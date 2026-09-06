@@ -23,12 +23,12 @@ forall a R, h R+:
 claim:
     ? forall x0 R:
         $HighSchoolCite::analysis::has_derivative_at_R(R, fn(x R) R {x^2}, x0, 2 * x0)
-1release thm HighSchoolCite::analysis::square_derivative_R(x0)
+    release thm HighSchoolCite::analysis::square_derivative_R(x0)
 
 claim:
     ? forall m, b, x0 R:
         $HighSchoolCite::analysis::has_derivative_at_R(R, fn(x R) R {m * x + b}, x0, m)
-1release thm HighSchoolCite::analysis::linear_derivative_R(m, b, x0)
+    release thm HighSchoolCite::analysis::linear_derivative_R(m, b, x0)
 
 claim:
     ? forall a, b R, f, df fn(x R) R:
@@ -39,7 +39,7 @@ claim:
                 df(x) > 0
         =>:
             $HighSchoolCite::analysis::is_increasing_on_R(a, b, f)
-1release thm HighSchoolCite::analysis::positive_derivative_implies_increasing(a, b, f, df)
+    release thm HighSchoolCite::analysis::positive_derivative_implies_increasing(a, b, f, df)
 
 claim:
     ? forall a, b R, f, df fn(x R) R:
@@ -50,7 +50,7 @@ claim:
                 df(x) < 0
         =>:
             $HighSchoolCite::analysis::is_decreasing_on_R(a, b, f)
-1release thm HighSchoolCite::analysis::negative_derivative_implies_decreasing(a, b, f, df)
+    release thm HighSchoolCite::analysis::negative_derivative_implies_decreasing(a, b, f, df)
 
 have fn quadratic_model(x R) R = x^2 - 6 * x + 5
 have fn quadratic_model_prime(x R) R = 2 * x - 6

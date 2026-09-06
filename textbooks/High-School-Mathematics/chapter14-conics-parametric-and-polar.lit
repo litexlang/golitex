@@ -55,7 +55,7 @@ claim:
     sqrt((focal_point_claim[1] - 2)^2 + focal_point_claim[2]^2) = sqrt((3 - 2)^2 + 0^2) = sqrt(1) = 1
     sqrt((focal_point_claim[1] + 2)^2 + focal_point_claim[2]^2) = sqrt((3 + 2)^2 + 0^2) = sqrt(25) = 5
     sqrt((focal_point_claim[1] - 2)^2 + focal_point_claim[2]^2) + sqrt((focal_point_claim[1] + 2)^2 + focal_point_claim[2]^2) = 1 + 5 = 2 * 3
-1release thm set_builder_member(focal_point_claim, {x cart(R, R): sqrt((x[1] - 2)^2 + x[2]^2) + sqrt((x[1] + 2)^2 + x[2]^2) = 2 * 3})
+    release thm set_builder_member(focal_point_claim, {x cart(R, R): sqrt((x[1] - 2)^2 + x[2]^2) + sqrt((x[1] + 2)^2 + x[2]^2) = 2 * 3})
     focal_point_claim $in {x cart(R, R): sqrt((x[1] - 2)^2 + x[2]^2) + sqrt((x[1] + 2)^2 + x[2]^2) = 2 * 3}
     (3, 0) $in {x cart(R, R): sqrt((x[1] - 2)^2 + x[2]^2) + sqrt((x[1] + 2)^2 + x[2]^2) = 2 * 3}
     (3, 0) $in ellipse_by_foci(3, 2)

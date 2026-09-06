@@ -317,7 +317,10 @@ sketch:
 
     claim:
         ? exist k N+ st {$superpowered(k) and not $superpowered(k + 1)}
-        witness exist k N+ st {$superpowered(k) and not $superpowered(k + 1)} from 1
+        witness exist k N+ st {$superpowered(k) and not $superpowered(k + 1)} from 1:
+            $superpowered(1)
+            not $superpowered(1 + 1)
+            $superpowered(1) and not $superpowered(1 + 1)
 
 # The first `by for` block proves `2` is prime. The identity `1^n = 1` is builtin,
 # so the body for `$superpowered(1)` follows by reducing `1^(1^n) + 1` to `2`,
@@ -343,7 +346,8 @@ claim:
     $is_even(n) or not $is_even(n)
     by cases:
         ? $is_even(n)
-        case $is_even(n)
+        case $is_even(n):
+            $is_even(n)
         case not $is_even(n):
             impossible not $is_even(n)
 
@@ -407,7 +411,8 @@ sketch:
             $is_even_or_odd(n)
             by cases:
                 ? $is_even(n)
-                case $is_even(n)
+                case $is_even(n):
+                    $is_even(n)
                 case $is_odd(n):
                     impossible $is_odd(n)
             impossible $is_even(n)
@@ -441,12 +446,14 @@ claim:
     $is_even(n) or not $is_even(n)
     by cases:
         ? not $is_even(n) or not $is_odd(n)
-        case not $is_even(n)
+        case not $is_even(n):
+            not $is_even(n) or not $is_odd(n)
         case $is_even(n):
             by contra:
                 ? not $is_odd(n)
                 by def $is_even_and_odd(n)
                 impossible $is_even_and_odd(n)
+            not $is_even(n) or not $is_odd(n)
 
 # Finally, here is the existential rule from Section 5.1 again, now using the
 # concrete assertion that a natural-number square equals `2`.

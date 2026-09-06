@@ -1,8 +1,9 @@
 # MIL-derived Litex mathematical interface map
 
-> Publication status (2026-08-21): the runnable module exports Chapters
-> 1--9 plus the introduction. Other cards describe preserved
-> chapters in `../todo_textbook_chapters/`, not current published interfaces.
+> Publication status (2026-08-23): the release-verified runnable module
+> exports the introduction and Chapters 1--13. The former quarantine copies
+> are retired; the cards below describe current canonical interfaces and
+> explicit remaining proof debt.
 
 This is the design manual for the independent Litex translation pressure-test
 corpus in this directory. It records the mathematical nodes that organize the
@@ -93,6 +94,12 @@ Fermat's Last Theorem is the largest visible instance of this boundary. The
 source uses an admitted proof term, but the current completion target requires
 a real checked theorem. Its natural-number statement and full proof therefore
 remain explicit Litex proof debt rather than an exclusion or assumption.
+
+Chapter 3's sum-of-two-squares multiplication theorem is a checked example of
+the opposite case: its witnesses are the two Brahmagupta--Fibonacci
+coordinates, and the generic commutative-ring calculation is expanded through
+the existing Chapter 2 reorder, inverse, and distributivity interfaces. No
+polynomial tactic or imported algebra package is an implicit dependency.
 
 ## Setting-first narrative with structure interfaces
 
@@ -285,16 +292,18 @@ part of a theorem conclusion.
 
 The integer natural-scalar instance is likewise an actual
 `AdditiveMonoidWithNSmul<Z>` object. Its action is `(n,x) |-> n*x`, so the zero
-and successor laws normalize directly. The generic recursive natural-scalar
-selection remains deferred. The componentwise product instance is now the
-parameterized structure object
+and successor laws normalize directly. For every additive commutative group,
+the generic `additive_nsmul` is a transparent native recursion on `N`, and
+`additive_zsmul` is the visible sign split of the natural action indexed by
+native `abs`. Their zero, one, index-addition, index-multiplication,
+argument-addition, and inverse laws are checked. The componentwise product
+instance is the parameterized structure object
 `product_additive_monoid_with_nsmul<A,B,left,right>`: its addition, zero, and
-natural-scalar action are all explicit coordinate formulas. The tuple's
-`AdditiveMonoidWithNSmul<cart(A,B)>` membership is currently one trusted law
-package. A proposition-only replacement was rejected because callers need the
-three structure fields. The template body's direct struct declaration now
-propagates those fields to a fixed template application, so its callable
-projections use the same declaration-owned interface as an ordinary binding.
+natural-scalar action are the transparent coordinate formulas `product_add`
+and `product_nsmul`. Pair extensionality reduces all five structure laws to
+the two input objects, and the exact
+`AdditiveMonoidWithNSmul<cart(A,B)>` membership is checked. A proposition-only
+replacement was rejected because callers need the three structure fields.
 
 Chapter 8's `Module<Scalar,M>` follows the same flat-data rule. It exposes the
 five scalar-ring operations, the three additive operations on `M`, and scalar
@@ -312,7 +321,7 @@ integer ring operations, the supplied additive-group operations, and
 `additive_zsmul` into `Module<Z,M>`. The nearest rejected forms are a nullary
 prop saying that such an action exists and identification with builtin
 multiplication on a carrier that has no multiplication. The recursive
-selections and module laws remain visible trust debt.
+definitions and the complete module law package are checked in Chapter 8.
 
 Chapter 8's fraction quotient uses represented equivalence classes as the
 carrier. `fraction_quotient_mk` maps a representative to its class,
@@ -320,8 +329,13 @@ carrier. `fraction_quotient_mk` maps a representative to its class,
 equation, and `fraction_quotient_monoid` packages that operation with the class
 of the original identity. This form preserves the source quotient API without
 pretending that `is_fraction_class` itself is a quotient object. Projection
-membership, representative independence, and the induced monoid laws remain
-visible trust debt.
+membership is an explicit represented-class witness. Multiplication closure is
+proved by multiplying denominator witnesses and a checked four-factor
+commutative-monoid rearrangement. A visible candidate-value proposition and
+`have fn ... by exist!` select the unique class product; every quotient element
+then yields a representative, so associativity and both identity laws reduce
+to the corresponding source-monoid laws. The quotient-monoid surface is fully
+checked and contains no opaque quotient operation.
 
 Chapter 9 keeps algebraic constructions callable. A normal subgroup produces
 a nonempty quotient carrier together with projection, multiplication, inverse,
@@ -390,7 +404,7 @@ implicit unfolding; the broader function-object equality stays lexical to
 that proof to keep the cross-chapter inference surface small. The
 executable `polynomial_nat_degree` reuses the same finite bound. Its conditional
 multiplication law remains a narrow theorem-body trust. The source's
-`WithBot N` degree is not yet modeled; plain integer addition with `-1` as an
+`WithBot N` degree is not yet modeled; plain integer addition with `(-1)` as an
 ad-hoc bottom was rejected because it gives a false zero-polynomial
 multiplication law.
 
@@ -411,8 +425,9 @@ records it as a `nonempty_set`; `permutation_group<s>` is then an actual
 `chap2::Group` object with reversed composition,
 identity, and inverse fields.
 A proposition-only `is_permutation_group` wrapper was rejected because later
-clients need the operations. The remaining group-record membership proof is
-an extensional equality problem for composed function records.
+clients need the operations. The group-record membership is now checked:
+pointwise composition and inverse laws are promoted to exact function equality,
+then exact operation-field equality promotes them to record equality.
 
 ## Source-local elementary number theory
 
@@ -438,6 +453,27 @@ while coprimality, arithmetic, remainder, finite-set difference, finite
 extrema, and Euclidean-quotient existence are explicit builtin boundaries. The
 other rejected form is an empty cite package or an imported theorem whose
 simple local proof is hidden from the corpus reader.
+
+Chapter 5's factorization coordinate is likewise visible and source-local.
+`prime_factor_exponent(n,p)` is the maximum of the finite set of admissible
+exponents in `closed_range(0,n)`; the always-admissible exponent zero preserves
+the source convention at zero and for nonprime `p`. Its checked interface
+exposes selected-candidate membership and maximality. Bezout's identity and
+Euclid's prime-divides-product lemma are then proved locally, yielding the
+product law, power law, prime-self computation, irrational-root obstruction,
+and the final exponent-divisibility witness. A decreasing-division object was
+rejected because finite maximum already gives a total, inspectable definition.
+
+The source's separate `MyNat` is not aliased to native `N`. It is the named
+tagged struct `MyNat` with a fixed tag and an `N` value coordinate. Zero,
+successor, addition, and multiplication operate on that coordinate; native
+induction is transported back to the tagged carrier; exact tagged equality
+then proves the recursive equations and arithmetic laws. An opaque carrier was
+rejected because it would hide every computation rule, while `MyNat = N` was
+rejected because it changes the intended mathematics. The modulo-four prime
+slice is also local: strong factor induction proves the factor theorem and a
+factorial Euclid number proves unboundedness. Together these choices leave
+Chapter 5 with zero executable source `trust` statements.
 
 The later induction section uses native `factorial : N -> N+` and keeps
 Fibonacci plus the tail-recursive Fibonacci state machine callable. The native
@@ -473,7 +509,7 @@ Lean's truncated natural predecessor is represented by the callable function
 `natural_predecessor : N -> N`, with a zero branch and the ordinary `n - 1`
 branch for positive naturals. This keeps the source domain and makes the
 factorial power bound well-typed at zero. The rejected form is to reuse
-ordinary integer subtraction at zero, where `0 - 1` is `-1` rather than a
+ordinary integer subtraction at zero, where `0 - 1` is `(-1)` rather than a
 natural exponent. The piecewise function and the factorial power bound are
 checked; no existence or well-definedness hole remains in this local
 interface.
@@ -509,18 +545,29 @@ surjectivity and it being a right inverse.
 Chapter 4 also exposes the source-ordered `sb_aux`, `sb_set`, and `sb_fun`
 constructions. The right-inverse lemma, closure of `sb_set` under `g o f`, and
 the injective and surjective branches of `sb_fun` lead to the final explicit
-Schröder–Bernstein bijection witness. The zero and two piecewise computation
-equations are checked; the successor equation retains one localized trust
-because equality at `(n + 1) - 1` is not transported through both selected
-image objects to the normalized index `n`.
+Schröder–Bernstein bijection witness. The zero, successor, and two piecewise
+computation equations are all checked. For the successor equation, arithmetic
+normalizes `(n + 1) - 1` to `n`; the resulting set equality is converted to
+both subset directions, transported through the inner and outer images by
+`set_image_mono`, and folded back to equality by extensionality. Direct
+congruence through a selected template object remains an ergonomic inference
+gap, but it is not a trust or kernel blocker for this construction.
 
-Chapter 4 is published with that explicit source debt unchanged. On the
-2026-08-21 current release, `inverse_fiber_nonempty` and the remainder of the
-chapter pass both the canonical registered-file gate and the complete source
-module gate. Child-environment commit now reuses the identical parent
+Chapter 4 is published with no direct proof trust in its set-map or
+Schröder–Bernstein slices. On the 2026-08-24 current release,
+`inverse_fiber_nonempty`, `sb_aux_successor`, and the remainder of the chapter
+pass the canonical registered-file gate. Child-environment commit now reuses
+the identical parent
 `inverse_fiber<S,T,default,f>` object. The set-valued `have fn` remains the
 correct model because choice and downstream membership consume the actual
 fiber set; a proposition wrapper remains rejected as a semantic change.
+
+The six elementary real-function examples also have no local opaque function
+layer. Their `$injective` and `$surjective` statements take inline function
+literals whose bodies are the native objects `ln(x)`, `exp(x)`, `sqrt(x)`, and
+`x^2`. Native inverse and principal-square-root identities prove the examples;
+the only retained named carrier is the repeatedly used set of nonnegative
+reals. Consequently Chapter 4 has no direct trust anywhere in the file.
 
 ## Finite and inductive mathematics
 
@@ -537,18 +584,25 @@ have fn triangle(n N) power_set(cart(range(0, n + 1), range(0, n + 1)))
 
 It is represented by deleting pairs whose first coordinate is at least their
 second. This makes finiteness follow from the finite Cartesian square and
-finite-set difference. The rejected form is an untyped subset plus a trusted
-subset-finiteness bridge. Its cardinality formula remains separate source debt
-in `todo.lit`.
+finite-set difference. Its cardinality is checked by decomposing the successor
+triangle into the previous triangle and an injective last-column image over a
+native closed range. The rejected form is an untyped subset plus a trusted
+subset-finiteness or counting bridge.
 
-The rejected shortcut is to identify a new source inductive carrier such as
-`MyNat`, `BinTree`, or `PropForm` with an existing carrier. A real implementation
-must supply its constructors, induction/recursion interface, recursive
-functions, and defining equations. Chapter 6 can nevertheless prove
-`list_append_nil` and `list_map_map` for every callable candidate satisfying
-the checked recursion specifications. Its piecewise updated Boolean valuation
-is also a callable template. The missing canonical list selections and the
-larger `BinTree` and `PropForm` recursion families remain in `todo.lit`.
+An inductive source object must expose its representation, constructors,
+induction/recursion interface, recursive functions, and defining equations; a
+cosmetic name for an opaque carrier is not enough. For Chapter 5, the concrete
+implementation is a named `struct MyNat` with a fixed `{0}` tag and an `N`
+value, not the alias `MyNat = N`: its `&MyNat` carrier is an independent tagged
+Cartesian copy of `N`, while the visible `value` field lets native
+natural-number induction establish the Peano induction rule.
+Zero, successor, addition, and multiplication are then callable objects on the
+tagged carrier, and their source equations are checked before the named
+arithmetic laws are accepted. Chapter 6 represents a list by its native length
+and exact finite sequence of entries. Empty, cons, append, and map are callable;
+their computation rules, structural induction, `list_append_nil`, and
+`list_map_map` are checked. Its piecewise updated Boolean valuation is also a
+callable template.
 
 Chapter 5's prime-factor multiplicity is a callable arithmetic function:
 
@@ -557,40 +611,49 @@ trust have prime_factor_exponent fn(n, p N) N
 ```
 
 Its intended value is the exponent of `p` in `n`, with the source convention
-at zero.  Later statements apply this function in the multiplication, power,
-prime-self, parity, and power-equation laws.  A proposition such as
+at zero and value zero away from prime coordinates. Later statements apply
+this function in the multiplication, power, prime-self, parity, and
+power-equation laws. A proposition such as
 `has_prime_factor_exponent(n,p,k)` is not a replacement because downstream
-mathematics needs the selected exponent.  Until decreasing division or an
-equivalent finite-maximum construction is available, the function's existence
-and the exact source laws remain explicit proof debt.
+mathematics needs the selected exponent. The explicit implementation target is
+the maximum of the finite nonempty set of admissible exponents when `p` is
+prime and `n` is nonzero, with a zero branch otherwise; an equivalent
+decreasing-division recursion is acceptable only when its termination and
+computation laws remain visible. The multiplication and power theorems, not an
+opaque declaration, must justify the later exponent comparisons.
 
 The source's `MyNat` is likewise kept as a genuinely independent nonempty
-carrier, not aliased to builtin `N`.  Its zero and successor are named objects,
-its induction rule is an ordinary universal fact, and addition and
-multiplication are callable binary functions with the source recursion
-equations.  The nearest rejected form is a `prop` describing Peano arithmetic:
-callers must be able to construct successors and evaluate arithmetic.  The
-carrier, constructors, recursive selections, and their computation equations
-remain trusted until Litex supports user-defined inductive carriers and their
-recursors; the algebraic laws are stated separately in source order.
+carrier, not aliased to builtin `N`. Its explicit tagged representation is the
+named carrier `&MyNat`, structurally `cart({0}, N)`: `mynat_zero` is `(0, 0)`,
+`mynat_succ` increments `value`, and `mynat_add`/`mynat_mul` compute on that field. Native `N`
+induction proves the source-facing structural induction law for every subset
+of the tagged carrier. The nearest rejected form is a `prop` describing Peano
+arithmetic: callers must be able to construct successors and evaluate
+arithmetic. The other rejected form is the direct alias `MyNat = N`, which
+would erase the source's independently introduced carrier instead of modeling
+it.
 
-Chapter 6 applies the same boundary to `BinTree` and `PropForm`. Each is an
-independent nonempty carrier with named constructors and a structural
-induction interface. Tree size, depth, and flip, and formula evaluation,
-variable support, and substitution are callable functions. Representative
-signatures are:
+Chapter 6 makes the representation of `BinTree` and `PropForm` completely
+visible using native `N`, rather than introducing cosmetic carrier aliases.
+Trees use zero for empty and a checked reversible positive pairing for nodes;
+formulas use five constructor residues with paired payloads. Strictly smaller
+decoded children justify native decreasing recursion, from which the source
+structural induction interfaces are derived. Tree size, depth, and flip, and
+formula evaluation, variable support, and substitution are callable functions.
+Representative signatures are:
 
 ```litex
-trust have binary_tree_size fn(tree BinaryTree) N
-trust have formula_eval fn(formula PropForm, valuation fn(idx N) {0, 1}) {0, 1}
-trust have formula_subst fn(formula PropForm, idx N, replacement PropForm) PropForm
+have fn binary_tree_size(tree N) N by induc tree from 0
+have fn formula_eval(formula N, valuation fn(idx N) {0, 1}) {0, 1} by induc formula from 0
+have fn formula_subst(formula, target_idx, repl N) N by induc formula from 0
 ```
 
 The nearest rejected form is a collection of predicates that only says a
 candidate value is a size, evaluation, or substitution result. Source
 theorems evaluate and compose these functions, so the functions themselves
 must remain visible. Their constructors, recursors, computation equations,
-and structural-induction theorems currently form explicit proof debt.
+structural-induction theorems, and source meta-theorems are all checked; Chapter
+6 contains no direct proof trust.
 
 The indexed standard simplex is the set of real coordinate functions on
 `range(0, n)` whose coordinates are nonnegative and whose finite sum is one.
@@ -645,12 +708,17 @@ conjugation, norm, and rank functions. Projection, norm-zero, positivity,
 multiplicativity, conjugation, and the checked rank inequality form a usable
 core. The source-facing `gaussian_integer_commutative_ring` now packages the
 five callable coordinate operations as a `CommutativeRing<GaussInt>` object.
-Its single `is_commutative_ring` law package remains explicit trust until the
-coordinatewise additive, multiplicative, distributive, identity, inverse, and
-commutativity proofs are supplied. A proposition-only assertion was rejected
+Its `is_commutative_ring` law package is checked through the two integer
+coordinates for all ten additive, multiplicative, distributive, identity,
+inverse, and commutativity laws. A proposition-only assertion was rejected
 because later mathematics needs the operations through a real structure
-value. The Euclidean-domain construction still depends on centered division
-and a strict remainder-norm proof, so it remains deferred.
+value. The source-facing `gaussian_integer_euclidean_domain` is also checked:
+signed centered division is reduced to Chapter 5's positive Euclidean
+quotient, the centered remainder bound is proved by the parity cases of
+`b % 2`, and multiplying the Gaussian remainder by the divisor conjugate
+turns its two coordinates into those centered remainders. The coordinate
+square bounds, norm multiplicativity, and positive-factor cancellation then
+give the strict Euclidean rank decrease.
 
 Polynomials are coefficient functions with a support witness that is both
 finite and contained in `N`. This is the right carrier because coefficient
@@ -686,7 +754,7 @@ typed canonical projection is callable and surjective. A quotient vector-space
 structure and the projection's linear-map laws remain downstream of
 representative-independent addition and scalar multiplication. The raw
 pointwise sub-scalar map `v |-> phi(v) - a v` is proved equal to the sum of
-`phi` and `-1` times the scalar endomorphism. The checked addition and scalar
+`phi` and `(-1)` times the scalar endomorphism. The checked addition and scalar
 closure laws therefore make `endomorphism_sub_scalar` a typed callable
 endomorphism, and the canonical eigenspace theorem identifies the eigenspace
 with its zero kernel.
@@ -940,8 +1008,14 @@ position. Indexed images are likewise represented by a named function family
 instead of repeating an anonymous function inside theorem conclusions. The
 nearest rejected forms are proposition-shaped “image” objects and theorem
 statements padded with separate membership facts solely to repair expression
-typing. The elementary image/preimage laws remain narrow trust debt while the
-objects and theorem interfaces themselves are executable.
+typing. The elementary image/preimage laws are now checked: binary laws use
+pointwise range witnesses, indexed unions reassociate two existential
+witnesses, indexed intersections retain one witness across every fiber, and
+injectivity merges independently selected witnesses. Preimage laws use the
+same memberwise spine; anonymous indexed fibers are eliminated in their
+beta-reduced form, with explicit ambient membership preserving the empty-index
+intersection case. No standard-library import or local trust is needed for
+this slice.
 
 ## Differential calculus
 
@@ -1071,10 +1145,10 @@ It is not called a filter until the filter laws are proved.
 ## Checked/deferred ownership
 
 Executable chapter files contain definitions, constructions, and facts
-accepted by the ordered project runner. Chapter 7 currently has one explicit
-trusted Gaussian commutative-ring law package; `todo.lit` records that proof
-debt and all other known unimplemented source mathematics. The ledger is
-comment-only and absent from `litex.config` exports.
+accepted by the ordered project runner. Chapters 3 and 7 now have zero direct
+source-level trust statements; `todo.lit` records other known unimplemented
+source mathematics. The ledger is comment-only and absent from `litex.config`
+exports.
 
 When a todo family is resumed, first reconstruct its natural-language proof or
 construction, then restore the smallest source-facing declaration in source

@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use litex::prelude::*;
 use litex::stmt_result_to_lean_compiler::{
     compile_litex_source_to_lean_compilation_report, compile_litex_source_to_lean_source,
