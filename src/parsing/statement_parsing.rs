@@ -14,8 +14,16 @@ impl Runtime {
         let saved_parse_context = self.current_parse_context().clone();
         let parsing_definition = matches!(
             tb.current()?,
-            PROP | ABSTRACT_PROP | LET | HAVE | THM | AXIOM | STRATEGY | STRUCT | TEMPLATE
-                | SETTING | TRUST
+            PROP | ABSTRACT_PROP
+                | LET
+                | HAVE
+                | THM
+                | AXIOM
+                | STRATEGY
+                | STRUCT
+                | TEMPLATE
+                | SETTING
+                | TRUST
         );
         if parsing_definition {
             self.parsing_definition_depth += 1;

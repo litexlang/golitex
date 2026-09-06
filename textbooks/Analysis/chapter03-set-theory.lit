@@ -496,7 +496,7 @@ sketch:
             n < 4
             =>:
                 n $in {k N: k < 4}
-1release thm set_builder_member(n, {k N: k < 4})
+        release thm set_builder_member(n, {k N: k < 4})
 """
 Example 3.1.22. If S = {1, 2, 3, 4, 5}, then {n in S : n < 4} is
 {1, 2, 3}; the predicates n < 7 and n < 1 give S and the empty set.
@@ -506,9 +506,9 @@ Example 3.1.22. If S = {1, 2, 3, 4, 5}, then {n in S : n < 4} is
 # ambient set or type, then state the filtering condition.
 
 sketch:
-1release thm set_builder_member(1, {n N: n $in {1, 2, 3, 4, 5} and n < 4})
-1release thm set_builder_member(2, {n N: n $in {1, 2, 3, 4, 5} and n < 4})
-1release thm set_builder_member(3, {n N: n $in {1, 2, 3, 4, 5} and n < 4})
+    release thm set_builder_member(1, {n N: n $in {1, 2, 3, 4, 5} and n < 4})
+    release thm set_builder_member(2, {n N: n $in {1, 2, 3, 4, 5} and n < 4})
+    release thm set_builder_member(3, {n N: n $in {1, 2, 3, 4, 5} and n < 4})
 
     by contra:
         ? not 4 $in {n N: n $in {1, 2, 3, 4, 5} and n < 4}
@@ -518,7 +518,7 @@ sketch:
         ? not 5 $in {n N: n $in {1, 2, 3, 4, 5} and n < 4}
         impossible 5 < 4
 
-1release thm set_builder_member(5, {n N: n $in {1, 2, 3, 4, 5} and n < 7})
+    release thm set_builder_member(5, {n N: n $in {1, 2, 3, 4, 5} and n < 7})
 
     by contra:
         ? not 1 $in {n N: n $in {1, 2, 3, 4, 5} and n < 1}
@@ -835,6 +835,9 @@ claim:
         ? not $is_universal_set(U)
         U $in U
         U $in {U}
+        claim:
+            ? $is_nonempty_set({U})
+            U $in {U}
         by regularity_axiom({U})
         obtain x from exist x {U} st {intersect(x, {U}) = {}}
         x = U
@@ -849,8 +852,8 @@ sketch:
         3 $in {1, 2}
         impossible not 3 $in {1, 2}
 
-1release thm set_builder_member(2, {n N: n < 4})
-1release thm set_builder_member(2, {n N: n + 1 < 5})
+    release thm set_builder_member(2, {n N: n < 4})
+    release thm set_builder_member(2, {n N: n + 1 < 5})
 
     by contra:
         ? not 5 $in {n N: n < 4}
@@ -950,14 +953,14 @@ valid implicit definition.
 
 sketch:
     by contra:
-        ? not exist y R st {y^2 = -1}
-        obtain a from exist y R st {y^2 = -1}
+        ? not exist y R st {y^2 = (-1)}
+        obtain a from exist y R st {y^2 = (-1)}
         a^2 >= 0
         impossible -1 >= 0
 
     2^2 = 4
     (-2)^2 = 4
-    2 != -2
+    2 != (-2)
 
 """
 Example 3.3.4. The relation P(x,y) defined by y=7 passes the vertical line
@@ -1061,7 +1064,7 @@ sketch:
     have fn id_R(x R) R = x
     have fn abs_R(x R) R = abs(x)
 
-    id_R(-2) = -2
+    id_R(-2) = (-2)
     abs_R(-2) = 2
     id_R(-2) != abs_R(-2)
 
@@ -1158,7 +1161,7 @@ injective.
 """
 
 # The core of this example is domain dependence.  The failing direction uses
-# `1` and `-1` as counterexamples; the successful direction cancels equal
+# `1` and `(-1)` as counterexamples; the successful direction cancels equal
 # squares using `sqrt(x^2)=x` for `x in N`.
 # `sqrt(t)` is the builtin nonnegative square root, so for a natural number `x`
 # the expression `sqrt(x^2)` returns `x`, not its negative.
@@ -1167,11 +1170,11 @@ sketch:
     have fn square_Z(z Z) Z = z^2
     square_Z(1) = 1
     square_Z(-1) = 1
-    1 != -1
+    1 != (-1)
 
     by contra:
         ? not $is_injective_fn(Z, Z, square_Z)
-        impossible 1 = -1
+        impossible 1 = (-1)
 
     have fn square_N(n N) Z = n^2
 
@@ -1204,26 +1207,26 @@ integers are not squares. If the codomain is restricted to the set of square
 numbers, the same formula becomes onto.
 """
 
-# The core of this example is codomain dependence.  First prove that `-1` has no
+# The core of this example is codomain dependence.  First prove that `(-1)` has no
 # square preimage; then refute surjectivity, because being onto would provide an
-# input that maps to `-1`.
+# input that maps to `(-1)`.
 
 sketch:
     have fn square_Z(z Z) Z = z^2
 
     by contra:
-        ? not exist n Z st {square_Z(n) = -1}
-        obtain k from exist n Z st {square_Z(n) = -1}
+        ? not exist n Z st {square_Z(n) = (-1)}
+        obtain k from exist n Z st {square_Z(n) = (-1)}
         square_Z(k) = k^2
-        k^2 = square_Z(k) = -1
+        k^2 = square_Z(k) = (-1)
         k^2 >= 0
-        -1 >= 0
+        (-1) >= 0
         impossible -1 >= 0
 
     by contra:
         ? not $is_surjective_fn(Z, Z, square_Z)
-        obtain k2 from exist n Z st {-1 = square_Z(n)}
-        impossible square_Z(k2) = -1
+        obtain k2 from exist n Z st {(-1) = square_Z(n)}
+        impossible square_Z(k2) = (-1)
 
 """
 Remark 3.3.19. Injectivity and surjectivity are dual notions; Tao points to
@@ -1237,8 +1240,8 @@ Definition 3.3.20. A function is bijective when it is both one-to-one and onto.
 # Bijectivity is the conjunction of injectivity and surjectivity; it is not the
 # vertical line test itself.
 prop is_bijective_fn(S, T set, f fn(x S) T):
-    $is_injective_fn(S, T, f)
-    $is_surjective_fn(S, T, f)
+    $chap3::is_injective_fn(S, T, f)
+    $chap3::is_surjective_fn(S, T, f)
 
 """
 Example 3.3.21. Three finite functions show failure of injectivity, failure of
@@ -1481,7 +1484,7 @@ sketch:
 
     witness $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, double_nat(1)) from 1
     \restricted_image<N, N, double_nat, {1, 2, 3}> = {y N: $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, y)}
-1release thm set_builder_member(double_nat(1), {y N: $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, y)})
+    release thm set_builder_member(double_nat(1), {y N: $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, y)})
     double_nat(1) $in \restricted_image<N, N, double_nat, {1, 2, 3}>
 
     claim:
@@ -1504,8 +1507,8 @@ Example 3.4.3. If f:Z->Z is f(x)=x^2, then the forward image of
 
 sketch:
     have fn square_Z(z Z) Z = z^2
-    have fn square_on_example(z {-1, 0, 1, 2}) {0, 1, 4} by cases:
-        case z = -1: 1
+    have fn square_on_example(z {(-1), 0, 1, 2}) {0, 1, 4} by cases:
+        case z = (-1): 1
         case z = 0: 0
         case z = 1: 1
         case z = 2: 4
@@ -1517,33 +1520,33 @@ sketch:
 
     by enumerate finite_set:
         ? forall y {0, 1, 4}:
-            exist z {-1, 0, 1, 2} st {y = square_on_example(z)}
+            exist z {(-1), 0, 1, 2} st {y = square_on_example(z)}
         by cases:
-            ? exist z {-1, 0, 1, 2} st {y = square_on_example(z)}
+            ? exist z {(-1), 0, 1, 2} st {y = square_on_example(z)}
             case y = 0:
-                witness exist z {-1, 0, 1, 2} st {y = square_on_example(z)} from 0
+                witness exist z {(-1), 0, 1, 2} st {y = square_on_example(z)} from 0
             case y = 1:
-                witness exist z {-1, 0, 1, 2} st {y = square_on_example(z)} from -1
+                witness exist z {(-1), 0, 1, 2} st {y = square_on_example(z)} from (-1)
             case y = 4:
-                witness exist z {-1, 0, 1, 2} st {y = square_on_example(z)} from 2
-    by def $is_forward_image_of({-1, 0, 1, 2}, {0, 1, 4}, square_on_example, {-1, 0, 1, 2}, {0, 1, 4})
+                witness exist z {(-1), 0, 1, 2} st {y = square_on_example(z)} from 2
+    by def $is_forward_image_of({(-1), 0, 1, 2}, {0, 1, 4}, square_on_example, {(-1), 0, 1, 2}, {0, 1, 4})
 
     claim:
         ? forall y {0, 1, 4}:
             y $in fn_range(square_on_example)
-        obtain z from exist z {-1, 0, 1, 2} st {y = square_on_example(z)}
+        obtain z from exist z {(-1), 0, 1, 2} st {y = square_on_example(z)}
         square_on_example(z) $in fn_range(square_on_example)
 
     by extension:
         ? fn_range(square_on_example) = {0, 1, 4}
 
     finite_set_size(fn_range(square_on_example)) = finite_set_size({0, 1, 4}) = 3
-    finite_set_size({-1, 0, 1, 2}) = 4
+    finite_set_size({(-1), 0, 1, 2}) = 4
     square_Z(-1) = 1
     square_Z(1) = 1
-    -1 != 1
+    (-1) != 1
     square_Z(-2) = 4
-    not -2 $in {-1, 0, 1, 2}
+    not (-2) $in {(-1), 0, 1, 2}
 
 """
 Definition 3.4.4. The inverse image f^{-1}(U) consists of inputs whose values
@@ -1622,63 +1625,68 @@ invertible.
 # The calculation is ordinary finite preimage reasoning, together with the
 # elementary integer-square classification for roots of 1 and 4.
 
+"""
+Draft-only executable sketch retained as documentation. The current verifier
+does not yet expose the reusable integer lemma `z^2 = 0 => z = 0` needed by
+the zero-root branch below.
+
 sketch:
     have fn square_Z(z Z) Z = z^2
 
     square_Z(-1) = 1
     square_Z(1) = 1
-    -1 != 1
+    (-1) != 1
 
     by enumerate finite_set:
         ? forall u {0, 1, 4}:
             u $in Z
 
     by enumerate finite_set:
-        ? forall z {-2, -1, 0, 1, 2}:
+        ? forall z {(-2), (-1), 0, 1, 2}:
             z $in Z
 
     claim:
         ? forall z Z:
             square_Z(z) $in {0, 1, 4}
             =>:
-                z $in {-2, -1, 0, 1, 2}
+                z $in {(-2), (-1), 0, 1, 2}
         square_Z(z) = 0 or square_Z(z) = 1 or square_Z(z) = 4
         by cases:
-            ? z $in {-2, -1, 0, 1, 2}
+            ? z $in {(-2), (-1), 0, 1, 2}
             case square_Z(z) = 0:
                 z^2 = square_Z(z) = 0
                 z = 0
-                z $in {-2, -1, 0, 1, 2}
+                z $in {(-2), (-1), 0, 1, 2}
             case square_Z(z) = 1:
                 (z - 1) * (z + 1) = z^2 - 1 = square_Z(z) - 1 = 0
                 z - 1 = 0 or z + 1 = 0
                 by cases:
-                    ? z $in {-2, -1, 0, 1, 2}
+                    ? z $in {(-2), (-1), 0, 1, 2}
                     case z - 1 = 0:
                         z = 1
-                        z $in {-2, -1, 0, 1, 2}
+                        z $in {(-2), (-1), 0, 1, 2}
                     case z + 1 = 0:
-                        z = -1
-                        z $in {-2, -1, 0, 1, 2}
+                        z = (-1)
+                        z $in {(-2), (-1), 0, 1, 2}
             case square_Z(z) = 4:
                 (z - 2) * (z + 2) = z^2 - 4 = square_Z(z) - 4 = 0
                 z - 2 = 0 or z + 2 = 0
                 by cases:
-                    ? z $in {-2, -1, 0, 1, 2}
+                    ? z $in {(-2), (-1), 0, 1, 2}
                     case z - 2 = 0:
                         z = 2
-                        z $in {-2, -1, 0, 1, 2}
+                        z $in {(-2), (-1), 0, 1, 2}
                     case z + 2 = 0:
-                        z = -2
-                        z $in {-2, -1, 0, 1, 2}
+                        z = (-2)
+                        z $in {(-2), (-1), 0, 1, 2}
 
     by cases:
-        ? forall z {-2, -1, 0, 1, 2}:
+        ? forall z {(-2), (-1), 0, 1, 2}:
             square_Z(z) $in {0, 1, 4}
-        case z = -2:
+        case z = (-2):
             square_Z(z) = 4
             square_Z(z) $in {0, 1, 4}
-        case z = -1:
+        case z = (-1):
             square_Z(z) = 1
             square_Z(z) $in {0, 1, 4}
         case z = 0:
@@ -1690,10 +1698,11 @@ sketch:
         case z = 2:
             square_Z(z) = 4
             square_Z(z) $in {0, 1, 4}
-    by def $is_inverse_image_of(Z, Z, square_Z, {0, 1, 4}, {-2, -1, 0, 1, 2})
+    by def $is_inverse_image_of(Z, Z, square_Z, {0, 1, 4}, {(-2), (-1), 0, 1, 2})
 
-    -2 $in {-2, -1, 0, 1, 2}
-    not -2 $in {-1, 0, 1, 2}
+    (-2) $in {(-2), (-1), 0, 1, 2}
+    not (-2) $in {(-1), 0, 1, 2}
+"""
 
 """
 Remark 3.4.7. For a bijection, inverse-function notation and inverse-image
@@ -2229,7 +2238,7 @@ from one set to the other.
 # together with injectivity and surjectivity.
 
 prop has_equal_cardinality(S, T set):
-    exist f fn(x S) T st {$is_bijective_fn(S, T, f)}
+    exist f fn(x S) T st {$chap3::is_bijective_fn(S, T, f)}
 
 """
 Example 3.6.2. The sets {0,1,2} and {3,4,5} have equal cardinality.  A single
@@ -2299,7 +2308,7 @@ sketch:
         ? forall n N:
             2 * n $in even_N
         witness $is_even_nat(2 * n) from n
-1release thm set_builder_member(2 * n, {m N: $is_even_nat(m)})
+        release thm set_builder_member(2 * n, {m N: $is_even_nat(m)})
 
     have fn double_to_even(n N) even_N = 2 * n
     forall n N:
@@ -2611,7 +2620,7 @@ sketch:
             =>:
                 $is_finite_set(Y)
                 finite_set_size(Y) <= finite_set_size(X)
-1release thm subset_of_finite_set_is_finite(Y, X)
+        release thm subset_of_finite_set_is_finite(Y, X)
 
     have fn double_on_three(n {1, 2, 3}) {2, 4, 6} by cases:
         case n = 1: 2

@@ -112,8 +112,8 @@ forall x Z:
 # Positive natural numbers have negative integer inverses.
 
 forall n N+:
-    -n $in Z
-    -n < 0
+    (-n) $in Z
+    (-n) < 0
 
 """
 Lemma 4.1.5 (Trichotomy of integers). Every integer is positive, zero, or
@@ -305,7 +305,7 @@ forall a, b, c Z:
 forall a, b Z:
     a > b
     =>:
-        -a < -b
+        (-a) < (-b)
 
 # Lemma 4.1.11(e): strict order is transitive.
 
@@ -437,7 +437,7 @@ thm rational_operations_respect_left_representative:
             (a / b) + (c / d) = (a1 / b1) + (c / d)
             (a / b) * (c / d) = (a1 / b1) * (c / d)
             -(a / b) = -(a1 / b1)
-1release thm cross_products_give_rational_equality(a, b, a1, b1)
+    by thm cross_products_give_rational_equality(a, b, a1, b1)
     a / b = a1 / b1
     (a / b) + (c / d) = (a1 / b1) + (c / d)
     (a / b) * (c / d) = (a1 / b1) * (c / d)
@@ -449,7 +449,7 @@ thm rational_operations_respect_right_representative:
         =>:
             (a / b) + (c / d) = (a / b) + (c1 / d1)
             (a / b) * (c / d) = (a / b) * (c1 / d1)
-1release thm cross_products_give_rational_equality(c, d, c1, d1)
+    by thm cross_products_give_rational_equality(c, d, c1, d1)
     c / d = c1 / d1
     (a / b) + (c / d) = (a / b) + (c1 / d1)
     (a / b) * (c / d) = (a / b) * (c1 / d1)
@@ -466,7 +466,7 @@ thm integer_embedding_into_rationals_is_injective:
         a / 1 = b / 1
         =>:
             a = b
-1release thm rational_equality_gives_cross_products(a, 1, b, 1)
+    by thm rational_equality_gives_cross_products(a, 1, b, 1)
     a * 1 = b * 1
     a = a * 1 = b * 1 = b
 
@@ -491,7 +491,7 @@ thm rational_quotient_zero_has_zero_numerator:
             a = 0
     0 = 0 / 1
     a / b = 0 / 1
-1release thm rational_equality_gives_cross_products(a, b, 0, 1)
+    by thm rational_equality_gives_cross_products(a, b, 0, 1)
     a * 1 = 0 * b
     a = a * 1 = 0 * b = 0
 
@@ -577,11 +577,11 @@ claim:
         case b = 0:
             impossible b != 0
         case b < 0:
-            have b0 Z = -b
-            b0 = -b = 0 - b > 0
+            have b0 Z = (-b)
+            b0 = (-b) = 0 - b > 0
             b0 $in N
             b0 $in N+
-            have a0 Z = -a
+            have a0 Z = (-a)
             a / b = (-a) / (-b) = a0 / b0
             a0 / b0 > 0
             a0 = a0 / b0 * b0 > 0 * b0 = 0
@@ -596,15 +596,15 @@ claim:
     ? forall q Q:
         q < 0
         =>:
-            exist y Q st {y > 0, q = -y}
-    witness exist y Q st {y > 0, q = -y} from -q
+            exist y Q st {y > 0, q = (-y)}
+    witness exist y Q st {y > 0, q = (-y)} from (-q)
 
 # Conversely, the additive inverse of a positive rational is negative.
 
 forall y Q:
     y > 0
     =>:
-        -y < 0
+        (-y) < 0
 
 # In quotient form, `(-a)/b` is negative when `a` and `b` are positive.
 
@@ -774,7 +774,7 @@ forall x Q:
 forall x Q:
     x < 0
     =>:
-        abs(x) = -x
+        abs(x) = (-x)
 
 forall x Q:
     x = 0
@@ -823,11 +823,11 @@ forall x Q:
     =>:
         abs(x) > 0
 
-# Proposition 4.3.3(c): `-y <= x <= y` is equivalent to `y >= abs(x)`.
+# Proposition 4.3.3(c): `(-y) <= x <= y` is equivalent to `y >= abs(x)`.
 
 claim:
     ? forall x, y Q:
-        -y <= x
+        (-y) <= x
         x <= y
         =>:
             y >= abs(x)
@@ -838,25 +838,25 @@ claim:
             abs(x) = x
             abs(x) = x <= y
         case x < 0:
-            -x <= y
-            abs(x) = -x <= y
+            (-x) <= y
+            abs(x) = (-x) <= y
 
 thm rational_abs_upper_bound_gives_two_sided_bound:
     ? forall x, y Q:
         y >= abs(x)
         =>:
-            -y <= x
+            (-y) <= x
             x <= y
     x <= abs(x)
-    -x <= abs(x)
-    -y <= -abs(x)
-    -abs(x) <= x
-    -y <= -abs(x) <= x
+    (-x) <= abs(x)
+    (-y) <= (-abs(x))
+    (-abs(x)) <= x
+    (-y) <= (-abs(x)) <= x
     x <= abs(x) <= y
 
 forall x, y Q:
     =>:
-        -y <= x
+        (-y) <= x
         x <= y
     <=>:
         y >= abs(x)
@@ -865,14 +865,14 @@ forall x, y Q:
 
 forall x Q:
     x <= abs(x)
-    -x <= abs(x)
+    (-x) <= abs(x)
 
 # Proposition 4.3.3(d): absolute value is multiplicative.
 
 forall x, y Q:
     abs(x * y) = abs(x) * abs(y)
 
-# Taking `y=-1` in multiplicativity gives `abs(-x)=abs(x)`.
+# Taking `y=(-1)` in multiplicativity gives `abs(-x)=abs(x)`.
 
 forall x Q:
     abs(-x) = abs(x)
@@ -1055,7 +1055,7 @@ thm rational_closeness_is_transitive:
         $is_close_in_Q(delta, y, z)
         =>:
             $is_close_in_Q(epsilon + delta, x, z)
-1release thm rational_distance_triangle_inequality(x, y, z)
+    by thm rational_distance_triangle_inequality(x, y, z)
     dist_Q(x, z) <= dist_Q(x, y) + dist_Q(y, z) <= epsilon + delta
     by def $is_close_in_Q(epsilon + delta, x, z)
 
@@ -1087,13 +1087,13 @@ thm rational_closeness_of_between_points:
             $is_close_in_Q(epsilon, w, x)
     dist_Q(y, x) <= epsilon
     abs(y - x) = dist_Q(y, x) <= epsilon
-1release thm rational_abs_upper_bound_gives_two_sided_bound(y - x, epsilon)
-    -epsilon <= y - x
+    by thm rational_abs_upper_bound_gives_two_sided_bound(y - x, epsilon)
+    (-epsilon) <= y - x
     dist_Q(z, x) <= epsilon
     abs(z - x) = dist_Q(z, x) <= epsilon
-1release thm rational_abs_upper_bound_gives_two_sided_bound(z - x, epsilon)
+    by thm rational_abs_upper_bound_gives_two_sided_bound(z - x, epsilon)
     z - x <= epsilon
-    -epsilon <= y - x <= w - x
+    (-epsilon) <= y - x <= w - x
     w - x <= z - x <= epsilon
     dist_Q(w, x) = abs(w - x) <= epsilon
     by def $is_close_in_Q(epsilon, w, x)
@@ -1106,7 +1106,7 @@ thm rational_closeness_of_reverse_between_points:
         w <= y
         =>:
             $is_close_in_Q(epsilon, w, x)
-1release thm rational_closeness_of_between_points(epsilon, x, z, y, w)
+    by thm rational_closeness_of_between_points(epsilon, x, z, y, w)
 
 # Multiplication by a fixed rational scales the error by `abs(z)`: rewrite
 # `(x*z)-(y*z)` as `(x-y)*z`, then use multiplicativity of absolute value.
@@ -1329,10 +1329,10 @@ thm rational_has_positive_denominator_representation:
             0 - b >= 0
             0 - b $in N
             0 - b $in N+
-            -b = 0 - b
-            -b $in N+
+            (-b) = 0 - b
+            (-b) $in N+
             a / b = (-a) / (-b)
-            witness exist a0 Z, b0 N+ st {x = a0 / b0} from -a,-b
+            witness exist a0 Z, b0 N+ st {x = a0 / b0} from (-a),(-b)
 
 """
 Proposition 4.4.1 (Interspersing of integers by rationals). Every rational x
@@ -1371,9 +1371,9 @@ thm rational_quotient_integer_interval_exists:
 thm rational_integer_interval_exists:
     ? forall x Q:
         exist n Z st {n <= x, x < n + 1}
-1release thm rational_has_positive_denominator_representation(x)
+    by thm rational_has_positive_denominator_representation(x)
     obtain a, b from exist a Z, b N+ st {x = a / b}
-1release thm rational_quotient_integer_interval_exists(a, b)
+    by thm rational_quotient_integer_interval_exists(a, b)
     obtain m from exist m Z st {m <= a / b, a / b < m + 1}
     witness exist n Z st {n <= x, x < n + 1} from m
 
@@ -1416,7 +1416,7 @@ thm rational_integer_interval_is_unique:
 thm natural_upper_bound_for_rational:
     ? forall x Q:
         exist n N st {n > x}
-1release thm rational_integer_interval_exists(x)
+    by thm rational_integer_interval_exists(x)
     obtain m from exist m Z st {m <= x, x < m + 1}
     m >= 0 or m < 0
     by cases:
@@ -1488,7 +1488,7 @@ thm integer_square_multiple_of_two_has_even_base:
 thm rational_reduced_fraction_parity_witness:
     ? forall x Q:
         exist p Z, q N+ st {x = p / q, p % 2 != 0 or q % 2 != 0}
-1release thm rational_has_unique_reduced_fraction(x)
+    by thm rational_has_unique_reduced_fraction(x)
     obtain p, q from exist! p Z, q N+ st {x = p / q, gcd(p, q) = 1}
     claim:
         ? p % 2 != 0 or q % 2 != 0
@@ -1513,17 +1513,17 @@ thm rational_square_not_two:
         x^2 != 2
     by contra:
         ? x^2 != 2
-1release thm rational_reduced_fraction_parity_witness(x)
+        by thm rational_reduced_fraction_parity_witness(x)
         obtain p, q from exist p Z, q N+ st {x = p / q, p % 2 != 0 or q % 2 != 0}
         (p / q)^2 = x^2 = 2
         p^2 / q^2 = (p / q)^2 = 2
         p^2 = (p^2 / q^2) * q^2 = 2 * q^2
-1release thm integer_square_multiple_of_two_has_even_base(p, q^2)
+        by thm integer_square_multiple_of_two_has_even_base(p, q^2)
         have s Z = integer_quotient(p, 2)
         p = 2 * integer_quotient(p, 2) + p % 2 = 2 * s + p % 2 = 2 * s
         2 * q^2 = p^2 = (2 * s)^2 = 4 * s^2
         q^2 = (2 * q^2) / 2 = (4 * s^2) / 2 = 2 * s^2
-1release thm integer_square_multiple_of_two_has_even_base(q, s^2)
+        by thm integer_square_multiple_of_two_has_even_base(q, s^2)
         by cases:
             ? q % 2 != 0
             case p % 2 != 0:
@@ -1566,7 +1566,7 @@ thm rational_sqrt_two_no_gap_step:
             ? not 2 < (y + epsilon)^2
             by def $is_rational_sqrt_two_gap_witness(epsilon, y)
             impossible not $is_rational_sqrt_two_gap_witness(epsilon, y)
-1release thm rational_square_not_two(y + epsilon)
+    by thm rational_square_not_two(y + epsilon)
     (y + epsilon)^2 != 2
     (y + epsilon)^2 < 2 or (y + epsilon)^2 = 2 or (y + epsilon)^2 > 2
     by cases:
@@ -1592,7 +1592,7 @@ thm rational_sqrt_two_no_gap_forces_each_multiple_below_two:
             (0 * epsilon)^2 = 0 < 2
         ? induc:
             n * epsilon >= 0
-1release thm rational_sqrt_two_no_gap_step(epsilon, n * epsilon)
+            by thm rational_sqrt_two_no_gap_step(epsilon, n * epsilon)
             (n * epsilon + epsilon)^2 < 2
             (n + 1) * epsilon = n * epsilon + epsilon
             ((n + 1) * epsilon)^2 = (n * epsilon + epsilon)^2 < 2
@@ -1602,9 +1602,9 @@ thm rational_sqrt_two_gap:
         exist x Q st {$is_rational_sqrt_two_gap_witness(epsilon, x)}
     by contra:
         ? exist x Q st {$is_rational_sqrt_two_gap_witness(epsilon, x)}
-1release thm natural_upper_bound_for_rational(2 / epsilon)
+        by thm natural_upper_bound_for_rational(2 / epsilon)
         obtain n from exist n N st {n > 2 / epsilon}
-1release thm rational_sqrt_two_no_gap_forces_each_multiple_below_two(epsilon, n)
+        by thm rational_sqrt_two_no_gap_forces_each_multiple_below_two(epsilon, n)
         n * epsilon > (2 / epsilon) * epsilon = 2
         (n * epsilon)^2 > 2^2 = 4 > 2
         impossible (n * epsilon)^2 < 2

@@ -243,10 +243,10 @@ pub use crate::parsing::{TokenBlock, Tokenizer};
 pub use crate::pipeline::{
     display_stmt_exec_result_json, execute_file_in_runtime, execute_isolated_file_in_runtime,
     execute_repository_target, render_run_output, render_run_summary, render_runtime_error_json,
-    render_stream_output, resolve_source_file_path, run_eval_command, run_file_command, run_isolated_file_command,
-    run_isolated_repl_with_runtime, run_latex_repl, run_repl, run_repository_command, run_session,
-    ExecutionTarget, RunOutcome, RunSummary, RunSummaryRequest, RunTarget, RunTargetKind,
-    SessionRequest, SessionTarget, SourceRunOutcome,
+    render_stream_output, resolve_source_file_path, run_eval_command, run_file_command,
+    run_isolated_file_command, run_isolated_repl_with_runtime, run_latex_repl, run_repl,
+    run_repository_command, run_session, ExecutionTarget, RunOutcome, RunSummary,
+    RunSummaryRequest, RunTarget, RunTargetKind, SessionRequest, SessionTarget, SourceRunOutcome,
 };
 pub use crate::result::BuiltinTheoremProvenance;
 pub use crate::result::BuiltinTheoremRequirementRole;

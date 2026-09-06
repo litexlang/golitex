@@ -346,7 +346,7 @@ thm closure_contains_set:
     claim:
         ? forall x X:
             x $in closure_of_real_set(X)
-1release thm interval_member_is_adherent(X, x)
+        release thm interval_member_is_adherent(X, x)
         $is_adherent_point(X, x)
     by def:
         ? X $subset closure_of_real_set(X)
@@ -433,7 +433,7 @@ thm closure_monotone:
 thm closure_of_intersection_subset:
     ? forall X, Y power_set(R):
         closure_of_real_set(intersect(X, Y)) $subset intersect(closure_of_real_set(X), closure_of_real_set(Y))
-1release thm real_set_operations_stay_in_power_set(X, Y)
+    release thm real_set_operations_stay_in_power_set(X, Y)
     claim:
         ? forall x closure_of_real_set(intersect(X, Y)):
             x $in intersect(closure_of_real_set(X), closure_of_real_set(Y))
@@ -483,7 +483,7 @@ thm non_closure_gives_failed_radius:
 thm closure_union_subset_forward:
     ? forall X, Y power_set(R):
         closure_of_real_set(union(X, Y)) $subset union(closure_of_real_set(X), closure_of_real_set(Y))
-1release thm real_set_operations_stay_in_power_set(X, Y)
+    release thm real_set_operations_stay_in_power_set(X, Y)
     claim:
         ? forall z closure_of_real_set(union(X, Y)):
             z $in union(closure_of_real_set(X), closure_of_real_set(Y))
@@ -499,9 +499,9 @@ thm closure_union_subset_forward:
                     case z $in closure_of_real_set(Y):
                         z $in union(closure_of_real_set(X), closure_of_real_set(Y))
                     case not z $in closure_of_real_set(Y):
-1release thm non_closure_gives_failed_radius(X, z)
+                        release thm non_closure_gives_failed_radius(X, z)
                         obtain epsilon_x from exist epsilon_x R+ st {not $is_epsilon_adherent_to_set(X, z, epsilon_x)}
-1release thm non_closure_gives_failed_radius(Y, z)
+                        release thm non_closure_gives_failed_radius(Y, z)
                         obtain epsilon_y from exist epsilon_y R+ st {not $is_epsilon_adherent_to_set(Y, z, epsilon_y)}
                         finite_set_min(union({epsilon_x}, { epsilon_y})) $in R+
                         $is_adherent_point(union(X, Y), z)
@@ -530,7 +530,7 @@ thm closure_union_subset_forward:
 thm closure_union_subset_reverse:
     ? forall X, Y power_set(R):
         union(closure_of_real_set(X), closure_of_real_set(Y)) $subset closure_of_real_set(union(X, Y))
-1release thm real_set_operations_stay_in_power_set(X, Y)
+    release thm real_set_operations_stay_in_power_set(X, Y)
     claim:
         ? forall z union(closure_of_real_set(X), closure_of_real_set(Y)):
             z $in closure_of_real_set(union(X, Y))
@@ -571,9 +571,9 @@ thm closure_union_subset_reverse:
 thm closure_union_identity:
     ? forall X, Y power_set(R):
         closure_of_real_set(union(X, Y)) = union(closure_of_real_set(X), closure_of_real_set(Y))
-1release thm closure_union_subset_forward(X, Y)
+    release thm closure_union_subset_forward(X, Y)
     closure_of_real_set(union(X, Y)) $subset union(closure_of_real_set(X), closure_of_real_set(Y))
-1release thm closure_union_subset_reverse(X, Y)
+    release thm closure_union_subset_reverse(X, Y)
     union(closure_of_real_set(X), closure_of_real_set(Y)) $subset closure_of_real_set(union(X, Y))
     by extension:
         ? closure_of_real_set(union(X, Y)) = union(closure_of_real_set(X), closure_of_real_set(Y))
@@ -585,11 +585,11 @@ thm closure_elementary_properties:
         X $subset Y
         =>:
             closure_of_real_set(X) $subset closure_of_real_set(Y)
-1release thm closure_union_identity(X, Y)
+    release thm closure_union_identity(X, Y)
     closure_of_real_set(union(X, Y)) = union(closure_of_real_set(X), closure_of_real_set(Y))
-1release thm closure_of_intersection_subset(X, Y)
+    release thm closure_of_intersection_subset(X, Y)
     closure_of_real_set(intersect(X, Y)) $subset intersect(closure_of_real_set(X), closure_of_real_set(Y))
-1release thm closure_monotone(X, Y)
+release thm closure_monotone(X, Y)
 
 """
 Lemma 9.1.12 (Closures of intervals). Non-degenerate finite intervals have
@@ -631,14 +631,14 @@ thm left_endpoint_adherent_to_open_interval:
                     a + epsilon / 2 < a + (b - a) = b
                     a + epsilon / 2 < b
                     a + epsilon / 2 $in '(a, b)
-                    a - (a + epsilon / 2) = -epsilon / 2
-                    -1 < 0
-                    -1 * (epsilon / 2) < 0
-                    -epsilon / 2 = -1 * (epsilon / 2)
-                    -epsilon / 2 < 0
-                    abs(-epsilon / 2) = epsilon / 2
-                    abs(a - (a + epsilon / 2)) = abs(-epsilon / 2)
-                    abs(a - (a + epsilon / 2)) = abs(-epsilon / 2) = epsilon / 2
+                    a - (a + epsilon / 2) = (-epsilon) / 2
+                    (-1) < 0
+                    (-1) * (epsilon / 2) < 0
+                    (-epsilon) / 2 = (-1) * (epsilon / 2)
+                    (-epsilon) / 2 < 0
+                    abs((-epsilon) / 2) = epsilon / 2
+                    abs(a - (a + epsilon / 2)) = abs((-epsilon) / 2)
+                    abs(a - (a + epsilon / 2)) = abs((-epsilon) / 2) = epsilon / 2
                     abs(a - (a + epsilon / 2)) = epsilon / 2
                     epsilon / 2 < epsilon
                     epsilon / 2 <= epsilon
@@ -655,9 +655,9 @@ thm left_endpoint_adherent_to_open_interval:
                     (a + b) / 2 < b
                     (a + b) / 2 $in '(a, b)
                     a - (a + b) / 2 = -(b - a) / 2
-                    -1 < 0
-                    -1 * ((b - a) / 2) < 0
-                    -(b - a) / 2 = -1 * ((b - a) / 2)
+                    (-1) < 0
+                    (-1) * ((b - a) / 2) < 0
+                    -(b - a) / 2 = (-1) * ((b - a) / 2)
                     -(b - a) / 2 < 0
                     abs(-(b - a) / 2) = (b - a) / 2
                     abs(a - (a + b) / 2) = abs(-(b - a) / 2)
@@ -744,7 +744,7 @@ thm closed_interval_subset_open_interval_closure:
         by cases:
             ? $is_adherent_point('(a, b), x)
             case x = a:
-1release thm left_endpoint_adherent_to_open_interval(a, b)
+                release thm left_endpoint_adherent_to_open_interval(a, b)
                 $is_adherent_point('(a, b), a)
                 $is_adherent_point('(a, b), x)
             case x > a:
@@ -752,14 +752,14 @@ thm closed_interval_subset_open_interval_closure:
                 by cases:
                     ? $is_adherent_point('(a, b), x)
                     case x = b:
-1release thm right_endpoint_adherent_to_open_interval(a, b)
+                        release thm right_endpoint_adherent_to_open_interval(a, b)
                         $is_adherent_point('(a, b), b)
                         $is_adherent_point('(a, b), x)
                     case x < b:
                         a < x
                         x < b
                         x $in '(a, b)
-1release thm interval_member_is_adherent('(a, b), x)
+                        release thm interval_member_is_adherent('(a, b), x)
                         $is_adherent_point('(a, b), x)
         $is_adherent_point('(a, b), x)
     by def:
@@ -773,7 +773,7 @@ thm open_interval_closure_subset_closed_interval:
     claim:
         ? forall x closure_of_real_set('(a, b)):
             x $in '[a, b]
-1release thm closure_member_is_adherent('(a, b), x)
+        release thm closure_member_is_adherent('(a, b), x)
         $is_adherent_point('(a, b), x)
         x < a or x >= a
         by cases:
@@ -829,9 +829,9 @@ thm closure_of_open_interval:
         a < b
         =>:
             closure_of_real_set('(a, b)) = '[a, b]
-1release thm closed_interval_subset_open_interval_closure(a, b)
+    release thm closed_interval_subset_open_interval_closure(a, b)
     '[a, b] $subset closure_of_real_set('(a, b))
-1release thm open_interval_closure_subset_closed_interval(a, b)
+    release thm open_interval_closure_subset_closed_interval(a, b)
     closure_of_real_set('(a, b)) $subset '[a, b]
     by extension:
         ? closure_of_real_set('(a, b)) = '[a, b]
@@ -844,7 +844,7 @@ thm closed_interval_closure_subset_closed_interval:
     claim:
         ? forall x closure_of_real_set('[a, b]):
             x $in '[a, b]
-1release thm closure_member_is_adherent('[a, b], x)
+        release thm closure_member_is_adherent('[a, b], x)
         $is_adherent_point('[a, b], x)
         x < a or x >= a
         by cases:
@@ -908,9 +908,9 @@ thm closure_of_closed_interval:
         a < b
         =>:
             closure_of_real_set('[a, b]) = '[a, b]
-1release thm closure_contains_set('[a, b])
+    release thm closure_contains_set('[a, b])
     '[a, b] $subset closure_of_real_set('[a, b])
-1release thm closed_interval_closure_subset_closed_interval(a, b)
+    release thm closed_interval_closure_subset_closed_interval(a, b)
     closure_of_real_set('[a, b]) $subset '[a, b]
     by extension:
         ? closure_of_real_set('[a, b]) = '[a, b]
@@ -957,17 +957,17 @@ thm closure_of_open_closed_interval:
         a < b
         =>:
             closure_of_real_set('(a, b]) = '[a, b]
-1release thm finite_interval_containment_relations(a, b)
+    release thm finite_interval_containment_relations(a, b)
     '(a, b) $subset '(a, b]
     '(a, b] $subset '[a, b]
-1release thm closure_monotone('(a, b), '(a, b])
+    release thm closure_monotone('(a, b), '(a, b])
     closure_of_real_set('(a, b)) $subset closure_of_real_set('(a, b])
-1release thm closure_of_open_interval(a, b)
+    release thm closure_of_open_interval(a, b)
     closure_of_real_set('(a, b)) = '[a, b]
     '[a, b] $subset closure_of_real_set('(a, b])
-1release thm closure_monotone('(a, b], '[a, b])
+    release thm closure_monotone('(a, b], '[a, b])
     closure_of_real_set('(a, b]) $subset closure_of_real_set('[a, b])
-1release thm closure_of_closed_interval(a, b)
+    release thm closure_of_closed_interval(a, b)
     closure_of_real_set('[a, b]) = '[a, b]
     closure_of_real_set('(a, b]) $subset '[a, b]
     by extension:
@@ -978,17 +978,17 @@ thm closure_of_closed_open_interval:
         a < b
         =>:
             closure_of_real_set('[a, b)) = '[a, b]
-1release thm finite_interval_containment_relations(a, b)
+    release thm finite_interval_containment_relations(a, b)
     '(a, b) $subset '[a, b)
     '[a, b) $subset '[a, b]
-1release thm closure_monotone('(a, b), '[a, b))
+    release thm closure_monotone('(a, b), '[a, b))
     closure_of_real_set('(a, b)) $subset closure_of_real_set('[a, b))
-1release thm closure_of_open_interval(a, b)
+    release thm closure_of_open_interval(a, b)
     closure_of_real_set('(a, b)) = '[a, b]
     '[a, b] $subset closure_of_real_set('[a, b))
-1release thm closure_monotone('[a, b), '[a, b])
+    release thm closure_monotone('[a, b), '[a, b])
     closure_of_real_set('[a, b)) $subset closure_of_real_set('[a, b])
-1release thm closure_of_closed_interval(a, b)
+    release thm closure_of_closed_interval(a, b)
     closure_of_real_set('[a, b]) = '[a, b]
     closure_of_real_set('[a, b)) $subset '[a, b]
     by extension:
@@ -1002,13 +1002,13 @@ thm closure_of_bounded_intervals:
             closure_of_real_set('(a, b]) = '[a, b]
             closure_of_real_set('[a, b)) = '[a, b]
             closure_of_real_set('[a, b]) = '[a, b]
-1release thm closure_of_open_interval(a, b)
+    release thm closure_of_open_interval(a, b)
     closure_of_real_set('(a, b)) = '[a, b]
-1release thm closure_of_open_closed_interval(a, b)
+    release thm closure_of_open_closed_interval(a, b)
     closure_of_real_set('(a, b]) = '[a, b]
-1release thm closure_of_closed_open_interval(a, b)
+    release thm closure_of_closed_open_interval(a, b)
     closure_of_real_set('[a, b)) = '[a, b]
-1release thm closure_of_closed_interval(a, b)
+    release thm closure_of_closed_interval(a, b)
     closure_of_real_set('[a, b]) = '[a, b]
 
 thm endpoint_adherent_to_open_right_ray:
@@ -1021,13 +1021,13 @@ thm endpoint_adherent_to_open_right_ray:
             epsilon / 2 > 0
             a < a + epsilon / 2
             a + epsilon / 2 $in '(a,)
-            a - (a + epsilon / 2) = -epsilon / 2
-            -1 < 0
-            -1 * (epsilon / 2) < 0
-            -epsilon / 2 = -1 * (epsilon / 2)
-            -epsilon / 2 < 0
-            abs(-epsilon / 2) = epsilon / 2
-            abs(a - (a + epsilon / 2)) = abs(-epsilon / 2)
+            a - (a + epsilon / 2) = (-epsilon) / 2
+            (-1) < 0
+            (-1) * (epsilon / 2) < 0
+            (-epsilon) / 2 = (-1) * (epsilon / 2)
+            (-epsilon) / 2 < 0
+            abs((-epsilon) / 2) = epsilon / 2
+            abs(a - (a + epsilon / 2)) = abs((-epsilon) / 2)
             abs(a - (a + epsilon / 2)) = epsilon / 2
             epsilon / 2 < epsilon
             epsilon / 2 <= epsilon
@@ -1045,13 +1045,13 @@ thm closed_right_ray_subset_open_right_ray_closure:
         by cases:
             ? $is_adherent_point('(a,), x)
             case x = a:
-1release thm endpoint_adherent_to_open_right_ray(a)
+                release thm endpoint_adherent_to_open_right_ray(a)
                 $is_adherent_point('(a,), a)
                 $is_adherent_point('(a,), x)
             case x > a:
                 a < x
                 x $in '(a,)
-1release thm interval_member_is_adherent('(a,), x)
+                release thm interval_member_is_adherent('(a,), x)
                 $is_adherent_point('(a,), x)
 
 thm open_right_ray_closure_subset_closed_right_ray:
@@ -1060,7 +1060,7 @@ thm open_right_ray_closure_subset_closed_right_ray:
     claim:
         ? forall x closure_of_real_set('(a,)):
             x $in '[a,)
-1release thm closure_member_is_adherent('(a,), x)
+        release thm closure_member_is_adherent('(a,), x)
         $is_adherent_point('(a,), x)
         x < a or x >= a
         by cases:
@@ -1092,9 +1092,9 @@ thm open_right_ray_closure_subset_closed_right_ray:
 thm closure_of_open_right_ray:
     ? forall a R:
         closure_of_real_set('(a,)) = '[a,)
-1release thm open_right_ray_closure_subset_closed_right_ray(a)
+    release thm open_right_ray_closure_subset_closed_right_ray(a)
     closure_of_real_set('(a,)) $subset '[a,)
-1release thm closed_right_ray_subset_open_right_ray_closure(a)
+    release thm closed_right_ray_subset_open_right_ray_closure(a)
     '[a,) $subset closure_of_real_set('(a,))
     by extension:
         ? closure_of_real_set('(a,)) = '[a,)
@@ -1105,7 +1105,7 @@ thm closed_right_ray_closure_subset_closed_right_ray:
     claim:
         ? forall x closure_of_real_set('[a,)):
             x $in '[a,)
-1release thm closure_member_is_adherent('[a,), x)
+        release thm closure_member_is_adherent('[a,), x)
         $is_adherent_point('[a,), x)
         x < a or x >= a
         by cases:
@@ -1142,9 +1142,9 @@ thm closed_right_ray_closure_subset_closed_right_ray:
 thm closure_of_closed_right_ray:
     ? forall a R:
         closure_of_real_set('[a,)) = '[a,)
-1release thm closure_contains_set('[a,))
+    release thm closure_contains_set('[a,))
     '[a,) $subset closure_of_real_set('[a,))
-1release thm closed_right_ray_closure_subset_closed_right_ray(a)
+    release thm closed_right_ray_closure_subset_closed_right_ray(a)
     closure_of_real_set('[a,)) $subset '[a,)
     by extension:
         ? closure_of_real_set('[a,)) = '[a,)
@@ -1179,12 +1179,12 @@ thm closed_left_ray_subset_open_left_ray_closure:
         by cases:
             ? $is_adherent_point('(,a), x)
             case x = a:
-1release thm endpoint_adherent_to_open_left_ray(a)
+                release thm endpoint_adherent_to_open_left_ray(a)
                 $is_adherent_point('(,a), a)
                 $is_adherent_point('(,a), x)
             case x < a:
                 x $in '(,a)
-1release thm interval_member_is_adherent('(,a), x)
+                release thm interval_member_is_adherent('(,a), x)
                 $is_adherent_point('(,a), x)
 
 thm open_left_ray_closure_subset_closed_left_ray:
@@ -1193,7 +1193,7 @@ thm open_left_ray_closure_subset_closed_left_ray:
     claim:
         ? forall x closure_of_real_set('(,a)):
             x $in '(,a]
-1release thm closure_member_is_adherent('(,a), x)
+        release thm closure_member_is_adherent('(,a), x)
         $is_adherent_point('(,a), x)
         x <= a or x > a
         by cases:
@@ -1221,9 +1221,9 @@ thm open_left_ray_closure_subset_closed_left_ray:
 thm closure_of_open_left_ray:
     ? forall a R:
         closure_of_real_set('(,a)) = '(,a]
-1release thm open_left_ray_closure_subset_closed_left_ray(a)
+    release thm open_left_ray_closure_subset_closed_left_ray(a)
     closure_of_real_set('(,a)) $subset '(,a]
-1release thm closed_left_ray_subset_open_left_ray_closure(a)
+    release thm closed_left_ray_subset_open_left_ray_closure(a)
     '(,a] $subset closure_of_real_set('(,a))
     by extension:
         ? closure_of_real_set('(,a)) = '(,a]
@@ -1234,7 +1234,7 @@ thm closed_left_ray_closure_subset_closed_left_ray:
     claim:
         ? forall x closure_of_real_set('(,a]):
             x $in '(,a]
-1release thm closure_member_is_adherent('(,a], x)
+        release thm closure_member_is_adherent('(,a], x)
         $is_adherent_point('(,a], x)
         x <= a or x > a
         by cases:
@@ -1266,9 +1266,9 @@ thm closed_left_ray_closure_subset_closed_left_ray:
 thm closure_of_closed_left_ray:
     ? forall a R:
         closure_of_real_set('(,a]) = '(,a]
-1release thm closure_contains_set('(,a])
+    release thm closure_contains_set('(,a])
     '(,a] $subset closure_of_real_set('(,a])
-1release thm closed_left_ray_closure_subset_closed_left_ray(a)
+    release thm closed_left_ray_closure_subset_closed_left_ray(a)
     closure_of_real_set('(,a]) $subset '(,a]
     by extension:
         ? closure_of_real_set('(,a]) = '(,a]
@@ -1285,7 +1285,7 @@ thm closure_of_one_sided_intervals:
         claim:
             ? forall x R:
                 x $in closure_of_real_set(R)
-1release thm interval_member_is_adherent(R, x)
+            release thm interval_member_is_adherent(R, x)
             $is_adherent_point(R, x)
         by extension:
             ? closure_of_real_set(R) = R
@@ -1294,13 +1294,13 @@ thm closure_of_one_sided_intervals:
             forall x R:
                 x $in closure_of_real_set(R)
         closure_of_real_set(R) = R
-1release thm closure_of_open_right_ray(a)
+    release thm closure_of_open_right_ray(a)
     closure_of_real_set('(a,)) = '[a,)
-1release thm closure_of_closed_right_ray(a)
+    release thm closure_of_closed_right_ray(a)
     closure_of_real_set('[a,)) = '[a,)
-1release thm closure_of_open_left_ray(a)
+    release thm closure_of_open_left_ray(a)
     closure_of_real_set('(,a)) = '(,a]
-1release thm closure_of_closed_left_ray(a)
+    release thm closure_of_closed_left_ray(a)
     closure_of_real_set('(,a]) = '(,a]
 
 thm closure_of_empty_set:
@@ -1337,7 +1337,7 @@ thm sqrt_two_not_rational:
     by contra:
         ? not sqrt(2) $in Q
         sqrt(2) $in Q
-1release thm chap4::rational_square_not_two(sqrt(2))
+        release thm chap4::rational_square_not_two(sqrt(2))
         sqrt(2)^2 != 2
         sqrt(2)^2 = 2
         impossible sqrt(2)^2 = 2
@@ -1352,7 +1352,7 @@ thm irrational_density_of_reals:
         =>:
             exist z set_minus(R, Q) st {x < z < y}
     x - sqrt(2) < y - sqrt(2)
-1release thm chap5::has_rational_between(x - sqrt(2), y - sqrt(2))
+    release thm chap5::has_rational_between(x - sqrt(2), y - sqrt(2))
     obtain q from exist q Q st {x - sqrt(2) < q < y - sqrt(2)}
     have z R = q + sqrt(2)
     x - sqrt(2) < q
@@ -1377,7 +1377,7 @@ thm irrational_density_of_reals:
             (q + sqrt(2)) - q = sqrt(2)
             z - q = sqrt(2)
             sqrt(2) $in Q
-1release thm sqrt_two_not_rational()
+            release thm sqrt_two_not_rational()
             impossible sqrt(2) $in Q
     z $in set_minus(R, Q)
     witness exist z0 set_minus(R, Q) st {x < z0 < y} from z:
@@ -1391,16 +1391,16 @@ thm rational_points_are_adherent_everywhere:
         ? forall epsilon R+:
             $is_epsilon_adherent_to_set(Q, x, epsilon)
         x < x + epsilon
-1release thm chap5::has_rational_between(x, x + epsilon)
+        release thm chap5::has_rational_between(x, x + epsilon)
         obtain q from exist q Q st {x < q < x + epsilon}
         q $in Q
         x < q
         q - x > 0
-        x - q = -1 * (q - x)
-        abs(x - q) = abs(-1 * (q - x))
-        abs(-1 * (q - x)) = abs(q - x)
+        x - q = (-1) * (q - x)
+        abs(x - q) = abs((-1) * (q - x))
+        abs((-1) * (q - x)) = abs(q - x)
         abs(q - x) = q - x
-        abs(-1 * (q - x)) = q - x
+        abs((-1) * (q - x)) = q - x
         abs(x - q) = q - x
         q < x + epsilon
         q - x < x + epsilon - x
@@ -1425,7 +1425,7 @@ thm closure_of_rationals:
         claim:
             ? forall x R:
                 x $in closure_of_real_set(Q)
-1release thm rational_points_are_adherent_everywhere(x)
+            release thm rational_points_are_adherent_everywhere(x)
             $is_adherent_point(Q, x)
 
 """
@@ -1484,7 +1484,7 @@ thm convergent_integer_valued_sequence_has_integer_limit:
         $chap6::has_limit(a, L)
         =>:
             L $in Z
-1release thm chap6::has_limit_implies_cauchy(a, L)
+    release thm chap6::has_limit_implies_cauchy(a, L)
     $chap6::is_cauchy_sequence(a)
     $chap6::has_eventual_epsilon_steadiness(a, 1 / 2)
     obtain n0 from exist n0 N+ st {$chap6::is_tail_epsilon_steady(a, 1 / 2, n0)}
@@ -1497,7 +1497,7 @@ thm convergent_integer_valued_sequence_has_integer_limit:
         a(n) $in Z
         a(n0) $in Z
         abs(a(n) - a(n0)) < 1 / 2
-1release thm integer_points_are_half_isolated_in_R(a(n0), a(n))
+    release thm integer_points_are_half_isolated_in_R(a(n0), a(n))
     claim:
         ? $chap6::has_limit(a, a(n0))
         claim:
@@ -1515,7 +1515,7 @@ thm convergent_integer_valued_sequence_has_integer_limit:
                     ? $chap6::is_tail_close_to(a, a(n0), epsilon, n0)
         by def:
             ? $chap6::has_limit(a, a(n0))
-1release thm chap6::sequence_limit_unique(a, L, a(n0))
+    release thm chap6::sequence_limit_unique(a, L, a(n0))
     L = a(n0)
     a(n0) $in Z
 
@@ -1562,7 +1562,7 @@ thm adherent_integer_point_is_integer:
         claim:
             ? forall epsilon R+:
                 $chap6::has_eventual_closeness_to(a, x, epsilon)
-1release thm chap5::archimedean_property(epsilon)
+            release thm chap5::archimedean_property(epsilon)
             obtain n0 from exist n0 N+ st {1 / n0 < epsilon}
             witness $chap6::has_eventual_closeness_to(a, x, epsilon) from n0:
                 forall n N+:
@@ -1589,7 +1589,7 @@ thm adherent_integer_point_is_integer:
                     ? $chap6::is_tail_close_to(a, x, epsilon, n0)
         by def:
             ? $chap6::has_limit(a, x)
-1release thm convergent_integer_valued_sequence_has_integer_limit(a, x)
+release thm convergent_integer_valued_sequence_has_integer_limit(a, x)
 
 thm adherent_natural_point_is_natural:
     ? forall x R:
@@ -1610,7 +1610,7 @@ thm adherent_natural_point_is_natural:
                 abs(x - y) <= epsilon
         by def:
             ? $is_adherent_point(Z, x)
-1release thm adherent_integer_point_is_integer(x)
+    release thm adherent_integer_point_is_integer(x)
     x $in Z
     claim:
         ? x >= 0
@@ -1636,14 +1636,14 @@ thm adherent_natural_point_is_natural:
 thm closure_of_integers:
     ? forall:
         closure_of_real_set(Z) = Z
-1release thm closure_contains_set(Z)
+    release thm closure_contains_set(Z)
     Z $subset closure_of_real_set(Z)
     claim:
         ? forall x closure_of_real_set(Z):
             x $in Z
-1release thm closure_member_is_adherent(Z, x)
+        release thm closure_member_is_adherent(Z, x)
         $is_adherent_point(Z, x)
-1release thm adherent_integer_point_is_integer(x)
+    release thm adherent_integer_point_is_integer(x)
     by def:
         ? closure_of_real_set(Z) $subset Z
     by extension:
@@ -1656,14 +1656,14 @@ thm closure_of_integers:
 thm closure_of_naturals:
     ? forall:
         closure_of_real_set(N) = N
-1release thm closure_contains_set(N)
+    release thm closure_contains_set(N)
     N $subset closure_of_real_set(N)
     claim:
         ? forall x closure_of_real_set(N):
             x $in N
-1release thm closure_member_is_adherent(N, x)
+        release thm closure_member_is_adherent(N, x)
         $is_adherent_point(N, x)
-1release thm adherent_natural_point_is_natural(x)
+    release thm adherent_natural_point_is_natural(x)
     by def:
         ? closure_of_real_set(N) $subset N
     by extension:
@@ -1688,15 +1688,15 @@ thm closures_of_standard_sets:
         closure_of_real_set({}) = {}
     # Source handling: the N/Z clauses use the checked half-isolation bridge;
     # Q uses rational density, and R/the empty set use interval closures.
-1release thm closure_of_naturals()
+    release thm closure_of_naturals()
     closure_of_real_set(N) = N
-1release thm closure_of_integers()
+    release thm closure_of_integers()
     closure_of_real_set(Z) = Z
-1release thm closure_of_rationals()
+    release thm closure_of_rationals()
     closure_of_real_set(Q) = R
-1release thm closure_of_one_sided_intervals(0)
+    release thm closure_of_one_sided_intervals(0)
     closure_of_real_set(R) = R
-1release thm closure_of_empty_set()
+    release thm closure_of_empty_set()
     closure_of_real_set({}) = {}
 
 """
@@ -1763,7 +1763,7 @@ thm adherent_point_sequence_characterization_forward:
         claim:
             ? forall epsilon R+:
                 $chap6::has_eventual_closeness_to(a, x, epsilon)
-1release thm chap5::archimedean_property(epsilon)
+            release thm chap5::archimedean_property(epsilon)
             obtain n0 from exist n0 N+ st {1 / n0 < epsilon}
             witness $chap6::has_eventual_closeness_to(a, x, epsilon) from n0:
                 claim:
@@ -1847,19 +1847,19 @@ thm standard_closed_sets:
             $is_closed_subset(Z)
             $is_closed_subset(R)
             $is_closed_subset({})
-1release thm closure_of_bounded_intervals(a, b)
+    release thm closure_of_bounded_intervals(a, b)
     closure_of_real_set('[a, b]) = '[a, b]
     by def:
         ? $is_closed_subset('[a, b])
-1release thm closure_of_one_sided_intervals(a)
+    release thm closure_of_one_sided_intervals(a)
     closure_of_real_set('[a,)) = '[a,)
     by def:
         ? $is_closed_subset('[a,))
-1release thm closure_of_one_sided_intervals(a)
+    release thm closure_of_one_sided_intervals(a)
     closure_of_real_set('(,a]) = '(,a]
     by def:
         ? $is_closed_subset('(,a])
-1release thm closures_of_standard_sets()
+    release thm closures_of_standard_sets()
     closure_of_real_set(N) = N
     closure_of_real_set(Z) = Z
     closure_of_real_set(R) = R
@@ -1916,9 +1916,9 @@ thm sequence_limit_lies_in_closure:
     witness $has_sequence_in_set_converging_to(E, L) from a:
         $is_sequence_in_real_set(a, E)
         $chap6::has_limit(a, L)
-1release thm adherent_point_sequence_characterization_reverse(E, L)
+    release thm adherent_point_sequence_characterization_reverse(E, L)
     $is_adherent_point(E, L)
-1release thm adherent_point_lies_in_closure(E, L)
+release thm adherent_point_lies_in_closure(E, L)
 
 # The forward direction of Corollary 9.1.17 is the two-step chain
 # `sequence_limit_lies_in_closure` followed by
@@ -1958,7 +1958,7 @@ thm point_three_adherent_in_interval_union_singleton:
     union('(1, 2), {3}) $in power_set(R)
     3 $in {3}
     3 $in union('(1, 2), {3})
-1release thm interval_member_is_adherent(union('(1, 2), {3}), 3)
+release thm interval_member_is_adherent(union('(1, 2), {3}), 3)
 
 thm point_three_isolated_in_interval_union_singleton:
     ? forall:
@@ -2068,9 +2068,9 @@ thm interval_with_isolated_point_example:
         $is_adherent_point(union('(1, 2), {3}), 3)
         $is_isolated_point_of_set(union('(1, 2), {3}), 3)
         $is_limit_point_of_set(union('(1, 2), {3}), 2)
-1release thm point_three_adherent_in_interval_union_singleton()
-1release thm point_three_isolated_in_interval_union_singleton()
-1release thm two_is_limit_point_of_interval_union_singleton()
+release thm point_three_adherent_in_interval_union_singleton()
+release thm point_three_isolated_in_interval_union_singleton()
+release thm two_is_limit_point_of_interval_union_singleton()
 
 """
 Remark 9.1.20. Limit points admit a sequence characterization using sequences
@@ -2085,12 +2085,12 @@ thm limit_point_sequence_characterization_forward:
         $is_limit_point_of_set(X, x)
         =>:
             $has_sequence_in_punctured_set_converging_to(X, x)
-1release thm real_singleton_in_power_set(x)
+    release thm real_singleton_in_power_set(x)
     {x} $in power_set(R)
-1release thm real_set_operations_stay_in_power_set(X, {x})
+    release thm real_set_operations_stay_in_power_set(X, {x})
     set_minus(X, {x}) $in power_set(R)
     $is_adherent_point(set_minus(X, {x}), x)
-1release thm adherent_point_sequence_characterization_forward(set_minus(X, {x}), x)
+    release thm adherent_point_sequence_characterization_forward(set_minus(X, {x}), x)
     $has_sequence_in_set_converging_to(set_minus(X, {x}), x)
     by def:
         ? $has_sequence_in_punctured_set_converging_to(X, x)
@@ -2100,13 +2100,13 @@ thm limit_point_sequence_characterization_reverse:
         $has_sequence_in_punctured_set_converging_to(X, x)
         =>:
             $is_limit_point_of_set(X, x)
-1release thm real_singleton_in_power_set(x)
+    release thm real_singleton_in_power_set(x)
     {x} $in power_set(R)
-1release thm real_set_operations_stay_in_power_set(X, {x})
+    release thm real_set_operations_stay_in_power_set(X, {x})
     set_minus(X, {x}) $in power_set(R)
     by def:
         ? $has_sequence_in_set_converging_to(set_minus(X, {x}), x)
-1release thm adherent_point_sequence_characterization_reverse(set_minus(X, {x}), x)
+    release thm adherent_point_sequence_characterization_reverse(set_minus(X, {x}), x)
     $is_adherent_point(set_minus(X, {x}), x)
     by def:
         ? $is_limit_point_of_set(X, x)
@@ -2150,13 +2150,13 @@ thm right_neighbor_points_are_limit_points:
                     x + epsilon / 2 < b
                     x + epsilon / 2 $in X
                     x + epsilon / 2 $in set_minus(X, {x})
-                    x - (x + epsilon / 2) = -epsilon / 2
-                    -1 < 0
-                    -1 * (epsilon / 2) < 0
-                    -epsilon / 2 = -1 * (epsilon / 2)
-                    -epsilon / 2 < 0
-                    abs(-epsilon / 2) = epsilon / 2
-                    abs(x - (x + epsilon / 2)) = abs(-epsilon / 2)
+                    x - (x + epsilon / 2) = (-epsilon) / 2
+                    (-1) < 0
+                    (-1) * (epsilon / 2) < 0
+                    (-epsilon) / 2 = (-1) * (epsilon / 2)
+                    (-epsilon) / 2 < 0
+                    abs((-epsilon) / 2) = epsilon / 2
+                    abs(x - (x + epsilon / 2)) = abs((-epsilon) / 2)
                     abs(x - (x + epsilon / 2)) = epsilon / 2
                     epsilon / 2 < epsilon
                     epsilon / 2 <= epsilon
@@ -2176,9 +2176,9 @@ thm right_neighbor_points_are_limit_points:
                     (x + b) / 2 $in X
                     (x + b) / 2 $in set_minus(X, {x})
                     x - (x + b) / 2 = -(b - x) / 2
-                    -1 < 0
-                    -1 * ((b - x) / 2) < 0
-                    -(b - x) / 2 = -1 * ((b - x) / 2)
+                    (-1) < 0
+                    (-1) * ((b - x) / 2) < 0
+                    -(b - x) / 2 = (-1) * ((b - x) / 2)
                     -(b - x) / 2 < 0
                     abs(-(b - x) / 2) = (b - x) / 2
                     abs(x - (x + b) / 2) = abs(-(b - x) / 2)
@@ -2294,7 +2294,7 @@ thm closed_interval_points_are_limit_points:
                 a <= y
                 y < b
                 y <= b
-1release thm right_neighbor_points_are_limit_points('[a, b], x, b)
+            release thm right_neighbor_points_are_limit_points('[a, b], x, b)
             $is_limit_point_of_set('[a, b], x)
         case x = b:
             a < x
@@ -2309,7 +2309,7 @@ thm closed_interval_points_are_limit_points:
                 y < x
                 y < b
                 y <= b
-1release thm left_neighbor_points_are_limit_points('[a, b], a, x)
+            release thm left_neighbor_points_are_limit_points('[a, b], a, x)
             $is_limit_point_of_set('[a, b], x)
 
 thm open_interval_points_are_limit_points:
@@ -2327,7 +2327,7 @@ thm open_interval_points_are_limit_points:
         a < x < y
         a < y
         y < b
-1release thm right_neighbor_points_are_limit_points('(a, b), x, b)
+release thm right_neighbor_points_are_limit_points('(a, b), x, b)
 
 thm left_open_interval_points_are_limit_points:
     ? forall a, b R, x '(a, b]:
@@ -2349,7 +2349,7 @@ thm left_open_interval_points_are_limit_points:
                 a < y
                 y < b
                 y <= b
-1release thm right_neighbor_points_are_limit_points('(a, b], x, b)
+            release thm right_neighbor_points_are_limit_points('(a, b], x, b)
             $is_limit_point_of_set('(a, b], x)
         case x = b:
             a < x
@@ -2363,7 +2363,7 @@ thm left_open_interval_points_are_limit_points:
                 y < x
                 y < b
                 y <= b
-1release thm left_neighbor_points_are_limit_points('(a, b], a, x)
+            release thm left_neighbor_points_are_limit_points('(a, b], a, x)
             $is_limit_point_of_set('(a, b], x)
 
 thm right_open_interval_points_are_limit_points:
@@ -2407,13 +2407,13 @@ thm right_open_interval_points_are_limit_points:
                     a <= x + epsilon / 2
                     x + epsilon / 2 $in '[a, b)
                     x + epsilon / 2 $in set_minus('[a, b), {x})
-                    x - (x + epsilon / 2) = -epsilon / 2
-                    -1 < 0
-                    -1 * (epsilon / 2) < 0
-                    -epsilon / 2 = -1 * (epsilon / 2)
-                    -epsilon / 2 < 0
-                    abs(-epsilon / 2) = epsilon / 2
-                    abs(x - (x + epsilon / 2)) = abs(-epsilon / 2)
+                    x - (x + epsilon / 2) = (-epsilon) / 2
+                    (-1) < 0
+                    (-1) * (epsilon / 2) < 0
+                    (-epsilon) / 2 = (-1) * (epsilon / 2)
+                    (-epsilon) / 2 < 0
+                    abs((-epsilon) / 2) = epsilon / 2
+                    abs(x - (x + epsilon / 2)) = abs((-epsilon) / 2)
                     abs(x - (x + epsilon / 2)) = epsilon / 2
                     epsilon / 2 < epsilon
                     epsilon / 2 <= epsilon
@@ -2443,9 +2443,9 @@ thm right_open_interval_points_are_limit_points:
                     (x + b) / 2 $in '[a, b)
                     (x + b) / 2 $in set_minus('[a, b), {x})
                     x - (x + b) / 2 = -(b - x) / 2
-                    -1 < 0
-                    -1 * ((b - x) / 2) < 0
-                    -(b - x) / 2 = -1 * ((b - x) / 2)
+                    (-1) < 0
+                    (-1) * ((b - x) / 2) < 0
+                    -(b - x) / 2 = (-1) * ((b - x) / 2)
                     -(b - x) / 2 < 0
                     abs(-(b - x) / 2) = (b - x) / 2
                     abs(x - (x + b) / 2) = abs(-(b - x) / 2)
@@ -2464,21 +2464,21 @@ thm right_open_interval_points_are_limit_points:
 
 """
 Definition 9.1.22 (Bounded sets). A real set is bounded when it is contained
-in `[-M, M]` for some positive real M.
+in `[(-M), M]` for some positive real M.
 """
 
 prop is_bounded_real_set(X power_set(R)):
-    exist M R+ st {X $subset '[-M, M]}
+    exist M R+ st {X $subset '[(-M), M]}
 
 thm empty_real_set_is_bounded:
     ? forall:
         $is_bounded_real_set({})
     claim:
-        ? exist M R+ st {{} $subset '[-M, M]}
-        witness exist M R+ st {{} $subset '[-M, M]} from 1:
+        ? exist M R+ st {{} $subset '[(-M), M]}
+        witness exist M R+ st {{} $subset '[(-M), M]} from 1:
             1 $in R+
-            {} $subset '[-1, 1]
-    exist M R+ st {{} $subset '[-M, M]}
+            {} $subset '[(-1), 1]
+    exist M R+ st {{} $subset '[(-M), M]}
     by def:
         ? $is_bounded_real_set({})
 
@@ -2508,25 +2508,25 @@ thm closed_interval_is_bounded:
                 ? -abs(a) <= a
                 case a >= 0:
                     abs(a) = a
-                    -abs(a) = -a
-                    -a <= a
+                    (-abs(a)) = (-a)
+                    (-a) <= a
                 case a < 0:
-                    abs(a) = -a
-                    -abs(a) = a
-                    -abs(a) <= a
-            -abs(a) <= a
+                    abs(a) = (-a)
+                    (-abs(a)) = a
+                    (-abs(a)) <= a
+            (-abs(a)) <= a
             abs(b) >= 0
             abs(b) + 1 > 0
             -(abs(b) + 1) < 0
             abs(a) < abs(a) + (abs(b) + 1)
             abs(a) + (abs(b) + 1) = abs(a) + abs(b) + 1
             abs(a) < abs(a) + abs(b) + 1
-            -1 < 0
-            -1 * (abs(a) + abs(b) + 1) < -1 * abs(a)
-            -(abs(a) + abs(b) + 1) = -abs(a) - (abs(b) + 1)
-            -(abs(a) + abs(b) + 1) <= -abs(a)
+            (-1) < 0
+            (-1) * (abs(a) + abs(b) + 1) < (-1) * abs(a)
+            -(abs(a) + abs(b) + 1) = (-abs(a)) - (abs(b) + 1)
+            -(abs(a) + abs(b) + 1) <= (-abs(a))
             have lower0 R = -(abs(a) + abs(b) + 1)
-            have lower1 R = -abs(a)
+            have lower1 R = (-abs(a))
             have lower2 R = a
             lower0 <= lower1
             lower1 <= lower2
@@ -2545,11 +2545,11 @@ thm closed_interval_is_bounded:
                     abs(b) = b
                     b <= abs(b)
                 case b < 0:
-                    abs(b) = -b
+                    abs(b) = (-b)
                     b <= 0
-                    0 < -b
-                    b < -b
-                    b <= -b
+                    0 < (-b)
+                    b < (-b)
+                    b <= (-b)
                     b <= abs(b)
             b <= abs(b)
             abs(a) >= 0
@@ -2583,12 +2583,12 @@ thm bounded_real_set_subset:
     obtain M from $is_bounded_real_set(Y)
     claim:
         ? forall x X:
-            x $in '[-M, M]
+            x $in '[(-M), M]
         x $in Y
     by def:
-        ? X $subset '[-M, M]
+        ? X $subset '[(-M), M]
     witness $is_bounded_real_set(X) from M:
-        X $subset '[-M, M]
+        X $subset '[(-M), M]
 
 thm exists_nat_above_real:
     ? forall M R:
@@ -2596,7 +2596,7 @@ thm exists_nat_above_real:
     abs(M) + 1 > 0
     abs(M) + 1 $in R+
     1 / (abs(M) + 1) $in R+
-1release thm chap5::archimedean_property(1 / (abs(M) + 1))
+    release thm chap5::archimedean_property(1 / (abs(M) + 1))
     exist n_bound N+ st {1 / n_bound < 1 / (abs(M) + 1)}
     obtain n0 from exist n0 N+ st {1 / n0 < 1 / (abs(M) + 1)}
     n0 > 0
@@ -2624,11 +2624,11 @@ thm set_containing_positive_naturals_unbounded:
         ? not $is_bounded_real_set(X)
         $is_bounded_real_set(X)
         obtain M from $is_bounded_real_set(X)
-1release thm exists_nat_above_real(M)
+        release thm exists_nat_above_real(M)
         obtain n0 from exist n0 N+ st {M < n0}
         M < n0
         n0 $in X
-        n0 $in '[-M, M]
+        n0 $in '[(-M), M]
         n0 <= M
         impossible M < n0
 
@@ -2644,13 +2644,13 @@ thm standard_unbounded_sets:
             n $in Z
             n $in Q
             n $in R
-1release thm set_containing_positive_naturals_unbounded(N)
+    release thm set_containing_positive_naturals_unbounded(N)
     not $is_bounded_real_set(N)
-1release thm set_containing_positive_naturals_unbounded(Z)
+    release thm set_containing_positive_naturals_unbounded(Z)
     not $is_bounded_real_set(Z)
-1release thm set_containing_positive_naturals_unbounded(Q)
+    release thm set_containing_positive_naturals_unbounded(Q)
     not $is_bounded_real_set(Q)
-1release thm set_containing_positive_naturals_unbounded(R)
+    release thm set_containing_positive_naturals_unbounded(R)
     not $is_bounded_real_set(R)
 
 """
@@ -2677,7 +2677,7 @@ prop has_sequential_compactness_in_R(X power_set(R)):
 # sequence bridge and later for bounded functions.
 thm abs_bound_from_symmetric_bound:
     ? forall u R, M R+:
-        -M <= u
+        (-M) <= u
         u <= M
         =>:
             abs(u) <= M
@@ -2689,7 +2689,7 @@ thm abs_bound_from_symmetric_bound:
             abs(u) <= M
         case u < 0:
             abs(u) = 0 - u
-            -M <= u
+            (-M) <= u
             (-1) * u <= (-1) * (-M)
             (-1) * (-M) = M
             0 - u = (-1) * u
@@ -2700,69 +2700,69 @@ thm abs_bound_implies_symmetric_interval_membership:
     ? forall u R, M R+:
         abs(u) <= M
         =>:
-            u $in '[-M, M]
+            u $in '[(-M), M]
     u >= 0 or u < 0
     by cases:
-        ? u $in '[-M, M]
+        ? u $in '[(-M), M]
         case u >= 0:
             abs(u) = u
             u <= M
             M > 0
-            -M < 0
-            -M < 0 <= u
-            -M <= u
-            u $in '[-M, M]
+            (-M) < 0
+            (-M) < 0 <= u
+            (-M) <= u
+            u $in '[(-M), M]
         case u < 0:
             abs(u) = 0 - u
             0 - u <= M
             (-1) * M <= (-1) * (0 - u)
-            (-1) * M = -M
+            (-1) * M = (-M)
             (-1) * (0 - u) = u
-            -M <= u
+            (-M) <= u
             M > 0
             u < 0 < M
             u <= M
-            u $in '[-M, M]
+            u $in '[(-M), M]
 
 thm unbounded_real_set_has_point_outside_symmetric_interval:
     ? forall X power_set(R), n N+:
         not $is_bounded_real_set(X)
         =>:
-            exist x X st {not x $in '[-n, n]}
+            exist x X st {not x $in '[(-n), n]}
     by contra:
-        ? exist x X st {not x $in '[-n, n]}
-        not exist x X st {not x $in '[-n, n]}
+        ? exist x X st {not x $in '[(-n), n]}
+        not exist x X st {not x $in '[(-n), n]}
         forall x X:
-            x $in '[-n, n]
+            x $in '[(-n), n]
         by def:
-            ? X $subset '[-n, n]
+            ? X $subset '[(-n), n]
         n $in R+
         witness $is_bounded_real_set(X) from n:
-            X $subset '[-n, n]
+            X $subset '[(-n), n]
         impossible not $is_bounded_real_set(X)
 
 prop escapes_symmetric_real_intervals(a seq(R)):
     forall n N+:
-        not a(n) $in '[-n, n]
+        not a(n) $in '[(-n), n]
 
 thm unbounded_real_set_has_escaping_sequence:
     ? forall X power_set(R):
         not $is_bounded_real_set(X)
         =>:
             exist a seq(R) st {$is_sequence_in_real_set(a, X), $escapes_symmetric_real_intervals(a)}
-    have fn escaping_witness_set(n N+) power_set(R) = {x R: x $in X and not x $in '[-n, n]}
+    have fn escaping_witness_set(n N+) power_set(R) = {x R: x $in X and not x $in '[(-n), n]}
     claim:
         ? forall A fn_range(escaping_witness_set):
             $is_nonempty_set(A)
         have by preimage n from A $in fn_range(escaping_witness_set)
         A = escaping_witness_set(n)
-1release thm unbounded_real_set_has_point_outside_symmetric_interval(X, n)
-        obtain x from exist x X st {not x $in '[-n, n]}
+        release thm unbounded_real_set_has_point_outside_symmetric_interval(X, n)
+        obtain x from exist x X st {not x $in '[(-n), n]}
         x $in X
         x $in R
-        not x $in '[-n, n]
-        escaping_witness_set(n) = {y R: y $in X and not y $in '[-n, n]}
-        x $in {y R: y $in X and not y $in '[-n, n]}
+        not x $in '[(-n), n]
+        escaping_witness_set(n) = {y R: y $in X and not y $in '[(-n), n]}
+        x $in {y R: y $in X and not y $in '[(-n), n]}
         x $in escaping_witness_set(n)
         x $in A
         witness $is_nonempty_set(A) from x:
@@ -2785,7 +2785,7 @@ thm unbounded_real_set_has_escaping_sequence:
                 a(n) $in X
             escaping_witness_set(n) $in fn_range(escaping_witness_set)
             choose_point(escaping_witness_set(n)) $in escaping_witness_set(n)
-            escaping_witness_set(n) = {x R: x $in X and not x $in '[-n, n]}
+            escaping_witness_set(n) = {x R: x $in X and not x $in '[(-n), n]}
             choose_point(escaping_witness_set(n)) $in X
             a(n) = choose_point(escaping_witness_set(n))
         by def:
@@ -2794,11 +2794,11 @@ thm unbounded_real_set_has_escaping_sequence:
         ? $escapes_symmetric_real_intervals(a)
         claim:
             ? forall n N+:
-                not a(n) $in '[-n, n]
+                not a(n) $in '[(-n), n]
             escaping_witness_set(n) $in fn_range(escaping_witness_set)
             choose_point(escaping_witness_set(n)) $in escaping_witness_set(n)
-            escaping_witness_set(n) = {x R: x $in X and not x $in '[-n, n]}
-            not choose_point(escaping_witness_set(n)) $in '[-n, n]
+            escaping_witness_set(n) = {x R: x $in X and not x $in '[(-n), n]}
+            not choose_point(escaping_witness_set(n)) $in '[(-n), n]
             a(n) = choose_point(escaping_witness_set(n))
         by def:
             ? $escapes_symmetric_real_intervals(a)
@@ -2814,19 +2814,19 @@ thm escaping_real_sequence_is_not_convergent:
     by contra:
         ? not $chap6::is_convergent_sequence(a)
         $chap6::is_convergent_sequence(a)
-1release thm chap6::convergent_sequence_is_bounded(a)
+        release thm chap6::convergent_sequence_is_bounded(a)
         $chap6::is_bounded_sequence(a)
         obtain M from exist M R st {$chap6::is_bounded_by(a, M)}
-1release thm exists_nat_above_real(M)
+        release thm exists_nat_above_real(M)
         obtain n0 from exist n0 N+ st {M < n0}
         abs(a(n0)) <= M
         M < n0
         abs(a(n0)) < n0
         abs(a(n0)) <= n0
         n0 $in R+
-1release thm abs_bound_implies_symmetric_interval_membership(a(n0), n0)
-        a(n0) $in '[-n0, n0]
-        impossible not a(n0) $in '[-n0, n0]
+        release thm abs_bound_implies_symmetric_interval_membership(a(n0), n0)
+        a(n0) $in '[(-n0), n0]
+        impossible not a(n0) $in '[(-n0), n0]
 
 thm subsequence_of_escaping_real_sequence_is_not_convergent:
     ? forall a, b seq(R):
@@ -2837,15 +2837,15 @@ thm subsequence_of_escaping_real_sequence_is_not_convergent:
     by contra:
         ? not $chap6::is_convergent_sequence(b)
         $chap6::is_convergent_sequence(b)
-1release thm chap6::convergent_sequence_is_bounded(b)
+        release thm chap6::convergent_sequence_is_bounded(b)
         $chap6::is_bounded_sequence(b)
         obtain M from exist M R st {$chap6::is_bounded_by(b, M)}
-1release thm exists_nat_above_real(M)
+        release thm exists_nat_above_real(M)
         obtain n0 from exist n0 N+ st {M < n0}
         obtain phi from exist phi fn(k N+) N+ st {$chap6::is_subsequence_along(a, b, phi)}
         $chap6::is_subsequence_index(phi)
         b(n0) = a(phi(n0))
-1release thm chap6::subsequence_index_at_least_identity(phi, n0)
+        release thm chap6::subsequence_index_at_least_identity(phi, n0)
         phi(n0) >= n0
         abs(b(n0)) <= M
         M < n0
@@ -2855,11 +2855,11 @@ thm subsequence_of_escaping_real_sequence_is_not_convergent:
         phi(n0) > 0
         phi(n0) $in R
         phi(n0) $in R+
-1release thm abs_bound_implies_symmetric_interval_membership(b(n0), phi(n0))
-        b(n0) $in '[-phi(n0), phi(n0)]
+        release thm abs_bound_implies_symmetric_interval_membership(b(n0), phi(n0))
+        b(n0) $in '[(-phi(n0)), phi(n0)]
         b(n0) = a(phi(n0))
-        a(phi(n0)) $in '[-phi(n0), phi(n0)]
-        impossible not a(phi(n0)) $in '[-phi(n0), phi(n0)]
+        a(phi(n0)) $in '[(-phi(n0)), phi(n0)]
+        impossible not a(phi(n0)) $in '[(-phi(n0)), phi(n0)]
 
 # Source handling: the forward Heine-Borel direction combines boundedness,
 # Bolzano-Weierstrass, and closedness; the reverse direction uses bad
@@ -2878,10 +2878,10 @@ thm sequence_in_bounded_real_set_is_bounded:
         ? forall n N+:
             abs(a(n)) <= M
         a(n) $in X
-        a(n) $in '[-M, M]
-        -M <= a(n)
+        a(n) $in '[(-M), M]
+        (-M) <= a(n)
         a(n) <= M
-1release thm abs_bound_from_symmetric_bound(a(n), M)
+    release thm abs_bound_from_symmetric_bound(a(n), M)
     witness $chap6::is_bounded_sequence(a) from M:
         M >= 0
         forall n N+:
@@ -2914,7 +2914,7 @@ thm sequence_limit_in_closed_real_set:
         $chap6::has_limit(b, L)
         =>:
             L $in X
-1release thm sequence_limit_lies_in_closure(X, b, L)
+    release thm sequence_limit_lies_in_closure(X, b, L)
     L $in closure_of_real_set(X)
     closure_of_real_set(X) = X
 
@@ -2929,14 +2929,14 @@ thm closed_bounded_real_set_has_sequential_compactness:
             $is_sequence_in_real_set(a, X)
             =>:
                 exist b seq(R) st {$chap6::has_subsequence(a, b), $has_limit_in_set(b, X)}
-1release thm sequence_in_bounded_real_set_is_bounded(X, a)
+        release thm sequence_in_bounded_real_set_is_bounded(X, a)
         $chap6::is_bounded_sequence(a)
-1release thm chap6::bolzano_weierstrass_convergent_subsequence(a)
+        release thm chap6::bolzano_weierstrass_convergent_subsequence(a)
         obtain b from exist b seq(R) st {$chap6::has_subsequence(a, b), $chap6::is_convergent_sequence(b)}
         obtain L from exist L R st {$chap6::has_limit(b, L)}
-1release thm subsequence_inherits_real_set_membership(X, a, b)
+        release thm subsequence_inherits_real_set_membership(X, a, b)
         $is_sequence_in_real_set(b, X)
-1release thm sequence_limit_in_closed_real_set(X, b, L)
+        release thm sequence_limit_in_closed_real_set(X, b, L)
         L $in X
         witness $has_limit_in_set(b, X) from L:
             L $in X
@@ -2964,9 +2964,9 @@ thm sequentially_compact_real_set_is_sequentially_closed:
         obtain K from $has_limit_in_set(b, X)
         K $in X
         $chap6::has_limit(b, K)
-1release thm chap6::every_subsequence_of_convergent_sequence_converges(a, L, b)
+        release thm chap6::every_subsequence_of_convergent_sequence_converges(a, L, b)
         $chap6::has_limit(b, L)
-1release thm chap6::sequence_limit_unique(b, K, L)
+        release thm chap6::sequence_limit_unique(b, K, L)
         K = L
     by def:
         ? $is_sequentially_closed_subset(X)
@@ -2976,14 +2976,14 @@ thm sequentially_closed_real_set_is_closed:
         $is_sequentially_closed_subset(X)
         =>:
             closure_of_real_set(X) = X
-1release thm closure_contains_set(X)
+    release thm closure_contains_set(X)
     X $subset closure_of_real_set(X)
     claim:
         ? forall x closure_of_real_set(X):
             x $in X
-1release thm closure_member_is_adherent(X, x)
+        release thm closure_member_is_adherent(X, x)
         $is_adherent_point(X, x)
-1release thm adherent_point_sequence_characterization_forward(X, x)
+        release thm adherent_point_sequence_characterization_forward(X, x)
         obtain a from exist a seq(R) st {$is_sequence_in_real_set(a, X), $chap6::has_limit(a, x)}
         $is_sequence_in_real_set(a, X)
         $chap6::has_limit(a, x)
@@ -3001,9 +3001,9 @@ thm sequentially_compact_real_set_is_closed:
         $has_sequential_compactness_in_R(X)
         =>:
             closure_of_real_set(X) = X
-1release thm sequentially_compact_real_set_is_sequentially_closed(X)
+    release thm sequentially_compact_real_set_is_sequentially_closed(X)
     $is_sequentially_closed_subset(X)
-1release thm sequentially_closed_real_set_is_closed(X)
+release thm sequentially_closed_real_set_is_closed(X)
 
 thm sequentially_compact_real_set_is_bounded:
     ? forall X power_set(R):
@@ -3013,14 +3013,14 @@ thm sequentially_compact_real_set_is_bounded:
     by contra:
         ? $is_bounded_real_set(X)
         not $is_bounded_real_set(X)
-1release thm unbounded_real_set_has_escaping_sequence(X)
+        release thm unbounded_real_set_has_escaping_sequence(X)
         obtain a from exist a seq(R) st {$is_sequence_in_real_set(a, X), $escapes_symmetric_real_intervals(a)}
         $is_sequence_in_real_set(a, X)
         $escapes_symmetric_real_intervals(a)
         obtain b from exist b seq(R) st {$chap6::has_subsequence(a, b), $has_limit_in_set(b, X)}
         $chap6::has_subsequence(a, b)
         $has_limit_in_set(b, X)
-1release thm subsequence_of_escaping_real_sequence_is_not_convergent(a, b)
+        release thm subsequence_of_escaping_real_sequence_is_not_convergent(a, b)
         not $chap6::is_convergent_sequence(b)
         obtain L from $has_limit_in_set(b, X)
         $chap6::has_limit(b, L)
@@ -3034,7 +3034,7 @@ thm heine_borel_sequential_compactness_for_real_sets:
         $is_bounded_real_set(X)
         =>:
             $has_sequential_compactness_in_R(X)
-1release thm closed_bounded_real_set_has_sequential_compactness(X)
+release thm closed_bounded_real_set_has_sequential_compactness(X)
 
 thm sequentially_compact_real_set_is_closed_and_bounded:
     ? forall X power_set(R):
@@ -3042,9 +3042,9 @@ thm sequentially_compact_real_set_is_closed_and_bounded:
         =>:
             closure_of_real_set(X) = X
             $is_bounded_real_set(X)
-1release thm sequentially_compact_real_set_is_closed(X)
+    release thm sequentially_compact_real_set_is_closed(X)
     closure_of_real_set(X) = X
-1release thm sequentially_compact_real_set_is_bounded(X)
+    release thm sequentially_compact_real_set_is_bounded(X)
     $is_bounded_real_set(X)
 
 """
@@ -3239,7 +3239,7 @@ thm square_on_closed_one_three_not_one_tenth_close_to_four:
         fn(x '[1, 3]) R {x^2}(1) = 1^2
         1^2 = 1
         square_on_closed_one_three(1) - 4 = 1 - 4
-        1 - 4 = -3
+        1 - 4 = (-3)
         abs(square_on_closed_one_three(1) - 4) = abs(-3)
         abs(-3) = 3
         3 <= 1 / 10
@@ -3300,7 +3300,7 @@ thm square_on_closed_one_three_not_one_tenth_close_to_nine:
         fn(x '[1, 3]) R {x^2}(1) = 1^2
         1^2 = 1
         square_on_closed_one_three(1) - 9 = 1 - 9
-        1 - 9 = -8
+        1 - 9 = (-8)
         abs(square_on_closed_one_three(1) - 9) = abs(-8)
         abs(-8) = 8
         8 <= 1 / 10
@@ -3533,7 +3533,7 @@ thm sequence_limit_preservation_implies_function_limit:
                 claim:
                     ? forall eta R+:
                         $chap6::has_eventual_closeness_to(bad_sequence, x0, eta)
-1release thm chap5::archimedean_property(eta)
+                    release thm chap5::archimedean_property(eta)
                     obtain n0 from exist n0 N+ st {1 / n0 < eta}
                     witness $chap6::has_eventual_closeness_to(bad_sequence, x0, eta) from n0:
                         claim:
@@ -3836,10 +3836,10 @@ thm function_limit_product:
                 f(y) <= 1 + abs(L)
                 -(f(y) - L) <= abs(f(y) - L)
                 -(f(y) - L) <= 1
-                -L <= abs(L)
-                -f(y) = -(f(y) - L) + -L
-                -(f(y) - L) + -L <= 1 + abs(L)
-                -f(y) <= 1 + abs(L)
+                (-L) <= abs(L)
+                (-f(y)) = -(f(y) - L) + (-L)
+                -(f(y) - L) + (-L) <= 1 + abs(L)
+                (-f(y)) <= 1 + abs(L)
                 abs(f(y)) <= 1 + abs(L)
                 1 + abs(L) = abs(L) + 1
                 abs(f(y)) <= abs(L) + 1
@@ -3948,33 +3948,33 @@ thm max_lipschitz:
 
 thm min_neg_max:
     ? forall u, v R:
-        finite_set_min(union({u}, { v})) = -finite_set_max(union({-u}, { -v}))
+        finite_set_min(union({u}, { v})) = (-finite_set_max(union({(-u)}, { (-v)})))
     u <= v or u > v
     by cases:
-        ? finite_set_min(union({u}, { v})) = -finite_set_max(union({-u}, { -v}))
+        ? finite_set_min(union({u}, { v})) = (-finite_set_max(union({(-u)}, { (-v)})))
         case u <= v:
             finite_set_min(union({u}, { v})) <= u
             u <= finite_set_min(union({u}, { v}))
             finite_set_min(union({u}, { v})) = u
-            -v <= -u
-            finite_set_max(union({-u}, { -v})) <= -u
-            -u <= finite_set_max(union({-u}, { -v}))
-            finite_set_max(union({-u}, { -v})) = -u
-            -finite_set_max(union({-u}, { -v})) = -(-u)
+            (-v) <= (-u)
+            finite_set_max(union({(-u)}, { (-v)})) <= (-u)
+            (-u) <= finite_set_max(union({(-u)}, { (-v)}))
+            finite_set_max(union({(-u)}, { (-v)})) = (-u)
+            (-finite_set_max(union({(-u)}, { (-v)}))) = -(-u)
             -(-u) = u
-            finite_set_min(union({u}, { v})) = -finite_set_max(union({-u}, { -v}))
+            finite_set_min(union({u}, { v})) = (-finite_set_max(union({(-u)}, { (-v)})))
         case u > v:
             v <= u
             finite_set_min(union({u}, { v})) <= v
             v <= finite_set_min(union({u}, { v}))
             finite_set_min(union({u}, { v})) = v
-            -u <= -v
-            finite_set_max(union({-u}, { -v})) <= -v
-            -v <= finite_set_max(union({-u}, { -v}))
-            finite_set_max(union({-u}, { -v})) = -v
-            -finite_set_max(union({-u}, { -v})) = -(-v)
+            (-u) <= (-v)
+            finite_set_max(union({(-u)}, { (-v)})) <= (-v)
+            (-v) <= finite_set_max(union({(-u)}, { (-v)}))
+            finite_set_max(union({(-u)}, { (-v)})) = (-v)
+            (-finite_set_max(union({(-u)}, { (-v)}))) = -(-v)
             -(-v) = v
-            finite_set_min(union({u}, { v})) = -finite_set_max(union({-u}, { -v}))
+            finite_set_min(union({u}, { v})) = (-finite_set_max(union({(-u)}, { (-v)})))
 
 thm min_lipschitz:
     ? forall a, b, A, B R, epsilon R+:
@@ -3990,12 +3990,12 @@ thm min_lipschitz:
     # negated pair and transport it through min(u,v) = -max(-u,-v).
     # proof_debt: instantiating max_lipschitz at four negated arguments causes
     # non-terminating verifier inference in the current release build.
-    trust abs(finite_set_max(union({-a}, { -b})) - finite_set_max(union({-A}, { -B}))) <= epsilon
+    trust abs(finite_set_max(union({(-a)}, { (-b)})) - finite_set_max(union({(-A)}, { (-B)}))) <= epsilon
     # Source handling: use min(u,v) = -max(-u,-v) for each endpoint pair.
     # proof_debt: these two direct instances of the preceding checked theorem
     # trigger the same non-terminating inference path.
-    trust finite_set_min(union({a}, { b})) = -finite_set_max(union({-a}, { -b}))
-    trust finite_set_min(union({A}, { B})) = -finite_set_max(union({-A}, { -B}))
+    trust finite_set_min(union({a}, { b})) = (-finite_set_max(union({(-a)}, { (-b)})))
+    trust finite_set_min(union({A}, { B})) = (-finite_set_max(union({(-A)}, { (-B)})))
     # The intended checked transport is:
     # finite_set_min(union({a}, {b})) - finite_set_min(union({A}, {B}))
     # = (-finite_set_max(union({-a}, {-b}))) - (-finite_set_max(union({-A}, {-B})))
@@ -4035,7 +4035,7 @@ thm function_limit_max:
                 abs(y - x0) < delta_g
                 abs(f(y) - L) <= epsilon
                 abs(g(y) - M) <= epsilon
-1release thm max_lipschitz(f(y), g(y), L, M, epsilon)
+                release thm max_lipschitz(f(y), g(y), L, M, epsilon)
                 abs(finite_set_max(union({f(y)}, { g(y)})) - finite_set_max(union({L}, { M}))) <= epsilon
                 fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}(y) = finite_set_max(union({f(y)}, { g(y)}))
                 abs(fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}(y) - finite_set_max(union({L}, { M}))) = abs(finite_set_max(union({f(y)}, { g(y)})) - finite_set_max(union({L}, { M})))
@@ -4073,7 +4073,7 @@ thm function_limit_min:
                 abs(y - x0) < delta_g
                 abs(f(y) - L) <= epsilon
                 abs(g(y) - M) <= epsilon
-1release thm min_lipschitz(f(y), g(y), L, M, epsilon)
+                release thm min_lipschitz(f(y), g(y), L, M, epsilon)
                 abs(finite_set_min(union({f(y)}, { g(y)})) - finite_set_min(union({L}, { M}))) <= epsilon
                 fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}(y) = finite_set_min(union({f(y)}, { g(y)}))
                 abs(fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}(y) - finite_set_min(union({L}, { M}))) = abs(finite_set_min(union({f(y)}, { g(y)})) - finite_set_min(union({L}, { M})))
@@ -4264,7 +4264,7 @@ thm function_limit_on_nonzero_domain:
         M != 0
         =>:
             $has_function_limit({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {f(x)}, x0, L)
-1release thm nonzero_limit_restricted_domain_adherent(E, g, x0, M)
+    release thm nonzero_limit_restricted_domain_adherent(E, g, x0, M)
     $is_adherent_point({x E: g(x) != 0}, x0)
     claim:
         ? forall epsilon R+:
@@ -4292,7 +4292,7 @@ thm function_limit_reciprocal:
         M != 0
         =>:
             $has_function_limit({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {1 / g(x)}, x0, 1 / M)
-1release thm nonzero_limit_restricted_domain_adherent(E, g, x0, M)
+    release thm nonzero_limit_restricted_domain_adherent(E, g, x0, M)
     $is_adherent_point({x E: g(x) != 0}, x0)
     abs(M) > 0
     abs(M) / 2 > 0
@@ -4326,10 +4326,10 @@ thm function_limit_reciprocal:
                 abs(y - x0) < finite_set_min(union({delta_lower}, { delta_close})) <= delta_close
                 abs(y - x0) < delta_close
                 abs(g(y) - M) <= abs(M) / 2
-1release thm near_nonzero_abs_lower(g(y), M)
+                release thm near_nonzero_abs_lower(g(y), M)
                 abs(g(y)) >= abs(M) / 2
                 abs(g(y) - M) <= (abs(M) / 2)^2 * epsilon
-1release thm reciprocal_abs_diff_bound(g(y), M, abs(M) / 2, epsilon)
+                release thm reciprocal_abs_diff_bound(g(y), M, abs(M) / 2, epsilon)
                 abs(1 / g(y) - 1 / M) <= epsilon
                 fn(x {x E: g(x) != 0}) R {1 / g(x)}(y) = 1 / g(y)
                 abs(fn(x {x E: g(x) != 0}) R {1 / g(x)}(y) - 1 / M) = abs(1 / g(y) - 1 / M)
@@ -4348,11 +4348,11 @@ thm function_limit_quotient:
     # The quotient law is proved by restricting to the nonzero denominator
     # domain, proving the reciprocal limit there, and multiplying limits.
     have nonzero_domain power_set(R) = {domain_point E: g(domain_point) != 0}
-1release thm function_limit_on_nonzero_domain(E, f, g, x0, L, M)
+    release thm function_limit_on_nonzero_domain(E, f, g, x0, L, M)
     $has_function_limit({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {f(x)}, x0, L)
-1release thm function_limit_reciprocal(E, g, x0, M)
+    release thm function_limit_reciprocal(E, g, x0, M)
     $has_function_limit({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {1 / g(x)}, x0, 1 / M)
-1release thm function_limit_product({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {f(x)}, fn(x {x E: g(x) != 0}) R {1 / g(x)}, x0, L, 1 / M)
+    release thm function_limit_product({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {f(x)}, fn(x {x E: g(x) != 0}) R {1 / g(x)}, x0, L, 1 / M)
     L * (1 / M) = L / M
     # Source handling/proof_debt: the verifier does not transport this
     # function-limit fact across the checked equality L * (1 / M) = L / M.
@@ -4383,14 +4383,14 @@ thm function_limit_quotient_when_nonzero_on_domain:
         =>:
             $has_function_limit(E, fn(x E: g(x) != 0) R {f(x) / g(x)}, x0, L / M)
     have fn quotient_on_nonzero_domain(x {x E: g(x) != 0}) R = f(x) / g(x)
-1release thm function_limit_quotient(E, f, g, x0, L, M)
+    release thm function_limit_quotient(E, f, g, x0, L, M)
     $has_function_limit({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {f(x) / g(x)}, x0, L / M)
     claim:
         ? forall y {x E: g(x) != 0}:
             fn(x {x E: g(x) != 0}) R {f(x) / g(x)}(y) = quotient_on_nonzero_domain(y)
         quotient_on_nonzero_domain(y) = f(y) / g(y)
         fn(x {x E: g(x) != 0}) R {f(x) / g(x)}(y) = f(y) / g(y)
-1release thm equal_functions_have_equal_function_limits({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {f(x) / g(x)}, quotient_on_nonzero_domain, x0, L / M)
+    release thm equal_functions_have_equal_function_limits({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {f(x) / g(x)}, quotient_on_nonzero_domain, x0, L / M)
     $has_function_limit({x E: g(x) != 0}, quotient_on_nonzero_domain, x0, L / M)
     claim:
         ? forall y E:
@@ -4437,7 +4437,7 @@ have fn function_limit by exist!:
             $has_function_limit(E, f, x0, L2)
             =>:
                 L1 = L2
-1release thm function_limit_unique(E, f, x0, L1, L2)
+    release thm function_limit_unique(E, f, x0, L1, L2)
     exist! L R st {$has_function_limit(E, f, x0, L)}
 
 forall E power_set(R), f fn(x E) R, x0 R:
@@ -4457,7 +4457,7 @@ thm has_function_limit_to_function_limit_value:
         =>:
             $has_function_limit_at(E, f, x0)
             function_limit(E, f, x0) = L
-1release thm function_limit_at_from_value(E, f, x0, L)
+    release thm function_limit_at_from_value(E, f, x0, L)
     $has_function_limit_at(E, f, x0)
     L = function_limit(E, f, x0)
     function_limit(E, f, x0) = L
@@ -4471,9 +4471,9 @@ thm function_limit_add_value:
             function_limit(E, fn(x E) R {f(x) + g(x)}, x0) = function_limit(E, f, x0) + function_limit(E, g, x0)
     $has_function_limit(E, f, x0, function_limit(E, f, x0))
     $has_function_limit(E, g, x0, function_limit(E, g, x0))
-1release thm function_limit_add(E, f, g, x0, function_limit(E, f, x0), function_limit(E, g, x0))
+    release thm function_limit_add(E, f, g, x0, function_limit(E, f, x0), function_limit(E, g, x0))
     $has_function_limit(E, fn(x E) R {f(x) + g(x)}, x0, function_limit(E, f, x0) + function_limit(E, g, x0))
-1release thm has_function_limit_to_function_limit_value(E, fn(x E) R {f(x) + g(x)}, x0, function_limit(E, f, x0) + function_limit(E, g, x0))
+    release thm has_function_limit_to_function_limit_value(E, fn(x E) R {f(x) + g(x)}, x0, function_limit(E, f, x0) + function_limit(E, g, x0))
     $has_function_limit_at(E, fn(x E) R {f(x) + g(x)}, x0)
     function_limit(E, fn(x E) R {f(x) + g(x)}, x0) = function_limit(E, f, x0) + function_limit(E, g, x0)
 
@@ -4486,9 +4486,9 @@ thm function_limit_sub_value:
             function_limit(E, fn(x E) R {f(x) - g(x)}, x0) = function_limit(E, f, x0) - function_limit(E, g, x0)
     $has_function_limit(E, f, x0, function_limit(E, f, x0))
     $has_function_limit(E, g, x0, function_limit(E, g, x0))
-1release thm function_limit_sub(E, f, g, x0, function_limit(E, f, x0), function_limit(E, g, x0))
+    release thm function_limit_sub(E, f, g, x0, function_limit(E, f, x0), function_limit(E, g, x0))
     $has_function_limit(E, fn(x E) R {f(x) - g(x)}, x0, function_limit(E, f, x0) - function_limit(E, g, x0))
-1release thm has_function_limit_to_function_limit_value(E, fn(x E) R {f(x) - g(x)}, x0, function_limit(E, f, x0) - function_limit(E, g, x0))
+    release thm has_function_limit_to_function_limit_value(E, fn(x E) R {f(x) - g(x)}, x0, function_limit(E, f, x0) - function_limit(E, g, x0))
     $has_function_limit_at(E, fn(x E) R {f(x) - g(x)}, x0)
     function_limit(E, fn(x E) R {f(x) - g(x)}, x0) = function_limit(E, f, x0) - function_limit(E, g, x0)
 
@@ -4501,9 +4501,9 @@ thm function_limit_product_value:
             function_limit(E, fn(x E) R {f(x) * g(x)}, x0) = function_limit(E, f, x0) * function_limit(E, g, x0)
     $has_function_limit(E, f, x0, function_limit(E, f, x0))
     $has_function_limit(E, g, x0, function_limit(E, g, x0))
-1release thm function_limit_product(E, f, g, x0, function_limit(E, f, x0), function_limit(E, g, x0))
+    release thm function_limit_product(E, f, g, x0, function_limit(E, f, x0), function_limit(E, g, x0))
     $has_function_limit(E, fn(x E) R {f(x) * g(x)}, x0, function_limit(E, f, x0) * function_limit(E, g, x0))
-1release thm has_function_limit_to_function_limit_value(E, fn(x E) R {f(x) * g(x)}, x0, function_limit(E, f, x0) * function_limit(E, g, x0))
+    release thm has_function_limit_to_function_limit_value(E, fn(x E) R {f(x) * g(x)}, x0, function_limit(E, f, x0) * function_limit(E, g, x0))
     $has_function_limit_at(E, fn(x E) R {f(x) * g(x)}, x0)
     function_limit(E, fn(x E) R {f(x) * g(x)}, x0) = function_limit(E, f, x0) * function_limit(E, g, x0)
 
@@ -4516,9 +4516,9 @@ thm function_limit_max_value:
             function_limit(E, fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}, x0) = finite_set_max(union({function_limit(E, f, x0)}, { function_limit(E, g, x0)}))
     $has_function_limit(E, f, x0, function_limit(E, f, x0))
     $has_function_limit(E, g, x0, function_limit(E, g, x0))
-1release thm function_limit_max(E, f, g, x0, function_limit(E, f, x0), function_limit(E, g, x0))
+    release thm function_limit_max(E, f, g, x0, function_limit(E, f, x0), function_limit(E, g, x0))
     $has_function_limit(E, fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, finite_set_max(union({function_limit(E, f, x0)}, { function_limit(E, g, x0)})))
-1release thm has_function_limit_to_function_limit_value(E, fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, finite_set_max(union({function_limit(E, f, x0)}, { function_limit(E, g, x0)})))
+    release thm has_function_limit_to_function_limit_value(E, fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, finite_set_max(union({function_limit(E, f, x0)}, { function_limit(E, g, x0)})))
     $has_function_limit_at(E, fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}, x0)
     function_limit(E, fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}, x0) = finite_set_max(union({function_limit(E, f, x0)}, { function_limit(E, g, x0)}))
 
@@ -4531,9 +4531,9 @@ thm function_limit_min_value:
             function_limit(E, fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}, x0) = finite_set_min(union({function_limit(E, f, x0)}, { function_limit(E, g, x0)}))
     $has_function_limit(E, f, x0, function_limit(E, f, x0))
     $has_function_limit(E, g, x0, function_limit(E, g, x0))
-1release thm function_limit_min(E, f, g, x0, function_limit(E, f, x0), function_limit(E, g, x0))
+    release thm function_limit_min(E, f, g, x0, function_limit(E, f, x0), function_limit(E, g, x0))
     $has_function_limit(E, fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, finite_set_min(union({function_limit(E, f, x0)}, { function_limit(E, g, x0)})))
-1release thm has_function_limit_to_function_limit_value(E, fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, finite_set_min(union({function_limit(E, f, x0)}, { function_limit(E, g, x0)})))
+    release thm has_function_limit_to_function_limit_value(E, fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, finite_set_min(union({function_limit(E, f, x0)}, { function_limit(E, g, x0)})))
     $has_function_limit_at(E, fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}, x0)
     function_limit(E, fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}, x0) = finite_set_min(union({function_limit(E, f, x0)}, { function_limit(E, g, x0)}))
 
@@ -4547,9 +4547,9 @@ thm function_limit_quotient_value:
             function_limit({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {f(x) / g(x)}, x0) = function_limit(E, f, x0) / function_limit(E, g, x0)
     $has_function_limit(E, f, x0, function_limit(E, f, x0))
     $has_function_limit(E, g, x0, function_limit(E, g, x0))
-1release thm function_limit_quotient(E, f, g, x0, function_limit(E, f, x0), function_limit(E, g, x0))
+    release thm function_limit_quotient(E, f, g, x0, function_limit(E, f, x0), function_limit(E, g, x0))
     $has_function_limit({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {f(x) / g(x)}, x0, function_limit(E, f, x0) / function_limit(E, g, x0))
-1release thm has_function_limit_to_function_limit_value({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {f(x) / g(x)}, x0, function_limit(E, f, x0) / function_limit(E, g, x0))
+    release thm has_function_limit_to_function_limit_value({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {f(x) / g(x)}, x0, function_limit(E, f, x0) / function_limit(E, g, x0))
     $has_function_limit_at({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {f(x) / g(x)}, x0)
     function_limit({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {f(x) / g(x)}, x0) = function_limit(E, f, x0) / function_limit(E, g, x0)
 
@@ -4560,7 +4560,7 @@ nonzero in the quotient case.
 """
 
 # In ordinary notation these are the rules
-# `chap6::lim(f +/- g)=chap6::lim f +/- chap6::lim g`, `chap6::lim(fg)=chap6::lim f chap6::lim g`,
+# `chap6::lim(f +/(- g))=chap6::lim f +/(- chap6::lim) g`, `chap6::lim(fg)=chap6::lim f chap6::lim g`,
 # `chap6::lim finite_set_max(union({f}, {g}))=finite_set_max(union({chap6::lim f}, { chap6::lim g}))`, `chap6::lim finite_set_min(union({f}, {g}))=finite_set_min(union({chap6::lim f}, { chap6::lim g}))`, and
 # `chap6::lim(f/g)=chap6::lim f / chap6::lim g` when the quotient expression is defined and the
 # denominator limit is nonzero.  The next examples show how the same laws give
@@ -4569,7 +4569,7 @@ nonzero in the quotient case.
 thm constant_real_function_limit:
     ? forall x0, c R:
         $has_function_limit(R, fn(x R) R {c}, x0, c)
-1release thm interval_member_is_adherent(R, x0)
+    release thm interval_member_is_adherent(R, x0)
     claim:
         ? forall epsilon R+:
             $is_locally_epsilon_close_to(R, fn(x R) R {c}, x0, c, epsilon)
@@ -4593,7 +4593,7 @@ thm constant_real_function_limit:
 thm identity_real_function_limit:
     ? forall x0 R:
         $has_function_limit(R, fn(x R) R {x}, x0, x0)
-1release thm interval_member_is_adherent(R, x0)
+    release thm interval_member_is_adherent(R, x0)
     claim:
         ? forall epsilon R+:
             $is_locally_epsilon_close_to(R, fn(x R) R {x}, x0, x0, epsilon)
@@ -4615,9 +4615,9 @@ thm identity_real_function_limit:
 thm square_real_function_limit:
     ? forall x0 R:
         $has_function_limit(R, fn(x R) R {x^2}, x0, x0^2)
-1release thm identity_real_function_limit(x0)
+    release thm identity_real_function_limit(x0)
     $has_function_limit(R, fn(x R) R {x}, x0, x0)
-1release thm function_limit_product(R, fn(x R) R {x}, fn(x R) R {x}, x0, x0, x0)
+    release thm function_limit_product(R, fn(x R) R {x}, fn(x R) R {x}, x0, x0, x0)
     $has_function_limit(R, fn(x R) R {x * x}, x0, x0 * x0)
     x0 * x0 = x0^2
     # Source handling/proof_debt: the verifier does not transport the checked
@@ -4627,24 +4627,24 @@ thm square_real_function_limit:
 thm scalar_identity_real_function_limit:
     ? forall c, x0 R:
         $has_function_limit(R, fn(x R) R {c * x}, x0, c * x0)
-1release thm constant_real_function_limit(x0, c)
+    release thm constant_real_function_limit(x0, c)
     $has_function_limit(R, fn(x R) R {c}, x0, c)
-1release thm identity_real_function_limit(x0)
+    release thm identity_real_function_limit(x0)
     $has_function_limit(R, fn(x R) R {x}, x0, x0)
-1release thm function_limit_product(R, fn(x R) R {c}, fn(x R) R {x}, x0, c, x0)
+release thm function_limit_product(R, fn(x R) R {c}, fn(x R) R {x}, x0, c, x0)
 
 thm quadratic_polynomial_real_function_limit:
     ? forall c, d, x0 R:
         $has_function_limit(R, fn(x R) R {x^2 + c * x + d}, x0, x0^2 + c * x0 + d)
-1release thm square_real_function_limit(x0)
+    release thm square_real_function_limit(x0)
     $has_function_limit(R, fn(x R) R {x^2}, x0, x0^2)
-1release thm scalar_identity_real_function_limit(c, x0)
+    release thm scalar_identity_real_function_limit(c, x0)
     $has_function_limit(R, fn(x R) R {c * x}, x0, c * x0)
-1release thm function_limit_add(R, fn(x R) R {x^2}, fn(x R) R {c * x}, x0, x0^2, c * x0)
+    release thm function_limit_add(R, fn(x R) R {x^2}, fn(x R) R {c * x}, x0, x0^2, c * x0)
     $has_function_limit(R, fn(x R) R {x^2 + c * x}, x0, x0^2 + c * x0)
-1release thm constant_real_function_limit(x0, d)
+    release thm constant_real_function_limit(x0, d)
     $has_function_limit(R, fn(x R) R {d}, x0, d)
-1release thm function_limit_add(R, fn(x R) R {x^2 + c * x}, fn(x R) R {d}, x0, x0^2 + c * x0, d)
+release thm function_limit_add(R, fn(x R) R {x^2 + c * x}, fn(x R) R {d}, x0, x0^2 + c * x0, d)
 
 """
 Example 9.3.16. The sign function has different right and left limiting
@@ -4654,12 +4654,12 @@ real mathematical information.
 
 # The sign function is locally constant on each punctured side of zero.  The
 # right-hand restriction has limit `1`, the left-hand restriction has limit
-# `-1`, and the full-domain function has no limit at zero because any proposed
-# limit would have to be close to both `1` and `-1`.
+# `(-1)`, and the full-domain function has no limit at zero because any proposed
+# limit would have to be close to both `1` and `(-1)`.
 
 have fn signum_for_limit_example(x R) R by cases:
     case x = 0: 0
-    case x < 0: -1
+    case x < 0: (-1)
     case x > 0: 1
 
 have fn signum_on_open_right_ray(x '(0,)) R = signum_for_limit_example(x)
@@ -4668,10 +4668,10 @@ have fn signum_on_open_left_ray(x '(,0)) R = signum_for_limit_example(x)
 thm signum_for_limit_example_restricted_limits:
     ? forall:
         $has_function_limit('(0,), signum_on_open_right_ray, 0, 1)
-        $has_function_limit('(,0), signum_on_open_left_ray, 0, -1)
+        $has_function_limit('(,0), signum_on_open_left_ray, 0, (-1))
     claim:
         ? $has_function_limit('(0,), signum_on_open_right_ray, 0, 1)
-1release thm endpoint_adherent_to_open_right_ray(0)
+        release thm endpoint_adherent_to_open_right_ray(0)
         $is_adherent_point('(0,), 0)
         claim:
             ? forall epsilon R+:
@@ -4695,32 +4695,32 @@ thm signum_for_limit_example_restricted_limits:
         by def:
             ? $has_function_limit('(0,), signum_on_open_right_ray, 0, 1)
     claim:
-        ? $has_function_limit('(,0), signum_on_open_left_ray, 0, -1)
-1release thm endpoint_adherent_to_open_left_ray(0)
+        ? $has_function_limit('(,0), signum_on_open_left_ray, 0, (-1))
+        release thm endpoint_adherent_to_open_left_ray(0)
         $is_adherent_point('(,0), 0)
         claim:
             ? forall epsilon R+:
-                $is_locally_epsilon_close_to('(,0), signum_on_open_left_ray, 0, -1, epsilon)
-            witness $is_locally_epsilon_close_to('(,0), signum_on_open_left_ray, 0, -1, epsilon) from epsilon:
+                $is_locally_epsilon_close_to('(,0), signum_on_open_left_ray, 0, (-1), epsilon)
+            witness $is_locally_epsilon_close_to('(,0), signum_on_open_left_ray, 0, (-1), epsilon) from epsilon:
                 claim:
                     ? forall x '(,0):
                         abs(x - 0) < epsilon
                         =>:
                             abs(signum_on_open_left_ray(x) - (-1)) <= epsilon
                     x < 0
-                    signum_for_limit_example(x) = -1
+                    signum_for_limit_example(x) = (-1)
                     signum_on_open_left_ray(x) = signum_for_limit_example(x)
-                    signum_on_open_left_ray(x) = -1
+                    signum_on_open_left_ray(x) = (-1)
                     signum_on_open_left_ray(x) - (-1) = 0
                     abs(signum_on_open_left_ray(x) - (-1)) = abs(0)
                     abs(0) = 0
                     0 <= epsilon
                 by def:
-                    ? $is_delta_neighborhood_close_to('(,0), signum_on_open_left_ray, 0, -1, epsilon, epsilon)
+                    ? $is_delta_neighborhood_close_to('(,0), signum_on_open_left_ray, 0, (-1), epsilon, epsilon)
         by def:
-            ? $has_function_limit('(,0), signum_on_open_left_ray, 0, -1)
+            ? $has_function_limit('(,0), signum_on_open_left_ray, 0, (-1))
     $has_function_limit('(0,), signum_on_open_right_ray, 0, 1)
-    $has_function_limit('(,0), signum_on_open_left_ray, 0, -1)
+    $has_function_limit('(,0), signum_on_open_left_ray, 0, (-1))
 
 thm signum_for_limit_example_has_no_full_limit:
     ? forall:
@@ -4753,7 +4753,7 @@ thm signum_for_limit_example_has_no_full_limit:
         abs((0 - delta / 2) - 0) = delta / 2
         abs((0 - delta / 2) - 0) < delta
         abs(signum_for_limit_example(0 - delta / 2) - L) <= 1 / 2
-        signum_for_limit_example(0 - delta / 2) = -1
+        signum_for_limit_example(0 - delta / 2) = (-1)
         signum_for_limit_example(0 - delta / 2) - L = (-1) - L
         abs(signum_for_limit_example(0 - delta / 2) - L) = abs((-1) - L)
         abs((-1) - L) <= 1 / 2
@@ -4795,7 +4795,7 @@ thm removable_spike_punctured_limit_zero:
         $has_function_limit(set_minus(R, {0}), removable_spike_on_punctured_line, 0, 0)
     {0} $in power_set(R)
     set_minus(R, {0}) $in power_set(R)
-1release thm right_neighbor_points_are_limit_points(R, 0, 1)
+    release thm right_neighbor_points_are_limit_points(R, 0, 1)
     $is_limit_point_of_set(R, 0)
     $is_adherent_point(set_minus(R, {0}), 0)
     claim:
@@ -5065,7 +5065,7 @@ thm function_limit_composition:
                 eta_g / 2 < eta_g
                 abs(f(y) - L) <= eta_g / 2 < eta_g
                 abs(f(y) - L) < eta_g
-1release thm function_value_in_codomain(E, Y, f, y)
+                release thm function_value_in_codomain(E, Y, f, y)
                 f(y) $in Y
                 abs(g(f(y)) - M) <= epsilon
                 h(y) = g(f(y))
@@ -5091,20 +5091,20 @@ have fn quotient_9_3_19(x {x R: quotient_9_3_19_denominator(x) != 0}) R = quotie
 thm quotient_x_plus_two_over_x_plus_one_limit_at_two:
     ? forall :
         $has_function_limit({x R: quotient_9_3_19_denominator(x) != 0}, quotient_9_3_19, 2, 4 / 3)
-1release thm identity_real_function_limit(2)
+    release thm identity_real_function_limit(2)
     $has_function_limit(R, fn(x R) R {x}, 2, 2)
-1release thm constant_real_function_limit(2, 2)
+    release thm constant_real_function_limit(2, 2)
     $has_function_limit(R, fn(x R) R {2}, 2, 2)
-1release thm function_limit_add(R, fn(x R) R {x}, fn(x R) R {2}, 2, 2, 2)
+    release thm function_limit_add(R, fn(x R) R {x}, fn(x R) R {2}, 2, 2, 2)
     $has_function_limit(R, fn(x R) R {x + 2}, 2, 2 + 2)
     2 + 2 = 4
     quotient_9_3_19_numerator = fn(x R) R {x + 2}
     # Source handling/proof_debt: transport the checked anonymous-function
     # limit across the named-function equality.
     trust $has_function_limit(R, quotient_9_3_19_numerator, 2, 4)
-1release thm constant_real_function_limit(2, 1)
+    release thm constant_real_function_limit(2, 1)
     $has_function_limit(R, fn(x R) R {1}, 2, 1)
-1release thm function_limit_add(R, fn(x R) R {x}, fn(x R) R {1}, 2, 2, 1)
+    release thm function_limit_add(R, fn(x R) R {x}, fn(x R) R {1}, 2, 2, 1)
     $has_function_limit(R, fn(x R) R {x + 1}, 2, 2 + 1)
     2 + 1 = 3
     quotient_9_3_19_denominator = fn(x R) R {x + 1}
@@ -5112,7 +5112,7 @@ thm quotient_x_plus_two_over_x_plus_one_limit_at_two:
     # is not inferred for the denominator.
     trust $has_function_limit(R, quotient_9_3_19_denominator, 2, 3)
     3 != 0
-1release thm function_limit_quotient(R, quotient_9_3_19_numerator, quotient_9_3_19_denominator, 2, 4, 3)
+    release thm function_limit_quotient(R, quotient_9_3_19_numerator, quotient_9_3_19_denominator, 2, 4, 3)
     $has_function_limit({x R: quotient_9_3_19_denominator(x) != 0}, fn(x {x R: quotient_9_3_19_denominator(x) != 0}) R {quotient_9_3_19_numerator(x) / quotient_9_3_19_denominator(x)}, 2, 4 / 3)
     quotient_9_3_19 = fn(x {x R: quotient_9_3_19_denominator(x) != 0}) R {quotient_9_3_19_numerator(x) / quotient_9_3_19_denominator(x)}
     # Source handling/proof_debt: transport the checked quotient-lambda limit
@@ -5146,13 +5146,13 @@ thm punctured_factor_domain_adherent_at_one:
             1 < 1 + epsilon / 2
             1 + epsilon / 2 != 1
             1 + epsilon / 2 $in {x R: x != 1}
-            1 - (1 + epsilon / 2) = -epsilon / 2
-            -1 < 0
-            -1 * (epsilon / 2) < 0
-            -epsilon / 2 = -1 * (epsilon / 2)
-            -epsilon / 2 < 0
-            abs(-epsilon / 2) = epsilon / 2
-            abs(1 - (1 + epsilon / 2)) = abs(-epsilon / 2)
+            1 - (1 + epsilon / 2) = (-epsilon) / 2
+            (-1) < 0
+            (-1) * (epsilon / 2) < 0
+            (-epsilon) / 2 = (-1) * (epsilon / 2)
+            (-epsilon) / 2 < 0
+            abs((-epsilon) / 2) = epsilon / 2
+            abs(1 - (1 + epsilon / 2)) = abs((-epsilon) / 2)
             abs(1 - (1 + epsilon / 2)) = epsilon / 2
             epsilon / 2 < epsilon
             epsilon / 2 <= epsilon
@@ -5163,7 +5163,7 @@ thm punctured_factor_domain_adherent_at_one:
 thm punctured_factor_limit_at_one:
     ? forall :
         $has_function_limit({x R: x != 1}, fn(x {x R: x != 1}) R {(x^2 - 1) / (x - 1)}, 1, 2)
-1release thm punctured_factor_domain_adherent_at_one()
+    release thm punctured_factor_domain_adherent_at_one()
     $is_adherent_point({x R: x != 1}, 1)
     claim:
         ? forall epsilon R+:
@@ -5175,7 +5175,7 @@ thm punctured_factor_limit_at_one:
                     =>:
                         abs(fn(x {x R: x != 1}) R {(x^2 - 1) / (x - 1)}(y) - 2) <= epsilon
                 fn(x {x R: x != 1}) R {(x^2 - 1) / (x - 1)}(y) = (y^2 - 1) / (y - 1)
-1release thm punctured_factor_identity(y)
+                release thm punctured_factor_identity(y)
                 (y^2 - 1) / (y - 1) = y + 1
                 fn(x {x R: x != 1}) R {(x^2 - 1) / (x - 1)}(y) = y + 1
                 fn(x {x R: x != 1}) R {(x^2 - 1) / (x - 1)}(y) - 2 = (y + 1) - 2
@@ -5215,18 +5215,18 @@ thm rational_indicator_restricted_limits_at_zero:
             claim:
                 ? forall epsilon R+:
                     $is_epsilon_adherent_to_set(Q, 0, epsilon)
-1release thm chap5::has_rational_between(0, epsilon)
+                release thm chap5::has_rational_between(0, epsilon)
                 obtain q from exist q Q st {0 < q < epsilon}
                 q $in R
                 q $in Q
                 q > 0
-                0 - q = -1 * (q - 0)
+                0 - q = (-1) * (q - 0)
                 q - 0 = q
                 q - 0 > 0
-                abs(0 - q) = abs(-1 * (q - 0))
-                abs(-1 * (q - 0)) = abs(q - 0)
+                abs(0 - q) = abs((-1) * (q - 0))
+                abs((-1) * (q - 0)) = abs(q - 0)
                 abs(q - 0) = q - 0
-                abs(-1 * (q - 0)) = q - 0
+                abs((-1) * (q - 0)) = q - 0
                 abs(0 - q) = q
                 q < epsilon
                 q <= epsilon
@@ -5267,17 +5267,17 @@ thm rational_indicator_restricted_limits_at_zero:
             claim:
                 ? forall epsilon R+:
                     $is_epsilon_adherent_to_set(set_minus(R, Q), 0, epsilon)
-1release thm irrational_density_of_reals(0, epsilon)
+                release thm irrational_density_of_reals(0, epsilon)
                 obtain y from exist y set_minus(R, Q) st {0 < y < epsilon}
                 y $in R
                 y $in set_minus(R, Q)
                 y - 0 = y
                 y - 0 > 0
-                0 - y = -1 * (y - 0)
-                abs(0 - y) = abs(-1 * (y - 0))
-                abs(-1 * (y - 0)) = abs(y - 0)
+                0 - y = (-1) * (y - 0)
+                abs(0 - y) = abs((-1) * (y - 0))
+                abs((-1) * (y - 0)) = abs(y - 0)
                 abs(y - 0) = y - 0
-                abs(-1 * (y - 0)) = y - 0
+                abs((-1) * (y - 0)) = y - 0
                 abs(0 - y) = y
                 y < epsilon
                 y <= epsilon
@@ -5326,7 +5326,7 @@ thm rational_indicator_no_limit_at_zero:
         1 / 4 $in R+
         $is_locally_epsilon_close_to(R, rational_indicator_for_limit_example, 0, L, 1 / 4)
         obtain delta from $is_locally_epsilon_close_to(R, rational_indicator_for_limit_example, 0, L, 1 / 4)
-1release thm chap5::has_rational_between(0, delta)
+        release thm chap5::has_rational_between(0, delta)
         obtain q from exist q Q st {0 < q < delta}
         q $in R
         q - 0 = q
@@ -5339,7 +5339,7 @@ thm rational_indicator_no_limit_at_zero:
         abs(rational_indicator_for_limit_example(q) - L) = abs(1 - L)
         abs(1 - L) <= 1 / 4
 
-1release thm rational_indicator_restricted_limits_at_zero()
+        release thm rational_indicator_restricted_limits_at_zero()
         $has_function_limit(set_minus(R, Q), fn(x set_minus(R, Q)) R {rational_indicator_for_limit_example(x)}, 0, 0)
         $is_adherent_point(set_minus(R, Q), 0)
         delta / 2 $in R+
@@ -5360,7 +5360,7 @@ thm rational_indicator_no_limit_at_zero:
 
         L - 0 = L
         abs(L - 0) = abs(L)
-        0 - L = -L
+        0 - L = (-L)
         abs(0 - L) = abs(L)
         abs(L - 0) = abs(0 - L)
         1 = (1 - L) + (L - 0)
@@ -5403,7 +5403,7 @@ thm constant_function_continuous:
     claim:
         ? forall x0 X:
             $is_continuous_at(X, fn(x X) R {c}, x0)
-1release thm interval_member_is_adherent(X, x0)
+        release thm interval_member_is_adherent(X, x0)
         claim:
             ? forall epsilon R+:
                 $is_locally_epsilon_close_to(X, fn(x X) R {c}, x0, fn(x X) R {c}(x0), epsilon)
@@ -5440,7 +5440,7 @@ thm identity_function_continuous:
     claim:
         ? forall x0 X:
             $is_continuous_at(X, fn(x X) R {x}, x0)
-1release thm interval_member_is_adherent(X, x0)
+        release thm interval_member_is_adherent(X, x0)
         claim:
             ? forall epsilon R+:
                 $is_locally_epsilon_close_to(X, fn(x X) R {x}, x0, fn(x X) R {x}(x0), epsilon)
@@ -5483,7 +5483,7 @@ thm signum_continuous_on_open_rays:
         claim:
             ? forall x0 '(0,):
                 $is_continuous_at('(0,), signum_on_open_right_ray, x0)
-1release thm interval_member_is_adherent('(0,), x0)
+            release thm interval_member_is_adherent('(0,), x0)
             x0 > 0
             signum_for_limit_example(x0) = 1
             signum_on_open_right_ray(x0) = signum_for_limit_example(x0)
@@ -5519,11 +5519,11 @@ thm signum_continuous_on_open_rays:
         claim:
             ? forall x0 '(,0):
                 $is_continuous_at('(,0), signum_on_open_left_ray, x0)
-1release thm interval_member_is_adherent('(,0), x0)
+            release thm interval_member_is_adherent('(,0), x0)
             x0 < 0
-            signum_for_limit_example(x0) = -1
+            signum_for_limit_example(x0) = (-1)
             signum_on_open_left_ray(x0) = signum_for_limit_example(x0)
-            signum_on_open_left_ray(x0) = -1
+            signum_on_open_left_ray(x0) = (-1)
             claim:
                 ? forall epsilon R+:
                     $is_locally_epsilon_close_to('(,0), signum_on_open_left_ray, x0, signum_on_open_left_ray(x0), epsilon)
@@ -5534,11 +5534,11 @@ thm signum_continuous_on_open_rays:
                             =>:
                                 abs(signum_on_open_left_ray(y) - signum_on_open_left_ray(x0)) <= epsilon
                         y < 0
-                        signum_for_limit_example(y) = -1
+                        signum_for_limit_example(y) = (-1)
                         signum_on_open_left_ray(y) = signum_for_limit_example(y)
-                        signum_on_open_left_ray(y) = -1
-                        signum_on_open_left_ray(y) - signum_on_open_left_ray(x0) = -1 - (-1)
-                        -1 - (-1) = 0
+                        signum_on_open_left_ray(y) = (-1)
+                        signum_on_open_left_ray(y) - signum_on_open_left_ray(x0) = (-1) - (-1)
+                        (-1) - (-1) = 0
                         abs(signum_on_open_left_ray(y) - signum_on_open_left_ray(x0)) = abs(0)
                         abs(0) = 0
                         0 <= epsilon
@@ -5599,7 +5599,7 @@ thm rational_indicator_discontinuous_everywhere:
         obtain delta from $is_locally_epsilon_close_to(R, rational_indicator_for_limit_example, x0, rational_indicator_for_limit_example(x0), 1 / 4)
 
         x0 < x0 + delta
-1release thm chap5::has_rational_between(x0, x0 + delta)
+        release thm chap5::has_rational_between(x0, x0 + delta)
         obtain q from exist q Q st {x0 < q < x0 + delta}
         q - x0 > 0
         abs(q - x0) = q - x0
@@ -5613,7 +5613,7 @@ thm rational_indicator_discontinuous_everywhere:
         abs(rational_indicator_for_limit_example(q) - rational_indicator_for_limit_example(x0)) = abs(1 - rational_indicator_for_limit_example(x0))
         abs(1 - rational_indicator_for_limit_example(x0)) <= 1 / 4
 
-1release thm irrational_density_of_reals(x0, x0 + delta)
+        release thm irrational_density_of_reals(x0, x0 + delta)
         obtain y from exist y set_minus(R, Q) st {x0 < y < x0 + delta}
         y - x0 > 0
         abs(y - x0) = y - x0
@@ -5629,7 +5629,7 @@ thm rational_indicator_discontinuous_everywhere:
 
         rational_indicator_for_limit_example(x0) - 0 = rational_indicator_for_limit_example(x0)
         abs(rational_indicator_for_limit_example(x0) - 0) = abs(rational_indicator_for_limit_example(x0))
-        0 - rational_indicator_for_limit_example(x0) = -rational_indicator_for_limit_example(x0)
+        0 - rational_indicator_for_limit_example(x0) = (-rational_indicator_for_limit_example(x0))
         abs(0 - rational_indicator_for_limit_example(x0)) = abs(rational_indicator_for_limit_example(x0))
         abs(rational_indicator_for_limit_example(x0) - 0) = abs(0 - rational_indicator_for_limit_example(x0))
         1 = (1 - rational_indicator_for_limit_example(x0)) + (rational_indicator_for_limit_example(x0) - 0)
@@ -5680,7 +5680,7 @@ thm right_step_discontinuous_at_zero_on_full_line:
         abs(right_step_at_zero(0 - delta / 2) - 1) <= 1 / 4
         right_step_at_zero(0 - delta / 2) = 0
         right_step_at_zero(0 - delta / 2) - 1 = 0 - 1
-        0 - 1 = -1
+        0 - 1 = (-1)
         abs(right_step_at_zero(0 - delta / 2) - 1) = abs(-1)
         abs(-1) = 1
         1 <= 1 / 4
@@ -5692,7 +5692,7 @@ thm right_step_continuous_on_nonnegative_ray:
     claim:
         ? forall x0 '[0,):
             $is_continuous_at('[0,), right_step_on_nonnegative_ray, x0)
-1release thm interval_member_is_adherent('[0,), x0)
+        release thm interval_member_is_adherent('[0,), x0)
         x0 >= 0
         right_step_at_zero(x0) = 1
         right_step_on_nonnegative_ray(x0) = right_step_at_zero(x0)
@@ -5777,7 +5777,7 @@ thm continuity_at_implies_sequence_limit_preservation_at:
         =>:
             $preserves_sequence_limits_at(X, f, x0)
     $has_function_limit(X, f, x0, f(x0))
-1release thm function_limit_preserves_sequence_limits(X, f, x0, f(x0))
+    release thm function_limit_preserves_sequence_limits(X, f, x0, f(x0))
     by def:
         ? $function_limit_preserves_sequences(X, f, x0, f(x0))
     by def:
@@ -5790,9 +5790,9 @@ thm sequence_limit_preservation_at_implies_continuity_at:
             $is_continuous_at(X, f, x0)
     by def:
         ? $function_limit_preserves_sequences(X, f, x0, f(x0))
-1release thm interval_member_is_adherent(X, x0)
+    release thm interval_member_is_adherent(X, x0)
     $is_adherent_point(X, x0)
-1release thm sequence_limit_preservation_implies_function_limit(X, f, x0, f(x0))
+    release thm sequence_limit_preservation_implies_function_limit(X, f, x0, f(x0))
     $has_function_limit(X, f, x0, f(x0))
     by def:
         ? $is_continuous_at(X, f, x0)
@@ -5833,7 +5833,7 @@ thm epsilon_delta_continuity_implies_continuity_at:
             $is_continuous_at(X, f, x0)
     # This proves (c) => (a): use the same delta and weaken the strict output
     # estimate to the non-strict function-limit estimate.
-1release thm interval_member_is_adherent(X, x0)
+    release thm interval_member_is_adherent(X, x0)
     claim:
         ? forall epsilon R+:
             $is_locally_epsilon_close_to(X, f, x0, f(x0), epsilon)
@@ -5924,7 +5924,7 @@ thm continuous_at_preserves_convergent_sequences:
         $chap6::has_limit(a, x0)
         =>:
             $chap6::has_limit(image_sequence_in_set(X, f, a), f(x0))
-1release thm continuity_at_implies_sequence_limit_preservation_at(X, f, x0)
+    release thm continuity_at_implies_sequence_limit_preservation_at(X, f, x0)
     $preserves_sequence_limits_at(X, f, x0)
 
 thm continuous_image_of_sequentially_compact_real_set_is_sequentially_compact:
@@ -5994,10 +5994,10 @@ thm continuous_image_of_sequentially_compact_real_set_is_sequentially_compact:
         obtain L from $has_limit_in_set(b, X)
         L $in X
         $chap6::has_limit(b, L)
-1release thm subsequence_inherits_real_set_membership(X, a, b)
+        release thm subsequence_inherits_real_set_membership(X, a, b)
         $is_sequence_in_real_set(b, X)
         $is_continuous_at(X, f, L)
-1release thm continuous_at_preserves_convergent_sequences(X, f, L, b)
+        release thm continuous_at_preserves_convergent_sequences(X, f, L, b)
         $chap6::has_limit(image_sequence_in_set(X, f, b), f(L))
         obtain phi from exist phi fn(k N+) N+ st {$chap6::is_subsequence_along(a, b, phi)}
         witness exist c0 seq(R) st {$chap6::has_subsequence(y, c0), $has_limit_in_set(c0, fn_range(f))} from image_sequence_in_set(X, f, b):
@@ -6041,7 +6041,7 @@ thm continuity_at_closed_under_arithmetic:
         ? $is_continuous_at(X, fn(x X) R {f(x) + g(x)}, x0)
         $has_function_limit(X, f, x0, f(x0))
         $has_function_limit(X, g, x0, g(x0))
-1release thm function_limit_add(X, f, g, x0, f(x0), g(x0))
+        release thm function_limit_add(X, f, g, x0, f(x0), g(x0))
         $has_function_limit(X, fn(x X) R {f(x) + g(x)}, x0, f(x0) + g(x0))
         fn(x X) R {f(x) + g(x)}(x0) = f(x0) + g(x0)
         $has_function_limit(X, fn(x X) R {f(x) + g(x)}, x0, fn(x X) R {f(x) + g(x)}(x0))
@@ -6051,7 +6051,7 @@ thm continuity_at_closed_under_arithmetic:
         ? $is_continuous_at(X, fn(x X) R {f(x) - g(x)}, x0)
         $has_function_limit(X, f, x0, f(x0))
         $has_function_limit(X, g, x0, g(x0))
-1release thm function_limit_sub(X, f, g, x0, f(x0), g(x0))
+        release thm function_limit_sub(X, f, g, x0, f(x0), g(x0))
         $has_function_limit(X, fn(x X) R {f(x) - g(x)}, x0, f(x0) - g(x0))
         fn(x X) R {f(x) - g(x)}(x0) = f(x0) - g(x0)
         $has_function_limit(X, fn(x X) R {f(x) - g(x)}, x0, fn(x X) R {f(x) - g(x)}(x0))
@@ -6061,7 +6061,7 @@ thm continuity_at_closed_under_arithmetic:
         ? $is_continuous_at(X, fn(x X) R {f(x) * g(x)}, x0)
         $has_function_limit(X, f, x0, f(x0))
         $has_function_limit(X, g, x0, g(x0))
-1release thm function_limit_product(X, f, g, x0, f(x0), g(x0))
+        release thm function_limit_product(X, f, g, x0, f(x0), g(x0))
         $has_function_limit(X, fn(x X) R {f(x) * g(x)}, x0, f(x0) * g(x0))
         fn(x X) R {f(x) * g(x)}(x0) = f(x0) * g(x0)
         $has_function_limit(X, fn(x X) R {f(x) * g(x)}, x0, fn(x X) R {f(x) * g(x)}(x0))
@@ -6071,7 +6071,7 @@ thm continuity_at_closed_under_arithmetic:
         ? $is_continuous_at(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}, x0)
         $has_function_limit(X, f, x0, f(x0))
         $has_function_limit(X, g, x0, g(x0))
-1release thm function_limit_max(X, f, g, x0, f(x0), g(x0))
+        release thm function_limit_max(X, f, g, x0, f(x0), g(x0))
         $has_function_limit(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, finite_set_max(union({f(x0)}, { g(x0)})))
         fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(x0) = finite_set_max(union({f(x0)}, { g(x0)}))
         $has_function_limit(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(x0))
@@ -6081,7 +6081,7 @@ thm continuity_at_closed_under_arithmetic:
         ? $is_continuous_at(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}, x0)
         $has_function_limit(X, f, x0, f(x0))
         $has_function_limit(X, g, x0, g(x0))
-1release thm function_limit_min(X, f, g, x0, f(x0), g(x0))
+        release thm function_limit_min(X, f, g, x0, f(x0), g(x0))
         $has_function_limit(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, finite_set_min(union({f(x0)}, { g(x0)})))
         fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(x0) = finite_set_min(union({f(x0)}, { g(x0)}))
         $has_function_limit(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(x0))
@@ -6099,7 +6099,7 @@ thm continuity_at_quotient_on_nonzero_domain:
     $has_function_limit(X, f, x0, f(x0))
     $has_function_limit(X, g, x0, g(x0))
     g(x0) != 0
-1release thm function_limit_quotient(X, f, g, x0, f(x0), g(x0))
+    release thm function_limit_quotient(X, f, g, x0, f(x0), g(x0))
     $has_function_limit({x X: g(x) != 0}, fn(x {x X: g(x) != 0}) R {f(x) / g(x)}, x0, f(x0) / g(x0))
     fn(x {x X: g(x) != 0}) R {f(x) / g(x)}(x0) = f(x0) / g(x0)
     $has_function_limit({x X: g(x) != 0}, fn(x {x X: g(x) != 0}) R {f(x) / g(x)}, x0, fn(x {x X: g(x) != 0}) R {f(x) / g(x)}(x0))
@@ -6119,7 +6119,7 @@ thm continuous_max_of_continuous:
     claim:
         ? forall x0 X:
             $is_continuous_at(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}, x0)
-1release thm interval_member_is_adherent(X, x0)
+        release thm interval_member_is_adherent(X, x0)
         $is_continuous_at(X, f, x0)
         $is_continuous_at(X, g, x0)
         $has_function_limit(X, f, x0, f(x0))
@@ -6146,7 +6146,7 @@ thm continuous_max_of_continuous:
                     abs(y - x0) < delta_g
                     abs(f(y) - f(x0)) <= epsilon
                     abs(g(y) - g(x0)) <= epsilon
-1release thm max_lipschitz(f(y), g(y), f(x0), g(x0), epsilon)
+                    release thm max_lipschitz(f(y), g(y), f(x0), g(x0), epsilon)
                     abs(finite_set_max(union({f(y)}, { g(y)})) - finite_set_max(union({f(x0)}, { g(x0)}))) <= epsilon
                     fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(y) = finite_set_max(union({f(y)}, { g(y)}))
                     fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(x0) = finite_set_max(union({f(x0)}, { g(x0)}))
@@ -6170,7 +6170,7 @@ thm continuous_min_of_continuous:
     claim:
         ? forall x0 X:
             $is_continuous_at(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}, x0)
-1release thm interval_member_is_adherent(X, x0)
+        release thm interval_member_is_adherent(X, x0)
         $is_continuous_at(X, f, x0)
         $is_continuous_at(X, g, x0)
         $has_function_limit(X, f, x0, f(x0))
@@ -6197,7 +6197,7 @@ thm continuous_min_of_continuous:
                     abs(y - x0) < delta_g
                     abs(f(y) - f(x0)) <= epsilon
                     abs(g(y) - g(x0)) <= epsilon
-1release thm min_lipschitz(f(y), g(y), f(x0), g(x0), epsilon)
+                    release thm min_lipschitz(f(y), g(y), f(x0), g(x0), epsilon)
                     abs(finite_set_min(union({f(y)}, { g(y)})) - finite_set_min(union({f(x0)}, { g(x0)}))) <= epsilon
                     fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(y) = finite_set_min(union({f(y)}, { g(y)}))
                     fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(x0) = finite_set_min(union({f(x0)}, { g(x0)}))
@@ -6231,7 +6231,7 @@ thm continuity_closed_under_arithmetic:
             $is_continuous_at(X, g, x0)
             $has_function_limit(X, f, x0, f(x0))
             $has_function_limit(X, g, x0, g(x0))
-1release thm function_limit_add(X, f, g, x0, f(x0), g(x0))
+            release thm function_limit_add(X, f, g, x0, f(x0), g(x0))
             $has_function_limit(X, fn(x X) R {f(x) + g(x)}, x0, f(x0) + g(x0))
             fn(x X) R {f(x) + g(x)}(x0) = f(x0) + g(x0)
             $has_function_limit(X, fn(x X) R {f(x) + g(x)}, x0, fn(x X) R {f(x) + g(x)}(x0))
@@ -6248,7 +6248,7 @@ thm continuity_closed_under_arithmetic:
             $is_continuous_at(X, g, x0)
             $has_function_limit(X, f, x0, f(x0))
             $has_function_limit(X, g, x0, g(x0))
-1release thm function_limit_product(X, f, g, x0, f(x0), g(x0))
+            release thm function_limit_product(X, f, g, x0, f(x0), g(x0))
             $has_function_limit(X, fn(x X) R {f(x) * g(x)}, x0, f(x0) * g(x0))
             fn(x X) R {f(x) * g(x)}(x0) = f(x0) * g(x0)
             $has_function_limit(X, fn(x X) R {f(x) * g(x)}, x0, fn(x X) R {f(x) * g(x)}(x0))
@@ -6265,7 +6265,7 @@ thm continuity_closed_under_arithmetic:
             $is_continuous_at(X, g, x0)
             $has_function_limit(X, f, x0, f(x0))
             $has_function_limit(X, g, x0, g(x0))
-1release thm function_limit_sub(X, f, g, x0, f(x0), g(x0))
+            release thm function_limit_sub(X, f, g, x0, f(x0), g(x0))
             $has_function_limit(X, fn(x X) R {f(x) - g(x)}, x0, f(x0) - g(x0))
             fn(x X) R {f(x) - g(x)}(x0) = f(x0) - g(x0)
             $has_function_limit(X, fn(x X) R {f(x) - g(x)}, x0, fn(x X) R {f(x) - g(x)}(x0))
@@ -6273,9 +6273,9 @@ thm continuity_closed_under_arithmetic:
                 ? $is_continuous_at(X, fn(x X) R {f(x) - g(x)}, x0)
         by def:
             ? $is_continuous_on(X, fn(x X) R {f(x) - g(x)})
-1release thm continuous_max_of_continuous(X, f, g)
+    release thm continuous_max_of_continuous(X, f, g)
     $is_continuous_on(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))})
-1release thm continuous_min_of_continuous(X, f, g)
+    release thm continuous_min_of_continuous(X, f, g)
     $is_continuous_on(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))})
 
 """
@@ -6320,12 +6320,12 @@ thm positive_domain_power_function_continuous:
 
 """
 Proposition 9.4.12 (Absolute value is continuous). The function `x |-> abs(x)`
-is continuous on the real line; Tao derives this from `abs(x)=finite_set_max(union({x}, {-x}))`.
+is continuous on the real line; Tao derives this from `abs(x)=finite_set_max(union({x}, {(-x)}))`.
 """
 
 # These three propositions give standard continuous functions.  The proof uses
 # Chapter 6 exponentiation estimates for the first two and arithmetic
-# continuity plus `abs(x)=finite_set_max(union({x}, {-x}))` for the absolute-value case.
+# continuity plus `abs(x)=finite_set_max(union({x}, {(-x)}))` for the absolute-value case.
 
 have fn abs_fn(u R) R = abs(u)
 
@@ -6335,7 +6335,7 @@ thm absolute_value_continuous:
     claim:
         ? forall x0 R:
             $is_continuous_at(R, abs_fn, x0)
-1release thm interval_member_is_adherent(R, x0)
+        release thm interval_member_is_adherent(R, x0)
         claim:
             ? forall epsilon R+:
                 $is_locally_epsilon_close_to(R, abs_fn, x0, abs_fn(x0), epsilon)
@@ -6374,9 +6374,9 @@ thm exponentiation_and_abs_continuous:
         $is_continuous_on(R, fn(x R) R {a^x})
         $is_continuous_on(R+, fn(x R+) R {x^p})
         $is_continuous_on(R, abs_fn)
-1release thm absolute_value_continuous()
-1release thm positive_base_exponentiation_continuous(a)
-1release thm positive_domain_power_function_continuous(p)
+release thm absolute_value_continuous()
+release thm positive_base_exponentiation_continuous(a)
+release thm positive_domain_power_function_continuous(p)
 
 """
 Proposition 9.4.13. Composition preserves continuity.
@@ -6403,11 +6403,11 @@ thm composition_preserves_continuity:
     claim:
         ? forall x0 X:
             $is_continuous_at(X, h, x0)
-1release thm interval_member_is_adherent(X, x0)
+        release thm interval_member_is_adherent(X, x0)
         $is_adherent_point(X, x0)
         $is_continuous_at(X, f, x0)
         $has_function_limit(X, f, x0, f(x0))
-1release thm function_value_in_codomain(X, Y, f, x0)
+        release thm function_value_in_codomain(X, Y, f, x0)
         f(x0) $in Y
         $is_continuous_at(Y, g, f(x0))
         $has_function_limit(Y, g, f(x0), g(f(x0)))
@@ -6429,7 +6429,7 @@ thm composition_preserves_continuity:
                     abs(f(y) - f(x0)) <= eta_g / 2
                     abs(f(y) - f(x0)) <= eta_g / 2 < eta_g
                     abs(f(y) - f(x0)) < eta_g
-1release thm function_value_in_codomain(X, Y, f, y)
+                    release thm function_value_in_codomain(X, Y, f, y)
                     f(y) $in Y
                     abs(g(f(y)) - g(f(x0))) <= epsilon
                     h(y) = g(f(y))
@@ -6459,9 +6459,9 @@ have fn example_9_4_14_exp_affine(x R) R = 5^(3 * x + 1)
 thm example_9_4_14_square_continuous:
     ? forall:
         $is_continuous_on(R, fn(x R) R {x^2})
-1release thm identity_function_continuous(R)
+    release thm identity_function_continuous(R)
     $is_continuous_on(R, fn(x R) R {x})
-1release thm continuity_closed_under_arithmetic(R, fn(x R) R {x}, fn(x R) R {x})
+    release thm continuity_closed_under_arithmetic(R, fn(x R) R {x}, fn(x R) R {x})
     $is_continuous_on(R, fn(x R) R {x * x})
     claim:
         ? forall x R:
@@ -6476,22 +6476,22 @@ thm example_9_4_14_square_continuous:
 thm example_9_4_14_affine_continuous:
     ? forall:
         $is_continuous_on(R, example_9_4_14_affine)
-1release thm constant_function_continuous(R, 3)
+    release thm constant_function_continuous(R, 3)
     $is_continuous_on(R, fn(x R) R {3})
-1release thm identity_function_continuous(R)
+    release thm identity_function_continuous(R)
     $is_continuous_on(R, fn(x R) R {x})
-1release thm continuity_closed_under_arithmetic(R, fn(x R) R {3}, fn(x R) R {x})
+    release thm continuity_closed_under_arithmetic(R, fn(x R) R {3}, fn(x R) R {x})
     $is_continuous_on(R, fn(x R) R {3 * x})
-1release thm constant_function_continuous(R, 1)
+    release thm constant_function_continuous(R, 1)
     $is_continuous_on(R, fn(x R) R {1})
-1release thm continuity_closed_under_arithmetic(R, fn(x R) R {3 * x}, fn(x R) R {1})
+    release thm continuity_closed_under_arithmetic(R, fn(x R) R {3 * x}, fn(x R) R {1})
     $is_continuous_on(R, fn(x R) R {3 * x + 1})
 
 thm example_9_4_14_exp_continuous:
     ? forall:
         $is_continuous_on(R, example_9_4_14_exp)
     5 $in R+
-1release thm positive_base_exponentiation_continuous(5)
+    release thm positive_base_exponentiation_continuous(5)
     $is_continuous_on(R, fn(x R) R {5^x})
 
 thm example_9_4_14_exp_affine_is_composition:
@@ -6510,13 +6510,13 @@ thm example_9_4_14_exp_affine_is_composition:
 thm example_9_4_14_exp_affine_continuous:
     ? forall:
         $is_continuous_on(R, example_9_4_14_exp_affine)
-1release thm example_9_4_14_affine_continuous()
+    release thm example_9_4_14_affine_continuous()
     $is_continuous_on(R, example_9_4_14_affine)
-1release thm example_9_4_14_exp_continuous()
+    release thm example_9_4_14_exp_continuous()
     $is_continuous_on(R, example_9_4_14_exp)
-1release thm example_9_4_14_exp_affine_is_composition()
+    release thm example_9_4_14_exp_affine_is_composition()
     $is_composition_of_real_functions(R, R, example_9_4_14_affine, example_9_4_14_exp, example_9_4_14_exp_affine)
-1release thm composition_preserves_continuity(R, R, example_9_4_14_affine, example_9_4_14_exp, example_9_4_14_exp_affine)
+release thm composition_preserves_continuity(R, R, example_9_4_14_affine, example_9_4_14_exp, example_9_4_14_exp_affine)
 
 have fn example_9_4_14_quadratic(x R) R = x^2 - 8 * x + 7
 have fn example_9_4_14_abs_quadratic(x R) R = abs(x^2 - 8 * x + 7)
@@ -6525,19 +6525,19 @@ have fn example_9_4_14_denominator(x R) R = x^2 + 1
 thm example_9_4_14_quadratic_continuous:
     ? forall:
         $is_continuous_on(R, example_9_4_14_quadratic)
-1release thm example_9_4_14_square_continuous()
+    release thm example_9_4_14_square_continuous()
     $is_continuous_on(R, fn(x R) R {x^2})
-1release thm constant_function_continuous(R, 8)
+    release thm constant_function_continuous(R, 8)
     $is_continuous_on(R, fn(x R) R {8})
-1release thm identity_function_continuous(R)
+    release thm identity_function_continuous(R)
     $is_continuous_on(R, fn(x R) R {x})
-1release thm continuity_closed_under_arithmetic(R, fn(x R) R {8}, fn(x R) R {x})
+    release thm continuity_closed_under_arithmetic(R, fn(x R) R {8}, fn(x R) R {x})
     $is_continuous_on(R, fn(x R) R {8 * x})
-1release thm continuity_closed_under_arithmetic(R, fn(x R) R {x^2}, fn(x R) R {8 * x})
+    release thm continuity_closed_under_arithmetic(R, fn(x R) R {x^2}, fn(x R) R {8 * x})
     $is_continuous_on(R, fn(x R) R {x^2 - 8 * x})
-1release thm constant_function_continuous(R, 7)
+    release thm constant_function_continuous(R, 7)
     $is_continuous_on(R, fn(x R) R {7})
-1release thm continuity_closed_under_arithmetic(R, fn(x R) R {x^2 - 8 * x}, fn(x R) R {7})
+    release thm continuity_closed_under_arithmetic(R, fn(x R) R {x^2 - 8 * x}, fn(x R) R {7})
     $is_continuous_on(R, fn(x R) R {x^2 - 8 * x + 7})
 
 thm example_9_4_14_abs_quadratic_is_composition:
@@ -6556,22 +6556,22 @@ thm example_9_4_14_abs_quadratic_is_composition:
 thm example_9_4_14_abs_quadratic_continuous:
     ? forall:
         $is_continuous_on(R, example_9_4_14_abs_quadratic)
-1release thm example_9_4_14_quadratic_continuous()
+    release thm example_9_4_14_quadratic_continuous()
     $is_continuous_on(R, example_9_4_14_quadratic)
-1release thm absolute_value_continuous()
+    release thm absolute_value_continuous()
     $is_continuous_on(R, abs_fn)
-1release thm example_9_4_14_abs_quadratic_is_composition()
+    release thm example_9_4_14_abs_quadratic_is_composition()
     $is_composition_of_real_functions(R, R, example_9_4_14_quadratic, abs_fn, example_9_4_14_abs_quadratic)
-1release thm composition_preserves_continuity(R, R, example_9_4_14_quadratic, abs_fn, example_9_4_14_abs_quadratic)
+release thm composition_preserves_continuity(R, R, example_9_4_14_quadratic, abs_fn, example_9_4_14_abs_quadratic)
 
 thm example_9_4_14_denominator_continuous:
     ? forall:
         $is_continuous_on(R, example_9_4_14_denominator)
-1release thm example_9_4_14_square_continuous()
+    release thm example_9_4_14_square_continuous()
     $is_continuous_on(R, fn(x R) R {x^2})
-1release thm constant_function_continuous(R, 1)
+    release thm constant_function_continuous(R, 1)
     $is_continuous_on(R, fn(x R) R {1})
-1release thm continuity_closed_under_arithmetic(R, fn(x R) R {x^2}, fn(x R) R {1})
+    release thm continuity_closed_under_arithmetic(R, fn(x R) R {x^2}, fn(x R) R {1})
     $is_continuous_on(R, fn(x R) R {x^2 + 1})
 
 thm example_9_4_14_square_plus_one_nonzero:
@@ -6610,7 +6610,7 @@ thm example_9_4_14_sqrt_two_power_continuous_on_nonnegative:
     claim:
         ? forall t0 '[0,):
             $is_continuous_at('[0,), example_9_4_14_sqrt_two_power_on_nonnegative, t0)
-1release thm interval_member_is_adherent('[0,), t0)
+        release thm interval_member_is_adherent('[0,), t0)
         claim:
             ? forall epsilon R+:
                 $is_locally_epsilon_close_to('[0,), example_9_4_14_sqrt_two_power_on_nonnegative, t0, example_9_4_14_sqrt_two_power_on_nonnegative(t0), epsilon)
@@ -6667,8 +6667,8 @@ thm example_9_4_14_sqrt_two_power_continuous_on_nonnegative:
                                                 impossible y = 0
                                         y > 0
                                         y $in R+
-1release thm example_9_4_14_sqrt_two_gt_one()
-1release thm chap6::real_power_exponent_strict_antimono_below_one(y, sqrt(2), 1)
+                                        release thm example_9_4_14_sqrt_two_gt_one()
+                                        release thm chap6::real_power_exponent_strict_antimono_below_one(y, sqrt(2), 1)
                                         y^sqrt(2) < y^1
                                         y^1 = y
                                         y^sqrt(2) < y
@@ -6676,7 +6676,7 @@ thm example_9_4_14_sqrt_two_power_continuous_on_nonnegative:
                                         y < finite_set_min(union({epsilon}, {1 / 2})) <= epsilon
                                         y < epsilon
                                         y <= epsilon
-1release thm chap6::real_power_positive(y, sqrt(2))
+                                        release thm chap6::real_power_positive(y, sqrt(2))
                                         y^sqrt(2) >= 0
                                         example_9_4_14_sqrt_two_power_on_nonnegative(y) = y^sqrt(2)
                                         example_9_4_14_sqrt_two_power_on_nonnegative(t0) = 0^sqrt(2)
@@ -6702,7 +6702,7 @@ thm example_9_4_14_sqrt_two_power_continuous_on_nonnegative:
                                 impossible t0 = 0
                         t0 > 0
                         t0 $in R+
-1release thm positive_domain_power_function_continuous(sqrt(2))
+                        release thm positive_domain_power_function_continuous(sqrt(2))
                         $is_continuous_on(R+, fn(t R+) R {t^sqrt(2)})
                         $is_continuous_at(R+, fn(t R+) R {t^sqrt(2)}, t0)
                         fn(t R+) R {t^sqrt(2)}(t0) = t0^sqrt(2)
@@ -6775,7 +6775,7 @@ thm example_9_4_14_sqrt_two_power_extension_continuous:
     claim:
         ? forall t0 R:
             $is_continuous_at(R, example_9_4_14_sqrt_two_power_extension, t0)
-1release thm interval_member_is_adherent(R, t0)
+        release thm interval_member_is_adherent(R, t0)
         claim:
             ? forall epsilon R+:
                 $is_locally_epsilon_close_to(R, example_9_4_14_sqrt_two_power_extension, t0, example_9_4_14_sqrt_two_power_extension(t0), epsilon)
@@ -6885,15 +6885,15 @@ thm example_9_4_14_sqrt_two_power_extension_continuous:
                                                             impossible y = 0
                                                     y > 0
                                                     y $in R+
-1release thm example_9_4_14_sqrt_two_gt_one()
-1release thm chap6::real_power_exponent_strict_antimono_below_one(y, sqrt(2), 1)
+                                                    release thm example_9_4_14_sqrt_two_gt_one()
+                                                    release thm chap6::real_power_exponent_strict_antimono_below_one(y, sqrt(2), 1)
                                                     y^sqrt(2) < y^1
                                                     y^1 = y
                                                     y^sqrt(2) < y
                                                     y^sqrt(2) <= y
                                                     y < finite_set_min(union({epsilon}, {1 / 2})) <= epsilon
                                                     y <= epsilon
-1release thm chap6::real_power_positive(y, sqrt(2))
+                                                    release thm chap6::real_power_positive(y, sqrt(2))
                                                     y^sqrt(2) >= 0
                                                     example_9_4_14_sqrt_two_power_extension(y) = y^sqrt(2)
                                                     t0 = 0
@@ -6913,7 +6913,7 @@ thm example_9_4_14_sqrt_two_power_extension_continuous:
                             $is_locally_epsilon_close_to(R, example_9_4_14_sqrt_two_power_extension, t0, example_9_4_14_sqrt_two_power_extension(t0), epsilon)
                         case t0 > 0:
                             t0 $in R+
-1release thm positive_domain_power_function_continuous(sqrt(2))
+                            release thm positive_domain_power_function_continuous(sqrt(2))
                             $is_continuous_on(R+, fn(t R+) R {t^sqrt(2)})
                             $is_continuous_at(R+, fn(t R+) R {t^sqrt(2)}, t0)
                             fn(t R+) R {t^sqrt(2)}(t0) = t0^sqrt(2)
@@ -6972,11 +6972,11 @@ thm example_9_4_14_sqrt_two_power_extension_continuous:
 thm example_9_4_14_abs_quadratic_continuous_into_nonnegative:
     ? forall:
         $is_continuous_on(R, example_9_4_14_abs_quadratic_nonnegative)
-1release thm example_9_4_14_abs_quadratic_continuous()
+    release thm example_9_4_14_abs_quadratic_continuous()
     claim:
         ? forall x0 R:
             $is_continuous_at(R, example_9_4_14_abs_quadratic_nonnegative, x0)
-1release thm interval_member_is_adherent(R, x0)
+        release thm interval_member_is_adherent(R, x0)
         claim:
             ? forall epsilon R+:
                 $is_locally_epsilon_close_to(R, example_9_4_14_abs_quadratic_nonnegative, x0, example_9_4_14_abs_quadratic_nonnegative(x0), epsilon)
@@ -7041,27 +7041,27 @@ thm example_9_4_14_complex_is_quotient:
             example_9_4_14_complex(x) = example_9_4_14_powered_abs_quadratic(x) / example_9_4_14_denominator(x)
     example_9_4_14_complex(x) = abs(x^2 - 8 * x + 7)^sqrt(2) / (x^2 + 1)
     example_9_4_14_powered_abs_quadratic(x) = abs(x^2 - 8 * x + 7)^sqrt(2)
-1release thm example_9_4_14_denominator_eval(x)
+    release thm example_9_4_14_denominator_eval(x)
     example_9_4_14_denominator(x) = x^2 + 1
     example_9_4_14_powered_abs_quadratic(x) / example_9_4_14_denominator(x) = abs(x^2 - 8 * x + 7)^sqrt(2) / (x^2 + 1)
 
 thm example_9_4_14_powered_abs_quadratic_continuous:
     ? forall:
         $is_continuous_on(R, example_9_4_14_powered_abs_quadratic)
-1release thm example_9_4_14_abs_quadratic_continuous_into_nonnegative()
+    release thm example_9_4_14_abs_quadratic_continuous_into_nonnegative()
     $is_continuous_on(R, example_9_4_14_abs_quadratic_nonnegative)
-1release thm example_9_4_14_sqrt_two_power_extension_continuous()
+    release thm example_9_4_14_sqrt_two_power_extension_continuous()
     $is_continuous_on(R, example_9_4_14_sqrt_two_power_extension)
-1release thm example_9_4_14_powered_abs_quadratic_is_composition()
+    release thm example_9_4_14_powered_abs_quadratic_is_composition()
     $is_composition_of_real_functions(R, R, example_9_4_14_abs_quadratic_nonnegative, example_9_4_14_sqrt_two_power_extension, example_9_4_14_powered_abs_quadratic)
-1release thm composition_preserves_continuity(R, R, example_9_4_14_abs_quadratic_nonnegative, example_9_4_14_sqrt_two_power_extension, example_9_4_14_powered_abs_quadratic)
+release thm composition_preserves_continuity(R, R, example_9_4_14_abs_quadratic_nonnegative, example_9_4_14_sqrt_two_power_extension, example_9_4_14_powered_abs_quadratic)
 
 thm example_9_4_14_complex_continuous:
     ? forall:
         $is_continuous_on(R, example_9_4_14_complex)
-1release thm example_9_4_14_powered_abs_quadratic_continuous()
+    release thm example_9_4_14_powered_abs_quadratic_continuous()
     $is_continuous_on(R, example_9_4_14_powered_abs_quadratic)
-1release thm example_9_4_14_denominator_continuous()
+    release thm example_9_4_14_denominator_continuous()
     $is_continuous_on(R, example_9_4_14_denominator)
     claim:
         ? forall x0 R:
@@ -7070,15 +7070,15 @@ thm example_9_4_14_complex_continuous:
         $is_continuous_at(R, example_9_4_14_denominator, x0)
         $has_function_limit(R, example_9_4_14_powered_abs_quadratic, x0, example_9_4_14_powered_abs_quadratic(x0))
         $has_function_limit(R, example_9_4_14_denominator, x0, example_9_4_14_denominator(x0))
-1release thm example_9_4_14_square_plus_one_nonzero(x0)
-1release thm example_9_4_14_denominator_eval(x0)
+        release thm example_9_4_14_square_plus_one_nonzero(x0)
+        release thm example_9_4_14_denominator_eval(x0)
         example_9_4_14_denominator(x0) = x0^2 + 1
         example_9_4_14_denominator(x0) != 0
-1release thm function_limit_quotient(R, example_9_4_14_powered_abs_quadratic, example_9_4_14_denominator, x0, example_9_4_14_powered_abs_quadratic(x0), example_9_4_14_denominator(x0))
+        release thm function_limit_quotient(R, example_9_4_14_powered_abs_quadratic, example_9_4_14_denominator, x0, example_9_4_14_powered_abs_quadratic(x0), example_9_4_14_denominator(x0))
         $has_function_limit({x R: example_9_4_14_denominator(x) != 0}, fn(x {x R: example_9_4_14_denominator(x) != 0}) R {example_9_4_14_powered_abs_quadratic(x) / example_9_4_14_denominator(x)}, x0, example_9_4_14_powered_abs_quadratic(x0) / example_9_4_14_denominator(x0))
         claim:
             ? $has_function_limit(R, example_9_4_14_complex, x0, example_9_4_14_powered_abs_quadratic(x0) / example_9_4_14_denominator(x0))
-1release thm interval_member_is_adherent(R, x0)
+            release thm interval_member_is_adherent(R, x0)
             $is_adherent_point(R, x0)
             claim:
                 ? forall epsilon R+:
@@ -7091,13 +7091,13 @@ thm example_9_4_14_complex_continuous:
                             abs(y - x0) < delta
                             =>:
                                 abs(example_9_4_14_complex(y) - example_9_4_14_powered_abs_quadratic(x0) / example_9_4_14_denominator(x0)) <= epsilon
-1release thm example_9_4_14_square_plus_one_nonzero(y)
-1release thm example_9_4_14_denominator_eval(y)
+                        release thm example_9_4_14_square_plus_one_nonzero(y)
+                        release thm example_9_4_14_denominator_eval(y)
                         example_9_4_14_denominator(y) = y^2 + 1
                         example_9_4_14_denominator(y) != 0
                         y $in {x R: example_9_4_14_denominator(x) != 0}
                         abs(fn(x {x R: example_9_4_14_denominator(x) != 0}) R {example_9_4_14_powered_abs_quadratic(x) / example_9_4_14_denominator(x)}(y) - example_9_4_14_powered_abs_quadratic(x0) / example_9_4_14_denominator(x0)) <= epsilon
-1release thm example_9_4_14_complex_is_quotient(y)
+                        release thm example_9_4_14_complex_is_quotient(y)
                         example_9_4_14_complex(y) = example_9_4_14_powered_abs_quadratic(y) / example_9_4_14_denominator(y)
                         fn(x {x R: example_9_4_14_denominator(x) != 0}) R {example_9_4_14_powered_abs_quadratic(x) / example_9_4_14_denominator(x)}(y) = example_9_4_14_powered_abs_quadratic(y) / example_9_4_14_denominator(y)
                         example_9_4_14_complex(y) = fn(x {x R: example_9_4_14_denominator(x) != 0}) R {example_9_4_14_powered_abs_quadratic(x) / example_9_4_14_denominator(x)}(y)
@@ -7106,7 +7106,7 @@ thm example_9_4_14_complex_continuous:
                         ? $is_delta_neighborhood_close_to(R, example_9_4_14_complex, x0, example_9_4_14_powered_abs_quadratic(x0) / example_9_4_14_denominator(x0), epsilon, delta)
             by def:
                 ? $has_function_limit(R, example_9_4_14_complex, x0, example_9_4_14_powered_abs_quadratic(x0) / example_9_4_14_denominator(x0))
-1release thm example_9_4_14_complex_is_quotient(x0)
+        release thm example_9_4_14_complex_is_quotient(x0)
         example_9_4_14_complex(x0) = example_9_4_14_powered_abs_quadratic(x0) / example_9_4_14_denominator(x0)
         $has_function_limit(R, example_9_4_14_complex, x0, example_9_4_14_complex(x0))
         by def:
@@ -7199,13 +7199,13 @@ Example 9.5.2. The sign function has different one-sided limits at zero.
 
 have fn analysis_sign(x R) R by cases:
     case x = 0: 0
-    case x < 0: -1
+    case x < 0: (-1)
     case x > 0: 1
 
 thm sign_function_one_sided_limits:
     ? forall:
         $has_right_limit(R, analysis_sign, 0, 1)
-        $has_left_limit(R, analysis_sign, 0, -1)
+        $has_left_limit(R, analysis_sign, 0, (-1))
         not $has_function_limit(R, analysis_sign, 0, 0)
     claim:
         ? $has_right_limit(R, analysis_sign, 0, 1)
@@ -7230,27 +7230,27 @@ thm sign_function_one_sided_limits:
         by def:
             ? $has_right_limit(R, analysis_sign, 0, 1)
     claim:
-        ? $has_left_limit(R, analysis_sign, 0, -1)
+        ? $has_left_limit(R, analysis_sign, 0, (-1))
         claim:
             ? forall epsilon R+:
-                exist delta R+ st {$is_left_delta_close_to(R, analysis_sign, 0, -1, epsilon, delta)}
-            witness exist delta R+ st {$is_left_delta_close_to(R, analysis_sign, 0, -1, epsilon, delta)} from epsilon:
+                exist delta R+ st {$is_left_delta_close_to(R, analysis_sign, 0, (-1), epsilon, delta)}
+            witness exist delta R+ st {$is_left_delta_close_to(R, analysis_sign, 0, (-1), epsilon, delta)} from epsilon:
                 claim:
                     ? forall x R:
                         x < 0
                         abs(x - 0) < epsilon
                         =>:
                             abs(analysis_sign(x) - (-1)) <= epsilon
-                    analysis_sign(x) = -1
-                    analysis_sign(x) - (-1) = -1 - (-1)
-                    -1 - (-1) = 0
+                    analysis_sign(x) = (-1)
+                    analysis_sign(x) - (-1) = (-1) - (-1)
+                    (-1) - (-1) = 0
                     abs(analysis_sign(x) - (-1)) = abs(0)
                     abs(0) = 0
                     0 <= epsilon
                 by def:
-                    ? $is_left_delta_close_to(R, analysis_sign, 0, -1, epsilon, epsilon)
+                    ? $is_left_delta_close_to(R, analysis_sign, 0, (-1), epsilon, epsilon)
         by def:
-            ? $has_left_limit(R, analysis_sign, 0, -1)
+            ? $has_left_limit(R, analysis_sign, 0, (-1))
     claim:
         ? not $has_function_limit(R, analysis_sign, 0, 0)
         by contra:
@@ -7292,7 +7292,7 @@ thm continuity_from_one_sided_limits:
     # into left, center, and right cases.
     # The proof follows that argument directly: choose a common delta from the
     # two one-sided witnesses and handle the center point by `f(x0)=L`.
-1release thm interval_member_is_adherent(E, x0)
+    release thm interval_member_is_adherent(E, x0)
     claim:
         ? forall epsilon R+:
             $is_locally_epsilon_close_to(E, f, x0, L, epsilon)
@@ -7355,7 +7355,7 @@ function remains bounded but has no one-sided or two-sided limiting value there.
 thm rational_indicator_not_continuous_at_zero:
     ? forall:
         not $is_continuous_at(R, rational_indicator_for_limit_example, 0)
-1release thm rational_indicator_no_limit_at_zero()
+    release thm rational_indicator_no_limit_at_zero()
     not exist L R st {$has_function_limit(R, rational_indicator_for_limit_example, 0, L)}
     by contra:
         ? not $is_continuous_at(R, rational_indicator_for_limit_example, 0)
@@ -7368,7 +7368,7 @@ thm rational_indicator_not_continuous_at_zero:
 
 """
 Definition 9.6.1. A function on X is bounded when its values remain inside
-`[-M,M]` for some positive M.  Tao also defines one-sided boundedness from
+`[(-M),M]` for some positive M.  Tao also defines one-sided boundedness from
 above and from below.
 """
 
@@ -7378,7 +7378,7 @@ prop is_function_bounded_above_by(X power_set(R), f fn(x X) R, M R):
 
 prop is_function_bounded_below_by(X power_set(R), f fn(x X) R, M R):
     forall x X:
-        -M <= f(x)
+        (-M) <= f(x)
 
 prop is_function_bounded_above_on(X power_set(R), f fn(x X) R):
     exist M R st {$is_function_bounded_above_by(X, f, M)}
@@ -7401,10 +7401,10 @@ thm neg_order_reverse_bridge:
         =>:
             0 - u <= 0 - v
     (-1) * u <= (-1) * v
-    0 - u = -u
-    0 - v = -v
+    0 - u = (-u)
+    0 - v = (-v)
 
-# Every real number is at least `-abs(u)`, and at most `abs(u)`.
+# Every real number is at least `(-abs(u))`, and at most `abs(u)`.
 thm neg_abs_le_self:
     ? forall u R:
         0 - abs(u) <= u
@@ -7427,22 +7427,22 @@ thm abs_bound_implies_two_sided_bound:
         abs(u) <= M
         =>:
             u <= M
-            -M <= u
+            (-M) <= u
     u <= abs(u)
     u <= abs(u) <= M
     u <= M
-1release thm neg_abs_le_self(u)
+    release thm neg_abs_le_self(u)
     0 - abs(u) <= u
-1release thm neg_order_reverse_bridge(M, abs(u))
+    release thm neg_order_reverse_bridge(M, abs(u))
     0 - M <= 0 - abs(u)
     0 - M <= 0 - abs(u) <= u
     0 - M <= u
-    0 - M = -M
-    -M <= u
+    0 - M = (-M)
+    (-M) <= u
 
-# If `u` lies between `-B` and `A`, then `abs(u)` is bounded by `A+B`.
+# If `u` lies between `(-B)` and `A`, then `abs(u)` is bounded by `A+B`.
 # The proof splits on the sign of `u`; the negative case reverses order by
-# multiplying through by `-1`.
+# multiplying through by `(-1)`.
 thm abs_bound_from_two_sided_bound:
     ? forall u, A, B R:
         0 <= A
@@ -7490,7 +7490,7 @@ thm bounded_function_implies_upper_and_lower_bounded:
                 ? forall x X:
                     f(x) <= M
                 abs(f(x)) <= M
-1release thm abs_bound_implies_two_sided_bound(f(x), M)
+                release thm abs_bound_implies_two_sided_bound(f(x), M)
                 f(x) <= M
             $is_function_bounded_above_by(X, f, M)
     claim:
@@ -7498,10 +7498,10 @@ thm bounded_function_implies_upper_and_lower_bounded:
         witness $is_function_bounded_below_on(X, f) from M:
             claim:
                 ? forall x X:
-                    -M <= f(x)
+                    (-M) <= f(x)
                 abs(f(x)) <= M
-1release thm abs_bound_implies_two_sided_bound(f(x), M)
-                -M <= f(x)
+                release thm abs_bound_implies_two_sided_bound(f(x), M)
+                (-M) <= f(x)
             $is_function_bounded_below_by(X, f, M)
 
 thm upper_and_lower_bounded_implies_bounded_function:
@@ -7521,17 +7521,17 @@ thm upper_and_lower_bounded_implies_bounded_function:
             A <= abs(A)
             f(x) <= A <= abs(A)
             f(x) <= abs(A)
-            -B <= f(x)
-            0 - B = -B
+            (-B) <= f(x)
+            0 - B = (-B)
             0 - B <= f(x)
             B <= abs(B)
-1release thm neg_order_reverse_bridge(abs(B), B)
+            release thm neg_order_reverse_bridge(abs(B), B)
             0 - abs(B) <= 0 - B
             0 - abs(B) <= 0 - B <= f(x)
             0 - abs(B) <= f(x)
             0 <= abs(A)
             0 <= abs(B)
-1release thm abs_bound_from_two_sided_bound(f(x), abs(A), abs(B))
+            release thm abs_bound_from_two_sided_bound(f(x), abs(A), abs(B))
             abs(f(x)) <= abs(A) + abs(B)
             abs(A) + abs(B) <= abs(A) + abs(B) + 1
             abs(f(x)) <= abs(A) + abs(B) + 1
@@ -7548,17 +7548,17 @@ thm bounded_function_implies_bounded_range:
     witness $is_bounded_real_set(fn_range(f)) from M:
         claim:
             ? forall y fn_range(f):
-                y $in '[-M, M]
+                y $in '[(-M), M]
             have by preimage x from y $in fn_range(f)
             y = f(x)
             abs(f(x)) <= M
-1release thm abs_bound_implies_two_sided_bound(f(x), M)
+            release thm abs_bound_implies_two_sided_bound(f(x), M)
             f(x) <= M
-            -M <= f(x)
+            (-M) <= f(x)
             y <= M
-            -M <= y
+            (-M) <= y
         by def:
-            ? fn_range(f) $subset '[-M, M]
+            ? fn_range(f) $subset '[(-M), M]
 
 thm bounded_range_implies_bounded_function:
     ? forall X power_set(R), f fn(x X) R:
@@ -7573,10 +7573,10 @@ thm bounded_range_implies_bounded_function:
             ? forall x X:
                 abs(f(x)) <= M
             f(x) $in fn_range(f)
-            f(x) $in '[-M, M]
-            -M <= f(x)
+            f(x) $in '[(-M), M]
+            (-M) <= f(x)
             f(x) <= M
-1release thm abs_bound_from_symmetric_bound(f(x), M)
+            release thm abs_bound_from_symmetric_bound(f(x), M)
             abs(f(x)) <= M
         $is_function_bounded_by(X, f, M)
 
@@ -7617,11 +7617,11 @@ prop attains_minimum_on(X power_set(R), f fn(x X) R):
 # A symmetric bound supplies an upper bound for a real set.
 thm real_set_member_le_of_symmetric_bound:
     ? forall Y power_set(R), B R+, y Y:
-        Y $subset '[-B, B]
+        Y $subset '[(-B), B]
         =>:
             y <= B
-    Y $subset '[-B, B]
-    y $in '[-B, B]
+    Y $subset '[(-B), B]
+    y $in '[(-B), B]
 
 thm bounded_real_set_has_upper_bound:
     ? forall Y power_set(R):
@@ -7635,7 +7635,7 @@ thm bounded_real_set_has_upper_bound:
         claim:
             ? forall y Y:
                 y <= B
-1release thm real_set_member_le_of_symmetric_bound(Y, B, y)
+        release thm real_set_member_le_of_symmetric_bound(Y, B, y)
         by def:
             ? $chap5::is_upper_bound(Y, B)
     witness exist bound_witness R st {$chap5::is_upper_bound(Y, bound_witness)} from B:
@@ -7705,14 +7705,14 @@ thm nonempty_sequentially_compact_real_set_has_maximum:
         $has_sequential_compactness_in_R(Y)
         =>:
             exist M Y st {$chap5::is_upper_bound(Y, M)}
-1release thm sequentially_compact_real_set_is_closed_and_bounded(Y)
+    release thm sequentially_compact_real_set_is_closed_and_bounded(Y)
     closure_of_real_set(Y) = Y
     $is_bounded_real_set(Y)
-1release thm bounded_real_set_has_upper_bound(Y)
+    release thm bounded_real_set_has_upper_bound(Y)
     $chap5::has_upper_bound(Y)
-1release thm chap5::least_upper_bound_existence(Y)
+    release thm chap5::least_upper_bound_existence(Y)
     obtain M from exist M R st {$chap5::is_least_upper_bound(Y, M)}
-1release thm least_upper_bound_is_adherent(Y, M)
+    release thm least_upper_bound_is_adherent(Y, M)
     $is_adherent_point(Y, M)
     M $in closure_of_real_set(Y)
     closure_of_real_set(Y) = Y
@@ -7726,9 +7726,9 @@ thm neg_order_bridge:
         0 - u <= 0 - v
         =>:
             v <= u
-    0 - u = -u
-    0 - v = -v
-    -u <= -v
+    0 - u = (-u)
+    0 - v = (-v)
+    (-u) <= (-v)
     (-1) * (-v) <= (-1) * (-u)
     (-1) * (-v) = v
     (-1) * (-u) = u
@@ -7738,9 +7738,9 @@ thm neg_eq_bridge:
         0 - u = 0 - v
         =>:
             u = v
-    0 - u = -u
-    0 - v = -v
-    -u = -v
+    0 - u = (-u)
+    0 - v = (-v)
+    (-u) = (-v)
     (-1) * (-u) = (-1) * (-v)
     (-1) * (-u) = u
     (-1) * (-v) = v
@@ -7767,7 +7767,7 @@ thm attained_extrema_imply_bounded_function:
             f(x) <= f(cmax)
             f(cmin) <= f(x)
             f(cmax) <= abs(f(cmax))
-1release thm neg_abs_le_self(f(cmin))
+            release thm neg_abs_le_self(f(cmin))
             0 - abs(f(cmin)) <= f(cmin)
             0 - abs(f(cmin)) <= f(cmin) <= f(x)
             0 - abs(f(cmin)) <= f(x)
@@ -7775,7 +7775,7 @@ thm attained_extrema_imply_bounded_function:
             f(x) <= abs(f(cmax))
             0 <= abs(f(cmax))
             0 <= abs(f(cmin))
-1release thm abs_bound_from_two_sided_bound(f(x), abs(f(cmax)), abs(f(cmin)))
+            release thm abs_bound_from_two_sided_bound(f(x), abs(f(cmax)), abs(f(cmin)))
             abs(f(x)) <= abs(f(cmax)) + abs(f(cmin))
             abs(f(cmax)) + abs(f(cmin)) <= abs(f(cmax)) + abs(f(cmin)) + 1
             abs(f(x)) <= abs(f(cmax)) + abs(f(cmin)) + 1
@@ -7796,13 +7796,13 @@ thm continuous_closed_interval_attains_maximum:
     # The interval is closed and bounded, hence sequentially compact.  Its
     # continuous image is sequentially compact; its least upper bound belongs
     # to that image, and a preimage is a maximizer.
-1release thm closure_of_closed_interval(a, b)
+    release thm closure_of_closed_interval(a, b)
     closure_of_real_set('[a, b]) = '[a, b]
-1release thm closed_interval_is_bounded(a, b)
+    release thm closed_interval_is_bounded(a, b)
     $is_bounded_real_set('[a, b])
-1release thm heine_borel_sequential_compactness_for_real_sets('[a, b])
+    release thm heine_borel_sequential_compactness_for_real_sets('[a, b])
     $has_sequential_compactness_in_R('[a, b])
-1release thm continuous_image_of_sequentially_compact_real_set_is_sequentially_compact('[a, b], f)
+    release thm continuous_image_of_sequentially_compact_real_set_is_sequentially_compact('[a, b], f)
     $has_sequential_compactness_in_R(fn_range(f))
     claim:
         ? $is_nonempty_set(fn_range(f))
@@ -7810,7 +7810,7 @@ thm continuous_closed_interval_attains_maximum:
         f(a) $in fn_range(f)
         witness $is_nonempty_set(fn_range(f)) from f(a):
             f(a) $in fn_range(f)
-1release thm nonempty_sequentially_compact_real_set_has_maximum(fn_range(f))
+    release thm nonempty_sequentially_compact_real_set_has_maximum(fn_range(f))
     obtain M from exist M fn_range(f) st {$chap5::is_upper_bound(fn_range(f), M)}
     have by preimage c from M $in fn_range(f)
     witness $attains_maximum_on('[a, b], f) from c:
@@ -7848,11 +7848,11 @@ thm continuous_closed_interval_attains_minimum:
                     witness $attains_minimum_on('[a, b], f) from b:
                         $is_minimizer_on('[a, b], f, b)
                 case not $is_minimizer_on('[a, b], f, b):
-1release thm constant_function_continuous('[a, b], 0)
+                    release thm constant_function_continuous('[a, b], 0)
                     $is_continuous_on('[a, b], fn(x '[a, b]) R {0})
-1release thm continuity_closed_under_arithmetic('[a, b], fn(x '[a, b]) R {0}, f)
+                    release thm continuity_closed_under_arithmetic('[a, b], fn(x '[a, b]) R {0}, f)
                     $is_continuous_on('[a, b], fn(x '[a, b]) R {0 - f(x)})
-1release thm continuous_closed_interval_attains_maximum(a, b, fn(x '[a, b]) R {0 - f(x)})
+                    release thm continuous_closed_interval_attains_maximum(a, b, fn(x '[a, b]) R {0 - f(x)})
                     $attains_maximum_on('[a, b], fn(x '[a, b]) R {0 - f(x)})
                     obtain c from $attains_maximum_on('[a, b], fn(x '[a, b]) R {0 - f(x)})
                     witness $attains_minimum_on('[a, b], f) from c:
@@ -7863,7 +7863,7 @@ thm continuous_closed_interval_attains_minimum:
                             fn(u '[a, b]) R {0 - f(u)}(x) = 0 - f(x)
                             fn(u '[a, b]) R {0 - f(u)}(c) = 0 - f(c)
                             0 - f(x) <= 0 - f(c)
-1release thm neg_order_bridge(f(x), f(c))
+                        release thm neg_order_bridge(f(x), f(c))
                         by def:
                             ? $is_minimizer_on('[a, b], f, c)
 
@@ -7874,8 +7874,8 @@ thm maximum_principle_closed_interval:
         =>:
             $attains_maximum_on('[a, b], f)
             $attains_minimum_on('[a, b], f)
-1release thm continuous_closed_interval_attains_maximum(a, b, f)
-1release thm continuous_closed_interval_attains_minimum(a, b, f)
+release thm continuous_closed_interval_attains_maximum(a, b, f)
+release thm continuous_closed_interval_attains_minimum(a, b, f)
 
 # Lemma 9.6.3 uses the maximum principle on a compact interval: once both
 # extrema are attained, the explicit absolute-value estimate from Remark 9.6.6
@@ -7886,10 +7886,10 @@ thm lemma_9_6_3_continuous_closed_interval_function_bounded:
         $is_continuous_on('[a, b], f)
         =>:
             $is_bounded_function_on('[a, b], f)
-1release thm maximum_principle_closed_interval(a, b, f)
+    release thm maximum_principle_closed_interval(a, b, f)
     $attains_maximum_on('[a, b], f)
     $attains_minimum_on('[a, b], f)
-1release thm attained_extrema_imply_bounded_function('[a, b], f)
+release thm attained_extrema_imply_bounded_function('[a, b], f)
 
 thm continuous_closed_interval_function_bounded:
     ? forall a, b R, f fn(x '[a, b]) R:
@@ -7897,7 +7897,7 @@ thm continuous_closed_interval_function_bounded:
         $is_continuous_on('[a, b], f)
         =>:
             $is_bounded_function_on('[a, b], f)
-1release thm lemma_9_6_3_continuous_closed_interval_function_bounded(a, b, f)
+release thm lemma_9_6_3_continuous_closed_interval_function_bounded(a, b, f)
 
 """
 Remark 9.6.8. The name "maximum principle" is slightly misleading because the
@@ -7951,9 +7951,9 @@ thm ivt_left_set_bounded_in_strict_case:
         by def:
             ? {x '[a, b]: f(x) <= y} $subset '[a, b]
     a <= b
-1release thm closed_interval_is_bounded(a, b)
+    release thm closed_interval_is_bounded(a, b)
     $is_bounded_real_set('[a, b])
-1release thm bounded_real_set_subset({x '[a, b]: f(x) <= y}, '[a, b])
+release thm bounded_real_set_subset({x '[a, b]: f(x) <= y}, '[a, b])
 
 # The supremum of the left set remains in the closed interval: `a` belongs to
 # the left set, while `b` is an upper bound for it.
@@ -8002,7 +8002,7 @@ thm ivt_left_set_lub_value_at_most:
         $has_function_limit('[a, b], f, c0, f(c0))
         $is_locally_epsilon_close_to('[a, b], f, c0, f(c0), (f(c0) - y) / 2)
         obtain delta from $is_locally_epsilon_close_to('[a, b], f, c0, f(c0), (f(c0) - y) / 2)
-1release thm least_upper_bound_is_adherent({x '[a, b]: f(x) <= y}, c)
+        release thm least_upper_bound_is_adherent({x '[a, b]: f(x) <= y}, c)
         delta / 2 $in R+
         $is_epsilon_adherent_to_set({x '[a, b]: f(x) <= y}, c, delta / 2)
         obtain z from exist z R st {z $in {x '[a, b]: f(x) <= y}, abs(c - z) <= delta / 2}
@@ -8150,19 +8150,19 @@ thm intermediate_value_theorem_strict_interior_core:
             exist c '[a, b] st {f(c) = y}
     # Take the supremum of the left set.  Continuity rules out values both
     # above and below `y` at the cut point.
-1release thm ivt_left_set_nonempty_in_strict_case(a, b, f, y)
+    release thm ivt_left_set_nonempty_in_strict_case(a, b, f, y)
     $is_nonempty_set({x '[a, b]: f(x) <= y})
-1release thm ivt_left_set_bounded_in_strict_case(a, b, f, y)
+    release thm ivt_left_set_bounded_in_strict_case(a, b, f, y)
     $is_bounded_real_set({x '[a, b]: f(x) <= y})
-1release thm bounded_real_set_has_upper_bound({x '[a, b]: f(x) <= y})
+    release thm bounded_real_set_has_upper_bound({x '[a, b]: f(x) <= y})
     $chap5::has_upper_bound({x '[a, b]: f(x) <= y})
-1release thm chap5::least_upper_bound_existence({x '[a, b]: f(x) <= y})
+    release thm chap5::least_upper_bound_existence({x '[a, b]: f(x) <= y})
     obtain c from exist c R st {$chap5::is_least_upper_bound({x '[a, b]: f(x) <= y}, c)}
-1release thm ivt_left_set_lub_lies_in_closed_interval(a, b, f, y, c)
+    release thm ivt_left_set_lub_lies_in_closed_interval(a, b, f, y, c)
     c $in '[a, b]
-1release thm ivt_left_set_lub_value_at_most(a, b, f, y, c)
+    release thm ivt_left_set_lub_value_at_most(a, b, f, y, c)
     f(c) <= y
-1release thm ivt_left_set_lub_value_at_least(a, b, f, y, c)
+    release thm ivt_left_set_lub_value_at_least(a, b, f, y, c)
     y <= f(c)
     f(c) = y
     witness exist c0 '[a, b] st {f(c0) = y} from c:
@@ -8205,7 +8205,7 @@ thm intermediate_value_theorem_increasing_order:
                         f(c) = f(b)
                         f(b) = y
                 case y < f(b):
-1release thm intermediate_value_theorem_strict_interior_core(a, b, f, y)
+                    release thm intermediate_value_theorem_strict_interior_core(a, b, f, y)
                     exist c '[a, b] st {f(c) = y}
 
 thm intermediate_value_theorem_decreasing_order:
@@ -8219,9 +8219,9 @@ thm intermediate_value_theorem_decreasing_order:
     # In the source: Tao leaves this reversed endpoint order as similar.
     # The proof applies the increasing-order case to `0-f`.
     have fn reversed_endpoint_function(x '[a, b]) R = 0 - f(x)
-1release thm constant_function_continuous('[a, b], 0)
+    release thm constant_function_continuous('[a, b], 0)
     $is_continuous_on('[a, b], fn(x '[a, b]) R {0})
-1release thm continuity_closed_under_arithmetic('[a, b], fn(x '[a, b]) R {0}, f)
+    release thm continuity_closed_under_arithmetic('[a, b], fn(x '[a, b]) R {0}, f)
     $is_continuous_on('[a, b], fn(x '[a, b]) R {0 - f(x)})
     claim:
         ? forall x '[a, b]:
@@ -8231,11 +8231,11 @@ thm intermediate_value_theorem_decreasing_order:
     claim:
         ? forall x0 '[a, b]:
             $is_continuous_at('[a, b], reversed_endpoint_function, x0)
-1release thm interval_member_is_adherent('[a, b], x0)
+        release thm interval_member_is_adherent('[a, b], x0)
         $is_adherent_point('[a, b], x0)
         $is_continuous_at('[a, b], fn(x '[a, b]) R {0 - f(x)}, x0)
         $has_function_limit('[a, b], fn(x '[a, b]) R {0 - f(x)}, x0, fn(x '[a, b]) R {0 - f(x)}(x0))
-1release thm equal_functions_have_equal_function_limits('[a, b], fn(x '[a, b]) R {0 - f(x)}, reversed_endpoint_function, x0, fn(x '[a, b]) R {0 - f(x)}(x0))
+        release thm equal_functions_have_equal_function_limits('[a, b], fn(x '[a, b]) R {0 - f(x)}, reversed_endpoint_function, x0, fn(x '[a, b]) R {0 - f(x)}(x0))
         $has_function_limit('[a, b], reversed_endpoint_function, x0, fn(x '[a, b]) R {0 - f(x)}(x0))
         fn(x '[a, b]) R {0 - f(x)}(x0) = reversed_endpoint_function(x0)
         # Source handling/proof_debt: transport the checked limit across the
@@ -8245,9 +8245,9 @@ thm intermediate_value_theorem_decreasing_order:
             ? $is_continuous_at('[a, b], reversed_endpoint_function, x0)
     by def:
         ? $is_continuous_on('[a, b], reversed_endpoint_function)
-1release thm neg_order_reverse_bridge(f(a), y)
+    release thm neg_order_reverse_bridge(f(a), y)
     0 - f(a) <= 0 - y
-1release thm neg_order_reverse_bridge(y, f(b))
+    release thm neg_order_reverse_bridge(y, f(b))
     0 - y <= 0 - f(b)
     # Source handling/proof_debt: named-function evaluation is not unfolded at
     # these endpoint arguments after the checked function definition above.
@@ -8255,100 +8255,100 @@ thm intermediate_value_theorem_decreasing_order:
     reversed_endpoint_function(b) = 0 - f(b)
     reversed_endpoint_function(a) <= 0 - y
     0 - y <= reversed_endpoint_function(b)
-1release thm intermediate_value_theorem_increasing_order(a, b, reversed_endpoint_function, 0 - y)
+    release thm intermediate_value_theorem_increasing_order(a, b, reversed_endpoint_function, 0 - y)
     exist c '[a, b] st {reversed_endpoint_function(c) = 0 - y}
     obtain c from exist c '[a, b] st {reversed_endpoint_function(c) = 0 - y}
     witness exist c0 '[a, b] st {f(c0) = y} from c:
         reversed_endpoint_function(c) = 0 - y
         reversed_endpoint_function(c) = 0 - f(c)
         0 - f(c) = 0 - y
-1release thm neg_eq_bridge(f(c), y)
+        release thm neg_eq_bridge(f(c), y)
         f(c) = y
 
 """
 Remark 9.7.2. The intermediate value theorem guarantees existence, not
-uniqueness.  For `f : [-2,2] -> R` defined by `f(x)=x^3-x`, the endpoint
-values are `f(-2)=-6` and `f(2)=6`, so IVT gives at least one point with
-`f(c)=0`; in fact `-1`, `0`, and `1` are three distinct such points.
+uniqueness.  For `f : [(-2),2] -> R` defined by `f(x)=x^3-x`, the endpoint
+values are `f(-2)=(-6)` and `f(2)=6`, so IVT gives at least one point with
+`f(c)=0`; in fact `(-1)`, `0`, and `1` are three distinct such points.
 """
 
-have fn cubic_minus_identity_on_closed_minus_two_two(x '[-2, 2]) R = x^3 - x
+have fn cubic_minus_identity_on_closed_minus_two_two(x '[(-2), 2]) R = x^3 - x
 
 # The same arithmetic continuity rules used for polynomial examples earlier
-# show that this restricted cubic is continuous on `[-2,2]`.
+# show that this restricted cubic is continuous on `[(-2),2]`.
 thm cubic_minus_identity_on_closed_minus_two_two_continuous:
     ? forall:
-        $is_continuous_on('[-2, 2], cubic_minus_identity_on_closed_minus_two_two)
-1release thm identity_function_continuous('[-2, 2])
-    $is_continuous_on('[-2, 2], fn(x '[-2, 2]) R {x})
-1release thm continuity_closed_under_arithmetic('[-2, 2], fn(x '[-2, 2]) R {x}, fn(x '[-2, 2]) R {x})
-    $is_continuous_on('[-2, 2], fn(x '[-2, 2]) R {x * x})
+        $is_continuous_on('[(-2), 2], cubic_minus_identity_on_closed_minus_two_two)
+    release thm identity_function_continuous('[(-2), 2])
+    $is_continuous_on('[(-2), 2], fn(x '[(-2), 2]) R {x})
+    release thm continuity_closed_under_arithmetic('[(-2), 2], fn(x '[(-2), 2]) R {x}, fn(x '[(-2), 2]) R {x})
+    $is_continuous_on('[(-2), 2], fn(x '[(-2), 2]) R {x * x})
     claim:
-        ? forall x '[-2, 2]:
-            fn(u '[-2, 2]) R {u * u}(x) = fn(u '[-2, 2]) R {u^2}(x)
-        fn(u '[-2, 2]) R {u * u}(x) = x * x
+        ? forall x '[(-2), 2]:
+            fn(u '[(-2), 2]) R {u * u}(x) = fn(u '[(-2), 2]) R {u^2}(x)
+        fn(u '[(-2), 2]) R {u * u}(x) = x * x
         x^2 = x * x
-        fn(u '[-2, 2]) R {u^2}(x) = x^2
+        fn(u '[(-2), 2]) R {u^2}(x) = x^2
     by def:
-        ? $fn_eq(fn(x '[-2, 2]) R {x * x}, fn(x '[-2, 2]) R {x^2})
-    fn(x '[-2, 2]) R {x * x} = fn(x '[-2, 2]) R {x^2}
-    $is_continuous_on('[-2, 2], fn(x '[-2, 2]) R {x^2})
-1release thm continuity_closed_under_arithmetic('[-2, 2], fn(x '[-2, 2]) R {x^2}, fn(x '[-2, 2]) R {x})
-    $is_continuous_on('[-2, 2], fn(x '[-2, 2]) R {x^2 * x})
+        ? $fn_eq(fn(x '[(-2), 2]) R {x * x}, fn(x '[(-2), 2]) R {x^2})
+    fn(x '[(-2), 2]) R {x * x} = fn(x '[(-2), 2]) R {x^2}
+    $is_continuous_on('[(-2), 2], fn(x '[(-2), 2]) R {x^2})
+    release thm continuity_closed_under_arithmetic('[(-2), 2], fn(x '[(-2), 2]) R {x^2}, fn(x '[(-2), 2]) R {x})
+    $is_continuous_on('[(-2), 2], fn(x '[(-2), 2]) R {x^2 * x})
     claim:
-        ? forall x '[-2, 2]:
-            fn(u '[-2, 2]) R {u^2 * u}(x) = fn(u '[-2, 2]) R {u^3}(x)
-        fn(u '[-2, 2]) R {u^2 * u}(x) = x^2 * x
+        ? forall x '[(-2), 2]:
+            fn(u '[(-2), 2]) R {u^2 * u}(x) = fn(u '[(-2), 2]) R {u^3}(x)
+        fn(u '[(-2), 2]) R {u^2 * u}(x) = x^2 * x
         x^3 = x^2 * x
-        fn(u '[-2, 2]) R {u^3}(x) = x^3
+        fn(u '[(-2), 2]) R {u^3}(x) = x^3
     by def:
-        ? $fn_eq(fn(x '[-2, 2]) R {x^2 * x}, fn(x '[-2, 2]) R {x^3})
-    fn(x '[-2, 2]) R {x^2 * x} = fn(x '[-2, 2]) R {x^3}
-    $is_continuous_on('[-2, 2], fn(x '[-2, 2]) R {x^3})
-1release thm continuity_closed_under_arithmetic('[-2, 2], fn(x '[-2, 2]) R {x^3}, fn(x '[-2, 2]) R {x})
-    $is_continuous_on('[-2, 2], fn(x '[-2, 2]) R {x^3 - x})
+        ? $fn_eq(fn(x '[(-2), 2]) R {x^2 * x}, fn(x '[(-2), 2]) R {x^3})
+    fn(x '[(-2), 2]) R {x^2 * x} = fn(x '[(-2), 2]) R {x^3}
+    $is_continuous_on('[(-2), 2], fn(x '[(-2), 2]) R {x^3})
+    release thm continuity_closed_under_arithmetic('[(-2), 2], fn(x '[(-2), 2]) R {x^3}, fn(x '[(-2), 2]) R {x})
+    $is_continuous_on('[(-2), 2], fn(x '[(-2), 2]) R {x^3 - x})
     # Transport the polynomial limit to the named source-facing function.
     claim:
-        ? forall x '[-2, 2]:
-            fn(u '[-2, 2]) R {u^3 - u}(x) = cubic_minus_identity_on_closed_minus_two_two(x)
-        fn(u '[-2, 2]) R {u^3 - u}(x) = x^3 - x
+        ? forall x '[(-2), 2]:
+            fn(u '[(-2), 2]) R {u^3 - u}(x) = cubic_minus_identity_on_closed_minus_two_two(x)
+        fn(u '[(-2), 2]) R {u^3 - u}(x) = x^3 - x
         cubic_minus_identity_on_closed_minus_two_two(x) = x^3 - x
     claim:
-        ? forall x0 '[-2, 2]:
-            $is_continuous_at('[-2, 2], cubic_minus_identity_on_closed_minus_two_two, x0)
-1release thm interval_member_is_adherent('[-2, 2], x0)
-        $is_adherent_point('[-2, 2], x0)
-        $is_continuous_at('[-2, 2], fn(x '[-2, 2]) R {x^3 - x}, x0)
-        $has_function_limit('[-2, 2], fn(x '[-2, 2]) R {x^3 - x}, x0, fn(x '[-2, 2]) R {x^3 - x}(x0))
-1release thm equal_functions_have_equal_function_limits('[-2, 2], fn(x '[-2, 2]) R {x^3 - x}, cubic_minus_identity_on_closed_minus_two_two, x0, fn(x '[-2, 2]) R {x^3 - x}(x0))
-        $has_function_limit('[-2, 2], cubic_minus_identity_on_closed_minus_two_two, x0, fn(x '[-2, 2]) R {x^3 - x}(x0))
-        fn(x '[-2, 2]) R {x^3 - x}(x0) = cubic_minus_identity_on_closed_minus_two_two(x0)
+        ? forall x0 '[(-2), 2]:
+            $is_continuous_at('[(-2), 2], cubic_minus_identity_on_closed_minus_two_two, x0)
+        release thm interval_member_is_adherent('[(-2), 2], x0)
+        $is_adherent_point('[(-2), 2], x0)
+        $is_continuous_at('[(-2), 2], fn(x '[(-2), 2]) R {x^3 - x}, x0)
+        $has_function_limit('[(-2), 2], fn(x '[(-2), 2]) R {x^3 - x}, x0, fn(x '[(-2), 2]) R {x^3 - x}(x0))
+        release thm equal_functions_have_equal_function_limits('[(-2), 2], fn(x '[(-2), 2]) R {x^3 - x}, cubic_minus_identity_on_closed_minus_two_two, x0, fn(x '[(-2), 2]) R {x^3 - x}(x0))
+        $has_function_limit('[(-2), 2], cubic_minus_identity_on_closed_minus_two_two, x0, fn(x '[(-2), 2]) R {x^3 - x}(x0))
+        fn(x '[(-2), 2]) R {x^3 - x}(x0) = cubic_minus_identity_on_closed_minus_two_two(x0)
         # Source handling/proof_debt: transport the checked limit across the
         # named polynomial's displayed value equality.
-        trust $has_function_limit('[-2, 2], cubic_minus_identity_on_closed_minus_two_two, x0, cubic_minus_identity_on_closed_minus_two_two(x0))
+        trust $has_function_limit('[(-2), 2], cubic_minus_identity_on_closed_minus_two_two, x0, cubic_minus_identity_on_closed_minus_two_two(x0))
         by def:
-            ? $is_continuous_at('[-2, 2], cubic_minus_identity_on_closed_minus_two_two, x0)
+            ? $is_continuous_at('[(-2), 2], cubic_minus_identity_on_closed_minus_two_two, x0)
     by def:
-        ? $is_continuous_on('[-2, 2], cubic_minus_identity_on_closed_minus_two_two)
+        ? $is_continuous_on('[(-2), 2], cubic_minus_identity_on_closed_minus_two_two)
 
 thm cubic_minus_identity_remark_9_7_2_values:
     ? forall:
-        cubic_minus_identity_on_closed_minus_two_two(-2) = -6
+        cubic_minus_identity_on_closed_minus_two_two(-2) = (-6)
         cubic_minus_identity_on_closed_minus_two_two(2) = 6
-        exist c '[-2, 2] st {cubic_minus_identity_on_closed_minus_two_two(c) = 0}
-        -1 != 0
-        -1 != 1
+        exist c '[(-2), 2] st {cubic_minus_identity_on_closed_minus_two_two(c) = 0}
+        (-1) != 0
+        (-1) != 1
         0 != 1
         cubic_minus_identity_on_closed_minus_two_two(-1) = 0
         cubic_minus_identity_on_closed_minus_two_two(0) = 0
         cubic_minus_identity_on_closed_minus_two_two(1) = 0
-    -2 $in '[-2, 2]
-    2 $in '[-2, 2]
-    -1 $in '[-2, 2]
-    0 $in '[-2, 2]
-    1 $in '[-2, 2]
+    (-2) $in '[(-2), 2]
+    2 $in '[(-2), 2]
+    (-1) $in '[(-2), 2]
+    0 $in '[(-2), 2]
+    1 $in '[(-2), 2]
     cubic_minus_identity_on_closed_minus_two_two(-2) = (-2)^3 - (-2)
-    (-2)^3 - (-2) = -6
+    (-2)^3 - (-2) = (-6)
     cubic_minus_identity_on_closed_minus_two_two(2) = 2^3 - 2
     2^3 - 2 = 6
     cubic_minus_identity_on_closed_minus_two_two(-1) = (-1)^3 - (-1)
@@ -8357,7 +8357,7 @@ thm cubic_minus_identity_remark_9_7_2_values:
     0^3 - 0 = 0
     cubic_minus_identity_on_closed_minus_two_two(1) = 1^3 - 1
     1^3 - 1 = 0
-    witness exist c '[-2, 2] st {cubic_minus_identity_on_closed_minus_two_two(c) = 0} from 0:
+    witness exist c '[(-2), 2] st {cubic_minus_identity_on_closed_minus_two_two(c) = 0} from 0:
         c = 0
         cubic_minus_identity_on_closed_minus_two_two(c) = cubic_minus_identity_on_closed_minus_two_two(0)
         cubic_minus_identity_on_closed_minus_two_two(c) = 0
@@ -8376,7 +8376,7 @@ thm sign_change_has_zero:
         0 <= f(b)
         =>:
             exist c '[a, b] st {f(c) = 0}
-1release thm intermediate_value_theorem_increasing_order(a, b, f, 0)
+release thm intermediate_value_theorem_increasing_order(a, b, f, 0)
 
 """
 Corollary 9.7.4. The image of a continuous function on an interval is an
@@ -8529,7 +8529,7 @@ thm positive_nth_root_exists:
     # construction as the surrounding mathematical explanation.
     y^(1 / n) $in R+
     witness exist x R+ st {$has_positive_nth_root(n, y, x)} from y^(1 / n):
-1release thm chap5::nth_root_power_identity_nonnegative(y, n)
+        release thm chap5::nth_root_power_identity_nonnegative(y, n)
         x = y^(1 / n)
         x^n = (y^(1 / n))^n
         x^n = y
@@ -8574,7 +8574,7 @@ thm uniformly_continuous_implies_continuous:
     claim:
         ? forall x0 X:
             $is_continuous_at(X, f, x0)
-1release thm interval_member_is_adherent(X, x0)
+        release thm interval_member_is_adherent(X, x0)
         claim:
             ? forall epsilon R+:
                 $is_locally_epsilon_close_to(X, f, x0, f(x0), epsilon)
@@ -8756,7 +8756,7 @@ thm equivalent_sequences_have_equivalent_common_subsequences:
                     n >= n0
                     =>:
                         abs(fn(k N+) R {a(phi(k))}(n) - fn(k N+) R {b(phi(k))}(n)) < epsilon
-1release thm chap6::subsequence_index_at_least_identity(phi, n)
+                release thm chap6::subsequence_index_at_least_identity(phi, n)
                 phi(n) >= n >= n0
                 abs(a(phi(n)) - b(phi(n))) < epsilon
                 fn(k N+) R {a(phi(k))}(n) = a(phi(n))
@@ -8813,7 +8813,7 @@ thm equivalent_subsequence_converges_to_same_limit:
         =>:
             $chap6::has_limit(fn(n N+) R {v(phi(n))}, L)
     $chap6::is_subsequence_index(phi)
-1release thm equivalent_sequences_have_equivalent_common_subsequences(u, v, phi)
+    release thm equivalent_sequences_have_equivalent_common_subsequences(u, v, phi)
     $are_equivalent_sequences(fn(n N+) R {u(phi(n))}, fn(n N+) R {v(phi(n))})
     claim:
         ? forall n N+:
@@ -8824,7 +8824,7 @@ thm equivalent_subsequence_converges_to_same_limit:
         ? $fn_eq(w, fn(k N+) R {u(phi(k))})
     w = fn(k N+) R {u(phi(k))}
     $are_equivalent_sequences(w, fn(n N+) R {v(phi(n))})
-1release thm equivalent_sequences_share_limit(w, fn(n N+) R {v(phi(n))}, L)
+release thm equivalent_sequences_share_limit(w, fn(n N+) R {v(phi(n))}, L)
 
 """
 Proposition 9.9.8. Uniform continuity is equivalent to preserving equivalence
@@ -9016,7 +9016,7 @@ thm equivalent_sequence_preservation_implies_uniform_continuity:
     by contra:
         ? $is_uniformly_continuous_on(X, f)
         not $is_uniformly_continuous_on(X, f)
-1release thm not_uniformly_continuous_has_bad_uniform_sequence_pair(X, f)
+        release thm not_uniformly_continuous_has_bad_uniform_sequence_pair(X, f)
         obtain epsilon0, bad_left, bad_right from $has_bad_uniform_sequence_pair(X, f)
         $is_sequence_in_real_set(bad_left, X)
         $is_sequence_in_real_set(bad_right, X)
@@ -9056,7 +9056,7 @@ thm reciprocal_uniform_example_inputs_equivalent:
         ? forall epsilon R+:
             $are_eventually_epsilon_close_sequences(reciprocal_uniform_example_left_input, reciprocal_uniform_example_right_input, epsilon)
         1 / epsilon $in R
-1release thm exists_nat_above_real(1 / epsilon)
+        release thm exists_nat_above_real(1 / epsilon)
         obtain n0 from exist n0 N+ st {1 / epsilon < n0}
         witness $are_eventually_epsilon_close_sequences(reciprocal_uniform_example_left_input, reciprocal_uniform_example_right_input, epsilon) from n0:
             claim:
@@ -9119,7 +9119,7 @@ thm reciprocal_uniform_example_images_not_equivalent:
         obtain n0 from $are_eventually_epsilon_close_sequences(reciprocal_uniform_example_left_image, reciprocal_uniform_example_right_image, 1 / 2)
         n0 >= n0
         abs(reciprocal_uniform_example_left_image(n0) - reciprocal_uniform_example_right_image(n0)) < 1 / 2
-1release thm reciprocal_uniform_example_image_pointwise_gap(n0)
+        release thm reciprocal_uniform_example_image_pointwise_gap(n0)
         reciprocal_uniform_example_left_image(n0) = n0
         reciprocal_uniform_example_right_image(n0) = 2 * n0
         reciprocal_uniform_example_left_image(n0) - reciprocal_uniform_example_right_image(n0) = n0 - 2 * n0
@@ -9162,7 +9162,7 @@ thm square_uniform_example_inputs_equivalent:
         ? forall epsilon R+:
             $are_eventually_epsilon_close_sequences(square_uniform_example_left_input, square_uniform_example_right_input, epsilon)
         1 / epsilon $in R
-1release thm exists_nat_above_real(1 / epsilon)
+        release thm exists_nat_above_real(1 / epsilon)
         obtain n0 from exist n0 N+ st {1 / epsilon < n0}
         witness $are_eventually_epsilon_close_sequences(square_uniform_example_left_input, square_uniform_example_right_input, epsilon) from n0:
             claim:
@@ -9247,7 +9247,7 @@ thm square_uniform_example_images_not_equivalent:
         # Source handling/proof_debt: make the instantiated reciprocal-square
         # denominator well-defined before storing the theorem conclusions.
         n0^2 != 0
-1release thm square_uniform_example_image_pointwise_gap(n0)
+        release thm square_uniform_example_image_pointwise_gap(n0)
         square_uniform_example_right_image(n0) - square_uniform_example_left_image(n0) = 2 + 1 / n0^2
         abs(square_uniform_example_left_image(n0) - square_uniform_example_right_image(n0)) = 2 + 1 / n0^2
         square_uniform_example_left_image(n0) - square_uniform_example_right_image(n0) = 0 - (2 + 1 / n0^2)
@@ -9366,7 +9366,7 @@ claim:
         ? forall epsilon R+:
             $chap6::has_eventual_epsilon_steadiness(reciprocal_input_seq, epsilon)
         2 / epsilon $in R
-1release thm exists_nat_above_real(2 / epsilon)
+        release thm exists_nat_above_real(2 / epsilon)
         obtain n0 from exist n0 N+ st {2 / epsilon < n0}
         witness exist n1 N+ st {$chap6::is_tail_epsilon_steady(reciprocal_input_seq, epsilon, n1)} from n0:
             claim:
@@ -9448,7 +9448,7 @@ claim:
         1 / (1 / (n0 + 1)) = n0 + 1
         image_sequence_in_set('(0, 2), reciprocal_on_open_0_2, reciprocal_input_seq)(n0 + 1) = n0 + 1
         image_sequence_in_set('(0, 2), reciprocal_on_open_0_2, reciprocal_input_seq)(n0) - image_sequence_in_set('(0, 2), reciprocal_on_open_0_2, reciprocal_input_seq)(n0 + 1) = n0 - (n0 + 1)
-        n0 - (n0 + 1) = -1
+        n0 - (n0 + 1) = (-1)
         abs(image_sequence_in_set('(0, 2), reciprocal_on_open_0_2, reciprocal_input_seq)(n0) - image_sequence_in_set('(0, 2), reciprocal_on_open_0_2, reciprocal_input_seq)(n0 + 1)) = abs(-1)
         abs(-1) = 1
         1 < 1
@@ -9460,7 +9460,7 @@ thm reciprocal_open_0_2_not_uniformly_continuous_by_cauchy:
     by contra:
         ? not $is_uniformly_continuous_on('(0, 2), reciprocal_on_open_0_2)
         $is_uniformly_continuous_on('(0, 2), reciprocal_on_open_0_2)
-1release thm uniformly_continuous_maps_cauchy_sequences('(0, 2), reciprocal_on_open_0_2, reciprocal_input_seq)
+        release thm uniformly_continuous_maps_cauchy_sequences('(0, 2), reciprocal_on_open_0_2, reciprocal_input_seq)
         $chap6::is_cauchy_sequence(image_sequence_in_set('(0, 2), reciprocal_on_open_0_2, reciprocal_input_seq))
         impossible not $chap6::is_cauchy_sequence(image_sequence_in_set('(0, 2), reciprocal_on_open_0_2, reciprocal_input_seq))
 
@@ -9541,7 +9541,7 @@ thm subsequence_has_index:
         $chap6::has_subsequence(u, w)
         =>:
             exist phi fn(k N+) N+ st {$chap6::is_subsequence_along(u, w, phi)}
-1release thm chap6::subsequence_witness_exists(u, w)
+release thm chap6::subsequence_witness_exists(u, w)
 
 thm continuous_closed_interval_uniformly_continuous:
     ? forall a, b R, f fn(x '[a, b]) R:
@@ -9556,22 +9556,22 @@ thm continuous_closed_interval_uniformly_continuous:
     by contra:
         ? $is_uniformly_continuous_on('[a, b], f)
         not $is_uniformly_continuous_on('[a, b], f)
-1release thm not_uniformly_continuous_has_bad_uniform_sequence_pair('[a, b], f)
+        release thm not_uniformly_continuous_has_bad_uniform_sequence_pair('[a, b], f)
         obtain epsilon0, u, v from exist epsilon R+, u, v seq(R) st {$is_bad_uniform_sequence_pair('[a, b], f, epsilon, u, v)}
         $is_bad_uniform_sequence_pair('[a, b], f, epsilon0, u, v)
         $is_sequence_in_real_set(u, '[a, b])
         $is_sequence_in_real_set(v, '[a, b])
         $are_equivalent_sequences(u, v)
-1release thm closure_of_closed_interval(a, b)
+        release thm closure_of_closed_interval(a, b)
         closure_of_real_set('[a, b]) = '[a, b]
-1release thm closed_interval_is_bounded(a, b)
+        release thm closed_interval_is_bounded(a, b)
         $is_bounded_real_set('[a, b])
-1release thm heine_borel_sequential_compactness_for_real_sets('[a, b])
+        release thm heine_borel_sequential_compactness_for_real_sets('[a, b])
         $has_sequential_compactness_in_R('[a, b])
-1release thm sequentially_compact_real_set_has_convergent_subsequence_in_set('[a, b], u)
+        release thm sequentially_compact_real_set_has_convergent_subsequence_in_set('[a, b], u)
         obtain w from exist w seq(R) st {$chap6::has_subsequence(u, w), $has_limit_in_set(w, '[a, b])}
         $chap6::has_subsequence(u, w)
-1release thm subsequence_has_index(u, w)
+        release thm subsequence_has_index(u, w)
         obtain phi from exist phi fn(k N+) N+ st {$chap6::is_subsequence_along(u, w, phi)}
         obtain L from $has_limit_in_set(w, '[a, b])
         have fn v_sub(n N+) R = v(phi(n))
@@ -9584,7 +9584,7 @@ thm continuous_closed_interval_uniformly_continuous:
                 v(phi(n)) $in '[a, b]
             by def:
                 ? $is_sequence_in_real_set(v_sub, '[a, b])
-1release thm equivalent_subsequence_converges_to_same_limit(u, v, w, phi, L)
+        release thm equivalent_subsequence_converges_to_same_limit(u, v, w, phi, L)
         $chap6::has_limit(fn(n N+) R {v(phi(n))}, L)
         claim:
             ? $chap6::has_limit(v_sub, L)
@@ -9598,14 +9598,14 @@ thm continuous_closed_interval_uniformly_continuous:
             v_sub = fn(k N+) R {v(phi(k))}
             $chap6::has_limit(v_sub, L)
         $chap6::has_limit(v_sub, L)
-1release thm subsequence_inherits_real_set_membership('[a, b], u, w)
+        release thm subsequence_inherits_real_set_membership('[a, b], u, w)
         $is_sequence_in_real_set(w, '[a, b])
         $is_continuous_at('[a, b], f, L)
-1release thm continuous_at_preserves_convergent_sequences('[a, b], f, L, w)
+        release thm continuous_at_preserves_convergent_sequences('[a, b], f, L, w)
         $chap6::has_limit(image_sequence_in_set('[a, b], f, w), f(L))
-1release thm continuous_at_preserves_convergent_sequences('[a, b], f, L, v_sub)
+        release thm continuous_at_preserves_convergent_sequences('[a, b], f, L, v_sub)
         $chap6::has_limit(image_sequence_in_set('[a, b], f, v_sub), f(L))
-1release thm sequences_with_common_limit_are_equivalent(image_sequence_in_set('[a, b], f, w), image_sequence_in_set('[a, b], f, v_sub), f(L))
+        release thm sequences_with_common_limit_are_equivalent(image_sequence_in_set('[a, b], f, w), image_sequence_in_set('[a, b], f, v_sub), f(L))
         $are_equivalent_sequences(image_sequence_in_set('[a, b], f, w), image_sequence_in_set('[a, b], f, v_sub))
         $are_eventually_epsilon_close_sequences(image_sequence_in_set('[a, b], f, w), image_sequence_in_set('[a, b], f, v_sub), epsilon0)
         obtain n0 from exist n0 N+ st {$are_epsilon_close_after_index(image_sequence_in_set('[a, b], f, w), image_sequence_in_set('[a, b], f, v_sub), epsilon0, n0)}
@@ -9635,9 +9635,9 @@ thm compact_interval_continuity_preserves_equivalent_sequences:
         $is_continuous_on('[a, b], f)
         =>:
             $maps_equivalent_sequences_to_equivalent_sequences('[a, b], f)
-1release thm continuous_closed_interval_uniformly_continuous(a, b, f)
+    release thm continuous_closed_interval_uniformly_continuous(a, b, f)
     $is_uniformly_continuous_on('[a, b], f)
-1release thm uniformly_continuous_preserves_equivalent_sequences('[a, b], f)
+release thm uniformly_continuous_preserves_equivalent_sequences('[a, b], f)
 
 """
 Remark 9.9.17. Boundedness of continuous images, boundedness of uniformly
@@ -9712,7 +9712,7 @@ thm reciprocal_limit_at_pos_infinity:
         claim:
             ? forall M R:
                 exist x R+ st {x > M}
-1release thm exists_nat_above_real(M)
+            release thm exists_nat_above_real(M)
             obtain n0 from exist n0 N+ st {M < n0}
             n0 $in R+
             n0 > M
@@ -9769,7 +9769,7 @@ thm sequence_limit_implies_function_limit_at_infinity:
         claim:
             ? forall M R:
                 exist x N+ st {x > M}
-1release thm exists_nat_above_real(M)
+            release thm exists_nat_above_real(M)
             obtain n0 from exist n0 N+ st {M < n0}
             n0 > M
             witness exist x N+ st {x > M} from n0:
@@ -9808,7 +9808,7 @@ thm function_limit_at_infinity_implies_sequence_limit:
         epsilon / 2 $in R+
         exist M R st {$is_pos_infinity_tail_close(N+, a, L, epsilon / 2, M)}
         obtain M from exist M R st {$is_pos_infinity_tail_close(N+, a, L, epsilon / 2, M)}
-1release thm exists_nat_above_real(M)
+        release thm exists_nat_above_real(M)
         obtain n0 from exist n0 N+ st {M < n0}
         witness $chap6::has_eventual_closeness_to(a, L, epsilon) from n0:
             claim:

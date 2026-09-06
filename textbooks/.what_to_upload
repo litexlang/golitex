@@ -1,7 +1,7 @@
 [book]
 Analysis
-verified book
-"Introduction, Chapters 1-11, and Appendix A are published; Chapter 11 passes the requested registered source and formal -f gates, with no whole-module -r required."
+verified prefix
+"Introduction, Chapters 1-10, Appendix A, and Chapter 11 Sections 11.1-11.4 are published; the registered Chapter 11 prefix passes native -f in 468.78s under the 500s gate. Sections 11.5-11.10 remain quarantined in the draft workspace."
 
 [book]
 Analysis2

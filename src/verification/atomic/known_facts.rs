@@ -885,8 +885,7 @@ impl Runtime {
                     if known_atomic_fact.to_string() != atomic_fact.to_string() {
                         eprintln!(
                             "known-fact args_match mismatch: goal=`{}`, known=`{}`",
-                            atomic_fact,
-                            known_atomic_fact
+                            atomic_fact, known_atomic_fact
                         );
                     }
                     return Ok((SuccessProveFactResult::new_with_verified_by_known_fact(
