@@ -49,8 +49,8 @@ impl Environment {
                 if is_materialized_template_name(self, name)
                     || is_materialized_template_symbol(definition)
                     || child.objects.knowledge_by_object.contains_key(name)
-                    && existing.role() == SymbolRole::Object
-                    && definition.role() == SymbolRole::Object
+                        && existing.role() == SymbolRole::Object
+                        && definition.role() == SymbolRole::Object
                 {
                     continue;
                 }
@@ -92,8 +92,8 @@ impl Environment {
                 if is_materialized_template_name(self, name)
                     || is_materialized_template_symbol(definition)
                     || child.objects.knowledge_by_object.contains_key(name)
-                    && existing.role() == SymbolRole::Object
-                    && definition.role() == SymbolRole::Object
+                        && existing.role() == SymbolRole::Object
+                        && definition.role() == SymbolRole::Object
                 {
                     continue;
                 }
@@ -285,8 +285,8 @@ impl Environment {
                 if is_materialized_template_name(self, name)
                     || is_materialized_template_symbol(child_definition)
                     || child.objects.knowledge_by_object.contains_key(name)
-                    && existing.role() == SymbolRole::Object
-                    && child_definition.role() == SymbolRole::Object
+                        && existing.role() == SymbolRole::Object
+                        && child_definition.role() == SymbolRole::Object
                 {
                     continue;
                 }

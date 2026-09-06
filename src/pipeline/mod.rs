@@ -23,7 +23,10 @@ pub use crate::runtime::{
 };
 pub use repl::{run_isolated_repl_with_runtime, run_latex_repl, run_repl};
 pub use repository_execution::execute_repository_target;
-pub use run::{run_eval_command, run_file_command, run_isolated_file_command, run_repository_command, RunOutcome};
+pub use run::{
+    run_eval_command, run_file_command, run_isolated_file_command, run_repository_command,
+    RunOutcome,
+};
 pub use session::{run_session, SessionRequest};
 pub use source_execution::SourceRunOutcome;
 pub use summary::{render_run_summary, RunSummary, RunSummaryRequest};

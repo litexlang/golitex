@@ -179,8 +179,7 @@ impl VerifiedFactResult {
             );
         }
         assert_eq!(
-            checked_fact,
-            verification_fact,
+            checked_fact, verification_fact,
             "fact WD and truth proof must describe the same resolved proposition"
         );
         Self {

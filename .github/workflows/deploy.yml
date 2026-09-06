@@ -3,7 +3,10 @@ name: Deploy
 on:
   push:
     tags:
-      - "[0-9]+.[0-9]+*"
+      # Release tags are the exact Cargo version, without a leading `v`.
+      # Keep the filter broad enough for both stable and prerelease semver;
+      # the validate job below enforces the exact package-version match.
+      - "*.*.*"
 
 env:
   CARGO_TERM_COLOR: always
@@ -321,7 +324,7 @@ jobs:
   # ─────────────────────────────────────────────
   publish-crates-io:
     name: Publish to crates.io
-    needs: validate
+    needs: [validate, release]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -390,7 +393,9 @@ jobs:
             end
 
             test do
-              assert_match "litex VERSION_PLACEHOLDER", shell_output("#{bin}/litex -version")
+              version_output = shell_output("#{bin}/litex -version")
+              assert_match '"ok": true', version_output
+              assert_match %Q{"version": "#{version}"}, version_output
               (testpath/"test.lit").write "import std basics\nquot(-7, 3) = -3\n$dvd(12, 3)\n"
               output = shell_output("#{bin}/litex -isolated -f #{testpath}/test.lit")
               assert_match 'quot(-7, 3) = -3', output
