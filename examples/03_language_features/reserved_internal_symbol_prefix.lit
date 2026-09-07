@@ -12,6 +12,6 @@ _x = 1
 #
 # Boundary: `have __x R = 1` and every longer underscore prefix are rejected.
 # The name-validation regression test covers this reserved-prefix boundary.
-# Evidence: `target/release/litex -isolated -f examples/03_language_features/reserved_internal_symbol_prefix.lit` exits 0 with `ok: true`.
+# The publishable example itself is the positive evidence for the single-underscore form.
 # The tokenizer regression checks that `__x` remains a token and the parser regression checks that `have __x R = 1` fails at name validation.
-# Negative regression: `target/release/litex -e 'have __x R = 2'`; unit coverage is in tests/unit/parsing/tokenizer/tests.rs and tests/unit/syntax/name_validation/tests.rs.
+# Unit coverage for the negative boundary lives with tokenizer and name-validation tests.

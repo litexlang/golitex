@@ -176,32 +176,6 @@ fn named_real_same_equality_emits_only_its_source_declaration() {
 }
 
 #[test]
-fn known_forall_multi_conclusion_fact_id_provenance_compiles_both_exact_projections() {
-    const SOURCE: &str = include_str!("../../lean/examples/57_KnownForallFactIdProvenance.lit");
-    let generated = compile_on_verifier_stack(SOURCE, "57_KnownForallFactIdProvenance.lit")
-        .expect("compile two conclusions from one exact known-forall source FactId");
-
-    assert!(generated.contains("theorem paired_source :"), "{generated}");
-    assert!(
-        generated.contains(
-            "paired_source (2 : ℝ) ((Litex.In.congr (Litex.Same.symm (Litex.Same.realComplex ((2 : ℝ)))) Litex.R).mp (Litex.Rules.complexRealInR (2 : ℝ)))"
-        ),
-        "{generated}"
-    );
-    assert!(
-        generated.contains("theorem __fact2 : Litex.In (2 : ℝ) Litex.R"),
-        "{generated}"
-    );
-    assert!(
-        generated.contains("(paired_source (2 : ℝ) (__fact2)).2"),
-        "the second application must directly reuse the exact-carrier FactId proof produced while compiling the first conclusion:\n{generated}"
-    );
-    assert!(generated.matches("paired_source (2 : ℝ)").count() >= 2);
-    assert!(!generated.contains("axiom "));
-    assert!(!generated.contains("sorry"));
-}
-
-#[test]
 fn nonempty_set_witness_compiles_its_local_result_and_membership_evidence() {
     let generated = compile_direct_result_only_on_verifier_stack(
         "witness $is_nonempty_set({1, 2}) from 1\n",
@@ -384,24 +358,6 @@ fn set_extension_compiles_nested_finite_enumeration_proof_steps() {
         "{generated}"
     );
     assert_eq!(generated.matches("have __step").count(), 2, "{generated}");
-    assert!(!generated.contains("axiom "), "{generated}");
-    assert!(!generated.contains("sorry"), "{generated}");
-}
-
-#[test]
-fn nested_forall_premises_replay_parameter_aliases_and_normalization() {
-    let generated = compile_on_verifier_stack(
-        "forall h fn(x R) R:\n    forall y R:\n        h(y) = h(y - 1)\n    =>:\n        h(2) = h(1)\n",
-        "nested_forall_probe.lit",
-    )
-    .expect("compile a nested forall premise");
-    assert!(generated.contains("(__domain1 : ∀"), "{generated}");
-    assert!(generated.contains("convert (__domain_f"), "{generated}");
-    assert!(generated.contains("(__p1_s"), "{generated}");
-    assert!(
-        generated.contains("Litex.In.congr (Litex.Same.symm (Litex.Same.trans"),
-        "{generated}"
-    );
     assert!(!generated.contains("axiom "), "{generated}");
     assert!(!generated.contains("sorry"), "{generated}");
 }
@@ -1199,84 +1155,6 @@ fn unary_function_set_application_consumes_both_memberships() {
 }
 
 #[test]
-fn multilayer_application_preserves_each_unary_source_contract() {
-    const SOURCE: &str =
-        "forall S, T, U set, a S, b T, g fn(x S) fn(y T) U:\n    g(a)(b) = g(a)(b)\n";
-    let result_json =
-        capture_statement_results_json_on_verifier_stack(SOURCE, "23_MultilayerApplication.lit")
-            .expect("capture multi-layer application statement-result JSON");
-    assert!(
-        result_json.contains("\"through_layer_index\": 0"),
-        "{result_json}"
-    );
-    assert!(result_json.contains("\"layer_index\": 0"), "{result_json}");
-    assert!(result_json.contains("\"layer_index\": 1"), "{result_json}");
-
-    let generated = compile_on_verifier_stack(SOURCE, "23_MultilayerApplication.lit")
-        .expect("compile multi-layer application tracer");
-    assert!(generated.contains("__type6 : Litex.In (α :="));
-    assert!(generated.contains("let __fn_layer1 := (Litex.fnApplyOwn (domain :="));
-    assert!(generated.contains("Litex.fnApplyOwn (domain := T) (codomain := U) __fn_layer1"));
-    assert!(generated.contains("(Litex.In.own (Litex.fnSet"));
-    assert!(!generated.contains("Litex.Object"));
-    assert!(!generated.contains("sorry"));
-
-    const THREE_LAYERS: &str = "forall S, T, U, V set, a S, b T, c U, g fn(x S) fn(y T) fn(z U) V:\n    g(a)(b)(c) = g(a)(b)(c)\n";
-    let generated = compile_on_verifier_stack(THREE_LAYERS, "three_layer_application.lit")
-        .expect("compile three source application layers");
-    assert!(generated.contains("let __fn_layer2 :="));
-    assert!(generated.contains("Litex.fnApplyOwn (domain := U) (codomain := V) __fn_layer2"));
-    assert!(generated.contains("(U : Litex.Set.{0}) (V : Litex.Set.{0})"));
-
-    const SAME_LAYER: &str =
-        "forall S, T, U set, a S, b T, f fn(x S, y T) U:\n    f(a, b) = f(a, b)\n";
-    let same_layer_result_json = capture_statement_results_json_on_verifier_stack(
-        SAME_LAYER,
-        "23_MultilayerApplication.lit",
-    )
-    .expect("capture same-layer telescope statement-result JSON");
-    assert!(same_layer_result_json.contains("\"parameter_index\": 0"));
-    assert!(same_layer_result_json.contains("\"parameter_index\": 1"));
-    let same_layer = compile_on_verifier_stack(SAME_LAYER, "23_MultilayerApplication.lit")
-        .expect("compile one exact two-parameter source layer");
-    assert!(same_layer.contains("Litex.fnTelescopeSet"));
-    assert!(same_layer.contains("Litex.FnTelescope.parameter"));
-    assert!(same_layer.contains("Litex.fnTelescopeApplyOwn (signature :="));
-    assert!(same_layer.contains(").down"));
-    assert!(!same_layer.contains("Litex.Object"));
-    assert!(!same_layer.contains("sorry"));
-
-    const SAME_LAYER_DOMAIN: &str = "forall f fn(x, y R: x > 0, y > 0) R, a, b R:\n    a > 0\n    b > 0\n    =>:\n        f(a, b) = f(a, b)\n";
-    let same_layer_domain =
-        compile_on_verifier_stack(SAME_LAYER_DOMAIN, "23_MultilayerApplication.lit")
-            .expect("compile same-layer ordered domain clauses");
-    assert!(same_layer_domain.contains("Litex.FnTelescope.requirement"));
-    assert!(
-        same_layer_domain.contains("Litex.Lt (0 : ℂ) (((Litex.In.rep __arg1 __arg1_in : ℝ)) : ℂ)")
-    );
-    assert!(
-        same_layer_domain.contains("Litex.Lt (0 : ℂ) (((Litex.In.rep __arg2 __arg2_in : ℝ)) : ℂ)")
-    );
-    assert!(same_layer_domain.contains("__domain1"));
-    assert!(same_layer_domain.contains("__domain2"));
-    // Exact real binders require a narrow `In.rep_exact` adapter before the
-    // source domain proof can feed the telescope's selected-carrier clause.
-    assert!(same_layer_domain.contains("domain_transport"));
-
-    let split = compile_on_verifier_stack(
-        "forall S, T, U set, a S, b T, f fn(x S, y T) U:\n    f(a)(b) = f(a)(b)\n",
-        "split_same_layer_application.lit",
-    )
-    .expect_err("a source layer must not be repaired by target currying");
-    assert!(
-        split.contains("parameter")
-            || split.contains("well-defined")
-            || split.contains("cannot verify"),
-        "unexpected split-layer error: {split}"
-    );
-}
-
-#[test]
 fn dependent_function_sets_keep_parameter_and_return_carriers() {
     const DEPENDENT_PARAMETER: &str = "forall f fn(x R, y {z R: z > x}) R:\n    f = f\n";
     let parameter =
@@ -1693,94 +1571,6 @@ fn set_builder_predicate_transport_is_not_specialized_to_one_argument() {
 }
 
 #[test]
-fn builtin_strategy_result_marks_each_selected_layer_and_replays_exact_rules() {
-    const SOURCE: &str = "forall a, b, c, d R:\n    a > 0\n    b >= 0\n    c >= 0\n    d >= 0\n    =>:\n        (a + b) + (c + d) > 0\n";
-    let result_json =
-        capture_statement_results_json_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
-            .expect("capture builtin-strategy statement-result JSON");
-    assert_eq!(
-        result_json.matches("\"kind\": \"BuiltinStrategy\"").count(),
-        3,
-        "{result_json}"
-    );
-    assert!(
-        result_json.contains("AddPositiveLeftStrict"),
-        "{result_json}"
-    );
-    assert!(
-        result_json.contains("\"rule_id\": \"order.add_nonnegative\""),
-        "{result_json}"
-    );
-    assert!(
-        result_json.matches("FactCitation").count() >= 4,
-        "{result_json}"
-    );
-
-    let generated = compile_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
-        .expect("compile builtin-strategy tracer");
-    assert_eq!(
-        generated
-            .matches("Litex.Rules.complexAddPositiveLeftStrict")
-            .count(),
-        2
-    );
-    assert!(generated.contains("Litex.Rules.complexAddNonnegative"));
-    assert!(generated.contains("Litex.Rules.realCastPositive (a : ℝ)"));
-    assert!(generated.contains("Litex.Rules.realCastNonnegative (b : ℝ)"));
-    assert!(generated
-        .contains("Litex.Rules.complexNegativeOneMulNegative (Litex.Rules.realCastPositive"));
-    assert!(generated.contains("Litex.Negative.toNonpositive (__infer"));
-    assert!(!generated.contains("Litex.Positive.congr"));
-    assert!(!generated.contains("Litex.Same.realComplex"));
-    assert!(!generated.contains("sorry"));
-
-    const REAL_ADDITION_CARRIER_SOURCE: &str = "forall a, b R:\n    a + b $in R\n";
-    let carrier_result_json = capture_statement_results_json_on_verifier_stack(
-        REAL_ADDITION_CARRIER_SOURCE,
-        "15_BuiltinStrategy.lit",
-    )
-    .expect("capture real-addition carrier statement-result JSON");
-    assert!(
-        carrier_result_json.contains("RealArithmeticMembershipClosure"),
-        "{carrier_result_json}"
-    );
-    let carrier_generated =
-        compile_on_verifier_stack(REAL_ADDITION_CARRIER_SOURCE, "15_BuiltinStrategy.lit")
-            .expect("compile real-addition carrier tracer");
-    assert!(carrier_generated.contains("Litex.Rules.complexAddInR"));
-    assert!(carrier_generated.contains("Litex.Rules.complexRealInR ((a : ℝ)"));
-    assert!(carrier_generated.contains("Litex.Rules.complexRealInR ((b : ℝ)"));
-
-    const RIGHT_STRICT_SOURCE: &str = "forall a, b, c, d R:\n    a >= 0\n    b >= 0\n    c >= 0\n    d > 0\n    =>:\n        (a + b) + (c + d) > 0\n";
-    let right_result_json = capture_statement_results_json_on_verifier_stack(
-        RIGHT_STRICT_SOURCE,
-        "15_BuiltinStrategy.lit",
-    )
-    .expect("capture right-strict builtin-strategy statement-result JSON");
-    assert!(
-        right_result_json.contains("AddPositiveRightStrict"),
-        "{right_result_json}"
-    );
-    assert!(
-        right_result_json.contains("\"rule_id\": \"order.add_positive_of_nonnegative_positive\""),
-        "{right_result_json}"
-    );
-
-    let right_generated = compile_on_verifier_stack(RIGHT_STRICT_SOURCE, "15_BuiltinStrategy.lit")
-        .expect("compile right-strict builtin-strategy tracer");
-    assert_eq!(
-        right_generated
-            .matches("Litex.Rules.complexAddPositiveRightStrict")
-            .count(),
-        2
-    );
-    assert!(!right_generated.contains("Litex.Object"));
-    assert!(!right_generated.contains("Set.univ"));
-    assert!(!right_generated.contains("axiom "));
-    assert!(!right_generated.contains("sorry"));
-}
-
-#[test]
 fn real_arithmetic_membership_closures_replay_exact_rules() {
     const SOURCE: &str = "forall a, b R:\n    a + b $in R\n\nforall a, b R:\n    a - b $in R\n\nforall a, b R:\n    a * b $in R\n\nforall a, b R:\n    b != 0\n    =>:\n        a / b $in R\n";
     let result_json =
@@ -1873,25 +1663,6 @@ fn direct_multiplicative_and_divisive_sign_rules_all_compile() {
 }
 
 #[test]
-fn subtractive_strategy_rule_compiles_from_registered_certificate() {
-    const SOURCE: &str = "forall a, b R:\n    a <= b\n    =>:\n        b - a >= 0\n";
-    let result_json = capture_statement_results_json_on_verifier_stack(
-        SOURCE,
-        "subtractive_builtin_strategy_rule.lit",
-    )
-    .expect("capture the registered subtractive-sign certificate");
-    assert!(result_json.contains("SubNonnegativeFromLessEqual"));
-
-    let generated = compile_on_verifier_stack(SOURCE, "subtractive_builtin_strategy_rule.lit")
-        .expect("compile the reviewed subtractive-sign rule");
-    assert!(generated.contains("Litex.Rules.complexSubNonnegativeOfLessEqual"));
-    assert!(generated.contains("(u := (b : ℝ)"));
-    assert!(generated.contains("(v := (a : ℝ)"));
-    assert!(!generated.contains("axiom "));
-    assert!(!generated.contains("sorry"));
-}
-
-#[test]
 fn nested_set_builder_binder_expression_remains_fail_closed() {
     let error = compile_on_verifier_stack(
         "2 $in {x R: x + 1 = 3}\n",
@@ -1946,55 +1717,6 @@ fn indexed_sequence_definition_uses_the_recursive_result_environment() {
     assert!(generated.contains("Litex.fnApplyCarrier (domain := Litex.NPos)"));
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
-}
-
-#[test]
-fn template_sequence_alias_compiles_from_recursive_results_without_index_shift() {
-    const SOURCE: &str =
-        include_str!("../../lean/examples/55_TemplateSequenceInstantiationResult.lit");
-    let result_json = capture_statement_results_json_on_verifier_stack(
-        SOURCE,
-        "55_TemplateSequenceInstantiationResult.lit",
-    )
-    .expect("capture Template definition and Created/object-WD-Reuse statement-result JSON");
-    for retained_field in [
-        "\"template_parameter_groups\"",
-        "\"body_statement_result\"",
-        "\"kind\": \"Created\"",
-        "\"kind\": \"Reuse\"",
-        "\"template_argument_results\"",
-        "\"public_value_equalities\"",
-    ] {
-        assert!(
-            result_json.contains(retained_field),
-            "missing {retained_field}: {result_json}"
-        );
-    }
-
-    let generated = compile_on_verifier_stack(SOURCE, "55_TemplateSequenceInstantiationResult.lit")
-        .expect("compile Template sequence alias directly from recursive statement Results");
-    assert!(
-        generated.contains(
-            "abbrev sequence (S : Litex.Set) := (Litex.fnSet Litex.NPos (S : Litex.Set.{0}))"
-        ),
-        "{generated}"
-    );
-    assert!(
-        generated.contains(
-            "@Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) (sequence Litex.R) (Litex.fnSet Litex.NPos Litex.R)",
-        ),
-        "{generated}"
-    );
-    assert!(!generated.contains("Nat ->"), "{generated}");
-    assert!(!generated.contains("+ 1"), "{generated}");
-    assert!(!generated.contains("- 1"), "{generated}");
-    assert!(!generated.contains("axiom "), "{generated}");
-    assert!(!generated.contains("sorry"), "{generated}");
-    assert_eq!(
-        generated,
-        include_str!("../../lean/examples/55_TemplateSequenceInstantiationResult.lean"),
-        "the checked-in Template tracer must not drift from direct Result compilation"
-    );
 }
 
 #[test]

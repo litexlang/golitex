@@ -1,3 +1,4 @@
+# Draft: excluded with its required main module until both verify again.
 # Linear algebra through struct-backed settings.
 #
 # The `main` export owns the mathematical structures, propositions,

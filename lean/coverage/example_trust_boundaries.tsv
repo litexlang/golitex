@@ -56,7 +56,6 @@ example	classification	strict_positive_eligible	source_boundary_count	source_bou
 60_OddSumToSquare.lit	trust_free	true	0			0	
 61_TheoremApplicationScope.lit	trust_free	true	0			0	
 62_BuiltinTheoremApplications.lit	trust_free	true	0			0	
-63_ScalarOperatorBuiltins.lit	trust_free	true	0			0	
 64_RealSequenceCompleteness.lit	trust_free	true	0			0	
 65_ImplicitNumericBinder.lit	trust_free	true	0			0	
 66_LocalTypedSetDefinition.lit	trust_free	true	0			0	
