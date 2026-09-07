@@ -780,6 +780,24 @@ thm point_difference_norm_pos:
         a = (a[1], a[2]) = (b[1], b[2]) = b
         impossible a != b
 
+# Zero factor law: if a product is zero and one factor is nonzero, the other must be zero.
+# Keep this helper before the elimination theorem so it can be selected there.
+thm zero_factor_law:
+    ? forall a, b R:
+        a != 0,
+        a * b = 0
+        =>:
+            b = 0
+
+    a * b = 0
+    a != 0
+    by cases:
+        ? b = 0
+        case a = 0:
+            impossible a != 0
+        case b = 0:
+            b = 0
+
 # Helper lemma: elimination of variables from dot and det equations
 thm dot_det_eliminate:
     ? forall dx, dy, vx, vy R:
@@ -794,11 +812,13 @@ thm dot_det_eliminate:
     dx * (dx*vx + dy*vy) - dy * (dx*vy - dy*vx) = 0
     (dx^2 + dy^2) * vx = 0
     dx^2 + dy^2 != 0
+    by thm zero_factor_law(dx^2 + dy^2, vx)
     vx = 0
     dy * (dx*vx + dy*vy) = 0
     dx * (dx*vy - dy*vx) = 0
     dy * (dx*vx + dy*vy) + dx * (dx*vy - dy*vx) = 0
     (dx^2 + dy^2) * vy = 0
+    by thm zero_factor_law(dx^2 + dy^2, vy)
     vy = 0
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -813,18 +833,6 @@ axiom collinear_to_standard_det:
         (m[1] - a[1]) * (b[2] - a[2]) - (m[2] - a[2]) * (b[1] - a[1]) = 0
         =>:
             (b[1] - a[1]) * (2*m[2] - (a[2] + b[2])) - (b[2] - a[2]) * (2*m[1] - (a[1] + b[1])) = 0
-
-# Zero factor law: if a product is zero and one factor is nonzero, the other must be zero
-thm zero_factor_law:
-    ? forall a, b R:
-        a != 0,
-        a * b = 0
-        =>:
-            b = 0
-
-    a * b = 0
-    a != 0
-    b = 0
 
 # Difference of squares identity
 thm difference_of_squares:
@@ -3820,4 +3828,3 @@ thm common_line_feet_preserve_midpoint:
     by thm tuple_equal_from_coordinates(g, (g[1], g[2]))
     g = (g[1], g[2]) = ((m[1] + n[1]) / 2, (m[2] + n[2]) / 2)
     by def $is_midpoint(g, m, n)
-

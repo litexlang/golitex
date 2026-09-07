@@ -23,7 +23,7 @@ to the Lean/Mathlib ecosystem.
 
 > **Litex is an experimental hobby project in beta; expect rough edges.**
 
-<!-- Blueprint spine: reasoning abundance → scientific object → design hypothesis → measurable costs → potential capacity impact → verification and understanding bottlenecks → two participation barriers → four language choices → readable execution and Checkable Knowledge Records → definition and verification → ToLean/adapter handoff → the end-to-end human–AI–Litex knowledge-production loop → ecosystem role → success criterion -->
+<!-- Blueprint spine: reasoning abundance → scientific object → design hypothesis → measurable costs → potential capacity impact → verification and understanding bottlenecks → two participation barriers → four language choices → definition and verification → readable execution and Checkable Knowledge Records → ToLean/adapter handoff → the end-to-end human–AI–Litex knowledge-production loop → ecosystem role → success criterion -->
 
 <!--
 Litex 定位四层检查（写作时逐层核对；面向不同受众可以调整强调重点，但不能混淆层级）：
@@ -50,11 +50,10 @@ Litex 定位四层检查（写作时逐层核对；面向不同受众可以调�
     - [Pattern-Match Search: A Semantic `Ctrl+F`](#pattern-match-search-a-semantic-ctrlf)
     - [Summary: How Fact Orientation Is Implemented](#summary-how-fact-orientation-is-implemented)
   - [3. Bottom-Up: Let Verified Facts Continue to Grow](#3-bottom-up-let-verified-facts-continue-to-grow)
-  - [4. Lean-Compatible: Independent Rechecking for Covered Paths](#4-lean-compatible-independent-rechecking-for-covered-paths)
-    - [One Complete Theorem Now Reaches Lean](#one-complete-theorem-now-reaches-lean)
+  - [4. From Four Design Principles to Mathematical Practice: Definition and Verification](#mathematics-practice)
+  - [5. What Each Statement Leaves Behind: Checkable Knowledge Records](#execution-model)
+  - [6. Lean-Compatible: Independent Rechecking for Covered Paths](#compatibility)
     - [Summary: Bottom-Up and Top-Down Reasoning Are Complementary](#summary-bottom-up-and-top-down-reasoning-are-complementary)
-  - [5. How Litex Runs: From Mathematical Statements to Checkable Knowledge Records](#execution-model)
-  - [6. From Four Design Principles to Mathematical Practice: Definition and Verification](#mathematics-practice)
   - [7. The End-to-End Human–AI–Litex Knowledge-Production Loop](#interaction-loop)
     - [Summary: Why Fact Orientation and Bottom-Up Flow Help the Loop](#summary-fact-oriented-bottom-up-loop)
   - [8. From Language to Ecosystem: The Role Litex Aims to Play](#ecosystem-role)
@@ -484,208 +483,9 @@ Mizar, Isar, ACL2, and Naproche already support forward text, theorem accumulati
 
 </details>
 
-<a id="compatibility"></a>
-
-## 4. Lean-Compatible: Independent Rechecking for Covered Paths
-
-Litex is first an independently usable language with its own syntax, runtime, and kernel; without Lean it still checks well-definedness and facts and provides feedback.
-
-“A mathematical front end for Lean” means translating supported verification paths into Lean proof terms while coverage expands. *Litex can offer content and interface experience; Lean's kernel and Mathlib can strengthen Litex. The relationship is complementary, not competitive.*
-
-Fact-first verification lets humans and AI focus on objects, conditions, facts, and conclusions with local traceable feedback. Elaboration, type classes, namespaces, and tactics are instead important sources of Lean's expressiveness and compositionality.
-
-*The compiler also provides an independent safeguard for Litex's rigor.* Rust under `src/` alone approaches 200,000 lines and contains hundreds of growing rules, making its trusted surface harder to audit than Lean's smaller kernel. A Litex route fully compiled and accepted by Lean gains strong independent evidence and reduces sole reliance on Litex's implementation.
-
-_Coverage remains partial. Only source routes that fully compile and pass Lean receive this safeguard._
-
-<details>
-<summary><strong>Complete example: prove that scaling preserves convergence, then hand the proof to Lean/Mathlib</strong></summary>
-
-First, the mathematical task. Let a real sequence `s` converge to `a`, and let `c` be any real constant. We want to prove that the new sequence `n ↦ c * s(n)` converges to `c * a`:
-
-`s(n) → a  ⟹  c * s(n) → c * a`
-
-The proof is an error estimate. Given any `epsilon > 0`, use the convergence of `s` with the smaller error `epsilon / (abs(c) + 1)` to obtain an index `N0`. For every `n >= N0`,
-
-`abs(c * s(n) - c * a) = abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < epsilon`.
-
-Because `abs(c) + 1` is always positive, this formulation does not require a separate `c = 0` case.
-
-The example shows more than the final theorem: it follows the same proof evidence from Litex into Lean/Mathlib. On a currently supported compilation path, Litex first checks the definitions, facts, and proof evidence in the source; ToLean then compiles the accepted theorem into Lean code for independent checking by Lean's kernel; finally, a small handwritten adapter exports the generated theorem through a native Mathlib interface such as `Filter.Tendsto`.
-
-`Litex source → Litex verification → ToLean compilation → Lean kernel recheck → handwritten adapter → Mathlib theorem`
-
-The following excerpts show what is written at each layer. The complete Litex proof is explained step by step again below.
-
-#### 1. Litex source: define convergence and prove closure under scaling
-
-A human or AI writes the definitions, conditions, and fact chain in Litex. Only after Litex accepts `converges_to_mul_const` does the theorem enter the context available to the compiler.
-
-<!-- litex:skip-test -->
-
-```litex
-# main.lit
-prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):
-    forall n N:
-        n >= N0
-        =>:
-            abs(s(n) - a) < epsilon
-
-prop converges_to(s fn(n N) R, a R):
-    forall epsilon R+:
-        exist N0 N st {$is_eventually_close(s, a, epsilon, N0)}
-
-thm converges_to_mul_const:
-    ? forall s fn(n N) R, a, c R:
-        $converges_to(s, a)
-        =>:
-            $converges_to(fn(n N) R {c * s(n)}, c * a)
-    claim:
-        ? forall epsilon R+:
-            exist N0 N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)}
-        abs(c) + 1 > 0
-        epsilon / (abs(c) + 1) $in R+
-        obtain N0 from exist K N st {$is_eventually_close(s, a, epsilon / (abs(c) + 1), K)}
-        witness exist K N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, K)} from N0:
-            forall n N:
-                n >= N0
-                =>:
-                    abs(s(n) - a) < epsilon / (abs(c) + 1)
-                    abs(c * s(n) - c * a) = abs(c * (s(n) - a)) = abs(c) * abs(s(n) - a)
-                    abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < (abs(c) + 1) * (epsilon / (abs(c) + 1)) = epsilon
-                    abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon
-            by def $is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)
-    by def $converges_to(fn(n N) R {c * s(n)}, c * a)
-```
-
-#### 2. ToLean output: turn the accepted theorem into a Lean proof object
-
-ToLean uses Litex's recorded verification evidence to generate definitions, theorems, and proof terms. The following is a structural excerpt; wrapper parameters and the long proof body are omitted, and the generated file is not handwritten.
-
-```lean
--- LitexGenerate.lean (generated by ToLean; excerpt)
-namespace __Compiler_main
-
-def is_eventually_close (...) : Prop := ...
-def converges_to (...) : Prop := ...
-
-theorem converges_to_mul_const :
-    ∀ (s : (Litex.fnSet Litex.N Litex.R).Carrier) ...,
-      converges_to (...) (...) := by
-  -- The longer generated proof body is omitted from this excerpt.
-  ...
-
-end __Compiler_main
-```
-
-When this generated code is submitted to Lean, Lean's kernel checks the resulting proof object rather than trusting Litex's success label.
-
-#### 3. Handwritten adapter: invoke the generated theorem and bridge representations
-
-The adapter does not modify the generated file. It invokes the generated theorem and converts Litex sequences, membership evidence, and convergence into Mathlib-facing representations. The decisive call remains short:
-
-```lean
--- LitexToMathlib.lean (handwritten adapter; excerpt)
-import LitexGenerate
-
-have generated :=
-  __Compiler_main.converges_to_mul_const s sIn a aIn c cIn h
-```
-
-The representation bridge is concentrated in a separately auditable theorem:
-
-```lean
--- LitexToMathlib.lean (representation bridge; excerpt)
-theorem tendsto_of_generated_convergesTo
-    (s : LitexRealSequence)
-    (a : ℝ)
-    (h : __Compiler_main.converges_to s a) :
-    Filter.Tendsto (toMathlibSequence s) Filter.atTop (nhds a) := by
-  rw [Metric.tendsto_nhds]
-  -- Extract N from the generated convergence evidence and build eventually_atTop.
-  ...
-```
-
-#### 4. Mathlib interface: expose the result as `Filter.Tendsto`
-
-After the bridge, the theorem concludes in Mathlib's sequence-limit interface, so downstream Lean code can consume it like an ordinary `Filter.Tendsto` theorem.
-
-```lean
--- LitexToMathlib.lean (Mathlib-facing theorem; excerpt)
-theorem tendsto_mul_const_from_generated (...) :
-    Filter.Tendsto
-      (toMathlibSequence (scaleSequence c s))
-      Filter.atTop
-      (nhds (c * a)) := by
-  have generated :=
-    __Compiler_main.converges_to_mul_const s sIn a aIn c cIn h
-  exact tendsto_of_generated_convergesTo _ _ generated
-```
-
-This establishes one fully covered route, not universal compiler coverage. The generated code and adapter above are structural excerpts; ellipses mark omitted wrapper details or proof bodies.
-
-</details>
-
-<details>
-<summary><strong>How the Litex-to-Lean Compiler Works</strong></summary>
-
-Ecosystem reuse and independent rechecking share one route: Litex records verification paths, maps each supported step to a Lean theorem or proof construction, and assembles a proof term. Mathlib's set-theoretic support makes this a natural architecture.
-
-Implementation requires two mappings: supported paths to Lean proof constructions, and Litex objects through designed wrappers to Lean representations rather than mechanical translation. This takes continued development and verification; intermediary code lives at https://github.com/litexlang/golitex/blob/main/lean/Litex/Core.lean.
-
-The compiler has two underlying problems. First, how should Lean/Mathlib represent Litex mathematics? Equivalent formulations have long-term consequences for Mathlib reuse, Litex extension, and ecosystem cooperation. Functions, sets, membership, and well-definedness need a consistent, sustainable representation.
-
-Second, how should successful execution become a Lean proof? A search branch must return structured rules, facts, objects, subproofs, and well-definedness results, while preserving declarations and scope changes. The compiler can then replay Litex's route deterministically instead of rebuilding from display text or asking Lean to search again.
-
-</details>
-
-Litex therefore supplies a mathematics-facing interface while Lean supplies small-kernel rechecking and ecosystem reuse. Covered paths can combine both into a verifiable, reviewable, reusable workflow.
-
-### Summary: Bottom-Up and Top-Down Reasoning Are Complementary
-
-In mathematical practice, bottom-up accumulation of facts and top-down decomposition of a goal are not alternatives. They coexist and check one another. Litex and Lean are therefore complementary: Litex lets an author start from objects, conditions, and verified facts and grow a readable proof flow; Lean starts from an explicit goal, decomposes it, constructs a proof term, and submits the result to a small kernel for independent checking. They can divide the work in one workflow without making either direction the only correct one.
-
-From the author's observation, AI often handles *fact-oriented* expression and local bottom-up continuation naturally. One possible explanation is its training material: much knowledge on the internet is organized as facts, conclusions, and local derivations, so models learn patterns that resemble this direction. This is a working hypothesis about data distribution and model behavior, not a universal conclusion about every model or task.
-
-AI training also optimizes objectives and, in some stages, preference or reward signals. “Reward” should not be identified with the Transformer architecture itself: a Transformer provides the representation and generation architecture, while losses and sometimes preference/reward optimization shape behavior during training. This gives no basis for claiming that AI has a stable first-principles, bottom-up reasoning ability; in many tasks it may more readily organize a plausible path backward from a desired result or evaluation signal. That is a tendency to test, not an immutable limitation.
-
-Both modes of thought are valuable. Bottom-up reasoning accumulates reusable local facts and exposes their intermediate support; top-down reasoning clarifies the target, chooses a direction, and narrows the search space. The Litex–Lean connection can place both directions in one checkable evidence chain, allowing humans and AI to collaborate from the direction each handles best.
-
-<a id="execution-model"></a>
-
-## 5. How Litex Runs: From Mathematical Statements to Checkable Knowledge Records
-
-When we read mathematics, we usually follow a sentence back to the definition, condition, or earlier fact that makes it meaningful. Litex keeps that ordinary mathematical flow and makes its dependencies available for checking and inspection.
-
-The implementation can grow as Litex adds rules, libraries, graphs, and Lean interfaces, while the core execution model remains short:
-
-```text
-Litex source
-  → parse typed objects and statements
-  → define an object or verify a fact
-  → check well-definedness and applicable dependencies
-  → build a structured execution result
-  → commit the candidate or roll it back
-  → extend the accepted context and run inference when applicable
-  → expose the result to people, AI, JSON, and graph views
-  → send covered verification paths to ToLean and Lean
-```
-
-`define` and `verify` are two branches of the same knowledge-building process. A definition introduces a reusable object, relation, function, or interface and records what it depends on. A verification statement checks a fact against the current environment, records its supporting evidence, and gives an accepted fact a `FactId` that later statements can cite. A failed top-level candidate rolls back its local changes, leaving the accepted context available for the next attempt.
-
-In this Blueprint, we call the resulting structured artifacts **Checkable Knowledge Records**. A record can describe an introduced definition or a verified fact together with its status, dependencies, identifiers, and—where applicable—well-definedness and proof evidence. JSON is the machine-readable representation of these records; it is not a log reconstructed from terminal prose.
-
-Because the relationships are already represented as data, mathematical facts and concepts can be extracted and connected quickly. Litex's `graph` command provides one view of those relationships:
-
-![Example of a Litex relation graph](../assets/litex_graph_example.png)
-
-The graph is a presentation of the underlying records, rather than the focus of this section. The important design choice is that a person, an AI system, or another tool can inspect the same statement, dependencies, evidence, and state transition through the interface appropriate to it.
-
-This is why a large implementation can still have an understandable conceptual model. The reader need not reconstruct the entire rule base to answer four local questions: what was introduced, what was checked, why did it pass or stop, and what entered the accepted context. The next section follows those questions through a mathematical example; the following human–AI section shows how the same record becomes feedback for a candidate repair.
-
 <a id="mathematics-practice"></a>
 
-## 6. From Four Design Principles to Mathematical Practice: Definition and Verification
+## 4. From Four Design Principles to Mathematical Practice: Definition and Verification
 
 In formal practice, mathematical work repeatedly moves between two activities. **Definition** introduces objects, relations, and reusable interfaces that give a domain its language. **Verification** establishes what follows from those definitions and the available conditions. The earlier group and algebraic-equality examples were local slices; the full convergence example below puts definitions, quantifiers, witnesses, and estimates into one proof flow.
 
@@ -799,7 +599,419 @@ thm converges_to_mul_const:
 
 The first two `prop` declarations establish the domain language: what it means to be eventually close and to converge. Then `obtain N0` extracts a position from the original convergence statement, while `witness` supplies it for the new sequence. Choosing `epsilon / (abs(c) + 1)` avoids a separate `c = 0` case, and the inequality chain compresses the error below `epsilon`. The example combines both kinds of mathematical work: define a reusable interface, then verify a new fact through it. Fact orientation changes the interface; it does not remove the mathematics.
 
+This example first shows the two recurring mathematical actions; the next section does not repeat the proof itself, but follows how a statement becomes a Checkable Knowledge Record and continues to affect context.
+
 </details>
+
+<a id="execution-model"></a>
+
+## 5. What Each Statement Leaves Behind: Checkable Knowledge Records
+
+When we read mathematics, no sentence stands alone. As we write a fact, we also bring to mind the definitions, premises, and earlier facts on which it depends; together they form a context that keeps growing, and later reasoning moves forward on ground already established.
+
+Litex turns this flow—normally held only in the mind—into code, one statement at a time: source records the objects to establish and facts to verify, while defined concepts and proved facts remain in context for later statements to build on. Litex makes not only the source close to everyday mathematical writing, but the growth itself visible: it records why each statement holds, which grounds it uses, what it infers, and what actually enters the mathematical context that follows.
+
+In other words, Litex makes both sides visible: the source reads like mathematics, and the execution lays out which definitions and facts it followed and what it leaves for the next statement.
+
+Start with a minimal consecutive fragment:
+
+```litex
+let a = 1
+a + 1 = 2
+```
+
+The first line is a definition (`define`): it introduces an object and stores the defining fact `a = 1` in context. The second is a verification (`verify`): it reads the current context, checks the well-definedness of `a + 1 = 2`, reduces transparently through `a = 1`, and then uses numeric normalization. Once accepted, the second fact enters the current context and becomes a basis for later statements.
+
+The following expands the key records for these two lines. The field names retain their current JSON semantics; runtime node IDs and empty fields unrelated to this example are omitted for readability. The example keeps `fact_id` because it appears in the current output, but it is only an implementation field for preserving an address when compiling to Lean, not mathematical content.
+
+<details>
+<summary><strong>Expand: key JSON record for the two statements</strong></summary>
+
+```json
+{
+  "kind": "run",
+  "ok": true,
+  "statement_results": [
+    {
+      "outcome": "success",
+      "result": {
+        "kind": "LetObjStmt",
+        "statement": "let a = 1",
+        "common": {
+          "infers": {
+            "stores": [
+              {
+                "fact_id": "f1",
+                "statement": "a = 1",
+                "reason": "object definition",
+                "inferred_facts": []
+              }
+            ],
+            "rule_applications": []
+          }
+        }
+      }
+    },
+    {
+      "outcome": "success",
+      "result": {
+        "kind": "Fact",
+        "statement": "a + 1 = 2",
+        "evidence": {
+          "kind": "Verified",
+          "well_definedness": {
+            "kind": "WellDefinedFactResult",
+            "fact": "a + 1 = 2",
+            "proof": {
+              "kind": "AtomicFact",
+              "statement": "a + 1 = 2",
+              "arguments": [
+                {
+                  "argument_index": 0,
+                  "object": "a + 1",
+                  "result": {
+                    "value": {
+                      "kind": "Direct",
+                      "object": "a + 1",
+                      "intrinsic_result_set": "C",
+                      "target_requirements": [
+                        {
+                          "role": {
+                            "kind": "BuiltinArgumentMembership",
+                            "argument_index": 0
+                          },
+                          "expected_proposition": "a $in C",
+                          "verification": {
+                            "value": {
+                              "kind": "AtomicFact",
+                              "statement": "a $in C",
+                              "proof": {
+                                "kind": "Reuse",
+                                "source": {
+                                  "value": {
+                                    "kind": "AtomicFact",
+                                    "statement": "a $in C",
+                                    "proof": {
+                                      "kind": "Transform",
+                                      "rule": {
+                                        "kind": "TransparentDefinitionReduction",
+                                        "definitions": [
+                                          {
+                                            "symbol": "a",
+                                            "definition_object": "1",
+                                            "defining_equality": "a = 1"
+                                          }
+                                        ]
+                                      },
+                                      "source": {
+                                        "kind": "AtomicFact",
+                                        "statement": "1 $in C",
+                                        "proof": {
+                                          "kind": "BuiltinRule",
+                                          "diagnostic_label": "number in C",
+                                          "evidence": {
+                                            "kind": "Typed",
+                                            "rule_id": "numeric.closed_membership",
+                                            "value": {
+                                              "kind": "ClosedNumericMembership",
+                                              "expected_target": "1 $in C",
+                                              "target_set": "C",
+                                              "evaluation": {
+                                                "expression": "1",
+                                                "value": "1",
+                                                "step": {
+                                                  "kind": "Literal",
+                                                  "literal": "1"
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "subgoals": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "argument_index": 1,
+                  "object": "2",
+                  "result": {
+                    "value": {
+                      "kind": "Direct",
+                      "object": "2"
+                    }
+                  }
+                }
+              ],
+              "predicate": {
+                "kind": "SuccessVerifyAtomicPredicateWellDefinedResult",
+                "name": "=",
+                "expected_arity": 2,
+                "domain_checks": []
+              }
+            }
+          },
+          "proof": {
+            "kind": "AtomicFact",
+            "statement": "a + 1 = 2",
+            "proof": {
+              "kind": "Reuse",
+              "source": {
+                "value": {
+                  "kind": "AtomicFact",
+                  "statement": "a + 1 = 2",
+                  "proof": {
+                    "kind": "Transform",
+                    "rule": {
+                      "kind": "TransparentDefinitionReduction",
+                      "definitions": [
+                        {
+                          "symbol": "a",
+                          "definition_object": "1",
+                          "defining_equality": "a = 1"
+                        }
+                      ]
+                    },
+                    "source": {
+                      "kind": "AtomicFact",
+                      "statement": "1 + 1 = 2",
+                      "proof": {
+                        "kind": "BuiltinRule",
+                        "diagnostic_label": "calculation",
+                        "evidence": {
+                          "kind": "Typed",
+                          "rule_id": "equality.rational_normalization",
+                          "value": {
+                            "kind": "RationalNormalization",
+                            "expected_target": "1 + 1 = 2",
+                            "left_evaluation": {
+                              "expression": "1 + 1",
+                              "value": "2",
+                              "step": {
+                                "kind": "Binary",
+                                "operator": "Add",
+                                "left": {
+                                  "expression": "1",
+                                  "value": "1",
+                                  "step": {
+                                    "kind": "Literal",
+                                    "literal": "1"
+                                  }
+                                },
+                                "right": {
+                                  "expression": "1",
+                                  "value": "1",
+                                  "step": {
+                                    "kind": "Literal",
+                                    "literal": "1"
+                                  }
+                                }
+                              }
+                            },
+                            "right_evaluation": {
+                              "expression": "2",
+                              "value": "2",
+                              "step": {
+                                "kind": "Literal",
+                                "literal": "2"
+                              }
+                            }
+                          }
+                        },
+                        "subgoals": []
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "store": {
+          "fact": "a + 1 = 2",
+          "fact_id": "f2",
+          "infers": {
+            "stores": [],
+            "rule_applications": []
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+</details>
+
+This record turns “why this can be written down” into traceable local steps: first confirm that `a + 1` meets the operation's domain requirement; then reduce transparently through the established definition `a = 1` to `1 + 1 = 2`; finally complete the calculation with a numeric normalization rule. For a reader, it answers at least five local questions:
+
+| What a reader wants to know | Where to look |
+| --- | --- |
+| Statement and statement type | The statement and type (`statement`, `kind`): is this defining a symbol, predicate, or function, or verifying a fact? |
+| Whether the statement is meaningful | The well-definedness check (`well_definedness`): are its objects and operations within their allowed domains? |
+| Why it holds | The well-definedness checks, definition reduction, and rule evidence in `evidence` and `proof` |
+| Whether it became a later premise | The stored result (`store`) and the accepted context |
+| What was inferred while checking | The inferred results (`infers`) and their rule applications |
+
+For example, `let a = 1` defines the symbol `a` and records `a = 1`; `a + 1 = 2` verifies a fact in the current context. Well-definedness comes first: `1 / 0 = 1 / 0` has identical expressions on both sides, but `0` is not an allowed denominator for division, so the statement does not meet the well-definedness requirement.
+
+This minimal example produces no additional inference, so `infers` is empty; when a checking rule derives new facts or relationships, they are listed in the same place rather than hidden in terminal prose.
+
+The context therefore grows one accepted statement at a time:
+
+```text
+Γ₀
+  -- define a = 1 --> Γ₁ = Γ₀ + {a = 1}
+  -- verify a + 1 = 2 --> Γ₂ = Γ₁ + {a + 1 = 2}
+```
+
+The `Γ` symbol here denotes the context of the entire proof: the concepts already defined, the facts already confirmed, and the premises available to later statements. `Γ₀` is the initial context; each accepted definition or fact adds one item to it, producing `Γ₁`, `Γ₂`, and the context used by the reasoning that follows.
+
+A failed candidate does not fabricate a record or add an unaccepted fact to `Γ₂`; Section 7 uses the human–AI–Litex interaction to show this stopping and repair boundary. “Checkable Knowledge Record” also does not mean that every record has already been independently rechecked by Lean: temporary trust markers (`trust`), unsupported compilation routes, and expanding rules must retain their explicit boundaries.
+
+Starting from Litex's core design—making a trustworthy, checkable knowledge record a first-class runtime product—the same record can serve four purposes:
+
+1. **For people to read**: turn statements, grounds, and context changes into an interactive textbook, so beginners do not have to stop simply because they cannot see why a sentence holds.
+2. **For AI collaboration**: return the grounds for every success, stop, and failure to the AI, so it can write Litex, correct itself from feedback, and improve step by step in a human–AI–Litex loop.
+3. **For knowledge structure**: generate a dependency graph of definitions and theorems from definitions, facts, citations, and inferences, making connections among concepts visible.
+4. **For Lean rechecking**: use the definitions, facts, and verification grounds in the record to design a Litex-to-Lean compiler, submit equivalent generated Lean code to Lean's kernel, and connect it to the Lean ecosystem.
+
+![Example of a Litex relation graph](https://litexlang.com/_next/image?url=%2Fassets%2Fknowledge_graph.png&w=2048&q=75)
+
+### Summary: Litex's Mathematical View
+
+Litex treats mathematical practice as a pair of recurring actions:
+
+1. **define** establishes objects, relations, functions, and reusable interfaces—the vocabulary of a domain.
+2. **verify** establishes which facts hold in the current context and preserves their grounds.
+3. Every accepted statement changes the premises available to later reasoning; earlier text is a foundation, not decoration.
+4. Verification preserves both why a statement holds and applicable inferences, rather than returning only a truth label.
+5. Common mathematical correspondences should come from a small, composable vocabulary of objects, relations, logical structures, builtins, and library interfaces. The aim is broad set-theoretic expressiveness without adding an overlapping special interface for every formulation; current coverage is still expanding and being audited.
+
+None of these five points is unique to Litex on its own; other languages may do one of them very well. Litex's design focus is their combination into one continuous mathematical workflow: definitions establish a vocabulary, verification confirms facts in the current context, records preserve grounds and inferences, later statements grow from what came before, and the same record serves people, AI, dependency graphs, and Lean. That combination makes formalization closer to everyday mathematical thought, more suitable for AI participation, and more aligned with an AI-era pursuit of mathematics that starts from human understanding and judgment. This is a design hypothesis Litex is testing, not an exclusivity claim about other languages.
+
+Most importantly: Litex is a tool that genuinely helps people understand mathematics. It does not only return an answer; it lays out why the answer holds, what it depends on, and what it leaves for the statements that follow. In the age of AI, when answers can be generated in abundance, preserving this human capacity for understanding is especially precious.
+
+<details>
+<summary><strong>Implementation summary: how a record is produced</strong></summary>
+
+The implementation can grow as rules, libraries, graphs, and Lean interfaces expand without changing the reader's core model:
+
+```text
+Litex source
+  → parse typed objects and statements
+  → run a definition or verification
+  → check well-definedness, shape, grounds, and premises
+  → build a structured execution result
+  → commit the candidate or roll it back
+  → extend the accepted context and run applicable inference
+  → expose JSON, relation-graph, and human/AI views
+  → send supported routes to the Litex-to-Lean compiler and Lean
+```
+
+JSON is the machine-readable representation of the record, not a log reconstructed from terminal prose; a relation graph is one view of record relationships; Lean is the independent rechecking endpoint for supported routes. The implementation can grow while these responsibilities remain understandable.
+
+</details>
+
+<a id="compatibility"></a>
+
+## 6. Lean-Compatible: Independent Rechecking for Covered Paths
+
+Litex is first an independently usable language with its own syntax, runtime, and kernel; without Lean it still checks well-definedness and facts and provides feedback.
+
+Section 5 showed what Litex leaves behind as a record; this section only follows supported verification routes into Lean/Mathlib and does not repeat the mathematical source or record fields.
+
+“A mathematical front end for Lean” means translating supported verification paths into Lean proof terms while coverage expands. *Litex can offer content and interface experience; Lean's kernel and Mathlib can strengthen Litex. The relationship is complementary, not competitive.*
+
+Fact-first verification lets humans and AI focus on objects, conditions, facts, and conclusions with local traceable feedback. Elaboration, type classes, namespaces, and tactics are instead important sources of Lean's expressiveness and compositionality.
+
+*The compiler also provides an independent safeguard for Litex's rigor.* Rust under `src/` alone approaches 200,000 lines and contains hundreds of growing rules, making its trusted surface harder to audit than Lean's smaller kernel. A Litex route fully compiled and accepted by Lean gains strong independent evidence and reduces sole reliance on Litex's implementation.
+
+_Coverage remains partial. Only source routes that fully compile and pass Lean receive this safeguard._
+
+<details>
+<summary><strong>How one supported route reaches Lean/Mathlib</strong></summary>
+
+Section 4 already showed the convergence source and its Litex verification; this section follows the same accepted record downstream without repeating the Litex proof:
+
+`Litex source → Litex verification → ToLean compilation → Lean kernel recheck → handwritten adapter → Mathlib theorem`
+
+ToLean uses the definitions, facts, and verification grounds in the record to generate a Lean proof object. The generated file is not handwritten:
+
+```lean
+-- LitexGenerate.lean (generated by ToLean; excerpt)
+namespace __Compiler_main
+
+def is_eventually_close (...) : Prop := ...
+def converges_to (...) : Prop := ...
+
+theorem converges_to_mul_const :
+    ∀ (s : (Litex.fnSet Litex.N Litex.R).Carrier) ...,
+      converges_to (...) (...) := by
+  ...
+
+end __Compiler_main
+```
+
+A handwritten adapter invokes the generated theorem and bridges its representation to Mathlib:
+
+```lean
+import LitexGenerate
+
+-- The decisive call inside the handwritten adapter theorem (context omitted)
+have generated :=
+  __Compiler_main.converges_to_mul_const s sIn a aIn c cIn h
+```
+
+After the bridge, downstream code can use a native Mathlib interface:
+
+```lean
+theorem tendsto_mul_const_from_generated (...) :
+    Filter.Tendsto
+      (toMathlibSequence (scaleSequence c s))
+      Filter.atTop
+      (nhds (c * a)) := by
+  have generated :=
+    __Compiler_main.converges_to_mul_const s sIn a aIn c cIn h
+  exact tendsto_of_generated_convergesTo _ _ generated
+```
+
+This establishes one currently covered route, not universal compiler coverage; other source routes must retain their explicit boundaries.
+
+</details>
+
+<details>
+<summary><strong>How the Litex-to-Lean Compiler Works</strong></summary>
+
+Ecosystem reuse and independent rechecking share one route: Litex records verification paths, maps each supported step to a Lean theorem or proof construction, and assembles a proof term. Mathlib's set-theoretic support makes this a natural architecture.
+
+Implementation requires two mappings: supported paths to Lean proof constructions, and Litex objects through designed wrappers to Lean representations rather than mechanical translation. This takes continued development and verification; intermediary code lives at https://github.com/litexlang/golitex/blob/main/lean/Litex/Core.lean.
+
+The compiler has two underlying problems. First, how should Lean/Mathlib represent Litex mathematics? Equivalent formulations have long-term consequences for Mathlib reuse, Litex extension, and ecosystem cooperation. Functions, sets, membership, and well-definedness need a consistent, sustainable representation.
+
+Second, how should successful execution become a Lean proof? A search branch must return structured rules, facts, objects, subproofs, and well-definedness results, while preserving declarations and scope changes. The compiler can then replay Litex's route deterministically instead of rebuilding from display text or asking Lean to search again.
+
+</details>
+
+Litex therefore supplies a mathematics-facing interface while Lean supplies small-kernel rechecking and ecosystem reuse. Covered paths can combine both into a verifiable, reviewable, reusable workflow.
+
+### Summary: Bottom-Up and Top-Down Reasoning Are Complementary
+
+In mathematical practice, bottom-up accumulation of facts and top-down decomposition of a goal are not alternatives. They coexist and check one another. Litex and Lean are therefore complementary: Litex lets an author start from objects, conditions, and verified facts and grow a readable proof flow; Lean starts from an explicit goal, decomposes it, constructs a proof term, and submits the result to a small kernel for independent checking. They can divide the work in one workflow without making either direction the only correct one.
+
+From the author's observation, AI often handles *fact-oriented* expression and local bottom-up continuation naturally. One possible explanation is its training material: much knowledge on the internet is organized as facts, conclusions, and local derivations, so models learn patterns that resemble this direction. This is a working hypothesis about data distribution and model behavior, not a universal conclusion about every model or task.
+
+AI training also optimizes objectives and, in some stages, preference or reward signals. “Reward” should not be identified with the Transformer architecture itself: a Transformer provides the representation and generation architecture, while losses and sometimes preference/reward optimization shape behavior during training. This gives no basis for claiming that AI has a stable first-principles, bottom-up reasoning ability; in many tasks it may more readily organize a plausible path backward from a desired result or evaluation signal. That is a tendency to test, not an immutable limitation.
+
+Both modes of thought are valuable. Bottom-up reasoning accumulates reusable local facts and exposes their intermediate support; top-down reasoning clarifies the target, chooses a direction, and narrows the search space. The Litex–Lean connection can place both directions in one checkable evidence chain, allowing humans and AI to collaborate from the direction each handles best.
 
 <a id="interaction-loop"></a>
 
@@ -913,10 +1125,9 @@ shaping mathematical attention, not only as a way of satisfying a kernel. Its
 fact-oriented and bottom-up design is an invitation to explore another relation
 between human intuition, machine verification, and mathematical knowledge.
 
-Litex's longer-term vision is that its implementation may grow large while its
-core execution model remains easy to understand. It can externalize the
-dependencies readers silently track in mathematics as Checkable Knowledge
-Records for interactive textbooks.
+Section 5 makes this longer-term vision concrete: the implementation may grow
+large while readers can still trace the definitions, premises, and facts behind
+each statement through Checkable Knowledge Records.
 
 Litex may not become the only path, and it does not need to. Its contribution
 may be to show that formal mathematics has more than one possible future.
