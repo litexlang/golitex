@@ -4,7 +4,6 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn parse_fact(&mut self, tb: &mut TokenBlock) -> Result<Fact, RuntimeError> {
-        self.ensure_current_source_for_parse();
         if tb.current()? == NOT
             && tb.token_at_add_index(1) == FORALL
             && Self::uses_inline_forall_syntax(tb)
@@ -45,7 +44,6 @@ impl Runtime {
         tb: &mut TokenBlock,
         nested: bool,
     ) -> Result<Fact, RuntimeError> {
-        self.ensure_current_source_for_parse();
         if !nested && !tb.body.is_empty() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(

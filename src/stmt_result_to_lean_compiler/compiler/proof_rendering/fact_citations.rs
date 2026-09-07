@@ -39,8 +39,7 @@ pub(in super::super) fn resolve_fact_citation(
     } else if normal_atomic_facts_are_equal_up_to_nested_binder_alpha(retained, expected) {
         true
     } else if let (Fact::ForallFact(retained), Fact::ForallFact(expected)) = (retained, expected) {
-        let mut runtime = Runtime::default();
-        runtime.ensure_current_source_for_parse();
+        let runtime = Runtime::default();
         let retained_key = runtime
             .alpha_normalized_forall_cache_key(retained)
             .map_err(|error| {

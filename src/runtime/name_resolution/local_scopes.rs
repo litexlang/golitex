@@ -4,12 +4,7 @@ use crate::prelude::*;
 
 impl Runtime {
     fn current_source_target(&self) -> (ModuleId, SourceId) {
-        (
-            self.current_module_id
-                .expect("a current source should always exist"),
-            self.current_source_id
-                .expect("a current source should always exist"),
-        )
+        (self.current_module_id, self.current_source_id)
     }
 
     pub fn top_level_env(&mut self) -> &mut Environment {

@@ -1,4 +1,4 @@
-use super::super::command::{parse_cli_command, CliCommand};
+use super::super::command::{parse_command_line_command, CliCommand};
 use super::super::messages::help_message;
 use crate::graph::GraphKind;
 use crate::output::{language::OutputLanguage, style::OutputDetail};
@@ -16,7 +16,7 @@ fn canonical_cli_prefix_maps_to_one_typed_command() {
         "1 = 1".to_string(),
     ];
 
-    let command = parse_cli_command(&args).expect("canonical CLI options should parse");
+    let command = parse_command_line_command(&args).expect("canonical CLI options should parse");
     let CliCommand::Execute { target, options } = command else {
         panic!("expected typed eval command");
     };
@@ -56,7 +56,7 @@ fn graph_tracer_resolves_every_argument_before_dispatch() {
     ]
     .map(str::to_string);
 
-    let command = parse_cli_command(&args).expect("graph tracer should parse");
+    let command = parse_command_line_command(&args).expect("graph tracer should parse");
     let CliCommand::Graph {
         kind,
         target,
@@ -136,7 +136,7 @@ fn help_lists_session_command() {
 fn session_accepts_an_optional_file_preload() {
     let args = ["-session", "-f", "chap4.lit"].map(str::to_string);
     let CliCommand::Session { file_path, options } =
-        parse_cli_command(&args).expect("session file target should parse")
+        parse_command_line_command(&args).expect("session file target should parse")
     else {
         panic!("expected typed session command");
     };
@@ -149,7 +149,7 @@ fn session_accepts_an_optional_file_preload() {
 fn isolated_session_file_has_an_explicit_isolated_mode() {
     let args = ["-isolated", "-session", "-f", "chap5.lit"].map(str::to_string);
     let CliCommand::Session { file_path, options } =
-        parse_cli_command(&args).expect("isolated session file target should parse")
+        parse_command_line_command(&args).expect("isolated session file target should parse")
     else {
         panic!("expected typed session command");
     };
@@ -166,14 +166,14 @@ fn session_without_a_file_keeps_current_directory_and_isolated_modes_distinct() 
     let CliCommand::Session {
         file_path: project_file,
         options: project_options,
-    } = parse_cli_command(&project).unwrap()
+    } = parse_command_line_command(&project).unwrap()
     else {
         panic!("expected typed project session");
     };
     let CliCommand::Session {
         file_path: isolated_file,
         options: isolated_options,
-    } = parse_cli_command(&isolated).unwrap()
+    } = parse_command_line_command(&isolated).unwrap()
     else {
         panic!("expected typed isolated session");
     };
@@ -187,7 +187,7 @@ fn session_without_a_file_keeps_current_directory_and_isolated_modes_distinct() 
 #[test]
 fn session_rejects_non_file_targets() {
     let args = ["-session", "-r", "Demo"].map(str::to_string);
-    let error = parse_cli_command(&args).expect_err("session repository target should be rejected");
+    let error = parse_command_line_command(&args).expect_err("session repository target should be rejected");
 
     assert_eq!(error, "unsupported CLI command combination");
 }
@@ -195,7 +195,7 @@ fn session_rejects_non_file_targets() {
 #[test]
 fn session_rejects_the_retired_before_target() {
     let args = ["-session", "-before", "chap5.lit"].map(str::to_string);
-    let error = parse_cli_command(&args).expect_err("the retired before target must be rejected");
+    let error = parse_command_line_command(&args).expect_err("the retired before target must be rejected");
 
     assert_eq!(error, "unsupported CLI command combination");
 }
@@ -234,7 +234,7 @@ fn cli_whitelist_accepts_every_supported_command_family() {
         vec!["-extractc", "-r", "project"],
     ] {
         let args: Vec<String> = args.into_iter().map(str::to_string).collect();
-        parse_cli_command(&args).unwrap_or_else(|error| panic!("{args:?}: {error}"));
+        parse_command_line_command(&args).unwrap_or_else(|error| panic!("{args:?}: {error}"));
     }
 
     for graph in ["-graph", "-factgraph", "-defgraph"] {
@@ -244,14 +244,14 @@ fn cli_whitelist_accepts_every_supported_command_family() {
                 if let Some(output) = output {
                     args.push(output.to_string());
                 }
-                parse_cli_command(&args).unwrap();
+                parse_command_line_command(&args).unwrap();
 
                 let mut strict = vec!["-strict".to_string()];
                 if target == "-f" {
                     strict.push("-isolated".to_string());
                 }
                 strict.extend(args);
-                parse_cli_command(&strict).unwrap();
+                parse_command_line_command(&strict).unwrap();
             }
         }
     }
@@ -298,7 +298,7 @@ fn cli_whitelist_rejects_retired_malformed_and_meaningless_combinations() {
     ] {
         let args: Vec<String> = args.into_iter().map(str::to_string).collect();
         let error =
-            parse_cli_command(&args).expect_err("unsupported CLI combination must be rejected");
+            parse_command_line_command(&args).expect_err("unsupported CLI combination must be rejected");
         assert_eq!(error, "unsupported CLI command combination", "{args:?}");
     }
 }
@@ -361,7 +361,7 @@ fn graph_kinds_keep_their_public_flags_and_output_names() {
 fn graph_command_rejects_more_than_one_save_path() {
     for flag in ["-graph", "-factgraph", "-defgraph"] {
         let args = [flag, "-f", "main.lit", "graph.json", "extra"].map(str::to_string);
-        let error = parse_cli_command(&args)
+        let error = parse_command_line_command(&args)
             .expect_err("a graph command accepts only one optional save path");
 
         assert_eq!(error, "unsupported CLI command combination");

@@ -182,6 +182,32 @@ impl ModuleManager {
         Ok(id)
     }
 
+    /// Convert the constructor-created virtual root into a repository root.
+    /// The bootstrap source remains registered so Runtime never loses its
+    /// active `(ModuleId, SourceId)` pair while discovery builds the export
+    /// tree.
+    pub fn configure_repository_root_module(
+        &mut self,
+        module_root_path: RealDirectoryPath,
+        main_file_path: RealFilePath,
+    ) -> Result<ModuleId, String> {
+        let Some(module) = self.module_mut(ModuleId::ROOT) else {
+            return Err("runtime root module is missing".to_string());
+        };
+        if module.location != ModuleLocation::Virtual
+            || module.module_source_id != Some(SourceId(0))
+            || module.sources.len() != 1
+        {
+            return Err("root module has already been configured".to_string());
+        }
+        module.location = ModuleLocation::Repository {
+            root: module_root_path.clone(),
+            manifest: main_file_path,
+        };
+        self.module_by_root.insert(module_root_path, ModuleId::ROOT);
+        Ok(ModuleId::ROOT)
+    }
+
     pub fn create_discovered_module(
         &mut self,
         module_name: String,

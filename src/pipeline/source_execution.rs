@@ -1,4 +1,4 @@
-use crate::error::{ParseRuntimeError, RuntimeError, RuntimeErrorStruct};
+use crate::error::RuntimeError;
 use crate::parsing::{TokenBlock, Tokenizer};
 use crate::result::StmtResult;
 use crate::runtime::Runtime;
@@ -30,15 +30,7 @@ impl SourceRunOutcome {
 
 impl Runtime {
     pub fn execute_source(&mut self, source_code: &str) -> SourceRunOutcome {
-        if !self.has_current_source() {
-            let error = ParseRuntimeError(RuntimeErrorStruct::new_with_just_msg(
-                "runtime has no active source context; initialize a file or repository before running source"
-                    .to_string(),
-            ))
-            .into();
-            return SourceRunOutcome::failure(vec![], error);
-        }
-
+        self.mark_source_execution_started();
         let blocks = match tokenize_source_code(source_code, self) {
             Ok(blocks) => blocks,
             Err(error) => {

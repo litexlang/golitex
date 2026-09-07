@@ -21,8 +21,7 @@ pub(in super::super) fn matches_directly_or_after_one_transparent_definition_pas
     if substitutions.is_empty() {
         return Ok(false);
     }
-    let mut runtime = Runtime::default();
-    runtime.ensure_current_source_for_parse();
+    let runtime = Runtime::default();
     let reduced_source = runtime
         .inst_obj(source, &substitutions, SubstitutionMode::Exact)
         .map_err(|error| {
@@ -701,8 +700,7 @@ pub(in super::super) fn render_function_application(
             .zip(application.source_argument_layers[layer_index].iter())
             .map(|(parameter, argument)| (parameter.symbol_id.substitution_key(), argument.clone()))
             .collect::<HashMap<_, _>>();
-        let mut domain_substitution_runtime = Runtime::default();
-        domain_substitution_runtime.ensure_current_source_for_parse();
+        let domain_substitution_runtime = Runtime::default();
         let mut domain_proofs = Vec::with_capacity(domain_requirements.len());
         for (_domain_index, (source_fact, requirement)) in function
             .domain_facts

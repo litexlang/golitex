@@ -3,15 +3,16 @@
 //! Prefer this module over importing the kernel's implementation modules or
 //! the broad internal [`crate::prelude`].
 //!
-//! `Runtime::execute_source` executes inside an explicit source context:
+//! `Runtime::execute_source` executes inside the source context created by the
+//! runtime constructor. Select a different virtual or file source before the
+//! first execution when the source label matters:
 //!
 //! ```
-//! use litex::api::{Runtime, VirtualSource};
+//! use litex::api::Runtime;
 //!
 //! let mut runtime = Runtime::default();
-//! runtime.start_virtual_source(VirtualSource::Eval);
 //! let (results, error) = runtime.execute_source("1 = 1").into_parts();
-//! assert!(error.is_none());
+//! assert!(error.is_none(), "{error:?}");
 //! assert_eq!(results.len(), 1);
 //! ```
 

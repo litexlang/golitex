@@ -582,7 +582,7 @@ pub use crate::verification::general_cart_member_fn_set;
 pub use crate::verification::nested_obj_binder_normalized_fact_key;
 pub use crate::verification::{BuiltinRuleSearchState, VerifyState};
 
-pub use crate::cli::run_cli;
+pub use crate::cli::run_command_line_commands;
 pub use crate::syntax::keywords::is_builtin_identifier_name;
 pub use crate::syntax::keywords::is_builtin_predicate;
 pub use crate::syntax::keywords::is_builtin_theorem_name;
