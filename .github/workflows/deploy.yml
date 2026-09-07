@@ -53,12 +53,36 @@ jobs:
             exit 1
           fi
 
+  quality:
+    name: Release gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
+
+      - name: Rust formatting
+        run: cargo fmt --all -- --check
+
+      - name: Release tests
+        run: cargo test --release --all-targets --locked
+
   # ─────────────────────────────────────────────
   # Job 2: Build binaries for all platforms
   # ─────────────────────────────────────────────
   build:
     name: Build ${{ matrix.os_name }}-${{ matrix.arch }}
-    needs: validate
+    needs: [validate, quality]
     strategy:
       matrix:
         include:
@@ -98,11 +122,11 @@ jobs:
 
       - name: Build (native)
         if: "!matrix.cross"
-        run: cargo build --release --target ${{ matrix.target }}
+        run: cargo build --release --locked --target ${{ matrix.target }}
 
       - name: Build (cross)
         if: matrix.cross
-        run: cross build --release --target ${{ matrix.target }}
+        run: cross build --release --locked --target ${{ matrix.target }}
 
       - name: Rename binary (unix)
         if: matrix.os_name != 'windows'
@@ -330,7 +354,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - name: Publish
-        run: cargo publish --allow-dirty --token ${{ secrets.CRATES_IO_TOKEN }}
+        run: cargo publish --locked --token ${{ secrets.CRATES_IO_TOKEN }}
 
   # ─────────────────────────────────────────────
   # Job 7: Update Homebrew tap
