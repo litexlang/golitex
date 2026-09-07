@@ -1323,8 +1323,7 @@ impl StmtResultToLeanCompiler {
             | ArithmeticBuiltinRule::SubLessSwap
             | ArithmeticBuiltinRule::SubLessEqualSwap
             | ArithmeticBuiltinRule::LessEqualAddImpliesSubLessEqual
-            | ArithmeticBuiltinRule::NegateOrder
-            | ArithmeticBuiltinRule::AddRightNonnegativeLessEqual => 1,
+            | ArithmeticBuiltinRule::NegateOrder => 1,
             ArithmeticBuiltinRule::MulCommonFactorLessEqualNonnegative
             | ArithmeticBuiltinRule::MulCommonFactorLessEqualNonpositive
             | ArithmeticBuiltinRule::MulCommonFactorLessPositive
@@ -1336,7 +1335,6 @@ impl StmtResultToLeanCompiler {
             | ArithmeticBuiltinRule::AddComponentwiseLessEqualLess
             | ArithmeticBuiltinRule::SubComponentwiseLessEqualLess
             | ArithmeticBuiltinRule::SubComponentwiseLessEqual
-            | ArithmeticBuiltinRule::SubRightNonnegativeLessEqual
             | ArithmeticBuiltinRule::DivByGreaterThanOneLessSelf => {
                 if rule == ArithmeticBuiltinRule::MulComponentwiseLessEqual {
                     4
@@ -1346,11 +1344,7 @@ impl StmtResultToLeanCompiler {
             }
             _ => return Ok(None),
         };
-        let child_count_is_valid = if rule == ArithmeticBuiltinRule::AddRightNonnegativeLessEqual {
-            matches!(subgoals.len(), 1 | 2)
-        } else {
-            subgoals.len() == expected_child_count
-        };
+        let child_count_is_valid = subgoals.len() == expected_child_count;
         if !child_count_is_valid {
             return Err(format!(
                 "arithmetic rule {rule:?} changed its ordered child arity"
@@ -1891,122 +1885,6 @@ impl StmtResultToLeanCompiler {
             return Ok(Some(format!(
                 "Litex.Rules.complexSubLtSwap ({})",
                 premise.proof_expression
-            )));
-        }
-
-        if rule == ArithmeticBuiltinRule::AddRightNonnegativeLessEqual {
-            let (reflexive, premise) = match children.as_slice() {
-                [premise] => (None, premise),
-                [reflexive, premise] => (Some(reflexive), premise),
-                _ => unreachable!(
-                    "right-nonnegative addition retained one premise and optional reflexivity"
-                ),
-            };
-            let (target_left, target_right, target_strict) = order_relation_parts(target)?;
-            let Obj::Add(sum) = target_right else {
-                return Err("right-nonnegative addition changed its target sum".into());
-            };
-            let (addend, reversed) =
-                if obj_equality_key(target_left) == obj_equality_key(sum.left.as_ref()) {
-                    (sum.right.as_ref(), false)
-                } else if obj_equality_key(target_left) == obj_equality_key(sum.right.as_ref()) {
-                    (sum.left.as_ref(), true)
-                } else {
-                    return Err("right-nonnegative addition changed its common addend".into());
-                };
-            if let Some(reflexive) = reflexive {
-                let (reflexive_left, reflexive_right, reflexive_strict) =
-                    order_relation_parts(&reflexive.fact)?;
-                if reflexive_strict
-                    || obj_equality_key(reflexive_left) != obj_equality_key(target_left)
-                    || obj_equality_key(reflexive_right) != obj_equality_key(target_left)
-                {
-                    return Err(
-                        "right-nonnegative addition changed its retained reflexivity premise"
-                            .into(),
-                    );
-                }
-            }
-            let (zero, premise_addend, premise_strict) = order_relation_parts(&premise.fact)?;
-            if target_strict
-                || premise_strict
-                || !is_literal_zero(zero)
-                || obj_equality_key(addend) != obj_equality_key(premise_addend)
-            {
-                return Err("right-nonnegative addition changed its premise".into());
-            }
-            let common = render_real_target_object_representation(
-                &LeanTargetObjectRepresentation::lower(target_left)?,
-                &self.environment_stack,
-            )?;
-            let addend = render_real_target_object_representation(
-                &LeanTargetObjectRepresentation::lower(addend)?,
-                &self.environment_stack,
-            )?;
-            render_fact(target, &self.environment_stack)?;
-            let nonnegative_proposition = format!(
-                "Litex.Nonnegative {}",
-                render_obj(premise_addend, &self.environment_stack)?
-            );
-            let nonnegative_proof = if premise.proposition == nonnegative_proposition {
-                // Closed or otherwise native-real expressions may use the
-                // source zero-ended sign interface.  The typed child still
-                // selects this exact addend; Lean independently checks its
-                // native nonnegativity for the binary `Le` adapter.
-                "Litex.OrderBridge.leOfReal (by positivity)".to_string()
-            } else {
-                premise.proof_expression.clone()
-            };
-            let proof = format!(
-                "Litex.Rules.realCastLeAddOfNonnegativeRight {common} {addend} ({})",
-                nonnegative_proof
-            );
-            return Ok(Some(if reversed {
-                format!("(by simpa [add_comm] using ({proof}))")
-            } else {
-                proof
-            }));
-        }
-
-        if rule == ArithmeticBuiltinRule::SubRightNonnegativeLessEqual {
-            let [ordered, nonnegative] = children.as_slice() else {
-                unreachable!("right-nonnegative subtraction retained two children")
-            };
-            let (target_left, target_right, target_strict) = order_relation_parts(target)?;
-            let Obj::Sub(difference) = target_left else {
-                return Err("right-nonnegative subtraction changed its target difference".into());
-            };
-            let (ordered_left, ordered_right, ordered_strict) =
-                order_relation_parts(&ordered.fact)?;
-            let (zero, subtractor, nonnegative_strict) = order_relation_parts(&nonnegative.fact)?;
-            if target_strict
-                || ordered_strict
-                || nonnegative_strict
-                || !is_literal_zero(zero)
-                || obj_equality_key(difference.left.as_ref()) != obj_equality_key(ordered_left)
-                || obj_equality_key(target_right) != obj_equality_key(ordered_right)
-                || obj_equality_key(difference.right.as_ref()) != obj_equality_key(subtractor)
-            {
-                return Err(
-                    "right-nonnegative subtraction changed its operands or premises".into(),
-                );
-            }
-            let a = render_real_target_object_representation(
-                &LeanTargetObjectRepresentation::lower(difference.left.as_ref())?,
-                &self.environment_stack,
-            )?;
-            let b = render_real_target_object_representation(
-                &LeanTargetObjectRepresentation::lower(target_right)?,
-                &self.environment_stack,
-            )?;
-            let c = render_real_target_object_representation(
-                &LeanTargetObjectRepresentation::lower(difference.right.as_ref())?,
-                &self.environment_stack,
-            )?;
-            render_fact(target, &self.environment_stack)?;
-            return Ok(Some(format!(
-                "Litex.Rules.realCastSubLeOfLeOfNonnegative {a} {b} {c} ({}) ({})",
-                ordered.proof_expression, nonnegative.proof_expression
             )));
         }
 

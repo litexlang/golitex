@@ -44,7 +44,7 @@ fn forall_proof_compiles_its_binder_owned_results_in_one_child_environment() {
         .environment_stack
         .forall_conclusion_bindings
         .contains_key(&conclusion_fact_id));
-    assert!(compiler.declarations[0].contains("∀ (__p1 : (Litex.R).Carrier)"));
+    assert!(compiler.declarations[0].contains("∀ (__p1 : ℂ)"));
     assert!(compiler.declarations[0].contains("intro x __h"));
     assert!(
         compiler.declarations[0].contains("have __prior0_0"),

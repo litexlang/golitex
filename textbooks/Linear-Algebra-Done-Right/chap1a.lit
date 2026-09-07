@@ -1,21 +1,41 @@
 # Linear Algebra Done Right, fourth edition, Section 1A: R^n and C^n.
-# Definition 1.1. Litex uses its builtin complex carrier C. The source pair
-# presentation is expressed through re, img, and z = re(z) + img(z) * i rather
-# than introducing a second complex-number type.
-# This checked source-facing statement records the coordinate presentation.
-thm complex_coordinate_representation:
-    ? forall z C:
-        z = re(z) + img(z) * i
-# Example 1.2. Expanding the builtin product gives
-# (2 + 3i)(4 + 5i) = -7 + 22i.
+# Definition 1.1. The book constructs complex numbers from pairs of reals.
+# Litex already provides that mathematics through builtin C, i, re, and img,
+# so the chapter uses those objects directly and introduces no duplicate type
+# or wrapper theorem.
+# Example 1.2. Compute the product by its real and imaginary coordinates, then
+# reconstruct the resulting builtin complex number.
 sketch:
-    2 * 4 - 3 * 5 = -7
-    2 * 5 + 3 * 4 = 22
+    re((2 + 3 * i) * (4 + 5 * i)) = re(2 + 3 * i) * re(4 + 5 * i) - img(2 + 3 * i) * img(4 + 5 * i) = 2 * 4 - 3 * 5 = (-7)
+    img((2 + 3 * i) * (4 + 5 * i)) = re(2 + 3 * i) * img(4 + 5 * i) + img(2 + 3 * i) * re(4 + 5 * i) = 2 * 5 + 3 * 4 = 22
+    re((2 + 3 * i) * (4 + 5 * i)) = (-7)
+    img((2 + 3 * i) * (4 + 5 * i)) = 22
+    (2 + 3 * i) * (4 + 5 * i) = re((2 + 3 * i) * (4 + 5 * i)) + img((2 + 3 * i) * (4 + 5 * i)) * i = (-7) + 22 * i
 # Result 1.3. Complex arithmetic obeys the field laws. The source leaves
 # several coordinate verifications to exercises; Litex checks the displayed
 # laws directly from builtin complex arithmetic instead of retaining those
-# omitted proofs as trust. ScalarSystem packages the same operation surface
-# for generic algebraic backends.
+# omitted proofs as trust. The concrete law proposition is the one canonical
+# interface shared by flat settings and first-class ScalarSystem values.
+prop is_scalar_system_laws(s nonempty_set, scalar_zero, scalar_one s, scalar_add fn(x, y s) s, scalar_neg fn(x s) s, scalar_mul fn(x, y s) s, scalar_inv fn(x s) s):
+    scalar_zero != scalar_one
+    forall x, y, z s:
+        scalar_add(scalar_add(x, y), z) = scalar_add(x, scalar_add(y, z))
+        scalar_mul(scalar_mul(x, y), z) = scalar_mul(x, scalar_mul(y, z))
+        scalar_mul(x, scalar_add(y, z)) = scalar_add(scalar_mul(x, y), scalar_mul(x, z))
+    forall x, y s:
+        scalar_add(x, y) = scalar_add(y, x)
+        scalar_mul(x, y) = scalar_mul(y, x)
+    forall x s:
+        scalar_add(scalar_zero, x) = x
+        scalar_add(x, scalar_neg(x)) = scalar_zero
+        scalar_mul(scalar_one, x) = x
+    forall x s:
+        x != scalar_zero
+        =>:
+            scalar_mul(x, scalar_inv(x)) = scalar_one
+
+# ScalarSystem remains the first-class representation used by constructors,
+# stored values, templates, and struct-returning functions.
 struct ScalarSystem<s nonempty_set>:
     zero s
     one s
@@ -24,22 +44,7 @@ struct ScalarSystem<s nonempty_set>:
     mul fn(x, y s) s
     inv fn(x s) s
     <=>:
-        zero != one
-        forall x, y, z s:
-            add(add(x, y), z) = add(x, add(y, z))
-            mul(mul(x, y), z) = mul(x, mul(y, z))
-            mul(x, add(y, z)) = add(mul(x, y), mul(x, z))
-        forall x, y s:
-            add(x, y) = add(y, x)
-            mul(x, y) = mul(y, x)
-        forall x s:
-            add(zero, x) = x
-            add(x, neg(x)) = zero
-            mul(one, x) = x
-        forall x s:
-            x != zero
-            =>:
-                mul(x, inv(x)) = one
+        $is_scalar_system_laws(s, zero, one, add, neg, mul, inv)
 
 prop is_scalar_system(s nonempty_set, scalar_zero, scalar_one s, scalar_add fn(x, y s) s, scalar_neg fn(x s) s, scalar_mul fn(x, y s) s, scalar_inv fn(x s) s):
     (scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv) $in &ScalarSystem<s>
@@ -63,7 +68,7 @@ thm complex_arithmetic_laws:
     x * (y + z) = x * y + x * z
     0 + x = x
     1 * x = x
-    have inverse C = -x
+    have inverse C = (-x)
     x + inverse = x + (-x) = 0
     claim:
         ? forall w1, w2 C:
@@ -80,7 +85,7 @@ sketch:
 # Definition 1.5. Negation, subtraction, inverse, and division use the builtin
 # operators on C. These named adapters provide callable ScalarSystem fields.
 have fn complex_scalar_add(x, y C) C = x + y
-have fn complex_scalar_neg(x C) C = -x
+have fn complex_scalar_neg(x C) C = (-x)
 have fn complex_scalar_mul(x, y C) C = x * y
 have fn complex_scalar_inv(x C) C by cases:
     case x = 0: 0
@@ -94,7 +99,7 @@ have fn real_inv(x R) R by cases:
 # Concrete real operations let the verifier see the ScalarSystem laws without
 # unfolding anonymous function fields inside a structure value.
 have fn real_add(x, y R) R = x + y
-have fn real_neg(x R) R = -x
+have fn real_neg(x R) R = (-x)
 have fn real_mul(x, y R) R = x * y
 
 claim:
@@ -134,11 +139,11 @@ claim:
         real_add(x, real_neg(x)) = 0
         real_mul(1, x) = x
     real_add(0, x) = 0 + x = x
-    real_neg(x) = -x
+    real_neg(x) = (-x)
     real_add(x, real_neg(x)) = x + real_neg(x) = x + (-x) = 0
     real_mul(1, x) = 1 * x = x
 
-1release thm struct_member((0, 1, real_add, real_neg, real_mul, real_inv), &ScalarSystem<R>)
+release thm struct_member((0, 1, real_add, real_neg, real_mul, real_inv), &ScalarSystem<R>)
 have real_scalars &ScalarSystem<R> = (0, 1, real_add, real_neg, real_mul, real_inv)
 
 # Export the declaration-owned real adapter value for later chapters. A `have`
@@ -186,13 +191,13 @@ claim:
         complex_scalar_add(x, complex_scalar_neg(x)) = 0
         complex_scalar_mul(1, x) = x
     complex_scalar_add(0, x) = 0 + x = x
-    complex_scalar_neg(x) = -x
+    complex_scalar_neg(x) = (-x)
     complex_scalar_add(x, complex_scalar_neg(x)) = x + complex_scalar_neg(x) = x + (-x) = 0
     complex_scalar_mul(1, x) = 1 * x = x
 
 # The generic complex adapter structure is checked from builtin field laws.
 # Two later-use operation-value bridges below remain localized proof debt.
-1release thm struct_member((0, 1, complex_scalar_add, complex_scalar_neg, complex_scalar_mul, complex_scalar_inv), &ScalarSystem<C>)
+release thm struct_member((0, 1, complex_scalar_add, complex_scalar_neg, complex_scalar_mul, complex_scalar_inv), &ScalarSystem<C>)
 have complex_scalars &ScalarSystem<C> = (0, 1, complex_scalar_add, complex_scalar_neg, complex_scalar_mul, complex_scalar_inv)
 
 thm complex_scalar_adapter_value:
@@ -314,8 +319,8 @@ thm finite_list_extensionality:
     x.entries = left_entries = right_entries = y.entries
     x[1] = x.length = n = y.length = y[1]
     x[2] = x.entries = y.entries = y[2]
-1release thm tuple_equal_from_coordinates(x, (x[1], x[2]))
-1release thm tuple_equal_from_coordinates(y, (y[1], y[2]))
+    release thm tuple_equal_from_coordinates(x, (x[1], x[2]))
+    release thm tuple_equal_from_coordinates(y, (y[1], y[2]))
     (x[1], x[2]) = (y[1], y[2])
     x = (x[1], x[2]) = (y[1], y[2]) = y
 # Example 1.9. Order and repetition are observable in lists through coordinate
@@ -377,8 +382,8 @@ thm coordinate_add_commutative:
             idx <= n
             =>:
                 left(idx) = right(idx)
-1release thm coordinate_add_entry(s, scalars, n, x, y, left, idx)
-1release thm coordinate_add_entry(s, scalars, n, y, x, right, idx)
+        release thm coordinate_add_entry(s, scalars, n, x, y, left, idx)
+        release thm coordinate_add_entry(s, scalars, n, y, x, right, idx)
         left(idx) = scalars.add(x(idx), y(idx))
         scalars.add(x(idx), y(idx)) = scalars.add(y(idx), x(idx))
         scalars.add(y(idx), x(idx)) = right(idx)

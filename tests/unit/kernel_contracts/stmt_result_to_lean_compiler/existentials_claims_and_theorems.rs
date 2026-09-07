@@ -760,7 +760,7 @@ fn standard_set_binder_named_theorem_compiles_in_a_child_environment() {
         .compile_named_theorem_stmt_result_to_lean_source(theorem)
         .expect("direct binder theorem compilation succeeds"));
     assert_eq!(compiler.environment_stack.environments.len(), 1);
-    assert!(compiler.declarations[0].contains("∀ (x : (Litex.R).Carrier)"));
+    assert!(compiler.declarations[0].contains("∀ (x : ℂ)"));
     assert!(compiler.declarations[0].contains(": Litex.In x Litex.R)"));
     assert!(compiler.declarations[0].contains("intro x __h"));
     assert!(compiler.declarations[0].contains("have __step"));
@@ -841,9 +841,12 @@ fn release_thm_uses_the_exact_source_fact_id_and_argument_check_result() {
 
     assert!(lean.contains("theorem local_reflexivity :"));
     assert!(lean.contains("theorem __fact1 : Litex.Same (1 : ℂ) (1 : ℂ)"));
-    assert!(lean.contains("local_reflexivity (1 : ℝ)"));
-    assert!(lean.contains("Litex.In.own Litex.R (1 : ℝ)"));
-    assert!(lean.contains("Litex.Same.realComplex ((1 : ℝ))"));
+    // The theorem ABI now instantiates R binders through the native complex
+    // host carrier and supplies the checked membership adapter explicitly.
+    assert!(
+        lean.contains("local_reflexivity (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ))"),
+        "{lean}"
+    );
 }
 
 #[test]
@@ -946,8 +949,6 @@ fn typed_abs_min_max_rules_compile_through_reviewed_scalar_operator_abi() {
         "Litex.Rules.maxMonotone",
         "Litex.Rules.minAssociative",
         "Litex.Rules.maxAbsorbMinLeft",
-        "Litex.Rules.realCastLeAddOfNonnegativeRight",
-        "Litex.Rules.realCastSubLeOfLeOfNonnegative",
     ] {
         assert!(
             generated.contains(theorem),
@@ -1076,7 +1077,10 @@ fn by_thm_replays_temporary_conclusions_in_a_child_scope_and_publishes_only_sele
         compiler.environment_stack.fact_names.get(&selected_fact_id),
         Some(&"__fact1".to_string())
     );
-    assert!(compiler.declarations[0].contains("(Litex.C).Carrier"));
+    // Adapter-facing C binders use the reviewed complex host ABI; membership
+    // remains an explicit semantic premise rather than changing the binder to
+    // the exact carrier type.
+    assert!(compiler.declarations[0].contains("(x : ℂ)"));
     assert!(!compiler.declarations[0].contains("Litex.In.rep x"));
     assert_eq!(
         compiler.declarations[1]

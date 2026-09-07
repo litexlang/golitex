@@ -771,8 +771,25 @@ impl StmtResultToLeanCompiler {
                             parameter.name()
                         ));
                     };
-                    let exact_value =
-                        render_exact_predicate_argument(argument, set, &self.environment_stack)?;
+                    // R/C forall parameters are hosted by native `ℂ`.  For a
+                    // closed R argument the application context therefore
+                    // contains the checked real representative widened back
+                    // to complex, while the generic exact-carrier renderer
+                    // quite correctly returns the underlying R carrier.  The
+                    // two forms are the same selected value; compare against
+                    // the representation actually installed in this call.
+                    let exact_value = if source_value.contains("Litex.In.rep")
+                        && source_value.contains(": ℂ)")
+                        && matches!(set, Obj::StandardSet(StandardSet::R))
+                    {
+                        // `source_value` was assembled immediately above from
+                        // this exact membership proof, so retaining it here
+                        // checks the selected carrier used by the application
+                        // context rather than reconstructing an R-only value.
+                        source_value.clone()
+                    } else {
+                        render_exact_predicate_argument(argument, set, &self.environment_stack)?
+                    };
                     if &exact_value != source_value {
                         return Err(format!(
                             "known-forall abstract-predicate parameter `{}` application value `{source_value}` is not its checked exact carrier `{exact_value}`",

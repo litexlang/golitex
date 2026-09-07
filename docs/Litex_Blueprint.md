@@ -9,7 +9,9 @@ Website: https://litexlang.com/doc/Litex_Blueprint
 Chinese version: https://litexlang.com/doc/Litex中文蓝图
 
 **Litex is a small, readable, fact-oriented formal language for turning**
-**mathematical reasoning into checkable, traceable data for the human–AI–Litex loop.**
+**mathematical reasoning into checkable, traceable data; it also keeps the**
+**runtime process readable, traceable, and repairable, so humans, AI, and Litex**
+**can work in the same loop.**
 
 It is a set-theoretic, fact-oriented formal language that builds proof flows
 from the bottom up. It puts humans, AI, and the verifier in the same loop:
@@ -21,7 +23,7 @@ to the Lean/Mathlib ecosystem.
 
 > **Litex is an experimental hobby project in beta; expect rough edges.**
 
-<!-- Blueprint spine: reasoning abundance → scientific object → design hypothesis → measurable costs → potential capacity impact → verification and understanding bottlenecks → two participation barriers → four language choices → definition and verification → ToLean/adapter handoff → the end-to-end human–AI–Litex knowledge-production loop → ecosystem role → success criterion -->
+<!-- Blueprint spine: reasoning abundance → scientific object → design hypothesis → measurable costs → potential capacity impact → verification and understanding bottlenecks → two participation barriers → four language choices → readable execution and Checkable Knowledge Records → definition and verification → ToLean/adapter handoff → the end-to-end human–AI–Litex knowledge-production loop → ecosystem role → success criterion -->
 
 <!--
 Litex 定位四层检查（写作时逐层核对；面向不同受众可以调整强调重点，但不能混淆层级）：
@@ -51,11 +53,12 @@ Litex 定位四层检查（写作时逐层核对；面向不同受众可以调�
   - [4. Lean-Compatible: Independent Rechecking for Covered Paths](#4-lean-compatible-independent-rechecking-for-covered-paths)
     - [One Complete Theorem Now Reaches Lean](#one-complete-theorem-now-reaches-lean)
     - [Summary: Bottom-Up and Top-Down Reasoning Are Complementary](#summary-bottom-up-and-top-down-reasoning-are-complementary)
-  - [5. From Four Design Principles to Mathematical Practice: Definition and Verification](#mathematics-practice)
-  - [6. The End-to-End Human–AI–Litex Knowledge-Production Loop](#interaction-loop)
+  - [5. How Litex Runs: From Mathematical Statements to Checkable Knowledge Records](#execution-model)
+  - [6. From Four Design Principles to Mathematical Practice: Definition and Verification](#mathematics-practice)
+  - [7. The End-to-End Human–AI–Litex Knowledge-Production Loop](#interaction-loop)
     - [Summary: Why Fact Orientation and Bottom-Up Flow Help the Loop](#summary-fact-oriented-bottom-up-loop)
-  - [7. From Language to Ecosystem: The Role Litex Aims to Play](#ecosystem-role)
-  - [8. Beyond the Search for One Best Language](#conclusions)
+  - [8. From Language to Ecosystem: The Role Litex Aims to Play](#ecosystem-role)
+  - [9. Beyond the Search for One Best Language](#conclusions)
     - [Special Thanks](#special-thanks)
     - [Related Links](#related-links)
 
@@ -648,9 +651,41 @@ AI training also optimizes objectives and, in some stages, preference or reward 
 
 Both modes of thought are valuable. Bottom-up reasoning accumulates reusable local facts and exposes their intermediate support; top-down reasoning clarifies the target, chooses a direction, and narrows the search space. The Litex–Lean connection can place both directions in one checkable evidence chain, allowing humans and AI to collaborate from the direction each handles best.
 
+<a id="execution-model"></a>
+
+## 5. How Litex Runs: From Mathematical Statements to Checkable Knowledge Records
+
+When we read mathematics, we usually follow a sentence back to the definition, condition, or earlier fact that makes it meaningful. Litex keeps that ordinary mathematical flow and makes its dependencies available for checking and inspection.
+
+The implementation can grow as Litex adds rules, libraries, graphs, and Lean interfaces, while the core execution model remains short:
+
+```text
+Litex source
+  → parse typed objects and statements
+  → define an object or verify a fact
+  → check well-definedness and applicable dependencies
+  → build a structured execution result
+  → commit the candidate or roll it back
+  → extend the accepted context and run inference when applicable
+  → expose the result to people, AI, JSON, and graph views
+  → send covered verification paths to ToLean and Lean
+```
+
+`define` and `verify` are two branches of the same knowledge-building process. A definition introduces a reusable object, relation, function, or interface and records what it depends on. A verification statement checks a fact against the current environment, records its supporting evidence, and gives an accepted fact a `FactId` that later statements can cite. A failed top-level candidate rolls back its local changes, leaving the accepted context available for the next attempt.
+
+In this Blueprint, we call the resulting structured artifacts **Checkable Knowledge Records**. A record can describe an introduced definition or a verified fact together with its status, dependencies, identifiers, and—where applicable—well-definedness and proof evidence. JSON is the machine-readable representation of these records; it is not a log reconstructed from terminal prose.
+
+Because the relationships are already represented as data, mathematical facts and concepts can be extracted and connected quickly. Litex's `graph` command provides one view of those relationships:
+
+![Example of a Litex relation graph](../assets/litex_graph_example.png)
+
+The graph is a presentation of the underlying records, rather than the focus of this section. The important design choice is that a person, an AI system, or another tool can inspect the same statement, dependencies, evidence, and state transition through the interface appropriate to it.
+
+This is why a large implementation can still have an understandable conceptual model. The reader need not reconstruct the entire rule base to answer four local questions: what was introduced, what was checked, why did it pass or stop, and what entered the accepted context. The next section follows those questions through a mathematical example; the following human–AI section shows how the same record becomes feedback for a candidate repair.
+
 <a id="mathematics-practice"></a>
 
-## 5. From Four Design Principles to Mathematical Practice: Definition and Verification
+## 6. From Four Design Principles to Mathematical Practice: Definition and Verification
 
 In formal practice, mathematical work repeatedly moves between two activities. **Definition** introduces objects, relations, and reusable interfaces that give a domain its language. **Verification** establishes what follows from those definitions and the available conditions. The earlier group and algebraic-equality examples were local slices; the full convergence example below puts definitions, quantifiers, witnesses, and estimates into one proof flow.
 
@@ -768,7 +803,7 @@ The first two `prop` declarations establish the domain language: what it means t
 
 <a id="interaction-loop"></a>
 
-## 6. The End-to-End Human–AI–Litex Knowledge-Production Loop
+## 7. The End-to-End Human–AI–Litex Knowledge-Production Loop
 
 The point of the loop is not merely to let AI generate code. Verification results determine what the AI may do next. The human supplies the mathematical intent, constraints, and acceptance boundary; the AI proposes the next Litex fact; Litex checks whether it is well-defined and adequately justified, then returns a machine-readable result.
 
@@ -849,7 +884,7 @@ Therefore, the human–AI–Litex loop produces more than a final proof: it prod
 
 <a id="ecosystem-role"></a>
 
-## 7. From Language to Ecosystem: The Role Litex Aims to Play
+## 8. From Language to Ecosystem: The Role Litex Aims to Play
 
 **Litex serves humans and AI as both a readable-reasoning front end and a production layer for trustworthy reasoning data, connected to existing ecosystems through Lean and Mathlib. It aims to serve AI, engineers, and other domain practitioners as well as formal-methods experts.**
 
@@ -867,7 +902,7 @@ Code and dataset volume are intermediate measures. What matters is whether peopl
 
 <a id="conclusions"></a>
 
-## 8. Beyond the Search for One Best Language
+## 9. Beyond the Search for One Best Language
 
 The question is not only which formal language is the most powerful, mature, or
 widely adopted. We should also ask what other forms of mathematical thought
@@ -877,6 +912,11 @@ Litex begins from this possibility. It treats formalization as a way of
 shaping mathematical attention, not only as a way of satisfying a kernel. Its
 fact-oriented and bottom-up design is an invitation to explore another relation
 between human intuition, machine verification, and mathematical knowledge.
+
+Litex's longer-term vision is that its implementation may grow large while its
+core execution model remains easy to understand. It can externalize the
+dependencies readers silently track in mathematics as Checkable Knowledge
+Records for interactive textbooks.
 
 Litex may not become the only path, and it does not need to. Its contribution
 may be to show that formal mathematics has more than one possible future.

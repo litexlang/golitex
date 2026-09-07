@@ -66,11 +66,32 @@ prop parallel_coordinate_planes(P, P2 set):
 
 # First examples: read each line as a coordinate substitution. The point
 # (2,-3,0), for instance, belongs to z=0 because its third coordinate is 0.
+horizontal_plane(0) = {p cart(R, R, R): p[3] = 0}
+(0, 0, 0)[3] = 0
+release thm set_builder_member((0, 0, 0), {p cart(R, R, R): p[3] = 0})
 (0, 0, 0) $in horizontal_plane(0)
+horizontal_plane(0) = {p cart(R, R, R): p[3] = 0}
+(2, -3, 0)[3] = 0
+release thm set_builder_member((2, -3, 0), {p cart(R, R, R): p[3] = 0})
 (2, -3, 0) $in horizontal_plane(0)
+vertical_plane_x(0) = {p cart(R, R, R): p[1] = 0}
+(0, 5, 7)[1] = 0
+release thm set_builder_member((0, 5, 7), {p cart(R, R, R): p[1] = 0})
 (0, 5, 7) $in vertical_plane_x(0)
+x_axis_line(0) = {p cart(R, R, R): p[2] = 0 and p[3] = 0}
+(4, 0, 0)[2] = 0
+(4, 0, 0)[3] = 0
+release thm set_builder_member((4, 0, 0), {p cart(R, R, R): p[2] = 0 and p[3] = 0})
 (4, 0, 0) $in x_axis_line(0)
+y_axis_line(0) = {p cart(R, R, R): p[1] = 0 and p[3] = 0}
+(0, 5, 0)[1] = 0
+(0, 5, 0)[3] = 0
+release thm set_builder_member((0, 5, 0), {p cart(R, R, R): p[1] = 0 and p[3] = 0})
 (0, 5, 0) $in y_axis_line(0)
+z_axis_line(0) = {p cart(R, R, R): p[1] = 0 and p[2] = 0}
+(0, 0, 6)[1] = 0
+(0, 0, 6)[2] = 0
+release thm set_builder_member((0, 0, 6), {p cart(R, R, R): p[1] = 0 and p[2] = 0})
 (0, 0, 6) $in z_axis_line(0)
 
 claim:

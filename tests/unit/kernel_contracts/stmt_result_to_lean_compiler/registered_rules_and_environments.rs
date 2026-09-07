@@ -481,44 +481,6 @@ fn typed_subtraction_sign_evidence_replays_the_exact_real_adapter() {
 }
 
 #[test]
-fn typed_right_nonnegative_order_evidence_replays_exact_real_adapters() {
-    run_registered_rule_test(|| {
-        let mut results =
-            crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
-                "forall a, b R:\n    0 <= b\n    =>:\n        a <= a + b\n\nforall a, b, c R:\n    a <= b\n    0 <= c\n    =>:\n        a - c <= b\n",
-                "legacy_typed_right_nonnegative_order.lit",
-            )
-            .expect("execute registered right-nonnegative order rules");
-        for (result, rule) in results.iter_mut().zip([
-            ArithmeticBuiltinRule::AddRightNonnegativeLessEqual,
-            ArithmeticBuiltinRule::SubRightNonnegativeLessEqual,
-        ]) {
-            let builtin = registered_single_forall_conclusion_builtin_mut(result);
-            assert!(!builtin.subgoals.is_empty());
-            assert!(matches!(
-                builtin.evidence.typed(),
-                Some(BuiltinRuleEvidence::Arithmetic(actual)) if *actual == rule
-            ));
-        }
-        let generated = StmtResultToLeanCompiler::new("typed_right_nonnegative_order.lit")
-            .compile_stmt_results_to_lean_source(&results)
-            .expect("compile typed right-nonnegative order evidence");
-        assert!(
-            generated.contains("Litex.Rules.realCastLeAddOfNonnegativeRight"),
-            "{generated}"
-        );
-        assert!(
-            generated.contains("Litex.Rules.realCastSubLeOfLeOfNonnegative"),
-            "{generated}"
-        );
-        assert!(
-            !generated.contains("Litex.OrderBridge.leOfReal (by positivity)"),
-            "the right-nonnegative rule must replay its retained semantic premise: {generated}"
-        );
-    });
-}
-
-#[test]
 fn typed_subtraction_sign_rejects_a_missing_semantic_child() {
     run_registered_rule_test(|| {
         let mut results = execute_registered_subtraction_sign_and_greater_to_greater_equal_rules();
@@ -665,7 +627,8 @@ fn strategy_definition_compiles_from_recursive_well_definedness_and_local_proof_
         assert!(generated.contains("theorem prove_reflexive"), "{generated}");
         assert!(generated.contains("intro x __h"), "{generated}");
         assert!(
-            generated.contains("have __step") && generated.contains(": reflexive (x : ℝ)"),
+            generated.contains("have __step")
+                && generated.contains(": reflexive (Litex.In.rep x __h6 : ℝ)"),
             "{generated}"
         );
         assert!(generated.contains("Litex.In.own Litex.R"), "{generated}");
@@ -743,10 +706,7 @@ fn symbolic_order_reflexivity_compiles_inside_the_result_owned_binder_environmen
                 .compile_stmt_results_to_lean_source(&results)
                 .expect("compile symbolic reflexivity from its typed Result evidence");
         assert!(generated.contains("intro x __h"), "{generated}");
-        assert!(
-            generated.contains("Litex.Le.refl (((x : ℝ)) : ℂ)"),
-            "{generated}"
-        );
+        assert!(generated.contains("Litex.Le.refl x"), "{generated}");
     });
 }
 

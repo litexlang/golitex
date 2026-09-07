@@ -42,22 +42,26 @@ claim:
         exist! x Z st {a + x = b}
     witness exist x Z st {a + x = b} from b - a:
         a + (b - a) = b
-    forall x1, x2 Z:
-        a + x1 = b
-        a + x2 = b
-        =>:
-            x1 = (a + x1) - a = (a + x2) - a = x2
+    claim:
+        ? forall x1, x2 Z:
+            a + x1 = b
+            a + x2 = b
+            =>:
+                x1 = x2
+        x1 = (a + x1) - a = (a + x2) - a = x2
 
 claim:
     ? forall a, b Q:
         exist! x Q st {a + x = b}
     witness exist x Q st {a + x = b} from b - a:
         a + (b - a) = b
-    forall x1, x2 Q:
-        a + x1 = b
-        a + x2 = b
-        =>:
-            x1 = (a + x1) - a = (a + x2) - a = x2
+    claim:
+        ? forall x1, x2 Q:
+            a + x1 = b
+            a + x2 = b
+            =>:
+                x1 = x2
+        x1 = (a + x1) - a = (a + x2) - a = x2
 
 claim:
     ? forall a, b Q:
@@ -66,11 +70,13 @@ claim:
             exist! x Q st {a * x = b}
     witness exist x Q st {a * x = b} from b / a:
         a * (b / a) = b
-    forall x1, x2 Q:
-        a * x1 = b
-        a * x2 = b
-        =>:
-            x1 = (a * x1) / a = (a * x2) / a = x2
+    claim:
+        ? forall x1, x2 Q:
+            a * x1 = b
+            a * x2 = b
+            =>:
+                x1 = x2
+        x1 = (a * x1) / a = (a * x2) / a = x2
 
 forall a, b Z:
     a + (b - a) = b
@@ -174,11 +180,11 @@ thm positive_divisor_of_one_is_one:
         by contra:
             ? k > 0
             k <= 0
-            d * (-1 * k) >= 0
-            d * (-1 * k) = -1 * (d * k)
-            -1 * (d * k) >= 0
-            -1 * (-1 * (d * k)) <= 0
-            d * k = -1 * (-1 * (d * k)) <= 0
+            d * ((-1) * k) >= 0
+            d * ((-1) * k) = (-1) * (d * k)
+            (-1) * (d * k) >= 0
+            (-1) * ((-1) * (d * k)) <= 0
+            d * k = (-1) * ((-1) * (d * k)) <= 0
             1 <= 0
             impossible 1 <= 0
     k >= 1
@@ -198,6 +204,7 @@ prop is_positive_integer_set(S power_set(Z)):
     S $subset Z
     forall x S:
         x $in Z
+    forall x S:
         x > 0
 
 prop is_least_element_of_integer_set(S power_set(Z), m Z):
@@ -205,6 +212,7 @@ prop is_least_element_of_integer_set(S power_set(Z), m Z):
     m $in S
     forall x S:
         x $in Z
+    forall x S:
         m <= x
 
 prop is_least_element_of_N_set(T power_set(N), m N):
@@ -272,7 +280,7 @@ thm finite_N_subset_size_one_has_least:
     finite_set_size(T) >= 1
     $is_nonempty_set(T)
     have a T
-1release thm intersect_with_singleton(T, a)
+    release thm intersect_with_singleton(T, a)
     finite_set_size({a}) = 1
     $is_finite_set(set_minus(T, {a}))
     finite_set_size(set_minus(T, {a})) = finite_set_size(T) - finite_set_size(intersect(T, {a})) = 1 - 1 = 0
@@ -305,7 +313,7 @@ thm finite_N_subset_successor_has_least:
             exist a N st {$is_least_element_of_N_set(T, a)}
     n $in N+
     have a T
-1release thm intersect_with_singleton(T, a)
+    release thm intersect_with_singleton(T, a)
     finite_set_size({a}) = 1
     finite_set_size(intersect(T, {a})) = finite_set_size({a}) = 1
     $is_finite_set(set_minus(T, {a}))
@@ -367,7 +375,7 @@ thm every_N_finite_subset_has_least_by_count_induction:
                     $is_nonempty_set(T)
                     =>:
                         exist a N st {$is_least_element_of_N_set(T, a)}
-1release thm finite_N_subset_size_one_has_least(T)
+                release thm finite_N_subset_size_one_has_least(T)
             by def:
                 ? $every_N_finite_subset_of_n_elements_has_least(1)
             $every_N_finite_subset_of_n_elements_has_least(n)
@@ -379,7 +387,7 @@ thm every_N_finite_subset_has_least_by_count_induction:
                     $is_nonempty_set(T)
                     =>:
                         exist a N st {$is_least_element_of_N_set(T, a)}
-1release thm finite_N_subset_successor_has_least(n, T)
+                release thm finite_N_subset_successor_has_least(n, T)
             by def:
                 ? $every_N_finite_subset_of_n_elements_has_least(n + 1)
 
@@ -392,6 +400,16 @@ thm positive_integer_set_has_least_element:
         $is_positive_integer_set(S)
         =>:
             exist m Z st {$is_least_element_of_integer_set(S, m)}
+    claim:
+        ? forall x S:
+            x $in Z
+        by def:
+            ? $is_positive_integer_set(S)
+    claim:
+        ? forall x S:
+            x > 0
+        by def:
+            ? $is_positive_integer_set(S)
     have a S
     a $in Z
     a > 0
@@ -410,7 +428,7 @@ thm positive_integer_set_has_least_element:
     witness $is_nonempty_set(T) from a
     finite_set_size(T) >= 1
     finite_set_size(T) $in N+
-1release thm every_N_finite_subset_has_least_by_count_induction(finite_set_size(T))
+    release thm every_N_finite_subset_has_least_by_count_induction(finite_set_size(T))
     exist m N st {$is_least_element_of_N_set(T, m)}
     obtain m from exist m N st {$is_least_element_of_N_set(T, m)}
     m $in T
@@ -420,6 +438,9 @@ thm positive_integer_set_has_least_element:
         claim:
             ? forall x S:
                 x $in Z
+            x $in Z
+        claim:
+            ? forall x S:
                 m <= x
             x $in Z
             x > 0
@@ -460,15 +481,17 @@ thm section_I_strong_induction:
         ? n $in S
         not n $in S
         have bad power_set(Z) = {t N: not t $in S}
-1release thm set_builder_member(n, {t N: not t $in S})
+        release thm set_builder_member(n, {t N: not t $in S})
         witness $is_nonempty_set(bad) from n
         claim:
             ? $is_positive_integer_set(bad)
             claim:
                 ? forall x bad:
                     x $in Z
-                    x > 0
                 x $in Z
+            claim:
+                ? forall x bad:
+                    x > 0
                 by contra:
                     ? x > 0
                     x >= 0
@@ -479,7 +502,7 @@ thm section_I_strong_induction:
                     impossible not x $in S
             by def:
                 ? $is_positive_integer_set(bad)
-1release thm positive_integer_set_has_least_element(bad)
+        release thm positive_integer_set_has_least_element(bad)
         obtain m from exist m Z st {$is_least_element_of_integer_set(bad, m)}
         claim:
             ? forall k N:
@@ -489,7 +512,7 @@ thm section_I_strong_induction:
             by contra:
                 ? k $in S
                 not k $in S
-1release thm set_builder_member(k, {t N: not t $in S})
+                release thm set_builder_member(k, {t N: not t $in S})
                 k $in bad
                 m <= k
                 impossible k < m

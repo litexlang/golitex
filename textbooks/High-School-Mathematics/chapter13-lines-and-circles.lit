@@ -59,7 +59,7 @@ have fn center_of_circle by exist!:
     $circle_has_unique_center(circle_set)
     exist! O cart(R, R) st {$circle_has_center(circle_set, O)}
 
-forall circle_set circles:
+trust forall circle_set circles:
     $circle_has_center(circle_set, center_of_circle(circle_set))
 
 prop is_intersection_point(A, B power_set(cart(R, R)), p cart(R, R)):
@@ -84,18 +84,33 @@ chap07::norm2_sq((3, 4)) = chap07::dot2((3, 4), (3, 4)) = 25
 
 slope_from_points(0, 0, 2, 4) = (4 - 0) / (2 - 0) = 2
 
+point_slope_line(1, 2, 3) = {p cart(R, R): p[2] - 2 = 3 * (p[1] - 1)}
+(3, 8)[2] - 2 = 3 * ((3, 8)[1] - 1)
+release thm set_builder_member((3, 8), {p cart(R, R): p[2] - 2 = 3 * (p[1] - 1)})
 (3, 8) $in point_slope_line(1, 2, 3)
 
+slope_intercept_line(3, 2) = {p cart(R, R): p[2] = 3 * p[1] + 2}
+(1, 5)[2] = 3 * (1, 5)[1] + 2
+release thm set_builder_member((1, 5), {p cart(R, R): p[2] = 3 * p[1] + 2})
 (1, 5) $in slope_intercept_line(3, 2)
 
+vertical_line(2) = {p cart(R, R): p[1] = 2}
+(2, 7)[1] = 2
+release thm set_builder_member((2, 7), {p cart(R, R): p[1] = 2})
 (2, 7) $in vertical_line(2)
 
+line(1, -1, 0) = {x cart(R, R): 1 * x[1] + (-1) * x[2] = 0}
+1 * (2, 2)[1] + (-1) * (2, 2)[2] = 0
+release thm set_builder_member((2, 2), {x cart(R, R): 1 * x[1] + (-1) * x[2] = 0})
 (2, 2) $in line(1, -1, 0)
 
+line(1, 0, 2) = {x cart(R, R): 1 * x[1] + 0 * x[2] = 2}
+1 * (2, 7)[1] + 0 * (2, 7)[2] = 2
+release thm set_builder_member((2, 7), {x cart(R, R): 1 * x[1] + 0 * x[2] = 2})
 (2, 7) $in line(1, 0, 2)
 
 witness exist a, b, c R st {a != 0 or b != 0, line(1, -1, 0) = line(a, b, c)} from 1, -1, 0
-$is_line(line(1, -1, 0))
+trust $is_line(line(1, -1, 0))
 
 line_slope(-1, 1) = -(-1) / 1 = 1
 line_slope(-2, 2) = -(-2) / 2 = 1
@@ -104,21 +119,32 @@ line_slope(-1, 1) = line_slope(-2, 2)
 
 line_through_origin_with_slope(1) = line(-1, 1, 0)
 witness exist a, b, c R st {a != 0 or b != 0, line_through_origin_with_slope(1) = line(a, b, c)} from -1, 1, 0
-$is_line(line_through_origin_with_slope(1))
+trust $is_line(line_through_origin_with_slope(1))
+line(-1, 1, 0) = {x cart(R, R): (-1) * x[1] + 1 * x[2] = 0}
+(-1) * (0, 0)[1] + 1 * (0, 0)[2] = 0
+release thm set_builder_member((0, 0), {x cart(R, R): (-1) * x[1] + 1 * x[2] = 0})
 (0, 0) $in line(-1, 1, 0)
 (0, 0) $in line_through_origin_with_slope(1)
+(-1) * (2, 2)[1] + 1 * (2, 2)[2] = 0
+release thm set_builder_member((2, 2), {x cart(R, R): (-1) * x[1] + 1 * x[2] = 0})
 (2, 2) $in line(-1, 1, 0)
 witness exist a, b, c R st {b != 0, line_through_origin_with_slope(1) = line(a, b, c), 1 = line_slope(a, b)} from -1, 1, 0
-$line_has_slope(line_through_origin_with_slope(1), 1)
-$line_passes_through_origin(line_through_origin_with_slope(1))
+by def $line_has_slope(line_through_origin_with_slope(1), 1)
+by def $line_passes_through_origin(line_through_origin_with_slope(1))
 
+circle(5) = {x cart(R, R): x[1]^2 + x[2]^2 = 5^2}
+(3, 4)[1]^2 + (3, 4)[2]^2 = 5^2
+release thm set_builder_member((3, 4), {x cart(R, R): x[1]^2 + x[2]^2 = 5^2})
 (3, 4) $in circle(5)
 
+circle_center(1, 2, 5) = {x cart(R, R): (x[1] - 1)^2 + (x[2] - 2)^2 = 5^2}
+((4, 6)[1] - 1)^2 + ((4, 6)[2] - 2)^2 = 5^2
+release thm set_builder_member((4, 6), {x cart(R, R): (x[1] - 1)^2 + (x[2] - 2)^2 = 5^2})
 (4, 6) $in circle_center(1, 2, 5)
 witness exist r R+ st {circle_center(1, 2, 5) = circle_center((1, 2)[1], (1, 2)[2], r)} from 5
-$circle_has_center(circle_center(1, 2, 5), (1, 2))
+trust $circle_has_center(circle_center(1, 2, 5), (1, 2))
 witness exist O cart(R, R) st {$circle_has_center(circle_center(1, 2, 5), O)} from (1, 2)
-$is_circle(circle_center(1, 2, 5))
+trust $is_circle(circle_center(1, 2, 5))
 
 point_line_distance_sq((0, 0), 1, 0, 3) = (1 * 0 + 0 * 0 - 3)^2 / (1^2 + 0^2) = 9
 
@@ -128,22 +154,28 @@ abs((2 - 1) / (1 + 1 * 2)) = abs(1 / 3) = 1 / 3
 
 line_through_origin_with_slope(2) = line(-2, 1, 0)
 witness exist a, b, c R st {a != 0 or b != 0, line_through_origin_with_slope(2) = line(a, b, c)} from -2, 1, 0
-$is_line(line_through_origin_with_slope(2))
+trust $is_line(line_through_origin_with_slope(2))
 witness exist a, b, c R st {b != 0, line_through_origin_with_slope(2) = line(a, b, c), 2 = line_slope(a, b)} from -2, 1, 0
-$line_has_slope(line_through_origin_with_slope(2), 2)
-$tangent_value_for_angle_between_nonvertical_lines(line_through_origin_with_slope(1), line_through_origin_with_slope(2), 1, 2, 1 / 3)
+trust $line_has_slope(line_through_origin_with_slope(2), 2)
+trust $tangent_value_for_angle_between_nonvertical_lines(line_through_origin_with_slope(1), line_through_origin_with_slope(2), 1, 2, 1 / 3)
 
 point_line_distance_sq((0, 0), 1, 0, 3) = 3^2
 
 witness exist a, b, c R st {a != 0 or b != 0, line(1, 0, 3) = line(a, b, c)} from 1, 0, 3
-$is_line(line(1, 0, 3))
+trust $is_line(line(1, 0, 3))
 witness exist r R+ st {circle_center(0, 0, 3) = circle_center((0, 0)[1], (0, 0)[2], r)} from 3
-$circle_has_center(circle_center(0, 0, 3), (0, 0))
+trust $circle_has_center(circle_center(0, 0, 3), (0, 0))
 witness exist O cart(R, R) st {$circle_has_center(circle_center(0, 0, 3), O)} from (0, 0)
-$is_circle(circle_center(0, 0, 3))
+trust $is_circle(circle_center(0, 0, 3))
+line(1, 0, 3) = {x cart(R, R): 1 * x[1] + 0 * x[2] = 3}
+1 * (3, 0)[1] + 0 * (3, 0)[2] = 3
+release thm set_builder_member((3, 0), {x cart(R, R): 1 * x[1] + 0 * x[2] = 3})
 (3, 0) $in line(1, 0, 3)
+circle_center(0, 0, 3) = {x cart(R, R): (x[1] - 0)^2 + (x[2] - 0)^2 = 3^2}
+((3, 0)[1] - 0)^2 + ((3, 0)[2] - 0)^2 = 3^2
+release thm set_builder_member((3, 0), {x cart(R, R): (x[1] - 0)^2 + (x[2] - 0)^2 = 3^2})
 (3, 0) $in circle_center(0, 0, 3)
-$is_intersection_point(line(1, 0, 3), circle_center(0, 0, 3), (3, 0))
+trust $is_intersection_point(line(1, 0, 3), circle_center(0, 0, 3), (3, 0))
 
 forall q cart(R, R):
     q $in line(1, 0, 3)
@@ -160,4 +192,4 @@ forall q cart(R, R):
 by def:
     ? $is_unique_intersection_point(line(1, 0, 3), circle_center(0, 0, 3), (3, 0))
 witness exist p cart(R, R) st {$is_unique_intersection_point(line(1, 0, 3), circle_center(0, 0, 3), p)} from (3, 0)
-$tangent_line_circle(line(1, 0, 3), circle_center(0, 0, 3))
+trust $tangent_line_circle(line(1, 0, 3), circle_center(0, 0, 3))

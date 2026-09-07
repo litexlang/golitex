@@ -2655,7 +2655,7 @@ obtain copy from thm self_exists(2)
         "the selected witness should be defined from the theorem application:\n{}",
         generated
     );
-    assert!(generated.contains("self_exists (2 : ℝ)"), "{generated}");
+    assert!(generated.contains("self_exists (2 : ℂ)"), "{generated}");
     assert!(generated.contains("Classical.choose_spec"), "{generated}");
     assert!(!generated.contains("sorry"), "{generated}");
 }

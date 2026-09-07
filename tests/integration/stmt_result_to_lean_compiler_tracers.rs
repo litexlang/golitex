@@ -1497,7 +1497,7 @@ fn existential_elimination_statement_adapters_share_recursive_result_compilation
         generated_from_theorem.contains("noncomputable def theorem_copy"),
         "{generated_from_theorem}"
     );
-    assert!(generated_from_theorem.contains("self_exists (3 : ℝ)"));
+    assert!(generated_from_theorem.contains("self_exists (3 : ℂ)"));
     assert!(generated_from_theorem.contains("Classical.choose_spec"));
     assert!(!generated_from_theorem.contains("Litex.Object"));
     assert!(!generated_from_theorem.contains("LitexObject"));

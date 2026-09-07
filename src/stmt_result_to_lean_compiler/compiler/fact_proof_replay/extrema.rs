@@ -63,6 +63,23 @@ impl StmtResultToLeanCompiler {
                 format!(
                     "Litex.Same.trans (Litex.Same.symm (Litex.Same.realComplex ({real}))) (Litex.Same.ofEq (by simp [Litex.In.rep]))"
                 )
+            } else if let Some(real) = self.environment_stack.numeric_real_values.get(&symbol_id) {
+                // R binders keep the complex source host, so their exact
+                // representative is not installed in the generic
+                // exact-carrier map. The visible membership proof still gives
+                // the observed bridge from the selected real back to the
+                // source symbol; compose it after moving the native real
+                // result through `realComplex`.
+                let membership = resolve_visible_exact_membership_proof(
+                    selected,
+                    &Obj::StandardSet(StandardSet::R),
+                    &self.environment_stack,
+                )?;
+                let source = render_obj(selected, &self.environment_stack)?;
+                let real = real.clone();
+                format!(
+                    "Litex.Same.trans (Litex.Same.symm (Litex.Same.realComplex ({real}))) (Litex.Same.symm (Litex.In.same_rep {source} ({membership})))"
+                )
             } else {
                 let Some(source_to_selected) = self
                     .environment_stack

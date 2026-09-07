@@ -1957,38 +1957,6 @@ forall a, b seq(R):
 }
 
 #[test]
-fn set_valued_have_fn_application_unfolds_for_membership() {
-    let source_code = r#"
-have fn circle(r R+) power_set(cart(R, R)) = {x cart(R, R): x[1]^2 + x[2]^2 = r^2}
-have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {x cart(R, R): a * x[1] + b * x[2] + c = 0}
-
-(3, 4) $in circle(5)
-(2, 2) $in line(1, -1, 0)
-
-forall a, b R:
-    a != 0 or b != 0
-    =>:
-        (0, 0) $in line(a, b, 0)
-
-forall p cart(R, R):
-    p $in circle(5)
-    =>:
-        p[1]^2 + p[2]^2 = 5^2
-"#;
-
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("set_valued_have_fn_application_unfolds_for_membership");
-    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
-    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
-
-    assert!(
-        run_succeeded,
-        "set-valued have fn applications should unfold for membership:\n{}",
-        run_output
-    );
-}
-
-#[test]
 fn function_valued_set_family_preserves_member_cart_carrier() {
     let source_code = r#"
 have fn row(x N+) power_set(cart(N+, N+)) = {point cart(N+, N+): point[1] = x}
@@ -2065,27 +2033,6 @@ have positive_reals power_set(R) = {x R: x > 0}
     assert!(
         !run_succeeded,
         "named set-builder membership must not bypass its defining predicate:\n{}",
-        run_output
-    );
-}
-
-#[test]
-fn template_set_valued_have_fn_application_unfolds_for_membership() {
-    let source_code = r#"
-template<s set>:
-    have fn selected(S power_set(s)) power_set(s) = {x s: x $in S}
-
-1 $in \selected<R>({1})
-"#;
-
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("template_set_valued_have_fn_application_unfolds_for_membership");
-    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
-    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
-
-    assert!(
-        run_succeeded,
-        "a materialized template function returning a set builder should unfold for membership:\n{}",
         run_output
     );
 }

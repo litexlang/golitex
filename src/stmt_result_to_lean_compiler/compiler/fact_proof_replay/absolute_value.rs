@@ -490,17 +490,28 @@ impl StmtResultToLeanCompiler {
                         };
                         ("absPositiveOfNotSameNoObservation", source_to_selected)
                     } else {
-                        (
-                            "absPositiveOfNotSame",
-                            self.environment_stack
-                            .numeric_representation_equalities
-                            .get(&symbol_id)
-                            .cloned()
-                            .ok_or_else(|| {
-                                "absolute-value positivity has no source-to-real representation bridge"
-                                    .to_string()
-                            })?,
+                        // `R` forall binders intentionally keep their source
+                        // value on the complex host ABI, so they do not
+                        // populate the numeric-equality cache used by native
+                        // integer/rational consumers. Their visible
+                        // membership proof still selects the exact real
+                        // representative needed by abs positivity. Reuse
+                        // that Result-owned proof directly and keep the
+                        // bridge observation-free; this does not infer a
+                        // native equality for the source binder.
+                        let membership = resolve_visible_exact_membership_proof(
+                            argument,
+                            &Obj::StandardSet(StandardSet::R),
+                            &self.environment_stack,
                         )
+                        .map_err(|_| {
+                            "absolute-value positivity has no source-to-real representation bridge"
+                                .to_string()
+                        })?;
+                        let source_to_selected = format!(
+                            "Litex.Same.transNoObservation (Litex.Same.withoutObservation (Litex.In.same_rep {source} ({membership}))) (Litex.Same.realComplexNoObservation ({native_real}))"
+                        );
+                        ("absPositiveOfNotSameNoObservation", source_to_selected)
                     };
                     Ok(Some(format!(
                         "Litex.Rules.{theorem} {source} {native_real} ({source_to_selected}) ({child_proof})"

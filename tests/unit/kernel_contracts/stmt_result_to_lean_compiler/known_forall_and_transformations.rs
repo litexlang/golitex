@@ -41,9 +41,11 @@ fn known_forall_instantiation_combines_exact_fact_id_and_requirement_result_dire
             "known-forall application did not explicitly transport its abstract predicate across representations: {generated}"
         );
         assert!(
-                generated.contains("p_real (2 : ℝ) ((Litex.In.congr"),
-                "known-forall application did not combine its source theorem and parameter requirement: {generated}"
-            );
+            generated.contains("p_real ((Litex.In.rep (2 : ℂ)")
+                && generated.contains("Litex.Rules.complexRealInR (2 : ℝ)")
+                && generated.contains("((Litex.In.congr"),
+            "known-forall application did not combine its source theorem and parameter requirement: {generated}"
+        );
     });
 }
 
