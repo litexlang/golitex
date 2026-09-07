@@ -129,20 +129,22 @@ fn render_object_same_across_exact_parameter_contexts(
     if source.contains("ℂ") && target.contains("ℂ") {
         let mut bridge_equalities = Vec::new();
         for (index, (symbol_id, bridge)) in source_bridges.iter().enumerate() {
-            // Only the closed-complex helper carries the native observer
-            // evidence required by `complexNativeEq`.  An arbitrary C
-            // source uses `In.same_rep` (and a real/refined source has a
-            // different observer), so those bridges must remain on the
-            // ordinary fail-closed path below.
-            if !bridge.contains("AsComplex") {
-                continue;
-            }
             let Some(source_value) = source_context.symbol_names.get(symbol_id) else {
                 continue;
             };
             let Some(target_value) = target_context.symbol_names.get(symbol_id) else {
                 continue;
             };
+            // Once both endpoint terms are visibly native complex values,
+            // `Same.complexNativeEq` is the reviewed injective observation for
+            // every retained bridge shape (the closed-complex helper and the
+            // checked C-parameter `In.same_rep` edge). The generated `have`
+            // below still lets Lean reject any bridge whose endpoint types do
+            // not actually agree; all refined/non-complex carriers stay on
+            // the fail-closed path because their renderings lack this guard.
+            if !(source_value.contains("ℂ") && target_value.contains("ℂ")) {
+                continue;
+            }
             if source_value == target_value
                 || !(source_value.contains("ℂ")
                     || target_value.contains("ℂ")
@@ -159,12 +161,11 @@ fn render_object_same_across_exact_parameter_contexts(
                 .iter()
                 .enumerate()
                 .filter_map(|(index, (symbol_id, _))| {
-                    let (_, bridge) = source_bridges.get(index)?;
-                    if !bridge.contains("AsComplex") {
-                        return None;
-                    }
                     let source_value = source_context.symbol_names.get(symbol_id)?;
                     let target_value = target_context.symbol_names.get(symbol_id)?;
+                    if !(source_value.contains("ℂ") && target_value.contains("ℂ")) {
+                        return None;
+                    }
                     (source_value != target_value
                         && (source_value.contains("ℂ")
                             || target_value.contains("ℂ")

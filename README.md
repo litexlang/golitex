@@ -9,7 +9,9 @@ Created and maintained by Jiachen Shen.
 
 
 **Litex is a small, readable, fact-oriented formal language for turning**
-**mathematical reasoning into checkable, traceable data for the human–AI–Litex loop.**
+**mathematical reasoning into checkable, traceable data; it also keeps the**
+**runtime process readable, traceable, and repairable, so humans, AI, and Litex**
+**can work in the same loop.**
 
 It is a set-theoretic, fact-oriented formal language that builds proof flows
 from the bottom up. It puts humans, AI, and the verifier in the same loop:
@@ -48,7 +50,12 @@ second rigorous route can make different structures visible, support new ideas,
 and give different readers a way into the same mathematics. Read the
 [Litex Blueprint](docs/Litex_Blueprint.md) for the fuller argument.
 
-<!-- README spine: plural formalization paths → write one fact → accepted facts become context → build a mathematical language with Group → human–AI verification loop → formal language → AI for Math → toward safe and efficient reasoning → ToLean and Lean rechecking → ecosystem fit and boundaries → action -->
+Litex's longer-term vision is that its implementation may grow large while its
+core execution model remains easy to understand. It can externalize the
+dependencies readers silently track in mathematics as Checkable Knowledge
+Records for interactive textbooks.
+
+<!-- README spine: plural formalization paths → write one fact → accepted facts become context → build a mathematical language with Group → readable execution and Checkable Knowledge Records → human–AI verification loop → formal language → AI for Math → toward safe and efficient reasoning → ToLean and Lean rechecking → ecosystem fit and boundaries → action -->
 
 <!--
 Litex positioning layers:
@@ -188,6 +195,12 @@ Litex also supports transactional attempts: a failed attempt can roll back
 without contaminating the context that was already checked. This gives humans
 and agents a concrete repair boundary rather than an all-or-nothing answer.
 
+The structured result of a definition or verification can be treated as a
+**Checkable Knowledge Record**. It keeps the statement, relevant dependencies,
+evidence, identifiers, and execution status available to people and tools;
+JSON is a machine-readable representation, while Litex's graph command can
+display relationships extracted from those records.
+
 Four connected design choices support this loop:
 
 | Design choice | What it changes for the author |
@@ -278,6 +291,7 @@ The following are potential areas of strength to test through real work:
 - **Formalization middle layer:** connect natural-language mathematics with mature systems such as Lean.
 - **New-domain incubator:** experiment with definitions, interfaces, and small domain libraries at low initial cost.
 - **AI proof training ground:** produce local feedback, repair trajectories, and classified failures.
+- **Checkable knowledge record:** preserve definitions, facts, dependencies, and verification status for interactive textbooks and knowledge bases.
 
 Current areas where mature systems such as Lean/Mathlib are stronger:
 

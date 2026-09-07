@@ -6,94 +6,82 @@ set_option linter.style.nameCheck false
 namespace __Compiler_63_ScalarOperatorBuiltins
 
 theorem __fact0 :
-    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In (α := (Litex.R).Carrier) __p2 Litex.R), (Litex.Same (Litex.abs ((((__p1 : ℝ)) : ℂ) * (((__p2 : ℝ)) : ℂ))) ((Litex.abs (((__p1 : ℝ)) : ℂ)) * (Litex.abs (((__p2 : ℝ)) : ℂ)))) ∧ (Litex.Le (Litex.abs ((((__p1 : ℝ)) : ℂ) + (((__p2 : ℝ)) : ℂ))) ((Litex.abs (((__p1 : ℝ)) : ℂ)) + (Litex.abs (((__p2 : ℝ)) : ℂ)))) ∧ (Litex.Le (Litex.abs ((((__p1 : ℝ)) : ℂ) - (((__p2 : ℝ)) : ℂ))) ((Litex.abs (((__p1 : ℝ)) : ℂ)) + (Litex.abs (((__p2 : ℝ)) : ℂ)))) ∧ (Litex.Le ((Litex.abs (((__p1 : ℝ)) : ℂ)) - (Litex.abs (((__p2 : ℝ)) : ℂ))) (Litex.abs ((((__p1 : ℝ)) : ℂ) + (((__p2 : ℝ)) : ℂ)))) ∧ (Litex.Le ((Litex.abs (((__p1 : ℝ)) : ℂ)) - (Litex.abs (((__p2 : ℝ)) : ℂ))) (Litex.abs ((((__p1 : ℝ)) : ℂ) - (((__p2 : ℝ)) : ℂ)))) := by
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.R), (Litex.Same (Litex.abs (__p1 * __p2)) ((Litex.abs __p1) * (Litex.abs __p2))) ∧ (Litex.Le (Litex.abs (__p1 + __p2)) ((Litex.abs __p1) + (Litex.abs __p2))) ∧ (Litex.Le (Litex.abs (__p1 - __p2)) ((Litex.abs __p1) + (Litex.abs __p2))) ∧ (Litex.Le ((Litex.abs __p1) - (Litex.abs __p2)) (Litex.abs (__p1 + __p2))) ∧ (Litex.Le ((Litex.abs __p1) - (Litex.abs __p2)) (Litex.abs (__p1 - __p2))) := by
   intro x __h8 y __h9
-  have __prior0_0 : Litex.Same (Litex.abs ((((x : ℝ)) : ℂ) * (((y : ℝ)) : ℂ))) ((Litex.abs (((x : ℝ)) : ℂ)) * (Litex.abs (((y : ℝ)) : ℂ))) := Litex.Rules.absMul (((x : ℝ)) : ℂ) (((y : ℝ)) : ℂ)
-  have __prior0_1 : Litex.Le (Litex.abs ((((x : ℝ)) : ℂ) + (((y : ℝ)) : ℂ))) ((Litex.abs (((x : ℝ)) : ℂ)) + (Litex.abs (((y : ℝ)) : ℂ))) := Litex.Rules.absAddLe (((x : ℝ)) : ℂ) (((y : ℝ)) : ℂ)
-  have __prior0_2 : Litex.Le (Litex.abs ((((x : ℝ)) : ℂ) - (((y : ℝ)) : ℂ))) ((Litex.abs (((x : ℝ)) : ℂ)) + (Litex.abs (((y : ℝ)) : ℂ))) := Litex.Rules.absSubLeSum (((x : ℝ)) : ℂ) (((y : ℝ)) : ℂ)
-  have __prior0_3 : Litex.Le ((Litex.abs (((x : ℝ)) : ℂ)) - (Litex.abs (((y : ℝ)) : ℂ))) (Litex.abs ((((x : ℝ)) : ℂ) + (((y : ℝ)) : ℂ))) := Litex.Rules.absSubAbsLeAbsAdd (((x : ℝ)) : ℂ) (((y : ℝ)) : ℂ)
-  have __prior0_4 : Litex.Le ((Litex.abs (((x : ℝ)) : ℂ)) - (Litex.abs (((y : ℝ)) : ℂ))) (Litex.abs ((((x : ℝ)) : ℂ) - (((y : ℝ)) : ℂ))) := Litex.Rules.absSubAbsLeAbsSub (((x : ℝ)) : ℂ) (((y : ℝ)) : ℂ)
+  have __prior0_0 : Litex.Same (Litex.abs (x * y)) ((Litex.abs x) * (Litex.abs y)) := Litex.Rules.absMul x y
+  have __prior0_1 : Litex.Le (Litex.abs (x + y)) ((Litex.abs x) + (Litex.abs y)) := Litex.Rules.absAddLe x y
+  have __prior0_2 : Litex.Le (Litex.abs (x - y)) ((Litex.abs x) + (Litex.abs y)) := Litex.Rules.absSubLeSum x y
+  have __prior0_3 : Litex.Le ((Litex.abs x) - (Litex.abs y)) (Litex.abs (x + y)) := Litex.Rules.absSubAbsLeAbsAdd x y
+  have __prior0_4 : Litex.Le ((Litex.abs x) - (Litex.abs y)) (Litex.abs (x - y)) := Litex.Rules.absSubAbsLeAbsSub x y
   exact ⟨__prior0_0, __prior0_1, __prior0_2, __prior0_3, __prior0_4⟩
 
 theorem __fact1 :
-    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R), (Litex.Nonnegative (Litex.abs (((__p1 : ℝ)) : ℂ))) ∧ (Litex.Le ((-1 : ℂ) * (Litex.abs (((__p1 : ℝ)) : ℂ))) (((__p1 : ℝ)) : ℂ)) ∧ (Litex.Le ((-1 : ℂ) * (((__p1 : ℝ)) : ℂ)) (Litex.abs (((__p1 : ℝ)) : ℂ))) ∧ (Litex.Le (((__p1 : ℝ)) : ℂ) (Litex.abs (((__p1 : ℝ)) : ℂ))) := by
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R), (Litex.Nonnegative (Litex.abs __p1)) ∧ (Litex.Le ((-1 : ℂ) * (Litex.abs __p1)) __p1) ∧ (Litex.Le ((-1 : ℂ) * __p1) (Litex.abs __p1)) ∧ (Litex.Le __p1 (Litex.abs __p1)) := by
   intro x __h21
-  have __prior1_0 : Litex.Nonnegative (Litex.abs (((x : ℝ)) : ℂ)) := Litex.Rules.absNonnegative (((x : ℝ)) : ℂ)
-  have __prior1_1 : Litex.Le ((-1 : ℂ) * (Litex.abs (((x : ℝ)) : ℂ))) (((x : ℝ)) : ℂ) := Litex.Rules.negAbsLe (((x : ℝ)) : ℂ)
-  have __prior1_2 : Litex.Le ((-1 : ℂ) * (((x : ℝ)) : ℂ)) (Litex.abs (((x : ℝ)) : ℂ)) := Litex.Rules.negLeAbs (((x : ℝ)) : ℂ)
-  have __prior1_3 : Litex.Le (((x : ℝ)) : ℂ) (Litex.abs (((x : ℝ)) : ℂ)) := Litex.Rules.selfLeAbs (((x : ℝ)) : ℂ)
+  have __prior1_0 : Litex.Nonnegative (Litex.abs x) := Litex.Rules.absNonnegative x
+  have __prior1_1 : Litex.Le ((-1 : ℂ) * (Litex.abs x)) x := Litex.Rules.negAbsLe x
+  have __prior1_2 : Litex.Le ((-1 : ℂ) * x) (Litex.abs x) := Litex.Rules.negLeAbs x
+  have __prior1_3 : Litex.Le x (Litex.abs x) := Litex.Rules.selfLeAbs x
   exact ⟨__prior1_0, __prior1_1, __prior1_2, __prior1_3⟩
 
 theorem __fact2 :
-    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In (α := (Litex.R).Carrier) __p2 Litex.R), (Litex.Le (Litex.min (((__p1 : ℝ)) : ℂ) (((__p2 : ℝ)) : ℂ)) (((__p1 : ℝ)) : ℂ)) ∧ (Litex.Le (Litex.min (((__p1 : ℝ)) : ℂ) (((__p2 : ℝ)) : ℂ)) (((__p2 : ℝ)) : ℂ)) ∧ (Litex.Le (((__p1 : ℝ)) : ℂ) (Litex.max (((__p1 : ℝ)) : ℂ) (((__p2 : ℝ)) : ℂ))) ∧ (Litex.Le (((__p2 : ℝ)) : ℂ) (Litex.max (((__p1 : ℝ)) : ℂ) (((__p2 : ℝ)) : ℂ))) ∧ (Litex.Same (Litex.min (((__p1 : ℝ)) : ℂ) (((__p2 : ℝ)) : ℂ)) (Litex.min (((__p2 : ℝ)) : ℂ) (((__p1 : ℝ)) : ℂ))) ∧ (Litex.Same (Litex.max (((__p1 : ℝ)) : ℂ) (((__p2 : ℝ)) : ℂ)) (Litex.max (((__p2 : ℝ)) : ℂ) (((__p1 : ℝ)) : ℂ))) ∧ (Litex.Same (Litex.min (((__p1 : ℝ)) : ℂ) (Litex.max (((__p1 : ℝ)) : ℂ) (((__p2 : ℝ)) : ℂ))) __p1) ∧ (Litex.Same (Litex.max (((__p1 : ℝ)) : ℂ) (Litex.min (((__p1 : ℝ)) : ℂ) (((__p2 : ℝ)) : ℂ))) __p1) := by
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.R), (Litex.Le (Litex.min __p1 __p2) __p1) ∧ (Litex.Le (Litex.min __p1 __p2) __p2) ∧ (Litex.Le __p1 (Litex.max __p1 __p2)) ∧ (Litex.Le __p2 (Litex.max __p1 __p2)) ∧ (Litex.Same (Litex.min __p1 __p2) (Litex.min __p2 __p1)) ∧ (Litex.Same (Litex.max __p1 __p2) (Litex.max __p2 __p1)) ∧ (Litex.Same (Litex.min __p1 (Litex.max __p1 __p2)) __p1) ∧ (Litex.Same (Litex.max __p1 (Litex.min __p1 __p2)) __p1) := by
   intro a __h37 b __h38
-  have __prior2_0 : Litex.Le (Litex.min (((a : ℝ)) : ℂ) (((b : ℝ)) : ℂ)) (((a : ℝ)) : ℂ) := Litex.Rules.minLeLeft (a : ℝ) (b : ℝ)
-  have __prior2_1 : Litex.Le (Litex.min (((a : ℝ)) : ℂ) (((b : ℝ)) : ℂ)) (((b : ℝ)) : ℂ) := Litex.Rules.minLeRight (a : ℝ) (b : ℝ)
-  have __prior2_2 : Litex.Le (((a : ℝ)) : ℂ) (Litex.max (((a : ℝ)) : ℂ) (((b : ℝ)) : ℂ)) := Litex.Rules.leMaxLeft (a : ℝ) (b : ℝ)
-  have __prior2_3 : Litex.Le (((b : ℝ)) : ℂ) (Litex.max (((a : ℝ)) : ℂ) (((b : ℝ)) : ℂ)) := Litex.Rules.leMaxRight (a : ℝ) (b : ℝ)
-  have __prior2_4 : Litex.Same (Litex.min (((a : ℝ)) : ℂ) (((b : ℝ)) : ℂ)) (Litex.min (((b : ℝ)) : ℂ) (((a : ℝ)) : ℂ)) := Litex.Rules.minCommutative (a : ℝ) (b : ℝ)
-  have __prior2_5 : Litex.Same (Litex.max (((a : ℝ)) : ℂ) (((b : ℝ)) : ℂ)) (Litex.max (((b : ℝ)) : ℂ) (((a : ℝ)) : ℂ)) := Litex.Rules.maxCommutative (a : ℝ) (b : ℝ)
-  have __prior2_6 : Litex.Same (Litex.min (((a : ℝ)) : ℂ) (Litex.max (((a : ℝ)) : ℂ) (((b : ℝ)) : ℂ))) a := Litex.Same.trans (Litex.Rules.minAbsorbMaxLeft (a : ℝ) (b : ℝ)) (Litex.Same.trans (Litex.Same.symm (Litex.Same.realComplex ((a : ℝ)))) (Litex.Same.ofEq (by simp [Litex.In.rep])))
-  have __prior2_7 : Litex.Same (Litex.max (((a : ℝ)) : ℂ) (Litex.min (((a : ℝ)) : ℂ) (((b : ℝ)) : ℂ))) a := Litex.Same.trans (Litex.Rules.maxAbsorbMinLeft (a : ℝ) (b : ℝ)) (Litex.Same.trans (Litex.Same.symm (Litex.Same.realComplex ((a : ℝ)))) (Litex.Same.ofEq (by simp [Litex.In.rep])))
+  have __prior2_0 : Litex.Le (Litex.min a b) a := Litex.Rules.minLeLeft (Litex.In.rep a __h37 : ℝ) (Litex.In.rep b __h38 : ℝ)
+  have __prior2_1 : Litex.Le (Litex.min a b) b := Litex.Rules.minLeRight (Litex.In.rep a __h37 : ℝ) (Litex.In.rep b __h38 : ℝ)
+  have __prior2_2 : Litex.Le a (Litex.max a b) := Litex.Rules.leMaxLeft (Litex.In.rep a __h37 : ℝ) (Litex.In.rep b __h38 : ℝ)
+  have __prior2_3 : Litex.Le b (Litex.max a b) := Litex.Rules.leMaxRight (Litex.In.rep a __h37 : ℝ) (Litex.In.rep b __h38 : ℝ)
+  have __prior2_4 : Litex.Same (Litex.min a b) (Litex.min b a) := Litex.Rules.minCommutative (Litex.In.rep a __h37 : ℝ) (Litex.In.rep b __h38 : ℝ)
+  have __prior2_5 : Litex.Same (Litex.max a b) (Litex.max b a) := Litex.Rules.maxCommutative (Litex.In.rep a __h37 : ℝ) (Litex.In.rep b __h38 : ℝ)
+  have __prior2_6 : Litex.Same (Litex.min a (Litex.max a b)) a := Litex.Same.trans (Litex.Rules.minAbsorbMaxLeft (Litex.In.rep a __h37 : ℝ) (Litex.In.rep b __h38 : ℝ)) (Litex.Same.trans (Litex.Same.symm (Litex.Same.realComplex ((Litex.In.rep a __h37 : ℝ)))) (Litex.Same.symm (Litex.In.same_rep a (__h37))))
+  have __prior2_7 : Litex.Same (Litex.max a (Litex.min a b)) a := Litex.Same.trans (Litex.Rules.maxAbsorbMinLeft (Litex.In.rep a __h37 : ℝ) (Litex.In.rep b __h38 : ℝ)) (Litex.Same.trans (Litex.Same.symm (Litex.Same.realComplex ((Litex.In.rep a __h37 : ℝ)))) (Litex.Same.symm (Litex.In.same_rep a (__h37))))
   exact ⟨__prior2_0, __prior2_1, __prior2_2, __prior2_3, __prior2_4, __prior2_5, __prior2_6, __prior2_7⟩
 
 theorem __fact3 :
-    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R), (Litex.Same (Litex.min (((__p1 : ℝ)) : ℂ) (((__p1 : ℝ)) : ℂ)) __p1) ∧ (Litex.Same (Litex.max (((__p1 : ℝ)) : ℂ) (((__p1 : ℝ)) : ℂ)) __p1) := by
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R), (Litex.Same (Litex.min __p1 __p1) __p1) ∧ (Litex.Same (Litex.max __p1 __p1) __p1) := by
   intro a __h51
-  have __prior3_0 : Litex.Same (Litex.min (((a : ℝ)) : ℂ) (((a : ℝ)) : ℂ)) a := Litex.Same.trans (Litex.Rules.minIdempotent (a : ℝ)) (Litex.Same.trans (Litex.Same.symm (Litex.Same.realComplex ((a : ℝ)))) (Litex.Same.ofEq (by simp [Litex.In.rep])))
-  have __prior3_1 : Litex.Same (Litex.max (((a : ℝ)) : ℂ) (((a : ℝ)) : ℂ)) a := Litex.Same.trans (Litex.Rules.maxIdempotent (a : ℝ)) (Litex.Same.trans (Litex.Same.symm (Litex.Same.realComplex ((a : ℝ)))) (Litex.Same.ofEq (by simp [Litex.In.rep])))
+  have __prior3_0 : Litex.Same (Litex.min a a) a := Litex.Same.trans (Litex.Rules.minIdempotent (Litex.In.rep a __h51 : ℝ)) (Litex.Same.trans (Litex.Same.symm (Litex.Same.realComplex ((Litex.In.rep a __h51 : ℝ)))) (Litex.Same.symm (Litex.In.same_rep a (__h51))))
+  have __prior3_1 : Litex.Same (Litex.max a a) a := Litex.Same.trans (Litex.Rules.maxIdempotent (Litex.In.rep a __h51 : ℝ)) (Litex.Same.trans (Litex.Same.symm (Litex.Same.realComplex ((Litex.In.rep a __h51 : ℝ)))) (Litex.Same.symm (Litex.In.same_rep a (__h51))))
   exact ⟨__prior3_0, __prior3_1⟩
 
 theorem __fact4 :
-    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In (α := (Litex.R).Carrier) __p2 Litex.R) (__p3 : (Litex.R).Carrier) (__type3 : Litex.In (α := (Litex.R).Carrier) __p3 Litex.R), (Litex.Same (Litex.min (Litex.min (((__p1 : ℝ)) : ℂ) (((__p2 : ℝ)) : ℂ)) (((__p3 : ℝ)) : ℂ)) (Litex.min (((__p1 : ℝ)) : ℂ) (Litex.min (((__p2 : ℝ)) : ℂ) (((__p3 : ℝ)) : ℂ)))) ∧ (Litex.Same (Litex.max (Litex.max (((__p1 : ℝ)) : ℂ) (((__p2 : ℝ)) : ℂ)) (((__p3 : ℝ)) : ℂ)) (Litex.max (((__p1 : ℝ)) : ℂ) (Litex.max (((__p2 : ℝ)) : ℂ) (((__p3 : ℝ)) : ℂ)))) := by
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.R) (__p3 : ℂ) (__type3 : Litex.In __p3 Litex.R), (Litex.Same (Litex.min (Litex.min __p1 __p2) __p3) (Litex.min __p1 (Litex.min __p2 __p3))) ∧ (Litex.Same (Litex.max (Litex.max __p1 __p2) __p3) (Litex.max __p1 (Litex.max __p2 __p3))) := by
   intro a __h60 b __h61 c __h62
-  have __prior4_0 : Litex.Same (Litex.min (Litex.min (((a : ℝ)) : ℂ) (((b : ℝ)) : ℂ)) (((c : ℝ)) : ℂ)) (Litex.min (((a : ℝ)) : ℂ) (Litex.min (((b : ℝ)) : ℂ) (((c : ℝ)) : ℂ))) := Litex.Rules.minAssociative (a : ℝ) (b : ℝ) (c : ℝ)
-  have __prior4_1 : Litex.Same (Litex.max (Litex.max (((a : ℝ)) : ℂ) (((b : ℝ)) : ℂ)) (((c : ℝ)) : ℂ)) (Litex.max (((a : ℝ)) : ℂ) (Litex.max (((b : ℝ)) : ℂ) (((c : ℝ)) : ℂ))) := Litex.Rules.maxAssociative (a : ℝ) (b : ℝ) (c : ℝ)
+  have __prior4_0 : Litex.Same (Litex.min (Litex.min a b) c) (Litex.min a (Litex.min b c)) := Litex.Rules.minAssociative (Litex.In.rep a __h60 : ℝ) (Litex.In.rep b __h61 : ℝ) (Litex.In.rep c __h62 : ℝ)
+  have __prior4_1 : Litex.Same (Litex.max (Litex.max a b) c) (Litex.max a (Litex.max b c)) := Litex.Rules.maxAssociative (Litex.In.rep a __h60 : ℝ) (Litex.In.rep b __h61 : ℝ) (Litex.In.rep c __h62 : ℝ)
   exact ⟨__prior4_0, __prior4_1⟩
 
 theorem __fact5 :
-    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In (α := (Litex.R).Carrier) __p2 Litex.R) (__domain1 : Litex.Le (((__p1 : ℝ)) : ℂ) (((__p2 : ℝ)) : ℂ)), (Litex.Same (Litex.min (((__p1 : ℝ)) : ℂ) (((__p2 : ℝ)) : ℂ)) __p1) ∧ (Litex.Same (Litex.max (((__p1 : ℝ)) : ℂ) (((__p2 : ℝ)) : ℂ)) __p2) := by
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.R) (__domain1 : Litex.Le __p1 __p2), (Litex.Same (Litex.min __p1 __p2) __p1) ∧ (Litex.Same (Litex.max __p1 __p2) __p2) := by
   intro a __h71 b __h72 __domain_f73
-  have __prior5_0 : Litex.Same (Litex.min (((a : ℝ)) : ℂ) (((b : ℝ)) : ℂ)) a := Litex.Same.trans (Litex.Rules.minEqLeftOfLe (a : ℝ) (b : ℝ) (__domain_f73)) (Litex.Same.trans (Litex.Same.symm (Litex.Same.realComplex ((a : ℝ)))) (Litex.Same.ofEq (by simp [Litex.In.rep])))
-  have __prior5_1 : Litex.Same (Litex.max (((a : ℝ)) : ℂ) (((b : ℝ)) : ℂ)) b := Litex.Same.trans (Litex.Rules.maxEqRightOfLe (a : ℝ) (b : ℝ) (__domain_f73)) (Litex.Same.trans (Litex.Same.symm (Litex.Same.realComplex ((b : ℝ)))) (Litex.Same.ofEq (by simp [Litex.In.rep])))
+  have __prior5_0 : Litex.Same (Litex.min a b) a := Litex.Same.trans (Litex.Rules.minEqLeftOfLe (Litex.In.rep a __h71 : ℝ) (Litex.In.rep b __h72 : ℝ) (__domain_f73)) (Litex.Same.trans (Litex.Same.symm (Litex.Same.realComplex ((Litex.In.rep a __h71 : ℝ)))) (Litex.Same.symm (Litex.In.same_rep a (__h71))))
+  have __prior5_1 : Litex.Same (Litex.max a b) b := Litex.Same.trans (Litex.Rules.maxEqRightOfLe (Litex.In.rep a __h71 : ℝ) (Litex.In.rep b __h72 : ℝ) (__domain_f73)) (Litex.Same.trans (Litex.Same.symm (Litex.Same.realComplex ((Litex.In.rep b __h72 : ℝ)))) (Litex.Same.symm (Litex.In.same_rep b (__h72))))
   exact ⟨__prior5_0, __prior5_1⟩
 
 theorem __fact6 :
-    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In (α := (Litex.R).Carrier) __p2 Litex.R) (__p3 : (Litex.R).Carrier) (__type3 : Litex.In (α := (Litex.R).Carrier) __p3 Litex.R) (__p4 : (Litex.R).Carrier) (__type4 : Litex.In (α := (Litex.R).Carrier) __p4 Litex.R) (__domain1 : Litex.Le (((__p1 : ℝ)) : ℂ) (((__p3 : ℝ)) : ℂ)) (__domain2 : Litex.Le (((__p2 : ℝ)) : ℂ) (((__p4 : ℝ)) : ℂ)), (Litex.Le (Litex.min (((__p1 : ℝ)) : ℂ) (((__p2 : ℝ)) : ℂ)) (Litex.min (((__p3 : ℝ)) : ℂ) (((__p4 : ℝ)) : ℂ))) ∧ (Litex.Le (Litex.max (((__p1 : ℝ)) : ℂ) (((__p2 : ℝ)) : ℂ)) (Litex.max (((__p3 : ℝ)) : ℂ) (((__p4 : ℝ)) : ℂ))) := by
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.R) (__p3 : ℂ) (__type3 : Litex.In __p3 Litex.R) (__p4 : ℂ) (__type4 : Litex.In __p4 Litex.R) (__domain1 : Litex.Le __p1 __p3) (__domain2 : Litex.Le __p2 __p4), (Litex.Le (Litex.min __p1 __p2) (Litex.min __p3 __p4)) ∧ (Litex.Le (Litex.max __p1 __p2) (Litex.max __p3 __p4)) := by
   intro a __h85 b __h86 c __h87 d __h88 __domain_f89 __domain_f90
-  have __prior6_0 : Litex.Le (Litex.min (((a : ℝ)) : ℂ) (((b : ℝ)) : ℂ)) (Litex.min (((c : ℝ)) : ℂ) (((d : ℝ)) : ℂ)) := Litex.Rules.minMonotone (a : ℝ) (b : ℝ) (c : ℝ) (d : ℝ) (__domain_f89) (__domain_f90)
-  have __prior6_1 : Litex.Le (Litex.max (((a : ℝ)) : ℂ) (((b : ℝ)) : ℂ)) (Litex.max (((c : ℝ)) : ℂ) (((d : ℝ)) : ℂ)) := Litex.Rules.maxMonotone (a : ℝ) (b : ℝ) (c : ℝ) (d : ℝ) (__domain_f89) (__domain_f90)
+  have __prior6_0 : Litex.Le (Litex.min a b) (Litex.min c d) := Litex.Rules.minMonotone (Litex.In.rep a __h85 : ℝ) (Litex.In.rep b __h86 : ℝ) (Litex.In.rep c __h87 : ℝ) (Litex.In.rep d __h88 : ℝ) (__domain_f89) (__domain_f90)
+  have __prior6_1 : Litex.Le (Litex.max a b) (Litex.max c d) := Litex.Rules.maxMonotone (Litex.In.rep a __h85 : ℝ) (Litex.In.rep b __h86 : ℝ) (Litex.In.rep c __h87 : ℝ) (Litex.In.rep d __h88 : ℝ) (__domain_f89) (__domain_f90)
   exact ⟨__prior6_0, __prior6_1⟩
 
 theorem __fact7 :
-    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R) (__domain1 : Litex.Le (0 : ℂ) (((__p1 : ℝ)) : ℂ)), Litex.Same (Litex.abs (((__p1 : ℝ)) : ℂ)) __p1 := by
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__domain1 : Litex.Nonnegative __p1), Litex.Same (Litex.abs __p1) __p1 := by
   intro x __h97 __domain_f98
-  have __prior7_0 : Litex.Same (Litex.abs (((x : ℝ)) : ℂ)) x := Litex.Same.trans (Litex.Rules.absEqSelfOfLe (x : ℝ) (__domain_f98)) (Litex.Same.trans (Litex.Same.symm (Litex.Same.realComplex ((x : ℝ)))) (Litex.Same.ofEq (by simp [Litex.In.rep])))
+  have __prior7_0 : Litex.Same (Litex.abs x) x := Litex.Rules.absEqSelfOfLe (Litex.In.rep x __h97 : ℝ) (__domain_f98)
   exact __prior7_0
 
 theorem __fact8 :
-    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R) (__domain1 : Litex.Le (((__p1 : ℝ)) : ℂ) (0 : ℂ)), Litex.Same (Litex.abs (((__p1 : ℝ)) : ℂ)) ((-1 : ℂ) * (((__p1 : ℝ)) : ℂ)) := by
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__domain1 : Litex.Nonpositive __p1), Litex.Same (Litex.abs __p1) ((-1 : ℂ) * __p1) := by
   intro x __h105 __domain_f106
-  have __infer8_0 : Litex.Nonnegative ((-1 : ℂ) * (((x : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonnegative (Litex.Rules.realCastNonpositive (x : ℝ) (__domain_f106))
-  have __prior8_0 : Litex.Same (Litex.abs (((x : ℝ)) : ℂ)) ((-1 : ℂ) * (((x : ℝ)) : ℂ)) := Litex.Rules.absEqNegOfLe (x : ℝ) (__domain_f106)
+  have __infer8_0 : Litex.Nonnegative ((-1 : ℂ) * x) := Litex.Rules.complexNegativeOneMulNonnegative (Litex.Rules.realCastNonpositive (Litex.In.rep x __h105 : ℝ) (__domain_f106))
+  have __prior8_0 : Litex.Same (Litex.abs x) ((-1 : ℂ) * x) := Litex.Rules.absEqNegOfLe (Litex.In.rep x __h105 : ℝ) (__domain_f106)
   exact __prior8_0
 
 theorem __fact9 :
-    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R) (__domain1 : ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) __p1 (0 : ℂ)), Litex.Positive (Litex.abs (((__p1 : ℝ)) : ℂ)) := by
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__domain1 : ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) __p1 (0 : ℂ)), Litex.Positive (Litex.abs __p1) := by
   intro x __h113 __domain_f114
-  have __prior9_0 : Litex.Positive (Litex.abs (((x : ℝ)) : ℂ)) := Litex.Rules.absPositiveOfNotSameNoObservation x (x : ℝ) (Litex.Same.realComplexNoObservation ((x : ℝ))) (__domain_f114)
+  have __prior9_0 : Litex.Positive (Litex.abs x) := Litex.Rules.absPositiveOfNotSameNoObservation x (Litex.In.rep x __h113 : ℝ) (Litex.Same.transNoObservation (Litex.Same.withoutObservation (Litex.In.same_rep x (__h113))) (Litex.Same.realComplexNoObservation ((Litex.In.rep x __h113 : ℝ)))) (__domain_f114)
   exact __prior9_0
-
-theorem __fact10 :
-    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In (α := (Litex.R).Carrier) __p2 Litex.R) (__domain1 : Litex.Le (0 : ℂ) (((__p2 : ℝ)) : ℂ)), Litex.Le (((__p1 : ℝ)) : ℂ) ((((__p1 : ℝ)) : ℂ) + (((__p2 : ℝ)) : ℂ)) := by
-  intro a __h121 b __h122 __domain_f123
-  have __prior10_0 : Litex.Le (((a : ℝ)) : ℂ) ((((a : ℝ)) : ℂ) + (((b : ℝ)) : ℂ)) := Litex.Rules.realCastLeAddOfNonnegativeRight (a : ℝ) (b : ℝ) (__domain_f123)
-  exact __prior10_0
-
-theorem __fact11 :
-    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In (α := (Litex.R).Carrier) __p2 Litex.R) (__p3 : (Litex.R).Carrier) (__type3 : Litex.In (α := (Litex.R).Carrier) __p3 Litex.R) (__domain1 : Litex.Le (((__p1 : ℝ)) : ℂ) (((__p2 : ℝ)) : ℂ)) (__domain2 : Litex.Le (0 : ℂ) (((__p3 : ℝ)) : ℂ)), Litex.Le ((((__p1 : ℝ)) : ℂ) - (((__p3 : ℝ)) : ℂ)) (((__p2 : ℝ)) : ℂ) := by
-  intro a __h132 b __h133 c __h134 __domain_f135 __domain_f136
-  have __prior11_0 : Litex.Le ((((a : ℝ)) : ℂ) - (((c : ℝ)) : ℂ)) (((b : ℝ)) : ℂ) := Litex.Rules.realCastSubLeOfLeOfNonnegative (a : ℝ) (b : ℝ) (c : ℝ) (__domain_f135) (__domain_f136)
-  exact __prior11_0
 
 end __Compiler_63_ScalarOperatorBuiltins

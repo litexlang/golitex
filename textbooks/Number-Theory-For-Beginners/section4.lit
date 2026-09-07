@@ -11,6 +11,20 @@
 # litex_code: This file runs Sections I-III first and then adds Section IV.
 # comments: No number-theory std module is imported.
 
+# Whole-module registration currently does not retain a callable FactId for
+# Section III's public recursion theorems.  These two local adapter facts unfold
+# the same public function once, so all Section IV proofs consume stable facts
+# without duplicating the finite-product construction.
+thm section3_finite_product_from_one_zero:
+    ? forall a fn(idx_i N+) Z:
+        section3::finite_product_from_one(a, 0) = 1
+    section3::finite_product_from_one(a, 0) = \section3::finite_product_from_one_selected<0>(a, 0) = 1
+
+thm section3_finite_product_from_one_successor:
+    ? forall a fn(idx_i N+) Z, n N:
+        section3::finite_product_from_one(a, n + 1) = section3::finite_product_from_one(a, n) * a(n + 1)
+    section3::finite_product_from_one(a, n + 1) = \section3::finite_product_from_one_selected<0>(a, n + 1) = \section3::finite_product_from_one_selected<0>(a, n) * a(n + 1) = section3::finite_product_from_one(a, n) * a(n + 1)
+
 """
 Definition. An integer p>1 is prime if its only positive divisors are 1 and p.
 """
@@ -39,7 +53,7 @@ thm theorem_IV_prime_divisor_from_least:
         a = a * 1
     by def:
         ? $section1::divides_Z(a, a)
-1release thm set_builder_member(a, {d Z: d > 1 and $section1::divides_Z(d, a)})
+    release thm set_builder_member(a, {d Z: d > 1 and $section1::divides_Z(d, a)})
     a $in D
     witness $is_nonempty_set(D) from a:
         a $in D
@@ -56,7 +70,7 @@ thm theorem_IV_prime_divisor_from_least:
             ? D $subset Z
         by def:
             ? $section1::is_positive_integer_set(D)
-1release thm section1::positive_integer_set_has_least_element(D)
+    release thm section1::positive_integer_set_has_least_element(D)
     obtain p from exist p Z st {$section1::is_least_element_of_integer_set(D, p)}
     p $in D
     p > 1
@@ -82,7 +96,7 @@ thm theorem_IV_prime_divisor_from_least:
                         a = p * r = d * k * r = d * (k * r)
                     by def:
                         ? $section1::divides_Z(d, a)
-1release thm set_builder_member(d, {exp_e Z: exp_e > 1 and $section1::divides_Z(exp_e, a)})
+                    release thm set_builder_member(d, {exp_e Z: exp_e > 1 and $section1::divides_Z(exp_e, a)})
                     d $in D
                     p <= d
                     k > 0 or k <= 0
@@ -94,11 +108,11 @@ thm theorem_IV_prime_divisor_from_least:
                             p <= d
                             d = p
                         case k <= 0:
-                            d * (-1 * k) >= 0
-                            d * (-1 * k) = -1 * (d * k)
-                            -1 * (d * k) >= 0
-                            -1 * (-1 * (d * k)) <= 0
-                            d * k = -1 * (-1 * (d * k)) <= 0
+                            d * ((-1) * k) >= 0
+                            d * ((-1) * k) = (-1) * (d * k)
+                            (-1) * (d * k) >= 0
+                            (-1) * ((-1) * (d * k)) <= 0
+                            d * k = (-1) * ((-1) * (d * k)) <= 0
                             p = d * k <= 0
                             impossible p > 1
         by def:
@@ -112,7 +126,7 @@ thm prime_divides_or_is_relatively_prime:
         $is_prime_Z(p)
         =>:
             $section1::divides_Z(p, a) or $section3::relatively_prime_Z(p, a)
-1release thm section2::gcd_Z_dvd_left(p, a)
+    release thm section2::gcd_Z_dvd_left(p, a)
     obtain u from exist u Z st {p = section2::gcd_Z(p, a) * u}
     section2::gcd_Z(p, a) = 0 or section2::gcd_Z(p, a) > 0
     by cases:
@@ -129,7 +143,7 @@ thm prime_divides_or_is_relatively_prime:
                     by def:
                         ? $section3::relatively_prime_Z(p, a)
                 case section2::gcd_Z(p, a) = p:
-1release thm section2::gcd_Z_dvd_right(p, a)
+                    release thm section2::gcd_Z_dvd_right(p, a)
                     $section1::divides_Z(p, a)
 
 thm prime_divisor_exists:
@@ -153,11 +167,11 @@ claim:
             by contra:
                 ? k > 0
                 k <= 0
-                d * (-1 * k) >= 0
-                d * (-1 * k) = -1 * (d * k)
-                -1 * (d * k) >= 0
-                -1 * (-1 * (d * k)) <= 0
-                d * k = -1 * (-1 * (d * k)) <= 0
+                d * ((-1) * k) >= 0
+                d * ((-1) * k) = (-1) * (d * k)
+                (-1) * (d * k) >= 0
+                (-1) * ((-1) * (d * k)) <= 0
+                d * k = (-1) * ((-1) * (d * k)) <= 0
                 2 = d * k <= 0
                 impossible 2 <= 0
         d >= 1
@@ -187,13 +201,13 @@ thm theorem_IV_1_prime_divides_binary_product:
         $section1::divides_Z(p, a * b)
         =>:
             $section1::divides_Z(p, a) or $section1::divides_Z(p, b)
-1release thm prime_divides_or_is_relatively_prime(p, a)
+    release thm prime_divides_or_is_relatively_prime(p, a)
     by cases:
         ? $section1::divides_Z(p, a) or $section1::divides_Z(p, b)
         case $section1::divides_Z(p, a):
             $section1::divides_Z(p, a)
         case $section3::relatively_prime_Z(p, a):
-1release thm section3::theorem_III_2_euclid_lemma(p, a, b)
+            release thm section3::theorem_III_2_euclid_lemma(p, a, b)
             $section1::divides_Z(p, b)
 
 # A proper positive divisor of a prime square is the prime itself.  This is
@@ -207,7 +221,7 @@ thm proper_positive_divisor_of_prime_square:
         $section1::divides_Z(d, p ^ 2)
         =>:
             d = p
-1release thm prime_divisor_exists(d)
+    release thm prime_divisor_exists(d)
     obtain r from exist r Z st {$is_prime_Z(r), $section1::divides_Z(r, d)}
     obtain u from exist u Z st {d = r * u}
     obtain v from exist v Z st {p ^ 2 = d * v}
@@ -217,13 +231,13 @@ thm proper_positive_divisor_of_prime_square:
         ? $section1::divides_Z(r, p * p)
     claim:
         ? $section1::divides_Z(r, p)
-1release thm prime_divides_or_is_relatively_prime(r, p)
+        release thm prime_divides_or_is_relatively_prime(r, p)
         by cases:
             ? $section1::divides_Z(r, p)
             case $section1::divides_Z(r, p):
                 $section1::divides_Z(r, p)
             case $section3::relatively_prime_Z(r, p):
-1release thm section3::theorem_III_2_euclid_lemma(r, p, p)
+                release thm section3::theorem_III_2_euclid_lemma(r, p, p)
                 $section1::divides_Z(r, p)
     by def:
         ? $is_prime_Z(p)
@@ -246,11 +260,11 @@ thm proper_positive_divisor_of_prime_square:
         by contra:
             ? u > 0
             u <= 0
-            p * (-1 * u) >= 0
-            p * (-1 * u) = -1 * (p * u)
-            -1 * (p * u) >= 0
-            -1 * (-1 * (p * u)) <= 0
-            p * u = -1 * (-1 * (p * u)) <= 0
+            p * ((-1) * u) >= 0
+            p * ((-1) * u) = (-1) * (p * u)
+            (-1) * (p * u) >= 0
+            (-1) * ((-1) * (p * u)) <= 0
+            p * u = (-1) * ((-1) * (p * u)) <= 0
             d = p * u <= 0
             impossible d > 1
     p * p = p ^ 2 = d * v = p * u * v = p * (u * v)
@@ -293,18 +307,18 @@ thm theorem_IV_1_prime_divides_finite_product:
                         $section1::divides_Z(p, section3::finite_product_from_one(f, 1))
                         =>:
                             $prime_divides_some_factor(p, 1, f)
-1release thm section3::finite_product_from_one_successor(f, 0)
+                    release thm section3_finite_product_from_one_successor(f, 0)
                     obtain q from exist q Z st {section3::finite_product_from_one(f, 1) = p * q}
                     witness exist r Z st {section3::finite_product_from_one(f, 0) * f(1) = p * r} from q:
                         section3::finite_product_from_one(f, 0) * f(1) = section3::finite_product_from_one(f, 1) = p * q
                     by def:
                         ? $section1::divides_Z(p, section3::finite_product_from_one(f, 0) * f(1))
-1release thm theorem_IV_1_prime_divides_binary_product(p, section3::finite_product_from_one(f, 0), f(1))
+                    release thm theorem_IV_1_prime_divides_binary_product(p, section3::finite_product_from_one(f, 0), f(1))
                     by cases:
                         ? $prime_divides_some_factor(p, 1, f)
                         case $section1::divides_Z(p, section3::finite_product_from_one(f, 0)):
-                            section3::finite_product_from_one(f, 0) = 1
-1release thm section1::positive_divisor_of_one_is_one(p)
+                            release thm section3_finite_product_from_one_zero(f)
+                            release thm section1::positive_divisor_of_one_is_one(p)
                             p = 1
                             impossible p > 1
                         case $section1::divides_Z(p, f(1)):
@@ -321,13 +335,13 @@ thm theorem_IV_1_prime_divides_finite_product:
                         $section1::divides_Z(p, section3::finite_product_from_one(f, k + 1))
                         =>:
                             $prime_divides_some_factor(p, k + 1, f)
-1release thm section3::finite_product_from_one_successor(f, k)
+                    release thm section3_finite_product_from_one_successor(f, k)
                     obtain q from exist q Z st {section3::finite_product_from_one(f, k + 1) = p * q}
                     witness exist r Z st {section3::finite_product_from_one(f, k) * f(k + 1) = p * r} from q:
                         section3::finite_product_from_one(f, k) * f(k + 1) = section3::finite_product_from_one(f, k + 1) = p * q
                     by def:
                         ? $section1::divides_Z(p, section3::finite_product_from_one(f, k) * f(k + 1))
-1release thm theorem_IV_1_prime_divides_binary_product(p, section3::finite_product_from_one(f, k), f(k + 1))
+                    release thm theorem_IV_1_prime_divides_binary_product(p, section3::finite_product_from_one(f, k), f(k + 1))
                     by cases:
                         ? $prime_divides_some_factor(p, k + 1, f)
                         case $section1::divides_Z(p, section3::finite_product_from_one(f, k)):
@@ -390,8 +404,8 @@ thm prime_factorization_exists:
                     idx_i = 1
                     f2(idx_i) = 2
                     $is_prime_Z(2)
-1release thm section3::finite_product_from_one_successor(f2, 0)
-                section3::finite_product_from_one(f2, 0) = 1
+                release thm section3_finite_product_from_one_successor(f2, 0)
+                release thm section3_finite_product_from_one_zero(f2)
                 f2(1) = 2
                 section3::finite_product_from_one(f2, 1) = section3::finite_product_from_one(f2, 0) * f2(1) = 1 * 2 = 2
                 by def:
@@ -408,7 +422,7 @@ thm prime_factorization_exists:
                             exist r N+, f fn(idx_i N+) Z st {$prime_factorization_Z(m, r, f)}
                     =>:
                         exist r N+, f fn(idx_i N+) Z st {$prime_factorization_Z(b + 1, r, f)}
-1release thm prime_divisor_exists(b + 1)
+                release thm prime_divisor_exists(b + 1)
                 obtain p from exist p Z st {$is_prime_Z(p), $section1::divides_Z(p, b + 1)}
                 obtain q from exist q Z st {b + 1 = p * q}
                 claim:
@@ -418,11 +432,11 @@ thm prime_factorization_exists:
                         q <= 0
                         p > 1
                         p > 0
-                        p * (-1 * q) >= 0
-                        p * (-1 * q) = -1 * (p * q)
-                        -1 * (p * q) >= 0
-                        -1 * (-1 * (p * q)) <= 0
-                        p * q = -1 * (-1 * (p * q)) <= 0
+                        p * ((-1) * q) >= 0
+                        p * ((-1) * q) = (-1) * (p * q)
+                        (-1) * (p * q) >= 0
+                        (-1) * ((-1) * (p * q)) <= 0
+                        p * q = (-1) * ((-1) * (p * q)) <= 0
                         b + 1 = p * q <= 0
                         b + 1 > 0
                         impossible b + 1 <= 0
@@ -444,8 +458,8 @@ thm prime_factorization_exists:
                                 idx_i = 1
                                 fp(idx_i) = p
                                 $is_prime_Z(p)
-1release thm section3::finite_product_from_one_successor(fp, 0)
-                            section3::finite_product_from_one(fp, 0) = 1
+                            release thm section3_finite_product_from_one_successor(fp, 0)
+                            release thm section3_finite_product_from_one_zero(fp)
                             fp(1) = p
                             section3::finite_product_from_one(fp, 1) = section3::finite_product_from_one(fp, 0) * fp(1) = 1 * p = p = b + 1
                             by def:
@@ -494,7 +508,7 @@ thm prime_factorization_exists:
                                         idx_i - 1 <= r
                                         $is_prime_Z(f(idx_i - 1))
                                         g(idx_i) = f(idx_i - 1)
-1release thm section3::finite_product_from_one_prepend(p, f, g, r)
+                            release thm section3::finite_product_from_one_prepend(p, f, g, r)
                             b + 1 = p * q = p * section3::finite_product_from_one(f, r) = section3::finite_product_from_one(g, r + 1)
                             by def:
                                 ? $prime_factorization_Z(b + 1, r + 1, g)
@@ -550,7 +564,7 @@ thm theorem_IV_2_prime_factorization:
         a > 1
         =>:
             $prime_factorization_statement(a)
-1release thm prime_factorization_exists(a)
+    release thm prime_factorization_exists(a)
     trust forall n, m N+, f fn(idx_i N+) Z, g fn(j N+) Z:
         $prime_factorization_Z(a, n, f)
         $prime_factorization_Z(a, m, g)
@@ -665,12 +679,12 @@ thm positive_index_divides_factorial_Z:
 thm theorem_IV_3_infinitely_many_primes:
     ? forall n N+:
         exist p Z st {p > n, $is_prime_Z(p)}
-1release thm factorial_Z_positive(n)
+    release thm factorial_Z_positive(n)
     factorial_Z(n) $in Z
     factorial_Z(n) > 0
     factorial_Z(n) >= 1
     factorial_Z(n) + 1 > 1
-1release thm prime_divisor_exists(factorial_Z(n) + 1)
+    release thm prime_divisor_exists(factorial_Z(n) + 1)
     obtain p from exist p Z st {$is_prime_Z(p), $section1::divides_Z(p, factorial_Z(n) + 1)}
     claim:
         ? p > n
@@ -679,14 +693,14 @@ thm theorem_IV_3_infinitely_many_primes:
             p <= n
             p > 1
             p $in N
-1release thm positive_index_divides_factorial_Z(p, n)
+            release thm positive_index_divides_factorial_Z(p, n)
             obtain a from exist a Z st {factorial_Z(n) = p * a}
             obtain b from exist b Z st {factorial_Z(n) + 1 = p * b}
             witness exist q Z st {1 = p * q} from b - a:
                 1 = (factorial_Z(n) + 1) - factorial_Z(n) = p * b - p * a = p * (b - a)
             by def:
                 ? $section1::divides_Z(p, 1)
-1release thm section1::positive_divisor_of_one_is_one(p)
+            release thm section1::positive_divisor_of_one_is_one(p)
             p = 1
             impossible p > 1
     witness exist q Z st {q > n, $is_prime_Z(q)} from p:

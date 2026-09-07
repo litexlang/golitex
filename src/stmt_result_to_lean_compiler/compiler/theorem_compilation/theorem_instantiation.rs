@@ -245,6 +245,34 @@ impl StmtResultToLeanCompiler {
                         None,
                         None,
                     )
+                } else if matches!(parameter_set, Obj::StandardSet(StandardSet::C)) {
+                    // C forall binders are exposed as complex host values,
+                    // but the theorem body may have selected the exact C
+                    // representative through its membership proof.  Pass
+                    // that same checked representative at the call site so
+                    // the source and target conclusion contexts retain an
+                    // explicit bridge instead of comparing `In.rep` with a
+                    // bare complex term by syntax.
+                    let exact_argument =
+                        format!("(Litex.In.rep {rendered_argument} ({parameter_proof}))");
+                    let rendered_set = render_obj(parameter_set, &self.environment_stack)?;
+                    let exact_membership = format!("Litex.In.own {rendered_set} {exact_argument}");
+                    let exact_to_source = if object_has_closed_complex_carrier(argument) {
+                        render_complex_same_from_membership(
+                            &rendered_argument,
+                            &exact_argument,
+                            &parameter_proof,
+                        )
+                    } else {
+                        format!(
+                            "Litex.Same.symm (Litex.In.same_rep {rendered_argument} ({parameter_proof}))"
+                        )
+                    };
+                    (
+                        exact_argument,
+                        Some(exact_membership),
+                        Some(exact_to_source),
+                    )
                 } else if exact_object_parameter {
                     let exact_complex_parameter =
                         matches!(parameter_set, Obj::StandardSet(StandardSet::C));

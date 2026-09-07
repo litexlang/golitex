@@ -431,12 +431,18 @@ fn checked_named_function_reduction_inside_forall_uses_wd_scope_fact_ids() {
     assert!(compiler
         .compile_direct_forall_fact_result(forall_result)
         .expect("compile checked reduction under the forall Result environment"));
-    assert!(compiler.declarations.last().is_some_and(|declaration| {
-        declaration.contains("unfold Litex.fnApplyWhereOwn reciprocal")
-            && declaration.contains("__domain1")
-            && declaration.contains("Litex.Same.refl")
-            && declaration.contains("(a : ℝ)")
-    }));
+    assert!(
+        compiler.declarations.last().is_some_and(|declaration| {
+            declaration.contains("unfold Litex.fnApplyWhereOwn reciprocal")
+                && declaration.contains("__domain1")
+                && declaration.contains("Litex.Same.refl")
+                // R/C forall binders use the native complex host carrier; the
+                // checked WD fact remains the scope evidence we care about.
+                && declaration.contains("∀ (__p1 : ℂ)")
+        }),
+        "generated declarations: {:?}",
+        compiler.declarations
+    );
 }
 
 #[test]

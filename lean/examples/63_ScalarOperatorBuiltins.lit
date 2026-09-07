@@ -61,14 +61,3 @@ forall x R:
     x != 0
     =>:
         0 < abs(x)
-
-forall a, b R:
-    0 <= b
-    =>:
-        a <= a + b
-
-forall a, b, c R:
-    a <= b
-    0 <= c
-    =>:
-        a - c <= b

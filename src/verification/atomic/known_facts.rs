@@ -750,6 +750,18 @@ impl Runtime {
         fact_transformation: Option<FactTransformationEvidence>,
     ) -> ProveFactResult {
         let Some(fact_transformation) = fact_transformation else {
+            // A resolver can return the same semantic fact with only nested
+            // binder spelling changed.  In that exact-identity case no
+            // transport step is needed; keep the verified result.  Any other
+            // unresolved retarget still remains unavailable, so a proof for a
+            // different fact cannot cross the WD/truth boundary.
+            let goal_fact: Fact = goal.clone().into();
+            if result.factual_success().is_some_and(|success| {
+                nested_obj_binder_normalized_fact_key(&success.fact())
+                    == nested_obj_binder_normalized_fact_key(&goal_fact)
+            }) {
+                return result;
+            }
             // The recursive lookup proved the resolved proposition, not the
             // original goal.  Without replayable transformation evidence it
             // must not leak that proof across the result boundary: the WD and
