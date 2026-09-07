@@ -80,14 +80,17 @@ have fn lim by exist!:
         $is_convergent_sequence(a)
         =>:
             exist! L R st {$has_limit(a, L)}
-    obtain L from $is_convergent_sequence(a)
-    claim:
-        ? forall L1, L2 R:
-            $has_limit(a, L1)
-            $has_limit(a, L2)
-            =>:
-                L1 = L2
-        by thm sequence_limit_unique(a, L1, L2) => L1 = L2
+    obtain candidate from $is_convergent_sequence(a)
+    witness exist! L R st {$has_limit(a, L)} from candidate:
+        L = candidate
+        $has_limit(a, L)
+        claim:
+            ? forall L1, L2 R:
+                $has_limit(a, L1)
+                $has_limit(a, L2)
+                =>:
+                    L1 = L2
+            by thm sequence_limit_unique(a, L1, L2) => L1 = L2
 
 forall a seq(R):
     $is_convergent_sequence(a)

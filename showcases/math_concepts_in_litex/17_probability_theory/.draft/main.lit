@@ -80,6 +80,7 @@ thm generators_are_in_generated_sigma_algebra:
             by def $is_sigma_algebra_containing(X, generators, candidate_events)
         by def $belongs_to_every_sigma_algebra_containing(X, generators, event)
         by thm set_builder_member(event, {candidate_event power_set(X): $belongs_to_every_sigma_algebra_containing(X, generators, candidate_event)}) => event $in {candidate_event power_set(X): $belongs_to_every_sigma_algebra_containing(X, generators, candidate_event)}
+        \generated_sigma_algebra<X>(generators) = {candidate_event power_set(X): $belongs_to_every_sigma_algebra_containing(X, generators, candidate_event)}
         event $in \generated_sigma_algebra<X>(generators)
     by def:
         ? generators $subset \generated_sigma_algebra<X>(generators)
@@ -90,6 +91,7 @@ thm belongs_to_every_sigma_algebra_containing_implies_generated_membership:
         =>:
             event $in \generated_sigma_algebra<X>(generators)
     by thm set_builder_member(event, {candidate_event power_set(X): $belongs_to_every_sigma_algebra_containing(X, generators, candidate_event)}) => event $in {candidate_event power_set(X): $belongs_to_every_sigma_algebra_containing(X, generators, candidate_event)}
+    \generated_sigma_algebra<X>(generators) = {candidate_event power_set(X): $belongs_to_every_sigma_algebra_containing(X, generators, candidate_event)}
     event $in \generated_sigma_algebra<X>(generators)
 
 thm generated_membership_implies_belongs_to_every_sigma_algebra_containing:
@@ -183,9 +185,9 @@ have real_open_intervals power_set(power_set(R)) = {interval power_set(R): $is_r
 
 have borel_sigma_algebra_on_R power_set(power_set(R)) = \generated_sigma_algebra<R>(real_open_intervals)
 
-by thm generated_sigma_algebra_is_sigma_algebra(R, real_open_intervals) => $is_sigma_algebra(R, \generated_sigma_algebra<R>(real_open_intervals))
-borel_sigma_algebra_on_R = \generated_sigma_algebra<R>(real_open_intervals)
-$is_sigma_algebra(R, borel_sigma_algebra_on_R)
+release thm generated_sigma_algebra_is_sigma_algebra(R, real_open_intervals)
+borel_sigma_algebra_on_R = \main::generated_sigma_algebra<R>(real_open_intervals)
+$is_sigma_algebra(R, \main::generated_sigma_algebra<R>(real_open_intervals))
 
 thm real_open_interval_is_borel:
     ? forall left, right R:
@@ -204,7 +206,7 @@ thm real_open_interval_is_borel:
         {x R: left < x < right} $in real_open_intervals
     by thm generators_are_in_generated_sigma_algebra(R, real_open_intervals) => real_open_intervals $subset \generated_sigma_algebra<R>(real_open_intervals)
     {x R: left < x < right} $in \generated_sigma_algebra<R>(real_open_intervals)
-    borel_sigma_algebra_on_R = \generated_sigma_algebra<R>(real_open_intervals)
+    borel_sigma_algebra_on_R = \main::generated_sigma_algebra<R>(real_open_intervals)
     {x R: left < x < right} $in borel_sigma_algebra_on_R
 
 # Event families now use the same checked indexed-set algebra as ordinary
@@ -302,6 +304,7 @@ thm pushforward_probability_is_distribution:
         =>:
             $is_distribution_of(Omega, events, probability, Target, target_events, X, \pushforward_probability<Omega, events, probability, Target, target_events, X>)
     let pushforward = \pushforward_probability<Omega, events, probability, Target, target_events, X>
+    pushforward = fn(target_event target_events) R {probability({omega Omega: X(omega) $in target_event})}
     claim:
         ? forall target_event target_events:
             {omega Omega: X(omega) $in target_event} $in events
@@ -478,6 +481,9 @@ thm pushforward_probability_is_probability_space:
                     witness exist candidate_index N+ st {X(point) $in family(candidate_index)} from idx
                     X(point) $in index_union(N+, Target, fn(n N+) power_set(Target) {family(n)})
                     by thm set_builder_member(point, {omega Omega: X(omega) $in index_union(N+, Target, fn(n N+) power_set(Target) {family(n)})}) => point $in {omega Omega: X(omega) $in index_union(N+, Target, fn(n N+) power_set(Target) {family(n)})}
+        index_union(N+, Target, fn(n N+) power_set(Target) {family(n)}) $in target_events
+        pushforward(index_union(N+, Target, fn(n N+) power_set(Target) {family(n)})) = probability({omega Omega: X(omega) $in index_union(N+, Target, fn(n N+) power_set(Target) {family(n)})})
+        probability({omega Omega: X(omega) $in index_union(N+, Target, fn(n N+) power_set(Target) {family(n)})}) = probability(source_union)
         pushforward(index_union(N+, Target, fn(n N+) power_set(Target) {family(n)})) = probability({omega Omega: X(omega) $in index_union(N+, Target, fn(n N+) power_set(Target) {family(n)})}) = probability(source_union)
         $has_series_sum(fn(n N+) R {pushforward(family(n))}, pushforward(index_union(N+, Target, fn(n N+) power_set(Target) {family(n)})))
     by def $is_probability_space(Target, target_events, pushforward)
@@ -772,6 +778,8 @@ thm probability_of_two_event_sequence:
         ? sequence_probability(two_events(A, B, n)) = two_term_sequence(sequence_probability(A), sequence_probability(B), n)
         case n = 1:
             two_events(A, B, n) = A
+            two_events(A, B, n) $in sequence_events
+            \two_event_sequence<sequence_Omega, sequence_events>(A, B, n) $in sequence_events
             two_term_sequence(sequence_probability(A), sequence_probability(B), n) = sequence_probability(A)
             sequence_probability(two_events(A, B, n)) = sequence_probability(A) = two_term_sequence(sequence_probability(A), sequence_probability(B), n)
         case n > 1:
@@ -782,6 +790,8 @@ thm probability_of_two_event_sequence:
                 case n - 1 = 1:
                     n = (n - 1) + 1 = 1 + 1 = 2
                     two_events(A, B, n) = B
+                    two_events(A, B, n) $in sequence_events
+                    \two_event_sequence<sequence_Omega, sequence_events>(A, B, n) $in sequence_events
                     one_term_sequence(sequence_probability(B), n - 1) = sequence_probability(B)
                     two_term_sequence(sequence_probability(A), sequence_probability(B), n) = one_term_sequence(sequence_probability(B), n - 1) = sequence_probability(B)
                     sequence_probability(two_events(A, B, n)) = sequence_probability(B) = two_term_sequence(sequence_probability(A), sequence_probability(B), n)
@@ -791,6 +801,8 @@ thm probability_of_two_event_sequence:
                     1 + 1 = 2
                     n > 2
                     two_events(A, B, n) = {}
+                    two_events(A, B, n) $in sequence_events
+                    \two_event_sequence<sequence_Omega, sequence_events>(A, B, n) $in sequence_events
                     sequence_probability(two_events(A, B, n)) = sequence_probability({}) = 0
                     one_term_sequence(sequence_probability(B), n - 1) = 0
                     two_term_sequence(sequence_probability(A), sequence_probability(B), n) = one_term_sequence(sequence_probability(B), n - 1) = 0
@@ -861,6 +873,8 @@ thm two_event_probability_series_has_sum:
             ? probability_terms(term_index) = two_term_sequence(series_probability(A), series_probability(B), term_index)
             case term_index = 1:
                 two_events(A, B, term_index) = A
+                two_events(A, B, term_index) $in series_events
+                \two_event_sequence<series_Omega, series_events>(A, B, term_index) $in series_events
                 two_term_sequence(series_probability(A), series_probability(B), term_index) = series_probability(A)
                 probability_terms(term_index) = series_probability(two_events(A, B, term_index)) = series_probability(A) = two_term_sequence(series_probability(A), series_probability(B), term_index)
             case term_index > 1:
@@ -871,6 +885,8 @@ thm two_event_probability_series_has_sum:
                     case term_index - 1 = 1:
                         term_index = (term_index - 1) + 1 = 1 + 1 = 2
                         two_events(A, B, term_index) = B
+                        two_events(A, B, term_index) $in series_events
+                        \two_event_sequence<series_Omega, series_events>(A, B, term_index) $in series_events
                         one_term_sequence(series_probability(B), term_index - 1) = series_probability(B)
                         two_term_sequence(series_probability(A), series_probability(B), term_index) = one_term_sequence(series_probability(B), term_index - 1) = series_probability(B)
                         probability_terms(term_index) = series_probability(two_events(A, B, term_index)) = series_probability(B) = two_term_sequence(series_probability(A), series_probability(B), term_index)
@@ -880,6 +896,8 @@ thm two_event_probability_series_has_sum:
                         1 + 1 = 2
                         term_index > 2
                         two_events(A, B, term_index) = {}
+                        two_events(A, B, term_index) $in series_events
+                        \two_event_sequence<series_Omega, series_events>(A, B, term_index) $in series_events
                         series_probability(two_events(A, B, term_index)) = series_probability({}) = 0
                         one_term_sequence(series_probability(B), term_index - 1) = 0
                         two_term_sequence(series_probability(A), series_probability(B), term_index) = one_term_sequence(series_probability(B), term_index - 1) = 0

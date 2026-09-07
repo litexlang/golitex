@@ -18,9 +18,7 @@ thm cancel_nonzero_factor_214:
         =>:
             x = y
     x * k - y * k = 0
-    (x - y) * k = x * k - y * k = 0
-    x - y = 0
-    x = y
+    x = (x * k) / k = (y * k) / k = y
 
 # 普通无向角的标量选根：平方关系结合点积同号，排除补角对应的负根。
 thm same_sign_double_from_squares_214:
@@ -36,7 +34,11 @@ thm same_sign_double_from_squares_214:
             y^2 = 0
             4 * y^2 = 0
             x^2 = 4 * y^2 = 0
-            x = 0
+            by contra:
+                ? x = 0
+                x != 0
+                x^2 > 0
+                impossible x^2 = 0
             x = 2 * y
         case not y = 0:
             by contra:
@@ -44,7 +46,12 @@ thm same_sign_double_from_squares_214:
                 x != 2 * y
                 x - 2 * y != 0
                 (x - 2 * y) * (x + 2 * y) = x^2 - (2 * y)^2 = x^2 - 4 * y^2 = 0
-                x + 2 * y = 0
+                by cases:
+                    ? x + 2 * y = 0
+                    case x - 2 * y = 0:
+                        impossible x - 2 * y != 0
+                    case x + 2 * y = 0:
+                        x + 2 * y = 0
                 (x + 2 * y) * y = 0
                 x * y + 2 * y^2 = 0
                 y^2 > 0

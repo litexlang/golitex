@@ -313,6 +313,7 @@ thm continuous_image_of_compact_is_compact:
                 target_open = cover(selected_index)
                 f(point) $in cover(selected_index)
                 by thm set_builder_member(point, {x X: f(x) $in cover(selected_index)}) => point $in {x X: f(x) $in cover(selected_index)}
+                pullback_cover(selected_index) = {x X: f(x) $in cover(selected_index)}
                 point $in pullback_cover(selected_index)
                 pullback_cover(selected_index) $in fn_range(pullback_cover)
                 point $in big_union(fn_range(pullback_cover))

@@ -52,7 +52,7 @@ thm square_function_has_derivative_at:
             by def $derivative_delta_controlled(square_function, x0, 2 * x0, epsilon, delta)
     by def $has_derivative_at_R(square_function, x0, 2 * x0)
 
-by thm square_function_has_derivative_at(3) => $has_derivative_at_R(square_function, 3, 6)
+release thm square_function_has_derivative_at(3)
 
 # Differentiability records existence of a candidate. This first version keeps
 # the derivative relational; it does not assume a trusted global selector.
@@ -112,8 +112,8 @@ thm square_function_is_differentiable_at:
     by thm derivative_candidate_implies_differentiable(square_function, x0, 2 * x0) => $is_differentiable_at_R(square_function, x0)
 
 \affine_function<3, 2>(4) = 14
-by thm affine_function_has_derivative_at(3, 2, 4) => $has_derivative_at_R(\affine_function<3, 2>, 4, 3)
-by thm derivative_candidate_implies_differentiable(\affine_function<3, 2>, 4, 3) => $is_differentiable_at_R(\affine_function<3, 2>, 4)
+release thm affine_function_has_derivative_at(3, 2, 4)
+release thm derivative_candidate_implies_differentiable(\affine_function<3, 2>, 4, 3)
 
 # At x0=3 the derivative 6 becomes the slope of the displayed tangent. The
 # remaining error is exactly quadratic, not hidden behind automation.

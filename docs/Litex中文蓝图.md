@@ -14,7 +14,7 @@
 
 > **Litex 是测试版（beta）的实验性爱好项目，可能存在边缘问题。**
 
-<!-- 蓝图主线：AI 带来的推理过剩 → 科学对象 → 设计假设 → 可测成本 → 潜在能力影响 → 验证与理解的双重瓶颈 → 两种参与门槛 → 四项语言设计 → 可读运行机制与可检查知识记录 → 数学实践中的定义与验证 → ToLean/adapter 接续 → 人类、AI 与 Litex 的端到端知识生产闭环 → 生态角色 → 从 AI for Math 走向 AI 时代的可信高效推理 → 成功标准 -->
+<!-- 蓝图主线：AI 带来的推理过剩 → 科学对象 → 设计假设 → 可测成本 → 潜在能力影响 → 验证与理解的双重瓶颈 → 两种参与门槛 → 四项语言设计 → 数学实践中的定义与验证 → 可检查知识记录 → ToLean/adapter 接续 → 人类、AI 与 Litex 的端到端知识生产闭环 → 生态角色 → 从 AI for Math 走向 AI 时代的可信高效推理 → 成功标准 -->
 
 <!--
 Litex 定位四层检查（写作时逐层核对；面向不同受众可以调整强调重点，但不能混淆层级）：
@@ -31,10 +31,10 @@ Litex 定位四层检查（写作时逐层核对；面向不同受众可以调�
 - [1. Litex 的数学基础：从最广为人熟悉的集合论出发](#set-theory)
 - [2. 事实导向：把“什么成立”写进源码](#fact-oriented)
 - [3. 自下而上：让已证明的事实推动后续证明](#bottom-up)
-- [4. Lean 兼容：为已覆盖路径提供独立复核](#compatibility)
+- [4. Litex的数学实践：定义与验证](#mathematics-practice)
+- [5. 每句话都留下什么：可检查知识记录](#execution-model)
+- [6. Lean 兼容：为已覆盖路径提供独立复核](#compatibility)
   - [小结：自下而上与自上而下互补](#summary-bottom-up-and-top-down)
-- [5. Litex 如何运行：从数学语句到可检查知识记录](#execution-model)
-- [6. Litex的数学实践：定义与验证](#mathematics-practice)
 - [7. 人类、AI 与 Litex 的端到端知识生产闭环](#interaction-loop)
   - [小结：事实导向与自下而上的闭环优势](#summary-fact-oriented-bottom-up-loop)
 - [8. 从语言到生态：Litex 想扮演什么角色](#ecosystem-role)
@@ -632,204 +632,9 @@ Mizar、Isar、ACL2 和 Naproche 已支持前向文本、定理累积或逐步�
 
 </details>
 
-<a id="compatibility"></a>
-
-## 4. Lean 兼容：为已覆盖路径提供独立复核
-
-Litex 可独立工作，拥有语法、运行时和验证内核；不编译成 Lean 也能检查良定义性与事实并提供反馈。Litex通常被认为更适合日常的数学写作和局部验证。
-
-但在大型数学系统上，Lean有不可比拟的优势：Lean/Mathlib生态成熟、可复用的数学对象和定理库丰富、内核小而可审计。Litex需要和现有的形式化系统兼容，这样才能让用户在Litex中写的数学成果被更广泛地复用和验证。同时Lean社区也能从Litex中受益，Litex可以在一些数学方向为Lean提供更易读、更易写的数学接口。
-
-*编译器还为 Litex 提供独立保障。* 当前 `src/` 下 Rust 源码接近 20 万行，含数百条规则；其可信实现面远大于 Lean 小内核，也更难完整审核。_目前Litex到Lean的编译器的覆盖尚未完全完成，但原理上这样的覆盖是可行的。我们预计2027年前会完成这一工作。_
-
-<details>
-<summary><strong>完整例子：证明“收敛数列乘常数后仍然收敛”，并将证明交给 Lean/Mathlib</strong></summary>
-
-先说明我们要证明什么。设实数数列 `s` 收敛到 `a`，`c` 是任意实数。我们要证明新数列 `n ↦ c * s(n)` 收敛到 `c * a`：
-
-`s(n) → a  ⟹  c * s(n) → c * a`
-
-证明的核心是误差控制。给定任意 `epsilon > 0`，从 `s` 的收敛性中取误差 `epsilon / (abs(c) + 1)` 所对应的位置 `N0`。当 `n >= N0` 时，利用
-
-`abs(c * s(n) - c * a) = abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < epsilon`
-
-即可得到新数列也收敛。因为 `abs(c) + 1` 始终为正，这种写法不需要另外讨论 `c = 0`。
-
-这个例子不只展示最终定理，还展示同一份证明证据怎样从 Litex 交给 Lean/Mathlib。在当前已支持的编译路径上，Litex 首先检查源码中的定义、事实与证明证据；ToLean 再将已接受的定理编译为 Lean 代码，由 Lean 内核独立复核；最后，一层简短的手写 adapter 将生成定理导出为 Mathlib 的原生接口，例如 `Filter.Tendsto`。
-
-`Litex 源码 → Litex 验证 → ToLean 编译 → Lean 内核复核 → 手写 adapter → Mathlib 定理`
-
-下面沿着这条证据链，依次看每一层实际写什么。完整的 Litex 证明会在下文再次逐步解释。
-
-#### 1. Litex 源码：定义收敛并证明常数倍仍然收敛
-
-人类或 AI 在 Litex 中写下数学定义、条件和事实链。Litex 验证通过后，`converges_to_mul_const` 才会进入可供编译的已接受上下文。
-
-<!-- litex:skip-test -->
-
-```litex
-# main.lit
-prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):
-    forall n N:
-        n >= N0
-        =>:
-            abs(s(n) - a) < epsilon
-
-prop converges_to(s fn(n N) R, a R):
-    forall epsilon R+:
-        exist N0 N st {$is_eventually_close(s, a, epsilon, N0)}
-
-thm converges_to_mul_const:
-    ? forall s fn(n N) R, a, c R:
-        $converges_to(s, a)
-        =>:
-            $converges_to(fn(n N) R {c * s(n)}, c * a)
-    claim:
-        ? forall epsilon R+:
-            exist N0 N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)}
-        abs(c) + 1 > 0
-        epsilon / (abs(c) + 1) $in R+
-        obtain N0 from exist K N st {$is_eventually_close(s, a, epsilon / (abs(c) + 1), K)}
-        witness exist K N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, K)} from N0:
-            forall n N:
-                n >= N0
-                =>:
-                    abs(s(n) - a) < epsilon / (abs(c) + 1)
-                    abs(c * s(n) - c * a) = abs(c * (s(n) - a)) = abs(c) * abs(s(n) - a)
-                    abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < (abs(c) + 1) * (epsilon / (abs(c) + 1)) = epsilon
-                    abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon
-            by def $is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)
-    by def $converges_to(fn(n N) R {c * s(n)}, c * a)
-```
-
-#### 2. ToLean 生成代码：把已接受定理变成 Lean 证明对象
-
-ToLean 根据 Litex 保存的验证依据生成定义、定理和证明项。下面是生成文件的结构化节选；包装参数和较长的证明体已省略，生成文件不由用户手改。
-
-```lean
--- LitexGenerate.lean（由 ToLean 生成，节选）
-namespace __Compiler_main
-
-def is_eventually_close (...) : Prop := ...
-def converges_to (...) : Prop := ...
-
-theorem converges_to_mul_const :
-    ∀ (s : (Litex.fnSet Litex.N Litex.R).Carrier) ...,
-      converges_to (...) (...) := by
-  -- 较长的生成证明体在此节选中省略。
-  ...
-
-end __Compiler_main
-```
-
-这段生成代码交给 Lean 时，Lean 内核检查最终证明对象，而不是信任 Litex 验证器给出的“成功”标签。
-
-#### 3. 手写 adapter：调用生成定理并转换表示
-
-adapter 不修改生成文件。它调用生成定理，再把 Litex 的数列、成员证据与收敛定义转换为 Mathlib 使用的表示。关键调用可以保持很短：
-
-```lean
--- LitexToMathlib.lean（手写 adapter，节选）
-import LitexGenerate
-
-have generated :=
-  __Compiler_main.converges_to_mul_const s sIn a aIn c cIn h
-```
-
-实际的表示桥接集中在一个可单独审核的定理中：
-
-```lean
--- LitexToMathlib.lean（表示桥接，节选）
-theorem tendsto_of_generated_convergesTo
-    (s : LitexRealSequence)
-    (a : ℝ)
-    (h : __Compiler_main.converges_to s a) :
-    Filter.Tendsto (toMathlibSequence s) Filter.atTop (nhds a) := by
-  rw [Metric.tendsto_nhds]
-  -- 从生成的收敛证据中取出 N，并转换成 Mathlib 的 eventually_atTop 证明。
-  ...
-```
-
-#### 4. Mathlib 接口：结论成为 `Filter.Tendsto` 定理
-
-完成桥接后，定理的结论已经使用 Mathlib 的数列极限接口；后续 Lean 代码可以按普通 `Filter.Tendsto` 定理复用它。
-
-```lean
--- LitexToMathlib.lean（Mathlib-facing 定理，节选）
-theorem tendsto_mul_const_from_generated (...) :
-    Filter.Tendsto
-      (toMathlibSequence (scaleSequence c s))
-      Filter.atTop
-      (nhds (c * a)) := by
-  have generated :=
-    __Compiler_main.converges_to_mul_const s sIn a aIn c cIn h
-  exact tendsto_of_generated_convergesTo _ _ generated
-```
-
-这证明一条已覆盖路径完整走通，不代表所有 Litex 源码都能编译。折叠示例中的生成代码和 adapter 均为关键结构节选，省略号表示未展示的包装细节或证明体。
-
-</details>
-
-<details>
-<summary><strong>Litex 到 Lean 的编译器如何工作</strong></summary>
-
-总结来说，Litex到Lean的编译器的工作原理是，Litex 保留验证路径，把每个已支持步骤映射为 Lean 定理或证明构造，再组装成证明对象。Mathlib 对集合论数学的支持使这条路线自然可行。
-
-实现它需要两层映射：验证路径映射为 Lean 证明构造；数学对象通过设计过的包装层映射为 Lean 表示，而非机械直译。这需要持续开发和验证；中介代码见 https://github.com/litexlang/golitex/blob/main/lean/Litex/Core.lean。
-
-编译器有两个底层问题。其一是如何在 Lean/Mathlib 中表示 Litex 数学。同一对象常有多种等价写法，选择会长期影响 Mathlib 复用、Litex 扩展与生态协作；函数、集合、成员和良定义性必须采用一致、可持续的表示。
-
-其二是把成功执行的信息变成 Lean 证明。搜索树的成功分支必须结构化返回规则、事实、对象、子证明和良定义性结果，并保留声明与作用域变化，使编译器能确定性重放路径，而非从显示文本重建或让 Lean 重新搜索。
-
-</details>
-
-Litex 不取代 Lean：前者提供数学写作接口，后者提供小内核复核与生态复用。已覆盖路径可形成可验证、可审核、可复用的流程；其余部分必须标明边界。
-
-<a id="summary-bottom-up-and-top-down"></a>
-
-### 小结：自下而上与自上而下互补
-
-数学实践中，自下而上的事实积累与自上而下的目标分解并不是二选一，而是同时存在、相互校验的两种方向。Litex 与 Lean 的设计思路因此是互补的：Litex 让作者从对象、条件和已验证事实出发，逐步生长一条可读的证明流；Lean 则从明确目标出发，通过目标分解和证明项构造，把结果交给小内核独立检查。两者可以在同一条工作流中分工，而不必争论哪一种方向“更正确”。
-
-从我的观察看，AI 在 *fact-oriented* 表达和自下而上的局部推进上往往表现得很自然，可能与其训练材料有关：互联网中的知识大多以事实、结论和局部推导的形式组织，模型从这些数据中学习到相应的模式。但这只是关于数据分布和模型行为的工作假设，不是对所有模型或任务的普遍结论。
-
-同时，AI 的训练也围绕目标函数和奖励信号展开。这里的“奖励”不等同于 Transformer 架构本身；更准确地说，Transformer 提供表示与生成架构，训练过程再通过损失函数以及在某些阶段使用的偏好/奖励优化模型行为。因而，AI 未必天然具备稳定的、从第一性原理自下而上展开的推理能力；在许多任务中，它更容易从期望结果或评价信号反向组织一条看起来能够到达结果的路径。
-
-因此，两种思维模式都很宝贵：自下而上适合积累可复用的局部事实、暴露中间依据；自上而下适合澄清目标、选择方向、压缩搜索空间。Litex 与 Lean 的连接，正可以把这两种方向放进同一条可检查的证据链，并让人类和 AI 在各自擅长的方向上协作。
-
-<a id="execution-model"></a>
-
-## 5. Litex 如何运行：从数学语句到可检查知识记录
-
-我们阅读数学时，看到一句话，通常会在脑中回溯它依赖的定义、前提和前面事实。Litex 保留这种日常的数学心流，并把这些联系外化为可以检查和阅读的结构化记录。
-
-Litex 的实现可以随着规则、标准库、知识图和 Lean 接口不断扩大，但核心运行概念仍然可以保持短而容易理解：
-
-```text
-Litex 源码
-  → 解析为带类型的对象和语句
-  → define：建立对象、关系、函数或接口
-  → verify：检查事实的良定义性、形状、依据和前提
-  → 生成结构化执行结果
-  → 提交候选或回滚候选
-  → 更新已接受上下文，并在适用时运行推断
-  → 向人类、AI、JSON 和图视图提供结果
-  → 在支持范围内交给 ToLean 和 Lean
-```
-
-`define` 和 `verify` 是同一个知识构造过程中的两个分支。定义引入可复用的数学概念和接口，并保留它们的依赖；验证语句检查当前环境能够推出的事实，并为已接受的事实保存 `FactId` 和支持依据。候选失败时回滚局部变化，已经接受的上下文仍可供下一步使用。
-
-在本文中，我们把这些面向机器的结构化产物统称为 **Checkable Knowledge Record（可检查知识记录）**。一条记录可以描述一个新定义或一个待验证事实，以及它的状态、依赖、标识和适用的证据；JSON 是这些记录的主要机器可读表示，不是从终端文字事后拼出的日志。
-
-正因为这些数学关系已经作为数据保存，事实和概念之间的联系就可以被快速提取。Litex 的 `graph` 功能提供了其中一种展示方式：
-
-![Litex 事实关系图示例](../assets/litex_graph_example.png)
-
-图的绘制细节不是这里的重点；关键在于人类、AI 和其他工具可以从同一份记录中查看语句、依赖、依据和状态变化。下一节的数学例子将沿着这条路径展示定义和事实如何进入上下文，再下一节的 AI 交互流将展示这份记录如何成为候选修复的反馈。
-
 <a id="mathematics-practice"></a>
 
-## 6. Litex的数学实践：定义与验证
+## 4. Litex的数学实践：定义与验证
 
 从形式化实践看，数学工作常在两个动作之间反复往返：一是**定义**对象、关系和可复用接口，建立一个领域的语言；二是**验证**这些定义与条件能够推出哪些事实。下面用一个完整例子把定义、量词、见证和估计放进同一条证明流。我们还是用Lean和Litex做对比。
 
@@ -932,6 +737,416 @@ thm converges_to_mul_const:
 前两个 `prop` 定义：“最终足够接近”，什么叫“收敛”。随后 `obtain N0` 从原收敛性取出位置，`witness` 把它交给新数列；`epsilon / (abs(c) + 1)` 避免另分 `c = 0`，不等式链再把误差压到 `epsilon` 以下。
 
 从这个例子可以看到，不同的形式化语言的源码风格是很不一样的。选择合适的语言用在合适的场景上，是非常重要的。
+
+这个例子先展示数学工作的两种动作；下一节不再重复证明本身，而是查看一句话如何生成可检查知识记录，并继续影响后续上下文。
+
+<a id="execution-model"></a>
+
+## 5. 每句话都留下什么：可检查知识记录
+
+我们读数学时，一句话从来不是孤零零地出现。写下一个事实的同时，我们也会在脑中浮现它所依赖的定义、前提和前面已经确认的事实；这些内容共同形成一个不断生长的上下文，后面的推理便在这片已经建立的基础上继续向前。
+
+Litex 想做的，是把这条通常只存在于脑中的数学心流，逐句化成代码：源码写下要建立的对象和要验证的事实，已经定义好的概念和已经证明的事实留在上下文中，后续语句在它们之上继续生长。Litex 不只让源码接近日常数学，也把这条生长过程本身清晰地打印出来：它记录每句话为什么成立、使用了哪些依据、产生了哪些引申，以及哪些内容真正进入了后续的数学上下文。
+
+换句话说，Litex 不只把数学源码写得容易理解，也把源码执行时内部发生的事情摊在桌面上：你能看到它沿着哪些定义和事实前进，以及它把什么留下给下一句。
+
+先看一个最小的连续片段：
+
+```litex
+let a = 1
+a + 1 = 2
+```
+
+第一句是定义（`define`）：它引入对象，并把定义事实 `a = 1` 存入上下文。第二句是验证（`verify`）：它读取当前上下文，检查 `a + 1 = 2` 的良定义性，沿着 `a = 1` 做透明定义化简，再使用数值规范化规则。通过后，第二条事实进入当前上下文，成为后续语句可以继续使用的基础。
+
+下面把这两句的关键记录展开。字段名保持当前 JSON 的语义；为便于阅读，省去运行时节点的定位编号和与本例无关的空字段。示例中的 `fact_id` 仍按实际输出保留，但它只是为了编译到 Lean 后保留定位地址的实现字段，不是数学内容本身。
+
+<details>
+<summary><strong>展开查看：两句代码的关键 JSON 记录</strong></summary>
+
+```json
+{
+  "kind": "run",
+  "ok": true,
+  "statement_results": [
+    {
+      "outcome": "success",
+      "result": {
+        "kind": "LetObjStmt",
+        "statement": "let a = 1",
+        "common": {
+          "infers": {
+            "stores": [
+              {
+                "fact_id": "f1",
+                "statement": "a = 1",
+                "reason": "object definition",
+                "inferred_facts": []
+              }
+            ],
+            "rule_applications": []
+          }
+        }
+      }
+    },
+    {
+      "outcome": "success",
+      "result": {
+        "kind": "Fact",
+        "statement": "a + 1 = 2",
+        "evidence": {
+          "kind": "Verified",
+          "well_definedness": {
+            "kind": "WellDefinedFactResult",
+            "fact": "a + 1 = 2",
+            "proof": {
+              "kind": "AtomicFact",
+              "statement": "a + 1 = 2",
+              "arguments": [
+                {
+                  "argument_index": 0,
+                  "object": "a + 1",
+                  "result": {
+                    "value": {
+                      "kind": "Direct",
+                      "object": "a + 1",
+                      "intrinsic_result_set": "C",
+                      "target_requirements": [
+                        {
+                          "role": {
+                            "kind": "BuiltinArgumentMembership",
+                            "argument_index": 0
+                          },
+                          "expected_proposition": "a $in C",
+                          "verification": {
+                            "value": {
+                              "kind": "AtomicFact",
+                              "statement": "a $in C",
+                              "proof": {
+                                "kind": "Reuse",
+                                "source": {
+                                  "value": {
+                                    "kind": "AtomicFact",
+                                    "statement": "a $in C",
+                                    "proof": {
+                                      "kind": "Transform",
+                                      "rule": {
+                                        "kind": "TransparentDefinitionReduction",
+                                        "definitions": [
+                                          {
+                                            "symbol": "a",
+                                            "definition_object": "1",
+                                            "defining_equality": "a = 1"
+                                          }
+                                        ]
+                                      },
+                                      "source": {
+                                        "kind": "AtomicFact",
+                                        "statement": "1 $in C",
+                                        "proof": {
+                                          "kind": "BuiltinRule",
+                                          "diagnostic_label": "number in C",
+                                          "evidence": {
+                                            "kind": "Typed",
+                                            "rule_id": "numeric.closed_membership",
+                                            "value": {
+                                              "kind": "ClosedNumericMembership",
+                                              "expected_target": "1 $in C",
+                                              "target_set": "C",
+                                              "evaluation": {
+                                                "expression": "1",
+                                                "value": "1",
+                                                "step": {
+                                                  "kind": "Literal",
+                                                  "literal": "1"
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "subgoals": []
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "argument_index": 1,
+                  "object": "2",
+                  "result": {
+                    "value": {
+                      "kind": "Direct",
+                      "object": "2"
+                    }
+                  }
+                }
+              ],
+              "predicate": {
+                "kind": "SuccessVerifyAtomicPredicateWellDefinedResult",
+                "name": "=",
+                "expected_arity": 2,
+                "domain_checks": []
+              }
+            }
+          },
+          "proof": {
+            "kind": "AtomicFact",
+            "statement": "a + 1 = 2",
+            "proof": {
+              "kind": "Reuse",
+              "source": {
+                "value": {
+                  "kind": "AtomicFact",
+                  "statement": "a + 1 = 2",
+                  "proof": {
+                    "kind": "Transform",
+                    "rule": {
+                      "kind": "TransparentDefinitionReduction",
+                      "definitions": [
+                        {
+                          "symbol": "a",
+                          "definition_object": "1",
+                          "defining_equality": "a = 1"
+                        }
+                      ]
+                    },
+                    "source": {
+                      "kind": "AtomicFact",
+                      "statement": "1 + 1 = 2",
+                      "proof": {
+                        "kind": "BuiltinRule",
+                        "diagnostic_label": "calculation",
+                        "evidence": {
+                          "kind": "Typed",
+                          "rule_id": "equality.rational_normalization",
+                          "value": {
+                            "kind": "RationalNormalization",
+                            "expected_target": "1 + 1 = 2",
+                            "left_evaluation": {
+                              "expression": "1 + 1",
+                              "value": "2",
+                              "step": {
+                                "kind": "Binary",
+                                "operator": "Add",
+                                "left": {
+                                  "expression": "1",
+                                  "value": "1",
+                                  "step": {
+                                    "kind": "Literal",
+                                    "literal": "1"
+                                  }
+                                },
+                                "right": {
+                                  "expression": "1",
+                                  "value": "1",
+                                  "step": {
+                                    "kind": "Literal",
+                                    "literal": "1"
+                                  }
+                                }
+                              }
+                            },
+                            "right_evaluation": {
+                              "expression": "2",
+                              "value": "2",
+                              "step": {
+                                "kind": "Literal",
+                                "literal": "2"
+                              }
+                            }
+                          }
+                        },
+                        "subgoals": []
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "store": {
+          "fact": "a + 1 = 2",
+          "fact_id": "f2",
+          "infers": {
+            "stores": [],
+            "rule_applications": []
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+</details>
+
+这份记录把“这句话为什么能写下来”拆成了可追踪的局部步骤：先确认 `a + 1` 的参数满足运算所需的集合条件；再沿着已定义的 `a = 1` 透明化简为 `1 + 1 = 2`；最后由数值规范化规则完成计算。对读者来说，它至少回答五个局部问题：
+
+| 读者想知道什么 | 记录中看什么 |
+| --- | --- |
+| 语句和语句类型 | 语句内容与类型（`statement`、`kind`）：这是定义符号、定义谓词、定义函数，还是验证事实？ |
+| 这句话是否有意义 | 良定义性检查（`well_definedness`）：对象和运算是否处在允许的定义域内？ |
+| 为什么成立 | 证据和证明过程（`evidence`、`proof`）中的良定义性检查、定义化简与规则依据 |
+| 它是否成为后续基础 | 保存结果（`store`）和已接受上下文 |
+| 检查过程中得到什么引申 | 引申结果（`infers`）及其规则应用 |
+
+例如，`let a = 1` 是定义符号 `a`，并记录 `a = 1`；`a + 1 = 2` 则是在当前上下文中验证一个事实。良定义性检查先确认语句是否有意义：例如 `1 / 0 = 1 / 0` 虽然两边形式相同，但 `0` 不能作为除法允许的分母，因此这个语句不满足良定义性要求。
+
+这个最小例子没有额外的引申，所以“引申结果”（`infers`）是空数组；如果检查规则同时推出了新的事实或关系，它们会在同一份记录中列出，而不会藏在终端文字之外。
+
+因此，Litex 的上下文可以理解为逐句增长的数学账本：
+
+```text
+Γ₀
+  -- 定义 a = 1 --> Γ₁ = Γ₀ + {a = 1}
+  -- 验证 a + 1 = 2 --> Γ₂ = Γ₁ + {a + 1 = 2}
+```
+
+这里的 `Γ` 表示整个证明过程的上下文：当前已经定义的概念、已经确认的事实，以及后续语句可以使用的前提。`Γ₀` 是开始时的上下文；每接受一句定义或事实，就在原有上下文上增加一项，形成 `Γ₁`、`Γ₂`，继续支持后面的推理。
+
+失败的候选不会伪造一条记录，也不会把未接受的事实加入 `Γ₂`；第 7 节再用人、人工智能与 Litex 的交互说明这种停止和修复边界。这里的“可检查知识记录”也不等同于“已经由 Lean 独立复核的证明”：暂时信任标记（`trust`）、未覆盖的编译路径和仍在扩展的规则，都必须保留明确边界。
+
+从 Litex 的一项核心设计——把可信、可检查的知识记录作为运行时的一等产物——出发，我们可以继续把同一份记录交给不同的使用者：
+
+1. **给人阅读**：把语句、依据和上下文变化做成交互式教科书。初学者不必再因为不知道某句话为什么成立而停在原地。
+2. **给人工智能协作**：把每次成功、停止和失败的依据返回给人工智能，使它可以写 Litex、根据反馈自动纠错并逐步改进，形成“人—人工智能—Litex”的循环。
+3. **给知识结构使用**：从定义、事实、引用和引申中生成定义与定理的依赖关系图，直观展示每个概念如何相互连接。
+4. **给 Lean 复核**：根据记录中的定义、事实和验证依据设计 Litex 到 Lean 的编译器，把生成的等价 Lean 代码交给 Lean 内核复核，并接入 Lean 生态。
+
+![Litex 事实关系图示例](https://litexlang.com/_next/image?url=%2Fassets%2Fknowledge_graph.png&w=2048&q=75)
+
+### 小结：Litex 的数学观
+
+Litex 把数学实践看成两种动作的往返：
+
+1. **定义**（`define`）建立对象、关系、函数和可复用接口，给领域建立词汇。
+2. **验证**（`verify`）在当前上下文中确认哪些事实成立，并保存它们的依据。
+3. 每条已接受语句都会改变后续证明的可用前提；前文不是背景装饰，而是后文的基石。
+4. 验证结果同时保留“为什么成立”和适用范围内的推断，而不只给出一个真假标签。
+5. 常见数学对应优先由少量可组合的对象、关系、逻辑结构、内置规则和标准库提供；目标是覆盖广泛的集合论数学，而不是为每个表述增加一个互相重叠的特殊接口。当前覆盖仍在持续扩展和审计。
+
+这五点中的任何一点，单独拿出来都不是 Litex 独有；其他语言也可能在某一个方向做得很好。Litex 的设计重点在于把它们组合成一条连续的数学工作流：定义建立词汇，验证在当前上下文中确认事实，记录保存依据和引申，后续语句在前文基础上继续生长，同一份记录再同时服务于人、人工智能、依赖关系图和 Lean。正是这个组合，让形式化过程更贴近日常数学思考，也更适合人工智能参与，更符合人工智能时代的数学追求，并以人的理解和判断为出发点。这是 Litex 正在检验的设计假设，而不是对其他语言能力的排他性断言。
+
+最最重要的是：Litex 是一个真的能帮助人理解数学的工具。它不只告诉你答案，还把答案为什么成立、依赖什么、会为后文留下什么都摊开在眼前；在人工智能时代，当答案可以被大量生成时，这种帮助人保持理解的能力尤其珍贵。
+
+<details>
+<summary><strong>实现摘要：记录如何生成</strong></summary>
+
+实现可以随着规则、标准库、知识图和 Lean 接口不断扩大，而不必改变读者对核心流程的理解：
+
+```text
+Litex 源码
+  → 解析为带类型的对象和语句
+  → 执行定义或验证
+  → 检查良定义性、形状、依据和前提
+  → 生成结构化执行结果
+  → 提交候选或回滚候选
+  → 更新已接受上下文，并在适用时运行推断
+  → 提供 JSON、关系图以及人类/人工智能视图
+  → 在支持范围内交给 Litex 到 Lean 的编译器和 Lean
+```
+
+这里的 JSON 是记录的机器可读表示，不是从终端文字事后拼出的日志；关系图是记录关系的一种视图；Lean 是受支持路径的独立复核端。实现规模可以增长，但这几个概念的职责不需要随规则数量一起膨胀。
+
+</details>
+
+<a id="compatibility"></a>
+
+## 6. Lean 兼容：为已覆盖路径提供独立复核
+
+Litex 可独立工作，拥有语法、运行时和验证内核；不编译成 Lean 也能检查良定义性与事实并提供反馈。Litex通常被认为更适合日常的数学写作和局部验证。
+
+第 5 节的记录说明了 Litex 自己留下什么；本节只追踪其中受支持的验证路径如何继续交给 Lean/Mathlib，不再重复数学源码和记录字段。
+
+但在大型数学系统上，Lean有不可比拟的优势：Lean/Mathlib生态成熟、可复用的数学对象和定理库丰富、内核小而可审计。Litex需要和现有的形式化系统兼容，这样才能让用户在Litex中写的数学成果被更广泛地复用和验证。同时Lean社区也能从Litex中受益，Litex可以在一些数学方向为Lean提供更易读、更易写的数学接口。
+
+*编译器还为 Litex 提供独立保障。* 当前 `src/` 下 Rust 源码接近 20 万行，含数百条规则；其可信实现面远大于 Lean 小内核，也更难完整审核。_目前Litex到Lean的编译器的覆盖尚未完全完成，但原理上这样的覆盖是可行的。我们预计2027年前会完成这一工作。_
+
+<details>
+<summary><strong>一条受支持的路径如何到达 Lean/Mathlib</strong></summary>
+
+第 4 节的收敛性例子已经展示了 Litex 源码和验证过程；这里沿着同一条已接受记录继续向下，不再重复 Litex 证明本身：
+
+`Litex 源码 → Litex 验证 → ToLean 编译 → Lean 内核复核 → 手写 adapter → Mathlib 定理`
+
+ToLean 根据记录中的定义、事实和验证依据生成 Lean 证明对象。下面是生成文件的结构化节选，生成文件不由用户手改：
+
+```lean
+-- LitexGenerate.lean（由 ToLean 生成，节选）
+namespace __Compiler_main
+
+def is_eventually_close (...) : Prop := ...
+def converges_to (...) : Prop := ...
+
+theorem converges_to_mul_const :
+    ∀ (s : (Litex.fnSet Litex.N Litex.R).Carrier) ...,
+      converges_to (...) (...) := by
+  ...
+
+end __Compiler_main
+```
+
+手写 adapter 调用生成定理，再将 Litex 的表示桥接到 Mathlib：
+
+```lean
+import LitexGenerate
+
+-- 手写 adapter 定理中的关键调用（上下文参数略）
+have generated :=
+  __Compiler_main.converges_to_mul_const s sIn a aIn c cIn h
+```
+
+桥接完成后，结论可以使用 Mathlib 的原生接口：
+
+```lean
+theorem tendsto_mul_const_from_generated (...) :
+    Filter.Tendsto
+      (toMathlibSequence (scaleSequence c s))
+      Filter.atTop
+      (nhds (c * a)) := by
+  have generated :=
+    __Compiler_main.converges_to_mul_const s sIn a aIn c cIn h
+  exact tendsto_of_generated_convergesTo _ _ generated
+```
+
+这只证明一条当前已覆盖的路径完整走通；其他源码路径仍必须明确标出未覆盖边界。
+
+</details>
+
+<details>
+<summary><strong>Litex 到 Lean 的编译器如何工作</strong></summary>
+
+总结来说，Litex到Lean的编译器的工作原理是，Litex 保留验证路径，把每个已支持步骤映射为 Lean 定理或证明构造，再组装成证明对象。Mathlib 对集合论数学的支持使这条路线自然可行。
+
+实现它需要两层映射：验证路径映射为 Lean 证明构造；数学对象通过设计过的包装层映射为 Lean 表示，而非机械直译。这需要持续开发和验证；中介代码见 https://github.com/litexlang/golitex/blob/main/lean/Litex/Core.lean。
+
+编译器有两个底层问题。其一是如何在 Lean/Mathlib 中表示 Litex 数学。同一对象常有多种等价写法，选择会长期影响 Mathlib 复用、Litex 扩展与生态协作；函数、集合、成员和良定义性必须采用一致、可持续的表示。
+
+其二是把成功执行的信息变成 Lean 证明。搜索树的成功分支必须结构化返回规则、事实、对象、子证明和良定义性结果，并保留声明与作用域变化，使编译器能确定性重放路径，而非从显示文本重建或让 Lean 重新搜索。
+
+</details>
+
+Litex 不取代 Lean：前者提供数学写作接口，后者提供小内核复核与生态复用。已覆盖路径可形成可验证、可审核、可复用的流程；其余部分必须标明边界。
+
+<a id="summary-bottom-up-and-top-down"></a>
+
+### 小结：自下而上与自上而下互补
+
+数学实践中，自下而上的事实积累与自上而下的目标分解并不是二选一，而是同时存在、相互校验的两种方向。Litex 与 Lean 的设计思路因此是互补的：Litex 让作者从对象、条件和已验证事实出发，逐步生长一条可读的证明流；Lean 则从明确目标出发，通过目标分解和证明项构造，把结果交给小内核独立检查。两者可以在同一条工作流中分工，而不必争论哪一种方向“更正确”。
+
+从我的观察看，AI 在 *fact-oriented* 表达和自下而上的局部推进上往往表现得很自然，可能与其训练材料有关：互联网中的知识大多以事实、结论和局部推导的形式组织，模型从这些数据中学习到相应的模式。但这只是关于数据分布和模型行为的工作假设，不是对所有模型或任务的普遍结论。
+
+同时，AI 的训练也围绕目标函数和奖励信号展开。这里的“奖励”不等同于 Transformer 架构本身；更准确地说，Transformer 提供表示与生成架构，训练过程再通过损失函数以及在某些阶段使用的偏好/奖励优化模型行为。因而，AI 未必天然具备稳定的、从第一性原理自下而上展开的推理能力；在许多任务中，它更容易从期望结果或评价信号反向组织一条看起来能够到达结果的路径。
+
+因此，两种思维模式都很宝贵：自下而上适合积累可复用的局部事实、暴露中间依据；自上而下适合澄清目标、选择方向、压缩搜索空间。Litex 与 Lean 的连接，正可以把这两种方向放进同一条可检查的证据链，并让人类和 AI 在各自擅长的方向上协作。
 
 <a id="interaction-loop"></a>
 
@@ -1060,7 +1275,7 @@ Litex 正是从这种可能性出发。它把形式化看作塑造数学注意�
 而不只是满足内核检查的一种手段。它的事实导向和自下而上设计，邀请我们探索
 人类直觉、机器验证与数学知识之间的另一种关系。
 
-Litex 的一个特别愿景是：它的实现可以随着规则、标准库、知识图和 Lean 接口不断扩大，但核心运行概念仍然容易理解。它把人类阅读数学时脑中追踪的定义、前提和事实联系，外化为可检查知识记录，让教材中的每句话都能被展开和追溯。
+第 5 节所描述的可检查知识记录，正是这一愿景的具体化：实现可以随着规则、标准库、知识图和 Lean 接口扩大，而读者仍能沿着每句话的定义、前提和事实联系追踪数学。
 
 Litex 也许不会成为唯一的道路，而且它不需要成为唯一的道路。它的贡献，
 或许正在于展示：形式化数学可以拥有不止一种未来。
