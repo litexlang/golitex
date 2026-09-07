@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-pub(super) fn render_cli_error(message: &str) -> String {
+pub(super) fn render_command_line_command_error(message: &str) -> String {
     render_json_value(
         &JsonValue::Object(vec![
             string_field("kind", "cli_error"),

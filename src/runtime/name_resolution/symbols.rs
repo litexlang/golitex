@@ -50,14 +50,10 @@ impl Runtime {
 
     fn canonical_display_name_for_definition(&self, name: &str) -> String {
         let canonical_owner = self
-            .current_module_id
-            .zip(self.current_source_id)
-            .and_then(|(module_id, source_id)| {
-                self.module_manager
-                    .canonical_name_for_target(ImportTarget::File {
-                        module_id,
-                        source_id,
-                    })
+            .module_manager
+            .canonical_name_for_target(ImportTarget::File {
+                module_id: self.current_module_id,
+                source_id: self.current_source_id,
             })
             .unwrap_or("");
         if canonical_owner.is_empty() {
@@ -122,8 +118,8 @@ impl Runtime {
                         .or_else(|| {
                             module.sources.iter().find_map(|source| {
                                 if source.real_file_path().is_none()
-                                    && !(self.current_module_id == Some(module.id)
-                                        && self.current_source_id == Some(source.id))
+                                    && !(self.current_module_id == module.id
+                                        && self.current_source_id == source.id)
                                 {
                                     return None;
                                 }

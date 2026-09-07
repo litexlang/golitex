@@ -12,7 +12,7 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-use litex::cli::run_cli;
+use litex::cli::run_command_line_commands;
 
 const CLI_STACK_SIZE: usize = 64 * 1024 * 1024;
 
@@ -20,7 +20,7 @@ fn main() {
     std::thread::Builder::new()
         .name("litex-cli".to_string())
         .stack_size(CLI_STACK_SIZE)
-        .spawn(run_cli)
+        .spawn(run_command_line_commands)
         .expect("start Litex CLI thread")
         .join()
         .expect("Litex CLI thread panicked");

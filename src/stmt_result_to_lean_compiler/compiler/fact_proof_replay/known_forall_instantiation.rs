@@ -50,9 +50,7 @@ impl StmtResultToLeanCompiler {
         let substitutions = source_forall
             .typed_parameters
             .param_defs_and_args_to_param_to_arg_map(&arguments);
-        let mut substitution_runtime = Runtime::default();
-        substitution_runtime.ensure_current_source_for_parse();
-
+        let substitution_runtime = Runtime::default();
         let mut application_terms = vec![source_theorem];
         let mut source_application_context = self.environment_stack.clone();
         let mut target_application_context = self.environment_stack.clone();

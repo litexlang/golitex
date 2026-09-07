@@ -22,8 +22,7 @@ impl StmtResultToLeanCompiler {
             return Ok(false);
         }
 
-        let mut runtime = Runtime::default();
-        runtime.ensure_current_source_for_parse();
+        let runtime = Runtime::default();
         let function_body = runtime
             .direct_fn_set_body_for_have_fn_by_forall_exist_unique(&result.statement)
             .map_err(|error| error.trace_message())?;

@@ -4,7 +4,6 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn parse_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
-        self.ensure_current_source_for_parse();
         self.parse_unicode_union(tb)
     }
 

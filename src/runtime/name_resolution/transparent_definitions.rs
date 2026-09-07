@@ -39,8 +39,8 @@ impl Runtime {
         for module in self.module_manager.modules.values() {
             collect_transparent_object_definitions(&module.main_environment, &mut definitions)?;
             for source in &module.sources {
-                let is_current_source = self.current_module_id == Some(module.id)
-                    && self.current_source_id == Some(source.id);
+                let is_current_source =
+                    self.current_module_id == module.id && self.current_source_id == source.id;
                 if source.real_file_path().is_none() && !is_current_source {
                     continue;
                 }

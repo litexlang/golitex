@@ -1,19 +1,19 @@
-use super::command::{parse_cli_command, CliCommand};
+use super::command::{parse_command_line_command, CliCommand};
 use super::command_handlers::{run_execute_command, run_graph_command, VERSION};
 use super::conversion_commands::{run_code_extraction_command, run_latex_command};
-use super::json_output::{render_cli_error, render_version};
+use super::json_output::{render_command_line_command_error, render_version};
 use super::lean_commands::run_lean_file_command;
 use super::messages::print_help_message;
 use crate::prelude::*;
 use std::env;
 use std::process;
 
-pub fn run_cli() {
+pub fn run_command_line_commands() {
     let raw_args: Vec<String> = env::args().skip(1).collect();
-    let command = match parse_cli_command(&raw_args) {
+    let command = match parse_command_line_command(&raw_args) {
         Ok(command) => command,
         Err(message) => {
-            println!("{}", render_cli_error(message.as_str()));
+            println!("{}", render_command_line_command_error(message.as_str()));
             process::exit(2);
         }
     };

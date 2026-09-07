@@ -26,8 +26,8 @@ impl Runtime {
                 .map(|environment| environment.as_ref());
         }
         let layer_index = index - local_count;
-        let module = self.module_manager.module(self.current_module_id?)?;
-        let current_file = module.source(self.current_source_id?)?;
+        let module = self.module_manager.module(self.current_module_id)?;
+        let current_file = module.source(self.current_source_id)?;
         if layer_index == 0 {
             return Some(current_file.environment.as_ref());
         }
@@ -1231,8 +1231,8 @@ impl Runtime {
     }
 
     pub fn current_parse_namespace(&self) -> Option<&str> {
-        let module_id = self.current_module_id?;
-        let source_id = self.current_source_id?;
+        let module_id = self.current_module_id;
+        let source_id = self.current_source_id;
         let module = self.module_manager.module(module_id)?;
         if module.flattened_export_source == Some(source_id) && !module.module_name.is_empty() {
             return Some(module.module_name.as_str());

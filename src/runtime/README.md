@@ -7,13 +7,13 @@ is carried explicitly by `VerifyState`, not stored on `Runtime`.
 
 ```text
 Runtime::new(options: LitexExecutionOptions)
-  module_manager = one shared module world
-  current_module_id = None
-  current_source_id = None
+  module_manager = one shared module world with a registered Eval source
+  current_module_id = ModuleId::ROOT
+  current_source_id = SourceId(0)
   next_fact_id = 1
 start_real_file("example.lit")
-  register ModuleId::ROOT/SourceId(0)
-  set current_module_id/current_source_id
+  reuse the constructor source as ModuleId::ROOT/SourceId(0)
+  update its origin and keep the current source pair
 run source `1 = 1`
   parse and execute statement
   allocate f1
@@ -26,12 +26,21 @@ run source `1 = 1`
 | --- | --- |
 | `Runtime` | Stored facts receive `f1`, then `f2`; popped local facts do not cause ID reuse. It owns the one transient `ParseContext` shared across recursive parsing of a compound statement. It also retains execution-derived direct struct carriers by exact `SymbolId`, so a stored theorem can later instantiate field syntax whose original binder scope has ended. Its `LitexExecutionOptions` value owns verification strictness, output detail, language, and summary settings; source selection and isolation remain with the command or pipeline entry point. |
 | `VerifyState` | Owns one explicit proof-search tree: successful atomic/WD memos and recursion guards. A child proof scope can read parent memos, while child entries never become visible in its parent. It also carries the explicit `InferenceState` used by stores reached from that verification tree. A fresh top-level state starts a fresh search. |
-| `current source` | `Runtime.current_module_id` plus `Runtime.current_source_id` identifies one registered `Source`; `Runtime.active_mode` and `Runtime.local_scopes` hold only active invocation state. `SourcePath::RealFilePath` is the only source origin accepted by filesystem/module path logic; `SourcePath::VirtualSource` is used for eval, REPL, session, generated projections, and `VirtualSource::Named` embedding labels. |
+| `current source` | `Runtime.current_module_id` plus `Runtime.current_source_id` always identifies one registered `Source`; the pair is concrete for the lifetime of Runtime. `Runtime.active_mode` and `Runtime.local_scopes` hold only active invocation state. `SourcePath::RealFilePath` is the only source origin accepted by filesystem/module path logic; `SourcePath::VirtualSource` is used for eval, REPL, session, generated projections, and `VirtualSource::Named` embedding labels. |
 | `SourceActivation` | A short-lived checkpoint used by graph/rendering helpers while they temporarily activate another registered source. It is not a second source registry or a persistent source stack. |
 | `ParseContext` | Runtime-owned free binders and scoped parse bindings needed to construct symbol-aware syntax trees before nested statements execute. It must return to its root scope before the current source changes. Field syntax is stored only as receiver plus field name; the parser does not choose a struct carrier. |
 | `Environment` | Checked definitions, facts, and persistent mathematical caches. A stored `SymbolDefinition` may own the direct struct carrier declared for that exact `SymbolId`; execution and well-definedness resolve field access from it. Tuple carriers are not retained as parser or symbol metadata. Child-environment merge commits this mathematical state; proof-search memos and recursion guards are not environment data. |
 | `ModuleManager` | Repository/module/file lifecycle and every persistent file environment, plus unverified-import diagnostics shared by files in that module world. `ModuleId::ROOT` is always zero. |
 | Local matcher values | Recursive forall-argument bindings live only for the operation using them; they are not ambient `Runtime` state. |
+
+The acceptance boundary is exercised by
+`structured_source_run_uses_the_constructor_source_context` and
+`runtime_constructor_registers_an_active_eval_source`. The former behavior
+returned an error when `execute_source` was called before a source was selected;
+the current behavior executes through the constructor-registered
+`ModuleId::ROOT`/`SourceId(0)` source. Repository setup is covered by
+`repository_start_reuses_the_registered_constructor_source`, which keeps that
+same concrete pair active while discovery configures the root module.
 
 Start with [`runtime.rs`](runtime.rs) for the `Runtime` fields and run initialization,
 [`execution_options.rs`](execution_options.rs) for Litex execution configuration,

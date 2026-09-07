@@ -648,21 +648,15 @@ claim:
 }
 
 #[test]
-fn source_execution_requires_an_active_context() {
+fn source_execution_uses_the_constructor_source_context() {
     let mut runtime = Runtime::default();
     let (stmt_results, runtime_error) = execute_source("1 = 1", &mut runtime);
     assert!(
-        stmt_results.is_empty(),
-        "an unconfigured runtime must not execute source"
+        runtime_error.is_none(),
+        "constructor-bound runtime should execute source: {:?}",
+        runtime_error
     );
-    let error = runtime_error.expect("unconfigured runtime should return an error");
-    assert!(
-        error
-            .trace_message()
-            .contains("runtime has no active source context"),
-        "unexpected unconfigured-runtime error: {}",
-        error.trace_message()
-    );
+    assert_eq!(stmt_results.len(), 1);
 }
 
 #[test]

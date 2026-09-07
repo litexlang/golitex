@@ -6,4 +6,4 @@ mod json_output;
 mod lean_commands;
 mod messages;
 
-pub use command_dispatch::run_cli;
+pub use command_dispatch::run_command_line_commands;

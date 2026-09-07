@@ -119,8 +119,7 @@ impl StmtResultToLeanCompiler {
             let substitutions = active_definition
                 .typed_parameters
                 .param_defs_and_args_to_param_to_arg_map(evidence.fact.body.as_slice());
-            let mut instantiator = Runtime::default();
-            instantiator.ensure_current_source_for_parse();
+            let instantiator = Runtime::default();
             let instantiated_clause = instantiator
                 .inst_fact(
                     definition_clause,

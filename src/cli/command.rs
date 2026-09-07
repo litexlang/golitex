@@ -182,7 +182,7 @@ pub(super) enum CliCommand {
     },
 }
 
-pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
+pub(super) fn parse_command_line_command(args: &[String]) -> Result<CliCommand, String> {
     let mut index = 0;
     let strict = if args.get(index).is_some_and(|arg| arg == "-strict") {
         index += 1;

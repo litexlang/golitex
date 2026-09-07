@@ -57,13 +57,19 @@ fn failed_nested_parse_restores_the_runtime_owned_parse_context() {
 }
 
 #[test]
-fn structured_source_run_requires_an_active_source_context() {
+fn structured_source_run_uses_the_constructor_source_context() {
     let mut runtime = Runtime::default();
 
     let outcome = runtime.execute_source("1 = 1");
 
-    assert!(outcome.stmt_results.is_empty());
-    assert!(outcome.runtime_error.is_some());
+    assert_eq!(outcome.stmt_results.len(), 1);
+    assert!(
+        outcome.runtime_error.is_none(),
+        "{:?}",
+        outcome.runtime_error
+    );
+    assert_eq!(runtime.current_module_id, ModuleId::ROOT);
+    assert_eq!(runtime.current_source_id, SourceId(0));
 }
 
 #[test]
@@ -110,7 +116,7 @@ fn source_import_is_rejected_even_in_an_isolated_source_context() {
 fn code_run_uses_the_explicit_e_source_label() {
     let outcome = run_eval_command("1 = 1", LitexExecutionOptions::default());
 
-    assert_eq!(outcome.runtime.current_module_id, Some(ModuleId::ROOT));
-    assert_eq!(outcome.runtime.current_source_id, Some(SourceId(0)));
+    assert_eq!(outcome.runtime.current_module_id, ModuleId::ROOT);
+    assert_eq!(outcome.runtime.current_source_id, SourceId(0));
     assert_eq!(outcome.runtime.current_file_path_rc().as_ref(), "eval");
 }

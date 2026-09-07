@@ -99,8 +99,8 @@ impl DefinitionGraphBuilder {
                 // a standalone or session graph may additionally include only
                 // the one virtual source that is currently active. Historical
                 // REPL/session sources must not leak into later projections.
-                let is_current_source = runtime.current_module_id == Some(module.id)
-                    && runtime.current_source_id == Some(source.id);
+                let is_current_source = runtime.current_module_id == module.id
+                    && runtime.current_source_id == source.id;
                 if source.real_file_path().is_none() && !is_current_source {
                     continue;
                 }
