@@ -1,9 +1,11 @@
 # Probability and statistics in Litex, setting-first.
 #
-# Included: two-point probability vectors, expectation and variance, linearity
-# of expectation, a fair-coin calculation, conditional probability, and Bayes.
+# Included: two-point probability vectors, expectation and variance, a
+# three-point least-squares center, linearity of expectation, a fair-coin
+# calculation, conditional probability, and Bayes.
 #
-# Main line: finite distributions -> expectation and variance -> Bayes' rule.
+# Main line: finite distributions -> expectation and variance -> least squares
+# -> Bayes' rule.
 
 prop is_probability_vector2(p finite_seq(R, 2)):
     p(1) >= 0
@@ -12,6 +14,50 @@ prop is_probability_vector2(p finite_seq(R, 2)):
 
 have fn expectation2(values, probs finite_seq(R, 2)) R = values(1) * probs(1) + values(2) * probs(2)
 have fn variance2(values, probs finite_seq(R, 2)) R = (values(1) - expectation2(values, probs))^2 * probs(1) + (values(2) - expectation2(values, probs))^2 * probs(2)
+
+# For three real observations, a least-squares center is a point whose
+# squared-error sum is no larger than the sum at any real candidate.
+prop is_least_squares_center(center, a, b, c R):
+    forall candidate R:
+        (a - center)^2 + (b - center)^2 + (c - center)^2 <= (a - candidate)^2 + (b - candidate)^2 + (c - candidate)^2
+
+have fn mean3(a, b, c R) R = (a + b + c) / 3
+
+# The key identity leaves the nonnegative remainder visible:
+# SSE(candidate) = SSE(mean) + 3 * (candidate - mean)^2.
+thm three_point_sse_decomposition:
+    ? forall a, b, c, candidate R:
+        (a - (a + b + c) / 3)^2 + (b - (a + b + c) / 3)^2 + (c - (a + b + c) / 3)^2 + 3 * (candidate - (a + b + c) / 3)^2 = (a - candidate)^2 + (b - candidate)^2 + (c - candidate)^2
+
+thm mean_formula_is_least_squares_center:
+    ? forall a, b, c R:
+        $is_least_squares_center((a + b + c) / 3, a, b, c)
+    claim:
+        ? forall candidate R:
+            (a - (a + b + c) / 3)^2 + (b - (a + b + c) / 3)^2 + (c - (a + b + c) / 3)^2 <= (a - candidate)^2 + (b - candidate)^2 + (c - candidate)^2
+        0 <= (candidate - (a + b + c) / 3)^2
+        0 <= 3 * (candidate - (a + b + c) / 3)^2
+        by thm three_point_sse_decomposition(a, b, c, candidate) => (a - (a + b + c) / 3)^2 + (b - (a + b + c) / 3)^2 + (c - (a + b + c) / 3)^2 + 3 * (candidate - (a + b + c) / 3)^2 = (a - candidate)^2 + (b - candidate)^2 + (c - candidate)^2
+        (a - (a + b + c) / 3)^2 + (b - (a + b + c) / 3)^2 + (c - (a + b + c) / 3)^2 = (a - (a + b + c) / 3)^2 + (b - (a + b + c) / 3)^2 + (c - (a + b + c) / 3)^2 + 0 <= (a - (a + b + c) / 3)^2 + (b - (a + b + c) / 3)^2 + (c - (a + b + c) / 3)^2 + 3 * (candidate - (a + b + c) / 3)^2 = (a - candidate)^2 + (b - candidate)^2 + (c - candidate)^2
+    by def $is_least_squares_center((a + b + c) / 3, a, b, c)
+
+thm mean3_is_least_squares_center:
+    ? forall a, b, c R:
+        $is_least_squares_center(mean3(a, b, c), a, b, c)
+    mean3(a, b, c) = (a + b + c) / 3
+    by thm mean_formula_is_least_squares_center(a, b, c) => $is_least_squares_center((a + b + c) / 3, a, b, c)
+
+# Tracer example: for 1, 2, 5 the mean is 8/3.  The candidate 2 has a
+# larger squared-error sum, and the difference is exactly 3*(2 - 8/3)^2.
+mean3(1, 2, 5) = 8 / 3
+by thm mean3_is_least_squares_center(1, 2, 5) => $is_least_squares_center(mean3(1, 2, 5), 1, 2, 5)
+by def $is_least_squares_center(mean3(1, 2, 5), 1, 2, 5)
+(1 - mean3(1, 2, 5))^2 + (2 - mean3(1, 2, 5))^2 + (5 - mean3(1, 2, 5))^2 = 26 / 3
+(1 - 2)^2 + (2 - 2)^2 + (5 - 2)^2 = 10
+3 * (2 - mean3(1, 2, 5))^2 = 4 / 3
+26 / 3 + 4 / 3 = 10
+26 / 3 <= 10
+
 have fn affine_combine2(X, Y finite_seq(R, 2), a, b R) finite_seq(R, 2) = fn(k N+: k <= 2) R {a * X(k) + b * Y(k)}
 
 # Expanding the two coordinates proves linearity of expectation directly.

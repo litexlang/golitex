@@ -1,5 +1,0 @@
-# Propositional atoms used by the required-1 logic syntax examples.
-
-abstract_prop hs_P()
-abstract_prop hs_Q()
-abstract_prop hs_R()

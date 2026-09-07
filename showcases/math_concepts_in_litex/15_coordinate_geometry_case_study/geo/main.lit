@@ -32,7 +32,8 @@
 # ───────────────────────────────────────────────────────────────────────
 
 
-have points set = cart(R, R)
+# The carrier is written directly as `cart(R, R)` in public signatures; an
+# unused `points` alias generated stale cross-module FactIds after the update.
 
 # ───────────────────────────────────────────────────────────────────────
 # 1.2 Vector operations (internal computation layer)
