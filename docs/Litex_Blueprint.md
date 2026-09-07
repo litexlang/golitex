@@ -9,9 +9,10 @@ Website: https://litexlang.com/doc/Litex_Blueprint
 Chinese version: https://litexlang.com/doc/Litex中文蓝图
 
 **Litex is a small, readable, fact-oriented formal language for turning**
-**mathematical reasoning into checkable, traceable data; it also keeps the**
-**runtime process readable, traceable, and repairable, so humans, AI, and Litex**
-**can work in the same loop.**
+**mathematical reasoning into checkable, traceable statements; it also keeps the**
+**processing of definitions, verification, and repairs readable, traceable, and**
+**repairable, so users can understand what it is doing and participate in the**
+**human–AI–Litex loop.**
 
 It is a set-theoretic, fact-oriented formal language that builds proof flows
 from the bottom up. It puts humans, AI, and the verifier in the same loop:
@@ -23,7 +24,7 @@ to the Lean/Mathlib ecosystem.
 
 > **Litex is an experimental hobby project in beta; expect rough edges.**
 
-<!-- Blueprint spine: reasoning abundance → scientific object → design hypothesis → measurable costs → potential capacity impact → verification and understanding bottlenecks → two participation barriers → four language choices → definition and verification → readable execution and Checkable Knowledge Records → ToLean/adapter handoff → the end-to-end human–AI–Litex knowledge-production loop → ecosystem role → success criterion -->
+<!-- Blueprint spine: reasoning abundance → scientific object → design hypothesis → measurable costs → potential capacity impact → verification and understanding bottlenecks → two participation barriers → four language choices → definition and verification → a readable execution process users can join → ToLean/adapter handoff → the end-to-end human–AI–Litex knowledge-production loop → ecosystem role → success criterion -->
 
 <!--
 Litex 定位四层检查（写作时逐层核对；面向不同受众可以调整强调重点，但不能混淆层级）：
@@ -52,6 +53,7 @@ Litex 定位四层检查（写作时逐层核对；面向不同受众可以调�
   - [3. Bottom-Up: Let Verified Facts Continue to Grow](#3-bottom-up-let-verified-facts-continue-to-grow)
   - [4. From Four Design Principles to Mathematical Practice: Definition and Verification](#mathematics-practice)
   - [5. What Each Statement Leaves Behind: Checkable Knowledge Records](#execution-model)
+    - [Summary: Litex and Naproche—Similar Goals, Different Core Interfaces](#summary-litex-and-naproche)
   - [6. Lean-Compatible: Independent Rechecking for Covered Paths](#compatibility)
     - [Summary: Bottom-Up and Top-Down Reasoning Are Complementary](#summary-bottom-up-and-top-down-reasoning-are-complementary)
   - [7. The End-to-End Human–AI–Litex Knowledge-Production Loop](#interaction-loop)
@@ -479,7 +481,7 @@ This convenience has a trust cost. Hundreds of builtin and infer rules move work
 <details>
 <summary><strong>Position in the design space: forward proof is not unique to Litex</strong></summary>
 
-Mizar, Isar, ACL2, and Naproche already support forward text, theorem accumulation, or incremental checking. Litex instead tests their combination: an ordinary fact triggers local verification and extends context on success, while explicit proof structure appears only when ordinary automation is insufficient.
+Mizar, Isar, ACL2, and Naproche already support forward text, theorem accumulation, or incremental checking. Litex instead tests their combination: an ordinary fact triggers local verification and extends context on success, while the accepted or stopped route stays inspectable for a user or AI to repair; explicit proof structure appears only when ordinary automation is insufficient. A fuller comparison appears in the Section 5 summary, “Litex and Naproche—Similar Goals, Different Core Interfaces.”
 
 </details>
 
@@ -611,7 +613,7 @@ When we read mathematics, no sentence stands alone. As we write a fact, we also 
 
 Litex turns this flow—normally held only in the mind—into code, one statement at a time: source records the objects to establish and facts to verify, while defined concepts and proved facts remain in context for later statements to build on. Litex makes not only the source close to everyday mathematical writing, but the growth itself visible: it records why each statement holds, which grounds it uses, what it infers, and what actually enters the mathematical context that follows.
 
-In other words, Litex makes both sides visible: the source reads like mathematics, and the execution lays out which definitions and facts it followed and what it leaves for the next statement.
+In other words, Litex makes both sides visible: the source reads like mathematics, and the execution lays out which definitions and facts it followed and what it leaves for the next statement. Because this path is visible, users can participate rather than only receive a final verdict: they can inspect a dependency, add a condition or witness, and choose the next local repair.
 
 Start with a minimal consecutive fragment:
 
@@ -622,10 +624,10 @@ a + 1 = 2
 
 The first line is a definition (`define`): it introduces an object and stores the defining fact `a = 1` in context. The second is a verification (`verify`): it reads the current context, checks the well-definedness of `a + 1 = 2`, reduces transparently through `a = 1`, and then uses numeric normalization. Once accepted, the second fact enters the current context and becomes a basis for later statements.
 
-The following expands the key records for these two lines. The field names retain their current JSON semantics; runtime node IDs and empty fields unrelated to this example are omitted for readability. The example keeps `fact_id` because it appears in the current output, but it is only an implementation field for preserving an address when compiling to Lean, not mathematical content.
+The following expands the execution path for these two lines. A Checkable Knowledge Record is the structured form of that path; the field names below retain their current JSON semantics. Runtime node IDs and empty fields unrelated to this example are omitted for readability. The example keeps `fact_id` because it appears in the current output, but it is only an implementation field for preserving an address when compiling to Lean, not mathematical content.
 
 <details>
-<summary><strong>Expand: key JSON record for the two statements</strong></summary>
+<summary><strong>Expand: machine-readable view of the two statements</strong></summary>
 
 ```json
 {
@@ -877,7 +879,7 @@ The `Γ` symbol here denotes the context of the entire proof: the concepts alrea
 
 A failed candidate does not fabricate a record or add an unaccepted fact to `Γ₂`; Section 7 uses the human–AI–Litex interaction to show this stopping and repair boundary. “Checkable Knowledge Record” also does not mean that every record has already been independently rechecked by Lean: temporary trust markers (`trust`), unsupported compilation routes, and expanding rules must retain their explicit boundaries.
 
-Starting from Litex's core design—making a trustworthy, checkable knowledge record a first-class runtime product—the same record can serve four purposes:
+Starting from a process users can read and enter, Litex keeps a structured knowledge record alongside it. That record can serve four purposes:
 
 1. **For people to read**: turn statements, grounds, and context changes into an interactive textbook, so beginners do not have to stop simply because they cannot see why a sentence holds.
 2. **For AI collaboration**: return the grounds for every success, stop, and failure to the AI, so it can write Litex, correct itself from feedback, and improve step by step in a human–AI–Litex loop.
@@ -913,13 +915,35 @@ Litex source
   → build a structured execution result
   → commit the candidate or roll it back
   → extend the accepted context and run applicable inference
-  → expose JSON, relation-graph, and human/AI views
+  → make the accepted path, context change, and repair boundary visible to users and AI
+  → preserve a Checkable Knowledge Record for tools and interactive views
+  → offer JSON and relation graphs as optional machine-readable and structural views
   → send supported routes to the Litex-to-Lean compiler and Lean
 ```
 
-JSON is the machine-readable representation of the record, not a log reconstructed from terminal prose; a relation graph is one view of record relationships; Lean is the independent rechecking endpoint for supported routes. The implementation can grow while these responsibilities remain understandable.
+A Checkable Knowledge Record is the structured form of the visible execution path, not a log reconstructed from terminal prose. JSON is one machine-readable representation for tools that need it; users can follow and repair the process without reading JSON. A relation graph is one optional view of the relationships, while Lean is the independent rechecking endpoint for supported routes. The implementation can grow while these responsibilities remain understandable.
 
 </details>
+
+<a id="summary-litex-and-naproche"></a>
+
+### Summary: Litex and Naproche—Similar Goals, Different Core Interfaces
+
+Naproche and Litex both try to make mathematical expression closer to everyday mathematics and involve machines in checking it. Naproche's central route translates controlled natural language in ForTheL into formal logic, generates proof obligations, and passes them to automated theorem provers; Litex puts definitions and facts into a continuously growing context and lets users see, understand, and repair that execution path. See the [Naproche project](https://naproche-net.github.io/) and [Naproche GitHub repository](https://github.com/naproche/naproche).
+
+| Dimension | Naproche | Litex |
+| --- | --- | --- |
+| Mathematical input | Controlled natural language and LaTeX close to textbook prose | Set-theoretic objects, definitions, facts, and conditions |
+| Core execution | Text translation, proof obligations, and automated theorem-prover checking | `define`, `verify`, context growth, and local repair |
+| User-visible process | Mainly text checking and proof feedback | Traceable grounds, context changes, commit/rollback, and the next repair step |
+| Runtime state | Mainly organized around text checking and proof feedback | Explicitly retains accepted facts, `FactId`, dependencies, and commit/rollback state |
+| Main knowledge product | Checked mathematical text, logical translation, and proof feedback | **A plain, trustworthy fact record** |
+| Machine interface | Checker and IDE feedback | A structured record that can be represented as JSON and used by `graph`, textbooks, and AI |
+| Core research question | Can text close to natural mathematical language be formally checked? | Can definitions and facts keep growing as readable, repairable, reusable knowledge state, while the source remains close to natural mathematical language? |
+
+Litex's `struct` and `template` keywords also provide reusable structures for organizing set-related facts; in the mathematical areas Litex currently targets, they are intended to address needs that Naproche's text-to-ATP route does not foreground. Litex can compile to Lean and connect to one of the most active formal-mathematics ecosystems. This is not a claim that Litex is simply much better than Naproche; the two systems have different strengths despite sharing a goal of staying close to natural mathematical expression.
+
+The distinction is not that one system has JSON and the other does not. JSON is only a format. Litex's claim is that definitions, facts, verification grounds, state changes, and dependencies together form a checkable knowledge record that people, AI, textbooks, and other tools can continue to use. Here, “trustworthy” means that grounds, status, and trust boundaries remain explicit; it does not mean that every record has already been independently rechecked by Lean.
 
 <a id="compatibility"></a>
 
@@ -1126,8 +1150,9 @@ fact-oriented and bottom-up design is an invitation to explore another relation
 between human intuition, machine verification, and mathematical knowledge.
 
 Section 5 makes this longer-term vision concrete: the implementation may grow
-large while readers can still trace the definitions, premises, and facts behind
-each statement through Checkable Knowledge Records.
+large while its core execution process remains easy to understand. Readers can
+trace the definitions, premises, and facts behind each statement, and
+participate in an interactive textbook through that visible path.
 
 Litex may not become the only path, and it does not need to. Its contribution
 may be to show that formal mathematics has more than one possible future.

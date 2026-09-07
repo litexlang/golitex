@@ -238,6 +238,7 @@ setting ProbabilitySpaceSetting([SigmaAlgebraSetting], probability fn(event even
     forall event events:
         probability(event) >= 0
     forall family fn(n N+) events:
+        index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}) $in events
         $pairwise_disjoint_event_sequence(Omega, events, family)
         =>:
             $has_series_sum(fn(n N+) R {probability(family(n))}, probability(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})))
@@ -248,6 +249,7 @@ prop is_probability_space([ProbabilitySpaceSetting])
 # right side carrying ordinary real-series convergence semantics.
 thm kolmogorov_countable_additivity:
     ? forall [ProbabilitySpaceSetting], event_sequence fn(n N+) events:
+        index_union(N+, Omega, fn(n N+) power_set(Omega) {event_sequence(n)}) $in events
         $pairwise_disjoint_event_sequence(Omega, events, event_sequence)
         =>:
             $has_series_sum(fn(n N+) R {probability(event_sequence(n))}, probability(index_union(N+, Omega, fn(n N+) power_set(Omega) {event_sequence(n)})))
@@ -771,7 +773,9 @@ thm two_event_sequence_pairwise_disjoint:
 # every later empty-event value is zero.
 thm probability_of_two_event_sequence:
     ? forall [ProbabilitySpaceSetting(sequence_Omega, sequence_events, sequence_probability)], A, B sequence_events, n N+:
-        sequence_probability(\two_event_sequence<sequence_Omega, sequence_events>(A, B, n)) = two_term_sequence(sequence_probability(A), sequence_probability(B), n)
+        \two_event_sequence<sequence_Omega, sequence_events>(A, B, n) $in sequence_events
+        =>:
+            sequence_probability(\two_event_sequence<sequence_Omega, sequence_events>(A, B, n)) = two_term_sequence(sequence_probability(A), sequence_probability(B), n)
     let two_events = \two_event_sequence<sequence_Omega, sequence_events>
     n = 1 or n > 1
     by cases:
@@ -868,40 +872,9 @@ thm two_event_probability_series_has_sum:
         ? forall term_index N+:
             probability_terms(term_index) = two_term_sequence(series_probability(A), series_probability(B), term_index)
         probability_terms(term_index) = series_probability(two_events(A, B, term_index))
-        term_index = 1 or term_index > 1
-        by cases:
-            ? probability_terms(term_index) = two_term_sequence(series_probability(A), series_probability(B), term_index)
-            case term_index = 1:
-                two_events(A, B, term_index) = A
-                two_events(A, B, term_index) $in series_events
-                \two_event_sequence<series_Omega, series_events>(A, B, term_index) $in series_events
-                two_term_sequence(series_probability(A), series_probability(B), term_index) = series_probability(A)
-                probability_terms(term_index) = series_probability(two_events(A, B, term_index)) = series_probability(A) = two_term_sequence(series_probability(A), series_probability(B), term_index)
-            case term_index > 1:
-                term_index - 1 $in N+
-                term_index - 1 = 1 or term_index - 1 > 1
-                by cases:
-                    ? probability_terms(term_index) = two_term_sequence(series_probability(A), series_probability(B), term_index)
-                    case term_index - 1 = 1:
-                        term_index = (term_index - 1) + 1 = 1 + 1 = 2
-                        two_events(A, B, term_index) = B
-                        two_events(A, B, term_index) $in series_events
-                        \two_event_sequence<series_Omega, series_events>(A, B, term_index) $in series_events
-                        one_term_sequence(series_probability(B), term_index - 1) = series_probability(B)
-                        two_term_sequence(series_probability(A), series_probability(B), term_index) = one_term_sequence(series_probability(B), term_index - 1) = series_probability(B)
-                        probability_terms(term_index) = series_probability(two_events(A, B, term_index)) = series_probability(B) = two_term_sequence(series_probability(A), series_probability(B), term_index)
-                    case term_index - 1 > 1:
-                        (term_index - 1) + 1 > 1 + 1
-                        term_index = (term_index - 1) + 1
-                        1 + 1 = 2
-                        term_index > 2
-                        two_events(A, B, term_index) = {}
-                        two_events(A, B, term_index) $in series_events
-                        \two_event_sequence<series_Omega, series_events>(A, B, term_index) $in series_events
-                        series_probability(two_events(A, B, term_index)) = series_probability({}) = 0
-                        one_term_sequence(series_probability(B), term_index - 1) = 0
-                        two_term_sequence(series_probability(A), series_probability(B), term_index) = one_term_sequence(series_probability(B), term_index - 1) = 0
-                        probability_terms(term_index) = series_probability(two_events(A, B, term_index)) = 0 = two_term_sequence(series_probability(A), series_probability(B), term_index)
+        \two_event_sequence<series_Omega, series_events>(A, B, term_index) $in series_events
+        release thm probability_of_two_event_sequence(series_Omega, series_events, series_probability, A, B, term_index)
+        probability_terms(term_index) = series_probability(two_events(A, B, term_index)) = series_probability(\two_event_sequence<series_Omega, series_events>(A, B, term_index)) = two_term_sequence(series_probability(A), series_probability(B), term_index)
     by thm two_term_series_has_sum(series_probability(A), series_probability(B)) => $has_series_sum(fn(n N+) R {two_term_sequence(series_probability(A), series_probability(B), n)}, series_probability(A) + series_probability(B))
     by thm pointwise_equal_sequences_preserve_series_sum(probability_terms, fn(n N+) R {two_term_sequence(series_probability(A), series_probability(B), n)}, series_probability(A) + series_probability(B)) => $has_series_sum(probability_terms, series_probability(A) + series_probability(B))
     probability_terms = fn(n N+) R {series_probability(two_events(A, B, n))}
@@ -1536,17 +1509,7 @@ thm equalities_compose:
             x = z
 
 thm probability_of_next_increasing_stage:
-    ? forall Omega set, events power_set(power_set(Omega)), probability fn (event events) R, event_sequence fn (index N+) events, k N+:
-        $is_sigma_algebra(Omega, events)
-        probability({}) = 0
-        probability(Omega) = 1
-        forall event events:
-            probability(event) >= 0
-        forall family fn (family_index N+) events:
-            $pairwise_disjoint_event_sequence(Omega, events, family)
-            =>:
-                $has_series_sum(fn (family_index N+) R {probability(family(family_index))}, probability(index_union(N+, Omega, fn (family_index N+) power_set(Omega) {family(family_index)})))
-        $is_sigma_algebra(Omega, events)
+    ? forall [ProbabilitySpaceSetting], event_sequence fn (index N+) events, k N+:
         $is_increasing_event_sequence(Omega, events, event_sequence)
         =>:
             probability(event_sequence(k + 1)) = probability(event_sequence(k)) + probability(\increasing_event_increment<Omega, events>(event_sequence, k + 1))
@@ -1561,16 +1524,7 @@ thm probability_of_next_increasing_stage:
     probability(event_sequence(k + 1)) = probability(event_sequence(k)) + probability(increment(event_sequence, k + 1)) = probability(event_sequence(k)) + probability(\increasing_event_increment<Omega, events>(event_sequence, k + 1))
 
 thm increasing_event_increment_probability_partial_sum:
-    ? forall Omega set, events power_set(power_set(Omega)), probability fn (event events) R, event_sequence fn (index N+) events, k N+:
-        $is_sigma_algebra(Omega, events)
-        probability({}) = 0
-        probability(Omega) = 1
-        forall event events:
-            probability(event) >= 0
-        forall family fn (family_index N+) events:
-            $pairwise_disjoint_event_sequence(Omega, events, family)
-            =>:
-                $has_series_sum(fn (family_index N+) R {probability(family(family_index))}, probability(index_union(N+, Omega, fn (family_index N+) power_set(Omega) {family(family_index)})))
+    ? forall [ProbabilitySpaceSetting], event_sequence fn (index N+) events, k N+:
         $is_sigma_algebra(Omega, events)
         $is_increasing_event_sequence(Omega, events, event_sequence)
         =>:
