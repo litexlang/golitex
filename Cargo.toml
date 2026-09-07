@@ -14,6 +14,12 @@ exclude = [
     "litex/.binary/*",
     "assets/*",
     "examples/*",
+    "showcases/*",
+    "scripts/*",
+    "lean/.lake",
+    "litex_semantics_in_lean/*",
+    "**/.draft/**",
+    "**/.drafts/**",
     "doc/*",
     ".github/*",
 ]

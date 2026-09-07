@@ -8,6 +8,7 @@ use std::time::Instant;
 
 const SHOWCASES_SUBDIR: &str = "showcases/math_concepts_in_litex";
 const SHOWCASE_WORKERS: usize = 4;
+const SHOWCASE_SUPPORT_FILES: &[&str] = &["15_coordinate_geometry_case_study/geo/main.lit"];
 
 struct ShowcaseResult {
     label: String,
@@ -101,6 +102,13 @@ fn run_showcases_excludes_draft_paths() {
     )));
 }
 
+#[test]
+fn run_showcases_excludes_support_modules() {
+    assert!(is_showcase_support_file(Path::new(
+        "showcases/math_concepts_in_litex/15_coordinate_geometry_case_study/geo/main.lit"
+    )));
+}
+
 fn collect_showcase_files(repository_root: &Path) -> Vec<PathBuf> {
     let showcase_root = repository_root.join(SHOWCASES_SUBDIR);
     let mut pending = vec![showcase_root];
@@ -115,7 +123,9 @@ fn collect_showcase_files(repository_root: &Path) -> Vec<PathBuf> {
                 if !is_draft_path(&path) {
                     pending.push(path);
                 }
-            } else if path.extension().is_some_and(|extension| extension == "lit") {
+            } else if path.extension().is_some_and(|extension| extension == "lit")
+                && !is_showcase_support_file(&path)
+            {
                 files.push(path);
             }
         }
@@ -174,6 +184,12 @@ fn run_showcase_worker(
         });
     }
     results
+}
+
+fn is_showcase_support_file(path: &Path) -> bool {
+    SHOWCASE_SUPPORT_FILES
+        .iter()
+        .any(|support_file| path.ends_with(support_file))
 }
 
 fn is_draft_path(path: &Path) -> bool {

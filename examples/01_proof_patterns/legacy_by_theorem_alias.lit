@@ -31,4 +31,3 @@ $legacy_right(1)
 
 # Boundary: `by thm legacy_release(1) => <atomic_fact>` remains the selected
 # one-conclusion form; compound or indented targets are still rejected.
-# Evidence: `target/release/litex -f examples/01_proof_patterns/legacy_by_theorem_alias.lit`.

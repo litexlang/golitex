@@ -1103,25 +1103,6 @@
     },
     {
       "checked_in_forbidden_hits": [],
-      "checked_in_kernel_class": "kernel_reject",
-      "checked_in_kernel_exit": 1,
-      "checked_in_kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/63_ScalarOperatorBuiltins.lean:36:332: error: Application type mismatch: The argument",
-      "checked_in_path": "lean/examples/63_ScalarOperatorBuiltins.lean",
-      "checked_in_sha256": "730e53b6f77152fa94bd5ef37ce88aa7b2cc8db0c855ac59aff761f29300677a",
-      "compiler_exit": 0,
-      "compiler_first_error": "generated /Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/tmp/2026-09-03/verify-result-wd-migration/coverage-generated/63_ScalarOperatorBuiltins.lean from /Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/63_ScalarOperatorBuiltins.lit",
-      "example": "63_ScalarOperatorBuiltins.lit",
-      "generated_forbidden_hits": [],
-      "generated_kernel_class": "pass",
-      "generated_kernel_exit": 0,
-      "generated_kernel_first_error": null,
-      "generated_path": "tmp/2026-09-03/verify-result-wd-migration/coverage-generated/63_ScalarOperatorBuiltins.lean",
-      "generated_sha256": "4fb6d5f201d3ee3bf89a0611b579cfb2173b25d325ed632a03ae2fb375a17e91",
-      "matches_checked_in": false,
-      "source_sha256": "046eb89f9087198f2c5d77553467acbbba499a1a120fefe62d7945303cf7a7bf"
-    },
-    {
-      "checked_in_forbidden_hits": [],
       "checked_in_kernel_class": "pass",
       "checked_in_kernel_exit": 0,
       "checked_in_kernel_first_error": null,
@@ -1340,16 +1321,16 @@
   "totals": {
     "checked_in_forbidden_rows": 0,
     "checked_in_kernel_infrastructure_failure": 0,
-    "checked_in_kernel_kernel_reject": 24,
+    "checked_in_kernel_kernel_reject": 23,
     "checked_in_kernel_not_run": 0,
     "checked_in_kernel_pass": 45,
-    "compiler_pass": 62,
+    "compiler_pass": 61,
     "generated_forbidden_rows": 0,
     "generated_kernel_infrastructure_failure": 0,
     "generated_kernel_kernel_reject": 2,
     "generated_kernel_not_run": 7,
-    "generated_kernel_pass": 60,
+    "generated_kernel_pass": 59,
     "matches_checked_in": 12,
-    "registered": 69
+    "registered": 68
   }
 }

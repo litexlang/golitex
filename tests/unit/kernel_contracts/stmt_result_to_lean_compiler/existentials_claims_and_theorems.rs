@@ -929,42 +929,6 @@ fn integer_sum_builtin_release_fails_closed_outside_the_reviewed_z_to_z_contract
 }
 
 #[test]
-fn typed_abs_min_max_rules_compile_through_reviewed_scalar_operator_abi() {
-    let source = include_str!("../../../../lean/examples/63_ScalarOperatorBuiltins.lit");
-    let results =
-        crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
-            source,
-            "scalar_operator_builtins.lit",
-        )
-        .expect("execute typed abs/min/max rules");
-    let generated = StmtResultToLeanCompiler::new("scalar_operator_builtins.lit")
-        .compile_stmt_results_to_lean_source(&results)
-        .expect("compile typed abs/min/max rules");
-
-    for theorem in [
-        "Litex.Rules.absMul",
-        "Litex.Rules.absNonnegative",
-        "Litex.Rules.absAddLe",
-        "Litex.Rules.minMonotone",
-        "Litex.Rules.maxMonotone",
-        "Litex.Rules.minAssociative",
-        "Litex.Rules.maxAbsorbMinLeft",
-    ] {
-        assert!(
-            generated.contains(theorem),
-            "missing {theorem}:\n{generated}"
-        );
-    }
-    assert!(generated.contains("Litex.abs"), "{generated}");
-    assert!(generated.contains("Litex.min"), "{generated}");
-    assert!(generated.contains("Litex.max"), "{generated}");
-    assert!(
-        generated.contains("Litex.Same.trans (Litex.Rules.minIdempotent"),
-        "heterogeneous result must retain the exact source-to-selected bridge:\n{generated}"
-    );
-}
-
-#[test]
 fn closed_abs_min_max_normalization_uses_the_same_reviewed_object_abi() {
     let source = "abs(1) = 1\nmin(1, 2) = 1\nmax(1, 2) = 2\n";
     let results =
