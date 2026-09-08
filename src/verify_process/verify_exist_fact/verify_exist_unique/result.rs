@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 pub struct VerifyExistUniqueFactResult {
     pub fact: ExistUniqueFact,
-    pub well_defined_result: VerifyExistFactWellDefinednessResult,
+    pub well_defined_proof: ExistUniqueFactWellDefinedProof,
     pub searched_proof: ExistUniqueFactSearchedProof,
 }
 

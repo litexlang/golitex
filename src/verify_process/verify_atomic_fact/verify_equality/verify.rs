@@ -6,12 +6,12 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> Result<VerifyEqualityResult, RuntimeError> {
-        let well_defined_result =
+        let well_defined_proof =
             self.verify_equal_fact_well_definedness(fact, verify_state.clone())?;
         let searched_proof = self.search_equal_fact_proof(fact, verify_state)?;
         Ok(VerifyEqualityResult {
             fact: fact.clone(),
-            well_defined_result,
+            well_defined_proof,
             searched_proof,
         })
     }

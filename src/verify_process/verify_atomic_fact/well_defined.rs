@@ -1,5 +1,5 @@
 use crate::prelude::*;
 
-pub struct VerifyAtomicFactWellDefinednessResult {
-    pub well_definedness_proof_of_each_parameter: Vec<WellDefinednessProofOfObj>,
+pub struct AtomicFactWellDefinedProof {
+    pub well_defined_of_each_parameter: Vec<WellDefinednessProofOfObj>,
 }

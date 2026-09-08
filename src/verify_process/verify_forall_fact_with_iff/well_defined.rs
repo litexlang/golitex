@@ -1,8 +1,8 @@
 use crate::prelude::*;
 
-pub struct VerifyForallFactWithIffWellDefinednessResult {
-    pub then_implies_iff: VerifyForallFactWellDefinednessResult,
-    pub iff_implies_then: VerifyForallFactWellDefinednessResult,
+pub struct ForallFactWithIffWellDefinedProof {
+    pub then_implies_iff: ForallFactWellDefinedProof,
+    pub iff_implies_then: ForallFactWellDefinedProof,
 }
 
 impl Runtime {
@@ -10,6 +10,6 @@ impl Runtime {
         &mut self,
         fact: &ForallFactWithIff,
         verify_state: VerifyState,
-    ) -> Result<VerifyForallFactWithIffWellDefinednessResult, RuntimeError> {
+    ) -> Result<ForallFactWithIffWellDefinedProof, RuntimeError> {
     }
 }

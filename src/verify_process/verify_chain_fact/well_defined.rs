@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
-pub struct VerifyChainFactWellDefinednessResult {
-    pub well_definedness_of_each_comparison: Vec<VerifyAtomicFactWellDefinednessResult>,
+pub struct ChainFactWellDefinedProof {
+    pub well_defined_of_each_comparison: Vec<AtomicFactWellDefinedProof>,
 }
 
 impl Runtime {
@@ -9,6 +9,6 @@ impl Runtime {
         &mut self,
         fact: &ChainFact,
         verify_state: VerifyState,
-    ) -> Result<VerifyChainFactWellDefinednessResult, RuntimeError> {
+    ) -> Result<ChainFactWellDefinedProof, RuntimeError> {
     }
 }

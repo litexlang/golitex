@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 pub struct VerifyAndFactResult {
     pub fact: AndFact,
-    pub well_defined_result: VerifyAndFactWellDefinednessResult,
+    pub well_defined_proof: AndFactWellDefinedProof,
     pub searched_proof: AndFactSearchedProof,
 }
 
