@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 pub struct VerifyNonEquationalAtomicFactResult {
     pub fact: AtomicFact,
-    pub well_defined_result: VerifyNonEquationalAtomicFactWellDefinednessResult,
+    pub well_defined_proof: AtomicFactWellDefinedProof,
     pub searched_proof: NonEquationalAtomicFactSearchedProof,
 }
 

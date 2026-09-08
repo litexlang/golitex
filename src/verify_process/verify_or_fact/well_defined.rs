@@ -1,13 +1,13 @@
 use crate::prelude::*;
 
-pub enum VerifyAndChainAtomicFactWellDefinednessResult {
-    AtomicFact(VerifyAtomicFactWellDefinednessResult),
-    AndFact(VerifyAndFactWellDefinednessResult),
-    ChainFact(VerifyChainFactWellDefinednessResult),
+pub enum AndChainAtomicFactWellDefinedProof {
+    AtomicFact(AtomicFactWellDefinedProof),
+    AndFact(AndFactWellDefinedProof),
+    ChainFact(ChainFactWellDefinedProof),
 }
 
-pub struct VerifyOrFactWellDefinednessResult {
-    pub well_definedness_of_each_branch: Vec<VerifyAndChainAtomicFactWellDefinednessResult>,
+pub struct OrFactWellDefinedProof {
+    pub well_defined_of_each_branch: Vec<AndChainAtomicFactWellDefinedProof>,
 }
 
 impl Runtime {
@@ -15,13 +15,13 @@ impl Runtime {
         &mut self,
         fact: &OrFact,
         verify_state: VerifyState,
-    ) -> Result<VerifyOrFactWellDefinednessResult, RuntimeError> {
+    ) -> Result<OrFactWellDefinedProof, RuntimeError> {
     }
 
     pub fn verify_and_chain_atomic_fact_well_definedness(
         &mut self,
         fact: &AndChainAtomicFact,
         verify_state: VerifyState,
-    ) -> Result<VerifyAndChainAtomicFactWellDefinednessResult, RuntimeError> {
+    ) -> Result<AndChainAtomicFactWellDefinedProof, RuntimeError> {
     }
 }

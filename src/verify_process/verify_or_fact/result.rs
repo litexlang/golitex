@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 pub struct VerifyOrFactResult {
     pub fact: OrFact,
-    pub well_defined_result: VerifyOrFactWellDefinednessResult,
+    pub well_defined_proof: OrFactWellDefinedProof,
     pub searched_proof: OrFactSearchedProof,
 }
 

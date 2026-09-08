@@ -5,6 +5,6 @@ impl Runtime {
         &mut self,
         fact: &EqualFact,
         verify_state: VerifyState,
-    ) -> Result<VerifyAtomicFactWellDefinednessResult, RuntimeError> {
+    ) -> Result<AtomicFactWellDefinedProof, RuntimeError> {
     }
 }

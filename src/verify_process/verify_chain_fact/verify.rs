@@ -6,12 +6,12 @@ impl Runtime {
         fact: &ChainFact,
         verify_state: VerifyState,
     ) -> Result<VerifyChainFactResult, RuntimeError> {
-        let well_defined_result =
+        let well_defined_proof =
             self.verify_chain_fact_well_definedness(fact, verify_state.clone())?;
         let searched_proof = self.search_chain_fact_proof(fact, verify_state)?;
         Ok(VerifyChainFactResult {
             fact: fact.clone(),
-            well_defined_result,
+            well_defined_proof,
             searched_proof,
         })
     }

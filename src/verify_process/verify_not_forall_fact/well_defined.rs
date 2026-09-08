@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
-pub struct VerifyNotForallFactWellDefinednessResult {
-    pub inner: VerifyForallFactWellDefinednessResult,
+pub struct NotForallFactWellDefinedProof {
+    pub inner: ForallFactWellDefinedProof,
 }
 
 impl Runtime {
@@ -9,6 +9,6 @@ impl Runtime {
         &mut self,
         fact: &NotForallFact,
         verify_state: VerifyState,
-    ) -> Result<VerifyNotForallFactWellDefinednessResult, RuntimeError> {
+    ) -> Result<NotForallFactWellDefinedProof, RuntimeError> {
     }
 }

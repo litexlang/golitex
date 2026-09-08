@@ -1,16 +1,16 @@
 use crate::prelude::*;
 
-pub enum VerifyExistOrAndChainAtomicFactWellDefinednessResult {
-    AtomicFact(VerifyAtomicFactWellDefinednessResult),
-    AndFact(VerifyAndFactWellDefinednessResult),
-    ChainFact(VerifyChainFactWellDefinednessResult),
-    OrFact(VerifyOrFactWellDefinednessResult),
-    ExistFact(VerifyExistFactWellDefinednessResult),
+pub enum ExistOrAndChainAtomicFactWellDefinedProof {
+    AtomicFact(AtomicFactWellDefinedProof),
+    AndFact(AndFactWellDefinedProof),
+    ChainFact(ChainFactWellDefinedProof),
+    OrFact(OrFactWellDefinedProof),
+    ExistFact(ExistFactWellDefinedProof),
 }
 
-pub struct VerifyForallFactWellDefinednessResult {
-    pub well_definedness_of_each_premise: Vec<VerifyExistOrAndChainAtomicFactWellDefinednessResult>,
-    pub well_definedness_of_each_then_fact: Vec<VerifyExistOrAndChainAtomicFactWellDefinednessResult>,
+pub struct ForallFactWellDefinedProof {
+    pub well_defined_of_each_premise: Vec<ExistOrAndChainAtomicFactWellDefinedProof>,
+    pub well_defined_of_each_then_fact: Vec<ExistOrAndChainAtomicFactWellDefinedProof>,
 }
 
 impl Runtime {
@@ -18,13 +18,13 @@ impl Runtime {
         &mut self,
         fact: &ForallFact,
         verify_state: VerifyState,
-    ) -> Result<VerifyForallFactWellDefinednessResult, RuntimeError> {
+    ) -> Result<ForallFactWellDefinedProof, RuntimeError> {
     }
 
     pub fn verify_exist_or_and_chain_atomic_fact_well_definedness(
         &mut self,
         fact: &ExistOrAndChainAtomicFact,
         verify_state: VerifyState,
-    ) -> Result<VerifyExistOrAndChainAtomicFactWellDefinednessResult, RuntimeError> {
+    ) -> Result<ExistOrAndChainAtomicFactWellDefinedProof, RuntimeError> {
     }
 }

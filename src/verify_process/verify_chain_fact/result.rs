@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 pub struct VerifyChainFactResult {
     pub fact: ChainFact,
-    pub well_defined_result: VerifyChainFactWellDefinednessResult,
+    pub well_defined_proof: ChainFactWellDefinedProof,
     pub searched_proof: ChainFactSearchedProof,
 }
 

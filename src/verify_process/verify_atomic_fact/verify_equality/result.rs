@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 pub struct VerifyEqualityResult {
     pub fact: EqualFact,
-    pub well_defined_result: VerifyAtomicFactWellDefinednessResult,
+    pub well_defined_proof: AtomicFactWellDefinedProof,
     pub searched_proof: EqualitySearchedProof,
 }
 
