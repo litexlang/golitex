@@ -1,26 +1,27 @@
 use crate::prelude::*;
 
 pub struct VerifyEqualityResult {
-    pub well_definedness_result: VerifyAtomicFactWellDefinednessResult,
-    pub search_proof: EqualitySearchProof,
+    pub fact: EqualFact,
+    pub well_defined_result: VerifyAtomicFactWellDefinednessResult,
+    pub searched_proof: EqualitySearchedProof,
 }
 
-pub enum EqualitySearchProof {
+pub enum EqualitySearchedProof {
     ByCache(CacheSearchProof),
     ByBuiltinRule(EqualitySearchProofByBuiltinRule),
-    ByKnownAtomicFact(EqualitySearchProofByKnownAtomicFact),
+    ByKnownAtomicFact(EqualitySearchedProofByKnownAtomicFact),
     ByBuiltinStrategy(EqualitySearchProofByBuiltinStrategy),
-    ByKnownForallFact(EqualitySearchProofByKnownForallFact),
+    ByKnownForallFact(EqualitySearchedProofByKnownForallFact),
     ByBuiltinAlgebraicRewrite(EqualitySearchProofByBuiltinAlgebraicRewrite),
     ByKnownAlgebraicRewrite(EqualitySearchProofByKnownAlgebraicRewrite),
 }
 
-pub struct EqualitySearchProofByKnownAtomicFact {
+pub struct EqualitySearchedProofByKnownAtomicFact {
     pub cite_fact_id: FactId,
     pub why_parameters_of_known_fact_are_equal_to_givens: Vec<VerifyFactResult>,
 }
 
-pub struct EqualitySearchProofByKnownForallFact {
+pub struct EqualitySearchedProofByKnownForallFact {
     pub cite_fact_id: FactId,
     pub requirement_facts: Vec<FactStmt>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,

@@ -6,68 +6,62 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: VerifyState,
     ) -> Result<VerifyNonEquationalAtomicFactResult, RuntimeError> {
-        let well_definedness_result =
+        let well_defined_result =
             self.verify_non_equational_atomic_fact_well_definedness(fact, verify_state.clone())?;
-        let search_proof = self.search_non_equational_atomic_proof(fact, verify_state)?;
+        let searched_proof = self.search_non_equational_atomic_fact_proof(fact, verify_state)?;
         Ok(VerifyNonEquationalAtomicFactResult {
-            well_definedness_result,
-            search_proof,
+            fact: fact.clone(),
+            well_defined_result,
+            searched_proof,
         })
     }
 
-    pub fn verify_non_equational_atomic_fact_well_definedness(
+    pub fn search_non_equational_atomic_fact_proof(
         &mut self,
         fact: &AtomicFact,
         verify_state: VerifyState,
-    ) -> Result<VerifyNonEquationalAtomicFactWellDefinednessResult, RuntimeError> {
-    }
-
-    pub fn search_non_equational_atomic_proof(
-        &mut self,
-        fact: &AtomicFact,
-        verify_state: VerifyState,
-    ) -> Result<NonEquationalAtomicFactSearchProof, RuntimeError> {
+    ) -> Result<NonEquationalAtomicFactSearchedProof, RuntimeError> {
         if let Some(result) =
             self.search_non_equational_atomic_proof_by_cache(fact, verify_state.clone())?
         {
-            return Ok(NonEquationalAtomicFactSearchProof::ByCache(result));
+            return Ok(NonEquationalAtomicFactSearchedProof::ByCache(result));
         }
 
         if let Some(result) =
             self.search_non_equational_atomic_proof_by_builtin_rule(fact, verify_state.clone())?
         {
-            return Ok(NonEquationalAtomicFactSearchProof::ByBuiltinRule(result));
+            return Ok(NonEquationalAtomicFactSearchedProof::ByBuiltinRule(result));
         }
 
         if let Some(result) = self
             .search_non_equational_atomic_proof_by_known_atomic_fact(fact, verify_state.clone())?
         {
-            return Ok(NonEquationalAtomicFactSearchProof::ByKnownAtomicFact(result));
+            return Ok(NonEquationalAtomicFactSearchedProof::ByKnownAtomicFact(result));
         }
 
         if let Some(result) =
             self.search_non_equational_atomic_proof_by_definition(fact, verify_state.clone())?
         {
-            return Ok(NonEquationalAtomicFactSearchProof::ByDefinition(result));
+            return Ok(NonEquationalAtomicFactSearchedProof::ByDefinition(result));
         }
 
         if let Some(result) = self
             .search_non_equational_atomic_proof_by_builtin_strategy(fact, verify_state.clone())?
         {
-            return Ok(NonEquationalAtomicFactSearchProof::ByBuiltinStrategy(result));
+            return Ok(NonEquationalAtomicFactSearchedProof::ByBuiltinStrategy(result));
         }
 
         if let Some(result) = self
             .search_non_equational_atomic_proof_by_known_forall_fact(fact, verify_state.clone())?
         {
-            return Ok(NonEquationalAtomicFactSearchProof::ByKnownForallFact(result));
+            return Ok(NonEquationalAtomicFactSearchedProof::ByKnownForallFact(result));
         }
 
         if let Some(result) = self.search_non_equational_atomic_proof_by_builtin_algebraic_rewrite(
             fact,
             verify_state.clone(),
         )? {
-            return Ok(NonEquationalAtomicFactSearchProof::ByBuiltinAlgebraicRewrite(
+            return Ok(NonEquationalAtomicFactSearchedProof::ByBuiltinAlgebraicRewrite(
                 result,
             ));
         }
@@ -76,7 +70,7 @@ impl Runtime {
             if let Some(result) = self
                 .search_non_equational_atomic_proof_by_known_algebraic_rewrite(fact, verify_state)?
             {
-                return Ok(NonEquationalAtomicFactSearchProof::ByKnownAlgebraicRewrite(
+                return Ok(NonEquationalAtomicFactSearchedProof::ByKnownAlgebraicRewrite(
                     result,
                 ));
             }
@@ -103,14 +97,14 @@ impl Runtime {
         &mut self,
         fact: &AtomicFact,
         verify_state: VerifyState,
-    ) -> Result<Option<NonEquationalAtomicFactSearchProofByKnownAtomicFact>, RuntimeError> {
+    ) -> Result<Option<NonEquationalAtomicFactSearchedProofByKnownAtomicFact>, RuntimeError> {
     }
 
     pub fn search_non_equational_atomic_proof_by_definition(
         &mut self,
         fact: &AtomicFact,
         verify_state: VerifyState,
-    ) -> Result<Option<NonEquationalAtomicFactSearchProofByDefinition>, RuntimeError> {
+    ) -> Result<Option<NonEquationalAtomicFactSearchedProofByDefinition>, RuntimeError> {
     }
 
     pub fn search_non_equational_atomic_proof_by_builtin_strategy(
@@ -124,7 +118,7 @@ impl Runtime {
         &mut self,
         fact: &AtomicFact,
         verify_state: VerifyState,
-    ) -> Result<Option<NonEquationalAtomicFactSearchProofByKnownForallFact>, RuntimeError> {
+    ) -> Result<Option<NonEquationalAtomicFactSearchedProofByKnownForallFact>, RuntimeError> {
     }
 
     pub fn search_non_equational_atomic_proof_by_builtin_algebraic_rewrite(
