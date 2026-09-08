@@ -4,6 +4,7 @@ use crate::prelude::*;
 use std::fmt;
 #[derive(Clone)]
 pub struct NormalAtomicFact {
+    pub fact_id: FactId,
     pub predicate: AtomicName,
     pub body: Vec<Obj>,
     pub line_file: LineFile,
@@ -11,6 +12,7 @@ pub struct NormalAtomicFact {
 
 #[derive(Clone)]
 pub struct NotNormalAtomicFact {
+    pub fact_id: FactId,
     pub predicate: AtomicName,
     pub body: Vec<Obj>,
     pub line_file: LineFile,
@@ -19,6 +21,7 @@ pub struct NotNormalAtomicFact {
 impl NormalAtomicFact {
     pub fn new(predicate: AtomicName, body: Vec<Obj>, line_file: LineFile) -> Self {
         NormalAtomicFact {
+            fact_id: FactId::fresh(),
             predicate,
             body,
             line_file,
@@ -29,6 +32,7 @@ impl NormalAtomicFact {
 impl NotNormalAtomicFact {
     pub fn new(predicate: AtomicName, body: Vec<Obj>, line_file: LineFile) -> Self {
         NotNormalAtomicFact {
+            fact_id: FactId::fresh(),
             predicate,
             body,
             line_file,

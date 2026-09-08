@@ -2,7 +2,7 @@
 
 Created and maintained by Jiachen Shen.
 
-Last updated: September 2, 2026.
+Last updated: September 8, 2026.
 
 Website: https://litexlang.com/doc/Litex_Blueprint
 
@@ -24,7 +24,7 @@ to the Lean/Mathlib ecosystem.
 
 > **Litex is an experimental hobby project in beta; expect rough edges.**
 
-<!-- Blueprint spine: reasoning abundance → scientific object → design hypothesis → measurable costs → potential capacity impact → verification and understanding bottlenecks → two participation barriers → four language choices → definition and verification → a readable execution process users can join → ToLean/adapter handoff → the end-to-end human–AI–Litex knowledge-production loop → ecosystem role → success criterion -->
+<!-- Blueprint spine: reasoning abundance → scientific object → design hypothesis → measurable costs → potential capacity impact → verification and understanding bottlenecks → two participation barriers → four language choices → definition and verification → one-statement knowledge record → Human–AI–Litex skill and construction protocol → replay, reuse, and Lean/Mathlib handoff → ecosystem role → success criterion -->
 
 <!--
 Litex 定位四层检查（写作时逐层核对；面向不同受众可以调整强调重点，但不能混淆层级）：
@@ -54,10 +54,10 @@ Litex 定位四层检查（写作时逐层核对；面向不同受众可以调�
   - [4. From Four Design Principles to Mathematical Practice: Definition and Verification](#mathematics-practice)
   - [5. What Each Statement Leaves Behind: Checkable Knowledge Records](#execution-model)
     - [Summary: Litex and Naproche—Similar Goals, Different Core Interfaces](#summary-litex-and-naproche)
-  - [6. Lean-Compatible: Independent Rechecking for Covered Paths](#compatibility)
-    - [Summary: Bottom-Up and Top-Down Reasoning Are Complementary](#summary-bottom-up-and-top-down-reasoning-are-complementary)
-  - [7. The End-to-End Human–AI–Litex Knowledge-Production Loop](#interaction-loop)
+  - [6. The Human–AI–Litex Skill: Organizing Knowledge Production](#interaction-loop)
     - [Summary: Why Fact Orientation and Bottom-Up Flow Help the Loop](#summary-fact-oriented-bottom-up-loop)
+  - [7. From Recorded Litex Knowledge to Lean/Mathlib](#compatibility)
+    - [Summary: Bottom-Up and Top-Down Reasoning Are Complementary](#summary-bottom-up-and-top-down-reasoning-are-complementary)
   - [8. From Language to Ecosystem: The Role Litex Aims to Play](#ecosystem-role)
   - [9. Beyond the Search for One Best Language](#conclusions)
     - [Special Thanks](#special-thanks)
@@ -945,13 +945,196 @@ Litex's `struct` and `template` keywords also provide reusable structures for or
 
 The distinction is not that one system has JSON and the other does not. JSON is only a format. Litex's claim is that definitions, facts, verification grounds, state changes, and dependencies together form a checkable knowledge record that people, AI, textbooks, and other tools can continue to use. Here, “trustworthy” means that grounds, status, and trust boundaries remain explicit; it does not mean that every record has already been independently rechecked by Lean.
 
+This answers what one Litex statement leaves behind. The next question is how a human and an AI can use many such records to construct a larger mathematical development without confusing a proposal with an accepted fact, or a debugging trace with the maintained source. That is the role of the Human–AI–Litex skill: it turns the visible execution record into a controlled knowledge-production protocol.
+
+<a id="interaction-loop"></a>
+
+## 6. The Human–AI–Litex Skill: Organizing Knowledge Production
+
+Section 5 showed what Litex leaves behind after one definition or fact. A
+larger development needs one more layer: a way for a human and an AI to use
+those records while keeping mathematical intent, candidate proposals,
+verification decisions, and maintained source distinct. The Human–AI–Litex
+skill supplies that layer. It is a construction protocol around the language,
+not a second mathematical syntax.
+
+The protocol is possible because several first-principles choices meet in one
+interface. Litex starts from set-theoretic objects and membership, lets a
+fact-oriented source grow a verified context from the bottom up, and exposes a
+structured verification result rather than only a final truth label. Its syntax
+and semantics are deliberately small, and its statements stay close to the
+way ordinary mathematics introduces objects, conditions, facts, and
+conclusions. Other formal languages have versions of each individual choice:
+sets, forward fact accumulation, readable notation, local feedback, or
+structured proof evidence are not each exclusive to Litex. Litex's design
+hypothesis is that their combination can change the cost and visibility of
+constructing, understanding, repairing, and reusing checked mathematics in
+the AI era. That combination, rather than any single feature, is what gives
+Litex its distinctive identity and its scientific question. It is a testable
+design hypothesis, not a claim that Litex is universally superior or that any
+single ingredient is unprecedented.
+
+The skill makes the combination operational. The human fixes the mathematical
+contract, the AI proposes the next source-order block, Litex checks it in a
+small transaction, and the record explains what may happen next:
+
+```text
+human-owned mathematical intent and acceptance boundary
+                         ↓
+AI decision: the next mathematical responsibility and candidate
+                         ↓
+Litex structured verification result
+             ├─ Committed → accepted context grows
+             └─ RolledBack → accepted context stays unchanged
+                                      ↓
+                         evidence-backed diagnosis
+                                      ↓
+                         repair the same block
+
+contiguous committed prefix → canonical .lit → clean replay
+```
+
+The unit of progress is one source-order definition, theorem, or small proof
+fragment inside one outer `try:` block. The AI does not self-accept a fluent
+candidate. Litex owns the local checking decision; a `Committed` block may
+extend the context, while a `RolledBack` block cannot become a premise for
+later statements. The journal records why the next candidate changed, but a
+recorded candidate is not thereby a proof.
+
+This separation produces two related knowledge products:
+
+| Knowledge product | Primary artifact | What it preserves | What it must not replace |
+| --- | --- | --- | --- |
+| Mathematical knowledge | Materialized `.lit` source | Accepted definitions, facts, dependencies, and the contiguous verified prefix | Attempt history or AI explanations |
+| Construction knowledge | AI decision journal, Litex JSON result, replay and gate records | The goal, candidate, verifier state, failure location, diagnosis, repair, and clean replay evidence | Human judgment about mathematical meaning or the verifier's actual decision |
+
+The construction record has two distinct voices. The AI journal says why a
+candidate was proposed or repaired: its intent, hypothesis, evidence used, and
+next smallest change. The Litex result says what the verifier actually
+reported: whether the transaction committed, which phase or goal failed, what
+evidence was returned, and whether the accepted context changed. A machine
+readable `structured verification result` is therefore a better name for the
+direct output of checking than “the AI's reasoning.” It preserves auditable
+decision evidence without pretending to preserve hidden chain-of-thought.
+
+This also explains why both successful and failed attempts matter. A success
+records a reusable fact and the route that entered the accepted context. A
+failure records a boundary: the exact candidate that did not enter the
+context, the earliest decisive verifier evidence, and the smallest repair that
+was tried next. Failures can later support review, blocker classification,
+diagnostic improvement, evaluation, or future training data, but those are
+potential uses rather than measured performance results.
+
+<details>
+<summary><strong>Example: one failed proposal becomes a successful local repair</strong></summary>
+
+**Human | Fixes the mathematical contract**
+
+> Given a subgroup `H` of a group `G`, define multiplication on `H` so that
+> `group.mul(x, y)` is treated as an element of `H` whenever `x, y ∈ H`.
+
+**AI | Proposes the first candidate**
+
+The AI initially uses the previously defined `subgroup_carrier` alias as the
+return carrier. The accepted mathematical goal has not changed; only this
+candidate's interface is under test.
+
+**Litex | Returns a structured verification result**
+
+```json
+{
+  "attempt_id": "SS003A1",
+  "result": "rejected_rolled_back",
+  "failed_phase": "verify_well_definedness",
+  "verifier_evidence": "Return value group.mul(x,y) was not inferred to belong to the cross-file subgroup_carrier."
+}
+```
+
+The accepted context remains unchanged. The AI's decision record can now say
+that the mathematical definition is still intended, while the return-carrier
+expression needs a smaller repair.
+
+**AI | Repairs the localized interface**
+
+The fourth candidate keeps the same function value and exposes `H`, which is
+definitionally equal to `subgroup_carrier`, as the direct return carrier:
+
+<!-- litex:skip-test -->
+```litex
+template<G nonempty_set, group &group::Group<G>, H power_set(G):
+    $subgroup::is_subgroup(G, group, H)>:
+    have fn subgroup_mul(
+        x, y \subgroup_carrier<G, group, H>
+    ) H = group.mul(x, y)
+```
+
+**Litex | Commits the repaired fact**
+
+```json
+{
+  "attempt_id": "SS003A4",
+  "result": "accepted",
+  "verifier_evidence": "Outer try committed after declaring the return carrier as the definitionally equal H."
+}
+```
+
+Only the accepted source is materialized into the maintained `.lit` file. The
+failed proposal remains part of construction knowledge, where it explains the
+repair and can be inspected without becoming a mathematical premise. This is
+one observed interaction, not a claim that every failure can be repaired
+automatically by AI.
+
+</details>
+
+The complete construction walkthrough lives in the [Human–AI–Litex
+pipeline](https://litexlang.com/showcases); this Blueprint uses the smaller
+trace above to make the protocol and its knowledge boundary explicit.
+
+The same protocol scales from one fact to a theorem, a reusable interface, a
+textbook chapter, or a multi-file theory. At each scale, the central boundary
+stays the same: the human owns meaning, the AI proposes, Litex checks, the
+journal preserves the decision and machine evidence, and `.lit` materializes
+only the accepted mathematical prefix. The next question is therefore no
+longer how to produce another candidate, but how these two kinds of records can
+be resumed, replayed, reused, and independently checked.
+
+<a id="summary-fact-oriented-bottom-up-loop"></a>
+
+### Summary: Why Fact Orientation and Bottom-Up Flow Help the Loop
+
+| Design benefit | Mechanism in the Human–AI–Litex skill | Meaning | Boundary |
+| --- | --- | --- | --- |
+| Intermediate facts are reusable | Verified facts enter the growing context | A partial development can still supply definitions, interfaces, and facts to later work | Reuse depends on scope, formulation, and later need |
+| Correct and incorrect experiences are retained | Commits, rollbacks, verifier evidence, and repair decisions remain linked | Both successful routes and failed proposals become inspectable construction knowledge | A journal records evidence; it does not turn a candidate into a proof |
+| Errors do not pollute mathematics | A `RolledBack` candidate leaves the accepted context unchanged | A failed attempt can guide repair without becoming a false premise | The proposition still needs review against human intent |
+| Each repair remains local | The skill revisits the earliest failed phase or goal in the same block | AI can continue from an accepted prefix instead of rewriting the whole development | This lowers per-round repair cost; it is not a universal productivity result |
+| The process can be resumed | The journal names the last accepted block and the first unaccepted block | Work can continue after interruption and can be audited from a checkpoint | Replay still requires a clean file-backed gate |
+| Litex's design combination becomes testable | Set theory, fact orientation, bottom-up context growth, compact syntax, and structured results meet in one workflow | The design can be evaluated through construction cost, understanding, repair, and reuse | The combination is a research hypothesis, not an established universal advantage |
+
+The Human–AI–Litex skill therefore turns Litex's language choices into a
+repeatable knowledge-production process. The process produces both maintained
+mathematics and recoverable construction evidence. Section 7 follows those
+records beyond the original interaction: first through clean replay and reuse,
+then, where the route is supported, through Lean/Mathlib.
+
 <a id="compatibility"></a>
 
-## 6. Lean-Compatible: Independent Rechecking for Covered Paths
+## 7. From Recorded Litex Knowledge to Lean/Mathlib
 
 Litex is first an independently usable language with its own syntax, runtime, and kernel; without Lean it still checks well-definedness and facts and provides feedback.
 
-Section 5 showed what Litex leaves behind as a record; this section only follows supported verification routes into Lean/Mathlib and does not repeat the mathematical source or record fields.
+Section 6 separated the maintained mathematical source from the construction
+record. This section follows what happens after that separation: an AI or
+human can resume from the last contiguous committed block, materialize the
+accepted prefix, and run a clean file-backed replay. The same records can
+support later proofs, dependency graphs, interactive teaching, or another
+repair session without turning a failed candidate into canonical mathematics.
+
+Only after this replay and reuse boundary is clear does the Lean/Mathlib
+handoff begin. Lean is not required for every Litex development; it is an
+independent downstream checker for routes whose representations, evidence, and
+adapters are supported. The handoff therefore consumes the recorded accepted
+route rather than asking Lean to reconstruct the original interaction.
 
 “A mathematical front end for Lean” means translating supported verification paths into Lean proof terms while coverage expands. *Litex can offer content and interface experience; Lean's kernel and Mathlib can strengthen Litex. The relationship is complementary, not competitive.*
 
@@ -1037,92 +1220,18 @@ AI training also optimizes objectives and, in some stages, preference or reward 
 
 Both modes of thought are valuable. Bottom-up reasoning accumulates reusable local facts and exposes their intermediate support; top-down reasoning clarifies the target, chooses a direction, and narrows the search space. The Litex–Lean connection can place both directions in one checkable evidence chain, allowing humans and AI to collaborate from the direction each handles best.
 
-<a id="interaction-loop"></a>
-
-## 7. The End-to-End Human–AI–Litex Knowledge-Production Loop
-
-The point of the loop is not merely to let AI generate code. Verification results determine what the AI may do next. The human supplies the mathematical intent, constraints, and acceptance boundary; the AI proposes the next Litex fact; Litex checks whether it is well-defined and adequately justified, then returns a machine-readable result.
-
-`mathematical intent → AI candidate → Litex check → Committed / RolledBack → continue / repair`
-
-A `Committed` candidate enters accepted context, allowing the AI to propose the next fact. A `RolledBack` candidate leaves the context unchanged, so the AI repairs the current candidate using the failed phase, failed goal, and verifier evidence. JSON can preserve these attempts and decisions, but the JSON record is not itself a proof.
-
-<details>
-<summary><strong>Example: how Litex guides the AI in repairing subgroup multiplication</strong></summary>
-
-**Human | Supplies the mathematical goal**
-
-> Given a subgroup `H` of a group `G`, define multiplication on `H` so that `group.mul(x, y)` is still treated as an element of `H` whenever `x, y ∈ H`.
-
-**AI | Submits the first interface candidate**
-
-The AI initially declared the return carrier through the previously defined `subgroup_carrier` alias. The existing proof journal does not preserve the complete candidate source, so it is not reconstructed here as a verbatim record. The journal does preserve the decisive verification result:
-
-> **Output boundary:** The JSON below is a readable field-level excerpt retained by the existing proof journal from the Litex output at the time; it is not a stable output API. As Litex evolves, field names, nesting, and message text may change. The loop depends on the underlying meanings—whether the transaction committed, the earliest failure location, and the verifier evidence—not on this exact JSON shape.
-
-```json
-{
-  "attempt_id": "SS003A1",
-  "result": "rejected_rolled_back",
-  "failed_phase": "verify_well_definedness",
-  "verifier_evidence": "Return value group.mul(x,y) was not inferred to belong to the cross-file subgroup_carrier."
-}
-```
-
-The accepted context remains unchanged. From the stopping point, the AI concludes that the mathematical definition need not change; only the expression of the return carrier needs repair.
-
-**AI | Repairs only the localized interface problem**
-
-The fourth candidate keeps the same function value and exposes `H`, which is definitionally equal to `subgroup_carrier`, as the direct return carrier:
-
-<!-- litex:skip-test -->
-```litex
-template<G nonempty_set, group &group::Group<G>, H power_set(G):
-    $subgroup::is_subgroup(G, group, H)>:
-    have fn subgroup_mul(
-        x, y \subgroup_carrier<G, group, H>
-    ) H = group.mul(x, y)
-```
-
-**Litex | Accepts the repair**
-
-```json
-{
-  "attempt_id": "SS003A4",
-  "result": "accepted",
-  "verifier_evidence": "Outer try committed after declaring the return carrier as the definitionally equal H."
-}
-```
-
-The fact then enters accepted context, and the AI can continue with the subgroup identity and inverse. This is one observed interaction; it does not imply that every failure can be repaired automatically by AI.
-
-</details>
-
-The same loop can scale from one fact to a theorem, a reusable interface, a textbook chapter, or a multi-file theory. Contiguous committed blocks can be materialized as `.lit` source containing only accepted mathematics. When explicitly in scope and supported, the route may continue to a proof artifact checked by Lean's kernel.
-
-<a id="summary-fact-oriented-bottom-up-loop"></a>
-
-### Summary: Why Fact Orientation and Bottom-Up Flow Help the Loop
-
-| Design benefit | Mechanism in the human–AI–Litex loop | Meaning | Boundary |
-| --- | --- | --- | --- |
-| Intermediate facts are reusable | Verified facts enter context as material for later proofs | Even if the final target fails, accepted intermediate steps may serve other proofs, definitions, or interfaces | Reuse depends on the fact's scope, formulation, and later need |
-| Each trial costs less | A failed candidate rolls back transactionally, so only the current candidate needs repair | AI need not rewrite the entire proof from scratch and can continue from the previous state | This is a design advantage that lowers per-round repair cost, not a claim that AI is more efficient on every task |
-| Errors do not pollute context | A `RolledBack` candidate does not enter the accepted fact set | A failed attempt cannot become a false premise for later proofs | The proposition itself still needs review against mathematical intent |
-| Success and failure are explainable | Failure returns the phase, goal, and evidence; success preserves the accepted path | A human can tell the AI exactly where it went wrong and why a step is correct | Field names and messages may evolve; these underlying meanings are the stable part |
-| Mathematical intent is easier to align | Humans provide the goal, conditions, and acceptance boundary; AI proposes local facts | Humans review not only whether a proof passes, but whether the problem was expressed correctly | Litex cannot replace human judgment about mathematical intent |
-| Human attention is reallocated | Humans own intent and boundaries, AI explores candidates, and Litex performs local checks | Humans need not guide every syntactic and search detail line by line | Key definitions, conditions, and final judgments still require human participation |
-| Failures can improve the system | Failures are localized as expression, rule, standard-library, kernel, or diagnostic problems | A failed proof can become a language or tooling improvement signal | Classification and verification are still required; not every failure is a kernel defect |
-| The reasoning trajectory can be saved and resumed | Commits, rollback points, and verification evidence form a continuous trajectory | Work can resume from an accepted prefix, and the trajectory can support review, evaluation, or future AI training | “Useful for AI training” is data potential, not a demonstrated performance gain |
-| Important paths can be independently rechecked | Covered paths continue to Lean/Mathlib for independent checking | Litex provides an easy-to-write, easy-to-repair front end while Lean adds kernel assurance | Only currently covered paths that compile successfully receive this extra check |
-
-Therefore, the human–AI–Litex loop produces more than a final proof: it produces a reasoning trajectory with proposition boundaries, commit states, failure locations, verification evidence, and reusable intermediate facts. The `verify` pipeline above makes each candidate's next repair actionable by locating the missing well-definedness condition, fact match, definition or theorem route, universal instantiation, or later subgoal. Litex's fact-oriented, bottom-up design makes that trajectory available for continued use, targeted repair, review, and improvement.
-
 <a id="ecosystem-role"></a>
 
 ## 8. From Language to Ecosystem: The Role Litex Aims to Play
 
 **Litex serves humans and AI as both a readable-reasoning front end and a production layer for trustworthy reasoning data, connected to existing ecosystems through Lean and Mathlib. It aims to serve AI, engineers, and other domain practitioners as well as formal-methods experts.**
+
+The preceding sections describe why this role is more than a collection of
+features. Set-theoretic objects, fact-oriented source, bottom-up growth of a
+verified context, compact syntax, readable mathematical expression, and
+structured verification results meet in one protocol that can preserve both
+the mathematics and its construction evidence. The ecosystem role is the
+downstream question of what people and tools can do with that combined record.
 
 These three roles correspond to the following concrete outputs:
 

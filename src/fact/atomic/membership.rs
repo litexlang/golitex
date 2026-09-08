@@ -4,6 +4,7 @@ use crate::prelude::*;
 use std::fmt;
 #[derive(Clone)]
 pub struct InFact {
+    pub fact_id: FactId,
     pub element: Obj,
     pub set: Obj,
     pub line_file: LineFile,
@@ -11,6 +12,7 @@ pub struct InFact {
 
 #[derive(Clone)]
 pub struct NotInFact {
+    pub fact_id: FactId,
     pub element: Obj,
     pub set: Obj,
     pub line_file: LineFile,
@@ -19,6 +21,7 @@ pub struct NotInFact {
 impl InFact {
     pub fn new(element: Obj, set: Obj, line_file: LineFile) -> Self {
         InFact {
+            fact_id: FactId::fresh(),
             element,
             set,
             line_file,
@@ -29,6 +32,7 @@ impl InFact {
 impl NotInFact {
     pub fn new(element: Obj, set: Obj, line_file: LineFile) -> Self {
         NotInFact {
+            fact_id: FactId::fresh(),
             element,
             set,
             line_file,

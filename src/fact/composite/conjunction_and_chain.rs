@@ -9,13 +9,14 @@ use std::fmt;
 /// outer [`OrFact`] layer rather than recursively nesting inside `and`.
 #[derive(Clone)]
 pub struct AndFact {
+    pub fact_id: FactId,
     pub facts: Vec<AtomicFact>,
     pub line_file: LineFile,
 }
 
 impl AndFact {
     pub fn new(facts: Vec<AtomicFact>, line_file: LineFile) -> Self {
-        AndFact { facts, line_file }
+        AndFact { fact_id: FactId::fresh(), facts, line_file }
     }
     pub fn line_file(&self) -> LineFile {
         self.line_file.clone()
@@ -24,6 +25,7 @@ impl AndFact {
 
 #[derive(Clone)]
 pub struct ChainFact {
+    pub fact_id: FactId,
     pub objs: Vec<Obj>,
     pub prop_names: Vec<AtomicName>,
     pub line_file: LineFile,
@@ -32,6 +34,7 @@ pub struct ChainFact {
 impl ChainFact {
     pub fn new(objs: Vec<Obj>, prop_names: Vec<AtomicName>, line_file: LineFile) -> Self {
         ChainFact {
+            fact_id: FactId::fresh(),
             objs,
             prop_names,
             line_file,

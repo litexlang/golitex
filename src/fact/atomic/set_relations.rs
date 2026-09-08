@@ -4,6 +4,7 @@ use crate::prelude::*;
 use std::fmt;
 #[derive(Clone)]
 pub struct SupersetFact {
+    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
     pub line_file: LineFile,
@@ -11,6 +12,7 @@ pub struct SupersetFact {
 
 #[derive(Clone)]
 pub struct NotSupersetFact {
+    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
     pub line_file: LineFile,
@@ -18,6 +20,7 @@ pub struct NotSupersetFact {
 
 #[derive(Clone)]
 pub struct SubsetFact {
+    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
     pub line_file: LineFile,
@@ -25,6 +28,7 @@ pub struct SubsetFact {
 
 #[derive(Clone)]
 pub struct NotSubsetFact {
+    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
     pub line_file: LineFile,
@@ -33,6 +37,7 @@ pub struct NotSubsetFact {
 impl SubsetFact {
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         SubsetFact {
+            fact_id: FactId::fresh(),
             left,
             right,
             line_file,
@@ -43,6 +48,7 @@ impl SubsetFact {
 impl NotSubsetFact {
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         NotSubsetFact {
+            fact_id: FactId::fresh(),
             left,
             right,
             line_file,
@@ -53,6 +59,7 @@ impl NotSubsetFact {
 impl SupersetFact {
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         SupersetFact {
+            fact_id: FactId::fresh(),
             left,
             right,
             line_file,
@@ -63,6 +70,7 @@ impl SupersetFact {
 impl NotSupersetFact {
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         NotSupersetFact {
+            fact_id: FactId::fresh(),
             left,
             right,
             line_file,

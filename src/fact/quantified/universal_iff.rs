@@ -5,6 +5,7 @@ use std::fmt;
 
 #[derive(Clone)]
 pub struct ForallFactWithIff {
+    pub fact_id: FactId,
     pub forall_fact: ForallFact,
     pub iff_facts: Vec<ExistOrAndChainAtomicFact>,
     pub line_file: LineFile,
@@ -17,6 +18,7 @@ impl ForallFactWithIff {
         line_file: LineFile,
     ) -> Result<Self, RuntimeError> {
         let forall_fact_with_iff = ForallFactWithIff {
+            fact_id: FactId::fresh(),
             forall_fact,
             iff_facts,
             line_file,

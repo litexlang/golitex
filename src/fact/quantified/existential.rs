@@ -15,6 +15,7 @@ pub enum ExistFactEnum {
 
 #[derive(Clone)]
 pub struct ExistentialSpec {
+    pub fact_id: FactId,
     pub typed_parameters: TypedParameterList,
     pub facts: Vec<QuantifierFreeFact>,
     pub line_file: LineFile,
@@ -27,6 +28,7 @@ impl ExistentialSpec {
         line_file: LineFile,
     ) -> Result<Self, RuntimeError> {
         let spec = ExistentialSpec {
+            fact_id: FactId::fresh(),
             typed_parameters,
             facts,
             line_file,

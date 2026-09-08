@@ -10,13 +10,14 @@ use std::fmt;
 /// hierarchy without making compound facts recursively nestable.
 #[derive(Clone)]
 pub struct OrFact {
+    pub fact_id: FactId,
     pub facts: Vec<AndChainAtomicFact>,
     pub line_file: LineFile,
 }
 
 impl OrFact {
     pub fn new(facts: Vec<AndChainAtomicFact>, line_file: LineFile) -> Self {
-        OrFact { facts, line_file }
+        OrFact { fact_id: FactId::fresh(), facts, line_file }
     }
 }
 

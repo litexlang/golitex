@@ -4,12 +4,13 @@ use crate::prelude::*;
 
 #[derive(Clone)]
 pub struct NotForallFact {
+    pub fact_id: FactId,
     pub forall_fact: ForallFact,
 }
 
 impl NotForallFact {
     pub fn new(forall_fact: ForallFact) -> Self {
-        Self { forall_fact }
+        Self { fact_id: FactId::fresh(), forall_fact }
     }
 
     pub fn line_file(&self) -> LineFile {

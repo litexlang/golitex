@@ -4,43 +4,48 @@ use crate::prelude::*;
 use std::fmt;
 #[derive(Clone)]
 pub struct IsTupleFact {
+    pub fact_id: FactId,
     pub set: Obj,
     pub line_file: LineFile,
 }
 
 #[derive(Clone)]
 pub struct NotIsTupleFact {
+    pub fact_id: FactId,
     pub set: Obj,
     pub line_file: LineFile,
 }
 
 #[derive(Clone)]
 pub struct IsCartFact {
+    pub fact_id: FactId,
     pub set: Obj,
     pub line_file: LineFile,
 }
 
 #[derive(Clone)]
 pub struct NotIsCartFact {
+    pub fact_id: FactId,
     pub set: Obj,
     pub line_file: LineFile,
 }
 
 impl IsCartFact {
     pub fn new(set: Obj, line_file: LineFile) -> Self {
-        IsCartFact { set, line_file }
+        IsCartFact { fact_id: FactId::fresh(), set, line_file }
     }
 }
 
 impl NotIsCartFact {
     pub fn new(set: Obj, line_file: LineFile) -> Self {
-        NotIsCartFact { set, line_file }
+        NotIsCartFact { fact_id: FactId::fresh(), set, line_file }
     }
 }
 
 impl IsTupleFact {
     pub fn new(tuple: Obj, line_file: LineFile) -> Self {
         IsTupleFact {
+            fact_id: FactId::fresh(),
             set: tuple,
             line_file,
         }
@@ -50,6 +55,7 @@ impl IsTupleFact {
 impl NotIsTupleFact {
     pub fn new(tuple: Obj, line_file: LineFile) -> Self {
         NotIsTupleFact {
+            fact_id: FactId::fresh(),
             set: tuple,
             line_file,
         }

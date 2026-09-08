@@ -937,9 +937,7 @@ impl Runtime {
     }
 
     fn fact_id_for_fact_store(&mut self, fact: &Fact) -> Result<FactId, RuntimeError> {
-        self.known_fact_id_for_fact(fact)?
-            .map(Ok)
-            .unwrap_or_else(|| self.allocate_fact_id())
+        Ok(fact.fact_id())
     }
 
     pub fn equivalent_proposition_lookup_key_for_fact(
