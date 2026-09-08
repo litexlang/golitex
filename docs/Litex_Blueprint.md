@@ -975,120 +975,151 @@ design hypothesis, not a claim that Litex is universally superior or that any
 single ingredient is unprecedented.
 
 The skill makes the combination operational. The human fixes the mathematical
-contract, the AI proposes the next source-order block, Litex checks it in a
-small transaction, and the record explains what may happen next:
+contract. The AI does not formalize the whole answer at once: it first splits
+the mathematical problem and its solution into ordered fragments. Each
+fragment becomes one Litex source block. If Litex accepts it, the fragment
+source and the structured record of how Litex ran that block are kept, and the
+loop moves to the next fragment. If Litex rolls it back, only that same
+fragment is diagnosed and repaired. When every fragment has succeeded, the
+contiguous chain of accepted fragments is the final formal proof.
 
 ```text
-human-owned mathematical intent and acceptance boundary
+human-owned mathematical problem and intended solution
                          ↓
-AI decision: the next mathematical responsibility and candidate
+AI splits the problem and solution into ordered fragments
                          ↓
-Litex structured verification result
-             ├─ Committed → accepted context grows
-             └─ RolledBack → accepted context stays unchanged
-                                      ↓
-                         evidence-backed diagnosis
-                                      ↓
-                         repair the same block
-
-contiguous committed prefix → canonical .lit → clean replay
+              ┌──── fragment formalization loop ────┐
+              │                                      │
+              ▼                                      │
+AI writes the current fragment as Litex code         │
+                         ↓                           │
+Litex structured verification result                 │
+   ├─ success                                        │
+   │     → record this fragment's source             │
+   │     → record how Litex ran it                   │
+   │     → continue to the next fragment ────────────┘
+   └─ RolledBack
+         → evidence-backed diagnosis
+         → repair the same fragment, then retry
+                         ↓
+all successful fragments in order → the problem is solved and formalized
+                         ↓
+human experts perform a basic review
+                         ↓
+these Litex sources become foundations for later problems
 ```
 
-The unit of progress is one source-order definition, theorem, or small proof
-fragment inside one outer `try:` block. The AI does not self-accept a fluent
-candidate. Litex owns the local checking decision; a `Committed` block may
-extend the context, while a `RolledBack` block cannot become a premise for
-later statements. The journal records why the next candidate changed, but a
-recorded candidate is not thereby a proof.
+The diagram above explains **only this fragment formalization loop itself**:
+how it advances step by step, and why Litex output is essential inside it.
+Progress is source-ordered. Each round handles one definition, theorem, or
+small proof fragment. The AI proposes Litex code for that fragment; Litex
+returns a structured verification result that decides whether the round may
+continue. On success, the result keeps two things at once: the accepted
+fragment source, and the record of how that code was checked and on what
+grounds it held. Without the second, the AI would not know what to trust or
+what to repair next; with it, a successful fragment can become an accepted
+premise for later fragments, and a failed one can be diagnosed precisely
+without polluting the context. When every fragment succeeds, the problem is
+both solved and formalized; human experts then give a basic review. Only
+after that review do the Litex sources and their run records become reusable
+foundations for later problems. In short, what drives the loop is not fluent
+AI prose, but Litex's checkable, replayable, handoff-ready output at every
+step.
 
-This separation produces two related knowledge products:
-
-| Knowledge product | Primary artifact | What it preserves | What it must not replace |
-| --- | --- | --- | --- |
-| Mathematical knowledge | Materialized `.lit` source | Accepted definitions, facts, dependencies, and the contiguous verified prefix | Attempt history or AI explanations |
-| Construction knowledge | AI decision journal, Litex JSON result, replay and gate records | The goal, candidate, verifier state, failure location, diagnosis, repair, and clean replay evidence | Human judgment about mathematical meaning or the verifier's actual decision |
-
-The construction record has two distinct voices. The AI journal says why a
-candidate was proposed or repaired: its intent, hypothesis, evidence used, and
-next smallest change. The Litex result says what the verifier actually
-reported: whether the transaction committed, which phase or goal failed, what
-evidence was returned, and whether the accepted context changed. A machine
-readable `structured verification result` is therefore a better name for the
-direct output of checking than “the AI's reasoning.” It preserves auditable
-decision evidence without pretending to preserve hidden chain-of-thought.
-
-This also explains why both successful and failed attempts matter. A success
-records a reusable fact and the route that entered the accepted context. A
-failure records a boundary: the exact candidate that did not enter the
-context, the earliest decisive verifier evidence, and the smallest repair that
-was tried next. Failures can later support review, blocker classification,
-diagnostic improvement, evaluation, or future training data, but those are
-potential uses rather than measured performance results.
+So Litex leaves more than final reusable `.lit` source. It also preserves the
+AI's formalization attempts themselves: what was right, what was wrong, how it
+was right, and how it went wrong. That experience beyond source is equally
+essential. Without it, later readers would see only a finished proof; with
+it, humans and AI can revisit the construction path, reuse repair moves, and
+turn one solved problem into learnable formalization experience.
 
 <details>
-<summary><strong>Example: one failed proposal becomes a successful local repair</strong></summary>
+<summary><strong>Example: walk the fragment formalization loop with the flowchart</strong></summary>
 
-**Human | Fixes the mathematical contract**
+This is a self-contained miniature example. The steps mirror the flowchart
+above. It is incomplete on purpose: it only makes the loop itself visible.
 
-> Given a subgroup `H` of a group `G`, define multiplication on `H` so that
-> `group.mul(x, y)` is treated as an element of `H` whenever `x, y ∈ H`.
+**1. Human proposes the mathematical problem and intended solution**
 
-**AI | Proposes the first candidate**
+> Assume finite groups, subgroups, and left-coset spaces are already available.
+> Prove Lagrange’s theorem: if `H` is a subgroup of a finite group `G`, then
+> `|H|` divides `|G|`.
 
-The AI initially uses the previously defined `subgroup_carrier` alias as the
-return carrier. The accepted mathematical goal has not changed; only this
-candidate's interface is under test.
+**2. AI splits the problem and solution into ordered fragments**
 
-**Litex | Returns a structured verification result**
+For this problem, the AI may first split it as:
+
+1. cite finiteness of the coset space and the coset-coordinate bijection to get
+   `|G| = |G/H| * |H|`  
+2. witness divisibility of `|G|` by `|H|` using `|G/H|`  
+3. (optional corollary) if `|H| = 1`, then `H = {one}`  
+
+Each fragment does one job.
+
+**3. Fragment formalization loop: preparatory facts succeed**
+
+The AI first writes Litex for coset finiteness, the bijection, and the
+cardinality identity; Litex returns success. That leaves both the accepted
+source and the record of how Litex ran it. The accepted context grows, so the
+divisibility fragment may cite them.
+
+**4. Failure and repair inside the same loop: prove `|H|` divides `|G|`**
+
+The AI first tries to assert the divisibility conclusion without an explicit
+coset-cardinality argument. Litex fails and rolls back:
 
 ```json
 {
-  "attempt_id": "SS003A1",
   "result": "rejected_rolled_back",
-  "failed_phase": "verify_well_definedness",
-  "verifier_evidence": "Return value group.mul(x,y) was not inferred to belong to the cross-file subgroup_carrier."
+  "failed_phase": "verify_process",
+  "verifier_evidence": "failed goal $group::divides(finite_set_size(H), finite_set_size(G))"
 }
 ```
 
-The accepted context remains unchanged. The AI's decision record can now say
-that the mathematical definition is still intended, while the return-carrier
-expression needs a smaller repair.
-
-**AI | Repairs the localized interface**
-
-The fourth candidate keeps the same function value and exposes `H`, which is
-definitionally equal to `subgroup_carrier`, as the direct return carrier:
+The accepted context stays unchanged. The record says the failure is
+mathematical: divisibility is not supplied by an import or a builtin theorem;
+the coset-cardinality argument is required. The AI repairs only this fragment,
+first establishing `|G| = |G/H| * |H|`, then witnessing with `|G/H|`:
 
 <!-- litex:skip-test -->
 ```litex
-template<G nonempty_set, group &group::Group<G>, H power_set(G):
-    $subgroup::is_subgroup(G, group, H)>:
-    have fn subgroup_mul(
-        x, y \subgroup_carrier<G, group, H>
-    ) H = group.mul(x, y)
+thm subgroup_order_divides_group_order:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G):
+        $subgroup::is_subgroup(G, group, H)
+        $is_finite_set(G)
+        $is_finite_set(H)
+        =>:
+            $group::divides(finite_set_size(H), finite_set_size(G))
+    release thm cosets::left_coset_space_finite(G, group, H)
+    release thm cosets::left_coset_forward_bijective(G, group, H)
+    finite_set_size(G) = finite_set_size(cosets::quotient_group_carrier<G, group>(H)) * finite_set_size(H)
+    witness $group::divides(finite_set_size(H), finite_set_size(G)) from finite_set_size(cosets::quotient_group_carrier<G, group>(H)):
+        finite_set_size(G) = finite_set_size(H) * finite_set_size(cosets::quotient_group_carrier<G, group>(H))
 ```
 
-**Litex | Commits the repaired fact**
+Litex succeeds on the next check. Source and run record are kept again.
 
-```json
-{
-  "attempt_id": "SS003A4",
-  "result": "accepted",
-  "verifier_evidence": "Outer try committed after declaring the return carrier as the definitionally equal H."
-}
-```
+**5. All successful fragments join → the problem is solved and formalized**
 
-Only the accepted source is materialized into the maintained `.lit` file. The
-failed proposal remains part of construction knowledge, where it explains the
-repair and can be inspected without becoming a mathematical premise. This is
-one observed interaction, not a claim that every failure can be repaired
-automatically by AI.
+The successful fragments become one contiguous Litex proof. The final source
+keeps only the successful prefix; failed attempts remain recorded to explain
+the repair, without becoming mathematical premises.
+
+**6. Human experts perform a basic review**
+
+Experts check that the intent is still “Lagrange divisibility,” that the coset
+bijection and cardinality equalities are trustworthy, and that the subgroup or
+finiteness hypotheses were not quietly rewritten. Machine success is not a
+waiver of review.
+
+**7. These Litex sources become foundations for later problems**
+
+After review, the divisibility fact can be cited by the order-one subgroup
+corollary, later subgroup-order relations, and Sylow-style follow-on problems.
+What remains is not only this proof, but reusable formal ground and experience
+about what was right, what was wrong, and how.
 
 </details>
-
-The complete construction walkthrough lives in the [Human–AI–Litex
-pipeline](https://litexlang.com/showcases); this Blueprint uses the smaller
-trace above to make the protocol and its knowledge boundary explicit.
 
 The same protocol scales from one fact to a theorem, a reusable interface, a
 textbook chapter, or a multi-file theory. At each scale, the central boundary
