@@ -10,11 +10,11 @@
 
 **Litex 是一门小而易读、事实导向的形式化语言，把数学推理写成可检查、可追踪的数学语句；同时让 Litex 对定义、验证和修复的处理过程保持可读、可追踪、可修复，使用户能够看懂 Litex 在做什么，并参与人类、AI 与 Litex 的共同闭环。**
 
-它以集合论为基础，自下而上构建证明流，并把人类、AI 与验证器放进同一个闭环：人类给出数学意图，AI 提出或修复下一条事实，Litex 检查并返回依据或停止位置，由此循环积累可检查的数学知识。原理上，任何 Litex 代码都能编译成 Lean，并接入 Lean/Mathlib 生态。
+它以集合论为基础，自下而上构建证明流，并把人类、AI 与验证器放进同一个闭环：人类给出数学意图，AI 提出或修复下一条事实，Litex 检查并返回依据或停止位置，由此循环积累可检查的数学知识。原理上，任何 Litex 代码都能编译成 Lean，并接入 Lean/Mathlib 生态，Litex到Lean的编译器预计2026年底完成。
 
 > **Litex 是测试版（beta）的实验性爱好项目，可能存在边缘问题。**
 
-<!-- 蓝图主线：AI 带来的推理过剩 → 科学对象 → 设计假设 → 可测成本 → 潜在能力影响 → 验证与理解的双重瓶颈 → 两种参与门槛 → 四项语言设计 → 数学实践中的定义与验证 → 单条语句留下的知识记录 → Human–AI–Litex skill 与知识生产协议 → 记录的重放、复用和 Lean/Mathlib 接续 → 生态角色 → 从 AI for Math 走向 AI 时代的可信高效推理 → 成功标准 -->
+<!-- 蓝图主线：AI 带来的推理过剩 → 科学对象 → 设计假设 → 可测成本 → 潜在能力影响 → 验证与理解的双重瓶颈 → 两种参与门槛 → 四项语言设计 → 单条语句留下的知识记录 → Human–AI–Litex skill 与知识生产协议（含定义与验证） → 记录的重放、复用和 Lean/Mathlib 接续 → 生态角色 → 从 AI for Math 走向 AI 时代的可信高效推理 → 成功标准 -->
 
 <!--
 Litex 定位四层检查（写作时逐层核对；面向不同受众可以调整强调重点，但不能混淆层级）：
@@ -31,32 +31,29 @@ Litex 定位四层检查（写作时逐层核对；面向不同受众可以调�
 - [1. Litex 的数学基础：从最广为人熟悉的集合论出发](#set-theory)
 - [2. 事实导向：把“什么成立”写进源码](#fact-oriented)
 - [3. 自下而上：让已证明的事实推动后续证明](#bottom-up)
-- [4. Litex的数学实践：定义与验证](#mathematics-practice)
-- [5. 每句话都留下什么：可检查知识记录](#execution-model)
+- [4. 每句话都留下什么：可检查知识记录](#execution-model)
   - [小结：Litex 与 Naproche——相近目标，不同核心接口](#summary-litex-and-naproche)
-- [6. Human–AI–Litex skill：组织知识生产](#interaction-loop)
+- [5. Human–AI–Litex skill：组织知识生产](#interaction-loop)
   - [小结：事实导向与自下而上的闭环优势](#summary-fact-oriented-bottom-up-loop)
-- [7. 从可检查知识记录到 Lean/Mathlib](#compatibility)
+- [6. 从可检查知识记录到 Lean/Mathlib](#compatibility)
   - [小结：自下而上与自上而下互补](#summary-bottom-up-and-top-down)
-- [8. 从语言到生态：Litex 想扮演什么角色](#ecosystem-role)
-- [9. 超越对唯一最佳语言的追寻](#conclusions)
+- [7. 从语言到生态：Litex 想扮演什么角色](#ecosystem-role)
+- [8. 超越对唯一最佳语言的追寻](#conclusions)
   - [特别感谢](#special-thanks)
 
 <a id="overview"></a>
 
 ## 0. Litex 蓝图总览
 
-AI 正在把我们从“推理稀缺”带入“推理充裕”的时代。过去，难点是提出足够好的猜想、推导和解法；现在，候选推理可以被大规模生成，但人类注意力、专家审核和可靠验证无法以同样的速度扩张。瓶颈正在从“能否产生一个看似合理的答案”，转向“能否把大量候选变成可检查、可理解、可复用的知识”。**推理过剩、验证稀缺，不是一时的失衡，而是 AI 时代知识生产正在形成的结构性条件。**
+AI 正在把我们从“推理稀缺”带入“推理充裕”的时代：候选可以大规模生成，但人类注意力与可靠验证跟不上。瓶颈已从“能否给出答案”，转向“能否把候选变成可检查、可理解、可复用的知识”。**推理过剩、验证稀缺，是 AI 时代知识生产的结构性条件。**
 
-Litex 正是面向这种新条件的一项接口实验：一门基于集合论、事实导向、自下而上构建证明流的形式化语言。它检验这种表示与交互范式能否降低人类和 AI 构造、理解、审核、修复与复用可检查知识的成本。人类给出数学意图与验收边界，AI 提出或修复下一条事实，Litex 检查并返回依据或停止位置，由此形成持续生长的验证闭环。Litex 同时以 Lean 兼容为设计目标：当前编译器已能把部分受支持路径交给 Lean/Mathlib 独立复核，完整覆盖仍在推进中。
+正确性只是危机的一半。形式化代码可以正确，却仍然难以理解。AI For Math 社区常谈证明长、表示繁、工具难、成果难消化，却很少追问这些理解成本从何而来、如何降低。这是 **理解所承担的复杂度税（the complexity tax on understanding）**。
 
-正确性只是危机的一半。形式化代码确实是正确的，却仍然难以理解。如何才能让信息的充盈转化为洞见的丰盈？AI For Math的社区总是在谈复杂性：证明长、表示繁、工具难、成果难消化。但我们很少追问这些理解成本为何产生，更少研究如何降低。这是 **理解所承担的复杂度税（the complexity tax on understanding）**。
+> 在 2026 年，我们已能看到 AI 生成越来越多重要定理的证明乃至形式化代码；但正确性并不等于可理解性——大量结果仍难以被人类消化、解释并纳入共同知识。陶哲轩在 2026 ICM 公开讲演 中呼吁数学家：在“证明充裕”的时代，减少对单纯证明生成的过度追逐，转而强调 proof digestion——清晰阐述、社区接受，以及把结果吸收进领域的标准理论。
 
-复杂性不可能全部消失。有些属于数学本身；有些来自表示、证明证书和交互协议。结果的严格性和可读性之间存在张力。陶哲轩在 [2026 年 ICM 公开演讲](https://teorth.github.io/tao-web/slides/age-of-ai-icm-2026.pdf) 中强调了这一瓶颈对数学和其他领域的影响。*Litex 的目标是：在不降低严格性的前提下，降低形式化代码理解的复杂度税。*
+Litex 是一门小而易读、事实导向的形式化语言，把数学推理写成可检查、可追踪的数学语句；同时让 Litex 对定义、验证和修复的处理过程保持可读、可追踪、可修复，使用户能够看懂 Litex 在做什么，并参与人类、AI 与 Litex 的共同闭环。原理上，任何 Litex 代码都能编译成 Lean，并接入 Lean/Mathlib 生态，Litex到Lean的编译器预计2026年底完成。**Litex 不只是为形式化专家而创造的工具，它的目标更是让更多人成为形式化专家，让各个行业都能注入形式化的严格性。**
 
-从AI For Math出发，我们可以看到随着AI的发展，人们对可信推理的需求日益增长。从AI安全，到AI科学发现，只要有数学的地方，理论上形式化都能发挥作用。Litex的目标是：让更多人能参与形式化，让更多领域能注入形式化的严格性。避免即使AI确实生成了形式化代码，但由于难以理解，领域专家无法发现“证明正确，题目本身错了”的情况。
-
-> **Litex 不只是为形式化专家而创造的工具，它的目标更是让更多人成为形式化专家，让各个行业都能注入形式化的严格性。**
+> 从AI For Math出发，我们更可以看到随着AI的发展，人们对可信推理的需求日益增长。从AI安全，到AI科学发现，只要有数学的地方，理论上形式化都能发挥作用。让这些非数学背景的从业者也能使用形式化技术，会是非常理想的。
 
 Litex 的核心假设是：能否不降低标准，却让学生、领域专家和 AI 更容易写、读和修复可检查的数学？
 
@@ -67,7 +64,9 @@ Litex 的核心假设是：能否不降低标准，却让学生、领域专家�
 3. **自下而上积累**：通过的事实进入上下文，供后续推理使用；这只是默认方向。
 4. **Lean 复核**：已覆盖路径可翻译为 Lean 证明对象并由其内核检查；目前覆盖仍不完整。
 
-全文通过比较 Litex 与 Lean 的写法，展示四项设计如何降低理解成本。最后讨论 Litex 在 AI For Math 生态中的角色，以及它如何帮助更多人参与形式化。如果您是Lean用户，可以先粗略地把Litex和Lean的默认流程理解成：
+全文通过比较 Litex 与 Lean 的写法，展示四项设计如何降低理解成本。最后讨论 Litex 在 AI For Math 生态中的角色，以及它如何帮助更多人参与形式化。
+
+如果您是Lean用户，可以先粗略地把Litex和Lean的默认流程理解成：
 
 ```text
 Lean：命题 → 证明目标 → 证明指令与细化 → 证明对象 → 内核检查
@@ -629,121 +628,13 @@ claim:
 <details>
 <summary><strong>设计空间中的位置：前向证明并非 Litex 首创</strong></summary>
 
-Mizar、Isar、ACL2 和 Naproche 已支持前向文本、定理累积或逐步检查，因此“自下而上”并非 Litex 独有。Litex 检验的是组合：普通事实自动触发局部验证，通过后扩展上下文，同时让已接受或停下来的路径保持可见，供用户或人工智能检查和修复；只有常规验证不足时才写显式证明结构。更完整的比较见第 5 节的小结“Litex 与 Naproche——相近目标，不同核心接口”。
+Mizar、Isar、ACL2 和 Naproche 已支持前向文本、定理累积或逐步检查，因此“自下而上”并非 Litex 独有。Litex 检验的是组合：普通事实自动触发局部验证，通过后扩展上下文，同时让已接受或停下来的路径保持可见，供用户或人工智能检查和修复；只有常规验证不足时才写显式证明结构。更完整的比较见第 4 节的小结“Litex 与 Naproche——相近目标，不同核心接口”。
 
 </details>
 
-<a id="mathematics-practice"></a>
-
-## 4. Litex的数学实践：定义与验证
-
-从形式化实践看，数学工作常在两个动作之间反复往返：一是**定义**对象、关系和可复用接口，建立一个领域的语言；二是**验证**这些定义与条件能够推出哪些事实。下面用一个完整例子把定义、量词、见证和估计放进同一条证明流。我们还是用Lean和Litex做对比。
-
-> **Lean 证明指令：定理先给出最终证明目标 → 用户声明应当如何改写、分解或关闭它 → 信息视图显示还剩哪些证明目标 → 证明指令构造证明对象 → 内核检查该证明对象。**
-
-我们定义数学分析中常见的`收敛`的概念：对任意正误差 `ε`，存在位置 `N`，使此后每项都足够接近极限；再证明 `{s(n)}` 收敛到 `a` 时，`{c * s(n)}` 收敛到 `c * a`。
-
-```lean
-import Mathlib
-
-def ConvergesTo (s : ℕ → ℝ) (a : ℝ) :=
-  ∀ ε > 0, ∃ N, ∀ n ≥ N, |s n - a| < ε
-
-theorem convergesTo_const (a : ℝ) : ConvergesTo (fun _x : ℕ ↦ a) a := by
-  intro ε εpos
-  use 0
-  intro n nge
-  rw [sub_self, abs_zero]
-  apply εpos
-
-theorem convergesTo_mul_const {s : ℕ → ℝ} {a : ℝ} (c : ℝ)
-    (cs : ConvergesTo s a) :
-    ConvergesTo (fun n ↦ c * s n) (c * a) := by
-  by_cases h : c = 0
-  · convert convergesTo_const 0
-    · rw [h]
-      ring
-    rw [h]
-    ring
-  have acpos : 0 < |c| := abs_pos.mpr h
-  intro ε εpos
-  dsimp
-  have εcpos : 0 < ε / |c| := by
-    exact div_pos εpos acpos
-  rcases cs (ε / |c|) εcpos with ⟨Ns, hs⟩
-  use Ns
-  intro n ngt
-  calc
-    |c * s n - c * a| = |c| * |s n - a| := by
-      rw [← abs_mul, mul_sub]
-    _ < |c| * (ε / |c|) :=
-      mul_lt_mul_of_pos_left (hs n ngt) acpos
-    _ = ε := mul_div_cancel₀ _ (ne_of_lt acpos).symm
-```
-
-Lean 先处理 `c = 0`，再缩小误差、取出 `Ns` 并完成估计；`by_cases` 分类，`rcases` 取见证，`calc` 写等式链。这种方式通用可组合，但初学者要同时跟踪数学和证明状态。
-
-Litex源码的书写，更接近日常数学书写：
-
-> **Litex：用户声明“什么应当成立” → 检查器寻找证明依据 → 通过的事实扩展当前上下文。**
-
-对应代码先定义“最终足够接近”和“收敛”，再从原收敛性取得位置并为新数列构造见证：
-
-```litex
-# 1. 用 prop 定义“最终足够接近”：forall n，只要 n >= N0，=>: 后的距离界就成立。
-prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):
-    forall n N:
-        n >= N0
-        =>:
-            abs(s(n) - a) < epsilon
-
-# 2. 收敛的意思是：forall 正误差 epsilon，都存在一个让上述 prop 成立的 N0。
-prop converges_to(s fn(n N) R, a R):
-    forall epsilon R+:
-        exist N0 N st {$is_eventually_close(s, a, epsilon, N0)}
-
-# 3. 把“s 收敛 =>: c * s 收敛”写成一个 thm。
-thm converges_to_mul_const:
-    ? forall s fn(n N) R, a, c R:
-        $converges_to(s, a)
-        =>:
-            $converges_to(fn(n N) R {c * s(n)}, c * a)
-    # 4. 先 claim 一个局部目标：forall epsilon，都要证明存在 N0。
-    claim:
-        ? forall epsilon R+:
-            exist N0 N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)}
-        # 5. 为了给这个存在性找到见证，选择更小的正误差 epsilon / (abs(c) + 1)。
-        abs(c) + 1 > 0
-        epsilon / (abs(c) + 1) $in R+
-        # 6. 原收敛性已经说这样的 K 存在，所以 obtain N0。
-        obtain N0 from exist K N st {$is_eventually_close(s, a, epsilon / (abs(c) + 1), K)}
-        # 7. 要完成新数列的存在性，就把同一个 N0 作为 witness 交出去。
-        witness exist K N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, K)} from N0:
-            # 8. 进入 forall n；把 n >= N0 放在 =>: 左边，右边证明距离界。
-            forall n N:
-                n >= N0
-                =>:
-                    abs(s(n) - a) < epsilon / (abs(c) + 1)
-                    # 9. 沿事实链提出 abs(c)，再用 abs(c) <= abs(c) + 1 把误差压到 epsilon 以下。
-                    abs(c * s(n) - c * a) = abs(c * (s(n) - a)) = abs(c) * abs(s(n) - a)
-                    abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < (abs(c) + 1) * (epsilon / (abs(c) + 1)) = epsilon
-                    # 用 fn 写出的新数列，在 n 处需要的正是这个结论。
-                    abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon
-            # 10. by def is_eventually_close：由定义，上面的 forall 事实就是“最终足够接近”。
-            by def $is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)
-    # 11. by def converges_to：再由定义，刚才的 forall / exist 结构就是收敛。
-    by def $converges_to(fn(n N) R {c * s(n)}, c * a)
-```
-
-前两个 `prop` 定义：“最终足够接近”，什么叫“收敛”。随后 `obtain N0` 从原收敛性取出位置，`witness` 把它交给新数列；`epsilon / (abs(c) + 1)` 避免另分 `c = 0`，不等式链再把误差压到 `epsilon` 以下。
-
-从这个例子可以看到，不同的形式化语言的源码风格是很不一样的。选择合适的语言用在合适的场景上，是非常重要的。
-
-这个例子先展示数学工作的两种动作；下一节不再重复证明本身，而是查看一句话如何生成可检查知识记录，并继续影响后续上下文。
-
 <a id="execution-model"></a>
 
-## 5. 每句话都留下什么：可检查知识记录
+## 4. 每句话都留下什么：可检查知识记录
 
 我们读数学时，一句话从来不是孤零零地出现。写下一个事实的同时，我们也会在脑中浮现它所依赖的定义、前提和前面已经确认的事实；这些内容共同形成一个不断生长的上下文，后面的推理便在这片已经建立的基础上继续向前。
 
@@ -1101,7 +992,7 @@ Litex 源码
 
 <a id="interaction-loop"></a>
 
-## 6. 人类-AI-Litex 循环工作流构建
+## 5. 人类-AI-Litex 循环工作流构建
 
 前文说明了一条定义或事实被执行后，Litex 会留下什么。更大的数学发展还需要另一层：人类和人工智能如何利用这些记录继续构造，同时把数学意图、候选方案、验证决定和维护中的源码分开。
 
@@ -1144,92 +1035,99 @@ Litex 结构化验证结果                    │
 <details>
 <summary><strong>示例：按流程图走一遍片段形式化循环</strong></summary>
 
-下面是一个独立的小例子，步骤与上文流程图一一对应。它故意不完整，只用来看清循环本身。
+下面是一个独立的小例子，步骤与上文流程图一一对应。它故意不完整，只用来看清循环本身：先定义语言，再验证定义之下能推出什么。
+
+<a id="convergence-example"></a>
 
 **1. 人类提出数学问题及其解答意图**
 
-> 假设有限群、子群与左陪集空间已经给出。证明 Lagrange 定理：若 `H` 是有限群 `G` 的子群，则 `|H|` 整除 `|G|`。
+> 先定义数列收敛：对任意正误差 `ε`，存在位置 `N`，使此后每项都足够接近极限。再证明：若 `{s(n)}` 收敛到 `a`，则 `{c * s(n)}` 收敛到 `c * a`。
 
 **2. AI 把问题与解答拆成有序片段**
 
 针对这个问题，AI 可以先拆成例如：
 
-1. 引用陪集空间有限性与陪集坐标双射，得到 `|G| = |G/H| * |H|`  
-2. 以 `|G/H|` 为见证，写出 `|H|` 整除 `|G|`  
-3.（可选推论）若 `|H| = 1`，则 `H = {one}`  
+1. 定义“最终足够接近”，这是一个谓词，用`prop`定义
+2. 定义“收敛”，这是一个谓词，用`prop`定义
+3. 写出并证明 `thm`：数乘保持收敛  
 
-每个片段只做一件事。
+**3. 片段形式化循环：前两个片段成功——先把定义写进上下文**
 
-**3. 片段形式化循环：前两个片段中的“准备事实”成功**
+AI 先提交两个定义；Litex 返回成功。于是留下这段源码，以及 Litex 如何运行它的记录。已接受上下文增长，后面的定理片段可以按定义展开。
 
-AI 先把陪集有限性、双射与基数恒等式写成 Litex 代码；Litex 返回成功。于是留下这段源码，以及 Litex 如何运行它的记录。已接受上下文增长，整除结论片段可以引用它们。
+<!-- litex:skip-test -->
+```litex
+# “最终足够接近”：从 N0 起，每项都落在误差 epsilon 内。
+prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):
+    forall n N:
+        n >= N0
+        =>:
+            abs(s(n) - a) < epsilon
 
-**4. 同一循环中的失败与修复：证明 `|H|` 整除 `|G|`**
+# “收敛到 a”：任意正误差都存在这样一个 N0。
+prop converges_to(s fn(n N) R, a R):
+    forall epsilon R+:
+        exist N0 N st {$is_eventually_close(s, a, epsilon, N0)}
+```
 
-AI 先试图在没有显式陪集基数论证的情况下，直接断言整除结论。Litex 返回失败并回滚：
+**4. 同一循环中的失败与修复：证明数乘保持收敛**
+
+AI 先试图在没有构造 `forall / exist` 结构的情况下，直接 `by def` 得到新数列的收敛。Litex 返回失败并回滚：
 
 ```json
 {
   "result": "rejected_rolled_back",
   "failed_phase": "verify_process",
-  "verifier_evidence": "failed goal $group::divides(finite_set_size(H), finite_set_size(G))"
+  "verifier_evidence": "cannot prove then-clause; failed goal $converges_to(fn(n N) R {c * s(n)}, c * a)"
 }
 ```
 
-已接受上下文不变。记录说明：整除不是导入或内建定理直接给出的，必须用陪集基数显式论证。AI 只修这一片段，改成先建立 `|G| = |G/H| * |H|`，再以 `|G/H|` 作见证：
+已接受上下文不变。记录说明：定义给出的是要证明的形状，不是现成结论；必须先为每个 `epsilon` 取出并交出合适的 `N0`。AI 只修这一片段：
 
 <!-- litex:skip-test -->
 ```litex
-thm subgroup_order_divides_group_order:
-    ? forall G nonempty_set, group &group::Group<G>, H power_set(G):
-        $subgroup::is_subgroup(G, group, H)
-        $is_finite_set(G)
-        $is_finite_set(H)
+thm converges_to_mul_const:
+    ? forall s fn(n N) R, a, c R:
+        $converges_to(s, a)
         =>:
-            $group::divides(finite_set_size(H), finite_set_size(G))
-    release thm cosets::left_coset_space_finite(G, group, H)
-    release thm cosets::left_coset_forward_bijective(G, group, H)
-    finite_set_size(G) = finite_set_size(cosets::quotient_group_carrier<G, group>(H)) * finite_set_size(H)
-    witness $group::divides(finite_set_size(H), finite_set_size(G)) from finite_set_size(cosets::quotient_group_carrier<G, group>(H)):
-        finite_set_size(G) = finite_set_size(H) * finite_set_size(cosets::quotient_group_carrier<G, group>(H))
+            $converges_to(fn(n N) R {c * s(n)}, c * a)
+    claim:
+        ? forall epsilon R+:
+            exist N0 N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)}
+        abs(c) + 1 > 0
+        epsilon / (abs(c) + 1) $in R+
+        obtain N0 from exist K N st {$is_eventually_close(s, a, epsilon / (abs(c) + 1), K)}
+        witness exist K N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, K)} from N0:
+            forall n N:
+                n >= N0
+                =>:
+                    abs(s(n) - a) < epsilon / (abs(c) + 1)
+                    abs(c * s(n) - c * a) = abs(c) * abs(s(n) - a)
+                    abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < epsilon
+                    abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon
+            by def $is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)
+    by def $converges_to(fn(n N) R {c * s(n)}, c * a)
 ```
 
 Litex 再次检查后成功。于是同样留下源码与运行记录。
 
 **5. 全部成功片段衔接 → 问题得到解决与形式化**
 
-各成功片段按顺序连成一份连续的 Litex 证明。最终源码只有成功前缀；失败尝试仍被记录，解释修复，却不成为数学前提。
+各成功片段按顺序连成一份连续的 Litex 发展：先有定义语言，再有定义之下的定理。最终源码只有成功前缀；失败尝试仍被记录，解释修复，却不成为数学前提。
 
 **6. 人类专家做基本校验**
 
-专家核对：意图是否仍是“Lagrange 整除”、陪集双射与基数等式是否可信、是否偷偷改写了子群或有限性假设。机器通过不等于免审。
+专家核对：意图是否仍是“定义收敛并证明数乘保持”、`prop` 是否忠实于分析定义、估计是否可信。机器通过不等于免审。
 
 **7. 这些 Litex 代码成为后续问题的基石**
 
-通过校验后，这条整除事实可被阶为 1 的子群推论、子群阶整除关系、乃至 Sylow 型后续问题继续引用。留下的不只是当次证明，还有可复用的形式化地基，以及“哪里对了、哪里错了”的经验。
+通过校验后，这套收敛接口与数乘定理可被极限代数、连续函数等后续问题继续引用。留下的不只是当次证明，还有可复用的形式化地基，以及“哪里对了、哪里错了”的经验。
 
 </details>
 
-同一套协议可以从一条事实扩展到一条定理、一个可复用接口、一个教材章节或一个多文件理论。在每个规模上，核心边界都保持不变：人类拥有含义，AI 提出候选，Litex 负责检查，journal 保存决策和机器证据，`.lit` 只物化已接受的数学前缀。接下来的问题就不再是如何再提出一份候选，而是这两种记录如何被恢复、重放、复用，并在适用时交给 Lean/Mathlib 独立检查。
-
-<a id="summary-fact-oriented-bottom-up-loop"></a>
-
-### 小结：事实导向与自下而上的闭环优势
-
-| 设计收益 | 在 Human–AI–Litex skill 中的机制 | 带来的意义 | 边界 |
-| --- | --- | --- | --- |
-| 中间事实可复用 | 已验证事实进入持续增长的上下文 | 部分完成的理论仍可为后续工作提供定义、接口和事实 | 是否能复用取决于范围、表达和后续需求 |
-| 正确和错误的经验都能保留 | 提交、回滚、验证依据和修复决定保持关联 | 成功路径和失败候选都成为可检查的构造知识 | journal 保存证据，不会把候选变成证明 |
-| 错误不会污染数学 | `RolledBack` 候选不会改变已接受上下文 | 失败尝试可以推动修复，却不会成为错误前提 | 命题本身仍需对照数学意图审核 |
-| 每次修复保持局部 | skill 回到当前证明块最早失败的阶段或目标 | AI 可以从已接受前缀继续，而不必重写整个发展 | 这是降低单轮修复成本的设计优势，不是普遍的效率结论 |
-| 过程可以恢复 | journal 记录最后一个已接受块和第一个未接受块 | 中断之后可以继续，也可以从检查点审核 | 仍然需要文件级干净重放 |
-| Litex 的设计组合可以被检验 | 集合论、事实导向、自下而上的上下文增长、极简语法和结构化结果在同一工作流中相遇 | 可以从构造、理解、修复和复用成本来评估这套设计 | 这是研究假设，不是已经证明的普遍优势 |
-
-因此，Human–AI–Litex skill 把 Litex 的语言选择变成了可重复的知识生产过程。这个过程同时产生维护中的数学和可恢复的构造证据。第 7 节将沿着这些记录继续向下：先讲干净重放和复用，再讲在路径受支持时如何接续到 Lean/Mathlib。
-
 <a id="compatibility"></a>
 
-## 7. Litex代码如何编译成Lean代码，并与Mathlib兼容
+## 6. Litex代码如何编译成Lean代码，并与Mathlib兼容
 
 Litex 可独立工作，拥有语法、运行时和验证内核。如果你相信Litex内核是没有bug的，那它不编译成 Lean 也能为你检查良定义性与事实并提供反馈。
 
@@ -1440,7 +1338,7 @@ Litex因此可以视作Lean的一个更可读的，更容易理解的前端语�
 
 <a id="ecosystem-role"></a>
 
-## 8. 从语言到生态：Litex 想扮演什么角色
+## 7. 从语言到生态：Litex 想扮演什么角色
 
 所有的设计合在一起，使 Litex 希望成为人和 AI 共同生产、使用可检查推理的基础设施。
 
@@ -1473,7 +1371,7 @@ Litex目前的优势区：
 
 <a id="conclusions"></a>
 
-## 9. 追寻与众不同的艺术
+## 8. 追寻与众不同的艺术
 
 <!-- 这一段比较理想主义一点。因为AI时代大家过度关注实用主义了，容易忽略一个原生的、创新的、与众不同的新解决方案带来的长期的影响力。不管是数学界，还是任何科学，大家都鼓励对同一问题的不同角度、不同解决方案的出现。这样的不同的观点，往往才是科学史上真正突破的来源，最终可能会带来更大的效益提高。 -->
 
