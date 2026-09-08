@@ -1249,22 +1249,34 @@ Code and dataset volume are intermediate measures. What matters is whether peopl
 
 ## 9. Beyond the Search for One Best Language
 
-The question is not only which formal language is the most powerful, mature, or
-widely adopted. We should also ask what other forms of mathematical thought
-could become possible if the interface were different.
+We need not rush to decide which formal language is the only correct one, the
+only powerful one, or the only one worth investing in.
 
-Litex begins from this possibility. It treats formalization as a way of
-shaping mathematical attention, not only as a way of satisfying a kernel. Its
-fact-oriented and bottom-up design is an invitation to explore another relation
-between human intuition, machine verification, and mathematical knowledge.
+AI for Math and AI for formal languages move quickly. Tool changes, benchmark
+refreshes, and ecosystem growth all push attention toward what seems most
+useful right now: which library is largest, which system proves more, which
+one connects to what already exists. Usefulness matters. It is not everything.
+In the history of science, horizons are often opened not by pushing one answer
+to its extreme, but by someone willing to look again at the same problem with
+a different kind of attention, a different interface, and a different shape of
+evidence.
 
-Section 5 makes this longer-term vision concrete: the implementation may grow
-large while its core execution process remains easy to understand. Readers can
-trace the definitions, premises, and facts behind each statement, and
-participate in an interactive textbook through that visible path.
+Litex hopes to stand in that place: not claiming to replace anyone, but
+acknowledging that formal mathematics may have more than one future. It cares
+not only about satisfying a kernel, but also about how mathematical intuition
+is preserved, checked, and made readable when people and machines write proofs
+together.
 
-Litex may not become the only path, and it does not need to. Its contribution
-may be to show that formal mathematics has more than one possible future.
+This does not promise faster short-term gains. It is closer to a long-term
+invitation: while pragmatism stays in the foreground, leave room for a native,
+slightly different solution. Different views are not immediately stronger. Yet
+in mathematics and in science more broadly, it is often these differences that
+become the source of real breakthroughs—and may eventually bring larger, more
+lasting benefit.
+
+If Litex contributes anything, let it first be this reminder: what we seek
+need not be a single “best language,” but more mathematical paths that deserve
+to be taken seriously.
 
 <a id="special-thanks"></a>
 

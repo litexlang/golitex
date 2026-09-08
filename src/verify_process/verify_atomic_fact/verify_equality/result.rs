@@ -15,15 +15,6 @@ pub enum EqualitySearchProof {
     ByKnownAlgebraicRewrite(EqualitySearchProofByKnownAlgebraicRewrite),
 }
 
-pub enum EqualitySearchProofByBuiltinRule {
-    TheyAreTheSame(EqualitySearchProofByTheyAreTheSame),
-    Calculation(EqualitySearchProofByCalculation),
-}
-
-pub struct EqualitySearchProofByTheyAreTheSame {}
-
-pub struct EqualitySearchProofByCalculation {}
-
 pub struct EqualitySearchProofByKnownAtomicFact {
     pub cite_fact_id: FactId,
     pub why_parameters_of_known_fact_are_equal_to_givens: Vec<VerifyFactResult>,
