@@ -1101,95 +1101,114 @@ Litex 源码
 
 <a id="interaction-loop"></a>
 
-## 6. Human–AI–Litex skill：组织知识生产
+## 6. 人类-AI-Litex 循环工作流构建
 
-第 5 节说明了一条定义或事实被执行后，Litex 会留下什么。更大的数学发展还需要另一层：人类和人工智能如何利用这些记录继续构造，同时把数学意图、候选方案、验证决定和维护中的源码分开。Human–AI–Litex skill 提供的正是这一层。它是围绕 Litex 的构造协议，而不是另一套数学语法。
+前文说明了一条定义或事实被执行后，Litex 会留下什么。更大的数学发展还需要另一层：人类和人工智能如何利用这些记录继续构造，同时把数学意图、候选方案、验证决定和维护中的源码分开。
 
-这套协议之所以可能，正是因为几项第一性原理在同一个接口中相遇。Litex 从集合论对象和成员关系出发，让事实导向的源码自下而上地生长一个已验证的上下文，并直接输出结构化验证结果，而不是只返回一个最终真假标签。它的语法和语义保持极简，语句也尽量贴近普通数学引入对象、条件、事实和结论的书写与阅读逻辑。其他形式化语言分别拥有其中的一项或几项：集合、向前积累事实、可读记法、局部反馈和结构化证明依据都不是单独属于 Litex 的。Litex 正在检验的设计假设是：把这些选择组合在一起，能否改变 AI 时代构造、理解、修复和复用可检查数学的成本与可见性。正是这种组合，而不是某一个单独功能，构成了 Litex 的独特性和它要检验的科学问题。这是一种可以被验证的设计假设，并不是“Litex 在所有方面都优于其他语言”，也不是声称其中任何一个组成部分前所未有。
-
-skill 把这组设计选择变成可执行的过程。人类固定数学契约，AI 提出下一个源代码顺序中的证明块，Litex 在小事务中检查它，而记录说明下一步可以做什么：
+Litex 从集合论对象和成员关系出发，让事实导向的源码自下而上地生长一个已验证的上下文，并直接输出结构化验证结果，而不是只返回一个最终真假标签。正是这种设计组合，构成了 Litex 的独特性，让构建`人类-AI-Litex循环`的方法非常分工明确：
 
 ```text
-人类拥有数学意图和验收边界
+人类提出数学问题及其解答意图
                          ↓
-AI 决策：下一项数学责任与候选方案
+AI 把问题与解答拆成有序片段
                          ↓
-Litex 的结构化验证结果
-             ├─ Committed → 已接受上下文增长
-             └─ RolledBack → 已接受上下文保持不变
-                                      ↓
-                         基于证据的诊断
-                                      ↓
-                         修复同一个证明块
-
-连续已提交前缀 → canonical .lit → 干净重放
+              ┌──── 片段形式化循环 ────┐
+              │                         │
+              ▼                         │
+AI 把当前片段写成 Litex 代码             │
+                         ↓              │
+Litex 结构化验证结果                    │
+   ├─ success                           │
+   │     → 记录这段代码                 │
+   │     → 记录 Litex 如何运行它        │
+   │     → 进入下一片段 ────────────────┘
+   └─ RolledBack
+         → 基于证据的诊断
+         → 修复同一个片段，再试
+                         ↓
+全部成功片段按顺序衔接 → 问题得到解决与形式化
+                         ↓
+人类专家做基本校验
+                         ↓
+这些 Litex 代码成为后续其他问题的基石
 ```
 
-每一轮的单位是源代码顺序中的一个定义、定理或小型证明片段，并放在一个外层 `try:` 事务中。AI 不能自行接受一个表达流畅的候选。Litex 负责局部验证决定：`Committed` 的证明块可以扩展上下文，`RolledBack` 的候选不能成为后续语句的前提。journal 记录为什么要改变下一份候选，但候选不会因为被记录就变成证明。
+> 任何单独的Litex的特性，都能在历史上的某一个形式化语言上找到影子：可读性上，Naproche有非常接近课本的书写格式；基于集合论？Mizar就是；建立了丰富生态的其他形式化语言更是很多。Litex集众语言之长，形成了自己的设计风格，使之能面向广大的非形式化专业用户群体，适应AI时代的需求。
 
-这一过程会产生两种相互关联的知识产物：
+> 在数学之外，其他对可信推理有强需求的行业，如AI安全、软件验证，都对这样的人类-AI-Litex循环产生了兴趣。
 
-| 知识产物 | 主要载体 | 保留什么 | 不能替代什么 |
-| --- | --- | --- | --- |
-| 数学知识 | 物化后的 `.lit` 源码 | 已接受的定义、事实、依赖关系和连续验证前缀 | 候选历史或 AI 解释 |
-| 构造知识 | AI 决策 journal、Litex JSON 结果、重放和验收记录 | 目标、候选、验证状态、失败位置、诊断、修复和干净重放证据 | 人类对数学含义的判断或验证器实际作出的决定 |
+片段形式化循环中，执行流按源代码顺序推进，每一轮只处理一个定义、定理或小型证明片段。AI 提出该片段的 Litex 代码；Litex 返回结构化验证结果，决定这一轮能否继续。若成功，结果会同时留下两样东西：这段已被接受的源码，以及这段代码如何被检查、依据什么成立的运行记录——没有后者，AI 就不知道下一步该信任什么、该修复什么；有了后者，成功片段才能成为后续片段的已接受前提，失败片段也能被精准诊断而不污染上下文。当全部片段成功衔接后，问题既被解决，也被形式化；人类专家再做基本校验。通过校验的 Litex 代码与其运行记录，才会作为可复用的数学基石，支撑后续其他问题。换言之，推动循环前进的，不是 AI 的流畅表述，而是 Litex 每一次可检查、可回放、可交接的输出。
 
-构造记录中还要区分两种声音。AI journal 说明为什么提出或修复一个候选：它的意图、假设、使用的证据和下一项最小修改。Litex 结果说明验证器实际报告了什么：事务是否提交、哪个阶段或目标失败、返回了什么依据、已接受上下文是否发生变化。因此，与其把 Litex 的直接输出叫作“AI 的思考”，不如称为 **结构化验证结果**。它保存可审核的决策证据，但不声称保存隐藏的思维链。
-
-这也解释了为什么成功和失败都值得保存。成功记录了一条可复用的事实，以及它如何进入已接受上下文。失败记录了一条边界：哪个候选没有进入上下文、验证器最早在哪里停止、下一次尝试采用了什么最小修复。失败记录以后可以用于人工审核、阻塞分类、诊断改进、评估或未来训练数据，但这些是数据潜力，不是已经测得的性能结果。
+因此，Litex 留下的不只是最终可复用的 `.lit` 源码。它还把 AI 在形式化过程中的尝试本身保存下来：哪里对了、哪里错了，怎么对的、怎么错的。这些源码以外的经验同样本质——没有它们，后人只能看见一份已经写好的证明；有了它们，人和 AI 才能回看构造路径、复用修复方式，并把一次求解变成可学习的形式化经验。
 
 <details>
-<summary><strong>示例：一次失败候选如何变成一次成功的局部修复</strong></summary>
+<summary><strong>示例：按流程图走一遍片段形式化循环</strong></summary>
 
-**Human｜固定数学契约**
+下面是一个独立的小例子，步骤与上文流程图一一对应。它故意不完整，只用来看清循环本身。
 
-> 已知 `H` 是群 `G` 的一个子群。定义 `H` 上的乘法，使 `x, y ∈ H` 时，`group.mul(x, y)` 被看作 `H` 中的元素。
+**1. 人类提出数学问题及其解答意图**
 
-**AI｜提出第一份候选**
+> 假设有限群、子群与左陪集空间已经给出。证明 Lagrange 定理：若 `H` 是有限群 `G` 的子群，则 `|H|` 整除 `|G|`。
 
-AI 最初使用此前定义的 `subgroup_carrier` 别名作为返回集合。数学目标没有改变；现在接受检查的只是这一份候选接口。
+**2. AI 把问题与解答拆成有序片段**
 
-**Litex｜返回结构化验证结果**
+针对这个问题，AI 可以先拆成例如：
+
+1. 引用陪集空间有限性与陪集坐标双射，得到 `|G| = |G/H| * |H|`  
+2. 以 `|G/H|` 为见证，写出 `|H|` 整除 `|G|`  
+3.（可选推论）若 `|H| = 1`，则 `H = {one}`  
+
+每个片段只做一件事。
+
+**3. 片段形式化循环：前两个片段中的“准备事实”成功**
+
+AI 先把陪集有限性、双射与基数恒等式写成 Litex 代码；Litex 返回成功。于是留下这段源码，以及 Litex 如何运行它的记录。已接受上下文增长，整除结论片段可以引用它们。
+
+**4. 同一循环中的失败与修复：证明 `|H|` 整除 `|G|`**
+
+AI 先试图在没有显式陪集基数论证的情况下，直接断言整除结论。Litex 返回失败并回滚：
 
 ```json
 {
-  "attempt_id": "SS003A1",
   "result": "rejected_rolled_back",
-  "failed_phase": "verify_well_definedness",
-  "verifier_evidence": "Return value group.mul(x,y) was not inferred to belong to the cross-file subgroup_carrier."
+  "failed_phase": "verify_process",
+  "verifier_evidence": "failed goal $group::divides(finite_set_size(H), finite_set_size(G))"
 }
 ```
 
-已接受上下文保持不变。AI 的决策记录现在可以说明：数学定义仍然是原来的定义，需要缩小修改范围，只修复返回集合的表达方式。
-
-**AI｜修复已经定位的接口问题**
-
-第四份候选保持同一个函数值，直接把与 `subgroup_carrier` 定义相等的 `H` 写成返回集合：
+已接受上下文不变。记录说明：整除不是导入或内建定理直接给出的，必须用陪集基数显式论证。AI 只修这一片段，改成先建立 `|G| = |G/H| * |H|`，再以 `|G/H|` 作见证：
 
 <!-- litex:skip-test -->
 ```litex
-template<G nonempty_set, group &group::Group<G>, H power_set(G):
-    $subgroup::is_subgroup(G, group, H)>:
-    have fn subgroup_mul(
-        x, y \subgroup_carrier<G, group, H>
-    ) H = group.mul(x, y)
+thm subgroup_order_divides_group_order:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G):
+        $subgroup::is_subgroup(G, group, H)
+        $is_finite_set(G)
+        $is_finite_set(H)
+        =>:
+            $group::divides(finite_set_size(H), finite_set_size(G))
+    release thm cosets::left_coset_space_finite(G, group, H)
+    release thm cosets::left_coset_forward_bijective(G, group, H)
+    finite_set_size(G) = finite_set_size(cosets::quotient_group_carrier<G, group>(H)) * finite_set_size(H)
+    witness $group::divides(finite_set_size(H), finite_set_size(G)) from finite_set_size(cosets::quotient_group_carrier<G, group>(H)):
+        finite_set_size(G) = finite_set_size(H) * finite_set_size(cosets::quotient_group_carrier<G, group>(H))
 ```
 
-**Litex｜提交修复后的事实**
+Litex 再次检查后成功。于是同样留下源码与运行记录。
 
-```json
-{
-  "attempt_id": "SS003A4",
-  "result": "accepted",
-  "verifier_evidence": "Outer try committed after declaring the return carrier as the definitionally equal H."
-}
-```
+**5. 全部成功片段衔接 → 问题得到解决与形式化**
 
-只有已接受的源码会被物化到维护中的 `.lit` 文件。失败候选仍然属于构造知识，可以解释这次修复，却不会成为数学前提。这是一次真实交互的记录，并不意味着所有失败都能由 AI 自动修复。
+各成功片段按顺序连成一份连续的 Litex 证明。最终源码只有成功前缀；失败尝试仍被记录，解释修复，却不成为数学前提。
+
+**6. 人类专家做基本校验**
+
+专家核对：意图是否仍是“Lagrange 整除”、陪集双射与基数等式是否可信、是否偷偷改写了子群或有限性假设。机器通过不等于免审。
+
+**7. 这些 Litex 代码成为后续问题的基石**
+
+通过校验后，这条整除事实可被阶为 1 的子群推论、子群阶整除关系、乃至 Sylow 型后续问题继续引用。留下的不只是当次证明，还有可复用的形式化地基，以及“哪里对了、哪里错了”的经验。
 
 </details>
-
-完整的构造过程见 [Litex 端到端验证闭环](https://litexlang.com/showcases)；本蓝图只保留上面的短轨迹，用来说明协议和知识边界。
 
 同一套协议可以从一条事实扩展到一条定理、一个可复用接口、一个教材章节或一个多文件理论。在每个规模上，核心边界都保持不变：人类拥有含义，AI 提出候选，Litex 负责检查，journal 保存决策和机器证据，`.lit` 只物化已接受的数学前缀。接下来的问题就不再是如何再提出一份候选，而是这两种记录如何被恢复、重放、复用，并在适用时交给 Lean/Mathlib 独立检查。
 
@@ -1218,7 +1237,7 @@ Litex 可独立工作，拥有语法、运行时和验证内核。如果你相�
 
 *同时，Litex到Lean的编译器还为 Litex 的严格性提供了保障。目前Litex的Rust 源码接近 20 万行，含数百条规则；其可信实现面远大于 Lean 的小内核，不可能像Lean内核那样真的经过检查。如果每一句Litex语句都能编译成对应的Lean代码，那么Litex的严格性就有保证了。*
 
-> 目前Litex到Lean的编译器还处于实验阶段。从原理上，Litex的处理对象、语句、验证机制，都是能对应到Lean/Mathlib的代码的。预计2026年底会完成这一工程。
+> 目前Litex到Lean的编译器还处于实验阶段。从原理上，Litex的处理对象、验证机制，都是能对应到Lean/Mathlib的代码的（Litex基于集合论，Mathlib有集合论的包；Litex的每个验证机制，都能对应成Lean的若干个tactic的组合）。预计2026年底会完成这一工程。
 
 <details>
 <summary><strong>示例：Litex代码如何编译成Lean</strong></summary>
@@ -1227,76 +1246,197 @@ Litex编译成Lean，并接入Mathlib-Style的Lean代码，要经过以下过程
 
 `Litex 源码 → Litex 验证 → ToLean 编译 → Lean 内核复核 → 手写 adapter → Mathlib 定理`
 
-ToLean 根据记录中的定义、事实和验证依据生成 Lean 证明对象。下面是生成文件的结构化节选，生成文件不由用户手改：
+> Litex编译成Lean的过程非常像C语言代码编译成汇编。我们知道汇编语言的代码之所以看起来像乱码是因为源码里写了很多内存地址。不管是新开地址和使用该地址时都要显式把地址写出来。Lean代码给每个事实都取了名字，在调用对应事实时也需要显式地把名字附上。Litex的内核在处理Litex代码时，替用户维护了这样一张事实表，同时在验证时会从该事实表中搜索到对应的事实来辅佐证明当前想要证明的东西。这个搜索过程的分叉多（Litex有几百条内置验证规则）而不深（每个验证规则都很直白，任何内置规则可以被编译成若干条Lean的tactic）。
 
-```lean
--- LitexGenerate.lean（由 ToLean 生成，节选）
-namespace __Compiler_main
+举例：我们想要证明前`n`个正奇数之和是`n^2`。我们先写下Litex的源码：
 
-def is_eventually_close (...) : Prop := ...
-def converges_to (...) : Prop := ...
+```litex
+have fn kth_odd(k Z) Z = 2 * k - 1
 
-theorem converges_to_mul_const :
-    ∀ (s : (Litex.fnSet Litex.N Litex.R).Carrier) ...,
-      converges_to (...) (...) := by
-  ...
+forall n Z:
+    n >= 1
+    =>:
+        sum(1, n, kth_odd) $in Z
 
-end __Compiler_main
+forall n Z:
+    n^2 $in Z
+
+thm sum_first_odds: 
+    ? forall n Z:
+        n >= 1
+        =>:
+            sum(1, n, kth_odd) = n^2
+    by induc n from 1:
+        ? sum(1, n, kth_odd) = n^2
+
+        ? from n = 1:
+            kth_odd(1) = 2 * 1 - 1 = 1
+            sum(1, 1, kth_odd) = kth_odd(1) = 2 * 1 - 1 = 1 = 1^2
+
+        ? induc:
+            kth_odd(n + 1) = 2 * (n + 1) - 1
+            sum(1, n + 1, kth_odd) = sum(1, n, kth_odd) + kth_odd(n + 1) = n^2 + kth_odd(n + 1) = n^2 + (2 * (n + 1) - 1) = (n + 1)^2
 ```
 
-手写 adapter 调用生成定理，再将 Litex 的表示桥接到 Mathlib：
+编译到Lean（不同的Litex版本编译出来的东西可能会不同）
 
 ```lean
-import LitexGenerate
+-- Generated by StmtResultToLeanCompiler from main.lit. DO NOT EDIT.
+import Litex
 
--- 手写 adapter 定理中的关键调用（上下文参数略）
-have generated :=
-  __Compiler_main.converges_to_mul_const s sIn a aIn c cIn h
+set_option linter.style.nameCheck false
+
+namespace __Compiler_main
+
+noncomputable def kth_odd : Litex.Fn Litex.Z Litex.Z :=
+  { call := fun {__alpha} (__arg : __alpha) __arg_in => (((2 : ℤ) * Litex.In.rep __arg __arg_in) - (1 : ℤ)), callOwn := fun (__arg : ℤ) => (((2 : ℤ) * __arg) - (1 : ℤ)) }
+
+theorem __fact0 : Litex.In kth_odd (Litex.fnSet Litex.Z Litex.Z) := by
+  exact Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd
+
+theorem __fact1 : Litex.Same kth_odd ({ call := fun {__alpha} (__arg : __alpha) __arg_in => (((2 : ℤ) * Litex.In.rep __arg __arg_in) - (1 : ℤ)), callOwn := fun (__arg : ℤ) => (((2 : ℤ) * __arg) - (1 : ℤ)) } : Litex.Fn Litex.Z Litex.Z) := by
+  unfold kth_odd
+  exact Litex.Same.refl ({ call := fun {__alpha} (__arg : __alpha) __arg_in => (((2 : ℤ) * Litex.In.rep __arg __arg_in) - (1 : ℤ)), callOwn := fun (__arg : ℤ) => (((2 : ℤ) * __arg) - (1 : ℤ)) } : Litex.Fn Litex.Z Litex.Z)
+
+theorem __fact2 :
+    ∀ (__p1 : ℤ) (__domain1 : Litex.Le (1 : ℂ) (((__p1) : ℂ))), Litex.In (Litex.sum (1 : ℤ) __p1 kth_odd) Litex.Z := by
+  intro n __domain_f17
+  have __infer2_0 : Litex.Lt (0 : ℂ) (((n) : ℂ)) := Litex.Lt.transLe (Litex.OrderBridge.ltOfComplexReals (show (0 : ℝ) < (1 : ℝ) by norm_num)) (__domain_f17)
+  have __prior2_0 : Litex.In (Litex.sum (1 : ℤ) n kth_odd) Litex.Z := Litex.In.own Litex.Z ((Litex.sum (1 : ℤ) n kth_odd))
+  exact __prior2_0
+
+theorem __fact3 :
+    ∀ (__p1 : ℤ), Litex.In (((((__p1) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) Litex.Z := by
+  intro n
+  have __prior3_0 : Litex.In (((((n) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) Litex.Z := Litex.Rules.complexIntPowNatInZ (n) (2 : ℕ)
+  exact __prior3_0
+
+theorem sum_first_odds :
+    ∀ (n : ℤ) (__domain_f48 : Litex.Le (1 : ℂ) (((n) : ℂ))),
+      Litex.Same (Litex.sum (1 : ℤ) n kth_odd) (((((n) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) := by
+  intro n __domain_f48
+  have __step4_29 : ∀ (__p1 : ℤ) (__domain1 : Litex.Le (1 : ℂ) (((__p1) : ℂ))), Litex.Same (Litex.sum (1 : ℤ) __p1 kth_odd) (((((__p1) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) := by
+    intro __target_value __domain1
+    have __target_ge_start_real : (((1 : ℤ)) : ℝ) ≤ (__target_value : ℝ) := by
+      simpa [Litex.Le, Litex.OrderValue] using __domain1
+    have __target_ge_start : (1 : ℤ) ≤ __target_value := by
+      exact_mod_cast __target_ge_start_real
+    exact Litex.Rules.integerInductionFrom (motive := fun __induction_value : ℤ => Litex.Same (Litex.sum (1 : ℤ) __induction_value kth_odd) (((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ)) (by
+    have __step4_2 : (Litex.Same (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (1 : ℤ)) (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ))) ∧ (Litex.Same (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ)) (1 : ℂ)) := by
+      exact ⟨Litex.Same.trans ((by
+      unfold Litex.fnApplyCarrier kth_odd
+      exact Litex.Same.intSubComplex (Litex.Same.intMulComplex (Litex.Same.intComplexOfEq (z := (2 : ℤ)) (by norm_num)) (Litex.Same.intComplexOfEq (z := ((1 : ℤ))) (by norm_cast))) (Litex.Same.intComplexOfEq (z := (1 : ℤ)) (by norm_num)))) (Litex.Same.refl (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ))), Litex.Same.ofEq (by norm_num [Litex.abs, Litex.min, Litex.max, Litex.tupleDim, Litex.TupleShape.dimension])⟩
+    have __infer4_3 : Litex.Same (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (1 : ℤ)) (1 : ℂ) := Litex.Same.trans ((__step4_2).1) ((__step4_2).2)
+    have __step4_4 : (Litex.Same (Litex.sum (1 : ℤ) (1 : ℤ) kth_odd) (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (1 : ℤ))) ∧ (Litex.Same (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (1 : ℤ)) (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ))) ∧ (Litex.Same (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ)) (1 : ℂ)) ∧ (Litex.Same (1 : ℂ) (((1 : ℚ) ^ (2 : ℤ) : ℚ) : ℂ)) := by
+      exact ⟨Litex.Same.trans (Litex.Same.symm (Litex.Same.symm (Litex.Same.trans (Litex.Rules.integerRangeSumSingleOwn (1 : ℤ) kth_odd) ((__step4_2).1)))) (Litex.Same.symm ((by
+      unfold Litex.fnApplyCarrier kth_odd
+      exact Litex.Same.intSubComplex (Litex.Same.intMulComplex (Litex.Same.intComplexOfEq (z := (2 : ℤ)) (by norm_num)) (Litex.Same.intComplexOfEq (z := ((1 : ℤ))) (by norm_cast))) (Litex.Same.intComplexOfEq (z := (1 : ℤ)) (by norm_num))))), ⟨(__step4_2).1, ⟨(__step4_2).2, Litex.Same.ofEq (by norm_num [Litex.abs, Litex.min, Litex.max, Litex.tupleDim, Litex.TupleShape.dimension])⟩⟩⟩
+    have __infer4_5 : Litex.Same (Litex.sum (1 : ℤ) (1 : ℤ) kth_odd) (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ)) := Litex.Same.trans ((__step4_4).1) ((__step4_4).2.1)
+    have __infer4_6 : Litex.Same (Litex.sum (1 : ℤ) (1 : ℤ) kth_odd) (1 : ℂ) := Litex.Same.trans (Litex.Same.trans ((__step4_4).1) ((__step4_4).2.1)) ((__step4_4).2.2.1)
+    have __infer4_7 : Litex.Same (Litex.sum (1 : ℤ) (1 : ℤ) kth_odd) (((1 : ℚ) ^ (2 : ℤ) : ℚ) : ℂ) := Litex.Same.trans (Litex.Same.trans (Litex.Same.trans ((__step4_4).1) ((__step4_4).2.1)) ((__step4_4).2.2.1)) ((__step4_4).2.2.2)
+    have __infer4_8 : Litex.Same (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (1 : ℤ)) (((1 : ℚ) ^ (2 : ℤ) : ℚ) : ℂ) := Litex.Same.trans (Litex.Same.trans ((__step4_4).2.1) ((__step4_4).2.2.1)) ((__step4_4).2.2.2)
+    have __infer4_9 : Litex.Same (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ)) (((1 : ℚ) ^ (2 : ℤ) : ℚ) : ℂ) := Litex.Same.trans ((__step4_4).2.2.1) ((__step4_4).2.2.2)
+    have __infer4_10 : Litex.In (1 : ℂ) Litex.RPos := (Litex.In.congr ((__step4_4).2.2.2) Litex.RPos).mpr (Litex.Rules.complexEqRealInRPos (((1 : ℚ) ^ (2 : ℤ) : ℚ) : ℂ) (1 : ℝ) (by norm_num) (by norm_num))
+    have __infer4_11 : Litex.Positive (1 : ℂ) := (by simpa [Litex.In.rep] using (Litex.Rules.positiveOfInRPos (__infer4_10)))
+    have __infer4_12 : Litex.In (Litex.sum (1 : ℤ) (1 : ℤ) kth_odd) Litex.RPos := (Litex.In.congr (__infer4_7) Litex.RPos).mpr (Litex.Rules.complexEqRealInRPos (((1 : ℚ) ^ (2 : ℤ) : ℚ) : ℂ) (1 : ℝ) (by norm_num) (by norm_num))
+    have __infer4_13 : Litex.Positive (Litex.sum (1 : ℤ) (1 : ℤ) kth_odd) := (by simpa [Litex.In.rep] using (Litex.Rules.positiveOfInRPos (__infer4_12)))
+    have __infer4_14 : Litex.In (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (1 : ℤ)) Litex.RPos := (Litex.In.congr (__infer4_8) Litex.RPos).mpr (Litex.Rules.complexEqRealInRPos (((1 : ℚ) ^ (2 : ℤ) : ℚ) : ℂ) (1 : ℝ) (by norm_num) (by norm_num))
+    have __infer4_15 : Litex.Positive (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (1 : ℤ)) := (by simpa [Litex.In.rep] using (Litex.Rules.positiveOfInRPos (__infer4_14)))
+    have __infer4_16 : Litex.In (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ)) Litex.RPos := (Litex.In.congr (__infer4_9) Litex.RPos).mpr (Litex.Rules.complexEqRealInRPos (((1 : ℚ) ^ (2 : ℤ) : ℚ) : ℂ) (1 : ℝ) (by norm_num) (by norm_num))
+    have __infer4_17 : Litex.Positive (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ)) := (by simpa [Litex.In.rep] using (Litex.Rules.positiveOfInRPos (__infer4_16)))
+    exact (by simpa using (__infer4_7))) (fun (__induction_value : ℤ) (__induction_ge_start : (1 : ℤ) ≤ __induction_value) (__induction_hypotheses : Litex.Same (Litex.sum (1 : ℤ) __induction_value kth_odd) (((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ)) => by
+    have __infer4_18 : Litex.Lt (0 : ℂ) (((__induction_value) : ℂ)) := Litex.Lt.transLe (Litex.OrderBridge.ltOfComplexReals (show (0 : ℝ) < (1 : ℝ) by norm_num)) ((by
+      have __induction_ge_start_real : (((1 : ℤ)) : ℝ) ≤ (__induction_value : ℝ) := by
+        exact_mod_cast __induction_ge_start
+      simpa [Litex.Le, Litex.OrderValue] using __induction_ge_start_real))
+    have __infer4_19 : Litex.In (Litex.sum (1 : ℤ) __induction_value kth_odd) Litex.RPos := (Litex.In.congr (__induction_hypotheses) Litex.RPos).mpr (Litex.Rules.positiveIntegerRationalPowInRPos (__induction_value) (2 : ℤ) (__infer4_18) (by norm_num))
+    have __infer4_20 : Litex.Positive (Litex.sum (1 : ℤ) __induction_value kth_odd) := (by simpa [Litex.In.rep] using (Litex.Rules.positiveOfInRPos (__infer4_19)))
+    have __step4_21 : Litex.Same (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (__induction_value + (1 : ℤ))) (((2 : ℂ) * ((((__induction_value) : ℂ)) + (1 : ℂ))) - (1 : ℂ)) := by
+      exact Litex.Same.trans ((by
+      unfold Litex.fnApplyCarrier kth_odd
+      exact Litex.Same.intSubComplex (Litex.Same.intMulComplex (Litex.Same.intComplexOfEq (z := (2 : ℤ)) (by norm_num)) (Litex.Same.intComplexOfEq (z := ((__induction_value + (1 : ℤ)))) (by norm_cast))) (Litex.Same.intComplexOfEq (z := (1 : ℤ)) (by norm_num)))) (Litex.Same.refl (((2 : ℂ) * ((((__induction_value) : ℂ)) + (1 : ℂ))) - (1 : ℂ)))
+    have __step4_22 : (Litex.Same (Litex.sum (1 : ℤ) (__induction_value + (1 : ℤ)) kth_odd) ((((Litex.sum (1 : ℤ) __induction_value kth_odd) : ℤ) : ℂ) + (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (__induction_value + (1 : ℤ))))) ∧ (Litex.Same ((((Litex.sum (1 : ℤ) __induction_value kth_odd) : ℤ) : ℂ) + (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (__induction_value + (1 : ℤ)))) ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (__induction_value + (1 : ℤ))))) ∧ (Litex.Same ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (__induction_value + (1 : ℤ)))) ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (((2 : ℂ) * ((((__induction_value) : ℂ)) + (1 : ℂ))) - (1 : ℂ)))) ∧ (Litex.Same ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (((2 : ℂ) * ((((__induction_value) : ℂ)) + (1 : ℂ))) - (1 : ℂ))) ((((((__induction_value) : ℚ)) + (1 : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ)) := by
+      exact ⟨Litex.Rules.integerRangeSumSplitLastOwn (1 : ℤ) __induction_value kth_odd ((by simpa [Litex.Le, Litex.OrderValue] using ((by
+      have __induction_ge_start_real : (((1 : ℤ)) : ℝ) ≤ (__induction_value : ℝ) := by
+        exact_mod_cast __induction_ge_start
+      simpa [Litex.Le, Litex.OrderValue] using __induction_ge_start_real)))), ⟨Litex.Same.intCastAddComplex (__induction_hypotheses) (Litex.Same.intComplex ((Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (__induction_value + (1 : ℤ))))), ⟨Litex.Same.addCongrRightInt (Litex.Same.refl ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ))) (__step4_21), Litex.Same.trans (Litex.Same.refl (((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (((2 : ℂ) * ((((__induction_value) : ℂ)) + (1 : ℂ))) - (1 : ℂ))))) (Litex.Same.trans (Litex.Same.ofEq ((show ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (((2 : ℂ) * ((((__induction_value) : ℂ)) + (1 : ℂ))) - (1 : ℂ))) = ((((((__induction_value) : ℚ)) + (1 : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) from (by norm_cast <;> ring_nf)))) (Litex.Same.symm (Litex.Same.refl (((((((__induction_value) : ℚ)) + (1 : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ)))))⟩⟩⟩
+    have __infer4_23 : Litex.Same (Litex.sum (1 : ℤ) (__induction_value + (1 : ℤ)) kth_odd) ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (__induction_value + (1 : ℤ)))) := Litex.Same.trans ((__step4_22).1) ((__step4_22).2.1)
+    have __infer4_24 : Litex.Same (Litex.sum (1 : ℤ) (__induction_value + (1 : ℤ)) kth_odd) ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (((2 : ℂ) * ((((__induction_value) : ℂ)) + (1 : ℂ))) - (1 : ℂ))) := Litex.Same.trans (Litex.Same.trans ((__step4_22).1) ((__step4_22).2.1)) ((__step4_22).2.2.1)
+    have __infer4_25 : Litex.Same (Litex.sum (1 : ℤ) (__induction_value + (1 : ℤ)) kth_odd) ((((((__induction_value) : ℚ)) + (1 : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) := Litex.Same.trans (Litex.Same.trans (Litex.Same.trans ((__step4_22).1) ((__step4_22).2.1)) ((__step4_22).2.2.1)) ((__step4_22).2.2.2)
+    have __infer4_26 : Litex.Same ((((Litex.sum (1 : ℤ) __induction_value kth_odd) : ℤ) : ℂ) + (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (__induction_value + (1 : ℤ)))) ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (((2 : ℂ) * ((((__induction_value) : ℂ)) + (1 : ℂ))) - (1 : ℂ))) := Litex.Same.trans ((__step4_22).2.1) ((__step4_22).2.2.1)
+    have __infer4_27 : Litex.Same ((((Litex.sum (1 : ℤ) __induction_value kth_odd) : ℤ) : ℂ) + (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (__induction_value + (1 : ℤ)))) ((((((__induction_value) : ℚ)) + (1 : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) := Litex.Same.trans (Litex.Same.trans ((__step4_22).2.1) ((__step4_22).2.2.1)) ((__step4_22).2.2.2)
+    have __infer4_28 : Litex.Same ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (Litex.fnApplyCarrier (domain := Litex.Z) (codomain := Litex.Z) kth_odd ((Litex.In.own (Litex.fnSet Litex.Z Litex.Z) kth_odd)) (__induction_value + (1 : ℤ)))) ((((((__induction_value) : ℚ)) + (1 : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) := Litex.Same.trans ((__step4_22).2.2.1) ((__step4_22).2.2.2)
+    exact (by simpa using (__infer4_25))) __target_value __target_ge_start
+  have __c4_0 : Litex.Same (Litex.sum (1 : ℤ) n kth_odd) (((((n) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) := (by
+    simpa [Litex.In.rep, Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__step4_29 n (by
+    simpa [Litex.In.rep, Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__domain_f48))))
+  exact __c4_0
+
+end __Compiler_main
+
+```
+
+生成的代码是Lean代码，但是是在Litex的语义下的Lean代码。我们稍加一个adapter，将 Litex 的表示桥接到 Mathlib：
+
+```lean
+import Generated
+
+/-! The handwritten interface from generated Litex evidence to native Mathlib. -/
+
+namespace Adapter
+
+/-- Export the generated theorem as ordinary Mathlib equality. -/
+theorem sumFirstOddsNative
+    (n : ℤ)
+    (oneLeN : (1 : ℤ) ≤ n) :
+    ∑ k ∈ Finset.Icc (1 : ℤ) n, (2 * k - 1) = n ^ 2 := by
+  have generated :=
+    __Compiler_main.sum_first_odds n
+      (Litex.OrderBridge.leOfComplexReals (by exact_mod_cast oneLeN))
+  have exactComplexEq :
+      ((Litex.sum (1 : ℤ) n __Compiler_main.kth_odd : ℤ) : ℂ) =
+        ((n ^ 2 : ℤ) : ℂ) := by
+    calc
+      ((Litex.sum (1 : ℤ) n __Compiler_main.kth_odd : ℤ) : ℂ) =
+          ((((n : ℚ) ^ (2 : ℤ) : ℚ) : ℂ)) :=
+        Litex.Same.intComplexEq generated
+      _ = ((n ^ 2 : ℤ) : ℂ) := by norm_cast
+  exact_mod_cast exactComplexEq
+
+end Adapter
+
 ```
 
 桥接完成后，结论可以使用 Mathlib 的原生接口：
 
 ```lean
-theorem tendsto_mul_const_from_generated (...) :
-    Filter.Tendsto
-      (toMathlibSequence (scaleSequence c s))
-      Filter.atTop
-      (nhds (c * a)) := by
-  have generated :=
-    __Compiler_main.converges_to_mul_const s sIn a aIn c cIn h
-  exact tendsto_of_generated_convergesTo _ _ generated
+import Adapter
+
+/-- A native theorem whose statement is entirely independent of Litex. -/
+theorem firstHundredPositiveOddIntegersSum :
+    ∑ k ∈ Finset.Icc (1 : ℤ) 100, (2 * k - 1) = 10000 := by
+  exact Adapter.sumFirstOddsNative 100 (by norm_num)
+
 ```
 
-这只证明一条当前已覆盖的路径完整走通；其他源码路径仍必须明确标出未覆盖边界。
+Litex因此可以视作Lean的一个更可读的，更容易理解的前端语言。用户写下Litex代码，从Litex代码中理解整个证明过程，然后编译成Lean确保验证性并接入Mathlib生态。我相信这是非常值得探索的一个方向。
 
 </details>
-
-<details>
-<summary><strong>Litex 到 Lean 的编译器如何工作</strong></summary>
-
-总结来说，Litex到Lean的编译器的工作原理是，Litex 保留验证路径，把每个已支持步骤映射为 Lean 定理或证明构造，再组装成证明对象。Mathlib 对集合论数学的支持使这条路线自然可行。
-
-实现它需要两层映射：验证路径映射为 Lean 证明构造；数学对象通过设计过的包装层映射为 Lean 表示，而非机械直译。这需要持续开发和验证；中介代码见 https://github.com/litexlang/golitex/blob/main/lean/Litex/Core.lean。
-
-编译器有两个底层问题。其一是如何在 Lean/Mathlib 中表示 Litex 数学。同一对象常有多种等价写法，选择会长期影响 Mathlib 复用、Litex 扩展与生态协作；函数、集合、成员和良定义性必须采用一致、可持续的表示。
-
-其二是把成功执行的信息变成 Lean 证明。搜索树的成功分支必须结构化返回规则、事实、对象、子证明和良定义性结果，并保留声明与作用域变化，使编译器能确定性重放路径，而非从显示文本重建或让 Lean 重新搜索。
-
-</details>
-
-Litex 不取代 Lean：前者提供数学写作接口，后者提供小内核复核与生态复用。已覆盖路径可形成可验证、可审核、可复用的流程；其余部分必须标明边界。
 
 <a id="summary-bottom-up-and-top-down"></a>
 
-### 小结：自下而上与自上而下互补
+<details>
+<summary><strong>个人思考：Litex补齐了AI推理的范式缺口？</strong></summary>
 
-数学实践中，自下而上的事实积累与自上而下的目标分解并不是二选一，而是同时存在、相互校验的两种方向。Litex 与 Lean 的设计思路因此是互补的：Litex 让作者从对象、条件和已验证事实出发，逐步生长一条可读的证明流；Lean 则从明确目标出发，通过目标分解和证明项构造，把结果交给小内核独立检查。两者可以在同一条工作流中分工，而不必争论哪一种方向“更正确”。
+在数学实践中，自下而上的证明流（从前提出发，积累更多事实），与自上而下的证明流（分解最终结论，直到最终和前提匹配上），构成了数学证明时的不同视角和思路。Litex的源码代表了前者的思维模式，Lean代码代表了后者。那么AI更偏好哪一种思维模式呢？
 
-从我的观察看，AI 在基于事实的源代码表达和自下而上的局部推进上往往表现得很自然，可能与其训练材料有关：互联网中的知识大多以事实、结论和局部推导的形式组织，模型从这些数据中学习到相应的模式。但这只是关于数据分布和模型行为的工作假设，不是对所有模型或任务的普遍结论。
+先看自下而上的证明流。大部分数学教材都是基于自下而上的行文模式写的，这也是人类更适应的思维范式（试想，我们不会从数学最后一页开始读书！）。大模型都是在互联网中的数学知识上进行训练的，因此AI更容易阅读Litex代码。同时，让AI Agent去写Litex代码时，让它和Litex的输出交互，了解每段证明为什么对，哪里出错，更容易形成`人类-AI-Litex`的证明流构建。
 
-同时，AI 的训练也围绕目标函数和奖励信号展开。因而，AI 未必天然具备稳定的、从第一性原理自下而上展开的推理能力；在许多任务中，它更容易从期望结果或评价信号反向组织一条看起来能够到达结果的路径。如此，AI似乎内蕴的思维模式更像是自上而下的。
+再看自上而下的证明流。大模型的训练围绕着目标函数和奖励信号展开。因而，AI 未必天然具备稳定的、从第一性原理自下而上展开的推理能力；在许多任务中，它更容易从期望结果或评价信号反向组织一条看起来能够到达结果的路径。
 
 因此，两种思维模式都很宝贵：自下而上适合积累可复用的局部事实、暴露中间依据；自上而下适合澄清目标、选择方向、压缩搜索空间。Litex 与 Lean 的连接，正可以把这两种方向放进同一条可检查的证据链，并让人类和 AI 在各自擅长的方向上协作。
+
+</details>
 
 <a id="ecosystem-role"></a>
 
