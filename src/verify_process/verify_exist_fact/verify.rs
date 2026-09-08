@@ -18,25 +18,4 @@ impl Runtime {
             )),
         }
     }
-
-    pub fn verify_plain_exist_fact(
-        &mut self,
-        fact: &ExistentialSpec,
-        verify_state: VerifyState,
-    ) -> Result<VerifyPlainExistFactResult, RuntimeError> {
-    }
-
-    pub fn verify_exist_unique_fact(
-        &mut self,
-        fact: &ExistentialSpec,
-        verify_state: VerifyState,
-    ) -> Result<VerifyExistUniqueFactResult, RuntimeError> {
-    }
-
-    pub fn verify_not_exist_fact(
-        &mut self,
-        fact: &ExistentialSpec,
-        verify_state: VerifyState,
-    ) -> Result<VerifyNotExistFactResult, RuntimeError> {
-    }
 }
