@@ -20,10 +20,6 @@ pub enum NonEquationalAtomicFactSearchProof {
     ByKnownAlgebraicRewrite(NonEquationalAtomicFactSearchProofByKnownAlgebraicRewrite),
 }
 
-pub enum NonEquationalAtomicFactSearchProofByBuiltinRule {
-    // ...
-}
-
 pub struct NonEquationalAtomicFactSearchProofByKnownAtomicFact {
     pub cite_fact_id: FactId,
     pub why_parameters_of_known_fact_are_equal_to_givens: Vec<VerifyFactResult>,
