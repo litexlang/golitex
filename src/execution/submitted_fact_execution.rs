@@ -452,7 +452,7 @@ impl Runtime {
         };
         let infer_result = self.store_without_well_defined_verification_and_infer(fact.clone())?;
         let mut store = SuccessStoreFactResult::new(fact.clone(), infer_result);
-        store.fact_id = self.known_fact_id_for_fact(fact)?;
+        store.fact_id = Some(fact.fact_id());
         Ok(SuccessFactStmtResult::verified(verification, store).into())
     }
 

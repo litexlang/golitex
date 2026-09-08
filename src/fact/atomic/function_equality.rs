@@ -4,6 +4,7 @@ use crate::prelude::*;
 use std::fmt;
 #[derive(Clone)]
 pub struct FnEqualInFact {
+    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
     pub set: Obj,
@@ -13,6 +14,7 @@ pub struct FnEqualInFact {
 impl FnEqualInFact {
     pub fn new(left: Obj, right: Obj, set: Obj, line_file: LineFile) -> Self {
         FnEqualInFact {
+            fact_id: FactId::fresh(),
             left,
             right,
             set,
@@ -33,6 +35,7 @@ impl fmt::Display for FnEqualInFact {
 
 #[derive(Clone)]
 pub struct FnEqualFact {
+    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
     pub line_file: LineFile,
@@ -41,6 +44,7 @@ pub struct FnEqualFact {
 impl FnEqualFact {
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         FnEqualFact {
+            fact_id: FactId::fresh(),
             left,
             right,
             line_file,

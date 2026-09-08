@@ -1,14 +1,27 @@
 use std::fmt;
+use std::sync::atomic::{AtomicU64, Ordering};
 
-/// Runtime-unique identity for one fact stored in an environment.
+/// Globally unique identity for one fact node created during the process.
 ///
-/// Display text is deliberately not the identity: alpha-normalized and
-/// nested-binder cache aliases for the same stored fact share one `FactId`.
+/// The identity belongs to the node, not to its rendered proposition or to the
+/// environment in which it is eventually stored. Cloning a node preserves its
+/// identity; every constructor that creates a new node obtains a fresh one.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct FactId(u64);
 
+static NEXT_FACT_ID: AtomicU64 = AtomicU64::new(1);
+
 impl FactId {
+    /// Construct an explicit identity for fixtures and compatibility tests.
     pub fn new(value: u64) -> Self {
+        FactId(value)
+    }
+
+    /// Allocate the next process-wide identity for a newly created fact node.
+    pub fn fresh() -> Self {
+        let value = NEXT_FACT_ID.fetch_update(Ordering::Relaxed, Ordering::Relaxed, |value| {
+            value.checked_add(1)
+        }).expect("fact ID space exhausted");
         FactId(value)
     }
 

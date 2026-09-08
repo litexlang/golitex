@@ -51,9 +51,7 @@ impl Runtime {
             // local environment that has since been popped. Never retarget it
             // to a later ambient fact with the same proposition.
             if success.fact_id.is_none() {
-                if let Some(fact_id) = self.known_fact_id_for_fact(&success.fact())? {
-                    success.fact_id = Some(fact_id);
-                }
+                success.fact_id = Some(success.fact().fact_id());
             }
             self.attach_known_fact_ids_to_infer_result(&mut success.infers)?;
             if let FactStatementEvidence::Verified(verification) = &mut success.evidence {
@@ -128,8 +126,7 @@ impl Runtime {
             // Only fill missing identities; an ambient fact with the same
             // proposition is not the same store operation.
             if output.fact_id.is_none() {
-                output.fact_id =
-                    self.known_fact_id_for_fact(&output.itself_and_why_itself_is_stored.0)?;
+                output.fact_id = Some(output.itself_and_why_itself_is_stored.0.fact_id());
             }
             if output.inferred_fact_ids.len() != output.inferred_facts.len() {
                 return Err(RuntimeError::from(UnknownRuntimeError(
@@ -148,19 +145,19 @@ impl Runtime {
                 .zip(output.inferred_fact_ids.iter_mut())
             {
                 if fact_id.is_none() {
-                    *fact_id = self.known_fact_id_for_fact(fact)?;
+                    *fact_id = Some(fact.fact_id());
                 }
             }
         }
         for application in infer_result.rule_applications.iter_mut() {
             for premise in application.premises.iter_mut() {
                 if premise.fact_id.is_none() {
-                    premise.fact_id = self.known_fact_id_for_fact(&premise.fact)?;
+                    premise.fact_id = Some(premise.fact.fact_id());
                 }
             }
             for conclusion in application.conclusions.iter_mut() {
                 if conclusion.fact_id.is_none() {
-                    conclusion.fact_id = self.known_fact_id_for_fact(&conclusion.fact)?;
+                    conclusion.fact_id = Some(conclusion.fact.fact_id());
                 }
                 self.attach_known_fact_ids_to_infer_result(&mut conclusion.infers)?;
             }

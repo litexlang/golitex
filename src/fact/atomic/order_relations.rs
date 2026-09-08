@@ -4,6 +4,7 @@ use crate::prelude::*;
 use std::fmt;
 #[derive(Clone)]
 pub struct LessFact {
+    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
     pub line_file: LineFile,
@@ -11,6 +12,7 @@ pub struct LessFact {
 
 #[derive(Clone)]
 pub struct NotLessFact {
+    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
     pub line_file: LineFile,
@@ -18,6 +20,7 @@ pub struct NotLessFact {
 
 #[derive(Clone)]
 pub struct GreaterFact {
+    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
     pub line_file: LineFile,
@@ -25,6 +28,7 @@ pub struct GreaterFact {
 
 #[derive(Clone)]
 pub struct NotGreaterFact {
+    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
     pub line_file: LineFile,
@@ -32,6 +36,7 @@ pub struct NotGreaterFact {
 
 #[derive(Clone)]
 pub struct LessEqualFact {
+    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
     pub line_file: LineFile,
@@ -39,6 +44,7 @@ pub struct LessEqualFact {
 
 #[derive(Clone)]
 pub struct NotLessEqualFact {
+    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
     pub line_file: LineFile,
@@ -46,6 +52,7 @@ pub struct NotLessEqualFact {
 
 #[derive(Clone)]
 pub struct GreaterEqualFact {
+    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
     pub line_file: LineFile,
@@ -53,6 +60,7 @@ pub struct GreaterEqualFact {
 
 #[derive(Clone)]
 pub struct NotGreaterEqualFact {
+    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
     pub line_file: LineFile,
@@ -61,6 +69,7 @@ pub struct NotGreaterEqualFact {
 impl LessFact {
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         LessFact {
+            fact_id: FactId::fresh(),
             left,
             right,
             line_file,
@@ -71,6 +80,7 @@ impl LessFact {
 impl NotLessFact {
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         NotLessFact {
+            fact_id: FactId::fresh(),
             left,
             right,
             line_file,
@@ -81,6 +91,7 @@ impl NotLessFact {
 impl GreaterFact {
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         GreaterFact {
+            fact_id: FactId::fresh(),
             left,
             right,
             line_file,
@@ -91,6 +102,7 @@ impl GreaterFact {
 impl NotGreaterFact {
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         NotGreaterFact {
+            fact_id: FactId::fresh(),
             left,
             right,
             line_file,
@@ -101,6 +113,7 @@ impl NotGreaterFact {
 impl LessEqualFact {
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         LessEqualFact {
+            fact_id: FactId::fresh(),
             left,
             right,
             line_file,
@@ -111,6 +124,7 @@ impl LessEqualFact {
 impl NotLessEqualFact {
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         NotLessEqualFact {
+            fact_id: FactId::fresh(),
             left,
             right,
             line_file,
@@ -121,6 +135,7 @@ impl NotLessEqualFact {
 impl GreaterEqualFact {
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         GreaterEqualFact {
+            fact_id: FactId::fresh(),
             left,
             right,
             line_file,
@@ -131,6 +146,7 @@ impl GreaterEqualFact {
 impl NotGreaterEqualFact {
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         NotGreaterEqualFact {
+            fact_id: FactId::fresh(),
             left,
             right,
             line_file,

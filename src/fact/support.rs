@@ -3,6 +3,65 @@
 use crate::prelude::*;
 
 impl Fact {
+    /// Identity allocated when this concrete fact node was created.
+    pub fn fact_id(&self) -> FactId {
+        match self {
+            Fact::AtomicFact(fact) => fact.fact_id(),
+            Fact::ExistFact(fact) => fact.fact_id(),
+            Fact::OrFact(fact) => fact.fact_id,
+            Fact::AndFact(fact) => fact.fact_id,
+            Fact::ChainFact(fact) => fact.fact_id,
+            Fact::ForallFact(fact) => fact.fact_id,
+            Fact::ForallFactWithIff(fact) => fact.fact_id,
+            Fact::NotForall(fact) => fact.fact_id,
+        }
+    }
+}
+
+impl AtomicFact {
+    pub fn fact_id(&self) -> FactId {
+        match self {
+            AtomicFact::NormalAtomicFact(fact) => fact.fact_id,
+            AtomicFact::EqualFact(fact) => fact.fact_id,
+            AtomicFact::LessFact(fact) => fact.fact_id,
+            AtomicFact::GreaterFact(fact) => fact.fact_id,
+            AtomicFact::LessEqualFact(fact) => fact.fact_id,
+            AtomicFact::GreaterEqualFact(fact) => fact.fact_id,
+            AtomicFact::IsSetFact(fact) => fact.fact_id,
+            AtomicFact::IsNonemptySetFact(fact) => fact.fact_id,
+            AtomicFact::IsFiniteSetFact(fact) => fact.fact_id,
+            AtomicFact::InFact(fact) => fact.fact_id,
+            AtomicFact::IsCartFact(fact) => fact.fact_id,
+            AtomicFact::IsTupleFact(fact) => fact.fact_id,
+            AtomicFact::SubsetFact(fact) => fact.fact_id,
+            AtomicFact::SupersetFact(fact) => fact.fact_id,
+            AtomicFact::NotNormalAtomicFact(fact) => fact.fact_id,
+            AtomicFact::NotEqualFact(fact) => fact.fact_id,
+            AtomicFact::NotLessFact(fact) => fact.fact_id,
+            AtomicFact::NotGreaterFact(fact) => fact.fact_id,
+            AtomicFact::NotLessEqualFact(fact) => fact.fact_id,
+            AtomicFact::NotGreaterEqualFact(fact) => fact.fact_id,
+            AtomicFact::NotIsSetFact(fact) => fact.fact_id,
+            AtomicFact::NotIsNonemptySetFact(fact) => fact.fact_id,
+            AtomicFact::NotIsFiniteSetFact(fact) => fact.fact_id,
+            AtomicFact::NotInFact(fact) => fact.fact_id,
+            AtomicFact::NotIsCartFact(fact) => fact.fact_id,
+            AtomicFact::NotIsTupleFact(fact) => fact.fact_id,
+            AtomicFact::NotSubsetFact(fact) => fact.fact_id,
+            AtomicFact::NotSupersetFact(fact) => fact.fact_id,
+            AtomicFact::FnEqualInFact(fact) => fact.fact_id,
+            AtomicFact::FnEqualFact(fact) => fact.fact_id,
+        }
+    }
+}
+
+impl ExistFactEnum {
+    pub fn fact_id(&self) -> FactId {
+        self.spec().fact_id
+    }
+}
+
+impl Fact {
     pub fn contains_native_complex_syntax(&self) -> bool {
         match self {
             Fact::AtomicFact(fact) => fact
