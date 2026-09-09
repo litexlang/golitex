@@ -1,6 +1,6 @@
 use super::run_terminal_import;
 use crate::prelude::{OutputDetail, OutputLanguage};
-use crate::runtime::{LitexExecutionOptions, Runtime, SummaryOption};
+use crate::runtime::{RuntimeOptions, Runtime, SummaryOption};
 use crate::test_support::{execute_source, with_standard_library_root};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -116,7 +116,7 @@ fn strict_terminal_import_verifies_and_rolls_back_a_failing_module() {
     );
     write_file(&dependency.join("assumption.lit"), "1 = 0\n");
 
-    let mut runtime = Runtime::new(LitexExecutionOptions::strict(
+    let mut runtime = Runtime::new(RuntimeOptions::strict(
         OutputDetail::Normal,
         OutputLanguage::English,
         SummaryOption::None,

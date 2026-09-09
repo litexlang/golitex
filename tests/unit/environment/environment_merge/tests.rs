@@ -203,14 +203,14 @@ fn committed_child_keeps_a_function_definition_signature_paired_with_its_rhs() {
         )
     };
 
-    let parent_info = parent.objects.function_set_mut("f".to_string());
+    let parent_info = parent.object_properties.function_set_mut("f".to_string());
     parent_info.fn_set = Some((body(&parent_binding), default_line_file()));
     parent_info.equal_to = Some((
         BoundParamObj::new(&parent_binding).into(),
         default_line_file(),
     ));
 
-    let child_info = child.objects.function_set_mut("f".to_string());
+    let child_info = child.object_properties.function_set_mut("f".to_string());
     child_info.fn_set = Some((body(&child_binding), default_line_file()));
 
     parent
@@ -218,7 +218,7 @@ fn committed_child_keeps_a_function_definition_signature_paired_with_its_rhs() {
         .expect("an inferred child signature should merge without splitting the definition pair");
 
     let merged = parent
-        .objects
+        .object_properties
         .function_set("f")
         .expect("the parent definition should remain available");
     assert_eq!(

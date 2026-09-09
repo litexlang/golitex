@@ -15,7 +15,7 @@ use super::helper::{
 use super::runtime_regression_tests::run_runtime_contract_suite_impl;
 
 fn run_file_for_test(file_path: &str) -> (bool, String) {
-    let outcome = run_file_command(file_path, LitexExecutionOptions::default());
+    let outcome = run_file_command(file_path, RuntimeOptions::default());
     (outcome.ok, outcome.output)
 }
 

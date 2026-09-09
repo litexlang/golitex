@@ -12,7 +12,7 @@ impl Runtime {
             .create_virtual_root_module(VirtualSource::CodeExtraction);
         self.current_module_id = ModuleId::ROOT;
         self.current_source_id = source_id;
-        self.execution_options.trusted_or_require_verify = TrustedOrRequireVerify::RequireVerification;
+        self.is_current_file_trusted = false;
         self.execution_environments_stack.clear();
         self.bootstrap_source_pending = false;
         self.parse_context = ParseContext::new();

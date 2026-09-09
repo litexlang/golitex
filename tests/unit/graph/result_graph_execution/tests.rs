@@ -9,7 +9,7 @@ fn graph_output(source: &'static str) -> String {
         .spawn(move || {
             render_graph(
                 GraphKind::Result,
-                run_eval_command(source, LitexExecutionOptions::default()),
+                run_eval_command(source, RuntimeOptions::default()),
                 true,
             )
             .1

@@ -24,6 +24,15 @@ pub struct Runtime {
     /// Source currently being parsed or executed.
     pub(crate) current_source_id: SourceId,
 
+    /// Whether the current file is executed as trusted source.
+    ///
+    /// Trusted repository execution (for example `-r` prefix runs) skips
+    /// re-verifying statements that were already checked by the source
+    /// selection path. Trust and prior-verification helpers temporarily use
+    /// the same mode. This is transient runtime state, not an execution
+    /// option or source metadata.
+    pub is_current_file_trusted: bool,
+
     /// Temporary environments nested inside the current source.
     pub execution_environments_stack: Vec<Box<ExecEnv>>,
 
@@ -55,8 +64,8 @@ pub struct Runtime {
     /// environment ends, for example when a stored theorem is instantiated.
     pub(crate) executed_direct_struct_carriers: HashMap<SymbolId, StructObj>,
 
-    /// Verification, output, language, and summary settings for Litex execution.
-    pub execution_options: LitexExecutionOptions,
+    /// Execution options for output and configured dependency verification.
+    pub execution_options: RuntimeOptions,
 
     /// Whether the constructor-created virtual source is still available for
     /// the first explicit source selection.
@@ -77,13 +86,14 @@ pub struct SourceActivation {
 }
 
 impl Runtime {
-    pub fn new(execution_options: LitexExecutionOptions) -> Self {
+    pub fn new(execution_options: RuntimeOptions) -> Self {
         let mut module_manager = ModuleManager::new();
         let source_id = module_manager.create_virtual_root_module(VirtualSource::Eval);
         Runtime {
             module_manager: Box::new(module_manager),
             current_module_id: ModuleId::ROOT,
             current_source_id: source_id,
+            is_current_file_trusted: false,
             execution_environments_stack: vec![],
             parse_context: ParseContext::new(),
             parsing_definition_depth: 0,
@@ -109,7 +119,7 @@ fn virtual_source_from_legacy_label(label: &str) -> VirtualSource {
 
 impl Default for Runtime {
     fn default() -> Self {
-        Self::new(LitexExecutionOptions::default())
+        Self::new(RuntimeOptions::default())
     }
 }
 
@@ -726,7 +736,7 @@ impl Runtime {
         );
         self.current_module_id = module_id;
         self.current_source_id = source_id;
-        self.execution_options.trusted_or_require_verify = mode;
+        self.is_current_file_trusted = mode == TrustedOrRequireVerify::Trusted;
         self.bootstrap_source_pending = false;
     }
 
@@ -734,7 +744,7 @@ impl Runtime {
         SourceActivation {
             module_id: self.current_module_id,
             source_id: self.current_source_id,
-            mode: self.execution_options.trusted_or_require_verify,
+            mode: self.current_execution_mode(),
         }
     }
 
@@ -809,7 +819,11 @@ impl Runtime {
     }
 
     pub fn current_execution_mode(&self) -> TrustedOrRequireVerify {
-        self.execution_options.trusted_or_require_verify
+        if self.is_current_file_trusted {
+            TrustedOrRequireVerify::Trusted
+        } else {
+            TrustedOrRequireVerify::RequireVerification
+        }
     }
 
     pub fn current_execution_is_trusted_source(&self) -> bool {
@@ -851,8 +865,8 @@ impl Runtime {
         &mut self,
         execution_mode: TrustedOrRequireVerify,
     ) -> TrustedOrRequireVerify {
-        let previous = self.execution_options.trusted_or_require_verify;
-        self.execution_options.trusted_or_require_verify = execution_mode;
+        let previous = self.current_execution_mode();
+        self.is_current_file_trusted = execution_mode == TrustedOrRequireVerify::Trusted;
         previous
     }
 }

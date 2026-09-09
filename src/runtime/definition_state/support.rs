@@ -44,13 +44,13 @@ impl Runtime {
         line_file: LineFile,
     ) {
         self.top_level_env()
-            .objects
+            .object_properties
             .store_tuple_and_cart(name.to_string(), tuple, cart, line_file);
     }
 
     pub fn store_known_cart_obj(&mut self, name: &str, cart: Cart, line_file: LineFile) {
         self.top_level_env()
-            .objects
+            .object_properties
             .store_cart(name.to_string(), cart, line_file);
     }
 
@@ -61,7 +61,7 @@ impl Runtime {
         line_file: LineFile,
     ) {
         self.top_level_env()
-            .objects
+            .object_properties
             .store_set_builder(name.to_string(), set_builder, line_file);
     }
 
@@ -72,7 +72,7 @@ impl Runtime {
         member_of_finite_seq_set: Option<FiniteSeqSet>,
         line_file: LineFile,
     ) {
-        self.top_level_env().objects.store_finite_sequence_list(
+        self.top_level_env().object_properties.store_finite_sequence_list(
             name.to_string(),
             list,
             member_of_finite_seq_set,
@@ -87,7 +87,7 @@ impl Runtime {
         member_of_matrix_set: Option<MatrixSet>,
         line_file: LineFile,
     ) {
-        self.top_level_env().objects.store_matrix_list(
+        self.top_level_env().object_properties.store_matrix_list(
             name.to_string(),
             matrix,
             member_of_matrix_set,
@@ -101,7 +101,7 @@ impl Runtime {
         matrix_set: MatrixSet,
         line_file: LineFile,
     ) {
-        self.top_level_env().objects.store_matrix_set_membership(
+        self.top_level_env().object_properties.store_matrix_set_membership(
             obj.to_string(),
             matrix_set,
             line_file,

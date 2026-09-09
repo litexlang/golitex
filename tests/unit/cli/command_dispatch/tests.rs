@@ -3,7 +3,7 @@ use super::super::messages::help_message;
 use crate::graph::GraphKind;
 use crate::output::{language::OutputLanguage, style::OutputDetail};
 use crate::pipeline::{
-    LitexExecution, LitexExecutionOptions, SummaryOption, VerifyStrictnessPolicy,
+    LitexExecution, RuntimeOptions, SummaryOption, VerifyStrictnessPolicy,
 };
 
 #[test]
@@ -87,7 +87,7 @@ fn graph_tracer_resolves_every_argument_before_dispatch() {
 
 #[test]
 fn strictness_is_carried_by_execution_options() {
-    for options in [LitexExecutionOptions::ordinary(
+    for options in [RuntimeOptions::ordinary(
         OutputDetail::Normal,
         OutputLanguage::English,
         SummaryOption::None,
@@ -95,7 +95,7 @@ fn strictness_is_carried_by_execution_options() {
         assert!(!options.is_strict(), "{:?}", options.verify_strictness());
     }
 
-    for options in [LitexExecutionOptions::strict(
+    for options in [RuntimeOptions::strict(
         OutputDetail::Normal,
         OutputLanguage::English,
         SummaryOption::None,

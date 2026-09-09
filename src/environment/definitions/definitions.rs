@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 /// Definitions that introduce reusable names in one Environment.
 #[derive(Clone)]
-pub struct EnvironmentDefinitionRegistry {
+pub struct DefinitionMemory {
     pub symbols: SymbolTable,
     pub predicate_definitions: HashMap<PropName, DefPropStmt>,
     pub abstract_predicate_definitions: HashMap<AbstractPropName, DefAbstractPropStmt>,
@@ -18,7 +18,7 @@ pub struct EnvironmentDefinitionRegistry {
     pub strategy_definitions: HashMap<StrategyName, DefStrategyStmt>,
 }
 
-impl EnvironmentDefinitionRegistry {
+impl DefinitionMemory {
     pub fn new() -> Self {
         Self {
             symbols: SymbolTable::new(),

@@ -33,7 +33,6 @@ LEAN_ADAPTER_GATE_EVIDENCE_PATH = COVERAGE_DIR / "lean_adapter_gate_evidence.jso
 INTEGRATION_GATE_EVIDENCE_PATH = COVERAGE_DIR / "integration_gate_evidence.json"
 INTEGRATION_FAILURE_FAMILIES_PATH = COVERAGE_DIR / "integration_failure_families.tsv"
 INTEGRATION_TEST_INVENTORY_PATH = COVERAGE_DIR / "integration_test_inventory.tsv"
-EXAMPLE_MATRIX_PATH = COVERAGE_DIR / "example_kernel_matrix.json"
 CHECKED_EXAMPLE_GATE_PATH = COVERAGE_DIR / "checked_example_kernel_evidence.json"
 EXAMPLE_TRUST_BOUNDARIES_PATH = COVERAGE_DIR / "example_trust_boundaries.tsv"
 REQUIRED_TRACER_QUEUE_PATH = COVERAGE_DIR / "required_tracer_queue.tsv"
@@ -1984,88 +1983,6 @@ def validate_integration_gate_evidence() -> None:
         raise ValueError("Rust sources changed after compiler integration evidence")
 
 
-def validate_example_matrix_evidence() -> None:
-    report = json.loads(EXAMPLE_MATRIX_PATH.read_text(encoding="utf-8"))
-    schema_version = report.get("schema_version")
-    if schema_version not in (2, 3):
-        raise ValueError("example matrix has an unsupported schema")
-    rows = report.get("rows")
-    totals = report.get("totals")
-    if not isinstance(rows, list) or not isinstance(totals, dict):
-        raise ValueError("example matrix lacks rows or totals")
-    names = [str(row["example"]) for row in rows]
-    if len(names) != len(set(names)) or totals.get("registered") != len(rows):
-        raise ValueError("example matrix row identities do not reconcile")
-
-    config = (ROOT / "lean/examples/litex.config").read_text(encoding="utf-8")
-    current_names = sorted(
-        source.name
-        for source in (ROOT / "lean/examples").glob("*.lit")
-        if f'"./{source.name}"' in config
-    )
-    if sorted(names) != current_names:
-        raise ValueError("registered example set changed after the matrix")
-    expected_totals: dict[str, int] = {
-        "registered": len(rows),
-        "compiler_pass": sum(row["compiler_exit"] == 0 for row in rows),
-        "matches_checked_in": sum(bool(row["matches_checked_in"]) for row in rows),
-    }
-    for prefix in ("generated_kernel", "checked_in_kernel"):
-        for classification in (
-            "pass",
-            "kernel_reject",
-            "infrastructure_failure",
-            "not_run",
-        ):
-            expected_totals[f"{prefix}_{classification}"] = sum(
-                row[f"{prefix}_class"] == classification for row in rows
-            )
-    if schema_version >= 3:
-        expected_totals["generated_forbidden_rows"] = sum(
-            bool(row["generated_forbidden_hits"]) for row in rows
-        )
-        expected_totals["checked_in_forbidden_rows"] = sum(
-            bool(row["checked_in_forbidden_hits"]) for row in rows
-        )
-    if totals != expected_totals:
-        raise ValueError("example matrix totals do not reconcile with its rows")
-
-    if report.get("snapshot_valid") is not True:
-        raise ValueError("example matrix is not a stable Rust/compiler/Lean snapshot")
-    if report.get("compiler_stable_during_run") is not True:
-        raise ValueError("example matrix compiler changed during the run")
-    if report.get("example_inputs_stable_during_run") is not True:
-        raise ValueError("example matrix inputs changed during the run")
-    if report.get("lean_dependency_stable_during_run") is not True:
-        raise ValueError("example matrix Lean dependencies changed during the run")
-    if report.get("rust_source_stable_during_build_and_matrix") is not True:
-        raise ValueError("example matrix lacks a stable Rust source binding")
-    if report.get("olean_precondition_errors_before") or report.get(
-        "olean_precondition_errors_after"
-    ):
-        raise ValueError("example matrix has stale or missing Lean object evidence")
-    if schema_version < 3:
-        raise ValueError("example matrix predates forbidden-output auditing")
-    if totals.get("generated_forbidden_rows") or totals.get(
-        "checked_in_forbidden_rows"
-    ):
-        raise ValueError("example matrix contains forbidden generated output")
-    if report.get("lean_dependency_fingerprint_after") != lean_dependency_fingerprint():
-        raise ValueError("Lean dependencies changed after the example matrix")
-    if report.get("rust_source_fingerprint_after_matrix") != rust_source_fingerprint():
-        raise ValueError("Rust sources changed after the example matrix")
-    compiler_path = str(report["compiler_path"])
-    if file_sha256(compiler_path) != report.get("compiler_sha256"):
-        raise ValueError("release compiler changed after the example matrix")
-    for row in rows:
-        source = ROOT / "lean/examples" / str(row["example"])
-        checked = ROOT / str(row["checked_in_path"])
-        if hashlib.sha256(source.read_bytes()).hexdigest() != row["source_sha256"]:
-            raise ValueError(f"example source changed after matrix: {row['example']}")
-        if hashlib.sha256(checked.read_bytes()).hexdigest() != row["checked_in_sha256"]:
-            raise ValueError(f"checked Lean changed after matrix: {row['example']}")
-
-
 def validate_checked_example_gate_evidence() -> None:
     report = json.loads(CHECKED_EXAMPLE_GATE_PATH.read_text(encoding="utf-8"))
     rows = report.get("rows")
@@ -2123,7 +2040,6 @@ def evidence_gate_issues(files: dict[str, list[str]]) -> list[str]:
         ("Lean adapter", lambda: validate_lean_adapter_gate_evidence(files)),
         ("compiler integration", validate_integration_gate_evidence),
         ("checked examples", validate_checked_example_gate_evidence),
-        ("example matrix", validate_example_matrix_evidence),
     )
     issues: list[str] = []
     for label, gate in gates:

@@ -1128,7 +1128,7 @@ trust:
     999 = 1000
     1 / 0 = 0
 "#;
-    let mut strict_runtime = Runtime::new(LitexExecutionOptions::strict(
+    let mut strict_runtime = Runtime::new(RuntimeOptions::strict(
         OutputDetail::Normal,
         OutputLanguage::English,
         SummaryOption::None,

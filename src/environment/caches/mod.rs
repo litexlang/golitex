@@ -1,3 +1,3 @@
 mod caches;
 
-pub use caches::EnvironmentInferenceCache;
+pub use caches::KnownFactsCache;

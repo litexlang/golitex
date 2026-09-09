@@ -6,4 +6,4 @@ mod object;
 pub use knowledge::EnvironmentObjectKnowledge;
 pub use known_function::KnownFnInfo;
 pub use known_value::KnownObjValue;
-pub use object::EnvironmentObjectKnowledgeStore;
+pub use object::ObjectPropertyMemory;

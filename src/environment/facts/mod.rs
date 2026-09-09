@@ -16,7 +16,7 @@ mod stored_forall_conclusion;
 
 pub use atomic::AtomicFactIndex;
 pub use cached_known_fact::CachedKnownFact;
-pub use facts::EnvironmentFactStore;
+pub use facts::KnownFactMemory;
 pub use forall_argument_shape::{forall_argument_shape, ForallArgumentShape};
 pub use forall_conclusions::ForallConclusionIndex;
 pub use known_equality::{EqualityClassId, EqualityHistoryEvent, KnownEquality};

@@ -12,7 +12,7 @@ use crate::output::language::OutputLanguage;
 use crate::output::render_runtime_error_json;
 use crate::pipeline::file_execution::file_execution_option;
 use crate::prelude::{render_json_value, JsonValue};
-use crate::runtime::{LitexExecution, LitexExecutionOptions, OutputDetail, Runtime, SummaryOption};
+use crate::runtime::{LitexExecution, RuntimeOptions, OutputDetail, Runtime, SummaryOption};
 use crate::syntax::source_formatting::remove_windows_carriage_from_str;
 use std::fs;
 
@@ -189,7 +189,7 @@ fn extraction_command_flag(target: ExtractionKind) -> &'static str {
 }
 
 fn render_conversion_error(output_language: OutputLanguage, error: &RuntimeError) -> String {
-    let runtime = Runtime::new(LitexExecutionOptions::ordinary(
+    let runtime = Runtime::new(RuntimeOptions::ordinary(
         OutputDetail::Normal,
         output_language,
         SummaryOption::None,

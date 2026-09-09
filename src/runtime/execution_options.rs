@@ -50,16 +50,10 @@ pub enum SummaryOption {
 /// Configuration required to execute Litex source.
 ///
 /// The source entry point is kept by the command or pipeline entry that owns
-/// it. This type contains only execution-wide verification, output, and
-/// summary settings, so conversion commands do not need to carry strictness.
+/// it. This type contains only execution-wide dependency policy, output, and
+/// summary settings, so transient current-file trust stays on `Runtime`.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct LitexExecutionOptions {
-    /// Verification mode for the current operation.
-    ///
-    /// This transient mode travels with the execution-wide settings so the
-    /// runtime does not keep a second owner for verification state.
-    pub trusted_or_require_verify: TrustedOrRequireVerify,
-
+pub struct RuntimeOptions {
     /// Policy controlling whether configured dependencies must be verified.
     verify_strictness: VerifyStrictnessPolicy,
 
@@ -73,7 +67,7 @@ pub struct LitexExecutionOptions {
     summary: SummaryOption,
 }
 
-impl LitexExecutionOptions {
+impl RuntimeOptions {
     /// Construct execution settings for one Litex source operation.
     pub fn new(
         verify_strictness: VerifyStrictnessPolicy,
@@ -82,7 +76,6 @@ impl LitexExecutionOptions {
         summary: SummaryOption,
     ) -> Self {
         Self {
-            trusted_or_require_verify: TrustedOrRequireVerify::RequireVerification,
             verify_strictness,
             output_detail,
             output_language,
@@ -154,7 +147,7 @@ impl LitexExecutionOptions {
     }
 }
 
-impl Default for LitexExecutionOptions {
+impl Default for RuntimeOptions {
     fn default() -> Self {
         Self::ordinary(
             OutputDetail::Normal,

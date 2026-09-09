@@ -5,11 +5,11 @@ use std::collections::HashMap;
 
 /// Registered algebraic properties of predicates.
 #[derive(Clone)]
-pub struct EnvironmentPredicateAlgebraicPropertyStore {
+pub struct PropAlgebraicPropertyMemory {
     pub properties_by_predicate: HashMap<String, EnvironmentPredicateProperties>,
 }
 
-impl EnvironmentPredicateAlgebraicPropertyStore {
+impl PropAlgebraicPropertyMemory {
     pub fn new() -> Self {
         Self {
             properties_by_predicate: HashMap::new(),

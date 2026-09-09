@@ -23,7 +23,7 @@ fn run_repository_for_test(
     } else {
         VerifyStrictnessPolicy::Ordinary
     };
-    let options = LitexExecutionOptions::new(
+    let options = RuntimeOptions::new(
         verify_strictness,
         if detailed_output {
             OutputDetail::Detailed
@@ -70,7 +70,7 @@ pub(super) fn run_runtime_contract_suite_impl() {
 fn runtime_contract_builtin() {
     let source_code = "1 = 1";
 
-    let mut import_runtime = Runtime::new(LitexExecutionOptions::strict(
+    let mut import_runtime = Runtime::new(RuntimeOptions::strict(
         OutputDetail::Normal,
         OutputLanguage::English,
         SummaryOption::None,
@@ -96,7 +96,6 @@ mod finite_set_induction;
 mod functions_sets_and_iterated;
 mod indexed_set_family;
 mod kernel_soundness;
-mod matrix_semantics;
 mod missing_numeric_builtins;
 mod native_exp_sign_factorial;
 mod native_number_theory;

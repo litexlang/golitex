@@ -1,6 +1,6 @@
 use super::run_session_loop_with_readers_and_target;
 use crate::prelude::{OutputDetail, OutputLanguage, SessionTarget};
-use crate::runtime::{LitexExecutionOptions, SummaryOption, VerifyStrictnessPolicy};
+use crate::runtime::{RuntimeOptions, SummaryOption, VerifyStrictnessPolicy};
 use std::fs;
 use std::io::{self, BufRead, Cursor, Write};
 use std::path::{Path, PathBuf};
@@ -23,7 +23,7 @@ fn run_session_loop_with_readers(
         stdin_reader,
         stdout_writer,
         directory,
-        LitexExecutionOptions::new(
+        RuntimeOptions::new(
             verify_strictness,
             output_detail,
             output_language,
@@ -121,7 +121,7 @@ fn project_file_session_preloads_registered_prefix() {
         &mut stdin_reader,
         &mut stdout_writer,
         &root,
-        LitexExecutionOptions::default(),
+        RuntimeOptions::default(),
         SessionTarget::File {
             path: preload.to_string_lossy().into_owned(),
         },
@@ -159,7 +159,7 @@ fn project_file_session_reports_a_failing_prefix_before_ready() {
         &mut stdin_reader,
         &mut stdout_writer,
         &root,
-        LitexExecutionOptions::default(),
+        RuntimeOptions::default(),
         SessionTarget::File {
             path: preload.to_string_lossy().into_owned(),
         },
@@ -220,7 +220,7 @@ fn isolated_file_session_preloads_the_standalone_file() {
         &mut stdin_reader,
         &mut stdout_writer,
         &root,
-        LitexExecutionOptions::default(),
+        RuntimeOptions::default(),
         SessionTarget::IsolatedFile {
             path: preload.to_string_lossy().into_owned(),
         },
@@ -250,7 +250,7 @@ fn plain_file_session_auto_selects_isolated_context_without_config() {
         &mut stdin_reader,
         &mut stdout_writer,
         &root,
-        LitexExecutionOptions::ordinary(
+        RuntimeOptions::ordinary(
             OutputDetail::Normal,
             OutputLanguage::English,
             SummaryOption::None,

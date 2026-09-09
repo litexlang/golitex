@@ -29,7 +29,7 @@ fn extra_known_fn_set_keys_for_bare_name_lookup(element: &Obj) -> Vec<String> {
 
 impl Runtime {
     fn upsert_known_fn_info_for_key(
-        object_knowledge: &mut EnvironmentObjectKnowledgeStore,
+        object_knowledge: &mut ObjectPropertyMemory,
         key: ObjString,
         body: Option<(FnSetBody, LineFile, Option<FactId>)>,
         equal_to: Option<(Obj, LineFile)>,
@@ -87,7 +87,7 @@ impl Runtime {
             .clone()
             .map(|eq| (eq, defining_expr_line_file.clone()));
         Self::upsert_known_fn_info_for_key(
-            &mut env.objects,
+            &mut env.object_properties,
             key.clone(),
             body_opt,
             equal_opt.clone(),
@@ -95,7 +95,7 @@ impl Runtime {
         for alternate_key in extra_known_fn_set_keys_for_bare_name_lookup(element) {
             if alternate_key != key {
                 Self::upsert_known_fn_info_for_key(
-                    &mut env.objects,
+                    &mut env.object_properties,
                     alternate_key,
                     Some((
                         body.clone(),

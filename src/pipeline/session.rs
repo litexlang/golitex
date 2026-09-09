@@ -6,12 +6,12 @@ use std::io::{self, BufRead, Write};
 use std::path::Path;
 
 pub struct SessionRequest {
-    pub options: LitexExecutionOptions,
+    pub options: RuntimeOptions,
     pub target: SessionTarget,
 }
 
 impl SessionRequest {
-    pub fn new(options: LitexExecutionOptions, target: SessionTarget) -> Self {
+    pub fn new(options: RuntimeOptions, target: SessionTarget) -> Self {
         Self { options, target }
     }
 }
@@ -71,7 +71,7 @@ fn run_session_loop_with_readers_and_target(
     stdin_reader: &mut dyn BufRead,
     stdout_writer: &mut dyn Write,
     directory: &Path,
-    options: LitexExecutionOptions,
+    options: RuntimeOptions,
     target: SessionTarget,
 ) -> io::Result<()> {
     let mut runtime = Runtime::new(options);

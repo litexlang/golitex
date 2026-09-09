@@ -1374,7 +1374,7 @@ fn direct_calculation_builtin_rule_output_localizes_to_zh() {
         || {
             let source_code = "(-1 * sqrt (2)) ^ 2 = 2";
 
-            let mut runtime = Runtime::new(LitexExecutionOptions::new(
+            let mut runtime = Runtime::new(RuntimeOptions::new(
                 VerifyStrictnessPolicy::Ordinary,
                 OutputDetail::Normal,
                 OutputLanguage::SimplifiedChinese,
@@ -1406,7 +1406,7 @@ forall a, b R:
         0 = 2 * a^2 + b
 "#;
 
-    let mut runtime = Runtime::new(LitexExecutionOptions::new(
+    let mut runtime = Runtime::new(RuntimeOptions::new(
         VerifyStrictnessPolicy::Ordinary,
         OutputDetail::Normal,
         OutputLanguage::SimplifiedChinese,
@@ -1559,7 +1559,7 @@ trust d = 1 / (2 / 3 * 4)
         .next()
         .expect("the active source environment should exist");
     match env
-        .objects
+        .object_properties
         .knowledge(&a_key)
         .and_then(|knowledge| knowledge.simplified_value.as_ref())
     {
@@ -1573,7 +1573,7 @@ trust d = 1 / (2 / 3 * 4)
         ),
     }
     match env
-        .objects
+        .object_properties
         .knowledge(&b_key)
         .and_then(|knowledge| knowledge.simplified_value.as_ref())
     {
@@ -1586,7 +1586,7 @@ trust d = 1 / (2 / 3 * 4)
         ),
     }
     match env
-        .objects
+        .object_properties
         .knowledge(&c_key)
         .and_then(|knowledge| knowledge.simplified_value.as_ref())
     {
@@ -1600,7 +1600,7 @@ trust d = 1 / (2 / 3 * 4)
         ),
     }
     match env
-        .objects
+        .object_properties
         .knowledge(&d_key)
         .and_then(|knowledge| knowledge.simplified_value.as_ref())
     {

@@ -15,10 +15,8 @@ impl Runtime {
         let line_file = equal_fact.line_file.clone();
         let mut prop_names: Vec<String> = Vec::new();
         for env in self.iter_environments_from_top() {
-            for (prop_name, properties) in env
-                .predicate_algebraic_properties
-                .properties_by_predicate
-                .iter()
+            for (prop_name, properties) in
+                env.prop_algebraic_properties.properties_by_predicate.iter()
             {
                 if !properties.is_antisymmetric {
                     continue;

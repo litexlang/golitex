@@ -694,56 +694,60 @@ impl EnvironmentSummary {
 
         summary.add_field_counts(
             "known_objs_equal_to_tuple",
-            environment.objects.tuple_equality_count(),
-            environment.objects.tuple_equality_count(),
+            environment.object_properties.tuple_equality_count(),
+            environment.object_properties.tuple_equality_count(),
         );
         summary.add_field_counts(
             "known_objs_equal_to_cart",
-            environment.objects.cart_equality_count(),
-            environment.objects.cart_equality_count(),
+            environment.object_properties.cart_equality_count(),
+            environment.object_properties.cart_equality_count(),
         );
         summary.add_field_counts(
             "known_objs_equal_to_finite_seq_list",
-            environment.objects.finite_sequence_list_equality_count(),
-            environment.objects.finite_sequence_list_equality_count(),
+            environment
+                .object_properties
+                .finite_sequence_list_equality_count(),
+            environment
+                .object_properties
+                .finite_sequence_list_equality_count(),
         );
         summary.add_field_counts(
             "known_objs_equal_to_matrix_list",
-            environment.objects.matrix_list_equality_count(),
-            environment.objects.matrix_list_equality_count(),
+            environment.object_properties.matrix_list_equality_count(),
+            environment.object_properties.matrix_list_equality_count(),
         );
         summary.add_field_counts(
             "known_obj_values",
-            environment.objects.simplified_value_count(),
-            environment.objects.simplified_value_count(),
+            environment.object_properties.simplified_value_count(),
+            environment.object_properties.simplified_value_count(),
         );
         summary.add_field_counts(
             "known_objs_equal_to_set_builder",
-            environment.objects.set_builder_equality_count(),
-            environment.objects.set_builder_equality_count(),
+            environment.object_properties.set_builder_equality_count(),
+            environment.object_properties.set_builder_equality_count(),
         );
         summary.add_field_counts(
             "known_objs_in_fn_sets",
-            environment.objects.function_set_count(),
-            environment.objects.function_set_count(),
+            environment.object_properties.function_set_count(),
+            environment.object_properties.function_set_count(),
         );
         summary.add_field_counts(
             "known_transitive_props",
             environment
-                .predicate_algebraic_properties
+                .prop_algebraic_properties
                 .transitive_predicate_count(),
             environment
-                .predicate_algebraic_properties
+                .prop_algebraic_properties
                 .transitive_predicate_count(),
         );
 
         let symmetric_permutation_count = environment
-            .predicate_algebraic_properties
+            .prop_algebraic_properties
             .symmetric_permutation_count();
         summary.add_field_counts(
             "known_symmetric_props",
             environment
-                .predicate_algebraic_properties
+                .prop_algebraic_properties
                 .symmetric_predicate_count(),
             symmetric_permutation_count,
         );
@@ -751,19 +755,19 @@ impl EnvironmentSummary {
         summary.add_field_counts(
             "known_reflexive_props",
             environment
-                .predicate_algebraic_properties
+                .prop_algebraic_properties
                 .reflexive_predicate_count(),
             environment
-                .predicate_algebraic_properties
+                .prop_algebraic_properties
                 .reflexive_predicate_count(),
         );
         summary.add_field_counts(
             "known_antisymmetric_props",
             environment
-                .predicate_algebraic_properties
+                .prop_algebraic_properties
                 .antisymmetric_predicate_count(),
             environment
-                .predicate_algebraic_properties
+                .prop_algebraic_properties
                 .antisymmetric_predicate_count(),
         );
         summary.add_field_counts(
@@ -829,12 +833,14 @@ impl EnvironmentSummary {
         );
         self.category_counts.insert(
             "object_cache_entries".to_string(),
-            environment.objects.old_summary_object_knowledge_count(),
+            environment
+                .object_properties
+                .old_summary_object_knowledge_count(),
         );
         self.category_counts.insert(
             "property_registrations".to_string(),
             environment
-                .predicate_algebraic_properties
+                .prop_algebraic_properties
                 .property_registration_count(),
         );
     }
