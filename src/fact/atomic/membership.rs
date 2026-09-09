@@ -19,6 +19,7 @@ pub struct NotInFact {
 }
 
 impl InFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(element: Obj, set: Obj, line_file: LineFile) -> Self {
         InFact {
             fact_id: FactId::fresh(),
@@ -30,6 +31,7 @@ impl InFact {
 }
 
 impl NotInFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(element: Obj, set: Obj, line_file: LineFile) -> Self {
         NotInFact {
             fact_id: FactId::fresh(),

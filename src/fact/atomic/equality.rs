@@ -19,6 +19,7 @@ pub struct NotEqualFact {
 }
 
 impl EqualFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         EqualFact {
             fact_id: FactId::fresh(),
@@ -37,6 +38,7 @@ impl EqualFact {
 }
 
 impl NotEqualFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         NotEqualFact {
             fact_id: FactId::fresh(),

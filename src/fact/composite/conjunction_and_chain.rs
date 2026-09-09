@@ -15,6 +15,7 @@ pub struct AndFact {
 }
 
 impl AndFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(facts: Vec<AtomicFact>, line_file: LineFile) -> Self {
         AndFact { fact_id: FactId::fresh(), facts, line_file }
     }
@@ -32,6 +33,7 @@ pub struct ChainFact {
 }
 
 impl ChainFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(objs: Vec<Obj>, prop_names: Vec<AtomicName>, line_file: LineFile) -> Self {
         ChainFact {
             fact_id: FactId::fresh(),

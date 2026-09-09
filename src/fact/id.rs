@@ -17,11 +17,17 @@ impl FactId {
         FactId(value)
     }
 
-    /// Allocate the next process-wide identity for a newly created fact node.
+    /// Allocate a legacy process-wide identity.
+    ///
+    /// Production code must use `Runtime::allocate_fact_id`; this method stays
+    /// temporarily available for the constructor migration and fixed fixtures.
+    #[deprecated(note = "production facts must be created through Runtime")]
     pub fn fresh() -> Self {
-        let value = NEXT_FACT_ID.fetch_update(Ordering::Relaxed, Ordering::Relaxed, |value| {
-            value.checked_add(1)
-        }).expect("fact ID space exhausted");
+        let value = NEXT_FACT_ID
+            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |value| {
+                value.checked_add(1)
+            })
+            .expect("fact ID space exhausted");
         FactId(value)
     }
 

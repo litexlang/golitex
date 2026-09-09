@@ -1,12 +1,12 @@
 use crate::prelude::*;
-use crate::verify_rewrite::VerifyState;
+use crate::verify_rewrite::VerifyState2;
 
-pub enum EqualitySearchProofByKnownAlgebraicRewrite {
-    Transitivity(EqualitySearchProofByKnownTransitivity),
+pub enum EqualitySearchProofByKnownAlgebraicRewrite2 {
+    Transitivity(EqualitySearchProofByKnownTransitivity2),
 }
 
-pub struct EqualitySearchProofByKnownTransitivity {
+pub struct EqualitySearchProofByKnownTransitivity2 {
     pub middle: Obj,
-    pub left_to_middle: VerifyFactResult,
-    pub middle_to_right: VerifyFactResult,
+    pub left_to_middle: VerifyFactResult2,
+    pub middle_to_right: VerifyFactResult2,
 }

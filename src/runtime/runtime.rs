@@ -130,6 +130,546 @@ impl Runtime {
         Ok(FactId::new(value))
     }
 
+    /// Construct facts with IDs allocated exclusively by this Runtime.
+    pub fn new_equal_fact(
+        &mut self,
+        left: Obj,
+        right: Obj,
+        line_file: LineFile,
+    ) -> Result<EqualFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(EqualFact {
+            fact_id,
+            left,
+            right,
+            line_file,
+        })
+    }
+
+    pub fn new_not_equal_fact(
+        &mut self,
+        left: Obj,
+        right: Obj,
+        line_file: LineFile,
+    ) -> Result<NotEqualFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(NotEqualFact {
+            fact_id,
+            left,
+            right,
+            line_file,
+        })
+    }
+
+    pub fn new_less_fact(
+        &mut self,
+        left: Obj,
+        right: Obj,
+        line_file: LineFile,
+    ) -> Result<LessFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(LessFact {
+            fact_id,
+            left,
+            right,
+            line_file,
+        })
+    }
+
+    pub fn new_greater_fact(
+        &mut self,
+        left: Obj,
+        right: Obj,
+        line_file: LineFile,
+    ) -> Result<GreaterFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(GreaterFact {
+            fact_id,
+            left,
+            right,
+            line_file,
+        })
+    }
+
+    pub fn new_less_equal_fact(
+        &mut self,
+        left: Obj,
+        right: Obj,
+        line_file: LineFile,
+    ) -> Result<LessEqualFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(LessEqualFact {
+            fact_id,
+            left,
+            right,
+            line_file,
+        })
+    }
+
+    pub fn new_greater_equal_fact(
+        &mut self,
+        left: Obj,
+        right: Obj,
+        line_file: LineFile,
+    ) -> Result<GreaterEqualFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(GreaterEqualFact {
+            fact_id,
+            left,
+            right,
+            line_file,
+        })
+    }
+
+    pub fn new_not_less_fact(
+        &mut self,
+        left: Obj,
+        right: Obj,
+        line_file: LineFile,
+    ) -> Result<NotLessFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(NotLessFact {
+            fact_id,
+            left,
+            right,
+            line_file,
+        })
+    }
+
+    pub fn new_not_greater_fact(
+        &mut self,
+        left: Obj,
+        right: Obj,
+        line_file: LineFile,
+    ) -> Result<NotGreaterFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(NotGreaterFact {
+            fact_id,
+            left,
+            right,
+            line_file,
+        })
+    }
+
+    pub fn new_not_less_equal_fact(
+        &mut self,
+        left: Obj,
+        right: Obj,
+        line_file: LineFile,
+    ) -> Result<NotLessEqualFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(NotLessEqualFact {
+            fact_id,
+            left,
+            right,
+            line_file,
+        })
+    }
+
+    pub fn new_not_greater_equal_fact(
+        &mut self,
+        left: Obj,
+        right: Obj,
+        line_file: LineFile,
+    ) -> Result<NotGreaterEqualFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(NotGreaterEqualFact {
+            fact_id,
+            left,
+            right,
+            line_file,
+        })
+    }
+
+    pub fn new_in_fact(
+        &mut self,
+        element: Obj,
+        set: Obj,
+        line_file: LineFile,
+    ) -> Result<InFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(InFact {
+            fact_id,
+            element,
+            set,
+            line_file,
+        })
+    }
+
+    pub fn new_not_in_fact(
+        &mut self,
+        element: Obj,
+        set: Obj,
+        line_file: LineFile,
+    ) -> Result<NotInFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(NotInFact {
+            fact_id,
+            element,
+            set,
+            line_file,
+        })
+    }
+
+    pub fn new_is_set_fact(
+        &mut self,
+        set: Obj,
+        line_file: LineFile,
+    ) -> Result<IsSetFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(IsSetFact {
+            fact_id,
+            set,
+            line_file,
+        })
+    }
+
+    pub fn new_is_nonempty_set_fact(
+        &mut self,
+        set: Obj,
+        line_file: LineFile,
+    ) -> Result<IsNonemptySetFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(IsNonemptySetFact {
+            fact_id,
+            set,
+            line_file,
+        })
+    }
+
+    pub fn new_is_finite_set_fact(
+        &mut self,
+        set: Obj,
+        line_file: LineFile,
+    ) -> Result<IsFiniteSetFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(IsFiniteSetFact {
+            fact_id,
+            set,
+            line_file,
+        })
+    }
+
+    pub fn new_is_cart_fact(
+        &mut self,
+        set: Obj,
+        line_file: LineFile,
+    ) -> Result<IsCartFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(IsCartFact {
+            fact_id,
+            set,
+            line_file,
+        })
+    }
+
+    pub fn new_is_tuple_fact(
+        &mut self,
+        tuple: Obj,
+        line_file: LineFile,
+    ) -> Result<IsTupleFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(IsTupleFact {
+            fact_id,
+            set: tuple,
+            line_file,
+        })
+    }
+
+    pub fn new_not_is_set_fact(
+        &mut self,
+        set: Obj,
+        line_file: LineFile,
+    ) -> Result<NotIsSetFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(NotIsSetFact {
+            fact_id,
+            set,
+            line_file,
+        })
+    }
+
+    pub fn new_not_is_nonempty_set_fact(
+        &mut self,
+        set: Obj,
+        line_file: LineFile,
+    ) -> Result<NotIsNonemptySetFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(NotIsNonemptySetFact {
+            fact_id,
+            set,
+            line_file,
+        })
+    }
+
+    pub fn new_not_is_finite_set_fact(
+        &mut self,
+        set: Obj,
+        line_file: LineFile,
+    ) -> Result<NotIsFiniteSetFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(NotIsFiniteSetFact {
+            fact_id,
+            set,
+            line_file,
+        })
+    }
+
+    pub fn new_not_is_cart_fact(
+        &mut self,
+        set: Obj,
+        line_file: LineFile,
+    ) -> Result<NotIsCartFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(NotIsCartFact {
+            fact_id,
+            set,
+            line_file,
+        })
+    }
+
+    pub fn new_not_is_tuple_fact(
+        &mut self,
+        tuple: Obj,
+        line_file: LineFile,
+    ) -> Result<NotIsTupleFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(NotIsTupleFact {
+            fact_id,
+            set: tuple,
+            line_file,
+        })
+    }
+
+    pub fn new_subset_fact(
+        &mut self,
+        left: Obj,
+        right: Obj,
+        line_file: LineFile,
+    ) -> Result<SubsetFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(SubsetFact {
+            fact_id,
+            left,
+            right,
+            line_file,
+        })
+    }
+
+    pub fn new_superset_fact(
+        &mut self,
+        left: Obj,
+        right: Obj,
+        line_file: LineFile,
+    ) -> Result<SupersetFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(SupersetFact {
+            fact_id,
+            left,
+            right,
+            line_file,
+        })
+    }
+
+    pub fn new_not_subset_fact(
+        &mut self,
+        left: Obj,
+        right: Obj,
+        line_file: LineFile,
+    ) -> Result<NotSubsetFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(NotSubsetFact {
+            fact_id,
+            left,
+            right,
+            line_file,
+        })
+    }
+
+    pub fn new_not_superset_fact(
+        &mut self,
+        left: Obj,
+        right: Obj,
+        line_file: LineFile,
+    ) -> Result<NotSupersetFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(NotSupersetFact {
+            fact_id,
+            left,
+            right,
+            line_file,
+        })
+    }
+
+    pub fn new_fn_equal_in_fact(
+        &mut self,
+        left: Obj,
+        right: Obj,
+        set: Obj,
+        line_file: LineFile,
+    ) -> Result<FnEqualInFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(FnEqualInFact {
+            fact_id,
+            left,
+            right,
+            set,
+            line_file,
+        })
+    }
+
+    pub fn new_fn_equal_fact(
+        &mut self,
+        left: Obj,
+        right: Obj,
+        line_file: LineFile,
+    ) -> Result<FnEqualFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(FnEqualFact {
+            fact_id,
+            left,
+            right,
+            line_file,
+        })
+    }
+
+    pub fn new_normal_atomic_fact(
+        &mut self,
+        predicate: AtomicName,
+        body: Vec<Obj>,
+        line_file: LineFile,
+    ) -> Result<NormalAtomicFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(NormalAtomicFact {
+            fact_id,
+            predicate,
+            body,
+            line_file,
+        })
+    }
+
+    pub fn new_not_normal_atomic_fact(
+        &mut self,
+        predicate: AtomicName,
+        body: Vec<Obj>,
+        line_file: LineFile,
+    ) -> Result<NotNormalAtomicFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(NotNormalAtomicFact {
+            fact_id,
+            predicate,
+            body,
+            line_file,
+        })
+    }
+
+    pub fn new_not_forall_fact(
+        &mut self,
+        forall_fact: ForallFact,
+    ) -> Result<NotForallFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(NotForallFact {
+            fact_id,
+            forall_fact,
+        })
+    }
+
+    pub fn new_and_fact(
+        &mut self,
+        facts: Vec<AtomicFact>,
+        line_file: LineFile,
+    ) -> Result<AndFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(AndFact {
+            fact_id,
+            facts,
+            line_file,
+        })
+    }
+
+    pub fn new_or_fact(
+        &mut self,
+        facts: Vec<AndChainAtomicFact>,
+        line_file: LineFile,
+    ) -> Result<OrFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(OrFact {
+            fact_id,
+            facts,
+            line_file,
+        })
+    }
+
+    pub fn new_chain_fact(
+        &mut self,
+        objs: Vec<Obj>,
+        prop_names: Vec<AtomicName>,
+        line_file: LineFile,
+    ) -> Result<ChainFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        Ok(ChainFact {
+            fact_id,
+            objs,
+            prop_names,
+            line_file,
+        })
+    }
+
+    pub fn new_forall_fact(
+        &mut self,
+        typed_parameters: TypedParameterList,
+        dom_facts: Vec<Fact>,
+        then_facts: Vec<ExistOrAndChainAtomicFact>,
+        line_file: LineFile,
+    ) -> Result<ForallFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        let fact = ForallFact {
+            fact_id,
+            typed_parameters,
+            dom_facts,
+            then_facts,
+            line_file,
+        };
+        check_forall_fact_has_no_duplicate_forall_free_parameter(&fact)?;
+        Ok(fact)
+    }
+
+    pub fn new_forall_fact_with_iff(
+        &mut self,
+        forall_fact: ForallFact,
+        iff_facts: Vec<ExistOrAndChainAtomicFact>,
+        line_file: LineFile,
+    ) -> Result<ForallFactWithIff, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        let fact = ForallFactWithIff {
+            fact_id,
+            forall_fact,
+            iff_facts,
+            line_file,
+        };
+        check_forall_fact_with_iff_has_no_duplicate_forall_free_parameter(&fact)?;
+        Ok(fact)
+    }
+
+    pub fn new_plain_exist_fact(
+        &mut self,
+        typed_parameters: TypedParameterList,
+        facts: Vec<QuantifierFreeFact>,
+        line_file: LineFile,
+    ) -> Result<PlainExistFact, RuntimeError> {
+        let fact_id = self.allocate_fact_id()?;
+        let fact = PlainExistFact {
+            fact_id,
+            typed_parameters,
+            facts,
+            line_file,
+        };
+        check_exist_fact_has_no_duplicate_exist_free_parameter(&ExistFact::PlainExistFact(
+            fact.clone(),
+        ))?;
+        Ok(fact)
+    }
+
     pub fn set_output_detail(&mut self, output_detail: OutputDetail) {
         self.execution_options.set_output_detail(output_detail);
     }

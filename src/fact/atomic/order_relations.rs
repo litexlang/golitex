@@ -67,6 +67,7 @@ pub struct NotGreaterEqualFact {
 }
 
 impl LessFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         LessFact {
             fact_id: FactId::fresh(),
@@ -78,6 +79,7 @@ impl LessFact {
 }
 
 impl NotLessFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         NotLessFact {
             fact_id: FactId::fresh(),
@@ -89,6 +91,7 @@ impl NotLessFact {
 }
 
 impl GreaterFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         GreaterFact {
             fact_id: FactId::fresh(),
@@ -100,6 +103,7 @@ impl GreaterFact {
 }
 
 impl NotGreaterFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         NotGreaterFact {
             fact_id: FactId::fresh(),
@@ -111,6 +115,7 @@ impl NotGreaterFact {
 }
 
 impl LessEqualFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         LessEqualFact {
             fact_id: FactId::fresh(),
@@ -122,6 +127,7 @@ impl LessEqualFact {
 }
 
 impl NotLessEqualFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         NotLessEqualFact {
             fact_id: FactId::fresh(),
@@ -133,6 +139,7 @@ impl NotLessEqualFact {
 }
 
 impl GreaterEqualFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         GreaterEqualFact {
             fact_id: FactId::fresh(),
@@ -144,6 +151,7 @@ impl GreaterEqualFact {
 }
 
 impl NotGreaterEqualFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         NotGreaterEqualFact {
             fact_id: FactId::fresh(),

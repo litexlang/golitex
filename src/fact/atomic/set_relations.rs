@@ -35,6 +35,7 @@ pub struct NotSubsetFact {
 }
 
 impl SubsetFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         SubsetFact {
             fact_id: FactId::fresh(),
@@ -46,6 +47,7 @@ impl SubsetFact {
 }
 
 impl NotSubsetFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         NotSubsetFact {
             fact_id: FactId::fresh(),
@@ -57,6 +59,7 @@ impl NotSubsetFact {
 }
 
 impl SupersetFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         SupersetFact {
             fact_id: FactId::fresh(),
@@ -68,6 +71,7 @@ impl SupersetFact {
 }
 
 impl NotSupersetFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         NotSupersetFact {
             fact_id: FactId::fresh(),

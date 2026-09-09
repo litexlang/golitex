@@ -36,27 +36,31 @@ impl Runtime {
     ) -> Result<Fact, RuntimeError> {
         let parameter = param_binding_element_obj_for_store(binding, binding_scope);
         Ok(match param_type {
-            ParamType::Obj(Obj::FiniteSeqSet(value)) => InFact::new(
-                parameter,
-                self.finite_seq_set_to_fn_set(value, default_line_file())
-                    .into(),
-                default_line_file(),
-            )
-            .into(),
-            ParamType::Obj(Obj::SeqSet(value)) => InFact::new(
-                parameter,
-                self.seq_set_to_fn_set(value, default_line_file()).into(),
-                default_line_file(),
-            )
-            .into(),
-            ParamType::Obj(value) => {
-                InFact::new(parameter, value.clone(), default_line_file()).into()
-            }
-            ParamType::Set(_) => IsSetFact::new(parameter, default_line_file()).into(),
-            ParamType::NonemptySet(_) => {
-                IsNonemptySetFact::new(parameter, default_line_file()).into()
-            }
-            ParamType::FiniteSet(_) => IsFiniteSetFact::new(parameter, default_line_file()).into(),
+            ParamType::Obj(Obj::FiniteSeqSet(value)) => self
+                .new_in_fact(
+                    parameter,
+                    self.finite_seq_set_to_fn_set(value, default_line_file())
+                        .into(),
+                    default_line_file(),
+                )?
+                .into(),
+            ParamType::Obj(Obj::SeqSet(value)) => self
+                .new_in_fact(
+                    parameter,
+                    self.seq_set_to_fn_set(value, default_line_file()).into(),
+                    default_line_file(),
+                )?
+                .into(),
+            ParamType::Obj(value) => self
+                .new_in_fact(parameter, value.clone(), default_line_file())?
+                .into(),
+            ParamType::Set(_) => self.new_is_set_fact(parameter, default_line_file())?.into(),
+            ParamType::NonemptySet(_) => self
+                .new_is_nonempty_set_fact(parameter, default_line_file())?
+                .into(),
+            ParamType::FiniteSet(_) => self
+                .new_is_finite_set_fact(parameter, default_line_file())?
+                .into(),
         })
     }
 

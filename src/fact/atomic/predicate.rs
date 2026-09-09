@@ -19,6 +19,7 @@ pub struct NotNormalAtomicFact {
 }
 
 impl NormalAtomicFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(predicate: AtomicName, body: Vec<Obj>, line_file: LineFile) -> Self {
         NormalAtomicFact {
             fact_id: FactId::fresh(),
@@ -30,6 +31,7 @@ impl NormalAtomicFact {
 }
 
 impl NotNormalAtomicFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(predicate: AtomicName, body: Vec<Obj>, line_file: LineFile) -> Self {
         NotNormalAtomicFact {
             fact_id: FactId::fresh(),

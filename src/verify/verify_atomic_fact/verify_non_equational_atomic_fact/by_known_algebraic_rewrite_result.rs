@@ -1,19 +1,18 @@
 use crate::prelude::*;
-use crate::verify_rewrite::VerifyState;
-use crate::verify_rewrite::FactStmt;
+use crate::verify_rewrite::VerifyState2;
 
-pub enum NonEquationalAtomicFactSearchProofByKnownAlgebraicRewrite {
-    Reflexivity(NonEquationalAtomicFactSearchProofByKnownReflexivity),
-    Symmetry(NonEquationalAtomicFactSearchProofByKnownSymmetry),
+pub enum NonEquationalAtomicFactSearchProofByKnownAlgebraicRewrite2 {
+    Reflexivity(NonEquationalAtomicFactSearchProofByKnownReflexivity2),
+    Symmetry(NonEquationalAtomicFactSearchProofByKnownSymmetry2),
 }
 
-pub struct NonEquationalAtomicFactSearchProofByKnownReflexivity {
-    pub cite_prop_algebraic_property_id: PropAlgebraicPropertyId,
+pub struct NonEquationalAtomicFactSearchProofByKnownReflexivity2 {
+    pub cite_prop_algebraic_property_id: PropAlgebraicPropertyId2,
 }
 
-pub struct NonEquationalAtomicFactSearchProofByKnownSymmetry {
-    pub cite_prop_algebraic_property_id: PropAlgebraicPropertyId,
+pub struct NonEquationalAtomicFactSearchProofByKnownSymmetry2 {
+    pub cite_prop_algebraic_property_id: PropAlgebraicPropertyId2,
     pub argument_permutation: Vec<usize>,
-    pub alternate_fact: FactStmt,
-    pub proof_of_alternate_fact: VerifyFactResult,
+    pub alternate_fact: Fact,
+    pub proof_of_alternate_fact: VerifyFactResult2,
 }

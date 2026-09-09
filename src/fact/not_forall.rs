@@ -9,6 +9,7 @@ pub struct NotForallFact {
 }
 
 impl NotForallFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(forall_fact: ForallFact) -> Self {
         Self { fact_id: FactId::fresh(), forall_fact }
     }
