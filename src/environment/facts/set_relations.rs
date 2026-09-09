@@ -5,12 +5,12 @@ use std::collections::HashMap;
 
 /// Direct membership and inclusion edges used by set-relation lookup.
 #[derive(Clone)]
-pub struct SetRelationIndex {
+pub struct SetRelationMemory {
     pub owner_sets: HashMap<ObjString, HashMap<ObjString, InFact>>,
     pub direct_supersets: HashMap<ObjString, HashMap<ObjString, AtomicFact>>,
 }
 
-impl SetRelationIndex {
+impl SetRelationMemory {
     pub fn new() -> Self {
         Self {
             owner_sets: HashMap::new(),

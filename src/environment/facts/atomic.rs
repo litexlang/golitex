@@ -5,13 +5,13 @@ use std::collections::{HashMap, HashSet};
 
 /// Atomic facts indexed by predicate family, polarity, and argument arity.
 #[derive(Clone)]
-pub struct AtomicFactIndex {
+pub struct AtomicFactMemory {
     pub by_other_arg_count: HashMap<(AtomicFactKey, bool), Vec<AtomicFact>>,
     pub by_one_arg: HashMap<(AtomicFactKey, bool), HashMap<ObjString, AtomicFact>>,
     pub by_two_args: HashMap<(AtomicFactKey, bool), HashMap<(ObjString, ObjString), AtomicFact>>,
 }
 
-impl AtomicFactIndex {
+impl AtomicFactMemory {
     pub fn new() -> Self {
         Self {
             by_other_arg_count: HashMap::new(),
