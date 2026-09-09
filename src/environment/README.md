@@ -13,6 +13,7 @@ pub struct Environment {
     pub objects: EnvironmentObjectKnowledgeStore,
     pub predicate_algebraic_properties: EnvironmentPredicateAlgebraicPropertyStore,
     pub inference_cache: EnvironmentInferenceCache,
+    pub well_defined_objects: HashMap<ObjString, WellDefinednessId2>,
 }
 ```
 
@@ -21,7 +22,7 @@ and public re-exports live in the wiring-only [`mod.rs`](mod.rs). Feature logic
 is organized by the current owner and field names:
 
 ```text
-environment.rs                                                   the five Environment owners and construction
+environment.rs                                                   the six Environment owners and construction
 definitions/definitions.rs                                       reusable name definitions
 facts/facts.rs                                                   fact-owner composition root
 facts/                                                            fact records and typed search indexes
@@ -58,6 +59,7 @@ There is now no `EnvironmentPersistentRepositories` and no compatibility
 | `objects` | One `ObjString -> EnvironmentObjectKnowledge` entry per object key. Tuple/cart shape, sequence or matrix shape, simplified value, set-builder equality, and function-set knowledge are optional facets of that one entry. |
 | `predicate_algebraic_properties` | One predicate-name entry whose profile independently records transitivity, symmetry permutations, reflexivity, and antisymmetry. |
 | `inference_cache` | Environment-scoped infer-rule firing keys that prevent the same persistent consequence from being emitted repeatedly. No WD or truth proof nodes live here. |
+| `well_defined_objects` | Object equality keys mapped to `WellDefinednessId2` identities. The proof route remains in the corresponding Result; lookup and publication are not wired yet. |
 
 Definitions retain symbol identity, not the syntactic construct that first
 introduced a name. `EnvironmentDefinitionRegistry` owns a `SymbolTable`; each

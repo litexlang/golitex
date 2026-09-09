@@ -17,7 +17,8 @@ use std::collections::HashMap;
 /// - derived object-shape caches for tuples, carts, finite sequences,
 ///   matrices, object values, set builders, and function-set information;
 /// - persistent infer-rule firing deduplication. Returned WD and truth proofs
-///   belong to `VerifyState` and `VerifyFactResult`, never this environment.
+///   belong to `VerifyState` and `VerifyFactResult`, never this environment;
+/// - object well-definedness identities whose proof details remain in Results.
 #[derive(Clone)]
 pub struct Environment {
     /// Definitions and symbol identities for declarations visible to later
