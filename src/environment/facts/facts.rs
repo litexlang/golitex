@@ -6,10 +6,10 @@ use crate::prelude::*;
 #[derive(Clone)]
 pub struct KnownFactMemory {
     pub known_equality: KnownEquality,
-    pub atomic: AtomicFactIndex,
-    pub set_relations: SetRelationIndex,
-    pub quantified: QuantifiedFactIndex,
-    pub forall_conclusions: ForallConclusionIndex,
+    pub atomic: AtomicFactMemory,
+    pub set_relations: SetRelationMemory,
+    pub quantified: QuantifiedFactMemory,
+    pub forall_conclusions: ForallConclusionMemory,
     pub stored_facts: EnvironmentStoredFactStore,
 }
 
@@ -17,10 +17,10 @@ impl KnownFactMemory {
     pub fn new() -> Self {
         Self {
             known_equality: KnownEquality::new(),
-            atomic: AtomicFactIndex::new(),
-            set_relations: SetRelationIndex::new(),
-            quantified: QuantifiedFactIndex::new(),
-            forall_conclusions: ForallConclusionIndex::new(),
+            atomic: AtomicFactMemory::new(),
+            set_relations: SetRelationMemory::new(),
+            quantified: QuantifiedFactMemory::new(),
+            forall_conclusions: ForallConclusionMemory::new(),
             stored_facts: EnvironmentStoredFactStore::default(),
         }
     }

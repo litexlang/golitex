@@ -5,12 +5,12 @@ use std::collections::{HashMap, HashSet};
 
 /// Stored existential and disjunctive facts indexed by their structural key.
 #[derive(Clone)]
-pub struct QuantifiedFactIndex {
+pub struct QuantifiedFactMemory {
     pub existential: HashMap<ExistFactKey, Vec<ExistFact>>,
     pub disjunctions: HashMap<OrFactKey, Vec<OrFact>>,
 }
 
-impl QuantifiedFactIndex {
+impl QuantifiedFactMemory {
     pub fn new() -> Self {
         Self {
             existential: HashMap::new(),
