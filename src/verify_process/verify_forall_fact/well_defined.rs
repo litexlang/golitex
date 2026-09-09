@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 pub struct ForallFactWellDefinedProof {
-    pub param_def_results: LocalParameterDefinitionResult,
+    pub param_def_results: LocalParamsDefResults,
     pub domain_assumptions: Vec<AssumptionResult>,
 
     pub local_env: Environment,

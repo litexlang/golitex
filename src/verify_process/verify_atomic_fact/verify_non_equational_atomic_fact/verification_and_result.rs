@@ -1,5 +1,40 @@
 use crate::prelude::*;
 
+pub struct VerifyNonEquationalAtomicFactResult {
+    pub fact: AtomicFact,
+    pub well_defined_proof: AtomicFactWellDefinedProof,
+    pub searched_proof: NonEquationalAtomicFactSearchedProof,
+}
+
+pub enum NonEquationalAtomicFactSearchedProof {
+    ByCache(CacheSearchProof),
+    ByBuiltinRule(NonEquationalAtomicFactSearchProofByBuiltinRule),
+    ByKnownAtomicFact(NonEquationalAtomicFactSearchedProofByKnownAtomicFact),
+    ByDefinition(NonEquationalAtomicFactSearchedProofByDefinition),
+    ByBuiltinStrategy(NonEquationalAtomicFactSearchProofByBuiltinStrategy),
+    ByKnownForallFact(NonEquationalAtomicFactSearchedProofByKnownForallFact),
+    ByBuiltinAlgebraicRewrite(NonEquationalAtomicFactSearchProofByBuiltinAlgebraicRewrite),
+    ByKnownAlgebraicRewrite(NonEquationalAtomicFactSearchProofByKnownAlgebraicRewrite),
+}
+
+pub struct NonEquationalAtomicFactSearchedProofByKnownAtomicFact {
+    pub cite_fact_id: FactId,
+    pub why_parameters_of_known_fact_are_equal_to_givens: Vec<VerifyFactResult>,
+}
+
+pub struct NonEquationalAtomicFactSearchedProofByDefinition {
+    pub requirement_facts: Vec<FactStmt>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+// Record how forall params map to goal args, e.g. forall a R: a > 0 => $p(a) vs $p(1) maps a -> 1.
+pub struct NonEquationalAtomicFactSearchedProofByKnownForallFact {
+    pub cite_fact_id: FactId,
+    pub forall_parameters_match_what_args: Vec<Obj>,
+    // Proofs that matched args satisfy param types and domain facts, e.g. 1 $in R and 1 > 0 for $p(1).
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
 impl Runtime {
     pub fn verify_non_equational_atomic_fact(
         &mut self,

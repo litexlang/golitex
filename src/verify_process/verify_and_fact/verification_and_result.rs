@@ -1,5 +1,15 @@
 use crate::prelude::*;
 
+pub struct VerifyAndFactResult {
+    pub fact: AndFact,
+    pub well_defined_proof: AndFactWellDefinedProof,
+    pub searched_proof: AndFactSearchedProof,
+}
+
+pub struct AndFactSearchedProof {
+    pub proof_of_each_conjunct: Vec<VerifyFactResult>,
+}
+
 impl Runtime {
     pub fn verify_and_fact(
         &mut self,

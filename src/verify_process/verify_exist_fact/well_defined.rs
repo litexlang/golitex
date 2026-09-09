@@ -1,9 +1,9 @@
 use crate::prelude::*;
 
 pub struct ExistFactWellDefinedProof {
-    pub local_param_def_results: LocalParameterDefinitionResult,
+    pub local_param_def_results: LocalParamsDefResults,
     pub local_env: Environment,
-    pub proof_of_facts_inside_exist_Fact: Vec<FactWellDefinedProof>,
+    pub proof_of_well_definedness_of_facts_inside: Vec<FactWellDefinedProof>,
 }
 
 impl Runtime {
