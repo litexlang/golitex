@@ -15,6 +15,6 @@ pub use crate::fact::{
     NotForallFact, OrFact, PlainExistFact,
 };
 pub use crate::runtime::Runtime;
-pub use runtime_ids::{FactId, PropAlgebraicPropertyId2};
+pub use runtime_ids::{FactId, PropAlgebraicPropertyId2, WellDefinednessId2};
 pub use verify_state::VerifyState2;
 

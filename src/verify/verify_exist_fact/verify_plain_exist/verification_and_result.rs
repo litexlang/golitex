@@ -34,7 +34,7 @@ impl Runtime {
         verify_state: VerifyState2,
     ) -> Result<VerifyPlainExistFactResult2, RuntimeError> {
         let well_defined_proof =
-            self.verify_plain_exist_fact_well_definedness2(fact, verify_state.clone())?;
+            self.verify_exist_fact_well_definedness2(fact, verify_state.clone())?;
         let searched_proof = self.search_plain_exist_fact_proof2(fact, verify_state)?;
         Ok(VerifyPlainExistFactResult2 {
             fact: fact.clone(),

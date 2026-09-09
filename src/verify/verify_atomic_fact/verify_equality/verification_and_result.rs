@@ -35,7 +35,7 @@ impl Runtime {
         verify_state: VerifyState2,
     ) -> Result<VerifyEqualityResult2, RuntimeError> {
         let well_defined_proof =
-            self.verify_equal_fact_well_definedness2(fact, verify_state.clone())?;
+            self.verify_atomic_fact_well_definedness2(&fact.clone().into(), verify_state.clone())?;
         let searched_proof = self.search_equal_fact_proof2(fact, verify_state)?;
         Ok(VerifyEqualityResult2 {
             fact: fact.clone(),

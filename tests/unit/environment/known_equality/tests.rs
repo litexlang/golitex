@@ -145,6 +145,54 @@ fn equality_proof_path_preserves_edge_order_and_orientation() {
 }
 
 #[test]
+fn equality_proof_path_carries_exact_fact_ids() {
+    let mut known = KnownEquality::new();
+    let first = equality("x0", "x1");
+    let second = equality("x1", "x2");
+    let first_id = first.fact_id;
+    let second_id = second.fact_id;
+    known.store(&first);
+    known.store(&second);
+
+    let path = known
+        .proof_path(&named_obj("x0"), &named_obj("x2"))
+        .expect("proof path");
+    assert_eq!(
+        path.iter().map(|step| step.fact_id).collect::<Vec<_>>(),
+        vec![first_id, second_id]
+    );
+}
+
+#[test]
+fn equality_history_records_class_growth_and_redundant_edges() {
+    let mut known = KnownEquality::new();
+    let first = equality("x0", "x1");
+    let second = equality("x1", "x2");
+    let redundant = equality("x0", "x2");
+    let first_id = first.fact_id;
+    let second_id = second.fact_id;
+    let redundant_id = redundant.fact_id;
+
+    known.store(&first);
+    known.store(&second);
+    known.store(&redundant);
+
+    assert_eq!(known.history().len(), 3);
+    assert!(matches!(
+        known.history()[0],
+        EqualityHistoryEvent::ClassesMerged { via_fact_id, .. } if via_fact_id == first_id
+    ));
+    assert!(matches!(
+        known.history()[1],
+        EqualityHistoryEvent::ClassesMerged { via_fact_id, .. } if via_fact_id == second_id
+    ));
+    assert!(matches!(
+        known.history()[2],
+        EqualityHistoryEvent::EdgeAddedInsideExistingClass { fact_id, .. } if fact_id == redundant_id
+    ));
+}
+
+#[test]
 fn later_equality_endpoint_upgrades_a_surface_identifier_to_its_template_instance() {
     let mut known = KnownEquality::new();
     let (surface_identifier, instantiated_template) = selected_real_template_instance();

@@ -158,6 +158,41 @@ This is the next ABI design. The implemented v2 compiler still emits
 that path must migrate as one incompatible Core/compiler change rather than be
 treated as the settled semantics.
 
+## Sethood and membership migration plan
+
+The chosen boundary is now explicit. `Litex.Set` remains the exact-carrier
+backend name. The source-level proposition is `Litex.IsSet A`, with a checked
+view `Litex.IsSet.rep A hA : Litex.Set` and a semantic witness
+`Litex.IsSet.same_rep A hA : Litex.Same A (Litex.IsSet.rep A hA)`.
+`Litex.IsSet.own` will expose the retained source sethood proof to membership
+rules. It must not be implemented as a bare existential unless the selected
+representative also comes with a proved membership-coherence law.
+
+Core now provides that law's concrete shape as `Litex.SetEquivalent S T`,
+namely `∀ x, Litex.In x S ↔ Litex.In x T`. It is derived from `In`, has
+ordinary reflexive, symmetric, and transitive proofs, and is separate from
+`Same`: `Same` relates Litex objects, while `SetEquivalent` certifies that a
+particular pair of set representations has the same extension. A reviewed set
+bridge must carry or prove `SetEquivalent`; no global theorem may infer it
+from an arbitrary `Same` edge.
+
+The implementation order is fixed:
+
+1. Keep the Core `Same` and `In` contracts, and use `SetEquivalent` as the
+   coherence gate for every set representation bridge.
+2. Add the `IsSet` view and migrate `forall A set`, `have A set = E`, and
+   `$in A` only after a bridge owner supplies `same_rep`, `own`, and
+   representative membership coherence.
+3. Replace the compiler's current `IsSetFact -> True` lowering in one ABI
+   change, regenerate paired examples, and run the Lean kernel gate.
+4. Add extensional set equality, union/intersection, power-set universes, and
+   finiteness only on top of this checked view.
+
+For the standard aliases, `R` has exact carrier `ℝ` and `C` has exact carrier
+`ℂ`. Thus `In x R` means `∃ r : ℝ, Same x r`, and `In x C` means
+`∃ c : ℂ, Same x c`. The inclusion `R ⊆ C` is a membership transport proof;
+it does not identify the two `Litex.Set` structures or claim `R = C`.
+
 ## Heterogeneous membership
 
 `Litex.In x S` means that some `y : S.Carrier` satisfies `Litex.Same x y`.

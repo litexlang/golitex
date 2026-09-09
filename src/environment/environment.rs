@@ -1,4 +1,6 @@
 use crate::prelude::*;
+use crate::verify_rewrite::WellDefinednessId2;
+use std::collections::HashMap;
 
 /// The mutable mathematical context for a runtime environment.
 ///
@@ -34,6 +36,10 @@ pub struct Environment {
 
     /// Environment-scoped keys that deduplicate persistent infer-rule firings.
     pub inference_cache: EnvironmentInferenceCache,
+
+    /// Objects whose well-definedness has been established in this environment.
+    /// The proof itself remains owned by the corresponding Result.
+    pub well_defined_objects: HashMap<ObjString, WellDefinednessId2>,
 }
 
 impl Environment {
@@ -44,6 +50,7 @@ impl Environment {
             objects: EnvironmentObjectKnowledgeStore::new(),
             predicate_algebraic_properties: EnvironmentPredicateAlgebraicPropertyStore::new(),
             inference_cache: EnvironmentInferenceCache::new(),
+            well_defined_objects: HashMap::new(),
         }
     }
 }

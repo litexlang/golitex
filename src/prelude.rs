@@ -24,9 +24,10 @@ pub use crate::environment::{
     EnvironmentDefinitionRegistry, EnvironmentFactStore, EnvironmentInferenceCache,
     EnvironmentObjectKnowledge, EnvironmentObjectKnowledgeStore,
     EnvironmentPredicateAlgebraicPropertyStore, EnvironmentPredicateProperties,
-    EnvironmentStoredFactStore, ForallArgumentShape, ForallConclusionIndex, KnownEquality,
-    KnownEqualityProofStep, KnownFnInfo, KnownObjValue, QuantifiedFactIndex, SetRelationIndex,
-    StoredFactRecord, StoredForallConclusionReference, WellDefinednessEnvironmentDelta,
+    EnvironmentStoredFactStore, EqualityClassId, EqualityHistoryEvent, ForallArgumentShape,
+    ForallConclusionIndex, KnownEquality, KnownEqualityProofStep, KnownFnInfo, KnownObjValue,
+    QuantifiedFactIndex, SetRelationIndex, StoredFactRecord, StoredForallConclusionReference,
+    WellDefinednessEnvironmentDelta,
 };
 pub use crate::error::exec_stmt_error_with_stmt_and_cause;
 pub use crate::error::short_exec_error;

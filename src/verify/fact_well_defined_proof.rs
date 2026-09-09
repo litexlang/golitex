@@ -1,4 +1,4 @@
-use crate::fact::{ExistFact, Fact};
+use crate::fact::Fact;
 use crate::prelude::*;
 use crate::verify_rewrite::VerifyState2;
 
@@ -33,7 +33,7 @@ impl Runtime {
                 self.verify_or_fact_well_definedness2(fact, verify_state)?,
             )),
             Fact::ExistFact(fact) => Ok(FactWellDefinedProof2::ExistFact(
-                self.verify_exist_fact_well_definedness_for_variant2(fact, verify_state)?,
+                self.verify_exist_fact_well_definedness2(fact.spec(), verify_state)?,
             )),
             Fact::ForallFact(fact) => Ok(FactWellDefinedProof2::ForallFact(
                 self.verify_forall_fact_well_definedness2(fact, verify_state)?,
@@ -44,20 +44,6 @@ impl Runtime {
             Fact::NotForall(fact) => Ok(FactWellDefinedProof2::NotForall(
                 self.verify_not_forall_fact_well_definedness2(fact, verify_state)?,
             )),
-        }
-    }
-
-    pub fn verify_exist_fact_well_definedness_for_variant2(
-        &mut self,
-        fact: &ExistFact,
-        verify_state: VerifyState2,
-    ) -> Result<ExistFactWellDefinedProof2, RuntimeError> {
-        match fact {
-            ExistFact::PlainExistFact(spec)
-            | ExistFact::ExistUniqueFact(spec)
-            | ExistFact::NotExistFact(spec) => {
-                self.verify_exist_fact_well_definedness2(spec, verify_state)
-            }
         }
     }
 }

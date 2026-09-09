@@ -14,8 +14,9 @@ pub use environment::Environment;
 pub use facts::equality_linear_derive;
 pub use facts::{
     forall_argument_shape, AtomicFactIndex, CachedKnownFact, EnvironmentFactStore,
-    EnvironmentStoredFactStore, ForallArgumentShape, ForallConclusionIndex, KnownEquality,
-    KnownEqualityProofStep, QuantifiedFactIndex, SetRelationIndex, StoredFactRecord,
+    EnvironmentStoredFactStore, EqualityClassId, EqualityHistoryEvent, ForallArgumentShape,
+    ForallConclusionIndex,
+    KnownEquality, KnownEqualityProofStep, QuantifiedFactIndex, SetRelationIndex, StoredFactRecord,
     StoredForallConclusionReference,
 };
 pub use object::{

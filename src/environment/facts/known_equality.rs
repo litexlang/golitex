@@ -4,6 +4,31 @@ use crate::prelude::*;
 use std::collections::{HashMap, HashSet, VecDeque};
 
 type EqualityNodeId = usize;
+pub type EqualityClassId = u64;
+
+/// Append-only evidence of how the current equality partition was built.
+///
+/// Union-find is deliberately only an index. These events preserve the
+/// semantic history needed by compiler and diagnostic consumers.
+#[derive(Clone, Debug)]
+pub enum EqualityHistoryEvent {
+    ClassesMerged {
+        revision: u64,
+        left_class: EqualityClassId,
+        right_class: EqualityClassId,
+        result_class: EqualityClassId,
+        left: ObjString,
+        right: ObjString,
+        via_fact_id: FactId,
+    },
+    EdgeAddedInsideExistingClass {
+        revision: u64,
+        class_id: EqualityClassId,
+        left: ObjString,
+        right: ObjString,
+        fact_id: FactId,
+    },
+}
 
 #[derive(Clone)]
 struct KnownEqualityEntry {
@@ -15,6 +40,7 @@ struct KnownEqualityEntry {
 struct EqualityNode {
     parent: EqualityNodeId,
     size: usize,
+    class_id: EqualityClassId,
     members: Vec<Obj>,
 }
 
@@ -22,11 +48,16 @@ struct EqualityNode {
 ///
 /// Each key owns only its direct proof edges and a node id. Class membership
 /// lives once at the union-find root, so extending a class does not scan and
-/// rebind every key already in that class.
+/// rebind every key already in that class. `history` is append-only and is the
+/// authoritative record of class expansion; union-find remains only a query
+/// index and may change roots as it is optimized.
 #[derive(Clone)]
 pub struct KnownEquality {
     entries: HashMap<ObjString, KnownEqualityEntry>,
     nodes: Vec<EqualityNode>,
+    next_class_id: EqualityClassId,
+    next_revision: u64,
+    history: Vec<EqualityHistoryEvent>,
 }
 
 impl KnownEquality {
@@ -34,6 +65,9 @@ impl KnownEquality {
         KnownEquality {
             entries: HashMap::new(),
             nodes: Vec::new(),
+            next_class_id: 0,
+            next_revision: 0,
+            history: Vec::new(),
         }
     }
 
@@ -50,14 +84,19 @@ impl KnownEquality {
     pub fn get_with_class_id(
         &self,
         key: &str,
-    ) -> Option<(usize, &HashMap<ObjString, AtomicFact>, &[Obj])> {
+    ) -> Option<(EqualityClassId, &HashMap<ObjString, AtomicFact>, &[Obj])> {
         let entry = self.entries.get(key)?;
         let root_id = self.root_id(entry.node_id);
         Some((
-            root_id,
+            self.nodes[root_id].class_id,
             &entry.direct_proof_map,
             self.nodes[root_id].members.as_slice(),
         ))
+    }
+
+    /// Returns the append-only class construction history in insertion order.
+    pub fn history(&self) -> &[EqualityHistoryEvent] {
+        &self.history
     }
 
     pub fn iter(
@@ -169,7 +208,12 @@ impl KnownEquality {
             } else {
                 return None;
             };
-            reversed.push(KnownEqualityProofStep { from, to, equality });
+            reversed.push(KnownEqualityProofStep {
+                from,
+                to,
+                fact_id: equality.fact_id,
+                equality,
+            });
             current = parent;
         }
         reversed.reverse();
@@ -218,6 +262,16 @@ impl KnownEquality {
         let right_node = self.entries.get(&right_key).map(|entry| entry.node_id);
         if let (Some(left_node), Some(right_node)) = (left_node, right_node) {
             if self.root_id(left_node) == self.root_id(right_node) {
+                let root_id = self.root_id(left_node);
+                self.next_revision += 1;
+                self.history
+                    .push(EqualityHistoryEvent::EdgeAddedInsideExistingClass {
+                        revision: self.next_revision,
+                        class_id: self.nodes[root_id].class_id,
+                        left: left_key.clone(),
+                        right: right_key.clone(),
+                        fact_id: equality.fact_id,
+                    });
                 return;
             }
         }
@@ -243,7 +297,21 @@ impl KnownEquality {
             .direct_proof_map
             .insert(left_key.clone(), equality_fact);
 
-        self.union(left_node, right_node);
+        let left_root = self.root_id(left_node);
+        let right_root = self.root_id(right_node);
+        let left_class = self.nodes[left_root].class_id;
+        let right_class = self.nodes[right_root].class_id;
+        let result_class = self.union(left_node, right_node);
+        self.next_revision += 1;
+        self.history.push(EqualityHistoryEvent::ClassesMerged {
+            revision: self.next_revision,
+            left_class,
+            right_class,
+            result_class,
+            left: left_key.clone(),
+            right: right_key.clone(),
+            via_fact_id: equality.fact_id,
+        });
         self.insert_raw_alias(left_raw_key, &left_key);
         self.insert_raw_alias(right_raw_key, &right_key);
     }
@@ -253,6 +321,11 @@ impl KnownEquality {
         self.nodes.push(EqualityNode {
             parent: node_id,
             size: 1,
+            class_id: {
+                let class_id = self.next_class_id;
+                self.next_class_id += 1;
+                class_id
+            },
             members: vec![object],
         });
         self.entries.insert(
@@ -306,11 +379,11 @@ impl KnownEquality {
         node_id
     }
 
-    fn union(&mut self, left_node: EqualityNodeId, right_node: EqualityNodeId) {
+    fn union(&mut self, left_node: EqualityNodeId, right_node: EqualityNodeId) -> EqualityClassId {
         let left_root = self.root_id(left_node);
         let right_root = self.root_id(right_node);
         if left_root == right_root {
-            return;
+            return self.nodes[left_root].class_id;
         }
 
         let (large_root, small_root) = if self.nodes[left_root].size >= self.nodes[right_root].size
@@ -323,6 +396,11 @@ impl KnownEquality {
         self.nodes[small_root].parent = large_root;
         self.nodes[large_root].size += self.nodes[small_root].size;
         self.nodes[large_root].members.extend(small_members);
+
+        let result_class = self.next_class_id;
+        self.next_class_id += 1;
+        self.nodes[large_root].class_id = result_class;
+        result_class
     }
 }
 

@@ -43,7 +43,7 @@ impl Runtime {
         verify_state: VerifyState2,
     ) -> Result<VerifyNonEquationalAtomicFactResult2, RuntimeError> {
         let well_defined_proof =
-            self.verify_non_equational_atomic_fact_well_definedness2(fact, verify_state.clone())?;
+            self.verify_atomic_fact_well_definedness2(fact, verify_state.clone())?;
         let searched_proof = self.search_non_equational_atomic_fact_proof2(fact, verify_state)?;
         Ok(VerifyNonEquationalAtomicFactResult2 {
             fact: fact.clone(),
