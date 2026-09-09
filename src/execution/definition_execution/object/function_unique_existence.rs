@@ -288,7 +288,7 @@ impl Runtime {
         }
 
         let exist_body = match &stmt.forall.then_facts[0] {
-            ExistOrAndChainAtomicFact::ExistFact(ExistFactEnum::ExistUniqueFact(body)) => body,
+            ExistOrAndChainAtomicFact::ExistFact(ExistFact::ExistUniqueFact(body)) => body,
             _ => {
                 return Err(Self::have_fn_by_forall_exist_unique_msg(
                     stmt,

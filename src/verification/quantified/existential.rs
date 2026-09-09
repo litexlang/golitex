@@ -16,7 +16,7 @@ fn is_bound_symbol(obj: &Obj, binding: &SymbolBinding) -> bool {
 }
 
 fn real_line_comparison_exist_fact_non_witness_operands(
-    exist_fact: &ExistFactEnum,
+    exist_fact: &ExistFact,
 ) -> Option<Vec<&Obj>> {
     if !exist_fact.is_plain_exist() || exist_fact.facts().len() != 1 {
         return None;
@@ -80,9 +80,7 @@ fn real_line_comparison_exist_fact_non_witness_operands(
     Some(vec![])
 }
 
-fn rational_integer_ratio_exist_fact_non_witness_operand(
-    exist_fact: &ExistFactEnum,
-) -> Option<&Obj> {
+fn rational_integer_ratio_exist_fact_non_witness_operand(exist_fact: &ExistFact) -> Option<&Obj> {
     if !exist_fact.is_plain_exist() || exist_fact.facts().len() != 1 {
         return None;
     }
@@ -135,7 +133,7 @@ fn rational_integer_ratio_exist_fact_non_witness_operand(
 }
 
 fn rational_positive_denominator_exist_fact_non_witness_operand(
-    exist_fact: &ExistFactEnum,
+    exist_fact: &ExistFact,
 ) -> Option<&Obj> {
     if !exist_fact.is_plain_exist() || exist_fact.facts().len() != 2 {
         return None;
@@ -190,7 +188,7 @@ fn rational_positive_denominator_exist_fact_non_witness_operand(
     Some(ratio_other)
 }
 
-fn euclidean_quotient_exist_unique_operands(exist_fact: &ExistFactEnum) -> Option<(Obj, Obj)> {
+fn euclidean_quotient_exist_unique_operands(exist_fact: &ExistFact) -> Option<(Obj, Obj)> {
     if !exist_fact.is_exist_unique() || exist_fact.facts().len() != 1 {
         return None;
     }
@@ -233,7 +231,7 @@ fn euclidean_quotient_exist_unique_operands(exist_fact: &ExistFactEnum) -> Optio
     Some((dividend, divisor))
 }
 
-fn integer_divisibility_exist_fact_operands(exist_fact: &ExistFactEnum) -> Option<(Obj, Obj)> {
+fn integer_divisibility_exist_fact_operands(exist_fact: &ExistFact) -> Option<(Obj, Obj)> {
     if !exist_fact.is_plain_exist() || exist_fact.facts().len() != 1 {
         return None;
     }
@@ -274,7 +272,7 @@ fn integer_divisibility_exist_fact_operands(exist_fact: &ExistFactEnum) -> Optio
     Some((dividend, divisor))
 }
 
-fn archimedean_reciprocal_bound_non_witness_operand(exist_fact: &ExistFactEnum) -> Option<&Obj> {
+fn archimedean_reciprocal_bound_non_witness_operand(exist_fact: &ExistFact) -> Option<&Obj> {
     if !exist_fact.is_plain_exist() || exist_fact.facts().len() != 1 {
         return None;
     }
@@ -303,7 +301,7 @@ fn archimedean_reciprocal_bound_non_witness_operand(exist_fact: &ExistFactEnum) 
 }
 
 fn dense_order_exist_fact_endpoints(
-    exist_fact: &ExistFactEnum,
+    exist_fact: &ExistFact,
     witness_carrier: StandardSet,
 ) -> Option<(Obj, Obj)> {
     if !exist_fact.is_plain_exist() || exist_fact.facts().len() != 1 {
@@ -347,7 +345,7 @@ fn dense_order_exist_fact_endpoints(
     Some((left_less.left.clone(), right_less.right.clone()))
 }
 
-fn integer_interval_exist_fact_endpoints(exist_fact: &ExistFactEnum) -> Option<(Obj, Obj, bool)> {
+fn integer_interval_exist_fact_endpoints(exist_fact: &ExistFact) -> Option<(Obj, Obj, bool)> {
     if !exist_fact.is_plain_exist() || exist_fact.facts().len() != 1 {
         return None;
     }
@@ -392,7 +390,7 @@ fn integer_interval_exist_fact_endpoints(exist_fact: &ExistFactEnum) -> Option<(
     Some((left.clone(), right.clone(), strict))
 }
 
-fn nonempty_set_exist_fact_set(exist_fact: &ExistFactEnum) -> Option<Obj> {
+fn nonempty_set_exist_fact_set(exist_fact: &ExistFact) -> Option<Obj> {
     if !exist_fact.is_plain_exist() || exist_fact.facts().len() != 1 {
         return None;
     }
@@ -419,7 +417,7 @@ fn nonempty_set_exist_fact_set(exist_fact: &ExistFactEnum) -> Option<Obj> {
 impl Runtime {
     pub(in crate::verification) fn prove_exist_fact(
         &mut self,
-        exist_fact: &ExistFactEnum,
+        exist_fact: &ExistFact,
         verify_state: &VerifyState,
     ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(cached_result) =
@@ -770,10 +768,10 @@ impl Runtime {
 
     fn verify_finite_nonempty_natural_set_has_maximum(
         &mut self,
-        exist_fact: &ExistFactEnum,
+        exist_fact: &ExistFact,
         verify_state: &VerifyState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
-        let ExistFactEnum::ExistFact(body) = exist_fact else {
+        let ExistFact::PlainExistFact(body) = exist_fact else {
             return Ok(None);
         };
         let groups = &body.typed_parameters.groups;
@@ -892,21 +890,21 @@ impl Runtime {
 
     pub fn build_exist_unique_uniqueness_forall_fact(
         &self,
-        exist_fact: &ExistFactEnum,
+        exist_fact: &ExistFact,
     ) -> Result<ForallFact, RuntimeError> {
         self.build_exist_unique_uniqueness_forall_fact_inner(exist_fact, false)
     }
 
     pub fn build_exist_unique_component_uniqueness_forall_fact(
         &self,
-        exist_fact: &ExistFactEnum,
+        exist_fact: &ExistFact,
     ) -> Result<ForallFact, RuntimeError> {
         self.build_exist_unique_uniqueness_forall_fact_inner(exist_fact, true)
     }
 
     fn build_exist_unique_uniqueness_forall_fact_inner(
         &self,
-        exist_fact: &ExistFactEnum,
+        exist_fact: &ExistFact,
         component_conclusion: bool,
     ) -> Result<ForallFact, RuntimeError> {
         let lf = exist_fact.line_file();
@@ -1048,13 +1046,13 @@ impl Runtime {
 
     fn try_verify_exist_unique_by_exist_and_uniqueness_forall(
         &mut self,
-        exist_fact: &ExistFactEnum,
+        exist_fact: &ExistFact,
         verify_state: &VerifyState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if exist_fact.typed_parameters().number_of_params() == 0 {
             return Ok(None);
         }
-        let plain = ExistFactEnum::ExistFact(ExistentialSpec::new(
+        let plain = ExistFact::PlainExistFact(PlainExistFact::new(
             exist_fact.typed_parameters().clone(),
             exist_fact.facts().clone(),
             exist_fact.line_file(),
@@ -1091,8 +1089,8 @@ impl Runtime {
 
     pub fn verify_exist_fact_with_known_exist_fact(
         &mut self,
-        exist_fact: &ExistFactEnum,
-        known_exist_fact: &ExistFactEnum,
+        exist_fact: &ExistFact,
+        known_exist_fact: &ExistFact,
     ) -> Result<ProveFactResult, RuntimeError> {
         for environment in self.iter_environments_from_top() {
             let result = Self::verify_exist_fact_with_known_exist_fact_with_facts_in_environment(
@@ -1112,8 +1110,8 @@ impl Runtime {
     pub fn verify_exist_fact_with_known_exist_fact_with_facts_in_environment(
         runtime: &Runtime,
         environment: &Environment,
-        exist_fact: &ExistFactEnum,
-        known_exist_fact: &ExistFactEnum,
+        exist_fact: &ExistFact,
+        known_exist_fact: &ExistFact,
     ) -> Result<ProveFactResult, RuntimeError> {
         let goal_keys = Self::known_exist_lookup_keys(known_exist_fact);
         let target_body_string = Self::exist_fact_normalized_body_string(runtime, exist_fact)
@@ -1165,10 +1163,10 @@ impl Runtime {
         Ok((UnknownGenericStmtResult::new()).into())
     }
 
-    fn known_exist_lookup_keys(goal: &ExistFactEnum) -> Vec<String> {
+    fn known_exist_lookup_keys(goal: &ExistFact) -> Vec<String> {
         let mut keys = vec![goal.alpha_normalized_key(), goal.key()];
-        if let ExistFactEnum::ExistFact(body) = goal {
-            let unique = ExistFactEnum::ExistUniqueFact(body.clone());
+        if let ExistFact::PlainExistFact(body) = goal {
+            let unique = ExistFact::ExistUniqueFact(body.clone());
             keys.push(unique.alpha_normalized_key());
             keys.push(unique.key());
         }
@@ -1179,7 +1177,7 @@ impl Runtime {
 
     pub fn exist_fact_normalized_body_string(
         runtime: &Runtime,
-        exist_fact: &ExistFactEnum,
+        exist_fact: &ExistFact,
     ) -> Result<String, RuntimeError> {
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
         let mut param_index: usize = 0;

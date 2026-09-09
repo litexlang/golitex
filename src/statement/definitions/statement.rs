@@ -234,7 +234,7 @@ pub enum TemplateDefEnum {
 #[derive(Clone)]
 pub struct ObtainObjFromExistFact {
     pub equal_tos: Vec<SymbolBinding>,
-    pub fact: ExistFactEnum,
+    pub fact: ExistFact,
     pub line_file: LineFile,
 }
 
@@ -810,7 +810,7 @@ impl TrustHaveStmt {
 }
 
 impl ObtainObjFromExistFact {
-    pub fn new(equal_tos: Vec<SymbolBinding>, fact: ExistFactEnum, line_file: LineFile) -> Self {
+    pub fn new(equal_tos: Vec<SymbolBinding>, fact: ExistFact, line_file: LineFile) -> Self {
         ObtainObjFromExistFact {
             equal_tos,
             fact,

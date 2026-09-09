@@ -708,12 +708,12 @@ impl Runtime {
                 stmt.line_file.clone(),
             )
             .into();
-            let body = ExistentialSpec::new(
+            let body = PlainExistFact::new(
                 TypedParameterList::new(vec![index_group]),
                 vec![bijective.into()],
                 stmt.line_file.clone(),
             )?;
-            let conclusion: ExistOrAndChainAtomicFact = ExistFactEnum::ExistFact(body).into();
+            let conclusion: ExistOrAndChainAtomicFact = ExistFact::PlainExistFact(body).into();
 
             let mut inside_results = Vec::new();
             let mut requirement_facts = Vec::new();
@@ -794,12 +794,12 @@ impl Runtime {
                 stmt.line_file.clone(),
             )
             .into();
-            let body = ExistentialSpec::new(
+            let body = PlainExistFact::new(
                 TypedParameterList::new(vec![numerator_group, denominator_group]),
                 vec![ratio_fact.into(), coprime_fact.into()],
                 stmt.line_file.clone(),
             )?;
-            let conclusion: ExistOrAndChainAtomicFact = ExistFactEnum::ExistUniqueFact(body).into();
+            let conclusion: ExistOrAndChainAtomicFact = ExistFact::ExistUniqueFact(body).into();
 
             let rational_requirement: AtomicFact = InFact::new(
                 stmt.args()[0].clone(),
@@ -1583,13 +1583,13 @@ impl Runtime {
                         line_file.clone(),
                     )
                     .into();
-                    let existential = ExistentialSpec::new(
+                    let existential = PlainExistFact::new(
                         TypedParameterList::new(vec![lub_group]),
                         vec![certificate.into()],
                         line_file.clone(),
                     )?;
                     let conclusion: ExistOrAndChainAtomicFact =
-                        ExistFactEnum::ExistFact(existential).into();
+                        ExistFact::PlainExistFact(existential).into();
 
                     (
                         vec![
@@ -1686,13 +1686,13 @@ impl Runtime {
                     )?;
                     let glb = obj_for_bound_param_in_scope(&glb_group.params[0]);
                     let certificate = real_glb_certificate_fact(&set, &glb, line_file.clone());
-                    let existential = ExistentialSpec::new(
+                    let existential = PlainExistFact::new(
                         TypedParameterList::new(vec![glb_group]),
                         vec![certificate.into()],
                         line_file.clone(),
                     )?;
                     let conclusion: ExistOrAndChainAtomicFact =
-                        ExistFactEnum::ExistFact(existential).into();
+                        ExistFact::PlainExistFact(existential).into();
 
                     (
                     vec![
@@ -1784,13 +1784,13 @@ impl Runtime {
                     let natural = obj_for_bound_param_in_scope(&natural_group.params[0]);
                     let body: AtomicFact =
                         LessFact::new(value.clone(), natural, line_file.clone()).into();
-                    let existential = ExistentialSpec::new(
+                    let existential = PlainExistFact::new(
                         TypedParameterList::new(vec![natural_group]),
                         vec![body.into()],
                         line_file.clone(),
                     )?;
                     let conclusion: ExistOrAndChainAtomicFact =
-                        ExistFactEnum::ExistFact(existential).into();
+                        ExistFact::PlainExistFact(existential).into();
                     (
                         vec![(
                             InFact::new(value, real.clone(), line_file.clone()).into(),
@@ -1811,7 +1811,7 @@ impl Runtime {
                         LessFact::new(left.clone(), rational.clone(), line_file.clone()).into();
                     let right_less: AtomicFact =
                         LessFact::new(rational, right.clone(), line_file.clone()).into();
-                    let existential = ExistentialSpec::new(
+                    let existential = PlainExistFact::new(
                         TypedParameterList::new(vec![rational_group]),
                         vec![QuantifierFreeFact::AndFact(AndFact::new(
                             vec![left_less, right_less],
@@ -1820,7 +1820,7 @@ impl Runtime {
                         line_file.clone(),
                     )?;
                     let conclusion: ExistOrAndChainAtomicFact =
-                        ExistFactEnum::ExistFact(existential).into();
+                        ExistFact::PlainExistFact(existential).into();
                     (
                         vec![
                             (

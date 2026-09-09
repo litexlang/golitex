@@ -253,7 +253,7 @@ impl Runtime {
         let Some(fx) = function_applied_to_one_arg(&function, x) else {
             return Err(function_property_application_error(&function, line_file));
         };
-        let exist_body = ExistentialSpec::new(
+        let exist_body = PlainExistFact::new(
             TypedParameterList::new(vec![x_group]),
             vec![EqualFact::new(y, fx, line_file.clone()).into()],
             line_file.clone(),
@@ -261,7 +261,7 @@ impl Runtime {
         Ok(ForallFact::new_canonical_forall(
             TypedParameterList::new(vec![y_group]),
             vec![],
-            vec![ExistFactEnum::ExistFact(exist_body).into()],
+            vec![ExistFact::PlainExistFact(exist_body).into()],
             line_file,
         )?
         .into())
@@ -293,7 +293,7 @@ impl Runtime {
                 fact.line_file.clone(),
             ));
         };
-        let exist_body = ExistentialSpec::new(
+        let exist_body = PlainExistFact::new(
             TypedParameterList::new(vec![x_group]),
             vec![EqualFact::new(fx, y, fact.line_file.clone()).into()],
             fact.line_file.clone(),
@@ -302,7 +302,7 @@ impl Runtime {
             ForallFact::new_canonical_forall(
                 TypedParameterList::new(vec![y_group]),
                 vec![],
-                vec![ExistFactEnum::ExistUniqueFact(exist_body).into()],
+                vec![ExistFact::ExistUniqueFact(exist_body).into()],
                 fact.line_file.clone(),
             )?
             .into(),

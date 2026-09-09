@@ -193,7 +193,7 @@ impl StmtResultToLeanCompiler {
     /// the same recursively retained ordinary existential verification.
     pub(super) fn construct_lean_proof_from_plain_existential_witness_result(
         &mut self,
-        existential: &ExistFactEnum,
+        existential: &ExistFact,
         witness_objects: &[Obj],
         source_proof_step_count: usize,
         line_file: &LineFile,
@@ -216,7 +216,7 @@ impl StmtResultToLeanCompiler {
     /// kernel-checked local theorem and is never discarded as untrusted data.
     pub(super) fn construct_lean_existence_proof_from_unique_witness_result(
         &mut self,
-        existential: &ExistFactEnum,
+        existential: &ExistFact,
         witness_objects: &[Obj],
         source_proof_step_count: usize,
         line_file: &LineFile,
@@ -234,7 +234,7 @@ impl StmtResultToLeanCompiler {
 
     fn construct_lean_proof_from_existential_witness_result(
         &mut self,
-        existential: &ExistFactEnum,
+        existential: &ExistFact,
         witness_objects: &[Obj],
         source_proof_step_count: usize,
         line_file: &LineFile,

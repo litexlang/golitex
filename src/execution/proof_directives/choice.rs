@@ -248,10 +248,10 @@ fn axiom_of_choice_exist_fact(
         f,
         line_file.clone(),
     );
-    let body = ExistentialSpec::new(
+    let body = PlainExistFact::new(
         TypedParameterList::new(vec![f_group]),
         vec![QuantifierFreeFact::AtomicFact(named_choice_fact)],
         line_file,
     )?;
-    Ok(ExistFactEnum::ExistFact(body).into())
+    Ok(ExistFact::PlainExistFact(body).into())
 }

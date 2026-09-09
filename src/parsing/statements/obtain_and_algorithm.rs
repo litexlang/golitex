@@ -185,7 +185,7 @@ impl Runtime {
         &self,
         call: &TheoremCall,
         line_file: &LineFile,
-    ) -> Result<Option<ExistFactEnum>, RuntimeError> {
+    ) -> Result<Option<ExistFact>, RuntimeError> {
         let Some(fact) = self.get_thm_or_axiom_fact_by_name(&call.name.to_string()) else {
             // Reserved builtin theorem interfaces are execution-owned. An
             // unresolved user/imported theorem likewise receives its normal

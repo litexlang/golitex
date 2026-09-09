@@ -525,7 +525,7 @@ impl Runtime {
         }
     }
 
-    pub fn parse_exist_fact(&mut self, tb: &mut TokenBlock) -> Result<ExistFactEnum, RuntimeError> {
+    pub fn parse_exist_fact(&mut self, tb: &mut TokenBlock) -> Result<ExistFact, RuntimeError> {
         self.run_in_local_parsing_time_name_scope(|this| {
             let is_exist_unique = if tb.current()? == EXIST {
                 tb.skip_token(EXIST)?;
@@ -577,11 +577,11 @@ impl Runtime {
                     tb.skip_token(RIGHT_CURLY_BRACE)?;
 
                     let line_file = tb.line_file.clone();
-                    let body = ExistentialSpec::new(param_def, facts, line_file)?;
+                    let body = PlainExistFact::new(param_def, facts, line_file)?;
                     Ok(if is_exist_unique {
-                        ExistFactEnum::ExistUniqueFact(body)
+                        ExistFact::ExistUniqueFact(body)
                     } else {
-                        ExistFactEnum::ExistFact(body)
+                        ExistFact::PlainExistFact(body)
                     })
                 })();
                 inner.end_parsing_scope(&exist_param_names);
@@ -678,8 +678,8 @@ impl Runtime {
                     tb.skip_token(NOT)?;
                     let exist_fact = self.parse_exist_fact(tb)?;
                     return Ok(ExistOrAndChainAtomicFact::ExistFact(match exist_fact {
-                        ExistFactEnum::ExistFact(body) => ExistFactEnum::NotExistFact(body),
-                        ExistFactEnum::ExistUniqueFact(_) | ExistFactEnum::NotExistFact(_) => {
+                        ExistFact::PlainExistFact(body) => ExistFact::NotExistFact(body),
+                        ExistFact::ExistUniqueFact(_) | ExistFact::NotExistFact(_) => {
                             unreachable!("`not exist` parse should only produce plain exist body")
                         }
                     }));

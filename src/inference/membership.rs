@@ -1195,12 +1195,12 @@ impl Runtime {
             .into(),
         );
 
-        let exist_body = ExistentialSpec::new(
+        let exist_body = PlainExistFact::new(
             TypedParameterList::new(param_groups),
             facts,
             in_fact.line_file.clone(),
         )?;
-        Ok(Some(ExistFactEnum::ExistFact(exist_body).into()))
+        Ok(Some(ExistFact::PlainExistFact(exist_body).into()))
     }
 
     fn infer_membership_in_big_union(
@@ -1221,12 +1221,12 @@ impl Runtime {
             in_fact.line_file.clone(),
         )
         .into();
-        let exist_body = ExistentialSpec::new(
+        let exist_body = PlainExistFact::new(
             TypedParameterList::new(vec![member_group]),
             vec![element_in_member.into()],
             in_fact.line_file.clone(),
         )?;
-        let exist_fact: Fact = ExistFactEnum::ExistFact(exist_body).into();
+        let exist_fact: Fact = ExistFact::PlainExistFact(exist_body).into();
         let mut result = SuccessInferResult::new();
         result.new_fact(&exist_fact);
         result.new_infer_result_inside(
@@ -1281,7 +1281,7 @@ impl Runtime {
         };
         let element_in_fiber: AtomicFact =
             InFact::new(in_fact.element.clone(), fiber, in_fact.line_file.clone()).into();
-        let exist_fact: Fact = ExistFactEnum::ExistFact(ExistentialSpec::new(
+        let exist_fact: Fact = ExistFact::PlainExistFact(PlainExistFact::new(
             TypedParameterList::new(vec![index_group]),
             vec![element_in_fiber.into()],
             in_fact.line_file.clone(),
@@ -1357,12 +1357,12 @@ impl Runtime {
             in_fact.line_file.clone(),
         )
         .into();
-        let exist_body = ExistentialSpec::new(
+        let exist_body = PlainExistFact::new(
             TypedParameterList::new(vec![preimage_group]),
             vec![relation_fact.into()],
             in_fact.line_file.clone(),
         )?;
-        let exist_fact: Fact = ExistFactEnum::ExistFact(exist_body).into();
+        let exist_fact: Fact = ExistFact::PlainExistFact(exist_body).into();
         let mut result = SuccessInferResult::new();
         result.new_fact(&exist_fact);
         result.new_infer_result_inside(

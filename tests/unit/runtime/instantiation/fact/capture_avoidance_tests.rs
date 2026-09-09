@@ -86,8 +86,8 @@ fn exist_alpha_rename_avoids_every_existing_bound_name() {
         default_line_file(),
     )
     .into();
-    let fact = ExistFactEnum::ExistFact(
-        ExistentialSpec::new(
+    let fact = ExistFact::PlainExistFact(
+        PlainExistFact::new(
             TypedParameterList::new(vec![n_group.clone()]),
             vec![body.into()],
             default_line_file(),
@@ -210,8 +210,8 @@ fn exist_alpha_rename_respects_dependent_parameter_scope() {
             ParamType::Obj(BoundParamObj::new(&first_group.params[0]).into()),
         )
         .unwrap();
-    let fact = ExistFactEnum::ExistFact(
-        ExistentialSpec::new(
+    let fact = ExistFact::PlainExistFact(
+        PlainExistFact::new(
             TypedParameterList::new(vec![first_group.clone(), second_group.clone()]),
             vec![AtomicFact::from(EqualFact::new(
                 BoundParamObj::new(&first_group.params[0]).into(),

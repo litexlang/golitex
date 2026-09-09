@@ -5,7 +5,7 @@ use crate::prelude::*;
 #[derive(Clone)]
 pub enum Fact {
     AtomicFact(AtomicFact),
-    ExistFact(ExistFactEnum),
+    ExistFact(ExistFact),
     OrFact(OrFact),
     AndFact(AndFact),
     ChainFact(ChainFact),

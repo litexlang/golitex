@@ -6,7 +6,7 @@ use std::collections::HashMap;
 impl Runtime {
     pub fn build_not_exist_demorgan_forall_fact(
         &self,
-        not_exist: &ExistFactEnum,
+        not_exist: &ExistFact,
     ) -> Result<ForallFact, RuntimeError> {
         if !not_exist.is_not_exist() {
             return Err(RuntimeError::from(NewFactRuntimeError(

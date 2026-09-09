@@ -98,7 +98,7 @@ pub use crate::fact::OrFact;
 pub use crate::fact::QuantifierFreeFact;
 pub use crate::fact::SubsetFact;
 pub use crate::fact::SupersetFact;
-pub use crate::fact::{ExistFactEnum, ExistentialSpec};
+pub use crate::fact::{ExistFact, PlainExistFact};
 pub use crate::graph::{
     render_definition_graph_from_stmt_results, render_fact_graph_from_stmt_results, render_graph,
     render_graph_from_stmt_results, render_result_graph_from_stmt_results, GraphKind,

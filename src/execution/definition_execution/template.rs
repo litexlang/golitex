@@ -378,13 +378,10 @@ impl Runtime {
                 Ok(HaveObjEqualStmt::new(param_def, objs_equal_to, line_file.clone()).into())
             }
             TemplateDefEnum::HaveObjByExistFactsStmt(s) => {
-                let body = ExistentialSpec::new(
-                    s.param_def.clone(),
-                    s.facts.clone(),
-                    s.line_file.clone(),
-                )?;
+                let body =
+                    PlainExistFact::new(s.param_def.clone(), s.facts.clone(), s.line_file.clone())?;
                 let exist_fact = self.inst_exist_fact(
-                    &ExistFactEnum::ExistFact(body),
+                    &ExistFact::PlainExistFact(body),
                     param_to_arg_map,
                     SubstitutionMode::Exact,
                     Some(line_file),

@@ -234,9 +234,9 @@ fn logical_negation_for_by_contra(fact: &Fact) -> Result<Fact, RuntimeError> {
         Fact::ForallFact(forall_fact) => Ok(NotForallFact::new(forall_fact.clone()).into()),
         Fact::NotForall(not_forall) => Ok(not_forall.forall_fact.clone().into()),
         Fact::ExistFact(exist_fact) => match exist_fact {
-            ExistFactEnum::ExistFact(body) => Ok(ExistFactEnum::NotExistFact(body.clone()).into()),
-            ExistFactEnum::NotExistFact(body) => Ok(ExistFactEnum::ExistFact(body.clone()).into()),
-            ExistFactEnum::ExistUniqueFact(_) => Err(RuntimeError::ExecStmtError(Box::new(
+            ExistFact::PlainExistFact(body) => Ok(ExistFact::NotExistFact(body.clone()).into()),
+            ExistFact::NotExistFact(body) => Ok(ExistFact::PlainExistFact(body.clone()).into()),
+            ExistFact::ExistUniqueFact(_) => Err(RuntimeError::ExecStmtError(Box::new(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     format!(
                         "by contra: cannot build logical negation for `{}` yet",

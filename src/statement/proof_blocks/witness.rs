@@ -14,7 +14,7 @@ pub struct WitnessNonemptySet {
 #[derive(Clone)]
 pub struct WitnessExistFact {
     pub equal_tos: Vec<Obj>,
-    pub exist_fact_in_witness: ExistFactEnum,
+    pub exist_fact_in_witness: ExistFact,
     pub proof: Vec<Stmt>,
     pub line_file: LineFile,
 }
@@ -30,7 +30,7 @@ pub struct WitnessAtomicFact {
 impl WitnessExistFact {
     pub fn new(
         equal_tos: Vec<Obj>,
-        exist_fact_in_witness: ExistFactEnum,
+        exist_fact_in_witness: ExistFact,
         proof: Vec<Stmt>,
         line_file: LineFile,
     ) -> Self {

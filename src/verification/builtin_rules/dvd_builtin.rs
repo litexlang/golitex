@@ -35,7 +35,7 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let multiple_witness: Fact = ExistFactEnum::ExistFact(ExistentialSpec::new(
+        let multiple_witness: Fact = ExistFact::PlainExistFact(PlainExistFact::new(
             TypedParameterList::new(vec![witness_group]),
             vec![multiple_equality.into()],
             line_file,

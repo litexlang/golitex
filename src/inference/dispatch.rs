@@ -68,7 +68,7 @@ impl Runtime {
 
     fn infer_exist_fact(
         &mut self,
-        exist_fact: &ExistFactEnum,
+        exist_fact: &ExistFact,
         inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut out = SuccessInferResult::new();

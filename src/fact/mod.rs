@@ -19,7 +19,7 @@ pub use composite::conjunction_and_chain::{
 pub use composite::disjunction::OrFact;
 pub use composite::order_closure::NumericOrderChainClosureStep;
 pub use composite::quantifier_free::QuantifierFreeFact;
-pub use quantified::existential::{ExistFactEnum, ExistentialSpec};
+pub use quantified::existential::{ExistFact, PlainExistFact};
 pub use quantified::universal::ForallFact;
 pub use quantified::universal_iff::ForallFactWithIff;
 pub use validation::fact_parameters::{

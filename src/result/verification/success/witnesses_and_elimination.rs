@@ -20,7 +20,7 @@ pub struct SuccessVerifyWitnessExistResult {
 
 pub struct SuccessVerifyWitnessAtomicFactResult {
     pub definition: DefPropStmt,
-    pub instantiated_existential: ExistFactEnum,
+    pub instantiated_existential: ExistFact,
     pub definition_parameter_verification: Box<SuccessVerifyArgsSatisfyParamDefResult>,
     pub witness_verification: SuccessVerifyWitnessExistResult,
 }
@@ -28,7 +28,7 @@ pub struct SuccessVerifyWitnessAtomicFactResult {
 impl SuccessVerifyWitnessAtomicFactResult {
     pub fn new(
         definition: DefPropStmt,
-        instantiated_existential: ExistFactEnum,
+        instantiated_existential: ExistFact,
         definition_parameter_verification: SuccessVerifyArgsSatisfyParamDefResult,
         witness_verification: SuccessVerifyWitnessExistResult,
     ) -> Self {
@@ -79,7 +79,7 @@ pub struct SuccessVerifyExistentialEliminationResult {
     /// exact direct conclusion is retained recursively.
     pub source_result: ExistentialEliminationSourceResult,
     /// Exact existential eliminated after any definition projection.
-    pub source_exist_fact: ExistFactEnum,
+    pub source_exist_fact: ExistFact,
     /// Exact instantiated type fact stored for every introduced witness.
     pub witness_type_facts: Vec<Fact>,
     /// Exact instantiated direct body facts stored by elimination.
@@ -126,7 +126,7 @@ impl fmt::Debug for SuccessVerifyExistentialEliminationResult {
 impl SuccessVerifyExistentialEliminationResult {
     pub fn new(
         source_result: ExistentialEliminationSourceResult,
-        source_exist_fact: ExistFactEnum,
+        source_exist_fact: ExistFact,
         witness_type_facts: Vec<Fact>,
         instantiated_body_facts: Vec<Fact>,
         includes_uniqueness: bool,

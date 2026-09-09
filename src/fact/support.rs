@@ -55,7 +55,7 @@ impl AtomicFact {
     }
 }
 
-impl ExistFactEnum {
+impl ExistFact {
     pub fn fact_id(&self) -> FactId {
         self.spec().fact_id
     }
