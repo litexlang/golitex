@@ -20,12 +20,12 @@ pub struct WellDefinednessEnvironmentDelta {
 
 impl WellDefinednessEnvironmentDelta {
     pub fn new() -> Self {
-        Self::from_environment(Environment::new_empty_env())
+        Self::from_environment(ExecEnv::new_empty_env())
     }
 
     pub fn merge_committed_environment(
         &mut self,
-        checked_environment: Environment,
+        checked_environment: ExecEnv,
     ) -> Result<(), RuntimeError> {
         let mut accumulated_environment = self.clone().into_environment();
         accumulated_environment.merge_committed_child(checked_environment)?;
@@ -33,12 +33,12 @@ impl WellDefinednessEnvironmentDelta {
         Ok(())
     }
 
-    pub fn apply_to(&self, environment: &mut Environment) -> Result<(), RuntimeError> {
+    pub fn apply_to(&self, environment: &mut ExecEnv) -> Result<(), RuntimeError> {
         environment.merge_committed_child(self.clone().into_environment())
     }
 
-    fn from_environment(environment: Environment) -> Self {
-        let Environment {
+    fn from_environment(environment: ExecEnv) -> Self {
+        let ExecEnv {
             definitions,
             facts,
             objects,
@@ -56,7 +56,7 @@ impl WellDefinednessEnvironmentDelta {
         }
     }
 
-    fn into_environment(self) -> Environment {
+    fn into_environment(self) -> ExecEnv {
         let Self {
             definitions,
             facts,
@@ -65,7 +65,7 @@ impl WellDefinednessEnvironmentDelta {
             inference_cache,
             well_defined_objects,
         } = self;
-        Environment {
+        ExecEnv {
             definitions,
             facts,
             objects,

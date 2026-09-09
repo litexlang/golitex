@@ -22,7 +22,7 @@ impl Runtime {
         &mut self,
         verify_state: &VerifyState,
         verify: F,
-    ) -> Result<(T, Environment), E>
+    ) -> Result<(T, ExecEnv), E>
     where
         F: FnOnce(&mut Self, &VerifyState) -> Result<T, E>,
     {

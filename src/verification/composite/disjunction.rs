@@ -848,7 +848,7 @@ impl Runtime {
             all_objs_equal_to_each_arg.push(all_objs_equal_to_current_arg);
         }
 
-        let environments: Vec<Environment> = self.iter_environments_from_top().cloned().collect();
+        let environments: Vec<ExecEnv> = self.iter_environments_from_top().cloned().collect();
         for environment in &environments {
             let result = self.verify_or_fact_with_known_or_facts_with_facts_in_environment(
                 environment,
@@ -866,7 +866,7 @@ impl Runtime {
 
     pub fn verify_or_fact_with_known_or_facts_with_facts_in_environment(
         &mut self,
-        environment: &Environment,
+        environment: &ExecEnv,
         or_fact: &OrFact,
         all_objs_equal_to_each_arg: &Vec<Vec<String>>,
         verify_state: &VerifyState,

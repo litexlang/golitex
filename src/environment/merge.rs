@@ -3,8 +3,8 @@
 use crate::prelude::*;
 use std::collections::HashSet;
 
-impl Environment {
-    pub fn merge_committed_child(&mut self, child: Environment) -> Result<(), RuntimeError> {
+impl ExecEnv {
+    pub fn merge_committed_child(&mut self, child: ExecEnv) -> Result<(), RuntimeError> {
         self.validate_committed_child(&child)?;
         self.merge_committed_child_in_place(child)
     }
@@ -16,7 +16,7 @@ impl Environment {
     /// later statements.
     pub fn merge_committed_object_effects(
         &mut self,
-        child: Environment,
+        child: ExecEnv,
     ) -> Result<(), RuntimeError> {
         for (_, definition) in child
             .definitions
@@ -65,14 +65,14 @@ impl Environment {
         Ok(())
     }
 
-    fn merge_committed_child_in_place(&mut self, child: Environment) -> Result<(), RuntimeError> {
+    fn merge_committed_child_in_place(&mut self, child: ExecEnv) -> Result<(), RuntimeError> {
         self.merge_defined_names(&child)?;
         self.merge_equalities_from_child(&child)?;
         self.merge_child_fact_and_cache_tables(child)?;
         Ok(())
     }
 
-    fn merge_defined_names(&mut self, child: &Environment) -> Result<(), RuntimeError> {
+    fn merge_defined_names(&mut self, child: &ExecEnv) -> Result<(), RuntimeError> {
         for (name, definition) in child.definitions.symbols.iter() {
             if let Some(existing) = self.definitions.symbols.get(name) {
                 if same_symbol_definition(existing, definition) {
@@ -206,7 +206,7 @@ impl Environment {
         Ok(())
     }
 
-    fn merge_equalities_from_child(&mut self, child: &Environment) -> Result<(), RuntimeError> {
+    fn merge_equalities_from_child(&mut self, child: &ExecEnv) -> Result<(), RuntimeError> {
         let mut seen_equalities = HashSet::new();
         let mut child_equalities = Vec::new();
         for (_, (direct_proof_map, _)) in child.facts.known_equality.iter() {
@@ -230,9 +230,9 @@ impl Environment {
 
     fn merge_child_fact_and_cache_tables(
         &mut self,
-        child: Environment,
+        child: ExecEnv,
     ) -> Result<(), RuntimeError> {
-        let Environment {
+        let ExecEnv {
             definitions: _,
             facts,
             objects,
@@ -277,7 +277,7 @@ impl Environment {
         Ok(())
     }
 
-    fn validate_committed_child(&self, child: &Environment) -> Result<(), RuntimeError> {
+    fn validate_committed_child(&self, child: &ExecEnv) -> Result<(), RuntimeError> {
         for (name, child_definition) in child.definitions.symbols.iter() {
             if let Some(existing) = self.definitions.symbols.get(name) {
                 if same_symbol_definition(existing, child_definition) {
@@ -406,7 +406,7 @@ fn same_symbol_definition(left: &SymbolDefinition, right: &SymbolDefinition) -> 
     }
 }
 
-fn is_materialized_template_name(environment: &Environment, name: &str) -> bool {
+fn is_materialized_template_name(environment: &ExecEnv, name: &str) -> bool {
     let Some(_) = name.find('<') else {
         return false;
     };

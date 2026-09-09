@@ -666,7 +666,7 @@ impl Runtime {
     }
 
     fn collect_known_sets_containing_obj_in_environment(
-        environment: &Environment,
+        environment: &ExecEnv,
         obj_strings: &[String],
         sets: &mut Vec<Obj>,
         seen: &mut std::collections::HashSet<String>,

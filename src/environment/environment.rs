@@ -20,7 +20,7 @@ use std::collections::HashMap;
 ///   belong to `VerifyState` and `VerifyFactResult`, never this environment;
 /// - object well-definedness identities whose proof details remain in Results.
 #[derive(Clone)]
-pub struct Environment {
+pub struct ExecEnv {
     /// Definitions and symbol identities for declarations visible to later
     /// statements.
     pub definitions: EnvironmentDefinitionRegistry,
@@ -43,9 +43,9 @@ pub struct Environment {
     pub well_defined_objects: HashMap<ObjString, WellDefinednessId2>,
 }
 
-impl Environment {
+impl ExecEnv {
     pub fn new_empty_env() -> Self {
-        Environment {
+        ExecEnv {
             definitions: EnvironmentDefinitionRegistry::new(),
             facts: EnvironmentFactStore::new(),
             objects: EnvironmentObjectKnowledgeStore::new(),

@@ -375,7 +375,7 @@ fn split_module_qualified_name(name: &str) -> Option<(&str, &str)> {
 }
 
 fn get_prop_definition_by_name_in_env(
-    environment: &Environment,
+    environment: &ExecEnv,
     predicate_name: String,
 ) -> Option<&DefPropStmt> {
     if let Some(definition) = environment
@@ -396,7 +396,7 @@ fn get_prop_definition_by_name_in_env(
 }
 
 fn get_abstract_prop_definition_by_name_in_env(
-    environment: &Environment,
+    environment: &ExecEnv,
     predicate_name: String,
 ) -> Option<&DefAbstractPropStmt> {
     if let Some(definition) = environment
@@ -417,7 +417,7 @@ fn get_abstract_prop_definition_by_name_in_env(
 }
 
 fn get_prop_definition_from_environments(
-    environments: Vec<&Environment>,
+    environments: Vec<&ExecEnv>,
     predicate_name: &str,
 ) -> Option<DefPropStmt> {
     for environment in environments {
@@ -441,7 +441,7 @@ fn get_prop_definition_from_environments(
 }
 
 fn get_abstract_prop_definition_from_environments(
-    environments: Vec<&Environment>,
+    environments: Vec<&ExecEnv>,
     predicate_name: &str,
 ) -> Option<DefAbstractPropStmt> {
     for environment in environments {

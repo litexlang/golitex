@@ -1109,7 +1109,7 @@ impl Runtime {
 
     pub fn verify_exist_fact_with_known_exist_fact_with_facts_in_environment(
         runtime: &Runtime,
-        environment: &Environment,
+        environment: &ExecEnv,
         exist_fact: &ExistFact,
         known_exist_fact: &ExistFact,
     ) -> Result<ProveFactResult, RuntimeError> {

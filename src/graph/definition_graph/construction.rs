@@ -123,7 +123,7 @@ impl DefinitionGraphBuilder {
 
     pub(super) fn add_environment(
         &mut self,
-        environment: &Environment,
+        environment: &ExecEnv,
         canonical_name: Option<&str>,
         source_path: Option<&str>,
     ) -> Vec<String> {

@@ -4,7 +4,7 @@ use crate::module_system::{discover_terminal_module_import, discover_terminal_st
 use crate::module_system::{ImportTarget, ModuleStatus, UnverifiedImportKind};
 use crate::output::json_value::{render_json_value, JsonValue};
 use crate::parsing::Tokenizer;
-use crate::runtime::{ExecutionMode, Runtime};
+use crate::runtime::{TrustedOrRequireVerify, Runtime};
 use crate::syntax::keywords::{AS, DOUBLE_QUOTE, IMPORT, STD};
 use crate::syntax::name_validation::is_valid_litex_name;
 use crate::syntax::source_conventions::{default_line_file, LineFile};
@@ -88,7 +88,7 @@ pub(super) fn run_terminal_import(source: &str, runtime: &mut Runtime) -> (bool,
         .expect("terminal import module should be registered")
         .status;
     let execution_mode = if runtime.execution_options.is_strict() {
-        ExecutionMode::RequireVerification
+        TrustedOrRequireVerify::RequireVerification
     } else {
         let name = runtime
             .module_manager
@@ -96,7 +96,7 @@ pub(super) fn run_terminal_import(source: &str, runtime: &mut Runtime) -> (bool,
             .unwrap_or("terminal import")
             .to_string();
         runtime.record_unverified_import(command.diagnostic_kind(), name, command.line_file());
-        ExecutionMode::Trusted
+        TrustedOrRequireVerify::Trusted
     };
     let (_, runtime_error) = super::repository_execution::run_repository_module_target_with_mode(
         runtime,
@@ -143,8 +143,8 @@ pub(super) fn run_terminal_import(source: &str, runtime: &mut Runtime) -> (bool,
                 "execution_mode".to_string(),
                 JsonValue::JsonString(
                     match execution_mode {
-                        ExecutionMode::RequireVerification => "verified",
-                        ExecutionMode::Trusted => "trusted",
+                        TrustedOrRequireVerify::RequireVerification => "verified",
+                        TrustedOrRequireVerify::Trusted => "trusted",
                     }
                     .to_string(),
                 ),

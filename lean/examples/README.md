@@ -265,14 +265,6 @@ inside one inherited compiler environment. The emitted Lean value is the exact
 must supply the verifier-owned membership and domain proofs before `.down`
 exposes its real result.
 
-`32_MatrixCompilerEnvironment.lit` verifies that the same compiler-stack rule
-scales without introducing a matrix-specific scope model. Four outer bound
-checks surround one child environment containing two positive-natural
-parameters, two ordered domain premises, and one return check. The generated
-two-parameter `FnTelescope` consumes the two verifier-owned domain proofs as a
-conjunction, and the following application proves that both local index
-bindings disappeared while the persistent matrix contract remained callable.
-
 `33_NonemptySetWitnessCompilerEnvironment.lit` traces a missing statement and
 builtin family together. `WitnessNonemptySet` pushes one inherited compiler
 environment, consumes its ordered local proof-step Results, and then compiles

@@ -493,7 +493,7 @@ impl UnverifiedImportSummary {
 }
 
 impl EnvironmentSummary {
-    fn from_environment(environment: &Environment) -> Self {
+    fn from_environment(environment: &ExecEnv) -> Self {
         let mut summary = Self::default();
 
         summary.add_field_counts(
@@ -782,7 +782,7 @@ impl EnvironmentSummary {
         self.field_item_counts.insert(name.to_string(), item_count);
     }
 
-    fn add_category_counts(&mut self, environment: &Environment) {
+    fn add_category_counts(&mut self, environment: &ExecEnv) {
         self.category_counts.insert(
             "objects".to_string(),
             environment.definitions.object_symbol_count(),
@@ -839,7 +839,7 @@ impl EnvironmentSummary {
         );
     }
 
-    fn add_fact_index_counts(&mut self, environment: &Environment) {
+    fn add_fact_index_counts(&mut self, environment: &ExecEnv) {
         self.fact_index_counts.insert(
             "known_facts".to_string(),
             environment.facts.stored_facts.lookup_key_count(),
@@ -921,7 +921,7 @@ fn reason_rule_name(reason: &str, prefix: &str) -> Option<String> {
     Some(rule.to_string())
 }
 
-fn unique_known_equality_count(environment: &Environment) -> usize {
+fn unique_known_equality_count(environment: &ExecEnv) -> usize {
     let mut seen = HashSet::new();
     for (direct_proof_map, _) in environment.facts.known_equality.values() {
         for fact in direct_proof_map.values() {

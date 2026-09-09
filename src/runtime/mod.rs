@@ -8,7 +8,7 @@ pub mod output_detail;
 mod parse_context;
 mod runtime;
 
-pub use execution_mode::ExecutionMode;
+pub use execution_mode::TrustedOrRequireVerify;
 pub use execution_options::{
     LitexExecution, LitexExecutionOptions, SummaryOption, VerifyStrictnessPolicy,
 };

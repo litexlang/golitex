@@ -3,7 +3,7 @@
 use super::*;
 
 impl DefinitionGraphBuilder {
-    pub(super) fn add_identifiers(&mut self, environment: &Environment) {
+    pub(super) fn add_identifiers(&mut self, environment: &ExecEnv) {
         let mut identifiers = environment.definitions.object_symbols().collect::<Vec<_>>();
         identifiers.sort_by(|left, right| left.0.cmp(right.0));
         for (name, definition) in identifiers {
@@ -23,7 +23,7 @@ impl DefinitionGraphBuilder {
         }
     }
 
-    pub(super) fn add_props(&mut self, environment: &Environment) {
+    pub(super) fn add_props(&mut self, environment: &ExecEnv) {
         let mut abstract_props = environment
             .definitions
             .abstract_predicate_definitions
@@ -72,7 +72,7 @@ impl DefinitionGraphBuilder {
         }
     }
 
-    pub(super) fn add_functions(&mut self, environment: &Environment) {
+    pub(super) fn add_functions(&mut self, environment: &ExecEnv) {
         let mut functions = environment
             .objects
             .knowledge_by_object
@@ -129,7 +129,7 @@ impl DefinitionGraphBuilder {
         }
     }
 
-    pub(super) fn add_algorithms(&mut self, environment: &Environment) {
+    pub(super) fn add_algorithms(&mut self, environment: &ExecEnv) {
         let mut algorithms = environment
             .definitions
             .algorithm_definitions
@@ -162,7 +162,7 @@ impl DefinitionGraphBuilder {
         }
     }
 
-    pub(super) fn add_structs(&mut self, environment: &Environment) {
+    pub(super) fn add_structs(&mut self, environment: &ExecEnv) {
         let mut structs = environment
             .definitions
             .structure_definitions
@@ -207,7 +207,7 @@ impl DefinitionGraphBuilder {
         }
     }
 
-    pub(super) fn add_templates(&mut self, environment: &Environment) {
+    pub(super) fn add_templates(&mut self, environment: &ExecEnv) {
         let mut templates = environment
             .definitions
             .template_definitions
@@ -246,7 +246,7 @@ impl DefinitionGraphBuilder {
         }
     }
 
-    pub(super) fn add_theorems(&mut self, environment: &Environment) {
+    pub(super) fn add_theorems(&mut self, environment: &ExecEnv) {
         let mut theorems = environment
             .definitions
             .theorem_definitions
@@ -322,7 +322,7 @@ impl DefinitionGraphBuilder {
         }
     }
 
-    pub(super) fn add_strategies(&mut self, environment: &Environment) {
+    pub(super) fn add_strategies(&mut self, environment: &ExecEnv) {
         let mut strategies = environment
             .definitions
             .strategy_definitions

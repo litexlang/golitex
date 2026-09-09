@@ -2,7 +2,7 @@
 
 use crate::prelude::*;
 
-impl Environment {
+impl ExecEnv {
     pub fn store_transitive_prop_name(&mut self, prop_name: String) {
         self.predicate_algebraic_properties
             .properties_mut(prop_name)

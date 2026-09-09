@@ -4,7 +4,7 @@ use crate::prelude::*;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-impl Environment {
+impl ExecEnv {
     pub fn store_atomic_fact_by_ref(
         &mut self,
         atomic_fact: &AtomicFact,

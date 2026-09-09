@@ -12,8 +12,8 @@ impl Runtime {
             .create_virtual_root_module(VirtualSource::CodeExtraction);
         self.current_module_id = ModuleId::ROOT;
         self.current_source_id = source_id;
-        self.execution_mode = ExecutionMode::RequireVerification;
-        self.current_environment_stack.clear();
+        self.execution_options.trusted_or_require_verify = TrustedOrRequireVerify::RequireVerification;
+        self.execution_environments_stack.clear();
         self.bootstrap_source_pending = false;
         self.parse_context = ParseContext::new();
         self.set_current_user_lit_file_path(path.as_str());
