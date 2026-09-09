@@ -20,9 +20,33 @@ humans provide mathematical intent, AI proposes or repairs the next fact, and
 Litex checks it and returns either its supporting evidence or the point where
 verification stops. Through this cycle, checkable mathematical knowledge
 accumulates. In principle, any Litex code can be compiled to Lean and connected
-to the Lean/Mathlib ecosystem. 
+to the Lean/Mathlib ecosystem.
 
 > **Litex is an experimental hobby project in beta; expect rough edges.**
+
+Litex can be viewed as a scientific question in mathematics: can we design a
+formal language whose source stays close to natural mathematical expression,
+while its verification flow lets users understand what each line does and how
+it is proved? The value of such a language lies not only in its source code,
+but also in the plain, rigorous, structured verification flow and the
+mathematical dependencies it reveals. If readers can understand every step of a
+formal proof rather than only a few selected steps, the proof may even prompt
+the next important mathematical question.
+
+In a time when reasoning is becoming more abundant while understanding is
+becoming scarcer, Litex rethinks the first principles of formal-language design
+as a tool for helping more people become formalization experts. Litex is not
+only a tool for formalization experts; it aims to help more people become
+formalization experts and bring formal rigor into every industry.
+
+Lean is an elegant formal language, and without it AI for Math could not have
+developed so rapidly. Litex does not replace Lean: it keeps the goal of
+compiling source to Lean while exploring a different design philosophy based
+on facts and bottom-up construction. The Litex-to-Lean compiler is expected by
+the end of 2026. A future mathematician's workflow may have humans and AI
+produce a proof together, then generate Lean or Litex code to check its
+correctness; Litex aims to be a more readable front end to Lean for that
+workflow.
 
 This README is a five-minute introduction. For the complete design argument,
 detailed comparisons, examples, and trust boundaries, read the
@@ -30,15 +54,15 @@ detailed comparisons, examples, and trust boundaries, read the
 ([中文蓝图](docs/Litex中文蓝图.md)).
 </div>
 
-## Beyond the Search for One Best Language
+## Why another formal-language path?
 
 The question is not only which formal language is the most powerful, mature, or
 widely adopted. We should also ask what other forms of mathematical thought
 could become possible if the interface were different. As AI produces more
-mathematical reasoning, solving more problems, producing shorter proofs, and
-increasing benchmark scores are useful goals—but they are not the whole
-purpose of mathematics. Different formal paths can preserve the attention
-needed for deep understanding and discovery.
+mathematical reasoning, solving more problems and producing shorter proofs are
+useful goals—but they are not the whole purpose of mathematics. Different
+formal paths can preserve the attention needed for deep understanding and
+discovery.
 
 Litex begins from this possibility. It treats formalization as a way of
 shaping mathematical attention, not only as a way of satisfying a kernel. Its
@@ -56,7 +80,7 @@ core execution model remains easy to understand. It can make the dependencies
 readers silently track in mathematics visible and explorable, so users can
 inspect, repair, and participate in interactive textbooks.
 
-<!-- README spine: plural formalization paths → write one fact → accepted facts become context → build a mathematical language with Group → a readable execution process users can join → human–AI verification loop → formal language → AI for Math → toward safe and efficient reasoning → ToLean and Lean rechecking → ecosystem fit and boundaries → action -->
+<!-- README spine: scientific question → write one fact → accepted facts become context → build a mathematical language with Group → a readable execution process users can join → human–AI verification loop → formal language → AI for Math → toward safe and efficient reasoning → ToLean and Lean rechecking → ecosystem fit and boundaries → action -->
 
 <!--
 Litex positioning layers:

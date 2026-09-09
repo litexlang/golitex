@@ -45,17 +45,21 @@ Writing boundary: the first three layers are Litex's scientific core; the fourth
 
 ## 0. Litex Blueprint Overview
 
-AI is moving us from an age of scarce reasoning into an age of abundant reasoning: candidates can be generated at scale, while human attention and reliable verification cannot keep up. The bottleneck has shifted from “can we produce an answer” to “can we turn candidates into knowledge that is checkable, understandable, and reusable.” **Reasoning overflow and verification scarcity are a structural condition of knowledge production in the AI era.**
+AI is moving us from an age of scarce reasoning into an age of abundant reasoning. The challenge has shifted from “can we produce an answer” to “can we turn candidates into knowledge that is checkable, understandable, and reusable.”
 
-Correctness is only half of the crisis. Formal code can be correct and still hard to understand. The AI for Math community often talks about long proofs, heavy representations, steep tools, and results that are hard to digest, yet rarely asks where these understanding costs come from or how to lower them. This is **the complexity tax on understanding**.
+Correctness is only half of the crisis. Formal code can be correct and still hard to understand. The AI for Math community often talks about long proofs, heavy representations, steep tools, and results that are hard to digest, and treats them as native, unsolvable problems of AI. **Reasoning overflow, verification scarcity, and suppressed understanding are structural conditions of knowledge production in the AI era.**
 
 > In 2026, we already see AI generating proofs—and even formal code—for more and more important theorems; but correctness is not understandability—many results remain hard for humans to digest, explain, and absorb into shared knowledge. In his [2026 ICM public lecture](https://teorth.github.io/tao-web/slides/age-of-ai-icm-2026.pdf), Terence Tao urged mathematicians: in an age of proof abundance, reduce the chase after mere proof generation, and emphasize *proof digestion*—clear exposition, community acceptance, and absorption of results into the standard theory of a field.
 
-Litex is a small, readable, fact-oriented formal language that writes mathematical reasoning as checkable, traceable mathematical statements; at the same time, Litex keeps its handling of definition, verification, and repair readable, traceable, and repairable, so users can see what Litex is doing and join a shared loop among humans, AI, and Litex. In principle, any Litex code can compile to Lean and connect to the Lean/Mathlib ecosystem; the Litex-to-Lean compiler is expected by the end of 2026. **Litex is not only a tool created for formalization experts; its goal is also to help more people become formalization experts, so that every industry can inject the rigor of formalization.**
+Litex can be viewed as a scientific question in mathematics: can we design a formal language whose source is close enough to natural mathematical expression that users can understand the role of each line, while the language also returns a verification flow that shows how each line is proved? The value of such a language lies not only in its source code, but also in the plain, rigorous, structured verification flow and the mathematical dependencies it exposes. If people can understand every step of a formal proof rather than only a few selected steps, the proof may even prompt them to ask the next important mathematical question.
+
+In a time when reasoning is becoming more abundant while understanding is becoming scarcer, Litex rethinks the first principles of formal-language design as a tool for helping more people become formalization experts. Litex is a small, readable, fact-oriented formal language that writes mathematical reasoning as checkable, traceable mathematical statements; at the same time, it keeps its handling of definition, verification, and repair readable, traceable, and repairable, so users can see what Litex is doing and join a shared loop among humans, AI, and Litex. In principle, any Litex code can compile to Lean and connect to the Lean/Mathlib ecosystem; the Litex-to-Lean compiler is expected by the end of 2026. **Litex is not only a tool created for formalization experts; its goal is also to help more people become formalization experts, so that formal rigor can enter every industry.**
+
+Lean is an elegant formal language. Without it, AI for Math could not have developed so rapidly, and the “engineering of mathematics” could hardly have taken off. But even a beautiful answer need not be the only answer. No matter how AI develops, people who can master Lean and type theory will remain a minority. Litex keeps the goal of compiling source to Lean while proposing a different design philosophy for formal languages. Its fact-oriented and bottom-up design invites us to explore another relationship among human intuition, machine verification, and mathematical knowledge. Every technology's success goes through a stage of turning from an expert tool into a tool that more people can use. Litex hopes to help Lean and the wider formalization community move in that direction.
 
 > Starting from AI for Math, we can also see that as AI develops, demand for trustworthy reasoning keeps growing. From AI safety to AI-driven scientific discovery, wherever mathematics appears, formalization can in principle help. Letting practitioners without a mathematical background also use formalization technology would be ideal.
 
-Litex's core hypothesis is: can we keep the standard, yet make checkable mathematics easier for students, domain experts, and AI to write, read, and repair?
+Litex's core hypothesis is: can we keep the standard, yet make checkable mathematics easier for humans and AI to write, read, and repair?
 
 The document develops along four connected questions: what the user sees, what the source preserves, how reasoning continues, and how results are independently rechecked.
 
@@ -1157,7 +1161,7 @@ forall n Z:
 forall n Z:
     n^2 $in Z
 
-thm sum_first_odds: 
+thm sum_first_odds:
     ? forall n Z:
         n >= 1
         =>:
@@ -1342,6 +1346,8 @@ Taken together, the designs make Litex hope to become infrastructure on which hu
 
 **Litex faces humans and AI: it is both a readable reasoning front end and a trustworthy-reasoning data production layer, and it tries to connect to the existing ecosystem through Lean/Mathlib.** It also hopes to serve AI, engineers, and practitioners in other domains.
 
+The mathematicians' workflow of the future will involve AI and humans working together to produce a proof and then generating formal code so that its correctness can be checked. That formal code may be Lean or Litex. Litex hopes to become a more readable front end to Lean, lowering the barrier to reading and writing formal code.
+
 Earlier sections showed that this role is not a simple sum of several features. Set-theoretic objects, fact-oriented source, a bottom-up growing verified context, minimal syntax, expression close to natural mathematics, and structured verification results enter the same protocol together, so that both mathematics itself and the construction evidence of mathematics can be preserved.
 
 | Ecosystem role | Practical outcomes Litex hopes to produce |
@@ -1375,7 +1381,7 @@ Of course, Litex at this stage is more like a `proof of an idea`. Even though it
 
 In the starlit history of science, new perspectives and new answers to the same problem have often greatly driven the development of the original field, and even given birth to entirely new disciplines. In an AI era that prizes efficiency above all, even in a discipline as known for long-termism as mathematics, we can still easily get lost in local optima of racing to publish and climbing leaderboard publicity, and overlook rethinking first principles and original innovation.
 
-Lean is an elegant formal language. One can say that without it, AI for Math could not have developed so rapidly, and the “engineering of mathematics” could hardly have taken off. But even the most beautiful answer need not be the only answer. No matter how AI develops, people who can master Lean and type theory will remain a minority. Litex hopes, while keeping source compilable to Lean, to propose a new design philosophy for formal languages. Its fact-oriented and bottom-up design invites us to explore another relationship among human intuition, machine verification, and mathematical knowledge. Every technology's success goes through a stage of turning from an expert tool into a tool everyone can use. Litex is not only a tool for experts; it is also a tool that helps more people become formalization experts.
+This does not mean denying Lean's enormous success. With its elegant type theory, reliable kernel, and rich Mathlib ecosystem, Lean has shown that mathematics can be engineered with rigor. Litex wants to ask a different question: while preserving compilation to Lean and kernel rechecking, can a formal language adopt an interface closer to natural mathematics, so that people can more easily understand and write its source, follow its verification process, and participate in the mathematical development? This is not an attempt to find an answer that replaces Lean, but to add a direction worth testing to the design space of formal languages.
 
 Of course, Litex may not become the only path, and it need not become the only path. Litex hopes the world will be better because of mathematics, and that the mathematical world will be better because of formal languages. I believe that such “nonstandard solutions” as Litex have long-term value.
 

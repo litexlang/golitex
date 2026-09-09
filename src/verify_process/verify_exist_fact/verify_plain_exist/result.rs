@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 pub struct VerifyPlainExistFactResult {
     pub fact: PlainExistFact,
-    pub well_defined_proof: PlainExistFactWellDefinedProof,
+    pub well_defined_proof: ExistFactWellDefinedProof,
     pub searched_proof: PlainExistFactSearchedProof,
 }
 
