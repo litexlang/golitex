@@ -20,14 +20,13 @@ pub use crate::algebraic_normalization::{
     evaluate_obj_to_exact_rational_for_eval, evaluate_obj_to_exact_rational_obj_for_eval,
 };
 pub use crate::environment::{
-    forall_argument_shape, AtomicFactIndex, CachedKnownFact, Environment,
-    EnvironmentDefinitionRegistry, EnvironmentFactStore, EnvironmentInferenceCache,
-    EnvironmentObjectKnowledge, EnvironmentObjectKnowledgeStore,
-    EnvironmentPredicateAlgebraicPropertyStore, EnvironmentPredicateProperties,
-    EnvironmentStoredFactStore, EqualityClassId, EqualityHistoryEvent, ForallArgumentShape,
-    ForallConclusionIndex, KnownEquality, KnownEqualityProofStep, KnownFnInfo, KnownObjValue,
-    QuantifiedFactIndex, SetRelationIndex, StoredFactRecord, StoredForallConclusionReference,
-    WellDefinednessEnvironmentDelta,
+    forall_argument_shape, AtomicFactIndex, CachedKnownFact, EnvironmentDefinitionRegistry,
+    EnvironmentFactStore, EnvironmentInferenceCache, EnvironmentObjectKnowledge,
+    EnvironmentObjectKnowledgeStore, EnvironmentPredicateAlgebraicPropertyStore,
+    EnvironmentPredicateProperties, EnvironmentStoredFactStore, EqualityClassId,
+    EqualityHistoryEvent, ExecEnv, ForallArgumentShape, ForallConclusionIndex, KnownEquality,
+    KnownEqualityProofStep, KnownFnInfo, KnownObjValue, QuantifiedFactIndex, SetRelationIndex,
+    StoredFactRecord, StoredForallConclusionReference, WellDefinednessEnvironmentDelta,
 };
 pub use crate::error::exec_stmt_error_with_stmt_and_cause;
 pub use crate::error::short_exec_error;
@@ -478,11 +477,11 @@ pub use crate::result::{
     WellDefinedBinderPremiseRole, WellDefinedFunctionContract, WellDefinedObjChildRole,
 };
 pub use crate::runner::render_runner;
-pub use crate::runtime::ExecutionMode;
 pub use crate::runtime::FreeParamCollection;
 #[allow(deprecated)]
 pub use crate::runtime::OutputStyle;
 pub use crate::runtime::ParseContext;
+pub use crate::runtime::TrustedOrRequireVerify;
 pub use crate::runtime::ScopeFrame;
 pub use crate::runtime::{
     LitexExecution, LitexExecutionOptions, OutputDetail, Runtime, SourceActivation, SummaryOption,

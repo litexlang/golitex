@@ -102,7 +102,7 @@ impl Runtime {
 }
 
 fn collect_transparent_object_definitions(
-    environment: &Environment,
+    environment: &ExecEnv,
     definitions: &mut BTreeMap<SymbolId, TransparentObjectDefinitionUse>,
 ) -> Result<(), RuntimeError> {
     for (_, symbol_definition) in environment.definitions.symbols.iter() {

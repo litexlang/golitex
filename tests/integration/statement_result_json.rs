@@ -308,7 +308,7 @@ fn claim_statement_result_json_serializes_named_verification_fields_and_children
 fn trusted_claim_result_contains_only_environment_effects() {
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("trusted_claim_statement_result_json");
-    runtime.replace_current_execution_mode(ExecutionMode::Trusted);
+    runtime.replace_current_execution_mode(TrustedOrRequireVerify::Trusted);
     let tokenizer = Tokenizer::new();
     let mut blocks = tokenizer
         .parse_blocks(

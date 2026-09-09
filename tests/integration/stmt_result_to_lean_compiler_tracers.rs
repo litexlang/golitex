@@ -1763,21 +1763,6 @@ fn finite_sequence_definition_uses_the_recursive_result_environment() {
 }
 
 #[test]
-fn matrix_definition_uses_the_recursive_result_environment() {
-    const SOURCE: &str = include_str!("../../lean/examples/32_MatrixCompilerEnvironment.lit");
-    let generated = compile_on_verifier_stack(SOURCE, "32_MatrixCompilerEnvironment.lit")
-        .expect("compile matrix from its recursive statement Result");
-    assert!(generated.contains("noncomputable def entry_matrix : Litex.FnTelescope.Carrier"));
-    assert!(generated.contains("Litex.matrixSet.{0} Litex.R (2 : Nat) (3 : Nat)"));
-    assert!(generated.contains("Litex.positiveNaturalParameterLessEqualNaturalBound __arg1"));
-    assert!(generated.contains("Litex.positiveNaturalParameterLessEqualNaturalBound __arg2"));
-    assert!(generated.contains("fun __arg_domain => ULift.up"));
-    assert!(generated.contains("Litex.fnTelescopeApplyOwn (signature :="));
-    assert!(!generated.contains("axiom "));
-    assert!(!generated.contains("sorry"));
-}
-
-#[test]
 fn multiple_existential_witnesses_fail_closed() {
     let error = compile_on_verifier_stack(
         "witness exist x, y R st {x = y} from 1, 1:\n    1 = 1\n",

@@ -1,10 +1,10 @@
 use super::*;
 
-fn insert_object(environment: &mut Environment, name: &str, symbol_id: u64) {
+fn insert_object(environment: &mut ExecEnv, name: &str, symbol_id: u64) {
     insert_symbol(environment, name, symbol_id, SymbolRole::Object);
 }
 
-fn insert_symbol(environment: &mut Environment, name: &str, symbol_id: u64, role: SymbolRole) {
+fn insert_symbol(environment: &mut ExecEnv, name: &str, symbol_id: u64, role: SymbolRole) {
     let binding = SymbolBinding::new(SymbolId::new(symbol_id), name.to_string(), name.to_string());
     environment
         .definitions
@@ -14,7 +14,7 @@ fn insert_symbol(environment: &mut Environment, name: &str, symbol_id: u64, role
 }
 
 fn remember_transparent_object_definition(
-    environment: &mut Environment,
+    environment: &mut ExecEnv,
     name: &str,
     value: Obj,
     fact_id: u64,
@@ -46,8 +46,8 @@ fn remember_transparent_object_definition(
 
 #[test]
 fn committed_child_reuses_exact_symbol_identity_idempotently() {
-    let mut parent = Environment::new_empty_env();
-    let mut child = Environment::new_empty_env();
+    let mut parent = ExecEnv::new_empty_env();
+    let mut child = ExecEnv::new_empty_env();
     insert_object(&mut parent, "\\template_instance<X>", 17);
     insert_object(&mut child, "\\template_instance<X>", 17);
 
@@ -76,8 +76,8 @@ fn committed_child_reuses_exact_symbol_identity_idempotently() {
 
 #[test]
 fn committed_child_preserves_missing_direct_struct_carrier_for_the_same_symbol() {
-    let mut parent = Environment::new_empty_env();
-    let mut child = Environment::new_empty_env();
+    let mut parent = ExecEnv::new_empty_env();
+    let mut child = ExecEnv::new_empty_env();
     insert_object(&mut parent, "shared", 17);
     insert_object(&mut child, "shared", 17);
     child
@@ -108,8 +108,8 @@ fn committed_child_preserves_missing_direct_struct_carrier_for_the_same_symbol()
 
 #[test]
 fn committed_child_preserves_missing_transparent_definition_for_the_same_symbol() {
-    let mut parent = Environment::new_empty_env();
-    let mut child = Environment::new_empty_env();
+    let mut parent = ExecEnv::new_empty_env();
+    let mut child = ExecEnv::new_empty_env();
     insert_object(&mut parent, "shared", 17);
     insert_object(&mut child, "shared", 17);
     remember_transparent_object_definition(&mut child, "shared", StandardSet::R.into(), 23);
@@ -130,8 +130,8 @@ fn committed_child_preserves_missing_transparent_definition_for_the_same_symbol(
 
 #[test]
 fn committed_child_rejects_conflicting_transparent_definition_for_the_same_symbol() {
-    let mut parent = Environment::new_empty_env();
-    let mut child = Environment::new_empty_env();
+    let mut parent = ExecEnv::new_empty_env();
+    let mut child = ExecEnv::new_empty_env();
     insert_object(&mut parent, "shared", 17);
     insert_object(&mut child, "shared", 17);
     remember_transparent_object_definition(&mut parent, "shared", StandardSet::R.into(), 23);
@@ -146,8 +146,8 @@ fn committed_child_rejects_conflicting_transparent_definition_for_the_same_symbo
 
 #[test]
 fn committed_child_still_rejects_same_name_with_distinct_symbol_identity() {
-    let mut parent = Environment::new_empty_env();
-    let mut child = Environment::new_empty_env();
+    let mut parent = ExecEnv::new_empty_env();
+    let mut child = ExecEnv::new_empty_env();
     insert_object(&mut parent, "\\template_instance<X>", 17);
     insert_object(&mut child, "\\template_instance<X>", 18);
 
@@ -160,8 +160,8 @@ fn committed_child_still_rejects_same_name_with_distinct_symbol_identity() {
 
 #[test]
 fn committed_child_still_rejects_same_symbol_identity_with_distinct_role() {
-    let mut parent = Environment::new_empty_env();
-    let mut child = Environment::new_empty_env();
+    let mut parent = ExecEnv::new_empty_env();
+    let mut child = ExecEnv::new_empty_env();
     insert_symbol(&mut parent, "shared", 17, SymbolRole::Object);
     insert_symbol(&mut child, "shared", 17, SymbolRole::Predicate);
 
@@ -174,8 +174,8 @@ fn committed_child_still_rejects_same_symbol_identity_with_distinct_role() {
 
 #[test]
 fn committed_child_still_rejects_same_symbol_identity_with_object_and_binder_roles() {
-    let mut parent = Environment::new_empty_env();
-    let mut child = Environment::new_empty_env();
+    let mut parent = ExecEnv::new_empty_env();
+    let mut child = ExecEnv::new_empty_env();
     insert_symbol(&mut parent, "shared", 17, SymbolRole::Object);
     insert_symbol(&mut child, "shared", 17, SymbolRole::Binder);
 
@@ -188,8 +188,8 @@ fn committed_child_still_rejects_same_symbol_identity_with_object_and_binder_rol
 
 #[test]
 fn committed_child_keeps_a_function_definition_signature_paired_with_its_rhs() {
-    let mut parent = Environment::new_empty_env();
-    let mut child = Environment::new_empty_env();
+    let mut parent = ExecEnv::new_empty_env();
+    let mut child = ExecEnv::new_empty_env();
     let parent_binding = SymbolBinding::new(SymbolId::new(17), "x".to_string(), "x".to_string());
     let child_binding = SymbolBinding::new(SymbolId::new(18), "x".to_string(), "x".to_string());
     let body = |binding: &SymbolBinding| {

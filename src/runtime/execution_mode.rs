@@ -1,5 +1,5 @@
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ExecutionMode {
+pub enum TrustedOrRequireVerify {
     RequireVerification,
     Trusted,
 }

@@ -5,7 +5,7 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 impl Runtime {
-    pub fn iter_environments_from_top(&self) -> impl Iterator<Item = &Environment> {
+    pub fn iter_environments_from_top(&self) -> impl Iterator<Item = &ExecEnv> {
         (0..self.environment_count()).map(|index| {
             self.environment_by_top_index(index)
                 .expect("environment index should be valid")
@@ -13,15 +13,15 @@ impl Runtime {
     }
 
     pub fn environment_count(&self) -> usize {
-        let local_count = self.current_environment_stack.len();
+        let local_count = self.execution_environments_stack.len();
         local_count + 2
     }
 
-    pub fn environment_by_top_index(&self, index: usize) -> Option<&Environment> {
-        let local_count = self.current_environment_stack.len();
+    pub fn environment_by_top_index(&self, index: usize) -> Option<&ExecEnv> {
+        let local_count = self.execution_environments_stack.len();
         if index < local_count {
             return self
-                .current_environment_stack
+                .execution_environments_stack
                 .get(local_count - 1 - index)
                 .map(|environment| environment.as_ref());
         }
@@ -1025,7 +1025,7 @@ impl Runtime {
 
     fn extend_obj_representatives_equal_to_given_in_environments(
         result: &mut Vec<Obj>,
-        environments: &[&Environment],
+        environments: &[&ExecEnv],
         initial_keys: &[String],
     ) {
         let mut keys = initial_keys.to_vec();
@@ -1059,14 +1059,14 @@ impl Runtime {
     }
 
     pub fn get_all_objs_equal_to_given_in_environment(
-        environment: &Environment,
+        environment: &ExecEnv,
         given: &str,
     ) -> Vec<String> {
         Self::get_all_objs_equal_to_given_in_environments(&[environment], given)
     }
 
     pub fn get_all_objs_equal_to_given_in_environments(
-        environments: &[&Environment],
+        environments: &[&ExecEnv],
         given: &str,
     ) -> Vec<String> {
         let mut result = vec![given.to_string()];
@@ -1105,7 +1105,7 @@ impl Runtime {
         }
     }
 
-    fn object_lookup_environments(&self, obj: &Obj) -> Vec<&Environment> {
+    fn object_lookup_environments(&self, obj: &Obj) -> Vec<&ExecEnv> {
         let mut environments = self.iter_environments_from_top().collect::<Vec<_>>();
         for module_name in self.obj_referenced_module_names(obj) {
             environments.extend(self.imported_module_environments(&module_name));
@@ -1180,7 +1180,7 @@ impl Runtime {
         aliases
     }
 
-    pub fn imported_module_environments(&self, module_name: &str) -> Vec<&Environment> {
+    pub fn imported_module_environments(&self, module_name: &str) -> Vec<&ExecEnv> {
         if self.is_current_parse_module(module_name) {
             return vec![];
         }

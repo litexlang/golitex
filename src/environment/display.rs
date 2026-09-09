@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use std::fmt;
 
-impl fmt::Display for Environment {
+impl fmt::Display for ExecEnv {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "Environment {{\n")?;
         write!(

@@ -7,7 +7,7 @@ use crate::result::{
     SuccessSketchStmtResult, SuccessStmtCommonResult, SuccessStmtResult, SuccessTryStmtResult,
     TryStmtExecutionResult,
 };
-use crate::runtime::{ExecutionMode, Runtime};
+use crate::runtime::{Runtime, TrustedOrRequireVerify};
 use crate::statement::{
     ByStmt, CommandStmt, DefinitionStmt, ProofBlockStmt, Stmt, UnsafeStmt, WitnessStmt,
 };
@@ -36,7 +36,7 @@ impl Runtime {
         }
         // Reuse the no-verification environment path for a statement whose
         // generic form was already checked before capture-avoiding substitution.
-        let previous_execution_mode = self.replace_current_execution_mode(ExecutionMode::Trusted);
+        let previous_execution_mode = self.replace_current_execution_mode(TrustedOrRequireVerify::Trusted);
         let result = self.execute_statement_with_trust_body(stmt);
         self.replace_current_execution_mode(previous_execution_mode);
         result
@@ -118,7 +118,7 @@ impl Runtime {
             // contract incomplete.
             Stmt::Definition(DefinitionStmt::DefTemplateStmt(s)) => {
                 let previous_execution_mode =
-                    self.replace_current_execution_mode(ExecutionMode::RequireVerification);
+                    self.replace_current_execution_mode(TrustedOrRequireVerify::RequireVerification);
                 let result = self.exec_def_template_stmt(s);
                 self.replace_current_execution_mode(previous_execution_mode);
                 result

@@ -1150,7 +1150,7 @@ impl Runtime {
     }
 
     pub(super) fn extend_known_preimages_for_replacement_target_from_environment(
-        environment: &Environment,
+        environment: &ExecEnv,
         lookup_key: &(String, bool),
         target_keys: &[String],
         candidates: &mut Vec<Obj>,
@@ -1212,7 +1212,7 @@ impl Runtime {
     }
 
     pub(super) fn extend_known_member_sets_for_big_union_family_from_environment(
-        environment: &Environment,
+        environment: &ExecEnv,
         family_keys: &[String],
         candidates: &mut Vec<Obj>,
     ) {
@@ -1946,7 +1946,7 @@ impl Runtime {
     }
 
     fn collect_owner_memberships_from_environment(
-        environment: &Environment,
+        environment: &ExecEnv,
         element_keys: &[ObjString],
         owner_memberships: &mut Vec<InFact>,
     ) {
@@ -1967,7 +1967,7 @@ impl Runtime {
     }
 
     fn collect_direct_superset_evidence_from_environment(
-        environment: &Environment,
+        environment: &ExecEnv,
         owner_set_keys: &[ObjString],
         target_set_keys: &[ObjString],
         evidence: &mut Vec<AtomicFact>,

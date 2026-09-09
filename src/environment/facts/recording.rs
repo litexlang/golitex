@@ -2,7 +2,7 @@
 
 use crate::prelude::*;
 
-impl Environment {
+impl ExecEnv {
     pub fn store_fact_to_cache_known_fact(
         &mut self,
         fact_key: FactString,

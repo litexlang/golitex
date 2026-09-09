@@ -82,7 +82,7 @@ fn run_repository_prefix(
 pub fn run_repository_module_target_with_mode(
     runtime: &mut Runtime,
     module_id: ModuleId,
-    execution_mode: ExecutionMode,
+    execution_mode: TrustedOrRequireVerify,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     run_repository_module_with_mode(
         runtime,
@@ -95,7 +95,7 @@ pub fn run_repository_module_target_with_mode(
 fn run_repository_module_with_mode(
     runtime: &mut Runtime,
     module_id: ModuleId,
-    execution_mode: ExecutionMode,
+    execution_mode: TrustedOrRequireVerify,
     module_run: RepositoryModuleRun,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let Some(module) = runtime.module_manager.module(module_id) else {
@@ -111,8 +111,8 @@ fn run_repository_module_with_mode(
     }
     if module.status == ModuleStatus::Loaded {
         if matches!(module_run, RepositoryModuleRun::Complete)
-            && execution_mode == ExecutionMode::RequireVerification
-            && module.load_mode == ExecutionMode::Trusted
+            && execution_mode == TrustedOrRequireVerify::RequireVerification
+            && module.load_mode == TrustedOrRequireVerify::Trusted
         {
             return (
                 vec![],
@@ -156,7 +156,7 @@ fn run_repository_module_with_mode(
 fn run_repository_module_plan(
     runtime: &mut Runtime,
     module_id: ModuleId,
-    execution_mode: ExecutionMode,
+    execution_mode: TrustedOrRequireVerify,
     module_run: RepositoryModuleRun,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let (mut results, import_error) = run_config_imports(runtime, module_id);
@@ -258,7 +258,7 @@ fn run_repository_module_plan(
 fn run_repository_import_target(
     runtime: &mut Runtime,
     target: ImportTarget,
-    execution_mode: ExecutionMode,
+    execution_mode: TrustedOrRequireVerify,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     match target {
         ImportTarget::File {
@@ -347,9 +347,9 @@ fn run_config_imports(
 fn config_import_execution_mode(
     runtime: &mut Runtime,
     config_import: &ConfigImport,
-) -> ExecutionMode {
+) -> TrustedOrRequireVerify {
     if runtime.execution_options.is_strict() {
-        return ExecutionMode::RequireVerification;
+        return TrustedOrRequireVerify::RequireVerification;
     }
     let import_target = ImportTarget::Module(config_import.module_id);
     let name = runtime
@@ -362,16 +362,16 @@ fn config_import_execution_mode(
         name,
         config_import.line_file.clone(),
     );
-    ExecutionMode::Trusted
+    TrustedOrRequireVerify::Trusted
 }
 
 fn project_target_execution_mode(
     runtime: &mut Runtime,
     module_id: ModuleId,
     target: ImportTarget,
-) -> ExecutionMode {
+) -> TrustedOrRequireVerify {
     if runtime.execution_options.is_strict() {
-        return ExecutionMode::RequireVerification;
+        return TrustedOrRequireVerify::RequireVerification;
     }
     let line_file = runtime
         .module_manager
@@ -385,14 +385,14 @@ fn project_target_execution_mode(
         .unwrap_or("project export")
         .to_string();
     runtime.record_unverified_import(UnverifiedImportKind::ProjectExport, name, line_file);
-    ExecutionMode::Trusted
+    TrustedOrRequireVerify::Trusted
 }
 
 fn run_repository_exported_file_target_with_mode(
     runtime: &mut Runtime,
     module_id: ModuleId,
     source_id: SourceId,
-    execution_mode: ExecutionMode,
+    execution_mode: TrustedOrRequireVerify,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let Some(file) = runtime
         .module_manager

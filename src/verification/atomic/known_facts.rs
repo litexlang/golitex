@@ -358,7 +358,7 @@ impl Runtime {
         result.unwrap_or(false)
     }
 
-    fn extend_equality_proof_graph(equalities: &mut KnownEquality, environment: &Environment) {
+    fn extend_equality_proof_graph(equalities: &mut KnownEquality, environment: &ExecEnv) {
         for equality in environment.facts.known_equality.direct_equalities().iter() {
             equalities.store(equality);
         }
@@ -384,7 +384,7 @@ impl Runtime {
     ) -> Option<FactId> {
         let display_key = fact.to_string();
         let normalized_key = nested_obj_binder_normalized_fact_key(fact);
-        let find_in_environment = |environment: &Environment| {
+        let find_in_environment = |environment: &ExecEnv| {
             environment
                 .facts
                 .stored_facts
@@ -808,7 +808,7 @@ impl Runtime {
 
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param_with_facts_in_environment(
         &self,
-        environment: &Environment,
+        environment: &ExecEnv,
         atomic_fact: &AtomicFact,
         all_objs_equal_to_arg: &Vec<String>,
         module_names: &[String],
@@ -841,7 +841,7 @@ impl Runtime {
 
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(
         &self,
-        environment: &Environment,
+        environment: &ExecEnv,
         atomic_fact: &AtomicFact,
         all_objs_equal_to_arg0: &Vec<String>,
         all_objs_equal_to_arg1: &Vec<String>,
@@ -978,7 +978,7 @@ impl Runtime {
 
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params_with_facts_in_environment(
         &self,
-        environment: &Environment,
+        environment: &ExecEnv,
         atomic_fact: &AtomicFact,
         all_objs_equal_to_each_arg: &Vec<Vec<String>>,
         module_names: &[String],
@@ -1083,7 +1083,7 @@ impl Runtime {
 
     fn verify_atomic_fact_with_alpha_equivalent_anonymous_fn_known_facts_in_environment(
         &self,
-        environment: &Environment,
+        environment: &ExecEnv,
         atomic_fact: &AtomicFact,
         module_names: &[String],
     ) -> Result<Option<ProveFactResult>, RuntimeError> {

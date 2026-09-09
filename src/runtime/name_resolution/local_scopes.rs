@@ -7,10 +7,10 @@ impl Runtime {
         (self.current_module_id, self.current_source_id)
     }
 
-    pub fn top_level_env(&mut self) -> &mut Environment {
-        if !self.current_environment_stack.is_empty() {
+    pub fn top_level_env(&mut self) -> &mut ExecEnv {
+        if !self.execution_environments_stack.is_empty() {
             return self
-                .current_environment_stack
+                .execution_environments_stack
                 .last_mut()
                 .map(|environment| environment.as_mut())
                 .expect("local environment should exist");
@@ -27,8 +27,8 @@ impl Runtime {
 
 impl Runtime {
     fn push_env(&mut self) {
-        self.current_environment_stack
-            .push(Box::new(Environment::new_empty_env()));
+        self.execution_environments_stack
+            .push(Box::new(ExecEnv::new_empty_env()));
     }
 
     /// Runs a closure in a temporary child environment and pops it on normal return.
@@ -40,7 +40,7 @@ impl Runtime {
         self.push_env();
         let result = f(self);
         let _child = self
-            .current_environment_stack
+            .execution_environments_stack
             .pop()
             .expect("local environment should exist after push_env");
         result
@@ -48,14 +48,14 @@ impl Runtime {
 
     /// Runs a closure in an isolated child environment and returns that child
     /// on success instead of committing or discarding it.
-    pub fn run_in_local_env_and_take<T, E, F>(&mut self, f: F) -> Result<(T, Environment), E>
+    pub fn run_in_local_env_and_take<T, E, F>(&mut self, f: F) -> Result<(T, ExecEnv), E>
     where
         F: FnOnce(&mut Self) -> Result<T, E>,
     {
         self.push_env();
         let result = f(self);
         let child = self
-            .current_environment_stack
+            .execution_environments_stack
             .pop()
             .expect("local environment should exist after push_env");
         result.map(|value| (value, *child))
@@ -71,7 +71,7 @@ impl Runtime {
         self.push_env();
         let result = f(self);
         let child = self
-            .current_environment_stack
+            .execution_environments_stack
             .pop()
             .expect("local environment should exist after push_env");
 

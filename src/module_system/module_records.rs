@@ -214,12 +214,12 @@ pub struct Source {
     /// Namespace name used by imports/exports; virtual sources do not need one.
     pub canonical_name: Option<String>,
     /// Persistent checked environment owned by this source.
-    pub environment: Box<Environment>,
+    pub environment: Box<ExecEnv>,
     /// Lifecycle state for repository loading; virtual sources are ready when created.
     pub load_status: SourceLoadStatus,
     /// Verification policy used when this source was loaded.  This is source
     /// provenance for graph/output projection, not the runtime's active mode.
-    pub load_mode: ExecutionMode,
+    pub load_mode: TrustedOrRequireVerify,
 }
 
 impl Source {
@@ -228,9 +228,9 @@ impl Source {
             id,
             origin,
             canonical_name,
-            environment: Box::new(Environment::new_empty_env()),
+            environment: Box::new(ExecEnv::new_empty_env()),
             load_status: SourceLoadStatus::Unloaded,
-            load_mode: ExecutionMode::RequireVerification,
+            load_mode: TrustedOrRequireVerify::RequireVerification,
         }
     }
 
@@ -255,7 +255,7 @@ pub struct ModuleRunner {
     pub parent_module_id: Option<ModuleId>,
     pub is_standard_library: bool,
     /// Module-level state for repository configuration; source environments live in `sources`.
-    pub main_environment: Box<Environment>,
+    pub main_environment: Box<ExecEnv>,
     pub sources: Vec<Source>,
     /// The source owned directly by a module, whether physical or virtual.
     pub module_source_id: Option<SourceId>,
@@ -267,7 +267,7 @@ pub struct ModuleRunner {
     pub config_imports: Vec<ConfigImport>,
     pub status: ModuleStatus,
     /// Verification policy used while loading the module-owned environment.
-    pub load_mode: ExecutionMode,
+    pub load_mode: TrustedOrRequireVerify,
 }
 
 impl ModuleRunner {
@@ -286,7 +286,7 @@ impl ModuleRunner {
             hierarchy,
             parent_module_id,
             is_standard_library: false,
-            main_environment: Box::new(Environment::new_empty_env()),
+            main_environment: Box::new(ExecEnv::new_empty_env()),
             sources: vec![],
             module_source_id: None,
             flattened_export_source: None,
@@ -295,7 +295,7 @@ impl ModuleRunner {
             run_target_lines: HashMap::new(),
             config_imports: vec![],
             status,
-            load_mode: ExecutionMode::RequireVerification,
+            load_mode: TrustedOrRequireVerify::RequireVerification,
         }
     }
 

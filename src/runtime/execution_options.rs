@@ -54,6 +54,12 @@ pub enum SummaryOption {
 /// summary settings, so conversion commands do not need to carry strictness.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct LitexExecutionOptions {
+    /// Verification mode for the current operation.
+    ///
+    /// This transient mode travels with the execution-wide settings so the
+    /// runtime does not keep a second owner for verification state.
+    pub trusted_or_require_verify: TrustedOrRequireVerify,
+
     /// Policy controlling whether configured dependencies must be verified.
     verify_strictness: VerifyStrictnessPolicy,
 
@@ -76,6 +82,7 @@ impl LitexExecutionOptions {
         summary: SummaryOption,
     ) -> Self {
         Self {
+            trusted_or_require_verify: TrustedOrRequireVerify::RequireVerification,
             verify_strictness,
             output_detail,
             output_language,

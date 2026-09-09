@@ -24,13 +24,8 @@ pub struct Runtime {
     /// Source currently being parsed or executed.
     pub(crate) current_source_id: SourceId,
 
-    /// Verification mode for the current operation.
-    ///
-    /// This is transient runtime state, not source metadata.
-    pub execution_mode: ExecutionMode,
-
     /// Temporary environments nested inside the current source.
-    pub current_environment_stack: Vec<Box<Environment>>,
+    pub execution_environments_stack: Vec<Box<ExecEnv>>,
 
     /// Transient binder and scope state shared by one nested parser traversal.
     ///
@@ -78,7 +73,7 @@ pub struct SourceActivation {
     pub source_id: SourceId,
 
     /// Active verification mode restored with the source.
-    pub mode: ExecutionMode,
+    pub mode: TrustedOrRequireVerify,
 }
 
 impl Runtime {
@@ -89,8 +84,7 @@ impl Runtime {
             module_manager: Box::new(module_manager),
             current_module_id: ModuleId::ROOT,
             current_source_id: source_id,
-            execution_mode: ExecutionMode::RequireVerification,
-            current_environment_stack: vec![],
+            execution_environments_stack: vec![],
             parse_context: ParseContext::new(),
             parsing_definition_depth: 0,
             next_fact_id: 1,
@@ -713,9 +707,14 @@ impl Runtime {
             .expect("current source should be registered")
     }
 
-    fn activate_source(&mut self, module_id: ModuleId, source_id: SourceId, mode: ExecutionMode) {
+    fn activate_source(
+        &mut self,
+        module_id: ModuleId,
+        source_id: SourceId,
+        mode: TrustedOrRequireVerify,
+    ) {
         assert!(
-            self.current_environment_stack.is_empty(),
+            self.execution_environments_stack.is_empty(),
             "a source cannot be selected with an active local environment"
         );
         assert!(
@@ -727,7 +726,7 @@ impl Runtime {
         );
         self.current_module_id = module_id;
         self.current_source_id = source_id;
-        self.execution_mode = mode;
+        self.execution_options.trusted_or_require_verify = mode;
         self.bootstrap_source_pending = false;
     }
 
@@ -735,7 +734,7 @@ impl Runtime {
         SourceActivation {
             module_id: self.current_module_id,
             source_id: self.current_source_id,
-            mode: self.execution_mode,
+            mode: self.execution_options.trusted_or_require_verify,
         }
     }
 
@@ -773,14 +772,18 @@ impl Runtime {
     }
 
     pub fn activate_source_for_execution(&mut self, module_id: ModuleId, source_id: SourceId) {
-        self.activate_source_with_mode(module_id, source_id, ExecutionMode::RequireVerification);
+        self.activate_source_with_mode(
+            module_id,
+            source_id,
+            TrustedOrRequireVerify::RequireVerification,
+        );
     }
 
     pub fn activate_source_with_mode(
         &mut self,
         module_id: ModuleId,
         source_id: SourceId,
-        execution_mode: ExecutionMode,
+        execution_mode: TrustedOrRequireVerify,
     ) {
         debug_assert!(
             self.parse_context.is_at_root_scope(),
@@ -805,12 +808,12 @@ impl Runtime {
             .is_some_and(|module| module.is_standard_library)
     }
 
-    pub fn current_execution_mode(&self) -> ExecutionMode {
-        self.execution_mode
+    pub fn current_execution_mode(&self) -> TrustedOrRequireVerify {
+        self.execution_options.trusted_or_require_verify
     }
 
     pub fn current_execution_is_trusted_source(&self) -> bool {
-        self.current_execution_mode() == ExecutionMode::Trusted
+        self.current_execution_mode() == TrustedOrRequireVerify::Trusted
     }
 
     pub(crate) fn mark_source_execution_started(&mut self) {
@@ -846,10 +849,10 @@ impl Runtime {
 
     pub fn replace_current_execution_mode(
         &mut self,
-        execution_mode: ExecutionMode,
-    ) -> ExecutionMode {
-        let previous = self.execution_mode;
-        self.execution_mode = execution_mode;
+        execution_mode: TrustedOrRequireVerify,
+    ) -> TrustedOrRequireVerify {
+        let previous = self.execution_options.trusted_or_require_verify;
+        self.execution_options.trusted_or_require_verify = execution_mode;
         previous
     }
 }
@@ -920,7 +923,7 @@ impl Runtime {
         self.activate_source(
             ModuleId::ROOT,
             source_id,
-            ExecutionMode::RequireVerification,
+            TrustedOrRequireVerify::RequireVerification,
         );
     }
 
@@ -934,7 +937,7 @@ impl Runtime {
         self.activate_source(
             ModuleId::ROOT,
             source_id,
-            ExecutionMode::RequireVerification,
+            TrustedOrRequireVerify::RequireVerification,
         );
     }
 
@@ -1044,7 +1047,7 @@ impl Runtime {
         self.activate_source(
             ModuleId::ROOT,
             source_id,
-            ExecutionMode::RequireVerification,
+            TrustedOrRequireVerify::RequireVerification,
         );
         Ok(())
     }
@@ -1070,7 +1073,7 @@ impl Runtime {
             source.origin = origin;
             source.canonical_name = None;
             source.load_status = SourceLoadStatus::Loaded;
-            source.load_mode = ExecutionMode::RequireVerification;
+            source.load_mode = TrustedOrRequireVerify::RequireVerification;
         }
         module.module_source_id = Some(source_id);
         module.location = location;

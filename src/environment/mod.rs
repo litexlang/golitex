@@ -10,7 +10,7 @@ mod well_definedness_environment_delta;
 
 pub use caches::EnvironmentInferenceCache;
 pub use definitions::EnvironmentDefinitionRegistry;
-pub use environment::Environment;
+pub use environment::ExecEnv;
 pub use facts::equality_linear_derive;
 pub use facts::{
     forall_argument_shape, AtomicFactIndex, CachedKnownFact, EnvironmentFactStore,

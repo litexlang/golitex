@@ -72,12 +72,12 @@ impl DefinitionGraphBuilder {
     pub(super) fn add_execution_source_for_nodes(
         &mut self,
         runtime: &Runtime,
-        execution_mode: ExecutionMode,
+        execution_mode: TrustedOrRequireVerify,
         canonical_name: &str,
         source_path: &str,
         node_ids: &[String],
     ) {
-        if execution_mode == ExecutionMode::RequireVerification || node_ids.is_empty() {
+        if execution_mode == TrustedOrRequireVerify::RequireVerification || node_ids.is_empty() {
             return;
         }
         let unverified = runtime
