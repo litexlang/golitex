@@ -52,6 +52,8 @@ impl Runtime {
         fact: &ExistentialSpec,
         verify_state: VerifyState,
     ) -> Result<Option<CacheSearchProof>, RuntimeError> {
+        let _ = (fact, verify_state);
+        todo!("search not exist by cache")
     }
 
     pub fn search_not_exist_fact_proof_by_demorgan_forall(
@@ -59,5 +61,7 @@ impl Runtime {
         fact: &ExistentialSpec,
         verify_state: VerifyState,
     ) -> Result<Option<VerifyForallFactResult>, RuntimeError> {
+        let _ = (fact, verify_state);
+        todo!("search not exist by demorgan forall")
     }
 }

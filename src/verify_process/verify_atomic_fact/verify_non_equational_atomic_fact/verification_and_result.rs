@@ -119,6 +119,8 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: VerifyState,
     ) -> Result<Option<CacheSearchProof>, RuntimeError> {
+        let _ = (fact, verify_state);
+        todo!("search non-equational atomic by cache")
     }
 
     pub fn search_non_equational_atomic_proof_by_builtin_rule(
@@ -126,6 +128,8 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: VerifyState,
     ) -> Result<Option<NonEquationalAtomicFactSearchProofByBuiltinRule>, RuntimeError> {
+        let _ = (fact, verify_state);
+        todo!("search non-equational atomic by builtin rule")
     }
 
     pub fn search_non_equational_atomic_proof_by_known_atomic_fact(
@@ -133,6 +137,8 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: VerifyState,
     ) -> Result<Option<NonEquationalAtomicFactSearchedProofByKnownAtomicFact>, RuntimeError> {
+        let _ = (fact, verify_state);
+        todo!("search non-equational atomic by known atomic fact")
     }
 
     pub fn search_non_equational_atomic_proof_by_definition(
@@ -140,6 +146,8 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: VerifyState,
     ) -> Result<Option<NonEquationalAtomicFactSearchedProofByDefinition>, RuntimeError> {
+        let _ = (fact, verify_state);
+        todo!("search non-equational atomic by definition")
     }
 
     pub fn search_non_equational_atomic_proof_by_builtin_strategy(
@@ -147,6 +155,8 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: VerifyState,
     ) -> Result<Option<NonEquationalAtomicFactSearchProofByBuiltinStrategy>, RuntimeError> {
+        let _ = (fact, verify_state);
+        todo!("search non-equational atomic by builtin strategy")
     }
 
     pub fn search_non_equational_atomic_proof_by_known_forall_fact(
@@ -154,6 +164,8 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: VerifyState,
     ) -> Result<Option<NonEquationalAtomicFactSearchedProofByKnownForallFact>, RuntimeError> {
+        let _ = (fact, verify_state);
+        todo!("search non-equational atomic by known forall fact")
     }
 
     pub fn search_non_equational_atomic_proof_by_builtin_algebraic_rewrite(
@@ -178,6 +190,8 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: VerifyState,
     ) -> Result<Option<NonEquationalAtomicFactSearchProofByBuiltinOrderDual>, RuntimeError> {
+        let _ = (fact, verify_state);
+        todo!("search non-equational atomic by builtin order dual")
     }
 
     pub fn search_non_equational_atomic_proof_by_known_algebraic_rewrite(
@@ -210,6 +224,8 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: VerifyState,
     ) -> Result<Option<NonEquationalAtomicFactSearchProofByKnownReflexivity>, RuntimeError> {
+        let _ = (fact, verify_state);
+        todo!("search non-equational atomic by known reflexivity")
     }
 
     pub fn search_non_equational_atomic_proof_by_known_symmetry(
@@ -217,5 +233,7 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: VerifyState,
     ) -> Result<Option<NonEquationalAtomicFactSearchProofByKnownSymmetry>, RuntimeError> {
+        let _ = (fact, verify_state);
+        todo!("search non-equational atomic by known symmetry")
     }
 }

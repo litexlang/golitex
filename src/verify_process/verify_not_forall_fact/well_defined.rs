@@ -5,10 +5,14 @@ pub struct NotForallFactWellDefinedProof {
 }
 
 impl Runtime {
+    // Well-definedness of `not forall` is well-definedness of the inner forall.
     pub fn verify_not_forall_fact_well_definedness(
         &mut self,
         fact: &NotForallFact,
         verify_state: VerifyState,
     ) -> Result<NotForallFactWellDefinedProof, RuntimeError> {
+        let inner =
+            self.verify_forall_fact_well_definedness(&fact.forall_fact, verify_state)?;
+        Ok(NotForallFactWellDefinedProof { inner })
     }
 }

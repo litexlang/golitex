@@ -6,5 +6,6 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: VerifyState,
     ) -> Result<AtomicFactWellDefinedProof, RuntimeError> {
+        self.verify_atomic_fact_well_definedness(fact, verify_state)
     }
 }

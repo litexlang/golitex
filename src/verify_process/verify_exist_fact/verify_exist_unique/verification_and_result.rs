@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 pub struct VerifyExistUniqueFactResult {
-    pub fact: ExistUniqueFact,
+    pub fact: ExistentialSpec,
     pub well_defined_proof: ExistFactWellDefinedProof,
     pub searched_proof: ExistUniqueFactSearchedProof,
 }
@@ -59,6 +59,8 @@ impl Runtime {
         fact: &ExistentialSpec,
         verify_state: VerifyState,
     ) -> Result<Option<CacheSearchProof>, RuntimeError> {
+        let _ = (fact, verify_state);
+        todo!("search exist unique by cache")
     }
 
     pub fn search_exist_unique_fact_proof_by_exist_and_uniqueness(
@@ -66,5 +68,7 @@ impl Runtime {
         fact: &ExistentialSpec,
         verify_state: VerifyState,
     ) -> Result<Option<ExistUniqueFactSearchedProofByExistAndUniqueness>, RuntimeError> {
+        let _ = (fact, verify_state);
+        todo!("search exist unique by exist and uniqueness")
     }
 }
