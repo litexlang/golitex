@@ -3,7 +3,7 @@
 use super::super::*;
 
 pub(in super::super) fn render_existential_fact(
-    existential: &ExistFactEnum,
+    existential: &ExistFact,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     let group = one_witness_existential_group(existential)?;
@@ -17,20 +17,20 @@ pub(in super::super) fn render_existential_fact(
 /// existence projection.  No source fact is weakened—the caller must compile
 /// and validate the retained uniqueness child as well.
 pub(in super::super) fn render_unique_existential_as_plain_existence(
-    existential: &ExistFactEnum,
+    existential: &ExistFact,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     if !existential.is_exist_unique() {
         return Err("unique-existence projection received a non-`exist!` fact".into());
     }
     render_existential_fact(
-        &ExistFactEnum::ExistFact(existential.spec().clone()),
+        &ExistFact::PlainExistFact(existential.spec().clone()),
         context,
     )
 }
 
 pub(in super::super) fn render_existential_fact_with_names(
-    existential: &ExistFactEnum,
+    existential: &ExistFact,
     context: &StmtResultToLeanCompilerEnvironmentStack,
     witness_name: &str,
     carrier_name: &str,
@@ -148,7 +148,7 @@ pub(in super::super) fn existential_uses_exact_numeric_carrier(set: &Obj) -> Res
 }
 
 pub(in super::super) fn one_witness_existential_group(
-    existential: &ExistFactEnum,
+    existential: &ExistFact,
 ) -> Result<&TypedParameterGroup, String> {
     if !existential.is_plain_exist()
         || existential.typed_parameters().number_of_params() != 1

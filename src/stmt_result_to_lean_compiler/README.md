@@ -172,6 +172,16 @@ carrier has a faithful/injective semantic observation. For example,
 `Litex.Same.complexNativeEq` turns `Same x y` into `x = y` for `x y : ℂ`.
 Arbitrary `Same` evidence is not a Lean rewrite certificate.
 
+This boundary is a fixed ABI decision. `Same x y` must not be reinterpreted as
+the existence of one universal Lean type `a` for which both endpoints can be
+cast and compared by `Eq`: arbitrary host types have no such common faithful
+carrier, and unrestricted maps into one would collapse distinct Litex values.
+When native Lean equality is needed, the compiler or an Adapter first extracts
+both endpoints into the same reviewed carrier and then applies its proved
+elimination theorem. For example, membership in `N` supplies two `ℕ`
+representatives, after which `Same.natEq` can produce ordinary Lean equality.
+The original heterogeneous `Same` proof remains the semantic evidence.
+
 ### Parameter kinds are not membership domains
 
 The source Result already distinguishes these two forms, and compiler must

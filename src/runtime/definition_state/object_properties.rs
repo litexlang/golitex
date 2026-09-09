@@ -793,7 +793,7 @@ impl Runtime {
 
     pub fn alpha_normalized_exist_fact_id_key(
         &self,
-        exist_fact: &ExistFactEnum,
+        exist_fact: &ExistFact,
     ) -> Result<String, RuntimeError> {
         Ok(format!(
             "#exist-fact-id:{}:{}",

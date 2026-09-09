@@ -24,9 +24,9 @@ impl Fact {
         match self {
             Fact::AtomicFact(atomic_fact) => atomic_fact.output_type_string(),
             Fact::ExistFact(exist_fact) => match exist_fact {
-                ExistFactEnum::ExistFact(_) => "existence fact".to_string(),
-                ExistFactEnum::ExistUniqueFact(_) => "unique existence fact".to_string(),
-                ExistFactEnum::NotExistFact(_) => "nonexistence fact".to_string(),
+                ExistFact::PlainExistFact(_) => "existence fact".to_string(),
+                ExistFact::ExistUniqueFact(_) => "unique existence fact".to_string(),
+                ExistFact::NotExistFact(_) => "nonexistence fact".to_string(),
             },
             Fact::OrFact(_) => "disjunction fact".to_string(),
             Fact::AndFact(_) => "conjunction fact".to_string(),

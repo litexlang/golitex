@@ -118,7 +118,7 @@ impl Environment {
         }
     }
 
-    fn store_exist_fact(&mut self, exist_fact: ExistFactEnum) -> Result<(), RuntimeError> {
+    fn store_exist_fact(&mut self, exist_fact: ExistFact) -> Result<(), RuntimeError> {
         let key: ExistFactKey = exist_fact.key();
         if let Some(vec_ref) = self.facts.quantified.existential.get_mut(&key) {
             vec_ref.push(exist_fact.clone());
@@ -285,7 +285,7 @@ impl Environment {
 
     fn store_exist_fact_in_forall_fact(
         &mut self,
-        exist_fact: &ExistFactEnum,
+        exist_fact: &ExistFact,
         stored_forall_conclusion_reference: Rc<StoredForallConclusionReference>,
     ) -> Result<(), RuntimeError> {
         let pair = || {
@@ -433,7 +433,7 @@ impl Environment {
 
     pub fn store_exist_fact_by_ref(
         &mut self,
-        exist_fact: &ExistFactEnum,
+        exist_fact: &ExistFact,
     ) -> Result<(), RuntimeError> {
         self.store_exist_fact(exist_fact.clone())
     }

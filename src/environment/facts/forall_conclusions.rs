@@ -14,7 +14,7 @@ pub struct ForallConclusionIndex {
         HashMap<ForallArgumentShape, Vec<(AtomicFact, Rc<StoredForallConclusionReference>)>>,
     >,
     pub existential:
-        HashMap<ExistFactKey, Vec<(ExistFactEnum, Rc<StoredForallConclusionReference>)>>,
+        HashMap<ExistFactKey, Vec<(ExistFact, Rc<StoredForallConclusionReference>)>>,
     pub conjunction: HashMap<AndFactKey, Vec<(AndFact, Rc<StoredForallConclusionReference>)>>,
     pub disjunction: HashMap<OrFactKey, Vec<(OrFact, Rc<StoredForallConclusionReference>)>>,
 }
@@ -73,8 +73,8 @@ fn append_missing_atomic_pairs(
 }
 
 fn append_missing_exist_pairs(
-    parent: &mut Vec<(ExistFactEnum, Rc<StoredForallConclusionReference>)>,
-    child: Vec<(ExistFactEnum, Rc<StoredForallConclusionReference>)>,
+    parent: &mut Vec<(ExistFact, Rc<StoredForallConclusionReference>)>,
+    child: Vec<(ExistFact, Rc<StoredForallConclusionReference>)>,
 ) {
     let mut seen = parent
         .iter()

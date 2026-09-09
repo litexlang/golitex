@@ -862,7 +862,7 @@ impl EvalStmt {
     }
 }
 
-impl ExistFactEnum {
+impl ExistFact {
     pub fn syntax_rendering(&self) -> String {
         let head = if self.is_not_exist() {
             r"\nexists"

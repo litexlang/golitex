@@ -21,9 +21,9 @@ impl Fact {
             Fact::AtomicFact(a) => Fact::AtomicFact(a.with_line_file(line_file)),
             Fact::ExistFact(mut e) => {
                 match &mut e {
-                    ExistFactEnum::ExistFact(b)
-                    | ExistFactEnum::ExistUniqueFact(b)
-                    | ExistFactEnum::NotExistFact(b) => b.line_file = line_file,
+                    ExistFact::PlainExistFact(b)
+                    | ExistFact::ExistUniqueFact(b)
+                    | ExistFact::NotExistFact(b) => b.line_file = line_file,
                 }
                 Fact::ExistFact(e)
             }

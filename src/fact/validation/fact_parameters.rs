@@ -20,7 +20,7 @@ pub fn check_forall_fact_has_no_duplicate_forall_free_parameter(
 }
 
 pub fn check_exist_fact_has_no_duplicate_exist_free_parameter(
-    exist_fact: &ExistFactEnum,
+    exist_fact: &ExistFact,
 ) -> Result<(), RuntimeError> {
     let mut params_already_used: Vec<Vec<String>> = Vec::new();
     check_exist_fact_has_no_duplicate_free_parameter(
@@ -162,7 +162,7 @@ fn push_forall_scope_if_needed(
 }
 
 fn check_exist_fact_has_no_duplicate_free_parameter(
-    exist_fact: &ExistFactEnum,
+    exist_fact: &ExistFact,
     free_param_type: QuantifierBinderKind,
     params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<(), RuntimeError> {
@@ -201,7 +201,7 @@ fn check_quantifier_free_fact_has_no_duplicate_free_parameter(
 }
 
 fn push_exist_scope_if_needed(
-    exist_fact: &ExistFactEnum,
+    exist_fact: &ExistFact,
     free_param_type: QuantifierBinderKind,
     params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<bool, RuntimeError> {

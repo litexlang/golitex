@@ -79,7 +79,7 @@ pub(in super::super) fn render_no_observation_equality_across_representative(
 /// bodies use the direct representative bridge; concrete predicate bodies use
 /// their own definition-owned exact-parameter transport.
 pub(in super::super) fn render_one_witness_existential_across_representative(
-    existential: &ExistFactEnum,
+    existential: &ExistFact,
     source: &StmtResultToLeanCompilerEnvironmentStack,
     target: &StmtResultToLeanCompilerEnvironmentStack,
     source_value: &str,

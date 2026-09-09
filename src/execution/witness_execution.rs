@@ -58,7 +58,7 @@ impl Runtime {
     fn resolve_witness_atomic_fact(
         &self,
         stmt: &WitnessAtomicFact,
-    ) -> Result<(DefPropStmt, ExistFactEnum), RuntimeError> {
+    ) -> Result<(DefPropStmt, ExistFact), RuntimeError> {
         let witness_stmt: Stmt = stmt.clone().into();
         let predicate_name = stmt.atomic_fact.predicate.to_string();
         if self

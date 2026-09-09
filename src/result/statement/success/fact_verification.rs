@@ -10,7 +10,7 @@ pub struct SuccessVerifyAtomicFactResult {
 }
 
 pub struct SuccessVerifyExistFactResult {
-    pub statement: ExistFactEnum,
+    pub statement: ExistFact,
     pub proof: SuccessFactProofResult,
 }
 

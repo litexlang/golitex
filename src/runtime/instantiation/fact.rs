@@ -783,7 +783,7 @@ impl Runtime {
         fact: &NormalAtomicFact,
         definition: &DefPropStmt,
         line_file: &LineFile,
-    ) -> Result<ExistFactEnum, RuntimeError> {
+    ) -> Result<ExistFact, RuntimeError> {
         let invalid_source = |message: String| {
             RuntimeError::from(InstantiateRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(message, line_file.clone()),
@@ -830,11 +830,11 @@ impl Runtime {
 
     pub fn inst_exist_fact(
         &self,
-        exist_fact: &ExistFactEnum,
+        exist_fact: &ExistFact,
         param_to_arg_map: &HashMap<String, Obj>,
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
-    ) -> Result<ExistFactEnum, RuntimeError> {
+    ) -> Result<ExistFact, RuntimeError> {
         let rename_map = self.exist_capture_avoiding_rename_map(exist_fact, param_to_arg_map);
         let renamed_exist_fact = self.alpha_rename_exist_fact(exist_fact, &rename_map)?;
         self.inst_exist_fact_without_capture_preparation(
@@ -847,11 +847,11 @@ impl Runtime {
 
     fn inst_exist_fact_without_capture_preparation(
         &self,
-        exist_fact: &ExistFactEnum,
+        exist_fact: &ExistFact,
         param_to_arg_map: &HashMap<String, Obj>,
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
-    ) -> Result<ExistFactEnum, RuntimeError> {
+    ) -> Result<ExistFact, RuntimeError> {
         let mut groups = Vec::with_capacity(exist_fact.typed_parameters().groups.len());
         for param_def_with_type in exist_fact.typed_parameters().groups.iter() {
             groups.push(TypedParameterGroup::new(
@@ -873,21 +873,21 @@ impl Runtime {
                 inst_lf,
             )?);
         }
-        let body = ExistentialSpec::new(
+        let body = PlainExistFact::new(
             typed_parameters,
             facts,
             Self::line_file_after_inst(&exist_fact.spec().line_file, inst_lf),
         )?;
         Ok(match exist_fact {
-            ExistFactEnum::ExistFact(_) => ExistFactEnum::ExistFact(body),
-            ExistFactEnum::ExistUniqueFact(_) => ExistFactEnum::ExistUniqueFact(body),
-            ExistFactEnum::NotExistFact(_) => ExistFactEnum::NotExistFact(body),
+            ExistFact::PlainExistFact(_) => ExistFact::PlainExistFact(body),
+            ExistFact::ExistUniqueFact(_) => ExistFact::ExistUniqueFact(body),
+            ExistFact::NotExistFact(_) => ExistFact::NotExistFact(body),
         })
     }
 
     fn exist_capture_avoiding_rename_map(
         &self,
-        exist_fact: &ExistFactEnum,
+        exist_fact: &ExistFact,
         param_to_arg_map: &HashMap<String, Obj>,
     ) -> HashMap<String, Obj> {
         let mut replacement_exist_names = HashSet::new();
@@ -930,9 +930,9 @@ impl Runtime {
 
     pub fn alpha_rename_exist_fact(
         &self,
-        exist_fact: &ExistFactEnum,
+        exist_fact: &ExistFact,
         rename_map: &HashMap<String, Obj>,
-    ) -> Result<ExistFactEnum, RuntimeError> {
+    ) -> Result<ExistFact, RuntimeError> {
         if rename_map.is_empty() {
             return Ok(exist_fact.clone());
         }
@@ -971,15 +971,15 @@ impl Runtime {
                 None,
             )?);
         }
-        let body = ExistentialSpec::new(
+        let body = PlainExistFact::new(
             TypedParameterList::new(groups),
             facts,
             exist_fact.spec().line_file.clone(),
         )?;
         Ok(match exist_fact {
-            ExistFactEnum::ExistFact(_) => ExistFactEnum::ExistFact(body),
-            ExistFactEnum::ExistUniqueFact(_) => ExistFactEnum::ExistUniqueFact(body),
-            ExistFactEnum::NotExistFact(_) => ExistFactEnum::NotExistFact(body),
+            ExistFact::PlainExistFact(_) => ExistFact::PlainExistFact(body),
+            ExistFact::ExistUniqueFact(_) => ExistFact::ExistUniqueFact(body),
+            ExistFact::NotExistFact(_) => ExistFact::NotExistFact(body),
         })
     }
 
@@ -1317,7 +1317,7 @@ impl Runtime {
 
     pub fn collect_bound_param_names_in_exist_fact(
         &self,
-        exist_fact: &ExistFactEnum,
+        exist_fact: &ExistFact,
         names: &mut HashSet<String>,
     ) {
         collect_bound_param_names_in_exist_fact(exist_fact, names);
@@ -1381,7 +1381,7 @@ fn collect_bound_param_names_in_fact(fact: &Fact, names: &mut HashSet<String>) {
 }
 
 pub fn collect_bound_param_names_in_exist_fact(
-    exist_fact: &ExistFactEnum,
+    exist_fact: &ExistFact,
     names: &mut HashSet<String>,
 ) {
     collect_bound_param_names_in_param_def(exist_fact.typed_parameters(), names);

@@ -7,33 +7,33 @@ use crate::prelude::*;
 use std::fmt;
 
 #[derive(Clone)]
-pub enum ExistFactEnum {
-    ExistFact(ExistentialSpec),
-    ExistUniqueFact(ExistentialSpec),
-    NotExistFact(ExistentialSpec),
+pub enum ExistFact {
+    PlainExistFact(PlainExistFact),
+    ExistUniqueFact(PlainExistFact),
+    NotExistFact(PlainExistFact),
 }
 
 #[derive(Clone)]
-pub struct ExistentialSpec {
+pub struct PlainExistFact {
     pub fact_id: FactId,
     pub typed_parameters: TypedParameterList,
     pub facts: Vec<QuantifierFreeFact>,
     pub line_file: LineFile,
 }
 
-impl ExistentialSpec {
+impl PlainExistFact {
     pub fn new(
         typed_parameters: TypedParameterList,
         facts: Vec<QuantifierFreeFact>,
         line_file: LineFile,
     ) -> Result<Self, RuntimeError> {
-        let spec = ExistentialSpec {
+        let spec = PlainExistFact {
             fact_id: FactId::fresh(),
             typed_parameters,
             facts,
             line_file,
         };
-        check_exist_fact_has_no_duplicate_exist_free_parameter(&ExistFactEnum::ExistFact(
+        check_exist_fact_has_no_duplicate_exist_free_parameter(&ExistFact::PlainExistFact(
             spec.clone(),
         ))?;
         Ok(spec)
@@ -76,25 +76,25 @@ impl ExistentialSpec {
     }
 }
 
-impl ExistFactEnum {
-    pub fn spec(&self) -> &ExistentialSpec {
+impl ExistFact {
+    pub fn spec(&self) -> &PlainExistFact {
         match self {
-            ExistFactEnum::ExistFact(b)
-            | ExistFactEnum::ExistUniqueFact(b)
-            | ExistFactEnum::NotExistFact(b) => b,
+            ExistFact::PlainExistFact(b)
+            | ExistFact::ExistUniqueFact(b)
+            | ExistFact::NotExistFact(b) => b,
         }
     }
 
     pub fn is_exist_unique(&self) -> bool {
-        matches!(self, ExistFactEnum::ExistUniqueFact(_))
+        matches!(self, ExistFact::ExistUniqueFact(_))
     }
 
     pub fn is_not_exist(&self) -> bool {
-        matches!(self, ExistFactEnum::NotExistFact(_))
+        matches!(self, ExistFact::NotExistFact(_))
     }
 
     pub fn is_plain_exist(&self) -> bool {
-        matches!(self, ExistFactEnum::ExistFact(_))
+        matches!(self, ExistFact::PlainExistFact(_))
     }
 
     pub fn keyword_prefix(&self) -> String {
@@ -109,11 +109,11 @@ impl ExistFactEnum {
 
     /// Whether a stored exist fact can directly verify the `goal`.
     /// `exist!` can verify `exist`, but other cross-variant matches are rejected.
-    pub fn can_be_used_to_verify_goal(&self, goal: &ExistFactEnum) -> bool {
+    pub fn can_be_used_to_verify_goal(&self, goal: &ExistFact) -> bool {
         match self {
-            ExistFactEnum::ExistFact(_) => goal.is_plain_exist(),
-            ExistFactEnum::ExistUniqueFact(_) => goal.is_plain_exist() || goal.is_exist_unique(),
-            ExistFactEnum::NotExistFact(_) => goal.is_not_exist(),
+            ExistFact::PlainExistFact(_) => goal.is_plain_exist(),
+            ExistFact::ExistUniqueFact(_) => goal.is_plain_exist() || goal.is_exist_unique(),
+            ExistFact::NotExistFact(_) => goal.is_not_exist(),
         }
     }
 
@@ -201,7 +201,7 @@ fn exist_fact_string_without_exist_as_prefix(
     )
 }
 
-impl fmt::Display for ExistFactEnum {
+impl fmt::Display for ExistFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let head = self.keyword_prefix();
         write!(

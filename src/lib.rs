@@ -58,3 +58,9 @@ pub mod test_support;
 pub mod verification;
 // Compatibility alias retained for one version while embedders migrate.
 pub use verification as verify;
+
+// Staged verifier rewrite. The legacy `verify` compatibility alias above and
+// the active Runtime execution path remain unchanged until this rewrite has
+// completed its Result/pipeline migration.
+#[path = "verify/mod.rs"]
+pub mod verify_rewrite;

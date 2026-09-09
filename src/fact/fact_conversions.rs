@@ -20,8 +20,8 @@ impl From<ForallFact> for Fact {
     }
 }
 
-impl From<ExistFactEnum> for Fact {
-    fn from(exist_fact: ExistFactEnum) -> Self {
+impl From<ExistFact> for Fact {
+    fn from(exist_fact: ExistFact) -> Self {
         Fact::ExistFact(exist_fact)
     }
 }

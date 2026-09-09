@@ -706,7 +706,7 @@ impl Runtime {
         &self,
         in_fact: &InFact,
         big_union: &BigUnion,
-    ) -> Result<ExistFactEnum, RuntimeError> {
+    ) -> Result<ExistFact, RuntimeError> {
         let member_name = self.generate_internal_binder_name();
         let member_group = self.fresh_param_group_with_type(
             vec![member_name],
@@ -719,12 +719,12 @@ impl Runtime {
             in_fact.line_file.clone(),
         )
         .into();
-        let exist_body = ExistentialSpec::new(
+        let exist_body = PlainExistFact::new(
             TypedParameterList::new(vec![member_group]),
             vec![element_in_member.into()],
             in_fact.line_file.clone(),
         )?;
-        Ok(ExistFactEnum::ExistFact(exist_body))
+        Ok(ExistFact::PlainExistFact(exist_body))
     }
 
     fn indexed_family_application(
@@ -746,7 +746,7 @@ impl Runtime {
         &self,
         in_fact: &InFact,
         index_union: &IndexUnion,
-    ) -> Result<Option<ExistFactEnum>, RuntimeError> {
+    ) -> Result<Option<ExistFact>, RuntimeError> {
         let index_name = self.generate_internal_binder_name();
         let index_group = self.fresh_param_group_with_type(
             vec![index_name],
@@ -760,7 +760,7 @@ impl Runtime {
         };
         let element_in_fiber: AtomicFact =
             InFact::new(in_fact.element.clone(), fiber, in_fact.line_file.clone()).into();
-        Ok(Some(ExistFactEnum::ExistFact(ExistentialSpec::new(
+        Ok(Some(ExistFact::PlainExistFact(PlainExistFact::new(
             TypedParameterList::new(vec![index_group]),
             vec![element_in_fiber.into()],
             in_fact.line_file.clone(),
@@ -1086,7 +1086,7 @@ impl Runtime {
         &self,
         in_fact: &InFact,
         replacement: &Replacement,
-    ) -> Result<ExistFactEnum, RuntimeError> {
+    ) -> Result<ExistFact, RuntimeError> {
         let preimage_name = self.generate_internal_binder_name();
         let preimage_group = self.fresh_param_group_with_type(
             vec![preimage_name],
@@ -1099,12 +1099,12 @@ impl Runtime {
             in_fact.line_file.clone(),
         )
         .into();
-        let exist_body = ExistentialSpec::new(
+        let exist_body = PlainExistFact::new(
             TypedParameterList::new(vec![preimage_group]),
             vec![relation_fact.into()],
             in_fact.line_file.clone(),
         )?;
-        Ok(ExistFactEnum::ExistFact(exist_body))
+        Ok(ExistFact::PlainExistFact(exist_body))
     }
 
     pub(super) fn known_preimages_for_replacement_target(

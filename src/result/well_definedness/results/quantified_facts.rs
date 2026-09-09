@@ -4,7 +4,7 @@ use crate::prelude::*;
 use std::fmt;
 
 pub struct SuccessVerifyExistFactWellDefinedResult {
-    pub statement: ExistFactEnum,
+    pub statement: ExistFact,
     pub binder: SuccessVerifyFactBinderResult,
     pub body: Vec<SuccessVerifyLocalFactWellDefinedResult>,
 }

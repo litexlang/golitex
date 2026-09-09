@@ -26,7 +26,7 @@ impl Runtime {
     fn build_not_forall_counterexample_exist_fact(
         &self,
         not_forall: &NotForallFact,
-    ) -> Result<Option<ExistFactEnum>, RuntimeError> {
+    ) -> Result<Option<ExistFact>, RuntimeError> {
         let forall = &not_forall.forall_fact;
         if forall.typed_parameters.number_of_params() == 0 || forall.then_facts.is_empty() {
             return Ok(None);
@@ -92,7 +92,7 @@ impl Runtime {
                 .into()
         });
 
-        Ok(Some(ExistFactEnum::ExistFact(ExistentialSpec::new(
+        Ok(Some(ExistFact::PlainExistFact(PlainExistFact::new(
             TypedParameterList::new(exist_groups),
             body_facts,
             forall.line_file.clone(),

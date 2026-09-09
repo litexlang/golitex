@@ -595,7 +595,7 @@ fn zorn_upper_bound_exist_fact(
     chain: Obj,
     upper_bound_prop_name: AtomicName,
     line_file: LineFile,
-) -> Result<ExistFactEnum, RuntimeError> {
+) -> Result<ExistFact, RuntimeError> {
     let u_group = runtime.fresh_param_group_with_type(
         vec![runtime.generate_internal_binder_name()],
         ParamType::Obj(set),
@@ -603,12 +603,12 @@ fn zorn_upper_bound_exist_fact(
     let u = obj_for_bound_param_in_scope(&u_group.params[0]);
     let named_upper_bound =
         normal_prop_fact(upper_bound_prop_name, vec![chain, u], line_file.clone());
-    let body = ExistentialSpec::new(
+    let body = PlainExistFact::new(
         TypedParameterList::new(vec![u_group]),
         vec![QuantifierFreeFact::AtomicFact(named_upper_bound)],
         line_file,
     )?;
-    Ok(ExistFactEnum::ExistFact(body))
+    Ok(ExistFact::PlainExistFact(body))
 }
 
 fn zorn_upper_bound_forall_fact(
@@ -643,12 +643,12 @@ fn zorn_lemma_maximal_fact(
     )?;
     let m = obj_for_bound_param_in_scope(&m_group.params[0]);
     let named_maximal = normal_prop_fact(maximal_prop_name, vec![m], line_file.clone());
-    let body = ExistentialSpec::new(
+    let body = PlainExistFact::new(
         TypedParameterList::new(vec![m_group]),
         vec![QuantifierFreeFact::AtomicFact(named_maximal)],
         line_file,
     )?;
-    Ok(ExistFactEnum::ExistFact(body).into())
+    Ok(ExistFact::PlainExistFact(body).into())
 }
 
 fn zorn_maximal_forall_fact(

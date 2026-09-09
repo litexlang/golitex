@@ -115,10 +115,10 @@ fn regularity_axiom_exist_fact(
         empty_set,
         line_file.clone(),
     );
-    let body = ExistentialSpec::new(
+    let body = PlainExistFact::new(
         TypedParameterList::new(vec![x_group]),
         vec![disjoint_fact.into()],
         line_file,
     )?;
-    Ok(ExistFactEnum::ExistFact(body).into())
+    Ok(ExistFact::PlainExistFact(body).into())
 }

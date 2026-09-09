@@ -138,7 +138,7 @@ impl Runtime {
 
     pub fn verify_exist_fact_well_defined_result(
         &mut self,
-        exist_fact: &ExistFactEnum,
+        exist_fact: &ExistFact,
         verify_state: &VerifyState,
     ) -> Result<SuccessVerifyFactWellDefinedProofResult, RuntimeError> {
         let bindings = exist_fact.typed_parameters().collect_param_bindings();

@@ -277,7 +277,7 @@ impl DepCollector {
         self.local_names = old;
     }
 
-    pub fn collect_exist_fact(&mut self, fact: &ExistFactEnum) {
+    pub fn collect_exist_fact(&mut self, fact: &ExistFact) {
         let body = fact.spec();
         let old = self.local_names.clone();
         self.collect_param_def_with_type_deps(&body.typed_parameters);

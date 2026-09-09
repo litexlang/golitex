@@ -6,7 +6,7 @@ use std::collections::{HashMap, HashSet};
 /// Stored existential and disjunctive facts indexed by their structural key.
 #[derive(Clone)]
 pub struct QuantifiedFactIndex {
-    pub existential: HashMap<ExistFactKey, Vec<ExistFactEnum>>,
+    pub existential: HashMap<ExistFactKey, Vec<ExistFact>>,
     pub disjunctions: HashMap<OrFactKey, Vec<OrFact>>,
 }
 
@@ -30,7 +30,7 @@ impl QuantifiedFactIndex {
     }
 }
 
-fn append_missing_exist_facts(parent: &mut Vec<ExistFactEnum>, child: Vec<ExistFactEnum>) {
+fn append_missing_exist_facts(parent: &mut Vec<ExistFact>, child: Vec<ExistFact>) {
     let mut seen = parent
         .iter()
         .map(ToString::to_string)

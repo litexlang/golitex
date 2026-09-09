@@ -9,7 +9,7 @@ pub enum ExistOrAndChainAtomicFact {
     AndFact(AndFact),
     ChainFact(ChainFact),
     OrFact(OrFact),
-    ExistFact(ExistFactEnum),
+    ExistFact(ExistFact),
 }
 
 impl fmt::Display for ExistOrAndChainAtomicFact {
@@ -87,8 +87,8 @@ impl From<QuantifierFreeFact> for ExistOrAndChainAtomicFact {
     }
 }
 
-impl From<ExistFactEnum> for ExistOrAndChainAtomicFact {
-    fn from(exist_fact: ExistFactEnum) -> Self {
+impl From<ExistFact> for ExistOrAndChainAtomicFact {
+    fn from(exist_fact: ExistFact) -> Self {
         ExistOrAndChainAtomicFact::ExistFact(exist_fact)
     }
 }

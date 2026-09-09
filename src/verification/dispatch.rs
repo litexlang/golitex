@@ -39,7 +39,7 @@ impl Runtime {
 
     pub fn verify_exist_fact(
         &mut self,
-        fact: &crate::fact::ExistFactEnum,
+        fact: &crate::fact::ExistFact,
         verify_state: &VerifyState,
     ) -> Result<VerifyFactResult, RuntimeError> {
         self.verify_fact_allow_unknown(&Fact::from(fact.clone()), verify_state)

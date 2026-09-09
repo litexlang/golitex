@@ -520,7 +520,7 @@ impl Runtime {
         family: &Obj,
         finite: bool,
         line_file: &LineFile,
-    ) -> Result<Option<ExistFactEnum>, RuntimeError> {
+    ) -> Result<Option<ExistFact>, RuntimeError> {
         let param_name = self.generate_internal_binder_name();
         let param_group =
             self.fresh_param_group_with_type(vec![param_name], ParamType::Obj(index_set.clone()))?;
@@ -533,7 +533,7 @@ impl Runtime {
         } else {
             IsNonemptySetFact::new(fiber, line_file.clone()).into()
         };
-        Ok(Some(ExistFactEnum::ExistFact(ExistentialSpec::new(
+        Ok(Some(ExistFact::PlainExistFact(PlainExistFact::new(
             TypedParameterList::new(vec![param_group]),
             vec![predicate.into()],
             line_file.clone(),

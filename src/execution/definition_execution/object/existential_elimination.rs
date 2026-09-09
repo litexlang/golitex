@@ -148,8 +148,8 @@ impl Runtime {
         &self,
         stmt: Stmt,
         application_result: StmtResult,
-    ) -> Result<(ExistFactEnum, StmtResult), RuntimeError> {
-        let extracted = (|| -> Result<ExistFactEnum, String> {
+    ) -> Result<(ExistFact, StmtResult), RuntimeError> {
+        let extracted = (|| -> Result<ExistFact, String> {
             let success = application_result.non_factual_success().ok_or_else(|| {
                 "obtain from thm: theorem application did not return a statement success"
                     .to_string()
@@ -203,13 +203,13 @@ impl Runtime {
         &mut self,
         stmt: &HaveObjByExistFactsStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let body = ExistentialSpec::new(
+        let body = PlainExistFact::new(
             stmt.param_def.clone(),
             stmt.facts.clone(),
             stmt.line_file.clone(),
         )
         .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
-        let exist_fact = ExistFactEnum::ExistFact(body);
+        let exist_fact = ExistFact::PlainExistFact(body);
         let equal_to_bindings = stmt.param_def.collect_param_bindings();
         self.exec_obj_from_exist_fact(
             stmt.clone().into(),
@@ -223,13 +223,13 @@ impl Runtime {
         &mut self,
         stmt: &HaveObjByExistFactsStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let body = ExistentialSpec::new(
+        let body = PlainExistFact::new(
             stmt.param_def.clone(),
             stmt.facts.clone(),
             stmt.line_file.clone(),
         )
         .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
-        let exist_fact = ExistFactEnum::ExistFact(body);
+        let exist_fact = ExistFact::PlainExistFact(body);
         let equal_to_bindings = stmt.param_def.collect_param_bindings();
         let infer_result = self.apply_obj_from_exist_fact_to_environment(
             stmt.clone().into(),
@@ -253,7 +253,7 @@ impl Runtime {
         &mut self,
         stmt: Stmt,
         defined_bindings: &[SymbolBinding],
-        source_exist_fact: &ExistFactEnum,
+        source_exist_fact: &ExistFact,
         line_file: LineFile,
     ) -> Result<StmtResult, RuntimeError> {
         self.verify_obj_from_exist_fact_well_definedness(
@@ -276,7 +276,7 @@ impl Runtime {
         &mut self,
         stmt: Stmt,
         defined_bindings: &[SymbolBinding],
-        source_exist_fact: &ExistFactEnum,
+        source_exist_fact: &ExistFact,
         source_result: ExistentialEliminationSourceResult,
         line_file: LineFile,
     ) -> Result<StmtResult, RuntimeError> {
@@ -344,7 +344,7 @@ impl Runtime {
         &mut self,
         stmt: Stmt,
         defined_bindings: &[SymbolBinding],
-        source_exist_fact: &ExistFactEnum,
+        source_exist_fact: &ExistFact,
     ) -> Result<(), RuntimeError> {
         if source_exist_fact.typed_parameters().number_of_params() != defined_bindings.len() {
             return Err(short_exec_error(
@@ -372,7 +372,7 @@ impl Runtime {
     fn verify_obj_from_exist_fact_source(
         &mut self,
         stmt: Stmt,
-        source_exist_fact: &ExistFactEnum,
+        source_exist_fact: &ExistFact,
     ) -> Result<VerifyFactResult, RuntimeError> {
         let verify_state = VerifyState::initial();
         let result = self
@@ -397,7 +397,7 @@ impl Runtime {
         stmt: Stmt,
         obtain: &ObtainObjFromAtomicFact,
         definition: &DefPropStmt,
-        source_exist_fact: &ExistFactEnum,
+        source_exist_fact: &ExistFact,
     ) -> Result<VerifyFactResult, RuntimeError> {
         let source_atomic: AtomicFact = obtain.fact.clone().into();
         let source_result = self
@@ -441,7 +441,7 @@ impl Runtime {
     fn resolve_obtain_obj_from_atomic_fact(
         &self,
         stmt: &ObtainObjFromAtomicFact,
-    ) -> Result<(DefPropStmt, ExistFactEnum), RuntimeError> {
+    ) -> Result<(DefPropStmt, ExistFact), RuntimeError> {
         let source_stmt: Stmt = stmt.clone().into();
         let predicate_name = stmt.fact.predicate.to_string();
         if self
@@ -481,7 +481,7 @@ impl Runtime {
         &mut self,
         stmt: Stmt,
         defined_bindings: &[SymbolBinding],
-        source_exist_fact: &ExistFactEnum,
+        source_exist_fact: &ExistFact,
         line_file: LineFile,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let new_obj_names_as_identifier_objs: Vec<Obj> = defined_bindings
@@ -562,7 +562,7 @@ impl Runtime {
         &self,
         _stmt: &Stmt,
         equal_tos: &[SymbolBinding],
-        exist_fact: &ExistFactEnum,
+        exist_fact: &ExistFact,
         source_result: ExistentialEliminationSourceResult,
         line_file: LineFile,
     ) -> Result<SuccessVerifyExistentialEliminationResult, RuntimeError> {

@@ -700,7 +700,7 @@ fn mark_forall_param_coverage_in_fact(
 }
 
 fn mark_forall_param_coverage_in_exist_fact(
-    exist_fact: &ExistFactEnum,
+    exist_fact: &ExistFact,
     coverage_by_forall_param: &mut HashMap<IdentifierName, bool>,
 ) {
     for param_def_with_type in exist_fact.typed_parameters().groups.iter() {

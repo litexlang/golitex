@@ -140,8 +140,8 @@ impl Runtime {
 
     pub fn _verify_exist_fact_the_same_type_and_return_matched_args(
         &self,
-        fact: &ExistFactEnum,
-        other: &ExistFactEnum,
+        fact: &ExistFact,
+        other: &ExistFact,
     ) -> Result<Option<Vec<(Obj, Obj)>>, RuntimeError> {
         let mut next_forall_scope_id = 0;
         self._verify_exist_fact_the_same_type_and_return_matched_args_with_scope_counter(
@@ -153,8 +153,8 @@ impl Runtime {
 
     fn _verify_exist_fact_the_same_type_and_return_matched_args_with_scope_counter(
         &self,
-        fact: &ExistFactEnum,
-        other: &ExistFactEnum,
+        fact: &ExistFact,
+        other: &ExistFact,
         _next_forall_scope_id: &mut usize,
     ) -> Result<Option<Vec<(Obj, Obj)>>, RuntimeError> {
         if fact.is_not_exist() != other.is_not_exist() {

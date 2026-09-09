@@ -10,7 +10,7 @@ use std::result::Result;
 impl Runtime {
     pub fn verify_exist_fact_with_known_forall(
         &mut self,
-        exist_fact: &ExistFactEnum,
+        exist_fact: &ExistFact,
         verify_state: &VerifyState,
     ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(fact_verified) =
@@ -25,12 +25,12 @@ impl Runtime {
         &mut self,
         iterate_from_env_index: usize,
         iterate_from_known_forall_fact_index: usize,
-        given_exist_fact: &ExistFactEnum,
+        given_exist_fact: &ExistFact,
     ) -> Result<
         (
             (usize, usize),
             Option<(HashMap<String, Obj>, HashMap<String, Obj>)>,
-            Option<(ExistFactEnum, Rc<StoredForallConclusionReference>)>,
+            Option<(ExistFact, Rc<StoredForallConclusionReference>)>,
         ),
         RuntimeError,
     > {
@@ -41,7 +41,7 @@ impl Runtime {
             let env = self
                 .environment_by_top_index(i)
                 .expect("environment index should be valid");
-            let mut merged_bucket: Vec<(ExistFactEnum, Rc<StoredForallConclusionReference>)> =
+            let mut merged_bucket: Vec<(ExistFact, Rc<StoredForallConclusionReference>)> =
                 Vec::new();
             for lk in lookup_keys.iter() {
                 if let Some(known_forall_facts_in_env) =
@@ -96,7 +96,7 @@ impl Runtime {
 
     fn try_verify_exist_fact_with_known_forall_facts_in_envs(
         &mut self,
-        exist_fact: &ExistFactEnum,
+        exist_fact: &ExistFact,
         verify_state: &VerifyState,
     ) -> Result<Option<SuccessProveFactResult>, RuntimeError> {
         let mut iterate_from_env_index = 0;
@@ -136,11 +136,11 @@ impl Runtime {
 
     fn verify_exist_fact_args_satisfy_forall_requirements(
         &mut self,
-        exist_fact_in_known_forall: &ExistFactEnum,
+        exist_fact_in_known_forall: &ExistFact,
         known_forall: &Rc<StoredForallConclusionReference>,
         forall_arg_map: HashMap<String, Obj>,
         exist_arg_map: HashMap<String, Obj>,
-        given_exist_fact: &ExistFactEnum,
+        given_exist_fact: &ExistFact,
         verify_state: &VerifyState,
     ) -> Result<Option<SuccessProveFactResult>, RuntimeError> {
         if !exist_fact_in_known_forall.can_be_used_to_verify_goal(given_exist_fact) {
@@ -572,10 +572,10 @@ impl Runtime {
     }
 }
 
-fn known_exist_lookup_keys_for_forall_bucket(goal: &ExistFactEnum) -> Vec<String> {
+fn known_exist_lookup_keys_for_forall_bucket(goal: &ExistFact) -> Vec<String> {
     let mut keys = vec![goal.alpha_normalized_key(), goal.key()];
-    if let ExistFactEnum::ExistFact(body) = goal {
-        let unique = ExistFactEnum::ExistUniqueFact(body.clone());
+    if let ExistFact::PlainExistFact(body) = goal {
+        let unique = ExistFact::ExistUniqueFact(body.clone());
         keys.push(unique.alpha_normalized_key());
         keys.push(unique.key());
     }
