@@ -10,7 +10,7 @@ mod runtime;
 
 pub use execution_mode::TrustedOrRequireVerify;
 pub use execution_options::{
-    LitexExecution, LitexExecutionOptions, SummaryOption, VerifyStrictnessPolicy,
+    LitexExecution, RuntimeOptions, SummaryOption, VerifyStrictnessPolicy,
 };
 pub use name_resolution::{
     FreeParamCollection, FreeParamTypeAndLineFile, TransparentObjectDefinitionUse,

@@ -42,32 +42,28 @@ impl fmt::Display for ExecEnv {
         write!(
             f,
             "    known_fn_in_fn_set: {:?}\n",
-            self.objects.function_set_count()
+            self.object_properties.function_set_count()
         )?;
         write!(
             f,
             "    known_transitive_props: {:?}\n",
-            self.predicate_algebraic_properties
-                .transitive_predicate_count()
+            self.prop_algebraic_properties.transitive_predicate_count()
         )?;
         write!(
             f,
             "    known_symmetric_props: {} predicates, {} permutations\n",
-            self.predicate_algebraic_properties
-                .symmetric_predicate_count(),
-            self.predicate_algebraic_properties
-                .symmetric_permutation_count()
+            self.prop_algebraic_properties.symmetric_predicate_count(),
+            self.prop_algebraic_properties.symmetric_permutation_count()
         )?;
         write!(
             f,
             "    known_reflexive_props: {:?}\n",
-            self.predicate_algebraic_properties
-                .reflexive_predicate_count()
+            self.prop_algebraic_properties.reflexive_predicate_count()
         )?;
         write!(
             f,
             "    known_antisymmetric_props: {:?}\n",
-            self.predicate_algebraic_properties
+            self.prop_algebraic_properties
                 .antisymmetric_predicate_count()
         )?;
         write!(

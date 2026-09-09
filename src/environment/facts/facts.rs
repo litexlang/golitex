@@ -4,7 +4,7 @@ use crate::prelude::*;
 
 /// Canonical stored facts and the search indexes derived from them.
 #[derive(Clone)]
-pub struct EnvironmentFactStore {
+pub struct KnownFactMemory {
     pub known_equality: KnownEquality,
     pub atomic: AtomicFactIndex,
     pub set_relations: SetRelationIndex,
@@ -13,7 +13,7 @@ pub struct EnvironmentFactStore {
     pub stored_facts: EnvironmentStoredFactStore,
 }
 
-impl EnvironmentFactStore {
+impl KnownFactMemory {
     pub fn new() -> Self {
         Self {
             known_equality: KnownEquality::new(),
@@ -28,7 +28,7 @@ impl EnvironmentFactStore {
     /// Merge every fact owner except equality, which Environment replays
     /// through `store_equality` so derived equalities remain consistent.
     pub fn merge_non_equality_from(&mut self, child: Self) -> Result<(), RuntimeError> {
-        let EnvironmentFactStore {
+        let KnownFactMemory {
             known_equality: _,
             atomic,
             set_relations,

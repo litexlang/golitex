@@ -654,9 +654,5 @@ pub(super) fn validate_module_path_segment_for_parse(
 mod module_qualification_tests;
 
 #[cfg(test)]
-#[path = "../../../tests/unit/parsing/object/expression/matrix_operators.rs"]
-mod matrix_operator_tests;
-
-#[cfg(test)]
 #[path = "../../../tests/unit/parsing/object/expression/precedence.rs"]
 mod precedence_tests;

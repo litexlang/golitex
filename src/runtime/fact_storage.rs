@@ -1149,7 +1149,7 @@ impl Runtime {
 
     fn is_transitive_prop_name_known(&self, prop_name: &str) -> bool {
         for env in self.iter_environments_from_top() {
-            if env.predicate_algebraic_properties.is_transitive(prop_name) {
+            if env.prop_algebraic_properties.is_transitive(prop_name) {
                 return true;
             }
         }

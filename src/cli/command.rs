@@ -23,8 +23,8 @@ pub(super) struct LitexExecutionOutputSettings {
 }
 
 impl LitexExecutionOutputSettings {
-    pub(super) fn litex_execution_options(self) -> LitexExecutionOptions {
-        LitexExecutionOptions::new(
+    pub(super) fn litex_execution_options(self) -> RuntimeOptions {
+        RuntimeOptions::new(
             self.verify_strictness,
             self.output_detail,
             self.output_language,
@@ -41,7 +41,7 @@ pub(super) struct ReplCommandOptions {
 }
 
 impl ReplCommandOptions {
-    pub(super) fn litex_execution_options(self) -> LitexExecutionOptions {
+    pub(super) fn litex_execution_options(self) -> RuntimeOptions {
         self.execution_output.litex_execution_options()
     }
 }
@@ -57,7 +57,7 @@ pub(super) struct ExecuteEvalFileRepoCommandOptions {
 }
 
 impl ExecuteEvalFileRepoCommandOptions {
-    pub(super) fn litex_execution_options(self) -> LitexExecutionOptions {
+    pub(super) fn litex_execution_options(self) -> RuntimeOptions {
         self.execution_output.litex_execution_options()
     }
 }
@@ -73,7 +73,7 @@ pub(super) struct GraphCommandOptions {
 }
 
 impl GraphCommandOptions {
-    pub(super) fn litex_execution_options(self) -> LitexExecutionOptions {
+    pub(super) fn litex_execution_options(self) -> RuntimeOptions {
         self.execution_output.litex_execution_options()
     }
 }
@@ -89,7 +89,7 @@ pub(super) struct SessionCommandOptions {
 }
 
 impl SessionCommandOptions {
-    pub(super) fn litex_execution_options(self) -> LitexExecutionOptions {
+    pub(super) fn litex_execution_options(self) -> RuntimeOptions {
         self.execution_output.litex_execution_options()
     }
 }

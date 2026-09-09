@@ -6,9 +6,13 @@ impl Runtime {
         &mut self,
         fact: &Fact,
     ) -> Result<ExecFactStmtResult2, RuntimeError> {
-        let verify_state = self.current_verify_state();
+        let verify_state = VerifyState2 {
+            can_use_forall_fact: true,
+            can_use_known_algebraic_rewrite: true,
+        };
         let verify_result = self.verify_fact2(fact, verify_state)?;
-        let store_and_infer_result = self.store_and_infer_fact(fact)?;
+        let store_and_infer_result =
+            self.store_fact_and_well_definedness_then_infer(verify_result)?;
         Ok(ExecFactStmtResult2 {
             verify_result,
             store_and_infer_result,

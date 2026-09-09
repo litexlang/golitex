@@ -19,7 +19,7 @@ EXAMPLES = ROOT / "lean/examples"
 LEAN_ROOT = ROOT / "lean"
 TMP_ROOT = ROOT / "tmp"
 COMPILER = ROOT / "target/release/stmt_result_to_lean_compiler"
-DEFAULT_REPORT = ROOT / "lean/coverage/example_kernel_matrix.json"
+DEFAULT_REPORT = ROOT / "tmp/example_kernel_report.json"
 FORBIDDEN_OUTPUT = re.compile(
     r"\b(?:sorry|admit|LitexObject)\b|Litex\.Object|Set\.univ"
 )

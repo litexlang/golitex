@@ -14,10 +14,7 @@ impl ExecEnv {
     /// and must not escape a submitted-fact WD process, while a materialized
     /// template/object definition is a real mathematical object needed by
     /// later statements.
-    pub fn merge_committed_object_effects(
-        &mut self,
-        child: ExecEnv,
-    ) -> Result<(), RuntimeError> {
+    pub fn merge_committed_object_effects(&mut self, child: ExecEnv) -> Result<(), RuntimeError> {
         for (_, definition) in child
             .definitions
             .symbols
@@ -48,7 +45,10 @@ impl ExecEnv {
                 // materialization.
                 if is_materialized_template_name(self, name)
                     || is_materialized_template_symbol(definition)
-                    || child.objects.knowledge_by_object.contains_key(name)
+                    || child
+                        .object_properties
+                        .knowledge_by_object
+                        .contains_key(name)
                         && existing.role() == SymbolRole::Object
                         && definition.role() == SymbolRole::Object
                 {
@@ -61,7 +61,7 @@ impl ExecEnv {
                 .insert(definition.clone())
                 .expect("object symbol was checked absent before merge");
         }
-        self.objects.merge_from(child.objects);
+        self.object_properties.merge_from(child.object_properties);
         Ok(())
     }
 
@@ -91,7 +91,10 @@ impl ExecEnv {
                 }
                 if is_materialized_template_name(self, name)
                     || is_materialized_template_symbol(definition)
-                    || child.objects.knowledge_by_object.contains_key(name)
+                    || child
+                        .object_properties
+                        .knowledge_by_object
+                        .contains_key(name)
                         && existing.role() == SymbolRole::Object
                         && definition.role() == SymbolRole::Object
                 {
@@ -228,28 +231,25 @@ impl ExecEnv {
         Ok(())
     }
 
-    fn merge_child_fact_and_cache_tables(
-        &mut self,
-        child: ExecEnv,
-    ) -> Result<(), RuntimeError> {
+    fn merge_child_fact_and_cache_tables(&mut self, child: ExecEnv) -> Result<(), RuntimeError> {
         let ExecEnv {
             definitions: _,
             facts,
-            objects,
-            predicate_algebraic_properties,
-            inference_cache,
+            object_properties: objects,
+            prop_algebraic_properties: predicate_algebraic_properties,
+            known_facts_cache: inference_cache,
             well_defined_objects: _,
         } = child;
-        let EnvironmentPredicateAlgebraicPropertyStore {
+        let PropAlgebraicPropertyMemory {
             properties_by_predicate,
         } = predicate_algebraic_properties;
-        let EnvironmentInferenceCache {
+        let KnownFactsCache {
             infer_rule_firings: cache_infer_rule_firing,
         } = inference_cache;
 
         self.facts.merge_non_equality_from(facts)?;
 
-        self.objects.merge_from(objects);
+        self.object_properties.merge_from(objects);
 
         for (name, properties) in properties_by_predicate {
             if properties.is_transitive {
@@ -271,7 +271,7 @@ impl ExecEnv {
         }
 
         for (key, _) in cache_infer_rule_firing {
-            self.inference_cache.infer_rule_firings.insert(key, ());
+            self.known_facts_cache.infer_rule_firings.insert(key, ());
         }
 
         Ok(())
@@ -285,7 +285,10 @@ impl ExecEnv {
                 }
                 if is_materialized_template_name(self, name)
                     || is_materialized_template_symbol(child_definition)
-                    || child.objects.knowledge_by_object.contains_key(name)
+                    || child
+                        .object_properties
+                        .knowledge_by_object
+                        .contains_key(name)
                         && existing.role() == SymbolRole::Object
                         && child_definition.role() == SymbolRole::Object
                 {
@@ -359,7 +362,7 @@ impl ExecEnv {
         }
 
         for (name, child_properties) in child
-            .predicate_algebraic_properties
+            .prop_algebraic_properties
             .properties_by_predicate
             .iter()
         {
@@ -368,7 +371,7 @@ impl ExecEnv {
                 continue;
             };
             let Some(parent_arity) = self
-                .predicate_algebraic_properties
+                .prop_algebraic_properties
                 .symmetric_argument_permutations(name)
                 .and_then(|permutations| permutations.first())
                 .map(Vec::len)
@@ -436,7 +439,10 @@ fn is_materialized_template_name(environment: &ExecEnv, name: &str) -> bool {
                 .symbols
                 .get(local_name)
                 .is_some_and(|definition| definition.role() == SymbolRole::Template)
-            || environment.objects.knowledge_by_object.contains_key(name))
+            || environment
+                .object_properties
+                .knowledge_by_object
+                .contains_key(name))
 }
 
 fn is_materialized_template_symbol(definition: &SymbolDefinition) -> bool {

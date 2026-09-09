@@ -8,21 +8,18 @@ mod object;
 mod predicate_algebraic_properties;
 mod well_definedness_environment_delta;
 
-pub use caches::EnvironmentInferenceCache;
-pub use definitions::EnvironmentDefinitionRegistry;
+pub use caches::KnownFactsCache;
+pub use definitions::DefinitionMemory;
 pub use environment::ExecEnv;
 pub use facts::equality_linear_derive;
 pub use facts::{
-    forall_argument_shape, AtomicFactIndex, CachedKnownFact, EnvironmentFactStore,
-    EnvironmentStoredFactStore, EqualityClassId, EqualityHistoryEvent, ForallArgumentShape,
-    ForallConclusionIndex,
-    KnownEquality, KnownEqualityProofStep, QuantifiedFactIndex, SetRelationIndex, StoredFactRecord,
-    StoredForallConclusionReference,
+    forall_argument_shape, AtomicFactIndex, CachedKnownFact, EnvironmentStoredFactStore,
+    EqualityClassId, EqualityHistoryEvent, ForallArgumentShape, ForallConclusionIndex,
+    KnownEquality, KnownEqualityProofStep, KnownFactMemory, QuantifiedFactIndex, SetRelationIndex,
+    StoredFactRecord, StoredForallConclusionReference,
 };
-pub use object::{
-    EnvironmentObjectKnowledge, EnvironmentObjectKnowledgeStore, KnownFnInfo, KnownObjValue,
-};
+pub use object::{EnvironmentObjectKnowledge, KnownFnInfo, KnownObjValue, ObjectPropertyMemory};
 pub use predicate_algebraic_properties::{
-    EnvironmentPredicateAlgebraicPropertyStore, EnvironmentPredicateProperties,
+    EnvironmentPredicateProperties, PropAlgebraicPropertyMemory,
 };
 pub use well_definedness_environment_delta::WellDefinednessEnvironmentDelta;

@@ -23,20 +23,20 @@ use std::collections::HashMap;
 pub struct ExecEnv {
     /// Definitions and symbol identities for declarations visible to later
     /// statements.
-    pub definitions: EnvironmentDefinitionRegistry,
+    pub definitions: DefinitionMemory,
 
     /// Stored facts and indexes used to find mathematical evidence.
-    pub facts: EnvironmentFactStore,
+    pub facts: KnownFactMemory,
 
     /// Known object values and shape facets keyed by canonical object string.
-    pub objects: EnvironmentObjectKnowledgeStore,
+    pub object_properties: ObjectPropertyMemory,
 
     /// Algebraic properties registered for predicates, such as transitivity,
     /// symmetry, reflexivity, and antisymmetry.
-    pub predicate_algebraic_properties: EnvironmentPredicateAlgebraicPropertyStore,
+    pub prop_algebraic_properties: PropAlgebraicPropertyMemory,
 
     /// Environment-scoped keys that deduplicate persistent infer-rule firings.
-    pub inference_cache: EnvironmentInferenceCache,
+    pub known_facts_cache: KnownFactsCache,
 
     /// Objects whose well-definedness has been established in this environment.
     /// The proof itself remains owned by the corresponding Result.
@@ -46,11 +46,11 @@ pub struct ExecEnv {
 impl ExecEnv {
     pub fn new_empty_env() -> Self {
         ExecEnv {
-            definitions: EnvironmentDefinitionRegistry::new(),
-            facts: EnvironmentFactStore::new(),
-            objects: EnvironmentObjectKnowledgeStore::new(),
-            predicate_algebraic_properties: EnvironmentPredicateAlgebraicPropertyStore::new(),
-            inference_cache: EnvironmentInferenceCache::new(),
+            definitions: DefinitionMemory::new(),
+            facts: KnownFactMemory::new(),
+            object_properties: ObjectPropertyMemory::new(),
+            prop_algebraic_properties: PropAlgebraicPropertyMemory::new(),
+            known_facts_cache: KnownFactsCache::new(),
             well_defined_objects: HashMap::new(),
         }
     }

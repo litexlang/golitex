@@ -51,7 +51,7 @@ impl ExecEnv {
     }
 
     pub fn store_infer_rule_firing(&mut self, firing_key: String) {
-        self.inference_cache
+        self.known_facts_cache
             .infer_rule_firings
             .insert(firing_key, ());
     }

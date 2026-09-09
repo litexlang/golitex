@@ -177,12 +177,6 @@ The generated artifacts are:
 - `runtime_gap_correlations.md`: the five registered compiler failures plus
   three generated-Lean failures mapped to their exact Result/renderer boundary
   and smallest repair gate.
-- `example_kernel_matrix.json`: per registered example, hash-bound compiler,
-  generated-module kernel, checked-in-module kernel, and drift results from the
-  non-destructive all-example gate.
-- `example_matrix_baseline.md`: interpretation of the latest matrix, including
-  the exact point where a concurrent missing-olean event makes later kernel
-  rows infrastructure failures rather than semantic rejections.
 
 ## Interpretation boundaries
 

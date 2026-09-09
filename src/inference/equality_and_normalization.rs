@@ -463,7 +463,7 @@ impl Runtime {
             return;
         };
         self.top_level_env()
-            .objects
+            .object_properties
             .store_simplified_value(target.to_string(), value);
     }
 

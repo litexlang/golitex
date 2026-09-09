@@ -2,7 +2,7 @@ use super::*;
 
 const LARGE_TEST_STACK_SIZE: usize = 64 * 1024 * 1024;
 
-fn run_runner_for_test(code: &str, options: LitexExecutionOptions) -> (bool, String) {
+fn run_runner_for_test(code: &str, options: RuntimeOptions) -> (bool, String) {
     render_runner(run_eval_command(code, options), true)
 }
 
@@ -18,7 +18,7 @@ fn run_with_large_stack(test_name: &str, f: impl FnOnce() + Send + 'static) {
 
 #[test]
 fn runner_success_returns_trace() {
-    let (ok, output) = run_runner_for_test("1 + 1 = 2", LitexExecutionOptions::default());
+    let (ok, output) = run_runner_for_test("1 + 1 = 2", RuntimeOptions::default());
 
     assert!(ok, "runner success run failed:\n{}", output);
     assert!(output.contains("\"runner\": \"litex-runner\""));
@@ -33,7 +33,7 @@ fn runner_success_returns_trace() {
 
 #[test]
 fn runner_failure_returns_trace() {
-    let (ok, output) = run_runner_for_test("1 = 0", LitexExecutionOptions::default());
+    let (ok, output) = run_runner_for_test("1 = 0", RuntimeOptions::default());
 
     assert!(!ok, "runner unknown run should fail:\n{}", output);
     assert!(output.contains("\"result\": \"error\""));
@@ -47,7 +47,7 @@ fn runner_failure_returns_trace() {
 #[test]
 fn runner_target_error_returns_message() {
     let (ok, output) = render_runner(
-        run_file_command("does_not_exist.lit", LitexExecutionOptions::default()),
+        run_file_command("does_not_exist.lit", RuntimeOptions::default()),
         true,
     );
 
@@ -63,7 +63,7 @@ fn runner_target_error_returns_message() {
 
 #[test]
 fn detailed_runner_exposes_a_real_target_path_without_a_label() {
-    let outcome = run_file_command("does_not_exist.lit", LitexExecutionOptions::default());
+    let outcome = run_file_command("does_not_exist.lit", RuntimeOptions::default());
     let expected_path = outcome
         .target
         .path()
@@ -79,7 +79,7 @@ fn detailed_runner_exposes_a_real_target_path_without_a_label() {
 
 #[test]
 fn runner_accepts_trust_as_normal_execution() {
-    let (ok, output) = run_runner_for_test("trust 1 = 0", LitexExecutionOptions::default());
+    let (ok, output) = run_runner_for_test("trust 1 = 0", RuntimeOptions::default());
 
     assert!(ok, "runner should not reject trust statements:\n{}", output);
     assert!(output.contains("\"result\": \"success\""));
@@ -88,7 +88,7 @@ fn runner_accepts_trust_as_normal_execution() {
 #[test]
 fn runner_accepts_trust_have_as_normal_execution() {
     run_with_large_stack("runner_accepts_trust_have_as_normal_execution", || {
-        let (ok, output) = run_runner_for_test("trust have x R", LitexExecutionOptions::default());
+        let (ok, output) = run_runner_for_test("trust have x R", RuntimeOptions::default());
 
         assert!(
             ok,
@@ -103,7 +103,7 @@ fn runner_accepts_trust_have_as_normal_execution() {
 fn zh_runner_keeps_machine_wrapper_keys_and_localizes_trace() {
     let (ok, output) = run_runner_for_test(
         "trust 1 = 1",
-        LitexExecutionOptions::new(
+        RuntimeOptions::new(
             VerifyStrictnessPolicy::Ordinary,
             OutputDetail::Normal,
             OutputLanguage::SimplifiedChinese,
@@ -137,7 +137,7 @@ fn non_english_runner_keeps_machine_wrapper_keys() {
     ] {
         let (ok, output) = run_runner_for_test(
             "trust 1 = 1",
-            LitexExecutionOptions::new(
+            RuntimeOptions::new(
                 VerifyStrictnessPolicy::Ordinary,
                 OutputDetail::Normal,
                 language,
@@ -158,7 +158,7 @@ fn non_english_runner_keeps_machine_wrapper_keys() {
 fn strict_runner_rejects_user_trust() {
     let (ok, output) = run_runner_for_test(
         "trust 1 = 0",
-        LitexExecutionOptions::strict(
+        RuntimeOptions::strict(
             OutputDetail::Normal,
             OutputLanguage::English,
             SummaryOption::None,
@@ -183,7 +183,7 @@ axiom strict_axiom:
 "#;
     let (ok, output) = run_runner_for_test(
         source_code,
-        LitexExecutionOptions::strict(
+        RuntimeOptions::strict(
             OutputDetail::Normal,
             OutputLanguage::English,
             SummaryOption::None,
@@ -204,7 +204,7 @@ fn strict_runner_rejects_user_trust_have() {
     run_with_large_stack("strict_runner_rejects_user_trust_have", || {
         let (ok, output) = run_runner_for_test(
             "trust have x R",
-            LitexExecutionOptions::strict(
+            RuntimeOptions::strict(
                 OutputDetail::Normal,
                 OutputLanguage::English,
                 SummaryOption::None,

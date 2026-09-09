@@ -10,11 +10,11 @@ use std::collections::HashMap;
 /// partial preflight artifact as the complete mathematical world.
 #[derive(Clone)]
 pub struct WellDefinednessEnvironmentDelta {
-    definitions: EnvironmentDefinitionRegistry,
-    facts: EnvironmentFactStore,
-    objects: EnvironmentObjectKnowledgeStore,
-    predicate_algebraic_properties: EnvironmentPredicateAlgebraicPropertyStore,
-    inference_cache: EnvironmentInferenceCache,
+    definitions: DefinitionMemory,
+    facts: KnownFactMemory,
+    objects: ObjectPropertyMemory,
+    predicate_algebraic_properties: PropAlgebraicPropertyMemory,
+    inference_cache: KnownFactsCache,
     well_defined_objects: HashMap<ObjString, WellDefinednessId2>,
 }
 
@@ -41,9 +41,9 @@ impl WellDefinednessEnvironmentDelta {
         let ExecEnv {
             definitions,
             facts,
-            objects,
-            predicate_algebraic_properties,
-            inference_cache,
+            object_properties: objects,
+            prop_algebraic_properties: predicate_algebraic_properties,
+            known_facts_cache: inference_cache,
             well_defined_objects,
         } = environment;
         Self {
@@ -68,9 +68,9 @@ impl WellDefinednessEnvironmentDelta {
         ExecEnv {
             definitions,
             facts,
-            objects,
-            predicate_algebraic_properties,
-            inference_cache,
+            object_properties: objects,
+            prop_algebraic_properties: predicate_algebraic_properties,
+            known_facts_cache: inference_cache,
             well_defined_objects,
         }
     }

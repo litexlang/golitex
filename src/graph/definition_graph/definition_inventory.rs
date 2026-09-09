@@ -74,7 +74,7 @@ impl DefinitionGraphBuilder {
 
     pub(super) fn add_functions(&mut self, environment: &ExecEnv) {
         let mut functions = environment
-            .objects
+            .object_properties
             .knowledge_by_object
             .iter()
             .filter_map(|(name, knowledge)| {

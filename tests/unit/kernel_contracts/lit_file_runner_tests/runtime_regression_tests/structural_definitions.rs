@@ -731,7 +731,7 @@ have b &Box<R> = (0, 0)
             let environment = runtime.top_level_env();
             (
                 environment.facts.stored_facts.lookup_key_count(),
-                environment.inference_cache.infer_rule_firings.len(),
+                environment.known_facts_cache.infer_rule_firings.len(),
             )
         };
 
@@ -747,7 +747,7 @@ have b &Box<R> = (0, 0)
             let environment = runtime.top_level_env();
             (
                 environment.facts.stored_facts.lookup_key_count(),
-                environment.inference_cache.infer_rule_firings.len(),
+                environment.known_facts_cache.infer_rule_firings.len(),
             )
         };
 
@@ -1113,7 +1113,7 @@ try:
     runtime.start_isolated_source("failed_try_discards_infer_rule_firings");
     let firings_before = runtime
         .top_level_env()
-        .inference_cache
+        .known_facts_cache
         .infer_rule_firings
         .len();
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -1132,7 +1132,7 @@ try:
     );
     let firings_after = runtime
         .top_level_env()
-        .inference_cache
+        .known_facts_cache
         .infer_rule_firings
         .len();
 

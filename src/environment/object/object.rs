@@ -5,11 +5,11 @@ use std::collections::HashMap;
 
 /// Object knowledge has one canonical entry per object equality key.
 #[derive(Clone)]
-pub struct EnvironmentObjectKnowledgeStore {
+pub struct ObjectPropertyMemory {
     pub knowledge_by_object: HashMap<ObjString, EnvironmentObjectKnowledge>,
 }
 
-impl EnvironmentObjectKnowledgeStore {
+impl ObjectPropertyMemory {
     pub fn new() -> Self {
         Self {
             knowledge_by_object: HashMap::new(),

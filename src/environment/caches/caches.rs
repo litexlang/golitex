@@ -5,11 +5,11 @@ use std::collections::HashMap;
 /// Returned verification proofs never live here; they are owned by the
 /// current verification process.
 #[derive(Clone)]
-pub struct EnvironmentInferenceCache {
+pub struct KnownFactsCache {
     pub infer_rule_firings: HashMap<String, ()>,
 }
 
-impl EnvironmentInferenceCache {
+impl KnownFactsCache {
     pub fn new() -> Self {
         Self {
             infer_rule_firings: HashMap::new(),

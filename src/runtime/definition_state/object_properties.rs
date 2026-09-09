@@ -40,7 +40,7 @@ impl Runtime {
     pub fn is_symmetric_prop_name_known(&self, prop_name: &str) -> bool {
         for env in self.iter_environments_from_top() {
             if let Some(perms) = env
-                .predicate_algebraic_properties
+                .prop_algebraic_properties
                 .symmetric_argument_permutations(prop_name)
             {
                 if !perms.is_empty() {
@@ -499,7 +499,7 @@ impl Runtime {
                     continue;
                 }
                 for env in self.imported_module_environments(&module_name) {
-                    if let Some(info) = env.objects.function_set(&key) {
+                    if let Some(info) = env.object_properties.function_set(&key) {
                         return Some(info.clone());
                     }
                 }
@@ -520,7 +520,7 @@ impl Runtime {
 
     fn get_known_fn_info_for_key_from_current_envs(&self, key: &str) -> Option<&KnownFnInfo> {
         for env in self.iter_environments_from_top() {
-            if let Some(info) = env.objects.function_set(key) {
+            if let Some(info) = env.object_properties.function_set(key) {
                 return Some(info);
             }
         }
@@ -544,9 +544,9 @@ impl Runtime {
         self.imported_module_environments(module_name)
             .into_iter()
             .find_map(|env| {
-                env.objects
+                env.object_properties
                     .function_set(local_name)
-                    .or_else(|| env.objects.function_set(&qualified_name))
+                    .or_else(|| env.object_properties.function_set(&qualified_name))
                     .cloned()
             })
     }
@@ -804,7 +804,7 @@ impl Runtime {
 
     pub fn infer_rule_firing_cached(&self, key: &str) -> bool {
         self.iter_environments_from_top()
-            .any(|env| env.inference_cache.infer_rule_firings.contains_key(key))
+            .any(|env| env.known_facts_cache.infer_rule_firings.contains_key(key))
     }
 
     pub fn store_infer_rule_firing(&mut self, key: String) {
@@ -814,7 +814,7 @@ impl Runtime {
     pub fn get_object_equal_to_cart(&self, obj: &Obj) -> Option<Cart> {
         for key in self.object_knowledge_keys(obj) {
             for env in self.object_lookup_environments(obj) {
-                if let Some(knowledge) = env.objects.knowledge(&key) {
+                if let Some(knowledge) = env.object_properties.knowledge(&key) {
                     if let Some((known_cart_obj, _)) = &knowledge.cart_equality {
                         return Some(known_cart_obj.clone());
                     }
@@ -831,7 +831,7 @@ impl Runtime {
         for key in self.object_knowledge_keys(obj) {
             for env in self.object_lookup_environments(obj) {
                 if let Some((set_builder, _)) = env
-                    .objects
+                    .object_properties
                     .knowledge(&key)
                     .and_then(|knowledge| knowledge.set_builder_equality.as_ref())
                 {
@@ -846,7 +846,7 @@ impl Runtime {
         for key in self.object_knowledge_keys(obj) {
             for env in self.object_lookup_environments(obj) {
                 if let Some((Some(known_tuple_obj), _, _)) = env
-                    .objects
+                    .object_properties
                     .knowledge(&key)
                     .and_then(|knowledge| knowledge.tuple_equality.as_ref())
                 {
@@ -861,7 +861,7 @@ impl Runtime {
         for key in self.object_knowledge_keys(obj) {
             for env in self.object_lookup_environments(obj) {
                 if let Some((_, Some(known_cart_obj), _)) = env
-                    .objects
+                    .object_properties
                     .knowledge(&key)
                     .and_then(|knowledge| knowledge.tuple_equality.as_ref())
                 {
@@ -876,7 +876,7 @@ impl Runtime {
         for key in self.object_knowledge_keys(obj) {
             for env in self.object_lookup_environments(obj) {
                 if let Some((known_list, _, _)) = env
-                    .objects
+                    .object_properties
                     .knowledge(&key)
                     .and_then(|knowledge| knowledge.finite_sequence_list_equality.as_ref())
                 {
@@ -891,7 +891,7 @@ impl Runtime {
         for key in self.object_knowledge_keys(obj) {
             for env in self.object_lookup_environments(obj) {
                 if let Some((_, member_of, _)) = env
-                    .objects
+                    .object_properties
                     .knowledge(&key)
                     .and_then(|knowledge| knowledge.finite_sequence_list_equality.as_ref())
                 {
@@ -906,7 +906,7 @@ impl Runtime {
         for key in self.object_knowledge_keys(obj) {
             for env in self.object_lookup_environments(obj) {
                 if let Some((known_matrix, _, _)) = env
-                    .objects
+                    .object_properties
                     .knowledge(&key)
                     .and_then(|knowledge| knowledge.matrix_list_equality.as_ref())
                 {
@@ -921,7 +921,7 @@ impl Runtime {
         for key in self.object_knowledge_keys(obj) {
             for env in self.object_lookup_environments(obj) {
                 if let Some((_, member_of, _)) = env
-                    .objects
+                    .object_properties
                     .knowledge(&key)
                     .and_then(|knowledge| knowledge.matrix_list_equality.as_ref())
                 {
@@ -936,7 +936,7 @@ impl Runtime {
         for key in self.object_knowledge_keys(obj) {
             for env in self.object_lookup_environments(obj) {
                 if let Some((matrix_set, _)) = env
-                    .objects
+                    .object_properties
                     .knowledge(&key)
                     .and_then(|knowledge| knowledge.matrix_set_membership.as_ref())
                 {
@@ -951,7 +951,7 @@ impl Runtime {
         for key in self.object_knowledge_keys(obj) {
             for env in self.object_lookup_environments(obj) {
                 if let Some((_, cart, _)) = env
-                    .objects
+                    .object_properties
                     .knowledge(&key)
                     .and_then(|knowledge| knowledge.tuple_equality.as_ref())
                 {
@@ -966,7 +966,7 @@ impl Runtime {
         for key in self.object_knowledge_keys(obj) {
             for env in self.object_lookup_environments(obj) {
                 if let Some(KnownObjValue::SimplifiedNumber(number)) = env
-                    .objects
+                    .object_properties
                     .knowledge(&key)
                     .and_then(|knowledge| knowledge.simplified_value.as_ref())
                 {
@@ -981,7 +981,7 @@ impl Runtime {
         for key in self.object_knowledge_keys(obj) {
             for env in self.object_lookup_environments(obj) {
                 if let Some(known_value) = env
-                    .objects
+                    .object_properties
                     .knowledge(&key)
                     .and_then(|knowledge| knowledge.simplified_value.as_ref())
                 {

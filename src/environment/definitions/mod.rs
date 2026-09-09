@@ -1,3 +1,3 @@
 mod definitions;
 
-pub use definitions::EnvironmentDefinitionRegistry;
+pub use definitions::DefinitionMemory;
