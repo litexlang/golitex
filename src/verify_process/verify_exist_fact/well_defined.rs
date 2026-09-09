@@ -1,30 +1,17 @@
 use crate::prelude::*;
 
-pub enum QuantifierFreeFactWellDefinedProof {
-    AtomicFact(AtomicFactWellDefinedProof),
-    AndFact(AndFactWellDefinedProof),
-    ChainFact(ChainFactWellDefinedProof),
-    OrFact(OrFactWellDefinedProof),
-}
-
-pub enum ExistFactWellDefinedProof {
-    Plain(PlainExistFactWellDefinedProof),
-    ExistUnique(ExistUniqueFactWellDefinedProof),
-    NotExist(NotExistFactWellDefinedProof),
+pub struct ExistFactWellDefinedProof {
+    pub local_param_def_results: LocalParameterDefinitionResult,
+    pub local_env: Environment,
+    pub proof_of_facts_inside_exist_Fact: Vec<FactWellDefinedProof>,
 }
 
 impl Runtime {
-    pub fn verify_quantifier_free_fact_well_definedness(
-        &mut self,
-        fact: &QuantifierFreeFact,
-        verify_state: VerifyState,
-    ) -> Result<QuantifierFreeFactWellDefinedProof, RuntimeError> {
-    }
-
-    pub fn verify_existential_spec_body_well_definedness(
+    pub fn verify_exist_fact_well_definedness(
         &mut self,
         fact: &ExistentialSpec,
         verify_state: VerifyState,
-    ) -> Result<Vec<QuantifierFreeFactWellDefinedProof>, RuntimeError> {
+    ) -> Result<ExistFactWellDefinedProof, RuntimeError> {
+        Ok(ExistFactWellDefinedProof {})
     }
 }
