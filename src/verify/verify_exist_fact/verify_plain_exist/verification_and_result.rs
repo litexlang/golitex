@@ -1,112 +1,112 @@
 use crate::fact::PlainExistFact;
 use crate::prelude::*;
-use crate::verify_rewrite::VerifyState;
+use crate::verify_rewrite::VerifyState2;
 
-pub struct VerifyPlainExistFactResult {
+pub struct VerifyPlainExistFactResult2 {
     pub fact: PlainExistFact,
-    pub well_defined_proof: ExistFactWellDefinedProof,
-    pub searched_proof: PlainExistFactSearchedProof,
+    pub well_defined_proof: ExistFactWellDefinedProof2,
+    pub searched_proof: PlainExistFactSearchedProof2,
 }
 
-pub enum PlainExistFactSearchedProof {
-    ByCache(CacheSearchProof),
-    ByBuiltinRule(PlainExistFactSearchedProofByBuiltinRule),
-    ByKnownExistFact(PlainExistFactSearchedProofByKnownExistFact),
-    ByKnownForallFact(PlainExistFactSearchedProofByKnownForallFact),
+pub enum PlainExistFactSearchedProof2 {
+    ByCache(CacheSearchProof2),
+    ByBuiltinRule(PlainExistFactSearchedProofByBuiltinRule2),
+    ByKnownExistFact(PlainExistFactSearchedProofByKnownExistFact2),
+    ByKnownForallFact(PlainExistFactSearchedProofByKnownForallFact2),
 }
 
-pub struct PlainExistFactSearchedProofByKnownExistFact {
+pub struct PlainExistFactSearchedProofByKnownExistFact2 {
     pub cite_fact_id: FactId,
     // If known-exist matching requires alpha-normalized string equality of the
     // full body, cite_fact_id alone is enough.
 }
 
-pub struct PlainExistFactSearchedProofByKnownForallFact {
+pub struct PlainExistFactSearchedProofByKnownForallFact2 {
     pub cite_fact_id: FactId,
     pub forall_parameters_match_what_args: Vec<Obj>,
-    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult2>,
 }
 
 impl Runtime {
-    pub fn verify_plain_exist_fact(
+    pub fn verify_plain_exist_fact2(
         &mut self,
         fact: &PlainExistFact,
-        verify_state: VerifyState,
-    ) -> Result<VerifyPlainExistFactResult, RuntimeError> {
+        verify_state: VerifyState2,
+    ) -> Result<VerifyPlainExistFactResult2, RuntimeError> {
         let well_defined_proof =
-            self.verify_plain_exist_fact_well_definedness(fact, verify_state.clone())?;
-        let searched_proof = self.search_plain_exist_fact_proof(fact, verify_state)?;
-        Ok(VerifyPlainExistFactResult {
+            self.verify_plain_exist_fact_well_definedness2(fact, verify_state.clone())?;
+        let searched_proof = self.search_plain_exist_fact_proof2(fact, verify_state)?;
+        Ok(VerifyPlainExistFactResult2 {
             fact: fact.clone(),
             well_defined_proof,
             searched_proof,
         })
     }
 
-    pub fn search_plain_exist_fact_proof(
+    pub fn search_plain_exist_fact_proof2(
         &mut self,
         fact: &PlainExistFact,
-        verify_state: VerifyState,
-    ) -> Result<PlainExistFactSearchedProof, RuntimeError> {
+        verify_state: VerifyState2,
+    ) -> Result<PlainExistFactSearchedProof2, RuntimeError> {
         if let Some(result) =
-            self.search_plain_exist_fact_proof_by_cache(fact, verify_state.clone())?
+            self.search_plain_exist_fact_proof_by_cache2(fact, verify_state.clone())?
         {
-            return Ok(PlainExistFactSearchedProof::ByCache(result));
+            return Ok(PlainExistFactSearchedProof2::ByCache(result));
         }
 
         if let Some(result) =
-            self.search_plain_exist_fact_proof_by_known_exist_fact(fact, verify_state.clone())?
+            self.search_plain_exist_fact_proof_by_known_exist_fact2(fact, verify_state.clone())?
         {
-            return Ok(PlainExistFactSearchedProof::ByKnownExistFact(result));
+            return Ok(PlainExistFactSearchedProof2::ByKnownExistFact(result));
         }
 
         if let Some(result) =
-            self.search_plain_exist_fact_proof_by_builtin_rule(fact, verify_state.clone())?
+            self.search_plain_exist_fact_proof_by_builtin_rule2(fact, verify_state.clone())?
         {
-            return Ok(PlainExistFactSearchedProof::ByBuiltinRule(result));
+            return Ok(PlainExistFactSearchedProof2::ByBuiltinRule(result));
         }
 
         if let Some(result) =
-            self.search_plain_exist_fact_proof_by_known_forall_fact(fact, verify_state)?
+            self.search_plain_exist_fact_proof_by_known_forall_fact2(fact, verify_state)?
         {
-            return Ok(PlainExistFactSearchedProof::ByKnownForallFact(result));
+            return Ok(PlainExistFactSearchedProof2::ByKnownForallFact(result));
         }
 
         todo!()
     }
 
-    pub fn search_plain_exist_fact_proof_by_cache(
+    pub fn search_plain_exist_fact_proof_by_cache2(
         &mut self,
         fact: &PlainExistFact,
-        verify_state: VerifyState,
-    ) -> Result<Option<CacheSearchProof>, RuntimeError> {
+        verify_state: VerifyState2,
+    ) -> Result<Option<CacheSearchProof2>, RuntimeError> {
         let _ = (fact, verify_state);
         todo!("search plain exist by cache")
     }
 
-    pub fn search_plain_exist_fact_proof_by_known_exist_fact(
+    pub fn search_plain_exist_fact_proof_by_known_exist_fact2(
         &mut self,
         fact: &PlainExistFact,
-        verify_state: VerifyState,
-    ) -> Result<Option<PlainExistFactSearchedProofByKnownExistFact>, RuntimeError> {
+        verify_state: VerifyState2,
+    ) -> Result<Option<PlainExistFactSearchedProofByKnownExistFact2>, RuntimeError> {
         let _ = (fact, verify_state);
         todo!("search plain exist by known exist fact")
     }
 
-    pub fn search_plain_exist_fact_proof_by_builtin_rule(
+    pub fn search_plain_exist_fact_proof_by_builtin_rule2(
         &mut self,
         fact: &PlainExistFact,
-        verify_state: VerifyState,
-    ) -> Result<Option<PlainExistFactSearchedProofByBuiltinRule>, RuntimeError> {
+        verify_state: VerifyState2,
+    ) -> Result<Option<PlainExistFactSearchedProofByBuiltinRule2>, RuntimeError> {
         let _ = (fact, verify_state);
         todo!("search plain exist by builtin rule")
     }
 
-    pub fn search_plain_exist_fact_proof_by_known_forall_fact(
+    pub fn search_plain_exist_fact_proof_by_known_forall_fact2(
         &mut self,
         fact: &PlainExistFact,
-        verify_state: VerifyState,
-    ) -> Result<Option<PlainExistFactSearchedProofByKnownForallFact>, RuntimeError> {
+        verify_state: VerifyState2,
+    ) -> Result<Option<PlainExistFactSearchedProofByKnownForallFact2>, RuntimeError> {
         let _ = (fact, verify_state);
         todo!("search plain exist by known forall fact")
     }

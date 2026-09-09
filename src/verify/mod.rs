@@ -15,11 +15,6 @@ pub use crate::fact::{
     NotForallFact, OrFact, PlainExistFact,
 };
 pub use crate::runtime::Runtime;
-pub use runtime_ids::{FactId, PropAlgebraicPropertyId};
-pub use verify_state::VerifyState;
+pub use runtime_ids::{FactId, PropAlgebraicPropertyId2};
+pub use verify_state::VerifyState2;
 
-/// A fact statement is the `Fact` payload carried by `Stmt::Fact`.
-///
-/// Keep this name in the verifier layer so Result fields can describe their
-/// statement role while still using the runtime's canonical fact node.
-pub type FactStmt = Fact;

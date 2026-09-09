@@ -1,3 +1,3 @@
 pub use crate::fact::id::FactId;
 
-pub type PropAlgebraicPropertyId = u64;
+pub type PropAlgebraicPropertyId2 = u128;

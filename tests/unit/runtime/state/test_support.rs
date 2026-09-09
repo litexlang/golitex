@@ -31,6 +31,29 @@ fn runtime_constructor_registers_an_active_eval_source() {
 }
 
 #[test]
+fn runtime_fact_factories_share_one_monotone_id_sequence() {
+    let mut runtime = Runtime::default();
+    let left: Obj = Number::new("1".to_string()).into();
+    let right: Obj = Number::new("2".to_string()).into();
+    let line_file = default_line_file();
+
+    let equality = runtime
+        .new_equal_fact(left.clone(), right.clone(), line_file.clone())
+        .expect("runtime should allocate equality fact id");
+    let membership = runtime
+        .new_in_fact(left, right, line_file.clone())
+        .expect("runtime should allocate membership fact id");
+    let conjunction = runtime
+        .new_and_fact(vec![equality.clone().into()], line_file)
+        .expect("runtime should allocate conjunction fact id");
+
+    assert_eq!(equality.fact_id.value(), 1);
+    assert_eq!(membership.fact_id.value(), 2);
+    assert_eq!(conjunction.fact_id.value(), 3);
+    assert_eq!(runtime.next_fact_id, 4);
+}
+
+#[test]
 fn repository_start_reuses_the_registered_constructor_source() {
     let mut runtime = Runtime::default();
 

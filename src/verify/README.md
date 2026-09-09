@@ -14,12 +14,11 @@ methods at the same time.
 The foundational correspondence is intentional:
 
 ```text
-verify_rewrite::FactStmt == fact::Fact
-verify_rewrite::ExistFact == fact::ExistFact
-verify_rewrite::PlainExistFact == fact::PlainExistFact
+verify_rewrite uses fact::Fact / ExistFact / PlainExistFact directly
 verify_rewrite::FactId   == fact::id::FactId
 verify_rewrite::Environment == environment::Environment
 verify_rewrite::Runtime  == runtime::Runtime
+New verifier types/fns use a `2` suffix (e.g. VerifyFactResult2, verify_fact2)
 ```
 
 This keeps FactIds and temporary environments compatible with later Lean

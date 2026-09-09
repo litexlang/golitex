@@ -1,4 +1,4 @@
-pub enum VerifyAtomicFactResult {
-    Equality(VerifyEqualityResult),
-    NonEquationalAtomicFact(VerifyNonEquationalAtomicFactResult),
+pub enum VerifyAtomicFactResult2 {
+    Equality(VerifyEqualityResult2),
+    NonEquationalAtomicFact(VerifyNonEquationalAtomicFactResult2),
 }

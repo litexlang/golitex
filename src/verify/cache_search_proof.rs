@@ -1,8 +1,6 @@
 use crate::prelude::*;
-use crate::verify_rewrite::VerifyState;
-use crate::verify_rewrite::FactStmt;
 
-pub struct CacheSearchProof {
-    pub fact: FactStmt,
+pub struct CacheSearchProof2 {
+    pub fact: Fact,
     pub cite_fact_id: FactId,
 }

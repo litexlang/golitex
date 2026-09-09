@@ -18,6 +18,7 @@ impl ForallFact {
     /// The restricted conclusion type is intentional: every universal
     /// parameter belongs in this forall's header, so a stored conclusion can
     /// never contain a nested `forall` or `not forall` fact.
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new_canonical_forall(
         typed_parameters: TypedParameterList,
         dom_facts: Vec<Fact>,

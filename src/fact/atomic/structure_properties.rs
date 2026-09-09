@@ -31,18 +31,21 @@ pub struct NotIsCartFact {
 }
 
 impl IsCartFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(set: Obj, line_file: LineFile) -> Self {
         IsCartFact { fact_id: FactId::fresh(), set, line_file }
     }
 }
 
 impl NotIsCartFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(set: Obj, line_file: LineFile) -> Self {
         NotIsCartFact { fact_id: FactId::fresh(), set, line_file }
     }
 }
 
 impl IsTupleFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(tuple: Obj, line_file: LineFile) -> Self {
         IsTupleFact {
             fact_id: FactId::fresh(),
@@ -53,6 +56,7 @@ impl IsTupleFact {
 }
 
 impl NotIsTupleFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(tuple: Obj, line_file: LineFile) -> Self {
         NotIsTupleFact {
             fact_id: FactId::fresh(),

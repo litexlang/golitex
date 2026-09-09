@@ -12,6 +12,7 @@ pub struct ForallFactWithIff {
 }
 
 impl ForallFactWithIff {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(
         forall_fact: ForallFact,
         iff_facts: Vec<ExistOrAndChainAtomicFact>,

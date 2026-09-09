@@ -12,6 +12,7 @@ pub struct FnEqualInFact {
 }
 
 impl FnEqualInFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(left: Obj, right: Obj, set: Obj, line_file: LineFile) -> Self {
         FnEqualInFact {
             fact_id: FactId::fresh(),
@@ -42,6 +43,7 @@ pub struct FnEqualFact {
 }
 
 impl FnEqualFact {
+    #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         FnEqualFact {
             fact_id: FactId::fresh(),
