@@ -2,12 +2,13 @@ use crate::prelude::*;
 use crate::verify_rewrite::{VerifyState2, WellDefinednessId2};
 
 // How object well-definedness was established.
-// ByReuse is checked first (session memo cites a prior wd id). Then either a
-// trivial/atom case, or a constructor-specific ByXxxDef path.
+// ByReuse is checked first (session memo cites a prior wd id). Then either
+// ByTrivial, or a constructor-specific ByXxxDef path.
 pub enum WellDefinednessProofOfObj2 {
     ByReuse(WellDefinednessId2),
+    // Atom (identifier / bound), Number, Pi, EulerNumber, ImaginaryUnit,
+    // StandardSet, and similar leaves with no further WD obligations.
     ByTrivial,
-    ByAtom,
     ByAddDef(WellDefinednessProofOfAddObj2),
     // Other constructors with requirements get ByXxxDef variants later.
 }
@@ -34,10 +35,7 @@ impl Runtime {
             | Obj::EulerNumber(_)
             | Obj::Pi(_)
             | Obj::StandardSet(_)
-            | Obj::Atom(AtomObj::Bound(_)) => Ok(WellDefinednessProofOfObj2::ByTrivial),
-            Obj::Atom(AtomObj::Identifier(_)) | Obj::Atom(AtomObj::IdentifierWithMod(_)) => {
-                Ok(WellDefinednessProofOfObj2::ByAtom)
-            }
+            | Obj::Atom(_) => Ok(WellDefinednessProofOfObj2::ByTrivial),
             Obj::Add(add) => self.verify_add_obj_well_definedness2(add, verify_state),
             _ => todo!("object well-definedness for remaining Obj variants"),
         }

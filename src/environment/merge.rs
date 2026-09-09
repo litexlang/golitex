@@ -238,6 +238,7 @@ impl Environment {
             objects,
             predicate_algebraic_properties,
             inference_cache,
+            well_defined_objects: _,
         } = child;
         let EnvironmentPredicateAlgebraicPropertyStore {
             properties_by_predicate,

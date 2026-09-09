@@ -63,6 +63,7 @@ impl WellDefinednessEnvironmentDelta {
             objects,
             predicate_algebraic_properties,
             inference_cache,
+            well_defined_objects,
         } = self;
         Environment {
             definitions,
@@ -70,6 +71,7 @@ impl WellDefinednessEnvironmentDelta {
             objects,
             predicate_algebraic_properties,
             inference_cache,
+            well_defined_objects,
         }
     }
 }
