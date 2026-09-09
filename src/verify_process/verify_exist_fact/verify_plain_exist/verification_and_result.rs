@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 pub struct VerifyPlainExistFactResult {
-    pub fact: PlainExistFact,
+    pub fact: ExistentialSpec,
     pub well_defined_proof: ExistFactWellDefinedProof,
     pub searched_proof: PlainExistFactSearchedProof,
 }
@@ -78,6 +78,8 @@ impl Runtime {
         fact: &ExistentialSpec,
         verify_state: VerifyState,
     ) -> Result<Option<CacheSearchProof>, RuntimeError> {
+        let _ = (fact, verify_state);
+        todo!("search plain exist by cache")
     }
 
     pub fn search_plain_exist_fact_proof_by_known_exist_fact(
@@ -85,6 +87,8 @@ impl Runtime {
         fact: &ExistentialSpec,
         verify_state: VerifyState,
     ) -> Result<Option<PlainExistFactSearchedProofByKnownExistFact>, RuntimeError> {
+        let _ = (fact, verify_state);
+        todo!("search plain exist by known exist fact")
     }
 
     pub fn search_plain_exist_fact_proof_by_builtin_rule(
@@ -92,6 +96,8 @@ impl Runtime {
         fact: &ExistentialSpec,
         verify_state: VerifyState,
     ) -> Result<Option<PlainExistFactSearchedProofByBuiltinRule>, RuntimeError> {
+        let _ = (fact, verify_state);
+        todo!("search plain exist by builtin rule")
     }
 
     pub fn search_plain_exist_fact_proof_by_known_forall_fact(
@@ -99,5 +105,7 @@ impl Runtime {
         fact: &ExistentialSpec,
         verify_state: VerifyState,
     ) -> Result<Option<PlainExistFactSearchedProofByKnownForallFact>, RuntimeError> {
+        let _ = (fact, verify_state);
+        todo!("search plain exist by known forall fact")
     }
 }
