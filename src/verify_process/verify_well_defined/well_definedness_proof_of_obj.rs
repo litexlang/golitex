@@ -1,6 +1,6 @@
 pub enum WellDefinednessProofOfObj {
-    // 这里应该要对应上每个 obj 的 enum 的 field
-    // 举例
+    // Variants should match the fields of the Obj enum.
+    // Example:
     Add(WellDefinednessProofOfAddObj),
     // ...
 }
