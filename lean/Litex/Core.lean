@@ -1093,7 +1093,12 @@ theorem complexNativeEq {left right : ℂ} (same : Same left right) : left = rig
 end Same
 
 /-- A Litex set is represented by its exact element carrier. The carrier is
-the set extension itself; no target-type-specific observation is stored. -/
+the set extension itself; no target-type-specific observation is stored.
+
+`Litex.Set` is a backend representation used when Lean needs an exact carrier;
+it is not the source-language type of sets and it is not a universal box for
+all Litex objects. Source sethood remains a proposition (`IsSet`) over an
+arbitrary Lean host value. -/
 structure Set where
   Carrier : Litex.u.{u}
 
@@ -1151,7 +1156,12 @@ theorem coproduct_finite
 end Set
 
 /-- Heterogeneous membership: `x` belongs to `set` when it is semantically the
-same as one value in the set's exact carrier. -/
+same as one value in the set's exact carrier.
+
+`In` is the backend membership operation. A source-level `$in A` where `A` is
+an arbitrary set expression must first obtain the exact representation from
+the checked `IsSet` view, then apply this definition. Membership never changes
+the Lean type of `x`. -/
 def In
     {α : Litex.u.{u}}
     (x : α)
@@ -1223,6 +1233,38 @@ theorem same_rep
     · exact Classical.choose_spec hx
 
 end In
+
+/-- Extensional equality of two exact-carrier set representations.
+
+This proposition is deliberately derived from heterogeneous membership. It is
+the coherence evidence required when a reviewed representation bridge relates
+two set endpoints. Arbitrary `Same` evidence does not imply it: `Same` is the
+object-level semantic equality relation, while `SetEquivalent` records that a
+particular pair of set representations has the same membership extension. -/
+def SetEquivalent
+    (left right : Litex.Set.{u}) : Prop :=
+  ∀ {α : Litex.u.{u}} (x : α), In x left ↔ In x right
+
+namespace SetEquivalent
+
+theorem refl (set : Litex.Set.{u}) : SetEquivalent set set := by
+  intro α x
+  rfl
+
+theorem symm
+    {left right : Litex.Set.{u}}
+    (h : SetEquivalent left right) : SetEquivalent right left := by
+  intro α x
+  exact (h x).symm
+
+theorem trans
+    {left middle right : Litex.Set.{u}}
+    (h₁ : SetEquivalent left middle)
+    (h₂ : SetEquivalent middle right) : SetEquivalent left right := by
+  intro α x
+  exact (h₁ x).trans (h₂ x)
+
+end SetEquivalent
 
 /-- Exact binary union carrier. The two sides remain separately typed and are
 joined only by the reviewed `Sum` representation bridges in `Same`. -/

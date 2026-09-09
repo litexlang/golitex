@@ -19,7 +19,7 @@ pub use cached_known_fact::CachedKnownFact;
 pub use facts::EnvironmentFactStore;
 pub use forall_argument_shape::{forall_argument_shape, ForallArgumentShape};
 pub use forall_conclusions::ForallConclusionIndex;
-pub use known_equality::KnownEquality;
+pub use known_equality::{EqualityClassId, EqualityHistoryEvent, KnownEquality};
 pub use known_equality_proof_step::KnownEqualityProofStep;
 pub use quantified::QuantifiedFactIndex;
 pub use set_relations::SetRelationIndex;

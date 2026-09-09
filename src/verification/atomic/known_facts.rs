@@ -333,17 +333,11 @@ impl Runtime {
 
         if let Some(path) = equalities.proof_path(&equal_fact.left, &equal_fact.right) {
             for proof_step in path {
-                let equality_fact: Fact = AtomicFact::EqualFact(proof_step.equality.clone()).into();
-                let Some(equality_fact_id) =
-                    self.fact_id_for_transport_fact(&equality_fact, module_names)
-                else {
-                    return false;
-                };
                 steps.push(EqualityTransportStep::new(
                     proof_step.from,
                     proof_step.to,
                     proof_step.equality,
-                    equality_fact_id,
+                    proof_step.fact_id,
                 ));
             }
             return true;

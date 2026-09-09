@@ -1,4 +1,6 @@
 use crate::prelude::*;
+use crate::verify_rewrite::WellDefinednessId2;
+use std::collections::HashMap;
 
 /// Checked environment changes produced while preflighting well-definedness.
 ///
@@ -13,6 +15,7 @@ pub struct WellDefinednessEnvironmentDelta {
     objects: EnvironmentObjectKnowledgeStore,
     predicate_algebraic_properties: EnvironmentPredicateAlgebraicPropertyStore,
     inference_cache: EnvironmentInferenceCache,
+    well_defined_objects: HashMap<ObjString, WellDefinednessId2>,
 }
 
 impl WellDefinednessEnvironmentDelta {
@@ -41,6 +44,7 @@ impl WellDefinednessEnvironmentDelta {
             objects,
             predicate_algebraic_properties,
             inference_cache,
+            well_defined_objects,
         } = environment;
         Self {
             definitions,
@@ -48,6 +52,7 @@ impl WellDefinednessEnvironmentDelta {
             objects,
             predicate_algebraic_properties,
             inference_cache,
+            well_defined_objects,
         }
     }
 

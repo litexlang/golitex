@@ -83,28 +83,18 @@ impl Runtime {
         let mut equalities = KnownEquality::new();
         for environment in self.iter_environments_from_top() {
             for equality in environment.facts.known_equality.direct_equalities() {
-                let equality_fact: Fact = AtomicFact::EqualFact(equality.clone()).into();
-                if self
-                    .known_fact_id_for_fact(&equality_fact)
-                    .ok()
-                    .flatten()
-                    .is_some()
-                {
-                    equalities.store(&equality);
-                }
+                equalities.store(&equality);
             }
         }
         equalities
             .proof_path(&equal_fact.left, &equal_fact.right)?
             .into_iter()
             .map(|step| {
-                let equality_fact: Fact = AtomicFact::EqualFact(step.equality.clone()).into();
-                let source_fact_id = self.known_fact_id_for_fact(&equality_fact).ok().flatten()?;
                 Some(KnownEqualityBuiltinRuleStep::new(
                     step.from,
                     step.to,
                     step.equality,
-                    source_fact_id,
+                    step.fact_id,
                 ))
             })
             .collect()

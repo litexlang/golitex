@@ -9,6 +9,12 @@ pub struct KnownEqualityProofStep {
     pub from: Obj,
     pub to: Obj,
     pub equality: EqualFact,
+    /// The exact environment fact that supplied this proof edge.
+    ///
+    /// `EqualFact` already owns this identity; keeping it beside the oriented
+    /// path step means downstream compiler consumers do not have to rediscover
+    /// it from a rendered proposition.
+    pub fact_id: FactId,
 }
 
 impl std::fmt::Debug for KnownEqualityProofStep {
@@ -17,6 +23,7 @@ impl std::fmt::Debug for KnownEqualityProofStep {
             .field("from", &self.from.to_string())
             .field("to", &self.to.to_string())
             .field("equality", &self.equality.to_string())
+            .field("fact_id", &self.fact_id)
             .finish()
     }
 }
