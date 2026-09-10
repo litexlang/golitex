@@ -34,7 +34,6 @@ pub struct ExecEnv {
 
     /// Environment-scoped keys that deduplicate persistent infer-rule firings.
     pub known_facts_cache: KnownFactsCache,
-
 }
 
 impl ExecEnv {

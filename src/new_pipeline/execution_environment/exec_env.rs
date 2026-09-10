@@ -1,16 +1,28 @@
 pub struct ExecEnv {
+    // 每次对应 atom 的时候都要往里面store一下
     pub defined_atoms_and_their_ids: HashMap<Id, Atom>,
+
+    // 里面存了predicate,atom,struct等各种定义。每次定义东西的时候放
     pub definitions: DefinitionMemory,
 
+    // 每次store fact的时候往里面放一下
     pub known_facts_and_their_id: HashMap<Id, Fact>,
     pub facts: KnownFactMemory,
 
-    pub special_object_properties: HashMap<ObjString, SpecialObjectPropertyMemory>,
+    // store fact如果是特殊的事实那往里面放
+    pub special_object_properties: HashMap<ObjString, Vec<SpecialObjProperty>>,
 
-    pub known_prop_algebraic_property_ids: HashMap<Id, (PropName, PropAlgebraicProperty)>,
+    // 每次证明出来prop的性质的时候放一下
     pub prop_algebraic_properties: HashMap<PropName, Vec<PropAlgebraicProperty>>,
 
+    // 每次证明好一个obj的wd的时候放一下
     pub well_defined_objects_and_their_ids: HashMap<ObjString, Id>,
+
+    // 我不太确定这个东西有没有有用，放一下再说
+    pub known_prop_algebraic_property_ids: HashMap<Id, (PropName, PropAlgebraicProperty)>,
+
+    // 我不太确定这个东西有没有有用，放一下再说
+    pub well_defined_ids_of_objects: HashMap<Id, Obj>,
 }
 
 pub struct DefinitionMemory {
@@ -41,4 +53,16 @@ pub enum PropAlgebraicProperty {
     SymmetricArgumentPermutate(Vec<Vec<usize>>),
     Reflexive,
     Antisymmetric,
+}
+
+pub enum SpecialObjProperty {
+    TupleEquality((Tuple, FactId)),
+    TupleOwner((Cart, FactId)),
+    CartEquality((Cart, FactId)),
+    FiniteSeqEquality((FiniteSeqListObj, FactId)),
+    FiniteSeqOwner((FiniteSeqSet, FactId)),
+    SetBuilderEquality((SetBuilder, FactId)),
+    SimplifiedValue(KnownObjValue),
+    InFunctionSet((FnSetBody, FactId)),
+    EqualToFunction((Obj, FactId)),
 }
