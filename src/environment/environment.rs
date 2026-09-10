@@ -1,6 +1,4 @@
 use crate::prelude::*;
-use crate::verify_rewrite::WellDefinednessId2;
-use std::collections::HashMap;
 
 /// The mutable mathematical context for a runtime environment.
 ///
@@ -17,8 +15,7 @@ use std::collections::HashMap;
 /// - derived object-shape caches for tuples, carts, finite sequences,
 ///   matrices, object values, set builders, and function-set information;
 /// - persistent infer-rule firing deduplication. Returned WD and truth proofs
-///   belong to `VerifyState` and `VerifyFactResult`, never this environment;
-/// - object well-definedness identities whose proof details remain in Results.
+///   belong to verification state and fact results, never this environment.
 #[derive(Clone)]
 pub struct ExecEnv {
     /// Definitions and symbol identities for declarations visible to later
@@ -38,9 +35,6 @@ pub struct ExecEnv {
     /// Environment-scoped keys that deduplicate persistent infer-rule firings.
     pub known_facts_cache: KnownFactsCache,
 
-    /// Objects whose well-definedness has been established in this environment.
-    /// The proof itself remains owned by the corresponding Result.
-    pub well_defined_objects: HashMap<ObjString, WellDefinednessId2>,
 }
 
 impl ExecEnv {
@@ -51,7 +45,6 @@ impl ExecEnv {
             object_properties: ObjectPropertyMemory::new(),
             prop_algebraic_properties: PropAlgebraicPropertyMemory::new(),
             known_facts_cache: KnownFactsCache::new(),
-            well_defined_objects: HashMap::new(),
         }
     }
 }

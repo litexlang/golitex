@@ -238,7 +238,6 @@ impl ExecEnv {
             object_properties: objects,
             prop_algebraic_properties: predicate_algebraic_properties,
             known_facts_cache: inference_cache,
-            well_defined_objects: _,
         } = child;
         let PropAlgebraicPropertyMemory {
             properties_by_predicate,

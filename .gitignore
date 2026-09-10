@@ -90,3 +90,6 @@ todo/
 /showcases/math_concepts_in_litex/*/.drafts/
 
 scratch/
+
+./pptbuild
+.pptbuild/

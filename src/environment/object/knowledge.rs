@@ -4,7 +4,7 @@ use crate::prelude::*;
 
 /// All reusable information known about one object equality key.
 #[derive(Clone, Default)]
-pub struct SpecialKnowledgeOfObject {
+pub struct SpecialObjectPropertyMemory {
     pub tuple_equality: Option<(Option<Tuple>, Option<Cart>, LineFile)>,
     pub cart_equality: Option<(Cart, LineFile)>,
     pub finite_sequence_list_equality: Option<(FiniteSeqListObj, Option<FiniteSeqSet>, LineFile)>,
