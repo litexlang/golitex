@@ -28,7 +28,7 @@ impl Runtime {
         };
         let memberships: Vec<InFact> = self
             .iter_environments_from_top()
-            .flat_map(|environment| environment.facts.set_relations.owner_sets.values())
+            .flat_map(|environment| environment.facts.special_set_relations.owner_sets.values())
             .flat_map(|owner_sets| owner_sets.values())
             .filter(|membership| objs_match_for_pattern(&membership.element, &goal.element))
             .cloned()
@@ -307,7 +307,7 @@ impl Runtime {
             })
             .collect();
         for environment in self.iter_environments_from_top() {
-            for owner_sets in environment.facts.set_relations.owner_sets.values() {
+            for owner_sets in environment.facts.special_set_relations.owner_sets.values() {
                 for membership in owner_sets.values() {
                     if !memberships
                         .iter()
@@ -1951,7 +1951,11 @@ impl Runtime {
         owner_memberships: &mut Vec<InFact>,
     ) {
         for element_key in element_keys {
-            let Some(owner_sets) = environment.facts.set_relations.owner_sets.get(element_key)
+            let Some(owner_sets) = environment
+                .facts
+                .special_set_relations
+                .owner_sets
+                .get(element_key)
             else {
                 continue;
             };
@@ -1975,7 +1979,7 @@ impl Runtime {
         for owner_set_key in owner_set_keys {
             let Some(direct_supersets) = environment
                 .facts
-                .set_relations
+                .special_set_relations
                 .direct_supersets
                 .get(owner_set_key)
             else {

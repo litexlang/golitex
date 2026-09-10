@@ -672,7 +672,7 @@ impl Runtime {
         seen: &mut std::collections::HashSet<String>,
     ) {
         for obj_string in obj_strings {
-            let Some(owner_sets) = environment.facts.set_relations.owner_sets.get(obj_string)
+            let Some(owner_sets) = environment.facts.special_set_relations.owner_sets.get(obj_string)
             else {
                 continue;
             };

@@ -1144,14 +1144,14 @@ try:
             (
                 environment
                     .facts
-                    .set_relations
+                    .special_set_relations
                     .owner_sets
                     .values()
                     .map(|owner_sets| owner_sets.len())
                     .sum::<usize>(),
                 environment
                     .facts
-                    .set_relations
+                    .special_set_relations
                     .direct_supersets
                     .values()
                     .map(|supersets| supersets.len())
@@ -1177,14 +1177,14 @@ try:
             (
                 environment
                     .facts
-                    .set_relations
+                    .special_set_relations
                     .owner_sets
                     .values()
                     .map(|owner_sets| owner_sets.len())
                     .sum::<usize>(),
                 environment
                     .facts
-                    .set_relations
+                    .special_set_relations
                     .direct_supersets
                     .values()
                     .map(|supersets| supersets.len())

@@ -148,7 +148,7 @@ impl Runtime {
         self.iter_environments_from_top().find_map(|environment| {
             environment
                 .facts
-                .set_relations
+                .special_set_relations
                 .owner_sets
                 .get(&key)?
                 .values()

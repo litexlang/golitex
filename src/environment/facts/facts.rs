@@ -7,9 +7,9 @@ use crate::prelude::*;
 pub struct KnownFactMemory {
     pub known_equality: KnownEquality,
     pub atomic: AtomicFactMemory,
-    pub set_relations: SetRelationMemory,
+    pub special_set_relations: SpecialSetRelationMemory,
     pub quantified: QuantifiedFactMemory,
-    pub forall_conclusions: ForallConclusionMemory,
+    pub forall_conclusions: KnownForallFactMemory,
     pub stored_facts: EnvironmentStoredFactStore,
 }
 
@@ -18,9 +18,9 @@ impl KnownFactMemory {
         Self {
             known_equality: KnownEquality::new(),
             atomic: AtomicFactMemory::new(),
-            set_relations: SetRelationMemory::new(),
+            special_set_relations: SpecialSetRelationMemory::new(),
             quantified: QuantifiedFactMemory::new(),
-            forall_conclusions: ForallConclusionMemory::new(),
+            forall_conclusions: KnownForallFactMemory::new(),
             stored_facts: EnvironmentStoredFactStore::default(),
         }
     }
@@ -31,13 +31,13 @@ impl KnownFactMemory {
         let KnownFactMemory {
             known_equality: _,
             atomic,
-            set_relations,
+            special_set_relations: set_relations,
             quantified,
             forall_conclusions,
             stored_facts,
         } = child;
         self.atomic.merge_from(atomic);
-        self.set_relations.merge_from(set_relations);
+        self.special_set_relations.merge_from(set_relations);
         self.quantified.merge_from(quantified);
         self.forall_conclusions.merge_from(forall_conclusions);
         self.stored_facts.merge_from(stored_facts)

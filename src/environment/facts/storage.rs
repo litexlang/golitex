@@ -18,7 +18,7 @@ impl ExecEnv {
                 let element_key = obj_equality_key(&in_fact.element);
                 let set_key = obj_equality_key(&in_fact.set);
                 self.facts
-                    .set_relations
+                    .special_set_relations
                     .owner_sets
                     .entry(element_key.clone())
                     .or_default()
@@ -27,7 +27,7 @@ impl ExecEnv {
 
                 if let Obj::PowerSet(power_set) = &in_fact.set {
                     self.facts
-                        .set_relations
+                        .special_set_relations
                         .direct_supersets
                         .entry(element_key)
                         .or_default()
@@ -37,7 +37,7 @@ impl ExecEnv {
             }
             AtomicFact::SubsetFact(subset_fact) => {
                 self.facts
-                    .set_relations
+                    .special_set_relations
                     .direct_supersets
                     .entry(obj_equality_key(&subset_fact.left))
                     .or_default()
@@ -46,7 +46,7 @@ impl ExecEnv {
             }
             AtomicFact::SupersetFact(superset_fact) => {
                 self.facts
-                    .set_relations
+                    .special_set_relations
                     .direct_supersets
                     .entry(obj_equality_key(&superset_fact.right))
                     .or_default()

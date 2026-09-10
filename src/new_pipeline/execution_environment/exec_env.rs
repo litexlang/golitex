@@ -1,32 +1,48 @@
 pub struct ExecEnv {
-    /// Definitions and symbol identities for declarations visible to later
-    /// statements.
+    pub defined_atoms_and_their_ids: HashMap<Id, Atom>,
     pub definitions: DefinitionMemory,
 
-    /// Stored facts and indexes used to find mathematical evidence.
+    pub known_facts_and_their_id: HashMap<Id, Fact>,
     pub facts: KnownFactMemory,
 
-    /// Known object values and shape facets keyed by canonical object string.
-    pub object_properties: ObjectPropertyMemory,
+    // TODO: 语义变化：我其实想要让现有的这个功能弱化，就是只有有id的symbol才能用上special object Property，而不是现在obj都行
+    pub special_object_properties: HashMap<Id, EnvironmentObjectKnowledge>,
 
-    /// Algebraic properties registered for predicates, such as transitivity,
-    /// symmetry, reflexivity, and antisymmetry.
-    pub prop_algebraic_properties: PropAlgebraicPropertyMemory,
+    pub known_prop_algebraic_property_ids: HashMap<Id, (PropName, PropAlgebraicProperty)>,
+    pub prop_algebraic_properties: HashMap<PropName, Vec<PropAlgebraicProperty>>,
 
-    /// Objects whose well-definedness has been established in this environment.
-    /// The proof itself remains owned by the corresponding Result.
-    /// 每次当前环境里证明了某个东西的wd后，都会被放进来。
+    pub known_well_defined_object_ids: HashMap<Id>,
     pub well_defined_objects: HashMap<ObjString, WellDefinednessId2>,
-    pub known_well_defined_fact_ids: HashMap<Id>,
+}
+
+pub struct DefinitionMemory {
+    pub symbol_definitions: HashMap<String, SymbolDefinition>,
+    pub predicate_definitions: HashMap<PropName, DefPropStmt>,
+    pub abstract_predicate_definitions: HashMap<AbstractPropName, DefAbstractPropStmt>,
+    pub algorithm_definitions: HashMap<AlgoName, DefAlgoStmt>,
+    pub structure_definitions: HashMap<StructName, DefStructStmt>,
+    pub template_definitions: HashMap<TemplateName, DefTemplateStmt>,
+    pub setting_definitions: HashMap<String, DefSettingStmt>,
+    pub theorem_definitions: HashMap<ThmName, DefThmStmt>,
+    pub axiom_definitions: HashMap<ThmName, AxiomStmt>,
+    pub strategy_definitions: HashMap<StrategyName, DefStrategyStmt>,
 }
 
 pub struct KnownFactMemory {
     pub known_equality: KnownEquality,
-    pub atomic: AtomicFactIndex,
-    pub set_relations: SetRelationIndex,
-    pub quantified: QuantifiedFactIndex,
-    pub forall_conclusions: ForallConclusionIndex,
-    pub stored_facts: EnvironmentStoredFactStore,
-    pub known_fact_cache: HashMap<FactString, CachedKnownFact>,
-    pub facts_by_id: HashMap<FactId, Fact>,
+    pub atomic: AtomicFactMemory,
+    pub set_relations: SetRelationMemory,
+    pub or_facts: HashMap<OrFactKey, Vec<OrFact>>,
+    pub exist_facts: HashMap<ExistFactKey, Vec<ExistFact>>,
+    pub forall_facts: ForallConclusionMemory,
+    pub fact_cache: HashMap<FactString, CachedKnownFact>,
 }
+
+pub enum PropAlgebraicProperty {
+    Transitive,
+    SymmetricArgumentPermutate(Vec<Vec<usize>>),
+    Reflexive,
+    Antisymmetric,
+}
+
+pub struct PropAlgebraicProperty {}
