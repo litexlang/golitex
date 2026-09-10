@@ -6,7 +6,7 @@ use std::collections::HashMap;
 /// Object knowledge has one canonical entry per object equality key.
 #[derive(Clone)]
 pub struct ObjectPropertyMemory {
-    pub knowledge_by_object: HashMap<ObjString, EnvironmentObjectKnowledge>,
+    pub knowledge_by_object: HashMap<ObjString, SpecialObjectPropertyMemory>,
 }
 
 impl ObjectPropertyMemory {
@@ -16,11 +16,11 @@ impl ObjectPropertyMemory {
         }
     }
 
-    pub fn knowledge(&self, key: &str) -> Option<&EnvironmentObjectKnowledge> {
+    pub fn knowledge(&self, key: &str) -> Option<&SpecialObjectPropertyMemory> {
         self.knowledge_by_object.get(key)
     }
 
-    pub fn knowledge_mut(&mut self, key: ObjString) -> &mut EnvironmentObjectKnowledge {
+    pub fn knowledge_mut(&mut self, key: ObjString) -> &mut SpecialObjectPropertyMemory {
         self.knowledge_by_object.entry(key).or_default()
     }
 

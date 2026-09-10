@@ -21,11 +21,11 @@ pub use crate::algebraic_normalization::{
 };
 pub use crate::environment::{
     forall_argument_shape, AtomicFactMemory, CachedKnownFact, DefinitionMemory,
-    EnvironmentObjectKnowledge, EnvironmentPredicateProperties, EnvironmentStoredFactStore,
-    EqualityClassId, EqualityHistoryEvent, ExecEnv, ForallArgumentShape, ForallConclusionMemory,
-    KnownEquality, KnownEqualityProofStep, KnownFactMemory, KnownFactsCache, KnownFnInfo,
+    SpecialObjectPropertyMemory, EnvironmentPredicateProperties, EnvironmentStoredFactStore,
+    EqualityClassId, EqualityHistoryEvent, ExecEnv, ForallArgumentShape, KnownEquality,
+    KnownEqualityProofStep, KnownFactMemory, KnownFactsCache, KnownFnInfo, KnownForallFactMemory,
     KnownObjValue, ObjectPropertyMemory, PropAlgebraicPropertyMemory, QuantifiedFactMemory,
-    SetRelationMemory, StoredFactRecord, StoredForallConclusionReference,
+    SpecialSetRelationMemory, StoredFactRecord, StoredForallConclusionReference,
     WellDefinednessEnvironmentDelta,
 };
 pub use crate::error::exec_stmt_error_with_stmt_and_cause;

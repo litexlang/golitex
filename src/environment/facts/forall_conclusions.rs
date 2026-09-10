@@ -6,7 +6,7 @@ use std::rc::Rc;
 
 /// Search indexes for conclusions projected from exact stored universal facts.
 #[derive(Clone)]
-pub struct ForallConclusionMemory {
+pub struct KnownForallFactMemory {
     pub atomic_with_parameterized_head:
         HashMap<(AtomicFactKey, bool), Vec<(AtomicFact, Rc<StoredForallConclusionReference>)>>,
     pub atomic_by_argument_shape: HashMap<
@@ -18,7 +18,7 @@ pub struct ForallConclusionMemory {
     pub disjunction: HashMap<OrFactKey, Vec<(OrFact, Rc<StoredForallConclusionReference>)>>,
 }
 
-impl ForallConclusionMemory {
+impl KnownForallFactMemory {
     pub fn new() -> Self {
         Self {
             atomic_with_parameterized_head: HashMap::new(),
