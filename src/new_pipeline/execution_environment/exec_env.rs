@@ -5,14 +5,12 @@ pub struct ExecEnv {
     pub known_facts_and_their_id: HashMap<Id, Fact>,
     pub facts: KnownFactMemory,
 
-    // TODO: 语义变化：我其实想要让现有的这个功能弱化，就是只有有id的symbol才能用上special object Property，而不是现在obj都行
-    pub special_object_properties: HashMap<Id, EnvironmentObjectKnowledge>,
+    pub special_object_properties: HashMap<ObjString, SpecialObjectPropertyMemory>,
 
     pub known_prop_algebraic_property_ids: HashMap<Id, (PropName, PropAlgebraicProperty)>,
     pub prop_algebraic_properties: HashMap<PropName, Vec<PropAlgebraicProperty>>,
 
-    pub known_well_defined_object_ids: HashMap<Id>,
-    pub well_defined_objects: HashMap<ObjString, WellDefinednessId2>,
+    pub well_defined_objects_and_their_ids: HashMap<ObjString, Id>,
 }
 
 pub struct DefinitionMemory {
@@ -44,5 +42,3 @@ pub enum PropAlgebraicProperty {
     Reflexive,
     Antisymmetric,
 }
-
-pub struct PropAlgebraicProperty {}
