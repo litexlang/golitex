@@ -1,6 +1,6 @@
-use crate::new_pipeline::runtime::{PipelineResult, RealOrVirtualPath, Runtime};
+use crate::new_pipeline::runtime::{RuntimeResult, RealOrVirtualPath, Runtime};
 
-pub fn run_eval(code: String) -> PipelineResult<()> {
+pub fn run_eval(code: String) -> RuntimeResult<()> {
     let mut runtime = Runtime::new();
     runtime.begin_file(RealOrVirtualPath::Eval, false);
     if let Err(error) = runtime.run_litex_code(&code) {

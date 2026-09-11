@@ -1,5 +1,8 @@
+use crate::new_pipeline::execute::execute_fact_stmt::verify_obj_well_defined::
+    WellDefinednessProofOfObj2;
+use crate::new_pipeline::execute::execute_fact_stmt::VerifyState2;
+use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::prelude::*;
-use crate::new_pipeline::execute_fact_stmt::VerifyState2;
 
 pub struct AtomicFactWellDefinedProof2 {
     pub well_defined_of_each_parameter: Vec<WellDefinednessProofOfObj2>,
@@ -10,7 +13,7 @@ impl Runtime {
         &mut self,
         fact: &AtomicFact,
         verify_state: VerifyState2,
-    ) -> Result<AtomicFactWellDefinedProof2, RuntimeError> {
+    ) -> RuntimeResult<AtomicFactWellDefinedProof2> {
         let mut well_defined_of_each_parameter = Vec::new();
         for arg in fact.args_ref() {
             well_defined_of_each_parameter

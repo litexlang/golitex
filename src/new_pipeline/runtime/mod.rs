@@ -4,7 +4,7 @@ pub mod error;
 pub mod runtime;
 pub mod runtime_ids;
 
-pub use error::{PipelineError, PipelineResult};
+pub use error::{RuntimeError, RuntimeResult};
 pub use runtime::{Ids, ParseScope, RealOrVirtualPath, Runtime};
 pub use runtime_ids::{
     AtomId, FactId, PropAlgebraicPropertyId, SymbolId, WellDefinednessId,

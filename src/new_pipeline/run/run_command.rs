@@ -1,37 +1,37 @@
 use super::command::CliCommand;
 use super::{run_eval, run_file, run_repo};
-use crate::new_pipeline::runtime::PipelineResult;
+use crate::new_pipeline::runtime::RuntimeResult;
 
 pub const NEW_PIPELINE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Debug)]
-pub enum DispatchOutcome {
+pub enum RunCommandOutcome {
     Ran,
     Help,
     Version,
 }
 
-pub fn run_cli_command(command: CliCommand) -> PipelineResult<DispatchOutcome> {
+pub fn run_command(command: CliCommand) -> RuntimeResult<RunCommandOutcome> {
     match command {
         CliCommand::Help => {
             print_help_message();
-            Ok(DispatchOutcome::Help)
+            Ok(RunCommandOutcome::Help)
         }
         CliCommand::Version => {
             println!("litex new_pipeline {}", NEW_PIPELINE_VERSION);
-            Ok(DispatchOutcome::Version)
+            Ok(RunCommandOutcome::Version)
         }
         CliCommand::Eval(code) => {
             run_eval::run_eval(code)?;
-            Ok(DispatchOutcome::Ran)
+            Ok(RunCommandOutcome::Ran)
         }
         CliCommand::File(path) => {
             run_file::run_file(path)?;
-            Ok(DispatchOutcome::Ran)
+            Ok(RunCommandOutcome::Ran)
         }
         CliCommand::Repository(path) => {
             run_repo::run_repo(path)?;
-            Ok(DispatchOutcome::Ran)
+            Ok(RunCommandOutcome::Ran)
         }
     }
 }

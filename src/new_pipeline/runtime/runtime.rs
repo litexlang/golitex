@@ -6,6 +6,7 @@ use crate::new_pipeline::module_manager::{
     ExportFileAndItsExecEnv, ModuleHierarchy, ModuleManager,
 };
 use std::collections::HashMap;
+use std::fmt;
 use std::path::PathBuf;
 
 pub struct ParseScope {
@@ -52,6 +53,15 @@ impl RealOrVirtualPath {
                 .map(str::to_owned)
                 .unwrap_or_else(|| path.to_string_lossy().into_owned()),
             RealOrVirtualPath::Eval => "<eval>".to_string(),
+        }
+    }
+}
+
+impl fmt::Display for RealOrVirtualPath {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            RealOrVirtualPath::Real(path) => write!(f, "{}", path.display()),
+            RealOrVirtualPath::Eval => write!(f, "<eval>"),
         }
     }
 }

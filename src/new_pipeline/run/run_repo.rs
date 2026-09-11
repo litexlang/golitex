@@ -1,10 +1,10 @@
-use crate::new_pipeline::runtime::{PipelineError, PipelineResult, RealOrVirtualPath, Runtime};
+use crate::new_pipeline::runtime::{RuntimeError, RuntimeResult, RealOrVirtualPath, Runtime};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-pub fn run_repo(path: PathBuf) -> PipelineResult<()> {
+pub fn run_repo(path: PathBuf) -> RuntimeResult<()> {
     if path.as_os_str().is_empty() {
-        return Err(PipelineError::InvalidArguments(
+        return Err(RuntimeError::InvalidArguments(
             "-r requires a repository path".to_string(),
         ));
     }
@@ -12,9 +12,9 @@ pub fn run_repo(path: PathBuf) -> PipelineResult<()> {
     run_module_dir(&mut runtime, &path)
 }
 
-fn run_module_dir(runtime: &mut Runtime, module_dir: &Path) -> PipelineResult<()> {
+fn run_module_dir(runtime: &mut Runtime, module_dir: &Path) -> RuntimeResult<()> {
     let config_path = module_dir.join("litex.config");
-    let source = fs::read_to_string(&config_path).map_err(|error| PipelineError::Io {
+    let source = fs::read_to_string(&config_path).map_err(|error| RuntimeError::Io {
         path: config_path.clone(),
         message: error.to_string(),
     })?;
@@ -81,7 +81,7 @@ fn run_module_dir(runtime: &mut Runtime, module_dir: &Path) -> PipelineResult<()
 
     for name in std_imports {
         let _ = runtime;
-        return Err(PipelineError::Unsupported(format!(
+        return Err(RuntimeError::Unsupported(format!(
             "import std `{name}` is not wired yet"
         )));
     }
@@ -97,7 +97,7 @@ fn run_module_dir(runtime: &mut Runtime, module_dir: &Path) -> PipelineResult<()
             continue;
         }
 
-        let file_source = fs::read_to_string(&export_path).map_err(|error| PipelineError::Io {
+        let file_source = fs::read_to_string(&export_path).map_err(|error| RuntimeError::Io {
             path: export_path.clone(),
             message: error.to_string(),
         })?;
@@ -118,7 +118,7 @@ fn parse_name_eq_path(
     config_path: &Path,
     line: usize,
     table: &str,
-) -> PipelineResult<(String, PathBuf)> {
+) -> RuntimeResult<(String, PathBuf)> {
     let Some((raw_key, raw_value)) = text.split_once('=') else {
         return Err(config_err(
             config_path,
@@ -138,8 +138,8 @@ fn parse_name_eq_path(
     Ok((name, PathBuf::from(&value[1..value.len() - 1])))
 }
 
-fn config_err(config_path: &Path, line: usize, message: &str) -> PipelineError {
-    PipelineError::InvalidArguments(format!(
+fn config_err(config_path: &Path, line: usize, message: &str) -> RuntimeError {
+    RuntimeError::InvalidArguments(format!(
         "{}:{}: {}",
         config_path.display(),
         line,
