@@ -1,6 +1,16 @@
 use crate::new_pipeline::runtime::runtime_ids::FactId;
 use crate::prelude::*;
-use crate::verify_rewrite::VerifyState2;
+use crate::new_pipeline::execute_fact_stmt::VerifyState2;
+use crate::new_pipeline::execute_fact_stmt::verify_atomic_fact::search_proof::
+    VerifyAtomicFactSearchProof2;
+use crate::new_pipeline::execute_fact_stmt::cache_search_proof::CacheSearchProof2;
+use crate::new_pipeline::execute_fact_stmt::verify_atomic_fact::well_defined::
+    AtomicFactWellDefinedProof2;
+use crate::new_pipeline::execute_fact_stmt::verify_fact_result::VerifyFactResult2;
+use super::by_builtin_algebraic_rewrite_result::*;
+use super::by_builtin_rule_result::*;
+use super::by_builtin_strategy_result::*;
+use super::by_known_algebraic_rewrite_result::*;
 
 pub struct VerifyNonEquationalAtomicFactResult2 {
     pub fact: AtomicFact,
@@ -45,7 +55,12 @@ impl Runtime {
     ) -> Result<VerifyNonEquationalAtomicFactResult2, RuntimeError> {
         let well_defined_proof =
             self.verify_atomic_fact_well_definedness2(fact, verify_state.clone())?;
-        let searched_proof = self.search_non_equational_atomic_fact_proof2(fact, verify_state)?;
+        let searched_proof = match self.verify_atomic_fact_search_proof(fact, verify_state)? {
+            VerifyAtomicFactSearchProof2::NonEquationalAtomicFact(proof) => proof,
+            VerifyAtomicFactSearchProof2::Equality(_) => {
+                unreachable!("a non-equational fact must use the non-equational search pipeline")
+            }
+        };
         Ok(VerifyNonEquationalAtomicFactResult2 {
             fact: fact.clone(),
             well_defined_proof,
@@ -58,6 +73,11 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: VerifyState2,
     ) -> Result<NonEquationalAtomicFactSearchedProof2, RuntimeError> {
+        // Ordinary truth search is scoped to the currently active execution
+        // environments. In particular, this pipeline never searches the
+        // persistent module environments held by ModuleManager.
+        let _visible_environment_count = self.current_atomic_fact_search_environment_count();
+
         if let Some(result) =
             self.search_non_equational_atomic_proof_by_cache2(fact, verify_state.clone())?
         {
@@ -78,11 +98,11 @@ impl Runtime {
             ));
         }
 
-        if let Some(result) =
-            self.search_non_equational_atomic_proof_by_definition2(fact, verify_state.clone())?
-        {
-            return Ok(NonEquationalAtomicFactSearchedProof2::ByDefinition(result));
-        }
+        // Definition/theorem lookup is intentionally not part of ordinary
+        // atomic-fact search. A loaded module is usable only through an
+        // explicit `by def` / `by thm` directive, which resolves its own
+        // module environment. Keeping this slot out of the implicit pipeline
+        // prevents ModuleManager contents from becoming ambient facts.
 
         if let Some(result) = self
             .search_non_equational_atomic_proof_by_builtin_strategy2(fact, verify_state.clone())?
@@ -150,6 +170,12 @@ impl Runtime {
         todo!("search non-equational atomic by known atomic fact")
     }
 
+    /// Resolve a definition for an explicit `by def` proof request.
+    ///
+    /// This function is deliberately not called by
+    /// `search_non_equational_atomic_fact_proof2`; keeping it as a separate
+    /// hook prevents an imported module definition from becoming an ambient
+    /// fact during ordinary search.
     pub fn search_non_equational_atomic_proof_by_definition2(
         &mut self,
         fact: &AtomicFact,

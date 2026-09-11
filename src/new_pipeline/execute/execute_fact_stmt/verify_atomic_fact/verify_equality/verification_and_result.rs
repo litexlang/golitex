@@ -1,6 +1,16 @@
 use crate::new_pipeline::runtime::runtime_ids::FactId;
 use crate::prelude::*;
-use crate::verify_rewrite::VerifyState2;
+use crate::new_pipeline::execute_fact_stmt::VerifyState2;
+use crate::new_pipeline::execute_fact_stmt::verify_atomic_fact::search_proof::
+    VerifyAtomicFactSearchProof2;
+use crate::new_pipeline::execute_fact_stmt::cache_search_proof::CacheSearchProof2;
+use crate::new_pipeline::execute_fact_stmt::verify_atomic_fact::well_defined::
+    AtomicFactWellDefinedProof2;
+use crate::new_pipeline::execute_fact_stmt::verify_fact_result::VerifyFactResult2;
+use super::by_builtin_algebraic_rewrite_result::*;
+use super::by_builtin_rule_result::*;
+use super::by_builtin_strategy_result::*;
+use super::by_known_algebraic_rewrite_result::*;
 
 pub struct VerifyEqualityResult2 {
     pub fact: EqualFact,
@@ -37,7 +47,15 @@ impl Runtime {
     ) -> Result<VerifyEqualityResult2, RuntimeError> {
         let well_defined_proof =
             self.verify_atomic_fact_well_definedness2(&fact.clone().into(), verify_state.clone())?;
-        let searched_proof = self.search_equal_fact_proof2(fact, verify_state)?;
+        let searched_proof = match self.verify_atomic_fact_search_proof(
+            &fact.clone().into(),
+            verify_state,
+        )? {
+            VerifyAtomicFactSearchProof2::Equality(proof) => proof,
+            VerifyAtomicFactSearchProof2::NonEquationalAtomicFact(_) => {
+                unreachable!("an EqualFact must use the equality search pipeline")
+            }
+        };
         Ok(VerifyEqualityResult2 {
             fact: fact.clone(),
             well_defined_proof,
@@ -50,6 +68,12 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState2,
     ) -> Result<EqualitySearchedProof2, RuntimeError> {
+        // Ordinary truth search is scoped to the currently active execution
+        // environments. In particular, this pipeline never searches the
+        // persistent module environments held by ModuleManager, and it has no
+        // implicit definition/theorem fallback.
+        let _visible_environment_count = self.current_atomic_fact_search_environment_count();
+
         if let Some(result) = self.search_equal_fact_proof_by_cache2(fact, verify_state.clone())? {
             return Ok(EqualitySearchedProof2::ByCache(result));
         }
