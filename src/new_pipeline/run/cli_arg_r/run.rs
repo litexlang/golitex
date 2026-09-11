@@ -1,9 +1,9 @@
-impl Runtime {
-    pub fn run_cli_arg_f() {
-        // run std
+use crate::new_pipeline::runtime::{PipelineError, PipelineResult};
+use std::path::PathBuf;
 
-        // run import，运行的时候调用 run_litex_code_with_trust
-
-        // 按顺序run export，运行的时候调用 run_litex_code
-    }
+/// Future entry point for `litex -r <repository>`.
+pub fn run_cli_arg_r(_path: PathBuf) -> PipelineResult<()> {
+    Err(PipelineError::Unsupported(
+        "repository execution is not wired yet".to_string(),
+    ))
 }

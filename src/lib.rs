@@ -33,6 +33,7 @@ pub mod parsing;
 // Compatibility alias retained for one version while embedders migrate.
 pub use parsing as parse;
 pub mod algebraic_normalization;
+pub mod new_pipeline;
 pub mod pipeline;
 pub mod prelude;
 // Compatibility alias retained for one version while embedders migrate.
