@@ -1429,7 +1429,7 @@ impl Runtime {
                 .object_properties
                 .store_simplified_value(call_key, KnownObjValue::SimplifiedNumber(number));
             let evaluated_equal_fact =
-                EqualFact::new(evaluated_call_obj, number_obj, eval_stmt.line_file.clone());
+                self.new_equal_fact(evaluated_call_obj, number_obj, eval_stmt.line_file.clone());
             self.top_level_env().store_equality(&evaluated_equal_fact)?;
         }
         Ok(evaluated_obj)
@@ -1505,7 +1505,7 @@ impl Runtime {
             self.top_level_env()
                 .object_properties
                 .store_simplified_value(call_key, KnownObjValue::SimplifiedNumber(number));
-            let evaluated_equal_fact = EqualFact::new(
+            let evaluated_equal_fact = self.new_equal_fact(
                 current_call_obj,
                 number_obj.clone(),
                 eval_stmt.line_file.clone(),
@@ -1713,7 +1713,7 @@ impl Runtime {
             }
             if verify_result.is_unknown() {
                 let negated_case_condition = instantiated_case_condition
-                    .logical_negation()
+                    .logical_negation_with_runtime(self)
                     .map_err(|negation_error| {
                         short_exec_error(
                             eval_stmt.clone().into(),
@@ -1853,12 +1853,13 @@ impl Runtime {
             .obj_to_eval
             .evaluate_to_normalized_decimal_number_with_result();
         let evaluated_obj = self.evaluate_obj_for_eval_stmt(stmt)?;
-        let evaluated_equal_fact = EqualFact::new(
-            stmt.obj_to_eval.clone(),
-            evaluated_obj.clone(),
-            stmt.line_file.clone(),
-        )
-        .into();
+        let evaluated_equal_fact = self
+            .new_equal_fact(
+                stmt.obj_to_eval.clone(),
+                evaluated_obj.clone(),
+                stmt.line_file.clone(),
+            )
+            .into();
 
         let infer_result = self
             .store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason(

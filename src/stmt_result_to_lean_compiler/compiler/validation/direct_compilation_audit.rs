@@ -196,6 +196,7 @@ pub(in super::super) fn direct_builtin_rule_compiler_limitation(
 }
 
 pub(in super::super) fn validate_complex_algebraic_normalization_builtin_rule_evidence(
+    runtime: &Runtime,
     target: &Fact,
     evidence: &ComplexAlgebraicNormalizationBuiltinRuleEvidence,
 ) -> Result<(), String> {
@@ -215,7 +216,7 @@ pub(in super::super) fn validate_complex_algebraic_normalization_builtin_rule_ev
         complex_algebraic_normalization_nonzero_requirements(&equality.left, &equality.right)
             .into_iter()
             .map(|object| {
-                Fact::from(AtomicFact::NotEqualFact(NotEqualFact::new(
+                Fact::from(AtomicFact::NotEqualFact(runtime.new_not_equal_fact(
                     object,
                     zero.clone(),
                     equality.line_file.clone(),
@@ -236,6 +237,7 @@ pub(in super::super) fn validate_complex_algebraic_normalization_builtin_rule_ev
 }
 
 pub(in super::super) fn validate_rational_algebraic_normalization_builtin_rule_evidence(
+    runtime: &Runtime,
     target: &Fact,
     evidence: &RationalAlgebraicNormalizationBuiltinRuleEvidence,
 ) -> Result<(), String> {
@@ -256,7 +258,7 @@ pub(in super::super) fn validate_rational_algebraic_normalization_builtin_rule_e
         algebraic_normalization_nonzero_requirements(&equality.left, &equality.right)
             .into_iter()
             .map(|object| {
-                Fact::from(AtomicFact::NotEqualFact(NotEqualFact::new(
+                Fact::from(AtomicFact::NotEqualFact(runtime.new_not_equal_fact(
                     object,
                     zero.clone(),
                     equality.line_file.clone(),

@@ -50,13 +50,16 @@ pub fn general_cart_member_pointwise_fact(
         .beta_reduce_complete_anonymous_application_once(&family_at_param_raw)?
         .unwrap_or(family_at_param_raw);
     Ok(Some(
-        ForallFact::new_canonical_forall(
-            TypedParameterList::new(vec![param_group]),
-            vec![],
-            vec![InFact::new(member_at_param, family_at_param, line_file.clone()).into()],
-            line_file.clone(),
-        )?
-        .into(),
+        runtime
+            .new_forall_fact(
+                TypedParameterList::new(vec![param_group]),
+                vec![],
+                vec![runtime
+                    .new_in_fact(member_at_param, family_at_param, line_file.clone())
+                    .into()],
+                line_file.clone(),
+            )?
+            .into(),
     ))
 }
 
@@ -64,26 +67,30 @@ pub fn general_cart_member_pointwise_fact(
 // Example: `$is_choice_function_for(I, S, g, f)` means
 // `forall alpha I: f(alpha) $in g(alpha)`.
 pub fn choice_function_for_fact(
+    runtime: &Runtime,
     index_set: Obj,
     family_set: Obj,
     family_fn: Obj,
     member: Obj,
     line_file: LineFile,
 ) -> AtomicFact {
-    NormalAtomicFact::new(
-        AtomicName::WithoutMod(crate::syntax::keywords::IS_CHOICE_FUNCTION_FOR.to_string()),
-        vec![index_set, family_set, family_fn, member],
-        line_file,
-    )
-    .into()
+    runtime
+        .new_normal_atomic_fact(
+            AtomicName::WithoutMod(crate::syntax::keywords::IS_CHOICE_FUNCTION_FOR.to_string()),
+            vec![index_set, family_set, family_fn, member],
+            line_file,
+        )
+        .into()
 }
 
 pub fn general_cart_member_choice_fact(
+    runtime: &Runtime,
     general_cart: &GeneralCart,
     member: Obj,
     line_file: LineFile,
 ) -> AtomicFact {
     choice_function_for_fact(
+        runtime,
         general_cart.index_set.as_ref().clone(),
         general_cart.family_set.as_ref().clone(),
         general_cart.family_fn.as_ref().clone(),
@@ -147,19 +154,27 @@ pub fn verify_choice_function_for_arg_types(
     let requirements = vec![
         (
             AtomicPredicateDomainCheckRole::ChoiceFunctionIndexSet,
-            IsSetFact::new(index_set.clone(), line_file.clone()).into(),
+            runtime
+                .new_is_set_fact(index_set.clone(), line_file.clone())
+                .into(),
         ),
         (
             AtomicPredicateDomainCheckRole::ChoiceFunctionFamilySet,
-            IsSetFact::new(family_set.clone(), line_file.clone()).into(),
+            runtime
+                .new_is_set_fact(family_set.clone(), line_file.clone())
+                .into(),
         ),
         (
             AtomicPredicateDomainCheckRole::ChoiceFunctionFamily,
-            InFact::new(family_fn.clone(), family_fn_set, line_file.clone()).into(),
+            runtime
+                .new_in_fact(family_fn.clone(), family_fn_set, line_file.clone())
+                .into(),
         ),
         (
             AtomicPredicateDomainCheckRole::ChoiceFunctionMember,
-            InFact::new(member.clone(), member_fn_set, line_file.clone()).into(),
+            runtime
+                .new_in_fact(member.clone(), member_fn_set, line_file.clone())
+                .into(),
         ),
     ];
     let mut results = Vec::with_capacity(requirements.len());

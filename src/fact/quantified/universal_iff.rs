@@ -12,6 +12,7 @@ pub struct ForallFactWithIff {
 }
 
 impl ForallFactWithIff {
+    #[cfg(test)]
     #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(
         forall_fact: ForallFact,
@@ -46,7 +47,10 @@ impl ForallFactWithIff {
     // Split `forall ... <=>:` into two forall facts used to verify both directions:
     // 1. `dom + then` proves `iff`.
     // 2. `dom + iff` proves `then`.
-    pub fn to_two_forall_facts(&self) -> Result<(ForallFact, ForallFact), RuntimeError> {
+    pub fn to_two_forall_facts(
+        &self,
+        runtime: &Runtime,
+    ) -> Result<(ForallFact, ForallFact), RuntimeError> {
         let f = &self.forall_fact;
         let mut dom_then = f.dom_facts.clone();
         dom_then.extend(
@@ -55,7 +59,7 @@ impl ForallFactWithIff {
                 .cloned()
                 .map(ExistOrAndChainAtomicFact::to_fact),
         );
-        let forall_then_implies_iff = ForallFact::new_canonical_forall(
+        let forall_then_implies_iff = runtime.new_forall_fact(
             f.typed_parameters.clone(),
             dom_then,
             self.iff_facts.clone(),
@@ -69,7 +73,7 @@ impl ForallFactWithIff {
                 .cloned()
                 .map(ExistOrAndChainAtomicFact::to_fact),
         );
-        let forall_iff_implies_then = ForallFact::new_canonical_forall(
+        let forall_iff_implies_then = runtime.new_forall_fact(
             f.typed_parameters.clone(),
             dom_iff,
             f.then_facts.clone(),

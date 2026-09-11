@@ -35,7 +35,7 @@ impl Runtime {
             };
             let Some(right_to_left) = self.verify_user_prop_subgoal(
                 &prop_name,
-                &EqualFact::new_from_refs(right, left, line_file.clone()),
+                &self.new_equal_fact_from_refs(right, left, line_file.clone()),
                 builtin_state,
             )?
             else {

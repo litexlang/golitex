@@ -318,12 +318,13 @@ impl Runtime {
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
 
         let function_identifier_obj = self.definition_identifier_obj(name);
-        let surface_membership_fact: Fact = InFact::new(
-            function_identifier_obj.clone(),
-            surface_set,
-            line_file.clone(),
-        )
-        .into();
+        let surface_membership_fact: Fact = self
+            .new_in_fact(
+                function_identifier_obj.clone(),
+                surface_set,
+                line_file.clone(),
+            )
+            .into();
 
         let mut infer_result = self
             .store_with_well_defined_verification_and_infer_with_default_verify_state(
@@ -342,12 +343,13 @@ impl Runtime {
             line_file.clone(),
         );
 
-        let function_equals_anonymous_fn_fact: AtomicFact = EqualFact::new(
-            function_identifier_obj,
-            shape.anonymous_fn.into(),
-            line_file,
-        )
-        .into();
+        let function_equals_anonymous_fn_fact: AtomicFact = self
+            .new_equal_fact(
+                function_identifier_obj,
+                shape.anonymous_fn.into(),
+                line_file,
+            )
+            .into();
         infer_result.new_infer_result_inside(
             self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason(
                 function_equals_anonymous_fn_fact,
@@ -440,12 +442,13 @@ impl Runtime {
                     );
                     assumption_infers.new_infer_result_inside(dom_infers);
                 }
-                let value_membership: AtomicFact = InFact::new(
-                    (*anonymous_fn.equal_to).clone(),
-                    (*anonymous_fn.body.ret_set).clone(),
-                    line_file,
-                )
-                .into();
+                let value_membership: AtomicFact = rt
+                    .new_in_fact(
+                        (*anonymous_fn.equal_to).clone(),
+                        (*anonymous_fn.body.ret_set).clone(),
+                        line_file,
+                    )
+                    .into();
                 let mut return_check =
                     rt.verify_atomic_fact(&value_membership, &VerifyState::initial())?;
                 rt.attach_known_fact_ids_to_infer_result(&mut assumption_infers)?;
@@ -476,8 +479,9 @@ impl Runtime {
         line_file: LineFile,
     ) -> Result<Vec<VerifyFactResult>, RuntimeError> {
         let mut check_results = Vec::new();
-        let in_n_pos: AtomicFact =
-            InFact::new(bound.clone(), StandardSet::NPos.into(), line_file.clone()).into();
+        let in_n_pos: AtomicFact = self
+            .new_in_fact(bound.clone(), StandardSet::NPos.into(), line_file.clone())
+            .into();
         let in_n_pos_result = self
             .verify_atomic_fact(&in_n_pos, &VerifyState::initial())
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
@@ -491,8 +495,9 @@ impl Runtime {
         }
         check_results.push(in_n_pos_result);
 
-        let equal_fact: AtomicFact =
-            EqualFact::new(bound.clone(), expected.clone(), line_file).into();
+        let equal_fact: AtomicFact = self
+            .new_equal_fact(bound.clone(), expected.clone(), line_file)
+            .into();
         let equal_result = self
             .verify_atomic_fact(&equal_fact, &VerifyState::initial())
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
@@ -525,7 +530,7 @@ fn build_have_seq_anonymous_fn(
 }
 
 fn build_have_finite_seq_anonymous_fn(
-    _runtime: &Runtime,
+    runtime: &Runtime,
     stmt: &HaveFiniteSeqStmt,
 ) -> Result<AnonymousFn, RuntimeError> {
     let index_obj = obj_for_bound_param_in_scope(&stmt.index_binding);
@@ -534,7 +539,7 @@ fn build_have_finite_seq_anonymous_fn(
             vec![stmt.index_binding.clone()],
             StandardSet::NPos.into(),
         )],
-        vec![AtomicFact::from(LessEqualFact::new(
+        vec![AtomicFact::from(runtime.new_less_equal_fact(
             index_obj,
             stmt.bound.clone(),
             stmt.line_file.clone(),
@@ -546,7 +551,7 @@ fn build_have_finite_seq_anonymous_fn(
 }
 
 fn build_have_matrix_anonymous_fn(
-    _runtime: &Runtime,
+    runtime: &Runtime,
     stmt: &HaveMatrixStmt,
 ) -> Result<AnonymousFn, RuntimeError> {
     let row_obj = obj_for_bound_param_in_scope(&stmt.row_index_binding);
@@ -563,13 +568,13 @@ fn build_have_matrix_anonymous_fn(
             ),
         ],
         vec![
-            AtomicFact::from(LessEqualFact::new(
+            AtomicFact::from(runtime.new_less_equal_fact(
                 row_obj,
                 stmt.row_bound.clone(),
                 stmt.line_file.clone(),
             ))
             .into(),
-            AtomicFact::from(LessEqualFact::new(
+            AtomicFact::from(runtime.new_less_equal_fact(
                 col_obj,
                 stmt.col_bound.clone(),
                 stmt.line_file.clone(),

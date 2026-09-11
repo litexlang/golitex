@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
-        let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
+        let Some(norm) = normalize_positive_order_atomic_fact(self, atomic_fact) else {
             return Ok(None);
         };
         let AtomicFact::LessEqualFact(f) = &norm else {
@@ -36,7 +36,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
-        let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
+        let Some(norm) = normalize_positive_order_atomic_fact(self, atomic_fact) else {
             return Ok(None);
         };
         let AtomicFact::LessEqualFact(f) = &norm else {
@@ -48,12 +48,13 @@ impl Runtime {
         let Obj::Sqrt(sqrt) = &f.right else {
             return Ok(None);
         };
-        let nonnegative_arg: AtomicFact = LessEqualFact::new(
-            Number::new("0".to_string()).into(),
-            sqrt.arg.as_ref().clone(),
-            f.line_file.clone(),
-        )
-        .into();
+        let nonnegative_arg: AtomicFact = self
+            .new_less_equal_fact(
+                Number::new("0".to_string()).into(),
+                sqrt.arg.as_ref().clone(),
+                f.line_file.clone(),
+            )
+            .into();
         let Some(nonnegative_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&nonnegative_arg, builtin_state)?
         else {
@@ -78,7 +79,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
-        let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
+        let Some(norm) = normalize_positive_order_atomic_fact(self, atomic_fact) else {
             return Ok(None);
         };
         let AtomicFact::LessFact(f) = &norm else {
@@ -90,12 +91,13 @@ impl Runtime {
         let Obj::Sqrt(sqrt) = &f.right else {
             return Ok(None);
         };
-        let positive_arg: AtomicFact = LessFact::new(
-            Number::new("0".to_string()).into(),
-            sqrt.arg.as_ref().clone(),
-            f.line_file.clone(),
-        )
-        .into();
+        let positive_arg: AtomicFact = self
+            .new_less_fact(
+                Number::new("0".to_string()).into(),
+                sqrt.arg.as_ref().clone(),
+                f.line_file.clone(),
+            )
+            .into();
         let Some(positive_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&positive_arg, builtin_state)?
         else {
@@ -120,7 +122,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
-        let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
+        let Some(norm) = normalize_positive_order_atomic_fact(self, atomic_fact) else {
             return Ok(None);
         };
         match &norm {
@@ -160,13 +162,18 @@ impl Runtime {
         let left_arg = left_sqrt.arg.as_ref().clone();
         let right_arg = right_sqrt.arg.as_ref().clone();
         let mut subgoals: Vec<AtomicFact> = vec![
-            LessEqualFact::new(zero.clone(), left_arg.clone(), line_file.clone()).into(),
-            LessEqualFact::new(zero, right_arg.clone(), line_file.clone()).into(),
+            self.new_less_equal_fact(zero.clone(), left_arg.clone(), line_file.clone())
+                .into(),
+            self.new_less_equal_fact(zero, right_arg.clone(), line_file.clone())
+                .into(),
         ];
         if strict {
-            subgoals.push(LessFact::new(left_arg, right_arg, line_file).into());
+            subgoals.push(self.new_less_fact(left_arg, right_arg, line_file).into());
         } else {
-            subgoals.push(LessEqualFact::new(left_arg, right_arg, line_file).into());
+            subgoals.push(
+                self.new_less_equal_fact(left_arg, right_arg, line_file)
+                    .into(),
+            );
         }
 
         let Some(step_results) = self.verify_builtin_rule_premises(&subgoals, builtin_state)?

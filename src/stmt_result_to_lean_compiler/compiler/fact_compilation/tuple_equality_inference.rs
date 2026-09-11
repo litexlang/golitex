@@ -58,14 +58,18 @@ impl StmtResultToLeanCompiler {
             );
         }
 
-        let expected_tuple_fact: Fact =
-            IsTupleFact::new(target_object.clone(), equality.line_file.clone()).into();
-        let expected_dimension_fact: Fact = EqualFact::new(
-            TupleDim::new(target_object.clone()).into(),
-            Number::new(rule.tuple_length.to_string()).into(),
-            equality.line_file.clone(),
-        )
-        .into();
+        let expected_tuple_fact: Fact = self
+            .runtime
+            .new_is_tuple_fact(target_object.clone(), equality.line_file.clone())
+            .into();
+        let expected_dimension_fact: Fact = self
+            .runtime
+            .new_equal_fact(
+                TupleDim::new(target_object.clone()).into(),
+                Number::new(rule.tuple_length.to_string()).into(),
+                equality.line_file.clone(),
+            )
+            .into();
         let expected = [
             (expected_tuple_fact, "⟨inferInstance⟩".to_string()),
             (

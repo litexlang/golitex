@@ -6,7 +6,7 @@ use super::{
 use crate::error::RuntimeError;
 use crate::module_system::{discover_repository, VirtualSource};
 use crate::result::StmtResult;
-use crate::runtime::{LitexExecution, RuntimeOptions, Runtime};
+use crate::runtime::{LitexExecution, Runtime, RuntimeOptions};
 use crate::syntax::source_formatting::remove_windows_carriage_from_str;
 
 pub struct RunOutcome {

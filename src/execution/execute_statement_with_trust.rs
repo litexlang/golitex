@@ -36,7 +36,8 @@ impl Runtime {
         }
         // Reuse the no-verification environment path for a statement whose
         // generic form was already checked before capture-avoiding substitution.
-        let previous_execution_mode = self.replace_current_execution_mode(TrustedOrRequireVerify::Trusted);
+        let previous_execution_mode =
+            self.replace_current_execution_mode(TrustedOrRequireVerify::Trusted);
         let result = self.execute_statement_with_trust_body(stmt);
         self.replace_current_execution_mode(previous_execution_mode);
         result
@@ -117,8 +118,8 @@ impl Runtime {
             // substitution, so storing only the syntax would make the Result
             // contract incomplete.
             Stmt::Definition(DefinitionStmt::DefTemplateStmt(s)) => {
-                let previous_execution_mode =
-                    self.replace_current_execution_mode(TrustedOrRequireVerify::RequireVerification);
+                let previous_execution_mode = self
+                    .replace_current_execution_mode(TrustedOrRequireVerify::RequireVerification);
                 let result = self.exec_def_template_stmt(s);
                 self.replace_current_execution_mode(previous_execution_mode);
                 result

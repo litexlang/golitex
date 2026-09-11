@@ -17,7 +17,7 @@ impl StmtResultToLeanCompiler {
             .verified()
             .ok_or_else(|| "tuple/cart coordinate premise is not factual".to_string())?;
         let child_fact = child.fact();
-        let components = conjunction_components(&child_fact)?;
+        let components = conjunction_components(&self.runtime, &child_fact)?;
         if components.len() != evidence.expected_coordinate_memberships.len()
             || components
                 .iter()

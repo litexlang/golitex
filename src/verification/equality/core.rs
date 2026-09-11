@@ -326,7 +326,7 @@ impl Runtime {
         {
             "calculation and rational expression simplification"
         } else if equal_fact_sides_match_by_bounded_symbolic_normalization(equal_fact)
-            || equal_fact_sides_match_by_bounded_symbolic_normalization(&EqualFact::new(
+            || equal_fact_sides_match_by_bounded_symbolic_normalization(&self.new_equal_fact(
                 left_resolved,
                 right_resolved,
                 equal_fact.line_file.clone(),
@@ -436,7 +436,7 @@ impl Runtime {
             objs_equal_by_rational_expression_evaluation(representative, &equal_fact.right)
         });
         let known_fact = if let Some(representative) = left_match {
-            EqualFact::new(
+            self.new_equal_fact(
                 equal_fact.left.clone(),
                 representative,
                 equal_fact.line_file.clone(),
@@ -451,7 +451,7 @@ impl Runtime {
             else {
                 return Ok(UnknownGenericStmtResult::new().into());
             };
-            EqualFact::new(
+            self.new_equal_fact(
                 equal_fact.right.clone(),
                 representative,
                 equal_fact.line_file.clone(),
@@ -545,7 +545,7 @@ impl Runtime {
         let required_facts = required_objects
             .into_iter()
             .map(|object| {
-                AtomicFact::NotEqualFact(NotEqualFact::new(
+                AtomicFact::NotEqualFact(self.new_not_equal_fact(
                     object,
                     zero.clone(),
                     equal_fact.line_file.clone(),
@@ -606,7 +606,7 @@ impl Runtime {
         let required_facts = required_objects
             .into_iter()
             .map(|object| {
-                AtomicFact::NotEqualFact(NotEqualFact::new(
+                AtomicFact::NotEqualFact(self.new_not_equal_fact(
                     object,
                     zero.clone(),
                     equal_fact.line_file.clone(),
@@ -734,7 +734,7 @@ impl Runtime {
                 }
 
                 let source_fact =
-                    EqualFact::new(left.clone(), right.clone(), equal_fact.line_file.clone());
+                    self.new_equal_fact(left.clone(), right.clone(), equal_fact.line_file.clone());
                 let source_result =
                     self.verify_equal_fact_with_known_forall(&source_fact, verify_state)?;
                 let Some(source_success) = source_result.into_factual_success() else {
@@ -743,7 +743,7 @@ impl Runtime {
 
                 let mut rewrite_steps = Vec::new();
                 if obj_equality_key(&left) != target_left_key {
-                    let Some(path) = self.compiler_known_equality_path(&EqualFact::new(
+                    let Some(path) = self.compiler_known_equality_path(&self.new_equal_fact(
                         left.clone(),
                         equal_fact.left.clone(),
                         equal_fact.line_file.clone(),
@@ -760,7 +760,7 @@ impl Runtime {
                     }));
                 }
                 if obj_equality_key(right) != target_right_key {
-                    let Some(path) = self.compiler_known_equality_path(&EqualFact::new(
+                    let Some(path) = self.compiler_known_equality_path(&self.new_equal_fact(
                         right.clone(),
                         equal_fact.right.clone(),
                         equal_fact.line_file.clone(),
@@ -864,7 +864,7 @@ impl Runtime {
 
         for comparison_candidate in comparison_candidates {
             let reduced_equality =
-                EqualFact::new_from_refs(&comparison_candidate, other_side, line_file.clone());
+                self.new_equal_fact_from_refs(&comparison_candidate, other_side, line_file.clone());
             let comparison_proof = self
                 .verify_equal_fact_with_bounded_builtin_routes(&reduced_equality, verify_state)?;
             let Some(reduced_equality_result) = self.complete_proven_fact_candidate(
@@ -959,12 +959,13 @@ impl Runtime {
             body,
             equal_to: Box::new(equal_to),
         };
-        let defining_equality: Fact = EqualFact::new(
-            definition_object.clone(),
-            anonymous_function.into(),
-            line_file,
-        )
-        .into();
+        let defining_equality: Fact = self
+            .new_equal_fact(
+                definition_object.clone(),
+                anonymous_function.into(),
+                line_file,
+            )
+            .into();
         let Some(defining_equality_fact_id) = self.known_fact_id_for_fact(&defining_equality)?
         else {
             return Ok(None);
@@ -1034,18 +1035,22 @@ impl Runtime {
         match (left_obj, right_obj) {
             (Obj::Sum(left), Obj::Sum(right)) => {
                 if !self.verify_two_equal_fact_premises_for_corresponding_binary_args(
-                    &EqualFact::new_from_refs(
+                    &self.new_equal_fact_from_refs(
                         &left.start,
                         &right.start,
                         equality_line_file.clone(),
                     ),
-                    &EqualFact::new_from_refs(&left.end, &right.end, equality_line_file.clone()),
+                    &self.new_equal_fact_from_refs(
+                        &left.end,
+                        &right.end,
+                        equality_line_file.clone(),
+                    ),
                     verify_state,
                 )? {
                     return Ok(false);
                 }
                 self.verify_equal_fact_for_iterated_operator_functions(
-                    &EqualFact::new_from_refs(
+                    &self.new_equal_fact_from_refs(
                         left.func.as_ref(),
                         right.func.as_ref(),
                         equality_line_file,
@@ -1056,7 +1061,7 @@ impl Runtime {
             (Obj::SumOfFiniteSet(left), Obj::SumOfFiniteSet(right)) => {
                 if !self
                     .verify_equal_fact_by_builtin_rules_and_known_equalities(
-                        &EqualFact::new_from_refs(
+                        &self.new_equal_fact_from_refs(
                             left.set.as_ref(),
                             right.set.as_ref(),
                             equality_line_file.clone(),
@@ -1068,7 +1073,7 @@ impl Runtime {
                     return Ok(false);
                 }
                 self.verify_equal_fact_for_iterated_operator_functions(
-                    &EqualFact::new_from_refs(
+                    &self.new_equal_fact_from_refs(
                         left.func.as_ref(),
                         right.func.as_ref(),
                         equality_line_file,
@@ -1079,7 +1084,7 @@ impl Runtime {
             (Obj::ProductOfFiniteSet(left), Obj::ProductOfFiniteSet(right)) => {
                 if !self
                     .verify_equal_fact_by_builtin_rules_and_known_equalities(
-                        &EqualFact::new_from_refs(
+                        &self.new_equal_fact_from_refs(
                             left.set.as_ref(),
                             right.set.as_ref(),
                             equality_line_file.clone(),
@@ -1091,7 +1096,7 @@ impl Runtime {
                     return Ok(false);
                 }
                 self.verify_equal_fact_for_iterated_operator_functions(
-                    &EqualFact::new_from_refs(
+                    &self.new_equal_fact_from_refs(
                         left.func.as_ref(),
                         right.func.as_ref(),
                         equality_line_file,
@@ -1101,18 +1106,22 @@ impl Runtime {
             }
             (Obj::Product(left), Obj::Product(right)) => {
                 if !self.verify_two_equal_fact_premises_for_corresponding_binary_args(
-                    &EqualFact::new_from_refs(
+                    &self.new_equal_fact_from_refs(
                         &left.start,
                         &right.start,
                         equality_line_file.clone(),
                     ),
-                    &EqualFact::new_from_refs(&left.end, &right.end, equality_line_file.clone()),
+                    &self.new_equal_fact_from_refs(
+                        &left.end,
+                        &right.end,
+                        equality_line_file.clone(),
+                    ),
                     verify_state,
                 )? {
                     return Ok(false);
                 }
                 self.verify_equal_fact_for_iterated_operator_functions(
-                    &EqualFact::new_from_refs(
+                    &self.new_equal_fact_from_refs(
                         left.func.as_ref(),
                         right.func.as_ref(),
                         equality_line_file,
@@ -1125,7 +1134,11 @@ impl Runtime {
                 right_obj,
                 &mut |left_arg, right_arg| {
                     self.verify_equal_fact_by_builtin_rules_and_known_equalities(
-                        &EqualFact::new_from_refs(left_arg, right_arg, equality_line_file.clone()),
+                        &self.new_equal_fact_from_refs(
+                            left_arg,
+                            right_arg,
+                            equality_line_file.clone(),
+                        ),
                         verify_state,
                     )
                     .map(|result| result.is_success())

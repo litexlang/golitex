@@ -51,8 +51,9 @@ impl Runtime {
         result: &mut SuccessInferResult,
         inference_state: &InferenceState,
     ) -> Result<(), RuntimeError> {
-        let target_is_cart_fact =
-            IsCartFact::new(target_obj.clone(), equal_fact.line_file.clone()).into();
+        let target_is_cart_fact = self
+            .new_is_cart_fact(target_obj.clone(), equal_fact.line_file.clone())
+            .into();
         let _ = self.store_inferred_fact_and_record_result(
             target_is_cart_fact,
             equal_fact,
@@ -63,12 +64,13 @@ impl Runtime {
 
         let target_cart_dim_obj = CartDim::new(target_obj.clone()).into();
         let known_cart_dim_obj = Number::new(known_cart_obj.args.len().to_string()).into();
-        let cart_dim_equal_fact = EqualFact::new(
-            target_cart_dim_obj,
-            known_cart_dim_obj,
-            equal_fact.line_file.clone(),
-        )
-        .into();
+        let cart_dim_equal_fact = self
+            .new_equal_fact(
+                target_cart_dim_obj,
+                known_cart_dim_obj,
+                equal_fact.line_file.clone(),
+            )
+            .into();
         let _ = self.store_inferred_fact_and_record_result(
             cart_dim_equal_fact,
             equal_fact,
@@ -101,8 +103,9 @@ impl Runtime {
         if known_tuple_obj.args.len() < 2 {
             return Ok(());
         }
-        let target_is_tuple_fact =
-            IsTupleFact::new(target_obj.clone(), equal_fact.line_file.clone()).into();
+        let target_is_tuple_fact = self
+            .new_is_tuple_fact(target_obj.clone(), equal_fact.line_file.clone())
+            .into();
         let tuple_conclusion = self.store_inferred_fact_and_record_result(
             target_is_tuple_fact,
             equal_fact,
@@ -113,12 +116,13 @@ impl Runtime {
 
         let target_tuple_dim_obj = TupleDim::new(target_obj.clone()).into();
         let known_tuple_dim_obj = Number::new(known_tuple_obj.args.len().to_string()).into();
-        let tuple_dim_equal_fact = EqualFact::new(
-            target_tuple_dim_obj,
-            known_tuple_dim_obj,
-            equal_fact.line_file.clone(),
-        )
-        .into();
+        let tuple_dim_equal_fact = self
+            .new_equal_fact(
+                target_tuple_dim_obj,
+                known_tuple_dim_obj,
+                equal_fact.line_file.clone(),
+            )
+            .into();
         let dimension_conclusion = self.store_inferred_fact_and_record_result(
             tuple_dim_equal_fact,
             equal_fact,
@@ -310,7 +314,9 @@ impl Runtime {
         if a.to_string() == b.to_string() {
             return Ok(result);
         }
-        let derived: Fact = EqualFact::new(a, b, equal_fact.line_file.clone()).into();
+        let derived: Fact = self
+            .new_equal_fact(a, b, equal_fact.line_file.clone())
+            .into();
         let _ = self.store_inferred_fact_and_record_result(
             derived,
             equal_fact,
@@ -450,7 +456,9 @@ impl Runtime {
         self.store_known_obj_value_from_equal_side(&equal_fact.right, &equal_fact.left);
 
         if let Some(derived) =
-            crate::environment::equality_linear_derive::maybe_derived_linear_equal_fact(equal_fact)
+            crate::environment::equality_linear_derive::maybe_derived_linear_equal_fact(
+                self, equal_fact,
+            )
         {
             self.store_known_obj_value_from_equal_side(&derived.left, &derived.right);
         }
@@ -508,12 +516,13 @@ impl Runtime {
             return Ok(());
         };
 
-        let power_in_r_pos: AtomicFact = InFact::new(
-            maybe_power.clone(),
-            StandardSet::RPos.into(),
-            equal_fact.line_file.clone(),
-        )
-        .into();
+        let power_in_r_pos: AtomicFact = self
+            .new_in_fact(
+                maybe_power.clone(),
+                StandardSet::RPos.into(),
+                equal_fact.line_file.clone(),
+            )
+            .into();
         let verify_state = VerifyState::initial().with_inference_state(inference_state);
         let power_result = self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(
             &power_in_r_pos,
@@ -523,12 +532,13 @@ impl Runtime {
             return Ok(());
         }
 
-        let target_in_r_pos: AtomicFact = InFact::new(
-            target.clone(),
-            StandardSet::RPos.into(),
-            equal_fact.line_file.clone(),
-        )
-        .into();
+        let target_in_r_pos: AtomicFact = self
+            .new_in_fact(
+                target.clone(),
+                StandardSet::RPos.into(),
+                equal_fact.line_file.clone(),
+            )
+            .into();
         let target_fact: Fact = target_in_r_pos.clone().into();
         let nested_infer = self
             .store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
@@ -555,18 +565,20 @@ impl Runtime {
                         .parse::<i128>()
                         .is_ok_and(|exponent| exponent >= 0)
                 });
-            let base_positive: Fact = LessFact::new(
-                Number::new("0".to_string()).into(),
-                power.base.as_ref().clone(),
-                equal_fact.line_file.clone(),
-            )
-            .into();
-            let base_in_z: Fact = InFact::new(
-                power.base.as_ref().clone(),
-                StandardSet::Z.into(),
-                equal_fact.line_file.clone(),
-            )
-            .into();
+            let base_positive: Fact = self
+                .new_less_fact(
+                    Number::new("0".to_string()).into(),
+                    power.base.as_ref().clone(),
+                    equal_fact.line_file.clone(),
+                )
+                .into();
+            let base_in_z: Fact = self
+                .new_in_fact(
+                    power.base.as_ref().clone(),
+                    StandardSet::Z.into(),
+                    equal_fact.line_file.clone(),
+                )
+                .into();
             (exponent_is_natural
                 && self.known_fact_id_for_fact(&base_positive)?.is_some()
                 && self.known_fact_id_for_fact(&base_in_z)?.is_some())
@@ -624,7 +636,7 @@ impl Runtime {
         if self.infer_rule_firing_cached(&firing_key) {
             return Ok(SuccessInferResult::new());
         }
-        let proper_relation_facts = crate::verification::verify_proper_set_relations_builtin::positive_proper_set_relation_definition_facts(normal_atomic_fact);
+        let proper_relation_facts = crate::verification::verify_proper_set_relations_builtin::positive_proper_set_relation_definition_facts(self, normal_atomic_fact);
         let builtin_definition_facts = match proper_relation_facts {
             Some(facts) => Some(facts),
             None => match self.builtin_prime_definition_facts(normal_atomic_fact)? {

@@ -57,7 +57,7 @@ impl Runtime {
             ));
         }
 
-        let negated_assumption = logical_negation_for_by_contra(&stmt.to_prove)?;
+        let negated_assumption = logical_negation_for_by_contra(self, &stmt.to_prove)?;
         let contradiction = contradiction.ok_or_else(|| {
             short_exec_error(
                 stmt.clone().into(),
@@ -101,7 +101,7 @@ impl Runtime {
         RuntimeError,
     > {
         let mut proof_steps: Vec<StmtResult> = Vec::new();
-        let negated_to_prove_fact = logical_negation_for_by_contra(to_prove_fact)?;
+        let negated_to_prove_fact = logical_negation_for_by_contra(self, to_prove_fact)?;
         let mut assumption_infers = self
             .store_with_well_defined_verification_and_infer_with_default_verify_state(
                 negated_to_prove_fact.clone(),
@@ -163,7 +163,7 @@ impl Runtime {
             ));
         }
 
-        let negated_impossible_fact = stmt.impossible_fact.logical_negation()?;
+        let negated_impossible_fact = stmt.impossible_fact.logical_negation_with_runtime(self)?;
         let verify_negated_impossible_fact_result =
             self.verify_atomic_fact(&negated_impossible_fact, &VerifyState::initial())?;
         if verify_negated_impossible_fact_result.is_unknown() {
@@ -228,10 +228,14 @@ impl Runtime {
     }
 }
 
-fn logical_negation_for_by_contra(fact: &Fact) -> Result<Fact, RuntimeError> {
+fn logical_negation_for_by_contra(runtime: &Runtime, fact: &Fact) -> Result<Fact, RuntimeError> {
     match fact {
-        Fact::AtomicFact(atomic_fact) => Ok(atomic_fact.logical_negation()?.into()),
-        Fact::ForallFact(forall_fact) => Ok(NotForallFact::new(forall_fact.clone()).into()),
+        Fact::AtomicFact(atomic_fact) => {
+            Ok(atomic_fact.logical_negation_with_runtime(runtime)?.into())
+        }
+        Fact::ForallFact(forall_fact) => {
+            Ok(runtime.new_not_forall_fact(forall_fact.clone()).into())
+        }
         Fact::NotForall(not_forall) => Ok(not_forall.forall_fact.clone().into()),
         Fact::ExistFact(exist_fact) => match exist_fact {
             ExistFact::PlainExistFact(body) => Ok(ExistFact::NotExistFact(body.clone()).into()),

@@ -729,7 +729,7 @@ impl StmtResultToLeanCompiler {
                         SuccessFactProofResult::CombinedProofs(combined),
                     ) = (&expected, child.proof())
                     {
-                        let components = chain.facts().map_err(|error| {
+                        let components = chain.facts(&self.runtime).map_err(|error| {
                             format!(
                                 "ForallProof conclusion {source_conclusion_index} retained an invalid chain: {error:?}"
                             )
@@ -750,6 +750,7 @@ impl StmtResultToLeanCompiler {
                                 ));
                             };
                             validate_chain_component_inference_target(
+                                &self.runtime,
                                 rule,
                                 &expected,
                                 &stored_component.fact,

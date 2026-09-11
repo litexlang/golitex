@@ -151,7 +151,7 @@ impl Runtime {
 
         let verify_state_for_children = verify_state.clone();
 
-        let facts = chain_fact.facts().map_err(|e| {
+        let facts = chain_fact.facts(self).map_err(|e| {
             RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
                 Some(Fact::ChainFact(chain_fact.clone()).into_stmt()),
                 String::new(),

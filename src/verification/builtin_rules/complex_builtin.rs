@@ -38,7 +38,7 @@ impl Runtime {
         if let Some(z) = candidate {
             let complex_abs: Obj = ComplexAbs::new(z.clone()).into();
             let known_zero = self.try_verify_known_equality_fact_candidate(
-                &EqualFact::new_from_refs(&complex_abs, &zero, line_file.clone()),
+                &self.new_equal_fact_from_refs(&complex_abs, &zero, line_file.clone()),
                 builtin_state.verify_state(),
             )?;
             if let Some(known_zero) = known_zero {
@@ -96,14 +96,14 @@ impl Runtime {
         let left_img: Obj = ImaginaryPart::new(left.clone()).into();
         let right_img: Obj = ImaginaryPart::new(right.clone()).into();
         let Some(re_result) = self.try_verify_known_equality_fact_candidate(
-            &EqualFact::new_from_refs(&left_re, &right_re, line_file.clone()),
+            &self.new_equal_fact_from_refs(&left_re, &right_re, line_file.clone()),
             builtin_state.verify_state(),
         )?
         else {
             return Ok(None);
         };
         let Some(img_result) = self.try_verify_known_equality_fact_candidate(
-            &EqualFact::new_from_refs(&left_img, &right_img, line_file.clone()),
+            &self.new_equal_fact_from_refs(&left_img, &right_img, line_file.clone()),
             builtin_state.verify_state(),
         )?
         else {
@@ -145,7 +145,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
-        let Some(normalized) = normalize_positive_order_atomic_fact(atomic_fact) else {
+        let Some(normalized) = normalize_positive_order_atomic_fact(self, atomic_fact) else {
             return Ok(None);
         };
         match &normalized {
@@ -176,12 +176,13 @@ impl Runtime {
                 let Obj::ComplexAbs(complex_abs) = &f.right else {
                     return Ok(None);
                 };
-                let premise: AtomicFact = NotEqualFact::new(
-                    complex_abs.arg.as_ref().clone(),
-                    Number::new("0".to_string()).into(),
-                    f.line_file.clone(),
-                )
-                .into();
+                let premise: AtomicFact = self
+                    .new_not_equal_fact(
+                        complex_abs.arg.as_ref().clone(),
+                        Number::new("0".to_string()).into(),
+                        f.line_file.clone(),
+                    )
+                    .into();
                 let result =
                     self.try_verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
                 if let Some(result) = result {
@@ -209,12 +210,13 @@ impl Runtime {
             (left, Obj::ComplexAbs(complex_abs)) if obj_is_literal_zero(left) => complex_abs,
             _ => return Ok(None),
         };
-        let premise: AtomicFact = NotEqualFact::new(
-            complex_abs.arg.as_ref().clone(),
-            Number::new("0".to_string()).into(),
-            not_equal_fact.line_file.clone(),
-        )
-        .into();
+        let premise: AtomicFact = self
+            .new_not_equal_fact(
+                complex_abs.arg.as_ref().clone(),
+                Number::new("0".to_string()).into(),
+                not_equal_fact.line_file.clone(),
+            )
+            .into();
         let Some(result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?
         else {
@@ -422,12 +424,13 @@ impl Runtime {
                 else {
                     return Ok(None);
                 };
-                let exponent_in_n: AtomicFact = InFact::new(
-                    predecessor.clone(),
-                    StandardSet::N.into(),
-                    line_file.clone(),
-                )
-                .into();
+                let exponent_in_n: AtomicFact = self
+                    .new_in_fact(
+                        predecessor.clone(),
+                        StandardSet::N.into(),
+                        line_file.clone(),
+                    )
+                    .into();
                 let Some(exponent_result) = self.try_verify_atomic_fact_as_builtin_rule_premise(
                     &exponent_in_n,
                     builtin_state,
@@ -478,12 +481,13 @@ impl Runtime {
                 else {
                     return Ok(None);
                 };
-                let denominator_nonzero: AtomicFact = NotEqualFact::new(
-                    div.right.as_ref().clone(),
-                    Number::new("0".to_string()).into(),
-                    line_file.clone(),
-                )
-                .into();
+                let denominator_nonzero: AtomicFact = self
+                    .new_not_equal_fact(
+                        div.right.as_ref().clone(),
+                        Number::new("0".to_string()).into(),
+                        line_file.clone(),
+                    )
+                    .into();
                 let Some(nonzero_result) = self.try_verify_atomic_fact_as_builtin_rule_premise(
                     &denominator_nonzero,
                     builtin_state,
@@ -567,7 +571,7 @@ impl Runtime {
         if obj_is_literal_zero(expected) {
             let zero: Obj = Number::new("0".to_string()).into();
             let arg_zero = self.try_verify_known_equality_fact_candidate(
-                &EqualFact::new_from_refs(arg, &zero, line_file.clone()),
+                &self.new_equal_fact_from_refs(arg, &zero, line_file.clone()),
                 builtin_state.verify_state(),
             )?;
             if let Some(arg_zero) = arg_zero {
@@ -608,7 +612,8 @@ impl Runtime {
         let premises = objs
             .iter()
             .map(|obj| {
-                InFact::new((**obj).clone(), StandardSet::C.into(), line_file.clone()).into()
+                self.new_in_fact((**obj).clone(), StandardSet::C.into(), line_file.clone())
+                    .into()
             })
             .collect::<Vec<AtomicFact>>();
         self.verify_builtin_rule_premises(&premises, builtin_state)

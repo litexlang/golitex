@@ -32,14 +32,14 @@ impl Runtime {
 
         let zero = Self::literal_zero_obj_for_abs_builtin();
         let Some(first_zero) = self.try_verify_known_equality_fact_candidate(
-            &EqualFact::new_from_refs(&first_base, &zero, line_file.clone()),
+            &self.new_equal_fact_from_refs(&first_base, &zero, line_file.clone()),
             builtin_state.verify_state(),
         )?
         else {
             return Ok(None);
         };
         let Some(second_zero) = self.try_verify_known_equality_fact_candidate(
-            &EqualFact::new_from_refs(&second_base, &zero, line_file.clone()),
+            &self.new_equal_fact_from_refs(&second_base, &zero, line_file.clone()),
             builtin_state.verify_state(),
         )?
         else {
@@ -105,18 +105,18 @@ impl Runtime {
                     continue;
                 };
                 let Some(sum_zero) = self.try_verify_known_equality_fact_candidate(
-                    &EqualFact::new_from_refs(&square_sum, &zero, line_file.clone()),
+                    &self.new_equal_fact_from_refs(&square_sum, &zero, line_file.clone()),
                     builtin_state.verify_state(),
                 )?
                 else {
                     continue;
                 };
                 let first_matches = self.verify_zero_product_factor_matches_target(
-                    &EqualFact::new_from_refs(target, &first_base, line_file.clone()),
+                    &self.new_equal_fact_from_refs(target, &first_base, line_file.clone()),
                     builtin_state,
                 )?;
                 let second_matches = self.verify_zero_product_factor_matches_target(
-                    &EqualFact::new_from_refs(target, &second_base, line_file.clone()),
+                    &self.new_equal_fact_from_refs(target, &second_base, line_file.clone()),
                     builtin_state,
                 )?;
                 if !first_matches.is_success() && !second_matches.is_success() {

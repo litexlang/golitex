@@ -17,14 +17,15 @@ impl Runtime {
             _ => return Ok(None),
         };
 
-        let not_nonempty: AtomicFact =
-            NotIsNonemptySetFact::new(set.clone(), line_file.clone()).into();
+        let not_nonempty: AtomicFact = self
+            .new_not_is_nonempty_set_fact(set.clone(), line_file.clone())
+            .into();
         let mut sub =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&not_nonempty, builtin_state)?;
         if sub.is_none() {
             let empty_order: Option<AtomicFact> = match &set {
                 Obj::Range(range) => Some(
-                    LessEqualFact::new(
+                    self.new_less_equal_fact(
                         range.end.as_ref().clone(),
                         range.start.as_ref().clone(),
                         line_file.clone(),
@@ -32,7 +33,7 @@ impl Runtime {
                     .into(),
                 ),
                 Obj::ClosedRange(range) => Some(
-                    LessFact::new(
+                    self.new_less_fact(
                         range.end.as_ref().clone(),
                         range.start.as_ref().clone(),
                         line_file.clone(),
@@ -101,7 +102,7 @@ impl Runtime {
         let size: Obj = FiniteSetSize::new(set).into();
         let zero: Obj = Number::new("0".to_string()).into();
         let Some(size_zero) = self.try_verify_known_equality_fact_candidate(
-            &EqualFact::new_from_refs(&size, &zero, line_file.clone()),
+            &self.new_equal_fact_from_refs(&size, &zero, line_file.clone()),
             verify_state,
         )?
         else {

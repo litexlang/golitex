@@ -30,13 +30,14 @@ impl Runtime {
 
         let zero: Obj = Number::new("0".to_string()).into();
         let required: [AtomicFact; 2] = [
-            NotEqualFact::new(
+            self.new_not_equal_fact(
                 product.left.as_ref().clone(),
                 zero.clone(),
                 fact.line_file.clone(),
             )
             .into(),
-            NotEqualFact::new(product.right.as_ref().clone(), zero, fact.line_file.clone()).into(),
+            self.new_not_equal_fact(product.right.as_ref().clone(), zero, fact.line_file.clone())
+                .into(),
         ];
         let mut children = Vec::with_capacity(required.len());
         for child in &required {

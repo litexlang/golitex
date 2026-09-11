@@ -29,7 +29,7 @@ impl StmtResultToLeanCompiler {
             return self.construct_lean_proof_from_shared_verify_fact_result(primary);
         }
 
-        let components = conjunction_components(target)?;
+        let components = conjunction_components(&self.runtime, target)?;
         if components.len() != combined.steps.len() {
             return Err("combined fact proof changed its component arity".into());
         }

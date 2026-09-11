@@ -65,7 +65,7 @@ impl Runtime {
                     return None;
                 }
                 Some(
-                    GreaterEqualFact::new(
+                    self.new_greater_equal_fact(
                         self.obj_mul_literal_neg_one(f.left.clone()),
                         z,
                         f.line_file.clone(),
@@ -78,7 +78,7 @@ impl Runtime {
                     return None;
                 }
                 Some(
-                    GreaterEqualFact::new(
+                    self.new_greater_equal_fact(
                         self.obj_mul_literal_neg_one(f.left.clone()),
                         z,
                         f.line_file.clone(),
@@ -91,7 +91,7 @@ impl Runtime {
                     return None;
                 }
                 Some(
-                    LessFact::new(
+                    self.new_less_fact(
                         self.obj_mul_literal_neg_one(f.left.clone()),
                         z,
                         f.line_file.clone(),
@@ -104,7 +104,7 @@ impl Runtime {
                     return None;
                 }
                 Some(
-                    LessEqualFact::new(
+                    self.new_less_equal_fact(
                         self.obj_mul_literal_neg_one(f.left.clone()),
                         z,
                         f.line_file.clone(),
@@ -138,12 +138,13 @@ impl Runtime {
             }
             _ => return Ok(SuccessInferResult::new()),
         };
-        let source_in_r: AtomicFact = InFact::new(
-            source_operand,
-            StandardSet::R.into(),
-            atomic_fact.line_file(),
-        )
-        .into();
+        let source_in_r: AtomicFact = self
+            .new_in_fact(
+                source_operand,
+                StandardSet::R.into(),
+                atomic_fact.line_file(),
+            )
+            .into();
         let verify_state = VerifyState::initial().with_inference_state(inference_state);
         let source_in_r_result = self
             .verify_non_equational_atomic_fact_with_bounded_builtin_routes(
@@ -371,12 +372,13 @@ impl Runtime {
         source: &LessFact,
         inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        let conclusion_atomic: AtomicFact = LessEqualFact::new(
-            source.left.clone(),
-            Number::new("0".to_string()).into(),
-            source.line_file.clone(),
-        )
-        .into();
+        let conclusion_atomic: AtomicFact = self
+            .new_less_equal_fact(
+                source.left.clone(),
+                Number::new("0".to_string()).into(),
+                source.line_file.clone(),
+            )
+            .into();
         let conclusion_fact: Fact = conclusion_atomic.clone().into();
         let mut result = SuccessInferResult::new();
         result.new_fact(&conclusion_fact);
@@ -400,8 +402,9 @@ impl Runtime {
         source: AtomicFact,
         inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        let conclusion_atomic: AtomicFact =
-            LessFact::new(Number::new("0".to_string()).into(), x, line_file.clone()).into();
+        let conclusion_atomic: AtomicFact = self
+            .new_less_fact(Number::new("0".to_string()).into(), x, line_file.clone())
+            .into();
         let fact_to_store: Fact = conclusion_atomic.clone().into();
         let mut result = SuccessInferResult::new();
         let conclusion_infers = self
@@ -433,8 +436,9 @@ impl Runtime {
         source: AtomicFact,
         inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        let conclusion_atomic: AtomicFact =
-            LessEqualFact::new(x, Number::new("0".to_string()).into(), line_file.clone()).into();
+        let conclusion_atomic: AtomicFact = self
+            .new_less_equal_fact(x, Number::new("0".to_string()).into(), line_file.clone())
+            .into();
         let fact_to_store: Fact = conclusion_atomic.clone().into();
         let mut result = SuccessInferResult::new();
         let conclusion_infers = self

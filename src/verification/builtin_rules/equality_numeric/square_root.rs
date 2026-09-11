@@ -23,7 +23,7 @@ impl Runtime {
             return Ok(None);
         };
         let Some(arg_result) = self.try_verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(sqrt.arg.as_ref(), other, line_file.clone()),
+            &self.new_equal_fact_from_refs(sqrt.arg.as_ref(), other, line_file.clone()),
             builtin_state,
         )?
         else {
@@ -62,14 +62,14 @@ impl Runtime {
             Number::new("1".to_string()).into(),
         ] {
             let Some(arg_result) = self.try_verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(sqrt.arg.as_ref(), &literal, line_file.clone()),
+                &self.new_equal_fact_from_refs(sqrt.arg.as_ref(), &literal, line_file.clone()),
                 builtin_state,
             )?
             else {
                 continue;
             };
             let Some(other_result) = self.try_verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(other, &literal, line_file.clone()),
+                &self.new_equal_fact_from_refs(other, &literal, line_file.clone()),
                 builtin_state,
             )?
             else {
@@ -106,16 +106,18 @@ impl Runtime {
             _ => return Ok(None),
         };
 
-        let nonnegative: AtomicFact = LessEqualFact::new(
-            Self::literal_zero_obj_for_abs_builtin(),
-            other.clone(),
-            line_file.clone(),
-        )
-        .into();
+        let nonnegative: AtomicFact = self
+            .new_less_equal_fact(
+                Self::literal_zero_obj_for_abs_builtin(),
+                other.clone(),
+                line_file.clone(),
+            )
+            .into();
         let other_squared: Obj =
             Pow::new(other.clone(), Number::new("2".to_string()).into()).into();
-        let square: AtomicFact =
-            EqualFact::new_from_refs(sqrt.arg.as_ref(), &other_squared, line_file.clone()).into();
+        let square: AtomicFact = self
+            .new_equal_fact_from_refs(sqrt.arg.as_ref(), &other_squared, line_file.clone())
+            .into();
         let Some(results) =
             self.verify_builtin_rule_premises(&[nonnegative, square], builtin_state)?
         else {
@@ -157,25 +159,28 @@ impl Runtime {
             return Ok(None);
         };
 
-        let left_nonnegative: AtomicFact = LessEqualFact::new(
-            Self::literal_zero_obj_for_abs_builtin(),
-            left_factor.arg.as_ref().clone(),
-            line_file.clone(),
-        )
-        .into();
-        let right_nonnegative: AtomicFact = LessEqualFact::new(
-            Self::literal_zero_obj_for_abs_builtin(),
-            right_factor.arg.as_ref().clone(),
-            line_file.clone(),
-        )
-        .into();
+        let left_nonnegative: AtomicFact = self
+            .new_less_equal_fact(
+                Self::literal_zero_obj_for_abs_builtin(),
+                left_factor.arg.as_ref().clone(),
+                line_file.clone(),
+            )
+            .into();
+        let right_nonnegative: AtomicFact = self
+            .new_less_equal_fact(
+                Self::literal_zero_obj_for_abs_builtin(),
+                right_factor.arg.as_ref().clone(),
+                line_file.clone(),
+            )
+            .into();
         let arg_product: Obj = Mul::new(
             left_factor.arg.as_ref().clone(),
             right_factor.arg.as_ref().clone(),
         )
         .into();
-        let arg_product_fact: AtomicFact =
-            EqualFact::new_from_refs(sqrt.arg.as_ref(), &arg_product, line_file.clone()).into();
+        let arg_product_fact: AtomicFact = self
+            .new_equal_fact_from_refs(sqrt.arg.as_ref(), &arg_product, line_file.clone())
+            .into();
         let arg_product_result =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&arg_product_fact, builtin_state)?;
         let results = if let Some(arg_product_result) = arg_product_result {
@@ -234,25 +239,28 @@ impl Runtime {
             return Ok(None);
         };
 
-        let numerator_nonnegative: AtomicFact = LessEqualFact::new(
-            Self::literal_zero_obj_for_abs_builtin(),
-            numerator_sqrt.arg.as_ref().clone(),
-            line_file.clone(),
-        )
-        .into();
-        let denominator_positive: AtomicFact = LessFact::new(
-            Self::literal_zero_obj_for_abs_builtin(),
-            denominator_sqrt.arg.as_ref().clone(),
-            line_file.clone(),
-        )
-        .into();
+        let numerator_nonnegative: AtomicFact = self
+            .new_less_equal_fact(
+                Self::literal_zero_obj_for_abs_builtin(),
+                numerator_sqrt.arg.as_ref().clone(),
+                line_file.clone(),
+            )
+            .into();
+        let denominator_positive: AtomicFact = self
+            .new_less_fact(
+                Self::literal_zero_obj_for_abs_builtin(),
+                denominator_sqrt.arg.as_ref().clone(),
+                line_file.clone(),
+            )
+            .into();
         let arg_quotient: Obj = Div::new(
             numerator_sqrt.arg.as_ref().clone(),
             denominator_sqrt.arg.as_ref().clone(),
         )
         .into();
-        let arg_quotient_fact: AtomicFact =
-            EqualFact::new_from_refs(sqrt.arg.as_ref(), &arg_quotient, line_file.clone()).into();
+        let arg_quotient_fact: AtomicFact = self
+            .new_equal_fact_from_refs(sqrt.arg.as_ref(), &arg_quotient, line_file.clone())
+            .into();
         let arg_quotient_result =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&arg_quotient_fact, builtin_state)?;
         let results = if let Some(arg_quotient_result) = arg_quotient_result {

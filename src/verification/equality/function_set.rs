@@ -3,11 +3,19 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 
-fn fn_set_equality_fact(left: &FnSet, right: &FnSet, line_file: LineFile) -> Fact {
-    EqualFact::new(left.clone().into(), right.clone().into(), line_file).into()
+fn fn_set_equality_fact(
+    runtime: &Runtime,
+    left: &FnSet,
+    right: &FnSet,
+    line_file: LineFile,
+) -> Fact {
+    runtime
+        .new_equal_fact(left.clone().into(), right.clone().into(), line_file)
+        .into()
 }
 
 fn fn_set_equality_verify_error(
+    runtime: &Runtime,
     left: &FnSet,
     right: &FnSet,
     line_file: LineFile,
@@ -16,7 +24,7 @@ fn fn_set_equality_verify_error(
 ) -> RuntimeError {
     {
         VerifyRuntimeError(RuntimeErrorStruct::new(
-            Some(fn_set_equality_fact(left, right, line_file.clone()).into_stmt()),
+            Some(fn_set_equality_fact(runtime, left, right, line_file.clone()).into_stmt()),
             message,
             line_file,
             cause,
@@ -157,6 +165,7 @@ impl Runtime {
             )
             .map_err(|e| {
                 fn_set_equality_verify_error(
+                    self,
                     source,
                     target,
                     line_file.clone(),
@@ -172,6 +181,7 @@ impl Runtime {
             )
             .map_err(|e| {
                 fn_set_equality_verify_error(
+                    self,
                     source,
                     target,
                     line_file.clone(),
@@ -179,11 +189,9 @@ impl Runtime {
                     Some(e),
                 )
             })?;
-        let ret_equal_result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
-            &source_ret_set,
-            &target_ret_set,
-            line_file,
-        ));
+        let ret_equal_result = self.verify_equal_fact_by_known_equality(
+            &self.new_equal_fact_from_refs(&source_ret_set, &target_ret_set, line_file),
+        );
         Ok(ret_equal_result.is_success())
     }
 
@@ -285,6 +293,7 @@ impl Runtime {
                 )
                 .map_err(|e| {
                     fn_set_equality_verify_error(
+                        self,
                         source,
                         target,
                         line_file.clone(),
@@ -299,6 +308,7 @@ impl Runtime {
             self.define_params_with_set(&generated_param_def)
                 .map_err(|e| {
                     fn_set_equality_verify_error(
+                        self,
                         source,
                         target,
                         line_file.clone(),
@@ -342,6 +352,7 @@ impl Runtime {
                 )
                 .map_err(|e| {
                     fn_set_equality_verify_error(
+                        self,
                         source,
                         target,
                         line_file.clone(),
@@ -354,6 +365,7 @@ impl Runtime {
             )
             .map_err(|e| {
                 fn_set_equality_verify_error(
+                    self,
                     source,
                     target,
                     line_file.clone(),
@@ -383,6 +395,7 @@ impl Runtime {
                 )
                 .map_err(|e| {
                     fn_set_equality_verify_error(
+                        self,
                         source,
                         target,
                         line_file.clone(),
@@ -397,6 +410,7 @@ impl Runtime {
                     .cloned()
                 else {
                     return Err(fn_set_equality_verify_error(
+                        self,
                         source,
                         target,
                         line_file.clone(),
@@ -436,6 +450,7 @@ impl Runtime {
                 )
                 .map_err(|e| {
                     fn_set_equality_verify_error(
+                        self,
                         source,
                         target,
                         line_file.clone(),

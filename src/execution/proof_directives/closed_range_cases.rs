@@ -11,7 +11,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let set_obj: Obj = stmt.closed_range.clone().into();
         let element = stmt.element.clone();
-        let in_fact = InFact::new(element, set_obj, stmt.line_file.clone());
+        let in_fact = self.new_in_fact(element, set_obj, stmt.line_file.clone());
         let in_atomic: AtomicFact = in_fact.clone().into();
         let verify_state = VerifyState::initial();
         let membership = self.verify_atomic_fact(&in_atomic, &verify_state)?;
@@ -42,7 +42,7 @@ impl Runtime {
                 stmt.closed_range.end.as_ref().clone(),
             ),
         ] {
-            let in_z: AtomicFact = InFact::new(endpoint, z_set.clone(), lf.clone()).into();
+            let in_z: AtomicFact = self.new_in_fact(endpoint, z_set.clone(), lf.clone()).into();
             let in_z_ok = self.verify_atomic_fact(&in_z, &verify_state)?;
             if in_z_ok.is_unknown() {
                 return Err(short_exec_error(
@@ -71,6 +71,7 @@ impl Runtime {
         }
 
         let branches = match or_branches_integer_closed_range_equalities(
+            self,
             stmt.element.clone(),
             &stmt.closed_range,
             &stmt.line_file,
@@ -89,6 +90,7 @@ impl Runtime {
                 b
             }
             Err(literal_err) => match or_branches_closed_range_start_plus_offset_equalities(
+                self,
                 stmt.element.clone(),
                 &stmt.closed_range,
                 &stmt.line_file,
@@ -108,7 +110,7 @@ impl Runtime {
         let generated_fact: Fact = if branches.len() == 1 {
             branches[0].clone().into()
         } else {
-            OrFact::new(branches, stmt.line_file.clone()).into()
+            self.new_or_fact(branches, stmt.line_file.clone()).into()
         };
         let infer_after_store = self
             .store_with_well_defined_verification_and_infer_with_default_verify_state(
@@ -143,6 +145,7 @@ impl Runtime {
         stmt: &ByClosedRangeAsCasesStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let branches = match or_branches_integer_closed_range_equalities(
+            self,
             stmt.element.clone(),
             &stmt.closed_range,
             &stmt.line_file,
@@ -161,6 +164,7 @@ impl Runtime {
                 b
             }
             Err(literal_err) => match or_branches_closed_range_start_plus_offset_equalities(
+                self,
                 stmt.element.clone(),
                 &stmt.closed_range,
                 &stmt.line_file,
@@ -180,7 +184,7 @@ impl Runtime {
         let generated_fact: Fact = if branches.len() == 1 {
             branches[0].clone().into()
         } else {
-            OrFact::new(branches, stmt.line_file.clone()).into()
+            self.new_or_fact(branches, stmt.line_file.clone()).into()
         };
         let infer_result = self.store_fact_with_trust_and_infer_with_reason(
             generated_fact,

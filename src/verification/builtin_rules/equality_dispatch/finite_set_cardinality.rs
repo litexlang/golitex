@@ -41,14 +41,18 @@ impl Runtime {
             return Ok(None);
         };
 
-        let first_finite: AtomicFact = IsFiniteSetFact::new(first_set, line_file.clone()).into();
+        let first_finite: AtomicFact = self
+            .new_is_finite_set_fact(first_set, line_file.clone())
+            .into();
         let Some(first_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&first_finite, builtin_state)?
         else {
             return Ok(None);
         };
 
-        let second_finite: AtomicFact = IsFiniteSetFact::new(second_set, line_file.clone()).into();
+        let second_finite: AtomicFact = self
+            .new_is_finite_set_fact(second_set, line_file.clone())
+            .into();
         let Some(second_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&second_finite, builtin_state)?
         else {
@@ -161,21 +165,25 @@ impl Runtime {
             return Ok(None);
         };
 
-        let subset_fact: AtomicFact =
-            SubsetFact::new(subset.clone(), container.clone(), line_file.clone()).into();
+        let subset_fact: AtomicFact = self
+            .new_subset_fact(subset.clone(), container.clone(), line_file.clone())
+            .into();
         let Some(subset_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?
         else {
             return Ok(None);
         };
-        let container_finite: AtomicFact =
-            IsFiniteSetFact::new(container, line_file.clone()).into();
+        let container_finite: AtomicFact = self
+            .new_is_finite_set_fact(container, line_file.clone())
+            .into();
         let Some(container_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&container_finite, builtin_state)?
         else {
             return Ok(None);
         };
-        let subset_finite: AtomicFact = IsFiniteSetFact::new(subset, line_file.clone()).into();
+        let subset_finite: AtomicFact = self
+            .new_is_finite_set_fact(subset, line_file.clone())
+            .into();
         let Some(subset_finite_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&subset_finite, builtin_state)?
         else {
@@ -212,24 +220,27 @@ impl Runtime {
             return Ok(None);
         };
 
-        let start_in_n: AtomicFact =
-            InFact::new(start.clone(), StandardSet::N.into(), line_file.clone()).into();
+        let start_in_n: AtomicFact = self
+            .new_in_fact(start.clone(), StandardSet::N.into(), line_file.clone())
+            .into();
         let Some(start_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&start_in_n, builtin_state)?
         else {
             return Ok(None);
         };
 
-        let end_in_n: AtomicFact =
-            InFact::new(end.clone(), StandardSet::N.into(), line_file.clone()).into();
+        let end_in_n: AtomicFact = self
+            .new_in_fact(end.clone(), StandardSet::N.into(), line_file.clone())
+            .into();
         let Some(end_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&end_in_n, builtin_state)?
         else {
             return Ok(None);
         };
 
-        let endpoints_ordered: AtomicFact =
-            LessEqualFact::new(start, end, line_file.clone()).into();
+        let endpoints_ordered: AtomicFact = self
+            .new_less_equal_fact(start, end, line_file.clone())
+            .into();
         let Some(order_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&endpoints_ordered, builtin_state)?
         else {
@@ -270,7 +281,9 @@ impl Runtime {
             return Ok(None);
         };
 
-        let base_finite: AtomicFact = IsFiniteSetFact::new(base_set, line_file.clone()).into();
+        let base_finite: AtomicFact = self
+            .new_is_finite_set_fact(base_set, line_file.clone())
+            .into();
         let Some(base_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&base_finite, builtin_state)?
         else {
@@ -466,12 +479,14 @@ impl Runtime {
         _builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let type_state = VerifyState::initial();
-        let first_finite: AtomicFact = IsFiniteSetFact::new(first_set, line_file.clone()).into();
+        let first_finite: AtomicFact = self
+            .new_is_finite_set_fact(first_set, line_file.clone())
+            .into();
         let first_result = self.verify_atomic_fact(&first_finite, &type_state)?;
         if !first_result.is_success() {
             return Ok(None);
         }
-        let second_finite: AtomicFact = IsFiniteSetFact::new(second_set, line_file).into();
+        let second_finite: AtomicFact = self.new_is_finite_set_fact(second_set, line_file).into();
         let second_result = self.verify_atomic_fact(&second_finite, &type_state)?;
         if !second_result.is_success() {
             return Ok(None);

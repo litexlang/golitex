@@ -34,7 +34,7 @@ impl Runtime {
                 )))
             })?;
         let mut infer_result = SuccessInferResult::new();
-        let facts = param_def.facts();
+        let facts = param_def.facts(self);
         for (binding, fact) in param_def.params.iter().zip(facts.iter()) {
             let name = binding.name();
             self.store_set_bound_parameter_binding(binding, binding_scope, param_set)
@@ -80,7 +80,7 @@ impl Runtime {
         binding_scope: BindingScope,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut infer_result = SuccessInferResult::new();
-        let facts = param_def.facts();
+        let facts = param_def.facts(self);
         for (binding, fact) in param_def.params.iter().zip(facts.iter()) {
             let name = binding.name();
             self.store_set_bound_parameter_binding(binding, binding_scope, param_def.set_obj())

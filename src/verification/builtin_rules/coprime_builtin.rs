@@ -58,24 +58,28 @@ impl Runtime {
         let right = normal_fact.body[1].clone();
         let line_file = normal_fact.line_file.clone();
         let zero: Obj = Number::new("0".to_string()).into();
-        let left_nonzero: AtomicFact =
-            NotEqualFact::new(left.clone(), zero.clone(), line_file.clone()).into();
-        let right_nonzero: AtomicFact =
-            NotEqualFact::new(right.clone(), zero, line_file.clone()).into();
-        let non_all_zero: Fact = OrFact::new(
-            vec![
-                AndChainAtomicFact::AtomicFact(left_nonzero),
-                AndChainAtomicFact::AtomicFact(right_nonzero),
-            ],
-            line_file.clone(),
-        )
-        .into();
-        let gcd_is_one: Fact = EqualFact::new(
-            Gcd::new(left, right).into(),
-            Number::new("1".to_string()).into(),
-            line_file,
-        )
-        .into();
+        let left_nonzero: AtomicFact = self
+            .new_not_equal_fact(left.clone(), zero.clone(), line_file.clone())
+            .into();
+        let right_nonzero: AtomicFact = self
+            .new_not_equal_fact(right.clone(), zero, line_file.clone())
+            .into();
+        let non_all_zero: Fact = self
+            .new_or_fact(
+                vec![
+                    AndChainAtomicFact::AtomicFact(left_nonzero),
+                    AndChainAtomicFact::AtomicFact(right_nonzero),
+                ],
+                line_file.clone(),
+            )
+            .into();
+        let gcd_is_one: Fact = self
+            .new_equal_fact(
+                Gcd::new(left, right).into(),
+                Number::new("1".to_string()).into(),
+                line_file,
+            )
+            .into();
         Some(vec![non_all_zero, gcd_is_one])
     }
 }

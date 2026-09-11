@@ -27,8 +27,9 @@ impl Runtime {
                 self.push_required_real_object_wd_result(steps, &value.arg, verify_state)
             }
             _ => {
-                let fact: AtomicFact =
-                    InFact::new(object.clone(), StandardSet::R.into(), default_line_file()).into();
+                let fact: AtomicFact = self
+                    .new_in_fact(object.clone(), StandardSet::R.into(), default_line_file())
+                    .into();
                 let result = self.verify_atomic_fact(&fact, verify_state)?;
                 if result.is_unknown() {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -55,15 +56,15 @@ impl Runtime {
             )?);
         }
         let zero: Obj = Number::new("0".to_string()).into();
-        let complex_natural = AndChainAtomicFact::AndFact(AndFact::new(
+        let complex_natural = AndChainAtomicFact::AndFact(self.new_and_fact(
             vec![
-                InFact::new(
+                self.new_in_fact(
                     (*value.base).clone(),
                     StandardSet::C.into(),
                     default_line_file(),
                 )
                 .into(),
-                InFact::new(
+                self.new_in_fact(
                     (*value.exponent).clone(),
                     StandardSet::N.into(),
                     default_line_file(),
@@ -78,22 +79,27 @@ impl Runtime {
             return Ok(steps);
         }
 
-        let nonzero_complex_integer = AndChainAtomicFact::AndFact(AndFact::new(
+        let nonzero_complex_integer = AndChainAtomicFact::AndFact(self.new_and_fact(
             vec![
-                InFact::new(
-                    (*value.base).clone(),
-                    StandardSet::C.into(),
-                    default_line_file(),
-                )
-                .into(),
-                InFact::new(
-                    (*value.exponent).clone(),
-                    StandardSet::Z.into(),
-                    default_line_file(),
-                )
-                .into(),
-                NotEqualFact::new((*value.base).clone(), zero.clone(), default_line_file()).into(),
-            ],
+                    self.new_in_fact(
+                        (*value.base).clone(),
+                        StandardSet::C.into(),
+                        default_line_file(),
+                    )
+                    .into(),
+                    self.new_in_fact(
+                        (*value.exponent).clone(),
+                        StandardSet::Z.into(),
+                        default_line_file(),
+                    )
+                    .into(),
+                    self.new_not_equal_fact(
+                        (*value.base).clone(),
+                        zero.clone(),
+                        default_line_file(),
+                    )
+                    .into(),
+                ],
             default_line_file(),
         ));
         let result = self.verify_and_chain_atomic_fact(&nonzero_complex_integer, verify_state)?;
@@ -114,18 +120,27 @@ impl Runtime {
             )));
         }
 
-        let nonnegative_positive_real = AndChainAtomicFact::AndFact(AndFact::new(
+        let nonnegative_positive_real = AndChainAtomicFact::AndFact(self.new_and_fact(
             vec![
-                LessEqualFact::new(zero.clone(), (*value.base).clone(), default_line_file()).into(),
-                InFact::new(
-                    (*value.exponent).clone(),
-                    StandardSet::R.into(),
-                    default_line_file(),
-                )
-                .into(),
-                GreaterFact::new((*value.exponent).clone(), zero.clone(), default_line_file())
+                    self.new_less_equal_fact(
+                        zero.clone(),
+                        (*value.base).clone(),
+                        default_line_file(),
+                    )
                     .into(),
-            ],
+                    self.new_in_fact(
+                        (*value.exponent).clone(),
+                        StandardSet::R.into(),
+                        default_line_file(),
+                    )
+                    .into(),
+                    self.new_greater_fact(
+                        (*value.exponent).clone(),
+                        zero.clone(),
+                        default_line_file(),
+                    )
+                    .into(),
+                ],
             default_line_file(),
         ));
         let result = self.verify_and_chain_atomic_fact(&nonnegative_positive_real, verify_state)?;
@@ -134,16 +149,17 @@ impl Runtime {
             return Ok(steps);
         }
 
-        let positive_real = AndChainAtomicFact::AndFact(AndFact::new(
+        let positive_real = AndChainAtomicFact::AndFact(self.new_and_fact(
             vec![
-                GreaterFact::new((*value.base).clone(), zero.clone(), default_line_file()).into(),
-                InFact::new(
-                    (*value.exponent).clone(),
-                    StandardSet::R.into(),
-                    default_line_file(),
-                )
-                .into(),
-            ],
+                    self.new_greater_fact((*value.base).clone(), zero.clone(), default_line_file())
+                        .into(),
+                    self.new_in_fact(
+                        (*value.exponent).clone(),
+                        StandardSet::R.into(),
+                        default_line_file(),
+                    )
+                    .into(),
+                ],
             default_line_file(),
         ));
         let result = self.verify_and_chain_atomic_fact(&positive_real, verify_state)?;
@@ -152,17 +168,19 @@ impl Runtime {
             return Ok(steps);
         }
 
-        let zero_positive_real = AndChainAtomicFact::AndFact(AndFact::new(
+        let zero_positive_real = AndChainAtomicFact::AndFact(self.new_and_fact(
             vec![
-                EqualFact::new((*value.base).clone(), zero.clone(), default_line_file()).into(),
-                InFact::new(
-                    (*value.exponent).clone(),
-                    StandardSet::R.into(),
-                    default_line_file(),
-                )
-                .into(),
-                GreaterFact::new((*value.exponent).clone(), zero, default_line_file()).into(),
-            ],
+                    self.new_equal_fact((*value.base).clone(), zero.clone(), default_line_file())
+                        .into(),
+                    self.new_in_fact(
+                        (*value.exponent).clone(),
+                        StandardSet::R.into(),
+                        default_line_file(),
+                    )
+                    .into(),
+                    self.new_greater_fact((*value.exponent).clone(), zero, default_line_file())
+                        .into(),
+                ],
             default_line_file(),
         ));
         let result = self.verify_and_chain_atomic_fact(&zero_positive_real, verify_state)?;
@@ -171,7 +189,7 @@ impl Runtime {
             return Ok(steps);
         }
 
-        let domain = OrFact::new(
+        let domain = self.new_or_fact(
             vec![nonnegative_positive_real, positive_real, zero_positive_real],
             default_line_file(),
         );
@@ -195,7 +213,7 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<VerifyFactResult, RuntimeError> {
         let c_obj = StandardSet::C.into();
-        let in_fact = InFact::new(obj.clone(), c_obj, default_line_file());
+        let in_fact = self.new_in_fact(obj.clone(), c_obj, default_line_file());
         let result = self.verify_atomic_fact(&in_fact.into(), verify_state)?;
         if result.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -322,8 +340,9 @@ impl Runtime {
 
         let parent: Obj = div.clone().into();
         let zero: Obj = Number::new("0".to_string()).into();
-        let nonzero: AtomicFact =
-            NotEqualFact::new((*div.right).clone(), zero, default_line_file()).into();
+        let nonzero: AtomicFact = self
+            .new_not_equal_fact((*div.right).clone(), zero, default_line_file())
+            .into();
         let nonzero_result = self.verify_atomic_fact(&nonzero, verify_state)?;
         if nonzero_result.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -389,11 +408,13 @@ impl Runtime {
         let arguments = [(*value.left).clone(), (*value.right).clone()];
         let mut requirements = vec![
             scalar_membership_requirement(
+                self,
                 &value.left,
                 StandardSet::Z,
                 "mod dividend must belong to Z",
             ),
             scalar_membership_requirement(
+                self,
                 &value.right,
                 StandardSet::Z,
                 "mod modulus must belong to Z",
@@ -401,7 +422,7 @@ impl Runtime {
         ];
         if !matches!(value.right.as_ref(), Obj::Gcd(_)) {
             requirements.push((
-                NotEqualFact::new(
+                self.new_not_equal_fact(
                     (*value.right).clone(),
                     Number::new("0".to_string()).into(),
                     default_line_file(),
@@ -421,11 +442,13 @@ impl Runtime {
         let arguments = [(*value.left).clone(), (*value.right).clone()];
         let requirements = vec![
             scalar_membership_requirement(
+                self,
                 &value.left,
                 StandardSet::Z,
                 "quot dividend must belong to Z",
             ),
             scalar_membership_requirement(
+                self,
                 &value.right,
                 StandardSet::NPos,
                 "quot divisor must belong to N+",
@@ -442,11 +465,13 @@ impl Runtime {
         let arguments = [(*value.left).clone(), (*value.right).clone()];
         let carrier_requirements = vec![
             scalar_membership_requirement(
+                self,
                 &value.left,
                 StandardSet::Z,
                 "gcd left argument must belong to Z",
             ),
             scalar_membership_requirement(
+                self,
                 &value.right,
                 StandardSet::Z,
                 "gcd right argument must belong to Z",
@@ -458,10 +483,12 @@ impl Runtime {
             verify_state,
         )?;
         let zero: Obj = Number::new("0".to_string()).into();
-        let left_nonzero: AtomicFact =
-            NotEqualFact::new((*value.left).clone(), zero.clone(), default_line_file()).into();
-        let right_nonzero: AtomicFact =
-            NotEqualFact::new((*value.right).clone(), zero, default_line_file()).into();
+        let left_nonzero: AtomicFact = self
+            .new_not_equal_fact((*value.left).clone(), zero.clone(), default_line_file())
+            .into();
+        let right_nonzero: AtomicFact = self
+            .new_not_equal_fact((*value.right).clone(), zero, default_line_file())
+            .into();
         for selected in [&left_nonzero, &right_nonzero] {
             let result = self.verify_atomic_fact(selected, verify_state)?;
             if result.is_success() {
@@ -473,7 +500,7 @@ impl Runtime {
             vec![left_nonzero.clone().into(), right_nonzero.clone().into()],
             vec![right_nonzero.into(), left_nonzero.into()],
         ] {
-            let disjunction = OrFact::new(branches, default_line_file());
+            let disjunction = self.new_or_fact(branches, default_line_file());
             let result = self.verify_or_fact(&disjunction, verify_state)?;
             if result.is_success() {
                 steps.push_fact_check(super::success_obj_fact_check(result)?);
@@ -497,11 +524,13 @@ impl Runtime {
             &[(*value.left).clone(), (*value.right).clone()],
             vec![
                 scalar_membership_requirement(
+                    self,
                     &value.left,
                     StandardSet::Z,
                     "lcm left argument must belong to Z",
                 ),
                 scalar_membership_requirement(
+                    self,
                     &value.right,
                     StandardSet::Z,
                     "lcm right argument must belong to Z",
@@ -580,12 +609,13 @@ impl Runtime {
             &[(*value.arg).clone()],
             vec![
                 scalar_membership_requirement(
+                    self,
                     &value.arg,
                     StandardSet::R,
                     "ln argument must belong to R",
                 ),
                 (
-                    GreaterFact::new(
+                    self.new_greater_fact(
                         (*value.arg).clone(),
                         Number::new("0".to_string()).into(),
                         default_line_file(),
@@ -637,12 +667,13 @@ impl Runtime {
             &[(*value.arg).clone()],
             vec![
                 scalar_membership_requirement(
+                    self,
                     &value.arg,
                     StandardSet::R,
                     "arcsin argument must belong to R",
                 ),
                 (
-                    LessEqualFact::new(
+                    self.new_less_equal_fact(
                         Number::new("-1".to_string()).into(),
                         (*value.arg).clone(),
                         line_file.clone(),
@@ -654,7 +685,7 @@ impl Runtime {
                     ),
                 ),
                 (
-                    LessEqualFact::new(
+                    self.new_less_equal_fact(
                         (*value.arg).clone(),
                         Number::new("1".to_string()).into(),
                         line_file,
@@ -688,12 +719,13 @@ impl Runtime {
             &[(*value.arg).clone()],
             vec![
                 scalar_membership_requirement(
+                    self,
                     &value.arg,
                     StandardSet::R,
                     "tan argument must belong to R",
                 ),
                 (
-                    NotEqualFact::new(
+                    self.new_not_equal_fact(
                         denominator.clone(),
                         Number::new("0".to_string()).into(),
                         default_line_file(),
@@ -716,12 +748,13 @@ impl Runtime {
             &[(*value.arg).clone()],
             vec![
                 scalar_membership_requirement(
+                    self,
                     &value.arg,
                     StandardSet::R,
                     "cot argument must belong to R",
                 ),
                 (
-                    NotEqualFact::new(
+                    self.new_not_equal_fact(
                         denominator.clone(),
                         Number::new("0".to_string()).into(),
                         default_line_file(),
@@ -782,12 +815,13 @@ impl Runtime {
             &[(*value.arg).clone()],
             vec![
                 scalar_membership_requirement(
+                    self,
                     &value.arg,
                     StandardSet::R,
                     "sqrt argument must belong to R",
                 ),
                 (
-                    LessEqualFact::new(
+                    self.new_less_equal_fact(
                         Number::new("0".to_string()).into(),
                         (*value.arg).clone(),
                         default_line_file(),
@@ -810,26 +844,29 @@ impl Runtime {
             &[(*value.base).clone(), (*value.arg).clone()],
             vec![
                 scalar_membership_requirement(
+                    self,
                     &value.base,
                     StandardSet::R,
                     "log base must belong to R",
                 ),
                 scalar_membership_requirement(
+                    self,
                     &value.arg,
                     StandardSet::R,
                     "log argument must belong to R",
                 ),
                 (
-                    GreaterFact::new((*value.base).clone(), zero.clone(), default_line_file())
+                    self.new_greater_fact((*value.base).clone(), zero.clone(), default_line_file())
                         .into(),
                     "log: base must be > 0".to_string(),
                 ),
                 (
-                    GreaterFact::new((*value.arg).clone(), zero, default_line_file()).into(),
+                    self.new_greater_fact((*value.arg).clone(), zero, default_line_file())
+                        .into(),
                     "log: argument must be > 0".to_string(),
                 ),
                 (
-                    NotEqualFact::new(
+                    self.new_not_equal_fact(
                         (*value.base).clone(),
                         Number::new("1".to_string()).into(),
                         default_line_file(),
@@ -852,6 +889,7 @@ impl Runtime {
         self.verify_scalar_constructor_steps_result(
             &[argument.clone()],
             vec![scalar_membership_requirement(
+                self,
                 argument,
                 carrier,
                 &scalar_carrier_failure_message(argument, carrier),
@@ -872,11 +910,13 @@ impl Runtime {
             &[left.clone(), right.clone()],
             vec![
                 scalar_membership_requirement(
+                    self,
                     left,
                     carrier,
                     &scalar_carrier_failure_message(left, carrier),
                 ),
                 scalar_membership_requirement(
+                    self,
                     right,
                     carrier,
                     &scalar_carrier_failure_message(right, carrier),
@@ -888,12 +928,15 @@ impl Runtime {
 }
 
 fn scalar_membership_requirement(
+    runtime: &Runtime,
     argument: &Obj,
     carrier: StandardSet,
     message: &str,
 ) -> (AtomicFact, String) {
     (
-        InFact::new(argument.clone(), carrier.into(), default_line_file()).into(),
+        runtime
+            .new_in_fact(argument.clone(), carrier.into(), default_line_file())
+            .into(),
         message.to_string(),
     )
 }

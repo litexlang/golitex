@@ -749,8 +749,10 @@ impl StmtResultToLeanCompiler {
         let mut proof = format!("Litex.Rules.emptySubset {target}");
         for (item, subgoal) in list.list.iter().zip(subgoals.iter()).rev() {
             let item = item.as_ref();
-            let expected: Fact =
-                InFact::new(item.clone(), subset.right.clone(), subset.line_file.clone()).into();
+            let expected: Fact = self
+                .runtime
+                .new_in_fact(item.clone(), subset.right.clone(), subset.line_file.clone())
+                .into();
             let subgoal = subgoal
                 .verified()
                 .ok_or_else(|| "literal-set-subset member subgoal is not factual".to_string())?;

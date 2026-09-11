@@ -22,6 +22,7 @@ pub struct PlainExistFact {
 }
 
 impl PlainExistFact {
+    #[cfg(test)]
     #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(
         typed_parameters: TypedParameterList,

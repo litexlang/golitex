@@ -28,7 +28,7 @@ impl Runtime {
                     ))
                 }
                 Fact::ChainFact(chain_fact) => {
-                    let atomic_facts = chain_fact.facts()?;
+                    let atomic_facts = chain_fact.facts(self)?;
                     let mut comparisons = Vec::with_capacity(atomic_facts.len());
                     for atomic_fact in atomic_facts.iter() {
                         comparisons.push(
@@ -64,7 +64,7 @@ impl Runtime {
                     self.verify_forall_fact_well_defined_result(forall_fact, verify_state)?
                 }
                 Fact::ForallFactWithIff(forall_fact) => {
-                    let (forward, reverse) = forall_fact.to_two_forall_facts()?;
+                    let (forward, reverse) = forall_fact.to_two_forall_facts(self)?;
                     let forward =
                         self.verify_forall_fact_well_defined_result(&forward, verify_state)?;
                     let reverse =
@@ -363,8 +363,9 @@ impl Runtime {
         let mut domain_checks = Vec::new();
         if name_string == PRIME {
             let arg = atomic_fact.args_ref()[0];
-            let in_n: AtomicFact =
-                InFact::new(arg.clone(), StandardSet::N.into(), atomic_fact.line_file()).into();
+            let in_n: AtomicFact = self
+                .new_in_fact(arg.clone(), StandardSet::N.into(), atomic_fact.line_file())
+                .into();
             let result = self.verify_atomic_fact(&in_n, verify_state)?;
             if result.is_unknown() {
                 return Err(WellDefinedRuntimeError(
@@ -383,12 +384,13 @@ impl Runtime {
 
         if name_string == COPRIME {
             for arg in atomic_fact.args_ref() {
-                let in_n: AtomicFact = InFact::new(
-                    (*arg).clone(),
-                    StandardSet::N.into(),
-                    atomic_fact.line_file(),
-                )
-                .into();
+                let in_n: AtomicFact = self
+                    .new_in_fact(
+                        (*arg).clone(),
+                        StandardSet::N.into(),
+                        atomic_fact.line_file(),
+                    )
+                    .into();
                 let result = self.verify_atomic_fact(&in_n, verify_state)?;
                 if result.is_unknown() {
                     return Err(WellDefinedRuntimeError(
@@ -411,9 +413,9 @@ impl Runtime {
             for (index, (arg, expected_set)) in
                 atomic_fact.args_ref().iter().zip(expected_sets).enumerate()
             {
-                let membership: AtomicFact =
-                    InFact::new((*arg).clone(), expected_set.into(), atomic_fact.line_file())
-                        .into();
+                let membership: AtomicFact = self
+                    .new_in_fact((*arg).clone(), expected_set.into(), atomic_fact.line_file())
+                    .into();
                 let result = self.verify_atomic_fact(&membership, verify_state)?;
                 if result.is_unknown() {
                     return Err(WellDefinedRuntimeError(

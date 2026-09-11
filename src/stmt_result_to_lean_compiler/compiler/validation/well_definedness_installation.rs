@@ -114,18 +114,20 @@ pub(in super::super) fn install_object_well_definedness_store_results_for_source
                 store.fact
             )
         })?;
-        let expected: Fact = InFact::new(
-            direct.object.clone(),
-            result_set.clone(),
-            store.fact.line_file(),
-        )
-        .into();
-        if store.fact.to_string() != expected.to_string() {
-            return Err(format!(
-                "object WD store changed intrinsic membership `{expected}` to `{}`",
-                store.fact
-            ));
-        }
+        let expected = match &store.fact {
+            Fact::AtomicFact(AtomicFact::InFact(in_fact))
+                if in_fact.element.to_string() == direct.object.to_string()
+                    && in_fact.set.to_string() == result_set.to_string() =>
+            {
+                store.fact.clone()
+            }
+            _ => {
+                return Err(format!(
+                    "object WD store changed intrinsic membership `{}` to `{}`",
+                    direct.object, store.fact
+                ));
+            }
+        };
         let fact_id = store.fact_id.ok_or_else(|| {
             format!("object WD intrinsic-result store `{expected}` has no FactId")
         })?;
@@ -161,7 +163,12 @@ pub(in super::super) fn install_object_well_definedness_store_results_for_source
             .insert(fact_id, expected);
     }
     if let Some(instantiation) = direct.steps.template_instantiation.as_deref() {
-        install_template_instantiation_result(&direct.object, instantiation, environment_stack)?;
+        install_template_instantiation_result(
+            &Runtime::default(),
+            &direct.object,
+            instantiation,
+            environment_stack,
+        )?;
     }
     Ok(())
 }

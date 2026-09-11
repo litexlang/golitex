@@ -12,7 +12,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let set_obj = enumerated_range_set_obj(&stmt.range);
         let element = stmt.element.clone();
-        let in_fact = InFact::new(element, set_obj, stmt.line_file.clone());
+        let in_fact = self.new_in_fact(element, set_obj, stmt.line_file.clone());
         let in_atomic: AtomicFact = in_fact.clone().into();
         let verify_state = VerifyState::initial();
         let membership = self.verify_atomic_fact(&in_atomic, &verify_state)?;
@@ -42,8 +42,9 @@ impl Runtime {
                 end,
             ),
         ] {
-            let in_z: AtomicFact =
-                InFact::new((*endpoint).clone(), z_set.clone(), lf.clone()).into();
+            let in_z: AtomicFact = self
+                .new_in_fact((*endpoint).clone(), z_set.clone(), lf.clone())
+                .into();
             let in_z_ok = self.verify_atomic_fact(&in_z, &verify_state)?;
             if in_z_ok.is_unknown() {
                 return Err(short_exec_error(
@@ -64,7 +65,7 @@ impl Runtime {
             ));
         }
 
-        let branches = match enumerate_range_equalities(stmt) {
+        let branches = match enumerate_range_equalities(self, stmt) {
             Ok(branches) => {
                 if branches.is_empty() {
                     return Err(short_exec_error(
@@ -88,7 +89,7 @@ impl Runtime {
         let generated_fact: Fact = if branches.len() == 1 {
             branches[0].clone().into()
         } else {
-            OrFact::new(branches, stmt.line_file.clone()).into()
+            self.new_or_fact(branches, stmt.line_file.clone()).into()
         };
         let infer_after_store = self
             .store_with_well_defined_verification_and_infer_with_default_verify_state(
@@ -124,7 +125,7 @@ impl Runtime {
         &mut self,
         stmt: &ByEnumerateRangeStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let branches = enumerate_range_equalities(stmt)
+        let branches = enumerate_range_equalities(self, stmt)
             .map_err(|msg| short_exec_error(stmt.clone().into(), msg, None, vec![]))?;
         if branches.is_empty() {
             return Err(short_exec_error(
@@ -141,7 +142,7 @@ impl Runtime {
         let generated_fact: Fact = if branches.len() == 1 {
             branches[0].clone().into()
         } else {
-            OrFact::new(branches, stmt.line_file.clone()).into()
+            self.new_or_fact(branches, stmt.line_file.clone()).into()
         };
         let infer_result = self.store_fact_with_trust_and_infer_with_reason(
             generated_fact,
@@ -191,12 +192,14 @@ fn enumerate_range_empty_error(range: &ClosedRangeOrRange) -> &'static str {
 }
 
 fn enumerate_range_equalities(
+    runtime: &Runtime,
     stmt: &ByEnumerateRangeStmt,
 ) -> Result<Vec<AndChainAtomicFact>, String> {
     let stmt_name = enumerate_range_stmt_name(&stmt.range);
     match &stmt.range {
         ClosedRangeOrRange::ClosedRange(closed_range) => {
             match or_branches_integer_closed_range_equalities(
+                runtime,
                 stmt.element.clone(),
                 closed_range,
                 &stmt.line_file,
@@ -204,6 +207,7 @@ fn enumerate_range_equalities(
             ) {
                 Ok(branches) => Ok(branches),
                 Err(literal_err) => match or_branches_closed_range_start_plus_offset_equalities(
+                    runtime,
                     stmt.element.clone(),
                     closed_range,
                     &stmt.line_file,
@@ -216,6 +220,7 @@ fn enumerate_range_equalities(
         }
         ClosedRangeOrRange::Range(range) => {
             match or_branches_integer_range_equalities(
+                runtime,
                 stmt.element.clone(),
                 range,
                 &stmt.line_file,
@@ -223,6 +228,7 @@ fn enumerate_range_equalities(
             ) {
                 Ok(branches) => Ok(branches),
                 Err(literal_err) => match or_branches_range_start_plus_offset_equalities(
+                    runtime,
                     stmt.element.clone(),
                     range,
                     &stmt.line_file,

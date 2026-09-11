@@ -46,7 +46,7 @@ fn obj_plus_one(obj: &Obj) -> Obj {
     Add::new(obj.clone(), Number::new("1".to_string()).into()).into()
 }
 
-fn direct_positive_order_shape(fact: &AtomicFact) -> Option<(Obj, Obj, bool)> {
+fn direct_positive_order_shape(runtime: &Runtime, fact: &AtomicFact) -> Option<(Obj, Obj, bool)> {
     if !matches!(
         fact,
         AtomicFact::LessFact(_)
@@ -56,7 +56,7 @@ fn direct_positive_order_shape(fact: &AtomicFact) -> Option<(Obj, Obj, bool)> {
     ) {
         return None;
     }
-    let normalized = normalize_positive_order_atomic_fact(fact)?;
+    let normalized = normalize_positive_order_atomic_fact(runtime, fact)?;
     match normalized {
         AtomicFact::LessFact(f) => Some((f.left, f.right, true)),
         AtomicFact::LessEqualFact(f) => Some((f.left, f.right, false)),
@@ -136,7 +136,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
-        let Some((left, integer, true)) = direct_positive_order_shape(atomic_fact) else {
+        let Some((left, integer, true)) = direct_positive_order_shape(self, atomic_fact) else {
             return Ok(None);
         };
         if !obj_is_literal_one(&left) {
@@ -144,8 +144,9 @@ impl Runtime {
         }
 
         let line_file = atomic_fact.line_file();
-        let in_n_pos: AtomicFact =
-            InFact::new(integer.clone(), StandardSet::NPos.into(), line_file.clone()).into();
+        let in_n_pos: AtomicFact = self
+            .new_in_fact(integer.clone(), StandardSet::NPos.into(), line_file.clone())
+            .into();
         let Some(membership_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&in_n_pos, builtin_state)?
         else {
@@ -155,7 +156,7 @@ impl Runtime {
         let two: Obj = Number::new("2".to_string()).into();
         let zero: Obj = Number::new("0".to_string()).into();
         let remainder: Obj = Mod::new(integer, two).into();
-        let even_fact: AtomicFact = EqualFact::new(remainder, zero, line_file).into();
+        let even_fact: AtomicFact = self.new_equal_fact(remainder, zero, line_file).into();
         let Some(even_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&even_fact, builtin_state)?
         else {
@@ -183,7 +184,7 @@ impl Runtime {
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some((target_left, target_right, target_is_strict)) =
-            direct_positive_order_shape(atomic_fact)
+            direct_positive_order_shape(self, atomic_fact)
         else {
             return Ok(None);
         };
@@ -192,7 +193,7 @@ impl Runtime {
         for environment in self.iter_environments_from_top() {
             for known_facts_map in environment.facts.atomic.by_two_args.values() {
                 for known_fact in known_facts_map.values() {
-                    if direct_positive_order_shape(known_fact).is_some() {
+                    if direct_positive_order_shape(self, known_fact).is_some() {
                         known_orders.push(known_fact.clone());
                     }
                 }
@@ -202,7 +203,8 @@ impl Runtime {
         known_orders.dedup_by(|left, right| left.to_string() == right.to_string());
 
         for first in known_orders.iter() {
-            let Some((first_left, middle, first_is_strict)) = direct_positive_order_shape(first)
+            let Some((first_left, middle, first_is_strict)) =
+                direct_positive_order_shape(self, first)
             else {
                 continue;
             };
@@ -211,7 +213,7 @@ impl Runtime {
             }
             for second in known_orders.iter() {
                 let Some((second_left, second_right, second_is_strict)) =
-                    direct_positive_order_shape(second)
+                    direct_positive_order_shape(self, second)
                 else {
                     continue;
                 };
@@ -276,17 +278,18 @@ impl Runtime {
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(AtomicFact::LessEqualFact(fact)) =
-            normalize_positive_order_atomic_fact(atomic_fact)
+            normalize_positive_order_atomic_fact(self, atomic_fact)
         else {
             return Ok(None);
         };
         if let Obj::FiniteSetMax(maximum) = &fact.right {
-            let member_fact: AtomicFact = InFact::new(
-                fact.left.clone(),
-                maximum.set.as_ref().clone(),
-                fact.line_file.clone(),
-            )
-            .into();
+            let member_fact: AtomicFact = self
+                .new_in_fact(
+                    fact.left.clone(),
+                    maximum.set.as_ref().clone(),
+                    fact.line_file.clone(),
+                )
+                .into();
             let member_result = self.verify_known_or_concrete_finite_set_membership(
                 &member_fact,
                 builtin_state.verify_state(),
@@ -306,7 +309,7 @@ impl Runtime {
         for maximum in self.known_equal_finite_set_max_candidates(&fact.right) {
             let maximum_obj: Obj = maximum.clone().into();
             let equality =
-                EqualFact::new_from_refs(&fact.right, &maximum_obj, fact.line_file.clone());
+                self.new_equal_fact_from_refs(&fact.right, &maximum_obj, fact.line_file.clone());
             let equality_proof = self.verify_equal_fact_by_known_equality(&equality);
             let equality_atomic: AtomicFact = equality.into();
             let equality_result = self.complete_atomic_fact_proof_result(
@@ -317,12 +320,13 @@ impl Runtime {
             if !equality_result.is_success() {
                 continue;
             }
-            let member_fact: AtomicFact = InFact::new(
-                fact.left.clone(),
-                maximum.set.as_ref().clone(),
-                fact.line_file.clone(),
-            )
-            .into();
+            let member_fact: AtomicFact = self
+                .new_in_fact(
+                    fact.left.clone(),
+                    maximum.set.as_ref().clone(),
+                    fact.line_file.clone(),
+                )
+                .into();
             let member_result = self.verify_known_or_concrete_finite_set_membership(
                 &member_fact,
                 builtin_state.verify_state(),
@@ -341,12 +345,13 @@ impl Runtime {
         }
 
         if let Obj::FiniteSetMin(minimum) = &fact.left {
-            let member_fact: AtomicFact = InFact::new(
-                fact.right.clone(),
-                minimum.set.as_ref().clone(),
-                fact.line_file.clone(),
-            )
-            .into();
+            let member_fact: AtomicFact = self
+                .new_in_fact(
+                    fact.right.clone(),
+                    minimum.set.as_ref().clone(),
+                    fact.line_file.clone(),
+                )
+                .into();
             let member_result = self.verify_known_or_concrete_finite_set_membership(
                 &member_fact,
                 builtin_state.verify_state(),
@@ -366,7 +371,7 @@ impl Runtime {
         for minimum in self.known_equal_finite_set_min_candidates(&fact.left) {
             let minimum_obj: Obj = minimum.clone().into();
             let equality =
-                EqualFact::new_from_refs(&fact.left, &minimum_obj, fact.line_file.clone());
+                self.new_equal_fact_from_refs(&fact.left, &minimum_obj, fact.line_file.clone());
             let equality_proof = self.verify_equal_fact_by_known_equality(&equality);
             let equality_atomic: AtomicFact = equality.into();
             let equality_result = self.complete_atomic_fact_proof_result(
@@ -377,12 +382,13 @@ impl Runtime {
             if !equality_result.is_success() {
                 continue;
             }
-            let member_fact: AtomicFact = InFact::new(
-                fact.right.clone(),
-                minimum.set.as_ref().clone(),
-                fact.line_file.clone(),
-            )
-            .into();
+            let member_fact: AtomicFact = self
+                .new_in_fact(
+                    fact.right.clone(),
+                    minimum.set.as_ref().clone(),
+                    fact.line_file.clone(),
+                )
+                .into();
             let member_result = self.verify_known_or_concrete_finite_set_membership(
                 &member_fact,
                 builtin_state.verify_state(),
@@ -491,7 +497,7 @@ impl Runtime {
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(AtomicFact::LessEqualFact(fact)) =
-            normalize_positive_order_atomic_fact(atomic_fact)
+            normalize_positive_order_atomic_fact(self, atomic_fact)
         else {
             return Ok(None);
         };
@@ -505,12 +511,13 @@ impl Runtime {
                     &fact.line_file,
                     builtin_state.verify_state(),
                 )? {
-                    let strict: AtomicFact = LessFact::new(
-                        difference.right.as_ref().clone(),
-                        difference.left.as_ref().clone(),
-                        fact.line_file.clone(),
-                    )
-                    .into();
+                    let strict: AtomicFact = self
+                        .new_less_fact(
+                            difference.right.as_ref().clone(),
+                            difference.left.as_ref().clone(),
+                            fact.line_file.clone(),
+                        )
+                        .into();
                     if let Some(strict_result) =
                         self.try_verify_atomic_fact_as_builtin_rule_premise(&strict, builtin_state)?
                     {
@@ -536,12 +543,13 @@ impl Runtime {
             &fact.line_file,
             builtin_state.verify_state(),
         )? {
-            let strict: AtomicFact = LessFact::new(
-                fact.left.clone(),
-                obj_plus_one(&fact.right),
-                fact.line_file.clone(),
-            )
-            .into();
+            let strict: AtomicFact = self
+                .new_less_fact(
+                    fact.left.clone(),
+                    obj_plus_one(&fact.right),
+                    fact.line_file.clone(),
+                )
+                .into();
             if let Some(strict_result) =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&strict, builtin_state)?
             {
@@ -567,8 +575,9 @@ impl Runtime {
             else {
                 return Ok(None);
             };
-            let strict: AtomicFact =
-                LessFact::new(predecessor, fact.right.clone(), fact.line_file.clone()).into();
+            let strict: AtomicFact = self
+                .new_less_fact(predecessor, fact.right.clone(), fact.line_file.clone())
+                .into();
             if let Some(strict_result) =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&strict, builtin_state)?
             {
@@ -594,8 +603,9 @@ impl Runtime {
             else {
                 return Ok(None);
             };
-            let strict: AtomicFact =
-                LessFact::new(fact.left.clone(), successor, fact.line_file.clone()).into();
+            let strict: AtomicFact = self
+                .new_less_fact(fact.left.clone(), successor, fact.line_file.clone())
+                .into();
             if let Some(strict_result) =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&strict, builtin_state)?
             {
@@ -634,10 +644,12 @@ impl Runtime {
             else {
                 continue;
             };
-            let lower: AtomicFact =
-                LessEqualFact::new(base.clone(), subject.clone(), line_file.clone()).into();
-            let upper: AtomicFact =
-                LessFact::new(subject.clone(), obj_plus_one(base), line_file.clone()).into();
+            let lower: AtomicFact = self
+                .new_less_equal_fact(base.clone(), subject.clone(), line_file.clone())
+                .into();
+            let upper: AtomicFact = self
+                .new_less_fact(subject.clone(), obj_plus_one(base), line_file.clone())
+                .into();
             let Some(lower_result) =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&lower, builtin_state)?
             else {
@@ -675,9 +687,12 @@ impl Runtime {
             else {
                 continue;
             };
-            let lower: AtomicFact = LessFact::new(base, subject.clone(), line_file.clone()).into();
-            let upper: AtomicFact =
-                LessEqualFact::new(subject.clone(), successor.clone(), line_file.clone()).into();
+            let lower: AtomicFact = self
+                .new_less_fact(base, subject.clone(), line_file.clone())
+                .into();
+            let upper: AtomicFact = self
+                .new_less_equal_fact(subject.clone(), successor.clone(), line_file.clone())
+                .into();
             let Some(lower_result) =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&lower, builtin_state)?
             else {

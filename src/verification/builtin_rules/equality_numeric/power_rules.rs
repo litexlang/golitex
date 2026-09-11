@@ -32,20 +32,20 @@ impl Runtime {
             }
             return Ok(self
                 .try_verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(base, factor, line_file.clone()),
+                    &self.new_equal_fact_from_refs(base, factor, line_file.clone()),
                     builtin_state,
                 )?
                 .map(|result| vec![result]));
         };
         let Some(base_result) = self.try_verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(base, pow.base.as_ref(), line_file.clone()),
+            &self.new_equal_fact_from_refs(base, pow.base.as_ref(), line_file.clone()),
             builtin_state,
         )?
         else {
             return Ok(None);
         };
         let Some(exponent_result) = self.try_verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(exponent, pow.exponent.as_ref(), line_file.clone()),
+            &self.new_equal_fact_from_refs(exponent, pow.exponent.as_ref(), line_file.clone()),
             builtin_state,
         )?
         else {
@@ -60,8 +60,9 @@ impl Runtime {
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
-        let in_n_pos: AtomicFact =
-            InFact::new(obj.clone(), StandardSet::NPos.into(), line_file).into();
+        let in_n_pos: AtomicFact = self
+            .new_in_fact(obj.clone(), StandardSet::NPos.into(), line_file)
+            .into();
         Ok(self
             .try_verify_atomic_fact_as_builtin_rule_premise(&in_n_pos, builtin_state)?
             .map(|result| vec![result]))
@@ -74,8 +75,9 @@ impl Runtime {
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
-        let in_set: AtomicFact =
-            InFact::new(obj.clone(), standard_set.clone().into(), line_file.clone()).into();
+        let in_set: AtomicFact = self
+            .new_in_fact(obj.clone(), standard_set.clone().into(), line_file.clone())
+            .into();
         if let Some(result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&in_set, builtin_state)?
         {
@@ -89,8 +91,9 @@ impl Runtime {
             if !known_standard_set.is_subset_eq(&standard_set) {
                 continue;
             }
-            let known_membership: AtomicFact =
-                InFact::new(obj.clone(), known_set, line_file.clone()).into();
+            let known_membership: AtomicFact = self
+                .new_in_fact(obj.clone(), known_set, line_file.clone())
+                .into();
             if let Some(result) = self
                 .try_verify_atomic_fact_as_builtin_rule_premise(&known_membership, builtin_state)?
             {
@@ -200,15 +203,17 @@ impl Runtime {
         )? {
             return Ok(Some(results));
         }
-        let in_r: AtomicFact =
-            InFact::new(obj.clone(), StandardSet::R.into(), line_file.clone()).into();
+        let in_r: AtomicFact = self
+            .new_in_fact(obj.clone(), StandardSet::R.into(), line_file.clone())
+            .into();
         let Some(in_r_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&in_r, builtin_state)?
         else {
             return Ok(None);
         };
-        let positive: AtomicFact =
-            LessFact::new(Number::new("0".to_string()).into(), obj.clone(), line_file).into();
+        let positive: AtomicFact = self
+            .new_less_fact(Number::new("0".to_string()).into(), obj.clone(), line_file)
+            .into();
         let Some(positive_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&positive, builtin_state)?
         else {
@@ -223,12 +228,13 @@ impl Runtime {
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
-        let nonzero: AtomicFact = NotEqualFact::new(
-            obj.clone(),
-            Self::literal_zero_obj_for_abs_builtin(),
-            line_file,
-        )
-        .into();
+        let nonzero: AtomicFact = self
+            .new_not_equal_fact(
+                obj.clone(),
+                Self::literal_zero_obj_for_abs_builtin(),
+                line_file,
+            )
+            .into();
         Ok(self
             .try_verify_atomic_fact_as_builtin_rule_premise(&nonzero, builtin_state)?
             .map(|result| vec![result]))
@@ -388,22 +394,23 @@ impl Runtime {
             // for example, the context stores `m in N+ and n in N+` but neither leaf
             // was introduced independently.
             let base = combined_power.base.as_ref();
-            let nonzero: AtomicFact = NotEqualFact::new(
-                base.clone(),
-                Self::literal_zero_obj_for_abs_builtin(),
-                line_file.clone(),
-            )
-            .into();
+            let nonzero: AtomicFact = self
+                .new_not_equal_fact(
+                    base.clone(),
+                    Self::literal_zero_obj_for_abs_builtin(),
+                    line_file.clone(),
+                )
+                .into();
             let carrier_result = self.try_verify_builtin_rule_premise_alternatives(
                 vec![
                     vec![
-                        InFact::new(
+                        self.new_in_fact(
                             left_exp.clone(),
                             StandardSet::NPos.into(),
                             line_file.clone(),
                         )
                         .into(),
-                        InFact::new(
+                        self.new_in_fact(
                             right_exp.clone(),
                             StandardSet::NPos.into(),
                             line_file.clone(),
@@ -411,25 +418,50 @@ impl Runtime {
                         .into(),
                     ],
                     vec![
-                        InFact::new(left_exp.clone(), StandardSet::N.into(), line_file.clone())
+                        self.new_in_fact(
+                            left_exp.clone(),
+                            StandardSet::N.into(),
+                            line_file.clone(),
+                        )
+                        .into(),
+                        self.new_in_fact(
+                            right_exp.clone(),
+                            StandardSet::N.into(),
+                            line_file.clone(),
+                        )
+                        .into(),
+                        self.new_in_fact(base.clone(), StandardSet::C.into(), line_file.clone())
                             .into(),
-                        InFact::new(right_exp.clone(), StandardSet::N.into(), line_file.clone())
-                            .into(),
-                        InFact::new(base.clone(), StandardSet::C.into(), line_file.clone()).into(),
                     ],
                     vec![
-                        InFact::new(left_exp.clone(), StandardSet::R.into(), line_file.clone())
-                            .into(),
-                        InFact::new(right_exp.clone(), StandardSet::R.into(), line_file.clone())
-                            .into(),
-                        InFact::new(base.clone(), StandardSet::RPos.into(), line_file.clone())
+                        self.new_in_fact(
+                            left_exp.clone(),
+                            StandardSet::R.into(),
+                            line_file.clone(),
+                        )
+                        .into(),
+                        self.new_in_fact(
+                            right_exp.clone(),
+                            StandardSet::R.into(),
+                            line_file.clone(),
+                        )
+                        .into(),
+                        self.new_in_fact(base.clone(), StandardSet::RPos.into(), line_file.clone())
                             .into(),
                     ],
                     vec![
-                        InFact::new(left_exp.clone(), StandardSet::Z.into(), line_file.clone())
-                            .into(),
-                        InFact::new(right_exp.clone(), StandardSet::Z.into(), line_file.clone())
-                            .into(),
+                        self.new_in_fact(
+                            left_exp.clone(),
+                            StandardSet::Z.into(),
+                            line_file.clone(),
+                        )
+                        .into(),
+                        self.new_in_fact(
+                            right_exp.clone(),
+                            StandardSet::Z.into(),
+                            line_file.clone(),
+                        )
+                        .into(),
                         nonzero,
                     ],
                 ],
@@ -487,7 +519,7 @@ impl Runtime {
             return Ok(None);
         };
         let Some(base_match) = self.try_verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(
+            &self.new_equal_fact_from_refs(
                 inner_power.base.as_ref(),
                 combined_power.base.as_ref(),
                 line_file.clone(),
@@ -615,27 +647,31 @@ impl Runtime {
         let inner_exp = inner_power.exponent.as_ref();
         let outer_exp = nested_power.exponent.as_ref();
         let base = combined_power.base.as_ref();
-        let nonzero: AtomicFact = NotEqualFact::new(
-            base.clone(),
-            Self::literal_zero_obj_for_abs_builtin(),
-            line_file.clone(),
-        )
-        .into();
+        let nonzero: AtomicFact = self
+            .new_not_equal_fact(
+                base.clone(),
+                Self::literal_zero_obj_for_abs_builtin(),
+                line_file.clone(),
+            )
+            .into();
         let carrier_result = self.try_verify_builtin_rule_premise_alternatives(
             vec![
                 vec![
-                    InFact::new(base.clone(), StandardSet::RPos.into(), line_file.clone()).into(),
-                    InFact::new(inner_exp.clone(), StandardSet::R.into(), line_file.clone()).into(),
-                    InFact::new(outer_exp.clone(), StandardSet::R.into(), line_file.clone()).into(),
+                    self.new_in_fact(base.clone(), StandardSet::RPos.into(), line_file.clone())
+                        .into(),
+                    self.new_in_fact(inner_exp.clone(), StandardSet::R.into(), line_file.clone())
+                        .into(),
+                    self.new_in_fact(outer_exp.clone(), StandardSet::R.into(), line_file.clone())
+                        .into(),
                 ],
                 vec![
-                    InFact::new(
+                    self.new_in_fact(
                         inner_exp.clone(),
                         StandardSet::NPos.into(),
                         line_file.clone(),
                     )
                     .into(),
-                    InFact::new(
+                    self.new_in_fact(
                         outer_exp.clone(),
                         StandardSet::NPos.into(),
                         line_file.clone(),
@@ -643,13 +679,18 @@ impl Runtime {
                     .into(),
                 ],
                 vec![
-                    InFact::new(inner_exp.clone(), StandardSet::N.into(), line_file.clone()).into(),
-                    InFact::new(outer_exp.clone(), StandardSet::N.into(), line_file.clone()).into(),
-                    InFact::new(base.clone(), StandardSet::C.into(), line_file.clone()).into(),
+                    self.new_in_fact(inner_exp.clone(), StandardSet::N.into(), line_file.clone())
+                        .into(),
+                    self.new_in_fact(outer_exp.clone(), StandardSet::N.into(), line_file.clone())
+                        .into(),
+                    self.new_in_fact(base.clone(), StandardSet::C.into(), line_file.clone())
+                        .into(),
                 ],
                 vec![
-                    InFact::new(inner_exp.clone(), StandardSet::Z.into(), line_file.clone()).into(),
-                    InFact::new(outer_exp.clone(), StandardSet::Z.into(), line_file.clone()).into(),
+                    self.new_in_fact(inner_exp.clone(), StandardSet::Z.into(), line_file.clone())
+                        .into(),
+                    self.new_in_fact(outer_exp.clone(), StandardSet::Z.into(), line_file.clone())
+                        .into(),
                     nonzero,
                 ],
             ],
@@ -673,7 +714,7 @@ impl Runtime {
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         if let Some(result) = self.try_verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(product, expected, line_file.clone()),
+            &self.new_equal_fact_from_refs(product, expected, line_file.clone()),
             builtin_state,
         )? {
             return Ok(Some(vec![result]));
@@ -842,22 +883,27 @@ impl Runtime {
             let zero = Self::literal_zero_obj_for_abs_builtin();
             self.try_verify_builtin_rule_premise_alternatives(
                 vec![
-                    vec![InFact::new(
-                        exponent.clone(),
-                        StandardSet::NPos.into(),
-                        line_file.clone(),
-                    )
-                    .into()],
+                    vec![self
+                        .new_in_fact(
+                            exponent.clone(),
+                            StandardSet::NPos.into(),
+                            line_file.clone(),
+                        )
+                        .into()],
                     vec![
-                        InFact::new(exponent.clone(), StandardSet::R.into(), line_file.clone())
-                            .into(),
-                        InFact::new(
+                        self.new_in_fact(
+                            exponent.clone(),
+                            StandardSet::R.into(),
+                            line_file.clone(),
+                        )
+                        .into(),
+                        self.new_in_fact(
                             left_base.clone(),
                             StandardSet::RPos.into(),
                             line_file.clone(),
                         )
                         .into(),
-                        InFact::new(
+                        self.new_in_fact(
                             right_base.clone(),
                             StandardSet::RPos.into(),
                             line_file.clone(),
@@ -865,19 +911,36 @@ impl Runtime {
                         .into(),
                     ],
                     vec![
-                        InFact::new(exponent.clone(), StandardSet::N.into(), line_file.clone())
-                            .into(),
-                        InFact::new(left_base.clone(), StandardSet::C.into(), line_file.clone())
-                            .into(),
-                        InFact::new(right_base.clone(), StandardSet::C.into(), line_file.clone())
-                            .into(),
+                        self.new_in_fact(
+                            exponent.clone(),
+                            StandardSet::N.into(),
+                            line_file.clone(),
+                        )
+                        .into(),
+                        self.new_in_fact(
+                            left_base.clone(),
+                            StandardSet::C.into(),
+                            line_file.clone(),
+                        )
+                        .into(),
+                        self.new_in_fact(
+                            right_base.clone(),
+                            StandardSet::C.into(),
+                            line_file.clone(),
+                        )
+                        .into(),
                     ],
                     vec![
-                        InFact::new(exponent.clone(), StandardSet::Z.into(), line_file.clone())
+                        self.new_in_fact(
+                            exponent.clone(),
+                            StandardSet::Z.into(),
+                            line_file.clone(),
+                        )
+                        .into(),
+                        self.new_not_equal_fact(left_base.clone(), zero.clone(), line_file.clone())
                             .into(),
-                        NotEqualFact::new(left_base.clone(), zero.clone(), line_file.clone())
+                        self.new_not_equal_fact(right_base.clone(), zero, line_file.clone())
                             .into(),
-                        NotEqualFact::new(right_base.clone(), zero, line_file.clone()).into(),
                     ],
                 ],
                 line_file.clone(),

@@ -1,8 +1,8 @@
 use litex::api::{
     compile_litex_source_to_lean_compilation_report, compile_litex_source_to_lean_source,
     run_eval_command, run_file_command, run_isolated_file_command, run_repository_command,
-    RuntimeOptions, OutputDetail, OutputLanguage, RunOutcome, RunTarget, RunTargetKind,
-    Runtime, SourceRunOutcome, StmtResult, StmtResultToLeanCompilationReport, SummaryOption,
+    OutputDetail, OutputLanguage, RunOutcome, RunTarget, RunTargetKind, Runtime, RuntimeOptions,
+    SourceRunOutcome, StmtResult, StmtResultToLeanCompilationReport, SummaryOption,
     VerifyStrictnessPolicy,
 };
 
@@ -94,8 +94,7 @@ fn curated_api_keeps_only_canonical_execution_paths_public() {
     let _: fn(&mut Runtime, &str) -> SourceRunOutcome = Runtime::execute_source;
     let _: fn(&str, RuntimeOptions) -> RunOutcome = litex::pipeline::run_eval_command;
     let _: fn(&str, RuntimeOptions) -> RunOutcome = litex::pipeline::run_file_command;
-    let _: fn(&str, RuntimeOptions) -> RunOutcome =
-        litex::pipeline::run_isolated_file_command;
+    let _: fn(&str, RuntimeOptions) -> RunOutcome = litex::pipeline::run_isolated_file_command;
     let _: fn(&str, RuntimeOptions) -> RunOutcome = litex::pipeline::run_repository_command;
     let _: fn(&str) -> Result<String, String> = litex::pipeline::resolve_source_file_path;
     let _: fn(&str, &str) -> Result<String, String> = compile_litex_source_to_lean_source;

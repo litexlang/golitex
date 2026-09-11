@@ -203,12 +203,13 @@ impl Runtime {
         &mut self,
         stmt: &HaveObjByExistFactsStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let body = PlainExistFact::new(
-            stmt.param_def.clone(),
-            stmt.facts.clone(),
-            stmt.line_file.clone(),
-        )
-        .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
+        let body = self
+            .new_plain_exist_fact(
+                stmt.param_def.clone(),
+                stmt.facts.clone(),
+                stmt.line_file.clone(),
+            )
+            .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
         let exist_fact = ExistFact::PlainExistFact(body);
         let equal_to_bindings = stmt.param_def.collect_param_bindings();
         self.exec_obj_from_exist_fact(
@@ -223,12 +224,13 @@ impl Runtime {
         &mut self,
         stmt: &HaveObjByExistFactsStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let body = PlainExistFact::new(
-            stmt.param_def.clone(),
-            stmt.facts.clone(),
-            stmt.line_file.clone(),
-        )
-        .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
+        let body = self
+            .new_plain_exist_fact(
+                stmt.param_def.clone(),
+                stmt.facts.clone(),
+                stmt.line_file.clone(),
+            )
+            .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
         let exist_fact = ExistFact::PlainExistFact(body);
         let equal_to_bindings = stmt.param_def.collect_param_bindings();
         let infer_result = self.apply_obj_from_exist_fact_to_environment(
@@ -585,14 +587,16 @@ impl Runtime {
             .cloned()
             .zip(flat_types.iter())
             .map(|(witness, param_type)| match param_type {
-                ParamType::Set(_) => IsSetFact::new(witness, line_file.clone()).into(),
-                ParamType::NonemptySet(_) => {
-                    IsNonemptySetFact::new(witness, line_file.clone()).into()
-                }
-                ParamType::FiniteSet(_) => IsFiniteSetFact::new(witness, line_file.clone()).into(),
-                ParamType::Obj(carrier) => {
-                    InFact::new(witness, carrier.clone(), line_file.clone()).into()
-                }
+                ParamType::Set(_) => self.new_is_set_fact(witness, line_file.clone()).into(),
+                ParamType::NonemptySet(_) => self
+                    .new_is_nonempty_set_fact(witness, line_file.clone())
+                    .into(),
+                ParamType::FiniteSet(_) => self
+                    .new_is_finite_set_fact(witness, line_file.clone())
+                    .into(),
+                ParamType::Obj(carrier) => self
+                    .new_in_fact(witness, carrier.clone(), line_file.clone())
+                    .into(),
             })
             .collect::<Vec<Fact>>();
 

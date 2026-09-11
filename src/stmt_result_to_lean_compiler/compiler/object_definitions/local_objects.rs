@@ -36,12 +36,14 @@ impl StmtResultToLeanCompiler {
         let defined_object: Obj =
             Identifier::new_bound(source_name.to_string(), statement.symbol_binding.as_ref())
                 .into();
-        let defining_equality: Fact = EqualFact::new(
-            defined_object,
-            statement.value.clone(),
-            statement.line_file.clone(),
-        )
-        .into();
+        let defining_equality: Fact = self
+            .runtime
+            .new_equal_fact(
+                defined_object,
+                statement.value.clone(),
+                statement.line_file.clone(),
+            )
+            .into();
         if store.itself_and_why_itself_is_stored.0.to_string() != defining_equality.to_string() {
             return Err("let-object result changed its defining equality".into());
         }

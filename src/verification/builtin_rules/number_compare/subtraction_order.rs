@@ -12,9 +12,11 @@ impl Runtime {
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<VerifyFactResult>, RuntimeError> {
         let fact: AtomicFact = if weak {
-            LessEqualFact::new(zero.clone(), sub_expr.clone(), line_file.clone()).into()
+            self.new_less_equal_fact(zero.clone(), sub_expr.clone(), line_file.clone())
+                .into()
         } else {
-            LessFact::new(zero.clone(), sub_expr.clone(), line_file.clone()).into()
+            self.new_less_fact(zero.clone(), sub_expr.clone(), line_file.clone())
+                .into()
         };
         self.try_verify_atomic_fact_as_builtin_rule_premise(&fact, builtin_state)
     }
@@ -26,7 +28,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
-        let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
+        let Some(normalized_fact) = normalize_positive_order_atomic_fact(self, atomic_fact) else {
             return Ok(None);
         };
         let (left, right, is_weak, line_file) = match normalized_fact {
@@ -38,9 +40,11 @@ impl Runtime {
         let zero = Self::literal_zero_obj();
         let direct_difference: Obj = Sub::new(left.clone(), right.clone()).into();
         let direct_difference_order: AtomicFact = if is_weak {
-            LessEqualFact::new(direct_difference, zero.clone(), line_file.clone()).into()
+            self.new_less_equal_fact(direct_difference, zero.clone(), line_file.clone())
+                .into()
         } else {
-            LessFact::new(direct_difference, zero.clone(), line_file.clone()).into()
+            self.new_less_fact(direct_difference, zero.clone(), line_file.clone())
+                .into()
         };
         let direct_difference_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
             &direct_difference_order,
@@ -67,9 +71,11 @@ impl Runtime {
 
         let difference: Obj = Sub::new(right, left).into();
         let difference_order: AtomicFact = if is_weak {
-            LessEqualFact::new(zero, difference, line_file.clone()).into()
+            self.new_less_equal_fact(zero, difference, line_file.clone())
+                .into()
         } else {
-            LessFact::new(zero, difference, line_file.clone()).into()
+            self.new_less_fact(zero, difference, line_file.clone())
+                .into()
         };
         let difference_result =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&difference_order, builtin_state)?;
@@ -120,7 +126,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
-        let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
+        let Some(norm) = normalize_positive_order_atomic_fact(self, atomic_fact) else {
             return Ok(None);
         };
         match &norm {
@@ -128,12 +134,13 @@ impl Runtime {
                 let Obj::Sub(sub) = &f.right else {
                     return Ok(None);
                 };
-                let derived: AtomicFact = LessEqualFact::new(
-                    sub.right.as_ref().clone(),
-                    sub.left.as_ref().clone(),
-                    f.line_file.clone(),
-                )
-                .into();
+                let derived: AtomicFact = self
+                    .new_less_equal_fact(
+                        sub.right.as_ref().clone(),
+                        sub.left.as_ref().clone(),
+                        f.line_file.clone(),
+                    )
+                    .into();
                 let result =
                     self.try_verify_atomic_fact_as_builtin_rule_premise(&derived, builtin_state)?;
                 if let Some(result) = result {
@@ -155,12 +162,13 @@ impl Runtime {
                 let Obj::Sub(sub) = &f.right else {
                     return Ok(None);
                 };
-                let derived: AtomicFact = LessFact::new(
-                    sub.right.as_ref().clone(),
-                    sub.left.as_ref().clone(),
-                    f.line_file.clone(),
-                )
-                .into();
+                let derived: AtomicFact = self
+                    .new_less_fact(
+                        sub.right.as_ref().clone(),
+                        sub.left.as_ref().clone(),
+                        f.line_file.clone(),
+                    )
+                    .into();
                 let result =
                     self.try_verify_atomic_fact_as_builtin_rule_premise(&derived, builtin_state)?;
                 if let Some(result) = result {

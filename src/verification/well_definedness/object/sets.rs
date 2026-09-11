@@ -40,23 +40,23 @@ impl Runtime {
         let y2_obj = obj_for_bound_param_in_scope(&y_group.params[1]);
         let line_file = default_line_file();
 
-        ForallFact::new_canonical_forall(
+        self.new_forall_fact(
             TypedParameterList::new(vec![x_group, y_group]),
             vec![
-                NormalAtomicFact::new(
+                self.new_normal_atomic_fact(
                     x.prop_name.clone(),
                     vec![x_obj.clone(), y_obj.clone()],
                     line_file.clone(),
                 )
                 .into(),
-                NormalAtomicFact::new(
+                self.new_normal_atomic_fact(
                     x.prop_name.clone(),
                     vec![x_obj, y2_obj.clone()],
                     line_file.clone(),
                 )
                 .into(),
             ],
-            vec![EqualFact::new(y_obj, y2_obj, line_file.clone()).into()],
+            vec![self.new_equal_fact(y_obj, y2_obj, line_file.clone()).into()],
             line_file,
         )
     }
@@ -115,7 +115,7 @@ impl Runtime {
                     ))
                 })?;
 
-            let parameter_fact: Fact = InFact::new(
+            let parameter_fact: Fact = runtime.new_in_fact(
                 obj_for_bound_param_in_scope(&value.param_binding),
                 (*value.param_set).clone(),
                 default_line_file(),
@@ -278,7 +278,7 @@ impl Runtime {
                         ) {
                             continue;
                         }
-                        let subset: AtomicFact = SubsetFact::new(
+                        let subset: AtomicFact = runtime.new_subset_fact(
                             group.set_obj().clone(),
                             (*value.body.ret_set).clone(),
                             default_line_file(),
@@ -354,12 +354,13 @@ impl Runtime {
                     BindingScope::LocalBinder,
                     group.set_obj(),
                 )?;
-                let proposition: Fact = InFact::new(
-                    obj_for_bound_param_in_scope(binding),
-                    group.set_obj().clone(),
-                    default_line_file(),
-                )
-                .into();
+                let proposition: Fact = self
+                    .new_in_fact(
+                        obj_for_bound_param_in_scope(binding),
+                        group.set_obj().clone(),
+                        default_line_file(),
+                    )
+                    .into();
                 let well_definedness =
                     self.verify_fact_well_defined_result(&proposition, verify_state)?;
                 let Fact::AtomicFact(atomic) = proposition.clone() else {
@@ -449,8 +450,9 @@ impl Runtime {
                 self.push_required_real_object_result(steps, &value.arg, verify_state)
             }
             _ => {
-                let fact: AtomicFact =
-                    InFact::new(object.clone(), StandardSet::R.into(), default_line_file()).into();
+                let fact: AtomicFact = self
+                    .new_in_fact(object.clone(), StandardSet::R.into(), default_line_file())
+                    .into();
                 self.push_set_wd_fact_check(
                     steps,
                     &fact,
@@ -508,8 +510,9 @@ impl Runtime {
                 verify_state,
             ),
             _ => {
-                let subset: AtomicFact =
-                    SubsetFact::new(set.clone(), StandardSet::R.into(), default_line_file()).into();
+                let subset: AtomicFact = self
+                    .new_subset_fact(set.clone(), StandardSet::R.into(), default_line_file())
+                    .into();
                 self.push_set_wd_fact_check(
                     steps,
                     &subset,
@@ -528,8 +531,12 @@ impl Runtime {
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps =
             self.verify_set_constructor_children_result(&[set.clone()], verify_state)?;
-        let finite: AtomicFact = IsFiniteSetFact::new(set.clone(), default_line_file()).into();
-        let nonempty: AtomicFact = IsNonemptySetFact::new(set.clone(), default_line_file()).into();
+        let finite: AtomicFact = self
+            .new_is_finite_set_fact(set.clone(), default_line_file())
+            .into();
+        let nonempty: AtomicFact = self
+            .new_is_nonempty_set_fact(set.clone(), default_line_file())
+            .into();
         let error_message = format!("{operator_name} requires a finite, nonempty subset of R");
         self.push_set_wd_fact_check(&mut steps, &finite, verify_state, error_message.clone())?;
         self.push_set_wd_fact_check(&mut steps, &nonempty, verify_state, error_message)?;
@@ -606,12 +613,13 @@ impl Runtime {
         let next_verify_state = verify_state.clone();
         for left_index in 0..arguments.len() {
             for right_index in left_index + 1..arguments.len() {
-                let fact: AtomicFact = NotEqualFact::new(
-                    arguments[left_index].clone(),
-                    arguments[right_index].clone(),
-                    default_line_file(),
-                )
-                .into();
+                let fact: AtomicFact = self
+                    .new_not_equal_fact(
+                        arguments[left_index].clone(),
+                        arguments[right_index].clone(),
+                        default_line_file(),
+                    )
+                    .into();
                 let result = self.verify_atomic_fact(&fact, &next_verify_state)?;
                 if result.is_unknown() {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -653,7 +661,9 @@ impl Runtime {
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps =
             self.verify_set_constructor_children_result(&[(*value.set).clone()], verify_state)?;
-        let fact: AtomicFact = IsCartFact::new((*value.set).clone(), default_line_file()).into();
+        let fact: AtomicFact = self
+            .new_is_cart_fact((*value.set).clone(), default_line_file())
+            .into();
         self.push_set_wd_fact_check(
             &mut steps,
             &fact,
@@ -676,19 +686,22 @@ impl Runtime {
             .resolve_obj_to_number(&value.dim)
             .map(|number| Number::new(number.normalized_value).into())
             .unwrap_or_else(|| (*value.dim).clone());
-        let positive: AtomicFact = InFact::new(
-            dimension.clone(),
-            StandardSet::NPos.into(),
-            default_line_file(),
-        )
-        .into();
+        let positive: AtomicFact = self
+            .new_in_fact(
+                dimension.clone(),
+                StandardSet::NPos.into(),
+                default_line_file(),
+            )
+            .into();
         self.push_set_wd_fact_check(
             &mut steps,
             &positive,
             verify_state,
             format!("projection dimension {dimension} is not a positive integer"),
         )?;
-        let cart: AtomicFact = IsCartFact::new((*value.set).clone(), default_line_file()).into();
+        let cart: AtomicFact = self
+            .new_is_cart_fact((*value.set).clone(), default_line_file())
+            .into();
         self.push_set_wd_fact_check(
             &mut steps,
             &cart,
@@ -696,8 +709,9 @@ impl Runtime {
             format!("projection left side {} is not a cart", value.set),
         )?;
         let cart_dim: Obj = CartDim::new((*value.set).clone()).into();
-        let bounded: AtomicFact =
-            LessEqualFact::new(dimension.clone(), cart_dim.clone(), default_line_file()).into();
+        let bounded: AtomicFact = self
+            .new_less_equal_fact(dimension.clone(), cart_dim.clone(), default_line_file())
+            .into();
         self.push_set_wd_fact_check(
             &mut steps,
             &bounded,
@@ -714,7 +728,9 @@ impl Runtime {
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps =
             self.verify_set_constructor_children_result(&[(*value.arg).clone()], verify_state)?;
-        let fact: AtomicFact = IsTupleFact::new((*value.arg).clone(), default_line_file()).into();
+        let fact: AtomicFact = self
+            .new_is_tuple_fact((*value.arg).clone(), default_line_file())
+            .into();
         self.push_set_wd_fact_check(
             &mut steps,
             &fact,
@@ -744,8 +760,9 @@ impl Runtime {
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps =
             self.verify_set_constructor_children_result(&[(*value.set).clone()], verify_state)?;
-        let fact: AtomicFact =
-            IsFiniteSetFact::new((*value.set).clone(), default_line_file()).into();
+        let fact: AtomicFact = self
+            .new_is_finite_set_fact((*value.set).clone(), default_line_file())
+            .into();
         self.push_set_wd_fact_check(
             &mut steps,
             &fact,

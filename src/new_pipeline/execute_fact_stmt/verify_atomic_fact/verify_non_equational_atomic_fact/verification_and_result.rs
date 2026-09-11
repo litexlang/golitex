@@ -1,3 +1,4 @@
+use crate::new_pipeline::runtime::runtime_ids::FactId;
 use crate::prelude::*;
 use crate::verify_rewrite::VerifyState2;
 
@@ -72,7 +73,9 @@ impl Runtime {
         if let Some(result) = self
             .search_non_equational_atomic_proof_by_known_atomic_fact2(fact, verify_state.clone())?
         {
-            return Ok(NonEquationalAtomicFactSearchedProof2::ByKnownAtomicFact(result));
+            return Ok(NonEquationalAtomicFactSearchedProof2::ByKnownAtomicFact(
+                result,
+            ));
         }
 
         if let Some(result) =
@@ -84,31 +87,36 @@ impl Runtime {
         if let Some(result) = self
             .search_non_equational_atomic_proof_by_builtin_strategy2(fact, verify_state.clone())?
         {
-            return Ok(NonEquationalAtomicFactSearchedProof2::ByBuiltinStrategy(result));
+            return Ok(NonEquationalAtomicFactSearchedProof2::ByBuiltinStrategy(
+                result,
+            ));
         }
 
         if let Some(result) = self
             .search_non_equational_atomic_proof_by_known_forall_fact2(fact, verify_state.clone())?
         {
-            return Ok(NonEquationalAtomicFactSearchedProof2::ByKnownForallFact(result));
-        }
-
-        if let Some(result) = self.search_non_equational_atomic_proof_by_builtin_algebraic_rewrite2(
-            fact,
-            verify_state.clone(),
-        )? {
-            return Ok(NonEquationalAtomicFactSearchedProof2::ByBuiltinAlgebraicRewrite(
+            return Ok(NonEquationalAtomicFactSearchedProof2::ByKnownForallFact(
                 result,
             ));
         }
 
+        if let Some(result) = self
+            .search_non_equational_atomic_proof_by_builtin_algebraic_rewrite2(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(NonEquationalAtomicFactSearchedProof2::ByBuiltinAlgebraicRewrite(result));
+        }
+
         if verify_state.can_use_known_algebraic_rewrite {
             if let Some(result) = self
-                .search_non_equational_atomic_proof_by_known_algebraic_rewrite2(fact, verify_state)?
+                .search_non_equational_atomic_proof_by_known_algebraic_rewrite2(
+                    fact,
+                    verify_state,
+                )?
             {
-                return Ok(NonEquationalAtomicFactSearchedProof2::ByKnownAlgebraicRewrite(
-                    result,
-                ));
+                return Ok(NonEquationalAtomicFactSearchedProof2::ByKnownAlgebraicRewrite(result));
             }
         }
 

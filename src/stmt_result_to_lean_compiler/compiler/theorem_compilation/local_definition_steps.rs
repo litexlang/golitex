@@ -36,16 +36,19 @@ impl StmtResultToLeanCompiler {
         let defined_object: Obj =
             Identifier::new_bound(binding.name().to_string(), binding.as_ref()).into();
         let stored_type_fact = object_type_fact_for_compiler_definition(
+            &self.runtime,
             defined_object.clone(),
             param_type,
             result.statement.line_file.clone(),
         );
-        let stored_equality: Fact = EqualFact::new(
-            defined_object.clone(),
-            value.clone(),
-            result.statement.line_file.clone(),
-        )
-        .into();
+        let stored_equality: Fact = self
+            .runtime
+            .new_equal_fact(
+                defined_object.clone(),
+                value.clone(),
+                result.statement.line_file.clone(),
+            )
+            .into();
         let stored_fact_ids = exact_ordered_fact_ids_from_store_results(
             &result.common.infers,
             &[stored_type_fact.clone(), stored_equality.clone()],
@@ -53,6 +56,7 @@ impl StmtResultToLeanCompiler {
         )?;
 
         let expected_value_type = object_type_fact_for_compiler_definition(
+            &self.runtime,
             value.clone(),
             param_type,
             result.statement.line_file.clone(),
@@ -393,12 +397,14 @@ impl StmtResultToLeanCompiler {
         {
             return Err("local power-set definition changed its inferred effect arity".into());
         }
-        let expected_subset: Fact = SubsetFact::new(
-            defined_object.clone(),
-            (*power_set.set).clone(),
-            type_check.fact().line_file().clone(),
-        )
-        .into();
+        let expected_subset: Fact = self
+            .runtime
+            .new_subset_fact(
+                defined_object.clone(),
+                (*power_set.set).clone(),
+                type_check.fact().line_file().clone(),
+            )
+            .into();
         if type_store.inferred_facts[0].to_string() != expected_subset.to_string() {
             return Err("local power-set definition changed its inferred subset".into());
         }
@@ -496,12 +502,14 @@ impl StmtResultToLeanCompiler {
         let defined_object: Obj =
             Identifier::new_bound(source_name.to_string(), statement.symbol_binding.as_ref())
                 .into();
-        let defining_equality: Fact = EqualFact::new(
-            defined_object,
-            statement.value.clone(),
-            statement.line_file.clone(),
-        )
-        .into();
+        let defining_equality: Fact = self
+            .runtime
+            .new_equal_fact(
+                defined_object,
+                statement.value.clone(),
+                statement.line_file.clone(),
+            )
+            .into();
         if store.itself_and_why_itself_is_stored.0.to_string() != defining_equality.to_string() {
             return Err("local let-object Result changed its defining equality".into());
         }

@@ -33,7 +33,7 @@ impl StmtResultToLeanCompiler {
             );
         }
         let expected_alternate_from_gather: Fact = target_atomic
-            .symmetric_reordered_args(&evidence.gather)
+            .symmetric_reordered_args_with_runtime(&self.runtime, &evidence.gather)
             .ok_or_else(|| {
                 "registered symmetric-predicate evidence retained an invalid permutation"
                     .to_string()
@@ -96,6 +96,7 @@ impl StmtResultToLeanCompiler {
         loop {
             let (next, parameter_arguments) =
                 instantiate_registered_symmetric_predicate_transition(
+                    &self.runtime,
                     &binding.forall_fact,
                     &evidence.predicate_name,
                     &current,
@@ -145,6 +146,7 @@ impl StmtResultToLeanCompiler {
             })?;
         let (parameter_arguments, expected_premises) =
             instantiate_registered_antisymmetric_predicate_application(
+                &self.runtime,
                 &binding.forall_fact,
                 &evidence.predicate_name,
                 target,

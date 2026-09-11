@@ -7,12 +7,13 @@ impl Runtime {
         stmt: &ByStructDefStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let struct_obj = self.direct_struct_carrier_for_obj(&stmt.obj, stmt.line_file.clone())?;
-        let membership: AtomicFact = InFact::new(
-            stmt.obj.clone(),
-            struct_obj.clone().into(),
-            stmt.line_file.clone(),
-        )
-        .into();
+        let membership: AtomicFact = self
+            .new_in_fact(
+                stmt.obj.clone(),
+                struct_obj.clone().into(),
+                stmt.line_file.clone(),
+            )
+            .into();
         self.verify_atomic_fact_well_defined_result(&membership, &VerifyState::initial())?;
         let membership_check = self.verify_atomic_fact(&membership, &VerifyState::initial())?;
         if membership_check.is_unknown() {
@@ -111,27 +112,31 @@ impl Runtime {
                 Some(cart.clone()),
                 line_file.clone(),
             );
-            let is_tuple: AtomicFact = IsTupleFact::new(obj.clone(), line_file.clone()).into();
+            let is_tuple: AtomicFact = self
+                .new_is_tuple_fact(obj.clone(), line_file.clone())
+                .into();
             infer_result.new_infer_result_inside(
                 self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason(
                     is_tuple,
                     store_reason.clone(),
                 )?,
             );
-            let tuple_dim: AtomicFact = EqualFact::new(
-                TupleDim::new(obj.clone()).into(),
-                Number::new(def.fields.len().to_string()).into(),
-                line_file.clone(),
-            )
-            .into();
+            let tuple_dim: AtomicFact = self
+                .new_equal_fact(
+                    TupleDim::new(obj.clone()).into(),
+                    Number::new(def.fields.len().to_string()).into(),
+                    line_file.clone(),
+                )
+                .into();
             infer_result.new_infer_result_inside(
                 self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason(
                     tuple_dim,
                     store_reason.clone(),
                 )?,
             );
-            let cart_membership: AtomicFact =
-                InFact::new(obj.clone(), cart.into(), line_file.clone()).into();
+            let cart_membership: AtomicFact = self
+                .new_in_fact(obj.clone(), cart.into(), line_file.clone())
+                .into();
             infer_result.new_infer_result_inside(
                 self.store_derived_atomic_fact_without_infer(
                     cart_membership,
@@ -151,8 +156,9 @@ impl Runtime {
                 Obj::ObjAsStructInstanceWithFieldAccess(access) => access,
                 _ => unreachable!("constructed field access has the field-access shape"),
             })?;
-            let bridge: AtomicFact =
-                EqualFact::new(field_value, projection, line_file.clone()).into();
+            let bridge: AtomicFact = self
+                .new_equal_fact(field_value, projection, line_file.clone())
+                .into();
             infer_result.new_infer_result_inside(
                 self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason(
                     bridge,
@@ -168,8 +174,9 @@ impl Runtime {
                 struct_obj.clone(),
             )
             .into();
-            let field_membership: AtomicFact =
-                InFact::new(field_value, named_field_type.clone(), line_file.clone()).into();
+            let field_membership: AtomicFact = self
+                .new_in_fact(field_value, named_field_type.clone(), line_file.clone())
+                .into();
             infer_result.new_infer_result_inside(
                 self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason(
                     field_membership,
@@ -177,8 +184,9 @@ impl Runtime {
                 )?,
             );
             if def.fields.len() == 1 {
-                let carrier_membership: AtomicFact =
-                    InFact::new(obj.clone(), named_field_type.clone(), line_file.clone()).into();
+                let carrier_membership: AtomicFact = self
+                    .new_in_fact(obj.clone(), named_field_type.clone(), line_file.clone())
+                    .into();
                 infer_result.new_infer_result_inside(
                     self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason(
                         carrier_membership,

@@ -7,7 +7,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
-        let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
+        let Some(norm) = normalize_positive_order_atomic_fact(self, atomic_fact) else {
             return Ok(None);
         };
         let AtomicFact::LessEqualFact(f) = &norm else {
@@ -60,7 +60,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
-        let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
+        let Some(norm) = normalize_positive_order_atomic_fact(self, atomic_fact) else {
             return Ok(None);
         };
         let AtomicFact::LessFact(f) = &norm else {
@@ -178,11 +178,17 @@ fn abs_obj(arg: Obj) -> Obj {
     Abs::new(arg).into()
 }
 
-fn abs_order_subgoal(left: Obj, right: Obj, line_file: LineFile, strict: bool) -> AtomicFact {
+fn abs_order_subgoal(
+    runtime: &Runtime,
+    left: Obj,
+    right: Obj,
+    line_file: LineFile,
+    strict: bool,
+) -> AtomicFact {
     if strict {
-        LessFact::new(left, right, line_file).into()
+        runtime.new_less_fact(left, right, line_file).into()
     } else {
-        LessEqualFact::new(left, right, line_file).into()
+        runtime.new_less_equal_fact(left, right, line_file).into()
     }
 }
 
@@ -278,23 +284,25 @@ impl Runtime {
             return Ok(None);
         };
 
-        let start_fact: AtomicFact = EqualFact::new(
-            left_sum.start.as_ref().clone(),
-            right_sum.start.as_ref().clone(),
-            f.line_file.clone(),
-        )
-        .into();
+        let start_fact: AtomicFact = self
+            .new_equal_fact(
+                left_sum.start.as_ref().clone(),
+                right_sum.start.as_ref().clone(),
+                f.line_file.clone(),
+            )
+            .into();
         let Some(start_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&start_fact, builtin_state)?
         else {
             return Ok(None);
         };
-        let end_fact: AtomicFact = EqualFact::new(
-            left_sum.end.as_ref().clone(),
-            right_sum.end.as_ref().clone(),
-            f.line_file.clone(),
-        )
-        .into();
+        let end_fact: AtomicFact = self
+            .new_equal_fact(
+                left_sum.end.as_ref().clone(),
+                right_sum.end.as_ref().clone(),
+                f.line_file.clone(),
+            )
+            .into();
         let Some(end_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&end_fact, builtin_state)?
         else {
@@ -313,16 +321,19 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let pointwise_fact: AtomicFact =
-            EqualFact::new(right_inst, abs_obj(left_inst), f.line_file.clone()).into();
-        let dom_lo: Fact = LessEqualFact::new(
-            (*left_sum.start).clone(),
-            x_obj.clone(),
-            f.line_file.clone(),
-        )
-        .into();
-        let dom_hi: Fact =
-            LessEqualFact::new(x_obj, (*left_sum.end).clone(), f.line_file.clone()).into();
+        let pointwise_fact: AtomicFact = self
+            .new_equal_fact(right_inst, abs_obj(left_inst), f.line_file.clone())
+            .into();
+        let dom_lo: Fact = self
+            .new_less_equal_fact(
+                (*left_sum.start).clone(),
+                x_obj.clone(),
+                f.line_file.clone(),
+            )
+            .into();
+        let dom_hi: Fact = self
+            .new_less_equal_fact(x_obj, (*left_sum.end).clone(), f.line_file.clone())
+            .into();
         let pointwise_result = self.run_in_local_verification_env(
             builtin_state.verify_state(),
             |rt, local_verify_state| {
@@ -374,12 +385,13 @@ impl Runtime {
             return Ok(None);
         };
 
-        let set_fact: AtomicFact = EqualFact::new(
-            left_sum.set.as_ref().clone(),
-            right_sum.set.as_ref().clone(),
-            f.line_file.clone(),
-        )
-        .into();
+        let set_fact: AtomicFact = self
+            .new_equal_fact(
+                left_sum.set.as_ref().clone(),
+                right_sum.set.as_ref().clone(),
+                f.line_file.clone(),
+            )
+            .into();
         let Some(set_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&set_fact, builtin_state)?
         else {
@@ -397,8 +409,9 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let pointwise_fact: AtomicFact =
-            EqualFact::new(right_inst, abs_obj(left_inst), f.line_file.clone()).into();
+        let pointwise_fact: AtomicFact = self
+            .new_equal_fact(right_inst, abs_obj(left_inst), f.line_file.clone())
+            .into();
         let pointwise_result = self.run_in_local_verification_env(
             builtin_state.verify_state(),
             |rt, local_verify_state| {
@@ -444,12 +457,13 @@ impl Runtime {
         let Obj::Abs(abs) = &f.right else {
             return Ok(None);
         };
-        let arg_nonzero: AtomicFact = NotEqualFact::new(
-            abs.arg.as_ref().clone(),
-            literal_zero_obj(),
-            f.line_file.clone(),
-        )
-        .into();
+        let arg_nonzero: AtomicFact = self
+            .new_not_equal_fact(
+                abs.arg.as_ref().clone(),
+                literal_zero_obj(),
+                f.line_file.clone(),
+            )
+            .into();
         let Some(nonzero_result) = self.verify_abs_order_subgoal(arg_nonzero, builtin_state)?
         else {
             return Ok(None);
@@ -480,11 +494,12 @@ impl Runtime {
             return Ok(None);
         };
         let arg = abs.arg.as_ref();
-        let arg_le_bound = abs_order_subgoal(arg.clone(), right.clone(), line_file.clone(), strict);
+        let arg_le_bound =
+            abs_order_subgoal(self, arg.clone(), right.clone(), line_file.clone(), strict);
         let neg_arg_le_bound =
-            abs_order_subgoal(neg_obj(arg), right.clone(), line_file.clone(), strict);
+            abs_order_subgoal(self, neg_obj(arg), right.clone(), line_file.clone(), strict);
         let neg_bound_le_arg =
-            abs_order_subgoal(neg_obj(right), arg.clone(), line_file.clone(), strict);
+            abs_order_subgoal(self, neg_obj(right), arg.clone(), line_file.clone(), strict);
         let Some(r1) = self.verify_abs_order_subgoal(arg_le_bound, builtin_state)? else {
             return Ok(None);
         };
@@ -565,8 +580,9 @@ impl Runtime {
                     strict,
                     builtin_state.verify_state(),
                 )? {
-                    let ge_y: AtomicFact =
-                        GreaterEqualFact::new(y.clone(), zero.clone(), line_file.clone()).into();
+                    let ge_y: AtomicFact = self
+                        .new_greater_equal_fact(y.clone(), zero.clone(), line_file.clone())
+                        .into();
                     if let Some(r_sign) = self.verify_abs_order_subgoal(ge_y, builtin_state)? {
                         let rule = format!(
                             "abs: -y {} x from abs(x) {} abs(y) and 0 <= y{}",
@@ -647,8 +663,9 @@ impl Runtime {
             strict,
             builtin_state.verify_state(),
         )? {
-            let le_y: AtomicFact =
-                LessEqualFact::new(left.clone(), zero.clone(), line_file.clone()).into();
+            let le_y: AtomicFact = self
+                .new_less_equal_fact(left.clone(), zero.clone(), line_file.clone())
+                .into();
             let r_sign = if strict {
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&le_y, builtin_state)?
             } else {
@@ -681,8 +698,9 @@ impl Runtime {
                 strict,
                 builtin_state.verify_state(),
             )? {
-                let le_y: AtomicFact =
-                    LessEqualFact::new(y.clone(), zero.clone(), line_file.clone()).into();
+                let le_y: AtomicFact = self
+                    .new_less_equal_fact(y.clone(), zero.clone(), line_file.clone())
+                    .into();
                 let r_sign = if strict {
                     self.try_verify_atomic_fact_as_builtin_rule_premise(&le_y, builtin_state)?
                 } else {
@@ -715,8 +733,9 @@ impl Runtime {
             strict,
             builtin_state.verify_state(),
         )? {
-            let ge_y: AtomicFact =
-                GreaterEqualFact::new(right.clone(), zero.clone(), line_file.clone()).into();
+            let ge_y: AtomicFact = self
+                .new_greater_equal_fact(right.clone(), zero.clone(), line_file.clone())
+                .into();
             if let Some(r_sign) = self.verify_abs_order_subgoal(ge_y, builtin_state)? {
                 let rule = format!(
                     "abs: x {} y from abs(x) {} abs(y) and 0 <= y{}",
@@ -747,6 +766,7 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<Option<VerifyFactResult>, RuntimeError> {
         let fact = abs_order_subgoal(
+            self,
             abs_obj(arg.clone()),
             bound.clone(),
             line_file.clone(),

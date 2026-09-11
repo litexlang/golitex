@@ -609,18 +609,22 @@ impl Runtime {
         if name == "subset_of_finite_set_is_finite" {
             require_arity!(2);
 
-            let conclusion: AtomicFact =
-                IsFiniteSetFact::new(stmt.args()[0].clone(), stmt.line_file.clone()).into();
-            let first_is_set: AtomicFact =
-                IsSetFact::new(stmt.args()[0].clone(), stmt.line_file.clone()).into();
-            let second_is_finite: AtomicFact =
-                IsFiniteSetFact::new(stmt.args()[1].clone(), stmt.line_file.clone()).into();
-            let subset: AtomicFact = SubsetFact::new(
-                stmt.args()[0].clone(),
-                stmt.args()[1].clone(),
-                stmt.line_file.clone(),
-            )
-            .into();
+            let conclusion: AtomicFact = self
+                .new_is_finite_set_fact(stmt.args()[0].clone(), stmt.line_file.clone())
+                .into();
+            let first_is_set: AtomicFact = self
+                .new_is_set_fact(stmt.args()[0].clone(), stmt.line_file.clone())
+                .into();
+            let second_is_finite: AtomicFact = self
+                .new_is_finite_set_fact(stmt.args()[1].clone(), stmt.line_file.clone())
+                .into();
+            let subset: AtomicFact = self
+                .new_subset_fact(
+                    stmt.args()[0].clone(),
+                    stmt.args()[1].clone(),
+                    stmt.line_file.clone(),
+                )
+                .into();
 
             let mut inside_results = Vec::new();
             let mut requirement_facts = Vec::new();
@@ -702,13 +706,14 @@ impl Runtime {
             )?;
             let index = obj_for_bound_param_in_scope(&index_group.params[0]);
             let domain: Obj = ClosedRange::new(Number::new("1".to_string()).into(), size).into();
-            let bijective: AtomicFact = NormalAtomicFact::new(
-                AtomicName::WithoutMod(BIJECTIVE.to_string()),
-                vec![domain, finite_set.clone(), index],
-                stmt.line_file.clone(),
-            )
-            .into();
-            let body = PlainExistFact::new(
+            let bijective: AtomicFact = self
+                .new_normal_atomic_fact(
+                    AtomicName::WithoutMod(BIJECTIVE.to_string()),
+                    vec![domain, finite_set.clone(), index],
+                    stmt.line_file.clone(),
+                )
+                .into();
+            let body = self.new_plain_exist_fact(
                 TypedParameterList::new(vec![index_group]),
                 vec![bijective.into()],
                 stmt.line_file.clone(),
@@ -719,8 +724,9 @@ impl Runtime {
             let mut requirement_facts = Vec::new();
             let mut requirement_roles = Vec::new();
             if verify_requirements {
-                let finite_requirement: AtomicFact =
-                    IsFiniteSetFact::new(finite_set, stmt.line_file.clone()).into();
+                let finite_requirement: AtomicFact = self
+                    .new_is_finite_set_fact(finite_set, stmt.line_file.clone())
+                    .into();
                 self.verify_atomic_fact_well_defined_result(&finite_requirement, &verify_state)?;
                 let result = self.verify_atomic_fact(&finite_requirement, &verify_state)?;
                 if !result.is_success() {
@@ -786,27 +792,30 @@ impl Runtime {
             let denominator = obj_for_bound_param_in_scope(&denominator_group.params[0]);
             let ratio: Obj = Div::new(numerator.clone(), denominator.clone()).into();
             let gcd: Obj = Gcd::new(numerator, denominator).into();
-            let ratio_fact: AtomicFact =
-                EqualFact::new(stmt.args()[0].clone(), ratio, stmt.line_file.clone()).into();
-            let coprime_fact: AtomicFact = EqualFact::new(
-                gcd,
-                Number::new("1".to_string()).into(),
-                stmt.line_file.clone(),
-            )
-            .into();
-            let body = PlainExistFact::new(
+            let ratio_fact: AtomicFact = self
+                .new_equal_fact(stmt.args()[0].clone(), ratio, stmt.line_file.clone())
+                .into();
+            let coprime_fact: AtomicFact = self
+                .new_equal_fact(
+                    gcd,
+                    Number::new("1".to_string()).into(),
+                    stmt.line_file.clone(),
+                )
+                .into();
+            let body = self.new_plain_exist_fact(
                 TypedParameterList::new(vec![numerator_group, denominator_group]),
                 vec![ratio_fact.into(), coprime_fact.into()],
                 stmt.line_file.clone(),
             )?;
             let conclusion: ExistOrAndChainAtomicFact = ExistFact::ExistUniqueFact(body).into();
 
-            let rational_requirement: AtomicFact = InFact::new(
-                stmt.args()[0].clone(),
-                StandardSet::Q.into(),
-                stmt.line_file.clone(),
-            )
-            .into();
+            let rational_requirement: AtomicFact = self
+                .new_in_fact(
+                    stmt.args()[0].clone(),
+                    StandardSet::Q.into(),
+                    stmt.line_file.clone(),
+                )
+                .into();
 
             let verification = if verify_requirements {
                 Some(self.verify_atomic_fact_restricted_known_builtin(
@@ -891,12 +900,13 @@ impl Runtime {
                         ));
                     }
                 };
-                let conclusion: AtomicFact = InFact::new(
-                    stmt.args()[0].clone(),
-                    stmt.args()[1].clone(),
-                    stmt.line_file.clone(),
-                )
-                .into();
+                let conclusion: AtomicFact = self
+                    .new_in_fact(
+                        stmt.args()[0].clone(),
+                        stmt.args()[1].clone(),
+                        stmt.line_file.clone(),
+                    )
+                    .into();
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let automatic_result = self
@@ -925,18 +935,22 @@ impl Runtime {
                             self.real_matrix_type_after_well_defined(element, "operator")?;
                         let real: Obj = StandardSet::R.into();
                         let equality_steps = vec![
-                            EqualFact::new_from_refs(
+                            self.new_equal_fact_from_refs(
                                 &actual.set,
                                 &expected.set,
                                 stmt.line_file.clone(),
                             ),
-                            EqualFact::new_from_refs(&expected.set, &real, stmt.line_file.clone()),
-                            EqualFact::new_from_refs(
+                            self.new_equal_fact_from_refs(
+                                &expected.set,
+                                &real,
+                                stmt.line_file.clone(),
+                            ),
+                            self.new_equal_fact_from_refs(
                                 &actual.row_len,
                                 &expected.row_len,
                                 stmt.line_file.clone(),
                             ),
-                            EqualFact::new_from_refs(
+                            self.new_equal_fact_from_refs(
                                 &actual.col_len,
                                 &expected.col_len,
                                 stmt.line_file.clone(),
@@ -973,7 +987,7 @@ impl Runtime {
                             )
                         }
                     } else {
-                        let expanded_in_fact = InFact::new(
+                        let expanded_in_fact = self.new_in_fact(
                             stmt.args()[0].clone(),
                             fn_set.clone().into(),
                             stmt.line_file.clone(),
@@ -1025,12 +1039,13 @@ impl Runtime {
                         "second argument must be a set builder",
                     ));
                 };
-                let conclusion: AtomicFact = InFact::new(
-                    stmt.args()[0].clone(),
-                    stmt.args()[1].clone(),
-                    stmt.line_file.clone(),
-                )
-                .into();
+                let conclusion: AtomicFact = self
+                    .new_in_fact(
+                        stmt.args()[0].clone(),
+                        stmt.args()[1].clone(),
+                        stmt.line_file.clone(),
+                    )
+                    .into();
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let AtomicFact::InFact(in_fact) = &conclusion else {
@@ -1053,12 +1068,13 @@ impl Runtime {
             }
             "defined_set_member" => {
                 require_arity!(2);
-                let conclusion: AtomicFact = InFact::new(
-                    stmt.args()[0].clone(),
-                    stmt.args()[1].clone(),
-                    stmt.line_file.clone(),
-                )
-                .into();
+                let conclusion: AtomicFact = self
+                    .new_in_fact(
+                        stmt.args()[0].clone(),
+                        stmt.args()[1].clone(),
+                        stmt.line_file.clone(),
+                    )
+                    .into();
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let AtomicFact::InFact(in_fact) = &conclusion else {
@@ -1090,12 +1106,13 @@ impl Runtime {
                         "second argument must be a struct object",
                     ));
                 };
-                let conclusion: AtomicFact = InFact::new(
-                    stmt.args()[0].clone(),
-                    stmt.args()[1].clone(),
-                    stmt.line_file.clone(),
-                )
-                .into();
+                let conclusion: AtomicFact = self
+                    .new_in_fact(
+                        stmt.args()[0].clone(),
+                        stmt.args()[1].clone(),
+                        stmt.line_file.clone(),
+                    )
+                    .into();
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let AtomicFact::InFact(in_fact) = &conclusion else {
@@ -1114,12 +1131,13 @@ impl Runtime {
             }
             "cart_member_from_coordinates" => {
                 require_arity!(2);
-                let conclusion: AtomicFact = InFact::new(
-                    stmt.args()[0].clone(),
-                    stmt.args()[1].clone(),
-                    stmt.line_file.clone(),
-                )
-                .into();
+                let conclusion: AtomicFact = self
+                    .new_in_fact(
+                        stmt.args()[0].clone(),
+                        stmt.args()[1].clone(),
+                        stmt.line_file.clone(),
+                    )
+                    .into();
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let automatic = self
@@ -1157,12 +1175,13 @@ impl Runtime {
                         "second argument must be `general_cart(...)`",
                     ));
                 };
-                let conclusion: AtomicFact = InFact::new(
-                    stmt.args()[0].clone(),
-                    stmt.args()[1].clone(),
-                    stmt.line_file.clone(),
-                )
-                .into();
+                let conclusion: AtomicFact = self
+                    .new_in_fact(
+                        stmt.args()[0].clone(),
+                        stmt.args()[1].clone(),
+                        stmt.line_file.clone(),
+                    )
+                    .into();
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let AtomicFact::InFact(in_fact) = &conclusion else {
@@ -1193,8 +1212,9 @@ impl Runtime {
                         "argument must be `general_cart(...)`",
                     ));
                 }
-                let conclusion: AtomicFact =
-                    IsNonemptySetFact::new(stmt.args()[0].clone(), stmt.line_file.clone()).into();
+                let conclusion: AtomicFact = self
+                    .new_is_nonempty_set_fact(stmt.args()[0].clone(), stmt.line_file.clone())
+                    .into();
                 let pointwise = name.ends_with("_from_pointwise");
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
@@ -1232,12 +1252,13 @@ impl Runtime {
                         "both arguments must be `sum(...)` objects",
                     ));
                 }
-                let conclusion: AtomicFact = LessEqualFact::new(
-                    stmt.args()[0].clone(),
-                    stmt.args()[1].clone(),
-                    stmt.line_file.clone(),
-                )
-                .into();
+                let conclusion: AtomicFact = self
+                    .new_less_equal_fact(
+                        stmt.args()[0].clone(),
+                        stmt.args()[1].clone(),
+                        stmt.line_file.clone(),
+                    )
+                    .into();
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let AtomicFact::LessEqualFact(fact) = &conclusion else {
@@ -1273,12 +1294,13 @@ impl Runtime {
                         "both arguments must be `finite_set_sum(...)` objects",
                     ));
                 }
-                let conclusion: AtomicFact = LessEqualFact::new(
-                    stmt.args()[0].clone(),
-                    stmt.args()[1].clone(),
-                    stmt.line_file.clone(),
-                )
-                .into();
+                let conclusion: AtomicFact = self
+                    .new_less_equal_fact(
+                        stmt.args()[0].clone(),
+                        stmt.args()[1].clone(),
+                        stmt.line_file.clone(),
+                    )
+                    .into();
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let AtomicFact::LessEqualFact(fact) = &conclusion else {
@@ -1311,12 +1333,13 @@ impl Runtime {
                         "second argument must be `finite_set_sum(...)`",
                     ));
                 }
-                let conclusion: AtomicFact = LessEqualFact::new(
-                    stmt.args()[0].clone(),
-                    stmt.args()[1].clone(),
-                    stmt.line_file.clone(),
-                )
-                .into();
+                let conclusion: AtomicFact = self
+                    .new_less_equal_fact(
+                        stmt.args()[0].clone(),
+                        stmt.args()[1].clone(),
+                        stmt.line_file.clone(),
+                    )
+                    .into();
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let AtomicFact::LessEqualFact(fact) = &conclusion else {
@@ -1342,16 +1365,17 @@ impl Runtime {
             }
             "tuple_equal_from_coordinates" => {
                 require_arity!(2);
-                let conclusion: AtomicFact = EqualFact::new(
-                    stmt.args()[0].clone(),
-                    stmt.args()[1].clone(),
-                    stmt.line_file.clone(),
-                )
-                .into();
+                let conclusion: AtomicFact = self
+                    .new_equal_fact(
+                        stmt.args()[0].clone(),
+                        stmt.args()[1].clone(),
+                        stmt.line_file.clone(),
+                    )
+                    .into();
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let literal = self.try_verify_tuple_equality_from_dim_and_projections(
-                        &EqualFact::new_from_refs(
+                        &self.new_equal_fact_from_refs(
                             &stmt.args()[0],
                             &stmt.args()[1],
                             stmt.line_file.clone(),
@@ -1362,7 +1386,7 @@ impl Runtime {
                         result
                     } else {
                         self.try_verify_symbolic_tuple_equality_from_coordinates(
-                            &EqualFact::new_from_refs(
+                            &self.new_equal_fact_from_refs(
                                 &stmt.args()[0],
                                 &stmt.args()[1],
                                 stmt.line_file.clone(),
@@ -1393,17 +1417,18 @@ impl Runtime {
                         "both arguments must be `finite_set_sum(...)` objects",
                     ));
                 }
-                let conclusion: AtomicFact = EqualFact::new(
-                    stmt.args()[0].clone(),
-                    stmt.args()[1].clone(),
-                    stmt.line_file.clone(),
-                )
-                .into();
+                let conclusion: AtomicFact = self
+                    .new_equal_fact(
+                        stmt.args()[0].clone(),
+                        stmt.args()[1].clone(),
+                        stmt.line_file.clone(),
+                    )
+                    .into();
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let builtin_state = BuiltinRuleSearchState::initial();
                     let pointwise = self.try_verify_finite_set_sum_pointwise_equality(
-                        &EqualFact::new_from_refs(
+                        &self.new_equal_fact_from_refs(
                             &stmt.args()[0],
                             &stmt.args()[1],
                             stmt.line_file.clone(),
@@ -1414,7 +1439,7 @@ impl Runtime {
                         result
                     } else {
                         self.try_verify_finite_set_sum_substitution(
-                            &EqualFact::new_from_refs(
+                            &self.new_equal_fact_from_refs(
                                 &stmt.args()[0],
                                 &stmt.args()[1],
                                 stmt.line_file.clone(),
@@ -1445,18 +1470,19 @@ impl Runtime {
                         "both arguments must be `sum(...)` objects",
                     ));
                 }
-                let conclusion: AtomicFact = EqualFact::new(
-                    stmt.args()[0].clone(),
-                    stmt.args()[1].clone(),
-                    stmt.line_file.clone(),
-                )
-                .into();
+                let conclusion: AtomicFact = self
+                    .new_equal_fact(
+                        stmt.args()[0].clone(),
+                        stmt.args()[1].clone(),
+                        stmt.line_file.clone(),
+                    )
+                    .into();
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let builtin_state = BuiltinRuleSearchState::initial();
                     Some(
                         self.try_verify_sum_over_bijective_finite_set_enumerations(
-                            &EqualFact::new_from_refs(
+                            &self.new_equal_fact_from_refs(
                                 &stmt.args()[0],
                                 &stmt.args()[1],
                                 stmt.line_file.clone(),
@@ -1577,13 +1603,14 @@ impl Runtime {
                         ParamType::Obj(real.clone()),
                     )?;
                     let lub = obj_for_bound_param_in_scope(&lub_group.params[0]);
-                    let certificate: AtomicFact = NormalAtomicFact::new(
-                        AtomicName::WithoutMod(IS_REAL_LEAST_UPPER_BOUND.to_string()),
-                        vec![set.clone(), lub],
-                        line_file.clone(),
-                    )
-                    .into();
-                    let existential = PlainExistFact::new(
+                    let certificate: AtomicFact = self
+                        .new_normal_atomic_fact(
+                            AtomicName::WithoutMod(IS_REAL_LEAST_UPPER_BOUND.to_string()),
+                            vec![set.clone(), lub],
+                            line_file.clone(),
+                        )
+                        .into();
+                    let existential = self.new_plain_exist_fact(
                         TypedParameterList::new(vec![lub_group]),
                         vec![certificate.into()],
                         line_file.clone(),
@@ -1594,16 +1621,17 @@ impl Runtime {
                     (
                         vec![
                             (
-                                SubsetFact::new(set.clone(), real.clone(), line_file.clone())
+                                self.new_subset_fact(set.clone(), real.clone(), line_file.clone())
                                     .into(),
                                 BuiltinTheoremRequirementRole::ArgumentSetSubsetOfReals,
                             ),
                             (
-                                IsNonemptySetFact::new(set, line_file.clone()).into(),
+                                self.new_is_nonempty_set_fact(set, line_file.clone()).into(),
                                 BuiltinTheoremRequirementRole::ArgumentSetIsNonempty,
                             ),
                             (
-                                InFact::new(upper_bound, real.clone(), line_file.clone()).into(),
+                                self.new_in_fact(upper_bound, real.clone(), line_file.clone())
+                                    .into(),
                                 BuiltinTheoremRequirementRole::SuppliedUpperBoundBelongsToReals,
                             ),
                             (
@@ -1621,24 +1649,28 @@ impl Runtime {
                     (
                         vec![
                             (
-                                SubsetFact::new(set.clone(), real.clone(), line_file.clone())
+                                self.new_subset_fact(set.clone(), real.clone(), line_file.clone())
                                     .into(),
                                 BuiltinTheoremRequirementRole::ArgumentSetSubsetOfReals,
                             ),
                             (
-                                InFact::new(lub.clone(), real.clone(), line_file.clone()).into(),
+                                self.new_in_fact(lub.clone(), real.clone(), line_file.clone())
+                                    .into(),
                                 BuiltinTheoremRequirementRole::CandidateBelongsToReals,
                             ),
                             (
-                                real_lub_certificate_fact(&set, &lub, line_file.clone()).into(),
+                                real_lub_certificate_fact(self, &set, &lub, line_file.clone())
+                                    .into(),
                                 BuiltinTheoremRequirementRole::CandidateIsRealLeastUpperBound,
                             ),
                             (
-                                InFact::new(member.clone(), set, line_file.clone()).into(),
+                                self.new_in_fact(member.clone(), set, line_file.clone())
+                                    .into(),
                                 BuiltinTheoremRequirementRole::ArgumentIsMemberOfSet,
                             ),
                         ],
-                        LessEqualFact::new(member, lub, line_file.clone()).into(),
+                        self.new_less_equal_fact(member, lub, line_file.clone())
+                            .into(),
                     )
                 }
                 BuiltinTheoremId::RealLeastUpperBoundLeUpperBound => {
@@ -1650,20 +1682,23 @@ impl Runtime {
                     (
                         vec![
                             (
-                                SubsetFact::new(set.clone(), real.clone(), line_file.clone())
+                                self.new_subset_fact(set.clone(), real.clone(), line_file.clone())
                                     .into(),
                                 BuiltinTheoremRequirementRole::ArgumentSetSubsetOfReals,
                             ),
                             (
-                                InFact::new(lub.clone(), real.clone(), line_file.clone()).into(),
+                                self.new_in_fact(lub.clone(), real.clone(), line_file.clone())
+                                    .into(),
                                 BuiltinTheoremRequirementRole::CandidateBelongsToReals,
                             ),
                             (
-                                real_lub_certificate_fact(&set, &lub, line_file.clone()).into(),
+                                real_lub_certificate_fact(self, &set, &lub, line_file.clone())
+                                    .into(),
                                 BuiltinTheoremRequirementRole::CandidateIsRealLeastUpperBound,
                             ),
                             (
-                                InFact::new(upper_bound, real, line_file.clone()).into(),
+                                self.new_in_fact(upper_bound, real, line_file.clone())
+                                    .into(),
                                 BuiltinTheoremRequirementRole::SuppliedUpperBoundBelongsToReals,
                             ),
                             (
@@ -1671,7 +1706,8 @@ impl Runtime {
                                 BuiltinTheoremRequirementRole::SuppliedValueBoundsEverySetMember,
                             ),
                         ],
-                        LessEqualFact::new(lub, stmt.args()[2].clone(), line_file.clone()).into(),
+                        self.new_less_equal_fact(lub, stmt.args()[2].clone(), line_file.clone())
+                            .into(),
                     )
                 }
                 BuiltinTheoremId::RealGreatestLowerBoundExists => {
@@ -1685,8 +1721,9 @@ impl Runtime {
                         ParamType::Obj(real.clone()),
                     )?;
                     let glb = obj_for_bound_param_in_scope(&glb_group.params[0]);
-                    let certificate = real_glb_certificate_fact(&set, &glb, line_file.clone());
-                    let existential = PlainExistFact::new(
+                    let certificate =
+                        real_glb_certificate_fact(self, &set, &glb, line_file.clone());
+                    let existential = self.new_plain_exist_fact(
                         TypedParameterList::new(vec![glb_group]),
                         vec![certificate.into()],
                         line_file.clone(),
@@ -1697,15 +1734,15 @@ impl Runtime {
                     (
                     vec![
                         (
-                            SubsetFact::new(set.clone(), real.clone(), line_file.clone()).into(),
+                            self.new_subset_fact(set.clone(), real.clone(), line_file.clone()).into(),
                             BuiltinTheoremRequirementRole::ArgumentSetSubsetOfReals,
                         ),
                         (
-                            IsNonemptySetFact::new(set, line_file.clone()).into(),
+                            self.new_is_nonempty_set_fact(set, line_file.clone()).into(),
                             BuiltinTheoremRequirementRole::ArgumentSetIsNonempty,
                         ),
                         (
-                            InFact::new(lower_bound, real.clone(), line_file.clone()).into(),
+                            self.new_in_fact(lower_bound, real.clone(), line_file.clone()).into(),
                             BuiltinTheoremRequirementRole::SuppliedLowerBoundBelongsToReals,
                         ),
                         (
@@ -1723,24 +1760,28 @@ impl Runtime {
                     (
                         vec![
                             (
-                                SubsetFact::new(set.clone(), real.clone(), line_file.clone())
+                                self.new_subset_fact(set.clone(), real.clone(), line_file.clone())
                                     .into(),
                                 BuiltinTheoremRequirementRole::ArgumentSetSubsetOfReals,
                             ),
                             (
-                                InFact::new(glb.clone(), real.clone(), line_file.clone()).into(),
+                                self.new_in_fact(glb.clone(), real.clone(), line_file.clone())
+                                    .into(),
                                 BuiltinTheoremRequirementRole::CandidateBelongsToReals,
                             ),
                             (
-                                real_glb_certificate_fact(&set, &glb, line_file.clone()).into(),
+                                real_glb_certificate_fact(self, &set, &glb, line_file.clone())
+                                    .into(),
                                 BuiltinTheoremRequirementRole::CandidateIsRealGreatestLowerBound,
                             ),
                             (
-                                InFact::new(member.clone(), set, line_file.clone()).into(),
+                                self.new_in_fact(member.clone(), set, line_file.clone())
+                                    .into(),
                                 BuiltinTheoremRequirementRole::ArgumentIsMemberOfSet,
                             ),
                         ],
-                        LessEqualFact::new(glb, member, line_file.clone()).into(),
+                        self.new_less_equal_fact(glb, member, line_file.clone())
+                            .into(),
                     )
                 }
                 BuiltinTheoremId::RealLowerBoundLeGreatestLowerBound => {
@@ -1752,19 +1793,19 @@ impl Runtime {
                     (
                     vec![
                         (
-                            SubsetFact::new(set.clone(), real.clone(), line_file.clone()).into(),
+                            self.new_subset_fact(set.clone(), real.clone(), line_file.clone()).into(),
                             BuiltinTheoremRequirementRole::ArgumentSetSubsetOfReals,
                         ),
                         (
-                            InFact::new(glb.clone(), real.clone(), line_file.clone()).into(),
+                            self.new_in_fact(glb.clone(), real.clone(), line_file.clone()).into(),
                             BuiltinTheoremRequirementRole::CandidateBelongsToReals,
                         ),
                         (
-                            real_glb_certificate_fact(&set, &glb, line_file.clone()).into(),
+                            real_glb_certificate_fact(self, &set, &glb, line_file.clone()).into(),
                             BuiltinTheoremRequirementRole::CandidateIsRealGreatestLowerBound,
                         ),
                         (
-                            InFact::new(lower_bound.clone(), real, line_file.clone()).into(),
+                            self.new_in_fact(lower_bound.clone(), real, line_file.clone()).into(),
                             BuiltinTheoremRequirementRole::SuppliedLowerBoundBelongsToReals,
                         ),
                         (
@@ -1772,7 +1813,7 @@ impl Runtime {
                             BuiltinTheoremRequirementRole::SuppliedValueIsLowerBoundForEverySetMember,
                         ),
                     ],
-                    LessEqualFact::new(lower_bound, glb, line_file.clone()).into(),
+                    self.new_less_equal_fact(lower_bound, glb, line_file.clone()).into(),
                 )
                 }
                 BuiltinTheoremId::RealArchimedeanNaturalUpperBound => {
@@ -1782,9 +1823,10 @@ impl Runtime {
                         ParamType::Obj(StandardSet::NPos.into()),
                     )?;
                     let natural = obj_for_bound_param_in_scope(&natural_group.params[0]);
-                    let body: AtomicFact =
-                        LessFact::new(value.clone(), natural, line_file.clone()).into();
-                    let existential = PlainExistFact::new(
+                    let body: AtomicFact = self
+                        .new_less_fact(value.clone(), natural, line_file.clone())
+                        .into();
+                    let existential = self.new_plain_exist_fact(
                         TypedParameterList::new(vec![natural_group]),
                         vec![body.into()],
                         line_file.clone(),
@@ -1793,7 +1835,8 @@ impl Runtime {
                         ExistFact::PlainExistFact(existential).into();
                     (
                         vec![(
-                            InFact::new(value, real.clone(), line_file.clone()).into(),
+                            self.new_in_fact(value, real.clone(), line_file.clone())
+                                .into(),
                             BuiltinTheoremRequirementRole::ArgumentBelongsToReals,
                         )],
                         conclusion.to_fact(),
@@ -1807,13 +1850,15 @@ impl Runtime {
                         ParamType::Obj(StandardSet::Q.into()),
                     )?;
                     let rational = obj_for_bound_param_in_scope(&rational_group.params[0]);
-                    let left_less: AtomicFact =
-                        LessFact::new(left.clone(), rational.clone(), line_file.clone()).into();
-                    let right_less: AtomicFact =
-                        LessFact::new(rational, right.clone(), line_file.clone()).into();
-                    let existential = PlainExistFact::new(
+                    let left_less: AtomicFact = self
+                        .new_less_fact(left.clone(), rational.clone(), line_file.clone())
+                        .into();
+                    let right_less: AtomicFact = self
+                        .new_less_fact(rational, right.clone(), line_file.clone())
+                        .into();
+                    let existential = self.new_plain_exist_fact(
                         TypedParameterList::new(vec![rational_group]),
-                        vec![QuantifierFreeFact::AndFact(AndFact::new(
+                        vec![QuantifierFreeFact::AndFact(self.new_and_fact(
                             vec![left_less, right_less],
                             line_file.clone(),
                         ))],
@@ -1824,15 +1869,17 @@ impl Runtime {
                     (
                         vec![
                             (
-                                InFact::new(left.clone(), real.clone(), line_file.clone()).into(),
+                                self.new_in_fact(left.clone(), real.clone(), line_file.clone())
+                                    .into(),
                                 BuiltinTheoremRequirementRole::LeftArgumentBelongsToReals,
                             ),
                             (
-                                InFact::new(right.clone(), real, line_file.clone()).into(),
+                                self.new_in_fact(right.clone(), real, line_file.clone())
+                                    .into(),
                                 BuiltinTheoremRequirementRole::RightArgumentBelongsToReals,
                             ),
                             (
-                                LessFact::new(left, right, line_file.clone()).into(),
+                                self.new_less_fact(left, right, line_file.clone()).into(),
                                 BuiltinTheoremRequirementRole::RealArgumentsStrictlyOrdered,
                             ),
                         ],
@@ -1917,15 +1964,17 @@ impl Runtime {
         let member_group = self
             .fresh_param_group_with_type(vec!["member".to_string()], ParamType::Obj(set.clone()))?;
         let member = obj_for_bound_param_in_scope(&member_group.params[0]);
-        let comparison: AtomicFact =
-            LessEqualFact::new(member, upper_bound.clone(), line_file.clone()).into();
-        Ok(ForallFact::new_canonical_forall(
-            TypedParameterList::new(vec![member_group]),
-            vec![],
-            vec![comparison.into()],
-            line_file,
-        )?
-        .into())
+        let comparison: AtomicFact = self
+            .new_less_equal_fact(member, upper_bound.clone(), line_file.clone())
+            .into();
+        Ok(self
+            .new_forall_fact(
+                TypedParameterList::new(vec![member_group]),
+                vec![],
+                vec![comparison.into()],
+                line_file,
+            )?
+            .into())
     }
 
     fn real_lower_bound_requirement(
@@ -1937,34 +1986,48 @@ impl Runtime {
         let member_group = self
             .fresh_param_group_with_type(vec!["member".to_string()], ParamType::Obj(set.clone()))?;
         let member = obj_for_bound_param_in_scope(&member_group.params[0]);
-        let comparison: AtomicFact =
-            LessEqualFact::new(lower_bound.clone(), member, line_file.clone()).into();
-        Ok(ForallFact::new_canonical_forall(
-            TypedParameterList::new(vec![member_group]),
-            vec![],
-            vec![comparison.into()],
-            line_file,
-        )?
-        .into())
+        let comparison: AtomicFact = self
+            .new_less_equal_fact(lower_bound.clone(), member, line_file.clone())
+            .into();
+        Ok(self
+            .new_forall_fact(
+                TypedParameterList::new(vec![member_group]),
+                vec![],
+                vec![comparison.into()],
+                line_file,
+            )?
+            .into())
     }
 }
 
-fn real_lub_certificate_fact(set: &Obj, lub: &Obj, line_file: LineFile) -> AtomicFact {
-    NormalAtomicFact::new(
-        AtomicName::WithoutMod(IS_REAL_LEAST_UPPER_BOUND.to_string()),
-        vec![set.clone(), lub.clone()],
-        line_file,
-    )
-    .into()
+fn real_lub_certificate_fact(
+    runtime: &Runtime,
+    set: &Obj,
+    lub: &Obj,
+    line_file: LineFile,
+) -> AtomicFact {
+    runtime
+        .new_normal_atomic_fact(
+            AtomicName::WithoutMod(IS_REAL_LEAST_UPPER_BOUND.to_string()),
+            vec![set.clone(), lub.clone()],
+            line_file,
+        )
+        .into()
 }
 
-fn real_glb_certificate_fact(set: &Obj, glb: &Obj, line_file: LineFile) -> AtomicFact {
-    NormalAtomicFact::new(
-        AtomicName::WithoutMod(IS_REAL_GREATEST_LOWER_BOUND.to_string()),
-        vec![set.clone(), glb.clone()],
-        line_file,
-    )
-    .into()
+fn real_glb_certificate_fact(
+    runtime: &Runtime,
+    set: &Obj,
+    glb: &Obj,
+    line_file: LineFile,
+) -> AtomicFact {
+    runtime
+        .new_normal_atomic_fact(
+            AtomicName::WithoutMod(IS_REAL_GREATEST_LOWER_BOUND.to_string()),
+            vec![set.clone(), glb.clone()],
+            line_file,
+        )
+        .into()
 }
 
 fn builtin_thm_exec_error(

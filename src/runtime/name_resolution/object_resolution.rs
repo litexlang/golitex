@@ -8,7 +8,9 @@ use crate::verification::{compare_normalized_number_str_to_zero, NumberCompareRe
 
 impl Runtime {
     fn cached_less_equal_fact_holds(&self, left: Obj, right: Obj) -> bool {
-        let fact: Fact = LessEqualFact::new(left, right, default_line_file()).into();
+        let fact: Fact = self
+            .new_less_equal_fact(left, right, default_line_file())
+            .into();
         let (cache_ok, _) = self.cache_known_facts_contains(&fact.to_string());
         cache_ok
     }
@@ -658,22 +660,23 @@ impl Runtime {
             return None;
         };
 
-        let denominator_known_nonzero = if let Some(number) =
-            self.resolve_obj_to_number(denominator)
-        {
-            !matches!(
-                compare_normalized_number_str_to_zero(&number.normalized_value),
-                NumberCompareResult::Equal
-            )
-        } else {
-            let zero: Obj = Number::new("0".to_string()).into();
-            let forward: Fact =
-                NotEqualFact::new(denominator.clone(), zero.clone(), default_line_file()).into();
-            let backward: Fact =
-                NotEqualFact::new(zero, denominator.clone(), default_line_file()).into();
-            self.cache_known_facts_contains(&forward.to_string()).0
-                || self.cache_known_facts_contains(&backward.to_string()).0
-        };
+        let denominator_known_nonzero =
+            if let Some(number) = self.resolve_obj_to_number(denominator) {
+                !matches!(
+                    compare_normalized_number_str_to_zero(&number.normalized_value),
+                    NumberCompareResult::Equal
+                )
+            } else {
+                let zero: Obj = Number::new("0".to_string()).into();
+                let forward: Fact = self
+                    .new_not_equal_fact(denominator.clone(), zero.clone(), default_line_file())
+                    .into();
+                let backward: Fact = self
+                    .new_not_equal_fact(zero, denominator.clone(), default_line_file())
+                    .into();
+                self.cache_known_facts_contains(&forward.to_string()).0
+                    || self.cache_known_facts_contains(&backward.to_string()).0
+            };
 
         if denominator_known_nonzero {
             Some(cancelled)
@@ -811,7 +814,7 @@ impl Runtime {
                 .into();
                 let function = AnonymousFn::new(
                     vec![index_group],
-                    vec![AtomicFact::from(LessEqualFact::new(
+                    vec![AtomicFact::from(self.new_less_equal_fact(
                         index,
                         end.clone(),
                         default_line_file(),

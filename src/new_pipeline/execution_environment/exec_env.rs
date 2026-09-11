@@ -1,32 +1,59 @@
-pub struct ExecEnv {
-    // 每次对应 atom 的时候都要往里面store一下
-    pub defined_atoms_and_their_ids: HashMap<Id, Atom>,
+use crate::new_pipeline::runtime::runtime_ids::{AtomId, FactId, WellDefinednessId2};
+use crate::prelude::*;
+use std::collections::HashMap;
 
-    // 里面存了predicate,atom,struct等各种定义。每次定义东西的时候放
+// -----------------------------------------------------------------------------
+// Core data model
+// -----------------------------------------------------------------------------
+
+/// State owned by one execution scope.
+///
+/// A child scope may read this environment and all of its parents.  It writes
+/// only to its own instance.  When a statement returns, the result may retain
+/// the child environment so its local definitions, facts, and WD records stay
+/// available to the renderer without being merged into the parent implicitly.
+#[derive(Clone)]
+pub struct ExecEnv {
+    /// Atoms introduced in this scope, indexed by their stable local ids.
+    pub atoms_by_id: HashMap<AtomId, Atom>,
+
+    /// Definitions visible to statements executed in this scope.
     pub definitions: DefinitionMemory,
 
-    // 每次store fact的时候往里面放一下
-    pub known_facts_and_their_id: HashMap<Id, Fact>,
+    /// Facts and fact indexes stored in this scope.
     pub facts: KnownFactMemory,
 
-    // store fact如果是特殊的事实那往里面放
+    /// Shape/value properties attached to special objects by stored facts.
     pub special_object_properties: HashMap<ObjString, Vec<SpecialObjProperty>>,
 
-    // 每次证明出来prop的性质的时候放一下
+    /// Algebraic properties proved for predicates in this scope.
     pub prop_algebraic_properties: HashMap<PropName, Vec<PropAlgebraicProperty>>,
 
-    // 每次证明好一个obj的wd的时候放一下。这是重大的架构更新。以后每次检查wd的时候需要看一下有没有cache过了。如果之前证明过了这个obj是两良好定义的，那就直接成立了
-    pub well_defined_objects_and_their_ids: HashMap<ObjString, Id>,
-
-    // 我不太确定这个东西有没有有用，放一下再说
-    pub known_prop_algebraic_property_ids: HashMap<Id, (PropName, PropAlgebraicProperty)>,
-
-    // 我不太确定这个东西有没有有用，放一下再说
-    pub well_defined_ids_of_objects: HashMap<Id, Obj>,
+    /// Well-definedness records owned by this scope.
+    ///
+    /// WD lookup walks this scope and then its parent scopes.  A successful
+    /// WD proof is recorded here only when the current verification state
+    /// explicitly allows storage; temporary builtin-rule searches therefore
+    /// remain read-only.
+    pub well_defined_objects: WellDefinedObjectMemory,
 }
 
+/// The two-way index for well-defined objects owned by one scope.
+#[derive(Clone, Default)]
+pub struct WellDefinedObjectMemory {
+    /// Canonical object key to the proof identity that established WD.
+    pub object_to_wd_id: HashMap<ObjString, WellDefinednessId2>,
+
+    /// Proof identity back to the object carried by a result or citation.
+    pub wd_id_to_object: HashMap<WellDefinednessId2, Obj>,
+}
+
+/// Definitions introduced in one execution environment.
+#[derive(Clone)]
 pub struct DefinitionMemory {
-    pub symbol_definitions: HashMap<String, SymbolDefinition>,
+    /// Canonical symbol table used for name and identity resolution.
+    pub symbols: SymbolTable,
+
     pub predicate_definitions: HashMap<PropName, DefPropStmt>,
     pub abstract_predicate_definitions: HashMap<AbstractPropName, DefAbstractPropStmt>,
     pub algorithm_definitions: HashMap<AlgoName, DefAlgoStmt>,
@@ -38,23 +65,33 @@ pub struct DefinitionMemory {
     pub strategy_definitions: HashMap<StrategyName, DefStrategyStmt>,
 }
 
+/// Facts stored in one execution environment and the indexes used to search
+/// them later.
+#[derive(Clone)]
 pub struct KnownFactMemory {
+    /// Canonical facts retained for citations and result construction.
+    pub facts_by_id: HashMap<FactId, Fact>,
+
     pub known_equality: KnownEquality,
     pub atomic: AtomicFactMemory,
-    pub set_relations: SetRelationMemory,
-    pub or_facts: HashMap<OrFactKey, Vec<OrFact>>,
-    pub exist_facts: HashMap<ExistFactKey, Vec<ExistFact>>,
-    pub forall_facts: ForallConclusionMemory,
+    pub set_relations: SpecialSetRelationMemory,
+    pub quantified: QuantifiedFactMemory,
+    pub forall_facts: KnownForallFactMemory,
     pub fact_cache: HashMap<FactString, CachedKnownFact>,
 }
 
+/// Algebraic properties that can be proved for a predicate.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum PropAlgebraicProperty {
     Transitive,
-    SymmetricArgumentPermutate(Box<Vec<Vec<usize>>>),
+    SymmetricArgumentPermutate(Vec<Vec<usize>>),
     Reflexive,
     Antisymmetric,
 }
 
+/// Properties recorded for objects whose structure has a reusable fact-based
+/// interpretation.
+#[derive(Clone)]
 pub enum SpecialObjProperty {
     TupleEquality((Tuple, FactId)),
     TupleOwner((Cart, FactId)),
@@ -65,4 +102,103 @@ pub enum SpecialObjProperty {
     SimplifiedValue(KnownObjValue),
     InFunctionSet((FnSetBody, FactId)),
     EqualToFunction((Obj, FactId)),
+}
+
+// -----------------------------------------------------------------------------
+// Construction and cache operations
+// -----------------------------------------------------------------------------
+
+impl ExecEnv {
+    pub fn new() -> Self {
+        Self {
+            atoms_by_id: HashMap::new(),
+            definitions: DefinitionMemory::new(),
+            facts: KnownFactMemory::new(),
+            special_object_properties: HashMap::new(),
+            prop_algebraic_properties: HashMap::new(),
+            well_defined_objects: WellDefinedObjectMemory::new(),
+        }
+    }
+}
+
+impl Default for ExecEnv {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl WellDefinedObjectMemory {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Return the WD proof identity for an object, if this scope owns one.
+    pub fn lookup(&self, object: &Obj) -> Option<WellDefinednessId2> {
+        self.object_to_wd_id.get(&obj_equality_key(object)).copied()
+    }
+
+    /// Record a WD proof and its object payload in both directions.
+    ///
+    /// Re-recording the same object or proof id is idempotent.  Debug builds
+    /// additionally detect an accidental collision between different objects
+    /// and the same canonical key or proof id.
+    pub fn record(&mut self, object: Obj, wd_id: WellDefinednessId2) {
+        let object_key = obj_equality_key(&object);
+
+        if let Some(existing_id) = self.object_to_wd_id.get(&object_key) {
+            debug_assert_eq!(*existing_id, wd_id);
+            return;
+        }
+
+        if let Some(existing_object) = self.wd_id_to_object.get(&wd_id) {
+            debug_assert_eq!(obj_equality_key(existing_object), object_key);
+            return;
+        }
+
+        self.object_to_wd_id.insert(object_key, wd_id);
+        self.wd_id_to_object.insert(wd_id, object);
+    }
+}
+
+impl DefinitionMemory {
+    pub fn new() -> Self {
+        Self {
+            symbols: SymbolTable::new(),
+            predicate_definitions: HashMap::new(),
+            abstract_predicate_definitions: HashMap::new(),
+            algorithm_definitions: HashMap::new(),
+            structure_definitions: HashMap::new(),
+            template_definitions: HashMap::new(),
+            setting_definitions: HashMap::new(),
+            theorem_definitions: HashMap::new(),
+            axiom_definitions: HashMap::new(),
+            strategy_definitions: HashMap::new(),
+        }
+    }
+}
+
+impl Default for DefinitionMemory {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl KnownFactMemory {
+    pub fn new() -> Self {
+        Self {
+            facts_by_id: HashMap::new(),
+            known_equality: KnownEquality::new(),
+            atomic: AtomicFactMemory::new(),
+            set_relations: SpecialSetRelationMemory::new(),
+            quantified: QuantifiedFactMemory::new(),
+            forall_facts: KnownForallFactMemory::new(),
+            fact_cache: HashMap::new(),
+        }
+    }
+}
+
+impl Default for KnownFactMemory {
+    fn default() -> Self {
+        Self::new()
+    }
 }

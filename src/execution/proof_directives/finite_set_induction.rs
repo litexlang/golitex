@@ -215,10 +215,13 @@ impl Runtime {
                 )
             })?;
         let param = obj_for_bound_param_in_scope(&stmt.param_binding);
-        let parameter_type_fact: Fact =
-            IsFiniteSetFact::new(param.clone(), stmt.line_file.clone()).into();
+        let parameter_type_fact: Fact = self
+            .new_is_finite_set_fact(param.clone(), stmt.line_file.clone())
+            .into();
         let empty_set: Obj = ListSet::new(vec![]).into();
-        let base_eq: Fact = EqualFact::new(param.clone(), empty_set, stmt.line_file.clone()).into();
+        let base_eq: Fact = self
+            .new_equal_fact(param.clone(), empty_set, stmt.line_file.clone())
+            .into();
         let base_infers = self
             .store_with_well_defined_verification_and_infer_with_default_verify_state(
                 base_eq.clone(),
@@ -245,8 +248,9 @@ impl Runtime {
             )?,
         ];
         if let Some(carrier_set) = &stmt.carrier_set {
-            let base_subset: Fact =
-                SubsetFact::new(param, carrier_set.clone(), stmt.line_file.clone()).into();
+            let base_subset: Fact = self
+                .new_subset_fact(param, carrier_set.clone(), stmt.line_file.clone())
+                .into();
             let subset_infers = self
                 .store_with_well_defined_verification_and_infer_with_default_verify_state(
                     base_subset.clone(),
@@ -302,13 +306,16 @@ impl Runtime {
         let element = obj_for_bound_param_in_scope(&stmt.element_param_binding);
         let smaller_set = obj_for_bound_param_in_scope(&stmt.smaller_set_param_binding);
         let element_type_fact: Fact = match &stmt.carrier_set {
-            Some(carrier_set) => {
-                InFact::new(element.clone(), carrier_set.clone(), stmt.line_file.clone()).into()
-            }
-            None => IsSetFact::new(element.clone(), stmt.line_file.clone()).into(),
+            Some(carrier_set) => self
+                .new_in_fact(element.clone(), carrier_set.clone(), stmt.line_file.clone())
+                .into(),
+            None => self
+                .new_is_set_fact(element.clone(), stmt.line_file.clone())
+                .into(),
         };
-        let smaller_type_fact: Fact =
-            IsFiniteSetFact::new(smaller_set.clone(), stmt.line_file.clone()).into();
+        let smaller_type_fact: Fact = self
+            .new_is_finite_set_fact(smaller_set.clone(), stmt.line_file.clone())
+            .into();
         let mut assumptions = vec![
             self.finite_set_induc_assumption_result(
                 element_type_fact,
@@ -321,8 +328,9 @@ impl Runtime {
                 None,
             )?,
         ];
-        let fresh_fact: Fact =
-            NotInFact::new(element, smaller_set.clone(), stmt.line_file.clone()).into();
+        let fresh_fact: Fact = self
+            .new_not_in_fact(element, smaller_set.clone(), stmt.line_file.clone())
+            .into();
         let fresh_infers = self
             .store_with_well_defined_verification_and_infer_with_default_verify_state(
                 fresh_fact.clone(),
@@ -338,12 +346,13 @@ impl Runtime {
         infers.new_infer_result_inside(fresh_infers);
 
         if let Some(carrier_set) = &stmt.carrier_set {
-            let smaller_subset: Fact = SubsetFact::new(
-                smaller_set.clone(),
-                carrier_set.clone(),
-                stmt.line_file.clone(),
-            )
-            .into();
+            let smaller_subset: Fact = self
+                .new_subset_fact(
+                    smaller_set.clone(),
+                    carrier_set.clone(),
+                    stmt.line_file.clone(),
+                )
+                .into();
             let subset_infers = self
                 .store_with_well_defined_verification_and_infer_with_default_verify_state(
                     smaller_subset.clone(),
@@ -469,19 +478,21 @@ impl Runtime {
         let mut dom_facts = Vec::new();
         if let Some(carrier_set) = &stmt.carrier_set {
             dom_facts.push(
-                SubsetFact::new(param.clone(), carrier_set.clone(), stmt.line_file.clone()).into(),
+                self.new_subset_fact(param.clone(), carrier_set.clone(), stmt.line_file.clone())
+                    .into(),
             );
         }
-        Ok(ForallFact::new_canonical_forall(
-            TypedParameterList::new(vec![TypedParameterGroup::new(
-                vec![forall_names[0].clone()],
-                ParamType::FiniteSet(FiniteSet::new()),
-            )]),
-            dom_facts,
-            then_facts,
-            stmt.line_file.clone(),
-        )?
-        .into())
+        Ok(self
+            .new_forall_fact(
+                TypedParameterList::new(vec![TypedParameterGroup::new(
+                    vec![forall_names[0].clone()],
+                    ParamType::FiniteSet(FiniteSet::new()),
+                )]),
+                dom_facts,
+                then_facts,
+                stmt.line_file.clone(),
+            )?
+            .into())
     }
 
     fn finite_set_induc_assumption_result(

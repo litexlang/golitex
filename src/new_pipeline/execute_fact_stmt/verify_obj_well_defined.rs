@@ -1,5 +1,6 @@
+use crate::new_pipeline::runtime::runtime_ids::WellDefinednessId2;
 use crate::prelude::*;
-use crate::verify_rewrite::{VerifyState2, WellDefinednessId2};
+use crate::verify_rewrite::VerifyState2;
 
 // How object well-definedness was established.
 // ByReuse is checked first (session memo cites a prior wd id). Then either

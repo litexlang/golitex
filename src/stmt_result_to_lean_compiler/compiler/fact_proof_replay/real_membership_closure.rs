@@ -66,7 +66,7 @@ impl StmtResultToLeanCompiler {
         let components = components
             .verified()
             .ok_or_else(|| "real arithmetic membership child is not factual".to_string())?;
-        let retained_components = conjunction_components(&components.fact())?;
+        let retained_components = conjunction_components(&self.runtime, &components.fact())?;
         if retained_components.len() != 2 {
             return Err("real arithmetic membership child is not a binary conjunction".into());
         }

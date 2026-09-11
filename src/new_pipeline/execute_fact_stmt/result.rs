@@ -2,7 +2,7 @@
 // Executing a fact statement does two things: prove the fact, then store it.
 pub struct ExecFactStmtResult2 {
     pub verify_result: VerifyFactResult2,
-    pub store_and_infer_result: StoreFactAndWellDefinednessAndInferResult2,
+    pub store_and_infer_result: StoreFactAndInferResult2,
 }
 
-pub struct StoreFactAndWellDefinednessAndInferResult2 {}
+pub struct StoreFactAndInferResult2 {}

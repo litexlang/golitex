@@ -233,7 +233,7 @@ impl Runtime {
             }
             Fact::ChainFact(chain_fact) => {
                 let verify_state_for_children = verify_state.clone();
-                let facts = chain_fact.facts()?;
+                let facts = chain_fact.facts(self)?;
                 for (fact_index, child_fact) in facts.iter().enumerate() {
                     let child_result =
                         self.prove_atomic_fact(child_fact, &verify_state_for_children)?;

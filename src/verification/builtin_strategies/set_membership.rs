@@ -32,72 +32,90 @@ impl Runtime {
                     .iter()
                     .zip(cart.args.iter())
                     .map(|(element, set)| {
-                        InFact::new(element.as_ref().clone(), set.as_ref().clone(), lf.clone())
+                        self.new_in_fact(element.as_ref().clone(), set.as_ref().clone(), lf.clone())
                             .into()
                     })
                     .collect()]
             }
             Obj::Union(set) => vec![
-                vec![
-                    InFact::new(fact.element.clone(), set.left.as_ref().clone(), lf.clone()).into(),
-                ],
-                vec![
-                    InFact::new(fact.element.clone(), set.right.as_ref().clone(), lf.clone())
-                        .into(),
-                ],
+                vec![self
+                    .new_in_fact(fact.element.clone(), set.left.as_ref().clone(), lf.clone())
+                    .into()],
+                vec![self
+                    .new_in_fact(fact.element.clone(), set.right.as_ref().clone(), lf.clone())
+                    .into()],
             ],
             Obj::Intersect(set) => vec![vec![
-                InFact::new(fact.element.clone(), set.left.as_ref().clone(), lf.clone()).into(),
-                InFact::new(fact.element.clone(), set.right.as_ref().clone(), lf.clone()).into(),
+                self.new_in_fact(fact.element.clone(), set.left.as_ref().clone(), lf.clone())
+                    .into(),
+                self.new_in_fact(fact.element.clone(), set.right.as_ref().clone(), lf.clone())
+                    .into(),
             ]],
             Obj::SetMinus(set) => vec![vec![
-                InFact::new(fact.element.clone(), set.left.as_ref().clone(), lf.clone()).into(),
-                NotInFact::new(fact.element.clone(), set.right.as_ref().clone(), lf.clone()).into(),
+                self.new_in_fact(fact.element.clone(), set.left.as_ref().clone(), lf.clone())
+                    .into(),
+                self.new_not_in_fact(fact.element.clone(), set.right.as_ref().clone(), lf.clone())
+                    .into(),
             ]],
-            Obj::PowerSet(set) => vec![vec![SubsetFact::new(
-                fact.element.clone(),
-                set.set.as_ref().clone(),
-                lf.clone(),
-            )
-            .into()]],
+            Obj::PowerSet(set) => vec![vec![self
+                .new_subset_fact(fact.element.clone(), set.set.as_ref().clone(), lf.clone())
+                .into()]],
             Obj::Range(range) => vec![vec![
-                InFact::new(fact.element.clone(), StandardSet::Z.into(), lf.clone()).into(),
-                LessEqualFact::new(
+                self.new_in_fact(fact.element.clone(), StandardSet::Z.into(), lf.clone())
+                    .into(),
+                self.new_less_equal_fact(
                     range.start.as_ref().clone(),
                     fact.element.clone(),
                     lf.clone(),
                 )
                 .into(),
-                LessFact::new(fact.element.clone(), range.end.as_ref().clone(), lf.clone()).into(),
+                self.new_less_fact(fact.element.clone(), range.end.as_ref().clone(), lf.clone())
+                    .into(),
             ]],
             Obj::ClosedRange(range) => vec![vec![
-                InFact::new(fact.element.clone(), StandardSet::Z.into(), lf.clone()).into(),
-                LessEqualFact::new(
+                self.new_in_fact(fact.element.clone(), StandardSet::Z.into(), lf.clone())
+                    .into(),
+                self.new_less_equal_fact(
                     range.start.as_ref().clone(),
                     fact.element.clone(),
                     lf.clone(),
                 )
                 .into(),
-                LessEqualFact::new(fact.element.clone(), range.end.as_ref().clone(), lf.clone())
-                    .into(),
+                self.new_less_equal_fact(
+                    fact.element.clone(),
+                    range.end.as_ref().clone(),
+                    lf.clone(),
+                )
+                .into(),
             ]],
             // Real interval membership structurally decomposes into the real
             // carrier and its two endpoint bounds. Each smaller child may use
             // one direct rule or another constructor-decreasing strategy.
             // Example: `r R+` implies `c in (c-r, c+r)`.
             Obj::IntervalObj(interval) => vec![vec![
-                InFact::new(fact.element.clone(), StandardSet::R.into(), lf.clone()).into(),
+                self.new_in_fact(fact.element.clone(), StandardSet::R.into(), lf.clone())
+                    .into(),
                 if interval.left_closed() {
-                    LessEqualFact::new(interval.start().clone(), fact.element.clone(), lf.clone())
-                        .into()
+                    self.new_less_equal_fact(
+                        interval.start().clone(),
+                        fact.element.clone(),
+                        lf.clone(),
+                    )
+                    .into()
                 } else {
-                    LessFact::new(interval.start().clone(), fact.element.clone(), lf.clone()).into()
+                    self.new_less_fact(interval.start().clone(), fact.element.clone(), lf.clone())
+                        .into()
                 },
                 if interval.right_closed() {
-                    LessEqualFact::new(fact.element.clone(), interval.end().clone(), lf.clone())
-                        .into()
+                    self.new_less_equal_fact(
+                        fact.element.clone(),
+                        interval.end().clone(),
+                        lf.clone(),
+                    )
+                    .into()
                 } else {
-                    LessFact::new(fact.element.clone(), interval.end().clone(), lf.clone()).into()
+                    self.new_less_fact(fact.element.clone(), interval.end().clone(), lf.clone())
+                        .into()
                 },
             ]],
             _ => return Ok(UnknownGenericStmtResult::new().into()),
@@ -189,12 +207,13 @@ impl Runtime {
             return Ok(UnknownGenericStmtResult::new().into());
         };
 
-        let source_membership: AtomicFact = InFact::new(
-            fact.element.clone(),
-            Obj::SetBuilder(set_builder.clone()),
-            fact.line_file.clone(),
-        )
-        .into();
+        let source_membership: AtomicFact = self
+            .new_in_fact(
+                fact.element.clone(),
+                Obj::SetBuilder(set_builder.clone()),
+                fact.line_file.clone(),
+            )
+            .into();
         let target_atomic: AtomicFact = fact.clone().into();
         let target_transport = if source_membership.to_string() == target_atomic.to_string() {
             None
@@ -215,12 +234,13 @@ impl Runtime {
 
         let mut children = Vec::with_capacity(set_builder.facts.len() + 1);
         let mut expected_premises = Vec::with_capacity(set_builder.facts.len() + 1);
-        let base: AtomicFact = InFact::new(
-            fact.element.clone(),
-            set_builder.param_set.as_ref().clone(),
-            fact.line_file.clone(),
-        )
-        .into();
+        let base: AtomicFact = self
+            .new_in_fact(
+                fact.element.clone(),
+                set_builder.param_set.as_ref().clone(),
+                fact.line_file.clone(),
+            )
+            .into();
         let base_result = self.verify_builtin_strategy_child(&base, verify_state)?;
         if !base_result.is_success() {
             return Ok(UnknownGenericStmtResult::new().into());
@@ -312,40 +332,36 @@ impl Runtime {
                 set.list
                     .iter()
                     .map(|element| {
-                        InFact::new(element.as_ref().clone(), fact.right.clone(), lf.clone()).into()
+                        self.new_in_fact(element.as_ref().clone(), fact.right.clone(), lf.clone())
+                            .into()
                     })
                     .collect(),
             ),
             Obj::Union(set) => alternatives.push(vec![
-                SubsetFact::new(set.left.as_ref().clone(), fact.right.clone(), lf.clone()).into(),
-                SubsetFact::new(set.right.as_ref().clone(), fact.right.clone(), lf.clone()).into(),
+                self.new_subset_fact(set.left.as_ref().clone(), fact.right.clone(), lf.clone())
+                    .into(),
+                self.new_subset_fact(set.right.as_ref().clone(), fact.right.clone(), lf.clone())
+                    .into(),
             ]),
             Obj::Intersect(set) => {
-                alternatives.push(vec![SubsetFact::new(
-                    set.left.as_ref().clone(),
-                    fact.right.clone(),
-                    lf.clone(),
-                )
-                .into()]);
-                alternatives.push(vec![SubsetFact::new(
-                    set.right.as_ref().clone(),
-                    fact.right.clone(),
-                    lf.clone(),
-                )
-                .into()]);
+                alternatives.push(vec![self
+                    .new_subset_fact(set.left.as_ref().clone(), fact.right.clone(), lf.clone())
+                    .into()]);
+                alternatives.push(vec![self
+                    .new_subset_fact(set.right.as_ref().clone(), fact.right.clone(), lf.clone())
+                    .into()]);
             }
-            Obj::SetMinus(set) => alternatives.push(vec![SubsetFact::new(
-                set.left.as_ref().clone(),
-                fact.right.clone(),
-                lf.clone(),
-            )
-            .into()]),
+            Obj::SetMinus(set) => alternatives.push(vec![self
+                .new_subset_fact(set.left.as_ref().clone(), fact.right.clone(), lf.clone())
+                .into()]),
             _ => {}
         }
         if let Obj::Intersect(set) = &fact.right {
             alternatives.push(vec![
-                SubsetFact::new(fact.left.clone(), set.left.as_ref().clone(), lf.clone()).into(),
-                SubsetFact::new(fact.left.clone(), set.right.as_ref().clone(), lf.clone()).into(),
+                self.new_subset_fact(fact.left.clone(), set.left.as_ref().clone(), lf.clone())
+                    .into(),
+                self.new_subset_fact(fact.left.clone(), set.right.as_ref().clone(), lf.clone())
+                    .into(),
             ]);
         }
         let Some(children) = self.verify_set_strategy_alternatives(alternatives, verify_state)?

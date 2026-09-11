@@ -152,7 +152,11 @@ impl StmtResultToLeanCompiler {
         evidence: &ComplexAlgebraicNormalizationBuiltinRuleEvidence,
         subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
-        validate_complex_algebraic_normalization_builtin_rule_evidence(target, evidence)?;
+        validate_complex_algebraic_normalization_builtin_rule_evidence(
+            &self.runtime,
+            target,
+            evidence,
+        )?;
         self.construct_lean_algebraic_normalization_from_result(
             target,
             &evidence.expected_nonzero_premises,
@@ -166,7 +170,11 @@ impl StmtResultToLeanCompiler {
         evidence: &RationalAlgebraicNormalizationBuiltinRuleEvidence,
         subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
-        validate_rational_algebraic_normalization_builtin_rule_evidence(target, evidence)?;
+        validate_rational_algebraic_normalization_builtin_rule_evidence(
+            &self.runtime,
+            target,
+            evidence,
+        )?;
         self.construct_lean_algebraic_normalization_from_result(
             target,
             &evidence.expected_nonzero_premises,

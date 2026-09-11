@@ -37,8 +37,9 @@ impl Runtime {
             if cart.args.len() != tuple.args.len() {
                 continue;
             }
-            let membership: AtomicFact =
-                InFact::new(target.clone(), owner_set, line_file.clone()).into();
+            let membership: AtomicFact = self
+                .new_in_fact(target.clone(), owner_set, line_file.clone())
+                .into();
             let membership_result =
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&membership)?;
             if !membership_result.is_success() {

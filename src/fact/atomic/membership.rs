@@ -19,6 +19,7 @@ pub struct NotInFact {
 }
 
 impl InFact {
+    #[cfg(test)]
     #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(element: Obj, set: Obj, line_file: LineFile) -> Self {
         InFact {
@@ -31,6 +32,7 @@ impl InFact {
 }
 
 impl NotInFact {
+    #[cfg(test)]
     #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(element: Obj, set: Obj, line_file: LineFile) -> Self {
         NotInFact {

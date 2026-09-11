@@ -212,12 +212,13 @@ impl Runtime {
             )
             .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
         let function_identifier_obj = self.definition_identifier_obj(stmt.fn_name());
-        let bind_fact: Fact = InFact::new(
-            function_identifier_obj,
-            fn_set.clone().into(),
-            stmt.line_file.clone(),
-        )
-        .into();
+        let bind_fact: Fact = self
+            .new_in_fact(
+                function_identifier_obj,
+                fn_set.clone().into(),
+                stmt.line_file.clone(),
+            )
+            .into();
         Self::merge_have_fn_by_forall_exist_unique_infer(&mut infer_result, bind_infer, &bind_fact);
 
         let property_forall = self.have_fn_by_forall_exist_unique_property_forall(stmt, &shape)?;
@@ -439,7 +440,7 @@ impl Runtime {
             then_facts.push(Self::then_fact_from_quantifier_free_fact(inst_body_fact));
         }
 
-        ForallFact::new_canonical_forall(
+        self.new_forall_fact(
             stmt.forall.typed_parameters.clone(),
             stmt.forall.dom_facts.clone(),
             then_facts,
@@ -514,8 +515,8 @@ impl Runtime {
             dom_facts.push(inst_body_fact.to_fact());
         }
 
-        let equal_fact = EqualFact::new(witness_obj, function_obj, stmt.line_file.clone());
-        ForallFact::new_canonical_forall(
+        let equal_fact = self.new_equal_fact(witness_obj, function_obj, stmt.line_file.clone());
+        self.new_forall_fact(
             TypedParameterList::new(params),
             dom_facts,
             vec![ExistOrAndChainAtomicFact::AtomicFact(equal_fact.into())],

@@ -68,13 +68,13 @@ impl Runtime {
                 fact.line_file.clone(),
             )?])),
             BIJECTIVE => Ok(Some(vec![
-                NormalAtomicFact::new(
+                self.new_normal_atomic_fact(
                     AtomicName::WithoutMod(INJECTIVE.to_string()),
                     fact.body.clone(),
                     fact.line_file.clone(),
                 )
                 .into(),
-                NormalAtomicFact::new(
+                self.new_normal_atomic_fact(
                     AtomicName::WithoutMod(SURJECTIVE.to_string()),
                     fact.body.clone(),
                     fact.line_file.clone(),
@@ -132,8 +132,9 @@ impl Runtime {
                 codomain.clone(),
             )?
             .into();
-            let signature: AtomicFact =
-                InFact::new(function, function_set, fact.line_file()).into();
+            let signature: AtomicFact = self
+                .new_in_fact(function, function_set, fact.line_file())
+                .into();
             let result = self.verify_atomic_fact(&signature, verify_state)?;
             if result.is_unknown() {
                 return Err(invalid_signature());
@@ -149,8 +150,9 @@ impl Runtime {
         };
 
         if function_body.dom_facts.is_empty() {
-            let domain_fact: AtomicFact =
-                EqualFact::new_from_refs(param_group.set_obj(), &domain, fact.line_file()).into();
+            let domain_fact: AtomicFact = self
+                .new_equal_fact_from_refs(param_group.set_obj(), &domain, fact.line_file())
+                .into();
             let domain_result = self.verify_atomic_fact(&domain_fact, verify_state)?;
             if domain_result.is_unknown() {
                 return Err(invalid_signature());
@@ -180,18 +182,18 @@ impl Runtime {
             }
 
             let one: Obj = Number::new("1".to_string()).into();
-            let start_fact: AtomicFact =
-                EqualFact::new_from_refs(closed_range.start.as_ref(), &one, fact.line_file())
-                    .into();
+            let start_fact: AtomicFact = self
+                .new_equal_fact_from_refs(closed_range.start.as_ref(), &one, fact.line_file())
+                .into();
             let start_result = self.verify_atomic_fact(&start_fact, verify_state)?;
             if start_result.is_unknown() {
                 return Err(invalid_signature());
             }
             type_results.push(start_result);
 
-            let end_fact: AtomicFact =
-                EqualFact::new_from_refs(closed_range.end.as_ref(), &bound.right, fact.line_file())
-                    .into();
+            let end_fact: AtomicFact = self
+                .new_equal_fact_from_refs(closed_range.end.as_ref(), &bound.right, fact.line_file())
+                .into();
             let end_result = self.verify_atomic_fact(&end_fact, verify_state)?;
             if end_result.is_unknown() {
                 return Err(invalid_signature());
@@ -199,9 +201,9 @@ impl Runtime {
             type_results.push(end_result);
         }
 
-        let codomain_fact: AtomicFact =
-            EqualFact::new_from_refs(function_body.ret_set.as_ref(), &codomain, fact.line_file())
-                .into();
+        let codomain_fact: AtomicFact = self
+            .new_equal_fact_from_refs(function_body.ret_set.as_ref(), &codomain, fact.line_file())
+            .into();
         let codomain_result = self.verify_atomic_fact(&codomain_fact, verify_state)?;
         if codomain_result.is_unknown() {
             return Err(invalid_signature());
@@ -227,13 +229,14 @@ impl Runtime {
         let Some(fx2) = function_applied_to_one_arg(&function, x2.clone()) else {
             return Err(function_property_application_error(&function, line_file));
         };
-        Ok(ForallFact::new_canonical_forall(
-            TypedParameterList::new(vec![params]),
-            vec![EqualFact::new(fx1, fx2, line_file.clone()).into()],
-            vec![EqualFact::new(x1, x2, line_file.clone()).into()],
-            line_file,
-        )?
-        .into())
+        Ok(self
+            .new_forall_fact(
+                TypedParameterList::new(vec![params]),
+                vec![self.new_equal_fact(fx1, fx2, line_file.clone()).into()],
+                vec![self.new_equal_fact(x1, x2, line_file.clone()).into()],
+                line_file,
+            )?
+            .into())
     }
 
     fn surjective_definition_fact(
@@ -253,18 +256,19 @@ impl Runtime {
         let Some(fx) = function_applied_to_one_arg(&function, x) else {
             return Err(function_property_application_error(&function, line_file));
         };
-        let exist_body = PlainExistFact::new(
+        let exist_body = self.new_plain_exist_fact(
             TypedParameterList::new(vec![x_group]),
-            vec![EqualFact::new(y, fx, line_file.clone()).into()],
+            vec![self.new_equal_fact(y, fx, line_file.clone()).into()],
             line_file.clone(),
         )?;
-        Ok(ForallFact::new_canonical_forall(
-            TypedParameterList::new(vec![y_group]),
-            vec![],
-            vec![ExistFact::PlainExistFact(exist_body).into()],
-            line_file,
-        )?
-        .into())
+        Ok(self
+            .new_forall_fact(
+                TypedParameterList::new(vec![y_group]),
+                vec![],
+                vec![ExistFact::PlainExistFact(exist_body).into()],
+                line_file,
+            )?
+            .into())
     }
 
     // A bijection has exactly one preimage for every codomain element.
@@ -293,13 +297,13 @@ impl Runtime {
                 fact.line_file.clone(),
             ));
         };
-        let exist_body = PlainExistFact::new(
+        let exist_body = self.new_plain_exist_fact(
             TypedParameterList::new(vec![x_group]),
-            vec![EqualFact::new(fx, y, fact.line_file.clone()).into()],
+            vec![self.new_equal_fact(fx, y, fact.line_file.clone()).into()],
             fact.line_file.clone(),
         )?;
         Ok(Some(
-            ForallFact::new_canonical_forall(
+            self.new_forall_fact(
                 TypedParameterList::new(vec![y_group]),
                 vec![],
                 vec![ExistFact::ExistUniqueFact(exist_body).into()],

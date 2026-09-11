@@ -116,6 +116,7 @@ impl StmtResultToLeanCompiler {
                 return Err("Template set-alias body changed its type-check count".into());
             };
             let expected_type = object_type_fact_for_compiler_definition(
+                &self.runtime,
                 value.clone(),
                 defined_type,
                 body.statement.line_file.clone(),
@@ -150,16 +151,18 @@ impl StmtResultToLeanCompiler {
                     .into();
             let expected_stores = vec![
                 object_type_fact_for_compiler_definition(
+                    &self.runtime,
                     defined_object.clone(),
                     defined_type,
                     body.statement.line_file.clone(),
                 ),
-                EqualFact::new(
-                    defined_object,
-                    value.clone(),
-                    body.statement.line_file.clone(),
-                )
-                .into(),
+                self.runtime
+                    .new_equal_fact(
+                        defined_object,
+                        value.clone(),
+                        body.statement.line_file.clone(),
+                    )
+                    .into(),
             ];
             exact_ordered_fact_ids_from_store_results(
                 &body.common.infers,

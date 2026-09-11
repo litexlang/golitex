@@ -11,8 +11,7 @@ impl Runtime {
             can_use_known_algebraic_rewrite: true,
         };
         let verify_result = self.verify_fact2(fact, verify_state)?;
-        let store_and_infer_result =
-            self.store_fact_and_well_definedness_then_infer(verify_result)?;
+        let store_and_infer_result = self.store_fact_then_infer(verify_result)?;
         Ok(ExecFactStmtResult2 {
             verify_result,
             store_and_infer_result,

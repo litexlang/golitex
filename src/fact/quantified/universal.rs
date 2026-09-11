@@ -13,6 +13,7 @@ pub struct ForallFact {
 }
 
 impl ForallFact {
+    #[cfg(test)]
     /// Build the canonical internal forall representation.
     ///
     /// The restricted conclusion type is intentional: every universal
@@ -36,12 +37,15 @@ impl ForallFact {
         Ok(forall_fact)
     }
 
-    pub fn expand_then_facts_with_order_chain_closure(&mut self) -> Result<(), RuntimeError> {
+    pub fn expand_then_facts_with_order_chain_closure(
+        &mut self,
+        runtime: &Runtime,
+    ) -> Result<(), RuntimeError> {
         let mut new_then: Vec<ExistOrAndChainAtomicFact> = Vec::new();
         for tf in std::mem::take(&mut self.then_facts) {
             match tf {
                 ExistOrAndChainAtomicFact::ChainFact(c) => {
-                    let atomics = c.facts_with_order_transitive_closure()?;
+                    let atomics = c.facts_with_order_transitive_closure_with_runtime(runtime)?;
                     new_then.push(ExistOrAndChainAtomicFact::ChainFact(c));
                     for af in atomics {
                         new_then.push(ExistOrAndChainAtomicFact::AtomicFact(af));

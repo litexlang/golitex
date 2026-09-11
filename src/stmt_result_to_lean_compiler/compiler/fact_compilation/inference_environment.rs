@@ -468,7 +468,7 @@ impl StmtResultToLeanCompiler {
                     );
                 }
             } else if let InferRule::ChainImpliesComponent(rule) = &application.rule {
-                validate_chain_component_inference_target(rule, &premise.fact, &conclusion.fact)?;
+                validate_chain_component_inference_target(&self.runtime, rule, &premise.fact, &conclusion.fact)?;
                 if !conclusion_already_visible {
                     let premise_name = resolve_fact_citation(
                         &premise_fact_id,
@@ -508,6 +508,7 @@ impl StmtResultToLeanCompiler {
                         render_fact(&conclusion.fact, &self.environment_stack)?;
                     let conclusion_name = self.next_local_inference_fact_proof_name();
                     let proof = render_closed_positive_power_equality_membership_inference(
+                        &self.runtime,
                         rule,
                         &premise.fact,
                         &conclusion.fact,
@@ -584,6 +585,7 @@ impl StmtResultToLeanCompiler {
                     )?;
                     let (expected_conclusion, proof) =
                         render_positive_integer_base_natural_power_equality_membership_inference(
+                            &self.runtime,
                             rule,
                             &premise.fact,
                             &base_positive.fact,

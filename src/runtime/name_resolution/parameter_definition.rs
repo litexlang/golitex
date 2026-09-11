@@ -42,24 +42,24 @@ impl Runtime {
                     self.finite_seq_set_to_fn_set(value, default_line_file())
                         .into(),
                     default_line_file(),
-                )?
+                )
                 .into(),
             ParamType::Obj(Obj::SeqSet(value)) => self
                 .new_in_fact(
                     parameter,
                     self.seq_set_to_fn_set(value, default_line_file()).into(),
                     default_line_file(),
-                )?
+                )
                 .into(),
             ParamType::Obj(value) => self
-                .new_in_fact(parameter, value.clone(), default_line_file())?
+                .new_in_fact(parameter, value.clone(), default_line_file())
                 .into(),
-            ParamType::Set(_) => self.new_is_set_fact(parameter, default_line_file())?.into(),
+            ParamType::Set(_) => self.new_is_set_fact(parameter, default_line_file()).into(),
             ParamType::NonemptySet(_) => self
-                .new_is_nonempty_set_fact(parameter, default_line_file())?
+                .new_is_nonempty_set_fact(parameter, default_line_file())
                 .into(),
             ParamType::FiniteSet(_) => self
-                .new_is_finite_set_fact(parameter, default_line_file())?
+                .new_is_finite_set_fact(parameter, default_line_file())
                 .into(),
         })
     }
@@ -139,30 +139,33 @@ impl Runtime {
                 self.store_typed_parameter_binding(binding, binding_scope, &param_def.param_type)?;
                 let param_obj = param_binding_element_obj_for_store(binding, binding_scope);
                 let fact: Fact = match &param_def.param_type {
-                    ParamType::Obj(obj) => InFact::new(
-                        param_obj,
-                        match obj {
-                            Obj::FiniteSeqSet(fs) => self
-                                .finite_seq_set_to_fn_set(fs, default_line_file())
-                                .into(),
-                            Obj::SeqSet(ss) => {
-                                self.seq_set_to_fn_set(ss, default_line_file()).into()
-                            }
-                            Obj::MatrixSet(ms) => {
-                                self.matrix_set_to_fn_set(ms, default_line_file()).into()
-                            }
-                            _ => obj.clone(),
-                        },
-                        default_line_file(),
-                    )
-                    .into(),
-                    ParamType::Set(_) => IsSetFact::new(param_obj, default_line_file()).into(),
-                    ParamType::NonemptySet(_) => {
-                        IsNonemptySetFact::new(param_obj, default_line_file()).into()
+                    ParamType::Obj(obj) => self
+                        .new_in_fact(
+                            param_obj,
+                            match obj {
+                                Obj::FiniteSeqSet(fs) => self
+                                    .finite_seq_set_to_fn_set(fs, default_line_file())
+                                    .into(),
+                                Obj::SeqSet(ss) => {
+                                    self.seq_set_to_fn_set(ss, default_line_file()).into()
+                                }
+                                Obj::MatrixSet(ms) => {
+                                    self.matrix_set_to_fn_set(ms, default_line_file()).into()
+                                }
+                                _ => obj.clone(),
+                            },
+                            default_line_file(),
+                        )
+                        .into(),
+                    ParamType::Set(_) => {
+                        self.new_is_set_fact(param_obj, default_line_file()).into()
                     }
-                    ParamType::FiniteSet(_) => {
-                        IsFiniteSetFact::new(param_obj, default_line_file()).into()
-                    }
+                    ParamType::NonemptySet(_) => self
+                        .new_is_nonempty_set_fact(param_obj, default_line_file())
+                        .into(),
+                    ParamType::FiniteSet(_) => self
+                        .new_is_finite_set_fact(param_obj, default_line_file())
+                        .into(),
                 };
                 infer_result.new_infer_result_inside(
                     self.store_fact_with_trust_and_infer_with_reason(

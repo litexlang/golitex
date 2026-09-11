@@ -153,7 +153,11 @@ impl StmtResultToLeanCompiler {
                 )))
             }
             Some(BuiltinRuleEvidence::ComplexAlgebraicNormalization(evidence)) => {
-                validate_complex_algebraic_normalization_builtin_rule_evidence(&target, evidence)?;
+                validate_complex_algebraic_normalization_builtin_rule_evidence(
+                    &self.runtime,
+                    &target,
+                    evidence,
+                )?;
                 self.construct_lean_native_algebraic_normalization_from_result(
                     &target,
                     &evidence.expected_nonzero_premises,
@@ -162,7 +166,11 @@ impl StmtResultToLeanCompiler {
                 .map(Some)
             }
             Some(BuiltinRuleEvidence::RationalAlgebraicNormalization(evidence)) => {
-                validate_rational_algebraic_normalization_builtin_rule_evidence(&target, evidence)?;
+                validate_rational_algebraic_normalization_builtin_rule_evidence(
+                    &self.runtime,
+                    &target,
+                    evidence,
+                )?;
                 self.construct_lean_native_algebraic_normalization_from_result(
                     &target,
                     &evidence.expected_nonzero_premises,

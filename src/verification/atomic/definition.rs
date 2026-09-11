@@ -223,18 +223,20 @@ impl Runtime {
             vec![bound_param_name],
             ParamType::Obj(subset_fact.left.clone()),
         )?;
-        let membership_forall_fact = ForallFact::new_canonical_forall(
-            TypedParameterList::new(vec![bound_param.clone()]),
-            vec![],
-            vec![InFact::new(
-                obj_for_bound_param_in_scope(&bound_param.params[0]),
-                subset_fact.right.clone(),
+        let membership_forall_fact = self
+            .new_forall_fact(
+                TypedParameterList::new(vec![bound_param.clone()]),
+                vec![],
+                vec![self
+                    .new_in_fact(
+                        obj_for_bound_param_in_scope(&bound_param.params[0]),
+                        subset_fact.right.clone(),
+                        subset_fact.line_file.clone(),
+                    )
+                    .into()],
                 subset_fact.line_file.clone(),
-            )
-            .into()],
-            subset_fact.line_file.clone(),
-        )?
-        .into();
+            )?
+            .into();
         let verify_forall_result =
             self.verify_fact_allow_unknown(&membership_forall_fact, verify_state)?;
         if !verify_forall_result.is_success() {
@@ -263,18 +265,20 @@ impl Runtime {
             vec![bound_param_name],
             ParamType::Obj(superset_fact.right.clone()),
         )?;
-        let membership_forall_fact = ForallFact::new_canonical_forall(
-            TypedParameterList::new(vec![bound_param.clone()]),
-            vec![],
-            vec![InFact::new(
-                obj_for_bound_param_in_scope(&bound_param.params[0]),
-                superset_fact.left.clone(),
+        let membership_forall_fact = self
+            .new_forall_fact(
+                TypedParameterList::new(vec![bound_param.clone()]),
+                vec![],
+                vec![self
+                    .new_in_fact(
+                        obj_for_bound_param_in_scope(&bound_param.params[0]),
+                        superset_fact.left.clone(),
+                        superset_fact.line_file.clone(),
+                    )
+                    .into()],
                 superset_fact.line_file.clone(),
-            )
-            .into()],
-            superset_fact.line_file.clone(),
-        )?
-        .into();
+            )?
+            .into();
         let verify_forall_result =
             self.verify_fact_allow_unknown(&membership_forall_fact, verify_state)?;
         if !verify_forall_result.is_success() {

@@ -3,6 +3,7 @@
 use crate::prelude::*;
 impl AtomicFact {
     pub fn to_atomic_fact(
+        runtime: &Runtime,
         prop_name: AtomicName,
         positive_polarity: bool,
         args: Vec<Obj>,
@@ -22,9 +23,9 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if positive_polarity {
-                    Ok(EqualFact::new(a0, a1, line_file).into())
+                    Ok(runtime.new_equal_fact(a0, a1, line_file).into())
                 } else {
-                    Ok(NotEqualFact::new(a0, a1, line_file).into())
+                    Ok(runtime.new_not_equal_fact(a0, a1, line_file).into())
                 }
             }
             NOT_EQUAL => {
@@ -39,9 +40,9 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if positive_polarity {
-                    Ok(NotEqualFact::new(a0, a1, line_file).into())
+                    Ok(runtime.new_not_equal_fact(a0, a1, line_file).into())
                 } else {
-                    Ok(EqualFact::new(a0, a1, line_file).into())
+                    Ok(runtime.new_equal_fact(a0, a1, line_file).into())
                 }
             }
             LESS => {
@@ -56,9 +57,9 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if positive_polarity {
-                    Ok(LessFact::new(a0, a1, line_file).into())
+                    Ok(runtime.new_less_fact(a0, a1, line_file).into())
                 } else {
-                    Ok(NotLessFact::new(a0, a1, line_file).into())
+                    Ok(runtime.new_not_less_fact(a0, a1, line_file).into())
                 }
             }
             GREATER => {
@@ -73,9 +74,9 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if positive_polarity {
-                    Ok(GreaterFact::new(a0, a1, line_file).into())
+                    Ok(runtime.new_greater_fact(a0, a1, line_file).into())
                 } else {
-                    Ok(NotGreaterFact::new(a0, a1, line_file).into())
+                    Ok(runtime.new_not_greater_fact(a0, a1, line_file).into())
                 }
             }
             LESS_EQUAL => {
@@ -94,9 +95,9 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if positive_polarity {
-                    Ok(LessEqualFact::new(a0, a1, line_file).into())
+                    Ok(runtime.new_less_equal_fact(a0, a1, line_file).into())
                 } else {
-                    Ok(NotLessEqualFact::new(a0, a1, line_file).into())
+                    Ok(runtime.new_not_less_equal_fact(a0, a1, line_file).into())
                 }
             }
             GREATER_EQUAL => {
@@ -115,9 +116,9 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if positive_polarity {
-                    Ok(GreaterEqualFact::new(a0, a1, line_file).into())
+                    Ok(runtime.new_greater_equal_fact(a0, a1, line_file).into())
                 } else {
-                    Ok(NotGreaterEqualFact::new(a0, a1, line_file).into())
+                    Ok(runtime.new_not_greater_equal_fact(a0, a1, line_file).into())
                 }
             }
             IS_SET => {
@@ -131,9 +132,9 @@ impl AtomicFact {
                 let mut args = args;
                 let a0 = args.remove(0);
                 if positive_polarity {
-                    Ok(IsSetFact::new(a0, line_file).into())
+                    Ok(runtime.new_is_set_fact(a0, line_file).into())
                 } else {
-                    Ok(NotIsSetFact::new(a0, line_file).into())
+                    Ok(runtime.new_not_is_set_fact(a0, line_file).into())
                 }
             }
             IS_NONEMPTY_SET => {
@@ -151,9 +152,9 @@ impl AtomicFact {
                 let mut args = args;
                 let a0 = args.remove(0);
                 if positive_polarity {
-                    Ok(IsNonemptySetFact::new(a0, line_file).into())
+                    Ok(runtime.new_is_nonempty_set_fact(a0, line_file).into())
                 } else {
-                    Ok(NotIsNonemptySetFact::new(a0, line_file).into())
+                    Ok(runtime.new_not_is_nonempty_set_fact(a0, line_file).into())
                 }
             }
             IS_FINITE_SET => {
@@ -171,9 +172,9 @@ impl AtomicFact {
                 let mut args = args;
                 let a0 = args.remove(0);
                 if positive_polarity {
-                    Ok(IsFiniteSetFact::new(a0, line_file).into())
+                    Ok(runtime.new_is_finite_set_fact(a0, line_file).into())
                 } else {
-                    Ok(NotIsFiniteSetFact::new(a0, line_file).into())
+                    Ok(runtime.new_not_is_finite_set_fact(a0, line_file).into())
                 }
             }
             IN => {
@@ -188,9 +189,9 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if positive_polarity {
-                    Ok(InFact::new(a0, a1, line_file).into())
+                    Ok(runtime.new_in_fact(a0, a1, line_file).into())
                 } else {
-                    Ok(NotInFact::new(a0, a1, line_file).into())
+                    Ok(runtime.new_not_in_fact(a0, a1, line_file).into())
                 }
             }
             IS_CART => {
@@ -204,9 +205,9 @@ impl AtomicFact {
                 let mut args = args;
                 let a0 = args.remove(0);
                 if positive_polarity {
-                    Ok(IsCartFact::new(a0, line_file).into())
+                    Ok(runtime.new_is_cart_fact(a0, line_file).into())
                 } else {
-                    Ok(NotIsCartFact::new(a0, line_file).into())
+                    Ok(runtime.new_not_is_cart_fact(a0, line_file).into())
                 }
             }
             IS_TUPLE => {
@@ -220,9 +221,9 @@ impl AtomicFact {
                 let mut args = args;
                 let a0 = args.remove(0);
                 if positive_polarity {
-                    Ok(IsTupleFact::new(a0, line_file).into())
+                    Ok(runtime.new_is_tuple_fact(a0, line_file).into())
                 } else {
-                    Ok(NotIsTupleFact::new(a0, line_file).into())
+                    Ok(runtime.new_not_is_tuple_fact(a0, line_file).into())
                 }
             }
             SUBSET => {
@@ -237,9 +238,9 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if positive_polarity {
-                    Ok(SubsetFact::new(a0, a1, line_file).into())
+                    Ok(runtime.new_subset_fact(a0, a1, line_file).into())
                 } else {
-                    Ok(NotSubsetFact::new(a0, a1, line_file).into())
+                    Ok(runtime.new_not_subset_fact(a0, a1, line_file).into())
                 }
             }
             SUPERSET => {
@@ -254,9 +255,9 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if positive_polarity {
-                    Ok(SupersetFact::new(a0, a1, line_file).into())
+                    Ok(runtime.new_superset_fact(a0, a1, line_file).into())
                 } else {
-                    Ok(NotSupersetFact::new(a0, a1, line_file).into())
+                    Ok(runtime.new_not_superset_fact(a0, a1, line_file).into())
                 }
             }
             FN_EQ_IN => {
@@ -282,7 +283,7 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 let a2 = args.remove(0);
-                Ok(FnEqualInFact::new(a0, a1, a2, line_file).into())
+                Ok(runtime.new_fn_equal_in_fact(a0, a1, a2, line_file).into())
             }
             FN_EQ => {
                 if !positive_polarity {
@@ -306,13 +307,17 @@ impl AtomicFact {
                 let mut args = args;
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
-                Ok(FnEqualFact::new(a0, a1, line_file).into())
+                Ok(runtime.new_fn_equal_fact(a0, a1, line_file).into())
             }
             _ => {
                 if positive_polarity {
-                    Ok(NormalAtomicFact::new(prop_name, args, line_file).into())
+                    Ok(runtime
+                        .new_normal_atomic_fact(prop_name, args, line_file)
+                        .into())
                 } else {
-                    Ok(NotNormalAtomicFact::new(prop_name, args, line_file).into())
+                    Ok(runtime
+                        .new_not_normal_atomic_fact(prop_name, args, line_file)
+                        .into())
                 }
             }
         }

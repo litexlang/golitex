@@ -263,7 +263,7 @@ impl ExecEnv {
         stored_forall_conclusion_reference: Rc<StoredForallConclusionReference>,
     ) -> Result<(), RuntimeError> {
         for (component_index, fact) in chain_fact
-            .facts()
+            .facts(&Runtime::default())
             .map_err(RuntimeError::wrap_new_fact_as_store_conflict)?
             .into_iter()
             .enumerate()
@@ -391,7 +391,7 @@ impl ExecEnv {
         source_fact_id: FactId,
     ) -> Result<(), RuntimeError> {
         let (forall_then_implies_iff, forall_iff_implies_then) =
-            forall_fact_with_iff.to_two_forall_facts()?;
+            forall_fact_with_iff.to_two_forall_facts(&Runtime::default())?;
         self.store_forall_fact(Rc::new(forall_then_implies_iff), source_fact_id)?;
         self.store_forall_fact(Rc::new(forall_iff_implies_then), source_fact_id)?;
         Ok(())
@@ -431,10 +431,7 @@ impl ExecEnv {
         }
     }
 
-    pub fn store_exist_fact_by_ref(
-        &mut self,
-        exist_fact: &ExistFact,
-    ) -> Result<(), RuntimeError> {
+    pub fn store_exist_fact_by_ref(&mut self, exist_fact: &ExistFact) -> Result<(), RuntimeError> {
         self.store_exist_fact(exist_fact.clone())
     }
 
@@ -478,7 +475,7 @@ impl ExecEnv {
 
     fn store_chain_fact(&mut self, chain_fact: ChainFact) -> Result<(), RuntimeError> {
         let atomic_facts = chain_fact
-            .facts_with_order_transitive_closure()
+            .facts_with_order_transitive_closure_with_runtime(&Runtime::default())
             .map_err(RuntimeError::wrap_new_fact_as_store_conflict)?;
         for atomic_fact in atomic_facts {
             self.store_atomic_fact(atomic_fact)?;
@@ -493,9 +490,10 @@ impl ExecEnv {
     pub fn store_equality(&mut self, equality: &EqualFact) -> Result<(), RuntimeError> {
         self.facts.known_equality.store(equality);
 
-        if let Some(derived) =
-            super::equality_linear_derive::maybe_derived_linear_equal_fact(equality)
-        {
+        if let Some(derived) = super::equality_linear_derive::maybe_derived_linear_equal_fact(
+            &Runtime::default(),
+            equality,
+        ) {
             if obj_equality_key(&derived.left) != obj_equality_key(&derived.right) {
                 self.store_equality(&derived)?;
             }

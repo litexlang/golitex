@@ -98,8 +98,10 @@ impl StmtResultToLeanCompiler {
             for binding in &group.params {
                 let object: Obj =
                     Identifier::new_bound(binding.name().to_string(), binding.as_ref()).into();
-                let membership: Fact =
-                    InFact::new(object, carrier.clone(), result.statement.line_file.clone()).into();
+                let membership: Fact = self
+                    .runtime
+                    .new_in_fact(object, carrier.clone(), result.statement.line_file.clone())
+                    .into();
                 parameters.push((binding, carrier, membership));
             }
         }

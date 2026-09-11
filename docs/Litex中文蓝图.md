@@ -31,13 +31,11 @@ Litex 定位四层检查（写作时逐层核对；面向不同受众可以调�
 - [2. 事实导向：把“什么成立”写进源码](#fact-oriented)
 - [3. 自下而上：让已证明的事实推动后续证明](#bottom-up)
 - [4. 每句话都留下什么：可检查知识记录](#execution-model)
-  - [小结：Litex 与 Naproche——相近目标，不同核心接口](#summary-litex-and-naproche)
-- [5. Human–AI–Litex skill：组织知识生产](#interaction-loop)
-  - [小结：事实导向与自下而上的闭环优势](#summary-fact-oriented-bottom-up-loop)
-- [6. 从可检查知识记录到 Lean/Mathlib](#compatibility)
-  - [小结：自下而上与自上而下互补](#summary-bottom-up-and-top-down)
+- [5. 人类-AI-Litex 循环工作流构建](#interaction-loop)
+- [6. Litex代码如何编译成Lean代码，并与Mathlib兼容](#compatibility)
+  - [个人思考：Litex补齐了AI推理的范式缺口？](#summary-bottom-up-and-top-down)
 - [7. 从语言到生态：Litex 想扮演什么角色](#ecosystem-role)
-- [8. 超越对唯一最佳语言的追寻](#conclusions)
+- [8. 追寻与众不同的艺术](#conclusions)
   - [特别感谢](#special-thanks)
 
 <a id="overview"></a>
@@ -46,20 +44,82 @@ Litex 定位四层检查（写作时逐层核对；面向不同受众可以调�
 
 AI 正在推动全人类进入“推理丰盈”的时代：答案和证明可以大规模生成，但大模型输出本身并不自动具备可信性、可解释性，也不必然促进人类理解。以数学为例，正如[陶哲轩在 2026 年 ICM 的公开讲演](https://www.youtube.com/watch?v=M0--ZH1lOzg)中所说，数学的未来需要从关注证明生成，转向证明的验证、阐释与消化。更普遍的问题是：如何将 AI 生成的推理转化为可检查、可理解、可复用的共同知识？这一问题不仅关乎数学，也关乎未来所有行业的知识生产。若能解决，人类才能更可靠地理解和利用 AI 的推理，形成真正有效的人机协同，并为新科学理论的产生创造条件。
 
-*自然语言便于理解，却难以保证严格验证；形式化代码能够验证，却常常难以理解。Litex本身是这样的科学（数学问题），它探索的是连接自然语言和可信推理的形式化语言：让源代码接近自然的数学表达，同时反馈清晰、结构化的验证流，使用户看懂每一步的作用及其数学依赖关系。*
+*自然语言便于理解，却难以保证严格验证；形式化代码能够验证，却常常难以理解。Litex本身是这样的科学（数学问题），它想要实现的是连接自然语言和可信推理的形式化语言：它接近自然的数学表达，同时反馈清晰、结构化的验证流，使用户看懂每一步的作用及其数学依赖关系。*
 
-Litex 是一门小而易读、事实导向的形式化语言，把数学推理写成可检查、可追踪的数学语句；同时让 Litex 对定义、验证和修复的处理过程保持可读、可追踪、可修复，使用户能够看懂 Litex 在做什么，并参与人类、AI 与 Litex 的共同闭环。原理上，任何 Litex 代码都能编译成 Lean，并接入 Lean/Mathlib 生态，Litex到Lean的编译器预计2026年底完成。**Litex 不只是为形式化专家而创造的工具，它的目标更是让更多人成为形式化专家。Litex同时还是一个Math For AI的工作。**
+*Litex是一门易学易用的形式化语言。它以集合论为基础，自下而上构建证明流，并把人类、AI 与验证器放进同一个闭环：人类给出数学意图，AI 提出或修复下一条事实，Litex 检查并返回依据或停止位置，由此循环积累可检查的数学知识。原理上，任何 Litex 代码都能编译成 Lean，并接入 Lean/Mathlib 生态，Litex到Lean的编译器预计2026年底完成。*
 
-> 主流形式化语言，如Lean，是一门优雅的形式化语言。可以说，没有它，AI For Math不可能发展如此迅猛，“数学的工程化”根本无从谈起。不论AI如何发展，能掌握Lean和类型论的人都会是少数人，因为它对数学背景的要求很高。科学史已无数次证明，对同一问题的全新视角下的解答，经常会极大推动原有领域发展，甚至催生新学科的诞生。
+<details>
+<summary><strong>站在 Lean 的肩膀上</strong></summary>
 
-全文沿四个相连问题展开：用户看见什么，源码保存什么，推理如何继续，结果如何独立复核。
+以 Lean 为代表的现代形式化语言，为 AI for Math 和“数学的工程化”奠定了不可替代的基础。然而，无论 AI 如何发展，能够熟练掌握 Lean、类型论及其工程体系的人，仍可能只是少数。Litex 并非试图取代 Lean，而是探索另一种形式化视角：让更多人能够直接书写、检查和理解严格的数学知识。
 
-1. **集合论对象**：用户先看见集合、元素、函数和关系，而非先管理承载类型。
-2. **事实中心**：源码写“什么成立”；检查器寻找依据并检查良定义性。
-3. **自下而上积累**：通过的事实进入上下文，供后续推理使用；这只是默认方向。
-4. **Lean 复核**：已覆盖路径可翻译为 Lean 证明对象并由其内核检查；目前覆盖仍不完整。
+科学史反复表明，从全新的出发点重新审视已有问题，往往能够推动原有领域发展，甚至孕育新的学科。进入 AI 时代，复杂问题不断涌现，人们也越来越需要可信、可扩展且可解释的推理。在这一过程中，形式化方法将扮演越来越重要的角色。因此，多一种像 Litex 这样的探索，本身就是有价值的。
 
-全文通过比较 Litex 与 Lean 的写法，展示四项设计如何降低理解成本。如果您是Lean用户，可以先粗略地把Litex和Lean的默认流程理解成：
+下面直接放三组来自[代表性 Lean–Litex 示例对照](Representative_Lean_Litex_Example_Comparisons.md)的代码。为保持表格简洁，Lean 示例省略了 `import` 行。它们比较的是默认接口，不是证明长短，也不声称两种语言的能力边界完全相同：
+
+<table>
+<thead>
+<tr><th>Litex 示例</th><th>Lean 示例</th></tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>直接事实：已知 x = 2</strong><pre><code>forall x R:
+    x = 2
+    =&gt;:
+        x + 1 = 3
+        x^2 = 4</code></pre></td>
+<td><strong>同一事实</strong><pre><code>example (x : ℝ) (h : x = 2) :
+    x + 1 = 3 ∧ x ^ 2 = 4 := by
+  have h_add : x + 1 = 3 := by
+    rw [h]
+    norm_num
+  have h_square : x ^ 2 = 4 := by
+    rw [h]
+    norm_num
+  exact ⟨h_add, h_square⟩</code></pre></td>
+</tr>
+<tr>
+<td><strong>带条件的函数定义域</strong><pre><code>forall x {y R: y &gt; 0}:
+    x &gt; 0
+
+have fn positive_successor(x R: x &gt; 0) R = x + 1
+
+positive_successor(1) = 2</code></pre></td>
+<td><strong>用 subtype 携带条件</strong><pre><code>def positiveSuccessor
+    (x : {y : ℝ // y &gt; 0}) : ℝ := x.val + 1
+
+example : positiveSuccessor ⟨1, by norm_num⟩ = 2 := by
+  norm_num [positiveSuccessor]</code></pre></td>
+</tr>
+<tr>
+<td><strong>交集保持子集关系</strong><pre><code>forall s, t, u set:
+    s $subset t
+    =&gt;:
+        intersect(s, u) $subset intersect(t, u)</code></pre></td>
+<td><strong>展开集合定义并逐点证明</strong><pre><code>example {alpha : Type*} (s t u : Set alpha) (h : s ⊆ t) :
+    s ∩ u ⊆ t ∩ u := by
+  rw [subset_def, inter_def, inter_def]
+  rw [subset_def] at h
+  simp only [mem_setOf]
+  rintro x ⟨xs, xu⟩
+  exact ⟨h _ xs, xu⟩</code></pre></td>
+</tr>
+</tbody>
+</table>
+
+</details>
+
+**Litex 不只是为形式化专家而创造的工具，它的目标更是让更多人成为形式化专家，让Math For AI成为可能。**
+
+全文沿五个相连的问题展开：用户看见什么，源码保存什么，推理如何积累，证明过程如何呈现，结果如何独立复核。
+
+1. **集合论对象**：用户直接看见集合、元素、函数和关系，而不必先管理抽象的承载类型。
+2. **事实中心**：源码记录“什么成立”；检查器负责寻找依据，并检查相关对象和表达式是否良定义。
+3. **自下而上积累**：每个通过验证的事实都会进入上下文，供后续推理使用；这是默认的推理方向。
+4. **可追溯的证明流**：系统整理并输出从定义、前提到结论的前后依赖关系，使整个证明过程成为可阅读、可检查、可复用的结构化信息；出错时指出失败发生在哪里。
+5. **Lean 复核**：已有覆盖路径可以翻译为 Lean 证明对象，并交由 Lean 内核独立检查；目前覆盖范围仍不完整。
+
+全文通过比较 Litex 与 Lean 的写法，展示五项设计如何降低理解成本。如果您是Lean用户，可以先粗略地把Litex和Lean的默认流程理解成：
 
 ```text
 Lean：命题 → 证明目标 → 证明指令与细化 → 证明对象 → 内核检查
@@ -1359,9 +1419,14 @@ Litex因此可以视作Lean的一个更可读的，更容易理解的前端语�
 
 当然，Litex现阶段更像是处于 `proof of an idea` 的阶段。即便它本身已经有几十万行代码，它在行业上下游中的探索仍然稀缺。这也是Litex下一阶段会着重关注的：如何让从0到1的原始创新，成为从1到10的早期价值兑现。对Litex感兴趣的朋友可以联系 litexlang@outlook.com 。
 
-> 在数学之外，Litex 更希望探索形式化语言在真实知识工作中的入口：从 AI 安全、金融风控、精密软件工程，到物理化学、医疗、法律和工程。它希望用简单的语法表达对象、关系、条件与规则，再用清晰的验证反馈帮助人理解依据、发现冲突、修正错误。这样，形式化就不再只是少数专家证明定理的工具，也可以成为更多人整理知识、审查规则、协作设计和约束 AI 的工作方式。Litex 希望从数学出发，但不止于数学。
+<details>
+<summary><strong>Litex的生态位</strong></summary>
 
-<a id="reasoning-direction"></a>
+编程语言很少凭空流行。它们通常诞生于新的技术能力与新的社会需求交汇之处：Fortran 伴随大型机计算能力和高性能计算需求出现，C 与 Unix 的系统编程需求彼此塑造，JavaScript 与 Java 随互联网时代的前端和后端开发普及，Python 和 CUDA 则分别回应了 AI 框架快速迭代与底层高性能计算的需要。Lean 的新一轮发展，也与 AI for Math 对可靠形式化的需求高度重合。
+
+Litex 想寻找的，正是下一个由 AI 时代催生、目前还难以准确命名的场景。AI 将持续生成大量候选推理，新的知识工作也会因此需要更低成本的检查、解释、组织和复用。我相信这样的场景应该会很快出现。
+
+</details>
 
 <a id="conclusions"></a>
 

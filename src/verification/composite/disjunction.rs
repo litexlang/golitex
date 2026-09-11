@@ -38,6 +38,7 @@ fn order_split_or_real_line_operands(a: &AtomicFact, b: &AtomicFact) -> Option<(
 }
 
 fn equality_and_strict_order_need_weak_bound(
+    runtime: &Runtime,
     equality: &AtomicFact,
     strict: &AtomicFact,
 ) -> Option<AtomicFact> {
@@ -51,7 +52,11 @@ fn equality_and_strict_order_need_weak_bound(
                 || (objs_match_for_pattern(&eq.left, &g.right)
                     && objs_match_for_pattern(&eq.right, &g.left)) =>
         {
-            Some(GreaterEqualFact::new(g.left.clone(), g.right.clone(), g.line_file.clone()).into())
+            Some(
+                runtime
+                    .new_greater_equal_fact(g.left.clone(), g.right.clone(), g.line_file.clone())
+                    .into(),
+            )
         }
         AtomicFact::LessFact(l)
             if (objs_match_for_pattern(&eq.left, &l.left)
@@ -59,7 +64,11 @@ fn equality_and_strict_order_need_weak_bound(
                 || (objs_match_for_pattern(&eq.left, &l.right)
                     && objs_match_for_pattern(&eq.right, &l.left)) =>
         {
-            Some(LessEqualFact::new(l.left.clone(), l.right.clone(), l.line_file.clone()).into())
+            Some(
+                runtime
+                    .new_less_equal_fact(l.left.clone(), l.right.clone(), l.line_file.clone())
+                    .into(),
+            )
         }
         _ => None,
     }
@@ -391,6 +400,7 @@ fn nonzero_operand_from_atomic_fact_for_square_sum_or_builtin(atomic: &AtomicFac
 }
 
 fn square_pow_sum_not_equal_zero_fact_for_or_builtin(
+    runtime: &Runtime,
     left_base: Obj,
     right_base: Obj,
     line_file: LineFile,
@@ -400,10 +410,13 @@ fn square_pow_sum_not_equal_zero_fact_for_or_builtin(
     let left_square: Obj = Pow::new(left_base, two_obj.clone()).into();
     let right_square: Obj = Pow::new(right_base, two_obj).into();
     let square_sum: Obj = Add::new(left_square, right_square).into();
-    NotEqualFact::new(square_sum, zero_obj, line_file).into()
+    runtime
+        .new_not_equal_fact(square_sum, zero_obj, line_file)
+        .into()
 }
 
 fn square_mul_sum_not_equal_zero_fact_for_or_builtin(
+    runtime: &Runtime,
     left_base: Obj,
     right_base: Obj,
     line_file: LineFile,
@@ -412,7 +425,9 @@ fn square_mul_sum_not_equal_zero_fact_for_or_builtin(
     let left_square: Obj = Mul::new(left_base.clone(), left_base).into();
     let right_square: Obj = Mul::new(right_base.clone(), right_base).into();
     let square_sum: Obj = Add::new(left_square, right_square).into();
-    NotEqualFact::new(square_sum, zero_obj, line_file).into()
+    runtime
+        .new_not_equal_fact(square_sum, zero_obj, line_file)
+        .into()
 }
 
 impl Runtime {
@@ -453,7 +468,7 @@ impl Runtime {
                 AndChainAtomicFact::AtomicFact(second_atomic),
             ) = (&or_fact.facts[0], &or_fact.facts[1])
             {
-                if let Ok(negated_first) = first_atomic.logical_negation() {
+                if let Ok(negated_first) = first_atomic.logical_negation_with_runtime(self) {
                     if negated_first.to_string() == second_atomic.to_string() {
                         return Ok(
                             (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -488,9 +503,14 @@ impl Runtime {
                     }
                 }
                 if let Some(weak_bound) =
-                    equality_and_strict_order_need_weak_bound(first_atomic, second_atomic).or_else(
-                        || equality_and_strict_order_need_weak_bound(second_atomic, first_atomic),
-                    )
+                    equality_and_strict_order_need_weak_bound(self, first_atomic, second_atomic)
+                        .or_else(|| {
+                            equality_and_strict_order_need_weak_bound(
+                                self,
+                                second_atomic,
+                                first_atomic,
+                            )
+                        })
                 {
                     let weak_result = self
                         .verify_atomic_fact_restricted_known_builtin(&weak_bound, verify_state)?;
@@ -624,7 +644,8 @@ impl Runtime {
         for (disjunction_branch, conclusion) in
             [(first_atomic, second_atomic), (second_atomic, first_atomic)]
         {
-            let Ok(assumed_opposite) = disjunction_branch.logical_negation() else {
+            let Ok(assumed_opposite) = disjunction_branch.logical_negation_with_runtime(self)
+            else {
                 continue;
             };
             let conclusion_result =
@@ -671,9 +692,11 @@ impl Runtime {
         let line_file = or_fact.line_file.clone();
         let z_set: Obj = StandardSet::Z.into();
         let prerequisites: Vec<AtomicFact> = vec![
-            InFact::new(subject.clone(), z_set.clone(), line_file.clone()).into(),
-            InFact::new(base.clone(), z_set, line_file.clone()).into(),
-            GreaterEqualFact::new(subject, base, line_file).into(),
+            self.new_in_fact(subject.clone(), z_set.clone(), line_file.clone())
+                .into(),
+            self.new_in_fact(base.clone(), z_set, line_file.clone())
+                .into(),
+            self.new_greater_equal_fact(subject, base, line_file).into(),
         ];
         let mut steps = Vec::with_capacity(prerequisites.len());
         for prerequisite in prerequisites {
@@ -744,7 +767,7 @@ impl Runtime {
             Mul::new(second_factor.clone(), first_factor.clone()).into(),
         ] {
             let product_zero_result = self.try_verify_known_equality_fact_candidate(
-                &EqualFact::new_from_refs(&product, &zero, line_file.clone()),
+                &self.new_equal_fact_from_refs(&product, &zero, line_file.clone()),
                 verify_state,
             )?;
             if let Some(product_zero_result) = product_zero_result {
@@ -796,21 +819,29 @@ impl Runtime {
         let line_file = or_fact.line_file.clone();
         let candidates = vec![
             square_pow_sum_not_equal_zero_fact_for_or_builtin(
+                self,
                 first_base.clone(),
                 second_base.clone(),
                 line_file.clone(),
             ),
             square_pow_sum_not_equal_zero_fact_for_or_builtin(
+                self,
                 second_base.clone(),
                 first_base.clone(),
                 line_file.clone(),
             ),
             square_mul_sum_not_equal_zero_fact_for_or_builtin(
+                self,
                 first_base.clone(),
                 second_base.clone(),
                 line_file.clone(),
             ),
-            square_mul_sum_not_equal_zero_fact_for_or_builtin(second_base, first_base, line_file),
+            square_mul_sum_not_equal_zero_fact_for_or_builtin(
+                self,
+                second_base,
+                first_base,
+                line_file,
+            ),
         ];
 
         for candidate in candidates {

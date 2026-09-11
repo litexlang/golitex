@@ -135,6 +135,7 @@ impl StmtResultToLeanCompiler {
                 return Err("structural set equality unexpectedly gained child Results".into());
             }
             return Ok(Some(render_structural_set_equality(
+                &self.runtime,
                 target,
                 compilation_kind,
                 &self.environment_stack,

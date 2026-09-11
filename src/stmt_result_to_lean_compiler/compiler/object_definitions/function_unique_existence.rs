@@ -61,28 +61,31 @@ impl StmtResultToLeanCompiler {
         ) {
             return Ok(false);
         }
-        let source_parameter_facts = result
-            .statement
-            .forall
-            .typed_parameters
-            .groups
-            .iter()
-            .flat_map(|group| {
-                let parameter_set = match &group.param_type {
-                    ParamType::Obj(set) => Some(set),
-                    _ => None,
-                };
-                group.params.iter().filter_map(move |parameter| {
-                    parameter_set.map(|set| {
-                        Fact::from(InFact::new(
-                            obj_for_bound_param_in_scope(parameter),
-                            set.clone(),
-                            result.statement.line_file.clone(),
-                        ))
+        let source_parameter_facts = {
+            let runtime = &self.runtime;
+            result
+                .statement
+                .forall
+                .typed_parameters
+                .groups
+                .iter()
+                .flat_map(|group| {
+                    let parameter_set = match &group.param_type {
+                        ParamType::Obj(set) => Some(set),
+                        _ => None,
+                    };
+                    group.params.iter().filter_map(move |parameter| {
+                        parameter_set.map(|set| {
+                            Fact::from(runtime.new_in_fact(
+                                obj_for_bound_param_in_scope(parameter),
+                                set.clone(),
+                                result.statement.line_file.clone(),
+                            ))
+                        })
                     })
                 })
-            })
-            .collect::<Vec<_>>();
+                .collect::<Vec<_>>()
+        };
         if source_parameter_facts.len() != 1
             || !result.statement.forall.dom_facts.is_empty()
             || !verification.proof_scope.assumption_components.is_empty()
@@ -101,12 +104,14 @@ impl StmtResultToLeanCompiler {
             result.statement.symbol_binding.as_ref(),
         )
         .into();
-        let expected_membership: Fact = InFact::new(
-            function_object,
-            function_set.clone().into(),
-            result.statement.line_file.clone(),
-        )
-        .into();
+        let expected_membership: Fact = self
+            .runtime
+            .new_in_fact(
+                function_object,
+                function_set.clone().into(),
+                result.statement.line_file.clone(),
+            )
+            .into();
         let reconstructed_property: Fact = runtime
             .direct_property_forall_for_have_fn_by_forall_exist_unique(&result.statement)
             .map_err(|error| error.trace_message())?

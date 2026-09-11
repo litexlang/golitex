@@ -63,20 +63,21 @@ impl StmtResultToLeanCompiler {
             let conclusion_fact_id = conclusion.fact_id.ok_or_else(|| {
                 format!("literal cart projection {application_index} has no FactId")
             })?;
-            let (expected_fact, expected_projection, proof) = if application_index == 0 {
-                let rendered_tuple =
-                    render_obj(&source_membership.element, &self.environment_stack)?;
-                (
-                    Fact::from(IsTupleFact::new(
-                        source_membership.element.clone(),
-                        default_line_file(),
-                    )),
-                    CartesianMembershipProjectionKind::TupleShape,
-                    format!("Litex.tupleShape_isTuple {rendered_tuple}"),
-                )
-            } else if application_index == 1 {
-                (
-                    Fact::from(EqualFact::new(
+            let (expected_fact, expected_projection, proof) =
+                if application_index == 0 {
+                    let rendered_tuple =
+                        render_obj(&source_membership.element, &self.environment_stack)?;
+                    (
+                        Fact::from(self.runtime.new_is_tuple_fact(
+                            source_membership.element.clone(),
+                            default_line_file(),
+                        )),
+                        CartesianMembershipProjectionKind::TupleShape,
+                        format!("Litex.tupleShape_isTuple {rendered_tuple}"),
+                    )
+                } else if application_index == 1 {
+                    (
+                    Fact::from(self.runtime.new_equal_fact(
                         TupleDim::new(source_membership.element.clone()).into(),
                         Number::new(coordinate_count.to_string()).into(),
                         default_line_file(),
@@ -85,16 +86,16 @@ impl StmtResultToLeanCompiler {
                     "Litex.Same.ofEq (by norm_num [Litex.tupleDim, Litex.TupleShape.dimension])"
                         .to_string(),
                 )
-            } else {
-                let coordinate_index = application_index - 2;
-                (
-                    evidence.expected_coordinate_memberships[coordinate_index].clone(),
-                    CartesianMembershipProjectionKind::Coordinate {
-                        index: coordinate_index,
-                    },
-                    coordinate_proofs[coordinate_index].clone(),
-                )
-            };
+                } else {
+                    let coordinate_index = application_index - 2;
+                    (
+                        evidence.expected_coordinate_memberships[coordinate_index].clone(),
+                        CartesianMembershipProjectionKind::Coordinate {
+                            index: coordinate_index,
+                        },
+                        coordinate_proofs[coordinate_index].clone(),
+                    )
+                };
             let InferRule::CartesianMembershipProjection(rule) = &application.rule else {
                 return Err(format!(
                     "literal cart projection {application_index} lost its typed rule"

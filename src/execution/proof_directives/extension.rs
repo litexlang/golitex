@@ -50,12 +50,13 @@ impl Runtime {
 
             let unused_name = rt.generate_random_unused_name();
 
-            let left_to_right_subset_fact: AtomicFact = SubsetFact::new(
-                stmt.left.clone(),
-                stmt.right.clone(),
-                stmt.line_file.clone(),
-            )
-            .into();
+            let left_to_right_subset_fact: AtomicFact = rt
+                .new_subset_fact(
+                    stmt.left.clone(),
+                    stmt.right.clone(),
+                    stmt.line_file.clone(),
+                )
+                .into();
             let left_to_right_subset_result = rt.verify_atomic_fact_restricted_known_builtin(
                 &left_to_right_subset_fact,
                 &VerifyState::initial(),
@@ -65,18 +66,20 @@ impl Runtime {
                 vec![unused_name.clone()],
                 ParamType::Obj(stmt.left.clone()),
             )?;
-            let left_to_right_forall_fact = ForallFact::new_canonical_forall(
-                TypedParameterList::new(vec![left_to_right_param.clone()]),
-                vec![],
-                vec![InFact::new(
-                    obj_for_bound_param_in_scope(&left_to_right_param.params[0]),
-                    stmt.right.clone(),
+            let left_to_right_forall_fact = rt
+                .new_forall_fact(
+                    TypedParameterList::new(vec![left_to_right_param.clone()]),
+                    vec![],
+                    vec![rt
+                        .new_in_fact(
+                            obj_for_bound_param_in_scope(&left_to_right_param.params[0]),
+                            stmt.right.clone(),
+                            stmt.line_file.clone(),
+                        )
+                        .into()],
                     stmt.line_file.clone(),
-                )
-                .into()],
-                stmt.line_file.clone(),
-            )?
-            .into();
+                )?
+                .into();
             let left_to_right_result = if left_to_right_subset_result.is_success() {
                 left_to_right_subset_result
             } else {
@@ -94,12 +97,13 @@ impl Runtime {
                     })?
             };
 
-            let right_to_left_subset_fact: AtomicFact = SubsetFact::new(
-                stmt.right.clone(),
-                stmt.left.clone(),
-                stmt.line_file.clone(),
-            )
-            .into();
+            let right_to_left_subset_fact: AtomicFact = rt
+                .new_subset_fact(
+                    stmt.right.clone(),
+                    stmt.left.clone(),
+                    stmt.line_file.clone(),
+                )
+                .into();
             let right_to_left_subset_result = rt.verify_atomic_fact_restricted_known_builtin(
                 &right_to_left_subset_fact,
                 &VerifyState::initial(),
@@ -109,18 +113,20 @@ impl Runtime {
                 vec![unused_name.clone()],
                 ParamType::Obj(stmt.right.clone()),
             )?;
-            let right_to_left_forall_fact = ForallFact::new_canonical_forall(
-                TypedParameterList::new(vec![right_to_left_param.clone()]),
-                vec![],
-                vec![InFact::new(
-                    obj_for_bound_param_in_scope(&right_to_left_param.params[0]),
-                    stmt.left.clone(),
+            let right_to_left_forall_fact = rt
+                .new_forall_fact(
+                    TypedParameterList::new(vec![right_to_left_param.clone()]),
+                    vec![],
+                    vec![rt
+                        .new_in_fact(
+                            obj_for_bound_param_in_scope(&right_to_left_param.params[0]),
+                            stmt.left.clone(),
+                            stmt.line_file.clone(),
+                        )
+                        .into()],
                     stmt.line_file.clone(),
-                )
-                .into()],
-                stmt.line_file.clone(),
-            )?
-            .into();
+                )?
+                .into();
             let right_to_left_result = if right_to_left_subset_result.is_success() {
                 right_to_left_subset_result
             } else {
@@ -141,7 +147,7 @@ impl Runtime {
         });
         let (proof_steps, left_to_right_check, right_to_left_check) = local_proof_result?;
 
-        let left_equal_to_right_atomic_fact = AtomicFact::EqualFact(EqualFact::new(
+        let left_equal_to_right_atomic_fact = AtomicFact::EqualFact(self.new_equal_fact(
             stmt.left.clone(),
             stmt.right.clone(),
             stmt.line_file.clone(),
@@ -159,34 +165,38 @@ impl Runtime {
             vec!["x".to_string()],
             ParamType::Obj(stmt.left.clone()),
         )?;
-        let left_to_right_subset = ForallFact::new_canonical_forall(
-            TypedParameterList::new(vec![left_to_right_param.clone()]),
-            vec![],
-            vec![InFact::new(
-                obj_for_bound_param_in_scope(&left_to_right_param.params[0]),
-                stmt.right.clone(),
+        let left_to_right_subset = self
+            .new_forall_fact(
+                TypedParameterList::new(vec![left_to_right_param.clone()]),
+                vec![],
+                vec![self
+                    .new_in_fact(
+                        obj_for_bound_param_in_scope(&left_to_right_param.params[0]),
+                        stmt.right.clone(),
+                        stmt.line_file.clone(),
+                    )
+                    .into()],
                 stmt.line_file.clone(),
-            )
-            .into()],
-            stmt.line_file.clone(),
-        )?
-        .to_string();
+            )?
+            .to_string();
         let right_to_left_param = self.fresh_param_group_with_type(
             vec!["x".to_string()],
             ParamType::Obj(stmt.right.clone()),
         )?;
-        let right_to_left_subset = ForallFact::new_canonical_forall(
-            TypedParameterList::new(vec![right_to_left_param.clone()]),
-            vec![],
-            vec![InFact::new(
-                obj_for_bound_param_in_scope(&right_to_left_param.params[0]),
-                stmt.left.clone(),
+        let right_to_left_subset = self
+            .new_forall_fact(
+                TypedParameterList::new(vec![right_to_left_param.clone()]),
+                vec![],
+                vec![self
+                    .new_in_fact(
+                        obj_for_bound_param_in_scope(&right_to_left_param.params[0]),
+                        stmt.left.clone(),
+                        stmt.line_file.clone(),
+                    )
+                    .into()],
                 stmt.line_file.clone(),
-            )
-            .into()],
-            stmt.line_file.clone(),
-        )?
-        .to_string();
+            )?
+            .to_string();
         let by_verification = SuccessVerifyByExtensionResult::new(
             stmt.left.to_string(),
             stmt.right.to_string(),
@@ -212,12 +222,13 @@ impl Runtime {
         &mut self,
         stmt: &ByExtensionStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let equality_fact: Fact = EqualFact::new(
-            stmt.left.clone(),
-            stmt.right.clone(),
-            stmt.line_file.clone(),
-        )
-        .into();
+        let equality_fact: Fact = self
+            .new_equal_fact(
+                stmt.left.clone(),
+                stmt.right.clone(),
+                stmt.line_file.clone(),
+            )
+            .into();
         let infer_result = self.store_fact_with_trust_and_infer_with_reason(
             equality_fact,
             InferReason::StatementWithVerification,

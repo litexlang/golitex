@@ -34,12 +34,13 @@ impl Runtime {
         else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
-        let set_goal: AtomicFact = EqualFact::new(
-            left.set.as_ref().clone(),
-            right.set.as_ref().clone(),
-            fact.line_file.clone(),
-        )
-        .into();
+        let set_goal: AtomicFact = self
+            .new_equal_fact(
+                left.set.as_ref().clone(),
+                right.set.as_ref().clone(),
+                fact.line_file.clone(),
+            )
+            .into();
         let set_result = self.verify_builtin_strategy_child(&set_goal, verify_state)?;
         if !set_result.is_success() {
             return Ok(UnknownGenericStmtResult::new().into());
@@ -55,8 +56,9 @@ impl Runtime {
         else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
-        let pointwise_goal: AtomicFact =
-            EqualFact::new(left_at_x, right_at_x, fact.line_file.clone()).into();
+        let pointwise_goal: AtomicFact = self
+            .new_equal_fact(left_at_x, right_at_x, fact.line_file.clone())
+            .into();
         let pointwise_result =
             self.run_in_local_verification_env(verify_state, |rt, local_verify_state| {
                 let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
@@ -101,13 +103,13 @@ impl Runtime {
         }
 
         let required: [AtomicFact; 2] = [
-            LessEqualFact::new(
+            self.new_less_equal_fact(
                 fact.left.clone(),
                 fact.right.clone(),
                 fact.line_file.clone(),
             )
             .into(),
-            LessEqualFact::new(
+            self.new_less_equal_fact(
                 fact.right.clone(),
                 fact.left.clone(),
                 fact.line_file.clone(),
@@ -149,7 +151,7 @@ impl Runtime {
             return Ok(UnknownGenericStmtResult::new().into());
         };
 
-        let modulus_goal = EqualFact::new(
+        let modulus_goal = self.new_equal_fact(
             left_mod.right.as_ref().clone(),
             right_mod.right.as_ref().clone(),
             fact.line_file.clone(),
@@ -191,7 +193,7 @@ impl Runtime {
             Mod::new(obj.clone(), modulus.clone()).into()
         };
         for (left, right) in pairs {
-            let child = EqualFact::new(
+            let child = self.new_equal_fact(
                 residue(left, left_mod.right.as_ref()),
                 residue(right, right_mod.right.as_ref()),
                 fact.line_file.clone(),

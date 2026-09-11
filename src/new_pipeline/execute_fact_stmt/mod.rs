@@ -6,7 +6,6 @@
 //! the new implementation grow without creating two active implementations of
 //! the same `Runtime` methods.
 
-pub mod runtime_ids;
 pub mod verify_state;
 
 pub use crate::environment::Environment;
@@ -15,6 +14,4 @@ pub use crate::fact::{
     NotForallFact, OrFact, PlainExistFact,
 };
 pub use crate::runtime::Runtime;
-pub use runtime_ids::{FactId, PropAlgebraicPropertyId2, WellDefinednessId2};
 pub use verify_state::VerifyState2;
-

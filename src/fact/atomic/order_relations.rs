@@ -67,6 +67,7 @@ pub struct NotGreaterEqualFact {
 }
 
 impl LessFact {
+    #[cfg(test)]
     #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         LessFact {
@@ -79,6 +80,7 @@ impl LessFact {
 }
 
 impl NotLessFact {
+    #[cfg(test)]
     #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         NotLessFact {
@@ -91,6 +93,7 @@ impl NotLessFact {
 }
 
 impl GreaterFact {
+    #[cfg(test)]
     #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         GreaterFact {
@@ -103,6 +106,7 @@ impl GreaterFact {
 }
 
 impl NotGreaterFact {
+    #[cfg(test)]
     #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         NotGreaterFact {
@@ -115,6 +119,7 @@ impl NotGreaterFact {
 }
 
 impl LessEqualFact {
+    #[cfg(test)]
     #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         LessEqualFact {
@@ -127,6 +132,7 @@ impl LessEqualFact {
 }
 
 impl NotLessEqualFact {
+    #[cfg(test)]
     #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         NotLessEqualFact {
@@ -139,6 +145,7 @@ impl NotLessEqualFact {
 }
 
 impl GreaterEqualFact {
+    #[cfg(test)]
     #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         GreaterEqualFact {
@@ -151,6 +158,7 @@ impl GreaterEqualFact {
 }
 
 impl NotGreaterEqualFact {
+    #[cfg(test)]
     #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         NotGreaterEqualFact {

@@ -61,21 +61,23 @@ impl Runtime {
         if !objs_match_for_pattern(arg, other) {
             return Ok(None);
         }
-        let nonnegative: AtomicFact = LessEqualFact::new(
-            Self::literal_zero_obj_for_abs_builtin(),
-            arg.clone(),
-            line_file.clone(),
-        )
-        .into();
-        let mut nonnegative_result =
-            self.try_verify_atomic_fact_as_builtin_rule_premise(&nonnegative, builtin_state)?;
-        if nonnegative_result.is_none() {
-            let positive: AtomicFact = LessFact::new(
+        let nonnegative: AtomicFact = self
+            .new_less_equal_fact(
                 Self::literal_zero_obj_for_abs_builtin(),
                 arg.clone(),
                 line_file.clone(),
             )
             .into();
+        let mut nonnegative_result =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&nonnegative, builtin_state)?;
+        if nonnegative_result.is_none() {
+            let positive: AtomicFact = self
+                .new_less_fact(
+                    Self::literal_zero_obj_for_abs_builtin(),
+                    arg.clone(),
+                    line_file.clone(),
+                )
+                .into();
             nonnegative_result =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&positive, builtin_state)?;
         }
@@ -109,21 +111,23 @@ impl Runtime {
         if !Self::obj_is_negation_of_for_abs_builtin(other, arg) {
             return Ok(None);
         }
-        let nonpositive: AtomicFact = LessEqualFact::new(
-            arg.clone(),
-            Self::literal_zero_obj_for_abs_builtin(),
-            line_file.clone(),
-        )
-        .into();
-        let mut nonpositive_result =
-            self.try_verify_atomic_fact_as_builtin_rule_premise(&nonpositive, builtin_state)?;
-        if nonpositive_result.is_none() {
-            let negative: AtomicFact = LessFact::new(
+        let nonpositive: AtomicFact = self
+            .new_less_equal_fact(
                 arg.clone(),
                 Self::literal_zero_obj_for_abs_builtin(),
                 line_file.clone(),
             )
             .into();
+        let mut nonpositive_result =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&nonpositive, builtin_state)?;
+        if nonpositive_result.is_none() {
+            let negative: AtomicFact = self
+                .new_less_fact(
+                    arg.clone(),
+                    Self::literal_zero_obj_for_abs_builtin(),
+                    line_file.clone(),
+                )
+                .into();
             nonpositive_result =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&negative, builtin_state)?;
         }
@@ -243,11 +247,9 @@ impl Runtime {
             return Ok(None);
         };
         let abs_arg: Obj = Abs::new(arg.clone()).into();
-        if !self.equal_fact_sides_have_same_known_equality_in_some_env(&EqualFact::new_from_refs(
-            &abs_arg,
-            &zero,
-            equal_fact.line_file.clone(),
-        )) {
+        if !self.equal_fact_sides_have_same_known_equality_in_some_env(
+            &self.new_equal_fact_from_refs(&abs_arg, &zero, equal_fact.line_file.clone()),
+        ) {
             return Ok(None);
         }
         Ok(Some(factual_equal_success_by_builtin_reason(

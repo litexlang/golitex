@@ -4,7 +4,7 @@ use crate::pipeline::run_eval_command;
 use crate::result::{
     StmtResult, SuccessProofBlockStmtResult, SuccessStmtResult, TryStmtExecutionResult,
 };
-use crate::runtime::{RuntimeOptions, Runtime};
+use crate::runtime::{Runtime, RuntimeOptions};
 
 fn runtime_with_source_context(name: &str) -> Runtime {
     let mut runtime = Runtime::default();

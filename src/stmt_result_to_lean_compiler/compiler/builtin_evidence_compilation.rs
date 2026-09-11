@@ -781,7 +781,7 @@ impl StmtResultToLeanCompiler {
                                expected_base_set: StandardSet,
                                branch_index: usize|
          -> Result<(), String> {
-            let components = conjunction_components(branch)?;
+            let components = conjunction_components(&self.runtime, branch)?;
             let [base_component, exponent_component] = components.as_slice() else {
                 return Err(format!(
                     "integer natural-power premise branch {branch_index} changed its component arity"
@@ -920,7 +920,7 @@ impl StmtResultToLeanCompiler {
         let conjunction_result = conjunction_result
             .verified()
             .ok_or_else(|| "integer remainder conjunction child is not factual".to_string())?;
-        let components = conjunction_components(&conjunction_result.fact())?;
+        let components = conjunction_components(&self.runtime, &conjunction_result.fact())?;
         let [left_component, right_component] = components.as_slice() else {
             return Err("integer remainder conjunction changed its component arity".into());
         };
@@ -1167,7 +1167,7 @@ impl StmtResultToLeanCompiler {
         let conjunction_result = conjunction_result
             .verified()
             .ok_or_else(|| "rational power conjunction child is not factual".to_string())?;
-        let components = conjunction_components(&conjunction_result.fact())?;
+        let components = conjunction_components(&self.runtime, &conjunction_result.fact())?;
         let [base_component, exponent_component] = components.as_slice() else {
             return Err("rational power conjunction changed its component arity".into());
         };
@@ -1238,7 +1238,7 @@ impl StmtResultToLeanCompiler {
         let conjunction_result = conjunction_result
             .verified()
             .ok_or_else(|| "binary arithmetic conjunction child is not factual".to_string())?;
-        let components = conjunction_components(&conjunction_result.fact())?;
+        let components = conjunction_components(&self.runtime, &conjunction_result.fact())?;
         let [left_component, right_component] = components.as_slice() else {
             return Err("binary arithmetic conjunction changed its component arity".into());
         };
@@ -1947,7 +1947,7 @@ impl StmtResultToLeanCompiler {
                         "order transitivity carrier child {index} retained an invalid ordered-real subset"
                     ));
                 }
-            } else if let Ok(components) = conjunction_components(&check_fact) {
+            } else if let Ok(components) = conjunction_components(&self.runtime, &check_fact) {
                 if components.is_empty() {
                     return Err(format!(
                         "order transitivity carrier child {index} retained an empty conjunction"

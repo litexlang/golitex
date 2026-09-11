@@ -1,3 +1,4 @@
+use crate::new_pipeline::runtime::runtime_ids::FactId;
 use crate::prelude::*;
 use crate::verify_rewrite::VerifyState2;
 
@@ -49,9 +50,7 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState2,
     ) -> Result<EqualitySearchedProof2, RuntimeError> {
-        if let Some(result) =
-            self.search_equal_fact_proof_by_cache2(fact, verify_state.clone())?
-        {
+        if let Some(result) = self.search_equal_fact_proof_by_cache2(fact, verify_state.clone())? {
             return Ok(EqualitySearchedProof2::ByCache(result));
         }
 
@@ -79,8 +78,8 @@ impl Runtime {
             return Ok(EqualitySearchedProof2::ByKnownForallFact(result));
         }
 
-        if let Some(result) = self
-            .search_equal_fact_proof_by_builtin_algebraic_rewrite2(fact, verify_state.clone())?
+        if let Some(result) =
+            self.search_equal_fact_proof_by_builtin_algebraic_rewrite2(fact, verify_state.clone())?
         {
             return Ok(EqualitySearchedProof2::ByBuiltinAlgebraicRewrite(result));
         }

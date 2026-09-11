@@ -76,11 +76,12 @@ impl Runtime {
                             ) {
                                 continue;
                             }
-                            let nonempty_index: AtomicFact = IsNonemptySetFact::new(
-                                index_intersect.index_set.as_ref().clone(),
-                                equal_fact.line_file.clone(),
-                            )
-                            .into();
+                            let nonempty_index: AtomicFact = self
+                                .new_is_nonempty_set_fact(
+                                    index_intersect.index_set.as_ref().clone(),
+                                    equal_fact.line_file.clone(),
+                                )
+                                .into();
                             let nonempty_result = match index_intersect.index_set.as_ref() {
                                 Obj::ListSet(list) if !list.list.is_empty() => {
                                     let proof: ProveFactResult = SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(

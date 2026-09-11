@@ -63,7 +63,7 @@ impl StmtResultToLeanCompiler {
             &mut visited_well_definedness_results,
         )?;
 
-        let expected_parameter_facts = parameter_group.facts();
+        let expected_parameter_facts = parameter_group.facts(&self.runtime);
         let [expected_parameter_fact] = expected_parameter_facts.as_slice() else {
             return Err("sequence index scope did not produce one parameter fact".into());
         };
@@ -102,12 +102,14 @@ impl StmtResultToLeanCompiler {
         {
             return Err("sequence index inference lost an inferred FactId".into());
         }
-        let expected_positive_index: Fact = LessFact::new(
-            Number::new("0".to_string()).into(),
-            obj_for_bound_param_in_scope(&statement.index_binding),
-            statement.line_file.clone(),
-        )
-        .into();
+        let expected_positive_index: Fact = self
+            .runtime
+            .new_less_fact(
+                Number::new("0".to_string()).into(),
+                obj_for_bound_param_in_scope(&statement.index_binding),
+                statement.line_file.clone(),
+            )
+            .into();
         if parameter_store.inferred_facts.len() != 1
             || parameter_store.inferred_facts[0].to_string() != expected_positive_index.to_string()
         {
@@ -116,12 +118,14 @@ impl StmtResultToLeanCompiler {
 
         let source_body = statement.value.clone();
         let lowered_body = LeanTargetObjectRepresentation::lower(&source_body)?;
-        let expected_return_check: Fact = InFact::new(
-            source_body.clone(),
-            statement.seq_set.set.as_ref().clone(),
-            statement.line_file.clone(),
-        )
-        .into();
+        let expected_return_check: Fact = self
+            .runtime
+            .new_in_fact(
+                source_body.clone(),
+                statement.seq_set.set.as_ref().clone(),
+                statement.line_file.clone(),
+            )
+            .into();
         self.environment_stack.push_inherited_environment();
         let compiled_body: Result<CompiledIndexedFunctionDefinitionBody, String> = (|| {
             self.environment_stack
@@ -221,18 +225,22 @@ impl StmtResultToLeanCompiler {
             statement.symbol_binding.as_ref(),
         )
         .into();
-        let expected_surface_membership: Fact = InFact::new(
-            function_object.clone(),
-            statement.seq_set.clone().into(),
-            statement.line_file.clone(),
-        )
-        .into();
-        let expected_defining_equality: Fact = EqualFact::new(
-            function_object.clone(),
-            anonymous_function.clone().into(),
-            statement.line_file.clone(),
-        )
-        .into();
+        let expected_surface_membership: Fact = self
+            .runtime
+            .new_in_fact(
+                function_object.clone(),
+                statement.seq_set.clone().into(),
+                statement.line_file.clone(),
+            )
+            .into();
+        let expected_defining_equality: Fact = self
+            .runtime
+            .new_equal_fact(
+                function_object.clone(),
+                anonymous_function.clone().into(),
+                statement.line_file.clone(),
+            )
+            .into();
         if surface_membership_store
             .itself_and_why_itself_is_stored
             .0
@@ -413,18 +421,22 @@ impl StmtResultToLeanCompiler {
         else {
             return Err("finite-sequence verification requires two ordered bound checks".into());
         };
-        let expected_positive_bound: Fact = InFact::new(
-            statement.bound.clone(),
-            StandardSet::NPos.into(),
-            statement.line_file.clone(),
-        )
-        .into();
-        let expected_matching_length: Fact = EqualFact::new(
-            statement.bound.clone(),
-            statement.finite_seq_set.n.as_ref().clone(),
-            statement.line_file.clone(),
-        )
-        .into();
+        let expected_positive_bound: Fact = self
+            .runtime
+            .new_in_fact(
+                statement.bound.clone(),
+                StandardSet::NPos.into(),
+                statement.line_file.clone(),
+            )
+            .into();
+        let expected_matching_length: Fact = self
+            .runtime
+            .new_equal_fact(
+                statement.bound.clone(),
+                statement.finite_seq_set.n.as_ref().clone(),
+                statement.line_file.clone(),
+            )
+            .into();
         for (label, checked_result, expected_fact) in [
             (
                 "positive bound",
@@ -454,12 +466,14 @@ impl StmtResultToLeanCompiler {
         }
 
         let index_object = obj_for_bound_param_in_scope(&statement.index_binding);
-        let expected_domain_atomic_fact: AtomicFact = LessEqualFact::new(
-            index_object,
-            statement.bound.clone(),
-            statement.line_file.clone(),
-        )
-        .into();
+        let expected_domain_atomic_fact: AtomicFact = self
+            .runtime
+            .new_less_equal_fact(
+                index_object,
+                statement.bound.clone(),
+                statement.line_file.clone(),
+            )
+            .into();
         let expected_domain_fact: Fact = expected_domain_atomic_fact.clone().into();
         let parameter_group = SetBoundParameterGroup::new(
             vec![statement.index_binding.clone()],
@@ -512,7 +526,7 @@ impl StmtResultToLeanCompiler {
             &mut visited_well_definedness_results,
         )?;
 
-        let expected_parameter_facts = parameter_group.facts();
+        let expected_parameter_facts = parameter_group.facts(&self.runtime);
         let [expected_parameter_fact] = expected_parameter_facts.as_slice() else {
             return Err("finite-sequence index scope did not produce one parameter fact".into());
         };
@@ -558,12 +572,14 @@ impl StmtResultToLeanCompiler {
         {
             return Err("finite-sequence index inference lost an inferred FactId".into());
         }
-        let expected_positive_index: Fact = LessFact::new(
-            Number::new("0".to_string()).into(),
-            obj_for_bound_param_in_scope(&statement.index_binding),
-            statement.line_file.clone(),
-        )
-        .into();
+        let expected_positive_index: Fact = self
+            .runtime
+            .new_less_fact(
+                Number::new("0".to_string()).into(),
+                obj_for_bound_param_in_scope(&statement.index_binding),
+                statement.line_file.clone(),
+            )
+            .into();
         if parameter_store.inferred_facts.len() != 1
             || parameter_store.inferred_facts[0].to_string() != expected_positive_index.to_string()
         {
@@ -585,12 +601,14 @@ impl StmtResultToLeanCompiler {
 
         let source_body = statement.value.clone();
         let lowered_body = LeanTargetObjectRepresentation::lower(&source_body)?;
-        let expected_return_check: Fact = InFact::new(
-            source_body.clone(),
-            statement.finite_seq_set.set.as_ref().clone(),
-            statement.line_file.clone(),
-        )
-        .into();
+        let expected_return_check: Fact = self
+            .runtime
+            .new_in_fact(
+                source_body.clone(),
+                statement.finite_seq_set.set.as_ref().clone(),
+                statement.line_file.clone(),
+            )
+            .into();
         self.environment_stack.push_inherited_environment();
         let compiled_body: Result<CompiledIndexedFunctionDefinitionBody, String> = (|| {
             self.environment_stack
@@ -706,18 +724,22 @@ impl StmtResultToLeanCompiler {
             statement.symbol_binding.as_ref(),
         )
         .into();
-        let expected_surface_membership: Fact = InFact::new(
-            function_object.clone(),
-            statement.finite_seq_set.clone().into(),
-            statement.line_file.clone(),
-        )
-        .into();
-        let expected_defining_equality: Fact = EqualFact::new(
-            function_object.clone(),
-            anonymous_function.clone().into(),
-            statement.line_file.clone(),
-        )
-        .into();
+        let expected_surface_membership: Fact = self
+            .runtime
+            .new_in_fact(
+                function_object.clone(),
+                statement.finite_seq_set.clone().into(),
+                statement.line_file.clone(),
+            )
+            .into();
+        let expected_defining_equality: Fact = self
+            .runtime
+            .new_equal_fact(
+                function_object.clone(),
+                anonymous_function.clone().into(),
+                statement.line_file.clone(),
+            )
+            .into();
         if surface_membership_store
             .itself_and_why_itself_is_stored
             .0

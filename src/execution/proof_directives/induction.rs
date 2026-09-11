@@ -145,19 +145,21 @@ impl Runtime {
             SubstitutionMode::Exact,
             None,
         )?;
-        Ok(ForallFact::new_canonical_forall(
-            TypedParameterList::new(vec![TypedParameterGroup::new(
-                vec![inner],
-                ParamType::Obj(StandardSet::Z.into()),
-            )]),
-            vec![
-                GreaterEqualFact::new(y_obj.clone(), stmt.induc_from.clone(), lf.clone()).into(),
-                LessEqualFact::new(y_obj, n_induc, lf.clone()).into(),
-            ],
-            vec![p_y],
-            lf,
-        )?
-        .into())
+        Ok(self
+            .new_forall_fact(
+                TypedParameterList::new(vec![TypedParameterGroup::new(
+                    vec![inner],
+                    ParamType::Obj(StandardSet::Z.into()),
+                )]),
+                vec![
+                    self.new_greater_equal_fact(y_obj.clone(), stmt.induc_from.clone(), lf.clone())
+                        .into(),
+                    self.new_less_equal_fact(y_obj, n_induc, lf.clone()).into(),
+                ],
+                vec![p_y],
+                lf,
+            )?
+            .into())
     }
 
     /// Step obligation for strong induc: `forall n, n >= m, (forall y, m<=y<=n =>: P(y)) =>: P(n+1)`.
@@ -181,19 +183,22 @@ impl Runtime {
             SubstitutionMode::Exact,
             None,
         )?;
-        let inner_forall: Fact = ForallFact::new_canonical_forall(
-            TypedParameterList::new(vec![TypedParameterGroup::new(
-                vec![inner],
-                ParamType::Obj(StandardSet::Z.into()),
-            )]),
-            vec![
-                GreaterEqualFact::new(y_obj.clone(), stmt.induc_from.clone(), lf.clone()).into(),
-                LessEqualFact::new(y_obj, n_forall.clone(), lf.clone()).into(),
-            ],
-            vec![p_y],
-            lf.clone(),
-        )?
-        .into();
+        let inner_forall: Fact = self
+            .new_forall_fact(
+                TypedParameterList::new(vec![TypedParameterGroup::new(
+                    vec![inner],
+                    ParamType::Obj(StandardSet::Z.into()),
+                )]),
+                vec![
+                    self.new_greater_equal_fact(y_obj.clone(), stmt.induc_from.clone(), lf.clone())
+                        .into(),
+                    self.new_less_equal_fact(y_obj, n_forall.clone(), lf.clone())
+                        .into(),
+                ],
+                vec![p_y],
+                lf.clone(),
+            )?
+            .into();
 
         let param_plus_one_obj =
             Add::new(n_forall.clone(), Number::new("1".to_string()).into()).into();
@@ -206,19 +211,21 @@ impl Runtime {
             None,
         )?;
 
-        Ok(ForallFact::new_canonical_forall(
-            TypedParameterList::new(vec![TypedParameterGroup::new(
-                vec![outer],
-                ParamType::Obj(StandardSet::Z.into()),
-            )]),
-            vec![
-                GreaterEqualFact::new(n_forall, stmt.induc_from.clone(), lf.clone()).into(),
-                inner_forall,
-            ],
-            vec![p_n1],
-            lf,
-        )?
-        .into())
+        Ok(self
+            .new_forall_fact(
+                TypedParameterList::new(vec![TypedParameterGroup::new(
+                    vec![outer],
+                    ParamType::Obj(StandardSet::Z.into()),
+                )]),
+                vec![
+                    self.new_greater_equal_fact(n_forall, stmt.induc_from.clone(), lf.clone())
+                        .into(),
+                    inner_forall,
+                ],
+                vec![p_n1],
+                lf,
+            )?
+            .into())
     }
 
     fn exec_strong_induc_stmt_assume_proof_context(
@@ -240,12 +247,13 @@ impl Runtime {
                 )
             })?;
 
-        let dom_ge: Fact = GreaterEqualFact::new(
-            obj_for_bound_param_in_scope(&stmt.param_binding),
-            stmt.induc_from.clone(),
-            stmt.line_file.clone(),
-        )
-        .into();
+        let dom_ge: Fact = self
+            .new_greater_equal_fact(
+                obj_for_bound_param_in_scope(&stmt.param_binding),
+                stmt.induc_from.clone(),
+                stmt.line_file.clone(),
+            )
+            .into();
         let domain_infers = self
             .store_with_well_defined_verification_and_infer_with_default_verify_state(dom_ge)
             .map_err(|e| {
@@ -309,12 +317,13 @@ impl Runtime {
                 )
             })?;
 
-        let induc_from_in_z_fact = InFact::new(
-            stmt.induc_from.clone(),
-            StandardSet::Z.into(),
-            stmt.line_file.clone(),
-        )
-        .into();
+        let induc_from_in_z_fact = self
+            .new_in_fact(
+                stmt.induc_from.clone(),
+                StandardSet::Z.into(),
+                stmt.line_file.clone(),
+            )
+            .into();
         let verify_induc_from_in_z_result = self
             .verify_atomic_fact(&induc_from_in_z_fact, &VerifyState::initial())
             .map_err(|verify_error| {
@@ -382,12 +391,13 @@ impl Runtime {
                 )
             })?;
 
-        let dom_ge: Fact = GreaterEqualFact::new(
-            obj_for_bound_param_in_scope(&stmt.param_binding),
-            stmt.induc_from.clone(),
-            stmt.line_file.clone(),
-        )
-        .into();
+        let dom_ge: Fact = self
+            .new_greater_equal_fact(
+                obj_for_bound_param_in_scope(&stmt.param_binding),
+                stmt.induc_from.clone(),
+                stmt.line_file.clone(),
+            )
+            .into();
         let domain_infers = self
             .store_with_well_defined_verification_and_infer_with_default_verify_state(dom_ge)
             .map_err(|e| {
@@ -443,21 +453,23 @@ impl Runtime {
                 None,
             )?);
         }
-        Ok(ForallFact::new_canonical_forall(
-            TypedParameterList::new(vec![TypedParameterGroup::new(
-                vec![forall_name],
-                ParamType::Obj(StandardSet::Z.into()),
-            )]),
-            vec![GreaterEqualFact::new(
-                forall_obj,
-                stmt.induc_from.clone(),
+        Ok(self
+            .new_forall_fact(
+                TypedParameterList::new(vec![TypedParameterGroup::new(
+                    vec![forall_name],
+                    ParamType::Obj(StandardSet::Z.into()),
+                )]),
+                vec![self
+                    .new_greater_equal_fact(
+                        forall_obj,
+                        stmt.induc_from.clone(),
+                        stmt.line_file.clone(),
+                    )
+                    .into()],
+                then_facts,
                 stmt.line_file.clone(),
-            )
-            .into()],
-            then_facts,
-            stmt.line_file.clone(),
-        )?
-        .into())
+            )?
+            .into())
     }
 
     fn by_induc_assumptions(
@@ -467,7 +479,7 @@ impl Runtime {
         let param_obj = obj_for_bound_param_in_scope(&stmt.param_binding);
         let base_assumptions = vec![
             (
-                InFact::new(
+                self.new_in_fact(
                     param_obj.clone(),
                     StandardSet::Z.into(),
                     stmt.line_file.clone(),
@@ -476,7 +488,7 @@ impl Runtime {
                 "induction parameter".to_string(),
             ),
             (
-                EqualFact::new(
+                self.new_equal_fact(
                     param_obj.clone(),
                     stmt.induc_from.clone(),
                     stmt.line_file.clone(),
@@ -488,7 +500,7 @@ impl Runtime {
 
         let mut step_assumptions = vec![
             (
-                InFact::new(
+                self.new_in_fact(
                     param_obj.clone(),
                     StandardSet::Z.into(),
                     stmt.line_file.clone(),
@@ -497,7 +509,7 @@ impl Runtime {
                 "induction parameter".to_string(),
             ),
             (
-                GreaterEqualFact::new(
+                self.new_greater_equal_fact(
                     param_obj.clone(),
                     stmt.induc_from.clone(),
                     stmt.line_file.clone(),
@@ -563,12 +575,13 @@ impl Runtime {
                 )
             })?;
 
-        let induc_from_in_z_fact = InFact::new(
-            stmt.induc_from.clone(),
-            StandardSet::Z.into(),
-            stmt.line_file.clone(),
-        )
-        .into();
+        let induc_from_in_z_fact = self
+            .new_in_fact(
+                stmt.induc_from.clone(),
+                StandardSet::Z.into(),
+                stmt.line_file.clone(),
+            )
+            .into();
         let verify_induc_from_in_z_result = self
             .verify_atomic_fact(&induc_from_in_z_fact, &VerifyState::initial())
             .map_err(|verify_error| {
@@ -616,24 +629,25 @@ impl Runtime {
             None,
         )?;
 
-        let corresponding_forall_fact = ForallFact::new_canonical_forall(
-            TypedParameterList::new(vec![TypedParameterGroup::new(
-                vec![forall_names[0].clone()],
-                ParamType::Obj(StandardSet::Z.into()),
-            )]),
-            vec![
-                GreaterEqualFact::new(
-                    forall_bound_param,
-                    stmt.induc_from.clone(),
-                    stmt.line_file.clone(),
-                )
-                .into(),
-                dom_p_fact.to_fact(),
-            ],
-            vec![next_fact_of_induction_step],
-            stmt.line_file.clone(),
-        )?
-        .into();
+        let corresponding_forall_fact = self
+            .new_forall_fact(
+                TypedParameterList::new(vec![TypedParameterGroup::new(
+                    vec![forall_names[0].clone()],
+                    ParamType::Obj(StandardSet::Z.into()),
+                )]),
+                vec![
+                    self.new_greater_equal_fact(
+                        forall_bound_param,
+                        stmt.induc_from.clone(),
+                        stmt.line_file.clone(),
+                    )
+                    .into(),
+                    dom_p_fact.to_fact(),
+                ],
+                vec![next_fact_of_induction_step],
+                stmt.line_file.clone(),
+            )?
+            .into();
 
         let step_check = self
             .verify_fact_or_error(&corresponding_forall_fact, &VerifyState::initial())
@@ -807,14 +821,16 @@ impl Runtime {
             })?;
 
         let param_obj = obj_for_bound_param_in_scope(&stmt.param_binding);
-        let parameter_type_fact: Fact = InFact::new(
-            param_obj.clone(),
-            StandardSet::Z.into(),
-            stmt.line_file.clone(),
-        )
-        .into();
-        let base_eq: Fact =
-            EqualFact::new(param_obj, stmt.induc_from.clone(), stmt.line_file.clone()).into();
+        let parameter_type_fact: Fact = self
+            .new_in_fact(
+                param_obj.clone(),
+                StandardSet::Z.into(),
+                stmt.line_file.clone(),
+            )
+            .into();
+        let base_eq: Fact = self
+            .new_equal_fact(param_obj, stmt.induc_from.clone(), stmt.line_file.clone())
+            .into();
         let base_infers = self
             .store_with_well_defined_verification_and_infer_with_default_verify_state(
                 base_eq.clone(),
@@ -862,18 +878,20 @@ impl Runtime {
         self.attach_known_fact_ids_to_infer_result(&mut infers)?;
 
         let param_obj = obj_for_bound_param_in_scope(&stmt.param_binding);
-        let parameter_type_fact: Fact = InFact::new(
-            param_obj.clone(),
-            StandardSet::Z.into(),
-            stmt.line_file.clone(),
-        )
-        .into();
-        let domain_fact: Fact = GreaterEqualFact::new(
-            param_obj.clone(),
-            stmt.induc_from.clone(),
-            stmt.line_file.clone(),
-        )
-        .into();
+        let parameter_type_fact: Fact = self
+            .new_in_fact(
+                param_obj.clone(),
+                StandardSet::Z.into(),
+                stmt.line_file.clone(),
+            )
+            .into();
+        let domain_fact: Fact = self
+            .new_greater_equal_fact(
+                param_obj.clone(),
+                stmt.induc_from.clone(),
+                stmt.line_file.clone(),
+            )
+            .into();
         let mut assumptions = vec![
             self.structured_induc_assumption_result(
                 parameter_type_fact,
@@ -967,12 +985,13 @@ impl Runtime {
         &mut self,
         stmt: &ByInducStmt,
     ) -> Result<VerifyFactResult, RuntimeError> {
-        let induc_from_in_z_fact = InFact::new(
-            stmt.induc_from.clone(),
-            StandardSet::Z.into(),
-            stmt.line_file.clone(),
-        )
-        .into();
+        let induc_from_in_z_fact = self
+            .new_in_fact(
+                stmt.induc_from.clone(),
+                StandardSet::Z.into(),
+                stmt.line_file.clone(),
+            )
+            .into();
         let verify_result = self
             .verify_atomic_fact(&induc_from_in_z_fact, &VerifyState::initial())
             .map_err(|verify_error| {

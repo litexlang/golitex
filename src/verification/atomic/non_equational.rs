@@ -252,14 +252,17 @@ impl Runtime {
             // Direct known not-equality symmetry is owned by the builtin rule.
             // Keep this full-verifier fallback so a reversed known `forall`
             // conclusion remains available after the bounded builtin attempt.
-            AtomicFact::NotEqualFact(fact) => NotEqualFact::new(
-                fact.right.clone(),
-                fact.left.clone(),
-                fact.line_file.clone(),
-            )
-            .into(),
+            AtomicFact::NotEqualFact(fact) => self
+                .new_not_equal_fact(
+                    fact.right.clone(),
+                    fact.left.clone(),
+                    fact.line_file.clone(),
+                )
+                .into(),
             _ => {
-                let Some(transposed) = atomic_fact.transposed_binary_order_equivalent() else {
+                let Some(transposed) =
+                    atomic_fact.transposed_binary_order_equivalent_with_runtime(self)
+                else {
                     return Ok(result);
                 };
                 transposed
@@ -339,7 +342,7 @@ impl Runtime {
         }
 
         for gather in permutations {
-            let Some(alt) = atomic_fact.symmetric_reordered_args(&gather) else {
+            let Some(alt) = atomic_fact.symmetric_reordered_args_with_runtime(self, &gather) else {
                 continue;
             };
             let alt_result = self.verify_non_equational_atomic_fact(

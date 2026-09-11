@@ -45,20 +45,23 @@ impl Runtime {
         // Every positive common divisor is bounded by the gcd.
         // Example: `d in N+`, `a % d = 0`, `b % d = 0` imply `d <= gcd(a, b)`.
         if let (AtomicFact::LessEqualFact(_), Obj::Gcd(gcd)) = (atomic_fact, &right) {
-            let d_in_n_pos: AtomicFact =
-                InFact::new(left.clone(), StandardSet::NPos.into(), line_file.clone()).into();
-            let left_divisible: AtomicFact = EqualFact::new(
-                Mod::new((*gcd.left).clone(), left.clone()).into(),
-                Number::new("0".to_string()).into(),
-                line_file.clone(),
-            )
-            .into();
-            let right_divisible: AtomicFact = EqualFact::new(
-                Mod::new((*gcd.right).clone(), left.clone()).into(),
-                Number::new("0".to_string()).into(),
-                line_file.clone(),
-            )
-            .into();
+            let d_in_n_pos: AtomicFact = self
+                .new_in_fact(left.clone(), StandardSet::NPos.into(), line_file.clone())
+                .into();
+            let left_divisible: AtomicFact = self
+                .new_equal_fact(
+                    Mod::new((*gcd.left).clone(), left.clone()).into(),
+                    Number::new("0".to_string()).into(),
+                    line_file.clone(),
+                )
+                .into();
+            let right_divisible: AtomicFact = self
+                .new_equal_fact(
+                    Mod::new((*gcd.right).clone(), left.clone()).into(),
+                    Number::new("0".to_string()).into(),
+                    line_file.clone(),
+                )
+                .into();
             if let Some(subgoals) = self.verify_builtin_rule_premises(
                 &[d_in_n_pos, left_divisible, right_divisible],
                 builtin_state,
@@ -312,7 +315,7 @@ impl Runtime {
                 ));
             }
             let equal_result = self.try_verify_known_equality_fact_candidate(
-                &EqualFact::new_from_refs(
+                &self.new_equal_fact_from_refs(
                     &less_equal_fact.left,
                     &less_equal_fact.right,
                     less_equal_fact.line_file.clone(),
@@ -329,12 +332,13 @@ impl Runtime {
                     ),
                 ));
             }
-            let strict_atomic: AtomicFact = LessFact::new(
-                less_equal_fact.left.clone(),
-                less_equal_fact.right.clone(),
-                less_equal_fact.line_file.clone(),
-            )
-            .into();
+            let strict_atomic: AtomicFact = self
+                .new_less_fact(
+                    less_equal_fact.left.clone(),
+                    less_equal_fact.right.clone(),
+                    less_equal_fact.line_file.clone(),
+                )
+                .into();
             let strict_result =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&strict_atomic, builtin_state)?;
             if let Some(strict_result) = strict_result {
@@ -362,7 +366,7 @@ impl Runtime {
                 ));
             }
             let equal_result = self.try_verify_known_equality_fact_candidate(
-                &EqualFact::new_from_refs(
+                &self.new_equal_fact_from_refs(
                     &greater_equal_fact.left,
                     &greater_equal_fact.right,
                     greater_equal_fact.line_file.clone(),
@@ -381,12 +385,13 @@ impl Runtime {
             }
 
             // Strict order implies weak order. Example: from `pi > 0`, prove `pi >= 0`.
-            let strict_atomic: AtomicFact = GreaterFact::new(
-                greater_equal_fact.left.clone(),
-                greater_equal_fact.right.clone(),
-                greater_equal_fact.line_file.clone(),
-            )
-            .into();
+            let strict_atomic: AtomicFact = self
+                .new_greater_fact(
+                    greater_equal_fact.left.clone(),
+                    greater_equal_fact.right.clone(),
+                    greater_equal_fact.line_file.clone(),
+                )
+                .into();
             let strict_result =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&strict_atomic, builtin_state)?;
             if let Some(strict_result) = strict_result {
@@ -409,7 +414,7 @@ impl Runtime {
         &self,
         atomic_fact: &AtomicFact,
     ) -> Option<BuiltinRuleEvidence> {
-        let normalized = normalize_positive_order_atomic_fact(atomic_fact)?;
+        let normalized = normalize_positive_order_atomic_fact(self, atomic_fact)?;
         let (left, right, allow_equal) = match &normalized {
             AtomicFact::LessFact(fact) => (&fact.left, &fact.right, false),
             AtomicFact::LessEqualFact(fact) => (&fact.left, &fact.right, true),

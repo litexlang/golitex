@@ -44,7 +44,7 @@ impl Runtime {
             )?);
         }
 
-        let leaf_equality = EqualFact::new_from_refs(left, right, line_file);
+        let leaf_equality = self.new_equal_fact_from_refs(left, right, line_file);
         let leaf: Fact = leaf_equality.clone().into();
         let result =
             self.verify_equal_fact_by_known_equality_without_direct_evaluation(&leaf_equality);
@@ -119,7 +119,7 @@ impl Runtime {
         }
         if objs_match_for_pattern(&left_resolved, &right_resolved)
             || self.equal_fact_sides_have_same_known_equality_in_some_env(
-                &EqualFact::new_from_refs(
+                &self.new_equal_fact_from_refs(
                     &left_resolved,
                     &right_resolved,
                     equal_fact.line_file.clone(),
@@ -203,7 +203,11 @@ impl Runtime {
             &equal_fact.right,
             &mut |left_arg, right_arg| {
                 Ok(self.equal_fact_sides_are_congruent_by_known_equalities(
-                    &EqualFact::new_from_refs(left_arg, right_arg, equal_fact.line_file.clone()),
+                    &self.new_equal_fact_from_refs(
+                        left_arg,
+                        right_arg,
+                        equal_fact.line_file.clone(),
+                    ),
                 ))
             },
         );
@@ -240,7 +244,7 @@ impl Runtime {
                     );
             if made_progress
                 && self.equal_fact_sides_are_equal_by_terminating_reduction_and_congruence(
-                    &EqualFact::new_from_refs(
+                    &self.new_equal_fact_from_refs(
                         candidate_left,
                         candidate_right,
                         equal_fact.line_file.clone(),
@@ -256,7 +260,11 @@ impl Runtime {
             &equal_fact.right,
             &mut |left_arg, right_arg| {
                 self.equal_fact_sides_are_equal_by_terminating_reduction_and_congruence(
-                    &EqualFact::new_from_refs(left_arg, right_arg, equal_fact.line_file.clone()),
+                    &self.new_equal_fact_from_refs(
+                        left_arg,
+                        right_arg,
+                        equal_fact.line_file.clone(),
+                    ),
                 )
             },
         )

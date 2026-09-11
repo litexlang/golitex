@@ -321,7 +321,7 @@ impl Runtime {
         mut forall_fact: ForallFact,
         inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        forall_fact.expand_then_facts_with_order_chain_closure()?;
+        forall_fact.expand_then_facts_with_order_chain_closure(self)?;
 
         let coverage_error_detail_lines =
             forall_fact.error_messages_if_forall_param_missing_in_some_then_clause();
@@ -363,7 +363,7 @@ impl Runtime {
                     // parameters whose independent domains are known nonempty.
                     // Example: `forall a,b R, x,y E: norm(a • x)=...` exposes
                     // `forall a R, x E: norm(a • x)=...` when `E` is nonempty.
-                    projected_forall_facts.push(ForallFact::new_canonical_forall(
+                    projected_forall_facts.push(self.new_forall_fact(
                         TypedParameterList::new(retained_groups),
                         forall_fact.dom_facts.clone(),
                         vec![then_fact.clone()],
@@ -426,7 +426,7 @@ impl Runtime {
         inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let (forall_then_implies_iff, forall_iff_implies_then) =
-            forall_fact_with_iff.to_two_forall_facts()?;
+            forall_fact_with_iff.to_two_forall_facts(self)?;
         let mut infer_result = self
             .store_forall_fact_without_well_defined_verified_and_infer_with_state(
                 forall_then_implies_iff,
@@ -493,15 +493,19 @@ impl Runtime {
         };
         let fact_for_infer = fact.clone();
         let chain_atomic_facts = match &fact {
-            Fact::ChainFact(chain_fact) => chain_fact.facts_with_order_transitive_closure()?,
+            Fact::ChainFact(chain_fact) => {
+                chain_fact.facts_with_order_transitive_closure_with_runtime(self)?
+            }
             _ => Vec::new(),
         };
         let numeric_order_chain_steps = match &fact {
-            Fact::ChainFact(chain_fact) => chain_fact.numeric_order_chain_closure_steps()?,
+            Fact::ChainFact(chain_fact) => {
+                chain_fact.numeric_order_chain_closure_steps_with_runtime(self)?
+            }
             _ => Vec::new(),
         };
         let equality_chain_facts = match &fact {
-            Fact::ChainFact(chain_fact) => Self::equality_chain_closure_facts(chain_fact)?,
+            Fact::ChainFact(chain_fact) => self.equality_chain_closure_facts(chain_fact)?,
             _ => Vec::new(),
         };
         let transitive_chain_facts = match &fact {
@@ -576,19 +580,19 @@ impl Runtime {
         let fact_for_infer: Fact = fact.clone().into();
         let chain_atomic_facts = match &fact {
             AndChainAtomicFact::ChainFact(chain_fact) => {
-                chain_fact.facts_with_order_transitive_closure()?
+                chain_fact.facts_with_order_transitive_closure_with_runtime(self)?
             }
             _ => Vec::new(),
         };
         let numeric_order_chain_steps = match &fact {
             AndChainAtomicFact::ChainFact(chain_fact) => {
-                chain_fact.numeric_order_chain_closure_steps()?
+                chain_fact.numeric_order_chain_closure_steps_with_runtime(self)?
             }
             _ => Vec::new(),
         };
         let equality_chain_facts = match &fact {
             AndChainAtomicFact::ChainFact(chain_fact) => {
-                Self::equality_chain_closure_facts(chain_fact)?
+                self.equality_chain_closure_facts(chain_fact)?
             }
             _ => Vec::new(),
         };
@@ -717,19 +721,19 @@ impl Runtime {
         let output_fact = fact_for_infer.clone().to_fact();
         let chain_atomic_facts = match &fact {
             ExistOrAndChainAtomicFact::ChainFact(chain_fact) => {
-                chain_fact.facts_with_order_transitive_closure()?
+                chain_fact.facts_with_order_transitive_closure_with_runtime(self)?
             }
             _ => Vec::new(),
         };
         let numeric_order_chain_steps = match &fact {
             ExistOrAndChainAtomicFact::ChainFact(chain_fact) => {
-                chain_fact.numeric_order_chain_closure_steps()?
+                chain_fact.numeric_order_chain_closure_steps_with_runtime(self)?
             }
             _ => Vec::new(),
         };
         let equality_chain_facts = match &fact {
             ExistOrAndChainAtomicFact::ChainFact(chain_fact) => {
-                Self::equality_chain_closure_facts(chain_fact)?
+                self.equality_chain_closure_facts(chain_fact)?
             }
             _ => Vec::new(),
         };
@@ -798,19 +802,19 @@ impl Runtime {
         let output_fact = fact_for_infer.clone().to_fact();
         let chain_atomic_facts = match &fact {
             QuantifierFreeFact::ChainFact(chain_fact) => {
-                chain_fact.facts_with_order_transitive_closure()?
+                chain_fact.facts_with_order_transitive_closure_with_runtime(self)?
             }
             _ => Vec::new(),
         };
         let numeric_order_chain_steps = match &fact {
             QuantifierFreeFact::ChainFact(chain_fact) => {
-                chain_fact.numeric_order_chain_closure_steps()?
+                chain_fact.numeric_order_chain_closure_steps_with_runtime(self)?
             }
             _ => Vec::new(),
         };
         let equality_chain_facts = match &fact {
             QuantifierFreeFact::ChainFact(chain_fact) => {
-                Self::equality_chain_closure_facts(chain_fact)?
+                self.equality_chain_closure_facts(chain_fact)?
             }
             _ => Vec::new(),
         };
@@ -1120,7 +1124,7 @@ impl Runtime {
             return Ok(Vec::new());
         }
 
-        let adjacent_facts = chain_fact.facts()?;
+        let adjacent_facts = chain_fact.facts(self)?;
         let mut inferences = Vec::new();
         for i in 0..chain_fact.objs.len() {
             for j in i + 2..chain_fact.objs.len() {
@@ -1135,12 +1139,13 @@ impl Runtime {
                         .cloned()
                         .map(Fact::from)
                         .collect(),
-                    conclusion: NormalAtomicFact::new(
-                        chain_fact.prop_names[0].clone(),
-                        vec![chain_fact.objs[i].clone(), chain_fact.objs[j].clone()],
-                        chain_fact.line_file.clone(),
-                    )
-                    .into(),
+                    conclusion: self
+                        .new_normal_atomic_fact(
+                            chain_fact.prop_names[0].clone(),
+                            vec![chain_fact.objs[i].clone(), chain_fact.objs[j].clone()],
+                            chain_fact.line_file.clone(),
+                        )
+                        .into(),
                 });
             }
         }
@@ -1157,6 +1162,7 @@ impl Runtime {
     }
 
     fn equality_chain_closure_facts(
+        &self,
         chain_fact: &ChainFact,
     ) -> Result<Vec<EqualityChainClosureInference>, RuntimeError> {
         if chain_fact.objs.len() < 3
@@ -1167,7 +1173,7 @@ impl Runtime {
         {
             return Ok(Vec::new());
         }
-        let adjacent_facts = chain_fact.facts()?;
+        let adjacent_facts = chain_fact.facts(self)?;
         let mut inferences = Vec::new();
         for start_object_index in 0..chain_fact.objs.len() {
             for end_object_index in start_object_index + 2..chain_fact.objs.len() {
@@ -1181,12 +1187,13 @@ impl Runtime {
                         .cloned()
                         .map(Fact::from)
                         .collect(),
-                    conclusion: EqualFact::new(
-                        chain_fact.objs[start_object_index].clone(),
-                        chain_fact.objs[end_object_index].clone(),
-                        chain_fact.line_file.clone(),
-                    )
-                    .into(),
+                    conclusion: self
+                        .new_equal_fact(
+                            chain_fact.objs[start_object_index].clone(),
+                            chain_fact.objs[end_object_index].clone(),
+                            chain_fact.line_file.clone(),
+                        )
+                        .into(),
                 });
             }
         }

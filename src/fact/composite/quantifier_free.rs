@@ -16,35 +16,50 @@ pub enum QuantifierFreeFact {
 
 impl QuantifierFreeFact {
     pub fn replace_bound_identifier(self, from: &str, to: &str) -> Self {
+        self.replace_bound_identifier_with_runtime(&Runtime::default(), from, to)
+    }
+
+    pub fn replace_bound_identifier_with_runtime(
+        self,
+        runtime: &Runtime,
+        from: &str,
+        to: &str,
+    ) -> Self {
         if from == to {
             return self;
         }
         match self {
-            QuantifierFreeFact::AtomicFact(a) => {
-                QuantifierFreeFact::AtomicFact(a.replace_bound_identifier(from, to))
-            }
-            QuantifierFreeFact::AndFact(af) => QuantifierFreeFact::AndFact(AndFact::new(
-                af.facts
-                    .into_iter()
-                    .map(|x| x.replace_bound_identifier(from, to))
-                    .collect(),
-                af.line_file,
-            )),
-            QuantifierFreeFact::ChainFact(cf) => QuantifierFreeFact::ChainFact(ChainFact::new(
-                cf.objs
-                    .into_iter()
-                    .map(|o| Obj::replace_bound_identifier(o, from, to))
-                    .collect(),
-                cf.prop_names,
-                cf.line_file,
-            )),
-            QuantifierFreeFact::OrFact(of) => QuantifierFreeFact::OrFact(OrFact::new(
-                of.facts
-                    .into_iter()
-                    .map(|x| x.replace_bound_identifier(from, to))
-                    .collect(),
-                of.line_file,
-            )),
+            QuantifierFreeFact::AtomicFact(a) => QuantifierFreeFact::AtomicFact(
+                a.replace_bound_identifier_with_runtime(runtime, from, to),
+            ),
+            QuantifierFreeFact::AndFact(af) => QuantifierFreeFact::AndFact(
+                runtime.new_and_fact(
+                    af.facts
+                        .into_iter()
+                        .map(|x| x.replace_bound_identifier_with_runtime(runtime, from, to))
+                        .collect(),
+                    af.line_file,
+                ),
+            ),
+            QuantifierFreeFact::ChainFact(cf) => QuantifierFreeFact::ChainFact(
+                runtime.new_chain_fact(
+                    cf.objs
+                        .into_iter()
+                        .map(|o| Obj::replace_bound_identifier_with_runtime(o, runtime, from, to))
+                        .collect(),
+                    cf.prop_names,
+                    cf.line_file,
+                ),
+            ),
+            QuantifierFreeFact::OrFact(of) => QuantifierFreeFact::OrFact(
+                runtime.new_or_fact(
+                    of.facts
+                        .into_iter()
+                        .map(|x| x.replace_bound_identifier_with_runtime(runtime, from, to))
+                        .collect(),
+                    of.line_file,
+                ),
+            ),
         }
     }
 }

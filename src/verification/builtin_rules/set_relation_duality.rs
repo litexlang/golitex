@@ -78,8 +78,12 @@ impl Runtime {
                         !objs_equal_with_nested_binder_alpha_equivalence(left, right)
                     })
                     .map(|(left, right)| {
-                        SubsetFact::new(left.clone(), right.clone(), subset_fact.line_file.clone())
-                            .into()
+                        self.new_subset_fact(
+                            left.clone(),
+                            right.clone(),
+                            subset_fact.line_file.clone(),
+                        )
+                        .into()
                     })
                     .collect::<Vec<AtomicFact>>();
                 if let Some(steps) = self.verify_builtin_rule_premises(&premises, builtin_state)? {
@@ -101,12 +105,13 @@ impl Runtime {
         // `intersect(A, B) subset A` rule.
         if let Obj::Intersect(intersection) = &subset_fact.left {
             for operand in [intersection.left.as_ref(), intersection.right.as_ref()] {
-                let premise: AtomicFact = SubsetFact::new(
-                    operand.clone(),
-                    subset_fact.right.clone(),
-                    subset_fact.line_file.clone(),
-                )
-                .into();
+                let premise: AtomicFact = self
+                    .new_subset_fact(
+                        operand.clone(),
+                        subset_fact.right.clone(),
+                        subset_fact.line_file.clone(),
+                    )
+                    .into();
                 if let Some(result) =
                     self.try_verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?
                 {
@@ -124,12 +129,13 @@ impl Runtime {
         }
 
         if let Obj::SetMinus(set_minus) = &subset_fact.left {
-            let premise: AtomicFact = SubsetFact::new(
-                set_minus.left.as_ref().clone(),
-                subset_fact.right.clone(),
-                subset_fact.line_file.clone(),
-            )
-            .into();
+            let premise: AtomicFact = self
+                .new_subset_fact(
+                    set_minus.left.as_ref().clone(),
+                    subset_fact.right.clone(),
+                    subset_fact.line_file.clone(),
+                )
+                .into();
             if let Some(result) =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?
             {
@@ -150,12 +156,13 @@ impl Runtime {
         if let (Obj::PowerSet(left_power), Obj::PowerSet(right_power)) =
             (&subset_fact.left, &subset_fact.right)
         {
-            let premise: AtomicFact = SubsetFact::new(
-                left_power.set.as_ref().clone(),
-                right_power.set.as_ref().clone(),
-                subset_fact.line_file.clone(),
-            )
-            .into();
+            let premise: AtomicFact = self
+                .new_subset_fact(
+                    left_power.set.as_ref().clone(),
+                    right_power.set.as_ref().clone(),
+                    subset_fact.line_file.clone(),
+                )
+                .into();
             if let Some(result) =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?
             {
@@ -179,12 +186,13 @@ impl Runtime {
                 left_minus.right.as_ref(),
                 right_minus.right.as_ref(),
             ) {
-                let premise: AtomicFact = SubsetFact::new(
-                    left_minus.left.as_ref().clone(),
-                    right_minus.left.as_ref().clone(),
-                    subset_fact.line_file.clone(),
-                )
-                .into();
+                let premise: AtomicFact = self
+                    .new_subset_fact(
+                        left_minus.left.as_ref().clone(),
+                        right_minus.left.as_ref().clone(),
+                        subset_fact.line_file.clone(),
+                    )
+                    .into();
                 if let Some(result) =
                     self.try_verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?
                 {
@@ -205,13 +213,13 @@ impl Runtime {
         // to be contained in it.
         if let Obj::Union(union) = &subset_fact.left {
             let premises: [AtomicFact; 2] = [
-                SubsetFact::new(
+                self.new_subset_fact(
                     union.left.as_ref().clone(),
                     subset_fact.right.clone(),
                     subset_fact.line_file.clone(),
                 )
                 .into(),
-                SubsetFact::new(
+                self.new_subset_fact(
                     union.right.as_ref().clone(),
                     subset_fact.right.clone(),
                     subset_fact.line_file.clone(),
@@ -268,7 +276,7 @@ impl Runtime {
                 .list
                 .iter()
                 .map(|element| {
-                    InFact::new(
+                    self.new_in_fact(
                         element.as_ref().clone(),
                         subset_fact.right.clone(),
                         subset_fact.line_file.clone(),
@@ -311,7 +319,7 @@ impl Runtime {
                         )
                     })
                     .map(|(left_factor, right_factor)| {
-                        SubsetFact::new(
+                        self.new_subset_fact(
                             left_factor.as_ref().clone(),
                             right_factor.as_ref().clone(),
                             subset_fact.line_file.clone(),
@@ -370,12 +378,13 @@ impl Runtime {
             if let Some(required_start_set) = range_carrier_requirement {
                 let mut dependencies = Vec::new();
                 if let Some(required_start_set) = required_start_set {
-                    let start_membership: AtomicFact = InFact::new(
-                        start.clone(),
-                        required_start_set.into(),
-                        subset_fact.line_file.clone(),
-                    )
-                    .into();
+                    let start_membership: AtomicFact = self
+                        .new_in_fact(
+                            start.clone(),
+                            required_start_set.into(),
+                            subset_fact.line_file.clone(),
+                        )
+                        .into();
                     let Some(result) = self.try_verify_atomic_fact_as_builtin_rule_premise(
                         &start_membership,
                         builtin_state,
@@ -499,12 +508,13 @@ impl Runtime {
         // Example: `have f fn(x S) T` proves `fn_range(f) $subset T`.
         if let Obj::FnRange(fn_range) = &subset_fact.left {
             if let Some(body) = self.get_fn_range_function_body(&fn_range.function) {
-                let ret_subset: AtomicFact = SubsetFact::new(
-                    body.ret_set.as_ref().clone(),
-                    subset_fact.right.clone(),
-                    subset_fact.line_file.clone(),
-                )
-                .into();
+                let ret_subset: AtomicFact = self
+                    .new_subset_fact(
+                        body.ret_set.as_ref().clone(),
+                        subset_fact.right.clone(),
+                        subset_fact.line_file.clone(),
+                    )
+                    .into();
                 let ret_subset_result = if objs_equal_with_nested_binder_alpha_equivalence(
                     body.ret_set.as_ref(),
                     &subset_fact.right,
@@ -544,12 +554,13 @@ impl Runtime {
             }
         }
 
-        let converted_superset_fact = SupersetFact::new(
-            subset_fact.right.clone(),
-            subset_fact.left.clone(),
-            subset_fact.line_file.clone(),
-        )
-        .into();
+        let converted_superset_fact = self
+            .new_superset_fact(
+                subset_fact.right.clone(),
+                subset_fact.left.clone(),
+                subset_fact.line_file.clone(),
+            )
+            .into();
         let verify_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
             &converted_superset_fact,
             builtin_state,
@@ -610,12 +621,13 @@ impl Runtime {
                 .into(),
             );
         }
-        let converted_subset_fact = SubsetFact::new(
-            superset_fact.right.clone(),
-            superset_fact.left.clone(),
-            superset_fact.line_file.clone(),
-        )
-        .into();
+        let converted_subset_fact = self
+            .new_subset_fact(
+                superset_fact.right.clone(),
+                superset_fact.left.clone(),
+                superset_fact.line_file.clone(),
+            )
+            .into();
         let verify_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
             &converted_subset_fact,
             builtin_state,
@@ -643,12 +655,13 @@ impl Runtime {
         not_subset_fact: &NotSubsetFact,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<ProveFactResult, RuntimeError> {
-        let converted_not_superset_fact = NotSupersetFact::new(
-            not_subset_fact.right.clone(),
-            not_subset_fact.left.clone(),
-            not_subset_fact.line_file.clone(),
-        )
-        .into();
+        let converted_not_superset_fact = self
+            .new_not_superset_fact(
+                not_subset_fact.right.clone(),
+                not_subset_fact.left.clone(),
+                not_subset_fact.line_file.clone(),
+            )
+            .into();
         let verify_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
             &converted_not_superset_fact,
             builtin_state,
@@ -676,12 +689,13 @@ impl Runtime {
         not_superset_fact: &NotSupersetFact,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<ProveFactResult, RuntimeError> {
-        let converted_not_subset_fact = NotSubsetFact::new(
-            not_superset_fact.right.clone(),
-            not_superset_fact.left.clone(),
-            not_superset_fact.line_file.clone(),
-        )
-        .into();
+        let converted_not_subset_fact = self
+            .new_not_subset_fact(
+                not_superset_fact.right.clone(),
+                not_superset_fact.left.clone(),
+                not_superset_fact.line_file.clone(),
+            )
+            .into();
         let verify_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
             &converted_not_subset_fact,
             builtin_state,

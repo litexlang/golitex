@@ -6,6 +6,10 @@ use super::*;
 /// that [`Runtime`] owns execution environments. The stack contains generated
 /// names and source fragments only; all proof evidence comes from `StmtResult`.
 pub struct StmtResultToLeanCompiler {
+    /// Dedicated allocator for compiler-synthesized fact views. These facts
+    /// are still canonical runtime facts; the compiler keeps its own runtime
+    /// because it does not execute source statements.
+    pub(super) runtime: Runtime,
     pub(super) source_label: String,
     pub(super) environment_stack: StmtResultToLeanCompilerEnvironmentStack,
     pub(super) declarations: Vec<String>,
@@ -207,6 +211,7 @@ pub(super) enum DefinedPredicateInferenceConclusionPublication {
 impl StmtResultToLeanCompiler {
     pub fn new(source_label: &str) -> Self {
         Self {
+            runtime: Runtime::new_with_fact_id_start(RuntimeOptions::default(), 1 << 63),
             source_label: source_label.to_string(),
             environment_stack: StmtResultToLeanCompilerEnvironmentStack::default(),
             declarations: Vec::new(),

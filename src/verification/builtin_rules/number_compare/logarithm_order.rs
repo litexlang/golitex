@@ -15,7 +15,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
-        let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
+        let Some(norm) = normalize_positive_order_atomic_fact(self, atomic_fact) else {
             return Ok(None);
         };
         let one = Self::literal_one_obj();
@@ -24,7 +24,7 @@ impl Runtime {
         if let AtomicFact::LessFact(f) = &norm {
             match (&f.left, &f.right) {
                 (Obj::Log(left_log), Obj::Log(right_log)) => {
-                    let same_base_fact = EqualFact::new_from_refs(
+                    let same_base_fact = self.new_equal_fact_from_refs(
                         left_log.base.as_ref(),
                         right_log.base.as_ref(),
                         f.line_file.clone(),
@@ -39,30 +39,34 @@ impl Runtime {
                         builtin_state.verify_state(),
                     )?;
 
-                    let base_gt_one: AtomicFact = LessFact::new(
-                        one.clone(),
-                        left_log.base.as_ref().clone(),
-                        f.line_file.clone(),
-                    )
-                    .into();
-                    let base_lt_one: AtomicFact = LessFact::new(
-                        left_log.base.as_ref().clone(),
-                        one.clone(),
-                        f.line_file.clone(),
-                    )
-                    .into();
-                    let forward_args: AtomicFact = LessFact::new(
-                        left_log.arg.as_ref().clone(),
-                        right_log.arg.as_ref().clone(),
-                        f.line_file.clone(),
-                    )
-                    .into();
-                    let reversed_args: AtomicFact = LessFact::new(
-                        right_log.arg.as_ref().clone(),
-                        left_log.arg.as_ref().clone(),
-                        f.line_file.clone(),
-                    )
-                    .into();
+                    let base_gt_one: AtomicFact = self
+                        .new_less_fact(
+                            one.clone(),
+                            left_log.base.as_ref().clone(),
+                            f.line_file.clone(),
+                        )
+                        .into();
+                    let base_lt_one: AtomicFact = self
+                        .new_less_fact(
+                            left_log.base.as_ref().clone(),
+                            one.clone(),
+                            f.line_file.clone(),
+                        )
+                        .into();
+                    let forward_args: AtomicFact = self
+                        .new_less_fact(
+                            left_log.arg.as_ref().clone(),
+                            right_log.arg.as_ref().clone(),
+                            f.line_file.clone(),
+                        )
+                        .into();
+                    let reversed_args: AtomicFact = self
+                        .new_less_fact(
+                            right_log.arg.as_ref().clone(),
+                            left_log.arg.as_ref().clone(),
+                            f.line_file.clone(),
+                        )
+                        .into();
 
                     let base_gt_one_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
                         &base_gt_one,
@@ -109,12 +113,12 @@ impl Runtime {
                 (Obj::Number(left_number), Obj::Log(log))
                     if left_number.normalized_value == "0" =>
                 {
-                    let base_gt_one: AtomicFact =
-                        LessFact::new(one.clone(), log.base.as_ref().clone(), f.line_file.clone())
-                            .into();
-                    let arg_gt_one: AtomicFact =
-                        LessFact::new(one.clone(), log.arg.as_ref().clone(), f.line_file.clone())
-                            .into();
+                    let base_gt_one: AtomicFact = self
+                        .new_less_fact(one.clone(), log.base.as_ref().clone(), f.line_file.clone())
+                        .into();
+                    let arg_gt_one: AtomicFact = self
+                        .new_less_fact(one.clone(), log.arg.as_ref().clone(), f.line_file.clone())
+                        .into();
                     let Some(base_gt_one_result) = self
                         .try_verify_atomic_fact_as_builtin_rule_premise(
                             &base_gt_one,
@@ -142,16 +146,19 @@ impl Runtime {
                 (Obj::Log(log), Obj::Number(right_number))
                     if right_number.normalized_value == "0" =>
                 {
-                    let base_gt_one: AtomicFact =
-                        LessFact::new(one, log.base.as_ref().clone(), f.line_file.clone()).into();
-                    let arg_lt_one: AtomicFact = LessFact::new(
-                        log.arg.as_ref().clone(),
-                        Self::literal_one_obj(),
-                        f.line_file.clone(),
-                    )
-                    .into();
-                    let arg_positive: AtomicFact =
-                        LessFact::new(zero, log.arg.as_ref().clone(), f.line_file.clone()).into();
+                    let base_gt_one: AtomicFact = self
+                        .new_less_fact(one, log.base.as_ref().clone(), f.line_file.clone())
+                        .into();
+                    let arg_lt_one: AtomicFact = self
+                        .new_less_fact(
+                            log.arg.as_ref().clone(),
+                            Self::literal_one_obj(),
+                            f.line_file.clone(),
+                        )
+                        .into();
+                    let arg_positive: AtomicFact = self
+                        .new_less_fact(zero, log.arg.as_ref().clone(), f.line_file.clone())
+                        .into();
                     let Some(base_gt_one_result) = self
                         .try_verify_atomic_fact_as_builtin_rule_premise(
                             &base_gt_one,

@@ -3,108 +3,199 @@
 use crate::prelude::*;
 impl AtomicFact {
     pub fn replace_bound_identifier(self, from: &str, to: &str) -> Self {
+        self.replace_bound_identifier_with_runtime(&Runtime::default(), from, to)
+    }
+
+    pub fn replace_bound_identifier_with_runtime(
+        self,
+        runtime: &Runtime,
+        from: &str,
+        to: &str,
+    ) -> Self {
         if from == to {
             return self;
         }
-        fn r(o: Obj, from: &str, to: &str) -> Obj {
-            Obj::replace_bound_identifier(o, from, to)
+        fn r(runtime: &Runtime, o: Obj, from: &str, to: &str) -> Obj {
+            Obj::replace_bound_identifier_with_runtime(o, runtime, from, to)
         }
         match self {
-            AtomicFact::NormalAtomicFact(x) => NormalAtomicFact::new(
-                x.predicate,
-                x.body.into_iter().map(|o| r(o, from, to)).collect(),
-                x.line_file,
-            )
-            .into(),
-            AtomicFact::EqualFact(x) => {
-                EqualFact::new(r(x.left, from, to), r(x.right, from, to), x.line_file).into()
-            }
-            AtomicFact::LessFact(x) => {
-                LessFact::new(r(x.left, from, to), r(x.right, from, to), x.line_file).into()
-            }
-            AtomicFact::GreaterFact(x) => {
-                GreaterFact::new(r(x.left, from, to), r(x.right, from, to), x.line_file).into()
-            }
-            AtomicFact::LessEqualFact(x) => {
-                LessEqualFact::new(r(x.left, from, to), r(x.right, from, to), x.line_file).into()
-            }
-            AtomicFact::GreaterEqualFact(x) => {
-                GreaterEqualFact::new(r(x.left, from, to), r(x.right, from, to), x.line_file).into()
-            }
-            AtomicFact::IsSetFact(x) => IsSetFact::new(r(x.set, from, to), x.line_file).into(),
-            AtomicFact::IsNonemptySetFact(x) => {
-                IsNonemptySetFact::new(r(x.set, from, to), x.line_file).into()
-            }
-            AtomicFact::IsFiniteSetFact(x) => {
-                IsFiniteSetFact::new(r(x.set, from, to), x.line_file).into()
-            }
-            AtomicFact::InFact(x) => {
-                InFact::new(r(x.element, from, to), r(x.set, from, to), x.line_file).into()
-            }
-            AtomicFact::IsCartFact(x) => IsCartFact::new(r(x.set, from, to), x.line_file).into(),
-            AtomicFact::IsTupleFact(x) => IsTupleFact::new(r(x.set, from, to), x.line_file).into(),
-            AtomicFact::SubsetFact(x) => {
-                SubsetFact::new(r(x.left, from, to), r(x.right, from, to), x.line_file).into()
-            }
-            AtomicFact::SupersetFact(x) => {
-                SupersetFact::new(r(x.left, from, to), r(x.right, from, to), x.line_file).into()
-            }
-            AtomicFact::NotNormalAtomicFact(x) => NotNormalAtomicFact::new(
-                x.predicate,
-                x.body.into_iter().map(|o| r(o, from, to)).collect(),
-                x.line_file,
-            )
-            .into(),
-            AtomicFact::NotEqualFact(x) => {
-                NotEqualFact::new(r(x.left, from, to), r(x.right, from, to), x.line_file).into()
-            }
-            AtomicFact::NotLessFact(x) => {
-                NotLessFact::new(r(x.left, from, to), r(x.right, from, to), x.line_file).into()
-            }
-            AtomicFact::NotGreaterFact(x) => {
-                NotGreaterFact::new(r(x.left, from, to), r(x.right, from, to), x.line_file).into()
-            }
-            AtomicFact::NotLessEqualFact(x) => {
-                NotLessEqualFact::new(r(x.left, from, to), r(x.right, from, to), x.line_file).into()
-            }
-            AtomicFact::NotGreaterEqualFact(x) => {
-                NotGreaterEqualFact::new(r(x.left, from, to), r(x.right, from, to), x.line_file)
-                    .into()
-            }
-            AtomicFact::NotIsSetFact(x) => {
-                NotIsSetFact::new(r(x.set, from, to), x.line_file).into()
-            }
-            AtomicFact::NotIsNonemptySetFact(x) => {
-                NotIsNonemptySetFact::new(r(x.set, from, to), x.line_file).into()
-            }
-            AtomicFact::NotIsFiniteSetFact(x) => {
-                NotIsFiniteSetFact::new(r(x.set, from, to), x.line_file).into()
-            }
-            AtomicFact::NotInFact(x) => {
-                NotInFact::new(r(x.element, from, to), r(x.set, from, to), x.line_file).into()
-            }
-            AtomicFact::NotIsCartFact(x) => {
-                NotIsCartFact::new(r(x.set, from, to), x.line_file).into()
-            }
-            AtomicFact::NotIsTupleFact(x) => {
-                NotIsTupleFact::new(r(x.set, from, to), x.line_file).into()
-            }
-            AtomicFact::NotSubsetFact(x) => {
-                NotSubsetFact::new(r(x.left, from, to), r(x.right, from, to), x.line_file).into()
-            }
-            AtomicFact::NotSupersetFact(x) => {
-                NotSupersetFact::new(r(x.left, from, to), r(x.right, from, to), x.line_file).into()
-            }
-            AtomicFact::FnEqualInFact(x) => FnEqualInFact::new(
-                r(x.left, from, to),
-                r(x.right, from, to),
-                r(x.set, from, to),
-                x.line_file,
-            )
-            .into(),
-            AtomicFact::FnEqualFact(x) => {
-                FnEqualFact::new(r(x.left, from, to), r(x.right, from, to), x.line_file).into()
-            }
+            AtomicFact::NormalAtomicFact(x) => runtime
+                .new_normal_atomic_fact(
+                    x.predicate,
+                    x.body
+                        .into_iter()
+                        .map(|o| r(runtime, o, from, to))
+                        .collect(),
+                    x.line_file,
+                )
+                .into(),
+            AtomicFact::EqualFact(x) => runtime
+                .new_equal_fact(
+                    r(runtime, x.left, from, to),
+                    r(runtime, x.right, from, to),
+                    x.line_file,
+                )
+                .into(),
+            AtomicFact::LessFact(x) => runtime
+                .new_less_fact(
+                    r(runtime, x.left, from, to),
+                    r(runtime, x.right, from, to),
+                    x.line_file,
+                )
+                .into(),
+            AtomicFact::GreaterFact(x) => runtime
+                .new_greater_fact(
+                    r(runtime, x.left, from, to),
+                    r(runtime, x.right, from, to),
+                    x.line_file,
+                )
+                .into(),
+            AtomicFact::LessEqualFact(x) => runtime
+                .new_less_equal_fact(
+                    r(runtime, x.left, from, to),
+                    r(runtime, x.right, from, to),
+                    x.line_file,
+                )
+                .into(),
+            AtomicFact::GreaterEqualFact(x) => runtime
+                .new_greater_equal_fact(
+                    r(runtime, x.left, from, to),
+                    r(runtime, x.right, from, to),
+                    x.line_file,
+                )
+                .into(),
+            AtomicFact::IsSetFact(x) => runtime
+                .new_is_set_fact(r(runtime, x.set, from, to), x.line_file)
+                .into(),
+            AtomicFact::IsNonemptySetFact(x) => runtime
+                .new_is_nonempty_set_fact(r(runtime, x.set, from, to), x.line_file)
+                .into(),
+            AtomicFact::IsFiniteSetFact(x) => runtime
+                .new_is_finite_set_fact(r(runtime, x.set, from, to), x.line_file)
+                .into(),
+            AtomicFact::InFact(x) => runtime
+                .new_in_fact(
+                    r(runtime, x.element, from, to),
+                    r(runtime, x.set, from, to),
+                    x.line_file,
+                )
+                .into(),
+            AtomicFact::IsCartFact(x) => runtime
+                .new_is_cart_fact(r(runtime, x.set, from, to), x.line_file)
+                .into(),
+            AtomicFact::IsTupleFact(x) => runtime
+                .new_is_tuple_fact(r(runtime, x.set, from, to), x.line_file)
+                .into(),
+            AtomicFact::SubsetFact(x) => runtime
+                .new_subset_fact(
+                    r(runtime, x.left, from, to),
+                    r(runtime, x.right, from, to),
+                    x.line_file,
+                )
+                .into(),
+            AtomicFact::SupersetFact(x) => runtime
+                .new_superset_fact(
+                    r(runtime, x.left, from, to),
+                    r(runtime, x.right, from, to),
+                    x.line_file,
+                )
+                .into(),
+            AtomicFact::NotNormalAtomicFact(x) => runtime
+                .new_not_normal_atomic_fact(
+                    x.predicate,
+                    x.body
+                        .into_iter()
+                        .map(|o| r(runtime, o, from, to))
+                        .collect(),
+                    x.line_file,
+                )
+                .into(),
+            AtomicFact::NotEqualFact(x) => runtime
+                .new_not_equal_fact(
+                    r(runtime, x.left, from, to),
+                    r(runtime, x.right, from, to),
+                    x.line_file,
+                )
+                .into(),
+            AtomicFact::NotLessFact(x) => runtime
+                .new_not_less_fact(
+                    r(runtime, x.left, from, to),
+                    r(runtime, x.right, from, to),
+                    x.line_file,
+                )
+                .into(),
+            AtomicFact::NotGreaterFact(x) => runtime
+                .new_not_greater_fact(
+                    r(runtime, x.left, from, to),
+                    r(runtime, x.right, from, to),
+                    x.line_file,
+                )
+                .into(),
+            AtomicFact::NotLessEqualFact(x) => runtime
+                .new_not_less_equal_fact(
+                    r(runtime, x.left, from, to),
+                    r(runtime, x.right, from, to),
+                    x.line_file,
+                )
+                .into(),
+            AtomicFact::NotGreaterEqualFact(x) => runtime
+                .new_not_greater_equal_fact(
+                    r(runtime, x.left, from, to),
+                    r(runtime, x.right, from, to),
+                    x.line_file,
+                )
+                .into(),
+            AtomicFact::NotIsSetFact(x) => runtime
+                .new_not_is_set_fact(r(runtime, x.set, from, to), x.line_file)
+                .into(),
+            AtomicFact::NotIsNonemptySetFact(x) => runtime
+                .new_not_is_nonempty_set_fact(r(runtime, x.set, from, to), x.line_file)
+                .into(),
+            AtomicFact::NotIsFiniteSetFact(x) => runtime
+                .new_not_is_finite_set_fact(r(runtime, x.set, from, to), x.line_file)
+                .into(),
+            AtomicFact::NotInFact(x) => runtime
+                .new_not_in_fact(
+                    r(runtime, x.element, from, to),
+                    r(runtime, x.set, from, to),
+                    x.line_file,
+                )
+                .into(),
+            AtomicFact::NotIsCartFact(x) => runtime
+                .new_not_is_cart_fact(r(runtime, x.set, from, to), x.line_file)
+                .into(),
+            AtomicFact::NotIsTupleFact(x) => runtime
+                .new_not_is_tuple_fact(r(runtime, x.set, from, to), x.line_file)
+                .into(),
+            AtomicFact::NotSubsetFact(x) => runtime
+                .new_not_subset_fact(
+                    r(runtime, x.left, from, to),
+                    r(runtime, x.right, from, to),
+                    x.line_file,
+                )
+                .into(),
+            AtomicFact::NotSupersetFact(x) => runtime
+                .new_not_superset_fact(
+                    r(runtime, x.left, from, to),
+                    r(runtime, x.right, from, to),
+                    x.line_file,
+                )
+                .into(),
+            AtomicFact::FnEqualInFact(x) => runtime
+                .new_fn_equal_in_fact(
+                    r(runtime, x.left, from, to),
+                    r(runtime, x.right, from, to),
+                    r(runtime, x.set, from, to),
+                    x.line_file,
+                )
+                .into(),
+            AtomicFact::FnEqualFact(x) => runtime
+                .new_fn_equal_fact(
+                    r(runtime, x.left, from, to),
+                    r(runtime, x.right, from, to),
+                    x.line_file,
+                )
+                .into(),
         }
     }
 }

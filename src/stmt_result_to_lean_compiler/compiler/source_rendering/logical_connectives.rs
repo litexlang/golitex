@@ -19,11 +19,14 @@ pub(in super::super) fn conjunction(facts: &[String]) -> String {
     }
 }
 
-pub(in super::super) fn conjunction_components(fact: &Fact) -> Result<Vec<Fact>, String> {
+pub(in super::super) fn conjunction_components(
+    runtime: &Runtime,
+    fact: &Fact,
+) -> Result<Vec<Fact>, String> {
     match fact {
         Fact::AndFact(and_fact) => Ok(and_fact.facts.iter().cloned().map(Fact::from).collect()),
         Fact::ChainFact(chain_fact) => chain_fact
-            .facts()
+            .facts(runtime)
             .map(|facts| facts.into_iter().map(Fact::from).collect())
             .map_err(|error| format!("invalid retained relation chain: {error:?}")),
         _ => Err(format!(

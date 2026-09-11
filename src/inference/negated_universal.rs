@@ -75,8 +75,7 @@ impl Runtime {
             else {
                 return Ok(None);
             };
-            let Ok(mut branches) = Self::demorgan_negate_exist_body_conjunct(&then_body_fact)
-            else {
+            let Ok(mut branches) = self.demorgan_negate_exist_body_conjunct(&then_body_fact) else {
                 return Ok(None);
             };
             negated_then_branches.append(&mut branches);
@@ -88,11 +87,13 @@ impl Runtime {
         body_facts.push(if negated_then_branches.len() == 1 {
             and_chain_atomic_to_or_and_chain_atomic(negated_then_branches.remove(0)).into()
         } else {
-            QuantifierFreeFact::OrFact(OrFact::new(negated_then_branches, forall.line_file.clone()))
-                .into()
+            QuantifierFreeFact::OrFact(
+                self.new_or_fact(negated_then_branches, forall.line_file.clone()),
+            )
+            .into()
         });
 
-        Ok(Some(ExistFact::PlainExistFact(PlainExistFact::new(
+        Ok(Some(ExistFact::PlainExistFact(self.new_plain_exist_fact(
             TypedParameterList::new(exist_groups),
             body_facts,
             forall.line_file.clone(),

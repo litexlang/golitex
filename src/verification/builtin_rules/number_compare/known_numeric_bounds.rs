@@ -10,7 +10,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
-        let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
+        let Some(norm) = normalize_positive_order_atomic_fact(self, atomic_fact) else {
             return Ok(None);
         };
         match &norm {
@@ -60,12 +60,13 @@ impl Runtime {
                         )));
                     }
                     if known_strict && known_bound.checked_add(1) == Some(target_bound) {
-                        let in_z: AtomicFact = InFact::new(
-                            f.right.clone(),
-                            StandardSet::Z.into(),
-                            f.line_file.clone(),
-                        )
-                        .into();
+                        let in_z: AtomicFact = self
+                            .new_in_fact(
+                                f.right.clone(),
+                                StandardSet::Z.into(),
+                                f.line_file.clone(),
+                            )
+                            .into();
                         let Some(in_z_result) = self
                             .try_verify_atomic_fact_as_builtin_rule_premise(&in_z, builtin_state)?
                         else {
@@ -148,7 +149,7 @@ impl Runtime {
         known_fact: &AtomicFact,
         right: &Obj,
     ) -> Option<(i128, bool)> {
-        let norm = normalize_positive_order_atomic_fact(known_fact)?;
+        let norm = normalize_positive_order_atomic_fact(self, known_fact)?;
         match &norm {
             AtomicFact::LessFact(f) if f.right.to_string() == right.to_string() => {
                 Some((self.resolved_integer_value_for_order_bound(&f.left)?, true))
@@ -167,7 +168,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
-        let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
+        let Some(norm) = normalize_positive_order_atomic_fact(self, atomic_fact) else {
             return Ok(None);
         };
         let (target_bound, target_is_strict, target_left) = match &norm {
@@ -246,7 +247,7 @@ impl Runtime {
         known_fact: &AtomicFact,
         left: &Obj,
     ) -> Option<(i128, bool)> {
-        let norm = normalize_positive_order_atomic_fact(known_fact)?;
+        let norm = normalize_positive_order_atomic_fact(self, known_fact)?;
         match &norm {
             AtomicFact::LessFact(f) if f.left.to_string() == left.to_string() => {
                 Some((self.resolved_integer_value_for_order_bound(&f.right)?, true))

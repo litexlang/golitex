@@ -106,11 +106,12 @@ impl Runtime {
             ParamType::Set(_) | ParamType::NonemptySet(_) | ParamType::FiniteSet(_) => Ok(()),
             ParamType::Obj(param_set) => match param_set {
                 Obj::FnSet(fn_set) => {
-                    let ret_nonempty = IsNonemptySetFact::new(
-                        fn_set.body.ret_set.as_ref().clone(),
-                        default_line_file(),
-                    )
-                    .into();
+                    let ret_nonempty = self
+                        .new_is_nonempty_set_fact(
+                            fn_set.body.ret_set.as_ref().clone(),
+                            default_line_file(),
+                        )
+                        .into();
                     self.store_fact_with_well_defined_verification_and_infer(
                         ret_nonempty,
                         &VerifyState::final_round(),
@@ -118,11 +119,12 @@ impl Runtime {
                     Ok(())
                 }
                 Obj::AnonymousFn(anon) => {
-                    let ret_nonempty = IsNonemptySetFact::new(
-                        anon.body.ret_set.as_ref().clone(),
-                        default_line_file(),
-                    )
-                    .into();
+                    let ret_nonempty = self
+                        .new_is_nonempty_set_fact(
+                            anon.body.ret_set.as_ref().clone(),
+                            default_line_file(),
+                        )
+                        .into();
                     self.store_fact_with_well_defined_verification_and_infer(
                         ret_nonempty,
                         &VerifyState::final_round(),
@@ -131,7 +133,7 @@ impl Runtime {
                 }
                 _ => {
                     let nonempty_fact =
-                        IsNonemptySetFact::new(param_set.clone(), default_line_file());
+                        self.new_is_nonempty_set_fact(param_set.clone(), default_line_file());
                     let ret = self.verify_fact_allow_unknown(
                         &nonempty_fact.into(),
                         &VerifyState::initial(),
@@ -272,7 +274,7 @@ impl Runtime {
         let fact: Fact = chain_fact.clone().into();
         let checked = self.verify_fact_well_defined_result(&fact, verify_state)?;
         let mut steps = Vec::new();
-        for atomic_fact in chain_fact.facts()? {
+        for atomic_fact in chain_fact.facts(self)? {
             let result =
                 self.verify_atomic_fact_restricted_known_builtin(&atomic_fact, verify_state)?;
             if result.is_unknown() {
@@ -447,7 +449,7 @@ impl Runtime {
             .flat_instantiated_types_for_args(&instantiated_types);
         for (arg, param_type) in args_for_params.iter().zip(flat_types.iter()) {
             let requirement_fact =
-                fact_for_param_type_requirement(arg.clone(), param_type, default_line_file());
+                fact_for_param_type_requirement(self, arg.clone(), param_type, default_line_file());
             let result = self
                 .verify_obj_satisfies_param_type(arg.clone(), param_type, verify_state)
                 .map_err(|e| known_forall_requirement_error(goal.clone(), e))?;
@@ -486,12 +488,17 @@ pub fn nested_obj_binder_normalized_fact_key(fact: &Fact) -> String {
     }
 }
 
-fn fact_for_param_type_requirement(obj: Obj, param_type: &ParamType, line_file: LineFile) -> Fact {
+fn fact_for_param_type_requirement(
+    runtime: &Runtime,
+    obj: Obj,
+    param_type: &ParamType,
+    line_file: LineFile,
+) -> Fact {
     match param_type {
-        ParamType::Obj(set_obj) => InFact::new(obj, set_obj.clone(), line_file).into(),
-        ParamType::Set(_) => IsSetFact::new(obj, line_file).into(),
-        ParamType::NonemptySet(_) => IsNonemptySetFact::new(obj, line_file).into(),
-        ParamType::FiniteSet(_) => IsFiniteSetFact::new(obj, line_file).into(),
+        ParamType::Obj(set_obj) => runtime.new_in_fact(obj, set_obj.clone(), line_file).into(),
+        ParamType::Set(_) => runtime.new_is_set_fact(obj, line_file).into(),
+        ParamType::NonemptySet(_) => runtime.new_is_nonempty_set_fact(obj, line_file).into(),
+        ParamType::FiniteSet(_) => runtime.new_is_finite_set_fact(obj, line_file).into(),
     }
 }
 
@@ -524,8 +531,9 @@ impl Runtime {
                 continue;
             }
             seen.push(key);
-            let in_r: AtomicFact =
-                InFact::new((*obj).clone(), StandardSet::R.into(), line_file.clone()).into();
+            let in_r: AtomicFact = self
+                .new_in_fact((*obj).clone(), StandardSet::R.into(), line_file.clone())
+                .into();
             let mut result =
                 self.verify_atomic_fact_restricted_known_builtin(&in_r, verify_state)?;
             if !result.is_success() {
@@ -542,8 +550,9 @@ impl Runtime {
             // the general forall engine from a foundational carrier check.
             let mut found_numeric_subcarrier = false;
             for source_set in self.known_sets_containing_obj(obj) {
-                let source_membership: AtomicFact =
-                    InFact::new((*obj).clone(), source_set.clone(), line_file.clone()).into();
+                let source_membership: AtomicFact = self
+                    .new_in_fact((*obj).clone(), source_set.clone(), line_file.clone())
+                    .into();
                 let source_membership_result = self.verify_atomic_fact_restricted_known_builtin(
                     &source_membership,
                     verify_state,
@@ -567,9 +576,9 @@ impl Runtime {
                     StandardSet::RNeg,
                     StandardSet::RStar,
                 ] {
-                    let subset: AtomicFact =
-                        SubsetFact::new(source_set.clone(), carrier.into(), line_file.clone())
-                            .into();
+                    let subset: AtomicFact = self
+                        .new_subset_fact(source_set.clone(), carrier.into(), line_file.clone())
+                        .into();
                     let subset_result =
                         self.verify_atomic_fact_restricted_known_builtin(&subset, verify_state)?;
                     if !subset_result.is_success() {
@@ -618,8 +627,9 @@ impl Runtime {
                 continue;
             }
 
-            let in_c: AtomicFact =
-                InFact::new((*obj).clone(), StandardSet::C.into(), line_file.clone()).into();
+            let in_c: AtomicFact = self
+                .new_in_fact((*obj).clone(), StandardSet::C.into(), line_file.clone())
+                .into();
             let mut result =
                 self.verify_atomic_fact_restricted_known_builtin(&in_c, verify_state)?;
             if !result.is_success() {
@@ -637,7 +647,9 @@ impl Runtime {
         // This is an index of materialized facts, not the proof closure for
         // `obj`. A proof rule must not use this history to replace a finite
         // target-driven premise search; cache warmth cannot change semantics.
-        let probe: AtomicFact = InFact::new(obj.clone(), obj.clone(), default_line_file()).into();
+        let probe: AtomicFact = self
+            .new_in_fact(obj.clone(), obj.clone(), default_line_file())
+            .into();
         let module_names = self.atomic_fact_referenced_module_names(&probe);
         let obj_strings = self.all_objs_equal_to_arg_for_known_atomic_fact(obj, &module_names);
         let mut sets = Vec::new();
@@ -672,7 +684,11 @@ impl Runtime {
         seen: &mut std::collections::HashSet<String>,
     ) {
         for obj_string in obj_strings {
-            let Some(owner_sets) = environment.facts.special_set_relations.owner_sets.get(obj_string)
+            let Some(owner_sets) = environment
+                .facts
+                .special_set_relations
+                .owner_sets
+                .get(obj_string)
             else {
                 continue;
             };

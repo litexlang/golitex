@@ -79,12 +79,14 @@ impl StmtResultToLeanCompiler {
                 "checked function-definition reduction child has no direct Lean proof constructor"
                     .to_string()
             })?;
-        let unfolding_target: Fact = EqualFact::new(
-            reduction.application_side.clone(),
-            reduction.reduced.clone(),
-            target.line_file(),
-        )
-        .into();
+        let unfolding_target: Fact = self
+            .runtime
+            .new_equal_fact(
+                reduction.application_side.clone(),
+                reduction.reduced.clone(),
+                target.line_file(),
+            )
+            .into();
         let unfolding_proof = render_checked_identity_function_reduction_from_fact(
             &unfolding_target,
             reduction.defining_equality_fact_id,

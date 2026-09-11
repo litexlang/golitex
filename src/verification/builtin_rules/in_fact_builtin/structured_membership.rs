@@ -13,8 +13,11 @@ impl Runtime {
     ) -> Result<ProveFactResult, RuntimeError> {
         let definition_carrier =
             self.instantiated_struct_field_type_after_well_defined(field_access)?;
-        let carrier_equality_fact =
-            EqualFact::new_from_refs(&definition_carrier, &in_fact.set, in_fact.line_file.clone());
+        let carrier_equality_fact = self.new_equal_fact_from_refs(
+            &definition_carrier,
+            &in_fact.set,
+            in_fact.line_file.clone(),
+        );
         let carrier_equality_proof =
             self.verify_equal_fact_by_known_equality(&carrier_equality_fact);
         let carrier_equality_atomic: AtomicFact = carrier_equality_fact.into();
@@ -35,12 +38,13 @@ impl Runtime {
             field_access,
             in_fact.line_file.clone(),
         )?;
-        let receiver_membership: AtomicFact = InFact::new(
-            (*field_access.obj).clone(),
-            struct_obj.into(),
-            in_fact.line_file.clone(),
-        )
-        .into();
+        let receiver_membership: AtomicFact = self
+            .new_in_fact(
+                (*field_access.obj).clone(),
+                struct_obj.into(),
+                in_fact.line_file.clone(),
+            )
+            .into();
         let Some(receiver_result) = self
             .try_verify_atomic_fact_as_builtin_rule_premise(&receiver_membership, builtin_state)?
         else {
@@ -96,12 +100,13 @@ impl Runtime {
         }
 
         let selected = tuple.args[one_based_index - 1].as_ref().clone();
-        let selected_membership: AtomicFact = InFact::new(
-            selected.clone(),
-            target_set_obj.clone(),
-            in_fact.line_file.clone(),
-        )
-        .into();
+        let selected_membership: AtomicFact = self
+            .new_in_fact(
+                selected.clone(),
+                target_set_obj.clone(),
+                in_fact.line_file.clone(),
+            )
+            .into();
         let mut selected_result = self
             .try_verify_atomic_fact_as_builtin_rule_premise(&selected_membership, builtin_state)?;
         if selected_result.is_none() && matches!(target_set_obj, Obj::StandardSet(StandardSet::R)) {
@@ -131,12 +136,13 @@ impl Runtime {
         // the exact `x $in R` fact is replayable, while resolving `x` to a
         // numeric literal may not have a transport certificate.
         if selected_result.is_none() && matches!(target_set_obj, Obj::StandardSet(StandardSet::C)) {
-            let real_membership: AtomicFact = InFact::new(
-                selected.clone(),
-                StandardSet::R.into(),
-                in_fact.line_file.clone(),
-            )
-            .into();
+            let real_membership: AtomicFact = self
+                .new_in_fact(
+                    selected.clone(),
+                    StandardSet::R.into(),
+                    in_fact.line_file.clone(),
+                )
+                .into();
             let real_proof = match self
                 .verification_result_from_known_fact_cache(&real_membership.clone().into())
             {
@@ -192,12 +198,13 @@ impl Runtime {
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<ProveFactResult, RuntimeError> {
         let base_set = power_set.set.as_ref();
-        let subset_fact: AtomicFact = SubsetFact::new(
-            (*set_builder.param_set).clone(),
-            base_set.clone(),
-            in_fact.line_file.clone(),
-        )
-        .into();
+        let subset_fact: AtomicFact = self
+            .new_subset_fact(
+                (*set_builder.param_set).clone(),
+                base_set.clone(),
+                in_fact.line_file.clone(),
+            )
+            .into();
         let verify_subset_result = match (&*set_builder.param_set, base_set) {
             (Obj::StandardSet(left), Obj::StandardSet(right)) if left.is_subset_eq(right) => {
                 let proof = SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -263,7 +270,7 @@ impl Runtime {
             .list
             .iter()
             .map(|element_box| {
-                InFact::new(
+                self.new_in_fact(
                     element_box.as_ref().clone(),
                     base_set.clone(),
                     in_fact.line_file.clone(),
@@ -299,7 +306,7 @@ impl Runtime {
         // Check reflexive and already-known element equalities before invoking
         // the broader equality builtin search for list-set membership.
         for (selected_index, current_element_in_list_set) in list_set.list.iter().enumerate() {
-            let equality = EqualFact::new_from_refs(
+            let equality = self.new_equal_fact_from_refs(
                 &in_fact.element,
                 current_element_in_list_set.as_ref(),
                 in_fact.line_file.clone(),
@@ -337,7 +344,7 @@ impl Runtime {
         let mut right_equalities = Vec::with_capacity(list_set.list.len());
         for listed_element in &list_set.list {
             left_equalities.push(AndChainAtomicFact::AtomicFact(
-                EqualFact::new_from_refs(
+                self.new_equal_fact_from_refs(
                     &in_fact.element,
                     listed_element.as_ref(),
                     in_fact.line_file.clone(),
@@ -345,7 +352,7 @@ impl Runtime {
                 .into(),
             ));
             right_equalities.push(AndChainAtomicFact::AtomicFact(
-                EqualFact::new_from_refs(
+                self.new_equal_fact_from_refs(
                     listed_element.as_ref(),
                     &in_fact.element,
                     in_fact.line_file.clone(),
@@ -356,7 +363,7 @@ impl Runtime {
 
         for branches in [left_equalities, right_equalities] {
             let premise =
-                QuantifierFreeFact::OrFact(OrFact::new(branches, in_fact.line_file.clone()));
+                QuantifierFreeFact::OrFact(self.new_or_fact(branches, in_fact.line_file.clone()));
             let premise_result = self.try_verify_builtin_rule_premise(&premise, builtin_state)?;
             if let Some(premise_result) = premise_result {
                 return Ok(
@@ -384,7 +391,7 @@ impl Runtime {
             .list
             .iter()
             .map(|current_element| {
-                NotEqualFact::new(
+                self.new_not_equal_fact(
                     not_in_fact.element.clone(),
                     current_element.as_ref().clone(),
                     not_in_fact.line_file.clone(),
@@ -540,7 +547,7 @@ impl Runtime {
             (*anon.body.ret_set).clone(),
         )?;
         let signature_equality = self.verify_fn_set_with_params_equality_by_builtin_rules(
-            &EqualFact::new(
+            &self.new_equal_fact(
                 signature_from_anon.into(),
                 expected_fn_set.clone().into(),
                 in_fact.line_file.clone(),
@@ -616,19 +623,21 @@ impl Runtime {
         };
 
         let index_obj = fn_obj.body[0][0].as_ref().clone();
-        let index_in_n_pos: AtomicFact = InFact::new(
-            index_obj.clone(),
-            StandardSet::NPos.into(),
-            in_fact.line_file.clone(),
-        )
-        .into();
+        let index_in_n_pos: AtomicFact = self
+            .new_in_fact(
+                index_obj.clone(),
+                StandardSet::NPos.into(),
+                in_fact.line_file.clone(),
+            )
+            .into();
         let list_len_obj: Obj = Number::new(list.objs.len().to_string()).into();
-        let index_in_range: AtomicFact =
-            LessEqualFact::new(index_obj, list_len_obj, in_fact.line_file.clone()).into();
+        let index_in_range: AtomicFact = self
+            .new_less_equal_fact(index_obj, list_len_obj, in_fact.line_file.clone())
+            .into();
         let mut premises = vec![index_in_n_pos, index_in_range];
         for element in list.objs.iter() {
             premises.push(
-                InFact::new(
+                self.new_in_fact(
                     element.as_ref().clone(),
                     target_set_obj.clone(),
                     in_fact.line_file.clone(),
@@ -693,7 +702,7 @@ impl Runtime {
             .list
             .iter()
             .map(|element| {
-                InFact::new(
+                self.new_in_fact(
                     element.as_ref().clone(),
                     target_set_obj.clone(),
                     in_fact.line_file.clone(),
@@ -737,12 +746,13 @@ impl Runtime {
         // projection is in `N`, then widen that result to `C`.
         for source_set in target_set.proper_subsets_in_membership_proof_order() {
             let source_set_obj: Obj = source_set.into();
-            let source_membership: AtomicFact = InFact::new(
-                in_fact.element.clone(),
-                source_set_obj.clone(),
-                in_fact.line_file.clone(),
-            )
-            .into();
+            let source_membership: AtomicFact = self
+                .new_in_fact(
+                    in_fact.element.clone(),
+                    source_set_obj.clone(),
+                    in_fact.line_file.clone(),
+                )
+                .into();
             let source_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
                 &source_membership,
                 builtin_state,
@@ -779,12 +789,13 @@ impl Runtime {
             let Obj::ListSet(list_set) = &source_set else {
                 continue;
             };
-            let source_membership: AtomicFact = InFact::new(
-                in_fact.element.clone(),
-                source_set.clone(),
-                in_fact.line_file.clone(),
-            )
-            .into();
+            let source_membership: AtomicFact = self
+                .new_in_fact(
+                    in_fact.element.clone(),
+                    source_set.clone(),
+                    in_fact.line_file.clone(),
+                )
+                .into();
             let Some(source_result) = self.try_verify_atomic_fact_as_builtin_rule_premise(
                 &source_membership,
                 builtin_state,
@@ -796,12 +807,13 @@ impl Runtime {
             let mut steps = vec![source_result];
             let mut all_elements_match = true;
             for element in &list_set.list {
-                let element_membership: AtomicFact = InFact::new(
-                    element.as_ref().clone(),
-                    in_fact.set.clone(),
-                    in_fact.line_file.clone(),
-                )
-                .into();
+                let element_membership: AtomicFact = self
+                    .new_in_fact(
+                        element.as_ref().clone(),
+                        in_fact.set.clone(),
+                        in_fact.line_file.clone(),
+                    )
+                    .into();
                 let Some(evaluated_number) = element.evaluate_to_normalized_decimal_number() else {
                     all_elements_match = false;
                     break;

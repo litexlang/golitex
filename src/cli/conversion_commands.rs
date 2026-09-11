@@ -12,7 +12,7 @@ use crate::output::language::OutputLanguage;
 use crate::output::render_runtime_error_json;
 use crate::pipeline::file_execution::file_execution_option;
 use crate::prelude::{render_json_value, JsonValue};
-use crate::runtime::{LitexExecution, RuntimeOptions, OutputDetail, Runtime, SummaryOption};
+use crate::runtime::{LitexExecution, OutputDetail, Runtime, RuntimeOptions, SummaryOption};
 use crate::syntax::source_formatting::remove_windows_carriage_from_str;
 use std::fs;
 

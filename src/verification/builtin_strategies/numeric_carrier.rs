@@ -23,10 +23,9 @@ impl Runtime {
             StandardSet::N | StandardSet::Z | StandardSet::Q | StandardSet::R | StandardSet::C
         ) {
             if let Obj::FiniteSetSize(size) = &fact.element {
-                let required = [AtomicFact::from(IsFiniteSetFact::new(
-                    size.set.as_ref().clone(),
-                    lf.clone(),
-                ))];
+                let required = [AtomicFact::from(
+                    self.new_is_finite_set_fact(size.set.as_ref().clone(), lf.clone()),
+                )];
                 let Some(children) =
                     self.verify_numeric_carrier_strategy_children(&required, verify_state)?
                 else {
@@ -119,7 +118,7 @@ impl Runtime {
             None
         };
         if let Some(rule) = real_rule {
-            let conjunction: Fact = AndFact::new(required, lf).into();
+            let conjunction: Fact = self.new_and_fact(required, lf).into();
             let conjunction_result = SuccessProveFactResult::new(
                 conjunction.clone(),
                 SuccessInferResult::new(),
@@ -153,7 +152,7 @@ impl Runtime {
             None
         };
         if let Some(rule) = integer_rule {
-            let conjunction: Fact = AndFact::new(required, lf).into();
+            let conjunction: Fact = self.new_and_fact(required, lf).into();
             let conjunction_result = SuccessProveFactResult::new(
                 conjunction.clone(),
                 SuccessInferResult::new(),
@@ -198,44 +197,48 @@ impl Runtime {
         let (base, condition): (StandardSet, AtomicFact) = match target {
             StandardSet::QPos => (
                 StandardSet::Q,
-                LessFact::new(zero, element.clone(), lf.clone()).into(),
+                self.new_less_fact(zero, element.clone(), lf.clone()).into(),
             ),
             StandardSet::RPos => (
                 StandardSet::R,
-                LessFact::new(zero, element.clone(), lf.clone()).into(),
+                self.new_less_fact(zero, element.clone(), lf.clone()).into(),
             ),
             StandardSet::QNeg => (
                 StandardSet::Q,
-                LessFact::new(element.clone(), zero, lf.clone()).into(),
+                self.new_less_fact(element.clone(), zero, lf.clone()).into(),
             ),
             StandardSet::ZNeg => (
                 StandardSet::Z,
-                LessFact::new(element.clone(), zero, lf.clone()).into(),
+                self.new_less_fact(element.clone(), zero, lf.clone()).into(),
             ),
             StandardSet::RNeg => (
                 StandardSet::R,
-                LessFact::new(element.clone(), zero, lf.clone()).into(),
+                self.new_less_fact(element.clone(), zero, lf.clone()).into(),
             ),
             StandardSet::QStar => (
                 StandardSet::Q,
-                NotEqualFact::new(element.clone(), zero, lf.clone()).into(),
+                self.new_not_equal_fact(element.clone(), zero, lf.clone())
+                    .into(),
             ),
             StandardSet::ZStar => (
                 StandardSet::Z,
-                NotEqualFact::new(element.clone(), zero, lf.clone()).into(),
+                self.new_not_equal_fact(element.clone(), zero, lf.clone())
+                    .into(),
             ),
             StandardSet::RStar => (
                 StandardSet::R,
-                NotEqualFact::new(element.clone(), zero, lf.clone()).into(),
+                self.new_not_equal_fact(element.clone(), zero, lf.clone())
+                    .into(),
             ),
             StandardSet::CStar => (
                 StandardSet::C,
-                NotEqualFact::new(element.clone(), zero, lf.clone()).into(),
+                self.new_not_equal_fact(element.clone(), zero, lf.clone())
+                    .into(),
             ),
             _ => return None,
         };
         Some(vec![
-            InFact::new(element, base.into(), lf.clone()).into(),
+            self.new_in_fact(element, base.into(), lf.clone()).into(),
             condition,
         ])
     }
@@ -244,24 +247,32 @@ impl Runtime {
         let real: Obj = StandardSet::R.into();
         match obj {
             Obj::Add(x) => Some(vec![
-                InFact::new(x.left.as_ref().clone(), real.clone(), lf.clone()).into(),
-                InFact::new(x.right.as_ref().clone(), real, lf.clone()).into(),
+                self.new_in_fact(x.left.as_ref().clone(), real.clone(), lf.clone())
+                    .into(),
+                self.new_in_fact(x.right.as_ref().clone(), real, lf.clone())
+                    .into(),
             ]),
             Obj::Mul(x) => Some(vec![
-                InFact::new(x.left.as_ref().clone(), real.clone(), lf.clone()).into(),
-                InFact::new(x.right.as_ref().clone(), real, lf.clone()).into(),
+                self.new_in_fact(x.left.as_ref().clone(), real.clone(), lf.clone())
+                    .into(),
+                self.new_in_fact(x.right.as_ref().clone(), real, lf.clone())
+                    .into(),
             ]),
             Obj::Sub(x) => Some(vec![
-                InFact::new(x.left.as_ref().clone(), real.clone(), lf.clone()).into(),
-                InFact::new(x.right.as_ref().clone(), real, lf.clone()).into(),
+                self.new_in_fact(x.left.as_ref().clone(), real.clone(), lf.clone())
+                    .into(),
+                self.new_in_fact(x.right.as_ref().clone(), real, lf.clone())
+                    .into(),
             ]),
             Obj::Div(x) => Some(vec![
-                InFact::new(x.left.as_ref().clone(), real.clone(), lf.clone()).into(),
-                InFact::new(x.right.as_ref().clone(), real, lf.clone()).into(),
+                self.new_in_fact(x.left.as_ref().clone(), real.clone(), lf.clone())
+                    .into(),
+                self.new_in_fact(x.right.as_ref().clone(), real, lf.clone())
+                    .into(),
             ]),
-            Obj::Pow(x) => Some(vec![
-                InFact::new(x.base.as_ref().clone(), real, lf.clone()).into()
-            ]),
+            Obj::Pow(x) => Some(vec![self
+                .new_in_fact(x.base.as_ref().clone(), real, lf.clone())
+                .into()]),
             _ => None,
         }
     }
@@ -270,36 +281,42 @@ impl Runtime {
         let rational: Obj = StandardSet::Q.into();
         match obj {
             Obj::Add(x) => Some(vec![
-                InFact::new(x.left.as_ref().clone(), rational.clone(), lf.clone()).into(),
-                InFact::new(x.right.as_ref().clone(), rational, lf.clone()).into(),
+                self.new_in_fact(x.left.as_ref().clone(), rational.clone(), lf.clone())
+                    .into(),
+                self.new_in_fact(x.right.as_ref().clone(), rational, lf.clone())
+                    .into(),
             ]),
             Obj::Mul(x) => Some(vec![
-                InFact::new(x.left.as_ref().clone(), rational.clone(), lf.clone()).into(),
-                InFact::new(x.right.as_ref().clone(), rational, lf.clone()).into(),
+                self.new_in_fact(x.left.as_ref().clone(), rational.clone(), lf.clone())
+                    .into(),
+                self.new_in_fact(x.right.as_ref().clone(), rational, lf.clone())
+                    .into(),
             ]),
             Obj::Sub(x) => Some(vec![
-                InFact::new(x.left.as_ref().clone(), rational.clone(), lf.clone()).into(),
-                InFact::new(x.right.as_ref().clone(), rational, lf.clone()).into(),
+                self.new_in_fact(x.left.as_ref().clone(), rational.clone(), lf.clone())
+                    .into(),
+                self.new_in_fact(x.right.as_ref().clone(), rational, lf.clone())
+                    .into(),
             ]),
             Obj::Div(x) => Some(vec![
-                InFact::new(x.left.as_ref().clone(), rational.clone(), lf.clone()).into(),
-                InFact::new(x.right.as_ref().clone(), rational, lf.clone()).into(),
+                self.new_in_fact(x.left.as_ref().clone(), rational.clone(), lf.clone())
+                    .into(),
+                self.new_in_fact(x.right.as_ref().clone(), rational, lf.clone())
+                    .into(),
             ]),
             Obj::Pow(x) => Some(vec![
-                InFact::new(x.base.as_ref().clone(), rational, lf.clone()).into(),
-                InFact::new(
+                self.new_in_fact(x.base.as_ref().clone(), rational, lf.clone())
+                    .into(),
+                self.new_in_fact(
                     x.exponent.as_ref().clone(),
                     StandardSet::Z.into(),
                     lf.clone(),
                 )
                 .into(),
             ]),
-            Obj::Abs(x) => Some(vec![InFact::new(
-                x.arg.as_ref().clone(),
-                rational,
-                lf.clone(),
-            )
-            .into()]),
+            Obj::Abs(x) => Some(vec![self
+                .new_in_fact(x.arg.as_ref().clone(), rational, lf.clone())
+                .into()]),
             _ => None,
         }
     }
@@ -308,36 +325,42 @@ impl Runtime {
         let integer: Obj = StandardSet::Z.into();
         match obj {
             Obj::Add(x) => Some(vec![
-                InFact::new(x.left.as_ref().clone(), integer.clone(), lf.clone()).into(),
-                InFact::new(x.right.as_ref().clone(), integer, lf.clone()).into(),
+                self.new_in_fact(x.left.as_ref().clone(), integer.clone(), lf.clone())
+                    .into(),
+                self.new_in_fact(x.right.as_ref().clone(), integer, lf.clone())
+                    .into(),
             ]),
             Obj::Mul(x) => Some(vec![
-                InFact::new(x.left.as_ref().clone(), integer.clone(), lf.clone()).into(),
-                InFact::new(x.right.as_ref().clone(), integer, lf.clone()).into(),
+                self.new_in_fact(x.left.as_ref().clone(), integer.clone(), lf.clone())
+                    .into(),
+                self.new_in_fact(x.right.as_ref().clone(), integer, lf.clone())
+                    .into(),
             ]),
             Obj::Mod(x) => Some(vec![
-                InFact::new(x.left.as_ref().clone(), integer.clone(), lf.clone()).into(),
-                InFact::new(x.right.as_ref().clone(), integer, lf.clone()).into(),
+                self.new_in_fact(x.left.as_ref().clone(), integer.clone(), lf.clone())
+                    .into(),
+                self.new_in_fact(x.right.as_ref().clone(), integer, lf.clone())
+                    .into(),
             ]),
             Obj::Sub(x) => Some(vec![
-                InFact::new(x.left.as_ref().clone(), integer.clone(), lf.clone()).into(),
-                InFact::new(x.right.as_ref().clone(), integer, lf.clone()).into(),
+                self.new_in_fact(x.left.as_ref().clone(), integer.clone(), lf.clone())
+                    .into(),
+                self.new_in_fact(x.right.as_ref().clone(), integer, lf.clone())
+                    .into(),
             ]),
             Obj::Pow(x) => Some(vec![
-                InFact::new(x.base.as_ref().clone(), integer, lf.clone()).into(),
-                InFact::new(
+                self.new_in_fact(x.base.as_ref().clone(), integer, lf.clone())
+                    .into(),
+                self.new_in_fact(
                     x.exponent.as_ref().clone(),
                     StandardSet::N.into(),
                     lf.clone(),
                 )
                 .into(),
             ]),
-            Obj::Abs(x) => Some(vec![InFact::new(
-                x.arg.as_ref().clone(),
-                integer,
-                lf.clone(),
-            )
-            .into()]),
+            Obj::Abs(x) => Some(vec![self
+                .new_in_fact(x.arg.as_ref().clone(), integer, lf.clone())
+                .into()]),
             _ => None,
         }
     }
@@ -346,17 +369,23 @@ impl Runtime {
         let natural: Obj = StandardSet::N.into();
         match obj {
             Obj::Add(x) => Some(vec![
-                InFact::new(x.left.as_ref().clone(), natural.clone(), lf.clone()).into(),
-                InFact::new(x.right.as_ref().clone(), natural, lf.clone()).into(),
+                self.new_in_fact(x.left.as_ref().clone(), natural.clone(), lf.clone())
+                    .into(),
+                self.new_in_fact(x.right.as_ref().clone(), natural, lf.clone())
+                    .into(),
             ]),
             Obj::Mul(x) => Some(vec![
-                InFact::new(x.left.as_ref().clone(), natural.clone(), lf.clone()).into(),
-                InFact::new(x.right.as_ref().clone(), natural, lf.clone()).into(),
+                self.new_in_fact(x.left.as_ref().clone(), natural.clone(), lf.clone())
+                    .into(),
+                self.new_in_fact(x.right.as_ref().clone(), natural, lf.clone())
+                    .into(),
             ]),
             Obj::Sub(x) => Some(vec![
-                InFact::new(x.left.as_ref().clone(), StandardSet::Z.into(), lf.clone()).into(),
-                InFact::new(x.right.as_ref().clone(), StandardSet::Z.into(), lf.clone()).into(),
-                LessEqualFact::new(
+                self.new_in_fact(x.left.as_ref().clone(), StandardSet::Z.into(), lf.clone())
+                    .into(),
+                self.new_in_fact(x.right.as_ref().clone(), StandardSet::Z.into(), lf.clone())
+                    .into(),
+                self.new_less_equal_fact(
                     x.right.as_ref().clone(),
                     x.left.as_ref().clone(),
                     lf.clone(),
@@ -364,15 +393,14 @@ impl Runtime {
                 .into(),
             ]),
             Obj::Pow(x) => Some(vec![
-                InFact::new(x.base.as_ref().clone(), natural.clone(), lf.clone()).into(),
-                InFact::new(x.exponent.as_ref().clone(), natural, lf.clone()).into(),
+                self.new_in_fact(x.base.as_ref().clone(), natural.clone(), lf.clone())
+                    .into(),
+                self.new_in_fact(x.exponent.as_ref().clone(), natural, lf.clone())
+                    .into(),
             ]),
-            Obj::Abs(x) => Some(vec![InFact::new(
-                x.arg.as_ref().clone(),
-                StandardSet::Z.into(),
-                lf.clone(),
-            )
-            .into()]),
+            Obj::Abs(x) => Some(vec![self
+                .new_in_fact(x.arg.as_ref().clone(), StandardSet::Z.into(), lf.clone())
+                .into()]),
             _ => None,
         }
     }
@@ -388,21 +416,28 @@ impl Runtime {
         let alternatives: Vec<Vec<AtomicFact>> = match &fact.element {
             Obj::Add(x) => vec![
                 vec![
-                    InFact::new(x.left.as_ref().clone(), n_pos.clone(), lf.clone()).into(),
-                    InFact::new(x.right.as_ref().clone(), n.clone(), lf.clone()).into(),
+                    self.new_in_fact(x.left.as_ref().clone(), n_pos.clone(), lf.clone())
+                        .into(),
+                    self.new_in_fact(x.right.as_ref().clone(), n.clone(), lf.clone())
+                        .into(),
                 ],
                 vec![
-                    InFact::new(x.left.as_ref().clone(), n, lf.clone()).into(),
-                    InFact::new(x.right.as_ref().clone(), n_pos.clone(), lf.clone()).into(),
+                    self.new_in_fact(x.left.as_ref().clone(), n, lf.clone())
+                        .into(),
+                    self.new_in_fact(x.right.as_ref().clone(), n_pos.clone(), lf.clone())
+                        .into(),
                 ],
             ],
             Obj::Mul(x) => vec![vec![
-                InFact::new(x.left.as_ref().clone(), n_pos.clone(), lf.clone()).into(),
-                InFact::new(x.right.as_ref().clone(), n_pos.clone(), lf.clone()).into(),
+                self.new_in_fact(x.left.as_ref().clone(), n_pos.clone(), lf.clone())
+                    .into(),
+                self.new_in_fact(x.right.as_ref().clone(), n_pos.clone(), lf.clone())
+                    .into(),
             ]],
             Obj::Pow(x) => vec![vec![
-                InFact::new(x.base.as_ref().clone(), n_pos, lf.clone()).into(),
-                InFact::new(
+                self.new_in_fact(x.base.as_ref().clone(), n_pos, lf.clone())
+                    .into(),
+                self.new_in_fact(
                     x.exponent.as_ref().clone(),
                     StandardSet::N.into(),
                     lf.clone(),
@@ -410,8 +445,9 @@ impl Runtime {
                 .into(),
             ]],
             Obj::Abs(x) => vec![vec![
-                InFact::new(x.arg.as_ref().clone(), StandardSet::Z.into(), lf.clone()).into(),
-                LessFact::new(
+                self.new_in_fact(x.arg.as_ref().clone(), StandardSet::Z.into(), lf.clone())
+                    .into(),
+                self.new_less_fact(
                     Number::new("0".to_string()).into(),
                     fact.element.clone(),
                     lf.clone(),
@@ -419,8 +455,9 @@ impl Runtime {
                 .into(),
             ]],
             Obj::FiniteSetSize(_) => vec![vec![
-                InFact::new(fact.element.clone(), StandardSet::N.into(), lf.clone()).into(),
-                LessEqualFact::new(
+                self.new_in_fact(fact.element.clone(), StandardSet::N.into(), lf.clone())
+                    .into(),
+                self.new_less_equal_fact(
                     Number::new("1".to_string()).into(),
                     fact.element.clone(),
                     lf.clone(),
@@ -472,8 +509,9 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let target_obj: Obj = target.clone().into();
-        let subset: AtomicFact =
-            SubsetFact::new(set.clone(), target_obj.clone(), lf.clone()).into();
+        let subset: AtomicFact = self
+            .new_subset_fact(set.clone(), target_obj.clone(), lf.clone())
+            .into();
         let direct_proof = self
             .verify_non_equational_atomic_fact_with_bounded_builtin_routes(&subset, verify_state)?;
         let direct = self.complete_atomic_fact_proof_result(&subset, direct_proof, verify_state)?;
@@ -485,9 +523,9 @@ impl Runtime {
         match set {
             Obj::ListSet(list) => {
                 for element in &list.list {
-                    let child: AtomicFact =
-                        InFact::new(element.as_ref().clone(), target_obj.clone(), lf.clone())
-                            .into();
+                    let child: AtomicFact = self
+                        .new_in_fact(element.as_ref().clone(), target_obj.clone(), lf.clone())
+                        .into();
                     let direct_proof = self
                         .verify_non_equational_atomic_fact_with_bounded_builtin_routes(
                             &child,

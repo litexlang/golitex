@@ -11,14 +11,14 @@ impl Runtime {
             tb.skip_token(NOT)?;
             let fact = self.parse_inline_forall_fact(tb, false)?;
             match fact {
-                Fact::ForallFact(forall_fact) => Ok(NotForallFact::new(forall_fact).into()),
+                Fact::ForallFact(forall_fact) => Ok(self.new_not_forall_fact(forall_fact).into()),
                 _ => unreachable!("parse_inline_forall_fact only returns ForallFact"),
             }
         } else if tb.current()? == NOT && tb.token_at_add_index(1) == FORALL {
             tb.skip_token(NOT)?;
             let fact = self.parse_forall_or_forall_with_iff(tb)?;
             match fact {
-                Fact::ForallFact(forall_fact) => Ok(NotForallFact::new(forall_fact).into()),
+                Fact::ForallFact(forall_fact) => Ok(self.new_not_forall_fact(forall_fact).into()),
                 Fact::ForallFactWithIff(_) => Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
                         "not forall with <=> is not supported".to_string(),
@@ -58,7 +58,7 @@ impl Runtime {
             let Fact::ForallFact(forall_fact) = fact else {
                 unreachable!("parse_inline_forall_fact only returns ForallFact")
             };
-            Ok(NotForallFact::new(forall_fact).into())
+            Ok(self.new_not_forall_fact(forall_fact).into())
         } else if tb.current()? == FORALL {
             self.parse_inline_forall_fact(tb, nested)
         } else {
@@ -112,13 +112,14 @@ impl Runtime {
                         ),
                     )));
                 }
-                return Ok(ForallFact::new_canonical_forall(
-                    setting_prefix.param_def,
-                    setting_prefix.dom_facts,
-                    then_facts,
-                    tb.line_file.clone(),
-                )?
-                .into());
+                return Ok(this
+                    .new_forall_fact(
+                        setting_prefix.param_def,
+                        setting_prefix.dom_facts,
+                        then_facts,
+                        tb.line_file.clone(),
+                    )?
+                    .into());
             }
 
             let mut groups: Vec<TypedParameterGroup> = vec![];
@@ -179,13 +180,9 @@ impl Runtime {
                 )));
             }
 
-            Ok(ForallFact::new_canonical_forall(
-                param_def,
-                dom_facts,
-                then_facts,
-                tb.line_file.clone(),
-            )?
-            .into())
+            Ok(this
+                .new_forall_fact(param_def, dom_facts, then_facts, tb.line_file.clone())?
+                .into())
         })
     }
 
@@ -433,14 +430,12 @@ impl Runtime {
             dom_facts.push(self.parse_fact(block)?);
         }
 
-        let forall_fact = ForallFact::new_canonical_forall(
-            param_def,
-            dom_facts,
-            then_facts,
-            tb.line_file.clone(),
-        )?;
+        let forall_fact =
+            self.new_forall_fact(param_def, dom_facts, then_facts, tb.line_file.clone())?;
 
-        Ok(ForallFactWithIff::new(forall_fact, iff_facts, tb.line_file.clone())?.into())
+        Ok(self
+            .new_forall_fact_with_iff(forall_fact, iff_facts, tb.line_file.clone())?
+            .into())
     }
 
     fn parse_forall(
@@ -475,25 +470,27 @@ impl Runtime {
             for block in last.body.iter_mut() {
                 then_facts.push(self.parse_forall_conclusion_fact(block)?);
             }
-            Ok(ForallFact::new_canonical_forall(
-                param_def,
-                initial_dom_facts,
-                then_facts,
-                tb.line_file.clone(),
-            )?
-            .into())
+            Ok(self
+                .new_forall_fact(
+                    param_def,
+                    initial_dom_facts,
+                    then_facts,
+                    tb.line_file.clone(),
+                )?
+                .into())
         } else {
             let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
             for block in tb.body.iter_mut() {
                 then_facts.push(self.parse_forall_conclusion_fact(block)?);
             }
-            Ok(ForallFact::new_canonical_forall(
-                param_def,
-                initial_dom_facts,
-                then_facts,
-                tb.line_file.clone(),
-            )?
-            .into())
+            Ok(self
+                .new_forall_fact(
+                    param_def,
+                    initial_dom_facts,
+                    then_facts,
+                    tb.line_file.clone(),
+                )?
+                .into())
         }
     }
 
@@ -517,10 +514,9 @@ impl Runtime {
                 if collected.len() == 1 {
                     return Ok(AndChainAtomicFact::AtomicFact(collected.remove(0)));
                 }
-                Ok(AndChainAtomicFact::AndFact(AndFact::new(
-                    collected,
-                    tb.line_file.clone(),
-                )))
+                Ok(AndChainAtomicFact::AndFact(
+                    self.new_and_fact(collected, tb.line_file.clone()),
+                ))
             }
         }
     }
@@ -577,7 +573,7 @@ impl Runtime {
                     tb.skip_token(RIGHT_CURLY_BRACE)?;
 
                     let line_file = tb.line_file.clone();
-                    let body = PlainExistFact::new(param_def, facts, line_file)?;
+                    let body = inner.new_plain_exist_fact(param_def, facts, line_file)?;
                     Ok(if is_exist_unique {
                         ExistFact::ExistUniqueFact(body)
                     } else {
@@ -699,10 +695,9 @@ impl Runtime {
                         AndChainAtomicFact::ChainFact(c) => ExistOrAndChainAtomicFact::ChainFact(c),
                     });
                 }
-                Ok(ExistOrAndChainAtomicFact::OrFact(OrFact::new(
-                    list,
-                    tb.line_file.clone(),
-                )))
+                Ok(ExistOrAndChainAtomicFact::OrFact(
+                    self.new_or_fact(list, tb.line_file.clone()),
+                ))
             }
             FORALL => {
                 return Err(RuntimeError::from(ParseRuntimeError(
@@ -732,7 +727,7 @@ impl Runtime {
             tb.skip_token(FACT_PREFIX)?;
             let prop = self.parse_predicate(tb)?;
             let args = self.parse_braced_objs(tb)?;
-            let atomic = AtomicFact::to_atomic_fact(prop, positive_polarity, args, line_file)
+            let atomic = AtomicFact::to_atomic_fact(self, prop, positive_polarity, args, line_file)
                 .map_err(|e: RuntimeError| {
                     let msg = match &e {
                         RuntimeError::NewFactError(s) => s.msg.clone(),
@@ -774,16 +769,16 @@ impl Runtime {
         let next_obj = self.parse_obj(tb)?;
         let args = vec![first_obj, next_obj];
         let atomic =
-            AtomicFact::to_atomic_fact(prop, atomic_has_positive_polarity, args, line_file)
+            AtomicFact::to_atomic_fact(self, prop, atomic_has_positive_polarity, args, line_file)
                 .map_err(|e: RuntimeError| {
-                    let msg = match &e {
-                        RuntimeError::NewFactError(s) => s.msg.clone(),
-                        _ => "parse atomic fact".to_string(),
-                    };
-                    RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
-                    ))
-                })?;
+                let msg = match &e {
+                    RuntimeError::NewFactError(s) => s.msg.clone(),
+                    _ => "parse atomic fact".to_string(),
+                };
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
+                ))
+            })?;
         Ok(atomic)
     }
 
@@ -821,10 +816,9 @@ impl Runtime {
                 AndChainAtomicFact::ChainFact(c) => QuantifierFreeFact::ChainFact(c),
             });
         }
-        Ok(QuantifierFreeFact::OrFact(OrFact::new(
-            list,
-            tb.line_file.clone(),
-        )))
+        Ok(QuantifierFreeFact::OrFact(
+            self.new_or_fact(list, tb.line_file.clone()),
+        ))
     }
 
     /// Parse chain (obj op obj op ...) or single atomic ($prop(args) or obj op obj). When positive_polarity is false, only single atomic is allowed (negated).
@@ -838,7 +832,7 @@ impl Runtime {
             tb.skip_token(FACT_PREFIX)?;
             let prop = self.parse_predicate(tb)?;
             let args = self.parse_braced_objs(tb)?;
-            let atomic = AtomicFact::to_atomic_fact(prop, positive_polarity, args, line_file)
+            let atomic = AtomicFact::to_atomic_fact(self, prop, positive_polarity, args, line_file)
                 .map_err(|e: RuntimeError| {
                     let msg = match &e {
                         RuntimeError::NewFactError(s) => s.msg.clone(),
@@ -879,6 +873,7 @@ impl Runtime {
                     )));
                 }
                 let atomic = AtomicFact::to_atomic_fact(
+                    self,
                     AtomicName::WithoutMod(IN.to_string()),
                     !positive_polarity,
                     vec![objs.remove(0), next_obj],
@@ -927,7 +922,7 @@ impl Runtime {
         if objs.len() == 2 && prop_names.len() == 1 {
             let prop = prop_names.remove(0);
             let args = objs;
-            let atomic = AtomicFact::to_atomic_fact(prop, positive_polarity, args, line_file)
+            let atomic = AtomicFact::to_atomic_fact(self, prop, positive_polarity, args, line_file)
                 .map_err(|e: RuntimeError| {
                     let msg = match &e {
                         RuntimeError::NewFactError(s) => s.msg.clone(),
@@ -939,9 +934,9 @@ impl Runtime {
                 })?;
             return Ok(ChainAtomicFact::AtomicFact(atomic));
         }
-        Ok(ChainAtomicFact::ChainFact(ChainFact::new(
-            objs, prop_names, line_file,
-        )))
+        Ok(ChainAtomicFact::ChainFact(
+            self.new_chain_fact(objs, prop_names, line_file),
+        ))
     }
 }
 

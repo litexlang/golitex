@@ -1258,22 +1258,23 @@ pub fn induc_obj_plus_offset(induc_from: &Obj, offset: usize) -> Obj {
     }
 }
 
-fn flatten_and_chain_to_atomic_facts(c: &AndChainAtomicFact) -> Vec<AtomicFact> {
+fn flatten_and_chain_to_atomic_facts(runtime: &Runtime, c: &AndChainAtomicFact) -> Vec<AtomicFact> {
     match c {
         AndChainAtomicFact::AtomicFact(a) => vec![a.clone()],
         AndChainAtomicFact::AndFact(af) => af.facts.clone(),
-        AndChainAtomicFact::ChainFact(cf) => cf.facts().unwrap(),
+        AndChainAtomicFact::ChainFact(cf) => cf.facts(runtime).unwrap(),
     }
 }
 
 fn merge_two_and_chain_clauses(
+    runtime: &Runtime,
     a: AndChainAtomicFact,
     b: AndChainAtomicFact,
     line_file: LineFile,
 ) -> AndChainAtomicFact {
-    let mut atoms = flatten_and_chain_to_atomic_facts(&a);
-    atoms.extend(flatten_and_chain_to_atomic_facts(&b));
-    AndChainAtomicFact::AndFact(AndFact::new(atoms, line_file))
+    let mut atoms = flatten_and_chain_to_atomic_facts(runtime, &a);
+    atoms.extend(flatten_and_chain_to_atomic_facts(runtime, &b));
+    AndChainAtomicFact::AndFact(runtime.new_and_fact(atoms, line_file))
 }
 
 impl HaveFnByInducCase {
@@ -1310,11 +1311,21 @@ impl HaveFnByInducStmt {
     }
 
     /// Flatten nested cases into the ordinary case-by-case shape used for stored forall facts.
-    pub fn to_have_fn_equal_case_by_case_stmt(&self) -> HaveFnEqualCaseByCaseStmt {
+    pub fn to_have_fn_equal_case_by_case_stmt(
+        &self,
+        runtime: &Runtime,
+    ) -> HaveFnEqualCaseByCaseStmt {
         let line_file = self.line_file.clone();
         let mut cases: Vec<AndChainAtomicFact> = Vec::new();
         let mut equal_tos: Vec<Obj> = Vec::new();
-        Self::flatten_case_list(&self.cases, None, &mut cases, &mut equal_tos, &line_file);
+        Self::flatten_case_list(
+            runtime,
+            &self.cases,
+            None,
+            &mut cases,
+            &mut equal_tos,
+            &line_file,
+        );
         HaveFnEqualCaseByCaseStmt::new(
             self.symbol_binding.clone(),
             self.fn_set_clause.clone(),
@@ -1325,6 +1336,7 @@ impl HaveFnByInducStmt {
     }
 
     fn flatten_case_list(
+        runtime: &Runtime,
         source_cases: &[HaveFnByInducCase],
         prefix: Option<AndChainAtomicFact>,
         cases: &mut Vec<AndChainAtomicFact>,
@@ -1333,9 +1345,12 @@ impl HaveFnByInducStmt {
     ) {
         for c in source_cases {
             let merged = match &prefix {
-                Some(p) => {
-                    merge_two_and_chain_clauses(p.clone(), c.case_fact.clone(), line_file.clone())
-                }
+                Some(p) => merge_two_and_chain_clauses(
+                    runtime,
+                    p.clone(),
+                    c.case_fact.clone(),
+                    line_file.clone(),
+                ),
                 None => c.case_fact.clone(),
             };
             match &c.body {
@@ -1344,7 +1359,14 @@ impl HaveFnByInducStmt {
                     equal_tos.push(eq.clone());
                 }
                 HaveFnByInducCaseBody::NestedCases(nested) => {
-                    Self::flatten_case_list(nested, Some(merged), cases, equal_tos, line_file);
+                    Self::flatten_case_list(
+                        runtime,
+                        nested,
+                        Some(merged),
+                        cases,
+                        equal_tos,
+                        line_file,
+                    );
                 }
             }
         }

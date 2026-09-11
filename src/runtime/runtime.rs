@@ -1,6 +1,7 @@
 //! Run-wide runtime state and current-source lifecycle.
 
 use crate::prelude::*;
+use std::cell::Cell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
@@ -53,7 +54,7 @@ pub struct Runtime {
     ///
     /// Local environments may disappear, but a fact ID is never reused during
     /// the run.
-    pub next_fact_id: u64,
+    pub next_fact_id: Cell<u64>,
 
     /// Runtime-wide allocator for globally unique symbol IDs.
     pub symbol_id_allocator: Rc<SymbolIdAllocator>,
@@ -87,6 +88,17 @@ pub struct SourceActivation {
 
 impl Runtime {
     pub fn new(execution_options: RuntimeOptions) -> Self {
+        Self::new_with_fact_id_start(execution_options, 1)
+    }
+
+    /// Construct an independent runtime with an explicitly disjoint fact-ID
+    /// range. This is used by compiler-only structural passes that must create
+    /// temporary facts without colliding with IDs retained by an execution
+    /// runtime. Semantic execution should use [`Runtime::new`].
+    pub(crate) fn new_with_fact_id_start(
+        execution_options: RuntimeOptions,
+        fact_id_start: u64,
+    ) -> Self {
         let mut module_manager = ModuleManager::new();
         let source_id = module_manager.create_virtual_root_module(VirtualSource::Eval);
         Runtime {
@@ -97,7 +109,7 @@ impl Runtime {
             execution_environments_stack: vec![],
             parse_context: ParseContext::new(),
             parsing_definition_depth: 0,
-            next_fact_id: 1,
+            next_fact_id: Cell::new(fact_id_start),
             symbol_id_allocator: Rc::new(SymbolIdAllocator::new()),
             executed_direct_struct_carriers: HashMap::new(),
             execution_options,
@@ -124,503 +136,406 @@ impl Default for Runtime {
 }
 
 impl Runtime {
-    pub fn allocate_fact_id(&mut self) -> Result<FactId, RuntimeError> {
-        let value = self.next_fact_id;
-        self.next_fact_id = value.checked_add(1).ok_or_else(|| {
+    pub fn allocate_fact_id(&self) -> Result<FactId, RuntimeError> {
+        let value = self.next_fact_id.get();
+        let next_value = value.checked_add(1).ok_or_else(|| {
             RuntimeError::from(UnknownRuntimeError(RuntimeErrorStruct::new_with_just_msg(
                 "fact ID space exhausted".to_string(),
             )))
         })?;
+        self.next_fact_id.set(next_value);
         Ok(FactId::new(value))
     }
 
     /// Construct facts with IDs allocated exclusively by this Runtime.
-    pub fn new_equal_fact(
-        &mut self,
-        left: Obj,
-        right: Obj,
-        line_file: LineFile,
-    ) -> Result<EqualFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(EqualFact {
+    pub fn new_equal_fact(&self, left: Obj, right: Obj, line_file: LineFile) -> EqualFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        EqualFact {
             fact_id,
             left,
             right,
             line_file,
-        })
+        }
     }
 
-    pub fn new_not_equal_fact(
-        &mut self,
-        left: Obj,
-        right: Obj,
+    pub fn new_equal_fact_from_refs(
+        &self,
+        left: &Obj,
+        right: &Obj,
         line_file: LineFile,
-    ) -> Result<NotEqualFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(NotEqualFact {
-            fact_id,
-            left,
-            right,
-            line_file,
-        })
+    ) -> EqualFact {
+        self.new_equal_fact(left.clone(), right.clone(), line_file)
     }
 
-    pub fn new_less_fact(
-        &mut self,
-        left: Obj,
-        right: Obj,
-        line_file: LineFile,
-    ) -> Result<LessFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(LessFact {
+    pub fn new_not_equal_fact(&self, left: Obj, right: Obj, line_file: LineFile) -> NotEqualFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        NotEqualFact {
             fact_id,
             left,
             right,
             line_file,
-        })
+        }
     }
 
-    pub fn new_greater_fact(
-        &mut self,
-        left: Obj,
-        right: Obj,
-        line_file: LineFile,
-    ) -> Result<GreaterFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(GreaterFact {
+    pub fn new_less_fact(&self, left: Obj, right: Obj, line_file: LineFile) -> LessFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        LessFact {
             fact_id,
             left,
             right,
             line_file,
-        })
+        }
     }
 
-    pub fn new_less_equal_fact(
-        &mut self,
-        left: Obj,
-        right: Obj,
-        line_file: LineFile,
-    ) -> Result<LessEqualFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(LessEqualFact {
+    pub fn new_greater_fact(&self, left: Obj, right: Obj, line_file: LineFile) -> GreaterFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        GreaterFact {
             fact_id,
             left,
             right,
             line_file,
-        })
+        }
+    }
+
+    pub fn new_less_equal_fact(&self, left: Obj, right: Obj, line_file: LineFile) -> LessEqualFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        LessEqualFact {
+            fact_id,
+            left,
+            right,
+            line_file,
+        }
     }
 
     pub fn new_greater_equal_fact(
-        &mut self,
+        &self,
         left: Obj,
         right: Obj,
         line_file: LineFile,
-    ) -> Result<GreaterEqualFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(GreaterEqualFact {
+    ) -> GreaterEqualFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        GreaterEqualFact {
             fact_id,
             left,
             right,
             line_file,
-        })
+        }
     }
 
-    pub fn new_not_less_fact(
-        &mut self,
-        left: Obj,
-        right: Obj,
-        line_file: LineFile,
-    ) -> Result<NotLessFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(NotLessFact {
+    pub fn new_not_less_fact(&self, left: Obj, right: Obj, line_file: LineFile) -> NotLessFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        NotLessFact {
             fact_id,
             left,
             right,
             line_file,
-        })
+        }
     }
 
     pub fn new_not_greater_fact(
-        &mut self,
+        &self,
         left: Obj,
         right: Obj,
         line_file: LineFile,
-    ) -> Result<NotGreaterFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(NotGreaterFact {
+    ) -> NotGreaterFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        NotGreaterFact {
             fact_id,
             left,
             right,
             line_file,
-        })
+        }
     }
 
     pub fn new_not_less_equal_fact(
-        &mut self,
+        &self,
         left: Obj,
         right: Obj,
         line_file: LineFile,
-    ) -> Result<NotLessEqualFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(NotLessEqualFact {
+    ) -> NotLessEqualFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        NotLessEqualFact {
             fact_id,
             left,
             right,
             line_file,
-        })
+        }
     }
 
     pub fn new_not_greater_equal_fact(
-        &mut self,
+        &self,
         left: Obj,
         right: Obj,
         line_file: LineFile,
-    ) -> Result<NotGreaterEqualFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(NotGreaterEqualFact {
+    ) -> NotGreaterEqualFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        NotGreaterEqualFact {
             fact_id,
             left,
             right,
             line_file,
-        })
+        }
     }
 
-    pub fn new_in_fact(
-        &mut self,
-        element: Obj,
-        set: Obj,
-        line_file: LineFile,
-    ) -> Result<InFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(InFact {
+    pub fn new_in_fact(&self, element: Obj, set: Obj, line_file: LineFile) -> InFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        InFact {
             fact_id,
             element,
             set,
             line_file,
-        })
+        }
     }
 
-    pub fn new_not_in_fact(
-        &mut self,
-        element: Obj,
-        set: Obj,
-        line_file: LineFile,
-    ) -> Result<NotInFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(NotInFact {
+    pub fn new_not_in_fact(&self, element: Obj, set: Obj, line_file: LineFile) -> NotInFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        NotInFact {
             fact_id,
             element,
             set,
             line_file,
-        })
+        }
     }
 
-    pub fn new_is_set_fact(
-        &mut self,
-        set: Obj,
-        line_file: LineFile,
-    ) -> Result<IsSetFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(IsSetFact {
+    pub fn new_is_set_fact(&self, set: Obj, line_file: LineFile) -> IsSetFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        IsSetFact {
             fact_id,
             set,
             line_file,
-        })
+        }
     }
 
-    pub fn new_is_nonempty_set_fact(
-        &mut self,
-        set: Obj,
-        line_file: LineFile,
-    ) -> Result<IsNonemptySetFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(IsNonemptySetFact {
+    pub fn new_is_nonempty_set_fact(&self, set: Obj, line_file: LineFile) -> IsNonemptySetFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        IsNonemptySetFact {
             fact_id,
             set,
             line_file,
-        })
+        }
     }
 
-    pub fn new_is_finite_set_fact(
-        &mut self,
-        set: Obj,
-        line_file: LineFile,
-    ) -> Result<IsFiniteSetFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(IsFiniteSetFact {
+    pub fn new_is_finite_set_fact(&self, set: Obj, line_file: LineFile) -> IsFiniteSetFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        IsFiniteSetFact {
             fact_id,
             set,
             line_file,
-        })
+        }
     }
 
-    pub fn new_is_cart_fact(
-        &mut self,
-        set: Obj,
-        line_file: LineFile,
-    ) -> Result<IsCartFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(IsCartFact {
+    pub fn new_is_cart_fact(&self, set: Obj, line_file: LineFile) -> IsCartFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        IsCartFact {
             fact_id,
             set,
             line_file,
-        })
+        }
     }
 
-    pub fn new_is_tuple_fact(
-        &mut self,
-        tuple: Obj,
-        line_file: LineFile,
-    ) -> Result<IsTupleFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(IsTupleFact {
+    pub fn new_is_tuple_fact(&self, tuple: Obj, line_file: LineFile) -> IsTupleFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        IsTupleFact {
             fact_id,
             set: tuple,
             line_file,
-        })
+        }
     }
 
-    pub fn new_not_is_set_fact(
-        &mut self,
-        set: Obj,
-        line_file: LineFile,
-    ) -> Result<NotIsSetFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(NotIsSetFact {
+    pub fn new_not_is_set_fact(&self, set: Obj, line_file: LineFile) -> NotIsSetFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        NotIsSetFact {
             fact_id,
             set,
             line_file,
-        })
+        }
     }
 
     pub fn new_not_is_nonempty_set_fact(
-        &mut self,
+        &self,
         set: Obj,
         line_file: LineFile,
-    ) -> Result<NotIsNonemptySetFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(NotIsNonemptySetFact {
+    ) -> NotIsNonemptySetFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        NotIsNonemptySetFact {
             fact_id,
             set,
             line_file,
-        })
+        }
     }
 
-    pub fn new_not_is_finite_set_fact(
-        &mut self,
-        set: Obj,
-        line_file: LineFile,
-    ) -> Result<NotIsFiniteSetFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(NotIsFiniteSetFact {
+    pub fn new_not_is_finite_set_fact(&self, set: Obj, line_file: LineFile) -> NotIsFiniteSetFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        NotIsFiniteSetFact {
             fact_id,
             set,
             line_file,
-        })
+        }
     }
 
-    pub fn new_not_is_cart_fact(
-        &mut self,
-        set: Obj,
-        line_file: LineFile,
-    ) -> Result<NotIsCartFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(NotIsCartFact {
+    pub fn new_not_is_cart_fact(&self, set: Obj, line_file: LineFile) -> NotIsCartFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        NotIsCartFact {
             fact_id,
             set,
             line_file,
-        })
+        }
     }
 
-    pub fn new_not_is_tuple_fact(
-        &mut self,
-        tuple: Obj,
-        line_file: LineFile,
-    ) -> Result<NotIsTupleFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(NotIsTupleFact {
+    pub fn new_not_is_tuple_fact(&self, tuple: Obj, line_file: LineFile) -> NotIsTupleFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        NotIsTupleFact {
             fact_id,
             set: tuple,
             line_file,
-        })
+        }
     }
 
-    pub fn new_subset_fact(
-        &mut self,
-        left: Obj,
-        right: Obj,
-        line_file: LineFile,
-    ) -> Result<SubsetFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(SubsetFact {
+    pub fn new_subset_fact(&self, left: Obj, right: Obj, line_file: LineFile) -> SubsetFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        SubsetFact {
             fact_id,
             left,
             right,
             line_file,
-        })
+        }
     }
 
-    pub fn new_superset_fact(
-        &mut self,
-        left: Obj,
-        right: Obj,
-        line_file: LineFile,
-    ) -> Result<SupersetFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(SupersetFact {
+    pub fn new_superset_fact(&self, left: Obj, right: Obj, line_file: LineFile) -> SupersetFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        SupersetFact {
             fact_id,
             left,
             right,
             line_file,
-        })
+        }
     }
 
-    pub fn new_not_subset_fact(
-        &mut self,
-        left: Obj,
-        right: Obj,
-        line_file: LineFile,
-    ) -> Result<NotSubsetFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(NotSubsetFact {
+    pub fn new_not_subset_fact(&self, left: Obj, right: Obj, line_file: LineFile) -> NotSubsetFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        NotSubsetFact {
             fact_id,
             left,
             right,
             line_file,
-        })
+        }
     }
 
     pub fn new_not_superset_fact(
-        &mut self,
+        &self,
         left: Obj,
         right: Obj,
         line_file: LineFile,
-    ) -> Result<NotSupersetFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(NotSupersetFact {
+    ) -> NotSupersetFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        NotSupersetFact {
             fact_id,
             left,
             right,
             line_file,
-        })
+        }
     }
 
     pub fn new_fn_equal_in_fact(
-        &mut self,
+        &self,
         left: Obj,
         right: Obj,
         set: Obj,
         line_file: LineFile,
-    ) -> Result<FnEqualInFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(FnEqualInFact {
+    ) -> FnEqualInFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        FnEqualInFact {
             fact_id,
             left,
             right,
             set,
             line_file,
-        })
+        }
     }
 
-    pub fn new_fn_equal_fact(
-        &mut self,
-        left: Obj,
-        right: Obj,
-        line_file: LineFile,
-    ) -> Result<FnEqualFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(FnEqualFact {
+    pub fn new_fn_equal_fact(&self, left: Obj, right: Obj, line_file: LineFile) -> FnEqualFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        FnEqualFact {
             fact_id,
             left,
             right,
             line_file,
-        })
+        }
     }
 
     pub fn new_normal_atomic_fact(
-        &mut self,
+        &self,
         predicate: AtomicName,
         body: Vec<Obj>,
         line_file: LineFile,
-    ) -> Result<NormalAtomicFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(NormalAtomicFact {
+    ) -> NormalAtomicFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        NormalAtomicFact {
             fact_id,
             predicate,
             body,
             line_file,
-        })
+        }
     }
 
     pub fn new_not_normal_atomic_fact(
-        &mut self,
+        &self,
         predicate: AtomicName,
         body: Vec<Obj>,
         line_file: LineFile,
-    ) -> Result<NotNormalAtomicFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(NotNormalAtomicFact {
+    ) -> NotNormalAtomicFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        NotNormalAtomicFact {
             fact_id,
             predicate,
             body,
             line_file,
-        })
+        }
     }
 
-    pub fn new_not_forall_fact(
-        &mut self,
-        forall_fact: ForallFact,
-    ) -> Result<NotForallFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(NotForallFact {
+    pub fn new_not_forall_fact(&self, forall_fact: ForallFact) -> NotForallFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        NotForallFact {
             fact_id,
             forall_fact,
-        })
+        }
     }
 
-    pub fn new_and_fact(
-        &mut self,
-        facts: Vec<AtomicFact>,
-        line_file: LineFile,
-    ) -> Result<AndFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(AndFact {
+    pub fn new_and_fact(&self, facts: Vec<AtomicFact>, line_file: LineFile) -> AndFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        AndFact {
             fact_id,
             facts,
             line_file,
-        })
+        }
     }
 
-    pub fn new_or_fact(
-        &mut self,
-        facts: Vec<AndChainAtomicFact>,
-        line_file: LineFile,
-    ) -> Result<OrFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(OrFact {
+    pub fn new_or_fact(&self, facts: Vec<AndChainAtomicFact>, line_file: LineFile) -> OrFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        OrFact {
             fact_id,
             facts,
             line_file,
-        })
+        }
     }
 
     pub fn new_chain_fact(
-        &mut self,
+        &self,
         objs: Vec<Obj>,
         prop_names: Vec<AtomicName>,
         line_file: LineFile,
-    ) -> Result<ChainFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        Ok(ChainFact {
+    ) -> ChainFact {
+        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
+        ChainFact {
             fact_id,
             objs,
             prop_names,
             line_file,
-        })
+        }
     }
 
     pub fn new_forall_fact(
-        &mut self,
+        &self,
         typed_parameters: TypedParameterList,
         dom_facts: Vec<Fact>,
         then_facts: Vec<ExistOrAndChainAtomicFact>,
@@ -639,7 +554,7 @@ impl Runtime {
     }
 
     pub fn new_forall_fact_with_iff(
-        &mut self,
+        &self,
         forall_fact: ForallFact,
         iff_facts: Vec<ExistOrAndChainAtomicFact>,
         line_file: LineFile,
@@ -656,7 +571,7 @@ impl Runtime {
     }
 
     pub fn new_plain_exist_fact(
-        &mut self,
+        &self,
         typed_parameters: TypedParameterList,
         facts: Vec<QuantifierFreeFact>,
         line_file: LineFile,

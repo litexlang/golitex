@@ -22,12 +22,13 @@ impl Runtime {
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<VerifyFactResult>, RuntimeError> {
-        let not_zero: AtomicFact = NotEqualFact::new(
-            denominator.clone(),
-            Self::literal_zero_obj_for_division_builtin(),
-            line_file,
-        )
-        .into();
+        let not_zero: AtomicFact = self
+            .new_not_equal_fact(
+                denominator.clone(),
+                Self::literal_zero_obj_for_division_builtin(),
+                line_file,
+            )
+            .into();
         self.try_verify_atomic_fact_as_builtin_rule_premise(&not_zero, builtin_state)
     }
 
@@ -41,7 +42,7 @@ impl Runtime {
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let line_file = &equal_fact.line_file;
         let division_obj: Obj = Div::new(dividend.clone(), denominator.clone()).into();
-        if !self.equal_fact_sides_are_the_same_or_known_equal(&EqualFact::new_from_refs(
+        if !self.equal_fact_sides_are_the_same_or_known_equal(&self.new_equal_fact_from_refs(
             &division_obj,
             quotient,
             line_file.clone(),
@@ -118,11 +119,11 @@ impl Runtime {
 
         let product_1: Obj = Mul::new(division.right.as_ref().clone(), quotient.clone()).into();
         let product_2: Obj = Mul::new(quotient.clone(), division.right.as_ref().clone()).into();
-        if !self.equal_fact_sides_are_the_same_or_known_equal(&EqualFact::new_from_refs(
+        if !self.equal_fact_sides_are_the_same_or_known_equal(&self.new_equal_fact_from_refs(
             division.left.as_ref(),
             &product_1,
             line_file.clone(),
-        )) && !self.equal_fact_sides_are_the_same_or_known_equal(&EqualFact::new_from_refs(
+        )) && !self.equal_fact_sides_are_the_same_or_known_equal(&self.new_equal_fact_from_refs(
             division.left.as_ref(),
             &product_2,
             line_file.clone(),

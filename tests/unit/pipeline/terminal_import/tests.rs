@@ -1,6 +1,6 @@
 use super::run_terminal_import;
 use crate::prelude::{OutputDetail, OutputLanguage};
-use crate::runtime::{RuntimeOptions, Runtime, SummaryOption};
+use crate::runtime::{Runtime, RuntimeOptions, SummaryOption};
 use crate::test_support::{execute_source, with_standard_library_root};
 use std::fs;
 use std::path::{Path, PathBuf};

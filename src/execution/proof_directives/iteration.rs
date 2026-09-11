@@ -308,12 +308,13 @@ impl Runtime {
                 .map(|(i, ls)| (*ls.list[assignment[i]]).clone())
                 .collect();
             let tuple_obj: Obj = Tuple::new(elems).into();
-            let parameter_equal_to_tuple: AtomicFact = EqualFact::new(
-                obj_for_bound_param_in_scope(&param_binding),
-                tuple_obj.clone(),
-                stmt.line_file.clone(),
-            )
-            .into();
+            let parameter_equal_to_tuple: AtomicFact = rt
+                .new_equal_fact(
+                    obj_for_bound_param_in_scope(&param_binding),
+                    tuple_obj.clone(),
+                    stmt.line_file.clone(),
+                )
+                .into();
             let assignment = vec![(param.to_string(), tuple_obj.to_string())];
             let assumption_fact: Fact = parameter_equal_to_tuple.clone().into();
             let assumption_infers = rt.store_atomic_fact_without_well_defined_verified_and_infer(
@@ -339,19 +340,27 @@ impl Runtime {
 
 impl Runtime {
     // Negated domain: one atomic uses logical negation; conjunction uses De Morgan.
+    #[deprecated(note = "use Runtime::negated_domain_fact_for_by_for_skip_with_runtime")]
     pub fn negated_domain_fact_for_by_for_skip(dom: &Fact) -> Option<Fact> {
+        Self::negated_domain_fact_for_by_for_skip_with_runtime(&Runtime::default(), dom)
+    }
+
+    pub fn negated_domain_fact_for_by_for_skip_with_runtime(&self, dom: &Fact) -> Option<Fact> {
         match dom {
-            Fact::AtomicFact(a) => a.logical_negation().ok().map(Fact::AtomicFact),
+            Fact::AtomicFact(a) => a
+                .logical_negation_with_runtime(self)
+                .ok()
+                .map(Fact::AtomicFact),
             Fact::AndFact(and_fact) => {
                 if and_fact.facts.is_empty() {
                     return None;
                 }
                 let mut branches = Vec::with_capacity(and_fact.facts.len());
                 for fact in and_fact.facts.iter() {
-                    let negated = fact.logical_negation().ok()?;
+                    let negated = fact.logical_negation_with_runtime(self).ok()?;
                     branches.push(AndChainAtomicFact::AtomicFact(negated));
                 }
-                Some(OrFact::new(branches, and_fact.line_file()).into())
+                Some(self.new_or_fact(branches, and_fact.line_file()).into())
             }
             Fact::ChainFact(_)
             | Fact::OrFact(_)
@@ -527,7 +536,7 @@ impl Runtime {
                 parameter_type,
             )?;
 
-            let parameter_in_z_atomic_fact = AtomicFact::InFact(InFact::new(
+            let parameter_in_z_atomic_fact = AtomicFact::InFact(self.new_in_fact(
                 obj_for_bound_param_in_scope(parameter_binding),
                 StandardSet::Z.into(),
                 stmt.line_file.clone(),
@@ -544,7 +553,7 @@ impl Runtime {
             )?);
 
             let parameter_equal_to_assigned_obj_atomic_fact =
-                AtomicFact::EqualFact(EqualFact::new(
+                AtomicFact::EqualFact(self.new_equal_fact(
                     obj_for_bound_param_in_scope(parameter_binding),
                     Number::new(assigned_integer_string).into(),
                     stmt.line_file.clone(),
@@ -602,7 +611,9 @@ impl Runtime {
                     satisfied_infers: Some(satisfied_infers),
                 });
             } else if verify_dom_result.is_unknown() {
-                if let Some(negated_domain) = Self::negated_domain_fact_for_by_for_skip(dom_fact) {
+                if let Some(negated_domain) =
+                    self.negated_domain_fact_for_by_for_skip_with_runtime(dom_fact)
+                {
                     let verify_negation_result =
                         self.verify_fact_allow_unknown(&negated_domain, &verify_state)?;
                     if verify_negation_result.is_success() {

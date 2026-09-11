@@ -4,7 +4,7 @@ use crate::module_system::{discover_terminal_module_import, discover_terminal_st
 use crate::module_system::{ImportTarget, ModuleStatus, UnverifiedImportKind};
 use crate::output::json_value::{render_json_value, JsonValue};
 use crate::parsing::Tokenizer;
-use crate::runtime::{TrustedOrRequireVerify, Runtime};
+use crate::runtime::{Runtime, TrustedOrRequireVerify};
 use crate::syntax::keywords::{AS, DOUBLE_QUOTE, IMPORT, STD};
 use crate::syntax::name_validation::is_valid_litex_name;
 use crate::syntax::source_conventions::{default_line_file, LineFile};

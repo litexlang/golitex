@@ -16,9 +16,14 @@ pub struct OrFact {
 }
 
 impl OrFact {
+    #[cfg(test)]
     #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(facts: Vec<AndChainAtomicFact>, line_file: LineFile) -> Self {
-        OrFact { fact_id: FactId::fresh(), facts, line_file }
+        OrFact {
+            fact_id: FactId::fresh(),
+            facts,
+            line_file,
+        }
     }
 }
 

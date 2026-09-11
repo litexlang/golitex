@@ -38,7 +38,7 @@ impl Runtime {
         fact: &ForallFactWithIff,
         verify_state: VerifyState2,
     ) -> Result<(VerifyForallFactResult2, VerifyForallFactResult2), RuntimeError> {
-        let (then_implies_iff_fact, iff_implies_then_fact) = fact.to_two_forall_facts()?;
+        let (then_implies_iff_fact, iff_implies_then_fact) = fact.to_two_forall_facts(self)?;
         let then_implies_iff =
             self.verify_forall_fact2(&then_implies_iff_fact, verify_state.clone())?;
         let iff_implies_then = self.verify_forall_fact2(&iff_implies_then_fact, verify_state)?;

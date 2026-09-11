@@ -43,9 +43,12 @@ impl Runtime {
         cart: Option<Cart>,
         line_file: LineFile,
     ) {
-        self.top_level_env()
-            .object_properties
-            .store_tuple_and_cart(name.to_string(), tuple, cart, line_file);
+        self.top_level_env().object_properties.store_tuple_and_cart(
+            name.to_string(),
+            tuple,
+            cart,
+            line_file,
+        );
     }
 
     pub fn store_known_cart_obj(&mut self, name: &str, cart: Cart, line_file: LineFile) {
@@ -60,9 +63,11 @@ impl Runtime {
         set_builder: SetBuilder,
         line_file: LineFile,
     ) {
-        self.top_level_env()
-            .object_properties
-            .store_set_builder(name.to_string(), set_builder, line_file);
+        self.top_level_env().object_properties.store_set_builder(
+            name.to_string(),
+            set_builder,
+            line_file,
+        );
     }
 
     pub fn store_known_finite_seq_list_obj(
@@ -72,12 +77,14 @@ impl Runtime {
         member_of_finite_seq_set: Option<FiniteSeqSet>,
         line_file: LineFile,
     ) {
-        self.top_level_env().object_properties.store_finite_sequence_list(
-            name.to_string(),
-            list,
-            member_of_finite_seq_set,
-            line_file,
-        );
+        self.top_level_env()
+            .object_properties
+            .store_finite_sequence_list(
+                name.to_string(),
+                list,
+                member_of_finite_seq_set,
+                line_file,
+            );
     }
 
     pub fn store_known_matrix_list_obj(
@@ -101,11 +108,9 @@ impl Runtime {
         matrix_set: MatrixSet,
         line_file: LineFile,
     ) {
-        self.top_level_env().object_properties.store_matrix_set_membership(
-            obj.to_string(),
-            matrix_set,
-            line_file,
-        );
+        self.top_level_env()
+            .object_properties
+            .store_matrix_set_membership(obj.to_string(), matrix_set, line_file);
     }
 
     pub fn matrix_set_to_fn_set(&self, ms: &MatrixSet, line_file: LineFile) -> FnSet {
@@ -116,13 +121,13 @@ impl Runtime {
         FnSet::new(
             vec![parameters.clone()],
             vec![
-                AtomicFact::from(LessEqualFact::new(
+                AtomicFact::from(self.new_less_equal_fact(
                     obj_for_bound_param_in_scope(&parameters.params[0]),
                     (*ms.row_len).clone(),
                     line_file.clone(),
                 ))
                 .into(),
-                AtomicFact::from(LessEqualFact::new(
+                AtomicFact::from(self.new_less_equal_fact(
                     obj_for_bound_param_in_scope(&parameters.params[1]),
                     (*ms.col_len).clone(),
                     line_file.clone(),
@@ -141,7 +146,7 @@ impl Runtime {
             .expect("internal binder identity counter exhausted");
         FnSet::new(
             vec![param_group.clone()],
-            vec![AtomicFact::from(LessEqualFact::new(
+            vec![AtomicFact::from(self.new_less_equal_fact(
                 obj_for_bound_param_in_scope(&param_group.params[0]),
                 (*fs.n).clone(),
                 line_file,
@@ -175,7 +180,7 @@ impl Runtime {
             StandardSet::NPos.into(),
         )?];
         let dom_facts: Vec<QuantifierFreeFact> = vec![QuantifierFreeFact::AtomicFact(
-            LessEqualFact::new(
+            self.new_less_equal_fact(
                 obj_for_bound_param_in_scope(&params[0].params[0]),
                 (*fs.n).clone(),
                 line_file,

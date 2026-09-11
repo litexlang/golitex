@@ -16,7 +16,7 @@ impl Runtime {
         }
 
         let (forall_then_implies_iff, forall_iff_implies_then) =
-            forall_iff.to_two_forall_facts()?;
+            forall_iff.to_two_forall_facts(self)?;
         let verification_steps = [
             (&forall_then_implies_iff, "then to iff"),
             (&forall_iff_implies_then, "iff to then"),

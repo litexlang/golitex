@@ -24,6 +24,12 @@ such as `x = y` from its negative counterpart `x != y`. It does not claim that
 the proposition has been verified; verification success belongs to
 `StmtResult::is_success()`.
 
+Fact values in production code are created through the owning
+`Runtime::new_*_fact` factory. The factory allocates the fact ID before any
+shape validation, so an attempted construction that later returns an error
+still advances that Runtime's monotone ID sequence. Fact IDs are preserved by
+cloning an existing fact; cloning never allocates a new identity.
+
 [`types.rs`](types.rs) owns the top-level `Fact` variants. The implementation is
 then grouped by mathematical shape:
 

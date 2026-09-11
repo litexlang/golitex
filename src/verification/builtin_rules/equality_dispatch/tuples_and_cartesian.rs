@@ -25,8 +25,9 @@ impl Runtime {
             return Ok(None);
         }
 
-        let is_tuple_fact: AtomicFact =
-            IsTupleFact::new(target_obj.clone(), line_file.clone()).into();
+        let is_tuple_fact: AtomicFact = self
+            .new_is_tuple_fact(target_obj.clone(), line_file.clone())
+            .into();
         let is_tuple_result = self.verify_atomic_fact(&is_tuple_fact, verify_state)?;
         if !is_tuple_result.is_success() {
             return Ok(None);
@@ -34,8 +35,9 @@ impl Runtime {
 
         let tuple_dim_obj: Obj = TupleDim::new(target_obj.clone()).into();
         let tuple_dim_value_obj: Obj = Number::new(tuple_obj.args.len().to_string()).into();
-        let tuple_dim_fact: AtomicFact =
-            EqualFact::new(tuple_dim_obj, tuple_dim_value_obj, line_file.clone()).into();
+        let tuple_dim_fact: AtomicFact = self
+            .new_equal_fact(tuple_dim_obj, tuple_dim_value_obj, line_file.clone())
+            .into();
         let tuple_dim_result = self.verify_atomic_fact(&tuple_dim_fact, verify_state)?;
         if !tuple_dim_result.is_success() {
             return Ok(None);
@@ -45,8 +47,9 @@ impl Runtime {
         for (index, arg) in tuple_obj.args.iter().enumerate() {
             let index_obj: Obj = Number::new((index + 1).to_string()).into();
             let projected_obj: Obj = ObjAtIndex::new(target_obj.clone(), index_obj).into();
-            let component_fact: AtomicFact =
-                EqualFact::new(projected_obj, arg.as_ref().clone(), line_file.clone()).into();
+            let component_fact: AtomicFact = self
+                .new_equal_fact(projected_obj, arg.as_ref().clone(), line_file.clone())
+                .into();
             let component_result = self.verify_atomic_fact(&component_fact, verify_state)?;
             if !component_result.is_success() {
                 return Ok(None);
@@ -91,13 +94,17 @@ impl Runtime {
             return Ok(None);
         }
 
-        let left_is_tuple: AtomicFact = IsTupleFact::new(left.clone(), line_file.clone()).into();
+        let left_is_tuple: AtomicFact = self
+            .new_is_tuple_fact(left.clone(), line_file.clone())
+            .into();
         let left_is_tuple_result = self.verify_atomic_fact(&left_is_tuple, verify_state)?;
         if !left_is_tuple_result.is_success() {
             return Ok(None);
         }
 
-        let right_is_tuple: AtomicFact = IsTupleFact::new(right.clone(), line_file.clone()).into();
+        let right_is_tuple: AtomicFact = self
+            .new_is_tuple_fact(right.clone(), line_file.clone())
+            .into();
         let right_is_tuple_result = self.verify_atomic_fact(&right_is_tuple, verify_state)?;
         if !right_is_tuple_result.is_success() {
             return Ok(None);
@@ -105,19 +112,21 @@ impl Runtime {
 
         let left_dim: Obj = TupleDim::new(left.clone()).into();
         let right_dim: Obj = TupleDim::new(right.clone()).into();
-        let same_dim: AtomicFact =
-            EqualFact::new(left_dim.clone(), right_dim, line_file.clone()).into();
+        let same_dim: AtomicFact = self
+            .new_equal_fact(left_dim.clone(), right_dim, line_file.clone())
+            .into();
         let same_dim_result = self.verify_atomic_fact(&same_dim, verify_state)?;
         if !same_dim_result.is_success() {
             return Ok(None);
         }
 
-        let dimension_is_positive: AtomicFact = LessEqualFact::new(
-            Number::new("1".to_string()).into(),
-            left_dim.clone(),
-            line_file.clone(),
-        )
-        .into();
+        let dimension_is_positive: AtomicFact = self
+            .new_less_equal_fact(
+                Number::new("1".to_string()).into(),
+                left_dim.clone(),
+                line_file.clone(),
+            )
+            .into();
         let dimension_is_positive_result =
             self.verify_atomic_fact(&dimension_is_positive, verify_state)?;
         if !dimension_is_positive_result.is_success() {
@@ -130,12 +139,13 @@ impl Runtime {
             ParamType::Obj(ClosedRange::new(Number::new("1".to_string()).into(), left_dim).into()),
         )?;
         let index_obj = obj_for_bound_param_in_scope(&coordinate_group.params[0]);
-        let coordinate_equality: AtomicFact = EqualFact::new(
-            ObjAtIndex::new(left.clone(), index_obj.clone()).into(),
-            ObjAtIndex::new(right.clone(), index_obj).into(),
-            line_file.clone(),
-        )
-        .into();
+        let coordinate_equality: AtomicFact = self
+            .new_equal_fact(
+                ObjAtIndex::new(left.clone(), index_obj.clone()).into(),
+                ObjAtIndex::new(right.clone(), index_obj).into(),
+                line_file.clone(),
+            )
+            .into();
         let coordinate_params = TypedParameterList::new(vec![coordinate_group]);
         let coordinate_result =
             self.run_in_local_verification_env(verify_state, |rt, local_verify_state| {
@@ -196,17 +206,19 @@ impl Runtime {
             return Ok(None);
         }
 
-        let is_cart_fact: AtomicFact =
-            IsCartFact::new(target_obj.clone(), line_file.clone()).into();
+        let is_cart_fact: AtomicFact = self
+            .new_is_cart_fact(target_obj.clone(), line_file.clone())
+            .into();
         let cart_dim_obj: Obj = CartDim::new(target_obj.clone()).into();
         let cart_dim_value_obj: Obj = Number::new(cart_obj.args.len().to_string()).into();
-        let cart_dim_fact: AtomicFact =
-            EqualFact::new(cart_dim_obj, cart_dim_value_obj, line_file.clone()).into();
+        let cart_dim_fact: AtomicFact = self
+            .new_equal_fact(cart_dim_obj, cart_dim_value_obj, line_file.clone())
+            .into();
         let mut complete_premises = vec![is_cart_fact.clone(), cart_dim_fact.clone()];
         for (index, arg) in cart_obj.args.iter().enumerate() {
             let index_obj: Obj = Number::new((index + 1).to_string()).into();
             complete_premises.push(
-                EqualFact::new(
+                self.new_equal_fact(
                     Proj::new(target_obj.clone(), index_obj).into(),
                     arg.as_ref().clone(),
                     line_file.clone(),
@@ -244,8 +256,9 @@ impl Runtime {
         for (index, arg) in cart_obj.args.iter().enumerate() {
             let index_obj: Obj = Number::new((index + 1).to_string()).into();
             let projected_target: Obj = Proj::new(target_obj.clone(), index_obj).into();
-            let projection_fact: AtomicFact =
-                EqualFact::new(projected_target, arg.as_ref().clone(), line_file.clone()).into();
+            let projection_fact: AtomicFact = self
+                .new_equal_fact(projected_target, arg.as_ref().clone(), line_file.clone())
+                .into();
             let mut projection_result = self
                 .try_verify_atomic_fact_as_builtin_rule_premise(&projection_fact, builtin_state)?;
             if projection_result.is_none() {

@@ -44,10 +44,12 @@ impl Runtime {
             return Ok(UnknownGenericStmtResult::new().into());
         };
         let param_def = TypedParameterList::new(vec![x_group]);
-        let forall_f = ForallFact::new_canonical_forall(
+        let forall_f = self.new_forall_fact(
             param_def,
             vec![],
-            vec![EqualFact::new(left_ap, right_ap, f.line_file.clone()).into()],
+            vec![self
+                .new_equal_fact(left_ap, right_ap, f.line_file.clone())
+                .into()],
             f.line_file.clone(),
         )?;
         let forall_res = self.verify_forall_fact(&forall_f, verify_state)?;
@@ -106,10 +108,12 @@ impl Runtime {
                 Some(o) => o,
                 None => return Ok(UnknownGenericStmtResult::new().into()),
             };
-            let pointwise = ForallFact::new_canonical_forall(
+            let pointwise = self.new_forall_fact(
                 param_def,
                 dom_facts,
-                vec![EqualFact::new(left_ap, right_ap, f.line_file.clone()).into()],
+                vec![self
+                    .new_equal_fact(left_ap, right_ap, f.line_file.clone())
+                    .into()],
                 f.line_file.clone(),
             )?;
             let pointwise_result = self.verify_forall_fact(&pointwise, verify_state)?;
@@ -127,24 +131,26 @@ impl Runtime {
             }
         }
 
-        let in_left: AtomicFact = InFact::new(
-            f.left.clone(),
-            Obj::FnSet(right_t.clone()),
-            f.line_file.clone(),
-        )
-        .into();
+        let in_left: AtomicFact = self
+            .new_in_fact(
+                f.left.clone(),
+                Obj::FnSet(right_t.clone()),
+                f.line_file.clone(),
+            )
+            .into();
         if !self
             .verify_function_value_in_fn_set_explicit(&f.left, &right_t, &in_left, verify_state)?
             .is_success()
         {
             return Ok(UnknownGenericStmtResult::new().into());
         }
-        let in_right: AtomicFact = InFact::new(
-            f.right.clone(),
-            Obj::FnSet(left_t.clone()),
-            f.line_file.clone(),
-        )
-        .into();
+        let in_right: AtomicFact = self
+            .new_in_fact(
+                f.right.clone(),
+                Obj::FnSet(left_t.clone()),
+                f.line_file.clone(),
+            )
+            .into();
         if !self
             .verify_function_value_in_fn_set_explicit(&f.right, &left_t, &in_right, verify_state)?
             .is_success()
@@ -163,10 +169,12 @@ impl Runtime {
             Some(o) => o,
             None => return Ok(UnknownGenericStmtResult::new().into()),
         };
-        let forall_f = ForallFact::new_canonical_forall(
+        let forall_f = self.new_forall_fact(
             param_def,
             dom_facts,
-            vec![EqualFact::new(left_ap, right_ap, f.line_file.clone()).into()],
+            vec![self
+                .new_equal_fact(left_ap, right_ap, f.line_file.clone())
+                .into()],
             f.line_file.clone(),
         )?;
         let forall_res = self.verify_forall_fact(&forall_f, verify_state)?;

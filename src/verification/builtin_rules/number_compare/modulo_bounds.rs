@@ -10,7 +10,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
-        let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
+        let Some(norm) = normalize_positive_order_atomic_fact(self, atomic_fact) else {
             return Ok(None);
         };
         let (mod_obj, line_file, strict_upper_bound) = match &norm {
@@ -41,24 +41,26 @@ impl Runtime {
             _ => return Ok(None),
         };
 
-        let dividend_in_z: AtomicFact = InFact::new(
-            mod_obj.left.as_ref().clone(),
-            StandardSet::Z.into(),
-            line_file.clone(),
-        )
-        .into();
+        let dividend_in_z: AtomicFact = self
+            .new_in_fact(
+                mod_obj.left.as_ref().clone(),
+                StandardSet::Z.into(),
+                line_file.clone(),
+            )
+            .into();
         let Some(dividend_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&dividend_in_z, builtin_state)?
         else {
             return Ok(None);
         };
 
-        let modulus_in_n_pos: AtomicFact = InFact::new(
-            mod_obj.right.as_ref().clone(),
-            StandardSet::NPos.into(),
-            line_file,
-        )
-        .into();
+        let modulus_in_n_pos: AtomicFact = self
+            .new_in_fact(
+                mod_obj.right.as_ref().clone(),
+                StandardSet::NPos.into(),
+                line_file,
+            )
+            .into();
         let Some(modulus_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&modulus_in_n_pos, builtin_state)?
         else {

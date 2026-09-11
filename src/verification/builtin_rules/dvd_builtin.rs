@@ -16,12 +16,13 @@ impl Runtime {
         let dividend = normal_fact.body[0].clone();
         let divisor = normal_fact.body[1].clone();
         let line_file = normal_fact.line_file.clone();
-        let zero_remainder: Fact = EqualFact::new(
-            Mod::new(dividend.clone(), divisor.clone()).into(),
-            Number::new("0".to_string()).into(),
-            line_file.clone(),
-        )
-        .into();
+        let zero_remainder: Fact = self
+            .new_equal_fact(
+                Mod::new(dividend.clone(), divisor.clone()).into(),
+                Number::new("0".to_string()).into(),
+                line_file.clone(),
+            )
+            .into();
 
         let witness_name = self.generate_random_unused_name();
         let witness_group = self.fresh_param_group_with_type(
@@ -29,13 +30,14 @@ impl Runtime {
             ParamType::Obj(StandardSet::Z.into()),
         )?;
         let witness = obj_for_bound_param_in_scope(&witness_group.params[0]);
-        let multiple_equality: AtomicFact = EqualFact::new(
-            dividend,
-            Mul::new(witness, divisor).into(),
-            line_file.clone(),
-        )
-        .into();
-        let multiple_witness: Fact = ExistFact::PlainExistFact(PlainExistFact::new(
+        let multiple_equality: AtomicFact = self
+            .new_equal_fact(
+                dividend,
+                Mul::new(witness, divisor).into(),
+                line_file.clone(),
+            )
+            .into();
+        let multiple_witness: Fact = ExistFact::PlainExistFact(self.new_plain_exist_fact(
             TypedParameterList::new(vec![witness_group]),
             vec![multiple_equality.into()],
             line_file,

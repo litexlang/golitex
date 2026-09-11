@@ -266,6 +266,7 @@ pub(in super::super) fn validate_conjunction_component_inference_target(
 }
 
 pub(in super::super) fn validate_chain_component_inference_target(
+    runtime: &Runtime,
     rule: &ChainImpliesComponentInferRule,
     source: &Fact,
     target: &Fact,
@@ -273,7 +274,7 @@ pub(in super::super) fn validate_chain_component_inference_target(
     let Fact::ChainFact(source) = source else {
         return Err("chain-component inference retained a non-chain premise".into());
     };
-    let components = source.facts().map_err(|error| {
+    let components = source.facts(runtime).map_err(|error| {
         format!("chain-component inference retained an invalid chain: {error:?}")
     })?;
     if rule.component_count != components.len() || rule.component_index >= rule.component_count {

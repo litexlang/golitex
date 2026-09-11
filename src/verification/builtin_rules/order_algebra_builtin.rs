@@ -20,7 +20,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
-        let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
+        let Some(norm) = normalize_positive_order_atomic_fact(self, atomic_fact) else {
             return Ok(None);
         };
         match &norm {
@@ -64,8 +64,9 @@ impl Runtime {
         lf: &LineFile,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<VerifyFactResult>, RuntimeError> {
-        let in_n_pos: AtomicFact =
-            InFact::new(obj.clone(), StandardSet::NPos.into(), lf.clone()).into();
+        let in_n_pos: AtomicFact = self
+            .new_in_fact(obj.clone(), StandardSet::NPos.into(), lf.clone())
+            .into();
         self.try_verify_atomic_fact_as_builtin_rule_premise(&in_n_pos, builtin_state)
     }
 
@@ -79,9 +80,12 @@ impl Runtime {
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let positive_real_memberships: [AtomicFact; 3] = [
-            InFact::new(left_base.clone(), StandardSet::RPos.into(), lf.clone()).into(),
-            InFact::new(right_base.clone(), StandardSet::RPos.into(), lf.clone()).into(),
-            InFact::new(exponent.clone(), StandardSet::RPos.into(), lf.clone()).into(),
+            self.new_in_fact(left_base.clone(), StandardSet::RPos.into(), lf.clone())
+                .into(),
+            self.new_in_fact(right_base.clone(), StandardSet::RPos.into(), lf.clone())
+                .into(),
+            self.new_in_fact(exponent.clone(), StandardSet::RPos.into(), lf.clone())
+                .into(),
         ];
         if let Some(steps) =
             self.verify_builtin_rule_premises(&positive_real_memberships, builtin_state)?
@@ -90,22 +94,28 @@ impl Runtime {
         }
 
         let zero = Self::literal_zero_obj();
-        let positive_exponent: AtomicFact =
-            LessFact::new(zero.clone(), exponent.clone(), lf.clone()).into();
-        let positive_left: AtomicFact =
-            LessFact::new(zero.clone(), left_base.clone(), lf.clone()).into();
-        let positive_right: AtomicFact = LessFact::new(zero, right_base.clone(), lf.clone()).into();
+        let positive_exponent: AtomicFact = self
+            .new_less_fact(zero.clone(), exponent.clone(), lf.clone())
+            .into();
+        let positive_left: AtomicFact = self
+            .new_less_fact(zero.clone(), left_base.clone(), lf.clone())
+            .into();
+        let positive_right: AtomicFact = self
+            .new_less_fact(zero, right_base.clone(), lf.clone())
+            .into();
         let _ = allow_strict_recursion;
         let result = self.try_verify_builtin_rule_premise_alternatives(
             vec![
                 vec![
-                    InFact::new(exponent.clone(), StandardSet::R.into(), lf.clone()).into(),
+                    self.new_in_fact(exponent.clone(), StandardSet::R.into(), lf.clone())
+                        .into(),
                     positive_exponent.clone(),
                     positive_left.clone(),
                     positive_right.clone(),
                 ],
                 vec![
-                    InFact::new(exponent.clone(), StandardSet::Q.into(), lf.clone()).into(),
+                    self.new_in_fact(exponent.clone(), StandardSet::Q.into(), lf.clone())
+                        .into(),
                     positive_exponent,
                     positive_left,
                     positive_right,
@@ -184,7 +194,7 @@ impl Runtime {
         let two: Obj = Number::new("2".to_string()).into();
         let zero = Self::literal_zero_obj();
         let mod_obj: Obj = Mod::new(exp.clone(), two).into();
-        let even_fact: AtomicFact = EqualFact::new(mod_obj, zero, lf.clone()).into();
+        let even_fact: AtomicFact = self.new_equal_fact(mod_obj, zero, lf.clone()).into();
         let Some(even_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&even_fact, builtin_state)?
         else {
@@ -212,7 +222,9 @@ impl Runtime {
         let two: Obj = Number::new("2".to_string()).into();
         let one = Self::literal_one_obj();
         let mod_obj: Obj = Mod::new(exp.clone(), two).into();
-        let odd_fact: AtomicFact = EqualFact::new_from_refs(&mod_obj, &one, lf.clone()).into();
+        let odd_fact: AtomicFact = self
+            .new_equal_fact_from_refs(&mod_obj, &one, lf.clone())
+            .into();
         let Some(odd_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&odd_fact, builtin_state)?
         else {
@@ -277,7 +289,7 @@ impl Runtime {
         let mut subgoals = Vec::new();
         if !Self::obj_is_positive_integer_number(left_pow.exponent.as_ref()) {
             subgoals.push(
-                InFact::new(
+                self.new_in_fact(
                     left_pow.exponent.as_ref().clone(),
                     StandardSet::NPos.into(),
                     lf.clone(),
@@ -289,8 +301,14 @@ impl Runtime {
         let z = Self::literal_zero_obj();
         let left_base = left_pow.base.as_ref();
         let right_base = right_pow.base.as_ref();
-        subgoals.push(LessEqualFact::new(z, left_base.clone(), lf.clone()).into());
-        subgoals.push(LessEqualFact::new(left_base.clone(), right_base.clone(), lf.clone()).into());
+        subgoals.push(
+            self.new_less_equal_fact(z, left_base.clone(), lf.clone())
+                .into(),
+        );
+        subgoals.push(
+            self.new_less_equal_fact(left_base.clone(), right_base.clone(), lf.clone())
+                .into(),
+        );
         let Some(step_results) = self.verify_builtin_rule_premises(&subgoals, builtin_state)?
         else {
             return Ok(None);
@@ -400,10 +418,12 @@ impl Runtime {
             };
 
             let z = Self::literal_zero_obj();
-            let left_nonnegative: AtomicFact =
-                LessEqualFact::new(z.clone(), f.left.clone(), f.line_file.clone()).into();
-            let right_nonnegative: AtomicFact =
-                LessEqualFact::new(z, f.right.clone(), f.line_file.clone()).into();
+            let left_nonnegative: AtomicFact = self
+                .new_less_equal_fact(z.clone(), f.left.clone(), f.line_file.clone())
+                .into();
+            let right_nonnegative: AtomicFact = self
+                .new_less_equal_fact(z, f.right.clone(), f.line_file.clone())
+                .into();
             let Some(power_le_result) =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&candidate, builtin_state)?
             else {
@@ -495,8 +515,9 @@ impl Runtime {
 
         let left_base = left_pow.base.as_ref();
         let right_base = right_pow.base.as_ref();
-        let subgoal: AtomicFact =
-            LessEqualFact::new(left_base.clone(), right_base.clone(), lf.clone()).into();
+        let subgoal: AtomicFact = self
+            .new_less_equal_fact(left_base.clone(), right_base.clone(), lf.clone())
+            .into();
         let Some(result) = self.try_verify_order_subgoal(subgoal, builtin_state)? else {
             return Ok(None);
         };
@@ -531,10 +552,13 @@ impl Runtime {
         let exponent = left_pow.exponent.as_ref();
         let zero = Self::literal_zero_obj();
         let subgoals: [AtomicFact; 4] = [
-            InFact::new(exponent.clone(), StandardSet::Z.into(), lf.clone()).into(),
-            LessFact::new(exponent.clone(), zero.clone(), lf.clone()).into(),
-            LessFact::new(zero, right_pow.base.as_ref().clone(), lf.clone()).into(),
-            LessEqualFact::new(
+            self.new_in_fact(exponent.clone(), StandardSet::Z.into(), lf.clone())
+                .into(),
+            self.new_less_fact(exponent.clone(), zero.clone(), lf.clone())
+                .into(),
+            self.new_less_fact(zero, right_pow.base.as_ref().clone(), lf.clone())
+                .into(),
+            self.new_less_equal_fact(
                 right_pow.base.as_ref().clone(),
                 left_pow.base.as_ref().clone(),
                 lf.clone(),
@@ -578,12 +602,13 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let abs_le: AtomicFact = LessEqualFact::new(
-            Abs::new(left_pow.base.as_ref().clone()).into(),
-            Abs::new(right_pow.base.as_ref().clone()).into(),
-            lf.clone(),
-        )
-        .into();
+        let abs_le: AtomicFact = self
+            .new_less_equal_fact(
+                Abs::new(left_pow.base.as_ref().clone()).into(),
+                Abs::new(right_pow.base.as_ref().clone()).into(),
+                lf.clone(),
+            )
+            .into();
         let Some(abs_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&abs_le, builtin_state)?
         else {
@@ -622,12 +647,13 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let abs_lt: AtomicFact = LessFact::new(
-            Abs::new(left_pow.base.as_ref().clone()).into(),
-            Abs::new(right_pow.base.as_ref().clone()).into(),
-            lf.clone(),
-        )
-        .into();
+        let abs_lt: AtomicFact = self
+            .new_less_fact(
+                Abs::new(left_pow.base.as_ref().clone()).into(),
+                Abs::new(right_pow.base.as_ref().clone()).into(),
+                lf.clone(),
+            )
+            .into();
         let Some(abs_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&abs_lt, builtin_state)?
         else {
@@ -674,18 +700,20 @@ impl Runtime {
             else {
                 continue;
             };
-            let x_in_r: AtomicFact = InFact::new(
-                left_abs.arg.as_ref().clone(),
-                StandardSet::R.into(),
-                f.line_file.clone(),
-            )
-            .into();
-            let y_in_r: AtomicFact = InFact::new(
-                right_abs.arg.as_ref().clone(),
-                StandardSet::R.into(),
-                f.line_file.clone(),
-            )
-            .into();
+            let x_in_r: AtomicFact = self
+                .new_in_fact(
+                    left_abs.arg.as_ref().clone(),
+                    StandardSet::R.into(),
+                    f.line_file.clone(),
+                )
+                .into();
+            let y_in_r: AtomicFact = self
+                .new_in_fact(
+                    right_abs.arg.as_ref().clone(),
+                    StandardSet::R.into(),
+                    f.line_file.clone(),
+                )
+                .into();
             let Some(x_result) =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&x_in_r, builtin_state)?
             else {
@@ -738,24 +766,31 @@ impl Runtime {
         let left_base = left_pow.base.as_ref();
         let right_base = right_pow.base.as_ref();
 
-        let positive_exponent: AtomicFact =
-            LessFact::new(zero.clone(), exponent.clone(), lf.clone()).into();
-        let positive_left: AtomicFact =
-            LessFact::new(zero.clone(), left_base.clone(), lf.clone()).into();
-        let positive_right: AtomicFact = LessFact::new(zero, right_base.clone(), lf.clone()).into();
-        let base_order: AtomicFact =
-            LessFact::new(left_base.clone(), right_base.clone(), lf.clone()).into();
+        let positive_exponent: AtomicFact = self
+            .new_less_fact(zero.clone(), exponent.clone(), lf.clone())
+            .into();
+        let positive_left: AtomicFact = self
+            .new_less_fact(zero.clone(), left_base.clone(), lf.clone())
+            .into();
+        let positive_right: AtomicFact = self
+            .new_less_fact(zero, right_base.clone(), lf.clone())
+            .into();
+        let base_order: AtomicFact = self
+            .new_less_fact(left_base.clone(), right_base.clone(), lf.clone())
+            .into();
         let Some(premise_result) = self.try_verify_builtin_rule_premise_alternatives(
             vec![
                 vec![
-                    InFact::new(exponent.clone(), StandardSet::R.into(), lf.clone()).into(),
+                    self.new_in_fact(exponent.clone(), StandardSet::R.into(), lf.clone())
+                        .into(),
                     positive_exponent.clone(),
                     positive_left.clone(),
                     positive_right.clone(),
                     base_order.clone(),
                 ],
                 vec![
-                    InFact::new(exponent.clone(), StandardSet::Q.into(), lf.clone()).into(),
+                    self.new_in_fact(exponent.clone(), StandardSet::Q.into(), lf.clone())
+                        .into(),
                     positive_exponent,
                     positive_left,
                     positive_right,
@@ -852,8 +887,9 @@ impl Runtime {
 
         let left_base = left_pow.base.as_ref();
         let right_base = right_pow.base.as_ref();
-        let subgoal: AtomicFact =
-            LessFact::new(left_base.clone(), right_base.clone(), lf.clone()).into();
+        let subgoal: AtomicFact = self
+            .new_less_fact(left_base.clone(), right_base.clone(), lf.clone())
+            .into();
         let Some(result) = self.try_verify_order_subgoal(subgoal, builtin_state)? else {
             return Ok(None);
         };
@@ -887,8 +923,9 @@ impl Runtime {
         };
 
         let zero = Self::literal_zero_obj();
-        let base_nonpositive: AtomicFact =
-            LessEqualFact::new(pow.base.as_ref().clone(), zero, lf.clone()).into();
+        let base_nonpositive: AtomicFact = self
+            .new_less_equal_fact(pow.base.as_ref().clone(), zero, lf.clone())
+            .into();
         let Some(base_result) = self.try_verify_order_subgoal(base_nonpositive, builtin_state)?
         else {
             return Ok(None);
@@ -923,8 +960,9 @@ impl Runtime {
         };
 
         let zero = Self::literal_zero_obj();
-        let base_negative: AtomicFact =
-            LessFact::new(pow.base.as_ref().clone(), zero, lf.clone()).into();
+        let base_negative: AtomicFact = self
+            .new_less_fact(pow.base.as_ref().clone(), zero, lf.clone())
+            .into();
         let Some(base_result) = self.try_verify_order_subgoal(base_negative, builtin_state)? else {
             return Ok(None);
         };
@@ -959,7 +997,7 @@ impl Runtime {
         let mut subgoals = Vec::new();
         if !Self::obj_is_positive_integer_number(left_pow.exponent.as_ref()) {
             subgoals.push(
-                InFact::new(
+                self.new_in_fact(
                     left_pow.exponent.as_ref().clone(),
                     StandardSet::NPos.into(),
                     lf.clone(),
@@ -971,8 +1009,14 @@ impl Runtime {
         let z = Self::literal_zero_obj();
         let left_base = left_pow.base.as_ref();
         let right_base = right_pow.base.as_ref();
-        subgoals.push(LessEqualFact::new(z, left_base.clone(), lf.clone()).into());
-        subgoals.push(LessFact::new(left_base.clone(), right_base.clone(), lf.clone()).into());
+        subgoals.push(
+            self.new_less_equal_fact(z, left_base.clone(), lf.clone())
+                .into(),
+        );
+        subgoals.push(
+            self.new_less_fact(left_base.clone(), right_base.clone(), lf.clone())
+                .into(),
+        );
         let Some(step_results) = self.verify_builtin_rule_premises(&subgoals, builtin_state)?
         else {
             return Ok(None);
@@ -1006,16 +1050,19 @@ impl Runtime {
         for (premises, message, rule) in [
             (
                 vec![
-                    LessEqualFact::new(z.clone(), x.clone(), lf.clone()).into(),
-                    LessEqualFact::new(u.clone(), v.clone(), lf.clone()).into(),
+                    self.new_less_equal_fact(z.clone(), x.clone(), lf.clone())
+                        .into(),
+                    self.new_less_equal_fact(u.clone(), v.clone(), lf.clone())
+                        .into(),
                 ],
                 msg_nonneg,
                 ArithmeticBuiltinRule::MulCommonFactorLessEqualNonnegative,
             ),
             (
                 vec![
-                    LessEqualFact::new(x.clone(), z, lf.clone()).into(),
-                    LessEqualFact::new(v.clone(), u.clone(), lf.clone()).into(),
+                    self.new_less_equal_fact(x.clone(), z, lf.clone()).into(),
+                    self.new_less_equal_fact(v.clone(), u.clone(), lf.clone())
+                        .into(),
                 ],
                 msg_nonpos,
                 ArithmeticBuiltinRule::MulCommonFactorLessEqualNonpositive,
@@ -1059,16 +1106,16 @@ impl Runtime {
         for (premises, message, rule) in [
             (
                 vec![
-                    LessFact::new(z.clone(), x.clone(), lf.clone()).into(),
-                    LessFact::new(u.clone(), v.clone(), lf.clone()).into(),
+                    self.new_less_fact(z.clone(), x.clone(), lf.clone()).into(),
+                    self.new_less_fact(u.clone(), v.clone(), lf.clone()).into(),
                 ],
                 msg_pos,
                 ArithmeticBuiltinRule::MulCommonFactorLessPositive,
             ),
             (
                 vec![
-                    LessFact::new(x.clone(), z, lf.clone()).into(),
-                    LessFact::new(v.clone(), u.clone(), lf.clone()).into(),
+                    self.new_less_fact(x.clone(), z, lf.clone()).into(),
+                    self.new_less_fact(v.clone(), u.clone(), lf.clone()).into(),
                 ],
                 msg_neg,
                 ArithmeticBuiltinRule::MulCommonFactorLessNegative,
@@ -1110,17 +1157,32 @@ impl Runtime {
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let z = Self::literal_zero_obj();
         let nonnegative = vec![
-            LessEqualFact::new(z.clone(), l1.clone(), lf.clone()).into(),
-            LessEqualFact::new(z.clone(), l2.clone(), lf.clone()).into(),
-            LessEqualFact::new(z.clone(), r1.clone(), lf.clone()).into(),
-            LessEqualFact::new(z, r2.clone(), lf.clone()).into(),
+            self.new_less_equal_fact(z.clone(), l1.clone(), lf.clone())
+                .into(),
+            self.new_less_equal_fact(z.clone(), l2.clone(), lf.clone())
+                .into(),
+            self.new_less_equal_fact(z.clone(), r1.clone(), lf.clone())
+                .into(),
+            self.new_less_equal_fact(z, r2.clone(), lf.clone()).into(),
         ];
         let mut direct = nonnegative.clone();
-        direct.push(LessEqualFact::new(l1.clone(), r1.clone(), lf.clone()).into());
-        direct.push(LessEqualFact::new(l2.clone(), r2.clone(), lf.clone()).into());
+        direct.push(
+            self.new_less_equal_fact(l1.clone(), r1.clone(), lf.clone())
+                .into(),
+        );
+        direct.push(
+            self.new_less_equal_fact(l2.clone(), r2.clone(), lf.clone())
+                .into(),
+        );
         let mut crossed = nonnegative;
-        crossed.push(LessEqualFact::new(l1.clone(), r2.clone(), lf.clone()).into());
-        crossed.push(LessEqualFact::new(l2.clone(), r1.clone(), lf.clone()).into());
+        crossed.push(
+            self.new_less_equal_fact(l1.clone(), r2.clone(), lf.clone())
+                .into(),
+        );
+        crossed.push(
+            self.new_less_equal_fact(l2.clone(), r1.clone(), lf.clone())
+                .into(),
+        );
         let premise_result = self.try_verify_builtin_rule_premise_alternatives(
             vec![direct, crossed],
             lf.clone(),
@@ -1156,12 +1218,15 @@ impl Runtime {
         let premise_result = self.try_verify_builtin_rule_premise_alternatives(
             vec![
                 vec![
-                    LessEqualFact::new(left.clone(), z.clone(), lf.clone()).into(),
-                    LessEqualFact::new(z.clone(), right.clone(), lf.clone()).into(),
+                    self.new_less_equal_fact(left.clone(), z.clone(), lf.clone())
+                        .into(),
+                    self.new_less_equal_fact(z.clone(), right.clone(), lf.clone())
+                        .into(),
                 ],
                 vec![
-                    LessEqualFact::new(right.clone(), z.clone(), lf.clone()).into(),
-                    LessEqualFact::new(z, left.clone(), lf.clone()).into(),
+                    self.new_less_equal_fact(right.clone(), z.clone(), lf.clone())
+                        .into(),
+                    self.new_less_equal_fact(z, left.clone(), lf.clone()).into(),
                 ],
             ],
             lf.clone(),
@@ -1194,12 +1259,16 @@ impl Runtime {
         let premise_result = self.try_verify_builtin_rule_premise_alternatives(
             vec![
                 vec![
-                    LessEqualFact::new(z.clone(), left.clone(), lf.clone()).into(),
-                    LessEqualFact::new(z.clone(), right.clone(), lf.clone()).into(),
+                    self.new_less_equal_fact(z.clone(), left.clone(), lf.clone())
+                        .into(),
+                    self.new_less_equal_fact(z.clone(), right.clone(), lf.clone())
+                        .into(),
                 ],
                 vec![
-                    LessEqualFact::new(left.clone(), z.clone(), lf.clone()).into(),
-                    LessEqualFact::new(right.clone(), z, lf.clone()).into(),
+                    self.new_less_equal_fact(left.clone(), z.clone(), lf.clone())
+                        .into(),
+                    self.new_less_equal_fact(right.clone(), z, lf.clone())
+                        .into(),
                 ],
             ],
             lf.clone(),
@@ -1233,12 +1302,15 @@ impl Runtime {
         let premise_result = self.try_verify_builtin_rule_premise_alternatives(
             vec![
                 vec![
-                    LessFact::new(left.clone(), z.clone(), lf.clone()).into(),
-                    LessFact::new(z.clone(), right.clone(), lf.clone()).into(),
+                    self.new_less_fact(left.clone(), z.clone(), lf.clone())
+                        .into(),
+                    self.new_less_fact(z.clone(), right.clone(), lf.clone())
+                        .into(),
                 ],
                 vec![
-                    LessFact::new(right.clone(), z.clone(), lf.clone()).into(),
-                    LessFact::new(z, left.clone(), lf.clone()).into(),
+                    self.new_less_fact(right.clone(), z.clone(), lf.clone())
+                        .into(),
+                    self.new_less_fact(z, left.clone(), lf.clone()).into(),
                 ],
             ],
             lf.clone(),
@@ -1268,20 +1340,28 @@ impl Runtime {
         let z = Self::literal_zero_obj();
         let alternatives = vec![
             vec![
-                LessFact::new(z.clone(), left.clone(), lf.clone()).into(),
-                LessFact::new(z.clone(), right.clone(), lf.clone()).into(),
+                self.new_less_fact(z.clone(), left.clone(), lf.clone())
+                    .into(),
+                self.new_less_fact(z.clone(), right.clone(), lf.clone())
+                    .into(),
             ],
             vec![
-                LessFact::new(z.clone(), right.clone(), lf.clone()).into(),
-                LessFact::new(z.clone(), left.clone(), lf.clone()).into(),
+                self.new_less_fact(z.clone(), right.clone(), lf.clone())
+                    .into(),
+                self.new_less_fact(z.clone(), left.clone(), lf.clone())
+                    .into(),
             ],
             vec![
-                LessFact::new(left.clone(), z.clone(), lf.clone()).into(),
-                LessFact::new(right.clone(), z.clone(), lf.clone()).into(),
+                self.new_less_fact(left.clone(), z.clone(), lf.clone())
+                    .into(),
+                self.new_less_fact(right.clone(), z.clone(), lf.clone())
+                    .into(),
             ],
             vec![
-                LessFact::new(right.clone(), z.clone(), lf.clone()).into(),
-                LessFact::new(left.clone(), z.clone(), lf.clone()).into(),
+                self.new_less_fact(right.clone(), z.clone(), lf.clone())
+                    .into(),
+                self.new_less_fact(left.clone(), z.clone(), lf.clone())
+                    .into(),
             ],
         ];
         let premise_result = self.try_verify_builtin_rule_premise_alternatives(
@@ -1316,22 +1396,24 @@ impl Runtime {
             return Ok(None);
         };
 
-        let start_equality: AtomicFact = EqualFact::new(
-            left_sum.start.as_ref().clone(),
-            right_sum.start.as_ref().clone(),
-            f.line_file.clone(),
-        )
-        .into();
+        let start_equality: AtomicFact = self
+            .new_equal_fact(
+                left_sum.start.as_ref().clone(),
+                right_sum.start.as_ref().clone(),
+                f.line_file.clone(),
+            )
+            .into();
         let start_result = self.verify_atomic_fact(&start_equality, verify_state)?;
         if !start_result.is_success() {
             return Ok(None);
         }
-        let end_equality: AtomicFact = EqualFact::new(
-            left_sum.end.as_ref().clone(),
-            right_sum.end.as_ref().clone(),
-            f.line_file.clone(),
-        )
-        .into();
+        let end_equality: AtomicFact = self
+            .new_equal_fact(
+                left_sum.end.as_ref().clone(),
+                right_sum.end.as_ref().clone(),
+                f.line_file.clone(),
+            )
+            .into();
         let end_result = self.verify_atomic_fact(&end_equality, verify_state)?;
         if !end_result.is_success() {
             return Ok(None);
@@ -1341,7 +1423,9 @@ impl Runtime {
         let index_param_set = match (left_param_set, right_param_set) {
             (Some(left_set), Some(right_set)) => {
                 let set_result = self.verify_atomic_fact(
-                    &EqualFact::new(left_set.clone(), right_set, f.line_file.clone()).into(),
+                    &self
+                        .new_equal_fact(left_set.clone(), right_set, f.line_file.clone())
+                        .into(),
                     verify_state,
                 )?;
                 if !set_result.is_success() {
@@ -1366,17 +1450,20 @@ impl Runtime {
             return Ok(None);
         };
 
-        let pointwise_fact: AtomicFact =
-            LessEqualFact::new(left_inst, right_inst, f.line_file.clone()).into();
-        let dom_lo: Fact = LessEqualFact::new(
-            (*left_sum.start).clone(),
-            x_obj.clone(),
-            f.line_file.clone(),
-        )
-        .into();
-        let dom_hi: Fact =
-            LessEqualFact::new(x_obj, (*left_sum.end).clone(), f.line_file.clone()).into();
-        let pointwise_forall = ForallFact::new_canonical_forall(
+        let pointwise_fact: AtomicFact = self
+            .new_less_equal_fact(left_inst, right_inst, f.line_file.clone())
+            .into();
+        let dom_lo: Fact = self
+            .new_less_equal_fact(
+                (*left_sum.start).clone(),
+                x_obj.clone(),
+                f.line_file.clone(),
+            )
+            .into();
+        let dom_hi: Fact = self
+            .new_less_equal_fact(x_obj, (*left_sum.end).clone(), f.line_file.clone())
+            .into();
+        let pointwise_forall = self.new_forall_fact(
             TypedParameterList::new(vec![TypedParameterGroup::new(
                 vec![x_binding],
                 ParamType::Obj(index_param_set),
@@ -1423,12 +1510,13 @@ impl Runtime {
         };
 
         let set_result = self.verify_atomic_fact(
-            &EqualFact::new(
-                left_sum.set.as_ref().clone(),
-                right_sum.set.as_ref().clone(),
-                f.line_file.clone(),
-            )
-            .into(),
+            &self
+                .new_equal_fact(
+                    left_sum.set.as_ref().clone(),
+                    right_sum.set.as_ref().clone(),
+                    f.line_file.clone(),
+                )
+                .into(),
             verify_state,
         )?;
         if !set_result.is_success() {
@@ -1447,8 +1535,9 @@ impl Runtime {
             return Ok(None);
         };
 
-        let pointwise_fact: AtomicFact =
-            LessEqualFact::new(left_inst, right_inst, f.line_file.clone()).into();
+        let pointwise_fact: AtomicFact = self
+            .new_less_equal_fact(left_inst, right_inst, f.line_file.clone())
+            .into();
         let pointwise_result =
             self.run_in_local_verification_env(verify_state, |rt, local_verify_state| {
                 let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
@@ -1501,15 +1590,18 @@ impl Runtime {
             return Ok(None);
         };
         let summand_result = self.verify_atomic_fact(
-            &EqualFact::new(f.left.clone(), summand, f.line_file.clone()).into(),
+            &self
+                .new_equal_fact(f.left.clone(), summand, f.line_file.clone())
+                .into(),
             verify_state,
         )?;
         if !summand_result.is_success() {
             return Ok(None);
         }
 
-        let member_fact: AtomicFact =
-            InFact::new(member, sum.set.as_ref().clone(), f.line_file.clone()).into();
+        let member_fact: AtomicFact = self
+            .new_in_fact(member, sum.set.as_ref().clone(), f.line_file.clone())
+            .into();
         let member_result = self.verify_atomic_fact(&member_fact, verify_state)?;
         if !member_result.is_success() {
             return Ok(None);
@@ -1521,8 +1613,9 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let nonnegative_fact: AtomicFact =
-            LessEqualFact::new(Self::literal_zero_obj(), summand_at_x, f.line_file.clone()).into();
+        let nonnegative_fact: AtomicFact = self
+            .new_less_equal_fact(Self::literal_zero_obj(), summand_at_x, f.line_file.clone())
+            .into();
         let nonnegative_result =
             self.run_in_local_verification_env(verify_state, |rt, local_verify_state| {
                 let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
@@ -1588,14 +1681,16 @@ impl Runtime {
         if let (Obj::Div(left_div), Obj::Div(right_div)) = (&f.left, &f.right) {
             if left_div.right.to_string() == right_div.right.to_string() {
                 let denominator = left_div.right.as_ref();
-                let positive_denominator: AtomicFact =
-                    LessFact::new(z.clone(), denominator.clone(), lf.clone()).into();
-                let numerator_bound: AtomicFact = LessEqualFact::new(
-                    left_div.left.as_ref().clone(),
-                    right_div.left.as_ref().clone(),
-                    lf.clone(),
-                )
-                .into();
+                let positive_denominator: AtomicFact = self
+                    .new_less_fact(z.clone(), denominator.clone(), lf.clone())
+                    .into();
+                let numerator_bound: AtomicFact = self
+                    .new_less_equal_fact(
+                        left_div.left.as_ref().clone(),
+                        right_div.left.as_ref().clone(),
+                        lf.clone(),
+                    )
+                    .into();
                 let positive_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
                     &positive_denominator,
                     builtin_state,
@@ -1615,14 +1710,16 @@ impl Runtime {
                     }
                 }
 
-                let negative_denominator: AtomicFact =
-                    LessFact::new(denominator.clone(), z.clone(), lf.clone()).into();
-                let reversed_numerator_bound: AtomicFact = LessEqualFact::new(
-                    right_div.left.as_ref().clone(),
-                    left_div.left.as_ref().clone(),
-                    lf.clone(),
-                )
-                .into();
+                let negative_denominator: AtomicFact = self
+                    .new_less_fact(denominator.clone(), z.clone(), lf.clone())
+                    .into();
+                let reversed_numerator_bound: AtomicFact = self
+                    .new_less_equal_fact(
+                        right_div.left.as_ref().clone(),
+                        left_div.left.as_ref().clone(),
+                        lf.clone(),
+                    )
+                    .into();
                 let negative_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
                     &negative_denominator,
                     builtin_state,
@@ -1723,8 +1820,9 @@ impl Runtime {
             if let Some((left_remaining, right_remaining)) =
                 Self::add_common_remaining(left_add, right_add)
             {
-                let subgoal: AtomicFact =
-                    LessEqualFact::new(left_remaining, right_remaining, lf.clone()).into();
+                let subgoal: AtomicFact = self
+                    .new_less_equal_fact(left_remaining, right_remaining, lf.clone())
+                    .into();
                 if let Some(result) = self.try_verify_order_subgoal(subgoal, builtin_state)? {
                     return Ok(Some(ProveFactResult::from(
                         SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -1744,8 +1842,9 @@ impl Runtime {
             // Exchange the target subtrahend with the weak upper bound.
             // Example: from `a - b <= c`, prove `a - c <= b`.
             let swapped_left: Obj = Sub::new(sub.left.as_ref().clone(), f.right.clone()).into();
-            let swapped_subgoal: AtomicFact =
-                LessEqualFact::new(swapped_left, sub.right.as_ref().clone(), lf.clone()).into();
+            let swapped_subgoal: AtomicFact = self
+                .new_less_equal_fact(swapped_left, sub.right.as_ref().clone(), lf.clone())
+                .into();
             if let Some(swapped_result) =
                 self.try_verify_order_subgoal(swapped_subgoal, builtin_state)?
             {
@@ -1763,10 +1862,12 @@ impl Runtime {
 
             // Subtracting a nonnegative term cannot increase the left side.
             // Example: from `a <= b` and `0 <= c`, prove `a - c <= b`.
-            let order_subgoal: AtomicFact =
-                LessEqualFact::new(sub.left.as_ref().clone(), f.right.clone(), lf.clone()).into();
-            let nonnegative_subtractor: AtomicFact =
-                LessEqualFact::new(z.clone(), sub.right.as_ref().clone(), lf.clone()).into();
+            let order_subgoal: AtomicFact = self
+                .new_less_equal_fact(sub.left.as_ref().clone(), f.right.clone(), lf.clone())
+                .into();
+            let nonnegative_subtractor: AtomicFact = self
+                .new_less_equal_fact(z.clone(), sub.right.as_ref().clone(), lf.clone())
+                .into();
             let order_result = self.try_verify_order_subgoal(order_subgoal, builtin_state)?;
             let nonnegative_result =
                 self.try_verify_order_subgoal(nonnegative_subtractor, builtin_state)?;
@@ -1791,8 +1892,9 @@ impl Runtime {
                 Add::new(f.right.clone(), sub.right.as_ref().clone()).into(),
                 Add::new(sub.right.as_ref().clone(), f.right.clone()).into(),
             ] {
-                let shifted_subgoal: AtomicFact =
-                    LessEqualFact::new(sub.left.as_ref().clone(), shifted_right, lf.clone()).into();
+                let shifted_subgoal: AtomicFact = self
+                    .new_less_equal_fact(sub.left.as_ref().clone(), shifted_right, lf.clone())
+                    .into();
                 if let Some(shifted_result) =
                     self.try_verify_order_subgoal(shifted_subgoal, builtin_state)?
                 {
@@ -1820,7 +1922,7 @@ impl Runtime {
                 None
             };
             if let Some(b) = b_opt {
-                let g0 = LessEqualFact::new(z.clone(), b, lf.clone()).into();
+                let g0 = self.new_less_equal_fact(z.clone(), b, lf.clone()).into();
                 if let Some(r0) = self.try_verify_order_subgoal(g0, builtin_state)? {
                     return Ok(Some(ProveFactResult::from(
                         SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -1835,14 +1937,18 @@ impl Runtime {
                 }
             }
             // a <= u + v from a <= u and 0 <= v (or symmetric addends).
-            let g_a_left =
-                LessEqualFact::new(f.left.clone(), add.left.as_ref().clone(), lf.clone()).into();
-            let g0_right =
-                LessEqualFact::new(z.clone(), add.right.as_ref().clone(), lf.clone()).into();
-            let g_a_right =
-                LessEqualFact::new(f.left.clone(), add.right.as_ref().clone(), lf.clone()).into();
-            let g0_left =
-                LessEqualFact::new(z.clone(), add.left.as_ref().clone(), lf.clone()).into();
+            let g_a_left = self
+                .new_less_equal_fact(f.left.clone(), add.left.as_ref().clone(), lf.clone())
+                .into();
+            let g0_right = self
+                .new_less_equal_fact(z.clone(), add.right.as_ref().clone(), lf.clone())
+                .into();
+            let g_a_right = self
+                .new_less_equal_fact(f.left.clone(), add.right.as_ref().clone(), lf.clone())
+                .into();
+            let g0_left = self
+                .new_less_equal_fact(z.clone(), add.left.as_ref().clone(), lf.clone())
+                .into();
             let premise_result = self.try_verify_builtin_rule_premise_alternatives(
                 vec![vec![g_a_left, g0_right], vec![g_a_right, g0_left]],
                 lf.clone(),
@@ -1864,8 +1970,9 @@ impl Runtime {
             // Move a right subtractor to the left side as an addend.
             // Example: from `a + c <= b`, prove `a <= b - c`.
             let shifted_left: Obj = Add::new(f.left.clone(), sub.right.as_ref().clone()).into();
-            let shifted_subgoal: AtomicFact =
-                LessEqualFact::new(shifted_left, sub.left.as_ref().clone(), lf.clone()).into();
+            let shifted_subgoal: AtomicFact = self
+                .new_less_equal_fact(shifted_left, sub.left.as_ref().clone(), lf.clone())
+                .into();
             if let Some(shifted_result) =
                 self.try_verify_order_subgoal(shifted_subgoal, builtin_state)?
             {
@@ -1882,9 +1989,9 @@ impl Runtime {
             if let Some(offset) = Self::integer_value_of_number_obj(sub.right.as_ref()) {
                 if offset >= 0 {
                     let shifted_left = Self::obj_plus_nonnegative_integer_offset(&f.left, offset);
-                    let subgoal: AtomicFact =
-                        LessEqualFact::new(shifted_left, sub.left.as_ref().clone(), lf.clone())
-                            .into();
+                    let subgoal: AtomicFact = self
+                        .new_less_equal_fact(shifted_left, sub.left.as_ref().clone(), lf.clone())
+                        .into();
                     if let Some(result) = self.try_verify_order_subgoal(subgoal, builtin_state)? {
                         return Ok(Some(ProveFactResult::from(
                             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -1918,10 +2025,12 @@ impl Runtime {
             // A sum of nonpositive real terms is nonpositive.
             // Example: `a <= 0, b <= 0 => a + b <= 0`.
             if let Obj::Add(add) = &f.left {
-                let left_nonpositive: AtomicFact =
-                    LessEqualFact::new(add.left.as_ref().clone(), z.clone(), lf.clone()).into();
-                let right_nonpositive: AtomicFact =
-                    LessEqualFact::new(add.right.as_ref().clone(), z.clone(), lf.clone()).into();
+                let left_nonpositive: AtomicFact = self
+                    .new_less_equal_fact(add.left.as_ref().clone(), z.clone(), lf.clone())
+                    .into();
+                let right_nonpositive: AtomicFact = self
+                    .new_less_equal_fact(add.right.as_ref().clone(), z.clone(), lf.clone())
+                    .into();
                 let left_result = self.try_verify_order_subgoal(left_nonpositive, builtin_state)?;
                 let right_result =
                     self.try_verify_order_subgoal(right_nonpositive, builtin_state)?;
@@ -1975,8 +2084,12 @@ impl Runtime {
 
         if let Obj::Mul(m) = &f.right {
             if m.right.to_string() == f.left.to_string() {
-                let g0 = LessEqualFact::new(z.clone(), f.left.clone(), lf.clone()).into();
-                let g1 = LessEqualFact::new(one, m.left.as_ref().clone(), lf.clone()).into();
+                let g0 = self
+                    .new_less_equal_fact(z.clone(), f.left.clone(), lf.clone())
+                    .into();
+                let g1 = self
+                    .new_less_equal_fact(one, m.left.as_ref().clone(), lf.clone())
+                    .into();
                 let Some(r0) = self.try_verify_order_subgoal(g0, builtin_state)? else {
                     return Ok(None);
                 };
@@ -2037,18 +2150,20 @@ impl Runtime {
         }
 
         if let (Obj::Add(al), Obj::Add(bl)) = (&f.left, &f.right) {
-            let g1 = LessEqualFact::new(
-                al.left.as_ref().clone(),
-                bl.left.as_ref().clone(),
-                lf.clone(),
-            )
-            .into();
-            let g2 = LessEqualFact::new(
-                al.right.as_ref().clone(),
-                bl.right.as_ref().clone(),
-                lf.clone(),
-            )
-            .into();
+            let g1 = self
+                .new_less_equal_fact(
+                    al.left.as_ref().clone(),
+                    bl.left.as_ref().clone(),
+                    lf.clone(),
+                )
+                .into();
+            let g2 = self
+                .new_less_equal_fact(
+                    al.right.as_ref().clone(),
+                    bl.right.as_ref().clone(),
+                    lf.clone(),
+                )
+                .into();
             let Some(r1) = self.try_verify_order_subgoal(g1, builtin_state)? else {
                 return Ok(None);
             };
@@ -2070,18 +2185,20 @@ impl Runtime {
         if let (Obj::Sub(sl), Obj::Sub(sr)) = (&f.left, &f.right) {
             // Componentwise weak monotonicity for subtraction.
             // Example: from `a <= b` and `c <= d`, prove `a - d <= b - c`.
-            let g1 = LessEqualFact::new(
-                sl.left.as_ref().clone(),
-                sr.left.as_ref().clone(),
-                lf.clone(),
-            )
-            .into();
-            let g2 = LessEqualFact::new(
-                sr.right.as_ref().clone(),
-                sl.right.as_ref().clone(),
-                lf.clone(),
-            )
-            .into();
+            let g1 = self
+                .new_less_equal_fact(
+                    sl.left.as_ref().clone(),
+                    sr.left.as_ref().clone(),
+                    lf.clone(),
+                )
+                .into();
+            let g2 = self
+                .new_less_equal_fact(
+                    sr.right.as_ref().clone(),
+                    sl.right.as_ref().clone(),
+                    lf.clone(),
+                )
+                .into();
             let Some(r1) = self.try_verify_order_subgoal(g1, builtin_state)? else {
                 return Ok(None);
             };
@@ -2118,12 +2235,13 @@ impl Runtime {
         let denominator = quotient.right.as_ref().clone();
         let numerator = quotient.left.as_ref().clone();
         let line_file = f.line_file.clone();
-        let positive_denominator: AtomicFact = LessFact::new(
-            Self::literal_zero_obj(),
-            denominator.clone(),
-            line_file.clone(),
-        )
-        .into();
+        let positive_denominator: AtomicFact = self
+            .new_less_fact(
+                Self::literal_zero_obj(),
+                denominator.clone(),
+                line_file.clone(),
+            )
+            .into();
         let Some(positive_result) = self
             .try_verify_atomic_fact_as_builtin_rule_premise(&positive_denominator, builtin_state)?
         else {
@@ -2132,11 +2250,13 @@ impl Runtime {
 
         let left_product: Obj = Mul::new(denominator.clone(), f.left.clone()).into();
         let right_product: Obj = Mul::new(f.left.clone(), denominator).into();
-        let left_product_bound: AtomicFact =
-            LessEqualFact::new(left_product, numerator.clone(), line_file.clone()).into();
-        let right_product_bound: AtomicFact =
-            LessEqualFact::new(right_product, numerator, line_file).into();
-        let product_bound_premise = QuantifierFreeFact::OrFact(OrFact::new(
+        let left_product_bound: AtomicFact = self
+            .new_less_equal_fact(left_product, numerator.clone(), line_file.clone())
+            .into();
+        let right_product_bound: AtomicFact = self
+            .new_less_equal_fact(right_product, numerator, line_file)
+            .into();
+        let product_bound_premise = QuantifierFreeFact::OrFact(self.new_or_fact(
             vec![left_product_bound.into(), right_product_bound.into()],
             f.line_file.clone(),
         ));
@@ -2182,12 +2302,13 @@ impl Runtime {
             ),
         ];
         for (denominator, other_factor) in candidates {
-            let positive_denominator: AtomicFact = LessFact::new(
-                Self::literal_zero_obj(),
-                denominator.clone(),
-                line_file.clone(),
-            )
-            .into();
+            let positive_denominator: AtomicFact = self
+                .new_less_fact(
+                    Self::literal_zero_obj(),
+                    denominator.clone(),
+                    line_file.clone(),
+                )
+                .into();
             let Some(positive_result) = self.try_verify_atomic_fact_as_builtin_rule_premise(
                 &positive_denominator,
                 builtin_state,
@@ -2197,8 +2318,9 @@ impl Runtime {
             };
 
             let quotient: Obj = Div::new(f.left.clone(), denominator).into();
-            let quotient_bound: AtomicFact =
-                LessEqualFact::new(quotient, other_factor, line_file.clone()).into();
+            let quotient_bound: AtomicFact = self
+                .new_less_equal_fact(quotient, other_factor, line_file.clone())
+                .into();
             if let Some(quotient_bound_result) =
                 self.try_verify_order_subgoal(quotient_bound, builtin_state)?
             {
@@ -2231,14 +2353,16 @@ impl Runtime {
         if let (Obj::Div(left_div), Obj::Div(right_div)) = (&f.left, &f.right) {
             if left_div.right.to_string() == right_div.right.to_string() {
                 let denominator = left_div.right.as_ref();
-                let positive_denominator: AtomicFact =
-                    LessFact::new(z.clone(), denominator.clone(), lf.clone()).into();
-                let numerator_bound: AtomicFact = LessFact::new(
-                    left_div.left.as_ref().clone(),
-                    right_div.left.as_ref().clone(),
-                    lf.clone(),
-                )
-                .into();
+                let positive_denominator: AtomicFact = self
+                    .new_less_fact(z.clone(), denominator.clone(), lf.clone())
+                    .into();
+                let numerator_bound: AtomicFact = self
+                    .new_less_fact(
+                        left_div.left.as_ref().clone(),
+                        right_div.left.as_ref().clone(),
+                        lf.clone(),
+                    )
+                    .into();
                 if let Some(positive_result) =
                     self.try_verify_order_subgoal(positive_denominator, builtin_state)?
                 {
@@ -2256,14 +2380,16 @@ impl Runtime {
                     }
                 }
 
-                let negative_denominator: AtomicFact =
-                    LessFact::new(denominator.clone(), z.clone(), lf.clone()).into();
-                let reversed_numerator_bound: AtomicFact = LessFact::new(
-                    right_div.left.as_ref().clone(),
-                    left_div.left.as_ref().clone(),
-                    lf.clone(),
-                )
-                .into();
+                let negative_denominator: AtomicFact = self
+                    .new_less_fact(denominator.clone(), z.clone(), lf.clone())
+                    .into();
+                let reversed_numerator_bound: AtomicFact = self
+                    .new_less_fact(
+                        right_div.left.as_ref().clone(),
+                        left_div.left.as_ref().clone(),
+                        lf.clone(),
+                    )
+                    .into();
                 if let Some(negative_result) =
                     self.try_verify_order_subgoal(negative_denominator, builtin_state)?
                 {
@@ -2334,8 +2460,9 @@ impl Runtime {
             if let Some((left_remaining, right_remaining)) =
                 Self::add_common_remaining(left_add, right_add)
             {
-                let subgoal: AtomicFact =
-                    LessFact::new(left_remaining, right_remaining, lf.clone()).into();
+                let subgoal: AtomicFact = self
+                    .new_less_fact(left_remaining, right_remaining, lf.clone())
+                    .into();
                 if let Some(result) = self.try_verify_order_subgoal(subgoal, builtin_state)? {
                     return Ok(Some(ProveFactResult::from(
                         SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -2354,18 +2481,20 @@ impl Runtime {
         if let (Obj::Sub(sl), Obj::Sub(sr)) = (&f.left, &f.right) {
             // Componentwise strict monotonicity for subtraction.
             // Example: from `a < b` and `c <= d`, prove `a - d < b - c`.
-            let g1s = LessFact::new(
-                sl.left.as_ref().clone(),
-                sr.left.as_ref().clone(),
-                lf.clone(),
-            )
-            .into();
-            let g2s = LessEqualFact::new(
-                sr.right.as_ref().clone(),
-                sl.right.as_ref().clone(),
-                lf.clone(),
-            )
-            .into();
+            let g1s = self
+                .new_less_fact(
+                    sl.left.as_ref().clone(),
+                    sr.left.as_ref().clone(),
+                    lf.clone(),
+                )
+                .into();
+            let g2s = self
+                .new_less_equal_fact(
+                    sr.right.as_ref().clone(),
+                    sl.right.as_ref().clone(),
+                    lf.clone(),
+                )
+                .into();
             let r1 = self.try_verify_order_subgoal(g1s, builtin_state)?;
             let r2 = self.try_verify_atomic_fact_as_builtin_rule_premise(&g2s, builtin_state)?;
             if let (Some(r1), Some(r2)) = (r1, r2) {
@@ -2381,18 +2510,20 @@ impl Runtime {
 
             // A strict subtractor comparison also gives a strict result.
             // Example: from `a <= b` and `c < d`, prove `a - d < b - c`.
-            let g1w = LessEqualFact::new(
-                sl.left.as_ref().clone(),
-                sr.left.as_ref().clone(),
-                lf.clone(),
-            )
-            .into();
-            let g2w = LessFact::new(
-                sr.right.as_ref().clone(),
-                sl.right.as_ref().clone(),
-                lf.clone(),
-            )
-            .into();
+            let g1w = self
+                .new_less_equal_fact(
+                    sl.left.as_ref().clone(),
+                    sr.left.as_ref().clone(),
+                    lf.clone(),
+                )
+                .into();
+            let g2w = self
+                .new_less_fact(
+                    sr.right.as_ref().clone(),
+                    sl.right.as_ref().clone(),
+                    lf.clone(),
+                )
+                .into();
             let r3 = self.try_verify_atomic_fact_as_builtin_rule_premise(&g1w, builtin_state)?;
             let r4 = self.try_verify_order_subgoal(g2w, builtin_state)?;
             if let (Some(r3), Some(r4)) = (r3, r4) {
@@ -2415,11 +2546,12 @@ impl Runtime {
                     && Self::obj_is_positive_integer_number(sub.right.as_ref())
                 {
                     let zero = Self::literal_zero_obj();
-                    let positive_arg: AtomicFact =
-                        LessFact::new(zero.clone(), right_abs.arg.as_ref().clone(), lf.clone())
-                            .into();
-                    let nonnegative_sub: AtomicFact =
-                        LessEqualFact::new(zero, left_abs.arg.as_ref().clone(), lf.clone()).into();
+                    let positive_arg: AtomicFact = self
+                        .new_less_fact(zero.clone(), right_abs.arg.as_ref().clone(), lf.clone())
+                        .into();
+                    let nonnegative_sub: AtomicFact = self
+                        .new_less_equal_fact(zero, left_abs.arg.as_ref().clone(), lf.clone())
+                        .into();
                     let r_pos = self.try_verify_order_subgoal(positive_arg, builtin_state)?;
                     let r_sub = self.try_verify_atomic_fact_as_builtin_rule_premise(
                         &nonnegative_sub,
@@ -2444,8 +2576,9 @@ impl Runtime {
             // Exchange the target subtrahend with the strict upper bound.
             // Example: from `a - b < c`, prove `a - c < b`.
             let swapped_left: Obj = Sub::new(sub.left.as_ref().clone(), f.right.clone()).into();
-            let swapped_subgoal: AtomicFact =
-                LessFact::new(swapped_left, sub.right.as_ref().clone(), lf.clone()).into();
+            let swapped_subgoal: AtomicFact = self
+                .new_less_fact(swapped_left, sub.right.as_ref().clone(), lf.clone())
+                .into();
             if let Some(swapped_result) =
                 self.try_verify_order_subgoal(swapped_subgoal, builtin_state)?
             {
@@ -2460,10 +2593,12 @@ impl Runtime {
             }
             // Subtracting a nonnegative term preserves a strict upper bound.
             // Example: from `a < b` and `0 <= c`, prove `a - c < b`.
-            let strict_order_subgoal: AtomicFact =
-                LessFact::new(sub.left.as_ref().clone(), f.right.clone(), lf.clone()).into();
-            let nonnegative_subtractor: AtomicFact =
-                LessEqualFact::new(z.clone(), sub.right.as_ref().clone(), lf.clone()).into();
+            let strict_order_subgoal: AtomicFact = self
+                .new_less_fact(sub.left.as_ref().clone(), f.right.clone(), lf.clone())
+                .into();
+            let nonnegative_subtractor: AtomicFact = self
+                .new_less_equal_fact(z.clone(), sub.right.as_ref().clone(), lf.clone())
+                .into();
             let strict_order_result =
                 self.try_verify_order_subgoal(strict_order_subgoal, builtin_state)?;
             let nonnegative_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
@@ -2485,10 +2620,12 @@ impl Runtime {
 
             // Subtracting a positive term turns a weak upper bound into a strict one.
             // Example: from `a <= b` and `0 < c`, prove `a - c < b`.
-            let weak_order_subgoal: AtomicFact =
-                LessEqualFact::new(sub.left.as_ref().clone(), f.right.clone(), lf.clone()).into();
-            let positive_subtractor: AtomicFact =
-                LessFact::new(z.clone(), sub.right.as_ref().clone(), lf.clone()).into();
+            let weak_order_subgoal: AtomicFact = self
+                .new_less_equal_fact(sub.left.as_ref().clone(), f.right.clone(), lf.clone())
+                .into();
+            let positive_subtractor: AtomicFact = self
+                .new_less_fact(z.clone(), sub.right.as_ref().clone(), lf.clone())
+                .into();
             let weak_order_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
                 &weak_order_subgoal,
                 builtin_state,
@@ -2511,8 +2648,9 @@ impl Runtime {
             // Move a left subtractor to the right side as an addend.
             // Example: from `a < b + c`, prove `a - c < b`.
             let shifted_right: Obj = Add::new(f.right.clone(), sub.right.as_ref().clone()).into();
-            let shifted_subgoal: AtomicFact =
-                LessFact::new(sub.left.as_ref().clone(), shifted_right, lf.clone()).into();
+            let shifted_subgoal: AtomicFact = self
+                .new_less_fact(sub.left.as_ref().clone(), shifted_right, lf.clone())
+                .into();
             if let Some(shifted_result) =
                 self.try_verify_order_subgoal(shifted_subgoal, builtin_state)?
             {
@@ -2535,8 +2673,9 @@ impl Runtime {
                 (add.right.as_ref(), add.left.as_ref()),
             ] {
                 let shifted_left: Obj = Sub::new(f.left.clone(), subtrahend.clone()).into();
-                let shifted_subgoal: AtomicFact =
-                    LessFact::new(shifted_left, remaining_bound.clone(), lf.clone()).into();
+                let shifted_subgoal: AtomicFact = self
+                    .new_less_fact(shifted_left, remaining_bound.clone(), lf.clone())
+                    .into();
                 if let Some(shifted_result) =
                     self.try_verify_order_subgoal(shifted_subgoal, builtin_state)?
                 {
@@ -2561,7 +2700,7 @@ impl Runtime {
                 None
             };
             if let Some(b) = b_opt {
-                let g0 = LessFact::new(z.clone(), b, lf.clone()).into();
+                let g0 = self.new_less_fact(z.clone(), b, lf.clone()).into();
                 if let Some(r0) = self.try_verify_order_subgoal(g0, builtin_state)? {
                     return Ok(Some(ProveFactResult::from(
                         SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -2574,14 +2713,18 @@ impl Runtime {
                 }
             }
             // a < u + v from a < u and 0 <= v (or symmetric addends).
-            let g_a_left =
-                LessFact::new(f.left.clone(), add.left.as_ref().clone(), lf.clone()).into();
-            let g0_right =
-                LessEqualFact::new(z.clone(), add.right.as_ref().clone(), lf.clone()).into();
-            let g_a_right =
-                LessFact::new(f.left.clone(), add.right.as_ref().clone(), lf.clone()).into();
-            let g0_left =
-                LessEqualFact::new(z.clone(), add.left.as_ref().clone(), lf.clone()).into();
+            let g_a_left = self
+                .new_less_fact(f.left.clone(), add.left.as_ref().clone(), lf.clone())
+                .into();
+            let g0_right = self
+                .new_less_equal_fact(z.clone(), add.right.as_ref().clone(), lf.clone())
+                .into();
+            let g_a_right = self
+                .new_less_fact(f.left.clone(), add.right.as_ref().clone(), lf.clone())
+                .into();
+            let g0_left = self
+                .new_less_equal_fact(z.clone(), add.left.as_ref().clone(), lf.clone())
+                .into();
             let premise_result = self.try_verify_builtin_rule_premise_alternatives(
                 vec![vec![g_a_left, g0_right], vec![g_a_right, g0_left]],
                 lf.clone(),
@@ -2604,8 +2747,9 @@ impl Runtime {
             // Move a right subtractor to the left side as an addend.
             // Example: from `a + c < b`, prove `a < b - c`.
             let shifted_left: Obj = Add::new(f.left.clone(), sub.right.as_ref().clone()).into();
-            let shifted_subgoal: AtomicFact =
-                LessFact::new(shifted_left, sub.left.as_ref().clone(), lf.clone()).into();
+            let shifted_subgoal: AtomicFact = self
+                .new_less_fact(shifted_left, sub.left.as_ref().clone(), lf.clone())
+                .into();
             if let Some(shifted_result) =
                 self.try_verify_order_subgoal(shifted_subgoal, builtin_state)?
             {
@@ -2639,9 +2783,12 @@ impl Runtime {
         // Example: from `a > 0` and `b > 1`, prove `a / b < a`.
         if let Obj::Div(div) = &f.left {
             if div.left.as_ref().to_string() == f.right.to_string() {
-                let g_pos = LessFact::new(z.clone(), f.right.clone(), lf.clone()).into();
-                let g_denom_gt_one =
-                    LessFact::new(one.clone(), div.right.as_ref().clone(), lf.clone()).into();
+                let g_pos = self
+                    .new_less_fact(z.clone(), f.right.clone(), lf.clone())
+                    .into();
+                let g_denom_gt_one = self
+                    .new_less_fact(one.clone(), div.right.as_ref().clone(), lf.clone())
+                    .into();
                 let Some(r_pos) = self.try_verify_order_subgoal(g_pos, builtin_state)? else {
                     return Ok(None);
                 };
@@ -2669,13 +2816,16 @@ impl Runtime {
             if let Obj::Add(add) = &f.left {
                 let cases: [(AtomicFact, AtomicFact); 2] = [
                     (
-                        LessFact::new(add.left.as_ref().clone(), z.clone(), lf.clone()).into(),
-                        LessEqualFact::new(add.right.as_ref().clone(), z.clone(), lf.clone())
+                        self.new_less_fact(add.left.as_ref().clone(), z.clone(), lf.clone())
+                            .into(),
+                        self.new_less_equal_fact(add.right.as_ref().clone(), z.clone(), lf.clone())
                             .into(),
                     ),
                     (
-                        LessEqualFact::new(add.left.as_ref().clone(), z.clone(), lf.clone()).into(),
-                        LessFact::new(add.right.as_ref().clone(), z.clone(), lf.clone()).into(),
+                        self.new_less_equal_fact(add.left.as_ref().clone(), z.clone(), lf.clone())
+                            .into(),
+                        self.new_less_fact(add.right.as_ref().clone(), z.clone(), lf.clone())
+                            .into(),
                     ),
                 ];
                 for (negative, nonpositive) in cases {
@@ -2738,8 +2888,12 @@ impl Runtime {
 
         if let Obj::Mul(m) = &f.right {
             if m.right.to_string() == f.left.to_string() {
-                let g0 = LessFact::new(z.clone(), f.left.clone(), lf.clone()).into();
-                let g1 = LessFact::new(one, m.left.as_ref().clone(), lf.clone()).into();
+                let g0 = self
+                    .new_less_fact(z.clone(), f.left.clone(), lf.clone())
+                    .into();
+                let g1 = self
+                    .new_less_fact(one, m.left.as_ref().clone(), lf.clone())
+                    .into();
                 let Some(r0) = self.try_verify_order_subgoal(g0, builtin_state)? else {
                     return Ok(None);
                 };
@@ -2789,18 +2943,20 @@ impl Runtime {
         }
 
         if let (Obj::Add(al), Obj::Add(bl)) = (&f.left, &f.right) {
-            let g1s = LessFact::new(
-                al.left.as_ref().clone(),
-                bl.left.as_ref().clone(),
-                lf.clone(),
-            )
-            .into();
-            let g2s = LessFact::new(
-                al.right.as_ref().clone(),
-                bl.right.as_ref().clone(),
-                lf.clone(),
-            )
-            .into();
+            let g1s = self
+                .new_less_fact(
+                    al.left.as_ref().clone(),
+                    bl.left.as_ref().clone(),
+                    lf.clone(),
+                )
+                .into();
+            let g2s = self
+                .new_less_fact(
+                    al.right.as_ref().clone(),
+                    bl.right.as_ref().clone(),
+                    lf.clone(),
+                )
+                .into();
             let r1 = self.try_verify_order_subgoal(g1s, builtin_state)?;
             let r2 = self.try_verify_order_subgoal(g2s, builtin_state)?;
             if let (Some(r1), Some(r2)) = (r1, r2) {
@@ -2815,18 +2971,20 @@ impl Runtime {
                     ),
                 )));
             }
-            let g1m = LessFact::new(
-                al.left.as_ref().clone(),
-                bl.left.as_ref().clone(),
-                lf.clone(),
-            )
-            .into();
-            let g2m = LessEqualFact::new(
-                al.right.as_ref().clone(),
-                bl.right.as_ref().clone(),
-                lf.clone(),
-            )
-            .into();
+            let g1m = self
+                .new_less_fact(
+                    al.left.as_ref().clone(),
+                    bl.left.as_ref().clone(),
+                    lf.clone(),
+                )
+                .into();
+            let g2m = self
+                .new_less_equal_fact(
+                    al.right.as_ref().clone(),
+                    bl.right.as_ref().clone(),
+                    lf.clone(),
+                )
+                .into();
             let r3 = self.try_verify_order_subgoal(g1m, builtin_state)?;
             let r4 = self.try_verify_atomic_fact_as_builtin_rule_premise(&g2m, builtin_state)?;
             if let (Some(r3), Some(r4)) = (r3, r4) {
@@ -2841,18 +2999,20 @@ impl Runtime {
                     ),
                 )));
             }
-            let g1w = LessEqualFact::new(
-                al.left.as_ref().clone(),
-                bl.left.as_ref().clone(),
-                lf.clone(),
-            )
-            .into();
-            let g2w = LessFact::new(
-                al.right.as_ref().clone(),
-                bl.right.as_ref().clone(),
-                lf.clone(),
-            )
-            .into();
+            let g1w = self
+                .new_less_equal_fact(
+                    al.left.as_ref().clone(),
+                    bl.left.as_ref().clone(),
+                    lf.clone(),
+                )
+                .into();
+            let g2w = self
+                .new_less_fact(
+                    al.right.as_ref().clone(),
+                    bl.right.as_ref().clone(),
+                    lf.clone(),
+                )
+                .into();
             let r5 = self.try_verify_atomic_fact_as_builtin_rule_premise(&g1w, builtin_state)?;
             let r6 = self.try_verify_order_subgoal(g2w, builtin_state)?;
             if let (Some(r5), Some(r6)) = (r5, r6) {

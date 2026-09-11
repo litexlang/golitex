@@ -312,7 +312,7 @@ impl Runtime {
                 .typed_parameters()
                 .collect_param_bindings();
             for (binding, equal_to_obj) in exist_param_bindings.iter().zip(stmt.equal_tos.iter()) {
-                let equal_fact: AtomicFact = EqualFact::new(
+                let equal_fact: AtomicFact = rt.new_equal_fact(
                     obj_for_bound_param_in_scope(binding),
                     equal_to_obj.clone(),
                     stmt.line_file.clone(),
@@ -589,11 +589,12 @@ impl Runtime {
 
             let verify_state_for_proof_check = VerifyState::initial();
             if let Obj::FnSet(fn_set) = &stmt.set {
-                let ret_nonempty_fact = IsNonemptySetFact::new(
-                    fn_set.body.ret_set.as_ref().clone(),
-                    stmt.line_file.clone(),
-                )
-                .into();
+                let ret_nonempty_fact = rt
+                    .new_is_nonempty_set_fact(
+                        fn_set.body.ret_set.as_ref().clone(),
+                        stmt.line_file.clone(),
+                    )
+                    .into();
                 let ret_check = rt.verify_non_equational_atomic_fact_with_bounded_builtin_routes(
                     &ret_nonempty_fact,
                     &verify_state_for_proof_check,
@@ -608,8 +609,9 @@ impl Runtime {
                 }
             }
 
-            let membership_fact =
-                InFact::new(stmt.obj.clone(), stmt.set.clone(), stmt.line_file.clone()).into();
+            let membership_fact = rt
+                .new_in_fact(stmt.obj.clone(), stmt.set.clone(), stmt.line_file.clone())
+                .into();
             let membership_result = rt
                 .verify_fact_or_error(&membership_fact, &verify_state_for_proof_check)
                 .map_err(|verify_error| {
@@ -632,7 +634,9 @@ impl Runtime {
         stmt: &WitnessNonemptySet,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let witness_stmt = stmt.clone().into();
-        let fact = IsNonemptySetFact::new(stmt.set.clone(), stmt.line_file.clone()).into();
+        let fact = self
+            .new_is_nonempty_set_fact(stmt.set.clone(), stmt.line_file.clone())
+            .into();
         let store_result = if self.current_execution_is_trusted_source() {
             self.store_fact_with_trust_and_infer_with_reason(
                 fact,

@@ -38,7 +38,7 @@ impl StmtResultToLeanCompiler {
             ));
         }
         let adjacent_facts = chain
-            .facts()
+            .facts(&self.runtime)
             .map_err(|error| format!("{result_layer} retained an invalid chain: {error:?}"))?
             .into_iter()
             .map(Fact::from)
@@ -112,12 +112,14 @@ impl StmtResultToLeanCompiler {
                         "{result_layer} equality application {application_index} must retain one conclusion"
                     ));
                 };
-                let expected_conclusion: Fact = EqualFact::new(
-                    chain.objs[start_object_index].clone(),
-                    chain.objs[end_object_index].clone(),
-                    chain.line_file.clone(),
-                )
-                .into();
+                let expected_conclusion: Fact = self
+                    .runtime
+                    .new_equal_fact(
+                        chain.objs[start_object_index].clone(),
+                        chain.objs[end_object_index].clone(),
+                        chain.line_file.clone(),
+                    )
+                    .into();
                 validate_success_store_fact_result(
                     conclusion,
                     &expected_conclusion,
@@ -177,9 +179,11 @@ impl StmtResultToLeanCompiler {
                 "{result_layer} retained numeric-order closure for a non-chain source"
             ));
         };
-        let expected_steps = chain.numeric_order_chain_closure_steps().map_err(|error| {
-            format!("{result_layer} retained an invalid order chain: {error:?}")
-        })?;
+        let expected_steps = chain
+            .numeric_order_chain_closure_steps_with_runtime(&self.runtime)
+            .map_err(|error| {
+                format!("{result_layer} retained an invalid order chain: {error:?}")
+            })?;
         if applications.len() != expected_steps.len() {
             return Err(format!(
                 "{result_layer} expected {} numeric-order closure applications, retained {}",
@@ -188,7 +192,7 @@ impl StmtResultToLeanCompiler {
             ));
         }
         let adjacent_facts = chain
-            .facts()
+            .facts(&self.runtime)
             .map_err(|error| format!("{result_layer} retained an invalid chain: {error:?}"))?
             .into_iter()
             .map(Fact::from)

@@ -127,12 +127,13 @@ impl Runtime {
             if let Some(selected_index) =
                 Self::indexed_singleton_peeling_index(&whole, decomposition_side)
             {
-                let membership: AtomicFact = InFact::new(
-                    selected_index,
-                    whole.index_set().clone(),
-                    equal_fact.line_file.clone(),
-                )
-                .into();
+                let membership: AtomicFact = self
+                    .new_in_fact(
+                        selected_index,
+                        whole.index_set().clone(),
+                        equal_fact.line_file.clone(),
+                    )
+                    .into();
                 let result = self
                     .try_verify_atomic_fact_as_builtin_rule_premise(&membership, builtin_state)?;
                 if let Some(result) = result {
@@ -175,8 +176,9 @@ impl Runtime {
                         steps.push(nonempty_result);
                     }
                     IndexedEqualityPremise::Subset(left, right) => {
-                        let premise: AtomicFact =
-                            SubsetFact::new(left, right, equal_fact.line_file.clone()).into();
+                        let premise: AtomicFact = self
+                            .new_subset_fact(left, right, equal_fact.line_file.clone())
+                            .into();
                         let Some(result) = self.try_verify_atomic_fact_as_builtin_rule_premise(
                             &premise,
                             builtin_state,
@@ -221,12 +223,13 @@ impl Runtime {
                 index_union.family_fn.as_ref(),
                 &subset_fact.left,
             )? {
-                let membership: AtomicFact = InFact::new(
-                    index,
-                    index_union.index_set.as_ref().clone(),
-                    subset_fact.line_file.clone(),
-                )
-                .into();
+                let membership: AtomicFact = self
+                    .new_in_fact(
+                        index,
+                        index_union.index_set.as_ref().clone(),
+                        subset_fact.line_file.clone(),
+                    )
+                    .into();
                 if let Some(steps) =
                     self.verify_builtin_rule_premises(&[membership], builtin_state)?
                 {
@@ -243,12 +246,13 @@ impl Runtime {
                 index_intersect.family_fn.as_ref(),
                 &subset_fact.right,
             )? {
-                let membership: AtomicFact = InFact::new(
-                    index,
-                    index_intersect.index_set.as_ref().clone(),
-                    subset_fact.line_file.clone(),
-                )
-                .into();
+                let membership: AtomicFact = self
+                    .new_in_fact(
+                        index,
+                        index_intersect.index_set.as_ref().clone(),
+                        subset_fact.line_file.clone(),
+                    )
+                    .into();
                 if let Some(steps) =
                     self.verify_builtin_rule_premises(&[membership], builtin_state)?
                 {
@@ -311,12 +315,13 @@ impl Runtime {
                 &subset_fact.line_file,
                 builtin_state,
             )? {
-                let ambient_premise: AtomicFact = SubsetFact::new(
-                    subset_fact.left.clone(),
-                    index_intersect.ambient_set.as_ref().clone(),
-                    subset_fact.line_file.clone(),
-                )
-                .into();
+                let ambient_premise: AtomicFact = self
+                    .new_subset_fact(
+                        subset_fact.left.clone(),
+                        index_intersect.ambient_set.as_ref().clone(),
+                        subset_fact.line_file.clone(),
+                    )
+                    .into();
                 let ambient_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
                     &ambient_premise,
                     builtin_state,
@@ -334,12 +339,13 @@ impl Runtime {
         if let Some((smaller, larger, is_union)) =
             Self::indexed_domain_monotonicity_parts(&subset_fact.left, &subset_fact.right)
         {
-            let domain_premise: AtomicFact = SubsetFact::new(
-                smaller.index_set().clone(),
-                larger.index_set().clone(),
-                subset_fact.line_file.clone(),
-            )
-            .into();
+            let domain_premise: AtomicFact = self
+                .new_subset_fact(
+                    smaller.index_set().clone(),
+                    larger.index_set().clone(),
+                    subset_fact.line_file.clone(),
+                )
+                .into();
             if let Some(steps) =
                 self.verify_builtin_rule_premises(&[domain_premise], builtin_state)?
             {
@@ -472,8 +478,9 @@ impl Runtime {
         line_file: &LineFile,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<VerifyFactResult>, RuntimeError> {
-        let nonempty: AtomicFact =
-            IsNonemptySetFact::new(index_set.clone(), line_file.clone()).into();
+        let nonempty: AtomicFact = self
+            .new_is_nonempty_set_fact(index_set.clone(), line_file.clone())
+            .into();
         if matches!(index_set, Obj::ListSet(list) if !list.list.is_empty()) {
             let proof =
                 SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -505,8 +512,8 @@ impl Runtime {
         let Some(fiber) = self.apply_indexed_family_once(family, param)? else {
             return Ok(None);
         };
-        let finite_fiber: AtomicFact = IsFiniteSetFact::new(fiber, line_file.clone()).into();
-        Ok(Some(ForallFact::new_canonical_forall(
+        let finite_fiber: AtomicFact = self.new_is_finite_set_fact(fiber, line_file.clone()).into();
+        Ok(Some(self.new_forall_fact(
             TypedParameterList::new(vec![param_group]),
             Vec::new(),
             vec![finite_fiber.into()],
@@ -529,11 +536,12 @@ impl Runtime {
             return Ok(None);
         };
         let predicate: AtomicFact = if finite {
-            IsFiniteSetFact::new(fiber, line_file.clone()).into()
+            self.new_is_finite_set_fact(fiber, line_file.clone()).into()
         } else {
-            IsNonemptySetFact::new(fiber, line_file.clone()).into()
+            self.new_is_nonempty_set_fact(fiber, line_file.clone())
+                .into()
         };
-        Ok(Some(ExistFact::PlainExistFact(PlainExistFact::new(
+        Ok(Some(ExistFact::PlainExistFact(self.new_plain_exist_fact(
             TypedParameterList::new(vec![param_group]),
             vec![predicate.into()],
             line_file.clone(),
@@ -587,14 +595,14 @@ impl Runtime {
             return Ok(None);
         };
         let pointwise: AtomicFact = match direction {
-            PointwiseBoundDirection::FamilySubsetSet => {
-                SubsetFact::new(fiber, bound.clone(), line_file.clone()).into()
-            }
-            PointwiseBoundDirection::SetSubsetFamily => {
-                SubsetFact::new(bound.clone(), fiber, line_file.clone()).into()
-            }
+            PointwiseBoundDirection::FamilySubsetSet => self
+                .new_subset_fact(fiber, bound.clone(), line_file.clone())
+                .into(),
+            PointwiseBoundDirection::SetSubsetFamily => self
+                .new_subset_fact(bound.clone(), fiber, line_file.clone())
+                .into(),
         };
-        let forall_fact = ForallFact::new_canonical_forall(
+        let forall_fact = self.new_forall_fact(
             TypedParameterList::new(vec![param_group]),
             vec![],
             vec![pointwise.into()],
@@ -631,14 +639,14 @@ impl Runtime {
             return Ok(None);
         };
         let pointwise: AtomicFact = match relation {
-            PointwiseRelation::Equal => {
-                EqualFact::new(left_fiber, right_fiber, line_file.clone()).into()
-            }
-            PointwiseRelation::Subset => {
-                SubsetFact::new(left_fiber, right_fiber, line_file.clone()).into()
-            }
+            PointwiseRelation::Equal => self
+                .new_equal_fact(left_fiber, right_fiber, line_file.clone())
+                .into(),
+            PointwiseRelation::Subset => self
+                .new_subset_fact(left_fiber, right_fiber, line_file.clone())
+                .into(),
         };
-        Ok(Some(ForallFact::new_canonical_forall(
+        Ok(Some(self.new_forall_fact(
             TypedParameterList::new(vec![param_group]),
             vec![],
             vec![pointwise.into()],

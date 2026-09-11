@@ -88,12 +88,13 @@ impl Runtime {
         // Empty set rule: `$is_nonempty_set(S)` follows from `S != {}`.
         // Example: after `S != {}`, prove `$is_nonempty_set(S)`.
         let empty_set: Obj = ListSet::new(vec![]).into();
-        let not_equal_empty: AtomicFact = NotEqualFact::new(
-            is_nonempty_set_fact.set.clone(),
-            empty_set,
-            is_nonempty_set_fact.line_file.clone(),
-        )
-        .into();
+        let not_equal_empty: AtomicFact = self
+            .new_not_equal_fact(
+                is_nonempty_set_fact.set.clone(),
+                empty_set,
+                is_nonempty_set_fact.line_file.clone(),
+            )
+            .into();
         if let Some(not_equal_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&not_equal_empty, builtin_state)?
         {
@@ -162,12 +163,13 @@ impl Runtime {
             // The structural strategy handles the separate case where the order itself
             // needs one fresh builtin rule, such as deriving `1 <= n` from `2 <= n`.
             Obj::ClosedRange(closed_range) => {
-                let endpoint_order: AtomicFact = LessEqualFact::new(
-                    closed_range.start.as_ref().clone(),
-                    closed_range.end.as_ref().clone(),
-                    is_nonempty_set_fact.line_file.clone(),
-                )
-                .into();
+                let endpoint_order: AtomicFact = self
+                    .new_less_equal_fact(
+                        closed_range.start.as_ref().clone(),
+                        closed_range.end.as_ref().clone(),
+                        is_nonempty_set_fact.line_file.clone(),
+                    )
+                    .into();
                 let Some(result) = self.try_verify_atomic_fact_as_builtin_rule_premise(
                     &endpoint_order,
                     builtin_state,
@@ -188,12 +190,13 @@ impl Runtime {
             // A half-open integer range is nonempty when its known endpoints are
             // strictly ordered. Derived endpoint order is delegated to the strategy.
             Obj::Range(range) => {
-                let endpoint_order: AtomicFact = LessFact::new(
-                    range.start.as_ref().clone(),
-                    range.end.as_ref().clone(),
-                    is_nonempty_set_fact.line_file.clone(),
-                )
-                .into();
+                let endpoint_order: AtomicFact = self
+                    .new_less_fact(
+                        range.start.as_ref().clone(),
+                        range.end.as_ref().clone(),
+                        is_nonempty_set_fact.line_file.clone(),
+                    )
+                    .into();
                 let Some(result) = self.try_verify_atomic_fact_as_builtin_rule_premise(
                     &endpoint_order,
                     builtin_state,
@@ -217,14 +220,14 @@ impl Runtime {
             Obj::IntervalObj(interval) => {
                 let both_closed = interval.left_closed() && interval.right_closed();
                 let endpoint_order: AtomicFact = if both_closed {
-                    LessEqualFact::new(
+                    self.new_less_equal_fact(
                         interval.start().clone(),
                         interval.end().clone(),
                         is_nonempty_set_fact.line_file.clone(),
                     )
                     .into()
                 } else {
-                    LessFact::new(
+                    self.new_less_fact(
                         interval.start().clone(),
                         interval.end().clone(),
                         is_nonempty_set_fact.line_file.clone(),
@@ -290,11 +293,12 @@ impl Runtime {
             // A union is nonempty when either side is nonempty.
             // Example: from `$is_nonempty_set(A)`, prove `$is_nonempty_set(union(A, B))`.
             Obj::Union(union) => {
-                let left_nonempty: AtomicFact = IsNonemptySetFact::new(
-                    union.left.as_ref().clone(),
-                    is_nonempty_set_fact.line_file.clone(),
-                )
-                .into();
+                let left_nonempty: AtomicFact = self
+                    .new_is_nonempty_set_fact(
+                        union.left.as_ref().clone(),
+                        is_nonempty_set_fact.line_file.clone(),
+                    )
+                    .into();
                 if let Some(left_result) = self
                     .try_verify_atomic_fact_as_builtin_rule_premise(&left_nonempty, builtin_state)?
                 {
@@ -309,11 +313,12 @@ impl Runtime {
                     );
                 }
 
-                let right_nonempty: AtomicFact = IsNonemptySetFact::new(
-                    union.right.as_ref().clone(),
-                    is_nonempty_set_fact.line_file.clone(),
-                )
-                .into();
+                let right_nonempty: AtomicFact = self
+                    .new_is_nonempty_set_fact(
+                        union.right.as_ref().clone(),
+                        is_nonempty_set_fact.line_file.clone(),
+                    )
+                    .into();
                 if let Some(right_result) = self.try_verify_atomic_fact_as_builtin_rule_premise(
                     &right_nonempty,
                     builtin_state,
@@ -353,7 +358,7 @@ impl Runtime {
                     .args
                     .iter()
                     .map(|arg_obj| {
-                        IsNonemptySetFact::new(
+                        self.new_is_nonempty_set_fact(
                             *arg_obj.clone(),
                             is_nonempty_set_fact.line_file.clone(),
                         )
@@ -385,11 +390,12 @@ impl Runtime {
                 )
             }
             Obj::FnSet(fn_set) => {
-                let ret_nonempty_fact = IsNonemptySetFact::new(
-                    fn_set.body.ret_set.as_ref().clone(),
-                    is_nonempty_set_fact.line_file.clone(),
-                )
-                .into();
+                let ret_nonempty_fact = self
+                    .new_is_nonempty_set_fact(
+                        fn_set.body.ret_set.as_ref().clone(),
+                        is_nonempty_set_fact.line_file.clone(),
+                    )
+                    .into();
                 let ret_check = self.try_verify_atomic_fact_as_builtin_rule_premise(
                     &ret_nonempty_fact,
                     builtin_state,
@@ -409,11 +415,12 @@ impl Runtime {
                 }
             }
             Obj::AnonymousFn(anon) => {
-                let ret_nonempty_fact = IsNonemptySetFact::new(
-                    anon.body.ret_set.as_ref().clone(),
-                    is_nonempty_set_fact.line_file.clone(),
-                )
-                .into();
+                let ret_nonempty_fact = self
+                    .new_is_nonempty_set_fact(
+                        anon.body.ret_set.as_ref().clone(),
+                        is_nonempty_set_fact.line_file.clone(),
+                    )
+                    .into();
                 let ret_check = self.try_verify_atomic_fact_as_builtin_rule_premise(
                     &ret_nonempty_fact,
                     builtin_state,
@@ -437,7 +444,7 @@ impl Runtime {
                 // A zero-length finite-sequence space contains the empty sequence,
                 // even when its codomain is empty. Example: `finite_seq({}, 0)`.
                 let zero: Obj = Number::new("0".to_string()).into();
-                let length_zero_fact = EqualFact::new_from_refs(
+                let length_zero_fact = self.new_equal_fact_from_refs(
                     fs.n.as_ref(),
                     &zero,
                     is_nonempty_set_fact.line_file.clone(),
@@ -461,11 +468,12 @@ impl Runtime {
                         .into(),
                     );
                 }
-                let codomain_nonempty = IsNonemptySetFact::new(
-                    (*fs.set).clone(),
-                    is_nonempty_set_fact.line_file.clone(),
-                )
-                .into();
+                let codomain_nonempty = self
+                    .new_is_nonempty_set_fact(
+                        (*fs.set).clone(),
+                        is_nonempty_set_fact.line_file.clone(),
+                    )
+                    .into();
                 let codomain_check = self.try_verify_atomic_fact_as_builtin_rule_premise(
                     &codomain_nonempty,
                     builtin_state,
@@ -485,11 +493,12 @@ impl Runtime {
                 }
             }
             Obj::SeqSet(ss) => {
-                let codomain_nonempty = IsNonemptySetFact::new(
-                    (*ss.set).clone(),
-                    is_nonempty_set_fact.line_file.clone(),
-                )
-                .into();
+                let codomain_nonempty = self
+                    .new_is_nonempty_set_fact(
+                        (*ss.set).clone(),
+                        is_nonempty_set_fact.line_file.clone(),
+                    )
+                    .into();
                 let codomain_check = self.try_verify_atomic_fact_as_builtin_rule_premise(
                     &codomain_nonempty,
                     builtin_state,
@@ -509,11 +518,12 @@ impl Runtime {
                 }
             }
             Obj::MatrixSet(ms) => {
-                let codomain_nonempty = IsNonemptySetFact::new(
-                    (*ms.set).clone(),
-                    is_nonempty_set_fact.line_file.clone(),
-                )
-                .into();
+                let codomain_nonempty = self
+                    .new_is_nonempty_set_fact(
+                        (*ms.set).clone(),
+                        is_nonempty_set_fact.line_file.clone(),
+                    )
+                    .into();
                 let codomain_check = self.try_verify_atomic_fact_as_builtin_rule_premise(
                     &codomain_nonempty,
                     builtin_state,
@@ -566,9 +576,9 @@ impl Runtime {
                     if !obj_can_trigger_nonempty_structural_builtin(&equal_set) {
                         continue;
                     }
-                    let equal_nonempty: AtomicFact =
-                        IsNonemptySetFact::new(equal_set, is_nonempty_set_fact.line_file.clone())
-                            .into();
+                    let equal_nonempty: AtomicFact = self
+                        .new_is_nonempty_set_fact(equal_set, is_nonempty_set_fact.line_file.clone())
+                        .into();
                     let equal_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
                         &equal_nonempty,
                         builtin_state,
@@ -599,14 +609,16 @@ impl Runtime {
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let line_file = is_nonempty_set_fact.line_file.clone();
-        let finite: AtomicFact =
-            IsFiniteSetFact::new(is_nonempty_set_fact.set.clone(), line_file.clone()).into();
-        let finite_set_size_at_least_one: AtomicFact = GreaterEqualFact::new(
-            FiniteSetSize::new(is_nonempty_set_fact.set.clone()).into(),
-            Number::new("1".to_string()).into(),
-            line_file,
-        )
-        .into();
+        let finite: AtomicFact = self
+            .new_is_finite_set_fact(is_nonempty_set_fact.set.clone(), line_file.clone())
+            .into();
+        let finite_set_size_at_least_one: AtomicFact = self
+            .new_greater_equal_fact(
+                FiniteSetSize::new(is_nonempty_set_fact.set.clone()).into(),
+                Number::new("1".to_string()).into(),
+                line_file,
+            )
+            .into();
         let Some(results) = self
             .verify_builtin_rule_premises(&[finite, finite_set_size_at_least_one], builtin_state)?
         else {
@@ -674,11 +686,12 @@ impl Runtime {
         }
 
         if let Obj::IndexUnion(index_union) = &is_finite_set_fact.set {
-            let domain_finite: AtomicFact = IsFiniteSetFact::new(
-                index_union.index_set.as_ref().clone(),
-                is_finite_set_fact.line_file.clone(),
-            )
-            .into();
+            let domain_finite: AtomicFact = self
+                .new_is_finite_set_fact(
+                    index_union.index_set.as_ref().clone(),
+                    is_finite_set_fact.line_file.clone(),
+                )
+                .into();
             let domain_result =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&domain_finite, builtin_state)?;
             if let Some(domain_result) = domain_result {
@@ -710,11 +723,12 @@ impl Runtime {
             }
         }
         if let Obj::IndexIntersect(index_intersect) = &is_finite_set_fact.set {
-            let ambient_finite: AtomicFact = IsFiniteSetFact::new(
-                index_intersect.ambient_set.as_ref().clone(),
-                is_finite_set_fact.line_file.clone(),
-            )
-            .into();
+            let ambient_finite: AtomicFact = self
+                .new_is_finite_set_fact(
+                    index_intersect.ambient_set.as_ref().clone(),
+                    is_finite_set_fact.line_file.clone(),
+                )
+                .into();
             let ambient_result = self
                 .try_verify_atomic_fact_as_builtin_rule_premise(&ambient_finite, builtin_state)?;
             if let Some(ambient_result) = ambient_result {
@@ -777,11 +791,12 @@ impl Runtime {
             // always gives a finite result.
             // Example: `$is_finite_set({n closed_range(0, k): P(n)})`.
             Obj::SetBuilder(set_builder) => {
-                let base_finite: AtomicFact = IsFiniteSetFact::new(
-                    set_builder.param_set.as_ref().clone(),
-                    is_finite_set_fact.line_file.clone(),
-                )
-                .into();
+                let base_finite: AtomicFact = self
+                    .new_is_finite_set_fact(
+                        set_builder.param_set.as_ref().clone(),
+                        is_finite_set_fact.line_file.clone(),
+                    )
+                    .into();
                 let Some(base_result) = self
                     .try_verify_atomic_fact_as_builtin_rule_premise(&base_finite, builtin_state)?
                 else {
@@ -809,11 +824,12 @@ impl Runtime {
                 let Some(domain) = body.set_bound_parameters.first() else {
                     return Ok((UnknownGenericStmtResult::new()).into());
                 };
-                let domain_finite: AtomicFact = IsFiniteSetFact::new(
-                    domain.set_obj().clone(),
-                    is_finite_set_fact.line_file.clone(),
-                )
-                .into();
+                let domain_finite: AtomicFact = self
+                    .new_is_finite_set_fact(
+                        domain.set_obj().clone(),
+                        is_finite_set_fact.line_file.clone(),
+                    )
+                    .into();
                 let domain_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
                     &domain_finite,
                     builtin_state,
@@ -836,16 +852,18 @@ impl Runtime {
             // Example: from `$is_finite_set(A)` and `$is_finite_set(B)`, prove
             // `$is_finite_set(union(A, B))`.
             Obj::Union(union) => {
-                let left_finite: AtomicFact = IsFiniteSetFact::new(
-                    union.left.as_ref().clone(),
-                    is_finite_set_fact.line_file.clone(),
-                )
-                .into();
-                let right_finite: AtomicFact = IsFiniteSetFact::new(
-                    union.right.as_ref().clone(),
-                    is_finite_set_fact.line_file.clone(),
-                )
-                .into();
+                let left_finite: AtomicFact = self
+                    .new_is_finite_set_fact(
+                        union.left.as_ref().clone(),
+                        is_finite_set_fact.line_file.clone(),
+                    )
+                    .into();
+                let right_finite: AtomicFact = self
+                    .new_is_finite_set_fact(
+                        union.right.as_ref().clone(),
+                        is_finite_set_fact.line_file.clone(),
+                    )
+                    .into();
                 let Some(left_result) = self
                     .try_verify_atomic_fact_as_builtin_rule_premise(&left_finite, builtin_state)?
                 else {
@@ -871,16 +889,18 @@ impl Runtime {
             // Example: from `$is_finite_set(A)` and `$is_finite_set(B)`, prove
             // `$is_finite_set(intersect(A, B))`.
             Obj::Intersect(intersect) => {
-                let left_finite: AtomicFact = IsFiniteSetFact::new(
-                    intersect.left.as_ref().clone(),
-                    is_finite_set_fact.line_file.clone(),
-                )
-                .into();
-                let right_finite: AtomicFact = IsFiniteSetFact::new(
-                    intersect.right.as_ref().clone(),
-                    is_finite_set_fact.line_file.clone(),
-                )
-                .into();
+                let left_finite: AtomicFact = self
+                    .new_is_finite_set_fact(
+                        intersect.left.as_ref().clone(),
+                        is_finite_set_fact.line_file.clone(),
+                    )
+                    .into();
+                let right_finite: AtomicFact = self
+                    .new_is_finite_set_fact(
+                        intersect.right.as_ref().clone(),
+                        is_finite_set_fact.line_file.clone(),
+                    )
+                    .into();
                 let Some(left_result) = self
                     .try_verify_atomic_fact_as_builtin_rule_premise(&left_finite, builtin_state)?
                 else {
@@ -905,11 +925,12 @@ impl Runtime {
             // Finite set difference: a subset of a finite set is finite.
             // Example: from `$is_finite_set(A)`, prove `$is_finite_set(set_minus(A, B))`.
             Obj::SetMinus(set_minus) => {
-                let left_finite: AtomicFact = IsFiniteSetFact::new(
-                    set_minus.left.as_ref().clone(),
-                    is_finite_set_fact.line_file.clone(),
-                )
-                .into();
+                let left_finite: AtomicFact = self
+                    .new_is_finite_set_fact(
+                        set_minus.left.as_ref().clone(),
+                        is_finite_set_fact.line_file.clone(),
+                    )
+                    .into();
                 let Some(left_result) = self
                     .try_verify_atomic_fact_as_builtin_rule_premise(&left_finite, builtin_state)?
                 else {
@@ -929,11 +950,12 @@ impl Runtime {
             // Power set of a finite set is finite.
             // Example: from `$is_finite_set(S)`, prove `$is_finite_set(power_set(S))`.
             Obj::PowerSet(power_set) => {
-                let base_finite: AtomicFact = IsFiniteSetFact::new(
-                    power_set.set.as_ref().clone(),
-                    is_finite_set_fact.line_file.clone(),
-                )
-                .into();
+                let base_finite: AtomicFact = self
+                    .new_is_finite_set_fact(
+                        power_set.set.as_ref().clone(),
+                        is_finite_set_fact.line_file.clone(),
+                    )
+                    .into();
                 let Some(base_result) = self
                     .try_verify_atomic_fact_as_builtin_rule_premise(&base_finite, builtin_state)?
                 else {
@@ -958,7 +980,7 @@ impl Runtime {
                     .args
                     .iter()
                     .map(|arg| {
-                        IsFiniteSetFact::new(
+                        self.new_is_finite_set_fact(
                             arg.as_ref().clone(),
                             is_finite_set_fact.line_file.clone(),
                         )
@@ -996,16 +1018,18 @@ impl Runtime {
             return Ok((UnknownGenericStmtResult::new()).into());
         };
 
-        let left_infinite: AtomicFact = NotIsFiniteSetFact::new(
-            set_minus.left.as_ref().clone(),
-            not_is_finite_set_fact.line_file.clone(),
-        )
-        .into();
-        let right_finite: AtomicFact = IsFiniteSetFact::new(
-            set_minus.right.as_ref().clone(),
-            not_is_finite_set_fact.line_file.clone(),
-        )
-        .into();
+        let left_infinite: AtomicFact = self
+            .new_not_is_finite_set_fact(
+                set_minus.left.as_ref().clone(),
+                not_is_finite_set_fact.line_file.clone(),
+            )
+            .into();
+        let right_finite: AtomicFact = self
+            .new_is_finite_set_fact(
+                set_minus.right.as_ref().clone(),
+                not_is_finite_set_fact.line_file.clone(),
+            )
+            .into();
         let Some(left_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&left_infinite, builtin_state)?
         else {
@@ -1130,7 +1154,7 @@ impl Runtime {
         // Example: `finite_set_size(S) = 0` => `not $is_nonempty_set(S)`.
         let finite_set_size: Obj = FiniteSetSize::new(not_is_nonempty_set_fact.set.clone()).into();
         let zero: Obj = Number::new("0".to_string()).into();
-        let size_zero_fact = EqualFact::new_from_refs(
+        let size_zero_fact = self.new_equal_fact_from_refs(
             &finite_set_size,
             &zero,
             not_is_nonempty_set_fact.line_file.clone(),
@@ -1159,11 +1183,13 @@ impl Runtime {
         // Empty set rule: `not $is_nonempty_set(S)` follows from known `S = {}`.
         // Example: after `S = {}`, prove `not $is_nonempty_set(S)`.
         let empty_set: Obj = ListSet::new(vec![]).into();
-        if self.equal_fact_sides_have_same_known_equality_in_some_env(&EqualFact::new_from_refs(
-            &not_is_nonempty_set_fact.set,
-            &empty_set,
-            not_is_nonempty_set_fact.line_file.clone(),
-        )) {
+        if self.equal_fact_sides_have_same_known_equality_in_some_env(
+            &self.new_equal_fact_from_refs(
+                &not_is_nonempty_set_fact.set,
+                &empty_set,
+                not_is_nonempty_set_fact.line_file.clone(),
+            ),
+        ) {
             return Ok(
                 (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     not_is_nonempty_set_fact.clone().into(),
@@ -1180,12 +1206,13 @@ impl Runtime {
             // Integer closed interval `{x in Z | lo <= x <= hi}` is empty from a known
             // `hi < lo` fact.
             // Example: under `b < a`, prove `not $is_nonempty_set(closed_range(a, b))`.
-            let lt: AtomicFact = LessFact::new(
-                closed_range.end.as_ref().clone(),
-                closed_range.start.as_ref().clone(),
-                not_is_nonempty_set_fact.line_file.clone(),
-            )
-            .into();
+            let lt: AtomicFact = self
+                .new_less_fact(
+                    closed_range.end.as_ref().clone(),
+                    closed_range.start.as_ref().clone(),
+                    not_is_nonempty_set_fact.line_file.clone(),
+                )
+                .into();
             if let Some(lt_ok) =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&lt, builtin_state)?
             {
@@ -1203,12 +1230,13 @@ impl Runtime {
         if let Obj::Range(range) = &not_is_nonempty_set_fact.set {
             // Integer half-open interval `{x in Z | lo <= x < hi}` is empty from a
             // known `hi <= lo` fact. Example: `range(0, 0) = {}`.
-            let le: AtomicFact = LessEqualFact::new(
-                range.end.as_ref().clone(),
-                range.start.as_ref().clone(),
-                not_is_nonempty_set_fact.line_file.clone(),
-            )
-            .into();
+            let le: AtomicFact = self
+                .new_less_equal_fact(
+                    range.end.as_ref().clone(),
+                    range.start.as_ref().clone(),
+                    not_is_nonempty_set_fact.line_file.clone(),
+                )
+                .into();
             if let Some(le_ok) =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&le, builtin_state)?
             {
@@ -1281,14 +1309,17 @@ fn general_cart_global_family_nonempty_fact(
         )
         .expect("internal binder identity counter exhausted");
     let param_obj = obj_for_bound_param_in_scope(&param_group.params[0]);
-    ForallFact::new_canonical_forall(
-        TypedParameterList::new(vec![param_group]),
-        vec![],
-        vec![IsNonemptySetFact::new(param_obj, source_fact.line_file.clone()).into()],
-        source_fact.line_file.clone(),
-    )
-    .expect("general_cart global nonempty forall has a fresh local parameter")
-    .into()
+    runtime
+        .new_forall_fact(
+            TypedParameterList::new(vec![param_group]),
+            vec![],
+            vec![runtime
+                .new_is_nonempty_set_fact(param_obj, source_fact.line_file.clone())
+                .into()],
+            source_fact.line_file.clone(),
+        )
+        .expect("general_cart global nonempty forall has a fresh local parameter")
+        .into()
 }
 
 fn general_cart_pointwise_family_nonempty_fact(
@@ -1307,13 +1338,16 @@ fn general_cart_pointwise_family_nonempty_fact(
     let param_obj = obj_for_bound_param_in_scope(&param_group.params[0]);
     let factor: Obj = FnObj::new(head, vec![vec![Box::new(param_obj.clone())]]).into();
     Ok(Some(
-        ForallFact::new_canonical_forall(
-            TypedParameterList::new(vec![param_group]),
-            vec![],
-            vec![IsNonemptySetFact::new(factor, source_fact.line_file.clone()).into()],
-            source_fact.line_file.clone(),
-        )?
-        .into(),
+        runtime
+            .new_forall_fact(
+                TypedParameterList::new(vec![param_group]),
+                vec![],
+                vec![runtime
+                    .new_is_nonempty_set_fact(factor, source_fact.line_file.clone())
+                    .into()],
+                source_fact.line_file.clone(),
+            )?
+            .into(),
     ))
 }
 

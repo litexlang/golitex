@@ -16,19 +16,20 @@ impl Runtime {
             let Obj::Reduce(reduce) = reduce_side else {
                 continue;
             };
-            let empty: AtomicFact = LessFact::new(
-                reduce.end.as_ref().clone(),
-                reduce.start.as_ref().clone(),
-                line_file.clone(),
-            )
-            .into();
+            let empty: AtomicFact = self
+                .new_less_fact(
+                    reduce.end.as_ref().clone(),
+                    reduce.start.as_ref().clone(),
+                    line_file.clone(),
+                )
+                .into();
             let Some(empty_result) =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&empty, builtin_state)?
             else {
                 continue;
             };
             let Some(seed_result) = self.try_verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(other, reduce.seed.as_ref(), line_file.clone()),
+                &self.new_equal_fact_from_refs(other, reduce.seed.as_ref(), line_file.clone()),
                 builtin_state,
             )?
             else {
@@ -97,7 +98,7 @@ impl Runtime {
                 accumulator = next;
             }
             let Some(expansion_result) = self.try_verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(other, &accumulator, line_file.clone()),
+                &self.new_equal_fact_from_refs(other, &accumulator, line_file.clone()),
                 builtin_state,
             )?
             else {
@@ -138,12 +139,13 @@ impl Runtime {
             let Obj::Reduce(reduce) = reduce_side else {
                 continue;
             };
-            let nonempty: AtomicFact = LessEqualFact::new(
-                reduce.start.as_ref().clone(),
-                reduce.end.as_ref().clone(),
-                line_file.clone(),
-            )
-            .into();
+            let nonempty: AtomicFact = self
+                .new_less_equal_fact(
+                    reduce.start.as_ref().clone(),
+                    reduce.end.as_ref().clone(),
+                    line_file.clone(),
+                )
+                .into();
             let Some(nonempty_result) =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&nonempty, builtin_state)?
             else {
@@ -179,7 +181,7 @@ impl Runtime {
                 continue;
             };
             let Some(step_result) = self.try_verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(other, &expected, line_file.clone()),
+                &self.new_equal_fact_from_refs(other, &expected, line_file.clone()),
                 builtin_state,
             )?
             else {
@@ -208,14 +210,14 @@ impl Runtime {
                 continue;
             };
             let Some(empty_set_result) = self.try_verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(reduce.set.as_ref(), &empty_set, line_file.clone()),
+                &self.new_equal_fact_from_refs(reduce.set.as_ref(), &empty_set, line_file.clone()),
                 builtin_state,
             )?
             else {
                 continue;
             };
             let Some(seed_result) = self.try_verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(other, reduce.seed.as_ref(), line_file.clone()),
+                &self.new_equal_fact_from_refs(other, reduce.seed.as_ref(), line_file.clone()),
                 builtin_state,
             )?
             else {
@@ -255,7 +257,11 @@ impl Runtime {
                             let list_obj: Obj = list.clone().into();
                             if let Some(set_result) = self
                                 .try_verify_equal_fact_as_builtin_premise(
-                                    &EqualFact::new_from_refs(set, &list_obj, line_file.clone()),
+                                    &self.new_equal_fact_from_refs(
+                                        set,
+                                        &list_obj,
+                                        line_file.clone(),
+                                    ),
                                     builtin_state,
                                 )?
                             {
@@ -293,7 +299,7 @@ impl Runtime {
                     continue;
                 }
                 let Some(expansion_result) = self.try_verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(other, &accumulator, line_file.clone()),
+                    &self.new_equal_fact_from_refs(other, &accumulator, line_file.clone()),
                     builtin_state,
                 )?
                 else {
@@ -338,7 +344,7 @@ impl Runtime {
             )
             .into();
             let Some(bridge_result) = self.try_verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(other, &expected, line_file.clone()),
+                &self.new_equal_fact_from_refs(other, &expected, line_file.clone()),
                 builtin_state,
             )?
             else {
@@ -380,12 +386,13 @@ impl Runtime {
                 let [inserted] = singleton.list.as_slice() else {
                     continue;
                 };
-                let freshness: AtomicFact = NotInFact::new(
-                    inserted.as_ref().clone(),
-                    smaller_set.clone(),
-                    line_file.clone(),
-                )
-                .into();
+                let freshness: AtomicFact = self
+                    .new_not_in_fact(
+                        inserted.as_ref().clone(),
+                        smaller_set.clone(),
+                        line_file.clone(),
+                    )
+                    .into();
                 let Some(freshness_result) =
                     self.try_verify_atomic_fact_as_builtin_rule_premise(&freshness, builtin_state)?
                 else {
@@ -415,7 +422,7 @@ impl Runtime {
                     continue;
                 };
                 let Some(insertion_result) = self.try_verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(other, &expected, line_file.clone()),
+                    &self.new_equal_fact_from_refs(other, &expected, line_file.clone()),
                     builtin_state,
                 )?
                 else {
@@ -566,14 +573,14 @@ impl Runtime {
                     (left_reduce.seed.as_ref(), right_reduce.seed.as_ref()),
                 ] {
                     let Some(result) = self.try_verify_equal_fact_as_builtin_premise(
-                        &EqualFact::new_from_refs(left_arg, right_arg, line_file.clone()),
+                        &self.new_equal_fact_from_refs(left_arg, right_arg, line_file.clone()),
                         builtin_state,
                     )?
                     else {
                         return Ok(None);
                     };
                     subgoals.extend(equality_builtin_match_subgoals(
-                        &EqualFact::new_from_refs(left_arg, right_arg, line_file.clone()),
+                        &self.new_equal_fact_from_refs(left_arg, right_arg, line_file.clone()),
                         result,
                     ));
                 }
@@ -583,7 +590,7 @@ impl Runtime {
                 )
                 .into();
                 let Some(pointwise) = self.verify_reduce_functions_pointwise_on_set(
-                    &EqualFact::new_from_refs(
+                    &self.new_equal_fact_from_refs(
                         left_reduce.func.as_ref(),
                         right_reduce.func.as_ref(),
                         line_file.clone(),
@@ -612,19 +619,19 @@ impl Runtime {
                     (left_reduce.seed.as_ref(), right_reduce.seed.as_ref()),
                 ] {
                     let Some(result) = self.try_verify_equal_fact_as_builtin_premise(
-                        &EqualFact::new_from_refs(left_arg, right_arg, line_file.clone()),
+                        &self.new_equal_fact_from_refs(left_arg, right_arg, line_file.clone()),
                         builtin_state,
                     )?
                     else {
                         return Ok(None);
                     };
                     subgoals.extend(equality_builtin_match_subgoals(
-                        &EqualFact::new_from_refs(left_arg, right_arg, line_file.clone()),
+                        &self.new_equal_fact_from_refs(left_arg, right_arg, line_file.clone()),
                         result,
                     ));
                 }
                 let Some(pointwise) = self.verify_reduce_functions_pointwise_on_set(
-                    &EqualFact::new_from_refs(
+                    &self.new_equal_fact_from_refs(
                         left_reduce.func.as_ref(),
                         right_reduce.func.as_ref(),
                         line_file.clone(),
@@ -674,7 +681,7 @@ impl Runtime {
                 (source.seed.as_ref(), translated.seed.as_ref()),
             ] {
                 let Some(result) = self.try_verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(actual, expected, line_file.clone()),
+                    &self.new_equal_fact_from_refs(actual, expected, line_file.clone()),
                     builtin_state,
                 )?
                 else {
@@ -682,7 +689,7 @@ impl Runtime {
                     break;
                 };
                 subgoals.extend(equality_builtin_match_subgoals(
-                    &EqualFact::new_from_refs(actual, expected, line_file.clone()),
+                    &self.new_equal_fact_from_refs(actual, expected, line_file.clone()),
                     result,
                 ));
             }
@@ -698,32 +705,42 @@ impl Runtime {
             )
             .into();
             let Some(length_result) = self.try_verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(&source_length, &translated_length, line_file.clone()),
+                &self.new_equal_fact_from_refs(
+                    &source_length,
+                    &translated_length,
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?
             else {
                 continue;
             };
             subgoals.extend(equality_builtin_match_subgoals(
-                &EqualFact::new_from_refs(&source_length, &translated_length, line_file.clone()),
+                &self.new_equal_fact_from_refs(
+                    &source_length,
+                    &translated_length,
+                    line_file.clone(),
+                ),
                 length_result,
             ));
 
-            let nonempty: AtomicFact = LessEqualFact::new(
-                source.start.as_ref().clone(),
-                source.end.as_ref().clone(),
-                line_file.clone(),
-            )
-            .into();
-            let nonempty_result =
-                self.try_verify_atomic_fact_as_builtin_rule_premise(&nonempty, builtin_state)?;
-            if nonempty_result.is_none() {
-                let empty: AtomicFact = LessFact::new(
-                    source.end.as_ref().clone(),
+            let nonempty: AtomicFact = self
+                .new_less_equal_fact(
                     source.start.as_ref().clone(),
+                    source.end.as_ref().clone(),
                     line_file.clone(),
                 )
                 .into();
+            let nonempty_result =
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&nonempty, builtin_state)?;
+            if nonempty_result.is_none() {
+                let empty: AtomicFact = self
+                    .new_less_fact(
+                        source.end.as_ref().clone(),
+                        source.start.as_ref().clone(),
+                        line_file.clone(),
+                    )
+                    .into();
                 let Some(empty_result) =
                     self.try_verify_atomic_fact_as_builtin_rule_premise(&empty, builtin_state)?
                 else {
@@ -777,8 +794,9 @@ impl Runtime {
                     else {
                         return Ok(None);
                     };
-                    let equality: AtomicFact =
-                        EqualFact::new(source_value, translated_value, line_file.clone()).into();
+                    let equality: AtomicFact = rt
+                        .new_equal_fact(source_value, translated_value, line_file.clone())
+                        .into();
                     let known_forall = rt.verify_atomic_fact_with_known_forall(
                         &equality,
                         &local_verify_state.clone(),
@@ -842,7 +860,7 @@ impl Runtime {
                 (tail.op.as_ref(), full.op.as_ref()),
             ] {
                 let Some(result) = self.try_verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(actual, expected, line_file.clone()),
+                    &self.new_equal_fact_from_refs(actual, expected, line_file.clone()),
                     builtin_state,
                 )?
                 else {
@@ -850,7 +868,7 @@ impl Runtime {
                     break;
                 };
                 subgoals.extend(equality_builtin_match_subgoals(
-                    &EqualFact::new_from_refs(actual, expected, line_file.clone()),
+                    &self.new_equal_fact_from_refs(actual, expected, line_file.clone()),
                     result,
                 ));
             }
@@ -858,12 +876,13 @@ impl Runtime {
                 continue;
             }
 
-            let nonempty: AtomicFact = LessEqualFact::new(
-                full.start.as_ref().clone(),
-                full.end.as_ref().clone(),
-                line_file.clone(),
-            )
-            .into();
+            let nonempty: AtomicFact = self
+                .new_less_equal_fact(
+                    full.start.as_ref().clone(),
+                    full.end.as_ref().clone(),
+                    line_file.clone(),
+                )
+                .into();
             let Some(nonempty_result) =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&nonempty, builtin_state)?
             else {
@@ -888,14 +907,22 @@ impl Runtime {
                 continue;
             };
             let Some(seed_result) = self.try_verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(tail.seed.as_ref(), &expected_seed, line_file.clone()),
+                &self.new_equal_fact_from_refs(
+                    tail.seed.as_ref(),
+                    &expected_seed,
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?
             else {
                 continue;
             };
             subgoals.extend(equality_builtin_match_subgoals(
-                &EqualFact::new_from_refs(tail.seed.as_ref(), &expected_seed, line_file.clone()),
+                &self.new_equal_fact_from_refs(
+                    tail.seed.as_ref(),
+                    &expected_seed,
+                    line_file.clone(),
+                ),
                 seed_result,
             ));
 
@@ -941,7 +968,7 @@ impl Runtime {
                 (full.seed.as_ref(), prefix.seed.as_ref()),
             ] {
                 let Some(result) = self.try_verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(actual, expected, line_file.clone()),
+                    &self.new_equal_fact_from_refs(actual, expected, line_file.clone()),
                     builtin_state,
                 )?
                 else {
@@ -949,25 +976,27 @@ impl Runtime {
                     break;
                 };
                 subgoals.extend(equality_builtin_match_subgoals(
-                    &EqualFact::new_from_refs(actual, expected, line_file.clone()),
+                    &self.new_equal_fact_from_refs(actual, expected, line_file.clone()),
                     result,
                 ));
             }
             if !structural_match {
                 continue;
             }
-            let prefix_nonempty: AtomicFact = LessEqualFact::new(
-                full.start.as_ref().clone(),
-                prefix.end.as_ref().clone(),
-                line_file.clone(),
-            )
-            .into();
-            let tail_nonempty: AtomicFact = LessFact::new(
-                prefix.end.as_ref().clone(),
-                full.end.as_ref().clone(),
-                line_file.clone(),
-            )
-            .into();
+            let prefix_nonempty: AtomicFact = self
+                .new_less_equal_fact(
+                    full.start.as_ref().clone(),
+                    prefix.end.as_ref().clone(),
+                    line_file.clone(),
+                )
+                .into();
+            let tail_nonempty: AtomicFact = self
+                .new_less_fact(
+                    prefix.end.as_ref().clone(),
+                    full.end.as_ref().clone(),
+                    line_file.clone(),
+                )
+                .into();
             let Some(range_results) = self
                 .verify_builtin_rule_premises(&[prefix_nonempty, tail_nonempty], builtin_state)?
             else {
@@ -1007,21 +1036,29 @@ impl Runtime {
             let expected_union: Obj =
                 Union::new(outer.set.as_ref().clone(), inner.set.as_ref().clone()).into();
             let Some(union_result) = self.try_verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(full.set.as_ref(), &expected_union, line_file.clone()),
+                &self.new_equal_fact_from_refs(
+                    full.set.as_ref(),
+                    &expected_union,
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?
             else {
                 continue;
             };
             let mut subgoals = equality_builtin_match_subgoals(
-                &EqualFact::new_from_refs(full.set.as_ref(), &expected_union, line_file.clone()),
+                &self.new_equal_fact_from_refs(
+                    full.set.as_ref(),
+                    &expected_union,
+                    line_file.clone(),
+                ),
                 union_result,
             );
             let empty_set: Obj = ListSet::new(Vec::new()).into();
             let intersection: Obj =
                 Intersect::new(outer.set.as_ref().clone(), inner.set.as_ref().clone()).into();
             let Some(disjoint_result) = self.try_verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(&intersection, &empty_set, line_file.clone()),
+                &self.new_equal_fact_from_refs(&intersection, &empty_set, line_file.clone()),
                 builtin_state,
             )?
             else {
@@ -1035,7 +1072,7 @@ impl Runtime {
                 (full.seed.as_ref(), inner.seed.as_ref()),
             ] {
                 let Some(result) = self.try_verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(actual, expected, line_file.clone()),
+                    &self.new_equal_fact_from_refs(actual, expected, line_file.clone()),
                     builtin_state,
                 )?
                 else {
@@ -1043,7 +1080,7 @@ impl Runtime {
                     break;
                 };
                 subgoals.extend(equality_builtin_match_subgoals(
-                    &EqualFact::new_from_refs(actual, expected, line_file.clone()),
+                    &self.new_equal_fact_from_refs(actual, expected, line_file.clone()),
                     result,
                 ));
             }
@@ -1051,7 +1088,7 @@ impl Runtime {
                 continue;
             }
             let Some(outer_pointwise) = self.verify_reduce_functions_pointwise_on_set(
-                &EqualFact::new_from_refs(
+                &self.new_equal_fact_from_refs(
                     full.func.as_ref(),
                     outer.func.as_ref(),
                     line_file.clone(),
@@ -1066,7 +1103,7 @@ impl Runtime {
                 continue;
             }
             let Some(inner_pointwise) = self.verify_reduce_functions_pointwise_on_set(
-                &EqualFact::new_from_refs(
+                &self.new_equal_fact_from_refs(
                     full.func.as_ref(),
                     inner.func.as_ref(),
                     line_file.clone(),
@@ -1109,7 +1146,7 @@ impl Runtime {
                 continue;
             };
             let Some(op_result) = self.try_verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(
+                &self.new_equal_fact_from_refs(
                     source.op.as_ref(),
                     pullback.op.as_ref(),
                     line_file.clone(),
@@ -1120,7 +1157,7 @@ impl Runtime {
                 continue;
             };
             let Some(seed_result) = self.try_verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(
+                &self.new_equal_fact_from_refs(
                     source.seed.as_ref(),
                     pullback.seed.as_ref(),
                     line_file.clone(),
@@ -1154,8 +1191,9 @@ impl Runtime {
             else {
                 continue;
             };
-            let pointwise_fact: AtomicFact =
-                EqualFact::new(pullback_at_y, source_at_map_y, line_file.clone()).into();
+            let pointwise_fact: AtomicFact = self
+                .new_equal_fact(pullback_at_y, source_at_map_y, line_file.clone())
+                .into();
             let pointwise_result = self.run_in_local_verification_env(
                 builtin_state.verify_state(),
                 |rt, local_verify_state| {
@@ -1203,7 +1241,7 @@ impl Runtime {
             };
             let mut subgoals = Vec::new();
             subgoals.extend(equality_builtin_match_subgoals(
-                &EqualFact::new_from_refs(
+                &self.new_equal_fact_from_refs(
                     source.op.as_ref(),
                     pullback.op.as_ref(),
                     line_file.clone(),
@@ -1211,7 +1249,7 @@ impl Runtime {
                 op_result,
             ));
             subgoals.extend(equality_builtin_match_subgoals(
-                &EqualFact::new_from_refs(
+                &self.new_equal_fact_from_refs(
                     source.seed.as_ref(),
                     pullback.seed.as_ref(),
                     line_file.clone(),
@@ -1245,21 +1283,21 @@ impl Runtime {
             (reduce.end.as_ref(), aggregate_end),
         ] {
             let Some(result) = self.try_verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(actual, expected, line_file.clone()),
+                &self.new_equal_fact_from_refs(actual, expected, line_file.clone()),
                 builtin_state,
             )?
             else {
                 return Ok(None);
             };
             subgoals.extend(equality_builtin_match_subgoals(
-                &EqualFact::new_from_refs(actual, expected, line_file.clone()),
+                &self.new_equal_fact_from_refs(actual, expected, line_file.clone()),
                 result,
             ));
         }
         let index_set: Obj =
             ClosedRange::new(aggregate_start.clone(), aggregate_end.clone()).into();
         let Some(function_result) = self.verify_reduce_functions_pointwise_on_set(
-            &EqualFact::new_from_refs(reduce.func.as_ref(), aggregate_func, line_file.clone()),
+            &self.new_equal_fact_from_refs(reduce.func.as_ref(), aggregate_func, line_file.clone()),
             &index_set,
             builtin_state,
         )?
@@ -1272,14 +1310,14 @@ impl Runtime {
         subgoals.push(function_result);
         let identity = specialization.identity();
         let Some(seed_result) = self.try_verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(reduce.seed.as_ref(), &identity, line_file.clone()),
+            &self.new_equal_fact_from_refs(reduce.seed.as_ref(), &identity, line_file.clone()),
             builtin_state,
         )?
         else {
             return Ok(None);
         };
         subgoals.extend(equality_builtin_match_subgoals(
-            &EqualFact::new_from_refs(reduce.seed.as_ref(), &identity, line_file.clone()),
+            &self.new_equal_fact_from_refs(reduce.seed.as_ref(), &identity, line_file.clone()),
             seed_result,
         ));
         let Some(carrier) = self.reduce_carrier_from_operation(reduce.op.as_ref()) else {
@@ -1312,18 +1350,18 @@ impl Runtime {
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let Some(set_result) = self.try_verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(reduce.set.as_ref(), aggregate_set, line_file.clone()),
+            &self.new_equal_fact_from_refs(reduce.set.as_ref(), aggregate_set, line_file.clone()),
             builtin_state,
         )?
         else {
             return Ok(None);
         };
         let mut subgoals = equality_builtin_match_subgoals(
-            &EqualFact::new_from_refs(reduce.set.as_ref(), aggregate_set, line_file.clone()),
+            &self.new_equal_fact_from_refs(reduce.set.as_ref(), aggregate_set, line_file.clone()),
             set_result,
         );
         let Some(function_result) = self.verify_reduce_functions_pointwise_on_set(
-            &EqualFact::new_from_refs(reduce.func.as_ref(), aggregate_func, line_file.clone()),
+            &self.new_equal_fact_from_refs(reduce.func.as_ref(), aggregate_func, line_file.clone()),
             reduce.set.as_ref(),
             builtin_state,
         )?
@@ -1336,14 +1374,14 @@ impl Runtime {
         subgoals.push(function_result);
         let identity = specialization.identity();
         let Some(seed_result) = self.try_verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(reduce.seed.as_ref(), &identity, line_file.clone()),
+            &self.new_equal_fact_from_refs(reduce.seed.as_ref(), &identity, line_file.clone()),
             builtin_state,
         )?
         else {
             return Ok(None);
         };
         subgoals.extend(equality_builtin_match_subgoals(
-            &EqualFact::new_from_refs(reduce.seed.as_ref(), &identity, line_file.clone()),
+            &self.new_equal_fact_from_refs(reduce.seed.as_ref(), &identity, line_file.clone()),
             seed_result,
         ));
         let Some(carrier) = self.reduce_carrier_from_operation(reduce.op.as_ref()) else {
@@ -1398,8 +1436,9 @@ impl Runtime {
                     return Ok(None);
                 };
                 let expected = specialization.apply(x, y);
-                let equality: AtomicFact =
-                    EqualFact::new(actual, expected, line_file.clone()).into();
+                let equality: AtomicFact = rt
+                    .new_equal_fact(actual, expected, line_file.clone())
+                    .into();
                 let known_forall = rt
                     .verify_atomic_fact_with_known_forall(&equality, &local_verify_state.clone())?;
                 if known_forall.is_success() {
@@ -1434,8 +1473,9 @@ impl Runtime {
             (left_func.clone(), right_func.clone()),
             (right_func.clone(), left_func.clone()),
         ] {
-            let fn_eq_in: AtomicFact =
-                FnEqualInFact::new(first, second, set.clone(), line_file.clone()).into();
+            let fn_eq_in: AtomicFact = self
+                .new_fn_equal_in_fact(first, second, set.clone(), line_file.clone())
+                .into();
             let known_proof = if let Some(result) =
                 self.verification_result_from_known_fact_cache(&fn_eq_in.clone().into())
             {
@@ -1480,8 +1520,9 @@ impl Runtime {
                 else {
                     return Ok(None);
                 };
-                let equality: AtomicFact =
-                    EqualFact::new(left_value, right_value, line_file.clone()).into();
+                let equality: AtomicFact = rt
+                    .new_equal_fact(left_value, right_value, line_file.clone())
+                    .into();
                 let known_forall = rt
                     .verify_atomic_fact_with_known_forall(&equality, &local_verify_state.clone())?;
                 if known_forall.is_success() {
