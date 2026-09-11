@@ -15,7 +15,7 @@ use std::collections::HashMap;
 #[derive(Clone)]
 pub struct ExecEnv {
     /// Atoms introduced in this scope, indexed by their stable local ids.
-    pub atoms_by_id: HashMap<AtomId, Atom>,
+    pub atoms_by_id: HashMap<AtomId, String>,
 
     /// Definitions visible to statements executed in this scope.
     pub definitions: DefinitionMemory,
@@ -52,7 +52,7 @@ pub struct WellDefinedObjectMemory {
 #[derive(Clone)]
 pub struct DefinitionMemory {
     /// Canonical symbol table used for name and identity resolution.
-    pub symbols: HashMap<SymbolId, Atom>,
+    pub symbols: HashMap<SymbolId, String>,
 
     pub predicate_definitions: HashMap<PropName, DefPropStmt>,
     pub abstract_predicate_definitions: HashMap<AbstractPropName, DefAbstractPropStmt>,
@@ -163,7 +163,7 @@ impl WellDefinedObjectMemory {
 impl DefinitionMemory {
     pub fn new() -> Self {
         Self {
-            symbols: SymbolTable::new(),
+            symbols: HashMap::new(),
             predicate_definitions: HashMap::new(),
             abstract_predicate_definitions: HashMap::new(),
             algorithm_definitions: HashMap::new(),
