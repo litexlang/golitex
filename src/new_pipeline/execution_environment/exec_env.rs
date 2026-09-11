@@ -1,4 +1,4 @@
-use crate::new_pipeline::runtime::runtime_ids::{AtomId, FactId, WellDefinednessId2};
+use crate::new_pipeline::runtime::runtime_ids::{AtomId, FactId, WellDefinednessId};
 use crate::prelude::*;
 use std::collections::HashMap;
 
@@ -42,10 +42,10 @@ pub struct ExecEnv {
 #[derive(Clone, Default)]
 pub struct WellDefinedObjectMemory {
     /// Canonical object key to the proof identity that established WD.
-    pub object_to_wd_id: HashMap<ObjString, WellDefinednessId2>,
+    pub object_to_wd_id: HashMap<ObjString, WellDefinednessId>,
 
     /// Proof identity back to the object carried by a result or citation.
-    pub wd_id_to_object: HashMap<WellDefinednessId2, Obj>,
+    pub wd_id_to_object: HashMap<WellDefinednessId, Obj>,
 }
 
 /// Definitions introduced in one execution environment.
@@ -133,7 +133,7 @@ impl WellDefinedObjectMemory {
     }
 
     /// Return the WD proof identity for an object, if this scope owns one.
-    pub fn lookup(&self, object: &Obj) -> Option<WellDefinednessId2> {
+    pub fn lookup(&self, object: &Obj) -> Option<WellDefinednessId> {
         self.object_to_wd_id.get(&obj_equality_key(object)).copied()
     }
 
@@ -142,7 +142,7 @@ impl WellDefinedObjectMemory {
     /// Re-recording the same object or proof id is idempotent.  Debug builds
     /// additionally detect an accidental collision between different objects
     /// and the same canonical key or proof id.
-    pub fn record(&mut self, object: Obj, wd_id: WellDefinednessId2) {
+    pub fn record(&mut self, object: Obj, wd_id: WellDefinednessId) {
         let object_key = obj_equality_key(&object);
 
         if let Some(existing_id) = self.object_to_wd_id.get(&object_key) {
