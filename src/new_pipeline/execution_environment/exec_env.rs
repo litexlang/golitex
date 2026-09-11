@@ -52,7 +52,7 @@ pub struct WellDefinedObjectMemory {
 #[derive(Clone)]
 pub struct DefinitionMemory {
     /// Canonical symbol table used for name and identity resolution.
-    pub symbols: SymbolTable,
+    pub symbols: HashMap<SymbolId, Atom>,
 
     pub predicate_definitions: HashMap<PropName, DefPropStmt>,
     pub abstract_predicate_definitions: HashMap<AbstractPropName, DefAbstractPropStmt>,

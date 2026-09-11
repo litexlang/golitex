@@ -3,5 +3,8 @@
 pub mod runtime;
 pub mod runtime_ids;
 
-pub use runtime::{ParseScope, Runtime, RuntimeOptions};
+pub use runtime::{
+    Atom, CompletedFile, CurrentFile, ParseScope, PipelineError, PipelineResult, RunMode,
+    RunOptions, RunTarget, Runtime, RuntimeOptions,
+};
 pub use runtime_ids::{AtomId, FactId, Id, PropAlgebraicPropertyId2, WellDefinednessId2};

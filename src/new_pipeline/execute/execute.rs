@@ -1,7 +1,9 @@
+use crate::prelude::*;
+use crate::new_pipeline::runtime::Runtime;
+
 impl Runtime {
-    pub fn execute_stmt2(&mut self, stmt: &Stmt) -> Result<ExecStmtResult2, RuntimeError> {
-        match Stmt {
-            FactStmt(stmt) => execute_fact_statement2(stmt),
-        }
+    pub fn exec_stmt(&mut self, stmt: &Stmt) -> Result<ExecStmtResult2, RuntimeError> {
+        let _ = stmt;
+        unimplemented!("new_pipeline exec_stmt")
     }
 }

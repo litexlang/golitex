@@ -17,7 +17,7 @@ pub struct FactId(u64);
 pub type Id = u64;
 
 /// Identity space reserved for predicate algebraic-property records.
-pub type PropAlgebraicPropertyId2 = u128;
+pub type PropAlgebraicPropertyId2 = u64;
 
 /// Stable identity for an atom owned by the runtime's parse/execution state.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
