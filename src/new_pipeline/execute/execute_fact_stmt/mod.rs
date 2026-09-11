@@ -7,6 +7,9 @@
 //! the same `Runtime` methods.
 
 pub mod verify_state;
+pub mod verify_atomic_fact;
+pub mod cache_search_proof;
+pub mod verify_fact_result;
 
 pub use crate::environment::Environment;
 pub use crate::fact::{

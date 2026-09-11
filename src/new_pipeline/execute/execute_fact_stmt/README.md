@@ -22,3 +22,20 @@ New verifier types/fns use a `2` suffix (e.g. VerifyFactResult2, verify_fact2)
 
 This keeps FactIds and temporary environments compatible with later Lean
 consumers while the new Result and pipeline shapes are still being drafted.
+
+## Atomic-fact search boundary
+
+`verify_atomic_fact_search_proof` is the truth-proof phase after atomic-fact
+well-definedness. Its ordinary search pipeline is intentionally limited to the
+current `Runtime.execution_environments_stack` (including the parent scopes
+represented by that stack). It does not search `Runtime.module_manager` or
+merge loaded module main environments into ambient facts.
+
+The stage also derives a read-only verification state, so trying proof routes
+does not write new well-definedness records into the current scope.
+
+The equality and non-equational pipelines keep their search slots in a fixed
+order (cache, builtin rule, known atomic fact, builtin strategy, known forall,
+and algebraic rewrites). The definition slot is not part of implicit atomic
+search: cross-module definitions and theorems must be requested explicitly by
+`by def` or `by thm`.

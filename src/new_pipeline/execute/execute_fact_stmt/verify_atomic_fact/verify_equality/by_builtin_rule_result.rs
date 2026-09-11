@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use crate::verify_rewrite::VerifyState2;
+use crate::new_pipeline::execute_fact_stmt::VerifyState2;
 
 // Each equality builtin rule gets its own variant and payload struct.
 pub enum EqualitySearchProofByBuiltinRule2 {
