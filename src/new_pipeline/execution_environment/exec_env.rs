@@ -15,7 +15,7 @@ pub struct ExecEnv {
     // 每次证明出来prop的性质的时候放一下
     pub prop_algebraic_properties: HashMap<PropName, Vec<PropAlgebraicProperty>>,
 
-    // 每次证明好一个obj的wd的时候放一下
+    // 每次证明好一个obj的wd的时候放一下。这是重大的架构更新。以后每次检查wd的时候需要看一下有没有cache过了。如果之前证明过了这个obj是两良好定义的，那就直接成立了
     pub well_defined_objects_and_their_ids: HashMap<ObjString, Id>,
 
     // 我不太确定这个东西有没有有用，放一下再说
@@ -50,7 +50,7 @@ pub struct KnownFactMemory {
 
 pub enum PropAlgebraicProperty {
     Transitive,
-    SymmetricArgumentPermutate(Vec<Vec<usize>>),
+    SymmetricArgumentPermutate(Box<Vec<Vec<usize>>>),
     Reflexive,
     Antisymmetric,
 }
