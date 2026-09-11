@@ -150,7 +150,7 @@ impl Runtime {
     ) -> Result<SuccessInferResult, RuntimeError> {
         let source_fact: Fact = chain_fact.clone().into();
         let adjacent_facts = chain_fact
-            .facts()
+            .facts(self)
             .map_err(RuntimeError::wrap_new_fact_as_store_conflict)?;
         let adjacent_keys = adjacent_facts
             .iter()
@@ -178,7 +178,7 @@ impl Runtime {
                 )],
             );
         }
-        let atomic_facts = match chain_fact.facts_with_order_transitive_closure() {
+        let atomic_facts = match chain_fact.facts_with_order_transitive_closure_with_runtime(self) {
             Ok(v) => v,
             Err(_) => return Ok(result),
         };

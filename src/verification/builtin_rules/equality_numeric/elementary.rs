@@ -49,7 +49,7 @@ impl Runtime {
         };
 
         let inner = self.try_verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(x, y, line_file.clone()),
+            &self.new_equal_fact_from_refs(x, y, line_file.clone()),
             builtin_state,
         )?;
         if let Some(inner) = inner {
@@ -137,8 +137,9 @@ impl Runtime {
                     ),
                 ] {
                     let premises: [AtomicFact; 2] = [
-                        EqualFact::new_from_refs(target, factor, line_file.clone()).into(),
-                        NotEqualFact::new(
+                        self.new_equal_fact_from_refs(target, factor, line_file.clone())
+                            .into(),
+                        self.new_not_equal_fact(
                             other_factor.clone(),
                             zero_obj.clone(),
                             line_file.clone(),
@@ -171,16 +172,17 @@ impl Runtime {
                 }
 
                 let left_target_result = self.verify_zero_product_factor_matches_target(
-                    &EqualFact::new_from_refs(target, mul.left.as_ref(), line_file.clone()),
+                    &self.new_equal_fact_from_refs(target, mul.left.as_ref(), line_file.clone()),
                     builtin_state,
                 )?;
                 if left_target_result.is_success() {
-                    let right_nonzero: AtomicFact = NotEqualFact::new(
-                        mul.right.as_ref().clone(),
-                        zero_obj.clone(),
-                        line_file.clone(),
-                    )
-                    .into();
+                    let right_nonzero: AtomicFact = self
+                        .new_not_equal_fact(
+                            mul.right.as_ref().clone(),
+                            zero_obj.clone(),
+                            line_file.clone(),
+                        )
+                        .into();
                     let right_nonzero_result = self
                         .try_verify_atomic_fact_as_builtin_rule_premise(
                             &right_nonzero,
@@ -210,16 +212,17 @@ impl Runtime {
                 }
 
                 let right_target_result = self.verify_zero_product_factor_matches_target(
-                    &EqualFact::new_from_refs(target, mul.right.as_ref(), line_file.clone()),
+                    &self.new_equal_fact_from_refs(target, mul.right.as_ref(), line_file.clone()),
                     builtin_state,
                 )?;
                 if right_target_result.is_success() {
-                    let left_nonzero: AtomicFact = NotEqualFact::new(
-                        mul.left.as_ref().clone(),
-                        zero_obj.clone(),
-                        line_file.clone(),
-                    )
-                    .into();
+                    let left_nonzero: AtomicFact = self
+                        .new_not_equal_fact(
+                            mul.left.as_ref().clone(),
+                            zero_obj.clone(),
+                            line_file.clone(),
+                        )
+                        .into();
                     let left_nonzero_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
                         &left_nonzero,
                         builtin_state,
@@ -294,7 +297,7 @@ impl Runtime {
             right
         };
         let inner = self.try_verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(base, zero_side, line_file.clone()),
+            &self.new_equal_fact_from_refs(base, zero_side, line_file.clone()),
             builtin_state,
         )?;
         if let Some(inner) = inner {
@@ -398,12 +401,13 @@ impl Runtime {
             return Ok(None);
         };
 
-        let modulus_at_least_two: AtomicFact = LessEqualFact::new(
-            Number::new("2".to_string()).into(),
-            modulus,
-            line_file.clone(),
-        )
-        .into();
+        let modulus_at_least_two: AtomicFact = self
+            .new_less_equal_fact(
+                Number::new("2".to_string()).into(),
+                modulus,
+                line_file.clone(),
+            )
+            .into();
         let Some(modulus_result) = self
             .try_verify_atomic_fact_as_builtin_rule_premise(&modulus_at_least_two, builtin_state)?
         else {
@@ -456,18 +460,20 @@ impl Runtime {
             return Ok(None);
         }
 
-        let dividend_in_z: AtomicFact = InFact::new(
-            sub.left.as_ref().clone(),
-            StandardSet::Z.into(),
-            line_file.clone(),
-        )
-        .into();
-        let modulus_in_n_pos: AtomicFact = InFact::new(
-            outer_mod.right.as_ref().clone(),
-            StandardSet::NPos.into(),
-            line_file.clone(),
-        )
-        .into();
+        let dividend_in_z: AtomicFact = self
+            .new_in_fact(
+                sub.left.as_ref().clone(),
+                StandardSet::Z.into(),
+                line_file.clone(),
+            )
+            .into();
+        let modulus_in_n_pos: AtomicFact = self
+            .new_in_fact(
+                outer_mod.right.as_ref().clone(),
+                StandardSet::NPos.into(),
+                line_file.clone(),
+            )
+            .into();
         let Some(results) =
             self.verify_builtin_rule_premises(&[dividend_in_z, modulus_in_n_pos], builtin_state)?
         else {
@@ -533,10 +539,12 @@ impl Runtime {
             return Ok(None);
         };
 
-        let dividend_in_z: AtomicFact =
-            InFact::new(dividend.clone(), StandardSet::Z.into(), line_file.clone()).into();
-        let divisor_in_n_pos: AtomicFact =
-            InFact::new(divisor.clone(), StandardSet::NPos.into(), line_file.clone()).into();
+        let dividend_in_z: AtomicFact = self
+            .new_in_fact(dividend.clone(), StandardSet::Z.into(), line_file.clone())
+            .into();
+        let divisor_in_n_pos: AtomicFact = self
+            .new_in_fact(divisor.clone(), StandardSet::NPos.into(), line_file.clone())
+            .into();
         let Some(premises) =
             self.verify_builtin_rule_premises(&[dividend_in_z, divisor_in_n_pos], builtin_state)?
         else {
@@ -589,17 +597,23 @@ impl Runtime {
             }
 
             let quotient = product.right.as_ref();
-            let divisor_in_n_pos: AtomicFact =
-                InFact::new(modulus.clone(), StandardSet::NPos.into(), line_file.clone()).into();
-            let remainder_in_n: AtomicFact =
-                InFact::new(remainder.clone(), StandardSet::N.into(), line_file.clone()).into();
-            let remainder_lt_modulus: AtomicFact =
-                LessFact::new(remainder.clone(), modulus.clone(), line_file.clone()).into();
-            let decomposition: AtomicFact =
-                EqualFact::new_from_refs(dividend, &candidate, line_file.clone()).into();
+            let divisor_in_n_pos: AtomicFact = self
+                .new_in_fact(modulus.clone(), StandardSet::NPos.into(), line_file.clone())
+                .into();
+            let remainder_in_n: AtomicFact = self
+                .new_in_fact(remainder.clone(), StandardSet::N.into(), line_file.clone())
+                .into();
+            let remainder_lt_modulus: AtomicFact = self
+                .new_less_fact(remainder.clone(), modulus.clone(), line_file.clone())
+                .into();
+            let decomposition: AtomicFact = self
+                .new_equal_fact_from_refs(dividend, &candidate, line_file.clone())
+                .into();
             let complete_premises: [AtomicFact; 6] = [
-                InFact::new(dividend.clone(), StandardSet::Z.into(), line_file.clone()).into(),
-                InFact::new(quotient.clone(), StandardSet::Z.into(), line_file.clone()).into(),
+                self.new_in_fact(dividend.clone(), StandardSet::Z.into(), line_file.clone())
+                    .into(),
+                self.new_in_fact(quotient.clone(), StandardSet::Z.into(), line_file.clone())
+                    .into(),
                 divisor_in_n_pos.clone(),
                 remainder_in_n.clone(),
                 remainder_lt_modulus.clone(),
@@ -646,7 +660,7 @@ impl Runtime {
                 continue;
             };
             let decomposition_fact =
-                EqualFact::new_from_refs(dividend, &candidate, line_file.clone());
+                self.new_equal_fact_from_refs(dividend, &candidate, line_file.clone());
             let decomposition_proof = self.verify_equal_fact_by_known_equality(&decomposition_fact);
             let decomposition_atomic: AtomicFact = decomposition_fact.into();
             let decomposition_result = self.complete_atomic_fact_proof_result(

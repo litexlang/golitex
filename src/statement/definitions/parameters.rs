@@ -440,15 +440,16 @@ impl SetBoundParameterGroup {
     }
 
     /// Membership facts for parameters; each element uses the parameter's exact symbol binding.
-    pub fn facts(&self) -> Vec<Fact> {
+    pub fn facts(&self, runtime: &Runtime) -> Vec<Fact> {
         let mut facts = Vec::with_capacity(self.params.len());
         for binding in self.params.iter() {
-            let fact = InFact::new(
-                obj_for_bound_param_in_scope(binding),
-                self.set_obj().clone(),
-                default_line_file(),
-            )
-            .into();
+            let fact = runtime
+                .new_in_fact(
+                    obj_for_bound_param_in_scope(binding),
+                    self.set_obj().clone(),
+                    default_line_file(),
+                )
+                .into();
             facts.push(fact);
         }
         facts
@@ -467,7 +468,11 @@ impl SetBoundParameterGroup {
             param_defs.flat_instantiated_param_sets_for_args(&instantiated_param_sets);
         let mut facts = Vec::with_capacity(args.len());
         for (arg, param_set) in args.iter().zip(flat_param_sets.iter()) {
-            facts.push(InFact::new(arg.clone(), param_set.clone(), default_line_file()).into());
+            facts.push(
+                runtime
+                    .new_in_fact(arg.clone(), param_set.clone(), default_line_file())
+                    .into(),
+            );
         }
         Ok(facts)
     }

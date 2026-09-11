@@ -76,13 +76,16 @@ impl Runtime {
 
         let mut infer_result = SuccessInferResult::new();
         let target = self.definition_identifier_obj(stmt.name());
-        infer_result.new_infer_result_inside(self.store_have_tuple_or_cart_fact(
-            IsTupleFact::new(target.clone(), stmt.line_file.clone()).into(),
-            HaveTupleStmt::store_reason(),
-        )?);
         infer_result.new_infer_result_inside(
             self.store_have_tuple_or_cart_fact(
-                EqualFact::new(
+                self.new_is_tuple_fact(target.clone(), stmt.line_file.clone())
+                    .into(),
+                HaveTupleStmt::store_reason(),
+            )?,
+        );
+        infer_result.new_infer_result_inside(
+            self.store_have_tuple_or_cart_fact(
+                self.new_equal_fact(
                     TupleDim::new(target.clone()).into(),
                     stmt.dimension.clone(),
                     stmt.line_file.clone(),
@@ -152,17 +155,23 @@ impl Runtime {
 
         let mut infer_result = SuccessInferResult::new();
         let target = self.definition_identifier_obj(stmt.name());
-        infer_result.new_infer_result_inside(self.store_have_tuple_or_cart_fact(
-            IsSetFact::new(target.clone(), stmt.line_file.clone()).into(),
-            HaveCartStmt::store_reason(),
-        )?);
-        infer_result.new_infer_result_inside(self.store_have_tuple_or_cart_fact(
-            IsCartFact::new(target.clone(), stmt.line_file.clone()).into(),
-            HaveCartStmt::store_reason(),
-        )?);
         infer_result.new_infer_result_inside(
             self.store_have_tuple_or_cart_fact(
-                EqualFact::new(
+                self.new_is_set_fact(target.clone(), stmt.line_file.clone())
+                    .into(),
+                HaveCartStmt::store_reason(),
+            )?,
+        );
+        infer_result.new_infer_result_inside(
+            self.store_have_tuple_or_cart_fact(
+                self.new_is_cart_fact(target.clone(), stmt.line_file.clone())
+                    .into(),
+                HaveCartStmt::store_reason(),
+            )?,
+        );
+        infer_result.new_infer_result_inside(
+            self.store_have_tuple_or_cart_fact(
+                self.new_equal_fact(
                     CartDim::new(target.clone()).into(),
                     stmt.dimension.clone(),
                     stmt.line_file.clone(),
@@ -212,12 +221,13 @@ impl Runtime {
         dimension: &Obj,
         line_file: LineFile,
     ) -> Result<SuccessVerifyTupleOrCartDimensionResult, RuntimeError> {
-        let in_n_pos: AtomicFact = InFact::new(
-            dimension.clone(),
-            StandardSet::NPos.into(),
-            line_file.clone(),
-        )
-        .into();
+        let in_n_pos: AtomicFact = self
+            .new_in_fact(
+                dimension.clone(),
+                StandardSet::NPos.into(),
+                line_file.clone(),
+            )
+            .into();
         let in_n_pos_result = self
             .verify_atomic_fact(&in_n_pos, &VerifyState::initial())
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
@@ -231,7 +241,9 @@ impl Runtime {
         }
 
         let two: Obj = Number::new("2".to_string()).into();
-        let at_least_two: AtomicFact = LessEqualFact::new(two, dimension.clone(), line_file).into();
+        let at_least_two: AtomicFact = self
+            .new_less_equal_fact(two, dimension.clone(), line_file)
+            .into();
         let at_least_two_result = self
             .verify_atomic_fact(&at_least_two, &VerifyState::initial())
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
@@ -287,8 +299,8 @@ impl Runtime {
         let value = self.inst_obj(&stmt.value, &index_map, SubstitutionMode::Exact)?;
         let target = self.definition_identifier_obj(stmt.name());
         let left: Obj = ObjAtIndex::new(target, index_obj).into();
-        let equal_fact = EqualFact::new(left, value, stmt.line_file.clone());
-        ForallFact::new_canonical_forall(
+        let equal_fact = self.new_equal_fact(left, value, stmt.line_file.clone());
+        self.new_forall_fact(
             tuple_or_cart_index_param_def(&index_names[0], stmt.dimension.clone()),
             vec![],
             vec![equal_fact.into()],
@@ -303,8 +315,8 @@ impl Runtime {
         let value = self.inst_obj(&stmt.value, &index_map, SubstitutionMode::Exact)?;
         let target = self.definition_identifier_obj(stmt.name());
         let left: Obj = Proj::new(target, index_obj).into();
-        let equal_fact = EqualFact::new(left, value, stmt.line_file.clone());
-        ForallFact::new_canonical_forall(
+        let equal_fact = self.new_equal_fact(left, value, stmt.line_file.clone());
+        self.new_forall_fact(
             tuple_or_cart_index_param_def(&index_names[0], stmt.dimension.clone()),
             vec![],
             vec![equal_fact.into()],

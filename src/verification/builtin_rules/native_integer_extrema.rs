@@ -25,8 +25,9 @@ impl Runtime {
         if !objs_match_for_pattern(arg, other) {
             return Ok(None);
         }
-        let integer_fact: AtomicFact =
-            InFact::new(arg.clone(), StandardSet::Z.into(), line_file.clone()).into();
+        let integer_fact: AtomicFact = self
+            .new_in_fact(arg.clone(), StandardSet::Z.into(), line_file.clone())
+            .into();
         let Some(premise_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&integer_fact, builtin_state)?
         else {
@@ -75,8 +76,9 @@ impl Runtime {
         let Some(shift) = shift else {
             return Ok(None);
         };
-        let premise: AtomicFact =
-            InFact::new(shift, StandardSet::Z.into(), line_file.clone()).into();
+        let premise: AtomicFact = self
+            .new_in_fact(shift, StandardSet::Z.into(), line_file.clone())
+            .into();
         let Some(premise_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?
         else {
@@ -125,7 +127,7 @@ impl Runtime {
             } else {
                 (second_arg, first_arg)
             };
-        let premise = LessEqualFact::new(
+        let premise = self.new_less_equal_fact(
             premise_left.clone(),
             premise_right.clone(),
             line_file.clone(),
@@ -215,7 +217,8 @@ impl Runtime {
         // A positive common multiple bounds the least common multiple.
         // The modulo premises intentionally use abs(input), matching the
         // Euclidean remainder interface for signed integers.
-        let Some(AtomicFact::LessEqualFact(f)) = normalize_positive_order_atomic_fact(atomic_fact)
+        let Some(AtomicFact::LessEqualFact(f)) =
+            normalize_positive_order_atomic_fact(self, atomic_fact)
         else {
             return Ok(None);
         };
@@ -224,19 +227,19 @@ impl Runtime {
         };
         let zero: Obj = Number::new("0".to_string()).into();
         let premises: Vec<AtomicFact> = vec![
-            InFact::new(
+            self.new_in_fact(
                 f.right.clone(),
                 StandardSet::NPos.into(),
                 f.line_file.clone(),
             )
             .into(),
-            EqualFact::new(
+            self.new_equal_fact(
                 Mod::new(f.right.clone(), Abs::new(lcm.left.as_ref().clone()).into()).into(),
                 zero.clone(),
                 f.line_file.clone(),
             )
             .into(),
-            EqualFact::new(
+            self.new_equal_fact(
                 Mod::new(f.right.clone(), Abs::new(lcm.right.as_ref().clone()).into()).into(),
                 zero,
                 f.line_file.clone(),
@@ -267,40 +270,43 @@ impl Runtime {
         // Floor, ceiling, min, and max preserve weak componentwise order.
         // Examples: `a <= b => floor(a) <= floor(b)` and
         // `a <= c, b <= d => min(a,b) <= min(c,d)`.
-        let Some(AtomicFact::LessEqualFact(f)) = normalize_positive_order_atomic_fact(atomic_fact)
+        let Some(AtomicFact::LessEqualFact(f)) =
+            normalize_positive_order_atomic_fact(self, atomic_fact)
         else {
             return Ok(None);
         };
         let (premises, reason, typed_rule) = match (&f.left, &f.right) {
             (Obj::Floor(left), Obj::Floor(right)) => (
-                vec![LessEqualFact::new(
-                    left.arg.as_ref().clone(),
-                    right.arg.as_ref().clone(),
-                    f.line_file.clone(),
-                )
-                .into()],
+                vec![self
+                    .new_less_equal_fact(
+                        left.arg.as_ref().clone(),
+                        right.arg.as_ref().clone(),
+                        f.line_file.clone(),
+                    )
+                    .into()],
                 "native floor preserves weak order",
                 None,
             ),
             (Obj::Ceil(left), Obj::Ceil(right)) => (
-                vec![LessEqualFact::new(
-                    left.arg.as_ref().clone(),
-                    right.arg.as_ref().clone(),
-                    f.line_file.clone(),
-                )
-                .into()],
+                vec![self
+                    .new_less_equal_fact(
+                        left.arg.as_ref().clone(),
+                        right.arg.as_ref().clone(),
+                        f.line_file.clone(),
+                    )
+                    .into()],
                 "native ceil preserves weak order",
                 None,
             ),
             (Obj::Min(left), Obj::Min(right)) => (
                 vec![
-                    LessEqualFact::new(
+                    self.new_less_equal_fact(
                         left.left.as_ref().clone(),
                         right.left.as_ref().clone(),
                         f.line_file.clone(),
                     )
                     .into(),
-                    LessEqualFact::new(
+                    self.new_less_equal_fact(
                         left.right.as_ref().clone(),
                         right.right.as_ref().clone(),
                         f.line_file.clone(),
@@ -312,13 +318,13 @@ impl Runtime {
             ),
             (Obj::Max(left), Obj::Max(right)) => (
                 vec![
-                    LessEqualFact::new(
+                    self.new_less_equal_fact(
                         left.left.as_ref().clone(),
                         right.left.as_ref().clone(),
                         f.line_file.clone(),
                     )
                     .into(),
-                    LessEqualFact::new(
+                    self.new_less_equal_fact(
                         left.right.as_ref().clone(),
                         right.right.as_ref().clone(),
                         f.line_file.clone(),

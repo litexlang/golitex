@@ -65,19 +65,22 @@ impl Runtime {
                 WellDefinedObjChildRole::ConstructorArgument { argument_index },
             )?);
         }
-        let is_set: AtomicFact = IsSetFact::new((*value.set).clone(), default_line_file()).into();
+        let is_set: AtomicFact = self
+            .new_is_set_fact((*value.set).clone(), default_line_file())
+            .into();
         self.push_matrix_wd_fact_check(
             &mut steps,
             &is_set,
             verify_state,
             format!("finite_seq_set: first argument {} is not a set", value.set),
         )?;
-        let length: AtomicFact = InFact::new(
-            (*value.n).clone(),
-            StandardSet::N.into(),
-            default_line_file(),
-        )
-        .into();
+        let length: AtomicFact = self
+            .new_in_fact(
+                (*value.n).clone(),
+                StandardSet::N.into(),
+                default_line_file(),
+            )
+            .into();
         self.push_matrix_wd_fact_check(
             &mut steps,
             &length,
@@ -101,7 +104,9 @@ impl Runtime {
             verify_state,
             WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
         )?);
-        let is_set: AtomicFact = IsSetFact::new((*value.set).clone(), default_line_file()).into();
+        let is_set: AtomicFact = self
+            .new_is_set_fact((*value.set).clone(), default_line_file())
+            .into();
         self.push_matrix_wd_fact_check(
             &mut steps,
             &is_set,
@@ -143,7 +148,9 @@ impl Runtime {
                 WellDefinedObjChildRole::ConstructorArgument { argument_index },
             )?);
         }
-        let is_set: AtomicFact = IsSetFact::new((*value.set).clone(), default_line_file()).into();
+        let is_set: AtomicFact = self
+            .new_is_set_fact((*value.set).clone(), default_line_file())
+            .into();
         self.push_matrix_wd_fact_check(
             &mut steps,
             &is_set,
@@ -154,12 +161,13 @@ impl Runtime {
             ("row_len", value.row_len.as_ref()),
             ("col_len", value.col_len.as_ref()),
         ] {
-            let positive: AtomicFact = InFact::new(
-                dimension.clone(),
-                StandardSet::NPos.into(),
-                default_line_file(),
-            )
-            .into();
+            let positive: AtomicFact = self
+                .new_in_fact(
+                    dimension.clone(),
+                    StandardSet::NPos.into(),
+                    default_line_file(),
+                )
+                .into();
             self.push_matrix_wd_fact_check(
                 &mut steps,
                 &positive,
@@ -213,7 +221,7 @@ impl Runtime {
         right: &Obj,
         error_message: String,
     ) -> Result<(), RuntimeError> {
-        let result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+        let result = self.verify_equal_fact_by_known_equality(&self.new_equal_fact_from_refs(
             left,
             right,
             default_line_file(),
@@ -370,12 +378,13 @@ impl Runtime {
                         )),
                     ))
                 })?;
-                let membership: AtomicFact = InFact::new(
-                    object.clone(),
-                    matrix_set.clone().into(),
-                    default_line_file(),
-                )
-                .into();
+                let membership: AtomicFact = self
+                    .new_in_fact(
+                        object.clone(),
+                        matrix_set.clone().into(),
+                        default_line_file(),
+                    )
+                    .into();
                 let membership_result = self.verify_atomic_fact(&membership, verify_state)?;
                 if membership_result.is_unknown() {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -536,12 +545,13 @@ impl Runtime {
             "square",
             MATRIX_POW,
         )?;
-        let positive: AtomicFact = InFact::new(
-            (*value.exponent).clone(),
-            StandardSet::NPos.into(),
-            default_line_file(),
-        )
-        .into();
+        let positive: AtomicFact = self
+            .new_in_fact(
+                (*value.exponent).clone(),
+                StandardSet::NPos.into(),
+                default_line_file(),
+            )
+            .into();
         self.push_matrix_wd_fact_check(
             &mut steps,
             &positive,

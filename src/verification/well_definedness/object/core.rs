@@ -79,9 +79,9 @@ impl Runtime {
                         argument_index: 0,
                     },
                 )?);
-                let positive: AtomicFact =
-                    InFact::new(index.clone(), StandardSet::NPos.into(), default_line_file())
-                        .into();
+                let positive: AtomicFact = self
+                    .new_in_fact(index.clone(), StandardSet::NPos.into(), default_line_file())
+                    .into();
                 let result = self.verify_atomic_fact(&positive, verify_state)?;
                 if result.is_unknown() {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -92,8 +92,9 @@ impl Runtime {
                 }
                 head_steps.push_fact_check(super::success_obj_fact_check(result)?);
                 let length: Obj = Number::new(list.objs.len().to_string()).into();
-                let bounded: AtomicFact =
-                    LessEqualFact::new(index.clone(), length.clone(), default_line_file()).into();
+                let bounded: AtomicFact = self
+                    .new_less_equal_fact(index.clone(), length.clone(), default_line_file())
+                    .into();
                 let result = self.verify_atomic_fact(&bounded, verify_state)?;
                 if result.is_unknown() {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -298,8 +299,9 @@ impl Runtime {
             })?;
         steps.append(layer);
         let return_set = self.fn_set_return_set_after_args(&space, arguments)?;
-        let membership: AtomicFact =
-            InFact::new(source_application, return_set, default_line_file()).into();
+        let membership: AtomicFact = self
+            .new_in_fact(source_application, return_set, default_line_file())
+            .into();
         let proposition: Fact = membership.clone().into();
         let mut infers = self
             .store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(

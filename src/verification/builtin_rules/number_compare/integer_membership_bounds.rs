@@ -36,7 +36,9 @@ impl Runtime {
             }
             _ => return Ok(None),
         };
-        let in_n: AtomicFact = InFact::new(n, StandardSet::N.into(), line_file.clone()).into();
+        let in_n: AtomicFact = self
+            .new_in_fact(n, StandardSet::N.into(), line_file.clone())
+            .into();
         let in_n_result =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&in_n, builtin_state)?;
         if let Some(in_n_result) = in_n_result {
@@ -87,8 +89,9 @@ impl Runtime {
             }
             _ => return Ok(None),
         };
-        let in_n_pos: AtomicFact =
-            InFact::new(n, StandardSet::NPos.into(), line_file.clone()).into();
+        let in_n_pos: AtomicFact = self
+            .new_in_fact(n, StandardSet::NPos.into(), line_file.clone())
+            .into();
         let in_n_pos_result =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&in_n_pos, builtin_state)?;
         if let Some(in_n_pos_result) = in_n_pos_result {
@@ -141,14 +144,18 @@ impl Runtime {
             _ => return Ok(None),
         };
         let zero_obj: Obj = Number::new("0".to_string()).into();
-        let in_n: AtomicFact =
-            InFact::new(n.clone(), StandardSet::N.into(), line_file.clone()).into();
-        let nonzero: AtomicFact = NotEqualFact::new(n.clone(), zero_obj, line_file.clone()).into();
+        let in_n: AtomicFact = self
+            .new_in_fact(n.clone(), StandardSet::N.into(), line_file.clone())
+            .into();
+        let nonzero: AtomicFact = self
+            .new_not_equal_fact(n.clone(), zero_obj, line_file.clone())
+            .into();
         let mut in_n_result =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&in_n, builtin_state)?;
         if in_n_result.is_none() {
             if let Obj::FiniteSetSize(finite_set_size) = &n {
-                let in_n_fact = InFact::new(n.clone(), StandardSet::N.into(), line_file.clone());
+                let in_n_fact =
+                    self.new_in_fact(n.clone(), StandardSet::N.into(), line_file.clone());
                 let proof = self.verify_finite_set_size_in_standard_number_set(
                     &in_n_fact,
                     finite_set_size,
@@ -220,9 +227,10 @@ impl Runtime {
             _ => return Ok(None),
         };
         let zero_obj: Obj = Number::new("0".to_string()).into();
-        let in_z: AtomicFact =
-            InFact::new(n.clone(), StandardSet::Z.into(), line_file.clone()).into();
-        let positive: AtomicFact = LessFact::new(zero_obj, n, line_file.clone()).into();
+        let in_z: AtomicFact = self
+            .new_in_fact(n.clone(), StandardSet::Z.into(), line_file.clone())
+            .into();
+        let positive: AtomicFact = self.new_less_fact(zero_obj, n, line_file.clone()).into();
         let Some(in_z_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&in_z, builtin_state)?
         else {

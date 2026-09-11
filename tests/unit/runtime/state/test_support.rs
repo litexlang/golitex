@@ -2,6 +2,12 @@
 
 use super::*;
 
+fn set_param(runtime: &Runtime, name: &str) -> TypedParameterList {
+    TypedParameterList::new(vec![runtime
+        .fresh_param_group_with_type(vec![name.to_string()], ParamType::Set(Set::new()))
+        .expect("test parameter group should be valid")])
+}
+
 impl Runtime {
     /// Rebuild the module registry between independent runner items.
     pub fn reset_for_isolated_runner_item(&mut self) {
@@ -37,20 +43,56 @@ fn runtime_fact_factories_share_one_monotone_id_sequence() {
     let right: Obj = Number::new("2".to_string()).into();
     let line_file = default_line_file();
 
-    let equality = runtime
-        .new_equal_fact(left.clone(), right.clone(), line_file.clone())
-        .expect("runtime should allocate equality fact id");
-    let membership = runtime
-        .new_in_fact(left, right, line_file.clone())
-        .expect("runtime should allocate membership fact id");
-    let conjunction = runtime
-        .new_and_fact(vec![equality.clone().into()], line_file)
-        .expect("runtime should allocate conjunction fact id");
+    let equality = runtime.new_equal_fact(left.clone(), right.clone(), line_file.clone());
+    let membership = runtime.new_in_fact(left, right, line_file.clone());
+    let conjunction = runtime.new_and_fact(vec![equality.clone().into()], line_file);
 
     assert_eq!(equality.fact_id.value(), 1);
     assert_eq!(membership.fact_id.value(), 2);
     assert_eq!(conjunction.fact_id.value(), 3);
-    assert_eq!(runtime.next_fact_id, 4);
+    assert_eq!(runtime.next_fact_id.get(), 4);
+}
+
+#[test]
+fn failed_quantifier_construction_consumes_its_reserved_id() {
+    let runtime = Runtime::default();
+    let inner = runtime
+        .new_forall_fact(
+            set_param(&runtime, "x"),
+            vec![],
+            vec![],
+            default_line_file(),
+        )
+        .expect("inner forall should be valid");
+
+    let failed = runtime.new_forall_fact(
+        set_param(&runtime, "x"),
+        vec![inner.into()],
+        vec![],
+        default_line_file(),
+    );
+    assert!(failed.is_err());
+    assert_eq!(runtime.next_fact_id.get(), 3);
+}
+
+#[test]
+fn cloning_a_fact_preserves_its_id_without_advancing_runtime() {
+    let runtime = Runtime::default();
+    let first = runtime.new_equal_fact(
+        Number::new("1".to_string()).into(),
+        Number::new("2".to_string()).into(),
+        default_line_file(),
+    );
+    let cloned = first.clone();
+    assert_eq!(cloned.fact_id, first.fact_id);
+    assert_eq!(runtime.next_fact_id.get(), 2);
+
+    let second = runtime.new_equal_fact(
+        Number::new("2".to_string()).into(),
+        Number::new("3".to_string()).into(),
+        default_line_file(),
+    );
+    assert_eq!(second.fact_id.value(), first.fact_id.value() + 1);
 }
 
 #[test]

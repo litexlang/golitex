@@ -16,30 +16,34 @@ impl StmtResultToLeanCompiler {
         };
         let statement = &result.statement;
         let expected_bound_checks: [Fact; 4] = [
-            InFact::new(
-                statement.row_bound.clone(),
-                StandardSet::NPos.into(),
-                statement.line_file.clone(),
-            )
-            .into(),
-            EqualFact::new(
-                statement.row_bound.clone(),
-                statement.matrix_set.row_len.as_ref().clone(),
-                statement.line_file.clone(),
-            )
-            .into(),
-            InFact::new(
-                statement.col_bound.clone(),
-                StandardSet::NPos.into(),
-                statement.line_file.clone(),
-            )
-            .into(),
-            EqualFact::new(
-                statement.col_bound.clone(),
-                statement.matrix_set.col_len.as_ref().clone(),
-                statement.line_file.clone(),
-            )
-            .into(),
+            self.runtime
+                .new_in_fact(
+                    statement.row_bound.clone(),
+                    StandardSet::NPos.into(),
+                    statement.line_file.clone(),
+                )
+                .into(),
+            self.runtime
+                .new_equal_fact(
+                    statement.row_bound.clone(),
+                    statement.matrix_set.row_len.as_ref().clone(),
+                    statement.line_file.clone(),
+                )
+                .into(),
+            self.runtime
+                .new_in_fact(
+                    statement.col_bound.clone(),
+                    StandardSet::NPos.into(),
+                    statement.line_file.clone(),
+                )
+                .into(),
+            self.runtime
+                .new_equal_fact(
+                    statement.col_bound.clone(),
+                    statement.matrix_set.col_len.as_ref().clone(),
+                    statement.line_file.clone(),
+                )
+                .into(),
         ];
         if verification.bound_checks.len() != expected_bound_checks.len() {
             return Err("matrix verification requires four ordered bound checks".into());
@@ -79,12 +83,12 @@ impl StmtResultToLeanCompiler {
             ),
         ];
         let domain_atomic_facts = [
-            AtomicFact::from(LessEqualFact::new(
+            AtomicFact::from(self.runtime.new_less_equal_fact(
                 obj_for_bound_param_in_scope(&statement.row_index_binding),
                 statement.row_bound.clone(),
                 statement.line_file.clone(),
             )),
-            AtomicFact::from(LessEqualFact::new(
+            AtomicFact::from(self.runtime.new_less_equal_fact(
                 obj_for_bound_param_in_scope(&statement.col_index_binding),
                 statement.col_bound.clone(),
                 statement.line_file.clone(),
@@ -151,7 +155,7 @@ impl StmtResultToLeanCompiler {
 
         let expected_parameter_facts = parameter_groups
             .iter()
-            .flat_map(|group| group.facts())
+            .flat_map(|group| group.facts(&self.runtime))
             .collect::<Vec<_>>();
         if expected_parameter_facts.len() != 2 {
             return Err("matrix index scope did not produce two parameter facts".into());
@@ -188,12 +192,14 @@ impl StmtResultToLeanCompiler {
             let fact_id = store
                 .fact_id
                 .ok_or_else(|| format!("matrix parameter store {parameter_index} has no FactId"))?;
-            let expected_positive: Fact = LessFact::new(
-                Number::new("0".to_string()).into(),
-                obj_for_bound_param_in_scope(parameter_bindings[parameter_index]),
-                statement.line_file.clone(),
-            )
-            .into();
+            let expected_positive: Fact = self
+                .runtime
+                .new_less_fact(
+                    Number::new("0".to_string()).into(),
+                    obj_for_bound_param_in_scope(parameter_bindings[parameter_index]),
+                    statement.line_file.clone(),
+                )
+                .into();
             if store.inferred_facts.len() != 1
                 || store.inferred_fact_ids.len() != 1
                 || store.inferred_fact_ids[0].is_none()
@@ -236,12 +242,14 @@ impl StmtResultToLeanCompiler {
 
         let source_body = statement.value.clone();
         let lowered_body = LeanTargetObjectRepresentation::lower(&source_body)?;
-        let expected_return_check: Fact = InFact::new(
-            source_body.clone(),
-            statement.matrix_set.set.as_ref().clone(),
-            statement.line_file.clone(),
-        )
-        .into();
+        let expected_return_check: Fact = self
+            .runtime
+            .new_in_fact(
+                source_body.clone(),
+                statement.matrix_set.set.as_ref().clone(),
+                statement.line_file.clone(),
+            )
+            .into();
         self.environment_stack.push_inherited_environment();
         let compiled_body: Result<CompiledIndexedFunctionDefinitionBody, String> = (|| {
             let mut parameter_premises = Vec::with_capacity(2);
@@ -380,18 +388,22 @@ impl StmtResultToLeanCompiler {
             statement.symbol_binding.as_ref(),
         )
         .into();
-        let expected_surface_membership: Fact = InFact::new(
-            function_object.clone(),
-            statement.matrix_set.clone().into(),
-            statement.line_file.clone(),
-        )
-        .into();
-        let expected_defining_equality: Fact = EqualFact::new(
-            function_object.clone(),
-            anonymous_function.clone().into(),
-            statement.line_file.clone(),
-        )
-        .into();
+        let expected_surface_membership: Fact = self
+            .runtime
+            .new_in_fact(
+                function_object.clone(),
+                statement.matrix_set.clone().into(),
+                statement.line_file.clone(),
+            )
+            .into();
+        let expected_defining_equality: Fact = self
+            .runtime
+            .new_equal_fact(
+                function_object.clone(),
+                anonymous_function.clone().into(),
+                statement.line_file.clone(),
+            )
+            .into();
         if surface_membership_store
             .itself_and_why_itself_is_stored
             .0

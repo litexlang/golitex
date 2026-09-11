@@ -120,7 +120,7 @@ impl Runtime {
                 }
             }
             if atomic_facts.len() == then_count {
-                Some(AndFact::new(atomic_facts, forall_fact.line_file.clone()))
+                Some(self.new_and_fact(atomic_facts, forall_fact.line_file.clone()))
             } else {
                 None
             }

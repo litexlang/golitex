@@ -8,7 +8,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
-        let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
+        let Some(normalized_fact) = normalize_positive_order_atomic_fact(self, atomic_fact) else {
             return Ok(None);
         };
         let AtomicFact::LessEqualFact(less_equal_fact) = normalized_fact else {
@@ -59,7 +59,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
-        let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
+        let Some(normalized_fact) = normalize_positive_order_atomic_fact(self, atomic_fact) else {
             return Ok(None);
         };
         let AtomicFact::LessFact(less_fact) = normalized_fact else {
@@ -110,7 +110,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
-        let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
+        let Some(normalized_fact) = normalize_positive_order_atomic_fact(self, atomic_fact) else {
             return Ok(None);
         };
         let AtomicFact::LessEqualFact(less_equal_fact) = normalized_fact else {
@@ -161,7 +161,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
-        let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
+        let Some(normalized_fact) = normalize_positive_order_atomic_fact(self, atomic_fact) else {
             return Ok(None);
         };
         let AtomicFact::LessFact(less_fact) = normalized_fact else {

@@ -36,7 +36,7 @@ impl Runtime {
 
         let candidate_sum_1: Obj =
             Add::new(target_a.clone(), subtraction.right.as_ref().clone()).into();
-        let sum_fact_1 = EqualFact::new_from_refs(
+        let sum_fact_1 = self.new_equal_fact_from_refs(
             &candidate_sum_1,
             subtraction.left.as_ref(),
             line_file.clone(),
@@ -63,7 +63,7 @@ impl Runtime {
 
         let candidate_sum_2: Obj =
             Add::new(subtraction.right.as_ref().clone(), target_a.clone()).into();
-        let sum_fact_2 = EqualFact::new_from_refs(
+        let sum_fact_2 = self.new_equal_fact_from_refs(
             &candidate_sum_2,
             subtraction.left.as_ref(),
             line_file.clone(),

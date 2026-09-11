@@ -26,8 +26,9 @@ impl Runtime {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
                     let negative_right: Obj =
                         Mul::new(Number::new("-1".to_string()).into(), f.right.clone()).into();
-                    let reverse: AtomicFact =
-                        LessFact::new(x, negative_right, f.line_file.clone()).into();
+                    let reverse: AtomicFact = self
+                        .new_less_fact(x, negative_right, f.line_file.clone())
+                        .into();
                     if let Some(premise) = self
                         .try_verify_atomic_fact_as_builtin_rule_premise(&reverse, builtin_state)?
                     {
@@ -39,8 +40,9 @@ impl Runtime {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
                     let negative_right: Obj =
                         Mul::new(Number::new("-1".to_string()).into(), f.right.clone()).into();
-                    let reverse: AtomicFact =
-                        LessEqualFact::new(x, negative_right, f.line_file.clone()).into();
+                    let reverse: AtomicFact = self
+                        .new_less_equal_fact(x, negative_right, f.line_file.clone())
+                        .into();
                     if let Some(premise) = self
                         .try_verify_atomic_fact_as_builtin_rule_premise(&reverse, builtin_state)?
                     {
@@ -52,8 +54,9 @@ impl Runtime {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
                     let negative_right: Obj =
                         Mul::new(Number::new("-1".to_string()).into(), f.right.clone()).into();
-                    let reverse: AtomicFact =
-                        GreaterFact::new(x, negative_right, f.line_file.clone()).into();
+                    let reverse: AtomicFact = self
+                        .new_greater_fact(x, negative_right, f.line_file.clone())
+                        .into();
                     if let Some(premise) = self
                         .try_verify_atomic_fact_as_builtin_rule_premise(&reverse, builtin_state)?
                     {
@@ -65,8 +68,9 @@ impl Runtime {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
                     let negative_right: Obj =
                         Mul::new(Number::new("-1".to_string()).into(), f.right.clone()).into();
-                    let reverse: AtomicFact =
-                        GreaterEqualFact::new(x, negative_right, f.line_file.clone()).into();
+                    let reverse: AtomicFact = self
+                        .new_greater_equal_fact(x, negative_right, f.line_file.clone())
+                        .into();
                     if let Some(premise) = self
                         .try_verify_atomic_fact_as_builtin_rule_premise(&reverse, builtin_state)?
                     {
@@ -79,14 +83,16 @@ impl Runtime {
         match atomic_fact {
             AtomicFact::GreaterEqualFact(f) if self.obj_is_resolved_zero(&f.right) => {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
-                    let le: AtomicFact =
-                        LessEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
+                    let le: AtomicFact = self
+                        .new_less_equal_fact(x.clone(), z.clone(), f.line_file.clone())
+                        .into();
                     if let Some(premise) =
                         self.try_verify_atomic_fact_as_builtin_rule_premise(&le, builtin_state)?
                     {
                         return success("order: (-1)*x >= 0 from x <= 0", premise);
                     }
-                    let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
+                    let lt: AtomicFact =
+                        self.new_less_fact(x, z.clone(), f.line_file.clone()).into();
                     if let Some(premise) =
                         self.try_verify_atomic_fact_as_builtin_rule_premise(&lt, builtin_state)?
                     {
@@ -97,7 +103,8 @@ impl Runtime {
             }
             AtomicFact::GreaterFact(f) if self.obj_is_resolved_zero(&f.right) => {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
-                    let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
+                    let lt: AtomicFact =
+                        self.new_less_fact(x, z.clone(), f.line_file.clone()).into();
                     if let Some(premise) =
                         self.try_verify_atomic_fact_as_builtin_rule_premise(&lt, builtin_state)?
                     {
@@ -108,14 +115,17 @@ impl Runtime {
             }
             AtomicFact::LessEqualFact(f) if self.obj_is_resolved_zero(&f.right) => {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
-                    let ge: AtomicFact =
-                        GreaterEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
+                    let ge: AtomicFact = self
+                        .new_greater_equal_fact(x.clone(), z.clone(), f.line_file.clone())
+                        .into();
                     if let Some(premise) =
                         self.try_verify_atomic_fact_as_builtin_rule_premise(&ge, builtin_state)?
                     {
                         return success("order: (-1)*x <= 0 from x >= 0", premise);
                     }
-                    let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
+                    let gt: AtomicFact = self
+                        .new_greater_fact(x, z.clone(), f.line_file.clone())
+                        .into();
                     if let Some(premise) =
                         self.try_verify_atomic_fact_as_builtin_rule_premise(&gt, builtin_state)?
                     {
@@ -126,7 +136,9 @@ impl Runtime {
             }
             AtomicFact::LessFact(f) if self.obj_is_resolved_zero(&f.right) => {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
-                    let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
+                    let gt: AtomicFact = self
+                        .new_greater_fact(x, z.clone(), f.line_file.clone())
+                        .into();
                     if let Some(premise) =
                         self.try_verify_atomic_fact_as_builtin_rule_premise(&gt, builtin_state)?
                     {
@@ -137,14 +149,16 @@ impl Runtime {
             }
             AtomicFact::LessEqualFact(f) if self.obj_is_resolved_zero(&f.left) => {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.right) {
-                    let le: AtomicFact =
-                        LessEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
+                    let le: AtomicFact = self
+                        .new_less_equal_fact(x.clone(), z.clone(), f.line_file.clone())
+                        .into();
                     if let Some(premise) =
                         self.try_verify_atomic_fact_as_builtin_rule_premise(&le, builtin_state)?
                     {
                         return success("order: 0 <= (-1)*x from x <= 0", premise);
                     }
-                    let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
+                    let lt: AtomicFact =
+                        self.new_less_fact(x, z.clone(), f.line_file.clone()).into();
                     if let Some(premise) =
                         self.try_verify_atomic_fact_as_builtin_rule_premise(&lt, builtin_state)?
                     {
@@ -155,7 +169,8 @@ impl Runtime {
             }
             AtomicFact::LessFact(f) if self.obj_is_resolved_zero(&f.left) => {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.right) {
-                    let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
+                    let lt: AtomicFact =
+                        self.new_less_fact(x, z.clone(), f.line_file.clone()).into();
                     if let Some(premise) =
                         self.try_verify_atomic_fact_as_builtin_rule_premise(&lt, builtin_state)?
                     {
@@ -166,14 +181,17 @@ impl Runtime {
             }
             AtomicFact::GreaterEqualFact(f) if self.obj_is_resolved_zero(&f.left) => {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.right) {
-                    let ge: AtomicFact =
-                        GreaterEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
+                    let ge: AtomicFact = self
+                        .new_greater_equal_fact(x.clone(), z.clone(), f.line_file.clone())
+                        .into();
                     if let Some(premise) =
                         self.try_verify_atomic_fact_as_builtin_rule_premise(&ge, builtin_state)?
                     {
                         return success("order: 0 >= (-1)*x from x >= 0", premise);
                     }
-                    let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
+                    let gt: AtomicFact = self
+                        .new_greater_fact(x, z.clone(), f.line_file.clone())
+                        .into();
                     if let Some(premise) =
                         self.try_verify_atomic_fact_as_builtin_rule_premise(&gt, builtin_state)?
                     {
@@ -184,7 +202,9 @@ impl Runtime {
             }
             AtomicFact::GreaterFact(f) if self.obj_is_resolved_zero(&f.left) => {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.right) {
-                    let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
+                    let gt: AtomicFact = self
+                        .new_greater_fact(x, z.clone(), f.line_file.clone())
+                        .into();
                     if let Some(premise) =
                         self.try_verify_atomic_fact_as_builtin_rule_premise(&gt, builtin_state)?
                     {
@@ -205,26 +225,33 @@ impl Runtime {
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let (neg, left, right, line_file) = match atomic_fact {
             AtomicFact::GreaterFact(f) => (
-                NotLessEqualFact::new(f.left.clone(), f.right.clone(), f.line_file.clone()).into(),
-                f.left.clone(),
-                f.right.clone(),
-                f.line_file.clone(),
-            ),
-            AtomicFact::LessFact(f) => (
-                NotGreaterEqualFact::new(f.left.clone(), f.right.clone(), f.line_file.clone())
+                self.new_not_less_equal_fact(f.left.clone(), f.right.clone(), f.line_file.clone())
                     .into(),
                 f.left.clone(),
                 f.right.clone(),
                 f.line_file.clone(),
             ),
+            AtomicFact::LessFact(f) => (
+                self.new_not_greater_equal_fact(
+                    f.left.clone(),
+                    f.right.clone(),
+                    f.line_file.clone(),
+                )
+                .into(),
+                f.left.clone(),
+                f.right.clone(),
+                f.line_file.clone(),
+            ),
             AtomicFact::GreaterEqualFact(f) => (
-                NotLessFact::new(f.left.clone(), f.right.clone(), f.line_file.clone()).into(),
+                self.new_not_less_fact(f.left.clone(), f.right.clone(), f.line_file.clone())
+                    .into(),
                 f.left.clone(),
                 f.right.clone(),
                 f.line_file.clone(),
             ),
             AtomicFact::LessEqualFact(f) => (
-                NotGreaterFact::new(f.left.clone(), f.right.clone(), f.line_file.clone()).into(),
+                self.new_not_greater_fact(f.left.clone(), f.right.clone(), f.line_file.clone())
+                    .into(),
                 f.left.clone(),
                 f.right.clone(),
                 f.line_file.clone(),
@@ -288,29 +315,37 @@ impl Runtime {
             AtomicFact::NotLessFact(f) => {
                 let lf = f.line_file.clone();
                 vec![
-                    LessEqualFact::new(f.right.clone(), f.left.clone(), lf.clone()).into(),
-                    GreaterEqualFact::new(f.left.clone(), f.right.clone(), lf).into(),
+                    self.new_less_equal_fact(f.right.clone(), f.left.clone(), lf.clone())
+                        .into(),
+                    self.new_greater_equal_fact(f.left.clone(), f.right.clone(), lf)
+                        .into(),
                 ]
             }
             AtomicFact::NotGreaterFact(f) => {
                 let lf = f.line_file.clone();
                 vec![
-                    LessEqualFact::new(f.left.clone(), f.right.clone(), lf.clone()).into(),
-                    GreaterEqualFact::new(f.right.clone(), f.left.clone(), lf).into(),
+                    self.new_less_equal_fact(f.left.clone(), f.right.clone(), lf.clone())
+                        .into(),
+                    self.new_greater_equal_fact(f.right.clone(), f.left.clone(), lf)
+                        .into(),
                 ]
             }
             AtomicFact::NotLessEqualFact(f) => {
                 let lf = f.line_file.clone();
                 vec![
-                    LessFact::new(f.right.clone(), f.left.clone(), lf.clone()).into(),
-                    GreaterFact::new(f.left.clone(), f.right.clone(), lf).into(),
+                    self.new_less_fact(f.right.clone(), f.left.clone(), lf.clone())
+                        .into(),
+                    self.new_greater_fact(f.left.clone(), f.right.clone(), lf)
+                        .into(),
                 ]
             }
             AtomicFact::NotGreaterEqualFact(f) => {
                 let lf = f.line_file.clone();
                 vec![
-                    LessFact::new(f.left.clone(), f.right.clone(), lf.clone()).into(),
-                    GreaterFact::new(f.right.clone(), f.left.clone(), lf).into(),
+                    self.new_less_fact(f.left.clone(), f.right.clone(), lf.clone())
+                        .into(),
+                    self.new_greater_fact(f.right.clone(), f.left.clone(), lf)
+                        .into(),
                 ]
             }
             _ => return Ok(None),

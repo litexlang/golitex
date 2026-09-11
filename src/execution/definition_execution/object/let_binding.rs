@@ -22,7 +22,7 @@ impl Runtime {
         self.store_parameter_binding(&stmt.symbol_binding, BindingScope::DefinitionBinding)
             .map_err(|error| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), error))?;
 
-        let defining_equality = EqualFact::new(
+        let defining_equality = self.new_equal_fact(
             Identifier::new_bound(
                 stmt.symbol_binding.name().to_string(),
                 stmt.symbol_binding.as_ref(),

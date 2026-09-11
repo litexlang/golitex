@@ -7,12 +7,13 @@ impl Runtime {
         line_file: &LineFile,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<VerifyFactResult>, RuntimeError> {
-        let positive: AtomicFact = GreaterFact::new(
-            obj.clone(),
-            Self::literal_zero_obj_for_abs_builtin(),
-            line_file.clone(),
-        )
-        .into();
+        let positive: AtomicFact = self
+            .new_greater_fact(
+                obj.clone(),
+                Self::literal_zero_obj_for_abs_builtin(),
+                line_file.clone(),
+            )
+            .into();
         let positive_result =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&positive, builtin_state)?;
         if positive_result.is_some() {
@@ -20,8 +21,9 @@ impl Runtime {
         }
 
         for carrier in [StandardSet::NPos, StandardSet::QPos, StandardSet::RPos] {
-            let membership: AtomicFact =
-                InFact::new(obj.clone(), carrier.into(), line_file.clone()).into();
+            let membership: AtomicFact = self
+                .new_in_fact(obj.clone(), carrier.into(), line_file.clone())
+                .into();
             let membership_result =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&membership, builtin_state)?;
             if membership_result.is_some() {
@@ -83,8 +85,9 @@ impl Runtime {
         } else {
             return Ok(None);
         };
-        let m_in_n: AtomicFact =
-            InFact::new(m.clone(), StandardSet::N.into(), line_file.clone()).into();
+        let m_in_n: AtomicFact = self
+            .new_in_fact(m.clone(), StandardSet::N.into(), line_file.clone())
+            .into();
         let Some(m_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&m_in_n, builtin_state)?
         else {
@@ -122,7 +125,7 @@ impl Runtime {
             return Ok(None);
         }
         let Some(base_result) = self.try_verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(pow.base.as_ref(), other, line_file.clone()),
+            &self.new_equal_fact_from_refs(pow.base.as_ref(), other, line_file.clone()),
             builtin_state,
         )?
         else {
@@ -225,12 +228,13 @@ impl Runtime {
             return Ok(None);
         }
 
-        let positive_exponent: AtomicFact = GreaterFact::new(
-            (*pow.exponent).clone(),
-            Self::literal_zero_obj_for_abs_builtin(),
-            line_file.clone(),
-        )
-        .into();
+        let positive_exponent: AtomicFact = self
+            .new_greater_fact(
+                (*pow.exponent).clone(),
+                Self::literal_zero_obj_for_abs_builtin(),
+                line_file.clone(),
+            )
+            .into();
         let positive_result =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&positive_exponent, builtin_state)?;
         let mut positive_steps = Vec::new();

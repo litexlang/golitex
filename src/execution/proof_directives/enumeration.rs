@@ -228,12 +228,13 @@ impl Runtime {
                 BindingScope::LocalBinder,
                 parameter_type,
             )?;
-            let parameter_equal_to_assigned_obj_atomic_fact: AtomicFact = EqualFact::new(
-                obj_for_bound_param_in_scope(parameter_binding),
-                assigned_obj,
-                stmt.line_file.clone(),
-            )
-            .into();
+            let parameter_equal_to_assigned_obj_atomic_fact: AtomicFact = self
+                .new_equal_fact(
+                    obj_for_bound_param_in_scope(parameter_binding),
+                    assigned_obj,
+                    stmt.line_file.clone(),
+                )
+                .into();
             let assumption_fact: Fact = parameter_equal_to_assigned_obj_atomic_fact.clone().into();
             let assumption_infers = self
                 .store_atomic_fact_without_well_defined_verified_and_infer(
@@ -264,7 +265,9 @@ impl Runtime {
                     satisfied_infers: Some(satisfied_infers),
                 });
             } else if verify_dom_result.is_unknown() {
-                if let Some(negated_domain) = Self::negated_domain_fact_for_by_for_skip(dom_fact) {
+                if let Some(negated_domain) =
+                    self.negated_domain_fact_for_by_for_skip_with_runtime(dom_fact)
+                {
                     let verify_negation_result =
                         self.verify_fact_allow_unknown(&negated_domain, &verify_state)?;
                     if verify_negation_result.is_success() {

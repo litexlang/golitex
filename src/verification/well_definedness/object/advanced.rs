@@ -21,7 +21,9 @@ impl Runtime {
         }
 
         for set in [index_set, ambient_set] {
-            let is_set: Fact = IsSetFact::new(set.clone(), default_line_file()).into();
+            let is_set: Fact = self
+                .new_is_set_fact(set.clone(), default_line_file())
+                .into();
             let result = self
                 .verify_fact_or_error(&is_set, verify_state)
                 .map_err(|error| {
@@ -42,8 +44,9 @@ impl Runtime {
             PowerSet::new(ambient_set.clone()).into(),
         )?
         .into();
-        let family_fn_type: Fact =
-            InFact::new(family_fn.clone(), family_fn_set, default_line_file()).into();
+        let family_fn_type: Fact = self
+            .new_in_fact(family_fn.clone(), family_fn_set, default_line_file())
+            .into();
         let result = self
             .verify_fact_or_error(&family_fn_type, verify_state)
             .map_err(|error| {
@@ -117,8 +120,9 @@ impl Runtime {
             )?);
         }
 
-        let index_is_set: Fact =
-            IsSetFact::new((*value.index_set).clone(), default_line_file()).into();
+        let index_is_set: Fact = self
+            .new_is_set_fact((*value.index_set).clone(), default_line_file())
+            .into();
         let index_result = self
             .verify_fact_or_error(&index_is_set, verify_state)
             .map_err(|error| {
@@ -131,8 +135,9 @@ impl Runtime {
             })?;
         steps.push_fact_check(super::success_obj_fact_check(index_result)?);
 
-        let family_is_nonempty: Fact =
-            IsNonemptySetFact::new((*value.family_set).clone(), default_line_file()).into();
+        let family_is_nonempty: Fact = self
+            .new_is_nonempty_set_fact((*value.family_set).clone(), default_line_file())
+            .into();
         let family_result = self
             .verify_fact_or_error(&family_is_nonempty, verify_state)
             .map_err(|error| {
@@ -153,12 +158,13 @@ impl Runtime {
             (*value.family_set).clone(),
         )?
         .into();
-        let family_fn_type: Fact = InFact::new(
-            (*value.family_fn).clone(),
-            family_fn_set,
-            default_line_file(),
-        )
-        .into();
+        let family_fn_type: Fact = self
+            .new_in_fact(
+                (*value.family_fn).clone(),
+                family_fn_set,
+                default_line_file(),
+            )
+            .into();
         let function_result = self
             .verify_fact_or_error(&family_fn_type, verify_state)
             .map_err(|error| {
@@ -191,12 +197,13 @@ impl Runtime {
             .resolve_obj_to_number(&value.index)
             .map(|number| Number::new(number.normalized_value).into())
             .unwrap_or_else(|| (*value.index).clone());
-        let positive: AtomicFact = InFact::new(
-            calculated_index.clone(),
-            StandardSet::NPos.into(),
-            default_line_file(),
-        )
-        .into();
+        let positive: AtomicFact = self
+            .new_in_fact(
+                calculated_index.clone(),
+                StandardSet::NPos.into(),
+                default_line_file(),
+            )
+            .into();
         let positive_result = self.verify_atomic_fact(&positive, verify_state)?;
         if positive_result.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -214,24 +221,26 @@ impl Runtime {
         )?;
         let known_struct_carrier = self.known_struct_carrier_for_obj(&value.obj);
         if let Some(struct_obj) = known_struct_carrier {
-            let struct_membership: AtomicFact = InFact::new(
-                (*value.obj).clone(),
-                struct_obj.clone().into(),
-                default_line_file(),
-            )
-            .into();
+            let struct_membership: AtomicFact = self
+                .new_in_fact(
+                    (*value.obj).clone(),
+                    struct_obj.clone().into(),
+                    default_line_file(),
+                )
+                .into();
             let membership_result = self.verify_atomic_fact(&struct_membership, verify_state)?;
             if membership_result.is_success() {
                 steps.push_fact_check(super::success_obj_fact_check(membership_result)?);
                 let field_types =
                     self.instantiated_struct_field_types_after_well_defined(&struct_obj)?;
                 if field_types.len() > 1 {
-                    let cart_membership: AtomicFact = InFact::new(
-                        (*value.obj).clone(),
-                        Cart::new(field_types).into(),
-                        default_line_file(),
-                    )
-                    .into();
+                    let cart_membership: AtomicFact = self
+                        .new_in_fact(
+                            (*value.obj).clone(),
+                            Cart::new(field_types).into(),
+                            default_line_file(),
+                        )
+                        .into();
                     self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
                         cart_membership,
                         InferReason::StoredFact.store_reason(),
@@ -241,8 +250,9 @@ impl Runtime {
             }
         }
 
-        let is_tuple: AtomicFact =
-            IsTupleFact::new((*value.obj).clone(), default_line_file()).into();
+        let is_tuple: AtomicFact = self
+            .new_is_tuple_fact((*value.obj).clone(), default_line_file())
+            .into();
         let tuple_result = self.verify_atomic_fact(&is_tuple, verify_state)?;
         if tuple_result.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -255,12 +265,13 @@ impl Runtime {
         steps.push_fact_check(super::success_obj_fact_check(tuple_result)?);
 
         let tuple_dim: Obj = TupleDim::new((*value.obj).clone()).into();
-        let bounded: AtomicFact = LessEqualFact::new(
-            calculated_index.clone(),
-            tuple_dim.clone(),
-            default_line_file(),
-        )
-        .into();
+        let bounded: AtomicFact = self
+            .new_less_equal_fact(
+                calculated_index.clone(),
+                tuple_dim.clone(),
+                default_line_file(),
+            )
+            .into();
         let bounded_result = self.verify_atomic_fact(&bounded, verify_state)?;
         if bounded_result.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -300,7 +311,9 @@ impl Runtime {
         let obj_key = obj.to_string();
         self.store_tuple_obj_and_cart(&obj_key, None, Some(cart.clone()), line_file.clone());
 
-        let is_tuple_fact: AtomicFact = IsTupleFact::new(obj.clone(), line_file.clone()).into();
+        let is_tuple_fact: AtomicFact = self
+            .new_is_tuple_fact(obj.clone(), line_file.clone())
+            .into();
         self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
             is_tuple_fact,
             InferReason::StoredFact.store_reason(),
@@ -309,8 +322,9 @@ impl Runtime {
 
         let tuple_dim_obj: Obj = TupleDim::new(obj.clone()).into();
         let cart_arg_count_obj: Obj = Number::new(cart.args.len().to_string()).into();
-        let tuple_dim_fact: AtomicFact =
-            EqualFact::new(tuple_dim_obj, cart_arg_count_obj, line_file.clone()).into();
+        let tuple_dim_fact: AtomicFact = self
+            .new_equal_fact(tuple_dim_obj, cart_arg_count_obj, line_file.clone())
+            .into();
         self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
             tuple_dim_fact,
             InferReason::StoredFact.store_reason(),
@@ -320,12 +334,13 @@ impl Runtime {
         for (factor_index, factor) in cart.args.iter().enumerate() {
             let index = factor_index + 1;
             let index_obj: Obj = Number::new(index.to_string()).into();
-            let index_bound_fact: AtomicFact = LessEqualFact::new(
-                index_obj.clone(),
-                TupleDim::new(obj.clone()).into(),
-                line_file.clone(),
-            )
-            .into();
+            let index_bound_fact: AtomicFact = self
+                .new_less_equal_fact(
+                    index_obj.clone(),
+                    TupleDim::new(obj.clone()).into(),
+                    line_file.clone(),
+                )
+                .into();
             self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
                 index_bound_fact,
                 InferReason::StoredFact.store_reason(),
@@ -333,8 +348,9 @@ impl Runtime {
             )?;
 
             let projected_obj: Obj = ObjAtIndex::new(obj.clone(), index_obj).into();
-            let projected_in_factor_fact: AtomicFact =
-                InFact::new(projected_obj, (**factor).clone(), line_file.clone()).into();
+            let projected_in_factor_fact: AtomicFact = self
+                .new_in_fact(projected_obj, (**factor).clone(), line_file.clone())
+                .into();
             self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
                 projected_in_factor_fact,
                 InferReason::StoredFact.store_reason(),

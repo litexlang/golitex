@@ -1,14 +1,17 @@
 use std::fmt;
+#[cfg(test)]
 use std::sync::atomic::{AtomicU64, Ordering};
 
-/// Globally unique identity for one fact node created during the process.
+/// Runtime-scoped monotone identity for one fact node.
 ///
 /// The identity belongs to the node, not to its rendered proposition or to the
 /// environment in which it is eventually stored. Cloning a node preserves its
-/// identity; every constructor that creates a new node obtains a fresh one.
+/// identity; every `Runtime::new_*_fact` call obtains the next ID from that
+/// runtime's allocator.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct FactId(u64);
 
+#[cfg(test)]
 static NEXT_FACT_ID: AtomicU64 = AtomicU64::new(1);
 
 impl FactId {
@@ -21,6 +24,7 @@ impl FactId {
     ///
     /// Production code must use `Runtime::allocate_fact_id`; this method stays
     /// temporarily available for the constructor migration and fixed fixtures.
+    #[cfg(test)]
     #[deprecated(note = "production facts must be created through Runtime")]
     pub fn fresh() -> Self {
         let value = NEXT_FACT_ID

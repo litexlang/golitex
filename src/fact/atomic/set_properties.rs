@@ -45,44 +45,74 @@ pub struct NotIsFiniteSetFact {
 }
 
 impl IsSetFact {
+    #[cfg(test)]
     #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(set: Obj, line_file: LineFile) -> Self {
-        IsSetFact { fact_id: FactId::fresh(), set, line_file }
+        IsSetFact {
+            fact_id: FactId::fresh(),
+            set,
+            line_file,
+        }
     }
 }
 
 impl NotIsSetFact {
+    #[cfg(test)]
     #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(set: Obj, line_file: LineFile) -> Self {
-        NotIsSetFact { fact_id: FactId::fresh(), set, line_file }
+        NotIsSetFact {
+            fact_id: FactId::fresh(),
+            set,
+            line_file,
+        }
     }
 }
 
 impl IsNonemptySetFact {
+    #[cfg(test)]
     #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(set: Obj, line_file: LineFile) -> Self {
-        IsNonemptySetFact { fact_id: FactId::fresh(), set, line_file }
+        IsNonemptySetFact {
+            fact_id: FactId::fresh(),
+            set,
+            line_file,
+        }
     }
 }
 
 impl NotIsNonemptySetFact {
+    #[cfg(test)]
     #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(set: Obj, line_file: LineFile) -> Self {
-        NotIsNonemptySetFact { fact_id: FactId::fresh(), set, line_file }
+        NotIsNonemptySetFact {
+            fact_id: FactId::fresh(),
+            set,
+            line_file,
+        }
     }
 }
 
 impl IsFiniteSetFact {
+    #[cfg(test)]
     #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(set: Obj, line_file: LineFile) -> Self {
-        IsFiniteSetFact { fact_id: FactId::fresh(), set, line_file }
+        IsFiniteSetFact {
+            fact_id: FactId::fresh(),
+            set,
+            line_file,
+        }
     }
 }
 
 impl NotIsFiniteSetFact {
+    #[cfg(test)]
     #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(set: Obj, line_file: LineFile) -> Self {
-        NotIsFiniteSetFact { fact_id: FactId::fresh(), set, line_file }
+        NotIsFiniteSetFact {
+            fact_id: FactId::fresh(),
+            set,
+            line_file,
+        }
     }
 }
 

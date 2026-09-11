@@ -29,18 +29,22 @@ impl StmtResultToLeanCompiler {
             return Err("indexed tuple dimension is smaller than two".into());
         }
 
-        let expected_positive_dimension: Fact = InFact::new(
-            statement.dimension.clone(),
-            StandardSet::NPos.into(),
-            statement.line_file.clone(),
-        )
-        .into();
-        let expected_at_least_two: Fact = LessEqualFact::new(
-            Number::new("2".to_string()).into(),
-            statement.dimension.clone(),
-            statement.line_file.clone(),
-        )
-        .into();
+        let expected_positive_dimension: Fact = self
+            .runtime
+            .new_in_fact(
+                statement.dimension.clone(),
+                StandardSet::NPos.into(),
+                statement.line_file.clone(),
+            )
+            .into();
+        let expected_at_least_two: Fact = self
+            .runtime
+            .new_less_equal_fact(
+                Number::new("2".to_string()).into(),
+                statement.dimension.clone(),
+                statement.line_file.clone(),
+            )
+            .into();
         let positive_dimension = verification
             .dimension
             .positive_check
@@ -179,8 +183,10 @@ impl StmtResultToLeanCompiler {
             statement.symbol_binding.as_ref(),
         )
         .into();
-        let expected_is_tuple: Fact =
-            IsTupleFact::new(target.clone(), statement.line_file.clone()).into();
+        let expected_is_tuple: Fact = self
+            .runtime
+            .new_is_tuple_fact(target.clone(), statement.line_file.clone())
+            .into();
         if is_tuple_output
             .itself_and_why_itself_is_stored
             .0
@@ -205,12 +211,14 @@ impl StmtResultToLeanCompiler {
             .insert(is_tuple_fact_id, expected_is_tuple);
         self.next_fact_name_index += 1;
 
-        let expected_dimension: Fact = EqualFact::new(
-            TupleDim::new(target.clone()).into(),
-            statement.dimension.clone(),
-            statement.line_file.clone(),
-        )
-        .into();
+        let expected_dimension: Fact = self
+            .runtime
+            .new_equal_fact(
+                TupleDim::new(target.clone()).into(),
+                statement.dimension.clone(),
+                statement.line_file.clone(),
+            )
+            .into();
         if dimension_output
             .itself_and_why_itself_is_stored
             .0

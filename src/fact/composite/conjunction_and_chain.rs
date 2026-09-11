@@ -15,9 +15,14 @@ pub struct AndFact {
 }
 
 impl AndFact {
+    #[cfg(test)]
     #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(facts: Vec<AtomicFact>, line_file: LineFile) -> Self {
-        AndFact { fact_id: FactId::fresh(), facts, line_file }
+        AndFact {
+            fact_id: FactId::fresh(),
+            facts,
+            line_file,
+        }
     }
     pub fn line_file(&self) -> LineFile {
         self.line_file.clone()
@@ -33,6 +38,7 @@ pub struct ChainFact {
 }
 
 impl ChainFact {
+    #[cfg(test)]
     #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(objs: Vec<Obj>, prop_names: Vec<AtomicName>, line_file: LineFile) -> Self {
         ChainFact {
@@ -46,7 +52,7 @@ impl ChainFact {
         self.line_file.clone()
     }
 
-    pub fn facts(&self) -> Result<Vec<AtomicFact>, RuntimeError> {
+    pub fn facts(&self, runtime: &Runtime) -> Result<Vec<AtomicFact>, RuntimeError> {
         if self.objs.len() != self.prop_names.len() + 1 {
             return Err(
                 NewFactRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(
@@ -64,6 +70,7 @@ impl ChainFact {
             let left_obj = self.objs[i].clone();
             let right_obj = self.objs[i + 1].clone();
             let atomic_fact = AtomicFact::to_atomic_fact(
+                runtime,
                 prop_name,
                 true,
                 vec![left_obj, right_obj],
@@ -98,6 +105,10 @@ pub enum AndChainAtomicFact {
 }
 
 impl AndChainAtomicFact {
+    pub fn replace_bound_identifier(self, from: &str, to: &str) -> Self {
+        self.replace_bound_identifier_with_runtime(&Runtime::default(), from, to)
+    }
+
     pub fn line_file(&self) -> LineFile {
         match self {
             AndChainAtomicFact::AtomicFact(a) => a.line_file(),
@@ -106,29 +117,38 @@ impl AndChainAtomicFact {
         }
     }
 
-    pub fn replace_bound_identifier(self, from: &str, to: &str) -> Self {
+    pub fn replace_bound_identifier_with_runtime(
+        self,
+        runtime: &Runtime,
+        from: &str,
+        to: &str,
+    ) -> Self {
         if from == to {
             return self;
         }
         match self {
-            AndChainAtomicFact::AtomicFact(a) => {
-                AndChainAtomicFact::AtomicFact(a.replace_bound_identifier(from, to))
-            }
-            AndChainAtomicFact::AndFact(af) => AndChainAtomicFact::AndFact(AndFact::new(
-                af.facts
-                    .into_iter()
-                    .map(|x| x.replace_bound_identifier(from, to))
-                    .collect(),
-                af.line_file,
-            )),
-            AndChainAtomicFact::ChainFact(cf) => AndChainAtomicFact::ChainFact(ChainFact::new(
-                cf.objs
-                    .into_iter()
-                    .map(|o| Obj::replace_bound_identifier(o, from, to))
-                    .collect(),
-                cf.prop_names,
-                cf.line_file,
-            )),
+            AndChainAtomicFact::AtomicFact(a) => AndChainAtomicFact::AtomicFact(
+                a.replace_bound_identifier_with_runtime(runtime, from, to),
+            ),
+            AndChainAtomicFact::AndFact(af) => AndChainAtomicFact::AndFact(
+                runtime.new_and_fact(
+                    af.facts
+                        .into_iter()
+                        .map(|x| x.replace_bound_identifier_with_runtime(runtime, from, to))
+                        .collect(),
+                    af.line_file,
+                ),
+            ),
+            AndChainAtomicFact::ChainFact(cf) => AndChainAtomicFact::ChainFact(
+                runtime.new_chain_fact(
+                    cf.objs
+                        .into_iter()
+                        .map(|o| Obj::replace_bound_identifier_with_runtime(o, runtime, from, to))
+                        .collect(),
+                    cf.prop_names,
+                    cf.line_file,
+                ),
+            ),
         }
     }
 }

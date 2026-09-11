@@ -39,12 +39,13 @@ impl Runtime {
 
         // Not-equality is symmetric.
         // Example: a known `a != b` proves the goal `b != a`.
-        let reversed: AtomicFact = NotEqualFact::new(
-            right_obj.clone(),
-            left_obj.clone(),
-            not_equal_fact.line_file.clone(),
-        )
-        .into();
+        let reversed: AtomicFact = self
+            .new_not_equal_fact(
+                right_obj.clone(),
+                left_obj.clone(),
+                not_equal_fact.line_file.clone(),
+            )
+            .into();
         if let Some(reversed_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&reversed, builtin_state)?
         {
@@ -354,7 +355,7 @@ impl Runtime {
             _ => return Ok(None),
         };
 
-        let nonempty: AtomicFact = IsNonemptySetFact::new(set, line_file).into();
+        let nonempty: AtomicFact = self.new_is_nonempty_set_fact(set, line_file).into();
         let Some(sub) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&nonempty, builtin_state)?
         else {
@@ -390,10 +391,14 @@ impl Runtime {
             return Ok(None);
         };
         let candidates: [AtomicFact; 4] = [
-            LessFact::new(x.clone(), y.clone(), line_file.clone()).into(),
-            GreaterFact::new(x.clone(), y.clone(), line_file.clone()).into(),
-            LessFact::new(y.clone(), x.clone(), line_file.clone()).into(),
-            GreaterFact::new(y.clone(), x.clone(), line_file.clone()).into(),
+            self.new_less_fact(x.clone(), y.clone(), line_file.clone())
+                .into(),
+            self.new_greater_fact(x.clone(), y.clone(), line_file.clone())
+                .into(),
+            self.new_less_fact(y.clone(), x.clone(), line_file.clone())
+                .into(),
+            self.new_greater_fact(y.clone(), x.clone(), line_file.clone())
+                .into(),
         ];
         for order_atomic in &candidates {
             let Some(sub) =
@@ -466,7 +471,7 @@ impl Runtime {
             for known_facts_map in environment.facts.atomic.by_two_args.values() {
                 for known_fact in known_facts_map.values() {
                     if let Some(normalized) =
-                        super::normalize_positive_order_atomic_fact(known_fact)
+                        super::normalize_positive_order_atomic_fact(self, known_fact)
                     {
                         known_orders.push(normalized);
                     }
@@ -485,12 +490,13 @@ impl Runtime {
             }
 
             for positive_set in [StandardSet::NPos, StandardSet::QPos, StandardSet::RPos] {
-                let positive_membership: AtomicFact = InFact::new(
-                    lower.clone(),
-                    positive_set.into(),
-                    not_equal_fact.line_file.clone(),
-                )
-                .into();
+                let positive_membership: AtomicFact = self
+                    .new_in_fact(
+                        lower.clone(),
+                        positive_set.into(),
+                        not_equal_fact.line_file.clone(),
+                    )
+                    .into();
                 let Some(positive_result) = self.try_verify_atomic_fact_as_builtin_rule_premise(
                     &positive_membership,
                     builtin_state,
@@ -535,16 +541,18 @@ impl Runtime {
 
         for (member_obj, non_member_obj) in candidates {
             for set in self.known_sets_containing_obj(&member_obj) {
-                let not_in_set: AtomicFact =
-                    NotInFact::new(non_member_obj.clone(), set.clone(), line_file.clone()).into();
+                let not_in_set: AtomicFact = self
+                    .new_not_in_fact(non_member_obj.clone(), set.clone(), line_file.clone())
+                    .into();
                 let Some(not_in_result) = self
                     .try_verify_atomic_fact_as_builtin_rule_premise(&not_in_set, builtin_state)?
                 else {
                     continue;
                 };
 
-                let in_set: AtomicFact =
-                    InFact::new(member_obj.clone(), set, line_file.clone()).into();
+                let in_set: AtomicFact = self
+                    .new_in_fact(member_obj.clone(), set, line_file.clone())
+                    .into();
                 let Some(in_result) =
                     self.try_verify_atomic_fact_as_builtin_rule_premise(&in_set, builtin_state)?
                 else {
@@ -590,8 +598,9 @@ impl Runtime {
         };
 
         let zero_obj: Obj = Number::new("0".to_string()).into();
-        let arg_nonzero: AtomicFact =
-            NotEqualFact::new(abs.arg.as_ref().clone(), zero_obj, line_file.clone()).into();
+        let arg_nonzero: AtomicFact = self
+            .new_not_equal_fact(abs.arg.as_ref().clone(), zero_obj, line_file.clone())
+            .into();
         let Some(result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&arg_nonzero, builtin_state)?
         else {
@@ -636,8 +645,9 @@ impl Runtime {
         };
 
         let zero: Obj = Number::new("0".to_string()).into();
-        let positive: AtomicFact =
-            GreaterFact::new(sqrt.arg.as_ref().clone(), zero, line_file.clone()).into();
+        let positive: AtomicFact = self
+            .new_greater_fact(sqrt.arg.as_ref().clone(), zero, line_file.clone())
+            .into();
         let Some(positive_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&positive, builtin_state)?
         else {
@@ -678,13 +688,13 @@ impl Runtime {
         };
 
         let candidates: [AtomicFact; 2] = [
-            NotEqualFact::new(
+            self.new_not_equal_fact(
                 sub.left.as_ref().clone(),
                 sub.right.as_ref().clone(),
                 line_file.clone(),
             )
             .into(),
-            NotEqualFact::new(
+            self.new_not_equal_fact(
                 sub.right.as_ref().clone(),
                 sub.left.as_ref().clone(),
                 line_file.clone(),
@@ -759,7 +769,7 @@ impl Runtime {
         };
 
         let candidates: [AtomicFact; 2] = [
-            NotEqualFact::new(
+            self.new_not_equal_fact(
                 add.left.as_ref().clone(),
                 Mul::new(
                     Number::new("-1".to_string()).into(),
@@ -769,7 +779,7 @@ impl Runtime {
                 line_file.clone(),
             )
             .into(),
-            NotEqualFact::new(
+            self.new_not_equal_fact(
                 add.right.as_ref().clone(),
                 Mul::new(
                     Number::new("-1".to_string()).into(),
@@ -833,13 +843,13 @@ impl Runtime {
         let line_file = not_equal_fact.line_file.clone();
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let candidates: [AtomicFact; 2] = [
-            NotEqualFact::new(
+            self.new_not_equal_fact(
                 Sub::new(not_equal_fact.left.clone(), not_equal_fact.right.clone()).into(),
                 zero_obj.clone(),
                 line_file.clone(),
             )
             .into(),
-            NotEqualFact::new(
+            self.new_not_equal_fact(
                 Sub::new(not_equal_fact.right.clone(), not_equal_fact.left.clone()).into(),
                 zero_obj,
                 line_file.clone(),
@@ -907,7 +917,7 @@ impl Runtime {
         if let Some(right_arg) = Self::negated_arg_for_not_equal_builtin_rule(&not_equal_fact.right)
         {
             candidates.push(
-                NotEqualFact::new(
+                self.new_not_equal_fact(
                     Add::new(not_equal_fact.left.clone(), right_arg.clone()).into(),
                     zero_obj.clone(),
                     line_file.clone(),
@@ -915,7 +925,7 @@ impl Runtime {
                 .into(),
             );
             candidates.push(
-                NotEqualFact::new(
+                self.new_not_equal_fact(
                     Add::new(right_arg, not_equal_fact.left.clone()).into(),
                     zero_obj.clone(),
                     line_file.clone(),
@@ -926,7 +936,7 @@ impl Runtime {
 
         if let Some(left_arg) = Self::negated_arg_for_not_equal_builtin_rule(&not_equal_fact.left) {
             candidates.push(
-                NotEqualFact::new(
+                self.new_not_equal_fact(
                     Add::new(not_equal_fact.right.clone(), left_arg.clone()).into(),
                     zero_obj.clone(),
                     line_file.clone(),
@@ -934,7 +944,7 @@ impl Runtime {
                 .into(),
             );
             candidates.push(
-                NotEqualFact::new(
+                self.new_not_equal_fact(
                     Add::new(left_arg, not_equal_fact.right.clone()).into(),
                     zero_obj,
                     line_file.clone(),
@@ -1000,11 +1010,15 @@ impl Runtime {
             (l, r) if self.obj_represents_zero_for_not_equal_builtin_rules(l) => r.clone(),
             _ => return Ok(None),
         };
-        let in_n: AtomicFact =
-            InFact::new(x.clone(), StandardSet::N.into(), line_file.clone()).into();
-        let ge: AtomicFact =
-            GreaterEqualFact::new(x.clone(), one_obj.clone(), line_file.clone()).into();
-        let one_le: AtomicFact = LessEqualFact::new(one_obj, x, line_file.clone()).into();
+        let in_n: AtomicFact = self
+            .new_in_fact(x.clone(), StandardSet::N.into(), line_file.clone())
+            .into();
+        let ge: AtomicFact = self
+            .new_greater_equal_fact(x.clone(), one_obj.clone(), line_file.clone())
+            .into();
+        let one_le: AtomicFact = self
+            .new_less_equal_fact(one_obj, x, line_file.clone())
+            .into();
         let Some(premise_result) = self.try_verify_builtin_rule_premise_alternatives(
             vec![vec![in_n.clone(), ge], vec![in_n, one_le]],
             line_file,
@@ -1063,8 +1077,9 @@ impl Runtime {
         }
 
         for standard_set in [StandardSet::Z, StandardSet::N, StandardSet::NPos] {
-            let in_set: AtomicFact =
-                InFact::new(obj.clone(), standard_set.into(), line_file.clone()).into();
+            let in_set: AtomicFact = self
+                .new_in_fact(obj.clone(), standard_set.into(), line_file.clone())
+                .into();
             if let Some(result) =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&in_set, builtin_state)?
             {
@@ -1098,8 +1113,9 @@ impl Runtime {
         };
 
         let base = pow.base.as_ref().clone();
-        let base_neq_zero: AtomicFact =
-            NotEqualFact::new(base.clone(), zero_obj, line_file.clone()).into();
+        let base_neq_zero: AtomicFact = self
+            .new_not_equal_fact(base.clone(), zero_obj, line_file.clone())
+            .into();
         if let Some(result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&base_neq_zero, builtin_state)?
         {
@@ -1123,8 +1139,9 @@ impl Runtime {
         // carrier to `base != 0` while checking a division's well-definedness.
         // Example: `n N+` implies `n^2 != 0`.
         for positive_set in [StandardSet::NPos, StandardSet::QPos, StandardSet::RPos] {
-            let positive_membership: AtomicFact =
-                InFact::new(base.clone(), positive_set.into(), line_file.clone()).into();
+            let positive_membership: AtomicFact = self
+                .new_in_fact(base.clone(), positive_set.into(), line_file.clone())
+                .into();
             if let Some(positive_result) = self.try_verify_atomic_fact_as_builtin_rule_premise(
                 &positive_membership,
                 builtin_state,
@@ -1168,14 +1185,16 @@ impl Runtime {
         };
 
         let zero_obj: Obj = Number::new("0".to_string()).into();
-        let numerator_nonzero: AtomicFact = NotEqualFact::new(
-            div.left.as_ref().clone(),
-            zero_obj.clone(),
-            line_file.clone(),
-        )
-        .into();
-        let denominator_nonzero: AtomicFact =
-            NotEqualFact::new(div.right.as_ref().clone(), zero_obj, line_file.clone()).into();
+        let numerator_nonzero: AtomicFact = self
+            .new_not_equal_fact(
+                div.left.as_ref().clone(),
+                zero_obj.clone(),
+                line_file.clone(),
+            )
+            .into();
+        let denominator_nonzero: AtomicFact = self
+            .new_not_equal_fact(div.right.as_ref().clone(), zero_obj, line_file.clone())
+            .into();
 
         let Some(numerator_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&numerator_nonzero, builtin_state)?
@@ -1267,7 +1286,7 @@ impl Runtime {
             };
 
             let target_matches_left = self.verify_zero_product_factor_matches_target(
-                &EqualFact::new_from_refs(
+                &self.new_equal_fact_from_refs(
                     &target,
                     product.left.as_ref(),
                     not_equal_fact.line_file.clone(),
@@ -1275,7 +1294,7 @@ impl Runtime {
                 builtin_state,
             )?;
             let target_matches_right = self.verify_zero_product_factor_matches_target(
-                &EqualFact::new_from_refs(
+                &self.new_equal_fact_from_refs(
                     &target,
                     product.right.as_ref(),
                     not_equal_fact.line_file.clone(),
@@ -1359,14 +1378,15 @@ impl Runtime {
         };
 
         let zero_obj: Obj = Number::new("0".to_string()).into();
-        let left_nonzero: AtomicFact =
-            NotEqualFact::new(left_base.clone(), zero_obj.clone(), line_file.clone()).into();
-        let right_nonzero: AtomicFact =
-            NotEqualFact::new(right_base.clone(), zero_obj, line_file.clone()).into();
-        let premise = QuantifierFreeFact::OrFact(OrFact::new(
-            vec![left_nonzero.into(), right_nonzero.into()],
-            line_file,
-        ));
+        let left_nonzero: AtomicFact = self
+            .new_not_equal_fact(left_base.clone(), zero_obj.clone(), line_file.clone())
+            .into();
+        let right_nonzero: AtomicFact = self
+            .new_not_equal_fact(right_base.clone(), zero_obj, line_file.clone())
+            .into();
+        let premise = QuantifierFreeFact::OrFact(
+            self.new_or_fact(vec![left_nonzero.into(), right_nonzero.into()], line_file),
+        );
         let premise_result = self.try_verify_builtin_rule_premise(&premise, builtin_state)?;
         if let Some(premise_result) = premise_result {
             steps.push(premise_result);
@@ -1451,8 +1471,10 @@ impl Runtime {
     ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let premises = [
-            NotEqualFact::new(left_operand.clone(), zero_obj.clone(), line_file.clone()).into(),
-            NotEqualFact::new(right_operand.clone(), zero_obj, line_file).into(),
+            self.new_not_equal_fact(left_operand.clone(), zero_obj.clone(), line_file.clone())
+                .into(),
+            self.new_not_equal_fact(right_operand.clone(), zero_obj, line_file)
+                .into(),
         ];
         // A factor may also be a directly computable nonzero scalar such as `7 / 5`.
         let mut results = Vec::with_capacity(premises.len());
@@ -1476,8 +1498,10 @@ impl Runtime {
     ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let premises = [
-            LessFact::new(zero_obj.clone(), left_operand.clone(), line_file.clone()).into(),
-            LessFact::new(zero_obj, right_operand.clone(), line_file).into(),
+            self.new_less_fact(zero_obj.clone(), left_operand.clone(), line_file.clone())
+                .into(),
+            self.new_less_fact(zero_obj, right_operand.clone(), line_file)
+                .into(),
         ];
         self.verify_builtin_rule_premises(&premises, builtin_state)
     }
@@ -1491,8 +1515,10 @@ impl Runtime {
     ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let premises = [
-            LessFact::new(left_operand.clone(), zero_obj.clone(), line_file.clone()).into(),
-            LessFact::new(right_operand.clone(), zero_obj, line_file).into(),
+            self.new_less_fact(left_operand.clone(), zero_obj.clone(), line_file.clone())
+                .into(),
+            self.new_less_fact(right_operand.clone(), zero_obj, line_file)
+                .into(),
         ];
         self.verify_builtin_rule_premises(&premises, builtin_state)
     }
@@ -1507,12 +1533,16 @@ impl Runtime {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let alternatives = vec![
             vec![
-                LessFact::new(left_factor.clone(), zero_obj.clone(), line_file.clone()).into(),
-                LessFact::new(zero_obj.clone(), right_factor.clone(), line_file.clone()).into(),
+                self.new_less_fact(left_factor.clone(), zero_obj.clone(), line_file.clone())
+                    .into(),
+                self.new_less_fact(zero_obj.clone(), right_factor.clone(), line_file.clone())
+                    .into(),
             ],
             vec![
-                LessFact::new(zero_obj.clone(), left_factor.clone(), line_file.clone()).into(),
-                LessFact::new(right_factor.clone(), zero_obj, line_file.clone()).into(),
+                self.new_less_fact(zero_obj.clone(), left_factor.clone(), line_file.clone())
+                    .into(),
+                self.new_less_fact(right_factor.clone(), zero_obj, line_file.clone())
+                    .into(),
             ],
         ];
         let result = self.try_verify_builtin_rule_premise_alternatives(
@@ -1533,12 +1563,16 @@ impl Runtime {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let alternatives = vec![
             vec![
-                LessFact::new(zero_obj.clone(), minuend.clone(), line_file.clone()).into(),
-                LessFact::new(subtrahend.clone(), zero_obj.clone(), line_file.clone()).into(),
+                self.new_less_fact(zero_obj.clone(), minuend.clone(), line_file.clone())
+                    .into(),
+                self.new_less_fact(subtrahend.clone(), zero_obj.clone(), line_file.clone())
+                    .into(),
             ],
             vec![
-                LessFact::new(minuend.clone(), zero_obj.clone(), line_file.clone()).into(),
-                LessFact::new(zero_obj, subtrahend.clone(), line_file.clone()).into(),
+                self.new_less_fact(minuend.clone(), zero_obj.clone(), line_file.clone())
+                    .into(),
+                self.new_less_fact(zero_obj, subtrahend.clone(), line_file.clone())
+                    .into(),
             ],
         ];
         let result = self.try_verify_builtin_rule_premise_alternatives(
@@ -1624,7 +1658,7 @@ impl Runtime {
             }
             other => {
                 let zero_obj: Obj = Number::new("0".to_string()).into();
-                let zero_lt_a = LessFact::new(
+                let zero_lt_a = self.new_less_fact(
                     zero_obj.clone(),
                     other.clone(),
                     line_file.clone(),
@@ -1635,7 +1669,7 @@ impl Runtime {
                 if let Some(positive_result) = positive_result {
                     Some(("not_equal_zero_operand_strictly_positive", vec![positive_result]))
                 } else {
-                    let a_lt_0 = LessFact::new(
+                    let a_lt_0 = self.new_less_fact(
                         other.clone(),
                         zero_obj,
                         line_file.clone(),

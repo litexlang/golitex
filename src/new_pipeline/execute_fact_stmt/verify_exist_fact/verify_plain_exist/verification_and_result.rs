@@ -1,4 +1,5 @@
 use crate::fact::PlainExistFact;
+use crate::new_pipeline::runtime::runtime_ids::FactId;
 use crate::prelude::*;
 use crate::verify_rewrite::VerifyState2;
 

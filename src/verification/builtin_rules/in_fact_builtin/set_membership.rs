@@ -102,14 +102,16 @@ impl Runtime {
             .collect();
         let zero: Obj = Number::new("0".to_string()).into();
         for (membership_pattern, forall_context) in forall_memberships {
-            let pattern_match: AtomicFact = EqualFact::new(
-                membership_pattern.element.clone(),
-                zero.clone(),
-                goal.line_file.clone(),
-            )
-            .into();
-            let goal_match: AtomicFact =
-                EqualFact::new(goal.element.clone(), zero.clone(), goal.line_file.clone()).into();
+            let pattern_match: AtomicFact = self
+                .new_equal_fact(
+                    membership_pattern.element.clone(),
+                    zero.clone(),
+                    goal.line_file.clone(),
+                )
+                .into();
+            let goal_match: AtomicFact = self
+                .new_equal_fact(goal.element.clone(), zero.clone(), goal.line_file.clone())
+                .into();
             let arg_map = self.match_atomic_fact_args_against_known_forall_ordered_args(
                 &pattern_match,
                 &goal_match,
@@ -396,12 +398,13 @@ impl Runtime {
             (union.left.as_ref(), "left"),
             (union.right.as_ref(), "right"),
         ] {
-            let member_fact: AtomicFact = InFact::new(
-                in_fact.element.clone(),
-                side.clone(),
-                in_fact.line_file.clone(),
-            )
-            .into();
+            let member_fact: AtomicFact = self
+                .new_in_fact(
+                    in_fact.element.clone(),
+                    side.clone(),
+                    in_fact.line_file.clone(),
+                )
+                .into();
             alternatives.push(vec![member_fact.clone()]);
             if let Some(member_result) =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&member_fact, builtin_state)?
@@ -452,18 +455,20 @@ impl Runtime {
         intersect: &Intersect,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<ProveFactResult, RuntimeError> {
-        let left_member_fact: AtomicFact = InFact::new(
-            in_fact.element.clone(),
-            intersect.left.as_ref().clone(),
-            in_fact.line_file.clone(),
-        )
-        .into();
-        let right_member_fact: AtomicFact = InFact::new(
-            in_fact.element.clone(),
-            intersect.right.as_ref().clone(),
-            in_fact.line_file.clone(),
-        )
-        .into();
+        let left_member_fact: AtomicFact = self
+            .new_in_fact(
+                in_fact.element.clone(),
+                intersect.left.as_ref().clone(),
+                in_fact.line_file.clone(),
+            )
+            .into();
+        let right_member_fact: AtomicFact = self
+            .new_in_fact(
+                in_fact.element.clone(),
+                intersect.right.as_ref().clone(),
+                in_fact.line_file.clone(),
+            )
+            .into();
         let left_member_result =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&left_member_fact, builtin_state)?;
         let right_member_result =
@@ -482,7 +487,7 @@ impl Runtime {
             );
         }
 
-        let premise = QuantifierFreeFact::AndFact(AndFact::new(
+        let premise = QuantifierFreeFact::AndFact(self.new_and_fact(
             vec![left_member_fact, right_member_fact],
             in_fact.line_file.clone(),
         ));
@@ -517,12 +522,13 @@ impl Runtime {
             (intersect.left.as_ref(), "left"),
             (intersect.right.as_ref(), "right"),
         ] {
-            let non_member_fact: AtomicFact = NotInFact::new(
-                not_in_fact.element.clone(),
-                side.clone(),
-                not_in_fact.line_file.clone(),
-            )
-            .into();
+            let non_member_fact: AtomicFact = self
+                .new_not_in_fact(
+                    not_in_fact.element.clone(),
+                    side.clone(),
+                    not_in_fact.line_file.clone(),
+                )
+                .into();
             alternatives.push(vec![non_member_fact.clone()]);
             if let Some(non_member_result) = self
                 .try_verify_atomic_fact_as_builtin_rule_premise(&non_member_fact, builtin_state)?
@@ -572,18 +578,20 @@ impl Runtime {
         set_minus: &SetMinus,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<ProveFactResult, RuntimeError> {
-        let left_member_fact: AtomicFact = InFact::new(
-            in_fact.element.clone(),
-            set_minus.left.as_ref().clone(),
-            in_fact.line_file.clone(),
-        )
-        .into();
-        let right_non_member_fact: AtomicFact = NotInFact::new(
-            in_fact.element.clone(),
-            set_minus.right.as_ref().clone(),
-            in_fact.line_file.clone(),
-        )
-        .into();
+        let left_member_fact: AtomicFact = self
+            .new_in_fact(
+                in_fact.element.clone(),
+                set_minus.left.as_ref().clone(),
+                in_fact.line_file.clone(),
+            )
+            .into();
+        let right_non_member_fact: AtomicFact = self
+            .new_not_in_fact(
+                in_fact.element.clone(),
+                set_minus.right.as_ref().clone(),
+                in_fact.line_file.clone(),
+            )
+            .into();
         let left_member_result =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&left_member_fact, builtin_state)?;
         let right_non_member_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
@@ -605,7 +613,7 @@ impl Runtime {
             );
         }
 
-        let premise = QuantifierFreeFact::AndFact(AndFact::new(
+        let premise = QuantifierFreeFact::AndFact(self.new_and_fact(
             vec![left_member_fact, right_non_member_fact],
             in_fact.line_file.clone(),
         ));
@@ -661,12 +669,13 @@ impl Runtime {
         for member_set in
             self.known_member_sets_for_big_union_family(in_fact, big_union.left.as_ref())
         {
-            let member_set_in_family: AtomicFact = InFact::new(
-                member_set.clone(),
-                big_union.left.as_ref().clone(),
-                in_fact.line_file.clone(),
-            )
-            .into();
+            let member_set_in_family: AtomicFact = self
+                .new_in_fact(
+                    member_set.clone(),
+                    big_union.left.as_ref().clone(),
+                    in_fact.line_file.clone(),
+                )
+                .into();
             let Some(member_set_result) = self.try_verify_atomic_fact_as_builtin_rule_premise(
                 &member_set_in_family,
                 builtin_state,
@@ -675,12 +684,13 @@ impl Runtime {
                 continue;
             };
 
-            let element_in_member_set: AtomicFact = InFact::new(
-                in_fact.element.clone(),
-                member_set,
-                in_fact.line_file.clone(),
-            )
-            .into();
+            let element_in_member_set: AtomicFact = self
+                .new_in_fact(
+                    in_fact.element.clone(),
+                    member_set,
+                    in_fact.line_file.clone(),
+                )
+                .into();
             let element_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
                 &element_in_member_set,
                 builtin_state,
@@ -713,13 +723,14 @@ impl Runtime {
             ParamType::Obj(big_union.left.as_ref().clone()),
         )?;
         let member_obj = obj_for_bound_param_in_scope(&member_group.params[0]);
-        let element_in_member: AtomicFact = InFact::new(
-            in_fact.element.clone(),
-            member_obj,
-            in_fact.line_file.clone(),
-        )
-        .into();
-        let exist_body = PlainExistFact::new(
+        let element_in_member: AtomicFact = self
+            .new_in_fact(
+                in_fact.element.clone(),
+                member_obj,
+                in_fact.line_file.clone(),
+            )
+            .into();
+        let exist_body = self.new_plain_exist_fact(
             TypedParameterList::new(vec![member_group]),
             vec![element_in_member.into()],
             in_fact.line_file.clone(),
@@ -758,9 +769,10 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let element_in_fiber: AtomicFact =
-            InFact::new(in_fact.element.clone(), fiber, in_fact.line_file.clone()).into();
-        Ok(Some(ExistFact::PlainExistFact(PlainExistFact::new(
+        let element_in_fiber: AtomicFact = self
+            .new_in_fact(in_fact.element.clone(), fiber, in_fact.line_file.clone())
+            .into();
+        Ok(Some(ExistFact::PlainExistFact(self.new_plain_exist_fact(
             TypedParameterList::new(vec![index_group]),
             vec![element_in_fiber.into()],
             in_fact.line_file.clone(),
@@ -820,12 +832,13 @@ impl Runtime {
 
         for index in self.known_indices_for_indexed_family(in_fact, index_union.index_set.as_ref())
         {
-            let index_member: AtomicFact = InFact::new(
-                index.clone(),
-                index_union.index_set.as_ref().clone(),
-                in_fact.line_file.clone(),
-            )
-            .into();
+            let index_member: AtomicFact = self
+                .new_in_fact(
+                    index.clone(),
+                    index_union.index_set.as_ref().clone(),
+                    in_fact.line_file.clone(),
+                )
+                .into();
             let index_is_literal_member = matches!(
                 index_union.index_set.as_ref(),
                 Obj::ListSet(list)
@@ -859,8 +872,9 @@ impl Runtime {
             else {
                 continue;
             };
-            let fiber_member: AtomicFact =
-                InFact::new(in_fact.element.clone(), fiber, in_fact.line_file.clone()).into();
+            let fiber_member: AtomicFact = self
+                .new_in_fact(in_fact.element.clone(), fiber, in_fact.line_file.clone())
+                .into();
             if let Some(fiber_result) =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&fiber_member, builtin_state)?
             {
@@ -895,9 +909,10 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let element_in_fiber: AtomicFact =
-            InFact::new(in_fact.element.clone(), fiber, in_fact.line_file.clone()).into();
-        Ok(Some(ForallFact::new_canonical_forall(
+        let element_in_fiber: AtomicFact = self
+            .new_in_fact(in_fact.element.clone(), fiber, in_fact.line_file.clone())
+            .into();
+        Ok(Some(self.new_forall_fact(
             TypedParameterList::new(vec![index_group]),
             vec![],
             vec![element_in_fiber.into()],
@@ -914,12 +929,13 @@ impl Runtime {
         index_intersect: &IndexIntersect,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<ProveFactResult, RuntimeError> {
-        let ambient_member: AtomicFact = InFact::new(
-            in_fact.element.clone(),
-            index_intersect.ambient_set.as_ref().clone(),
-            in_fact.line_file.clone(),
-        )
-        .into();
+        let ambient_member: AtomicFact = self
+            .new_in_fact(
+                in_fact.element.clone(),
+                index_intersect.ambient_set.as_ref().clone(),
+                in_fact.line_file.clone(),
+            )
+            .into();
         let Some(ambient_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&ambient_member, builtin_state)?
         else {
@@ -936,8 +952,9 @@ impl Runtime {
                 else {
                     return Ok(UnknownGenericStmtResult::new().into());
                 };
-                let fiber_member: AtomicFact =
-                    InFact::new(in_fact.element.clone(), fiber, in_fact.line_file.clone()).into();
+                let fiber_member: AtomicFact = self
+                    .new_in_fact(in_fact.element.clone(), fiber, in_fact.line_file.clone())
+                    .into();
                 let Some(fiber_result) = self
                     .try_verify_atomic_fact_as_builtin_rule_premise(&fiber_member, builtin_state)?
                 else {
@@ -1021,12 +1038,13 @@ impl Runtime {
         }
 
         for preimage in self.known_preimages_for_replacement_target(in_fact, replacement) {
-            let preimage_in_source: AtomicFact = InFact::new(
-                preimage.clone(),
-                replacement.source_set.as_ref().clone(),
-                in_fact.line_file.clone(),
-            )
-            .into();
+            let preimage_in_source: AtomicFact = self
+                .new_in_fact(
+                    preimage.clone(),
+                    replacement.source_set.as_ref().clone(),
+                    in_fact.line_file.clone(),
+                )
+                .into();
             let mut preimage_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
                 &preimage_in_source,
                 builtin_state,
@@ -1057,12 +1075,13 @@ impl Runtime {
                 continue;
             };
 
-            let relation_fact: AtomicFact = NormalAtomicFact::new(
-                replacement.prop_name.clone(),
-                vec![preimage, in_fact.element.clone()],
-                in_fact.line_file.clone(),
-            )
-            .into();
+            let relation_fact: AtomicFact = self
+                .new_normal_atomic_fact(
+                    replacement.prop_name.clone(),
+                    vec![preimage, in_fact.element.clone()],
+                    in_fact.line_file.clone(),
+                )
+                .into();
             if let Some(relation_result) =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&relation_fact, builtin_state)?
             {
@@ -1093,13 +1112,14 @@ impl Runtime {
             ParamType::Obj(replacement.source_set.as_ref().clone()),
         )?;
         let preimage_obj = obj_for_bound_param_in_scope(&preimage_group.params[0]);
-        let relation_fact: AtomicFact = NormalAtomicFact::new(
-            replacement.prop_name.clone(),
-            vec![preimage_obj, in_fact.element.clone()],
-            in_fact.line_file.clone(),
-        )
-        .into();
-        let exist_body = PlainExistFact::new(
+        let relation_fact: AtomicFact = self
+            .new_normal_atomic_fact(
+                replacement.prop_name.clone(),
+                vec![preimage_obj, in_fact.element.clone()],
+                in_fact.line_file.clone(),
+            )
+            .into();
+        let exist_body = self.new_plain_exist_fact(
             TypedParameterList::new(vec![preimage_group]),
             vec![relation_fact.into()],
             in_fact.line_file.clone(),
@@ -1279,12 +1299,13 @@ impl Runtime {
         let Some(body) = self.get_fn_range_function_body(&fn_range.function) else {
             return Ok((UnknownGenericStmtResult::new()).into());
         };
-        let subset_fact: AtomicFact = SubsetFact::new(
-            body.ret_set.as_ref().clone(),
-            power_set.set.as_ref().clone(),
-            in_fact.line_file.clone(),
-        )
-        .into();
+        let subset_fact: AtomicFact = self
+            .new_subset_fact(
+                body.ret_set.as_ref().clone(),
+                power_set.set.as_ref().clone(),
+                in_fact.line_file.clone(),
+            )
+            .into();
         let mut subset_result =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?;
         if subset_result.is_none()
@@ -1339,12 +1360,13 @@ impl Runtime {
         power_set: &PowerSet,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<ProveFactResult, RuntimeError> {
-        let subset_fact: AtomicFact = SubsetFact::new(
-            in_fact.element.clone(),
-            power_set.set.as_ref().clone(),
-            in_fact.line_file.clone(),
-        )
-        .into();
+        let subset_fact: AtomicFact = self
+            .new_subset_fact(
+                in_fact.element.clone(),
+                power_set.set.as_ref().clone(),
+                in_fact.line_file.clone(),
+            )
+            .into();
         let mut subset_result =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?;
         if subset_result.is_none()
@@ -1399,18 +1421,20 @@ impl Runtime {
         general_cart: &GeneralCart,
         verify_state: &VerifyState,
     ) -> Result<ProveFactResult, RuntimeError> {
-        let fn_set_fact: AtomicFact = InFact::new(
-            in_fact.element.clone(),
-            general_cart_member_fn_set(self, general_cart)?,
-            in_fact.line_file.clone(),
-        )
-        .into();
+        let fn_set_fact: AtomicFact = self
+            .new_in_fact(
+                in_fact.element.clone(),
+                general_cart_member_fn_set(self, general_cart)?,
+                in_fact.line_file.clone(),
+            )
+            .into();
         let fn_set_result = self.verify_atomic_fact(&fn_set_fact, verify_state)?;
         if !fn_set_result.is_success() {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
 
         let choice_fact = general_cart_member_choice_fact(
+            self,
             general_cart,
             in_fact.element.clone(),
             in_fact.line_file.clone(),
@@ -1443,12 +1467,13 @@ impl Runtime {
         let mut step_results = Vec::with_capacity(set_builder.facts.len() + 1);
         let mut expected_premises = Vec::with_capacity(set_builder.facts.len() + 1);
 
-        let element_in_param_set: AtomicFact = InFact::new(
-            in_fact.element.clone(),
-            *set_builder.param_set.clone(),
-            in_fact.line_file.clone(),
-        )
-        .into();
+        let element_in_param_set: AtomicFact = self
+            .new_in_fact(
+                in_fact.element.clone(),
+                *set_builder.param_set.clone(),
+                in_fact.line_file.clone(),
+            )
+            .into();
         let element_in_param_set_result =
             self.verify_atomic_fact(&element_in_param_set, verify_state)?;
         if !element_in_param_set_result.is_success() {
@@ -1545,7 +1570,7 @@ impl Runtime {
             return Ok(None);
         };
 
-        let unfolded_fact = InFact::new(
+        let unfolded_fact = self.new_in_fact(
             in_fact.element.clone(),
             set_builder.clone().into(),
             in_fact.line_file.clone(),
@@ -1583,12 +1608,13 @@ impl Runtime {
             self.struct_header_param_to_arg_map_after_well_defined(struct_obj)?;
         let field_types = self.instantiated_struct_field_types_after_well_defined(struct_obj)?;
         let carrier_obj = self.struct_carrier_from_field_types(field_types.clone());
-        let carrier_membership: AtomicFact = InFact::new(
-            in_fact.element.clone(),
-            carrier_obj,
-            in_fact.line_file.clone(),
-        )
-        .into();
+        let carrier_membership: AtomicFact = self
+            .new_in_fact(
+                in_fact.element.clone(),
+                carrier_obj,
+                in_fact.line_file.clone(),
+            )
+            .into();
         let carrier_result = if field_types.len() == 1 {
             self.verify_atomic_fact(&carrier_membership, verify_state)?
         } else if let Obj::Tuple(tuple) = &in_fact.element {
@@ -1682,7 +1708,7 @@ impl Runtime {
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<ProveFactResult, RuntimeError> {
         let finite_fact =
-            IsFiniteSetFact::new((*finite_set_size.set).clone(), in_fact.line_file.clone());
+            self.new_is_finite_set_fact((*finite_set_size.set).clone(), in_fact.line_file.clone());
         if let Some(finite_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&finite_fact.into(), builtin_state)?
         {
@@ -1774,7 +1800,7 @@ impl Runtime {
                     .list
                     .iter()
                     .map(|element| {
-                        InFact::new(
+                        self.new_in_fact(
                             element.as_ref().clone(),
                             standard_set.clone(),
                             line_file.clone(),
@@ -1810,9 +1836,9 @@ impl Runtime {
                 builtin_state,
             ),
             _ => {
-                let subset_fact: AtomicFact =
-                    SubsetFact::new(source_set.clone(), standard_set.clone(), line_file.clone())
-                        .into();
+                let subset_fact: AtomicFact = self
+                    .new_subset_fact(source_set.clone(), standard_set.clone(), line_file.clone())
+                    .into();
                 Ok(self
                     .try_verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?
                     .map(|result| vec![result]))

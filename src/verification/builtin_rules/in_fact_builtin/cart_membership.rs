@@ -20,7 +20,7 @@ impl Runtime {
             let tuple_component_obj = (*tuple.args[component_index]).clone();
             let cart_component_obj = (*cart.args[component_index]).clone();
             component_facts.push(
-                InFact::new(
+                self.new_in_fact(
                     tuple_component_obj,
                     cart_component_obj,
                     in_fact.line_file.clone(),
@@ -60,26 +60,29 @@ impl Runtime {
         in_fact: &InFact,
         verify_state: &VerifyState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
-        let is_cart_fact: AtomicFact =
-            IsCartFact::new(in_fact.set.clone(), in_fact.line_file.clone()).into();
+        let is_cart_fact: AtomicFact = self
+            .new_is_cart_fact(in_fact.set.clone(), in_fact.line_file.clone())
+            .into();
         let is_cart_result = self.verify_atomic_fact(&is_cart_fact, verify_state)?;
         if !is_cart_result.is_success() {
             return Ok(None);
         }
 
-        let is_tuple_fact: AtomicFact =
-            IsTupleFact::new(in_fact.element.clone(), in_fact.line_file.clone()).into();
+        let is_tuple_fact: AtomicFact = self
+            .new_is_tuple_fact(in_fact.element.clone(), in_fact.line_file.clone())
+            .into();
         let is_tuple_result = self.verify_atomic_fact(&is_tuple_fact, verify_state)?;
         if !is_tuple_result.is_success() {
             return Ok(None);
         }
 
-        let tuple_dim_fact: AtomicFact = EqualFact::new(
-            TupleDim::new(in_fact.element.clone()).into(),
-            CartDim::new(in_fact.set.clone()).into(),
-            in_fact.line_file.clone(),
-        )
-        .into();
+        let tuple_dim_fact: AtomicFact = self
+            .new_equal_fact(
+                TupleDim::new(in_fact.element.clone()).into(),
+                CartDim::new(in_fact.set.clone()).into(),
+                in_fact.line_file.clone(),
+            )
+            .into();
         let tuple_dim_result = self.verify_atomic_fact(&tuple_dim_fact, verify_state)?;
         if !tuple_dim_result.is_success() {
             return Ok(None);
@@ -94,19 +97,21 @@ impl Runtime {
         let index_group =
             self.fresh_param_group_with_type(vec![index_name], ParamType::Obj(index_set))?;
         let index_obj = obj_for_bound_param_in_scope(&index_group.params[0]);
-        let coordinate_fact: AtomicFact = InFact::new(
-            ObjAtIndex::new(in_fact.element.clone(), index_obj.clone()).into(),
-            Proj::new(in_fact.set.clone(), index_obj).into(),
-            in_fact.line_file.clone(),
-        )
-        .into();
-        let coordinate_forall: Fact = ForallFact::new_canonical_forall(
-            TypedParameterList::new(vec![index_group]),
-            vec![],
-            vec![coordinate_fact.into()],
-            in_fact.line_file.clone(),
-        )?
-        .into();
+        let coordinate_fact: AtomicFact = self
+            .new_in_fact(
+                ObjAtIndex::new(in_fact.element.clone(), index_obj.clone()).into(),
+                Proj::new(in_fact.set.clone(), index_obj).into(),
+                in_fact.line_file.clone(),
+            )
+            .into();
+        let coordinate_forall: Fact = self
+            .new_forall_fact(
+                TypedParameterList::new(vec![index_group]),
+                vec![],
+                vec![coordinate_fact.into()],
+                in_fact.line_file.clone(),
+            )?
+            .into();
         let coordinate_result = self.verify_fact_allow_unknown(&coordinate_forall, verify_state)?;
         if !coordinate_result.is_success() {
             return Ok(None);

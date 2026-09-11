@@ -20,6 +20,7 @@ pub(super) struct FactGraphEdge {
 }
 
 pub(super) struct FactGraphBuilder {
+    pub(super) runtime: Runtime,
     pub(super) nodes: Vec<FactGraphNode>,
     pub(super) node_index: HashMap<String, usize>,
     pub(super) edges: Vec<FactGraphEdge>,

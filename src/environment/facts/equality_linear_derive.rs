@@ -22,12 +22,17 @@ fn obj_is_non_const_leaf_for_solve(x: &Obj) -> bool {
 }
 
 /// Returns a derived [`EqualFact`] with the same `line_file` as `equal`, or `None`.
-pub fn maybe_derived_linear_equal_fact(equal: &EqualFact) -> Option<EqualFact> {
-    try_linear_solve_one_side(&equal.left, &equal.right, &equal.line_file)
-        .or_else(|| try_linear_solve_one_side(&equal.right, &equal.left, &equal.line_file))
+pub fn maybe_derived_linear_equal_fact(runtime: &Runtime, equal: &EqualFact) -> Option<EqualFact> {
+    try_linear_solve_one_side(runtime, &equal.left, &equal.right, &equal.line_file)
+        .or_else(|| try_linear_solve_one_side(runtime, &equal.right, &equal.left, &equal.line_file))
 }
 
-fn try_linear_solve_one_side(expr: &Obj, other: &Obj, lf: &LineFile) -> Option<EqualFact> {
+fn try_linear_solve_one_side(
+    runtime: &Runtime,
+    expr: &Obj,
+    other: &Obj,
+    lf: &LineFile,
+) -> Option<EqualFact> {
     let d = other.evaluate_to_normalized_decimal_number()?;
     let d_obj: Obj = d.clone().into();
     match expr {
@@ -42,7 +47,7 @@ fn try_linear_solve_one_side(expr: &Obj, other: &Obj, lf: &LineFile) -> Option<E
                     }
                     let rhs = Obj::Add(Add::new(d_obj, c_num.into()))
                         .evaluate_to_normalized_decimal_number()?;
-                    Some(EqualFact::new(x.clone(), rhs.into(), lf.clone()))
+                    Some(runtime.new_equal_fact(x.clone(), rhs.into(), lf.clone()))
                 }
                 (Some(c_num), None) => {
                     let x = s.right.as_ref();
@@ -51,7 +56,7 @@ fn try_linear_solve_one_side(expr: &Obj, other: &Obj, lf: &LineFile) -> Option<E
                     }
                     let rhs = Obj::Sub(Sub::new(c_num.into(), d_obj))
                         .evaluate_to_normalized_decimal_number()?;
-                    Some(EqualFact::new(x.clone(), rhs.into(), lf.clone()))
+                    Some(runtime.new_equal_fact(x.clone(), rhs.into(), lf.clone()))
                 }
                 _ => None,
             }
@@ -67,7 +72,7 @@ fn try_linear_solve_one_side(expr: &Obj, other: &Obj, lf: &LineFile) -> Option<E
                     }
                     let rhs = Obj::Sub(Sub::new(d_obj, c_num.into()))
                         .evaluate_to_normalized_decimal_number()?;
-                    Some(EqualFact::new(x.clone(), rhs.into(), lf.clone()))
+                    Some(runtime.new_equal_fact(x.clone(), rhs.into(), lf.clone()))
                 }
                 (Some(c_num), None) => {
                     let x = a.right.as_ref();
@@ -76,7 +81,7 @@ fn try_linear_solve_one_side(expr: &Obj, other: &Obj, lf: &LineFile) -> Option<E
                     }
                     let rhs = Obj::Sub(Sub::new(d_obj, c_num.into()))
                         .evaluate_to_normalized_decimal_number()?;
-                    Some(EqualFact::new(x.clone(), rhs.into(), lf.clone()))
+                    Some(runtime.new_equal_fact(x.clone(), rhs.into(), lf.clone()))
                 }
                 _ => None,
             }
@@ -95,7 +100,7 @@ fn try_linear_solve_one_side(expr: &Obj, other: &Obj, lf: &LineFile) -> Option<E
                     }
                     let rhs = Obj::Div(Div::new(d_obj, c_num.into()))
                         .evaluate_to_normalized_decimal_number()?;
-                    Some(EqualFact::new(x.clone(), rhs.into(), lf.clone()))
+                    Some(runtime.new_equal_fact(x.clone(), rhs.into(), lf.clone()))
                 }
                 (None, Some(c_num)) => {
                     if !number_literal_is_nonzero(&c_num) {
@@ -107,7 +112,7 @@ fn try_linear_solve_one_side(expr: &Obj, other: &Obj, lf: &LineFile) -> Option<E
                     }
                     let rhs = Obj::Div(Div::new(d_obj, c_num.into()))
                         .evaluate_to_normalized_decimal_number()?;
-                    Some(EqualFact::new(x.clone(), rhs.into(), lf.clone()))
+                    Some(runtime.new_equal_fact(x.clone(), rhs.into(), lf.clone()))
                 }
                 _ => None,
             }
@@ -123,7 +128,7 @@ fn try_linear_solve_one_side(expr: &Obj, other: &Obj, lf: &LineFile) -> Option<E
             }
             let rhs = Obj::Mul(Mul::new(d_obj, div.right.as_ref().clone()))
                 .evaluate_to_normalized_decimal_number()?;
-            Some(EqualFact::new(x.clone(), rhs.into(), lf.clone()))
+            Some(runtime.new_equal_fact(x.clone(), rhs.into(), lf.clone()))
         }
         _ => None,
     }

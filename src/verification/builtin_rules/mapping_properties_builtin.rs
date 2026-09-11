@@ -13,15 +13,16 @@ impl Runtime {
                 continue;
             };
             let Some(codomain_match) = self.try_verify_known_equality_fact_candidate(
-                &EqualFact::new_from_refs(&codomain, &target.set, target.line_file.clone()),
+                &self.new_equal_fact_from_refs(&codomain, &target.set, target.line_file.clone()),
                 builtin_state.verify_state(),
             )?
             else {
                 continue;
             };
 
-            let domain_finite: AtomicFact =
-                IsFiniteSetFact::new(domain, target.line_file.clone()).into();
+            let domain_finite: AtomicFact = self
+                .new_is_finite_set_fact(domain, target.line_file.clone())
+                .into();
             let Some(domain_result) =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&domain_finite, builtin_state)?
             else {
@@ -68,21 +69,23 @@ impl Runtime {
                 continue;
             };
             let Some(domain_match) = self.try_verify_known_equality_fact_candidate(
-                &EqualFact::new_from_refs(&domain, &source, line_file.clone()),
+                &self.new_equal_fact_from_refs(&domain, &source, line_file.clone()),
                 builtin_state.verify_state(),
             )?
             else {
                 continue;
             };
             let Some(function_match) = self.try_verify_known_equality_fact_candidate(
-                &EqualFact::new_from_refs(&candidate_function, &function, line_file.clone()),
+                &self.new_equal_fact_from_refs(&candidate_function, &function, line_file.clone()),
                 builtin_state.verify_state(),
             )?
             else {
                 continue;
             };
 
-            let domain_finite: AtomicFact = IsFiniteSetFact::new(domain, line_file.clone()).into();
+            let domain_finite: AtomicFact = self
+                .new_is_finite_set_fact(domain, line_file.clone())
+                .into();
             let Some(finite_result) = self.try_verify_known_or_structurally_finite_set_candidate(
                 &domain_finite,
                 builtin_state.verify_state(),
@@ -133,19 +136,27 @@ impl Runtime {
                 continue;
             };
             let direct_domain = self.try_verify_known_equality_fact_candidate(
-                &EqualFact::new_from_refs(&domain, left_size.set.as_ref(), line_file.clone()),
+                &self.new_equal_fact_from_refs(&domain, left_size.set.as_ref(), line_file.clone()),
                 builtin_state.verify_state(),
             )?;
             let direct_codomain = self.try_verify_known_equality_fact_candidate(
-                &EqualFact::new_from_refs(&codomain, right_size.set.as_ref(), line_file.clone()),
+                &self.new_equal_fact_from_refs(
+                    &codomain,
+                    right_size.set.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state.verify_state(),
             )?;
             let reverse_domain = self.try_verify_known_equality_fact_candidate(
-                &EqualFact::new_from_refs(&domain, right_size.set.as_ref(), line_file.clone()),
+                &self.new_equal_fact_from_refs(&domain, right_size.set.as_ref(), line_file.clone()),
                 builtin_state.verify_state(),
             )?;
             let reverse_codomain = self.try_verify_known_equality_fact_candidate(
-                &EqualFact::new_from_refs(&codomain, left_size.set.as_ref(), line_file.clone()),
+                &self.new_equal_fact_from_refs(
+                    &codomain,
+                    left_size.set.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state.verify_state(),
             )?;
             let (domain_match, codomain_match) = match (
@@ -159,7 +170,9 @@ impl Runtime {
                 _ => continue,
             };
 
-            let domain_finite: AtomicFact = IsFiniteSetFact::new(domain, line_file.clone()).into();
+            let domain_finite: AtomicFact = self
+                .new_is_finite_set_fact(domain, line_file.clone())
+                .into();
             let Some(finite_result) = self.try_verify_known_or_structurally_finite_set_candidate(
                 &domain_finite,
                 builtin_state.verify_state(),
@@ -207,21 +220,23 @@ impl Runtime {
                 continue;
             };
             let Some(codomain_match) = self.try_verify_known_equality_fact_candidate(
-                &EqualFact::new_from_refs(&codomain, &smaller, line_file.clone()),
+                &self.new_equal_fact_from_refs(&codomain, &smaller, line_file.clone()),
                 builtin_state.verify_state(),
             )?
             else {
                 continue;
             };
             let Some(domain_match) = self.try_verify_known_equality_fact_candidate(
-                &EqualFact::new_from_refs(&domain, &larger, line_file.clone()),
+                &self.new_equal_fact_from_refs(&domain, &larger, line_file.clone()),
                 builtin_state.verify_state(),
             )?
             else {
                 continue;
             };
 
-            let domain_finite: AtomicFact = IsFiniteSetFact::new(domain, line_file.clone()).into();
+            let domain_finite: AtomicFact = self
+                .new_is_finite_set_fact(domain, line_file.clone())
+                .into();
             let Some(finite_result) = self.try_verify_known_or_structurally_finite_set_candidate(
                 &domain_finite,
                 builtin_state.verify_state(),
@@ -274,15 +289,15 @@ impl Runtime {
             // the enumeration-shape recognizer does, so a builtin theorem's
             // witness can feed a builtin sum/product consumer directly.
             let domain_match = self.try_verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(&candidate_domain, domain, line_file.clone()),
+                &self.new_equal_fact_from_refs(&candidate_domain, domain, line_file.clone()),
                 builtin_state,
             )?;
             let codomain_match = self.try_verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(&candidate_codomain, codomain, line_file.clone()),
+                &self.new_equal_fact_from_refs(&candidate_codomain, codomain, line_file.clone()),
                 builtin_state,
             )?;
             let function_match = self.try_verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(&candidate_function, function, line_file.clone()),
+                &self.new_equal_fact_from_refs(&candidate_function, function, line_file.clone()),
                 builtin_state,
             )?;
             if let (Some(domain_match), Some(codomain_match), Some(function_match)) =

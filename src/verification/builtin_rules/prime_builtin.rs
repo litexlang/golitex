@@ -40,12 +40,13 @@ impl Runtime {
         }
         let value = normal_fact.body[0].clone();
         let line_file = normal_fact.line_file.clone();
-        let lower_bound: Fact = LessEqualFact::new(
-            Number::new("2".to_string()).into(),
-            value.clone(),
-            line_file.clone(),
-        )
-        .into();
+        let lower_bound: Fact = self
+            .new_less_equal_fact(
+                Number::new("2".to_string()).into(),
+                value.clone(),
+                line_file.clone(),
+            )
+            .into();
 
         let divisor_name = self.generate_random_unused_name();
         let divisor_group = self.fresh_param_group_with_type(
@@ -53,19 +54,21 @@ impl Runtime {
             ParamType::Obj(Range::new(Number::new("2".to_string()).into(), value.clone()).into()),
         )?;
         let divisor = obj_for_bound_param_in_scope(&divisor_group.params[0]);
-        let no_divisor: AtomicFact = NotEqualFact::new(
-            Mod::new(value, divisor).into(),
-            Number::new("0".to_string()).into(),
-            line_file.clone(),
-        )
-        .into();
-        let trial_division: Fact = ForallFact::new_canonical_forall(
-            TypedParameterList::new(vec![divisor_group]),
-            Vec::new(),
-            vec![no_divisor.into()],
-            line_file,
-        )?
-        .into();
+        let no_divisor: AtomicFact = self
+            .new_not_equal_fact(
+                Mod::new(value, divisor).into(),
+                Number::new("0".to_string()).into(),
+                line_file.clone(),
+            )
+            .into();
+        let trial_division: Fact = self
+            .new_forall_fact(
+                TypedParameterList::new(vec![divisor_group]),
+                Vec::new(),
+                vec![no_divisor.into()],
+                line_file,
+            )?
+            .into();
         Ok(Some(vec![lower_bound, trial_division]))
     }
 }

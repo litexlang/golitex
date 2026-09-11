@@ -64,16 +64,18 @@ impl Runtime {
             .iter()
             .zip(instantiated_types.iter())
             .map(|(argument, parameter_type)| match parameter_type {
-                ParamType::Set(_) => IsSetFact::new(argument.clone(), line_file.clone()).into(),
-                ParamType::NonemptySet(_) => {
-                    IsNonemptySetFact::new(argument.clone(), line_file.clone()).into()
-                }
-                ParamType::FiniteSet(_) => {
-                    IsFiniteSetFact::new(argument.clone(), line_file.clone()).into()
-                }
-                ParamType::Obj(set) => {
-                    InFact::new(argument.clone(), set.clone(), line_file.clone()).into()
-                }
+                ParamType::Set(_) => self
+                    .new_is_set_fact(argument.clone(), line_file.clone())
+                    .into(),
+                ParamType::NonemptySet(_) => self
+                    .new_is_nonempty_set_fact(argument.clone(), line_file.clone())
+                    .into(),
+                ParamType::FiniteSet(_) => self
+                    .new_is_finite_set_fact(argument.clone(), line_file.clone())
+                    .into(),
+                ParamType::Obj(set) => self
+                    .new_in_fact(argument.clone(), set.clone(), line_file.clone())
+                    .into(),
             })
             .collect())
     }

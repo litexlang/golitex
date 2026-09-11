@@ -256,6 +256,7 @@ pub(in super::super) fn registered_symmetric_predicate_gather(
 }
 
 pub(in super::super) fn instantiate_registered_positive_user_predicate_pattern(
+    runtime: &Runtime,
     pattern: &NormalAtomicFact,
     parameter_substitution: &HashMap<String, Obj>,
     predicate_name: &str,
@@ -282,15 +283,17 @@ pub(in super::super) fn instantiate_registered_positive_user_predicate_pattern(
                 })
         })
         .collect::<Result<Vec<_>, _>>()?;
-    Ok(NormalAtomicFact::new(
-        pattern.predicate.clone(),
-        arguments,
-        pattern.line_file.clone(),
-    )
-    .into())
+    Ok(runtime
+        .new_normal_atomic_fact(
+            pattern.predicate.clone(),
+            arguments,
+            pattern.line_file.clone(),
+        )
+        .into())
 }
 
 pub(in super::super) fn instantiate_registered_symmetric_predicate_transition(
+    runtime: &Runtime,
     forall_fact: &ForallFact,
     predicate_name: &str,
     current_domain: &Fact,
@@ -337,6 +340,7 @@ pub(in super::super) fn instantiate_registered_symmetric_predicate_transition(
     let conclusion =
         registered_positive_user_predicate_fact(&conclusion_fact, "symmetry", "conclusion")?;
     let instantiated_conclusion = instantiate_registered_positive_user_predicate_pattern(
+        runtime,
         conclusion,
         &substitution,
         predicate_name,
@@ -347,6 +351,7 @@ pub(in super::super) fn instantiate_registered_symmetric_predicate_transition(
 }
 
 pub(in super::super) fn instantiate_registered_antisymmetric_predicate_application(
+    runtime: &Runtime,
     forall_fact: &ForallFact,
     predicate_name: &str,
     target: &Fact,
@@ -416,6 +421,7 @@ pub(in super::super) fn instantiate_registered_antisymmetric_predicate_applicati
                 ));
             }
             instantiate_registered_positive_user_predicate_pattern(
+                runtime,
                 premise,
                 &substitution,
                 predicate_name,
@@ -428,6 +434,7 @@ pub(in super::super) fn instantiate_registered_antisymmetric_predicate_applicati
 }
 
 pub(in super::super) fn instantiate_registered_transitive_predicate_application(
+    runtime: &Runtime,
     forall_fact: &ForallFact,
     predicate_name: &str,
     left_premise: &Fact,
@@ -520,6 +527,7 @@ pub(in super::super) fn instantiate_registered_transitive_predicate_application(
         return Err("registered transitivity theorem changed its conclusion arity".into());
     }
     let instantiated_conclusion = instantiate_registered_positive_user_predicate_pattern(
+        runtime,
         conclusion_pattern,
         &substitution,
         predicate_name,

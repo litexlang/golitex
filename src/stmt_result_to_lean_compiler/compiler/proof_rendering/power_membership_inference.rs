@@ -7,6 +7,7 @@ use super::super::*;
 /// again here; equality orientation and the `R+` target must match the retained
 /// certificate exactly.
 pub(in super::super) fn render_closed_positive_power_equality_membership_inference(
+    runtime: &Runtime,
     rule: &ClosedPositivePowerEqualityImpliesEqualSideMembershipInferRule,
     source: &Fact,
     target: &Fact,
@@ -64,6 +65,7 @@ pub(in super::super) fn render_closed_positive_power_equality_membership_inferen
 /// integer representation is selected by the cited `Z` premise, while the
 /// cited strict-order premise supplies the Mathlib positivity proof.
 pub(in super::super) fn render_positive_integer_base_natural_power_equality_membership_inference(
+    runtime: &Runtime,
     rule: &PositiveIntegerBaseNaturalPowerEqualityImpliesEqualSideMembershipInferRule,
     source: &Fact,
     base_positive: &Fact,
@@ -115,12 +117,13 @@ pub(in super::super) fn render_positive_integer_base_natural_power_equality_memb
     } else {
         "mpr"
     };
-    let target: Fact = InFact::new(
-        opposite.clone(),
-        StandardSet::RPos.into(),
-        source.line_file(),
-    )
-    .into();
+    let target: Fact = runtime
+        .new_in_fact(
+            opposite.clone(),
+            StandardSet::RPos.into(),
+            source.line_file(),
+        )
+        .into();
     Ok((
         target,
         format!(

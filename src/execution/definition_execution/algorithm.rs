@@ -349,20 +349,22 @@ impl Runtime {
         }
         case_dom_facts.push(inst_condition.into());
 
-        let case_then_facts = vec![EqualFact::new(
-            fn_call_obj.clone(),
-            inst_return_value,
-            algo_case.line_file.clone(),
-        )
-        .into()];
+        let case_then_facts = vec![self
+            .new_equal_fact(
+                fn_call_obj.clone(),
+                inst_return_value,
+                algo_case.line_file.clone(),
+            )
+            .into()];
 
-        Ok(ForallFact::new_canonical_forall(
-            algo_param_defs_with_type.clone(),
-            case_dom_facts,
-            case_then_facts,
-            algo_case.line_file.clone(),
-        )?
-        .into())
+        Ok(self
+            .new_forall_fact(
+                algo_param_defs_with_type.clone(),
+                case_dom_facts,
+                case_then_facts,
+                algo_case.line_file.clone(),
+            )?
+            .into())
     }
 
     fn verify_each_def_algo_case_implies_return(
@@ -429,16 +431,19 @@ impl Runtime {
                 SubstitutionMode::Exact,
                 None,
             )?;
-            let negated_condition = condition.logical_negation().map_err(|runtime_error| {
-                Self::def_algo_verify_exec_error_with_message_and_optional_cause(
-                    def_algo_stmt,
-                    format!(
-                        "algo verify: default branch cannot negate case condition `{}`",
-                        condition
-                    ),
-                    Some(runtime_error),
-                )
-            })?;
+            let negated_condition =
+                condition
+                    .logical_negation_with_runtime(self)
+                    .map_err(|runtime_error| {
+                        Self::def_algo_verify_exec_error_with_message_and_optional_cause(
+                            def_algo_stmt,
+                            format!(
+                                "algo verify: default branch cannot negate case condition `{}`",
+                                condition
+                            ),
+                            Some(runtime_error),
+                        )
+                    })?;
             dom_facts.push(negated_condition.into());
         }
         let return_value = self.inst_obj(
@@ -446,18 +451,20 @@ impl Runtime {
             algo_param_to_forall_obj,
             SubstitutionMode::Exact,
         )?;
-        let verification_fact: Fact = ForallFact::new_canonical_forall(
-            algo_param_defs_with_type.clone(),
-            dom_facts,
-            vec![EqualFact::new(
-                fn_call_obj.clone(),
-                return_value,
+        let verification_fact: Fact = self
+            .new_forall_fact(
+                algo_param_defs_with_type.clone(),
+                dom_facts,
+                vec![self
+                    .new_equal_fact(
+                        fn_call_obj.clone(),
+                        return_value,
+                        default_return.line_file.clone(),
+                    )
+                    .into()],
                 default_return.line_file.clone(),
-            )
-            .into()],
-            default_return.line_file.clone(),
-        )?
-        .into();
+            )?
+            .into();
 
         let mut verification = self
             .verify_fact_or_error(&verification_fact, &VerifyState::initial())
@@ -507,18 +514,19 @@ impl Runtime {
             )?;
             case_conditions.push(inst_condition.into());
         }
-        let coverage_or_fact = OrFact::new(case_conditions, def_algo_stmt.line_file.clone());
-        let coverage_forall_fact = ForallFact::new_canonical_forall(
-            algo_param_defs_with_type.clone(),
-            requirement_dom_facts
-                .iter()
-                .cloned()
-                .map(ExistOrAndChainAtomicFact::to_fact)
-                .collect(),
-            vec![ExistOrAndChainAtomicFact::OrFact(coverage_or_fact)],
-            def_algo_stmt.line_file.clone(),
-        )?
-        .into();
+        let coverage_or_fact = self.new_or_fact(case_conditions, def_algo_stmt.line_file.clone());
+        let coverage_forall_fact = self
+            .new_forall_fact(
+                algo_param_defs_with_type.clone(),
+                requirement_dom_facts
+                    .iter()
+                    .cloned()
+                    .map(ExistOrAndChainAtomicFact::to_fact)
+                    .collect(),
+                vec![ExistOrAndChainAtomicFact::OrFact(coverage_or_fact)],
+                def_algo_stmt.line_file.clone(),
+            )?
+            .into();
 
         let verify_state = VerifyState::initial();
         let mut verification = self

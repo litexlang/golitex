@@ -19,6 +19,7 @@ pub struct NotEqualFact {
 }
 
 impl EqualFact {
+    #[cfg(test)]
     #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         EqualFact {
@@ -32,12 +33,14 @@ impl EqualFact {
     /// Builds an owned equality goal at a proof boundary from borrowed objects.
     /// Equality verifiers should receive the resulting `EqualFact`, rather than
     /// carrying `left`, `right`, and `line_file` as independent parameters.
+    #[cfg(test)]
     pub fn new_from_refs(left: &Obj, right: &Obj, line_file: LineFile) -> Self {
         Self::new(left.clone(), right.clone(), line_file)
     }
 }
 
 impl NotEqualFact {
+    #[cfg(test)]
     #[deprecated(note = "production facts must be created through Runtime::new_*_fact")]
     pub fn new(left: Obj, right: Obj, line_file: LineFile) -> Self {
         NotEqualFact {

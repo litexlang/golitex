@@ -2,9 +2,7 @@ use super::super::command::{parse_command_line_command, CliCommand};
 use super::super::messages::help_message;
 use crate::graph::GraphKind;
 use crate::output::{language::OutputLanguage, style::OutputDetail};
-use crate::pipeline::{
-    LitexExecution, RuntimeOptions, SummaryOption, VerifyStrictnessPolicy,
-};
+use crate::pipeline::{LitexExecution, RuntimeOptions, SummaryOption, VerifyStrictnessPolicy};
 
 #[test]
 fn canonical_cli_prefix_maps_to_one_typed_command() {
@@ -187,7 +185,8 @@ fn session_without_a_file_keeps_current_directory_and_isolated_modes_distinct() 
 #[test]
 fn session_rejects_non_file_targets() {
     let args = ["-session", "-r", "Demo"].map(str::to_string);
-    let error = parse_command_line_command(&args).expect_err("session repository target should be rejected");
+    let error = parse_command_line_command(&args)
+        .expect_err("session repository target should be rejected");
 
     assert_eq!(error, "unsupported CLI command combination");
 }
@@ -195,7 +194,8 @@ fn session_rejects_non_file_targets() {
 #[test]
 fn session_rejects_the_retired_before_target() {
     let args = ["-session", "-before", "chap5.lit"].map(str::to_string);
-    let error = parse_command_line_command(&args).expect_err("the retired before target must be rejected");
+    let error =
+        parse_command_line_command(&args).expect_err("the retired before target must be rejected");
 
     assert_eq!(error, "unsupported CLI command combination");
 }
@@ -297,8 +297,8 @@ fn cli_whitelist_rejects_retired_malformed_and_meaningless_combinations() {
         vec!["-isolated", "-f", "main.lit", "-strict"],
     ] {
         let args: Vec<String> = args.into_iter().map(str::to_string).collect();
-        let error =
-            parse_command_line_command(&args).expect_err("unsupported CLI combination must be rejected");
+        let error = parse_command_line_command(&args)
+            .expect_err("unsupported CLI combination must be rejected");
         assert_eq!(error, "unsupported CLI command combination", "{args:?}");
     }
 }

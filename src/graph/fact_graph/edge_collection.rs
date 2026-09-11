@@ -50,12 +50,14 @@ impl FactGraphBuilder {
                 .common()
                 .expect("by-struct-definition result carries common execution evidence");
             self.add_infer_edges(&common.infers);
-            let membership: Fact = InFact::new(
-                result.statement.obj.clone(),
-                result.struct_obj.clone().into(),
-                result.statement.line_file.clone(),
-            )
-            .into();
+            let membership: Fact = self
+                .runtime
+                .new_in_fact(
+                    result.statement.obj.clone(),
+                    result.struct_obj.clone().into(),
+                    result.statement.line_file.clone(),
+                )
+                .into();
             let source_id = self.add_fact_node(&membership, "membership", None);
             for output in common.infers.store_fact_outputs() {
                 let target_id = self.add_fact_node(

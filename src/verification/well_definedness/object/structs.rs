@@ -164,7 +164,7 @@ impl Runtime {
                     BindingScope::StructureField,
                     &instantiated_field_type,
                 )?;
-                let proposition: Fact = InFact::new(
+                let proposition: Fact = runtime.new_in_fact(
                     obj_for_bound_param_in_scope(field_binding),
                     instantiated_field_type,
                     default_line_file(),

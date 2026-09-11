@@ -73,8 +73,9 @@ impl Runtime {
         if let Some((subset, container)) = Self::union_absorption_shape(left, right)
             .or_else(|| Self::union_absorption_shape(right, left))
         {
-            let premise: AtomicFact =
-                SubsetFact::new(subset, container, equal_fact.line_file.clone()).into();
+            let premise: AtomicFact = self
+                .new_subset_fact(subset, container, equal_fact.line_file.clone())
+                .into();
             let result =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
             if let Some(result) = result {
@@ -160,8 +161,9 @@ impl Runtime {
         if let Some((subset, removed)) = Self::intersect_set_minus_subset_empty_shape(left, right)
             .or_else(|| Self::intersect_set_minus_subset_empty_shape(right, left))
         {
-            let premise: AtomicFact =
-                SubsetFact::new(subset, removed, equal_fact.line_file.clone()).into();
+            let premise: AtomicFact = self
+                .new_subset_fact(subset, removed, equal_fact.line_file.clone())
+                .into();
             let result =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
             if let Some(result) = result {
@@ -270,8 +272,9 @@ impl Runtime {
                 })
             })
         {
-            let subset_fact: AtomicFact =
-                SubsetFact::new(subset, container, line_file.clone()).into();
+            let subset_fact: AtomicFact = self
+                .new_subset_fact(subset, container, line_file.clone())
+                .into();
             let subset_result =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?;
             if let Some(subset_result) = subset_result {

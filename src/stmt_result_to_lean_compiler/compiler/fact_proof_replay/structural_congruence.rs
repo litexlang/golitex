@@ -96,7 +96,10 @@ impl StmtResultToLeanCompiler {
                 return Ok(format!("{theorem} ({left_proof}) ({right_proof})"));
             }
 
-            let expected: Fact = EqualFact::new_from_refs(left, right, line_file.clone()).into();
+            let expected: Fact = compiler
+                .runtime
+                .new_equal_fact_from_refs(left, right, line_file.clone())
+                .into();
             let child = subgoals.get(*next_subgoal).ok_or_else(|| {
                 "structural-known-equality evidence has fewer child Results than leaves".to_string()
             })?;

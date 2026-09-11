@@ -115,7 +115,7 @@ impl Runtime {
                     if let ParamType::Obj(target_set) = current_type {
                         known_source_sets = self.known_sets_containing_obj(current_param_equal_to);
                         for source_set in known_source_sets.iter() {
-                            let set_equality_fact = EqualFact::new(
+                            let set_equality_fact = self.new_equal_fact(
                                 source_set.clone(),
                                 target_set.clone(),
                                 have_obj_equal_stmt.line_file.clone(),
@@ -252,7 +252,7 @@ impl Runtime {
         {
             let defined: Obj =
                 Identifier::new_bound(binding.name().to_string(), binding.as_ref()).into();
-            let equality = EqualFact::new(
+            let equality = self.new_equal_fact(
                 defined.clone(),
                 obj.clone(),
                 have_obj_equal_stmt.line_file.clone(),

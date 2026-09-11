@@ -45,7 +45,7 @@ impl Runtime {
                         _ => None,
                     };
                     if let Some(expected_fn_set) = expected_fn_set {
-                        let in_fact = InFact::new(
+                        let in_fact = self.new_in_fact(
                             obj.clone(),
                             expected_fn_set.clone().into(),
                             default_line_file(),
@@ -63,11 +63,14 @@ impl Runtime {
                         return Ok(Runtime::finish_fact_verification(checked, result));
                     }
                 }
-                InFact::new(obj, set_obj.clone(), default_line_file()).into()
+                self.new_in_fact(obj, set_obj.clone(), default_line_file())
+                    .into()
             }
-            ParamType::Set(_) => IsSetFact::new(obj, default_line_file()).into(),
-            ParamType::NonemptySet(_) => IsNonemptySetFact::new(obj, default_line_file()).into(),
-            ParamType::FiniteSet(_) => IsFiniteSetFact::new(obj, default_line_file()).into(),
+            ParamType::Set(_) => self.new_is_set_fact(obj, default_line_file()).into(),
+            ParamType::NonemptySet(_) => self
+                .new_is_nonempty_set_fact(obj, default_line_file())
+                .into(),
+            ParamType::FiniteSet(_) => self.new_is_finite_set_fact(obj, default_line_file()).into(),
         };
         self.verify_atomic_parameter_fact_known_or_builtin_only(&fact, verify_state)
     }
@@ -113,8 +116,9 @@ impl Runtime {
     ) -> Result<VerifyFactResult, RuntimeError> {
         match param_type {
             ParamType::Obj(set_obj) => {
-                let fact: AtomicFact =
-                    InFact::new(obj.clone(), set_obj.clone(), default_line_file()).into();
+                let fact: AtomicFact = self
+                    .new_in_fact(obj.clone(), set_obj.clone(), default_line_file())
+                    .into();
                 if let Obj::AnonymousFn(anonymous_fn) = &obj {
                     let expected_fn_set = match set_obj {
                         Obj::FnSet(fn_set) => Some(fn_set.clone()),
@@ -128,7 +132,7 @@ impl Runtime {
                         _ => None,
                     };
                     if let Some(expected_fn_set) = expected_fn_set {
-                        let in_fact = InFact::new(
+                        let in_fact = self.new_in_fact(
                             obj.clone(),
                             expected_fn_set.clone().into(),
                             default_line_file(),
@@ -157,7 +161,7 @@ impl Runtime {
                 // Keep this constructor check local to typed object/function
                 // admission; named members still use their stored membership.
                 if let Obj::StructObj(struct_obj) = set_obj {
-                    let in_fact = InFact::new(obj, set_obj.clone(), default_line_file());
+                    let in_fact = self.new_in_fact(obj, set_obj.clone(), default_line_file());
                     let result =
                         self.verify_in_fact_by_struct_obj(&in_fact, struct_obj, verify_state)?;
                     let checked = self
@@ -168,15 +172,17 @@ impl Runtime {
                 Ok(direct_result)
             }
             ParamType::Set(_) => {
-                let fact = IsSetFact::new(obj, default_line_file()).into();
+                let fact = self.new_is_set_fact(obj, default_line_file()).into();
                 self.verify_atomic_parameter_fact(&fact, verify_state)
             }
             ParamType::NonemptySet(_) => {
-                let fact = IsNonemptySetFact::new(obj, default_line_file()).into();
+                let fact = self
+                    .new_is_nonempty_set_fact(obj, default_line_file())
+                    .into();
                 self.verify_atomic_parameter_fact(&fact, verify_state)
             }
             ParamType::FiniteSet(_) => {
-                let fact = IsFiniteSetFact::new(obj, default_line_file()).into();
+                let fact = self.new_is_finite_set_fact(obj, default_line_file()).into();
                 self.verify_atomic_parameter_fact(&fact, verify_state)
             }
         }

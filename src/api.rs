@@ -25,7 +25,7 @@ pub use crate::output::language::OutputLanguage;
 pub use crate::result::StmtResult;
 #[allow(deprecated)]
 pub use crate::runtime::{
-    LitexExecution, RuntimeOptions, OutputDetail, OutputStyle, Runtime, SourceActivation,
+    LitexExecution, OutputDetail, OutputStyle, Runtime, RuntimeOptions, SourceActivation,
     SummaryOption, VerifyStrictnessPolicy,
 };
 

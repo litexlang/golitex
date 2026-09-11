@@ -1,6 +1,6 @@
 use crate::error::RuntimeError;
 use crate::result::StmtResult;
-use crate::runtime::{TrustedOrRequireVerify, Runtime};
+use crate::runtime::{Runtime, TrustedOrRequireVerify};
 use crate::statement::Stmt;
 
 impl Runtime {
@@ -9,7 +9,9 @@ impl Runtime {
         let execution_mode = self.current_execution_mode();
         match execution_mode {
             TrustedOrRequireVerify::Trusted => self.execute_statement_with_trust(stmt),
-            TrustedOrRequireVerify::RequireVerification => self.execute_statement_with_verification(stmt),
+            TrustedOrRequireVerify::RequireVerification => {
+                self.execute_statement_with_verification(stmt)
+            }
         }
     }
 }

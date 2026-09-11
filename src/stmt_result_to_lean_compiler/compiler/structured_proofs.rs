@@ -50,11 +50,13 @@ impl StmtResultToLeanCompiler {
             return Err("nonempty-set witness changed its source proof-step order".into());
         }
 
-        let target_fact: Fact = IsNonemptySetFact::new(
-            result.statement.set.clone(),
-            result.statement.line_file.clone(),
-        )
-        .into();
+        let target_fact: Fact = self
+            .runtime
+            .new_is_nonempty_set_fact(
+                result.statement.set.clone(),
+                result.statement.line_file.clone(),
+            )
+            .into();
         let fact_id = validate_single_fact_store_output(
             &result.common.infers,
             &target_fact,
@@ -86,12 +88,14 @@ impl StmtResultToLeanCompiler {
             let membership_check = verification.nonempty_check.verified().ok_or_else(|| {
                 "nonempty-set witness retained a non-factual final check".to_string()
             })?;
-            let expected_membership: Fact = InFact::new(
-                result.statement.obj.clone(),
-                result.statement.set.clone(),
-                result.statement.line_file.clone(),
-            )
-            .into();
+            let expected_membership: Fact = self
+                .runtime
+                .new_in_fact(
+                    result.statement.obj.clone(),
+                    result.statement.set.clone(),
+                    result.statement.line_file.clone(),
+                )
+                .into();
             if membership_check.fact().to_string() != expected_membership.to_string() {
                 // Function-set witnesses use a different retained check: the
                 // return set's nonemptiness. That route remains an explicit
@@ -338,12 +342,14 @@ impl StmtResultToLeanCompiler {
             let parameter_check = parameter_check.verified().ok_or_else(|| {
                 "existential witness parameter check is not a successful fact Result".to_string()
             })?;
-            let expected_parameter_fact: Fact = InFact::new(
-                witness_object.clone(),
-                source_set.clone(),
-                line_file.clone(),
-            )
-            .into();
+            let expected_parameter_fact: Fact = self
+                .runtime
+                .new_in_fact(
+                    witness_object.clone(),
+                    source_set.clone(),
+                    line_file.clone(),
+                )
+                .into();
             if parameter_check.fact().to_string() != expected_parameter_fact.to_string() {
                 return Err(
                     "existential witness parameter check changed its instantiated requirement"
@@ -647,7 +653,7 @@ impl StmtResultToLeanCompiler {
                     .body
                     .get(argument_index)
                     .ok_or_else(|| "atomic witness lost a predicate argument".to_string())?;
-                expected_parameter_facts.push(Fact::from(InFact::new(
+                expected_parameter_facts.push(Fact::from(self.runtime.new_in_fact(
                     argument.clone(),
                     set.clone(),
                     result.statement.line_file.clone(),
@@ -1710,12 +1716,14 @@ impl StmtResultToLeanCompiler {
             return Ok(None);
         };
         let statement = &result.statement;
-        let equality: Fact = EqualFact::new(
-            statement.left.clone(),
-            statement.right.clone(),
-            statement.line_file.clone(),
-        )
-        .into();
+        let equality: Fact = self
+            .runtime
+            .new_equal_fact(
+                statement.left.clone(),
+                statement.right.clone(),
+                statement.line_file.clone(),
+            )
+            .into();
         if verification.left != statement.left.to_string()
             || verification.right != statement.right.to_string()
             || verification.prove_goal != equality.to_string()
@@ -1723,18 +1731,22 @@ impl StmtResultToLeanCompiler {
         {
             return Err("by-extension Result changed its sets, goal, or proof-step order".into());
         }
-        let forward_fact: Fact = SubsetFact::new(
-            statement.left.clone(),
-            statement.right.clone(),
-            statement.line_file.clone(),
-        )
-        .into();
-        let backward_fact: Fact = SubsetFact::new(
-            statement.right.clone(),
-            statement.left.clone(),
-            statement.line_file.clone(),
-        )
-        .into();
+        let forward_fact: Fact = self
+            .runtime
+            .new_subset_fact(
+                statement.left.clone(),
+                statement.right.clone(),
+                statement.line_file.clone(),
+            )
+            .into();
+        let backward_fact: Fact = self
+            .runtime
+            .new_subset_fact(
+                statement.right.clone(),
+                statement.left.clone(),
+                statement.line_file.clone(),
+            )
+            .into();
 
         self.environment_stack.push_inherited_environment();
         let compilation = (|| {
@@ -1948,12 +1960,14 @@ impl StmtResultToLeanCompiler {
 
         self.validate_structured_integer_induction_generated_forall(verification)?;
         let target: Fact = verification.generated_forall.clone().into();
-        let expected_start_membership: Fact = InFact::new(
-            proof.start.clone(),
-            StandardSet::Z.into(),
-            result.statement.line_file.clone(),
-        )
-        .into();
+        let expected_start_membership: Fact = self
+            .runtime
+            .new_in_fact(
+                proof.start.clone(),
+                StandardSet::Z.into(),
+                result.statement.line_file.clone(),
+            )
+            .into();
         let start_membership_check = proof.start_in_z_check.verified().ok_or_else(|| {
             "structured induction start membership child is not factual".to_string()
         })?;
@@ -2060,15 +2074,19 @@ impl StmtResultToLeanCompiler {
             &verification.generated_forall.dom_facts[0],
             &retained_context,
         )?;
-        let expected_domain: Fact = GreaterEqualFact::new(
-            verification.parameter.clone(),
-            match &verification.proof {
-                SuccessVerifyByInducProofResult::IntegerStructured(proof) => proof.start.clone(),
-                _ => return Err("structured induction retained another proof family".into()),
-            },
-            verification.generated_forall.line_file.clone(),
-        )
-        .into();
+        let expected_domain: Fact = self
+            .runtime
+            .new_greater_equal_fact(
+                verification.parameter.clone(),
+                match &verification.proof {
+                    SuccessVerifyByInducProofResult::IntegerStructured(proof) => {
+                        proof.start.clone()
+                    }
+                    _ => return Err("structured induction retained another proof family".into()),
+                },
+                verification.generated_forall.line_file.clone(),
+            )
+            .into();
         if generated_domain != render_fact(&expected_domain, &source_context)? {
             return Err("structured induction generated forall changed its lower bound".into());
         }
@@ -2131,18 +2149,22 @@ impl StmtResultToLeanCompiler {
                 "structured induction base assumptions changed their semantic roles".into(),
             );
         }
-        let expected_parameter: Fact = InFact::new(
-            verification.parameter.clone(),
-            StandardSet::Z.into(),
-            result.statement.line_file.clone(),
-        )
-        .into();
-        let expected_equality: Fact = EqualFact::new(
-            verification.parameter.clone(),
-            proof.start.clone(),
-            result.statement.line_file.clone(),
-        )
-        .into();
+        let expected_parameter: Fact = self
+            .runtime
+            .new_in_fact(
+                verification.parameter.clone(),
+                StandardSet::Z.into(),
+                result.statement.line_file.clone(),
+            )
+            .into();
+        let expected_equality: Fact = self
+            .runtime
+            .new_equal_fact(
+                verification.parameter.clone(),
+                proof.start.clone(),
+                result.statement.line_file.clone(),
+            )
+            .into();
         if parameter_assumption.fact.to_string() != expected_parameter.to_string() {
             return Err(
                 "structured induction base parameter assumption changed its proposition".into(),
@@ -2568,12 +2590,14 @@ impl StmtResultToLeanCompiler {
                 return Err("by-enumerate parameter reused its SymbolId".into());
             }
             let parameter_object = obj_for_bound_param_in_scope(binding);
-            let parameter_membership: Fact = InFact::new(
-                parameter_object.clone(),
-                resolved_parameter_set.clone(),
-                statement.line_file.clone(),
-            )
-            .into();
+            let parameter_membership: Fact = self
+                .runtime
+                .new_in_fact(
+                    parameter_object.clone(),
+                    resolved_parameter_set.clone(),
+                    statement.line_file.clone(),
+                )
+                .into();
             let carrier_intro = if forall_parameter_uses_implicit_host_carrier(parameter_type) {
                 "__carrier1 "
             } else {
@@ -2602,7 +2626,7 @@ impl StmtResultToLeanCompiler {
                 .list
                 .iter()
                 .map(|item| {
-                    Fact::from(AtomicFact::EqualFact(EqualFact::new(
+                    Fact::from(AtomicFact::EqualFact(self.runtime.new_equal_fact(
                         parameter_object.clone(),
                         item.as_ref().clone(),
                         statement.line_file.clone(),
@@ -2612,17 +2636,20 @@ impl StmtResultToLeanCompiler {
             let assignment_alternatives = if assignment_equalities.len() == 1 {
                 assignment_equalities[0].clone()
             } else {
-                OrFact::new(
-                    assignment_equalities
-                        .iter()
-                        .map(|fact| match fact {
-                            Fact::AtomicFact(fact) => AndChainAtomicFact::AtomicFact(fact.clone()),
-                            _ => unreachable!("assignment equality is atomic"),
-                        })
-                        .collect(),
-                    statement.line_file.clone(),
-                )
-                .into()
+                self.runtime
+                    .new_or_fact(
+                        assignment_equalities
+                            .iter()
+                            .map(|fact| match fact {
+                                Fact::AtomicFact(fact) => {
+                                    AndChainAtomicFact::AtomicFact(fact.clone())
+                                }
+                                _ => unreachable!("assignment equality is atomic"),
+                            })
+                            .collect(),
+                        statement.line_file.clone(),
+                    )
+                    .into()
             };
             let target_is_exactly_the_generated_alternatives = source_forall.then_facts.len() == 1
                 && source_forall.then_facts[0].clone().to_fact().to_string()
@@ -3053,7 +3080,7 @@ impl StmtResultToLeanCompiler {
             let assignment_equalities = values
                 .iter()
                 .map(|value| {
-                    Fact::from(AtomicFact::EqualFact(EqualFact::new(
+                    Fact::from(AtomicFact::EqualFact(self.runtime.new_equal_fact(
                         parameter_object.clone(),
                         Number::new(value.clone()).into(),
                         statement.line_file.clone(),
@@ -3202,12 +3229,14 @@ impl StmtResultToLeanCompiler {
             ));
         }
         let parameter_object = obj_for_bound_param_in_scope(binding);
-        let expected_integer_membership: Fact = InFact::new(
-            parameter_object,
-            StandardSet::Z.into(),
-            source_forall.line_file.clone(),
-        )
-        .into();
+        let expected_integer_membership: Fact = self
+            .runtime
+            .new_in_fact(
+                parameter_object,
+                StandardSet::Z.into(),
+                source_forall.line_file.clone(),
+            )
+            .into();
         let expected = [expected_integer_membership, expected_equality.clone()];
         let names = [
             format!("__assignment{}_in_z", assignment_index + 1),
@@ -3360,8 +3389,10 @@ impl StmtResultToLeanCompiler {
             ));
         }
 
-        let expected_membership: Fact =
-            InFact::new(source_element.clone(), source_range_obj, line_file.clone()).into();
+        let expected_membership: Fact = self
+            .runtime
+            .new_in_fact(source_element.clone(), source_range_obj, line_file.clone())
+            .into();
         if verification.membership_fact.to_string() != expected_membership.to_string() {
             return Err(format!(
                 "{result_layer} Result changed its source membership fact"
@@ -3396,12 +3427,14 @@ impl StmtResultToLeanCompiler {
             .zip(expected_endpoints)
             .enumerate()
         {
-            let expected_fact: Fact = InFact::new(
-                expected_endpoint.clone(),
-                StandardSet::Z.into(),
-                line_file.clone(),
-            )
-            .into();
+            let expected_fact: Fact = self
+                .runtime
+                .new_in_fact(
+                    expected_endpoint.clone(),
+                    StandardSet::Z.into(),
+                    line_file.clone(),
+                )
+                .into();
             if retained.position != expected_position
                 || obj_equality_key(&retained.endpoint) != obj_equality_key(expected_endpoint)
                 || retained.integer_membership_fact.to_string() != expected_fact.to_string()
@@ -3435,7 +3468,7 @@ impl StmtResultToLeanCompiler {
         let equality_branches = values
             .iter()
             .map(|value| {
-                AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(self.runtime.new_equal_fact(
                     source_element.clone(),
                     Number::new(value.clone()).into(),
                     line_file.clone(),
@@ -3445,7 +3478,9 @@ impl StmtResultToLeanCompiler {
         let expected_cases: Fact = if equality_branches.len() == 1 {
             equality_branches[0].clone().into()
         } else {
-            OrFact::new(equality_branches, line_file.clone()).into()
+            self.runtime
+                .new_or_fact(equality_branches, line_file.clone())
+                .into()
         };
         if verification.generated_cases.to_string() != expected_cases.to_string() {
             return Err(format!(
@@ -3674,15 +3709,17 @@ impl StmtResultToLeanCompiler {
             .coverage_check
             .verified()
             .ok_or_else(|| "by-cases coverage child is not factual".to_string())?;
-        let expected_coverage: Fact = OrFact::new(
-            verification
-                .branches
-                .iter()
-                .map(|branch| branch.assumption.clone())
-                .collect(),
-            result.statement.line_file.clone(),
-        )
-        .into();
+        let expected_coverage: Fact = self
+            .runtime
+            .new_or_fact(
+                verification
+                    .branches
+                    .iter()
+                    .map(|branch| branch.assumption.clone())
+                    .collect(),
+                result.statement.line_file.clone(),
+            )
+            .into();
         if coverage.fact().to_string() != expected_coverage.to_string() {
             return Err("by-cases coverage child changed the ordered cases".into());
         }
@@ -3733,7 +3770,7 @@ impl StmtResultToLeanCompiler {
                             .map(Fact::from)
                             .collect::<Vec<_>>(),
                         AndChainAtomicFact::ChainFact(chain_fact) => chain_fact
-                            .facts()
+                            .facts(&self.runtime)
                             .map_err(|error| format!("invalid by-cases chain assumption: {error}"))?
                             .into_iter()
                             .map(Fact::from)
@@ -3969,7 +4006,7 @@ impl StmtResultToLeanCompiler {
             return Ok(None);
         };
         let expected_reverse: Fact = target_atomic
-            .logical_negation()
+            .logical_negation_with_runtime(&self.runtime)
             .map_err(|_| "by-contra target has no atomic negation".to_string())?
             .into();
         if verification.reverse_assumption.to_string() != expected_reverse.to_string() {
@@ -4056,7 +4093,7 @@ impl StmtResultToLeanCompiler {
             .ok_or_else(|| "contradiction negated child is not factual".to_string())?;
         let impossible_target: Fact = impossible_fact.clone().into();
         let expected_negated: Fact = impossible_fact
-            .logical_negation()
+            .logical_negation_with_runtime(&self.runtime)
             .map_err(|_| "contradiction fact has no atomic negation".to_string())?
             .into();
         if impossible.fact().to_string() != impossible_target.to_string()

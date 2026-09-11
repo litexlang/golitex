@@ -4,7 +4,7 @@ use super::{
 };
 use crate::pipeline::execute_isolated_file_in_runtime;
 use crate::prelude::{OutputDetail, OutputLanguage};
-use crate::runtime::{RuntimeOptions, Runtime, SummaryOption, VerifyStrictnessPolicy};
+use crate::runtime::{Runtime, RuntimeOptions, SummaryOption, VerifyStrictnessPolicy};
 use crate::test_support::execute_source;
 use std::fs;
 use std::io::{self, BufRead, Cursor, Write};

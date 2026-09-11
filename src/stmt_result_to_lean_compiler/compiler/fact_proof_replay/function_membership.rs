@@ -109,9 +109,12 @@ impl StmtResultToLeanCompiler {
         // definition's structural set-builder value so the canonical witness
         // can be constructed, while the surrounding equality remains typed by
         // the original local alias.
-        let rendering_target =
-            transparent_set_builder_membership_target(target, &self.environment_stack)
-                .unwrap_or_else(|| target.clone());
+        let rendering_target = transparent_set_builder_membership_target(
+            &self.runtime,
+            target,
+            &self.environment_stack,
+        )
+        .unwrap_or_else(|| target.clone());
         render_exact_set_builder_value_from_fact_and_proofs(
             &rendering_target,
             &compiled_children,
@@ -227,6 +230,7 @@ impl StmtResultToLeanCompiler {
 }
 
 fn transparent_set_builder_membership_target(
+    runtime: &Runtime,
     target: &Fact,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Option<Fact> {
@@ -242,11 +246,12 @@ fn transparent_set_builder_membership_target(
         return None;
     };
     Some(
-        InFact::new(
-            membership.element.clone(),
-            definition.value.clone(),
-            membership.line_file.clone(),
-        )
-        .into(),
+        runtime
+            .new_in_fact(
+                membership.element.clone(),
+                definition.value.clone(),
+                membership.line_file.clone(),
+            )
+            .into(),
     )
 }

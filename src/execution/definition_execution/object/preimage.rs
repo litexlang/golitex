@@ -216,18 +216,20 @@ impl Runtime {
         )
         .into();
 
-        let preimage_in_source: Fact = InFact::new(
-            preimage_obj.clone(),
-            replacement.source_set.as_ref().clone(),
-            stmt.line_file.clone(),
-        )
-        .into();
-        let relation_fact: Fact = NormalAtomicFact::new(
-            replacement.prop_name.clone(),
-            vec![preimage_obj, stmt.range_membership.element.clone()],
-            stmt.line_file.clone(),
-        )
-        .into();
+        let preimage_in_source: Fact = self
+            .new_in_fact(
+                preimage_obj.clone(),
+                replacement.source_set.as_ref().clone(),
+                stmt.line_file.clone(),
+            )
+            .into();
+        let relation_fact: Fact = self
+            .new_normal_atomic_fact(
+                replacement.prop_name.clone(),
+                vec![preimage_obj, stmt.range_membership.element.clone()],
+                stmt.line_file.clone(),
+            )
+            .into();
 
         let mut infer_result = SuccessInferResult::new();
         infer_result.new_infer_result_inside(
@@ -297,12 +299,13 @@ impl Runtime {
 
         let mut infer_result = SuccessInferResult::new();
         for (preimage_obj, param_set) in preimage_objs.iter().zip(flat_param_sets.iter()) {
-            let fact: Fact = InFact::new(
-                preimage_obj.clone(),
-                param_set.clone(),
-                stmt.line_file.clone(),
-            )
-            .into();
+            let fact: Fact = self
+                .new_in_fact(
+                    preimage_obj.clone(),
+                    param_set.clone(),
+                    stmt.line_file.clone(),
+                )
+                .into();
             infer_result.new_infer_result_inside(
                 self.store_with_well_defined_verification_and_infer(fact, &VerifyState::initial())
                     .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?,
@@ -359,12 +362,13 @@ impl Runtime {
                 vec![],
             )
         })?;
-        let equality_fact: Fact = EqualFact::new(
-            stmt.range_membership.element.clone(),
-            application,
-            stmt.line_file.clone(),
-        )
-        .into();
+        let equality_fact: Fact = self
+            .new_equal_fact(
+                stmt.range_membership.element.clone(),
+                application,
+                stmt.line_file.clone(),
+            )
+            .into();
         self.store_with_well_defined_verification_and_infer(equality_fact, &VerifyState::initial())
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))
     }

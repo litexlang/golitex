@@ -63,12 +63,13 @@ impl Runtime {
             return Ok(result);
         }
 
-        let fact_with_reversed_args: AtomicFact = EqualFact::new(
-            equal_fact.right.clone(),
-            equal_fact.left.clone(),
-            equal_fact.line_file.clone(),
-        )
-        .into();
+        let fact_with_reversed_args: AtomicFact = self
+            .new_equal_fact(
+                equal_fact.right.clone(),
+                equal_fact.left.clone(),
+                equal_fact.line_file.clone(),
+            )
+            .into();
         if let Some(fact_verified) =
             self.try_verify_with_known_forall_facts_in_envs(&fact_with_reversed_args, verify_state)?
         {

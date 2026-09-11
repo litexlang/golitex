@@ -150,12 +150,13 @@ impl Runtime {
             let Obj::FnSet(fn_set) = equal_set else {
                 continue;
             };
-            let expanded_atomic: AtomicFact = InFact::new(
-                in_fact.element.clone(),
-                fn_set.into(),
-                in_fact.line_file.clone(),
-            )
-            .into();
+            let expanded_atomic: AtomicFact = self
+                .new_in_fact(
+                    in_fact.element.clone(),
+                    fn_set.into(),
+                    in_fact.line_file.clone(),
+                )
+                .into();
             result.new_infer_result_inside(
                 self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
                     expanded_atomic,
@@ -191,30 +192,33 @@ impl Runtime {
             {
                 continue;
             }
-            let expanded_fact: AtomicFact = InFact::new(
-                in_fact.element.clone(),
-                equal_set.clone(),
-                in_fact.line_file.clone(),
-            )
-            .into();
+            let expanded_fact: AtomicFact = self
+                .new_in_fact(
+                    in_fact.element.clone(),
+                    equal_set.clone(),
+                    in_fact.line_file.clone(),
+                )
+                .into();
             if self
                 .cache_known_facts_contains(&expanded_fact.to_string())
                 .0
             {
                 continue;
             }
-            let source_on_left: Fact = EqualFact::new(
-                in_fact.set.clone(),
-                equal_set.clone(),
-                in_fact.line_file.clone(),
-            )
-            .into();
-            let source_on_right: Fact = EqualFact::new(
-                equal_set.clone(),
-                in_fact.set.clone(),
-                in_fact.line_file.clone(),
-            )
-            .into();
+            let source_on_left: Fact = self
+                .new_equal_fact(
+                    in_fact.set.clone(),
+                    equal_set.clone(),
+                    in_fact.line_file.clone(),
+                )
+                .into();
+            let source_on_right: Fact = self
+                .new_equal_fact(
+                    equal_set.clone(),
+                    in_fact.set.clone(),
+                    in_fact.line_file.clone(),
+                )
+                .into();
             let (equality, equality_orientation) = if self
                 .known_fact_id_for_fact(&source_on_left)?
                 .is_some()
@@ -265,12 +269,13 @@ impl Runtime {
         set_builder: &SetBuilder,
         inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        let unfolded_membership: Fact = InFact::new(
-            in_fact.element.clone(),
-            set_builder.clone().into(),
-            in_fact.line_file.clone(),
-        )
-        .into();
+        let unfolded_membership: Fact = self
+            .new_in_fact(
+                in_fact.element.clone(),
+                set_builder.clone().into(),
+                in_fact.line_file.clone(),
+            )
+            .into();
         let firing_key = format!(
             "set builder membership:{}",
             nested_obj_binder_normalized_fact_key(&unfolded_membership)
@@ -288,12 +293,13 @@ impl Runtime {
             in_fact.element.clone(),
         );
 
-        let element_in_param_set_fact = InFact::new(
-            in_fact.element.clone(),
-            *set_builder.param_set.clone(),
-            in_fact.line_file.clone(),
-        )
-        .into();
+        let element_in_param_set_fact = self
+            .new_in_fact(
+                in_fact.element.clone(),
+                *set_builder.param_set.clone(),
+                in_fact.line_file.clone(),
+            )
+            .into();
 
         let mut result = SuccessInferResult::new();
         result.new_fact(&element_in_param_set_fact);
@@ -355,18 +361,20 @@ impl Runtime {
         general_cart: &GeneralCart,
         inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        let fn_set_fact: Fact = InFact::new(
-            in_fact.element.clone(),
-            general_cart_member_fn_set(self, general_cart)?,
-            in_fact.line_file.clone(),
-        )
-        .into();
+        let fn_set_fact: Fact = self
+            .new_in_fact(
+                in_fact.element.clone(),
+                general_cart_member_fn_set(self, general_cart)?,
+                in_fact.line_file.clone(),
+            )
+            .into();
 
         let mut result = SuccessInferResult::new();
         result.new_fact(&fn_set_fact);
         self.store_typed_inference_conclusion_and_infer(fn_set_fact, inference_state)?;
 
         let choice_fact: Fact = crate::verification::general_cart_member_choice_fact(
+            self,
             general_cart,
             in_fact.element.clone(),
             in_fact.line_file.clone(),
@@ -392,8 +400,9 @@ impl Runtime {
         // metadata.  Restricting this lookup to known non-forall facts prevents
         // an unrelated dependent set parameter from being misclassified by a
         // theorem/forall search while preserving generic symbolic carts.
-        let is_cart_fact: AtomicFact =
-            IsCartFact::new(in_fact.set.clone(), in_fact.line_file.clone()).into();
+        let is_cart_fact: AtomicFact = self
+            .new_is_cart_fact(in_fact.set.clone(), in_fact.line_file.clone())
+            .into();
         let is_known_symbolic_cart = self
             .verify_non_equational_atomic_fact_with_known_atomic_facts(&is_cart_fact)?
             .is_success();
@@ -402,8 +411,9 @@ impl Runtime {
         }
 
         let mut result = SuccessInferResult::new();
-        let is_tuple_fact: AtomicFact =
-            IsTupleFact::new(in_fact.element.clone(), in_fact.line_file.clone()).into();
+        let is_tuple_fact: AtomicFact = self
+            .new_is_tuple_fact(in_fact.element.clone(), in_fact.line_file.clone())
+            .into();
         result.push_atomic_fact(&is_tuple_fact);
         result.new_infer_result_inside(
             self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
@@ -413,12 +423,13 @@ impl Runtime {
             )?,
         );
 
-        let tuple_dim_fact: AtomicFact = EqualFact::new(
-            TupleDim::new(in_fact.element.clone()).into(),
-            CartDim::new(in_fact.set.clone()).into(),
-            in_fact.line_file.clone(),
-        )
-        .into();
+        let tuple_dim_fact: AtomicFact = self
+            .new_equal_fact(
+                TupleDim::new(in_fact.element.clone()).into(),
+                CartDim::new(in_fact.set.clone()).into(),
+                in_fact.line_file.clone(),
+            )
+            .into();
         result.push_atomic_fact(&tuple_dim_fact);
         result.new_infer_result_inside(
             self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
@@ -437,19 +448,21 @@ impl Runtime {
         let index_group =
             self.fresh_param_group_with_type(vec![index_name], ParamType::Obj(index_set))?;
         let index_obj = obj_for_bound_param_in_scope(&index_group.params[0]);
-        let coordinate_fact: AtomicFact = InFact::new(
-            ObjAtIndex::new(in_fact.element.clone(), index_obj.clone()).into(),
-            Proj::new(in_fact.set.clone(), index_obj).into(),
-            in_fact.line_file.clone(),
-        )
-        .into();
-        let coordinate_forall_fact: Fact = ForallFact::new_canonical_forall(
-            TypedParameterList::new(vec![index_group]),
-            vec![],
-            vec![coordinate_fact.into()],
-            in_fact.line_file.clone(),
-        )?
-        .into();
+        let coordinate_fact: AtomicFact = self
+            .new_in_fact(
+                ObjAtIndex::new(in_fact.element.clone(), index_obj.clone()).into(),
+                Proj::new(in_fact.set.clone(), index_obj).into(),
+                in_fact.line_file.clone(),
+            )
+            .into();
+        let coordinate_forall_fact: Fact = self
+            .new_forall_fact(
+                TypedParameterList::new(vec![index_group]),
+                vec![],
+                vec![coordinate_fact.into()],
+                in_fact.line_file.clone(),
+            )?
+            .into();
         result.new_fact(&coordinate_forall_fact);
         result.new_infer_result_inside(
             self.store_typed_inference_conclusion_and_infer(
@@ -495,7 +508,7 @@ impl Runtime {
                 // Example: `x $in {2}` infers `x = 2`, which makes a restricted
                 // function body usable when its ambient domain contains `2`.
                 if let [singleton] = list_set.list.as_slice() {
-                    let equal_fact = EqualFact::new(
+                    let equal_fact = self.new_equal_fact(
                         in_fact.element.clone(),
                         singleton.as_ref().clone(),
                         in_fact.line_file.clone(),
@@ -526,16 +539,19 @@ impl Runtime {
                 let mut or_case_facts: Vec<AndChainAtomicFact> =
                     Vec::with_capacity(list_set.list.len());
                 for obj_in_list_set in list_set.list.iter() {
-                    let equal_fact = EqualFact::new(
-                        in_fact.element.clone(),
-                        *obj_in_list_set.clone(),
-                        in_fact.line_file.clone(),
-                    )
-                    .into();
+                    let equal_fact = self
+                        .new_equal_fact(
+                            in_fact.element.clone(),
+                            *obj_in_list_set.clone(),
+                            in_fact.line_file.clone(),
+                        )
+                        .into();
                     or_case_facts.push(AndChainAtomicFact::AtomicFact(equal_fact));
                 }
 
-                let or_fact = OrFact::new(or_case_facts, in_fact.line_file.clone()).into();
+                let or_fact = self
+                    .new_or_fact(or_case_facts, in_fact.line_file.clone())
+                    .into();
                 let mut result = SuccessInferResult::new();
                 result.new_fact(&or_fact);
                 let conclusion_infers = self
@@ -569,12 +585,13 @@ impl Runtime {
             // Power set membership: `A $in power_set(B)` means `A $subset B`.
             // Example: from `A $in power_set(Z)`, infer `A $subset Z`.
             Obj::PowerSet(power_set) => {
-                let subset_fact = SubsetFact::new(
-                    in_fact.element.clone(),
-                    (*power_set.set).clone(),
-                    in_fact.line_file.clone(),
-                )
-                .into();
+                let subset_fact = self
+                    .new_subset_fact(
+                        in_fact.element.clone(),
+                        (*power_set.set).clone(),
+                        in_fact.line_file.clone(),
+                    )
+                    .into();
                 let mut result = SuccessInferResult::new();
                 result.push_atomic_fact(&subset_fact);
                 result.new_infer_result_inside(
@@ -593,8 +610,9 @@ impl Runtime {
                 }
                 let mut result = SuccessInferResult::new();
 
-                let is_cart_fact =
-                    IsTupleFact::new(in_fact.element.clone(), in_fact.line_file.clone()).into();
+                let is_cart_fact = self
+                    .new_is_tuple_fact(in_fact.element.clone(), in_fact.line_file.clone())
+                    .into();
 
                 result.new_fact(&is_cart_fact);
                 let tuple_shape_infers = self.store_typed_inference_conclusion_and_infer(
@@ -618,12 +636,13 @@ impl Runtime {
                 let cart_args_count = cart.args.len();
                 let tuple_dim_obj = TupleDim::new(in_fact.element.clone()).into();
                 let cart_args_count_obj = Number::new(cart_args_count.to_string()).into();
-                let tuple_dim_fact = EqualFact::new(
-                    tuple_dim_obj,
-                    cart_args_count_obj,
-                    in_fact.line_file.clone(),
-                )
-                .into();
+                let tuple_dim_fact = self
+                    .new_equal_fact(
+                        tuple_dim_obj,
+                        cart_args_count_obj,
+                        in_fact.line_file.clone(),
+                    )
+                    .into();
 
                 result.new_fact(&tuple_dim_fact);
                 let tuple_dimension_infers = self.store_typed_inference_conclusion_and_infer(
@@ -665,9 +684,9 @@ impl Runtime {
                         )
                         .into(),
                     };
-                    let projected_in_factor: Fact =
-                        InFact::new(projected, (**factor).clone(), in_fact.line_file.clone())
-                            .into();
+                    let projected_in_factor: Fact = self
+                        .new_in_fact(projected, (**factor).clone(), in_fact.line_file.clone())
+                        .into();
                     result.new_fact(&projected_in_factor);
                     let coordinate_infers = self.store_typed_inference_conclusion_and_infer(
                         projected_in_factor.clone(),
@@ -730,9 +749,9 @@ impl Runtime {
                 source_set @ (StandardSet::QPos | StandardSet::RPos | StandardSet::NPos),
             ) => {
                 let zero_obj: Obj = Number::new("0".to_string()).into();
-                let inferred_atomic_fact: AtomicFact =
-                    LessFact::new(zero_obj, in_fact.element.clone(), in_fact.line_file.clone())
-                        .into();
+                let inferred_atomic_fact: AtomicFact = self
+                    .new_less_fact(zero_obj, in_fact.element.clone(), in_fact.line_file.clone())
+                    .into();
                 let inferred_fact: Fact = inferred_atomic_fact.clone().into();
                 let mut result = SuccessInferResult::new();
                 result.push_atomic_fact(&inferred_atomic_fact);
@@ -761,9 +780,9 @@ impl Runtime {
                 source_set @ (StandardSet::QNeg | StandardSet::ZNeg | StandardSet::RNeg),
             ) => {
                 let zero_obj: Obj = Number::new("0".to_string()).into();
-                let inferred_atomic_fact: AtomicFact =
-                    LessFact::new(in_fact.element.clone(), zero_obj, in_fact.line_file.clone())
-                        .into();
+                let inferred_atomic_fact: AtomicFact = self
+                    .new_less_fact(in_fact.element.clone(), zero_obj, in_fact.line_file.clone())
+                    .into();
                 let inferred_fact: Fact = inferred_atomic_fact.clone().into();
                 let mut result = SuccessInferResult::new();
                 result.push_atomic_fact(&inferred_atomic_fact);
@@ -795,9 +814,13 @@ impl Runtime {
                 | StandardSet::CStar),
             ) => {
                 let zero_obj: Obj = Number::new("0".to_string()).into();
-                let inferred_atomic_fact: AtomicFact =
-                    NotEqualFact::new(in_fact.element.clone(), zero_obj, in_fact.line_file.clone())
-                        .into();
+                let inferred_atomic_fact: AtomicFact = self
+                    .new_not_equal_fact(
+                        in_fact.element.clone(),
+                        zero_obj,
+                        in_fact.line_file.clone(),
+                    )
+                    .into();
                 let inferred_fact: Fact = inferred_atomic_fact.clone().into();
                 let mut result = SuccessInferResult::new();
                 result.push_atomic_fact(&inferred_atomic_fact);
@@ -825,12 +848,13 @@ impl Runtime {
             // Example: after `k $in N`, infer stores `k >= 0` (same as an explicit second line).
             Obj::StandardSet(StandardSet::N) => {
                 let zero_obj: Obj = Number::new("0".to_string()).into();
-                let inferred_atomic_fact: AtomicFact = GreaterEqualFact::new(
-                    in_fact.element.clone(),
-                    zero_obj,
-                    in_fact.line_file.clone(),
-                )
-                .into();
+                let inferred_atomic_fact: AtomicFact = self
+                    .new_greater_equal_fact(
+                        in_fact.element.clone(),
+                        zero_obj,
+                        in_fact.line_file.clone(),
+                    )
+                    .into();
                 let inferred_fact: Fact = inferred_atomic_fact.clone().into();
                 let mut result = SuccessInferResult::new();
                 result.push_atomic_fact(&inferred_atomic_fact);
@@ -864,12 +888,13 @@ impl Runtime {
             Obj::FiniteSeqSet(fs) => {
                 let fn_set = self.finite_seq_set_to_fn_set(fs, in_fact.line_file.clone());
                 let mut result = self.infer_membership_in_fn_set_from_in_fact(in_fact, &fn_set)?;
-                let expanded_atomic: AtomicFact = InFact::new(
-                    in_fact.element.clone(),
-                    fn_set.into(),
-                    in_fact.line_file.clone(),
-                )
-                .into();
+                let expanded_atomic: AtomicFact = self
+                    .new_in_fact(
+                        in_fact.element.clone(),
+                        fn_set.into(),
+                        in_fact.line_file.clone(),
+                    )
+                    .into();
                 result.new_infer_result_inside(
                     self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
                         expanded_atomic,
@@ -883,12 +908,13 @@ impl Runtime {
             Obj::SeqSet(ss) => {
                 let fn_set = self.seq_set_to_fn_set(ss, in_fact.line_file.clone());
                 let mut result = self.infer_membership_in_fn_set_from_in_fact(in_fact, &fn_set)?;
-                let expanded_atomic: AtomicFact = InFact::new(
-                    in_fact.element.clone(),
-                    fn_set.into(),
-                    in_fact.line_file.clone(),
-                )
-                .into();
+                let expanded_atomic: AtomicFact = self
+                    .new_in_fact(
+                        in_fact.element.clone(),
+                        fn_set.into(),
+                        in_fact.line_file.clone(),
+                    )
+                    .into();
                 result.new_infer_result_inside(
                     self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
                         expanded_atomic,
@@ -907,12 +933,13 @@ impl Runtime {
                 );
                 let fn_set = self.matrix_set_to_fn_set(ms, in_fact.line_file.clone());
                 let mut result = self.infer_membership_in_fn_set_from_in_fact(in_fact, &fn_set)?;
-                let expanded_atomic: AtomicFact = InFact::new(
-                    in_fact.element.clone(),
-                    fn_set.into(),
-                    in_fact.line_file.clone(),
-                )
-                .into();
+                let expanded_atomic: AtomicFact = self
+                    .new_in_fact(
+                        in_fact.element.clone(),
+                        fn_set.into(),
+                        in_fact.line_file.clone(),
+                    )
+                    .into();
                 result.new_infer_result_inside(
                     self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
                         expanded_atomic,
@@ -927,18 +954,21 @@ impl Runtime {
             // the two membership cases.
             Obj::Union(union) => {
                 let lf = in_fact.line_file.clone();
-                let element_in_left: AtomicFact =
-                    InFact::new(in_fact.element.clone(), (*union.left).clone(), lf.clone()).into();
-                let element_in_right: AtomicFact =
-                    InFact::new(in_fact.element.clone(), (*union.right).clone(), lf.clone()).into();
-                let union_membership_cases: Fact = OrFact::new(
-                    vec![
-                        AndChainAtomicFact::AtomicFact(element_in_left),
-                        AndChainAtomicFact::AtomicFact(element_in_right),
-                    ],
-                    lf,
-                )
-                .into();
+                let element_in_left: AtomicFact = self
+                    .new_in_fact(in_fact.element.clone(), (*union.left).clone(), lf.clone())
+                    .into();
+                let element_in_right: AtomicFact = self
+                    .new_in_fact(in_fact.element.clone(), (*union.right).clone(), lf.clone())
+                    .into();
+                let union_membership_cases: Fact = self
+                    .new_or_fact(
+                        vec![
+                            AndChainAtomicFact::AtomicFact(element_in_left),
+                            AndChainAtomicFact::AtomicFact(element_in_right),
+                        ],
+                        lf,
+                    )
+                    .into();
                 let mut result = SuccessInferResult::new();
                 result.new_fact(&union_membership_cases);
                 result.new_infer_result_inside(self.store_typed_inference_conclusion_and_infer(
@@ -951,18 +981,20 @@ impl Runtime {
             // Example: from `t $in intersect({-2, 3}, {y Q : y^2 = 9})`, infer both memberships for case splits.
             Obj::Intersect(intersect) => {
                 let lf = in_fact.line_file.clone();
-                let element_in_left: Fact = InFact::new(
-                    in_fact.element.clone(),
-                    (*intersect.left).clone(),
-                    lf.clone(),
-                )
-                .into();
-                let element_in_right: Fact = InFact::new(
-                    in_fact.element.clone(),
-                    (*intersect.right).clone(),
-                    lf.clone(),
-                )
-                .into();
+                let element_in_left: Fact = self
+                    .new_in_fact(
+                        in_fact.element.clone(),
+                        (*intersect.left).clone(),
+                        lf.clone(),
+                    )
+                    .into();
+                let element_in_right: Fact = self
+                    .new_in_fact(
+                        in_fact.element.clone(),
+                        (*intersect.right).clone(),
+                        lf.clone(),
+                    )
+                    .into();
                 let mut result = SuccessInferResult::new();
                 result.new_fact(&element_in_left);
                 result.new_infer_result_inside(self.store_typed_inference_conclusion_and_infer(
@@ -980,10 +1012,12 @@ impl Runtime {
             // Example: from `t $in set_minus({1,2}, {2})`, infer membership in `{1,2}` and non-membership in `{2}`.
             Obj::SetMinus(sm) => {
                 let lf = in_fact.line_file.clone();
-                let element_in_left: Fact =
-                    InFact::new(in_fact.element.clone(), (*sm.left).clone(), lf.clone()).into();
-                let element_not_in_right: Fact =
-                    NotInFact::new(in_fact.element.clone(), (*sm.right).clone(), lf.clone()).into();
+                let element_in_left: Fact = self
+                    .new_in_fact(in_fact.element.clone(), (*sm.left).clone(), lf.clone())
+                    .into();
+                let element_not_in_right: Fact = self
+                    .new_not_in_fact(in_fact.element.clone(), (*sm.right).clone(), lf.clone())
+                    .into();
                 let mut result = SuccessInferResult::new();
                 result.new_fact(&element_in_left);
                 result.new_infer_result_inside(self.store_typed_inference_conclusion_and_infer(
@@ -999,12 +1033,13 @@ impl Runtime {
                 // Example: a quotient over `set_minus(X, {x0})` may use `x - x0` as a divisor.
                 if let Obj::ListSet(list_set) = sm.right.as_ref() {
                     if let [excluded] = list_set.list.as_slice() {
-                        let element_not_equal: Fact = NotEqualFact::new(
-                            in_fact.element.clone(),
-                            excluded.as_ref().clone(),
-                            lf,
-                        )
-                        .into();
+                        let element_not_equal: Fact = self
+                            .new_not_equal_fact(
+                                in_fact.element.clone(),
+                                excluded.as_ref().clone(),
+                                lf,
+                            )
+                            .into();
                         result.new_fact(&element_not_equal);
                         result.new_infer_result_inside(
                             self.store_typed_inference_conclusion_and_infer(
@@ -1080,12 +1115,13 @@ impl Runtime {
         let Some(body) = self.get_fn_range_function_body(&fn_range.function) else {
             return Ok(SuccessInferResult::new());
         };
-        let codomain_atomic: AtomicFact = InFact::new(
-            in_fact.element.clone(),
-            body.ret_set.as_ref().clone(),
-            in_fact.line_file.clone(),
-        )
-        .into();
+        let codomain_atomic: AtomicFact = self
+            .new_in_fact(
+                in_fact.element.clone(),
+                body.ret_set.as_ref().clone(),
+                in_fact.line_file.clone(),
+            )
+            .into();
         let codomain_fact: Fact = codomain_atomic.clone().into();
         let mut result = SuccessInferResult::new();
         result.new_fact(&codomain_fact);
@@ -1187,7 +1223,7 @@ impl Runtime {
             return Ok(None);
         };
         facts.push(
-            EqualFact::new(
+            self.new_equal_fact(
                 in_fact.element.clone(),
                 application,
                 in_fact.line_file.clone(),
@@ -1195,7 +1231,7 @@ impl Runtime {
             .into(),
         );
 
-        let exist_body = PlainExistFact::new(
+        let exist_body = self.new_plain_exist_fact(
             TypedParameterList::new(param_groups),
             facts,
             in_fact.line_file.clone(),
@@ -1215,13 +1251,14 @@ impl Runtime {
             ParamType::Obj(big_union.left.as_ref().clone()),
         )?;
         let member_obj = obj_for_bound_param_in_scope(&member_group.params[0]);
-        let element_in_member: AtomicFact = InFact::new(
-            in_fact.element.clone(),
-            member_obj,
-            in_fact.line_file.clone(),
-        )
-        .into();
-        let exist_body = PlainExistFact::new(
+        let element_in_member: AtomicFact = self
+            .new_in_fact(
+                in_fact.element.clone(),
+                member_obj,
+                in_fact.line_file.clone(),
+            )
+            .into();
+        let exist_body = self.new_plain_exist_fact(
             TypedParameterList::new(vec![member_group]),
             vec![element_in_member.into()],
             in_fact.line_file.clone(),
@@ -1257,12 +1294,13 @@ impl Runtime {
         inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut result = SuccessInferResult::new();
-        let ambient_membership: Fact = InFact::new(
-            in_fact.element.clone(),
-            index_union.ambient_set.as_ref().clone(),
-            in_fact.line_file.clone(),
-        )
-        .into();
+        let ambient_membership: Fact = self
+            .new_in_fact(
+                in_fact.element.clone(),
+                index_union.ambient_set.as_ref().clone(),
+                in_fact.line_file.clone(),
+            )
+            .into();
         result.new_fact(&ambient_membership);
         result.new_infer_result_inside(
             self.store_typed_inference_conclusion_and_infer(ambient_membership, inference_state)?,
@@ -1279,9 +1317,10 @@ impl Runtime {
         else {
             return Ok(result);
         };
-        let element_in_fiber: AtomicFact =
-            InFact::new(in_fact.element.clone(), fiber, in_fact.line_file.clone()).into();
-        let exist_fact: Fact = ExistFact::PlainExistFact(PlainExistFact::new(
+        let element_in_fiber: AtomicFact = self
+            .new_in_fact(in_fact.element.clone(), fiber, in_fact.line_file.clone())
+            .into();
+        let exist_fact: Fact = ExistFact::PlainExistFact(self.new_plain_exist_fact(
             TypedParameterList::new(vec![index_group]),
             vec![element_in_fiber.into()],
             in_fact.line_file.clone(),
@@ -1301,12 +1340,13 @@ impl Runtime {
         inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut result = SuccessInferResult::new();
-        let ambient_membership: Fact = InFact::new(
-            in_fact.element.clone(),
-            index_intersect.ambient_set.as_ref().clone(),
-            in_fact.line_file.clone(),
-        )
-        .into();
+        let ambient_membership: Fact = self
+            .new_in_fact(
+                in_fact.element.clone(),
+                index_intersect.ambient_set.as_ref().clone(),
+                in_fact.line_file.clone(),
+            )
+            .into();
         result.new_fact(&ambient_membership);
         result.new_infer_result_inside(
             self.store_typed_inference_conclusion_and_infer(ambient_membership, inference_state)?,
@@ -1323,15 +1363,17 @@ impl Runtime {
         else {
             return Ok(result);
         };
-        let element_in_fiber: AtomicFact =
-            InFact::new(in_fact.element.clone(), fiber, in_fact.line_file.clone()).into();
-        let forall_fact: Fact = ForallFact::new_canonical_forall(
-            TypedParameterList::new(vec![index_group]),
-            vec![],
-            vec![element_in_fiber.into()],
-            in_fact.line_file.clone(),
-        )?
-        .into();
+        let element_in_fiber: AtomicFact = self
+            .new_in_fact(in_fact.element.clone(), fiber, in_fact.line_file.clone())
+            .into();
+        let forall_fact: Fact = self
+            .new_forall_fact(
+                TypedParameterList::new(vec![index_group]),
+                vec![],
+                vec![element_in_fiber.into()],
+                in_fact.line_file.clone(),
+            )?
+            .into();
         result.new_fact(&forall_fact);
         result.new_infer_result_inside(
             self.store_typed_inference_conclusion_and_infer(forall_fact, inference_state)?,
@@ -1351,13 +1393,14 @@ impl Runtime {
             ParamType::Obj(replacement.source_set.as_ref().clone()),
         )?;
         let preimage_obj = obj_for_bound_param_in_scope(&preimage_group.params[0]);
-        let relation_fact: AtomicFact = NormalAtomicFact::new(
-            replacement.prop_name.clone(),
-            vec![preimage_obj, in_fact.element.clone()],
-            in_fact.line_file.clone(),
-        )
-        .into();
-        let exist_body = PlainExistFact::new(
+        let relation_fact: AtomicFact = self
+            .new_normal_atomic_fact(
+                replacement.prop_name.clone(),
+                vec![preimage_obj, in_fact.element.clone()],
+                in_fact.line_file.clone(),
+            )
+            .into();
+        let exist_body = self.new_plain_exist_fact(
             TypedParameterList::new(vec![preimage_group]),
             vec![relation_fact.into()],
             in_fact.line_file.clone(),
@@ -1383,8 +1426,9 @@ impl Runtime {
         let element = in_fact.element.clone();
         let lf = in_fact.line_file.clone();
 
-        let inferred_in_z_fact =
-            InFact::new(element.clone(), StandardSet::Z.into(), lf.clone()).into();
+        let inferred_in_z_fact = self
+            .new_in_fact(element.clone(), StandardSet::Z.into(), lf.clone())
+            .into();
         let mut result = SuccessInferResult::new();
         result.push_atomic_fact(&inferred_in_z_fact);
         self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
@@ -1393,7 +1437,9 @@ impl Runtime {
             inference_state,
         )?;
 
-        let lower_bound = LessEqualFact::new(start.clone(), element.clone(), lf.clone()).into();
+        let lower_bound = self
+            .new_less_equal_fact(start.clone(), element.clone(), lf.clone())
+            .into();
         result.push_atomic_fact(&lower_bound);
         self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
             lower_bound.clone(),
@@ -1402,9 +1448,11 @@ impl Runtime {
         )?;
 
         let upper_bound = if end_inclusive {
-            LessEqualFact::new(element.clone(), end.clone(), lf.clone()).into()
+            self.new_less_equal_fact(element.clone(), end.clone(), lf.clone())
+                .into()
         } else {
-            LessFact::new(element.clone(), end.clone(), lf.clone()).into()
+            self.new_less_fact(element.clone(), end.clone(), lf.clone())
+                .into()
         };
         result.push_atomic_fact(&upper_bound);
         self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
@@ -1416,7 +1464,7 @@ impl Runtime {
         if let Some(singleton) =
             self.singleton_value_for_integer_interval(&start, &end, end_inclusive)
         {
-            let equal_fact = EqualFact::new(element, singleton, lf).into();
+            let equal_fact = self.new_equal_fact(element, singleton, lf).into();
             result.push_atomic_fact(&equal_fact);
             self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
                 equal_fact,
@@ -1438,8 +1486,9 @@ impl Runtime {
         let element = in_fact.element.clone();
         let lf = in_fact.line_file.clone();
 
-        let inferred_in_r_fact =
-            InFact::new(element.clone(), StandardSet::R.into(), lf.clone()).into();
+        let inferred_in_r_fact = self
+            .new_in_fact(element.clone(), StandardSet::R.into(), lf.clone())
+            .into();
         let mut result = SuccessInferResult::new();
         result.push_atomic_fact(&inferred_in_r_fact);
         self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
@@ -1449,9 +1498,11 @@ impl Runtime {
         )?;
 
         let lower_bound = if interval.left_closed() {
-            LessEqualFact::new(interval.start().clone(), element.clone(), lf.clone()).into()
+            self.new_less_equal_fact(interval.start().clone(), element.clone(), lf.clone())
+                .into()
         } else {
-            LessFact::new(interval.start().clone(), element.clone(), lf.clone()).into()
+            self.new_less_fact(interval.start().clone(), element.clone(), lf.clone())
+                .into()
         };
         result.push_atomic_fact(&lower_bound);
         self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
@@ -1461,9 +1512,11 @@ impl Runtime {
         )?;
 
         let upper_bound = if interval.right_closed() {
-            LessEqualFact::new(element.clone(), interval.end().clone(), lf.clone()).into()
+            self.new_less_equal_fact(element.clone(), interval.end().clone(), lf.clone())
+                .into()
         } else {
-            LessFact::new(element.clone(), interval.end().clone(), lf.clone()).into()
+            self.new_less_fact(element.clone(), interval.end().clone(), lf.clone())
+                .into()
         };
         result.push_atomic_fact(&upper_bound);
         self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
@@ -1484,8 +1537,9 @@ impl Runtime {
         let element = in_fact.element.clone();
         let lf = in_fact.line_file.clone();
 
-        let inferred_in_r_fact =
-            InFact::new(element.clone(), StandardSet::R.into(), lf.clone()).into();
+        let inferred_in_r_fact = self
+            .new_in_fact(element.clone(), StandardSet::R.into(), lf.clone())
+            .into();
         let mut result = SuccessInferResult::new();
         result.push_atomic_fact(&inferred_in_r_fact);
         self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
@@ -1495,18 +1549,18 @@ impl Runtime {
         )?;
 
         let bound = match interval {
-            OneSideInfinityIntervalObj::LeftOpen(_) => {
-                LessFact::new(interval.start().clone(), element.clone(), lf.clone()).into()
-            }
-            OneSideInfinityIntervalObj::LeftClosed(_) => {
-                LessEqualFact::new(interval.start().clone(), element.clone(), lf.clone()).into()
-            }
-            OneSideInfinityIntervalObj::RightOpen(_) => {
-                LessFact::new(element.clone(), interval.start().clone(), lf.clone()).into()
-            }
-            OneSideInfinityIntervalObj::RightClosed(_) => {
-                LessEqualFact::new(element.clone(), interval.start().clone(), lf.clone()).into()
-            }
+            OneSideInfinityIntervalObj::LeftOpen(_) => self
+                .new_less_fact(interval.start().clone(), element.clone(), lf.clone())
+                .into(),
+            OneSideInfinityIntervalObj::LeftClosed(_) => self
+                .new_less_equal_fact(interval.start().clone(), element.clone(), lf.clone())
+                .into(),
+            OneSideInfinityIntervalObj::RightOpen(_) => self
+                .new_less_fact(element.clone(), interval.start().clone(), lf.clone())
+                .into(),
+            OneSideInfinityIntervalObj::RightClosed(_) => self
+                .new_less_equal_fact(element.clone(), interval.start().clone(), lf.clone())
+                .into(),
         };
         result.push_atomic_fact(&bound);
         self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
@@ -1548,12 +1602,13 @@ impl Runtime {
         is_cart_fact: &IsCartFact,
         inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        let lower_bound: AtomicFact = GreaterEqualFact::new(
-            CartDim::new(is_cart_fact.set.clone()).into(),
-            Number::new("2".to_string()).into(),
-            is_cart_fact.line_file.clone(),
-        )
-        .into();
+        let lower_bound: AtomicFact = self
+            .new_greater_equal_fact(
+                CartDim::new(is_cart_fact.set.clone()).into(),
+                Number::new("2".to_string()).into(),
+                is_cart_fact.line_file.clone(),
+            )
+            .into();
         let mut result = SuccessInferResult::new();
         result.push_atomic_fact(&lower_bound);
         self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(

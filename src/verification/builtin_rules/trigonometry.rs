@@ -183,13 +183,14 @@ impl Runtime {
         {
             return Ok(Some(result));
         }
-        let Some(AtomicFact::LessEqualFact(f)) = normalize_positive_order_atomic_fact(atomic_fact)
+        let Some(AtomicFact::LessEqualFact(f)) =
+            normalize_positive_order_atomic_fact(self, atomic_fact)
         else {
             return Ok(None);
         };
 
         if let Some((trig, other)) = square_trig_upper_bound_target(&f.left, &f.right) {
-            let pythagorean_proof = pythagorean_core_result(&trig, &other, &f.line_file);
+            let pythagorean_proof = pythagorean_core_result(self, &trig, &other, &f.line_file);
             let pythagorean_fact = pythagorean_proof
                 .fact()
                 .expect("the trigonometric core dependency is factual");
@@ -200,12 +201,13 @@ impl Runtime {
             )?;
             let other_square: Obj =
                 Pow::new(other.clone(), Number::new("2".to_string()).into()).into();
-            let nonnegative: AtomicFact = LessEqualFact::new(
-                Number::new("0".to_string()).into(),
-                other_square,
-                f.line_file.clone(),
-            )
-            .into();
+            let nonnegative: AtomicFact = self
+                .new_less_equal_fact(
+                    Number::new("0".to_string()).into(),
+                    other_square,
+                    f.line_file.clone(),
+                )
+                .into();
             let Some(nonnegative_proof) =
                 self.verify_zero_le_even_integer_pow_builtin_rule(&nonnegative, builtin_state)?
             else {
@@ -236,12 +238,13 @@ impl Runtime {
         let Some(trig) = bounded_trig_target(&f.left, &f.right) else {
             return Ok(None);
         };
-        let square_bound: AtomicFact = LessEqualFact::new(
-            Pow::new(trig.clone(), Number::new("2".to_string()).into()).into(),
-            Number::new("1".to_string()).into(),
-            f.line_file.clone(),
-        )
-        .into();
+        let square_bound: AtomicFact = self
+            .new_less_equal_fact(
+                Pow::new(trig.clone(), Number::new("2".to_string()).into()).into(),
+                Number::new("1".to_string()).into(),
+                f.line_file.clone(),
+            )
+            .into();
         let Some(square_bound_proof) =
             self.try_verify_trigonometric_order_bound(&square_bound, builtin_state)?
         else {
@@ -277,8 +280,11 @@ impl Runtime {
             if let Obj::Sin(sin) = left {
                 if let Obj::Arcsin(arcsin) = sin.arg.as_ref() {
                     if objs_equal_by_rational_expression_evaluation(&arcsin.arg, right) {
-                        let premises =
-                            arcsin_domain_premises(arcsin.arg.as_ref(), &equal_fact.line_file);
+                        let premises = arcsin_domain_premises(
+                            self,
+                            arcsin.arg.as_ref(),
+                            &equal_fact.line_file,
+                        );
                         let Some(steps) =
                             self.verify_builtin_rule_premises(&premises, builtin_state)?
                         else {
@@ -313,6 +319,7 @@ impl Runtime {
                 if let Obj::Sin(sin) = arcsin.arg.as_ref() {
                     if objs_equal_by_rational_expression_evaluation(&sin.arg, right) {
                         let premises = arcsin_principal_argument_premises(
+                            self,
                             sin.arg.as_ref(),
                             &equal_fact.line_file,
                         );
@@ -338,9 +345,10 @@ impl Runtime {
                 // supported values such as arcsin(0)=0 and
                 // arcsin(1)=pi/2.  The premise has no arcsin node, so the
                 // recursive builtin query is structurally smaller.
-                let mut premises = arcsin_principal_argument_premises(right, &equal_fact.line_file);
+                let mut premises =
+                    arcsin_principal_argument_premises(self, right, &equal_fact.line_file);
                 premises.push(
-                    EqualFact::new(
+                    self.new_equal_fact(
                         arcsin.arg.as_ref().clone(),
                         Sin::new(right.clone()).into(),
                         equal_fact.line_file.clone(),
@@ -368,7 +376,8 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
-        let Some(AtomicFact::LessEqualFact(f)) = normalize_positive_order_atomic_fact(atomic_fact)
+        let Some(AtomicFact::LessEqualFact(f)) =
+            normalize_positive_order_atomic_fact(self, atomic_fact)
         else {
             return Ok(None);
         };
@@ -386,7 +395,7 @@ impl Runtime {
             }
             _ => return Ok(None),
         };
-        let premises = arcsin_domain_premises(argument, &f.line_file);
+        let premises = arcsin_domain_premises(self, argument, &f.line_file);
         let Some(steps) = self.verify_builtin_rule_premises(&premises, builtin_state)? else {
             return Ok(None);
         };
@@ -411,7 +420,7 @@ impl Runtime {
         // Canonical interval facts connect trigonometric objects to real order.
         // Examples: `0 < x < pi => 0 < sin(x)`, sine is increasing on
         // `[-pi/2, pi/2]`, and cosine is decreasing on `[0, pi]`.
-        let Some(normalized) = normalize_positive_order_atomic_fact(atomic_fact) else {
+        let Some(normalized) = normalize_positive_order_atomic_fact(self, atomic_fact) else {
             return Ok(None);
         };
         let pi: Obj = Pi::new().into();
@@ -426,22 +435,30 @@ impl Runtime {
             AtomicFact::LessFact(f) if obj_is_number(&f.left, "0") => match &f.right {
                 Obj::Sin(sin) => (
                     vec![
-                        LessFact::new(zero.clone(), sin.arg.as_ref().clone(), f.line_file.clone())
-                            .into(),
-                        LessFact::new(sin.arg.as_ref().clone(), pi.clone(), f.line_file.clone())
-                            .into(),
+                        self.new_less_fact(
+                            zero.clone(),
+                            sin.arg.as_ref().clone(),
+                            f.line_file.clone(),
+                        )
+                        .into(),
+                        self.new_less_fact(
+                            sin.arg.as_ref().clone(),
+                            pi.clone(),
+                            f.line_file.clone(),
+                        )
+                        .into(),
                     ],
                     "sine is positive on (0, pi)",
                 ),
                 Obj::Cos(cos) => (
                     vec![
-                        LessFact::new(
+                        self.new_less_fact(
                             negative_half_pi.clone(),
                             cos.arg.as_ref().clone(),
                             f.line_file.clone(),
                         )
                         .into(),
-                        LessFact::new(
+                        self.new_less_fact(
                             cos.arg.as_ref().clone(),
                             half_pi.clone(),
                             f.line_file.clone(),
@@ -452,9 +469,13 @@ impl Runtime {
                 ),
                 Obj::Tan(tan) => (
                     vec![
-                        LessFact::new(zero.clone(), tan.arg.as_ref().clone(), f.line_file.clone())
-                            .into(),
-                        LessFact::new(
+                        self.new_less_fact(
+                            zero.clone(),
+                            tan.arg.as_ref().clone(),
+                            f.line_file.clone(),
+                        )
+                        .into(),
+                        self.new_less_fact(
                             tan.arg.as_ref().clone(),
                             half_pi.clone(),
                             f.line_file.clone(),
@@ -465,9 +486,13 @@ impl Runtime {
                 ),
                 Obj::Cot(cot) => (
                     vec![
-                        LessFact::new(zero.clone(), cot.arg.as_ref().clone(), f.line_file.clone())
-                            .into(),
-                        LessFact::new(
+                        self.new_less_fact(
+                            zero.clone(),
+                            cot.arg.as_ref().clone(),
+                            f.line_file.clone(),
+                        )
+                        .into(),
+                        self.new_less_fact(
                             cot.arg.as_ref().clone(),
                             half_pi.clone(),
                             f.line_file.clone(),
@@ -481,40 +506,52 @@ impl Runtime {
             AtomicFact::LessFact(f) if obj_is_number(&f.right, "0") => match &f.left {
                 Obj::Sin(sin) => (
                     vec![
-                        LessFact::new(
+                        self.new_less_fact(
                             negative_pi.clone(),
                             sin.arg.as_ref().clone(),
                             f.line_file.clone(),
                         )
                         .into(),
-                        LessFact::new(sin.arg.as_ref().clone(), zero.clone(), f.line_file.clone())
-                            .into(),
+                        self.new_less_fact(
+                            sin.arg.as_ref().clone(),
+                            zero.clone(),
+                            f.line_file.clone(),
+                        )
+                        .into(),
                     ],
                     "sine is negative on (-pi, 0)",
                 ),
                 Obj::Tan(tan) => (
                     vec![
-                        LessFact::new(
+                        self.new_less_fact(
                             negative_half_pi.clone(),
                             tan.arg.as_ref().clone(),
                             f.line_file.clone(),
                         )
                         .into(),
-                        LessFact::new(tan.arg.as_ref().clone(), zero.clone(), f.line_file.clone())
-                            .into(),
+                        self.new_less_fact(
+                            tan.arg.as_ref().clone(),
+                            zero.clone(),
+                            f.line_file.clone(),
+                        )
+                        .into(),
                     ],
                     "tangent is negative on (-pi/2, 0)",
                 ),
                 Obj::Cot(cot) => (
                     vec![
-                        LessFact::new(
+                        self.new_less_fact(
                             half_pi.clone(),
                             cot.arg.as_ref().clone(),
                             f.line_file.clone(),
                         )
                         .into(),
-                        LessFact::new(cot.arg.as_ref().clone(), pi.clone(), f.line_file.clone())
-                            .into(),
+                        self.new_less_fact(
+                            cot.arg.as_ref().clone(),
+                            pi.clone(),
+                            f.line_file.clone(),
+                        )
+                        .into(),
                     ],
                     "cotangent is negative on (pi/2, pi)",
                 ),
@@ -524,19 +561,19 @@ impl Runtime {
                 if let (Obj::Sin(left), Obj::Sin(right)) = (&f.left, &f.right) {
                     (
                         vec![
-                            LessEqualFact::new(
+                            self.new_less_equal_fact(
                                 negative_half_pi.clone(),
                                 left.arg.as_ref().clone(),
                                 f.line_file.clone(),
                             )
                             .into(),
-                            LessEqualFact::new(
+                            self.new_less_equal_fact(
                                 right.arg.as_ref().clone(),
                                 half_pi.clone(),
                                 f.line_file.clone(),
                             )
                             .into(),
-                            LessFact::new(
+                            self.new_less_fact(
                                 left.arg.as_ref().clone(),
                                 right.arg.as_ref().clone(),
                                 f.line_file.clone(),
@@ -548,19 +585,19 @@ impl Runtime {
                 } else if let (Obj::Cos(right), Obj::Cos(left)) = (&f.left, &f.right) {
                     (
                         vec![
-                            LessEqualFact::new(
+                            self.new_less_equal_fact(
                                 zero.clone(),
                                 left.arg.as_ref().clone(),
                                 f.line_file.clone(),
                             )
                             .into(),
-                            LessEqualFact::new(
+                            self.new_less_equal_fact(
                                 right.arg.as_ref().clone(),
                                 pi.clone(),
                                 f.line_file.clone(),
                             )
                             .into(),
-                            LessFact::new(
+                            self.new_less_fact(
                                 left.arg.as_ref().clone(),
                                 right.arg.as_ref().clone(),
                                 f.line_file.clone(),
@@ -572,19 +609,19 @@ impl Runtime {
                 } else if let (Obj::Tan(left), Obj::Tan(right)) = (&f.left, &f.right) {
                     (
                         vec![
-                            LessFact::new(
+                            self.new_less_fact(
                                 negative_half_pi.clone(),
                                 left.arg.as_ref().clone(),
                                 f.line_file.clone(),
                             )
                             .into(),
-                            LessFact::new(
+                            self.new_less_fact(
                                 right.arg.as_ref().clone(),
                                 half_pi.clone(),
                                 f.line_file.clone(),
                             )
                             .into(),
-                            LessFact::new(
+                            self.new_less_fact(
                                 left.arg.as_ref().clone(),
                                 right.arg.as_ref().clone(),
                                 f.line_file.clone(),
@@ -596,19 +633,19 @@ impl Runtime {
                 } else if let (Obj::Cot(right), Obj::Cot(left)) = (&f.left, &f.right) {
                     (
                         vec![
-                            LessFact::new(
+                            self.new_less_fact(
                                 zero.clone(),
                                 left.arg.as_ref().clone(),
                                 f.line_file.clone(),
                             )
                             .into(),
-                            LessFact::new(
+                            self.new_less_fact(
                                 right.arg.as_ref().clone(),
                                 pi.clone(),
                                 f.line_file.clone(),
                             )
                             .into(),
-                            LessFact::new(
+                            self.new_less_fact(
                                 left.arg.as_ref().clone(),
                                 right.arg.as_ref().clone(),
                                 f.line_file.clone(),
@@ -625,19 +662,19 @@ impl Runtime {
                 if let (Obj::Sin(left), Obj::Sin(right)) = (&f.left, &f.right) {
                     (
                         vec![
-                            LessEqualFact::new(
+                            self.new_less_equal_fact(
                                 negative_half_pi,
                                 left.arg.as_ref().clone(),
                                 f.line_file.clone(),
                             )
                             .into(),
-                            LessEqualFact::new(
+                            self.new_less_equal_fact(
                                 right.arg.as_ref().clone(),
                                 half_pi,
                                 f.line_file.clone(),
                             )
                             .into(),
-                            LessEqualFact::new(
+                            self.new_less_equal_fact(
                                 left.arg.as_ref().clone(),
                                 right.arg.as_ref().clone(),
                                 f.line_file.clone(),
@@ -649,15 +686,19 @@ impl Runtime {
                 } else if let (Obj::Cos(right), Obj::Cos(left)) = (&f.left, &f.right) {
                     (
                         vec![
-                            LessEqualFact::new(
+                            self.new_less_equal_fact(
                                 zero,
                                 left.arg.as_ref().clone(),
                                 f.line_file.clone(),
                             )
                             .into(),
-                            LessEqualFact::new(right.arg.as_ref().clone(), pi, f.line_file.clone())
-                                .into(),
-                            LessEqualFact::new(
+                            self.new_less_equal_fact(
+                                right.arg.as_ref().clone(),
+                                pi,
+                                f.line_file.clone(),
+                            )
+                            .into(),
+                            self.new_less_equal_fact(
                                 left.arg.as_ref().clone(),
                                 right.arg.as_ref().clone(),
                                 f.line_file.clone(),
@@ -669,19 +710,19 @@ impl Runtime {
                 } else if let (Obj::Tan(left), Obj::Tan(right)) = (&f.left, &f.right) {
                     (
                         vec![
-                            LessFact::new(
+                            self.new_less_fact(
                                 negative_half_pi.clone(),
                                 left.arg.as_ref().clone(),
                                 f.line_file.clone(),
                             )
                             .into(),
-                            LessFact::new(
+                            self.new_less_fact(
                                 right.arg.as_ref().clone(),
                                 half_pi.clone(),
                                 f.line_file.clone(),
                             )
                             .into(),
-                            LessEqualFact::new(
+                            self.new_less_equal_fact(
                                 left.arg.as_ref().clone(),
                                 right.arg.as_ref().clone(),
                                 f.line_file.clone(),
@@ -693,19 +734,19 @@ impl Runtime {
                 } else if let (Obj::Cot(right), Obj::Cot(left)) = (&f.left, &f.right) {
                     (
                         vec![
-                            LessFact::new(
+                            self.new_less_fact(
                                 zero.clone(),
                                 left.arg.as_ref().clone(),
                                 f.line_file.clone(),
                             )
                             .into(),
-                            LessFact::new(
+                            self.new_less_fact(
                                 right.arg.as_ref().clone(),
                                 pi.clone(),
                                 f.line_file.clone(),
                             )
                             .into(),
-                            LessEqualFact::new(
+                            self.new_less_equal_fact(
                                 left.arg.as_ref().clone(),
                                 right.arg.as_ref().clone(),
                                 f.line_file.clone(),
@@ -761,13 +802,13 @@ impl Runtime {
         // `sin(x) != 0, cos(x) != 0 => tan(x) != 0, cot(x) != 0`.
         let quotient_nonzero_premises: Option<[AtomicFact; 2]> = match trig {
             Some(Obj::Tan(tan)) => Some([
-                NotEqualFact::new(
+                self.new_not_equal_fact(
                     Sin::new(tan.arg.as_ref().clone()).into(),
                     Number::new("0".to_string()).into(),
                     not_equal_fact.line_file.clone(),
                 )
                 .into(),
-                NotEqualFact::new(
+                self.new_not_equal_fact(
                     Cos::new(tan.arg.as_ref().clone()).into(),
                     Number::new("0".to_string()).into(),
                     not_equal_fact.line_file.clone(),
@@ -775,13 +816,13 @@ impl Runtime {
                 .into(),
             ]),
             Some(Obj::Cot(cot)) => Some([
-                NotEqualFact::new(
+                self.new_not_equal_fact(
                     Cos::new(cot.arg.as_ref().clone()).into(),
                     Number::new("0".to_string()).into(),
                     not_equal_fact.line_file.clone(),
                 )
                 .into(),
-                NotEqualFact::new(
+                self.new_not_equal_fact(
                     Sin::new(cot.arg.as_ref().clone()).into(),
                     Number::new("0".to_string()).into(),
                     not_equal_fact.line_file.clone(),
@@ -811,13 +852,13 @@ impl Runtime {
         let interval_candidates: Vec<Vec<AtomicFact>> = match trig {
             Some(Obj::Sin(sin)) => vec![
                 vec![
-                    LessFact::new(
+                    self.new_less_fact(
                         zero.clone(),
                         sin.arg.as_ref().clone(),
                         not_equal_fact.line_file.clone(),
                     )
                     .into(),
-                    LessFact::new(
+                    self.new_less_fact(
                         sin.arg.as_ref().clone(),
                         pi.clone(),
                         not_equal_fact.line_file.clone(),
@@ -825,13 +866,13 @@ impl Runtime {
                     .into(),
                 ],
                 vec![
-                    LessFact::new(
+                    self.new_less_fact(
                         zero.clone(),
                         sin.arg.as_ref().clone(),
                         not_equal_fact.line_file.clone(),
                     )
                     .into(),
-                    LessFact::new(
+                    self.new_less_fact(
                         sin.arg.as_ref().clone(),
                         half_pi.clone(),
                         not_equal_fact.line_file.clone(),
@@ -841,13 +882,13 @@ impl Runtime {
             ],
             Some(Obj::Cos(cos)) => vec![
                 vec![
-                    LessFact::new(
+                    self.new_less_fact(
                         negative_half_pi.clone(),
                         cos.arg.as_ref().clone(),
                         not_equal_fact.line_file.clone(),
                     )
                     .into(),
-                    LessFact::new(
+                    self.new_less_fact(
                         cos.arg.as_ref().clone(),
                         half_pi.clone(),
                         not_equal_fact.line_file.clone(),
@@ -855,13 +896,13 @@ impl Runtime {
                     .into(),
                 ],
                 vec![
-                    LessFact::new(
+                    self.new_less_fact(
                         zero.clone(),
                         cos.arg.as_ref().clone(),
                         not_equal_fact.line_file.clone(),
                     )
                     .into(),
-                    LessFact::new(
+                    self.new_less_fact(
                         cos.arg.as_ref().clone(),
                         half_pi.clone(),
                         not_equal_fact.line_file.clone(),
@@ -891,12 +932,13 @@ impl Runtime {
             }
         }
         if let Some(reduced_left) = shifted_trig_nonzero_reduction(&not_equal_fact.left) {
-            let reduced: AtomicFact = NotEqualFact::new(
-                reduced_left,
-                not_equal_fact.right.clone(),
-                not_equal_fact.line_file.clone(),
-            )
-            .into();
+            let reduced: AtomicFact = self
+                .new_not_equal_fact(
+                    reduced_left,
+                    not_equal_fact.right.clone(),
+                    not_equal_fact.line_file.clone(),
+                )
+                .into();
             let reduced_result =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&reduced, builtin_state)?;
             if let Some(reduced_result) = reduced_result {
@@ -918,8 +960,9 @@ impl Runtime {
         {
             return Ok(None);
         }
-        let expanded: AtomicFact =
-            NotEqualFact::new(left.obj, right.obj, not_equal_fact.line_file.clone()).into();
+        let expanded: AtomicFact = self
+            .new_not_equal_fact(left.obj, right.obj, not_equal_fact.line_file.clone())
+            .into();
         let Some(expanded_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&expanded, builtin_state)?
         else {
@@ -1302,7 +1345,12 @@ fn try_trig_quotient_definition(equal_fact: &EqualFact) -> Option<ProveFactResul
     None
 }
 
-fn pythagorean_core_result(sin_or_cos: &Obj, other: &Obj, line_file: &LineFile) -> ProveFactResult {
+fn pythagorean_core_result(
+    runtime: &Runtime,
+    sin_or_cos: &Obj,
+    other: &Obj,
+    line_file: &LineFile,
+) -> ProveFactResult {
     let (sin, cos) = match sin_or_cos {
         Obj::Sin(_) => (sin_or_cos.clone(), other.clone()),
         Obj::Cos(_) => (other.clone(), sin_or_cos.clone()),
@@ -1314,7 +1362,9 @@ fn pythagorean_core_result(sin_or_cos: &Obj, other: &Obj, line_file: &LineFile) 
     )
     .into();
     SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
-        EqualFact::new(left, Number::new("1".to_string()).into(), line_file.clone()).into(),
+        runtime
+            .new_equal_fact(left, Number::new("1".to_string()).into(), line_file.clone())
+            .into(),
         "trigonometry core: sin(x)^2 + cos(x)^2 = 1".to_string(),
         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::PythagoreanCoreResult),
         Vec::new(),
@@ -1399,7 +1449,7 @@ impl Runtime {
         };
         let sin: Obj = Sin::new(arg.clone()).into();
         let cos: Obj = Cos::new(arg.clone()).into();
-        let pythagorean_proof = pythagorean_core_result(&sin, &cos, &equal_fact.line_file);
+        let pythagorean_proof = pythagorean_core_result(self, &sin, &cos, &equal_fact.line_file);
         let pythagorean_fact = pythagorean_proof
             .fact()
             .expect("the trigonometric core dependency is factual");
@@ -1426,8 +1476,9 @@ impl Runtime {
                 Mul::new(Cos::new(arg).into(), Sin::new(zero).into()).into(),
             )
             .into();
-            let dependency: AtomicFact =
-                EqualFact::new(source, expanded, equal_fact.line_file.clone()).into();
+            let dependency: AtomicFact = self
+                .new_equal_fact(source, expanded, equal_fact.line_file.clone())
+                .into();
             let proof =
                 SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     dependency.clone().into(),
@@ -1568,30 +1619,48 @@ fn obj_is_number(obj: &Obj, expected: &str) -> bool {
         .is_some_and(|number| number.normalized_value == expected)
 }
 
-fn arcsin_domain_premises(argument: &Obj, line_file: &LineFile) -> Vec<AtomicFact> {
+fn arcsin_domain_premises(
+    runtime: &Runtime,
+    argument: &Obj,
+    line_file: &LineFile,
+) -> Vec<AtomicFact> {
     vec![
-        InFact::new(argument.clone(), StandardSet::R.into(), line_file.clone()).into(),
-        LessEqualFact::new(
-            Number::new("-1".to_string()).into(),
-            argument.clone(),
-            line_file.clone(),
-        )
-        .into(),
-        LessEqualFact::new(
-            argument.clone(),
-            Number::new("1".to_string()).into(),
-            line_file.clone(),
-        )
-        .into(),
+        runtime
+            .new_in_fact(argument.clone(), StandardSet::R.into(), line_file.clone())
+            .into(),
+        runtime
+            .new_less_equal_fact(
+                Number::new("-1".to_string()).into(),
+                argument.clone(),
+                line_file.clone(),
+            )
+            .into(),
+        runtime
+            .new_less_equal_fact(
+                argument.clone(),
+                Number::new("1".to_string()).into(),
+                line_file.clone(),
+            )
+            .into(),
     ]
 }
 
-fn arcsin_principal_argument_premises(argument: &Obj, line_file: &LineFile) -> Vec<AtomicFact> {
+fn arcsin_principal_argument_premises(
+    runtime: &Runtime,
+    argument: &Obj,
+    line_file: &LineFile,
+) -> Vec<AtomicFact> {
     let (negative_half_pi, half_pi) = arcsin_principal_bounds();
     vec![
-        InFact::new(argument.clone(), StandardSet::R.into(), line_file.clone()).into(),
-        LessEqualFact::new(negative_half_pi, argument.clone(), line_file.clone()).into(),
-        LessEqualFact::new(argument.clone(), half_pi, line_file.clone()).into(),
+        runtime
+            .new_in_fact(argument.clone(), StandardSet::R.into(), line_file.clone())
+            .into(),
+        runtime
+            .new_less_equal_fact(negative_half_pi, argument.clone(), line_file.clone())
+            .into(),
+        runtime
+            .new_less_equal_fact(argument.clone(), half_pi, line_file.clone())
+            .into(),
     ]
 }
 

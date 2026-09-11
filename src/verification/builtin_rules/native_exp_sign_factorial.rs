@@ -34,7 +34,7 @@ impl Runtime {
         let line_file = equal_fact.line_file.clone();
         let exp_left: Obj = Exp::new(left.clone()).into();
         let exp_right: Obj = Exp::new(right.clone()).into();
-        let exp_fact = EqualFact::new_from_refs(&exp_left, &exp_right, line_file.clone());
+        let exp_fact = self.new_equal_fact_from_refs(&exp_left, &exp_right, line_file.clone());
         let exp_proof = self.verify_equal_fact_by_known_equality(&exp_fact);
         let exp_atomic: AtomicFact = exp_fact.into();
         if let Some(exp_result) = self.complete_proven_fact_candidate(
@@ -50,7 +50,7 @@ impl Runtime {
         }
         let ln_left: Obj = Ln::new(left.clone()).into();
         let ln_right: Obj = Ln::new(right.clone()).into();
-        let ln_fact = EqualFact::new_from_refs(&ln_left, &ln_right, line_file.clone());
+        let ln_fact = self.new_equal_fact_from_refs(&ln_left, &ln_right, line_file.clone());
         let ln_proof = self.verify_equal_fact_by_known_equality(&ln_fact);
         let ln_atomic: AtomicFact = ln_fact.into();
         let Some(ln_result) = self.complete_proven_fact_candidate(
@@ -63,8 +63,10 @@ impl Runtime {
         };
         let zero: Obj = Number::new("0".to_string()).into();
         let positivity = [
-            LessFact::new(zero.clone(), left.clone(), line_file.clone()).into(),
-            LessFact::new(zero, right.clone(), line_file.clone()).into(),
+            self.new_less_fact(zero.clone(), left.clone(), line_file.clone())
+                .into(),
+            self.new_less_fact(zero, right.clone(), line_file.clone())
+                .into(),
         ];
         let Some(mut positivity_results) =
             self.verify_builtin_rule_premises(&positivity, builtin_state)?
@@ -98,7 +100,7 @@ impl Runtime {
         };
         let sign: Obj = Sign::new(arg.clone()).into();
         let zero: Obj = Number::new("0".to_string()).into();
-        let premise = EqualFact::new_from_refs(&sign, &zero, line_file.clone());
+        let premise = self.new_equal_fact_from_refs(&sign, &zero, line_file.clone());
         let proof = self.verify_equal_fact_by_known_equality(&premise);
         let premise_atomic: AtomicFact = premise.into();
         let Some(result) = self.complete_proven_fact_candidate(
@@ -132,7 +134,7 @@ impl Runtime {
             return Ok(None);
         };
         let premise: AtomicFact = if let Obj::Sign(sign) = nonzero_obj {
-            NotEqualFact::new(
+            self.new_not_equal_fact(
                 sign.arg.as_ref().clone(),
                 zero.clone(),
                 goal.line_file.clone(),
@@ -141,9 +143,11 @@ impl Runtime {
         } else {
             let sign: Obj = Sign::new(nonzero_obj.clone()).into();
             if zero_on_right {
-                NotEqualFact::new(sign, zero.clone(), goal.line_file.clone()).into()
+                self.new_not_equal_fact(sign, zero.clone(), goal.line_file.clone())
+                    .into()
             } else {
-                NotEqualFact::new(zero.clone(), sign, goal.line_file.clone()).into()
+                self.new_not_equal_fact(zero.clone(), sign, goal.line_file.clone())
+                    .into()
             }
         };
         let Some(result) =
@@ -202,9 +206,15 @@ impl Runtime {
         };
         let zero: Obj = Number::new("0".to_string()).into();
         let premise: AtomicFact = match number.normalized_value.as_str() {
-            "1" => GreaterFact::new((*sign.arg).clone(), zero, line_file.clone()).into(),
-            "0" => EqualFact::new((*sign.arg).clone(), zero, line_file.clone()).into(),
-            "-1" => LessFact::new((*sign.arg).clone(), zero, line_file.clone()).into(),
+            "1" => self
+                .new_greater_fact((*sign.arg).clone(), zero, line_file.clone())
+                .into(),
+            "0" => self
+                .new_equal_fact((*sign.arg).clone(), zero, line_file.clone())
+                .into(),
+            "-1" => self
+                .new_less_fact((*sign.arg).clone(), zero, line_file.clone())
+                .into(),
             _ => return Ok(None),
         };
         let Some(premise_result) =
@@ -296,12 +306,13 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let premise: AtomicFact = LessEqualFact::new(
-            earlier.arg.as_ref().clone(),
-            later.arg.as_ref().clone(),
-            line_file.clone(),
-        )
-        .into();
+        let premise: AtomicFact = self
+            .new_less_equal_fact(
+                earlier.arg.as_ref().clone(),
+                later.arg.as_ref().clone(),
+                line_file.clone(),
+            )
+            .into();
         let Some(result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?
         else {
@@ -365,7 +376,7 @@ impl Runtime {
         // Factorial preserves weak order on N and strict order from a positive
         // smaller argument. Examples: `m <= n => m! <= n!` and
         // `m in N+, m < n => m! < n!`.
-        let Some(normalized) = normalize_positive_order_atomic_fact(atomic_fact) else {
+        let Some(normalized) = normalize_positive_order_atomic_fact(self, atomic_fact) else {
             return Ok(None);
         };
         let (left, right, strict, line_file) = match &normalized {
@@ -379,7 +390,7 @@ impl Runtime {
         let mut premises: Vec<AtomicFact> = Vec::new();
         if strict {
             premises.push(
-                InFact::new(
+                self.new_in_fact(
                     left.arg.as_ref().clone(),
                     StandardSet::NPos.into(),
                     line_file.clone(),
@@ -387,7 +398,7 @@ impl Runtime {
                 .into(),
             );
             premises.push(
-                LessFact::new(
+                self.new_less_fact(
                     left.arg.as_ref().clone(),
                     right.arg.as_ref().clone(),
                     line_file,
@@ -396,7 +407,7 @@ impl Runtime {
             );
         } else {
             premises.push(
-                LessEqualFact::new(
+                self.new_less_equal_fact(
                     left.arg.as_ref().clone(),
                     right.arg.as_ref().clone(),
                     line_file,
@@ -427,19 +438,21 @@ impl Runtime {
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
         // The real sign function preserves weak order but not strict order.
         // Example: `a <= b => sign(a) <= sign(b)`.
-        let Some(AtomicFact::LessEqualFact(f)) = normalize_positive_order_atomic_fact(atomic_fact)
+        let Some(AtomicFact::LessEqualFact(f)) =
+            normalize_positive_order_atomic_fact(self, atomic_fact)
         else {
             return Ok(None);
         };
         let (Obj::Sign(left), Obj::Sign(right)) = (&f.left, &f.right) else {
             return Ok(None);
         };
-        let premise: AtomicFact = LessEqualFact::new(
-            left.arg.as_ref().clone(),
-            right.arg.as_ref().clone(),
-            f.line_file.clone(),
-        )
-        .into();
+        let premise: AtomicFact = self
+            .new_less_equal_fact(
+                left.arg.as_ref().clone(),
+                right.arg.as_ref().clone(),
+                f.line_file.clone(),
+            )
+            .into();
         let Some(result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?
         else {
@@ -490,7 +503,7 @@ impl Runtime {
             };
             (
                 ln,
-                GreaterFact::new(
+                self.new_greater_fact(
                     (*ln.arg).clone(),
                     Number::new("1".to_string()).into(),
                     default_line_file(),
@@ -503,7 +516,7 @@ impl Runtime {
             };
             (
                 ln,
-                LessFact::new(
+                self.new_less_fact(
                     (*ln.arg).clone(),
                     Number::new("1".to_string()).into(),
                     default_line_file(),
@@ -530,7 +543,7 @@ impl Runtime {
         // Natural exp is strictly increasing on R, and natural ln is strictly
         // increasing on R+. Examples: `a < b => exp(a) < exp(b)` and
         // `0 < a < b => ln(a) < ln(b)`; weak order is preserved as well.
-        let Some(normalized) = normalize_positive_order_atomic_fact(atomic_fact) else {
+        let Some(normalized) = normalize_positive_order_atomic_fact(self, atomic_fact) else {
             return Ok(None);
         };
         let (left, right, strict, line_file) = match &normalized {
@@ -543,13 +556,13 @@ impl Runtime {
         // monotonicity. Try it before the forward native-object shapes below.
         let reflected_premises: Vec<AtomicFact> = if strict {
             vec![
-                LessFact::new(
+                self.new_less_fact(
                     Exp::new(left.clone()).into(),
                     Exp::new(right.clone()).into(),
                     line_file.clone(),
                 )
                 .into(),
-                LessFact::new(
+                self.new_less_fact(
                     Ln::new(left.clone()).into(),
                     Ln::new(right.clone()).into(),
                     line_file.clone(),
@@ -558,13 +571,13 @@ impl Runtime {
             ]
         } else {
             vec![
-                LessEqualFact::new(
+                self.new_less_equal_fact(
                     Exp::new(left.clone()).into(),
                     Exp::new(right.clone()).into(),
                     line_file.clone(),
                 )
                 .into(),
-                LessEqualFact::new(
+                self.new_less_equal_fact(
                     Ln::new(left.clone()).into(),
                     Ln::new(right.clone()).into(),
                     line_file.clone(),
@@ -582,8 +595,10 @@ impl Runtime {
             if index == 1 {
                 let zero: Obj = Number::new("0".to_string()).into();
                 let positive_args = [
-                    LessFact::new(zero.clone(), left.clone(), line_file.clone()).into(),
-                    LessFact::new(zero, right.clone(), line_file.clone()).into(),
+                    self.new_less_fact(zero.clone(), left.clone(), line_file.clone())
+                        .into(),
+                    self.new_less_fact(zero, right.clone(), line_file.clone())
+                        .into(),
                 ];
                 let Some(results) =
                     self.verify_builtin_rule_premises(&positive_args, builtin_state)?
@@ -613,8 +628,10 @@ impl Runtime {
                 vec![reflected_premises[0].clone()],
                 vec![
                     reflected_premises[1].clone(),
-                    LessFact::new(zero.clone(), left.clone(), line_file.clone()).into(),
-                    LessFact::new(zero, right.clone(), line_file.clone()).into(),
+                    self.new_less_fact(zero.clone(), left.clone(), line_file.clone())
+                        .into(),
+                    self.new_less_fact(zero, right.clone(), line_file.clone())
+                        .into(),
                 ],
             ],
             line_file.clone(),
@@ -648,14 +665,25 @@ impl Runtime {
         let mut premises = Vec::new();
         if require_positive {
             let zero: Obj = Number::new("0".to_string()).into();
-            premises.push(LessFact::new(zero.clone(), left_arg.clone(), line_file.clone()).into());
-            premises.push(LessFact::new(zero, right_arg.clone(), line_file.clone()).into());
+            premises.push(
+                self.new_less_fact(zero.clone(), left_arg.clone(), line_file.clone())
+                    .into(),
+            );
+            premises.push(
+                self.new_less_fact(zero, right_arg.clone(), line_file.clone())
+                    .into(),
+            );
         }
         if strict {
-            premises.push(LessFact::new(left_arg.clone(), right_arg.clone(), line_file).into());
+            premises.push(
+                self.new_less_fact(left_arg.clone(), right_arg.clone(), line_file)
+                    .into(),
+            );
         } else {
-            premises
-                .push(LessEqualFact::new(left_arg.clone(), right_arg.clone(), line_file).into());
+            premises.push(
+                self.new_less_equal_fact(left_arg.clone(), right_arg.clone(), line_file)
+                    .into(),
+            );
         }
 
         let Some(results) = self.verify_builtin_rule_premises(&premises, builtin_state)? else {

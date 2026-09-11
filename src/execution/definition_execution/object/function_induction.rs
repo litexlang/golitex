@@ -29,7 +29,7 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnByInducStmt,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        let flat = stmt.to_have_fn_equal_case_by_case_stmt();
+        let flat = stmt.to_have_fn_equal_case_by_case_stmt(self);
         let fn_set_stored = self
             .fn_set_from_fn_set_clause(&flat.fn_set_clause)
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
@@ -177,12 +177,13 @@ impl Runtime {
         let lower_bound_integer_check =
             self.verify_have_fn_by_induc_integer_object(stmt, "lower bound", &stmt.lower_bound)?;
 
-        let lower_fact: AtomicFact = GreaterEqualFact::new(
-            stmt.measure.clone(),
-            stmt.lower_bound.clone(),
-            stmt.line_file.clone(),
-        )
-        .into();
+        let lower_fact: AtomicFact = self
+            .new_greater_equal_fact(
+                stmt.measure.clone(),
+                stmt.lower_bound.clone(),
+                stmt.line_file.clone(),
+            )
+            .into();
         let mut lower_bound_check = self
             .verify_atomic_fact(&lower_fact, &VerifyState::initial())
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
@@ -213,12 +214,13 @@ impl Runtime {
         label: &str,
         object: &Obj,
     ) -> Result<VerifyFactResult, RuntimeError> {
-        let integer_fact: AtomicFact = InFact::new(
-            object.clone(),
-            StandardSet::Z.into(),
-            stmt.line_file.clone(),
-        )
-        .into();
+        let integer_fact: AtomicFact = self
+            .new_in_fact(
+                object.clone(),
+                StandardSet::Z.into(),
+                stmt.line_file.clone(),
+            )
+            .into();
         let mut result = self
             .verify_atomic_fact(&integer_fact, &VerifyState::initial())
             .map_err(|e| {
@@ -282,7 +284,7 @@ impl Runtime {
             )
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
         recursive_dom_facts.push(QuantifierFreeFact::AtomicFact(
-            LessFact::new(
+            self.new_less_fact(
                 generated_measure.clone(),
                 stmt.measure.clone(),
                 stmt.line_file.clone(),
@@ -290,7 +292,7 @@ impl Runtime {
             .into(),
         ));
         recursive_dom_facts.push(QuantifierFreeFact::AtomicFact(
-            GreaterEqualFact::new(
+            self.new_greater_equal_fact(
                 generated_measure,
                 stmt.lower_bound.clone(),
                 stmt.line_file.clone(),
@@ -303,12 +305,13 @@ impl Runtime {
             .new_fn_set(generated_groups, recursive_dom_facts, generated_ret_set)
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
-        let function_in_function_set_fact: Fact = InFact::new(
-            self.definition_identifier_obj(stmt.name()),
-            recursive_fn_set.clone().into(),
-            stmt.line_file.clone(),
-        )
-        .into();
+        let function_in_function_set_fact: Fact = self
+            .new_in_fact(
+                self.definition_identifier_obj(stmt.name()),
+                recursive_fn_set.clone().into(),
+                stmt.line_file.clone(),
+            )
+            .into();
 
         let mut infers = self
             .store_with_well_defined_verification_and_infer_with_default_verify_state(
@@ -343,7 +346,9 @@ impl Runtime {
 
         let coverage_cases: Vec<AndChainAtomicFact> =
             cases.iter().map(|c| c.case_fact.clone()).collect();
-        let coverage: Fact = OrFact::new(coverage_cases, stmt.line_file.clone()).into();
+        let coverage: Fact = self
+            .new_or_fact(coverage_cases, stmt.line_file.clone())
+            .into();
         let mut coverage_check = self
             .verify_fact_or_error(&coverage, &VerifyState::initial())
             .map_err(|e| {
@@ -418,12 +423,13 @@ impl Runtime {
             .verify_obj_well_defined_result(equal_to, &verify_state)
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
-        let equal_to_in_ret_set_atomic_fact: AtomicFact = InFact::new(
-            equal_to.clone(),
-            stmt.fn_set_clause.ret_set.clone(),
-            stmt.line_file.clone(),
-        )
-        .into();
+        let equal_to_in_ret_set_atomic_fact: AtomicFact = self
+            .new_in_fact(
+                equal_to.clone(),
+                stmt.fn_set_clause.ret_set.clone(),
+                stmt.line_file.clone(),
+            )
+            .into();
         let mut return_membership_check = self
             .verify_atomic_fact(&equal_to_in_ret_set_atomic_fact, &verify_state)
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;

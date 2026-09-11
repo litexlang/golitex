@@ -10,7 +10,7 @@ Runtime::new(options: LitexExecutionOptions)
   module_manager = one shared module world with a registered Eval source
   current_module_id = ModuleId::ROOT
   current_source_id = SourceId(0)
-  next_fact_id = 1
+  next_fact_id = Cell(1) // advanced only by Runtime::new_*_fact
 start_real_file("example.lit")
   reuse the constructor source as ModuleId::ROOT/SourceId(0)
   update its origin and keep the current source pair

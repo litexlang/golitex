@@ -301,6 +301,7 @@ fn archimedean_reciprocal_bound_non_witness_operand(exist_fact: &ExistFact) -> O
 }
 
 fn dense_order_exist_fact_endpoints(
+    runtime: &Runtime,
     exist_fact: &ExistFact,
     witness_carrier: StandardSet,
 ) -> Option<(Obj, Obj)> {
@@ -325,7 +326,7 @@ fn dense_order_exist_fact_endpoints(
     let QuantifierFreeFact::ChainFact(chain) = &exist_fact.facts()[0] else {
         return None;
     };
-    let chain_facts = chain.facts().ok()?;
+    let chain_facts = chain.facts(runtime).ok()?;
     let [AtomicFact::LessFact(left_less), AtomicFact::LessFact(right_less)] =
         chain_facts.as_slice()
     else {
@@ -345,7 +346,10 @@ fn dense_order_exist_fact_endpoints(
     Some((left_less.left.clone(), right_less.right.clone()))
 }
 
-fn integer_interval_exist_fact_endpoints(exist_fact: &ExistFact) -> Option<(Obj, Obj, bool)> {
+fn integer_interval_exist_fact_endpoints(
+    runtime: &Runtime,
+    exist_fact: &ExistFact,
+) -> Option<(Obj, Obj, bool)> {
     if !exist_fact.is_plain_exist() || exist_fact.facts().len() != 1 {
         return None;
     }
@@ -361,7 +365,7 @@ fn integer_interval_exist_fact_endpoints(exist_fact: &ExistFact) -> Option<(Obj,
     let QuantifierFreeFact::ChainFact(chain) = &exist_fact.facts()[0] else {
         return None;
     };
-    let chain_facts = chain.facts().ok()?;
+    let chain_facts = chain.facts(runtime).ok()?;
     let [left_bound, right_bound] = chain_facts.as_slice() else {
         return None;
     };
@@ -457,7 +461,9 @@ impl Runtime {
         // without selecting a global choice object. Example:
         // `$is_nonempty_set(A)` => `exist x A st {x $in A}`.
         if let Some(set) = nonempty_set_exist_fact_set(exist_fact) {
-            let nonempty: AtomicFact = IsNonemptySetFact::new(set, exist_fact.line_file()).into();
+            let nonempty: AtomicFact = self
+                .new_is_nonempty_set_fact(set, exist_fact.line_file())
+                .into();
             let nonempty_result =
                 self.verify_atomic_fact_restricted_known_builtin(&nonempty, verify_state)?;
             if nonempty_result.is_success() {
@@ -478,12 +484,13 @@ impl Runtime {
         if let Some(rational) =
             rational_positive_denominator_exist_fact_non_witness_operand(exist_fact)
         {
-            let in_q: AtomicFact = InFact::new(
-                rational.clone(),
-                StandardSet::Q.into(),
-                exist_fact.line_file(),
-            )
-            .into();
+            let in_q: AtomicFact = self
+                .new_in_fact(
+                    rational.clone(),
+                    StandardSet::Q.into(),
+                    exist_fact.line_file(),
+                )
+                .into();
             let rational_membership =
                 self.verify_atomic_fact_restricted_known_builtin(&in_q, verify_state)?;
             if rational_membership.is_success() {
@@ -504,12 +511,13 @@ impl Runtime {
         // integer denominator. Example: `exist a Z, b Z* st {q = a / b}`
         // for `q Q`.
         if let Some(rational) = rational_integer_ratio_exist_fact_non_witness_operand(exist_fact) {
-            let in_q: AtomicFact = InFact::new(
-                rational.clone(),
-                StandardSet::Q.into(),
-                exist_fact.line_file(),
-            )
-            .into();
+            let in_q: AtomicFact = self
+                .new_in_fact(
+                    rational.clone(),
+                    StandardSet::Q.into(),
+                    exist_fact.line_file(),
+                )
+                .into();
             let rational_membership =
                 self.verify_atomic_fact_restricted_known_builtin(&in_q, verify_state)?;
             if rational_membership.is_success() {
@@ -528,10 +536,12 @@ impl Runtime {
         // Euclidean division by a positive integer determines a unique integer quotient.
         // Example: a Z, d N+ => exist! q Z st {a = d * q + a % d}.
         if let Some((dividend, divisor)) = euclidean_quotient_exist_unique_operands(exist_fact) {
-            let dividend_in_z: AtomicFact =
-                InFact::new(dividend, StandardSet::Z.into(), exist_fact.line_file()).into();
-            let divisor_in_n_pos: AtomicFact =
-                InFact::new(divisor, StandardSet::NPos.into(), exist_fact.line_file()).into();
+            let dividend_in_z: AtomicFact = self
+                .new_in_fact(dividend, StandardSet::Z.into(), exist_fact.line_file())
+                .into();
+            let divisor_in_n_pos: AtomicFact = self
+                .new_in_fact(divisor, StandardSet::NPos.into(), exist_fact.line_file())
+                .into();
             let dividend_result =
                 self.verify_atomic_fact_restricted_known_builtin(&dividend_in_z, verify_state)?;
             let divisor_result =
@@ -553,30 +563,34 @@ impl Runtime {
         // A zero Euclidean remainder means a nonzero integer modulus divides the integer.
         // Example: `a % b = 0`, `b != 0` => `exist k Z st {a = b * k}`.
         if let Some((dividend, divisor)) = integer_divisibility_exist_fact_operands(exist_fact) {
-            let dividend_in_z: AtomicFact = InFact::new(
-                dividend.clone(),
-                StandardSet::Z.into(),
-                exist_fact.line_file(),
-            )
-            .into();
-            let divisor_in_z: AtomicFact = InFact::new(
-                divisor.clone(),
-                StandardSet::Z.into(),
-                exist_fact.line_file(),
-            )
-            .into();
-            let divisor_nonzero: AtomicFact = NotEqualFact::new(
-                divisor.clone(),
-                Number::new("0".to_string()).into(),
-                exist_fact.line_file(),
-            )
-            .into();
-            let zero_remainder: AtomicFact = EqualFact::new(
-                Mod::new(dividend, divisor).into(),
-                Number::new("0".to_string()).into(),
-                exist_fact.line_file(),
-            )
-            .into();
+            let dividend_in_z: AtomicFact = self
+                .new_in_fact(
+                    dividend.clone(),
+                    StandardSet::Z.into(),
+                    exist_fact.line_file(),
+                )
+                .into();
+            let divisor_in_z: AtomicFact = self
+                .new_in_fact(
+                    divisor.clone(),
+                    StandardSet::Z.into(),
+                    exist_fact.line_file(),
+                )
+                .into();
+            let divisor_nonzero: AtomicFact = self
+                .new_not_equal_fact(
+                    divisor.clone(),
+                    Number::new("0".to_string()).into(),
+                    exist_fact.line_file(),
+                )
+                .into();
+            let zero_remainder: AtomicFact = self
+                .new_equal_fact(
+                    Mod::new(dividend, divisor).into(),
+                    Number::new("0".to_string()).into(),
+                    exist_fact.line_file(),
+                )
+                .into();
             let dividend_result =
                 self.verify_atomic_fact_restricted_known_builtin(&dividend_in_z, verify_state)?;
             let divisor_result =
@@ -611,12 +625,13 @@ impl Runtime {
         // Every positive real has a reciprocal positive-natural bound.
         // Example: `exist n N+ st {1 / n < epsilon}` for `epsilon $in R+`.
         if let Some(bound) = archimedean_reciprocal_bound_non_witness_operand(exist_fact) {
-            let positive_bound: AtomicFact = InFact::new(
-                bound.clone(),
-                StandardSet::RPos.into(),
-                exist_fact.line_file(),
-            )
-            .into();
+            let positive_bound: AtomicFact = self
+                .new_in_fact(
+                    bound.clone(),
+                    StandardSet::RPos.into(),
+                    exist_fact.line_file(),
+                )
+                .into();
             let positive_bound_result =
                 self.verify_atomic_fact_restricted_known_builtin(&positive_bound, verify_state)?;
             if positive_bound_result.is_success() {
@@ -634,14 +649,17 @@ impl Runtime {
 
         // Rational density: every nonempty real interval contains a rational.
         // Example: `a < b` => `exist q Q st {a < q < b}`.
-        if let Some((left, right)) = dense_order_exist_fact_endpoints(exist_fact, StandardSet::Q) {
+        if let Some((left, right)) =
+            dense_order_exist_fact_endpoints(self, exist_fact, StandardSet::Q)
+        {
             if let Some(mut steps) = self.verify_objects_are_known_reals(
                 &[&left, &right],
                 &exist_fact.line_file(),
                 verify_state,
             )? {
-                let interval_nonempty: AtomicFact =
-                    LessFact::new(left, right, exist_fact.line_file()).into();
+                let interval_nonempty: AtomicFact = self
+                    .new_less_fact(left, right, exist_fact.line_file())
+                    .into();
                 let interval_result = self.verify_atomic_fact_restricted_known_builtin(
                     &interval_nonempty,
                     verify_state,
@@ -663,14 +681,17 @@ impl Runtime {
 
         // Real density: the midpoint of two ordered reals lies strictly between them.
         // Example: `a < b` => `exist r R st {a < r < b}`.
-        if let Some((left, right)) = dense_order_exist_fact_endpoints(exist_fact, StandardSet::R) {
+        if let Some((left, right)) =
+            dense_order_exist_fact_endpoints(self, exist_fact, StandardSet::R)
+        {
             if let Some(mut steps) = self.verify_objects_are_known_reals(
                 &[&left, &right],
                 &exist_fact.line_file(),
                 verify_state,
             )? {
-                let interval_nonempty: AtomicFact =
-                    LessFact::new(left, right, exist_fact.line_file()).into();
+                let interval_nonempty: AtomicFact = self
+                    .new_less_fact(left, right, exist_fact.line_file())
+                    .into();
                 let interval_result = self.verify_atomic_fact_restricted_known_builtin(
                     &interval_nonempty,
                     verify_state,
@@ -695,7 +716,8 @@ impl Runtime {
         // integer interval, but are builtin bridges for routine interval arithmetic.
         // Examples: `b - a > 1 => exist c Z st {a < c < b}` and
         // `b - a >= 1 => exist c Z st {a <= c <= b}`.
-        if let Some((left, right, strict)) = integer_interval_exist_fact_endpoints(exist_fact) {
+        if let Some((left, right, strict)) = integer_interval_exist_fact_endpoints(self, exist_fact)
+        {
             if let Some(mut steps) = self.verify_objects_are_known_reals(
                 &[&left, &right],
                 &exist_fact.line_file(),
@@ -704,9 +726,11 @@ impl Runtime {
                 let one: Obj = Number::new("1".to_string()).into();
                 let gap = Sub::new(right.clone(), left.clone()).into();
                 let gap_requirement: AtomicFact = if strict {
-                    GreaterFact::new(gap, one, exist_fact.line_file()).into()
+                    self.new_greater_fact(gap, one, exist_fact.line_file())
+                        .into()
                 } else {
-                    GreaterEqualFact::new(gap, one, exist_fact.line_file()).into()
+                    self.new_greater_equal_fact(gap, one, exist_fact.line_file())
+                        .into()
                 };
                 let gap_result = self
                     .verify_atomic_fact_restricted_known_builtin(&gap_requirement, verify_state)?;
@@ -854,12 +878,9 @@ impl Runtime {
 
         let line_file = exist_fact.line_file();
         let prerequisites = [
-            AtomicFact::from(IsFiniteSetFact::new(member.set.clone(), line_file.clone())),
-            AtomicFact::from(IsNonemptySetFact::new(
-                member.set.clone(),
-                line_file.clone(),
-            )),
-            AtomicFact::from(SubsetFact::new(
+            AtomicFact::from(self.new_is_finite_set_fact(member.set.clone(), line_file.clone())),
+            AtomicFact::from(self.new_is_nonempty_set_fact(member.set.clone(), line_file.clone())),
+            AtomicFact::from(self.new_subset_fact(
                 member.set.clone(),
                 StandardSet::N.into(),
                 line_file,
@@ -998,7 +1019,7 @@ impl Runtime {
 
         let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
         if n == 1 {
-            let eq = EqualFact::new(
+            let eq = self.new_equal_fact(
                 obj_for_bound_param_in_scope(&flat_a[0]),
                 obj_for_bound_param_in_scope(&flat_b[0]),
                 lf.clone(),
@@ -1008,7 +1029,7 @@ impl Runtime {
             let mut equal_facts: Vec<AtomicFact> = Vec::new();
             for (left, right) in flat_a.iter().zip(flat_b.iter()) {
                 equal_facts.push(
-                    EqualFact::new(
+                    self.new_equal_fact(
                         obj_for_bound_param_in_scope(left),
                         obj_for_bound_param_in_scope(right),
                         lf.clone(),
@@ -1016,7 +1037,7 @@ impl Runtime {
                     .into(),
                 );
             }
-            then_facts.push(AndFact::new(equal_facts, lf.clone()).into());
+            then_facts.push(self.new_and_fact(equal_facts, lf.clone()).into());
         } else {
             let left_tuple: Obj = Tuple::new(
                 flat_a
@@ -1032,11 +1053,11 @@ impl Runtime {
                     .collect::<Vec<Obj>>(),
             )
             .into();
-            let eq = EqualFact::new(left_tuple, right_tuple, lf.clone());
+            let eq = self.new_equal_fact(left_tuple, right_tuple, lf.clone());
             then_facts.push(ExistOrAndChainAtomicFact::AtomicFact(eq.into()));
         }
 
-        ForallFact::new_canonical_forall(
+        self.new_forall_fact(
             TypedParameterList::new(forall_groups),
             dom_facts,
             then_facts,
@@ -1052,7 +1073,7 @@ impl Runtime {
         if exist_fact.typed_parameters().number_of_params() == 0 {
             return Ok(None);
         }
-        let plain = ExistFact::PlainExistFact(PlainExistFact::new(
+        let plain = ExistFact::PlainExistFact(self.new_plain_exist_fact(
             exist_fact.typed_parameters().clone(),
             exist_fact.facts().clone(),
             exist_fact.line_file(),

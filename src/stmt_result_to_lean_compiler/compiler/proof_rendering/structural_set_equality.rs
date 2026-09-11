@@ -3,6 +3,7 @@
 use super::super::*;
 
 pub(in super::super) fn render_structural_set_equality(
+    runtime: &Runtime,
     fact: &Fact,
     rule: LeanSetBuiltinCompilationKind,
     context: &StmtResultToLeanCompilerEnvironmentStack,
@@ -51,10 +52,11 @@ pub(in super::super) fn render_structural_set_equality(
                     }
                 }
             }
-            let reversed: Fact =
-                EqualFact::new(right.clone(), left.clone(), fact.line_file()).into();
+            let reversed: Fact = runtime
+                .new_equal_fact(right.clone(), left.clone(), fact.line_file())
+                .into();
             Ok(symmetric(render_structural_set_equality(
-                &reversed, rule, context,
+                runtime, &reversed, rule, context,
             )?))
         }
         LeanSetBuiltinCompilationKind::UnionIdempotent => {
@@ -154,10 +156,11 @@ pub(in super::super) fn render_structural_set_equality(
                     }
                 }
             }
-            let reversed: Fact =
-                EqualFact::new(right.clone(), left.clone(), fact.line_file()).into();
+            let reversed: Fact = runtime
+                .new_equal_fact(right.clone(), left.clone(), fact.line_file())
+                .into();
             Ok(symmetric(render_structural_set_equality(
-                &reversed, rule, context,
+                runtime, &reversed, rule, context,
             )?))
         }
         _ => Err("non-equality set rule reached structural equality renderer".into()),

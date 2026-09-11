@@ -6,6 +6,14 @@ use crate::prelude::*;
 #[path = "../../../tests/unit/fact/atomic/polarity.rs"]
 mod tests;
 impl AtomicFact {
+    pub fn transposed_binary_order_equivalent(&self) -> Option<Self> {
+        self.transposed_binary_order_equivalent_with_runtime(&Runtime::default())
+    }
+
+    pub fn symmetric_reordered_args(&self, gather: &[usize]) -> Option<Self> {
+        self.symmetric_reordered_args_with_runtime(&Runtime::default(), gather)
+    }
+
     fn predicate_string(&self) -> String {
         match self {
             AtomicFact::NormalAtomicFact(x) => x.predicate.to_string(),
@@ -80,7 +88,10 @@ impl AtomicFact {
         return self.predicate_string();
     }
 
-    pub fn transposed_binary_order_equivalent(&self) -> Option<Self> {
+    pub fn transposed_binary_order_equivalent_with_runtime(
+        &self,
+        runtime: &Runtime,
+    ) -> Option<Self> {
         match self {
             AtomicFact::NormalAtomicFact(f)
                 if f.body.len() == 2
@@ -95,12 +106,13 @@ impl AtomicFact {
                     PROPER_SUBSET
                 };
                 Some(
-                    NormalAtomicFact::new(
-                        AtomicName::WithoutMod(transposed_predicate.to_string()),
-                        vec![f.body[1].clone(), f.body[0].clone()],
-                        f.line_file.clone(),
-                    )
-                    .into(),
+                    runtime
+                        .new_normal_atomic_fact(
+                            AtomicName::WithoutMod(transposed_predicate.to_string()),
+                            vec![f.body[1].clone(), f.body[0].clone()],
+                            f.line_file.clone(),
+                        )
+                        .into(),
                 )
             }
             AtomicFact::NotNormalAtomicFact(f)
@@ -116,55 +128,85 @@ impl AtomicFact {
                     PROPER_SUBSET
                 };
                 Some(
-                    NotNormalAtomicFact::new(
-                        AtomicName::WithoutMod(transposed_predicate.to_string()),
-                        vec![f.body[1].clone(), f.body[0].clone()],
+                    runtime
+                        .new_not_normal_atomic_fact(
+                            AtomicName::WithoutMod(transposed_predicate.to_string()),
+                            vec![f.body[1].clone(), f.body[0].clone()],
+                            f.line_file.clone(),
+                        )
+                        .into(),
+                )
+            }
+            AtomicFact::LessFact(f) => Some(
+                runtime
+                    .new_greater_fact(f.right.clone(), f.left.clone(), f.line_file.clone())
+                    .into(),
+            ),
+            AtomicFact::GreaterFact(f) => Some(
+                runtime
+                    .new_less_fact(f.right.clone(), f.left.clone(), f.line_file.clone())
+                    .into(),
+            ),
+            AtomicFact::LessEqualFact(f) => Some(AtomicFact::GreaterEqualFact(
+                runtime.new_greater_equal_fact(
+                    f.right.clone(),
+                    f.left.clone(),
+                    f.line_file.clone(),
+                ),
+            )),
+            AtomicFact::GreaterEqualFact(f) => Some(
+                runtime
+                    .new_less_equal_fact(f.right.clone(), f.left.clone(), f.line_file.clone())
+                    .into(),
+            ),
+            AtomicFact::NotLessFact(f) => Some(
+                runtime
+                    .new_not_greater_fact(f.right.clone(), f.left.clone(), f.line_file.clone())
+                    .into(),
+            ),
+            AtomicFact::NotGreaterFact(f) => Some(
+                runtime
+                    .new_not_less_fact(f.right.clone(), f.left.clone(), f.line_file.clone())
+                    .into(),
+            ),
+            AtomicFact::NotLessEqualFact(f) => Some(AtomicFact::NotGreaterEqualFact(
+                runtime.new_not_greater_equal_fact(
+                    f.right.clone(),
+                    f.left.clone(),
+                    f.line_file.clone(),
+                ),
+            )),
+            AtomicFact::NotGreaterEqualFact(f) => Some(AtomicFact::NotLessEqualFact(
+                runtime.new_not_less_equal_fact(
+                    f.right.clone(),
+                    f.left.clone(),
+                    f.line_file.clone(),
+                ),
+            )),
+            AtomicFact::FnEqualFact(f) => Some(
+                runtime
+                    .new_fn_equal_fact(f.right.clone(), f.left.clone(), f.line_file.clone())
+                    .into(),
+            ),
+            AtomicFact::FnEqualInFact(f) => Some(
+                runtime
+                    .new_fn_equal_in_fact(
+                        f.right.clone(),
+                        f.left.clone(),
+                        f.set.clone(),
                         f.line_file.clone(),
                     )
                     .into(),
-                )
-            }
-            AtomicFact::LessFact(f) => {
-                Some(GreaterFact::new(f.right.clone(), f.left.clone(), f.line_file.clone()).into())
-            }
-            AtomicFact::GreaterFact(f) => {
-                Some(LessFact::new(f.right.clone(), f.left.clone(), f.line_file.clone()).into())
-            }
-            AtomicFact::LessEqualFact(f) => Some(AtomicFact::GreaterEqualFact(
-                GreaterEqualFact::new(f.right.clone(), f.left.clone(), f.line_file.clone()),
-            )),
-            AtomicFact::GreaterEqualFact(f) => Some(
-                LessEqualFact::new(f.right.clone(), f.left.clone(), f.line_file.clone()).into(),
-            ),
-            AtomicFact::NotLessFact(f) => Some(
-                NotGreaterFact::new(f.right.clone(), f.left.clone(), f.line_file.clone()).into(),
-            ),
-            AtomicFact::NotGreaterFact(f) => {
-                Some(NotLessFact::new(f.right.clone(), f.left.clone(), f.line_file.clone()).into())
-            }
-            AtomicFact::NotLessEqualFact(f) => Some(AtomicFact::NotGreaterEqualFact(
-                NotGreaterEqualFact::new(f.right.clone(), f.left.clone(), f.line_file.clone()),
-            )),
-            AtomicFact::NotGreaterEqualFact(f) => Some(AtomicFact::NotLessEqualFact(
-                NotLessEqualFact::new(f.right.clone(), f.left.clone(), f.line_file.clone()),
-            )),
-            AtomicFact::FnEqualFact(f) => {
-                Some(FnEqualFact::new(f.right.clone(), f.left.clone(), f.line_file.clone()).into())
-            }
-            AtomicFact::FnEqualInFact(f) => Some(
-                FnEqualInFact::new(
-                    f.right.clone(),
-                    f.left.clone(),
-                    f.set.clone(),
-                    f.line_file.clone(),
-                )
-                .into(),
             ),
             _ => None,
         }
     }
 
-    pub fn symmetric_reordered_args(&self, gather: &[usize]) -> Option<Self> {
+    pub fn symmetric_reordered_args_with_runtime(
+        &self,
+        runtime: &Runtime,
+        gather: &[usize],
+    ) -> Option<Self> {
         match self {
             AtomicFact::NormalAtomicFact(f) => {
                 let n = f.body.len();
@@ -180,7 +222,8 @@ impl AtomicFact {
                 }
                 let new_body: Vec<Obj> = gather.iter().map(|&i| f.body[i].clone()).collect();
                 Some(
-                    NormalAtomicFact::new(f.predicate.clone(), new_body, f.line_file.clone())
+                    runtime
+                        .new_normal_atomic_fact(f.predicate.clone(), new_body, f.line_file.clone())
                         .into(),
                 )
             }

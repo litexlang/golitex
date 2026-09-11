@@ -175,7 +175,9 @@ fn axiom_of_choice_obligations(
     Ok(vec![
         (
             SuccessVerifyByChoiceObligationRole::ChoiceFamilyIsSet,
-            IsSetFact::new(family.clone(), line_file.clone()).into(),
+            runtime
+                .new_is_set_fact(family.clone(), line_file.clone())
+                .into(),
         ),
         (
             SuccessVerifyByChoiceObligationRole::ChoiceMembersNonempty,
@@ -201,13 +203,16 @@ fn axiom_of_choice_members_nonempty_fact(
     let a_group =
         runtime.fresh_param_group_with_type(vec![a_name], ParamType::Obj(family.clone()))?;
     let a = obj_for_bound_param_in_scope(&a_group.params[0]);
-    Ok(ForallFact::new_canonical_forall(
-        TypedParameterList::new(vec![a_group]),
-        vec![],
-        vec![IsNonemptySetFact::new(a, line_file.clone()).into()],
-        line_file,
-    )?
-    .into())
+    Ok(runtime
+        .new_forall_fact(
+            TypedParameterList::new(vec![a_group]),
+            vec![],
+            vec![runtime
+                .new_is_nonempty_set_fact(a, line_file.clone())
+                .into()],
+            line_file,
+        )?
+        .into())
 }
 
 fn axiom_of_choice_exist_fact(
@@ -242,13 +247,14 @@ fn axiom_of_choice_exist_fact(
     .into();
 
     let named_choice_fact = crate::verification::choice_function_for_fact(
+        runtime,
         family.clone(),
         family,
         identity_family,
         f,
         line_file.clone(),
     );
-    let body = PlainExistFact::new(
+    let body = runtime.new_plain_exist_fact(
         TypedParameterList::new(vec![f_group]),
         vec![QuantifierFreeFact::AtomicFact(named_choice_fact)],
         line_file,

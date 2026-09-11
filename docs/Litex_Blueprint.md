@@ -32,13 +32,11 @@ Writing boundary: the first three layers are Litex's scientific core; the fourth
 - [2. Fact-Oriented: Writing “What Holds” into the Source](#fact-oriented)
 - [3. Bottom-Up: Let Verified Facts Drive Later Proofs](#bottom-up)
 - [4. What Each Statement Leaves Behind: Checkable Knowledge Records](#execution-model)
-  - [Summary: Litex and Naproche—Similar Goals, Different Core Interfaces](#summary-litex-and-naproche)
-- [5. Human–AI–Litex Skill: Organizing Knowledge Production](#interaction-loop)
-  - [Summary: Advantages of the Fact-Oriented, Bottom-Up Loop](#summary-fact-oriented-bottom-up-loop)
-- [6. From Checkable Knowledge Records to Lean/Mathlib](#compatibility)
-  - [Summary: Bottom-Up and Top-Down Are Complementary](#summary-bottom-up-and-top-down)
+- [5. Building the Human–AI–Litex Loop Workflow](#interaction-loop)
+- [6. How Litex Code Compiles to Lean and Interoperates with Mathlib](#compatibility)
+  - [Personal reflection: does Litex fill a paradigm gap in AI reasoning?](#summary-bottom-up-and-top-down)
 - [7. From Language to Ecosystem: The Role Litex Aims to Play](#ecosystem-role)
-- [8. Beyond the Search for One Best Language](#conclusions)
+- [8. The Art of Seeking What Is Different](#conclusions)
   - [Special Thanks](#special-thanks)
 
 <a id="overview"></a>

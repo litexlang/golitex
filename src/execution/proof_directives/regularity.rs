@@ -18,8 +18,9 @@ impl Runtime {
                 )
             })?;
 
-        let nonempty_fact: Fact =
-            IsNonemptySetFact::new(stmt.set.clone(), stmt.line_file.clone()).into();
+        let nonempty_fact: Fact = self
+            .new_is_nonempty_set_fact(stmt.set.clone(), stmt.line_file.clone())
+            .into();
         let mut nonempty_result = self
             .verify_fact_or_error(&nonempty_fact, &VerifyState::initial())
             .map_err(|verify_error| {
@@ -110,12 +111,12 @@ fn regularity_axiom_exist_fact(
     let x_group = runtime.fresh_param_group_with_type(vec![x_name], ParamType::Obj(set.clone()))?;
     let x = obj_for_bound_param_in_scope(&x_group.params[0]);
     let empty_set: Obj = ListSet::new(vec![]).into();
-    let disjoint_fact = EqualFact::new(
+    let disjoint_fact = runtime.new_equal_fact(
         Intersect::new(x, set.clone()).into(),
         empty_set,
         line_file.clone(),
     );
-    let body = PlainExistFact::new(
+    let body = runtime.new_plain_exist_fact(
         TypedParameterList::new(vec![x_group]),
         vec![disjoint_fact.into()],
         line_file,

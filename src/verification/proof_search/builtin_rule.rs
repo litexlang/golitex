@@ -62,21 +62,20 @@ impl Runtime {
         for mut alternative in alternatives {
             if alternative.is_empty() {
                 return self.try_verify_builtin_rule_premise(
-                    &QuantifierFreeFact::OrFact(OrFact::new(Vec::new(), line_file)),
+                    &QuantifierFreeFact::OrFact(self.new_or_fact(Vec::new(), line_file)),
                     builtin_state,
                 );
             }
             if alternative.len() == 1 {
                 branches.push(alternative.remove(0).into());
             } else {
-                branches.push(AndChainAtomicFact::AndFact(AndFact::new(
-                    alternative,
-                    line_file.clone(),
-                )));
+                branches.push(AndChainAtomicFact::AndFact(
+                    self.new_and_fact(alternative, line_file.clone()),
+                ));
             }
         }
         self.try_verify_builtin_rule_premise(
-            &QuantifierFreeFact::OrFact(OrFact::new(branches, line_file)),
+            &QuantifierFreeFact::OrFact(self.new_or_fact(branches, line_file)),
             builtin_state,
         )
     }
@@ -120,7 +119,7 @@ impl Runtime {
             return Ok(cached_result);
         }
 
-        let atomic_facts = chain_fact.facts()?;
+        let atomic_facts = chain_fact.facts(self)?;
         let mut child_results = Vec::with_capacity(atomic_facts.len());
         for atomic_fact in &atomic_facts {
             let Some(result) =
@@ -311,10 +310,9 @@ impl Runtime {
                 // Jointly required atomic premises form one conjunction. Trying the complete
                 // `AndFact` lets a stored whole conjunction satisfy the rule; otherwise the
                 // compound dispatcher verifies every leaf with the unchanged depth budget.
-                let conjunction = QuantifierFreeFact::AndFact(AndFact::new(
-                    children.to_vec(),
-                    children[0].line_file(),
-                ));
+                let conjunction = QuantifierFreeFact::AndFact(
+                    self.new_and_fact(children.to_vec(), children[0].line_file()),
+                );
                 let Some(result) =
                     self.try_verify_builtin_rule_premise(&conjunction, builtin_state)?
                 else {

@@ -73,12 +73,13 @@ impl Runtime {
             )?);
         }
 
-        Ok(ForallFact::new_canonical_forall(
-            TypedParameterList::new(groups),
-            dom_facts,
-            then_facts,
-            forall_fact.line_file,
-        )?
-        .into())
+        Ok(self
+            .new_forall_fact(
+                TypedParameterList::new(groups),
+                dom_facts,
+                then_facts,
+                forall_fact.line_file,
+            )?
+            .into())
     }
 }

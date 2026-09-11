@@ -20,7 +20,8 @@ impl Runtime {
                 let Some(domain) = body.set_bound_parameters.first() else {
                     return Ok(UnknownGenericStmtResult::new().into());
                 };
-                let child = IsFiniteSetFact::new(domain.set_obj().clone(), fact.line_file.clone());
+                let child =
+                    self.new_is_finite_set_fact(domain.set_obj().clone(), fact.line_file.clone());
                 let result = self.verify_is_finite_set_strategy_child(&child, verify_state)?;
                 if !result.is_success() {
                     return Ok(UnknownGenericStmtResult::new().into());
@@ -29,8 +30,8 @@ impl Runtime {
                 "finite-set strategy: range of a function with finite domain"
             }
             Obj::PowerSet(power_set) => {
-                let child =
-                    IsFiniteSetFact::new(power_set.set.as_ref().clone(), fact.line_file.clone());
+                let child = self
+                    .new_is_finite_set_fact(power_set.set.as_ref().clone(), fact.line_file.clone());
                 let result = self.verify_is_finite_set_strategy_child(&child, verify_state)?;
                 if !result.is_success() {
                     return Ok(UnknownGenericStmtResult::new().into());
@@ -39,7 +40,7 @@ impl Runtime {
                 "finite-set strategy: power set of a finite set"
             }
             Obj::SetBuilder(set_builder) => {
-                let child = IsFiniteSetFact::new(
+                let child = self.new_is_finite_set_fact(
                     set_builder.param_set.as_ref().clone(),
                     fact.line_file.clone(),
                 );
@@ -52,7 +53,7 @@ impl Runtime {
             }
             Obj::Union(union) => {
                 for set in [union.left.as_ref(), union.right.as_ref()] {
-                    let child = IsFiniteSetFact::new(set.clone(), fact.line_file.clone());
+                    let child = self.new_is_finite_set_fact(set.clone(), fact.line_file.clone());
                     let result = self.verify_is_finite_set_strategy_child(&child, verify_state)?;
                     if !result.is_success() {
                         return Ok(UnknownGenericStmtResult::new().into());
@@ -63,7 +64,7 @@ impl Runtime {
             }
             Obj::Intersect(intersect) => {
                 for set in [intersect.left.as_ref(), intersect.right.as_ref()] {
-                    let child = IsFiniteSetFact::new(set.clone(), fact.line_file.clone());
+                    let child = self.new_is_finite_set_fact(set.clone(), fact.line_file.clone());
                     let result = self.verify_is_finite_set_strategy_child(&child, verify_state)?;
                     if !result.is_success() {
                         return Ok(UnknownGenericStmtResult::new().into());
@@ -73,8 +74,10 @@ impl Runtime {
                 "finite-set strategy: intersection of finite sets"
             }
             Obj::SetMinus(set_minus) => {
-                let child =
-                    IsFiniteSetFact::new(set_minus.left.as_ref().clone(), fact.line_file.clone());
+                let child = self.new_is_finite_set_fact(
+                    set_minus.left.as_ref().clone(),
+                    fact.line_file.clone(),
+                );
                 let result = self.verify_is_finite_set_strategy_child(&child, verify_state)?;
                 if !result.is_success() {
                     return Ok(UnknownGenericStmtResult::new().into());
@@ -84,7 +87,8 @@ impl Runtime {
             }
             Obj::Cart(cart) => {
                 for set in &cart.args {
-                    let child = IsFiniteSetFact::new(set.as_ref().clone(), fact.line_file.clone());
+                    let child =
+                        self.new_is_finite_set_fact(set.as_ref().clone(), fact.line_file.clone());
                     let result = self.verify_is_finite_set_strategy_child(&child, verify_state)?;
                     if !result.is_success() {
                         return Ok(UnknownGenericStmtResult::new().into());
@@ -137,12 +141,13 @@ impl Runtime {
             // An integer closed range is nonempty exactly when its endpoints are ordered.
             // Example: `2 <= n` proves `$is_nonempty_set(closed_range(1, n))`.
             Obj::ClosedRange(closed_range) => {
-                let endpoint_order: AtomicFact = LessEqualFact::new(
-                    closed_range.start.as_ref().clone(),
-                    closed_range.end.as_ref().clone(),
-                    fact.line_file.clone(),
-                )
-                .into();
+                let endpoint_order: AtomicFact = self
+                    .new_less_equal_fact(
+                        closed_range.start.as_ref().clone(),
+                        closed_range.end.as_ref().clone(),
+                        fact.line_file.clone(),
+                    )
+                    .into();
                 let result = self.verify_builtin_strategy_child(&endpoint_order, verify_state)?;
                 if !result.is_success() {
                     return Ok(UnknownGenericStmtResult::new().into());
@@ -161,12 +166,13 @@ impl Runtime {
             // An integer half-open range is nonempty exactly when its start is below its end.
             // Example: `2 <= n` proves `$is_nonempty_set(range(1, n))`.
             Obj::Range(range) => {
-                let endpoint_order: AtomicFact = LessFact::new(
-                    range.start.as_ref().clone(),
-                    range.end.as_ref().clone(),
-                    fact.line_file.clone(),
-                )
-                .into();
+                let endpoint_order: AtomicFact = self
+                    .new_less_fact(
+                        range.start.as_ref().clone(),
+                        range.end.as_ref().clone(),
+                        fact.line_file.clone(),
+                    )
+                    .into();
                 let result = self.verify_builtin_strategy_child(&endpoint_order, verify_state)?;
                 if !result.is_success() {
                     return Ok(UnknownGenericStmtResult::new().into());
@@ -188,14 +194,14 @@ impl Runtime {
             Obj::IntervalObj(interval) => {
                 let both_closed = interval.left_closed() && interval.right_closed();
                 let endpoint_order: AtomicFact = if both_closed {
-                    LessEqualFact::new(
+                    self.new_less_equal_fact(
                         interval.start().clone(),
                         interval.end().clone(),
                         fact.line_file.clone(),
                     )
                     .into()
                 } else {
-                    LessFact::new(
+                    self.new_less_fact(
                         interval.start().clone(),
                         interval.end().clone(),
                         fact.line_file.clone(),
@@ -223,7 +229,7 @@ impl Runtime {
             }
             Obj::Union(union) => {
                 for set in [union.left.as_ref(), union.right.as_ref()] {
-                    let child = IsNonemptySetFact::new(set.clone(), fact.line_file.clone());
+                    let child = self.new_is_nonempty_set_fact(set.clone(), fact.line_file.clone());
                     let result =
                         self.verify_is_nonempty_set_strategy_child(&child, verify_state)?;
                     if result.is_success() {
@@ -244,7 +250,7 @@ impl Runtime {
                 let mut results = Vec::with_capacity(cart.args.len());
                 for set in &cart.args {
                     let child =
-                        IsNonemptySetFact::new(set.as_ref().clone(), fact.line_file.clone());
+                        self.new_is_nonempty_set_fact(set.as_ref().clone(), fact.line_file.clone());
                     let result =
                         self.verify_is_nonempty_set_strategy_child(&child, verify_state)?;
                     if !result.is_success() {
@@ -303,7 +309,7 @@ impl Runtime {
         reason: &str,
         verify_state: &VerifyState,
     ) -> Result<ProveFactResult, RuntimeError> {
-        let child = IsNonemptySetFact::new(child_set.clone(), fact.line_file.clone());
+        let child = self.new_is_nonempty_set_fact(child_set.clone(), fact.line_file.clone());
         let result = self.verify_is_nonempty_set_strategy_child(&child, verify_state)?;
         if !result.is_success() {
             return Ok(UnknownGenericStmtResult::new().into());

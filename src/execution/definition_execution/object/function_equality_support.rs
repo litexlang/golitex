@@ -295,8 +295,8 @@ fn case_condition_implies_not_other_result(
             infers,
         };
 
-        for atom in flatten_and_chain_to_atomic_facts(other) {
-            let Ok(negated) = atom.logical_negation() else {
+        for atom in flatten_and_chain_to_atomic_facts(rt, other) {
+            let Ok(negated) = atom.logical_negation_with_runtime(rt) else {
                 continue;
             };
             let mut result = rt.verify_atomic_fact(&negated, &VerifyState::initial())?;
@@ -318,11 +318,14 @@ fn case_condition_implies_not_other_result(
     })
 }
 
-fn flatten_and_chain_to_atomic_facts(fact: &AndChainAtomicFact) -> Vec<AtomicFact> {
+fn flatten_and_chain_to_atomic_facts(
+    runtime: &Runtime,
+    fact: &AndChainAtomicFact,
+) -> Vec<AtomicFact> {
     match fact {
         AndChainAtomicFact::AtomicFact(atomic_fact) => vec![atomic_fact.clone()],
         AndChainAtomicFact::AndFact(and_fact) => and_fact.facts.clone(),
-        AndChainAtomicFact::ChainFact(chain_fact) => chain_fact.facts().unwrap(),
+        AndChainAtomicFact::ChainFact(chain_fact) => chain_fact.facts(runtime).unwrap(),
     }
 }
 

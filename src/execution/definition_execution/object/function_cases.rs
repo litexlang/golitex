@@ -44,12 +44,13 @@ impl Runtime {
         let function_identifier_obj =
             self.definition_identifier_obj(have_fn_equal_case_by_case_stmt.name());
         let function_set_obj = fn_set_stored.clone().into();
-        let function_in_function_set_fact = InFact::new(
-            function_identifier_obj.clone(),
-            function_set_obj,
-            have_fn_equal_case_by_case_stmt.line_file.clone(),
-        )
-        .into();
+        let function_in_function_set_fact = self
+            .new_in_fact(
+                function_identifier_obj.clone(),
+                function_set_obj,
+                have_fn_equal_case_by_case_stmt.line_file.clone(),
+            )
+            .into();
 
         let mut infer_result = self
             .store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason(
@@ -102,13 +103,14 @@ impl Runtime {
                 &fn_set_param_to_forall_param,
                 SubstitutionMode::Exact,
             )?;
-            let function_equals_equal_to_fact: AtomicFact = EqualFact::new(
-                function_obj.clone(),
-                equal_to,
-                have_fn_equal_case_by_case_stmt.line_file.clone(),
-            )
-            .into();
-            let forall_fact = ForallFact::new_canonical_forall(
+            let function_equals_equal_to_fact: AtomicFact = self
+                .new_equal_fact(
+                    function_obj.clone(),
+                    equal_to,
+                    have_fn_equal_case_by_case_stmt.line_file.clone(),
+                )
+                .into();
+            let forall_fact = self.new_forall_fact(
                 param_defs_with_type.clone(),
                 forall_dom_facts,
                 vec![function_equals_equal_to_fact.into()],
@@ -269,7 +271,9 @@ impl Runtime {
             ));
         }
 
-        let coverage: Fact = OrFact::new(stmt.cases.clone(), stmt.line_file.clone()).into();
+        let coverage: Fact = self
+            .new_or_fact(stmt.cases.clone(), stmt.line_file.clone())
+            .into();
         let coverage_result = self
             .verify_fact_or_error(&coverage, &VerifyState::initial())
             .map_err(|e| {
@@ -368,15 +372,16 @@ impl Runtime {
                 )
             })?;
 
-        let equal_to_in_ret_set_atomic_fact = InFact::new(
-            equal_to.clone(),
-            have_fn_equal_case_by_case_stmt
-                .fn_set_clause
-                .ret_set
-                .clone(),
-            have_fn_equal_case_by_case_stmt.line_file.clone(),
-        )
-        .into();
+        let equal_to_in_ret_set_atomic_fact = self
+            .new_in_fact(
+                equal_to.clone(),
+                have_fn_equal_case_by_case_stmt
+                    .fn_set_clause
+                    .ret_set
+                    .clone(),
+                have_fn_equal_case_by_case_stmt.line_file.clone(),
+            )
+            .into();
         let verify_result = self
             .verify_atomic_fact(&equal_to_in_ret_set_atomic_fact, &verify_state)
             .map_err(|verify_error| {
@@ -446,9 +451,10 @@ impl Runtime {
             );
             let equal_to =
                 self.inst_obj(equal_to, &param_to_forall_param, SubstitutionMode::Exact)?;
-            let equation: AtomicFact =
-                EqualFact::new(function_obj.clone(), equal_to, stmt.line_file.clone()).into();
-            let forall = ForallFact::new_canonical_forall(
+            let equation: AtomicFact = self
+                .new_equal_fact(function_obj.clone(), equal_to, stmt.line_file.clone())
+                .into();
+            let forall = self.new_forall_fact(
                 param_defs_with_type.clone(),
                 forall_dom_facts,
                 vec![equation.into()],

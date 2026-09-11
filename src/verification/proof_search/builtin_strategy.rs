@@ -84,7 +84,7 @@ impl Runtime {
                 self.verify_subset_with_builtin_strategy(fact, verify_state)
             }
             AtomicFact::SupersetFact(fact) => {
-                let subset = SubsetFact::new(
+                let subset = self.new_subset_fact(
                     fact.right.clone(),
                     fact.left.clone(),
                     fact.line_file.clone(),

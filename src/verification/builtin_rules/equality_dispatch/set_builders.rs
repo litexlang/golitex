@@ -16,12 +16,13 @@ impl Runtime {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
-        let fact: AtomicFact = NormalAtomicFact::new(
-            AtomicName::WithoutMod(prop_name.to_string()),
-            vec![left.clone(), right.clone()],
-            line_file,
-        )
-        .into();
+        let fact: AtomicFact = self
+            .new_normal_atomic_fact(
+                AtomicName::WithoutMod(prop_name.to_string()),
+                vec![left.clone(), right.clone()],
+                line_file,
+            )
+            .into();
         self.try_verify_atomic_fact_as_builtin_rule_premise(&fact, builtin_state)
     }
 
@@ -79,7 +80,7 @@ impl Runtime {
         }
 
         let Some(domain_result) = self.try_verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(
+            &self.new_equal_fact_from_refs(
                 fn_set.body.set_bound_parameters[0].set_obj(),
                 general_cart.index_set.as_ref(),
                 line_file.clone(),
@@ -91,7 +92,7 @@ impl Runtime {
         };
         let expected_ret_set: Obj = BigUnion::new(general_cart.family_set.as_ref().clone()).into();
         let ret_result = self.try_verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(
+            &self.new_equal_fact_from_refs(
                 fn_set.body.ret_set.as_ref(),
                 &expected_ret_set,
                 line_file.clone(),
@@ -131,7 +132,7 @@ impl Runtime {
             (choice_family_fn, general_cart.family_fn.as_ref()),
         ] {
             let Some(result) = self.try_verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(actual, expected, line_file.clone()),
+                &self.new_equal_fact_from_refs(actual, expected, line_file.clone()),
                 builtin_state,
             )?
             else {
@@ -170,7 +171,7 @@ impl Runtime {
             let QuantifierFreeFact::ChainFact(chain) = &set_builder.facts[0] else {
                 continue;
             };
-            let Ok(chain_facts) = chain.facts() else {
+            let Ok(chain_facts) = chain.facts(self) else {
                 continue;
             };
             let [AtomicFact::LessEqualFact(lower), upper] = chain_facts.as_slice() else {

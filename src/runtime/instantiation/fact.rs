@@ -66,7 +66,7 @@ impl Runtime {
                 )?)
             }
             Fact::NotForall(not_forall) => {
-                Fact::NotForall(NotForallFact::new(self.inst_forall_fact(
+                Fact::NotForall(self.new_not_forall_fact(self.inst_forall_fact(
                     &not_forall.forall_fact,
                     param_to_arg_map,
                     to_inst_param_type,
@@ -319,13 +319,15 @@ impl Runtime {
             AtomicFact::NotSupersetFact(fact) => AtomicFact::NotSupersetFact(
                 self.inst_not_superset_fact(fact, param_to_arg_map, to_inst_param_type, inst_lf)?,
             ),
-            AtomicFact::FnEqualInFact(fact) => AtomicFact::FnEqualInFact(FnEqualInFact::new(
-                self.inst_obj(&fact.left, param_to_arg_map, to_inst_param_type)?,
-                self.inst_obj(&fact.right, param_to_arg_map, to_inst_param_type)?,
-                self.inst_obj(&fact.set, param_to_arg_map, to_inst_param_type)?,
-                Self::line_file_after_inst(&fact.line_file, inst_lf),
-            )),
-            AtomicFact::FnEqualFact(fact) => AtomicFact::FnEqualFact(FnEqualFact::new(
+            AtomicFact::FnEqualInFact(fact) => {
+                AtomicFact::FnEqualInFact(self.new_fn_equal_in_fact(
+                    self.inst_obj(&fact.left, param_to_arg_map, to_inst_param_type)?,
+                    self.inst_obj(&fact.right, param_to_arg_map, to_inst_param_type)?,
+                    self.inst_obj(&fact.set, param_to_arg_map, to_inst_param_type)?,
+                    Self::line_file_after_inst(&fact.line_file, inst_lf),
+                ))
+            }
+            AtomicFact::FnEqualFact(fact) => AtomicFact::FnEqualFact(self.new_fn_equal_fact(
                 self.inst_obj(&fact.left, param_to_arg_map, to_inst_param_type)?,
                 self.inst_obj(&fact.right, param_to_arg_map, to_inst_param_type)?,
                 Self::line_file_after_inst(&fact.line_file, inst_lf),
@@ -344,7 +346,7 @@ impl Runtime {
         for obj in normal_atomic_fact.body.iter() {
             body.push(self.inst_obj(obj, param_to_arg_map, to_inst_param_type)?);
         }
-        Ok(NormalAtomicFact::new(
+        Ok(self.new_normal_atomic_fact(
             normal_atomic_fact.predicate.clone(),
             body,
             Self::line_file_after_inst(&normal_atomic_fact.line_file, inst_lf),
@@ -358,7 +360,7 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<EqualFact, RuntimeError> {
-        Ok(EqualFact::new(
+        Ok(self.new_equal_fact(
             self.inst_obj(&equal_fact.left, param_to_arg_map, to_inst_param_type)?,
             self.inst_obj(&equal_fact.right, param_to_arg_map, to_inst_param_type)?,
             Self::line_file_after_inst(&equal_fact.line_file, inst_lf),
@@ -372,7 +374,7 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<LessFact, RuntimeError> {
-        Ok(LessFact::new(
+        Ok(self.new_less_fact(
             self.inst_obj(&less_fact.left, param_to_arg_map, to_inst_param_type)?,
             self.inst_obj(&less_fact.right, param_to_arg_map, to_inst_param_type)?,
             Self::line_file_after_inst(&less_fact.line_file, inst_lf),
@@ -386,7 +388,7 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<GreaterFact, RuntimeError> {
-        Ok(GreaterFact::new(
+        Ok(self.new_greater_fact(
             self.inst_obj(&greater_fact.left, param_to_arg_map, to_inst_param_type)?,
             self.inst_obj(&greater_fact.right, param_to_arg_map, to_inst_param_type)?,
             Self::line_file_after_inst(&greater_fact.line_file, inst_lf),
@@ -400,7 +402,7 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<LessEqualFact, RuntimeError> {
-        Ok(LessEqualFact::new(
+        Ok(self.new_less_equal_fact(
             self.inst_obj(&less_equal_fact.left, param_to_arg_map, to_inst_param_type)?,
             self.inst_obj(&less_equal_fact.right, param_to_arg_map, to_inst_param_type)?,
             Self::line_file_after_inst(&less_equal_fact.line_file, inst_lf),
@@ -414,7 +416,7 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<GreaterEqualFact, RuntimeError> {
-        Ok(GreaterEqualFact::new(
+        Ok(self.new_greater_equal_fact(
             self.inst_obj(
                 &greater_equal_fact.left,
                 param_to_arg_map,
@@ -436,7 +438,7 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<IsSetFact, RuntimeError> {
-        Ok(IsSetFact::new(
+        Ok(self.new_is_set_fact(
             self.inst_obj(&is_set_fact.set, param_to_arg_map, to_inst_param_type)?,
             Self::line_file_after_inst(&is_set_fact.line_file, inst_lf),
         ))
@@ -449,7 +451,7 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<IsNonemptySetFact, RuntimeError> {
-        Ok(IsNonemptySetFact::new(
+        Ok(self.new_is_nonempty_set_fact(
             self.inst_obj(
                 &is_nonempty_set_fact.set,
                 param_to_arg_map,
@@ -466,7 +468,7 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<IsFiniteSetFact, RuntimeError> {
-        Ok(IsFiniteSetFact::new(
+        Ok(self.new_is_finite_set_fact(
             self.inst_obj(
                 &is_finite_set_fact.set,
                 param_to_arg_map,
@@ -483,7 +485,7 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<InFact, RuntimeError> {
-        Ok(InFact::new(
+        Ok(self.new_in_fact(
             self.inst_obj(&in_fact.element, param_to_arg_map, to_inst_param_type)?,
             self.inst_obj(&in_fact.set, param_to_arg_map, to_inst_param_type)?,
             Self::line_file_after_inst(&in_fact.line_file, inst_lf),
@@ -497,7 +499,7 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<IsCartFact, RuntimeError> {
-        Ok(IsCartFact::new(
+        Ok(self.new_is_cart_fact(
             self.inst_obj(&is_cart_fact.set, param_to_arg_map, to_inst_param_type)?,
             Self::line_file_after_inst(&is_cart_fact.line_file, inst_lf),
         ))
@@ -510,7 +512,7 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<IsTupleFact, RuntimeError> {
-        Ok(IsTupleFact::new(
+        Ok(self.new_is_tuple_fact(
             self.inst_obj(&is_tuple_fact.set, param_to_arg_map, to_inst_param_type)?,
             Self::line_file_after_inst(&is_tuple_fact.line_file, inst_lf),
         ))
@@ -523,7 +525,7 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<SubsetFact, RuntimeError> {
-        Ok(SubsetFact::new(
+        Ok(self.new_subset_fact(
             self.inst_obj(&subset_fact.left, param_to_arg_map, to_inst_param_type)?,
             self.inst_obj(&subset_fact.right, param_to_arg_map, to_inst_param_type)?,
             Self::line_file_after_inst(&subset_fact.line_file, inst_lf),
@@ -537,7 +539,7 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<SupersetFact, RuntimeError> {
-        Ok(SupersetFact::new(
+        Ok(self.new_superset_fact(
             self.inst_obj(&superset_fact.left, param_to_arg_map, to_inst_param_type)?,
             self.inst_obj(&superset_fact.right, param_to_arg_map, to_inst_param_type)?,
             Self::line_file_after_inst(&superset_fact.line_file, inst_lf),
@@ -555,7 +557,7 @@ impl Runtime {
         for obj in not_normal_atomic_fact.body.iter() {
             body.push(self.inst_obj(obj, param_to_arg_map, to_inst_param_type)?);
         }
-        Ok(NotNormalAtomicFact::new(
+        Ok(self.new_not_normal_atomic_fact(
             not_normal_atomic_fact.predicate.clone(),
             body,
             Self::line_file_after_inst(&not_normal_atomic_fact.line_file, inst_lf),
@@ -569,7 +571,7 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotEqualFact, RuntimeError> {
-        Ok(NotEqualFact::new(
+        Ok(self.new_not_equal_fact(
             self.inst_obj(&not_equal_fact.left, param_to_arg_map, to_inst_param_type)?,
             self.inst_obj(&not_equal_fact.right, param_to_arg_map, to_inst_param_type)?,
             Self::line_file_after_inst(&not_equal_fact.line_file, inst_lf),
@@ -583,7 +585,7 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotLessFact, RuntimeError> {
-        Ok(NotLessFact::new(
+        Ok(self.new_not_less_fact(
             self.inst_obj(&not_less_fact.left, param_to_arg_map, to_inst_param_type)?,
             self.inst_obj(&not_less_fact.right, param_to_arg_map, to_inst_param_type)?,
             Self::line_file_after_inst(&not_less_fact.line_file, inst_lf),
@@ -597,7 +599,7 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotGreaterFact, RuntimeError> {
-        Ok(NotGreaterFact::new(
+        Ok(self.new_not_greater_fact(
             self.inst_obj(&not_greater_fact.left, param_to_arg_map, to_inst_param_type)?,
             self.inst_obj(
                 &not_greater_fact.right,
@@ -615,7 +617,7 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotLessEqualFact, RuntimeError> {
-        Ok(NotLessEqualFact::new(
+        Ok(self.new_not_less_equal_fact(
             self.inst_obj(
                 &not_less_equal_fact.left,
                 param_to_arg_map,
@@ -637,7 +639,7 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotGreaterEqualFact, RuntimeError> {
-        Ok(NotGreaterEqualFact::new(
+        Ok(self.new_not_greater_equal_fact(
             self.inst_obj(
                 &not_greater_equal_fact.left,
                 param_to_arg_map,
@@ -659,7 +661,7 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotIsSetFact, RuntimeError> {
-        Ok(NotIsSetFact::new(
+        Ok(self.new_not_is_set_fact(
             self.inst_obj(&not_is_set_fact.set, param_to_arg_map, to_inst_param_type)?,
             Self::line_file_after_inst(&not_is_set_fact.line_file, inst_lf),
         ))
@@ -672,7 +674,7 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotIsNonemptySetFact, RuntimeError> {
-        Ok(NotIsNonemptySetFact::new(
+        Ok(self.new_not_is_nonempty_set_fact(
             self.inst_obj(
                 &not_is_nonempty_set_fact.set,
                 param_to_arg_map,
@@ -689,7 +691,7 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotIsFiniteSetFact, RuntimeError> {
-        Ok(NotIsFiniteSetFact::new(
+        Ok(self.new_not_is_finite_set_fact(
             self.inst_obj(
                 &not_is_finite_set_fact.set,
                 param_to_arg_map,
@@ -706,7 +708,7 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotInFact, RuntimeError> {
-        Ok(NotInFact::new(
+        Ok(self.new_not_in_fact(
             self.inst_obj(&not_in_fact.element, param_to_arg_map, to_inst_param_type)?,
             self.inst_obj(&not_in_fact.set, param_to_arg_map, to_inst_param_type)?,
             Self::line_file_after_inst(&not_in_fact.line_file, inst_lf),
@@ -720,7 +722,7 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotIsCartFact, RuntimeError> {
-        Ok(NotIsCartFact::new(
+        Ok(self.new_not_is_cart_fact(
             self.inst_obj(&not_is_cart_fact.set, param_to_arg_map, to_inst_param_type)?,
             Self::line_file_after_inst(&not_is_cart_fact.line_file, inst_lf),
         ))
@@ -733,7 +735,7 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotIsTupleFact, RuntimeError> {
-        Ok(NotIsTupleFact::new(
+        Ok(self.new_not_is_tuple_fact(
             self.inst_obj(&not_is_tuple_fact.set, param_to_arg_map, to_inst_param_type)?,
             Self::line_file_after_inst(&not_is_tuple_fact.line_file, inst_lf),
         ))
@@ -746,7 +748,7 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotSubsetFact, RuntimeError> {
-        Ok(NotSubsetFact::new(
+        Ok(self.new_not_subset_fact(
             self.inst_obj(&not_subset_fact.left, param_to_arg_map, to_inst_param_type)?,
             self.inst_obj(&not_subset_fact.right, param_to_arg_map, to_inst_param_type)?,
             Self::line_file_after_inst(&not_subset_fact.line_file, inst_lf),
@@ -760,7 +762,7 @@ impl Runtime {
         to_inst_param_type: SubstitutionMode,
         inst_lf: Option<&LineFile>,
     ) -> Result<NotSupersetFact, RuntimeError> {
-        Ok(NotSupersetFact::new(
+        Ok(self.new_not_superset_fact(
             self.inst_obj(
                 &not_superset_fact.left,
                 param_to_arg_map,
@@ -873,7 +875,7 @@ impl Runtime {
                 inst_lf,
             )?);
         }
-        let body = PlainExistFact::new(
+        let body = self.new_plain_exist_fact(
             typed_parameters,
             facts,
             Self::line_file_after_inst(&exist_fact.spec().line_file, inst_lf),
@@ -971,7 +973,7 @@ impl Runtime {
                 None,
             )?);
         }
-        let body = PlainExistFact::new(
+        let body = self.new_plain_exist_fact(
             TypedParameterList::new(groups),
             facts,
             exist_fact.spec().line_file.clone(),
@@ -999,7 +1001,7 @@ impl Runtime {
                 inst_lf,
             )?);
         }
-        Ok(OrFact::new(
+        Ok(self.new_or_fact(
             facts,
             Self::line_file_after_inst(&or_fact.line_file, inst_lf),
         ))
@@ -1021,7 +1023,7 @@ impl Runtime {
                 inst_lf,
             )?);
         }
-        Ok(AndFact::new(
+        Ok(self.new_and_fact(
             facts,
             Self::line_file_after_inst(&and_fact.line_file, inst_lf),
         ))
@@ -1038,7 +1040,7 @@ impl Runtime {
         for obj in chain_fact.objs.iter() {
             objs.push(self.inst_obj(obj, param_to_arg_map, to_inst_param_type)?);
         }
-        Ok(ChainFact::new(
+        Ok(self.new_chain_fact(
             objs,
             chain_fact.prop_names.clone(),
             Self::line_file_after_inst(&chain_fact.line_file, inst_lf),
@@ -1111,12 +1113,12 @@ impl Runtime {
                 inst_lf,
             )?);
         }
-        Ok(ForallFact::new_canonical_forall(
+        self.new_forall_fact(
             typed_parameters,
             dom_facts,
             then_facts,
             Self::line_file_after_inst(&forall_fact.line_file, inst_lf),
-        )?)
+        )
     }
 
     pub fn inst_forall_fact_with_iff(
@@ -1164,11 +1166,11 @@ impl Runtime {
                 inst_lf,
             )?);
         }
-        Ok(ForallFactWithIff::new(
+        self.new_forall_fact_with_iff(
             forall_fact,
             iff_facts,
             Self::line_file_after_inst(&forall_fact_with_iff.line_file, inst_lf),
-        )?)
+        )
     }
 
     fn forall_capture_avoiding_rename_map(
@@ -1272,7 +1274,7 @@ impl Runtime {
             )?);
         }
 
-        ForallFact::new_canonical_forall(
+        self.new_forall_fact(
             TypedParameterList::new(groups),
             dom_facts,
             then_facts,

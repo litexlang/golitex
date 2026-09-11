@@ -14,10 +14,9 @@ methods at the same time.
 The foundational correspondence is intentional:
 
 ```text
-verify_rewrite uses fact::Fact / ExistFact / PlainExistFact directly
-verify_rewrite::FactId   == fact::id::FactId
-verify_rewrite::Environment == environment::Environment
-verify_rewrite::Runtime  == runtime::Runtime
+The new pipeline owns its runtime IDs in `runtime::runtime_ids`.
+`runtime::runtime_ids::FactId` is intentionally independent from the legacy
+`fact::id::FactId`; compatibility, if needed later, must be explicit.
 New verifier types/fns use a `2` suffix (e.g. VerifyFactResult2, verify_fact2)
 ```
 

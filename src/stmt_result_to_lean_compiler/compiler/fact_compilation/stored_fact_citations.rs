@@ -218,6 +218,15 @@ impl StmtResultToLeanCompiler {
                 .fact_propositions
                 .insert(source_fact_id, source_fact.clone());
         }
+        // A citation creates a fresh statement fact even when its proof comes
+        // from an earlier stored FactId. Publish the target store identity so
+        // the ordinary store-validation path can retain the new fact without
+        // conflating it with the cited source.
+        if let Some(target_fact_id) = result.store.fact_id {
+            self.environment_stack
+                .fact_propositions
+                .insert(target_fact_id, source_fact.clone());
+        }
         if matches!(source_fact, Fact::AtomicFact(_)) {
             validate_atomic_fact_well_definedness_result(&verified.checked, &source_fact)?;
         }

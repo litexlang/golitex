@@ -10,20 +10,22 @@ impl Runtime {
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<VerifyFactResult>, RuntimeError> {
-        let greater_equal: AtomicFact = GreaterEqualFact::new(
-            greater_or_equal.clone(),
-            less_or_equal.clone(),
-            line_file.clone(),
-        )
-        .into();
+        let greater_equal: AtomicFact = self
+            .new_greater_equal_fact(
+                greater_or_equal.clone(),
+                less_or_equal.clone(),
+                line_file.clone(),
+            )
+            .into();
         if let Some(result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&greater_equal, builtin_state)?
         {
             return Ok(Some(result));
         }
 
-        let less_equal: AtomicFact =
-            LessEqualFact::new(less_or_equal.clone(), greater_or_equal.clone(), line_file).into();
+        let less_equal: AtomicFact = self
+            .new_less_equal_fact(less_or_equal.clone(), greater_or_equal.clone(), line_file)
+            .into();
         if let Some(result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&less_equal, builtin_state)?
         {
@@ -45,18 +47,24 @@ impl Runtime {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
-        let left_in_r: AtomicFact =
-            InFact::new(left.clone(), StandardSet::R.into(), line_file.clone()).into();
-        let right_in_r: AtomicFact =
-            InFact::new(right.clone(), StandardSet::R.into(), line_file.clone()).into();
-        let left_ge_right: AtomicFact =
-            GreaterEqualFact::new(left.clone(), right.clone(), line_file.clone()).into();
-        let right_le_left: AtomicFact =
-            LessEqualFact::new(right.clone(), left.clone(), line_file.clone()).into();
-        let right_ge_left: AtomicFact =
-            GreaterEqualFact::new(right.clone(), left.clone(), line_file.clone()).into();
-        let left_le_right: AtomicFact =
-            LessEqualFact::new(left.clone(), right.clone(), line_file.clone()).into();
+        let left_in_r: AtomicFact = self
+            .new_in_fact(left.clone(), StandardSet::R.into(), line_file.clone())
+            .into();
+        let right_in_r: AtomicFact = self
+            .new_in_fact(right.clone(), StandardSet::R.into(), line_file.clone())
+            .into();
+        let left_ge_right: AtomicFact = self
+            .new_greater_equal_fact(left.clone(), right.clone(), line_file.clone())
+            .into();
+        let right_le_left: AtomicFact = self
+            .new_less_equal_fact(right.clone(), left.clone(), line_file.clone())
+            .into();
+        let right_ge_left: AtomicFact = self
+            .new_greater_equal_fact(right.clone(), left.clone(), line_file.clone())
+            .into();
+        let left_le_right: AtomicFact = self
+            .new_less_equal_fact(left.clone(), right.clone(), line_file.clone())
+            .into();
         let complete_result = self.try_verify_builtin_rule_premise_alternatives(
             vec![
                 vec![

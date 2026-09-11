@@ -547,7 +547,7 @@ impl Runtime {
             (Obj::Abs(abs), Obj::StandardSet(StandardSet::NPos)) => {
                 let mut evidence = None;
                 for source_carrier in [StandardSet::NPos, StandardSet::ZNeg, StandardSet::ZStar] {
-                    let source_membership: AtomicFact = InFact::new(
+                    let source_membership: AtomicFact = self.new_in_fact(
                         abs.arg.as_ref().clone(),
                         source_carrier.into(),
                         in_fact.line_file.clone(),
@@ -1009,9 +1009,9 @@ impl Runtime {
                 let lf = in_fact.line_file.clone();
                 let len_obj: Obj = Number::new(list.objs.len().to_string()).into();
                 let mut premises: Vec<AtomicFact> =
-                    vec![EqualFact::new_from_refs(&len_obj, fs.n.as_ref(), lf.clone()).into()];
+                    vec![self.new_equal_fact_from_refs(&len_obj, fs.n.as_ref(), lf.clone()).into()];
                 for o in list.objs.iter() {
-                    premises.push(InFact::new((**o).clone(), (*fs.set).clone(), lf.clone()).into());
+                    premises.push(self.new_in_fact((**o).clone(), (*fs.set).clone(), lf.clone()).into());
                 }
                 let Some(subgoals) = self.verify_builtin_rule_premises(&premises, builtin_state)?
                 else {
@@ -1030,18 +1030,18 @@ impl Runtime {
                 let n_rows_obj: Obj = Number::new(list.rows.len().to_string()).into();
                 let mut premises: Vec<AtomicFact> =
                     vec![
-                        EqualFact::new_from_refs(&n_rows_obj, ms.row_len.as_ref(), lf.clone())
+                        self.new_equal_fact_from_refs(&n_rows_obj, ms.row_len.as_ref(), lf.clone())
                             .into(),
                     ];
                 for row in list.rows.iter() {
                     let n_col_obj: Obj = Number::new(row.len().to_string()).into();
                     premises.push(
-                        EqualFact::new_from_refs(&n_col_obj, ms.col_len.as_ref(), lf.clone())
+                        self.new_equal_fact_from_refs(&n_col_obj, ms.col_len.as_ref(), lf.clone())
                             .into(),
                     );
                     for o in row.iter() {
                         premises
-                            .push(InFact::new((**o).clone(), (*ms.set).clone(), lf.clone()).into());
+                            .push(self.new_in_fact((**o).clone(), (*ms.set).clone(), lf.clone()).into());
                     }
                 }
                 let Some(subgoals) = self.verify_builtin_rule_premises(&premises, builtin_state)?
@@ -1058,7 +1058,7 @@ impl Runtime {
             }
             (_, Obj::FiniteSeqSet(fs)) => {
                 let fn_set = self.finite_seq_set_to_fn_set(fs, in_fact.line_file.clone());
-                let expanded = InFact::new(
+                let expanded = self.new_in_fact(
                     in_fact.element.clone(),
                     fn_set.into(),
                     in_fact.line_file.clone(),
@@ -1080,7 +1080,7 @@ impl Runtime {
             }
             (_, Obj::SeqSet(ss)) => {
                 let fn_set = self.seq_set_to_fn_set(ss, in_fact.line_file.clone());
-                let expanded = InFact::new(
+                let expanded = self.new_in_fact(
                     in_fact.element.clone(),
                     fn_set.into(),
                     in_fact.line_file.clone(),
@@ -1102,7 +1102,7 @@ impl Runtime {
             }
             (_, Obj::MatrixSet(ms)) => {
                 let fn_set = self.matrix_set_to_fn_set(ms, in_fact.line_file.clone());
-                let expanded = InFact::new(
+                let expanded = self.new_in_fact(
                     in_fact.element.clone(),
                     fn_set.into(),
                     in_fact.line_file.clone(),

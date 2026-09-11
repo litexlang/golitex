@@ -108,6 +108,7 @@ fn success_stmt_result_inferred_fact_id(
 }
 
 pub(super) fn or_branches_integer_closed_range_equalities(
+    runtime: &Runtime,
     element: Obj,
     closed: &ClosedRange,
     line_file: &LineFile,
@@ -125,7 +126,7 @@ pub(super) fn or_branches_integer_closed_range_equalities(
     let mut branches: Vec<AndChainAtomicFact> = Vec::new();
     let mut v = start_i;
     while v <= end_i {
-        let eq = EqualFact::new(
+        let eq = runtime.new_equal_fact(
             element.clone(),
             Number::new(v.to_string()).into(),
             line_file.clone(),
@@ -137,6 +138,7 @@ pub(super) fn or_branches_integer_closed_range_equalities(
 }
 
 pub(super) fn or_branches_integer_range_equalities(
+    runtime: &Runtime,
     element: Obj,
     range: &Range,
     line_file: &LineFile,
@@ -154,7 +156,7 @@ pub(super) fn or_branches_integer_range_equalities(
     let mut branches: Vec<AndChainAtomicFact> = Vec::new();
     let mut v = start_i;
     while v < end_i {
-        let eq = EqualFact::new(
+        let eq = runtime.new_equal_fact(
             element.clone(),
             Number::new(v.to_string()).into(),
             line_file.clone(),
@@ -166,6 +168,7 @@ pub(super) fn or_branches_integer_range_equalities(
 }
 
 pub(super) fn or_branches_closed_range_start_plus_offset_equalities(
+    runtime: &Runtime,
     element: Obj,
     closed: &ClosedRange,
     line_file: &LineFile,
@@ -193,11 +196,12 @@ pub(super) fn or_branches_closed_range_start_plus_offset_equalities(
         ));
     }
     Ok(start_plus_offset_equalities(
-        element, start, offset, true, line_file,
+        runtime, element, start, offset, true, line_file,
     ))
 }
 
 pub(super) fn or_branches_range_start_plus_offset_equalities(
+    runtime: &Runtime,
     element: Obj,
     range: &Range,
     line_file: &LineFile,
@@ -225,7 +229,7 @@ pub(super) fn or_branches_range_start_plus_offset_equalities(
         ));
     }
     Ok(start_plus_offset_equalities(
-        element, start, offset, false, line_file,
+        runtime, element, start, offset, false, line_file,
     ))
 }
 
@@ -265,6 +269,7 @@ fn offset_integer_literal(obj: &Obj, stmt_name: &str) -> Result<i128, String> {
 }
 
 fn start_plus_offset_equalities(
+    runtime: &Runtime,
     element: Obj,
     start: &Obj,
     offset: i128,
@@ -280,7 +285,7 @@ fn start_plus_offset_equalities(
         } else {
             Add::new(start.clone(), Number::new(i.to_string()).into()).into()
         };
-        let eq = EqualFact::new(element.clone(), rhs, line_file.clone());
+        let eq = runtime.new_equal_fact(element.clone(), rhs, line_file.clone());
         branches.push(AndChainAtomicFact::AtomicFact(eq.into()));
         i += 1;
     }

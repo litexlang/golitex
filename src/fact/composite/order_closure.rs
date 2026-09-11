@@ -83,10 +83,11 @@ impl ChainFact {
     /// Retain proof-replayable closure steps for mixed strict/weak numeric
     /// order chains. Equality edges use a different semantic transport and
     /// are deliberately excluded from this certificate family.
-    pub fn numeric_order_chain_closure_steps(
+    pub fn numeric_order_chain_closure_steps_with_runtime(
         &self,
+        runtime: &Runtime,
     ) -> Result<Vec<NumericOrderChainClosureStep>, RuntimeError> {
-        let adjacent = self.facts()?;
+        let adjacent = self.facts(runtime)?;
         let mut edges = Vec::with_capacity(self.prop_names.len());
         for predicate in &self.prop_names {
             let Some(edge) = order_edge_from_prop(predicate) else {
@@ -116,34 +117,38 @@ impl ChainFact {
                     .any(|edge| matches!(edge, OrderEdge::Lt | OrderEdge::Gt));
                 let conclusion: AtomicFact = if has_up {
                     if path_is_strict {
-                        LessFact::new(
-                            self.objs[start].clone(),
-                            self.objs[end].clone(),
-                            self.line_file.clone(),
-                        )
-                        .into()
+                        runtime
+                            .new_less_fact(
+                                self.objs[start].clone(),
+                                self.objs[end].clone(),
+                                self.line_file.clone(),
+                            )
+                            .into()
                     } else {
-                        LessEqualFact::new(
-                            self.objs[start].clone(),
-                            self.objs[end].clone(),
-                            self.line_file.clone(),
-                        )
-                        .into()
+                        runtime
+                            .new_less_equal_fact(
+                                self.objs[start].clone(),
+                                self.objs[end].clone(),
+                                self.line_file.clone(),
+                            )
+                            .into()
                     }
                 } else if path_is_strict {
-                    GreaterFact::new(
-                        self.objs[start].clone(),
-                        self.objs[end].clone(),
-                        self.line_file.clone(),
-                    )
-                    .into()
+                    runtime
+                        .new_greater_fact(
+                            self.objs[start].clone(),
+                            self.objs[end].clone(),
+                            self.line_file.clone(),
+                        )
+                        .into()
                 } else {
-                    GreaterEqualFact::new(
-                        self.objs[start].clone(),
-                        self.objs[end].clone(),
-                        self.line_file.clone(),
-                    )
-                    .into()
+                    runtime
+                        .new_greater_equal_fact(
+                            self.objs[start].clone(),
+                            self.objs[end].clone(),
+                            self.line_file.clone(),
+                        )
+                        .into()
                 };
                 steps.push(NumericOrderChainClosureStep {
                     start_object_index: start,
@@ -160,8 +165,11 @@ impl ChainFact {
         Ok(steps)
     }
 
-    pub fn facts_with_order_transitive_closure(&self) -> Result<Vec<AtomicFact>, RuntimeError> {
-        let base = self.facts()?;
+    pub fn facts_with_order_transitive_closure_with_runtime(
+        &self,
+        runtime: &Runtime,
+    ) -> Result<Vec<AtomicFact>, RuntimeError> {
+        let base = self.facts(runtime)?;
         let n = self.objs.len();
         if n < 2 {
             return Ok(base);
@@ -198,6 +206,7 @@ impl ChainFact {
                         (ChainPolarity::Down, true) => PROPER_SUPERSET,
                     };
                     extra.push(AtomicFact::to_atomic_fact(
+                        runtime,
                         AtomicName::WithoutMod(predicate.to_string()),
                         true,
                         vec![self.objs[i].clone(), self.objs[j].clone()],
@@ -288,7 +297,8 @@ impl ChainFact {
                     let i = indexes[ii];
                     let j = indexes[jj];
                     extra.push(
-                        EqualFact::new(self.objs[i].clone(), self.objs[j].clone(), lf.clone())
+                        runtime
+                            .new_equal_fact(self.objs[i].clone(), self.objs[j].clone(), lf.clone())
                             .into(),
                     );
                 }
@@ -303,16 +313,18 @@ impl ChainFact {
                 let f = match polarity {
                     ChainPolarity::Up => {
                         if path_strict {
-                            LessFact::new(left, right, lf.clone()).into()
+                            runtime.new_less_fact(left, right, lf.clone()).into()
                         } else {
-                            LessEqualFact::new(left, right, lf.clone()).into()
+                            runtime.new_less_equal_fact(left, right, lf.clone()).into()
                         }
                     }
                     ChainPolarity::Down => {
                         if path_strict {
-                            GreaterFact::new(left, right, lf.clone()).into()
+                            runtime.new_greater_fact(left, right, lf.clone()).into()
                         } else {
-                            GreaterEqualFact::new(left, right, lf.clone()).into()
+                            runtime
+                                .new_greater_equal_fact(left, right, lf.clone())
+                                .into()
                         }
                     }
                 };
@@ -323,6 +335,22 @@ impl ChainFact {
         let mut all = base;
         all.extend(extra);
         Ok(dedup_atomic_facts(all))
+    }
+
+    /// Compatibility wrapper for callers that do not yet own a runtime.
+    /// Production code should pass its runtime explicitly.
+    #[deprecated(note = "pass the owning Runtime explicitly")]
+    pub fn numeric_order_chain_closure_steps(
+        &self,
+    ) -> Result<Vec<NumericOrderChainClosureStep>, RuntimeError> {
+        self.numeric_order_chain_closure_steps_with_runtime(&Runtime::default())
+    }
+
+    /// Compatibility wrapper for callers that do not yet own a runtime.
+    /// Production code should pass its runtime explicitly.
+    #[deprecated(note = "pass the owning Runtime explicitly")]
+    pub fn facts_with_order_transitive_closure(&self) -> Result<Vec<AtomicFact>, RuntimeError> {
+        self.facts_with_order_transitive_closure_with_runtime(&Runtime::default())
     }
 }
 

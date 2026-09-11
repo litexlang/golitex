@@ -696,7 +696,7 @@ impl StmtResultToLeanCompiler {
                         );
                 };
                 let components = chain_fact
-                    .facts()
+                    .facts(&self.runtime)
                     .map_err(|error| format!("known-forall source chain is invalid: {error:?}"))?;
                 let component = components.get(location.component_index).ok_or_else(|| {
                     "known-forall Result selected a missing chain component".to_string()

@@ -250,7 +250,7 @@ pub(in super::super) fn render_fact(
             _ => Err(format!("unsupported compiler atomic fact `{fact}`")),
         },
         Fact::AndFact(_) | Fact::ChainFact(_) => {
-            let components = conjunction_components(fact)?;
+            let components = conjunction_components(&Runtime::default(), fact)?;
             let rendered = components
                 .iter()
                 .map(|component| render_fact(component, context))

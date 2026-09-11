@@ -48,12 +48,14 @@ impl StmtResultToLeanCompiler {
                 let lean_name = lean_identifier(source_name);
                 let defined_object: Obj =
                     Identifier::new_bound(source_name.to_string(), binding.as_ref()).into();
-                let expected_membership: Fact = InFact::new(
-                    defined_object,
-                    carrier.clone(),
-                    result.statement.line_file.clone(),
-                )
-                .into();
+                let expected_membership: Fact = self
+                    .runtime
+                    .new_in_fact(
+                        defined_object,
+                        carrier.clone(),
+                        result.statement.line_file.clone(),
+                    )
+                    .into();
                 if selected_type_fact.to_string() != expected_membership.to_string() {
                     return Err(format!(
                         "object choice changed selected membership `{selected_type_fact}`"

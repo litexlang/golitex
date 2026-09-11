@@ -12,18 +12,20 @@ impl Runtime {
             self.exec_have_fn_equal_stmt_affect_environment(have_fn_equal_stmt, &fn_set_stored)?;
 
         let function_identifier_obj = self.definition_identifier_obj(have_fn_equal_stmt.name());
-        let function_membership: Fact = InFact::new(
-            function_identifier_obj.clone(),
-            fn_set_stored.clone().into(),
-            have_fn_equal_stmt.line_file.clone(),
-        )
-        .into();
-        let defining_equality: Fact = EqualFact::new(
-            function_identifier_obj,
-            have_fn_equal_stmt.equal_to_anonymous_fn.clone().into(),
-            have_fn_equal_stmt.line_file.clone(),
-        )
-        .into();
+        let function_membership: Fact = self
+            .new_in_fact(
+                function_identifier_obj.clone(),
+                fn_set_stored.clone().into(),
+                have_fn_equal_stmt.line_file.clone(),
+            )
+            .into();
+        let defining_equality: Fact = self
+            .new_equal_fact(
+                function_identifier_obj,
+                have_fn_equal_stmt.equal_to_anonymous_fn.clone().into(),
+                have_fn_equal_stmt.line_file.clone(),
+            )
+            .into();
         Ok(
             SuccessDefinitionStmtResult::HaveFnEqualStmt(Box::new(SuccessHaveFnEqualStmtResult {
                 statement: have_fn_equal_stmt.clone(),
@@ -51,12 +53,13 @@ impl Runtime {
 
         let function_identifier_obj = self.definition_identifier_obj(have_fn_equal_stmt.name());
         let function_set_obj = fn_set_stored.clone().into();
-        let function_in_function_set_fact: Fact = InFact::new(
-            function_identifier_obj.clone(),
-            function_set_obj,
-            have_fn_equal_stmt.line_file.clone(),
-        )
-        .into();
+        let function_in_function_set_fact: Fact = self
+            .new_in_fact(
+                function_identifier_obj.clone(),
+                function_set_obj,
+                have_fn_equal_stmt.line_file.clone(),
+            )
+            .into();
 
         let infer_result = self
             .store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason(
@@ -83,12 +86,13 @@ impl Runtime {
             stmt_lf,
         );
 
-        let function_equals_anonymous_fn_fact: AtomicFact = EqualFact::new(
-            function_identifier_obj,
-            have_fn_equal_stmt.equal_to_anonymous_fn.clone().into(),
-            have_fn_equal_stmt.line_file.clone(),
-        )
-        .into();
+        let function_equals_anonymous_fn_fact: AtomicFact = self
+            .new_equal_fact(
+                function_identifier_obj,
+                have_fn_equal_stmt.equal_to_anonymous_fn.clone().into(),
+                have_fn_equal_stmt.line_file.clone(),
+            )
+            .into();
         let function_definition_infer_result = self
             .store_atomic_fact_without_well_defined_verified_and_infer_with_reason(
                 function_equals_anonymous_fn_fact,

@@ -413,7 +413,9 @@ fn zorn_lemma_obligations(
     Ok(vec![
         (
             SuccessVerifyByChoiceObligationRole::ZornNonempty,
-            IsNonemptySetFact::new(set.clone(), line_file.clone()).into(),
+            runtime
+                .new_is_nonempty_set_fact(set.clone(), line_file.clone())
+                .into(),
         ),
         (
             SuccessVerifyByChoiceObligationRole::ZornReflexive,
@@ -456,13 +458,16 @@ fn zorn_reflexive_fact(
         ParamType::Obj(set),
     )?;
     let x = obj_for_bound_param_in_scope(&x_group.params[0]);
-    Ok(ForallFact::new_canonical_forall(
-        TypedParameterList::new(vec![x_group]),
-        vec![],
-        vec![normal_prop_fact(prop_name, vec![x.clone(), x], line_file.clone()).into()],
-        line_file,
-    )?
-    .into())
+    Ok(runtime
+        .new_forall_fact(
+            TypedParameterList::new(vec![x_group]),
+            vec![],
+            vec![
+                normal_prop_fact(runtime, prop_name, vec![x.clone(), x], line_file.clone()).into(),
+            ],
+            line_file,
+        )?
+        .into())
 }
 
 fn zorn_transitive_fact(
@@ -482,21 +487,29 @@ fn zorn_transitive_fact(
     let x = obj_for_bound_param_in_scope(&params.params[0]);
     let y = obj_for_bound_param_in_scope(&params.params[1]);
     let z = obj_for_bound_param_in_scope(&params.params[2]);
-    Ok(ForallFact::new_canonical_forall(
-        TypedParameterList::new(vec![params]),
-        vec![
-            normal_prop_fact(
-                prop_name.clone(),
-                vec![x.clone(), y.clone()],
-                line_file.clone(),
-            )
-            .into(),
-            normal_prop_fact(prop_name.clone(), vec![y, z.clone()], line_file.clone()).into(),
-        ],
-        vec![normal_prop_fact(prop_name, vec![x, z], line_file.clone()).into()],
-        line_file,
-    )?
-    .into())
+    Ok(runtime
+        .new_forall_fact(
+            TypedParameterList::new(vec![params]),
+            vec![
+                normal_prop_fact(
+                    runtime,
+                    prop_name.clone(),
+                    vec![x.clone(), y.clone()],
+                    line_file.clone(),
+                )
+                .into(),
+                normal_prop_fact(
+                    runtime,
+                    prop_name.clone(),
+                    vec![y, z.clone()],
+                    line_file.clone(),
+                )
+                .into(),
+            ],
+            vec![normal_prop_fact(runtime, prop_name, vec![x, z], line_file.clone()).into()],
+            line_file,
+        )?
+        .into())
 }
 
 fn zorn_antisymmetric_fact(
@@ -514,21 +527,29 @@ fn zorn_antisymmetric_fact(
     )?;
     let x = obj_for_bound_param_in_scope(&params.params[0]);
     let y = obj_for_bound_param_in_scope(&params.params[1]);
-    Ok(ForallFact::new_canonical_forall(
-        TypedParameterList::new(vec![params]),
-        vec![
-            normal_prop_fact(
-                prop_name.clone(),
-                vec![x.clone(), y.clone()],
-                line_file.clone(),
-            )
-            .into(),
-            normal_prop_fact(prop_name, vec![y.clone(), x.clone()], line_file.clone()).into(),
-        ],
-        vec![EqualFact::new(x, y, line_file.clone()).into()],
-        line_file,
-    )?
-    .into())
+    Ok(runtime
+        .new_forall_fact(
+            TypedParameterList::new(vec![params]),
+            vec![
+                normal_prop_fact(
+                    runtime,
+                    prop_name.clone(),
+                    vec![x.clone(), y.clone()],
+                    line_file.clone(),
+                )
+                .into(),
+                normal_prop_fact(
+                    runtime,
+                    prop_name,
+                    vec![y.clone(), x.clone()],
+                    line_file.clone(),
+                )
+                .into(),
+            ],
+            vec![runtime.new_equal_fact(x, y, line_file.clone()).into()],
+            line_file,
+        )?
+        .into())
 }
 
 fn zorn_chain_upper_bound_fact(
@@ -547,13 +568,14 @@ fn zorn_chain_upper_bound_fact(
     let upper_bound_fact =
         zorn_upper_bound_exist_fact(runtime, set, c, upper_bound_prop_name, line_file.clone())?;
 
-    Ok(ForallFact::new_canonical_forall(
-        TypedParameterList::new(vec![c_group]),
-        vec![chain_total_fact],
-        vec![upper_bound_fact.into()],
-        line_file,
-    )?
-    .into())
+    Ok(runtime
+        .new_forall_fact(
+            TypedParameterList::new(vec![c_group]),
+            vec![chain_total_fact],
+            vec![upper_bound_fact.into()],
+            line_file,
+        )?
+        .into())
 }
 
 fn zorn_chain_total_fact(
@@ -572,21 +594,25 @@ fn zorn_chain_total_fact(
     let x = obj_for_bound_param_in_scope(&params.params[0]);
     let y = obj_for_bound_param_in_scope(&params.params[1]);
     let left: AndChainAtomicFact = normal_prop_fact(
+        runtime,
         prop_name.clone(),
         vec![x.clone(), y.clone()],
         line_file.clone(),
     )
     .into();
     let right: AndChainAtomicFact =
-        normal_prop_fact(prop_name, vec![y, x], line_file.clone()).into();
+        normal_prop_fact(runtime, prop_name, vec![y, x], line_file.clone()).into();
 
-    Ok(ForallFact::new_canonical_forall(
-        TypedParameterList::new(vec![params]),
-        vec![],
-        vec![OrFact::new(vec![left, right], line_file.clone()).into()],
-        line_file,
-    )?
-    .into())
+    Ok(runtime
+        .new_forall_fact(
+            TypedParameterList::new(vec![params]),
+            vec![],
+            vec![runtime
+                .new_or_fact(vec![left, right], line_file.clone())
+                .into()],
+            line_file,
+        )?
+        .into())
 }
 
 fn zorn_upper_bound_exist_fact(
@@ -601,9 +627,13 @@ fn zorn_upper_bound_exist_fact(
         ParamType::Obj(set),
     )?;
     let u = obj_for_bound_param_in_scope(&u_group.params[0]);
-    let named_upper_bound =
-        normal_prop_fact(upper_bound_prop_name, vec![chain, u], line_file.clone());
-    let body = PlainExistFact::new(
+    let named_upper_bound = normal_prop_fact(
+        runtime,
+        upper_bound_prop_name,
+        vec![chain, u],
+        line_file.clone(),
+    );
+    let body = runtime.new_plain_exist_fact(
         TypedParameterList::new(vec![u_group]),
         vec![QuantifierFreeFact::AtomicFact(named_upper_bound)],
         line_file,
@@ -623,10 +653,10 @@ fn zorn_upper_bound_forall_fact(
         ParamType::Obj(chain),
     )?;
     let x = obj_for_bound_param_in_scope(&x_group.params[0]);
-    ForallFact::new_canonical_forall(
+    runtime.new_forall_fact(
         TypedParameterList::new(vec![x_group]),
         vec![],
-        vec![normal_prop_fact(prop_name, vec![x, upper], line_file.clone()).into()],
+        vec![normal_prop_fact(runtime, prop_name, vec![x, upper], line_file.clone()).into()],
         line_file,
     )
 }
@@ -642,8 +672,8 @@ fn zorn_lemma_maximal_fact(
         ParamType::Obj(set),
     )?;
     let m = obj_for_bound_param_in_scope(&m_group.params[0]);
-    let named_maximal = normal_prop_fact(maximal_prop_name, vec![m], line_file.clone());
-    let body = PlainExistFact::new(
+    let named_maximal = normal_prop_fact(runtime, maximal_prop_name, vec![m], line_file.clone());
+    let body = runtime.new_plain_exist_fact(
         TypedParameterList::new(vec![m_group]),
         vec![QuantifierFreeFact::AtomicFact(named_maximal)],
         line_file,
@@ -663,19 +693,27 @@ fn zorn_maximal_forall_fact(
         ParamType::Obj(set),
     )?;
     let x = obj_for_bound_param_in_scope(&x_group.params[0]);
-    ForallFact::new_canonical_forall(
+    runtime.new_forall_fact(
         TypedParameterList::new(vec![x_group]),
         vec![normal_prop_fact(
+            runtime,
             prop_name,
             vec![maximal.clone(), x.clone()],
             line_file.clone(),
         )
         .into()],
-        vec![EqualFact::new(x, maximal, line_file.clone()).into()],
+        vec![runtime.new_equal_fact(x, maximal, line_file.clone()).into()],
         line_file,
     )
 }
 
-fn normal_prop_fact(prop_name: AtomicName, body: Vec<Obj>, line_file: LineFile) -> AtomicFact {
-    NormalAtomicFact::new(prop_name, body, line_file).into()
+fn normal_prop_fact(
+    runtime: &Runtime,
+    prop_name: AtomicName,
+    body: Vec<Obj>,
+    line_file: LineFile,
+) -> AtomicFact {
+    runtime
+        .new_normal_atomic_fact(prop_name, body, line_file)
+        .into()
 }

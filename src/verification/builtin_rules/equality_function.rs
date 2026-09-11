@@ -28,14 +28,14 @@ impl Runtime {
         };
         let one: Obj = Number::new("1".to_string()).into();
         if !self
-            .verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+            .verify_equal_fact_by_known_equality(&self.new_equal_fact_from_refs(
                 &power.exponent,
                 &one,
                 line_file.clone(),
             ))
             .is_unknown()
             && !self
-                .verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+                .verify_equal_fact_by_known_equality(&self.new_equal_fact_from_refs(
                     &power.base,
                     other_side,
                     line_file.clone(),
@@ -52,7 +52,7 @@ impl Runtime {
             return None;
         };
         let predecessor = if !self
-            .verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+            .verify_equal_fact_by_known_equality(&self.new_equal_fact_from_refs(
                 &exponent.right,
                 &one,
                 line_file.clone(),
@@ -61,7 +61,7 @@ impl Runtime {
         {
             exponent.left.as_ref()
         } else if !self
-            .verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+            .verify_equal_fact_by_known_equality(&self.new_equal_fact_from_refs(
                 &exponent.left,
                 &one,
                 line_file.clone(),
@@ -84,7 +84,7 @@ impl Runtime {
             (predecessor, previous_power.exponent.as_ref()),
         ];
         if pairs.iter().any(|(left, right)| {
-            self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+            self.verify_equal_fact_by_known_equality(&self.new_equal_fact_from_refs(
                 left,
                 right,
                 line_file.clone(),

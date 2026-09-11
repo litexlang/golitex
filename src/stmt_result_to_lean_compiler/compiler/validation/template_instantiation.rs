@@ -3,6 +3,7 @@
 use super::super::*;
 
 pub(in super::super) fn install_template_instantiation_result(
+    runtime: &Runtime,
     expected_object: &Obj,
     result: &SuccessTemplateInstantiationResult,
     environment_stack: &mut StmtResultToLeanCompilerEnvironmentStack,
@@ -69,14 +70,15 @@ pub(in super::super) fn install_template_instantiation_result(
             ));
         }
         validate_success_obj_fact_check(&argument_result.verification)?;
-        let expected: Fact = IsSetFact::new(
-            argument.clone(),
-            argument_result
-                .verification
-                .expected_proposition
-                .line_file(),
-        )
-        .into();
+        let expected: Fact = runtime
+            .new_is_set_fact(
+                argument.clone(),
+                argument_result
+                    .verification
+                    .expected_proposition
+                    .line_file(),
+            )
+            .into();
         if expected.to_string()
             != argument_result
                 .verification
@@ -113,16 +115,18 @@ pub(in super::super) fn install_template_instantiation_result(
         Identifier::new_bound(defined_binding.name().to_string(), defined_binding.as_ref()).into();
     let expected_stores = vec![
         object_type_fact_for_compiler_definition(
+            runtime,
             defined_object.clone(),
             defined_type,
             body.statement.line_file.clone(),
         ),
-        EqualFact::new(
-            defined_object,
-            value.clone(),
-            body.statement.line_file.clone(),
-        )
-        .into(),
+        runtime
+            .new_equal_fact(
+                defined_object,
+                value.clone(),
+                body.statement.line_file.clone(),
+            )
+            .into(),
     ];
     if body.common.infers.store_fact_outputs.len() != expected_stores.len()
         || body

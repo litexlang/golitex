@@ -39,17 +39,19 @@ impl StmtResultToLeanCompiler {
             let defined_object: Obj =
                 Identifier::new_bound(binding.name().to_string(), binding.as_ref()).into();
             expected_stored_facts.push(object_type_fact_for_compiler_definition(
+                &self.runtime,
                 defined_object.clone(),
                 param_type,
                 result.statement.line_file.clone(),
             ));
             expected_stored_facts.push(
-                EqualFact::new(
-                    defined_object,
-                    value.clone(),
-                    result.statement.line_file.clone(),
-                )
-                .into(),
+                self.runtime
+                    .new_equal_fact(
+                        defined_object,
+                        value.clone(),
+                        result.statement.line_file.clone(),
+                    )
+                    .into(),
             );
         }
         let stored_fact_ids = exact_ordered_fact_ids_from_store_results(
@@ -64,6 +66,7 @@ impl StmtResultToLeanCompiler {
             .enumerate()
         {
             let expected_value_type = object_type_fact_for_compiler_definition(
+                &self.runtime,
                 value.clone(),
                 param_type,
                 result.statement.line_file.clone(),

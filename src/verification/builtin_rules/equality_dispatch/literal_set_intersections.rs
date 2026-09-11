@@ -44,12 +44,13 @@ impl Runtime {
                     continue;
                 };
 
-            let subset_fact: AtomicFact = SubsetFact::new(
-                subset.as_ref().clone(),
-                superset.as_ref().clone(),
-                equal_fact.line_file.clone(),
-            )
-            .into();
+            let subset_fact: AtomicFact = self
+                .new_subset_fact(
+                    subset.as_ref().clone(),
+                    superset.as_ref().clone(),
+                    equal_fact.line_file.clone(),
+                )
+                .into();
             let Some(subset_result) =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?
             else {
@@ -95,8 +96,9 @@ impl Runtime {
         let mut steps = Vec::new();
         for element in literal_set.list.iter() {
             let element_obj = element.as_ref().clone();
-            let in_set: AtomicFact =
-                InFact::new(element_obj.clone(), set.clone(), line_file.clone()).into();
+            let in_set: AtomicFact = self
+                .new_in_fact(element_obj.clone(), set.clone(), line_file.clone())
+                .into();
             let in_result =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&in_set, builtin_state)?;
             if let Some(in_result) = in_result {
@@ -105,8 +107,9 @@ impl Runtime {
                 continue;
             }
 
-            let not_in_set: AtomicFact =
-                NotInFact::new(element_obj, set.clone(), line_file.clone()).into();
+            let not_in_set: AtomicFact = self
+                .new_not_in_fact(element_obj, set.clone(), line_file.clone())
+                .into();
             let not_in_result =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&not_in_set, builtin_state)?;
             if let Some(not_in_result) = not_in_result {

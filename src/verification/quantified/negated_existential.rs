@@ -70,16 +70,16 @@ impl Runtime {
                 SubstitutionMode::Exact,
                 None,
             )?;
-            let mut part = Self::demorgan_negate_exist_body_conjunct(&forall_conjunct)?;
+            let mut part = self.demorgan_negate_exist_body_conjunct(&forall_conjunct)?;
             disjuncts.append(&mut part);
         }
 
         let then_fact = if disjuncts.len() == 1 {
             disjuncts.remove(0).into()
         } else {
-            ExistOrAndChainAtomicFact::OrFact(OrFact::new(disjuncts, lf.clone()))
+            ExistOrAndChainAtomicFact::OrFact(self.new_or_fact(disjuncts, lf.clone()))
         };
-        Ok(ForallFact::new_canonical_forall(
+        Ok(self.new_forall_fact(
             TypedParameterList::new(forall_groups),
             vec![],
             vec![then_fact],
@@ -88,12 +88,13 @@ impl Runtime {
     }
 
     pub fn demorgan_negate_exist_body_conjunct(
+        &self,
         conjunct: &QuantifierFreeFact,
     ) -> Result<Vec<AndChainAtomicFact>, RuntimeError> {
         let lf = conjunct.line_file();
         match conjunct {
             QuantifierFreeFact::AtomicFact(a) => Ok(vec![AndChainAtomicFact::AtomicFact(
-                Self::demorgan_negate_atomic_or_err(a)?,
+                Self::demorgan_negate_atomic_or_err(self, a)?,
             )]),
             QuantifierFreeFact::AndFact(af) => {
                 if af.facts.is_empty() {
@@ -107,14 +108,14 @@ impl Runtime {
                 let mut out = Vec::with_capacity(af.facts.len());
                 for a in af.facts.iter() {
                     out.push(AndChainAtomicFact::AtomicFact(
-                        Self::demorgan_negate_atomic_or_err(a)?,
+                        Self::demorgan_negate_atomic_or_err(self, a)?,
                     ));
                 }
                 Ok(out)
             }
             QuantifierFreeFact::ChainFact(cf) => {
                 let atomics = cf
-                    .facts()
+                    .facts(self)
                     .map_err(RuntimeError::wrap_new_fact_as_store_conflict)?;
                 if atomics.is_empty() {
                     return Err(RuntimeError::from(NewFactRuntimeError(
@@ -127,7 +128,7 @@ impl Runtime {
                 let mut out = Vec::with_capacity(atomics.len());
                 for a in atomics.iter() {
                     out.push(AndChainAtomicFact::AtomicFact(
-                        Self::demorgan_negate_atomic_or_err(a)?,
+                        Self::demorgan_negate_atomic_or_err(self, a)?,
                     ));
                 }
                 Ok(out)
@@ -142,16 +143,20 @@ impl Runtime {
         }
     }
 
-    fn demorgan_negate_atomic_or_err(a: &AtomicFact) -> Result<AtomicFact, RuntimeError> {
-        a.logical_negation().map_err(|negation_error| {
-            RuntimeError::from(NewFactRuntimeError(RuntimeErrorStruct::new(
-                None,
-                "not exist: automatic forall derivation does not support this logical negation"
-                    .to_string(),
-                a.line_file(),
-                Some(negation_error),
-                vec![],
-            )))
-        })
+    fn demorgan_negate_atomic_or_err(
+        runtime: &Runtime,
+        a: &AtomicFact,
+    ) -> Result<AtomicFact, RuntimeError> {
+        a.logical_negation_with_runtime(runtime)
+            .map_err(|negation_error| {
+                RuntimeError::from(NewFactRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "not exist: automatic forall derivation does not support this logical negation"
+                        .to_string(),
+                    a.line_file(),
+                    Some(negation_error),
+                    vec![],
+                )))
+            })
     }
 }

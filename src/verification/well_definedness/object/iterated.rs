@@ -16,8 +16,9 @@ impl Runtime {
                 verify_state,
                 WellDefinedObjChildRole::ConstructorArgument { argument_index },
             )?);
-            let integer: AtomicFact =
-                InFact::new(child.clone(), StandardSet::Z.into(), default_line_file()).into();
+            let integer: AtomicFact = self
+                .new_in_fact(child.clone(), StandardSet::Z.into(), default_line_file())
+                .into();
             let result = self.verify_atomic_fact(&integer, verify_state)?;
             if result.is_unknown() {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -95,12 +96,13 @@ impl Runtime {
                 local_verify_state,
                 WellDefinedObjChildRole::BinderReturnCarrier,
             )?;
-            let subset: AtomicFact = SubsetFact::new(
-                (*body.ret_set).clone(),
-                StandardSet::C.into(),
-                default_line_file(),
-            )
-            .into();
+            let subset: AtomicFact = runtime
+                .new_subset_fact(
+                    (*body.ret_set).clone(),
+                    StandardSet::C.into(),
+                    default_line_file(),
+                )
+                .into();
             let result = runtime.verify_atomic_fact(&subset, local_verify_state)?;
             if result.is_unknown() {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -143,12 +145,13 @@ impl Runtime {
                 {
                     let mut checks = Vec::new();
                     for integer in start_integer..=end_integer {
-                        let fact: AtomicFact = InFact::new(
-                            Number::new(integer.to_string()).into(),
-                            parameter_set.clone(),
-                            default_line_file(),
-                        )
-                        .into();
+                        let fact: AtomicFact = self
+                            .new_in_fact(
+                                Number::new(integer.to_string()).into(),
+                                parameter_set.clone(),
+                                default_line_file(),
+                            )
+                            .into();
                         let result = self.verify_atomic_fact(&fact, verify_state)?;
                         if result.is_unknown() {
                             return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -195,8 +198,9 @@ impl Runtime {
             _ => Vec::new(),
         };
         for (endpoint, required_set) in endpoint_requirements {
-            let fact: AtomicFact =
-                InFact::new(endpoint.clone(), required_set.into(), default_line_file()).into();
+            let fact: AtomicFact = self
+                .new_in_fact(endpoint.clone(), required_set.into(), default_line_file())
+                .into();
             let result = self.verify_atomic_fact(&fact, verify_state)?;
             if result.is_success() {
                 return Ok(SuccessVerifyIterationCoverageResult::Endpoint(Box::new(
@@ -207,8 +211,9 @@ impl Runtime {
             }
         }
         let interval: Obj = ClosedRange::new(start.clone(), end.clone()).into();
-        let subset: AtomicFact =
-            SubsetFact::new(interval, parameter_set.clone(), default_line_file()).into();
+        let subset: AtomicFact = self
+            .new_subset_fact(interval, parameter_set.clone(), default_line_file())
+            .into();
         let result = self.verify_atomic_fact(&subset, verify_state)?;
         if result.is_success() {
             return Ok(SuccessVerifyIterationCoverageResult::IntervalSubset(
@@ -280,10 +285,10 @@ impl Runtime {
             let parameter =
                 obj_for_bound_param_in_scope(&parameter_binding);
             let lower = QuantifierFreeFact::AtomicFact(
-                LessEqualFact::new(start.clone(), parameter.clone(), default_line_file()).into(),
+                runtime.new_less_equal_fact(start.clone(), parameter.clone(), default_line_file()).into(),
             );
             let upper = QuantifierFreeFact::AtomicFact(
-                LessEqualFact::new(parameter, end.clone(), default_line_file()).into(),
+                runtime.new_less_equal_fact(parameter, end.clone(), default_line_file()).into(),
             );
             let lower_bound = runtime
                 .store_iteration_assumption_result(lower, local_verify_state)
@@ -379,7 +384,7 @@ impl Runtime {
                             ),
                         ))
                     })?;
-                let membership: AtomicFact = InFact::new(
+                let membership: AtomicFact = runtime.new_in_fact(
                     anonymous_body.clone(),
                     (*body.ret_set).clone(),
                     default_line_file(),
@@ -495,8 +500,9 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps = self.verify_integer_range_children_result(start, end, verify_state)?;
-        let ordered: AtomicFact =
-            LessEqualFact::new(start.clone(), end.clone(), default_line_file()).into();
+        let ordered: AtomicFact = self
+            .new_less_equal_fact(start.clone(), end.clone(), default_line_file())
+            .into();
         let ordered_result = self.verify_atomic_fact(&ordered, verify_state)?;
         if ordered_result.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -584,8 +590,9 @@ impl Runtime {
                 &substitutions,
                 SubstitutionMode::Exact,
             )?;
-            let membership: AtomicFact =
-                InFact::new(body.clone(), return_set.clone(), default_line_file()).into();
+            let membership: AtomicFact = self
+                .new_in_fact(body.clone(), return_set.clone(), default_line_file())
+                .into();
             let result = self.verify_atomic_fact(&membership, verify_state)?;
             if result.is_unknown() {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -672,8 +679,9 @@ impl Runtime {
         }
 
         if let Obj::ClosedRange(range) = set {
-            let empty: AtomicFact =
-                NotIsNonemptySetFact::new(set.clone(), default_line_file()).into();
+            let empty: AtomicFact = self
+                .new_not_is_nonempty_set_fact(set.clone(), default_line_file())
+                .into();
             let result = self.verify_atomic_fact(&empty, verify_state)?;
             if result.is_success() {
                 self.verify_empty_finite_set_aggregate_has_unary_iterand(operation, function)?;
@@ -750,7 +758,9 @@ impl Runtime {
             verify_state,
             WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
         )?);
-        let finite: AtomicFact = IsFiniteSetFact::new(set.clone(), default_line_file()).into();
+        let finite: AtomicFact = self
+            .new_is_finite_set_fact(set.clone(), default_line_file())
+            .into();
         let result = self.verify_atomic_fact(&finite, verify_state)?;
         if result.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -890,8 +900,9 @@ impl Runtime {
         verify_state: &VerifyState,
         operation_name: &str,
     ) -> Result<SuccessVerifyFactForObjWellDefinedResult, RuntimeError> {
-        let seed_fact: AtomicFact =
-            InFact::new(seed.clone(), carrier.clone(), default_line_file()).into();
+        let seed_fact: AtomicFact = self
+            .new_in_fact(seed.clone(), carrier.clone(), default_line_file())
+            .into();
         let result = self.verify_atomic_fact(&seed_fact, verify_state)?;
         if result.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -911,8 +922,9 @@ impl Runtime {
         verify_state: &VerifyState,
         operation_name: &str,
     ) -> Result<SuccessVerifyReduceModeResult, RuntimeError> {
-        let empty_fact: AtomicFact =
-            LessFact::new(end.clone(), start.clone(), default_line_file()).into();
+        let empty_fact: AtomicFact = self
+            .new_less_fact(end.clone(), start.clone(), default_line_file())
+            .into();
         let empty_result = self.verify_atomic_fact(&empty_fact, verify_state)?;
         if empty_result.is_success() {
             self.verify_empty_finite_set_aggregate_has_unary_iterand(operation_name, function)?;
@@ -1000,7 +1012,9 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<SuccessVerifyBinderPremiseResult, RuntimeError> {
         self.store_set_bound_parameter_binding(binding, BindingScope::LocalBinder, carrier)?;
-        let proposition: Fact = InFact::new(parameter, carrier.clone(), default_line_file()).into();
+        let proposition: Fact = self
+            .new_in_fact(parameter, carrier.clone(), default_line_file())
+            .into();
         let well_definedness = self.verify_fact_well_defined_result(&proposition, verify_state)?;
         let Fact::AtomicFact(atomic) = proposition.clone() else {
             unreachable!("reduce-law parameter membership is atomic")
@@ -1116,7 +1130,7 @@ impl Runtime {
                     ))
                 })?;
             let associativity_fact: AtomicFact =
-                EqualFact::new(left_assoc, right_assoc, default_line_file()).into();
+                runtime.new_equal_fact(left_assoc, right_assoc, default_line_file()).into();
             let associativity_result =
                 runtime.verify_atomic_fact(&associativity_fact, local_verify_state)?;
             if associativity_result.is_unknown() {
@@ -1151,7 +1165,7 @@ impl Runtime {
                     ))
                 })?;
             let commutativity_fact: AtomicFact =
-                EqualFact::new(xy, yx, default_line_file()).into();
+                runtime.new_equal_fact(xy, yx, default_line_file()).into();
             let commutativity_result =
                 runtime.verify_atomic_fact(&commutativity_fact, local_verify_state)?;
             if commutativity_result.is_unknown() {
@@ -1216,8 +1230,9 @@ impl Runtime {
                 }),
             ));
         }
-        let coverage: AtomicFact =
-            SubsetFact::new(set.clone(), domain.clone(), default_line_file()).into();
+        let coverage: AtomicFact = self
+            .new_subset_fact(set.clone(), domain.clone(), default_line_file())
+            .into();
         let result = self.verify_atomic_fact(&coverage, verify_state)?;
         if result.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -1241,8 +1256,9 @@ impl Runtime {
         function: &Obj,
         verify_state: &VerifyState,
     ) -> Result<SuccessVerifyReduceModeResult, RuntimeError> {
-        let empty_fact: AtomicFact =
-            NotIsNonemptySetFact::new(set.clone(), default_line_file()).into();
+        let empty_fact: AtomicFact = self
+            .new_not_is_nonempty_set_fact(set.clone(), default_line_file())
+            .into();
         let empty_result = self.verify_atomic_fact(&empty_fact, verify_state)?;
         if empty_result.is_success() {
             self.verify_empty_finite_set_aggregate_has_unary_iterand(
@@ -1337,8 +1353,9 @@ impl Runtime {
                 WellDefinedObjChildRole::ConstructorArgument { argument_index },
             )?);
         }
-        let finite_fact: AtomicFact =
-            IsFiniteSetFact::new(value.set.as_ref().clone(), default_line_file()).into();
+        let finite_fact: AtomicFact = self
+            .new_is_finite_set_fact(value.set.as_ref().clone(), default_line_file())
+            .into();
         let finite_result = self.verify_atomic_fact(&finite_fact, verify_state)?;
         if finite_result.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(

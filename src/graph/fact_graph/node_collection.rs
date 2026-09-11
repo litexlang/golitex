@@ -5,6 +5,7 @@ use super::*;
 impl FactGraphBuilder {
     pub(super) fn new() -> Self {
         Self {
+            runtime: Runtime::default(),
             nodes: vec![],
             node_index: HashMap::new(),
             edges: vec![],

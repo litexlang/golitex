@@ -61,8 +61,9 @@ impl Runtime {
             if !representative_result.is_success() {
                 continue;
             }
-            let membership_fact: Fact =
-                InFact::new(value_fn.clone().into(), definition_return_set, line_file).into();
+            let membership_fact: Fact = self
+                .new_in_fact(value_fn.clone().into(), definition_return_set, line_file)
+                .into();
             let checked = self.verify_fact_well_defined_result(&membership_fact, verify_state)?;
             let proof =
                 SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -99,28 +100,31 @@ impl Runtime {
         };
 
         for owner_set in self.known_sets_containing_obj(indexed.obj.as_ref()) {
-            let is_cart_fact: AtomicFact =
-                IsCartFact::new(owner_set.clone(), line_file.clone()).into();
+            let is_cart_fact: AtomicFact = self
+                .new_is_cart_fact(owner_set.clone(), line_file.clone())
+                .into();
             let is_cart_result = self.verify_atomic_fact(&is_cart_fact, verify_state)?;
             if !is_cart_result.is_success() {
                 continue;
             }
 
             let coordinate_set: Obj = Proj::new(owner_set, indexed.index.as_ref().clone()).into();
-            let coordinate_membership: AtomicFact =
-                InFact::new(value.clone(), coordinate_set.clone(), line_file.clone()).into();
+            let coordinate_membership: AtomicFact = self
+                .new_in_fact(value.clone(), coordinate_set.clone(), line_file.clone())
+                .into();
             let coordinate_result =
                 self.verify_atomic_fact(&coordinate_membership, verify_state)?;
             if !coordinate_result.is_success() {
                 continue;
             }
 
-            let equal_set_fact: AtomicFact = EqualFact::new(
-                coordinate_set.clone(),
-                definition_return_set.clone(),
-                line_file.clone(),
-            )
-            .into();
+            let equal_set_fact: AtomicFact = self
+                .new_equal_fact(
+                    coordinate_set.clone(),
+                    definition_return_set.clone(),
+                    line_file.clone(),
+                )
+                .into();
             let mut equal_set_result = self.verify_atomic_fact(&equal_set_fact, verify_state)?;
             if !equal_set_result.is_success() {
                 // Anonymous-function well-definedness can itself run beneath an
@@ -135,12 +139,13 @@ impl Runtime {
             let carrier_result = if equal_set_result.is_success() {
                 equal_set_result
             } else {
-                let subset_fact: AtomicFact = SubsetFact::new(
-                    coordinate_set,
-                    definition_return_set.clone(),
-                    line_file.clone(),
-                )
-                .into();
+                let subset_fact: AtomicFact = self
+                    .new_subset_fact(
+                        coordinate_set,
+                        definition_return_set.clone(),
+                        line_file.clone(),
+                    )
+                    .into();
                 let mut subset_result = self.verify_atomic_fact(&subset_fact, verify_state)?;
                 if !subset_result.is_success() {
                     subset_result =
@@ -152,12 +157,13 @@ impl Runtime {
                 subset_result
             };
 
-            let membership_fact: Fact = InFact::new(
-                value.clone(),
-                definition_return_set.clone(),
-                line_file.clone(),
-            )
-            .into();
+            let membership_fact: Fact = self
+                .new_in_fact(
+                    value.clone(),
+                    definition_return_set.clone(),
+                    line_file.clone(),
+                )
+                .into();
             let checked = self.verify_fact_well_defined_result(&membership_fact, verify_state)?;
             let proof =
                 SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -223,13 +229,14 @@ impl Runtime {
 
         self.verify_fn_membership_application_well_defined(&flow, verify_state)?;
 
-        let then_facts = vec![InFact::new(
-            flow.applied_fn_obj.clone(),
-            flow.pointwise_ret_set,
-            flow.in_fact.line_file.clone(),
-        )
-        .into()];
-        let forall = ForallFact::new_canonical_forall(
+        let then_facts = vec![self
+            .new_in_fact(
+                flow.applied_fn_obj.clone(),
+                flow.pointwise_ret_set,
+                flow.in_fact.line_file.clone(),
+            )
+            .into()];
+        let forall = self.new_forall_fact(
             flow.forall_params,
             flow.forall_dom_facts,
             then_facts,
@@ -414,7 +421,7 @@ impl Runtime {
         flow: &FnMembershipProofFlow,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        let stub = ForallFact::new_canonical_forall(
+        let stub = self.new_forall_fact(
             flow.forall_params.clone(),
             flow.forall_dom_facts.clone(),
             Vec::new(),

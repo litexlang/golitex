@@ -9,7 +9,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<ProveFactResult, RuntimeError> {
-        let Some(normalized) = normalize_positive_order_atomic_fact(atomic_fact) else {
+        let Some(normalized) = normalize_positive_order_atomic_fact(self, atomic_fact) else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
         if normalized.to_string() != atomic_fact.to_string() {
@@ -155,9 +155,11 @@ impl Runtime {
     ) -> Result<VerifyFactResult, RuntimeError> {
         let zero: Obj = Number::new("0".to_string()).into();
         let child: AtomicFact = if weak {
-            LessEqualFact::new(zero, obj.clone(), line_file.clone()).into()
+            self.new_less_equal_fact(zero, obj.clone(), line_file.clone())
+                .into()
         } else {
-            LessFact::new(zero, obj.clone(), line_file.clone()).into()
+            self.new_less_fact(zero, obj.clone(), line_file.clone())
+                .into()
         };
         self.verify_builtin_strategy_child(&child, verify_state)
     }
@@ -196,7 +198,7 @@ impl Runtime {
                             .list
                             .iter()
                             .map(|element| {
-                                LessEqualFact::new(
+                                self.new_less_equal_fact(
                                     element.as_ref().clone(),
                                     fact.right.clone(),
                                     lf.clone(),
@@ -210,12 +212,16 @@ impl Runtime {
             {
                 let mut required = Vec::with_capacity(parts.len() * 3);
                 for part in parts {
-                    required
-                        .push(IsFiniteSetFact::new(part.clone(), fact.line_file.clone()).into());
-                    required
-                        .push(IsNonemptySetFact::new(part.clone(), fact.line_file.clone()).into());
                     required.push(
-                        LessEqualFact::new(
+                        self.new_is_finite_set_fact(part.clone(), fact.line_file.clone())
+                            .into(),
+                    );
+                    required.push(
+                        self.new_is_nonempty_set_fact(part.clone(), fact.line_file.clone())
+                            .into(),
+                    );
+                    required.push(
+                        self.new_less_equal_fact(
                             FiniteSetMax::new(part).into(),
                             fact.right.clone(),
                             fact.line_file.clone(),
@@ -234,7 +240,7 @@ impl Runtime {
                             .list
                             .iter()
                             .map(|element| {
-                                LessEqualFact::new(
+                                self.new_less_equal_fact(
                                     fact.left.clone(),
                                     element.as_ref().clone(),
                                     lf.clone(),
@@ -248,12 +254,16 @@ impl Runtime {
             {
                 let mut required = Vec::with_capacity(parts.len() * 3);
                 for part in parts {
-                    required
-                        .push(IsFiniteSetFact::new(part.clone(), fact.line_file.clone()).into());
-                    required
-                        .push(IsNonemptySetFact::new(part.clone(), fact.line_file.clone()).into());
                     required.push(
-                        LessEqualFact::new(
+                        self.new_is_finite_set_fact(part.clone(), fact.line_file.clone())
+                            .into(),
+                    );
+                    required.push(
+                        self.new_is_nonempty_set_fact(part.clone(), fact.line_file.clone())
+                            .into(),
+                    );
+                    required.push(
+                        self.new_less_equal_fact(
                             fact.left.clone(),
                             FiniteSetMin::new(part).into(),
                             fact.line_file.clone(),
@@ -268,29 +278,45 @@ impl Runtime {
         if fact.left.to_string() == "0" {
             if let Obj::Mul(product) = &fact.right {
                 alternatives.push(vec![
-                    LessEqualFact::new(zero.clone(), product.left.as_ref().clone(), lf.clone())
-                        .into(),
-                    LessEqualFact::new(zero.clone(), product.right.as_ref().clone(), lf.clone())
-                        .into(),
+                    self.new_less_equal_fact(
+                        zero.clone(),
+                        product.left.as_ref().clone(),
+                        lf.clone(),
+                    )
+                    .into(),
+                    self.new_less_equal_fact(
+                        zero.clone(),
+                        product.right.as_ref().clone(),
+                        lf.clone(),
+                    )
+                    .into(),
                 ]);
                 alternatives.push(vec![
-                    LessEqualFact::new(product.left.as_ref().clone(), zero.clone(), lf.clone())
-                        .into(),
-                    LessEqualFact::new(product.right.as_ref().clone(), zero.clone(), lf.clone())
-                        .into(),
+                    self.new_less_equal_fact(
+                        product.left.as_ref().clone(),
+                        zero.clone(),
+                        lf.clone(),
+                    )
+                    .into(),
+                    self.new_less_equal_fact(
+                        product.right.as_ref().clone(),
+                        zero.clone(),
+                        lf.clone(),
+                    )
+                    .into(),
                 ]);
             }
         }
 
         if let (Obj::Add(left), Obj::Add(right)) = (&fact.left, &fact.right) {
             alternatives.push(vec![
-                LessEqualFact::new(
+                self.new_less_equal_fact(
                     left.left.as_ref().clone(),
                     right.left.as_ref().clone(),
                     lf.clone(),
                 )
                 .into(),
-                LessEqualFact::new(
+                self.new_less_equal_fact(
                     left.right.as_ref().clone(),
                     right.right.as_ref().clone(),
                     lf.clone(),
@@ -298,13 +324,13 @@ impl Runtime {
                 .into(),
             ]);
             alternatives.push(vec![
-                LessEqualFact::new(
+                self.new_less_equal_fact(
                     left.left.as_ref().clone(),
                     right.right.as_ref().clone(),
                     lf.clone(),
                 )
                 .into(),
-                LessEqualFact::new(
+                self.new_less_equal_fact(
                     left.right.as_ref().clone(),
                     right.left.as_ref().clone(),
                     lf.clone(),
@@ -316,22 +342,24 @@ impl Runtime {
         // Example: from `a <= b`, prove `a - c <= b - c`.
         if let (Obj::Sub(left), Obj::Sub(right)) = (&fact.left, &fact.right) {
             if left.right.to_string() == right.right.to_string() {
-                alternatives.push(vec![LessEqualFact::new(
-                    left.left.as_ref().clone(),
-                    right.left.as_ref().clone(),
-                    lf.clone(),
-                )
-                .into()]);
+                alternatives.push(vec![self
+                    .new_less_equal_fact(
+                        left.left.as_ref().clone(),
+                        right.left.as_ref().clone(),
+                        lf.clone(),
+                    )
+                    .into()]);
             }
             // With a shared minuend, subtraction reverses weak order in the subtractor.
             // Example: from `c <= d`, prove `a - d <= a - c`.
             if left.left.to_string() == right.left.to_string() {
-                alternatives.push(vec![LessEqualFact::new(
-                    right.right.as_ref().clone(),
-                    left.right.as_ref().clone(),
-                    lf.clone(),
-                )
-                .into()]);
+                alternatives.push(vec![self
+                    .new_less_equal_fact(
+                        right.right.as_ref().clone(),
+                        left.right.as_ref().clone(),
+                        lf.clone(),
+                    )
+                    .into()]);
             }
         }
         // Division by a shared positive term preserves weak order; division by a
@@ -339,8 +367,9 @@ impl Runtime {
         if let (Obj::Div(left), Obj::Div(right)) = (&fact.left, &fact.right) {
             if left.right.to_string() == right.right.to_string() {
                 alternatives.push(vec![
-                    LessFact::new(zero.clone(), left.right.as_ref().clone(), lf.clone()).into(),
-                    LessEqualFact::new(
+                    self.new_less_fact(zero.clone(), left.right.as_ref().clone(), lf.clone())
+                        .into(),
+                    self.new_less_equal_fact(
                         left.left.as_ref().clone(),
                         right.left.as_ref().clone(),
                         lf.clone(),
@@ -348,8 +377,9 @@ impl Runtime {
                     .into(),
                 ]);
                 alternatives.push(vec![
-                    LessFact::new(left.right.as_ref().clone(), zero.clone(), lf.clone()).into(),
-                    LessEqualFact::new(
+                    self.new_less_fact(left.right.as_ref().clone(), zero.clone(), lf.clone())
+                        .into(),
+                    self.new_less_equal_fact(
                         right.left.as_ref().clone(),
                         left.left.as_ref().clone(),
                         lf.clone(),
@@ -365,14 +395,15 @@ impl Runtime {
         if let (Obj::Pow(left), Obj::Pow(right)) = (&fact.left, &fact.right) {
             if left.exponent.to_string() == right.exponent.to_string() {
                 alternatives.push(vec![
-                    InFact::new(
+                    self.new_in_fact(
                         left.exponent.as_ref().clone(),
                         StandardSet::NPos.into(),
                         lf.clone(),
                     )
                     .into(),
-                    LessEqualFact::new(zero.clone(), left.base.as_ref().clone(), lf.clone()).into(),
-                    LessEqualFact::new(
+                    self.new_less_equal_fact(zero.clone(), left.base.as_ref().clone(), lf.clone())
+                        .into(),
+                    self.new_less_equal_fact(
                         left.base.as_ref().clone(),
                         right.base.as_ref().clone(),
                         lf.clone(),
@@ -389,14 +420,15 @@ impl Runtime {
         if let (Obj::Abs(left), Obj::Abs(right)) = (&fact.left, &fact.right) {
             let two: Obj = Number::new("2".to_string()).into();
             alternatives.push(vec![
-                InFact::new(left.arg.as_ref().clone(), StandardSet::R.into(), lf.clone()).into(),
-                InFact::new(
+                self.new_in_fact(left.arg.as_ref().clone(), StandardSet::R.into(), lf.clone())
+                    .into(),
+                self.new_in_fact(
                     right.arg.as_ref().clone(),
                     StandardSet::R.into(),
                     lf.clone(),
                 )
                 .into(),
-                LessEqualFact::new(
+                self.new_less_equal_fact(
                     Pow::new(left.arg.as_ref().clone(), two.clone()).into(),
                     Pow::new(right.arg.as_ref().clone(), two).into(),
                     lf.clone(),
@@ -406,45 +438,56 @@ impl Runtime {
         }
         if let Obj::Add(add) = &fact.right {
             alternatives.push(vec![
-                LessEqualFact::new(fact.left.clone(), add.left.as_ref().clone(), lf.clone()).into(),
-                LessEqualFact::new(zero.clone(), add.right.as_ref().clone(), lf.clone()).into(),
+                self.new_less_equal_fact(fact.left.clone(), add.left.as_ref().clone(), lf.clone())
+                    .into(),
+                self.new_less_equal_fact(zero.clone(), add.right.as_ref().clone(), lf.clone())
+                    .into(),
             ]);
             alternatives.push(vec![
-                LessEqualFact::new(fact.left.clone(), add.right.as_ref().clone(), lf.clone())
+                self.new_less_equal_fact(fact.left.clone(), add.right.as_ref().clone(), lf.clone())
                     .into(),
-                LessEqualFact::new(zero.clone(), add.left.as_ref().clone(), lf.clone()).into(),
+                self.new_less_equal_fact(zero.clone(), add.left.as_ref().clone(), lf.clone())
+                    .into(),
             ]);
         }
         if let Obj::Add(add) = &fact.left {
             alternatives.push(vec![
-                LessEqualFact::new(add.left.as_ref().clone(), fact.right.clone(), lf.clone())
+                self.new_less_equal_fact(add.left.as_ref().clone(), fact.right.clone(), lf.clone())
                     .into(),
-                LessEqualFact::new(add.right.as_ref().clone(), zero.clone(), lf.clone()).into(),
+                self.new_less_equal_fact(add.right.as_ref().clone(), zero.clone(), lf.clone())
+                    .into(),
             ]);
             alternatives.push(vec![
-                LessEqualFact::new(add.right.as_ref().clone(), fact.right.clone(), lf.clone())
+                self.new_less_equal_fact(
+                    add.right.as_ref().clone(),
+                    fact.right.clone(),
+                    lf.clone(),
+                )
+                .into(),
+                self.new_less_equal_fact(add.left.as_ref().clone(), zero.clone(), lf.clone())
                     .into(),
-                LessEqualFact::new(add.left.as_ref().clone(), zero.clone(), lf.clone()).into(),
             ]);
         }
         if let Obj::Sub(sub) = &fact.left {
             if fact.right.to_string() == "0" {
-                alternatives.push(vec![LessEqualFact::new(
-                    sub.left.as_ref().clone(),
-                    sub.right.as_ref().clone(),
-                    lf.clone(),
-                )
-                .into()]);
+                alternatives.push(vec![self
+                    .new_less_equal_fact(
+                        sub.left.as_ref().clone(),
+                        sub.right.as_ref().clone(),
+                        lf.clone(),
+                    )
+                    .into()]);
             }
         }
         if let Obj::Sub(sub) = &fact.right {
             if fact.left.to_string() == "0" {
-                alternatives.push(vec![LessEqualFact::new(
-                    sub.right.as_ref().clone(),
-                    sub.left.as_ref().clone(),
-                    lf.clone(),
-                )
-                .into()]);
+                alternatives.push(vec![self
+                    .new_less_equal_fact(
+                        sub.right.as_ref().clone(),
+                        sub.left.as_ref().clone(),
+                        lf.clone(),
+                    )
+                    .into()]);
             }
         }
         // Treat a bare factor as `1 * factor`.  This is the structural
@@ -457,8 +500,10 @@ impl Runtime {
             ] {
                 if factor.to_string() == fact.left.to_string() {
                     alternatives.push(vec![
-                        LessEqualFact::new(zero.clone(), factor.clone(), lf.clone()).into(),
-                        LessEqualFact::new(one.clone(), scale.clone(), lf.clone()).into(),
+                        self.new_less_equal_fact(zero.clone(), factor.clone(), lf.clone())
+                            .into(),
+                        self.new_less_equal_fact(one.clone(), scale.clone(), lf.clone())
+                            .into(),
                     ]);
                 }
             }
@@ -470,8 +515,10 @@ impl Runtime {
             ] {
                 if factor.to_string() == fact.right.to_string() {
                     alternatives.push(vec![
-                        LessEqualFact::new(zero.clone(), factor.clone(), lf.clone()).into(),
-                        LessEqualFact::new(scale.clone(), one.clone(), lf.clone()).into(),
+                        self.new_less_equal_fact(zero.clone(), factor.clone(), lf.clone())
+                            .into(),
+                        self.new_less_equal_fact(scale.clone(), one.clone(), lf.clone())
+                            .into(),
                     ]);
                 }
             }
@@ -486,13 +533,21 @@ impl Runtime {
                 (upper.right.as_ref(), upper.left.as_ref()),
             ] {
                 alternatives.push(vec![
-                    LessEqualFact::new(zero.clone(), lower.left.as_ref().clone(), lf.clone())
+                    self.new_less_equal_fact(zero.clone(), lower.left.as_ref().clone(), lf.clone())
                         .into(),
-                    LessEqualFact::new(zero.clone(), lower.right.as_ref().clone(), lf.clone())
-                        .into(),
-                    LessEqualFact::new(lower.left.as_ref().clone(), upper_left.clone(), lf.clone())
-                        .into(),
-                    LessEqualFact::new(
+                    self.new_less_equal_fact(
+                        zero.clone(),
+                        lower.right.as_ref().clone(),
+                        lf.clone(),
+                    )
+                    .into(),
+                    self.new_less_equal_fact(
+                        lower.left.as_ref().clone(),
+                        upper_left.clone(),
+                        lf.clone(),
+                    )
+                    .into(),
+                    self.new_less_equal_fact(
                         lower.right.as_ref().clone(),
                         upper_right.clone(),
                         lf.clone(),
@@ -523,12 +578,16 @@ impl Runtime {
         if fact.left.to_string() == "0" {
             if let Obj::Mul(product) = &fact.right {
                 alternatives.push(vec![
-                    LessFact::new(zero.clone(), product.left.as_ref().clone(), lf.clone()).into(),
-                    LessFact::new(zero.clone(), product.right.as_ref().clone(), lf.clone()).into(),
+                    self.new_less_fact(zero.clone(), product.left.as_ref().clone(), lf.clone())
+                        .into(),
+                    self.new_less_fact(zero.clone(), product.right.as_ref().clone(), lf.clone())
+                        .into(),
                 ]);
                 alternatives.push(vec![
-                    LessFact::new(product.left.as_ref().clone(), zero.clone(), lf.clone()).into(),
-                    LessFact::new(product.right.as_ref().clone(), zero.clone(), lf.clone()).into(),
+                    self.new_less_fact(product.left.as_ref().clone(), zero.clone(), lf.clone())
+                        .into(),
+                    self.new_less_fact(product.right.as_ref().clone(), zero.clone(), lf.clone())
+                        .into(),
                 ]);
             }
             // A quotient is positive when numerator and denominator have the
@@ -537,12 +596,16 @@ impl Runtime {
             // Example: `a > b` implies `(a-b)/2 > 0`.
             if let Obj::Div(quotient) = &fact.right {
                 alternatives.push(vec![
-                    LessFact::new(zero.clone(), quotient.left.as_ref().clone(), lf.clone()).into(),
-                    LessFact::new(zero.clone(), quotient.right.as_ref().clone(), lf.clone()).into(),
+                    self.new_less_fact(zero.clone(), quotient.left.as_ref().clone(), lf.clone())
+                        .into(),
+                    self.new_less_fact(zero.clone(), quotient.right.as_ref().clone(), lf.clone())
+                        .into(),
                 ]);
                 alternatives.push(vec![
-                    LessFact::new(quotient.left.as_ref().clone(), zero.clone(), lf.clone()).into(),
-                    LessFact::new(quotient.right.as_ref().clone(), zero.clone(), lf.clone()).into(),
+                    self.new_less_fact(quotient.left.as_ref().clone(), zero.clone(), lf.clone())
+                        .into(),
+                    self.new_less_fact(quotient.right.as_ref().clone(), zero.clone(), lf.clone())
+                        .into(),
                 ]);
             }
         }
@@ -550,14 +613,14 @@ impl Runtime {
         if let (Obj::Add(left), Obj::Add(right)) = (&fact.left, &fact.right) {
             for (strict_left, strict_right) in [(true, false), (false, true)] {
                 let left_order: AtomicFact = if strict_left {
-                    LessFact::new(
+                    self.new_less_fact(
                         left.left.as_ref().clone(),
                         right.left.as_ref().clone(),
                         lf.clone(),
                     )
                     .into()
                 } else {
-                    LessEqualFact::new(
+                    self.new_less_equal_fact(
                         left.left.as_ref().clone(),
                         right.left.as_ref().clone(),
                         lf.clone(),
@@ -565,14 +628,14 @@ impl Runtime {
                     .into()
                 };
                 let right_order: AtomicFact = if strict_right {
-                    LessFact::new(
+                    self.new_less_fact(
                         left.right.as_ref().clone(),
                         right.right.as_ref().clone(),
                         lf.clone(),
                     )
                     .into()
                 } else {
-                    LessEqualFact::new(
+                    self.new_less_equal_fact(
                         left.right.as_ref().clone(),
                         right.right.as_ref().clone(),
                         lf.clone(),
@@ -586,22 +649,24 @@ impl Runtime {
         // Example: from `a < b`, prove `a - c < b - c`.
         if let (Obj::Sub(left), Obj::Sub(right)) = (&fact.left, &fact.right) {
             if left.right.to_string() == right.right.to_string() {
-                alternatives.push(vec![LessFact::new(
-                    left.left.as_ref().clone(),
-                    right.left.as_ref().clone(),
-                    lf.clone(),
-                )
-                .into()]);
+                alternatives.push(vec![self
+                    .new_less_fact(
+                        left.left.as_ref().clone(),
+                        right.left.as_ref().clone(),
+                        lf.clone(),
+                    )
+                    .into()]);
             }
             // With a shared minuend, subtraction reverses strict order in the subtractor.
             // Example: from `c < d`, prove `a - d < a - c`.
             if left.left.to_string() == right.left.to_string() {
-                alternatives.push(vec![LessFact::new(
-                    right.right.as_ref().clone(),
-                    left.right.as_ref().clone(),
-                    lf.clone(),
-                )
-                .into()]);
+                alternatives.push(vec![self
+                    .new_less_fact(
+                        right.right.as_ref().clone(),
+                        left.right.as_ref().clone(),
+                        lf.clone(),
+                    )
+                    .into()]);
             }
         }
         // Division by a shared positive term preserves strict order; division by a
@@ -609,8 +674,9 @@ impl Runtime {
         if let (Obj::Div(left), Obj::Div(right)) = (&fact.left, &fact.right) {
             if left.right.to_string() == right.right.to_string() {
                 alternatives.push(vec![
-                    LessFact::new(zero.clone(), left.right.as_ref().clone(), lf.clone()).into(),
-                    LessFact::new(
+                    self.new_less_fact(zero.clone(), left.right.as_ref().clone(), lf.clone())
+                        .into(),
+                    self.new_less_fact(
                         left.left.as_ref().clone(),
                         right.left.as_ref().clone(),
                         lf.clone(),
@@ -618,8 +684,9 @@ impl Runtime {
                     .into(),
                 ]);
                 alternatives.push(vec![
-                    LessFact::new(left.right.as_ref().clone(), zero.clone(), lf.clone()).into(),
-                    LessFact::new(
+                    self.new_less_fact(left.right.as_ref().clone(), zero.clone(), lf.clone())
+                        .into(),
+                    self.new_less_fact(
                         right.left.as_ref().clone(),
                         left.left.as_ref().clone(),
                         lf.clone(),
@@ -632,14 +699,15 @@ impl Runtime {
         if let (Obj::Pow(left), Obj::Pow(right)) = (&fact.left, &fact.right) {
             if left.exponent.to_string() == right.exponent.to_string() {
                 alternatives.push(vec![
-                    InFact::new(
+                    self.new_in_fact(
                         left.exponent.as_ref().clone(),
                         StandardSet::NPos.into(),
                         lf.clone(),
                     )
                     .into(),
-                    LessEqualFact::new(zero.clone(), left.base.as_ref().clone(), lf.clone()).into(),
-                    LessFact::new(
+                    self.new_less_equal_fact(zero.clone(), left.base.as_ref().clone(), lf.clone())
+                        .into(),
+                    self.new_less_fact(
                         left.base.as_ref().clone(),
                         right.base.as_ref().clone(),
                         lf.clone(),
@@ -653,14 +721,15 @@ impl Runtime {
         if let (Obj::Abs(left), Obj::Abs(right)) = (&fact.left, &fact.right) {
             let two: Obj = Number::new("2".to_string()).into();
             alternatives.push(vec![
-                InFact::new(left.arg.as_ref().clone(), StandardSet::R.into(), lf.clone()).into(),
-                InFact::new(
+                self.new_in_fact(left.arg.as_ref().clone(), StandardSet::R.into(), lf.clone())
+                    .into(),
+                self.new_in_fact(
                     right.arg.as_ref().clone(),
                     StandardSet::R.into(),
                     lf.clone(),
                 )
                 .into(),
-                LessFact::new(
+                self.new_less_fact(
                     Pow::new(left.arg.as_ref().clone(), two.clone()).into(),
                     Pow::new(right.arg.as_ref().clone(), two).into(),
                     lf.clone(),
@@ -670,41 +739,50 @@ impl Runtime {
         }
         if let Obj::Add(add) = &fact.right {
             alternatives.push(vec![
-                LessFact::new(fact.left.clone(), add.left.as_ref().clone(), lf.clone()).into(),
-                LessEqualFact::new(zero.clone(), add.right.as_ref().clone(), lf.clone()).into(),
-            ]);
-            alternatives.push(vec![
-                LessEqualFact::new(fact.left.clone(), add.left.as_ref().clone(), lf.clone()).into(),
-                LessFact::new(zero.clone(), add.right.as_ref().clone(), lf.clone()).into(),
-            ]);
-            alternatives.push(vec![
-                LessFact::new(fact.left.clone(), add.right.as_ref().clone(), lf.clone()).into(),
-                LessEqualFact::new(zero.clone(), add.left.as_ref().clone(), lf.clone()).into(),
-            ]);
-            alternatives.push(vec![
-                LessEqualFact::new(fact.left.clone(), add.right.as_ref().clone(), lf.clone())
+                self.new_less_fact(fact.left.clone(), add.left.as_ref().clone(), lf.clone())
                     .into(),
-                LessFact::new(zero.clone(), add.left.as_ref().clone(), lf.clone()).into(),
+                self.new_less_equal_fact(zero.clone(), add.right.as_ref().clone(), lf.clone())
+                    .into(),
+            ]);
+            alternatives.push(vec![
+                self.new_less_equal_fact(fact.left.clone(), add.left.as_ref().clone(), lf.clone())
+                    .into(),
+                self.new_less_fact(zero.clone(), add.right.as_ref().clone(), lf.clone())
+                    .into(),
+            ]);
+            alternatives.push(vec![
+                self.new_less_fact(fact.left.clone(), add.right.as_ref().clone(), lf.clone())
+                    .into(),
+                self.new_less_equal_fact(zero.clone(), add.left.as_ref().clone(), lf.clone())
+                    .into(),
+            ]);
+            alternatives.push(vec![
+                self.new_less_equal_fact(fact.left.clone(), add.right.as_ref().clone(), lf.clone())
+                    .into(),
+                self.new_less_fact(zero.clone(), add.left.as_ref().clone(), lf.clone())
+                    .into(),
             ]);
         }
         if let Obj::Sub(sub) = &fact.left {
             if fact.right.to_string() == "0" {
-                alternatives.push(vec![LessFact::new(
-                    sub.left.as_ref().clone(),
-                    sub.right.as_ref().clone(),
-                    lf.clone(),
-                )
-                .into()]);
+                alternatives.push(vec![self
+                    .new_less_fact(
+                        sub.left.as_ref().clone(),
+                        sub.right.as_ref().clone(),
+                        lf.clone(),
+                    )
+                    .into()]);
             }
         }
         if let Obj::Sub(sub) = &fact.right {
             if fact.left.to_string() == "0" {
-                alternatives.push(vec![LessFact::new(
-                    sub.right.as_ref().clone(),
-                    sub.left.as_ref().clone(),
-                    lf.clone(),
-                )
-                .into()]);
+                alternatives.push(vec![self
+                    .new_less_fact(
+                        sub.right.as_ref().clone(),
+                        sub.left.as_ref().clone(),
+                        lf.clone(),
+                    )
+                    .into()]);
             }
         }
         self.push_common_nonnegative_factor_alternatives(
@@ -751,14 +829,18 @@ impl Runtime {
                 let left_other = left_factors[1 - left_index].clone();
                 let right_other = right_factors[1 - right_index].clone();
                 let factor_sign: AtomicFact = if strict {
-                    LessFact::new(zero.clone(), (*left_factor).clone(), lf.clone()).into()
+                    self.new_less_fact(zero.clone(), (*left_factor).clone(), lf.clone())
+                        .into()
                 } else {
-                    LessEqualFact::new(zero.clone(), (*left_factor).clone(), lf.clone()).into()
+                    self.new_less_equal_fact(zero.clone(), (*left_factor).clone(), lf.clone())
+                        .into()
                 };
                 let other_order: AtomicFact = if strict {
-                    LessFact::new(left_other, right_other, lf.clone()).into()
+                    self.new_less_fact(left_other, right_other, lf.clone())
+                        .into()
                 } else {
-                    LessEqualFact::new(left_other, right_other, lf.clone()).into()
+                    self.new_less_equal_fact(left_other, right_other, lf.clone())
+                        .into()
                 };
                 alternatives.push(vec![factor_sign, other_order]);
             }

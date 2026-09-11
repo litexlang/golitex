@@ -47,20 +47,22 @@ impl Runtime {
             vec![generated_param_name.clone()],
             ParamType::Obj(subset_fact.left.clone()),
         )?;
-        let in_fact_for_forall_then = InFact::new(
-            obj_for_bound_param_in_scope(&parameter_definition.params[0]),
-            subset_fact.right.clone(),
-            subset_fact.line_file.clone(),
-        )
-        .into();
+        let in_fact_for_forall_then = self
+            .new_in_fact(
+                obj_for_bound_param_in_scope(&parameter_definition.params[0]),
+                subset_fact.right.clone(),
+                subset_fact.line_file.clone(),
+            )
+            .into();
         let binder_symbol_id = parameter_definition.params[0].id();
-        let inferred_forall_fact: Fact = ForallFact::new_canonical_forall(
-            TypedParameterList::new(vec![parameter_definition]),
-            vec![],
-            vec![in_fact_for_forall_then],
-            subset_fact.line_file.clone(),
-        )?
-        .into();
+        let inferred_forall_fact: Fact = self
+            .new_forall_fact(
+                TypedParameterList::new(vec![parameter_definition]),
+                vec![],
+                vec![in_fact_for_forall_then],
+                subset_fact.line_file.clone(),
+            )?
+            .into();
 
         let mut result = SuccessInferResult::new();
         let conclusion_infers = self
@@ -106,20 +108,22 @@ impl Runtime {
             vec![generated_param_name.clone()],
             ParamType::Obj(superset_fact.right.clone()),
         )?;
-        let in_fact_for_forall_then = InFact::new(
-            obj_for_bound_param_in_scope(&parameter_definition.params[0]),
-            superset_fact.left.clone(),
-            superset_fact.line_file.clone(),
-        )
-        .into();
+        let in_fact_for_forall_then = self
+            .new_in_fact(
+                obj_for_bound_param_in_scope(&parameter_definition.params[0]),
+                superset_fact.left.clone(),
+                superset_fact.line_file.clone(),
+            )
+            .into();
         let binder_symbol_id = parameter_definition.params[0].id();
-        let inferred_forall_fact: Fact = ForallFact::new_canonical_forall(
-            TypedParameterList::new(vec![parameter_definition]),
-            vec![],
-            vec![in_fact_for_forall_then],
-            superset_fact.line_file.clone(),
-        )?
-        .into();
+        let inferred_forall_fact: Fact = self
+            .new_forall_fact(
+                TypedParameterList::new(vec![parameter_definition]),
+                vec![],
+                vec![in_fact_for_forall_then],
+                superset_fact.line_file.clone(),
+            )?
+            .into();
 
         let mut result = SuccessInferResult::new();
         let conclusion_infers = self

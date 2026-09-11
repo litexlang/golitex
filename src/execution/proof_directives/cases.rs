@@ -173,8 +173,9 @@ impl Runtime {
         &mut self,
         stmt: &ByCasesStmt,
     ) -> Result<VerifyFactResult, RuntimeError> {
-        let all_cases_or_fact: Fact =
-            OrFact::new(stmt.cases.clone(), stmt.line_file.clone()).into();
+        let all_cases_or_fact: Fact = self
+            .new_or_fact(stmt.cases.clone(), stmt.line_file.clone())
+            .into();
         let vs = VerifyState::initial();
         let result = if let Some(Fact::ForallFact(ff)) = stmt.then_facts.first() {
             self.run_in_local_env(|rt| {
@@ -426,20 +427,19 @@ impl Runtime {
                 ));
             }
 
-            let negated_impossible_fact =
-                impossible_fact
-                    .logical_negation()
-                    .map_err(|negation_error| {
-                        short_exec_error(
-                            stmt.clone().into(),
-                            impossible_proof_error_message(
-                                impossible_fact,
-                                Some(case_fact.to_string()),
-                            ),
-                            Some(negation_error),
-                            vec![],
-                        )
-                    })?;
+            let negated_impossible_fact = impossible_fact
+                .logical_negation_with_runtime(self)
+                .map_err(|negation_error| {
+                    short_exec_error(
+                        stmt.clone().into(),
+                        impossible_proof_error_message(
+                            impossible_fact,
+                            Some(case_fact.to_string()),
+                        ),
+                        Some(negation_error),
+                        vec![],
+                    )
+                })?;
             let verify_negated_impossible_fact_result = self
                 .verify_atomic_fact(&negated_impossible_fact, &verify_state)
                 .map_err(|verify_error| {
@@ -520,7 +520,7 @@ fn case_assumption_components_with_fact_ids(
             .map(Fact::from)
             .collect::<Vec<_>>(),
         AndChainAtomicFact::ChainFact(chain_fact) => chain_fact
-            .facts()?
+            .facts(runtime)?
             .into_iter()
             .map(Fact::from)
             .collect::<Vec<_>>(),

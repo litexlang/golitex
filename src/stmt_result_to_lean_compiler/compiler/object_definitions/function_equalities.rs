@@ -32,12 +32,14 @@ impl StmtResultToLeanCompiler {
             .ret_set
             .as_ref()
             .clone();
-        let expected_return_check: Fact = InFact::new(
-            source_body.clone(),
-            source_return_set,
-            statement.line_file.clone(),
-        )
-        .into();
+        let expected_return_check: Fact = self
+            .runtime
+            .new_in_fact(
+                source_body.clone(),
+                source_return_set,
+                statement.line_file.clone(),
+            )
+            .into();
 
         let mut expected_parameter_facts = Vec::new();
         for group in statement
@@ -46,7 +48,7 @@ impl StmtResultToLeanCompiler {
             .set_bound_parameters
             .iter()
         {
-            expected_parameter_facts.extend(group.facts());
+            expected_parameter_facts.extend(group.facts(&self.runtime));
         }
         let expected_domain_facts = statement
             .equal_to_anonymous_fn
@@ -87,18 +89,22 @@ impl StmtResultToLeanCompiler {
             statement.symbol_binding.as_ref(),
         )
         .into();
-        let expected_membership: Fact = InFact::new(
-            function_object.clone(),
-            function_set.clone().into(),
-            statement.line_file.clone(),
-        )
-        .into();
-        let expected_defining_equality: Fact = EqualFact::new(
-            function_object,
-            statement.equal_to_anonymous_fn.clone().into(),
-            statement.line_file.clone(),
-        )
-        .into();
+        let expected_membership: Fact = self
+            .runtime
+            .new_in_fact(
+                function_object.clone(),
+                function_set.clone().into(),
+                statement.line_file.clone(),
+            )
+            .into();
+        let expected_defining_equality: Fact = self
+            .runtime
+            .new_equal_fact(
+                function_object,
+                statement.equal_to_anonymous_fn.clone().into(),
+                statement.line_file.clone(),
+            )
+            .into();
         if verification.function_membership.to_string() != expected_membership.to_string()
             || verification.defining_equality.to_string() != expected_defining_equality.to_string()
         {

@@ -8,7 +8,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<ProveFactResult, RuntimeError> {
-        let Some(premise) = proper_set_relation_definition_premise(atomic_fact) else {
+        let Some(premise) = proper_set_relation_definition_premise(self, atomic_fact) else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
         let Some(premise_result) = self.try_verify_builtin_rule_premise(&premise, builtin_state)?
@@ -37,7 +37,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<Option<ProveFactResult>, RuntimeError> {
-        let Some(definition_facts) = proper_set_relation_definition_facts(atomic_fact) else {
+        let Some(definition_facts) = proper_set_relation_definition_facts(self, atomic_fact) else {
             return Ok(None);
         };
 
@@ -69,7 +69,10 @@ impl Runtime {
 
 // A positive proper-containment fact safely exposes both parts of its definition.
 // Example: `A $proper_subset B` infers `A $subset B` and `A != B`.
-pub fn positive_proper_set_relation_definition_facts(fact: &NormalAtomicFact) -> Option<Vec<Fact>> {
+pub fn positive_proper_set_relation_definition_facts(
+    runtime: &Runtime,
+    fact: &NormalAtomicFact,
+) -> Option<Vec<Fact>> {
     let AtomicName::WithoutMod(name) = &fact.predicate else {
         return None;
     };
@@ -80,15 +83,17 @@ pub fn positive_proper_set_relation_definition_facts(fact: &NormalAtomicFact) ->
     let left = fact.body[0].clone();
     let right = fact.body[1].clone();
     let containment: Fact = match name.as_str() {
-        PROPER_SUBSET => {
-            SubsetFact::new(left.clone(), right.clone(), fact.line_file.clone()).into()
-        }
-        PROPER_SUPERSET => {
-            SubsetFact::new(right.clone(), left.clone(), fact.line_file.clone()).into()
-        }
+        PROPER_SUBSET => runtime
+            .new_subset_fact(left.clone(), right.clone(), fact.line_file.clone())
+            .into(),
+        PROPER_SUPERSET => runtime
+            .new_subset_fact(right.clone(), left.clone(), fact.line_file.clone())
+            .into(),
         _ => return None,
     };
-    let not_equal = NotEqualFact::new(left, right, fact.line_file.clone()).into();
+    let not_equal = runtime
+        .new_not_equal_fact(left, right, fact.line_file.clone())
+        .into();
     Some(vec![containment, not_equal])
 }
 
@@ -108,9 +113,11 @@ pub fn is_builtin_proper_set_relation_fact(fact: &AtomicFact) -> bool {
     }
 }
 
-fn proper_set_relation_definition_facts(fact: &AtomicFact) -> Option<Vec<Fact>> {
+fn proper_set_relation_definition_facts(runtime: &Runtime, fact: &AtomicFact) -> Option<Vec<Fact>> {
     match fact {
-        AtomicFact::NormalAtomicFact(fact) => positive_proper_set_relation_definition_facts(fact),
+        AtomicFact::NormalAtomicFact(fact) => {
+            positive_proper_set_relation_definition_facts(runtime, fact)
+        }
         AtomicFact::NotNormalAtomicFact(fact) => {
             let AtomicName::WithoutMod(name) = &fact.predicate else {
                 return None;
@@ -122,33 +129,39 @@ fn proper_set_relation_definition_facts(fact: &AtomicFact) -> Option<Vec<Fact>> 
             let left = fact.body[0].clone();
             let right = fact.body[1].clone();
             let not_containment: AtomicFact = match name.as_str() {
-                PROPER_SUBSET => {
-                    NotSubsetFact::new(left.clone(), right.clone(), fact.line_file.clone()).into()
-                }
-                PROPER_SUPERSET => {
-                    NotSupersetFact::new(left.clone(), right.clone(), fact.line_file.clone()).into()
-                }
+                PROPER_SUBSET => runtime
+                    .new_not_subset_fact(left.clone(), right.clone(), fact.line_file.clone())
+                    .into(),
+                PROPER_SUPERSET => runtime
+                    .new_not_superset_fact(left.clone(), right.clone(), fact.line_file.clone())
+                    .into(),
                 _ => return None,
             };
-            let equal: AtomicFact = EqualFact::new(left, right, fact.line_file.clone()).into();
-            let definition: Fact = OrFact::new(
-                vec![
-                    AndChainAtomicFact::AtomicFact(not_containment),
-                    AndChainAtomicFact::AtomicFact(equal),
-                ],
-                fact.line_file.clone(),
-            )
-            .into();
+            let equal: AtomicFact = runtime
+                .new_equal_fact(left, right, fact.line_file.clone())
+                .into();
+            let definition: Fact = runtime
+                .new_or_fact(
+                    vec![
+                        AndChainAtomicFact::AtomicFact(not_containment),
+                        AndChainAtomicFact::AtomicFact(equal),
+                    ],
+                    fact.line_file.clone(),
+                )
+                .into();
             Some(vec![definition])
         }
         _ => None,
     }
 }
 
-fn proper_set_relation_definition_premise(fact: &AtomicFact) -> Option<QuantifierFreeFact> {
-    match proper_set_relation_definition_facts(fact)?.as_slice() {
+fn proper_set_relation_definition_premise(
+    runtime: &Runtime,
+    fact: &AtomicFact,
+) -> Option<QuantifierFreeFact> {
+    match proper_set_relation_definition_facts(runtime, fact)?.as_slice() {
         [Fact::AtomicFact(left), Fact::AtomicFact(right)] => Some(QuantifierFreeFact::AndFact(
-            AndFact::new(vec![left.clone(), right.clone()], fact.line_file()),
+            runtime.new_and_fact(vec![left.clone(), right.clone()], fact.line_file()),
         )),
         [Fact::OrFact(or_fact)] => Some(QuantifierFreeFact::OrFact(or_fact.clone())),
         _ => None,

@@ -302,7 +302,7 @@ impl Runtime {
         let mut steps = Vec::new();
         for (known_arg, goal_arg) in known_args.iter().zip(goal_args.iter()) {
             if !self.collect_nested_equality_transport_steps(
-                &EqualFact::new_from_refs(known_arg, goal_arg, goal.line_file()),
+                &self.new_equal_fact_from_refs(known_arg, goal_arg, goal.line_file()),
                 &equalities,
                 module_names,
                 &mut steps,
@@ -348,7 +348,11 @@ impl Runtime {
             &equal_fact.right,
             &mut |source_arg, goal_arg| {
                 Ok(self.collect_nested_equality_transport_steps(
-                    &EqualFact::new_from_refs(source_arg, goal_arg, equal_fact.line_file.clone()),
+                    &self.new_equal_fact_from_refs(
+                        source_arg,
+                        goal_arg,
+                        equal_fact.line_file.clone(),
+                    ),
                     equalities,
                     module_names,
                     steps,
@@ -495,25 +499,29 @@ impl Runtime {
         })
     }
 
-    fn atomic_fact_with_resolved_unary_operand(fact: &AtomicFact, x: Obj) -> AtomicFact {
+    fn atomic_fact_with_resolved_unary_operand(&self, fact: &AtomicFact, x: Obj) -> AtomicFact {
         let line_file = fact.line_file();
         match fact {
-            AtomicFact::IsSetFact(_) => IsSetFact::new(x, line_file).into(),
-            AtomicFact::IsNonemptySetFact(_) => IsNonemptySetFact::new(x, line_file).into(),
-            AtomicFact::IsFiniteSetFact(_) => IsFiniteSetFact::new(x, line_file).into(),
-            AtomicFact::IsCartFact(_) => IsCartFact::new(x, line_file).into(),
-            AtomicFact::IsTupleFact(_) => IsTupleFact::new(x, line_file).into(),
-            AtomicFact::NotIsSetFact(_) => NotIsSetFact::new(x, line_file).into(),
-            AtomicFact::NotIsNonemptySetFact(_) => NotIsNonemptySetFact::new(x, line_file).into(),
-            AtomicFact::NotIsFiniteSetFact(_) => NotIsFiniteSetFact::new(x, line_file).into(),
-            AtomicFact::NotIsCartFact(_) => NotIsCartFact::new(x, line_file).into(),
-            AtomicFact::NotIsTupleFact(_) => NotIsTupleFact::new(x, line_file).into(),
-            AtomicFact::NormalAtomicFact(n) => {
-                NormalAtomicFact::new(n.predicate.clone(), vec![x], line_file).into()
+            AtomicFact::IsSetFact(_) => self.new_is_set_fact(x, line_file).into(),
+            AtomicFact::IsNonemptySetFact(_) => self.new_is_nonempty_set_fact(x, line_file).into(),
+            AtomicFact::IsFiniteSetFact(_) => self.new_is_finite_set_fact(x, line_file).into(),
+            AtomicFact::IsCartFact(_) => self.new_is_cart_fact(x, line_file).into(),
+            AtomicFact::IsTupleFact(_) => self.new_is_tuple_fact(x, line_file).into(),
+            AtomicFact::NotIsSetFact(_) => self.new_not_is_set_fact(x, line_file).into(),
+            AtomicFact::NotIsNonemptySetFact(_) => {
+                self.new_not_is_nonempty_set_fact(x, line_file).into()
             }
-            AtomicFact::NotNormalAtomicFact(n) => {
-                NotNormalAtomicFact::new(n.predicate.clone(), vec![x], line_file).into()
+            AtomicFact::NotIsFiniteSetFact(_) => {
+                self.new_not_is_finite_set_fact(x, line_file).into()
             }
+            AtomicFact::NotIsCartFact(_) => self.new_not_is_cart_fact(x, line_file).into(),
+            AtomicFact::NotIsTupleFact(_) => self.new_not_is_tuple_fact(x, line_file).into(),
+            AtomicFact::NormalAtomicFact(n) => self
+                .new_normal_atomic_fact(n.predicate.clone(), vec![x], line_file)
+                .into(),
+            AtomicFact::NotNormalAtomicFact(n) => self
+                .new_not_normal_atomic_fact(n.predicate.clone(), vec![x], line_file)
+                .into(),
             _ => unreachable!(
                 "atomic_fact_with_resolved_unary_operand: expected a one-argument atomic fact"
             ),
@@ -521,51 +529,64 @@ impl Runtime {
     }
 
     fn atomic_fact_with_resolved_binary_operands(
+        &self,
         fact: &AtomicFact,
         left: Obj,
         right: Obj,
     ) -> AtomicFact {
         let line_file = fact.line_file();
         match fact {
-            AtomicFact::EqualFact(_) => EqualFact::new(left, right, line_file).into(),
-            AtomicFact::LessFact(_) => LessFact::new(left, right, line_file).into(),
-            AtomicFact::GreaterFact(_) => GreaterFact::new(left, right, line_file).into(),
-            AtomicFact::LessEqualFact(_) => LessEqualFact::new(left, right, line_file).into(),
-            AtomicFact::GreaterEqualFact(_) => GreaterEqualFact::new(left, right, line_file).into(),
-            AtomicFact::InFact(_) => InFact::new(left, right, line_file).into(),
-            AtomicFact::SubsetFact(_) => SubsetFact::new(left, right, line_file).into(),
-            AtomicFact::SupersetFact(_) => SupersetFact::new(left, right, line_file).into(),
-            AtomicFact::NotEqualFact(_) => NotEqualFact::new(left, right, line_file).into(),
-            AtomicFact::NotLessFact(_) => NotLessFact::new(left, right, line_file).into(),
-            AtomicFact::NotGreaterFact(_) => NotGreaterFact::new(left, right, line_file).into(),
-            AtomicFact::NotLessEqualFact(_) => NotLessEqualFact::new(left, right, line_file).into(),
-            AtomicFact::NotGreaterEqualFact(_) => {
-                NotGreaterEqualFact::new(left, right, line_file).into()
+            AtomicFact::EqualFact(_) => self.new_equal_fact(left, right, line_file).into(),
+            AtomicFact::LessFact(_) => self.new_less_fact(left, right, line_file).into(),
+            AtomicFact::GreaterFact(_) => self.new_greater_fact(left, right, line_file).into(),
+            AtomicFact::LessEqualFact(_) => self.new_less_equal_fact(left, right, line_file).into(),
+            AtomicFact::GreaterEqualFact(_) => {
+                self.new_greater_equal_fact(left, right, line_file).into()
             }
-            AtomicFact::NotInFact(_) => NotInFact::new(left, right, line_file).into(),
-            AtomicFact::NotSubsetFact(_) => NotSubsetFact::new(left, right, line_file).into(),
-            AtomicFact::NotSupersetFact(_) => NotSupersetFact::new(left, right, line_file).into(),
-            AtomicFact::FnEqualFact(_) => FnEqualFact::new(left, right, line_file).into(),
-            AtomicFact::NormalAtomicFact(x) => {
-                NormalAtomicFact::new(x.predicate.clone(), vec![left, right], line_file).into()
+            AtomicFact::InFact(_) => self.new_in_fact(left, right, line_file).into(),
+            AtomicFact::SubsetFact(_) => self.new_subset_fact(left, right, line_file).into(),
+            AtomicFact::SupersetFact(_) => self.new_superset_fact(left, right, line_file).into(),
+            AtomicFact::NotEqualFact(_) => self.new_not_equal_fact(left, right, line_file).into(),
+            AtomicFact::NotLessFact(_) => self.new_not_less_fact(left, right, line_file).into(),
+            AtomicFact::NotGreaterFact(_) => {
+                self.new_not_greater_fact(left, right, line_file).into()
             }
-            AtomicFact::NotNormalAtomicFact(x) => {
-                NotNormalAtomicFact::new(x.predicate.clone(), vec![left, right], line_file).into()
+            AtomicFact::NotLessEqualFact(_) => {
+                self.new_not_less_equal_fact(left, right, line_file).into()
             }
+            AtomicFact::NotGreaterEqualFact(_) => self
+                .new_not_greater_equal_fact(left, right, line_file)
+                .into(),
+            AtomicFact::NotInFact(_) => self.new_not_in_fact(left, right, line_file).into(),
+            AtomicFact::NotSubsetFact(_) => self.new_not_subset_fact(left, right, line_file).into(),
+            AtomicFact::NotSupersetFact(_) => {
+                self.new_not_superset_fact(left, right, line_file).into()
+            }
+            AtomicFact::FnEqualFact(_) => self.new_fn_equal_fact(left, right, line_file).into(),
+            AtomicFact::NormalAtomicFact(x) => self
+                .new_normal_atomic_fact(x.predicate.clone(), vec![left, right], line_file)
+                .into(),
+            AtomicFact::NotNormalAtomicFact(x) => self
+                .new_not_normal_atomic_fact(x.predicate.clone(), vec![left, right], line_file)
+                .into(),
             _ => unreachable!(
                 "atomic_fact_with_resolved_binary_operands: expected a two-argument atomic fact"
             ),
         }
     }
 
-    fn atomic_fact_with_resolved_predicate_args(fact: &AtomicFact, args: Vec<Obj>) -> AtomicFact {
+    fn atomic_fact_with_resolved_predicate_args(
+        &self,
+        fact: &AtomicFact,
+        args: Vec<Obj>,
+    ) -> AtomicFact {
         let line_file = fact.line_file();
         match fact {
             AtomicFact::NormalAtomicFact(x) => {
-                NormalAtomicFact::new(x.predicate.clone(), args, line_file).into()
+                self.new_normal_atomic_fact(x.predicate.clone(), args, line_file).into()
             }
             AtomicFact::NotNormalAtomicFact(x) => {
-                NotNormalAtomicFact::new(x.predicate.clone(), args, line_file).into()
+                self.new_not_normal_atomic_fact(x.predicate.clone(), args, line_file).into()
             }
             _ => unreachable!(
                 "atomic_fact_with_resolved_predicate_args: expected NormalAtomicFact or NotNormalAtomicFact"
@@ -574,15 +595,13 @@ impl Runtime {
     }
 
     pub fn atomic_fact_with_replaced_args(
+        &self,
         atomic_fact: &AtomicFact,
         args: Vec<Obj>,
     ) -> Option<AtomicFact> {
         match args.as_slice() {
-            [arg] => Some(Self::atomic_fact_with_resolved_unary_operand(
-                atomic_fact,
-                arg.clone(),
-            )),
-            [left, right] => Some(Self::atomic_fact_with_resolved_binary_operands(
+            [arg] => Some(self.atomic_fact_with_resolved_unary_operand(atomic_fact, arg.clone())),
+            [left, right] => Some(self.atomic_fact_with_resolved_binary_operands(
                 atomic_fact,
                 left.clone(),
                 right.clone(),
@@ -592,10 +611,7 @@ impl Runtime {
                 AtomicFact::NormalAtomicFact(_) | AtomicFact::NotNormalAtomicFact(_)
             ) =>
             {
-                Some(Self::atomic_fact_with_resolved_predicate_args(
-                    atomic_fact,
-                    args,
-                ))
+                Some(self.atomic_fact_with_resolved_predicate_args(atomic_fact, args))
             }
             _ => None,
         }
@@ -673,7 +689,7 @@ impl Runtime {
             .map(|argument| self.inst_obj(argument, &substitutions, SubstitutionMode::Exact))
             .collect::<Result<Vec<_>, _>>()?;
         let Some(equality_rewritten_fact) =
-            Self::atomic_fact_with_replaced_args(atomic_fact, equality_rewritten_args)
+            self.atomic_fact_with_replaced_args(atomic_fact, equality_rewritten_args)
         else {
             return Ok(None);
         };
@@ -683,7 +699,7 @@ impl Runtime {
             .map(|argument| self.resolve_obj(argument))
             .collect::<Vec<_>>();
         let Some(resolved_fact) =
-            Self::atomic_fact_with_replaced_args(&equality_rewritten_fact, resolved_args)
+            self.atomic_fact_with_replaced_args(&equality_rewritten_fact, resolved_args)
         else {
             return Ok(None);
         };
@@ -803,7 +819,7 @@ impl Runtime {
             return None;
         }
 
-        Self::atomic_fact_with_replaced_args(atomic_fact, resolved_args)
+        self.atomic_fact_with_replaced_args(atomic_fact, resolved_args)
     }
 
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param_with_facts_in_environment(
@@ -910,7 +926,7 @@ impl Runtime {
         }
 
         // Order facts are stored under `<` vs `>` etc.; e.g. known `a > 0` must match goal `0 < a`.
-        if let Some(alt) = atomic_fact.transposed_binary_order_equivalent() {
+        if let Some(alt) = atomic_fact.transposed_binary_order_equivalent_with_runtime(self) {
             if let Some(known_facts_map) = environment
                 .facts
                 .atomic
@@ -950,7 +966,7 @@ impl Runtime {
         given_arg: &Obj,
         line_file: LineFile,
     ) -> bool {
-        if self.equal_fact_sides_are_congruent_by_known_equalities(&EqualFact::new_from_refs(
+        if self.equal_fact_sides_are_congruent_by_known_equalities(&self.new_equal_fact_from_refs(
             known_arg,
             given_arg,
             line_file.clone(),
@@ -967,11 +983,13 @@ impl Runtime {
         // Example: A = {a} and a = b let membership in A imply membership in {b}.
         known_candidates.iter().any(|known_candidate| {
             given_candidates.iter().any(|given_candidate| {
-                self.equal_fact_sides_are_congruent_by_known_equalities(&EqualFact::new_from_refs(
-                    known_candidate,
-                    given_candidate,
-                    line_file.clone(),
-                ))
+                self.equal_fact_sides_are_congruent_by_known_equalities(
+                    &self.new_equal_fact_from_refs(
+                        known_candidate,
+                        given_candidate,
+                        line_file.clone(),
+                    ),
+                )
             })
         })
     }

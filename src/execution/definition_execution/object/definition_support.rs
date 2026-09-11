@@ -7,7 +7,7 @@ impl Runtime {
     ) -> Result<Vec<VerifyFactResult>, RuntimeError> {
         let mut checks = Vec::new();
         for param_def in param_defs.groups.iter() {
-            if let Some(fact) = nonempty_check_fact_for_param_type(&param_def.param_type) {
+            if let Some(fact) = nonempty_check_fact_for_param_type(self, &param_def.param_type) {
                 let verify_state = VerifyState::initial();
                 let result = self.verify_fact_or_error(&fact, &verify_state)?;
                 checks.push(result);
@@ -83,16 +83,16 @@ impl Runtime {
         use_defined_param_storage_shape: bool,
     ) -> Fact {
         match param_type {
-            ParamType::Set(_) => IsSetFact::new(obj, line_file).into(),
-            ParamType::NonemptySet(_) => IsNonemptySetFact::new(obj, line_file).into(),
-            ParamType::FiniteSet(_) => IsFiniteSetFact::new(obj, line_file).into(),
+            ParamType::Set(_) => self.new_is_set_fact(obj, line_file).into(),
+            ParamType::NonemptySet(_) => self.new_is_nonempty_set_fact(obj, line_file).into(),
+            ParamType::FiniteSet(_) => self.new_is_finite_set_fact(obj, line_file).into(),
             ParamType::Obj(param_obj) => {
                 let stored_param_obj = if use_defined_param_storage_shape {
                     self.defined_param_storage_obj_for_param_obj(param_obj, line_file.clone())
                 } else {
                     param_obj.clone()
                 };
-                InFact::new(obj, stored_param_obj, line_file).into()
+                self.new_in_fact(obj, stored_param_obj, line_file).into()
             }
         }
     }
@@ -107,7 +107,7 @@ impl Runtime {
     }
 }
 
-fn nonempty_check_fact_for_param_type(param_type: &ParamType) -> Option<Fact> {
+fn nonempty_check_fact_for_param_type(runtime: &Runtime, param_type: &ParamType) -> Option<Fact> {
     match param_type {
         ParamType::Set(_) | ParamType::NonemptySet(_) | ParamType::FiniteSet(_) => None,
         ParamType::Obj(param_set) => {
@@ -116,7 +116,11 @@ fn nonempty_check_fact_for_param_type(param_type: &ParamType) -> Option<Fact> {
                 Obj::AnonymousFn(anon) => anon.body.ret_set.as_ref().clone(),
                 _ => param_set.clone(),
             };
-            Some(IsNonemptySetFact::new(nonempty_obj, default_line_file()).into())
+            Some(
+                runtime
+                    .new_is_nonempty_set_fact(nonempty_obj, default_line_file())
+                    .into(),
+            )
         }
     }
 }

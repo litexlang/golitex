@@ -229,7 +229,7 @@ impl Runtime {
         // this lets its unique-existence property normalize directly to calls
         // such as `\selected<T>(x)` instead of remaining attached only to the
         // hidden materialized identifier.
-        let surface_equality_fact: Fact = AtomicFact::EqualFact(EqualFact::new(
+        let surface_equality_fact: Fact = AtomicFact::EqualFact(self.new_equal_fact(
             template_obj.clone().into(),
             instance_identifier.clone(),
             def.line_file.clone(),
@@ -283,7 +283,7 @@ impl Runtime {
         // reduction instead of a transitive hop through the hidden identifier.
         let mut public_value_equalities = Vec::with_capacity(public_values.len());
         for value in public_values {
-            let fact: Fact = AtomicFact::EqualFact(EqualFact::new(
+            let fact: Fact = AtomicFact::EqualFact(self.new_equal_fact(
                 template_obj.clone().into(),
                 value,
                 def.line_file.clone(),
@@ -307,7 +307,7 @@ impl Runtime {
                 .extend(self.store_template_surface_case_equations(case_stmt, template_obj)?);
         }
         if let Stmt::Definition(DefinitionStmt::HaveFnByInducStmt(recursive_stmt)) = &stmt {
-            let flat = recursive_stmt.to_have_fn_equal_case_by_case_stmt();
+            let flat = recursive_stmt.to_have_fn_equal_case_by_case_stmt(self);
             supplemental_stores
                 .extend(self.store_template_surface_case_equations(&flat, template_obj)?);
         }
@@ -378,8 +378,11 @@ impl Runtime {
                 Ok(HaveObjEqualStmt::new(param_def, objs_equal_to, line_file.clone()).into())
             }
             TemplateDefEnum::HaveObjByExistFactsStmt(s) => {
-                let body =
-                    PlainExistFact::new(s.param_def.clone(), s.facts.clone(), s.line_file.clone())?;
+                let body = self.new_plain_exist_fact(
+                    s.param_def.clone(),
+                    s.facts.clone(),
+                    s.line_file.clone(),
+                )?;
                 let exist_fact = self.inst_exist_fact(
                     &ExistFact::PlainExistFact(body),
                     param_to_arg_map,

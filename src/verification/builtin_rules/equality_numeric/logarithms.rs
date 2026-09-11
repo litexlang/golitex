@@ -18,17 +18,21 @@ impl Runtime {
 
         if let Obj::Pow(p) = log.arg.as_ref() {
             let base_ok = self.try_verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(p.base.as_ref(), log.base.as_ref(), line_file.clone()),
+                &self.new_equal_fact_from_refs(
+                    p.base.as_ref(),
+                    log.base.as_ref(),
+                    line_file.clone(),
+                ),
                 builtin_state,
             )?;
             if let Some(base_ok) = base_ok {
                 let exp_ok = self.try_verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(p.exponent.as_ref(), other, line_file.clone()),
+                    &self.new_equal_fact_from_refs(p.exponent.as_ref(), other, line_file.clone()),
                     builtin_state,
                 )?;
                 if let Some(exp_ok) = exp_ok {
                     let mut subgoals = equality_builtin_match_subgoals(
-                        &EqualFact::new_from_refs(
+                        &self.new_equal_fact_from_refs(
                             p.base.as_ref(),
                             log.base.as_ref(),
                             line_file.clone(),
@@ -36,7 +40,11 @@ impl Runtime {
                         base_ok,
                     );
                     subgoals.extend(equality_builtin_match_subgoals(
-                        &EqualFact::new_from_refs(p.exponent.as_ref(), other, line_file.clone()),
+                        &self.new_equal_fact_from_refs(
+                            p.exponent.as_ref(),
+                            other,
+                            line_file.clone(),
+                        ),
                         exp_ok,
                     ));
                     return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
@@ -71,12 +79,12 @@ impl Runtime {
         let inner_log: Obj = Log::new((*p.base).clone(), (*log.arg).clone()).into();
         let expected: Obj = Div::new(inner_log, (*p.exponent).clone()).into();
         let inner = self.try_verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(other, &expected, line_file.clone()),
+            &self.new_equal_fact_from_refs(other, &expected, line_file.clone()),
             builtin_state,
         )?;
         if let Some(inner) = inner {
             let subgoals = equality_builtin_match_subgoals(
-                &EqualFact::new_from_refs(other, &expected, line_file.clone()),
+                &self.new_equal_fact_from_refs(other, &expected, line_file.clone()),
                 inner,
             );
             return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
@@ -110,12 +118,12 @@ impl Runtime {
         let expected2: Obj = Mul::new(inner_log, (*p.exponent).clone()).into();
         for expected in [expected1, expected2] {
             let inner = self.try_verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(other, &expected, line_file.clone()),
+                &self.new_equal_fact_from_refs(other, &expected, line_file.clone()),
                 builtin_state,
             )?;
             if let Some(inner) = inner {
                 let subgoals = equality_builtin_match_subgoals(
-                    &EqualFact::new_from_refs(other, &expected, line_file.clone()),
+                    &self.new_equal_fact_from_refs(other, &expected, line_file.clone()),
                     inner,
                 );
                 return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
@@ -151,12 +159,12 @@ impl Runtime {
         let expected2: Obj = Add::new(l2, l1).into();
         for expected in [expected1, expected2] {
             let inner = self.try_verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(other, &expected, line_file.clone()),
+                &self.new_equal_fact_from_refs(other, &expected, line_file.clone()),
                 builtin_state,
             )?;
             if let Some(inner) = inner {
                 let subgoals = equality_builtin_match_subgoals(
-                    &EqualFact::new_from_refs(other, &expected, line_file.clone()),
+                    &self.new_equal_fact_from_refs(other, &expected, line_file.clone()),
                     inner,
                 );
                 return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
@@ -190,12 +198,12 @@ impl Runtime {
         let l2: Obj = Log::new((*log.base).clone(), (*d.right).clone()).into();
         let expected = Sub::new(l1, l2).into();
         let inner = self.try_verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(other, &expected, line_file.clone()),
+            &self.new_equal_fact_from_refs(other, &expected, line_file.clone()),
             builtin_state,
         )?;
         if let Some(inner) = inner {
             let subgoals = equality_builtin_match_subgoals(
-                &EqualFact::new_from_refs(other, &expected, line_file.clone()),
+                &self.new_equal_fact_from_refs(other, &expected, line_file.clone()),
                 inner,
             );
             return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
@@ -248,7 +256,7 @@ impl Runtime {
         };
         let one = Self::literal_one_obj_for_log_builtin();
         let Some(one_ok) = self.try_verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(d.left.as_ref(), &one, line_file.clone()),
+            &self.new_equal_fact_from_refs(d.left.as_ref(), &one, line_file.clone()),
             builtin_state,
         )?
         else {
@@ -270,16 +278,16 @@ impl Runtime {
 
         for expected in [expected1, expected2, expected3] {
             let ok = self.try_verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(other, &expected, line_file.clone()),
+                &self.new_equal_fact_from_refs(other, &expected, line_file.clone()),
                 builtin_state,
             )?;
             if let Some(ok) = ok {
                 let mut subgoals = equality_builtin_match_subgoals(
-                    &EqualFact::new_from_refs(d.left.as_ref(), &one, line_file.clone()),
+                    &self.new_equal_fact_from_refs(d.left.as_ref(), &one, line_file.clone()),
                     one_ok,
                 );
                 subgoals.extend(equality_builtin_match_subgoals(
-                    &EqualFact::new_from_refs(other, &expected, line_file.clone()),
+                    &self.new_equal_fact_from_refs(other, &expected, line_file.clone()),
                     ok,
                 ));
                 return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
@@ -316,7 +324,7 @@ impl Runtime {
         };
 
         let Some(base_ok) = self.try_verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(
+            &self.new_equal_fact_from_refs(
                 log_cb.base.as_ref(),
                 log_ca.base.as_ref(),
                 line_file.clone(),
@@ -327,14 +335,22 @@ impl Runtime {
             return Ok(None);
         };
         let Some(arg_ok) = self.try_verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(log_cb.arg.as_ref(), log_ab.arg.as_ref(), line_file.clone()),
+            &self.new_equal_fact_from_refs(
+                log_cb.arg.as_ref(),
+                log_ab.arg.as_ref(),
+                line_file.clone(),
+            ),
             builtin_state,
         )?
         else {
             return Ok(None);
         };
         let Some(inner_ok) = self.try_verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(log_ca.arg.as_ref(), log_ab.base.as_ref(), line_file.clone()),
+            &self.new_equal_fact_from_refs(
+                log_ca.arg.as_ref(),
+                log_ab.base.as_ref(),
+                line_file.clone(),
+            ),
             builtin_state,
         )?
         else {
@@ -342,7 +358,7 @@ impl Runtime {
         };
 
         let mut subgoals = equality_builtin_match_subgoals(
-            &EqualFact::new_from_refs(
+            &self.new_equal_fact_from_refs(
                 log_cb.base.as_ref(),
                 log_ca.base.as_ref(),
                 line_file.clone(),
@@ -350,11 +366,19 @@ impl Runtime {
             base_ok,
         );
         subgoals.extend(equality_builtin_match_subgoals(
-            &EqualFact::new_from_refs(log_cb.arg.as_ref(), log_ab.arg.as_ref(), line_file.clone()),
+            &self.new_equal_fact_from_refs(
+                log_cb.arg.as_ref(),
+                log_ab.arg.as_ref(),
+                line_file.clone(),
+            ),
             arg_ok,
         ));
         subgoals.extend(equality_builtin_match_subgoals(
-            &EqualFact::new_from_refs(log_ca.arg.as_ref(), log_ab.base.as_ref(), line_file.clone()),
+            &self.new_equal_fact_from_refs(
+                log_ca.arg.as_ref(),
+                log_ab.base.as_ref(),
+                line_file.clone(),
+            ),
             inner_ok,
         ));
 
@@ -385,8 +409,11 @@ impl Runtime {
         // rule, even though the remaining checks are only literal/shape
         // matching.
         if Self::obj_is_builtin_literal_one(other) {
-            let same_base_and_arg_fact =
-                EqualFact::new_from_refs(log.base.as_ref(), log.arg.as_ref(), line_file.clone());
+            let same_base_and_arg_fact = self.new_equal_fact_from_refs(
+                log.base.as_ref(),
+                log.arg.as_ref(),
+                line_file.clone(),
+            );
             let same_base_and_arg =
                 self.verify_equal_fact_by_known_equality(&same_base_and_arg_fact);
             if same_base_and_arg.is_success() {
@@ -396,7 +423,7 @@ impl Runtime {
                     builtin_state.verify_state(),
                 )?;
                 let subgoals = equality_builtin_match_subgoals(
-                    &EqualFact::new_from_refs(
+                    &self.new_equal_fact_from_refs(
                         log.base.as_ref(),
                         log.arg.as_ref(),
                         line_file.clone(),
@@ -421,7 +448,7 @@ impl Runtime {
 
         let pow_obj: Obj = Pow::new((*log.base).clone(), other.clone()).into();
         let inner = self.try_verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(&pow_obj, log.arg.as_ref(), line_file.clone()),
+            &self.new_equal_fact_from_refs(&pow_obj, log.arg.as_ref(), line_file.clone()),
             builtin_state,
         )?;
         if let Some(inner) = inner {
@@ -450,7 +477,7 @@ impl Runtime {
             _ => return Ok(None),
         };
         let expected_log: Obj = Log::new((*pow.base).clone(), other.clone()).into();
-        let exponent_ok = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+        let exponent_ok = self.verify_equal_fact_by_known_equality(&self.new_equal_fact_from_refs(
             pow.exponent.as_ref(),
             &expected_log,
             line_file.clone(),
@@ -459,7 +486,7 @@ impl Runtime {
             return Ok(None);
         }
         let exponent_fact =
-            EqualFact::new_from_refs(pow.exponent.as_ref(), &expected_log, line_file.clone());
+            self.new_equal_fact_from_refs(pow.exponent.as_ref(), &expected_log, line_file.clone());
         let exponent_ok = self.complete_fact_proof_result(
             &exponent_fact.into(),
             exponent_ok,

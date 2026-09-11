@@ -40,7 +40,7 @@ impl StmtResultToLeanCompiler {
             );
         }
         let adjacent_facts = chain
-            .facts()
+            .facts(&self.runtime)
             .map_err(|error| format!("invalid registered transitive chain: {error:?}"))?
             .into_iter()
             .map(Fact::from)
@@ -139,7 +139,12 @@ impl StmtResultToLeanCompiler {
                     "registered transitive chain component projection {component_index} must retain one conclusion"
                 ));
             };
-            validate_chain_component_inference_target(rule, &source_fact, &conclusion.fact)?;
+            validate_chain_component_inference_target(
+                &self.runtime,
+                rule,
+                &source_fact,
+                &conclusion.fact,
+            )?;
             if conclusion.fact.to_string() != expected_fact.to_string() {
                 return Err(format!(
                     "registered transitive chain component projection {component_index} changed its fact"
@@ -216,15 +221,17 @@ impl StmtResultToLeanCompiler {
                         expected_application_index - 1
                     ));
                 };
-                let expected_conclusion: Fact = NormalAtomicFact::new(
-                    chain.prop_names[0].clone(),
-                    vec![
-                        chain.objs[start_object_index].clone(),
-                        chain.objs[end_object_index].clone(),
-                    ],
-                    chain.line_file.clone(),
-                )
-                .into();
+                let expected_conclusion: Fact = self
+                    .runtime
+                    .new_normal_atomic_fact(
+                        chain.prop_names[0].clone(),
+                        vec![
+                            chain.objs[start_object_index].clone(),
+                            chain.objs[end_object_index].clone(),
+                        ],
+                        chain.line_file.clone(),
+                    )
+                    .into();
                 if conclusion.fact.to_string() != expected_conclusion.to_string() {
                     return Err(format!(
                         "registered transitive-chain application {} changed its conclusion",
@@ -352,6 +359,7 @@ impl StmtResultToLeanCompiler {
                 resolve_fact_citation(&next_fact_id, &next_premise.fact, &self.environment_stack)?;
             let (next_conclusion, parameter_arguments) =
                 instantiate_registered_transitive_predicate_application(
+                    &self.runtime,
                     &binding.forall_fact,
                     &rule.predicate_name,
                     &current_fact,

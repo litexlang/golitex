@@ -44,7 +44,11 @@ impl Runtime {
                     continue;
                 };
                 let base_result = self.verify_zero_product_factor_matches_target(
-                    &EqualFact::new_from_refs(target_base, pow.base.as_ref(), line_file.clone()),
+                    &self.new_equal_fact_from_refs(
+                        target_base,
+                        pow.base.as_ref(),
+                        line_file.clone(),
+                    ),
                     builtin_state,
                 )?;
                 if !base_result.is_success() {
@@ -123,14 +127,18 @@ impl Runtime {
         let zero = Self::literal_zero_obj_for_abs_builtin();
         let exponents = self.collect_known_equal_power_exponents_for_bases(left, right);
         for exponent in exponents {
-            let left_positive: AtomicFact =
-                LessFact::new(zero.clone(), left.clone(), line_file.clone()).into();
-            let right_positive: AtomicFact =
-                LessFact::new(zero.clone(), right.clone(), line_file.clone()).into();
-            let exponent_in_z: AtomicFact =
-                InFact::new(exponent.clone(), StandardSet::Z.into(), line_file.clone()).into();
-            let exponent_nonzero: AtomicFact =
-                NotEqualFact::new(exponent.clone(), zero.clone(), line_file.clone()).into();
+            let left_positive: AtomicFact = self
+                .new_less_fact(zero.clone(), left.clone(), line_file.clone())
+                .into();
+            let right_positive: AtomicFact = self
+                .new_less_fact(zero.clone(), right.clone(), line_file.clone())
+                .into();
+            let exponent_in_z: AtomicFact = self
+                .new_in_fact(exponent.clone(), StandardSet::Z.into(), line_file.clone())
+                .into();
+            let exponent_nonzero: AtomicFact = self
+                .new_not_equal_fact(exponent.clone(), zero.clone(), line_file.clone())
+                .into();
 
             let Some(left_positive_result) =
                 self.try_verify_atomic_fact_as_builtin_rule_premise(&left_positive, builtin_state)?
@@ -156,7 +164,7 @@ impl Runtime {
             let left_power: Obj = Pow::new(left.clone(), exponent.clone()).into();
             let right_power: Obj = Pow::new(right.clone(), exponent).into();
             let power_equal_fact =
-                EqualFact::new_from_refs(&left_power, &right_power, line_file.clone());
+                self.new_equal_fact_from_refs(&left_power, &right_power, line_file.clone());
             let power_equal_result = self.verify_equal_fact_by_known_equality(&power_equal_fact);
             if !power_equal_result.is_success() {
                 continue;
@@ -202,7 +210,7 @@ impl Runtime {
             return Ok(None);
         };
         let Some(base_match) = self.try_verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(
+            &self.new_equal_fact_from_refs(
                 inner_pow.base.as_ref(),
                 abs_base.arg.as_ref(),
                 line_file.clone(),
@@ -213,7 +221,7 @@ impl Runtime {
             return Ok(None);
         };
         let Some(exponent_match) = self.try_verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(
+            &self.new_equal_fact_from_refs(
                 inner_pow.exponent.as_ref(),
                 pow.exponent.as_ref(),
                 line_file.clone(),
@@ -324,36 +332,40 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let base_match: AtomicFact = EqualFact::new_from_refs(
-            negative_power.base.as_ref(),
-            denominator_power.base.as_ref(),
-            line_file.clone(),
-        )
-        .into();
-        let exponent_match: AtomicFact = EqualFact::new_from_refs(
-            &positive_exponent,
-            denominator_power.exponent.as_ref(),
-            line_file.clone(),
-        )
-        .into();
+        let base_match: AtomicFact = self
+            .new_equal_fact_from_refs(
+                negative_power.base.as_ref(),
+                denominator_power.base.as_ref(),
+                line_file.clone(),
+            )
+            .into();
+        let exponent_match: AtomicFact = self
+            .new_equal_fact_from_refs(
+                &positive_exponent,
+                denominator_power.exponent.as_ref(),
+                line_file.clone(),
+            )
+            .into();
 
-        let exponent_in_n_pos: AtomicFact = InFact::new(
-            positive_exponent.clone(),
-            StandardSet::NPos.into(),
-            line_file.clone(),
-        )
-        .into();
+        let exponent_in_n_pos: AtomicFact = self
+            .new_in_fact(
+                positive_exponent.clone(),
+                StandardSet::NPos.into(),
+                line_file.clone(),
+            )
+            .into();
 
         // The reciprocal law's primitive domain condition is `a != 0`.
         // Asking the premise verifier for `a^n != 0` here would require a
         // second semantic builtin rule, which is deliberately outside the
         // one-rule contract.
-        let base_nonzero: AtomicFact = NotEqualFact::new(
-            denominator_power.base.as_ref().clone(),
-            Self::literal_zero_obj_for_abs_builtin(),
-            line_file,
-        )
-        .into();
+        let base_nonzero: AtomicFact = self
+            .new_not_equal_fact(
+                denominator_power.base.as_ref().clone(),
+                Self::literal_zero_obj_for_abs_builtin(),
+                line_file,
+            )
+            .into();
         let base_match_result =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&base_match, builtin_state)?;
         let exponent_match_result =
@@ -446,17 +458,20 @@ impl Runtime {
             return Ok(None);
         };
 
-        let degree_in_n_pos: AtomicFact =
-            InFact::new(degree.clone(), StandardSet::NPos.into(), line_file.clone()).into();
-        let root_nonnegative: AtomicFact = LessEqualFact::new(
-            Self::literal_zero_obj_for_abs_builtin(),
-            root.clone(),
-            line_file.clone(),
-        )
-        .into();
+        let degree_in_n_pos: AtomicFact = self
+            .new_in_fact(degree.clone(), StandardSet::NPos.into(), line_file.clone())
+            .into();
+        let root_nonnegative: AtomicFact = self
+            .new_less_equal_fact(
+                Self::literal_zero_obj_for_abs_builtin(),
+                root.clone(),
+                line_file.clone(),
+            )
+            .into();
         let root_power: Obj = Pow::new(root.clone(), degree).into();
-        let inverse: AtomicFact =
-            EqualFact::new_from_refs(pow.base.as_ref(), &root_power, line_file.clone()).into();
+        let inverse: AtomicFact = self
+            .new_equal_fact_from_refs(pow.base.as_ref(), &root_power, line_file.clone())
+            .into();
         let inverse_result =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&inverse, builtin_state)?;
         let results = if let Some(inverse_result) = inverse_result {

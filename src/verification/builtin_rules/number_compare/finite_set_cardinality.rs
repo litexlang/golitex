@@ -42,14 +42,16 @@ impl Runtime {
         };
         let set = (*finite_set_size.set).clone();
 
-        let finite: AtomicFact = IsFiniteSetFact::new(set.clone(), line_file.clone()).into();
+        let finite: AtomicFact = self
+            .new_is_finite_set_fact(set.clone(), line_file.clone())
+            .into();
         let Some(finite_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&finite, builtin_state)?
         else {
             return Ok(None);
         };
 
-        let nonempty: AtomicFact = IsNonemptySetFact::new(set, line_file).into();
+        let nonempty: AtomicFact = self.new_is_nonempty_set_fact(set, line_file).into();
         let Some(nonempty_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&nonempty, builtin_state)?
         else {
@@ -89,7 +91,9 @@ impl Runtime {
         let Obj::FiniteSetSize(size) = size else {
             return Ok(None);
         };
-        let finite: AtomicFact = IsFiniteSetFact::new(size.set.as_ref().clone(), line_file).into();
+        let finite: AtomicFact = self
+            .new_is_finite_set_fact(size.set.as_ref().clone(), line_file)
+            .into();
         let Some(result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&finite, builtin_state)?
         else {
@@ -134,12 +138,12 @@ impl Runtime {
             let right_matches_right =
                 objs_match_for_pattern(intersection.right.as_ref(), right_size.set.as_ref());
             if right_matches_left || right_matches_right {
-                let left_input: AtomicFact =
-                    IsFiniteSetFact::new(intersection.left.as_ref().clone(), line_file.clone())
-                        .into();
-                let right_input: AtomicFact =
-                    IsFiniteSetFact::new(intersection.right.as_ref().clone(), line_file.clone())
-                        .into();
+                let left_input: AtomicFact = self
+                    .new_is_finite_set_fact(intersection.left.as_ref().clone(), line_file.clone())
+                    .into();
+                let right_input: AtomicFact = self
+                    .new_is_finite_set_fact(intersection.right.as_ref().clone(), line_file.clone())
+                    .into();
                 let left_result = self
                     .try_verify_atomic_fact_as_builtin_rule_premise(&left_input, builtin_state)?;
                 let right_result = self
@@ -159,21 +163,23 @@ impl Runtime {
             }
         }
 
-        let subset: AtomicFact = SubsetFact::new(
-            left_size.set.as_ref().clone(),
-            right_size.set.as_ref().clone(),
-            line_file.clone(),
-        )
-        .into();
-        let mut subset_result =
-            self.try_verify_atomic_fact_as_builtin_rule_premise(&subset, builtin_state)?;
-        if subset_result.is_none() {
-            let superset: AtomicFact = SupersetFact::new(
-                right_size.set.as_ref().clone(),
+        let subset: AtomicFact = self
+            .new_subset_fact(
                 left_size.set.as_ref().clone(),
+                right_size.set.as_ref().clone(),
                 line_file.clone(),
             )
             .into();
+        let mut subset_result =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&subset, builtin_state)?;
+        if subset_result.is_none() {
+            let superset: AtomicFact = self
+                .new_superset_fact(
+                    right_size.set.as_ref().clone(),
+                    left_size.set.as_ref().clone(),
+                    line_file.clone(),
+                )
+                .into();
             let proof =
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&superset)?;
             if proof.is_success() {
@@ -188,16 +194,18 @@ impl Runtime {
             return Ok(None);
         };
 
-        let left_finite: AtomicFact =
-            IsFiniteSetFact::new(left_size.set.as_ref().clone(), line_file.clone()).into();
+        let left_finite: AtomicFact = self
+            .new_is_finite_set_fact(left_size.set.as_ref().clone(), line_file.clone())
+            .into();
         let Some(left_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&left_finite, builtin_state)?
         else {
             return Ok(None);
         };
 
-        let right_finite: AtomicFact =
-            IsFiniteSetFact::new(right_size.set.as_ref().clone(), line_file).into();
+        let right_finite: AtomicFact = self
+            .new_is_finite_set_fact(right_size.set.as_ref().clone(), line_file)
+            .into();
         let Some(right_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&right_finite, builtin_state)?
         else {
@@ -253,13 +261,15 @@ impl Runtime {
             return Ok(None);
         }
 
-        let left_finite: AtomicFact = IsFiniteSetFact::new(left_set, line_file.clone()).into();
+        let left_finite: AtomicFact = self
+            .new_is_finite_set_fact(left_set, line_file.clone())
+            .into();
         let Some(left_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&left_finite, builtin_state)?
         else {
             return Ok(None);
         };
-        let right_finite: AtomicFact = IsFiniteSetFact::new(right_set, line_file).into();
+        let right_finite: AtomicFact = self.new_is_finite_set_fact(right_set, line_file).into();
         let Some(right_result) =
             self.try_verify_atomic_fact_as_builtin_rule_premise(&right_finite, builtin_state)?
         else {

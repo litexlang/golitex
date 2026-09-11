@@ -53,12 +53,14 @@ impl StmtResultToLeanCompiler {
         let SuccessEvalStmtExecutionResult::Evaluated(execution) = &result.execution else {
             unreachable!("trusted eval returned before store validation")
         };
-        let expected_equality: Fact = EqualFact::new(
-            execution.source_object.clone(),
-            execution.evaluated_object.clone(),
-            result.statement.line_file.clone(),
-        )
-        .into();
+        let expected_equality: Fact = self
+            .runtime
+            .new_equal_fact(
+                execution.source_object.clone(),
+                execution.evaluated_object.clone(),
+                result.statement.line_file.clone(),
+            )
+            .into();
         if store.itself_and_why_itself_is_stored.0.to_string() != expected_equality.to_string() {
             return Err("numeric eval store changed its evaluated equality".into());
         }
