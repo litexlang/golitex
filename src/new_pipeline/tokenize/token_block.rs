@@ -1,17 +1,12 @@
-use crate::new_pipeline::runtime::{PipelineError, PipelineResult};
-use std::path::PathBuf;
+use crate::new_pipeline::runtime::{RealOrVirtualPath, RuntimeError, RuntimeResult};
 
 /// One indented source unit handed from tokenizer to parser.
-///
-/// Shape matches the legacy token block: a header line, an optional indented
-/// body, a source location, and a parse cursor.  Owned entirely by
-/// `new_pipeline`; it does not import `crate::parsing`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TokenBlock {
     pub header: Vec<String>,
     pub body: Vec<TokenBlock>,
     pub line: usize,
-    pub source_path: PathBuf,
+    pub source_path: RealOrVirtualPath,
     pub parse_index: usize,
 }
 
@@ -20,7 +15,7 @@ impl TokenBlock {
         header: Vec<String>,
         body: Vec<TokenBlock>,
         line: usize,
-        source_path: PathBuf,
+        source_path: RealOrVirtualPath,
     ) -> Self {
         Self {
             header,
@@ -31,26 +26,25 @@ impl TokenBlock {
         }
     }
 
-    pub fn current(&self) -> PipelineResult<&str> {
+    pub fn current(&self) -> RuntimeResult<&str> {
         self.header
             .get(self.parse_index)
             .map(|token| token.as_str())
             .ok_or_else(|| {
-                PipelineError::InvalidArguments(format!(
+                RuntimeError::InvalidArguments(format!(
                     "unexpected end of tokens at line {} in {}",
-                    self.line,
-                    self.source_path.display()
+                    self.line, self.source_path
                 ))
             })
     }
 
-    pub fn advance(&mut self) -> PipelineResult<String> {
+    pub fn advance(&mut self) -> RuntimeResult<String> {
         let token = self.current()?.to_string();
         self.parse_index += 1;
         Ok(token)
     }
 
-    pub fn skip(&mut self) -> PipelineResult<()> {
+    pub fn skip(&mut self) -> RuntimeResult<()> {
         self.current()?;
         self.parse_index += 1;
         Ok(())

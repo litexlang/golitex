@@ -13,8 +13,8 @@
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
 use litex::cli::run_command_line_commands;
-use litex::new_pipeline::run::{run as run_new_pipeline, DispatchOutcome};
-use litex::new_pipeline::runtime::PipelineError;
+use litex::new_pipeline::run::{run as run_new_pipeline, RunCommandOutcome};
+use litex::new_pipeline::runtime::RuntimeError;
 use std::process;
 
 const CLI_STACK_SIZE: usize = 64 * 1024 * 1024;
@@ -50,12 +50,12 @@ fn use_new_pipeline_track() -> bool {
 
 fn run_new_pipeline_track() {
     match run_new_pipeline() {
-        Ok(DispatchOutcome::Ran) => {}
-        Ok(DispatchOutcome::Help | DispatchOutcome::Version) => {}
+        Ok(RunCommandOutcome::Ran) => {}
+        Ok(RunCommandOutcome::Help | RunCommandOutcome::Version) => {}
         Err(error) => {
-            eprintln!("{}", format_pipeline_error(&error));
+            eprintln!("{}", format_runtime_error(&error));
             let code = match error {
-                PipelineError::InvalidArguments(_) => 2,
+                RuntimeError::InvalidArguments(_) => 2,
                 _ => 1,
             };
             process::exit(code);
@@ -63,13 +63,14 @@ fn run_new_pipeline_track() {
     }
 }
 
-fn format_pipeline_error(error: &PipelineError) -> String {
+fn format_runtime_error(error: &RuntimeError) -> String {
     match error {
-        PipelineError::InvalidArguments(message) => format!("cli_error: {}", message),
-        PipelineError::Io { path, message } => {
+        RuntimeError::InvalidArguments(message) => format!("cli_error: {}", message),
+        RuntimeError::Io { path, message } => {
             format!("io_error: {}: {}", path.display(), message)
         }
-        PipelineError::Unsupported(message) => format!("unsupported: {}", message),
-        PipelineError::Invariant(message) => format!("invariant: {}", message),
+        RuntimeError::Unsupported(message) => format!("unsupported: {}", message),
+        RuntimeError::Invariant(message) => format!("invariant: {}", message),
+        RuntimeError::Unknown(message) => format!("unknown: {}", message),
     }
 }

@@ -1,12 +1,10 @@
 use super::command::parse_cli_command;
-use super::command_dispatch::{run_cli_command, DispatchOutcome};
-use crate::new_pipeline::runtime::PipelineResult;
+use super::run_command::{run_command, RunCommandOutcome};
+use crate::new_pipeline::runtime::RuntimeResult;
 
-/// New-pipeline CLI entry: argv -> slim `CliCommand` -> dispatch.
-///
-/// Dual-track test entry. Legacy CLI remains default unless `LITEX_NEW_PIPELINE` is set.
-pub fn run() -> PipelineResult<DispatchOutcome> {
+/// New-pipeline CLI entry: argv -> CliCommand -> run_command.
+pub fn run() -> RuntimeResult<RunCommandOutcome> {
     let args = std::env::args().skip(1).collect::<Vec<_>>();
     let command = parse_cli_command(&args)?;
-    run_cli_command(command)
+    run_command(command)
 }

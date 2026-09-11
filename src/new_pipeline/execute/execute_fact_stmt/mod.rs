@@ -1,20 +1,13 @@
-//! Staging boundary for the refactored verifier.
-//!
-//! The running `Runtime` still uses [`crate::verification`].  This namespace
-//! owns the new verifier's foundational types while its Result and pipeline
-//! modules are migrated incrementally.  Keeping the boundary explicit lets
-//! the new implementation grow without creating two active implementations of
-//! the same `Runtime` methods.
+//! Fact-statement execution: verify, then store and infer.
 
-pub mod verify_state;
-pub mod verify_atomic_fact;
-pub mod cache_search_proof;
-pub mod verify_fact_result;
+mod cache_search_proof;
+mod result;
+mod verify;
+mod verify_atomic_fact;
+mod verify_fact_result;
+mod verify_obj_well_defined;
+mod verify_state;
 
-pub use crate::environment::Environment;
-pub use crate::fact::{
-    AndFact, AtomicFact, ChainFact, EqualFact, ExistFact, Fact, ForallFact, ForallFactWithIff,
-    NotForallFact, OrFact, PlainExistFact,
-};
-pub use crate::runtime::Runtime;
+pub use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
+pub use result::ExecFactStmtResult2;
 pub use verify_state::VerifyState2;

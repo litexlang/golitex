@@ -7,8 +7,7 @@ use super::symbols::{
     Z_POSITIVE,
 };
 use super::token_block::TokenBlock;
-use crate::new_pipeline::runtime::{PipelineError, PipelineResult};
-use std::path::{Path, PathBuf};
+use crate::new_pipeline::runtime::{RealOrVirtualPath, RuntimeError, RuntimeResult};
 
 pub struct Tokenizer;
 
@@ -20,9 +19,8 @@ impl Tokenizer {
     pub fn tokenize(
         &self,
         code: &str,
-        source_path: impl Into<PathBuf>,
-    ) -> PipelineResult<Vec<TokenBlock>> {
-        let source_path = source_path.into();
+        source_path: RealOrVirtualPath,
+    ) -> RuntimeResult<Vec<TokenBlock>> {
         let stripped = self.strip_triple_quote_comment_blocks(code);
         let lines: Vec<&str> = stripped.lines().collect();
         let mut index = 0;
@@ -153,8 +151,8 @@ impl Tokenizer {
         lines: &[&str],
         i: &mut usize,
         base_indent: usize,
-        source_path: &Path,
-    ) -> PipelineResult<Vec<TokenBlock>> {
+        source_path: &RealOrVirtualPath,
+    ) -> RuntimeResult<Vec<TokenBlock>> {
         let mut items = Vec::new();
         let mut body_indent = None;
 
@@ -179,10 +177,9 @@ impl Tokenizer {
                     *i += 1;
                     continue;
                 }
-                return Err(PipelineError::InvalidArguments(format!(
+                return Err(RuntimeError::InvalidArguments(format!(
                     "unexpected indent at line {} in {}",
-                    line_no,
-                    source_path.display()
+                    line_no, source_path
                 )));
             }
 
@@ -194,18 +191,17 @@ impl Tokenizer {
 
             if Self::ends_with_colon(content) {
                 if *i >= lines.len() {
-                    return Err(PipelineError::InvalidArguments(format!(
+                    return Err(RuntimeError::InvalidArguments(format!(
                         "block header missing body at line {} in {}",
-                        line_no,
-                        source_path.display()
+                        line_no, source_path
                     )));
                 }
                 let next_indent = Self::indent_level(lines[*i]);
                 if next_indent <= indent {
-                    return Err(PipelineError::InvalidArguments(format!(
+                    return Err(RuntimeError::InvalidArguments(format!(
                         "expected indent at line {} in {}",
                         *i + 1,
-                        source_path.display()
+                        source_path
                     )));
                 }
                 let body = self.parse_level(lines, i, next_indent, source_path)?;
@@ -213,23 +209,22 @@ impl Tokenizer {
                     header_tokens,
                     body,
                     line_no,
-                    source_path.to_path_buf(),
+                    source_path.clone(),
                 ));
             } else {
                 items.push(TokenBlock::new(
                     header_tokens,
                     vec![],
                     line_no,
-                    source_path.to_path_buf(),
+                    source_path.clone(),
                 ));
             }
 
             if let Some(expected) = body_indent {
                 if indent != expected {
-                    return Err(PipelineError::InvalidArguments(format!(
+                    return Err(RuntimeError::InvalidArguments(format!(
                         "inconsistent indent at line {} in {}",
-                        line_no,
-                        source_path.display()
+                        line_no, source_path
                     )));
                 }
             } else {
@@ -317,7 +312,7 @@ mod tests {
     #[test]
     fn tokenizes_one_plus_one_equals_two() {
         let blocks = Tokenizer::new()
-            .tokenize("1 + 1 = 2", "eval")
+            .tokenize("1 + 1 = 2", RealOrVirtualPath::Eval)
             .expect("tokenize");
         assert_eq!(blocks.len(), 1);
         assert_eq!(
@@ -335,7 +330,7 @@ mod tests {
     fn tokenizes_indented_block_body() {
         let source = "forall x R:\n    x = x\n";
         let blocks = Tokenizer::new()
-            .tokenize(source, "eval")
+            .tokenize(source, RealOrVirtualPath::Eval)
             .expect("tokenize");
         assert_eq!(blocks.len(), 1);
         assert_eq!(

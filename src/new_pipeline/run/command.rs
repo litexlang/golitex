@@ -1,4 +1,4 @@
-use crate::new_pipeline::runtime::{PipelineError, PipelineResult};
+use crate::new_pipeline::runtime::{RuntimeError, RuntimeResult};
 use std::path::PathBuf;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -10,7 +10,7 @@ pub enum CliCommand {
     Repository(PathBuf),
 }
 
-pub fn parse_cli_command(args: &[String]) -> PipelineResult<CliCommand> {
+pub fn parse_cli_command(args: &[String]) -> RuntimeResult<CliCommand> {
     match args {
         [] => Ok(CliCommand::Help),
         [flag] if flag == "-help" || flag == "--help" || flag == "-h" => Ok(CliCommand::Help),
@@ -22,7 +22,7 @@ pub fn parse_cli_command(args: &[String]) -> PipelineResult<CliCommand> {
         [flag, value] if flag == "-r" && is_value(value) => {
             Ok(CliCommand::Repository(PathBuf::from(value)))
         }
-        _ => Err(PipelineError::InvalidArguments(
+        _ => Err(RuntimeError::InvalidArguments(
             "new_pipeline supports `-e <code>`, `-f <file>`, `-r <repository>`, `-help`, `-version`"
                 .to_string(),
         )),

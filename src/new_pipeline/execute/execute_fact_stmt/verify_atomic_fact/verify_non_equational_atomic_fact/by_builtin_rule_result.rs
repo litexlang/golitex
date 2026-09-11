@@ -1,5 +1,6 @@
 use crate::prelude::*;
-use crate::new_pipeline::execute_fact_stmt::VerifyState2;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult2;
+use crate::new_pipeline::execute::execute_fact_stmt::VerifyState2;
 
 // Each builtin rule gets its own variant and payload struct.
 pub enum NonEquationalAtomicFactSearchProofByBuiltinRule2 {

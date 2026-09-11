@@ -1,12 +1,12 @@
-use crate::new_pipeline::runtime::{PipelineError, PipelineResult, Runtime};
+use crate::new_pipeline::runtime::{RuntimeError, RuntimeResult, Runtime};
 
 impl Runtime {
     pub fn store_fact_and_well_definedness_then_infer(
         &mut self,
         _verify_result: (),
-    ) -> PipelineResult<()> {
+    ) -> RuntimeResult<()> {
         let _ = self;
-        Err(PipelineError::Unsupported(
+        Err(RuntimeError::Unsupported(
             "store_fact_and_well_definedness_then_infer is not wired yet".to_string(),
         ))
     }

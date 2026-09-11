@@ -1,13 +1,3 @@
-// 问题 a = 1, b = 2时，证明：a + b >= 0
-// 证明过程：a + b = 3 >= 0
-
-```litex
-let a = 1
-let b = 2
-
-a + b = 3 >= 0
-```
-
-```lean
-???
-```
+# Tracer for new_pipeline: tokenize → parse → exec → verify.
+# Expected under LITEX_NEW_PIPELINE=1: Unknown (WD / search_proof not wired).
+1 + 1 = 2

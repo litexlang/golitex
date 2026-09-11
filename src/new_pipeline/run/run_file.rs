@@ -1,15 +1,15 @@
-use crate::new_pipeline::runtime::{PipelineError, PipelineResult, RealOrVirtualPath, Runtime};
+use crate::new_pipeline::runtime::{RuntimeError, RuntimeResult, RealOrVirtualPath, Runtime};
 use std::fs;
 use std::path::PathBuf;
 
-pub fn run_file(path: PathBuf) -> PipelineResult<()> {
+pub fn run_file(path: PathBuf) -> RuntimeResult<()> {
     if path.as_os_str().is_empty() {
-        return Err(PipelineError::InvalidArguments(
+        return Err(RuntimeError::InvalidArguments(
             "-f requires a source file".to_string(),
         ));
     }
 
-    let source = fs::read_to_string(&path).map_err(|error| PipelineError::Io {
+    let source = fs::read_to_string(&path).map_err(|error| RuntimeError::Io {
         path: path.clone(),
         message: error.to_string(),
     })?;
