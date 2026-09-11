@@ -1,4 +1,4 @@
-use crate::new_pipeline::runtime::runtime_ids::WellDefinednessId2;
+use crate::new_pipeline::runtime::runtime_ids::WellDefinednessId;
 use crate::prelude::*;
 use crate::verify_rewrite::VerifyState2;
 
@@ -6,7 +6,7 @@ use crate::verify_rewrite::VerifyState2;
 // ByReuse is checked first (session memo cites a prior wd id). Then either
 // ByTrivial, or a constructor-specific ByXxxDef path.
 pub enum WellDefinednessProofOfObj2 {
-    ByReuse(WellDefinednessId2),
+    ByReuse(WellDefinednessId),
     // Atom (identifier / bound), Number, Pi, EulerNumber, ImaginaryUnit,
     // StandardSet, and similar leaves with no further WD obligations.
     ByTrivial,
@@ -26,7 +26,7 @@ impl Runtime {
         obj: &Obj,
         verify_state: VerifyState2,
     ) -> Result<WellDefinednessProofOfObj2, RuntimeError> {
-        // ByReuse comes first once Runtime allocates WellDefinednessId2 and
+        // ByReuse comes first once Runtime allocates WellDefinednessId and
         // VerifyState2 memos object -> wd id.
         let _ = &verify_state;
 

@@ -1,5 +1,5 @@
 use super::command::CliCommand;
-use super::run_litex_code::run_litex_code;
+use super::{run_eval, run_file, run_repo};
 use crate::new_pipeline::runtime::PipelineResult;
 
 pub const NEW_PIPELINE_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -21,8 +21,16 @@ pub fn run_cli_command(command: CliCommand) -> PipelineResult<DispatchOutcome> {
             println!("litex new_pipeline {}", NEW_PIPELINE_VERSION);
             Ok(DispatchOutcome::Version)
         }
-        CliCommand::Eval(_) | CliCommand::File(_) | CliCommand::Repository(_) => {
-            run_litex_code(command)?;
+        CliCommand::Eval(code) => {
+            run_eval::run_eval(code)?;
+            Ok(DispatchOutcome::Ran)
+        }
+        CliCommand::File(path) => {
+            run_file::run_file(path)?;
+            Ok(DispatchOutcome::Ran)
+        }
+        CliCommand::Repository(path) => {
+            run_repo::run_repo(path)?;
             Ok(DispatchOutcome::Ran)
         }
     }
