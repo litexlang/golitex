@@ -1,12 +1,11 @@
 use super::error::{RuntimeError, RuntimeResult};
+use super::real_or_virtual_path::RealOrVirtualPath;
 use super::runtime_ids::{FactId, PropAlgebraicPropertyId, SymbolId, WellDefinednessId};
 use crate::new_pipeline::execution_environment::exec_env::ExecEnv;
 use crate::new_pipeline::module_manager::{
     ExportFileAndItsExecEnv, ModuleHierarchy, ModuleManager,
 };
 use std::collections::HashSet;
-use std::fmt;
-use std::path::PathBuf;
 
 // One parse layer's occupied names. Inner scopes must not reuse a visible outer name.
 pub struct ParseScope {
@@ -18,41 +17,6 @@ pub struct Ids {
     next_well_definedness_id: WellDefinednessId,
     next_symbol_id: SymbolId,
     next_prop_algebraic_property_id: PropAlgebraicPropertyId,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum RealOrVirtualPath {
-    Real(PathBuf),
-    Eval,
-}
-
-impl RealOrVirtualPath {
-    pub fn display_path(&self) -> PathBuf {
-        match self {
-            RealOrVirtualPath::Real(path) => path.clone(),
-            RealOrVirtualPath::Eval => PathBuf::from("<eval>"),
-        }
-    }
-
-    pub fn name(&self) -> String {
-        match self {
-            RealOrVirtualPath::Real(path) => path
-                .file_name()
-                .and_then(|name| name.to_str())
-                .map(str::to_owned)
-                .unwrap_or_else(|| path.to_string_lossy().into_owned()),
-            RealOrVirtualPath::Eval => "<eval>".to_string(),
-        }
-    }
-}
-
-impl fmt::Display for RealOrVirtualPath {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            RealOrVirtualPath::Real(path) => write!(f, "{}", path.display()),
-            RealOrVirtualPath::Eval => write!(f, "<eval>"),
-        }
-    }
 }
 
 pub struct Runtime {

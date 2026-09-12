@@ -7,7 +7,9 @@ use super::symbols::{
     Z_POSITIVE,
 };
 use super::token_block::TokenBlock;
-use crate::new_pipeline::runtime::{RealOrVirtualPath, RuntimeError, RuntimeResult};
+use crate::new_pipeline::runtime::{
+    RealOrVirtualPath, RuntimeParseError, RuntimeResult,
+};
 
 pub struct Tokenizer;
 
@@ -177,10 +179,12 @@ impl Tokenizer {
                     *i += 1;
                     continue;
                 }
-                return Err(RuntimeError::InvalidArguments(format!(
-                    "unexpected indent at line {} in {}",
-                    line_no, source_path
-                )));
+                return Err(RuntimeParseError::new(
+                    "unexpected indent",
+                    line_no,
+                    source_path.clone(),
+                )
+                .into());
             }
 
             *i += 1;
@@ -191,18 +195,21 @@ impl Tokenizer {
 
             if Self::ends_with_colon(content) {
                 if *i >= lines.len() {
-                    return Err(RuntimeError::InvalidArguments(format!(
-                        "block header missing body at line {} in {}",
-                        line_no, source_path
-                    )));
+                    return Err(RuntimeParseError::new(
+                        "block header missing body",
+                        line_no,
+                        source_path.clone(),
+                    )
+                    .into());
                 }
                 let next_indent = Self::indent_level(lines[*i]);
                 if next_indent <= indent {
-                    return Err(RuntimeError::InvalidArguments(format!(
-                        "expected indent at line {} in {}",
+                    return Err(RuntimeParseError::new(
+                        "expected indent",
                         *i + 1,
-                        source_path
-                    )));
+                        source_path.clone(),
+                    )
+                    .into());
                 }
                 let body = self.parse_level(lines, i, next_indent, source_path)?;
                 items.push(TokenBlock::new(
@@ -222,10 +229,12 @@ impl Tokenizer {
 
             if let Some(expected) = body_indent {
                 if indent != expected {
-                    return Err(RuntimeError::InvalidArguments(format!(
-                        "inconsistent indent at line {} in {}",
-                        line_no, source_path
-                    )));
+                    return Err(RuntimeParseError::new(
+                        "inconsistent indent",
+                        line_no,
+                        source_path.clone(),
+                    )
+                    .into());
                 }
             } else {
                 body_indent = Some(indent);

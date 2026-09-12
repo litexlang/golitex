@@ -1,4 +1,4 @@
-use crate::new_pipeline::runtime::{RealOrVirtualPath, RuntimeError, RuntimeResult};
+use crate::new_pipeline::runtime::{RealOrVirtualPath, RuntimeParseError, RuntimeResult};
 
 /// One indented source unit handed from tokenizer to parser.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -31,10 +31,12 @@ impl TokenBlock {
             .get(self.parse_index)
             .map(|token| token.as_str())
             .ok_or_else(|| {
-                RuntimeError::InvalidArguments(format!(
-                    "unexpected end of tokens at line {} in {}",
-                    self.line, self.source_path
-                ))
+                RuntimeParseError::new(
+                    "unexpected end of tokens",
+                    self.line,
+                    self.source_path.clone(),
+                )
+                .into()
             })
     }
 

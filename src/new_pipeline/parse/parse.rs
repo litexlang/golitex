@@ -1,4 +1,6 @@
-use crate::new_pipeline::runtime::{RuntimeError, RuntimeResult, Runtime};
+use crate::new_pipeline::runtime::{
+    RuntimeError, RuntimeParseError, RuntimeResult, Runtime,
+};
 use crate::new_pipeline::tokenize::TokenBlock;
 use crate::prelude::*;
 use std::rc::Rc;
@@ -25,20 +27,24 @@ impl Runtime {
         let line_file = (block.line, Rc::from(block.source_path.to_string()));
         let tokens = &block.header;
         let mut i = 0;
-        let left = parse_add_expr(tokens, &mut i)?;
+        let left = parse_add_expr(tokens, &mut i, block)?;
         if i >= tokens.len() || tokens[i] != "=" {
-            return Err(RuntimeError::InvalidArguments(format!(
-                "parse: expected `=` at line {} in {}",
-                block.line, block.source_path
-            )));
+            return Err(RuntimeParseError::new(
+                "expected `=`",
+                block.line,
+                block.source_path.clone(),
+            )
+            .into());
         }
         i += 1;
-        let right = parse_add_expr(tokens, &mut i)?;
+        let right = parse_add_expr(tokens, &mut i, block)?;
         if i != tokens.len() {
-            return Err(RuntimeError::InvalidArguments(format!(
-                "parse: trailing tokens at line {} in {}",
-                block.line, block.source_path
-            )));
+            return Err(RuntimeParseError::new(
+                "trailing tokens",
+                block.line,
+                block.source_path.clone(),
+            )
+            .into());
         }
 
         let fact_id = crate::fact::id::FactId::new(self.ids.allocate_fact_id().value());
@@ -53,26 +59,40 @@ impl Runtime {
     }
 }
 
-fn parse_add_expr(tokens: &[String], i: &mut usize) -> RuntimeResult<Obj> {
-    let mut left = parse_number(tokens, i)?;
+fn parse_add_expr(
+    tokens: &[String],
+    i: &mut usize,
+    block: &TokenBlock,
+) -> RuntimeResult<Obj> {
+    let mut left = parse_number(tokens, i, block)?;
     while *i < tokens.len() && tokens[*i] == "+" {
         *i += 1;
-        let right = parse_number(tokens, i)?;
+        let right = parse_number(tokens, i, block)?;
         left = Add::new(left, right).into();
     }
     Ok(left)
 }
 
-fn parse_number(tokens: &[String], i: &mut usize) -> RuntimeResult<Obj> {
+fn parse_number(
+    tokens: &[String],
+    i: &mut usize,
+    block: &TokenBlock,
+) -> RuntimeResult<Obj> {
     let Some(token) = tokens.get(*i) else {
-        return Err(RuntimeError::InvalidArguments(
-            "parse: expected number".to_string(),
-        ));
+        return Err(RuntimeParseError::new(
+            "expected number",
+            block.line,
+            block.source_path.clone(),
+        )
+        .into());
     };
     if !token.chars().all(|c| c.is_ascii_digit()) {
-        return Err(RuntimeError::InvalidArguments(format!(
-            "parse: expected number, got `{token}`"
-        )));
+        return Err(RuntimeParseError::new(
+            format!("expected number, got `{token}`"),
+            block.line,
+            block.source_path.clone(),
+        )
+        .into());
     }
     *i += 1;
     Ok(Number::new(token.clone()).into())
