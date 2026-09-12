@@ -69,6 +69,12 @@ fn format_runtime_error(error: &RuntimeError) -> String {
         RuntimeError::Io { path, message } => {
             format!("io_error: {}: {}", path.display(), message)
         }
+        RuntimeError::ParseError(error) => {
+            format!(
+                "parse_error: {} at line {} in {}",
+                error.message, error.line, error.path
+            )
+        }
         RuntimeError::Unsupported(message) => format!("unsupported: {}", message),
         RuntimeError::Invariant(message) => format!("invariant: {}", message),
         RuntimeError::Unknown(message) => format!("unknown: {}", message),
