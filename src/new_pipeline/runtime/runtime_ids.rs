@@ -4,9 +4,6 @@ use std::fmt;
 pub struct FactId(u64);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct AtomId(u64);
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct WellDefinednessId(u64);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -16,16 +13,6 @@ pub struct SymbolId(u64);
 pub struct PropAlgebraicPropertyId(u64);
 
 impl FactId {
-    pub fn new(value: u64) -> Self {
-        Self(value)
-    }
-
-    pub fn value(self) -> u64 {
-        self.0
-    }
-}
-
-impl AtomId {
     pub fn new(value: u64) -> Self {
         Self(value)
     }
@@ -68,12 +55,6 @@ impl PropAlgebraicPropertyId {
 impl fmt::Display for FactId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "f{}", self.0)
-    }
-}
-
-impl fmt::Display for AtomId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "a{}", self.0)
     }
 }
 
