@@ -2,11 +2,12 @@ use super::exec_stmt_result::{ExecLetObjStmtResult, LetObjEffect};
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::stmt::LetObjStmt;
 use crate::new_pipeline::execution_environment::LetObjectBinding;
+use crate::new_pipeline::execute::execute_fact_stmt::equal_fact_from_let;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
 impl Runtime {
     // `let name = value`: check a minimal WD gate, allocate defining-equality FactId,
-    // store the binding in the top ExecEnv, return the effect mirror.
+    // store the binding and defining equality in the top ExecEnv, return the effect mirror.
     pub(super) fn exec_let_obj(
         &mut self,
         let_stmt: &LetObjStmt,
@@ -14,6 +15,13 @@ impl Runtime {
         ensure_let_value_supported(&let_stmt.value)?;
 
         let equality_fact_id = self.ids.allocate_fact_id();
+        let equal_fact = equal_fact_from_let(
+            equality_fact_id,
+            let_stmt.name.clone(),
+            let_stmt.value.clone(),
+            let_stmt.span.clone(),
+        );
+
         self.top_exec_env_mut().store_let_binding(
             let_stmt.name.clone(),
             LetObjectBinding {
@@ -21,6 +29,7 @@ impl Runtime {
                 equality_fact_id,
             },
         );
+        self.top_exec_env_mut().store_native_equal_fact(equal_fact);
 
         Ok(ExecLetObjStmtResult {
             statement: let_stmt.clone(),
@@ -31,7 +40,7 @@ impl Runtime {
     }
 }
 
-// Tracer WD gate: only numeric literals and `+` of those (e.g. `2`, `1 + 2`).
+// Tracer WD gate: numbers and `+` of those (e.g. `2`, `1 + 2`).
 fn ensure_let_value_supported(obj: &Obj) -> RuntimeResult<()> {
     match obj {
         Obj::Number(_) => Ok(()),

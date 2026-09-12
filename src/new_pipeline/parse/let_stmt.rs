@@ -17,19 +17,12 @@ impl Runtime {
             .into());
         }
 
-        let tokens = &block.header;
-        let mut i = 0;
-        // leading `let` already matched by dispatch
-        i += 1;
+        let mut tb = block.clone();
+        tb.advance()?; // `let`
 
-        let Some(name) = tokens.get(i).cloned() else {
-            return Err(RuntimeParseError::new(
-                "`let` expects a name",
-                block.line,
-                block.source_path.clone(),
-            )
-            .into());
-        };
+        let name = tb.advance().map_err(|_| {
+            RuntimeParseError::new("`let` expects a name", block.line, block.source_path.clone())
+        })?;
         if !is_simple_name(&name) {
             return Err(RuntimeParseError::new(
                 format!("invalid let name `{name}`"),
@@ -38,20 +31,17 @@ impl Runtime {
             )
             .into());
         }
-        i += 1;
 
-        if tokens.get(i).map(String::as_str) != Some(EQUAL) {
-            return Err(RuntimeParseError::new(
+        tb.expect(EQUAL).map_err(|_| {
+            RuntimeParseError::new(
                 "`let` expects `=` after the name",
                 block.line,
                 block.source_path.clone(),
             )
-            .into());
-        }
-        i += 1;
+        })?;
 
-        let value = parse_obj(tokens, &mut i, block)?;
-        if i != tokens.len() {
+        let value = parse_obj(&mut tb)?;
+        if !tb.exceed_end_of_head() {
             return Err(RuntimeParseError::new(
                 "trailing tokens after let value",
                 block.line,
@@ -60,12 +50,7 @@ impl Runtime {
             .into());
         }
 
-        self.occupy_name(name.clone()).map_err(|err| match err {
-            crate::new_pipeline::runtime::RuntimeError::Invariant(message) => {
-                RuntimeParseError::new(message, block.line, block.source_path.clone()).into()
-            }
-            other => other,
-        })?;
+        self.occupy_name_as_parse(&tb, name.clone())?;
 
         Ok(Stmt::Definition(DefinitionStmt::LetObjStmt(LetObjStmt {
             name,

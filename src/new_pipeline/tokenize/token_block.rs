@@ -55,4 +55,32 @@ impl TokenBlock {
     pub fn exceed_end_of_head(&self) -> bool {
         self.parse_index >= self.header.len()
     }
+
+    pub fn peek(&self) -> Option<&str> {
+        self.header.get(self.parse_index).map(String::as_str)
+    }
+
+    pub fn peek_at(&self, offset: usize) -> Option<&str> {
+        self.header
+            .get(self.parse_index + offset)
+            .map(String::as_str)
+    }
+
+    pub fn expect(&mut self, expected: &str) -> RuntimeResult<()> {
+        let got = self.current()?;
+        if got != expected {
+            return Err(RuntimeParseError::new(
+                format!("expected `{expected}`, got `{got}`"),
+                self.line,
+                self.source_path.clone(),
+            )
+            .into());
+        }
+        self.parse_index += 1;
+        Ok(())
+    }
+
+    pub fn span(&self) -> crate::new_pipeline::ast::SourceSpan {
+        crate::new_pipeline::ast::SourceSpan::new(self.line, self.source_path.clone())
+    }
 }
