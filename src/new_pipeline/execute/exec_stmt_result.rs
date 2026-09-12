@@ -20,22 +20,12 @@ pub enum ExecDefinitionStmtResult {
     LetObj(ExecLetObjStmtResult),
 }
 
-// Parse occupied the name; definition storage into ExecEnv comes later.
-// effect lists what this let contributed once storage is wired.
+// Name was occupied at parse; effect lists the defining-equality FactId written to ExecEnv.
 pub struct ExecLetObjStmtResult {
     pub statement: LetObjStmt,
     pub effect: LetObjEffect,
 }
 
 pub struct LetObjEffect {
-    // Reserved for transparent-definition / equality fact ids after store lands.
     pub stored_fact_ids: Vec<FactId>,
-}
-
-impl LetObjEffect {
-    pub fn empty() -> Self {
-        Self {
-            stored_fact_ids: Vec::new(),
-        }
-    }
 }

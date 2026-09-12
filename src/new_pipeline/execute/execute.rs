@@ -1,9 +1,9 @@
 use super::exec_stmt_result::{
-    ExecDefinitionStmtResult, ExecLetObjStmtResult, ExecStmtResult, LetObjEffect,
+    ExecDefinitionStmtResult, ExecStmtResult,
 };
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact};
 use crate::new_pipeline::ast::obj::{AtomObj, Identifier, Number, Obj};
-use crate::new_pipeline::ast::stmt::{DefinitionStmt, LetObjStmt, Stmt};
+use crate::new_pipeline::ast::stmt::{DefinitionStmt, Stmt};
 use crate::new_pipeline::execute::execute_fact_stmt::ExecFactStmtResult2;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 use crate::prelude;
@@ -22,14 +22,6 @@ impl Runtime {
                 "new_pipeline exec_stmt: only Fact and let are wired for the tracer".to_string(),
             )),
         }
-    }
-
-    fn exec_let_obj(&mut self, let_stmt: &LetObjStmt) -> RuntimeResult<ExecLetObjStmtResult> {
-        // Name occupancy happened at parse. ExecEnv definition storage later.
-        Ok(ExecLetObjStmtResult {
-            statement: let_stmt.clone(),
-            effect: LetObjEffect::empty(),
-        })
     }
 
     fn exec_fact(&mut self, fact: &Fact) -> RuntimeResult<ExecFactStmtResult2> {

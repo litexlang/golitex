@@ -1,3 +1,4 @@
+use crate::new_pipeline::ast::obj::Obj as AstObj;
 use crate::new_pipeline::runtime::runtime_ids::{FactId, WellDefinednessId};
 use crate::prelude::*;
 use std::collections::HashMap;
@@ -14,6 +15,9 @@ use std::collections::HashMap;
 /// available to the renderer without being merged into the parent implicitly.
 #[derive(Clone)]
 pub struct ExecEnv {
+    /// `let` object bindings in this scope (name → value + defining equality id).
+    pub let_bindings: HashMap<String, LetObjectBinding>,
+
     /// Definitions visible to statements executed in this scope.
     pub definitions: DefinitionMemory,
 
@@ -33,6 +37,13 @@ pub struct ExecEnv {
     /// explicitly allows storage; temporary builtin-rule searches therefore
     /// remain read-only.
     pub well_defined_objects: WellDefinedObjectMemory,
+}
+
+/// One `let name = value` binding stored in ExecEnv.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LetObjectBinding {
+    pub value: AstObj,
+    pub equality_fact_id: FactId,
 }
 
 /// The two-way index for well-defined objects owned by one scope.
@@ -108,12 +119,21 @@ pub enum SpecialObjProperty {
 impl ExecEnv {
     pub fn new() -> Self {
         Self {
+            let_bindings: HashMap::new(),
             definitions: DefinitionMemory::new(),
             facts: KnownFactMemory::new(),
             special_object_properties: HashMap::new(),
             prop_algebraic_properties: HashMap::new(),
             well_defined_objects: WellDefinedObjectMemory::new(),
         }
+    }
+
+    pub fn store_let_binding(&mut self, name: String, binding: LetObjectBinding) {
+        self.let_bindings.insert(name, binding);
+    }
+
+    pub fn lookup_let_binding(&self, name: &str) -> Option<&LetObjectBinding> {
+        self.let_bindings.get(name)
     }
 }
 
