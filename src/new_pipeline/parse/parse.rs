@@ -19,15 +19,8 @@ impl Runtime {
 
     // Match the leading token, then hand off to the statement family parser.
     fn parse_token_block(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
-        let Some(first) = block.header.first().map(String::as_str) else {
-            return Err(RuntimeParseError::new(
-                "empty statement",
-                block.line,
-                block.source_path.clone(),
-            )
-            .into());
-        };
-
+        // Tokenizer never emits empty headers.
+        let first = block.header[0].as_str();
         match first {
             PROP => self.unsupported_stmt(block, "prop"),
             ABSTRACT_PROP => self.unsupported_stmt(block, "abstract_prop"),

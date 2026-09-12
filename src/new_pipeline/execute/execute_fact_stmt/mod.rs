@@ -9,5 +9,5 @@ mod verify_obj_well_defined;
 mod verify_state;
 
 pub use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
-pub use result::ExecFactStmtResult2;
+pub use result::{ExecFactStmtResult2, StoreFactAndInferResult2};
 pub use verify_state::VerifyState2;

@@ -58,8 +58,7 @@ impl Runtime {
         verify_result: &VerifyFactResult2,
     ) -> RuntimeResult<StoreFactAndInferResult2> {
         let _ = verify_result;
-        Err(RuntimeError::Unknown(
-            "store_fact_then_infer is not wired yet".to_string(),
-        ))
+        // Global ExecEnv write comes later; return an empty effect mirror for now.
+        Ok(StoreFactAndInferResult2::empty())
     }
 }

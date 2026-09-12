@@ -7,7 +7,7 @@ impl Runtime {
         let token_blocks = Tokenizer::new().tokenize(code, self.current_file.clone())?;
         let stmts = self.parse(&token_blocks)?;
         for stmt in &stmts {
-            self.exec_stmt(stmt)?;
+            let _result = self.exec_stmt(stmt)?;
         }
         Ok(())
     }
