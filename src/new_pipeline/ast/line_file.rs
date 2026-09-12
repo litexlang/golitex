@@ -1,12 +1,12 @@
 use crate::new_pipeline::runtime::RealOrVirtualPath;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SourceSpan {
+pub struct LineFile {
     pub line: usize,
     pub path: RealOrVirtualPath,
 }
 
-impl SourceSpan {
+impl LineFile {
     pub fn new(line: usize, path: RealOrVirtualPath) -> Self {
         Self { line, path }
     }

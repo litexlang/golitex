@@ -1,9 +1,32 @@
-# new_pipeline native equality tracers (LITEX_NEW_PIPELINE=1)
+# new_pipeline parse gallery (LITEX_NEW_PIPELINE=1)
+# Goal: token → AST. Exec may stop early; smoke with -e one form at a time.
 
 let a = 2
 let sum = 1 + 2
 
 1 = 1
-a = 2
-sum = 1 + 2
-2 = a
+1 != 2
+1 < 2 < 3
+1 $in N
+{1, 2} $subset N
+$is_set(N)
+$p(1, 2)
+
+forall x R:
+    x = x
+
+exist y R st {y = 0}
+
+claim:
+    ? 1 = 1
+    1 = 1
+
+try:
+    1 = 1
+
+prop Q(x R):
+    x = x
+
+thm T:
+    ? forall z R:
+        z = z

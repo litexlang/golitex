@@ -4,7 +4,7 @@ use super::keywords::{
     STRONG_INDUC, STRUCT, TEMPLATE, THM, TRUST, TRY, TUPLE, WITNESS,
 };
 use crate::new_pipeline::ast::stmt::Stmt;
-use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeParseError, RuntimeResult};
+use crate::new_pipeline::runtime::{Runtime, RuntimeParseError, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
 
 impl Runtime {
@@ -18,40 +18,40 @@ impl Runtime {
     }
 
     // Match the leading token, then hand off to the statement family parser.
-    fn parse_token_block(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
+    pub(super) fn parse_token_block(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
         // Tokenizer never emits empty headers.
         let first = block.header[0].as_str();
         match first {
-            PROP => self.unsupported_stmt(block, "prop"),
-            ABSTRACT_PROP => self.unsupported_stmt(block, "abstract_prop"),
+            PROP => self.parse_def_prop_stmt(block),
+            ABSTRACT_PROP => self.parse_def_abstract_prop_stmt(block),
             LET => self.parse_let_stmt(block),
             HAVE => self.parse_have_dispatch(block),
-            OBTAIN => self.unsupported_stmt(block, "obtain"),
-            CLAIM => self.unsupported_stmt(block, "claim"),
-            EXAMPLE => self.unsupported_stmt(block, "example"),
-            THM => self.unsupported_stmt(block, "thm"),
-            AXIOM => self.unsupported_stmt(block, "axiom"),
-            STRATEGY => self.unsupported_stmt(block, "strategy"),
-            SKETCH => self.unsupported_stmt(block, "sketch"),
-            TRY => self.unsupported_stmt(block, "try"),
+            OBTAIN => self.parse_obtain_stmt(block),
+            CLAIM => self.parse_claim_stmt(block),
+            EXAMPLE => self.parse_example_stmt(block),
+            THM => self.parse_def_thm_stmt(block),
+            AXIOM => self.parse_axiom_stmt(block),
+            STRATEGY => self.parse_def_strategy_stmt(block),
+            SKETCH => self.parse_sketch_stmt(block),
+            TRY => self.parse_try_stmt(block),
             QUESTION_GOAL => Err(RuntimeParseError::new(
                 "top-level `?` is not supported; use it as a goal inside claim/example/thm/by/strategy",
                 block.line,
                 block.source_path.clone(),
             )
             .into()),
-            TRUST => self.unsupported_stmt(block, "trust"),
+            TRUST => self.parse_trust_stmt(block),
             IMPORT => Err(RuntimeParseError::new(
                 "`import` is not a Litex statement; declare dependencies in litex.config",
                 block.line,
                 block.source_path.clone(),
             )
             .into()),
-            EVAL => self.unsupported_stmt(block, "eval"),
-            WITNESS => self.unsupported_stmt(block, "witness"),
-            STRUCT => self.unsupported_stmt(block, "struct"),
-            TEMPLATE => self.unsupported_stmt(block, "template"),
-            SETTING => self.unsupported_stmt(block, "setting"),
+            EVAL => self.parse_eval_stmt(block),
+            WITNESS => self.parse_witness_stmt(block),
+            STRUCT => self.parse_def_struct_stmt(block),
+            TEMPLATE => self.parse_def_template_stmt(block),
+            SETTING => self.parse_def_setting_stmt(block),
             STRONG_INDUC => Err(RuntimeParseError::new(
                 "`strong_induc` is only valid after `by`",
                 block.line,
@@ -59,7 +59,7 @@ impl Runtime {
             )
             .into()),
             RELEASE => match block.header.get(1).map(String::as_str) {
-                Some(THM) => self.unsupported_stmt(block, "release thm"),
+                Some(THM) => self.parse_release_thm_stmt(block),
                 _ => Err(RuntimeParseError::new(
                     "release: expected `thm …`",
                     block.line,
@@ -67,7 +67,7 @@ impl Runtime {
                 )
                 .into()),
             },
-            BY => self.unsupported_stmt(block, "by"),
+            BY => self.parse_by_stmt(block),
             _ => self.parse_fact_stmt(block),
         }
     }
@@ -75,7 +75,12 @@ impl Runtime {
     fn parse_have_dispatch(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
         match block.header.get(1).map(String::as_str) {
             Some(ALGO) => match block.header.get(2).map(String::as_str) {
-                Some(FOR) => self.unsupported_stmt(block, "have algo for"),
+                Some(FOR) => Err(RuntimeParseError::new(
+                    "have algo for: not wired yet in new_pipeline",
+                    block.line,
+                    block.source_path.clone(),
+                )
+                .into()),
                 _ => Err(RuntimeParseError::new(
                     "have algo: expected `for …`",
                     block.line,
@@ -83,14 +88,49 @@ impl Runtime {
                 )
                 .into()),
             },
-            Some(TUPLE) => self.unsupported_stmt(block, "have tuple"),
-            Some(CART) => self.unsupported_stmt(block, "have cart"),
-            Some(SEQ) => self.unsupported_stmt(block, "have seq"),
-            Some(FINITE_SEQ) => self.unsupported_stmt(block, "have finite_seq"),
-            Some(MATRIX) => self.unsupported_stmt(block, "have matrix"),
-            Some(FN) => self.unsupported_stmt(block, "have fn"),
+            Some(TUPLE) => Err(RuntimeParseError::new(
+                "have tuple: not wired yet in new_pipeline",
+                block.line,
+                block.source_path.clone(),
+            )
+            .into()),
+            Some(CART) => Err(RuntimeParseError::new(
+                "have cart: not wired yet in new_pipeline",
+                block.line,
+                block.source_path.clone(),
+            )
+            .into()),
+            Some(SEQ) => Err(RuntimeParseError::new(
+                "have seq: not wired yet in new_pipeline",
+                block.line,
+                block.source_path.clone(),
+            )
+            .into()),
+            Some(FINITE_SEQ) => Err(RuntimeParseError::new(
+                "have finite_seq: not wired yet in new_pipeline",
+                block.line,
+                block.source_path.clone(),
+            )
+            .into()),
+            Some(MATRIX) => Err(RuntimeParseError::new(
+                "have matrix: not wired yet in new_pipeline",
+                block.line,
+                block.source_path.clone(),
+            )
+            .into()),
+            Some(FN) => Err(RuntimeParseError::new(
+                "have fn: not wired yet in new_pipeline",
+                block.line,
+                block.source_path.clone(),
+            )
+            .into()),
             Some(BY) => match block.header.get(2).map(String::as_str) {
-                Some(PREIMAGE) => self.unsupported_stmt(block, "have by preimage"),
+                Some(PREIMAGE) => Err(RuntimeParseError::new(
+                    "have by preimage: not wired yet in new_pipeline",
+                    block.line,
+                    block.source_path.clone(),
+                )
+                .into()),
                 _ => Err(RuntimeParseError::new(
                     "have by: expected `preimage`",
                     block.line,
@@ -104,14 +144,7 @@ impl Runtime {
                 block.source_path.clone(),
             )
             .into()),
-            Some(_) => self.unsupported_stmt(block, "have"),
+            Some(_) => self.parse_have_obj_stmt(block),
         }
-    }
-
-    fn unsupported_stmt(&self, block: &TokenBlock, kind: &str) -> RuntimeResult<Stmt> {
-        Err(RuntimeError::Unsupported(format!(
-            "parse: `{kind}` statements are not wired yet (line {} in {})",
-            block.line, block.source_path
-        )))
     }
 }

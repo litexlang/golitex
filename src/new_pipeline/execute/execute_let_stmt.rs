@@ -19,7 +19,7 @@ impl Runtime {
             equality_fact_id,
             let_stmt.name.clone(),
             let_stmt.value.clone(),
-            let_stmt.span.clone(),
+            let_stmt.line_file.clone(),
         );
 
         self.top_exec_env_mut().store_let_binding(

@@ -1,6 +1,6 @@
 use crate::new_pipeline::ast::fact::EqualFact;
 use crate::new_pipeline::ast::obj::{AtomObj, Obj};
-use crate::new_pipeline::ast::source_span::SourceSpan;
+use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::execution_environment::helper::{ast_obj_eq, ast_obj_key};
 use crate::new_pipeline::execute::execute_fact_stmt::result::{
     ExecFactStmtResult2, StoreFactAndInferResult2,
@@ -176,7 +176,7 @@ pub fn equal_fact_from_let(
     fact_id: crate::new_pipeline::runtime::FactId,
     name: String,
     value: Obj,
-    span: SourceSpan,
+    line_file: LineFile,
 ) -> EqualFact {
     EqualFact {
         fact_id,
@@ -184,6 +184,6 @@ pub fn equal_fact_from_let(
             crate::new_pipeline::ast::obj::Identifier { name },
         )),
         right: value,
-        span,
+        line_file,
     }
 }
