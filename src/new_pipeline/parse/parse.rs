@@ -1,14 +1,14 @@
-use crate::new_pipeline::runtime::{
-    RuntimeError, RuntimeParseError, RuntimeResult, Runtime,
+use super::keywords::{
+    ABSTRACT_PROP, ALGO, AXIOM, BY, CART, CLAIM, EVAL, EXAMPLE, FINITE_SEQ, FN, FOR, HAVE, IMPORT,
+    LET, MATRIX, OBTAIN, PREIMAGE, PROP, QUESTION_GOAL, RELEASE, SEQ, SETTING, SKETCH, STRATEGY,
+    STRONG_INDUC, STRUCT, TEMPLATE, THM, TRUST, TRY, TUPLE, WITNESS,
 };
+use crate::new_pipeline::ast::stmt::Stmt;
+use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeParseError, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
-use crate::prelude::*;
-use std::rc::Rc;
 
 impl Runtime {
-    /// Parse token blocks into statements.
-    ///
-    /// Tracer: equality facts with `+` of numbers, e.g. `1 + 1 = 2`.
+    /// Parse token blocks into new-pipeline statements.
     pub fn parse(&mut self, token_blocks: &[TokenBlock]) -> RuntimeResult<Vec<Stmt>> {
         let mut stmts = Vec::new();
         for block in token_blocks {
@@ -17,83 +17,108 @@ impl Runtime {
         Ok(stmts)
     }
 
+    // Match the leading token, then hand off to the statement family parser.
     fn parse_token_block(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
-        if !block.body.is_empty() {
-            return Err(RuntimeError::Unsupported(
-                "parse: indented blocks are not wired yet".to_string(),
-            ));
-        }
-
-        let line_file = (block.line, Rc::from(block.source_path.to_string()));
-        let tokens = &block.header;
-        let mut i = 0;
-        let left = parse_add_expr(tokens, &mut i, block)?;
-        if i >= tokens.len() || tokens[i] != "=" {
+        let Some(first) = block.header.first().map(String::as_str) else {
             return Err(RuntimeParseError::new(
-                "expected `=`",
+                "empty statement",
                 block.line,
                 block.source_path.clone(),
             )
             .into());
-        }
-        i += 1;
-        let right = parse_add_expr(tokens, &mut i, block)?;
-        if i != tokens.len() {
-            return Err(RuntimeParseError::new(
-                "trailing tokens",
-                block.line,
-                block.source_path.clone(),
-            )
-            .into());
-        }
-
-        let fact_id = crate::fact::id::FactId::new(self.ids.allocate_fact_id().value());
-        let equal = EqualFact {
-            fact_id,
-            left,
-            right,
-            line_file,
         };
-        let fact: Fact = equal.into();
-        Ok(fact.into())
-    }
-}
 
-fn parse_add_expr(
-    tokens: &[String],
-    i: &mut usize,
-    block: &TokenBlock,
-) -> RuntimeResult<Obj> {
-    let mut left = parse_number(tokens, i, block)?;
-    while *i < tokens.len() && tokens[*i] == "+" {
-        *i += 1;
-        let right = parse_number(tokens, i, block)?;
-        left = Add::new(left, right).into();
+        match first {
+            PROP => self.unsupported_stmt(block, "prop"),
+            ABSTRACT_PROP => self.unsupported_stmt(block, "abstract_prop"),
+            LET => self.parse_let_stmt(block),
+            HAVE => self.parse_have_dispatch(block),
+            OBTAIN => self.unsupported_stmt(block, "obtain"),
+            CLAIM => self.unsupported_stmt(block, "claim"),
+            EXAMPLE => self.unsupported_stmt(block, "example"),
+            THM => self.unsupported_stmt(block, "thm"),
+            AXIOM => self.unsupported_stmt(block, "axiom"),
+            STRATEGY => self.unsupported_stmt(block, "strategy"),
+            SKETCH => self.unsupported_stmt(block, "sketch"),
+            TRY => self.unsupported_stmt(block, "try"),
+            QUESTION_GOAL => Err(RuntimeParseError::new(
+                "top-level `?` is not supported; use it as a goal inside claim/example/thm/by/strategy",
+                block.line,
+                block.source_path.clone(),
+            )
+            .into()),
+            TRUST => self.unsupported_stmt(block, "trust"),
+            IMPORT => Err(RuntimeParseError::new(
+                "`import` is not a Litex statement; declare dependencies in litex.config",
+                block.line,
+                block.source_path.clone(),
+            )
+            .into()),
+            EVAL => self.unsupported_stmt(block, "eval"),
+            WITNESS => self.unsupported_stmt(block, "witness"),
+            STRUCT => self.unsupported_stmt(block, "struct"),
+            TEMPLATE => self.unsupported_stmt(block, "template"),
+            SETTING => self.unsupported_stmt(block, "setting"),
+            STRONG_INDUC => Err(RuntimeParseError::new(
+                "`strong_induc` is only valid after `by`",
+                block.line,
+                block.source_path.clone(),
+            )
+            .into()),
+            RELEASE => match block.header.get(1).map(String::as_str) {
+                Some(THM) => self.unsupported_stmt(block, "release thm"),
+                _ => Err(RuntimeParseError::new(
+                    "release: expected `thm …`",
+                    block.line,
+                    block.source_path.clone(),
+                )
+                .into()),
+            },
+            BY => self.unsupported_stmt(block, "by"),
+            _ => self.parse_fact_stmt(block),
+        }
     }
-    Ok(left)
-}
 
-fn parse_number(
-    tokens: &[String],
-    i: &mut usize,
-    block: &TokenBlock,
-) -> RuntimeResult<Obj> {
-    let Some(token) = tokens.get(*i) else {
-        return Err(RuntimeParseError::new(
-            "expected number",
-            block.line,
-            block.source_path.clone(),
-        )
-        .into());
-    };
-    if !token.chars().all(|c| c.is_ascii_digit()) {
-        return Err(RuntimeParseError::new(
-            format!("expected number, got `{token}`"),
-            block.line,
-            block.source_path.clone(),
-        )
-        .into());
+    fn parse_have_dispatch(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
+        match block.header.get(1).map(String::as_str) {
+            Some(ALGO) => match block.header.get(2).map(String::as_str) {
+                Some(FOR) => self.unsupported_stmt(block, "have algo for"),
+                _ => Err(RuntimeParseError::new(
+                    "have algo: expected `for …`",
+                    block.line,
+                    block.source_path.clone(),
+                )
+                .into()),
+            },
+            Some(TUPLE) => self.unsupported_stmt(block, "have tuple"),
+            Some(CART) => self.unsupported_stmt(block, "have cart"),
+            Some(SEQ) => self.unsupported_stmt(block, "have seq"),
+            Some(FINITE_SEQ) => self.unsupported_stmt(block, "have finite_seq"),
+            Some(MATRIX) => self.unsupported_stmt(block, "have matrix"),
+            Some(FN) => self.unsupported_stmt(block, "have fn"),
+            Some(BY) => match block.header.get(2).map(String::as_str) {
+                Some(PREIMAGE) => self.unsupported_stmt(block, "have by preimage"),
+                _ => Err(RuntimeParseError::new(
+                    "have by: expected `preimage`",
+                    block.line,
+                    block.source_path.clone(),
+                )
+                .into()),
+            },
+            None => Err(RuntimeParseError::new(
+                "have: expected object definition, `fn`, or `by preimage`",
+                block.line,
+                block.source_path.clone(),
+            )
+            .into()),
+            Some(_) => self.unsupported_stmt(block, "have"),
+        }
     }
-    *i += 1;
-    Ok(Number::new(token.clone()).into())
+
+    fn unsupported_stmt(&self, block: &TokenBlock, kind: &str) -> RuntimeResult<Stmt> {
+        Err(RuntimeError::Unsupported(format!(
+            "parse: `{kind}` statements are not wired yet (line {} in {})",
+            block.line, block.source_path
+        )))
+    }
 }

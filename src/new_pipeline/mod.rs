@@ -5,6 +5,7 @@
 //! unset.  Submodules own the new runtime, command dispatch, tokenization,
 //! parse, execute, environment, and module-manager boundaries.
 
+pub mod ast;
 pub mod execute;
 pub mod execution_environment;
 pub mod module_manager;

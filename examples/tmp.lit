@@ -1,3 +1,6 @@
-# Tracer for new_pipeline: tokenize → parse → exec → verify.
-# Expected under LITEX_NEW_PIPELINE=1: Unknown (WD / search_proof not wired).
+# Parse tracers for new_pipeline (LITEX_NEW_PIPELINE=1).
+# let: parse + occupy name; exec storage not wired yet (accepted no-op).
+let x = 1
+
+# fact: equality with numbers / names / +
 1 + 1 = 2
