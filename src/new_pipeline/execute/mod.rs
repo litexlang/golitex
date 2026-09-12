@@ -5,7 +5,6 @@ pub mod execute_fact_stmt;
 mod execute_let_stmt;
 
 pub use exec_stmt_result::{
-    DefPropEffect, DefPropWellDefinedResult, ExecDefPropStmtResult, ExecDefinitionStmtResult,
-    ExecLetObjStmtResult, ExecStmtResult, LetObjEffect, LetObjWellDefinedResult,
+    ExecDefPropStmtResult, ExecDefinitionStmtResult, ExecLetObjStmtResult, ExecStmtResult,
 };
 pub use execute_fact_stmt::{ExecFactStmtResult, VerifyState2};
