@@ -1,5 +1,5 @@
 use super::symbols::{
-    key_symbols_sorted_by_len_desc, unicode_alias_tokens, C_NOT_ZERO, COLON, DOUBLE_QUOTE,
+    key_symbols_sorted_by_len_desc, unicode_alias_tokens, C_NOT_ZERO, COLON,
     N_POSITIVE, Q_NEGATIVE, Q_NOT_ZERO, Q_POSITIVE, R_NEGATIVE, R_NOT_ZERO, R_POSITIVE,
     UNICODE_C_NOT_ZERO, UNICODE_N_POSITIVE, UNICODE_Q_NEGATIVE, UNICODE_Q_NOT_ZERO,
     UNICODE_Q_POSITIVE, UNICODE_R_NEGATIVE, UNICODE_R_NOT_ZERO, UNICODE_R_POSITIVE,
@@ -27,6 +27,46 @@ impl Tokenizer {
         let lines: Vec<&str> = stripped.lines().collect();
         let mut index = 0;
         self.parse_level(&lines, &mut index, 0, &source_path)
+    }
+
+    // Skip ASCII `"..."` inline asides. They are not tokens and must not cross lines.
+    fn strip_inline_asides(
+        &self,
+        line: &str,
+        line_no: usize,
+        source_path: &RealOrVirtualPath,
+    ) -> RuntimeResult<String> {
+        let mut out = String::with_capacity(line.len());
+        let mut i = 0;
+        let bytes = line.as_bytes();
+        while i < bytes.len() {
+            if bytes[i] == b'"' {
+                i += 1;
+                let mut closed = false;
+                while i < bytes.len() {
+                    if bytes[i] == b'"' {
+                        i += 1;
+                        closed = true;
+                        break;
+                    }
+                    let ch = line[i..].chars().next().unwrap_or('\0');
+                    i += ch.len_utf8();
+                }
+                if !closed {
+                    return Err(RuntimeParseError::new(
+                        "unclosed inline aside `\"...\"`",
+                        line_no,
+                        source_path.clone(),
+                    )
+                    .into());
+                }
+                continue;
+            }
+            let ch = line[i..].chars().next().unwrap_or('\0');
+            out.push(ch);
+            i += ch.len_utf8();
+        }
+        Ok(out)
     }
 
     fn tokenize_line(&self, line: &str) -> Vec<String> {
@@ -112,14 +152,8 @@ impl Tokenizer {
         }
 
         let mut canonical_tokens = Vec::with_capacity(tokens.len());
-        let mut inside_double_quotes = false;
         for token in tokens {
-            if token == DOUBLE_QUOTE {
-                inside_double_quotes = !inside_double_quotes;
-                canonical_tokens.push(token);
-            } else if inside_double_quotes {
-                canonical_tokens.push(token);
-            } else if let Some(alias_tokens) = unicode_alias_tokens(token.as_str()) {
+            if let Some(alias_tokens) = unicode_alias_tokens(token.as_str()) {
                 canonical_tokens.extend(alias_tokens.iter().map(|token| (*token).to_string()));
             } else {
                 canonical_tokens.push(token);
@@ -188,6 +222,13 @@ impl Tokenizer {
             }
 
             *i += 1;
+            // Strip `"..."` asides before structure checks and tokenization.
+            let content = self.strip_inline_asides(content, line_no, source_path)?;
+            let content = content.trim();
+            if content.is_empty() {
+                continue;
+            }
+
             let header_tokens = self.tokenize_line(content);
             if header_tokens.is_empty() {
                 continue;
@@ -357,5 +398,47 @@ mod tests {
                 .map(str::to_string)
                 .collect::<Vec<_>>()
         );
+    }
+
+    #[test]
+    fn strips_inline_aside_quotes() {
+        let source = "forall a R:\n    \"我们有\" a ^ 2 >= 0\n";
+        let blocks = Tokenizer::new()
+            .tokenize(source, RealOrVirtualPath::Eval)
+            .expect("tokenize");
+        assert_eq!(blocks.len(), 1);
+        assert_eq!(
+            blocks[0].body[0].header,
+            vec!["a", "^", "2", ">=", "0"]
+                .into_iter()
+                .map(str::to_string)
+                .collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn aside_after_colon_still_opens_block() {
+        let source = "forall a R: \"note\"\n    a = a\n";
+        let blocks = Tokenizer::new()
+            .tokenize(source, RealOrVirtualPath::Eval)
+            .expect("tokenize");
+        assert_eq!(blocks.len(), 1);
+        assert_eq!(
+            blocks[0].header,
+            vec!["forall", "a", "R", ":"]
+                .into_iter()
+                .map(str::to_string)
+                .collect::<Vec<_>>()
+        );
+        assert_eq!(blocks[0].body.len(), 1);
+    }
+
+    #[test]
+    fn unclosed_inline_aside_is_error() {
+        let err = Tokenizer::new()
+            .tokenize("1 = 1 \"oops", RealOrVirtualPath::Eval)
+            .expect_err("unclosed aside");
+        let msg = format!("{err:?}");
+        assert!(msg.contains("unclosed inline aside"), "{msg}");
     }
 }

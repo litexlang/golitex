@@ -1,4 +1,4 @@
-use super::result::{ExecFactStmtResult2, StoreFactAndInferResult2};
+use super::result::{ExecFactStmtResult, StoreFactAndInferResult2};
 use super::verify_atomic_fact::VerifyAtomicFactResult2;
 use super::verify_fact_result::VerifyFactResult2;
 use super::VerifyState2;
@@ -9,7 +9,7 @@ impl Runtime {
     pub fn execute_fact_statement2(
         &mut self,
         fact: &Fact,
-    ) -> RuntimeResult<ExecFactStmtResult2> {
+    ) -> RuntimeResult<ExecFactStmtResult> {
         let verify_state = VerifyState2 {
             can_use_forall_fact: true,
             can_use_known_algebraic_rewrite: true,
@@ -17,7 +17,7 @@ impl Runtime {
         };
         let verify_result = self.verify_fact2(fact, verify_state)?;
         let store_and_infer_result = self.store_fact_then_infer(&verify_result)?;
-        Ok(ExecFactStmtResult2 {
+        Ok(ExecFactStmtResult {
             verify_result,
             store_and_infer_result,
         })

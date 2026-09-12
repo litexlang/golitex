@@ -56,7 +56,6 @@ pub fn key_symbols_sorted_by_len_desc() -> Vec<&'static str> {
         ">",
         "[",
         "]",
-        "\"",
         ":",
         ".",
         "?",
@@ -74,7 +73,6 @@ pub fn key_symbols_sorted_by_len_desc() -> Vec<&'static str> {
 }
 
 pub const COLON: &str = ":";
-pub const DOUBLE_QUOTE: &str = "\"";
 
 pub const N_POSITIVE: &str = "N+";
 pub const Z_POSITIVE: &str = "Z+";

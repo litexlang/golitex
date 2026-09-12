@@ -15,6 +15,11 @@ $p(1, 2)
 forall x R:
     x = x
 
+# inline aside is stripped at tokenize time
+"我们有" 1 = 1
+forall a R: "note"
+    a = a
+
 exist y R st {y = 0}
 
 claim:

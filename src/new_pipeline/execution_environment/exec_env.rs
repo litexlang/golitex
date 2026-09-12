@@ -1,5 +1,6 @@
 use crate::new_pipeline::ast::fact::EqualFact;
 use crate::new_pipeline::ast::obj::Obj as AstObj;
+use crate::new_pipeline::ast::stmt::DefPropStmt as NewDefPropStmt;
 use crate::new_pipeline::execution_environment::helper::ast_obj_eq;
 use crate::new_pipeline::runtime::runtime_ids::{FactId, WellDefinednessId};
 use crate::prelude::*;
@@ -70,7 +71,7 @@ pub struct DefinitionMemory {
     /// Canonical symbol table used for name and identity resolution.
     pub symbols: HashMap<SymbolId, String>,
 
-    pub predicate_definitions: HashMap<PropName, DefPropStmt>,
+    pub predicate_definitions: HashMap<PropName, NewDefPropStmt>,
     pub abstract_predicate_definitions: HashMap<AbstractPropName, DefAbstractPropStmt>,
     pub algorithm_definitions: HashMap<AlgoName, DefAlgoStmt>,
     pub structure_definitions: HashMap<StructName, DefStructStmt>,
@@ -176,6 +177,16 @@ impl ExecEnv {
 
     pub fn record_native_wd(&mut self, object_key: String, wd_id: WellDefinednessId) {
         self.native_well_defined.entry(object_key).or_insert(wd_id);
+    }
+
+    pub fn lookup_def_prop(&self, name: &str) -> Option<&NewDefPropStmt> {
+        self.definitions.predicate_definitions.get(name)
+    }
+
+    pub fn store_def_prop(&mut self, def_prop: NewDefPropStmt) {
+        self.definitions
+            .predicate_definitions
+            .insert(def_prop.name.clone(), def_prop);
     }
 }
 
