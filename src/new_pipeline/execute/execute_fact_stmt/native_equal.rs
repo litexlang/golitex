@@ -3,7 +3,7 @@ use crate::new_pipeline::ast::obj::{AtomObj, Obj};
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::execution_environment::helper::{ast_obj_eq, ast_obj_key};
 use crate::new_pipeline::execute::execute_fact_stmt::result::{
-    ExecFactStmtResult2, StoreFactAndInferResult2,
+    ExecFactStmtResult, StoreFactAndInferResult2,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult2;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState2;
@@ -42,7 +42,7 @@ impl Runtime {
     pub(crate) fn exec_native_equal_fact(
         &mut self,
         fact: &EqualFact,
-    ) -> RuntimeResult<ExecFactStmtResult2> {
+    ) -> RuntimeResult<ExecFactStmtResult> {
         let verify_state = VerifyState2 {
             can_use_forall_fact: true,
             can_use_known_algebraic_rewrite: true,
@@ -50,7 +50,7 @@ impl Runtime {
         };
         let verify_result = self.verify_native_equal_fact(fact, verify_state)?;
         let store_and_infer_result = self.store_native_equal_fact(&verify_result.fact)?;
-        Ok(ExecFactStmtResult2 {
+        Ok(ExecFactStmtResult {
             verify_result: VerifyFactResult2::NativeEqual(verify_result),
             store_and_infer_result,
         })

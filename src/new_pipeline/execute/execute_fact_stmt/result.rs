@@ -1,8 +1,9 @@
 use super::verify_fact_result::VerifyFactResult2;
 use crate::new_pipeline::runtime::FactId;
 
-// Fact statement exec result: proof track + global env effect mirror.
-pub struct ExecFactStmtResult2 {
+// Pipeline: verify (how it ran) → store + infer (global env effect mirror).
+// Local binder envs, if any, live on verify sub-nodes — not here.
+pub struct ExecFactStmtResult {
     pub verify_result: VerifyFactResult2,
     pub store_and_infer_result: StoreFactAndInferResult2,
 }

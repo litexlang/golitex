@@ -122,6 +122,40 @@ impl Runtime {
             .last_mut()
             .expect("no ExecEnv")
     }
+
+    // Child ExecEnv for a statement-local binder / WD scope. Uses the existing stack.
+    pub fn push_local_exec_env(&mut self) {
+        self.execution_environments_stack
+            .push(Box::new(ExecEnv::new()));
+    }
+
+    pub fn pop_local_exec_env(&mut self) -> Box<ExecEnv> {
+        if self.execution_environments_stack.len() <= 1 {
+            panic!("pop_local_exec_env: refusing to pop the file ExecEnv");
+        }
+        self.execution_environments_stack
+            .pop()
+            .expect("no local ExecEnv")
+    }
+
+    // Run `f` in a fresh local ExecEnv; on success return (value, closed local env).
+    // On error the local env is discarded.
+    pub fn run_in_local_env_and_take<T, F>(&mut self, f: F) -> RuntimeResult<(T, Box<ExecEnv>)>
+    where
+        F: FnOnce(&mut Self) -> RuntimeResult<T>,
+    {
+        self.push_local_exec_env();
+        match f(self) {
+            Ok(value) => {
+                let local_env = self.pop_local_exec_env();
+                Ok((value, local_env))
+            }
+            Err(err) => {
+                let _ = self.pop_local_exec_env();
+                Err(err)
+            }
+        }
+    }
 }
 
 impl ParseScope {
