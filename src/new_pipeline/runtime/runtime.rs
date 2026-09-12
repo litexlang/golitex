@@ -110,6 +110,18 @@ impl Runtime {
         scope.occupied.insert(name);
         Ok(())
     }
+
+    pub fn top_exec_env(&self) -> &ExecEnv {
+        self.execution_environments_stack
+            .last()
+            .expect("no ExecEnv")
+    }
+
+    pub fn top_exec_env_mut(&mut self) -> &mut ExecEnv {
+        self.execution_environments_stack
+            .last_mut()
+            .expect("no ExecEnv")
+    }
 }
 
 impl ParseScope {
