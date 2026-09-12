@@ -1,13 +1,14 @@
-use super::exec_stmt_result::{
-    DefPropEffect, DefPropWellDefinedResult, ExecDefPropStmtResult,
-};
+use super::exec_stmt_result::ExecDefPropStmtResult;
 use crate::new_pipeline::ast::stmt::DefPropStmt;
+use crate::new_pipeline::execute::execute_fact_stmt::{
+    FactWellDefinedProof, ParamTypeWellDefinedProof, VerifyState2,
+};
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
 impl Runtime {
     // prop name(...): body
     // 1. open local env
-    // 2. well-defined in that local env
+    // 2. well-defined in that local env (param types, then iff-facts)
     // 3. close local env into the result
     // 4. affect global env (store the prop definition)
     pub(super) fn exec_def_prop_stmt(
@@ -16,17 +17,19 @@ impl Runtime {
     ) -> RuntimeResult<ExecDefPropStmtResult> {
         self.ensure_def_prop_name_free(&def_prop.name)?;
 
-        let (well_defined, local_env) = self.run_in_local_env_and_take(|rt| {
-            rt.exec_def_prop_stmt_well_defined_in_local(def_prop)
-        })?;
+        let ((param_type_well_defined, iff_fact_well_defined), local_env) =
+            self.run_in_local_env_and_take(|rt| {
+                rt.exec_def_prop_stmt_well_defined_in_local(def_prop)
+            })?;
 
-        let effect = self.exec_def_prop_stmt_affect_env(def_prop)?;
+        self.top_exec_env_mut().store_def_prop(def_prop.clone());
 
         Ok(ExecDefPropStmtResult {
             statement: def_prop.clone(),
-            well_defined,
+            param_type_well_defined,
+            iff_fact_well_defined,
             local_env,
-            effect,
+            prop_name: def_prop.name.clone(),
         })
     }
 
@@ -49,23 +52,27 @@ impl Runtime {
         Ok(())
     }
 
-    // Tracer: local phase is opened; full parameter/body WD comes later.
     fn exec_def_prop_stmt_well_defined_in_local(
         &mut self,
         def_prop: &DefPropStmt,
-    ) -> RuntimeResult<DefPropWellDefinedResult> {
-        let _ = def_prop;
-        let _ = self.top_exec_env();
-        Ok(DefPropWellDefinedResult {})
-    }
+    ) -> RuntimeResult<(Vec<ParamTypeWellDefinedProof>, Vec<FactWellDefinedProof>)> {
+        let verify_state = VerifyState2 {
+            can_use_forall_fact: true,
+            can_use_known_algebraic_rewrite: true,
+            store_well_defined_fact: true,
+        };
 
-    fn exec_def_prop_stmt_affect_env(
-        &mut self,
-        def_prop: &DefPropStmt,
-    ) -> RuntimeResult<DefPropEffect> {
-        self.top_exec_env_mut().store_def_prop(def_prop.clone());
-        Ok(DefPropEffect {
-            prop_name: def_prop.name.clone(),
-        })
+        let param_type_well_defined = self.verify_typed_parameters_well_definedness(
+            &def_prop.typed_parameters,
+            verify_state.clone(),
+        )?;
+
+        let mut iff_fact_well_defined = Vec::new();
+        for fact in &def_prop.iff_facts {
+            iff_fact_well_defined
+                .push(self.verify_fact_well_definedness(fact, verify_state.clone())?);
+        }
+
+        Ok((param_type_well_defined, iff_fact_well_defined))
     }
 }

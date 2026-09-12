@@ -9,7 +9,12 @@ mod verify_atomic_fact;
 mod verify_fact_result;
 mod verify_obj_well_defined;
 mod verify_state;
+pub mod verify_well_defined;
 
 pub use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 pub use result::{ExecFactStmtResult, StoreFactAndInferResult2};
 pub use verify_state::VerifyState2;
+pub use verify_well_defined::{
+    AtomicFactWellDefinedProof, FactWellDefinedProof, ObjWellDefinedProofByDef,
+    ParamTypeWellDefinedProof, VerifyObjResult,
+};
