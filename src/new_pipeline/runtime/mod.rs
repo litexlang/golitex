@@ -6,6 +6,4 @@ pub mod runtime_ids;
 
 pub use error::{RuntimeError, RuntimeResult};
 pub use runtime::{Ids, ParseScope, RealOrVirtualPath, Runtime};
-pub use runtime_ids::{
-    AtomId, FactId, PropAlgebraicPropertyId, SymbolId, WellDefinednessId,
-};
+pub use runtime_ids::{FactId, PropAlgebraicPropertyId, SymbolId, WellDefinednessId};

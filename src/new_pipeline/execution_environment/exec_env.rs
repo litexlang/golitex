@@ -1,4 +1,4 @@
-use crate::new_pipeline::runtime::runtime_ids::{AtomId, FactId, WellDefinednessId};
+use crate::new_pipeline::runtime::runtime_ids::{FactId, WellDefinednessId};
 use crate::prelude::*;
 use std::collections::HashMap;
 
@@ -14,9 +14,6 @@ use std::collections::HashMap;
 /// available to the renderer without being merged into the parent implicitly.
 #[derive(Clone)]
 pub struct ExecEnv {
-    /// Atoms introduced in this scope, indexed by their stable local ids.
-    pub atoms_by_id: HashMap<AtomId, String>,
-
     /// Definitions visible to statements executed in this scope.
     pub definitions: DefinitionMemory,
 
@@ -111,7 +108,6 @@ pub enum SpecialObjProperty {
 impl ExecEnv {
     pub fn new() -> Self {
         Self {
-            atoms_by_id: HashMap::new(),
             definitions: DefinitionMemory::new(),
             facts: KnownFactMemory::new(),
             special_object_properties: HashMap::new(),
