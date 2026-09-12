@@ -1,4 +1,6 @@
+use crate::new_pipeline::ast::fact::EqualFact;
 use crate::new_pipeline::ast::obj::Obj as AstObj;
+use crate::new_pipeline::execution_environment::helper::ast_obj_eq;
 use crate::new_pipeline::runtime::runtime_ids::{FactId, WellDefinednessId};
 use crate::prelude::*;
 use std::collections::HashMap;
@@ -17,6 +19,12 @@ use std::collections::HashMap;
 pub struct ExecEnv {
     /// `let` object bindings in this scope (name → value + defining equality id).
     pub let_bindings: HashMap<String, LetObjectBinding>,
+
+    /// Equality facts proved (or introduced by `let`) in this scope — new_pipeline AST.
+    pub native_equal_facts: HashMap<FactId, EqualFact>,
+
+    /// Well-definedness records for new_pipeline Ast objects in this scope.
+    pub native_well_defined: HashMap<String, WellDefinednessId>,
 
     /// Definitions visible to statements executed in this scope.
     pub definitions: DefinitionMemory,
@@ -120,6 +128,8 @@ impl ExecEnv {
     pub fn new() -> Self {
         Self {
             let_bindings: HashMap::new(),
+            native_equal_facts: HashMap::new(),
+            native_well_defined: HashMap::new(),
             definitions: DefinitionMemory::new(),
             facts: KnownFactMemory::new(),
             special_object_properties: HashMap::new(),
@@ -134,6 +144,38 @@ impl ExecEnv {
 
     pub fn lookup_let_binding(&self, name: &str) -> Option<&LetObjectBinding> {
         self.let_bindings.get(name)
+    }
+
+    pub fn store_native_equal_fact(&mut self, fact: EqualFact) {
+        self.native_equal_facts.insert(fact.fact_id, fact);
+    }
+
+    pub fn lookup_native_equal_fact(&self, fact_id: FactId) -> Option<&EqualFact> {
+        self.native_equal_facts.get(&fact_id)
+    }
+
+    pub fn find_native_equal(
+        &self,
+        left: &AstObj,
+        right: &AstObj,
+    ) -> Option<FactId> {
+        for (id, fact) in &self.native_equal_facts {
+            if ast_obj_eq(&fact.left, left) && ast_obj_eq(&fact.right, right) {
+                return Some(*id);
+            }
+            if ast_obj_eq(&fact.left, right) && ast_obj_eq(&fact.right, left) {
+                return Some(*id);
+            }
+        }
+        None
+    }
+
+    pub fn lookup_native_wd(&self, object_key: &str) -> Option<WellDefinednessId> {
+        self.native_well_defined.get(object_key).copied()
+    }
+
+    pub fn record_native_wd(&mut self, object_key: String, wd_id: WellDefinednessId) {
+        self.native_well_defined.entry(object_key).or_insert(wd_id);
     }
 }
 

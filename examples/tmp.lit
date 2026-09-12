@@ -1,3 +1,9 @@
-# new_pipeline tracer (LITEX_NEW_PIPELINE=1)
+# new_pipeline native equality tracers (LITEX_NEW_PIPELINE=1)
+
 let a = 2
-let x = 1 + 2
+let sum = 1 + 2
+
+1 = 1
+a = 2
+sum = 1 + 2
+2 = a

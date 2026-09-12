@@ -1,6 +1,8 @@
 //! Fact-statement execution: verify, then store and infer.
 
 mod cache_search_proof;
+mod native_equal;
+pub use native_equal::equal_fact_from_let;
 mod result;
 mod verify;
 mod verify_atomic_fact;
