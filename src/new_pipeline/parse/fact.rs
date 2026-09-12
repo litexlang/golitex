@@ -1,17 +1,15 @@
 use super::keywords::{
-    AND, EQUAL, EXIST, EXIST_BANG, FACT_PREFIX, FORALL, IN, is_comparison_op, NOT, OR,
-    RIGHT_ARROW,
+    AND, EQUIVALENT_SIGN, EXIST, EXIST_BANG, FACT_PREFIX, FORALL, IN, is_comparison_op, MOD_SIGN,
+    NOT, OR, RIGHT_ARROW,
 };
-use super::object::parse_obj;
+use super::object::{parse_obj, parse_obj_list_paren};
+use super::fact_prop::is_infix_prop_name;
 use crate::new_pipeline::ast::fact::{
-    AndChainAtomicFact, AndFact, AtomicFact, ChainAtomicFact, ChainFact, EqualFact, ExistFact,
-    ExistOrAndChainAtomicFact, Fact, ForallFact, GreaterEqualFact, GreaterFact, InFact, LessEqualFact,
-    LessFact, NotEqualFact, NotForallFact, NotGreaterEqualFact, NotGreaterFact, NotInFact,
-    NotLessEqualFact, NotLessFact, OrFact, PlainExistFact, QuantifierFreeFact,
+    AndChainAtomicFact, AndFact, AtomicFact, ChainAtomicFact, ChainFact, ExistFact,
+    ExistOrAndChainAtomicFact, Fact, ForallFact, ForallFactWithIff, NotForallFact, OrFact,
+    PlainExistFact, QuantifierFreeFact,
 };
 use crate::new_pipeline::ast::names::AtomicName;
-use crate::new_pipeline::ast::obj::Obj;
-use crate::new_pipeline::ast::source_span::SourceSpan;
 use crate::new_pipeline::ast::stmt::Stmt;
 use crate::new_pipeline::runtime::{Runtime, RuntimeParseError, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -107,15 +105,80 @@ impl Runtime {
                 .into());
             }
 
-            let last_is_arrow = tb
+            let last_header = tb
                 .body
                 .last()
                 .and_then(|b| b.header.first())
-                .map(String::as_str)
-                == Some(RIGHT_ARROW);
+                .map(String::as_str);
+            let last_is_arrow = last_header == Some(RIGHT_ARROW);
+            let last_is_iff = last_header == Some(EQUIVALENT_SIGN);
 
             let mut dom_facts = Vec::new();
             let mut then_facts = Vec::new();
+
+            if last_is_iff {
+                let n = tb.body.len();
+                if n < 2 {
+                    return Err(RuntimeParseError::new(
+                        "forall with `<=>:` expects a `=>:` block before it",
+                        tb.line,
+                        tb.source_path.clone(),
+                    )
+                    .into());
+                }
+                let then_header = tb.body[n - 2]
+                    .header
+                    .first()
+                    .map(String::as_str);
+                if then_header != Some(RIGHT_ARROW) {
+                    return Err(RuntimeParseError::new(
+                        "forall with `<=>:` expects the previous block to be `=>:`",
+                        tb.line,
+                        tb.source_path.clone(),
+                    )
+                    .into());
+                }
+                for block in tb.body.iter().take(n - 2) {
+                    let mut child = block.clone();
+                    dom_facts.push(self.parse_fact(&mut child)?);
+                }
+                let mut then_block = tb.body[n - 2].clone();
+                then_block.expect(RIGHT_ARROW)?;
+                then_block.expect(super::keywords::COLON)?;
+                for block in &then_block.body {
+                    let mut child = block.clone();
+                    then_facts.push(self.parse_exist_or_and_chain_atomic_fact(&mut child)?);
+                }
+                let mut iff_block = tb.body[n - 1].clone();
+                iff_block.expect(EQUIVALENT_SIGN)?;
+                iff_block.expect(super::keywords::COLON)?;
+                let mut iff_facts = Vec::new();
+                for block in &iff_block.body {
+                    let mut child = block.clone();
+                    iff_facts.push(self.parse_exist_or_and_chain_atomic_fact(&mut child)?);
+                }
+                if then_facts.is_empty() {
+                    return Err(RuntimeParseError::new(
+                        "forall expects at least one conclusion fact",
+                        tb.line,
+                        tb.source_path.clone(),
+                    )
+                    .into());
+                }
+                let forall_fact = ForallFact {
+                    fact_id: self.ids.allocate_fact_id(),
+                    typed_parameters: params,
+                    dom_facts,
+                    then_facts,
+                    line_file: tb.line_file(),
+                };
+                return Ok(Fact::ForallFactWithIff(ForallFactWithIff {
+                    fact_id: self.ids.allocate_fact_id(),
+                    forall_fact,
+                    iff_facts,
+                    line_file: tb.line_file(),
+                }));
+            }
 
             if last_is_arrow {
                 let n = tb.body.len();
@@ -159,14 +222,14 @@ impl Runtime {
                 typed_parameters: params,
                 dom_facts,
                 then_facts,
-                span: tb.span(),
+                line_file: tb.line_file(),
             }))
         })();
         self.pop_parse_scope();
         result
     }
 
-    fn parse_exist_fact(&mut self, tb: &mut TokenBlock) -> RuntimeResult<ExistFact> {
+    pub(super) fn parse_exist_fact(&mut self, tb: &mut TokenBlock) -> RuntimeResult<ExistFact> {
         self.push_parse_scope();
         let result = (|| {
             let unique = match tb.peek() {
@@ -235,7 +298,7 @@ impl Runtime {
                 fact_id: self.ids.allocate_fact_id(),
                 typed_parameters: params,
                 facts,
-                span: tb.span(),
+                line_file: tb.line_file(),
             };
             Ok(if unique {
                 ExistFact::ExistUniqueFact(body)
@@ -289,7 +352,7 @@ impl Runtime {
         }
     }
 
-    fn parse_quantifier_free_fact_top(
+    pub(super) fn parse_quantifier_free_fact_top(
         &mut self,
         tb: &mut TokenBlock,
     ) -> RuntimeResult<QuantifierFreeFact> {
@@ -333,11 +396,27 @@ impl Runtime {
         Ok(QuantifierFreeFact::OrFact(OrFact {
             fact_id: self.ids.allocate_fact_id(),
             facts: list,
-            span: tb.span(),
+            line_file: tb.line_file(),
         }))
     }
 
-    fn parse_and_chain_atomic_fact(
+    pub(super) fn parse_atomic_fact(
+        &mut self,
+        tb: &mut TokenBlock,
+        positive: bool,
+    ) -> RuntimeResult<AtomicFact> {
+        match self.parse_chain_or_atomic(tb, positive)? {
+            ChainAtomicFact::AtomicFact(a) => Ok(a),
+            ChainAtomicFact::ChainFact(_) => Err(RuntimeParseError::new(
+                "expected a single atomic fact (one operator)",
+                tb.line,
+                tb.source_path.clone(),
+            )
+            .into()),
+        }
+    }
+
+    pub(super) fn parse_and_chain_atomic_fact(
         &mut self,
         tb: &mut TokenBlock,
     ) -> RuntimeResult<AndChainAtomicFact> {
@@ -366,25 +445,40 @@ impl Runtime {
                     Ok(AndChainAtomicFact::AndFact(AndFact {
                         fact_id: self.ids.allocate_fact_id(),
                         facts: collected,
-                        span: tb.span(),
+                        line_file: tb.line_file(),
                     }))
                 }
             }
         }
     }
 
-    // obj op obj [op obj…] or `$in` membership / `$prop` (prop args deferred).
+    // Case arms may start with `not`.
+    pub(super) fn parse_and_chain_atomic_fact_allow_not(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> RuntimeResult<AndChainAtomicFact> {
+        if tb.peek() == Some(NOT) {
+            tb.advance()?;
+            Ok(AndChainAtomicFact::AtomicFact(
+                self.parse_atomic_fact(tb, false)?,
+            ))
+        } else {
+            self.parse_and_chain_atomic_fact(tb)
+        }
+    }
+
+    // obj op obj [op obj…] / `$prop(...)` / infix `$in` `$subset` …
     fn parse_chain_or_atomic(
         &mut self,
         tb: &mut TokenBlock,
         positive: bool,
     ) -> RuntimeResult<ChainAtomicFact> {
-        let span = tb.span();
+        let line_file = tb.line_file();
 
         if tb.peek() == Some(FACT_PREFIX) {
             tb.advance()?;
-            let prop = tb.advance()?;
-            if prop == IN {
+            let prop = self.parse_prop_name(tb)?;
+            if matches!(&prop, AtomicName::WithoutMod(s) if s == IN) {
                 return Err(RuntimeParseError::new(
                     "leading `$in` is invalid; write `x $in S`",
                     tb.line,
@@ -392,12 +486,9 @@ impl Runtime {
                 )
                 .into());
             }
-            return Err(RuntimeParseError::new(
-                format!("named prop `${prop}` is not wired yet in new_pipeline"),
-                tb.line,
-                tb.source_path.clone(),
-            )
-            .into());
+            let args = parse_obj_list_paren(tb)?;
+            let atomic = self.atomic_from_prop(prop, args, positive, line_file)?;
+            return Ok(ChainAtomicFact::AtomicFact(atomic));
         }
 
         let first = parse_obj(tb)?;
@@ -410,38 +501,65 @@ impl Runtime {
             };
             if tok == FACT_PREFIX {
                 tb.advance()?;
-                let prop = tb.advance()?;
-                if prop != IN {
+                let prop = self.parse_prop_name(tb)?;
+                let prop_str = match &prop {
+                    AtomicName::WithoutMod(s) => s.as_str(),
+                    AtomicName::WithMod(_, _) => {
+                        return Err(RuntimeParseError::new(
+                            "mod-qualified infix `$Mod::prop` is not supported; use `$Mod::prop(...)`",
+                            tb.line,
+                            tb.source_path.clone(),
+                        )
+                        .into());
+                    }
+                };
+                if !is_infix_prop_name(prop_str) {
                     return Err(RuntimeParseError::new(
-                        format!("infix `${prop}` is not wired yet in new_pipeline"),
+                        format!("`{prop_str}` is not a valid infix prop; use `${prop_str}(...)`"),
                         tb.line,
                         tb.source_path.clone(),
                     )
                     .into());
                 }
-                if !prop_names.is_empty() {
-                    return Err(RuntimeParseError::new(
-                        "`$in` cannot appear in a comparison chain",
-                        tb.line,
-                        tb.source_path.clone(),
-                    )
-                    .into());
-                }
-                let set = parse_obj(tb)?;
-                if !tb.exceed_end_of_head()
-                    && (tb.peek().map(is_comparison_op).unwrap_or(false)
-                        || tb.peek() == Some(FACT_PREFIX))
+                if !prop_names.is_empty()
+                    && (prop_str == IN
+                        || prop_str == super::fact_prop::SUBSET
+                        || prop_str == super::fact_prop::SUPERSET)
                 {
                     return Err(RuntimeParseError::new(
-                        "`$in` cannot appear in a comparison chain",
+                        format!("`${prop_str}` cannot appear in a comparison chain"),
                         tb.line,
                         tb.source_path.clone(),
                     )
                     .into());
                 }
-                let element = objs.remove(0);
-                let atomic = build_membership(self, element, set, positive, span)?;
-                return Ok(ChainAtomicFact::AtomicFact(atomic));
+                let right = parse_obj(tb)?;
+                if prop_names.is_empty()
+                    && (prop_str == IN
+                        || prop_str == super::fact_prop::SUBSET
+                        || prop_str == super::fact_prop::SUPERSET
+                        || prop_str == super::fact_prop::FN_EQ
+                        || prop_str == super::fact_prop::FN_EQ_IN)
+                {
+                    if !tb.exceed_end_of_head()
+                        && (tb.peek().map(is_comparison_op).unwrap_or(false)
+                            || tb.peek() == Some(FACT_PREFIX))
+                    {
+                        return Err(RuntimeParseError::new(
+                            format!("`${prop_str}` cannot appear in a comparison chain"),
+                            tb.line,
+                            tb.source_path.clone(),
+                        )
+                        .into());
+                    }
+                    let left = objs.remove(0);
+                    let atomic =
+                        self.atomic_from_prop(prop, vec![left, right], positive, line_file)?;
+                    return Ok(ChainAtomicFact::AtomicFact(atomic));
+                }
+                prop_names.push(prop);
+                objs.push(right);
+                continue;
             }
             if is_comparison_op(&tok) {
                 tb.advance()?;
@@ -454,7 +572,7 @@ impl Runtime {
 
         if prop_names.is_empty() {
             return Err(RuntimeParseError::new(
-                "expected comparison operator or `$in`",
+                "expected comparison operator or `$prop`",
                 tb.line,
                 tb.source_path.clone(),
             )
@@ -464,18 +582,8 @@ impl Runtime {
         if objs.len() == 2 && prop_names.len() == 1 {
             let right = objs.pop().unwrap();
             let left = objs.pop().unwrap();
-            let op = match prop_names.pop().unwrap() {
-                AtomicName::WithoutMod(s) => s,
-                AtomicName::WithMod(_, _) => {
-                    return Err(RuntimeParseError::new(
-                        "mod-qualified operators are not supported here",
-                        tb.line,
-                        tb.source_path.clone(),
-                    )
-                    .into());
-                }
-            };
-            let atomic = build_compare(self, &op, left, right, positive, span)?;
+            let prop = prop_names.pop().unwrap();
+            let atomic = self.atomic_from_prop(prop, vec![left, right], positive, line_file)?;
             return Ok(ChainAtomicFact::AtomicFact(atomic));
         }
 
@@ -492,131 +600,20 @@ impl Runtime {
             fact_id: self.ids.allocate_fact_id(),
             objs,
             prop_names,
-            span,
+            line_file,
         }))
     }
-}
 
-fn build_membership(
-    rt: &mut Runtime,
-    element: Obj,
-    set: Obj,
-    positive: bool,
-    span: SourceSpan,
-) -> RuntimeResult<AtomicFact> {
-    let fact_id = rt.ids.allocate_fact_id();
-    if positive {
-        Ok(AtomicFact::InFact(InFact {
-            fact_id,
-            element,
-            set,
-            span,
-        }))
-    } else {
-        Ok(AtomicFact::NotInFact(NotInFact {
-            fact_id,
-            element,
-            set,
-            span,
-        }))
+    fn parse_prop_name(&mut self, tb: &mut TokenBlock) -> RuntimeResult<AtomicName> {
+        let first = tb.advance()?;
+        if tb.peek() == Some(MOD_SIGN) {
+            tb.advance()?;
+            let second = tb.advance()?;
+            Ok(AtomicName::WithMod(first, second))
+        } else {
+            Ok(AtomicName::WithoutMod(first))
+        }
     }
-}
-
-fn build_compare(
-    rt: &mut Runtime,
-    op: &str,
-    left: Obj,
-    right: Obj,
-    positive: bool,
-    span: SourceSpan,
-) -> RuntimeResult<AtomicFact> {
-    let fact_id = rt.ids.allocate_fact_id();
-    Ok(match (op, positive) {
-        (EQUAL, true) => AtomicFact::EqualFact(EqualFact {
-            fact_id,
-            left,
-            right,
-            span,
-        }),
-        (EQUAL, false) => AtomicFact::NotEqualFact(NotEqualFact {
-            fact_id,
-            left,
-            right,
-            span,
-        }),
-        (super::keywords::NOT_EQUAL, true) => AtomicFact::NotEqualFact(NotEqualFact {
-            fact_id,
-            left,
-            right,
-            span,
-        }),
-        (super::keywords::NOT_EQUAL, false) => AtomicFact::EqualFact(EqualFact {
-            fact_id,
-            left,
-            right,
-            span,
-        }),
-        (super::keywords::LESS, true) => AtomicFact::LessFact(LessFact {
-            fact_id,
-            left,
-            right,
-            span,
-        }),
-        (super::keywords::LESS, false) => AtomicFact::NotLessFact(NotLessFact {
-            fact_id,
-            left,
-            right,
-            span,
-        }),
-        (super::keywords::GREATER, true) => AtomicFact::GreaterFact(GreaterFact {
-            fact_id,
-            left,
-            right,
-            span,
-        }),
-        (super::keywords::GREATER, false) => AtomicFact::NotGreaterFact(NotGreaterFact {
-            fact_id,
-            left,
-            right,
-            span,
-        }),
-        (super::keywords::LESS_EQUAL, true) => AtomicFact::LessEqualFact(LessEqualFact {
-            fact_id,
-            left,
-            right,
-            span,
-        }),
-        (super::keywords::LESS_EQUAL, false) => AtomicFact::NotLessEqualFact(NotLessEqualFact {
-            fact_id,
-            left,
-            right,
-            span,
-        }),
-        (super::keywords::GREATER_EQUAL, true) => {
-            AtomicFact::GreaterEqualFact(GreaterEqualFact {
-                fact_id,
-                left,
-                right,
-                span,
-            })
-        }
-        (super::keywords::GREATER_EQUAL, false) => {
-            AtomicFact::NotGreaterEqualFact(NotGreaterEqualFact {
-                fact_id,
-                left,
-                right,
-                span,
-            })
-        }
-                _ => {
-            return Err(RuntimeParseError::new(
-                format!("unknown comparison `{op}`"),
-                span.line,
-                span.path.clone(),
-            )
-            .into());
-        }
-    })
 }
 
 trait QuantifierFreeFactExt {

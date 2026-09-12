@@ -80,7 +80,24 @@ impl TokenBlock {
         Ok(())
     }
 
-    pub fn span(&self) -> crate::new_pipeline::ast::SourceSpan {
-        crate::new_pipeline::ast::SourceSpan::new(self.line, self.source_path.clone())
+    pub fn expect_colon_end_of_header(&mut self) -> RuntimeResult<()> {
+        self.expect(":")?;
+        if !self.exceed_end_of_head() {
+            return Err(RuntimeParseError::new(
+                "trailing tokens after `:`",
+                self.line,
+                self.source_path.clone(),
+            )
+            .into());
+        }
+        Ok(())
+    }
+
+    pub fn line_file(&self) -> crate::new_pipeline::ast::LineFile {
+        crate::new_pipeline::ast::LineFile::new(self.line, self.source_path.clone())
+    }
+
+    pub fn parse_error(&self, message: impl Into<String>) -> crate::new_pipeline::runtime::RuntimeError {
+        RuntimeParseError::new(message, self.line, self.source_path.clone()).into()
     }
 }

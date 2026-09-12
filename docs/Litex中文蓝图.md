@@ -380,7 +380,7 @@ Litex做的相当于就是把我们脑海的心流在机器中实现了。*用�
 
 这不只是界面偏好，也是在节约一种真实成本：用户不必为每条常见等式先记住该点名哪个 tactic、哪条引理——例如数值计算不必手写 `norm_num`，多项式不必手写 `ring`。关键选择、见证和估计仍由作者写；具体规则与等式对齐由内核寻找、记录。Litex 由事实触发局部搜索；结果都须可检查：Litex按关系、参数结构和上下文寻找内置规则、全称事实、具体事实或等式；搜索受支持范围限制，并非自由猜测。
 
-### 内核如何按事实形状寻找验证路径
+### Litex如何帮用户按事实形状寻找验证路径
 
 Litex 验证一条事实时，并不是在“想出一个证明”。更接近的图像是：把当前目标拆成谓词和参数形状，再到上下文与规则表里做受约束查找——有点像按形状 Ctrl+F。对上之后做实例化或替换，再检查前提是否齐备；对不上就停在当前目标。**本质是匹配与替换，不是自由推理。**
 
@@ -389,32 +389,41 @@ Litex 验证一条事实时，并不是在“想出一个证明”。更接近�
 | 匹配什么 | 内核做什么 | 极小例子 |
 | --- | --- | --- |
 | **内置规则**（builtin） | 按谓词/参数形状筛选规则，再核对前提 | 已知 `x >= 0`、`y >= 0`，匹配“非负之和仍非负”，得到 `x + y >= 0` |
-| **已知 `forall`** | 把目标形状对上全称事实，实例化参数并检查前提 | 已有 `forall x R: x > 10 => $is_positive(x)`，且 `a > 10`，匹配得到 `$is_positive(a)` |
 | **已知具体事实** | 在上下文中找到同形事实；必要时用等式对齐写法 | 已知 `$is_positive(a)` 与 `a = b`，匹配并替换得到 `$is_positive(b)` |
-| **定义**（def） | 把具名谓词/定义与展开式互相同形状匹配 | 已知 `a > 0`，且 `prop is_positive(x R): x > 0`，匹配定义得到 `$is_positive(a)` |
+| **已知 `forall`** | 把目标形状对上全称事实，实例化参数并检查前提 | 已有 `forall x R: x > 1 => $is_positive(x)`，且 `b > 1`，匹配得到 `$is_positive(b)` |
+| **定义**（def） | 把具名谓词与其定义体互相同形状匹配 | 已知 `a > 0`，匹配 `prop is_positive` 的定义，得到 `$is_positive(a)` |
 
 ```litex
-# 1) 匹配 builtin
+prop is_positive(a R):
+    a > 0
+
+# 1) 匹配内置规则（builtin）
 forall x, y R:
     x >= 0
     y >= 0
     =>:
         x + y >= 0
 
-# 2) 匹配已知 forall（前面已 claim 过全称事实，并有 a > 10）
-$is_positive(a)
-
-# 3) 匹配已知事实，并用等式替换
+# 2) 匹配已知事实，再用等式替换
 forall a, b R:
     $is_positive(a)
     a = b
     =>:
         $is_positive(b)
 
-# 4) 匹配 def
-prop is_positive(x R):
-    x > 0
+# 3) 匹配已知 forall（先存下这条全称；再由 b > 1 得到 $is_positive(b)）
+forall x R:
+    x > 1
+    =>:
+        x > 0
+        $is_positive(x)
 
+have b R:
+    b > 1
+
+$is_positive(b)
+
+# 4) 匹配 prop is_positive 的定义
 have a R:
     a > 0
 
@@ -1491,6 +1500,58 @@ Litex因此可以视作Lean的一个更可读的，更容易理解的前端语�
 | 可读推理的前端 | 人可以直接审核的数学对象、条件、中间事实和结论 |
 | 可信推理数据的生产层 | 经过机器检查的事实与验证来源、明确的停止边界，以及被显式标出的可信边界 |
 | 现有生态的接入层 | 从一开始的设计上即面向 Lean 编译与复核；现已覆盖部分数学场景对应的 Lean 证明对象，预计 2026 年底完成；以及明确分离、由 AI 或人类编写的新增 Lean/Mathlib adapter |
+| 科学计算证明 → 可执行代码（实验） | 把用于科学计算的证明，转化成可运行的 Python / C（见下方折叠示意） |
+
+<details>
+<summary><strong>示意：科学计算证明 → 可执行代码（实验）</strong></summary>
+
+同一份用于科学计算的 Litex 证明，可以转化成可执行代码。例如牛顿法逼近 √2 的单步更新：
+
+```litex
+have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2
+
+have fn newton_sqrt_two_step(x R) R by cases:
+    case x = 0: 1
+    case x != 0: (x + 2 / x) / 2
+
+claim:
+    ? forall x R+:
+        newton_sqrt_two_step(x) = newton_sqrt_two(x)
+    newton_sqrt_two_step(x) = (x + 2 / x) / 2 = newton_sqrt_two(x)
+
+have algo for newton_sqrt_two_step(x):
+    case x = 0: 1
+    case x != 0: (x + 2 / x) / 2
+```
+
+转化为 Python：
+
+```python
+def newton_sqrt_two_step(x):
+    if x == 0.0:
+        return 1.0
+    elif x != 0.0:
+        return ((x + (2.0 / x)) / 2.0)
+    raise AssertionError("unreachable verified Litex cases")
+```
+
+转化为 C：
+
+```c
+#include <stdlib.h>
+
+double newton_sqrt_two_step(double x) {
+    if (x == 0.0) {
+        return 1.0;
+    }
+    else if (x != 0.0) {
+        return ((x + (2.0 / x)) / 2.0);
+    }
+    abort();
+}
+```
+
+</details>
 
 当然，Litex现阶段更像是处于 `proof of an idea` 的阶段。即便它本身已经有几十万行代码，它在行业上下游中的探索仍然稀缺。这也是Litex下一阶段会着重关注的：如何让从0到1的原始创新，成为从1到10的早期价值兑现。对Litex感兴趣的朋友可以联系 litexlang@outlook.com 。
 
