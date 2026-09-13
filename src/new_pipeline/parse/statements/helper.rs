@@ -66,7 +66,7 @@ impl Runtime {
         Ok(facts)
     }
 
-    // Re-open forall binders so proof statements may occupy sibling names safely.
+    // Re-open forall binders so proof statements may use the same AtomIds.
     pub(in super::super) fn with_forall_params_occupied<T>(
         &mut self,
         params: &TypedParameterList,
@@ -76,8 +76,12 @@ impl Runtime {
         self.push_parse_scope();
         let result = (|| {
             for group in &params.groups {
-                for name in &group.params {
-                    self.occupy_name_as_parse(tb, name.clone())?;
+                for identifier in &group.params {
+                    self.occupy_plain_atom_as_parse(
+                        tb,
+                        identifier.name.clone(),
+                        identifier.atom_id,
+                    )?;
                 }
             }
             f(self)

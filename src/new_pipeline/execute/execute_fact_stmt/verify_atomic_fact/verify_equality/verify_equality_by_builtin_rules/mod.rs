@@ -1,0 +1,5 @@
+pub mod literally_the_same;
+pub mod search_equal_fact_proof_by_builtin_rule;
+pub mod search_equal_fact_proof_by_builtin_rule_result;
+
+pub use search_equal_fact_proof_by_builtin_rule_result::EqualitySearchProofByBuiltinRule;

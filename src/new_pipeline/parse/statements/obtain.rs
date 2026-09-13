@@ -49,7 +49,7 @@ impl Runtime {
         }
 
         for name in &equal_tos {
-            self.occupy_name_as_parse(&tb, name.clone())?;
+            self.define_plain_atom_as_parse(&tb, name.clone())?;
         }
         Ok(Stmt::Definition(DefinitionStmt::ObtainObjFromExistFact(
             ObtainObjFromExistFact {

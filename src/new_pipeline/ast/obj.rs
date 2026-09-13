@@ -1,10 +1,11 @@
 //! Framework AST data shapes for new_pipeline.
 //! Field taxonomy follows the legacy language; methods are added later.
-//! Identity: String names, FactId, LineFile — no SymbolId / AtomId.
+//! Identity: String display names plus AtomId on Identifier atoms; FactId; LineFile.
 
 use super::fact::QuantifierFreeFact;
 use super::names::AtomicName;
 use super::param::SetBoundParameterList;
+use crate::new_pipeline::runtime::AtomId;
 
 // from object/arithmetic_operations.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -215,6 +216,7 @@ pub enum FnSetSpace {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Identifier {
     pub name: String,
+    pub atom_id: AtomId,
 }
 
 // from object/identifier.rs
@@ -222,6 +224,7 @@ pub struct Identifier {
 pub struct IdentifierWithMod {
     pub mod_name: String,
     pub name: String,
+    pub atom_id: AtomId,
 }
 
 // from object/indexing.rs

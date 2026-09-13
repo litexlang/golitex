@@ -10,7 +10,7 @@ impl Runtime {
     pub(in super::super) fn parse_eval_stmt(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
         let mut tb = block.clone();
         tb.expect(EVAL)?;
-        let obj_to_eval = parse_obj(&mut tb)?;
+        let obj_to_eval = parse_obj(self, &mut tb)?;
         if !tb.exceed_end_of_head() {
             return Err(tb.parse_error("eval: expected one expression"));
         }

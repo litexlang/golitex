@@ -50,7 +50,7 @@ impl Runtime {
         self.pop_parse_scope();
         let (param_def, dom_facts) = result?;
 
-        self.occupy_name_as_parse(&tb, name.clone())?;
+        self.define_plain_atom_as_parse(&tb, name.clone())?;
         Ok(Stmt::Definition(DefinitionStmt::DefSettingStmt(
             DefSettingStmt {
                 name,
@@ -115,7 +115,7 @@ impl Runtime {
                         ));
                     }
                     for f in &fields {
-                        self.occupy_name_as_parse(&field_tb, f.binding.clone())?;
+                        self.define_plain_atom_as_parse(&field_tb, f.binding.clone())?;
                     }
                     equivalent_facts.extend(self.parse_facts_in_body(&field_tb.body)?);
                 } else {
@@ -135,7 +135,7 @@ impl Runtime {
                             "invalid struct field `{binding}`"
                         )));
                     }
-                    let field_type = parse_obj(&mut field_tb)?;
+                    let field_type = parse_obj(self, &mut field_tb)?;
                     if !field_tb.exceed_end_of_head() {
                         return Err(field_tb.parse_error(
                             "unexpected token after struct field type",
@@ -161,7 +161,7 @@ impl Runtime {
         self.pop_parse_scope();
         let (param_def_with_dom, fields, equivalent_facts) = result?;
 
-        self.occupy_name_as_parse(&tb, name.clone())?;
+        self.define_plain_atom_as_parse(&tb, name.clone())?;
         Ok(Stmt::Definition(DefinitionStmt::DefStructStmt(DefStructStmt {
             name,
             param_def_with_dom,
@@ -203,7 +203,7 @@ impl Runtime {
             &tb,
             |this| this.parse_body_stmts(proof_blocks),
         )?;
-        self.occupy_name_as_parse(&tb, name.clone())?;
+        self.define_plain_atom_as_parse(&tb, name.clone())?;
         Ok(Stmt::Definition(DefinitionStmt::DefStrategyStmt(
             DefStrategyStmt {
                 name,

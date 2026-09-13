@@ -19,10 +19,10 @@ impl Runtime {
 
         let exist_fact_in_witness = self.parse_exist_fact(&mut tb)?;
         tb.expect(FROM)?;
-        let mut equal_tos = vec![parse_obj(&mut tb)?];
+        let mut equal_tos = vec![parse_obj(self, &mut tb)?];
         while tb.peek() == Some(super::super::keywords::COMMA) {
             tb.advance()?;
-            equal_tos.push(parse_obj(&mut tb)?);
+            equal_tos.push(parse_obj(self, &mut tb)?);
         }
 
         let proof = if tb.exceed_end_of_head() {

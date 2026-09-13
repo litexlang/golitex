@@ -3,7 +3,6 @@
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
-use crate::new_pipeline::execution_environment::helper::ast_obj_key;
 use crate::new_pipeline::runtime::runtime_ids::WellDefinednessId;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
@@ -36,37 +35,15 @@ impl ObjWellDefinedProofByDef {
 }
 
 impl Runtime {
-    // 1. cache lookup → ByCache
-    // 2. else match Obj → fill ObjWellDefinedProofByDef
-    // 3. optionally store new WD id into ExecEnv
+    // Prove by definition. WD cache will use well_defined_objects when Ast Obj is wired.
     pub fn verify_obj_well_definedness(
         &mut self,
         obj: &Obj,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyObjResult> {
-        let key = ast_obj_key(obj);
-        if let Some(wd_id) = self.lookup_obj_wd_in_env_stack(&key) {
-            return Ok(VerifyObjResult::ByCache { wd_id });
-        }
-
-        let by_def = self.verify_obj_well_definedness_by_def(obj, verify_state.clone())?;
-        let result = VerifyObjResult::ByDef(by_def);
-
-        if verify_state.store_well_defined_fact {
-            let wd_id = self.ids.allocate_well_definedness_id();
-            self.top_exec_env_mut().record_native_wd(key, wd_id);
-        }
-
-        Ok(result)
-    }
-
-    fn lookup_obj_wd_in_env_stack(&self, key: &str) -> Option<WellDefinednessId> {
-        for env in self.execution_environments_stack.iter().rev() {
-            if let Some(wd_id) = env.lookup_native_wd(key) {
-                return Some(wd_id);
-            }
-        }
-        None
+        let _ = verify_state.store_well_defined_fact;
+        let by_def = self.verify_obj_well_definedness_by_def(obj, verify_state)?;
+        Ok(VerifyObjResult::ByDef(by_def))
     }
 
     // Big match: every Obj variant has its own by-def branch function.

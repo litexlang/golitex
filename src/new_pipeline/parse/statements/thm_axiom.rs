@@ -32,7 +32,7 @@ impl Runtime {
         } else {
             self.parse_body_stmts(proof_blocks)?
         };
-        self.occupy_name_as_parse(&tb, name.clone())?;
+        self.define_plain_atom_as_parse(&tb, name.clone())?;
         Ok(Stmt::Definition(DefinitionStmt::DefThmStmt(DefThmStmt {
             name,
             fact,
@@ -60,7 +60,7 @@ impl Runtime {
         }
         let mut goal = tb.body[0].clone();
         let forall_fact = self.parse_goal_forall_fact(&mut goal, "axiom")?;
-        self.occupy_name_as_parse(&tb, name.clone())?;
+        self.define_plain_atom_as_parse(&tb, name.clone())?;
         Ok(Stmt::Definition(DefinitionStmt::AxiomStmt(AxiomStmt {
             name,
             forall_fact,

@@ -2,15 +2,16 @@ use super::keywords::{
     COLON, COMMA, EQUAL, FINITE_SET, LEFT_PAREN, NONEMPTY_SET, RIGHT_PAREN, SET,
 };
 use super::object::{is_atom_name, parse_obj};
+use crate::new_pipeline::ast::obj::Identifier;
 use crate::new_pipeline::ast::param::{
     FiniteSet, NonemptySet, ParamType, Set, TypedParameterGroup, TypedParameterList,
 };
-use crate::new_pipeline::runtime::{Runtime, RuntimeParseError, RuntimeResult};
+use crate::new_pipeline::runtime::{AtomId, Runtime, RuntimeParseError, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
 
 impl Runtime {
     // Parse `x R` / `x, y R` groups until `:` (consumed).
-    // Occupies each parameter name in the current parse scope.
+    // Defines each parameter atom in the current parse scope.
     pub(super) fn parse_typed_param_list_until_colon(
         &mut self,
         tb: &mut TokenBlock,
@@ -80,7 +81,7 @@ impl Runtime {
         Ok(TypedParameterList { groups })
     }
 
-    // Parse `(x R, y S)` — occupies each parameter name.
+    // Parse `(x R, y S)` — defines each parameter atom.
     pub(super) fn parse_typed_param_list_in_parens(
         &mut self,
         tb: &mut TokenBlock,
@@ -105,11 +106,11 @@ impl Runtime {
         Ok(TypedParameterList { groups })
     }
 
-    // Parse `(x, y)` bare names — occupies each name.
+    // Parse `(x, y)` bare names — defines each atom.
     pub(super) fn parse_name_list_in_parens(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> RuntimeResult<Vec<String>> {
+    ) -> RuntimeResult<Vec<Identifier>> {
         tb.expect(LEFT_PAREN)?;
         let mut names = Vec::new();
         while !tb.exceed_end_of_head() && tb.peek() != Some(RIGHT_PAREN) {
@@ -122,8 +123,7 @@ impl Runtime {
                 )
                 .into());
             }
-            self.occupy_name_as_parse(tb, name.clone())?;
-            names.push(name);
+            names.push(self.define_plain_atom_as_parse(tb, name)?);
             if tb.peek() == Some(COMMA) {
                 tb.advance()?;
             }
@@ -154,8 +154,7 @@ impl Runtime {
             )
             .into());
         }
-        self.occupy_name_as_parse(tb, name.clone())?;
-        params.push(name);
+        params.push(self.define_plain_atom_as_parse(tb, name)?);
 
         while tb.peek() == Some(COMMA) {
             // More names in this group: `x, y R`. Group separators are handled
@@ -170,8 +169,7 @@ impl Runtime {
                 )
                 .into());
             }
-            self.occupy_name_as_parse(tb, next.clone())?;
-            params.push(next);
+            params.push(self.define_plain_atom_as_parse(tb, next)?);
         }
 
         let param_type = self.parse_param_type(tb)?;
@@ -192,16 +190,31 @@ impl Runtime {
                 tb.advance()?;
                 Ok(ParamType::Set(Set {}))
             }
-            _ => Ok(ParamType::Obj(parse_obj(tb)?)),
+            _ => Ok(ParamType::Obj(parse_obj(self, tb)?)),
         }
     }
 
-    pub(super) fn occupy_name_as_parse(
+    pub(super) fn define_plain_atom_as_parse(
         &mut self,
         tb: &TokenBlock,
         name: String,
+    ) -> RuntimeResult<Identifier> {
+        let atom_id = self.define_plain_atom(name.clone()).map_err(|err| match err {
+            crate::new_pipeline::runtime::RuntimeError::Invariant(message) => {
+                RuntimeParseError::new(message, tb.line, tb.source_path.clone()).into()
+            }
+            other => other,
+        })?;
+        Ok(Identifier { name, atom_id })
+    }
+
+    pub(super) fn occupy_plain_atom_as_parse(
+        &mut self,
+        tb: &TokenBlock,
+        name: String,
+        atom_id: AtomId,
     ) -> RuntimeResult<()> {
-        self.occupy_name(name).map_err(|err| match err {
+        self.occupy_plain_atom(name, atom_id).map_err(|err| match err {
             crate::new_pipeline::runtime::RuntimeError::Invariant(message) => {
                 RuntimeParseError::new(message, tb.line, tb.source_path.clone()).into()
             }

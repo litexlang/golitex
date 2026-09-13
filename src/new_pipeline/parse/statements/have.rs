@@ -1,6 +1,7 @@
 use super::super::keywords::{COLON, EQUAL};
 use super::super::object::parse_obj;
 use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::obj::Identifier;
 use crate::new_pipeline::ast::stmt::{
     DefinitionStmt, HaveObjByExistFactsStmt, HaveObjEqualStmt,
     HaveObjInNonemptySetOrParamTypeStmt, Stmt,
@@ -17,7 +18,7 @@ impl Runtime {
         self.push_parse_scope();
         let result = (|| {
             let param_def = self.parse_typed_param_list_until_eq_colon_or_end(&mut tb)?;
-            let names: Vec<String> = param_def
+            let identifiers: Vec<Identifier> = param_def
                 .groups
                 .iter()
                 .flat_map(|g| g.params.iter().cloned())
@@ -35,15 +36,15 @@ impl Runtime {
                     let mut c = child.clone();
                     facts.push(self.parse_quantifier_free_fact_top(&mut c)?);
                 }
-                return Ok(HaveObjKind::ByExist(param_def, facts, names));
+                return Ok(HaveObjKind::ByExist(param_def, facts, identifiers));
             }
 
             if tb.peek() == Some(EQUAL) {
                 tb.expect(EQUAL)?;
-                let mut objs_equal_to = vec![parse_obj(&mut tb)?];
+                let mut objs_equal_to = vec![parse_obj(self, &mut tb)?];
                 while tb.peek() == Some(super::super::keywords::COMMA) {
                     tb.advance()?;
-                    objs_equal_to.push(parse_obj(&mut tb)?);
+                    objs_equal_to.push(parse_obj(self, &mut tb)?);
                 }
                 if !tb.exceed_end_of_head() {
                     return Err(tb.parse_error("trailing tokens after have equal value"));
@@ -51,7 +52,7 @@ impl Runtime {
                 if !tb.body.is_empty() {
                     return Err(tb.parse_error("`have ... =` cannot have an indented body"));
                 }
-                return Ok(HaveObjKind::Equal(param_def, objs_equal_to, names));
+                return Ok(HaveObjKind::Equal(param_def, objs_equal_to, identifiers));
             }
 
             if !tb.exceed_end_of_head() {
@@ -64,14 +65,18 @@ impl Runtime {
                     "have without `=`/`:` cannot have an indented body",
                 ));
             }
-            Ok(HaveObjKind::InSet(param_def, names))
+            Ok(HaveObjKind::InSet(param_def, identifiers))
         })();
         self.pop_parse_scope();
 
         match result? {
-            HaveObjKind::InSet(param_def, names) => {
-                for name in names {
-                    self.occupy_name_as_parse(block, name)?;
+            HaveObjKind::InSet(param_def, identifiers) => {
+                for identifier in identifiers {
+                    self.occupy_plain_atom_as_parse(
+                        block,
+                        identifier.name,
+                        identifier.atom_id,
+                    )?;
                 }
                 Ok(Stmt::Definition(DefinitionStmt::HaveObjInNonemptySetStmt(
                     HaveObjInNonemptySetOrParamTypeStmt {
@@ -80,9 +85,13 @@ impl Runtime {
                     },
                 )))
             }
-            HaveObjKind::Equal(param_def, objs_equal_to, names) => {
-                for name in names {
-                    self.occupy_name_as_parse(block, name)?;
+            HaveObjKind::Equal(param_def, objs_equal_to, identifiers) => {
+                for identifier in identifiers {
+                    self.occupy_plain_atom_as_parse(
+                        block,
+                        identifier.name,
+                        identifier.atom_id,
+                    )?;
                 }
                 Ok(Stmt::Definition(DefinitionStmt::HaveObjEqualStmt(
                     HaveObjEqualStmt {
@@ -92,9 +101,13 @@ impl Runtime {
                     },
                 )))
             }
-            HaveObjKind::ByExist(param_def, facts, names) => {
-                for name in names {
-                    self.occupy_name_as_parse(block, name)?;
+            HaveObjKind::ByExist(param_def, facts, identifiers) => {
+                for identifier in identifiers {
+                    self.occupy_plain_atom_as_parse(
+                        block,
+                        identifier.name,
+                        identifier.atom_id,
+                    )?;
                 }
                 Ok(Stmt::Definition(DefinitionStmt::HaveObjByExistFactsStmt(
                     HaveObjByExistFactsStmt {
@@ -111,16 +124,16 @@ impl Runtime {
 enum HaveObjKind {
     InSet(
         crate::new_pipeline::ast::param::TypedParameterList,
-        Vec<String>,
+        Vec<Identifier>,
     ),
     Equal(
         crate::new_pipeline::ast::param::TypedParameterList,
         Vec<crate::new_pipeline::ast::obj::Obj>,
-        Vec<String>,
+        Vec<Identifier>,
     ),
     ByExist(
         crate::new_pipeline::ast::param::TypedParameterList,
         Vec<crate::new_pipeline::ast::fact::QuantifierFreeFact>,
-        Vec<String>,
+        Vec<Identifier>,
     ),
 }

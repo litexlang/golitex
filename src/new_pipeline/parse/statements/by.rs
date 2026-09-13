@@ -291,7 +291,7 @@ impl Runtime {
             let mut args = Vec::new();
             if tb.peek() != Some(RIGHT_PAREN) {
                 loop {
-                    args.push(parse_obj(tb)?);
+                    args.push(parse_obj(self, tb)?);
                     if tb.peek() == Some(COMMA) {
                         tb.advance()?;
                         continue;

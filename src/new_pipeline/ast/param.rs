@@ -1,8 +1,8 @@
 //! Framework AST data shapes for new_pipeline.
 //! Field taxonomy follows the legacy language; methods are added later.
-//! Identity: String names, FactId, LineFile — no SymbolId / AtomId.
+//! Identity: parameter lists store Identifier (name + AtomId).
 
-use super::obj::Obj;
+use super::obj::{Identifier, Obj};
 
 // from statement/definitions/parameters.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -27,13 +27,15 @@ pub struct SetBoundParameterList {
 
 // from statement/definitions/parameters.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SetBoundParameterGroup {    pub params: Vec<String>,
+pub struct SetBoundParameterGroup {
+    pub params: Vec<Identifier>,
     pub param_type: Box<Obj>,
 }
 
 // from statement/definitions/parameters.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct TypedParameterGroup {    pub params: Vec<String>,
+pub struct TypedParameterGroup {
+    pub params: Vec<Identifier>,
     pub param_type: ParamType,
 }
 
@@ -48,4 +50,3 @@ pub struct NonemptySet {}
 // from statement/definitions/parameters.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FiniteSet {}
-

@@ -1,21 +1,28 @@
 use super::error::{RuntimeError, RuntimeResult};
 use super::real_or_virtual_path::RealOrVirtualPath;
-use super::runtime_ids::{FactId, PropAlgebraicPropertyId, SymbolId, WellDefinednessId};
+use super::runtime_ids::{AtomId, FactId, PropAlgebraicPropertyId, WellDefinednessId};
 use crate::new_pipeline::execution_environment::exec_env::ExecEnv;
 use crate::new_pipeline::module_manager::{
     ExportFileAndItsExecEnv, ModuleHierarchy, ModuleManager,
 };
-use std::collections::HashSet;
+use std::collections::HashMap;
+
+// Name occupied in a parse scope. Plain `x` and `mod::x` are distinct.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub enum OccupiedName {
+    Plain(String),
+    WithMod { mod_name: String, name: String },
+}
 
 // One parse layer's occupied names. Inner scopes must not reuse a visible outer name.
 pub struct ParseScope {
-    pub occupied: HashSet<String>,
+    pub occupied: HashMap<OccupiedName, AtomId>,
 }
 
 pub struct Ids {
     next_fact_id: FactId,
     next_well_definedness_id: WellDefinednessId,
-    next_symbol_id: SymbolId,
+    next_atom_id: AtomId,
     next_prop_algebraic_property_id: PropAlgebraicPropertyId,
 }
 
@@ -87,28 +94,65 @@ impl Runtime {
             .expect("parse scope stack empty");
     }
 
-    pub fn name_is_visible(&self, name: &str) -> bool {
+    pub fn occupied_name_is_visible(&self, key: &OccupiedName) -> bool {
         for scope in &self.parse_scope_stack {
-            if scope.occupied.contains(name) {
+            if scope.occupied.contains_key(key) {
                 return true;
             }
         }
         false
     }
 
-    // Reject if name is already visible in any outer or current scope (no shadowing).
-    pub fn occupy_name(&mut self, name: String) -> RuntimeResult<()> {
-        if self.name_is_visible(&name) {
+    pub fn lookup_atom_id(&self, key: &OccupiedName) -> Option<AtomId> {
+        for scope in self.parse_scope_stack.iter().rev() {
+            if let Some(atom_id) = scope.occupied.get(key) {
+                return Some(*atom_id);
+            }
+        }
+        None
+    }
+
+    // Allocate a new global AtomId and occupy `key` in the current scope.
+    pub fn define_atom(&mut self, key: OccupiedName) -> RuntimeResult<AtomId> {
+        if self.occupied_name_is_visible(&key) {
             return Err(RuntimeError::Invariant(format!(
-                "name `{name}` is already bound in an enclosing parse scope"
+                "name `{key}` is already bound in an enclosing parse scope"
+            )));
+        }
+        let atom_id = self.ids.allocate_atom_id();
+        let scope = self
+            .parse_scope_stack
+            .last_mut()
+            .ok_or_else(|| RuntimeError::Invariant("no parse scope".to_string()))?;
+        scope.occupied.insert(key, atom_id);
+        Ok(atom_id)
+    }
+
+    // Put an already-allocated AtomId into the current scope without allocating.
+    pub fn occupy_atom(&mut self, key: OccupiedName, atom_id: AtomId) -> RuntimeResult<()> {
+        if self.occupied_name_is_visible(&key) {
+            return Err(RuntimeError::Invariant(format!(
+                "name `{key}` is already bound in an enclosing parse scope"
             )));
         }
         let scope = self
             .parse_scope_stack
             .last_mut()
             .ok_or_else(|| RuntimeError::Invariant("no parse scope".to_string()))?;
-        scope.occupied.insert(name);
+        scope.occupied.insert(key, atom_id);
         Ok(())
+    }
+
+    pub fn define_plain_atom(&mut self, name: String) -> RuntimeResult<AtomId> {
+        self.define_atom(OccupiedName::Plain(name))
+    }
+
+    pub fn occupy_plain_atom(&mut self, name: String, atom_id: AtomId) -> RuntimeResult<()> {
+        self.occupy_atom(OccupiedName::Plain(name), atom_id)
+    }
+
+    pub fn lookup_plain_atom_id(&self, name: &str) -> Option<AtomId> {
+        self.lookup_atom_id(&OccupiedName::Plain(name.to_string()))
     }
 
     pub fn top_exec_env(&self) -> &ExecEnv {
@@ -161,7 +205,7 @@ impl Runtime {
 impl ParseScope {
     pub fn new() -> Self {
         Self {
-            occupied: HashSet::new(),
+            occupied: HashMap::new(),
         }
     }
 }
@@ -171,7 +215,7 @@ impl Ids {
         Self {
             next_fact_id: FactId::new(1),
             next_well_definedness_id: WellDefinednessId::new(1),
-            next_symbol_id: SymbolId::new(1),
+            next_atom_id: AtomId::new(1),
             next_prop_algebraic_property_id: PropAlgebraicPropertyId::new(1),
         }
     }
@@ -189,9 +233,9 @@ impl Ids {
         current
     }
 
-    pub fn allocate_symbol_id(&mut self) -> SymbolId {
-        let current = self.next_symbol_id;
-        self.next_symbol_id = SymbolId::new(bump(current.value(), "symbol"));
+    pub fn allocate_atom_id(&mut self) -> AtomId {
+        let current = self.next_atom_id;
+        self.next_atom_id = AtomId::new(bump(current.value(), "atom"));
         current
     }
 
@@ -200,6 +244,15 @@ impl Ids {
         self.next_prop_algebraic_property_id =
             PropAlgebraicPropertyId::new(bump(current.value(), "prop algebraic property"));
         current
+    }
+}
+
+impl std::fmt::Display for OccupiedName {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            OccupiedName::Plain(name) => write!(f, "{name}"),
+            OccupiedName::WithMod { mod_name, name } => write!(f, "{mod_name}::{name}"),
+        }
     }
 }
 
