@@ -17,12 +17,21 @@ pub struct OrderReflexivityBuiltinRuleProof {
 }
 
 impl Runtime {
+    // Builtin: `x <= x` holds by reflexivity.
+    // Example: prove `a <= a`.
     pub fn search_less_equal_fact_proof_by_builtin_rule(
         &mut self,
         fact: &LessEqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
+        let _ = verify_state;
+        if fact.left == fact.right {
+            return Ok(Some(LessEqualFactSearchProofByBuiltinRule::OrderReflexivity(
+                OrderReflexivityBuiltinRuleProof {
+                    repeated_object: fact.left.clone(),
+                },
+            )));
+        }
         Ok(None)
     }
 }

@@ -6,9 +6,10 @@
 //! - fields sit flat on that result (no nested Effect / WellDefined wrappers):
 //!   how it ran, env effect mirrors, optional closed local env
 
-use crate::new_pipeline::ast::stmt::{DefPropStmt, LetObjStmt};
+use crate::new_pipeline::ast::stmt::{DefPropStmt, HaveObjInNonemptySetOrParamTypeStmt, LetObjStmt};
 use crate::new_pipeline::execute::execute_fact_stmt::{
-    ExecFactStmtResult, FactWellDefinedProof, ParamTypeWellDefinedProof, VerifyObjResult,
+    ExecFactStmtResult, FactWellDefinedProof, ParamTypeWellDefinedProof, VerifyFactResult,
+    VerifyObjResult,
 };
 use crate::new_pipeline::execution_environment::exec_env::ExecEnv;
 use crate::new_pipeline::runtime::FactId;
@@ -20,6 +21,7 @@ pub enum ExecStmtResult {
 
 pub enum ExecDefinitionStmtResult {
     LetObj(ExecLetObjStmtResult),
+    HaveObjInNonemptySet(ExecHaveObjInNonemptySetStmtResult),
     DefProp(ExecDefPropStmtResult),
 }
 
@@ -27,6 +29,26 @@ pub enum ExecDefinitionStmtResult {
 pub struct ExecLetObjStmtResult {
     pub statement: LetObjStmt,
     pub value_well_defined: VerifyObjResult,
+    pub stored_fact_ids: Vec<FactId>,
+}
+
+// Pipeline: WD param types → nonempty obligations → define symbols.
+pub struct ExecHaveObjInNonemptySetStmtResult {
+    pub statement: HaveObjInNonemptySetOrParamTypeStmt,
+    pub param_type_well_defined: Vec<ParamTypeWellDefinedProof>,
+    pub nonempty_checks: Vec<HaveObjGroupNonemptyCheckResult>,
+    pub store_and_infer_result: StoreHaveObjAndInferResult,
+}
+
+// One entry per TypedParameterGroup, mirroring ParamType.
+pub enum HaveObjGroupNonemptyCheckResult {
+    Set,
+    NonemptySet,
+    FiniteSet,
+    Obj(VerifyFactResult),
+}
+
+pub struct StoreHaveObjAndInferResult {
     pub stored_fact_ids: Vec<FactId>,
 }
 

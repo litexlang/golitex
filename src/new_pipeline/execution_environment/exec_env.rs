@@ -1,7 +1,9 @@
-use crate::new_pipeline::ast::fact::EqualFact;
+use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact};
 use crate::new_pipeline::ast::obj::Obj as AstObj;
 use crate::new_pipeline::ast::stmt::DefPropStmt as NewDefPropStmt;
-use crate::new_pipeline::execution_environment::helper::ast_obj_eq;
+use crate::new_pipeline::execution_environment::helper::{
+    ast_obj_eq, atomic_fact_proposition_eq,
+};
 use crate::new_pipeline::runtime::runtime_ids::{FactId, WellDefinednessId};
 use crate::prelude::*;
 use std::collections::HashMap;
@@ -23,6 +25,9 @@ pub struct ExecEnv {
 
     /// Equality facts proved (or introduced by `let`) in this scope — new_pipeline AST.
     pub native_equal_facts: HashMap<FactId, EqualFact>,
+
+    /// Non-equality atomic facts stored in this scope (have type facts, proved facts, …).
+    pub native_atomic_facts: HashMap<FactId, AtomicFact>,
 
     /// Well-definedness records for new_pipeline Ast objects in this scope.
     pub native_well_defined: HashMap<String, WellDefinednessId>,
@@ -68,8 +73,9 @@ pub struct WellDefinedObjectMemory {
 /// Definitions introduced in one execution environment.
 #[derive(Clone)]
 pub struct DefinitionMemory {
-    /// Canonical symbol table used for name and identity resolution.
-    pub symbols: HashMap<SymbolId, String>,
+    /// Named atoms defined in this scope (`let`, `have`, forall/exist locals, …).
+    /// Payload fields come later; presence of the key means the name is defined.
+    pub symbols: HashMap<String, SymbolDefinitionMemory>,
 
     pub predicate_definitions: HashMap<PropName, NewDefPropStmt>,
     pub abstract_predicate_definitions: HashMap<AbstractPropName, DefAbstractPropStmt>,
@@ -81,6 +87,12 @@ pub struct DefinitionMemory {
     pub axiom_definitions: HashMap<ThmName, AxiomStmt>,
     pub strategy_definitions: HashMap<StrategyName, DefStrategyStmt>,
 }
+
+/// One defined atom in `DefinitionMemory.symbols`.
+/// Empty for now; may later grow param_type / transparent def / … like the old
+/// SymbolDefinition.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct SymbolDefinitionMemory {}
 
 /// Facts stored in one execution environment and the indexes used to search
 /// them later.
@@ -131,6 +143,7 @@ impl ExecEnv {
         Self {
             let_bindings: HashMap::new(),
             native_equal_facts: HashMap::new(),
+            native_atomic_facts: HashMap::new(),
             native_well_defined: HashMap::new(),
             definitions: DefinitionMemory::new(),
             facts: KnownFactMemory::new(),
@@ -148,6 +161,14 @@ impl ExecEnv {
         self.let_bindings.get(name)
     }
 
+    pub fn define_symbol(&mut self, name: String, def: SymbolDefinitionMemory) {
+        self.definitions.symbols.insert(name, def);
+    }
+
+    pub fn lookup_symbol(&self, name: &str) -> Option<&SymbolDefinitionMemory> {
+        self.definitions.symbols.get(name)
+    }
+
     pub fn store_native_equal_fact(&mut self, fact: EqualFact) {
         self.native_equal_facts.insert(fact.fact_id, fact);
     }
@@ -162,6 +183,20 @@ impl ExecEnv {
                 return Some(*id);
             }
             if ast_obj_eq(&fact.left, right) && ast_obj_eq(&fact.right, left) {
+                return Some(*id);
+            }
+        }
+        None
+    }
+
+    pub fn store_native_atomic_fact(&mut self, fact: AtomicFact) {
+        let fact_id = crate::new_pipeline::execution_environment::helper::atomic_fact_id(&fact);
+        self.native_atomic_facts.insert(fact_id, fact);
+    }
+
+    pub fn find_native_atomic_fact(&self, goal: &AtomicFact) -> Option<FactId> {
+        for (id, known) in &self.native_atomic_facts {
+            if atomic_fact_proposition_eq(known, goal) {
                 return Some(*id);
             }
         }

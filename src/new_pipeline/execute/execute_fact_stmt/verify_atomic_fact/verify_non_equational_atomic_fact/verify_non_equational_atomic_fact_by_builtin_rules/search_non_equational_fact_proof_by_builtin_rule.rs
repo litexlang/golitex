@@ -1,25 +1,20 @@
 use crate::new_pipeline::ast::fact::{
-    AtomicFact, FnEqualFact, FnEqualInFact, IsCartFact, IsFiniteSetFact, IsNonemptySetFact,
-    IsTupleFact, NormalAtomicFact, NotGreaterEqualFact, NotGreaterFact, NotInFact, NotIsCartFact,
-    NotIsFiniteSetFact, NotIsNonemptySetFact, NotIsSetFact, NotIsTupleFact, NotLessEqualFact,
-    NotLessFact, NotNormalAtomicFact, NotSubsetFact, NotSupersetFact, SubsetFact, SupersetFact,
+    AtomicFact, FnEqualFact, FnEqualInFact, NormalAtomicFact, NotGreaterEqualFact, NotGreaterFact,
+    NotInFact, NotIsCartFact, NotIsFiniteSetFact, NotIsSetFact, NotIsTupleFact, NotLessEqualFact,
+    NotLessFact, NotNormalAtomicFact, NotSubsetFact, NotSupersetFact,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 use super::search_non_equational_fact_proof_by_builtin_rule_result::{
     FnEqualFactSearchProofByBuiltinRule, FnEqualInFactSearchProofByBuiltinRule,
-    IsCartFactSearchProofByBuiltinRule, IsFiniteSetFactSearchProofByBuiltinRule,
-    IsNonemptySetFactSearchProofByBuiltinRule, IsTupleFactSearchProofByBuiltinRule,
     NonEquationalAtomicFactSearchProofByBuiltinRule, NormalAtomicFactSearchProofByBuiltinRule,
     NotGreaterEqualFactSearchProofByBuiltinRule, NotGreaterFactSearchProofByBuiltinRule,
     NotInFactSearchProofByBuiltinRule, NotIsCartFactSearchProofByBuiltinRule,
-    NotIsFiniteSetFactSearchProofByBuiltinRule, NotIsNonemptySetFactSearchProofByBuiltinRule,
-    NotIsSetFactSearchProofByBuiltinRule, NotIsTupleFactSearchProofByBuiltinRule,
-    NotLessEqualFactSearchProofByBuiltinRule, NotLessFactSearchProofByBuiltinRule,
-    NotNormalAtomicFactSearchProofByBuiltinRule, NotSubsetFactSearchProofByBuiltinRule,
-    NotSupersetFactSearchProofByBuiltinRule, SubsetFactSearchProofByBuiltinRule,
-    SupersetFactSearchProofByBuiltinRule,
+    NotIsFiniteSetFactSearchProofByBuiltinRule, NotIsSetFactSearchProofByBuiltinRule,
+    NotIsTupleFactSearchProofByBuiltinRule, NotLessEqualFactSearchProofByBuiltinRule,
+    NotLessFactSearchProofByBuiltinRule, NotNormalAtomicFactSearchProofByBuiltinRule,
+    NotSubsetFactSearchProofByBuiltinRule, NotSupersetFactSearchProofByBuiltinRule,
 };
 
 impl Runtime {
@@ -131,60 +126,6 @@ impl Runtime {
         Ok(None)
     }
 
-    pub fn search_is_nonempty_set_fact_proof_by_builtin_rule(
-        &mut self,
-        fact: &IsNonemptySetFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<Option<IsNonemptySetFactSearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
-        Ok(None)
-    }
-
-    pub fn search_is_finite_set_fact_proof_by_builtin_rule(
-        &mut self,
-        fact: &IsFiniteSetFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<Option<IsFiniteSetFactSearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
-        Ok(None)
-    }
-
-    pub fn search_is_cart_fact_proof_by_builtin_rule(
-        &mut self,
-        fact: &IsCartFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<Option<IsCartFactSearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
-        Ok(None)
-    }
-
-    pub fn search_is_tuple_fact_proof_by_builtin_rule(
-        &mut self,
-        fact: &IsTupleFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<Option<IsTupleFactSearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
-        Ok(None)
-    }
-
-    pub fn search_subset_fact_proof_by_builtin_rule(
-        &mut self,
-        fact: &SubsetFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<Option<SubsetFactSearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
-        Ok(None)
-    }
-
-    pub fn search_superset_fact_proof_by_builtin_rule(
-        &mut self,
-        fact: &SupersetFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<Option<SupersetFactSearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
-        Ok(None)
-    }
-
     pub fn search_not_normal_atomic_fact_proof_by_builtin_rule(
         &mut self,
         fact: &NotNormalAtomicFact,
@@ -235,15 +176,6 @@ impl Runtime {
         fact: &NotIsSetFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotIsSetFactSearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
-        Ok(None)
-    }
-
-    pub fn search_not_is_nonempty_set_fact_proof_by_builtin_rule(
-        &mut self,
-        fact: &NotIsNonemptySetFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<Option<NotIsNonemptySetFactSearchProofByBuiltinRule>> {
         let _ = (fact, verify_state);
         Ok(None)
     }

@@ -22,6 +22,7 @@ pub use result::{ExecFactStmtResult, StoreFactAndInferResult};
 pub use verify_atomic_fact::verify_equality::equal_fact_from_let;
 pub use verify_atomic_fact::verify_non_equational_atomic_fact::
     NonEquationalAtomicFactSearchProofByBuiltinRule;
+pub use verify_fact_result::VerifyFactResult;
 pub use verify_state::VerifyState;
 pub use verify_well_defined::{
     AtomicFactWellDefinedProof, FactWellDefinedProof, ObjWellDefinedProofByDef,
