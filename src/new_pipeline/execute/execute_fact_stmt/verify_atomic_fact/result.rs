@@ -2,8 +2,7 @@ use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact};
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::execute::execute_fact_stmt::cache_search_proof::CacheSearchProof;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::{
-    EqualitySearchProofByBuiltinAlgebraicRewrite, EqualitySearchProofByBuiltinRule,
-    EqualitySearchProofByBuiltinStrategy, EqualitySearchProofByKnownAlgebraicRewrite,
+    EqualitySearchProofByBuiltinRule, EqualitySearchProofByBuiltinStrategy,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_non_equational_atomic_fact::{
     NonEquationalAtomicFactSearchProofByBuiltinAlgebraicRewrite,
@@ -27,14 +26,14 @@ pub struct VerifyEqualityResult {
 }
 
 // Mirrors search_equal_fact_proof stage order.
+// Equality algebraic properties are intrinsic to equality search, so there is
+// no separate algebraic-rewrite stage.
 pub enum EqualFactSearchedProof {
     ByCache(CacheSearchProof),
     ByBuiltinRule(EqualitySearchProofByBuiltinRule),
     ByKnownAtomicFact(EqualFactSearchedProofByKnownAtomicFact),
     ByBuiltinStrategy(EqualitySearchProofByBuiltinStrategy),
     ByKnownForallFact(EqualFactSearchedProofByKnownForallFact),
-    ByBuiltinAlgebraicRewrite(EqualitySearchProofByBuiltinAlgebraicRewrite),
-    ByKnownAlgebraicRewrite(EqualitySearchProofByKnownAlgebraicRewrite),
 }
 
 pub struct EqualFactSearchedProofByKnownAtomicFact {
