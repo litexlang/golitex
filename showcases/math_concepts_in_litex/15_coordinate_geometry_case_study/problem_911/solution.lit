@@ -1,0 +1,86 @@
+# Problem 911 / zhongkao_722 — 等腰直角三角形-SAS全等
+
+# 【NL原题】
+# 如图，在Rt△ABC中，∠BAC=90°，AB=AC=1，D是BC边上的一点，
+# 以AD为直角边作等腰Rt△ADE，其中∠DAE=90°，连接CE。
+# 求证：△ABD≌△ACE。
+
+# 同一90°旋转保持两个向量的点积。
+thm problem_911_same_quarter_turn_preserves_dot:
+    ? forall a, b, c, d, e_point cart(R, R):
+        $geo::rotated_90_ccw(c, a, b),
+        $geo::rotated_90_ccw(e_point, a, d)
+        =>:
+            geo::dot(geo::vec(a, c), geo::vec(a, e_point)) = geo::dot(geo::vec(a, b), geo::vec(a, d))
+    by def $geo::rotated_90_ccw(c, a, b)
+    by def $geo::rotated_90_ccw(e_point, a, d)
+    
+    # 展开两个点积为点坐标形式
+    by thm geo::perpendicular_dot_expand(a, c, a, e_point)
+    by thm geo::perpendicular_dot_expand(a, b, a, d)
+    geo::dot(geo::vec(a, c), geo::vec(a, e_point)) = (c[1] - a[1]) * (e_point[1] - a[1]) + (c[2] - a[2]) * (e_point[2] - a[2])
+    geo::dot(geo::vec(a, b), geo::vec(a, d)) = (b[1] - a[1]) * (d[1] - a[1]) + (b[2] - a[2]) * (d[2] - a[2])
+    
+    # 利用旋转谓词给出的坐标关系
+    c[1] - a[1] = b[2] - a[2]
+    c[2] - a[2] = a[1] - b[1]
+    e_point[1] - a[1] = d[2] - a[2]
+    e_point[2] - a[2] = a[1] - d[1]
+    
+    # 代入坐标关系
+    (c[1] - a[1]) * (e_point[1] - a[1]) + (c[2] - a[2]) * (e_point[2] - a[2]) = (b[2] - a[2]) * (d[2] - a[2]) + (a[1] - b[1]) * (a[1] - d[1])
+    (a[1] - b[1]) * (a[1] - d[1]) = (b[1] - a[1]) * (d[1] - a[1])
+    (b[2] - a[2]) * (d[2] - a[2]) + (a[1] - b[1]) * (a[1] - d[1]) = (b[2] - a[2]) * (d[2] - a[2]) + (b[1] - a[1]) * (d[1] - a[1])
+    (b[2] - a[2]) * (d[2] - a[2]) + (b[1] - a[1]) * (d[1] - a[1]) = (b[1] - a[1]) * (d[1] - a[1]) + (b[2] - a[2]) * (d[2] - a[2])
+    geo::dot(geo::vec(a, c), geo::vec(a, e_point)) = (b[1] - a[1]) * (d[1] - a[1]) + (b[2] - a[2]) * (d[2] - a[2])
+    (b[1] - a[1]) * (d[1] - a[1]) + (b[2] - a[2]) * (d[2] - a[2]) = geo::dot(geo::vec(a, b), geo::vec(a, d))
+    geo::dot(geo::vec(a, c), geo::vec(a, e_point)) = geo::dot(geo::vec(a, b), geo::vec(a, d))
+
+thm problem_911_congruence:
+    ? forall a, b, c, d, e_point cart(R, R):
+        # △ABC是三角形
+        $geo::is_triangle(a, b, c),
+        # ∠BAC=90°
+        $geo::is_right_angle(b, a, c),
+        # AB=1
+        geo::distance_sq(a, b) = 1,
+        # AC=1
+        geo::distance_sq(a, c) = 1,
+        # D是BC边上一点
+        $geo::is_on_segment(d, b, c),
+        # ∠DAE=90°
+        $geo::is_right_angle(d, a, e_point),
+        # AD=AE（等腰直角三角形）
+        geo::distance_sq(a, d) = geo::distance_sq(a, e_point),
+        # C是B绕A逆时针旋转90°
+        $geo::rotated_90_ccw(c, a, b),
+        # E是D绕A逆时针旋转90°（如图同向）
+        $geo::rotated_90_ccw(e_point, a, d)
+        =>:
+            # 结论：△ABD≌△ACE
+            $geo::are_triangles_congruent(a, b, d, a, c, e_point)
+    geo::distance_sq(a, b) = geo::distance_sq(a, c)
+    by thm geo::distance_sq_symmetric(a, b)
+    by thm geo::distance_sq_symmetric(a, c)
+    geo::distance_sq(b, a) = geo::distance_sq(c, a)
+
+    by thm problem_911_same_quarter_turn_preserves_dot(a, b, c, d, e_point)
+    geo::dot(geo::vec(a, b), geo::vec(a, d)) = geo::dot(geo::vec(a, c), geo::vec(a, e_point))
+
+    by thm geo::sas_congruence(b, a, d, c, a, e_point)
+    geo::distance_sq(b, d) = geo::distance_sq(c, e_point)
+
+    # 准备全等谓词所需的三边相等
+    # 边1: AB = AC (已给定)
+    # 边2: BD = CE (SAS结论)
+    # 边3: DA = EA，需要从前提 distance_sq(a,d) = distance_sq(a,e_point) 得到反向相等
+    by thm geo::distance_sq_symmetric(a, d)
+    by thm geo::distance_sq_symmetric(a, e_point)
+    geo::distance_sq(d, a) = geo::distance_sq(a, d)
+    geo::distance_sq(e_point, a) = geo::distance_sq(a, e_point)
+    geo::distance_sq(d, a) = geo::distance_sq(e_point, a)
+
+    by def $geo::are_triangles_congruent(a, b, d, a, c, e_point)
+    by def $geo::are_segments_congruent(a, b, a, c)
+    by def $geo::are_segments_congruent(b, d, c, e_point)
+    by def $geo::are_segments_congruent(d, a, e_point, a)

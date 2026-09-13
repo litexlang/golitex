@@ -1,0 +1,169 @@
+# Problem 903 / zhongkao_714 — 切线判定-垂径定理
+# Formalization: equal arcs BD and CD are encoded by equal chord lengths.
+
+prop is_tangent_at(p, q, o cart(R, R), r R+):
+    $geo::is_on_circle(p, o, r)
+    $geo::is_perpendicular(o, p, p, q)
+
+thm sum_to_zero_difference:
+    ? forall a, b, c R:
+        a = b + c
+        =>:
+            a - b - c = 0
+    a - b - c = (b + c) - b - c = 0
+
+# Convert the distance_sq representation to the coordinate premise used by
+# geo::equidistant_perp_bisector.
+thm equal_distance_coordinate_difference:
+    ? forall a, b, p cart(R, R):
+        geo::distance_sq(p, a) = geo::distance_sq(p, b)
+        =>:
+            (p[1] - a[1])^2 + (p[2] - a[2])^2 - (p[1] - b[1])^2 - (p[2] - b[2])^2 = 0
+    by thm geo::distance_sq_coordinate_formula(p, a)
+    by thm geo::distance_sq_coordinate_formula(p, b)
+    (a[1] - p[1])^2 = (p[1] - a[1])^2
+    (a[2] - p[2])^2 = (p[2] - a[2])^2
+    (b[1] - p[1])^2 = (p[1] - b[1])^2
+    (b[2] - p[2])^2 = (p[2] - b[2])^2
+    (p[1] - a[1])^2 + (p[2] - a[2])^2 = (a[1] - p[1])^2 + (p[2] - a[2])^2
+    (a[1] - p[1])^2 + (p[2] - a[2])^2 = (a[1] - p[1])^2 + (a[2] - p[2])^2
+    (a[1] - p[1])^2 + (a[2] - p[2])^2 = geo::distance_sq(p, a)
+    geo::distance_sq(p, b) = (b[1] - p[1])^2 + (b[2] - p[2])^2
+    (b[1] - p[1])^2 + (b[2] - p[2])^2 = (p[1] - b[1])^2 + (b[2] - p[2])^2
+    (p[1] - b[1])^2 + (b[2] - p[2])^2 = (p[1] - b[1])^2 + (p[2] - b[2])^2
+    (p[1] - a[1])^2 + (p[2] - a[2])^2 = (a[1] - p[1])^2 + (p[2] - a[2])^2 = (a[1] - p[1])^2 + (a[2] - p[2])^2 = geo::distance_sq(p, a) = geo::distance_sq(p, b) = (b[1] - p[1])^2 + (b[2] - p[2])^2 = (p[1] - b[1])^2 + (b[2] - p[2])^2 = (p[1] - b[1])^2 + (p[2] - b[2])^2
+    (p[1] - a[1])^2 + (p[2] - a[2])^2 = (p[1] - b[1])^2 + (p[2] - b[2])^2 + 0
+    by thm sum_to_zero_difference((p[1] - a[1])^2 + (p[2] - a[2])^2, (p[1] - b[1])^2 + (p[2] - b[2])^2, 0)
+
+# If O and D are both equidistant from B and C, then OD is perpendicular to BC.
+thm equal_distances_give_perpendicular_dot:
+    ? forall b, c, d, o cart(R, R):
+        geo::distance_sq(o, b) = geo::distance_sq(o, c),
+        geo::distance_sq(d, b) = geo::distance_sq(d, c)
+        =>:
+            geo::dot(geo::vec(o, d), geo::vec(b, c)) = 0
+    by thm geo::dot_from_cosine_law(o, b, c)
+    by thm geo::dot_from_cosine_law(d, b, c)
+    geo::dot(geo::vec(b, o), geo::vec(b, c)) = (geo::distance_sq(o, b) + geo::distance_sq(b, c) - geo::distance_sq(o, c)) / 2
+    geo::dot(geo::vec(b, d), geo::vec(b, c)) = (geo::distance_sq(d, b) + geo::distance_sq(b, c) - geo::distance_sq(d, c)) / 2
+    geo::distance_sq(o, c) = geo::distance_sq(o, b)
+    geo::distance_sq(d, c) = geo::distance_sq(d, b)
+    (geo::distance_sq(o, b) + geo::distance_sq(b, c) - geo::distance_sq(o, c)) / 2 = (geo::distance_sq(o, b) + geo::distance_sq(b, c) - geo::distance_sq(o, b)) / 2
+    (geo::distance_sq(d, b) + geo::distance_sq(b, c) - geo::distance_sq(d, c)) / 2 = (geo::distance_sq(d, b) + geo::distance_sq(b, c) - geo::distance_sq(d, b)) / 2
+    geo::dot(geo::vec(b, o), geo::vec(b, c)) = (geo::distance_sq(o, b) + geo::distance_sq(b, c) - geo::distance_sq(o, b)) / 2
+    geo::dot(geo::vec(b, d), geo::vec(b, c)) = (geo::distance_sq(d, b) + geo::distance_sq(b, c) - geo::distance_sq(d, b)) / 2
+    (geo::distance_sq(o, b) + geo::distance_sq(b, c) - geo::distance_sq(o, b)) / 2 = geo::distance_sq(b, c) / 2
+    (geo::distance_sq(d, b) + geo::distance_sq(b, c) - geo::distance_sq(d, b)) / 2 = geo::distance_sq(b, c) / 2
+    geo::dot(geo::vec(b, o), geo::vec(b, c)) = geo::distance_sq(b, c) / 2
+    geo::dot(geo::vec(b, d), geo::vec(b, c)) = geo::distance_sq(b, c) / 2
+    geo::dot(geo::vec(b, d), geo::vec(b, c)) - geo::dot(geo::vec(b, o), geo::vec(b, c)) = 0
+    by thm geo::dot_coordinate_formula(geo::vec(b, d), geo::vec(b, c))
+    by thm geo::dot_coordinate_formula(geo::vec(b, o), geo::vec(b, c))
+    by thm geo::dot_coordinate_formula(geo::vec(o, d), geo::vec(b, c))
+    geo::vec(b, d) = (d[1] - b[1], d[2] - b[2])
+    geo::vec(b, o) = (o[1] - b[1], o[2] - b[2])
+    geo::vec(o, d) = (d[1] - o[1], d[2] - o[2])
+    geo::vec(b, c) = (c[1] - b[1], c[2] - b[2])
+    geo::dot(geo::vec(b, d), geo::vec(b, c)) = (d[1] - b[1]) * (c[1] - b[1]) + (d[2] - b[2]) * (c[2] - b[2])
+    geo::dot(geo::vec(b, o), geo::vec(b, c)) = (o[1] - b[1]) * (c[1] - b[1]) + (o[2] - b[2]) * (c[2] - b[2])
+    geo::dot(geo::vec(o, d), geo::vec(b, c)) = (d[1] - o[1]) * (c[1] - b[1]) + (d[2] - o[2]) * (c[2] - b[2])
+    (d[1] - b[1]) * (c[1] - b[1]) + (d[2] - b[2]) * (c[2] - b[2]) - ((o[1] - b[1]) * (c[1] - b[1]) + (o[2] - b[2]) * (c[2] - b[2])) = 0
+    (d[1] - b[1]) * (c[1] - b[1]) + (d[2] - b[2]) * (c[2] - b[2]) - ((o[1] - b[1]) * (c[1] - b[1]) + (o[2] - b[2]) * (c[2] - b[2])) = (d[1] - b[1]) * (c[1] - b[1]) - (o[1] - b[1]) * (c[1] - b[1]) + (d[2] - b[2]) * (c[2] - b[2]) - (o[2] - b[2]) * (c[2] - b[2])
+    (d[1] - b[1]) * (c[1] - b[1]) - (o[1] - b[1]) * (c[1] - b[1]) + (d[2] - b[2]) * (c[2] - b[2]) - (o[2] - b[2]) * (c[2] - b[2]) = (d[1] - b[1] - (o[1] - b[1])) * (c[1] - b[1]) + (d[2] - b[2] - (o[2] - b[2])) * (c[2] - b[2])
+    (d[1] - b[1] - (o[1] - b[1])) * (c[1] - b[1]) + (d[2] - b[2] - (o[2] - b[2])) * (c[2] - b[2]) = (d[1] - o[1]) * (c[1] - b[1]) + (d[2] - o[2]) * (c[2] - b[2])
+    (d[1] - o[1]) * (c[1] - b[1]) + (d[2] - o[2]) * (c[2] - b[2]) = geo::dot(geo::vec(o, d), geo::vec(b, c))
+    geo::dot(geo::vec(o, d), geo::vec(b, c)) = 0
+
+# A nonzero direction u parallel to v transfers orthogonality from u to v.
+thm dot_det_transfer:
+    ? forall ux, uy, vx, vy, wx, wy R:
+        ux * wx + uy * wy = 0,
+        ux * vy - uy * vx = 0,
+        ux^2 + uy^2 > 0
+        =>:
+            vx * wx + vy * wy = 0
+    ux * (vx * (ux * wx + uy * wy) + wy * (ux * vy - uy * vx)) = 0
+    ux * (vx * (ux * wx + uy * wy) + wy * (ux * vy - uy * vx)) = ux^2 * (vx * wx + vy * wy)
+    ux^2 * (vx * wx + vy * wy) = 0
+    uy * (vy * (ux * wx + uy * wy) - wx * (ux * vy - uy * vx)) = 0
+    uy * (vy * (ux * wx + uy * wy) - wx * (ux * vy - uy * vx)) = uy^2 * (vx * wx + vy * wy)
+    uy^2 * (vx * wx + vy * wy) = 0
+    ux^2 * (vx * wx + vy * wy) + uy^2 * (vx * wx + vy * wy) = 0
+    (ux^2 + uy^2) * (vx * wx + vy * wy) = 0
+    ux^2 + uy^2 != 0
+    vx * wx + vy * wy = 0
+
+thm parallel_preserves_perpendicular:
+    ? forall a, b, c, d, p, q cart(R, R):
+        $geo::is_parallel(a, b, c, d),
+        $geo::is_perpendicular(a, b, p, q)
+        =>:
+            $geo::is_perpendicular(c, d, p, q)
+    a != b
+    c != d
+    p != q
+    geo::det(geo::vec(a, b), geo::vec(c, d)) = 0
+    geo::dot(geo::vec(a, b), geo::vec(p, q)) = 0
+    by thm geo::point_difference_norm_pos(a, b)
+    by thm geo::dot_coordinate_formula(geo::vec(a, b), geo::vec(p, q))
+    by thm geo::det_coordinate_formula(geo::vec(a, b), geo::vec(c, d))
+    geo::vec(a, b) = (b[1] - a[1], b[2] - a[2])
+    geo::vec(c, d) = (d[1] - c[1], d[2] - c[2])
+    geo::vec(p, q) = (q[1] - p[1], q[2] - p[2])
+    geo::dot(geo::vec(a, b), geo::vec(p, q)) = (b[1] - a[1]) * (q[1] - p[1]) + (b[2] - a[2]) * (q[2] - p[2])
+    geo::det(geo::vec(a, b), geo::vec(c, d)) = (b[1] - a[1]) * (d[2] - c[2]) - (b[2] - a[2]) * (d[1] - c[1])
+    (b[1] - a[1]) * (q[1] - p[1]) + (b[2] - a[2]) * (q[2] - p[2]) = 0
+    (b[1] - a[1]) * (d[2] - c[2]) - (b[2] - a[2]) * (d[1] - c[1]) = 0
+    (b[1] - a[1])^2 + (b[2] - a[2])^2 > 0
+    by thm dot_det_transfer(b[1] - a[1], b[2] - a[2], d[1] - c[1], d[2] - c[2], q[1] - p[1], q[2] - p[2])
+    by thm geo::dot_coordinate_formula(geo::vec(c, d), geo::vec(p, q))
+    geo::dot(geo::vec(c, d), geo::vec(p, q)) = 0
+    by def $geo::is_perpendicular(c, d, p, q)
+
+thm problem_903_tangent:
+    ? forall b, c, d, x, o cart(R, R), r R+:
+        $geo::is_on_circle(b, o, r),
+        $geo::is_on_circle(c, o, r),
+        $geo::is_on_circle(d, o, r),
+        geo::distance_sq(b, d) = geo::distance_sq(c, d),
+        $geo::is_parallel(b, c, d, x)
+        =>:
+            $is_tangent_at(d, x, o, r)
+    by def $geo::is_on_circle(b, o, r)
+    by def $geo::is_on_circle(c, o, r)
+    by def $geo::is_on_circle(d, o, r)
+    geo::distance_sq(b, o) = r^2
+    geo::distance_sq(c, o) = r^2
+    geo::distance_sq(d, o) = r^2
+    by thm geo::distance_sq_symmetric(b, o)
+    by thm geo::distance_sq_symmetric(c, o)
+    by thm geo::distance_sq_symmetric(d, o)
+    geo::distance_sq(o, b) = r^2
+    geo::distance_sq(o, c) = r^2
+    geo::distance_sq(o, d) = r^2
+    geo::distance_sq(o, b) = geo::distance_sq(o, c)
+    by thm geo::distance_sq_symmetric(b, d)
+    by thm geo::distance_sq_symmetric(c, d)
+    geo::distance_sq(d, b) = geo::distance_sq(d, c)
+    by thm equal_distances_give_perpendicular_dot(b, c, d, o)
+    b != c
+    by contra:
+        ? o != d
+        o = d
+        d[1] - o[1] = 0
+        d[2] - o[2] = 0
+        by thm geo::distance_sq_coordinate_formula(o, d)
+        geo::distance_sq(o, d) = (d[1] - o[1])^2 + (d[2] - o[2])^2
+        (d[1] - o[1])^2 + (d[2] - o[2])^2 = 0
+        geo::distance_sq(o, d) = 0
+        r^2 = 0
+        r > 0
+        r != 0
+        r^2 != 0
+        impossible r^2 != 0
+    o != d
+    by def $geo::is_perpendicular(o, d, b, c)
+    by thm parallel_preserves_perpendicular(b, c, d, x, o, d)
+    by thm geo::perpendicular_symmetric_prop(d, x, o, d)
+    $geo::is_perpendicular(o, d, d, x)
+    by def $is_tangent_at(d, x, o, r)

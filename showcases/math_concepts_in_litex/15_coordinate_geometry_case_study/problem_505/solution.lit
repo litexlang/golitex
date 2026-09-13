@@ -1,0 +1,389 @@
+# Problem 505 / zhongkao_307
+#
+# 原题：已知：如图，在△ABC和△ADE中，点D在BC上，∠BAD=∠CAE，
+#       AB=AD，AC=AE。求证：△ABC≌△ADE。
+#
+# 逐句 NL → Litex：
+# - “在△ABC中” ↔ $geo::is_triangle(a,b,c)。
+# - “在△ADE中” ↔ $geo::is_triangle(a,d,ep)。
+# - “点D在BC上” ↔ $geo::is_on_segment(d,b,c)。
+# - “如图，∠BAD=∠CAE” ↔ $translation::are_directed_angles_congruent(b,a,d,c,a,ep)。
+#   `directed`只补出图片给定的同向转角，不把待证夹角相等偷放进前提。
+# - “AB=AD” ↔ $geo::are_segments_congruent(a,b,a,d)。
+# - “AC=AE” ↔ $geo::are_segments_congruent(a,c,a,ep)。
+# - “求证△ABC≌△ADE” ↔ $geo::are_triangles_congruent(a,b,c,a,d,ep)。
+
+# Same square and the same weak sign determine the scalar itself.
+thm problem_505_same_sign_equal_squares:
+    ? forall x, y R:
+        x^2 = y^2,
+        x * y >= 0
+        =>:
+            x = y
+    x^2 - y^2 = 0
+    by thm geo::difference_of_squares(x, y)
+    x^2 - y^2 = (x + y) * (x - y)
+    (x + y) * (x - y) = 0
+    (x - y) * (x + y) = 0
+    by cases:
+        ? x = y
+        case x = y:
+            x = y
+        case x != y:
+            x - y != 0
+            by thm geo::zero_factor_law(x - y, x + y)
+            x + y = 0
+            y + x = 0
+            by thm geo::zero_sum_rearrange(y, x)
+            -y = x
+            x = -y
+            by contra:
+                ? y != 0
+                y = 0
+                x = 0
+                impossible x != y
+            y != 0
+            y^2 > 0
+            x * y = (-y) * y
+            (-y) * y = -(y^2)
+            x * y = -(y^2)
+            x * y < 0
+            impossible x * y >= 0
+
+# Equal ray lengths within each angle turn directed angle congruence into
+# equality of the normalized dot and determinant numerators.
+thm problem_505_directed_angle_metric_bridge:
+    ? forall p, q, r, u, v, w cart(R, R):
+        $translation::are_directed_angles_congruent(p, q, r, u, v, w),
+        geo::distance_sq(q, p) = geo::distance_sq(q, r),
+        geo::distance_sq(v, u) = geo::distance_sq(v, w)
+        =>:
+            geo::dot(geo::vec(q, p), geo::vec(q, r)) * geo::distance_sq(v, u) = geo::dot(geo::vec(v, u), geo::vec(v, w)) * geo::distance_sq(q, p),
+            geo::det(geo::vec(q, p), geo::vec(q, r)) * geo::distance_sq(v, u) = geo::det(geo::vec(v, u), geo::vec(v, w)) * geo::distance_sq(q, p)
+    by def $translation::are_directed_angles_congruent(p, q, r, u, v, w)
+    by def $geo::are_angles_congruent(p, q, r, u, v, w)
+    geo::angle_cos_den(p, q, r) = geo::distance_sq(q, p) * geo::distance_sq(q, r)
+    geo::angle_cos_den(u, v, w) = geo::distance_sq(v, u) * geo::distance_sq(v, w)
+    geo::distance_sq(q, p) * geo::distance_sq(q, r) = geo::distance_sq(q, p) * geo::distance_sq(q, p)
+    geo::distance_sq(q, p) * geo::distance_sq(q, p) = geo::distance_sq(q, p)^2
+    geo::angle_cos_den(p, q, r) = geo::distance_sq(q, p)^2
+    geo::distance_sq(v, u) * geo::distance_sq(v, w) = geo::distance_sq(v, u) * geo::distance_sq(v, u)
+    geo::distance_sq(v, u) * geo::distance_sq(v, u) = geo::distance_sq(v, u)^2
+    geo::angle_cos_den(u, v, w) = geo::distance_sq(v, u)^2
+    geo::distance_sq(q, p) > 0
+    geo::distance_sq(v, u) > 0
+
+    (geo::angle_cos_num(p, q, r) * geo::distance_sq(v, u))^2 = geo::angle_cos_num(p, q, r)^2 * geo::distance_sq(v, u)^2
+    geo::angle_cos_num(p, q, r)^2 * geo::distance_sq(v, u)^2 = geo::angle_cos_num(p, q, r)^2 * geo::angle_cos_den(u, v, w)
+    geo::angle_cos_num(p, q, r)^2 * geo::angle_cos_den(u, v, w) = geo::angle_cos_num(u, v, w)^2 * geo::angle_cos_den(p, q, r)
+    geo::angle_cos_num(u, v, w)^2 * geo::angle_cos_den(p, q, r) = geo::angle_cos_num(u, v, w)^2 * geo::distance_sq(q, p)^2
+    geo::angle_cos_num(u, v, w)^2 * geo::distance_sq(q, p)^2 = (geo::angle_cos_num(u, v, w) * geo::distance_sq(q, p))^2
+    (geo::angle_cos_num(p, q, r) * geo::distance_sq(v, u))^2 = (geo::angle_cos_num(u, v, w) * geo::distance_sq(q, p))^2
+    geo::distance_sq(v, u) * geo::distance_sq(q, p) > 0
+    (geo::angle_cos_num(p, q, r) * geo::angle_cos_num(u, v, w)) * (geo::distance_sq(v, u) * geo::distance_sq(q, p)) >= 0
+    (geo::angle_cos_num(p, q, r) * geo::distance_sq(v, u)) * (geo::angle_cos_num(u, v, w) * geo::distance_sq(q, p)) = (geo::angle_cos_num(p, q, r) * geo::angle_cos_num(u, v, w)) * (geo::distance_sq(v, u) * geo::distance_sq(q, p))
+    (geo::angle_cos_num(p, q, r) * geo::distance_sq(v, u)) * (geo::angle_cos_num(u, v, w) * geo::distance_sq(q, p)) >= 0
+    by thm problem_505_same_sign_equal_squares(geo::angle_cos_num(p, q, r) * geo::distance_sq(v, u), geo::angle_cos_num(u, v, w) * geo::distance_sq(q, p))
+    geo::angle_cos_num(p, q, r) * geo::distance_sq(v, u) = geo::angle_cos_num(u, v, w) * geo::distance_sq(q, p)
+    geo::angle_cos_num(p, q, r) = geo::dot(geo::vec(q, p), geo::vec(q, r))
+    geo::angle_cos_num(u, v, w) = geo::dot(geo::vec(v, u), geo::vec(v, w))
+    geo::dot(geo::vec(q, p), geo::vec(q, r)) = geo::angle_cos_num(p, q, r)
+    geo::dot(geo::vec(q, p), geo::vec(q, r)) * geo::distance_sq(v, u) = geo::angle_cos_num(p, q, r) * geo::distance_sq(v, u)
+    geo::dot(geo::vec(q, p), geo::vec(q, r)) * geo::distance_sq(v, u) = geo::angle_cos_num(u, v, w) * geo::distance_sq(q, p)
+    geo::angle_cos_num(u, v, w) * geo::distance_sq(q, p) = geo::dot(geo::vec(v, u), geo::vec(v, w)) * geo::distance_sq(q, p)
+    geo::dot(geo::vec(q, p), geo::vec(q, r)) * geo::distance_sq(v, u) = geo::dot(geo::vec(v, u), geo::vec(v, w)) * geo::distance_sq(q, p)
+
+    by thm geo::congruent_angle_det_square_ratio(p, q, r, u, v, w)
+    geo::det(geo::vec(q, p), geo::vec(q, r))^2 * geo::angle_cos_den(u, v, w) = geo::det(geo::vec(v, u), geo::vec(v, w))^2 * geo::angle_cos_den(p, q, r)
+    (geo::det(geo::vec(q, p), geo::vec(q, r)) * geo::distance_sq(v, u))^2 = geo::det(geo::vec(q, p), geo::vec(q, r))^2 * geo::distance_sq(v, u)^2
+    geo::det(geo::vec(q, p), geo::vec(q, r))^2 * geo::distance_sq(v, u)^2 = geo::det(geo::vec(q, p), geo::vec(q, r))^2 * geo::angle_cos_den(u, v, w)
+    geo::det(geo::vec(v, u), geo::vec(v, w))^2 * geo::angle_cos_den(p, q, r) = geo::det(geo::vec(v, u), geo::vec(v, w))^2 * geo::distance_sq(q, p)^2
+    geo::det(geo::vec(v, u), geo::vec(v, w))^2 * geo::distance_sq(q, p)^2 = (geo::det(geo::vec(v, u), geo::vec(v, w)) * geo::distance_sq(q, p))^2
+    (geo::det(geo::vec(q, p), geo::vec(q, r)) * geo::distance_sq(v, u))^2 = (geo::det(geo::vec(v, u), geo::vec(v, w)) * geo::distance_sq(q, p))^2
+    geo::det(geo::vec(q, p), geo::vec(q, r)) * geo::det(geo::vec(v, u), geo::vec(v, w)) >= 0
+    geo::distance_sq(v, u) * geo::distance_sq(q, p) > 0
+    (geo::det(geo::vec(q, p), geo::vec(q, r)) * geo::det(geo::vec(v, u), geo::vec(v, w))) * (geo::distance_sq(v, u) * geo::distance_sq(q, p)) >= 0
+    (geo::det(geo::vec(q, p), geo::vec(q, r)) * geo::distance_sq(v, u)) * (geo::det(geo::vec(v, u), geo::vec(v, w)) * geo::distance_sq(q, p)) = (geo::det(geo::vec(q, p), geo::vec(q, r)) * geo::det(geo::vec(v, u), geo::vec(v, w))) * (geo::distance_sq(v, u) * geo::distance_sq(q, p))
+    (geo::det(geo::vec(q, p), geo::vec(q, r)) * geo::distance_sq(v, u)) * (geo::det(geo::vec(v, u), geo::vec(v, w)) * geo::distance_sq(q, p)) >= 0
+    by thm problem_505_same_sign_equal_squares(geo::det(geo::vec(q, p), geo::vec(q, r)) * geo::distance_sq(v, u), geo::det(geo::vec(v, u), geo::vec(v, w)) * geo::distance_sq(q, p))
+
+# A common scaled rotation preserves dot products once the scale is nonzero.
+thm problem_505_scaled_rotation_preserves_dot:
+    ? forall x, y, z, w cart(R, R), n, c, s R:
+        n > 0,
+        n * y[1] = c * x[1] - s * x[2],
+        n * y[2] = s * x[1] + c * x[2],
+        n * w[1] = c * z[1] - s * z[2],
+        n * w[2] = s * z[1] + c * z[2],
+        c^2 + s^2 = n^2
+        =>:
+            geo::dot(x, z) = geo::dot(y, w)
+    by thm geo::dot_coordinate_formula(x, z)
+    by thm geo::dot_coordinate_formula(y, w)
+    geo::dot(x, z) = x[1] * z[1] + x[2] * z[2]
+    geo::dot(y, w) = y[1] * w[1] + y[2] * w[2]
+    n^2 > 0
+    (y[1] * w[1] + y[2] * w[2]) * n^2 = (n * y[1]) * (n * w[1]) + (n * y[2]) * (n * w[2])
+    (n * y[1]) * (n * w[1]) + (n * y[2]) * (n * w[2]) = (c * x[1] - s * x[2]) * (c * z[1] - s * z[2]) + (s * x[1] + c * x[2]) * (s * z[1] + c * z[2])
+    (c * x[1] - s * x[2]) * (c * z[1] - s * z[2]) + (s * x[1] + c * x[2]) * (s * z[1] + c * z[2]) = (c^2 + s^2) * (x[1] * z[1] + x[2] * z[2])
+    (c^2 + s^2) * (x[1] * z[1] + x[2] * z[2]) = n^2 * (x[1] * z[1] + x[2] * z[2])
+    (y[1] * w[1] + y[2] * w[2]) * n^2 = (x[1] * z[1] + x[2] * z[2]) * n^2
+    by thm geo::cancel_positive_right_factor(y[1] * w[1] + y[2] * w[2], x[1] * z[1] + x[2] * z[2], n^2)
+    geo::dot(x, z) = geo::dot(y, w)
+
+# If one directed rotation sends x to y and z to w, it preserves the cross dot.
+thm problem_505_rotation_pair_dot:
+    ? forall x, y, z, w cart(R, R):
+        geo::dot(x, y) = geo::dot(z, w),
+        geo::det(x, y) = geo::det(z, w),
+        geo::dot(x, x) = geo::dot(y, y),
+        geo::dot(z, z) = geo::dot(w, w)
+        =>:
+            geo::dot(x, z) = geo::dot(y, w)
+    geo::dot(x, y) = x[1] * y[1] + x[2] * y[2]
+    geo::dot(z, w) = z[1] * w[1] + z[2] * w[2]
+    geo::det(x, y) = x[1] * y[2] - x[2] * y[1]
+    geo::det(z, w) = z[1] * w[2] - z[2] * w[1]
+    geo::dot(x, x) = x[1]^2 + x[2]^2
+    geo::dot(y, y) = y[1]^2 + y[2]^2
+    geo::dot(z, z) = z[1]^2 + z[2]^2
+    geo::dot(w, w) = w[1]^2 + w[2]^2
+    geo::dot(x, z) = x[1] * z[1] + x[2] * z[2]
+    geo::dot(y, w) = y[1] * w[1] + y[2] * w[2]
+    # Lagrange's identity first shows that the common squared norm of x,y
+    # equals the common squared norm of z,w.
+    by thm geo::dot_squared_plus_det_squared(x, y)
+    by thm geo::dot_squared_plus_det_squared(z, w)
+    geo::dot(x, y)^2 + geo::det(x, y)^2 = geo::dot(x, x) * geo::dot(y, y)
+    geo::dot(z, w)^2 + geo::det(z, w)^2 = geo::dot(z, z) * geo::dot(w, w)
+    # Compare the two Lagrange left sides using the common dot and det values.
+    geo::dot(x, y)^2 + geo::det(x, y)^2 = geo::dot(z, w)^2 + geo::det(z, w)^2
+    geo::dot(x, x) * geo::dot(y, y) = geo::dot(z, z) * geo::dot(w, w)
+    geo::dot(x, x) * geo::dot(y, y) = (x[1]^2 + x[2]^2) * (y[1]^2 + y[2]^2)
+    geo::dot(z, z) * geo::dot(w, w) = (z[1]^2 + z[2]^2) * (w[1]^2 + w[2]^2)
+    (x[1]^2 + x[2]^2) * (y[1]^2 + y[2]^2) = (z[1]^2 + z[2]^2) * (w[1]^2 + w[2]^2)
+    (x[1]^2 + x[2]^2) * (y[1]^2 + y[2]^2) = (x[1]^2 + x[2]^2) * (x[1]^2 + x[2]^2)
+    (z[1]^2 + z[2]^2) * (w[1]^2 + w[2]^2) = (z[1]^2 + z[2]^2) * (z[1]^2 + z[2]^2)
+    (x[1]^2 + x[2]^2) * (x[1]^2 + x[2]^2) = (z[1]^2 + z[2]^2) * (z[1]^2 + z[2]^2)
+    (x[1]^2 + x[2]^2)^2 = (x[1]^2 + x[2]^2) * (x[1]^2 + x[2]^2)
+    (z[1]^2 + z[2]^2)^2 = (z[1]^2 + z[2]^2) * (z[1]^2 + z[2]^2)
+    (x[1]^2 + x[2]^2)^2 = (z[1]^2 + z[2]^2)^2
+    x[1]^2 + x[2]^2 >= 0
+    z[1]^2 + z[2]^2 >= 0
+    (x[1]^2 + x[2]^2) * (z[1]^2 + z[2]^2) >= 0
+    by thm problem_505_same_sign_equal_squares(x[1]^2 + x[2]^2, z[1]^2 + z[2]^2)
+    x[1]^2 + x[2]^2 = z[1]^2 + z[2]^2
+
+    x[1]^2 + x[2]^2 = 0 or not x[1]^2 + x[2]^2 = 0
+    by cases:
+        ? geo::dot(x, z) = geo::dot(y, w)
+        case x[1]^2 + x[2]^2 = 0:
+            x[1]^2 >= 0
+            x[2]^2 >= 0
+            x[1]^2 <= x[1]^2 + x[2]^2
+            x[2]^2 <= x[1]^2 + x[2]^2
+            x[1]^2 <= 0
+            x[2]^2 <= 0
+            x[1]^2 = 0
+            x[2]^2 = 0
+            x[1] = 0
+            x[2] = 0
+            y[1]^2 + y[2]^2 = 0
+            y[1]^2 >= 0
+            y[2]^2 >= 0
+            y[1]^2 <= y[1]^2 + y[2]^2
+            y[2]^2 <= y[1]^2 + y[2]^2
+            y[1]^2 <= 0
+            y[2]^2 <= 0
+            y[1]^2 = 0
+            y[2]^2 = 0
+            y[1] = 0
+            y[2] = 0
+            x[1] * z[1] + x[2] * z[2] = 0
+            y[1] * w[1] + y[2] * w[2] = 0
+            geo::dot(x, z) = geo::dot(y, w)
+        case not x[1]^2 + x[2]^2 = 0:
+            by contra:
+                ? x[1]^2 + x[2]^2 > 0
+                x[1]^2 + x[2]^2 <= 0
+                x[1]^2 + x[2]^2 >= 0
+                x[1]^2 + x[2]^2 = 0
+                impossible x[1]^2 + x[2]^2 != 0
+            x[1]^2 + x[2]^2 > 0
+
+            # Let n=|x|^2, c=x dot y, s=det(x,y).  The norm/dot/det
+            # hypotheses give the same scaled rotation from z to w.
+            (x[1]^2 + x[2]^2) * y[1] = (x[1] * y[1] + x[2] * y[2]) * x[1] - (x[1] * y[2] - x[2] * y[1]) * x[2]
+            (x[1]^2 + x[2]^2) * y[2] = (x[1] * y[2] - x[2] * y[1]) * x[1] + (x[1] * y[1] + x[2] * y[2]) * x[2]
+            (z[1]^2 + z[2]^2) * w[1] = (z[1] * w[1] + z[2] * w[2]) * z[1] - (z[1] * w[2] - z[2] * w[1]) * z[2]
+            (z[1]^2 + z[2]^2) * w[2] = (z[1] * w[2] - z[2] * w[1]) * z[1] + (z[1] * w[1] + z[2] * w[2]) * z[2]
+            x[1] * y[1] + x[2] * y[2] = z[1] * w[1] + z[2] * w[2]
+            x[1] * y[2] - x[2] * y[1] = z[1] * w[2] - z[2] * w[1]
+            (x[1]^2 + x[2]^2) * w[1] = (z[1]^2 + z[2]^2) * w[1]
+            (z[1] * w[1] + z[2] * w[2]) * z[1] = (x[1] * y[1] + x[2] * y[2]) * z[1]
+            (z[1] * w[2] - z[2] * w[1]) * z[2] = (x[1] * y[2] - x[2] * y[1]) * z[2]
+            (z[1]^2 + z[2]^2) * w[1] = (z[1] * w[1] + z[2] * w[2]) * z[1] - (z[1] * w[2] - z[2] * w[1]) * z[2]
+            (z[1] * w[1] + z[2] * w[2]) * z[1] - (z[1] * w[2] - z[2] * w[1]) * z[2] = (x[1] * y[1] + x[2] * y[2]) * z[1] - (z[1] * w[2] - z[2] * w[1]) * z[2]
+            (x[1] * y[1] + x[2] * y[2]) * z[1] - (z[1] * w[2] - z[2] * w[1]) * z[2] = (x[1] * y[1] + x[2] * y[2]) * z[1] - (x[1] * y[2] - x[2] * y[1]) * z[2]
+            (x[1]^2 + x[2]^2) * w[1] = (x[1] * y[1] + x[2] * y[2]) * z[1] - (x[1] * y[2] - x[2] * y[1]) * z[2]
+            (x[1]^2 + x[2]^2) * w[2] = (z[1]^2 + z[2]^2) * w[2]
+            (z[1] * w[2] - z[2] * w[1]) * z[1] = (x[1] * y[2] - x[2] * y[1]) * z[1]
+            (z[1] * w[1] + z[2] * w[2]) * z[2] = (x[1] * y[1] + x[2] * y[2]) * z[2]
+            (z[1]^2 + z[2]^2) * w[2] = (z[1] * w[2] - z[2] * w[1]) * z[1] + (z[1] * w[1] + z[2] * w[2]) * z[2]
+            (z[1] * w[2] - z[2] * w[1]) * z[1] + (z[1] * w[1] + z[2] * w[2]) * z[2] = (x[1] * y[2] - x[2] * y[1]) * z[1] + (z[1] * w[1] + z[2] * w[2]) * z[2]
+            (x[1] * y[2] - x[2] * y[1]) * z[1] + (z[1] * w[1] + z[2] * w[2]) * z[2] = (x[1] * y[2] - x[2] * y[1]) * z[1] + (x[1] * y[1] + x[2] * y[2]) * z[2]
+            (x[1]^2 + x[2]^2) * w[2] = (x[1] * y[2] - x[2] * y[1]) * z[1] + (x[1] * y[1] + x[2] * y[2]) * z[2]
+            (x[1] * y[1] + x[2] * y[2])^2 + (x[1] * y[2] - x[2] * y[1])^2 = geo::dot(x, y)^2 + geo::det(x, y)^2
+            (x[1] * y[1] + x[2] * y[2])^2 + (x[1] * y[2] - x[2] * y[1])^2 = (x[1]^2 + x[2]^2)^2
+            by thm problem_505_scaled_rotation_preserves_dot(x, y, z, w, x[1]^2 + x[2]^2, x[1] * y[1] + x[2] * y[2], x[1] * y[2] - x[2] * y[1])
+            geo::dot(x, z) = geo::dot(y, w)
+
+
+# Cross-scaled directed-angle invariants describe one common rotation on
+# two equal-length vector pairs, so the cross dot is preserved.
+thm problem_505_cross_scaled_rotation_pair_dot:
+    ? forall x, y, z, w cart(R, R):
+        geo::dot(x, y) * geo::dot(z, z) = geo::dot(z, w) * geo::dot(x, x),
+        geo::det(x, y) * geo::dot(z, z) = geo::det(z, w) * geo::dot(x, x),
+        geo::dot(x, x) = geo::dot(y, y),
+        geo::dot(z, z) = geo::dot(w, w),
+        geo::dot(x, x) > 0,
+        geo::dot(z, z) > 0
+        =>:
+            geo::dot(x, z) = geo::dot(y, w)
+    by thm geo::dot_coordinate_formula(x, y)
+    by thm geo::dot_coordinate_formula(z, w)
+    by thm geo::det_coordinate_formula(x, y)
+    by thm geo::det_coordinate_formula(z, w)
+    by thm geo::dot_coordinate_formula(x, x)
+    by thm geo::dot_coordinate_formula(y, y)
+    by thm geo::dot_coordinate_formula(z, z)
+    by thm geo::dot_coordinate_formula(w, w)
+
+    geo::dot(x, x) * geo::dot(z, z) > 0
+
+    # Reconstruct y from x and scale by |z|^2.
+    geo::dot(x, x) * y[1] = (x[1]^2 + x[2]^2) * y[1]
+    (x[1]^2 + x[2]^2) * y[1] = (x[1] * y[1] + x[2] * y[2]) * x[1] - (x[1] * y[2] - x[2] * y[1]) * x[2]
+    (x[1] * y[1] + x[2] * y[2]) * x[1] - (x[1] * y[2] - x[2] * y[1]) * x[2] = geo::dot(x, y) * x[1] - geo::det(x, y) * x[2]
+    geo::dot(x, x) * y[1] = geo::dot(x, y) * x[1] - geo::det(x, y) * x[2]
+    geo::dot(x, x) * y[2] = (x[1]^2 + x[2]^2) * y[2]
+    (x[1]^2 + x[2]^2) * y[2] = (x[1] * y[2] - x[2] * y[1]) * x[1] + (x[1] * y[1] + x[2] * y[2]) * x[2]
+    (x[1] * y[2] - x[2] * y[1]) * x[1] + (x[1] * y[1] + x[2] * y[2]) * x[2] = geo::det(x, y) * x[1] + geo::dot(x, y) * x[2]
+    geo::dot(x, x) * y[2] = geo::det(x, y) * x[1] + geo::dot(x, y) * x[2]
+    (geo::dot(x, x) * y[1]) * geo::dot(z, z) = (geo::dot(x, y) * x[1] - geo::det(x, y) * x[2]) * geo::dot(z, z)
+    (geo::dot(x, x) * geo::dot(z, z)) * y[1] = (geo::dot(x, x) * y[1]) * geo::dot(z, z)
+    (geo::dot(x, y) * x[1] - geo::det(x, y) * x[2]) * geo::dot(z, z) = (geo::dot(x, y) * geo::dot(z, z)) * x[1] - (geo::det(x, y) * geo::dot(z, z)) * x[2]
+    (geo::dot(x, x) * geo::dot(z, z)) * y[1] = (geo::dot(x, y) * geo::dot(z, z)) * x[1] - (geo::det(x, y) * geo::dot(z, z)) * x[2]
+    (geo::dot(x, x) * y[2]) * geo::dot(z, z) = (geo::det(x, y) * x[1] + geo::dot(x, y) * x[2]) * geo::dot(z, z)
+    (geo::dot(x, x) * geo::dot(z, z)) * y[2] = (geo::dot(x, x) * y[2]) * geo::dot(z, z)
+    (geo::det(x, y) * x[1] + geo::dot(x, y) * x[2]) * geo::dot(z, z) = (geo::det(x, y) * geo::dot(z, z)) * x[1] + (geo::dot(x, y) * geo::dot(z, z)) * x[2]
+    (geo::dot(x, x) * geo::dot(z, z)) * y[2] = (geo::det(x, y) * geo::dot(z, z)) * x[1] + (geo::dot(x, y) * geo::dot(z, z)) * x[2]
+
+    # Reconstruct w from z and use the two cross-scaled certificates.
+    geo::dot(z, z) * w[1] = (z[1]^2 + z[2]^2) * w[1]
+    (z[1]^2 + z[2]^2) * w[1] = (z[1] * w[1] + z[2] * w[2]) * z[1] - (z[1] * w[2] - z[2] * w[1]) * z[2]
+    (z[1] * w[1] + z[2] * w[2]) * z[1] - (z[1] * w[2] - z[2] * w[1]) * z[2] = geo::dot(z, w) * z[1] - geo::det(z, w) * z[2]
+    geo::dot(z, z) * w[1] = geo::dot(z, w) * z[1] - geo::det(z, w) * z[2]
+    geo::dot(z, z) * w[2] = (z[1]^2 + z[2]^2) * w[2]
+    (z[1]^2 + z[2]^2) * w[2] = (z[1] * w[2] - z[2] * w[1]) * z[1] + (z[1] * w[1] + z[2] * w[2]) * z[2]
+    (z[1] * w[2] - z[2] * w[1]) * z[1] + (z[1] * w[1] + z[2] * w[2]) * z[2] = geo::det(z, w) * z[1] + geo::dot(z, w) * z[2]
+    geo::dot(z, z) * w[2] = geo::det(z, w) * z[1] + geo::dot(z, w) * z[2]
+    geo::dot(z, w) * geo::dot(x, x) = geo::dot(x, y) * geo::dot(z, z)
+    geo::det(z, w) * geo::dot(x, x) = geo::det(x, y) * geo::dot(z, z)
+    (geo::dot(z, z) * w[1]) * geo::dot(x, x) = (geo::dot(z, w) * z[1] - geo::det(z, w) * z[2]) * geo::dot(x, x)
+    (geo::dot(x, x) * geo::dot(z, z)) * w[1] = (geo::dot(z, z) * w[1]) * geo::dot(x, x)
+    (geo::dot(z, w) * z[1] - geo::det(z, w) * z[2]) * geo::dot(x, x) = (geo::dot(z, w) * geo::dot(x, x)) * z[1] - (geo::det(z, w) * geo::dot(x, x)) * z[2]
+    (geo::dot(x, x) * geo::dot(z, z)) * w[1] = (geo::dot(z, w) * geo::dot(x, x)) * z[1] - (geo::det(z, w) * geo::dot(x, x)) * z[2]
+    (geo::dot(z, w) * geo::dot(x, x)) * z[1] - (geo::det(z, w) * geo::dot(x, x)) * z[2] = (geo::dot(x, y) * geo::dot(z, z)) * z[1] - (geo::det(z, w) * geo::dot(x, x)) * z[2]
+    (geo::dot(x, y) * geo::dot(z, z)) * z[1] - (geo::det(z, w) * geo::dot(x, x)) * z[2] = (geo::dot(x, y) * geo::dot(z, z)) * z[1] - (geo::det(x, y) * geo::dot(z, z)) * z[2]
+    (geo::dot(x, x) * geo::dot(z, z)) * w[1] = (geo::dot(x, y) * geo::dot(z, z)) * z[1] - (geo::det(x, y) * geo::dot(z, z)) * z[2]
+    (geo::dot(z, z) * w[2]) * geo::dot(x, x) = (geo::det(z, w) * z[1] + geo::dot(z, w) * z[2]) * geo::dot(x, x)
+    (geo::dot(x, x) * geo::dot(z, z)) * w[2] = (geo::dot(z, z) * w[2]) * geo::dot(x, x)
+    (geo::det(z, w) * z[1] + geo::dot(z, w) * z[2]) * geo::dot(x, x) = (geo::det(z, w) * geo::dot(x, x)) * z[1] + (geo::dot(z, w) * geo::dot(x, x)) * z[2]
+    (geo::dot(x, x) * geo::dot(z, z)) * w[2] = (geo::det(z, w) * geo::dot(x, x)) * z[1] + (geo::dot(z, w) * geo::dot(x, x)) * z[2]
+    (geo::det(z, w) * geo::dot(x, x)) * z[1] + (geo::dot(z, w) * geo::dot(x, x)) * z[2] = (geo::det(x, y) * geo::dot(z, z)) * z[1] + (geo::dot(z, w) * geo::dot(x, x)) * z[2]
+    (geo::det(x, y) * geo::dot(z, z)) * z[1] + (geo::dot(z, w) * geo::dot(x, x)) * z[2] = (geo::det(x, y) * geo::dot(z, z)) * z[1] + (geo::dot(x, y) * geo::dot(z, z)) * z[2]
+    (geo::dot(x, x) * geo::dot(z, z)) * w[2] = (geo::det(x, y) * geo::dot(z, z)) * z[1] + (geo::dot(x, y) * geo::dot(z, z)) * z[2]
+
+    # Lagrange's identity gives c^2+s^2=n^2.
+    by thm geo::dot_squared_plus_det_squared(x, y)
+    geo::dot(x, y)^2 + geo::det(x, y)^2 = geo::dot(x, x) * geo::dot(y, y)
+    geo::dot(x, x) * geo::dot(y, y) = geo::dot(x, x) * geo::dot(x, x)
+    geo::dot(x, x) * geo::dot(x, x) = geo::dot(x, x)^2
+    geo::dot(x, x) * geo::dot(y, y) = geo::dot(x, x)^2
+    geo::dot(x, y)^2 + geo::det(x, y)^2 = geo::dot(x, x)^2
+    (geo::dot(x, y) * geo::dot(z, z))^2 + (geo::det(x, y) * geo::dot(z, z))^2 = (geo::dot(x, y)^2 + geo::det(x, y)^2) * geo::dot(z, z)^2
+    (geo::dot(x, y)^2 + geo::det(x, y)^2) * geo::dot(z, z)^2 = geo::dot(x, x)^2 * geo::dot(z, z)^2
+    geo::dot(x, x)^2 * geo::dot(z, z)^2 = (geo::dot(x, x) * geo::dot(z, z))^2
+    (geo::dot(x, y) * geo::dot(z, z))^2 + (geo::det(x, y) * geo::dot(z, z))^2 = (geo::dot(x, x) * geo::dot(z, z))^2
+
+    by thm problem_505_scaled_rotation_preserves_dot(x, y, z, w, geo::dot(x, x) * geo::dot(z, z), geo::dot(x, y) * geo::dot(z, z), geo::det(x, y) * geo::dot(z, z))
+    geo::dot(x, z) = geo::dot(y, w)
+
+thm problem_505:
+    ? forall a, b, c, d, ep cart(R, R):
+        $geo::is_triangle(a, b, c),
+        $geo::is_triangle(a, d, ep),
+        $geo::is_on_segment(d, b, c),
+        $translation::are_directed_angles_congruent(b, a, d, c, a, ep),
+        $geo::are_segments_congruent(a, b, a, d),
+        $geo::are_segments_congruent(a, c, a, ep)
+        =>:
+            $geo::are_triangles_congruent(a, b, c, a, d, ep)
+    by def $geo::are_segments_congruent(a, b, a, d)
+    by def $geo::are_segments_congruent(a, c, a, ep)
+    by thm problem_505_directed_angle_metric_bridge(b, a, d, c, a, ep)
+    by def $translation::are_directed_angles_congruent(b, a, d, c, a, ep)
+    by def $geo::are_angles_congruent(b, a, d, c, a, ep)
+    by thm geo::distance_sq_positive_of_ne(a, b)
+    by thm geo::distance_sq_positive_of_ne(a, c)
+    by thm geo::distance_sq_coordinate_formula(a, b)
+    by thm geo::distance_sq_coordinate_formula(a, d)
+    by thm geo::distance_sq_coordinate_formula(a, c)
+    by thm geo::distance_sq_coordinate_formula(a, ep)
+
+    # Record the reverse direction before using it inside products.
+    geo::dot(geo::vec(a, b), geo::vec(a, b)) = geo::distance_sq(a, b)
+    geo::dot(geo::vec(a, c), geo::vec(a, c)) = geo::distance_sq(a, c)
+
+    # Rewrite the metric bridge's distance factors into exact self-dot factors.
+    geo::dot(geo::vec(a, b), geo::vec(a, d)) * geo::dot(geo::vec(a, c), geo::vec(a, c)) = geo::dot(geo::vec(a, b), geo::vec(a, d)) * geo::distance_sq(a, c)
+    geo::dot(geo::vec(a, b), geo::vec(a, d)) * geo::distance_sq(a, c) = geo::dot(geo::vec(a, c), geo::vec(a, ep)) * geo::distance_sq(a, b)
+    geo::dot(geo::vec(a, c), geo::vec(a, ep)) * geo::distance_sq(a, b) = geo::dot(geo::vec(a, c), geo::vec(a, ep)) * geo::dot(geo::vec(a, b), geo::vec(a, b))
+    geo::dot(geo::vec(a, b), geo::vec(a, d)) * geo::dot(geo::vec(a, c), geo::vec(a, c)) = geo::dot(geo::vec(a, c), geo::vec(a, ep)) * geo::dot(geo::vec(a, b), geo::vec(a, b))
+    geo::det(geo::vec(a, b), geo::vec(a, d)) * geo::dot(geo::vec(a, c), geo::vec(a, c)) = geo::det(geo::vec(a, b), geo::vec(a, d)) * geo::distance_sq(a, c)
+    geo::det(geo::vec(a, b), geo::vec(a, d)) * geo::distance_sq(a, c) = geo::det(geo::vec(a, c), geo::vec(a, ep)) * geo::distance_sq(a, b)
+    geo::det(geo::vec(a, c), geo::vec(a, ep)) * geo::distance_sq(a, b) = geo::det(geo::vec(a, c), geo::vec(a, ep)) * geo::dot(geo::vec(a, b), geo::vec(a, b))
+    geo::det(geo::vec(a, b), geo::vec(a, d)) * geo::dot(geo::vec(a, c), geo::vec(a, c)) = geo::det(geo::vec(a, c), geo::vec(a, ep)) * geo::dot(geo::vec(a, b), geo::vec(a, b))
+
+    geo::dot(geo::vec(a, b), geo::vec(a, b)) = geo::distance_sq(a, b)
+    geo::distance_sq(a, b) = geo::distance_sq(a, d)
+    geo::distance_sq(a, d) = geo::dot(geo::vec(a, d), geo::vec(a, d))
+    geo::dot(geo::vec(a, b), geo::vec(a, b)) = geo::dot(geo::vec(a, d), geo::vec(a, d))
+    geo::dot(geo::vec(a, c), geo::vec(a, c)) = geo::distance_sq(a, c)
+    geo::distance_sq(a, c) = geo::distance_sq(a, ep)
+    geo::distance_sq(a, ep) = geo::dot(geo::vec(a, ep), geo::vec(a, ep))
+    geo::dot(geo::vec(a, c), geo::vec(a, c)) = geo::dot(geo::vec(a, ep), geo::vec(a, ep))
+    geo::dot(geo::vec(a, b), geo::vec(a, b)) > 0
+    geo::dot(geo::vec(a, c), geo::vec(a, c)) > 0
+    by thm problem_505_cross_scaled_rotation_pair_dot(geo::vec(a, b), geo::vec(a, d), geo::vec(a, c), geo::vec(a, ep))
+
+    # SAS is instantiated as (b,a,c) and (d,a,ep), so orient the first side accordingly.
+    by thm geo::distance_sq_symmetric(a, b)
+    by thm geo::distance_sq_symmetric(a, d)
+    geo::distance_sq(b, a) = geo::distance_sq(a, b)
+    geo::distance_sq(a, b) = geo::distance_sq(a, d)
+    geo::distance_sq(a, d) = geo::distance_sq(d, a)
+    geo::distance_sq(b, a) = geo::distance_sq(d, a)
+    by thm geo::sas_congruence(b, a, c, d, a, ep)
+
+    # The triangle-congruence definition orients the third side as CA and EP-A.
+    by thm geo::distance_sq_symmetric(a, c)
+    by thm geo::distance_sq_symmetric(a, ep)
+    geo::distance_sq(c, a) = geo::distance_sq(a, c)
+    geo::distance_sq(a, c) = geo::distance_sq(a, ep)
+    geo::distance_sq(a, ep) = geo::distance_sq(ep, a)
+    geo::distance_sq(c, a) = geo::distance_sq(ep, a)
+    by def $geo::are_segments_congruent(c, a, ep, a)
+    by def $geo::are_triangles_congruent(a, b, c, a, d, ep)

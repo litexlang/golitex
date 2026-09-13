@@ -1,0 +1,254 @@
+# Problem 870 / zhongkao_675 - formally checked counterexample probe.
+#
+# 【完整原题】如图，在△ABC中，AB＝AC，E是边AC上一点，且BE＝BC，过点A作BE的垂线，
+# 交BE的延长线于点D，求证：△ADE∽△ABC。
+#
+# 原命题不成立。取 A=(0,2), B=(-1,0), C=(1,0),
+# E=(1/5,8/5), D=(8/25,44/25)。以下逐条验证所有原题条件，
+# 并证明按原题顶点顺序 △ADE 与 △ABC 不相似。
+
+# 【局部代数辅助引理】用于从“零的平方乘积”等式中推出右端为零。
+thm zero_square_mul_eq_forces_rhs_zero:
+    ? forall a, b, c R:
+        a = 0,
+        a^2 * b = c
+        =>:
+            c = 0
+    a^2 = 0
+    a^2 * b = 0
+    c = 0
+
+# 【局部代数辅助引理】将两个已知等式显式提升到平方乘积中。
+thm problem_870_product_substitution:
+    ? forall n, m, x, y R:
+        n = m,
+        x = y
+        =>:
+            n^2 * x = m^2 * y
+    by thm translation::multiply_both_sides(n, m, n)
+    n * n = m * n
+    by thm translation::multiply_both_sides(n, m, m)
+    n * m = m * m
+    n^2 = n * n = m * n = n * m = m * m = m^2
+    by thm translation::multiply_both_sides(n^2, m^2, x)
+    n^2 * x = m^2 * x
+    by thm translation::multiply_both_sides(x, y, m^2)
+    x * m^2 = y * m^2
+    m^2 * x = x * m^2 = y * m^2 = m^2 * y
+
+
+# 【原题条件】A、B、C组成三角形，且AB=AC。
+thm problem_870_triangle_and_legs_counterexample:
+    ? forall z R:
+        # 【技术前提】仅用于实例化无参数的坐标证书。
+        z = z
+        =>:
+            # 【原题条件】在△ABC中。
+            $translation::is_triangle((0, 2), (-1, 0), (1, 0)),
+            # 【原题条件】AB=AC。
+            $translation::are_segments_congruent((0, 2), (-1, 0), (0, 2), (1, 0))
+
+    by thm translation::vec_coordinate_formula((0, 2), (-1, 0))
+    translation::vec((0, 2), (-1, 0)) = (-1, -2)
+    by thm translation::vec_coordinate_formula((0, 2), (1, 0))
+    translation::vec((0, 2), (1, 0)) = (1, -2)
+    by thm translation::det_coordinate_formula((-1, -2), (1, -2))
+    translation::det((-1, -2), (1, -2)) = 4
+    translation::det(translation::vec((0, 2), (-1, 0)), translation::vec((0, 2), (1, 0))) = 4
+    by contra:
+        ? not $translation::is_collinear((0, 2), (-1, 0), (1, 0))
+        $translation::is_collinear((0, 2), (-1, 0), (1, 0))
+        by def $translation::is_collinear((0, 2), (-1, 0), (1, 0))
+        impossible 4 != 0
+    by def $translation::is_triangle((0, 2), (-1, 0), (1, 0))
+
+    by thm translation::distance_sq_coordinate_formula((0, 2), (-1, 0))
+    translation::distance_sq((0, 2), (-1, 0)) = 5
+    by thm translation::distance_sq_coordinate_formula((0, 2), (1, 0))
+    translation::distance_sq((0, 2), (1, 0)) = 5
+    by def $translation::are_segments_congruent((0, 2), (-1, 0), (0, 2), (1, 0))
+
+
+# 【原题条件】E是边AC上一点，且BE=BC。
+thm problem_870_point_e_counterexample:
+    ? forall z R:
+        # 【技术前提】仅用于实例化无参数的坐标证书。
+        z = z
+        =>:
+            # 【原题条件】E是边AC上一点。
+            $translation::is_on_segment((1 / 5, 8 / 5), (0, 2), (1, 0)),
+            # 【原题条件】BE=BC。
+            $translation::are_segments_congruent((-1, 0), (1 / 5, 8 / 5), (-1, 0), (1, 0))
+
+    by contra:
+        ? (0, 2) != (1, 0)
+        (0, 2) = (1, 0)
+        0 = (0, 2)[1] = (1, 0)[1] = 1
+        impossible 0 != 1
+    witness exist t R st {0 <= t, t <= 1, (1 / 5, 8 / 5) = ((0, 2)[1] + t * ((1, 0)[1] - (0, 2)[1]), (0, 2)[2] + t * ((1, 0)[2] - (0, 2)[2]))} from 1 / 5:
+        0 <= 1 / 5
+        1 / 5 <= 1
+        (1 / 5, 8 / 5) = ((0, 2)[1] + (1 / 5) * ((1, 0)[1] - (0, 2)[1]), (0, 2)[2] + (1 / 5) * ((1, 0)[2] - (0, 2)[2]))
+    by def $translation::is_on_segment((1 / 5, 8 / 5), (0, 2), (1, 0))
+
+    by thm translation::distance_sq_coordinate_formula((-1, 0), (1 / 5, 8 / 5))
+    translation::distance_sq((-1, 0), (1 / 5, 8 / 5)) = 4
+    by thm translation::distance_sq_coordinate_formula((-1, 0), (1, 0))
+    translation::distance_sq((-1, 0), (1, 0)) = 4
+    by def $translation::are_segments_congruent((-1, 0), (1 / 5, 8 / 5), (-1, 0), (1, 0))
+
+
+# 【原题条件】D在BE越过E的延长线上，且AD垂直BE。
+thm problem_870_point_d_counterexample:
+    ? forall z R:
+        # 【技术前提】仅用于实例化无参数的坐标证书。
+        z = z
+        =>:
+            # 【原题条件】D在BE的延长线上（越过E）。
+            $translation::is_on_extension((8 / 25, 44 / 25), (-1, 0), (1 / 5, 8 / 5)),
+            # 【原题条件】过点A作BE的垂线，交于D，即AD垂直BE。
+            $translation::is_perpendicular((0, 2), (8 / 25, 44 / 25), (-1, 0), (1 / 5, 8 / 5))
+
+    by contra:
+        ? (-1, 0) != (1 / 5, 8 / 5)
+        (-1, 0) = (1 / 5, 8 / 5)
+        -1 = (-1, 0)[1] = (1 / 5, 8 / 5)[1] = 1 / 5
+        impossible -1 != 1 / 5
+    by contra:
+        ? (8 / 25, 44 / 25) != (1 / 5, 8 / 5)
+        (8 / 25, 44 / 25) = (1 / 5, 8 / 5)
+        8 / 25 = (8 / 25, 44 / 25)[1] = (1 / 5, 8 / 5)[1] = 1 / 5
+        impossible 8 / 25 != 1 / 5
+    witness exist t R st {t > 1, (8 / 25, 44 / 25) = ((-1, 0)[1] + t * ((1 / 5, 8 / 5)[1] - (-1, 0)[1]), (-1, 0)[2] + t * ((1 / 5, 8 / 5)[2] - (-1, 0)[2]))} from 11 / 10:
+        11 / 10 > 1
+        (8 / 25, 44 / 25) = ((-1, 0)[1] + (11 / 10) * ((1 / 5, 8 / 5)[1] - (-1, 0)[1]), (-1, 0)[2] + (11 / 10) * ((1 / 5, 8 / 5)[2] - (-1, 0)[2]))
+    by def $translation::is_on_extension((8 / 25, 44 / 25), (-1, 0), (1 / 5, 8 / 5))
+
+    by contra:
+        ? (0, 2) != (8 / 25, 44 / 25)
+        (0, 2) = (8 / 25, 44 / 25)
+        0 = (0, 2)[1] = (8 / 25, 44 / 25)[1] = 8 / 25
+        impossible 0 != 8 / 25
+    by thm translation::vec_coordinate_formula((0, 2), (8 / 25, 44 / 25))
+    translation::vec((0, 2), (8 / 25, 44 / 25)) = (8 / 25, -6 / 25)
+    by thm translation::vec_coordinate_formula((-1, 0), (1 / 5, 8 / 5))
+    translation::vec((-1, 0), (1 / 5, 8 / 5)) = (6 / 5, 8 / 5)
+    by thm translation::dot_coordinate_formula((8 / 25, -6 / 25), (6 / 5, 8 / 5))
+    translation::dot((8 / 25, -6 / 25), (6 / 5, 8 / 5)) = 0
+    translation::dot(translation::vec((0, 2), (8 / 25, 44 / 25)), translation::vec((-1, 0), (1 / 5, 8 / 5))) = 0
+    by def $translation::is_perpendicular((0, 2), (8 / 25, 44 / 25), (-1, 0), (1 / 5, 8 / 5))
+
+
+# 【原题结论的否定】△ADE与△ABC按给定顶点顺序不相似。
+thm problem_870_conclusion_is_false:
+    ? forall z R:
+        # 【技术前提】仅用于实例化无参数的坐标证书。
+        z = z
+        =>:
+            # 【原题结论的否定】△ADE不相似于△ABC。
+            not $translation::are_triangles_similar((0, 2), (8 / 25, 44 / 25), (1 / 5, 8 / 5), (0, 2), (-1, 0), (1, 0))
+
+    # Establish the four nonzero-ray domain facts used by the two angle expressions.
+    by contra:
+        ? (0, 2) != (8 / 25, 44 / 25)
+        (0, 2) = (8 / 25, 44 / 25)
+        0 = (0, 2)[1] = (8 / 25, 44 / 25)[1] = 8 / 25
+        impossible 0 != 8 / 25
+    by contra:
+        ? (1 / 5, 8 / 5) != (8 / 25, 44 / 25)
+        (1 / 5, 8 / 5) = (8 / 25, 44 / 25)
+        1 / 5 = (1 / 5, 8 / 5)[1] = (8 / 25, 44 / 25)[1] = 8 / 25
+        impossible 1 / 5 != 8 / 25
+    by contra:
+        ? (0, 2) != (-1, 0)
+        (0, 2) = (-1, 0)
+        0 = (0, 2)[1] = (-1, 0)[1] = -1
+        impossible 0 != -1
+    by contra:
+        ? (1, 0) != (-1, 0)
+        (1, 0) = (-1, 0)
+        1 = (1, 0)[1] = (-1, 0)[1] = -1
+        impossible 1 != -1
+
+    by thm translation::vec_coordinate_formula((8 / 25, 44 / 25), (0, 2))
+    translation::vec((8 / 25, 44 / 25), (0, 2)) = (-8 / 25, 6 / 25)
+    by thm translation::vec_coordinate_formula((8 / 25, 44 / 25), (1 / 5, 8 / 5))
+    translation::vec((8 / 25, 44 / 25), (1 / 5, 8 / 5)) = (-3 / 25, -4 / 25)
+    by thm translation::dot_coordinate_formula((-8 / 25, 6 / 25), (-3 / 25, -4 / 25))
+    translation::dot((-8 / 25, 6 / 25), (-3 / 25, -4 / 25)) = 0
+
+    by thm translation::vec_coordinate_formula((-1, 0), (0, 2))
+    translation::vec((-1, 0), (0, 2)) = (1, 2)
+    by thm translation::vec_coordinate_formula((-1, 0), (1, 0))
+    translation::vec((-1, 0), (1, 0)) = (2, 0)
+    by thm translation::dot_coordinate_formula((1, 2), (2, 0))
+    translation::dot((1, 2), (2, 0)) = 2
+
+    by thm translation::distance_sq_coordinate_formula((8 / 25, 44 / 25), (0, 2))
+    translation::distance_sq((8 / 25, 44 / 25), (0, 2)) = 4 / 25
+    by thm translation::distance_sq_coordinate_formula((8 / 25, 44 / 25), (1 / 5, 8 / 5))
+    translation::distance_sq((8 / 25, 44 / 25), (1 / 5, 8 / 5)) = 1 / 25
+    by thm translation::distance_sq_coordinate_formula((-1, 0), (0, 2))
+    translation::distance_sq((-1, 0), (0, 2)) = 5
+    by thm translation::distance_sq_coordinate_formula((-1, 0), (1, 0))
+    translation::distance_sq((-1, 0), (1, 0)) = 4
+    # 与角全等定义中的六个标量因子逐字匹配，供反证展开后直接代入。
+    (0 - 8 / 25) * (1 / 5 - 8 / 25) + (2 - 44 / 25) * (8 / 5 - 44 / 25) = 0
+    (0 - (-1)) * (1 - (-1)) + (2 - 0) * (0 - 0) = 2
+    (0 - (-1))^2 + (2 - 0)^2 = 5
+    (1 - (-1))^2 + (0 - 0)^2 = 4
+    (0 - 8 / 25)^2 + (2 - 44 / 25)^2 = 4 / 25
+    (1 / 5 - 8 / 25)^2 + (8 / 5 - 44 / 25)^2 = 1 / 25
+    (((0 - (-1)) * (1 - (-1)) + (2 - 0) * (0 - 0))^2) * (((0 - 8 / 25)^2 + (2 - 44 / 25)^2) * ((1 / 5 - 8 / 25)^2 + (8 / 5 - 44 / 25)^2)) != 0
+
+    by contra:
+        ? not $translation::are_triangles_similar((0, 2), (8 / 25, 44 / 25), (1 / 5, 8 / 5), (0, 2), (-1, 0), (1, 0))
+        $translation::are_triangles_similar((0, 2), (8 / 25, 44 / 25), (1 / 5, 8 / 5), (0, 2), (-1, 0), (1, 0))
+        by def $translation::are_triangles_similar((0, 2), (8 / 25, 44 / 25), (1 / 5, 8 / 5), (0, 2), (-1, 0), (1, 0))
+        $translation::are_angles_congruent((0, 2), (8 / 25, 44 / 25), (1 / 5, 8 / 5), (0, 2), (-1, 0), (1, 0))
+        by def $translation::are_angles_congruent((0, 2), (8 / 25, 44 / 25), (1 / 5, 8 / 5), (0, 2), (-1, 0), (1, 0))
+        translation::angle_cos_num((0, 2), (8 / 25, 44 / 25), (1 / 5, 8 / 5)) = translation::dot(translation::vec((8 / 25, 44 / 25), (0, 2)), translation::vec((8 / 25, 44 / 25), (1 / 5, 8 / 5)))
+        translation::dot(translation::vec((8 / 25, 44 / 25), (0, 2)), translation::vec((8 / 25, 44 / 25), (1 / 5, 8 / 5))) = translation::dot((-8 / 25, 6 / 25), (-3 / 25, -4 / 25)) = 0
+        translation::angle_cos_num((0, 2), (8 / 25, 44 / 25), (1 / 5, 8 / 5)) = 0
+        translation::angle_cos_den((0, 2), (8 / 25, 44 / 25), (1 / 5, 8 / 5)) = translation::distance_sq((8 / 25, 44 / 25), (0, 2)) * translation::distance_sq((8 / 25, 44 / 25), (1 / 5, 8 / 5))
+        translation::angle_cos_den((0, 2), (8 / 25, 44 / 25), (1 / 5, 8 / 5)) = (4 / 25) * (1 / 25)
+        translation::angle_cos_num((0, 2), (-1, 0), (1, 0)) = translation::dot(translation::vec((-1, 0), (0, 2)), translation::vec((-1, 0), (1, 0)))
+        translation::dot(translation::vec((-1, 0), (0, 2)), translation::vec((-1, 0), (1, 0))) = translation::dot((1, 2), (2, 0)) = 2
+        translation::angle_cos_num((0, 2), (-1, 0), (1, 0)) = 2
+        translation::angle_cos_den((0, 2), (-1, 0), (1, 0)) = translation::distance_sq((-1, 0), (0, 2)) * translation::distance_sq((-1, 0), (1, 0))
+        translation::angle_cos_den((0, 2), (-1, 0), (1, 0)) = 5 * 4
+        by thm problem_870_product_substitution(translation::angle_cos_num((0, 2), (8 / 25, 44 / 25), (1 / 5, 8 / 5)), 0, translation::angle_cos_den((0, 2), (-1, 0), (1, 0)), 5 * 4)
+        translation::angle_cos_num((0, 2), (8 / 25, 44 / 25), (1 / 5, 8 / 5))^2 * translation::angle_cos_den((0, 2), (-1, 0), (1, 0)) = 0^2 * (5 * 4)
+        by thm problem_870_product_substitution(translation::angle_cos_num((0, 2), (-1, 0), (1, 0)), 2, translation::angle_cos_den((0, 2), (8 / 25, 44 / 25), (1 / 5, 8 / 5)), (4 / 25) * (1 / 25))
+        translation::angle_cos_num((0, 2), (-1, 0), (1, 0))^2 * translation::angle_cos_den((0, 2), (8 / 25, 44 / 25), (1 / 5, 8 / 5)) = 2^2 * ((4 / 25) * (1 / 25))
+        0^2 * (5 * 4) = 2^2 * ((4 / 25) * (1 / 25))
+        0^2 * (5 * 4) = 0
+        2^2 * ((4 / 25) * (1 / 25)) > 0
+        impossible 0^2 * (5 * 4) = 2^2 * ((4 / 25) * (1 / 25))
+
+
+# 对全部原题条件及结论否定的一一映射证书。
+thm problem_870_full_counterexample:
+    ? forall z R:
+        # 【技术前提】仅用于实例化四个局部坐标证书，不对应原题条件。
+        z = z
+        =>:
+            # 【原题条件1】在△ABC中。
+            $translation::is_triangle((0, 2), (-1, 0), (1, 0)),
+            # 【原题条件2】AB=AC。
+            $translation::are_segments_congruent((0, 2), (-1, 0), (0, 2), (1, 0)),
+            # 【原题条件3】E是边AC上一点。
+            $translation::is_on_segment((1 / 5, 8 / 5), (0, 2), (1, 0)),
+            # 【原题条件4】BE=BC。
+            $translation::are_segments_congruent((-1, 0), (1 / 5, 8 / 5), (-1, 0), (1, 0)),
+            # 【原题条件5】D在BE越过E的延长线上。
+            $translation::is_on_extension((8 / 25, 44 / 25), (-1, 0), (1 / 5, 8 / 5)),
+            # 【原题条件6】过点A作BE的垂线并交于D，即AD垂直BE。
+            $translation::is_perpendicular((0, 2), (8 / 25, 44 / 25), (-1, 0), (1 / 5, 8 / 5)),
+            # 【原题结论的否定】△ADE不相似于△ABC，故原命题为假。
+            not $translation::are_triangles_similar((0, 2), (8 / 25, 44 / 25), (1 / 5, 8 / 5), (0, 2), (-1, 0), (1, 0))
+
+    by thm problem_870_triangle_and_legs_counterexample(z)
+    by thm problem_870_point_e_counterexample(z)
+    by thm problem_870_point_d_counterexample(z)
+    by thm problem_870_conclusion_is_false(z)
