@@ -6,5 +6,11 @@ pub mod verify_equality;
 pub mod verify_non_equational_atomic_fact;
 pub mod well_defined;
 
-pub use result::VerifyAtomicFactResult2;
-pub use search_proof::VerifyAtomicFactSearchProof2;
+pub use result::{
+    EqualFactSearchedProof, EqualFactSearchedProofByKnownAtomicFact,
+    EqualFactSearchedProofByKnownForallFact, NonEquationalFactSearchedProof,
+    NonEquationalFactSearchedProofByDefinition, NonEquationalFactSearchedProofByKnownAtomicFact,
+    NonEquationalFactSearchedProofByKnownForallFact, VerifyAtomicFactResult,
+    VerifyEqualityResult, VerifyNonEquationalFactResult,
+};
+pub use search_proof::VerifyAtomicFactSearchProof;

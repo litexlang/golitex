@@ -82,14 +82,14 @@ impl Runtime {
                         fact_id,
                         element: args[0].clone(),
                         set: args[1].clone(),
-                        line_file,
+                        line_file: Some(line_file),
                     }))
                 } else {
                     Ok(AtomicFact::NotInFact(NotInFact {
                         fact_id,
                         element: args[0].clone(),
                         set: args[1].clone(),
-                        line_file,
+                        line_file: Some(line_file),
                     }))
                 }
             }
@@ -101,14 +101,14 @@ impl Runtime {
                         fact_id,
                         left: args[0].clone(),
                         right: args[1].clone(),
-                        line_file,
+                        line_file: Some(line_file),
                     }))
                 } else {
                     Ok(AtomicFact::NotSubsetFact(NotSubsetFact {
                         fact_id,
                         left: args[0].clone(),
                         right: args[1].clone(),
-                        line_file,
+                        line_file: Some(line_file),
                     }))
                 }
             }
@@ -120,14 +120,14 @@ impl Runtime {
                         fact_id,
                         left: args[0].clone(),
                         right: args[1].clone(),
-                        line_file,
+                        line_file: Some(line_file),
                     }))
                 } else {
                     Ok(AtomicFact::NotSupersetFact(NotSupersetFact {
                         fact_id,
                         left: args[0].clone(),
                         right: args[1].clone(),
-                        line_file,
+                        line_file: Some(line_file),
                     }))
                 }
             }
@@ -138,13 +138,13 @@ impl Runtime {
                     Ok(AtomicFact::IsSetFact(IsSetFact {
                         fact_id,
                         set: args[0].clone(),
-                        line_file,
+                        line_file: Some(line_file),
                     }))
                 } else {
                     Ok(AtomicFact::NotIsSetFact(NotIsSetFact {
                         fact_id,
                         set: args[0].clone(),
-                        line_file,
+                        line_file: Some(line_file),
                     }))
                 }
             }
@@ -155,13 +155,13 @@ impl Runtime {
                     Ok(AtomicFact::IsNonemptySetFact(IsNonemptySetFact {
                         fact_id,
                         set: args[0].clone(),
-                        line_file,
+                        line_file: Some(line_file),
                     }))
                 } else {
                     Ok(AtomicFact::NotIsNonemptySetFact(NotIsNonemptySetFact {
                         fact_id,
                         set: args[0].clone(),
-                        line_file,
+                        line_file: Some(line_file),
                     }))
                 }
             }
@@ -172,13 +172,13 @@ impl Runtime {
                     Ok(AtomicFact::IsFiniteSetFact(IsFiniteSetFact {
                         fact_id,
                         set: args[0].clone(),
-                        line_file,
+                        line_file: Some(line_file),
                     }))
                 } else {
                     Ok(AtomicFact::NotIsFiniteSetFact(NotIsFiniteSetFact {
                         fact_id,
                         set: args[0].clone(),
-                        line_file,
+                        line_file: Some(line_file),
                     }))
                 }
             }
@@ -189,13 +189,13 @@ impl Runtime {
                     Ok(AtomicFact::IsCartFact(IsCartFact {
                         fact_id,
                         set: args[0].clone(),
-                        line_file,
+                        line_file: Some(line_file),
                     }))
                 } else {
                     Ok(AtomicFact::NotIsCartFact(NotIsCartFact {
                         fact_id,
                         set: args[0].clone(),
-                        line_file,
+                        line_file: Some(line_file),
                     }))
                 }
             }
@@ -206,13 +206,13 @@ impl Runtime {
                     Ok(AtomicFact::IsTupleFact(IsTupleFact {
                         fact_id,
                         set: args[0].clone(),
-                        line_file,
+                        line_file: Some(line_file),
                     }))
                 } else {
                     Ok(AtomicFact::NotIsTupleFact(NotIsTupleFact {
                         fact_id,
                         set: args[0].clone(),
-                        line_file,
+                        line_file: Some(line_file),
                     }))
                 }
             }
@@ -230,7 +230,7 @@ impl Runtime {
                     fact_id: self.ids.allocate_fact_id(),
                     left: args[0].clone(),
                     right: args[1].clone(),
-                    line_file,
+                    line_file: Some(line_file),
                 }))
             }
             FN_EQ_IN => {
@@ -255,7 +255,7 @@ impl Runtime {
                     left: args[0].clone(),
                     right: args[1].clone(),
                     set: args[2].clone(),
-                    line_file,
+                    line_file: Some(line_file),
                 }))
             }
             _ => Ok(normal_or_not(
@@ -281,14 +281,14 @@ fn normal_or_not(
             fact_id,
             predicate,
             body,
-            line_file,
+            line_file: Some(line_file),
         })
     } else {
         AtomicFact::NotNormalAtomicFact(NotNormalAtomicFact {
             fact_id,
             predicate,
             body,
-            line_file,
+            line_file: Some(line_file),
         })
     }
 }
@@ -331,73 +331,73 @@ fn build_binary_compare(
             fact_id,
             left,
             right,
-            line_file,
+            line_file: Some(line_file),
         }),
         (EQUAL, false) => AtomicFact::NotEqualFact(NotEqualFact {
             fact_id,
             left,
             right,
-            line_file,
+            line_file: Some(line_file),
         }),
         (NOT_EQUAL, true) => AtomicFact::NotEqualFact(NotEqualFact {
             fact_id,
             left,
             right,
-            line_file,
+            line_file: Some(line_file),
         }),
         (NOT_EQUAL, false) => AtomicFact::EqualFact(EqualFact {
             fact_id,
             left,
             right,
-            line_file,
+            line_file: Some(line_file),
         }),
         (LESS, true) => AtomicFact::LessFact(LessFact {
             fact_id,
             left,
             right,
-            line_file,
+            line_file: Some(line_file),
         }),
         (LESS, false) => AtomicFact::NotLessFact(NotLessFact {
             fact_id,
             left,
             right,
-            line_file,
+            line_file: Some(line_file),
         }),
         (GREATER, true) => AtomicFact::GreaterFact(GreaterFact {
             fact_id,
             left,
             right,
-            line_file,
+            line_file: Some(line_file),
         }),
         (GREATER, false) => AtomicFact::NotGreaterFact(NotGreaterFact {
             fact_id,
             left,
             right,
-            line_file,
+            line_file: Some(line_file),
         }),
         (LESS_EQUAL, true) => AtomicFact::LessEqualFact(LessEqualFact {
             fact_id,
             left,
             right,
-            line_file,
+            line_file: Some(line_file),
         }),
         (LESS_EQUAL, false) => AtomicFact::NotLessEqualFact(NotLessEqualFact {
             fact_id,
             left,
             right,
-            line_file,
+            line_file: Some(line_file),
         }),
         (GREATER_EQUAL, true) => AtomicFact::GreaterEqualFact(GreaterEqualFact {
             fact_id,
             left,
             right,
-            line_file,
+            line_file: Some(line_file),
         }),
         (GREATER_EQUAL, false) => AtomicFact::NotGreaterEqualFact(NotGreaterEqualFact {
             fact_id,
             left,
             right,
-            line_file,
+            line_file: Some(line_file),
         }),
         _ => {
             return Err(RuntimeParseError::new(

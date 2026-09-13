@@ -1,6 +1,6 @@
 use super::AtomicFactWellDefinedProof;
 use crate::new_pipeline::ast::fact::Fact;
-use crate::new_pipeline::execute::execute_fact_stmt::VerifyState2;
+use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
 // Result of classifying a Fact and running its WD path.
@@ -14,7 +14,7 @@ impl Runtime {
     pub fn verify_fact_well_definedness(
         &mut self,
         fact: &Fact,
-        verify_state: VerifyState2,
+        verify_state: VerifyState,
     ) -> RuntimeResult<FactWellDefinedProof> {
         match fact {
             Fact::AtomicFact(fact) => Ok(FactWellDefinedProof::AtomicFact(

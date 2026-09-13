@@ -1,8 +1,8 @@
 use super::VerifyObjResult;
-use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact};
+use crate::new_pipeline::ast::fact::AtomicFact;
 use crate::new_pipeline::ast::obj::Obj;
-use crate::new_pipeline::execute::execute_fact_stmt::VerifyState2;
-use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
+use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
+use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 pub struct AtomicFactWellDefinedProof {
     pub well_defined_of_each_parameter: Vec<VerifyObjResult>,
@@ -13,9 +13,9 @@ impl Runtime {
     pub fn verify_atomic_fact_well_definedness(
         &mut self,
         fact: &AtomicFact,
-        verify_state: VerifyState2,
+        verify_state: VerifyState,
     ) -> RuntimeResult<AtomicFactWellDefinedProof> {
-        let args = atomic_fact_arg_objs(fact)?;
+        let args = atomic_fact_arg_objs(fact);
         let mut well_defined_of_each_parameter = Vec::new();
         for arg in args {
             well_defined_of_each_parameter
@@ -27,13 +27,37 @@ impl Runtime {
     }
 }
 
-// Tracer: equality is wired; other atomic shapes come next.
-fn atomic_fact_arg_objs(fact: &AtomicFact) -> RuntimeResult<Vec<&Obj>> {
+fn atomic_fact_arg_objs(fact: &AtomicFact) -> Vec<&Obj> {
     match fact {
-        AtomicFact::EqualFact(EqualFact { left, right, .. }) => Ok(vec![left, right]),
-        _ => Err(RuntimeError::Unsupported(
-            "verify_atomic_fact_well_definedness: only EqualFact args are wired for the tracer"
-                .to_string(),
-        )),
+        AtomicFact::EqualFact(f) => vec![&f.left, &f.right],
+        AtomicFact::NotEqualFact(f) => vec![&f.left, &f.right],
+        AtomicFact::InFact(f) => vec![&f.element, &f.set],
+        AtomicFact::NotInFact(f) => vec![&f.element, &f.set],
+        AtomicFact::LessFact(f) => vec![&f.left, &f.right],
+        AtomicFact::NotLessFact(f) => vec![&f.left, &f.right],
+        AtomicFact::GreaterFact(f) => vec![&f.left, &f.right],
+        AtomicFact::NotGreaterFact(f) => vec![&f.left, &f.right],
+        AtomicFact::LessEqualFact(f) => vec![&f.left, &f.right],
+        AtomicFact::NotLessEqualFact(f) => vec![&f.left, &f.right],
+        AtomicFact::GreaterEqualFact(f) => vec![&f.left, &f.right],
+        AtomicFact::NotGreaterEqualFact(f) => vec![&f.left, &f.right],
+        AtomicFact::IsSetFact(f) => vec![&f.set],
+        AtomicFact::NotIsSetFact(f) => vec![&f.set],
+        AtomicFact::IsNonemptySetFact(f) => vec![&f.set],
+        AtomicFact::NotIsNonemptySetFact(f) => vec![&f.set],
+        AtomicFact::IsFiniteSetFact(f) => vec![&f.set],
+        AtomicFact::NotIsFiniteSetFact(f) => vec![&f.set],
+        AtomicFact::SubsetFact(f) => vec![&f.left, &f.right],
+        AtomicFact::NotSubsetFact(f) => vec![&f.left, &f.right],
+        AtomicFact::SupersetFact(f) => vec![&f.left, &f.right],
+        AtomicFact::NotSupersetFact(f) => vec![&f.left, &f.right],
+        AtomicFact::IsTupleFact(f) => vec![&f.set],
+        AtomicFact::NotIsTupleFact(f) => vec![&f.set],
+        AtomicFact::IsCartFact(f) => vec![&f.set],
+        AtomicFact::NotIsCartFact(f) => vec![&f.set],
+        AtomicFact::FnEqualFact(f) => vec![&f.left, &f.right],
+        AtomicFact::FnEqualInFact(f) => vec![&f.left, &f.right, &f.set],
+        AtomicFact::NormalAtomicFact(f) => f.body.iter().collect(),
+        AtomicFact::NotNormalAtomicFact(f) => f.body.iter().collect(),
     }
 }

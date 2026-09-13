@@ -1,11 +1,11 @@
 #[derive(Clone)]
-pub struct VerifyState2 {
+pub struct VerifyState {
     pub can_use_forall_fact: bool,
     pub can_use_known_algebraic_rewrite: bool,
     pub store_well_defined_fact: bool,
 }
 
-impl VerifyState2 {
+impl VerifyState {
     /// Derive the read-only state used while searching for a truth proof.
     ///
     /// Truth search may reuse WD records that are already visible in the

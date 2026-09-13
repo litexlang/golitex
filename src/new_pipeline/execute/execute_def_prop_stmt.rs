@@ -1,7 +1,7 @@
 use super::exec_stmt_result::ExecDefPropStmtResult;
 use crate::new_pipeline::ast::stmt::DefPropStmt;
 use crate::new_pipeline::execute::execute_fact_stmt::{
-    FactWellDefinedProof, ParamTypeWellDefinedProof, VerifyState2,
+    FactWellDefinedProof, ParamTypeWellDefinedProof, VerifyState,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
@@ -56,7 +56,7 @@ impl Runtime {
         &mut self,
         def_prop: &DefPropStmt,
     ) -> RuntimeResult<(Vec<ParamTypeWellDefinedProof>, Vec<FactWellDefinedProof>)> {
-        let verify_state = VerifyState2 {
+        let verify_state = VerifyState {
             can_use_forall_fact: true,
             can_use_known_algebraic_rewrite: true,
             store_well_defined_fact: true,

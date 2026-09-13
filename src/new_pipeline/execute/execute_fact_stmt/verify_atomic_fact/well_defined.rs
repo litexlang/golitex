@@ -1,25 +1,25 @@
 use crate::new_pipeline::execute::execute_fact_stmt::verify_obj_well_defined::
-    WellDefinednessProofOfObj2;
-use crate::new_pipeline::execute::execute_fact_stmt::VerifyState2;
+    WellDefinednessProofOfObj;
+use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::prelude::*;
 
-pub struct AtomicFactWellDefinedProof2 {
-    pub well_defined_of_each_parameter: Vec<WellDefinednessProofOfObj2>,
+pub struct DraftAtomicFactWellDefinedProof {
+    pub well_defined_of_each_parameter: Vec<WellDefinednessProofOfObj>,
 }
 
 impl Runtime {
-    pub fn verify_atomic_fact_well_definedness2(
+    pub fn verify_draft_atomic_fact_well_definedness(
         &mut self,
         fact: &AtomicFact,
-        verify_state: VerifyState2,
-    ) -> RuntimeResult<AtomicFactWellDefinedProof2> {
+        verify_state: VerifyState,
+    ) -> RuntimeResult<DraftAtomicFactWellDefinedProof> {
         let mut well_defined_of_each_parameter = Vec::new();
         for arg in fact.args_ref() {
             well_defined_of_each_parameter
-                .push(self.verify_obj_well_definedness2(arg, verify_state.clone())?);
+                .push(self.verify_draft_obj_well_definedness(arg, verify_state.clone())?);
         }
-        Ok(AtomicFactWellDefinedProof2 {
+        Ok(DraftAtomicFactWellDefinedProof {
             well_defined_of_each_parameter,
         })
     }
