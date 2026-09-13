@@ -556,66 +556,66 @@ impl EnvironmentSummary {
 
         let atomic_0_count = environment
             .facts
-            .atomic
+            .known_non_equational_facts
             .by_other_arg_count
             .values()
             .map(Vec::len)
             .sum::<usize>();
         summary.add_field_counts(
             "known_atomic_facts_with_0_or_more_than_2_args",
-            environment.facts.atomic.by_other_arg_count.len(),
+            environment.facts.known_non_equational_facts.by_other_arg_count.len(),
             atomic_0_count,
         );
 
         let atomic_1_count = environment
             .facts
-            .atomic
+            .known_non_equational_facts
             .by_one_arg
             .values()
             .map(|facts| facts.len())
             .sum::<usize>();
         summary.add_field_counts(
             "known_atomic_facts_with_1_arg",
-            environment.facts.atomic.by_one_arg.len(),
+            environment.facts.known_non_equational_facts.by_one_arg.len(),
             atomic_1_count,
         );
 
         let atomic_2_count = environment
             .facts
-            .atomic
+            .known_non_equational_facts
             .by_two_args
             .values()
             .map(|facts| facts.len())
             .sum::<usize>();
         summary.add_field_counts(
             "known_atomic_facts_with_2_args",
-            environment.facts.atomic.by_two_args.len(),
+            environment.facts.known_non_equational_facts.by_two_args.len(),
             atomic_2_count,
         );
 
         let exist_count = environment
             .facts
-            .quantified
-            .existential
+            .known_exist
+            .by_key
             .values()
             .map(Vec::len)
             .sum::<usize>();
         summary.add_field_counts(
             "known_exist_facts",
-            environment.facts.quantified.existential.len(),
+            environment.facts.known_exist.by_key.len(),
             exist_count,
         );
 
         let or_count = environment
             .facts
-            .quantified
-            .disjunctions
+            .known_or
+            .by_key
             .values()
             .map(Vec::len)
             .sum::<usize>();
         summary.add_field_counts(
             "known_or_facts",
-            environment.facts.quantified.disjunctions.len(),
+            environment.facts.known_or.by_key.len(),
             or_count,
         );
 

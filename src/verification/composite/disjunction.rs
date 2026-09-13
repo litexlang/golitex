@@ -902,12 +902,7 @@ impl Runtime {
         all_objs_equal_to_each_arg: &Vec<Vec<String>>,
         verify_state: &VerifyState,
     ) -> Result<ProveFactResult, RuntimeError> {
-        if let Some(known_or_facts) = environment
-            .facts
-            .quantified
-            .disjunctions
-            .get(&or_fact.key())
-        {
+        if let Some(known_or_facts) = environment.facts.known_or.by_key.get(&or_fact.key()) {
             for known_or_fact in known_or_facts.iter() {
                 if !Self::_verify_or_fact_the_same_type_ref(known_or_fact, or_fact)? {
                     continue;

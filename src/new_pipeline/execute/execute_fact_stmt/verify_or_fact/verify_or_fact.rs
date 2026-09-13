@@ -1,19 +1,10 @@
 use crate::prelude::*;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 
-pub struct VerifyOrFactResult {
-    pub fact: OrFact,
-    pub well_defined_proof: OrFactWellDefinedProof,
-    pub searched_proof: OrFactSearchedProof,
-}
-
-pub enum OrFactSearchedProof {
-    ByCache(CacheSearchProof),
-    ByChosenBranch {
-        chosen_branch_index: usize,
-        proof_of_chosen_branch: VerifyFactResult,
-    },
-}
+use super::verify_or_fact_result::{
+    VerifyOrFactResult,
+    OrFactSearchedProof,
+};
 
 impl Runtime {
     pub fn verify_or_fact(

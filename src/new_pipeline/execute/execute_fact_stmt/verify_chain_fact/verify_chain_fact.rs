@@ -1,14 +1,7 @@
 use crate::prelude::*;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 
-pub struct VerifyChainFactResult {
-    pub fact: ChainFact,
-    pub well_defined_proof: ChainFactWellDefinedProof,
-
-    // Prove every adjacent comparison in source order. Keep the child proofs on
-    // the outer result so a consumer can follow the complete chain proof.
-    pub proof_of_each_edge: Vec<VerifyFactResult>,
-}
+use super::verify_chain_fact_result::VerifyChainFactResult;
 
 impl Runtime {
     pub fn verify_chain_fact(

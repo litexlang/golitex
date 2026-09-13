@@ -71,13 +71,13 @@ impl ExecEnv {
                     let arg_key: ObjString = arg_key1.expect("one argument key should exist");
                     if let Some(map) = self
                         .facts
-                        .atomic
+                        .known_non_equational_facts
                         .by_one_arg
                         .get_mut(&(key.clone(), positive_polarity))
                     {
                         map.insert(arg_key, atomic_fact);
                     } else {
-                        self.facts.atomic.by_one_arg.insert(
+                        self.facts.known_non_equational_facts.by_one_arg.insert(
                             (key, positive_polarity),
                             HashMap::from([(arg_key, atomic_fact)]),
                         );
@@ -87,13 +87,13 @@ impl ExecEnv {
                     let arg_key2: ObjString = arg_key2.expect("second argument key should exist");
                     if let Some(map) = self
                         .facts
-                        .atomic
+                        .known_non_equational_facts
                         .by_two_args
                         .get_mut(&(key.clone(), positive_polarity))
                     {
                         map.insert((arg_key1, arg_key2), atomic_fact);
                     } else {
-                        self.facts.atomic.by_two_args.insert(
+                        self.facts.known_non_equational_facts.by_two_args.insert(
                             (key, positive_polarity),
                             HashMap::from([((arg_key1, arg_key2), atomic_fact)]),
                         );
@@ -101,14 +101,14 @@ impl ExecEnv {
                 } else {
                     if let Some(vec_ref) = self
                         .facts
-                        .atomic
+                        .known_non_equational_facts
                         .by_other_arg_count
                         .get_mut(&(key.clone(), positive_polarity))
                     {
                         vec_ref.push(atomic_fact);
                     } else {
                         self.facts
-                            .atomic
+                            .known_non_equational_facts
                             .by_other_arg_count
                             .insert((key, positive_polarity), vec![atomic_fact]);
                     }
@@ -120,22 +120,22 @@ impl ExecEnv {
 
     fn store_exist_fact(&mut self, exist_fact: ExistFact) -> Result<(), RuntimeError> {
         let key: ExistFactKey = exist_fact.key();
-        if let Some(vec_ref) = self.facts.quantified.existential.get_mut(&key) {
+        if let Some(vec_ref) = self.facts.known_exist.by_key.get_mut(&key) {
             vec_ref.push(exist_fact.clone());
         } else {
             self.facts
-                .quantified
-                .existential
+                .known_exist
+                .by_key
                 .insert(key.clone(), vec![exist_fact.clone()]);
         }
         let alpha_key = exist_fact.alpha_normalized_key();
         if alpha_key != key {
-            if let Some(vec_ref) = self.facts.quantified.existential.get_mut(&alpha_key) {
+            if let Some(vec_ref) = self.facts.known_exist.by_key.get_mut(&alpha_key) {
                 vec_ref.push(exist_fact);
             } else {
                 self.facts
-                    .quantified
-                    .existential
+                    .known_exist
+                    .by_key
                     .insert(alpha_key, vec![exist_fact]);
             }
         }
@@ -144,13 +144,10 @@ impl ExecEnv {
 
     fn store_or_fact(&mut self, or_fact: OrFact) -> Result<(), RuntimeError> {
         let key: OrFactKey = or_fact.key();
-        if let Some(vec_ref) = self.facts.quantified.disjunctions.get_mut(&key) {
+        if let Some(vec_ref) = self.facts.known_or.by_key.get_mut(&key) {
             vec_ref.push(or_fact);
         } else {
-            self.facts
-                .quantified
-                .disjunctions
-                .insert(key, vec![or_fact]);
+            self.facts.known_or.by_key.insert(key, vec![or_fact]);
         }
         Ok(())
     }

@@ -2,16 +2,10 @@ use crate::fact::PlainExistFact;
 use crate::prelude::*;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 
-pub struct VerifyNotExistFactResult {
-    pub fact: PlainExistFact,
-    pub well_defined_proof: ExistFactWellDefinedProof,
-    pub searched_proof: NotExistFactSearchedProof,
-}
-
-pub enum NotExistFactSearchedProof {
-    ByCache(CacheSearchProof),
-    ByDemorganForall(VerifyForallFactResult),
-}
+use super::verify_not_exist_fact_result::{
+    VerifyNotExistFactResult,
+    NotExistFactSearchedProof,
+};
 
 impl Runtime {
     pub fn verify_not_exist_fact(

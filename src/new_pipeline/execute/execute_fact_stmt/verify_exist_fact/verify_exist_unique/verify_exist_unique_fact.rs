@@ -2,21 +2,11 @@ use crate::fact::PlainExistFact;
 use crate::prelude::*;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 
-pub struct VerifyExistUniqueFactResult {
-    pub fact: PlainExistFact,
-    pub well_defined_proof: ExistFactWellDefinedProof,
-    pub searched_proof: ExistUniqueFactSearchedProof,
-}
-
-pub enum ExistUniqueFactSearchedProof {
-    ByCache(CacheSearchProof),
-    ProveAsExistFactWithUniqueness(ExistUniqueFactSearchedProofByExistAndUniqueness),
-}
-
-pub struct ExistUniqueFactSearchedProofByExistAndUniqueness {
-    pub proof_of_exist_fact: VerifyPlainExistFactResult,
-    pub proof_of_uniqueness: VerifyForallFactResult,
-}
+use super::verify_exist_unique_fact_result::{
+    VerifyExistUniqueFactResult,
+    ExistUniqueFactSearchedProof,
+    ExistUniqueFactSearchedProofByExistAndUniqueness,
+};
 
 impl Runtime {
     pub fn verify_exist_unique_fact(

@@ -14,14 +14,14 @@ mod stored_fact;
 mod stored_facts;
 mod stored_forall_conclusion;
 
-pub use atomic::AtomicFactMemory;
+pub use atomic::NonEquationalAtomicFactMemory;
 pub use cached_known_fact::CachedKnownFact;
 pub use facts::KnownFactMemory;
 pub use forall_argument_shape::{forall_argument_shape, ForallArgumentShape};
 pub use forall_conclusions::KnownForallFactMemory;
 pub use known_equality::{EqualityClassId, EqualityHistoryEvent, KnownEquality};
 pub use known_equality_proof_step::KnownEqualityProofStep;
-pub use quantified::QuantifiedFactMemory;
+pub use quantified::{ExistFactMemory, OrFactMemory};
 pub use set_relations::SpecialSetRelationMemory;
 pub use stored_fact::StoredFactRecord;
 pub use stored_facts::EnvironmentStoredFactStore;

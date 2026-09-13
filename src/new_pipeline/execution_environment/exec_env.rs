@@ -90,9 +90,10 @@ pub struct KnownFactMemory {
     pub facts_by_id: HashMap<FactId, Fact>,
 
     pub known_equality: KnownEquality,
-    pub atomic: AtomicFactMemory,
+    pub known_non_equational_facts: NonEquationalAtomicFactMemory,
     pub set_relations: SpecialSetRelationMemory,
-    pub quantified: QuantifiedFactMemory,
+    pub known_exist: ExistFactMemory,
+    pub known_or: OrFactMemory,
     pub forall_facts: KnownForallFactMemory,
     pub fact_cache: HashMap<FactString, CachedKnownFact>,
 }
@@ -155,11 +156,7 @@ impl ExecEnv {
         self.native_equal_facts.get(&fact_id)
     }
 
-    pub fn find_native_equal(
-        &self,
-        left: &AstObj,
-        right: &AstObj,
-    ) -> Option<FactId> {
+    pub fn find_native_equal(&self, left: &AstObj, right: &AstObj) -> Option<FactId> {
         for (id, fact) in &self.native_equal_facts {
             if ast_obj_eq(&fact.left, left) && ast_obj_eq(&fact.right, right) {
                 return Some(*id);
@@ -257,9 +254,10 @@ impl KnownFactMemory {
         Self {
             facts_by_id: HashMap::new(),
             known_equality: KnownEquality::new(),
-            atomic: AtomicFactMemory::new(),
+            known_non_equational_facts: NonEquationalAtomicFactMemory::new(),
             set_relations: SpecialSetRelationMemory::new(),
-            quantified: QuantifiedFactMemory::new(),
+            known_exist: ExistFactMemory::new(),
+            known_or: OrFactMemory::new(),
             forall_facts: KnownForallFactMemory::new(),
             fact_cache: HashMap::new(),
         }

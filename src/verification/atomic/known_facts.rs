@@ -831,7 +831,7 @@ impl Runtime {
     ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(known_facts_map) = environment
             .facts
-            .atomic
+            .known_non_equational_facts
             .by_one_arg
             .get(&(atomic_fact.key(), atomic_fact.has_positive_polarity()))
         {
@@ -865,7 +865,7 @@ impl Runtime {
     ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(known_facts_map) = environment
             .facts
-            .atomic
+            .known_non_equational_facts
             .by_two_args
             .get(&(atomic_fact.key(), atomic_fact.has_positive_polarity()))
         {
@@ -929,7 +929,7 @@ impl Runtime {
         if let Some(alt) = atomic_fact.transposed_binary_order_equivalent_with_runtime(self) {
             if let Some(known_facts_map) = environment
                 .facts
-                .atomic
+                .known_non_equational_facts
                 .by_two_args
                 .get(&(alt.key(), alt.has_positive_polarity()))
             {
@@ -1003,7 +1003,7 @@ impl Runtime {
     ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(known_facts) = environment
             .facts
-            .atomic
+            .known_non_equational_facts
             .by_other_arg_count
             .get(&(atomic_fact.key(), atomic_fact.has_positive_polarity()))
         {
@@ -1109,17 +1109,17 @@ impl Runtime {
         let mut known_facts = Vec::new();
         match atomic_fact.number_of_args() {
             1 => {
-                if let Some(facts) = environment.facts.atomic.by_one_arg.get(&lookup_key) {
+                if let Some(facts) = environment.facts.known_non_equational_facts.by_one_arg.get(&lookup_key) {
                     known_facts.extend(facts.values());
                 }
             }
             2 => {
-                if let Some(facts) = environment.facts.atomic.by_two_args.get(&lookup_key) {
+                if let Some(facts) = environment.facts.known_non_equational_facts.by_two_args.get(&lookup_key) {
                     known_facts.extend(facts.values());
                 }
             }
             _ => {
-                if let Some(facts) = environment.facts.atomic.by_other_arg_count.get(&lookup_key) {
+                if let Some(facts) = environment.facts.known_non_equational_facts.by_other_arg_count.get(&lookup_key) {
                     known_facts.extend(facts.iter());
                 }
             }

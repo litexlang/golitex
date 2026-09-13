@@ -13,10 +13,10 @@ pub use definitions::DefinitionMemory;
 pub use environment::ExecEnv;
 pub use facts::equality_linear_derive;
 pub use facts::{
-    forall_argument_shape, AtomicFactMemory, CachedKnownFact, EnvironmentStoredFactStore,
-    EqualityClassId, EqualityHistoryEvent, ForallArgumentShape, KnownEquality,
-    KnownEqualityProofStep, KnownFactMemory, KnownForallFactMemory, QuantifiedFactMemory,
-    SpecialSetRelationMemory, StoredFactRecord, StoredForallConclusionReference,
+    forall_argument_shape, CachedKnownFact, EnvironmentStoredFactStore, EqualityClassId,
+    EqualityHistoryEvent, ExistFactMemory, ForallArgumentShape, KnownEquality,
+    KnownEqualityProofStep, KnownFactMemory, KnownForallFactMemory, NonEquationalAtomicFactMemory,
+    OrFactMemory, SpecialSetRelationMemory, StoredFactRecord, StoredForallConclusionReference,
 };
 pub use object::{KnownFnInfo, KnownObjValue, ObjectPropertyMemory, SpecialObjectPropertyMemory};
 pub use predicate_algebraic_properties::{

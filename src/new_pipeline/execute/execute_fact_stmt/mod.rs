@@ -2,8 +2,8 @@
 
 mod cache_search_proof;
 mod exec_fact_stmt;
-mod native_equal;
-pub use native_equal::equal_fact_from_let;
+mod verify_equal_fact;
+pub use verify_equal_fact::equal_fact_from_let;
 mod result;
 mod search_non_equational_fact;
 mod verify;
