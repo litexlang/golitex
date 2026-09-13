@@ -12,13 +12,20 @@ impl Runtime {
                     self.exec_let_obj(let_stmt)?,
                 )))
             }
+            Stmt::Definition(DefinitionStmt::HaveObjInNonemptySetStmt(have_stmt)) => {
+                Ok(ExecStmtResult::Definition(
+                    ExecDefinitionStmtResult::HaveObjInNonemptySet(
+                        self.exec_have_obj_in_nonempty_set_stmt(have_stmt)?,
+                    ),
+                ))
+            }
             Stmt::Definition(DefinitionStmt::DefPropStmt(def_prop)) => {
                 Ok(ExecStmtResult::Definition(ExecDefinitionStmtResult::DefProp(
                     self.exec_def_prop_stmt(def_prop)?,
                 )))
             }
             _ => Err(RuntimeError::Unsupported(
-                "new_pipeline exec_stmt: only Fact, let, and prop are wired for the tracer"
+                "new_pipeline exec_stmt: only Fact, let, have-obj-in-nonempty, and prop are wired for the tracer"
                     .to_string(),
             )),
         }

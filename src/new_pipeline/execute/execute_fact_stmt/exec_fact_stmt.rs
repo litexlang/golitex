@@ -31,6 +31,7 @@ impl Runtime {
         match verify_result {
             VerifyFactResult::AtomicFact(atomic) => match atomic.as_ref() {
                 VerifyAtomicFactResult::Equality(eq) => self.store_equal_fact_then_infer(&eq.fact),
+                // Non-equality fact store waits on known-atomic search / general fact memory.
                 _ => Ok(StoreFactAndInferResult::empty()),
             },
             _ => Ok(StoreFactAndInferResult::empty()),
