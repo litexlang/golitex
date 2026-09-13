@@ -75,6 +75,8 @@ Litex: objects and facts → kernel checks and searches for grounds → verified
 >
 > Litex began from a simple idea. Just as Fortran and C abstracted over assembly language, making systems engineering and scientific computing easier, Python later abstracted over some uses of C, allowing people without a professional programming background to participate. As programming languages became easier to learn and use, more people became programmers, and the computing industry expanded with them.
 >
+> Roughly, Litex stands to Lean as C stands to assembly: Lean tactic proofs often name facts and call them explicitly; humans usually remember proof shapes, not fact names. Assembly writes memory addresses; C maintains a table from variable names to addresses. Litex likewise maintains a fact table and a rule table, keyed by the predicate name of each atomic fact, so the author can write what should hold and let the kernel match and replace by shape (see Section 2)—without first memorizing scattered fact names. Lean cannot easily adopt the same default mechanism, precisely because its language allows highly first-class quantification over propositions; Section 2 explains that boundary.
+>
 > Litex aims to create a similar layer of abstraction between mathematical reasoning and formal verification, so that users are not burdened by low-level implementation details and can focus on the reasoning itself.
 
 > **For readers outside mathematics:**
@@ -179,6 +181,51 @@ Lean first declares a common element type `α : Type*`, then declares `s`, `t`, 
 
 The difference is not that “shorter code is stronger”: Lean can also finish this with a short proof or automation; here the textbook's expanded path is kept on purpose. The real distinction is the default interface: Lean first gives sets a type-theoretic carrier and then constructs a proof; Litex directly recognizes and checks common set-theoretic facts.
 
+> **Set theory decides how objects are shaped; it does not decide which layer you start from each day.**
+
+Choosing set theory as the foundation is often heard as two claims—really two misreadings.
+
+<details>
+<summary><strong>Two misreadings: neither “learn set-theoretic encoding first” nor “rebuild everything from ZFC”</strong></summary>
+
+**Misreading 1: If I am not fluent in set theory, I cannot express ordinary notions such as groups, topological spaces, or open sets with ∈ and ∪.**  
+This is first a **dictionary problem**, not a prerequisite course in set theory. How everyday mathematics says it should have a readable Litex counterpart. Groups and topological spaces (with their open-set families) can be written as working-layer interfaces, without first hand-coding a low-level encoding:
+
+```litex
+# Group: carrier set, operation, identity, inverse, and the usual laws
+struct Group<s nonempty_set>:
+    mul fn(x, y s) s
+    one s
+    inv fn(x s) s
+    <=>:
+        forall x, y, z s:
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+        forall x s:
+            mul(x, one) = x
+            mul(one, x) = x
+            mul(inv(x), x) = one
+
+# Topology: a space is its carrier together with a family of open sets
+setting TopologicalSpaceSetting(X set, open_sets power_set(power_set(X))):
+    {} $in open_sets
+    X $in open_sets
+    forall U, V open_sets:
+        intersect(U, V) $in open_sets
+    forall family power_set(power_set(X)):
+        family $subset open_sets
+        =>:
+            big_union(family) $in open_sets
+```
+
+An open set is simply a member of that family: once `TopologicalSpaceSetting` is bound, writing `U open_sets` means that `U` is open. The group–Lean comparison below is a fuller interface contrast; here the point is only what the “dictionary” looks like. Coverage is still expanding; this is not a claim that every common notion is already catalogued.
+
+**Misreading 2: If the foundation is set theory, must every development rebuild analysis, algebra, and topology from the ZFC axioms—and would that not be too hard?**  
+This is an **entry-height problem**. Litex does expose set-theoretic / ZFC-side axiom and constructor interfaces for foundational work or when one needs to dig downward. Ordinary use does not force unfolding the concrete set-theoretic constructions of common concepts: for objects and structures familiar in everyday mathematical writing, the system supplies checkable relations and usage surfaces so you can operate at the abstraction layer you want, rather than first building up to that layer from the axioms. The low-level interfaces are an exit and escape hatch, not the staircase you must climb every day.
+
+So: set theory fixes the shape of the object language; **the working entry point** remains yours—you may start from a working layer such as groups or topology, and drop to axiom interfaces when needed. The sketches above and the group comparison below demonstrate working-layer writing; they do not ask the reader to finish a construction that begins from the empty-set axiom.
+
+</details>
+
 <details>
 <summary><strong>Technical summary: typing judgments and membership facts</strong></summary>
 
@@ -256,7 +303,7 @@ Litex first binds a nonempty set `s`, then writes the group as a structure on it
 
 Field paths such as `G.mul` are checked against the declared structure carrier; the path itself does not add the group axioms to the context. Directly binding `G &Group<s>` opens only one layer automatically; a function return value or nested structure field needs `by struct def expression`, which first verifies structure membership and then releases one layer. A later, separately obtained `expression $in &Group<s>` remains opaque.
 
-Of course Lean can also define a group without Mathlib; what is compared here is the default experience, not the expressive upper bound. “Building from scratch” is not dependency-free either: Litex still depends on its kernel, rules, and standard library, and external libraries remain important accelerators—they simply should not become an expressive boundary.
+Of course Lean can also define a group without Mathlib; what is compared here is the default experience, not the expressive upper bound. “Building from scratch” is not dependency-free either: Litex still depends on its kernel, rules, and standard library, and external libraries remain important accelerators—they simply should not become an expressive boundary. The “two misreadings” above already say that working-layer writing is not rebuilding from ZFC; the group fragment here demonstrates entry height, not a foundations homework set.
 
 The group is only a small demonstration. A stronger test is whether a small team can build readable, extensible interfaces with clear boundaries for domains that existing libraries cover poorly. Future libraries in geometry and other areas should show progress through dated source, verification results, `trust` boundaries, and real reuse notes, rather than claiming success in advance.
 
@@ -271,7 +318,7 @@ The group is only a small demonstration. A stronger test is whether a small team
 [Isabelle/HOL](https://isabelle.in.tum.de/website-Isabelle2024/dist/library/Doc/Isar_Ref/HOL_Specific.html)
 uses polymorphic higher-order logic.
 
-Litex's user-facing propositional language is broadly first-order in style: atomic relations or named predicates are organized through restricted classical logical forms and quantifiers. It prefers canonical fact shapes; propositions and proofs cannot be arbitrarily combined as ordinary first-class values. This describes only the propositional interface; the verifier also checks well-definedness and searches for grounds from definitions, context, and supported rules.
+Litex's user-facing propositional language is broadly first-order in style: atomic relations or named predicates are organized through restricted classical logical forms and quantifiers. It prefers canonical fact shapes; propositions and proofs cannot be arbitrarily combined as ordinary first-class values—so forms such as `forall p prop` are disallowed; Section 2 explains how that keeps the fact table indexable by predicate name. This describes only the propositional interface; the verifier also checks well-definedness and searches for grounds from definitions, context, and supported rules.
 
 In this background, Litex's question falls more specifically on the user-facing object interface:
 can a small, membership-centered set-theoretic surface cover substantial mathematics without requiring users to manage type
@@ -290,6 +337,21 @@ What Litex does is essentially to implement that mental flow on a machine. *User
 > **The core human–machine division of labor in fact orientation is: the user writes “what I want to prove,” and Litex searches for “how this fact can be verified.”**
 
 Key choices, witnesses, and estimates are still written by the author; concrete rules and equality alignment are searched for and recorded by the kernel. Litex triggers local search from facts; every result must be checkable: Litex looks for builtin rules, universal facts, concrete facts, or equalities by relation, argument shape, and context. Search is limited to supported scope; it is not free guessing.
+
+When verifying a fact, Litex is not “inventing a proof.” A closer picture is constrained lookup: split the current goal into a predicate and an argument shape, then search the context and rule tables—somewhat like Ctrl+F by shape. The predicate name of an atomic fact (such as `>=`, `$is_positive`, or `$in`) is the key into those tables; after a hit, the kernel instantiates or replaces and checks that premises are ready; if nothing matches, it stops at the current goal. **The essence is matching and replacement, not free reasoning.**
+
+<details>
+<summary><strong>Why can Litex maintain a fact table? Could Lean be extended to do the same?</strong></summary>
+
+A natural question is: if Litex can maintain a fact table in the kernel so that users need not write `by xxx`-style tactics by hand, could Lean be extended to offer the same default mechanism? The answer is that it is **very difficult**—not mainly as an engineering backlog, but because of what the language may quantify over.
+
+By design, Litex does not allow forms such as `forall p prop` that quantify over propositions themselves. Every atomic fact has a nameable predicate head; the kernel uses that predicate name as a key to retrieve candidate facts and rules, then matches and replaces by shape. Because the key is fixed, search stays an indexed local lookup rather than blind trial over the whole context—and users need not name common grounds by hand.
+
+Once a language allows `prop`—or even facts themselves—to appear as parameters of `forall`, an atomic goal no longer guarantees a stable predicate name as an index. Without a fixed key, the candidate set expands toward nearly the entire context, or even the space of all expressible propositions. Maintaining a shape-indexed fact table and sparing users from tactic naming then become hard to hold together: one either falls back to explicit naming, or faces uncontrolled global search.
+
+This does not deny the usefulness of Lean automation such as `simp` or `grind`. It says that a **default fact table indexed by predicate names depends on the language boundary that propositions are not arbitrarily first-class under quantification**. Dependent type theory opens that boundary by making propositions and proofs highly first-class. Litex trades that expressive freedom for an indexable fact context.
+
+</details>
 
 ### How the Kernel Searches for Verification Routes by Fact Shape
 
@@ -583,6 +645,8 @@ has empty justification;
 [ACL2](https://acl2.org/doc/index-seo.php?xkey=ACL2____DEFTHM) can attempt to prove a theorem event without hints;
 [Naproche](https://naproche.github.io/) uses automated theorem provers
 to check steps in controlled natural language. Litex more specifically tests whether ordinary mathematical statements can trigger local verification limited by the current context and rules, then write back to the context when they succeed and display verification sources.
+
+Local automation can sit on many kernels. Litex emphasizes another route: trading away arbitrary quantification over `prop` / facts for a fact table indexed by predicate names, so the default proof need not rely on explicit tactic naming. This is the same design boundary as in “Why can Litex maintain a fact table?” above.
 
 </details>
 
@@ -1152,7 +1216,7 @@ Compiling Litex to Lean and connecting to Mathlib-style Lean code goes through t
 
 `Litex source → Litex verification → ToLean compilation → Lean kernel recheck → handwritten adapter → Mathlib theorem`
 
-> Compiling Litex to Lean is much like compiling C to assembly. We know assembly looks like gibberish because the source writes many memory addresses; both allocating a new address and using it require writing the address explicitly. Lean code names every fact, and calling a corresponding fact also requires attaching the name explicitly. When the Litex kernel processes Litex code, it maintains such a fact table for the user and, during verification, searches that table for corresponding facts to help prove what is currently to be proved. That search branches widely (Litex has hundreds of builtin verification rules) but is not deep (each verification rule is straightforward; any builtin rule can be compiled into several Lean tactics).
+> Compiling Litex to Lean is much like compiling C to assembly. We know assembly looks like gibberish because the source writes many memory addresses; both allocating a new address and using it require writing the address explicitly. Lean code names every fact, and calling a corresponding fact also requires attaching the name explicitly. When the Litex kernel processes Litex code, it maintains such a fact table for the user and, during verification, searches that table by the predicate name of each atomic fact as key, to help prove what is currently to be proved (why this works, and why Lean cannot easily copy the same default mechanism, see Section 2). That search branches widely (Litex has hundreds of builtin verification rules) but is not deep (each verification rule is straightforward; any builtin rule can be compiled into several Lean tactics).
 
 Example: we want to prove that the sum of the first `n` positive odd numbers is `n^2`. We first write Litex source:
 

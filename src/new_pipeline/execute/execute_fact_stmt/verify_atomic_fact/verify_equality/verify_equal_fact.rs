@@ -9,10 +9,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::{
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
-use super::{
-    EqualitySearchProofByBuiltinAlgebraicRewrite, EqualitySearchProofByBuiltinRule,
-    EqualitySearchProofByBuiltinStrategy, EqualitySearchProofByKnownAlgebraicRewrite,
-};
+use super::{EqualitySearchProofByBuiltinRule, EqualitySearchProofByBuiltinStrategy};
 
 impl Runtime {
     pub fn verify_equal_fact(
@@ -33,7 +30,7 @@ impl Runtime {
     }
 
     // Stage order: cache → builtin rule → known atomic → builtin strategy →
-    // known forall → builtin algebraic rewrite → known algebraic rewrite.
+    // known forall. Equality algebraic properties are intrinsic.
     pub fn search_equal_fact_proof(
         &mut self,
         fact: &EqualFact,
@@ -113,24 +110,6 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualFactSearchedProofByKnownForallFact>> {
-        let _ = (fact, verify_state);
-        Ok(None)
-    }
-
-    pub fn search_equal_fact_proof_by_builtin_algebraic_rewrite(
-        &mut self,
-        fact: &EqualFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<Option<EqualitySearchProofByBuiltinAlgebraicRewrite>> {
-        let _ = (fact, verify_state);
-        Ok(None)
-    }
-
-    pub fn search_equal_fact_proof_by_known_algebraic_rewrite(
-        &mut self,
-        fact: &EqualFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<Option<EqualitySearchProofByKnownAlgebraicRewrite>> {
         let _ = (fact, verify_state);
         Ok(None)
     }
