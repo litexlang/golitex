@@ -1,0 +1,669 @@
+# Problem 263 / zhongkao_60
+# 原题：在正方形ABCD中，连接对角线AC，在AC上截取AE=BC，连接BE，过点A作AF⊥BE于点F，延长AF交BC于点M。(2)如图2，过点A作AP⊥AM于点A，交CD的延长线于点P，求证：AP−2FM=BE。
+#
+# 证明策略：将正方形的两条邻边作为正交坐标向量，由题设位置谓词取得仿射参数，
+# 再用点积和距离平方完成代数消元。所有前提和结论均直接对应上面的NL题面。
+
+# 纯代数收尾：若同一正参数 t 分别缩放 AP、FM 与 BE，
+# 则可在不引入除法分支的情况下消去 t。
+thm problem_263_length_eliminate:
+    ? forall t, ap_len, fm_len, be_len R:
+        t > 0,
+        t * ap_len = be_len,
+        2 * t * fm_len = (1 - t) * be_len
+        =>:
+            ap_len - 2 * fm_len = be_len
+
+    t != 0
+    t * (ap_len - 2 * fm_len - be_len) = t * ap_len - 2 * t * fm_len - t * be_len
+    t * ap_len - 2 * t * fm_len - t * be_len = be_len - (1 - t) * be_len - t * be_len = 0
+    t * (ap_len - 2 * fm_len - be_len) = 0
+    by thm geo::zero_factor_law(t, ap_len - 2 * fm_len - be_len)
+    ap_len - 2 * fm_len - be_len = 0
+    ap_len - 2 * fm_len = be_len
+
+# 参数恒等式：2t²=1 且 s(1+t)=t 时，有 ts=1−t。
+# 该形式避免后续坐标证明中反复处理分式 t/(1+t)。
+thm problem_263_parameter_identity:
+    ? forall t, s R:
+        t > 0,
+        2 * t^2 = 1,
+        s * (1 + t) = t
+        =>:
+            t * s = 1 - t
+
+    1 + t > 0
+    1 + t != 0
+    t * (s * (1 + t)) = t * t
+    (t * s) * (1 + t) = t * (s * (1 + t)) = t^2
+    (1 - t) * (1 + t) = 1 - t^2 = t^2
+    (t * s - (1 - t)) * (1 + t) = (t * s) * (1 + t) - (1 - t) * (1 + t)
+    (t * s) * (1 + t) - (1 - t) * (1 + t) = t^2 - t^2 = 0
+    (1 + t) * (t * s - (1 - t)) = (t * s - (1 - t)) * (1 + t) = 0
+    by thm geo::zero_factor_law(1 + t, t * s - (1 - t))
+    t * s - (1 - t) = 0
+    t * s = 1 - t
+
+# 两个非负实数平方相等，则二者相等。
+thm problem_263_nonnegative_equal_of_equal_squares:
+    ? forall x, y R:
+        x >= 0,
+        y >= 0,
+        x^2 = y^2
+        =>:
+            x = y
+    y = 0 or not y = 0
+    by cases:
+        ? x = y
+        case y = 0:
+            y^2 = 0
+            x^2 = 0
+            x = 0
+            x = y
+        case not y = 0:
+            by contra:
+                ? y > 0
+                y <= 0
+                y >= 0
+                y = 0
+                impossible y != 0
+            y > 0
+            x^2 - y^2 = 0
+            (x - y) * (x + y) = 0
+            x + y > 0
+            x + y != 0
+            x - y = 0
+            x = y
+
+# 非负比例的平方关系可提升为长度关系。
+thm problem_263_nonnegative_length_scale:
+    ? forall k, x, y R:
+        k >= 0,
+        x >= 0,
+        y >= 0,
+        x^2 = k^2 * y^2
+        =>:
+            x = k * y
+    k * y >= 0
+    (k * y)^2 = k^2 * y^2
+    x^2 = (k * y)^2
+    by thm problem_263_nonnegative_equal_of_equal_squares(x, k * y)
+    x = k * y
+
+# 分量缩放关系直接给出三段距离平方关系。
+# 该桥只做坐标恒等式，不承担任何几何参数提取。
+thm problem_263_metric_from_coordinate_relations:
+    ? forall a, b, ep, f, m, p cart(R, R), t R:
+        ep[1] - b[1] = t * (p[1] - a[1]),
+        ep[2] - b[2] = t * (p[2] - a[2]),
+        m[1] - f[1] = ((1 - t) / 2) * (m[1] - a[1]),
+        m[2] - f[2] = ((1 - t) / 2) * (m[2] - a[2]),
+        geo::distance_sq(a, m) = geo::distance_sq(a, p)
+        =>:
+            geo::distance_sq(b, ep) = t^2 * geo::distance_sq(a, p),
+            geo::distance_sq(f, m) = ((1 - t) / 2)^2 * geo::distance_sq(a, p)
+
+    by thm geo::distance_sq_coordinate_formula(b, ep)
+    by thm geo::distance_sq_coordinate_formula(a, p)
+    geo::distance_sq(b, ep) = (ep[1] - b[1])^2 + (ep[2] - b[2])^2
+    (ep[1] - b[1])^2 + (ep[2] - b[2])^2 = (t * (p[1] - a[1]))^2 + (t * (p[2] - a[2]))^2
+    (t * (p[1] - a[1]))^2 + (t * (p[2] - a[2]))^2 = t^2 * ((p[1] - a[1])^2 + (p[2] - a[2])^2)
+    t^2 * ((p[1] - a[1])^2 + (p[2] - a[2])^2) = t^2 * geo::distance_sq(a, p)
+    geo::distance_sq(b, ep) = t^2 * geo::distance_sq(a, p)
+
+    by thm geo::distance_sq_coordinate_formula(f, m)
+    by thm geo::distance_sq_coordinate_formula(a, m)
+    geo::distance_sq(f, m) = (m[1] - f[1])^2 + (m[2] - f[2])^2
+    (m[1] - f[1])^2 + (m[2] - f[2])^2 = (((1 - t) / 2) * (m[1] - a[1]))^2 + (((1 - t) / 2) * (m[2] - a[2]))^2
+    (((1 - t) / 2) * (m[1] - a[1]))^2 + (((1 - t) / 2) * (m[2] - a[2]))^2 = ((1 - t) / 2)^2 * ((m[1] - a[1])^2 + (m[2] - a[2])^2)
+    ((1 - t) / 2)^2 * ((m[1] - a[1])^2 + (m[2] - a[2])^2) = ((1 - t) / 2)^2 * geo::distance_sq(a, m)
+    ((1 - t) / 2)^2 * geo::distance_sq(a, m) = ((1 - t) / 2)^2 * geo::distance_sq(a, p)
+    geo::distance_sq(f, m) = ((1 - t) / 2)^2 * geo::distance_sq(a, p)
+
+# 两条距离平方比例及 0<t<=1 足以推出题目的长度线性关系。
+thm problem_263_length_finish_from_squares:
+    ? forall t, ap_sq, fm_sq, be_sq R:
+        t > 0,
+        t <= 1,
+        ap_sq >= 0,
+        fm_sq >= 0,
+        be_sq >= 0,
+        be_sq = t^2 * ap_sq,
+        fm_sq = ((1 - t) / 2)^2 * ap_sq
+        =>:
+            sqrt(ap_sq) - 2 * sqrt(fm_sq) = sqrt(be_sq)
+
+    t >= 0
+    1 - t >= 0
+    (1 - t) / 2 >= 0
+    sqrt(ap_sq) >= 0
+    sqrt(fm_sq) >= 0
+    sqrt(be_sq) >= 0
+    sqrt(ap_sq)^2 = ap_sq
+    sqrt(fm_sq)^2 = fm_sq
+    sqrt(be_sq)^2 = be_sq
+    (sqrt(be_sq))^2 = be_sq = t^2 * ap_sq = t^2 * (sqrt(ap_sq))^2
+    by thm problem_263_nonnegative_length_scale(t, sqrt(be_sq), sqrt(ap_sq))
+    sqrt(be_sq) = t * sqrt(ap_sq)
+    (sqrt(fm_sq))^2 = fm_sq = ((1 - t) / 2)^2 * ap_sq = ((1 - t) / 2)^2 * (sqrt(ap_sq))^2
+    by thm problem_263_nonnegative_length_scale((1 - t) / 2, sqrt(fm_sq), sqrt(ap_sq))
+    sqrt(fm_sq) = ((1 - t) / 2) * sqrt(ap_sq)
+    t * sqrt(ap_sq) = sqrt(be_sq)
+    2 * t * sqrt(fm_sq) = 2 * t * (((1 - t) / 2) * sqrt(ap_sq)) = (1 - t) * (t * sqrt(ap_sq)) = (1 - t) * sqrt(be_sq)
+    by thm problem_263_length_eliminate(t, sqrt(ap_sq), sqrt(fm_sq), sqrt(be_sq))
+    sqrt(ap_sq) - 2 * sqrt(fm_sq) = sqrt(be_sq)
+
+# 等腰三角形底边上的垂足是底边中点；这里保留仿射参数形式，
+# 便于直接接收 is_foot 展开后“F在线段BE所在直线”的参数见证。
+thm problem_263_isosceles_foot_midpoint_coordinates:
+    ? forall a, b, ep, f cart(R, R), r R:
+        b != ep,
+        geo::distance_sq(a, b) = geo::distance_sq(a, ep),
+        f[1] = (1 - r) * b[1] + r * ep[1],
+        f[2] = (1 - r) * b[2] + r * ep[2],
+        geo::dot(geo::vec(a, f), geo::vec(b, ep)) = 0
+        =>:
+            f[1] = (b[1] + ep[1]) / 2,
+            f[2] = (b[2] + ep[2]) / 2
+
+    by thm geo::distance_sq_coordinate_formula(a, b)
+    by thm geo::distance_sq_coordinate_formula(a, ep)
+    by thm geo::vec_coordinate_formula(a, f)
+    by thm geo::vec_coordinate_formula(b, ep)
+    by thm geo::dot_coordinate_formula(geo::vec(a, f), geo::vec(b, ep))
+    by thm geo::point_difference_norm_pos(b, ep)
+
+    geo::distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2
+    geo::distance_sq(a, ep) = (ep[1] - a[1])^2 + (ep[2] - a[2])^2
+    (b[1] - a[1])^2 + (b[2] - a[2])^2 = (ep[1] - a[1])^2 + (ep[2] - a[2])^2
+
+    geo::vec(a, f) = (f[1] - a[1], f[2] - a[2])
+    geo::vec(b, ep) = (ep[1] - b[1], ep[2] - b[2])
+    geo::dot(geo::vec(a, f), geo::vec(b, ep)) = (f[1] - a[1]) * (ep[1] - b[1]) + (f[2] - a[2]) * (ep[2] - b[2])
+    (f[1] - a[1]) * (ep[1] - b[1]) + (f[2] - a[2]) * (ep[2] - b[2]) = 0
+
+    f[1] - a[1] = (b[1] - a[1]) + r * (ep[1] - b[1])
+    f[2] - a[2] = (b[2] - a[2]) + r * (ep[2] - b[2])
+    (f[1] - a[1]) * (ep[1] - b[1]) + (f[2] - a[2]) * (ep[2] - b[2]) = ((b[1] - a[1]) + r * (ep[1] - b[1])) * (ep[1] - b[1]) + (f[2] - a[2]) * (ep[2] - b[2])
+    ((b[1] - a[1]) + r * (ep[1] - b[1])) * (ep[1] - b[1]) + (f[2] - a[2]) * (ep[2] - b[2]) = ((b[1] - a[1]) + r * (ep[1] - b[1])) * (ep[1] - b[1]) + ((b[2] - a[2]) + r * (ep[2] - b[2])) * (ep[2] - b[2])
+    ((b[1] - a[1]) + r * (ep[1] - b[1])) * (ep[1] - b[1]) + ((b[2] - a[2]) + r * (ep[2] - b[2])) * (ep[2] - b[2]) = 0
+
+    ep[1] - a[1] = (b[1] - a[1]) + (ep[1] - b[1])
+    ep[2] - a[2] = (b[2] - a[2]) + (ep[2] - b[2])
+    (ep[1] - a[1])^2 = ((b[1] - a[1]) + (ep[1] - b[1]))^2
+    ((b[1] - a[1]) + (ep[1] - b[1]))^2 = (b[1] - a[1])^2 + 2 * (b[1] - a[1]) * (ep[1] - b[1]) + (ep[1] - b[1])^2
+    (ep[1] - a[1])^2 = (b[1] - a[1])^2 + 2 * (b[1] - a[1]) * (ep[1] - b[1]) + (ep[1] - b[1])^2
+    (ep[2] - a[2])^2 = ((b[2] - a[2]) + (ep[2] - b[2]))^2
+    ((b[2] - a[2]) + (ep[2] - b[2]))^2 = (b[2] - a[2])^2 + 2 * (b[2] - a[2]) * (ep[2] - b[2]) + (ep[2] - b[2])^2
+    (ep[2] - a[2])^2 = (b[2] - a[2])^2 + 2 * (b[2] - a[2]) * (ep[2] - b[2]) + (ep[2] - b[2])^2
+    (ep[1] - a[1])^2 + (ep[2] - a[2])^2 = ((b[1] - a[1])^2 + 2 * (b[1] - a[1]) * (ep[1] - b[1]) + (ep[1] - b[1])^2) + (ep[2] - a[2])^2
+    ((b[1] - a[1])^2 + 2 * (b[1] - a[1]) * (ep[1] - b[1]) + (ep[1] - b[1])^2) + (ep[2] - a[2])^2 = ((b[1] - a[1])^2 + 2 * (b[1] - a[1]) * (ep[1] - b[1]) + (ep[1] - b[1])^2) + ((b[2] - a[2])^2 + 2 * (b[2] - a[2]) * (ep[2] - b[2]) + (ep[2] - b[2])^2)
+    (ep[1] - a[1])^2 + (ep[2] - a[2])^2 = ((b[1] - a[1])^2 + 2 * (b[1] - a[1]) * (ep[1] - b[1]) + (ep[1] - b[1])^2) + ((b[2] - a[2])^2 + 2 * (b[2] - a[2]) * (ep[2] - b[2]) + (ep[2] - b[2])^2)
+    by thm geo::subtract_equalities((b[1] - a[1])^2 + (b[2] - a[2])^2, ((b[1] - a[1])^2 + 2 * (b[1] - a[1]) * (ep[1] - b[1]) + (ep[1] - b[1])^2) + ((b[2] - a[2])^2 + 2 * (b[2] - a[2]) * (ep[2] - b[2]) + (ep[2] - b[2])^2), (b[1] - a[1])^2 + (b[2] - a[2])^2, (b[1] - a[1])^2 + (b[2] - a[2])^2)
+    (b[1] - a[1])^2 + (b[2] - a[2])^2 - ((b[1] - a[1])^2 + (b[2] - a[2])^2) = ((b[1] - a[1])^2 + 2 * (b[1] - a[1]) * (ep[1] - b[1]) + (ep[1] - b[1])^2) + ((b[2] - a[2])^2 + 2 * (b[2] - a[2]) * (ep[2] - b[2]) + (ep[2] - b[2])^2) - ((b[1] - a[1])^2 + (b[2] - a[2])^2)
+    0 = ((b[1] - a[1])^2 + 2 * (b[1] - a[1]) * (ep[1] - b[1]) + (ep[1] - b[1])^2) + ((b[2] - a[2])^2 + 2 * (b[2] - a[2]) * (ep[2] - b[2]) + (ep[2] - b[2])^2) - ((b[1] - a[1])^2 + (b[2] - a[2])^2)
+    2 * ((b[1] - a[1]) * (ep[1] - b[1]) + (b[2] - a[2]) * (ep[2] - b[2])) + (ep[1] - b[1])^2 + (ep[2] - b[2])^2 = 0
+
+    ((b[1] - a[1]) + r * (ep[1] - b[1])) * (ep[1] - b[1]) + ((b[2] - a[2]) + r * (ep[2] - b[2])) * (ep[2] - b[2]) = (b[1] - a[1]) * (ep[1] - b[1]) + (b[2] - a[2]) * (ep[2] - b[2]) + r * ((ep[1] - b[1])^2 + (ep[2] - b[2])^2)
+    (b[1] - a[1]) * (ep[1] - b[1]) + (b[2] - a[2]) * (ep[2] - b[2]) + r * ((ep[1] - b[1])^2 + (ep[2] - b[2])^2) = 0
+    by thm geo::multiply_both_sides((b[1] - a[1]) * (ep[1] - b[1]) + (b[2] - a[2]) * (ep[2] - b[2]) + r * ((ep[1] - b[1])^2 + (ep[2] - b[2])^2), 0, 2)
+    ((b[1] - a[1]) * (ep[1] - b[1]) + (b[2] - a[2]) * (ep[2] - b[2]) + r * ((ep[1] - b[1])^2 + (ep[2] - b[2])^2)) * 2 = 0
+    ((b[1] - a[1]) * (ep[1] - b[1]) + (b[2] - a[2]) * (ep[2] - b[2]) + r * ((ep[1] - b[1])^2 + (ep[2] - b[2])^2)) * 2 = 2 * ((b[1] - a[1]) * (ep[1] - b[1]) + (b[2] - a[2]) * (ep[2] - b[2])) + 2 * r * ((ep[1] - b[1])^2 + (ep[2] - b[2])^2)
+    2 * ((b[1] - a[1]) * (ep[1] - b[1]) + (b[2] - a[2]) * (ep[2] - b[2])) + 2 * r * ((ep[1] - b[1])^2 + (ep[2] - b[2])^2) = 0
+    by thm geo::subtract_equalities(2 * ((b[1] - a[1]) * (ep[1] - b[1]) + (b[2] - a[2]) * (ep[2] - b[2])) + 2 * r * ((ep[1] - b[1])^2 + (ep[2] - b[2])^2), 0, 2 * ((b[1] - a[1]) * (ep[1] - b[1]) + (b[2] - a[2]) * (ep[2] - b[2])) + (ep[1] - b[1])^2 + (ep[2] - b[2])^2, 0)
+    (2 * ((b[1] - a[1]) * (ep[1] - b[1]) + (b[2] - a[2]) * (ep[2] - b[2])) + 2 * r * ((ep[1] - b[1])^2 + (ep[2] - b[2])^2)) - (2 * ((b[1] - a[1]) * (ep[1] - b[1]) + (b[2] - a[2]) * (ep[2] - b[2])) + (ep[1] - b[1])^2 + (ep[2] - b[2])^2) = 0
+    (2 * r - 1) * ((ep[1] - b[1])^2 + (ep[2] - b[2])^2) = (2 * ((b[1] - a[1]) * (ep[1] - b[1]) + (b[2] - a[2]) * (ep[2] - b[2])) + 2 * r * ((ep[1] - b[1])^2 + (ep[2] - b[2])^2)) - (2 * ((b[1] - a[1]) * (ep[1] - b[1]) + (b[2] - a[2]) * (ep[2] - b[2])) + (ep[1] - b[1])^2 + (ep[2] - b[2])^2) = 0
+    (ep[1] - b[1])^2 + (ep[2] - b[2])^2 > 0
+    (ep[1] - b[1])^2 + (ep[2] - b[2])^2 != 0
+    ((ep[1] - b[1])^2 + (ep[2] - b[2])^2) * (2 * r - 1) = 0
+    by thm geo::zero_factor_law((ep[1] - b[1])^2 + (ep[2] - b[2])^2, 2 * r - 1)
+    2 * r - 1 = 0
+    r = 1 / 2
+    f[1] = (1 - r) * b[1] + r * ep[1] = (b[1] + ep[1]) / 2
+    f[2] = (1 - r) * b[2] + r * ep[2] = (b[2] + ep[2]) / 2
+
+# 局部坐标桥：把正方形邻边作为正交等长基，消去 M、P 的交点参数。
+# 输入全部是题设谓词展开后得到的坐标/点积事实；输出恰为度量桥所需五项关系。
+thm problem_263_square_intersection_coordinate_bridge:
+    ? forall a, b, c, d, ep, f, m, p cart(R, R), t, s, q R:
+        d[1] = a[1] + c[1] - b[1],
+        d[2] = a[2] + c[2] - b[2],
+        ep[1] = a[1] + t * (c[1] - a[1]),
+        ep[2] = a[2] + t * (c[2] - a[2]),
+        f[1] = (b[1] + ep[1]) / 2,
+        f[2] = (b[2] + ep[2]) / 2,
+        m[1] = (1 - s) * b[1] + s * c[1],
+        m[2] = (1 - s) * b[2] + s * c[2],
+        p[1] = c[1] + q * (d[1] - c[1]),
+        p[2] = c[2] + q * (d[2] - c[2]),
+        geo::dot(geo::vec(a, m), geo::vec(b, ep)) = 0,
+        geo::dot(geo::vec(a, p), geo::vec(a, m)) = 0,
+        geo::dot(geo::vec(a, b), geo::vec(a, d)) = 0,
+        geo::distance_sq(a, b) = geo::distance_sq(a, d),
+        geo::distance_sq(a, b) > 0,
+        t > 0,
+        2 * t^2 = 1
+        =>:
+            ep[1] - b[1] = t * (p[1] - a[1]),
+            ep[2] - b[2] = t * (p[2] - a[2]),
+            m[1] - f[1] = ((1 - t) / 2) * (m[1] - a[1]),
+            m[2] - f[2] = ((1 - t) / 2) * (m[2] - a[2]),
+            geo::distance_sq(a, m) = geo::distance_sq(a, p)
+
+    by thm geo::vec_coordinate_formula(a, b)
+    by thm geo::vec_coordinate_formula(a, d)
+    by thm geo::vec_coordinate_formula(a, m)
+    by thm geo::vec_coordinate_formula(a, p)
+    by thm geo::vec_coordinate_formula(b, ep)
+    by thm geo::dot_coordinate_formula(geo::vec(a, b), geo::vec(a, d))
+    by thm geo::dot_coordinate_formula(geo::vec(a, m), geo::vec(b, ep))
+    by thm geo::dot_coordinate_formula(geo::vec(a, p), geo::vec(a, m))
+    by thm geo::distance_sq_coordinate_formula(a, b)
+    by thm geo::distance_sq_coordinate_formula(a, d)
+
+    by thm geo::parallelogram_coordinate_difference(a[1], b[1], c[1], d[1])
+    by thm geo::parallelogram_coordinate_difference(a[2], b[2], c[2], d[2])
+    c[1] - a[1] = (b[1] - a[1]) + (d[1] - a[1])
+    c[2] - a[2] = (b[2] - a[2]) + (d[2] - a[2])
+    c[1] - b[1] = d[1] - a[1]
+    c[2] - b[2] = d[2] - a[2]
+    d[1] - c[1] = a[1] - b[1]
+    d[2] - c[2] = a[2] - b[2]
+
+    ep[1] - b[1] = (a[1] + t * (c[1] - a[1])) - b[1]
+    (a[1] + t * (c[1] - a[1])) - b[1] = (a[1] - b[1]) + t * (c[1] - a[1])
+    (a[1] - b[1]) + t * (c[1] - a[1]) = (a[1] - b[1]) + t * ((b[1] - a[1]) + (d[1] - a[1]))
+    (a[1] - b[1]) + t * ((b[1] - a[1]) + (d[1] - a[1])) = (t - 1) * (b[1] - a[1]) + t * (d[1] - a[1])
+    ep[1] - b[1] = (t - 1) * (b[1] - a[1]) + t * (d[1] - a[1])
+    ep[2] - b[2] = (a[2] + t * (c[2] - a[2])) - b[2]
+    (a[2] + t * (c[2] - a[2])) - b[2] = (a[2] - b[2]) + t * (c[2] - a[2])
+    (a[2] - b[2]) + t * (c[2] - a[2]) = (a[2] - b[2]) + t * ((b[2] - a[2]) + (d[2] - a[2]))
+    (a[2] - b[2]) + t * ((b[2] - a[2]) + (d[2] - a[2])) = (t - 1) * (b[2] - a[2]) + t * (d[2] - a[2])
+    ep[2] - b[2] = (t - 1) * (b[2] - a[2]) + t * (d[2] - a[2])
+    m[1] - a[1] = ((1 - s) * b[1] + s * c[1]) - a[1]
+    ((1 - s) * b[1] + s * c[1]) - a[1] = (b[1] - a[1]) + s * (c[1] - b[1])
+    (b[1] - a[1]) + s * (c[1] - b[1]) = (b[1] - a[1]) + s * (d[1] - a[1])
+    m[1] - a[1] = (b[1] - a[1]) + s * (d[1] - a[1])
+    m[2] - a[2] = ((1 - s) * b[2] + s * c[2]) - a[2]
+    ((1 - s) * b[2] + s * c[2]) - a[2] = (b[2] - a[2]) + s * (c[2] - b[2])
+    (b[2] - a[2]) + s * (c[2] - b[2]) = (b[2] - a[2]) + s * (d[2] - a[2])
+    m[2] - a[2] = (b[2] - a[2]) + s * (d[2] - a[2])
+    p[1] - a[1] = (c[1] + q * (d[1] - c[1])) - a[1]
+    (c[1] + q * (d[1] - c[1])) - a[1] = (c[1] - a[1]) + q * (d[1] - c[1])
+    (c[1] - a[1]) + q * (d[1] - c[1]) = ((b[1] - a[1]) + (d[1] - a[1])) + q * (a[1] - b[1])
+    ((b[1] - a[1]) + (d[1] - a[1])) + q * (a[1] - b[1]) = (1 - q) * (b[1] - a[1]) + (d[1] - a[1])
+    p[1] - a[1] = (1 - q) * (b[1] - a[1]) + (d[1] - a[1])
+    p[2] - a[2] = (c[2] + q * (d[2] - c[2])) - a[2]
+    (c[2] + q * (d[2] - c[2])) - a[2] = (c[2] - a[2]) + q * (d[2] - c[2])
+    (c[2] - a[2]) + q * (d[2] - c[2]) = ((b[2] - a[2]) + (d[2] - a[2])) + q * (a[2] - b[2])
+    ((b[2] - a[2]) + (d[2] - a[2])) + q * (a[2] - b[2]) = (1 - q) * (b[2] - a[2]) + (d[2] - a[2])
+    p[2] - a[2] = (1 - q) * (b[2] - a[2]) + (d[2] - a[2])
+
+    geo::vec(a, b) = (b[1] - a[1], b[2] - a[2])
+    geo::vec(a, d) = (d[1] - a[1], d[2] - a[2])
+    geo::dot(geo::vec(a, b), geo::vec(a, d)) = (b[1] - a[1]) * (d[1] - a[1]) + (b[2] - a[2]) * (d[2] - a[2])
+    (b[1] - a[1]) * (d[1] - a[1]) + (b[2] - a[2]) * (d[2] - a[2]) = 0
+    geo::distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2
+    geo::distance_sq(a, d) = (d[1] - a[1])^2 + (d[2] - a[2])^2
+    (b[1] - a[1])^2 + (b[2] - a[2])^2 = (d[1] - a[1])^2 + (d[2] - a[2])^2
+
+    geo::vec(a, m) = (m[1] - a[1], m[2] - a[2])
+    geo::vec(b, ep) = (ep[1] - b[1], ep[2] - b[2])
+    geo::dot(geo::vec(a, m), geo::vec(b, ep)) = (m[1] - a[1]) * (ep[1] - b[1]) + (m[2] - a[2]) * (ep[2] - b[2])
+    (m[1] - a[1]) * (ep[1] - b[1]) + (m[2] - a[2]) * (ep[2] - b[2]) = 0
+    (m[1] - a[1]) * (ep[1] - b[1]) + (m[2] - a[2]) * (ep[2] - b[2]) = ((b[1] - a[1]) + s * (d[1] - a[1])) * ((t - 1) * (b[1] - a[1]) + t * (d[1] - a[1])) + ((b[2] - a[2]) + s * (d[2] - a[2])) * ((t - 1) * (b[2] - a[2]) + t * (d[2] - a[2]))
+    ((b[1] - a[1]) + s * (d[1] - a[1])) * ((t - 1) * (b[1] - a[1]) + t * (d[1] - a[1])) + ((b[2] - a[2]) + s * (d[2] - a[2])) * ((t - 1) * (b[2] - a[2]) + t * (d[2] - a[2])) = (t - 1) * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + s * t * ((d[1] - a[1])^2 + (d[2] - a[2])^2) + (t + s * (t - 1)) * ((b[1] - a[1]) * (d[1] - a[1]) + (b[2] - a[2]) * (d[2] - a[2]))
+    (t - 1) * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + s * t * ((d[1] - a[1])^2 + (d[2] - a[2])^2) + (t + s * (t - 1)) * ((b[1] - a[1]) * (d[1] - a[1]) + (b[2] - a[2]) * (d[2] - a[2])) = (t - 1) * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + s * t * ((d[1] - a[1])^2 + (d[2] - a[2])^2) + (t + s * (t - 1)) * 0
+    (t - 1) * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + s * t * ((d[1] - a[1])^2 + (d[2] - a[2])^2) + (t + s * (t - 1)) * 0 = (t - 1) * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + s * t * ((d[1] - a[1])^2 + (d[2] - a[2])^2)
+    (t - 1) * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + s * t * ((d[1] - a[1])^2 + (d[2] - a[2])^2) = (t - 1) * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + s * t * ((b[1] - a[1])^2 + (b[2] - a[2])^2)
+    (t - 1) * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + s * t * ((b[1] - a[1])^2 + (b[2] - a[2])^2) = (t - 1 + s * t) * ((b[1] - a[1])^2 + (b[2] - a[2])^2)
+    (t - 1 + s * t) * ((b[1] - a[1])^2 + (b[2] - a[2])^2) = (t - 1 + s * t) * geo::distance_sq(a, b)
+    (t - 1 + s * t) * geo::distance_sq(a, b) = 0
+    by thm geo::zero_factor_law(geo::distance_sq(a, b), t - 1 + s * t)
+    t - 1 + s * t = 0
+    t - 1 + s * t = s * t + t - 1
+    s * t + t - 1 = 0
+    s * t + t = 1
+    s * t = 1 - t
+    t * s = s * t
+    t * s = 1 - t
+
+    geo::vec(a, p) = (p[1] - a[1], p[2] - a[2])
+    geo::vec(a, m) = (m[1] - a[1], m[2] - a[2])
+    geo::dot(geo::vec(a, p), geo::vec(a, m)) = (p[1] - a[1]) * (m[1] - a[1]) + (p[2] - a[2]) * (m[2] - a[2])
+    (p[1] - a[1]) * (m[1] - a[1]) + (p[2] - a[2]) * (m[2] - a[2]) = 0
+    (p[1] - a[1]) * (m[1] - a[1]) + (p[2] - a[2]) * (m[2] - a[2]) = ((1 - q) * (b[1] - a[1]) + (d[1] - a[1])) * ((b[1] - a[1]) + s * (d[1] - a[1])) + ((1 - q) * (b[2] - a[2]) + (d[2] - a[2])) * ((b[2] - a[2]) + s * (d[2] - a[2]))
+    ((1 - q) * (b[1] - a[1]) + (d[1] - a[1])) * ((b[1] - a[1]) + s * (d[1] - a[1])) + ((1 - q) * (b[2] - a[2]) + (d[2] - a[2])) * ((b[2] - a[2]) + s * (d[2] - a[2])) = (1 - q) * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + s * ((d[1] - a[1])^2 + (d[2] - a[2])^2) + (1 + s * (1 - q)) * ((b[1] - a[1]) * (d[1] - a[1]) + (b[2] - a[2]) * (d[2] - a[2]))
+    (1 - q) * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + s * ((d[1] - a[1])^2 + (d[2] - a[2])^2) + (1 + s * (1 - q)) * ((b[1] - a[1]) * (d[1] - a[1]) + (b[2] - a[2]) * (d[2] - a[2])) = (1 - q) * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + s * ((d[1] - a[1])^2 + (d[2] - a[2])^2) + (1 + s * (1 - q)) * 0
+    (1 - q) * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + s * ((d[1] - a[1])^2 + (d[2] - a[2])^2) + (1 + s * (1 - q)) * 0 = (1 - q) * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + s * ((d[1] - a[1])^2 + (d[2] - a[2])^2)
+    (1 - q) * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + s * ((d[1] - a[1])^2 + (d[2] - a[2])^2) = (1 - q) * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + s * ((b[1] - a[1])^2 + (b[2] - a[2])^2)
+    (1 - q) * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + s * ((b[1] - a[1])^2 + (b[2] - a[2])^2) = (1 - q + s) * ((b[1] - a[1])^2 + (b[2] - a[2])^2)
+    (1 - q + s) * ((b[1] - a[1])^2 + (b[2] - a[2])^2) = (1 - q + s) * geo::distance_sq(a, b)
+    (1 - q + s) * geo::distance_sq(a, b) = 0
+    by thm geo::zero_factor_law(geo::distance_sq(a, b), 1 - q + s)
+    1 - q + s = 0
+    1 - q + s = 1 + s - q
+    1 + s - q = 0
+    1 + s = q
+    q = 1 + s
+
+    (1 - t) * (1 + t) = 1 - t^2 = t^2
+    t * (s * (1 + t)) = (t * s) * (1 + t) = (1 - t) * (1 + t) = t^2
+    t * (s * (1 + t) - t) = t * (s * (1 + t)) - t * t
+    t * (s * (1 + t)) - t * t = t^2 - t^2
+    t^2 - t^2 = 0
+    t * (s * (1 + t) - t) = 0
+    t != 0
+    by thm geo::zero_factor_law(t, s * (1 + t) - t)
+    s * (1 + t) = t
+    s * (1 + t) = s + s * t
+    s + s * t = s + (1 - t)
+    s + (1 - t) = 1 + s - t
+    1 + s - t = t
+    (1 + s - t) + t = t + t
+    (1 + s - t) + t = 1 + s
+    t + t = 2 * t
+    1 + s = 2 * t
+    (1 + s) - 1 = 2 * t - 1
+    (1 + s) - 1 = s
+    s = 2 * t - 1
+
+    q = 1 + s
+    q - 1 = s
+    1 - q = 0 - (q - 1)
+    0 - (q - 1) = 0 - s
+    0 - s = -s
+    1 - q = -s
+    p[1] - a[1] = (1 - q) * (b[1] - a[1]) + (d[1] - a[1])
+    (1 - q) * (b[1] - a[1]) + (d[1] - a[1]) = (-s) * (b[1] - a[1]) + (d[1] - a[1])
+    (-s) * (b[1] - a[1]) + (d[1] - a[1]) = -s * (b[1] - a[1]) + (d[1] - a[1])
+    p[1] - a[1] = -s * (b[1] - a[1]) + (d[1] - a[1])
+    p[2] - a[2] = (1 - q) * (b[2] - a[2]) + (d[2] - a[2])
+    (1 - q) * (b[2] - a[2]) + (d[2] - a[2]) = (-s) * (b[2] - a[2]) + (d[2] - a[2])
+    (-s) * (b[2] - a[2]) + (d[2] - a[2]) = -s * (b[2] - a[2]) + (d[2] - a[2])
+    p[2] - a[2] = -s * (b[2] - a[2]) + (d[2] - a[2])
+    t * (1 - q) = t * (-s)
+    t * (-s) = -(t * s)
+    -(t * s) = -(1 - t)
+    -(1 - t) = t - 1
+    t * (1 - q) = t - 1
+    t * (p[1] - a[1]) = t * ((1 - q) * (b[1] - a[1]) + (d[1] - a[1]))
+    t * ((1 - q) * (b[1] - a[1]) + (d[1] - a[1])) = (t * (1 - q)) * (b[1] - a[1]) + t * (d[1] - a[1])
+    (t * (1 - q)) * (b[1] - a[1]) + t * (d[1] - a[1]) = (t - 1) * (b[1] - a[1]) + t * (d[1] - a[1])
+    t * (p[1] - a[1]) = (t - 1) * (b[1] - a[1]) + t * (d[1] - a[1])
+    (t - 1) * (b[1] - a[1]) + t * (d[1] - a[1]) = ep[1] - b[1]
+    t * (p[1] - a[1]) = ep[1] - b[1]
+    t * (p[2] - a[2]) = t * ((1 - q) * (b[2] - a[2]) + (d[2] - a[2]))
+    t * ((1 - q) * (b[2] - a[2]) + (d[2] - a[2])) = (t * (1 - q)) * (b[2] - a[2]) + t * (d[2] - a[2])
+    (t * (1 - q)) * (b[2] - a[2]) + t * (d[2] - a[2]) = (t - 1) * (b[2] - a[2]) + t * (d[2] - a[2])
+    t * (p[2] - a[2]) = (t - 1) * (b[2] - a[2]) + t * (d[2] - a[2])
+    (t - 1) * (b[2] - a[2]) + t * (d[2] - a[2]) = ep[2] - b[2]
+    t * (p[2] - a[2]) = ep[2] - b[2]
+    ep[1] - b[1] = t * (p[1] - a[1])
+    ep[2] - b[2] = t * (p[2] - a[2])
+
+    ep[1] - a[1] = (a[1] + t * (c[1] - a[1])) - a[1]
+    (a[1] + t * (c[1] - a[1])) - a[1] = t * (c[1] - a[1])
+    t * (c[1] - a[1]) = t * ((b[1] - a[1]) + (d[1] - a[1]))
+    t * ((b[1] - a[1]) + (d[1] - a[1])) = t * (b[1] - a[1]) + t * (d[1] - a[1])
+    ep[1] - a[1] = t * (b[1] - a[1]) + t * (d[1] - a[1])
+    f[1] - a[1] = ((b[1] + ep[1]) / 2) - a[1]
+    ((b[1] + ep[1]) / 2) - a[1] = ((b[1] - a[1]) + (ep[1] - a[1])) / 2
+    by thm geo::add_equalities(b[1] - a[1], b[1] - a[1], ep[1] - a[1], t * (b[1] - a[1]) + t * (d[1] - a[1]))
+    (b[1] - a[1]) + (ep[1] - a[1]) = (b[1] - a[1]) + (t * (b[1] - a[1]) + t * (d[1] - a[1]))
+    (b[1] - a[1]) + (t * (b[1] - a[1]) + t * (d[1] - a[1])) = (b[1] - a[1]) + t * (b[1] - a[1]) + t * (d[1] - a[1])
+    (b[1] - a[1]) + (ep[1] - a[1]) = (b[1] - a[1]) + t * (b[1] - a[1]) + t * (d[1] - a[1])
+    by thm geo::multiply_both_sides((b[1] - a[1]) + (ep[1] - a[1]), (b[1] - a[1]) + t * (b[1] - a[1]) + t * (d[1] - a[1]), 1 / 2)
+    ((b[1] - a[1]) + (ep[1] - a[1])) * (1 / 2) = ((b[1] - a[1]) + t * (b[1] - a[1]) + t * (d[1] - a[1])) * (1 / 2)
+    ((b[1] - a[1]) + (ep[1] - a[1])) / 2 = ((b[1] - a[1]) + (ep[1] - a[1])) * (1 / 2)
+    ((b[1] - a[1]) + t * (b[1] - a[1]) + t * (d[1] - a[1])) * (1 / 2) = ((b[1] - a[1]) + t * (b[1] - a[1]) + t * (d[1] - a[1])) / 2
+    ((b[1] - a[1]) + (ep[1] - a[1])) / 2 = ((b[1] - a[1]) + t * (b[1] - a[1]) + t * (d[1] - a[1])) / 2
+    ((b[1] - a[1]) + t * (b[1] - a[1]) + t * (d[1] - a[1])) / 2 = ((1 + t) / 2) * (b[1] - a[1]) + (t / 2) * (d[1] - a[1])
+    f[1] - a[1] = ((1 + t) / 2) * (b[1] - a[1]) + (t / 2) * (d[1] - a[1])
+    m[1] - f[1] = (m[1] - a[1]) - (f[1] - a[1])
+    (m[1] - a[1]) - (f[1] - a[1]) = ((b[1] - a[1]) + s * (d[1] - a[1])) - (((1 + t) / 2) * (b[1] - a[1]) + (t / 2) * (d[1] - a[1]))
+    ((b[1] - a[1]) + s * (d[1] - a[1])) - (((1 + t) / 2) * (b[1] - a[1]) + (t / 2) * (d[1] - a[1])) = ((1 - t) / 2) * (b[1] - a[1]) + (s - t / 2) * (d[1] - a[1])
+    m[1] - f[1] = ((1 - t) / 2) * (b[1] - a[1]) + (s - t / 2) * (d[1] - a[1])
+
+    ep[2] - a[2] = (a[2] + t * (c[2] - a[2])) - a[2]
+    (a[2] + t * (c[2] - a[2])) - a[2] = t * (c[2] - a[2])
+    t * (c[2] - a[2]) = t * ((b[2] - a[2]) + (d[2] - a[2]))
+    t * ((b[2] - a[2]) + (d[2] - a[2])) = t * (b[2] - a[2]) + t * (d[2] - a[2])
+    ep[2] - a[2] = t * (b[2] - a[2]) + t * (d[2] - a[2])
+    f[2] - a[2] = ((b[2] + ep[2]) / 2) - a[2]
+    ((b[2] + ep[2]) / 2) - a[2] = ((b[2] - a[2]) + (ep[2] - a[2])) / 2
+    by thm geo::add_equalities(b[2] - a[2], b[2] - a[2], ep[2] - a[2], t * (b[2] - a[2]) + t * (d[2] - a[2]))
+    (b[2] - a[2]) + (ep[2] - a[2]) = (b[2] - a[2]) + (t * (b[2] - a[2]) + t * (d[2] - a[2]))
+    (b[2] - a[2]) + (t * (b[2] - a[2]) + t * (d[2] - a[2])) = (b[2] - a[2]) + t * (b[2] - a[2]) + t * (d[2] - a[2])
+    (b[2] - a[2]) + (ep[2] - a[2]) = (b[2] - a[2]) + t * (b[2] - a[2]) + t * (d[2] - a[2])
+    by thm geo::multiply_both_sides((b[2] - a[2]) + (ep[2] - a[2]), (b[2] - a[2]) + t * (b[2] - a[2]) + t * (d[2] - a[2]), 1 / 2)
+    ((b[2] - a[2]) + (ep[2] - a[2])) * (1 / 2) = ((b[2] - a[2]) + t * (b[2] - a[2]) + t * (d[2] - a[2])) * (1 / 2)
+    ((b[2] - a[2]) + (ep[2] - a[2])) / 2 = ((b[2] - a[2]) + (ep[2] - a[2])) * (1 / 2)
+    ((b[2] - a[2]) + t * (b[2] - a[2]) + t * (d[2] - a[2])) * (1 / 2) = ((b[2] - a[2]) + t * (b[2] - a[2]) + t * (d[2] - a[2])) / 2
+    ((b[2] - a[2]) + (ep[2] - a[2])) / 2 = ((b[2] - a[2]) + t * (b[2] - a[2]) + t * (d[2] - a[2])) / 2
+    ((b[2] - a[2]) + t * (b[2] - a[2]) + t * (d[2] - a[2])) / 2 = ((1 + t) / 2) * (b[2] - a[2]) + (t / 2) * (d[2] - a[2])
+    f[2] - a[2] = ((1 + t) / 2) * (b[2] - a[2]) + (t / 2) * (d[2] - a[2])
+    m[2] - f[2] = (m[2] - a[2]) - (f[2] - a[2])
+    (m[2] - a[2]) - (f[2] - a[2]) = ((b[2] - a[2]) + s * (d[2] - a[2])) - (((1 + t) / 2) * (b[2] - a[2]) + (t / 2) * (d[2] - a[2]))
+    ((b[2] - a[2]) + s * (d[2] - a[2])) - (((1 + t) / 2) * (b[2] - a[2]) + (t / 2) * (d[2] - a[2])) = ((1 - t) / 2) * (b[2] - a[2]) + (s - t / 2) * (d[2] - a[2])
+    m[2] - f[2] = ((1 - t) / 2) * (b[2] - a[2]) + (s - t / 2) * (d[2] - a[2])
+    s * (1 + t) = t
+    s * (1 + t) = s + s * t
+    s + s * t = t
+    by thm geo::subtract_equalities(s + s * t, t, s * t, s * t)
+    (s + s * t) - s * t = t - s * t
+    (s + s * t) - s * t = s
+    s = t - s * t
+    by thm geo::subtract_equalities(s, t - s * t, t, t)
+    s - t = (t - s * t) - t
+    (t - s * t) - t = -s * t
+    s - t = -s * t
+    by thm geo::add_equalities(s, s, s - t, -s * t)
+    s + (s - t) = s + (-s * t)
+    s + (s - t) = 2 * s - t
+    s + (-s * t) = s - s * t
+    2 * s - t = s - s * t
+    by thm geo::multiply_both_sides(2 * s - t, s - s * t, 1 / 2)
+    (2 * s - t) * (1 / 2) = (s - s * t) * (1 / 2)
+    (2 * s - t) * (1 / 2) = s - t / 2
+    (s - s * t) * (1 / 2) = ((1 - t) / 2) * s
+    s - t / 2 = ((1 - t) / 2) * s
+    by thm geo::multiply_both_sides(m[1] - a[1], (b[1] - a[1]) + s * (d[1] - a[1]), (1 - t) / 2)
+    (m[1] - a[1]) * ((1 - t) / 2) = ((b[1] - a[1]) + s * (d[1] - a[1])) * ((1 - t) / 2)
+    ((1 - t) / 2) * (m[1] - a[1]) = (m[1] - a[1]) * ((1 - t) / 2)
+    ((b[1] - a[1]) + s * (d[1] - a[1])) * ((1 - t) / 2) = ((1 - t) / 2) * (b[1] - a[1]) + (((1 - t) / 2) * s) * (d[1] - a[1])
+    ((1 - t) / 2) * (m[1] - a[1]) = ((1 - t) / 2) * (b[1] - a[1]) + (((1 - t) / 2) * s) * (d[1] - a[1])
+    by thm geo::multiply_both_sides(m[2] - a[2], (b[2] - a[2]) + s * (d[2] - a[2]), (1 - t) / 2)
+    (m[2] - a[2]) * ((1 - t) / 2) = ((b[2] - a[2]) + s * (d[2] - a[2])) * ((1 - t) / 2)
+    ((1 - t) / 2) * (m[2] - a[2]) = (m[2] - a[2]) * ((1 - t) / 2)
+    ((b[2] - a[2]) + s * (d[2] - a[2])) * ((1 - t) / 2) = ((1 - t) / 2) * (b[2] - a[2]) + (((1 - t) / 2) * s) * (d[2] - a[2])
+    ((1 - t) / 2) * (m[2] - a[2]) = ((1 - t) / 2) * (b[2] - a[2]) + (((1 - t) / 2) * s) * (d[2] - a[2])
+    by thm geo::multiply_both_sides(s - t / 2, ((1 - t) / 2) * s, d[1] - a[1])
+    (s - t / 2) * (d[1] - a[1]) = (((1 - t) / 2) * s) * (d[1] - a[1])
+    by thm geo::add_equalities(((1 - t) / 2) * (b[1] - a[1]), ((1 - t) / 2) * (b[1] - a[1]), (s - t / 2) * (d[1] - a[1]), (((1 - t) / 2) * s) * (d[1] - a[1]))
+    ((1 - t) / 2) * (b[1] - a[1]) + (s - t / 2) * (d[1] - a[1]) = ((1 - t) / 2) * (b[1] - a[1]) + (((1 - t) / 2) * s) * (d[1] - a[1])
+    m[1] - f[1] = ((1 - t) / 2) * (b[1] - a[1]) + (((1 - t) / 2) * s) * (d[1] - a[1])
+    ((1 - t) / 2) * (b[1] - a[1]) + (((1 - t) / 2) * s) * (d[1] - a[1]) = ((1 - t) / 2) * (m[1] - a[1])
+    m[1] - f[1] = ((1 - t) / 2) * (m[1] - a[1])
+    by thm geo::multiply_both_sides(s - t / 2, ((1 - t) / 2) * s, d[2] - a[2])
+    (s - t / 2) * (d[2] - a[2]) = (((1 - t) / 2) * s) * (d[2] - a[2])
+    by thm geo::add_equalities(((1 - t) / 2) * (b[2] - a[2]), ((1 - t) / 2) * (b[2] - a[2]), (s - t / 2) * (d[2] - a[2]), (((1 - t) / 2) * s) * (d[2] - a[2]))
+    ((1 - t) / 2) * (b[2] - a[2]) + (s - t / 2) * (d[2] - a[2]) = ((1 - t) / 2) * (b[2] - a[2]) + (((1 - t) / 2) * s) * (d[2] - a[2])
+    m[2] - f[2] = ((1 - t) / 2) * (b[2] - a[2]) + (((1 - t) / 2) * s) * (d[2] - a[2])
+    ((1 - t) / 2) * (b[2] - a[2]) + (((1 - t) / 2) * s) * (d[2] - a[2]) = ((1 - t) / 2) * (m[2] - a[2])
+    m[2] - f[2] = ((1 - t) / 2) * (m[2] - a[2])
+
+    by thm geo::distance_sq_coordinate_formula(a, m)
+    by thm geo::distance_sq_coordinate_formula(a, p)
+    geo::distance_sq(a, m) = (m[1] - a[1])^2 + (m[2] - a[2])^2
+    geo::distance_sq(a, p) = (p[1] - a[1])^2 + (p[2] - a[2])^2
+    by thm geo::square_of_equal(m[1] - a[1], (b[1] - a[1]) + s * (d[1] - a[1]))
+    (m[1] - a[1])^2 = ((b[1] - a[1]) + s * (d[1] - a[1]))^2
+    by thm geo::square_of_equal(m[2] - a[2], (b[2] - a[2]) + s * (d[2] - a[2]))
+    (m[2] - a[2])^2 = ((b[2] - a[2]) + s * (d[2] - a[2]))^2
+    by thm geo::add_equalities((m[1] - a[1])^2, ((b[1] - a[1]) + s * (d[1] - a[1]))^2, (m[2] - a[2])^2, ((b[2] - a[2]) + s * (d[2] - a[2]))^2)
+    (m[1] - a[1])^2 + (m[2] - a[2])^2 = ((b[1] - a[1]) + s * (d[1] - a[1]))^2 + ((b[2] - a[2]) + s * (d[2] - a[2]))^2
+    ((b[1] - a[1]) + s * (d[1] - a[1]))^2 + ((b[2] - a[2]) + s * (d[2] - a[2]))^2 = ((b[1] - a[1])^2 + (b[2] - a[2])^2) + s^2 * ((d[1] - a[1])^2 + (d[2] - a[2])^2) + 2 * s * ((b[1] - a[1]) * (d[1] - a[1]) + (b[2] - a[2]) * (d[2] - a[2]))
+    ((b[1] - a[1])^2 + (b[2] - a[2])^2) + s^2 * ((d[1] - a[1])^2 + (d[2] - a[2])^2) + 2 * s * ((b[1] - a[1]) * (d[1] - a[1]) + (b[2] - a[2]) * (d[2] - a[2])) = ((b[1] - a[1])^2 + (b[2] - a[2])^2) + s^2 * ((d[1] - a[1])^2 + (d[2] - a[2])^2) + 2 * s * 0
+    ((b[1] - a[1])^2 + (b[2] - a[2])^2) + s^2 * ((d[1] - a[1])^2 + (d[2] - a[2])^2) + 2 * s * 0 = ((b[1] - a[1])^2 + (b[2] - a[2])^2) + s^2 * ((d[1] - a[1])^2 + (d[2] - a[2])^2)
+    ((b[1] - a[1])^2 + (b[2] - a[2])^2) + s^2 * ((d[1] - a[1])^2 + (d[2] - a[2])^2) = ((b[1] - a[1])^2 + (b[2] - a[2])^2) + s^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2)
+    ((b[1] - a[1])^2 + (b[2] - a[2])^2) + s^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) = (1 + s^2) * ((b[1] - a[1])^2 + (b[2] - a[2])^2)
+    (1 + s^2) * ((b[1] - a[1])^2 + (b[2] - a[2])^2) = (1 + s^2) * geo::distance_sq(a, b)
+    (m[1] - a[1])^2 + (m[2] - a[2])^2 = (1 + s^2) * geo::distance_sq(a, b)
+    1 - q = -s
+    by thm geo::square_of_equal(1 - q, -s)
+    (1 - q)^2 = (-s)^2
+    (-s)^2 = s^2
+    (1 - q)^2 = s^2
+    by thm geo::square_of_equal(p[1] - a[1], (1 - q) * (b[1] - a[1]) + (d[1] - a[1]))
+    (p[1] - a[1])^2 = ((1 - q) * (b[1] - a[1]) + (d[1] - a[1]))^2
+    by thm geo::square_of_equal(p[2] - a[2], (1 - q) * (b[2] - a[2]) + (d[2] - a[2]))
+    (p[2] - a[2])^2 = ((1 - q) * (b[2] - a[2]) + (d[2] - a[2]))^2
+    by thm geo::add_equalities((p[1] - a[1])^2, ((1 - q) * (b[1] - a[1]) + (d[1] - a[1]))^2, (p[2] - a[2])^2, ((1 - q) * (b[2] - a[2]) + (d[2] - a[2]))^2)
+    (p[1] - a[1])^2 + (p[2] - a[2])^2 = ((1 - q) * (b[1] - a[1]) + (d[1] - a[1]))^2 + ((1 - q) * (b[2] - a[2]) + (d[2] - a[2]))^2
+    ((1 - q) * (b[1] - a[1]) + (d[1] - a[1]))^2 + ((1 - q) * (b[2] - a[2]) + (d[2] - a[2]))^2 = (1 - q)^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + ((d[1] - a[1])^2 + (d[2] - a[2])^2) + 2 * (1 - q) * ((b[1] - a[1]) * (d[1] - a[1]) + (b[2] - a[2]) * (d[2] - a[2]))
+    (1 - q)^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + ((d[1] - a[1])^2 + (d[2] - a[2])^2) + 2 * (1 - q) * ((b[1] - a[1]) * (d[1] - a[1]) + (b[2] - a[2]) * (d[2] - a[2])) = (1 - q)^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + ((d[1] - a[1])^2 + (d[2] - a[2])^2) + 2 * (1 - q) * 0
+    (1 - q)^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + ((d[1] - a[1])^2 + (d[2] - a[2])^2) + 2 * (1 - q) * 0 = (1 - q)^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + ((d[1] - a[1])^2 + (d[2] - a[2])^2)
+    (1 - q)^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + ((d[1] - a[1])^2 + (d[2] - a[2])^2) = (1 - q)^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + ((b[1] - a[1])^2 + (b[2] - a[2])^2)
+    by thm geo::multiply_both_sides((1 - q)^2, s^2, (b[1] - a[1])^2 + (b[2] - a[2])^2)
+    (1 - q)^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) = s^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2)
+    by thm geo::add_equalities((1 - q)^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2), s^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2), (b[1] - a[1])^2 + (b[2] - a[2])^2, (b[1] - a[1])^2 + (b[2] - a[2])^2)
+    (1 - q)^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + ((b[1] - a[1])^2 + (b[2] - a[2])^2) = s^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + ((b[1] - a[1])^2 + (b[2] - a[2])^2)
+    s^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + ((b[1] - a[1])^2 + (b[2] - a[2])^2) = (1 + s^2) * ((b[1] - a[1])^2 + (b[2] - a[2])^2)
+    (1 + s^2) * ((b[1] - a[1])^2 + (b[2] - a[2])^2) = (1 + s^2) * geo::distance_sq(a, b)
+    (p[1] - a[1])^2 + (p[2] - a[2])^2 = (1 + s^2) * geo::distance_sq(a, b)
+    geo::distance_sq(a, m) = geo::distance_sq(a, p)
+
+thm problem_263:
+    ? forall a, b, c, d, ep, f, m, p cart(R, R):
+        $geo::is_square(a, b, c, d),
+        $geo::is_on_segment(ep, a, c),
+        $geo::are_segments_congruent(a, ep, b, c),
+        $geo::is_foot(f, a, b, ep),
+        $geo::is_on_extension(m, a, f),
+        $geo::is_on_line(m, b, c),
+        $geo::is_perpendicular(a, p, a, m),
+        $geo::is_on_extension(p, c, d)
+        =>:
+            sqrt(geo::distance_sq(a, p)) - 2 * sqrt(geo::distance_sq(f, m)) = sqrt(geo::distance_sq(b, ep))
+
+    # 展开正方形定义，取得平行四边形、直角和邻边等长条件。
+    by def $geo::is_square(a, b, c, d)
+    by def $geo::is_rectangle(a, b, c, d)
+    by def $geo::is_parallelogram(a, b, c, d)
+    by def $geo::is_foot(f, a, b, ep)
+    by def $geo::is_on_segment(ep, a, c)
+    by def $geo::is_on_extension(m, a, f)
+    by def $geo::is_on_line(m, b, c)
+    by def $geo::is_on_extension(p, c, d)
+
+    # 第一块：由 E 在线段 AC 上及 AE=BC，取得正参数 t，并证明 2t²=1。
+    obtain t from exist t0 R st {0 <= t0, t0 <= 1, ep = (a[1] + t0 * (c[1] - a[1]), a[2] + t0 * (c[2] - a[2]))}
+    ep[1] = a[1] + t * (c[1] - a[1])
+    ep[2] = a[2] + t * (c[2] - a[2])
+    by thm geo::affine_distance_from_parameter(a, c, ep, t)
+    by thm geo::distance_sq_symmetric(ep, a)
+    geo::distance_sq(a, ep) = geo::distance_sq(ep, a) = t^2 * geo::distance_sq(a, c)
+
+    by def $geo::are_segments_congruent(a, ep, b, c)
+    by def $geo::are_segments_congruent(a, b, b, c)
+    geo::distance_sq(a, ep) = geo::distance_sq(b, c)
+    geo::distance_sq(a, b) = geo::distance_sq(b, c)
+    geo::distance_sq(a, ep) = geo::distance_sq(a, b)
+
+    by thm geo::square_diagonal_length(a, b, c, d, geo::distance_sq(a, b))
+    geo::distance_sq(a, c) = 2 * geo::distance_sq(a, b)
+    t^2 * geo::distance_sq(a, c) = t^2 * (2 * geo::distance_sq(a, b))
+    geo::distance_sq(a, b) = t^2 * (2 * geo::distance_sq(a, b))
+
+    by def $geo::is_parallel(a, b, d, c)
+    a != b
+    by thm geo::distance_sq_positive_of_ne(a, b)
+    geo::distance_sq(a, b) > 0
+    geo::distance_sq(a, b) != 0
+    by thm geo::subtract_equalities(geo::distance_sq(a, b), t^2 * (2 * geo::distance_sq(a, b)), geo::distance_sq(a, b), geo::distance_sq(a, b))
+    geo::distance_sq(a, b) - geo::distance_sq(a, b) = t^2 * (2 * geo::distance_sq(a, b)) - geo::distance_sq(a, b)
+    0 = t^2 * (2 * geo::distance_sq(a, b)) - geo::distance_sq(a, b)
+    geo::distance_sq(a, b) * (2 * t^2 - 1) = t^2 * (2 * geo::distance_sq(a, b)) - geo::distance_sq(a, b) = 0
+    by thm geo::zero_factor_law(geo::distance_sq(a, b), 2 * t^2 - 1)
+    2 * t^2 - 1 = 0
+    2 * t^2 = 1
+    t^2 > 0
+    by contra:
+        ? t != 0
+        t = 0
+        t^2 = 0
+        2 * t^2 = 0
+        impossible 2 * t^2 = 1
+    t != 0
+    by contra:
+        ? t > 0
+        t <= 0
+        t >= 0
+        t = 0
+        impossible t != 0
+    t > 0
+
+    # 垂足 F 在线段 BE 所在直线上，且 AF⊥BE；等腰垂足引理给出 F 为 BE 中点。
+    by thm geo::on_line_implies_affine_parameter(b, ep, f)
+    obtain r from exist r0 R st {f[1] = (1 - r0) * b[1] + r0 * ep[1], f[2] = (1 - r0) * b[2] + r0 * ep[2]}
+    by def $geo::is_perpendicular(a, f, b, ep)
+    geo::dot(geo::vec(a, f), geo::vec(b, ep)) = 0
+    by thm problem_263_isosceles_foot_midpoint_coordinates(a, b, ep, f, r)
+    f[1] = (b[1] + ep[1]) / 2
+    f[2] = (b[2] + ep[2]) / 2
+
+    # M lies on the extension of AF and on line BC; P lies on the extension of CD.
+    obtain u from exist u0 R st {u0 > 1, m = (a[1] + u0 * (f[1] - a[1]), a[2] + u0 * (f[2] - a[2]))}
+    m[1] = a[1] + u * (f[1] - a[1])
+    m[2] = a[2] + u * (f[2] - a[2])
+    by thm geo::on_line_implies_affine_parameter(b, c, m)
+    obtain s from exist s0 R st {m[1] = (1 - s0) * b[1] + s0 * c[1], m[2] = (1 - s0) * b[2] + s0 * c[2]}
+    obtain q from exist q0 R st {q0 > 1, p = (c[1] + q0 * (d[1] - c[1]), c[2] + q0 * (d[2] - c[2]))}
+    p[1] = c[1] + q * (d[1] - c[1])
+    p[2] = c[2] + q * (d[2] - c[2])
+
+    # Since AM is a scalar multiple of AF and AF is perpendicular to BE, AM is perpendicular to BE.
+    by thm geo::vec_coordinate_formula(a, m)
+    by thm geo::vec_coordinate_formula(a, f)
+    by thm geo::vec_coordinate_formula(b, ep)
+    by thm geo::dot_coordinate_formula(geo::vec(a, m), geo::vec(b, ep))
+    by thm geo::dot_coordinate_formula(geo::vec(a, f), geo::vec(b, ep))
+    geo::dot(geo::vec(a, m), geo::vec(b, ep)) = (m[1] - a[1]) * (ep[1] - b[1]) + (m[2] - a[2]) * (ep[2] - b[2])
+    (m[1] - a[1]) * (ep[1] - b[1]) + (m[2] - a[2]) * (ep[2] - b[2]) = (u * (f[1] - a[1])) * (ep[1] - b[1]) + (u * (f[2] - a[2])) * (ep[2] - b[2])
+    (u * (f[1] - a[1])) * (ep[1] - b[1]) + (u * (f[2] - a[2])) * (ep[2] - b[2]) = u * ((f[1] - a[1]) * (ep[1] - b[1]) + (f[2] - a[2]) * (ep[2] - b[2]))
+    (f[1] - a[1]) * (ep[1] - b[1]) + (f[2] - a[2]) * (ep[2] - b[2]) = geo::dot(geo::vec(a, f), geo::vec(b, ep)) = 0
+    u * ((f[1] - a[1]) * (ep[1] - b[1]) + (f[2] - a[2]) * (ep[2] - b[2])) = u * 0 = 0
+    geo::dot(geo::vec(a, m), geo::vec(b, ep)) = 0
+
+    # Expand AP perpendicular AM, and recover the standard square coordinate frame.
+    by def $geo::is_perpendicular(a, p, a, m)
+    geo::dot(geo::vec(a, p), geo::vec(a, m)) = 0
+    by def $geo::is_parallel(a, d, b, c)
+    by def $geo::is_right_angle(d, a, b)
+    by thm geo::square_orthogonal_parallel_quadrilateral_coordinates(a, b, c, d)
+    d[1] = a[1] + c[1] - b[1]
+    d[2] = a[2] + c[2] - b[2]
+
+    # Opposite sides of the parallelogram are equal; together with AB=BC this gives AB=AD.
+    by thm geo::parallelogram_sides(a, b, c, d)
+    geo::distance_sq(a, d) = geo::distance_sq(b, c)
+    geo::distance_sq(a, b) = geo::distance_sq(a, d)
+
+    # The local coordinate bridge now gives exactly the two vector ratios and AM=AP.
+    by thm problem_263_square_intersection_coordinate_bridge(a, b, c, d, ep, f, m, p, t, s, q)
+    ep[1] - b[1] = t * (p[1] - a[1])
+    ep[2] - b[2] = t * (p[2] - a[2])
+    m[1] - f[1] = ((1 - t) / 2) * (m[1] - a[1])
+    m[2] - f[2] = ((1 - t) / 2) * (m[2] - a[2])
+    geo::distance_sq(a, m) = geo::distance_sq(a, p)
+
+    by thm problem_263_metric_from_coordinate_relations(a, b, ep, f, m, p, t)
+    geo::distance_sq(b, ep) = t^2 * geo::distance_sq(a, p)
+    geo::distance_sq(f, m) = ((1 - t) / 2)^2 * geo::distance_sq(a, p)
+
+    by thm geo::distance_sq_nonnegative(a, p)
+    by thm geo::distance_sq_nonnegative(f, m)
+    by thm geo::distance_sq_nonnegative(b, ep)
+    by thm problem_263_length_finish_from_squares(t, geo::distance_sq(a, p), geo::distance_sq(f, m), geo::distance_sq(b, ep))
+    sqrt(geo::distance_sq(a, p)) - 2 * sqrt(geo::distance_sq(f, m)) = sqrt(geo::distance_sq(b, ep))

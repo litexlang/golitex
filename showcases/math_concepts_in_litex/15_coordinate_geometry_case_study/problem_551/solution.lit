@@ -1,0 +1,100 @@
+# Problem 551 incidence/parameter extraction probe.
+# This file deliberately uses only public atomic predicates in the theorem interface.
+
+thm problem_551_parameter_probe:
+    ? forall a, b, c, d, ep, f, m, n, o cart(R, R), r R+:
+        $geo::is_diameter_endpoints(a, b, o),
+        $geo::is_tangent_at(a, m, o, r),
+        $geo::is_tangent_at(b, n, o, r),
+        c != a,
+        $geo::is_on_line(c, a, m),
+        $geo::is_on_circle(d, o, r),
+        $geo::are_segments_congruent(c, d, c, a),
+        $geo::is_on_extension(ep, c, d),
+        $geo::is_on_line(ep, b, n),
+        $geo::is_on_extension(f, a, d),
+        $geo::is_on_line(f, b, n)
+        =>:
+            exist s, t, u, v, w R st {c[1] = (1 - s) * a[1] + s * m[1], c[2] = (1 - s) * a[2] + s * m[2], t > 1, ep = (c[1] + t * (d[1] - c[1]), c[2] + t * (d[2] - c[2])), ep[1] = (1 - u) * b[1] + u * n[1], ep[2] = (1 - u) * b[2] + u * n[2], v > 1, f = (a[1] + v * (d[1] - a[1]), a[2] + v * (d[2] - a[2])), f[1] = (1 - w) * b[1] + w * n[1], f[2] = (1 - w) * b[2] + w * n[2]}
+    by thm geo::on_line_implies_affine_parameter(a, m, c)
+    obtain s_param from exist s0 R st {c[1] = (1 - s0) * a[1] + s0 * m[1], c[2] = (1 - s0) * a[2] + s0 * m[2]}
+
+    by def $geo::is_on_extension(ep, c, d)
+    obtain t_param from exist t0 R st {t0 > 1, ep = (c[1] + t0 * (d[1] - c[1]), c[2] + t0 * (d[2] - c[2]))}
+
+    by thm geo::on_line_implies_affine_parameter(b, n, ep)
+    obtain u_param from exist u0 R st {ep[1] = (1 - u0) * b[1] + u0 * n[1], ep[2] = (1 - u0) * b[2] + u0 * n[2]}
+
+    by def $geo::is_on_extension(f, a, d)
+    obtain v_param from exist v0 R st {v0 > 1, f = (a[1] + v0 * (d[1] - a[1]), a[2] + v0 * (d[2] - a[2]))}
+
+    by thm geo::on_line_implies_affine_parameter(b, n, f)
+    obtain w_param from exist w0 R st {f[1] = (1 - w0) * b[1] + w0 * n[1], f[2] = (1 - w0) * b[2] + w0 * n[2]}
+
+    witness exist s, t, u, v, w R st {c[1] = (1 - s) * a[1] + s * m[1], c[2] = (1 - s) * a[2] + s * m[2], t > 1, ep = (c[1] + t * (d[1] - c[1]), c[2] + t * (d[2] - c[2])), ep[1] = (1 - u) * b[1] + u * n[1], ep[2] = (1 - u) * b[2] + u * n[2], v > 1, f = (a[1] + v * (d[1] - a[1]), a[2] + v * (d[2] - a[2])), f[1] = (1 - w) * b[1] + w * n[1], f[2] = (1 - w) * b[2] + w * n[2]} from s_param, t_param, u_param, v_param, w_param
+
+# Translation boundary: the original atomic geometry assumptions produce the
+# two requested public conclusions through the verified coordinate bridge.
+thm problem_551:
+    ? forall a, b, c, d, ep, f, m, n, o cart(R, R), r R+:
+        $geo::is_diameter_endpoints(a, b, o),
+        $geo::is_tangent_at(a, m, o, r),
+        $geo::is_tangent_at(b, n, o, r),
+        c != a,
+        $geo::is_on_line(c, a, m),
+        $geo::is_on_circle(d, o, r),
+        $geo::are_segments_congruent(c, d, c, a),
+        $geo::is_on_extension(ep, c, d),
+        $geo::is_on_line(ep, b, n),
+        $geo::is_on_extension(f, a, d),
+        $geo::is_on_line(f, b, n)
+        =>:
+            $geo::is_tangent_at(d, ep, o, r),
+            $geo::are_segments_congruent(b, ep, ep, f)
+
+    by thm problem_551_parameter_probe(a, b, c, d, ep, f, m, n, o, r)
+    obtain s, t, u, v, w from exist s0, t0, u0, v0, w0 R st {c[1] = (1 - s0) * a[1] + s0 * m[1], c[2] = (1 - s0) * a[2] + s0 * m[2], t0 > 1, ep = (c[1] + t0 * (d[1] - c[1]), c[2] + t0 * (d[2] - c[2])), ep[1] = (1 - u0) * b[1] + u0 * n[1], ep[2] = (1 - u0) * b[2] + u0 * n[2], v0 > 1, f = (a[1] + v0 * (d[1] - a[1]), a[2] + v0 * (d[2] - a[2])), f[1] = (1 - w0) * b[1] + w0 * n[1], f[2] = (1 - w0) * b[2] + w0 * n[2]}
+
+    by thm geometry_bridge::problem_551_geometry_bridge(a, b, c, d, ep, f, m, n, o, r, s, t, u, v, w)
+    geo::dot(geo::vec(o, d), geo::vec(d, ep)) = 0
+    geo::distance_sq(b, ep) = geo::distance_sq(ep, f)
+
+    # The circle predicate and positive radius imply d != o.
+    by def $geo::is_on_circle(d, o, r)
+    r > 0
+    r^2 > 0
+    geo::distance_sq(d, o) = r^2
+    geo::distance_sq(d, o) > 0
+    by contra:
+        ? d != o
+        d = o
+        by thm geo::distance_sq_coordinate_formula(d, o)
+        geo::distance_sq(d, o) = (o[1] - d[1])^2 + (o[2] - d[2])^2
+        o[1] = d[1]
+        o[2] = d[2]
+        o[1] - d[1] = 0
+        o[2] - d[2] = 0
+        (o[1] - d[1])^2 = 0
+        (o[2] - d[2])^2 = 0
+        (o[1] - d[1])^2 + (o[2] - d[2])^2 = 0
+        geo::distance_sq(d, o) = 0
+        impossible geo::distance_sq(d, o) > 0
+
+    # The extension predicate supplies d != ep.
+    by def $geo::is_on_extension(ep, c, d)
+    ep != d
+    by contra:
+        ? d != ep
+        d = ep
+        ep = d
+        impossible ep != d
+
+    by def $geo::is_perpendicular(o, d, d, ep)
+    geo::vec(o, d) = (d[1] - o[1], d[2] - o[2])
+    geo::vec(d, ep) = (ep[1] - d[1], ep[2] - d[2])
+    by thm geo::dot_coordinate_formula(geo::vec(o, d), geo::vec(d, ep))
+    geo::dot(geo::vec(o, d), geo::vec(d, ep)) = (d[1] - o[1]) * (ep[1] - d[1]) + (d[2] - o[2]) * (ep[2] - d[2])
+    (d[1] - o[1]) * (ep[1] - d[1]) + (d[2] - o[2]) * (ep[2] - d[2]) = 0
+
+    by def $geo::is_tangent_at(d, ep, o, r)
+    by def $geo::are_segments_congruent(b, ep, ep, f)

@@ -1,0 +1,16 @@
+# Problem 474 / zhongkao_273 — semantic translation boundary
+#
+# 完整自然语言题目：
+# 如图，四边形ABCD是平行四边形，以BC为直径的圆交AD于点E。
+# 若点E是AD的中点，连接OA，CE。
+# 求证：四边形AOCE是平行四边形。
+#
+# 主库已经提供本题需要的全部数学概念：
+# - geo::is_nondegenerate_parallelogram：通常非退化语义下的平行四边形；
+# - geo::is_diameter_endpoints：给定圆心下的一对直径端点；
+# - geo::is_on_circle：点在给定圆上；
+# - geo::is_midpoint：中点；
+# - geo::is_parallelogram：目标平行四边形。
+#
+# 因此本文件不新增任何题号包装谓词或临时数学谓词。
+# 原题每句NL与Litex前提/结论的逐项对应直接写在solution.lit主定理中。

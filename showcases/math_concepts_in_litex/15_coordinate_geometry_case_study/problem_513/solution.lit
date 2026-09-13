@@ -1,0 +1,33 @@
+# Problem 513 / zhongkao_315
+#
+# 原题：如图，O是△ABC的外心，I是△ABC的内心，连接AI并延长交BC和⊙O于D，E。
+#       (1)求证：EB=EI。
+#
+# 逐句 NL → Litex：
+# - “O是△ABC的外心” ↔ $geo::is_circumcenter(o,a,b,c)。
+# - “I是△ABC的内心” ↔ $geo::is_incenter(i,a,b,c)。
+# - “AI延长交BC于D” ↔ $geo::is_on_segment(d,b,c) 且 $geo::is_on_extension(d,a,i)。
+# - “AI延长交⊙O于E” ↔ $geo::is_on_extension(e,a,i) 且 $geo::are_segments_congruent(o,e,o,a)。
+# - “求证：EB=EI” ↔ $geo::are_segments_congruent(e,b,e,i)。
+#
+# is_on_extension(p,a,b) 表示 p 位于从 a 朝 b 的射线上且越过 b；
+# 因而 D、E 都使用 (p,a,i)，与图中的 A-I-D/E 顺序一致。
+
+thm problem_513_eb_eq_ei:
+    ? forall a, b, c, d, o, p, r cart(R, R):
+        # 【原题条件1】O是△ABC的外心。
+        $geo::is_circumcenter(o, a, b, c),
+        # 【原题条件2】I是△ABC的内心。
+        $geo::is_incenter(p, a, b, c),
+        # 【原题条件3a】AI延长交BC于D：D在线段BC上。
+        $geo::is_on_segment(d, b, c),
+        # 【原题条件3b】AI延长交BC于D：D在射线AI上且越过I。
+        $geo::is_on_extension(d, a, p),
+        # 【原题条件4a】AI延长交⊙O于E：E在射线AI上且越过I。
+        $geo::is_on_extension(r, a, p),
+        # 【原题条件4b】AI延长交⊙O于E：OE=OA，即E在以O为圆心、过A的外接圆上。
+        $geo::are_segments_congruent(o, r, o, a)
+        =>:
+            # 【原题结论】EB=EI。
+            $geo::are_segments_congruent(r, b, r, p)
+    by thm top_bridge::problem_513_public_bridge(a, b, c, o, p, d, r)

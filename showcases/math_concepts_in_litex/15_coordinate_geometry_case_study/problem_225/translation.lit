@@ -1,0 +1,40 @@
+# Problem 225 / zhongkao_21 - geometry-first translation
+#
+# 原题（完整自然语言）
+# （1）如图1．在Rt△ACB中，∠ACB＝90°，AC＝8，BC＝6，点D、E分别在边CA，CB上且CD＝3，CE＝4，连接AE，BD，F为AE的中点，连接CF交BD于点G，证明：CG⊥BD。
+# （提示：延长CF到点M，使FM＝CF，连接AM。）
+# （2）将△DCE绕点C逆时针旋转至图2所示位置时，（1）中的结论是否仍然成立？若成立，请给出证明；若不成立，请说明理由。
+# （3）将△DCE绕点C逆时针在平面内旋转，在旋转过程中，当B，D，E三点在同一条直线上时，CF的长为______。
+#
+# 逐句语义对照
+# - “Rt△ACB，∠ACB＝90°” ↔ C=(0,0), A=(8,0), B=(0,6)。
+# - “CD＝3，CE＝4” ↔ 旋转后三角形的 D、E 坐标分别由长度 3、4 的旋转半径给出。
+# - “F为AE的中点” ↔ F=(A+E)/2=(4-2*si, 2*co)。
+# - “将△DCE绕点C逆时针旋转” ↔ (co,si) 是旋转参数，满足 co^2+si^2=1；D、E 同时使用同一旋转。
+# - “(1)中的结论 CG⊥BD” ↔ $geo::is_perpendicular((0,0), f, (0,6), d)。
+# - “B，D，E三点在同一条直线上” ↔ 归一化坐标条件 3*co+4*si=2；这是 B、D、E 共线的代数桥。
+# - “CF的长” ↔ sqrt(geo::distance_sq((0,0), f))。
+#
+# The coordinate certificate records the translation bridge used by the coordinate proof.
+prop problem_225_rotation_certificate(co, si R, d, ep, f cart(R, R)):
+    co^2 + si^2 = 1
+    d = (3 * co, 3 * si)
+    ep = (-4 * si, 4 * co)
+    f = (4 - 2 * si, 2 * co)
+    (0, 0) != f
+    (0, 6) != d
+
+# 第（1）问和第（2）问的形式化目标：在旋转证书下，CF与BD垂直。
+prop problem_225_perpendicular_target(co, si R, d, ep, f cart(R, R)):
+    $problem_225_rotation_certificate(co, si, d, ep, f)
+    $geo::is_perpendicular((0, 0), f, (0, 6), d)
+
+# 第（3）问的“B、D、E共线”旋转状态。
+prop problem_225_collinear_rotation_case(co, si R, d, ep, f cart(R, R)):
+    $problem_225_rotation_certificate(co, si, d, ep, f)
+    3 * co + 4 * si = 2
+
+# 第（3）问的答案：CF有且仅需落入题目所求的两个候选长度之一。
+prop problem_225_cf_length_answer(f cart(R, R)):
+    0 <= geo::distance_sq((0, 0), f)
+    sqrt(geo::distance_sq((0, 0), f)) = (4 * sqrt(21) - 6) / 5 or sqrt(geo::distance_sq((0, 0), f)) = (4 * sqrt(21) + 6) / 5

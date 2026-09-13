@@ -1,0 +1,272 @@
+# Problem 476 isolated candidate.
+# The local core proves the target angle identity from affine coordinate data.
+
+# One-coordinate factorization used by the midpoint expansion.
+thm problem_476_one_coordinate_factor:
+    ? forall x, y, z, m, r R:
+        m = (x + y) / 2,
+        z = y - r * x
+        =>:
+            m^2 - (z - m)^2 = (1 + r) * x * z
+    m + (z - m) = z
+    m - (z - m) = 2 * m - z
+    by thm geo::difference_of_squares(m, z - m)
+    m^2 - (z - m)^2 = z * (2 * m - z)
+    2 * m = x + y
+    z = y - r * x
+    2 * m - z = x + y - z
+    x + y - z = x + y - (y - r * x)
+    x + y - (y - r * x) = x + r * x
+    x + r * x = (1 + r) * x
+    x + y - z = (1 + r) * x
+    2 * m - z = (1 + r) * x
+    z * (2 * m - z) = z * ((1 + r) * x)
+    z * ((1 + r) * x) = (1 + r) * x * z
+    m^2 - (z - m)^2 = (1 + r) * x * z
+
+# Equal source lengths force AB perpendicular to AF after midpoint expansion.
+thm problem_476_equal_length_orthogonality:
+    ? forall a1, a2, b1, b2, c1, c2, e1, e2, f1, f2, r R:
+        r > 0,
+        e1 = (b1 + c1) / 2,
+        e2 = (b2 + c2) / 2,
+        f1 = c1 + r * (a1 - b1),
+        f2 = c2 + r * (a2 - b2),
+        (e1 - a1)^2 + (e2 - a2)^2 = (f1 - e1)^2 + (f2 - e2)^2
+        =>:
+            (b1 - a1) * (f1 - a1) + (b2 - a2) * (f2 - a2) = 0
+    (e1 - a1)^2 + (e2 - a2)^2 - ((f1 - e1)^2 + (f2 - e2)^2) = 0
+
+    # Apply the verified one-coordinate factorization after translating by A.
+    e1 - a1 = (b1 + c1) / 2 - a1
+    (b1 + c1) / 2 - a1 = ((b1 - a1) + (c1 - a1)) / 2
+    e1 - a1 = ((b1 - a1) + (c1 - a1)) / 2
+    f1 - a1 = c1 + r * (a1 - b1) - a1
+    c1 + r * (a1 - b1) - a1 = (c1 - a1) - r * (b1 - a1)
+    f1 - a1 = (c1 - a1) - r * (b1 - a1)
+    by thm problem_476_one_coordinate_factor(b1 - a1, c1 - a1, f1 - a1, e1 - a1, r)
+    (e1 - a1)^2 - ((f1 - a1) - (e1 - a1))^2 = (1 + r) * (b1 - a1) * (f1 - a1)
+    (f1 - a1) - (e1 - a1) = f1 - e1
+    (e1 - a1)^2 - (f1 - e1)^2 = (1 + r) * (b1 - a1) * (f1 - a1)
+
+    e2 - a2 = (b2 + c2) / 2 - a2
+    (b2 + c2) / 2 - a2 = ((b2 - a2) + (c2 - a2)) / 2
+    e2 - a2 = ((b2 - a2) + (c2 - a2)) / 2
+    f2 - a2 = c2 + r * (a2 - b2) - a2
+    c2 + r * (a2 - b2) - a2 = (c2 - a2) - r * (b2 - a2)
+    f2 - a2 = (c2 - a2) - r * (b2 - a2)
+    by thm problem_476_one_coordinate_factor(b2 - a2, c2 - a2, f2 - a2, e2 - a2, r)
+    (e2 - a2)^2 - ((f2 - a2) - (e2 - a2))^2 = (1 + r) * (b2 - a2) * (f2 - a2)
+    (f2 - a2) - (e2 - a2) = f2 - e2
+    (e2 - a2)^2 - (f2 - e2)^2 = (1 + r) * (b2 - a2) * (f2 - a2)
+
+    (e1 - a1)^2 + (e2 - a2)^2 - ((f1 - e1)^2 + (f2 - e2)^2) = ((e1 - a1)^2 - (f1 - e1)^2) + ((e2 - a2)^2 - (f2 - e2)^2)
+    ((e1 - a1)^2 - (f1 - e1)^2) + ((e2 - a2)^2 - (f2 - e2)^2) = (1 + r) * (b1 - a1) * (f1 - a1) + (1 + r) * (b2 - a2) * (f2 - a2)
+    (1 + r) * (b1 - a1) * (f1 - a1) + (1 + r) * (b2 - a2) * (f2 - a2) = (1 + r) * ((b1 - a1) * (f1 - a1) + (b2 - a2) * (f2 - a2))
+    (e1 - a1)^2 + (e2 - a2)^2 - ((f1 - e1)^2 + (f2 - e2)^2) = (1 + r) * ((b1 - a1) * (f1 - a1) + (b2 - a2) * (f2 - a2))
+    (1 + r) * ((b1 - a1) * (f1 - a1) + (b2 - a2) * (f2 - a2)) = 0
+    1 + r > 0
+    1 + r != 0
+    by thm geo::zero_factor_law(1 + r, (b1 - a1) * (f1 - a1) + (b2 - a2) * (f2 - a2))
+    (b1 - a1) * (f1 - a1) + (b2 - a2) * (f2 - a2) = 0
+
+# Replace both factors of a squared product using two scalar equalities.
+thm problem_476_square_product_substitution:
+    ? forall n, m, x, y R:
+        n = m,
+        x = y
+        =>:
+            n^2 * x = m^2 * y
+    by thm geo::multiply_both_sides(n, m, n)
+    n * n = m * n
+    by thm geo::multiply_both_sides(n, m, m)
+    n * m = m * m
+    n^2 = n * n = m * n = n * m = m * m = m^2
+    by thm geo::multiply_both_sides(n^2, m^2, x)
+    n^2 * x = m^2 * x
+    by thm geo::multiply_both_sides(x, y, m^2)
+    x * m^2 = y * m^2
+    m^2 * x = x * m^2 = y * m^2 = m^2 * y
+
+# Replace both factors of an ordinary product using two scalar equalities.
+thm problem_476_linear_product_substitution:
+    ? forall n, m, x, y R:
+        n = m,
+        x = y
+        =>:
+            n * x = m * y
+    by thm geo::multiply_both_sides(n, m, x)
+    n * x = m * x
+    by thm geo::multiply_both_sides(x, y, m)
+    x * m = y * m
+    m * x = x * m = y * m = m * y
+
+thm problem_476_angle_coordinate_core:
+    ? forall a, b, c, d, ep, f cart(R, R), r R:
+        b != a,
+        ep != a,
+        c != f,
+        ep != f,
+        r > 0,
+        d[1] = a[1] + c[1] - b[1],
+        d[2] = a[2] + c[2] - b[2],
+        ep[1] = (b[1] + c[1]) / 2,
+        ep[2] = (b[2] + c[2]) / 2,
+        f[1] = c[1] + r * (d[1] - c[1]),
+        f[2] = c[2] + r * (d[2] - c[2]),
+        geo::distance_sq(a, ep) = geo::distance_sq(ep, f)
+        =>:
+            $geo::are_angles_congruent(b, a, ep, c, f, ep)
+
+    # Expand the four vectors and the equal-length premise.
+    by thm geo::distance_sq_coordinate_formula(a, ep)
+    by thm geo::distance_sq_coordinate_formula(ep, f)
+    geo::distance_sq(a, ep) = (ep[1] - a[1])^2 + (ep[2] - a[2])^2
+    geo::distance_sq(ep, f) = (f[1] - ep[1])^2 + (f[2] - ep[2])^2
+    (ep[1] - a[1])^2 + (ep[2] - a[2])^2 = (f[1] - ep[1])^2 + (f[2] - ep[2])^2
+
+    # Affine coordinate consequences.
+    f[1] = c[1] + r * (d[1] - c[1])
+    d[1] - c[1] = a[1] - b[1]
+    c[1] + r * (d[1] - c[1]) = c[1] + r * (a[1] - b[1])
+    f[1] = c[1] + r * (a[1] - b[1])
+    f[2] = c[2] + r * (d[2] - c[2])
+    d[2] - c[2] = a[2] - b[2]
+    c[2] + r * (d[2] - c[2]) = c[2] + r * (a[2] - b[2])
+    f[2] = c[2] + r * (a[2] - b[2])
+    c[1] - f[1] = c[1] - (c[1] + r * (a[1] - b[1]))
+    c[1] - (c[1] + r * (a[1] - b[1])) = -r * (a[1] - b[1])
+    -r * (a[1] - b[1]) = r * (b[1] - a[1])
+    c[1] - f[1] = r * (b[1] - a[1])
+    c[2] - f[2] = c[2] - (c[2] + r * (a[2] - b[2]))
+    c[2] - (c[2] + r * (a[2] - b[2])) = -r * (a[2] - b[2])
+    -r * (a[2] - b[2]) = r * (b[2] - a[2])
+    c[2] - f[2] = r * (b[2] - a[2])
+
+    # The equal-length equation gives AB perpendicular to AF.
+    by thm problem_476_equal_length_orthogonality(a[1], a[2], b[1], b[2], c[1], c[2], ep[1], ep[2], f[1], f[2], r)
+    (b[1] - a[1]) * (f[1] - a[1]) + (b[2] - a[2]) * (f[2] - a[2]) = 0
+
+    # Numerator scaling: dot(FC,FE) = r * dot(AB,AE).
+    by thm geo::vec_coordinate_formula(a, b)
+    by thm geo::vec_coordinate_formula(a, ep)
+    by thm geo::vec_coordinate_formula(f, c)
+    by thm geo::vec_coordinate_formula(f, ep)
+    by thm geo::dot_coordinate_formula(geo::vec(a, b), geo::vec(a, ep))
+    by thm geo::dot_coordinate_formula(geo::vec(f, c), geo::vec(f, ep))
+    geo::dot(geo::vec(f, c), geo::vec(f, ep)) = (c[1] - f[1]) * (ep[1] - f[1]) + (c[2] - f[2]) * (ep[2] - f[2])
+    (c[1] - f[1]) * (ep[1] - f[1]) + (c[2] - f[2]) * (ep[2] - f[2]) = (r * (b[1] - a[1])) * (ep[1] - f[1]) + (r * (b[2] - a[2])) * (ep[2] - f[2])
+    (r * (b[1] - a[1])) * (ep[1] - f[1]) + (r * (b[2] - a[2])) * (ep[2] - f[2]) = r * ((b[1] - a[1]) * (ep[1] - f[1]) + (b[2] - a[2]) * (ep[2] - f[2]))
+    ep[1] - f[1] = (ep[1] - a[1]) - (f[1] - a[1])
+    ep[2] - f[2] = (ep[2] - a[2]) - (f[2] - a[2])
+    (b[1] - a[1]) * (ep[1] - f[1]) = (b[1] - a[1]) * ((ep[1] - a[1]) - (f[1] - a[1]))
+    (b[1] - a[1]) * ((ep[1] - a[1]) - (f[1] - a[1])) = (b[1] - a[1]) * (ep[1] - a[1]) - (b[1] - a[1]) * (f[1] - a[1])
+    (b[1] - a[1]) * (ep[1] - f[1]) = (b[1] - a[1]) * (ep[1] - a[1]) - (b[1] - a[1]) * (f[1] - a[1])
+    (b[2] - a[2]) * (ep[2] - f[2]) = (b[2] - a[2]) * ((ep[2] - a[2]) - (f[2] - a[2]))
+    (b[2] - a[2]) * ((ep[2] - a[2]) - (f[2] - a[2])) = (b[2] - a[2]) * (ep[2] - a[2]) - (b[2] - a[2]) * (f[2] - a[2])
+    (b[2] - a[2]) * (ep[2] - f[2]) = (b[2] - a[2]) * (ep[2] - a[2]) - (b[2] - a[2]) * (f[2] - a[2])
+    (b[1] - a[1]) * (ep[1] - f[1]) + (b[2] - a[2]) * (ep[2] - f[2]) = ((b[1] - a[1]) * (ep[1] - a[1]) + (b[2] - a[2]) * (ep[2] - a[2])) - ((b[1] - a[1]) * (f[1] - a[1]) + (b[2] - a[2]) * (f[2] - a[2]))
+    ((b[1] - a[1]) * (ep[1] - a[1]) + (b[2] - a[2]) * (ep[2] - a[2])) - ((b[1] - a[1]) * (f[1] - a[1]) + (b[2] - a[2]) * (f[2] - a[2])) = (b[1] - a[1]) * (ep[1] - a[1]) + (b[2] - a[2]) * (ep[2] - a[2])
+    (b[1] - a[1]) * (ep[1] - f[1]) + (b[2] - a[2]) * (ep[2] - f[2]) = (b[1] - a[1]) * (ep[1] - a[1]) + (b[2] - a[2]) * (ep[2] - a[2])
+    geo::dot(geo::vec(a, b), geo::vec(a, ep)) = (b[1] - a[1]) * (ep[1] - a[1]) + (b[2] - a[2]) * (ep[2] - a[2])
+    r * ((b[1] - a[1]) * (ep[1] - f[1]) + (b[2] - a[2]) * (ep[2] - f[2])) = r * geo::dot(geo::vec(a, b), geo::vec(a, ep))
+    geo::dot(geo::vec(f, c), geo::vec(f, ep)) = r * geo::dot(geo::vec(a, b), geo::vec(a, ep))
+
+    # Denominator scaling: |FC|^2|FE|^2 = r^2|AB|^2|AE|^2.
+    by thm geo::distance_sq_coordinate_formula(a, b)
+    by thm geo::distance_sq_coordinate_formula(f, c)
+    geo::distance_sq(f, c) = (c[1] - f[1])^2 + (c[2] - f[2])^2
+    (c[1] - f[1])^2 = (r * (b[1] - a[1]))^2
+    (r * (b[1] - a[1]))^2 = r^2 * (b[1] - a[1])^2
+    (c[1] - f[1])^2 = r^2 * (b[1] - a[1])^2
+    (c[2] - f[2])^2 = (r * (b[2] - a[2]))^2
+    (r * (b[2] - a[2]))^2 = r^2 * (b[2] - a[2])^2
+    (c[2] - f[2])^2 = r^2 * (b[2] - a[2])^2
+    (c[1] - f[1])^2 + (c[2] - f[2])^2 = r^2 * (b[1] - a[1])^2 + r^2 * (b[2] - a[2])^2
+    r^2 * (b[1] - a[1])^2 + r^2 * (b[2] - a[2])^2 = r^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2)
+    geo::distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2
+    r^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) = r^2 * geo::distance_sq(a, b)
+    geo::distance_sq(f, c) = r^2 * geo::distance_sq(a, b)
+    geo::distance_sq(f, ep) = geo::distance_sq(ep, f) = geo::distance_sq(a, ep)
+
+    # Establish the five clauses, then unfold the metric angle contract.
+    geo::angle_cos_num(b, a, ep) = geo::dot(geo::vec(a, b), geo::vec(a, ep))
+    geo::angle_cos_num(c, f, ep) = geo::dot(geo::vec(f, c), geo::vec(f, ep))
+    geo::angle_cos_den(b, a, ep) = geo::distance_sq(a, b) * geo::distance_sq(a, ep)
+    geo::angle_cos_den(c, f, ep) = geo::distance_sq(f, c) * geo::distance_sq(f, ep)
+    geo::dot(geo::vec(f, c), geo::vec(f, ep))^2 = (r * geo::dot(geo::vec(a, b), geo::vec(a, ep)))^2
+    (r * geo::dot(geo::vec(a, b), geo::vec(a, ep)))^2 = r^2 * geo::dot(geo::vec(a, b), geo::vec(a, ep))^2
+    geo::dot(geo::vec(f, c), geo::vec(f, ep))^2 = r^2 * geo::dot(geo::vec(a, b), geo::vec(a, ep))^2
+    geo::distance_sq(f, c) * geo::distance_sq(f, ep) = (r^2 * geo::distance_sq(a, b)) * geo::distance_sq(a, ep)
+    geo::dot(geo::vec(a, b), geo::vec(a, ep))^2 * (geo::distance_sq(f, c) * geo::distance_sq(f, ep)) = geo::dot(geo::vec(a, b), geo::vec(a, ep))^2 * ((r^2 * geo::distance_sq(a, b)) * geo::distance_sq(a, ep))
+    geo::dot(geo::vec(a, b), geo::vec(a, ep))^2 * ((r^2 * geo::distance_sq(a, b)) * geo::distance_sq(a, ep)) = (r^2 * geo::dot(geo::vec(a, b), geo::vec(a, ep))^2) * (geo::distance_sq(a, b) * geo::distance_sq(a, ep))
+    (r^2 * geo::dot(geo::vec(a, b), geo::vec(a, ep))^2) * (geo::distance_sq(a, b) * geo::distance_sq(a, ep)) = geo::dot(geo::vec(f, c), geo::vec(f, ep))^2 * (geo::distance_sq(a, b) * geo::distance_sq(a, ep))
+    geo::dot(geo::vec(a, b), geo::vec(a, ep))^2 * (geo::distance_sq(f, c) * geo::distance_sq(f, ep)) = geo::dot(geo::vec(f, c), geo::vec(f, ep))^2 * (geo::distance_sq(a, b) * geo::distance_sq(a, ep))
+    by thm problem_476_square_product_substitution(geo::angle_cos_num(b, a, ep), geo::dot(geo::vec(a, b), geo::vec(a, ep)), geo::angle_cos_den(c, f, ep), geo::distance_sq(f, c) * geo::distance_sq(f, ep))
+    geo::angle_cos_num(b, a, ep)^2 * geo::angle_cos_den(c, f, ep) = geo::dot(geo::vec(a, b), geo::vec(a, ep))^2 * (geo::distance_sq(f, c) * geo::distance_sq(f, ep))
+    by thm problem_476_square_product_substitution(geo::angle_cos_num(c, f, ep), geo::dot(geo::vec(f, c), geo::vec(f, ep)), geo::angle_cos_den(b, a, ep), geo::distance_sq(a, b) * geo::distance_sq(a, ep))
+    geo::angle_cos_num(c, f, ep)^2 * geo::angle_cos_den(b, a, ep) = geo::dot(geo::vec(f, c), geo::vec(f, ep))^2 * (geo::distance_sq(a, b) * geo::distance_sq(a, ep))
+    geo::angle_cos_num(b, a, ep)^2 * geo::angle_cos_den(c, f, ep) = geo::angle_cos_num(c, f, ep)^2 * geo::angle_cos_den(b, a, ep)
+
+    geo::dot(geo::vec(a, b), geo::vec(a, ep)) * geo::dot(geo::vec(f, c), geo::vec(f, ep)) = geo::dot(geo::vec(a, b), geo::vec(a, ep)) * (r * geo::dot(geo::vec(a, b), geo::vec(a, ep)))
+    geo::dot(geo::vec(a, b), geo::vec(a, ep)) * (r * geo::dot(geo::vec(a, b), geo::vec(a, ep))) = r * geo::dot(geo::vec(a, b), geo::vec(a, ep))^2
+    geo::dot(geo::vec(a, b), geo::vec(a, ep))^2 >= 0
+    r * geo::dot(geo::vec(a, b), geo::vec(a, ep))^2 >= 0
+    geo::dot(geo::vec(a, b), geo::vec(a, ep)) * geo::dot(geo::vec(f, c), geo::vec(f, ep)) >= 0
+    by thm problem_476_linear_product_substitution(geo::angle_cos_num(b, a, ep), geo::dot(geo::vec(a, b), geo::vec(a, ep)), geo::angle_cos_num(c, f, ep), geo::dot(geo::vec(f, c), geo::vec(f, ep)))
+    geo::angle_cos_num(b, a, ep) * geo::angle_cos_num(c, f, ep) = geo::dot(geo::vec(a, b), geo::vec(a, ep)) * geo::dot(geo::vec(f, c), geo::vec(f, ep))
+    geo::angle_cos_num(b, a, ep) * geo::angle_cos_num(c, f, ep) >= 0
+    by def $geo::are_angles_congruent(b, a, ep, c, f, ep)
+
+
+# Problem 476 / zhongkao_275 — predicate-level theorem matching the NL statement.
+# 原题：在平行四边形ABCD中，E，F分别为边BC，CD上两点。当E是边BC中点时，
+# 联结EF，如果AE=EF，求证：∠BAE=∠CFE。
+thm problem_476:
+    ? forall a, b, c, d, ep, f cart(R, R):
+        # 【NL条件1】四边形ABCD是平行四边形（采用通常非退化四边形语义）。
+        $geo::is_nondegenerate_parallelogram(a, b, c, d),
+        # 【NL条件2a】点E在边BC上。
+        $geo::is_on_segment(ep, b, c),
+        # 【NL条件2b】点F在边CD上。
+        $geo::is_on_segment(f, c, d),
+        # 【NL条件3】点E是边BC的中点。
+        $geo::is_midpoint(ep, b, c),
+        # 【NL条件4】AE=EF。
+        $geo::are_segments_congruent(a, ep, ep, f),
+        # 【角良定义】以下四项只排除命名角的零射线，不增加额外几何构型。
+        b != a,
+        ep != a,
+        c != f,
+        ep != f
+        =>:
+            # 【NL结论】∠BAE=∠CFE。
+            $geo::are_angles_congruent(b, a, ep, c, f, ep)
+
+    # 平行四边形与中点谓词给出坐标核心需要的仿射等式。
+    by thm geo::nondegenerate_parallelogram_coordinate_formula(a, b, c, d)
+    by thm geo::midpoint_coordinate_formula(ep, b, c)
+    ep[1] = (b[1] + c[1]) / 2
+    ep[2] = (b[2] + c[2]) / 2
+
+    # F在线段CD上，因此存在闭区间参数r；F≠C排除r=0。
+    by def $geo::is_on_segment(f, c, d)
+    obtain r from exist r0 R st {0 <= r0, r0 <= 1, f = (c[1] + r0 * (d[1] - c[1]), c[2] + r0 * (d[2] - c[2]))}
+    f[1] = c[1] + r * (d[1] - c[1])
+    f[2] = c[2] + r * (d[2] - c[2])
+    by contra:
+        ? r > 0
+        r <= 0
+        r = 0
+        f[1] = c[1]
+        f[2] = c[2]
+        by thm tuple_equal_from_coordinates(f, (f[1], f[2]))
+        by thm tuple_equal_from_coordinates(c, (c[1], c[2]))
+        f = (f[1], f[2]) = (c[1], c[2]) = c
+        impossible c != f
+
+    # AE=EF按公共合同线段谓词展开为平方距离相等。
+    by def $geo::are_segments_congruent(a, ep, ep, f)
+
+    # 调用已经独立验证的坐标核心。
+    by thm problem_476_angle_coordinate_core(a, b, c, d, ep, f, r)

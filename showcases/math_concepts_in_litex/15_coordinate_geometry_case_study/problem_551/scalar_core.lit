@@ -1,0 +1,79 @@
+# Problem 551 scalar core.
+# U = OA, P = AC, Q = AD. Parameters t,v locate E on CD and F on AD.
+
+thm problem_551_scalar_core:
+    ? forall ux, uy, px, py, qx, qy, t, v R:
+        ux^2 + uy^2 > 0,
+        ux * px + uy * py = 0,
+        2 * (ux * qx + uy * qy) + (qx^2 + qy^2) = 0,
+        (qx^2 + qy^2) - 2 * (qx * px + qy * py) = 0,
+        2 * (ux^2 + uy^2) + t * (ux * qx + uy * qy) = 0,
+        2 * (ux^2 + uy^2) + v * (ux * qx + uy * qy) = 0
+        =>:
+            (ux + qx) * (qx - px) + (uy + qy) * (qy - py) = 0,
+            (2 * ux + t * qx + (1 - t) * px)^2 + (2 * uy + t * qy + (1 - t) * py)^2 = ((v - t) * qx + (t - 1) * px)^2 + ((v - t) * qy + (t - 1) * py)^2
+
+    have uu R = ux^2 + uy^2
+    have uq R = ux * qx + uy * qy
+    have qq R = qx^2 + qy^2
+    have qp R = qx * px + qy * py
+    have up R = ux * px + uy * py
+
+    uu = ux^2 + uy^2 > 0
+    up = ux * px + uy * py = 0
+    2 * uq + qq = 2 * (ux * qx + uy * qy) + (qx^2 + qy^2) = 0
+    qq - 2 * qp = (qx^2 + qy^2) - 2 * (qx * px + qy * py) = 0
+    2 * uu + t * uq = 2 * (ux^2 + uy^2) + t * (ux * qx + uy * qy) = 0
+    2 * uu + v * uq = 2 * (ux^2 + uy^2) + v * (ux * qx + uy * qy) = 0
+    qq + 2 * uq = 2 * uq + qq = 0
+    (-2 * uq) + 2 * uq = 0
+    by thm geo::addition_cancel(qq, -2 * uq, 2 * uq)
+    qq = -2 * uq
+    qq + (-2 * qp) = qq - 2 * qp = 0
+    (2 * qp) + (-2 * qp) = 0
+    by thm geo::addition_cancel(qq, 2 * qp, -2 * qp)
+    qq = 2 * qp
+    qp = (2 * qp) / 2 = qq / 2 = (-2 * uq) / 2 = -uq
+
+    (ux + qx) * (qx - px) + (uy + qy) * (qy - py) = (ux * qx + uy * qy) - (ux * px + uy * py) + (qx^2 + qy^2) - (qx * px + qy * py)
+    (ux * qx + uy * qy) - (ux * px + uy * py) + (qx^2 + qy^2) - (qx * px + qy * py) = uq - up + qq - qp
+    uq - up + qq - qp = uq - 0 + qq - qp
+    uq - 0 + qq - qp = uq + qq - qp
+    uq + qq - qp = uq + (-2 * uq) - qp
+    uq + (-2 * uq) - qp = uq + (-2 * uq) - (-uq)
+    uq + (-2 * uq) - (-uq) = 0
+    (ux + qx) * (qx - px) + (uy + qy) * (qy - py) = 0
+
+    by contra:
+        ? uq != 0
+        uq = 0
+        2 * uu + t * uq = 0
+        2 * uu + t * uq = 2 * uu + t * 0 = 2 * uu
+        2 * uu = 0
+        uu = (2 * uu) / 2 = 0 / 2 = 0
+        impossible uu > 0
+
+    (2 * uu + t * uq) - (2 * uu + v * uq) = 0
+    (t - v) * uq = 0
+    by thm geo::zero_factor_law(uq, t - v)
+    t - v = 0
+    t = v
+    v - t = 0
+
+    (2 * ux + t * qx + (1 - t) * px)^2 + (2 * uy + t * qy + (1 - t) * py)^2 = 4 * (ux^2 + uy^2) + t^2 * (qx^2 + qy^2) + (1 - t)^2 * (px^2 + py^2) + 4 * t * (ux * qx + uy * qy) + 2 * t * (1 - t) * (qx * px + qy * py) + 4 * (1 - t) * (ux * px + uy * py)
+    4 * (ux^2 + uy^2) + t^2 * (qx^2 + qy^2) + (1 - t)^2 * (px^2 + py^2) + 4 * t * (ux * qx + uy * qy) + 2 * t * (1 - t) * (qx * px + qy * py) + 4 * (1 - t) * (ux * px + uy * py) = 4 * uu + t^2 * (qx^2 + qy^2) + (1 - t)^2 * (px^2 + py^2) + 4 * t * (ux * qx + uy * qy) + 2 * t * (1 - t) * (qx * px + qy * py) + 4 * (1 - t) * (ux * px + uy * py)
+    4 * uu + t^2 * (qx^2 + qy^2) + (1 - t)^2 * (px^2 + py^2) + 4 * t * (ux * qx + uy * qy) + 2 * t * (1 - t) * (qx * px + qy * py) + 4 * (1 - t) * (ux * px + uy * py) = 4 * uu + t^2 * qq + (1 - t)^2 * (px^2 + py^2) + 4 * t * (ux * qx + uy * qy) + 2 * t * (1 - t) * (qx * px + qy * py) + 4 * (1 - t) * (ux * px + uy * py)
+    4 * uu + t^2 * qq + (1 - t)^2 * (px^2 + py^2) + 4 * t * (ux * qx + uy * qy) + 2 * t * (1 - t) * (qx * px + qy * py) + 4 * (1 - t) * (ux * px + uy * py) = 4 * uu + t^2 * qq + (1 - t)^2 * (px^2 + py^2) + 4 * t * uq + 2 * t * (1 - t) * (qx * px + qy * py) + 4 * (1 - t) * (ux * px + uy * py)
+    4 * uu + t^2 * qq + (1 - t)^2 * (px^2 + py^2) + 4 * t * uq + 2 * t * (1 - t) * (qx * px + qy * py) + 4 * (1 - t) * (ux * px + uy * py) = 4 * uu + t^2 * qq + (1 - t)^2 * (px^2 + py^2) + 4 * t * uq + 2 * t * (1 - t) * qp + 4 * (1 - t) * (ux * px + uy * py)
+    4 * uu + t^2 * qq + (1 - t)^2 * (px^2 + py^2) + 4 * t * uq + 2 * t * (1 - t) * qp + 4 * (1 - t) * (ux * px + uy * py) = 4 * uu + t^2 * qq + (1 - t)^2 * (px^2 + py^2) + 4 * t * uq + 2 * t * (1 - t) * qp + 4 * (1 - t) * up
+    4 * uu + t^2 * qq + (1 - t)^2 * (px^2 + py^2) + 4 * t * uq + 2 * t * (1 - t) * qp + 4 * (1 - t) * up = 4 * uu + t^2 * (-2 * uq) + (1 - t)^2 * (px^2 + py^2) + 4 * t * uq + 2 * t * (1 - t) * (-uq) + 4 * (1 - t) * 0
+    4 * uu + t^2 * (-2 * uq) + (1 - t)^2 * (px^2 + py^2) + 4 * t * uq + 2 * t * (1 - t) * (-uq) + 4 * (1 - t) * 0 = 4 * uu + 2 * t * uq + (1 - t)^2 * (px^2 + py^2)
+    4 * uu + 2 * t * uq + (1 - t)^2 * (px^2 + py^2) = 2 * (2 * uu + t * uq) + (1 - t)^2 * (px^2 + py^2)
+    2 * (2 * uu + t * uq) + (1 - t)^2 * (px^2 + py^2) = 2 * 0 + (1 - t)^2 * (px^2 + py^2) = (1 - t)^2 * (px^2 + py^2)
+    (1 - t)^2 * (px^2 + py^2) = (t - 1)^2 * (px^2 + py^2)
+    (2 * ux + t * qx + (1 - t) * px)^2 + (2 * uy + t * qy + (1 - t) * py)^2 = (t - 1)^2 * (px^2 + py^2)
+
+    ((v - t) * qx + (t - 1) * px)^2 + ((v - t) * qy + (t - 1) * py)^2 = (0 * qx + (t - 1) * px)^2 + (0 * qy + (t - 1) * py)^2
+    (0 * qx + (t - 1) * px)^2 + (0 * qy + (t - 1) * py)^2 = ((t - 1) * px)^2 + ((t - 1) * py)^2
+    ((t - 1) * px)^2 + ((t - 1) * py)^2 = (t - 1)^2 * (px^2 + py^2)
+    ((v - t) * qx + (t - 1) * px)^2 + ((v - t) * qy + (t - 1) * py)^2 = (t - 1)^2 * (px^2 + py^2)

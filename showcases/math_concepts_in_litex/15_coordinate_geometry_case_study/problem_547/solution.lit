@@ -1,0 +1,848 @@
+# Public geometry abstractions proposed for Problem 547.
+
+# Counterclockwise regular hexagon ABCDEF with center O and circumradius r.
+# The first two radius vectors form the positively oriented 60-degree frame;
+# the remaining four vertices are then determined cyclically.
+prop is_regular_hexagon(a, b, c, d, ep, f, o cart(R, R), r R+):
+    geo::distance_sq(o, a) = r^2
+    geo::distance_sq(o, b) = r^2
+    2 * geo::dot(geo::vec(o, a), geo::vec(o, b)) = r^2
+    geo::det(geo::vec(o, a), geo::vec(o, b)) > 0
+    c = (o[1] + (b[1] - o[1]) - (a[1] - o[1]), o[2] + (b[2] - o[2]) - (a[2] - o[2]))
+    d = (2 * o[1] - a[1], 2 * o[2] - a[2])
+    ep = (2 * o[1] - b[1], 2 * o[2] - b[2])
+    f = (o[1] + (a[1] - o[1]) - (b[1] - o[1]), o[2] + (a[2] - o[2]) - (b[2] - o[2]))
+
+# Uniform motion from a to b during the positive total duration.
+prop is_uniform_segment_motion(p, a, b cart(R, R), t R, duration R+):
+    0 <= t
+    t <= duration
+    $geo::is_affine_combination(p, a, b, t / duration)
+
+# Narrow interfaces keep definition expansion out of the final theorem context.
+thm regular_hexagon_core_facts:
+    ? forall a, b, c, d, ep, f, o cart(R, R), r R+:
+        $is_regular_hexagon(a, b, c, d, ep, f, o, r)
+        =>:
+            c[1] = o[1] + (b[1] - o[1]) - (a[1] - o[1])
+            c[2] = o[2] + (b[2] - o[2]) - (a[2] - o[2])
+            d[1] = 2 * o[1] - a[1]
+            d[2] = 2 * o[2] - a[2]
+            ep[1] = 2 * o[1] - b[1]
+            ep[2] = 2 * o[2] - b[2]
+            f[1] = o[1] + (a[1] - o[1]) - (b[1] - o[1])
+            f[2] = o[2] + (a[2] - o[2]) - (b[2] - o[2])
+            (a[1] - o[1]) * (b[2] - o[2]) - (a[2] - o[2]) * (b[1] - o[1]) > 0
+    by def $is_regular_hexagon(a, b, c, d, ep, f, o, r)
+    c[1] = o[1] + (b[1] - o[1]) - (a[1] - o[1])
+    c[2] = o[2] + (b[2] - o[2]) - (a[2] - o[2])
+    d[1] = 2 * o[1] - a[1]
+    d[2] = 2 * o[2] - a[2]
+    ep[1] = 2 * o[1] - b[1]
+    ep[2] = 2 * o[2] - b[2]
+    f[1] = o[1] + (a[1] - o[1]) - (b[1] - o[1])
+    f[2] = o[2] + (a[2] - o[2]) - (b[2] - o[2])
+    geo::det(geo::vec(o, a), geo::vec(o, b)) = (a[1] - o[1]) * (b[2] - o[2]) - (a[2] - o[2]) * (b[1] - o[1])
+    (a[1] - o[1]) * (b[2] - o[2]) - (a[2] - o[2]) * (b[1] - o[1]) > 0
+
+thm uniform_motion_coordinate_facts:
+    ? forall p, a, b cart(R, R), t R, duration R+:
+        $is_uniform_segment_motion(p, a, b, t, duration)
+        =>:
+            p[1] = (1 - t / duration) * a[1] + (t / duration) * b[1]
+            p[2] = (1 - t / duration) * a[2] + (t / duration) * b[2]
+    by def $is_uniform_segment_motion(p, a, b, t, duration)
+    by def $geo::is_affine_combination(p, a, b, t / duration)
+    p[1] = (1 - t / duration) * a[1] + (t / duration) * b[1]
+    p[2] = (1 - t / duration) * a[2] + (t / duration) * b[2]
+
+# Unsigned polygon areas, defined by the shoelace determinant.
+have fn quadrilateral_area(a, b, c, d cart(R, R)) R = sqrt(((a[1] * b[2] - a[2] * b[1]) + (b[1] * c[2] - b[2] * c[1]) + (c[1] * d[2] - c[2] * d[1]) + (d[1] * a[2] - d[2] * a[1]))^2) / 2
+
+have fn hexagon_area(a, b, c, d, ep, f cart(R, R)) R = sqrt(((a[1] * b[2] - a[2] * b[1]) + (b[1] * c[2] - b[2] * c[1]) + (c[1] * d[2] - c[2] * d[1]) + (d[1] * ep[2] - d[2] * ep[1]) + (ep[1] * f[2] - ep[2] * f[1]) + (f[1] * a[2] - f[2] * a[1]))^2) / 2
+
+# A common midpoint of both diagonals characterizes a nondegenerate parallelogram.
+thm common_midpoint_nondegenerate_parallelogram:
+    ? forall a, b, c, d, m cart(R, R):
+        $geo::is_midpoint(m, a, c),
+        $geo::is_midpoint(m, b, d),
+        a != b,
+        a != d
+        =>:
+            $geo::is_parallelogram(a, b, c, d)
+    by def $geo::is_midpoint(m, a, c)
+    by def $geo::is_midpoint(m, b, d)
+    by thm geo::midpoint_coordinate_formula(m, a, c)
+    m = ((a[1] + c[1]) / 2, (a[2] + c[2]) / 2)
+    m[1] = (a[1] + c[1]) / 2
+    m[2] = (a[2] + c[2]) / 2
+    by thm geo::midpoint_coordinate_formula(m, b, d)
+    m = ((b[1] + d[1]) / 2, (b[2] + d[2]) / 2)
+    m[1] = (b[1] + d[1]) / 2
+    m[2] = (b[2] + d[2]) / 2
+
+    2 * m[1] = a[1] + c[1]
+    2 * m[2] = a[2] + c[2]
+    2 * m[1] - a[1] = c[1]
+    2 * m[2] - a[2] = c[2]
+    c[1] = 2 * m[1] - a[1]
+    c[2] = 2 * m[2] - a[2]
+    2 * m[1] = b[1] + d[1]
+    2 * m[2] = b[2] + d[2]
+    2 * m[1] - b[1] = d[1]
+    2 * m[2] - b[2] = d[2]
+    d[1] = 2 * m[1] - b[1]
+    d[2] = 2 * m[2] - b[2]
+
+    by contra:
+        ? d != c
+        d = c
+        d[1] = c[1]
+        d[2] = c[2]
+        b[1] + c[1] = b[1] + d[1] = 2 * m[1] = a[1] + c[1]
+        b[2] + c[2] = b[2] + d[2] = 2 * m[2] = a[2] + c[2]
+        by thm geo::addition_cancel(b[1], a[1], c[1])
+        by thm geo::addition_cancel(b[2], a[2], c[2])
+        b[1] = a[1]
+        b[2] = a[2]
+        by thm tuple_equal_from_coordinates(a, (a[1], a[2]))
+        by thm tuple_equal_from_coordinates(b, (b[1], b[2]))
+        a = (a[1], a[2]) = (b[1], b[2]) = b
+        impossible a != b
+    d != c
+
+    by contra:
+        ? b != c
+        b = c
+        b[1] = c[1]
+        b[2] = c[2]
+        a[1] + b[1] = a[1] + c[1] = 2 * m[1] = b[1] + d[1] = d[1] + b[1]
+        a[2] + b[2] = a[2] + c[2] = 2 * m[2] = b[2] + d[2] = d[2] + b[2]
+        by thm geo::addition_cancel(a[1], d[1], b[1])
+        by thm geo::addition_cancel(a[2], d[2], b[2])
+        d[1] = a[1]
+        d[2] = a[2]
+        by thm tuple_equal_from_coordinates(a, (a[1], a[2]))
+        by thm tuple_equal_from_coordinates(d, (d[1], d[2]))
+        a = (a[1], a[2]) = (d[1], d[2]) = d
+        impossible a != d
+    b != c
+
+    a != b
+    by thm geo::vec_coordinate_formula(a, b)
+    by thm geo::vec_coordinate_formula(d, c)
+    by thm geo::det_coordinate_formula(geo::vec(a, b), geo::vec(d, c))
+    geo::vec(a, b) = (b[1] - a[1], b[2] - a[2])
+    geo::vec(d, c) = (c[1] - d[1], c[2] - d[2])
+    c[1] - d[1] = (2 * m[1] - a[1]) - (2 * m[1] - b[1]) = b[1] - a[1]
+    c[2] - d[2] = (2 * m[2] - a[2]) - (2 * m[2] - b[2]) = b[2] - a[2]
+    geo::det(geo::vec(a, b), geo::vec(d, c)) = (b[1] - a[1]) * (c[2] - d[2]) - (b[2] - a[2]) * (c[1] - d[1])
+    (b[1] - a[1]) * (c[2] - d[2]) = (b[1] - a[1]) * (b[2] - a[2])
+    (b[2] - a[2]) * (c[1] - d[1]) = (b[2] - a[2]) * (b[1] - a[1])
+    (b[1] - a[1]) * (c[2] - d[2]) = (b[1] - a[1]) * (b[2] - a[2]) = (b[2] - a[2]) * (b[1] - a[1]) = (b[2] - a[2]) * (c[1] - d[1])
+    (b[1] - a[1]) * (c[2] - d[2]) - (b[2] - a[2]) * (c[1] - d[1]) = 0
+    geo::det(geo::vec(a, b), geo::vec(d, c)) = 0
+    by def $geo::is_parallel(a, b, d, c)
+
+    a != d
+    by thm geo::vec_coordinate_formula(a, d)
+    by thm geo::vec_coordinate_formula(b, c)
+    by thm geo::det_coordinate_formula(geo::vec(a, d), geo::vec(b, c))
+    geo::vec(a, d) = (d[1] - a[1], d[2] - a[2])
+    geo::vec(b, c) = (c[1] - b[1], c[2] - b[2])
+    c[1] - b[1] = (2 * m[1] - a[1]) - b[1] = 2 * m[1] - a[1] - b[1]
+    d[1] - a[1] = (2 * m[1] - b[1]) - a[1] = 2 * m[1] - a[1] - b[1]
+    c[1] - b[1] = d[1] - a[1]
+    c[2] - b[2] = (2 * m[2] - a[2]) - b[2] = 2 * m[2] - a[2] - b[2]
+    d[2] - a[2] = (2 * m[2] - b[2]) - a[2] = 2 * m[2] - a[2] - b[2]
+    c[2] - b[2] = d[2] - a[2]
+    geo::det(geo::vec(a, d), geo::vec(b, c)) = (d[1] - a[1]) * (c[2] - b[2]) - (d[2] - a[2]) * (c[1] - b[1])
+    (d[1] - a[1]) * (c[2] - b[2]) = (d[1] - a[1]) * (d[2] - a[2])
+    (d[2] - a[2]) * (c[1] - b[1]) = (d[2] - a[2]) * (d[1] - a[1])
+    (d[1] - a[1]) * (c[2] - b[2]) = (d[1] - a[1]) * (d[2] - a[2]) = (d[2] - a[2]) * (d[1] - a[1]) = (d[2] - a[2]) * (c[1] - b[1])
+    (d[1] - a[1]) * (c[2] - b[2]) - (d[2] - a[2]) * (c[1] - b[1]) = 0
+    geo::det(geo::vec(a, d), geo::vec(b, c)) = 0
+    by def $geo::is_parallel(a, d, b, c)
+
+    by def $geo::is_parallelogram(a, b, c, d)
+
+# ================================================================
+# Problem 547 / zhongkao_349
+# 原题：中心为O的正六边形ABCDEF的半径为6cm。点P,Q同时分别从A,D两点
+# 出发，以1cm/s的速度沿AF,DC向终点F,C运动，连接PE,QB，设运动时间为t。
+# (1) 求证：四边形PEQB为平行四边形。
+# (2) 求矩形PEQB的面积与正六边形ABCDEF的面积之比。
+# 注：第(2)问的“矩形”与第(1)问及一般运动位置不一致；面积部分按四边形PEQB解释。
+
+# The determinant of two vectors that share a scalar factor is zero.
+thm common_scale_det_zero:
+    ? forall x, y, u, v, k R:
+        x = k * u
+        y = k * v
+        =>:
+            x * v - y * u = 0
+    by thm geo::multiply_both_sides(x, k * u, v)
+    by thm geo::multiply_both_sides(y, k * v, u)
+    x * v = (k * u) * v = k * (u * v)
+    y * u = (k * v) * u = k * (v * u) = k * (u * v)
+    x * v - y * u = 0
+
+# A point in a positively oriented affine frame cannot lie on the frame's b-axis.
+thm affine_frame_point_distinct:
+    ? forall p, z cart(R, R), ox, oy, ax, ay, bx, bz, k, s R:
+        p[1] = ox + ax - k * bx
+        p[2] = oy + ay - k * bz
+        z[1] = ox + s * bx
+        z[2] = oy + s * bz
+        ax * bz - ay * bx > 0
+        =>:
+            p != z
+    by contra:
+        ? p != z
+        p = z
+        p[1] = z[1]
+        p[2] = z[2]
+        ox + ax - k * bx = p[1] = z[1] = ox + s * bx
+        ox + ax - k * bx = (ax - k * bx) + ox
+        ox + s * bx = (s * bx) + ox
+        (ax - k * bx) + ox = (s * bx) + ox
+        by thm geo::addition_cancel(ax - k * bx, s * bx, ox)
+        ax - k * bx = s * bx
+        by thm geo::add_equalities(ax - k * bx, s * bx, k * bx, k * bx)
+        (ax - k * bx) + k * bx = s * bx + k * bx
+        (ax - k * bx) + k * bx = ax
+        s * bx + k * bx = (s + k) * bx
+        ax = (ax - k * bx) + k * bx = s * bx + k * bx = (s + k) * bx
+        oy + ay - k * bz = p[2] = z[2] = oy + s * bz
+        oy + ay - k * bz = (ay - k * bz) + oy
+        oy + s * bz = (s * bz) + oy
+        (ay - k * bz) + oy = (s * bz) + oy
+        by thm geo::addition_cancel(ay - k * bz, s * bz, oy)
+        ay - k * bz = s * bz
+        by thm geo::add_equalities(ay - k * bz, s * bz, k * bz, k * bz)
+        (ay - k * bz) + k * bz = s * bz + k * bz
+        (ay - k * bz) + k * bz = ay
+        s * bz + k * bz = (s + k) * bz
+        ay = (ay - k * bz) + k * bz = s * bz + k * bz = (s + k) * bz
+        by thm common_scale_det_zero(ax, ay, bx, bz, s + k)
+        ax * bz - ay * bx = 0
+        impossible ax * bz - ay * bx > 0
+    p != z
+
+thm application_point_ep_distinct:
+    ? forall p, ep, a, b, o cart(R, R), t R:
+        p[1] = o[1] + (a[1] - o[1]) - (t / 6) * (b[1] - o[1])
+        p[2] = o[2] + (a[2] - o[2]) - (t / 6) * (b[2] - o[2])
+        ep[1] = 2 * o[1] - b[1]
+        ep[2] = 2 * o[2] - b[2]
+        (a[1] - o[1]) * (b[2] - o[2]) - (a[2] - o[2]) * (b[1] - o[1]) > 0
+        =>:
+            p != ep
+    ep[1] = 2 * o[1] - b[1] = o[1] + (-1) * (b[1] - o[1])
+    ep[2] = 2 * o[2] - b[2] = o[2] + (-1) * (b[2] - o[2])
+    by thm affine_frame_point_distinct(p, ep, o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2], t / 6, -1)
+    p != ep
+
+thm application_point_b_distinct:
+    ? forall p, a, b, o cart(R, R), t R:
+        p[1] = o[1] + (a[1] - o[1]) - (t / 6) * (b[1] - o[1])
+        p[2] = o[2] + (a[2] - o[2]) - (t / 6) * (b[2] - o[2])
+        (a[1] - o[1]) * (b[2] - o[2]) - (a[2] - o[2]) * (b[1] - o[1]) > 0
+        =>:
+            p != b
+    b[1] = o[1] + 1 * (b[1] - o[1])
+    b[2] = o[2] + 1 * (b[2] - o[2])
+    by thm affine_frame_point_distinct(p, b, o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2], t / 6, 1)
+    p != b
+
+# The affine motion formulas place O at the common midpoint of P and Q.
+thm affine_motion_common_midpoint:
+    ? forall p, q, o, a, b cart(R, R), t R:
+        p[1] = o[1] + (a[1] - o[1]) - (t / 6) * (b[1] - o[1])
+        p[2] = o[2] + (a[2] - o[2]) - (t / 6) * (b[2] - o[2])
+        q[1] = o[1] - (a[1] - o[1]) + (t / 6) * (b[1] - o[1])
+        q[2] = o[2] - (a[2] - o[2]) + (t / 6) * (b[2] - o[2])
+        =>:
+            $geo::is_midpoint(o, p, q)
+
+    by thm geo::add_equalities(p[1], o[1] + (a[1] - o[1]) - (t / 6) * (b[1] - o[1]), q[1], o[1] - (a[1] - o[1]) + (t / 6) * (b[1] - o[1]))
+    p[1] + q[1] = (o[1] + (a[1] - o[1]) - (t / 6) * (b[1] - o[1])) + (o[1] - (a[1] - o[1]) + (t / 6) * (b[1] - o[1])) = 2 * o[1]
+    by thm geo::add_equalities(p[2], o[2] + (a[2] - o[2]) - (t / 6) * (b[2] - o[2]), q[2], o[2] - (a[2] - o[2]) + (t / 6) * (b[2] - o[2]))
+    p[2] + q[2] = (o[2] + (a[2] - o[2]) - (t / 6) * (b[2] - o[2])) + (o[2] - (a[2] - o[2]) + (t / 6) * (b[2] - o[2])) = 2 * o[2]
+    o[1] = (p[1] + q[1]) / 2
+    o[2] = (p[2] + q[2]) / 2
+    by thm tuple_equal_from_coordinates(o, ((p[1] + q[1]) / 2, (p[2] + q[2]) / 2))
+    o = ((p[1] + q[1]) / 2, (p[2] + q[2]) / 2)
+    by def $geo::is_midpoint(o, p, q)
+
+# The opposite-vertex formulas place O at the common midpoint of E and B.
+thm antipode_common_midpoint:
+    ? forall ep, b, o cart(R, R):
+        ep[1] = 2 * o[1] - b[1]
+        ep[2] = 2 * o[2] - b[2]
+        =>:
+            $geo::is_midpoint(o, ep, b)
+
+    by thm geo::add_equalities(ep[1], 2 * o[1] - b[1], b[1], b[1])
+    ep[1] + b[1] = (2 * o[1] - b[1]) + b[1] = 2 * o[1]
+    by thm geo::add_equalities(ep[2], 2 * o[2] - b[2], b[2], b[2])
+    ep[2] + b[2] = (2 * o[2] - b[2]) + b[2] = 2 * o[2]
+    o[1] = (ep[1] + b[1]) / 2
+    o[2] = (ep[2] + b[2]) / 2
+    by thm tuple_equal_from_coordinates(o, ((ep[1] + b[1]) / 2, (ep[2] + b[2]) / 2))
+    o = ((ep[1] + b[1]) / 2, (ep[2] + b[2]) / 2)
+    by def $geo::is_midpoint(o, ep, b)
+
+# The motion definitions reduce P and Q to centered affine coordinates.
+thm affine_motion_coordinate_expansion:
+    ? forall p, q, a, b, c, d, f, o cart(R, R), t R:
+        p[1] = (1 - t / 6) * a[1] + (t / 6) * f[1]
+        p[2] = (1 - t / 6) * a[2] + (t / 6) * f[2]
+        q[1] = (1 - t / 6) * d[1] + (t / 6) * c[1]
+        q[2] = (1 - t / 6) * d[2] + (t / 6) * c[2]
+        c[1] = o[1] + (b[1] - o[1]) - (a[1] - o[1])
+        c[2] = o[2] + (b[2] - o[2]) - (a[2] - o[2])
+        d[1] = 2 * o[1] - a[1]
+        d[2] = 2 * o[2] - a[2]
+        f[1] = o[1] + (a[1] - o[1]) - (b[1] - o[1])
+        f[2] = o[2] + (a[2] - o[2]) - (b[2] - o[2])
+        =>:
+            p[1] = o[1] + (a[1] - o[1]) - (t / 6) * (b[1] - o[1])
+            p[2] = o[2] + (a[2] - o[2]) - (t / 6) * (b[2] - o[2])
+            q[1] = o[1] - (a[1] - o[1]) + (t / 6) * (b[1] - o[1])
+            q[2] = o[2] - (a[2] - o[2]) + (t / 6) * (b[2] - o[2])
+
+    by thm geo::multiply_both_sides(f[1], o[1] + (a[1] - o[1]) - (b[1] - o[1]), t / 6)
+    by thm geo::add_equalities((1 - t / 6) * a[1], (1 - t / 6) * a[1], (t / 6) * f[1], (t / 6) * (o[1] + (a[1] - o[1]) - (b[1] - o[1])))
+    p[1] = (1 - t / 6) * a[1] + (t / 6) * f[1] = (1 - t / 6) * a[1] + (t / 6) * (o[1] + (a[1] - o[1]) - (b[1] - o[1])) = o[1] + (a[1] - o[1]) - (t / 6) * (b[1] - o[1])
+    by thm geo::multiply_both_sides(f[2], o[2] + (a[2] - o[2]) - (b[2] - o[2]), t / 6)
+    by thm geo::add_equalities((1 - t / 6) * a[2], (1 - t / 6) * a[2], (t / 6) * f[2], (t / 6) * (o[2] + (a[2] - o[2]) - (b[2] - o[2])))
+    p[2] = (1 - t / 6) * a[2] + (t / 6) * f[2] = (1 - t / 6) * a[2] + (t / 6) * (o[2] + (a[2] - o[2]) - (b[2] - o[2])) = o[2] + (a[2] - o[2]) - (t / 6) * (b[2] - o[2])
+
+    by thm geo::multiply_both_sides(d[1], 2 * o[1] - a[1], 1 - t / 6)
+    by thm geo::multiply_both_sides(c[1], o[1] + (b[1] - o[1]) - (a[1] - o[1]), t / 6)
+    by thm geo::add_equalities((1 - t / 6) * d[1], (1 - t / 6) * (2 * o[1] - a[1]), (t / 6) * c[1], (t / 6) * (o[1] + (b[1] - o[1]) - (a[1] - o[1])))
+    q[1] = (1 - t / 6) * d[1] + (t / 6) * c[1] = (1 - t / 6) * (2 * o[1] - a[1]) + (t / 6) * (o[1] + (b[1] - o[1]) - (a[1] - o[1])) = o[1] - (a[1] - o[1]) + (t / 6) * (b[1] - o[1])
+    by thm geo::multiply_both_sides(d[2], 2 * o[2] - a[2], 1 - t / 6)
+    by thm geo::multiply_both_sides(c[2], o[2] + (b[2] - o[2]) - (a[2] - o[2]), t / 6)
+    by thm geo::add_equalities((1 - t / 6) * d[2], (1 - t / 6) * (2 * o[2] - a[2]), (t / 6) * c[2], (t / 6) * (o[2] + (b[2] - o[2]) - (a[2] - o[2])))
+    q[2] = (1 - t / 6) * d[2] + (t / 6) * c[2] = (1 - t / 6) * (2 * o[2] - a[2]) + (t / 6) * (o[2] + (b[2] - o[2]) - (a[2] - o[2])) = o[2] - (a[2] - o[2]) + (t / 6) * (b[2] - o[2])
+
+# Coordinate certificate: all expensive midpoint and nondegeneracy reasoning is
+# isolated from the public predicate assumptions.
+thm coordinate_certificate_parallelogram:
+    ? forall a, b, c, d, ep, f, o, p, q cart(R, R), t R:
+        p[1] = (1 - t / 6) * a[1] + (t / 6) * f[1]
+        p[2] = (1 - t / 6) * a[2] + (t / 6) * f[2]
+        q[1] = (1 - t / 6) * d[1] + (t / 6) * c[1]
+        q[2] = (1 - t / 6) * d[2] + (t / 6) * c[2]
+        c[1] = o[1] + (b[1] - o[1]) - (a[1] - o[1])
+        c[2] = o[2] + (b[2] - o[2]) - (a[2] - o[2])
+        d[1] = 2 * o[1] - a[1]
+        d[2] = 2 * o[2] - a[2]
+        ep[1] = 2 * o[1] - b[1]
+        ep[2] = 2 * o[2] - b[2]
+        f[1] = o[1] + (a[1] - o[1]) - (b[1] - o[1])
+        f[2] = o[2] + (a[2] - o[2]) - (b[2] - o[2])
+        (a[1] - o[1]) * (b[2] - o[2]) - (a[2] - o[2]) * (b[1] - o[1]) > 0
+        =>:
+            $geo::is_parallelogram(p, ep, q, b)
+
+    by thm affine_motion_coordinate_expansion(p, q, a, b, c, d, f, o, t)
+    p[1] = o[1] + (a[1] - o[1]) - (t / 6) * (b[1] - o[1])
+    p[2] = o[2] + (a[2] - o[2]) - (t / 6) * (b[2] - o[2])
+    q[1] = o[1] - (a[1] - o[1]) + (t / 6) * (b[1] - o[1])
+    q[2] = o[2] - (a[2] - o[2]) + (t / 6) * (b[2] - o[2])
+
+    by thm affine_motion_common_midpoint(p, q, o, a, b, t)
+    $geo::is_midpoint(o, p, q)
+
+    by thm antipode_common_midpoint(ep, b, o)
+    $geo::is_midpoint(o, ep, b)
+
+    by thm application_point_ep_distinct(p, ep, a, b, o, t)
+    p != ep
+
+    by thm application_point_b_distinct(p, a, b, o, t)
+    p != b
+
+    by thm common_midpoint_nondegenerate_parallelogram(p, ep, q, b, o)
+
+# ==================== 正式解题入口A：平行四边形 ====================
+thm problem_547_parallelogram:
+    ? forall a, b, c, d, ep, f, o, p, q cart(R, R), t R:
+        # 原题条件：中心为O、半径为6cm的正六边形ABCDEF。
+        $is_regular_hexagon(a, b, c, d, ep, f, o, 6),
+        # 原题条件：P从A出发，以1cm/s沿AF运动，运动时间为t。
+        $is_uniform_segment_motion(p, a, f, t, 6),
+        # 原题条件：Q同时从D出发，以1cm/s沿DC运动，运动时间为t。
+        $is_uniform_segment_motion(q, d, c, t, 6)
+        =>:
+            # 原题结论(1)：四边形PEQB为平行四边形。
+            $geo::is_parallelogram(p, ep, q, b)
+
+    by thm regular_hexagon_core_facts(a, b, c, d, ep, f, o, 6)
+    by thm uniform_motion_coordinate_facts(p, a, f, t, 6)
+    by thm uniform_motion_coordinate_facts(q, d, c, t, 6)
+    by thm coordinate_certificate_parallelogram(a, b, c, d, ep, f, o, p, q, t)
+
+# Coordinate-to-edge-carrier integration probe for Problem 547.
+
+thm add_equalities_local:
+    ? forall a, b, c, d R:
+        a = b,
+        c = d
+        =>:
+            a + c = b + d
+    a + c = b + c = b + d
+
+thm multiply_both_sides_local:
+    ? forall a, b, c R:
+        a = b
+        =>:
+            c * a = c * b
+    c * a = c * b
+
+thm subtract_equalities_local:
+    ? forall a, b, c, d R:
+        a = b,
+        c = d
+        =>:
+            a - c = b - d
+    a - c = b - c = b - d
+
+have fn det2(ux, uy, vx, vy R) R = ux * vy - uy * vx
+
+have fn drift(ox, oy, ux, uy, vx, vy, s R) R = ox * s * vy - ox * uy - oy * s * vx + oy * ux
+
+have fn e1(ox, oy, ux, uy, vx, vy, s R) R = (ox - s*vx + ux) * (oy - vy) - (oy - s*vy + uy) * (ox - vx)
+
+thm e1_expand:
+    ? forall ox, oy, ux, uy, vx, vy, s R:
+        e1(ox, oy, ux, uy, vx, vy, s) = ox*s*vy - ox*uy - ox*vy - oy*s*vx + oy*ux + oy*vx - ux*vy + uy*vx
+
+    e1(ox, oy, ux, uy, vx, vy, s) = ox*s*vy - ox*uy - ox*vy - oy*s*vx + oy*ux + oy*vx - ux*vy + uy*vx
+
+have fn e2(ox, oy, ux, uy, vx, vy, s R) R = (ox - vx) * (oy + s*vy - uy) - (oy - vy) * (ox + s*vx - ux)
+
+thm e2_expand:
+    ? forall ox, oy, ux, uy, vx, vy, s R:
+        e2(ox, oy, ux, uy, vx, vy, s) = ox*s*vy - ox*uy + ox*vy - oy*s*vx + oy*ux - oy*vx - ux*vy + uy*vx
+
+    e2(ox, oy, ux, uy, vx, vy, s) = ox*s*vy - ox*uy + ox*vy - oy*s*vx + oy*ux - oy*vx - ux*vy + uy*vx
+
+have fn e3(ox, oy, ux, uy, vx, vy, s R) R = (ox + s*vx - ux) * (oy + vy) - (oy + s*vy - uy) * (ox + vx)
+
+thm e3_expand:
+    ? forall ox, oy, ux, uy, vx, vy, s R:
+        e3(ox, oy, ux, uy, vx, vy, s) = -ox*s*vy + ox*uy + ox*vy + oy*s*vx - oy*ux - oy*vx - ux*vy + uy*vx
+
+    e3(ox, oy, ux, uy, vx, vy, s) = -ox*s*vy + ox*uy + ox*vy + oy*s*vx - oy*ux - oy*vx - ux*vy + uy*vx
+
+have fn e4(ox, oy, ux, uy, vx, vy, s R) R = (ox + vx) * (oy - s*vy + uy) - (oy + vy) * (ox - s*vx + ux)
+
+thm e4_expand:
+    ? forall ox, oy, ux, uy, vx, vy, s R:
+        e4(ox, oy, ux, uy, vx, vy, s) = -ox*s*vy + ox*uy - ox*vy + oy*s*vx - oy*ux + oy*vx - ux*vy + uy*vx
+
+    e4(ox, oy, ux, uy, vx, vy, s) = -ox*s*vy + ox*uy - ox*vy + oy*s*vx - oy*ux + oy*vx - ux*vy + uy*vx
+
+thm pair1_test:
+    ? forall ox, oy, ux, uy, vx, vy, s R:
+        e1(ox, oy, ux, uy, vx, vy, s) + e2(ox, oy, ux, uy, vx, vy, s) = 2 * (drift(ox, oy, ux, uy, vx, vy, s) - det2(ux, uy, vx, vy))
+
+    by thm e1_expand(ox, oy, ux, uy, vx, vy, s)
+    by thm e2_expand(ox, oy, ux, uy, vx, vy, s)
+    by thm add_equalities_local(e1(ox, oy, ux, uy, vx, vy, s), ox*s*vy - ox*uy - ox*vy - oy*s*vx + oy*ux + oy*vx - ux*vy + uy*vx, e2(ox, oy, ux, uy, vx, vy, s), ox*s*vy - ox*uy + ox*vy - oy*s*vx + oy*ux - oy*vx - ux*vy + uy*vx)
+    drift(ox, oy, ux, uy, vx, vy, s) = ox*s*vy - ox*uy - oy*s*vx + oy*ux
+    det2(ux, uy, vx, vy) = ux*vy - uy*vx
+    by thm subtract_equalities_local(drift(ox, oy, ux, uy, vx, vy, s), ox*s*vy - ox*uy - oy*s*vx + oy*ux, det2(ux, uy, vx, vy), ux*vy - uy*vx)
+    by thm multiply_both_sides_local(drift(ox, oy, ux, uy, vx, vy, s) - det2(ux, uy, vx, vy), (ox*s*vy - ox*uy - oy*s*vx + oy*ux) - (ux*vy - uy*vx), 2)
+    (ox*s*vy - ox*uy - ox*vy - oy*s*vx + oy*ux + oy*vx - ux*vy + uy*vx) + (ox*s*vy - ox*uy + ox*vy - oy*s*vx + oy*ux - oy*vx - ux*vy + uy*vx) = 2 * ((ox*s*vy - ox*uy - oy*s*vx + oy*ux) - (ux*vy - uy*vx))
+    e1(ox, oy, ux, uy, vx, vy, s) + e2(ox, oy, ux, uy, vx, vy, s) = (ox*s*vy - ox*uy - ox*vy - oy*s*vx + oy*ux + oy*vx - ux*vy + uy*vx) + (ox*s*vy - ox*uy + ox*vy - oy*s*vx + oy*ux - oy*vx - ux*vy + uy*vx) = 2 * ((ox*s*vy - ox*uy - oy*s*vx + oy*ux) - (ux*vy - uy*vx)) = 2 * (drift(ox, oy, ux, uy, vx, vy, s) - det2(ux, uy, vx, vy))
+
+
+
+thm pair2_test:
+    ? forall ox, oy, ux, uy, vx, vy, s R:
+        e3(ox, oy, ux, uy, vx, vy, s) + e4(ox, oy, ux, uy, vx, vy, s) = -2 * (drift(ox, oy, ux, uy, vx, vy, s) + det2(ux, uy, vx, vy))
+
+    by thm e3_expand(ox, oy, ux, uy, vx, vy, s)
+    by thm e4_expand(ox, oy, ux, uy, vx, vy, s)
+    by thm add_equalities_local(e3(ox, oy, ux, uy, vx, vy, s), -ox*s*vy + ox*uy + ox*vy + oy*s*vx - oy*ux - oy*vx - ux*vy + uy*vx, e4(ox, oy, ux, uy, vx, vy, s), -ox*s*vy + ox*uy - ox*vy + oy*s*vx - oy*ux + oy*vx - ux*vy + uy*vx)
+    drift(ox, oy, ux, uy, vx, vy, s) = ox*s*vy - ox*uy - oy*s*vx + oy*ux
+    det2(ux, uy, vx, vy) = ux*vy - uy*vx
+    by thm add_equalities_local(drift(ox, oy, ux, uy, vx, vy, s), ox*s*vy - ox*uy - oy*s*vx + oy*ux, det2(ux, uy, vx, vy), ux*vy - uy*vx)
+    by thm multiply_both_sides_local(drift(ox, oy, ux, uy, vx, vy, s) + det2(ux, uy, vx, vy), (ox*s*vy - ox*uy - oy*s*vx + oy*ux) + (ux*vy - uy*vx), -2)
+    (-ox*s*vy + ox*uy + ox*vy + oy*s*vx - oy*ux - oy*vx - ux*vy + uy*vx) + (-ox*s*vy + ox*uy - ox*vy + oy*s*vx - oy*ux + oy*vx - ux*vy + uy*vx) = -2 * ((ox*s*vy - ox*uy - oy*s*vx + oy*ux) + (ux*vy - uy*vx))
+    e3(ox, oy, ux, uy, vx, vy, s) + e4(ox, oy, ux, uy, vx, vy, s) = (-ox*s*vy + ox*uy + ox*vy + oy*s*vx - oy*ux - oy*vx - ux*vy + uy*vx) + (-ox*s*vy + ox*uy - ox*vy + oy*s*vx - oy*ux + oy*vx - ux*vy + uy*vx) = -2 * ((ox*s*vy - ox*uy - oy*s*vx + oy*ux) + (ux*vy - uy*vx)) = -2 * (drift(ox, oy, ux, uy, vx, vy, s) + det2(ux, uy, vx, vy))
+
+have fn quadrilateral_sum_edge(ox, oy, ux, uy, vx, vy, s R) R = (e1(ox, oy, ux, uy, vx, vy, s) + e2(ox, oy, ux, uy, vx, vy, s)) + (e3(ox, oy, ux, uy, vx, vy, s) + e4(ox, oy, ux, uy, vx, vy, s))
+
+thm quadrilateral_sum_edge_identity:
+    ? forall ox, oy, ux, uy, vx, vy, s R:
+        quadrilateral_sum_edge(ox, oy, ux, uy, vx, vy, s) = -4 * det2(ux, uy, vx, vy)
+
+    by thm pair1_test(ox, oy, ux, uy, vx, vy, s)
+    by thm pair2_test(ox, oy, ux, uy, vx, vy, s)
+    by thm add_equalities_local(e1(ox, oy, ux, uy, vx, vy, s) + e2(ox, oy, ux, uy, vx, vy, s), 2 * (drift(ox, oy, ux, uy, vx, vy, s) - det2(ux, uy, vx, vy)), e3(ox, oy, ux, uy, vx, vy, s) + e4(ox, oy, ux, uy, vx, vy, s), -2 * (drift(ox, oy, ux, uy, vx, vy, s) + det2(ux, uy, vx, vy)))
+    2 * (drift(ox, oy, ux, uy, vx, vy, s) - det2(ux, uy, vx, vy)) + -2 * (drift(ox, oy, ux, uy, vx, vy, s) + det2(ux, uy, vx, vy)) = -4 * det2(ux, uy, vx, vy)
+    quadrilateral_sum_edge(ox, oy, ux, uy, vx, vy, s) = (e1(ox, oy, ux, uy, vx, vy, s) + e2(ox, oy, ux, uy, vx, vy, s)) + (e3(ox, oy, ux, uy, vx, vy, s) + e4(ox, oy, ux, uy, vx, vy, s)) = 2 * (drift(ox, oy, ux, uy, vx, vy, s) - det2(ux, uy, vx, vy)) + -2 * (drift(ox, oy, ux, uy, vx, vy, s) + det2(ux, uy, vx, vy)) = -4 * det2(ux, uy, vx, vy)
+
+
+have fn h1(ox, oy, ux, uy, vx, vy R) R = (ox + ux) * (oy + vy) - (oy + uy) * (ox + vx)
+have fn h2(ox, oy, ux, uy, vx, vy R) R = (ox + vx) * (oy + vy - uy) - (oy + vy) * (ox + vx - ux)
+have fn h3(ox, oy, ux, uy, vx, vy R) R = (ox + vx - ux) * (oy - uy) - (oy + vy - uy) * (ox - ux)
+have fn h4(ox, oy, ux, uy, vx, vy R) R = (ox - ux) * (oy - vy) - (oy - uy) * (ox - vx)
+have fn h5(ox, oy, ux, uy, vx, vy R) R = (ox - vx) * (oy + uy - vy) - (oy - vy) * (ox + ux - vx)
+have fn h6(ox, oy, ux, uy, vx, vy R) R = (ox + ux - vx) * (oy + uy) - (oy + uy - vy) * (ox + ux)
+
+thm h1_expand:
+    ? forall ox, oy, ux, uy, vx, vy R:
+        h1(ox, oy, ux, uy, vx, vy) = -ox*uy + ox*vy + oy*ux - oy*vx + ux*vy - uy*vx
+    h1(ox, oy, ux, uy, vx, vy) = -ox*uy + ox*vy + oy*ux - oy*vx + ux*vy - uy*vx
+
+thm h2_expand:
+    ? forall ox, oy, ux, uy, vx, vy R:
+        h2(ox, oy, ux, uy, vx, vy) = -ox*uy + oy*ux + ux*vy - uy*vx
+    h2(ox, oy, ux, uy, vx, vy) = -ox*uy + oy*ux + ux*vy - uy*vx
+
+thm h3_expand:
+    ? forall ox, oy, ux, uy, vx, vy R:
+        h3(ox, oy, ux, uy, vx, vy) = -ox*vy + oy*vx + ux*vy - uy*vx
+    h3(ox, oy, ux, uy, vx, vy) = -ox*vy + oy*vx + ux*vy - uy*vx
+
+thm h4_expand:
+    ? forall ox, oy, ux, uy, vx, vy R:
+        h4(ox, oy, ux, uy, vx, vy) = ox*uy - ox*vy - oy*ux + oy*vx + ux*vy - uy*vx
+    h4(ox, oy, ux, uy, vx, vy) = ox*uy - ox*vy - oy*ux + oy*vx + ux*vy - uy*vx
+
+thm h5_expand:
+    ? forall ox, oy, ux, uy, vx, vy R:
+        h5(ox, oy, ux, uy, vx, vy) = ox*uy - oy*ux + ux*vy - uy*vx
+    h5(ox, oy, ux, uy, vx, vy) = ox*uy - oy*ux + ux*vy - uy*vx
+
+thm h6_expand:
+    ? forall ox, oy, ux, uy, vx, vy R:
+        h6(ox, oy, ux, uy, vx, vy) = ox*vy - oy*vx + ux*vy - uy*vx
+    h6(ox, oy, ux, uy, vx, vy) = ox*vy - oy*vx + ux*vy - uy*vx
+
+
+have fn hexagon_odd_edge(ox, oy, ux, uy, vx, vy R) R = (h1(ox, oy, ux, uy, vx, vy) + h3(ox, oy, ux, uy, vx, vy)) + h5(ox, oy, ux, uy, vx, vy)
+have fn hexagon_even_edge(ox, oy, ux, uy, vx, vy R) R = (h2(ox, oy, ux, uy, vx, vy) + h4(ox, oy, ux, uy, vx, vy)) + h6(ox, oy, ux, uy, vx, vy)
+
+thm hexagon_odd_edge_identity:
+    ? forall ox, oy, ux, uy, vx, vy R:
+        hexagon_odd_edge(ox, oy, ux, uy, vx, vy) = 3 * det2(ux, uy, vx, vy)
+
+    by thm h1_expand(ox, oy, ux, uy, vx, vy)
+    by thm h3_expand(ox, oy, ux, uy, vx, vy)
+    by thm add_equalities_local(h1(ox, oy, ux, uy, vx, vy), -ox*uy + ox*vy + oy*ux - oy*vx + ux*vy - uy*vx, h3(ox, oy, ux, uy, vx, vy), -ox*vy + oy*vx + ux*vy - uy*vx)
+    by thm h5_expand(ox, oy, ux, uy, vx, vy)
+    by thm add_equalities_local(h1(ox, oy, ux, uy, vx, vy) + h3(ox, oy, ux, uy, vx, vy), (-ox*uy + ox*vy + oy*ux - oy*vx + ux*vy - uy*vx) + (-ox*vy + oy*vx + ux*vy - uy*vx), h5(ox, oy, ux, uy, vx, vy), ox*uy - oy*ux + ux*vy - uy*vx)
+    det2(ux, uy, vx, vy) = ux*vy - uy*vx
+    by thm multiply_both_sides_local(det2(ux, uy, vx, vy), ux*vy - uy*vx, 3)
+    ((-ox*uy + ox*vy + oy*ux - oy*vx + ux*vy - uy*vx) + (-ox*vy + oy*vx + ux*vy - uy*vx)) + (ox*uy - oy*ux + ux*vy - uy*vx) = 3 * (ux*vy - uy*vx)
+    hexagon_odd_edge(ox, oy, ux, uy, vx, vy) = (h1(ox, oy, ux, uy, vx, vy) + h3(ox, oy, ux, uy, vx, vy)) + h5(ox, oy, ux, uy, vx, vy) = ((-ox*uy + ox*vy + oy*ux - oy*vx + ux*vy - uy*vx) + (-ox*vy + oy*vx + ux*vy - uy*vx)) + (ox*uy - oy*ux + ux*vy - uy*vx) = 3 * (ux*vy - uy*vx) = 3 * det2(ux, uy, vx, vy)
+
+thm hexagon_even_edge_identity:
+    ? forall ox, oy, ux, uy, vx, vy R:
+        hexagon_even_edge(ox, oy, ux, uy, vx, vy) = 3 * det2(ux, uy, vx, vy)
+
+    by thm h2_expand(ox, oy, ux, uy, vx, vy)
+    by thm h4_expand(ox, oy, ux, uy, vx, vy)
+    by thm add_equalities_local(h2(ox, oy, ux, uy, vx, vy), -ox*uy + oy*ux + ux*vy - uy*vx, h4(ox, oy, ux, uy, vx, vy), ox*uy - ox*vy - oy*ux + oy*vx + ux*vy - uy*vx)
+    by thm h6_expand(ox, oy, ux, uy, vx, vy)
+    by thm add_equalities_local(h2(ox, oy, ux, uy, vx, vy) + h4(ox, oy, ux, uy, vx, vy), (-ox*uy + oy*ux + ux*vy - uy*vx) + (ox*uy - ox*vy - oy*ux + oy*vx + ux*vy - uy*vx), h6(ox, oy, ux, uy, vx, vy), ox*vy - oy*vx + ux*vy - uy*vx)
+    det2(ux, uy, vx, vy) = ux*vy - uy*vx
+    by thm multiply_both_sides_local(det2(ux, uy, vx, vy), ux*vy - uy*vx, 3)
+    ((-ox*uy + oy*ux + ux*vy - uy*vx) + (ox*uy - ox*vy - oy*ux + oy*vx + ux*vy - uy*vx)) + (ox*vy - oy*vx + ux*vy - uy*vx) = 3 * (ux*vy - uy*vx)
+    hexagon_even_edge(ox, oy, ux, uy, vx, vy) = (h2(ox, oy, ux, uy, vx, vy) + h4(ox, oy, ux, uy, vx, vy)) + h6(ox, oy, ux, uy, vx, vy) = ((-ox*uy + oy*ux + ux*vy - uy*vx) + (ox*uy - ox*vy - oy*ux + oy*vx + ux*vy - uy*vx)) + (ox*vy - oy*vx + ux*vy - uy*vx) = 3 * (ux*vy - uy*vx) = 3 * det2(ux, uy, vx, vy)
+
+have fn hexagon_sum_edge(ox, oy, ux, uy, vx, vy R) R = hexagon_odd_edge(ox, oy, ux, uy, vx, vy) + hexagon_even_edge(ox, oy, ux, uy, vx, vy)
+
+thm hexagon_sum_edge_identity:
+    ? forall ox, oy, ux, uy, vx, vy R:
+        hexagon_sum_edge(ox, oy, ux, uy, vx, vy) = 6 * det2(ux, uy, vx, vy)
+
+    by thm hexagon_odd_edge_identity(ox, oy, ux, uy, vx, vy)
+    by thm hexagon_even_edge_identity(ox, oy, ux, uy, vx, vy)
+    by thm add_equalities_local(hexagon_odd_edge(ox, oy, ux, uy, vx, vy), 3 * det2(ux, uy, vx, vy), hexagon_even_edge(ox, oy, ux, uy, vx, vy), 3 * det2(ux, uy, vx, vy))
+    3 * det2(ux, uy, vx, vy) + 3 * det2(ux, uy, vx, vy) = 6 * det2(ux, uy, vx, vy)
+    hexagon_sum_edge(ox, oy, ux, uy, vx, vy) = hexagon_odd_edge(ox, oy, ux, uy, vx, vy) + hexagon_even_edge(ox, oy, ux, uy, vx, vy) = 3 * det2(ux, uy, vx, vy) + 3 * det2(ux, uy, vx, vy) = 6 * det2(ux, uy, vx, vy)
+
+
+have fn quadrilateral_shoelace(a, b, c, d cart(R, R)) R = (a[1] * b[2] - a[2] * b[1]) + (b[1] * c[2] - b[2] * c[1]) + (c[1] * d[2] - c[2] * d[1]) + (d[1] * a[2] - d[2] * a[1])
+
+have fn hexagon_shoelace(a, b, c, d, ep, f cart(R, R)) R = (a[1] * b[2] - a[2] * b[1]) + (b[1] * c[2] - b[2] * c[1]) + (c[1] * d[2] - c[2] * d[1]) + (d[1] * ep[2] - d[2] * ep[1]) + (ep[1] * f[2] - ep[2] * f[1]) + (f[1] * a[2] - f[2] * a[1])
+
+thm coordinate_reduced_forms:
+    ? forall a, b, c, d, ep, f, o, p, q cart(R, R), t R:
+        p[1] = (1 - t / 6) * a[1] + (t / 6) * f[1]
+        p[2] = (1 - t / 6) * a[2] + (t / 6) * f[2]
+        q[1] = (1 - t / 6) * d[1] + (t / 6) * c[1]
+        q[2] = (1 - t / 6) * d[2] + (t / 6) * c[2]
+        c[1] = o[1] + (b[1] - o[1]) - (a[1] - o[1])
+        c[2] = o[2] + (b[2] - o[2]) - (a[2] - o[2])
+        d[1] = 2 * o[1] - a[1]
+        d[2] = 2 * o[2] - a[2]
+        ep[1] = 2 * o[1] - b[1]
+        ep[2] = 2 * o[2] - b[2]
+        f[1] = o[1] + (a[1] - o[1]) - (b[1] - o[1])
+        f[2] = o[2] + (a[2] - o[2]) - (b[2] - o[2])
+        =>:
+            p[1] = o[1] - (t / 6) * (b[1] - o[1]) + (a[1] - o[1])
+            p[2] = o[2] - (t / 6) * (b[2] - o[2]) + (a[2] - o[2])
+            q[1] = o[1] + (t / 6) * (b[1] - o[1]) - (a[1] - o[1])
+            q[2] = o[2] + (t / 6) * (b[2] - o[2]) - (a[2] - o[2])
+            ep[1] = o[1] - (b[1] - o[1])
+            ep[2] = o[2] - (b[2] - o[2])
+            b[1] = o[1] + (b[1] - o[1])
+            b[2] = o[2] + (b[2] - o[2])
+            a[1] = o[1] + (a[1] - o[1])
+            a[2] = o[2] + (a[2] - o[2])
+            c[1] = o[1] + (b[1] - o[1]) - (a[1] - o[1])
+            c[2] = o[2] + (b[2] - o[2]) - (a[2] - o[2])
+            d[1] = o[1] - (a[1] - o[1])
+            d[2] = o[2] - (a[2] - o[2])
+            f[1] = o[1] + (a[1] - o[1]) - (b[1] - o[1])
+            f[2] = o[2] + (a[2] - o[2]) - (b[2] - o[2])
+
+    by thm multiply_both_sides_local(f[1], o[1] + (a[1] - o[1]) - (b[1] - o[1]), t / 6)
+    by thm add_equalities_local((1 - t / 6) * a[1], (1 - t / 6) * a[1], (t / 6) * f[1], (t / 6) * (o[1] + (a[1] - o[1]) - (b[1] - o[1])))
+    p[1] = (1 - t / 6) * a[1] + (t / 6) * f[1] = (1 - t / 6) * a[1] + (t / 6) * (o[1] + (a[1] - o[1]) - (b[1] - o[1])) = o[1] - (t / 6) * (b[1] - o[1]) + (a[1] - o[1])
+    by thm multiply_both_sides_local(f[2], o[2] + (a[2] - o[2]) - (b[2] - o[2]), t / 6)
+    by thm add_equalities_local((1 - t / 6) * a[2], (1 - t / 6) * a[2], (t / 6) * f[2], (t / 6) * (o[2] + (a[2] - o[2]) - (b[2] - o[2])))
+    p[2] = (1 - t / 6) * a[2] + (t / 6) * f[2] = (1 - t / 6) * a[2] + (t / 6) * (o[2] + (a[2] - o[2]) - (b[2] - o[2])) = o[2] - (t / 6) * (b[2] - o[2]) + (a[2] - o[2])
+
+    by thm multiply_both_sides_local(d[1], 2 * o[1] - a[1], 1 - t / 6)
+    by thm multiply_both_sides_local(c[1], o[1] + (b[1] - o[1]) - (a[1] - o[1]), t / 6)
+    by thm add_equalities_local((1 - t / 6) * d[1], (1 - t / 6) * (2 * o[1] - a[1]), (t / 6) * c[1], (t / 6) * (o[1] + (b[1] - o[1]) - (a[1] - o[1])))
+    q[1] = (1 - t / 6) * d[1] + (t / 6) * c[1] = (1 - t / 6) * (2 * o[1] - a[1]) + (t / 6) * (o[1] + (b[1] - o[1]) - (a[1] - o[1])) = o[1] + (t / 6) * (b[1] - o[1]) - (a[1] - o[1])
+    by thm multiply_both_sides_local(d[2], 2 * o[2] - a[2], 1 - t / 6)
+    by thm multiply_both_sides_local(c[2], o[2] + (b[2] - o[2]) - (a[2] - o[2]), t / 6)
+    by thm add_equalities_local((1 - t / 6) * d[2], (1 - t / 6) * (2 * o[2] - a[2]), (t / 6) * c[2], (t / 6) * (o[2] + (b[2] - o[2]) - (a[2] - o[2])))
+    q[2] = (1 - t / 6) * d[2] + (t / 6) * c[2] = (1 - t / 6) * (2 * o[2] - a[2]) + (t / 6) * (o[2] + (b[2] - o[2]) - (a[2] - o[2])) = o[2] + (t / 6) * (b[2] - o[2]) - (a[2] - o[2])
+
+    ep[1] = o[1] - (b[1] - o[1])
+    ep[2] = o[2] - (b[2] - o[2])
+    b[1] = o[1] + (b[1] - o[1])
+    b[2] = o[2] + (b[2] - o[2])
+    a[1] = o[1] + (a[1] - o[1])
+    a[2] = o[2] + (a[2] - o[2])
+    c[1] = o[1] + (b[1] - o[1]) - (a[1] - o[1])
+    c[2] = o[2] + (b[2] - o[2]) - (a[2] - o[2])
+    d[1] = o[1] - (a[1] - o[1])
+    d[2] = o[2] - (a[2] - o[2])
+    f[1] = o[1] + (a[1] - o[1]) - (b[1] - o[1])
+    f[2] = o[2] + (a[2] - o[2]) - (b[2] - o[2])
+
+thm cross_substitute_local:
+    ? forall x1, x2, x3, x4, x5, x6, x7, x8 R:
+        x1 = x2,
+        x3 = x4,
+        x5 = x6,
+        x7 = x8
+        =>:
+            x1 * x3 - x5 * x7 = x2 * x4 - x6 * x8
+    x1 * x3 - x5 * x7 = x2 * x3 - x5 * x7 = x2 * x4 - x5 * x7 = x2 * x4 - x6 * x7 = x2 * x4 - x6 * x8
+
+thm coordinate_carrier_sums:
+    ? forall a, b, c, d, ep, f, o, p, q cart(R, R), t R:
+        p[1] = o[1] - (t / 6) * (b[1] - o[1]) + (a[1] - o[1])
+        p[2] = o[2] - (t / 6) * (b[2] - o[2]) + (a[2] - o[2])
+        q[1] = o[1] + (t / 6) * (b[1] - o[1]) - (a[1] - o[1])
+        q[2] = o[2] + (t / 6) * (b[2] - o[2]) - (a[2] - o[2])
+        ep[1] = o[1] - (b[1] - o[1])
+        ep[2] = o[2] - (b[2] - o[2])
+        b[1] = o[1] + (b[1] - o[1])
+        b[2] = o[2] + (b[2] - o[2])
+        a[1] = o[1] + (a[1] - o[1])
+        a[2] = o[2] + (a[2] - o[2])
+        c[1] = o[1] + (b[1] - o[1]) - (a[1] - o[1])
+        c[2] = o[2] + (b[2] - o[2]) - (a[2] - o[2])
+        d[1] = o[1] - (a[1] - o[1])
+        d[2] = o[2] - (a[2] - o[2])
+        f[1] = o[1] + (a[1] - o[1]) - (b[1] - o[1])
+        f[2] = o[2] + (a[2] - o[2]) - (b[2] - o[2])
+        =>:
+            quadrilateral_shoelace(p, ep, q, b) = quadrilateral_sum_edge(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2], t / 6)
+            hexagon_shoelace(a, b, c, d, ep, f) = hexagon_sum_edge(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2])
+
+    p[1] * ep[2] - p[2] * ep[1] = (o[1] - (t / 6) * (b[1] - o[1]) + (a[1] - o[1])) * (o[2] - (b[2] - o[2])) - (o[2] - (t / 6) * (b[2] - o[2]) + (a[2] - o[2])) * (o[1] - (b[1] - o[1]))
+    e1(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2], t / 6) = (o[1] - (t / 6) * (b[1] - o[1]) + (a[1] - o[1])) * (o[2] - (b[2] - o[2])) - (o[2] - (t / 6) * (b[2] - o[2]) + (a[2] - o[2])) * (o[1] - (b[1] - o[1]))
+    p[1] * ep[2] - p[2] * ep[1] = e1(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2], t / 6)
+
+    ep[1] * q[2] - ep[2] * q[1] = (o[1] - (b[1] - o[1])) * (o[2] + (t / 6) * (b[2] - o[2]) - (a[2] - o[2])) - (o[2] - (b[2] - o[2])) * (o[1] + (t / 6) * (b[1] - o[1]) - (a[1] - o[1]))
+    e2(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2], t / 6) = (o[1] - (b[1] - o[1])) * (o[2] + (t / 6) * (b[2] - o[2]) - (a[2] - o[2])) - (o[2] - (b[2] - o[2])) * (o[1] + (t / 6) * (b[1] - o[1]) - (a[1] - o[1]))
+    ep[1] * q[2] - ep[2] * q[1] = e2(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2], t / 6)
+
+    q[1] * b[2] - q[2] * b[1] = (o[1] + (t / 6) * (b[1] - o[1]) - (a[1] - o[1])) * (o[2] + (b[2] - o[2])) - (o[2] + (t / 6) * (b[2] - o[2]) - (a[2] - o[2])) * (o[1] + (b[1] - o[1]))
+    e3(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2], t / 6) = (o[1] + (t / 6) * (b[1] - o[1]) - (a[1] - o[1])) * (o[2] + (b[2] - o[2])) - (o[2] + (t / 6) * (b[2] - o[2]) - (a[2] - o[2])) * (o[1] + (b[1] - o[1]))
+    q[1] * b[2] - q[2] * b[1] = e3(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2], t / 6)
+
+    b[1] * p[2] - b[2] * p[1] = (o[1] + (b[1] - o[1])) * (o[2] - (t / 6) * (b[2] - o[2]) + (a[2] - o[2])) - (o[2] + (b[2] - o[2])) * (o[1] - (t / 6) * (b[1] - o[1]) + (a[1] - o[1]))
+    e4(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2], t / 6) = (o[1] + (b[1] - o[1])) * (o[2] - (t / 6) * (b[2] - o[2]) + (a[2] - o[2])) - (o[2] + (b[2] - o[2])) * (o[1] - (t / 6) * (b[1] - o[1]) + (a[1] - o[1]))
+    b[1] * p[2] - b[2] * p[1] = e4(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2], t / 6)
+
+    quadrilateral_shoelace(p, ep, q, b) = (p[1] * ep[2] - p[2] * ep[1]) + (ep[1] * q[2] - ep[2] * q[1]) + (q[1] * b[2] - q[2] * b[1]) + (b[1] * p[2] - b[2] * p[1])
+    quadrilateral_shoelace(p, ep, q, b) = e1(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2], t / 6) + e2(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2], t / 6) + e3(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2], t / 6) + e4(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2], t / 6)
+    quadrilateral_sum_edge(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2], t / 6) = e1(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2], t / 6) + e2(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2], t / 6) + e3(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2], t / 6) + e4(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2], t / 6)
+    quadrilateral_shoelace(p, ep, q, b) = quadrilateral_sum_edge(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2], t / 6)
+
+    a[1] * b[2] - a[2] * b[1] = (o[1] + (a[1] - o[1])) * (o[2] + (b[2] - o[2])) - (o[2] + (a[2] - o[2])) * (o[1] + (b[1] - o[1]))
+    h1(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) = (o[1] + (a[1] - o[1])) * (o[2] + (b[2] - o[2])) - (o[2] + (a[2] - o[2])) * (o[1] + (b[1] - o[1]))
+    a[1] * b[2] - a[2] * b[1] = h1(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2])
+
+    b[1] * c[2] - b[2] * c[1] = (o[1] + (b[1] - o[1])) * (o[2] + (b[2] - o[2]) - (a[2] - o[2])) - (o[2] + (b[2] - o[2])) * (o[1] + (b[1] - o[1]) - (a[1] - o[1]))
+    h2(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) = (o[1] + (b[1] - o[1])) * (o[2] + (b[2] - o[2]) - (a[2] - o[2])) - (o[2] + (b[2] - o[2])) * (o[1] + (b[1] - o[1]) - (a[1] - o[1]))
+    b[1] * c[2] - b[2] * c[1] = h2(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2])
+
+    c[1] * d[2] - c[2] * d[1] = (o[1] + (b[1] - o[1]) - (a[1] - o[1])) * (o[2] - (a[2] - o[2])) - (o[2] + (b[2] - o[2]) - (a[2] - o[2])) * (o[1] - (a[1] - o[1]))
+    h3(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) = (o[1] + (b[1] - o[1]) - (a[1] - o[1])) * (o[2] - (a[2] - o[2])) - (o[2] + (b[2] - o[2]) - (a[2] - o[2])) * (o[1] - (a[1] - o[1]))
+    c[1] * d[2] - c[2] * d[1] = h3(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2])
+
+    d[1] * ep[2] - d[2] * ep[1] = (o[1] - (a[1] - o[1])) * (o[2] - (b[2] - o[2])) - (o[2] - (a[2] - o[2])) * (o[1] - (b[1] - o[1]))
+    h4(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) = (o[1] - (a[1] - o[1])) * (o[2] - (b[2] - o[2])) - (o[2] - (a[2] - o[2])) * (o[1] - (b[1] - o[1]))
+    d[1] * ep[2] - d[2] * ep[1] = h4(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2])
+
+    ep[1] * f[2] - ep[2] * f[1] = (o[1] - (b[1] - o[1])) * (o[2] + (a[2] - o[2]) - (b[2] - o[2])) - (o[2] - (b[2] - o[2])) * (o[1] + (a[1] - o[1]) - (b[1] - o[1]))
+    h5(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) = (o[1] - (b[1] - o[1])) * (o[2] + (a[2] - o[2]) - (b[2] - o[2])) - (o[2] - (b[2] - o[2])) * (o[1] + (a[1] - o[1]) - (b[1] - o[1]))
+    ep[1] * f[2] - ep[2] * f[1] = h5(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2])
+
+    f[1] * a[2] - f[2] * a[1] = (o[1] + (a[1] - o[1]) - (b[1] - o[1])) * (o[2] + (a[2] - o[2])) - (o[2] + (a[2] - o[2]) - (b[2] - o[2])) * (o[1] + (a[1] - o[1]))
+    h6(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) = (o[1] + (a[1] - o[1]) - (b[1] - o[1])) * (o[2] + (a[2] - o[2])) - (o[2] + (a[2] - o[2]) - (b[2] - o[2])) * (o[1] + (a[1] - o[1]))
+    f[1] * a[2] - f[2] * a[1] = h6(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2])
+
+    hexagon_shoelace(a, b, c, d, ep, f) = (a[1] * b[2] - a[2] * b[1]) + (b[1] * c[2] - b[2] * c[1]) + (c[1] * d[2] - c[2] * d[1]) + (d[1] * ep[2] - d[2] * ep[1]) + (ep[1] * f[2] - ep[2] * f[1]) + (f[1] * a[2] - f[2] * a[1])
+    hexagon_shoelace(a, b, c, d, ep, f) = h1(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) + h2(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) + h3(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) + h4(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) + h5(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) + h6(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2])
+    hexagon_odd_edge(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) = (h1(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) + h3(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2])) + h5(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2])
+    hexagon_even_edge(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) = (h2(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) + h4(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2])) + h6(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2])
+    by thm add_equalities_local(hexagon_odd_edge(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]), (h1(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) + h3(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2])) + h5(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]), hexagon_even_edge(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]), (h2(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) + h4(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2])) + h6(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]))
+    hexagon_sum_edge(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) = hexagon_odd_edge(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) + hexagon_even_edge(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2])
+    hexagon_sum_edge(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) = (h1(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) + h3(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) + h5(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2])) + (h2(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) + h4(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) + h6(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]))
+    h1(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) + h2(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) + h3(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) + h4(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) + h5(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) + h6(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) = (h1(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) + h3(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) + h5(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2])) + (h2(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) + h4(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) + h6(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]))
+    hexagon_shoelace(a, b, c, d, ep, f) = hexagon_sum_edge(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2])
+
+thm positive_sqrt_negative_four_scale:
+    ? forall delta R:
+        delta > 0
+        =>:
+            sqrt((-4 * delta)^2) = 4 * delta
+
+    sqrt((-4 * delta)^2) >= 0
+    sqrt((-4 * delta)^2)^2 = (-4 * delta)^2
+    (-4 * delta)^2 = (4 * delta)^2
+    sqrt((-4 * delta)^2)^2 = (4 * delta)^2
+    sqrt((-4 * delta)^2)^2 - (4 * delta)^2 = 0
+    by thm geo::difference_of_squares(sqrt((-4 * delta)^2), 4 * delta)
+    sqrt((-4 * delta)^2)^2 - (4 * delta)^2 = (sqrt((-4 * delta)^2) + 4 * delta) * (sqrt((-4 * delta)^2) - 4 * delta)
+    (sqrt((-4 * delta)^2) + 4 * delta) * (sqrt((-4 * delta)^2) - 4 * delta) = 0
+    4 * delta > 0
+    sqrt((-4 * delta)^2) + 4 * delta > 0
+    sqrt((-4 * delta)^2) + 4 * delta != 0
+    by thm geo::zero_factor_law(sqrt((-4 * delta)^2) + 4 * delta, sqrt((-4 * delta)^2) - 4 * delta)
+    sqrt((-4 * delta)^2) - 4 * delta = 0
+    sqrt((-4 * delta)^2) = 4 * delta
+
+thm positive_sqrt_six_scale:
+    ? forall delta R:
+        delta > 0
+        =>:
+            sqrt((6 * delta)^2) = 6 * delta
+
+    sqrt((6 * delta)^2) >= 0
+    sqrt((6 * delta)^2)^2 = (6 * delta)^2
+    sqrt((6 * delta)^2)^2 - (6 * delta)^2 = 0
+    by thm geo::difference_of_squares(sqrt((6 * delta)^2), 6 * delta)
+    sqrt((6 * delta)^2)^2 - (6 * delta)^2 = (sqrt((6 * delta)^2) + 6 * delta) * (sqrt((6 * delta)^2) - 6 * delta)
+    (sqrt((6 * delta)^2) + 6 * delta) * (sqrt((6 * delta)^2) - 6 * delta) = 0
+    6 * delta > 0
+    sqrt((6 * delta)^2) + 6 * delta > 0
+    sqrt((6 * delta)^2) + 6 * delta != 0
+    by thm geo::zero_factor_law(sqrt((6 * delta)^2) + 6 * delta, sqrt((6 * delta)^2) - 6 * delta)
+    sqrt((6 * delta)^2) - 6 * delta = 0
+    sqrt((6 * delta)^2) = 6 * delta
+
+# The authoritative area certificate is factored through verified edge-carrier sums.
+thm coordinate_shoelace_sums_verified:
+    ? forall a, b, c, d, ep, f, o, p, q cart(R, R), t R:
+        p[1] = (1 - t / 6) * a[1] + (t / 6) * f[1]
+        p[2] = (1 - t / 6) * a[2] + (t / 6) * f[2]
+        q[1] = (1 - t / 6) * d[1] + (t / 6) * c[1]
+        q[2] = (1 - t / 6) * d[2] + (t / 6) * c[2]
+        c[1] = o[1] + (b[1] - o[1]) - (a[1] - o[1])
+        c[2] = o[2] + (b[2] - o[2]) - (a[2] - o[2])
+        d[1] = 2 * o[1] - a[1]
+        d[2] = 2 * o[2] - a[2]
+        ep[1] = 2 * o[1] - b[1]
+        ep[2] = 2 * o[2] - b[2]
+        f[1] = o[1] + (a[1] - o[1]) - (b[1] - o[1])
+        f[2] = o[2] + (a[2] - o[2]) - (b[2] - o[2])
+        =>:
+            quadrilateral_shoelace(p, ep, q, b) = -4 * det2(a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2])
+            hexagon_shoelace(a, b, c, d, ep, f) = 6 * det2(a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2])
+
+    by thm coordinate_reduced_forms(a, b, c, d, ep, f, o, p, q, t)
+    by thm coordinate_carrier_sums(a, b, c, d, ep, f, o, p, q, t)
+    by thm quadrilateral_sum_edge_identity(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2], t / 6)
+    by thm hexagon_sum_edge_identity(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2])
+    quadrilateral_shoelace(p, ep, q, b) = quadrilateral_sum_edge(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2], t / 6) = -4 * det2(a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2])
+    hexagon_shoelace(a, b, c, d, ep, f) = hexagon_sum_edge(o[1], o[2], a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) = 6 * det2(a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2])
+
+thm coordinate_certificate_area_ratio_verified:
+    ? forall a, b, c, d, ep, f, o, p, q cart(R, R), t R:
+        p[1] = (1 - t / 6) * a[1] + (t / 6) * f[1]
+        p[2] = (1 - t / 6) * a[2] + (t / 6) * f[2]
+        q[1] = (1 - t / 6) * d[1] + (t / 6) * c[1]
+        q[2] = (1 - t / 6) * d[2] + (t / 6) * c[2]
+        c[1] = o[1] + (b[1] - o[1]) - (a[1] - o[1])
+        c[2] = o[2] + (b[2] - o[2]) - (a[2] - o[2])
+        d[1] = 2 * o[1] - a[1]
+        d[2] = 2 * o[2] - a[2]
+        ep[1] = 2 * o[1] - b[1]
+        ep[2] = 2 * o[2] - b[2]
+        f[1] = o[1] + (a[1] - o[1]) - (b[1] - o[1])
+        f[2] = o[2] + (a[2] - o[2]) - (b[2] - o[2])
+        (a[1] - o[1]) * (b[2] - o[2]) - (a[2] - o[2]) * (b[1] - o[1]) > 0
+        =>:
+            3 * quadrilateral_area(p, ep, q, b) = 2 * hexagon_area(a, b, c, d, ep, f)
+
+    by thm coordinate_shoelace_sums_verified(a, b, c, d, ep, f, o, p, q, t)
+    have delta R = (a[1] - o[1]) * (b[2] - o[2]) - (a[2] - o[2]) * (b[1] - o[1])
+    delta > 0
+    det2(a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) = (a[1] - o[1]) * (b[2] - o[2]) - (a[2] - o[2]) * (b[1] - o[1]) = delta
+    (p[1] * ep[2] - p[2] * ep[1]) + (ep[1] * q[2] - ep[2] * q[1]) + (q[1] * b[2] - q[2] * b[1]) + (b[1] * p[2] - b[2] * p[1]) = quadrilateral_shoelace(p, ep, q, b) = -4 * det2(a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) = -4 * ((a[1] - o[1]) * (b[2] - o[2]) - (a[2] - o[2]) * (b[1] - o[1])) = -4 * delta
+    (a[1] * b[2] - a[2] * b[1]) + (b[1] * c[2] - b[2] * c[1]) + (c[1] * d[2] - c[2] * d[1]) + (d[1] * ep[2] - d[2] * ep[1]) + (ep[1] * f[2] - ep[2] * f[1]) + (f[1] * a[2] - f[2] * a[1]) = hexagon_shoelace(a, b, c, d, ep, f) = 6 * det2(a[1] - o[1], a[2] - o[2], b[1] - o[1], b[2] - o[2]) = 6 * ((a[1] - o[1]) * (b[2] - o[2]) - (a[2] - o[2]) * (b[1] - o[1])) = 6 * delta
+
+    quadrilateral_area(p, ep, q, b) = sqrt((((p[1] * ep[2] - p[2] * ep[1]) + (ep[1] * q[2] - ep[2] * q[1]) + (q[1] * b[2] - q[2] * b[1]) + (b[1] * p[2] - b[2] * p[1]))^2)) / 2
+    quadrilateral_area(p, ep, q, b) = sqrt((-4 * delta)^2) / 2
+    by thm positive_sqrt_negative_four_scale(delta)
+    quadrilateral_area(p, ep, q, b) = sqrt((-4 * delta)^2) / 2 = (4 * delta) / 2 = 2 * delta
+
+    hexagon_area(a, b, c, d, ep, f) = sqrt((((a[1] * b[2] - a[2] * b[1]) + (b[1] * c[2] - b[2] * c[1]) + (c[1] * d[2] - c[2] * d[1]) + (d[1] * ep[2] - d[2] * ep[1]) + (ep[1] * f[2] - ep[2] * f[1]) + (f[1] * a[2] - f[2] * a[1]))^2)) / 2
+    hexagon_area(a, b, c, d, ep, f) = sqrt((6 * delta)^2) / 2
+    by thm positive_sqrt_six_scale(delta)
+    hexagon_area(a, b, c, d, ep, f) = sqrt((6 * delta)^2) / 2 = (6 * delta) / 2 = 3 * delta
+
+    3 * quadrilateral_area(p, ep, q, b) = 3 * (2 * delta) = 6 * delta
+    2 * hexagon_area(a, b, c, d, ep, f) = 2 * (3 * delta) = 6 * delta
+    3 * quadrilateral_area(p, ep, q, b) = 2 * hexagon_area(a, b, c, d, ep, f)
+
+# ==================== 正式解题入口B：面积比 ====================
+thm problem_547_area_ratio:
+    ? forall a, b, c, d, ep, f, o, p, q cart(R, R), t R:
+        # 原题条件：中心为O、半径为6cm的正六边形ABCDEF。
+        $is_regular_hexagon(a, b, c, d, ep, f, o, 6),
+        # 原题条件：P从A出发，以1cm/s沿AF运动，运动时间为t。
+        $is_uniform_segment_motion(p, a, f, t, 6),
+        # 原题条件：Q同时从D出发，以1cm/s沿DC运动，运动时间为t。
+        $is_uniform_segment_motion(q, d, c, t, 6)
+        =>:
+            # 原题结论(2)：四边形PEQB的面积是正六边形ABCDEF面积的2/3。
+            3 * quadrilateral_area(p, ep, q, b) = 2 * hexagon_area(a, b, c, d, ep, f)
+
+    by thm regular_hexagon_core_facts(a, b, c, d, ep, f, o, 6)
+    by thm uniform_motion_coordinate_facts(p, a, f, t, 6)
+    by thm uniform_motion_coordinate_facts(q, d, c, t, 6)
+    by thm coordinate_certificate_area_ratio_verified(a, b, c, d, ep, f, o, p, q, t)

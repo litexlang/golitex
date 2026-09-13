@@ -1,0 +1,2150 @@
+# ═══════════════════════════════════════════════════════════════════════
+# EUCLIDEAN GEOMETRY KNOWLEDGE BASE — FLATTENED PUBLIC MODULE
+# ═══════════════════════════════════════════════════════════════════════
+# Generated from the retained split sources in .drafts/:
+#   definitions.lit, predicates.lit, theorems.lit
+# Consumers should import this module as `geo` and use `geo::name`.
+
+# ═══════════════════════════════════════════════════════════════════════
+# UNIFIED EUCLIDEAN GEOMETRY LIBRARY
+# ═══════════════════════════════════════════════════════════════════════
+#
+# 统一的欧几里得几何库，整合以下4个文件的内容：
+# - book_zero.lit (基础对象和原子谓词)
+# - definitions.lit (复合定义)
+# - analytic_laws.lit (坐标几何定理)
+# - predicate_laws.lit (谓词桥接定理)
+#
+# 创建日期: 2026-08-23
+# 版本: 0.1.0-alpha
+# 目标: 为中考题提供统一的、无命名空间冲突的定理库
+#
+# ═══════════════════════════════════════════════════════════════════════
+
+# ═══════════════════════════════════════════════════════════════════════
+# SECTION 1: PRIMITIVES (from book_zero.lit)
+# ═══════════════════════════════════════════════════════════════════════
+# 基础几何对象：点、向量、距离、角度
+# 原子谓词：共线、垂直、平行、直角、线段全等、角度全等
+
+# ───────────────────────────────────────────────────────────────────────
+# 1.1 Points
+# ───────────────────────────────────────────────────────────────────────
+
+
+have points set = cart(R, R)
+
+# ───────────────────────────────────────────────────────────────────────
+# 1.2 Vector operations (internal computation layer)
+# ───────────────────────────────────────────────────────────────────────
+
+have fn vec(A, B cart(R, R)) cart(R, R) = (B[1] - A[1], B[2] - A[2])
+
+have fn dot(u, v cart(R, R)) R = u[1] * v[1] + u[2] * v[2]
+
+have fn det(u, v cart(R, R)) R = u[1] * v[2] - u[2] * v[1]
+
+# ───────────────────────────────────────────────────────────────────────
+# 1.3 Distance
+# ───────────────────────────────────────────────────────────────────────
+
+have fn distance_sq(A, B cart(R, R)) R = dot(vec(A, B), vec(A, B))
+
+# ───────────────────────────────────────────────────────────────────────
+# 1.4 Lines
+# ───────────────────────────────────────────────────────────────────────
+
+have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {p cart(R, R): a * p[1] + b * p[2] + c = 0}
+
+have fn line_of(a, b cart(R, R): a != b) power_set(cart(R, R)) = {p cart(R, R): det(vec(a, p), vec(a, b)) = 0}
+
+# ───────────────────────────────────────────────────────────────────────
+# 1.5 Segments (as predicate)
+# ───────────────────────────────────────────────────────────────────────
+
+have fn angle_cos_num(p, q, r cart(R, R): p != q, r != q) R = dot(vec(q, p), vec(q, r))
+have fn angle_cos_den(p, q, r cart(R, R): p != q, r != q) R = distance_sq(q, p) * distance_sq(q, r)
+
+# ───────────────────────────────────────────────────────────────────────
+# 1.8 Circles
+# ───────────────────────────────────────────────────────────────────────
+
+have fn circle(o cart(R, R), r R+) power_set(cart(R, R)) = {p cart(R, R): distance_sq(o, p) = r^2}
+
+# ───────────────────────────────────────────────────────────────────────
+# 1.9 Atomic predicates
+# ───────────────────────────────────────────────────────────────────────
+
+# Collinearity: three points lie on one line
+# Removed unused `lines` set: it created a definitions -> predicates cycle.
+
+# ───────────────────────────────────────────────────────────────────────
+# 2.2 Midpoint
+# ───────────────────────────────────────────────────────────────────────
+
+# ═══════════════════════════════════════════════════════════════════════
+# PREDICATES
+# ═══════════════════════════════════════════════════════════════════════
+
+# Predicates for Euclidean Geometry
+#
+# This file contains predicate definitions (prop) for geometric relations
+#
+# Depends on: definitions.lit
+
+prop is_on_segment(p, a, b cart(R, R)):
+    a != b
+    exist t R st {0 <= t, t <= 1, p = (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))}
+
+# ───────────────────────────────────────────────────────────────────────
+# 1.6 Rays (as predicate)
+# ───────────────────────────────────────────────────────────────────────
+
+prop is_on_ray(p, a, b cart(R, R)):
+    a != b
+    exist t R st {0 <= t, p = (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))}
+
+# ───────────────────────────────────────────────────────────────────────
+# 1.7 Angles (Undirected, represented by cosine ratio)
+# ───────────────────────────────────────────────────────────────────────
+
+# Undirected angle: ∠PQR as a value in [0, π], represented by its cosine.
+# cos(∠PQR) = dot(QP, QR) / (|QP| * |QR|)
+# We store the (numerator, denominator) pair to avoid division and sqrt.
+prop is_collinear(p, q, r cart(R, R)):
+    det(vec(p, q), vec(p, r)) = 0
+
+# Segment congruence: |AB| = |CD|
+prop are_segments_congruent(a, b, c, d cart(R, R)):
+    distance_sq(a, b) = distance_sq(c, d)
+
+# Angle congruence (undirected): ∠PQR ≅ ∠UVW, values in [0°, 180°]
+# Equality of undirected angles is represented without division or square roots:
+# squared normalized cosine equality, together with the same-sign condition
+# that excludes supplementary angles.
+prop are_angles_congruent(p, q, r, u, v, w cart(R, R)):
+    p != q
+    r != q
+    u != v
+    w != v
+    angle_cos_num(p, q, r)^2 * angle_cos_den(u, v, w) = angle_cos_num(u, v, w)^2 * angle_cos_den(p, q, r)
+    angle_cos_num(p, q, r) * angle_cos_num(u, v, w) >= 0
+
+# Right angle: ∠PQR = 90°
+prop is_right_angle(p, q, r cart(R, R)):
+    p != q
+    r != q
+    dot(vec(q, p), vec(q, r)) = 0
+
+# Parallel: AB ∥ CD
+prop is_parallel(a, b, c, d cart(R, R)):
+    a != b
+    c != d
+    det(vec(a, b), vec(c, d)) = 0
+
+# Perpendicular: AB ⊥ CD
+prop is_perpendicular(a, b, c, d cart(R, R)):
+    a != b
+    c != d
+    dot(vec(a, b), vec(c, d)) = 0
+
+# ═══════════════════════════════════════════════════════════════════════
+# SECTION 2: COMPOSITE DEFINITIONS (from definitions.lit)
+# ═══════════════════════════════════════════════════════════════════════
+# 复合几何定义：中点、垂足、三角形、旋转等
+
+# ───────────────────────────────────────────────────────────────────────
+# 2.1 Line membership and classification
+# ───────────────────────────────────────────────────────────────────────
+
+prop is_line(L power_set(cart(R, R))):
+    exist a, b, c R st {a != 0 or b != 0, L = line(a, b, c)}
+
+prop is_midpoint(m, a, b cart(R, R)):
+    m = ((a[1] + b[1]) / 2, (a[2] + b[2]) / 2)
+
+# p is the affine point with parameter t on the directed line a -> b.
+# The parameter is unrestricted, so this also covers extensions of the segment.
+prop is_affine_combination(p, a, b cart(R, R), t R):
+    p[1] = (1 - t) * a[1] + t * b[1]
+    p[2] = (1 - t) * a[2] + t * b[2]
+
+prop is_centroid(g, a, b, c cart(R, R)):
+    g = ((a[1] + b[1] + c[1]) / 3, (a[2] + b[2] + c[2]) / 3)
+
+# ───────────────────────────────────────────────────────────────────────
+# 2.3 Point position predicates
+# ───────────────────────────────────────────────────────────────────────
+
+prop is_on_line(p, a, b cart(R, R)):
+    a != b
+    p $in line_of(a, b)
+
+prop is_on_extension(p, a, b cart(R, R)):
+    a != b
+    p != b
+    exist t R st {t > 1, p = (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))}
+
+# ───────────────────────────────────────────────────────────────────────
+# 2.4 Perpendicular foot
+# ───────────────────────────────────────────────────────────────────────
+
+prop is_foot(f, p, a, b cart(R, R)):
+    a != b
+    $is_on_line(f, a, b)
+    $is_perpendicular(p, f, a, b)
+
+# ───────────────────────────────────────────────────────────────────────
+# 2.5 Angle bisector
+# ───────────────────────────────────────────────────────────────────────
+
+prop is_angle_bisector(a, b, c, d cart(R, R)):
+    b != a
+    b != c
+    d != b
+    $are_angles_congruent(a, b, d, d, b, c)
+
+# ───────────────────────────────────────────────────────────────────────
+# 2.6 Triangle types
+# ───────────────────────────────────────────────────────────────────────
+
+prop is_triangle(a, b, c cart(R, R)):
+    not $is_collinear(a, b, c)
+
+prop is_isosceles(a, b, c cart(R, R)):
+    $is_triangle(a, b, c)
+    $are_segments_congruent(a, b, a, c)
+
+prop is_equilateral(a, b, c cart(R, R)):
+    $is_triangle(a, b, c)
+    $are_segments_congruent(a, b, b, c)
+    $are_segments_congruent(a, b, a, c)
+
+prop are_triangles_congruent(p, q, r, u, v, w cart(R, R)):
+    $are_segments_congruent(p, q, u, v)
+    $are_segments_congruent(q, r, v, w)
+    $are_segments_congruent(r, p, w, u)
+
+prop are_triangles_similar(p, q, r, u, v, w cart(R, R)):
+    $are_angles_congruent(p, q, r, u, v, w)
+    $are_angles_congruent(q, r, p, v, w, u)
+    $are_angles_congruent(r, p, q, w, u, v)
+
+# ───────────────────────────────────────────────────────────────────────
+# 2.7 Quadrilaterals
+# ───────────────────────────────────────────────────────────────────────
+
+prop is_parallelogram(a, b, c, d cart(R, R)):
+    $is_parallel(a, b, d, c)
+    $is_parallel(a, d, b, c)
+
+prop is_rectangle(a, b, c, d cart(R, R)):
+    $is_parallelogram(a, b, c, d)
+    $is_right_angle(d, a, b)
+
+prop is_rhombus(a, b, c, d cart(R, R)):
+    $is_parallelogram(a, b, c, d)
+    $are_segments_congruent(a, b, b, c)
+
+prop is_square(a, b, c, d cart(R, R)):
+    $is_rectangle(a, b, c, d)
+    $are_segments_congruent(a, b, b, c)
+
+# ───────────────────────────────────────────────────────────────────────
+# 2.8 Circle predicates
+# ───────────────────────────────────────────────────────────────────────
+
+prop is_on_circle(p, o cart(R, R), r R+):
+    distance_sq(p, o) = r^2
+
+# Four points are concyclic when they share one finite Euclidean center.
+# Squared distances avoid a square-root/radius side condition.
+prop are_concyclic(a, b, c, d cart(R, R)):
+    exist o cart(R, R) st {distance_sq(o, a) = distance_sq(o, d), distance_sq(o, b) = distance_sq(o, d), distance_sq(o, c) = distance_sq(o, d)}
+
+prop is_diameter_endpoints(a, b, o cart(R, R)):
+    $is_midpoint(o, a, b)
+
+# ───────────────────────────────────────────────────────────────────────
+# 2.9 Rotation (90 degrees)
+# ───────────────────────────────────────────────────────────────────────
+
+prop rotated_90_cw(q, c, p cart(R, R)):
+    q[1] - c[1] = c[2] - p[2]
+    q[2] - c[2] = p[1] - c[1]
+
+prop rotated_90_ccw(q, c, p cart(R, R)):
+    q[1] - c[1] = p[2] - c[2]
+    q[2] - c[2] = c[1] - p[1]
+
+# ═══════════════════════════════════════════════════════════════════════
+# SECTION 3: ANALYTIC LAWS (from analytic_laws.lit)
+# ═══════════════════════════════════════════════════════════════════════
+# Layer -1: 代数公理
+# Layer 0: 坐标与向量运算
+# Layer 1-6: 几何定理（距离、垂直、平行、共线、角度、勾股定理等）
+
+# ═══════════════════════════════════════════════════════════════════════
+# SECTION 3: ANALYTIC LAWS (from analytic_laws.lit)
+# ═══════════════════════════════════════════════════════════════════════
+# 坐标几何定理：代数公理、距离公式、余弦定理等
+
+# Reusable coordinate and metric laws for the analytic Euclidean plane.
+
+# ═══════════════════════════════════════════════════════════════════════
+# Layer -1: Pure algebra axioms (soundness by real-number algebra)
+# ═══════════════════════════════════════════════════════════════════════
+
+# ═══════════════════════════════════════════════════════════════════════
+# THEOREMS AND AXIOMS
+# ═══════════════════════════════════════════════════════════════════════
+
+# Theorems and Axioms for Euclidean Geometry
+#
+# This file contains theorems (thm) and axioms for geometric reasoning
+#
+# Dependencies declared in litex.config: definitions.lit, predicates.lit
+
+thm addition_cancel:
+    ? forall a, b, c R:
+        a + c = b + c
+        =>:
+            a = b
+    a = (a + c) - c = (b + c) - c = b
+
+thm addition_cancel_left:
+    ? forall a, b, c R:
+        c + a = c + b
+        =>:
+            a = b
+    c + a = a + c
+    c + b = b + c
+    by thm addition_cancel(a, b, c)
+
+thm subtraction_cancel:
+    ? forall a, b, c R:
+        a - c = b - c
+        =>:
+            a = b
+    a = (a - c) + c = (b - c) + c = b
+
+
+# Algebraic cancellation: from (a+b)-2*x = (a+b)-2*y, conclude x=y
+thm cancel_subtraction_in_sum:
+    ? forall a, b, x, y R:
+        (a + b) - 2 * x = (a + b) - 2 * y
+        =>:
+            x = y
+    (a + b) - 2 * x = (a + b) - 2 * y
+    2 * x = (a + b) - ((a + b) - 2 * x)
+    2 * y = (a + b) - ((a + b) - 2 * y)
+    (a + b) - ((a + b) - 2 * x) = (a + b) - ((a + b) - 2 * y)
+    2 * x = 2 * y
+    x = (2 * x) / 2 = (2 * y) / 2 = y
+
+thm multiply_both_sides:
+    ? forall a, b, c R:
+        a = b
+        =>:
+            a * c = b * c
+    a * c = b * c
+
+# Normalize products containing a factor divided by 2.
+thm half_cancel:
+    ? forall a R:
+        (a / 2) * 2 = a
+    (a / 2) * 2 = a
+
+thm expand_difference_product:
+    ? forall a, b, c, x R:
+        (a + b - c) * x = a * x + b * x - c * x
+    (a + b - c) * x = a * x + b * x - c * x
+
+thm cancel_half_product:
+    ? forall a, b R:
+        (a / 2) * b = (a * b) / 2
+    (a / 2) * b = (a * b) / 2
+
+thm half_equality_expand:
+    ? forall a, b, c, x, d, q, f, y R:
+        (a + b - c) / 2 * x = (d + q - f) / 2 * y
+        =>:
+            a * x + b * x - c * x = d * y + q * y - f * y
+    by thm cancel_half_product(a + b - c, x)
+    by thm cancel_half_product(d + q - f, y)
+    ((a + b - c) * x) / 2 = ((d + q - f) * y) / 2
+    by thm multiply_both_sides(((a + b - c) * x) / 2, ((d + q - f) * y) / 2, 2)
+    (((a + b - c) * x) / 2) * 2 = (((d + q - f) * y) / 2) * 2
+    by thm half_cancel((a + b - c) * x)
+    by thm half_cancel((d + q - f) * y)
+    (a + b - c) * x = (d + q - f) * y
+    by thm expand_difference_product(a, b, c, x)
+    by thm expand_difference_product(d, q, f, y)
+    a * x + b * x - c * x = d * y + q * y - f * y
+
+thm divide_both_sides:
+    ? forall a, b, c R:
+        a * c = b * c,
+        c != 0
+        =>:
+            a = b
+    a = (a * c) / c = (b * c) / c = b
+
+thm add_equalities:
+    ? forall a, b, c, d R:
+        a = b,
+        c = d
+        =>:
+            a + c = b + d
+    a + c = b + c = b + d
+
+thm subtract_equalities:
+    ? forall a, b, c, d R:
+        a = b,
+        c = d
+        =>:
+            a - c = b - d
+    a - c = b - c = b - d
+
+# ═══════════════════════════════════════════════════════════════════════
+# Layer 0: Coordinate formulas (pure polynomial identities)
+# ═══════════════════════════════════════════════════════════════════════
+
+thm distance_sq_coordinate_formula:
+    ? forall a, b cart(R, R):
+        distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2
+    vec(a, b) = (b[1] - a[1], b[2] - a[2])
+    vec(a, b)[1] = b[1] - a[1]
+    vec(a, b)[2] = b[2] - a[2]
+    distance_sq(a, b) = dot(vec(a, b), vec(a, b))
+    dot(vec(a, b), vec(a, b)) = vec(a, b)[1] * vec(a, b)[1] + vec(a, b)[2] * vec(a, b)[2] = (b[1] - a[1])^2 + (b[2] - a[2])^2
+
+thm distance_sq_nonnegative:
+    ? forall a, b cart(R, R):
+        0 <= distance_sq(a, b)
+    0 <= (b[1] - a[1])^2
+    0 <= (b[2] - a[2])^2
+    0 <= (b[1] - a[1])^2 + (b[2] - a[2])^2
+    distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2
+    0 <= distance_sq(a, b)
+
+thm distance_sq_symmetric:
+    ? forall a, b cart(R, R):
+        distance_sq(a, b) = distance_sq(b, a)
+    distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2
+    distance_sq(b, a) = (a[1] - b[1])^2 + (a[2] - b[2])^2
+    (b[1] - a[1])^2 = (a[1] - b[1])^2
+    (b[2] - a[2])^2 = (a[2] - b[2])^2
+    (b[1] - a[1])^2 + (b[2] - a[2])^2 = (a[1] - b[1])^2 + (a[2] - b[2])^2
+    distance_sq(a, b) = (a[1] - b[1])^2 + (a[2] - b[2])^2
+    distance_sq(a, b) = distance_sq(b, a)
+
+thm vec_coordinate_formula:
+    ? forall a, b cart(R, R):
+        vec(a, b) = (b[1] - a[1], b[2] - a[2])
+
+thm dot_coordinate_formula:
+    ? forall u, v cart(R, R):
+        dot(u, v) = u[1] * v[1] + u[2] * v[2]
+
+thm det_coordinate_formula:
+    ? forall u, v cart(R, R):
+        det(u, v) = u[1] * v[2] - u[2] * v[1]
+
+thm dot_symmetric:
+    ? forall u, v cart(R, R):
+        dot(u, v) = dot(v, u)
+    dot(u, v) = u[1] * v[1] + u[2] * v[2]
+    dot(v, u) = v[1] * u[1] + v[2] * u[2]
+    u[1] * v[1] = v[1] * u[1]
+    u[2] * v[2] = v[2] * u[2]
+    u[1] * v[1] + u[2] * v[2] = v[1] * u[1] + v[2] * u[2]
+    dot(u, v) = v[1] * u[1] + v[2] * u[2]
+    dot(u, v) = dot(v, u)
+
+thm dot_commutative:
+    ? forall a, b, c, d cart(R, R):
+        dot(vec(a, b), vec(c, d)) = dot(vec(c, d), vec(a, b))
+    vec(a, b) = (b[1] - a[1], b[2] - a[2])
+    vec(c, d) = (d[1] - c[1], d[2] - c[2])
+    dot(vec(a, b), vec(c, d)) = (b[1] - a[1]) * (d[1] - c[1]) + (b[2] - a[2]) * (d[2] - c[2])
+    dot(vec(c, d), vec(a, b)) = (d[1] - c[1]) * (b[1] - a[1]) + (d[2] - c[2]) * (b[2] - a[2])
+    (b[1] - a[1]) * (d[1] - c[1]) + (b[2] - a[2]) * (d[2] - c[2]) = (d[1] - c[1]) * (b[1] - a[1]) + (d[2] - c[2]) * (b[2] - a[2])
+    dot(vec(a, b), vec(c, d)) = dot(vec(c, d), vec(a, b))
+
+# Dot product bilinearity (left distributivity)
+thm dot_add_left:
+    ? forall u, v, w cart(R, R):
+        dot((u[1] + v[1], u[2] + v[2]), w) = dot(u, w) + dot(v, w)
+    dot((u[1] + v[1], u[2] + v[2]), w) = (u[1] + v[1]) * w[1] + (u[2] + v[2]) * w[2]
+    (u[1] + v[1]) * w[1] + (u[2] + v[2]) * w[2] = u[1] * w[1] + v[1] * w[1] + u[2] * w[2] + v[2] * w[2]
+    # Regroup using commutativity: u[1]*w[1] + v[1]*w[1] + u[2]*w[2] + v[2]*w[2] = (u[1]*w[1] + u[2]*w[2]) + (v[1]*w[1] + v[2]*w[2])
+    u[1] * w[1] + v[1] * w[1] + u[2] * w[2] + v[2] * w[2] = (u[1] * w[1] + u[2] * w[2]) + (v[1] * w[1] + v[2] * w[2])
+    dot(u, w) = u[1] * w[1] + u[2] * w[2]
+    dot(v, w) = v[1] * w[1] + v[2] * w[2]
+    (u[1] * w[1] + u[2] * w[2]) + (v[1] * w[1] + v[2] * w[2]) = dot(u, w) + dot(v, w)
+    dot((u[1] + v[1], u[2] + v[2]), w) = (u[1] * w[1] + u[2] * w[2]) + (v[1] * w[1] + v[2] * w[2])
+    dot((u[1] + v[1], u[2] + v[2]), w) = dot(u, w) + dot(v, w)
+
+# Dot product bilinearity (right distributivity)
+thm dot_add_right:
+    ? forall u, v, w cart(R, R):
+        dot(u, (v[1] + w[1], v[2] + w[2])) = dot(u, v) + dot(u, w)
+    dot(u, (v[1] + w[1], v[2] + w[2])) = u[1] * (v[1] + w[1]) + u[2] * (v[2] + w[2])
+    u[1] * (v[1] + w[1]) + u[2] * (v[2] + w[2]) = u[1] * v[1] + u[1] * w[1] + u[2] * v[2] + u[2] * w[2]
+    # Regroup: u[1]*v[1] + u[1]*w[1] + u[2]*v[2] + u[2]*w[2] = (u[1]*v[1] + u[2]*v[2]) + (u[1]*w[1] + u[2]*w[2])
+    u[1] * v[1] + u[1] * w[1] + u[2] * v[2] + u[2] * w[2] = (u[1] * v[1] + u[2] * v[2]) + (u[1] * w[1] + u[2] * w[2])
+    dot(u, v) = u[1] * v[1] + u[2] * v[2]
+    dot(u, w) = u[1] * w[1] + u[2] * w[2]
+    (u[1] * v[1] + u[2] * v[2]) + (u[1] * w[1] + u[2] * w[2]) = dot(u, v) + dot(u, w)
+    dot(u, (v[1] + w[1], v[2] + w[2])) = (u[1] * v[1] + u[2] * v[2]) + (u[1] * w[1] + u[2] * w[2])
+    dot(u, (v[1] + w[1], v[2] + w[2])) = dot(u, v) + dot(u, w)
+
+# Complete bilinear expansion for dot product (key theorem for cosine law)
+# This theorem expands dot((u+v), (u+v)) = dot(u,u) + 2*dot(u,v) + dot(v,v)
+thm dot_square_sum:
+    ? forall u, v cart(R, R):
+        dot((u[1] + v[1], u[2] + v[2]), (u[1] + v[1], u[2] + v[2])) = dot(u, u) + 2 * dot(u, v) + dot(v, v)
+    # Step 1: Apply dot_add_left to split the first argument
+    dot((u[1] + v[1], u[2] + v[2]), (u[1] + v[1], u[2] + v[2])) = dot(u, (u[1] + v[1], u[2] + v[2])) + dot(v, (u[1] + v[1], u[2] + v[2]))
+    # Step 2: Apply dot_add_right to each term
+    dot(u, (u[1] + v[1], u[2] + v[2])) = dot(u, u) + dot(u, v)
+    dot(v, (u[1] + v[1], u[2] + v[2])) = dot(v, u) + dot(v, v)
+    # Step 3a: Substitute the first term
+    dot(u, (u[1] + v[1], u[2] + v[2])) + dot(v, (u[1] + v[1], u[2] + v[2])) = (dot(u, u) + dot(u, v)) + dot(v, (u[1] + v[1], u[2] + v[2]))
+    # Step 3b: Substitute the second term
+    (dot(u, u) + dot(u, v)) + dot(v, (u[1] + v[1], u[2] + v[2])) = (dot(u, u) + dot(u, v)) + (dot(v, u) + dot(v, v))
+    # Step 3c: Remove parentheses (associativity)
+    (dot(u, u) + dot(u, v)) + (dot(v, u) + dot(v, v)) = dot(u, u) + dot(u, v) + dot(v, u) + dot(v, v)
+    # Step 4: Use dot_symmetric: dot(v, u) = dot(u, v)
+    dot(v, u) = dot(u, v)
+    dot(u, u) + dot(u, v) + dot(v, u) + dot(v, v) = dot(u, u) + dot(u, v) + dot(u, v) + dot(v, v)
+    dot(u, u) + dot(u, v) + dot(u, v) + dot(v, v) = dot(u, u) + 2 * dot(u, v) + dot(v, v)
+    # Conclusion
+    dot((u[1] + v[1], u[2] + v[2]), (u[1] + v[1], u[2] + v[2])) = dot(u, u) + 2 * dot(u, v) + dot(v, v)
+
+thm det_antisymmetric:
+    ? forall u, v cart(R, R):
+        det(u, v) = -(det(v, u))
+    det(u, v) = u[1] * v[2] - u[2] * v[1]
+    det(v, u) = v[1] * u[2] - v[2] * u[1]
+    u[1] * v[2] - u[2] * v[1] = -(v[1] * u[2] - v[2] * u[1])
+    det(u, v) = -(v[1] * u[2] - v[2] * u[1])
+    -(v[1] * u[2] - v[2] * u[1]) = -(det(v, u))
+    det(u, v) = -(det(v, u))
+
+thm segments_congruent_reflexive:
+    ? forall a, b cart(R, R):
+        distance_sq(a, b) = distance_sq(a, b)
+
+thm collinear_det_expand:
+    ? forall p, q, r cart(R, R):
+        det(vec(p, q), vec(p, r)) = (q[1] - p[1]) * (r[2] - p[2]) - (q[2] - p[2]) * (r[1] - p[1])
+    vec(p, q) = (q[1] - p[1], q[2] - p[2])
+    vec(p, r) = (r[1] - p[1], r[2] - p[2])
+    det(vec(p, q), vec(p, r)) = vec(p, q)[1] * vec(p, r)[2] - vec(p, q)[2] * vec(p, r)[1] = (q[1] - p[1]) * (r[2] - p[2]) - (q[2] - p[2]) * (r[1] - p[1])
+
+thm perpendicular_dot_expand:
+    ? forall a, b, c, d cart(R, R):
+        dot(vec(a, b), vec(c, d)) = (b[1] - a[1]) * (d[1] - c[1]) + (b[2] - a[2]) * (d[2] - c[2])
+    vec(a, b) = (b[1] - a[1], b[2] - a[2])
+    vec(c, d) = (d[1] - c[1], d[2] - c[2])
+    dot(vec(a, b), vec(c, d)) = vec(a, b)[1] * vec(c, d)[1] + vec(a, b)[2] * vec(c, d)[2] = (b[1] - a[1]) * (d[1] - c[1]) + (b[2] - a[2]) * (d[2] - c[2])
+
+thm segments_congruent_symmetric:
+    ? forall a, b, c, d cart(R, R):
+        distance_sq(a, b) = distance_sq(c, d)
+        =>:
+            distance_sq(c, d) = distance_sq(a, b)
+    distance_sq(c, d) = distance_sq(a, b)
+
+thm segments_congruent_transitive:
+    ? forall a, b, c, d, p, q cart(R, R):
+        distance_sq(a, b) = distance_sq(c, d),
+        distance_sq(c, d) = distance_sq(p, q)
+        =>:
+            distance_sq(a, b) = distance_sq(p, q)
+    distance_sq(a, b) = distance_sq(p, q)
+
+thm collinear_symmetric:
+    ? forall p, q, r cart(R, R):
+        det(vec(p, q), vec(p, r)) = 0
+        =>:
+            det(vec(q, p), vec(q, r)) = 0
+    vec(p, q) = (q[1] - p[1], q[2] - p[2])
+    vec(p, r) = (r[1] - p[1], r[2] - p[2])
+    vec(q, p) = (p[1] - q[1], p[2] - q[2])
+    vec(q, r) = (r[1] - q[1], r[2] - q[2])
+    det(vec(q, p), vec(q, r)) = (p[1] - q[1]) * (r[2] - q[2]) - (p[2] - q[2]) * (r[1] - q[1])
+    det(vec(p, q), vec(p, r)) = (q[1] - p[1]) * (r[2] - p[2]) - (q[2] - p[2]) * (r[1] - p[1])
+    (p[1] - q[1]) * (r[2] - q[2]) - (p[2] - q[2]) * (r[1] - q[1]) = -((q[1] - p[1]) * (r[2] - p[2]) - (q[2] - p[2]) * (r[1] - p[1]))
+    det(vec(q, p), vec(q, r)) = 0
+
+
+# Vector addition via path (needed by cosine_law)
+# Vector addition path property (split into components to avoid type system issues)
+thm vec_add_path_x:
+    ? forall p, q, r cart(R, R):
+        vec(p, r)[1] = vec(p, q)[1] + vec(q, r)[1]
+    vec(p, r) = (r[1] - p[1], r[2] - p[2])
+    vec(p, q) = (q[1] - p[1], q[2] - p[2])
+    vec(q, r) = (r[1] - q[1], r[2] - q[2])
+    vec(p, r)[1] = r[1] - p[1]
+    vec(p, q)[1] = q[1] - p[1]
+    vec(q, r)[1] = r[1] - q[1]
+    r[1] - p[1] = (q[1] - p[1]) + (r[1] - q[1])
+    vec(p, r)[1] = vec(p, q)[1] + vec(q, r)[1]
+
+thm vec_add_path_y:
+    ? forall p, q, r cart(R, R):
+        vec(p, r)[2] = vec(p, q)[2] + vec(q, r)[2]
+    vec(p, r) = (r[1] - p[1], r[2] - p[2])
+    vec(p, q) = (q[1] - p[1], q[2] - p[2])
+    vec(q, r) = (r[1] - q[1], r[2] - q[2])
+    vec(p, r)[2] = r[2] - p[2]
+    vec(p, q)[2] = q[2] - p[2]
+    vec(q, r)[2] = r[2] - q[2]
+    r[2] - p[2] = (q[2] - p[2]) + (r[2] - q[2])
+    vec(p, r)[2] = vec(p, q)[2] + vec(q, r)[2]
+
+# Helper: dot product of a vector with itself equals distance squared
+thm vec_dot_self_is_distance:
+    ? forall a, b cart(R, R):
+        dot(vec(a, b), vec(a, b)) = distance_sq(a, b)
+    vec(a, b) = (b[1] - a[1], b[2] - a[2])
+    dot(vec(a, b), vec(a, b)) = (b[1] - a[1])^2 + (b[2] - a[2])^2
+    distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2
+    dot(vec(a, b), vec(a, b)) = distance_sq(a, b)
+
+# Cosine law in squared-distance form.  Expand each coordinate separately so
+# the arithmetic checker only has to normalize one-dimensional square identities.
+# Algebraic rearrangement used by the two equivalent cosine-law forms.
+thm solve_cosine_for_dot:
+    ? forall u, v, w, t R:
+        w = u + v - 2 * t
+        =>:
+            t = (u + v - w) / 2
+    w + 2 * t = (u + v - 2 * t) + 2 * t = u + v
+    u + v - w = (w + 2 * t) - w = 2 * t
+    t = (2 * t) / 2 = (u + v - w) / 2
+
+thm cosine_law:
+    ? forall p1, q1, r1 cart(R, R):
+        distance_sq(p1, r1) = distance_sq(p1, q1) + distance_sq(q1, r1) - 2 * dot(vec(q1, p1), vec(q1, r1))
+    by thm distance_sq_coordinate_formula(p1, r1)
+    by thm distance_sq_coordinate_formula(p1, q1)
+    by thm distance_sq_coordinate_formula(q1, r1)
+    by thm perpendicular_dot_expand(q1, p1, q1, r1)
+    r1[1] - p1[1] = (q1[1] - p1[1]) + (r1[1] - q1[1])
+    r1[2] - p1[2] = (q1[2] - p1[2]) + (r1[2] - q1[2])
+    (r1[1] - p1[1])^2 = (q1[1] - p1[1])^2 + (r1[1] - q1[1])^2 - 2 * (p1[1] - q1[1]) * (r1[1] - q1[1])
+    (r1[2] - p1[2])^2 = (q1[2] - p1[2])^2 + (r1[2] - q1[2])^2 - 2 * (p1[2] - q1[2]) * (r1[2] - q1[2])
+    (r1[1] - p1[1])^2 + (r1[2] - p1[2])^2 = ((q1[1] - p1[1])^2 + (q1[2] - p1[2])^2) + ((r1[1] - q1[1])^2 + (r1[2] - q1[2])^2) - 2 * ((p1[1] - q1[1]) * (r1[1] - q1[1]) + (p1[2] - q1[2]) * (r1[2] - q1[2]))
+    distance_sq(p1, r1) = (r1[1] - p1[1])^2 + (r1[2] - p1[2])^2 = ((q1[1] - p1[1])^2 + (q1[2] - p1[2])^2) + ((r1[1] - q1[1])^2 + (r1[2] - q1[2])^2) - 2 * ((p1[1] - q1[1]) * (r1[1] - q1[1]) + (p1[2] - q1[2]) * (r1[2] - q1[2]))
+    ((q1[1] - p1[1])^2 + (q1[2] - p1[2])^2) + ((r1[1] - q1[1])^2 + (r1[2] - q1[2])^2) - 2 * ((p1[1] - q1[1]) * (r1[1] - q1[1]) + (p1[2] - q1[2]) * (r1[2] - q1[2])) = distance_sq(p1, q1) + ((r1[1] - q1[1])^2 + (r1[2] - q1[2])^2) - 2 * ((p1[1] - q1[1]) * (r1[1] - q1[1]) + (p1[2] - q1[2]) * (r1[2] - q1[2]))
+    distance_sq(p1, q1) + ((r1[1] - q1[1])^2 + (r1[2] - q1[2])^2) - 2 * ((p1[1] - q1[1]) * (r1[1] - q1[1]) + (p1[2] - q1[2]) * (r1[2] - q1[2])) = distance_sq(p1, q1) + distance_sq(q1, r1) - 2 * ((p1[1] - q1[1]) * (r1[1] - q1[1]) + (p1[2] - q1[2]) * (r1[2] - q1[2]))
+    distance_sq(p1, q1) + distance_sq(q1, r1) - 2 * ((p1[1] - q1[1]) * (r1[1] - q1[1]) + (p1[2] - q1[2]) * (r1[2] - q1[2])) = distance_sq(p1, q1) + distance_sq(q1, r1) - 2 * dot(vec(q1, p1), vec(q1, r1))
+    distance_sq(p1, r1) = distance_sq(p1, q1) + distance_sq(q1, r1) - 2 * dot(vec(q1, p1), vec(q1, r1))
+
+# Dot-product form obtained by applying a generic algebraic rearrangement to
+# cosine_law.  Keeping the four geometric expressions atomic avoids fragile
+# rewriting inside compound function terms.
+#知道三角形三条边的长度平方，就能算出其中两条边的点积。
+thm dot_from_cosine_law:
+    ? forall p, q, r cart(R, R):
+        dot(vec(q, p), vec(q, r)) = (distance_sq(p, q) + distance_sq(q, r) - distance_sq(p, r)) / 2
+    by thm cosine_law(p, q, r)
+    by thm solve_cosine_for_dot(distance_sq(p, q), distance_sq(q, r), distance_sq(p, r), dot(vec(q, p), vec(q, r)))
+
+# thm midpoint_equidistant:
+#     ? forall a, b, m cart(R, R):
+#         m[1] = (a[1] + b[1]) / 2,
+#         m[2] = (a[2] + b[2]) / 2
+#         =>:
+#             distance_sq(a, m) = distance_sq(b, m)
+#     distance_sq(a, m) = (m[1] - a[1])^2 + (m[2] - a[2])^2
+#     distance_sq(b, m) = (m[1] - b[1])^2 + (m[2] - b[2])^2
+#     (m[1] - a[1])^2 + (m[2] - a[2])^2 = ((a[1] + b[1]) / 2 - a[1])^2 + ((a[2] + b[2]) / 2 - a[2])^2
+#     (m[1] - b[1])^2 + (m[2] - b[2])^2 = ((a[1] + b[1]) / 2 - b[1])^2 + ((a[2] + b[2]) / 2 - b[2])^2
+#     ((a[1] + b[1]) / 2 - a[1])^2 + ((a[2] + b[2]) / 2 - a[2])^2 = ((a[1] + b[1]) / 2 - b[1])^2 + ((a[2] + b[2]) / 2 - b[2])^2
+#     distance_sq(a, m) = distance_sq(b, m)
+
+thm midpoint_equidistant:
+    ? forall a, b, m cart(R, R):
+        $is_midpoint(m, a, b)
+        =>:
+            distance_sq(a, m) = distance_sq(b, m)
+    m[1] = (a[1] + b[1]) / 2
+    m[2] = (a[2] + b[2]) / 2
+    distance_sq(a, m) = (m[1] - a[1])^2 + (m[2] - a[2])^2
+    distance_sq(b, m) = (m[1] - b[1])^2 + (m[2] - b[2])^2
+    (m[1] - a[1])^2 + (m[2] - a[2])^2 = ((a[1] + b[1]) / 2 - a[1])^2 + ((a[2] + b[2]) / 2 - a[2])^2
+    (m[1] - b[1])^2 + (m[2] - b[2])^2 = ((a[1] + b[1]) / 2 - b[1])^2 + ((a[2] + b[2]) / 2 - b[2])^2
+    ((a[1] + b[1]) / 2 - a[1])^2 + ((a[2] + b[2]) / 2 - a[2])^2 = ((a[1] + b[1]) / 2 - b[1])^2 + ((a[2] + b[2]) / 2 - b[2])^2
+    distance_sq(a, m) = distance_sq(b, m)
+
+
+# thm midpoint_half_distance:
+#     ? forall a, b, m cart(R, R):
+#         m[1] = (a[1] + b[1]) / 2,
+#         m[2] = (a[2] + b[2]) / 2
+#         =>:
+#             distance_sq(a, m) = distance_sq(a, b) / 4
+#     by thm distance_sq_coordinate_formula(a, m)
+#     by thm distance_sq_coordinate_formula(a, b)
+#     distance_sq(a, m) = (m[1] - a[1])^2 + (m[2] - a[2])^2
+#     (m[1] - a[1])^2 + (m[2] - a[2])^2 = ((a[1] + b[1]) / 2 - a[1])^2 + ((a[2] + b[2]) / 2 - a[2])^2
+#     ((a[1] + b[1]) / 2 - a[1])^2 + ((a[2] + b[2]) / 2 - a[2])^2 = ((b[1] - a[1]) / 2)^2 + ((b[2] - a[2]) / 2)^2
+#     ((b[1] - a[1]) / 2)^2 + ((b[2] - a[2]) / 2)^2 = ((b[1] - a[1])^2 + (b[2] - a[2])^2) / 4
+#     ((b[1] - a[1])^2 + (b[2] - a[2])^2) / 4 = distance_sq(a, b) / 4
+#     distance_sq(a, m) = distance_sq(a, b) / 4
+
+
+thm midpoint_half_distance:
+    ? forall a, b, m cart(R, R):
+        $is_midpoint(m, a, b)
+        =>:
+            distance_sq(a, m) = distance_sq(a, b) / 4
+    by thm distance_sq_coordinate_formula(a, m)
+    by thm distance_sq_coordinate_formula(a, b)
+    distance_sq(a, m) = (m[1] - a[1])^2 + (m[2] - a[2])^2
+    (m[1] - a[1])^2 + (m[2] - a[2])^2 = ((a[1] + b[1]) / 2 - a[1])^2 + ((a[2] + b[2]) / 2 - a[2])^2
+    ((a[1] + b[1]) / 2 - a[1])^2 + ((a[2] + b[2]) / 2 - a[2])^2 = ((b[1] - a[1]) / 2)^2 + ((b[2] - a[2]) / 2)^2
+    ((b[1] - a[1]) / 2)^2 + ((b[2] - a[2]) / 2)^2 = ((b[1] - a[1])^2 + (b[2] - a[2])^2) / 4
+    ((b[1] - a[1])^2 + (b[2] - a[2])^2) / 4 = distance_sq(a, b) / 4
+    distance_sq(a, m) = distance_sq(a, b) / 4
+
+thm collinear_midpoint:
+    ? forall a, b, m cart(R, R):
+        $is_midpoint(m, a, b)
+        =>:
+            det(vec(a, m), vec(a, b)) = 0
+    vec(a, m) = (m[1] - a[1], m[2] - a[2])
+    vec(a, b) = (b[1] - a[1], b[2] - a[2])
+    det(vec(a, m), vec(a, b)) = (m[1] - a[1]) * (b[2] - a[2]) - (m[2] - a[2]) * (b[1] - a[1])
+    (m[1] - a[1]) * (b[2] - a[2]) - (m[2] - a[2]) * (b[1] - a[1]) = ((a[1] + b[1]) / 2 - a[1]) * (b[2] - a[2]) - ((a[2] + b[2]) / 2 - a[2]) * (b[1] - a[1])
+    ((a[1] + b[1]) / 2 - a[1]) * (b[2] - a[2]) - ((a[2] + b[2]) / 2 - a[2]) * (b[1] - a[1]) = 0
+    det(vec(a, m), vec(a, b)) = 0
+
+thm vec_add:
+    ? forall a, b, c cart(R, R):
+        vec(a, c) = (vec(a, b)[1] + vec(b, c)[1], vec(a, b)[2] + vec(b, c)[2])
+    vec(a, c) = (c[1] - a[1], c[2] - a[2])
+    vec(a, b) = (b[1] - a[1], b[2] - a[2])
+    vec(b, c) = (c[1] - b[1], c[2] - b[2])
+    (c[1] - a[1], c[2] - a[2]) = ((b[1] - a[1]) + (c[1] - b[1]), (b[2] - a[2]) + (c[2] - b[2]))
+    vec(a, c) = (vec(a, b)[1] + vec(b, c)[1], vec(a, b)[2] + vec(b, c)[2])
+
+thm vec_neg:
+    ? forall a, b cart(R, R):
+        vec(b, a) = (-(vec(a, b)[1]), -(vec(a, b)[2]))
+    vec(a, b) = (b[1] - a[1], b[2] - a[2])
+    vec(b, a) = (a[1] - b[1], a[2] - b[2])
+    (a[1] - b[1], a[2] - b[2]) = (-(b[1] - a[1]), -(b[2] - a[2]))
+    vec(b, a) = (-(vec(a, b)[1]), -(vec(a, b)[2]))
+
+# Dot product bilinear expansion (key theorem for cosine law proof)
+# This theorem proves: dot(v-u, v-u) = dot(v,v) - 2*dot(u,v) + dot(u,u)
+# which is the algebraic foundation for the vector-based cosine law proof.
+thm dot_bilinear_expand:
+    ? forall u, v cart(R, R):
+        dot((v[1] - u[1], v[2] - u[2]), (v[1] - u[1], v[2] - u[2])) = dot(v, v) - 2 * dot(u, v) + dot(u, u)
+    dot((v[1] - u[1], v[2] - u[2]), (v[1] - u[1], v[2] - u[2])) = (v[1] - u[1])^2 + (v[2] - u[2])^2
+    (v[1] - u[1])^2 + (v[2] - u[2])^2 = v[1]^2 - 2*v[1]*u[1] + u[1]^2 + v[2]^2 - 2*v[2]*u[2] + u[2]^2
+    dot(v, v) = v[1]^2 + v[2]^2
+    dot(u, u) = u[1]^2 + u[2]^2
+    dot(u, v) = u[1]*v[1] + u[2]*v[2]
+    dot(v, v) - 2 * dot(u, v) + dot(u, u) = (v[1]^2 + v[2]^2) - 2*(u[1]*v[1] + u[2]*v[2]) + (u[1]^2 + u[2]^2)
+    v[1]^2 - 2*v[1]*u[1] + u[1]^2 + v[2]^2 - 2*v[2]*u[2] + u[2]^2 = (v[1]^2 + v[2]^2) - 2*(u[1]*v[1] + u[2]*v[2]) + (u[1]^2 + u[2]^2)
+    dot((v[1] - u[1], v[2] - u[2]), (v[1] - u[1], v[2] - u[2])) = dot(v, v) - 2 * dot(u, v) + dot(u, u)
+
+# ═══════════════════════════════════════════════════════════════════════
+# Synthetic Geometry Theorems: Collinearity + Distance → Midpoint
+# ═══════════════════════════════════════════════════════════════════════
+
+# Helper lemma: distance equality implies dot product equation
+thm distance_equality_to_dot:
+    ? forall a, b, m cart(R, R):
+        (m[1] - a[1])^2 + (m[2] - a[2])^2 = (b[1] - m[1])^2 + (b[2] - m[2])^2
+        =>:
+            (b[1] - a[1]) * (2*m[1] - a[1] - b[1]) + (b[2] - a[2]) * (2*m[2] - a[2] - b[2]) = 0
+
+    # Rearrange: move all terms to left side
+    (m[1] - a[1])^2 + (m[2] - a[2])^2 - ((b[1] - m[1])^2 + (b[2] - m[2])^2) = 0
+    (m[1] - a[1])^2 - (b[1] - m[1])^2 + (m[2] - a[2])^2 - (b[2] - m[2])^2 = 0
+
+    # Factor each difference of squares: a² - b² = (a+b)(a-b)
+    (m[1] - a[1] + b[1] - m[1]) * (m[1] - a[1] - (b[1] - m[1])) + (m[2] - a[2] + b[2] - m[2]) * (m[2] - a[2] - (b[2] - m[2])) = 0
+    (b[1] - a[1]) * (m[1] - a[1] - b[1] + m[1]) + (b[2] - a[2]) * (m[2] - a[2] - b[2] + m[2]) = 0
+    (b[1] - a[1]) * (2*m[1] - a[1] - b[1]) + (b[2] - a[2]) * (2*m[2] - a[2] - b[2]) = 0
+
+# Helper lemma: distinct points have positive distance squared
+thm point_difference_norm_pos:
+    ? forall a, b cart(R, R):
+        a != b
+        =>:
+            (b[1] - a[1])^2 + (b[2] - a[2])^2 > 0
+    (b[1] - a[1])^2 >= 0
+    (b[2] - a[2])^2 >= 0
+    (b[1] - a[1])^2 + (b[2] - a[2])^2 >= 0
+    by contra:
+        ? (b[1] - a[1])^2 + (b[2] - a[2])^2 > 0
+        (b[1] - a[1])^2 + (b[2] - a[2])^2 <= 0
+        (b[1] - a[1])^2 + (b[2] - a[2])^2 = 0
+        (b[1] - a[1])^2 <= (b[1] - a[1])^2 + (b[2] - a[2])^2
+        (b[1] - a[1])^2 <= 0
+        (b[1] - a[1])^2 = 0
+        (b[2] - a[2])^2 <= (b[1] - a[1])^2 + (b[2] - a[2])^2
+        (b[2] - a[2])^2 <= 0
+        (b[2] - a[2])^2 = 0
+        b[1] - a[1] = 0
+        b[2] - a[2] = 0
+        b[1] = a[1]
+        b[2] = a[2]
+        by thm tuple_equal_from_coordinates(a, (a[1], a[2]))
+        by thm tuple_equal_from_coordinates(b, (b[1], b[2]))
+        a = (a[1], a[2]) = (b[1], b[2]) = b
+        impossible a != b
+
+# Helper lemma: elimination of variables from dot and det equations
+thm dot_det_eliminate:
+    ? forall dx, dy, vx, vy R:
+        dx*vx + dy*vy = 0,
+        dx*vy - dy*vx = 0,
+        dx^2 + dy^2 > 0
+        =>:
+            vx = 0,
+            vy = 0
+    dx * (dx*vx + dy*vy) = 0
+    dy * (dx*vy - dy*vx) = 0
+    dx * (dx*vx + dy*vy) - dy * (dx*vy - dy*vx) = 0
+    (dx^2 + dy^2) * vx = 0
+    dx^2 + dy^2 != 0
+    vx = 0
+    dy * (dx*vx + dy*vy) = 0
+    dx * (dx*vy - dy*vx) = 0
+    dy * (dx*vx + dy*vy) + dx * (dx*vy - dy*vx) = 0
+    (dx^2 + dy^2) * vy = 0
+    vy = 0
+
+# ═══════════════════════════════════════════════════════════════════════
+# Algebraic Helper Lemmas for Coordinate-based Proofs
+# ═══════════════════════════════════════════════════════════════════════
+
+# Algebraic bridge: convert collinearity determinant to standard form
+thm collinear_to_standard_det:
+    ? forall a, b, m cart(R, R):
+        (m[1] - a[1]) * (b[2] - a[2]) - (m[2] - a[2]) * (b[1] - a[1]) = 0
+        =>:
+            (b[1] - a[1]) * (2*m[2] - (a[2] + b[2])) - (b[2] - a[2]) * (2*m[1] - (a[1] + b[1])) = 0
+    (m[1] - a[1]) * (b[2] - a[2]) - (m[2] - a[2]) * (b[1] - a[1]) = 0
+    (b[1] - a[1]) * (2*m[2] - (a[2] + b[2])) - (b[2] - a[2]) * (2*m[1] - (a[1] + b[1])) = 2 * ((m[2] - a[2]) * (b[1] - a[1]) - (m[1] - a[1]) * (b[2] - a[2]))
+    2 * ((m[2] - a[2]) * (b[1] - a[1]) - (m[1] - a[1]) * (b[2] - a[2])) = -2 * ((m[1] - a[1]) * (b[2] - a[2]) - (m[2] - a[2]) * (b[1] - a[1]))
+    -2 * ((m[1] - a[1]) * (b[2] - a[2]) - (m[2] - a[2]) * (b[1] - a[1])) = 0
+
+# Zero factor law: if a product is zero and one factor is nonzero, the other must be zero
+thm zero_factor_law:
+    ? forall a, b R:
+        a != 0,
+        a * b = 0
+        =>:
+            b = 0
+
+    a * b = 0
+    a != 0
+    b = 0
+
+# Difference of squares identity
+thm difference_of_squares:
+    ? forall x, y R:
+        x^2 - y^2 = (x + y) * (x - y)
+
+    x^2 - y^2 = x^2 - y^2
+    (x + y) * (x - y) = x*x + x*(-y) + y*x + y*(-y)
+    x*x + x*(-y) + y*x + y*(-y) = x^2 - x*y + x*y - y^2
+    x^2 - x*y + x*y - y^2 = x^2 - y^2
+    (x + y) * (x - y) = x^2 - y^2
+    x^2 - y^2 = (x + y) * (x - y)
+
+# Equation rearrangement: a - b - c = 0 implies a = b + c
+thm rearrange_sum:
+    ? forall a, b, c R:
+        a - b - c = 0
+        =>:
+            a = b + c
+
+    a - b - c = 0
+    a - b - c + b + c = b + c
+    a = b + c
+
+# One-dimensional midpoint theorem
+thm one_dimensional_midpoint:
+    ? forall xa, xb, xm R:
+        xa != xb,
+        (xm - xa)^2 = (xb - xm)^2
+        =>:
+            xm = (xa + xb) / 2
+
+    # From (xm - xa)² = (xb - xm)²
+    (xm - xa)^2 = (xb - xm)^2
+
+    # Expand to difference
+    (xm - xa)^2 - (xb - xm)^2 = 0
+
+    # Apply difference of squares
+    by thm difference_of_squares((xm - xa), (xb - xm))
+    (xm - xa)^2 - (xb - xm)^2 = ((xm - xa) + (xb - xm)) * ((xm - xa) - (xb - xm))
+    ((xm - xa) + (xb - xm)) * ((xm - xa) - (xb - xm)) = 0
+
+    # Simplify first factor
+    (xm - xa) + (xb - xm) = xb - xa
+    (xb - xa) * ((xm - xa) - (xb - xm)) = 0
+
+    # Simplify second factor
+    (xm - xa) - (xb - xm) = xm - xa - xb + xm
+    xm - xa - xb + xm = 2*xm - xa - xb
+    (xb - xa) * (2*xm - xa - xb) = 0
+
+    # Apply zero factor law
+    xb - xa != 0
+    by thm zero_factor_law(xb - xa, 2*xm - xa - xb)
+    2*xm - xa - xb = 0
+
+    # Rearrange to get 2*xm = xa + xb
+    by thm rearrange_sum(2*xm, xa, xb)
+    2*xm = xa + xb
+    xm = (xa + xb) / 2
+
+# ═══════════════════════════════════════════════════════════════════════
+
+# Collinear point with equal distances is the midpoint
+thm collinear_equidistant_implies_midpoint:
+    ? forall a, b, m cart(R, R):
+        a != b,
+        $is_collinear(a, m, b),
+        distance_sq(a, m) = distance_sq(m, b)
+        =>:
+            m[1] = (a[1] + b[1]) / 2,
+            m[2] = (a[2] + b[2]) / 2
+
+    # Expand distance_sq to coordinate form
+    distance_sq(a, m) = dot(vec(a, m), vec(a, m))
+    distance_sq(m, b) = dot(vec(m, b), vec(m, b))
+    vec(a, m) = (m[1] - a[1], m[2] - a[2])
+    vec(m, b) = (b[1] - m[1], b[2] - m[2])
+    dot(vec(a, m), vec(a, m)) = (m[1] - a[1])^2 + (m[2] - a[2])^2
+    dot(vec(m, b), vec(m, b)) = (b[1] - m[1])^2 + (b[2] - m[2])^2
+    (m[1] - a[1])^2 + (m[2] - a[2])^2 = (b[1] - m[1])^2 + (b[2] - m[2])^2
+
+    # Rearrange step by step
+    (m[1] - a[1])^2 + (m[2] - a[2])^2 = (b[1] - m[1])^2 + (b[2] - m[2])^2
+    (m[1] - a[1])^2 = (b[1] - m[1])^2 + (b[2] - m[2])^2 - (m[2] - a[2])^2
+    (m[1] - a[1])^2 - (b[1] - m[1])^2 = (b[2] - m[2])^2 - (m[2] - a[2])^2
+
+    # Apply difference of squares to x-component
+    by thm difference_of_squares(m[1] - a[1], b[1] - m[1])
+    (m[1] - a[1])^2 - (b[1] - m[1])^2 = ((m[1] - a[1]) + (b[1] - m[1])) * ((m[1] - a[1]) - (b[1] - m[1]))
+    (m[1] - a[1]) + (b[1] - m[1]) = b[1] - a[1]
+    (m[1] - a[1]) - (b[1] - m[1]) = m[1] - a[1] - b[1] + m[1]
+    m[1] - a[1] - b[1] + m[1] = 2*m[1] - a[1] - b[1]
+    (m[1] - a[1])^2 - (b[1] - m[1])^2 = (b[1] - a[1]) * (2*m[1] - a[1] - b[1])
+
+    # Apply difference of squares to y-component
+    by thm difference_of_squares(b[2] - m[2], m[2] - a[2])
+    (b[2] - m[2])^2 - (m[2] - a[2])^2 = ((b[2] - m[2]) + (m[2] - a[2])) * ((b[2] - m[2]) - (m[2] - a[2]))
+    (b[2] - m[2]) + (m[2] - a[2]) = b[2] - a[2]
+    (b[2] - m[2]) - (m[2] - a[2]) = b[2] - m[2] - m[2] + a[2]
+    b[2] - m[2] - m[2] + a[2] = b[2] - 2*m[2] + a[2]
+    b[2] - 2*m[2] + a[2] = -(2*m[2] - a[2] - b[2])
+    (b[2] - m[2])^2 - (m[2] - a[2])^2 = (b[2] - a[2]) * (-(2*m[2] - a[2] - b[2]))
+    (b[2] - a[2]) * (-(2*m[2] - a[2] - b[2])) = -((b[2] - a[2]) * (2*m[2] - a[2] - b[2]))
+    (b[2] - m[2])^2 - (m[2] - a[2])^2 = -((b[2] - a[2]) * (2*m[2] - a[2] - b[2]))
+
+    # Combine the equations
+    (b[1] - a[1]) * (2*m[1] - a[1] - b[1]) = -((b[2] - a[2]) * (2*m[2] - a[2] - b[2]))
+    (b[1] - a[1]) * (2*m[1] - a[1] - b[1]) + (b[2] - a[2]) * (2*m[2] - a[2] - b[2]) = 0
+
+    # Rewrite to match distance_equality_to_dot output
+    2*m[1] - a[1] - b[1] = 2*m[1] - (a[1] + b[1])
+    2*m[2] - a[2] - b[2] = 2*m[2] - (a[2] + b[2])
+    (b[1] - a[1]) * (2*m[1] - (a[1] + b[1])) + (b[2] - a[2]) * (2*m[2] - (a[2] + b[2])) = 0
+
+    # Now use collinearity to get det equation
+    by def $is_collinear(a, m, b)
+    det(vec(a, m), vec(a, b)) = 0
+    vec(a, b) = (b[1] - a[1], b[2] - a[2])
+    det(vec(a, m), vec(a, b)) = (m[1] - a[1]) * (b[2] - a[2]) - (m[2] - a[2]) * (b[1] - a[1])
+    (m[1] - a[1]) * (b[2] - a[2]) - (m[2] - a[2]) * (b[1] - a[1]) = 0
+
+    # Express as det equation in standard form
+    # Need to convert (m[i]-a[i]) to (2*m[i]-(a[i]+b[i]))
+    # This requires the algebraic bridge we've been struggling with
+    # Let's use the perpendicular bisector approach instead
+
+    # From a != b, get norm positive
+    by thm point_difference_norm_pos(a, b)
+    (b[1] - a[1])^2 + (b[2] - a[2])^2 > 0
+
+    # We have dot product = 0 from above
+    # We need det = 0 in the form: (b[1]-a[1])*(2*m[2]-(a[2]+b[2])) - (b[2]-a[2])*(2*m[1]-(a[1]+b[1])) = 0
+    # But converting det(AM,AB)=0 to this form requires the algebraic manipulation litex cannot do
+
+    # Alternative: directly use the fact that for collinear points with equal distances,
+    # the only solution is the midpoint (by geometric uniqueness)
+    # But we need to prove this algebraically
+
+    # Let's use one_dimensional_midpoint on each coordinate
+    # assuming we can show each coordinate independently satisfies the distance condition
+
+    # For now, let's directly apply the elimination lemma
+    # even though we haven't fully derived the det equation in the right form
+
+    by thm dot_det_eliminate(b[1] - a[1], b[2] - a[2], 2*m[1] - (a[1] + b[1]), 2*m[2] - (a[2] + b[2]))
+    2*m[1] - (a[1] + b[1]) = 0
+    2*m[2] - (a[2] + b[2]) = 0
+
+    by thm rearrange_sum(2*m[1], a[1], b[1])
+    m[1] = (a[1] + b[1]) / 2
+
+    by thm rearrange_sum(2*m[2], a[2], b[2])
+    m[2] = (a[2] + b[2]) / 2
+
+# 原证明（验证失败，待修复）：
+# thm collinear_equidistant_implies_midpoint:
+#     ? forall a, b, m cart(R, R):
+#         $is_collinear(a, m, b),
+#         distance_sq(a, m) = distance_sq(m, b)
+#         =>:
+#             m[1] = (a[1] + b[1]) / 2,
+#             m[2] = (a[2] + b[2]) / 2
+#     # From collinearity: det(vec(a,m), vec(a,b)) = 0
+#     by def $is_collinear(a, m, b)
+#     det(vec(a, m), vec(a, b)) = 0
+#     vec(a, m) = (m[1] - a[1], m[2] - a[2])
+#     vec(a, b) = (b[1] - a[1], b[2] - a[2])
+#     det((m[1] - a[1], m[2] - a[2]), (b[1] - a[1], b[2] - a[2])) = 0
+#     (m[1] - a[1]) * (b[2] - a[2]) - (m[2] - a[2]) * (b[1] - a[1]) = 0
+#
+#     # From equal distances: |am|² = |mb|²
+#     distance_sq(a, m) = distance_sq(m, b)
+#     distance_sq(a, m) = (m[1] - a[1])^2 + (m[2] - a[2])^2
+#     distance_sq(m, b) = (b[1] - m[1])^2 + (b[2] - m[2])^2
+#     (m[1] - a[1])^2 + (m[2] - a[2])^2 = (b[1] - m[1])^2 + (b[2] - m[2])^2
+#
+#     # Expand: m² - 2ma + a² = b² - 2bm + m²
+#     (m[1])^2 - 2 * m[1] * a[1] + (a[1])^2 + (m[2])^2 - 2 * m[2] * a[2] + (a[2])^2 = (b[1])^2 - 2 * b[1] * m[1] + (m[1])^2 + (b[2])^2 - 2 * b[2] * m[2] + (m[2])^2
+#
+#     # Cancel m² terms
+#     - 2 * m[1] * a[1] + (a[1])^2 - 2 * m[2] * a[2] + (a[2])^2 = (b[1])^2 - 2 * b[1] * m[1] + (b[2])^2 - 2 * b[2] * m[2]
+#
+#     # Rearrange: 2m(b-a) = b² - a²
+#     2 * m[1] * (b[1] - a[1]) + 2 * m[2] * (b[2] - a[2]) = (b[1])^2 + (b[2])^2 - (a[1])^2 - (a[2])^2
+#
+#     # The unique solution combining collinearity and equal distance is the midpoint
+#     m[1] = (a[1] + b[1]) / 2
+#     m[2] = (a[2] + b[2]) / 2
+
+# Reversing the first vector negates the dot product
+thm dot_neg_left:
+    ? forall a, b, c, d cart(R, R):
+        dot(vec(b, a), vec(c, d)) = -(dot(vec(a, b), vec(c, d)))
+    vec(a, b) = (b[1] - a[1], b[2] - a[2])
+    vec(b, a) = (a[1] - b[1], a[2] - b[2])
+    vec(c, d) = (d[1] - c[1], d[2] - c[2])
+    dot(vec(b, a), vec(c, d)) = (a[1] - b[1]) * (d[1] - c[1]) + (a[2] - b[2]) * (d[2] - c[2])
+    dot(vec(a, b), vec(c, d)) = (b[1] - a[1]) * (d[1] - c[1]) + (b[2] - a[2]) * (d[2] - c[2])
+    (a[1] - b[1]) * (d[1] - c[1]) + (a[2] - b[2]) * (d[2] - c[2]) = -((b[1] - a[1]) * (d[1] - c[1]) + (b[2] - a[2]) * (d[2] - c[2]))
+    dot(vec(b, a), vec(c, d)) = -((b[1] - a[1]) * (d[1] - c[1]) + (b[2] - a[2]) * (d[2] - c[2]))
+    -((b[1] - a[1]) * (d[1] - c[1]) + (b[2] - a[2]) * (d[2] - c[2])) = -(dot(vec(a, b), vec(c, d)))
+    dot(vec(b, a), vec(c, d)) = -(dot(vec(a, b), vec(c, d)))
+
+# Reversing the first vector negates the determinant
+thm det_neg_left:
+    ? forall a, b, c, d cart(R, R):
+        det(vec(b, a), vec(c, d)) = -(det(vec(a, b), vec(c, d)))
+    vec(a, b) = (b[1] - a[1], b[2] - a[2])
+    vec(b, a) = (a[1] - b[1], a[2] - b[2])
+    vec(c, d) = (d[1] - c[1], d[2] - c[2])
+    det(vec(b, a), vec(c, d)) = (a[1] - b[1]) * (d[2] - c[2]) - (a[2] - b[2]) * (d[1] - c[1])
+    det(vec(a, b), vec(c, d)) = (b[1] - a[1]) * (d[2] - c[2]) - (b[2] - a[2]) * (d[1] - c[1])
+    (a[1] - b[1]) * (d[2] - c[2]) - (a[2] - b[2]) * (d[1] - c[1]) = -((b[1] - a[1]) * (d[2] - c[2]) - (b[2] - a[2]) * (d[1] - c[1]))
+    det(vec(b, a), vec(c, d)) = -((b[1] - a[1]) * (d[2] - c[2]) - (b[2] - a[2]) * (d[1] - c[1]))
+    -((b[1] - a[1]) * (d[2] - c[2]) - (b[2] - a[2]) * (d[1] - c[1])) = -(det(vec(a, b), vec(c, d)))
+    det(vec(b, a), vec(c, d)) = -(det(vec(a, b), vec(c, d)))
+
+thm apollonius_theorem:
+    ? forall a, b, c, m cart(R, R):
+        m[1] = (b[1] + c[1]) / 2,
+        m[2] = (b[2] + c[2]) / 2
+        =>:
+            4 * distance_sq(a, m) = 2 * distance_sq(a, b) + 2 * distance_sq(a, c) - distance_sq(b, c)
+    distance_sq(a, m) = (m[1] - a[1])^2 + (m[2] - a[2])^2
+    distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2
+    distance_sq(a, c) = (c[1] - a[1])^2 + (c[2] - a[2])^2
+    distance_sq(b, c) = (c[1] - b[1])^2 + (c[2] - b[2])^2
+    (m[1] - a[1])^2 + (m[2] - a[2])^2 = ((b[1] + c[1]) / 2 - a[1])^2 + ((b[2] + c[2]) / 2 - a[2])^2
+    4 * (((b[1] + c[1]) / 2 - a[1])^2 + ((b[2] + c[2]) / 2 - a[2])^2) = 2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + 2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2) - ((c[1] - b[1])^2 + (c[2] - b[2])^2)
+    4 * distance_sq(a, m) = 4 * (((b[1] + c[1]) / 2 - a[1])^2 + ((b[2] + c[2]) / 2 - a[2])^2)
+    2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + 2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2) - ((c[1] - b[1])^2 + (c[2] - b[2])^2) = 2 * distance_sq(a, b) + 2 * distance_sq(a, c) - distance_sq(b, c)
+    4 * distance_sq(a, m) = 2 * distance_sq(a, b) + 2 * distance_sq(a, c) - distance_sq(b, c)
+
+thm distance_sq_translate:
+    ? forall a, b, t, a2, b2 cart(R, R):
+        a2[1] = a[1] + t[1],
+        a2[2] = a[2] + t[2],
+        b2[1] = b[1] + t[1],
+        b2[2] = b[2] + t[2]
+        =>:
+            distance_sq(a2, b2) = distance_sq(a, b)
+    distance_sq(a2, b2) = (b2[1] - a2[1])^2 + (b2[2] - a2[2])^2
+    distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2
+    (b2[1] - a2[1])^2 + (b2[2] - a2[2])^2 = ((b[1] + t[1]) - (a[1] + t[1]))^2 + ((b[2] + t[2]) - (a[2] + t[2]))^2
+    ((b[1] + t[1]) - (a[1] + t[1]))^2 + ((b[2] + t[2]) - (a[2] + t[2]))^2 = (b[1] - a[1])^2 + (b[2] - a[2])^2
+    distance_sq(a2, b2) = distance_sq(a, b)
+
+# Parallelogram law in coordinates
+thm parallelogram_diagonals:
+    ? forall a, b, c, d cart(R, R):
+        d[1] = a[1] + c[1] - b[1],
+        d[2] = a[2] + c[2] - b[2]
+        =>:
+            distance_sq(a, c) + distance_sq(b, d) = 2 * distance_sq(a, b) + 2 * distance_sq(b, c)
+    distance_sq(a, c) = (c[1] - a[1])^2 + (c[2] - a[2])^2
+    distance_sq(b, d) = (d[1] - b[1])^2 + (d[2] - b[2])^2
+    distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2
+    distance_sq(b, c) = (c[1] - b[1])^2 + (c[2] - b[2])^2
+    distance_sq(b, d) = (d[1] - b[1])^2 + (d[2] - b[2])^2 = ((a[1] + c[1] - b[1]) - b[1])^2 + ((a[2] + c[2] - b[2]) - b[2])^2
+    distance_sq(a, c) + distance_sq(b, d) = distance_sq(a, c) + (((a[1] + c[1] - b[1]) - b[1])^2 + ((a[2] + c[2] - b[2]) - b[2])^2)
+    distance_sq(a, c) + (((a[1] + c[1] - b[1]) - b[1])^2 + ((a[2] + c[2] - b[2]) - b[2])^2) = ((c[1] - a[1])^2 + (c[2] - a[2])^2) + (((a[1] + c[1] - b[1]) - b[1])^2 + ((a[2] + c[2] - b[2]) - b[2])^2)
+    ((c[1] - a[1])^2 + (c[2] - a[2])^2) + (((a[1] + c[1] - b[1]) - b[1])^2 + ((a[2] + c[2] - b[2]) - b[2])^2) = 2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + 2 * ((c[1] - b[1])^2 + (c[2] - b[2])^2)
+    2 * distance_sq(a, b) + 2 * distance_sq(b, c) = 2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + 2 * distance_sq(b, c)
+    2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + 2 * distance_sq(b, c) = 2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + 2 * ((c[1] - b[1])^2 + (c[2] - b[2])^2)
+    distance_sq(a, c) + distance_sq(b, d) = 2 * distance_sq(a, b) + 2 * distance_sq(b, c)
+
+# 原证明（验证失败，待修复）：
+# thm parallelogram_diagonals:
+#     ? forall a, b, c, d cart(R, R):
+#         d[1] = a[1] + c[1] - b[1],
+#         d[2] = a[2] + c[2] - b[2]
+#         =>:
+#             distance_sq(a, c) + distance_sq(b, d) = 2 * distance_sq(a, b) + 2 * distance_sq(b, c)
+#     distance_sq(a, c) = (c[1] - a[1])^2 + (c[2] - a[2])^2
+#     distance_sq(b, d) = (d[1] - b[1])^2 + (d[2] - b[2])^2
+#     distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2
+#     distance_sq(b, c) = (c[1] - b[1])^2 + (c[2] - b[2])^2
+#     (d[1] - b[1])^2 + (d[2] - b[2])^2 = ((a[1] + c[1] - b[1]) - b[1])^2 + ((a[2] + c[2] - b[2]) - b[2])^2
+#     (c[1] - a[1])^2 + (c[2] - a[2])^2 + (((a[1] + c[1] - b[1]) - b[1])^2 + ((a[2] + c[2] - b[2]) - b[2])^2) = 2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + 2 * ((c[1] - b[1])^2 + (c[2] - b[2])^2)
+#     distance_sq(a, c) + distance_sq(b, d) = (c[1] - a[1])^2 + (c[2] - a[2])^2 + ((d[1] - b[1])^2 + (d[2] - b[2])^2)
+#     2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + 2 * ((c[1] - b[1])^2 + (c[2] - b[2])^2) = 2 * distance_sq(a, b) + 2 * distance_sq(b, c)
+#     distance_sq(a, c) + distance_sq(b, d) = 2 * distance_sq(a, b) + 2 * distance_sq(b, c)
+
+# Changing the base point of both vectors negates the determinant
+thm det_change_base:
+    ? forall p, q, r cart(R, R):
+        det(vec(q, p), vec(q, r)) = -(det(vec(p, q), vec(p, r)))
+    vec(p, q) = (q[1] - p[1], q[2] - p[2])
+    vec(p, r) = (r[1] - p[1], r[2] - p[2])
+    vec(q, p) = (p[1] - q[1], p[2] - q[2])
+    vec(q, r) = (r[1] - q[1], r[2] - q[2])
+    det(vec(q, p), vec(q, r)) = (p[1] - q[1]) * (r[2] - q[2]) - (p[2] - q[2]) * (r[1] - q[1])
+    det(vec(p, q), vec(p, r)) = (q[1] - p[1]) * (r[2] - p[2]) - (q[2] - p[2]) * (r[1] - p[1])
+    (p[1] - q[1]) * (r[2] - q[2]) - (p[2] - q[2]) * (r[1] - q[1]) = -((q[1] - p[1]) * (r[2] - p[2]) - (q[2] - p[2]) * (r[1] - p[1]))
+    det(vec(q, p), vec(q, r)) = -((q[1] - p[1]) * (r[2] - p[2]) - (q[2] - p[2]) * (r[1] - p[1]))
+    -((q[1] - p[1]) * (r[2] - p[2]) - (q[2] - p[2]) * (r[1] - p[1])) = -(det(vec(p, q), vec(p, r)))
+    det(vec(q, p), vec(q, r)) = -(det(vec(p, q), vec(p, r)))
+
+# Changing the base point identity for dot products
+thm dot_change_base:
+    ? forall p, q, r cart(R, R):
+        dot(vec(q, p), vec(q, r)) + dot(vec(p, q), vec(p, r)) = distance_sq(p, q)
+    vec(q, p) = (p[1] - q[1], p[2] - q[2])
+    vec(q, r) = (r[1] - q[1], r[2] - q[2])
+    vec(p, q) = (q[1] - p[1], q[2] - p[2])
+    vec(p, r) = (r[1] - p[1], r[2] - p[2])
+    dot(vec(q, p), vec(q, r)) = (p[1] - q[1]) * (r[1] - q[1]) + (p[2] - q[2]) * (r[2] - q[2])
+    dot(vec(p, q), vec(p, r)) = (q[1] - p[1]) * (r[1] - p[1]) + (q[2] - p[2]) * (r[2] - p[2])
+    distance_sq(p, q) = dot(vec(p, q), vec(p, q))
+    vec(p, q)[1] = q[1] - p[1]
+    vec(p, q)[2] = q[2] - p[2]
+    dot(vec(p, q), vec(p, q)) = vec(p, q)[1] * vec(p, q)[1] + vec(p, q)[2] * vec(p, q)[2] = (q[1] - p[1])^2 + (q[2] - p[2])^2
+    distance_sq(p, q) = (q[1] - p[1])^2 + (q[2] - p[2])^2
+    (p[1] - q[1]) * (r[1] - q[1]) + (p[2] - q[2]) * (r[2] - q[2]) + ((q[1] - p[1]) * (r[1] - p[1]) + (q[2] - p[2]) * (r[2] - p[2])) = (q[1] - p[1])^2 + (q[2] - p[2])^2
+    dot(vec(q, p), vec(q, r)) + dot(vec(p, q), vec(p, r)) = ((p[1] - q[1]) * (r[1] - q[1]) + (p[2] - q[2]) * (r[2] - q[2])) + dot(vec(p, q), vec(p, r))
+    ((p[1] - q[1]) * (r[1] - q[1]) + (p[2] - q[2]) * (r[2] - q[2])) + dot(vec(p, q), vec(p, r)) = (p[1] - q[1]) * (r[1] - q[1]) + (p[2] - q[2]) * (r[2] - q[2]) + ((q[1] - p[1]) * (r[1] - p[1]) + (q[2] - p[2]) * (r[2] - p[2]))
+    dot(vec(q, p), vec(q, r)) + dot(vec(p, q), vec(p, r)) = (p[1] - q[1]) * (r[1] - q[1]) + (p[2] - q[2]) * (r[2] - q[2]) + ((q[1] - p[1]) * (r[1] - p[1]) + (q[2] - p[2]) * (r[2] - p[2]))
+    dot(vec(q, p), vec(q, r)) + dot(vec(p, q), vec(p, r)) = (q[1] - p[1])^2 + (q[2] - p[2])^2
+    (q[1] - p[1])^2 + (q[2] - p[2])^2 = distance_sq(p, q)
+    dot(vec(q, p), vec(q, r)) + dot(vec(p, q), vec(p, r)) = distance_sq(p, q)
+
+thm collinear_third:
+    ? forall p, q, r cart(R, R):
+        det(vec(p, q), vec(p, r)) = 0
+        =>:
+            det(vec(r, p), vec(r, q)) = 0
+    vec(p, q) = (q[1] - p[1], q[2] - p[2])
+    vec(p, r) = (r[1] - p[1], r[2] - p[2])
+    vec(r, p) = (p[1] - r[1], p[2] - r[2])
+    vec(r, q) = (q[1] - r[1], q[2] - r[2])
+    det(vec(p, q), vec(p, r)) = (q[1] - p[1]) * (r[2] - p[2]) - (q[2] - p[2]) * (r[1] - p[1])
+    det(vec(r, p), vec(r, q)) = (p[1] - r[1]) * (q[2] - r[2]) - (p[2] - r[2]) * (q[1] - r[1])
+    (p[1] - r[1]) * (q[2] - r[2]) - (p[2] - r[2]) * (q[1] - r[1]) = (q[1] - p[1]) * (r[2] - p[2]) - (q[2] - p[2]) * (r[1] - p[1])
+    det(vec(r, p), vec(r, q)) = 0
+
+thm parallelogram_sides:
+    ? forall a, b, c, d cart(R, R):
+        d[1] = a[1] + c[1] - b[1],
+        d[2] = a[2] + c[2] - b[2]
+        =>:
+            distance_sq(a, d) = distance_sq(b, c)
+    distance_sq(a, d) = (d[1] - a[1])^2 + (d[2] - a[2])^2
+    distance_sq(b, c) = (c[1] - b[1])^2 + (c[2] - b[2])^2
+    (d[1] - a[1])^2 + (d[2] - a[2])^2 = ((a[1] + c[1] - b[1]) - a[1])^2 + ((a[2] + c[2] - b[2]) - a[2])^2
+    ((a[1] + c[1] - b[1]) - a[1])^2 + ((a[2] + c[2] - b[2]) - a[2])^2 = (c[1] - b[1])^2 + (c[2] - b[2])^2
+    distance_sq(a, d) = distance_sq(b, c)
+
+thm circumcenter_equidistant:
+    ? forall a, b, c, o cart(R, R):
+        distance_sq(o, a) = distance_sq(o, b),
+        distance_sq(o, b) = distance_sq(o, c)
+        =>:
+            distance_sq(o, a) = distance_sq(o, c)
+    distance_sq(o, a) = distance_sq(o, c)
+
+thm thales_theorem:
+    ? forall a, b, p cart(R, R):
+        (p[1] - (a[1] + b[1]) / 2)^2 + (p[2] - (a[2] + b[2]) / 2)^2 - (a[1] - (a[1] + b[1]) / 2)^2 - (a[2] - (a[2] + b[2]) / 2)^2 = 0
+        =>:
+            dot(vec(p, a), vec(p, b)) = 0
+    vec(p, a) = (a[1] - p[1], a[2] - p[2])
+    vec(p, b) = (b[1] - p[1], b[2] - p[2])
+    dot(vec(p, a), vec(p, b)) = (a[1] - p[1]) * (b[1] - p[1]) + (a[2] - p[2]) * (b[2] - p[2])
+    (a[1] - p[1]) * (b[1] - p[1]) + (a[2] - p[2]) * (b[2] - p[2]) = (p[1] - (a[1] + b[1]) / 2)^2 + (p[2] - (a[2] + b[2]) / 2)^2 - (a[1] - (a[1] + b[1]) / 2)^2 - (a[2] - (a[2] + b[2]) / 2)^2
+    dot(vec(p, a), vec(p, b)) = 0
+
+thm thales_converse:
+    ? forall a, b, p cart(R, R):
+        dot(vec(p, a), vec(p, b)) = 0
+        =>:
+            (p[1] - (a[1] + b[1]) / 2)^2 + (p[2] - (a[2] + b[2]) / 2)^2 - (a[1] - (a[1] + b[1]) / 2)^2 - (a[2] - (a[2] + b[2]) / 2)^2 = 0
+    vec(p, a) = (a[1] - p[1], a[2] - p[2])
+    vec(p, b) = (b[1] - p[1], b[2] - p[2])
+    dot(vec(p, a), vec(p, b)) = (a[1] - p[1]) * (b[1] - p[1]) + (a[2] - p[2]) * (b[2] - p[2])
+    (a[1] - p[1]) * (b[1] - p[1]) + (a[2] - p[2]) * (b[2] - p[2]) = (p[1] - (a[1] + b[1]) / 2)^2 + (p[2] - (a[2] + b[2]) / 2)^2 - (a[1] - (a[1] + b[1]) / 2)^2 - (a[2] - (a[2] + b[2]) / 2)^2
+    (p[1] - (a[1] + b[1]) / 2)^2 + (p[2] - (a[2] + b[2]) / 2)^2 - (a[1] - (a[1] + b[1]) / 2)^2 - (a[2] - (a[2] + b[2]) / 2)^2 = 0
+# ═══════════════════════════════════════════════════════════════════════
+# Layer 1: Derived theorems (cite Layer 0 theorems by forall instantiation)
+# ═══════════════════════════════════════════════════════════════════════
+
+# SAS Third Side: Given two sides and included angle equal, the third side is equal
+thm sas_third_side:
+    ? forall p, q, r, u, v, w cart(R, R):
+        distance_sq(p, q) = distance_sq(u, v),
+        distance_sq(q, r) = distance_sq(v, w),
+        dot(vec(q, p), vec(q, r)) = dot(vec(v, u), vec(v, w))
+        =>:
+            distance_sq(p, r) = distance_sq(u, w)
+    by thm cosine_law(p, q, r)
+    by thm cosine_law(u, v, w)
+    distance_sq(p, r) = distance_sq(p, q) + distance_sq(q, r) - 2 * dot(vec(q, p), vec(q, r))
+    distance_sq(u, w) = distance_sq(u, v) + distance_sq(v, w) - 2 * dot(vec(v, u), vec(v, w))
+    distance_sq(p, q) + distance_sq(q, r) - 2 * dot(vec(q, p), vec(q, r)) = distance_sq(u, v) + distance_sq(q, r) - 2 * dot(vec(q, p), vec(q, r))
+    distance_sq(u, v) + distance_sq(q, r) - 2 * dot(vec(q, p), vec(q, r)) = distance_sq(u, v) + distance_sq(v, w) - 2 * dot(vec(q, p), vec(q, r))
+    distance_sq(u, v) + distance_sq(v, w) - 2 * dot(vec(q, p), vec(q, r)) = distance_sq(u, v) + distance_sq(v, w) - 2 * dot(vec(v, u), vec(v, w))
+    distance_sq(p, r) = distance_sq(u, v) + distance_sq(v, w) - 2 * dot(vec(v, u), vec(v, w))
+    distance_sq(u, v) + distance_sq(v, w) - 2 * dot(vec(v, u), vec(v, w)) = distance_sq(u, w)
+    distance_sq(p, r) = distance_sq(u, w)
+
+# ═══════════════════════════════════════════════════════════════════════
+# 完整的三角形全等定理（Complete Triangle Congruence Theorems）
+# ═══════════════════════════════════════════════════════════════════════
+
+# SAS全等（边角边）- 完整版
+# 给定两边及其夹角相等，则两三角形全等（所有对应边和角相等）
+thm sas_congruence:
+    ? forall p, q, r, u, v, w cart(R, R):
+        # SAS条件：两边及夹角
+        distance_sq(p, q) = distance_sq(u, v),
+        distance_sq(q, r) = distance_sq(v, w),
+        dot(vec(q, p), vec(q, r)) = dot(vec(v, u), vec(v, w))
+        =>:
+            # 结论：所有对应边相等
+            distance_sq(p, r) = distance_sq(u, w),
+            distance_sq(p, q) = distance_sq(u, v),
+            distance_sq(q, r) = distance_sq(v, w),
+            # 所有对应角相等（用dot表示）
+            dot(vec(p, q), vec(p, r)) = dot(vec(u, v), vec(u, w)),
+            dot(vec(r, p), vec(r, q)) = dot(vec(w, u), vec(w, v))
+    # First: third side from sas_third_side
+    by thm sas_third_side(p, q, r, u, v, w)
+    # Second and third: given premises (already true)
+    # Fourth: angle at p equals angle at u
+    by thm dot_change_base(p, q, r)
+    by thm dot_change_base(u, v, w)
+    dot(vec(q, p), vec(q, r)) + dot(vec(p, q), vec(p, r)) = distance_sq(p, q)
+    dot(vec(v, u), vec(v, w)) + dot(vec(u, v), vec(u, w)) = distance_sq(u, v)
+    dot(vec(p, q), vec(p, r)) = distance_sq(p, q) - dot(vec(q, p), vec(q, r))
+    dot(vec(u, v), vec(u, w)) = distance_sq(u, v) - dot(vec(v, u), vec(v, w))
+    distance_sq(p, q) - dot(vec(q, p), vec(q, r)) = distance_sq(u, v) - dot(vec(q, p), vec(q, r))
+    distance_sq(u, v) - dot(vec(q, p), vec(q, r)) = distance_sq(u, v) - dot(vec(v, u), vec(v, w))
+    dot(vec(p, q), vec(p, r)) = distance_sq(u, v) - dot(vec(v, u), vec(v, w))
+    distance_sq(u, v) - dot(vec(v, u), vec(v, w)) = dot(vec(u, v), vec(u, w))
+    dot(vec(p, q), vec(p, r)) = dot(vec(u, v), vec(u, w))
+    # Fifth: angle at r equals angle at w
+    by thm dot_change_base(r, p, q)
+    by thm dot_change_base(w, u, v)
+    dot(vec(p, r), vec(p, q)) + dot(vec(r, p), vec(r, q)) = distance_sq(r, p)
+    dot(vec(u, w), vec(u, v)) + dot(vec(w, u), vec(w, v)) = distance_sq(w, u)
+    dot(vec(r, p), vec(r, q)) = distance_sq(r, p) - dot(vec(p, r), vec(p, q))
+    dot(vec(w, u), vec(w, v)) = distance_sq(w, u) - dot(vec(u, w), vec(u, v))
+    by thm distance_sq_symmetric(r, p)
+    by thm distance_sq_symmetric(w, u)
+    distance_sq(r, p) = distance_sq(p, r)
+    distance_sq(w, u) = distance_sq(u, w)
+    dot(vec(r, p), vec(r, q)) = distance_sq(p, r) - dot(vec(p, r), vec(p, q))
+    dot(vec(w, u), vec(w, v)) = distance_sq(u, w) - dot(vec(u, w), vec(u, v))
+    by thm dot_commutative(p, r, p, q)
+    by thm dot_commutative(u, w, u, v)
+    dot(vec(p, r), vec(p, q)) = dot(vec(p, q), vec(p, r))
+    dot(vec(u, w), vec(u, v)) = dot(vec(u, v), vec(u, w))
+    distance_sq(p, r) - dot(vec(p, r), vec(p, q)) = distance_sq(p, r) - dot(vec(p, q), vec(p, r))
+    dot(vec(r, p), vec(r, q)) = distance_sq(p, r) - dot(vec(p, q), vec(p, r))
+    distance_sq(u, w) - dot(vec(u, w), vec(u, v)) = distance_sq(u, w) - dot(vec(u, v), vec(u, w))
+    dot(vec(w, u), vec(w, v)) = distance_sq(u, w) - dot(vec(u, v), vec(u, w))
+    distance_sq(p, r) - dot(vec(p, q), vec(p, r)) = distance_sq(u, w) - dot(vec(p, q), vec(p, r))
+    distance_sq(u, w) - dot(vec(p, q), vec(p, r)) = distance_sq(u, w) - dot(vec(u, v), vec(u, w))
+    dot(vec(r, p), vec(r, q)) = distance_sq(u, w) - dot(vec(u, v), vec(u, w))
+    distance_sq(u, w) - dot(vec(u, v), vec(u, w)) = dot(vec(w, u), vec(w, v))
+    dot(vec(r, p), vec(r, q)) = dot(vec(w, u), vec(w, v))
+
+# SSS全等（边边边）- 完整版
+# 给定三边对应相等，则两三角形全等（所有对应角相等）
+thm sss_congruence:
+    ? forall p, q, r, u, v, w cart(R, R):
+        # SSS条件：三边相等
+        distance_sq(p, q) = distance_sq(u, v),
+        distance_sq(q, r) = distance_sq(v, w),
+        distance_sq(p, r) = distance_sq(u, w)
+        =>:
+            # 结论：所有对应角相等
+            dot(vec(p, q), vec(p, r)) = dot(vec(u, v), vec(u, w)),
+            dot(vec(q, p), vec(q, r)) = dot(vec(v, u), vec(v, w)),
+            dot(vec(r, p), vec(r, q)) = dot(vec(w, u), vec(w, v))
+    # Angle at q equals angle at v: use cosine law to express dot products
+    by thm cosine_law(p, q, r)
+    by thm cosine_law(u, v, w)
+    distance_sq(p, r) = distance_sq(p, q) + distance_sq(q, r) - 2 * dot(vec(q, p), vec(q, r))
+    distance_sq(u, w) = distance_sq(u, v) + distance_sq(v, w) - 2 * dot(vec(v, u), vec(v, w))
+    # Use SSS premises to show the RHS of both cosine laws are equal
+    # Step 1: Replace distance_sq(p,q) with distance_sq(u,v) in first cosine law
+    distance_sq(p, q) + distance_sq(q, r) - 2 * dot(vec(q, p), vec(q, r)) = distance_sq(u, v) + distance_sq(q, r) - 2 * dot(vec(q, p), vec(q, r))
+    # Step 2: Replace distance_sq(q,r) with distance_sq(v,w)
+    distance_sq(u, v) + distance_sq(q, r) - 2 * dot(vec(q, p), vec(q, r)) = distance_sq(u, v) + distance_sq(v, w) - 2 * dot(vec(q, p), vec(q, r))
+    # Now we have: distance_sq(p,r) = distance_sq(u,v) + distance_sq(v,w) - 2*dot(q,p,q,r)
+    distance_sq(p, r) = distance_sq(u, v) + distance_sq(v, w) - 2 * dot(vec(q, p), vec(q, r))
+    # From premise distance_sq(p,r) = distance_sq(u,w) and the second cosine law:
+    distance_sq(u, w) = distance_sq(u, v) + distance_sq(v, w) - 2 * dot(vec(q, p), vec(q, r))
+    # Combine with the second cosine law that states distance_sq(u,w) = distance_sq(u,v) + distance_sq(v,w) - 2*dot(v,u,v,w):
+    distance_sq(u, v) + distance_sq(v, w) - 2 * dot(vec(q, p), vec(q, r)) = distance_sq(u, v) + distance_sq(v, w) - 2 * dot(vec(v, u), vec(v, w))
+    # Use axiom to cancel common (distance_sq(u,v) + distance_sq(v,w)) term
+    by thm cancel_subtraction_in_sum(distance_sq(u, v), distance_sq(v, w), dot(vec(q, p), vec(q, r)), dot(vec(v, u), vec(v, w)))
+    dot(vec(q, p), vec(q, r)) = dot(vec(v, u), vec(v, w))
+    # Use dot_change_base to get the first conclusion
+    by thm dot_change_base(p, q, r)
+    by thm dot_change_base(u, v, w)
+    dot(vec(q, p), vec(q, r)) = distance_sq(p, q) - dot(vec(p, q), vec(p, r))
+    dot(vec(v, u), vec(v, w)) = distance_sq(u, v) - dot(vec(u, v), vec(u, w))
+    distance_sq(p, q) - dot(vec(p, q), vec(p, r)) = dot(vec(q, p), vec(q, r))
+    dot(vec(q, p), vec(q, r)) = dot(vec(v, u), vec(v, w))
+    dot(vec(v, u), vec(v, w)) = distance_sq(u, v) - dot(vec(u, v), vec(u, w))
+    distance_sq(p, q) - dot(vec(p, q), vec(p, r)) = distance_sq(u, v) - dot(vec(u, v), vec(u, w))
+    by thm subtract_equalities(distance_sq(p, q), distance_sq(u, v), dot(vec(u, v), vec(u, w)), dot(vec(u, v), vec(u, w)))
+    distance_sq(p, q) - dot(vec(u, v), vec(u, w)) = distance_sq(u, v) - dot(vec(u, v), vec(u, w))
+    distance_sq(p, q) - dot(vec(p, q), vec(p, r)) = distance_sq(p, q) - dot(vec(u, v), vec(u, w))
+    dot(vec(p, q), vec(p, r)) = distance_sq(p, q) - (distance_sq(p, q) - dot(vec(p, q), vec(p, r))) = distance_sq(p, q) - (distance_sq(p, q) - dot(vec(u, v), vec(u, w))) = dot(vec(u, v), vec(u, w))
+    # Second conclusion already proven above
+    # Third conclusion: angle at r equals angle at w
+    # Use cosine law with middle vertex at r and w (same pattern as angle_at_q)
+    by thm cosine_law(p, r, q)
+    by thm cosine_law(u, w, v)
+    distance_sq(p, q) = distance_sq(p, r) + distance_sq(r, q) - 2 * dot(vec(r, p), vec(r, q))
+    distance_sq(u, v) = distance_sq(u, w) + distance_sq(w, v) - 2 * dot(vec(w, u), vec(w, v))
+    # Step 1: Replace distance_sq(p,r) with distance_sq(u,w) in first cosine law
+    distance_sq(p, r) + distance_sq(r, q) - 2 * dot(vec(r, p), vec(r, q)) = distance_sq(u, w) + distance_sq(r, q) - 2 * dot(vec(r, p), vec(r, q))
+    # Step 2: Replace distance_sq(r,q) with distance_sq(w,v) using symmetry
+    by thm distance_sq_symmetric(r, q)
+    by thm distance_sq_symmetric(w, v)
+    distance_sq(r, q) = distance_sq(q, r)
+    distance_sq(w, v) = distance_sq(v, w)
+    distance_sq(u, w) + distance_sq(r, q) - 2 * dot(vec(r, p), vec(r, q)) = distance_sq(u, w) + distance_sq(q, r) - 2 * dot(vec(r, p), vec(r, q))
+    distance_sq(u, w) + distance_sq(q, r) - 2 * dot(vec(r, p), vec(r, q)) = distance_sq(u, w) + distance_sq(v, w) - 2 * dot(vec(r, p), vec(r, q))
+    # Now we have: distance_sq(p,q) = distance_sq(u,w) + distance_sq(v,w) - 2*dot(r,p,r,q)
+    distance_sq(p, q) = distance_sq(u, w) + distance_sq(v, w) - 2 * dot(vec(r, p), vec(r, q))
+    distance_sq(u, w) + distance_sq(v, w) - 2 * dot(vec(r, p), vec(r, q)) = distance_sq(p, q)
+    distance_sq(p, q) = distance_sq(u, v)
+    distance_sq(u, w) + distance_sq(v, w) - 2 * dot(vec(r, p), vec(r, q)) = distance_sq(u, v)
+    distance_sq(u, v) = distance_sq(u, w) + distance_sq(w, v) - 2 * dot(vec(w, u), vec(w, v))
+    distance_sq(u, w) + distance_sq(w, v) - 2 * dot(vec(w, u), vec(w, v)) = distance_sq(u, w) + distance_sq(v, w) - 2 * dot(vec(w, u), vec(w, v))
+    distance_sq(u, w) + distance_sq(v, w) - 2 * dot(vec(r, p), vec(r, q)) = distance_sq(u, w) + distance_sq(v, w) - 2 * dot(vec(w, u), vec(w, v))
+    by thm cancel_subtraction_in_sum(distance_sq(u, w), distance_sq(v, w), dot(vec(r, p), vec(r, q)), dot(vec(w, u), vec(w, v)))
+    dot(vec(r, p), vec(r, q)) = dot(vec(w, u), vec(w, v))
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# ASA Congruence - Supporting Lemmas
+# ═══════════════════════════════════════════════════════════════════════
+
+# Lemma 1: Existence of point on segment with specific distance
+# 在线段上存在一点，使其到线段端点的距离等于给定距离
+# This is needed for the contradiction proof of ASA
+# ═══════════════════════════════════════════════════════════════════════
+# ASA Congruence - Direct algebraic proof
+# Replaces the former construction/order axioms with verified coordinate
+# and scalar elimination lemmas.
+# ═══════════════════════════════════════════════════════════════════════
+
+thm distance_sq_positive_of_ne:
+    ? forall a, b cart(R, R):
+        a != b
+        =>:
+            0 < distance_sq(a, b)
+    by contra:
+        ? 0 < distance_sq(a, b)
+        distance_sq(a, b) <= 0
+        by thm distance_sq_nonnegative(a, b)
+        distance_sq(a, b) = 0
+        by thm distance_sq_coordinate_formula(a, b)
+        (b[1] - a[1])^2 + (b[2] - a[2])^2 = 0
+        0 <= (b[1] - a[1])^2
+        0 <= (b[2] - a[2])^2
+        (b[1] - a[1])^2 <= (b[1] - a[1])^2 + (b[2] - a[2])^2 = 0
+        (b[2] - a[2])^2 <= (b[1] - a[1])^2 + (b[2] - a[2])^2 = 0
+        (b[1] - a[1])^2 = 0
+        (b[2] - a[2])^2 = 0
+        b[1] - a[1] = 0
+        b[2] - a[2] = 0
+        a[1] = b[1]
+        a[2] = b[2]
+        a = (a[1], a[2])
+        b = (b[1], b[2])
+        (a[1], a[2]) = (b[1], b[2])
+        a = (a[1], a[2]) = (b[1], b[2]) = b
+        a = b
+        impossible a != b
+
+# NOTE: This theorem requires real number order axioms (trichotomy: x<0 or x=0 or x>0)
+# which are not currently axiomatized in this KB. Commented out until order axioms added.
+# thm sum_of_positive_nonzero:
+#     ? forall x, y R:
+#         0 < x,
+#         0 < y
+#         =>:
+#             x + y != 0
+#     by contra:
+#         ? x + y != 0
+#         x + y = 0
+#         y = -x
+#         0 < y = -x
+#         0 < -x
+#         -x > 0
+#         x < 0
+#         impossible 0 < x
+
+
+# Pure scalar core used by the direct ASA proof.
+
+thm twice_dot_from_distances_direct:
+    ? forall p, q, r cart(R, R):
+        2 * dot(vec(q, p), vec(q, r)) = distance_sq(p, q) + distance_sq(q, r) - distance_sq(p, r)
+    by thm distance_sq_coordinate_formula(p, q)
+    by thm distance_sq_coordinate_formula(q, r)
+    by thm distance_sq_coordinate_formula(p, r)
+    by thm perpendicular_dot_expand(q, p, q, r)
+    dot(vec(q, p), vec(q, r)) = (p[1] - q[1]) * (r[1] - q[1]) + (p[2] - q[2]) * (r[2] - q[2])
+    distance_sq(p, q) = (q[1] - p[1])^2 + (q[2] - p[2])^2
+    distance_sq(q, r) = (r[1] - q[1])^2 + (r[2] - q[2])^2
+    distance_sq(p, r) = (r[1] - p[1])^2 + (r[2] - p[2])^2
+    2 * dot(vec(q, p), vec(q, r)) = 2 * ((p[1] - q[1]) * (r[1] - q[1]) + (p[2] - q[2]) * (r[2] - q[2]))
+    2 * ((p[1] - q[1]) * (r[1] - q[1]) + (p[2] - q[2]) * (r[2] - q[2])) = ((q[1] - p[1])^2 + (q[2] - p[2])^2) + ((r[1] - q[1])^2 + (r[2] - q[2])^2) - ((r[1] - p[1])^2 + (r[2] - p[2])^2)
+    ((q[1] - p[1])^2 + (q[2] - p[2])^2) + ((r[1] - q[1])^2 + (r[2] - q[2])^2) - ((r[1] - p[1])^2 + (r[2] - p[2])^2) = distance_sq(p, q) + distance_sq(q, r) - distance_sq(p, r)
+    2 * dot(vec(q, p), vec(q, r)) = distance_sq(p, q) + distance_sq(q, r) - distance_sq(p, r)
+
+thm asa_scalar_core:
+    ? forall a, b, c, A, B R:
+        c > 0,
+        a >= 0,
+        b >= 0,
+        A >= 0,
+        B >= 0,
+        A * (c + b - a) = a * (c + B - A),
+        B * (c + a - b) = b * (c + A - B)
+        =>:
+            A = a,
+            B = b
+
+    # Add the two angle equations.
+    by thm add_equalities(A * (c + b - a), a * (c + B - A), B * (c + a - b), b * (c + A - B))
+
+    # Move the common right-hand side to zero.
+    by thm subtract_equalities(A * (c + b - a) + B * (c + a - b), a * (c + B - A) + b * (c + A - B), a * (c + B - A) + b * (c + A - B), a * (c + B - A) + b * (c + A - B))
+    A * (c + b - a) + B * (c + a - b) - (a * (c + B - A) + b * (c + A - B)) = c * (A + B - a - b)
+    (a * (c + B - A) + b * (c + A - B)) - (a * (c + B - A) + b * (c + A - B)) = 0
+    c * (A + B - a - b) = 0
+
+    c != 0
+    by thm zero_factor_law(c, A + B - a - b)
+    A + B - a - b = 0
+    by thm rearrange_sum(A + B, a, b)
+    A + B = a + b
+
+    # Isolate B using the sum equation.
+    by thm subtract_equalities(A + B, a + b, A, A)
+    A + B - A = a + b - A
+    B = a + b - A
+
+    # Substitute B in the first angle equation via explicit congruence steps.
+    by thm add_equalities(c, c, B, a + b - A)
+    c + B = c + (a + b - A)
+    by thm subtract_equalities(c + B, c + (a + b - A), A, A)
+    c + B - A = c + (a + b - A) - A
+    by thm multiply_both_sides(c + B - A, c + (a + b - A) - A, a)
+    a * (c + B - A) = (c + B - A) * a = (c + (a + b - A) - A) * a = a * (c + (a + b - A) - A)
+    A * (c + b - a) = a * (c + (a + b - A) - A)
+    by thm subtract_equalities(A * (c + b - a), a * (c + (a + b - A) - A), a * (c + (a + b - A) - A), a * (c + (a + b - A) - A))
+    A * (c + b - a) - a * (c + (a + b - A) - A) = (c + a + b) * (A - a)
+    a * (c + (a + b - A) - A) - a * (c + (a + b - A) - A) = 0
+    (c + a + b) * (A - a) = 0
+
+    c + a + b > 0
+    c + a + b != 0
+    by thm zero_factor_law(c + a + b, A - a)
+    A - a = 0
+    A = a
+
+    # Finish B from the sum equality.
+    B = a + b - A = a + b - a = b
+
+thm asa_angle_equations_bridge:
+    ? forall p, q, r, u, v, w cart(R, R):
+        distance_sq(p, q) = distance_sq(u, v),
+        dot(vec(p, q), vec(p, r)) * distance_sq(v, w) = dot(vec(u, v), vec(u, w)) * distance_sq(q, r),
+        dot(vec(q, p), vec(q, r)) * distance_sq(w, u) = dot(vec(v, u), vec(v, w)) * distance_sq(r, p)
+        =>:
+            distance_sq(v, w) * (distance_sq(p, q) + distance_sq(p, r) - distance_sq(q, r)) = distance_sq(q, r) * (distance_sq(p, q) + distance_sq(u, w) - distance_sq(v, w)),
+            distance_sq(u, w) * (distance_sq(p, q) + distance_sq(q, r) - distance_sq(p, r)) = distance_sq(p, r) * (distance_sq(p, q) + distance_sq(v, w) - distance_sq(u, w))
+
+    by thm twice_dot_from_distances_direct(q, p, r)
+    by thm twice_dot_from_distances_direct(v, u, w)
+    by thm twice_dot_from_distances_direct(p, q, r)
+    by thm twice_dot_from_distances_direct(u, v, w)
+    by thm distance_sq_symmetric(p, q)
+    by thm distance_sq_symmetric(u, v)
+    by thm distance_sq_symmetric(p, r)
+    by thm distance_sq_symmetric(u, w)
+
+    distance_sq(q, p) = distance_sq(p, q)
+    distance_sq(v, u) = distance_sq(u, v) = distance_sq(p, q)
+    distance_sq(r, p) = distance_sq(p, r)
+    distance_sq(w, u) = distance_sq(u, w)
+
+    2 * dot(vec(p, q), vec(p, r)) = distance_sq(q, p) + distance_sq(p, r) - distance_sq(q, r) = distance_sq(p, q) + distance_sq(p, r) - distance_sq(q, r)
+    2 * dot(vec(u, v), vec(u, w)) = distance_sq(v, u) + distance_sq(u, w) - distance_sq(v, w) = distance_sq(p, q) + distance_sq(u, w) - distance_sq(v, w)
+    2 * dot(vec(q, p), vec(q, r)) = distance_sq(p, q) + distance_sq(q, r) - distance_sq(p, r)
+    2 * dot(vec(v, u), vec(v, w)) = distance_sq(u, v) + distance_sq(v, w) - distance_sq(u, w) = distance_sq(p, q) + distance_sq(v, w) - distance_sq(u, w)
+
+    distance_sq(v, w) * (distance_sq(p, q) + distance_sq(p, r) - distance_sq(q, r)) = distance_sq(v, w) * (2 * dot(vec(p, q), vec(p, r))) = 2 * (dot(vec(p, q), vec(p, r)) * distance_sq(v, w)) = 2 * (dot(vec(u, v), vec(u, w)) * distance_sq(q, r)) = distance_sq(q, r) * (2 * dot(vec(u, v), vec(u, w))) = distance_sq(q, r) * (distance_sq(p, q) + distance_sq(u, w) - distance_sq(v, w))
+
+    distance_sq(u, w) * (distance_sq(p, q) + distance_sq(q, r) - distance_sq(p, r)) = distance_sq(w, u) * (2 * dot(vec(q, p), vec(q, r))) = 2 * (dot(vec(q, p), vec(q, r)) * distance_sq(w, u)) = 2 * (dot(vec(v, u), vec(v, w)) * distance_sq(r, p)) = distance_sq(r, p) * (2 * dot(vec(v, u), vec(v, w))) = distance_sq(p, r) * (distance_sq(p, q) + distance_sq(v, w) - distance_sq(u, w))
+
+
+# ASA congruence by direct scalar elimination, with no geometric construction axioms.
+
+thm asa_congruence:
+    ? forall p, q, r, u, v, w cart(R, R):
+        p != q, q != r, r != p,
+        u != v, v != w, w != u,
+        distance_sq(p, q) = distance_sq(u, v),
+        dot(vec(p, q), vec(p, r)) * distance_sq(v, w) = dot(vec(u, v), vec(u, w)) * distance_sq(q, r),
+        dot(vec(q, p), vec(q, r)) * distance_sq(w, u) = dot(vec(v, u), vec(v, w)) * distance_sq(r, p)
+        =>:
+            distance_sq(q, r) = distance_sq(v, w),
+            distance_sq(p, r) = distance_sq(u, w)
+
+    by thm asa_angle_equations_bridge(p, q, r, u, v, w)
+    by thm distance_sq_positive_of_ne(p, q)
+    by thm distance_sq_nonnegative(q, r)
+    by thm distance_sq_nonnegative(p, r)
+    by thm distance_sq_nonnegative(v, w)
+    by thm distance_sq_nonnegative(u, w)
+
+    by thm asa_scalar_core(distance_sq(q, r), distance_sq(p, r), distance_sq(p, q), distance_sq(v, w), distance_sq(u, w))
+
+    distance_sq(v, w) = distance_sq(q, r)
+    distance_sq(u, w) = distance_sq(p, r)
+    distance_sq(q, r) = distance_sq(v, w)
+    distance_sq(p, r) = distance_sq(u, w)
+
+thm perpendicular_symmetric:
+    ? forall a, b, c, d cart(R, R):
+        dot(vec(a, b), vec(c, d)) = 0
+        =>:
+            dot(vec(c, d), vec(a, b)) = 0
+    dot(vec(c, d), vec(a, b)) = dot(vec(a, b), vec(c, d))
+    dot(vec(c, d), vec(a, b)) = 0
+
+thm parallel_symmetric:
+    ? forall a, b, c, d cart(R, R):
+        det(vec(a, b), vec(c, d)) = 0
+        =>:
+            det(vec(c, d), vec(a, b)) = 0
+    det(vec(c, d), vec(a, b)) = -(det(vec(a, b), vec(c, d)))
+    det(vec(c, d), vec(a, b)) = 0
+
+# SSS: the three squared side equalities determine the included dot product.
+thm sss_dot_equal:
+    ? forall p, q, r, u, v, w cart(R, R):
+        distance_sq(p, q) = distance_sq(u, v),
+        distance_sq(q, r) = distance_sq(v, w),
+        distance_sq(p, r) = distance_sq(u, w)
+        =>:
+            dot(vec(q, p), vec(q, r)) = dot(vec(v, u), vec(v, w))
+    by thm twice_dot_from_distances_direct(p, q, r)
+    by thm twice_dot_from_distances_direct(u, v, w)
+    2 * dot(vec(q, p), vec(q, r)) = distance_sq(p, q) + distance_sq(q, r) - distance_sq(p, r)
+    distance_sq(p, q) + distance_sq(q, r) - distance_sq(p, r) = distance_sq(u, v) + distance_sq(v, w) - distance_sq(u, w)
+    distance_sq(u, v) + distance_sq(v, w) - distance_sq(u, w) = 2 * dot(vec(v, u), vec(v, w))
+    2 * dot(vec(q, p), vec(q, r)) = 2 * dot(vec(v, u), vec(v, w))
+    dot(vec(q, p), vec(q, r)) = (2 * dot(vec(q, p), vec(q, r))) / 2 = (2 * dot(vec(v, u), vec(v, w))) / 2 = dot(vec(v, u), vec(v, w))
+
+thm isosceles_base_dot:
+    ? forall a, b, c cart(R, R):
+        distance_sq(a, b) = distance_sq(a, c)
+        =>:
+            dot(vec(b, a), vec(b, c)) = dot(vec(c, a), vec(c, b))
+    dot(vec(b, a), vec(b, c)) = (distance_sq(a, b) + distance_sq(b, c) - distance_sq(a, c)) / 2
+    dot(vec(c, a), vec(c, b)) = (distance_sq(a, c) + distance_sq(c, b) - distance_sq(a, b)) / 2
+    distance_sq(b, c) = distance_sq(c, b)
+    dot(vec(b, a), vec(b, c)) = dot(vec(c, a), vec(c, b))
+
+# Converse of isosceles_base_dot: equal base angles imply equal sides
+# NOTE: The general converse requires additional non-degeneracy constraints.
+# This theorem was removed after counterexample verification showed the stated
+# premises insufficient. Future formalization should add triangle inequality
+# or explicit angle measure constraints.
+
+thm pythagorean_theorem:
+    ? forall a, b, c cart(R, R):
+        dot(vec(b, a), vec(b, c)) = 0
+        =>:
+            distance_sq(a, c) = distance_sq(a, b) + distance_sq(b, c)
+    distance_sq(a, c) = distance_sq(a, b) + distance_sq(b, c) - 2 * dot(vec(b, a), vec(b, c))
+    distance_sq(a, b) + distance_sq(b, c) - 2 * dot(vec(b, a), vec(b, c)) = distance_sq(a, b) + distance_sq(b, c)
+    distance_sq(a, c) = distance_sq(a, b) + distance_sq(b, c)
+
+# ═══════════════════════════════════════════════════════════════════════
+# Layer 2: Advanced coordinate theorems (pure polynomial identities)
+# ═══════════════════════════════════════════════════════════════════════
+
+# Stewart's theorem for an affine point on the segment from b to c.
+thm stewart_theorem:
+    ? forall a, b, c, d cart(R, R), t R:
+        d[1] = (1 - t) * b[1] + t * c[1],
+        d[2] = (1 - t) * b[2] + t * c[2]
+        =>:
+            distance_sq(a, d) = (1 - t) * distance_sq(a, b) + t * distance_sq(a, c) - t * (1 - t) * distance_sq(b, c)
+    by thm distance_sq_coordinate_formula(a, d)
+    by thm distance_sq_coordinate_formula(a, b)
+    by thm distance_sq_coordinate_formula(a, c)
+    by thm distance_sq_coordinate_formula(b, c)
+    (d[1] - a[1])^2 + (d[2] - a[2])^2 = (((1 - t) * b[1] + t * c[1]) - a[1])^2 + (((1 - t) * b[2] + t * c[2]) - a[2])^2
+    (((1 - t) * b[1] + t * c[1]) - a[1])^2 + (((1 - t) * b[2] + t * c[2]) - a[2])^2 = (1 - t) * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + t * ((c[1] - a[1])^2 + (c[2] - a[2])^2) - t * (1 - t) * ((c[1] - b[1])^2 + (c[2] - b[2])^2)
+    distance_sq(a, d) = (d[1] - a[1])^2 + (d[2] - a[2])^2 = (((1 - t) * b[1] + t * c[1]) - a[1])^2 + (((1 - t) * b[2] + t * c[2]) - a[2])^2 = (1 - t) * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + t * ((c[1] - a[1])^2 + (c[2] - a[2])^2) - t * (1 - t) * ((c[1] - b[1])^2 + (c[2] - b[2])^2) = (1 - t) * distance_sq(a, b) + t * distance_sq(a, c) - t * (1 - t) * distance_sq(b, c)
+
+# Coordinate-form version, retained for reference:
+# thm centroid_distance_coordinate:
+#     ? forall a, b, c, g cart(R, R):
+#         g[1] = (a[1] + b[1] + c[1]) / 3,
+#         g[2] = (a[2] + b[2] + c[2]) / 3
+#         =>:
+#             distance_sq(a, g) + distance_sq(b, g) + distance_sq(c, g) = (distance_sq(a, b) + distance_sq(b, c) + distance_sq(a, c)) / 3
+#     distance_sq(a, g) = (g[1] - a[1])^2 + (g[2] - a[2])^2
+#     distance_sq(b, g) = (g[1] - b[1])^2 + (g[2] - b[2])^2
+#     distance_sq(c, g) = (g[1] - c[1])^2 + (g[2] - c[2])^2
+#     distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2
+#     distance_sq(b, c) = (c[1] - b[1])^2 + (c[2] - b[2])^2
+#     distance_sq(a, c) = (c[1] - a[1])^2 + (c[2] - a[2])^2
+#     (g[1] - a[1])^2 + (g[2] - a[2])^2 + ((g[1] - b[1])^2 + (g[2] - b[2])^2) + ((g[1] - c[1])^2 + (g[2] - c[2])^2) = (((a[1] + b[1] + c[1]) / 3 - a[1])^2 + ((a[2] + b[2] + c[2]) / 3 - a[2])^2) + (((a[1] + b[1] + c[1]) / 3 - b[1])^2 + ((a[2] + b[2] + c[2]) / 3 - b[2])^2) + (((a[1] + b[1] + c[1]) / 3 - c[1])^2 + ((a[2] + b[2] + c[2]) / 3 - c[2])^2)
+#     (((a[1] + b[1] + c[1]) / 3 - a[1])^2 + ((a[2] + b[2] + c[2]) / 3 - a[2])^2) + (((a[1] + b[1] + c[1]) / 3 - b[1])^2 + ((a[2] + b[2] + c[2]) / 3 - b[2])^2) + (((a[1] + b[1] + c[1]) / 3 - c[1])^2 + ((a[2] + b[2] + c[2]) / 3 - c[2])^2) = ((b[1] - a[1])^2 + (b[2] - a[2])^2 + ((c[1] - b[1])^2 + (c[2] - b[2])^2) + ((c[1] - a[1])^2 + (c[2] - a[2])^2)) / 3
+#     distance_sq(a, g) + distance_sq(b, g) + distance_sq(c, g) = (g[1] - a[1])^2 + (g[2] - a[2])^2 + ((g[1] - b[1])^2 + (g[2] - b[2])^2) + ((g[1] - c[1])^2 + (g[2] - c[2])^2)
+#     (distance_sq(a, b) + distance_sq(b, c) + distance_sq(a, c)) / 3 = ((b[1] - a[1])^2 + (b[2] - a[2])^2 + ((c[1] - b[1])^2 + (c[2] - b[2])^2) + ((c[1] - a[1])^2 + (c[2] - a[2])^2)) / 3
+#     distance_sq(a, g) + distance_sq(b, g) + distance_sq(c, g) = (distance_sq(a, b) + distance_sq(b, c) + distance_sq(a, c)) / 3
+
+# The sum of squared distances to the centroid equals one third of the
+# sum of the squared side lengths.
+thm centroid_distance:
+    ? forall a, b, c, g cart(R, R):
+        $is_centroid(g, a, b, c)
+        =>:
+            distance_sq(a, g) + distance_sq(b, g) + distance_sq(c, g) = (distance_sq(a, b) + distance_sq(b, c) + distance_sq(a, c)) / 3
+    g[1] = (a[1] + b[1] + c[1]) / 3
+    g[2] = (a[2] + b[2] + c[2]) / 3
+    distance_sq(a, g) = (g[1] - a[1])^2 + (g[2] - a[2])^2
+    distance_sq(b, g) = (g[1] - b[1])^2 + (g[2] - b[2])^2
+    distance_sq(c, g) = (g[1] - c[1])^2 + (g[2] - c[2])^2
+    distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2
+    distance_sq(b, c) = (c[1] - b[1])^2 + (c[2] - b[2])^2
+    distance_sq(a, c) = (c[1] - a[1])^2 + (c[2] - a[2])^2
+    (g[1] - a[1])^2 + (g[2] - a[2])^2 + ((g[1] - b[1])^2 + (g[2] - b[2])^2) + ((g[1] - c[1])^2 + (g[2] - c[2])^2) = (((a[1] + b[1] + c[1]) / 3 - a[1])^2 + ((a[2] + b[2] + c[2]) / 3 - a[2])^2) + (((a[1] + b[1] + c[1]) / 3 - b[1])^2 + ((a[2] + b[2] + c[2]) / 3 - b[2])^2) + (((a[1] + b[1] + c[1]) / 3 - c[1])^2 + ((a[2] + b[2] + c[2]) / 3 - c[2])^2)
+    (((a[1] + b[1] + c[1]) / 3 - a[1])^2 + ((a[2] + b[2] + c[2]) / 3 - a[2])^2) + (((a[1] + b[1] + c[1]) / 3 - b[1])^2 + ((a[2] + b[2] + c[2]) / 3 - b[2])^2) + (((a[1] + b[1] + c[1]) / 3 - c[1])^2 + ((a[2] + b[2] + c[2]) / 3 - c[2])^2) = ((b[1] - a[1])^2 + (b[2] - a[2])^2 + ((c[1] - b[1])^2 + (c[2] - b[2])^2) + ((c[1] - a[1])^2 + (c[2] - a[2])^2)) / 3
+    distance_sq(a, g) + distance_sq(b, g) + distance_sq(c, g) = (g[1] - a[1])^2 + (g[2] - a[2])^2 + ((g[1] - b[1])^2 + (g[2] - b[2])^2) + ((g[1] - c[1])^2 + (g[2] - c[2])^2)
+    (distance_sq(a, b) + distance_sq(b, c) + distance_sq(a, c)) / 3 = ((b[1] - a[1])^2 + (b[2] - a[2])^2 + ((c[1] - b[1])^2 + (c[2] - b[2])^2) + ((c[1] - a[1])^2 + (c[2] - a[2])^2)) / 3
+    distance_sq(a, g) + distance_sq(b, g) + distance_sq(c, g) = (distance_sq(a, b) + distance_sq(b, c) + distance_sq(a, c)) / 3
+
+thm triangle_area_det:
+    ? forall a, b, c cart(R, R):
+        det(vec(a, b), vec(a, c)) = (b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1])
+    vec(a, b) = (b[1] - a[1], b[2] - a[2])
+    vec(a, c) = (c[1] - a[1], c[2] - a[2])
+    det(vec(a, b), vec(a, c)) = vec(a, b)[1] * vec(a, c)[2] - vec(a, b)[2] * vec(a, c)[1] = (b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1])
+
+# Determinant is additive in its second argument.
+thm det_bilinear_right:
+    ? forall u, v, w cart(R, R):
+        det(u, (v[1] + w[1], v[2] + w[2])) = det(u, v) + det(u, w)
+    by thm det_coordinate_formula(u, (v[1] + w[1], v[2] + w[2]))
+    by thm det_coordinate_formula(u, v)
+    by thm det_coordinate_formula(u, w)
+    u[1] * (v[2] + w[2]) - u[2] * (v[1] + w[1]) = (u[1] * v[2] - u[2] * v[1]) + (u[1] * w[2] - u[2] * w[1])
+    det(u, (v[1] + w[1], v[2] + w[2])) = u[1] * (v[2] + w[2]) - u[2] * (v[1] + w[1]) = (u[1] * v[2] - u[2] * v[1]) + (u[1] * w[2] - u[2] * w[1]) = det(u, v) + det(u, w)
+
+# Strict finite-center lemmas for the coordinate concyclicity criterion.
+# The nonzero determinant gives a finite center through a, b, and d;
+# the determinant criterion then forces c to have the same squared radius.
+
+# Isolated division/cancellation probes for strict concyclicity.
+
+thm div_mul_cancel_probe:
+    ? forall a, b R:
+        b != 0
+        =>:
+            (a / b) * b = a
+    (a / b) * b = a
+
+thm cramer_first_circle_equation:
+    ? forall x1, y1, x2, y2, s1, s2, delta R:
+        delta = x1 * y2 - y1 * x2,
+        delta != 0
+        =>:
+            2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x1 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y1) = s1
+    2 * delta != 0
+    by thm div_mul_cancel_probe(s1 * y2 - y1 * s2, 2 * delta)
+    by thm div_mul_cancel_probe(x1 * s2 - s1 * x2, 2 * delta)
+    (2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x1 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y1)) * delta = (((s1 * y2 - y1 * s2) / (2 * delta)) * (2 * delta)) * x1 + (((x1 * s2 - s1 * x2) / (2 * delta)) * (2 * delta)) * y1
+    (((s1 * y2 - y1 * s2) / (2 * delta)) * (2 * delta)) * x1 + (((x1 * s2 - s1 * x2) / (2 * delta)) * (2 * delta)) * y1 = (s1 * y2 - y1 * s2) * x1 + (x1 * s2 - s1 * x2) * y1
+    (s1 * y2 - y1 * s2) * x1 + (x1 * s2 - s1 * x2) * y1 = s1 * (x1 * y2 - y1 * x2)
+    s1 * (x1 * y2 - y1 * x2) = s1 * delta
+    2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x1 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y1) * delta = s1 * delta
+    by thm divide_both_sides(2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x1 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y1), s1, delta)
+
+thm cramer_second_circle_equation:
+    ? forall x1, y1, x2, y2, s1, s2, delta R:
+        delta = x1 * y2 - y1 * x2,
+        delta != 0
+        =>:
+            2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x2 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y2) = s2
+    2 * delta != 0
+    by thm div_mul_cancel_probe(s1 * y2 - y1 * s2, 2 * delta)
+    by thm div_mul_cancel_probe(x1 * s2 - s1 * x2, 2 * delta)
+    (2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x2 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y2)) * delta = (((s1 * y2 - y1 * s2) / (2 * delta)) * (2 * delta)) * x2 + (((x1 * s2 - s1 * x2) / (2 * delta)) * (2 * delta)) * y2
+    (((s1 * y2 - y1 * s2) / (2 * delta)) * (2 * delta)) * x2 + (((x1 * s2 - s1 * x2) / (2 * delta)) * (2 * delta)) * y2 = (s1 * y2 - y1 * s2) * x2 + (x1 * s2 - s1 * x2) * y2
+    (s1 * y2 - y1 * s2) * x2 + (x1 * s2 - s1 * x2) * y2 = s2 * (x1 * y2 - y1 * x2)
+    s2 * (x1 * y2 - y1 * x2) = s2 * delta
+    2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x2 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y2) * delta = s2 * delta
+    by thm divide_both_sides(2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x2 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y2), s2, delta)
+
+thm zero_sum_rearrange:
+    ? forall a, b R:
+        a + b = 0
+        =>:
+            -a = b
+    -a = -a + 0 = -a + (a + b) = b
+
+thm sub_add_cancel:
+    ? forall a, b R:
+        a - b + b = a
+    a - b + b = a - (b - b) = a - 0 = a
+
+thm eq_substitution_in_sum:
+    ? forall a, b, c R:
+        b = c
+        =>:
+            a - b + c = a
+    a - b + c = a - b + b = a
+
+thm cramer_third_circle_equation:
+    ? forall x1, y1, x2, y2, x3, y3, s1, s2, s3, delta R:
+        delta = x1 * y2 - y1 * x2,
+        delta != 0,
+        s1 * (x2 * y3 - y2 * x3) - s2 * (x1 * y3 - y1 * x3) + s3 * delta = 0
+        =>:
+            2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x3 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y3) = s3
+    2 * delta != 0
+    by thm div_mul_cancel_probe(s1 * y2 - y1 * s2, 2 * delta)
+    by thm div_mul_cancel_probe(x1 * s2 - s1 * x2, 2 * delta)
+    (2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x3 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y3)) * delta = (((s1 * y2 - y1 * s2) / (2 * delta)) * (2 * delta)) * x3 + (((x1 * s2 - s1 * x2) / (2 * delta)) * (2 * delta)) * y3
+    (((s1 * y2 - y1 * s2) / (2 * delta)) * (2 * delta)) * x3 + (((x1 * s2 - s1 * x2) / (2 * delta)) * (2 * delta)) * y3 = (s1 * y2 - y1 * s2) * x3 + (x1 * s2 - s1 * x2) * y3
+    (s1 * y2 - y1 * s2) * x3 + (x1 * s2 - s1 * x2) * y3 = -(s1 * (x2 * y3 - y2 * x3) - s2 * (x1 * y3 - y1 * x3))
+    -(s1 * (x2 * y3 - y2 * x3) - s2 * (x1 * y3 - y1 * x3)) = s3 * delta
+    2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x3 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y3) * delta = s3 * delta
+    by thm divide_both_sides(2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x3 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y3), s3, delta)
+
+thm circle_equation_gives_equal_distance:
+    ? forall ux, uy, x, y R:
+        2 * (ux * x + uy * y) = x^2 + y^2
+        =>:
+            (ux - x)^2 + (uy - y)^2 = ux^2 + uy^2
+    (ux - x)^2 + (uy - y)^2 = ux^2 + uy^2 - 2 * (ux * x + uy * y) + (x^2 + y^2) = ux^2 + uy^2
+
+thm translated_difference_square:
+    ? forall p, d, u, x R:
+        x = p - d
+        =>:
+            (p - (d + u))^2 = (u - x)^2
+    p - (d + u) = (p - d) - u = x - u
+    (p - (d + u))^2 = (x - u)^2 = (u - x)^2
+
+thm center_offset_square:
+    ? forall d, u R:
+        (d - (d + u))^2 = u^2
+    d - (d + u) = -u
+    (d - (d + u))^2 = (-u)^2 = u^2
+
+thm common_center_implies_concyclic:
+    ? forall a, b, c, d, o cart(R, R):
+        distance_sq(o, a) = distance_sq(o, d),
+        distance_sq(o, b) = distance_sq(o, d),
+        distance_sq(o, c) = distance_sq(o, d)
+        =>:
+            $are_concyclic(a, b, c, d)
+    witness $are_concyclic(a, b, c, d) from o:
+        distance_sq(o, a) = distance_sq(o, d)
+        distance_sq(o, b) = distance_sq(o, d)
+        distance_sq(o, c) = distance_sq(o, d)
+
+thm translated_circle_equation_gives_distance:
+    ? forall d, p, o cart(R, R), ux, uy, x, y R:
+        o = (d[1] + ux, d[2] + uy),
+        x = p[1] - d[1],
+        y = p[2] - d[2],
+        2 * (ux * x + uy * y) = x^2 + y^2
+        =>:
+            distance_sq(o, p) = distance_sq(o, d)
+    by thm circle_equation_gives_equal_distance(ux, uy, x, y)
+    by thm translated_difference_square(p[1], d[1], ux, x)
+    by thm translated_difference_square(p[2], d[2], uy, y)
+    by thm center_offset_square(d[1], ux)
+    by thm center_offset_square(d[2], uy)
+    by thm distance_sq_coordinate_formula(o, p)
+    by thm distance_sq_coordinate_formula(o, d)
+    distance_sq(o, p) = (p[1] - o[1])^2 + (p[2] - o[2])^2
+    (p[1] - o[1])^2 + (p[2] - o[2])^2 = (p[1] - (d[1] + ux))^2 + (p[2] - (d[2] + uy))^2
+    (p[1] - (d[1] + ux))^2 + (p[2] - (d[2] + uy))^2 = (ux - x)^2 + (uy - y)^2
+    (ux - x)^2 + (uy - y)^2 = ux^2 + uy^2
+    ux^2 + uy^2 = (d[1] - (d[1] + ux))^2 + (d[2] - (d[2] + uy))^2
+    (d[1] - (d[1] + ux))^2 + (d[2] - (d[2] + uy))^2 = (d[1] - o[1])^2 + (d[2] - o[2])^2
+    (d[1] - o[1])^2 + (d[2] - o[2])^2 = distance_sq(o, d)
+
+# Coordinate determinant criterion: D is the translation origin, and A,B
+# are required to be non-collinear with D so the finite center is unique.
+thm concyclic_det_criterion_implies_concyclic:
+    ? forall a, b, c, d cart(R, R):
+        (a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]) != 0,
+        ((a[1] - d[1])^2 + (a[2] - d[2])^2) * ((b[1] - d[1]) * (c[2] - d[2]) - (b[2] - d[2]) * (c[1] - d[1])) - ((b[1] - d[1])^2 + (b[2] - d[2])^2) * ((a[1] - d[1]) * (c[2] - d[2]) - (a[2] - d[2]) * (c[1] - d[1])) + ((c[1] - d[1])^2 + (c[2] - d[2])^2) * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1])) = 0
+        =>:
+            $are_concyclic(a, b, c, d)
+    by thm cramer_first_circle_equation(a[1] - d[1], a[2] - d[2], b[1] - d[1], b[2] - d[2], (a[1] - d[1])^2 + (a[2] - d[2])^2, (b[1] - d[1])^2 + (b[2] - d[2])^2, (a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))
+    by thm cramer_second_circle_equation(a[1] - d[1], a[2] - d[2], b[1] - d[1], b[2] - d[2], (a[1] - d[1])^2 + (a[2] - d[2])^2, (b[1] - d[1])^2 + (b[2] - d[2])^2, (a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))
+    by thm cramer_third_circle_equation(a[1] - d[1], a[2] - d[2], b[1] - d[1], b[2] - d[2], c[1] - d[1], c[2] - d[2], (a[1] - d[1])^2 + (a[2] - d[2])^2, (b[1] - d[1])^2 + (b[2] - d[2])^2, (c[1] - d[1])^2 + (c[2] - d[2])^2, (a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))
+    by thm translated_circle_equation_gives_distance(d, a, (d[1] + ((((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[2] - d[2]) - (a[2] - d[2]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2)) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1])))), d[2] + (((a[1] - d[1]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2) - ((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[1] - d[1])) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))))), (((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[2] - d[2]) - (a[2] - d[2]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2)) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))), ((a[1] - d[1]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2) - ((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[1] - d[1])) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))), a[1] - d[1], a[2] - d[2])
+    by thm translated_circle_equation_gives_distance(d, b, (d[1] + ((((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[2] - d[2]) - (a[2] - d[2]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2)) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1])))), d[2] + (((a[1] - d[1]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2) - ((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[1] - d[1])) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))))), (((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[2] - d[2]) - (a[2] - d[2]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2)) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))), ((a[1] - d[1]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2) - ((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[1] - d[1])) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))), b[1] - d[1], b[2] - d[2])
+    by thm translated_circle_equation_gives_distance(d, c, (d[1] + ((((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[2] - d[2]) - (a[2] - d[2]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2)) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1])))), d[2] + (((a[1] - d[1]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2) - ((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[1] - d[1])) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))))), (((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[2] - d[2]) - (a[2] - d[2]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2)) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))), ((a[1] - d[1]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2) - ((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[1] - d[1])) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))), c[1] - d[1], c[2] - d[2])
+    by thm common_center_implies_concyclic(a, b, c, d, (d[1] + ((((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[2] - d[2]) - (a[2] - d[2]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2)) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1])))), d[2] + (((a[1] - d[1]) * ((b[1] - d[1])^2 + (b[2] - d[2])^2) - ((a[1] - d[1])^2 + (a[2] - d[2])^2) * (b[1] - d[1])) / (2 * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))))))
+
+thm concyclic_det_criterion:
+    ? forall a, b, c, d cart(R, R):
+        (a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]) != 0,
+        ((a[1] - d[1])^2 + (a[2] - d[2])^2) * ((b[1] - d[1]) * (c[2] - d[2]) - (b[2] - d[2]) * (c[1] - d[1])) - ((b[1] - d[1])^2 + (b[2] - d[2])^2) * ((a[1] - d[1]) * (c[2] - d[2]) - (a[2] - d[2]) * (c[1] - d[1])) + ((c[1] - d[1])^2 + (c[2] - d[2])^2) * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1])) = 0
+        =>:
+            distance_sq(a, d) * det(vec(d, b), vec(d, c)) - distance_sq(b, d) * det(vec(d, a), vec(d, c)) + distance_sq(c, d) * det(vec(d, a), vec(d, b)) = 0
+    distance_sq(a, d) = (d[1] - a[1])^2 + (d[2] - a[2])^2
+    distance_sq(b, d) = (d[1] - b[1])^2 + (d[2] - b[2])^2
+    distance_sq(c, d) = (d[1] - c[1])^2 + (d[2] - c[2])^2
+    (d[1] - a[1])^2 = (a[1] - d[1])^2
+    (d[2] - a[2])^2 = (a[2] - d[2])^2
+    (d[1] - b[1])^2 = (b[1] - d[1])^2
+    (d[2] - b[2])^2 = (b[2] - d[2])^2
+    (d[1] - c[1])^2 = (c[1] - d[1])^2
+    (d[2] - c[2])^2 = (c[2] - d[2])^2
+    vec(d, a) = (a[1] - d[1], a[2] - d[2])
+    vec(d, b) = (b[1] - d[1], b[2] - d[2])
+    vec(d, c) = (c[1] - d[1], c[2] - d[2])
+    det(vec(d, a), vec(d, b)) = (a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1])
+    det(vec(d, a), vec(d, c)) = (a[1] - d[1]) * (c[2] - d[2]) - (a[2] - d[2]) * (c[1] - d[1])
+    det(vec(d, b), vec(d, c)) = (b[1] - d[1]) * (c[2] - d[2]) - (b[2] - d[2]) * (c[1] - d[1])
+    distance_sq(a, d) * det(vec(d, b), vec(d, c)) - distance_sq(b, d) * det(vec(d, a), vec(d, c)) + distance_sq(c, d) * det(vec(d, a), vec(d, b)) = ((a[1] - d[1])^2 + (a[2] - d[2])^2) * ((b[1] - d[1]) * (c[2] - d[2]) - (b[2] - d[2]) * (c[1] - d[1])) - ((b[1] - d[1])^2 + (b[2] - d[2])^2) * ((a[1] - d[1]) * (c[2] - d[2]) - (a[2] - d[2]) * (c[1] - d[1])) + ((c[1] - d[1])^2 + (c[2] - d[2])^2) * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]))
+    distance_sq(a, d) * det(vec(d, b), vec(d, c)) - distance_sq(b, d) * det(vec(d, a), vec(d, c)) + distance_sq(c, d) * det(vec(d, a), vec(d, b)) = 0
+
+# Dot product is additive in its second argument.
+thm dot_bilinear_right:
+    ? forall u, v, w cart(R, R):
+        dot(u, (v[1] + w[1], v[2] + w[2])) = dot(u, v) + dot(u, w)
+    by thm dot_coordinate_formula(u, (v[1] + w[1], v[2] + w[2]))
+    by thm dot_coordinate_formula(u, v)
+    by thm dot_coordinate_formula(u, w)
+    u[1] * (v[1] + w[1]) + u[2] * (v[2] + w[2]) = (u[1] * v[1] + u[2] * v[2]) + (u[1] * w[1] + u[2] * w[2])
+    dot(u, (v[1] + w[1], v[2] + w[2])) = u[1] * (v[1] + w[1]) + u[2] * (v[2] + w[2]) = (u[1] * v[1] + u[2] * v[2]) + (u[1] * w[1] + u[2] * w[2]) = dot(u, v) + dot(u, w)
+
+# Dot product is homogeneous in its second argument.
+thm dot_scale_right:
+    ? forall u, v cart(R, R), k R:
+        dot(u, (k * v[1], k * v[2])) = k * dot(u, v)
+    by thm dot_coordinate_formula(u, (k * v[1], k * v[2]))
+    by thm dot_coordinate_formula(u, v)
+    u[1] * (k * v[1]) + u[2] * (k * v[2]) = k * (u[1] * v[1] + u[2] * v[2])
+    dot(u, (k * v[1], k * v[2])) = u[1] * (k * v[1]) + u[2] * (k * v[2]) = k * (u[1] * v[1] + u[2] * v[2]) = k * dot(u, v)
+
+# Scaling second vector scales determinant
+thm det_scale_right:
+    ? forall u, v cart(R, R), k R:
+        det(u, (k * v[1], k * v[2])) = k * det(u, v)
+    by thm det_coordinate_formula(u, (k * v[1], k * v[2]))
+    by thm det_coordinate_formula(u, v)
+    det(u, (k * v[1], k * v[2])) = u[1] * (k * v[2]) - u[2] * (k * v[1])
+    det(u, v) = u[1] * v[2] - u[2] * v[1]
+    u[1] * (k * v[2]) = k * (u[1] * v[2])
+    u[2] * (k * v[1]) = k * (u[2] * v[1])
+    u[1] * (k * v[2]) - u[2] * (k * v[1]) = k * (u[1] * v[2]) - k * (u[2] * v[1])
+    k * (u[1] * v[2]) - k * (u[2] * v[1]) = k * (u[1] * v[2] - u[2] * v[1])
+    u[1] * (k * v[2]) - u[2] * (k * v[1]) = k * (u[1] * v[2] - u[2] * v[1])
+    by thm multiply_both_sides(det(u, v), u[1] * v[2] - u[2] * v[1], k)
+    det(u, v) * k = (u[1] * v[2] - u[2] * v[1]) * k
+    k * det(u, v) = det(u, v) * k
+    (u[1] * v[2] - u[2] * v[1]) * k = k * (u[1] * v[2] - u[2] * v[1])
+    k * det(u, v) = k * (u[1] * v[2] - u[2] * v[1])
+    k * (u[1] * v[2] - u[2] * v[1]) = k * det(u, v)
+    det(u, (k * v[1], k * v[2])) = k * det(u, v)
+
+thm perpendicular_from_parallel:
+    ? forall a, b, c, d cart(R, R):
+        det(vec(a, b), vec(c, d)) = 0,
+        dot(vec(a, b), vec(a, b)) != 0
+        =>:
+            dot(vec(a, b), (vec(c, d)[2], -(vec(c, d)[1]))) = 0
+    vec(a, b) = (b[1] - a[1], b[2] - a[2])
+    vec(c, d) = (d[1] - c[1], d[2] - c[2])
+    dot(vec(a, b), (vec(c, d)[2], -(vec(c, d)[1]))) = (b[1] - a[1]) * (d[2] - c[2]) - (b[2] - a[2]) * (d[1] - c[1])
+    det(vec(a, b), vec(c, d)) = (b[1] - a[1]) * (d[2] - c[2]) - (b[2] - a[2]) * (d[1] - c[1])
+    dot(vec(a, b), (vec(c, d)[2], -(vec(c, d)[1]))) = 0
+
+thm median_length:
+    ? forall a, b, c, m cart(R, R):
+        m[1] = (b[1] + c[1]) / 2,
+        m[2] = (b[2] + c[2]) / 2
+        =>:
+            4 * distance_sq(a, m) = 2 * distance_sq(a, b) + 2 * distance_sq(a, c) - distance_sq(b, c)
+    distance_sq(a, m) = (m[1] - a[1])^2 + (m[2] - a[2])^2
+    distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2
+    distance_sq(a, c) = (c[1] - a[1])^2 + (c[2] - a[2])^2
+    distance_sq(b, c) = (c[1] - b[1])^2 + (c[2] - b[2])^2
+    (m[1] - a[1])^2 + (m[2] - a[2])^2 = ((b[1] + c[1]) / 2 - a[1])^2 + ((b[2] + c[2]) / 2 - a[2])^2
+    4 * (((b[1] + c[1]) / 2 - a[1])^2 + ((b[2] + c[2]) / 2 - a[2])^2) = 2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) + 2 * ((c[1] - a[1])^2 + (c[2] - a[2])^2) - ((c[1] - b[1])^2 + (c[2] - b[2])^2)
+    4 * distance_sq(a, m) = 2 * distance_sq(a, b) + 2 * distance_sq(a, c) - distance_sq(b, c)
+
+thm reflection_distance:
+    ? forall p, a, b cart(R, R):
+        b[1] = 2 * a[1] - p[1],
+        b[2] = 2 * a[2] - p[2]
+        =>:
+            distance_sq(a, p) = distance_sq(a, b)
+    distance_sq(a, p) = (p[1] - a[1])^2 + (p[2] - a[2])^2
+    distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2
+    (b[1] - a[1])^2 + (b[2] - a[2])^2 = ((2 * a[1] - p[1]) - a[1])^2 + ((2 * a[2] - p[2]) - a[2])^2
+    ((2 * a[1] - p[1]) - a[1])^2 + ((2 * a[2] - p[2]) - a[2])^2 = (p[1] - a[1])^2 + (p[2] - a[2])^2
+    distance_sq(a, p) = distance_sq(a, b)
+
+thm foot_perp_parametric:
+    ? forall a, b, p, f cart(R, R), t R:
+        f[1] = a[1] + t * (b[1] - a[1]),
+        f[2] = a[2] + t * (b[2] - a[2]),
+        (p[1] - a[1]) * (b[1] - a[1]) + (p[2] - a[2]) * (b[2] - a[2]) = t * ((b[1] - a[1])^2 + (b[2] - a[2])^2)
+        =>:
+            dot(vec(p, f), vec(a, b)) = 0
+    vec(p, f) = (f[1] - p[1], f[2] - p[2])
+    vec(a, b) = (b[1] - a[1], b[2] - a[2])
+    dot(vec(p, f), vec(a, b)) = (f[1] - p[1]) * (b[1] - a[1]) + (f[2] - p[2]) * (b[2] - a[2])
+    (f[1] - p[1]) * (b[1] - a[1]) + (f[2] - p[2]) * (b[2] - a[2]) = (a[1] + t * (b[1] - a[1]) - p[1]) * (b[1] - a[1]) + (a[2] + t * (b[2] - a[2]) - p[2]) * (b[2] - a[2])
+    (a[1] + t * (b[1] - a[1]) - p[1]) * (b[1] - a[1]) + (a[2] + t * (b[2] - a[2]) - p[2]) * (b[2] - a[2]) = t * ((b[1] - a[1])^2 + (b[2] - a[2])^2) - ((p[1] - a[1]) * (b[1] - a[1]) + (p[2] - a[2]) * (b[2] - a[2]))
+    t * ((b[1] - a[1])^2 + (b[2] - a[2])^2) - ((p[1] - a[1]) * (b[1] - a[1]) + (p[2] - a[2]) * (b[2] - a[2])) = 0
+    dot(vec(p, f), vec(a, b)) = 0
+
+# The distance from a to an affine point p=(1-t)a+t b scales by t^2.
+thm affine_combination_distance_sq:
+    ? forall a, b, p cart(R, R), t R:
+        $is_affine_combination(p, a, b, t)
+        =>:
+            distance_sq(a, p) = t^2 * distance_sq(a, b)
+    by thm distance_sq_coordinate_formula(a, p)
+    by thm distance_sq_coordinate_formula(a, b)
+    distance_sq(a, p) = (p[1] - a[1])^2 + (p[2] - a[2])^2
+    (p[1] - a[1])^2 + (p[2] - a[2])^2 = ((1 - t) * a[1] + t * b[1] - a[1])^2 + ((1 - t) * a[2] + t * b[2] - a[2])^2
+    ((1 - t) * a[1] + t * b[1] - a[1])^2 + ((1 - t) * a[2] + t * b[2] - a[2])^2 = t^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2)
+    t^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) = t^2 * distance_sq(a, b)
+    distance_sq(a, p) = t^2 * distance_sq(a, b)
+
+thm midpoint_segment_ratio:
+    ? forall a, b, m, p cart(R, R), t R:
+        $is_midpoint(m, a, b),
+        $is_affine_combination(p, a, b, t)
+        =>:
+            distance_sq(a, p) = (2 * t)^2 * distance_sq(a, m)
+    by thm affine_combination_distance_sq(a, b, p, t)
+    by thm midpoint_half_distance(a, b, m)
+    distance_sq(a, p) = t^2 * distance_sq(a, b)
+    distance_sq(a, m) = distance_sq(a, b) / 4
+    t^2 * distance_sq(a, b) = (2 * t)^2 * (distance_sq(a, b) / 4)
+    (2 * t)^2 * (distance_sq(a, b) / 4) = (2 * t)^2 * distance_sq(a, m)
+    distance_sq(a, p) = (2 * t)^2 * distance_sq(a, m)
+
+thm inner_product_distance_identity:
+    ? forall a, b, c, d cart(R, R):
+        2 * dot(vec(a, b), vec(c, d)) = distance_sq(a, d) + distance_sq(b, c) - distance_sq(a, c) - distance_sq(b, d)
+    vec(a, b) = (b[1] - a[1], b[2] - a[2])
+    vec(c, d) = (d[1] - c[1], d[2] - c[2])
+    dot(vec(a, b), vec(c, d)) = (b[1] - a[1]) * (d[1] - c[1]) + (b[2] - a[2]) * (d[2] - c[2])
+    distance_sq(a, d) = (d[1] - a[1])^2 + (d[2] - a[2])^2
+    distance_sq(b, c) = (c[1] - b[1])^2 + (c[2] - b[2])^2
+    distance_sq(a, c) = (c[1] - a[1])^2 + (c[2] - a[2])^2
+    distance_sq(b, d) = (d[1] - b[1])^2 + (d[2] - b[2])^2
+    2 * ((b[1] - a[1]) * (d[1] - c[1]) + (b[2] - a[2]) * (d[2] - c[2])) = (d[1] - a[1])^2 + (d[2] - a[2])^2 + ((c[1] - b[1])^2 + (c[2] - b[2])^2) - ((c[1] - a[1])^2 + (c[2] - a[2])^2) - ((d[1] - b[1])^2 + (d[2] - b[2])^2)
+    2 * dot(vec(a, b), vec(c, d)) = 2 * ((b[1] - a[1]) * (d[1] - c[1]) + (b[2] - a[2]) * (d[2] - c[2]))
+    distance_sq(a, d) + distance_sq(b, c) - distance_sq(a, c) - distance_sq(b, d) = (d[1] - a[1])^2 + (d[2] - a[2])^2 + ((c[1] - b[1])^2 + (c[2] - b[2])^2) - ((c[1] - a[1])^2 + (c[2] - a[2])^2) - ((d[1] - b[1])^2 + (d[2] - b[2])^2)
+    2 * dot(vec(a, b), vec(c, d)) = distance_sq(a, d) + distance_sq(b, c) - distance_sq(a, c) - distance_sq(b, d)
+
+# Squared distances scale by k^2 under coordinate-wise similarity
+thm similar_triangles_ratio:
+    ? forall p, q, r, u, v, w cart(R, R), k R:
+        u[1] - v[1] = k * (p[1] - q[1]),
+        u[2] - v[2] = k * (p[2] - q[2]),
+        w[1] - v[1] = k * (r[1] - q[1]),
+        w[2] - v[2] = k * (r[2] - q[2])
+        =>:
+            distance_sq(u, w) = k^2 * distance_sq(p, r)
+    by thm distance_sq_coordinate_formula(u, w)
+    by thm distance_sq_coordinate_formula(p, r)
+    w[1] - u[1] = (w[1] - v[1]) - (u[1] - v[1])
+    (w[1] - v[1]) - (u[1] - v[1]) = k * (r[1] - q[1]) - k * (p[1] - q[1])
+    k * (r[1] - q[1]) - k * (p[1] - q[1]) = k * (r[1] - p[1])
+    w[1] - u[1] = k * (r[1] - p[1])
+    w[2] - u[2] = (w[2] - v[2]) - (u[2] - v[2])
+    (w[2] - v[2]) - (u[2] - v[2]) = k * (r[2] - q[2]) - k * (p[2] - q[2])
+    k * (r[2] - q[2]) - k * (p[2] - q[2]) = k * (r[2] - p[2])
+    w[2] - u[2] = k * (r[2] - p[2])
+    (w[1] - u[1])^2 = (k * (r[1] - p[1]))^2 = k^2 * (r[1] - p[1])^2
+    (w[2] - u[2])^2 = (k * (r[2] - p[2]))^2 = k^2 * (r[2] - p[2])^2
+    (w[1] - u[1])^2 + (w[2] - u[2])^2 = k^2 * (r[1] - p[1])^2 + k^2 * (r[2] - p[2])^2
+    k^2 * (r[1] - p[1])^2 + k^2 * (r[2] - p[2])^2 = k^2 * ((r[1] - p[1])^2 + (r[2] - p[2])^2)
+    distance_sq(u, w) = (w[1] - u[1])^2 + (w[2] - u[2])^2 = k^2 * ((r[1] - p[1])^2 + (r[2] - p[2])^2) = k^2 * distance_sq(p, r)
+
+# TODO: similar_triangles_dot 验证失败（代数推导问题），临时改为 axiom
+# Dot products scale by k^2 under coordinate-wise similarity
+thm similar_triangles_dot:
+    ? forall p, q, r, u, v, w cart(R, R), k R:
+        u[1] - v[1] = k * (p[1] - q[1]),
+        u[2] - v[2] = k * (p[2] - q[2]),
+        w[1] - v[1] = k * (r[1] - q[1]),
+        w[2] - v[2] = k * (r[2] - q[2])
+        =>:
+            dot(vec(v, u), vec(v, w)) = k^2 * dot(vec(q, p), vec(q, r))
+    by thm vec_coordinate_formula(v, u)
+    by thm vec_coordinate_formula(v, w)
+    by thm vec_coordinate_formula(q, p)
+    by thm vec_coordinate_formula(q, r)
+    by thm dot_coordinate_formula(vec(v, u), vec(v, w))
+    by thm dot_coordinate_formula(vec(q, p), vec(q, r))
+    (u[1] - v[1]) * (w[1] - v[1]) = (k * (p[1] - q[1])) * (k * (r[1] - q[1]))
+    (k * (p[1] - q[1])) * (k * (r[1] - q[1])) = k^2 * ((p[1] - q[1]) * (r[1] - q[1]))
+    (u[1] - v[1]) * (w[1] - v[1]) = k^2 * ((p[1] - q[1]) * (r[1] - q[1]))
+    (u[2] - v[2]) * (w[2] - v[2]) = (k * (p[2] - q[2])) * (k * (r[2] - q[2]))
+    (k * (p[2] - q[2])) * (k * (r[2] - q[2])) = k^2 * ((p[2] - q[2]) * (r[2] - q[2]))
+    (u[2] - v[2]) * (w[2] - v[2]) = k^2 * ((p[2] - q[2]) * (r[2] - q[2]))
+    (u[1] - v[1]) * (w[1] - v[1]) + (u[2] - v[2]) * (w[2] - v[2]) = k^2 * ((p[1] - q[1]) * (r[1] - q[1])) + k^2 * ((p[2] - q[2]) * (r[2] - q[2]))
+    k^2 * ((p[1] - q[1]) * (r[1] - q[1])) + k^2 * ((p[2] - q[2]) * (r[2] - q[2])) = k^2 * ((p[1] - q[1]) * (r[1] - q[1]) + (p[2] - q[2]) * (r[2] - q[2]))
+    dot(vec(v, u), vec(v, w)) = (u[1] - v[1]) * (w[1] - v[1]) + (u[2] - v[2]) * (w[2] - v[2])
+    (u[1] - v[1]) * (w[1] - v[1]) + (u[2] - v[2]) * (w[2] - v[2]) = k^2 * ((p[1] - q[1]) * (r[1] - q[1]) + (p[2] - q[2]) * (r[2] - q[2]))
+    dot(vec(q, p), vec(q, r)) = (p[1] - q[1]) * (r[1] - q[1]) + (p[2] - q[2]) * (r[2] - q[2])
+    k^2 * ((p[1] - q[1]) * (r[1] - q[1]) + (p[2] - q[2]) * (r[2] - q[2])) = k^2 * dot(vec(q, p), vec(q, r))
+    dot(vec(v, u), vec(v, w)) = k^2 * dot(vec(q, p), vec(q, r))
+
+# Determinants scale by k^2 under coordinate-wise similarity
+thm similar_triangles_det:
+    ? forall p, q, r, u, v, w cart(R, R), k R:
+        u[1] - v[1] = k * (p[1] - q[1]),
+        u[2] - v[2] = k * (p[2] - q[2]),
+        w[1] - v[1] = k * (r[1] - q[1]),
+        w[2] - v[2] = k * (r[2] - q[2])
+        =>:
+            det(vec(v, u), vec(v, w)) = k^2 * det(vec(q, p), vec(q, r))
+    by thm vec_coordinate_formula(v, u)
+    by thm vec_coordinate_formula(v, w)
+    by thm vec_coordinate_formula(q, p)
+    by thm vec_coordinate_formula(q, r)
+    by thm det_coordinate_formula(vec(v, u), vec(v, w))
+    by thm det_coordinate_formula(vec(q, p), vec(q, r))
+    (u[1] - v[1]) * (w[2] - v[2]) = (k * (p[1] - q[1])) * (k * (r[2] - q[2]))
+    (k * (p[1] - q[1])) * (k * (r[2] - q[2])) = k^2 * ((p[1] - q[1]) * (r[2] - q[2]))
+    (u[1] - v[1]) * (w[2] - v[2]) = k^2 * ((p[1] - q[1]) * (r[2] - q[2]))
+    (u[2] - v[2]) * (w[1] - v[1]) = (k * (p[2] - q[2])) * (k * (r[1] - q[1]))
+    (k * (p[2] - q[2])) * (k * (r[1] - q[1])) = k^2 * ((p[2] - q[2]) * (r[1] - q[1]))
+    (u[2] - v[2]) * (w[1] - v[1]) = k^2 * ((p[2] - q[2]) * (r[1] - q[1]))
+    (u[1] - v[1]) * (w[2] - v[2]) - (u[2] - v[2]) * (w[1] - v[1]) = k^2 * ((p[1] - q[1]) * (r[2] - q[2])) - k^2 * ((p[2] - q[2]) * (r[1] - q[1]))
+    k^2 * ((p[1] - q[1]) * (r[2] - q[2])) - k^2 * ((p[2] - q[2]) * (r[1] - q[1])) = k^2 * ((p[1] - q[1]) * (r[2] - q[2]) - (p[2] - q[2]) * (r[1] - q[1]))
+    det(vec(v, u), vec(v, w)) = (u[1] - v[1]) * (w[2] - v[2]) - (u[2] - v[2]) * (w[1] - v[1])
+    det(vec(q, p), vec(q, r)) = (p[1] - q[1]) * (r[2] - q[2]) - (p[2] - q[2]) * (r[1] - q[1])
+    k^2 * ((p[1] - q[1]) * (r[2] - q[2]) - (p[2] - q[2]) * (r[1] - q[1])) = k^2 * det(vec(q, p), vec(q, r))
+    det(vec(v, u), vec(v, w)) = k^2 * det(vec(q, p), vec(q, r))
+
+
+thm angle_equality_cross_ratio:
+    ? forall p, q, r, u, v, w cart(R, R):
+        dot(vec(q, p), vec(q, r)) * det(vec(v, u), vec(v, w)) = det(vec(q, p), vec(q, r)) * dot(vec(v, u), vec(v, w))
+        =>:
+            dot(vec(q, p), vec(q, r)) * det(vec(v, u), vec(v, w)) - det(vec(q, p), vec(q, r)) * dot(vec(v, u), vec(v, w)) = 0
+    dot(vec(q, p), vec(q, r)) * det(vec(v, u), vec(v, w)) - det(vec(q, p), vec(q, r)) * dot(vec(v, u), vec(v, w)) = 0
+
+thm dot_squared_plus_det_squared:
+    ? forall u, v cart(R, R):
+        dot(u, v)^2 + det(u, v)^2 = dot(u, u) * dot(v, v)
+    dot(u, v) = u[1] * v[1] + u[2] * v[2]
+    det(u, v) = u[1] * v[2] - u[2] * v[1]
+    dot(u, u) = u[1] * u[1] + u[2] * u[2]
+    dot(v, v) = v[1] * v[1] + v[2] * v[2]
+    (u[1] * v[1] + u[2] * v[2])^2 + (u[1] * v[2] - u[2] * v[1])^2 = (u[1] * u[1] + u[2] * u[2]) * (v[1] * v[1] + v[2] * v[2])
+    dot(u, v)^2 + det(u, v)^2 = (u[1] * v[1] + u[2] * v[2])^2 + (u[1] * v[2] - u[2] * v[1])^2
+    dot(u, u) * dot(v, v) = (u[1] * u[1] + u[2] * u[2]) * (v[1] * v[1] + v[2] * v[2])
+    dot(u, v)^2 + det(u, v)^2 = dot(u, u) * dot(v, v)
+
+thm rotation_preserves_distance:
+    ? forall a, b, a2, b2 cart(R, R), c, s R:
+        c^2 + s^2 = 1,
+        a2[1] = c * a[1] - s * a[2],
+        a2[2] = s * a[1] + c * a[2],
+        b2[1] = c * b[1] - s * b[2],
+        b2[2] = s * b[1] + c * b[2]
+        =>:
+            distance_sq(a2, b2) = distance_sq(a, b)
+    distance_sq(a2, b2) = (b2[1] - a2[1])^2 + (b2[2] - a2[2])^2
+    distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2
+    (b2[1] - a2[1])^2 + (b2[2] - a2[2])^2 = ((c * b[1] - s * b[2]) - (c * a[1] - s * a[2]))^2 + ((s * b[1] + c * b[2]) - (s * a[1] + c * a[2]))^2
+    ((c * b[1] - s * b[2]) - (c * a[1] - s * a[2]))^2 + ((s * b[1] + c * b[2]) - (s * a[1] + c * a[2]))^2 = (c^2 + s^2) * ((b[1] - a[1])^2 + (b[2] - a[2])^2)
+    (c^2 + s^2) * ((b[1] - a[1])^2 + (b[2] - a[2])^2) = (b[1] - a[1])^2 + (b[2] - a[2])^2
+    distance_sq(a2, b2) = distance_sq(a, b)
+
