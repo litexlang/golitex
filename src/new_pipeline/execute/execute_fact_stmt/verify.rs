@@ -1,14 +1,6 @@
-use super::verify_atomic_fact::VerifyAtomicFactResult;
-use super::verify_fact_result::{
-    VerifyAndFactResult, VerifyChainFactResult, VerifyExistFactResult, VerifyFactResult,
-    VerifyForallFactResult, VerifyForallFactWithIffResult, VerifyNotForallFactResult,
-    VerifyOrFactResult,
-};
+use super::verify_fact_result::VerifyFactResult;
 use super::VerifyState;
-use crate::new_pipeline::ast::fact::{
-    AndFact, AtomicFact, ChainFact, ExistFact, Fact, ForallFact, ForallFactWithIff, NotForallFact,
-    OrFact,
-};
+use crate::new_pipeline::ast::fact::Fact;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
@@ -43,84 +35,5 @@ impl Runtime {
                 self.verify_not_forall_fact(fact, verify_state)?,
             ))),
         }
-    }
-
-    // EqualFact → Equality; other atomics → NonEquational.
-    pub fn verify_atomic_fact(
-        &mut self,
-        fact: &AtomicFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<VerifyAtomicFactResult> {
-        match fact {
-            AtomicFact::EqualFact(equal_fact) => Ok(VerifyAtomicFactResult::Equality(
-                self.verify_equal_fact(equal_fact, verify_state)?,
-            )),
-            _ => Ok(VerifyAtomicFactResult::NonEquational(
-                self.verify_non_equational_fact(fact, verify_state)?,
-            )),
-        }
-    }
-
-    pub fn verify_and_fact(
-        &mut self,
-        fact: &AndFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<VerifyAndFactResult> {
-        let _ = (fact, verify_state);
-        Ok(VerifyAndFactResult { _wire: () })
-    }
-
-    pub fn verify_chain_fact(
-        &mut self,
-        fact: &ChainFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<VerifyChainFactResult> {
-        let _ = (fact, verify_state);
-        Ok(VerifyChainFactResult { _wire: () })
-    }
-
-    pub fn verify_or_fact(
-        &mut self,
-        fact: &OrFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<VerifyOrFactResult> {
-        let _ = (fact, verify_state);
-        Ok(VerifyOrFactResult { _wire: () })
-    }
-
-    pub fn verify_exist_fact(
-        &mut self,
-        fact: &ExistFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<VerifyExistFactResult> {
-        let _ = (fact, verify_state);
-        Ok(VerifyExistFactResult { _wire: () })
-    }
-
-    pub fn verify_forall_fact(
-        &mut self,
-        fact: &ForallFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<VerifyForallFactResult> {
-        let _ = (fact, verify_state);
-        Ok(VerifyForallFactResult { _wire: () })
-    }
-
-    pub fn verify_forall_fact_with_iff(
-        &mut self,
-        fact: &ForallFactWithIff,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<VerifyForallFactWithIffResult> {
-        let _ = (fact, verify_state);
-        Ok(VerifyForallFactWithIffResult { _wire: () })
-    }
-
-    pub fn verify_not_forall_fact(
-        &mut self,
-        fact: &NotForallFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<VerifyNotForallFactResult> {
-        let _ = (fact, verify_state);
-        Ok(VerifyNotForallFactResult { _wire: () })
     }
 }

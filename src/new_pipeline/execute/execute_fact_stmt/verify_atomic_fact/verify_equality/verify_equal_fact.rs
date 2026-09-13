@@ -2,16 +2,17 @@ use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact};
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::obj::{AtomObj, Obj};
 use crate::new_pipeline::execute::execute_fact_stmt::cache_search_proof::CacheSearchProof;
-use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::{
-    EqualitySearchProofByBuiltinAlgebraicRewrite, EqualitySearchProofByBuiltinRule,
-    EqualitySearchProofByBuiltinStrategy, EqualitySearchProofByKnownAlgebraicRewrite,
-};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::{
     EqualFactSearchedProof, EqualFactSearchedProofByKnownAtomicFact,
     EqualFactSearchedProofByKnownForallFact, VerifyEqualityResult,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
+
+use super::{
+    EqualitySearchProofByBuiltinAlgebraicRewrite, EqualitySearchProofByBuiltinRule,
+    EqualitySearchProofByBuiltinStrategy, EqualitySearchProofByKnownAlgebraicRewrite,
+};
 
 impl Runtime {
     pub fn verify_equal_fact(
