@@ -170,13 +170,13 @@ impl Runtime {
                     typed_parameters: params,
                     dom_facts,
                     then_facts,
-                    line_file: tb.line_file(),
+                    line_file: Some(tb.line_file()),
                 };
                 return Ok(Fact::ForallFactWithIff(ForallFactWithIff {
                     fact_id: self.ids.allocate_fact_id(),
                     forall_fact,
                     iff_facts,
-                    line_file: tb.line_file(),
+                    line_file: Some(tb.line_file()),
                 }));
             }
 
@@ -222,7 +222,7 @@ impl Runtime {
                 typed_parameters: params,
                 dom_facts,
                 then_facts,
-                line_file: tb.line_file(),
+                line_file: Some(tb.line_file()),
             }))
         })();
         self.pop_parse_scope();
@@ -298,7 +298,7 @@ impl Runtime {
                 fact_id: self.ids.allocate_fact_id(),
                 typed_parameters: params,
                 facts,
-                line_file: tb.line_file(),
+                line_file: Some(tb.line_file()),
             };
             Ok(if unique {
                 ExistFact::ExistUniqueFact(body)
@@ -396,7 +396,7 @@ impl Runtime {
         Ok(QuantifierFreeFact::OrFact(OrFact {
             fact_id: self.ids.allocate_fact_id(),
             facts: list,
-            line_file: tb.line_file(),
+            line_file: Some(tb.line_file()),
         }))
     }
 
@@ -445,7 +445,7 @@ impl Runtime {
                     Ok(AndChainAtomicFact::AndFact(AndFact {
                         fact_id: self.ids.allocate_fact_id(),
                         facts: collected,
-                        line_file: tb.line_file(),
+                        line_file: Some(tb.line_file()),
                     }))
                 }
             }
@@ -600,7 +600,7 @@ impl Runtime {
             fact_id: self.ids.allocate_fact_id(),
             objs,
             prop_names,
-            line_file,
+            line_file: Some(line_file),
         }))
     }
 

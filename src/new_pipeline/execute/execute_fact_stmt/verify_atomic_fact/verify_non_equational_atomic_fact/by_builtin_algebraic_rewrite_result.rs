@@ -1,13 +1,13 @@
 use crate::prelude::*;
-use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult2;
-use crate::new_pipeline::execute::execute_fact_stmt::VerifyState2;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
+use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 
 
-pub enum NonEquationalAtomicFactSearchProofByBuiltinAlgebraicRewrite2 {
-    OrderDual(NonEquationalAtomicFactSearchProofByBuiltinOrderDual2),
+pub enum NonEquationalAtomicFactSearchProofByBuiltinAlgebraicRewrite {
+    OrderDual(NonEquationalAtomicFactSearchProofByBuiltinOrderDual),
 }
 
-pub struct NonEquationalAtomicFactSearchProofByBuiltinOrderDual2 {
+pub struct NonEquationalAtomicFactSearchProofByBuiltinOrderDual {
     pub alternate_fact: Fact,
-    pub proof_of_alternate_fact: VerifyFactResult2,
+    pub proof_of_alternate_fact: VerifyFactResult,
 }

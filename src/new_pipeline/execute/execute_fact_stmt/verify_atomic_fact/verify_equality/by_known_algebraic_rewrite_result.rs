@@ -1,13 +1,13 @@
 use crate::prelude::*;
-use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult2;
-use crate::new_pipeline::execute::execute_fact_stmt::VerifyState2;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
+use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 
-pub enum EqualitySearchProofByKnownAlgebraicRewrite2 {
-    Transitivity(EqualitySearchProofByKnownTransitivity2),
+pub enum EqualitySearchProofByKnownAlgebraicRewrite {
+    Transitivity(EqualitySearchProofByKnownTransitivity),
 }
 
-pub struct EqualitySearchProofByKnownTransitivity2 {
+pub struct EqualitySearchProofByKnownTransitivity {
     pub middle: Obj,
-    pub left_to_middle: VerifyFactResult2,
-    pub middle_to_right: VerifyFactResult2,
+    pub left_to_middle: VerifyFactResult,
+    pub middle_to_right: VerifyFactResult,
 }

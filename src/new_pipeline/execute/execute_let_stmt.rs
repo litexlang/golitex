@@ -1,7 +1,7 @@
 use super::exec_stmt_result::ExecLetObjStmtResult;
 use crate::new_pipeline::ast::stmt::LetObjStmt;
 use crate::new_pipeline::execution_environment::LetObjectBinding;
-use crate::new_pipeline::execute::execute_fact_stmt::{equal_fact_from_let, VerifyState2};
+use crate::new_pipeline::execute::execute_fact_stmt::{equal_fact_from_let, VerifyState};
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
@@ -12,7 +12,7 @@ impl Runtime {
         &mut self,
         let_stmt: &LetObjStmt,
     ) -> RuntimeResult<ExecLetObjStmtResult> {
-        let verify_state = VerifyState2 {
+        let verify_state = VerifyState {
             can_use_forall_fact: true,
             can_use_known_algebraic_rewrite: true,
             store_well_defined_fact: true,

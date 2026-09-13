@@ -2,14 +2,14 @@ use crate::new_pipeline::execution_environment::ExecEnv;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::prelude::*;
 
-use super::super::VerifyState2;
-use super::verify_equality::verification_and_result::EqualitySearchedProof2;
+use super::super::VerifyState;
+use super::verify_equality::verification_and_result::DraftEqualitySearchedProof;
 use super::verify_non_equational_atomic_fact::verification_and_result::
-    NonEquationalAtomicFactSearchedProof2;
+    NonEquationalAtomicFactSearchedProof;
 
-pub enum VerifyAtomicFactSearchProof2 {
-    Equality(EqualitySearchedProof2),
-    NonEquationalAtomicFact(NonEquationalAtomicFactSearchedProof2),
+pub enum VerifyAtomicFactSearchProof {
+    Equality(DraftEqualitySearchedProof),
+    NonEquationalAtomicFact(NonEquationalAtomicFactSearchedProof),
 }
 
 impl Runtime {
@@ -27,18 +27,18 @@ impl Runtime {
     pub fn verify_atomic_fact_search_proof(
         &mut self,
         fact: &AtomicFact,
-        verify_state: VerifyState2,
-    ) -> RuntimeResult<VerifyAtomicFactSearchProof2> {
+        verify_state: VerifyState,
+    ) -> RuntimeResult<VerifyAtomicFactSearchProof> {
         let _visible_environment_count = self.current_atomic_fact_search_environment_count();
         let search_state = verify_state.without_well_defined_storage();
 
         match fact {
-            AtomicFact::EqualFact(equal_fact) => Ok(VerifyAtomicFactSearchProof2::Equality(
-                self.search_equal_fact_proof2(equal_fact, search_state)?,
+            AtomicFact::EqualFact(equal_fact) => Ok(VerifyAtomicFactSearchProof::Equality(
+                self.search_draft_equal_fact_proof(equal_fact, search_state)?,
             )),
             _ => Ok(
-                VerifyAtomicFactSearchProof2::NonEquationalAtomicFact(
-                    self.search_non_equational_atomic_fact_proof2(fact, search_state)?,
+                VerifyAtomicFactSearchProof::NonEquationalAtomicFact(
+                    self.search_non_equational_atomic_fact_proof(fact, search_state)?,
                 ),
             ),
         }

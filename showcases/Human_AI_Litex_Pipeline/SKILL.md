@@ -32,6 +32,107 @@ These ownership boundaries imply the following rules:
 - Treat verification as necessary but not sufficient. A verified proof may still contain redundant facts, accidental interfaces, or an avoidable representation detour.
 - Report every `trust`, `abstract_prop`, assumed interface, unverified import, and checker boundary. Do not call a development `checkable` while unresolved trust remains.
 
+## New-pipeline result-shape contract
+
+When working on `src/new_pipeline`, make the return types expose the function's
+actual control flow. There are two distinct shapes:
+
+### Sequential pipelines use result structs
+
+If a function must complete several ordered stages, define a dedicated result
+struct whose fields appear in that same order. Each field contains the typed
+output of one stage.
+
+For example, a non-equational atomic-fact verifier that performs
+well-definedness first and proof search second has this shape:
+
+```rust
+pub struct VerifyNonEquationalFactResult {
+    pub verify_well_defined_result: VerifyAtomicFactWellDefinedResult,
+    pub searched_proof: NonEquationalFactSearchedProof,
+}
+```
+
+The implementation must preserve the same dependency order:
+
+```rust
+let verify_well_defined_result =
+    self.verify_atomic_fact_well_definedness(fact, state.clone())?;
+let searched_proof =
+    self.search_non_equational_atomic_fact_proof(fact, state)?;
+Ok(VerifyNonEquationalFactResult {
+    verify_well_defined_result,
+    searched_proof,
+})
+```
+
+Use a field named `...WellDefinedResult` when the stage may expose cache hits,
+definition paths, identifiers, or other execution evidence. Use
+`...WellDefinedProof` only for a pure proof object. The outer
+`Result<T, RuntimeError>` represents operational failure; a successfully
+returned `T` represents a completed pipeline. Do not encode a failed stage as
+a successful status variant. Retain the input subject in the result only when
+the result is cached, rendered, persisted, or otherwise consumed after the
+call's input is gone.
+
+Use a direct struct field when every child must be proved, such as:
+
+```rust
+pub struct VerifyAndFactResult {
+    pub verify_well_defined_result: AndFactWellDefinedResult,
+    pub proof_of_each_conjunct: Vec<VerifyFactResult>,
+}
+```
+
+Use a nested search enum when the stage chooses exactly one mutually exclusive
+route. `searched_proof` means the selected successful route; a future record of
+all failed attempts belongs in a separate `search_trace` field.
+
+### Dispatchers use recursively mirrored enums
+
+If a function dispatches on an input enum, its result enum must mirror that
+enum, recursively. Every constructor calls a dedicated branch function and
+stores that branch's dedicated result type:
+
+```rust
+pub enum ExecStmtResult {
+    Fact(ExecFactStmtResult),
+    Definition(ExecDefinitionStmtResult),
+    Unsafe(ExecUnsafeStmtResult),
+}
+
+pub enum ExecDefinitionStmtResult {
+    LetObj(ExecLetObjStmtResult),
+    DefProp(ExecDefPropStmtResult),
+}
+```
+
+The same rule applies to verification dispatchers:
+
+```rust
+pub enum VerifyAtomicFactResult {
+    Equality(VerifyEqualityFactResult),
+    NonEquational(VerifyNonEquationalFactResult),
+}
+
+pub enum VerifyExistFactResult {
+    Plain(VerifyPlainExistFactResult),
+    Unique(VerifyExistUniqueFactResult),
+    NotExist(VerifyNotExistFactResult),
+}
+```
+
+Do not flatten branch-specific data into one generic struct. Do not use a
+wildcard branch in the final dispatcher: exhaustive matching should reveal
+every unconnected AST constructor. An explicit `Unsupported` error may be a
+temporary tracer-stage bridge, but it must not hide missing final branches.
+
+Apply the rule at every level: `Fact -> VerifyFactResult`,
+`AtomicFact -> VerifyAtomicFactResult`, and `Stmt -> ExecStmtResult` should
+form the same shape tree as their input enums. Reserve successful `Unknown`
+variants for a real domain outcome; inability to produce a proof normally
+belongs in the error path.
+
 ## The loop is a state machine
 
 Do not treat “using AI” as a label for code generation. Assign one authority to each decision and preserve the state transition that connects them:

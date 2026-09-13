@@ -1,174 +1,137 @@
-use crate::new_pipeline::ast::fact::EqualFact;
-use crate::new_pipeline::ast::obj::{AtomObj, Obj};
+use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact};
 use crate::new_pipeline::ast::line_file::LineFile;
-use crate::new_pipeline::execution_environment::helper::{ast_obj_eq, ast_obj_key};
-use crate::new_pipeline::execute::execute_fact_stmt::result::{
-    ExecFactStmtResult, StoreFactAndInferResult2,
+use crate::new_pipeline::ast::obj::{AtomObj, Obj};
+use crate::new_pipeline::execute::execute_fact_stmt::cache_search_proof::CacheSearchProof;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::{
+    EqualitySearchProofByBuiltinAlgebraicRewrite, EqualitySearchProofByBuiltinRule,
+    EqualitySearchProofByBuiltinStrategy, EqualitySearchProofByKnownAlgebraicRewrite,
 };
-use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult2;
-use crate::new_pipeline::execute::execute_fact_stmt::VerifyState2;
-use crate::new_pipeline::runtime::runtime_ids::WellDefinednessId;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::{
+    EqualFactSearchedProof, EqualFactSearchedProofByKnownAtomicFact,
+    EqualFactSearchedProofByKnownForallFact, VerifyEqualityResult,
+};
+use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
-pub struct NativeVerifyEqualResult {
-    pub fact: EqualFact,
-    pub left_wd: NativeObjWdProof,
-    pub right_wd: NativeObjWdProof,
-    pub searched_proof: NativeEqualProof,
-}
-
-pub enum NativeEqualProof {
-    Reflexive,
-    ByLetBinding {
-        name: String,
-        equality_fact_id: crate::new_pipeline::runtime::FactId,
-    },
-    ByKnownEqual {
-        cite_fact_id: crate::new_pipeline::runtime::FactId,
-    },
-}
-
-pub enum NativeObjWdProof {
-    ByReuse(WellDefinednessId),
-    ByTrivial,
-    ByAdd {
-        left: Box<NativeObjWdProof>,
-        right: Box<NativeObjWdProof>,
-        wd_id: WellDefinednessId,
-    },
-}
-
 impl Runtime {
-    pub(crate) fn exec_native_equal_fact(
+    pub fn verify_equal_fact(
         &mut self,
         fact: &EqualFact,
-    ) -> RuntimeResult<ExecFactStmtResult> {
-        let verify_state = VerifyState2 {
-            can_use_forall_fact: true,
-            can_use_known_algebraic_rewrite: true,
-            store_well_defined_fact: true,
-        };
-        let verify_result = self.verify_native_equal_fact(fact, verify_state)?;
-        let store_and_infer_result = self.store_native_equal_fact(&verify_result.fact)?;
-        Ok(ExecFactStmtResult {
-            verify_result: VerifyFactResult2::NativeEqual(verify_result),
-            store_and_infer_result,
-        })
-    }
-
-    fn verify_native_equal_fact(
-        &mut self,
-        fact: &EqualFact,
-        verify_state: VerifyState2,
-    ) -> RuntimeResult<NativeVerifyEqualResult> {
-        let left_wd = self.verify_native_obj_wd(&fact.left, verify_state.clone())?;
-        let right_wd = self.verify_native_obj_wd(&fact.right, verify_state)?;
-        let searched_proof = self.search_native_equal_proof(fact)?;
-        Ok(NativeVerifyEqualResult {
+        verify_state: VerifyState,
+    ) -> RuntimeResult<VerifyEqualityResult> {
+        let well_defined_proof = self.verify_atomic_fact_well_definedness(
+            &AtomicFact::EqualFact(fact.clone()),
+            verify_state.clone(),
+        )?;
+        let searched_proof = self.search_equal_fact_proof(fact, verify_state)?;
+        Ok(VerifyEqualityResult {
             fact: fact.clone(),
-            left_wd,
-            right_wd,
+            well_defined_proof,
             searched_proof,
         })
     }
 
-    fn search_native_equal_proof(&self, fact: &EqualFact) -> RuntimeResult<NativeEqualProof> {
-        if ast_obj_eq(&fact.left, &fact.right) {
-            return Ok(NativeEqualProof::Reflexive);
+    // Stage order: cache → builtin rule → known atomic → builtin strategy →
+    // known forall → builtin algebraic rewrite → known algebraic rewrite.
+    pub fn search_equal_fact_proof(
+        &mut self,
+        fact: &EqualFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<EqualFactSearchedProof> {
+        if let Some(result) = self.search_equal_fact_proof_by_cache(fact, verify_state.clone())? {
+            return Ok(EqualFactSearchedProof::ByCache(result));
         }
 
-        if let Some(proof) = self.search_equal_by_let(&fact.left, &fact.right) {
-            return Ok(proof);
+        if let Some(result) =
+            self.search_equal_fact_proof_by_builtin_rule(fact, verify_state.clone())?
+        {
+            return Ok(EqualFactSearchedProof::ByBuiltinRule(result));
         }
 
-        if let Some(cite) = self.top_exec_env().find_native_equal(&fact.left, &fact.right) {
-            return Ok(NativeEqualProof::ByKnownEqual {
-                cite_fact_id: cite,
-            });
+        if let Some(result) =
+            self.search_equal_fact_proof_by_known_atomic_fact(fact, verify_state.clone())?
+        {
+            return Ok(EqualFactSearchedProof::ByKnownAtomicFact(result));
+        }
+
+        if let Some(result) =
+            self.search_equal_fact_proof_by_builtin_strategy(fact, verify_state.clone())?
+        {
+            return Ok(EqualFactSearchedProof::ByBuiltinStrategy(result));
+        }
+
+        if let Some(result) =
+            self.search_equal_fact_proof_by_known_forall_fact(fact, verify_state.clone())?
+        {
+            return Ok(EqualFactSearchedProof::ByKnownForallFact(result));
         }
 
         Err(RuntimeError::Unknown(
-            "search_proof: no equality proof found".to_string(),
+            "search_equal_fact_proof: no equality proof found".to_string(),
         ))
     }
 
-    fn search_equal_by_let(&self, left: &Obj, right: &Obj) -> Option<NativeEqualProof> {
-        if let Obj::Atom(AtomObj::Identifier(id)) = left {
-            if let Some(binding) = self.top_exec_env().lookup_let_binding(&id.name) {
-                if ast_obj_eq(&binding.value, right) {
-                    return Some(NativeEqualProof::ByLetBinding {
-                        name: id.name.clone(),
-                        equality_fact_id: binding.equality_fact_id,
-                    });
-                }
-            }
-        }
-        if let Obj::Atom(AtomObj::Identifier(id)) = right {
-            if let Some(binding) = self.top_exec_env().lookup_let_binding(&id.name) {
-                if ast_obj_eq(&binding.value, left) {
-                    return Some(NativeEqualProof::ByLetBinding {
-                        name: id.name.clone(),
-                        equality_fact_id: binding.equality_fact_id,
-                    });
-                }
-            }
-        }
-        None
-    }
-
-    fn store_native_equal_fact(&mut self, fact: &EqualFact) -> RuntimeResult<StoreFactAndInferResult2> {
-        self.top_exec_env_mut()
-            .store_native_equal_fact(fact.clone());
-        Ok(StoreFactAndInferResult2 {
-            stored_fact_ids: vec![fact.fact_id],
-        })
-    }
-
-    // Number and identifier are trivial; Add is WD when both children are WD.
-    pub(crate) fn verify_native_obj_wd(
+    pub fn search_equal_fact_proof_by_cache(
         &mut self,
-        obj: &Obj,
-        verify_state: VerifyState2,
-    ) -> RuntimeResult<NativeObjWdProof> {
-        let key = ast_obj_key(obj);
-        if let Some(wd_id) = self.top_exec_env().lookup_native_wd(&key) {
-            return Ok(NativeObjWdProof::ByReuse(wd_id));
-        }
+        fact: &EqualFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<CacheSearchProof>> {
+        let _ = (fact, verify_state);
+        Ok(None)
+    }
 
-        let proof = match obj {
-            Obj::Number(_) | Obj::Atom(AtomObj::Identifier(_)) => NativeObjWdProof::ByTrivial,
-            Obj::Add(add) => {
-                let left = self.verify_native_obj_wd(add.left.as_ref(), verify_state.clone())?;
-                let right = self.verify_native_obj_wd(add.right.as_ref(), verify_state.clone())?;
-                let wd_id = self.ids.allocate_well_definedness_id();
-                NativeObjWdProof::ByAdd {
-                    left: Box::new(left),
-                    right: Box::new(right),
-                    wd_id,
-                }
-            }
-            _ => {
-                return Err(RuntimeError::Unknown(
-                    "object well-definedness for this Obj variant is not wired yet".to_string(),
-                ));
-            }
-        };
+    pub fn search_equal_fact_proof_by_builtin_rule(
+        &mut self,
+        fact: &EqualFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<EqualitySearchProofByBuiltinRule>> {
+        let _ = (fact, verify_state);
+        Ok(None)
+    }
 
-        if verify_state.store_well_defined_fact {
-            let wd_id = match &proof {
-                NativeObjWdProof::ByReuse(id) => *id,
-                NativeObjWdProof::ByTrivial => self.ids.allocate_well_definedness_id(),
-                NativeObjWdProof::ByAdd { wd_id, .. } => *wd_id,
-            };
-            // For trivial, allocate once and record.
-            if matches!(proof, NativeObjWdProof::ByTrivial) {
-                self.top_exec_env_mut().record_native_wd(key, wd_id);
-                return Ok(NativeObjWdProof::ByReuse(wd_id));
-            }
-            self.top_exec_env_mut().record_native_wd(key, wd_id);
-        }
+    pub fn search_equal_fact_proof_by_known_atomic_fact(
+        &mut self,
+        fact: &EqualFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<EqualFactSearchedProofByKnownAtomicFact>> {
+        let _ = (fact, verify_state);
+        Ok(None)
+    }
 
-        Ok(proof)
+    pub fn search_equal_fact_proof_by_builtin_strategy(
+        &mut self,
+        fact: &EqualFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<EqualitySearchProofByBuiltinStrategy>> {
+        let _ = (fact, verify_state);
+        Ok(None)
+    }
+
+    pub fn search_equal_fact_proof_by_known_forall_fact(
+        &mut self,
+        fact: &EqualFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<EqualFactSearchedProofByKnownForallFact>> {
+        let _ = (fact, verify_state);
+        Ok(None)
+    }
+
+    pub fn search_equal_fact_proof_by_builtin_algebraic_rewrite(
+        &mut self,
+        fact: &EqualFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<EqualitySearchProofByBuiltinAlgebraicRewrite>> {
+        let _ = (fact, verify_state);
+        Ok(None)
+    }
+
+    pub fn search_equal_fact_proof_by_known_algebraic_rewrite(
+        &mut self,
+        fact: &EqualFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<EqualitySearchProofByKnownAlgebraicRewrite>> {
+        let _ = (fact, verify_state);
+        Ok(None)
     }
 }
 
@@ -184,6 +147,6 @@ pub fn equal_fact_from_let(
             crate::new_pipeline::ast::obj::Identifier { name },
         )),
         right: value,
-        line_file,
+        line_file: Some(line_file),
     }
 }

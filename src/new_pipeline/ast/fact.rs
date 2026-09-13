@@ -48,7 +48,7 @@ pub enum AtomicFact {
 pub struct EqualFact {    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/equality.rs
@@ -56,7 +56,7 @@ pub struct EqualFact {    pub fact_id: FactId,
 pub struct NotEqualFact {    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/function_equality.rs
@@ -65,7 +65,7 @@ pub struct FnEqualInFact {    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
     pub set: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/function_equality.rs
@@ -73,7 +73,7 @@ pub struct FnEqualInFact {    pub fact_id: FactId,
 pub struct FnEqualFact {    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/membership.rs
@@ -81,7 +81,7 @@ pub struct FnEqualFact {    pub fact_id: FactId,
 pub struct InFact {    pub fact_id: FactId,
     pub element: Obj,
     pub set: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/membership.rs
@@ -89,7 +89,7 @@ pub struct InFact {    pub fact_id: FactId,
 pub struct NotInFact {    pub fact_id: FactId,
     pub element: Obj,
     pub set: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/order_relations.rs
@@ -97,7 +97,7 @@ pub struct NotInFact {    pub fact_id: FactId,
 pub struct LessFact {    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/order_relations.rs
@@ -105,7 +105,7 @@ pub struct LessFact {    pub fact_id: FactId,
 pub struct NotLessFact {    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/order_relations.rs
@@ -113,7 +113,7 @@ pub struct NotLessFact {    pub fact_id: FactId,
 pub struct GreaterFact {    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/order_relations.rs
@@ -121,7 +121,7 @@ pub struct GreaterFact {    pub fact_id: FactId,
 pub struct NotGreaterFact {    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/order_relations.rs
@@ -129,7 +129,7 @@ pub struct NotGreaterFact {    pub fact_id: FactId,
 pub struct LessEqualFact {    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/order_relations.rs
@@ -137,7 +137,7 @@ pub struct LessEqualFact {    pub fact_id: FactId,
 pub struct NotLessEqualFact {    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/order_relations.rs
@@ -145,7 +145,7 @@ pub struct NotLessEqualFact {    pub fact_id: FactId,
 pub struct GreaterEqualFact {    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/order_relations.rs
@@ -153,7 +153,7 @@ pub struct GreaterEqualFact {    pub fact_id: FactId,
 pub struct NotGreaterEqualFact {    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/predicate.rs
@@ -161,7 +161,7 @@ pub struct NotGreaterEqualFact {    pub fact_id: FactId,
 pub struct NormalAtomicFact {    pub fact_id: FactId,
     pub predicate: AtomicName,
     pub body: Vec<Obj>,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/predicate.rs
@@ -169,49 +169,49 @@ pub struct NormalAtomicFact {    pub fact_id: FactId,
 pub struct NotNormalAtomicFact {    pub fact_id: FactId,
     pub predicate: AtomicName,
     pub body: Vec<Obj>,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/set_properties.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IsSetFact {    pub fact_id: FactId,
     pub set: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/set_properties.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NotIsSetFact {    pub fact_id: FactId,
     pub set: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/set_properties.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IsNonemptySetFact {    pub fact_id: FactId,
     pub set: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/set_properties.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NotIsNonemptySetFact {    pub fact_id: FactId,
     pub set: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/set_properties.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IsFiniteSetFact {    pub fact_id: FactId,
     pub set: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/set_properties.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NotIsFiniteSetFact {    pub fact_id: FactId,
     pub set: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/set_relations.rs
@@ -219,7 +219,7 @@ pub struct NotIsFiniteSetFact {    pub fact_id: FactId,
 pub struct SupersetFact {    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/set_relations.rs
@@ -227,7 +227,7 @@ pub struct SupersetFact {    pub fact_id: FactId,
 pub struct NotSupersetFact {    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/set_relations.rs
@@ -235,7 +235,7 @@ pub struct NotSupersetFact {    pub fact_id: FactId,
 pub struct SubsetFact {    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/set_relations.rs
@@ -243,42 +243,42 @@ pub struct SubsetFact {    pub fact_id: FactId,
 pub struct NotSubsetFact {    pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/structure_properties.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IsTupleFact {    pub fact_id: FactId,
     pub set: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/structure_properties.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NotIsTupleFact {    pub fact_id: FactId,
     pub set: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/structure_properties.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IsCartFact {    pub fact_id: FactId,
     pub set: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/atomic/structure_properties.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NotIsCartFact {    pub fact_id: FactId,
     pub set: Obj,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/composite/conjunction_and_chain.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct AndFact {    pub fact_id: FactId,
     pub facts: Vec<AtomicFact>,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/composite/conjunction_and_chain.rs
@@ -286,7 +286,7 @@ pub struct AndFact {    pub fact_id: FactId,
 pub struct ChainFact {    pub fact_id: FactId,
     pub objs: Vec<Obj>,
     pub prop_names: Vec<AtomicName>,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/composite/conjunction_and_chain.rs
@@ -308,7 +308,7 @@ pub enum AndChainAtomicFact {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct OrFact {    pub fact_id: FactId,
     pub facts: Vec<AndChainAtomicFact>,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/composite/order_closure.rs
@@ -385,7 +385,7 @@ pub enum ExistFact {
 pub struct PlainExistFact {    pub fact_id: FactId,
     pub typed_parameters: TypedParameterList,
     pub facts: Vec<QuantifierFreeFact>,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/quantified/nested.rs
@@ -404,7 +404,7 @@ pub struct ForallFact {    pub fact_id: FactId,
     pub typed_parameters: TypedParameterList,
     pub dom_facts: Vec<Fact>,
     pub then_facts: Vec<ExistOrAndChainAtomicFact>,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 
 // from fact/quantified/universal_iff.rs
@@ -412,6 +412,6 @@ pub struct ForallFact {    pub fact_id: FactId,
 pub struct ForallFactWithIff {    pub fact_id: FactId,
     pub forall_fact: ForallFact,
     pub iff_facts: Vec<ExistOrAndChainAtomicFact>,
-    pub line_file: LineFile,
+    pub line_file: Option<LineFile>,
 }
 

@@ -1,26 +1,26 @@
 use crate::prelude::*;
-use crate::verify_rewrite::VerifyState2;
+use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 
-pub struct VerifyNotForallFactResult2 {
+pub struct VerifyNotForallFactResult {
     pub fact: NotForallFact,
-    pub well_defined_proof: NotForallFactWellDefinedProof2,
-    pub searched_proof: NotForallFactSearchedProof2,
+    pub well_defined_proof: NotForallFactWellDefinedProof,
+    pub searched_proof: NotForallFactSearchedProof,
 }
 
-pub enum NotForallFactSearchedProof2 {
-    ByCache(CacheSearchProof2),
+pub enum NotForallFactSearchedProof {
+    ByCache(CacheSearchProof),
 }
 
 impl Runtime {
-    pub fn verify_not_forall_fact2(
+    pub fn verify_not_forall_fact(
         &mut self,
         fact: &NotForallFact,
-        verify_state: VerifyState2,
-    ) -> Result<VerifyNotForallFactResult2, RuntimeError> {
+        verify_state: VerifyState,
+    ) -> Result<VerifyNotForallFactResult, RuntimeError> {
         let well_defined_proof =
-            self.verify_not_forall_fact_well_definedness2(fact, verify_state.clone())?;
-        let searched_proof = self.search_not_forall_fact_proof2(fact, verify_state)?;
-        Ok(VerifyNotForallFactResult2 {
+            self.verify_not_forall_fact_well_definedness(fact, verify_state.clone())?;
+        let searched_proof = self.search_not_forall_fact_proof(fact, verify_state)?;
+        Ok(VerifyNotForallFactResult {
             fact: fact.clone(),
             well_defined_proof,
             searched_proof,
@@ -28,25 +28,25 @@ impl Runtime {
     }
 
     // Currently only known-fact cache proves `not forall`.
-    pub fn search_not_forall_fact_proof2(
+    pub fn search_not_forall_fact_proof(
         &mut self,
         fact: &NotForallFact,
-        verify_state: VerifyState2,
-    ) -> Result<NotForallFactSearchedProof2, RuntimeError> {
+        verify_state: VerifyState,
+    ) -> Result<NotForallFactSearchedProof, RuntimeError> {
         if let Some(result) =
-            self.search_not_forall_fact_proof_by_cache2(fact, verify_state)?
+            self.search_not_forall_fact_proof_by_cache(fact, verify_state)?
         {
-            return Ok(NotForallFactSearchedProof2::ByCache(result));
+            return Ok(NotForallFactSearchedProof::ByCache(result));
         }
 
         todo!()
     }
 
-    pub fn search_not_forall_fact_proof_by_cache2(
+    pub fn search_not_forall_fact_proof_by_cache(
         &mut self,
         fact: &NotForallFact,
-        verify_state: VerifyState2,
-    ) -> Result<Option<CacheSearchProof2>, RuntimeError> {
+        verify_state: VerifyState,
+    ) -> Result<Option<CacheSearchProof>, RuntimeError> {
         let _ = (fact, verify_state);
         todo!("search not forall by cache")
     }

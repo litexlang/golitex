@@ -7,4 +7,4 @@ mod execute_let_stmt;
 pub use exec_stmt_result::{
     ExecDefPropStmtResult, ExecDefinitionStmtResult, ExecLetObjStmtResult, ExecStmtResult,
 };
-pub use execute_fact_stmt::{ExecFactStmtResult, VerifyState2};
+pub use execute_fact_stmt::{ExecFactStmtResult, VerifyState};

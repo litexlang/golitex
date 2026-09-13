@@ -1,11 +1,11 @@
 use crate::prelude::*;
-use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult2;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 
-pub enum NonEquationalAtomicFactSearchProofByBuiltinStrategy2 {
-    PosAddPosIsPos(PosAddPosIsPosStrategySingleStep2),
+pub enum NonEquationalAtomicFactSearchProofByBuiltinStrategy {
+    PosAddPosIsPos(PosAddPosIsPosStrategySingleStep),
 }
 
-pub struct PosAddPosIsPosStrategySingleStep2 {
+pub struct PosAddPosIsPosStrategySingleStep {
     pub requirement_facts: Vec<Fact>,
-    pub proof_of_requirement_facts: Vec<VerifyFactResult2>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
