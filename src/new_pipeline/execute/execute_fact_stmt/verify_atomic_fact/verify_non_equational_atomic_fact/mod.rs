@@ -1,9 +1,10 @@
 pub mod by_builtin_algebraic_rewrite_result;
-pub mod by_builtin_rule_result;
 pub mod by_builtin_strategy_result;
 pub mod by_known_algebraic_rewrite_result;
+pub mod verify_non_equational_atomic_fact_by_builtin_rules;
+pub mod verify_non_equational_fact;
 
 pub use by_builtin_algebraic_rewrite_result::NonEquationalAtomicFactSearchProofByBuiltinAlgebraicRewrite;
-pub use by_builtin_rule_result::NonEquationalAtomicFactSearchProofByBuiltinRule;
 pub use by_builtin_strategy_result::NonEquationalAtomicFactSearchProofByBuiltinStrategy;
 pub use by_known_algebraic_rewrite_result::NonEquationalAtomicFactSearchProofByKnownAlgebraicRewrite;
+pub use verify_non_equational_atomic_fact_by_builtin_rules::NonEquationalAtomicFactSearchProofByBuiltinRule;

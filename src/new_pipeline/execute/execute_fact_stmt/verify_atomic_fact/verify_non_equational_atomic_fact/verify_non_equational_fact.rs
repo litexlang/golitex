@@ -1,11 +1,5 @@
 use crate::new_pipeline::ast::fact::AtomicFact;
 use crate::new_pipeline::execute::execute_fact_stmt::cache_search_proof::CacheSearchProof;
-use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_non_equational_atomic_fact::{
-    NonEquationalAtomicFactSearchProofByBuiltinAlgebraicRewrite,
-    NonEquationalAtomicFactSearchProofByBuiltinRule,
-    NonEquationalAtomicFactSearchProofByBuiltinStrategy,
-    NonEquationalAtomicFactSearchProofByKnownAlgebraicRewrite,
-};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::{
     NonEquationalFactSearchedProof, NonEquationalFactSearchedProofByDefinition,
     NonEquationalFactSearchedProofByKnownAtomicFact,
@@ -13,6 +7,12 @@ use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::{
 };
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
+
+use super::{
+    NonEquationalAtomicFactSearchProofByBuiltinAlgebraicRewrite,
+    NonEquationalAtomicFactSearchProofByBuiltinStrategy,
+    NonEquationalAtomicFactSearchProofByKnownAlgebraicRewrite,
+};
 
 impl Runtime {
     pub fn verify_non_equational_fact(
@@ -96,15 +96,6 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<CacheSearchProof>> {
-        let _ = (fact, verify_state);
-        Ok(None)
-    }
-
-    pub fn search_non_equational_fact_proof_by_builtin_rule(
-        &mut self,
-        fact: &AtomicFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<Option<NonEquationalAtomicFactSearchProofByBuiltinRule>> {
         let _ = (fact, verify_state);
         Ok(None)
     }
