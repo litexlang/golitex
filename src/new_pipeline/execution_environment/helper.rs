@@ -5,7 +5,13 @@ use crate::new_pipeline::runtime::FactId;
 pub fn ast_obj_eq(a: &Obj, b: &Obj) -> bool {
     match (a, b) {
         (Obj::Number(x), Obj::Number(y)) => x.normalized_value == y.normalized_value,
-        (Obj::Atom(AtomObj::Identifier(x)), Obj::Atom(AtomObj::Identifier(y))) => x.name == y.name,
+        (Obj::Atom(AtomObj::Identifier(x)), Obj::Atom(AtomObj::Identifier(y))) => {
+            x.atom_id == y.atom_id
+        }
+        (
+            Obj::Atom(AtomObj::IdentifierWithMod(x)),
+            Obj::Atom(AtomObj::IdentifierWithMod(y)),
+        ) => x.atom_id == y.atom_id,
         (Obj::Add(x), Obj::Add(y)) => {
             ast_obj_eq(x.left.as_ref(), y.left.as_ref())
                 && ast_obj_eq(x.right.as_ref(), y.right.as_ref())

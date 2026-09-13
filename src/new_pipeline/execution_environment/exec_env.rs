@@ -1,9 +1,4 @@
-use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact};
-use crate::new_pipeline::ast::obj::Obj as AstObj;
 use crate::new_pipeline::ast::stmt::DefPropStmt as NewDefPropStmt;
-use crate::new_pipeline::execution_environment::helper::{
-    ast_obj_eq, atomic_fact_proposition_eq,
-};
 use crate::new_pipeline::runtime::runtime_ids::{FactId, WellDefinednessId};
 use crate::prelude::*;
 use std::collections::HashMap;
@@ -20,18 +15,6 @@ use std::collections::HashMap;
 /// available to the renderer without being merged into the parent implicitly.
 #[derive(Clone)]
 pub struct ExecEnv {
-    /// `let` object bindings in this scope (name → value + defining equality id).
-    pub let_bindings: HashMap<String, LetObjectBinding>,
-
-    /// Equality facts proved (or introduced by `let`) in this scope — new_pipeline AST.
-    pub native_equal_facts: HashMap<FactId, EqualFact>,
-
-    /// Non-equality atomic facts stored in this scope (have type facts, proved facts, …).
-    pub native_atomic_facts: HashMap<FactId, AtomicFact>,
-
-    /// Well-definedness records for new_pipeline Ast objects in this scope.
-    pub native_well_defined: HashMap<String, WellDefinednessId>,
-
     /// Definitions visible to statements executed in this scope.
     pub definitions: DefinitionMemory,
 
@@ -51,13 +34,6 @@ pub struct ExecEnv {
     /// explicitly allows storage; temporary builtin-rule searches therefore
     /// remain read-only.
     pub well_defined_objects: WellDefinedObjectMemory,
-}
-
-/// One `let name = value` binding stored in ExecEnv.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct LetObjectBinding {
-    pub value: AstObj,
-    pub equality_fact_id: FactId,
 }
 
 /// The two-way index for well-defined objects owned by one scope.
@@ -141,74 +117,12 @@ pub enum SpecialObjProperty {
 impl ExecEnv {
     pub fn new() -> Self {
         Self {
-            let_bindings: HashMap::new(),
-            native_equal_facts: HashMap::new(),
-            native_atomic_facts: HashMap::new(),
-            native_well_defined: HashMap::new(),
             definitions: DefinitionMemory::new(),
             facts: KnownFactMemory::new(),
             special_object_properties: HashMap::new(),
             prop_algebraic_properties: HashMap::new(),
             well_defined_objects: WellDefinedObjectMemory::new(),
         }
-    }
-
-    pub fn store_let_binding(&mut self, name: String, binding: LetObjectBinding) {
-        self.let_bindings.insert(name, binding);
-    }
-
-    pub fn lookup_let_binding(&self, name: &str) -> Option<&LetObjectBinding> {
-        self.let_bindings.get(name)
-    }
-
-    pub fn define_symbol(&mut self, name: String, def: SymbolDefinitionMemory) {
-        self.definitions.symbols.insert(name, def);
-    }
-
-    pub fn lookup_symbol(&self, name: &str) -> Option<&SymbolDefinitionMemory> {
-        self.definitions.symbols.get(name)
-    }
-
-    pub fn store_native_equal_fact(&mut self, fact: EqualFact) {
-        self.native_equal_facts.insert(fact.fact_id, fact);
-    }
-
-    pub fn lookup_native_equal_fact(&self, fact_id: FactId) -> Option<&EqualFact> {
-        self.native_equal_facts.get(&fact_id)
-    }
-
-    pub fn find_native_equal(&self, left: &AstObj, right: &AstObj) -> Option<FactId> {
-        for (id, fact) in &self.native_equal_facts {
-            if ast_obj_eq(&fact.left, left) && ast_obj_eq(&fact.right, right) {
-                return Some(*id);
-            }
-            if ast_obj_eq(&fact.left, right) && ast_obj_eq(&fact.right, left) {
-                return Some(*id);
-            }
-        }
-        None
-    }
-
-    pub fn store_native_atomic_fact(&mut self, fact: AtomicFact) {
-        let fact_id = crate::new_pipeline::execution_environment::helper::atomic_fact_id(&fact);
-        self.native_atomic_facts.insert(fact_id, fact);
-    }
-
-    pub fn find_native_atomic_fact(&self, goal: &AtomicFact) -> Option<FactId> {
-        for (id, known) in &self.native_atomic_facts {
-            if atomic_fact_proposition_eq(known, goal) {
-                return Some(*id);
-            }
-        }
-        None
-    }
-
-    pub fn lookup_native_wd(&self, object_key: &str) -> Option<WellDefinednessId> {
-        self.native_well_defined.get(object_key).copied()
-    }
-
-    pub fn record_native_wd(&mut self, object_key: String, wd_id: WellDefinednessId) {
-        self.native_well_defined.entry(object_key).or_insert(wd_id);
     }
 
     pub fn lookup_def_prop(&self, name: &str) -> Option<&NewDefPropStmt> {
@@ -239,22 +153,9 @@ impl WellDefinedObjectMemory {
     }
 
     /// Record a WD proof and its object payload in both directions.
-    ///
-    /// Re-recording the same object or proof id is idempotent.  Debug builds
-    /// additionally detect an accidental collision between different objects
-    /// and the same canonical key or proof id.
+    /// Re-recording the same object or proof id is idempotent.
     pub fn record(&mut self, object: Obj, wd_id: WellDefinednessId) {
         let object_key = obj_equality_key(&object);
-
-        if let Some(existing_id) = self.object_to_wd_id.get(&object_key) {
-            debug_assert_eq!(*existing_id, wd_id);
-            return;
-        }
-
-        if let Some(existing_object) = self.wd_id_to_object.get(&wd_id) {
-            debug_assert_eq!(obj_equality_key(existing_object), object_key);
-            return;
-        }
 
         self.object_to_wd_id.insert(object_key, wd_id);
         self.wd_id_to_object.insert(wd_id, object);

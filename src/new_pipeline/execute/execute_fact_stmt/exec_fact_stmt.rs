@@ -1,8 +1,7 @@
 use super::result::{ExecFactStmtResult, StoreFactAndInferResult};
-use super::verify_atomic_fact::VerifyAtomicFactResult;
 use super::verify_fact_result::VerifyFactResult;
 use super::VerifyState;
-use crate::new_pipeline::ast::fact::{EqualFact, Fact};
+use crate::new_pipeline::ast::fact::Fact;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
@@ -24,28 +23,12 @@ impl Runtime {
         })
     }
 
+    // Fact store waits on KnownEquality / known-atomic search / general fact memory.
     fn store_fact_then_infer(
         &mut self,
         verify_result: &VerifyFactResult,
     ) -> RuntimeResult<StoreFactAndInferResult> {
-        match verify_result {
-            VerifyFactResult::AtomicFact(atomic) => match atomic.as_ref() {
-                VerifyAtomicFactResult::Equality(eq) => self.store_equal_fact_then_infer(&eq.fact),
-                // Non-equality fact store waits on known-atomic search / general fact memory.
-                _ => Ok(StoreFactAndInferResult::empty()),
-            },
-            _ => Ok(StoreFactAndInferResult::empty()),
-        }
-    }
-
-    fn store_equal_fact_then_infer(
-        &mut self,
-        fact: &EqualFact,
-    ) -> RuntimeResult<StoreFactAndInferResult> {
-        self.top_exec_env_mut()
-            .store_native_equal_fact(fact.clone());
-        Ok(StoreFactAndInferResult {
-            stored_fact_ids: vec![fact.fact_id],
-        })
+        let _ = verify_result;
+        Ok(StoreFactAndInferResult::empty())
     }
 }

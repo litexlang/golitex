@@ -1,13 +1,12 @@
-# new_pipeline have-obj store tracer (LITEX_NEW_PIPELINE=1)
+# new_pipeline equality literally_the_same tracer (LITEX_NEW_PIPELINE=1)
 # Focused command:
 #   unset CARGO_TARGET_DIR; cargo build --release --bin litex
 #   LITEX_NEW_PIPELINE=1 target/release/litex -f examples/tmp.lit
 #
-# Stores type facts into ExecEnv.native_atomic_facts; known-atomic search not wired yet.
-have A nonempty_set
+# Before: search_equal_fact_proof_by_builtin_rule always None
+# have x R
+# x = x
+#
+# Now: same AtomId ⇒ ByBuiltinRule(LiterallyTheSame)
 have x R
-
-# Boundary until known-atomic search exists:
-# have A nonempty_set
-# have x A
-# x $in A
+x = x

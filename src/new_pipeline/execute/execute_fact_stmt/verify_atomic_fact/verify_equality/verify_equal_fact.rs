@@ -1,6 +1,4 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact};
-use crate::new_pipeline::ast::line_file::LineFile;
-use crate::new_pipeline::ast::obj::{AtomObj, Obj};
 use crate::new_pipeline::execute::execute_fact_stmt::cache_search_proof::CacheSearchProof;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::{
     EqualFactSearchedProof, EqualFactSearchedProofByKnownAtomicFact,
@@ -9,7 +7,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::{
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
-use super::{EqualitySearchProofByBuiltinRule, EqualitySearchProofByBuiltinStrategy};
+use super::EqualitySearchProofByBuiltinStrategy;
 
 impl Runtime {
     pub fn verify_equal_fact(
@@ -78,15 +76,6 @@ impl Runtime {
         Ok(None)
     }
 
-    pub fn search_equal_fact_proof_by_builtin_rule(
-        &mut self,
-        fact: &EqualFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<Option<EqualitySearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
-        Ok(None)
-    }
-
     pub fn search_equal_fact_proof_by_known_atomic_fact(
         &mut self,
         fact: &EqualFact,
@@ -112,21 +101,5 @@ impl Runtime {
     ) -> RuntimeResult<Option<EqualFactSearchedProofByKnownForallFact>> {
         let _ = (fact, verify_state);
         Ok(None)
-    }
-}
-
-pub fn equal_fact_from_let(
-    fact_id: crate::new_pipeline::runtime::FactId,
-    name: String,
-    value: Obj,
-    line_file: LineFile,
-) -> EqualFact {
-    EqualFact {
-        fact_id,
-        left: Obj::Atom(AtomObj::Identifier(
-            crate::new_pipeline::ast::obj::Identifier { name },
-        )),
-        right: value,
-        line_file: Some(line_file),
     }
 }

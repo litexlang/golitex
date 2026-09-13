@@ -486,12 +486,12 @@ impl Runtime {
                 )
                 .into());
             }
-            let args = parse_obj_list_paren(tb)?;
+            let args = parse_obj_list_paren(self, tb)?;
             let atomic = self.atomic_from_prop(prop, args, positive, line_file)?;
             return Ok(ChainAtomicFact::AtomicFact(atomic));
         }
 
-        let first = parse_obj(tb)?;
+        let first = parse_obj(self, tb)?;
         let mut objs = vec![first];
         let mut prop_names: Vec<AtomicName> = Vec::new();
 
@@ -533,7 +533,7 @@ impl Runtime {
                     )
                     .into());
                 }
-                let right = parse_obj(tb)?;
+                let right = parse_obj(self, tb)?;
                 if prop_names.is_empty()
                     && (prop_str == IN
                         || prop_str == super::fact_prop::SUBSET
@@ -564,7 +564,7 @@ impl Runtime {
             if is_comparison_op(&tok) {
                 tb.advance()?;
                 prop_names.push(AtomicName::WithoutMod(tok));
-                objs.push(parse_obj(tb)?);
+                objs.push(parse_obj(self, tb)?);
                 continue;
             }
             break;

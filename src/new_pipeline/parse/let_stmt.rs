@@ -32,6 +32,9 @@ impl Runtime {
             .into());
         }
 
+        // Allocate atom id at definition time, before parsing the value.
+        let identifier = self.define_plain_atom_as_parse(&tb, name)?;
+
         tb.expect(EQUAL).map_err(|_| {
             RuntimeParseError::new(
                 "`let` expects `=` after the name",
@@ -40,7 +43,7 @@ impl Runtime {
             )
         })?;
 
-        let value = parse_obj(&mut tb)?;
+        let value = parse_obj(self, &mut tb)?;
         if !tb.exceed_end_of_head() {
             return Err(RuntimeParseError::new(
                 "trailing tokens after let value",
@@ -50,10 +53,9 @@ impl Runtime {
             .into());
         }
 
-        self.occupy_name_as_parse(&tb, name.clone())?;
-
         Ok(Stmt::Definition(DefinitionStmt::LetObjStmt(LetObjStmt {
-            name,
+            name: identifier.name,
+            atom_id: identifier.atom_id,
             value,
             line_file: LineFile::new(block.line, block.source_path.clone()),
         })))

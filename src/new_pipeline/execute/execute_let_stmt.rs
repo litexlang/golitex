@@ -1,15 +1,13 @@
 use super::exec_stmt_result::ExecLetObjStmtResult;
 use crate::new_pipeline::ast::stmt::LetObjStmt;
-use crate::new_pipeline::execution_environment::{
-    LetObjectBinding, SymbolDefinitionMemory,
-};
-use crate::new_pipeline::execute::execute_fact_stmt::{equal_fact_from_let, VerifyState};
+use crate::new_pipeline::execution_environment::SymbolDefinitionMemory;
+use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
 impl Runtime {
     // `let name = value`
     // 1. WD the RHS value object
-    // 2. define_symbol + let_bindings + defining equality
+    // 2. record symbol in definitions.symbols; equality id goes in the result
     pub(super) fn exec_let_obj(
         &mut self,
         let_stmt: &LetObjStmt,
@@ -23,29 +21,22 @@ impl Runtime {
             self.verify_obj_well_definedness(&let_stmt.value, verify_state)?;
 
         let equality_fact_id = self.ids.allocate_fact_id();
-        let equal_fact = equal_fact_from_let(
-            equality_fact_id,
-            let_stmt.name.clone(),
-            let_stmt.value.clone(),
-            let_stmt.line_file.clone(),
-        );
 
-        if self.top_exec_env().lookup_symbol(&let_stmt.name).is_some() {
+        if self
+            .top_exec_env()
+            .definitions
+            .symbols
+            .contains_key(&let_stmt.name)
+        {
             return Err(RuntimeError::Invariant(format!(
                 "symbol `{}` is already defined in this ExecEnv",
                 let_stmt.name
             )));
         }
         self.top_exec_env_mut()
-            .define_symbol(let_stmt.name.clone(), SymbolDefinitionMemory {});
-        self.top_exec_env_mut().store_let_binding(
-            let_stmt.name.clone(),
-            LetObjectBinding {
-                value: let_stmt.value.clone(),
-                equality_fact_id,
-            },
-        );
-        self.top_exec_env_mut().store_native_equal_fact(equal_fact);
+            .definitions
+            .symbols
+            .insert(let_stmt.name.clone(), SymbolDefinitionMemory {});
 
         Ok(ExecLetObjStmtResult {
             statement: let_stmt.clone(),

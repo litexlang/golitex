@@ -68,17 +68,17 @@ impl Runtime {
                 }
                 Vec::new()
             };
-            let names: Vec<String> = param_def
+            let identifiers: Vec<crate::new_pipeline::ast::obj::Identifier> = param_def
                 .groups
                 .iter()
                 .flat_map(|g| g.params.iter().cloned())
                 .collect();
-            Ok((param_def, facts, names))
+            Ok((param_def, facts, identifiers))
         })();
         self.pop_parse_scope();
-        let (param_def, facts, names) = result?;
-        for name in names {
-            self.occupy_name_as_parse(block, name)?;
+        let (param_def, facts, identifiers) = result?;
+        for identifier in identifiers {
+            self.occupy_plain_atom_as_parse(block, identifier.name, identifier.atom_id)?;
         }
         Ok(Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(TrustHaveStmt {
             param_def,

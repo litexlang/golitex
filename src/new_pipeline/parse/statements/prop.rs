@@ -46,7 +46,7 @@ impl Runtime {
         self.pop_parse_scope();
         let (typed_parameters, iff_facts) = result?;
 
-        self.occupy_name_as_parse(&tb, name.clone())?;
+        self.define_plain_atom_as_parse(&tb, name.clone())?;
         Ok(Stmt::Definition(DefinitionStmt::DefPropStmt(DefPropStmt {
             name,
             typed_parameters,
@@ -83,7 +83,7 @@ impl Runtime {
             return Err(tb.parse_error("abstract_prop cannot have an indented body"));
         }
 
-        self.occupy_name_as_parse(&tb, name.clone())?;
+        self.define_plain_atom_as_parse(&tb, name.clone())?;
         Ok(Stmt::Definition(DefinitionStmt::DefAbstractPropStmt(
             DefAbstractPropStmt {
                 name,

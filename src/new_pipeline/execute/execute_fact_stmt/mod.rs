@@ -19,7 +19,6 @@ pub mod verify_well_defined;
 
 pub use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 pub use result::{ExecFactStmtResult, StoreFactAndInferResult};
-pub use verify_atomic_fact::verify_equality::equal_fact_from_let;
 pub use verify_atomic_fact::verify_non_equational_atomic_fact::
     NonEquationalAtomicFactSearchProofByBuiltinRule;
 pub use verify_fact_result::VerifyFactResult;
