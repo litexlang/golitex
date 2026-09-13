@@ -2,11 +2,7 @@ use crate::fact::ExistFact;
 use crate::prelude::*;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 
-pub enum VerifyExistFactResult {
-    Exist(VerifyPlainExistFactResult),
-    ExistUnique(VerifyExistUniqueFactResult),
-    NotExist(VerifyNotExistFactResult),
-}
+use super::verify_exist_fact_result::VerifyExistFactResult;
 
 impl Runtime {
     pub fn verify_exist_fact(

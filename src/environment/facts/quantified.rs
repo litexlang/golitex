@@ -3,28 +3,43 @@
 use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
 
-/// Stored existential and disjunctive facts indexed by their structural key.
+/// Stored existential facts indexed by their structural key.
 #[derive(Clone)]
-pub struct QuantifiedFactMemory {
-    pub existential: HashMap<ExistFactKey, Vec<ExistFact>>,
-    pub disjunctions: HashMap<OrFactKey, Vec<OrFact>>,
+pub struct ExistFactMemory {
+    pub by_key: HashMap<ExistFactKey, Vec<ExistFact>>,
 }
 
-impl QuantifiedFactMemory {
+/// Stored disjunctive facts indexed by their structural key.
+#[derive(Clone)]
+pub struct OrFactMemory {
+    pub by_key: HashMap<OrFactKey, Vec<OrFact>>,
+}
+
+impl ExistFactMemory {
     pub fn new() -> Self {
         Self {
-            existential: HashMap::new(),
-            disjunctions: HashMap::new(),
+            by_key: HashMap::new(),
         }
     }
 
     pub fn merge_from(&mut self, child: Self) {
-        for (key, child_facts) in child.existential {
-            let parent_facts = self.existential.entry(key).or_default();
+        for (key, child_facts) in child.by_key {
+            let parent_facts = self.by_key.entry(key).or_default();
             append_missing_exist_facts(parent_facts, child_facts);
         }
-        for (key, child_facts) in child.disjunctions {
-            let parent_facts = self.disjunctions.entry(key).or_default();
+    }
+}
+
+impl OrFactMemory {
+    pub fn new() -> Self {
+        Self {
+            by_key: HashMap::new(),
+        }
+    }
+
+    pub fn merge_from(&mut self, child: Self) {
+        for (key, child_facts) in child.by_key {
+            let parent_facts = self.by_key.entry(key).or_default();
             append_missing_or_facts(parent_facts, child_facts);
         }
     }

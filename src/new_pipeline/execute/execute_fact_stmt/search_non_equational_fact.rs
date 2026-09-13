@@ -67,20 +67,18 @@ impl Runtime {
             return Ok(NonEquationalFactSearchedProof::ByKnownForallFact(result));
         }
 
-        if let Some(result) = self
-            .search_non_equational_fact_proof_by_builtin_algebraic_rewrite(
-                fact,
-                verify_state.clone(),
-            )?
-        {
+        if let Some(result) = self.search_non_equational_fact_proof_by_builtin_algebraic_rewrite(
+            fact,
+            verify_state.clone(),
+        )? {
             return Ok(NonEquationalFactSearchedProof::ByBuiltinAlgebraicRewrite(
                 result,
             ));
         }
 
         if verify_state.can_use_known_algebraic_rewrite {
-            if let Some(result) =
-                self.search_non_equational_fact_proof_by_known_algebraic_rewrite(fact, verify_state)?
+            if let Some(result) = self
+                .search_non_equational_fact_proof_by_known_algebraic_rewrite(fact, verify_state)?
             {
                 return Ok(NonEquationalFactSearchedProof::ByKnownAlgebraicRewrite(
                     result,

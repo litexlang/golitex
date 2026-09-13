@@ -1146,7 +1146,7 @@ impl Runtime {
                 )))
             })?;
         for key in goal_keys.iter() {
-            let Some(known_exist_facts) = environment.facts.quantified.existential.get(key) else {
+            let Some(known_exist_facts) = environment.facts.known_exist.by_key.get(key) else {
                 continue;
             };
             for known_fact in known_exist_facts.iter() {

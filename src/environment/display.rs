@@ -69,27 +69,27 @@ impl fmt::Display for ExecEnv {
         write!(
             f,
             "    known_atomic_facts_with_0_or_more_than_two_params: {:?}\n",
-            self.facts.atomic.by_other_arg_count.len()
+            self.facts.known_non_equational_facts.by_other_arg_count.len()
         )?;
         write!(
             f,
             "    known_atomic_facts_with_1_arg: {:?}\n",
-            self.facts.atomic.by_one_arg.len()
+            self.facts.known_non_equational_facts.by_one_arg.len()
         )?;
         write!(
             f,
             "    known_atomic_facts_with_2_args: {:?}\n",
-            self.facts.atomic.by_two_args.len()
+            self.facts.known_non_equational_facts.by_two_args.len()
         )?;
         write!(
             f,
             "    known_exist_facts_with_more_than_two_params: {:?}\n",
-            self.facts.quantified.existential.len()
+            self.facts.known_exist.by_key.len()
         )?;
         write!(
             f,
             "    known_or_facts_with_more_than_two_params: {:?}\n",
-            self.facts.quantified.disjunctions.len()
+            self.facts.known_or.by_key.len()
         )?;
         write!(
             f,

@@ -191,7 +191,7 @@ impl Runtime {
 
         let mut known_orders = Vec::new();
         for environment in self.iter_environments_from_top() {
-            for known_facts_map in environment.facts.atomic.by_two_args.values() {
+            for known_facts_map in environment.facts.known_non_equational_facts.by_two_args.values() {
                 for known_fact in known_facts_map.values() {
                     if direct_positive_order_shape(self, known_fact).is_some() {
                         known_orders.push(known_fact.clone());

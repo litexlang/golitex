@@ -1,15 +1,10 @@
 use crate::prelude::*;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 
-pub struct VerifyNotForallFactResult {
-    pub fact: NotForallFact,
-    pub well_defined_proof: NotForallFactWellDefinedProof,
-    pub searched_proof: NotForallFactSearchedProof,
-}
-
-pub enum NotForallFactSearchedProof {
-    ByCache(CacheSearchProof),
-}
+use super::verify_not_forall_fact_result::{
+    VerifyNotForallFactResult,
+    NotForallFactSearchedProof,
+};
 
 impl Runtime {
     pub fn verify_not_forall_fact(

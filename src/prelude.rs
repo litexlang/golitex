@@ -20,11 +20,11 @@ pub use crate::algebraic_normalization::{
     evaluate_obj_to_exact_rational_for_eval, evaluate_obj_to_exact_rational_obj_for_eval,
 };
 pub use crate::environment::{
-    forall_argument_shape, AtomicFactMemory, CachedKnownFact, DefinitionMemory,
+    forall_argument_shape, CachedKnownFact, DefinitionMemory, NonEquationalAtomicFactMemory,
     EnvironmentPredicateProperties, EnvironmentStoredFactStore, EqualityClassId,
     EqualityHistoryEvent, ExecEnv, ForallArgumentShape, KnownEquality, KnownEqualityProofStep,
     KnownFactMemory, KnownFactsCache, KnownFnInfo, KnownForallFactMemory, KnownObjValue,
-    ObjectPropertyMemory, PropAlgebraicPropertyMemory, QuantifiedFactMemory,
+    ExistFactMemory, ObjectPropertyMemory, OrFactMemory, PropAlgebraicPropertyMemory,
     SpecialObjectPropertyMemory, SpecialSetRelationMemory, StoredFactRecord,
     StoredForallConclusionReference, WellDefinednessEnvironmentDelta,
 };
