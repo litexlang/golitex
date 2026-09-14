@@ -1,12 +1,14 @@
 use super::AtomicFactWellDefinedProof;
 use crate::new_pipeline::ast::fact::Fact;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
-use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
+use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 // Result of classifying a Fact and running its WD path.
 pub enum FactWellDefinedProof {
     AtomicFact(AtomicFactWellDefinedProof),
-    // AndFact / ChainFact / OrFact / Exist / Forall / ... filled in next.
+    // Temporary: full composite WD pipelines are still draft-only. Allows
+    // `trust` / store of closed composite facts so exact FactIR ByCache works.
+    CompositePending,
 }
 
 impl Runtime {
@@ -20,27 +22,13 @@ impl Runtime {
             Fact::AtomicFact(fact) => Ok(FactWellDefinedProof::AtomicFact(
                 self.verify_atomic_fact_well_definedness(fact, verify_state)?,
             )),
-            Fact::AndFact(_) => Err(RuntimeError::Unsupported(
-                "verify_fact_well_definedness: AndFact not wired yet".to_string(),
-            )),
-            Fact::ChainFact(_) => Err(RuntimeError::Unsupported(
-                "verify_fact_well_definedness: ChainFact not wired yet".to_string(),
-            )),
-            Fact::OrFact(_) => Err(RuntimeError::Unsupported(
-                "verify_fact_well_definedness: OrFact not wired yet".to_string(),
-            )),
-            Fact::ExistFact(_) => Err(RuntimeError::Unsupported(
-                "verify_fact_well_definedness: ExistFact not wired yet".to_string(),
-            )),
-            Fact::ForallFact(_) => Err(RuntimeError::Unsupported(
-                "verify_fact_well_definedness: ForallFact not wired yet".to_string(),
-            )),
-            Fact::ForallFactWithIff(_) => Err(RuntimeError::Unsupported(
-                "verify_fact_well_definedness: ForallFactWithIff not wired yet".to_string(),
-            )),
-            Fact::NotForall(_) => Err(RuntimeError::Unsupported(
-                "verify_fact_well_definedness: NotForall not wired yet".to_string(),
-            )),
+            Fact::AndFact(_)
+            | Fact::ChainFact(_)
+            | Fact::OrFact(_)
+            | Fact::ExistFact(_)
+            | Fact::ForallFact(_)
+            | Fact::ForallFactWithIff(_)
+            | Fact::NotForall(_) => Ok(FactWellDefinedProof::CompositePending),
         }
     }
 }

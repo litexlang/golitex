@@ -56,11 +56,11 @@ cache → builtin rule → known atomic → builtin strategy → by definition �
 known forall → builtin algebraic rewrite → known algebraic rewrite.
 
 `cache` is exact `FactIR` lookup in `KnownFactMemory.fact_ir_to_id` across the
-current `execution_environments_stack`. The cache stores and cites **only**
-`AtomicFact` (including equality). Composite facts (`forall` / `exist` / `or` /
-`not forall`, …) do not enter this index and do not use ByCache; they need
-separate known-* / alpha-aware routes later. A cache hit requires full IR match;
-equality-class parameter matching belongs to later known-* slots, not cache.
+current `execution_environments_stack`. The cache stores and cites **every**
+closed `Fact` shape (atomic and composite). A cache hit requires full IR match
+under name-is-identity; equality-class parameter matching and alpha-renaming
+belong to later known-* slots, not cache. Do not index binder-internal open
+scraps as ambient facts.
 
 Here `by definition` means ambient prop / builtin definition expansion in the
 current execution-environment stack. Cross-module definitions and theorems are

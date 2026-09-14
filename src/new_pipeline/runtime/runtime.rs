@@ -1,11 +1,11 @@
 use super::error::{RuntimeError, RuntimeResult};
 use super::real_or_virtual_path::RealOrVirtualPath;
-use super::runtime_ids::{FactId, IdentifierId, PropAlgebraicPropertyId, WellDefinednessId};
+use super::runtime_ids::{FactId, PropAlgebraicPropertyId, WellDefinednessId};
 use crate::new_pipeline::exec_env::exec_env::ExecEnv;
 use crate::new_pipeline::module_manager::{
     ExportFileAndItsExecEnv, ModuleHierarchy, ModuleManager,
 };
-use std::collections::HashMap;
+use std::collections::HashSet;
 
 // -----------------------------------------------------------------------------
 // Core data model
@@ -27,6 +27,9 @@ pub struct Runtime {
 }
 
 /// Name occupied in a parse scope. Plain `x` and `mod::x` are distinct.
+///
+/// Under the locked name-is-identity premise (`identifier_identity.md`), this
+/// name *is* the symbol identity.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum OccupiedName {
     Plain(String),
@@ -35,14 +38,13 @@ pub enum OccupiedName {
 
 /// One parse layer's occupied names. Inner scopes must not reuse a visible outer name.
 pub struct ParseScope {
-    pub occupied: HashMap<OccupiedName, IdentifierId>,
+    pub occupied: HashSet<OccupiedName>,
 }
 
-/// Global monotonic id counters owned by `Runtime`.
+/// Global monotonic id counters owned by `Runtime` (facts / WD / prop properties).
 pub struct Ids {
     next_fact_id: FactId,
     next_well_definedness_id: WellDefinednessId,
-    next_identifier_id: IdentifierId,
     next_prop_algebraic_property_id: PropAlgebraicPropertyId,
 }
 
@@ -106,44 +108,15 @@ impl Runtime {
 
     pub fn occupied_name_is_visible(&self, key: &OccupiedName) -> bool {
         for scope in &self.parse_scope_stack {
-            if scope.occupied.contains_key(key) {
+            if scope.occupied.contains(key) {
                 return true;
             }
         }
         false
     }
 
-    pub fn lookup_identifier_id(&self, key: &OccupiedName) -> Option<IdentifierId> {
-        for scope in self.parse_scope_stack.iter().rev() {
-            if let Some(identifier_id) = scope.occupied.get(key) {
-                return Some(*identifier_id);
-            }
-        }
-        None
-    }
-
-    // Allocate a new global IdentifierId and occupy `key` in the current scope.
-    pub fn define_atom(&mut self, key: OccupiedName) -> RuntimeResult<IdentifierId> {
-        if self.occupied_name_is_visible(&key) {
-            return Err(RuntimeError::Invariant(format!(
-                "name `{key}` is already bound in an enclosing parse scope"
-            )));
-        }
-        let identifier_id = self.ids.allocate_identifier_id();
-        let scope = self
-            .parse_scope_stack
-            .last_mut()
-            .ok_or_else(|| RuntimeError::Invariant("no parse scope".to_string()))?;
-        scope.occupied.insert(key, identifier_id);
-        Ok(identifier_id)
-    }
-
-    // Put an already-allocated IdentifierId into the current scope without allocating.
-    pub fn occupy_atom(
-        &mut self,
-        key: OccupiedName,
-        identifier_id: IdentifierId,
-    ) -> RuntimeResult<()> {
+    // Occupy `key` in the current scope (name is identity; no per-occurrence id).
+    pub fn define_atom(&mut self, key: OccupiedName) -> RuntimeResult<()> {
         if self.occupied_name_is_visible(&key) {
             return Err(RuntimeError::Invariant(format!(
                 "name `{key}` is already bound in an enclosing parse scope"
@@ -153,24 +126,35 @@ impl Runtime {
             .parse_scope_stack
             .last_mut()
             .ok_or_else(|| RuntimeError::Invariant("no parse scope".to_string()))?;
-        scope.occupied.insert(key, identifier_id);
+        scope.occupied.insert(key);
         Ok(())
     }
 
-    pub fn define_plain_atom(&mut self, name: String) -> RuntimeResult<IdentifierId> {
+    // Occupy an already-known name in the current scope (e.g. re-open forall binders).
+    pub fn occupy_atom(&mut self, key: OccupiedName) -> RuntimeResult<()> {
+        if self.occupied_name_is_visible(&key) {
+            return Err(RuntimeError::Invariant(format!(
+                "name `{key}` is already bound in an enclosing parse scope"
+            )));
+        }
+        let scope = self
+            .parse_scope_stack
+            .last_mut()
+            .ok_or_else(|| RuntimeError::Invariant("no parse scope".to_string()))?;
+        scope.occupied.insert(key);
+        Ok(())
+    }
+
+    pub fn define_plain_atom(&mut self, name: String) -> RuntimeResult<()> {
         self.define_atom(OccupiedName::Plain(name))
     }
 
-    pub fn occupy_plain_atom(
-        &mut self,
-        name: String,
-        identifier_id: IdentifierId,
-    ) -> RuntimeResult<()> {
-        self.occupy_atom(OccupiedName::Plain(name), identifier_id)
+    pub fn occupy_plain_atom(&mut self, name: String) -> RuntimeResult<()> {
+        self.occupy_atom(OccupiedName::Plain(name))
     }
 
-    pub fn lookup_plain_identifier_id(&self, name: &str) -> Option<IdentifierId> {
-        self.lookup_identifier_id(&OccupiedName::Plain(name.to_string()))
+    pub fn plain_atom_is_visible(&self, name: &str) -> bool {
+        self.occupied_name_is_visible(&OccupiedName::Plain(name.to_string()))
     }
 
     pub fn top_exec_env(&self) -> &ExecEnv {
@@ -223,7 +207,7 @@ impl Runtime {
 impl ParseScope {
     pub fn new() -> Self {
         Self {
-            occupied: HashMap::new(),
+            occupied: HashSet::new(),
         }
     }
 }
@@ -233,7 +217,6 @@ impl Ids {
         Self {
             next_fact_id: FactId::new(1),
             next_well_definedness_id: WellDefinednessId::new(1),
-            next_identifier_id: IdentifierId::new(1),
             next_prop_algebraic_property_id: PropAlgebraicPropertyId::new(1),
         }
     }
@@ -248,12 +231,6 @@ impl Ids {
         let current = self.next_well_definedness_id;
         self.next_well_definedness_id =
             WellDefinednessId::new(bump(current.value(), "well-definedness"));
-        current
-    }
-
-    pub fn allocate_identifier_id(&mut self) -> IdentifierId {
-        let current = self.next_identifier_id;
-        self.next_identifier_id = IdentifierId::new(bump(current.value(), "identifier"));
         current
     }
 

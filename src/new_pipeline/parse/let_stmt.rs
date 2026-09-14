@@ -36,7 +36,7 @@ impl Runtime {
             .into());
         }
 
-        // Allocate atom id at definition time, before parsing the value.
+        // Occupy the name before parsing the value (name is identity).
         let identifier = self.define_plain_atom_as_parse(&tb, name)?;
 
         tb.expect(EQUAL).map_err(|_| {
@@ -59,7 +59,6 @@ impl Runtime {
 
         Ok(Stmt::Definition(DefinitionStmt::LetObjStmt(LetObjStmt {
             name: identifier.name,
-            identifier_id: identifier.identifier_id,
             value,
             line_file: LineFile::new(block.line, block.source_path.clone()),
         })))

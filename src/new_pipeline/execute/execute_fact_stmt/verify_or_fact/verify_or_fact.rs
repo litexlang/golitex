@@ -4,12 +4,13 @@ use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
+    // Exact ByCache is handled in `verify_fact` before this entry.
     pub fn verify_or_fact(
         &mut self,
         fact: &OrFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<VerifyOrFactResult> {
+    ) -> RuntimeResult<Option<VerifyOrFactResult>> {
         let _ = (fact, verify_state);
-        Ok(VerifyOrFactResult { _wire: () })
+        Ok(None)
     }
 }

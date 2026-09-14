@@ -6,7 +6,7 @@ use crate::new_pipeline::ast::obj::Identifier;
 use crate::new_pipeline::ast::param::{
     FiniteSet, NonemptySet, ParamType, Set, TypedParameterGroup, TypedParameterList,
 };
-use crate::new_pipeline::runtime::{IdentifierId, Runtime, RuntimeParseError, RuntimeResult};
+use crate::new_pipeline::runtime::{Runtime, RuntimeParseError, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
 
 impl Runtime {
@@ -199,32 +199,26 @@ impl Runtime {
         tb: &TokenBlock,
         name: String,
     ) -> RuntimeResult<Identifier> {
-        let identifier_id = self
-            .define_plain_atom(name.clone())
+        self.define_plain_atom(name.clone())
             .map_err(|err| match err {
                 crate::new_pipeline::runtime::RuntimeError::Invariant(message) => {
                     RuntimeParseError::new(message, tb.line, tb.source_path.clone()).into()
                 }
                 other => other,
             })?;
-        Ok(Identifier {
-            name,
-            identifier_id,
-        })
+        Ok(Identifier { name })
     }
 
     pub(super) fn occupy_plain_atom_as_parse(
         &mut self,
         tb: &TokenBlock,
         name: String,
-        identifier_id: IdentifierId,
     ) -> RuntimeResult<()> {
-        self.occupy_plain_atom(name, identifier_id)
-            .map_err(|err| match err {
-                crate::new_pipeline::runtime::RuntimeError::Invariant(message) => {
-                    RuntimeParseError::new(message, tb.line, tb.source_path.clone()).into()
-                }
-                other => other,
-            })
+        self.occupy_plain_atom(name).map_err(|err| match err {
+            crate::new_pipeline::runtime::RuntimeError::Invariant(message) => {
+                RuntimeParseError::new(message, tb.line, tb.source_path.clone()).into()
+            }
+            other => other,
+        })
     }
 }

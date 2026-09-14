@@ -1,6 +1,6 @@
 //! Framework AST data shapes for new_pipeline.
 //! Field taxonomy follows the legacy language; methods are added later.
-//! Identity: String display names plus IdentifierId on Identifier atoms; FactId; LineFile.
+//! Identity: String names (name is identity); FactId; LineFile.
 //!
 //! Layout: `Obj` first; each payload type follows in the same order as its `Obj` variant.
 //! Nested helpers that are not themselves `Obj` variants sit with their owning variant.
@@ -8,7 +8,6 @@
 use super::fact::QuantifierFreeFact;
 use super::names::AtomicName;
 use super::param::SetBoundParameterList;
-use crate::new_pipeline::runtime::IdentifierId;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Obj {
@@ -93,14 +92,12 @@ pub enum Obj {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Identifier {
     pub name: String,
-    pub identifier_id: IdentifierId,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IdentifierWithMod {
     pub mod_name: String,
     pub name: String,
-    pub identifier_id: IdentifierId,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

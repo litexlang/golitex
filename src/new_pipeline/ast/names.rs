@@ -1,6 +1,6 @@
 //! Framework AST data shapes for new_pipeline.
 //! Field taxonomy follows the legacy language; methods are added later.
-//! Identity: String names, FactId, LineFile; Identifier atoms carry IdentifierId.
+//! Identity: String names (name is identity); FactId; LineFile.
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum AtomicName {

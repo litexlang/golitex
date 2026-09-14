@@ -1,6 +1,6 @@
 //! Framework AST data shapes for new_pipeline.
 //! Field taxonomy follows the legacy language; methods are added later.
-//! Identity: String names, FactId, LineFile; Identifier atoms carry IdentifierId.
+//! Identity: String names, FactId, LineFile (name is identity; no IdentifierId).
 
 use super::line_file::LineFile;
 use super::names::AtomicName;
@@ -530,6 +530,25 @@ impl AtomicFact {
             AtomicFact::SupersetFact(_) | AtomicFact::NotSupersetFact(_) => SUPERSET.to_string(),
             AtomicFact::FnEqualInFact(_) => FN_EQ_IN.to_string(),
             AtomicFact::FnEqualFact(_) => FN_EQ.to_string(),
+        }
+    }
+}
+
+impl Fact {
+    pub fn fact_id(&self) -> FactId {
+        match self {
+            Fact::AtomicFact(f) => f.fact_id(),
+            Fact::AndFact(f) => f.fact_id,
+            Fact::ChainFact(f) => f.fact_id,
+            Fact::OrFact(f) => f.fact_id,
+            Fact::ExistFact(f) => match f {
+                ExistFact::PlainExistFact(p)
+                | ExistFact::ExistUniqueFact(p)
+                | ExistFact::NotExistFact(p) => p.fact_id,
+            },
+            Fact::ForallFact(f) => f.fact_id,
+            Fact::ForallFactWithIff(f) => f.fact_id,
+            Fact::NotForall(f) => f.fact_id,
         }
     }
 }

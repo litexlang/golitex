@@ -4,7 +4,6 @@
 //! (`XxxIR(String)` is module-private). Arbitrary
 //! `String` values cannot become these types without going through that path.
 
-use super::helper::strip_identifier_id_tags;
 use std::borrow::Borrow;
 use std::fmt;
 use std::ops::Deref;
@@ -20,7 +19,7 @@ macro_rules! define_ir {
             }
 
             pub fn display_string(&self) -> String {
-                strip_identifier_id_tags(&self.0)
+                self.0.clone()
             }
         }
 

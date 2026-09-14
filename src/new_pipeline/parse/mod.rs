@@ -9,8 +9,9 @@
 //!   keywords.rs       — local spellings (no legacy syntax import)
 //!
 //! Iron rules:
-//! 1. Names are String; Identifier / IdentifierWithMod carry global IdentifierId stamped at parse.
-//! 2. Scope is occupy only (no shadowing); binders and definitions are both Identifier.
+//! 1. Name is identity (see `new_pipeline/identifier_identity.md`): no
+//!    shadowing; no same-name nested binders.
+//! 2. Scope is occupy only; binders and definitions are both Identifier.
 //! 3. FactId may be allocated at parse; do not store facts or read ExecEnv here.
 //! 4. Errors use RuntimeParseError + LineFile from TokenBlock.
 //!

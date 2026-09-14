@@ -7,7 +7,7 @@ pub struct VerifyExistUniqueFactResult {
     pub searched_proof: ExistUniqueFactSearchedProof,
 }
 
-// Exact FactIR ByCache is AtomicFact-only; exist! uses other search routes.
+// Exact FactIR ByCache is handled at verify_fact; exist! uses other search routes.
 pub enum ExistUniqueFactSearchedProof {
     ProveAsExistFactWithUniqueness(ExistUniqueFactSearchedProofByExistAndUniqueness),
 }

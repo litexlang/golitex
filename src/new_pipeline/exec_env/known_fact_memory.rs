@@ -1,4 +1,4 @@
-use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact};
+use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact};
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::display_and_ir::FactIR;
 use crate::new_pipeline::runtime::FactId;
@@ -8,12 +8,12 @@ use std::rc::Rc;
 
 pub use crate::new_pipeline::display_and_ir::ObjIR;
 
-// Atomic facts and search indexes for one ExecEnv scope (new_pipeline AST).
-// Exact FactIR ByCache is AtomicFact-only; composite facts are not stored here.
+// Known facts and search indexes for one ExecEnv scope.
+// Exact FactIR ByCache indexes every closed Fact shape (name is identity).
 #[derive(Clone)]
 pub struct KnownFactMemory {
-    pub facts_by_id: HashMap<FactId, AtomicFact>,
-    // Exact IR → FactId for ByCache. Same string key as `atomic_fact.ir()`.
+    pub facts_by_id: HashMap<FactId, Fact>,
+    // Exact IR → FactId for ByCache. Same string key as `fact.ir()`.
     pub fact_ir_to_id: HashMap<FactIR, FactId>,
     pub known_equality: KnownEqualityMemory,
     pub known_atomic_except_equality_facts: AtomicExceptEqualityFactMemory,
@@ -58,16 +58,28 @@ impl KnownFactMemory {
         }
     }
 
-    // Record a stored atomic fact under both id and IR indexes.
-    pub fn record_atomic_fact(&mut self, fact_id: FactId, fact: AtomicFact) {
+    // Record any closed fact under both id and IR indexes (ByCache).
+    pub fn record_fact(&mut self, fact_id: FactId, fact: Fact) {
         self.fact_ir_to_id.insert(fact.ir(), fact_id);
         self.facts_by_id.insert(fact_id, fact);
     }
 
-    pub fn lookup_atomic_by_ir(&self, key: &FactIR) -> Option<(FactId, &AtomicFact)> {
+    pub fn record_atomic_fact(&mut self, fact_id: FactId, fact: AtomicFact) {
+        self.record_fact(fact_id, Fact::AtomicFact(fact));
+    }
+
+    pub fn lookup_fact_by_ir(&self, key: &FactIR) -> Option<(FactId, &Fact)> {
         let fact_id = *self.fact_ir_to_id.get(key)?;
         let fact = self.facts_by_id.get(&fact_id)?;
         Some((fact_id, fact))
+    }
+
+    pub fn lookup_atomic_by_ir(&self, key: &FactIR) -> Option<(FactId, &AtomicFact)> {
+        let (fact_id, fact) = self.lookup_fact_by_ir(key)?;
+        match fact {
+            Fact::AtomicFact(atomic) => Some((fact_id, atomic)),
+            _ => None,
+        }
     }
 }
 

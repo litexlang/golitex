@@ -169,9 +169,8 @@ impl EvalStmt {
 impl LetObjStmt {
     pub fn ir(&self) -> StmtIR {
         StmtIR(format!(
-            "{} #{}#{} {} {}",
+            "{} {} {} {}",
             LET,
-            self.identifier_id.value(),
             self.name,
             EQUAL,
             &self.value.ir()
