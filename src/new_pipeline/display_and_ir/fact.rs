@@ -64,7 +64,40 @@ impl AtomicFact {
             AtomicFact::FnEqualFact(x) => x.ir(),
         }
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        match self {
+            AtomicFact::NormalAtomicFact(x) => x.display_string(),
+            AtomicFact::EqualFact(x) => x.display_string(),
+            AtomicFact::LessFact(x) => x.display_string(),
+            AtomicFact::GreaterFact(x) => x.display_string(),
+            AtomicFact::LessEqualFact(x) => x.display_string(),
+            AtomicFact::GreaterEqualFact(x) => x.display_string(),
+            AtomicFact::IsSetFact(x) => x.display_string(),
+            AtomicFact::IsNonemptySetFact(x) => x.display_string(),
+            AtomicFact::IsFiniteSetFact(x) => x.display_string(),
+            AtomicFact::InFact(x) => x.display_string(),
+            AtomicFact::IsCartFact(x) => x.display_string(),
+            AtomicFact::IsTupleFact(x) => x.display_string(),
+            AtomicFact::SubsetFact(x) => x.display_string(),
+            AtomicFact::SupersetFact(x) => x.display_string(),
+            AtomicFact::NotNormalAtomicFact(x) => x.display_string(),
+            AtomicFact::NotEqualFact(x) => x.display_string(),
+            AtomicFact::NotLessFact(x) => x.display_string(),
+            AtomicFact::NotGreaterFact(x) => x.display_string(),
+            AtomicFact::NotLessEqualFact(x) => x.display_string(),
+            AtomicFact::NotGreaterEqualFact(x) => x.display_string(),
+            AtomicFact::NotIsSetFact(x) => x.display_string(),
+            AtomicFact::NotIsNonemptySetFact(x) => x.display_string(),
+            AtomicFact::NotIsFiniteSetFact(x) => x.display_string(),
+            AtomicFact::NotInFact(x) => x.display_string(),
+            AtomicFact::NotIsCartFact(x) => x.display_string(),
+            AtomicFact::NotIsTupleFact(x) => x.display_string(),
+            AtomicFact::NotSubsetFact(x) => x.display_string(),
+            AtomicFact::NotSupersetFact(x) => x.display_string(),
+            AtomicFact::FnEqualInFact(x) => x.display_string(),
+            AtomicFact::FnEqualFact(x) => x.display_string(),
+        }
+    }
 }
 
 impl EqualFact {
@@ -76,7 +109,14 @@ impl EqualFact {
             self.right.ir()
         ))
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        format!(
+            "{} {} {}",
+            self.left.display_string(),
+            EQUAL,
+            self.right.display_string()
+        )
+    }
 }
 
 impl NotEqualFact {
@@ -88,7 +128,14 @@ impl NotEqualFact {
             self.right.ir()
         ))
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        format!(
+            "{} {} {}",
+            self.left.display_string(),
+            NOT_EQUAL,
+            self.right.display_string()
+        )
+    }
 }
 
 macro_rules! impl_bin_rel {
@@ -102,7 +149,14 @@ macro_rules! impl_bin_rel {
                     self.right.ir()
                 ))
             }
-            impl_display_pair!();
+            pub fn display_string(&self) -> String {
+                format!(
+                    "{} {} {}",
+                    self.left.display_string(),
+                    $op,
+                    self.right.display_string()
+                )
+            }
         }
     };
 }
@@ -119,7 +173,15 @@ macro_rules! impl_not_bin_rel {
                     self.right.ir()
                 ))
             }
-            impl_display_pair!();
+            pub fn display_string(&self) -> String {
+                format!(
+                    "{} {} {} {}",
+                    NOT,
+                    self.left.display_string(),
+                    $op,
+                    self.right.display_string()
+                )
+            }
         }
     };
 }
@@ -143,7 +205,15 @@ impl InFact {
             self.set.ir()
         ))
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        format!(
+            "{} {}{} {}",
+            self.element.display_string(),
+            FACT_PREFIX,
+            IN,
+            self.set.display_string()
+        )
+    }
 }
 
 impl NotInFact {
@@ -157,7 +227,16 @@ impl NotInFact {
             self.set.ir()
         ))
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        format!(
+            "{} {} {}{} {}",
+            NOT,
+            self.element.display_string(),
+            FACT_PREFIX,
+            IN,
+            self.set.display_string()
+        )
+    }
 }
 
 macro_rules! impl_dollar_set_prop {
@@ -173,7 +252,16 @@ macro_rules! impl_dollar_set_prop {
                     RIGHT_PAREN
                 ))
             }
-            impl_display_pair!();
+            pub fn display_string(&self) -> String {
+                format!(
+                    "{}{}{}{}{}",
+                    FACT_PREFIX,
+                    $kw,
+                    LEFT_PAREN,
+                    self.set.display_string(),
+                    RIGHT_PAREN
+                )
+            }
         }
     };
 }
@@ -192,7 +280,17 @@ macro_rules! impl_not_dollar_set_prop {
                     RIGHT_PAREN
                 ))
             }
-            impl_display_pair!();
+            pub fn display_string(&self) -> String {
+                format!(
+                    "{} {}{}{}{}{}",
+                    NOT,
+                    FACT_PREFIX,
+                    $kw,
+                    LEFT_PAREN,
+                    self.set.display_string(),
+                    RIGHT_PAREN
+                )
+            }
         }
     };
 }
@@ -218,7 +316,15 @@ impl SubsetFact {
             self.right.ir()
         ))
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        format!(
+            "{} {}{} {}",
+            self.left.display_string(),
+            FACT_PREFIX,
+            SUBSET,
+            self.right.display_string()
+        )
+    }
 }
 
 impl NotSubsetFact {
@@ -232,7 +338,16 @@ impl NotSubsetFact {
             self.right.ir()
         ))
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        format!(
+            "{} {} {}{} {}",
+            NOT,
+            self.left.display_string(),
+            FACT_PREFIX,
+            SUBSET,
+            self.right.display_string()
+        )
+    }
 }
 
 impl SupersetFact {
@@ -245,7 +360,15 @@ impl SupersetFact {
             self.right.ir()
         ))
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        format!(
+            "{} {}{} {}",
+            self.left.display_string(),
+            FACT_PREFIX,
+            SUPERSET,
+            self.right.display_string()
+        )
+    }
 }
 
 impl NotSupersetFact {
@@ -259,7 +382,16 @@ impl NotSupersetFact {
             self.right.ir()
         ))
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        format!(
+            "{} {} {}{} {}",
+            NOT,
+            self.left.display_string(),
+            FACT_PREFIX,
+            SUPERSET,
+            self.right.display_string()
+        )
+    }
 }
 
 macro_rules! impl_normal_atomic {
@@ -301,7 +433,42 @@ macro_rules! impl_normal_atomic {
                 s.push_str(RIGHT_PAREN);
                 FactIR(s)
             }
-            impl_display_pair!();
+            pub fn display_string(&self) -> String {
+                if let AtomicName::WithoutMod(name) = &self.predicate {
+                    if self.body.len() == 2
+                        && (name.as_str() == PROPER_SUBSET || name.as_str() == PROPER_SUPERSET)
+                    {
+                        let mut s = String::new();
+                        if $negated {
+                            s.push_str(NOT);
+                            s.push(' ');
+                        }
+                        s.push_str(&self.body[0].display_string());
+                        s.push(' ');
+                        s.push_str(FACT_PREFIX);
+                        s.push_str(name);
+                        s.push(' ');
+                        s.push_str(&self.body[1].display_string());
+                        return s;
+                    }
+                }
+                let mut s = String::new();
+                if $negated {
+                    s.push_str(NOT);
+                    s.push(' ');
+                }
+                s.push_str(FACT_PREFIX);
+                s.push_str(&self.predicate.display_string());
+                let parts: Vec<_> = self
+                    .body
+                    .iter()
+                    .map(|o| o.display_string())
+                    .collect();
+                s.push_str(LEFT_PAREN);
+                s.push_str(&parts.join(&format!("{} ", COMMA)));
+                s.push_str(RIGHT_PAREN);
+                s
+            }
         }
     };
 }
@@ -324,7 +491,20 @@ impl FnEqualInFact {
             RIGHT_PAREN
         ))
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        format!(
+            "{}{}{}{}{} {}{} {}{}",
+            FACT_PREFIX,
+            FN_EQ_IN,
+            LEFT_PAREN,
+            self.left.display_string(),
+            COMMA,
+            self.right.display_string(),
+            COMMA,
+            self.set.display_string(),
+            RIGHT_PAREN
+        )
+    }
 }
 
 impl FnEqualFact {
@@ -340,7 +520,18 @@ impl FnEqualFact {
             RIGHT_PAREN
         ))
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        format!(
+            "{}{}{}{}{} {}{}",
+            FACT_PREFIX,
+            FN_EQ,
+            LEFT_PAREN,
+            self.left.display_string(),
+            COMMA,
+            self.right.display_string(),
+            RIGHT_PAREN
+        )
+    }
 }
 
 impl AndFact {
@@ -353,7 +544,13 @@ impl AndFact {
                 .join(&format!(" {} ", AND)),
         )
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        self.facts
+            .iter()
+            .map(|f| f.display_string())
+            .collect::<Vec<_>>()
+            .join(&format!(" {} ", AND))
+    }
 }
 
 impl OrFact {
@@ -366,7 +563,13 @@ impl OrFact {
                 .join(&format!(" {} ", OR)),
         )
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        self.facts
+            .iter()
+            .map(|f| f.display_string())
+            .collect::<Vec<_>>()
+            .join(&format!(" {} ", OR))
+    }
 }
 
 impl ChainFact {
@@ -383,7 +586,19 @@ impl ChainFact {
         }
         FactIR(s)
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        let mut s = format!("{}", self.objs[0].display_string());
+        for (i, obj) in self.objs[1..].iter().enumerate() {
+            let prop_s = self.prop_names[i].display_string();
+            if is_comparison_str(&prop_s) {
+                s.push_str(&format!(" {} ", prop_s));
+            } else {
+                s.push_str(&format!(" {}{} ", FACT_PREFIX, prop_s));
+            }
+            s.push_str(&obj.display_string());
+        }
+        s
+    }
 }
 
 impl ChainAtomicFact {
@@ -393,7 +608,12 @@ impl ChainAtomicFact {
             ChainAtomicFact::ChainFact(c) => c.ir(),
         }
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        match self {
+            ChainAtomicFact::AtomicFact(a) => a.display_string(),
+            ChainAtomicFact::ChainFact(c) => c.display_string(),
+        }
+    }
 }
 
 impl AndChainAtomicFact {
@@ -404,7 +624,13 @@ impl AndChainAtomicFact {
             AndChainAtomicFact::ChainFact(c) => c.ir(),
         }
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        match self {
+            AndChainAtomicFact::AtomicFact(a) => a.display_string(),
+            AndChainAtomicFact::AndFact(a) => a.display_string(),
+            AndChainAtomicFact::ChainFact(c) => c.display_string(),
+        }
+    }
 }
 
 impl QuantifierFreeFact {
@@ -416,7 +642,14 @@ impl QuantifierFreeFact {
             QuantifierFreeFact::OrFact(o) => o.ir(),
         }
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        match self {
+            QuantifierFreeFact::AtomicFact(a) => a.display_string(),
+            QuantifierFreeFact::AndFact(a) => a.display_string(),
+            QuantifierFreeFact::ChainFact(c) => c.display_string(),
+            QuantifierFreeFact::OrFact(o) => o.display_string(),
+        }
+    }
 }
 
 impl ExistOrAndChainAtomicFact {
@@ -449,7 +682,22 @@ impl PlainExistFact {
             RIGHT_CURLY
         ))
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        let parts: Vec<_> = self
+            .facts
+            .iter()
+            .map(|fact| fact.display_string())
+            .collect();
+        format!(
+            "{} {} {} {}{}{}",
+            EXIST,
+            self.typed_parameters.display_string(),
+            ST,
+            LEFT_CURLY,
+            parts.join(", "),
+            RIGHT_CURLY
+        )
+    }
 }
 
 impl ExistFact {
@@ -481,7 +729,34 @@ impl ExistFact {
             RIGHT_CURLY
         ))
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        let keyword = if matches!(self, ExistFact::NotExistFact(_)) {
+            format!("{} {}", NOT, EXIST)
+        } else if matches!(self, ExistFact::ExistUniqueFact(_)) {
+            EXIST_BANG.to_string()
+        } else {
+            EXIST.to_string()
+        };
+        let body = match self {
+            ExistFact::PlainExistFact(b)
+            | ExistFact::ExistUniqueFact(b)
+            | ExistFact::NotExistFact(b) => b,
+        };
+        let parts: Vec<_> = body
+            .facts
+            .iter()
+            .map(|fact| fact.display_string())
+            .collect();
+        format!(
+            "{} {} {} {}{}{}",
+            keyword,
+            body.typed_parameters.display_string(),
+            ST,
+            LEFT_CURLY,
+            parts.join(", "),
+            RIGHT_CURLY
+        )
+    }
 }
 
 impl ForallFact {
@@ -528,7 +803,49 @@ impl ForallFact {
         }
         FactIR(s)
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        let indent = |text: &str, n: usize| -> String {
+            let prefix = "    ".repeat(n);
+            text.split('\n')
+                .map(|line| format!("{}{}", prefix, line))
+                .collect::<Vec<_>>()
+                .join("\n")
+        };
+        let mut s = format!(
+            "{} {}{}",
+            FORALL,
+            self.typed_parameters.display_string(),
+            COLON
+        );
+        if self.dom_facts.is_empty() {
+            s.push('\n');
+            let then_parts: Vec<_> = self
+                .then_facts
+                .iter()
+                .map(|t| t.display_string())
+                .collect();
+            s.push_str(&indent(&then_parts.join("\n"), 1));
+        } else {
+            s.push('\n');
+            let dom_parts: Vec<_> = self
+                .dom_facts
+                .iter()
+                .map(|d| d.display_string())
+                .collect();
+            s.push_str(&indent(&dom_parts.join("\n"), 1));
+            s.push('\n');
+            s.push_str(&indent(RIGHT_ARROW, 1));
+            s.push_str(COLON);
+            s.push('\n');
+            let then_parts: Vec<_> = self
+                .then_facts
+                .iter()
+                .map(|t| t.display_string())
+                .collect();
+            s.push_str(&indent(&then_parts.join("\n"), 2));
+        }
+        s
+    }
 }
 
 impl ForallFactWithIff {
@@ -553,12 +870,34 @@ impl ForallFactWithIff {
         s.push_str(&indent(&iff_parts.join("\n"), 2));
         FactIR(s)
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        let indent = |text: &str, n: usize| -> String {
+            let prefix = "    ".repeat(n);
+            text.split('\n')
+                .map(|line| format!("{}{}", prefix, line))
+                .collect::<Vec<_>>()
+                .join("\n")
+        };
+        let mut s = format!("{}", self.forall_fact.display_string());
+        s.push('\n');
+        s.push_str(&indent(EQUIVALENT_SIGN, 1));
+        s.push_str(COLON);
+        s.push('\n');
+        let iff_parts: Vec<_> = self
+            .iff_facts
+            .iter()
+            .map(|t| t.display_string())
+            .collect();
+        s.push_str(&indent(&iff_parts.join("\n"), 2));
+        s
+    }
 }
 
 impl NotForallFact {
     pub fn ir(&self) -> FactIR {
         FactIR(format!("{} {}", NOT, self.forall_fact.ir()))
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        format!("{} {}", NOT, self.forall_fact.display_string())
+    }
 }

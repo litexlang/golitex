@@ -373,7 +373,7 @@ impl Runtime {
         Ok(fact)
     }
 
-    fn parse_quantifier_free_fact_inline(
+    pub(super) fn parse_quantifier_free_fact_inline(
         &mut self,
         tb: &mut TokenBlock,
     ) -> RuntimeResult<QuantifierFreeFact> {

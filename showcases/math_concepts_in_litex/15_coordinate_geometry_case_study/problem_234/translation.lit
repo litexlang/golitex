@@ -1,0 +1,33 @@
+# Problem 234 / zhongkao_30
+#
+# 完整自然语言题目：
+# (1) 在四边形ABCD中，AB=AD，∠B=∠D=90°，∠EAF=1/2∠BAD，证明BE+DF=EF；
+# (2) 在四边形ABCD中，AB=AD，∠B+∠D=180°，∠EAF=1/2∠BAD，求证EF=BE+DF；
+# (3) 四边形ABPC是⊙O的内接四边形，BC是直径，AB=AC，证明PB+PC=√2AP。
+#
+# The dataset conditions field contains only part (1); the full statement above
+# is retained, and diagram-dependent point locations are explicit certificates.
+
+# Metric encoding of ∠EAF = 1/2 ∠BAD.  Both angles are undirected in [0,π].
+# cos(2θ)=2cos²θ-1, together with θ<=90°, removes the doubling ambiguity.
+prop is_half_angle(ep, a, f, b, d cart(R, R)):
+    ep != a
+    f != a
+    b != a
+    d != a
+    geo::angle_cos_num(ep, a, f) >= 0
+    (2 * geo::angle_cos_num(ep, a, f)^2 - geo::angle_cos_den(ep, a, f))^2 * geo::angle_cos_den(b, a, d) = geo::angle_cos_num(b, a, d)^2 * geo::angle_cos_den(ep, a, f)^2
+    (2 * geo::angle_cos_num(ep, a, f)^2 - geo::angle_cos_den(ep, a, f)) * geo::angle_cos_num(b, a, d) >= 0
+
+# Metric encoding of α+β=180° for undirected nondegenerate angles.
+prop are_angles_supplementary(p, q, r, u, v, w cart(R, R)):
+    p != q
+    r != q
+    u != v
+    w != v
+    geo::angle_cos_num(p, q, r)^2 * geo::angle_cos_den(u, v, w) = geo::angle_cos_num(u, v, w)^2 * geo::angle_cos_den(p, q, r)
+    geo::angle_cos_num(p, q, r) * geo::angle_cos_num(u, v, w) <= 0
+
+# Only reusable mathematical concepts belong in this translation module.
+# The problem-specific NL premises, construction certificate, and conclusions
+# are written directly in solution.lit.

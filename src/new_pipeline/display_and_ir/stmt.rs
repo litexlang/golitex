@@ -391,7 +391,7 @@ impl FnSetClause {
 
 impl HaveFnEqualStmt {
     pub fn ir(&self) -> StmtIR {
-        let body = &self.equal_to_anonymous_fn.body;
+        let body = &self.equal_to_anonymous_fn.alpha.body;
         let params: Vec<_> = body
             .set_bound_parameters
             .groups
@@ -419,14 +419,47 @@ impl HaveFnEqualStmt {
         out.push_str(&format!(
             " {} {}",
             EQUAL,
-            self.equal_to_anonymous_fn
-                .equal_to
-                .as_ref()
-                .ir()
+            self.equal_to_anonymous_fn.alpha.equal_to.as_ref().ir()
         ));
         StmtIR(out)
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        let body = &self.equal_to_anonymous_fn.surface.body;
+        let params: Vec<_> = body
+            .set_bound_parameters
+            .groups
+            .iter()
+            .map(|g| g.display_string())
+            .collect();
+        let dom: Vec<_> = body
+            .dom_facts
+            .iter()
+            .map(|d| d.display_string())
+            .collect();
+        let mut out = format!("{} {} {}", HAVE, FN, self.name);
+        out.push_str(LEFT_PAREN);
+        if !params.is_empty() && !dom.is_empty() {
+            out.push_str(&params.join(", "));
+            out.push_str(&format!("{} ", COLON));
+            out.push_str(&dom.join(", "));
+        } else if dom.is_empty() {
+            out.push_str(&params.join(", "));
+        } else if params.is_empty() {
+            out.push_str(COLON);
+            out.push_str(&dom.join(", "));
+        }
+        out.push_str(RIGHT_PAREN);
+        out.push_str(&format!(
+            " {} {}",
+            EQUAL,
+            self.equal_to_anonymous_fn
+                .surface
+                .equal_to
+                .as_ref()
+                .display_string()
+        ));
+        out
+    }
 }
 
 impl HaveFnEqualCaseByCaseStmt {

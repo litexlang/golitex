@@ -1,0 +1,23 @@
+# Minimal scalar probe for the midpoint-expanded dot-product factorization.
+thm problem_464_dot_split_probe:
+    ? forall x, y, u, v R:
+        (x + u) * (2 * u) + (y + v) * (2 * v) = 2 * ((x + u) * u + (y + v) * v)
+    (x + u) * (2 * u) = 2 * ((x + u) * u)
+    (y + v) * (2 * v) = 2 * ((y + v) * v)
+    (x + u) * (2 * u) + (y + v) * (2 * v) = 2 * ((x + u) * u + (y + v) * v)
+
+# Package four midpoint coordinate substitutions plus the factorization.
+thm problem_464_dot_rewrite_probe:
+    ? forall da1, da2, ba1, ba2, x, y, u, v R:
+        da1 = x + u,
+        da2 = y + v,
+        ba1 = 2 * u,
+        ba2 = 2 * v
+        =>:
+            da1 * ba1 + da2 * ba2 = 2 * ((x + u) * u + (y + v) * v)
+    da1 * ba1 = (x + u) * (2 * u)
+    da2 * ba2 = (y + v) * (2 * v)
+    da1 * ba1 + da2 * ba2 = (x + u) * (2 * u) + (y + v) * (2 * v)
+    by thm problem_464_dot_split_probe(x, y, u, v)
+    (x + u) * (2 * u) + (y + v) * (2 * v) = 2 * ((x + u) * u + (y + v) * v)
+    da1 * ba1 + da2 * ba2 = 2 * ((x + u) * u + (y + v) * v)

@@ -1,8 +1,10 @@
+use crate::new_pipeline::ast::alpha_normalize::{new_anonymous_fn, new_fn_set, new_set_builder};
 use crate::new_pipeline::ast::obj::{
     Abs, AtomObj, Cart, Ceil, Cos, Exp, Floor, FnObjHead, Gcd, Identifier, IdentifierWithMod,
     Intersect, Lcm, ListSet, Ln, Max, Min, Number, Obj, Quot, SetMinus, Sin, Sqrt, StandardSet,
     Tan, Tuple, Union,
 };
+use crate::new_pipeline::ast::param::{ParamType, SetBoundParameterGroup, SetBoundParameterList};
 use crate::new_pipeline::parse::keywords::{
     ABS, C, CART, CEIL, COLON, COMMA, COS, C_STAR, DOT, EXP, FLOOR, FN, GCD, INTERSECT, LCM,
     LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LN, MAX, MIN, MOD_SIGN, N, N_POS, Q, QUOT, Q_NEG, Q_POS,
@@ -54,7 +56,7 @@ pub fn parse_primary(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
         );
     }
     if token == FN {
-        return Err(tb.parse_error("`fn` object forms are not wired in phase 1 object parse"));
+        return rt.parse_fn_set_or_anonymous_fn(tb);
     }
     if token == STRUCT_VIEW_PREFIX {
         return Err(tb.parse_error("struct view `&` is not wired in phase 1 object parse"));
@@ -133,7 +135,7 @@ fn parse_list_set(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
         return Ok(Obj::ListSet(ListSet { list: vec![] }));
     }
     if braced_content_has_top_level_colon(tb) {
-        return Err(tb.parse_error("set-builder not wired"));
+        return rt.parse_set_builder(tb);
     }
     let mut list = vec![Box::new(parse_obj(rt, tb)?)];
     while tb.peek() == Some(COMMA) {
@@ -142,6 +144,106 @@ fn parse_list_set(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
     }
     tb.expect(RIGHT_CURLY)?;
     Ok(Obj::ListSet(ListSet { list }))
+}
+
+impl Runtime {
+    // `{` already consumed. Form: `{ x S : facts }`.
+    fn parse_set_builder(&mut self, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
+        self.push_parse_scope();
+        let result = (|| {
+            let name = tb.advance()?;
+            if !is_atom_name(&name) && !is_simple_name(&name) {
+                return Err(tb.parse_error(format!(
+                    "set-builder expects a binder name, got `{name}`"
+                )));
+            }
+            let binding = self.define_plain_atom_as_parse(tb, name)?;
+            let param_set = parse_obj(self, tb)?;
+            tb.expect(COLON)?;
+            let mut facts = Vec::new();
+            loop {
+                facts.push(self.parse_quantifier_free_fact_inline(tb)?);
+                if tb.peek() == Some(RIGHT_CURLY) {
+                    break;
+                }
+                tb.expect(COMMA)?;
+            }
+            tb.expect(RIGHT_CURLY)?;
+            Ok(new_set_builder(binding, param_set, facts))
+        })();
+        self.pop_parse_scope();
+        result
+    }
+
+    fn parse_fn_set_or_anonymous_fn(&mut self, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
+        tb.expect(FN)?;
+        self.push_parse_scope();
+        let result = (|| {
+            let (params, dom_facts) = self.parse_fn_set_header(tb)?;
+            let ret_set = parse_obj(self, tb)?;
+            if tb.peek() == Some(LEFT_CURLY) {
+                tb.advance()?;
+                let equal_to = parse_obj(self, tb)?;
+                tb.expect(RIGHT_CURLY)?;
+                Ok(new_anonymous_fn(params, dom_facts, ret_set, equal_to))
+            } else {
+                Ok(new_fn_set(params, dom_facts, ret_set))
+            }
+        })();
+        self.pop_parse_scope();
+        result
+    }
+
+    fn parse_fn_set_header(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> RuntimeResult<(SetBoundParameterList, Vec<crate::new_pipeline::ast::fact::QuantifierFreeFact>)>
+    {
+        tb.expect(LEFT_PAREN)?;
+        let mut groups = Vec::new();
+        while !tb.exceed_end_of_head()
+            && tb.peek() != Some(COLON)
+            && tb.peek() != Some(RIGHT_PAREN)
+        {
+            let typed = self.parse_one_typed_param_group(tb)?;
+            groups.push(typed_group_to_set_bound(tb, typed)?);
+            if tb.peek() == Some(COMMA) {
+                tb.advance()?;
+            }
+        }
+        let mut dom_facts = Vec::new();
+        if tb.peek() == Some(COLON) {
+            tb.advance()?;
+            loop {
+                dom_facts.push(self.parse_quantifier_free_fact_inline(tb)?);
+                if tb.peek() == Some(COMMA) {
+                    tb.advance()?;
+                    continue;
+                }
+                break;
+            }
+        }
+        tb.expect(RIGHT_PAREN)?;
+        if groups.is_empty() {
+            return Err(tb.parse_error("fn expects at least one parameter"));
+        }
+        Ok((SetBoundParameterList { groups }, dom_facts))
+    }
+}
+
+fn typed_group_to_set_bound(
+    tb: &TokenBlock,
+    group: crate::new_pipeline::ast::param::TypedParameterGroup,
+) -> RuntimeResult<SetBoundParameterGroup> {
+    match group.param_type {
+        ParamType::Obj(obj) => Ok(SetBoundParameterGroup {
+            params: group.params,
+            param_type: Box::new(obj),
+        }),
+        _ => Err(tb.parse_error(
+            "fn parameters must be set-bound objects (e.g. `x R`), not `set` / `nonempty_set` / `finite_set`",
+        )),
+    }
 }
 
 fn braced_content_has_top_level_colon(tb: &TokenBlock) -> bool {
@@ -378,7 +480,7 @@ fn parse_identifier_or_mod_or_standard_set(
     if !rt.plain_atom_is_visible(&name) {
         return Err(tb.parse_error(format!("undefined name `{name}`")));
     }
-    Ok(Obj::Atom(AtomObj::Identifier(Identifier { name })))
+    Ok(Obj::Atom(AtomObj::Identifier(Identifier::new(name))))
 }
 
 fn standard_set_from_name(name: &str) -> Option<StandardSet> {

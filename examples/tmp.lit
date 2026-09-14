@@ -1,11 +1,14 @@
-# Exact FactIR ByCache for forall (name is identity).
-# trust stores the forall; the second forall should hit ByCache.
+# alpha_normalize on set-builder: {x…} and {y…} share □0 IR / ByCache.
 
-abstract_prop p(x R)
+abstract_prop p(s set)
 
 trust:
-    forall x R:
-        $p(x)
+    $p({x R: x > 0})
 
-forall x R:
-    $p(x)
+$p({y R: y > 0})
+
+# Nested binders get distinct □0 / □1 under one counter.
+trust:
+    $p({x R: x $in {y R: y > 0}})
+
+$p({a R: a $in {b R: b > 0}})

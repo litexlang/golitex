@@ -394,10 +394,18 @@ pub struct ListSet {
 
 // SetBuilder
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SetBuilder {
-    pub param_binding: String,
+pub struct SetBuilderBody {
+    pub param_binding: Identifier,
     pub param_set: Box<Obj>,
     pub facts: Vec<QuantifierFreeFact>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SetBuilder {
+    /// User spelling; display only.
+    pub surface: SetBuilderBody,
+    /// Alpha-normalized identity (`□N`); ops / ir / ByCache.
+    pub alpha: SetBuilderBody,
 }
 
 // FnSet
@@ -411,14 +419,25 @@ pub struct FnSetBody {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FnSet {
-    pub body: FnSetBody,
+    /// User spelling; display only.
+    pub surface: FnSetBody,
+    /// Alpha-normalized identity (`□N`); ops / ir / ByCache.
+    pub alpha: FnSetBody,
 }
 
 // AnonymousFn
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct AnonymousFn {
+pub struct AnonymousFnBody {
     pub body: FnSetBody,
     pub equal_to: Box<Obj>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct AnonymousFn {
+    /// User spelling; display only.
+    pub surface: AnonymousFnBody,
+    /// Alpha-normalized identity (`□N`); ops / ir / ByCache.
+    pub alpha: AnonymousFnBody,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -650,3 +669,25 @@ pub struct IntervalObjStruct {
     pub start: Box<Obj>,
     pub end: Box<Obj>,
 }
+
+impl Identifier {
+    pub fn new(name: String) -> Self {
+        Self { name }
+    }
+}
+
+/// Litex binder-slot identity after `alpha_normalize` (U+25A1 + index).
+pub const BINDER_SLOT_PREFIX: &str = "□";
+
+pub fn binder_slot_name(index: usize) -> String {
+    format!("{BINDER_SLOT_PREFIX}{index}")
+}
+
+pub fn is_binder_slot_name(name: &str) -> bool {
+    let rest = match name.strip_prefix(BINDER_SLOT_PREFIX) {
+        Some(r) => r,
+        None => return false,
+    };
+    !rest.is_empty() && rest.chars().all(|c| c.is_ascii_digit())
+}
+

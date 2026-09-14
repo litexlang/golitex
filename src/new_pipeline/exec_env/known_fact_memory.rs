@@ -10,6 +10,7 @@ pub use crate::new_pipeline::display_and_ir::ObjIR;
 
 // Known facts and search indexes for one ExecEnv scope.
 // Exact FactIR ByCache indexes every closed Fact shape (name is identity).
+// Rationale / do-not-break: `new_pipeline/identifier_identity.md`.
 #[derive(Clone)]
 pub struct KnownFactMemory {
     pub facts_by_id: HashMap<FactId, Fact>,

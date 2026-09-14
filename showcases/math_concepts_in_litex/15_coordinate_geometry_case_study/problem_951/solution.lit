@@ -1,0 +1,167 @@
+# Problem 951 isolated proof probes.
+
+thm nonnegative_equal_of_equal_squares:
+    ? forall x, y R:
+        x >= 0,
+        y >= 0,
+        x^2 = y^2
+        =>:
+            x = y
+    y = 0 or not y = 0
+    by cases:
+        ? x = y
+        case y = 0:
+            y^2 = 0
+            x^2 = 0
+            x = 0
+            x = y
+        case not y = 0:
+            by contra:
+                ? y > 0
+                y <= 0
+                y >= 0
+                y = 0
+                impossible y != 0
+            y > 0
+            x^2 - y^2 = 0
+            (x - y) * (x + y) = 0
+            x + y > 0
+            x + y != 0
+            x - y = 0
+            x = y
+
+thm sqrt_product_square:
+    ? forall x, y R:
+        x >= 0,
+        y >= 0
+        =>:
+            (sqrt(x) * sqrt(y))^2 = x * y
+    sqrt(x)^2 = x
+    sqrt(y)^2 = y
+    (sqrt(x) * sqrt(y))^2 = sqrt(x)^2 * sqrt(y)^2
+    sqrt(x)^2 * sqrt(y)^2 = x * y
+    (sqrt(x) * sqrt(y))^2 = x * y
+
+thm affine_chord_distance_products:
+    ? forall a, d, h cart(R, R), t R:
+        h[1] = a[1] + t * (d[1] - a[1]),
+        h[2] = a[2] + t * (d[2] - a[2])
+        =>:
+            geo::distance_sq(h, a) * geo::distance_sq(h, d) = (t * (1 - t) * geo::distance_sq(a, d))^2
+    by thm geo::affine_distance_from_parameter(a, d, h, t)
+    geo::distance_sq(h, a) = t^2 * geo::distance_sq(a, d)
+    geo::distance_sq(h, d) = (1 - t)^2 * geo::distance_sq(a, d)
+    geo::distance_sq(h, a) * geo::distance_sq(h, d) = (t^2 * geo::distance_sq(a, d)) * ((1 - t)^2 * geo::distance_sq(a, d))
+    (t^2 * geo::distance_sq(a, d)) * ((1 - t)^2 * geo::distance_sq(a, d)) = (t * (1 - t) * geo::distance_sq(a, d))^2
+    geo::distance_sq(h, a) * geo::distance_sq(h, d) = (t * (1 - t) * geo::distance_sq(a, d))^2
+
+
+# Problem 951 / zhongkao_764 — 圆的相交弦定理
+# 原题：AB是⊙O的直径，CD是⊙O的一条弦，连接AD、BC，交于点H。
+# 求证：AH·HD=BH·HC。
+thm cancel_same_minuend:
+    ? forall c, x, y R:
+        c - x = c - y
+        =>:
+            x = y
+    x = c - (c - x)
+    y = c - (c - y)
+    c - (c - x) = c - (c - y)
+    x = y
+
+thm problem_951_intersecting_chords:
+    ? forall a, b, c, d, h, o cart(R, R), r R+:
+        # A、B、C、D均在⊙O上。
+        $geo::is_on_circle(a, o, r),
+        $geo::is_on_circle(b, o, r),
+        $geo::is_on_circle(c, o, r),
+        $geo::is_on_circle(d, o, r),
+        # AB是直径；CD是非退化弦。
+        $geo::is_diameter_endpoints(a, b, o),
+        c != d,
+        # AD与BC交于H（图示中的内部交点）。
+        $geo::is_on_segment(h, a, d),
+        $geo::is_on_segment(h, b, c)
+        =>:
+            sqrt(geo::distance_sq(h, a)) * sqrt(geo::distance_sq(h, d)) = sqrt(geo::distance_sq(h, b)) * sqrt(geo::distance_sq(h, c))
+
+    # 提取H在两条弦上的仿射参数。
+    by def $geo::is_on_segment(h, a, d)
+    obtain t from exist t0 R st {0 <= t0, t0 <= 1, h = (a[1] + t0 * (d[1] - a[1]), a[2] + t0 * (d[2] - a[2]))}
+    h[1] = a[1] + t * (d[1] - a[1])
+    h[2] = a[2] + t * (d[2] - a[2])
+    h[1] = (1 - t) * a[1] + t * d[1]
+    h[2] = (1 - t) * a[2] + t * d[2]
+
+    by def $geo::is_on_segment(h, b, c)
+    obtain s from exist s0 R st {0 <= s0, s0 <= 1, h = (b[1] + s0 * (c[1] - b[1]), b[2] + s0 * (c[2] - b[2]))}
+    h[1] = b[1] + s * (c[1] - b[1])
+    h[2] = b[2] + s * (c[2] - b[2])
+    h[1] = (1 - s) * b[1] + s * c[1]
+    h[2] = (1 - s) * b[2] + s * c[2]
+
+    # 四个圆周点到圆心的平方距离均为r²。
+    by def $geo::is_on_circle(a, o, r)
+    by def $geo::is_on_circle(b, o, r)
+    by def $geo::is_on_circle(c, o, r)
+    by def $geo::is_on_circle(d, o, r)
+    by thm geo::distance_sq_symmetric(o, a)
+    by thm geo::distance_sq_symmetric(o, b)
+    by thm geo::distance_sq_symmetric(o, c)
+    by thm geo::distance_sq_symmetric(o, d)
+    geo::distance_sq(o, a) = r^2
+    geo::distance_sq(o, b) = r^2
+    geo::distance_sq(o, c) = r^2
+    geo::distance_sq(o, d) = r^2
+
+    # 对弦AD、BC分别应用Stewart定理。
+    by thm geo::stewart_theorem(o, a, d, h, t)
+    geo::distance_sq(o, h) = (1 - t) * geo::distance_sq(o, a) + t * geo::distance_sq(o, d) - t * (1 - t) * geo::distance_sq(a, d)
+    (1 - t) * geo::distance_sq(o, a) = (1 - t) * r^2
+    t * geo::distance_sq(o, d) = t * r^2
+    (1 - t) * geo::distance_sq(o, a) + t * geo::distance_sq(o, d) = (1 - t) * r^2 + t * r^2
+    (1 - t) * r^2 + t * r^2 = r^2
+    (1 - t) * geo::distance_sq(o, a) + t * geo::distance_sq(o, d) = r^2
+    (1 - t) * geo::distance_sq(o, a) + t * geo::distance_sq(o, d) - t * (1 - t) * geo::distance_sq(a, d) = r^2 - t * (1 - t) * geo::distance_sq(a, d)
+    geo::distance_sq(o, h) = r^2 - t * (1 - t) * geo::distance_sq(a, d)
+
+    by thm geo::stewart_theorem(o, b, c, h, s)
+    geo::distance_sq(o, h) = (1 - s) * geo::distance_sq(o, b) + s * geo::distance_sq(o, c) - s * (1 - s) * geo::distance_sq(b, c)
+    (1 - s) * geo::distance_sq(o, b) = (1 - s) * r^2
+    s * geo::distance_sq(o, c) = s * r^2
+    (1 - s) * geo::distance_sq(o, b) + s * geo::distance_sq(o, c) = (1 - s) * r^2 + s * r^2
+    (1 - s) * r^2 + s * r^2 = r^2
+    (1 - s) * geo::distance_sq(o, b) + s * geo::distance_sq(o, c) = r^2
+    (1 - s) * geo::distance_sq(o, b) + s * geo::distance_sq(o, c) - s * (1 - s) * geo::distance_sq(b, c) = r^2 - s * (1 - s) * geo::distance_sq(b, c)
+    geo::distance_sq(o, h) = r^2 - s * (1 - s) * geo::distance_sq(b, c)
+
+    r^2 - t * (1 - t) * geo::distance_sq(a, d) = geo::distance_sq(o, h)
+    r^2 - t * (1 - t) * geo::distance_sq(a, d) = r^2 - s * (1 - s) * geo::distance_sq(b, c)
+    by thm cancel_same_minuend(r^2, t * (1 - t) * geo::distance_sq(a, d), s * (1 - s) * geo::distance_sq(b, c))
+    t * (1 - t) * geo::distance_sq(a, d) = s * (1 - s) * geo::distance_sq(b, c)
+
+    # 仿射距离公式把参数幂转成H到弦端点的平方距离乘积。
+    by thm affine_chord_distance_products(a, d, h, t)
+    by thm affine_chord_distance_products(b, c, h, s)
+    geo::distance_sq(h, a) * geo::distance_sq(h, d) = (t * (1 - t) * geo::distance_sq(a, d))^2
+    geo::distance_sq(h, b) * geo::distance_sq(h, c) = (s * (1 - s) * geo::distance_sq(b, c))^2
+    (t * (1 - t) * geo::distance_sq(a, d))^2 = (s * (1 - s) * geo::distance_sq(b, c))^2
+    geo::distance_sq(h, a) * geo::distance_sq(h, d) = geo::distance_sq(h, b) * geo::distance_sq(h, c)
+
+    # 从平方距离乘积恢复原题中的真实线段长度乘积。
+    by thm geo::distance_sq_nonnegative(h, a)
+    by thm geo::distance_sq_nonnegative(h, d)
+    by thm geo::distance_sq_nonnegative(h, b)
+    by thm geo::distance_sq_nonnegative(h, c)
+    by thm sqrt_product_square(geo::distance_sq(h, a), geo::distance_sq(h, d))
+    by thm sqrt_product_square(geo::distance_sq(h, b), geo::distance_sq(h, c))
+    (sqrt(geo::distance_sq(h, a)) * sqrt(geo::distance_sq(h, d)))^2 = geo::distance_sq(h, a) * geo::distance_sq(h, d)
+    (sqrt(geo::distance_sq(h, b)) * sqrt(geo::distance_sq(h, c)))^2 = geo::distance_sq(h, b) * geo::distance_sq(h, c)
+    (sqrt(geo::distance_sq(h, a)) * sqrt(geo::distance_sq(h, d)))^2 = (sqrt(geo::distance_sq(h, b)) * sqrt(geo::distance_sq(h, c)))^2
+    sqrt(geo::distance_sq(h, a)) >= 0
+    sqrt(geo::distance_sq(h, d)) >= 0
+    sqrt(geo::distance_sq(h, b)) >= 0
+    sqrt(geo::distance_sq(h, c)) >= 0
+    sqrt(geo::distance_sq(h, a)) * sqrt(geo::distance_sq(h, d)) >= 0
+    sqrt(geo::distance_sq(h, b)) * sqrt(geo::distance_sq(h, c)) >= 0
+    by thm nonnegative_equal_of_equal_squares(sqrt(geo::distance_sq(h, a)) * sqrt(geo::distance_sq(h, d)), sqrt(geo::distance_sq(h, b)) * sqrt(geo::distance_sq(h, c)))

@@ -62,6 +62,10 @@ under name-is-identity; equality-class parameter matching and alpha-renaming
 belong to later known-* slots, not cache. Do not index binder-internal open
 scraps as ambient facts.
 
+`CacheSearchProof` carries only `cite_fact_id` (payload lives in
+`facts_by_id`). Design rationale and the identifier-conflict / do-not-break
+checklist: [`../../identifier_identity.md`](../../identifier_identity.md).
+
 Here `by definition` means ambient prop / builtin definition expansion in the
 current execution-environment stack. Cross-module definitions and theorems are
 still requested explicitly by `by def` or `by thm`, not by this search slot.

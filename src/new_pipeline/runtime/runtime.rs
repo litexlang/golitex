@@ -117,6 +117,13 @@ impl Runtime {
 
     // Occupy `key` in the current scope (name is identity; no per-occurrence id).
     pub fn define_atom(&mut self, key: OccupiedName) -> RuntimeResult<()> {
+        if let OccupiedName::Plain(name) = &key {
+            if crate::new_pipeline::ast::obj::is_binder_slot_name(name) {
+                return Err(RuntimeError::Invariant(format!(
+                    "binder-slot name `{name}` cannot be occupied as a free atom"
+                )));
+            }
+        }
         if self.occupied_name_is_visible(&key) {
             return Err(RuntimeError::Invariant(format!(
                 "name `{key}` is already bound in an enclosing parse scope"
@@ -132,6 +139,13 @@ impl Runtime {
 
     // Occupy an already-known name in the current scope (e.g. re-open forall binders).
     pub fn occupy_atom(&mut self, key: OccupiedName) -> RuntimeResult<()> {
+        if let OccupiedName::Plain(name) = &key {
+            if crate::new_pipeline::ast::obj::is_binder_slot_name(name) {
+                return Err(RuntimeError::Invariant(format!(
+                    "binder-slot name `{name}` cannot be occupied as a free atom"
+                )));
+            }
+        }
         if self.occupied_name_is_visible(&key) {
             return Err(RuntimeError::Invariant(format!(
                 "name `{key}` is already bound in an enclosing parse scope"

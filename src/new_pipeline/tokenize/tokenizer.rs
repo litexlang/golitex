@@ -230,6 +230,16 @@ impl Tokenizer {
             if header_tokens.is_empty() {
                 continue;
             }
+            for token in &header_tokens {
+                if token.starts_with("__") {
+                    return Err(RuntimeParseError::new(
+                        "names starting with `__` are reserved for Lean/codegen and cannot appear in Litex source",
+                        line_no,
+                        source_path.clone(),
+                    )
+                    .into());
+                }
+            }
 
             if Self::ends_with_colon(content) {
                 if *i >= lines.len() {

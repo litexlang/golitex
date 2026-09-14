@@ -1,0 +1,31 @@
+# Problem 474 / zhongkao_273 — 正式证明
+#
+# 原题：如图，四边形ABCD是平行四边形，以BC为直径的圆交AD于点E。
+# 若点E是AD的中点，连接OA，CE。
+# 求证：四边形AOCE是平行四边形。
+#
+# 主定理接口只使用公共几何谓词，并按NL语句逐项映射；
+# 证明直接调用已经加入公共KB并独立验证的中点闭包定理。
+
+thm problem_474:
+    ? forall a, b, c, d, ep, o cart(R, R), r R+:
+        # 【NL条件1】四边形ABCD是平行四边形（采用通常非退化四边形语义）。
+        $geo::is_nondegenerate_parallelogram(a, b, c, d),
+        # 【NL条件2】该圆以BC为直径，圆心为O。
+        $geo::is_diameter_endpoints(b, c, o),
+        # 【NL条件3】直径端点B在圆O上。
+        $geo::is_on_circle(b, o, r),
+        # 【NL条件4】直径端点C在圆O上。
+        $geo::is_on_circle(c, o, r),
+        # 【NL条件5】圆O与AD交于E，因此E在圆O上；E在AD上由下一条中点条件给出。
+        $geo::is_on_circle(ep, o, r),
+        # 【NL条件6】点E是AD的中点。
+        $geo::is_midpoint(ep, a, d)
+        =>:
+            # 【NL结论】四边形AOCE是平行四边形。
+            $geo::is_parallelogram(a, o, c, ep)
+
+    # “BC为直径且O为圆心”直接给出O是BC的中点。
+    by def $geo::is_diameter_endpoints(b, c, o)
+    # 平行四边形两组对边的中点组成AOCE；公共定理同时保证四个顶点非退化。
+    by thm geo::midpoint_parallelogram_closure(a, b, c, d, o, ep)

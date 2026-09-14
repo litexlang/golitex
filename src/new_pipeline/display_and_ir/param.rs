@@ -68,7 +68,13 @@ impl TypedParameterGroup {
         ))
     }
     pub fn display_string(&self) -> String {
-        self.ir().display_string()
+        let params = self
+            .params
+            .iter()
+            .map(|p| p.display_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        format!("{} {}", params, self.param_type.display_string())
     }
 }
 
@@ -87,7 +93,13 @@ impl SetBoundParameterGroup {
         ))
     }
     pub fn display_string(&self) -> String {
-        self.ir().display_string()
+        let params = self
+            .params
+            .iter()
+            .map(|p| p.display_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        format!("{} {}", params, self.param_type.display_string())
     }
 }
 
@@ -104,7 +116,12 @@ impl ParamType {
         }
     }
     pub fn display_string(&self) -> String {
-        self.ir().display_string()
+        match self {
+            ParamType::Set(set) => set.display_string(),
+            ParamType::NonemptySet(nonempty_set) => nonempty_set.display_string(),
+            ParamType::FiniteSet(finite_set) => finite_set.display_string(),
+            ParamType::Obj(obj) => obj.display_string(),
+        }
     }
 }
 

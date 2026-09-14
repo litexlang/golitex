@@ -1,0 +1,13 @@
+# 题546同步纠错版：一句NL对应一句Litex。
+# “△ABC内接于⊙O”中的“△ABC是非退化三角形” ↔ $geo::is_triangle(a,b,c)。
+# “△ABC内接于⊙O”中的“A在⊙O上” ↔ $geo::is_on_circle(a,o,r)。
+# “△ABC内接于⊙O”中的“B在⊙O上” ↔ $geo::is_on_circle(b,o,r)。
+# “△ABC内接于⊙O”中的“C在⊙O上” ↔ $geo::is_on_circle(c,o,r)。
+# “AB是⊙O的直径” ↔ $geo::is_diameter_endpoints(a,b,o)。
+# “过点B作⊙O的切线BD” ↔ $geo::is_tangent_at(b,d,o,r)。
+# “BD交AC的延长线于点D（D越过C）” ↔ $geo::is_on_extension(d,a,c)。
+# “E是AC的中点” ↔ $geo::is_midpoint(ep,a,c)。
+# “BD=6” ↔ geo::distance_sq(b,d)=36。
+# “CD=4” ↔ geo::distance_sq(c,d)=16。
+# “求证OE⊥AC” ↔ $geo::is_perpendicular(o,ep,a,c)。
+# “求OE的长”以无根号形式表达 ↔ geo::distance_sq(o,ep)=5（故OE=√5）。

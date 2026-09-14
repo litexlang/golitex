@@ -10,7 +10,8 @@
 //!
 //! Iron rules:
 //! 1. Name is identity (see `new_pipeline/identifier_identity.md`): no
-//!    shadowing; no same-name nested binders.
+//!    shadowing; no same-name nested binders. That doc also explains why
+//!    occurrence ids were removed and what must not be broken.
 //! 2. Scope is occupy only; binders and definitions are both Identifier.
 //! 3. FactId may be allocated at parse; do not store facts or read ExecEnv here.
 //! 4. Errors use RuntimeParseError + LineFile from TokenBlock.

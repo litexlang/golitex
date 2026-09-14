@@ -1,0 +1,66 @@
+# Problem 473: parallel vectors with matching strict orientation differ by a positive scalar.
+thm problem_473_positive_parallel_ratio:
+    ? forall x, d, ep cart(R, R):
+        geo::det(d, ep) = 0,
+        geo::det(x, d) * geo::det(x, ep) > 0
+        =>:
+            exist t R st {t > 0, ep[1] = t * d[1], ep[2] = t * d[2]}
+    by contra:
+        ? d != (0, 0)
+        d = (0, 0)
+        by thm geo::det_coordinate_formula(x, d)
+        geo::det(x, d) = x[1] * d[2] - x[2] * d[1] = 0
+        geo::det(x, d) * geo::det(x, ep) = 0
+        impossible geo::det(x, d) * geo::det(x, ep) > 0
+    by thm geo::det_coordinate_formula(d, ep)
+    geo::det(d, ep) = d[1] * ep[2] - d[2] * ep[1] = 0
+    d[1] * ep[2] - d[2] * ep[1] = 0
+    0 - (d[1] * ep[2] - d[2] * ep[1]) = 0 - 0
+    0 - 0 = 0
+    (ep[1] - 0) * (d[2] - 0) - (ep[2] - 0) * (d[1] - 0) = 0 - (d[1] * ep[2] - d[2] * ep[1]) = 0
+    by thm geo::collinear_coordinates_imply_affine_parameter((0, 0), d, ep)
+    exist t R st {ep[1] = (1 - t) * 0 + t * d[1], ep[2] = (1 - t) * 0 + t * d[2]}
+    obtain k from exist t0 R st {ep[1] = (1 - t0) * 0 + t0 * d[1], ep[2] = (1 - t0) * 0 + t0 * d[2]}
+    ep[1] = k * d[1]
+    ep[2] = k * d[2]
+    by thm geo::multiply_both_sides(ep[2], k * d[2], x[1])
+    x[1] * ep[2] = x[1] * (k * d[2])
+    by thm geo::multiply_both_sides(ep[1], k * d[1], x[2])
+    x[2] * ep[1] = x[2] * (k * d[1])
+    by thm geo::subtract_equalities(x[1] * ep[2], x[1] * (k * d[2]), x[2] * ep[1], x[2] * (k * d[1]))
+    x[1] * ep[2] - x[2] * ep[1] = x[1] * (k * d[2]) - x[2] * (k * d[1])
+    x[1] * (k * d[2]) - x[2] * (k * d[1]) = k * (x[1] * d[2] - x[2] * d[1])
+    by thm geo::multiply_both_sides(x[1] * d[2] - x[2] * d[1], geo::det(x, d), k)
+    (x[1] * d[2] - x[2] * d[1]) * k = geo::det(x, d) * k
+    geo::det(x, ep) = x[1] * ep[2] - x[2] * ep[1] = k * (x[1] * d[2] - x[2] * d[1]) = (x[1] * d[2] - x[2] * d[1]) * k = geo::det(x, d) * k
+    by thm geo::multiply_both_sides(geo::det(x, ep), geo::det(x, d) * k, geo::det(x, d))
+    geo::det(x, ep) * geo::det(x, d) = (geo::det(x, d) * k) * geo::det(x, d)
+    geo::det(x, d) * geo::det(x, ep) = geo::det(x, ep) * geo::det(x, d)
+    (geo::det(x, d) * k) * geo::det(x, d) = k * geo::det(x, d)^2
+    geo::det(x, d) * geo::det(x, ep) = k * geo::det(x, d)^2
+    by contra:
+        ? k > 0
+        k <= 0
+        geo::det(x, d)^2 >= 0
+        k * geo::det(x, d)^2 <= 0
+        geo::det(x, d) * geo::det(x, ep) <= 0
+        impossible geo::det(x, d) * geo::det(x, ep) > 0
+    witness exist t R st {t > 0, ep[1] = t * d[1], ep[2] = t * d[2]} from k
+
+# Scaling the second vector scales its determinant by the same factor.
+thm problem_473_det_second_scaled:
+    ? forall x, d, ep cart(R, R), t R:
+        ep[1] = t * d[1],
+        ep[2] = t * d[2]
+        =>:
+            geo::det(x, ep) = geo::det(x, d) * t
+    by thm geo::multiply_both_sides(ep[2], t * d[2], x[1])
+    x[1] * ep[2] = x[1] * (t * d[2])
+    by thm geo::multiply_both_sides(ep[1], t * d[1], x[2])
+    x[2] * ep[1] = x[2] * (t * d[1])
+    by thm geo::subtract_equalities(x[1] * ep[2], x[1] * (t * d[2]), x[2] * ep[1], x[2] * (t * d[1]))
+    x[1] * ep[2] - x[2] * ep[1] = x[1] * (t * d[2]) - x[2] * (t * d[1])
+    x[1] * (t * d[2]) - x[2] * (t * d[1]) = t * (x[1] * d[2] - x[2] * d[1])
+    by thm geo::multiply_both_sides(x[1] * d[2] - x[2] * d[1], geo::det(x, d), t)
+    (x[1] * d[2] - x[2] * d[1]) * t = geo::det(x, d) * t
+    geo::det(x, ep) = x[1] * ep[2] - x[2] * ep[1] = t * (x[1] * d[2] - x[2] * d[1]) = (x[1] * d[2] - x[2] * d[1]) * t = geo::det(x, d) * t
