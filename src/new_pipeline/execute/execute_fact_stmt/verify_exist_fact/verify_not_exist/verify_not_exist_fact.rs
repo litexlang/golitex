@@ -29,27 +29,12 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> Result<NotExistFactSearchedProof, RuntimeError> {
         if let Some(result) =
-            self.search_not_exist_fact_proof_by_cache(fact, verify_state.clone())?
-        {
-            return Ok(NotExistFactSearchedProof::ByCache(result));
-        }
-
-        if let Some(result) =
             self.search_not_exist_fact_proof_by_demorgan_forall(fact, verify_state)?
         {
             return Ok(NotExistFactSearchedProof::ByDemorganForall(result));
         }
 
         todo!()
-    }
-
-    pub fn search_not_exist_fact_proof_by_cache(
-        &mut self,
-        fact: &PlainExistFact,
-        verify_state: VerifyState,
-    ) -> Result<Option<CacheSearchProof>, RuntimeError> {
-        let _ = (fact, verify_state);
-        todo!("search not exist by cache")
     }
 
     pub fn search_not_exist_fact_proof_by_demorgan_forall(

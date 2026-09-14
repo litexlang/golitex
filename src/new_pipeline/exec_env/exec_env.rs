@@ -1,7 +1,7 @@
 use crate::new_pipeline::ast::obj::{Identifier, Obj as PipelineObj};
 use crate::new_pipeline::ast::stmt::DefAbstractPropStmt as NewDefAbstractPropStmt;
 use crate::new_pipeline::ast::stmt::DefPropStmt as NewDefPropStmt;
-use crate::new_pipeline::exec_env::known_fact_memory::ObjInternalRepresentation;
+use crate::new_pipeline::exec_env::known_fact_memory::ObjIR;
 use crate::new_pipeline::runtime::runtime_ids::{FactId, IdentifierId, WellDefinednessId};
 use crate::prelude::*;
 use std::collections::HashMap;
@@ -15,6 +15,10 @@ pub use super::known_fact_memory::{
 // -----------------------------------------------------------------------------
 
 /// State owned by one execution scope.
+///
+/// Together with `Runtime`, this is core data model.  `Runtime` owns the live
+/// stacks and session; each `ExecEnv` is one scope's definitions, facts, and
+/// WD records.
 ///
 /// A child scope may read this environment and all of its parents.  It writes
 /// only to its own instance.  When a statement returns, the result may retain
@@ -30,7 +34,7 @@ pub struct ExecEnv {
 
     /// Shape/value properties attached to special objects by stored facts.
     pub special_object_properties:
-        HashMap<ObjInternalRepresentation, Vec<SpecialObjProperty>>,
+        HashMap<ObjIR, Vec<SpecialObjProperty>>,
 
     /// Algebraic properties proved for predicates in this scope.
     pub prop_algebraic_properties: HashMap<PropName, Vec<PropAlgebraicProperty>>,
@@ -48,7 +52,7 @@ pub struct ExecEnv {
 #[derive(Clone, Default)]
 pub struct WellDefinedObjectMemory {
     /// Canonical object key to the proof identity that established WD.
-    pub object_to_wd_id: HashMap<ObjInternalRepresentation, WellDefinednessId>,
+    pub object_to_wd_id: HashMap<ObjIR, WellDefinednessId>,
 
     /// Proof identity back to the object carried by a result or citation.
     pub wd_id_to_object: HashMap<WellDefinednessId, PipelineObj>,
@@ -152,14 +156,14 @@ impl WellDefinedObjectMemory {
     /// Return the WD proof identity for an object, if this scope owns one.
     pub fn lookup(&self, object: &PipelineObj) -> Option<WellDefinednessId> {
         self.object_to_wd_id
-            .get(&object.internal_representation())
+            .get(&object.ir())
             .copied()
     }
 
     /// Record a WD proof and its object payload in both directions.
     /// Re-recording the same object or proof id is idempotent.
     pub fn record(&mut self, object: PipelineObj, wd_id: WellDefinednessId) {
-        let object_key = object.internal_representation();
+        let object_key = object.ir();
 
         self.object_to_wd_id.insert(object_key, wd_id);
         self.wd_id_to_object.insert(wd_id, object);

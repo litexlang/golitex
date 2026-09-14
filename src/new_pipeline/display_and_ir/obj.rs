@@ -1,19 +1,19 @@
-//! Obj and related leaf types: internal representation + display_string.
+//! Obj and related leaf types: IR + display_string.
 
-use super::types::ObjInternalRepresentation;
+use super::types::ObjIR;
 use crate::new_pipeline::ast::obj::*;
 use crate::new_pipeline::parse::keywords::*;
 
 macro_rules! impl_display_pair {
     () => {
         pub fn display_string(&self) -> String {
-            self.internal_representation().display_string()
+            self.ir().display_string()
         }
     };
 }
 
 impl Obj {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         fn precedence(o: &Obj) -> u8 {
             match o {
                 Obj::Add(_) | Obj::Sub(_) => 3,
@@ -293,55 +293,55 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
-                Obj::Union(x) => s.push_str(&x.internal_representation()),
-                Obj::Intersect(x) => s.push_str(&x.internal_representation()),
-                Obj::SetMinus(x) => s.push_str(&x.internal_representation()),
-                Obj::BigUnion(x) => s.push_str(&x.internal_representation()),
-                Obj::BigIntersect(x) => s.push_str(&x.internal_representation()),
-                Obj::IndexUnion(x) => s.push_str(&x.internal_representation()),
-                Obj::IndexIntersect(x) => s.push_str(&x.internal_representation()),
-                Obj::Atom(x) => s.push_str(&x.internal_representation()),
-                Obj::FnObj(x) => s.push_str(&x.internal_representation()),
-                Obj::Number(x) => s.push_str(&x.internal_representation()),
+                Obj::Union(x) => s.push_str(&x.ir()),
+                Obj::Intersect(x) => s.push_str(&x.ir()),
+                Obj::SetMinus(x) => s.push_str(&x.ir()),
+                Obj::BigUnion(x) => s.push_str(&x.ir()),
+                Obj::BigIntersect(x) => s.push_str(&x.ir()),
+                Obj::IndexUnion(x) => s.push_str(&x.ir()),
+                Obj::IndexIntersect(x) => s.push_str(&x.ir()),
+                Obj::Atom(x) => s.push_str(&x.ir()),
+                Obj::FnObj(x) => s.push_str(&x.ir()),
+                Obj::Number(x) => s.push_str(&x.ir()),
                 Obj::ImaginaryUnit(_) => s.push_str(I),
                 Obj::EulerNumber(_) => s.push_str(E),
                 Obj::Pi(_) => s.push_str(PI),
-                Obj::ListSet(x) => s.push_str(&x.internal_representation()),
-                Obj::SetBuilder(x) => s.push_str(&x.internal_representation()),
-                Obj::FnSet(x) => s.push_str(&x.internal_representation()),
-                Obj::AnonymousFn(x) => s.push_str(&x.internal_representation()),
-                Obj::StandardSet(x) => s.push_str(&x.internal_representation()),
-                Obj::Cart(x) => s.push_str(&x.internal_representation()),
-                Obj::CartDim(x) => s.push_str(&x.internal_representation()),
-                Obj::Proj(x) => s.push_str(&x.internal_representation()),
-                Obj::TupleDim(x) => s.push_str(&x.internal_representation()),
-                Obj::Tuple(x) => s.push_str(&x.internal_representation()),
-                Obj::FiniteSetSize(x) => s.push_str(&x.internal_representation()),
-                Obj::FiniteSetMax(x) => s.push_str(&x.internal_representation()),
-                Obj::FiniteSetMin(x) => s.push_str(&x.internal_representation()),
-                Obj::FnRange(x) => s.push_str(&x.internal_representation()),
-                Obj::Replacement(x) => s.push_str(&x.internal_representation()),
-                Obj::Sum(x) => s.push_str(&x.internal_representation()),
-                Obj::SumOfFiniteSet(x) => s.push_str(&x.internal_representation()),
-                Obj::Product(x) => s.push_str(&x.internal_representation()),
-                Obj::ProductOfFiniteSet(x) => s.push_str(&x.internal_representation()),
-                Obj::Reduce(x) => s.push_str(&x.internal_representation()),
-                Obj::FiniteSetReduce(x) => s.push_str(&x.internal_representation()),
-                Obj::Range(x) => s.push_str(&x.internal_representation()),
-                Obj::ClosedRange(x) => s.push_str(&x.internal_representation()),
-                Obj::FiniteSeqSet(x) => s.push_str(&x.internal_representation()),
-                Obj::SeqSet(x) => s.push_str(&x.internal_representation()),
-                Obj::FiniteSeqListObj(x) => s.push_str(&x.internal_representation()),
-                Obj::PowerSet(x) => s.push_str(&x.internal_representation()),
-                Obj::GeneralCart(x) => s.push_str(&x.internal_representation()),
-                Obj::ObjAtIndex(x) => s.push_str(&x.internal_representation()),
-                Obj::StructObj(x) => s.push_str(&x.internal_representation()),
+                Obj::ListSet(x) => s.push_str(&x.ir()),
+                Obj::SetBuilder(x) => s.push_str(&x.ir()),
+                Obj::FnSet(x) => s.push_str(&x.ir()),
+                Obj::AnonymousFn(x) => s.push_str(&x.ir()),
+                Obj::StandardSet(x) => s.push_str(&x.ir()),
+                Obj::Cart(x) => s.push_str(&x.ir()),
+                Obj::CartDim(x) => s.push_str(&x.ir()),
+                Obj::Proj(x) => s.push_str(&x.ir()),
+                Obj::TupleDim(x) => s.push_str(&x.ir()),
+                Obj::Tuple(x) => s.push_str(&x.ir()),
+                Obj::FiniteSetSize(x) => s.push_str(&x.ir()),
+                Obj::FiniteSetMax(x) => s.push_str(&x.ir()),
+                Obj::FiniteSetMin(x) => s.push_str(&x.ir()),
+                Obj::FnRange(x) => s.push_str(&x.ir()),
+                Obj::Replacement(x) => s.push_str(&x.ir()),
+                Obj::Sum(x) => s.push_str(&x.ir()),
+                Obj::SumOfFiniteSet(x) => s.push_str(&x.ir()),
+                Obj::Product(x) => s.push_str(&x.ir()),
+                Obj::ProductOfFiniteSet(x) => s.push_str(&x.ir()),
+                Obj::Reduce(x) => s.push_str(&x.ir()),
+                Obj::FiniteSetReduce(x) => s.push_str(&x.ir()),
+                Obj::Range(x) => s.push_str(&x.ir()),
+                Obj::ClosedRange(x) => s.push_str(&x.ir()),
+                Obj::FiniteSeqSet(x) => s.push_str(&x.ir()),
+                Obj::SeqSet(x) => s.push_str(&x.ir()),
+                Obj::FiniteSeqListObj(x) => s.push_str(&x.ir()),
+                Obj::PowerSet(x) => s.push_str(&x.ir()),
+                Obj::GeneralCart(x) => s.push_str(&x.ir()),
+                Obj::ObjAtIndex(x) => s.push_str(&x.ir()),
+                Obj::StructObj(x) => s.push_str(&x.ir()),
                 Obj::ObjAsStructInstanceWithFieldAccess(x) => {
-                    s.push_str(&x.internal_representation())
+                    s.push_str(&x.ir())
                 }
-                Obj::InstantiatedTemplateObj(x) => s.push_str(&x.internal_representation()),
-                Obj::OneSideInfinityIntervalObj(x) => s.push_str(&x.internal_representation()),
-                Obj::IntervalObj(x) => s.push_str(&x.internal_representation()),
+                Obj::InstantiatedTemplateObj(x) => s.push_str(&x.ir()),
+                Obj::OneSideInfinityIntervalObj(x) => s.push_str(&x.ir()),
+                Obj::IntervalObj(x) => s.push_str(&x.ir()),
             }
             if need_parens {
                 s.push_str(RIGHT_PAREN);
@@ -349,25 +349,25 @@ impl Obj {
             s
         }
 
-        ObjInternalRepresentation(fmt_with_prec(self, 0))
+        ObjIR(fmt_with_prec(self, 0))
     }
 
     pub fn display_string(&self) -> String {
-        self.internal_representation().display_string()
+        self.ir().display_string()
     }
 }
 
 impl Identifier {
     // Only unusual bit of internal strings: embed IdentifierId as #<id>#name.
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
-        ObjInternalRepresentation(format!("#{}#{}", self.identifier_id.value(), self.name))
+    pub fn ir(&self) -> ObjIR {
+        ObjIR(format!("#{}#{}", self.identifier_id.value(), self.name))
     }
     impl_display_pair!();
 }
 
 impl IdentifierWithMod {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
-        ObjInternalRepresentation(format!(
+    pub fn ir(&self) -> ObjIR {
+        ObjIR(format!(
             "{}{}#{}#{}",
             self.mod_name,
             MOD_SIGN,
@@ -379,55 +379,55 @@ impl IdentifierWithMod {
 }
 
 impl AtomObj {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         match self {
-            AtomObj::Identifier(x) => x.internal_representation(),
-            AtomObj::IdentifierWithMod(x) => x.internal_representation(),
+            AtomObj::Identifier(x) => x.ir(),
+            AtomObj::IdentifierWithMod(x) => x.ir(),
         }
     }
     impl_display_pair!();
 }
 
 impl FnObjHead {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         match self {
-            FnObjHead::Identifier(x) => x.internal_representation(),
-            FnObjHead::IdentifierWithMod(x) => x.internal_representation(),
-            FnObjHead::AnonymousFnLiteral(a) => a.internal_representation(),
-            FnObjHead::FiniteSeqListObj(v) => v.internal_representation(),
-            FnObjHead::ObjAtIndex(v) => v.internal_representation(),
-            FnObjHead::ObjAsStructInstanceWithFieldAccess(v) => v.internal_representation(),
-            FnObjHead::InstantiatedTemplateObj(t) => t.internal_representation(),
+            FnObjHead::Identifier(x) => x.ir(),
+            FnObjHead::IdentifierWithMod(x) => x.ir(),
+            FnObjHead::AnonymousFnLiteral(a) => a.ir(),
+            FnObjHead::FiniteSeqListObj(v) => v.ir(),
+            FnObjHead::ObjAtIndex(v) => v.ir(),
+            FnObjHead::ObjAsStructInstanceWithFieldAccess(v) => v.ir(),
+            FnObjHead::InstantiatedTemplateObj(t) => t.ir(),
         }
     }
     impl_display_pair!();
 }
 
 impl FnObj {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
-        out.push_str(&self.head.internal_representation());
+        out.push_str(&self.head.ir());
         for group in self.body.iter() {
             {
                 out.push_str(LEFT_PAREN);
                 out.push_str(
                     &group
                         .iter()
-                        .map(|o| o.internal_representation())
+                        .map(|o| o.ir())
                         .collect::<Vec<_>>()
                         .join(", "),
                 );
                 out.push_str(RIGHT_PAREN);
             };
         }
-        ObjInternalRepresentation(out)
+        ObjIR(out)
     }
     impl_display_pair!();
 }
 
 impl Number {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
-        ObjInternalRepresentation(self.normalized_value.clone())
+    pub fn ir(&self) -> ObjIR {
+        ObjIR(self.normalized_value.clone())
     }
     impl_display_pair!();
 }
@@ -435,9 +435,9 @@ impl Number {
 macro_rules! impl_obj_kw_call {
     ($ty:ty, $kw:expr, $($field:ident),+) => {
         impl $ty {
-            pub fn internal_representation(&self) -> ObjInternalRepresentation {
-                let parts = vec![$(self.$field.internal_representation()),+];
-                ObjInternalRepresentation(format!("{}{}{}{}", $kw, LEFT_PAREN, parts.join(", "), RIGHT_PAREN))
+            pub fn ir(&self) -> ObjIR {
+                let parts = vec![$(self.$field.ir()),+];
+                ObjIR(format!("{}{}{}{}", $kw, LEFT_PAREN, parts.join(", "), RIGHT_PAREN))
             }
             impl_display_pair!();
         }
@@ -447,12 +447,12 @@ macro_rules! impl_obj_kw_call {
 macro_rules! impl_obj_kw_unary {
     ($ty:ty, $kw:expr, $field:ident) => {
         impl $ty {
-            pub fn internal_representation(&self) -> ObjInternalRepresentation {
-                ObjInternalRepresentation(format!(
+            pub fn ir(&self) -> ObjIR {
+                ObjIR(format!(
                     "{}{}{}{}",
                     $kw,
                     LEFT_PAREN,
-                    self.$field.internal_representation(),
+                    self.$field.ir(),
                     RIGHT_PAREN
                 ))
             }
@@ -464,14 +464,14 @@ macro_rules! impl_obj_kw_unary {
 macro_rules! impl_obj_kw_binary {
     ($ty:ty, $kw:expr, $left:ident, $right:ident) => {
         impl $ty {
-            pub fn internal_representation(&self) -> ObjInternalRepresentation {
-                ObjInternalRepresentation(format!(
+            pub fn ir(&self) -> ObjIR {
+                ObjIR(format!(
                     "{}{}{}{} {}{}",
                     $kw,
                     LEFT_PAREN,
-                    self.$left.internal_representation(),
+                    self.$left.ir(),
                     COMMA,
-                    self.$right.internal_representation(),
+                    self.$right.ir(),
                     RIGHT_PAREN
                 ))
             }
@@ -491,43 +491,43 @@ impl_obj_kw_call!(BigUnion, BIG_UNION, left);
 impl_obj_kw_call!(BigIntersect, BIG_INTERSECT, left);
 
 impl IndexUnion {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
         out.push_str(&format!("{}{}", INDEX_UNION, LEFT_PAREN));
-        out.push_str(&self.index_set.internal_representation());
+        out.push_str(&self.index_set.ir());
         out.push_str(&format!("{COMMA} "));
-        out.push_str(&self.ambient_set.internal_representation());
+        out.push_str(&self.ambient_set.ir());
         out.push_str(&format!("{COMMA} "));
-        out.push_str(&self.family_fn.internal_representation());
+        out.push_str(&self.family_fn.ir());
         out.push_str(&format!("{}", RIGHT_PAREN));
-        ObjInternalRepresentation(out)
+        ObjIR(out)
     }
     impl_display_pair!();
 }
 impl IndexIntersect {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
         out.push_str(&format!("{}{}", INDEX_INTERSECT, LEFT_PAREN));
-        out.push_str(&self.index_set.internal_representation());
+        out.push_str(&self.index_set.ir());
         out.push_str(&format!("{COMMA} "));
-        out.push_str(&self.ambient_set.internal_representation());
+        out.push_str(&self.ambient_set.ir());
         out.push_str(&format!("{COMMA} "));
-        out.push_str(&self.family_fn.internal_representation());
+        out.push_str(&self.family_fn.ir());
         out.push_str(&format!("{}", RIGHT_PAREN));
-        ObjInternalRepresentation(out)
+        ObjIR(out)
     }
     impl_display_pair!();
 }
 impl_obj_kw_call!(PowerSet, POWER_SET, set);
 
 impl ListSet {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
-        ObjInternalRepresentation(format!(
+    pub fn ir(&self) -> ObjIR {
+        ObjIR(format!(
             "{}{}{}",
             LEFT_CURLY,
             self.list
                 .iter()
-                .map(|o| o.internal_representation())
+                .map(|o| o.ir())
                 .collect::<Vec<_>>()
                 .join(", "),
             RIGHT_CURLY
@@ -536,37 +536,37 @@ impl ListSet {
     impl_display_pair!();
 }
 impl SetBuilder {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
         out.push_str(&format!("{}", LEFT_CURLY));
         out.push_str(&format!("{}", self.param_binding));
         out.push_str(&format!(" "));
-        out.push_str(&self.param_set.internal_representation());
+        out.push_str(&self.param_set.ir());
         out.push_str(&format!("{}", COLON));
         out.push_str(&format!(" "));
         let fact_parts: Vec<_> = self
             .facts
             .iter()
-            .map(|fact| fact.internal_representation())
+            .map(|fact| fact.ir())
             .collect();
         out.push_str(&fact_parts.join(", "));
         out.push_str(&format!("{}", RIGHT_CURLY));
-        ObjInternalRepresentation(out)
+        ObjIR(out)
     }
     impl_display_pair!();
 }
 impl FnSetBody {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         let params: Vec<_> = self
             .set_bound_parameters
             .groups
             .iter()
-            .map(|g| g.internal_representation())
+            .map(|g| g.ir())
             .collect();
         let dom: Vec<_> = self
             .dom_facts
             .iter()
-            .map(|fact| fact.internal_representation())
+            .map(|fact| fact.ir())
             .collect();
         let mut out = format!("{} ", FN);
         out.push_str(LEFT_PAREN);
@@ -582,31 +582,31 @@ impl FnSetBody {
         }
         out.push_str(RIGHT_PAREN);
         out.push(' ');
-        out.push_str(&self.ret_set.internal_representation());
-        ObjInternalRepresentation(out)
+        out.push_str(&self.ret_set.ir());
+        ObjIR(out)
     }
     impl_display_pair!();
 }
 impl FnSet {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
-        self.body.internal_representation()
+    pub fn ir(&self) -> ObjIR {
+        self.body.ir()
     }
     impl_display_pair!();
 }
 impl AnonymousFn {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
-        out.push_str(&self.body.internal_representation());
+        out.push_str(&self.body.ir());
         out.push_str(&format!("{}", LEFT_CURLY));
-        out.push_str(&self.equal_to.internal_representation());
+        out.push_str(&self.equal_to.ir());
         out.push_str(&format!("{}", RIGHT_CURLY));
 
-        ObjInternalRepresentation(out)
+        ObjIR(out)
     }
     impl_display_pair!();
 }
 impl StandardSet {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
         let s = match self {
             StandardSet::NPos => N_POS,
@@ -627,13 +627,13 @@ impl StandardSet {
         };
         out.push_str(&format!("{}", s));
 
-        ObjInternalRepresentation(out)
+        ObjIR(out)
     }
     impl_display_pair!();
 }
 
 impl Cart {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
         out.push_str(&format!("{}", CART));
         {
@@ -642,14 +642,14 @@ impl Cart {
                 &self
                     .args
                     .iter()
-                    .map(|o| o.internal_representation())
+                    .map(|o| o.ir())
                     .collect::<Vec<_>>()
                     .join(", "),
             );
             out.push_str(RIGHT_PAREN);
         };
 
-        ObjInternalRepresentation(out)
+        ObjIR(out)
     }
     impl_display_pair!();
 }
@@ -660,7 +660,7 @@ impl_obj_kw_call!(Proj, PROJ, set, dim);
 impl_obj_kw_call!(TupleDim, TUPLE_DIM, arg);
 
 impl Tuple {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
         {
             out.push_str(LEFT_PAREN);
@@ -668,28 +668,28 @@ impl Tuple {
                 &self
                     .args
                     .iter()
-                    .map(|o| o.internal_representation())
+                    .map(|o| o.ir())
                     .collect::<Vec<_>>()
                     .join(", "),
             );
             out.push_str(RIGHT_PAREN);
         };
 
-        ObjInternalRepresentation(out)
+        ObjIR(out)
     }
     impl_display_pair!();
 }
 impl GeneralCart {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
         out.push_str(&format!("{}{}", GENERAL_CART, LEFT_PAREN));
-        out.push_str(&self.index_set.internal_representation());
+        out.push_str(&self.index_set.ir());
         out.push_str(&format!("{COMMA} "));
-        out.push_str(&self.family_set.internal_representation());
+        out.push_str(&self.family_set.ir());
         out.push_str(&format!("{COMMA} "));
-        out.push_str(&self.family_fn.internal_representation());
+        out.push_str(&self.family_fn.ir());
         out.push_str(&format!("{}", RIGHT_PAREN));
-        ObjInternalRepresentation(out)
+        ObjIR(out)
     }
     impl_display_pair!();
 }
@@ -702,14 +702,14 @@ impl_obj_kw_call!(FiniteSetMin, FINITE_SET_MIN, set);
 impl_obj_kw_call!(FnRange, FN_RANGE, function);
 
 impl Replacement {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
         out.push_str(&format!("{}{}", REPLACEMENT, LEFT_PAREN));
-        out.push_str(&self.prop_name.internal_representation());
+        out.push_str(&self.prop_name.ir());
         out.push_str(&format!("{COMMA} "));
-        out.push_str(&self.source_set.internal_representation());
+        out.push_str(&self.source_set.ir());
         out.push_str(&format!("{}", RIGHT_PAREN));
-        ObjInternalRepresentation(out)
+        ObjIR(out)
     }
     impl_display_pair!();
 }
@@ -734,86 +734,86 @@ impl_obj_kw_call!(FiniteSeqSet, FINITE_SEQ, set, n);
 impl_obj_kw_call!(SeqSet, SEQ, set);
 
 impl FiniteSeqListObj {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
         out.push_str(&format!("{}", LEFT_BRACKET));
         out.push_str(
             &self
                 .objs
                 .iter()
-                .map(|o| o.internal_representation())
+                .map(|o| o.ir())
                 .collect::<Vec<_>>()
                 .join(", "),
         );
         out.push_str(&format!("{}", RIGHT_BRACKET));
-        ObjInternalRepresentation(out)
+        ObjIR(out)
     }
     impl_display_pair!();
 }
 impl ObjAtIndex {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
-        out.push_str(&self.obj.internal_representation());
+        out.push_str(&self.obj.ir());
         out.push_str(&format!("{}", LEFT_BRACKET));
-        out.push_str(&self.index.internal_representation());
+        out.push_str(&self.index.ir());
         out.push_str(&format!("{}", RIGHT_BRACKET));
 
-        ObjInternalRepresentation(out)
+        ObjIR(out)
     }
     impl_display_pair!();
 }
 impl StructObj {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
         out.push_str(STRUCT_VIEW_PREFIX);
-        out.push_str(&self.name.internal_representation());
+        out.push_str(&self.name.ir());
         if !self.params.is_empty() {
             out.push_str(LESS);
             out.push_str(
                 &self
                     .params
                     .iter()
-                    .map(|o| o.internal_representation())
+                    .map(|o| o.ir())
                     .collect::<Vec<_>>()
                     .join(", "),
             );
             out.push_str(GREATER);
         }
-        ObjInternalRepresentation(out)
+        ObjIR(out)
     }
     impl_display_pair!();
 }
 impl ObjAsStructInstanceWithFieldAccess {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
-        out.push_str(&self.obj.internal_representation());
+        out.push_str(&self.obj.ir());
         out.push_str(&format!("{}{}", DOT_AKA_FIELD_ACCESS_SIGN, self.field_name));
 
-        ObjInternalRepresentation(out)
+        ObjIR(out)
     }
     impl_display_pair!();
 }
 impl InstantiatedTemplateObj {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
         out.push_str(&format!("{}", TEMPLATE_INSTANCE_PREFIX));
-        out.push_str(&self.template_name.internal_representation());
+        out.push_str(&self.template_name.ir());
         out.push_str(&format!("{}", LESS));
         out.push_str(
             &self
                 .args
                 .iter()
-                .map(|o| o.internal_representation())
+                .map(|o| o.ir())
                 .collect::<Vec<_>>()
                 .join(", "),
         );
         out.push_str(&format!("{}", GREATER));
-        ObjInternalRepresentation(out)
+        ObjIR(out)
     }
     impl_display_pair!();
 }
 impl IntervalObj {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
         let (left_delimiter, right_delimiter, body) = match self {
             IntervalObj::LeftOpenRightOpen(s) => (LEFT_PAREN, RIGHT_PAREN, s),
@@ -822,29 +822,29 @@ impl IntervalObj {
             IntervalObj::LeftClosedRightClosed(s) => (LEFT_BRACKET, RIGHT_BRACKET, s),
         };
         out.push_str(&format!("{}{}", INTERVAL_LITERAL_PREFIX, left_delimiter));
-        out.push_str(&body.start.internal_representation());
+        out.push_str(&body.start.ir());
         out.push_str(&format!("{COMMA} "));
-        out.push_str(&body.end.internal_representation());
+        out.push_str(&body.end.ir());
         out.push_str(&format!("{}", right_delimiter));
 
-        ObjInternalRepresentation(out)
+        ObjIR(out)
     }
     impl_display_pair!();
 }
 impl OneSideInfinityIntervalObj {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         match self {
             OneSideInfinityIntervalObj::LeftOpen(interval) => {
-                ObjInternalRepresentation(format!("'({},)", interval.start.as_ref().internal_representation()))
+                ObjIR(format!("'({},)", interval.start.as_ref().ir()))
             }
             OneSideInfinityIntervalObj::LeftClosed(interval) => {
-                ObjInternalRepresentation(format!("'[{},)", interval.start.as_ref().internal_representation()))
+                ObjIR(format!("'[{},)", interval.start.as_ref().ir()))
             }
             OneSideInfinityIntervalObj::RightOpen(interval) => {
-                ObjInternalRepresentation(format!("'(,{})", interval.start.as_ref().internal_representation()))
+                ObjIR(format!("'(,{})", interval.start.as_ref().ir()))
             }
             OneSideInfinityIntervalObj::RightClosed(interval) => {
-                ObjInternalRepresentation(format!("'(,{}]", interval.start.as_ref().internal_representation()))
+                ObjIR(format!("'(,{}]", interval.start.as_ref().ir()))
             }
         }
     }
@@ -852,57 +852,57 @@ impl OneSideInfinityIntervalObj {
 }
 // Binary/unary arithmetic leaf Display impls (surface via Obj precedence path primarily).
 impl Add {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
-        out.push_str(&self.left.internal_representation());
+        out.push_str(&self.left.ir());
         out.push_str(&format!(" {} ", ADD));
-        out.push_str(&self.right.internal_representation());
+        out.push_str(&self.right.ir());
 
-        ObjInternalRepresentation(out)
+        ObjIR(out)
     }
     impl_display_pair!();
 }
 impl Sub {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
-        out.push_str(&self.left.internal_representation());
+        out.push_str(&self.left.ir());
         out.push_str(&format!(" {} ", SUB));
-        out.push_str(&self.right.internal_representation());
+        out.push_str(&self.right.ir());
 
-        ObjInternalRepresentation(out)
+        ObjIR(out)
     }
     impl_display_pair!();
 }
 impl Mul {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
-        out.push_str(&self.left.internal_representation());
+        out.push_str(&self.left.ir());
         out.push_str(&format!(" {} ", MUL));
-        out.push_str(&self.right.internal_representation());
+        out.push_str(&self.right.ir());
 
-        ObjInternalRepresentation(out)
+        ObjIR(out)
     }
     impl_display_pair!();
 }
 impl Div {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
-        out.push_str(&self.left.internal_representation());
+        out.push_str(&self.left.ir());
         out.push_str(&format!(" {} ", DIV));
-        out.push_str(&self.right.internal_representation());
+        out.push_str(&self.right.ir());
 
-        ObjInternalRepresentation(out)
+        ObjIR(out)
     }
     impl_display_pair!();
 }
 impl Mod {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
-        out.push_str(&self.left.internal_representation());
+        out.push_str(&self.left.ir());
         out.push_str(&format!(" {} ", MOD_OP));
-        out.push_str(&self.right.internal_representation());
+        out.push_str(&self.right.ir());
 
-        ObjInternalRepresentation(out)
+        ObjIR(out)
     }
     impl_display_pair!();
 }
@@ -913,13 +913,13 @@ impl_obj_kw_binary!(Gcd, GCD, left, right);
 impl_obj_kw_binary!(Lcm, LCM, left, right);
 
 impl Pow {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
-        out.push_str(&self.base.internal_representation());
+        out.push_str(&self.base.ir());
         out.push_str(&format!(" {} ", POW));
-        out.push_str(&self.exponent.internal_representation());
+        out.push_str(&self.exponent.ir());
 
-        ObjInternalRepresentation(out)
+        ObjIR(out)
     }
     impl_display_pair!();
 }
@@ -940,12 +940,12 @@ impl_obj_kw_unary!(Sign, SIGN, arg);
 impl_obj_kw_unary!(Factorial, FACTORIAL, arg);
 
 impl Abs {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
         out.push_str(&format!("{} {}", ABS, LEFT_PAREN));
-        out.push_str(&self.arg.internal_representation());
+        out.push_str(&self.arg.ir());
         out.push_str(&format!("{}", RIGHT_PAREN));
-        ObjInternalRepresentation(out)
+        ObjIR(out)
     }
     impl_display_pair!();
 }
@@ -966,42 +966,42 @@ impl_obj_kw_unary!(ImaginaryPart, IMG, arg);
 impl_obj_kw_unary!(ComplexAbs, C_ABS, arg);
 
 impl Sqrt {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
         out.push_str(&format!("{} {}", SQRT, LEFT_PAREN));
-        out.push_str(&self.arg.internal_representation());
+        out.push_str(&self.arg.ir());
         out.push_str(&format!("{}", RIGHT_PAREN));
-        ObjInternalRepresentation(out)
+        ObjIR(out)
     }
     impl_display_pair!();
 }
 impl Log {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
+    pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
         out.push_str(&format!("{} {}", LOG, LEFT_PAREN));
-        out.push_str(&self.base.internal_representation());
+        out.push_str(&self.base.ir());
         out.push_str(&format!("{} ", COMMA));
-        out.push_str(&self.arg.internal_representation());
+        out.push_str(&self.arg.ir());
         out.push_str(&format!("{}", RIGHT_PAREN));
-        ObjInternalRepresentation(out)
+        ObjIR(out)
     }
     impl_display_pair!();
 }
 impl ImaginaryUnit {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
-        ObjInternalRepresentation(I.to_string())
+    pub fn ir(&self) -> ObjIR {
+        ObjIR(I.to_string())
     }
     impl_display_pair!();
 }
 impl EulerNumber {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
-        ObjInternalRepresentation(E.to_string())
+    pub fn ir(&self) -> ObjIR {
+        ObjIR(E.to_string())
     }
     impl_display_pair!();
 }
 impl Pi {
-    pub fn internal_representation(&self) -> ObjInternalRepresentation {
-        ObjInternalRepresentation(PI.to_string())
+    pub fn ir(&self) -> ObjIR {
+        ObjIR(PI.to_string())
     }
     impl_display_pair!();
 }

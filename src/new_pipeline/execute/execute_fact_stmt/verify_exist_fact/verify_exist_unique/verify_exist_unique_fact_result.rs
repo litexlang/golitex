@@ -7,8 +7,8 @@ pub struct VerifyExistUniqueFactResult {
     pub searched_proof: ExistUniqueFactSearchedProof,
 }
 
+// Exact FactIR ByCache is AtomicFact-only; exist! uses other search routes.
 pub enum ExistUniqueFactSearchedProof {
-    ByCache(CacheSearchProof),
     ProveAsExistFactWithUniqueness(ExistUniqueFactSearchedProofByExistAndUniqueness),
 }
 

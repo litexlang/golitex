@@ -6,8 +6,8 @@ pub struct VerifyOrFactResult {
     pub searched_proof: OrFactSearchedProof,
 }
 
+// Exact FactIR ByCache is AtomicFact-only; or-facts use branch search.
 pub enum OrFactSearchedProof {
-    ByCache(CacheSearchProof),
     ByChosenBranch {
         chosen_branch_index: usize,
         proof_of_chosen_branch: VerifyFactResult,

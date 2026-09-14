@@ -1,7 +1,7 @@
-//! Typed wrappers for internal representation strings.
+//! Typed wrappers for IR strings.
 //!
-//! Construct only via `internal_representation()` in this module
-//! (`XxxInternalRepresentation(String)` is module-private). Arbitrary
+//! Construct only via `ir()` in this module
+//! (`XxxIR(String)` is module-private). Arbitrary
 //! `String` values cannot become these types without going through that path.
 
 use super::helper::strip_identifier_id_tags;
@@ -9,7 +9,7 @@ use std::borrow::Borrow;
 use std::fmt;
 use std::ops::Deref;
 
-macro_rules! define_internal_representation {
+macro_rules! define_ir {
     ($name:ident) => {
         #[derive(Clone, Debug, PartialEq, Eq, Hash)]
         pub struct $name(pub(super) String);
@@ -52,7 +52,7 @@ macro_rules! define_internal_representation {
     };
 }
 
-define_internal_representation!(ObjInternalRepresentation);
-define_internal_representation!(FactInternalRepresentation);
-define_internal_representation!(StmtInternalRepresentation);
-define_internal_representation!(ParamInternalRepresentation);
+define_ir!(ObjIR);
+define_ir!(FactIR);
+define_ir!(StmtIR);
+define_ir!(ParamIR);
