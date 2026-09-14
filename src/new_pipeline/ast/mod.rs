@@ -1,5 +1,6 @@
 //! New-pipeline AST framework (legacy taxonomy, adapted identity).
 
+pub mod conversions;
 pub mod fact;
 pub mod line_file;
 pub mod names;

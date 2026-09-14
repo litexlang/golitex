@@ -4,12 +4,13 @@ use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
+    // Exact ByCache is handled in `verify_fact` before this entry.
     pub fn verify_forall_fact_with_iff(
         &mut self,
         fact: &ForallFactWithIff,
         verify_state: VerifyState,
-    ) -> RuntimeResult<VerifyForallFactWithIffResult> {
+    ) -> RuntimeResult<Option<VerifyForallFactWithIffResult>> {
         let _ = (fact, verify_state);
-        Ok(VerifyForallFactWithIffResult { _wire: () })
+        Ok(None)
     }
 }

@@ -8,7 +8,7 @@ pub struct VerifyPlainExistFactResult {
     pub searched_proof: PlainExistFactSearchedProof,
 }
 
-// Exact FactIR ByCache is AtomicFact-only; plain exist uses other search routes.
+// Exact FactIR ByCache is handled at verify_fact; plain exist uses other search routes.
 pub enum PlainExistFactSearchedProof {
     ByBuiltinRule(PlainExistFactSearchedProofByBuiltinRule),
     ByKnownExistFact(PlainExistFactSearchedProofByKnownExistFact),

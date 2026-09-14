@@ -353,19 +353,17 @@ fn parse_identifier_or_mod_or_standard_set(
             mod_name: mod_name.clone(),
             name: local.clone(),
         };
-        let identifier_id = match rt.lookup_identifier_id(&key) {
-            Some(identifier_id) => identifier_id,
-            None => rt.define_atom(key).map_err(|err| match err {
+        if !rt.occupied_name_is_visible(&key) {
+            rt.define_atom(key).map_err(|err| match err {
                 crate::new_pipeline::runtime::RuntimeError::Invariant(message) => {
                     tb.parse_error(message)
                 }
                 other => other,
-            })?,
-        };
+            })?;
+        }
         return Ok(Obj::Atom(AtomObj::IdentifierWithMod(IdentifierWithMod {
             mod_name,
             name: local,
-            identifier_id,
         })));
     }
 
@@ -377,13 +375,10 @@ fn parse_identifier_or_mod_or_standard_set(
         return Err(tb.parse_error(format!("expected name, got `{name}`")));
     }
 
-    let Some(identifier_id) = rt.lookup_plain_identifier_id(&name) else {
+    if !rt.plain_atom_is_visible(&name) {
         return Err(tb.parse_error(format!("undefined name `{name}`")));
-    };
-    Ok(Obj::Atom(AtomObj::Identifier(Identifier {
-        name,
-        identifier_id,
-    })))
+    }
+    Ok(Obj::Atom(AtomObj::Identifier(Identifier { name })))
 }
 
 fn standard_set_from_name(name: &str) -> Option<StandardSet> {

@@ -1,5 +1,5 @@
 use super::exec_stmt_result::ExecLetObjStmtResult;
-use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact};
+use crate::new_pipeline::ast::fact::{EqualFact, Fact};
 use crate::new_pipeline::ast::obj::{AtomObj, Identifier, Obj};
 use crate::new_pipeline::ast::stmt::LetObjStmt;
 use crate::new_pipeline::exec_env::DefinedIdentifierInfo;
@@ -26,7 +26,7 @@ impl Runtime {
             .top_exec_env()
             .definitions
             .identifiers
-            .contains_key(&let_stmt.identifier_id)
+            .contains_key(&let_stmt.name)
         {
             return Err(RuntimeError::Invariant(format!(
                 "identifier `{}` is already defined in this ExecEnv",
@@ -34,11 +34,10 @@ impl Runtime {
             )));
         }
         self.top_exec_env_mut().definitions.identifiers.insert(
-            let_stmt.identifier_id,
+            let_stmt.name.clone(),
             DefinedIdentifierInfo {
                 identifier: Identifier {
                     name: let_stmt.name.clone(),
-                    identifier_id: let_stmt.identifier_id,
                 },
             },
         );
@@ -46,14 +45,14 @@ impl Runtime {
         let equality_fact_id = self.ids.allocate_fact_id();
         let left = Obj::Atom(AtomObj::Identifier(Identifier {
             name: let_stmt.name.clone(),
-            identifier_id: let_stmt.identifier_id,
         }));
-        let equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
+        let equal_fact: Fact = EqualFact {
             fact_id: equality_fact_id,
             left,
             right: let_stmt.value.clone(),
             line_file: Some(let_stmt.line_file.clone()),
-        }));
+        }
+        .into();
         let store_and_infer_result = self.store_fact_and_infer(&equal_fact)?;
 
         Ok(ExecLetObjStmtResult {

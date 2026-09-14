@@ -7,6 +7,7 @@
 //! - `Ok(Unknown)` = unable to prove (not a runtime error)
 //! - `Err` = real operational / invariant failure
 
+use super::cache_search_proof::CacheSearchProof;
 use super::verify_atomic_fact::{VerifyAtomicExceptEqualityFactResult, VerifyEqualityResult};
 
 pub enum VerifyFactResult {
@@ -27,34 +28,34 @@ pub enum UnknownVerifyFactResult {
     UnableToSearchProof,
 }
 
-// Composite / quantified payloads: shape is fixed; bodies fill in as those
-// pipelines are attached to this module tree (draft files already exist).
-pub struct VerifyAndFactResult {
-    pub _wire: (),
+// Composite stubs currently expose only exact FactIR ByCache; fuller search
+// pipelines live in draft files until wired.
+pub enum VerifyAndFactResult {
+    ByCache(CacheSearchProof),
 }
 
-pub struct VerifyChainFactResult {
-    pub _wire: (),
+pub enum VerifyChainFactResult {
+    ByCache(CacheSearchProof),
 }
 
-pub struct VerifyOrFactResult {
-    pub _wire: (),
+pub enum VerifyOrFactResult {
+    ByCache(CacheSearchProof),
 }
 
-pub struct VerifyExistFactResult {
-    pub _wire: (),
+pub enum VerifyExistFactResult {
+    ByCache(CacheSearchProof),
 }
 
-pub struct VerifyForallFactResult {
-    pub _wire: (),
+pub enum VerifyForallFactResult {
+    ByCache(CacheSearchProof),
 }
 
-pub struct VerifyForallFactWithIffResult {
-    pub _wire: (),
+pub enum VerifyForallFactWithIffResult {
+    ByCache(CacheSearchProof),
 }
 
-pub struct VerifyNotForallFactResult {
-    pub _wire: (),
+pub enum VerifyNotForallFactResult {
+    ByCache(CacheSearchProof),
 }
 
 impl VerifyFactResult {

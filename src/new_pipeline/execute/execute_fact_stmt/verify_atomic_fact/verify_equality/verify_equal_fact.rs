@@ -1,4 +1,4 @@
-use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact};
+use crate::new_pipeline::ast::fact::EqualFact;
 use crate::new_pipeline::execute::execute_fact_stmt::cache_search_proof::CacheSearchProof;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::{
     EqualFactSearchedProof, EqualFactSearchedProofByKnownForallFact, VerifyEqualityResult,
@@ -18,7 +18,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
         let well_defined_proof = self.verify_atomic_fact_well_definedness(
-            &AtomicFact::equalFact(fact.clone()),
+            &(fact.clone().into()),
             verify_state.clone(),
         )?;
         match self.search_equal_fact_proof(fact, verify_state)? {
@@ -80,7 +80,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<CacheSearchProof>> {
         let _ = verify_state;
-        Ok(self.search_atomic_fact_proof_by_cache(&AtomicFact::equalFact(fact.clone())))
+        Ok(self.search_atomic_fact_proof_by_cache(&(fact.clone().into())))
     }
 
     pub fn search_equal_fact_proof_by_builtin_strategy(

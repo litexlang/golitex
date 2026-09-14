@@ -2,7 +2,7 @@ use crate::new_pipeline::ast::obj::{Identifier, Obj as PipelineObj};
 use crate::new_pipeline::ast::stmt::DefAbstractPropStmt as NewDefAbstractPropStmt;
 use crate::new_pipeline::ast::stmt::DefPropStmt as NewDefPropStmt;
 use crate::new_pipeline::exec_env::known_fact_memory::ObjIR;
-use crate::new_pipeline::runtime::runtime_ids::{FactId, IdentifierId, WellDefinednessId};
+use crate::new_pipeline::runtime::runtime_ids::{FactId, WellDefinednessId};
 use crate::prelude::*;
 use std::collections::HashMap;
 
@@ -62,8 +62,8 @@ pub struct WellDefinedObjectMemory {
 #[derive(Clone)]
 pub struct DefinitionMemory {
     /// Named atoms defined in this scope (`let`, `have`, forall/exist locals, …).
-    /// Keyed by IdentifierId; value carries the full Identifier (name + IdentifierId).
-    pub identifiers: HashMap<IdentifierId, DefinedIdentifierInfo>,
+    /// Keyed by plain name (name is identity).
+    pub identifiers: HashMap<String, DefinedIdentifierInfo>,
 
     pub predicate_definitions: HashMap<PropName, NewDefPropStmt>,
     pub abstract_predicate_definitions: HashMap<AbstractPropName, NewDefAbstractPropStmt>,

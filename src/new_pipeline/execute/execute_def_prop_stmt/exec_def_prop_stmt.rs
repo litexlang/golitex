@@ -116,7 +116,7 @@ impl Runtime {
                     .top_exec_env()
                     .definitions
                     .identifiers
-                    .contains_key(&identifier.identifier_id)
+                    .contains_key(&identifier.name)
                 {
                     return Err(RuntimeError::Invariant(format!(
                         "identifier `{}` is already defined in this ExecEnv",
@@ -124,7 +124,7 @@ impl Runtime {
                     )));
                 }
                 self.top_exec_env_mut().definitions.identifiers.insert(
-                    identifier.identifier_id,
+                    identifier.name.clone(),
                     DefinedIdentifierInfo {
                         identifier: identifier.clone(),
                     },

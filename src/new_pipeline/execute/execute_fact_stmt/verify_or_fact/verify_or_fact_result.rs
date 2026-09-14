@@ -6,7 +6,8 @@ pub struct VerifyOrFactResult {
     pub searched_proof: OrFactSearchedProof,
 }
 
-// Exact FactIR ByCache is AtomicFact-only; or-facts use branch search.
+// Exact FactIR ByCache for or-facts is handled at `verify_fact`; draft search
+// below covers non-cache routes when wired.
 pub enum OrFactSearchedProof {
     ByChosenBranch {
         chosen_branch_index: usize,

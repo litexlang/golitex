@@ -3,7 +3,7 @@ use crate::new_pipeline::ast::fact::{AtomicFact, Fact};
 use crate::new_pipeline::exec_env::helper::{
     atomic_fact_args_ref, atomic_fact_has_positive_polarity,
 };
-use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeError, RuntimeResult};
+use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeResult};
 
 impl Runtime {
     // Store the verified fact into the top ExecEnv; infer is still a no-op.
@@ -13,6 +13,8 @@ impl Runtime {
         Ok(StoreFactAndInferResult::from_stored_ids(stored_fact_ids))
     }
 
+    // Index every closed Fact by FactIR for ByCache; atomics also update
+    // equality / atomic-except-equality side indexes.
     pub fn store_fact(&mut self, fact: &Fact) -> RuntimeResult<Vec<FactId>> {
         match fact {
             Fact::AtomicFact(atomic_fact) => self.store_atomic_fact(atomic_fact),
@@ -22,15 +24,19 @@ impl Runtime {
             | Fact::ExistFact(_)
             | Fact::ForallFact(_)
             | Fact::ForallFactWithIff(_)
-            | Fact::NotForall(_) => Err(RuntimeError::Unsupported(
-                "store_fact: only AtomicFact store is implemented so far".to_string(),
-            )),
+            | Fact::NotForall(_) => {
+                let fact_id = fact.fact_id();
+                self.top_exec_env_mut()
+                    .facts
+                    .record_fact(fact_id, fact.clone());
+                Ok(vec![fact_id])
+            }
         }
     }
 
     pub fn store_atomic_fact(&mut self, atomic_fact: &AtomicFact) -> RuntimeResult<Vec<FactId>> {
         match atomic_fact {
-            AtomicFact::equalFact(equal_fact) => {
+            AtomicFact::EqualFact(equal_fact) => {
                 let fact_id = equal_fact.fact_id;
                 let env = self.top_exec_env_mut();
                 env.facts.known_equality.store(equal_fact);

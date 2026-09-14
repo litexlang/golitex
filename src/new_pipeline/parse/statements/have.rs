@@ -73,11 +73,7 @@ impl Runtime {
         match result? {
             HaveObjKind::InSet(param_def, identifiers) => {
                 for identifier in identifiers {
-                    self.occupy_plain_atom_as_parse(
-                        block,
-                        identifier.name,
-                        identifier.identifier_id,
-                    )?;
+                    self.occupy_plain_atom_as_parse(block, identifier.name)?;
                 }
                 Ok(Stmt::Definition(DefinitionStmt::HaveObjInNonemptySetStmt(
                     HaveObjInNonemptySetOrParamTypeStmt {
@@ -88,11 +84,7 @@ impl Runtime {
             }
             HaveObjKind::Equal(param_def, objs_equal_to, identifiers) => {
                 for identifier in identifiers {
-                    self.occupy_plain_atom_as_parse(
-                        block,
-                        identifier.name,
-                        identifier.identifier_id,
-                    )?;
+                    self.occupy_plain_atom_as_parse(block, identifier.name)?;
                 }
                 Ok(Stmt::Definition(DefinitionStmt::HaveObjEqualStmt(
                     HaveObjEqualStmt {
@@ -104,11 +96,7 @@ impl Runtime {
             }
             HaveObjKind::ByExist(param_def, facts, identifiers) => {
                 for identifier in identifiers {
-                    self.occupy_plain_atom_as_parse(
-                        block,
-                        identifier.name,
-                        identifier.identifier_id,
-                    )?;
+                    self.occupy_plain_atom_as_parse(block, identifier.name)?;
                 }
                 Ok(Stmt::Definition(DefinitionStmt::HaveObjByExistFactsStmt(
                     HaveObjByExistFactsStmt {

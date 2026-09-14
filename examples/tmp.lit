@@ -1,11 +1,11 @@
-let a = 1
-let b = a
-let c = b
+# Exact FactIR ByCache for forall (name is identity).
+# trust stores the forall; the second forall should hit ByCache.
 
-b = 1
+abstract_prop p(x R)
 
-abstract_prop p(x)
+trust:
+    forall x R:
+        $p(x)
 
-trust $p(c)
-
-$p(1)
+forall x R:
+    $p(x)

@@ -1,6 +1,6 @@
 //! Framework AST data shapes for new_pipeline.
 //! Field taxonomy follows the legacy language; methods are added later.
-//! Identity: parameter lists store Identifier (name + IdentifierId).
+//! Identity: parameter lists store Identifier (name only; name is identity).
 
 use super::obj::{Identifier, Obj};
 

@@ -358,22 +358,15 @@ impl Obj {
 }
 
 impl Identifier {
-    // Only unusual bit of internal strings: embed IdentifierId as #<id>#name.
     pub fn ir(&self) -> ObjIR {
-        ObjIR(format!("#{}#{}", self.identifier_id.value(), self.name))
+        ObjIR(self.name.clone())
     }
     impl_display_pair!();
 }
 
 impl IdentifierWithMod {
     pub fn ir(&self) -> ObjIR {
-        ObjIR(format!(
-            "{}{}#{}#{}",
-            self.mod_name,
-            MOD_SIGN,
-            self.identifier_id.value(),
-            self.name
-        ))
+        ObjIR(format!("{}{}{}", self.mod_name, MOD_SIGN, self.name))
     }
     impl_display_pair!();
 }

@@ -1,21 +1,20 @@
 use crate::new_pipeline::ast::fact::EqualFact;
 use crate::new_pipeline::ast::obj::{AtomObj, Obj};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
-use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
-// Builtin: left and right are the same atom (same IdentifierId).
-// Example: prove `a = a` when both sides are Identifier with equal identifier_id.
+// Builtin: left and right are the same atom (same name identity).
+// Example: prove `a = a` when both sides are Identifier with equal name.
 pub enum LiterallyTheSameBuiltinRuleProof {
-    SameIdentifierId(LiterallyTheSameBySameIdentifierIdProof),
+    SameName(LiterallyTheSameBySameNameProof),
 }
 
-pub struct LiterallyTheSameBySameIdentifierIdProof {
-    pub identifier_id: IdentifierId,
+pub struct LiterallyTheSameBySameNameProof {
+    pub name: String,
 }
 
 impl Runtime {
-    // Builtin: same Obj atom family and equal IdentifierId ⇒ equality.
+    // Builtin: same Obj atom family and equal name identity ⇒ equality.
     // Example: after `have x R`, prove `x = x`.
     pub fn search_equal_fact_proof_by_literally_the_same(
         &mut self,
@@ -25,21 +24,21 @@ impl Runtime {
         let _ = verify_state;
         match (&fact.left, &fact.right) {
             (Obj::Atom(AtomObj::Identifier(left)), Obj::Atom(AtomObj::Identifier(right)))
-                if left.identifier_id == right.identifier_id =>
+                if left.name == right.name =>
             {
-                Ok(Some(LiterallyTheSameBuiltinRuleProof::SameIdentifierId(
-                    LiterallyTheSameBySameIdentifierIdProof {
-                        identifier_id: left.identifier_id,
+                Ok(Some(LiterallyTheSameBuiltinRuleProof::SameName(
+                    LiterallyTheSameBySameNameProof {
+                        name: left.name.clone(),
                     },
                 )))
             }
             (
                 Obj::Atom(AtomObj::IdentifierWithMod(left)),
                 Obj::Atom(AtomObj::IdentifierWithMod(right)),
-            ) if left.identifier_id == right.identifier_id => {
-                Ok(Some(LiterallyTheSameBuiltinRuleProof::SameIdentifierId(
-                    LiterallyTheSameBySameIdentifierIdProof {
-                        identifier_id: left.identifier_id,
+            ) if left.mod_name == right.mod_name && left.name == right.name => {
+                Ok(Some(LiterallyTheSameBuiltinRuleProof::SameName(
+                    LiterallyTheSameBySameNameProof {
+                        name: format!("{}::{}", left.mod_name, left.name),
                     },
                 )))
             }
