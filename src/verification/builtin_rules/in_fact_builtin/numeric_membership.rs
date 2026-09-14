@@ -1408,12 +1408,12 @@ impl Runtime {
         bound: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<VerifyFactResult, RuntimeError> {
-        let exact = self.verify_non_equational_atomic_fact_with_known_atomic_facts(bound)?;
+        let exact = self.verify_atomic_except_equality_with_known_atomic_facts(bound)?;
         if exact.is_success() {
             return self.complete_atomic_fact_proof_result(bound, exact, verify_state);
         }
         let computed =
-            self.verify_non_equational_atomic_fact_with_zero_premise_verification(bound)?;
+            self.verify_atomic_except_equality_with_zero_premise_verification(bound)?;
         if computed.is_success() {
             return self.complete_atomic_fact_proof_result(bound, computed, verify_state);
         }
@@ -1447,7 +1447,7 @@ impl Runtime {
             );
         };
         let stronger_proof =
-            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&stronger)?;
+            self.verify_atomic_except_equality_with_known_atomic_facts(&stronger)?;
         if !stronger_proof.is_success() {
             return self.complete_atomic_fact_proof_result(bound, stronger_proof, verify_state);
         }
@@ -1819,7 +1819,7 @@ impl Runtime {
             {
                 result
             } else {
-                self.verify_non_equational_atomic_fact_with_zero_premise_verification(&in_z)?
+                self.verify_atomic_except_equality_with_zero_premise_verification(&in_z)?
             };
             if let Some(direct_result) = self.complete_proven_fact_candidate(
                 in_z.clone().into(),
@@ -1892,7 +1892,7 @@ impl Runtime {
                 {
                     result
                 } else {
-                    self.verify_non_equational_atomic_fact_with_known_atomic_facts(&finite_fact)?
+                    self.verify_atomic_except_equality_with_known_atomic_facts(&finite_fact)?
                 };
                 if let Some(finite_result) = self.complete_proven_fact_candidate(
                     finite_fact.clone().into(),
@@ -1929,7 +1929,7 @@ impl Runtime {
                 let source_membership: AtomicFact = self
                     .new_in_fact((*obj).clone(), source_set.clone(), line_file.clone())
                     .into();
-                let source_proof = self.verify_non_equational_atomic_fact_with_known_atomic_facts(
+                let source_proof = self.verify_atomic_except_equality_with_known_atomic_facts(
                     &source_membership,
                 )?;
                 let Some(source_result) = self.complete_proven_fact_candidate(
@@ -1997,7 +1997,7 @@ impl Runtime {
                 .new_in_fact(obj.clone(), source_set.clone(), line_file.clone())
                 .into();
             let source_proof =
-                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&source_membership)?;
+                self.verify_atomic_except_equality_with_known_atomic_facts(&source_membership)?;
             let source_result = self.complete_atomic_fact_proof_result(
                 &source_membership,
                 source_proof,
@@ -2049,7 +2049,7 @@ impl Runtime {
                     }
                 }
                 let subset_proof =
-                    self.verify_non_equational_atomic_fact_with_known_atomic_facts(&subset)?;
+                    self.verify_atomic_except_equality_with_known_atomic_facts(&subset)?;
                 let subset_result = self.complete_atomic_fact_proof_result(
                     &subset,
                     subset_proof,
@@ -2427,7 +2427,7 @@ impl Runtime {
             return Ok((UnknownGenericStmtResult::new()).into());
         };
         let Some(mut sign_subgoals) = self
-            .mul_product_negative_when_factors_have_strict_opposite_sign_by_non_equational_verify(
+            .mul_product_negative_when_factors_have_strict_opposite_sign_by_atomic_except_equality_verify(
                 &mul.left,
                 &mul.right,
                 in_fact.line_file.clone(),

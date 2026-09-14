@@ -6,7 +6,7 @@ use crate::new_pipeline::ast::fact::{AtomicFact, Fact, IsNonemptySetFact};
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::ast::stmt::HaveObjInNonemptySetOrParamTypeStmt;
-use crate::new_pipeline::execution_environment::SymbolDefinitionMemory;
+use crate::new_pipeline::execution_environment::IdentifierDefinitionMemory;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
@@ -82,18 +82,20 @@ impl Runtime {
                 if self
                     .top_exec_env()
                     .definitions
-                    .symbols
-                    .contains_key(&identifier.name)
+                    .identifiers
+                    .contains_key(&identifier.identifier_id)
                 {
                     return Err(RuntimeError::Invariant(format!(
-                        "symbol `{}` is already defined in this ExecEnv",
+                        "identifier `{}` is already defined in this ExecEnv",
                         identifier.name
                     )));
                 }
-                self.top_exec_env_mut()
-                    .definitions
-                    .symbols
-                    .insert(identifier.name.clone(), SymbolDefinitionMemory {});
+                self.top_exec_env_mut().definitions.identifiers.insert(
+                    identifier.identifier_id,
+                    IdentifierDefinitionMemory {
+                        identifier: identifier.clone(),
+                    },
+                );
 
                 // Type facts belong in KnownFactMemory once that store is wired.
                 stored_fact_ids.push(self.ids.allocate_fact_id());

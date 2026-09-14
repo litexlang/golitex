@@ -468,7 +468,7 @@ impl Runtime {
 
         let mut known_orders = Vec::new();
         for environment in self.iter_environments_from_top() {
-            for known_facts_map in environment.facts.known_non_equational_facts.by_two_args.values() {
+            for known_facts_map in environment.facts.known_atomic_except_equality_facts.by_two_args.values() {
                 for known_fact in known_facts_map.values() {
                     if let Some(normalized) =
                         super::normalize_positive_order_atomic_fact(self, known_fact)
@@ -1259,7 +1259,7 @@ impl Runtime {
 
         let mut known_not_equal_facts = Vec::new();
         for environment in self.iter_environments_from_top() {
-            for known_facts_map in environment.facts.known_non_equational_facts.by_two_args.values() {
+            for known_facts_map in environment.facts.known_atomic_except_equality_facts.by_two_args.values() {
                 for known_fact in known_facts_map.values() {
                     if matches!(known_fact, AtomicFact::NotEqualFact(_)) {
                         known_not_equal_facts.push(known_fact.clone());
@@ -1462,7 +1462,7 @@ impl Runtime {
         None
     }
 
-    fn both_operands_nonzero_by_known_non_equational_facts(
+    fn both_operands_nonzero_by_known_atomic_except_equality_facts(
         &mut self,
         left_operand: &Obj,
         right_operand: &Obj,
@@ -1489,7 +1489,7 @@ impl Runtime {
         Ok(Some(results))
     }
 
-    fn both_operands_strictly_positive_by_non_equational_verify(
+    fn both_operands_strictly_positive_by_atomic_except_equality_verify(
         &mut self,
         left_operand: &Obj,
         right_operand: &Obj,
@@ -1506,7 +1506,7 @@ impl Runtime {
         self.verify_builtin_rule_premises(&premises, builtin_state)
     }
 
-    fn both_operands_strictly_negative_by_non_equational_verify(
+    fn both_operands_strictly_negative_by_atomic_except_equality_verify(
         &mut self,
         left_operand: &Obj,
         right_operand: &Obj,
@@ -1523,7 +1523,7 @@ impl Runtime {
         self.verify_builtin_rule_premises(&premises, builtin_state)
     }
 
-    pub fn mul_product_negative_when_factors_have_strict_opposite_sign_by_non_equational_verify(
+    pub fn mul_product_negative_when_factors_have_strict_opposite_sign_by_atomic_except_equality_verify(
         &mut self,
         left_factor: &Obj,
         right_factor: &Obj,
@@ -1553,7 +1553,7 @@ impl Runtime {
         Ok(result.map(|result| vec![result]))
     }
 
-    fn sub_difference_nonzero_when_operands_have_strict_opposite_sign_by_non_equational_verify(
+    fn sub_difference_nonzero_when_operands_have_strict_opposite_sign_by_atomic_except_equality_verify(
         &mut self,
         minuend: &Obj,
         subtrahend: &Obj,
@@ -1600,14 +1600,14 @@ impl Runtime {
 
         let verified = match expression_obj {
             Obj::Add(add) => {
-                if let Some(subgoals) = self.both_operands_strictly_positive_by_non_equational_verify(
+                if let Some(subgoals) = self.both_operands_strictly_positive_by_atomic_except_equality_verify(
                     &add.left,
                     &add.right,
                     line_file.clone(),
                     builtin_state,
                 )? {
                     Some(("add_not_equal_zero_both_operands_strictly_positive", subgoals))
-                } else if let Some(subgoals) = self.both_operands_strictly_negative_by_non_equational_verify(
+                } else if let Some(subgoals) = self.both_operands_strictly_negative_by_atomic_except_equality_verify(
                     &add.left,
                     &add.right,
                     line_file.clone(),
@@ -1619,21 +1619,21 @@ impl Runtime {
                 }
             }
             Obj::Mul(mul) => {
-                if let Some(subgoals) = self.both_operands_nonzero_by_known_non_equational_facts(
+                if let Some(subgoals) = self.both_operands_nonzero_by_known_atomic_except_equality_facts(
                     &mul.left,
                     &mul.right,
                     line_file.clone(),
                     builtin_state,
                 )? {
                     Some(("mul_not_equal_zero_both_factors_nonzero_by_known_facts", subgoals))
-                } else if let Some(subgoals) = self.both_operands_strictly_positive_by_non_equational_verify(
+                } else if let Some(subgoals) = self.both_operands_strictly_positive_by_atomic_except_equality_verify(
                     &mul.left,
                     &mul.right,
                     line_file.clone(),
                     builtin_state,
                 )? {
                     Some(("mul_not_equal_zero_both_factors_strictly_positive", subgoals))
-                } else if let Some(subgoals) = self.both_operands_strictly_negative_by_non_equational_verify(
+                } else if let Some(subgoals) = self.both_operands_strictly_negative_by_atomic_except_equality_verify(
                     &mul.left,
                     &mul.right,
                     line_file.clone(),
@@ -1645,7 +1645,7 @@ impl Runtime {
                 }
             }
             Obj::Sub(sub) => {
-                if let Some(subgoals) = self.sub_difference_nonzero_when_operands_have_strict_opposite_sign_by_non_equational_verify(
+                if let Some(subgoals) = self.sub_difference_nonzero_when_operands_have_strict_opposite_sign_by_atomic_except_equality_verify(
                     &sub.left,
                     &sub.right,
                     line_file,

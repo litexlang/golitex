@@ -1,12 +1,12 @@
 //! Requirement-fact verification for object WD (new_pipeline AST).
 //!
 //! Mirrors old target_requirements: after child WD, prove domain facts true.
-//! Results are VerifyFactResult::AtomicFact (NonEquational).
+//! Results are VerifyFactResult::AtomicFact (AtomicExceptEquality).
 
 use crate::new_pipeline::ast::fact::{AtomicFact, InFact};
 use crate::new_pipeline::ast::obj::{Obj, StandardSet};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::{
-    VerifyAtomicFactResult, VerifyNonEquationalFactResult,
+    VerifyAtomicFactResult, VerifyAtomicExceptEqualityFactResult,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
@@ -22,9 +22,9 @@ impl Runtime {
     ) -> RuntimeResult<VerifyFactResult> {
         let well_defined_proof =
             self.verify_atomic_fact_well_definedness(&fact, verify_state.clone())?;
-        match self.search_non_equational_fact_proof(&fact, verify_state) {
+        match self.search_atomic_except_equality_fact_proof(&fact, verify_state) {
             Ok(searched_proof) => Ok(VerifyFactResult::AtomicFact(Box::new(
-                VerifyAtomicFactResult::NonEquational(VerifyNonEquationalFactResult {
+                VerifyAtomicFactResult::AtomicExceptEquality(VerifyAtomicExceptEqualityFactResult {
                     fact,
                     well_defined_proof,
                     searched_proof,

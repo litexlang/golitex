@@ -14,7 +14,7 @@ impl Runtime {
         };
         if normalized.to_string() != atomic_fact.to_string() {
             let normalized_proof = self
-                .verify_non_equational_atomic_fact_with_bounded_builtin_routes(
+                .verify_atomic_except_equality_with_bounded_builtin_routes(
                     &normalized,
                     verify_state,
                 )?;

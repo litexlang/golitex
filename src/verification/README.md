@@ -51,7 +51,7 @@ application; it is not the general proof-search state.
 
 Atomic-family entry points named `with_bounded_builtin_routes` first try their
 zero-premise leaves and may then spend one bounded builtin-rule step. For
-non-equational fallback, `AlternateFactSearch::Enabled` means that order-dual
+atomic-except-equality fallback, `AlternateFactSearch::Enabled` means that order-dual
 and registered symmetric alternatives may be tried; recursive alternatives use
 `Disabled` so they cannot select themselves again. Checked function-definition
 reduction similarly uses `EqualitySide::{Left, Right}` internally and converts
@@ -67,7 +67,7 @@ to the retained evidence boolean only when the Result is built.
 | [`proof_search/builtin_rule.rs`](proof_search/builtin_rule.rs) | Applies bounded builtin verification rules. |
 | [`proof_search/context_state.rs`](proof_search/context_state.rs) | Defines semantic initial, post-well-definedness, and final-round proof-search states. |
 | [`proof_search/builtin_rule_state.rs`](proof_search/builtin_rule_state.rs) | Limits builtin-rule recursion independently from general proof search. |
-| [`atomic/`](atomic) | Owns atomic lookup, definitions, strategies, and non-equational predicates. Universal candidate search and argument matching are separated under [`atomic/universal_search/`](atomic/universal_search). |
+| [`atomic/`](atomic) | Owns atomic lookup, definitions, strategies, and atomic-except-equality predicates. Universal candidate search and argument matching are separated under [`atomic/universal_search/`](atomic/universal_search). |
 | [`quantified/`](quantified) | Owns universal, existential, and negated quantified facts. |
 | [`builtin_rules/equality_dispatch/`](builtin_rules/equality_dispatch) | Dispatches equality-only set, tuple, order, and arithmetic rules by concept. |
 | [`builtin_rules/number_compare/`](builtin_rules/number_compare) | Proves numeric order and sign facts through focused comparison families. |

@@ -2,7 +2,7 @@
 
 Created and maintained by Jiachen Shen.
 
-Last updated: September 8, 2026.
+Last updated: September 14, 2026.
 
 Website: https://litexlang.com/doc/Litex_Blueprint
 
@@ -221,6 +221,8 @@ An open set is simply a member of that family: once `TopologicalSpaceSetting` is
 
 **Misreading 2: If the foundation is set theory, must every development rebuild analysis, algebra, and topology from the ZFC axioms—and would that not be too hard?**  
 This is an **entry-height problem**. Litex does expose set-theoretic / ZFC-side axiom and constructor interfaces for foundational work or when one needs to dig downward. Ordinary use does not force unfolding the concrete set-theoretic constructions of common concepts: for objects and structures familiar in everyday mathematical writing, the system supplies checkable relations and usage surfaces so you can operate at the abstraction layer you want, rather than first building up to that layer from the axioms. The low-level interfaces are an exit and escape hatch, not the staircase you must climb every day.
+
+More precisely: Litex's builtin layer cares about **checkable relationships** among objects, statements, and facts—not about picking one “true” concrete construction as the definition. Rational numbers `Q` and real numbers `R` admit many set-theoretic constructions; a function may be modeled by different graph encodings. The builtin interface does not make any one of these the unique definition; it exposes usable relations such as membership, inclusion, and the domain–codomain behavior of function application. When a particular construction matters, a development may write it explicitly, or mark an assumed compatibility result with `trust`.
 
 So: set theory fixes the shape of the object language; **the working entry point** remains yours—you may start from a working layer such as groups or topology, and drop to axiom interfaces when needed. The sketches above and the group comparison below demonstrate working-layer writing; they do not ask the reader to finish a construction that begins from the empty-set axiom.
 
@@ -1440,6 +1442,17 @@ Disadvantage zones:
 - **Long-term trusted assets**: maintenance, audit, compatibility, and final trusted delivery of public libraries are more mature in Lean.
 
 Of course, Litex at this stage is more like a `proof of an idea`. Even though it already has hundreds of thousands of lines of code, exploration of its place in industry upstream and downstream remains scarce. That is what Litex's next stage will focus on: how to turn zero-to-one original innovation into one-to-ten early value realization. Friends interested in Litex can contact litexlang@outlook.com .
+
+<details>
+<summary><strong>Litex's ecological niche</strong></summary>
+
+A supply–demand relationship for formal languages is inevitable. Language design is usually led by one or two people: design, engineering, and iteration proceed together; keeping the design circle small is what helps preserve consistency—this is almost the normal pattern for any programming language. But actually building a formal language is enormous engineering: kernel, rules, standard library, toolchain, documentation, and ecosystem are far beyond what the same one or two people could carry at once under traditional labor alone. Without AI assisting implementation and iteration, a project like Litex—whose design surface must stay small while its engineering surface is huge—was almost impossible to land; it is AI's development that makes such projects tryable.
+
+At the same time, new industries are raising demand for formalization. Programming languages rarely become popular in a vacuum. They usually arise where new technical capability meets new social demand: Fortran with mainframe computing power and high-performance needs; C and Unix shaping each other for systems programming; JavaScript and Java with the internet era's front- and back-end development; Python and CUDA with rapid AI-framework iteration and high-performance compute underneath. Lean's latest wave likewise coincides closely with AI for Math's demand for reliable formalization.
+
+What Litex seeks is precisely the next scene that the AI era is incubating and that is still hard to name accurately. AI will keep generating large volumes of candidate reasoning, and new knowledge work will therefore need cheaper checking, explanation, organization, and reuse. Whether the formal-language field can catch this wave is a question the industry needs to face together. I believe such a scene should appear soon.
+
+</details>
 
 <a id="reasoning-direction"></a>
 

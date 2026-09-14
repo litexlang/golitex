@@ -181,7 +181,7 @@ impl Runtime {
                 )
                 .into();
             let proof =
-                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&superset)?;
+                self.verify_atomic_except_equality_with_known_atomic_facts(&superset)?;
             if proof.is_success() {
                 subset_result = Some(self.complete_atomic_fact_proof_result(
                     &superset,

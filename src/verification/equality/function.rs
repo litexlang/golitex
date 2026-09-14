@@ -210,7 +210,7 @@ impl Runtime {
         let AtomicFact::InFact(in_fact) = membership else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
-        let known = self.verify_non_equational_atomic_fact_with_known_atomic_facts(membership)?;
+        let known = self.verify_atomic_except_equality_with_known_atomic_facts(membership)?;
         if known.is_success() {
             return Ok(known);
         }

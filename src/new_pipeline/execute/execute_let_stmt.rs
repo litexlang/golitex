@@ -1,13 +1,14 @@
 use super::exec_stmt_result::ExecLetObjStmtResult;
+use crate::new_pipeline::ast::obj::Identifier;
 use crate::new_pipeline::ast::stmt::LetObjStmt;
-use crate::new_pipeline::execution_environment::SymbolDefinitionMemory;
+use crate::new_pipeline::execution_environment::IdentifierDefinitionMemory;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
 impl Runtime {
     // `let name = value`
     // 1. WD the RHS value object
-    // 2. record symbol in definitions.symbols; equality id goes in the result
+    // 2. record identifier in definitions.identifiers; equality id goes in the result
     pub(super) fn exec_let_obj(
         &mut self,
         let_stmt: &LetObjStmt,
@@ -25,18 +26,23 @@ impl Runtime {
         if self
             .top_exec_env()
             .definitions
-            .symbols
-            .contains_key(&let_stmt.name)
+            .identifiers
+            .contains_key(&let_stmt.identifier_id)
         {
             return Err(RuntimeError::Invariant(format!(
-                "symbol `{}` is already defined in this ExecEnv",
+                "identifier `{}` is already defined in this ExecEnv",
                 let_stmt.name
             )));
         }
-        self.top_exec_env_mut()
-            .definitions
-            .symbols
-            .insert(let_stmt.name.clone(), SymbolDefinitionMemory {});
+        self.top_exec_env_mut().definitions.identifiers.insert(
+            let_stmt.identifier_id,
+            IdentifierDefinitionMemory {
+                identifier: Identifier {
+                    name: let_stmt.name.clone(),
+                    identifier_id: let_stmt.identifier_id,
+                },
+            },
+        );
 
         Ok(ExecLetObjStmtResult {
             statement: let_stmt.clone(),

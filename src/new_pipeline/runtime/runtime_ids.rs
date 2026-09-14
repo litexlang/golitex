@@ -8,7 +8,7 @@ pub struct WellDefinednessId(u64);
 
 // Global identity for Identifier / IdentifierWithMod atoms.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct AtomId(u64);
+pub struct IdentifierId(u64);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct PropAlgebraicPropertyId(u64);
@@ -33,7 +33,7 @@ impl WellDefinednessId {
     }
 }
 
-impl AtomId {
+impl IdentifierId {
     pub fn new(value: u64) -> Self {
         Self(value)
     }
@@ -65,7 +65,7 @@ impl fmt::Display for WellDefinednessId {
     }
 }
 
-impl fmt::Display for AtomId {
+impl fmt::Display for IdentifierId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "a{}", self.0)
     }

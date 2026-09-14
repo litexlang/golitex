@@ -4,11 +4,10 @@ use crate::new_pipeline::execute::execute_fact_stmt::cache_search_proof::CacheSe
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::{
     EqualitySearchProofByBuiltinRule, EqualitySearchProofByBuiltinStrategy,
 };
-use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_non_equational_atomic_fact::{
-    NonEquationalAtomicFactSearchProofByBuiltinAlgebraicRewrite,
-    NonEquationalAtomicFactSearchProofByBuiltinRule,
-    NonEquationalAtomicFactSearchProofByBuiltinStrategy,
-    NonEquationalAtomicFactSearchProofByKnownAlgebraicRewrite,
+use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::{
+    AtomicExceptEqualityFactSearchProofByBuiltinAlgebraicRewrite,
+    AtomicExceptEqualityFactSearchProofByBuiltinRule, AtomicExceptEqualityFactSearchProofByBuiltinStrategy,
+    AtomicExceptEqualityFactSearchProofByKnownAlgebraicRewrite,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_well_defined::AtomicFactWellDefinedProof;
@@ -16,7 +15,7 @@ use crate::new_pipeline::runtime::runtime_ids::FactId;
 
 pub enum VerifyAtomicFactResult {
     Equality(VerifyEqualityResult),
-    NonEquational(VerifyNonEquationalFactResult),
+    AtomicExceptEquality(VerifyAtomicExceptEqualityFactResult),
 }
 
 pub struct VerifyEqualityResult {
@@ -47,35 +46,35 @@ pub struct EqualFactSearchedProofByKnownForallFact {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
-pub struct VerifyNonEquationalFactResult {
+pub struct VerifyAtomicExceptEqualityFactResult {
     pub fact: AtomicFact,
     pub well_defined_proof: AtomicFactWellDefinedProof,
-    pub searched_proof: NonEquationalFactSearchedProof,
+    pub searched_proof: AtomicExceptEqualityFactSearchedProof,
 }
 
-// Mirrors search_non_equational_fact_proof stage order.
-pub enum NonEquationalFactSearchedProof {
+// Mirrors search_atomic_except_equality_fact_proof stage order.
+pub enum AtomicExceptEqualityFactSearchedProof {
     ByCache(CacheSearchProof),
-    ByBuiltinRule(NonEquationalAtomicFactSearchProofByBuiltinRule),
-    ByKnownAtomicFact(NonEquationalFactSearchedProofByKnownAtomicFact),
-    ByDefinition(NonEquationalFactSearchedProofByDefinition),
-    ByBuiltinStrategy(NonEquationalAtomicFactSearchProofByBuiltinStrategy),
-    ByKnownForallFact(NonEquationalFactSearchedProofByKnownForallFact),
-    ByBuiltinAlgebraicRewrite(NonEquationalAtomicFactSearchProofByBuiltinAlgebraicRewrite),
-    ByKnownAlgebraicRewrite(NonEquationalAtomicFactSearchProofByKnownAlgebraicRewrite),
+    ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule),
+    ByKnownAtomicFact(AtomicExceptEqualityFactSearchProofByKnownAtomicFact),
+    ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy),
+    ByDefinition(AtomicExceptEqualityFactSearchProofByDefinition),
+    ByKnownForallFact(AtomicExceptEqualityFactSearchProofByKnownForallFact),
+    ByBuiltinAlgebraicRewrite(AtomicExceptEqualityFactSearchProofByBuiltinAlgebraicRewrite),
+    ByKnownAlgebraicRewrite(AtomicExceptEqualityFactSearchProofByKnownAlgebraicRewrite),
 }
 
-pub struct NonEquationalFactSearchedProofByKnownAtomicFact {
+pub struct AtomicExceptEqualityFactSearchProofByKnownAtomicFact {
     pub cite_fact_id: FactId,
     pub why_parameters_of_known_fact_are_equal_to_givens: Vec<VerifyFactResult>,
 }
 
-pub struct NonEquationalFactSearchedProofByDefinition {
+pub struct AtomicExceptEqualityFactSearchProofByDefinition {
     pub requirement_facts: Vec<Fact>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
-pub struct NonEquationalFactSearchedProofByKnownForallFact {
+pub struct AtomicExceptEqualityFactSearchProofByKnownForallFact {
     pub cite_fact_id: FactId,
     pub forall_parameters_match_what_args: Vec<Obj>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,

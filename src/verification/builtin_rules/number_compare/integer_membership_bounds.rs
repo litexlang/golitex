@@ -172,7 +172,7 @@ impl Runtime {
             return Ok(None);
         };
         let nonzero_result =
-            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&nonzero)?;
+            self.verify_atomic_except_equality_with_known_atomic_facts(&nonzero)?;
         if !nonzero_result.is_success() {
             return Ok(None);
         }

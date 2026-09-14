@@ -1,17 +1,34 @@
 use crate::new_pipeline::ast::fact::AtomicFact;
+use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::{AtomObj, Obj};
 use crate::new_pipeline::runtime::FactId;
+
+const EQUAL: &str = "=";
+const LESS: &str = "<";
+const GREATER: &str = ">";
+const LESS_EQUAL: &str = "<=";
+const GREATER_EQUAL: &str = ">=";
+const IN: &str = "in";
+const IS_SET: &str = "is_set";
+const IS_NONEMPTY_SET: &str = "is_nonempty_set";
+const IS_FINITE_SET: &str = "is_finite_set";
+const IS_CART: &str = "is_cart";
+const IS_TUPLE: &str = "is_tuple";
+const SUBSET: &str = "subset";
+const SUPERSET: &str = "superset";
+const FN_EQ: &str = "fn_eq";
+const FN_EQ_IN: &str = "fn_eq_in";
 
 pub fn ast_obj_eq(a: &Obj, b: &Obj) -> bool {
     match (a, b) {
         (Obj::Number(x), Obj::Number(y)) => x.normalized_value == y.normalized_value,
         (Obj::Atom(AtomObj::Identifier(x)), Obj::Atom(AtomObj::Identifier(y))) => {
-            x.atom_id == y.atom_id
+            x.identifier_id == y.identifier_id
         }
         (
             Obj::Atom(AtomObj::IdentifierWithMod(x)),
             Obj::Atom(AtomObj::IdentifierWithMod(y)),
-        ) => x.atom_id == y.atom_id,
+        ) => x.identifier_id == y.identifier_id,
         (Obj::Add(x), Obj::Add(y)) => {
             ast_obj_eq(x.left.as_ref(), y.left.as_ref())
                 && ast_obj_eq(x.right.as_ref(), y.right.as_ref())
@@ -131,5 +148,96 @@ pub fn ast_obj_key(obj: &Obj) -> String {
             ast_obj_key(div.right.as_ref())
         ),
         _ => format!("unsupported:{obj:?}"),
+    }
+}
+
+pub fn atomic_name_key(name: &AtomicName) -> String {
+    match name {
+        AtomicName::WithoutMod(name) => name.clone(),
+        AtomicName::WithMod(module, name) => format!("{module}::{name}"),
+    }
+}
+
+// Predicate-family key shared by a fact and its negation (e.g. both use `in`).
+pub fn atomic_fact_key(fact: &AtomicFact) -> String {
+    match fact {
+        AtomicFact::NormalAtomicFact(f) => atomic_name_key(&f.predicate),
+        AtomicFact::NotNormalAtomicFact(f) => atomic_name_key(&f.predicate),
+        AtomicFact::EqualFact(_) | AtomicFact::NotEqualFact(_) => EQUAL.to_string(),
+        AtomicFact::LessFact(_) | AtomicFact::NotLessFact(_) => LESS.to_string(),
+        AtomicFact::GreaterFact(_) | AtomicFact::NotGreaterFact(_) => GREATER.to_string(),
+        AtomicFact::LessEqualFact(_) | AtomicFact::NotLessEqualFact(_) => LESS_EQUAL.to_string(),
+        AtomicFact::GreaterEqualFact(_) | AtomicFact::NotGreaterEqualFact(_) => {
+            GREATER_EQUAL.to_string()
+        }
+        AtomicFact::IsSetFact(_) | AtomicFact::NotIsSetFact(_) => IS_SET.to_string(),
+        AtomicFact::IsNonemptySetFact(_) | AtomicFact::NotIsNonemptySetFact(_) => {
+            IS_NONEMPTY_SET.to_string()
+        }
+        AtomicFact::IsFiniteSetFact(_) | AtomicFact::NotIsFiniteSetFact(_) => {
+            IS_FINITE_SET.to_string()
+        }
+        AtomicFact::InFact(_) | AtomicFact::NotInFact(_) => IN.to_string(),
+        AtomicFact::IsCartFact(_) | AtomicFact::NotIsCartFact(_) => IS_CART.to_string(),
+        AtomicFact::IsTupleFact(_) | AtomicFact::NotIsTupleFact(_) => IS_TUPLE.to_string(),
+        AtomicFact::SubsetFact(_) | AtomicFact::NotSubsetFact(_) => SUBSET.to_string(),
+        AtomicFact::SupersetFact(_) | AtomicFact::NotSupersetFact(_) => SUPERSET.to_string(),
+        AtomicFact::FnEqualInFact(_) => FN_EQ_IN.to_string(),
+        AtomicFact::FnEqualFact(_) => FN_EQ.to_string(),
+    }
+}
+
+pub fn atomic_fact_has_positive_polarity(fact: &AtomicFact) -> bool {
+    !matches!(
+        fact,
+        AtomicFact::NotNormalAtomicFact(_)
+            | AtomicFact::NotEqualFact(_)
+            | AtomicFact::NotLessFact(_)
+            | AtomicFact::NotGreaterFact(_)
+            | AtomicFact::NotLessEqualFact(_)
+            | AtomicFact::NotGreaterEqualFact(_)
+            | AtomicFact::NotIsSetFact(_)
+            | AtomicFact::NotIsNonemptySetFact(_)
+            | AtomicFact::NotIsFiniteSetFact(_)
+            | AtomicFact::NotInFact(_)
+            | AtomicFact::NotIsCartFact(_)
+            | AtomicFact::NotIsTupleFact(_)
+            | AtomicFact::NotSubsetFact(_)
+            | AtomicFact::NotSupersetFact(_)
+    )
+}
+
+pub fn atomic_fact_args_ref(fact: &AtomicFact) -> Vec<&Obj> {
+    match fact {
+        AtomicFact::NormalAtomicFact(f) => f.body.iter().collect(),
+        AtomicFact::NotNormalAtomicFact(f) => f.body.iter().collect(),
+        AtomicFact::EqualFact(f) => vec![&f.left, &f.right],
+        AtomicFact::NotEqualFact(f) => vec![&f.left, &f.right],
+        AtomicFact::LessFact(f) => vec![&f.left, &f.right],
+        AtomicFact::NotLessFact(f) => vec![&f.left, &f.right],
+        AtomicFact::GreaterFact(f) => vec![&f.left, &f.right],
+        AtomicFact::NotGreaterFact(f) => vec![&f.left, &f.right],
+        AtomicFact::LessEqualFact(f) => vec![&f.left, &f.right],
+        AtomicFact::NotLessEqualFact(f) => vec![&f.left, &f.right],
+        AtomicFact::GreaterEqualFact(f) => vec![&f.left, &f.right],
+        AtomicFact::NotGreaterEqualFact(f) => vec![&f.left, &f.right],
+        AtomicFact::IsSetFact(f) => vec![&f.set],
+        AtomicFact::NotIsSetFact(f) => vec![&f.set],
+        AtomicFact::IsNonemptySetFact(f) => vec![&f.set],
+        AtomicFact::NotIsNonemptySetFact(f) => vec![&f.set],
+        AtomicFact::IsFiniteSetFact(f) => vec![&f.set],
+        AtomicFact::NotIsFiniteSetFact(f) => vec![&f.set],
+        AtomicFact::InFact(f) => vec![&f.element, &f.set],
+        AtomicFact::NotInFact(f) => vec![&f.element, &f.set],
+        AtomicFact::IsCartFact(f) => vec![&f.set],
+        AtomicFact::NotIsCartFact(f) => vec![&f.set],
+        AtomicFact::IsTupleFact(f) => vec![&f.set],
+        AtomicFact::NotIsTupleFact(f) => vec![&f.set],
+        AtomicFact::SubsetFact(f) => vec![&f.left, &f.right],
+        AtomicFact::NotSubsetFact(f) => vec![&f.left, &f.right],
+        AtomicFact::SupersetFact(f) => vec![&f.left, &f.right],
+        AtomicFact::NotSupersetFact(f) => vec![&f.left, &f.right],
+        AtomicFact::FnEqualInFact(f) => vec![&f.left, &f.right, &f.set],
+        AtomicFact::FnEqualFact(f) => vec![&f.left, &f.right],
     }
 }

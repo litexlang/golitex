@@ -34,8 +34,12 @@ merge loaded module main environments into ambient facts.
 The stage also derives a read-only verification state, so trying proof routes
 does not write new well-definedness records into the current scope.
 
-The equality and non-equational pipelines keep their search slots in a fixed
-order (cache, builtin rule, known atomic fact, builtin strategy, known forall,
-and algebraic rewrites). The definition slot is not part of implicit atomic
-search: cross-module definitions and theorems must be requested explicitly by
-`by def` or `by thm`.
+The equality and atomic-except-equality pipelines keep their search slots in a fixed
+order. Atomic-except-equality search is:
+
+cache → builtin rule → known atomic → builtin strategy → by definition →
+known forall → builtin algebraic rewrite → known algebraic rewrite.
+
+Here `by definition` means ambient prop / builtin definition expansion in the
+current execution-environment stack. Cross-module definitions and theorems are
+still requested explicitly by `by def` or `by thm`, not by this search slot.

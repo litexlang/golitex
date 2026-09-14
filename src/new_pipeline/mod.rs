@@ -12,4 +12,5 @@ pub mod module_manager;
 pub mod parse;
 pub mod run;
 pub mod runtime;
+pub mod store_and_infer;
 pub mod tokenize;

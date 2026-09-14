@@ -556,40 +556,40 @@ impl EnvironmentSummary {
 
         let atomic_0_count = environment
             .facts
-            .known_non_equational_facts
+            .known_atomic_except_equality_facts
             .by_other_arg_count
             .values()
             .map(Vec::len)
             .sum::<usize>();
         summary.add_field_counts(
             "known_atomic_facts_with_0_or_more_than_2_args",
-            environment.facts.known_non_equational_facts.by_other_arg_count.len(),
+            environment.facts.known_atomic_except_equality_facts.by_other_arg_count.len(),
             atomic_0_count,
         );
 
         let atomic_1_count = environment
             .facts
-            .known_non_equational_facts
+            .known_atomic_except_equality_facts
             .by_one_arg
             .values()
             .map(|facts| facts.len())
             .sum::<usize>();
         summary.add_field_counts(
             "known_atomic_facts_with_1_arg",
-            environment.facts.known_non_equational_facts.by_one_arg.len(),
+            environment.facts.known_atomic_except_equality_facts.by_one_arg.len(),
             atomic_1_count,
         );
 
         let atomic_2_count = environment
             .facts
-            .known_non_equational_facts
+            .known_atomic_except_equality_facts
             .by_two_args
             .values()
             .map(|facts| facts.len())
             .sum::<usize>();
         summary.add_field_counts(
             "known_atomic_facts_with_2_args",
-            environment.facts.known_non_equational_facts.by_two_args.len(),
+            environment.facts.known_atomic_except_equality_facts.by_two_args.len(),
             atomic_2_count,
         );
 

@@ -27,14 +27,14 @@ impl Runtime {
                 self.verify_equal_fact_with_builtin_strategy_routes(equal_fact, verify_state)
             }
             _ => {
-                let direct = self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(
+                let direct = self.verify_atomic_except_equality_with_bounded_builtin_routes(
                     atomic_fact,
                     verify_state,
                 )?;
                 if direct.is_success() {
                     return Ok(direct);
                 }
-                self.verify_non_equational_atomic_fact_with_builtin_strategy(
+                self.verify_atomic_except_equality_with_builtin_strategy(
                     atomic_fact,
                     verify_state,
                 )
@@ -52,7 +52,7 @@ impl Runtime {
                 self.verify_equal_fact_with_builtin_strategy_routes(equal_fact, verify_state)
             }
             _ => self
-                .verify_non_equational_atomic_fact_with_builtin_strategy(atomic_fact, verify_state),
+                .verify_atomic_except_equality_with_builtin_strategy(atomic_fact, verify_state),
         }
     }
 
@@ -64,7 +64,7 @@ impl Runtime {
         self.verify_equality_with_builtin_strategy(equal_fact, verify_state)
     }
 
-    fn verify_non_equational_atomic_fact_with_builtin_strategy(
+    fn verify_atomic_except_equality_with_builtin_strategy(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,

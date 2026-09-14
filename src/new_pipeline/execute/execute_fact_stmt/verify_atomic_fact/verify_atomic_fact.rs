@@ -5,7 +5,7 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use super::VerifyAtomicFactResult;
 
 impl Runtime {
-    // EqualFact → Equality; other atomics → NonEquational.
+    // EqualFact → Equality; other atomics → AtomicExceptEquality.
     pub fn verify_atomic_fact(
         &mut self,
         fact: &AtomicFact,
@@ -15,8 +15,8 @@ impl Runtime {
             AtomicFact::EqualFact(equal_fact) => Ok(VerifyAtomicFactResult::Equality(
                 self.verify_equal_fact(equal_fact, verify_state)?,
             )),
-            _ => Ok(VerifyAtomicFactResult::NonEquational(
-                self.verify_non_equational_fact(fact, verify_state)?,
+            _ => Ok(VerifyAtomicFactResult::AtomicExceptEquality(
+                self.verify_atomic_except_equality(fact, verify_state)?,
             )),
         }
     }

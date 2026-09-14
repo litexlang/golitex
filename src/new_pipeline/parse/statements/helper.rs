@@ -66,7 +66,7 @@ impl Runtime {
         Ok(facts)
     }
 
-    // Re-open forall binders so proof statements may use the same AtomIds.
+    // Re-open forall binders so proof statements may use the same IdentifierIds.
     pub(in super::super) fn with_forall_params_occupied<T>(
         &mut self,
         params: &TypedParameterList,
@@ -80,7 +80,7 @@ impl Runtime {
                     self.occupy_plain_atom_as_parse(
                         tb,
                         identifier.name.clone(),
-                        identifier.atom_id,
+                        identifier.identifier_id,
                     )?;
                 }
             }

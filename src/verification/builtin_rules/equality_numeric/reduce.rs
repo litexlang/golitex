@@ -1481,7 +1481,7 @@ impl Runtime {
             {
                 result
             } else {
-                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&fn_eq_in)?
+                self.verify_atomic_except_equality_with_known_atomic_facts(&fn_eq_in)?
             };
             let known = self.complete_atomic_fact_proof_result(
                 &fn_eq_in,

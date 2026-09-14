@@ -191,7 +191,7 @@ impl Runtime {
 
         let mut known_orders = Vec::new();
         for environment in self.iter_environments_from_top() {
-            for known_facts_map in environment.facts.known_non_equational_facts.by_two_args.values() {
+            for known_facts_map in environment.facts.known_atomic_except_equality_facts.by_two_args.values() {
                 for known_fact in known_facts_map.values() {
                     if direct_positive_order_shape(self, known_fact).is_some() {
                         known_orders.push(known_fact.clone());
@@ -414,7 +414,7 @@ impl Runtime {
         member_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<VerifyFactResult, RuntimeError> {
-        let known = self.verify_non_equational_atomic_fact_with_known_atomic_facts(member_fact)?;
+        let known = self.verify_atomic_except_equality_with_known_atomic_facts(member_fact)?;
         if known.is_success() {
             return self.complete_atomic_fact_proof_result(member_fact, known, verify_state);
         }

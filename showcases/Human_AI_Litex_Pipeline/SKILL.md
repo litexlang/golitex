@@ -43,13 +43,13 @@ If a function must complete several ordered stages, define a dedicated result
 struct whose fields appear in that same order. Each field contains the typed
 output of one stage.
 
-For example, a non-equational atomic-fact verifier that performs
+For example, a atomic-except-equality atomic-fact verifier that performs
 well-definedness first and proof search second has this shape:
 
 ```rust
-pub struct VerifyNonEquationalFactResult {
+pub struct VerifyAtomicExceptEqualityFactResult {
     pub verify_well_defined_result: VerifyAtomicFactWellDefinedResult,
-    pub searched_proof: NonEquationalFactSearchedProof,
+    pub searched_proof: AtomicExceptEqualityFactSearchedProof,
 }
 ```
 
@@ -59,8 +59,8 @@ The implementation must preserve the same dependency order:
 let verify_well_defined_result =
     self.verify_atomic_fact_well_definedness(fact, state.clone())?;
 let searched_proof =
-    self.search_non_equational_atomic_fact_proof(fact, state)?;
-Ok(VerifyNonEquationalFactResult {
+    self.search_atomic_except_equality_proof(fact, state)?;
+Ok(VerifyAtomicExceptEqualityFactResult {
     verify_well_defined_result,
     searched_proof,
 })
@@ -112,7 +112,7 @@ The same rule applies to verification dispatchers:
 ```rust
 pub enum VerifyAtomicFactResult {
     Equality(VerifyEqualityFactResult),
-    NonEquational(VerifyNonEquationalFactResult),
+    AtomicExceptEquality(VerifyAtomicExceptEqualityFactResult),
 }
 
 pub enum VerifyExistFactResult {

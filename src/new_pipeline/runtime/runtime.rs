@@ -1,6 +1,6 @@
 use super::error::{RuntimeError, RuntimeResult};
 use super::real_or_virtual_path::RealOrVirtualPath;
-use super::runtime_ids::{AtomId, FactId, PropAlgebraicPropertyId, WellDefinednessId};
+use super::runtime_ids::{IdentifierId, FactId, PropAlgebraicPropertyId, WellDefinednessId};
 use crate::new_pipeline::execution_environment::exec_env::ExecEnv;
 use crate::new_pipeline::module_manager::{
     ExportFileAndItsExecEnv, ModuleHierarchy, ModuleManager,
@@ -16,13 +16,13 @@ pub enum OccupiedName {
 
 // One parse layer's occupied names. Inner scopes must not reuse a visible outer name.
 pub struct ParseScope {
-    pub occupied: HashMap<OccupiedName, AtomId>,
+    pub occupied: HashMap<OccupiedName, IdentifierId>,
 }
 
 pub struct Ids {
     next_fact_id: FactId,
     next_well_definedness_id: WellDefinednessId,
-    next_atom_id: AtomId,
+    next_identifier_id: IdentifierId,
     next_prop_algebraic_property_id: PropAlgebraicPropertyId,
 }
 
@@ -103,33 +103,33 @@ impl Runtime {
         false
     }
 
-    pub fn lookup_atom_id(&self, key: &OccupiedName) -> Option<AtomId> {
+    pub fn lookup_identifier_id(&self, key: &OccupiedName) -> Option<IdentifierId> {
         for scope in self.parse_scope_stack.iter().rev() {
-            if let Some(atom_id) = scope.occupied.get(key) {
-                return Some(*atom_id);
+            if let Some(identifier_id) = scope.occupied.get(key) {
+                return Some(*identifier_id);
             }
         }
         None
     }
 
-    // Allocate a new global AtomId and occupy `key` in the current scope.
-    pub fn define_atom(&mut self, key: OccupiedName) -> RuntimeResult<AtomId> {
+    // Allocate a new global IdentifierId and occupy `key` in the current scope.
+    pub fn define_atom(&mut self, key: OccupiedName) -> RuntimeResult<IdentifierId> {
         if self.occupied_name_is_visible(&key) {
             return Err(RuntimeError::Invariant(format!(
                 "name `{key}` is already bound in an enclosing parse scope"
             )));
         }
-        let atom_id = self.ids.allocate_atom_id();
+        let identifier_id = self.ids.allocate_identifier_id();
         let scope = self
             .parse_scope_stack
             .last_mut()
             .ok_or_else(|| RuntimeError::Invariant("no parse scope".to_string()))?;
-        scope.occupied.insert(key, atom_id);
-        Ok(atom_id)
+        scope.occupied.insert(key, identifier_id);
+        Ok(identifier_id)
     }
 
-    // Put an already-allocated AtomId into the current scope without allocating.
-    pub fn occupy_atom(&mut self, key: OccupiedName, atom_id: AtomId) -> RuntimeResult<()> {
+    // Put an already-allocated IdentifierId into the current scope without allocating.
+    pub fn occupy_atom(&mut self, key: OccupiedName, identifier_id: IdentifierId) -> RuntimeResult<()> {
         if self.occupied_name_is_visible(&key) {
             return Err(RuntimeError::Invariant(format!(
                 "name `{key}` is already bound in an enclosing parse scope"
@@ -139,20 +139,20 @@ impl Runtime {
             .parse_scope_stack
             .last_mut()
             .ok_or_else(|| RuntimeError::Invariant("no parse scope".to_string()))?;
-        scope.occupied.insert(key, atom_id);
+        scope.occupied.insert(key, identifier_id);
         Ok(())
     }
 
-    pub fn define_plain_atom(&mut self, name: String) -> RuntimeResult<AtomId> {
+    pub fn define_plain_atom(&mut self, name: String) -> RuntimeResult<IdentifierId> {
         self.define_atom(OccupiedName::Plain(name))
     }
 
-    pub fn occupy_plain_atom(&mut self, name: String, atom_id: AtomId) -> RuntimeResult<()> {
-        self.occupy_atom(OccupiedName::Plain(name), atom_id)
+    pub fn occupy_plain_atom(&mut self, name: String, identifier_id: IdentifierId) -> RuntimeResult<()> {
+        self.occupy_atom(OccupiedName::Plain(name), identifier_id)
     }
 
-    pub fn lookup_plain_atom_id(&self, name: &str) -> Option<AtomId> {
-        self.lookup_atom_id(&OccupiedName::Plain(name.to_string()))
+    pub fn lookup_plain_identifier_id(&self, name: &str) -> Option<IdentifierId> {
+        self.lookup_identifier_id(&OccupiedName::Plain(name.to_string()))
     }
 
     pub fn top_exec_env(&self) -> &ExecEnv {
@@ -215,7 +215,7 @@ impl Ids {
         Self {
             next_fact_id: FactId::new(1),
             next_well_definedness_id: WellDefinednessId::new(1),
-            next_atom_id: AtomId::new(1),
+            next_identifier_id: IdentifierId::new(1),
             next_prop_algebraic_property_id: PropAlgebraicPropertyId::new(1),
         }
     }
@@ -233,9 +233,9 @@ impl Ids {
         current
     }
 
-    pub fn allocate_atom_id(&mut self) -> AtomId {
-        let current = self.next_atom_id;
-        self.next_atom_id = AtomId::new(bump(current.value(), "atom"));
+    pub fn allocate_identifier_id(&mut self) -> IdentifierId {
+        let current = self.next_identifier_id;
+        self.next_identifier_id = IdentifierId::new(bump(current.value(), "identifier"));
         current
     }
 
