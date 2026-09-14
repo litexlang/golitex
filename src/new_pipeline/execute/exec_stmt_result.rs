@@ -11,7 +11,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::{
     ExecFactStmtResult, FactWellDefinedProof, ParamTypeWellDefinedProof, VerifyFactResult,
     VerifyObjResult,
 };
-use crate::new_pipeline::execution_environment::exec_env::ExecEnv;
+use crate::new_pipeline::exec_env::exec_env::ExecEnv;
 use crate::new_pipeline::runtime::FactId;
 
 pub enum ExecStmtResult {

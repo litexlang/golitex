@@ -1,26 +1,17 @@
-use super::store_fact_and_infer_result::{
-    InferFromStoredFactResult, StoreFactAndInferResult,
-};
+use super::store_fact_and_infer_result::{InferFromStoredFactResult, StoreFactAndInferResult};
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact};
-use crate::new_pipeline::execute::execute_fact_stmt::VerifyFactResult;
-use crate::new_pipeline::execution_environment::helper::{
+use crate::new_pipeline::exec_env::helper::{
     ast_obj_key, atomic_fact_args_ref, atomic_fact_has_positive_polarity, atomic_fact_id,
     atomic_fact_key,
 };
-use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult, FactId};
+use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeError, RuntimeResult};
 
 impl Runtime {
     // Store the verified fact into the top ExecEnv; infer is still a no-op.
-    pub fn store_fact_then_infer(
+    pub fn store_fact_and_infer(
         &mut self,
         fact: &Fact,
-        verify_result: &VerifyFactResult,
     ) -> RuntimeResult<StoreFactAndInferResult> {
-        if verify_result.is_unknown() {
-            return Err(RuntimeError::Invariant(
-                "store_fact_then_infer: refusing to store an unknown verify result".to_string(),
-            ));
-        }
         let stored_fact_ids = self.store_fact(fact)?;
         let _infer = self.infer_from_stored_facts(&stored_fact_ids)?;
         Ok(StoreFactAndInferResult::from_stored_ids(stored_fact_ids))

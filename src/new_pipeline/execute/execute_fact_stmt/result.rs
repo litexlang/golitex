@@ -1,4 +1,4 @@
-use crate::new_pipeline::store_and_infer::StoreFactAndInferResult;
+use crate::new_pipeline::store_fact_and_infer::StoreFactAndInferResult;
 
 use super::verify_fact_result::VerifyFactResult;
 

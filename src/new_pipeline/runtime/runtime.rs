@@ -1,11 +1,20 @@
 use super::error::{RuntimeError, RuntimeResult};
 use super::real_or_virtual_path::RealOrVirtualPath;
-use super::runtime_ids::{IdentifierId, FactId, PropAlgebraicPropertyId, WellDefinednessId};
-use crate::new_pipeline::execution_environment::exec_env::ExecEnv;
+use super::runtime_ids::{FactId, IdentifierId, PropAlgebraicPropertyId, WellDefinednessId};
+use crate::new_pipeline::exec_env::exec_env::ExecEnv;
 use crate::new_pipeline::module_manager::{
     ExportFileAndItsExecEnv, ModuleHierarchy, ModuleManager,
 };
 use std::collections::HashMap;
+
+pub struct Runtime {
+    pub is_current_file_trusted: bool,
+    pub module_manager: ModuleManager,
+    pub execution_environments_stack: Vec<Box<ExecEnv>>,
+    pub parse_scope_stack: Vec<Box<ParseScope>>,
+    pub current_file: RealOrVirtualPath,
+    pub ids: Ids,
+}
 
 // Name occupied in a parse scope. Plain `x` and `mod::x` are distinct.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -24,15 +33,6 @@ pub struct Ids {
     next_well_definedness_id: WellDefinednessId,
     next_identifier_id: IdentifierId,
     next_prop_algebraic_property_id: PropAlgebraicPropertyId,
-}
-
-pub struct Runtime {
-    pub is_current_file_trusted: bool,
-    pub module_manager: ModuleManager,
-    pub execution_environments_stack: Vec<Box<ExecEnv>>,
-    pub parse_scope_stack: Vec<Box<ParseScope>>,
-    pub current_file: RealOrVirtualPath,
-    pub ids: Ids,
 }
 
 impl Runtime {
@@ -84,8 +84,7 @@ impl Runtime {
     }
 
     pub fn push_parse_scope(&mut self) {
-        self.parse_scope_stack
-            .push(Box::new(ParseScope::new()));
+        self.parse_scope_stack.push(Box::new(ParseScope::new()));
     }
 
     pub fn pop_parse_scope(&mut self) {
@@ -129,7 +128,11 @@ impl Runtime {
     }
 
     // Put an already-allocated IdentifierId into the current scope without allocating.
-    pub fn occupy_atom(&mut self, key: OccupiedName, identifier_id: IdentifierId) -> RuntimeResult<()> {
+    pub fn occupy_atom(
+        &mut self,
+        key: OccupiedName,
+        identifier_id: IdentifierId,
+    ) -> RuntimeResult<()> {
         if self.occupied_name_is_visible(&key) {
             return Err(RuntimeError::Invariant(format!(
                 "name `{key}` is already bound in an enclosing parse scope"
@@ -147,7 +150,11 @@ impl Runtime {
         self.define_atom(OccupiedName::Plain(name))
     }
 
-    pub fn occupy_plain_atom(&mut self, name: String, identifier_id: IdentifierId) -> RuntimeResult<()> {
+    pub fn occupy_plain_atom(
+        &mut self,
+        name: String,
+        identifier_id: IdentifierId,
+    ) -> RuntimeResult<()> {
         self.occupy_atom(OccupiedName::Plain(name), identifier_id)
     }
 

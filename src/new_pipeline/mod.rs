@@ -6,11 +6,12 @@
 //! parse, execute, environment, and module-manager boundaries.
 
 pub mod ast;
+pub mod display_and_internal_representation;
 pub mod execute;
-pub mod execution_environment;
+pub mod exec_env;
 pub mod module_manager;
 pub mod parse;
 pub mod run;
 pub mod runtime;
-pub mod store_and_infer;
+pub mod store_fact_and_infer;
 pub mod tokenize;

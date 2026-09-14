@@ -41,6 +41,7 @@ pub const INDUC: &str = "induc";
 pub const FINITE_SET_INDUC: &str = "finite_set_induc";
 pub const IMPOSSIBLE: &str = "impossible";
 pub const FROM: &str = "from";
+pub const AS: &str = "as";
 
 pub const FORALL: &str = "forall";
 pub const EXIST: &str = "exist";
@@ -96,14 +97,75 @@ pub const FLOOR: &str = "floor";
 pub const CEIL: &str = "ceil";
 pub const EXP: &str = "exp";
 pub const LN: &str = "ln";
+pub const SIGN: &str = "sign";
+pub const FACTORIAL: &str = "factorial";
+pub const ARCSIN: &str = "arcsin";
+pub const COT: &str = "cot";
+pub const RE: &str = "re";
+pub const IMG: &str = "img";
+pub const C_ABS: &str = "C_abs";
+pub const LOG: &str = "log";
+pub const I: &str = "i";
+pub const E: &str = "e";
+pub const PI: &str = "pi";
 pub const UNION: &str = "union";
 pub const INTERSECT: &str = "intersect";
 pub const SET_MINUS: &str = "set_minus";
+pub const BIG_UNION: &str = "big_union";
+pub const BIG_INTERSECT: &str = "big_intersect";
+pub const INDEX_UNION: &str = "index_union";
+pub const INDEX_INTERSECT: &str = "index_intersect";
+pub const POWER_SET: &str = "power_set";
+pub const GENERAL_CART: &str = "general_cart";
 pub const MIN: &str = "min";
 pub const MAX: &str = "max";
 pub const GCD: &str = "gcd";
 pub const LCM: &str = "lcm";
 pub const QUOT: &str = "quot";
+pub const MATRIX_ADD: &str = "'+";
+pub const MATRIX_SUB: &str = "'-";
+pub const MATRIX_MUL: &str = "'*";
+pub const MATRIX_SCALAR_MUL: &str = "*'";
+pub const MATRIX_POW: &str = "'^";
+pub const CART_DIM: &str = "cart_dim";
+pub const TUPLE_DIM: &str = "tuple_dim";
+pub const PROJ: &str = "proj";
+pub const FINITE_SET_SIZE: &str = "finite_set_size";
+pub const FINITE_SET_MAX: &str = "finite_set_max";
+pub const FINITE_SET_MIN: &str = "finite_set_min";
+pub const FN_RANGE: &str = "fn_range";
+pub const REPLACEMENT: &str = "replacement";
+pub const RANGE: &str = "range";
+pub const CLOSED_RANGE: &str = "closed_range";
+pub const SUM: &str = "sum";
+pub const FINITE_SET_SUM: &str = "finite_set_sum";
+pub const PRODUCT: &str = "product";
+pub const FINITE_SET_PRODUCT: &str = "finite_set_product";
+pub const REDUCE: &str = "reduce";
+pub const FINITE_SET_REDUCE: &str = "finite_set_reduce";
+pub const INTERVAL_LITERAL_PREFIX: &str = "'";
+pub const TEMPLATE_INSTANCE_PREFIX: &str = "\\";
+pub const DOT_AKA_FIELD_ACCESS_SIGN: &str = ".";
+pub const IS_SET: &str = "is_set";
+pub const IS_NONEMPTY_SET: &str = "is_nonempty_set";
+pub const IS_FINITE_SET: &str = "is_finite_set";
+pub const IS_CART: &str = "is_cart";
+pub const IS_TUPLE: &str = "is_tuple";
+pub const SUBSET: &str = "subset";
+pub const SUPERSET: &str = "superset";
+pub const PROPER_SUBSET: &str = "proper_subset";
+pub const PROPER_SUPERSET: &str = "proper_superset";
+pub const FN_EQ_IN: &str = "fn_eq_in";
+pub const FN_EQ: &str = "fn_eq";
+pub const ENUMERATE: &str = "enumerate";
+pub const EXTENSION: &str = "extension";
+pub const TRANSITIVE_PROP: &str = "transitive_prop";
+pub const SYMMETRIC_PROP: &str = "symmetric_prop";
+pub const REFLEXIVE_PROP: &str = "reflexive_prop";
+pub const ANTISYMMETRIC_PROP: &str = "antisymmetric_prop";
+pub const ZORN_LEMMA: &str = "zorn_lemma";
+pub const AXIOM_OF_CHOICE: &str = "axiom_of_choice";
+pub const REGULARITY_AXIOM: &str = "regularity_axiom";
 
 pub const N: &str = "N";
 pub const Z: &str = "Z";
@@ -127,4 +189,8 @@ pub fn is_comparison_op(tok: &str) -> bool {
         tok,
         EQUAL | NOT_EQUAL | LESS | GREATER | LESS_EQUAL | GREATER_EQUAL
     )
+}
+
+pub fn is_comparison_str(atom_name: &str) -> bool {
+    is_comparison_op(atom_name)
 }
