@@ -25,7 +25,7 @@ pub(in crate::verification) mod number_compare_source;
 use atomic::numeric_membership as verify_number_in_standard_set;
 use equality::patterns as verify_equality_by_builtin_rules;
 
-pub use atomic::non_equational::AlternateFactSearch;
+pub use atomic::atomic_except_equality::AlternateFactSearch;
 pub use atomic::numeric_membership::{
     number_is_in_c_star, number_is_in_n, number_is_in_n_pos, number_is_in_q_neg,
     number_is_in_q_pos, number_is_in_q_star, number_is_in_r_neg, number_is_in_r_pos,

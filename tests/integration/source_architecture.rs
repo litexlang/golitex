@@ -202,12 +202,12 @@ fn root_module_and_target_metadata_use_structured_state() {
 #[test]
 fn atomic_and_equality_route_controls_use_semantic_names() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let atomic = fs::read_to_string(root.join("src/verification/atomic/non_equational.rs"))
-        .expect("non-equational verifier should be readable");
+    let atomic = fs::read_to_string(root.join("src/verification/atomic/atomic_except_equality.rs"))
+        .expect("atomic-except-equality verifier should be readable");
     let equality = fs::read_to_string(root.join("src/verification/equality/core.rs"))
         .expect("equality verifier should be readable");
     let old_equal_route = ["verify_equal_fact_with_", "direct_routes"].concat();
-    let old_atomic_route = ["verify_non_equational_atomic_fact_with_", "direct_routes"].concat();
+    let old_atomic_route = ["verify_atomic_except_equality_with_", "direct_routes"].concat();
 
     assert!(atomic.contains("enum AlternateFactSearch"));
     assert!(!atomic.contains("post_process: bool"));

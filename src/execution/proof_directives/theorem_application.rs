@@ -910,7 +910,7 @@ impl Runtime {
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let automatic_result = self
-                        .verify_non_equational_atomic_fact_with_bounded_builtin_routes(
+                        .verify_atomic_except_equality_with_bounded_builtin_routes(
                             &conclusion,
                             &verify_state,
                         )?;
@@ -1141,7 +1141,7 @@ impl Runtime {
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let automatic = self
-                        .verify_non_equational_atomic_fact_with_bounded_builtin_routes(
+                        .verify_atomic_except_equality_with_bounded_builtin_routes(
                             &conclusion,
                             &verify_state,
                         )?;

@@ -595,7 +595,7 @@ impl Runtime {
                         stmt.line_file.clone(),
                     )
                     .into();
-                let ret_check = rt.verify_non_equational_atomic_fact_with_bounded_builtin_routes(
+                let ret_check = rt.verify_atomic_except_equality_with_bounded_builtin_routes(
                     &ret_nonempty_fact,
                     &verify_state_for_proof_check,
                 )?;

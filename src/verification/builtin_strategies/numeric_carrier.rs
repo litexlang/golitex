@@ -513,7 +513,7 @@ impl Runtime {
             .new_subset_fact(set.clone(), target_obj.clone(), lf.clone())
             .into();
         let direct_proof = self
-            .verify_non_equational_atomic_fact_with_bounded_builtin_routes(&subset, verify_state)?;
+            .verify_atomic_except_equality_with_bounded_builtin_routes(&subset, verify_state)?;
         let direct = self.complete_atomic_fact_proof_result(&subset, direct_proof, verify_state)?;
         if direct.is_success() {
             return Ok(Some(vec![direct]));
@@ -527,7 +527,7 @@ impl Runtime {
                         .new_in_fact(element.as_ref().clone(), target_obj.clone(), lf.clone())
                         .into();
                     let direct_proof = self
-                        .verify_non_equational_atomic_fact_with_bounded_builtin_routes(
+                        .verify_atomic_except_equality_with_bounded_builtin_routes(
                             &child,
                             verify_state,
                         )?;

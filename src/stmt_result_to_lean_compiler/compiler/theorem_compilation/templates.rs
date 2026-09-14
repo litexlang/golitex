@@ -137,7 +137,7 @@ impl StmtResultToLeanCompiler {
             if !matches!(
                 type_check_proof.evidence.typed(),
                 Some(BuiltinRuleEvidence::Uncatalogued(
-                    UncataloguedBuiltinRule::VerifyNonEquationalAtomicFactWithBuiltinRulesInner
+                    UncataloguedBuiltinRule::VerifyAtomicExceptEqualityFactWithBuiltinRulesInner
                 ))
             ) || !type_check_proof.subgoals.is_empty()
             {

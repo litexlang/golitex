@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn verify_non_equational_atomic_fact_with_builtin_rules_inner(
+    pub fn verify_atomic_except_equality_with_builtin_rules_inner(
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
@@ -53,7 +53,7 @@ impl Runtime {
                 (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     is_set_fact.clone().into(),
                     "Every object is a set.".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyNonEquationalAtomicFactWithBuiltinRulesInner),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyAtomicExceptEqualityFactWithBuiltinRulesInner),
                     Vec::new(),
                 ))
                 .into(),

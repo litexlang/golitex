@@ -1,6 +1,6 @@
 //! Framework AST data shapes for new_pipeline.
 //! Field taxonomy follows the legacy language; methods are added later.
-//! Identity: String names, FactId, LineFile; Identifier atoms carry AtomId.
+//! Identity: String names, FactId, LineFile; Identifier atoms carry IdentifierId.
 
 use super::fact::{
     AndChainAtomicFact, AtomicFact, ExistFact, ExistOrAndChainAtomicFact, Fact, ForallFact,
@@ -235,7 +235,7 @@ pub struct HaveByPreimageStmt {    pub preimage_names: Vec<String>,
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct LetObjStmt {
     pub name: String,
-    pub atom_id: crate::new_pipeline::runtime::AtomId,
+    pub identifier_id: crate::new_pipeline::runtime::IdentifierId,
     pub value: Obj,
     pub line_file: LineFile,
 }

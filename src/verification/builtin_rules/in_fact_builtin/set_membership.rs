@@ -298,7 +298,7 @@ impl Runtime {
             .flat_map(|environment| {
                 environment
                     .facts
-                    .known_non_equational_facts
+                    .known_atomic_except_equality_facts
                     .by_two_args
                     .values()
                     .flat_map(|facts| facts.values())
@@ -1175,7 +1175,7 @@ impl Runtime {
         target_keys: &[String],
         candidates: &mut Vec<Obj>,
     ) {
-        let Some(known_relation_facts) = environment.facts.known_non_equational_facts.by_two_args.get(lookup_key)
+        let Some(known_relation_facts) = environment.facts.known_atomic_except_equality_facts.by_two_args.get(lookup_key)
         else {
             return;
         };
@@ -1237,7 +1237,7 @@ impl Runtime {
         candidates: &mut Vec<Obj>,
     ) {
         let lookup_key = (IN.to_string(), true);
-        let Some(known_membership_facts) = environment.facts.known_non_equational_facts.by_two_args.get(&lookup_key)
+        let Some(known_membership_facts) = environment.facts.known_atomic_except_equality_facts.by_two_args.get(&lookup_key)
         else {
             return;
         };

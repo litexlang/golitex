@@ -13,10 +13,10 @@ use super::not_is_nonempty_set::NotIsNonemptySetFactSearchProofByBuiltinRule;
 use super::subset::SubsetFactSearchProofByBuiltinRule;
 use super::superset::SupersetFactSearchProofByBuiltinRule;
 
-/// Builtin-rule search proof for a non-equational atomic fact.
-/// Mirrors non-equational `AtomicFact` constructors; each variant owns that
+/// Builtin-rule search proof for a atomic-except-equality atomic fact.
+/// Mirrors atomic-except-equality `AtomicFact` constructors; each variant owns that
 /// fact family's builtin-rule evidence.
-pub enum NonEquationalAtomicFactSearchProofByBuiltinRule {
+pub enum AtomicExceptEqualityFactSearchProofByBuiltinRule {
     NormalAtomicFact(NormalAtomicFactSearchProofByBuiltinRule),
     LessFact(LessFactSearchProofByBuiltinRule),
     GreaterFact(GreaterFactSearchProofByBuiltinRule),

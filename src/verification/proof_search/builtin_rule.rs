@@ -279,11 +279,11 @@ impl Runtime {
             }
             _ => {
                 let zero_premise_result =
-                    self.verify_non_equational_atomic_fact_with_zero_premise_verification(child)?;
+                    self.verify_atomic_except_equality_with_zero_premise_verification(child)?;
                 if zero_premise_result.is_success() || !builtin_state.can_apply_rule() {
                     return Ok(zero_premise_result);
                 }
-                self.verify_non_equational_atomic_fact_with_one_premise_producing_builtin_rule(
+                self.verify_atomic_except_equality_with_one_premise_producing_builtin_rule(
                     child,
                     builtin_state,
                 )

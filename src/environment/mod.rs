@@ -15,7 +15,7 @@ pub use facts::equality_linear_derive;
 pub use facts::{
     forall_argument_shape, CachedKnownFact, EnvironmentStoredFactStore, EqualityClassId,
     EqualityHistoryEvent, ExistFactMemory, ForallArgumentShape, KnownEquality,
-    KnownEqualityProofStep, KnownFactMemory, KnownForallFactMemory, NonEquationalAtomicFactMemory,
+    KnownEqualityProofStep, KnownFactMemory, KnownForallFactMemory, AtomicExceptEqualityFactMemory,
     OrFactMemory, SpecialSetRelationMemory, StoredFactRecord, StoredForallConclusionReference,
 };
 pub use object::{KnownFnInfo, KnownObjValue, ObjectPropertyMemory, SpecialObjectPropertyMemory};

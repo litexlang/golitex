@@ -1,4 +1,4 @@
-//! Tests for non-equational atomic verification.
+//! Tests for atomic-except-equality atomic verification.
 
 use crate::fact::{AtomicFact, Fact, InFact};
 use crate::inference::SuccessInferResult;
@@ -25,7 +25,7 @@ fn direct_numeric_membership_retains_recursive_evaluation_evidence() {
     let fact: AtomicFact =
         InFact::new(expression, StandardSet::N.into(), default_line_file()).into();
 
-    let result = Runtime::default().verify_non_equational_atomic_fact_by_direct_evaluation(&fact);
+    let result = Runtime::default().verify_atomic_except_equality_by_direct_evaluation(&fact);
     let success = result
         .factual_success()
         .expect("2 + 3 in N should have a successful truth proof");
@@ -59,7 +59,7 @@ fn direct_numeric_membership_retains_recursive_evaluation_evidence() {
 fn anonymous_function_membership_is_not_dispatched_by_the_generic_orchestrator() {
     let source = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/src/verification/atomic/non_equational.rs"
+        "/src/verification/atomic/atomic_except_equality.rs"
     ));
     let implementation = source.split("#[cfg(test)]").next().unwrap_or(source);
 

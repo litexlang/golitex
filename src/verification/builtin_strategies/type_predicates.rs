@@ -119,7 +119,7 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<VerifyFactResult, RuntimeError> {
         let atomic_fact: AtomicFact = fact.clone().into();
-        let direct = self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(
+        let direct = self.verify_atomic_except_equality_with_bounded_builtin_routes(
             &atomic_fact,
             verify_state,
         )?;
@@ -333,7 +333,7 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<VerifyFactResult, RuntimeError> {
         let atomic_fact: AtomicFact = fact.clone().into();
-        let direct = self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(
+        let direct = self.verify_atomic_except_equality_with_bounded_builtin_routes(
             &atomic_fact,
             verify_state,
         )?;

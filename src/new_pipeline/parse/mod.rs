@@ -9,7 +9,7 @@
 //!   keywords.rs       — local spellings (no legacy syntax import)
 //!
 //! Iron rules:
-//! 1. Names are String; Identifier / IdentifierWithMod carry global AtomId stamped at parse.
+//! 1. Names are String; Identifier / IdentifierWithMod carry global IdentifierId stamped at parse.
 //! 2. Scope is occupy only (no shadowing); identifiers stay Identifier (no Bound rewrite).
 //! 3. FactId may be allocated at parse; do not store facts or read ExecEnv here.
 //! 4. Errors use RuntimeParseError + LineFile from TokenBlock.

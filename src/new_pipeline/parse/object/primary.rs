@@ -341,8 +341,8 @@ fn parse_identifier_or_mod_or_standard_set(rt: &mut Runtime, tb: &mut TokenBlock
             mod_name: mod_name.clone(),
             name: local.clone(),
         };
-        let atom_id = match rt.lookup_atom_id(&key) {
-            Some(atom_id) => atom_id,
+        let identifier_id = match rt.lookup_identifier_id(&key) {
+            Some(identifier_id) => identifier_id,
             None => rt.define_atom(key).map_err(|err| match err {
                 crate::new_pipeline::runtime::RuntimeError::Invariant(message) => {
                     tb.parse_error(message)
@@ -353,7 +353,7 @@ fn parse_identifier_or_mod_or_standard_set(rt: &mut Runtime, tb: &mut TokenBlock
         return Ok(Obj::Atom(AtomObj::IdentifierWithMod(IdentifierWithMod {
             mod_name,
             name: local,
-            atom_id,
+            identifier_id,
         })));
     }
 
@@ -365,10 +365,10 @@ fn parse_identifier_or_mod_or_standard_set(rt: &mut Runtime, tb: &mut TokenBlock
         return Err(tb.parse_error(format!("expected name, got `{name}`")));
     }
 
-    let Some(atom_id) = rt.lookup_plain_atom_id(&name) else {
+    let Some(identifier_id) = rt.lookup_plain_identifier_id(&name) else {
         return Err(tb.parse_error(format!("undefined name `{name}`")));
     };
-    Ok(Obj::Atom(AtomObj::Identifier(Identifier { name, atom_id })))
+    Ok(Obj::Atom(AtomObj::Identifier(Identifier { name, identifier_id })))
 }
 
 fn standard_set_from_name(name: &str) -> Option<StandardSet> {

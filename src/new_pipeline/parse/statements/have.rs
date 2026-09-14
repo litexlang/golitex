@@ -75,7 +75,7 @@ impl Runtime {
                     self.occupy_plain_atom_as_parse(
                         block,
                         identifier.name,
-                        identifier.atom_id,
+                        identifier.identifier_id,
                     )?;
                 }
                 Ok(Stmt::Definition(DefinitionStmt::HaveObjInNonemptySetStmt(
@@ -90,7 +90,7 @@ impl Runtime {
                     self.occupy_plain_atom_as_parse(
                         block,
                         identifier.name,
-                        identifier.atom_id,
+                        identifier.identifier_id,
                     )?;
                 }
                 Ok(Stmt::Definition(DefinitionStmt::HaveObjEqualStmt(
@@ -106,7 +106,7 @@ impl Runtime {
                     self.occupy_plain_atom_as_parse(
                         block,
                         identifier.name,
-                        identifier.atom_id,
+                        identifier.identifier_id,
                     )?;
                 }
                 Ok(Stmt::Definition(DefinitionStmt::HaveObjByExistFactsStmt(

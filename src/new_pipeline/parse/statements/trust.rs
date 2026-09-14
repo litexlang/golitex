@@ -78,7 +78,7 @@ impl Runtime {
         self.pop_parse_scope();
         let (param_def, facts, identifiers) = result?;
         for identifier in identifiers {
-            self.occupy_plain_atom_as_parse(block, identifier.name, identifier.atom_id)?;
+            self.occupy_plain_atom_as_parse(block, identifier.name, identifier.identifier_id)?;
         }
         Ok(Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(TrustHaveStmt {
             param_def,

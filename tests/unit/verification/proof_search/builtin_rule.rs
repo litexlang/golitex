@@ -35,7 +35,7 @@ fn builtin_premise_dispatch_has_one_quantifier_free_entry_and_one_atomic_leaf() 
     assert!(!implementation.contains("verify_quantifier_free_fact_restricted_known_builtin("));
     assert!(implementation.contains("verify_equal_fact_with_one_premise_producing_builtin_rule"));
     assert!(implementation
-        .contains("verify_non_equational_atomic_fact_with_one_premise_producing_builtin_rule"));
+        .contains("verify_atomic_except_equality_with_one_premise_producing_builtin_rule"));
 }
 
 #[test]
@@ -192,11 +192,11 @@ fn integer_leaf_reuses_known_finiteness_without_opening_a_direct_rule() {
 
 #[test]
 fn direct_evaluation_matchers_are_not_repeated_in_builtin_rule_dispatchers() {
-    let non_equational = include_str!(concat!(
+    let atomic_except_equality = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/src/verification/builtin_rules/non_equational_dispatch.rs"
+        "/src/verification/builtin_rules/atomic_except_equality_dispatch.rs"
     ));
-    assert!(!non_equational.contains("verify_prime_fact_by_computation"));
+    assert!(!atomic_except_equality.contains("verify_prime_fact_by_computation"));
 
     let equality = crate::verification::equality_dispatch_source::SOURCE;
     assert!(!equality.contains("objs_match_for_pattern_and_calculation"));
@@ -238,18 +238,18 @@ fn obsolete_mixed_direct_routes_cannot_reappear_in_source() {
         ["verify_atomic_fact_with_one_", "builtin_rule"].concat(),
         ["verify_atomic_fact_with_builtin_rules_", "inner"].concat(),
         [
-            "verify_non_equational_atomic_fact_with_known_fact_then_",
+            "verify_atomic_except_equality_with_known_fact_then_",
             "with_builtin_computation",
         ]
         .concat(),
-        ["verify_non_equational_atomic_fact_with_", "known_fact("].concat(),
+        ["verify_atomic_except_equality_with_", "known_fact("].concat(),
         [
-            "verify_non_equational_atomic_fact_by_builtin_",
+            "verify_atomic_except_equality_by_builtin_",
             "computation",
         ]
         .concat(),
         [
-            "verify_non_equational_atomic_fact_with_one_",
+            "verify_atomic_except_equality_with_one_",
             "builtin_rule",
         ]
         .concat(),
@@ -324,45 +324,45 @@ fn family_owned_bounded_builtin_routes_preserve_policy_order_and_boundaries() {
     assert!(!equality_direct_evaluation_impl.contains("BuiltinRuleSearchState"));
     assert!(!equality_direct_evaluation_impl.contains("verify_builtin_rule_premise"));
 
-    let non_equational = include_str!(concat!(
+    let atomic_except_equality = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/src/verification/atomic/non_equational.rs"
+        "/src/verification/atomic/atomic_except_equality.rs"
     ));
-    let non_equational_direct = non_equational
-        .split("pub fn verify_non_equational_atomic_fact_with_bounded_builtin_routes(")
+    let atomic_except_equality_direct = atomic_except_equality
+        .split("pub fn verify_atomic_except_equality_with_bounded_builtin_routes(")
         .nth(1)
-        .expect("non-equational owner must expose a direct route")
-        .split("pub fn verify_non_equational_atomic_fact_with_zero_premise_verification(")
+        .expect("atomic-except-equality owner must expose a direct route")
+        .split("pub fn verify_atomic_except_equality_with_zero_premise_verification(")
         .next()
-        .expect("zero-premise verification must follow the non-equational direct route");
-    let non_equational_zero_premise = non_equational_direct
-        .find("verify_non_equational_atomic_fact_with_zero_premise_verification")
-        .expect("non-equational direct route must begin with zero-premise verification");
-    let non_equational_builtin = non_equational_direct
-        .find("verify_non_equational_atomic_fact_with_one_premise_producing_builtin_rule")
-        .expect("non-equational direct route must finish with one premise-producing rule");
-    assert!(non_equational_zero_premise < non_equational_builtin);
+        .expect("zero-premise verification must follow the atomic-except-equality direct route");
+    let atomic_except_equality_zero_premise = atomic_except_equality_direct
+        .find("verify_atomic_except_equality_with_zero_premise_verification")
+        .expect("atomic-except-equality direct route must begin with zero-premise verification");
+    let atomic_except_equality_builtin = atomic_except_equality_direct
+        .find("verify_atomic_except_equality_with_one_premise_producing_builtin_rule")
+        .expect("atomic-except-equality direct route must finish with one premise-producing rule");
+    assert!(atomic_except_equality_zero_premise < atomic_except_equality_builtin);
 
-    let zero_premise_impl = non_equational
-        .split("pub fn verify_non_equational_atomic_fact_with_zero_premise_verification(")
+    let zero_premise_impl = atomic_except_equality
+        .split("pub fn verify_atomic_except_equality_with_zero_premise_verification(")
         .nth(1)
-        .expect("non-equational owner must define zero-premise verification")
-        .split("pub fn verify_non_equational_atomic_fact_by_direct_evaluation(")
+        .expect("atomic-except-equality owner must define zero-premise verification")
+        .split("pub fn verify_atomic_except_equality_by_direct_evaluation(")
         .next()
         .expect("direct evaluation must follow zero-premise verification");
     let known_index = zero_premise_impl
-        .find("verify_non_equational_atomic_fact_with_known_atomic_facts(atomic_fact)")
+        .find("verify_atomic_except_equality_with_known_atomic_facts(atomic_fact)")
         .expect("zero-premise verification must try known facts first");
     let evaluation_index = zero_premise_impl
-        .find("verify_non_equational_atomic_fact_by_direct_evaluation(atomic_fact)")
+        .find("verify_atomic_except_equality_by_direct_evaluation(atomic_fact)")
         .expect("zero-premise verification must finish with direct evaluation");
     assert!(known_index < evaluation_index);
 
-    let direct_evaluation_impl = non_equational
-        .split("pub fn verify_non_equational_atomic_fact_by_direct_evaluation(")
+    let direct_evaluation_impl = atomic_except_equality
+        .split("pub fn verify_atomic_except_equality_by_direct_evaluation(")
         .nth(1)
-        .expect("non-equational owner must define direct evaluation")
-        .split("pub fn verify_non_equational_atomic_fact_with_one_premise_producing_builtin_rule(")
+        .expect("atomic-except-equality owner must define direct evaluation")
+        .split("pub fn verify_atomic_except_equality_with_one_premise_producing_builtin_rule(")
         .next()
         .expect("premise-producing rules must follow direct evaluation");
     assert!(!direct_evaluation_impl.contains("BuiltinRuleSearchState"));
@@ -382,7 +382,7 @@ fn family_owned_bounded_builtin_routes_preserve_policy_order_and_boundaries() {
     assert_eq!(child_dispatch.matches("match atomic_fact").count(), 1);
     assert!(child_dispatch.contains("verify_equal_fact_with_bounded_builtin_routes"));
     assert!(
-        child_dispatch.contains("verify_non_equational_atomic_fact_with_bounded_builtin_routes")
+        child_dispatch.contains("verify_atomic_except_equality_with_bounded_builtin_routes")
     );
 
     let known_forall = crate::verification::universal_search_source::SOURCE;
@@ -549,7 +549,7 @@ fn equality_proof_apis_receive_the_owned_equal_fact() {
                 && !name.contains("not_equal")
                 && !name.contains("less_equal")
                 && !name.contains("greater_equal")
-                && !name.contains("non_equational")
+                && !name.contains("atomic_except_equality")
                 && returns_equality_proof_result;
             if !equality_named_proof_api && explicitly_owned.is_none() {
                 continue;

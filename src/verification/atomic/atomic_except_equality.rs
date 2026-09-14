@@ -1,4 +1,4 @@
-//! Verification for non-equational atomic predicates.
+//! Verification for atomic-except-equality atomic predicates.
 
 use crate::error::RuntimeError;
 use crate::fact::{AtomicFact, Fact, NotEqualFact};
@@ -23,14 +23,14 @@ pub enum AlternateFactSearch {
 }
 
 impl Runtime {
-    pub fn verify_non_equational_atomic_fact_with_bounded_builtin_routes(
+    pub fn verify_atomic_except_equality_with_bounded_builtin_routes(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<ProveFactResult, RuntimeError> {
         debug_assert!(!matches!(atomic_fact, AtomicFact::EqualFact(_)));
         let zero_premise_result =
-            self.verify_non_equational_atomic_fact_with_zero_premise_verification(atomic_fact)?;
+            self.verify_atomic_except_equality_with_zero_premise_verification(atomic_fact)?;
         if zero_premise_result.is_success() {
             return Ok(self.remember_successful_atomic_fact_for_proof_search(
                 atomic_fact,
@@ -41,7 +41,7 @@ impl Runtime {
 
         let builtin_state = BuiltinRuleSearchState::in_proof_search(verify_state);
         let result = self
-            .verify_non_equational_atomic_fact_with_one_premise_producing_builtin_rule(
+            .verify_atomic_except_equality_with_one_premise_producing_builtin_rule(
                 atomic_fact,
                 &builtin_state,
             )?;
@@ -60,23 +60,23 @@ impl Runtime {
     // This extra phase is necessary for `x * 2 >= 0` from known `x >= 0`: the multiplication
     // rule consumes the allowed builtin-rule step, while its closed premise `2 >= 0` must still
     // be evaluated without opening another premise-producing rule step.
-    pub fn verify_non_equational_atomic_fact_with_zero_premise_verification(
+    pub fn verify_atomic_except_equality_with_zero_premise_verification(
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<ProveFactResult, RuntimeError> {
         let known_result =
-            self.verify_non_equational_atomic_fact_with_known_atomic_facts(atomic_fact)?;
+            self.verify_atomic_except_equality_with_known_atomic_facts(atomic_fact)?;
         if known_result.is_success() {
             return Ok(known_result);
         }
 
-        let result = self.verify_non_equational_atomic_fact_by_direct_evaluation(atomic_fact);
+        let result = self.verify_atomic_except_equality_by_direct_evaluation(atomic_fact);
         Ok(result)
     }
 
     // Direct evaluation is the computation arm of zero-premise verification: it may inspect
     // the current expression, but it cannot generate premises or apply another rule.
-    pub fn verify_non_equational_atomic_fact_by_direct_evaluation(
+    pub fn verify_atomic_except_equality_by_direct_evaluation(
         &self,
         atomic_fact: &AtomicFact,
     ) -> ProveFactResult {
@@ -145,7 +145,7 @@ impl Runtime {
 
     // This bounded phase may generate premises, so entering it consumes the available
     // builtin-rule step before any child fact is checked.
-    pub fn verify_non_equational_atomic_fact_with_one_premise_producing_builtin_rule(
+    pub fn verify_atomic_except_equality_with_one_premise_producing_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
@@ -161,7 +161,7 @@ impl Runtime {
         {
             return Ok(result);
         }
-        let result = self.verify_non_equational_atomic_fact_with_builtin_rules_inner(
+        let result = self.verify_atomic_except_equality_with_builtin_rules_inner(
             atomic_fact,
             &child_state,
             verify_state,
@@ -169,13 +169,13 @@ impl Runtime {
         Ok(result)
     }
 
-    pub fn verify_non_equational_atomic_fact(
+    pub fn verify_atomic_except_equality(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
         alternate_fact_search: AlternateFactSearch,
     ) -> Result<ProveFactResult, RuntimeError> {
-        let mut result = self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(
+        let mut result = self.verify_atomic_except_equality_with_bounded_builtin_routes(
             atomic_fact,
             verify_state,
         )?;
@@ -200,7 +200,7 @@ impl Runtime {
                 return Ok(verified_by_definition);
             }
 
-            result = self.verify_non_equational_atomic_fact_with_known_forall(
+            result = self.verify_atomic_except_equality_with_known_forall(
                 atomic_fact,
                 &next_round_state,
             )?;
@@ -211,7 +211,7 @@ impl Runtime {
 
         if alternate_fact_search == AlternateFactSearch::Enabled {
             result =
-                self.post_process_non_equational_atomic_fact(atomic_fact, verify_state, result)?;
+                self.post_process_atomic_except_equality(atomic_fact, verify_state, result)?;
             if result.is_success() {
                 return Ok(result);
             }
@@ -221,13 +221,13 @@ impl Runtime {
     }
 
     // If direct verification failed, try order-dual, then registered user-defined prop properties.
-    fn post_process_non_equational_atomic_fact(
+    fn post_process_atomic_except_equality(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
         result: ProveFactResult,
     ) -> Result<ProveFactResult, RuntimeError> {
-        let result = self.builtin_post_process_non_equational_atomic_fact(
+        let result = self.builtin_post_process_atomic_except_equality(
             atomic_fact,
             verify_state,
             result,
@@ -242,7 +242,7 @@ impl Runtime {
         self.use_known_symmetric_prop(atomic_fact, verify_state, result)
     }
 
-    fn builtin_post_process_non_equational_atomic_fact(
+    fn builtin_post_process_atomic_except_equality(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
@@ -268,7 +268,7 @@ impl Runtime {
                 transposed
             }
         };
-        let transposed_result = self.verify_non_equational_atomic_fact(
+        let transposed_result = self.verify_atomic_except_equality(
             &transposed_fact,
             verify_state,
             AlternateFactSearch::Disabled,
@@ -345,7 +345,7 @@ impl Runtime {
             let Some(alt) = atomic_fact.symmetric_reordered_args_with_runtime(self, &gather) else {
                 continue;
             };
-            let alt_result = self.verify_non_equational_atomic_fact(
+            let alt_result = self.verify_atomic_except_equality(
                 &alt,
                 verify_state,
                 AlternateFactSearch::Disabled,
@@ -416,5 +416,5 @@ impl Runtime {
 }
 
 #[cfg(test)]
-#[path = "../../../tests/unit/verification/atomic/non_equational.rs"]
+#[path = "../../../tests/unit/verification/atomic/atomic_except_equality.rs"]
 mod tests;

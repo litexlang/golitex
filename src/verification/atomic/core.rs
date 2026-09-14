@@ -14,7 +14,7 @@ impl Runtime {
     ) -> Result<ProveFactResult, RuntimeError> {
         match fact {
             AtomicFact::EqualFact(equal_fact) => self.verify_equal_fact(equal_fact, verify_state),
-            _ => self.verify_non_equational_atomic_fact(
+            _ => self.verify_atomic_except_equality(
                 fact,
                 verify_state,
                 AlternateFactSearch::Enabled,

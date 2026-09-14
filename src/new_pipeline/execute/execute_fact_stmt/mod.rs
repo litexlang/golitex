@@ -18,9 +18,10 @@ mod verify_state;
 pub mod verify_well_defined;
 
 pub use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
-pub use result::{ExecFactStmtResult, StoreFactAndInferResult};
-pub use verify_atomic_fact::verify_non_equational_atomic_fact::
-    NonEquationalAtomicFactSearchProofByBuiltinRule;
+pub use crate::new_pipeline::store_and_infer::StoreFactAndInferResult;
+pub use result::ExecFactStmtResult;
+pub use verify_atomic_fact::verify_atomic_except_equality::
+    AtomicExceptEqualityFactSearchProofByBuiltinRule;
 pub use verify_fact_result::VerifyFactResult;
 pub use verify_state::VerifyState;
 pub use verify_well_defined::{

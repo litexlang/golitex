@@ -1,7 +1,12 @@
+use crate::new_pipeline::ast::obj::Identifier;
 use crate::new_pipeline::ast::stmt::DefPropStmt as NewDefPropStmt;
-use crate::new_pipeline::runtime::runtime_ids::{FactId, WellDefinednessId};
+use crate::new_pipeline::runtime::runtime_ids::{FactId, IdentifierId, WellDefinednessId};
 use crate::prelude::*;
 use std::collections::HashMap;
+
+pub use super::known_fact_memory::{
+    AtomicExceptEqualityFactMemory, KnownEqualityMemory, KnownFactMemory,
+};
 
 // -----------------------------------------------------------------------------
 // Core data model
@@ -50,8 +55,8 @@ pub struct WellDefinedObjectMemory {
 #[derive(Clone)]
 pub struct DefinitionMemory {
     /// Named atoms defined in this scope (`let`, `have`, forall/exist locals, …).
-    /// Payload fields come later; presence of the key means the name is defined.
-    pub symbols: HashMap<String, SymbolDefinitionMemory>,
+    /// Keyed by IdentifierId; value carries the full Identifier (name + IdentifierId).
+    pub identifiers: HashMap<IdentifierId, IdentifierDefinitionMemory>,
 
     pub predicate_definitions: HashMap<PropName, NewDefPropStmt>,
     pub abstract_predicate_definitions: HashMap<AbstractPropName, DefAbstractPropStmt>,
@@ -64,26 +69,10 @@ pub struct DefinitionMemory {
     pub strategy_definitions: HashMap<StrategyName, DefStrategyStmt>,
 }
 
-/// One defined atom in `DefinitionMemory.symbols`.
-/// Empty for now; may later grow param_type / transparent def / … like the old
-/// SymbolDefinition.
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct SymbolDefinitionMemory {}
-
-/// Facts stored in one execution environment and the indexes used to search
-/// them later.
-#[derive(Clone)]
-pub struct KnownFactMemory {
-    /// Canonical facts retained for citations and result construction.
-    pub facts_by_id: HashMap<FactId, Fact>,
-
-    pub known_equality: KnownEquality,
-    pub known_non_equational_facts: NonEquationalAtomicFactMemory,
-    pub set_relations: SpecialSetRelationMemory,
-    pub known_exist: ExistFactMemory,
-    pub known_or: OrFactMemory,
-    pub forall_facts: KnownForallFactMemory,
-    pub fact_cache: HashMap<FactString, CachedKnownFact>,
+/// One defined atom in `DefinitionMemory.identifiers`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct IdentifierDefinitionMemory {
+    pub identifier: Identifier,
 }
 
 /// Algebraic properties that can be proved for a predicate.
@@ -165,7 +154,7 @@ impl WellDefinedObjectMemory {
 impl DefinitionMemory {
     pub fn new() -> Self {
         Self {
-            symbols: HashMap::new(),
+            identifiers: HashMap::new(),
             predicate_definitions: HashMap::new(),
             abstract_predicate_definitions: HashMap::new(),
             algorithm_definitions: HashMap::new(),
@@ -180,27 +169,6 @@ impl DefinitionMemory {
 }
 
 impl Default for DefinitionMemory {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl KnownFactMemory {
-    pub fn new() -> Self {
-        Self {
-            facts_by_id: HashMap::new(),
-            known_equality: KnownEquality::new(),
-            known_non_equational_facts: NonEquationalAtomicFactMemory::new(),
-            set_relations: SpecialSetRelationMemory::new(),
-            known_exist: ExistFactMemory::new(),
-            known_or: OrFactMemory::new(),
-            forall_facts: KnownForallFactMemory::new(),
-            fact_cache: HashMap::new(),
-        }
-    }
-}
-
-impl Default for KnownFactMemory {
     fn default() -> Self {
         Self::new()
     }

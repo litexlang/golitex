@@ -1,0 +1,6 @@
+pub mod store_fact;
+pub mod store_fact_and_infer_result;
+
+pub use store_fact_and_infer_result::{
+    InferFromStoredFactResult, StoreFactAndInferResult,
+};

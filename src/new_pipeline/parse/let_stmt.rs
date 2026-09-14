@@ -55,7 +55,7 @@ impl Runtime {
 
         Ok(Stmt::Definition(DefinitionStmt::LetObjStmt(LetObjStmt {
             name: identifier.name,
-            atom_id: identifier.atom_id,
+            identifier_id: identifier.identifier_id,
             value,
             line_file: LineFile::new(block.line, block.source_path.clone()),
         })))

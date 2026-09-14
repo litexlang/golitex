@@ -53,7 +53,7 @@ impl ArgMatcher<'_> {
         }
         if given_set.is_subset_eq(known_set) {
             let known_only_result =
-                self.verify_non_equational_atomic_fact_with_known_atomic_facts(given_fact)?;
+                self.verify_atomic_except_equality_with_known_atomic_facts(given_fact)?;
             if known_only_result.is_success() {
                 return Ok(Some(Some(element_map)));
             }

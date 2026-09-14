@@ -324,7 +324,7 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<Option<VerifyFactResult>, RuntimeError> {
-        let known = self.verify_non_equational_atomic_fact_with_known_atomic_facts(fact)?;
+        let known = self.verify_atomic_except_equality_with_known_atomic_facts(fact)?;
         if known.is_success() {
             return self.complete_proven_fact_candidate(fact.clone().into(), known, verify_state);
         }
@@ -352,7 +352,7 @@ impl Runtime {
         for predicate in predicates {
             let key = ((*predicate).to_string(), true);
             for environment in self.iter_environments_from_top() {
-                let Some(known) = environment.facts.known_non_equational_facts.by_other_arg_count.get(&key) else {
+                let Some(known) = environment.facts.known_atomic_except_equality_facts.by_other_arg_count.get(&key) else {
                     continue;
                 };
                 for fact in known {

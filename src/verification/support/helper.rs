@@ -182,7 +182,7 @@ impl Runtime {
             AtomicFact::EqualFact(equal_fact) => {
                 self.verify_equal_fact_with_bounded_builtin_routes(equal_fact, verify_state)
             }
-            _ => self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(
+            _ => self.verify_atomic_except_equality_with_bounded_builtin_routes(
                 atomic_fact,
                 verify_state,
             ),

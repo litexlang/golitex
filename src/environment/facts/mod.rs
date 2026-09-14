@@ -14,7 +14,7 @@ mod stored_fact;
 mod stored_facts;
 mod stored_forall_conclusion;
 
-pub use atomic::NonEquationalAtomicFactMemory;
+pub use atomic::AtomicExceptEqualityFactMemory;
 pub use cached_known_fact::CachedKnownFact;
 pub use facts::KnownFactMemory;
 pub use forall_argument_shape::{forall_argument_shape, ForallArgumentShape};

@@ -10,9 +10,9 @@ pub mod less;
 pub mod less_equal;
 pub mod not_equal;
 pub mod not_is_nonempty_set;
-pub mod search_non_equational_fact_proof_by_builtin_rule;
-pub mod search_non_equational_fact_proof_by_builtin_rule_result;
+pub mod search_atomic_except_equality_fact_proof_by_builtin_rule;
+pub mod search_atomic_except_equality_fact_proof_by_builtin_rule_result;
 pub mod subset;
 pub mod superset;
 
-pub use search_non_equational_fact_proof_by_builtin_rule_result::NonEquationalAtomicFactSearchProofByBuiltinRule;
+pub use search_atomic_except_equality_fact_proof_by_builtin_rule_result::AtomicExceptEqualityFactSearchProofByBuiltinRule;

@@ -454,7 +454,7 @@ impl Runtime {
                     let fn_eq_proof = self
                         .verification_result_from_known_fact_cache(&fn_eq_in.clone().into())
                         .unwrap_or(
-                            self.verify_non_equational_atomic_fact_with_known_atomic_facts(
+                            self.verify_atomic_except_equality_with_known_atomic_facts(
                                 &fn_eq_in,
                             )?,
                         );

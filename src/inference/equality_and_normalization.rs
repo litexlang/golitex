@@ -524,7 +524,7 @@ impl Runtime {
             )
             .into();
         let verify_state = VerifyState::initial().with_inference_state(inference_state);
-        let power_result = self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(
+        let power_result = self.verify_atomic_except_equality_with_bounded_builtin_routes(
             &power_in_r_pos,
             &verify_state,
         )?;

@@ -147,7 +147,7 @@ impl Runtime {
                 .verification_result_from_known_fact_cache(&real_membership.clone().into())
             {
                 Some(proof) => proof,
-                None => self.verify_non_equational_atomic_fact_with_zero_premise_verification(
+                None => self.verify_atomic_except_equality_with_zero_premise_verification(
                     &real_membership,
                 )?,
             };

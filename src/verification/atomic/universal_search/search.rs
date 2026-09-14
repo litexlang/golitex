@@ -13,12 +13,12 @@ impl Runtime {
                 self.verify_equal_fact_with_known_forall(equal_fact, verify_state)
             }
             _ => {
-                self.verify_non_equational_atomic_fact_with_known_forall(atomic_fact, verify_state)
+                self.verify_atomic_except_equality_with_known_forall(atomic_fact, verify_state)
             }
         }
     }
 
-    pub fn verify_non_equational_atomic_fact_with_known_forall(
+    pub fn verify_atomic_except_equality_with_known_forall(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
@@ -873,20 +873,20 @@ impl Runtime {
         for environment in self.iter_environments_from_top() {
             match dom_atomic_fact.number_of_args() {
                 1 => {
-                    if let Some(known_facts) = environment.facts.known_non_equational_facts.by_one_arg.get(&lookup_key)
+                    if let Some(known_facts) = environment.facts.known_atomic_except_equality_facts.by_one_arg.get(&lookup_key)
                     {
                         candidates.extend(known_facts.values().cloned());
                     }
                 }
                 2 => {
-                    if let Some(known_facts) = environment.facts.known_non_equational_facts.by_two_args.get(&lookup_key)
+                    if let Some(known_facts) = environment.facts.known_atomic_except_equality_facts.by_two_args.get(&lookup_key)
                     {
                         candidates.extend(known_facts.values().cloned());
                     }
                 }
                 _ => {
                     if let Some(known_facts) =
-                        environment.facts.known_non_equational_facts.by_other_arg_count.get(&lookup_key)
+                        environment.facts.known_atomic_except_equality_facts.by_other_arg_count.get(&lookup_key)
                     {
                         candidates.extend(known_facts.iter().cloned());
                     }

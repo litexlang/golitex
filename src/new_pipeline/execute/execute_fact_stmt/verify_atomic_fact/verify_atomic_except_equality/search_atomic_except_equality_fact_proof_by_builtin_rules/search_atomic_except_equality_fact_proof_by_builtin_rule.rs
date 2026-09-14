@@ -6,9 +6,9 @@ use crate::new_pipeline::ast::fact::{
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
-use super::search_non_equational_fact_proof_by_builtin_rule_result::{
+use super::search_atomic_except_equality_fact_proof_by_builtin_rule_result::{
     FnEqualFactSearchProofByBuiltinRule, FnEqualInFactSearchProofByBuiltinRule,
-    NonEquationalAtomicFactSearchProofByBuiltinRule, NormalAtomicFactSearchProofByBuiltinRule,
+    AtomicExceptEqualityFactSearchProofByBuiltinRule, NormalAtomicFactSearchProofByBuiltinRule,
     NotGreaterEqualFactSearchProofByBuiltinRule, NotGreaterFactSearchProofByBuiltinRule,
     NotInFactSearchProofByBuiltinRule, NotIsCartFactSearchProofByBuiltinRule,
     NotIsFiniteSetFactSearchProofByBuiltinRule, NotIsSetFactSearchProofByBuiltinRule,
@@ -18,102 +18,102 @@ use super::search_non_equational_fact_proof_by_builtin_rule_result::{
 };
 
 impl Runtime {
-    pub fn search_non_equational_fact_proof_by_builtin_rule(
+    pub fn search_atomic_except_equality_fact_proof_by_builtin_rule(
         &mut self,
         fact: &AtomicFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<NonEquationalAtomicFactSearchProofByBuiltinRule>> {
+    ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByBuiltinRule>> {
         match fact {
             AtomicFact::EqualFact(_) => unreachable!(
-                "equality facts use the equality search pipeline, not non-equational builtin rules"
+                "equality facts use the equality search pipeline, not atomic-except-equality builtin rules"
             ),
             AtomicFact::NormalAtomicFact(fact) => Ok(self
                 .search_normal_atomic_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::NormalAtomicFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::NormalAtomicFact)),
             AtomicFact::LessFact(fact) => Ok(self
                 .search_less_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::LessFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact)),
             AtomicFact::GreaterFact(fact) => Ok(self
                 .search_greater_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::GreaterFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact)),
             AtomicFact::LessEqualFact(fact) => Ok(self
                 .search_less_equal_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::LessEqualFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact)),
             AtomicFact::GreaterEqualFact(fact) => Ok(self
                 .search_greater_equal_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::GreaterEqualFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact)),
             AtomicFact::IsSetFact(fact) => Ok(self
                 .search_is_set_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::IsSetFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::IsSetFact)),
             AtomicFact::IsNonemptySetFact(fact) => Ok(self
                 .search_is_nonempty_set_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::IsNonemptySetFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::IsNonemptySetFact)),
             AtomicFact::IsFiniteSetFact(fact) => Ok(self
                 .search_is_finite_set_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::IsFiniteSetFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::IsFiniteSetFact)),
             AtomicFact::InFact(fact) => Ok(self
                 .search_in_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::InFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact)),
             AtomicFact::IsCartFact(fact) => Ok(self
                 .search_is_cart_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::IsCartFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::IsCartFact)),
             AtomicFact::IsTupleFact(fact) => Ok(self
                 .search_is_tuple_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::IsTupleFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::IsTupleFact)),
             AtomicFact::SubsetFact(fact) => Ok(self
                 .search_subset_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::SubsetFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact)),
             AtomicFact::SupersetFact(fact) => Ok(self
                 .search_superset_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::SupersetFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::SupersetFact)),
             AtomicFact::NotNormalAtomicFact(fact) => Ok(self
                 .search_not_normal_atomic_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::NotNormalAtomicFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::NotNormalAtomicFact)),
             AtomicFact::NotEqualFact(fact) => Ok(self
                 .search_not_equal_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::NotEqualFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact)),
             AtomicFact::NotLessFact(fact) => Ok(self
                 .search_not_less_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::NotLessFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::NotLessFact)),
             AtomicFact::NotGreaterFact(fact) => Ok(self
                 .search_not_greater_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::NotGreaterFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::NotGreaterFact)),
             AtomicFact::NotLessEqualFact(fact) => Ok(self
                 .search_not_less_equal_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::NotLessEqualFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::NotLessEqualFact)),
             AtomicFact::NotGreaterEqualFact(fact) => Ok(self
                 .search_not_greater_equal_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::NotGreaterEqualFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::NotGreaterEqualFact)),
             AtomicFact::NotIsSetFact(fact) => Ok(self
                 .search_not_is_set_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::NotIsSetFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::NotIsSetFact)),
             AtomicFact::NotIsNonemptySetFact(fact) => Ok(self
                 .search_not_is_nonempty_set_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::NotIsNonemptySetFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::NotIsNonemptySetFact)),
             AtomicFact::NotIsFiniteSetFact(fact) => Ok(self
                 .search_not_is_finite_set_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::NotIsFiniteSetFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::NotIsFiniteSetFact)),
             AtomicFact::NotInFact(fact) => Ok(self
                 .search_not_in_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::NotInFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::NotInFact)),
             AtomicFact::NotIsCartFact(fact) => Ok(self
                 .search_not_is_cart_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::NotIsCartFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::NotIsCartFact)),
             AtomicFact::NotIsTupleFact(fact) => Ok(self
                 .search_not_is_tuple_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::NotIsTupleFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::NotIsTupleFact)),
             AtomicFact::NotSubsetFact(fact) => Ok(self
                 .search_not_subset_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::NotSubsetFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::NotSubsetFact)),
             AtomicFact::NotSupersetFact(fact) => Ok(self
                 .search_not_superset_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::NotSupersetFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::NotSupersetFact)),
             AtomicFact::FnEqualInFact(fact) => Ok(self
                 .search_fn_equal_in_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::FnEqualInFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::FnEqualInFact)),
             AtomicFact::FnEqualFact(fact) => Ok(self
                 .search_fn_equal_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(NonEquationalAtomicFactSearchProofByBuiltinRule::FnEqualFact)),
+                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::FnEqualFact)),
         }
     }
 
