@@ -6,7 +6,7 @@ use crate::new_pipeline::ast::fact::{AtomicFact, Fact, IsNonemptySetFact};
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::ast::stmt::HaveObjInNonemptySetOrParamTypeStmt;
-use crate::new_pipeline::execution_environment::IdentifierDefinitionMemory;
+use crate::new_pipeline::exec_env::IdentifierDefinitionMemory;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 

@@ -15,7 +15,7 @@ impl Runtime {
             store_well_defined_fact: true,
         };
         let verify_result = self.verify_fact(fact, verify_state)?;
-        let store_and_infer_result = self.store_fact_then_infer(fact, &verify_result)?;
+        let store_and_infer_result = self.store_fact_and_infer(fact)?;
         Ok(ExecFactStmtResult {
             verify_result,
             store_and_infer_result,

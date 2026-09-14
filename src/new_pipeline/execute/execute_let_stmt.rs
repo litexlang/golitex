@@ -1,7 +1,7 @@
 use super::exec_stmt_result::ExecLetObjStmtResult;
 use crate::new_pipeline::ast::obj::Identifier;
 use crate::new_pipeline::ast::stmt::LetObjStmt;
-use crate::new_pipeline::execution_environment::IdentifierDefinitionMemory;
+use crate::new_pipeline::exec_env::IdentifierDefinitionMemory;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
@@ -18,8 +18,7 @@ impl Runtime {
             can_use_known_algebraic_rewrite: true,
             store_well_defined_fact: true,
         };
-        let value_well_defined =
-            self.verify_obj_well_definedness(&let_stmt.value, verify_state)?;
+        let value_well_defined = self.verify_obj_well_definedness(&let_stmt.value, verify_state)?;
 
         let equality_fact_id = self.ids.allocate_fact_id();
 

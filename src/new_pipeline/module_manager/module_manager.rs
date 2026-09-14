@@ -1,6 +1,6 @@
 //! Config-shaped module tree for the new pipeline.
 
-use crate::new_pipeline::execution_environment::exec_env::ExecEnv;
+use crate::new_pipeline::exec_env::exec_env::ExecEnv;
 use std::path::PathBuf;
 
 /// One module/config node.  Completed environments are owned by the node that
@@ -79,4 +79,3 @@ impl ModuleManager {
         &self.import_std
     }
 }
-

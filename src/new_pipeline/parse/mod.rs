@@ -18,7 +18,7 @@
 
 mod fact;
 mod fact_prop;
-mod keywords;
+pub mod keywords;
 mod let_stmt;
 mod object;
 mod param;
