@@ -7,21 +7,25 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
     pub(super) fn verify_atom_obj_well_definedness_by_def(
-        &mut self, _verify_state: VerifyState,
+        &mut self,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedProofByDef> {
         let _ = self;
         Ok(ObjWellDefinedProofByDef::leaf())
     }
 
     pub(super) fn verify_standard_set_obj_well_definedness_by_def(
-        &mut self, _verify_state: VerifyState,
+        &mut self,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedProofByDef> {
         let _ = self;
         Ok(ObjWellDefinedProofByDef::leaf())
     }
 
     pub(super) fn verify_fn_obj_well_definedness_by_def(
-        &mut self, value: &FnObj, verify_state: VerifyState,
+        &mut self,
+        value: &FnObj,
+        verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedProofByDef> {
         let mut children = Vec::new();
         self.collect_fn_obj_head_child_objs(&value.head, &mut children);
@@ -33,9 +37,7 @@ impl Runtime {
         self.verify_objs_as_children(&children, verify_state)
     }
 
-    fn collect_fn_obj_head_child_objs<'a>(
-        &self, head: &'a FnObjHead, children: &mut Vec<&'a Obj>,
-    ) {
+    fn collect_fn_obj_head_child_objs<'a>(&self, head: &'a FnObjHead, children: &mut Vec<&'a Obj>) {
         let _ = self;
         match head {
             FnObjHead::Identifier(_) | FnObjHead::IdentifierWithMod(_) | FnObjHead::Bound(_) => {}
@@ -47,7 +49,9 @@ impl Runtime {
                 children.push(anon.equal_to.as_ref());
             }
             FnObjHead::FiniteSeqListObj(list) => {
-                for obj in &list.objs { children.push(obj.as_ref()); }
+                for obj in &list.objs {
+                    children.push(obj.as_ref());
+                }
             }
             FnObjHead::ObjAtIndex(at) => {
                 children.push(at.obj.as_ref());
@@ -56,17 +60,23 @@ impl Runtime {
             FnObjHead::ObjAsStructInstanceWithFieldAccess(access) => {
                 children.push(access.obj.as_ref());
                 if let Some(carrier) = &access.resolved_struct_carrier {
-                    for param in &carrier.params { children.push(param); }
+                    for param in &carrier.params {
+                        children.push(param);
+                    }
                 }
             }
             FnObjHead::InstantiatedTemplateObj(inst) => {
-                for arg in &inst.args { children.push(arg); }
+                for arg in &inst.args {
+                    children.push(arg);
+                }
             }
         }
     }
 
     pub(super) fn verify_fn_set_obj_well_definedness_by_def(
-        &mut self, value: &FnSet, verify_state: VerifyState,
+        &mut self,
+        value: &FnSet,
+        verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedProofByDef> {
         let mut children = Vec::new();
         for group in &value.body.set_bound_parameters.groups {
@@ -78,7 +88,9 @@ impl Runtime {
     }
 
     pub(super) fn verify_anonymous_fn_obj_well_definedness_by_def(
-        &mut self, value: &AnonymousFn, verify_state: VerifyState,
+        &mut self,
+        value: &AnonymousFn,
+        verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedProofByDef> {
         let mut children = Vec::new();
         for group in &value.body.set_bound_parameters.groups {

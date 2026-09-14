@@ -3,15 +3,18 @@ use super::super::object::parse_obj;
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::obj::Identifier;
 use crate::new_pipeline::ast::stmt::{
-    DefinitionStmt, HaveObjByExistFactsStmt, HaveObjEqualStmt,
-    HaveObjInNonemptySetOrParamTypeStmt, Stmt,
+    DefinitionStmt, HaveObjByExistFactsStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt,
+    Stmt,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
 
 impl Runtime {
     // have x T | have x, y T | have x = obj | have x T: facts
-    pub(in super::super) fn parse_have_obj_stmt(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
+    pub(in super::super) fn parse_have_obj_stmt(
+        &mut self,
+        block: &TokenBlock,
+    ) -> RuntimeResult<Stmt> {
         let mut tb = block.clone();
         tb.advance()?; // `have` already matched by dispatch
 
@@ -27,9 +30,9 @@ impl Runtime {
             if tb.peek() == Some(COLON) {
                 tb.expect(COLON)?;
                 if !tb.exceed_end_of_head() {
-                    return Err(tb.parse_error(
-                        "`have ...:` facts must be written in an indented body",
-                    ));
+                    return Err(
+                        tb.parse_error("`have ...:` facts must be written in an indented body")
+                    );
                 }
                 let mut facts = Vec::new();
                 for child in &tb.body {
@@ -56,14 +59,12 @@ impl Runtime {
             }
 
             if !tb.exceed_end_of_head() {
-                return Err(tb.parse_error(
-                    "have: expected `=`, `:`, or end of header after parameters",
-                ));
+                return Err(
+                    tb.parse_error("have: expected `=`, `:`, or end of header after parameters")
+                );
             }
             if !tb.body.is_empty() {
-                return Err(tb.parse_error(
-                    "have without `=`/`:` cannot have an indented body",
-                ));
+                return Err(tb.parse_error("have without `=`/`:` cannot have an indented body"));
             }
             Ok(HaveObjKind::InSet(param_def, identifiers))
         })();

@@ -1,17 +1,13 @@
 use super::store_fact_and_infer_result::{InferFromStoredFactResult, StoreFactAndInferResult};
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact};
 use crate::new_pipeline::exec_env::helper::{
-    ast_obj_key, atomic_fact_args_ref, atomic_fact_has_positive_polarity, atomic_fact_id,
-    atomic_fact_key,
+    atomic_fact_args_ref, atomic_fact_has_positive_polarity,
 };
 use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeError, RuntimeResult};
 
 impl Runtime {
     // Store the verified fact into the top ExecEnv; infer is still a no-op.
-    pub fn store_fact_and_infer(
-        &mut self,
-        fact: &Fact,
-    ) -> RuntimeResult<StoreFactAndInferResult> {
+    pub fn store_fact_and_infer(&mut self, fact: &Fact) -> RuntimeResult<StoreFactAndInferResult> {
         let stored_fact_ids = self.store_fact(fact)?;
         let _infer = self.infer_from_stored_facts(&stored_fact_ids)?;
         Ok(StoreFactAndInferResult::from_stored_ids(stored_fact_ids))
@@ -44,8 +40,8 @@ impl Runtime {
                 Ok(vec![fact_id])
             }
             _ => {
-                let fact_id = atomic_fact_id(atomic_fact);
-                let key = atomic_fact_key(atomic_fact);
+                let fact_id = atomic_fact.fact_id();
+                let key = atomic_fact.prop_name();
                 let positive_polarity = atomic_fact_has_positive_polarity(atomic_fact);
                 let args = atomic_fact_args_ref(atomic_fact);
                 let env = self.top_exec_env_mut();
@@ -54,7 +50,7 @@ impl Runtime {
                         env.facts.known_atomic_except_equality_facts.store_one_arg(
                             key,
                             positive_polarity,
-                            ast_obj_key(arg0),
+                            arg0.internal_representation(),
                             atomic_fact.clone(),
                         );
                     }
@@ -62,8 +58,8 @@ impl Runtime {
                         env.facts.known_atomic_except_equality_facts.store_two_args(
                             key,
                             positive_polarity,
-                            ast_obj_key(arg0),
-                            ast_obj_key(arg1),
+                            arg0.internal_representation(),
+                            arg1.internal_representation(),
                             atomic_fact.clone(),
                         );
                     }

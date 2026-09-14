@@ -69,17 +69,26 @@ impl fmt::Display for ExecEnv {
         write!(
             f,
             "    known_atomic_facts_with_0_or_more_than_two_params: {:?}\n",
-            self.facts.known_atomic_except_equality_facts.by_other_arg_count.len()
+            self.facts
+                .known_atomic_except_equality_facts
+                .by_other_arg_count
+                .len()
         )?;
         write!(
             f,
             "    known_atomic_facts_with_1_arg: {:?}\n",
-            self.facts.known_atomic_except_equality_facts.by_one_arg.len()
+            self.facts
+                .known_atomic_except_equality_facts
+                .by_one_arg
+                .len()
         )?;
         write!(
             f,
             "    known_atomic_facts_with_2_args: {:?}\n",
-            self.facts.known_atomic_except_equality_facts.by_two_args.len()
+            self.facts
+                .known_atomic_except_equality_facts
+                .by_two_args
+                .len()
         )?;
         write!(
             f,

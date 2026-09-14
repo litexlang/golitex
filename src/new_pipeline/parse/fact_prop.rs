@@ -2,10 +2,11 @@
 
 use crate::new_pipeline::ast::fact::{
     AtomicFact, EqualFact, FnEqualFact, FnEqualInFact, GreaterEqualFact, GreaterFact, InFact,
-    IsCartFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact, IsTupleFact, LessEqualFact, LessFact,
-    NormalAtomicFact, NotEqualFact, NotGreaterEqualFact, NotGreaterFact, NotInFact, NotIsCartFact,
-    NotIsFiniteSetFact, NotIsNonemptySetFact, NotIsSetFact, NotIsTupleFact, NotLessEqualFact,
-    NotLessFact, NotNormalAtomicFact, NotSubsetFact, NotSupersetFact, SubsetFact, SupersetFact,
+    IsCartFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact, IsTupleFact, LessEqualFact,
+    LessFact, NormalAtomicFact, NotEqualFact, NotGreaterEqualFact, NotGreaterFact, NotInFact,
+    NotIsCartFact, NotIsFiniteSetFact, NotIsNonemptySetFact, NotIsSetFact, NotIsTupleFact,
+    NotLessEqualFact, NotLessFact, NotNormalAtomicFact, NotSubsetFact, NotSupersetFact, SubsetFact,
+    SupersetFact,
 };
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::names::AtomicName;

@@ -1,4 +1,4 @@
-use crate::new_pipeline::runtime::{RuntimeError, RuntimeResult, RealOrVirtualPath, Runtime};
+use crate::new_pipeline::runtime::{RealOrVirtualPath, Runtime, RuntimeError, RuntimeResult};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -139,10 +139,5 @@ fn parse_name_eq_path(
 }
 
 fn config_err(config_path: &Path, line: usize, message: &str) -> RuntimeError {
-    RuntimeError::InvalidArguments(format!(
-        "{}:{}: {}",
-        config_path.display(),
-        line,
-        message
-    ))
+    RuntimeError::InvalidArguments(format!("{}:{}: {}", config_path.display(), line, message))
 }

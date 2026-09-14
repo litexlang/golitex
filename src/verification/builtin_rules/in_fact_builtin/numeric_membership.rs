@@ -1412,8 +1412,7 @@ impl Runtime {
         if exact.is_success() {
             return self.complete_atomic_fact_proof_result(bound, exact, verify_state);
         }
-        let computed =
-            self.verify_atomic_except_equality_with_zero_premise_verification(bound)?;
+        let computed = self.verify_atomic_except_equality_with_zero_premise_verification(bound)?;
         if computed.is_success() {
             return self.complete_atomic_fact_proof_result(bound, computed, verify_state);
         }
@@ -1929,9 +1928,8 @@ impl Runtime {
                 let source_membership: AtomicFact = self
                     .new_in_fact((*obj).clone(), source_set.clone(), line_file.clone())
                     .into();
-                let source_proof = self.verify_atomic_except_equality_with_known_atomic_facts(
-                    &source_membership,
-                )?;
+                let source_proof =
+                    self.verify_atomic_except_equality_with_known_atomic_facts(&source_membership)?;
                 let Some(source_result) = self.complete_proven_fact_candidate(
                     source_membership.clone().into(),
                     source_proof,

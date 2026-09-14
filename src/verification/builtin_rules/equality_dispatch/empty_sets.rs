@@ -44,9 +44,7 @@ impl Runtime {
             };
             if let Some(empty_order) = empty_order {
                 let comparison_proof = self
-                    .verify_atomic_except_equality_with_zero_premise_verification(
-                        &empty_order,
-                    )?;
+                    .verify_atomic_except_equality_with_zero_premise_verification(&empty_order)?;
                 let comparison = self.complete_atomic_fact_proof_result(
                     &empty_order,
                     comparison_proof,

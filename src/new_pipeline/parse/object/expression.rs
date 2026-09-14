@@ -176,15 +176,19 @@ fn parse_postfix(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
     Ok(left)
 }
 
-fn parse_field_and_call_postfixes(rt: &mut Runtime, tb: &mut TokenBlock, mut result: Obj) -> RuntimeResult<Obj> {
+fn parse_field_and_call_postfixes(
+    rt: &mut Runtime,
+    tb: &mut TokenBlock,
+    mut result: Obj,
+) -> RuntimeResult<Obj> {
     loop {
         if tb.peek() == Some(DOT) {
             tb.advance()?;
             let field_name = tb.advance()?;
             if !super::primary::is_simple_name(&field_name) {
-                return Err(tb.parse_error(format!(
-                    "expected field name after `.`, got `{field_name}`"
-                )));
+                return Err(
+                    tb.parse_error(format!("expected field name after `.`, got `{field_name}`"))
+                );
             }
             result = Obj::ObjAsStructInstanceWithFieldAccess(ObjAsStructInstanceWithFieldAccess {
                 obj: Box::new(result),

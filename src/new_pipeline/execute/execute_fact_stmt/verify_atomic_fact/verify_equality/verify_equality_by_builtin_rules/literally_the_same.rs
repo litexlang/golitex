@@ -36,11 +36,13 @@ impl Runtime {
             (
                 Obj::Atom(AtomObj::IdentifierWithMod(left)),
                 Obj::Atom(AtomObj::IdentifierWithMod(right)),
-            ) if left.identifier_id == right.identifier_id => Ok(Some(
-                LiterallyTheSameBuiltinRuleProof::SameIdentifierId(LiterallyTheSameBySameIdentifierIdProof {
-                    identifier_id: left.identifier_id,
-                }),
-            )),
+            ) if left.identifier_id == right.identifier_id => {
+                Ok(Some(LiterallyTheSameBuiltinRuleProof::SameIdentifierId(
+                    LiterallyTheSameBySameIdentifierIdProof {
+                        identifier_id: left.identifier_id,
+                    },
+                )))
+            }
             _ => Ok(None),
         }
     }

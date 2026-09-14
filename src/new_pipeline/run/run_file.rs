@@ -1,4 +1,4 @@
-use crate::new_pipeline::runtime::{RuntimeError, RuntimeResult, RealOrVirtualPath, Runtime};
+use crate::new_pipeline::runtime::{RealOrVirtualPath, Runtime, RuntimeError, RuntimeResult};
 use std::fs;
 use std::path::PathBuf;
 

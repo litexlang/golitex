@@ -22,11 +22,13 @@ impl Runtime {
             verify_state.clone(),
         )?;
         match self.search_equal_fact_proof(fact, verify_state)? {
-            Some(searched_proof) => Ok(VerifyFactResult::Equality(Box::new(VerifyEqualityResult {
-                fact: fact.clone(),
-                well_defined_proof,
-                searched_proof,
-            }))),
+            Some(searched_proof) => {
+                Ok(VerifyFactResult::Equality(Box::new(VerifyEqualityResult {
+                    fact: fact.clone(),
+                    well_defined_proof,
+                    searched_proof,
+                })))
+            }
             None => Ok(VerifyFactResult::Unknown(
                 UnknownVerifyFactResult::UnableToSearchProof,
             )),

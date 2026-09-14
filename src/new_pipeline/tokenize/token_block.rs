@@ -97,7 +97,10 @@ impl TokenBlock {
         crate::new_pipeline::ast::LineFile::new(self.line, self.source_path.clone())
     }
 
-    pub fn parse_error(&self, message: impl Into<String>) -> crate::new_pipeline::runtime::RuntimeError {
+    pub fn parse_error(
+        &self,
+        message: impl Into<String>,
+    ) -> crate::new_pipeline::runtime::RuntimeError {
         RuntimeParseError::new(message, self.line, self.source_path.clone()).into()
     }
 }

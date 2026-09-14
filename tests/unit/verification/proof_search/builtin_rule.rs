@@ -243,16 +243,8 @@ fn obsolete_mixed_direct_routes_cannot_reappear_in_source() {
         ]
         .concat(),
         ["verify_atomic_except_equality_with_", "known_fact("].concat(),
-        [
-            "verify_atomic_except_equality_by_builtin_",
-            "computation",
-        ]
-        .concat(),
-        [
-            "verify_atomic_except_equality_with_one_",
-            "builtin_rule",
-        ]
-        .concat(),
+        ["verify_atomic_except_equality_by_builtin_", "computation"].concat(),
+        ["verify_atomic_except_equality_with_one_", "builtin_rule"].concat(),
         ["verify_equal_fact_with_known_fact_then_", "computation"].concat(),
         ["verify_equal_fact_with_", "leaf_routes"].concat(),
         ["verify_equal_fact_by_builtin_", "computation"].concat(),
@@ -381,9 +373,7 @@ fn family_owned_bounded_builtin_routes_preserve_policy_order_and_boundaries() {
         .expect("top-level strategy dispatcher must follow its child dispatcher");
     assert_eq!(child_dispatch.matches("match atomic_fact").count(), 1);
     assert!(child_dispatch.contains("verify_equal_fact_with_bounded_builtin_routes"));
-    assert!(
-        child_dispatch.contains("verify_atomic_except_equality_with_bounded_builtin_routes")
-    );
+    assert!(child_dispatch.contains("verify_atomic_except_equality_with_bounded_builtin_routes"));
 
     let known_forall = crate::verification::universal_search_source::SOURCE;
     let forward = known_forall

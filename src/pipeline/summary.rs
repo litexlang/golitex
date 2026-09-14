@@ -563,7 +563,11 @@ impl EnvironmentSummary {
             .sum::<usize>();
         summary.add_field_counts(
             "known_atomic_facts_with_0_or_more_than_2_args",
-            environment.facts.known_atomic_except_equality_facts.by_other_arg_count.len(),
+            environment
+                .facts
+                .known_atomic_except_equality_facts
+                .by_other_arg_count
+                .len(),
             atomic_0_count,
         );
 
@@ -576,7 +580,11 @@ impl EnvironmentSummary {
             .sum::<usize>();
         summary.add_field_counts(
             "known_atomic_facts_with_1_arg",
-            environment.facts.known_atomic_except_equality_facts.by_one_arg.len(),
+            environment
+                .facts
+                .known_atomic_except_equality_facts
+                .by_one_arg
+                .len(),
             atomic_1_count,
         );
 
@@ -589,7 +597,11 @@ impl EnvironmentSummary {
             .sum::<usize>();
         summary.add_field_counts(
             "known_atomic_facts_with_2_args",
-            environment.facts.known_atomic_except_equality_facts.by_two_args.len(),
+            environment
+                .facts
+                .known_atomic_except_equality_facts
+                .by_two_args
+                .len(),
             atomic_2_count,
         );
 

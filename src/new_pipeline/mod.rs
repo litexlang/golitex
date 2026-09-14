@@ -7,8 +7,8 @@
 
 pub mod ast;
 pub mod display_and_internal_representation;
-pub mod execute;
 pub mod exec_env;
+pub mod execute;
 pub mod module_manager;
 pub mod parse;
 pub mod run;

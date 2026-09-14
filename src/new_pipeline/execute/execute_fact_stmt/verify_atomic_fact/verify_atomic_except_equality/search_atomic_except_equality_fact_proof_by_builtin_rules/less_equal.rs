@@ -26,11 +26,13 @@ impl Runtime {
     ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
         let _ = verify_state;
         if fact.left == fact.right {
-            return Ok(Some(LessEqualFactSearchProofByBuiltinRule::OrderReflexivity(
-                OrderReflexivityBuiltinRuleProof {
-                    repeated_object: fact.left.clone(),
-                },
-            )));
+            return Ok(Some(
+                LessEqualFactSearchProofByBuiltinRule::OrderReflexivity(
+                    OrderReflexivityBuiltinRuleProof {
+                        repeated_object: fact.left.clone(),
+                    },
+                ),
+            ));
         }
         Ok(None)
     }

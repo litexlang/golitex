@@ -1,9 +1,9 @@
+use super::fact_prop::is_infix_prop_name;
 use super::keywords::{
-    AND, EQUIVALENT_SIGN, EXIST, EXIST_BANG, FACT_PREFIX, FORALL, IN, is_comparison_op, MOD_SIGN,
+    is_comparison_op, AND, EQUIVALENT_SIGN, EXIST, EXIST_BANG, FACT_PREFIX, FORALL, IN, MOD_SIGN,
     NOT, OR, RIGHT_ARROW,
 };
 use super::object::{parse_obj, parse_obj_list_paren};
-use super::fact_prop::is_infix_prop_name;
 use crate::new_pipeline::ast::fact::{
     AndChainAtomicFact, AndFact, AtomicFact, ChainAtomicFact, ChainFact, ExistFact,
     ExistOrAndChainAtomicFact, Fact, ForallFact, ForallFactWithIff, NotForallFact, OrFact,
@@ -126,10 +126,7 @@ impl Runtime {
                     )
                     .into());
                 }
-                let then_header = tb.body[n - 2]
-                    .header
-                    .first()
-                    .map(String::as_str);
+                let then_header = tb.body[n - 2].header.first().map(String::as_str);
                 if then_header != Some(RIGHT_ARROW) {
                     return Err(RuntimeParseError::new(
                         "forall with `<=>:` expects the previous block to be `=>:`",
@@ -315,9 +312,9 @@ impl Runtime {
         tb: &mut TokenBlock,
     ) -> RuntimeResult<ExistOrAndChainAtomicFact> {
         match tb.peek() {
-            Some(EXIST) | Some(EXIST_BANG) => {
-                Ok(ExistOrAndChainAtomicFact::ExistFact(self.parse_exist_fact(tb)?))
-            }
+            Some(EXIST) | Some(EXIST_BANG) => Ok(ExistOrAndChainAtomicFact::ExistFact(
+                self.parse_exist_fact(tb)?,
+            )),
             Some(NOT) if tb.peek_at(1) == Some(EXIST) => {
                 tb.expect(NOT)?;
                 if tb.peek() == Some(EXIST_BANG)
@@ -338,9 +335,9 @@ impl Runtime {
                     )
                     .into());
                 };
-                Ok(ExistOrAndChainAtomicFact::ExistFact(ExistFact::NotExistFact(
-                    body,
-                )))
+                Ok(ExistOrAndChainAtomicFact::ExistFact(
+                    ExistFact::NotExistFact(body),
+                ))
             }
             Some(FORALL) => Err(RuntimeParseError::new(
                 "nested `forall` is not allowed here",

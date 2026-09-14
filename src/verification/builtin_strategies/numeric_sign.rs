@@ -13,11 +13,10 @@ impl Runtime {
             return Ok(UnknownGenericStmtResult::new().into());
         };
         if normalized.to_string() != atomic_fact.to_string() {
-            let normalized_proof = self
-                .verify_atomic_except_equality_with_bounded_builtin_routes(
-                    &normalized,
-                    verify_state,
-                )?;
+            let normalized_proof = self.verify_atomic_except_equality_with_bounded_builtin_routes(
+                &normalized,
+                verify_state,
+            )?;
             let normalized_result = self.complete_atomic_fact_proof_result(
                 &normalized,
                 normalized_proof,

@@ -34,10 +34,7 @@ impl Runtime {
                 if direct.is_success() {
                     return Ok(direct);
                 }
-                self.verify_atomic_except_equality_with_builtin_strategy(
-                    atomic_fact,
-                    verify_state,
-                )
+                self.verify_atomic_except_equality_with_builtin_strategy(atomic_fact, verify_state)
             }
         }
     }
@@ -51,8 +48,9 @@ impl Runtime {
             AtomicFact::EqualFact(equal_fact) => {
                 self.verify_equal_fact_with_builtin_strategy_routes(equal_fact, verify_state)
             }
-            _ => self
-                .verify_atomic_except_equality_with_builtin_strategy(atomic_fact, verify_state),
+            _ => {
+                self.verify_atomic_except_equality_with_builtin_strategy(atomic_fact, verify_state)
+            }
         }
     }
 

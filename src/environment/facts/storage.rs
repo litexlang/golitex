@@ -77,10 +77,13 @@ impl ExecEnv {
                     {
                         map.insert(arg_key, atomic_fact);
                     } else {
-                        self.facts.known_atomic_except_equality_facts.by_one_arg.insert(
-                            (key, positive_polarity),
-                            HashMap::from([(arg_key, atomic_fact)]),
-                        );
+                        self.facts
+                            .known_atomic_except_equality_facts
+                            .by_one_arg
+                            .insert(
+                                (key, positive_polarity),
+                                HashMap::from([(arg_key, atomic_fact)]),
+                            );
                     }
                 } else if arg_len == 2 {
                     let arg_key1: ObjString = arg_key1.expect("first argument key should exist");
@@ -93,10 +96,13 @@ impl ExecEnv {
                     {
                         map.insert((arg_key1, arg_key2), atomic_fact);
                     } else {
-                        self.facts.known_atomic_except_equality_facts.by_two_args.insert(
-                            (key, positive_polarity),
-                            HashMap::from([((arg_key1, arg_key2), atomic_fact)]),
-                        );
+                        self.facts
+                            .known_atomic_except_equality_facts
+                            .by_two_args
+                            .insert(
+                                (key, positive_polarity),
+                                HashMap::from([((arg_key1, arg_key2), atomic_fact)]),
+                            );
                     }
                 } else {
                     if let Some(vec_ref) = self

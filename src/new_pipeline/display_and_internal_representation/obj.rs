@@ -46,7 +46,8 @@ impl Obj {
 
         fn fmt_with_prec(o: &Obj, parent_precedent: u8) -> String {
             let precedent = precedence(o);
-            let need_parens = parent_precedent != 0 && precedent != 0 && precedent > parent_precedent;
+            let need_parens =
+                parent_precedent != 0 && precedent != 0 && precedent > parent_precedent;
             let mut s = String::new();
             if need_parens {
                 s.push_str(LEFT_PAREN);
@@ -335,7 +336,9 @@ impl Obj {
                 Obj::GeneralCart(x) => s.push_str(&x.internal_representation()),
                 Obj::ObjAtIndex(x) => s.push_str(&x.internal_representation()),
                 Obj::StructObj(x) => s.push_str(&x.internal_representation()),
-                Obj::ObjAsStructInstanceWithFieldAccess(x) => s.push_str(&x.internal_representation()),
+                Obj::ObjAsStructInstanceWithFieldAccess(x) => {
+                    s.push_str(&x.internal_representation())
+                }
                 Obj::InstantiatedTemplateObj(x) => s.push_str(&x.internal_representation()),
                 Obj::OneSideInfinityIntervalObj(x) => s.push_str(&x.internal_representation()),
                 Obj::IntervalObj(x) => s.push_str(&x.internal_representation()),
@@ -364,11 +367,13 @@ impl Identifier {
 
 impl IdentifierWithMod {
     pub fn internal_representation(&self) -> String {
-        format!("{}{}#{}#{}",
+        format!(
+            "{}{}#{}#{}",
             self.mod_name,
             MOD_SIGN,
             self.identifier_id.value(),
-            self.name)
+            self.name
+        )
     }
     impl_display_pair!();
 }
@@ -382,13 +387,11 @@ impl BoundParamObj {
 
 impl AtomObj {
     pub fn internal_representation(&self) -> String {
-
         match self {
             AtomObj::Identifier(x) => x.internal_representation(),
             AtomObj::IdentifierWithMod(x) => x.internal_representation(),
             AtomObj::Bound(x) => x.internal_representation(),
         }
-    
     }
     impl_display_pair!();
 }
@@ -414,7 +417,17 @@ impl FnObj {
         let mut out = String::new();
         out.push_str(&self.head.internal_representation());
         for group in self.body.iter() {
-            { out.push_str(LEFT_PAREN); out.push_str(&group.iter().map(|o| o.internal_representation()).collect::<Vec<_>>().join(", ")); out.push_str(RIGHT_PAREN); };
+            {
+                out.push_str(LEFT_PAREN);
+                out.push_str(
+                    &group
+                        .iter()
+                        .map(|o| o.internal_representation())
+                        .collect::<Vec<_>>()
+                        .join(", "),
+                );
+                out.push_str(RIGHT_PAREN);
+            };
         }
         out
     }
@@ -596,7 +609,7 @@ impl AnonymousFn {
         out.push_str(&format!("{}", LEFT_CURLY));
         out.push_str(&self.equal_to.internal_representation());
         out.push_str(&format!("{}", RIGHT_CURLY));
-    
+
         out
     }
     impl_display_pair!();
@@ -622,7 +635,7 @@ impl StandardSet {
             StandardSet::CStar => C_STAR,
         };
         out.push_str(&format!("{}", s));
-    
+
         out
     }
     impl_display_pair!();
@@ -632,8 +645,19 @@ impl Cart {
     pub fn internal_representation(&self) -> String {
         let mut out = String::new();
         out.push_str(&format!("{}", CART));
-        { out.push_str(LEFT_PAREN); out.push_str(&self.args.iter().map(|o| o.internal_representation()).collect::<Vec<_>>().join(", ")); out.push_str(RIGHT_PAREN); };
-    
+        {
+            out.push_str(LEFT_PAREN);
+            out.push_str(
+                &self
+                    .args
+                    .iter()
+                    .map(|o| o.internal_representation())
+                    .collect::<Vec<_>>()
+                    .join(", "),
+            );
+            out.push_str(RIGHT_PAREN);
+        };
+
         out
     }
     impl_display_pair!();
@@ -647,8 +671,19 @@ impl_obj_kw_call!(TupleDim, TUPLE_DIM, arg);
 impl Tuple {
     pub fn internal_representation(&self) -> String {
         let mut out = String::new();
-        { out.push_str(LEFT_PAREN); out.push_str(&self.args.iter().map(|o| o.internal_representation()).collect::<Vec<_>>().join(", ")); out.push_str(RIGHT_PAREN); };
-    
+        {
+            out.push_str(LEFT_PAREN);
+            out.push_str(
+                &self
+                    .args
+                    .iter()
+                    .map(|o| o.internal_representation())
+                    .collect::<Vec<_>>()
+                    .join(", "),
+            );
+            out.push_str(RIGHT_PAREN);
+        };
+
         out
     }
     impl_display_pair!();
@@ -711,7 +746,14 @@ impl FiniteSeqListObj {
     pub fn internal_representation(&self) -> String {
         let mut out = String::new();
         out.push_str(&format!("{}", LEFT_BRACKET));
-        out.push_str(&self.objs.iter().map(|o| o.internal_representation()).collect::<Vec<_>>().join(", "));
+        out.push_str(
+            &self
+                .objs
+                .iter()
+                .map(|o| o.internal_representation())
+                .collect::<Vec<_>>()
+                .join(", "),
+        );
         out.push_str(&format!("{}", RIGHT_BRACKET));
         out
     }
@@ -724,7 +766,7 @@ impl ObjAtIndex {
         out.push_str(&format!("{}", LEFT_BRACKET));
         out.push_str(&self.index.internal_representation());
         out.push_str(&format!("{}", RIGHT_BRACKET));
-    
+
         out
     }
     impl_display_pair!();
@@ -755,7 +797,7 @@ impl ObjAsStructInstanceWithFieldAccess {
         let mut out = String::new();
         out.push_str(&self.obj.internal_representation());
         out.push_str(&format!("{}{}", DOT_AKA_FIELD_ACCESS_SIGN, self.field_name));
-    
+
         out
     }
     impl_display_pair!();
@@ -766,7 +808,14 @@ impl InstantiatedTemplateObj {
         out.push_str(&format!("{}", TEMPLATE_INSTANCE_PREFIX));
         out.push_str(&self.template_name.internal_representation());
         out.push_str(&format!("{}", LESS));
-        out.push_str(&self.args.iter().map(|o| o.internal_representation()).collect::<Vec<_>>().join(", "));
+        out.push_str(
+            &self
+                .args
+                .iter()
+                .map(|o| o.internal_representation())
+                .collect::<Vec<_>>()
+                .join(", "),
+        );
         out.push_str(&format!("{}", GREATER));
         out
     }
@@ -786,7 +835,7 @@ impl IntervalObj {
         out.push_str(&format!("{COMMA} "));
         out.push_str(&body.end.internal_representation());
         out.push_str(&format!("{}", right_delimiter));
-    
+
         out
     }
     impl_display_pair!();
@@ -817,7 +866,7 @@ impl Add {
         out.push_str(&self.left.internal_representation());
         out.push_str(&format!(" {} ", ADD));
         out.push_str(&self.right.internal_representation());
-    
+
         out
     }
     impl_display_pair!();
@@ -828,7 +877,7 @@ impl Sub {
         out.push_str(&self.left.internal_representation());
         out.push_str(&format!(" {} ", SUB));
         out.push_str(&self.right.internal_representation());
-    
+
         out
     }
     impl_display_pair!();
@@ -839,7 +888,7 @@ impl Mul {
         out.push_str(&self.left.internal_representation());
         out.push_str(&format!(" {} ", MUL));
         out.push_str(&self.right.internal_representation());
-    
+
         out
     }
     impl_display_pair!();
@@ -850,7 +899,7 @@ impl Div {
         out.push_str(&self.left.internal_representation());
         out.push_str(&format!(" {} ", DIV));
         out.push_str(&self.right.internal_representation());
-    
+
         out
     }
     impl_display_pair!();
@@ -861,7 +910,7 @@ impl Mod {
         out.push_str(&self.left.internal_representation());
         out.push_str(&format!(" {} ", MOD_OP));
         out.push_str(&self.right.internal_representation());
-    
+
         out
     }
     impl_display_pair!();
@@ -878,7 +927,7 @@ impl Pow {
         out.push_str(&self.base.internal_representation());
         out.push_str(&format!(" {} ", POW));
         out.push_str(&self.exponent.internal_representation());
-    
+
         out
     }
     impl_display_pair!();

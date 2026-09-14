@@ -2,14 +2,12 @@
 //! Ported from verification/well_definedness/object/scalar.rs into new_pipeline AST.
 
 use super::entry::ObjWellDefinedProofByDef;
-use crate::new_pipeline::ast::fact::{
-    AtomicFact, GreaterFact, LessEqualFact, NotEqualFact,
-};
+use crate::new_pipeline::ast::fact::{AtomicFact, GreaterFact, LessEqualFact, NotEqualFact};
+use crate::new_pipeline::ast::obj::StandardSet;
 use crate::new_pipeline::ast::obj::{
     Abs, Add, Arcsin, Ceil, ComplexAbs, Cos, Cot, Div, Exp, Factorial, Floor, Gcd, ImaginaryPart,
     Lcm, Ln, Log, Max, Min, Mod, Mul, Number, Obj, Pow, Quot, RealPart, Sign, Sin, Sqrt, Sub, Tan,
 };
-use crate::new_pipeline::ast::obj::StandardSet;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
@@ -93,8 +91,15 @@ impl Runtime {
             value.right.as_ref(),
             verify_state.clone(),
         )?;
-        let zero = Obj::Number(Number { normalized_value: "0".to_string() });
-        let nonzero = AtomicFact::NotEqualFact(NotEqualFact { fact_id: self.ids.allocate_fact_id(), left: value.right.as_ref().clone(), right: zero, line_file: None });
+        let zero = Obj::Number(Number {
+            normalized_value: "0".to_string(),
+        });
+        let nonzero = AtomicFact::NotEqualFact(NotEqualFact {
+            fact_id: self.ids.allocate_fact_id(),
+            left: value.right.as_ref().clone(),
+            right: zero,
+            line_file: None,
+        });
         let mut reqs = Vec::new();
         reqs.push(self.verify_required_atomic_fact(
             nonzero,
@@ -130,8 +135,15 @@ impl Runtime {
             "mod modulus must belong to Z".to_string(),
         )?);
         if !matches!(value.right.as_ref(), Obj::Gcd(_)) {
-            let zero = Obj::Number(Number { normalized_value: "0".to_string() });
-            let nonzero = AtomicFact::NotEqualFact(NotEqualFact { fact_id: self.ids.allocate_fact_id(), left: value.right.as_ref().clone(), right: zero, line_file: None });
+            let zero = Obj::Number(Number {
+                normalized_value: "0".to_string(),
+            });
+            let nonzero = AtomicFact::NotEqualFact(NotEqualFact {
+                fact_id: self.ids.allocate_fact_id(),
+                left: value.right.as_ref().clone(),
+                right: zero,
+                line_file: None,
+            });
             reqs.push(self.verify_required_atomic_fact(
                 nonzero,
                 verify_state,
@@ -190,7 +202,9 @@ impl Runtime {
             verify_state.clone(),
             "gcd right argument must belong to Z".to_string(),
         )?);
-        let zero = Obj::Number(Number { normalized_value: "0".to_string() });
+        let zero = Obj::Number(Number {
+            normalized_value: "0".to_string(),
+        });
         let left_nz = AtomicFact::NotEqualFact(NotEqualFact {
             fact_id: self.ids.allocate_fact_id(),
             left: value.left.as_ref().clone(),
@@ -333,8 +347,8 @@ impl Runtime {
         value: &Ln,
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedProofByDef> {
-        let proof =
-            self.verify_unary_obj_well_definedness_by_def(value.arg.as_ref(), verify_state.clone())?;
+        let proof = self
+            .verify_unary_obj_well_definedness_by_def(value.arg.as_ref(), verify_state.clone())?;
         let mut reqs = Vec::new();
         reqs.push(self.require_obj_in_standard_set(
             value.arg.as_ref(),
@@ -342,8 +356,15 @@ impl Runtime {
             verify_state.clone(),
             "ln argument must belong to R".to_string(),
         )?);
-        let zero = Obj::Number(Number { normalized_value: "0".to_string() });
-        let positive = AtomicFact::GreaterFact(GreaterFact { fact_id: self.ids.allocate_fact_id(), left: value.arg.as_ref().clone(), right: zero, line_file: None });
+        let zero = Obj::Number(Number {
+            normalized_value: "0".to_string(),
+        });
+        let positive = AtomicFact::GreaterFact(GreaterFact {
+            fact_id: self.ids.allocate_fact_id(),
+            left: value.arg.as_ref().clone(),
+            right: zero,
+            line_file: None,
+        });
         reqs.push(self.verify_required_atomic_fact(
             positive,
             verify_state,
@@ -389,14 +410,10 @@ impl Runtime {
             value.exponent.as_ref(),
             verify_state.clone(),
         )?;
-        if let Ok(reqs) =
-            self.try_pow_domain_complex_natural(value, verify_state.clone())
-        {
+        if let Ok(reqs) = self.try_pow_domain_complex_natural(value, verify_state.clone()) {
             return Ok(self.with_requirements(proof, reqs));
         }
-        if let Ok(reqs) =
-            self.try_pow_domain_nonzero_complex_integer(value, verify_state.clone())
-        {
+        if let Ok(reqs) = self.try_pow_domain_nonzero_complex_integer(value, verify_state.clone()) {
             return Ok(self.with_requirements(proof, reqs));
         }
         Err(RuntimeError::Unknown(
@@ -422,8 +439,8 @@ impl Runtime {
         value: &Arcsin,
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedProofByDef> {
-        let proof =
-            self.verify_unary_obj_well_definedness_by_def(value.arg.as_ref(), verify_state.clone())?;
+        let proof = self
+            .verify_unary_obj_well_definedness_by_def(value.arg.as_ref(), verify_state.clone())?;
         let mut reqs = Vec::new();
         reqs.push(self.require_obj_in_standard_set(
             value.arg.as_ref(),
@@ -431,8 +448,12 @@ impl Runtime {
             verify_state.clone(),
             "arcsin argument must belong to R".to_string(),
         )?);
-        let neg_one = Obj::Number(Number { normalized_value: "-1".to_string() });
-        let one = Obj::Number(Number { normalized_value: "1".to_string() });
+        let neg_one = Obj::Number(Number {
+            normalized_value: "-1".to_string(),
+        });
+        let one = Obj::Number(Number {
+            normalized_value: "1".to_string(),
+        });
         let lo = AtomicFact::LessEqualFact(LessEqualFact {
             fact_id: self.ids.allocate_fact_id(),
             left: neg_one,
@@ -476,8 +497,8 @@ impl Runtime {
         value: &Tan,
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedProofByDef> {
-        let proof =
-            self.verify_unary_obj_well_definedness_by_def(value.arg.as_ref(), verify_state.clone())?;
+        let proof = self
+            .verify_unary_obj_well_definedness_by_def(value.arg.as_ref(), verify_state.clone())?;
         let mut reqs = Vec::new();
         reqs.push(self.require_obj_in_standard_set(
             value.arg.as_ref(),
@@ -488,8 +509,15 @@ impl Runtime {
         let denom = Obj::Cos(Cos {
             arg: Box::new(value.arg.as_ref().clone()),
         });
-        let zero = Obj::Number(Number { normalized_value: "0".to_string() });
-        let nonzero = AtomicFact::NotEqualFact(NotEqualFact { fact_id: self.ids.allocate_fact_id(), left: denom, right: zero, line_file: None });
+        let zero = Obj::Number(Number {
+            normalized_value: "0".to_string(),
+        });
+        let nonzero = AtomicFact::NotEqualFact(NotEqualFact {
+            fact_id: self.ids.allocate_fact_id(),
+            left: denom,
+            right: zero,
+            line_file: None,
+        });
         reqs.push(self.verify_required_atomic_fact(
             nonzero,
             verify_state,
@@ -503,8 +531,8 @@ impl Runtime {
         value: &Cot,
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedProofByDef> {
-        let proof =
-            self.verify_unary_obj_well_definedness_by_def(value.arg.as_ref(), verify_state.clone())?;
+        let proof = self
+            .verify_unary_obj_well_definedness_by_def(value.arg.as_ref(), verify_state.clone())?;
         let mut reqs = Vec::new();
         reqs.push(self.require_obj_in_standard_set(
             value.arg.as_ref(),
@@ -515,8 +543,15 @@ impl Runtime {
         let denom = Obj::Sin(Sin {
             arg: Box::new(value.arg.as_ref().clone()),
         });
-        let zero = Obj::Number(Number { normalized_value: "0".to_string() });
-        let nonzero = AtomicFact::NotEqualFact(NotEqualFact { fact_id: self.ids.allocate_fact_id(), left: denom, right: zero, line_file: None });
+        let zero = Obj::Number(Number {
+            normalized_value: "0".to_string(),
+        });
+        let nonzero = AtomicFact::NotEqualFact(NotEqualFact {
+            fact_id: self.ids.allocate_fact_id(),
+            left: denom,
+            right: zero,
+            line_file: None,
+        });
         reqs.push(self.verify_required_atomic_fact(
             nonzero,
             verify_state,
@@ -569,8 +604,8 @@ impl Runtime {
         value: &Sqrt,
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedProofByDef> {
-        let proof =
-            self.verify_unary_obj_well_definedness_by_def(value.arg.as_ref(), verify_state.clone())?;
+        let proof = self
+            .verify_unary_obj_well_definedness_by_def(value.arg.as_ref(), verify_state.clone())?;
         let mut reqs = Vec::new();
         reqs.push(self.require_obj_in_standard_set(
             value.arg.as_ref(),
@@ -578,7 +613,9 @@ impl Runtime {
             verify_state.clone(),
             "sqrt argument must belong to R".to_string(),
         )?);
-        let zero = Obj::Number(Number { normalized_value: "0".to_string() });
+        let zero = Obj::Number(Number {
+            normalized_value: "0".to_string(),
+        });
         let ge = AtomicFact::LessEqualFact(LessEqualFact {
             fact_id: self.ids.allocate_fact_id(),
             left: zero,
@@ -616,8 +653,12 @@ impl Runtime {
             verify_state.clone(),
             "log argument must belong to R".to_string(),
         )?);
-        let zero = Obj::Number(Number { normalized_value: "0".to_string() });
-        let one = Obj::Number(Number { normalized_value: "1".to_string() });
+        let zero = Obj::Number(Number {
+            normalized_value: "0".to_string(),
+        });
+        let one = Obj::Number(Number {
+            normalized_value: "1".to_string(),
+        });
         let base_pos = AtomicFact::GreaterFact(GreaterFact {
             fact_id: self.ids.allocate_fact_id(),
             left: value.base.as_ref().clone(),
@@ -749,8 +790,15 @@ impl Runtime {
             verify_state.clone(),
             "pow exponent must belong to Z".to_string(),
         )?);
-        let zero = Obj::Number(Number { normalized_value: "0".to_string() });
-        let nonzero = AtomicFact::NotEqualFact(NotEqualFact { fact_id: self.ids.allocate_fact_id(), left: value.base.as_ref().clone(), right: zero, line_file: None });
+        let zero = Obj::Number(Number {
+            normalized_value: "0".to_string(),
+        });
+        let nonzero = AtomicFact::NotEqualFact(NotEqualFact {
+            fact_id: self.ids.allocate_fact_id(),
+            left: value.base.as_ref().clone(),
+            right: zero,
+            line_file: None,
+        });
         reqs.push(self.verify_required_atomic_fact(
             nonzero,
             verify_state,

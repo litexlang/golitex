@@ -199,13 +199,18 @@ impl Runtime {
         tb: &TokenBlock,
         name: String,
     ) -> RuntimeResult<Identifier> {
-        let identifier_id = self.define_plain_atom(name.clone()).map_err(|err| match err {
-            crate::new_pipeline::runtime::RuntimeError::Invariant(message) => {
-                RuntimeParseError::new(message, tb.line, tb.source_path.clone()).into()
-            }
-            other => other,
-        })?;
-        Ok(Identifier { name, identifier_id })
+        let identifier_id = self
+            .define_plain_atom(name.clone())
+            .map_err(|err| match err {
+                crate::new_pipeline::runtime::RuntimeError::Invariant(message) => {
+                    RuntimeParseError::new(message, tb.line, tb.source_path.clone()).into()
+                }
+                other => other,
+            })?;
+        Ok(Identifier {
+            name,
+            identifier_id,
+        })
     }
 
     pub(super) fn occupy_plain_atom_as_parse(
@@ -214,11 +219,12 @@ impl Runtime {
         name: String,
         identifier_id: IdentifierId,
     ) -> RuntimeResult<()> {
-        self.occupy_plain_atom(name, identifier_id).map_err(|err| match err {
-            crate::new_pipeline::runtime::RuntimeError::Invariant(message) => {
-                RuntimeParseError::new(message, tb.line, tb.source_path.clone()).into()
-            }
-            other => other,
-        })
+        self.occupy_plain_atom(name, identifier_id)
+            .map_err(|err| match err {
+                crate::new_pipeline::runtime::RuntimeError::Invariant(message) => {
+                    RuntimeParseError::new(message, tb.line, tb.source_path.clone()).into()
+                }
+                other => other,
+            })
     }
 }

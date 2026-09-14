@@ -7,9 +7,7 @@
 //! - `Ok(Unknown)` = unable to prove (not a runtime error)
 //! - `Err` = real operational / invariant failure
 
-use super::verify_atomic_fact::{
-    VerifyAtomicExceptEqualityFactResult, VerifyEqualityResult,
-};
+use super::verify_atomic_fact::{VerifyAtomicExceptEqualityFactResult, VerifyEqualityResult};
 
 pub enum VerifyFactResult {
     Unknown(UnknownVerifyFactResult),

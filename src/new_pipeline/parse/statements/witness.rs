@@ -8,7 +8,10 @@ use crate::new_pipeline::tokenize::TokenBlock;
 impl Runtime {
     // witness exist … from objs [: proof]
     // other witness forms → clear parse_error
-    pub(in super::super) fn parse_witness_stmt(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
+    pub(in super::super) fn parse_witness_stmt(
+        &mut self,
+        block: &TokenBlock,
+    ) -> RuntimeResult<Stmt> {
         let mut tb = block.clone();
         tb.expect(WITNESS)?;
         if tb.peek() != Some(EXIST) && tb.peek() != Some(super::super::keywords::EXIST_BANG) {
@@ -35,16 +38,12 @@ impl Runtime {
         } else {
             tb.expect(COLON)?;
             if !tb.exceed_end_of_head() {
-                return Err(tb.parse_error(
-                    "witness exist: unexpected tokens after `:` in header",
-                ));
+                return Err(tb.parse_error("witness exist: unexpected tokens after `:` in header"));
             }
             let params = match &exist_fact_in_witness {
                 crate::new_pipeline::ast::fact::ExistFact::PlainExistFact(b)
                 | crate::new_pipeline::ast::fact::ExistFact::ExistUniqueFact(b)
-                | crate::new_pipeline::ast::fact::ExistFact::NotExistFact(b) => {
-                    &b.typed_parameters
-                }
+                | crate::new_pipeline::ast::fact::ExistFact::NotExistFact(b) => &b.typed_parameters,
             };
             self.with_forall_params_occupied(params, &tb, |this| this.parse_body_stmts(&tb.body))?
         };
