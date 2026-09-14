@@ -1,0 +1,18 @@
+# Problem 442 / zhongkao_241
+#
+# 完整自然语言题目：
+# 已知：AD是△ABC的角平分线，且AD⊥BC．
+# (1) 如图1，求证：AB=AC；
+# (2) 如图2，∠ABC=30°，点E在AD上，连接CE并延长交AB于点F，
+#     BG交CA的延长线于点G，且∠ABG=∠ACF，连接FG．
+#     ①求证：∠AFG=∠AFC。
+#
+# 主库已有角平分线、垂直、线段/射线、延长线、线段相等和角相等。
+# 本文件仅补充主库缺失的可复用“30度角”概念；不包装整题前提或结论。
+
+# 无向非退化角∠PQR=30°：cos²=3/4，且cos>0排除150°。
+prop is_angle_30(p, q, r cart(R, R)):
+    p != q
+    r != q
+    4 * geo::angle_cos_num(p, q, r)^2 = 3 * geo::angle_cos_den(p, q, r)
+    geo::angle_cos_num(p, q, r) > 0

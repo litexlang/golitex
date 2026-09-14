@@ -1,0 +1,4 @@
+# Problem 473: determinant is unchanged when a multiple of the first vector is added to the second.
+thm problem_473_det_shift:
+    ? forall ux, uy, vx, vy, s R:
+        (2 * ux) * (s * uy + vy) - (2 * uy) * (s * ux + vx) = (2 * ux) * vy - (2 * uy) * vx

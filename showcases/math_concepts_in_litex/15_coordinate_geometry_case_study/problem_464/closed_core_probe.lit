@@ -1,0 +1,19 @@
+# Closed abstract core: the expanded angle polynomial stays internal; only the small cross-product conclusion is exported.
+thm problem_464_closed_angle_algebra_core:
+    ? forall s1, c1, c2, s2, qx, qy, cx, cy, dx, dy R:
+        s1 * (c2^2 - s2^2) + 2 * c1 * c2 * s2 = 0,
+        s1 = 2 * ((dx + qx) * qy - (dy + qy) * qx),
+        c1 = 2 * ((dx + qx) * qx + (dy + qy) * qy),
+        c2 = 2 * (qx^2 + qy^2 - qx * cx - qy * cy),
+        s2 = -2 * (qx * cy - qy * cx),
+        qx^2 + qy^2 = cx^2 + cy^2,
+        qx^2 + qy^2 = dx^2 + dy^2,
+        qx^2 + qy^2 != 0,
+        qx * cy - qy * cx != 0
+        =>:
+            (dx + qx) * cy - (dy + qy) * cx = 0
+
+    by thm angle_core_probe::problem_464_angle_core_from_four_terms(s1, c1, c2, s2, qx, qy, cx, cy, dx, dy)
+    (2 * ((dx + qx) * qy - (dy + qy) * qx)) * ((2 * (qx^2 + qy^2 - qx * cx - qy * cy))^2 - (-2 * (qx * cy - qy * cx))^2) + 2 * (2 * ((dx + qx) * qx + (dy + qy) * qy)) * (-2 * (qx * cy - qy * cx)) * (2 * (qx^2 + qy^2 - qx * cx - qy * cy)) = 0
+    by thm algebra_probe::problem_464_algebra_probe(qx, qy, cx, cy, dx, dy)
+    (dx + qx) * cy - (dy + qy) * cx = 0

@@ -1,0 +1,38 @@
+# Problem 928 / zhongkao_741 - quadrilateral triangle congruence.
+#
+# Original statement:
+# In quadrilateral ABCD, AB = CD, AD = BC, and angle BAD = angle DCB.
+# Prove that triangle ABD is congruent to triangle CDB.
+#
+# Natural-language objects to Litex variables:
+# A <-> a, B <-> b, C <-> c, D <-> d.
+#
+# Statement-to-formal-contract mapping:
+# 1. The quadrilateral context is represented by the two nondegenerate
+#    triangles used in the conclusion: is_triangle(a,b,d) and
+#    is_triangle(c,d,b). The current geometry KB has no generic
+#    quadrilateral predicate.
+# 2. AB = CD <-> are_segments_congruent(a,b,c,d).
+# 3. AD = BC <-> are_segments_congruent(d,a,b,c).
+# 4. angle BAD = angle DCB
+#    <-> are_angles_congruent(b,a,d,d,c,b).
+# 5. triangle ABD congruent to triangle CDB
+#    <-> are_triangles_congruent(a,b,d,c,d,b).
+#
+# Proof: AB = CD and AD = BC are given, while BD and DB are the same
+# undirected segment. These three corresponding side equalities prove SSS.
+# The given angle equality is retained in the formal contract but is
+# logically redundant for the library's side-based congruence predicate.
+
+thm problem_928_quadrilateral_congruence:
+    ? forall a, b, c, d cart(R, R):
+        $geo::is_triangle(a, b, d),
+        $geo::is_triangle(c, d, b),
+        $geo::are_segments_congruent(a, b, c, d),
+        $geo::are_segments_congruent(d, a, b, c),
+        $geo::are_angles_congruent(b, a, d, d, c, b)
+        =>:
+            $geo::are_triangles_congruent(a, b, d, c, d, b)
+
+    by thm geo::distance_sq_symmetric(b, d)
+    by def $geo::are_triangles_congruent(a, b, d, c, d, b)

@@ -1,0 +1,394 @@
+# Problem 227 (zhongkao_23): 倍长中线模型
+#
+# 原题自然语言：
+# (1) AD是△ABC的中线，延长AD至E，使ED=AD。证明△ACD≌△EBD。
+# (2) 在△ABC中，AB=10，AC=6。求BC边上中线AD的取值范围。
+# (3) AD是△ABC的中线，E、F分别在AB、AC上，且DE⊥DF。证明BE+CF>EF。
+#
+# 自然语言条件 ↔ 主定理 forall 前提与结论：
+# - (1) AD为中线 ↔ is_midpoint(d,b,c)；E在AD延长线上且ED=AD
+#   ↔ is_midpoint(d,a,ep)；△ACD≌△EBD ↔ are_triangles_congruent(a,c,d,ep,b,d)。
+# - (2) d_ab,d_ac,d_ad,d_bc为四条边/中线的非负长度；AB=10、AC=6
+#   ↔ d_ab²=100、d_ac²=36；三角形和中线条件 ↔ median inequality、
+#   d_bc<d_ab+d_ac 与 Apollonius 恒等式；结论 ↔ 2<d_ad 且 d_ad<8。
+#   本问最终 theorem 是上述几何事实的标量闭包，未误标为完整坐标导出。
+# - (3) 在 problem_227_part3_inequality 中以 p 表示原题E、f表示原题F；
+#   0<s,t<1 及两条仿射坐标等式 ↔ E、F分别严格位于AB、AC内部；
+#   is_midpoint(d,b,c) ↔ AD为中线；is_perpendicular(p,d,d,f) ↔ DE⊥DF；
+#   g是p关于d的反射点 ↔ is_midpoint(d,p,g)。=> 中存在的 l_be,l_cf,l_ef
+#   分别是BE、CF、EF的非负长度，且 l_be+l_cf>l_ef ↔ BE+CF>EF。
+#
+# 下方辅助接口先验证精确的KB谓词/定理调用，再给出原题三问的证明。
+
+thm problem_227_part1_sss_interface:
+    ? forall a, b, c, d, q cart(R, R):
+        geo::distance_sq(a, c) = geo::distance_sq(q, b),
+        geo::distance_sq(c, d) = geo::distance_sq(b, d),
+        geo::distance_sq(d, a) = geo::distance_sq(d, q)
+        =>:
+            $geo::are_triangles_congruent(a, c, d, q, b, d)
+    by def $geo::are_triangles_congruent(a, c, d, q, b, d)
+    by def $geo::are_segments_congruent(a, c, q, b)
+    by def $geo::are_segments_congruent(c, d, b, d)
+    by def $geo::are_segments_congruent(d, a, d, q)
+    by thm geo::distance_sq_symmetric(d, a)
+    by thm geo::distance_sq_symmetric(d, q)
+
+thm problem_227_part2_upper_interface:
+    ? forall a, b, c, d cart(R, R):
+        $geo::is_midpoint(d, b, c),
+        not $geo::is_collinear(a, b, c)
+        =>:
+            exist d_ab, d_ac, d_ad R st {d_ab >= 0, d_ac >= 0, d_ad >= 0, d_ab * d_ab = geo::distance_sq(a, b), d_ac * d_ac = geo::distance_sq(a, c), d_ad * d_ad = geo::distance_sq(a, d), d_ab + d_ac > 2 * d_ad}
+    by thm geo::median_inequality_distance(a, b, c, d)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Problem 227 (zhongkao_23): formalized original claims
+# ═══════════════════════════════════════════════════════════════════════
+
+# Part (1). D is the midpoint of BC and also of AE (the latter is exactly
+# the construction "extend AD to E with ED=AD"). Then △ACD ≌ △EBD.
+thm problem_227_part1:
+    ? forall a, b, c, d, ep cart(R, R):
+        $geo::is_midpoint(d, b, c),
+        $geo::is_midpoint(d, a, ep)
+        =>:
+            $geo::are_triangles_congruent(a, c, d, ep, b, d)
+    by def $geo::is_midpoint(d, b, c)
+    by def $geo::is_midpoint(d, a, ep)
+
+    by thm geo::double_midpoint_equal_sides(a, b, c, d, ep)
+    geo::distance_sq(a, c) = geo::distance_sq(b, ep)
+    by thm geo::distance_sq_symmetric(b, ep)
+    geo::distance_sq(b, ep) = geo::distance_sq(ep, b)
+    geo::distance_sq(a, c) = geo::distance_sq(ep, b)
+
+    geo::distance_sq(c, d) = geo::distance_sq(b, d)
+    geo::distance_sq(d, a) = geo::distance_sq(d, ep)
+
+    by thm problem_227_part1_sss_interface(a, b, c, d, ep)
+
+
+# Local arithmetic bridge reused from the verified solution of problem 225.
+# It is not available as a named theorem in the imported geometry KB.
+thm problem_227_nonnegative_equal_of_equal_squares:
+    ? forall x, y R:
+        x >= 0,
+        y > 0,
+        x^2 = y^2
+        =>:
+            x = y
+    x^2 - y^2 = 0
+    (x - y) * (x + y) = 0
+    x + y > 0
+    x + y != 0
+    x - y = 0
+    x = y
+
+# Part (2) scalar closure.  The upper estimate is the median inequality.
+# For the lower estimate, the third side is shorter than 10+6 and
+# Apollonius gives 4 AD^2 = 2 AB^2 + 2 AC^2 - BC^2.
+thm problem_227_part2_scalar:
+    ? forall d_ab, d_ac, d_ad, d_bc R:
+        d_ab >= 0,
+        d_ac >= 0,
+        d_ad >= 0,
+        d_bc >= 0,
+        d_ab * d_ab = 100,
+        d_ac * d_ac = 36,
+        d_ab + d_ac > 2 * d_ad,
+        d_bc < d_ab + d_ac,
+        4 * d_ad * d_ad = 2 * d_ab * d_ab + 2 * d_ac * d_ac - d_bc * d_bc
+        =>:
+            2 < d_ad,
+            d_ad < 8
+    d_ab^2 = d_ab * d_ab
+    d_ab^2 = 100
+    10^2 = 100
+    d_ab^2 = 10^2
+    by thm problem_227_nonnegative_equal_of_equal_squares(d_ab, 10)
+    d_ab = 10
+
+    d_ac^2 = d_ac * d_ac
+    d_ac^2 = 36
+    6^2 = 36
+    d_ac^2 = 6^2
+    by thm problem_227_nonnegative_equal_of_equal_squares(d_ac, 6)
+    d_ac = 6
+
+    d_ab + d_ac = 16
+    16 > 2 * d_ad
+    by contra:
+        ? d_ad < 8
+        d_ad >= 8
+        2 * d_ad >= 16
+        impossible 16 > 2 * d_ad
+    d_ad < 8
+    d_bc < 16
+    d_bc - 16 < 0
+    d_bc + 16 > 0
+    (d_bc - 16) * (d_bc + 16) < 0
+    (d_bc - 16) * (d_bc + 16) = d_bc * d_bc - 256
+    d_bc * d_bc - 256 < 0
+    d_bc * d_bc < 256
+    256 - d_bc * d_bc > 0
+    2 * d_ab * d_ab + 2 * d_ac * d_ac = 272
+    4 * d_ad * d_ad = 2 * d_ab * d_ab + 2 * d_ac * d_ac - d_bc * d_bc
+    2 * d_ab * d_ab + 2 * d_ac * d_ac - d_bc * d_bc = 272 - d_bc * d_bc
+    4 * d_ad * d_ad = 272 - d_bc * d_bc
+    4 * (d_ad * d_ad - 4) = 4 * d_ad * d_ad - 16
+    4 * d_ad * d_ad - 16 = (272 - d_bc * d_bc) - 16
+    (272 - d_bc * d_bc) - 16 = 256 - d_bc * d_bc
+    4 * (d_ad * d_ad - 4) = 256 - d_bc * d_bc
+    by contra:
+        ? 2 < d_ad
+        d_ad <= 2
+        by contra:
+            ? d_ad < 2
+            d_ad >= 2
+            d_ad = 2
+            d_ad * d_ad - 4 = 0
+            4 * (d_ad * d_ad - 4) = 0
+            256 - d_bc * d_bc = 0
+            impossible 256 - d_bc * d_bc > 0
+        d_ad < 2
+        d_ad - 2 < 0
+        d_ad + 2 > 0
+        (d_ad - 2) * (d_ad + 2) < 0
+        (d_ad - 2) * (d_ad + 2) = d_ad * d_ad - 4
+        d_ad * d_ad - 4 < 0
+        4 * (d_ad * d_ad - 4) < 0
+        256 - d_bc * d_bc = 4 * (d_ad * d_ad - 4) < 0
+        impossible 256 - d_bc * d_bc > 0
+    2 < d_ad
+
+
+# Part (3): BE + CF > EF via reflection across D.
+thm problem_227_reflection_equalities:
+    ? forall b, c, d, p, f, g cart(R, R):
+        $geo::is_midpoint(d, b, c),
+        $geo::is_midpoint(d, p, g),
+        $geo::is_perpendicular(p, d, d, f)
+        =>:
+            geo::distance_sq(b, p) = geo::distance_sq(c, g),
+            geo::distance_sq(f, p) = geo::distance_sq(f, g)
+
+    by def $geo::is_midpoint(d, b, c)
+    d = ((b[1] + c[1]) / 2, (b[2] + c[2]) / 2) = ((c[1] + b[1]) / 2, (c[2] + b[2]) / 2)
+    by def $geo::is_midpoint(d, c, b)
+
+    by thm geo::double_midpoint_equal_sides(p, c, b, d, g)
+    geo::distance_sq(p, b) = geo::distance_sq(c, g)
+    by thm geo::distance_sq_symmetric(b, p)
+    geo::distance_sq(b, p) = geo::distance_sq(p, b) = geo::distance_sq(c, g)
+
+    by thm geo::midpoint_coordinate_formula(d, p, g)
+    d = ((p[1] + g[1]) / 2, (p[2] + g[2]) / 2)
+    by def $geo::is_perpendicular(p, d, d, f)
+    d[1] = (p[1] + g[1]) / 2
+    d[2] = (p[2] + g[2]) / 2
+    p != d
+    d != f
+    geo::dot(geo::vec(p, d), geo::vec(d, f)) = 0
+
+    g[1] - p[1] = 2 * (d[1] - p[1])
+    g[2] - p[2] = 2 * (d[2] - p[2])
+
+    by thm geo::perpendicular_dot_expand(p, d, d, f)
+    (d[1] - p[1]) * (f[1] - d[1]) + (d[2] - p[2]) * (f[2] - d[2]) = 0
+
+    by thm geo::perpendicular_dot_expand(f, d, p, g)
+    geo::dot(geo::vec(f, d), geo::vec(p, g)) = (d[1] - f[1]) * (g[1] - p[1]) + (d[2] - f[2]) * (g[2] - p[2])
+    by thm geo::multiply_both_sides(g[1] - p[1], 2 * (d[1] - p[1]), d[1] - f[1])
+    (g[1] - p[1]) * (d[1] - f[1]) = (2 * (d[1] - p[1])) * (d[1] - f[1])
+    (d[1] - f[1]) * (g[1] - p[1]) = (g[1] - p[1]) * (d[1] - f[1]) = (2 * (d[1] - p[1])) * (d[1] - f[1]) = -2 * ((d[1] - p[1]) * (f[1] - d[1]))
+
+    by thm geo::multiply_both_sides(g[2] - p[2], 2 * (d[2] - p[2]), d[2] - f[2])
+    (g[2] - p[2]) * (d[2] - f[2]) = (2 * (d[2] - p[2])) * (d[2] - f[2])
+    (d[2] - f[2]) * (g[2] - p[2]) = (g[2] - p[2]) * (d[2] - f[2]) = (2 * (d[2] - p[2])) * (d[2] - f[2]) = -2 * ((d[2] - p[2]) * (f[2] - d[2]))
+
+    by thm geo::add_equalities((d[1] - f[1]) * (g[1] - p[1]), -2 * ((d[1] - p[1]) * (f[1] - d[1])), (d[2] - f[2]) * (g[2] - p[2]), -2 * ((d[2] - p[2]) * (f[2] - d[2])))
+    (d[1] - f[1]) * (g[1] - p[1]) + (d[2] - f[2]) * (g[2] - p[2]) = -2 * ((d[1] - p[1]) * (f[1] - d[1])) + -2 * ((d[2] - p[2]) * (f[2] - d[2]))
+    -2 * ((d[1] - p[1]) * (f[1] - d[1])) + -2 * ((d[2] - p[2]) * (f[2] - d[2])) = -2 * ((d[1] - p[1]) * (f[1] - d[1]) + (d[2] - p[2]) * (f[2] - d[2])) = 0
+    (d[1] - f[1]) * (g[1] - p[1]) + (d[2] - f[2]) * (g[2] - p[2]) = 0
+    geo::dot(geo::vec(f, d), geo::vec(p, g)) = 0
+
+    by contra:
+        ? f != d
+        f = d
+        impossible d != f
+
+    by contra:
+        ? p != g
+        p = g
+        p[1] = g[1]
+        p[2] = g[2]
+        d[1] = (p[1] + g[1]) / 2 = (p[1] + p[1]) / 2 = p[1]
+        d[2] = (p[2] + g[2]) / 2 = (p[2] + p[2]) / 2 = p[2]
+        by thm tuple_equal_from_coordinates(d, (d[1], d[2]))
+        by thm tuple_equal_from_coordinates(p, (p[1], p[2]))
+        d = (d[1], d[2]) = (p[1], p[2]) = p
+        impossible p != d
+
+    by thm geo::perpendicular_from_dot_zero(f, d, p, g)
+    $geo::is_perpendicular(f, d, p, g)
+    by thm geo::perpendicular_bisector_equidistant_sq(p, g, d, f)
+    geo::distance_sq(f, p) = geo::distance_sq(f, g)
+
+thm problem_227_reflected_triangle_noncollinear:
+    ? forall a, b, c, d, p, f, g cart(R, R), s, t R:
+        not $geo::is_collinear(a, b, c),
+        0 < s,
+        s < 1,
+        0 < t,
+        t < 1,
+        p = (a[1] + s * (b[1] - a[1]), a[2] + s * (b[2] - a[2])),
+        f = (a[1] + t * (c[1] - a[1]), a[2] + t * (c[2] - a[2])),
+        $geo::is_midpoint(d, b, c),
+        $geo::is_midpoint(d, p, g)
+        =>:
+            not $geo::is_collinear(c, f, g)
+    by contra:
+        ? not $geo::is_collinear(c, f, g)
+        $geo::is_collinear(c, f, g)
+        by def $geo::is_collinear(c, f, g)
+        geo::det(geo::vec(c, f), geo::vec(c, g)) = 0
+
+        by contra:
+            ? geo::det(geo::vec(a, b), geo::vec(a, c)) != 0
+            geo::det(geo::vec(a, b), geo::vec(a, c)) = 0
+            by def $geo::is_collinear(a, b, c)
+            impossible not $geo::is_collinear(a, b, c)
+
+        by thm geo::midpoint_coordinate_formula(d, b, c)
+        d = ((b[1] + c[1]) / 2, (b[2] + c[2]) / 2)
+        by thm geo::midpoint_coordinate_formula(d, p, g)
+        d = ((p[1] + g[1]) / 2, (p[2] + g[2]) / 2)
+        ((b[1] + c[1]) / 2, (b[2] + c[2]) / 2) = d = ((p[1] + g[1]) / 2, (p[2] + g[2]) / 2)
+        ((b[1] + c[1]) / 2, (b[2] + c[2]) / 2)[1] = ((p[1] + g[1]) / 2, (p[2] + g[2]) / 2)[1]
+        ((b[1] + c[1]) / 2, (b[2] + c[2]) / 2)[2] = ((p[1] + g[1]) / 2, (p[2] + g[2]) / 2)[2]
+        ((b[1] + c[1]) / 2, (b[2] + c[2]) / 2)[1] = (b[1] + c[1]) / 2
+        ((p[1] + g[1]) / 2, (p[2] + g[2]) / 2)[1] = (p[1] + g[1]) / 2
+        ((b[1] + c[1]) / 2, (b[2] + c[2]) / 2)[2] = (b[2] + c[2]) / 2
+        ((p[1] + g[1]) / 2, (p[2] + g[2]) / 2)[2] = (p[2] + g[2]) / 2
+        (b[1] + c[1]) / 2 = ((b[1] + c[1]) / 2, (b[2] + c[2]) / 2)[1] = ((p[1] + g[1]) / 2, (p[2] + g[2]) / 2)[1] = (p[1] + g[1]) / 2
+        (b[2] + c[2]) / 2 = ((b[1] + c[1]) / 2, (b[2] + c[2]) / 2)[2] = ((p[1] + g[1]) / 2, (p[2] + g[2]) / 2)[2] = (p[2] + g[2]) / 2
+        by thm geo::multiply_both_sides((b[1] + c[1]) / 2, (p[1] + g[1]) / 2, 2)
+        ((b[1] + c[1]) / 2) * 2 = ((p[1] + g[1]) / 2) * 2
+        ((b[1] + c[1]) / 2) * 2 = b[1] + c[1]
+        ((p[1] + g[1]) / 2) * 2 = p[1] + g[1]
+        b[1] + c[1] = ((b[1] + c[1]) / 2) * 2 = ((p[1] + g[1]) / 2) * 2 = p[1] + g[1]
+        by thm geo::subtract_equalities(b[1] + c[1], p[1] + g[1], p[1], p[1])
+        (b[1] + c[1]) - p[1] = (p[1] + g[1]) - p[1]
+        (p[1] + g[1]) - p[1] = g[1]
+        g[1] = (p[1] + g[1]) - p[1] = (b[1] + c[1]) - p[1]
+
+        by thm geo::multiply_both_sides((b[2] + c[2]) / 2, (p[2] + g[2]) / 2, 2)
+        ((b[2] + c[2]) / 2) * 2 = ((p[2] + g[2]) / 2) * 2
+        ((b[2] + c[2]) / 2) * 2 = b[2] + c[2]
+        ((p[2] + g[2]) / 2) * 2 = p[2] + g[2]
+        b[2] + c[2] = ((b[2] + c[2]) / 2) * 2 = ((p[2] + g[2]) / 2) * 2 = p[2] + g[2]
+        by thm geo::subtract_equalities(b[2] + c[2], p[2] + g[2], p[2], p[2])
+        (b[2] + c[2]) - p[2] = (p[2] + g[2]) - p[2]
+        (p[2] + g[2]) - p[2] = g[2]
+        g[2] = (p[2] + g[2]) - p[2] = (b[2] + c[2]) - p[2]
+
+        p[1] = a[1] + s * (b[1] - a[1])
+        p[2] = a[2] + s * (b[2] - a[2])
+        f[1] = a[1] + t * (c[1] - a[1])
+        f[2] = a[2] + t * (c[2] - a[2])
+        by thm geo::subtract_equalities(g[1], (b[1] + c[1]) - p[1], c[1], c[1])
+        g[1] - c[1] = ((b[1] + c[1]) - p[1]) - c[1]
+        ((b[1] + c[1]) - p[1]) - c[1] = b[1] - p[1]
+        by thm geo::subtract_equalities(b[1], b[1], p[1], a[1] + s * (b[1] - a[1]))
+        b[1] - p[1] = b[1] - (a[1] + s * (b[1] - a[1]))
+        b[1] - (a[1] + s * (b[1] - a[1])) = (1 - s) * (b[1] - a[1])
+        g[1] - c[1] = ((b[1] + c[1]) - p[1]) - c[1] = b[1] - p[1] = b[1] - (a[1] + s * (b[1] - a[1])) = (1 - s) * (b[1] - a[1])
+        by thm geo::subtract_equalities(g[2], (b[2] + c[2]) - p[2], c[2], c[2])
+        g[2] - c[2] = ((b[2] + c[2]) - p[2]) - c[2]
+        ((b[2] + c[2]) - p[2]) - c[2] = b[2] - p[2]
+        by thm geo::subtract_equalities(b[2], b[2], p[2], a[2] + s * (b[2] - a[2]))
+        b[2] - p[2] = b[2] - (a[2] + s * (b[2] - a[2]))
+        b[2] - (a[2] + s * (b[2] - a[2])) = (1 - s) * (b[2] - a[2])
+        g[2] - c[2] = ((b[2] + c[2]) - p[2]) - c[2] = b[2] - p[2] = b[2] - (a[2] + s * (b[2] - a[2])) = (1 - s) * (b[2] - a[2])
+        f[1] - c[1] = (1 - t) * (a[1] - c[1])
+        f[2] - c[2] = (1 - t) * (a[2] - c[2])
+
+        by thm geo::collinear_det_expand(c, f, g)
+        geo::det(geo::vec(c, f), geo::vec(c, g)) = (f[1] - c[1]) * (g[2] - c[2]) - (f[2] - c[2]) * (g[1] - c[1])
+        by thm geo::multiply_both_sides(f[1] - c[1], (1 - t) * (a[1] - c[1]), g[2] - c[2])
+        (f[1] - c[1]) * (g[2] - c[2]) = ((1 - t) * (a[1] - c[1])) * (g[2] - c[2])
+        by thm geo::multiply_both_sides(g[2] - c[2], (1 - s) * (b[2] - a[2]), (1 - t) * (a[1] - c[1]))
+        (g[2] - c[2]) * ((1 - t) * (a[1] - c[1])) = ((1 - s) * (b[2] - a[2])) * ((1 - t) * (a[1] - c[1]))
+        ((1 - t) * (a[1] - c[1])) * (g[2] - c[2]) = (g[2] - c[2]) * ((1 - t) * (a[1] - c[1])) = ((1 - s) * (b[2] - a[2])) * ((1 - t) * (a[1] - c[1]))
+        (f[1] - c[1]) * (g[2] - c[2]) = ((1 - t) * (a[1] - c[1])) * ((1 - s) * (b[2] - a[2]))
+
+        by thm geo::multiply_both_sides(f[2] - c[2], (1 - t) * (a[2] - c[2]), g[1] - c[1])
+        (f[2] - c[2]) * (g[1] - c[1]) = ((1 - t) * (a[2] - c[2])) * (g[1] - c[1])
+        by thm geo::multiply_both_sides(g[1] - c[1], (1 - s) * (b[1] - a[1]), (1 - t) * (a[2] - c[2]))
+        (g[1] - c[1]) * ((1 - t) * (a[2] - c[2])) = ((1 - s) * (b[1] - a[1])) * ((1 - t) * (a[2] - c[2]))
+        ((1 - t) * (a[2] - c[2])) * (g[1] - c[1]) = (g[1] - c[1]) * ((1 - t) * (a[2] - c[2])) = ((1 - s) * (b[1] - a[1])) * ((1 - t) * (a[2] - c[2]))
+        (f[2] - c[2]) * (g[1] - c[1]) = ((1 - t) * (a[2] - c[2])) * ((1 - s) * (b[1] - a[1]))
+
+        by thm geo::subtract_equalities((f[1] - c[1]) * (g[2] - c[2]), ((1 - t) * (a[1] - c[1])) * ((1 - s) * (b[2] - a[2])), (f[2] - c[2]) * (g[1] - c[1]), ((1 - t) * (a[2] - c[2])) * ((1 - s) * (b[1] - a[1])))
+        (f[1] - c[1]) * (g[2] - c[2]) - (f[2] - c[2]) * (g[1] - c[1]) = ((1 - t) * (a[1] - c[1])) * ((1 - s) * (b[2] - a[2])) - ((1 - t) * (a[2] - c[2])) * ((1 - s) * (b[1] - a[1]))
+        geo::det(geo::vec(c, f), geo::vec(c, g)) = (f[1] - c[1]) * (g[2] - c[2]) - (f[2] - c[2]) * (g[1] - c[1]) = ((1 - t) * (a[1] - c[1])) * ((1 - s) * (b[2] - a[2])) - ((1 - t) * (a[2] - c[2])) * ((1 - s) * (b[1] - a[1]))
+        ((1 - t) * (a[1] - c[1])) * ((1 - s) * (b[2] - a[2])) - ((1 - t) * (a[2] - c[2])) * ((1 - s) * (b[1] - a[1])) = (1 - t) * (1 - s) * ((a[1] - c[1]) * (b[2] - a[2]) - (a[2] - c[2]) * (b[1] - a[1]))
+        geo::det(geo::vec(c, f), geo::vec(c, g)) = (1 - t) * (1 - s) * ((a[1] - c[1]) * (b[2] - a[2]) - (a[2] - c[2]) * (b[1] - a[1]))
+
+        by thm geo::collinear_det_expand(a, b, c)
+        geo::det(geo::vec(a, b), geo::vec(a, c)) = (b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1])
+        (a[1] - c[1]) * (b[2] - a[2]) - (a[2] - c[2]) * (b[1] - a[1]) = (b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1])
+        by thm geo::multiply_both_sides((a[1] - c[1]) * (b[2] - a[2]) - (a[2] - c[2]) * (b[1] - a[1]), (b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1]), (1 - t) * (1 - s))
+        ((a[1] - c[1]) * (b[2] - a[2]) - (a[2] - c[2]) * (b[1] - a[1])) * ((1 - t) * (1 - s)) = ((b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1])) * ((1 - t) * (1 - s))
+        (1 - t) * (1 - s) * ((a[1] - c[1]) * (b[2] - a[2]) - (a[2] - c[2]) * (b[1] - a[1])) = ((a[1] - c[1]) * (b[2] - a[2]) - (a[2] - c[2]) * (b[1] - a[1])) * ((1 - t) * (1 - s)) = ((b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1])) * ((1 - t) * (1 - s)) = (1 - t) * (1 - s) * ((b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1]))
+        geo::det(geo::vec(c, f), geo::vec(c, g)) = (1 - t) * (1 - s) * ((b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1]))
+
+        by thm geo::multiply_both_sides(geo::det(geo::vec(a, b), geo::vec(a, c)), (b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1]), (1 - t) * (1 - s))
+        geo::det(geo::vec(a, b), geo::vec(a, c)) * ((1 - t) * (1 - s)) = ((b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1])) * ((1 - t) * (1 - s))
+        (1 - t) * (1 - s) * geo::det(geo::vec(a, b), geo::vec(a, c)) = geo::det(geo::vec(a, b), geo::vec(a, c)) * ((1 - t) * (1 - s)) = ((b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1])) * ((1 - t) * (1 - s)) = (1 - t) * (1 - s) * ((b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1]))
+        geo::det(geo::vec(c, f), geo::vec(c, g)) = (1 - t) * (1 - s) * ((b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1])) = (1 - t) * (1 - s) * geo::det(geo::vec(a, b), geo::vec(a, c))
+
+        1 - t > 0
+        1 - s > 0
+        (1 - t) * (1 - s) > 0
+        (1 - t) * (1 - s) != 0
+        geo::det(geo::vec(a, b), geo::vec(a, c)) = 0
+        impossible geo::det(geo::vec(a, b), geo::vec(a, c)) != 0
+
+
+thm problem_227_part3_inequality:
+    ? forall a, b, c, d, p, f, g cart(R, R), s, t R:
+        not $geo::is_collinear(a, b, c),
+        0 < s,
+        s < 1,
+        0 < t,
+        t < 1,
+        p = (a[1] + s * (b[1] - a[1]), a[2] + s * (b[2] - a[2])),
+        f = (a[1] + t * (c[1] - a[1]), a[2] + t * (c[2] - a[2])),
+        $geo::is_midpoint(d, b, c),
+        $geo::is_midpoint(d, p, g),
+        $geo::is_perpendicular(p, d, d, f)
+        =>:
+            exist l_be, l_cf, l_ef R st {l_be >= 0, l_cf >= 0, l_ef >= 0, l_be * l_be = geo::distance_sq(b, p), l_cf * l_cf = geo::distance_sq(c, f), l_ef * l_ef = geo::distance_sq(p, f), l_be + l_cf > l_ef}
+
+    by thm problem_227_reflected_triangle_noncollinear(a, b, c, d, p, f, g, s, t)
+    not $geo::is_collinear(c, f, g)
+
+    by thm geo::triangle_inequality(c, f, g)
+    obtain l_cf, l_fg, l_cg from exist l_cf, l_fg, l_cg R st {l_cf >= 0, l_fg >= 0, l_cg >= 0, l_cf * l_cf = geo::distance_sq(c, f), l_fg * l_fg = geo::distance_sq(f, g), l_cg * l_cg = geo::distance_sq(c, g), l_cf + l_fg > l_cg, l_fg + l_cg > l_cf, l_cf + l_cg > l_fg}
+
+    by thm problem_227_reflection_equalities(b, c, d, p, f, g)
+    geo::distance_sq(b, p) = geo::distance_sq(c, g)
+    geo::distance_sq(f, p) = geo::distance_sq(f, g)
+
+    by thm geo::distance_sq_symmetric(p, f)
+    geo::distance_sq(p, f) = geo::distance_sq(f, p)
+
+    l_cg * l_cg = geo::distance_sq(c, g) = geo::distance_sq(b, p)
+    l_fg * l_fg = geo::distance_sq(f, g) = geo::distance_sq(f, p) = geo::distance_sq(p, f)
+    l_cg + l_cf = l_cf + l_cg
+    l_cg + l_cf > l_fg
+
+    witness exist l_be, l_cf0, l_ef R st {l_be >= 0, l_cf0 >= 0, l_ef >= 0, l_be * l_be = geo::distance_sq(b, p), l_cf0 * l_cf0 = geo::distance_sq(c, f), l_ef * l_ef = geo::distance_sq(p, f), l_be + l_cf0 > l_ef} from l_cg, l_cf, l_fg

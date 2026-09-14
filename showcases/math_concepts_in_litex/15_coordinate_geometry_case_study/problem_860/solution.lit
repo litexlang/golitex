@@ -1,0 +1,194 @@
+# 完整原题（Problem 860，山东烟台中考，切线判定与菱形性质）：
+# 如图，在菱形ABCD中，对角线AC、BD相交于点O，圆O经过A、B两点，
+# 并交对角线BD于点E；连接AE交BD于点G，且AG=EG。
+# 求证：AD是圆O的切线，即半径OA垂直于直线AD。
+#
+# 形式化说明：非退化菱形要求A、B、D不共线。按录入题面，E和G都在BD上，
+# 同时A、G、E共线且E != G，因此题设推出A、B、D共线，与非退化条件矛盾。
+# 下列形式化忠实保留这些条件，并显式证明该矛盾蕴含所需的垂直结论。
+
+# 辅助引理1：对任意实数a、b、c，若等式两边同乘非零实数c后相等，则a=b。
+thm problem_860_divide_both_sides:
+    # a、b是待比较实数，c是两边共有的实数因子。
+    ? forall a, b, c R:
+        # 条件：a*c与b*c相等。
+        a * c = b * c,
+        # 条件：共有因子c非零。
+        c != 0
+        =>:
+            # 结论：约去非零因子后a=b。
+            a = b
+    a = (a * c) / c = (b * c) / c = b
+
+# 辅助引理2：对任意平面点a、b、p，若a!=b且p与a、b共线，则p有线段ab的仿射参数表示。
+thm problem_860_affine_parameter:
+    # a、b是确定直线的点，p是该直线上的点。
+    ? forall a, b, p cart(R, R):
+        # 条件：a与b不重合。
+        a != b,
+        # 条件：p、a、b的坐标行列式为零，即三点共线的坐标形式。
+        (p[1] - a[1]) * (b[2] - a[2]) - (p[2] - a[2]) * (b[1] - a[1]) = 0
+        =>:
+            # 结论：存在实数t，使p=(1-t)a+tb（逐坐标表示）。
+            exist t R st {p[1] = (1 - t) * a[1] + t * b[1], p[2] = (1 - t) * a[2] + t * b[2]}
+    by cases:
+        ? exist t R st {p[1] = (1 - t) * a[1] + t * b[1], p[2] = (1 - t) * a[2] + t * b[2]}
+        case b[1] - a[1] != 0:
+            witness exist t R st {p[1] = (1 - t) * a[1] + t * b[1], p[2] = (1 - t) * a[2] + t * b[2]} from (p[1] - a[1]) / (b[1] - a[1]):
+                ((p[1] - a[1]) / (b[1] - a[1])) * (b[1] - a[1]) = p[1] - a[1]
+                p[1] = (1 - (p[1] - a[1]) / (b[1] - a[1])) * a[1] + ((p[1] - a[1]) / (b[1] - a[1])) * b[1]
+                (p[2] - a[2]) * (b[1] - a[1]) = (((p[1] - a[1]) / (b[1] - a[1])) * (b[2] - a[2])) * (b[1] - a[1])
+                by thm problem_860_divide_both_sides(p[2] - a[2], ((p[1] - a[1]) / (b[1] - a[1])) * (b[2] - a[2]), b[1] - a[1])
+                p[2] - a[2] = ((p[1] - a[1]) / (b[1] - a[1])) * (b[2] - a[2])
+                p[2] = (p[2] - a[2]) + a[2] = ((p[1] - a[1]) / (b[1] - a[1])) * (b[2] - a[2]) + a[2] = (1 - (p[1] - a[1]) / (b[1] - a[1])) * a[2] + ((p[1] - a[1]) / (b[1] - a[1])) * b[2]
+        case b[1] - a[1] = 0:
+            b[1] = a[1]
+            by contra:
+                ? b[2] - a[2] != 0
+                b[2] - a[2] = 0
+                b[2] = a[2]
+                by thm tuple_equal_from_coordinates(a, (a[1], a[2]))
+                by thm tuple_equal_from_coordinates(b, (b[1], b[2]))
+                (a[1], a[2]) = (b[1], b[2])
+                a = (a[1], a[2]) = (b[1], b[2]) = b
+                impossible a != b
+            witness exist t R st {p[1] = (1 - t) * a[1] + t * b[1], p[2] = (1 - t) * a[2] + t * b[2]} from (p[2] - a[2]) / (b[2] - a[2]):
+                (p[1] - a[1]) * (b[2] - a[2]) = (p[1] - a[1]) * (b[2] - a[2]) - (p[2] - a[2]) * (b[1] - a[1]) = 0 = 0 * (b[2] - a[2])
+                by thm problem_860_divide_both_sides(p[1] - a[1], 0, b[2] - a[2])
+                p[1] - a[1] = 0
+                p[1] = a[1]
+                p[1] = a[1] = (1 - (p[2] - a[2]) / (b[2] - a[2])) * a[1] + ((p[2] - a[2]) / (b[2] - a[2])) * a[1] = (1 - (p[2] - a[2]) / (b[2] - a[2])) * a[1] + ((p[2] - a[2]) / (b[2] - a[2])) * b[1]
+                ((p[2] - a[2]) / (b[2] - a[2])) * (b[2] - a[2]) = p[2] - a[2]
+                p[2] = (p[2] - a[2]) + a[2] = ((p[2] - a[2]) / (b[2] - a[2])) * (b[2] - a[2]) + a[2] = (1 - (p[2] - a[2]) / (b[2] - a[2])) * a[2] + ((p[2] - a[2]) / (b[2] - a[2])) * b[2]
+
+# 辅助引理3：两条直线若有两个不同的公共点p、q，则两条直线重合。
+thm problem_860_shared_line_collinearity:
+    # a、b、d、q、p是平面点；b、d确定作为参照的直线。
+    ? forall a, b, d, q, p cart(R, R):
+        # 条件：a、p、q共线。
+        $geo::is_collinear(a, p, q),
+        # 条件：b、q、d共线。
+        $geo::is_collinear(b, q, d),
+        # 条件：b、p、d共线。
+        $geo::is_collinear(b, p, d),
+        # 条件：公共点q与p不同。
+        q != p,
+        # 条件：参照直线的确定点b与d不同。
+        b != d
+        =>:
+            # 结论：a也在直线bd上，即a、b、d共线。
+            $geo::is_collinear(a, b, d)
+
+    by def $geo::is_collinear(a, p, q)
+    by def $geo::is_collinear(b, q, d)
+    by def $geo::is_collinear(b, p, d)
+
+    by thm geo::collinear_det_expand(b, q, d)
+    by thm geo::collinear_det_expand(b, p, d)
+    by thm problem_860_affine_parameter(b, d, q)
+    obtain s from exist s0 R st {q[1] = (1 - s0) * b[1] + s0 * d[1], q[2] = (1 - s0) * b[2] + s0 * d[2]}
+    by thm problem_860_affine_parameter(b, d, p)
+    obtain t from exist t0 R st {p[1] = (1 - t0) * b[1] + t0 * d[1], p[2] = (1 - t0) * b[2] + t0 * d[2]}
+
+    by thm geo::collinear_det_expand(a, p, q)
+    geo::det(geo::vec(a, p), geo::vec(a, q)) = (p[1] - a[1]) * (q[2] - a[2]) - (p[2] - a[2]) * (q[1] - a[1]) = 0
+
+    by contra:
+        ? s != t
+        s = t
+        q[1] = (1 - s) * b[1] + s * d[1] = (1 - t) * b[1] + t * d[1] = p[1]
+        q[2] = (1 - s) * b[2] + s * d[2] = (1 - t) * b[2] + t * d[2] = p[2]
+        q[1] = p[1]
+        q[2] = p[2]
+        by thm tuple_equal_from_coordinates(q, (q[1], q[2]))
+        by thm tuple_equal_from_coordinates(p, (p[1], p[2]))
+        (q[1], q[2]) = (p[1], p[2])
+        q = (q[1], q[2]) = (p[1], p[2]) = p
+        impossible q != p
+
+    (p[1] - a[1]) * (q[2] - a[2]) - (p[2] - a[2]) * (q[1] - a[1]) = (((1 - t) * b[1] + t * d[1]) - a[1]) * (((1 - s) * b[2] + s * d[2]) - a[2]) - (((1 - t) * b[2] + t * d[2]) - a[2]) * (((1 - s) * b[1] + s * d[1]) - a[1])
+    (((1 - t) * b[1] + t * d[1]) - a[1]) * (((1 - s) * b[2] + s * d[2]) - a[2]) - (((1 - t) * b[2] + t * d[2]) - a[2]) * (((1 - s) * b[1] + s * d[1]) - a[1]) = (t - s) * ((a[1] - b[1]) * (d[2] - b[2]) - (a[2] - b[2]) * (d[1] - b[1]))
+    (t - s) * ((a[1] - b[1]) * (d[2] - b[2]) - (a[2] - b[2]) * (d[1] - b[1])) = 0
+    t - s != 0
+    by thm problem_860_divide_both_sides((t - s) * ((a[1] - b[1]) * (d[2] - b[2]) - (a[2] - b[2]) * (d[1] - b[1])), 0, t - s)
+    (a[1] - b[1]) * (d[2] - b[2]) - (a[2] - b[2]) * (d[1] - b[1]) = 0
+
+    (b[1] - a[1]) * (d[2] - a[2]) - (b[2] - a[2]) * (d[1] - a[1]) = -((a[1] - b[1]) * (d[2] - b[2]) - (a[2] - b[2]) * (d[1] - b[1])) = 0
+    by thm geo::collinear_det_expand(a, b, d)
+    geo::det(geo::vec(a, b), geo::vec(a, d)) = (b[1] - a[1]) * (d[2] - a[2]) - (b[2] - a[2]) * (d[1] - a[1]) = 0
+    by def $geo::is_collinear(a, b, d)
+
+# 主定理：逐项形式化原题条件并证明AD是圆O在A点的切线。
+thm problem_860:
+    # 题目中的点A、B、C、D、O、E、G以及圆的正半径r。
+    ? forall A, B, C0, D, O, E, G cart(R, R), r R+:
+        # 条件1：ABCD是菱形。
+        $geo::is_rhombus(A, B, C0, D),
+        # 条件2：非退化菱形的顶点A、B、D不共线。
+        $geo::is_triangle(A, B, D),
+        # 条件3：O在对角线AC上。
+        $geo::is_collinear(A, O, C0),
+        # 条件4：O在对角线BD上。
+        $geo::is_collinear(B, O, D),
+        # 条件5：O与A不重合。
+        O != A,
+        # 条件6：O与C不重合。
+        O != C0,
+        # 条件7：O与B不重合。
+        O != B,
+        # 条件8：O与D不重合。
+        O != D,
+        # 条件9：A在以O为圆心、r为半径的圆上。
+        $geo::is_on_circle(A, O, r),
+        # 条件10：B在以O为圆心、r为半径的圆上。
+        $geo::is_on_circle(B, O, r),
+        # 条件11：E在以O为圆心、r为半径的圆上。
+        $geo::is_on_circle(E, O, r),
+        # 条件12：E在直线BD上。
+        $geo::is_collinear(B, E, D),
+        # 条件13：G在直线AE上。
+        $geo::is_collinear(A, G, E),
+        # 条件14：G与A不重合。
+        G != A,
+        # 条件15：G与E不重合。
+        G != E,
+        # 条件16：G在直线BD上。
+        $geo::is_collinear(B, G, D),
+        # 条件17：线段AG与EG等长。
+        $geo::are_segments_congruent(A, G, E, G),
+        # 条件18：A与B不重合。
+        A != B,
+        # 条件19：B与C不重合。
+        B != C0,
+        # 条件20：C与D不重合。
+        C0 != D,
+        # 条件21：D与A不重合。
+        D != A,
+        # 条件22：A与E不重合。
+        A != E,
+        # 条件23：E与B不重合。
+        E != B,
+        # 条件24：E与D不重合。
+        E != D
+        =>:
+            # 结论：半径OA垂直于AD，因此AD是圆O在A点的切线。
+            $geo::is_perpendicular(O, A, A, D)
+
+    by def $geo::is_triangle(A, B, D)
+    by contra:
+        ? B != D
+        B = D
+        B[1] = D[1]
+        B[2] = D[2]
+        (B[1] - A[1]) * (D[2] - A[2]) - (B[2] - A[2]) * (D[1] - A[1]) = (B[1] - A[1]) * (B[2] - A[2]) - (B[2] - A[2]) * (B[1] - A[1]) = 0
+        by thm geo::collinear_det_expand(A, B, D)
+        geo::det(geo::vec(A, B), geo::vec(A, D)) = (B[1] - A[1]) * (D[2] - A[2]) - (B[2] - A[2]) * (D[1] - A[1]) = 0
+        by def $geo::is_collinear(A, B, D)
+        impossible $geo::is_collinear(A, B, D)
+
+    by thm problem_860_shared_line_collinearity(A, B, D, E, G)
+    $geo::is_collinear(A, B, D)
+    by contra:
+        ? $geo::is_perpendicular(O, A, A, D)
+        not $geo::is_perpendicular(O, A, A, D)
+        impossible not $geo::is_collinear(A, B, D)

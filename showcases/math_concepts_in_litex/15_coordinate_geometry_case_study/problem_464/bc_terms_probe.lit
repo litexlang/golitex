@@ -1,0 +1,64 @@
+# Focused probes for the two B-vertex angle terms.
+thm problem_464_bc_dot_scalar:
+    ? forall qx, qy, cx, cy R:
+        (-2 * qx) * (cx - qx) + (-2 * qy) * (cy - qy) = 2 * (qx^2 + qy^2 - qx * cx - qy * cy)
+    (-2 * qx) * (cx - qx) = 2 * (qx^2 - qx * cx)
+    (-2 * qy) * (cy - qy) = 2 * (qy^2 - qy * cy)
+    (-2 * qx) * (cx - qx) + (-2 * qy) * (cy - qy) = 2 * (qx^2 + qy^2 - qx * cx - qy * cy)
+
+thm problem_464_bc_det_scalar:
+    ? forall qx, qy, cx, cy R:
+        (-2 * qx) * (cy - qy) - (-2 * qy) * (cx - qx) = -2 * (qx * cy - qy * cx)
+    (-2 * qx) * (cy - qy) = -2 * qx * cy + 2 * qx * qy
+    (-2 * qy) * (cx - qx) = -2 * qy * cx + 2 * qy * qx
+    (-2 * qx) * (cy - qy) - (-2 * qy) * (cx - qx) = -2 * (qx * cy - qy * cx)
+
+thm problem_464_bc_dot_call_probe:
+    ? forall a, b, c, d, o cart(R, R):
+        $geo::is_diameter_endpoints(a, b, o)
+        =>:
+            geo::dot(geo::vec(b, a), geo::vec(b, c)) = 2 * ((b[1] - o[1])^2 + (b[2] - o[2])^2 - (b[1] - o[1]) * (c[1] - o[1]) - (b[2] - o[2]) * (c[2] - o[2]))
+
+    by def $geo::is_diameter_endpoints(a, b, o)
+    by def $geo::is_midpoint(o, a, b)
+    o[1] = (a[1] + b[1]) / 2
+    o[2] = (a[2] + b[2]) / 2
+    a[1] + b[1] = 2 * o[1]
+    a[2] + b[2] = 2 * o[2]
+    a[1] - b[1] = -2 * (b[1] - o[1])
+    a[2] - b[2] = -2 * (b[2] - o[2])
+    c[1] - b[1] = (c[1] - o[1]) - (b[1] - o[1])
+    c[2] - b[2] = (c[2] - o[2]) - (b[2] - o[2])
+    by thm geo::vec_coordinate_formula(b, a)
+    by thm geo::vec_coordinate_formula(b, c)
+    by thm geo::dot_coordinate_formula(geo::vec(b, a), geo::vec(b, c))
+    geo::dot(geo::vec(b, a), geo::vec(b, c)) = (a[1] - b[1]) * (c[1] - b[1]) + (a[2] - b[2]) * (c[2] - b[2])
+    (a[1] - b[1]) * (c[1] - b[1]) + (a[2] - b[2]) * (c[2] - b[2]) = (-2 * (b[1] - o[1])) * ((c[1] - o[1]) - (b[1] - o[1])) + (-2 * (b[2] - o[2])) * ((c[2] - o[2]) - (b[2] - o[2]))
+    by thm problem_464_bc_dot_scalar(b[1] - o[1], b[2] - o[2], c[1] - o[1], c[2] - o[2])
+    (-2 * (b[1] - o[1])) * ((c[1] - o[1]) - (b[1] - o[1])) + (-2 * (b[2] - o[2])) * ((c[2] - o[2]) - (b[2] - o[2])) = 2 * ((b[1] - o[1])^2 + (b[2] - o[2])^2 - (b[1] - o[1]) * (c[1] - o[1]) - (b[2] - o[2]) * (c[2] - o[2]))
+    geo::dot(geo::vec(b, a), geo::vec(b, c)) = 2 * ((b[1] - o[1])^2 + (b[2] - o[2])^2 - (b[1] - o[1]) * (c[1] - o[1]) - (b[2] - o[2]) * (c[2] - o[2]))
+
+thm problem_464_bc_det_call_probe:
+    ? forall a, b, c, d, o cart(R, R):
+        $geo::is_diameter_endpoints(a, b, o)
+        =>:
+            geo::det(geo::vec(b, a), geo::vec(b, c)) = -2 * ((b[1] - o[1]) * (c[2] - o[2]) - (b[2] - o[2]) * (c[1] - o[1]))
+
+    by def $geo::is_diameter_endpoints(a, b, o)
+    by def $geo::is_midpoint(o, a, b)
+    o[1] = (a[1] + b[1]) / 2
+    o[2] = (a[2] + b[2]) / 2
+    a[1] + b[1] = 2 * o[1]
+    a[2] + b[2] = 2 * o[2]
+    a[1] - b[1] = -2 * (b[1] - o[1])
+    a[2] - b[2] = -2 * (b[2] - o[2])
+    c[1] - b[1] = (c[1] - o[1]) - (b[1] - o[1])
+    c[2] - b[2] = (c[2] - o[2]) - (b[2] - o[2])
+    by thm geo::vec_coordinate_formula(b, a)
+    by thm geo::vec_coordinate_formula(b, c)
+    by thm geo::det_coordinate_formula(geo::vec(b, a), geo::vec(b, c))
+    geo::det(geo::vec(b, a), geo::vec(b, c)) = (a[1] - b[1]) * (c[2] - b[2]) - (a[2] - b[2]) * (c[1] - b[1])
+    (a[1] - b[1]) * (c[2] - b[2]) - (a[2] - b[2]) * (c[1] - b[1]) = (-2 * (b[1] - o[1])) * ((c[2] - o[2]) - (b[2] - o[2])) - (-2 * (b[2] - o[2])) * ((c[1] - o[1]) - (b[1] - o[1]))
+    by thm problem_464_bc_det_scalar(b[1] - o[1], b[2] - o[2], c[1] - o[1], c[2] - o[2])
+    (-2 * (b[1] - o[1])) * ((c[2] - o[2]) - (b[2] - o[2])) - (-2 * (b[2] - o[2])) * ((c[1] - o[1]) - (b[1] - o[1])) = -2 * ((b[1] - o[1]) * (c[2] - o[2]) - (b[2] - o[2]) * (c[1] - o[1]))
+    geo::det(geo::vec(b, a), geo::vec(b, c)) = -2 * ((b[1] - o[1]) * (c[2] - o[2]) - (b[2] - o[2]) * (c[1] - o[1]))

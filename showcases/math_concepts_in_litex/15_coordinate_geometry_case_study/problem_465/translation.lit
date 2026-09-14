@@ -1,0 +1,26 @@
+# Problem 465 / zhongkao_264 — minimal local vocabulary
+#
+# 公共 geo 库已经提供：共圆、在线段上、在延长线上、线段全等、平方距离等。
+# 本题只缺少“一个角等于另两个角之和”与“角的正切为给定非负数”两个通用概念。
+
+# Undirected nondegenerate angles α, β, γ in [0,π] satisfying α = β + γ.
+# `n*` are the positive products of the adjacent ray lengths; `s*` are
+# the nonnegative absolute determinant numerators.  The final two equations
+# are exactly the cosine and sine addition formulas, without division.
+prop angle_equals_sum(p, q, r, u, v, w, x, y, z cart(R, R)):
+    p != q
+    r != q
+    u != v
+    w != v
+    x != y
+    z != y
+    exist na, nb, nc, sa, sb, sc R st {na > 0, nb > 0, nc > 0, sa >= 0, sb >= 0, sc >= 0, na^2 = geo::angle_cos_den(p, q, r), nb^2 = geo::angle_cos_den(u, v, w), nc^2 = geo::angle_cos_den(x, y, z), sa^2 = geo::det(geo::vec(q, p), geo::vec(q, r))^2, sb^2 = geo::det(geo::vec(v, u), geo::vec(v, w))^2, sc^2 = geo::det(geo::vec(y, x), geo::vec(y, z))^2, geo::angle_cos_num(p, q, r) * nb * nc = na * (geo::angle_cos_num(u, v, w) * geo::angle_cos_num(x, y, z) - sb * sc), sa * nb * nc = na * (sb * geo::angle_cos_num(x, y, z) + geo::angle_cos_num(u, v, w) * sc)}
+
+# The undirected angle ∠PQR is acute and has nonnegative tangent t.
+# Squaring removes the orientation choice of the determinant.
+prop angle_tangent_equals(p, q, r cart(R, R), t R):
+    t >= 0
+    p != q
+    r != q
+    geo::dot(geo::vec(q, p), geo::vec(q, r)) > 0
+    geo::det(geo::vec(q, p), geo::vec(q, r))^2 = t^2 * geo::dot(geo::vec(q, p), geo::vec(q, r))^2

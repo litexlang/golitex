@@ -1,0 +1,18 @@
+# Problem 476 / zhongkao_275 — semantic translation boundary
+#
+# 完整自然语言题目：
+# 在平行四边形ABCD中，E，F分别为边BC，CD上两点。
+# 当E是边BC中点时，联结EF，如果AE=EF，
+# 求证：∠BAE=∠CFE。
+#
+# 主库已提供本题需要的全部数学概念：
+# - geo::is_nondegenerate_parallelogram：通常非退化语义下的平行四边形；
+# - geo::is_on_segment：点在线段上（含端点）；
+# - geo::is_midpoint：中点；
+# - geo::are_segments_congruent：线段等长；
+# - geo::are_angles_congruent：非退化无向角合同。
+#
+# 因此本文件不新增任何题号包装谓词或临时数学谓词。
+# 原题每句NL与Litex前提/结论的逐项对应直接写在solution.lit主定理中。
+# 因is_on_segment包含端点，而命名角必须由非零射线组成，主定理另显式列出
+# b != a、ep != a、c != f、ep != f，作为角表达式的良定义条件。

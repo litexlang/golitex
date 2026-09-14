@@ -1,0 +1,79 @@
+# Problem 913 / zhongkao_724 - 等边三角形与菱形判定
+#
+# 【NL原题】
+# 已知△ABC和△CDE均为等边三角形，过点B作BF∥CE交DE的延长线于点F。
+# 求证：四边形BCEF为菱形。
+#
+# 【题面完整性说明】
+# 原题文字遗漏了参考解答实际使用的两个题图条件：AC=CD、BC∥DE。
+# 若不补充这两个条件，命题存在反例。以下主定理将它们显式列为
+# “题图隐含前提”，从而保证自然语言与形式命题一致。
+
+# 若BC平行DE，且F在DE以E为端点的延长线上，则BC平行FE。
+thm problem_913_parallel_preserved_on_extension:
+    ? forall b, c, d, ep, f cart(R, R):
+        $geo::is_parallel(b, c, d, ep),
+        $geo::is_on_extension(f, d, ep)
+        =>:
+            $geo::is_parallel(b, c, f, ep)
+
+    by def $geo::is_parallel(b, c, d, ep)
+    by def $geo::is_on_extension(f, d, ep)
+    obtain t from exist t0 R st {t0 > 1, f = (d[1] + t0 * (ep[1] - d[1]), d[2] + t0 * (ep[2] - d[2]))}
+    f[1] = d[1] + t * (ep[1] - d[1])
+    f[2] = d[2] + t * (ep[2] - d[2])
+    
+    by thm geo::vec_coordinate_formula(b, c)
+    by thm geo::vec_coordinate_formula(d, ep)
+    by thm geo::vec_coordinate_formula(f, ep)
+    by thm geo::det_coordinate_formula(geo::vec(b, c), geo::vec(d, ep))
+    by thm geo::det_coordinate_formula(geo::vec(b, c), geo::vec(f, ep))
+
+    geo::det(geo::vec(b, c), geo::vec(d, ep)) = (c[1] - b[1]) * (ep[2] - d[2]) - (c[2] - b[2]) * (ep[1] - d[1])
+    geo::det(geo::vec(b, c), geo::vec(f, ep)) = (c[1] - b[1]) * (ep[2] - f[2]) - (c[2] - b[2]) * (ep[1] - f[1])
+    (c[1] - b[1]) * (ep[2] - d[2]) - (c[2] - b[2]) * (ep[1] - d[1]) = 0
+
+    ep[1] - f[1] = (1 - t) * (ep[1] - d[1])
+    ep[2] - f[2] = (1 - t) * (ep[2] - d[2])
+    (c[1] - b[1]) * (ep[2] - f[2]) - (c[2] - b[2]) * (ep[1] - f[1]) = (c[1] - b[1]) * ((1 - t) * (ep[2] - d[2])) - (c[2] - b[2]) * (ep[1] - f[1])
+    (c[1] - b[1]) * ((1 - t) * (ep[2] - d[2])) - (c[2] - b[2]) * (ep[1] - f[1]) = (c[1] - b[1]) * ((1 - t) * (ep[2] - d[2])) - (c[2] - b[2]) * ((1 - t) * (ep[1] - d[1]))
+    (c[1] - b[1]) * ((1 - t) * (ep[2] - d[2])) - (c[2] - b[2]) * ((1 - t) * (ep[1] - d[1])) = (1 - t) * ((c[1] - b[1]) * (ep[2] - d[2]) - (c[2] - b[2]) * (ep[1] - d[1]))
+    (1 - t) * ((c[1] - b[1]) * (ep[2] - d[2]) - (c[2] - b[2]) * (ep[1] - d[1])) = 0
+    (c[1] - b[1]) * (ep[2] - f[2]) - (c[2] - b[2]) * (ep[1] - f[1]) = 0
+    geo::det(geo::vec(b, c), geo::vec(f, ep)) = 0
+
+    by def $geo::is_parallel(b, c, f, ep)
+
+
+thm problem_913_rhombus:
+    ? forall a, b, c, d, ep, f cart(R, R):
+        # △ABC是等边三角形。
+        $geo::is_equilateral(a, b, c),
+        # △CDE是等边三角形。
+        $geo::is_equilateral(c, d, ep),
+        # 题图隐含：AC=CD（两个等边三角形边长相等）。
+        $geo::are_segments_congruent(a, c, c, d),
+        # BF∥CE。
+        $geo::is_parallel(b, f, c, ep),
+        # F在DE以E为端点的延长线上。
+        $geo::is_on_extension(f, d, ep),
+        # 题图隐含：BC∥DE（两等边三角形的同向配置）。
+        $geo::is_parallel(b, c, d, ep)
+        =>:
+            # 四边形BCEF为菱形。
+            $geo::is_rhombus(b, c, ep, f)
+
+    # 从两个等边三角形及AC=CD推出BC=CE。
+    by def $geo::is_equilateral(a, b, c)
+    by def $geo::is_equilateral(c, d, ep)
+    by thm geo::segments_congruent_symmetric_prop(a, b, b, c)
+    by thm geo::segments_congruent_transitive_prop(b, c, a, b, a, c)
+    by thm geo::segments_congruent_transitive_prop(b, c, a, c, c, d)
+    by thm geo::segments_congruent_transitive_prop(b, c, c, d, c, ep)
+
+    # F在DE延长线上且BC∥DE，所以BC∥FE。
+    by thm problem_913_parallel_preserved_on_extension(b, c, d, ep, f)
+
+    # 两组对边分别平行，故BCEF是平行四边形；再由BC=CE得菱形。
+    by def $geo::is_rhombus(b, c, ep, f)
+    by def $geo::is_parallelogram(b, c, ep, f)
