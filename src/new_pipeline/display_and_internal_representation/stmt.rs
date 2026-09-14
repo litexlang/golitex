@@ -75,7 +75,6 @@ impl DefinitionStmt {
             DefinitionStmt::HaveCartStmt(x) => x.internal_representation(),
             DefinitionStmt::HaveSeqStmt(x) => x.internal_representation(),
             DefinitionStmt::HaveFiniteSeqStmt(x) => x.internal_representation(),
-            DefinitionStmt::HaveMatrixStmt(x) => x.internal_representation(),
             DefinitionStmt::DefPropStmt(x) => x.internal_representation(),
             DefinitionStmt::DefAbstractPropStmt(x) => x.internal_representation(),
             DefinitionStmt::DefSettingStmt(x) => x.internal_representation(),
@@ -604,29 +603,6 @@ impl HaveFiniteSeqStmt {
     impl_display_pair!();
 }
 
-impl HaveMatrixStmt {
-    pub fn internal_representation(&self) -> String {
-        format!("{} {} {} {} {} {} {} {}, {} {} {}, {}({}, {}) {} {}",
-            HAVE,
-            MATRIX,
-            self.name,
-            self.matrix_set.internal_representation(),
-            FOR,
-            self.row_index_name,
-            LESS_EQUAL,
-            &self.row_bound.internal_representation(),
-            self.col_index_name,
-            LESS_EQUAL,
-            &self.col_bound.internal_representation(),
-            self.name,
-            self.row_index_name,
-            self.col_index_name,
-            EQUAL,
-            &self.value.internal_representation())
-    }
-    impl_display_pair!();
-}
-
 impl DefPropStmt {
     pub fn internal_representation(&self) -> String {
         let mut out = String::new();
@@ -698,7 +674,6 @@ impl TemplateDefEnum {
             TemplateDefEnum::HaveCartStmt(x) => x.internal_representation(),
             TemplateDefEnum::HaveSeqStmt(x) => x.internal_representation(),
             TemplateDefEnum::HaveFiniteSeqStmt(x) => x.internal_representation(),
-            TemplateDefEnum::HaveMatrixStmt(x) => x.internal_representation(),
         }
     
     }

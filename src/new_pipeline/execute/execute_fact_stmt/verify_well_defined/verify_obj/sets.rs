@@ -3,8 +3,9 @@
 use super::entry::ObjWellDefinedProofByDef;
 use crate::new_pipeline::ast::obj::{
     BigIntersect, BigUnion, Cart, CartDim, FiniteSetMax, FiniteSetMin, FiniteSetSize, FnRange,
-    GeneralCart, IndexIntersect, IndexUnion, Intersect, ListSet, PowerSet, Proj, Replacement,
-    SetBuilder, SetMinus, Tuple, TupleDim, Union,
+    GeneralCart, IndexIntersect, IndexUnion, Intersect, IntervalObj, IntervalObjStruct, ListSet,
+    OneSideInfinityIntervalObj, PowerSet, Proj, Replacement, SetBuilder, SetMinus, Tuple, TupleDim,
+    Union,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
@@ -115,5 +116,27 @@ impl Runtime {
         &mut self, value: &Replacement, verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedProofByDef> {
         self.verify_unary_obj_well_definedness_by_def(value.source_set.as_ref(), verify_state)
+    }
+    pub(super) fn verify_one_side_infinity_interval_obj_well_definedness_by_def(
+        &mut self, value: &OneSideInfinityIntervalObj, verify_state: VerifyState,
+    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+        let start = match value {
+            OneSideInfinityIntervalObj::LeftOpen(v)
+            | OneSideInfinityIntervalObj::LeftClosed(v)
+            | OneSideInfinityIntervalObj::RightOpen(v)
+            | OneSideInfinityIntervalObj::RightClosed(v) => v.start.as_ref(),
+        };
+        self.verify_unary_obj_well_definedness_by_def(start, verify_state)
+    }
+    pub(super) fn verify_interval_obj_well_definedness_by_def(
+        &mut self, value: &IntervalObj, verify_state: VerifyState,
+    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+        let bounds: &IntervalObjStruct = match value {
+            IntervalObj::LeftOpenRightOpen(v)
+            | IntervalObj::LeftOpenRightClosed(v)
+            | IntervalObj::LeftClosedRightOpen(v)
+            | IntervalObj::LeftClosedRightClosed(v) => v,
+        };
+        self.verify_binary_obj_well_definedness_by_def(bounds.start.as_ref(), bounds.end.as_ref(), verify_state)
     }
 }

@@ -62,7 +62,6 @@ impl Runtime {
             FnObjHead::InstantiatedTemplateObj(inst) => {
                 for arg in &inst.args { children.push(arg); }
             }
-            FnObjHead::MatrixOperator(obj) => { children.push(obj.as_ref()); }
         }
     }
 

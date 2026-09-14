@@ -30,14 +30,17 @@ pub struct VerifyEqualityResult {
 pub enum EqualFactSearchedProof {
     ByCache(CacheSearchProof),
     ByBuiltinRule(EqualitySearchProofByBuiltinRule),
-    ByKnownAtomicFact(EqualFactSearchedProofByKnownAtomicFact),
+    ByKnownEquality(EqualFactSearchedProofByKnownEquality),
     ByBuiltinStrategy(EqualitySearchProofByBuiltinStrategy),
     ByKnownForallFact(EqualFactSearchedProofByKnownForallFact),
 }
 
-pub struct EqualFactSearchedProofByKnownAtomicFact {
-    pub cite_fact_id: FactId,
-    pub why_parameters_of_known_fact_are_equal_to_givens: Vec<VerifyFactResult>,
+// Oriented cite chain from goal.left to goal.right over generating equality
+// edges only. Each entry: (from, to, cited_equal_fact_id). Empty <=> reflexive.
+// FactIds must come from KnownEqualityMemory.generating_edges, never from a
+// class-id handle alone.
+pub struct EqualFactSearchedProofByKnownEquality {
+    pub path: Vec<(Obj, Obj, FactId)>,
 }
 
 pub struct EqualFactSearchedProofByKnownForallFact {
@@ -66,7 +69,9 @@ pub enum AtomicExceptEqualityFactSearchedProof {
 
 pub struct AtomicExceptEqualityFactSearchProofByKnownAtomicFact {
     pub cite_fact_id: FactId,
-    pub why_parameters_of_known_fact_are_equal_to_givens: Vec<VerifyFactResult>,
+    // One ByKnownEquality path per argument (empty path when keys already match).
+    pub why_parameters_of_known_fact_are_equal_to_givens:
+        Vec<EqualFactSearchedProofByKnownEquality>,
 }
 
 pub struct AtomicExceptEqualityFactSearchProofByDefinition {

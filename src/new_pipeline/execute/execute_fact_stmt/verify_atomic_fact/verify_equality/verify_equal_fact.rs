@@ -1,8 +1,7 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact};
 use crate::new_pipeline::execute::execute_fact_stmt::cache_search_proof::CacheSearchProof;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::{
-    EqualFactSearchedProof, EqualFactSearchedProofByKnownAtomicFact,
-    EqualFactSearchedProofByKnownForallFact, VerifyEqualityResult,
+    EqualFactSearchedProof, EqualFactSearchedProofByKnownForallFact, VerifyEqualityResult,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
@@ -27,7 +26,7 @@ impl Runtime {
         })
     }
 
-    // Stage order: cache → builtin rule → known atomic → builtin strategy →
+    // Stage order: cache → builtin rule → known equality → builtin strategy →
     // known forall. Equality algebraic properties are intrinsic.
     pub fn search_equal_fact_proof(
         &mut self,
@@ -45,9 +44,9 @@ impl Runtime {
         }
 
         if let Some(result) =
-            self.search_equal_fact_proof_by_known_atomic_fact(fact, verify_state.clone())?
+            self.search_equal_fact_proof_by_known_equality(fact, verify_state.clone())?
         {
-            return Ok(EqualFactSearchedProof::ByKnownAtomicFact(result));
+            return Ok(EqualFactSearchedProof::ByKnownEquality(result));
         }
 
         if let Some(result) =
@@ -57,7 +56,7 @@ impl Runtime {
         }
 
         if let Some(result) =
-            self.search_equal_fact_proof_by_known_forall_fact(fact, verify_state.clone())?
+            self.search_equal_fact_proof_by_known_forall_fact(fact, verify_state)?
         {
             return Ok(EqualFactSearchedProof::ByKnownForallFact(result));
         }
@@ -72,15 +71,6 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<CacheSearchProof>> {
-        let _ = (fact, verify_state);
-        Ok(None)
-    }
-
-    pub fn search_equal_fact_proof_by_known_atomic_fact(
-        &mut self,
-        fact: &EqualFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<Option<EqualFactSearchedProofByKnownAtomicFact>> {
         let _ = (fact, verify_state);
         Ok(None)
     }

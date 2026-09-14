@@ -7,7 +7,6 @@ mod core;
 mod entry;
 mod helper;
 mod iterated;
-mod matrix;
 mod requirement;
 mod scalar;
 mod sets;

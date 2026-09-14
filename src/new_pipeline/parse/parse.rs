@@ -1,6 +1,6 @@
 use super::keywords::{
     ABSTRACT_PROP, ALGO, AXIOM, BY, CART, CLAIM, EVAL, EXAMPLE, FINITE_SEQ, FN, FOR, HAVE, IMPORT,
-    LET, MATRIX, OBTAIN, PREIMAGE, PROP, QUESTION_GOAL, RELEASE, SEQ, SETTING, SKETCH, STRATEGY,
+    LET, OBTAIN, PREIMAGE, PROP, QUESTION_GOAL, RELEASE, SEQ, SETTING, SKETCH, STRATEGY,
     STRONG_INDUC, STRUCT, TEMPLATE, THM, TRUST, TRY, TUPLE, WITNESS,
 };
 use crate::new_pipeline::ast::stmt::Stmt;
@@ -108,12 +108,6 @@ impl Runtime {
             .into()),
             Some(FINITE_SEQ) => Err(RuntimeParseError::new(
                 "have finite_seq: not wired yet in new_pipeline",
-                block.line,
-                block.source_path.clone(),
-            )
-            .into()),
-            Some(MATRIX) => Err(RuntimeParseError::new(
-                "have matrix: not wired yet in new_pipeline",
                 block.line,
                 block.source_path.clone(),
             )

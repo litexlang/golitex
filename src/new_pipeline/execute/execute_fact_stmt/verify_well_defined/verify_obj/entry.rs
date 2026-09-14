@@ -195,27 +195,6 @@ impl Runtime {
             Obj::StandardSet(_) => {
                 self.verify_standard_set_obj_well_definedness_by_def(verify_state)
             }
-            Obj::MatrixSet(value) => {
-                self.verify_matrix_set_obj_well_definedness_by_def(value, verify_state)
-            }
-            Obj::MatrixListObj(value) => {
-                self.verify_matrix_list_obj_well_definedness_by_def(value, verify_state)
-            }
-            Obj::MatrixAdd(value) => {
-                self.verify_matrix_add_obj_well_definedness_by_def(value, verify_state)
-            }
-            Obj::MatrixSub(value) => {
-                self.verify_matrix_sub_obj_well_definedness_by_def(value, verify_state)
-            }
-            Obj::MatrixMul(value) => {
-                self.verify_matrix_mul_obj_well_definedness_by_def(value, verify_state)
-            }
-            Obj::MatrixScalarMul(value) => {
-                self.verify_matrix_scalar_mul_obj_well_definedness_by_def(value, verify_state)
-            }
-            Obj::MatrixPow(value) => {
-                self.verify_matrix_pow_obj_well_definedness_by_def(value, verify_state)
-            }
             Obj::StructObj(value) => {
                 self.verify_struct_obj_well_definedness_by_def(value, verify_state)
             }
