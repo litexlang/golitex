@@ -1,0 +1,110 @@
+# Problem 546, corrected statement.
+# Every geometric assumption below directly matches one sentence in problem.md.
+thm problem_546_corrected:
+    ? forall a, b, c, d, ep, o cart(R, R), r R+:
+        $geo::is_triangle(a, b, c),
+        $geo::is_on_circle(a, o, r),
+        $geo::is_on_circle(b, o, r),
+        $geo::is_on_circle(c, o, r),
+        $geo::is_diameter_endpoints(a, b, o),
+        $geo::is_tangent_at(b, d, o, r),
+        $geo::is_on_extension(d, a, c),
+        $geo::is_midpoint(ep, a, c),
+        geo::distance_sq(b, d) = 36,
+        geo::distance_sq(c, d) = 16
+        =>:
+            $geo::is_perpendicular(o, ep, a, c),
+            geo::distance_sq(o, ep) = 5
+
+    by def $geo::is_triangle(a, b, c)
+    by def $geo::is_diameter_endpoints(a, b, o)
+    by def $geo::is_tangent_at(b, d, o, r)
+    by def $geo::is_on_circle(a, o, r)
+    by def $geo::is_on_circle(b, o, r)
+    by def $geo::is_on_circle(c, o, r)
+    by def $geo::is_on_extension(d, a, c)
+    obtain t from exist t0 R st {t0 > 1, d = (a[1] + t0 * (c[1] - a[1]), a[2] + t0 * (c[2] - a[2]))}
+    by def $geo::is_midpoint(ep, a, c)
+
+    # Thales: angle ACB is right.
+    geo::distance_sq(c, o) = r^2
+    by thm geo::distance_sq_symmetric(c, o)
+    geo::distance_sq(o, c) = r^2
+    geo::distance_sq(a, o) = r^2
+    by thm geo::distance_sq_symmetric(a, o)
+    geo::distance_sq(o, a) = r^2
+    by def $geo::are_segments_congruent(o, c, o, a)
+    by thm geo::triangle_det_nonzero(a, b, c)
+    geo::det(geo::vec(a, b), geo::vec(a, c)) != 0
+    by contra:
+        ? b != c
+        b = c
+        b[1] = c[1]
+        b[2] = c[2]
+        by thm geo::vec_coordinate_formula(a, b)
+        by thm geo::vec_coordinate_formula(a, c)
+        by thm geo::det_coordinate_formula(geo::vec(a, b), geo::vec(a, c))
+        geo::det(geo::vec(a, b), geo::vec(a, c)) = (b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1]) = (c[1] - a[1]) * (c[2] - a[2]) - (c[2] - a[2]) * (c[1] - a[1]) = 0
+        impossible geo::det(geo::vec(a, b), geo::vec(a, c)) != 0
+    b != c
+    by thm geo::thales_theorem_prop(a, b, c, o)
+    by def $geo::is_right_angle(a, c, b)
+
+    # The tangent at B is perpendicular to OB; since O is the midpoint of AB,
+    # it is also perpendicular to AB.
+    by def $geo::is_perpendicular(o, b, b, d)
+    by def $geo::is_midpoint(o, a, b)
+    by thm geo::perpendicular_dot_expand(o, b, b, d)
+    by thm geo::perpendicular_dot_expand(c, a, c, b)
+    by thm geo::vec_coordinate_formula(b, a)
+    by thm geo::vec_coordinate_formula(o, b)
+    geo::vec(b, a)[1] = a[1] - b[1] = -2 * (b[1] - o[1]) = -2 * geo::vec(o, b)[1]
+    geo::vec(b, a)[2] = a[2] - b[2] = -2 * (b[2] - o[2]) = -2 * geo::vec(o, b)[2]
+    by thm geo::dot_coordinate_formula(geo::vec(b, a), geo::vec(b, d))
+    by thm geo::dot_coordinate_formula(geo::vec(o, b), geo::vec(b, d))
+    geo::dot(geo::vec(b, a), geo::vec(b, d)) = geo::vec(b, a)[1] * geo::vec(b, d)[1] + geo::vec(b, a)[2] * geo::vec(b, d)[2] = (-2 * geo::vec(o, b)[1]) * geo::vec(b, d)[1] + (-2 * geo::vec(o, b)[2]) * geo::vec(b, d)[2] = -2 * (geo::vec(o, b)[1] * geo::vec(b, d)[1] + geo::vec(o, b)[2] * geo::vec(b, d)[2]) = -2 * geo::dot(geo::vec(o, b), geo::vec(b, d)) = 0
+
+    have s R = geo::distance_sq(a, c)
+    have q R = geo::distance_sq(a, o)
+    by thm geo::distance_sq_positive_of_ne(a, c)
+    s > 0
+
+    d[1] = a[1] + t * (c[1] - a[1])
+    d[2] = a[2] + t * (c[2] - a[2])
+    ep[1] = (a[1] + c[1]) / 2
+    ep[2] = (a[2] + c[2]) / 2
+
+    by thm bridge::problem_546_coordinate_bridge(a, b, c, d, ep, o, t, s, q)
+    geo::distance_sq(a, b) = t * s
+    geo::distance_sq(b, d) = t * (t - 1) * s
+    geo::distance_sq(c, d) = (t - 1)^2 * s
+    geo::distance_sq(o, ep) = q - s / 4
+
+    # A diameter has four times the squared radius.
+    by thm geo::midpoint_half_distance(a, b, o)
+    geo::distance_sq(a, o) = geo::distance_sq(a, b) / 4
+    geo::distance_sq(a, b) = 4 * geo::distance_sq(a, o)
+    t * s = geo::distance_sq(a, b) = 4 * geo::distance_sq(a, o) = 4 * q
+    t * (t - 1) * s = 36
+    (t - 1)^2 * s = 16
+
+    by thm scalar::problem_546_scalar_finish(t, s, q)
+    q - s / 4 = 5
+    geo::distance_sq(o, ep) = 5
+
+    by contra:
+        ? o != ep
+        o = ep
+        by thm geo::distance_sq_coordinate_formula(o, ep)
+        geo::distance_sq(o, ep) = (ep[1] - o[1])^2 + (ep[2] - o[2])^2
+        o[1] = ep[1]
+        o[2] = ep[2]
+        ep[1] - o[1] = 0
+        ep[2] - o[2] = 0
+        (ep[1] - o[1])^2 = 0
+        (ep[2] - o[2])^2 = 0
+        (ep[1] - o[1])^2 + (ep[2] - o[2])^2 = 0
+        geo::distance_sq(o, ep) = 0
+        impossible geo::distance_sq(o, ep) = 5
+
+    by thm geo::circle_center_to_chord_midpoint_perpendicular(a, c, ep, o, r)

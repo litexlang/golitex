@@ -140,7 +140,7 @@ impl Runtime {
         Ok(names)
     }
 
-    fn parse_one_typed_param_group(
+    pub(super) fn parse_one_typed_param_group(
         &mut self,
         tb: &mut TokenBlock,
     ) -> RuntimeResult<TypedParameterGroup> {
@@ -206,7 +206,7 @@ impl Runtime {
                 }
                 other => other,
             })?;
-        Ok(Identifier { name })
+        Ok(Identifier::new(name))
     }
 
     pub(super) fn occupy_plain_atom_as_parse(

@@ -353,7 +353,13 @@ impl Obj {
     }
 
     pub fn display_string(&self) -> String {
-        self.ir().display_string()
+        match self {
+            Obj::Atom(a) => a.display_string(),
+            Obj::SetBuilder(x) => x.display_string(),
+            Obj::FnSet(x) => x.display_string(),
+            Obj::AnonymousFn(x) => x.display_string(),
+            _ => self.ir().display_string(),
+        }
     }
 }
 
@@ -361,7 +367,9 @@ impl Identifier {
     pub fn ir(&self) -> ObjIR {
         ObjIR(self.name.clone())
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        self.name.clone()
+    }
 }
 
 impl IdentifierWithMod {
@@ -378,7 +386,12 @@ impl AtomObj {
             AtomObj::IdentifierWithMod(x) => x.ir(),
         }
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        match self {
+            AtomObj::Identifier(x) => x.display_string(),
+            AtomObj::IdentifierWithMod(x) => x.display_string(),
+        }
+    }
 }
 
 impl FnObjHead {
@@ -528,25 +541,45 @@ impl ListSet {
     }
     impl_display_pair!();
 }
-impl SetBuilder {
+impl SetBuilderBody {
     pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
         out.push_str(&format!("{}", LEFT_CURLY));
-        out.push_str(&format!("{}", self.param_binding));
+        out.push_str(&self.param_binding.ir());
         out.push_str(&format!(" "));
         out.push_str(&self.param_set.ir());
+        out.push_str(&format!("{}", COLON));
+        out.push_str(&format!(" "));
+        let fact_parts: Vec<_> = self.facts.iter().map(|fact| fact.ir()).collect();
+        out.push_str(&fact_parts.join(", "));
+        out.push_str(&format!("{}", RIGHT_CURLY));
+        ObjIR(out)
+    }
+    pub fn display_string(&self) -> String {
+        let mut out = String::new();
+        out.push_str(&format!("{}", LEFT_CURLY));
+        out.push_str(&self.param_binding.display_string());
+        out.push_str(&format!(" "));
+        out.push_str(&self.param_set.display_string());
         out.push_str(&format!("{}", COLON));
         out.push_str(&format!(" "));
         let fact_parts: Vec<_> = self
             .facts
             .iter()
-            .map(|fact| fact.ir())
+            .map(|fact| fact.display_string())
             .collect();
         out.push_str(&fact_parts.join(", "));
         out.push_str(&format!("{}", RIGHT_CURLY));
-        ObjIR(out)
+        out
     }
-    impl_display_pair!();
+}
+impl SetBuilder {
+    pub fn ir(&self) -> ObjIR {
+        self.alpha.ir()
+    }
+    pub fn display_string(&self) -> String {
+        self.surface.display_string()
+    }
 }
 impl FnSetBody {
     pub fn ir(&self) -> ObjIR {
@@ -578,25 +611,69 @@ impl FnSetBody {
         out.push_str(&self.ret_set.ir());
         ObjIR(out)
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        let params: Vec<_> = self
+            .set_bound_parameters
+            .groups
+            .iter()
+            .map(|g| g.display_string())
+            .collect();
+        let dom: Vec<_> = self
+            .dom_facts
+            .iter()
+            .map(|fact| fact.display_string())
+            .collect();
+        let mut out = format!("{} ", FN);
+        out.push_str(LEFT_PAREN);
+        if !params.is_empty() && !dom.is_empty() {
+            out.push_str(&params.join(", "));
+            out.push_str(&format!("{} ", COLON));
+            out.push_str(&dom.join(", "));
+        } else if dom.is_empty() {
+            out.push_str(&params.join(", "));
+        } else if params.is_empty() {
+            out.push_str(COLON);
+            out.push_str(&dom.join(", "));
+        }
+        out.push_str(RIGHT_PAREN);
+        out.push(' ');
+        out.push_str(&self.ret_set.display_string());
+        out
+    }
 }
 impl FnSet {
     pub fn ir(&self) -> ObjIR {
-        self.body.ir()
+        self.alpha.ir()
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        self.surface.display_string()
+    }
 }
-impl AnonymousFn {
+impl AnonymousFnBody {
     pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
         out.push_str(&self.body.ir());
         out.push_str(&format!("{}", LEFT_CURLY));
         out.push_str(&self.equal_to.ir());
         out.push_str(&format!("{}", RIGHT_CURLY));
-
         ObjIR(out)
     }
-    impl_display_pair!();
+    pub fn display_string(&self) -> String {
+        let mut out = String::new();
+        out.push_str(&self.body.display_string());
+        out.push_str(&format!("{}", LEFT_CURLY));
+        out.push_str(&self.equal_to.display_string());
+        out.push_str(&format!("{}", RIGHT_CURLY));
+        out
+    }
+}
+impl AnonymousFn {
+    pub fn ir(&self) -> ObjIR {
+        self.alpha.ir()
+    }
+    pub fn display_string(&self) -> String {
+        self.surface.display_string()
+    }
 }
 impl StandardSet {
     pub fn ir(&self) -> ObjIR {

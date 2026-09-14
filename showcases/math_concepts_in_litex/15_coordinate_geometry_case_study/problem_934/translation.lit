@@ -1,0 +1,103 @@
+# Minimal geometry module for Problem 934.
+# Closed subset of KB/main.lit at SHA-256:
+# faebc2add40c431e63a8a8530a15030527128f403f8da691f9d20282a3a1ef2c
+
+have fn vec(a, b cart(R, R)) cart(R, R) = (b[1] - a[1], b[2] - a[2])
+
+have fn dot(u, v cart(R, R)) R = u[1] * v[1] + u[2] * v[2]
+
+have fn det(u, v cart(R, R)) R = u[1] * v[2] - u[2] * v[1]
+
+have fn distance_sq(a, b cart(R, R)) R = dot(vec(a, b), vec(a, b))
+
+have fn angle_cos_num(p, q, r cart(R, R): p != q, r != q) R = dot(vec(q, p), vec(q, r))
+
+have fn angle_cos_den(p, q, r cart(R, R): p != q, r != q) R = distance_sq(q, p) * distance_sq(q, r)
+
+# Semantic predicate: points p, q, r are collinear.
+prop is_collinear(p, q, r cart(R, R)):
+    det(vec(p, q), vec(p, r)) = 0
+
+# Semantic predicate: segments AB and CD have equal length.
+prop are_segments_congruent(a, b, c, d cart(R, R)):
+    distance_sq(a, b) = distance_sq(c, d)
+
+# Semantic predicate: two undirected angles are congruent.
+prop are_angles_congruent(p, q, r, u, v, w cart(R, R)):
+    p != q
+    r != q
+    u != v
+    w != v
+    angle_cos_num(p, q, r)^2 * angle_cos_den(u, v, w) = angle_cos_num(u, v, w)^2 * angle_cos_den(p, q, r)
+    angle_cos_num(p, q, r) * angle_cos_num(u, v, w) >= 0
+
+# Semantic predicate: line AB is perpendicular to line CD.
+prop is_perpendicular(a, b, c, d cart(R, R)):
+    a != b
+    c != d
+    dot(vec(a, b), vec(c, d)) = 0
+
+# Semantic predicate: M is the midpoint of segment AB.
+prop is_midpoint(m, a, b cart(R, R)):
+    m = ((a[1] + b[1]) / 2, (a[2] + b[2]) / 2)
+
+# Semantic predicate: ray BD bisects angle ABC.
+prop is_angle_bisector(a, b, c, d cart(R, R)):
+    b != a
+    b != c
+    d != b
+    $are_angles_congruent(a, b, d, d, b, c)
+
+# Semantic predicate: ABC is a nondegenerate triangle.
+prop is_triangle(a, b, c cart(R, R)):
+    not $is_collinear(a, b, c)
+
+thm add_equalities:
+    ? forall a, b, c, d R:
+        a = b,
+        c = d
+        =>:
+            a + c = b + d
+    a + c = b + c = b + d
+
+thm distance_sq_coordinate_formula:
+    ? forall a, b cart(R, R):
+        distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2
+    vec(a, b) = (b[1] - a[1], b[2] - a[2])
+    vec(a, b)[1] = b[1] - a[1]
+    vec(a, b)[2] = b[2] - a[2]
+    distance_sq(a, b) = dot(vec(a, b), vec(a, b))
+    dot(vec(a, b), vec(a, b)) = vec(a, b)[1] * vec(a, b)[1] + vec(a, b)[2] * vec(a, b)[2] = (b[1] - a[1])^2 + (b[2] - a[2])^2
+
+thm perpendicular_dot_expand:
+    ? forall a, b, c, d cart(R, R):
+        dot(vec(a, b), vec(c, d)) = (b[1] - a[1]) * (d[1] - c[1]) + (b[2] - a[2]) * (d[2] - c[2])
+    vec(a, b) = (b[1] - a[1], b[2] - a[2])
+    vec(c, d) = (d[1] - c[1], d[2] - c[2])
+    dot(vec(a, b), vec(c, d)) = vec(a, b)[1] * vec(c, d)[1] + vec(a, b)[2] * vec(c, d)[2] = (b[1] - a[1]) * (d[1] - c[1]) + (b[2] - a[2]) * (d[2] - c[2])
+
+# A point on the perpendicular bisector of AB is equidistant from A and B.
+thm perpendicular_bisector_equidistant:
+    ? forall a, b, o, p cart(R, R):
+        a != b,
+        $is_midpoint(o, a, b),
+        $is_perpendicular(p, o, a, b)
+        =>:
+            distance_sq(p, a) = distance_sq(p, b)
+    by def $is_midpoint(o, a, b)
+    by def $is_perpendicular(p, o, a, b)
+    by thm perpendicular_dot_expand(p, o, a, b)
+    by thm distance_sq_coordinate_formula(p, a)
+    by thm distance_sq_coordinate_formula(p, b)
+    o[1] = (a[1] + b[1]) / 2
+    o[2] = (a[2] + b[2]) / 2
+    (o[1] - p[1]) * (b[1] - a[1]) + (o[2] - p[2]) * (b[2] - a[2]) = 0
+    2 * ((o[1] - p[1]) * (b[1] - a[1]) + (o[2] - p[2]) * (b[2] - a[2])) = 0
+    2 * (o[1] - p[1]) * (b[1] - a[1]) = (b[1] - p[1])^2 - (a[1] - p[1])^2
+    2 * (o[2] - p[2]) * (b[2] - a[2]) = (b[2] - p[2])^2 - (a[2] - p[2])^2
+    by thm add_equalities(2 * (o[1] - p[1]) * (b[1] - a[1]), (b[1] - p[1])^2 - (a[1] - p[1])^2, 2 * (o[2] - p[2]) * (b[2] - a[2]), (b[2] - p[2])^2 - (a[2] - p[2])^2)
+    2 * (o[1] - p[1]) * (b[1] - a[1]) + 2 * (o[2] - p[2]) * (b[2] - a[2]) = ((b[1] - p[1])^2 - (a[1] - p[1])^2) + ((b[2] - p[2])^2 - (a[2] - p[2])^2)
+    ((b[1] - p[1])^2 - (a[1] - p[1])^2) + ((b[2] - p[2])^2 - (a[2] - p[2])^2) = 2 * (o[1] - p[1]) * (b[1] - a[1]) + 2 * (o[2] - p[2]) * (b[2] - a[2]) = 2 * ((o[1] - p[1]) * (b[1] - a[1]) + (o[2] - p[2]) * (b[2] - a[2])) = 0
+    (b[1] - p[1])^2 - (a[1] - p[1])^2 + (b[2] - p[2])^2 - (a[2] - p[2])^2 = 0
+    (b[1] - p[1])^2 + (b[2] - p[2])^2 = ((b[1] - p[1])^2 - (a[1] - p[1])^2 + (b[2] - p[2])^2 - (a[2] - p[2])^2) + ((a[1] - p[1])^2 + (a[2] - p[2])^2) = 0 + ((a[1] - p[1])^2 + (a[2] - p[2])^2) = (a[1] - p[1])^2 + (a[2] - p[2])^2
+    distance_sq(p, a) = distance_sq(p, b)

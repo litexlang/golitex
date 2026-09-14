@@ -1,0 +1,135 @@
+# Private public-predicate-to-coordinate bridge for Problem 513.
+
+thm problem_513_public_bridge:
+    ? forall a, b, c, o, p, d, r cart(R, R):
+        $geo::is_circumcenter(o, a, b, c),
+        $geo::is_incenter(p, a, b, c),
+        $geo::is_on_segment(d, b, c),
+        $geo::is_on_extension(d, a, p),
+        $geo::is_on_extension(r, a, p),
+        $geo::are_segments_congruent(o, r, o, a)
+        =>:
+            $geo::are_segments_congruent(r, b, r, p)
+
+    # Extract the public predicate certificates.
+    by def $geo::is_incenter(p, a, b, c)
+    obtain ab, bc, ca from exist ab, bc, ca R+ st {ab^2 = geo::distance_sq(a, b), bc^2 = geo::distance_sq(b, c), ca^2 = geo::distance_sq(c, a), p[1] * (ab + bc + ca) = bc * a[1] + ca * b[1] + ab * c[1], p[2] * (ab + bc + ca) = bc * a[2] + ca * b[2] + ab * c[2]}
+
+    by def $geo::is_circumcenter(o, a, b, c)
+    by def $geo::are_segments_congruent(o, a, o, b)
+    by def $geo::are_segments_congruent(o, a, o, c)
+    by def $geo::is_on_extension(r, a, p)
+    obtain t from exist t0 R st {t0 > 1, r = (a[1] + t0 * (p[1] - a[1]), a[2] + t0 * (p[2] - a[2]))}
+    by def $geo::are_segments_congruent(o, r, o, a)
+
+    # Coordinates relative to A; side convention is A=BC, B=CA, C=AB.
+    have S R = bc + ca + ab
+    have x1 R = b[1] - a[1]
+    have x2 R = b[2] - a[2]
+    have y1 R = c[1] - a[1]
+    have y2 R = c[2] - a[2]
+    have u1 R = p[1] - a[1]
+    have u2 R = p[2] - a[2]
+    have q1 R = o[1] - a[1]
+    have q2 R = o[2] - a[2]
+    have z1 R = r[1] - a[1]
+    have z2 R = r[2] - a[2]
+    have V1 R = ca * x1 + ab * y1
+    have V2 R = ca * x2 + ab * y2
+
+    # Side-length certificates.
+    by thm geo::distance_sq_coordinate_formula(a, b)
+    by thm geo::distance_sq_coordinate_formula(b, c)
+    by thm geo::distance_sq_coordinate_formula(c, a)
+    geo::distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2
+    (b[1] - a[1])^2 + (b[2] - a[2])^2 = x1^2 + x2^2
+    ab^2 = geo::distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2 = x1^2 + x2^2
+    geo::distance_sq(b, c) = (c[1] - b[1])^2 + (c[2] - b[2])^2
+    c[1] - b[1] = (c[1] - a[1]) - (b[1] - a[1]) = y1 - x1
+    c[2] - b[2] = (c[2] - a[2]) - (b[2] - a[2]) = y2 - x2
+    (c[1] - b[1])^2 + (c[2] - b[2])^2 = (y1 - x1)^2 + (y2 - x2)^2
+    bc^2 = geo::distance_sq(b, c) = (c[1] - b[1])^2 + (c[2] - b[2])^2 = (y1 - x1)^2 + (y2 - x2)^2
+    geo::distance_sq(c, a) = (a[1] - c[1])^2 + (a[2] - c[2])^2
+    a[1] - c[1] = -(c[1] - a[1]) = -y1
+    a[2] - c[2] = -(c[2] - a[2]) = -y2
+    (a[1] - c[1])^2 + (a[2] - c[2])^2 = (-y1)^2 + (-y2)^2 = y1^2 + y2^2
+    ca^2 = geo::distance_sq(c, a) = (a[1] - c[1])^2 + (a[2] - c[2])^2 = y1^2 + y2^2
+
+    # Circumcenter certificates in A-relative coordinates.
+    by thm geo::distance_sq_coordinate_formula(o, a)
+    by thm geo::distance_sq_coordinate_formula(o, b)
+    by thm geo::distance_sq_coordinate_formula(o, c)
+    a[1] - o[1] = -(o[1] - a[1]) = -q1
+    a[2] - o[2] = -(o[2] - a[2]) = -q2
+    geo::distance_sq(o, a) = (a[1] - o[1])^2 + (a[2] - o[2])^2 = (-q1)^2 + (-q2)^2 = q1^2 + q2^2
+    b[1] - o[1] = (b[1] - a[1]) - (o[1] - a[1]) = x1 - q1
+    b[2] - o[2] = (b[2] - a[2]) - (o[2] - a[2]) = x2 - q2
+    geo::distance_sq(o, b) = (b[1] - o[1])^2 + (b[2] - o[2])^2 = (x1 - q1)^2 + (x2 - q2)^2
+    (x1 - q1)^2 + (x2 - q2)^2 = x1^2 + x2^2 - 2 * (q1 * x1 + q2 * x2) + q1^2 + q2^2
+    q1^2 + q2^2 = geo::distance_sq(o, a) = geo::distance_sq(o, b) = (x1 - q1)^2 + (x2 - q2)^2 = x1^2 + x2^2 - 2 * (q1 * x1 + q2 * x2) + q1^2 + q2^2
+    by thm geo::subtract_equalities(q1^2 + q2^2, x1^2 + x2^2 - 2 * (q1 * x1 + q2 * x2) + q1^2 + q2^2, q1^2 + q2^2, q1^2 + q2^2)
+    0 = (q1^2 + q2^2) - (q1^2 + q2^2) = (x1^2 + x2^2 - 2 * (q1 * x1 + q2 * x2) + q1^2 + q2^2) - (q1^2 + q2^2) = x1^2 + x2^2 - 2 * (q1 * x1 + q2 * x2)
+    x1^2 + x2^2 = (x1^2 + x2^2 - 2 * (q1 * x1 + q2 * x2)) + 2 * (q1 * x1 + q2 * x2) = 0 + 2 * (q1 * x1 + q2 * x2) = 2 * (q1 * x1 + q2 * x2)
+    c[1] - o[1] = (c[1] - a[1]) - (o[1] - a[1]) = y1 - q1
+    c[2] - o[2] = (c[2] - a[2]) - (o[2] - a[2]) = y2 - q2
+    geo::distance_sq(o, c) = (c[1] - o[1])^2 + (c[2] - o[2])^2 = (y1 - q1)^2 + (y2 - q2)^2
+    (y1 - q1)^2 + (y2 - q2)^2 = y1^2 + y2^2 - 2 * (q1 * y1 + q2 * y2) + q1^2 + q2^2
+    q1^2 + q2^2 = geo::distance_sq(o, a) = geo::distance_sq(o, c) = (y1 - q1)^2 + (y2 - q2)^2 = y1^2 + y2^2 - 2 * (q1 * y1 + q2 * y2) + q1^2 + q2^2
+    by thm geo::subtract_equalities(q1^2 + q2^2, y1^2 + y2^2 - 2 * (q1 * y1 + q2 * y2) + q1^2 + q2^2, q1^2 + q2^2, q1^2 + q2^2)
+    0 = (q1^2 + q2^2) - (q1^2 + q2^2) = (y1^2 + y2^2 - 2 * (q1 * y1 + q2 * y2) + q1^2 + q2^2) - (q1^2 + q2^2) = y1^2 + y2^2 - 2 * (q1 * y1 + q2 * y2)
+    y1^2 + y2^2 = (y1^2 + y2^2 - 2 * (q1 * y1 + q2 * y2)) + 2 * (q1 * y1 + q2 * y2) = 0 + 2 * (q1 * y1 + q2 * y2) = 2 * (q1 * y1 + q2 * y2)
+
+    # Incenter and extension certificates.
+    S * u1 = S * (p[1] - a[1]) = p[1] * S - a[1] * S
+    p[1] * S = p[1] * (bc + ca + ab) = p[1] * (ab + bc + ca) = bc * a[1] + ca * b[1] + ab * c[1]
+    a[1] * S = a[1] * (bc + ca + ab)
+    by thm geo::subtract_equalities(p[1] * S, bc * a[1] + ca * b[1] + ab * c[1], a[1] * S, a[1] * (bc + ca + ab))
+    p[1] * S - a[1] * S = (bc * a[1] + ca * b[1] + ab * c[1]) - a[1] * (bc + ca + ab)
+    (bc * a[1] + ca * b[1] + ab * c[1]) - a[1] * (bc + ca + ab) = ca * (b[1] - a[1]) + ab * (c[1] - a[1]) = ca * x1 + ab * y1 = V1
+    S * u1 = V1
+    S * u2 = S * (p[2] - a[2]) = p[2] * S - a[2] * S
+    p[2] * S = p[2] * (bc + ca + ab) = p[2] * (ab + bc + ca) = bc * a[2] + ca * b[2] + ab * c[2]
+    a[2] * S = a[2] * (bc + ca + ab)
+    by thm geo::subtract_equalities(p[2] * S, bc * a[2] + ca * b[2] + ab * c[2], a[2] * S, a[2] * (bc + ca + ab))
+    p[2] * S - a[2] * S = (bc * a[2] + ca * b[2] + ab * c[2]) - a[2] * (bc + ca + ab)
+    (bc * a[2] + ca * b[2] + ab * c[2]) - a[2] * (bc + ca + ab) = ca * (b[2] - a[2]) + ab * (c[2] - a[2]) = ca * x2 + ab * y2 = V2
+    S * u2 = V2
+    z1 = r[1] - a[1] = (a[1] + t * (p[1] - a[1])) - a[1] = t * (p[1] - a[1]) = t * u1
+    z2 = r[2] - a[2] = (a[2] + t * (p[2] - a[2])) - a[2] = t * (p[2] - a[2]) = t * u2
+    S * z1 = S * (t * u1) = t * (S * u1) = t * V1
+    S * z2 = S * (t * u2) = t * (S * u2) = t * V2
+
+    # E lies on the circumcircle.
+    by thm geo::distance_sq_coordinate_formula(o, r)
+    r[1] - o[1] = (r[1] - a[1]) - (o[1] - a[1]) = z1 - q1
+    r[2] - o[2] = (r[2] - a[2]) - (o[2] - a[2]) = z2 - q2
+    geo::distance_sq(o, r) = (r[1] - o[1])^2 + (r[2] - o[2])^2 = (z1 - q1)^2 + (z2 - q2)^2
+    (z1 - q1)^2 + (z2 - q2)^2 = z1^2 + z2^2 - 2 * (q1 * z1 + q2 * z2) + q1^2 + q2^2
+    q1^2 + q2^2 = geo::distance_sq(o, a) = geo::distance_sq(o, r) = (z1 - q1)^2 + (z2 - q2)^2 = z1^2 + z2^2 - 2 * (q1 * z1 + q2 * z2) + q1^2 + q2^2
+    by thm geo::subtract_equalities(q1^2 + q2^2, z1^2 + z2^2 - 2 * (q1 * z1 + q2 * z2) + q1^2 + q2^2, q1^2 + q2^2, q1^2 + q2^2)
+    0 = (q1^2 + q2^2) - (q1^2 + q2^2) = (z1^2 + z2^2 - 2 * (q1 * z1 + q2 * z2) + q1^2 + q2^2) - (q1^2 + q2^2) = z1^2 + z2^2 - 2 * (q1 * z1 + q2 * z2)
+    z1^2 + z2^2 = (z1^2 + z2^2 - 2 * (q1 * z1 + q2 * z2)) + 2 * (q1 * z1 + q2 * z2) = 0 + 2 * (q1 * z1 + q2 * z2) = 2 * (q1 * z1 + q2 * z2)
+
+    # Derive the scalar parameter relation, then recover the target distance.
+    by thm probe::problem_513_parameter_kernel(bc, ca, ab, t, S, x1, x2, y1, y2, q1, q2, z1, z2, V1, V2)
+    by thm norm_kernel::problem_513_vector_norm_kernel(bc, ca, ab, S, x1, x2, y1, y2, V1, V2)
+    by thm projection_kernel::problem_513_vector_projection_kernel(bc, ca, ab, S, x1, x2, y1, y2, V1, V2)
+    bc + ca > 0
+    bc + ca + ab > 0
+    S = bc + ca + ab > 0
+    by thm full_bridge::problem_513_distance_recovery_kernel(bc, ca, ab, t, S, x1, x2, u1, u2, z1, z2, V1, V2)
+
+    by thm geo::distance_sq_coordinate_formula(r, b)
+    by thm geo::distance_sq_coordinate_formula(r, p)
+    b[1] - r[1] = (b[1] - a[1]) - (r[1] - a[1]) = x1 - z1 = -(z1 - x1)
+    b[2] - r[2] = (b[2] - a[2]) - (r[2] - a[2]) = x2 - z2 = -(z2 - x2)
+    p[1] - r[1] = (p[1] - a[1]) - (r[1] - a[1]) = u1 - z1 = -(z1 - u1)
+    p[2] - r[2] = (p[2] - a[2]) - (r[2] - a[2]) = u2 - z2 = -(z2 - u2)
+    (b[1] - r[1])^2 = (-(z1 - x1))^2 = (z1 - x1)^2
+    (b[2] - r[2])^2 = (-(z2 - x2))^2 = (z2 - x2)^2
+    (p[1] - r[1])^2 = (-(z1 - u1))^2 = (z1 - u1)^2
+    (p[2] - r[2])^2 = (-(z2 - u2))^2 = (z2 - u2)^2
+    geo::distance_sq(r, b) = (b[1] - r[1])^2 + (b[2] - r[2])^2 = (z1 - x1)^2 + (z2 - x2)^2
+    (z1 - x1)^2 + (z2 - x2)^2 = (z1 - u1)^2 + (z2 - u2)^2
+    (z1 - u1)^2 + (z2 - u2)^2 = (p[1] - r[1])^2 + (p[2] - r[2])^2 = geo::distance_sq(r, p)
+    by def $geo::are_segments_congruent(r, b, r, p)

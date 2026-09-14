@@ -1,0 +1,94 @@
+# Problem 877 / zhongkao_688 — general symbolic diagnostic.
+# No coordinate normalization or special square is used.
+
+# In every parallelogram ABCD, if E and F trisect diagonal AC in the order
+# A-E-F-C, then vectors DF and BE are opposites.
+thm problem_877_general_opposite_components:
+    ? forall a, b, c, d, ep, fp cart(R, R):
+        d[1] = a[1] + c[1] - b[1],
+        d[2] = a[2] + c[2] - b[2],
+        ep[1] = (2 * a[1] + c[1]) / 3,
+        ep[2] = (2 * a[2] + c[2]) / 3,
+        fp[1] = (a[1] + 2 * c[1]) / 3,
+        fp[2] = (a[2] + 2 * c[2]) / 3
+        =>:
+            geo::vec(d, fp)[1] = -(geo::vec(b, ep)[1]),
+            geo::vec(d, fp)[2] = -(geo::vec(b, ep)[2])
+
+    by thm geo::vec_coordinate_formula(d, fp)
+    by thm geo::vec_coordinate_formula(b, ep)
+    geo::vec(d, fp)[1] = fp[1] - d[1]
+    geo::vec(d, fp)[2] = fp[2] - d[2]
+    geo::vec(b, ep)[1] = ep[1] - b[1]
+    geo::vec(b, ep)[2] = ep[2] - b[2]
+
+    fp[1] - d[1] = (a[1] + 2 * c[1]) / 3 - (a[1] + c[1] - b[1]) = -((2 * a[1] + c[1]) / 3 - b[1]) = -(ep[1] - b[1])
+    fp[2] - d[2] = (a[2] + 2 * c[2]) / 3 - (a[2] + c[2] - b[2]) = -((2 * a[2] + c[2]) / 3 - b[2]) = -(ep[2] - b[2])
+
+    by thm geo::multiply_both_sides(geo::vec(b, ep)[1], ep[1] - b[1], -1)
+    -(geo::vec(b, ep)[1]) = -(ep[1] - b[1])
+    geo::vec(d, fp)[1] = fp[1] - d[1] = -(ep[1] - b[1]) = -(geo::vec(b, ep)[1])
+
+    by thm geo::multiply_both_sides(geo::vec(b, ep)[2], ep[2] - b[2], -1)
+    -(geo::vec(b, ep)[2]) = -(ep[2] - b[2])
+    geo::vec(d, fp)[2] = fp[2] - d[2] = -(ep[2] - b[2]) = -(geo::vec(b, ep)[2])
+
+
+# Final universal diagnostic for the stated configuration.
+# The two trisection points are represented intrinsically as affine points
+# with parameters 1/3 and 2/3 on AC; no coordinate normalization is used.
+thm problem_877_square_trisection_diagnostic:
+    ? forall a, b, c, d, ep, fp cart(R, R):
+        $geo::is_square(a, b, c, d),
+        $geo::is_affine_combination(ep, a, c, 1 / 3),
+        $geo::is_affine_combination(fp, a, c, 2 / 3)
+        =>:
+            $geo::are_segments_congruent(b, ep, d, fp),
+            geo::det(geo::vec(b, ep), geo::vec(d, fp)) = 0,
+            geo::dot(geo::vec(b, ep), geo::vec(d, fp)) = -geo::distance_sq(b, ep)
+
+    by def $geo::is_square(a, b, c, d)
+    by def $geo::is_rectangle(a, b, c, d)
+    by def $geo::is_parallelogram(a, b, c, d)
+    by def $geo::is_parallel(a, b, d, c)
+    by def $geo::is_parallel(a, d, b, c)
+    by def $geo::is_right_angle(d, a, b)
+    by def $geo::is_affine_combination(ep, a, c, 1 / 3)
+    by def $geo::is_affine_combination(fp, a, c, 2 / 3)
+
+    by thm geo::square_orthogonal_parallel_quadrilateral_coordinates(a, b, c, d)
+    ep[1] = (1 - 1 / 3) * a[1] + (1 / 3) * c[1] = (2 * a[1] + c[1]) / 3
+    ep[2] = (1 - 1 / 3) * a[2] + (1 / 3) * c[2] = (2 * a[2] + c[2]) / 3
+    fp[1] = (1 - 2 / 3) * a[1] + (2 / 3) * c[1] = (a[1] + 2 * c[1]) / 3
+    fp[2] = (1 - 2 / 3) * a[2] + (2 / 3) * c[2] = (a[2] + 2 * c[2]) / 3
+
+    by thm problem_877_general_opposite_components(a, b, c, d, ep, fp)
+
+    by thm geo::vec_dot_self_is_distance(d, fp)
+    by thm geo::vec_dot_self_is_distance(b, ep)
+    by thm geo::dot_coordinate_formula(geo::vec(d, fp), geo::vec(d, fp))
+    by thm geo::dot_coordinate_formula(geo::vec(b, ep), geo::vec(b, ep))
+    geo::distance_sq(d, fp) = geo::dot(geo::vec(d, fp), geo::vec(d, fp)) = geo::vec(d, fp)[1]^2 + geo::vec(d, fp)[2]^2
+    geo::distance_sq(b, ep) = geo::dot(geo::vec(b, ep), geo::vec(b, ep)) = geo::vec(b, ep)[1]^2 + geo::vec(b, ep)[2]^2
+    geo::vec(d, fp)[1]^2 = (-(geo::vec(b, ep)[1]))^2 = geo::vec(b, ep)[1]^2
+    geo::vec(d, fp)[2]^2 = (-(geo::vec(b, ep)[2]))^2 = geo::vec(b, ep)[2]^2
+    geo::distance_sq(d, fp) = geo::vec(d, fp)[1]^2 + geo::vec(d, fp)[2]^2 = geo::vec(b, ep)[1]^2 + geo::vec(b, ep)[2]^2 = geo::distance_sq(b, ep)
+    by thm geo::segments_congruent_from_distance_sq(d, fp, b, ep)
+    by thm geo::segments_congruent_symmetric_prop(d, fp, b, ep)
+
+    by thm geo::det_coordinate_formula(geo::vec(b, ep), geo::vec(d, fp))
+    geo::det(geo::vec(b, ep), geo::vec(d, fp)) = geo::vec(b, ep)[1] * geo::vec(d, fp)[2] - geo::vec(b, ep)[2] * geo::vec(d, fp)[1]
+    geo::vec(b, ep)[1] * geo::vec(d, fp)[2] - geo::vec(b, ep)[2] * geo::vec(d, fp)[1] = geo::vec(b, ep)[1] * (-(geo::vec(b, ep)[2])) - geo::vec(b, ep)[2] * (-(geo::vec(b, ep)[1])) = 0
+    geo::det(geo::vec(b, ep), geo::vec(d, fp)) = 0
+
+    by thm geo::dot_coordinate_formula(geo::vec(b, ep), geo::vec(d, fp))
+    geo::dot(geo::vec(b, ep), geo::vec(d, fp)) = geo::vec(b, ep)[1] * geo::vec(d, fp)[1] + geo::vec(b, ep)[2] * geo::vec(d, fp)[2]
+    by thm geo::multiply_both_sides(geo::vec(d, fp)[1], -(geo::vec(b, ep)[1]), geo::vec(b, ep)[1])
+    geo::vec(b, ep)[1] * geo::vec(d, fp)[1] = geo::vec(d, fp)[1] * geo::vec(b, ep)[1] = (-(geo::vec(b, ep)[1])) * geo::vec(b, ep)[1] = -(geo::vec(b, ep)[1]^2)
+    by thm geo::multiply_both_sides(geo::vec(d, fp)[2], -(geo::vec(b, ep)[2]), geo::vec(b, ep)[2])
+    geo::vec(b, ep)[2] * geo::vec(d, fp)[2] = geo::vec(d, fp)[2] * geo::vec(b, ep)[2] = (-(geo::vec(b, ep)[2])) * geo::vec(b, ep)[2] = -(geo::vec(b, ep)[2]^2)
+    by thm geo::add_equalities(geo::vec(b, ep)[1] * geo::vec(d, fp)[1], -(geo::vec(b, ep)[1]^2), geo::vec(b, ep)[2] * geo::vec(d, fp)[2], -(geo::vec(b, ep)[2]^2))
+    geo::vec(b, ep)[1] * geo::vec(d, fp)[1] + geo::vec(b, ep)[2] * geo::vec(d, fp)[2] = -(geo::vec(b, ep)[1]^2) + -(geo::vec(b, ep)[2]^2) = -(geo::vec(b, ep)[1]^2 + geo::vec(b, ep)[2]^2)
+    by thm geo::multiply_both_sides(geo::distance_sq(b, ep), geo::vec(b, ep)[1]^2 + geo::vec(b, ep)[2]^2, -1)
+    -(geo::distance_sq(b, ep)) = -(geo::vec(b, ep)[1]^2 + geo::vec(b, ep)[2]^2)
+    geo::dot(geo::vec(b, ep), geo::vec(d, fp)) = -(geo::vec(b, ep)[1]^2 + geo::vec(b, ep)[2]^2) = -geo::distance_sq(b, ep)

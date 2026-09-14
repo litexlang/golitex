@@ -5,7 +5,7 @@ This module owns two views of new_pipeline AST:
 | API | Role |
 |-----|------|
 | `ir` | Typed semantic key (`*IR` newtypes) for cache / lookup / compare |
-| `display_string` | User-facing `String` (today: same as IR spelling) |
+| `display_string` | User-facing `String` (binder objs use `.surface`; otherwise usually IR spelling) |
 
 Surface spelling (operators, `$in`, precedence parentheses, keywords) follows the
 legacy Litex Display contract. FactId and line_file never appear in either view.
@@ -14,11 +14,19 @@ For every AST type in this module, these are the **only** two methods.
 
 ## Symbol identity (locked)
 
-See [`../identifier_identity.md`](../identifier_identity.md).
+See [`../identifier_identity.md`](../identifier_identity.md) — the canonical
+note on **name is identity**, why `IdentifierId` was removed (false ByCache
+misses / true shadowing conflicts), ByCache contracts, and the do-not-break
+checklist.
 
 **Name is identity:** the same surface name (plain or `mod::name`) always
 denotes the same symbol. No shadowing; no same-name nested binders. IR cache
 keys use the surface name spelling directly.
+
+Binder-carrying objects (`SetBuilder`, `FnSet`, `AnonymousFn`) store
+`surface` (user letters, display) and `alpha` (`□N`, ops / `ir` / ByCache).
+Tokenizer rejects source tokens starting with `__` (Lean/codegen reserve).
+Do not free-occupy `□N`.
 
 ## Typed IR wrappers
 
@@ -34,8 +42,8 @@ Construction is only through `ir()` in this module
 IR keys by conversion. When user-facing text is needed, call `display_string()`
 on the AST value or on the IR wrapper.
 
-Do not invent further internal-only spellings (no `____binder_…`, no
-`_generated_…`).
+Binder slots use `□N` in `ir` (Litex-internal identity). `__…` is Lean-only and
+must not appear in Litex source.
 
 ## Two methods only
 

@@ -1,0 +1,60 @@
+# Polynomial identity used after eliminating the zero factors.
+thm problem_473_square_identity:
+    ? forall u, v, t R:
+        4 * t * (u + v) * (u + t * v) + u^2 * (t - 1)^2 = (u * t + u + 2 * v * t)^2
+    4 * t * (u + v) * (u + t * v) + u^2 * (t - 1)^2 = 4 * t * (u^2 + u * t * v + u * v + t * v^2) + u^2 * (t^2 - 2 * t + 1)
+    4 * t * (u^2 + u * t * v + u * v + t * v^2) + u^2 * (t^2 - 2 * t + 1) = u^2 * t^2 + 2 * u^2 * t + u^2 + 4 * u * v * t^2 + 4 * u * v * t + 4 * v^2 * t^2
+    (u * t + u + 2 * v * t)^2 = u^2 * t^2 + 2 * u^2 * t + u^2 + 4 * u * v * t^2 + 4 * u * v * t + 4 * v^2 * t^2
+    4 * t * (u + v) * (u + t * v) + u^2 * (t - 1)^2 = (u * t + u + 2 * v * t)^2
+
+# Cancel the fixed nonzero scale before instantiating a large coordinate expression.
+thm problem_473_double_square_positive:
+    ? forall z R:
+        (2 * z)^2 > 0
+        =>:
+            z^2 > 0
+    by contra:
+        ? z^2 > 0
+        z^2 <= 0
+        z^2 >= 0
+        z^2 = 0
+        (2 * z)^2 = 4 * z^2 = 0
+        impossible (2 * z)^2 > 0
+
+# Problem 473 scalar branch-elimination probe.
+# If two same-side rays have the same normalized angle, the positive
+# parallel scale t cannot take the spurious squared-cosine branch.
+thm problem_473_positive_scale_unique:
+    ? forall u, v, w, t R:
+        u > 0,
+        t > 0,
+        u * w - v^2 > 0,
+        (t - 1) * (u * w - v^2) * (u * t + u + 2 * v * t) = 0,
+        (u + v) * (u + t * v) >= 0
+        =>:
+            t = 1
+    by contra:
+        ? t = 1
+        t != 1
+        t - 1 != 0
+        u * w - v^2 != 0
+        (t - 1) * ((u * w - v^2) * (u * t + u + 2 * v * t)) = 0
+        by thm geo::zero_factor_law(t - 1, (u * w - v^2) * (u * t + u + 2 * v * t))
+        (u * w - v^2) * (u * t + u + 2 * v * t) = 0
+        by thm geo::zero_factor_law(u * w - v^2, u * t + u + 2 * v * t)
+        u * t + u + 2 * v * t = 0
+        by thm geo::multiply_both_sides(u * t + u + 2 * v * t, 0, u * t + u + 2 * v * t)
+        (u * t + u + 2 * v * t) * (u * t + u + 2 * v * t) = 0
+        (u * t + u + 2 * v * t)^2 = 0
+        by thm problem_473_square_identity(u, v, t)
+        4 * t * (u + v) * (u + t * v) + u^2 * (t - 1)^2 = 0
+        by thm geo::zero_sum_rearrange(4 * t * (u + v) * (u + t * v), u^2 * (t - 1)^2)
+        0 - 4 * t * (u + v) * (u + t * v) = u^2 * (t - 1)^2
+        4 * t > 0
+        4 * t * ((u + v) * (u + t * v)) >= 0
+        4 * t * (u + v) * (u + t * v) >= 0
+        u^2 > 0
+        (t - 1)^2 > 0
+        u^2 * (t - 1)^2 > 0
+        0 - 4 * t * (u + v) * (u + t * v) <= 0
+        impossible 0 - 4 * t * (u + v) * (u + t * v) <= 0

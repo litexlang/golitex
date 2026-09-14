@@ -3,7 +3,7 @@ use crate::new_pipeline::display_and_ir::FactIR;
 use crate::new_pipeline::runtime::runtime_ids::FactId;
 use crate::new_pipeline::runtime::Runtime;
 
-// Exact FactIR hit. Cite the stored FactId; payload lives in facts_by_id.
+// Exact FactIR hit. Cite FactId only; see `identifier_identity.md` (ByCache).
 pub struct CacheSearchProof {
     pub cite_fact_id: FactId,
 }

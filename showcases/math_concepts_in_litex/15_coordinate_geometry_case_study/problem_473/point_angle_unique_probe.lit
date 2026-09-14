@@ -1,0 +1,28 @@
+# Problem 473: bridge an atomic point-angle predicate to the verified vector uniqueness theorem.
+
+thm problem_473_point_angle_scale_unique:
+    ? forall a, b, c, d, ep, x, y cart(R, R), t R:
+        $geo::are_angles_congruent(d, a, c, ep, c, b),
+        t > 0,
+        geo::dot(x, x) > 0,
+        geo::dot(x, x) * geo::dot(y, y) - geo::dot(x, y)^2 > 0,
+        geo::angle_cos_num(d, a, c) = geo::dot((x[1] + y[1], x[2] + y[2]), x),
+        geo::angle_cos_num(ep, c, b) = geo::dot((x[1] + t * y[1], x[2] + t * y[2]), x),
+        geo::angle_cos_den(d, a, c) = geo::dot((x[1] + y[1], x[2] + y[2]), (x[1] + y[1], x[2] + y[2])) * geo::dot(x, x),
+        geo::angle_cos_den(ep, c, b) = geo::dot((x[1] + t * y[1], x[2] + t * y[2]), (x[1] + t * y[1], x[2] + t * y[2])) * geo::dot(x, x)
+        =>:
+            t = 1
+    by def $geo::are_angles_congruent(d, a, c, ep, c, b)
+
+    geo::dot((x[1] + y[1], x[2] + y[2]), x)^2 * (geo::dot((x[1] + t * y[1], x[2] + t * y[2]), (x[1] + t * y[1], x[2] + t * y[2])) * geo::dot(x, x)) = geo::angle_cos_num(d, a, c)^2 * (geo::dot((x[1] + t * y[1], x[2] + t * y[2]), (x[1] + t * y[1], x[2] + t * y[2])) * geo::dot(x, x))
+    geo::angle_cos_num(d, a, c)^2 * (geo::dot((x[1] + t * y[1], x[2] + t * y[2]), (x[1] + t * y[1], x[2] + t * y[2])) * geo::dot(x, x)) = geo::angle_cos_num(d, a, c)^2 * geo::angle_cos_den(ep, c, b)
+    geo::angle_cos_num(d, a, c)^2 * geo::angle_cos_den(ep, c, b) = geo::angle_cos_num(ep, c, b)^2 * geo::angle_cos_den(d, a, c)
+    geo::angle_cos_num(ep, c, b)^2 * geo::angle_cos_den(d, a, c) = geo::angle_cos_num(ep, c, b)^2 * (geo::dot((x[1] + y[1], x[2] + y[2]), (x[1] + y[1], x[2] + y[2])) * geo::dot(x, x))
+    geo::angle_cos_num(ep, c, b)^2 * (geo::dot((x[1] + y[1], x[2] + y[2]), (x[1] + y[1], x[2] + y[2])) * geo::dot(x, x)) = geo::dot((x[1] + t * y[1], x[2] + t * y[2]), x)^2 * (geo::dot((x[1] + y[1], x[2] + y[2]), (x[1] + y[1], x[2] + y[2])) * geo::dot(x, x))
+    geo::dot((x[1] + y[1], x[2] + y[2]), x)^2 * (geo::dot((x[1] + t * y[1], x[2] + t * y[2]), (x[1] + t * y[1], x[2] + t * y[2])) * geo::dot(x, x)) = geo::dot((x[1] + t * y[1], x[2] + t * y[2]), x)^2 * (geo::dot((x[1] + y[1], x[2] + y[2]), (x[1] + y[1], x[2] + y[2])) * geo::dot(x, x))
+
+    geo::dot((x[1] + y[1], x[2] + y[2]), x) * geo::dot((x[1] + t * y[1], x[2] + t * y[2]), x) = geo::angle_cos_num(d, a, c) * geo::angle_cos_num(ep, c, b)
+    geo::dot((x[1] + y[1], x[2] + y[2]), x) * geo::dot((x[1] + t * y[1], x[2] + t * y[2]), x) >= 0
+
+    by thm vector_angle_unique_probe::problem_473_vector_angle_scale_unique(x, y, t)
+    t = 1

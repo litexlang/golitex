@@ -36,16 +36,12 @@ impl Runtime {
         self.top_exec_env_mut().definitions.identifiers.insert(
             let_stmt.name.clone(),
             DefinedIdentifierInfo {
-                identifier: Identifier {
-                    name: let_stmt.name.clone(),
-                },
+                identifier: Identifier::new(let_stmt.name.clone()),
             },
         );
 
         let equality_fact_id = self.ids.allocate_fact_id();
-        let left = Obj::Atom(AtomObj::Identifier(Identifier {
-            name: let_stmt.name.clone(),
-        }));
+        let left = Obj::Atom(AtomObj::Identifier(Identifier::new(let_stmt.name.clone())));
         let equal_fact: Fact = EqualFact {
             fact_id: equality_fact_id,
             left,

@@ -108,8 +108,8 @@ impl Runtime {
 
 fn nonempty_check_set_for_param_obj(param_set: &Obj) -> Obj {
     match param_set {
-        Obj::FnSet(fn_set) => fn_set.body.ret_set.as_ref().clone(),
-        Obj::AnonymousFn(anon) => anon.body.ret_set.as_ref().clone(),
+        Obj::FnSet(fn_set) => fn_set.alpha.ret_set.as_ref().clone(),
+        Obj::AnonymousFn(anon) => anon.alpha.body.ret_set.as_ref().clone(),
         _ => param_set.clone(),
     }
 }
