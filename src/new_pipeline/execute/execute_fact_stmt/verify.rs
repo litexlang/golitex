@@ -10,9 +10,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
         match fact {
-            Fact::AtomicFact(fact) => Ok(VerifyFactResult::AtomicFact(Box::new(
-                self.verify_atomic_fact(fact, verify_state)?,
-            ))),
+            Fact::AtomicFact(fact) => self.verify_atomic_fact(fact, verify_state),
             Fact::AndFact(fact) => Ok(VerifyFactResult::AndFact(Box::new(
                 self.verify_and_fact(fact, verify_state)?,
             ))),

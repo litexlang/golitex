@@ -13,11 +13,6 @@ use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyF
 use crate::new_pipeline::execute::execute_fact_stmt::verify_well_defined::AtomicFactWellDefinedProof;
 use crate::new_pipeline::runtime::runtime_ids::FactId;
 
-pub enum VerifyAtomicFactResult {
-    Equality(VerifyEqualityResult),
-    AtomicExceptEquality(VerifyAtomicExceptEqualityFactResult),
-}
-
 pub struct VerifyEqualityResult {
     pub fact: EqualFact,
     pub well_defined_proof: AtomicFactWellDefinedProof,

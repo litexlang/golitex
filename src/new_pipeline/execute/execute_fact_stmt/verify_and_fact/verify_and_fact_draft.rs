@@ -27,9 +27,11 @@ impl Runtime {
     ) -> Result<Vec<VerifyFactResult>, RuntimeError> {
         let mut proof_of_each_conjunct = Vec::new();
         for conjunct in fact.facts.iter() {
-            proof_of_each_conjunct.push(VerifyFactResult::AtomicFact(
-                self.verify_atomic_fact(conjunct, verify_state.clone())?,
-            ));
+            let proof = self.verify_atomic_fact(conjunct, verify_state.clone())?;
+            if proof.is_unknown() {
+                return Ok(vec![proof]);
+            }
+            proof_of_each_conjunct.push(proof);
         }
         Ok(proof_of_each_conjunct)
     }
