@@ -2,7 +2,7 @@ use crate::new_pipeline::ast::fact::AtomicFact;
 use crate::new_pipeline::exec_env::helper::{
     atomic_fact_args_ref, atomic_fact_has_positive_polarity,
 };
-use crate::new_pipeline::exec_env::known_fact_memory::ObjKey;
+use crate::new_pipeline::exec_env::known_fact_memory::ObjInternalRepresentation;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::{
     AtomicExceptEqualityFactSearchProofByKnownAtomicFact, EqualFactSearchedProofByKnownEquality,
 };
@@ -27,7 +27,7 @@ impl Runtime {
             atomic_fact_has_positive_polarity(fact),
         );
         let goal_args = atomic_fact_args_ref(fact);
-        let class_per_arg: Vec<Vec<ObjKey>> = goal_args
+        let class_per_arg: Vec<Vec<ObjInternalRepresentation>> = goal_args
             .iter()
             .map(|arg| self.known_equality_class_keys(arg))
             .collect();

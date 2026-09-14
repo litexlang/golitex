@@ -11,5 +11,10 @@ pub mod helper;
 pub mod obj;
 pub mod param;
 pub mod stmt;
+pub mod types;
 
 pub use helper::strip_identifier_id_tags;
+pub use types::{
+    FactInternalRepresentation, ObjInternalRepresentation, ParamInternalRepresentation,
+    StmtInternalRepresentation,
+};

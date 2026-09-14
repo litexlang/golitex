@@ -3,7 +3,7 @@ use super::known_equality_graph::{
 };
 use crate::new_pipeline::ast::fact::EqualFact;
 use crate::new_pipeline::ast::obj::Obj;
-use crate::new_pipeline::exec_env::known_fact_memory::ObjKey;
+use crate::new_pipeline::exec_env::known_fact_memory::ObjInternalRepresentation;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProofByKnownEquality;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeResult};
@@ -31,7 +31,7 @@ impl Runtime {
     // Class keys across visible envs via generating-edge connectivity.
     // Per-env `class_members` Rc lists are maintained on store for local class
     // sharing; cross-env closure still comes from the merged edge graph.
-    pub fn known_equality_class_keys(&self, obj: &Obj) -> Vec<ObjKey> {
+    pub fn known_equality_class_keys(&self, obj: &Obj) -> Vec<ObjInternalRepresentation> {
         equality_class_keys_in_adjacency(&self.visible_equality_adjacency(), obj)
     }
 

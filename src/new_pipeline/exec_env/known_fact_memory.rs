@@ -5,7 +5,7 @@ use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
-pub type ObjKey = String;
+pub use crate::new_pipeline::display_and_internal_representation::ObjInternalRepresentation;
 
 // Facts and search indexes for one ExecEnv scope (new_pipeline AST).
 #[derive(Clone)]
@@ -30,18 +30,18 @@ pub struct KnownFactMemory {
 pub struct KnownEqualityMemory {
     // Undirected adjacency of generating EqualFacts, keyed by obj internal representation.
     // Each store(a = b) inserts both a→b and b→a with the same EqualFact.
-    pub generating_edges: HashMap<ObjKey, Vec<(ObjKey, EqualFact)>>,
+    pub generating_edges: HashMap<ObjInternalRepresentation, Vec<(ObjInternalRepresentation, EqualFact)>>,
 
     // Shared member list per equivalence class. Same class <=> Rc::ptr_eq.
-    pub class_members: HashMap<ObjKey, Rc<Vec<Obj>>>,
+    pub class_members: HashMap<ObjInternalRepresentation, Rc<Vec<Obj>>>,
 }
 
 // Non-equality atomics indexed by prop_name, polarity, and arity.
 #[derive(Clone, Default)]
 pub struct AtomicExceptEqualityFactMemory {
     pub by_other_arg_count: HashMap<(PropName, bool), Vec<AtomicFact>>,
-    pub by_one_arg: HashMap<(PropName, bool), HashMap<ObjKey, AtomicFact>>,
-    pub by_two_args: HashMap<(PropName, bool), HashMap<(ObjKey, ObjKey), AtomicFact>>,
+    pub by_one_arg: HashMap<(PropName, bool), HashMap<ObjInternalRepresentation, AtomicFact>>,
+    pub by_two_args: HashMap<(PropName, bool), HashMap<(ObjInternalRepresentation, ObjInternalRepresentation), AtomicFact>>,
 }
 
 impl KnownFactMemory {
@@ -84,11 +84,17 @@ impl KnownEqualityMemory {
         self.merge_classes(&left_key, &right_key);
     }
 
-    pub fn class_members_for(&self, key: &str) -> Option<&Rc<Vec<Obj>>> {
+    pub fn class_members_for(
+        &self,
+        key: &ObjInternalRepresentation,
+    ) -> Option<&Rc<Vec<Obj>>> {
         self.class_members.get(key)
     }
 
-    pub fn class_keys_for(&self, key: &str) -> Option<Vec<ObjKey>> {
+    pub fn class_keys_for(
+        &self,
+        key: &ObjInternalRepresentation,
+    ) -> Option<Vec<ObjInternalRepresentation>> {
         let members = self.class_members_for(key)?;
         Some(
             members
@@ -98,7 +104,11 @@ impl KnownEqualityMemory {
         )
     }
 
-    pub fn same_class(&self, left_key: &str, right_key: &str) -> bool {
+    pub fn same_class(
+        &self,
+        left_key: &ObjInternalRepresentation,
+        right_key: &ObjInternalRepresentation,
+    ) -> bool {
         match (
             self.class_members.get(left_key),
             self.class_members.get(right_key),
@@ -108,7 +118,7 @@ impl KnownEqualityMemory {
         }
     }
 
-    fn ensure_singleton(&mut self, key: &ObjKey, obj: &Obj) {
+    fn ensure_singleton(&mut self, key: &ObjInternalRepresentation, obj: &Obj) {
         if self.class_members.contains_key(key) {
             return;
         }
@@ -116,7 +126,7 @@ impl KnownEqualityMemory {
             .insert(key.clone(), Rc::new(vec![obj.clone()]));
     }
 
-    fn merge_classes(&mut self, left_key: &ObjKey, right_key: &ObjKey) {
+    fn merge_classes(&mut self, left_key: &ObjInternalRepresentation, right_key: &ObjInternalRepresentation) {
         let left_rc = self
             .class_members
             .get(left_key)
@@ -156,7 +166,7 @@ impl AtomicExceptEqualityFactMemory {
         &mut self,
         key: PropName,
         positive_polarity: bool,
-        arg_key: ObjKey,
+        arg_key: ObjInternalRepresentation,
         fact: AtomicFact,
     ) {
         self.by_one_arg
@@ -169,8 +179,8 @@ impl AtomicExceptEqualityFactMemory {
         &mut self,
         key: PropName,
         positive_polarity: bool,
-        arg_key0: ObjKey,
-        arg_key1: ObjKey,
+        arg_key0: ObjInternalRepresentation,
+        arg_key1: ObjInternalRepresentation,
         fact: AtomicFact,
     ) {
         self.by_two_args
