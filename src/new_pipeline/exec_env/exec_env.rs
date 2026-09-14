@@ -1,6 +1,7 @@
-use crate::new_pipeline::ast::obj::Identifier;
+use crate::new_pipeline::ast::obj::{Identifier, Obj as PipelineObj};
 use crate::new_pipeline::ast::stmt::DefAbstractPropStmt as NewDefAbstractPropStmt;
 use crate::new_pipeline::ast::stmt::DefPropStmt as NewDefPropStmt;
+use crate::new_pipeline::exec_env::known_fact_memory::ObjInternalRepresentation;
 use crate::new_pipeline::runtime::runtime_ids::{FactId, IdentifierId, WellDefinednessId};
 use crate::prelude::*;
 use std::collections::HashMap;
@@ -28,7 +29,8 @@ pub struct ExecEnv {
     pub facts: KnownFactMemory,
 
     /// Shape/value properties attached to special objects by stored facts.
-    pub special_object_properties: HashMap<ObjString, Vec<SpecialObjProperty>>,
+    pub special_object_properties:
+        HashMap<ObjInternalRepresentation, Vec<SpecialObjProperty>>,
 
     /// Algebraic properties proved for predicates in this scope.
     pub prop_algebraic_properties: HashMap<PropName, Vec<PropAlgebraicProperty>>,
@@ -46,10 +48,10 @@ pub struct ExecEnv {
 #[derive(Clone, Default)]
 pub struct WellDefinedObjectMemory {
     /// Canonical object key to the proof identity that established WD.
-    pub object_to_wd_id: HashMap<ObjString, WellDefinednessId>,
+    pub object_to_wd_id: HashMap<ObjInternalRepresentation, WellDefinednessId>,
 
     /// Proof identity back to the object carried by a result or citation.
-    pub wd_id_to_object: HashMap<WellDefinednessId, Obj>,
+    pub wd_id_to_object: HashMap<WellDefinednessId, PipelineObj>,
 }
 
 /// Definitions introduced in one execution environment.
@@ -148,14 +150,16 @@ impl WellDefinedObjectMemory {
     }
 
     /// Return the WD proof identity for an object, if this scope owns one.
-    pub fn lookup(&self, object: &Obj) -> Option<WellDefinednessId> {
-        self.object_to_wd_id.get(&obj_equality_key(object)).copied()
+    pub fn lookup(&self, object: &PipelineObj) -> Option<WellDefinednessId> {
+        self.object_to_wd_id
+            .get(&object.internal_representation())
+            .copied()
     }
 
     /// Record a WD proof and its object payload in both directions.
     /// Re-recording the same object or proof id is idempotent.
-    pub fn record(&mut self, object: Obj, wd_id: WellDefinednessId) {
-        let object_key = obj_equality_key(&object);
+    pub fn record(&mut self, object: PipelineObj, wd_id: WellDefinednessId) {
+        let object_key = object.internal_representation();
 
         self.object_to_wd_id.insert(object_key, wd_id);
         self.wd_id_to_object.insert(wd_id, object);

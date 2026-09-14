@@ -1,367 +1,15 @@
 //! Framework AST data shapes for new_pipeline.
 //! Field taxonomy follows the legacy language; methods are added later.
 //! Identity: String display names plus IdentifierId on Identifier atoms; FactId; LineFile.
+//!
+//! Layout: `Obj` first; each payload type follows in the same order as its `Obj` variant.
+//! Nested helpers that are not themselves `Obj` variants sit with their owning variant.
 
 use super::fact::QuantifierFreeFact;
 use super::names::AtomicName;
 use super::param::SetBoundParameterList;
 use crate::new_pipeline::runtime::IdentifierId;
 
-// from object/arithmetic_operations.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Add {
-    pub left: Box<Obj>,
-    pub right: Box<Obj>,
-}
-
-// from object/arithmetic_operations.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Sub {
-    pub left: Box<Obj>,
-    pub right: Box<Obj>,
-}
-
-// from object/arithmetic_operations.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Mul {
-    pub left: Box<Obj>,
-    pub right: Box<Obj>,
-}
-
-// from object/arithmetic_operations.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Div {
-    pub left: Box<Obj>,
-    pub right: Box<Obj>,
-}
-
-// from object/arithmetic_operations.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Mod {
-    pub left: Box<Obj>,
-    pub right: Box<Obj>,
-}
-
-// from object/arithmetic_operations.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Quot {
-    pub left: Box<Obj>,
-    pub right: Box<Obj>,
-}
-
-// from object/arithmetic_operations.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Gcd {
-    pub left: Box<Obj>,
-    pub right: Box<Obj>,
-}
-
-// from object/arithmetic_operations.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Lcm {
-    pub left: Box<Obj>,
-    pub right: Box<Obj>,
-}
-
-// from object/arithmetic_operations.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Pow {
-    pub base: Box<Obj>,
-    pub exponent: Box<Obj>,
-}
-
-// from object/atom.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum AtomObj {
-    Identifier(Identifier),
-    IdentifierWithMod(IdentifierWithMod),
-    Bound(BoundParamObj),
-}
-
-// from object/binary_set_operations.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Union {
-    pub left: Box<Obj>,
-    pub right: Box<Obj>,
-}
-
-// from object/binary_set_operations.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Intersect {
-    pub left: Box<Obj>,
-    pub right: Box<Obj>,
-}
-
-// from object/binary_set_operations.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SetMinus {
-    pub left: Box<Obj>,
-    pub right: Box<Obj>,
-}
-
-// from object/complex_functions.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct RealPart {
-    pub arg: Box<Obj>,
-}
-
-// from object/complex_functions.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ImaginaryPart {
-    pub arg: Box<Obj>,
-}
-
-// from object/complex_functions.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ComplexAbs {
-    pub arg: Box<Obj>,
-}
-
-// from object/elementary_functions.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Sqrt {
-    pub arg: Box<Obj>,
-}
-
-// from object/elementary_functions.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Exp {
-    pub arg: Box<Obj>,
-}
-
-// from object/elementary_functions.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Ln {
-    pub arg: Box<Obj>,
-}
-
-// from object/elementary_functions.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Sign {
-    pub arg: Box<Obj>,
-}
-
-// from object/elementary_functions.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Factorial {
-    pub arg: Box<Obj>,
-}
-
-// from object/elementary_functions.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Abs {
-    pub arg: Box<Obj>,
-}
-
-// from object/elementary_functions.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Log {
-    pub base: Box<Obj>,
-    pub arg: Box<Obj>,
-}
-
-// from object/finite_set_measures.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct FiniteSetSize {
-    pub set: Box<Obj>,
-}
-
-// from object/finite_set_measures.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct FiniteSetMax {
-    pub set: Box<Obj>,
-}
-
-// from object/finite_set_measures.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct FiniteSetMin {
-    pub set: Box<Obj>,
-}
-
-// from object/function_application.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct FnObj {
-    pub head: Box<FnObjHead>,
-    pub body: Vec<Vec<Box<Obj>>>,
-}
-
-// from object/function_head.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum FnObjHead {
-    Identifier(Identifier),
-    IdentifierWithMod(IdentifierWithMod),
-    Bound(BoundParamObj),
-    /// Anonymous function literal used as applied head, e.g. `fn(x R) R {x}(a)`.
-    AnonymousFnLiteral(Box<AnonymousFn>),
-    FiniteSeqListObj(FiniteSeqListObj),
-    ObjAtIndex(ObjAtIndex),
-    ObjAsStructInstanceWithFieldAccess(ObjAsStructInstanceWithFieldAccess),
-    InstantiatedTemplateObj(InstantiatedTemplateObj),
-}
-
-// from object/function_images.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct FnRange {
-    pub function: Box<Obj>,
-}
-
-// from object/function_images.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Replacement {
-    pub prop_name: AtomicName,
-    pub source_set: Box<Obj>,
-}
-
-// from object/function_set.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct FnSetBody {
-    pub set_bound_parameters: SetBoundParameterList,
-    pub dom_facts: Vec<QuantifierFreeFact>,
-    /// The return set may depend on the function's parameters and is instantiated at application.
-    pub ret_set: Box<Obj>,
-}
-
-// from object/function_set.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct FnSet {
-    pub body: FnSetBody,
-}
-
-// from object/function_set.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct AnonymousFn {
-    pub body: FnSetBody,
-    pub equal_to: Box<Obj>,
-}
-
-// from object/function_set.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum FnSetSpace {
-    Set(FnSet),
-    Anon(AnonymousFn),
-}
-
-// from object/identifier.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Identifier {
-    pub name: String,
-    pub identifier_id: IdentifierId,
-}
-
-// from object/identifier.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct IdentifierWithMod {
-    pub mod_name: String,
-    pub name: String,
-    pub identifier_id: IdentifierId,
-}
-
-// from object/indexing.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ObjAtIndex {
-    pub obj: Box<Obj>,
-    pub index: Box<Obj>,
-}
-
-// from object/intervals.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum OneSideInfinityIntervalObj {
-    LeftOpen(OneSideInfinityIntervalObjStruct),
-    LeftClosed(OneSideInfinityIntervalObjStruct),
-    RightOpen(OneSideInfinityIntervalObjStruct),
-    RightClosed(OneSideInfinityIntervalObjStruct),
-}
-
-// from object/intervals.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct OneSideInfinityIntervalObjStruct {
-    pub start: Box<Obj>,
-}
-
-// from object/intervals.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum IntervalObj {
-    LeftOpenRightOpen(IntervalObjStruct),
-    LeftOpenRightClosed(IntervalObjStruct),
-    LeftClosedRightOpen(IntervalObjStruct),
-    LeftClosedRightClosed(IntervalObjStruct),
-}
-
-// from object/intervals.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct IntervalObjStruct {
-    pub start: Box<Obj>,
-    pub end: Box<Obj>,
-}
-
-// from object/iterated_operations.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Sum {
-    pub start: Box<Obj>,
-    pub end: Box<Obj>,
-    pub func: Box<Obj>,
-}
-
-// from object/iterated_operations.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SumOfFiniteSet {
-    pub set: Box<Obj>,
-    pub func: Box<Obj>,
-}
-
-// from object/iterated_operations.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Product {
-    pub start: Box<Obj>,
-    pub end: Box<Obj>,
-    pub func: Box<Obj>,
-}
-
-// from object/iterated_operations.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ProductOfFiniteSet {
-    pub set: Box<Obj>,
-    pub func: Box<Obj>,
-}
-
-// from object/iterated_operations.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Reduce {
-    pub start: Box<Obj>,
-    pub end: Box<Obj>,
-    pub func: Box<Obj>,
-    pub op: Box<Obj>,
-    pub seed: Box<Obj>,
-}
-
-// from object/iterated_operations.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct FiniteSetReduce {
-    pub set: Box<Obj>,
-    pub func: Box<Obj>,
-    pub op: Box<Obj>,
-    pub seed: Box<Obj>,
-}
-
-// from object/numeric_constants.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Number {
-    pub normalized_value: String,
-}
-
-// from object/numeric_constants.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ImaginaryUnit;
-
-// from object/numeric_constants.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct EulerNumber;
-
-// from object/numeric_constants.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Pi;
-
-// from object/object.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Obj {
     Atom(AtomObj),
@@ -441,84 +89,277 @@ pub enum Obj {
     IntervalObj(IntervalObj),
 }
 
-// from object/parameter.rs
+// Atom
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct BoundParamObj {
+pub struct Identifier {
     pub name: String,
+    pub identifier_id: IdentifierId,
 }
 
-// from object/ranges_and_sequences.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Range {
-    pub start: Box<Obj>,
-    pub end: Box<Obj>,
+pub struct IdentifierWithMod {
+    pub mod_name: String,
+    pub name: String,
+    pub identifier_id: IdentifierId,
 }
 
-// from object/ranges_and_sequences.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ClosedRange {
-    pub start: Box<Obj>,
-    pub end: Box<Obj>,
+pub enum AtomObj {
+    Identifier(Identifier),
+    IdentifierWithMod(IdentifierWithMod),
 }
 
-// from object/ranges_and_sequences.rs
+// FnObj
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct FiniteSeqSet {
-    pub set: Box<Obj>,
-    pub n: Box<Obj>,
+pub enum FnObjHead {
+    Identifier(Identifier),
+    IdentifierWithMod(IdentifierWithMod),
+    /// Anonymous function literal used as applied head, e.g. `fn(x R) R {x}(a)`.
+    AnonymousFnLiteral(Box<AnonymousFn>),
+    FiniteSeqListObj(FiniteSeqListObj),
+    ObjAtIndex(ObjAtIndex),
+    ObjAsStructInstanceWithFieldAccess(ObjAsStructInstanceWithFieldAccess),
+    InstantiatedTemplateObj(InstantiatedTemplateObj),
 }
 
-// from object/ranges_and_sequences.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SeqSet {
-    pub set: Box<Obj>,
+pub struct FnObj {
+    pub head: Box<FnObjHead>,
+    pub body: Vec<Vec<Box<Obj>>>,
 }
 
-// from object/ranges_and_sequences.rs
+// Number
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct FiniteSeqListObj {
-    pub objs: Vec<Box<Obj>>,
+pub struct Number {
+    pub normalized_value: String,
 }
 
-// from object/rounding_and_extrema.rs
+// ImaginaryUnit
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ImaginaryUnit;
+
+// EulerNumber
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct EulerNumber;
+
+// Pi
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Pi;
+
+// Add
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Add {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+}
+
+// Sub
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Sub {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+}
+
+// Mul
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Mul {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+}
+
+// Div
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Div {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+}
+
+// Mod
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Mod {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+}
+
+// Quot
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Quot {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+}
+
+// Gcd
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Gcd {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+}
+
+// Lcm
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Lcm {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+}
+
+// Floor
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Floor {
     pub arg: Box<Obj>,
 }
 
-// from object/rounding_and_extrema.rs
+// Ceil
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Ceil {
     pub arg: Box<Obj>,
 }
 
-// from object/rounding_and_extrema.rs
+// Min
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Min {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
 }
 
-// from object/rounding_and_extrema.rs
+// Max
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Max {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
 }
 
-// from object/set_aggregations.rs
+// Exp
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Exp {
+    pub arg: Box<Obj>,
+}
+
+// Ln
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Ln {
+    pub arg: Box<Obj>,
+}
+
+// Sign
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Sign {
+    pub arg: Box<Obj>,
+}
+
+// Factorial
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Factorial {
+    pub arg: Box<Obj>,
+}
+
+// Pow
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Pow {
+    pub base: Box<Obj>,
+    pub exponent: Box<Obj>,
+}
+
+// Abs
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Abs {
+    pub arg: Box<Obj>,
+}
+
+// Sin
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Sin {
+    pub arg: Box<Obj>,
+}
+
+// Arcsin
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Arcsin {
+    pub arg: Box<Obj>,
+}
+
+// Cos
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Cos {
+    pub arg: Box<Obj>,
+}
+
+// Tan
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Tan {
+    pub arg: Box<Obj>,
+}
+
+// Cot
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Cot {
+    pub arg: Box<Obj>,
+}
+
+// RealPart
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RealPart {
+    pub arg: Box<Obj>,
+}
+
+// ImaginaryPart
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ImaginaryPart {
+    pub arg: Box<Obj>,
+}
+
+// ComplexAbs
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ComplexAbs {
+    pub arg: Box<Obj>,
+}
+
+// Sqrt
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Sqrt {
+    pub arg: Box<Obj>,
+}
+
+// Log
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Log {
+    pub base: Box<Obj>,
+    pub arg: Box<Obj>,
+}
+
+// Union
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Union {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+}
+
+// Intersect
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Intersect {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+}
+
+// SetMinus
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SetMinus {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+}
+
+// BigUnion
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BigUnion {
     pub left: Box<Obj>,
 }
 
-// from object/set_aggregations.rs
+// BigIntersect
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BigIntersect {
     pub left: Box<Obj>,
 }
 
-// from object/set_aggregations.rs
+// IndexUnion
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IndexUnion {
     pub index_set: Box<Obj>,
@@ -526,7 +367,7 @@ pub struct IndexUnion {
     pub family_fn: Box<Obj>,
 }
 
-// from object/set_aggregations.rs
+// IndexIntersect
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IndexIntersect {
     pub index_set: Box<Obj>,
@@ -534,19 +375,27 @@ pub struct IndexIntersect {
     pub family_fn: Box<Obj>,
 }
 
-// from object/set_construction.rs
+// PowerSet
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PowerSet {
     pub set: Box<Obj>,
 }
 
-// from object/set_construction.rs
+// GeneralCart
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct GeneralCart {
+    pub index_set: Box<Obj>,
+    pub family_set: Box<Obj>,
+    pub family_fn: Box<Obj>,
+}
+
+// ListSet
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ListSet {
     pub list: Vec<Box<Obj>>,
 }
 
-// from object/set_construction.rs
+// SetBuilder
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SetBuilder {
     pub param_binding: String,
@@ -554,7 +403,185 @@ pub struct SetBuilder {
     pub facts: Vec<QuantifierFreeFact>,
 }
 
-// from object/standard_set.rs
+// FnSet
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FnSetBody {
+    pub set_bound_parameters: SetBoundParameterList,
+    pub dom_facts: Vec<QuantifierFreeFact>,
+    /// The return set may depend on the function's parameters and is instantiated at application.
+    pub ret_set: Box<Obj>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FnSet {
+    pub body: FnSetBody,
+}
+
+// AnonymousFn
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct AnonymousFn {
+    pub body: FnSetBody,
+    pub equal_to: Box<Obj>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum FnSetSpace {
+    Set(FnSet),
+    Anon(AnonymousFn),
+}
+
+// Cart
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Cart {
+    pub args: Vec<Box<Obj>>,
+}
+
+// CartDim
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CartDim {
+    pub set: Box<Obj>,
+}
+
+// Proj
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Proj {
+    pub set: Box<Obj>,
+    pub dim: Box<Obj>,
+}
+
+// TupleDim
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct TupleDim {
+    pub arg: Box<Obj>,
+}
+
+// Tuple
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Tuple {
+    pub args: Vec<Box<Obj>>,
+}
+
+// FiniteSetSize
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FiniteSetSize {
+    pub set: Box<Obj>,
+}
+
+// FiniteSetMax
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FiniteSetMax {
+    pub set: Box<Obj>,
+}
+
+// FiniteSetMin
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FiniteSetMin {
+    pub set: Box<Obj>,
+}
+
+// FnRange
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FnRange {
+    pub function: Box<Obj>,
+}
+
+// Replacement
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Replacement {
+    pub prop_name: AtomicName,
+    pub source_set: Box<Obj>,
+}
+
+// Sum
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Sum {
+    pub start: Box<Obj>,
+    pub end: Box<Obj>,
+    pub func: Box<Obj>,
+}
+
+// SumOfFiniteSet
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SumOfFiniteSet {
+    pub set: Box<Obj>,
+    pub func: Box<Obj>,
+}
+
+// Product
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Product {
+    pub start: Box<Obj>,
+    pub end: Box<Obj>,
+    pub func: Box<Obj>,
+}
+
+// ProductOfFiniteSet
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ProductOfFiniteSet {
+    pub set: Box<Obj>,
+    pub func: Box<Obj>,
+}
+
+// Reduce
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Reduce {
+    pub start: Box<Obj>,
+    pub end: Box<Obj>,
+    pub func: Box<Obj>,
+    pub op: Box<Obj>,
+    pub seed: Box<Obj>,
+}
+
+// FiniteSetReduce
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FiniteSetReduce {
+    pub set: Box<Obj>,
+    pub func: Box<Obj>,
+    pub op: Box<Obj>,
+    pub seed: Box<Obj>,
+}
+
+// Range
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Range {
+    pub start: Box<Obj>,
+    pub end: Box<Obj>,
+}
+
+// ClosedRange
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ClosedRange {
+    pub start: Box<Obj>,
+    pub end: Box<Obj>,
+}
+
+// FiniteSeqSet
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FiniteSeqSet {
+    pub set: Box<Obj>,
+    pub n: Box<Obj>,
+}
+
+// SeqSet
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SeqSet {
+    pub set: Box<Obj>,
+}
+
+// FiniteSeqListObj
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FiniteSeqListObj {
+    pub objs: Vec<Box<Obj>>,
+}
+
+// ObjAtIndex
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ObjAtIndex {
+    pub obj: Box<Obj>,
+    pub index: Box<Obj>,
+}
+
+// StandardSet
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum StandardSet {
     NPos,
@@ -574,14 +601,14 @@ pub enum StandardSet {
     CStar,
 }
 
-// from object/structure_instances.rs
+// StructObj
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct StructObj {
     pub name: AtomicName,
     pub params: Vec<Obj>,
 }
 
-// from object/structure_instances.rs
+// ObjAsStructInstanceWithFieldAccess
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ObjAsStructInstanceWithFieldAccess {
     pub obj: Box<Obj>,
@@ -591,78 +618,38 @@ pub struct ObjAsStructInstanceWithFieldAccess {
     pub resolved_struct_carrier: Option<Box<StructObj>>,
 }
 
-// from object/structure_instances.rs
+// InstantiatedTemplateObj
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct InstantiatedTemplateObj {
     pub template_name: AtomicName,
     pub args: Vec<Obj>,
 }
 
-// from object/trigonometric_functions.rs
+// OneSideInfinityIntervalObj
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Sin {
-    pub arg: Box<Obj>,
+pub enum OneSideInfinityIntervalObj {
+    LeftOpen(OneSideInfinityIntervalObjStruct),
+    LeftClosed(OneSideInfinityIntervalObjStruct),
+    RightOpen(OneSideInfinityIntervalObjStruct),
+    RightClosed(OneSideInfinityIntervalObjStruct),
 }
 
-// from object/trigonometric_functions.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Arcsin {
-    pub arg: Box<Obj>,
+pub struct OneSideInfinityIntervalObjStruct {
+    pub start: Box<Obj>,
 }
 
-// from object/trigonometric_functions.rs
+// IntervalObj
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Cos {
-    pub arg: Box<Obj>,
+pub enum IntervalObj {
+    LeftOpenRightOpen(IntervalObjStruct),
+    LeftOpenRightClosed(IntervalObjStruct),
+    LeftClosedRightOpen(IntervalObjStruct),
+    LeftClosedRightClosed(IntervalObjStruct),
 }
 
-// from object/trigonometric_functions.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Tan {
-    pub arg: Box<Obj>,
-}
-
-// from object/trigonometric_functions.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Cot {
-    pub arg: Box<Obj>,
-}
-
-// from object/tuples_and_cartesian.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Tuple {
-    pub args: Vec<Box<Obj>>,
-}
-
-// from object/tuples_and_cartesian.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct TupleDim {
-    pub arg: Box<Obj>,
-}
-
-// from object/tuples_and_cartesian.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CartDim {
-    pub set: Box<Obj>,
-}
-
-// from object/tuples_and_cartesian.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Proj {
-    pub set: Box<Obj>,
-    pub dim: Box<Obj>,
-}
-
-// from object/tuples_and_cartesian.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct GeneralCart {
-    pub index_set: Box<Obj>,
-    pub family_set: Box<Obj>,
-    pub family_fn: Box<Obj>,
-}
-
-// from object/tuples_and_cartesian.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Cart {
-    pub args: Vec<Box<Obj>>,
+pub struct IntervalObjStruct {
+    pub start: Box<Obj>,
+    pub end: Box<Obj>,
 }

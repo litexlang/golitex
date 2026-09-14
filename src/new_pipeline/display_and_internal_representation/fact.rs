@@ -1,6 +1,6 @@
 //! Fact and AtomicFact internal representation + display_string.
 
-use super::helper::strip_identifier_id_tags;
+use super::types::FactInternalRepresentation;
 use crate::new_pipeline::ast::fact::*;
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::parse::keywords::*;
@@ -8,13 +8,13 @@ use crate::new_pipeline::parse::keywords::*;
 macro_rules! impl_display_pair {
     () => {
         pub fn display_string(&self) -> String {
-            strip_identifier_id_tags(&self.internal_representation())
+            self.internal_representation().display_string()
         }
     };
 }
 
 impl Fact {
-    pub fn internal_representation(&self) -> String {
+    pub fn internal_representation(&self) -> FactInternalRepresentation {
         match self {
             Fact::AtomicFact(x) => x.internal_representation(),
             Fact::ExistFact(x) => x.internal_representation(),
@@ -30,7 +30,7 @@ impl Fact {
 }
 
 impl AtomicFact {
-    pub fn internal_representation(&self) -> String {
+    pub fn internal_representation(&self) -> FactInternalRepresentation {
         match self {
             AtomicFact::NormalAtomicFact(x) => x.internal_representation(),
             AtomicFact::EqualFact(x) => x.internal_representation(),
@@ -68,25 +68,25 @@ impl AtomicFact {
 }
 
 impl EqualFact {
-    pub fn internal_representation(&self) -> String {
-        format!(
+    pub fn internal_representation(&self) -> FactInternalRepresentation {
+        FactInternalRepresentation(format!(
             "{} {} {}",
             self.left.internal_representation(),
             EQUAL,
             self.right.internal_representation()
-        )
+        ))
     }
     impl_display_pair!();
 }
 
 impl NotEqualFact {
-    pub fn internal_representation(&self) -> String {
-        format!(
+    pub fn internal_representation(&self) -> FactInternalRepresentation {
+        FactInternalRepresentation(format!(
             "{} {} {}",
             self.left.internal_representation(),
             NOT_EQUAL,
             self.right.internal_representation()
-        )
+        ))
     }
     impl_display_pair!();
 }
@@ -94,13 +94,13 @@ impl NotEqualFact {
 macro_rules! impl_bin_rel {
     ($ty:ty, $op:expr) => {
         impl $ty {
-            pub fn internal_representation(&self) -> String {
-                format!(
+            pub fn internal_representation(&self) -> FactInternalRepresentation {
+                FactInternalRepresentation(format!(
                     "{} {} {}",
                     self.left.internal_representation(),
                     $op,
                     self.right.internal_representation()
-                )
+                ))
             }
             impl_display_pair!();
         }
@@ -110,14 +110,14 @@ macro_rules! impl_bin_rel {
 macro_rules! impl_not_bin_rel {
     ($ty:ty, $op:expr) => {
         impl $ty {
-            pub fn internal_representation(&self) -> String {
-                format!(
+            pub fn internal_representation(&self) -> FactInternalRepresentation {
+                FactInternalRepresentation(format!(
                     "{} {} {} {}",
                     NOT,
                     self.left.internal_representation(),
                     $op,
                     self.right.internal_representation()
-                )
+                ))
             }
             impl_display_pair!();
         }
@@ -134,28 +134,28 @@ impl_not_bin_rel!(NotLessEqualFact, LESS_EQUAL);
 impl_not_bin_rel!(NotGreaterEqualFact, GREATER_EQUAL);
 
 impl InFact {
-    pub fn internal_representation(&self) -> String {
-        format!(
+    pub fn internal_representation(&self) -> FactInternalRepresentation {
+        FactInternalRepresentation(format!(
             "{} {}{} {}",
             self.element.internal_representation(),
             FACT_PREFIX,
             IN,
             self.set.internal_representation()
-        )
+        ))
     }
     impl_display_pair!();
 }
 
 impl NotInFact {
-    pub fn internal_representation(&self) -> String {
-        format!(
+    pub fn internal_representation(&self) -> FactInternalRepresentation {
+        FactInternalRepresentation(format!(
             "{} {} {}{} {}",
             NOT,
             self.element.internal_representation(),
             FACT_PREFIX,
             IN,
             self.set.internal_representation()
-        )
+        ))
     }
     impl_display_pair!();
 }
@@ -163,15 +163,15 @@ impl NotInFact {
 macro_rules! impl_dollar_set_prop {
     ($ty:ty, $kw:expr) => {
         impl $ty {
-            pub fn internal_representation(&self) -> String {
-                format!(
+            pub fn internal_representation(&self) -> FactInternalRepresentation {
+                FactInternalRepresentation(format!(
                     "{}{}{}{}{}",
                     FACT_PREFIX,
                     $kw,
                     LEFT_PAREN,
                     self.set.internal_representation(),
                     RIGHT_PAREN
-                )
+                ))
             }
             impl_display_pair!();
         }
@@ -181,8 +181,8 @@ macro_rules! impl_dollar_set_prop {
 macro_rules! impl_not_dollar_set_prop {
     ($ty:ty, $kw:expr) => {
         impl $ty {
-            pub fn internal_representation(&self) -> String {
-                format!(
+            pub fn internal_representation(&self) -> FactInternalRepresentation {
+                FactInternalRepresentation(format!(
                     "{} {}{}{}{}{}",
                     NOT,
                     FACT_PREFIX,
@@ -190,7 +190,7 @@ macro_rules! impl_not_dollar_set_prop {
                     LEFT_PAREN,
                     self.set.internal_representation(),
                     RIGHT_PAREN
-                )
+                ))
             }
             impl_display_pair!();
         }
@@ -209,55 +209,55 @@ impl_dollar_set_prop!(IsTupleFact, IS_TUPLE);
 impl_not_dollar_set_prop!(NotIsTupleFact, IS_TUPLE);
 
 impl SubsetFact {
-    pub fn internal_representation(&self) -> String {
-        format!(
+    pub fn internal_representation(&self) -> FactInternalRepresentation {
+        FactInternalRepresentation(format!(
             "{} {}{} {}",
             self.left.internal_representation(),
             FACT_PREFIX,
             SUBSET,
             self.right.internal_representation()
-        )
+        ))
     }
     impl_display_pair!();
 }
 
 impl NotSubsetFact {
-    pub fn internal_representation(&self) -> String {
-        format!(
+    pub fn internal_representation(&self) -> FactInternalRepresentation {
+        FactInternalRepresentation(format!(
             "{} {} {}{} {}",
             NOT,
             self.left.internal_representation(),
             FACT_PREFIX,
             SUBSET,
             self.right.internal_representation()
-        )
+        ))
     }
     impl_display_pair!();
 }
 
 impl SupersetFact {
-    pub fn internal_representation(&self) -> String {
-        format!(
+    pub fn internal_representation(&self) -> FactInternalRepresentation {
+        FactInternalRepresentation(format!(
             "{} {}{} {}",
             self.left.internal_representation(),
             FACT_PREFIX,
             SUPERSET,
             self.right.internal_representation()
-        )
+        ))
     }
     impl_display_pair!();
 }
 
 impl NotSupersetFact {
-    pub fn internal_representation(&self) -> String {
-        format!(
+    pub fn internal_representation(&self) -> FactInternalRepresentation {
+        FactInternalRepresentation(format!(
             "{} {} {}{} {}",
             NOT,
             self.left.internal_representation(),
             FACT_PREFIX,
             SUPERSET,
             self.right.internal_representation()
-        )
+        ))
     }
     impl_display_pair!();
 }
@@ -265,7 +265,7 @@ impl NotSupersetFact {
 macro_rules! impl_normal_atomic {
     ($ty:ty, $negated:expr) => {
         impl $ty {
-            pub fn internal_representation(&self) -> String {
+            pub fn internal_representation(&self) -> FactInternalRepresentation {
                 if let AtomicName::WithoutMod(name) = &self.predicate {
                     if self.body.len() == 2
                         && (name.as_str() == PROPER_SUBSET || name.as_str() == PROPER_SUPERSET)
@@ -281,7 +281,7 @@ macro_rules! impl_normal_atomic {
                         s.push_str(name);
                         s.push(' ');
                         s.push_str(&self.body[1].internal_representation());
-                        return s;
+                        return FactInternalRepresentation(s);
                     }
                 }
                 let mut s = String::new();
@@ -291,7 +291,7 @@ macro_rules! impl_normal_atomic {
                 }
                 s.push_str(FACT_PREFIX);
                 s.push_str(&self.predicate.internal_representation());
-                let parts: Vec<String> = self
+                let parts: Vec<_> = self
                     .body
                     .iter()
                     .map(|o| o.internal_representation())
@@ -299,7 +299,7 @@ macro_rules! impl_normal_atomic {
                 s.push_str(LEFT_PAREN);
                 s.push_str(&parts.join(&format!("{} ", COMMA)));
                 s.push_str(RIGHT_PAREN);
-                s
+                FactInternalRepresentation(s)
             }
             impl_display_pair!();
         }
@@ -310,8 +310,8 @@ impl_normal_atomic!(NormalAtomicFact, false);
 impl_normal_atomic!(NotNormalAtomicFact, true);
 
 impl FnEqualInFact {
-    pub fn internal_representation(&self) -> String {
-        format!(
+    pub fn internal_representation(&self) -> FactInternalRepresentation {
+        FactInternalRepresentation(format!(
             "{}{}{}{}{} {}{} {}{}",
             FACT_PREFIX,
             FN_EQ_IN,
@@ -322,14 +322,14 @@ impl FnEqualInFact {
             COMMA,
             self.set.internal_representation(),
             RIGHT_PAREN
-        )
+        ))
     }
     impl_display_pair!();
 }
 
 impl FnEqualFact {
-    pub fn internal_representation(&self) -> String {
-        format!(
+    pub fn internal_representation(&self) -> FactInternalRepresentation {
+        FactInternalRepresentation(format!(
             "{}{}{}{}{} {}{}",
             FACT_PREFIX,
             FN_EQ,
@@ -338,36 +338,40 @@ impl FnEqualFact {
             COMMA,
             self.right.internal_representation(),
             RIGHT_PAREN
-        )
+        ))
     }
     impl_display_pair!();
 }
 
 impl AndFact {
-    pub fn internal_representation(&self) -> String {
-        self.facts
-            .iter()
-            .map(|f| f.internal_representation())
-            .collect::<Vec<_>>()
-            .join(&format!(" {} ", AND))
+    pub fn internal_representation(&self) -> FactInternalRepresentation {
+        FactInternalRepresentation(
+            self.facts
+                .iter()
+                .map(|f| f.internal_representation())
+                .collect::<Vec<_>>()
+                .join(&format!(" {} ", AND)),
+        )
     }
     impl_display_pair!();
 }
 
 impl OrFact {
-    pub fn internal_representation(&self) -> String {
-        self.facts
-            .iter()
-            .map(|f| f.internal_representation())
-            .collect::<Vec<_>>()
-            .join(&format!(" {} ", OR))
+    pub fn internal_representation(&self) -> FactInternalRepresentation {
+        FactInternalRepresentation(
+            self.facts
+                .iter()
+                .map(|f| f.internal_representation())
+                .collect::<Vec<_>>()
+                .join(&format!(" {} ", OR)),
+        )
     }
     impl_display_pair!();
 }
 
 impl ChainFact {
-    pub fn internal_representation(&self) -> String {
-        let mut s = self.objs[0].internal_representation();
+    pub fn internal_representation(&self) -> FactInternalRepresentation {
+        let mut s = format!("{}", self.objs[0].internal_representation());
         for (i, obj) in self.objs[1..].iter().enumerate() {
             let prop_s = self.prop_names[i].internal_representation();
             if is_comparison_str(&prop_s) {
@@ -377,13 +381,13 @@ impl ChainFact {
             }
             s.push_str(&obj.internal_representation());
         }
-        s
+        FactInternalRepresentation(s)
     }
     impl_display_pair!();
 }
 
 impl ChainAtomicFact {
-    pub fn internal_representation(&self) -> String {
+    pub fn internal_representation(&self) -> FactInternalRepresentation {
         match self {
             ChainAtomicFact::AtomicFact(a) => a.internal_representation(),
             ChainAtomicFact::ChainFact(c) => c.internal_representation(),
@@ -393,7 +397,7 @@ impl ChainAtomicFact {
 }
 
 impl AndChainAtomicFact {
-    pub fn internal_representation(&self) -> String {
+    pub fn internal_representation(&self) -> FactInternalRepresentation {
         match self {
             AndChainAtomicFact::AtomicFact(a) => a.internal_representation(),
             AndChainAtomicFact::AndFact(a) => a.internal_representation(),
@@ -404,7 +408,7 @@ impl AndChainAtomicFact {
 }
 
 impl QuantifierFreeFact {
-    pub fn internal_representation(&self) -> String {
+    pub fn internal_representation(&self) -> FactInternalRepresentation {
         match self {
             QuantifierFreeFact::AtomicFact(a) => a.internal_representation(),
             QuantifierFreeFact::AndFact(a) => a.internal_representation(),
@@ -416,7 +420,7 @@ impl QuantifierFreeFact {
 }
 
 impl ExistOrAndChainAtomicFact {
-    pub fn internal_representation(&self) -> String {
+    pub fn internal_representation(&self) -> FactInternalRepresentation {
         match self {
             ExistOrAndChainAtomicFact::AtomicFact(a) => a.internal_representation(),
             ExistOrAndChainAtomicFact::AndFact(a) => a.internal_representation(),
@@ -429,13 +433,13 @@ impl ExistOrAndChainAtomicFact {
 }
 
 impl PlainExistFact {
-    pub fn internal_representation(&self) -> String {
-        let parts: Vec<String> = self
+    pub fn internal_representation(&self) -> FactInternalRepresentation {
+        let parts: Vec<_> = self
             .facts
             .iter()
             .map(|fact| fact.internal_representation())
             .collect();
-        format!(
+        FactInternalRepresentation(format!(
             "{} {} {} {}{}{}",
             EXIST,
             self.typed_parameters.internal_representation(),
@@ -443,13 +447,13 @@ impl PlainExistFact {
             LEFT_CURLY,
             parts.join(", "),
             RIGHT_CURLY
-        )
+        ))
     }
     impl_display_pair!();
 }
 
 impl ExistFact {
-    pub fn internal_representation(&self) -> String {
+    pub fn internal_representation(&self) -> FactInternalRepresentation {
         let keyword = if matches!(self, ExistFact::NotExistFact(_)) {
             format!("{} {}", NOT, EXIST)
         } else if matches!(self, ExistFact::ExistUniqueFact(_)) {
@@ -462,12 +466,12 @@ impl ExistFact {
             | ExistFact::ExistUniqueFact(b)
             | ExistFact::NotExistFact(b) => b,
         };
-        let parts: Vec<String> = body
+        let parts: Vec<_> = body
             .facts
             .iter()
             .map(|fact| fact.internal_representation())
             .collect();
-        format!(
+        FactInternalRepresentation(format!(
             "{} {} {} {}{}{}",
             keyword,
             body.typed_parameters.internal_representation(),
@@ -475,13 +479,13 @@ impl ExistFact {
             LEFT_CURLY,
             parts.join(", "),
             RIGHT_CURLY
-        )
+        ))
     }
     impl_display_pair!();
 }
 
 impl ForallFact {
-    pub fn internal_representation(&self) -> String {
+    pub fn internal_representation(&self) -> FactInternalRepresentation {
         let indent = |text: &str, n: usize| -> String {
             let prefix = "    ".repeat(n);
             text.split('\n')
@@ -497,7 +501,7 @@ impl ForallFact {
         );
         if self.dom_facts.is_empty() {
             s.push('\n');
-            let then_parts: Vec<String> = self
+            let then_parts: Vec<_> = self
                 .then_facts
                 .iter()
                 .map(|t| t.internal_representation())
@@ -505,7 +509,7 @@ impl ForallFact {
             s.push_str(&indent(&then_parts.join("\n"), 1));
         } else {
             s.push('\n');
-            let dom_parts: Vec<String> = self
+            let dom_parts: Vec<_> = self
                 .dom_facts
                 .iter()
                 .map(|d| d.internal_representation())
@@ -515,20 +519,20 @@ impl ForallFact {
             s.push_str(&indent(RIGHT_ARROW, 1));
             s.push_str(COLON);
             s.push('\n');
-            let then_parts: Vec<String> = self
+            let then_parts: Vec<_> = self
                 .then_facts
                 .iter()
                 .map(|t| t.internal_representation())
                 .collect();
             s.push_str(&indent(&then_parts.join("\n"), 2));
         }
-        s
+        FactInternalRepresentation(s)
     }
     impl_display_pair!();
 }
 
 impl ForallFactWithIff {
-    pub fn internal_representation(&self) -> String {
+    pub fn internal_representation(&self) -> FactInternalRepresentation {
         let indent = |text: &str, n: usize| -> String {
             let prefix = "    ".repeat(n);
             text.split('\n')
@@ -536,25 +540,25 @@ impl ForallFactWithIff {
                 .collect::<Vec<_>>()
                 .join("\n")
         };
-        let mut s = self.forall_fact.internal_representation();
+        let mut s = format!("{}", self.forall_fact.internal_representation());
         s.push('\n');
         s.push_str(&indent(EQUIVALENT_SIGN, 1));
         s.push_str(COLON);
         s.push('\n');
-        let iff_parts: Vec<String> = self
+        let iff_parts: Vec<_> = self
             .iff_facts
             .iter()
             .map(|t| t.internal_representation())
             .collect();
         s.push_str(&indent(&iff_parts.join("\n"), 2));
-        s
+        FactInternalRepresentation(s)
     }
     impl_display_pair!();
 }
 
 impl NotForallFact {
-    pub fn internal_representation(&self) -> String {
-        format!("{} {}", NOT, self.forall_fact.internal_representation())
+    pub fn internal_representation(&self) -> FactInternalRepresentation {
+        FactInternalRepresentation(format!("{} {}", NOT, self.forall_fact.internal_representation()))
     }
     impl_display_pair!();
 }

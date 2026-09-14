@@ -1,10 +1,10 @@
 use crate::new_pipeline::ast::fact::EqualFact;
 use crate::new_pipeline::ast::obj::Obj;
-use crate::new_pipeline::exec_env::known_fact_memory::ObjKey;
+use crate::new_pipeline::exec_env::known_fact_memory::ObjInternalRepresentation;
 use crate::new_pipeline::runtime::FactId;
 use std::collections::{HashMap, HashSet, VecDeque};
 
-pub type EqualityAdjacency = HashMap<ObjKey, Vec<(ObjKey, EqualFact)>>;
+pub type EqualityAdjacency = HashMap<ObjInternalRepresentation, Vec<(ObjInternalRepresentation, EqualFact)>>;
 
 // BFS path from left to right. Empty Vec means same key (reflexive).
 pub fn equality_path_in_adjacency(
@@ -19,7 +19,7 @@ pub fn equality_path_in_adjacency(
     }
 
     let mut visited = HashSet::new();
-    let mut parent: HashMap<ObjKey, (ObjKey, EqualFact)> = HashMap::new();
+    let mut parent: HashMap<ObjInternalRepresentation, (ObjInternalRepresentation, EqualFact)> = HashMap::new();
     let mut queue = VecDeque::new();
     visited.insert(left_key.clone());
     queue.push_back(left_key.clone());
@@ -59,7 +59,7 @@ pub fn equality_path_in_adjacency(
 }
 
 // All obj keys in the same connected component as `obj` (including itself).
-pub fn equality_class_keys_in_adjacency(adjacency: &EqualityAdjacency, obj: &Obj) -> Vec<ObjKey> {
+pub fn equality_class_keys_in_adjacency(adjacency: &EqualityAdjacency, obj: &Obj) -> Vec<ObjInternalRepresentation> {
     let start = obj.internal_representation();
     let mut visited = HashSet::new();
     let mut queue = VecDeque::new();
@@ -80,19 +80,19 @@ pub fn equality_class_keys_in_adjacency(adjacency: &EqualityAdjacency, obj: &Obj
 }
 
 fn orient_equality_step(
-    from_key: &str,
-    to_key: &str,
+    from_key: &ObjInternalRepresentation,
+    to_key: &ObjInternalRepresentation,
     equal_fact: &EqualFact,
 ) -> Option<(Obj, Obj, FactId)> {
     let left_key = equal_fact.left.internal_representation();
     let right_key = equal_fact.right.internal_representation();
-    if from_key == left_key && to_key == right_key {
+    if from_key == &left_key && to_key == &right_key {
         Some((
             equal_fact.left.clone(),
             equal_fact.right.clone(),
             equal_fact.fact_id,
         ))
-    } else if from_key == right_key && to_key == left_key {
+    } else if from_key == &right_key && to_key == &left_key {
         Some((
             equal_fact.right.clone(),
             equal_fact.left.clone(),
