@@ -1,0 +1,14 @@
+# Problem 473: stable scalar interface for the geometric integration.
+thm problem_473_angle_scale_unique:
+    ? forall u, v, w, t R:
+        u > 0,
+        t > 0,
+        u * w - v^2 > 0,
+        ((u + v)^2 * (u + 2 * t * v + t^2 * w)) * u = ((u + t * v)^2 * (u + 2 * v + w)) * u,
+        (u + v) * (u + t * v) >= 0
+        =>:
+            t = 1
+    by thm angle_factor_probe::problem_473_angle_factor(u, v, w, t)
+    (t - 1) * (u * w - v^2) * (u * t + u + 2 * v * t) = 0
+    by thm scalar_core_probe::problem_473_positive_scale_unique(u, v, w, t)
+    t = 1

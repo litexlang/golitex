@@ -1,0 +1,40 @@
+# Temporary Problem 473 abstract vector/Gram bridge probe.
+
+thm problem_473_dot_sum_left:
+    ? forall x, y cart(R, R):
+        geo::dot((x[1] + y[1], x[2] + y[2]), x) = geo::dot(x, x) + geo::dot(x, y)
+    by thm geo::dot_linear_left(x, y, x, 1, 1)
+    by thm geo::dot_symmetric(y, x)
+    geo::dot((x[1] + y[1], x[2] + y[2]), x) = 1 * geo::dot(x, x) + 1 * geo::dot(y, x) = geo::dot(x, x) + geo::dot(x, y)
+
+thm problem_473_dot_scaled_sum_left:
+    ? forall x, y cart(R, R), t R:
+        geo::dot((x[1] + t * y[1], x[2] + t * y[2]), x) = geo::dot(x, x) + t * geo::dot(x, y)
+    by thm geo::dot_linear_left(x, y, x, 1, t)
+    by thm geo::dot_symmetric(y, x)
+    geo::dot((x[1] + t * y[1], x[2] + t * y[2]), x) = 1 * geo::dot(x, x) + t * geo::dot(y, x) = geo::dot(x, x) + t * geo::dot(x, y)
+
+thm problem_473_scaled_sum_norm:
+    ? forall x, y cart(R, R), t R:
+        geo::dot((x[1] + t * y[1], x[2] + t * y[2]), (x[1] + t * y[1], x[2] + t * y[2])) = geo::dot(x, x) + 2 * t * geo::dot(x, y) + t^2 * geo::dot(y, y)
+    by thm geo::dot_linear_left(x, y, (x[1] + t * y[1], x[2] + t * y[2]), 1, t)
+    by thm geo::dot_linear_right(x, x, y, 1, t)
+    by thm geo::dot_linear_right(y, x, y, 1, t)
+    by thm geo::dot_symmetric(y, x)
+    geo::dot((x[1] + t * y[1], x[2] + t * y[2]), (x[1] + t * y[1], x[2] + t * y[2])) = 1 * geo::dot(x, (x[1] + t * y[1], x[2] + t * y[2])) + t * geo::dot(y, (x[1] + t * y[1], x[2] + t * y[2]))
+    geo::dot(x, (x[1] + t * y[1], x[2] + t * y[2])) = 1 * geo::dot(x, x) + t * geo::dot(x, y) = geo::dot(x, x) + t * geo::dot(x, y)
+    geo::dot(y, (x[1] + t * y[1], x[2] + t * y[2])) = 1 * geo::dot(y, x) + t * geo::dot(y, y) = geo::dot(y, x) + t * geo::dot(y, y) = geo::dot(x, y) + t * geo::dot(y, y)
+    1 * geo::dot(x, (x[1] + t * y[1], x[2] + t * y[2])) + t * geo::dot(y, (x[1] + t * y[1], x[2] + t * y[2])) = 1 * (geo::dot(x, x) + t * geo::dot(x, y)) + t * geo::dot(y, (x[1] + t * y[1], x[2] + t * y[2]))
+    1 * (geo::dot(x, x) + t * geo::dot(x, y)) + t * geo::dot(y, (x[1] + t * y[1], x[2] + t * y[2])) = 1 * (geo::dot(x, x) + t * geo::dot(x, y)) + t * (geo::dot(x, y) + t * geo::dot(y, y))
+    1 * (geo::dot(x, x) + t * geo::dot(x, y)) + t * (geo::dot(x, y) + t * geo::dot(y, y)) = geo::dot(x, x) + 2 * t * geo::dot(x, y) + t^2 * geo::dot(y, y)
+    geo::dot((x[1] + t * y[1], x[2] + t * y[2]), (x[1] + t * y[1], x[2] + t * y[2])) = geo::dot(x, x) + 2 * t * geo::dot(x, y) + t^2 * geo::dot(y, y)
+
+thm problem_473_alias_vector_forms:
+    ? forall x, y cart(R, R), t R:
+        geo::dot((x[1] + t * y[1], x[2] + t * y[2]), (x[1] + t * y[1], x[2] + t * y[2])) = geo::dot(x, x) + 2 * t * geo::dot(x, y) + t^2 * geo::dot(y, y)
+    have u R = geo::dot(x, x)
+    have v R = geo::dot(x, y)
+    have w R = geo::dot(y, y)
+    u + 2 * t * v + t^2 * w = geo::dot(x, x) + 2 * t * geo::dot(x, y) + t^2 * geo::dot(y, y)
+    by thm problem_473_scaled_sum_norm(x, y, t)
+    geo::dot((x[1] + t * y[1], x[2] + t * y[2]), (x[1] + t * y[1], x[2] + t * y[2])) = geo::dot(x, x) + 2 * t * geo::dot(x, y) + t^2 * geo::dot(y, y)

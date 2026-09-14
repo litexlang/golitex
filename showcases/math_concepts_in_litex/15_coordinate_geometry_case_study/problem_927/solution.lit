@@ -1,0 +1,35 @@
+# Problem 927 / zhongkao_740 — 等腰三角形全等（SSS）
+#
+# 【原题】
+# 如图，在△ABC中，AB=AC，D是BC上一点，且D不与B、C重合。
+# 添加一个条件：BD=CD。求证：△ABD≌△ACD。
+#
+# 【自然语言对象 ↔ Litex 变量】
+# A ↔ a，B ↔ b，C ↔ c，D ↔ d。
+#
+# 【题面 ↔ 形式命题逐项对应】
+# 1. “△ABC” ↔ $geo::is_triangle(a, b, c)。
+# 2. “AB=AC” ↔ $geo::are_segments_congruent(a, b, a, c)。
+# 3. “D是BC上一点” ↔ $geo::is_on_segment(d, b, c)。
+# 4. “D不与B、C重合” ↔ d != b 且 d != c。
+# 5. 添加条件“BD=CD” ↔ $geo::are_segments_congruent(b, d, c, d)。
+# 6. 结论“△ABD≌△ACD”
+#    ↔ $geo::are_triangles_congruent(a, b, d, a, c, d)。
+#
+# 【证明】
+# AB=AC、BD=CD，且AD是两三角形的公共边，所以由SSS全等。
+# 库中的 are_triangles_congruent 正是三组对应边全等的合取定义。
+
+thm problem_927_sss_congruence:
+    ? forall a, b, c, d cart(R, R):
+        $geo::is_triangle(a, b, c),
+        $geo::are_segments_congruent(a, b, a, c),
+        $geo::is_on_segment(d, b, c),
+        d != b,
+        d != c,
+        $geo::are_segments_congruent(b, d, c, d)
+        =>:
+            $geo::are_triangles_congruent(a, b, d, a, c, d)
+
+    by thm geo::segments_congruent_reflexive_prop(d, a)
+    by def $geo::are_triangles_congruent(a, b, d, a, c, d)

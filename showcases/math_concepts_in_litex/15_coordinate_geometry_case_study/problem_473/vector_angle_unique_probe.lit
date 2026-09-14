@@ -1,0 +1,41 @@
+# Problem 473: compact vector-level bridge from angle equality to scale uniqueness.
+
+thm problem_473_vector_angle_scale_unique:
+    ? forall x, y cart(R, R), t R:
+        t > 0,
+        geo::dot(x, x) > 0,
+        geo::dot(x, x) * geo::dot(y, y) - geo::dot(x, y)^2 > 0,
+        geo::dot((x[1] + y[1], x[2] + y[2]), x)^2 * (geo::dot((x[1] + t * y[1], x[2] + t * y[2]), (x[1] + t * y[1], x[2] + t * y[2])) * geo::dot(x, x)) = geo::dot((x[1] + t * y[1], x[2] + t * y[2]), x)^2 * (geo::dot((x[1] + y[1], x[2] + y[2]), (x[1] + y[1], x[2] + y[2])) * geo::dot(x, x)),
+        geo::dot((x[1] + y[1], x[2] + y[2]), x) * geo::dot((x[1] + t * y[1], x[2] + t * y[2]), x) >= 0
+        =>:
+            t = 1
+    have u R = geo::dot(x, x)
+    have v R = geo::dot(x, y)
+    have w R = geo::dot(y, y)
+    u > 0
+    u * w - v^2 > 0
+    u + v = geo::dot(x, x) + geo::dot(x, y)
+    u + t * v = geo::dot(x, x) + t * geo::dot(x, y)
+    u + 2 * v + w = geo::dot(x, x) + 2 * geo::dot(x, y) + geo::dot(y, y)
+    u + 2 * t * v + t^2 * w = geo::dot(x, x) + 2 * t * geo::dot(x, y) + t^2 * geo::dot(y, y)
+    by thm vector_angle_bridge_probe::problem_473_dot_sum_left(x, y)
+    by thm vector_angle_bridge_probe::problem_473_dot_scaled_sum_left(x, y, t)
+    by thm vector_angle_bridge_probe::problem_473_scaled_sum_norm(x, y, 1)
+    by thm vector_angle_bridge_probe::problem_473_scaled_sum_norm(x, y, t)
+    geo::dot((x[1] + y[1], x[2] + y[2]), x) = geo::dot(x, x) + geo::dot(x, y) = u + v
+    geo::dot((x[1] + t * y[1], x[2] + t * y[2]), x) = geo::dot(x, x) + t * geo::dot(x, y) = u + t * v
+    geo::dot((x[1] + y[1], x[2] + y[2]), (x[1] + y[1], x[2] + y[2])) = geo::dot(x, x) + 2 * geo::dot(x, y) + geo::dot(y, y) = u + 2 * v + w
+    geo::dot((x[1] + t * y[1], x[2] + t * y[2]), (x[1] + t * y[1], x[2] + t * y[2])) = geo::dot(x, x) + 2 * t * geo::dot(x, y) + t^2 * geo::dot(y, y) = u + 2 * t * v + t^2 * w
+    ((u + v)^2 * (u + 2 * t * v + t^2 * w)) * u = (geo::dot((x[1] + y[1], x[2] + y[2]), x)^2 * (u + 2 * t * v + t^2 * w)) * u
+    (geo::dot((x[1] + y[1], x[2] + y[2]), x)^2 * (u + 2 * t * v + t^2 * w)) * u = (geo::dot((x[1] + y[1], x[2] + y[2]), x)^2 * geo::dot((x[1] + t * y[1], x[2] + t * y[2]), (x[1] + t * y[1], x[2] + t * y[2]))) * u
+    (geo::dot((x[1] + y[1], x[2] + y[2]), x)^2 * geo::dot((x[1] + t * y[1], x[2] + t * y[2]), (x[1] + t * y[1], x[2] + t * y[2]))) * u = (geo::dot((x[1] + y[1], x[2] + y[2]), x)^2 * geo::dot((x[1] + t * y[1], x[2] + t * y[2]), (x[1] + t * y[1], x[2] + t * y[2]))) * geo::dot(x, x)
+    (geo::dot((x[1] + y[1], x[2] + y[2]), x)^2 * geo::dot((x[1] + t * y[1], x[2] + t * y[2]), (x[1] + t * y[1], x[2] + t * y[2]))) * geo::dot(x, x) = geo::dot((x[1] + y[1], x[2] + y[2]), x)^2 * (geo::dot((x[1] + t * y[1], x[2] + t * y[2]), (x[1] + t * y[1], x[2] + t * y[2])) * geo::dot(x, x))
+    geo::dot((x[1] + y[1], x[2] + y[2]), x)^2 * (geo::dot((x[1] + t * y[1], x[2] + t * y[2]), (x[1] + t * y[1], x[2] + t * y[2])) * geo::dot(x, x)) = geo::dot((x[1] + t * y[1], x[2] + t * y[2]), x)^2 * (geo::dot((x[1] + y[1], x[2] + y[2]), (x[1] + y[1], x[2] + y[2])) * geo::dot(x, x))
+    geo::dot((x[1] + t * y[1], x[2] + t * y[2]), x)^2 * (geo::dot((x[1] + y[1], x[2] + y[2]), (x[1] + y[1], x[2] + y[2])) * geo::dot(x, x)) = (geo::dot((x[1] + t * y[1], x[2] + t * y[2]), x)^2 * geo::dot((x[1] + y[1], x[2] + y[2]), (x[1] + y[1], x[2] + y[2]))) * geo::dot(x, x)
+    (geo::dot((x[1] + t * y[1], x[2] + t * y[2]), x)^2 * geo::dot((x[1] + y[1], x[2] + y[2]), (x[1] + y[1], x[2] + y[2]))) * geo::dot(x, x) = (geo::dot((x[1] + t * y[1], x[2] + t * y[2]), x)^2 * geo::dot((x[1] + y[1], x[2] + y[2]), (x[1] + y[1], x[2] + y[2]))) * u
+    (geo::dot((x[1] + t * y[1], x[2] + t * y[2]), x)^2 * geo::dot((x[1] + y[1], x[2] + y[2]), (x[1] + y[1], x[2] + y[2]))) * u = ((u + t * v)^2 * geo::dot((x[1] + y[1], x[2] + y[2]), (x[1] + y[1], x[2] + y[2]))) * u
+    ((u + t * v)^2 * geo::dot((x[1] + y[1], x[2] + y[2]), (x[1] + y[1], x[2] + y[2]))) * u = ((u + t * v)^2 * (u + 2 * v + w)) * u
+    ((u + v)^2 * (u + 2 * t * v + t^2 * w)) * u = ((u + t * v)^2 * (u + 2 * v + w)) * u
+    (u + v) * (u + t * v) >= 0
+    by thm scale_unique_probe::problem_473_angle_scale_unique(u, v, w, t)
+    t = 1

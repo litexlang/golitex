@@ -1,0 +1,14 @@
+# Problem 229 / zhongkao_257 — minimal local vocabulary
+#
+# geo 库已经提供：直角、线段全等、点在线段上、90°旋转等谓词。
+# 本题只缺少“一个角等于 45°”这一最小语义，因此这里只新增该谓词；
+# 不封装整道题的配置，也不封装任一待证结论。
+
+# 原题句子：“在∠BAC内部作∠MAN=45°。”
+# 这里仅表达其中的 ∠MAN=45°：对内部的有向45°角，det(AM,AN)=dot(AM,AN)>=0。
+prop is_45_degree_angle(m, a, n cart(R, R)):
+    m != a
+    n != a
+    geo::det(geo::vec(a, m), geo::vec(a, n)) = geo::dot(geo::vec(a, m), geo::vec(a, n))
+    geo::det(geo::vec(a, m), geo::vec(a, n)) >= 0
+    geo::dot(geo::vec(a, m), geo::vec(a, n)) >= 0
