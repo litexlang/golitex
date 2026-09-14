@@ -18,7 +18,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
         let well_defined_proof = self.verify_atomic_fact_well_definedness(
-            &AtomicFact::EqualFact(fact.clone()),
+            &AtomicFact::equalFact(fact.clone()),
             verify_state.clone(),
         )?;
         match self.search_equal_fact_proof(fact, verify_state)? {
@@ -79,8 +79,8 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<CacheSearchProof>> {
-        let _ = (fact, verify_state);
-        Ok(None)
+        let _ = verify_state;
+        Ok(self.search_atomic_fact_proof_by_cache(&AtomicFact::equalFact(fact.clone())))
     }
 
     pub fn search_equal_fact_proof_by_builtin_strategy(

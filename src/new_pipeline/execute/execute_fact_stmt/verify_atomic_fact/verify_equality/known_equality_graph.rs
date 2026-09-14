@@ -1,10 +1,10 @@
 use crate::new_pipeline::ast::fact::EqualFact;
 use crate::new_pipeline::ast::obj::Obj;
-use crate::new_pipeline::exec_env::known_fact_memory::ObjInternalRepresentation;
+use crate::new_pipeline::exec_env::known_fact_memory::ObjIR;
 use crate::new_pipeline::runtime::FactId;
 use std::collections::{HashMap, HashSet, VecDeque};
 
-pub type EqualityAdjacency = HashMap<ObjInternalRepresentation, Vec<(ObjInternalRepresentation, EqualFact)>>;
+pub type EqualityAdjacency = HashMap<ObjIR, Vec<(ObjIR, EqualFact)>>;
 
 // BFS path from left to right. Empty Vec means same key (reflexive).
 pub fn equality_path_in_adjacency(
@@ -12,14 +12,14 @@ pub fn equality_path_in_adjacency(
     left: &Obj,
     right: &Obj,
 ) -> Option<Vec<(Obj, Obj, FactId)>> {
-    let left_key = left.internal_representation();
-    let right_key = right.internal_representation();
+    let left_key = left.ir();
+    let right_key = right.ir();
     if left_key == right_key {
         return Some(Vec::new());
     }
 
     let mut visited = HashSet::new();
-    let mut parent: HashMap<ObjInternalRepresentation, (ObjInternalRepresentation, EqualFact)> = HashMap::new();
+    let mut parent: HashMap<ObjIR, (ObjIR, EqualFact)> = HashMap::new();
     let mut queue = VecDeque::new();
     visited.insert(left_key.clone());
     queue.push_back(left_key.clone());
@@ -59,8 +59,8 @@ pub fn equality_path_in_adjacency(
 }
 
 // All obj keys in the same connected component as `obj` (including itself).
-pub fn equality_class_keys_in_adjacency(adjacency: &EqualityAdjacency, obj: &Obj) -> Vec<ObjInternalRepresentation> {
-    let start = obj.internal_representation();
+pub fn equality_class_keys_in_adjacency(adjacency: &EqualityAdjacency, obj: &Obj) -> Vec<ObjIR> {
+    let start = obj.ir();
     let mut visited = HashSet::new();
     let mut queue = VecDeque::new();
     visited.insert(start.clone());
@@ -80,12 +80,12 @@ pub fn equality_class_keys_in_adjacency(adjacency: &EqualityAdjacency, obj: &Obj
 }
 
 fn orient_equality_step(
-    from_key: &ObjInternalRepresentation,
-    to_key: &ObjInternalRepresentation,
+    from_key: &ObjIR,
+    to_key: &ObjIR,
     equal_fact: &EqualFact,
 ) -> Option<(Obj, Obj, FactId)> {
-    let left_key = equal_fact.left.internal_representation();
-    let right_key = equal_fact.right.internal_representation();
+    let left_key = equal_fact.left.ir();
+    let right_key = equal_fact.right.ir();
     if from_key == &left_key && to_key == &right_key {
         Some((
             equal_fact.left.clone(),

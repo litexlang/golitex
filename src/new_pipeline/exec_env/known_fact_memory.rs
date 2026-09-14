@@ -1,16 +1,20 @@
-use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact};
+use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact};
 use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::display_and_ir::FactIR;
 use crate::new_pipeline::runtime::FactId;
 use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
-pub use crate::new_pipeline::display_and_internal_representation::ObjInternalRepresentation;
+pub use crate::new_pipeline::display_and_ir::ObjIR;
 
-// Facts and search indexes for one ExecEnv scope (new_pipeline AST).
+// Atomic facts and search indexes for one ExecEnv scope (new_pipeline AST).
+// Exact FactIR ByCache is AtomicFact-only; composite facts are not stored here.
 #[derive(Clone)]
 pub struct KnownFactMemory {
-    pub facts_by_id: HashMap<FactId, Fact>,
+    pub facts_by_id: HashMap<FactId, AtomicFact>,
+    // Exact IR → FactId for ByCache. Same string key as `atomic_fact.ir()`.
+    pub fact_ir_to_id: HashMap<FactIR, FactId>,
     pub known_equality: KnownEqualityMemory,
     pub known_atomic_except_equality_facts: AtomicExceptEqualityFactMemory,
 }
@@ -25,32 +29,45 @@ pub struct KnownFactMemory {
 //    env (user or infer). Not the closed set of all equal pairs.
 //
 // Path search (EqualFactSearchedProofByKnownEquality) must cite only FactIds
-// from generating_edges; the shared Rc is an index, not Lean-replayable proof.
+// from generating_edges; the shared Rc is an index, not Lean-transformable proof.
 #[derive(Clone, Default)]
 pub struct KnownEqualityMemory {
-    // Undirected adjacency of generating EqualFacts, keyed by obj internal representation.
+    // Undirected adjacency of generating EqualFacts, keyed by obj IR.
     // Each store(a = b) inserts both a→b and b→a with the same EqualFact.
-    pub generating_edges: HashMap<ObjInternalRepresentation, Vec<(ObjInternalRepresentation, EqualFact)>>,
+    pub generating_edges: HashMap<ObjIR, Vec<(ObjIR, EqualFact)>>,
 
     // Shared member list per equivalence class. Same class <=> Rc::ptr_eq.
-    pub class_members: HashMap<ObjInternalRepresentation, Rc<Vec<Obj>>>,
+    pub class_members: HashMap<ObjIR, Rc<Vec<Obj>>>,
 }
 
 // Non-equality atomics indexed by prop_name, polarity, and arity.
 #[derive(Clone, Default)]
 pub struct AtomicExceptEqualityFactMemory {
     pub by_other_arg_count: HashMap<(PropName, bool), Vec<AtomicFact>>,
-    pub by_one_arg: HashMap<(PropName, bool), HashMap<ObjInternalRepresentation, AtomicFact>>,
-    pub by_two_args: HashMap<(PropName, bool), HashMap<(ObjInternalRepresentation, ObjInternalRepresentation), AtomicFact>>,
+    pub by_one_arg: HashMap<(PropName, bool), HashMap<ObjIR, AtomicFact>>,
+    pub by_two_args: HashMap<(PropName, bool), HashMap<(ObjIR, ObjIR), AtomicFact>>,
 }
 
 impl KnownFactMemory {
     pub fn new() -> Self {
         Self {
             facts_by_id: HashMap::new(),
+            fact_ir_to_id: HashMap::new(),
             known_equality: KnownEqualityMemory::new(),
             known_atomic_except_equality_facts: AtomicExceptEqualityFactMemory::new(),
         }
+    }
+
+    // Record a stored atomic fact under both id and IR indexes.
+    pub fn record_atomic_fact(&mut self, fact_id: FactId, fact: AtomicFact) {
+        self.fact_ir_to_id.insert(fact.ir(), fact_id);
+        self.facts_by_id.insert(fact_id, fact);
+    }
+
+    pub fn lookup_atomic_by_ir(&self, key: &FactIR) -> Option<(FactId, &AtomicFact)> {
+        let fact_id = *self.fact_ir_to_id.get(key)?;
+        let fact = self.facts_by_id.get(&fact_id)?;
+        Some((fact_id, fact))
     }
 }
 
@@ -67,8 +84,8 @@ impl KnownEqualityMemory {
 
     // Insert generating edge and merge class member lists.
     pub fn store(&mut self, equality: &EqualFact) {
-        let left_key = equality.left.internal_representation();
-        let right_key = equality.right.internal_representation();
+        let left_key = equality.left.ir();
+        let right_key = equality.right.ir();
 
         self.generating_edges
             .entry(left_key.clone())
@@ -84,31 +101,16 @@ impl KnownEqualityMemory {
         self.merge_classes(&left_key, &right_key);
     }
 
-    pub fn class_members_for(
-        &self,
-        key: &ObjInternalRepresentation,
-    ) -> Option<&Rc<Vec<Obj>>> {
+    pub fn class_members_for(&self, key: &ObjIR) -> Option<&Rc<Vec<Obj>>> {
         self.class_members.get(key)
     }
 
-    pub fn class_keys_for(
-        &self,
-        key: &ObjInternalRepresentation,
-    ) -> Option<Vec<ObjInternalRepresentation>> {
+    pub fn class_keys_for(&self, key: &ObjIR) -> Option<Vec<ObjIR>> {
         let members = self.class_members_for(key)?;
-        Some(
-            members
-                .iter()
-                .map(|obj| obj.internal_representation())
-                .collect(),
-        )
+        Some(members.iter().map(|obj| obj.ir()).collect())
     }
 
-    pub fn same_class(
-        &self,
-        left_key: &ObjInternalRepresentation,
-        right_key: &ObjInternalRepresentation,
-    ) -> bool {
+    pub fn same_class(&self, left_key: &ObjIR, right_key: &ObjIR) -> bool {
         match (
             self.class_members.get(left_key),
             self.class_members.get(right_key),
@@ -118,7 +120,7 @@ impl KnownEqualityMemory {
         }
     }
 
-    fn ensure_singleton(&mut self, key: &ObjInternalRepresentation, obj: &Obj) {
+    fn ensure_singleton(&mut self, key: &ObjIR, obj: &Obj) {
         if self.class_members.contains_key(key) {
             return;
         }
@@ -126,7 +128,7 @@ impl KnownEqualityMemory {
             .insert(key.clone(), Rc::new(vec![obj.clone()]));
     }
 
-    fn merge_classes(&mut self, left_key: &ObjInternalRepresentation, right_key: &ObjInternalRepresentation) {
+    fn merge_classes(&mut self, left_key: &ObjIR, right_key: &ObjIR) {
         let left_rc = self
             .class_members
             .get(left_key)
@@ -144,15 +146,14 @@ impl KnownEqualityMemory {
         let mut merged = Vec::new();
         let mut seen = HashSet::new();
         for obj in left_rc.iter().chain(right_rc.iter()) {
-            let key = obj.internal_representation();
+            let key = obj.ir();
             if seen.insert(key) {
                 merged.push(obj.clone());
             }
         }
         let new_rc = Rc::new(merged);
         for obj in new_rc.iter() {
-            self.class_members
-                .insert(obj.internal_representation(), new_rc.clone());
+            self.class_members.insert(obj.ir(), new_rc.clone());
         }
     }
 }
@@ -166,7 +167,7 @@ impl AtomicExceptEqualityFactMemory {
         &mut self,
         key: PropName,
         positive_polarity: bool,
-        arg_key: ObjInternalRepresentation,
+        arg_key: ObjIR,
         fact: AtomicFact,
     ) {
         self.by_one_arg
@@ -179,8 +180,8 @@ impl AtomicExceptEqualityFactMemory {
         &mut self,
         key: PropName,
         positive_polarity: bool,
-        arg_key0: ObjInternalRepresentation,
-        arg_key1: ObjInternalRepresentation,
+        arg_key0: ObjIR,
+        arg_key1: ObjIR,
         fact: AtomicFact,
     ) {
         self.by_two_args

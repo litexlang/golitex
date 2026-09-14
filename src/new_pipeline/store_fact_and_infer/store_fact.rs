@@ -30,13 +30,11 @@ impl Runtime {
 
     pub fn store_atomic_fact(&mut self, atomic_fact: &AtomicFact) -> RuntimeResult<Vec<FactId>> {
         match atomic_fact {
-            AtomicFact::EqualFact(equal_fact) => {
+            AtomicFact::equalFact(equal_fact) => {
                 let fact_id = equal_fact.fact_id;
                 let env = self.top_exec_env_mut();
                 env.facts.known_equality.store(equal_fact);
-                env.facts
-                    .facts_by_id
-                    .insert(fact_id, Fact::AtomicFact(atomic_fact.clone()));
+                env.facts.record_atomic_fact(fact_id, atomic_fact.clone());
                 Ok(vec![fact_id])
             }
             _ => {
@@ -50,7 +48,7 @@ impl Runtime {
                         env.facts.known_atomic_except_equality_facts.store_one_arg(
                             key,
                             positive_polarity,
-                            arg0.internal_representation(),
+                            arg0.ir(),
                             atomic_fact.clone(),
                         );
                     }
@@ -58,8 +56,8 @@ impl Runtime {
                         env.facts.known_atomic_except_equality_facts.store_two_args(
                             key,
                             positive_polarity,
-                            arg0.internal_representation(),
-                            arg1.internal_representation(),
+                            arg0.ir(),
+                            arg1.ir(),
                             atomic_fact.clone(),
                         );
                     }
@@ -69,9 +67,7 @@ impl Runtime {
                             .store_other_arg_count(key, positive_polarity, atomic_fact.clone());
                     }
                 }
-                env.facts
-                    .facts_by_id
-                    .insert(fact_id, Fact::AtomicFact(atomic_fact.clone()));
+                env.facts.record_atomic_fact(fact_id, atomic_fact.clone());
                 Ok(vec![fact_id])
             }
         }

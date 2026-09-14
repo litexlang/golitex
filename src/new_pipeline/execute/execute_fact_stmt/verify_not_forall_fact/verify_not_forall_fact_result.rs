@@ -6,6 +6,5 @@ pub struct VerifyNotForallFactResult {
     pub searched_proof: NotForallFactSearchedProof,
 }
 
-pub enum NotForallFactSearchedProof {
-    ByCache(CacheSearchProof),
-}
+// Exact FactIR ByCache is AtomicFact-only; not-forall search routes TBD.
+pub enum NotForallFactSearchedProof {}

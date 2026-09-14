@@ -7,6 +7,16 @@ use crate::new_pipeline::module_manager::{
 };
 use std::collections::HashMap;
 
+// -----------------------------------------------------------------------------
+// Core data model
+// -----------------------------------------------------------------------------
+
+/// Process-wide owner of new_pipeline execution and parse state.
+///
+/// Like `ExecEnv`, this is core data model: it owns the live stacks, current
+/// file, global id counters, and module manager.  A single `Runtime` drives
+/// one interpreter session; `ExecEnv` instances on
+/// `execution_environments_stack` are the per-scope stores it pushes and pops.
 pub struct Runtime {
     pub is_current_file_trusted: bool,
     pub module_manager: ModuleManager,
@@ -16,18 +26,19 @@ pub struct Runtime {
     pub ids: Ids,
 }
 
-// Name occupied in a parse scope. Plain `x` and `mod::x` are distinct.
+/// Name occupied in a parse scope. Plain `x` and `mod::x` are distinct.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum OccupiedName {
     Plain(String),
     WithMod { mod_name: String, name: String },
 }
 
-// One parse layer's occupied names. Inner scopes must not reuse a visible outer name.
+/// One parse layer's occupied names. Inner scopes must not reuse a visible outer name.
 pub struct ParseScope {
     pub occupied: HashMap<OccupiedName, IdentifierId>,
 }
 
+/// Global monotonic id counters owned by `Runtime`.
 pub struct Ids {
     next_fact_id: FactId,
     next_well_definedness_id: WellDefinednessId,

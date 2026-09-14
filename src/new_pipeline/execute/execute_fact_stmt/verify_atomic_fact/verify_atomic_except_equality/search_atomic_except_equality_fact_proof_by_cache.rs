@@ -9,7 +9,10 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<CacheSearchProof>> {
-        let _ = (fact, verify_state);
-        Ok(None)
+        let _ = verify_state;
+        if matches!(fact, AtomicFact::EqualFact(_)) {
+            return Ok(None);
+        }
+        Ok(self.search_atomic_fact_proof_by_cache(fact))
     }
 }

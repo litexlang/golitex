@@ -7,7 +7,7 @@ pub struct VerifyNotExistFactResult {
     pub searched_proof: NotExistFactSearchedProof,
 }
 
+// Exact FactIR ByCache is AtomicFact-only; not-exist uses other search routes.
 pub enum NotExistFactSearchedProof {
-    ByCache(CacheSearchProof),
     ByDemorganForall(VerifyForallFactResult),
 }

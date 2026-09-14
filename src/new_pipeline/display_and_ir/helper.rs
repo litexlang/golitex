@@ -1,6 +1,6 @@
-//! Shared helper for display strings derived from internal representation.
+//! Shared helper for display strings derived from IR.
 
-// Remove `#<digits>#` identifier id tags from an internal representation string.
+// Remove `#<digits>#` identifier id tags from an IR string.
 pub fn strip_identifier_id_tags(text: &str) -> String {
     let bytes = text.as_bytes();
     let mut out = String::with_capacity(text.len());

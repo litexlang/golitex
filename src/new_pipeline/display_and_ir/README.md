@@ -1,10 +1,10 @@
-# Internal representation and display_string
+# IR and display_string
 
 This module owns two views of new_pipeline AST:
 
 | API | Role |
 |-----|------|
-| `internal_representation` | Typed semantic key (`*InternalRepresentation` newtypes) for cache / lookup / compare |
+| `ir` | Typed semantic key (`*IR` newtypes) for cache / lookup / compare |
 | `display_string` | User-facing `String` = strip `#<digits>#` tags from the IR |
 
 Surface spelling (operators, `$in`, precedence parentheses, keywords) follows the
@@ -16,12 +16,12 @@ For every AST type in this module, these are the **only** two methods.
 
 | Type | Used for |
 |------|----------|
-| `ObjInternalRepresentation` | `Obj` and obj leaves |
-| `FactInternalRepresentation` | `Fact` / `AtomicFact` and fact leaves |
-| `StmtInternalRepresentation` | `Stmt` and statement leaves |
-| `ParamInternalRepresentation` | parameter lists / `AtomicName` |
+| `ObjIR` | `Obj` and obj leaves |
+| `FactIR` | `Fact` / `AtomicFact` and fact leaves |
+| `StmtIR` | `Stmt` and statement leaves |
+| `ParamIR` | parameter lists / `AtomicName` |
 
-Construction is only through `internal_representation()` in this module
+Construction is only through `ir()` in this module
 (the `String` field is module-private). Arbitrary `String` values cannot become
 IR keys by conversion. When user-facing text is needed, call `display_string()`
 on the AST value or on the IR wrapper.
@@ -50,8 +50,10 @@ spellings (no `____binder_…`, no `_generated_…`).
    cache key. The id is the binding identity; the name is only for humans.
 
 2. **Cache and cite stay exact.**
-   `ByCache` / known-fact lookup can key on the internal representation and know
+   `ByCache` / known-fact lookup can key on the IR and know
    that a hit means the same binding, not merely the same spelling.
+   Exact FactIR ByCache indexes **AtomicFact only**; binder-heavy composite
+   facts are out of scope for this cache.
 
 3. **Module-qualified and local forms can share one identity when they should.**
    A binding keeps one `IdentifierId`. Rendering may show `x` or `M::x`; the
@@ -71,14 +73,14 @@ spellings (no `____binder_…`, no `_generated_…`).
 For each AST type:
 
 ```rust
-pub fn internal_representation(&self) -> ObjInternalRepresentation { ... } // or Fact/Stmt/Param
+pub fn ir(&self) -> ObjIR { ... } // or Fact/Stmt/Param
 pub fn display_string(&self) -> String {
-    self.internal_representation().display_string()
+    self.ir().display_string()
 }
 ```
 
 `display_string` always strips `#<digits>#` from the IR. Obj arithmetic
-precedence parentheses are handled inside `Obj::internal_representation`
+precedence parentheses are handled inside `Obj::ir`
 (via a local nested function when needed).
 
 ## Layout

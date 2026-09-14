@@ -1,6 +1,6 @@
-//! Stmt and statement variants: internal representation + display_string.
+//! Stmt and statement variants: IR + display_string.
 
-use super::types::StmtInternalRepresentation;
+use super::types::StmtIR;
 use crate::new_pipeline::ast::fact::ExistFact;
 use crate::new_pipeline::ast::stmt::*;
 use crate::new_pipeline::parse::keywords::*;
@@ -8,7 +8,7 @@ use crate::new_pipeline::parse::keywords::*;
 macro_rules! impl_display_pair {
     () => {
         pub fn display_string(&self) -> String {
-            self.internal_representation().display_string()
+            self.ir().display_string()
         }
     };
 }
@@ -28,198 +28,198 @@ macro_rules! indent {
 }
 
 impl Stmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         match self {
-            Stmt::Fact(x) => StmtInternalRepresentation(x.internal_representation().0),
-            Stmt::UnsafeStmt(x) => x.internal_representation(),
-            Stmt::Definition(x) => x.internal_representation(),
-            Stmt::ReleaseThmStmt(x) => x.internal_representation(),
-            Stmt::By(x) => x.internal_representation(),
-            Stmt::Witness(x) => x.internal_representation(),
-            Stmt::ProofBlock(x) => x.internal_representation(),
-            Stmt::Command(x) => x.internal_representation(),
+            Stmt::Fact(x) => StmtIR(x.ir().0),
+            Stmt::UnsafeStmt(x) => x.ir(),
+            Stmt::Definition(x) => x.ir(),
+            Stmt::ReleaseThmStmt(x) => x.ir(),
+            Stmt::By(x) => x.ir(),
+            Stmt::Witness(x) => x.ir(),
+            Stmt::ProofBlock(x) => x.ir(),
+            Stmt::Command(x) => x.ir(),
         }
     }
     impl_display_pair!();
 }
 
 impl UnsafeStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         match self {
-            UnsafeStmt::TrustStmt(x) => x.internal_representation(),
-            UnsafeStmt::TrustHaveStmt(x) => x.internal_representation(),
+            UnsafeStmt::TrustStmt(x) => x.ir(),
+            UnsafeStmt::TrustHaveStmt(x) => x.ir(),
         }
     }
     impl_display_pair!();
 }
 
 impl DefinitionStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         match self {
-            DefinitionStmt::LetObjStmt(x) => x.internal_representation(),
-            DefinitionStmt::HaveObjInNonemptySetStmt(x) => x.internal_representation(),
-            DefinitionStmt::HaveObjEqualStmt(x) => x.internal_representation(),
-            DefinitionStmt::HaveObjByExistFactsStmt(x) => x.internal_representation(),
-            DefinitionStmt::ObtainObjFromExistFact(x) => x.internal_representation(),
-            DefinitionStmt::ObtainObjFromAtomicFact(x) => x.internal_representation(),
-            DefinitionStmt::ObtainObjFromThm(x) => x.internal_representation(),
-            DefinitionStmt::HaveByPreimageStmt(x) => x.internal_representation(),
-            DefinitionStmt::HaveFnEqualStmt(x) => x.internal_representation(),
-            DefinitionStmt::HaveFnEqualCaseByCaseStmt(x) => x.internal_representation(),
-            DefinitionStmt::HaveFnByInducStmt(x) => x.internal_representation(),
-            DefinitionStmt::HaveFnByForallExistUniqueStmt(x) => x.internal_representation(),
-            DefinitionStmt::HaveTupleStmt(x) => x.internal_representation(),
-            DefinitionStmt::HaveCartStmt(x) => x.internal_representation(),
-            DefinitionStmt::HaveSeqStmt(x) => x.internal_representation(),
-            DefinitionStmt::HaveFiniteSeqStmt(x) => x.internal_representation(),
-            DefinitionStmt::DefPropStmt(x) => x.internal_representation(),
-            DefinitionStmt::DefAbstractPropStmt(x) => x.internal_representation(),
-            DefinitionStmt::DefSettingStmt(x) => x.internal_representation(),
-            DefinitionStmt::DefTemplateStmt(x) => x.internal_representation(),
-            DefinitionStmt::DefStructStmt(x) => x.internal_representation(),
-            DefinitionStmt::DefAlgoStmt(x) => x.internal_representation(),
-            DefinitionStmt::DefThmStmt(x) => x.internal_representation(),
-            DefinitionStmt::AxiomStmt(x) => x.internal_representation(),
-            DefinitionStmt::DefStrategyStmt(x) => x.internal_representation(),
+            DefinitionStmt::LetObjStmt(x) => x.ir(),
+            DefinitionStmt::HaveObjInNonemptySetStmt(x) => x.ir(),
+            DefinitionStmt::HaveObjEqualStmt(x) => x.ir(),
+            DefinitionStmt::HaveObjByExistFactsStmt(x) => x.ir(),
+            DefinitionStmt::ObtainObjFromExistFact(x) => x.ir(),
+            DefinitionStmt::ObtainObjFromAtomicFact(x) => x.ir(),
+            DefinitionStmt::ObtainObjFromThm(x) => x.ir(),
+            DefinitionStmt::HaveByPreimageStmt(x) => x.ir(),
+            DefinitionStmt::HaveFnEqualStmt(x) => x.ir(),
+            DefinitionStmt::HaveFnEqualCaseByCaseStmt(x) => x.ir(),
+            DefinitionStmt::HaveFnByInducStmt(x) => x.ir(),
+            DefinitionStmt::HaveFnByForallExistUniqueStmt(x) => x.ir(),
+            DefinitionStmt::HaveTupleStmt(x) => x.ir(),
+            DefinitionStmt::HaveCartStmt(x) => x.ir(),
+            DefinitionStmt::HaveSeqStmt(x) => x.ir(),
+            DefinitionStmt::HaveFiniteSeqStmt(x) => x.ir(),
+            DefinitionStmt::DefPropStmt(x) => x.ir(),
+            DefinitionStmt::DefAbstractPropStmt(x) => x.ir(),
+            DefinitionStmt::DefSettingStmt(x) => x.ir(),
+            DefinitionStmt::DefTemplateStmt(x) => x.ir(),
+            DefinitionStmt::DefStructStmt(x) => x.ir(),
+            DefinitionStmt::DefAlgoStmt(x) => x.ir(),
+            DefinitionStmt::DefThmStmt(x) => x.ir(),
+            DefinitionStmt::AxiomStmt(x) => x.ir(),
+            DefinitionStmt::DefStrategyStmt(x) => x.ir(),
         }
     }
     impl_display_pair!();
 }
 
 impl ByStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         match self {
-            ByStmt::ByCasesStmt(x) => x.internal_representation(),
-            ByStmt::ByContraStmt(x) => x.internal_representation(),
-            ByStmt::ByEnumerateFiniteSetStmt(x) => x.internal_representation(),
-            ByStmt::ByFiniteSetInducStmt(x) => x.internal_representation(),
-            ByStmt::ByInducStmt(x) => x.internal_representation(),
-            ByStmt::ByForStmt(x) => x.internal_representation(),
-            ByStmt::ByExtensionStmt(x) => x.internal_representation(),
-            ByStmt::ByEnumerateRangeStmt(x) => x.internal_representation(),
-            ByStmt::ByClosedRangeAsCasesStmt(x) => x.internal_representation(),
-            ByStmt::ByTransitivePropStmt(x) => x.internal_representation(),
-            ByStmt::BySymmetricPropStmt(x) => x.internal_representation(),
-            ByStmt::ByReflexivePropStmt(x) => x.internal_representation(),
-            ByStmt::ByAntisymmetricPropStmt(x) => x.internal_representation(),
-            ByStmt::ByZornLemmaStmt(x) => x.internal_representation(),
-            ByStmt::ByAxiomOfChoiceStmt(x) => x.internal_representation(),
-            ByStmt::ByRegularityAxiomStmt(x) => x.internal_representation(),
-            ByStmt::ByDefStmt(x) => x.internal_representation(),
-            ByStmt::ByStructDefStmt(x) => x.internal_representation(),
-            ByStmt::ByThmStmt(x) => x.internal_representation(),
+            ByStmt::ByCasesStmt(x) => x.ir(),
+            ByStmt::ByContraStmt(x) => x.ir(),
+            ByStmt::ByEnumerateFiniteSetStmt(x) => x.ir(),
+            ByStmt::ByFiniteSetInducStmt(x) => x.ir(),
+            ByStmt::ByInducStmt(x) => x.ir(),
+            ByStmt::ByForStmt(x) => x.ir(),
+            ByStmt::ByExtensionStmt(x) => x.ir(),
+            ByStmt::ByEnumerateRangeStmt(x) => x.ir(),
+            ByStmt::ByClosedRangeAsCasesStmt(x) => x.ir(),
+            ByStmt::ByTransitivePropStmt(x) => x.ir(),
+            ByStmt::BySymmetricPropStmt(x) => x.ir(),
+            ByStmt::ByReflexivePropStmt(x) => x.ir(),
+            ByStmt::ByAntisymmetricPropStmt(x) => x.ir(),
+            ByStmt::ByZornLemmaStmt(x) => x.ir(),
+            ByStmt::ByAxiomOfChoiceStmt(x) => x.ir(),
+            ByStmt::ByRegularityAxiomStmt(x) => x.ir(),
+            ByStmt::ByDefStmt(x) => x.ir(),
+            ByStmt::ByStructDefStmt(x) => x.ir(),
+            ByStmt::ByThmStmt(x) => x.ir(),
         }
     }
     impl_display_pair!();
 }
 
 impl WitnessStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         match self {
-            WitnessStmt::WitnessExistFact(x) => x.internal_representation(),
-            WitnessStmt::WitnessAtomicFact(x) => x.internal_representation(),
-            WitnessStmt::WitnessNonemptySet(x) => x.internal_representation(),
+            WitnessStmt::WitnessExistFact(x) => x.ir(),
+            WitnessStmt::WitnessAtomicFact(x) => x.ir(),
+            WitnessStmt::WitnessNonemptySet(x) => x.ir(),
         }
     }
     impl_display_pair!();
 }
 
 impl ProofBlockStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         match self {
-            ProofBlockStmt::ClaimStmt(x) => x.internal_representation(),
-            ProofBlockStmt::ExampleStmt(x) => x.internal_representation(),
-            ProofBlockStmt::SketchStmt(x) => x.internal_representation(),
-            ProofBlockStmt::TryStmt(x) => x.internal_representation(),
+            ProofBlockStmt::ClaimStmt(x) => x.ir(),
+            ProofBlockStmt::ExampleStmt(x) => x.ir(),
+            ProofBlockStmt::SketchStmt(x) => x.ir(),
+            ProofBlockStmt::TryStmt(x) => x.ir(),
         }
     }
     impl_display_pair!();
 }
 
 impl CommandStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         match self {
-            CommandStmt::EvalStmt(x) => x.internal_representation(),
+            CommandStmt::EvalStmt(x) => x.ir(),
         }
     }
     impl_display_pair!();
 }
 
 impl TheoremCall {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
-        let mut out = format!("{}", self.name.internal_representation());
+    pub fn ir(&self) -> StmtIR {
+        let mut out = format!("{}", self.name.ir());
         if let TheoremCallArguments::Parenthesized(args) = &self.arguments {
-            let parts: Vec<_> = args.iter().map(|a| a.internal_representation()).collect();
+            let parts: Vec<_> = args.iter().map(|a| a.ir()).collect();
             out.push_str(LEFT_PAREN);
             out.push_str(&parts.join(", "));
             out.push_str(RIGHT_PAREN);
         }
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl EvalStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
-        StmtInternalRepresentation(format!("{} {}", EVAL, &self.obj_to_eval.internal_representation()))
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!("{} {}", EVAL, &self.obj_to_eval.ir()))
     }
     impl_display_pair!();
 }
 
 impl LetObjStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
-        StmtInternalRepresentation(format!(
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!(
             "{} #{}#{} {} {}",
             LET,
             self.identifier_id.value(),
             self.name,
             EQUAL,
-            &self.value.internal_representation()
+            &self.value.ir()
         ))
     }
     impl_display_pair!();
 }
 
 impl HaveObjInNonemptySetOrParamTypeStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
-        StmtInternalRepresentation(format!("{} {}", HAVE, self.param_def.internal_representation()))
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!("{} {}", HAVE, self.param_def.ir()))
     }
     impl_display_pair!();
 }
 
 impl HaveObjEqualStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
         let objs: Vec<_> = self
             .objs_equal_to
             .iter()
-            .map(|o| o.internal_representation())
+            .map(|o| o.ir())
             .collect();
         out.push_str(&format!(
             "{} {} {} {}",
             HAVE,
-            self.param_def.internal_representation(),
+            self.param_def.ir(),
             EQUAL,
             objs.join(", ")
         ));
 
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl HaveObjByExistFactsStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
         let facts: Vec<_> = self
             .facts
             .iter()
-            .map(|fact| fact.internal_representation())
+            .map(|fact| fact.ir())
             .collect();
         out.push_str(&format!(
             "{} {}{}\n{}",
             HAVE,
-            self.param_def.internal_representation(),
+            self.param_def.ir(),
             COLON,
             indent!(
                 &facts.join(
@@ -230,15 +230,15 @@ impl HaveObjByExistFactsStmt {
             )
         ));
 
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl TrustHaveStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
-        let param_str = self.param_def.internal_representation();
+        let param_str = self.param_def.ir();
         if self.facts.is_empty() {
             out.push_str(&format!("{} {} {}", TRUST, HAVE, param_str));
         } else {
@@ -252,7 +252,7 @@ impl TrustHaveStmt {
                     &self
                         .facts
                         .iter()
-                        .map(|f| f.internal_representation())
+                        .map(|f| f.ir())
                         .collect::<Vec<_>>()
                         .join(
                             "
@@ -263,19 +263,19 @@ impl TrustHaveStmt {
             ));
         }
 
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl TrustStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
         if self.facts.len() == 1 {
             out.push_str(&format!(
                 "{} {}",
                 TRUST,
-                &self.facts[0].internal_representation()
+                &self.facts[0].ir()
             ));
         } else {
             out.push_str(&format!(
@@ -286,7 +286,7 @@ impl TrustStmt {
                     &self
                         .facts
                         .iter()
-                        .map(|f| f.internal_representation())
+                        .map(|f| f.ir())
                         .collect::<Vec<_>>()
                         .join(
                             "
@@ -297,78 +297,78 @@ impl TrustStmt {
             ));
         }
 
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl ObtainObjFromExistFact {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
-        StmtInternalRepresentation(format!(
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!(
             "{} {} {} {}",
             OBTAIN,
             self.equal_tos.join(", "),
             FROM,
-            self.fact.internal_representation()
+            self.fact.ir()
         ))
     }
     impl_display_pair!();
 }
 
 impl ObtainObjFromAtomicFact {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
-        StmtInternalRepresentation(format!(
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!(
             "{} {} {} {}",
             OBTAIN,
             self.equal_tos.join(", "),
             FROM,
-            self.fact.internal_representation()
+            self.fact.ir()
         ))
     }
     impl_display_pair!();
 }
 
 impl ObtainObjFromThm {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
-        StmtInternalRepresentation(format!(
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!(
             "{} {} {} {} {}",
             OBTAIN,
             self.equal_tos.join(", "),
             FROM,
             THM,
-            self.call.internal_representation()
+            self.call.ir()
         ))
     }
     impl_display_pair!();
 }
 
 impl HaveByPreimageStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
-        StmtInternalRepresentation(format!(
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!(
             "{} {} {} {} {} {}",
             HAVE,
             BY,
             PREIMAGE,
             self.preimage_names.join(", "),
             FROM,
-            self.range_membership.internal_representation()
+            self.range_membership.ir()
         ))
     }
     impl_display_pair!();
 }
 
 impl FnSetClause {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let params: Vec<_> = self
             .set_bound_parameters
             .groups
             .iter()
-            .map(|g| g.internal_representation())
+            .map(|g| g.ir())
             .collect();
         let dom: Vec<_> = self
             .dom_facts
             .iter()
-            .map(|d| d.internal_representation())
+            .map(|d| d.ir())
             .collect();
         let mut out = format!("{} ", FN);
         out.push_str(LEFT_PAREN);
@@ -384,25 +384,25 @@ impl FnSetClause {
         }
         out.push_str(RIGHT_PAREN);
         out.push(' ');
-        out.push_str(&self.ret_set.internal_representation());
-        StmtInternalRepresentation(out)
+        out.push_str(&self.ret_set.ir());
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl HaveFnEqualStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let body = &self.equal_to_anonymous_fn.body;
         let params: Vec<_> = body
             .set_bound_parameters
             .groups
             .iter()
-            .map(|g| g.internal_representation())
+            .map(|g| g.ir())
             .collect();
         let dom: Vec<_> = body
             .dom_facts
             .iter()
-            .map(|d| d.internal_representation())
+            .map(|d| d.ir())
             .collect();
         let mut out = format!("{} {} {}", HAVE, FN, self.name);
         out.push_str(LEFT_PAREN);
@@ -423,27 +423,27 @@ impl HaveFnEqualStmt {
             self.equal_to_anonymous_fn
                 .equal_to
                 .as_ref()
-                .internal_representation()
+                .ir()
         ));
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl HaveFnEqualCaseByCaseStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let params: Vec<_> = self
             .fn_set_clause
             .set_bound_parameters
             .groups
             .iter()
-            .map(|g| g.internal_representation())
+            .map(|g| g.ir())
             .collect();
         let dom: Vec<_> = self
             .fn_set_clause
             .dom_facts
             .iter()
-            .map(|d| d.internal_representation())
+            .map(|d| d.ir())
             .collect();
         let mut out = format!("{} {} {}", HAVE, FN, self.name);
         out.push_str(LEFT_PAREN);
@@ -461,7 +461,7 @@ impl HaveFnEqualCaseByCaseStmt {
         out.push_str(&format!(
             " {} {} {} {}
 ",
-            self.fn_set_clause.ret_set.internal_representation(),
+            self.fn_set_clause.ret_set.ir(),
             BY,
             CASES,
             COLON
@@ -470,37 +470,37 @@ impl HaveFnEqualCaseByCaseStmt {
             let line = format!(
                 "{} {}{} {}",
                 CASE,
-                case.internal_representation(),
+                case.ir(),
                 COLON,
-                self.equal_tos[i].internal_representation()
+                self.equal_tos[i].ir()
             );
             out.push_str(&indent!(&line, 1));
             if i + 1 < self.cases.len() {
                 out.push_str("\n");
             }
         }
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl HaveFnByInducCase {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
         out.push_str(&format!(
             "{} {}{}",
             CASE,
-            &self.case_fact.internal_representation(),
+            &self.case_fact.ir(),
             COLON
         ));
         match &self.body {
             HaveFnByInducCaseBody::EqualTo(obj) => {
-                out.push_str(&format!(" {}", obj.internal_representation()));
+                out.push_str(&format!(" {}", obj.ir()));
             }
             HaveFnByInducCaseBody::NestedCases(cases) => {
                 out.push_str(&format!("\n"));
                 for (i, c) in cases.iter().enumerate() {
-                    out.push_str(&format!("{}", indent!(&c.internal_representation(), 1)));
+                    out.push_str(&format!("{}", indent!(&c.ir(), 1)));
                     if i + 1 < cases.len() {
                         out.push_str(&format!("\n"));
                     }
@@ -508,25 +508,25 @@ impl HaveFnByInducCase {
             }
         }
 
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl HaveFnByInducStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let params: Vec<_> = self
             .fn_set_clause
             .set_bound_parameters
             .groups
             .iter()
-            .map(|g| g.internal_representation())
+            .map(|g| g.ir())
             .collect();
         let dom: Vec<_> = self
             .fn_set_clause
             .dom_facts
             .iter()
-            .map(|d| d.internal_representation())
+            .map(|d| d.ir())
             .collect();
         let mut out = format!("{} {} {}", HAVE, FN, self.name);
         out.push_str(LEFT_PAREN);
@@ -543,25 +543,25 @@ impl HaveFnByInducStmt {
         out.push_str(RIGHT_PAREN);
         out.push_str(&format!(
             " {} {} {} {} {} {}",
-            self.fn_set_clause.ret_set.internal_representation(),
+            self.fn_set_clause.ret_set.ir(),
             BY,
             INDUC,
-            self.measure.internal_representation(),
+            self.measure.ir(),
             FROM,
-            self.lower_bound.internal_representation()
+            self.lower_bound.ir()
         ));
         out.push_str(COLON);
         for case in self.cases.iter() {
             out.push_str("\n");
-            out.push_str(&indent!(&case.internal_representation(), 1));
+            out.push_str(&indent!(&case.ir(), 1));
         }
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl HaveFnByForallExistUniqueStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
         out.push_str(&format!(
             "{} {} {} {} {}{}\n{}",
@@ -575,7 +575,7 @@ impl HaveFnByForallExistUniqueStmt {
                 &format!(
                     "{} {}",
                     QUESTION_GOAL,
-                    self.forall.internal_representation()
+                    self.forall.ir()
                 ),
                 1
             )
@@ -587,7 +587,7 @@ impl HaveFnByForallExistUniqueStmt {
                     &self
                         .prove_process
                         .iter()
-                        .map(|s| s.internal_representation())
+                        .map(|s| s.ir())
                         .collect::<Vec<_>>()
                         .join(
                             "
@@ -597,14 +597,14 @@ impl HaveFnByForallExistUniqueStmt {
                 )
             ));
         }
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl HaveTupleStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
-        StmtInternalRepresentation(format!(
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!(
             "{} {} {} {} {} {} {}, {}[{}] {} {}",
             HAVE,
             TUPLE,
@@ -612,19 +612,19 @@ impl HaveTupleStmt {
             FOR,
             self.index_name,
             LESS_EQUAL,
-            &self.dimension.internal_representation(),
+            &self.dimension.ir(),
             self.name,
             self.index_name,
             EQUAL,
-            &self.value.internal_representation()
+            &self.value.ir()
         ))
     }
     impl_display_pair!();
 }
 
 impl HaveCartStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
-        StmtInternalRepresentation(format!(
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!(
             "{} {} {} {} {} {} {}, {}[{}] {} {}",
             HAVE,
             CART,
@@ -632,63 +632,63 @@ impl HaveCartStmt {
             FOR,
             self.index_name,
             LESS_EQUAL,
-            &self.dimension.internal_representation(),
+            &self.dimension.ir(),
             self.name,
             self.index_name,
             EQUAL,
-            &self.value.internal_representation()
+            &self.value.ir()
         ))
     }
     impl_display_pair!();
 }
 
 impl HaveSeqStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
-        StmtInternalRepresentation(format!(
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!(
             "{} {} {} {} {} {}, {}({}) {} {}",
             HAVE,
             SEQ,
             self.name,
-            self.seq_set.internal_representation(),
+            self.seq_set.ir(),
             FOR,
             self.index_name,
             self.name,
             self.index_name,
             EQUAL,
-            &self.value.internal_representation()
+            &self.value.ir()
         ))
     }
     impl_display_pair!();
 }
 
 impl HaveFiniteSeqStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
-        StmtInternalRepresentation(format!(
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!(
             "{} {} {} {} {} {} {} {}, {}({}) {} {}",
             HAVE,
             FINITE_SEQ,
             self.name,
-            self.finite_seq_set.internal_representation(),
+            self.finite_seq_set.ir(),
             FOR,
             self.index_name,
             LESS_EQUAL,
-            &self.bound.internal_representation(),
+            &self.bound.ir(),
             self.name,
             self.index_name,
             EQUAL,
-            &self.value.internal_representation()
+            &self.value.ir()
         ))
     }
     impl_display_pair!();
 }
 
 impl DefPropStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
         out.push_str(&format!("{} {}{}", PROP, self.name, LEFT_PAREN));
         out.push_str(&format!(
             "{}{}",
-            self.typed_parameters.internal_representation(),
+            self.typed_parameters.ir(),
             RIGHT_PAREN
         ));
         if !self.iff_facts.is_empty() {
@@ -699,7 +699,7 @@ impl DefPropStmt {
                     &self
                         .iff_facts
                         .iter()
-                        .map(|f| f.internal_representation())
+                        .map(|f| f.ir())
                         .collect::<Vec<_>>()
                         .join(
                             "
@@ -709,85 +709,85 @@ impl DefPropStmt {
                 )
             ));
         }
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl DefAbstractPropStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
         let params: Vec<_> = self
             .params
             .iter()
-            .map(|p| p.internal_representation())
+            .map(|p| p.ir())
             .collect();
         out.push_str(&format!("{} {}{}", ABSTRACT_PROP, self.name, LEFT_PAREN));
         out.push_str(&format!("{}{}", params.join(", "), RIGHT_PAREN));
 
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl DefSettingStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
         out.push_str(&format!(
             "{} {}{}{}{}",
             SETTING,
             self.name,
             LEFT_PAREN,
-            self.param_def.internal_representation(),
+            self.param_def.ir(),
             RIGHT_PAREN
         ));
         if !self.dom_facts.is_empty() {
             out.push_str(&format!("{}", COLON));
             for fact in self.dom_facts.iter() {
-                out.push_str(&format!("\n    {}", fact.internal_representation()));
+                out.push_str(&format!("\n    {}", fact.ir()));
             }
         }
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl TemplateDefEnum {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         match self {
-            TemplateDefEnum::HaveObjInNonemptySetStmt(x) => x.internal_representation(),
-            TemplateDefEnum::HaveObjEqualStmt(x) => x.internal_representation(),
-            TemplateDefEnum::HaveObjByExistFactsStmt(x) => x.internal_representation(),
-            TemplateDefEnum::TrustHaveStmt(x) => x.internal_representation(),
-            TemplateDefEnum::ObtainObjFromExistFact(x) => x.internal_representation(),
-            TemplateDefEnum::ObtainObjFromAtomicFact(x) => x.internal_representation(),
-            TemplateDefEnum::ObtainObjFromThm(x) => x.internal_representation(),
-            TemplateDefEnum::HaveFnEqualStmt(x) => x.internal_representation(),
-            TemplateDefEnum::HaveFnEqualCaseByCaseStmt(x) => x.internal_representation(),
-            TemplateDefEnum::HaveFnByInducStmt(x) => x.internal_representation(),
-            TemplateDefEnum::HaveFnByForallExistUniqueStmt(x) => x.internal_representation(),
-            TemplateDefEnum::HaveTupleStmt(x) => x.internal_representation(),
-            TemplateDefEnum::HaveCartStmt(x) => x.internal_representation(),
-            TemplateDefEnum::HaveSeqStmt(x) => x.internal_representation(),
-            TemplateDefEnum::HaveFiniteSeqStmt(x) => x.internal_representation(),
+            TemplateDefEnum::HaveObjInNonemptySetStmt(x) => x.ir(),
+            TemplateDefEnum::HaveObjEqualStmt(x) => x.ir(),
+            TemplateDefEnum::HaveObjByExistFactsStmt(x) => x.ir(),
+            TemplateDefEnum::TrustHaveStmt(x) => x.ir(),
+            TemplateDefEnum::ObtainObjFromExistFact(x) => x.ir(),
+            TemplateDefEnum::ObtainObjFromAtomicFact(x) => x.ir(),
+            TemplateDefEnum::ObtainObjFromThm(x) => x.ir(),
+            TemplateDefEnum::HaveFnEqualStmt(x) => x.ir(),
+            TemplateDefEnum::HaveFnEqualCaseByCaseStmt(x) => x.ir(),
+            TemplateDefEnum::HaveFnByInducStmt(x) => x.ir(),
+            TemplateDefEnum::HaveFnByForallExistUniqueStmt(x) => x.ir(),
+            TemplateDefEnum::HaveTupleStmt(x) => x.ir(),
+            TemplateDefEnum::HaveCartStmt(x) => x.ir(),
+            TemplateDefEnum::HaveSeqStmt(x) => x.ir(),
+            TemplateDefEnum::HaveFiniteSeqStmt(x) => x.ir(),
         }
     }
     impl_display_pair!();
 }
 
 impl DefTemplateStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let mut out = format!(
             "{}{}{}",
             TEMPLATE,
             LESS,
-            self.template_arg_def.internal_representation()
+            self.template_arg_def.ir()
         );
         if !self.template_arg_dom.is_empty() {
             let dom: Vec<_> = self
                 .template_arg_dom
                 .iter()
-                .map(|d| d.internal_representation())
+                .map(|d| d.ir())
                 .collect();
             out.push_str(&format!("{} {}", COLON, dom.join(", ")));
         }
@@ -796,39 +796,39 @@ impl DefTemplateStmt {
 {}",
             GREATER,
             COLON,
-            indent!(&self.template_def_stmt.internal_representation(), 1)
+            indent!(&self.template_def_stmt.ir(), 1)
         ));
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl StructFieldDef {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
-        StmtInternalRepresentation(format!(
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!(
             "{} {}",
             self.binding,
-            &self.field_type.internal_representation()
+            &self.field_type.ir()
         ))
     }
     impl_display_pair!();
 }
 
 impl DefStructStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         match &self.param_def_with_dom {
             Some((param_def, _)) => {
-                StmtInternalRepresentation(format!(
+                StmtIR(format!(
                     "{} {}{}{}{}{}",
                     STRUCT,
                     self.name,
                     LESS,
-                    param_def.internal_representation(),
+                    param_def.ir(),
                     GREATER,
                     COLON
                 ))
             }
-            None => StmtInternalRepresentation(format!(
+            None => StmtIR(format!(
                 "{} {}{}",
                 STRUCT, self.name, COLON
             )),
@@ -838,44 +838,44 @@ impl DefStructStmt {
 }
 
 impl AlgoReturn {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
-        StmtInternalRepresentation(self.value.internal_representation().0)
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(self.value.ir().0)
     }
     impl_display_pair!();
 }
 
 impl AlgoCase {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
-        StmtInternalRepresentation(format!(
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!(
             "{} {}{} {}",
             CASE,
-            self.condition.internal_representation(),
+            self.condition.ir(),
             COLON,
-            indent!(&self.return_stmt.internal_representation(), 1)
+            indent!(&self.return_stmt.ir(), 1)
         ))
     }
     impl_display_pair!();
 }
 
 impl AlgoReturnOrAlgoCase {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         match self {
-            AlgoReturnOrAlgoCase::AlgoReturn(x) => x.internal_representation(),
-            AlgoReturnOrAlgoCase::AlgoCase(x) => x.internal_representation(),
+            AlgoReturnOrAlgoCase::AlgoReturn(x) => x.ir(),
+            AlgoReturnOrAlgoCase::AlgoCase(x) => x.ir(),
         }
     }
     impl_display_pair!();
 }
 
 impl DefAlgoStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let mut body: Vec<_> = self
             .cases
             .iter()
-            .map(|c| c.internal_representation())
+            .map(|c| c.ir())
             .collect();
         if let Some(default_return) = &self.default_return {
-            body.push(default_return.internal_representation());
+            body.push(default_return.ir());
         }
         let mut out = format!("{} {} {} {}", HAVE, ALGO, FOR, self.name);
         out.push_str(LEFT_PAREN);
@@ -893,13 +893,13 @@ impl DefAlgoStmt {
                 1
             )
         ));
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl DefThmStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
         out.push_str(&format!(
             "{} {}{}\n{}",
@@ -907,7 +907,7 @@ impl DefThmStmt {
             self.name,
             COLON,
             indent!(
-                &format!("{} {}", QUESTION_GOAL, &self.fact.internal_representation()),
+                &format!("{} {}", QUESTION_GOAL, &self.fact.ir()),
                 1
             )
         ));
@@ -918,7 +918,7 @@ impl DefThmStmt {
                     &self
                         .prove_process
                         .iter()
-                        .map(|s| s.internal_representation())
+                        .map(|s| s.ir())
                         .collect::<Vec<_>>()
                         .join(
                             "
@@ -928,14 +928,14 @@ impl DefThmStmt {
                 )
             ));
         }
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl AxiomStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
-        StmtInternalRepresentation(format!(
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!(
             "{} {}{}\n{}",
             AXIOM,
             self.name,
@@ -944,7 +944,7 @@ impl AxiomStmt {
                 &format!(
                     "{} {}",
                     QUESTION_GOAL,
-                    self.forall_fact.internal_representation()
+                    self.forall_fact.ir()
                 ),
                 1
             )
@@ -954,7 +954,7 @@ impl AxiomStmt {
 }
 
 impl DefStrategyStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
         out.push_str(&format!(
             "{} {}{}\n{}",
@@ -965,7 +965,7 @@ impl DefStrategyStmt {
                 &format!(
                     "{} {}",
                     QUESTION_GOAL,
-                    self.forall_fact.internal_representation()
+                    self.forall_fact.ir()
                 ),
                 1
             )
@@ -977,7 +977,7 @@ impl DefStrategyStmt {
                     &self
                         .prove_process
                         .iter()
-                        .map(|s| s.internal_representation())
+                        .map(|s| s.ir())
                         .collect::<Vec<_>>()
                         .join(
                             "
@@ -987,26 +987,26 @@ impl DefStrategyStmt {
                 )
             ));
         }
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl ClaimStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
-        StmtInternalRepresentation(format!(
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!(
             "{}{}\n{}\n{}",
             CLAIM,
             COLON,
             indent!(
-                &format!("{} {}", QUESTION_GOAL, &self.fact.internal_representation()),
+                &format!("{} {}", QUESTION_GOAL, &self.fact.ir()),
                 1
             ),
             indent!(
                 &self
                     .proof
                     .iter()
-                    .map(|s| s.internal_representation())
+                    .map(|s| s.ir())
                     .collect::<Vec<_>>()
                     .join(
                         "
@@ -1020,20 +1020,20 @@ impl ClaimStmt {
 }
 
 impl ExampleStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
-        StmtInternalRepresentation(format!(
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!(
             "{}{}\n{}\n{}",
             EXAMPLE,
             COLON,
             indent!(
-                &format!("{} {}", QUESTION_GOAL, &self.fact.internal_representation()),
+                &format!("{} {}", QUESTION_GOAL, &self.fact.ir()),
                 1
             ),
             indent!(
                 &self
                     .proof
                     .iter()
-                    .map(|s| s.internal_representation())
+                    .map(|s| s.ir())
                     .collect::<Vec<_>>()
                     .join(
                         "
@@ -1047,8 +1047,8 @@ impl ExampleStmt {
 }
 
 impl SketchStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
-        StmtInternalRepresentation(format!(
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!(
             "{}{}\n{}",
             SKETCH,
             COLON,
@@ -1056,7 +1056,7 @@ impl SketchStmt {
                 &self
                     .proof
                     .iter()
-                    .map(|s| s.internal_representation())
+                    .map(|s| s.ir())
                     .collect::<Vec<_>>()
                     .join(
                         "
@@ -1070,8 +1070,8 @@ impl SketchStmt {
 }
 
 impl TryStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
-        StmtInternalRepresentation(format!(
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!(
             "{}{}\n{}",
             TRY,
             COLON,
@@ -1079,7 +1079,7 @@ impl TryStmt {
                 &self
                     .proof
                     .iter()
-                    .map(|s| s.internal_representation())
+                    .map(|s| s.ir())
                     .collect::<Vec<_>>()
                     .join(
                         "
@@ -1093,24 +1093,24 @@ impl TryStmt {
 }
 
 impl ReleaseThmStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
-        StmtInternalRepresentation(format!(
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!(
             "{} {} {}",
             RELEASE,
             THM,
-            self.call.internal_representation()
+            self.call.ir()
         ))
     }
     impl_display_pair!();
 }
 
 impl WitnessExistFact {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
         let equal_tos: Vec<_> = self
             .equal_tos
             .iter()
-            .map(|o| o.internal_representation())
+            .map(|o| o.ir())
             .collect();
         let spec = match &self.exist_fact_in_witness {
             ExistFact::PlainExistFact(b)
@@ -1120,14 +1120,14 @@ impl WitnessExistFact {
         let facts: Vec<_> = spec
             .facts
             .iter()
-            .map(|fact| fact.internal_representation())
+            .map(|fact| fact.ir())
             .collect();
         out.push_str(&format!(
             "{} {}{} {} {} {}",
             WITNESS,
             equal_tos.join(", "),
             COLON,
-            spec.typed_parameters.internal_representation(),
+            spec.typed_parameters.ir(),
             ST,
             facts.join(", ")
         ));
@@ -1139,7 +1139,7 @@ impl WitnessExistFact {
                     &self
                         .proof
                         .iter()
-                        .map(|s| s.internal_representation())
+                        .map(|s| s.ir())
                         .collect::<Vec<_>>()
                         .join(
                             "
@@ -1149,23 +1149,23 @@ impl WitnessExistFact {
                 )
             ));
         }
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl WitnessAtomicFact {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
         let witnesses: Vec<_> = self
             .witnesses
             .iter()
-            .map(|o| o.internal_representation())
+            .map(|o| o.ir())
             .collect();
         out.push_str(&format!(
             "{} {} {} {}",
             WITNESS,
-            self.atomic_fact.internal_representation(),
+            self.atomic_fact.ir(),
             FROM,
             witnesses.join(", ")
         ));
@@ -1177,7 +1177,7 @@ impl WitnessAtomicFact {
                     &self
                         .proof
                         .iter()
-                        .map(|s| s.internal_representation())
+                        .map(|s| s.ir())
                         .collect::<Vec<_>>()
                         .join(
                             "
@@ -1187,19 +1187,19 @@ impl WitnessAtomicFact {
                 )
             ));
         }
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl WitnessNonemptySet {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
         out.push_str(&format!(
             "{} {} {}",
             WITNESS,
-            &self.obj.internal_representation(),
-            &self.set.internal_representation()
+            &self.obj.ir(),
+            &self.set.ir()
         ));
         if !self.proof.is_empty() {
             out.push_str(&format!(
@@ -1209,7 +1209,7 @@ impl WitnessNonemptySet {
                     &self
                         .proof
                         .iter()
-                        .map(|s| s.internal_representation())
+                        .map(|s| s.ir())
                         .collect::<Vec<_>>()
                         .join(
                             "
@@ -1219,18 +1219,18 @@ impl WitnessNonemptySet {
                 )
             ));
         }
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl ByCasesStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
         let question_goals: Vec<_> = self
             .then_facts
             .iter()
-            .map(|fact| format!("{} {}", QUESTION_GOAL, fact.internal_representation()))
+            .map(|fact| format!("{} {}", QUESTION_GOAL, fact.ir()))
             .collect();
         let mut case_blocks = Vec::new();
         for ((case, proof), impossible_fact) in self
@@ -1243,13 +1243,13 @@ impl ByCasesStmt {
                 let case_header = format!(
                     "{} {}{}",
                     indent!(CASE, 1),
-                    case.internal_representation(),
+                    case.ir(),
                     COLON
                 );
                 let impossible_line = format!(
                     "{} {}",
                     indent!(IMPOSSIBLE, 2),
-                    impossible_fact.internal_representation()
+                    impossible_fact.ir()
                 );
                 if proof.is_empty() {
                     case_blocks.push(format!("{}\n{}", case_header, impossible_line));
@@ -1260,7 +1260,7 @@ impl ByCasesStmt {
                         indent!(
                             &proof
                                 .iter()
-                                .map(|s| s.internal_representation())
+                                .map(|s| s.ir())
                                 .collect::<Vec<_>>()
                                 .join(
                                     "
@@ -1275,18 +1275,18 @@ impl ByCasesStmt {
                 case_blocks.push(format!(
                     "{} {}",
                     indent!(CASE, 1),
-                    case.internal_representation()
+                    case.ir()
                 ));
             } else {
                 case_blocks.push(format!(
                     "{} {}{}\n{}",
                     indent!(CASE, 1),
-                    case.internal_representation(),
+                    case.ir(),
                     COLON,
                     indent!(
                         &proof
                             .iter()
-                            .map(|s| s.internal_representation())
+                            .map(|s| s.ir())
                             .collect::<Vec<_>>()
                             .join(
                                 "
@@ -1315,13 +1315,13 @@ impl ByCasesStmt {
             )
         ));
 
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl ByContraStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let mut out = format!(
             "{} {}{}
 {}",
@@ -1332,7 +1332,7 @@ impl ByContraStmt {
                 &format!(
                     "{} {}",
                     QUESTION_GOAL,
-                    self.to_prove.internal_representation()
+                    self.to_prove.ir()
                 ),
                 1
             )
@@ -1343,7 +1343,7 @@ impl ByContraStmt {
                 &self
                     .proof
                     .iter()
-                    .map(|s| s.internal_representation())
+                    .map(|s| s.ir())
                     .collect::<Vec<_>>()
                     .join(
                         "
@@ -1356,9 +1356,9 @@ impl ByContraStmt {
         out.push_str(&format!(
             "{} {}",
             indent!(IMPOSSIBLE, 1),
-            self.impossible_fact.internal_representation()
+            self.impossible_fact.ir()
         ));
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
@@ -1366,7 +1366,7 @@ impl ByContraStmt {
 macro_rules! impl_by_prop {
     ($ty:ty, $prop:expr) => {
         impl $ty {
-            pub fn internal_representation(&self) -> StmtInternalRepresentation {
+            pub fn ir(&self) -> StmtIR {
                 let mut out = format!(
                     "{} {}:
 {}",
@@ -1376,7 +1376,7 @@ macro_rules! impl_by_prop {
                         &format!(
                             "{} {}",
                             QUESTION_GOAL,
-                            self.forall_fact.internal_representation()
+                            self.forall_fact.ir()
                         ),
                         1
                     )
@@ -1387,7 +1387,7 @@ macro_rules! impl_by_prop {
                         &self
                             .proof
                             .iter()
-                            .map(|s| s.internal_representation())
+                            .map(|s| s.ir())
                             .collect::<Vec<_>>()
                             .join(
                                 "
@@ -1396,7 +1396,7 @@ macro_rules! impl_by_prop {
                         1
                     ));
                 }
-                StmtInternalRepresentation(out)
+                StmtIR(out)
             }
             impl_display_pair!();
         }
@@ -1410,7 +1410,7 @@ impl_by_prop!(ByAntisymmetricPropStmt, ANTISYMMETRIC_PROP);
 impl_by_prop!(ByForStmt, FOR);
 
 impl ByEnumerateFiniteSetStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
         out.push_str(&format!(
             "{} {} {}:\n{}",
@@ -1421,7 +1421,7 @@ impl ByEnumerateFiniteSetStmt {
                 &format!(
                     "{} {}",
                     QUESTION_GOAL,
-                    self.forall_fact.internal_representation()
+                    self.forall_fact.ir()
                 ),
                 1
             )
@@ -1433,7 +1433,7 @@ impl ByEnumerateFiniteSetStmt {
                     &self
                         .proof
                         .iter()
-                        .map(|s| s.internal_representation())
+                        .map(|s| s.ir())
                         .collect::<Vec<_>>()
                         .join(
                             "
@@ -1443,13 +1443,13 @@ impl ByEnumerateFiniteSetStmt {
                 )
             ));
         }
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl ByExtensionStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
         out.push_str(&format!(
             "{} {}{}\n{}",
@@ -1460,9 +1460,9 @@ impl ByExtensionStmt {
                 &format!(
                     "{} {} {} {}",
                     QUESTION_GOAL,
-                    &self.left.internal_representation(),
+                    &self.left.ir(),
                     EQUAL,
-                    &self.right.internal_representation()
+                    &self.right.ir()
                 ),
                 1
             )
@@ -1474,7 +1474,7 @@ impl ByExtensionStmt {
                     &self
                         .proof
                         .iter()
-                        .map(|s| s.internal_representation())
+                        .map(|s| s.ir())
                         .collect::<Vec<_>>()
                         .join(
                             "
@@ -1484,19 +1484,19 @@ impl ByExtensionStmt {
                 )
             ));
         }
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl ClosedRangeOrRange {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         match self {
             ClosedRangeOrRange::ClosedRange(x) => {
-                StmtInternalRepresentation(x.internal_representation().0)
+                StmtIR(x.ir().0)
             }
             ClosedRangeOrRange::Range(x) => {
-                StmtInternalRepresentation(x.internal_representation().0)
+                StmtIR(x.ir().0)
             }
         }
     }
@@ -1504,7 +1504,7 @@ impl ClosedRangeOrRange {
 }
 
 impl ByEnumerateRangeStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
         let keyword = match &self.range {
             ClosedRangeOrRange::ClosedRange(_) => CLOSED_RANGE,
@@ -1516,79 +1516,79 @@ impl ByEnumerateRangeStmt {
             ENUMERATE,
             keyword,
             COLON,
-            &self.element.internal_representation(),
+            &self.element.ir(),
             FACT_PREFIX,
             IN,
-            self.range.internal_representation()
+            self.range.ir()
         ));
 
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl ByClosedRangeAsCasesStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
-        StmtInternalRepresentation(format!(
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!(
             "{} {} {} {}{} {} {}{} {}",
             BY,
             CLOSED_RANGE,
             AS,
             CASES,
             COLON,
-            &self.element.internal_representation(),
+            &self.element.ir(),
             FACT_PREFIX,
             IN,
-            self.closed_range.internal_representation()
+            self.closed_range.ir()
         ))
     }
     impl_display_pair!();
 }
 
 impl ByDefStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
-        StmtInternalRepresentation(format!("{} {} {}", BY, DEF, self.fact.internal_representation()))
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!("{} {} {}", BY, DEF, self.fact.ir()))
     }
     impl_display_pair!();
 }
 
 impl ByStructDefStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
-        StmtInternalRepresentation(format!(
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!(
             "{} {} {} {}",
             BY,
             STRUCT,
             DEF,
-            &self.obj.internal_representation()
+            &self.obj.ir()
         ))
     }
     impl_display_pair!();
 }
 
 impl ByThmStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
-        StmtInternalRepresentation(format!(
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!(
             "{} {} {} {} {}",
             BY,
             THM,
-            self.call.internal_representation(),
+            self.call.ir(),
             RIGHT_ARROW,
-            self.selected_fact.internal_representation()
+            self.selected_fact.ir()
         ))
     }
     impl_display_pair!();
 }
 
 impl ByAxiomOfChoiceStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         if self.proof.is_empty() {
-            return StmtInternalRepresentation(format!(
+            return StmtIR(format!(
                 "{} {}{} {} {}",
                 BY,
                 AXIOM_OF_CHOICE,
                 COLON,
                 SET,
-                self.family.internal_representation()
+                self.family.ir()
             ));
         }
         let mut out = format!(
@@ -1597,7 +1597,7 @@ impl ByAxiomOfChoiceStmt {
             AXIOM_OF_CHOICE,
             COLON,
             SET,
-            self.family.internal_representation(),
+            self.family.ir(),
             COLON
         );
         out.push_str("\n");
@@ -1605,7 +1605,7 @@ impl ByAxiomOfChoiceStmt {
             &self
                 .proof
                 .iter()
-                .map(|s| s.internal_representation())
+                .map(|s| s.ir())
                 .collect::<Vec<_>>()
                 .join(
                     "
@@ -1613,25 +1613,25 @@ impl ByAxiomOfChoiceStmt {
                 ),
             1
         ));
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl ByRegularityAxiomStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
-        StmtInternalRepresentation(format!(
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!(
             "{} {}({})",
             BY,
             REGULARITY_AXIOM,
-            &self.set.internal_representation()
+            &self.set.ir()
         ))
     }
     impl_display_pair!();
 }
 
 impl ByZornLemmaStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
         out.push_str(&format!(
             "{} {}{} {} {}, {} {}, {} {}, {} {}",
@@ -1639,13 +1639,13 @@ impl ByZornLemmaStmt {
             ZORN_LEMMA,
             COLON,
             SET,
-            &self.set.internal_representation(),
+            &self.set.ir(),
             PROP,
-            self.prop_name.internal_representation(),
+            self.prop_name.ir(),
             PROP,
-            self.upper_bound_prop_name.internal_representation(),
+            self.upper_bound_prop_name.ir(),
             PROP,
-            self.maximal_prop_name.internal_representation()
+            self.maximal_prop_name.ir()
         ));
         if !self.proof.is_empty() {
             out.push_str(&format!(
@@ -1655,7 +1655,7 @@ impl ByZornLemmaStmt {
                     &self
                         .proof
                         .iter()
-                        .map(|s| s.internal_representation())
+                        .map(|s| s.ir())
                         .collect::<Vec<_>>()
                         .join(
                             "
@@ -1665,17 +1665,17 @@ impl ByZornLemmaStmt {
                 )
             ));
         }
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl ByInducStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let question_goals: Vec<_> = self
             .to_prove
             .iter()
-            .map(|fact| format!("{} {}", QUESTION_GOAL, fact.internal_representation()))
+            .map(|fact| format!("{} {}", QUESTION_GOAL, fact.ir()))
             .collect();
         let keyword = if self.strong { STRONG_INDUC } else { INDUC };
         let has_structured = self.base_proof.is_some() || self.step_proof.is_some();
@@ -1685,7 +1685,7 @@ impl ByInducStmt {
                 Some(proof) => indent!(
                     &proof
                         .iter()
-                        .map(|s| s.internal_representation())
+                        .map(|s| s.ir())
                         .collect::<Vec<_>>()
                         .join(
                             "
@@ -1699,7 +1699,7 @@ impl ByInducStmt {
                 Some(proof) => indent!(
                     &proof
                         .iter()
-                        .map(|s| s.internal_representation())
+                        .map(|s| s.ir())
                         .collect::<Vec<_>>()
                         .join(
                             "
@@ -1709,7 +1709,7 @@ impl ByInducStmt {
                 ),
                 None => String::new(),
             };
-            return StmtInternalRepresentation(format!(
+            return StmtIR(format!(
                 "{} {} {} {} {}{}
 {}
 {} {} {} {} {}{}
@@ -1720,7 +1720,7 @@ impl ByInducStmt {
                 keyword,
                 self.param_binding,
                 FROM,
-                self.induc_from.internal_representation(),
+                self.induc_from.ir(),
                 COLON,
                 indent!(
                     &question_goals.join(
@@ -1733,7 +1733,7 @@ impl ByInducStmt {
                 FROM,
                 self.param_binding,
                 EQUAL,
-                self.induc_from.internal_representation(),
+                self.induc_from.ir(),
                 COLON,
                 base_proof,
                 indent!(QUESTION_GOAL, 1),
@@ -1749,7 +1749,7 @@ impl ByInducStmt {
             keyword,
             self.param_binding,
             FROM,
-            self.induc_from.internal_representation(),
+            self.induc_from.ir(),
             COLON,
             indent!(
                 &question_goals.join(
@@ -1765,7 +1765,7 @@ impl ByInducStmt {
                 &self
                     .proof
                     .iter()
-                    .map(|s| s.internal_representation())
+                    .map(|s| s.ir())
                     .collect::<Vec<_>>()
                     .join(
                         "
@@ -1774,24 +1774,24 @@ impl ByInducStmt {
                 1
             ));
         }
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }
 
 impl ByFiniteSetInducStmt {
-    pub fn internal_representation(&self) -> StmtInternalRepresentation {
+    pub fn ir(&self) -> StmtIR {
         let question_goals: Vec<_> = self
             .to_prove
             .iter()
-            .map(|fact| format!("{} {}", QUESTION_GOAL, fact.internal_representation()))
+            .map(|fact| format!("{} {}", QUESTION_GOAL, fact.ir()))
             .collect();
         let mut out = format!("{} {} {}", BY, INDUC, self.param_binding);
         if let Some(carrier_set) = &self.carrier_set {
             out.push_str(&format!(
                 " {} {}",
                 IN,
-                carrier_set.internal_representation()
+                carrier_set.ir()
             ));
         }
         out.push_str(&format!(
@@ -1824,7 +1824,7 @@ impl ByFiniteSetInducStmt {
                 &self
                     .base_proof
                     .iter()
-                    .map(|s| s.internal_representation())
+                    .map(|s| s.ir())
                     .collect::<Vec<_>>()
                     .join(
                         "
@@ -1856,7 +1856,7 @@ impl ByFiniteSetInducStmt {
                 &self
                     .step_proof
                     .iter()
-                    .map(|s| s.internal_representation())
+                    .map(|s| s.ir())
                     .collect::<Vec<_>>()
                     .join(
                         "
@@ -1865,7 +1865,7 @@ impl ByFiniteSetInducStmt {
                 2
             ));
         }
-        StmtInternalRepresentation(out)
+        StmtIR(out)
     }
     impl_display_pair!();
 }

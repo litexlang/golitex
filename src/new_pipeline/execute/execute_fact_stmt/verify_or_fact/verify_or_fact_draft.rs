@@ -22,16 +22,12 @@ impl Runtime {
         })
     }
 
-    // Try known-fact cache, then prove by selecting one verified disjunct.
+    // Prove by selecting one verified disjunct.
     pub fn search_or_fact_proof(
         &mut self,
         fact: &OrFact,
         verify_state: VerifyState,
     ) -> Result<OrFactSearchedProof, RuntimeError> {
-        if let Some(result) = self.search_or_fact_proof_by_cache(fact, verify_state.clone())? {
-            return Ok(OrFactSearchedProof::ByCache(result));
-        }
-
         if let Some(result) =
             self.search_or_fact_proof_by_chosen_branch(fact, verify_state)?
         {
@@ -42,15 +38,6 @@ impl Runtime {
         }
 
         todo!()
-    }
-
-    pub fn search_or_fact_proof_by_cache(
-        &mut self,
-        fact: &OrFact,
-        verify_state: VerifyState,
-    ) -> Result<Option<CacheSearchProof>, RuntimeError> {
-        let _ = (fact, verify_state);
-        todo!("search or fact by cache")
     }
 
     pub fn search_or_fact_proof_by_chosen_branch(

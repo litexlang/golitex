@@ -1,4 +1,4 @@
-//! Obj / Fact / Stmt internal representation and display strings.
+//! Obj / Fact / Stmt IR and display strings.
 //!
 //! Internal strings use ordinary Litex surface spelling. The only unusual part
 //! is tagging each identifier with its IdentifierId as `#<id>#name` (and
@@ -15,6 +15,6 @@ pub mod types;
 
 pub use helper::strip_identifier_id_tags;
 pub use types::{
-    FactInternalRepresentation, ObjInternalRepresentation, ParamInternalRepresentation,
-    StmtInternalRepresentation,
+    FactIR, ObjIR, ParamIR,
+    StmtIR,
 };
