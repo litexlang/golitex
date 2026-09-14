@@ -1,4 +1,5 @@
 use crate::new_pipeline::ast::obj::Identifier;
+use crate::new_pipeline::ast::stmt::DefAbstractPropStmt as NewDefAbstractPropStmt;
 use crate::new_pipeline::ast::stmt::DefPropStmt as NewDefPropStmt;
 use crate::new_pipeline::runtime::runtime_ids::{FactId, IdentifierId, WellDefinednessId};
 use crate::prelude::*;
@@ -59,7 +60,7 @@ pub struct DefinitionMemory {
     pub identifiers: HashMap<IdentifierId, DefinedIdentifierInfo>,
 
     pub predicate_definitions: HashMap<PropName, NewDefPropStmt>,
-    pub abstract_predicate_definitions: HashMap<AbstractPropName, DefAbstractPropStmt>,
+    pub abstract_predicate_definitions: HashMap<AbstractPropName, NewDefAbstractPropStmt>,
     pub algorithm_definitions: HashMap<AlgoName, DefAlgoStmt>,
     pub structure_definitions: HashMap<StructName, DefStructStmt>,
     pub template_definitions: HashMap<TemplateName, DefTemplateStmt>,
@@ -122,6 +123,16 @@ impl ExecEnv {
         self.definitions
             .predicate_definitions
             .insert(def_prop.name.clone(), def_prop);
+    }
+
+    pub fn lookup_def_abstract_prop(&self, name: &str) -> Option<&NewDefAbstractPropStmt> {
+        self.definitions.abstract_predicate_definitions.get(name)
+    }
+
+    pub fn store_def_abstract_prop(&mut self, def_abstract_prop: NewDefAbstractPropStmt) {
+        self.definitions
+            .abstract_predicate_definitions
+            .insert(def_abstract_prop.name.clone(), def_abstract_prop);
     }
 }
 

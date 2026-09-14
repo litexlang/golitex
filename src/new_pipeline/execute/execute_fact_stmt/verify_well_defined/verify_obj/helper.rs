@@ -14,7 +14,9 @@ impl Runtime {
             child_obj_well_defined
                 .push(self.verify_obj_well_definedness(obj, verify_state.clone())?);
         }
-        Ok(ObjWellDefinedProofByDef::from_children(child_obj_well_defined))
+        Ok(ObjWellDefinedProofByDef::from_children(
+            child_obj_well_defined,
+        ))
     }
 
     pub(super) fn verify_boxed_objs_as_children(

@@ -12,9 +12,7 @@ impl Runtime {
             AtomicFact::EqualFact(equal_fact) => {
                 self.verify_equal_fact_with_known_forall(equal_fact, verify_state)
             }
-            _ => {
-                self.verify_atomic_except_equality_with_known_forall(atomic_fact, verify_state)
-            }
+            _ => self.verify_atomic_except_equality_with_known_forall(atomic_fact, verify_state),
         }
     }
 
@@ -873,20 +871,31 @@ impl Runtime {
         for environment in self.iter_environments_from_top() {
             match dom_atomic_fact.number_of_args() {
                 1 => {
-                    if let Some(known_facts) = environment.facts.known_atomic_except_equality_facts.by_one_arg.get(&lookup_key)
+                    if let Some(known_facts) = environment
+                        .facts
+                        .known_atomic_except_equality_facts
+                        .by_one_arg
+                        .get(&lookup_key)
                     {
                         candidates.extend(known_facts.values().cloned());
                     }
                 }
                 2 => {
-                    if let Some(known_facts) = environment.facts.known_atomic_except_equality_facts.by_two_args.get(&lookup_key)
+                    if let Some(known_facts) = environment
+                        .facts
+                        .known_atomic_except_equality_facts
+                        .by_two_args
+                        .get(&lookup_key)
                     {
                         candidates.extend(known_facts.values().cloned());
                     }
                 }
                 _ => {
-                    if let Some(known_facts) =
-                        environment.facts.known_atomic_except_equality_facts.by_other_arg_count.get(&lookup_key)
+                    if let Some(known_facts) = environment
+                        .facts
+                        .known_atomic_except_equality_facts
+                        .by_other_arg_count
+                        .get(&lookup_key)
                     {
                         candidates.extend(known_facts.iter().cloned());
                     }

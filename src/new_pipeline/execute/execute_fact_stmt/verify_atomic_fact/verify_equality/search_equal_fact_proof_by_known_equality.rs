@@ -3,9 +3,9 @@ use super::known_equality_graph::{
 };
 use crate::new_pipeline::ast::fact::EqualFact;
 use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::exec_env::known_fact_memory::ObjKey;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProofByKnownEquality;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
-use crate::new_pipeline::exec_env::known_fact_memory::ObjKey;
 use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeResult};
 use std::collections::HashMap;
 
@@ -24,11 +24,7 @@ impl Runtime {
     }
 
     // Oriented path across visible env-stack generating edges (BFS).
-    pub fn known_equality_path(
-        &self,
-        left: &Obj,
-        right: &Obj,
-    ) -> Option<Vec<(Obj, Obj, FactId)>> {
+    pub fn known_equality_path(&self, left: &Obj, right: &Obj) -> Option<Vec<(Obj, Obj, FactId)>> {
         equality_path_in_adjacency(&self.visible_equality_adjacency(), left, right)
     }
 

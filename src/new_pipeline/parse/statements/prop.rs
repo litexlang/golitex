@@ -1,18 +1,21 @@
 use super::super::keywords::{ABSTRACT_PROP, COLON, PROP};
 use super::super::object::is_simple_name;
 use crate::new_pipeline::ast::line_file::LineFile;
-use crate::new_pipeline::ast::stmt::{
-    DefAbstractPropStmt, DefPropStmt, DefinitionStmt, Stmt,
-};
+use crate::new_pipeline::ast::stmt::{DefAbstractPropStmt, DefPropStmt, DefinitionStmt, Stmt};
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
 
 impl Runtime {
     // prop Name(params): <body facts>
-    pub(in super::super) fn parse_def_prop_stmt(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
+    pub(in super::super) fn parse_def_prop_stmt(
+        &mut self,
+        block: &TokenBlock,
+    ) -> RuntimeResult<Stmt> {
         let mut tb = block.clone();
         tb.expect(PROP)?;
-        let name = tb.advance().map_err(|_| tb.parse_error("`prop` expects a name"))?;
+        let name = tb
+            .advance()
+            .map_err(|_| tb.parse_error("`prop` expects a name"))?;
         if !is_simple_name(&name) {
             return Err(tb.parse_error(format!("invalid prop name `{name}`")));
         }
@@ -23,21 +26,15 @@ impl Runtime {
             let iff_facts = if tb.peek() == Some(COLON) {
                 tb.expect(COLON)?;
                 if !tb.exceed_end_of_head() {
-                    return Err(tb.parse_error(
-                        "prop: unexpected tokens after `:` in header",
-                    ));
+                    return Err(tb.parse_error("prop: unexpected tokens after `:` in header"));
                 }
                 self.parse_facts_in_body(&tb.body)?
             } else {
                 if !tb.exceed_end_of_head() {
-                    return Err(tb.parse_error(
-                        "prop: expected `:` or end of header after `(...)`",
-                    ));
+                    return Err(tb.parse_error("prop: expected `:` or end of header after `(...)`"));
                 }
                 if !tb.body.is_empty() {
-                    return Err(tb.parse_error(
-                        "prop without `:` cannot have an indented body",
-                    ));
+                    return Err(tb.parse_error("prop without `:` cannot have an indented body"));
                 }
                 Vec::new()
             };
@@ -75,9 +72,7 @@ impl Runtime {
         let params = params?;
 
         if !tb.exceed_end_of_head() {
-            return Err(tb.parse_error(
-                "abstract_prop: unexpected tokens after `(...)`",
-            ));
+            return Err(tb.parse_error("abstract_prop: unexpected tokens after `(...)`"));
         }
         if !tb.body.is_empty() {
             return Err(tb.parse_error("abstract_prop cannot have an indented body"));

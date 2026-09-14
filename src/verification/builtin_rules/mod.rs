@@ -1,6 +1,7 @@
 // Built-in verification for atomic facts except equality, split by topic.
 
 mod abs_order_builtin;
+mod atomic_except_equality_dispatch;
 mod complex_builtin;
 mod coprime_builtin;
 mod dvd_builtin;
@@ -13,7 +14,6 @@ mod indexed_set_family;
 mod mapping_properties_builtin;
 mod native_exp_sign_factorial;
 mod native_integer_extrema;
-mod atomic_except_equality_dispatch;
 mod not_equal_builtin;
 mod number_compare;
 mod number_compare_div_elimination;

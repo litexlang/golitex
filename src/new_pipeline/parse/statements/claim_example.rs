@@ -14,9 +14,9 @@ impl Runtime {
         tb.expect(CLAIM)?;
         tb.expect_colon_end_of_header()?;
         if tb.body.is_empty() {
-            return Err(tb.parse_error(
-                "claim: expects a `? <fact>` goal block and optional proof body",
-            ));
+            return Err(
+                tb.parse_error("claim: expects a `? <fact>` goal block and optional proof body")
+            );
         }
         let mut goal = tb.body[0].clone();
         let fact = self.parse_goal_fact(&mut goal, "claim")?;
@@ -38,14 +38,17 @@ impl Runtime {
     // example:
     //   ? <fact>
     //   <proof stmts…>
-    pub(in super::super) fn parse_example_stmt(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
+    pub(in super::super) fn parse_example_stmt(
+        &mut self,
+        block: &TokenBlock,
+    ) -> RuntimeResult<Stmt> {
         let mut tb = block.clone();
         tb.expect(EXAMPLE)?;
         tb.expect_colon_end_of_header()?;
         if tb.body.is_empty() {
-            return Err(tb.parse_error(
-                "example: expects a `? <fact>` goal block and optional proof body",
-            ));
+            return Err(
+                tb.parse_error("example: expects a `? <fact>` goal block and optional proof body")
+            );
         }
         let mut goal = tb.body[0].clone();
         let fact = self.parse_goal_fact(&mut goal, "example")?;

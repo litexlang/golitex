@@ -15,9 +15,7 @@ impl Runtime {
         if tb.peek() == Some(COLON) {
             tb.expect(COLON)?;
             if !tb.exceed_end_of_head() {
-                return Err(tb.parse_error(
-                    "`trust:` facts must be written in an indented body",
-                ));
+                return Err(tb.parse_error("`trust:` facts must be written in an indented body"));
             }
             let facts = self.parse_facts_in_body(&tb.body)?;
             return Ok(Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(TrustStmt {
@@ -28,9 +26,7 @@ impl Runtime {
 
         let fact = self.parse_fact(&mut tb)?;
         if !tb.body.is_empty() {
-            return Err(tb.parse_error(
-                "inline `trust` cannot have an indented body; use `trust:`",
-            ));
+            return Err(tb.parse_error("inline `trust` cannot have an indented body; use `trust:`"));
         }
         Ok(Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(TrustStmt {
             facts: vec![fact],
@@ -62,9 +58,9 @@ impl Runtime {
                     ));
                 }
                 if !tb.body.is_empty() {
-                    return Err(tb.parse_error(
-                        "trust have without `:` cannot have an indented body",
-                    ));
+                    return Err(
+                        tb.parse_error("trust have without `:` cannot have an indented body")
+                    );
                 }
                 Vec::new()
             };

@@ -7,7 +7,10 @@ use crate::new_pipeline::tokenize::TokenBlock;
 
 impl Runtime {
     // obtain x, y from exist …   (other obtain forms → parse_error)
-    pub(in super::super) fn parse_obtain_stmt(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
+    pub(in super::super) fn parse_obtain_stmt(
+        &mut self,
+        block: &TokenBlock,
+    ) -> RuntimeResult<Stmt> {
         let mut tb = block.clone();
         tb.expect(OBTAIN)?;
 

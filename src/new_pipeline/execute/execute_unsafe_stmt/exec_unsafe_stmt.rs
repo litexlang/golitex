@@ -12,10 +12,7 @@ pub enum ExecUnsafeStmtResult {
 }
 
 impl Runtime {
-    pub fn exec_unsafe_stmt(
-        &mut self,
-        stmt: &UnsafeStmt,
-    ) -> RuntimeResult<ExecUnsafeStmtResult> {
+    pub fn exec_unsafe_stmt(&mut self, stmt: &UnsafeStmt) -> RuntimeResult<ExecUnsafeStmtResult> {
         match stmt {
             UnsafeStmt::TrustStmt(trust_stmt) => Ok(ExecUnsafeStmtResult::TrustStmt(
                 self.exec_trust_stmt(trust_stmt)?,

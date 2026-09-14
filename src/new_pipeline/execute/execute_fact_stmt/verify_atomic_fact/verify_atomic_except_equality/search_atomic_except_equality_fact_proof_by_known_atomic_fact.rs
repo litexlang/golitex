@@ -1,13 +1,12 @@
 use crate::new_pipeline::ast::fact::AtomicFact;
+use crate::new_pipeline::exec_env::helper::{
+    atomic_fact_args_ref, atomic_fact_has_positive_polarity,
+};
+use crate::new_pipeline::exec_env::known_fact_memory::ObjKey;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::{
     AtomicExceptEqualityFactSearchProofByKnownAtomicFact, EqualFactSearchedProofByKnownEquality,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
-use crate::new_pipeline::exec_env::helper::{
-    ast_obj_key, atomic_fact_args_ref, atomic_fact_has_positive_polarity, atomic_fact_id,
-    atomic_fact_key,
-};
-use crate::new_pipeline::exec_env::known_fact_memory::ObjKey;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
@@ -24,7 +23,7 @@ impl Runtime {
         }
 
         let lookup_key = (
-            atomic_fact_key(fact),
+            fact.prop_name(),
             atomic_fact_has_positive_polarity(fact),
         );
         let goal_args = atomic_fact_args_ref(fact);
@@ -36,14 +35,11 @@ impl Runtime {
         for env in self.execution_environments_stack.iter().rev() {
             let memory = &env.facts.known_atomic_except_equality_facts;
             let hit = match goal_args.len() {
-                1 => memory
-                    .by_one_arg
-                    .get(&lookup_key)
-                    .and_then(|map| {
-                        class_per_arg[0]
-                            .iter()
-                            .find_map(|cand| map.get(cand).cloned())
-                    }),
+                1 => memory.by_one_arg.get(&lookup_key).and_then(|map| {
+                    class_per_arg[0]
+                        .iter()
+                        .find_map(|cand| map.get(cand).cloned())
+                }),
                 2 => memory.by_two_args.get(&lookup_key).and_then(|map| {
                     for k0 in class_per_arg[0].iter() {
                         for k1 in class_per_arg[1].iter() {
@@ -58,13 +54,18 @@ impl Runtime {
                     .by_other_arg_count
                     .get(&lookup_key)
                     .and_then(|knowns| {
-                        knowns.iter().find(|known| {
-                            let known_args = atomic_fact_args_ref(known);
-                            known_args.len() == goal_args.len()
-                                && known_args.iter().zip(class_per_arg.iter()).all(
-                                    |(known_arg, class)| class.contains(&ast_obj_key(known_arg)),
-                                )
-                        }).cloned()
+                        knowns
+                            .iter()
+                            .find(|known| {
+                                let known_args = atomic_fact_args_ref(known);
+                                known_args.len() == goal_args.len()
+                                    && known_args.iter().zip(class_per_arg.iter()).all(
+                                        |(known_arg, class)| {
+                                            class.contains(&known_arg.internal_representation())
+                                        },
+                                    )
+                            })
+                            .cloned()
                     }),
             };
 
@@ -94,7 +95,7 @@ impl Runtime {
         }
 
         Some(AtomicExceptEqualityFactSearchProofByKnownAtomicFact {
-            cite_fact_id: atomic_fact_id(known),
+            cite_fact_id: known.fact_id(),
             why_parameters_of_known_fact_are_equal_to_givens: why_parameters,
         })
     }

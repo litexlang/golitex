@@ -21,7 +21,11 @@ impl Runtime {
         tb.advance()?; // `let`
 
         let name = tb.advance().map_err(|_| {
-            RuntimeParseError::new("`let` expects a name", block.line, block.source_path.clone())
+            RuntimeParseError::new(
+                "`let` expects a name",
+                block.line,
+                block.source_path.clone(),
+            )
         })?;
         if !is_simple_name(&name) {
             return Err(RuntimeParseError::new(

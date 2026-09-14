@@ -180,8 +180,7 @@ impl Runtime {
                     line_file.clone(),
                 )
                 .into();
-            let proof =
-                self.verify_atomic_except_equality_with_known_atomic_facts(&superset)?;
+            let proof = self.verify_atomic_except_equality_with_known_atomic_facts(&superset)?;
             if proof.is_success() {
                 subset_result = Some(self.complete_atomic_fact_proof_result(
                     &superset,

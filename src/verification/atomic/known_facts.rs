@@ -1109,17 +1109,32 @@ impl Runtime {
         let mut known_facts = Vec::new();
         match atomic_fact.number_of_args() {
             1 => {
-                if let Some(facts) = environment.facts.known_atomic_except_equality_facts.by_one_arg.get(&lookup_key) {
+                if let Some(facts) = environment
+                    .facts
+                    .known_atomic_except_equality_facts
+                    .by_one_arg
+                    .get(&lookup_key)
+                {
                     known_facts.extend(facts.values());
                 }
             }
             2 => {
-                if let Some(facts) = environment.facts.known_atomic_except_equality_facts.by_two_args.get(&lookup_key) {
+                if let Some(facts) = environment
+                    .facts
+                    .known_atomic_except_equality_facts
+                    .by_two_args
+                    .get(&lookup_key)
+                {
                     known_facts.extend(facts.values());
                 }
             }
             _ => {
-                if let Some(facts) = environment.facts.known_atomic_except_equality_facts.by_other_arg_count.get(&lookup_key) {
+                if let Some(facts) = environment
+                    .facts
+                    .known_atomic_except_equality_facts
+                    .by_other_arg_count
+                    .get(&lookup_key)
+                {
                     known_facts.extend(facts.iter());
                 }
             }

@@ -5,9 +5,9 @@ use crate::new_pipeline::ast::obj::{
 };
 use crate::new_pipeline::parse::keywords::{
     ABS, C, CART, CEIL, COLON, COMMA, COS, C_STAR, DOT, EXP, FLOOR, FN, GCD, INTERSECT, LCM,
-    LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LN, MAX, MIN, MOD_SIGN, N, N_POS, Q, Q_NEG, Q_POS,
-    Q_STAR, QUOT, R, RIGHT_BRACKET, RIGHT_CURLY, RIGHT_PAREN, R_NEG, R_POS, R_STAR, SET_MINUS, SIN,
-    SQRT, STRUCT_VIEW_PREFIX, TAN, TUPLE, UNION, Z, Z_NEG, Z_POS, Z_STAR,
+    LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LN, MAX, MIN, MOD_SIGN, N, N_POS, Q, QUOT, Q_NEG, Q_POS,
+    Q_STAR, R, RIGHT_BRACKET, RIGHT_CURLY, RIGHT_PAREN, R_NEG, R_POS, R_STAR, SET_MINUS, SIN, SQRT,
+    STRUCT_VIEW_PREFIX, TAN, TUPLE, UNION, Z, Z_NEG, Z_POS, Z_STAR,
 };
 use crate::new_pipeline::runtime::{OccupiedName, Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -49,9 +49,9 @@ pub fn parse_primary(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
         return parse_list_set(rt, tb);
     }
     if token == LEFT_BRACKET {
-        return Err(tb.parse_error(
-            "finite_seq list literal `[...]` is not wired in phase 1 object parse",
-        ));
+        return Err(
+            tb.parse_error("finite_seq list literal `[...]` is not wired in phase 1 object parse")
+        );
     }
     if token == FN {
         return Err(tb.parse_error("`fn` object forms are not wired in phase 1 object parse"));
@@ -163,7 +163,11 @@ fn braced_content_has_top_level_colon(tb: &TokenBlock) -> bool {
     false
 }
 
-fn try_parse_keyword_primary(rt: &mut Runtime, tb: &mut TokenBlock, token: &str) -> RuntimeResult<Option<Obj>> {
+fn try_parse_keyword_primary(
+    rt: &mut Runtime,
+    tb: &mut TokenBlock,
+    token: &str,
+) -> RuntimeResult<Option<Obj>> {
     match token {
         ABS => Ok(Some(parse_unary_keyword(rt, tb, ABS, |arg| {
             Obj::Abs(Abs { arg: Box::new(arg) })
@@ -198,18 +202,28 @@ fn try_parse_keyword_primary(rt: &mut Runtime, tb: &mut TokenBlock, token: &str)
                 right: Box::new(right),
             })
         })?)),
-        INTERSECT => Ok(Some(parse_binary_keyword(rt, tb, INTERSECT, |left, right| {
-            Obj::Intersect(Intersect {
-                left: Box::new(left),
-                right: Box::new(right),
-            })
-        })?)),
-        SET_MINUS => Ok(Some(parse_binary_keyword(rt, tb, SET_MINUS, |left, right| {
-            Obj::SetMinus(SetMinus {
-                left: Box::new(left),
-                right: Box::new(right),
-            })
-        })?)),
+        INTERSECT => Ok(Some(parse_binary_keyword(
+            rt,
+            tb,
+            INTERSECT,
+            |left, right| {
+                Obj::Intersect(Intersect {
+                    left: Box::new(left),
+                    right: Box::new(right),
+                })
+            },
+        )?)),
+        SET_MINUS => Ok(Some(parse_binary_keyword(
+            rt,
+            tb,
+            SET_MINUS,
+            |left, right| {
+                Obj::SetMinus(SetMinus {
+                    left: Box::new(left),
+                    right: Box::new(right),
+                })
+            },
+        )?)),
         MIN => Ok(Some(parse_binary_keyword(rt, tb, MIN, |left, right| {
             Obj::Min(Min {
                 left: Box::new(left),
@@ -318,7 +332,10 @@ fn parse_number(tb: &mut TokenBlock) -> RuntimeResult<Obj> {
     }))
 }
 
-fn parse_identifier_or_mod_or_standard_set(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
+fn parse_identifier_or_mod_or_standard_set(
+    rt: &mut Runtime,
+    tb: &mut TokenBlock,
+) -> RuntimeResult<Obj> {
     let name = tb.advance()?;
     if tb.peek() == Some(MOD_SIGN) {
         let mut parts = vec![name];
@@ -326,9 +343,7 @@ fn parse_identifier_or_mod_or_standard_set(rt: &mut Runtime, tb: &mut TokenBlock
             tb.advance()?;
             let next = tb.advance()?;
             if !is_simple_name(&next) {
-                return Err(tb.parse_error(format!(
-                    "expected identifier after `::`, got `{next}`"
-                )));
+                return Err(tb.parse_error(format!("expected identifier after `::`, got `{next}`")));
             }
             parts.push(next);
         }
@@ -365,7 +380,10 @@ fn parse_identifier_or_mod_or_standard_set(rt: &mut Runtime, tb: &mut TokenBlock
     let Some(identifier_id) = rt.lookup_plain_identifier_id(&name) else {
         return Err(tb.parse_error(format!("undefined name `{name}`")));
     };
-    Ok(Obj::Atom(AtomObj::Identifier(Identifier { name, identifier_id })))
+    Ok(Obj::Atom(AtomObj::Identifier(Identifier {
+        name,
+        identifier_id,
+    })))
 }
 
 fn standard_set_from_name(name: &str) -> Option<StandardSet> {

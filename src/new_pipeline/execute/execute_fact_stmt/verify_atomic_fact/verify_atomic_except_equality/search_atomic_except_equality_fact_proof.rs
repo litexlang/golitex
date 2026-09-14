@@ -19,42 +19,59 @@ impl Runtime {
             return Ok(Some(AtomicExceptEqualityFactSearchedProof::ByCache(result)));
         }
 
-        if let Some(result) =
-            self.search_atomic_except_equality_fact_proof_by_builtin_rule(fact, verify_state.clone())?
+        if let Some(result) = self
+            .search_atomic_except_equality_fact_proof_by_builtin_rule(fact, verify_state.clone())?
         {
-            return Ok(Some(AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(result)));
+            return Ok(Some(AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
+                result,
+            )));
         }
 
-        if let Some(result) =
-            self.search_atomic_except_equality_fact_proof_by_known_atomic_fact(fact, verify_state.clone())?
-        {
-            return Ok(Some(AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(result)));
+        if let Some(result) = self.search_atomic_except_equality_fact_proof_by_known_atomic_fact(
+            fact,
+            verify_state.clone(),
+        )? {
+            return Ok(Some(
+                AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(result),
+            ));
         }
 
-        if let Some(result) =
-            self.search_atomic_except_equality_fact_proof_by_builtin_strategy(fact, verify_state.clone())?
-        {
-            return Ok(Some(AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(result)));
+        if let Some(result) = self.search_atomic_except_equality_fact_proof_by_builtin_strategy(
+            fact,
+            verify_state.clone(),
+        )? {
+            return Ok(Some(
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(result),
+            ));
         }
 
         if let Some(result) =
             self.search_atomic_except_equality_fact_proof_by_definition(fact, verify_state.clone())?
         {
-            return Ok(Some(AtomicExceptEqualityFactSearchedProof::ByDefinition(result)));
+            return Ok(Some(AtomicExceptEqualityFactSearchedProof::ByDefinition(
+                result,
+            )));
         }
 
         if verify_state.can_use_forall_fact {
             if let Some(result) = self
-                .search_atomic_except_equality_fact_proof_by_known_forall_fact(fact, verify_state.clone())?
+                .search_atomic_except_equality_fact_proof_by_known_forall_fact(
+                    fact,
+                    verify_state.clone(),
+                )?
             {
-                return Ok(Some(AtomicExceptEqualityFactSearchedProof::ByKnownForallFact(result)));
+                return Ok(Some(
+                    AtomicExceptEqualityFactSearchedProof::ByKnownForallFact(result),
+                ));
             }
         }
 
-        if let Some(result) = self.search_atomic_except_equality_fact_proof_by_builtin_algebraic_rewrite(
-            fact,
-            verify_state.clone(),
-        )? {
+        if let Some(result) = self
+            .search_atomic_except_equality_fact_proof_by_builtin_algebraic_rewrite(
+                fact,
+                verify_state.clone(),
+            )?
+        {
             return Ok(Some(
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinAlgebraicRewrite(result),
             ));
@@ -62,7 +79,10 @@ impl Runtime {
 
         if verify_state.can_use_known_algebraic_rewrite {
             if let Some(result) = self
-                .search_atomic_except_equality_fact_proof_by_known_algebraic_rewrite(fact, verify_state)?
+                .search_atomic_except_equality_fact_proof_by_known_algebraic_rewrite(
+                    fact,
+                    verify_state,
+                )?
             {
                 return Ok(Some(
                     AtomicExceptEqualityFactSearchedProof::ByKnownAlgebraicRewrite(result),

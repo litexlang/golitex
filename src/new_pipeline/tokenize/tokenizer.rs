@@ -1,15 +1,12 @@
 use super::symbols::{
-    key_symbols_sorted_by_len_desc, unicode_alias_tokens, C_NOT_ZERO, COLON,
-    N_POSITIVE, Q_NEGATIVE, Q_NOT_ZERO, Q_POSITIVE, R_NEGATIVE, R_NOT_ZERO, R_POSITIVE,
-    UNICODE_C_NOT_ZERO, UNICODE_N_POSITIVE, UNICODE_Q_NEGATIVE, UNICODE_Q_NOT_ZERO,
-    UNICODE_Q_POSITIVE, UNICODE_R_NEGATIVE, UNICODE_R_NOT_ZERO, UNICODE_R_POSITIVE,
-    UNICODE_Z_NEGATIVE, UNICODE_Z_NOT_ZERO, UNICODE_Z_POSITIVE, Z_NEGATIVE, Z_NOT_ZERO,
-    Z_POSITIVE,
+    key_symbols_sorted_by_len_desc, unicode_alias_tokens, COLON, C_NOT_ZERO, N_POSITIVE,
+    Q_NEGATIVE, Q_NOT_ZERO, Q_POSITIVE, R_NEGATIVE, R_NOT_ZERO, R_POSITIVE, UNICODE_C_NOT_ZERO,
+    UNICODE_N_POSITIVE, UNICODE_Q_NEGATIVE, UNICODE_Q_NOT_ZERO, UNICODE_Q_POSITIVE,
+    UNICODE_R_NEGATIVE, UNICODE_R_NOT_ZERO, UNICODE_R_POSITIVE, UNICODE_Z_NEGATIVE,
+    UNICODE_Z_NOT_ZERO, UNICODE_Z_POSITIVE, Z_NEGATIVE, Z_NOT_ZERO, Z_POSITIVE,
 };
 use super::token_block::TokenBlock;
-use crate::new_pipeline::runtime::{
-    RealOrVirtualPath, RuntimeParseError, RuntimeResult,
-};
+use crate::new_pipeline::runtime::{RealOrVirtualPath, RuntimeParseError, RuntimeResult};
 
 pub struct Tokenizer;
 

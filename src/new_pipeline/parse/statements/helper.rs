@@ -7,7 +7,10 @@ use crate::new_pipeline::tokenize::TokenBlock;
 use super::super::keywords::QUESTION_GOAL;
 
 impl Runtime {
-    pub(in super::super) fn parse_body_stmts(&mut self, body: &[TokenBlock]) -> RuntimeResult<Vec<Stmt>> {
+    pub(in super::super) fn parse_body_stmts(
+        &mut self,
+        body: &[TokenBlock],
+    ) -> RuntimeResult<Vec<Stmt>> {
         let mut stmts = Vec::with_capacity(body.len());
         for block in body {
             stmts.push(self.parse_token_block(block)?);
@@ -22,9 +25,9 @@ impl Runtime {
         syntax_name: &str,
     ) -> RuntimeResult<Fact> {
         if block.peek() != Some(QUESTION_GOAL) {
-            return Err(block.parse_error(format!(
-                "{syntax_name}: expected a `? <fact>` goal block"
-            )));
+            return Err(
+                block.parse_error(format!("{syntax_name}: expected a `? <fact>` goal block"))
+            );
         }
         block.expect(QUESTION_GOAL)?;
         if block.exceed_end_of_head() {
@@ -32,9 +35,7 @@ impl Runtime {
         }
         let fact = self.parse_fact(block)?;
         if !block.exceed_end_of_head() {
-            return Err(block.parse_error(format!(
-                "{syntax_name}: unfinished tokens in `?` goal"
-            )));
+            return Err(block.parse_error(format!("{syntax_name}: unfinished tokens in `?` goal")));
         }
         if !block.body.is_empty() && !matches!(&fact, Fact::ForallFact(_) | Fact::NotForall(_)) {
             return Err(block.parse_error(format!(
@@ -57,7 +58,10 @@ impl Runtime {
         }
     }
 
-    pub(in super::super) fn parse_facts_in_body(&mut self, body: &[TokenBlock]) -> RuntimeResult<Vec<Fact>> {
+    pub(in super::super) fn parse_facts_in_body(
+        &mut self,
+        body: &[TokenBlock],
+    ) -> RuntimeResult<Vec<Fact>> {
         let mut facts = Vec::with_capacity(body.len());
         for block in body {
             let mut child = block.clone();

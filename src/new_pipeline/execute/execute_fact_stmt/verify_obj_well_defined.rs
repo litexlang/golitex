@@ -1,5 +1,5 @@
-use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 use crate::new_pipeline::runtime::runtime_ids::WellDefinednessId;
+use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 use crate::prelude::*;
 
 use super::verify_fact_result::VerifyFactResult;

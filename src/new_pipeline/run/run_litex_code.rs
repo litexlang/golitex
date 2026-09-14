@@ -1,4 +1,4 @@
-use crate::new_pipeline::runtime::{RuntimeResult, Runtime};
+use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::Tokenizer;
 
 impl Runtime {

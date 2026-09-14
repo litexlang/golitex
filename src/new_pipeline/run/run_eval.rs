@@ -1,4 +1,4 @@
-use crate::new_pipeline::runtime::{RuntimeResult, RealOrVirtualPath, Runtime};
+use crate::new_pipeline::runtime::{RealOrVirtualPath, Runtime, RuntimeResult};
 
 pub fn run_eval(code: String) -> RuntimeResult<()> {
     let mut runtime = Runtime::new();

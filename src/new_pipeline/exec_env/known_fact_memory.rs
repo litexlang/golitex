@@ -1,12 +1,11 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact};
 use crate::new_pipeline::ast::obj::Obj;
-use crate::new_pipeline::exec_env::helper::ast_obj_key;
 use crate::new_pipeline::runtime::FactId;
+use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
 pub type ObjKey = String;
-pub type AtomicFactKey = String;
 
 // Facts and search indexes for one ExecEnv scope (new_pipeline AST).
 #[derive(Clone)]
@@ -29,7 +28,7 @@ pub struct KnownFactMemory {
 // from generating_edges; the shared Rc is an index, not Lean-replayable proof.
 #[derive(Clone, Default)]
 pub struct KnownEqualityMemory {
-    // Undirected adjacency of generating EqualFacts, keyed by obj_key.
+    // Undirected adjacency of generating EqualFacts, keyed by obj internal representation.
     // Each store(a = b) inserts both a→b and b→a with the same EqualFact.
     pub generating_edges: HashMap<ObjKey, Vec<(ObjKey, EqualFact)>>,
 
@@ -37,12 +36,12 @@ pub struct KnownEqualityMemory {
     pub class_members: HashMap<ObjKey, Rc<Vec<Obj>>>,
 }
 
-// Non-equality atomics indexed by predicate key, polarity, and arity.
+// Non-equality atomics indexed by prop_name, polarity, and arity.
 #[derive(Clone, Default)]
 pub struct AtomicExceptEqualityFactMemory {
-    pub by_other_arg_count: HashMap<(AtomicFactKey, bool), Vec<AtomicFact>>,
-    pub by_one_arg: HashMap<(AtomicFactKey, bool), HashMap<ObjKey, AtomicFact>>,
-    pub by_two_args: HashMap<(AtomicFactKey, bool), HashMap<(ObjKey, ObjKey), AtomicFact>>,
+    pub by_other_arg_count: HashMap<(PropName, bool), Vec<AtomicFact>>,
+    pub by_one_arg: HashMap<(PropName, bool), HashMap<ObjKey, AtomicFact>>,
+    pub by_two_args: HashMap<(PropName, bool), HashMap<(ObjKey, ObjKey), AtomicFact>>,
 }
 
 impl KnownFactMemory {
@@ -68,8 +67,8 @@ impl KnownEqualityMemory {
 
     // Insert generating edge and merge class member lists.
     pub fn store(&mut self, equality: &EqualFact) {
-        let left_key = ast_obj_key(&equality.left);
-        let right_key = ast_obj_key(&equality.right);
+        let left_key = equality.left.internal_representation();
+        let right_key = equality.right.internal_representation();
 
         self.generating_edges
             .entry(left_key.clone())
@@ -91,7 +90,12 @@ impl KnownEqualityMemory {
 
     pub fn class_keys_for(&self, key: &str) -> Option<Vec<ObjKey>> {
         let members = self.class_members_for(key)?;
-        Some(members.iter().map(|obj| ast_obj_key(obj)).collect())
+        Some(
+            members
+                .iter()
+                .map(|obj| obj.internal_representation())
+                .collect(),
+        )
     }
 
     pub fn same_class(&self, left_key: &str, right_key: &str) -> bool {
@@ -130,7 +134,7 @@ impl KnownEqualityMemory {
         let mut merged = Vec::new();
         let mut seen = HashSet::new();
         for obj in left_rc.iter().chain(right_rc.iter()) {
-            let key = ast_obj_key(obj);
+            let key = obj.internal_representation();
             if seen.insert(key) {
                 merged.push(obj.clone());
             }
@@ -138,7 +142,7 @@ impl KnownEqualityMemory {
         let new_rc = Rc::new(merged);
         for obj in new_rc.iter() {
             self.class_members
-                .insert(ast_obj_key(obj), new_rc.clone());
+                .insert(obj.internal_representation(), new_rc.clone());
         }
     }
 }
@@ -150,7 +154,7 @@ impl AtomicExceptEqualityFactMemory {
 
     pub fn store_one_arg(
         &mut self,
-        key: AtomicFactKey,
+        key: PropName,
         positive_polarity: bool,
         arg_key: ObjKey,
         fact: AtomicFact,
@@ -163,7 +167,7 @@ impl AtomicExceptEqualityFactMemory {
 
     pub fn store_two_args(
         &mut self,
-        key: AtomicFactKey,
+        key: PropName,
         positive_polarity: bool,
         arg_key0: ObjKey,
         arg_key1: ObjKey,
@@ -177,7 +181,7 @@ impl AtomicExceptEqualityFactMemory {
 
     pub fn store_other_arg_count(
         &mut self,
-        key: AtomicFactKey,
+        key: PropName,
         positive_polarity: bool,
         fact: AtomicFact,
     ) {

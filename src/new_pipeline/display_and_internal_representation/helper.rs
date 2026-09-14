@@ -28,10 +28,7 @@ mod tests {
 
     #[test]
     fn strips_identifier_id_tags_only() {
-        assert_eq!(
-            strip_identifier_id_tags("#12#x $in #3#A"),
-            "x $in A"
-        );
+        assert_eq!(strip_identifier_id_tags("#12#x $in #3#A"), "x $in A");
         assert_eq!(strip_identifier_id_tags("M::#12#x"), "M::x");
     }
 }

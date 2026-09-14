@@ -40,11 +40,10 @@ impl Runtime {
         }
 
         let builtin_state = BuiltinRuleSearchState::in_proof_search(verify_state);
-        let result = self
-            .verify_atomic_except_equality_with_one_premise_producing_builtin_rule(
-                atomic_fact,
-                &builtin_state,
-            )?;
+        let result = self.verify_atomic_except_equality_with_one_premise_producing_builtin_rule(
+            atomic_fact,
+            &builtin_state,
+        )?;
         Ok(
             self.remember_successful_atomic_fact_for_proof_search(
                 atomic_fact,
@@ -175,10 +174,8 @@ impl Runtime {
         verify_state: &VerifyState,
         alternate_fact_search: AlternateFactSearch,
     ) -> Result<ProveFactResult, RuntimeError> {
-        let mut result = self.verify_atomic_except_equality_with_bounded_builtin_routes(
-            atomic_fact,
-            verify_state,
-        )?;
+        let mut result = self
+            .verify_atomic_except_equality_with_bounded_builtin_routes(atomic_fact, verify_state)?;
         if result.is_success() {
             return Ok(result);
         }
@@ -200,18 +197,15 @@ impl Runtime {
                 return Ok(verified_by_definition);
             }
 
-            result = self.verify_atomic_except_equality_with_known_forall(
-                atomic_fact,
-                &next_round_state,
-            )?;
+            result = self
+                .verify_atomic_except_equality_with_known_forall(atomic_fact, &next_round_state)?;
             if result.is_success() {
                 return Ok(result);
             }
         }
 
         if alternate_fact_search == AlternateFactSearch::Enabled {
-            result =
-                self.post_process_atomic_except_equality(atomic_fact, verify_state, result)?;
+            result = self.post_process_atomic_except_equality(atomic_fact, verify_state, result)?;
             if result.is_success() {
                 return Ok(result);
             }
@@ -227,11 +221,8 @@ impl Runtime {
         verify_state: &VerifyState,
         result: ProveFactResult,
     ) -> Result<ProveFactResult, RuntimeError> {
-        let result = self.builtin_post_process_atomic_except_equality(
-            atomic_fact,
-            verify_state,
-            result,
-        )?;
+        let result =
+            self.builtin_post_process_atomic_except_equality(atomic_fact, verify_state, result)?;
         if result.is_success() {
             return Ok(result);
         }

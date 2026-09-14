@@ -23,7 +23,10 @@ impl Runtime {
 
     // sketch:
     //   <stmts…>
-    pub(in super::super) fn parse_sketch_stmt(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
+    pub(in super::super) fn parse_sketch_stmt(
+        &mut self,
+        block: &TokenBlock,
+    ) -> RuntimeResult<Stmt> {
         let mut tb = block.clone();
         tb.expect(SKETCH)?;
         tb.expect_colon_end_of_header()?;

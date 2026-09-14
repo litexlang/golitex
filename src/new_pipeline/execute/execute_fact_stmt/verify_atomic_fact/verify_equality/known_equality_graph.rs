@@ -1,6 +1,5 @@
 use crate::new_pipeline::ast::fact::EqualFact;
 use crate::new_pipeline::ast::obj::Obj;
-use crate::new_pipeline::exec_env::helper::ast_obj_key;
 use crate::new_pipeline::exec_env::known_fact_memory::ObjKey;
 use crate::new_pipeline::runtime::FactId;
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -13,8 +12,8 @@ pub fn equality_path_in_adjacency(
     left: &Obj,
     right: &Obj,
 ) -> Option<Vec<(Obj, Obj, FactId)>> {
-    let left_key = ast_obj_key(left);
-    let right_key = ast_obj_key(right);
+    let left_key = left.internal_representation();
+    let right_key = right.internal_representation();
     if left_key == right_key {
         return Some(Vec::new());
     }
@@ -60,11 +59,8 @@ pub fn equality_path_in_adjacency(
 }
 
 // All obj keys in the same connected component as `obj` (including itself).
-pub fn equality_class_keys_in_adjacency(
-    adjacency: &EqualityAdjacency,
-    obj: &Obj,
-) -> Vec<ObjKey> {
-    let start = ast_obj_key(obj);
+pub fn equality_class_keys_in_adjacency(adjacency: &EqualityAdjacency, obj: &Obj) -> Vec<ObjKey> {
+    let start = obj.internal_representation();
     let mut visited = HashSet::new();
     let mut queue = VecDeque::new();
     visited.insert(start.clone());
@@ -88,8 +84,8 @@ fn orient_equality_step(
     to_key: &str,
     equal_fact: &EqualFact,
 ) -> Option<(Obj, Obj, FactId)> {
-    let left_key = ast_obj_key(&equal_fact.left);
-    let right_key = ast_obj_key(&equal_fact.right);
+    let left_key = equal_fact.left.internal_representation();
+    let right_key = equal_fact.right.internal_representation();
     if from_key == left_key && to_key == right_key {
         Some((
             equal_fact.left.clone(),

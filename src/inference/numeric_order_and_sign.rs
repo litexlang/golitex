@@ -146,11 +146,10 @@ impl Runtime {
             )
             .into();
         let verify_state = VerifyState::initial().with_inference_state(inference_state);
-        let source_in_r_result = self
-            .verify_atomic_except_equality_with_bounded_builtin_routes(
-                &source_in_r,
-                &verify_state,
-            )?;
+        let source_in_r_result = self.verify_atomic_except_equality_with_bounded_builtin_routes(
+            &source_in_r,
+            &verify_state,
+        )?;
         if !source_in_r_result.is_success() {
             return Ok(SuccessInferResult::new());
         }

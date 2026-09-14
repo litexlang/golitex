@@ -7,8 +7,8 @@ use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 use super::search_atomic_except_equality_fact_proof_by_builtin_rule_result::{
-    FnEqualFactSearchProofByBuiltinRule, FnEqualInFactSearchProofByBuiltinRule,
-    AtomicExceptEqualityFactSearchProofByBuiltinRule, NormalAtomicFactSearchProofByBuiltinRule,
+    AtomicExceptEqualityFactSearchProofByBuiltinRule, FnEqualFactSearchProofByBuiltinRule,
+    FnEqualInFactSearchProofByBuiltinRule, NormalAtomicFactSearchProofByBuiltinRule,
     NotGreaterEqualFactSearchProofByBuiltinRule, NotGreaterFactSearchProofByBuiltinRule,
     NotInFactSearchProofByBuiltinRule, NotIsCartFactSearchProofByBuiltinRule,
     NotIsFiniteSetFactSearchProofByBuiltinRule, NotIsSetFactSearchProofByBuiltinRule,

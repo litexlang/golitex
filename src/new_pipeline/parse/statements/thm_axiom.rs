@@ -9,18 +9,23 @@ impl Runtime {
     // thm Name:
     //   ? <fact>
     //   <proof…>
-    pub(in super::super) fn parse_def_thm_stmt(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
+    pub(in super::super) fn parse_def_thm_stmt(
+        &mut self,
+        block: &TokenBlock,
+    ) -> RuntimeResult<Stmt> {
         let mut tb = block.clone();
         tb.expect(THM)?;
-        let name = tb.advance().map_err(|_| tb.parse_error("`thm` expects a name"))?;
+        let name = tb
+            .advance()
+            .map_err(|_| tb.parse_error("`thm` expects a name"))?;
         if !is_simple_name(&name) {
             return Err(tb.parse_error(format!("invalid thm name `{name}`")));
         }
         tb.expect_colon_end_of_header()?;
         if tb.body.is_empty() {
-            return Err(tb.parse_error(
-                "thm: expects a `? <fact>` goal block and optional proof body",
-            ));
+            return Err(
+                tb.parse_error("thm: expects a `? <fact>` goal block and optional proof body")
+            );
         }
         let mut goal = tb.body[0].clone();
         let fact = self.parse_goal_fact(&mut goal, "thm")?;
@@ -54,9 +59,7 @@ impl Runtime {
         }
         tb.expect_colon_end_of_header()?;
         if tb.body.len() != 1 {
-            return Err(tb.parse_error(
-                "axiom: expects exactly one `? forall ...` goal block",
-            ));
+            return Err(tb.parse_error("axiom: expects exactly one `? forall ...` goal block"));
         }
         let mut goal = tb.body[0].clone();
         let forall_fact = self.parse_goal_forall_fact(&mut goal, "axiom")?;

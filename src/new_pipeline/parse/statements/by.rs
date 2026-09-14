@@ -1,6 +1,6 @@
 use super::super::keywords::{
-    BY, CASE, CASES, COLON, CONTRA, DEF, FINITE_SET_INDUC, IMPOSSIBLE, INDUC, LEFT_PAREN,
-    QUESTION_GOAL, RELEASE, RIGHT_ARROW, RIGHT_PAREN, STRONG_INDUC, THM, COMMA,
+    BY, CASE, CASES, COLON, COMMA, CONTRA, DEF, FINITE_SET_INDUC, IMPOSSIBLE, INDUC, LEFT_PAREN,
+    QUESTION_GOAL, RELEASE, RIGHT_ARROW, RIGHT_PAREN, STRONG_INDUC, THM,
 };
 use super::super::object::{is_simple_name, parse_obj};
 use crate::new_pipeline::ast::fact::{AndChainAtomicFact, AtomicFact};
@@ -40,9 +40,9 @@ impl Runtime {
         tb.expect(CASES)?;
         tb.expect_colon_end_of_header()?;
         if tb.body.is_empty() {
-            return Err(tb.parse_error(
-                "by cases: expects at least one `? <fact>` goal and one `case` arm",
-            ));
+            return Err(
+                tb.parse_error("by cases: expects at least one `? <fact>` goal and one `case` arm")
+            );
         }
 
         let mut then_facts = Vec::new();
@@ -89,20 +89,15 @@ impl Runtime {
                     return Ok((Vec::new(), None));
                 }
                 let n = arm.body.len();
-                let last_is_impossible = arm.body[n - 1]
-                    .header
-                    .first()
-                    .map(String::as_str)
-                    == Some(IMPOSSIBLE);
+                let last_is_impossible =
+                    arm.body[n - 1].header.first().map(String::as_str) == Some(IMPOSSIBLE);
                 if last_is_impossible {
                     let proof = self.parse_body_stmts(&arm.body[..n - 1])?;
                     let mut last = arm.body[n - 1].clone();
                     last.expect(IMPOSSIBLE)?;
                     let imp = self.parse_atomic_fact(&mut last, true)?;
                     if !last.exceed_end_of_head() || !last.body.is_empty() {
-                        return Err(last.parse_error(
-                            "impossible: expected a single atomic fact",
-                        ));
+                        return Err(last.parse_error("impossible: expected a single atomic fact"));
                     }
                     Ok((proof, Some(imp)))
                 } else {
@@ -150,9 +145,7 @@ impl Runtime {
                 last.expect(IMPOSSIBLE)?;
                 let impossible_fact = this.parse_atomic_fact(&mut last, true)?;
                 if !last.exceed_end_of_head() || !last.body.is_empty() {
-                    return Err(last.parse_error(
-                        "impossible: expected a single atomic fact",
-                    ));
+                    return Err(last.parse_error("impossible: expected a single atomic fact"));
                 }
                 Ok((proof, impossible_fact))
             })?
@@ -163,9 +156,7 @@ impl Runtime {
                 last.expect(IMPOSSIBLE)?;
                 let impossible_fact = self.parse_atomic_fact(&mut last, true)?;
                 if !last.exceed_end_of_head() || !last.body.is_empty() {
-                    return Err(last.parse_error(
-                        "impossible: expected a single atomic fact",
-                    ));
+                    return Err(last.parse_error("impossible: expected a single atomic fact"));
                 }
                 Ok((proof, impossible_fact))
             })();
@@ -190,9 +181,9 @@ impl Runtime {
         let fact = if tb.peek() == Some(COLON) {
             tb.expect_colon_end_of_header()?;
             if tb.body.len() != 1 {
-                return Err(tb.parse_error(
-                    "by def: expects exactly one `? <atomic fact>` goal block",
-                ));
+                return Err(
+                    tb.parse_error("by def: expects exactly one `? <atomic fact>` goal block")
+                );
             }
             let mut goal = tb.body[0].clone();
             if goal.peek() != Some(QUESTION_GOAL) {
@@ -201,22 +192,16 @@ impl Runtime {
             goal.expect(QUESTION_GOAL)?;
             let atomic = self.parse_atomic_fact(&mut goal, true)?;
             if !goal.exceed_end_of_head() || !goal.body.is_empty() {
-                return Err(goal.parse_error(
-                    "by def: unfinished tokens in `?` atomic goal",
-                ));
+                return Err(goal.parse_error("by def: unfinished tokens in `?` atomic goal"));
             }
             atomic
         } else {
             if !tb.body.is_empty() {
-                return Err(tb.parse_error(
-                    "inline by def does not accept an indented body",
-                ));
+                return Err(tb.parse_error("inline by def does not accept an indented body"));
             }
             let atomic = self.parse_atomic_fact(tb, true)?;
             if !tb.exceed_end_of_head() {
-                return Err(tb.parse_error(
-                    "inline by def expects exactly one atomic fact",
-                ));
+                return Err(tb.parse_error("inline by def expects exactly one atomic fact"));
             }
             atomic
         };
@@ -243,9 +228,7 @@ impl Runtime {
             }
             let selected_fact = self.parse_atomic_fact(tb, true)?;
             if !tb.exceed_end_of_head() {
-                return Err(tb.parse_error(
-                    "by thm: `=>` expects exactly one atomic fact",
-                ));
+                return Err(tb.parse_error("by thm: `=>` expects exactly one atomic fact"));
             }
             return Ok(Stmt::By(ByStmt::ByThmStmt(ByThmStmt {
                 call,
@@ -254,9 +237,7 @@ impl Runtime {
             })));
         }
         if !tb.exceed_end_of_head() || !tb.body.is_empty() {
-            return Err(tb.parse_error(
-                "by thm: expected bare call or `=> <atomic fact>`",
-            ));
+            return Err(tb.parse_error("by thm: expected bare call or `=> <atomic fact>`"));
         }
         Ok(Stmt::ReleaseThmStmt(ReleaseThmStmt {
             call,
@@ -264,7 +245,10 @@ impl Runtime {
         }))
     }
 
-    pub(in super::super) fn parse_release_thm_stmt(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
+    pub(in super::super) fn parse_release_thm_stmt(
+        &mut self,
+        block: &TokenBlock,
+    ) -> RuntimeResult<Stmt> {
         let mut tb = block.clone();
         tb.expect(RELEASE)?;
         tb.expect(THM)?;
@@ -278,7 +262,10 @@ impl Runtime {
         }))
     }
 
-    pub(in super::super) fn parse_theorem_call(&mut self, tb: &mut TokenBlock) -> RuntimeResult<TheoremCall> {
+    pub(in super::super) fn parse_theorem_call(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> RuntimeResult<TheoremCall> {
         let name_tok = tb
             .advance()
             .map_err(|_| tb.parse_error("theorem call expects a name"))?;
