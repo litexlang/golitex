@@ -25,5 +25,5 @@ pub use verify_fact_result::VerifyFactResult;
 pub use verify_state::VerifyState;
 pub use verify_well_defined::{
     AtomicFactWellDefinedProof, FactWellDefinedProof, ObjWellDefinedProofByDef,
-    ParamTypeWellDefinedProof, VerifyObjResult,
+    ParamTypeWellDefinedProof, VerifyObjWellDefinedResult,
 };

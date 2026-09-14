@@ -1,12 +1,11 @@
-# new_pipeline equality literally_the_same tracer (LITEX_NEW_PIPELINE=1)
-# Focused command:
-#   unset CARGO_TARGET_DIR; cargo build --release --bin litex
-#   LITEX_NEW_PIPELINE=1 target/release/litex -f examples/tmp.lit
-#
-# Before: search_equal_fact_proof_by_builtin_rule always None
-# have x R
-# x = x
-#
-# Now: same AtomId ⇒ ByBuiltinRule(LiterallyTheSame)
-have x R
-x = x
+let a = 1
+let b = a
+let c = b
+
+b = 1
+
+abstract_prop p(x)
+
+trust $p(c)
+
+$p(1)

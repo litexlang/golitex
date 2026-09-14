@@ -1,4 +1,4 @@
-use super::VerifyObjResult;
+use super::VerifyObjWellDefinedResult;
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
@@ -8,7 +8,7 @@ pub enum ParamTypeWellDefinedProof {
     Set,
     NonemptySet,
     FiniteSet,
-    Obj(VerifyObjResult),
+    Obj(VerifyObjWellDefinedResult),
 }
 
 impl Runtime {

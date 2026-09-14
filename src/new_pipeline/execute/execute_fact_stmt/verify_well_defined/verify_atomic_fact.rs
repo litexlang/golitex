@@ -1,11 +1,11 @@
-use super::VerifyObjResult;
+use super::VerifyObjWellDefinedResult;
 use crate::new_pipeline::ast::fact::AtomicFact;
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 pub struct AtomicFactWellDefinedProof {
-    pub well_defined_of_each_parameter: Vec<VerifyObjResult>,
+    pub well_defined_of_each_parameter: Vec<VerifyObjWellDefinedResult>,
 }
 
 impl Runtime {

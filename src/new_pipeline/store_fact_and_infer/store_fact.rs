@@ -36,12 +36,8 @@ impl Runtime {
         match atomic_fact {
             AtomicFact::EqualFact(equal_fact) => {
                 let fact_id = equal_fact.fact_id;
-                let left_key = ast_obj_key(&equal_fact.left);
-                let right_key = ast_obj_key(&equal_fact.right);
                 let env = self.top_exec_env_mut();
-                env.facts
-                    .known_equality
-                    .store(equal_fact, left_key, right_key);
+                env.facts.known_equality.store(equal_fact);
                 env.facts
                     .facts_by_id
                     .insert(fact_id, Fact::AtomicFact(atomic_fact.clone()));

@@ -24,8 +24,11 @@ impl Runtime {
                     self.exec_def_prop_stmt(def_prop)?,
                 )))
             }
+            Stmt::UnsafeStmt(unsafe_stmt) => {
+                Ok(ExecStmtResult::Unsafe(self.exec_unsafe_stmt(unsafe_stmt)?))
+            }
             _ => Err(RuntimeError::Unsupported(
-                "new_pipeline exec_stmt: only Fact, let, have-obj-in-nonempty, and prop are wired for the tracer"
+                "new_pipeline exec_stmt: only Fact, let, have-obj-in-nonempty, prop, and trust are wired for the tracer"
                     .to_string(),
             )),
         }

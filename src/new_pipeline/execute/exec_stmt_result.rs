@@ -6,17 +6,21 @@
 //! - fields sit flat on that result (no nested Effect / WellDefined wrappers):
 //!   how it ran, env effect mirrors, optional closed local env
 
-use crate::new_pipeline::ast::stmt::{DefPropStmt, HaveObjInNonemptySetOrParamTypeStmt, LetObjStmt};
-use crate::new_pipeline::execute::execute_fact_stmt::{
-    ExecFactStmtResult, FactWellDefinedProof, ParamTypeWellDefinedProof, VerifyFactResult,
-    VerifyObjResult,
+use crate::new_pipeline::ast::stmt::{
+    DefPropStmt, HaveObjInNonemptySetOrParamTypeStmt, LetObjStmt,
 };
 use crate::new_pipeline::exec_env::exec_env::ExecEnv;
+use crate::new_pipeline::execute::execute_fact_stmt::{
+    ExecFactStmtResult, FactWellDefinedProof, ParamTypeWellDefinedProof, VerifyFactResult,
+    VerifyObjWellDefinedResult,
+};
+use crate::new_pipeline::execute::execute_unsafe_stmt::ExecUnsafeStmtResult;
 use crate::new_pipeline::runtime::FactId;
 
 pub enum ExecStmtResult {
     Fact(ExecFactStmtResult),
     Definition(ExecDefinitionStmtResult),
+    Unsafe(ExecUnsafeStmtResult),
 }
 
 pub enum ExecDefinitionStmtResult {
@@ -28,7 +32,7 @@ pub enum ExecDefinitionStmtResult {
 // Pipeline: WD the RHS value → affect global env. No local env.
 pub struct ExecLetObjStmtResult {
     pub statement: LetObjStmt,
-    pub value_well_defined: VerifyObjResult,
+    pub value_well_defined: VerifyObjWellDefinedResult,
     pub stored_fact_ids: Vec<FactId>,
 }
 

@@ -2401,6 +2401,12 @@ still stages bindings, assumed facts, and inferred consequences in a temporary
 child environment and commits them atomically. If name binding, storage, or
 inference fails, none of that statement's effects escape.
 
+Preview (`new_pipeline`): `trust` / `trust have` still skip truth search, but
+they require well-definedness of every involved object and fact before the
+assumption is stored. Ill-defined assumptions such as `trust 1 / 0 = 0` are
+rejected. Parameter carriers in `trust have` are checked the same way; nonempty
+obligations remain skipped.
+
 This is a statement boundary, not a process boundary. A persistent REPL may
 continue after the error with its parent environment unchanged, while an
 earlier, separately successful `trust` statement remains committed. Audit
@@ -2532,7 +2538,7 @@ introductions.
 | Bare fact | Well-definedness, then known facts/builtin rules/definitions/universals/strategies. | The fact and its ordinary inferred consequences. |
 | `let x = value` | `value` is well-defined and `x` is fresh. | One untyped name and `x = value`. |
 | `have x S`, `have x S = value`, `have x S: ...` | Nonemptiness or concrete membership, defined carrier, and any witness body. | A fresh object, its carrier facts, equality/body facts, and inference. |
-| `trust fact`, `trust have ...` | Parsing, binding, and transactional staging run; well-definedness and proof truth are both skipped. | One explicit trusted transaction. Failure commits nothing. |
+| `trust fact`, `trust have ...` | Parsing, binding, and transactional staging run; well-definedness and proof truth are both skipped (default pipeline). Preview `new_pipeline`: well-definedness is required; truth is still skipped. | One explicit trusted transaction. Failure commits nothing. |
 | `obtain ... from exist ...` | The source existential is known; names, count, and dependent parameter types match. | Opaque witness names plus their type and direct body facts. |
 | `obtain ... from $P(args)` | `$P(args)` is known and its concrete definition has exactly one positive `exist`/`exist!` clause. | The same witness facts after checked definition projection. |
 | `obtain ... from thm name(args)` / `obtain ... from thm name` | The named user, imported, or reserved builtin theorem passes the ordinary call checks and has exactly one direct positive `exist`/`exist!` conclusion. Parentheses are required for a root `forall`; a direct existential theorem uses the bare form. | The theorem application remains scoped; only the eliminated witnesses, types, body facts, and `exist!` uniqueness interface escape. |

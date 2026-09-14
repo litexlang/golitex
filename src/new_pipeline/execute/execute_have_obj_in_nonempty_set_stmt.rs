@@ -1,12 +1,11 @@
 use super::exec_stmt_result::{
-    ExecHaveObjInNonemptySetStmtResult, HaveObjGroupNonemptyCheckResult,
-    StoreHaveObjAndInferResult,
+    ExecHaveObjInNonemptySetStmtResult, HaveObjGroupNonemptyCheckResult, StoreHaveObjAndInferResult,
 };
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact, IsNonemptySetFact};
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::ast::stmt::HaveObjInNonemptySetOrParamTypeStmt;
-use crate::new_pipeline::exec_env::IdentifierDefinitionMemory;
+use crate::new_pipeline::exec_env::DefinedIdentifierInfo;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
@@ -25,10 +24,8 @@ impl Runtime {
             store_well_defined_fact: true,
         };
 
-        let param_type_well_defined = self.verify_typed_parameters_well_definedness(
-            &stmt.param_def,
-            verify_state.clone(),
-        )?;
+        let param_type_well_defined =
+            self.verify_typed_parameters_well_definedness(&stmt.param_def, verify_state.clone())?;
 
         let nonempty_checks =
             self.verify_have_obj_nonempty_obligations(&stmt.param_def, verify_state)?;
@@ -92,7 +89,7 @@ impl Runtime {
                 }
                 self.top_exec_env_mut().definitions.identifiers.insert(
                     identifier.identifier_id,
-                    IdentifierDefinitionMemory {
+                    DefinedIdentifierInfo {
                         identifier: identifier.clone(),
                     },
                 );

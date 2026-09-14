@@ -7,14 +7,14 @@ use crate::new_pipeline::runtime::runtime_ids::WellDefinednessId;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 // Top-level object WD result: only cache hit or prove-by-definition.
-pub enum VerifyObjResult {
+pub enum VerifyObjWellDefinedResult {
     ByCache { wd_id: WellDefinednessId },
     ByDef(ObjWellDefinedProofByDef),
 }
 
 // One by-def shape for every Obj: child WD + verified domain requirements.
 pub struct ObjWellDefinedProofByDef {
-    pub child_obj_well_defined: Vec<VerifyObjResult>,
+    pub child_obj_well_defined: Vec<VerifyObjWellDefinedResult>,
     pub requirement_fact_verified: Vec<VerifyFactResult>,
 }
 
@@ -26,7 +26,7 @@ impl ObjWellDefinedProofByDef {
         }
     }
 
-    pub fn from_children(child_obj_well_defined: Vec<VerifyObjResult>) -> Self {
+    pub fn from_children(child_obj_well_defined: Vec<VerifyObjWellDefinedResult>) -> Self {
         Self {
             child_obj_well_defined,
             requirement_fact_verified: Vec::new(),
@@ -40,10 +40,10 @@ impl Runtime {
         &mut self,
         obj: &Obj,
         verify_state: VerifyState,
-    ) -> RuntimeResult<VerifyObjResult> {
+    ) -> RuntimeResult<VerifyObjWellDefinedResult> {
         let _ = verify_state.store_well_defined_fact;
         let by_def = self.verify_obj_well_definedness_by_def(obj, verify_state)?;
-        Ok(VerifyObjResult::ByDef(by_def))
+        Ok(VerifyObjWellDefinedResult::ByDef(by_def))
     }
 
     // Big match: every Obj variant has its own by-def branch function.
@@ -132,7 +132,9 @@ impl Runtime {
             Obj::SetBuilder(value) => {
                 self.verify_set_builder_obj_well_definedness_by_def(value, verify_state)
             }
-            Obj::FnSet(value) => self.verify_fn_set_obj_well_definedness_by_def(value, verify_state),
+            Obj::FnSet(value) => {
+                self.verify_fn_set_obj_well_definedness_by_def(value, verify_state)
+            }
             Obj::AnonymousFn(value) => {
                 self.verify_anonymous_fn_obj_well_definedness_by_def(value, verify_state)
             }
@@ -203,13 +205,11 @@ impl Runtime {
                     value,
                     verify_state,
                 ),
-            Obj::InstantiatedTemplateObj(value) => self
-                .verify_instantiated_template_obj_well_definedness_by_def(value, verify_state),
+            Obj::InstantiatedTemplateObj(value) => {
+                self.verify_instantiated_template_obj_well_definedness_by_def(value, verify_state)
+            }
             Obj::OneSideInfinityIntervalObj(value) => self
-                .verify_one_side_infinity_interval_obj_well_definedness_by_def(
-                    value,
-                    verify_state,
-                ),
+                .verify_one_side_infinity_interval_obj_well_definedness_by_def(value, verify_state),
             Obj::IntervalObj(value) => {
                 self.verify_interval_obj_well_definedness_by_def(value, verify_state)
             }
