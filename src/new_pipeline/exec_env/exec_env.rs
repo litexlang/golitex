@@ -56,7 +56,7 @@ pub struct WellDefinedObjectMemory {
 pub struct DefinitionMemory {
     /// Named atoms defined in this scope (`let`, `have`, forall/exist locals, …).
     /// Keyed by IdentifierId; value carries the full Identifier (name + IdentifierId).
-    pub identifiers: HashMap<IdentifierId, IdentifierDefinitionMemory>,
+    pub identifiers: HashMap<IdentifierId, DefinedIdentifierInfo>,
 
     pub predicate_definitions: HashMap<PropName, NewDefPropStmt>,
     pub abstract_predicate_definitions: HashMap<AbstractPropName, DefAbstractPropStmt>,
@@ -71,7 +71,7 @@ pub struct DefinitionMemory {
 
 /// One defined atom in `DefinitionMemory.identifiers`.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct IdentifierDefinitionMemory {
+pub struct DefinedIdentifierInfo {
     pub identifier: Identifier,
 }
 

@@ -1,7 +1,7 @@
 use super::exec_stmt_result::ExecLetObjStmtResult;
 use crate::new_pipeline::ast::obj::Identifier;
 use crate::new_pipeline::ast::stmt::LetObjStmt;
-use crate::new_pipeline::exec_env::IdentifierDefinitionMemory;
+use crate::new_pipeline::exec_env::DefinedIdentifierInfo;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
@@ -35,7 +35,7 @@ impl Runtime {
         }
         self.top_exec_env_mut().definitions.identifiers.insert(
             let_stmt.identifier_id,
-            IdentifierDefinitionMemory {
+            DefinedIdentifierInfo {
                 identifier: Identifier {
                     name: let_stmt.name.clone(),
                     identifier_id: let_stmt.identifier_id,

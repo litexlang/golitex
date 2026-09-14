@@ -10,5 +10,5 @@ mod verify_param_type;
 
 pub use verify_atomic_fact::AtomicFactWellDefinedProof;
 pub use verify_fact::FactWellDefinedProof;
-pub use verify_obj::{ObjWellDefinedProofByDef, VerifyObjResult};
+pub use verify_obj::{ObjWellDefinedProofByDef, VerifyObjWellDefinedResult};
 pub use verify_param_type::ParamTypeWellDefinedProof;

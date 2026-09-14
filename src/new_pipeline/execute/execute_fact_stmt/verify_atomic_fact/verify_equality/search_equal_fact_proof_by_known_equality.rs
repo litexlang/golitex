@@ -23,7 +23,7 @@ impl Runtime {
             .map(|path| EqualFactSearchedProofByKnownEquality { path }))
     }
 
-    // Oriented path across visible env-stack equality edges.
+    // Oriented path across visible env-stack generating edges (BFS).
     pub fn known_equality_path(
         &self,
         left: &Obj,
@@ -32,6 +32,9 @@ impl Runtime {
         equality_path_in_adjacency(&self.visible_equality_adjacency(), left, right)
     }
 
+    // Class keys across visible envs via generating-edge connectivity.
+    // Per-env `class_members` Rc lists are maintained on store for local class
+    // sharing; cross-env closure still comes from the merged edge graph.
     pub fn known_equality_class_keys(&self, obj: &Obj) -> Vec<ObjKey> {
         equality_class_keys_in_adjacency(&self.visible_equality_adjacency(), obj)
     }

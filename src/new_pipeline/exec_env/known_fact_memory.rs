@@ -1,6 +1,9 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact};
+use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::exec_env::helper::ast_obj_key;
 use crate::new_pipeline::runtime::FactId;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use std::rc::Rc;
 
 pub type ObjKey = String;
 pub type AtomicFactKey = String;
@@ -16,18 +19,22 @@ pub struct KnownFactMemory {
 // Equality equivalence-class store for one ExecEnv.
 //
 // Two views of the same data:
-// 1. Class view: connected components under stored `=` (reflexive / symmetric /
-//    transitive closure). Membership and class enumeration are derived queries.
-// 2. Evidence view: `generating_edges` are the EqualFacts actually written into
-//    the env (user or infer). They are not the closed set of all equal pairs.
+// 1. Class view: `class_members` — each key points at a shared `Rc<Vec<Obj>>` of
+//    everyone currently in its equivalence class. After a merge (e.g. a=b and
+//    c=d then b=c), all keys in the merged class share one Rc.
+// 2. Evidence view: `generating_edges` — EqualFacts actually written into the
+//    env (user or infer). Not the closed set of all equal pairs.
 //
 // Path search (EqualFactSearchedProofByKnownEquality) must cite only FactIds
-// from these generating edges; class membership alone is not Lean-replayable.
+// from generating_edges; the shared Rc is an index, not Lean-replayable proof.
 #[derive(Clone, Default)]
 pub struct KnownEqualityMemory {
     // Undirected adjacency of generating EqualFacts, keyed by obj_key.
     // Each store(a = b) inserts both a→b and b→a with the same EqualFact.
     pub generating_edges: HashMap<ObjKey, Vec<(ObjKey, EqualFact)>>,
+
+    // Shared member list per equivalence class. Same class <=> Rc::ptr_eq.
+    pub class_members: HashMap<ObjKey, Rc<Vec<Obj>>>,
 }
 
 // Non-equality atomics indexed by predicate key, polarity, and arity.
@@ -59,15 +66,80 @@ impl KnownEqualityMemory {
         Self::default()
     }
 
-    pub fn store(&mut self, equality: &EqualFact, left_key: ObjKey, right_key: ObjKey) {
+    // Insert generating edge and merge class member lists.
+    pub fn store(&mut self, equality: &EqualFact) {
+        let left_key = ast_obj_key(&equality.left);
+        let right_key = ast_obj_key(&equality.right);
+
         self.generating_edges
             .entry(left_key.clone())
             .or_default()
             .push((right_key.clone(), equality.clone()));
         self.generating_edges
-            .entry(right_key)
+            .entry(right_key.clone())
             .or_default()
-            .push((left_key, equality.clone()));
+            .push((left_key.clone(), equality.clone()));
+
+        self.ensure_singleton(&left_key, &equality.left);
+        self.ensure_singleton(&right_key, &equality.right);
+        self.merge_classes(&left_key, &right_key);
+    }
+
+    pub fn class_members_for(&self, key: &str) -> Option<&Rc<Vec<Obj>>> {
+        self.class_members.get(key)
+    }
+
+    pub fn class_keys_for(&self, key: &str) -> Option<Vec<ObjKey>> {
+        let members = self.class_members_for(key)?;
+        Some(members.iter().map(|obj| ast_obj_key(obj)).collect())
+    }
+
+    pub fn same_class(&self, left_key: &str, right_key: &str) -> bool {
+        match (
+            self.class_members.get(left_key),
+            self.class_members.get(right_key),
+        ) {
+            (Some(left), Some(right)) => Rc::ptr_eq(left, right),
+            _ => left_key == right_key,
+        }
+    }
+
+    fn ensure_singleton(&mut self, key: &ObjKey, obj: &Obj) {
+        if self.class_members.contains_key(key) {
+            return;
+        }
+        self.class_members
+            .insert(key.clone(), Rc::new(vec![obj.clone()]));
+    }
+
+    fn merge_classes(&mut self, left_key: &ObjKey, right_key: &ObjKey) {
+        let left_rc = self
+            .class_members
+            .get(left_key)
+            .expect("left class missing after ensure_singleton")
+            .clone();
+        let right_rc = self
+            .class_members
+            .get(right_key)
+            .expect("right class missing after ensure_singleton")
+            .clone();
+        if Rc::ptr_eq(&left_rc, &right_rc) {
+            return;
+        }
+
+        let mut merged = Vec::new();
+        let mut seen = HashSet::new();
+        for obj in left_rc.iter().chain(right_rc.iter()) {
+            let key = ast_obj_key(obj);
+            if seen.insert(key) {
+                merged.push(obj.clone());
+            }
+        }
+        let new_rc = Rc::new(merged);
+        for obj in new_rc.iter() {
+            self.class_members
+                .insert(ast_obj_key(obj), new_rc.clone());
+        }
     }
 }
 

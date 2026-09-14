@@ -12,4 +12,4 @@ mod scalar;
 mod sets;
 mod structs;
 
-pub use entry::{ObjWellDefinedProofByDef, VerifyObjResult};
+pub use entry::{ObjWellDefinedProofByDef, VerifyObjWellDefinedResult};
