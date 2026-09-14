@@ -76,9 +76,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> Result<VerifyFactResult, RuntimeError> {
         match fact {
-            AndChainAtomicFact::AtomicFact(fact) => Ok(VerifyFactResult::AtomicFact(
-                self.verify_atomic_fact(fact, verify_state)?,
-            )),
+            AndChainAtomicFact::AtomicFact(fact) => self.verify_atomic_fact(fact, verify_state),
             AndChainAtomicFact::AndFact(fact) => Ok(VerifyFactResult::AndFact(
                 self.verify_and_fact(fact, verify_state)?,
             )),

@@ -3,8 +3,11 @@ use crate::new_pipeline::execute::execute_fact_stmt::cache_search_proof::CacheSe
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::{
     EqualFactSearchedProof, EqualFactSearchedProofByKnownForallFact, VerifyEqualityResult,
 };
+use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::{
+    UnknownVerifyFactResult, VerifyFactResult,
+};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
-use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
+use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 use super::EqualitySearchProofByBuiltinStrategy;
 
@@ -13,57 +16,60 @@ impl Runtime {
         &mut self,
         fact: &EqualFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<VerifyEqualityResult> {
+    ) -> RuntimeResult<VerifyFactResult> {
         let well_defined_proof = self.verify_atomic_fact_well_definedness(
             &AtomicFact::EqualFact(fact.clone()),
             verify_state.clone(),
         )?;
-        let searched_proof = self.search_equal_fact_proof(fact, verify_state)?;
-        Ok(VerifyEqualityResult {
-            fact: fact.clone(),
-            well_defined_proof,
-            searched_proof,
-        })
+        match self.search_equal_fact_proof(fact, verify_state)? {
+            Some(searched_proof) => Ok(VerifyFactResult::Equality(Box::new(VerifyEqualityResult {
+                fact: fact.clone(),
+                well_defined_proof,
+                searched_proof,
+            }))),
+            None => Ok(VerifyFactResult::Unknown(
+                UnknownVerifyFactResult::UnableToSearchProof,
+            )),
+        }
     }
 
     // Stage order: cache → builtin rule → known equality → builtin strategy →
     // known forall. Equality algebraic properties are intrinsic.
+    // Ok(None) means no proof found; that is not a runtime error.
     pub fn search_equal_fact_proof(
         &mut self,
         fact: &EqualFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<EqualFactSearchedProof> {
+    ) -> RuntimeResult<Option<EqualFactSearchedProof>> {
         if let Some(result) = self.search_equal_fact_proof_by_cache(fact, verify_state.clone())? {
-            return Ok(EqualFactSearchedProof::ByCache(result));
+            return Ok(Some(EqualFactSearchedProof::ByCache(result)));
         }
 
         if let Some(result) =
             self.search_equal_fact_proof_by_builtin_rule(fact, verify_state.clone())?
         {
-            return Ok(EqualFactSearchedProof::ByBuiltinRule(result));
+            return Ok(Some(EqualFactSearchedProof::ByBuiltinRule(result)));
         }
 
         if let Some(result) =
             self.search_equal_fact_proof_by_known_equality(fact, verify_state.clone())?
         {
-            return Ok(EqualFactSearchedProof::ByKnownEquality(result));
+            return Ok(Some(EqualFactSearchedProof::ByKnownEquality(result)));
         }
 
         if let Some(result) =
             self.search_equal_fact_proof_by_builtin_strategy(fact, verify_state.clone())?
         {
-            return Ok(EqualFactSearchedProof::ByBuiltinStrategy(result));
+            return Ok(Some(EqualFactSearchedProof::ByBuiltinStrategy(result)));
         }
 
         if let Some(result) =
             self.search_equal_fact_proof_by_known_forall_fact(fact, verify_state)?
         {
-            return Ok(EqualFactSearchedProof::ByKnownForallFact(result));
+            return Ok(Some(EqualFactSearchedProof::ByKnownForallFact(result)));
         }
 
-        Err(RuntimeError::Unknown(
-            "search_equal_fact_proof: no equality proof found".to_string(),
-        ))
+        Ok(None)
     }
 
     pub fn search_equal_fact_proof_by_cache(

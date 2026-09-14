@@ -1,5 +1,5 @@
+mod exec_stmt;
 mod exec_stmt_result;
-mod execute;
 mod execute_def_prop_stmt;
 pub mod execute_fact_stmt;
 mod execute_have_obj_in_nonempty_set_stmt;
@@ -12,6 +12,4 @@ pub use exec_stmt_result::{
     StoreHaveObjAndInferResult,
 };
 pub use execute_fact_stmt::{ExecFactStmtResult, VerifyState};
-pub use execute_unsafe_stmt::{
-    ExecTrustHaveStmtResult, ExecTrustStmtResult, ExecUnsafeStmtResult,
-};
+pub use execute_unsafe_stmt::{ExecTrustHaveStmtResult, ExecTrustStmtResult, ExecUnsafeStmtResult};

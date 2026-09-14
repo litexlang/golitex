@@ -17,13 +17,28 @@ The foundational correspondence is intentional:
 The new pipeline owns its runtime IDs in `runtime::runtime_ids`.
 `runtime::runtime_ids::FactId` is intentionally independent from the legacy
 `fact::id::FactId`; compatibility, if needed later, must be explicit.
-Verifier result types mirror Fact shape (e.g. VerifyFactResult, verify_fact).
+Verifier result types mostly mirror Fact shape; atomic facts flatten to
+Equality / AtomicExceptEquality on VerifyFactResult (no AtomicFact wrapper).
 ```
 
 This keeps FactIds and temporary environments compatible with later Lean
 consumers while the new Result and pipeline shapes are still being drafted.
 
 ## Atomic-fact search boundary
+
+`verify_atomic_fact` (after well-definedness) returns
+`RuntimeResult<VerifyFactResult>`:
+
+- `Ok(Equality(...))` / `Ok(AtomicExceptEquality(...))` when a proof route succeeds
+- `Ok(Unknown(UnableToSearchProof))` when every search slot fails
+- `Err(...)` only for real runtime / invariant failures
+
+Search aggregators return `Ok(None)` on exhaustion; they must not emit
+`Err(RuntimeError::Unknown)` for “no proof found”.
+
+Must-prove callers (`execute_fact_statement`, WD requirements, `have`
+nonempty obligations) reject `Unknown` at their boundary and must not `?`
+treat it as proven evidence.
 
 `verify_atomic_fact_search_proof` is the truth-proof phase after atomic-fact
 well-definedness. Its ordinary search pipeline is intentionally limited to the

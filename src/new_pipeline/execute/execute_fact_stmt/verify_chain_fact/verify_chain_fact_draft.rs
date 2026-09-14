@@ -28,9 +28,11 @@ impl Runtime {
         let edges = fact.facts()?;
         let mut proof_of_each_edge = Vec::new();
         for edge in edges.iter() {
-            proof_of_each_edge.push(VerifyFactResult::AtomicFact(
-                self.verify_atomic_fact(edge, verify_state.clone())?,
-            ));
+            let proof = self.verify_atomic_fact(edge, verify_state.clone())?;
+            if proof.is_unknown() {
+                return Ok(vec![proof]);
+            }
+            proof_of_each_edge.push(proof);
         }
         Ok(proof_of_each_edge)
     }

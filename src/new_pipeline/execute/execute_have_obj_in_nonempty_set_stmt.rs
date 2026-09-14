@@ -59,9 +59,13 @@ impl Runtime {
                         set: nonempty_set,
                         line_file: None,
                     }));
-                    HaveObjGroupNonemptyCheckResult::Obj(
-                        self.verify_fact(&fact, verify_state.clone())?,
-                    )
+                    let verify_result = self.verify_fact(&fact, verify_state.clone())?;
+                    if verify_result.is_unknown() {
+                        return Err(RuntimeError::Unknown(
+                            "have: unable to prove carrier set is nonempty".to_string(),
+                        ));
+                    }
+                    HaveObjGroupNonemptyCheckResult::Obj(verify_result)
                 }
             };
             out.push(check);

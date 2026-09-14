@@ -1,13 +1,20 @@
-//! Top-level fact verification result: mirrors `Fact` shape (plus Unknown).
+//! Top-level fact verification result.
 //!
-//! Proof *methods* (cache, builtin, let-binding, closed numeric, …) live inside
-//! each shape's payload — not as siblings of AtomicFact / ForallFact.
+//! Mirrors `Fact` for compound shapes; atomic facts are flattened into
+//! `Equality` / `AtomicExceptEquality` (no intermediate AtomicFact layer).
+//!
+//! Verify entry points return `RuntimeResult<VerifyFactResult>`:
+//! - `Ok(Unknown)` = unable to prove (not a runtime error)
+//! - `Err` = real operational / invariant failure
 
-use super::verify_atomic_fact::VerifyAtomicFactResult;
+use super::verify_atomic_fact::{
+    VerifyAtomicExceptEqualityFactResult, VerifyEqualityResult,
+};
 
 pub enum VerifyFactResult {
     Unknown(UnknownVerifyFactResult),
-    AtomicFact(Box<VerifyAtomicFactResult>),
+    Equality(Box<VerifyEqualityResult>),
+    AtomicExceptEquality(Box<VerifyAtomicExceptEqualityFactResult>),
     AndFact(Box<VerifyAndFactResult>),
     ChainFact(Box<VerifyChainFactResult>),
     OrFact(Box<VerifyOrFactResult>),
