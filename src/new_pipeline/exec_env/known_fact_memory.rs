@@ -13,10 +13,21 @@ pub struct KnownFactMemory {
     pub known_atomic_except_equality_facts: AtomicExceptEqualityFactMemory,
 }
 
-// Direct equality edges keyed by `ast_obj_key`. Full union-find comes later.
+// Equality equivalence-class store for one ExecEnv.
+//
+// Two views of the same data:
+// 1. Class view: connected components under stored `=` (reflexive / symmetric /
+//    transitive closure). Membership and class enumeration are derived queries.
+// 2. Evidence view: `generating_edges` are the EqualFacts actually written into
+//    the env (user or infer). They are not the closed set of all equal pairs.
+//
+// Path search (EqualFactSearchedProofByKnownEquality) must cite only FactIds
+// from these generating edges; class membership alone is not Lean-replayable.
 #[derive(Clone, Default)]
 pub struct KnownEqualityMemory {
-    pub edges: HashMap<ObjKey, Vec<(ObjKey, EqualFact)>>,
+    // Undirected adjacency of generating EqualFacts, keyed by obj_key.
+    // Each store(a = b) inserts both a→b and b→a with the same EqualFact.
+    pub generating_edges: HashMap<ObjKey, Vec<(ObjKey, EqualFact)>>,
 }
 
 // Non-equality atomics indexed by predicate key, polarity, and arity.
@@ -49,11 +60,11 @@ impl KnownEqualityMemory {
     }
 
     pub fn store(&mut self, equality: &EqualFact, left_key: ObjKey, right_key: ObjKey) {
-        self.edges
+        self.generating_edges
             .entry(left_key.clone())
             .or_default()
             .push((right_key.clone(), equality.clone()));
-        self.edges
+        self.generating_edges
             .entry(right_key)
             .or_default()
             .push((left_key, equality.clone()));

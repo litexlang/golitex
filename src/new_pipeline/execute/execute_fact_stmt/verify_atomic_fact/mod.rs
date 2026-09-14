@@ -7,9 +7,10 @@ pub mod verify_atomic_except_equality;
 pub mod well_defined;
 
 pub use result::{
-    EqualFactSearchedProof, EqualFactSearchedProofByKnownAtomicFact,
-    EqualFactSearchedProofByKnownForallFact, AtomicExceptEqualityFactSearchProofByDefinition,
-    AtomicExceptEqualityFactSearchProofByKnownAtomicFact, AtomicExceptEqualityFactSearchProofByKnownForallFact,
-    AtomicExceptEqualityFactSearchedProof, VerifyAtomicFactResult, VerifyEqualityResult,
-    VerifyAtomicExceptEqualityFactResult,
+    AtomicExceptEqualityFactSearchProofByDefinition,
+    AtomicExceptEqualityFactSearchProofByKnownAtomicFact,
+    AtomicExceptEqualityFactSearchProofByKnownForallFact, AtomicExceptEqualityFactSearchedProof,
+    EqualFactSearchedProof, EqualFactSearchedProofByKnownEquality,
+    EqualFactSearchedProofByKnownForallFact, VerifyAtomicExceptEqualityFactResult,
+    VerifyAtomicFactResult, VerifyEqualityResult,
 };

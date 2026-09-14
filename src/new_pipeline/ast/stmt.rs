@@ -8,7 +8,7 @@ use super::fact::{
 };
 use super::names::AtomicName;
 use super::obj::{
-    AnonymousFn, ClosedRange, FiniteSeqSet, ListSet, MatrixSet, Obj, Range, SeqSet,
+    AnonymousFn, ClosedRange, FiniteSeqSet, ListSet, Obj, Range, SeqSet,
 };
 use super::param::{SetBoundParameterList, TypedParameterList};
 use super::line_file::LineFile;
@@ -155,18 +155,6 @@ pub struct HaveFiniteSeqStmt {    pub name: String,
 
 // from statement/definitions/statement.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct HaveMatrixStmt {    pub name: String,
-    pub matrix_set: MatrixSet,
-    pub row_index_name: String,
-    pub row_bound: Obj,
-    pub col_index_name: String,
-    pub col_bound: Obj,
-    pub value: Obj,
-    pub line_file: LineFile,
-}
-
-// from statement/definitions/statement.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DefTemplateStmt {    pub template_name: String,
     pub template_arg_def: TypedParameterList,
     pub template_arg_dom: Vec<QuantifierFreeFact>,
@@ -200,7 +188,6 @@ pub enum TemplateDefEnum {
     HaveCartStmt(HaveCartStmt),
     HaveSeqStmt(HaveSeqStmt),
     HaveFiniteSeqStmt(HaveFiniteSeqStmt),
-    HaveMatrixStmt(HaveMatrixStmt),
 }
 
 // from statement/definitions/statement.rs
@@ -575,7 +562,6 @@ pub enum DefinitionStmt {
     HaveCartStmt(HaveCartStmt),
     HaveSeqStmt(HaveSeqStmt),
     HaveFiniteSeqStmt(HaveFiniteSeqStmt),
-    HaveMatrixStmt(HaveMatrixStmt),
     DefPropStmt(DefPropStmt),
     DefAbstractPropStmt(DefAbstractPropStmt),
     DefSettingStmt(DefSettingStmt),

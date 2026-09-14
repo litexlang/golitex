@@ -1,4 +1,6 @@
 pub mod by_builtin_strategy_result;
+pub mod known_equality_graph;
+pub mod search_equal_fact_proof_by_known_equality;
 pub mod verify_equal_fact;
 pub mod verify_equality_by_builtin_rules;
 

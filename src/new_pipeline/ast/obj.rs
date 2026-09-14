@@ -171,8 +171,6 @@ pub enum FnObjHead {
     ObjAtIndex(ObjAtIndex),
     ObjAsStructInstanceWithFieldAccess(ObjAsStructInstanceWithFieldAccess),
     InstantiatedTemplateObj(InstantiatedTemplateObj),
-    /// A matrix operator expression used as a two-argument function, e.g. `(A '+ B)(i, j)`.
-    MatrixOperator(Box<Obj>),
 }
 
 // from object/function_images.rs
@@ -305,48 +303,6 @@ pub struct FiniteSetReduce {    pub set: Box<Obj>,
     pub seed: Box<Obj>,
 }
 
-// from object/matrices.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct MatrixAdd {    pub left: Box<Obj>,
-    pub right: Box<Obj>,
-}
-
-// from object/matrices.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct MatrixSub {    pub left: Box<Obj>,
-    pub right: Box<Obj>,
-}
-
-// from object/matrices.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct MatrixMul {    pub left: Box<Obj>,
-    pub right: Box<Obj>,
-}
-
-// from object/matrices.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct MatrixScalarMul {    pub scalar: Box<Obj>,
-    pub matrix: Box<Obj>,
-}
-
-// from object/matrices.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct MatrixPow {    pub base: Box<Obj>,
-    pub exponent: Box<Obj>,
-}
-
-// from object/matrices.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct MatrixSet {    pub set: Box<Obj>,
-    pub row_len: Box<Obj>,
-    pub col_len: Box<Obj>,
-}
-
-// from object/matrices.rs
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct MatrixListObj {    pub rows: Vec<Vec<Box<Obj>>>,
-}
-
 // from object/numeric_constants.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Number {    pub normalized_value: String,
@@ -437,13 +393,6 @@ pub enum Obj {
     FiniteSeqListObj(FiniteSeqListObj),
     ObjAtIndex(ObjAtIndex),
     StandardSet(StandardSet),
-    MatrixSet(MatrixSet),
-    MatrixListObj(MatrixListObj),
-    MatrixAdd(MatrixAdd),
-    MatrixSub(MatrixSub),
-    MatrixMul(MatrixMul),
-    MatrixScalarMul(MatrixScalarMul),
-    MatrixPow(MatrixPow),
     StructObj(StructObj),
     ObjAsStructInstanceWithFieldAccess(ObjAsStructInstanceWithFieldAccess),
     InstantiatedTemplateObj(InstantiatedTemplateObj),

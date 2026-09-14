@@ -5,7 +5,7 @@ use crate::new_pipeline::ast::obj::{
 };
 use crate::new_pipeline::parse::keywords::{
     ABS, C, CART, CEIL, COLON, COMMA, COS, C_STAR, DOT, EXP, FLOOR, FN, GCD, INTERSECT, LCM,
-    LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LN, MATRIX, MAX, MIN, MOD_SIGN, N, N_POS, Q, Q_NEG, Q_POS,
+    LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LN, MAX, MIN, MOD_SIGN, N, N_POS, Q, Q_NEG, Q_POS,
     Q_STAR, QUOT, R, RIGHT_BRACKET, RIGHT_CURLY, RIGHT_PAREN, R_NEG, R_POS, R_STAR, SET_MINUS, SIN,
     SQRT, STRUCT_VIEW_PREFIX, TAN, TUPLE, UNION, Z, Z_NEG, Z_POS, Z_STAR,
 };
@@ -50,7 +50,7 @@ pub fn parse_primary(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
     }
     if token == LEFT_BRACKET {
         return Err(tb.parse_error(
-            "matrix / finite_seq list literal `[...]` is not wired in phase 1 object parse",
+            "finite_seq list literal `[...]` is not wired in phase 1 object parse",
         ));
     }
     if token == FN {
@@ -58,9 +58,6 @@ pub fn parse_primary(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
     }
     if token == STRUCT_VIEW_PREFIX {
         return Err(tb.parse_error("struct view `&` is not wired in phase 1 object parse"));
-    }
-    if token == MATRIX {
-        return Err(tb.parse_error("`matrix(...)` is not wired in phase 1 object parse"));
     }
 
     if let Some(obj) = try_parse_keyword_primary(rt, tb, &token)? {

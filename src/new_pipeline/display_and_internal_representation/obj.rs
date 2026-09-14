@@ -17,7 +17,7 @@ impl Obj {
         fn precedence(o: &Obj) -> u8 {
             match o {
                 Obj::Add(_) | Obj::Sub(_) => 3,
-                Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::MatrixScalarMul(_) => 2,
+                Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) => 2,
                 Obj::Pow(_)
                 | Obj::Abs(_)
                 | Obj::Sin(_)
@@ -39,11 +39,7 @@ impl Obj {
                 | Obj::Exp(_)
                 | Obj::Ln(_)
                 | Obj::Sign(_)
-                | Obj::Factorial(_)
-                | Obj::MatrixAdd(_)
-                | Obj::MatrixSub(_)
-                | Obj::MatrixMul(_)
-                | Obj::MatrixPow(_) => 1,
+                | Obj::Factorial(_) => 1,
                 _ => 0,
             }
         }
@@ -195,31 +191,6 @@ impl Obj {
                     s.push_str(&format!(" {} ", POW));
                     s.push_str(&fmt_with_prec(p.exponent.as_ref(), 1));
                 }
-                Obj::MatrixAdd(m) => {
-                    s.push_str(&fmt_with_prec(m.left.as_ref(), 1));
-                    s.push_str(&format!(" {} ", MATRIX_ADD));
-                    s.push_str(&fmt_with_prec(m.right.as_ref(), 1));
-                }
-                Obj::MatrixSub(m) => {
-                    s.push_str(&fmt_with_prec(m.left.as_ref(), 1));
-                    s.push_str(&format!(" {} ", MATRIX_SUB));
-                    s.push_str(&fmt_with_prec(m.right.as_ref(), 1));
-                }
-                Obj::MatrixMul(m) => {
-                    s.push_str(&fmt_with_prec(m.left.as_ref(), 1));
-                    s.push_str(&format!(" {} ", MATRIX_MUL));
-                    s.push_str(&fmt_with_prec(m.right.as_ref(), 1));
-                }
-                Obj::MatrixPow(m) => {
-                    s.push_str(&fmt_with_prec(m.base.as_ref(), 1));
-                    s.push_str(&format!(" {} ", MATRIX_POW));
-                    s.push_str(&fmt_with_prec(m.exponent.as_ref(), 1));
-                }
-                Obj::MatrixScalarMul(m) => {
-                    s.push_str(&fmt_with_prec(m.scalar.as_ref(), 2));
-                    s.push_str(&format!(" {} ", MATRIX_SCALAR_MUL));
-                    s.push_str(&fmt_with_prec(m.matrix.as_ref(), 2));
-                }
                 Obj::Abs(a) => {
                     s.push_str(&format!(
                         "{} {}{}{}",
@@ -360,8 +331,6 @@ impl Obj {
                 Obj::FiniteSeqSet(x) => s.push_str(&x.internal_representation()),
                 Obj::SeqSet(x) => s.push_str(&x.internal_representation()),
                 Obj::FiniteSeqListObj(x) => s.push_str(&x.internal_representation()),
-                Obj::MatrixSet(x) => s.push_str(&x.internal_representation()),
-                Obj::MatrixListObj(x) => s.push_str(&x.internal_representation()),
                 Obj::PowerSet(x) => s.push_str(&x.internal_representation()),
                 Obj::GeneralCart(x) => s.push_str(&x.internal_representation()),
                 Obj::ObjAtIndex(x) => s.push_str(&x.internal_representation()),
@@ -435,14 +404,6 @@ impl FnObjHead {
             FnObjHead::ObjAtIndex(v) => v.internal_representation(),
             FnObjHead::ObjAsStructInstanceWithFieldAccess(v) => v.internal_representation(),
             FnObjHead::InstantiatedTemplateObj(t) => t.internal_representation(),
-            FnObjHead::MatrixOperator(matrix) => {
-                format!(
-                    "{}{}{}",
-                    LEFT_PAREN,
-                    matrix.internal_representation(),
-                    RIGHT_PAREN
-                )
-            }
         }
     }
     impl_display_pair!();
@@ -756,25 +717,6 @@ impl FiniteSeqListObj {
     }
     impl_display_pair!();
 }
-impl_obj_kw_call!(MatrixSet, MATRIX, set, row_len, col_len);
-
-impl MatrixListObj {
-    pub fn internal_representation(&self) -> String {
-        let mut out = String::new();
-        out.push_str(&format!("{}", LEFT_BRACKET));
-        for (ri, row) in self.rows.iter().enumerate() {
-            if ri > 0 {
-                out.push_str(&format!("{} ", COMMA));
-            }
-            out.push_str(&format!("{}", LEFT_BRACKET));
-            out.push_str(&row.iter().map(|o| o.internal_representation()).collect::<Vec<_>>().join(", "));
-            out.push_str(&format!("{}", RIGHT_BRACKET));
-        }
-        out.push_str(&format!("{}", RIGHT_BRACKET));
-        out
-    }
-    impl_display_pair!();
-}
 impl ObjAtIndex {
     pub fn internal_representation(&self) -> String {
         let mut out = String::new();
@@ -1001,61 +943,6 @@ impl Log {
         out.push_str(&format!("{} ", COMMA));
         out.push_str(&self.arg.internal_representation());
         out.push_str(&format!("{}", RIGHT_PAREN));
-        out
-    }
-    impl_display_pair!();
-}
-impl MatrixAdd {
-    pub fn internal_representation(&self) -> String {
-        let mut out = String::new();
-        out.push_str(&self.left.internal_representation());
-        out.push_str(&format!(" {} ", MATRIX_ADD));
-        out.push_str(&self.right.internal_representation());
-    
-        out
-    }
-    impl_display_pair!();
-}
-impl MatrixSub {
-    pub fn internal_representation(&self) -> String {
-        let mut out = String::new();
-        out.push_str(&self.left.internal_representation());
-        out.push_str(&format!(" {} ", MATRIX_SUB));
-        out.push_str(&self.right.internal_representation());
-    
-        out
-    }
-    impl_display_pair!();
-}
-impl MatrixMul {
-    pub fn internal_representation(&self) -> String {
-        let mut out = String::new();
-        out.push_str(&self.left.internal_representation());
-        out.push_str(&format!(" {} ", MATRIX_MUL));
-        out.push_str(&self.right.internal_representation());
-    
-        out
-    }
-    impl_display_pair!();
-}
-impl MatrixScalarMul {
-    pub fn internal_representation(&self) -> String {
-        let mut out = String::new();
-        out.push_str(&self.scalar.internal_representation());
-        out.push_str(&format!(" {} ", MATRIX_SCALAR_MUL));
-        out.push_str(&self.matrix.internal_representation());
-    
-        out
-    }
-    impl_display_pair!();
-}
-impl MatrixPow {
-    pub fn internal_representation(&self) -> String {
-        let mut out = String::new();
-        out.push_str(&self.base.internal_representation());
-        out.push_str(&format!(" {} ", MATRIX_POW));
-        out.push_str(&self.exponent.internal_representation());
-    
         out
     }
     impl_display_pair!();
