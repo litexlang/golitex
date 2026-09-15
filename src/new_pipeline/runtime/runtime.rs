@@ -200,7 +200,7 @@ impl Runtime {
 
     // Run `f` in a fresh local ExecEnv; on success return (value, closed local env).
     // On error the local env is discarded.
-    pub fn run_in_local_env_and_take<T, F>(&mut self, f: F) -> RuntimeResult<(T, Box<ExecEnv>)>
+    pub fn run_in_local_env_and_take_env<T, F>(&mut self, f: F) -> RuntimeResult<(T, Box<ExecEnv>)>
     where
         F: FnOnce(&mut Self) -> RuntimeResult<T>,
     {

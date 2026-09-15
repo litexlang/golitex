@@ -1,23 +1,24 @@
 use super::exec_stmt_result::{
-    ExecHaveObjInNonemptySetStmtResult, HaveObjGroupNonemptyCheckResult, StoreHaveObjAndInferResult,
+    ExecHaveObjInNonemptySetStmtFailed, ExecHaveObjInNonemptySetStmtResult,
+    HaveObjGroupNonemptyCheckResult, StoreHaveObjAndInferResult,
 };
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact, IsNonemptySetFact};
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::ast::stmt::HaveObjInNonemptySetOrParamTypeStmt;
 use crate::new_pipeline::exec_env::DefinedIdentifierInfo;
-use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
+use crate::new_pipeline::execute::execute_fact_stmt::{
+    VerifyObjWellDefinedResult, VerifyState,
+};
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
 impl Runtime {
     // `have x S` / `have A nonempty_set` / …
-    // 1. WD each param type
-    // 2. prove nonempty obligations (Obj carriers only)
-    // 3. record symbols; type-fact ids go in the result (facts store not wired yet)
     pub(super) fn exec_have_obj_in_nonempty_set_stmt(
         &mut self,
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,
-    ) -> RuntimeResult<ExecHaveObjInNonemptySetStmtResult> {
+    ) -> RuntimeResult<Result<ExecHaveObjInNonemptySetStmtResult, ExecHaveObjInNonemptySetStmtFailed>>
+    {
         let verify_state = VerifyState {
             can_use_forall_fact: true,
             can_use_known_algebraic_rewrite: true,
@@ -27,31 +28,36 @@ impl Runtime {
         let param_type_well_defined =
             self.verify_typed_parameters_well_definedness(&stmt.param_def, verify_state.clone())?;
         for proof in &param_type_well_defined {
-            if proof.is_unknown() {
-                return Err(RuntimeError::Unknown(
-                    "have: unable to establish well-definedness of parameter type".to_string(),
-                ));
+            if proof.is_failed() {
+                return Ok(Err(ExecHaveObjInNonemptySetStmtFailed::ParamType(
+                    VerifyObjWellDefinedResult::FailToVerifyWellDefined,
+                )));
             }
         }
 
         let nonempty_checks =
-            self.verify_have_obj_nonempty_obligations(&stmt.param_def, verify_state)?;
+            match self.verify_have_obj_nonempty_obligations(&stmt.param_def, verify_state)? {
+                Ok(checks) => checks,
+                Err(failed) => return Ok(Err(failed)),
+            };
 
         let store_and_infer_result = self.affect_have_obj_in_nonempty_set_environment(stmt)?;
 
-        Ok(ExecHaveObjInNonemptySetStmtResult {
+        Ok(Ok(ExecHaveObjInNonemptySetStmtResult {
             statement: stmt.clone(),
             param_type_well_defined,
             nonempty_checks,
             store_and_infer_result,
-        })
+        }))
     }
 
     fn verify_have_obj_nonempty_obligations(
         &mut self,
         param_def: &TypedParameterList,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Vec<HaveObjGroupNonemptyCheckResult>> {
+    ) -> RuntimeResult<
+        Result<Vec<HaveObjGroupNonemptyCheckResult>, ExecHaveObjInNonemptySetStmtFailed>,
+    > {
         let mut out = Vec::new();
         for group in &param_def.groups {
             let check = match &group.param_type {
@@ -67,17 +73,17 @@ impl Runtime {
                         line_file: None,
                     }));
                     let verify_result = self.verify_fact(&fact, verify_state.clone())?;
-                    if verify_result.is_unknown() {
-                        return Err(RuntimeError::Unknown(
-                            "have: unable to prove carrier set is nonempty".to_string(),
-                        ));
+                    if verify_result.is_failed() {
+                        return Ok(Err(ExecHaveObjInNonemptySetStmtFailed::NonemptyCheck(
+                            verify_result,
+                        )));
                     }
                     HaveObjGroupNonemptyCheckResult::Obj(verify_result)
                 }
             };
             out.push(check);
         }
-        Ok(out)
+        Ok(Ok(out))
     }
 
     fn affect_have_obj_in_nonempty_set_environment(
@@ -87,12 +93,7 @@ impl Runtime {
         let mut stored_fact_ids = Vec::new();
         for group in &stmt.param_def.groups {
             for identifier in &group.params {
-                if self
-                    .top_exec_env()
-                    .definitions
-                    .identifiers
-                    .contains_key(&identifier.name)
-                {
+                if self.identifier_defined_in_stack(&identifier.name) {
                     return Err(RuntimeError::Invariant(format!(
                         "identifier `{}` is already defined in this ExecEnv",
                         identifier.name
@@ -105,7 +106,6 @@ impl Runtime {
                     },
                 );
 
-                // Type facts belong in KnownFactMemory once that store is wired.
                 stored_fact_ids.push(self.ids.allocate_fact_id());
             }
         }

@@ -1,19 +1,19 @@
 //! Requirement-fact verification for object WD (new_pipeline AST).
 //!
 //! Mirrors old target_requirements: after child WD, prove domain facts true.
-//! Search miss returns Ok(Unknown), same as fact proof search — not Err.
+//! Search miss returns Ok(FailTo*), same as fact proof search — not Err.
 
 use crate::new_pipeline::ast::fact::{AtomicFact, InFact};
 use crate::new_pipeline::ast::obj::{Obj, StandardSet};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::VerifyAtomicExceptEqualityFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::{
-    UnknownVerifyFactResult, VerifyFactResult,
+    VerifyFactResult,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
-    // Prove one atomic requirement. Ok(Unknown) if WD or truth search fails.
+    // Prove one atomic requirement. Ok(FailTo*) if WD or truth search fails.
     pub(super) fn verify_required_atomic_fact(
         &mut self,
         fact: AtomicFact,
@@ -22,10 +22,8 @@ impl Runtime {
     ) -> RuntimeResult<VerifyFactResult> {
         let well_defined_proof =
             self.verify_atomic_fact_well_definedness(&fact, verify_state.clone())?;
-        if well_defined_proof.is_unknown() {
-            return Ok(VerifyFactResult::Unknown(
-                UnknownVerifyFactResult::UnknownWellDefined,
-            ));
+        if well_defined_proof.is_failed() {
+            return Ok(VerifyFactResult::FailToVerifyWellDefined);
         }
         match self.search_atomic_except_equality_fact_proof(&fact, verify_state)? {
             Some(searched_proof) => Ok(VerifyFactResult::AtomicExceptEquality(Box::new(
@@ -35,9 +33,7 @@ impl Runtime {
                     searched_proof,
                 },
             ))),
-            None => Ok(VerifyFactResult::Unknown(
-                UnknownVerifyFactResult::UnableToSearchProof,
-            )),
+            None => Ok(VerifyFactResult::FailToSearchProof),
         }
     }
 

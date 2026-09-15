@@ -7,13 +7,15 @@
 //! 4. close local env into the result
 //! 5. store the prop definition in the parent ExecEnv
 
-use super::super::exec_stmt_result::StoreHaveObjAndInferResult;
+use super::super::exec_stmt_result::{ExecDefPropStmtFailed, StoreHaveObjAndInferResult};
 use crate::new_pipeline::ast::stmt::DefPropStmt;
 use crate::new_pipeline::exec_env::exec_env::ExecEnv;
 use crate::new_pipeline::exec_env::DefinedIdentifierInfo;
 use crate::new_pipeline::execute::execute_fact_stmt::{
-    FactWellDefinedProof, ParamTypeWellDefinedProof, VerifyState,
+    FactWellDefinedProof, ParamTypeWellDefinedProof, VerifyFactResult, VerifyObjWellDefinedResult,
+    VerifyState,
 };
+use crate::new_pipeline::parse::keywords::{ABSTRACT_PROP, PROP};
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
 /// `prop name(...): body` pipeline result.
@@ -36,36 +38,40 @@ impl Runtime {
     //   prop is_one(x R):
     //       x = 1
     //   // R WD; x bound locally; x = 1 WD under x; prop stored globally
-    pub fn exec_def_prop_stmt(
+    pub(in crate::new_pipeline::execute) fn exec_def_prop_stmt(
         &mut self,
         def_prop: &DefPropStmt,
-    ) -> RuntimeResult<ExecDefPropStmtResult> {
+    ) -> RuntimeResult<Result<ExecDefPropStmtResult, ExecDefPropStmtFailed>> {
         self.ensure_def_prop_name_free(&def_prop.name)?;
 
-        let ((param_type_well_defined, defined_params, iff_fact_well_defined), local_env) =
-            self.run_in_local_env_and_take(|rt| rt.exec_def_prop_stmt_in_local(def_prop))?;
+        let (local_outcome, local_env) =
+            self.run_in_local_env_and_take_env(|rt| rt.exec_def_prop_stmt_in_local(def_prop))?;
+
+        let (param_type_well_defined, defined_params, iff_fact_well_defined) = match local_outcome {
+            Ok(parts) => parts,
+            Err(failed) => return Ok(Err(failed)),
+        };
 
         self.top_exec_env_mut().store_def_prop(def_prop.clone());
 
-        Ok(ExecDefPropStmtResult {
+        Ok(Ok(ExecDefPropStmtResult {
             statement: def_prop.clone(),
             param_type_well_defined,
             defined_params,
             iff_fact_well_defined,
             local_env,
-        })
+        }))
     }
 
     fn ensure_def_prop_name_free(&self, name: &str) -> RuntimeResult<()> {
-        let env = self.top_exec_env();
-        if env.lookup_def_prop(name).is_some() {
+        if self.def_prop_visible_in_stack(name).is_some() {
             return Err(RuntimeError::Invariant(format!(
-                "name `{name}` is already used in this scope as prop"
+                "name `{name}` is already used in this scope as {PROP}"
             )));
         }
-        if env.lookup_def_abstract_prop(name).is_some() {
+        if self.def_abstract_prop_visible_in_stack(name).is_some() {
             return Err(RuntimeError::Invariant(format!(
-                "name `{name}` is already used in this scope as abstract_prop"
+                "name `{name}` is already used in this scope as {ABSTRACT_PROP}"
             )));
         }
         Ok(())
@@ -74,11 +80,16 @@ impl Runtime {
     fn exec_def_prop_stmt_in_local(
         &mut self,
         def_prop: &DefPropStmt,
-    ) -> RuntimeResult<(
-        Vec<ParamTypeWellDefinedProof>,
-        StoreHaveObjAndInferResult,
-        Vec<FactWellDefinedProof>,
-    )> {
+    ) -> RuntimeResult<
+        Result<
+            (
+                Vec<ParamTypeWellDefinedProof>,
+                StoreHaveObjAndInferResult,
+                Vec<FactWellDefinedProof>,
+            ),
+            ExecDefPropStmtFailed,
+        >,
+    > {
         let verify_state = VerifyState {
             can_use_forall_fact: true,
             can_use_known_algebraic_rewrite: true,
@@ -90,10 +101,10 @@ impl Runtime {
             verify_state.clone(),
         )?;
         for proof in &param_type_well_defined {
-            if proof.is_unknown() {
-                return Err(RuntimeError::Unknown(
-                    "prop: unable to establish well-definedness of parameter type".to_string(),
-                ));
+            if proof.is_failed() {
+                return Ok(Err(ExecDefPropStmtFailed::ParamType(
+                    VerifyObjWellDefinedResult::FailToVerifyWellDefined,
+                )));
             }
         }
 
@@ -102,19 +113,19 @@ impl Runtime {
         let mut iff_fact_well_defined = Vec::with_capacity(def_prop.iff_facts.len());
         for fact in &def_prop.iff_facts {
             let wd = self.verify_fact_well_definedness(fact, verify_state.clone())?;
-            if wd.is_unknown() {
-                return Err(RuntimeError::Unknown(
-                    "prop: unable to establish well-definedness of iff fact".to_string(),
-                ));
+            if wd.is_failed() {
+                return Ok(Err(ExecDefPropStmtFailed::IffFactWellDefined(
+                    VerifyFactResult::FailToVerifyWellDefined,
+                )));
             }
             iff_fact_well_defined.push(wd);
         }
 
-        Ok((
+        Ok(Ok((
             param_type_well_defined,
             defined_params,
             iff_fact_well_defined,
-        ))
+        )))
     }
 
     fn define_def_prop_params_in_local(

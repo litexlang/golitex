@@ -7,10 +7,9 @@ impl Runtime {
     // Exact ByCache is handled in `verify_fact` before this entry.
     pub fn verify_chain_fact(
         &mut self,
-        fact: &ChainFact,
-        verify_state: VerifyState,
+        _fact: &ChainFact,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<VerifyChainFactResult>> {
-        let _ = (fact, verify_state);
         Ok(None)
     }
 }

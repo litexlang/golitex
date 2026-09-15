@@ -17,9 +17,8 @@ impl Runtime {
     pub fn search_is_cart_fact_proof_by_builtin_rule(
         &mut self,
         fact: &IsCartFact,
-        verify_state: VerifyState,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<IsCartFactSearchProofByBuiltinRule>> {
-        let _ = verify_state;
         match &fact.set {
             Obj::Cart(_) => Ok(Some(IsCartFactSearchProofByBuiltinRule::CartConstructor(
                 CartConstructorBuiltinRuleProof {},

@@ -10,7 +10,6 @@ impl Runtime {
         &mut self,
         _verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedProofByDef> {
-        let _ = self;
         Ok(ObjWellDefinedProofByDef::leaf())
     }
 
@@ -18,7 +17,6 @@ impl Runtime {
         &mut self,
         _verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedProofByDef> {
-        let _ = self;
         Ok(ObjWellDefinedProofByDef::leaf())
     }
 
@@ -38,7 +36,6 @@ impl Runtime {
     }
 
     fn collect_fn_obj_head_child_objs<'a>(&self, head: &'a FnObjHead, children: &mut Vec<&'a Obj>) {
-        let _ = self;
         match head {
             FnObjHead::Identifier(_) | FnObjHead::IdentifierWithMod(_) => {}
             FnObjHead::AnonymousFnLiteral(anon) => {
@@ -83,7 +80,6 @@ impl Runtime {
             children.push(group.param_type.as_ref());
         }
         children.push(value.alpha.ret_set.as_ref());
-        let _ = &value.alpha.dom_facts;
         self.verify_objs_as_children(&children, verify_state)
     }
 
@@ -98,7 +94,6 @@ impl Runtime {
         }
         children.push(value.alpha.body.ret_set.as_ref());
         children.push(value.alpha.equal_to.as_ref());
-        let _ = &value.alpha.body.dom_facts;
         self.verify_objs_as_children(&children, verify_state)
     }
 }

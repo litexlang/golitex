@@ -17,9 +17,8 @@ impl Runtime {
     pub fn search_not_is_nonempty_set_fact_proof_by_builtin_rule(
         &mut self,
         fact: &NotIsNonemptySetFact,
-        verify_state: VerifyState,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotIsNonemptySetFactSearchProofByBuiltinRule>> {
-        let _ = verify_state;
         match &fact.set {
             Obj::ListSet(list_set) if list_set.list.is_empty() => Ok(Some(
                 NotIsNonemptySetFactSearchProofByBuiltinRule::EmptyListSet(

@@ -15,10 +15,9 @@ impl Runtime {
     // Example: prove `is_set(1)`, `is_set(R)`.
     pub fn search_is_set_fact_proof_by_builtin_rule(
         &mut self,
-        fact: &IsSetFact,
-        verify_state: VerifyState,
+        _fact: &IsSetFact,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<IsSetFactSearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
         Ok(Some(IsSetFactSearchProofByBuiltinRule::AlwaysTrue(
             IsSetAlwaysTrueBuiltinRuleProof {},
         )))

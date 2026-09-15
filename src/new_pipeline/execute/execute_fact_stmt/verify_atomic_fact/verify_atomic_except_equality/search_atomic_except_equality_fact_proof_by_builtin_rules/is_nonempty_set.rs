@@ -38,9 +38,8 @@ impl Runtime {
     pub fn search_is_nonempty_set_fact_proof_by_builtin_rule(
         &mut self,
         fact: &IsNonemptySetFact,
-        verify_state: VerifyState,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<IsNonemptySetFactSearchProofByBuiltinRule>> {
-        let _ = verify_state;
         match &fact.set {
             Obj::StandardSet(target_set) => Ok(Some(
                 IsNonemptySetFactSearchProofByBuiltinRule::StandardSetNonempty(

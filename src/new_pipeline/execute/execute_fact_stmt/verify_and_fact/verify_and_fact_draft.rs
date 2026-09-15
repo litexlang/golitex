@@ -28,7 +28,7 @@ impl Runtime {
         let mut proof_of_each_conjunct = Vec::new();
         for conjunct in fact.facts.iter() {
             let proof = self.verify_atomic_fact(conjunct, verify_state.clone())?;
-            if proof.is_unknown() {
+            if proof.is_failed() {
                 return Ok(vec![proof]);
             }
             proof_of_each_conjunct.push(proof);

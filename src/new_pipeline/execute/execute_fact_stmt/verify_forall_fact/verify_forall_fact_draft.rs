@@ -45,10 +45,9 @@ impl Runtime {
     // Inside the temporary scope: verify every then fact in source order.
     pub fn verify_forall_then_facts(
         &mut self,
-        fact: &ForallFact,
-        verify_state: &VerifyState,
+        _fact: &ForallFact,
+        _verify_state: &VerifyState,
     ) -> Result<Vec<VerifyFactResult>, RuntimeError> {
-        let _ = (fact, verify_state);
         todo!("verify forall then facts")
     }
 }

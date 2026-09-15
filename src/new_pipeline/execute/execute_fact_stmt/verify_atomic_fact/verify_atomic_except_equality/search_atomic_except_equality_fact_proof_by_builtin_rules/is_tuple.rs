@@ -17,9 +17,8 @@ impl Runtime {
     pub fn search_is_tuple_fact_proof_by_builtin_rule(
         &mut self,
         fact: &IsTupleFact,
-        verify_state: VerifyState,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<IsTupleFactSearchProofByBuiltinRule>> {
-        let _ = verify_state;
         match &fact.set {
             Obj::Tuple(tuple) if tuple.args.len() >= 2 => Ok(Some(
                 IsTupleFactSearchProofByBuiltinRule::TupleLiteral(TupleLiteralBuiltinRuleProof {}),

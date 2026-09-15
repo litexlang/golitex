@@ -39,10 +39,9 @@ impl Runtime {
 
     pub fn search_not_exist_fact_proof_by_demorgan_forall(
         &mut self,
-        fact: &PlainExistFact,
-        verify_state: VerifyState,
+        _fact: &PlainExistFact,
+        _verify_state: VerifyState,
     ) -> Result<Option<VerifyForallFactResult>, RuntimeError> {
-        let _ = (fact, verify_state);
         todo!("search not exist by demorgan forall")
     }
 }

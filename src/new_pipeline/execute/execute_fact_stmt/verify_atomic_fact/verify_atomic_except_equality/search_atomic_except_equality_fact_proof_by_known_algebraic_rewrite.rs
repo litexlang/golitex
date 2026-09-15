@@ -24,10 +24,9 @@ pub struct AtomicExceptEqualityFactSearchProofByKnownSymmetry {
 impl Runtime {
     pub fn search_atomic_except_equality_fact_proof_by_known_algebraic_rewrite(
         &mut self,
-        fact: &AtomicFact,
-        verify_state: VerifyState,
+        _fact: &AtomicFact,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByKnownAlgebraicRewrite>> {
-        let _ = (fact, verify_state);
         Ok(None)
     }
 }

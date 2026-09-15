@@ -15,9 +15,8 @@ impl Runtime {
     pub fn search_equal_fact_proof_by_known_equality(
         &mut self,
         fact: &EqualFact,
-        verify_state: VerifyState,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualFactSearchedProofByKnownEquality>> {
-        let _ = verify_state;
         Ok(self
             .known_equality_path(&fact.left, &fact.right)
             .map(|path| EqualFactSearchedProofByKnownEquality { path }))

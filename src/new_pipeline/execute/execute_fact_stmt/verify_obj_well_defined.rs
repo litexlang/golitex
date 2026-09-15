@@ -21,9 +21,8 @@ impl Runtime {
     pub fn verify_draft_obj_well_definedness(
         &mut self,
         obj: &Obj,
-        verify_state: VerifyState,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<WellDefinednessProofOfObj> {
-        let _ = &verify_state;
 
         match obj {
             Obj::Number(_)
@@ -32,7 +31,7 @@ impl Runtime {
             | Obj::Pi(_)
             | Obj::StandardSet(_)
             | Obj::Atom(_) => Ok(WellDefinednessProofOfObj::ByTrivial),
-            Obj::Add(add) => self.verify_add_obj_well_definedness(add, verify_state),
+            Obj::Add(add) => self.verify_add_obj_well_definedness(add, _verify_state),
             _ => Err(RuntimeError::Unknown(
                 "object well-definedness for this Obj variant is not wired yet".to_string(),
             )),
@@ -41,10 +40,9 @@ impl Runtime {
 
     fn verify_add_obj_well_definedness(
         &mut self,
-        add: &Add,
-        verify_state: VerifyState,
+        _add: &Add,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<WellDefinednessProofOfObj> {
-        let _ = (add, verify_state);
         Err(RuntimeError::Unknown(
             "well-definedness for Add is not wired yet".to_string(),
         ))

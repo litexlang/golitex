@@ -42,9 +42,8 @@ impl Runtime {
     pub fn search_in_fact_proof_by_builtin_rule(
         &mut self,
         fact: &InFact,
-        verify_state: VerifyState,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
-        let _ = verify_state;
         if let Some(kind) = native_constant_membership_kind(&fact.element, &fact.set) {
             return Ok(Some(
                 InFactSearchProofByBuiltinRule::NativeConstantMembership(

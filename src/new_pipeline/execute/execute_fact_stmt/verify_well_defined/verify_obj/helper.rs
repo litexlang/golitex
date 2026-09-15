@@ -52,7 +52,6 @@ impl Runtime {
             crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult,
         >,
     ) -> ObjWellDefinedProofByDef {
-        let _ = self;
         proof.requirement_fact_verified = requirement_fact_verified;
         proof
     }
