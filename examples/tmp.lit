@@ -1,14 +1,6 @@
-# alpha_normalize on set-builder: {x…} and {y…} share □0 IR / ByCache.
+`# ByEqualIr: alpha IR match makes set-builder equality.
 
-abstract_prop p(s set)
+{x R: x > 0} = {y R: y > 0}
 
-trust:
-    $p({x R: x > 0})
-
-$p({y R: y > 0})
-
-# Nested binders get distinct □0 / □1 under one counter.
-trust:
-    $p({x R: x $in {y R: y > 0}})
-
-$p({a R: a $in {b R: b > 0}})
+{a R: a $in {b R: b > 0}} = {c R: c $in {d R: d > 0}}
+`

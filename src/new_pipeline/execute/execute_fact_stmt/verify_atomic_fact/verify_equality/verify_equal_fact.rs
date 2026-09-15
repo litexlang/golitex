@@ -17,10 +17,8 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
-        let well_defined_proof = self.verify_atomic_fact_well_definedness(
-            &(fact.clone().into()),
-            verify_state.clone(),
-        )?;
+        let well_defined_proof =
+            self.verify_atomic_fact_well_definedness(&(fact.clone().into()), verify_state.clone())?;
         match self.search_equal_fact_proof(fact, verify_state)? {
             Some(searched_proof) => {
                 Ok(VerifyFactResult::Equality(Box::new(VerifyEqualityResult {
@@ -48,7 +46,7 @@ impl Runtime {
         }
 
         if let Some(result) =
-            self.search_equal_fact_proof_by_builtin_rule(fact, verify_state.clone())?
+            self.search_equal_fact_builtin_rule(fact, verify_state.clone())?
         {
             return Ok(Some(EqualFactSearchedProof::ByBuiltinRule(result)));
         }
@@ -65,10 +63,12 @@ impl Runtime {
             return Ok(Some(EqualFactSearchedProof::ByBuiltinStrategy(result)));
         }
 
-        if let Some(result) =
-            self.search_equal_fact_proof_by_known_forall_fact(fact, verify_state)?
-        {
-            return Ok(Some(EqualFactSearchedProof::ByKnownForallFact(result)));
+        if verify_state.can_use_forall_fact {
+            if let Some(result) =
+                self.search_equal_fact_proof_by_known_forall_fact(fact, verify_state)?
+            {
+                return Ok(Some(EqualFactSearchedProof::ByKnownForallFact(result)));
+            }
         }
 
         Ok(None)
