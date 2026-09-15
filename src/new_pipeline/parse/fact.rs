@@ -475,7 +475,7 @@ impl Runtime {
         if tb.peek() == Some(FACT_PREFIX) {
             tb.advance()?;
             let prop = self.parse_prop_name(tb)?;
-            if matches!(&prop, AtomicName::WithoutMod(s) if s == IN) {
+            if matches!(&prop, AtomicName::Plain { name } if name == IN) {
                 return Err(RuntimeParseError::new(
                     "leading `$in` is invalid; write `x $in S`",
                     tb.line,
@@ -500,8 +500,8 @@ impl Runtime {
                 tb.advance()?;
                 let prop = self.parse_prop_name(tb)?;
                 let prop_str = match &prop {
-                    AtomicName::WithoutMod(s) => s.as_str(),
-                    AtomicName::WithMod(_, _) => {
+                    AtomicName::Plain { name } => name.as_str(),
+                    AtomicName::WithMod { .. } | AtomicName::WithModAndExport { .. } => {
                         return Err(RuntimeParseError::new(
                             "mod-qualified infix `$Mod::prop` is not supported; use `$Mod::prop(...)`",
                             tb.line,
@@ -560,7 +560,7 @@ impl Runtime {
             }
             if is_comparison_op(&tok) {
                 tb.advance()?;
-                prop_names.push(AtomicName::WithoutMod(tok));
+                prop_names.push(AtomicName::Plain { name: tok });
                 objs.push(parse_obj(self, tb)?);
                 continue;
             }
@@ -603,12 +603,31 @@ impl Runtime {
 
     fn parse_prop_name(&mut self, tb: &mut TokenBlock) -> RuntimeResult<AtomicName> {
         let first = tb.advance()?;
-        if tb.peek() == Some(MOD_SIGN) {
+        if tb.peek() != Some(MOD_SIGN) {
+            return Ok(AtomicName::Plain { name: first });
+        }
+        let mut parts = vec![first];
+        while tb.peek() == Some(MOD_SIGN) {
             tb.advance()?;
-            let second = tb.advance()?;
-            Ok(AtomicName::WithMod(first, second))
-        } else {
-            Ok(AtomicName::WithoutMod(first))
+            let next = tb.advance()?;
+            parts.push(next);
+        }
+        match parts.len() {
+            2 => Ok(AtomicName::WithMod {
+                mod_name: parts[0].clone(),
+                name: parts[1].clone(),
+            }),
+            3 => Ok(AtomicName::WithModAndExport {
+                mod_name: parts[0].clone(),
+                export_name: parts[1].clone(),
+                name: parts[2].clone(),
+            }),
+            _ => Err(RuntimeParseError::new(
+                "qualified prop name must be `Mod::name` or `Mod::Export::name` (at most three segments)",
+                tb.line,
+                tb.source_path.clone(),
+            )
+            .into()),
         }
     }
 }

@@ -11,7 +11,7 @@ use super::param::SetBoundParameterList;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Obj {
-    Atom(AtomObj),
+    Identifier(IdentifierObj),
     FnObj(FnObj),
     Number(Number),
     ImaginaryUnit(ImaginaryUnit),
@@ -88,29 +88,28 @@ pub enum Obj {
     IntervalObj(IntervalObj),
 }
 
-// Atom
+// Binder / parameter name (always plain; never module-qualified).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Identifier {
     pub name: String,
 }
 
+// Free or module-qualified name used as an object (at most three `::` segments).
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct IdentifierWithMod {
-    pub mod_name: String,
-    pub name: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum AtomObj {
-    Identifier(Identifier),
-    IdentifierWithMod(IdentifierWithMod),
+pub enum IdentifierObj {
+    Plain { name: String },
+    WithMod { mod_name: String, name: String },
+    WithModAndExport {
+        mod_name: String,
+        export_name: String,
+        name: String,
+    },
 }
 
 // FnObj
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FnObjHead {
-    Identifier(Identifier),
-    IdentifierWithMod(IdentifierWithMod),
+    Identifier(IdentifierObj),
     /// Anonymous function literal used as applied head, e.g. `fn(x R) R {x}(a)`.
     AnonymousFnLiteral(Box<AnonymousFn>),
     FiniteSeqListObj(FiniteSeqListObj),

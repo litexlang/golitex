@@ -51,8 +51,8 @@ impl Runtime {
         line_file: LineFile,
     ) -> RuntimeResult<AtomicFact> {
         let name = match &prop {
-            AtomicName::WithoutMod(s) => s.as_str(),
-            AtomicName::WithMod(_, _) => {
+            AtomicName::Plain { name } => name.as_str(),
+            AtomicName::WithMod { .. } | AtomicName::WithModAndExport { .. } => {
                 return Ok(normal_or_not(
                     self.ids.allocate_fact_id(),
                     prop,

@@ -134,7 +134,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedProofByDef> {
         match obj {
-            Obj::Atom(_) => self.verify_atom_obj_well_definedness_by_def(verify_state),
+            Obj::Identifier(_) => self.verify_atom_obj_well_definedness_by_def(verify_state),
             Obj::FnObj(value) => self.verify_fn_obj_well_definedness_by_def(value, verify_state),
             Obj::Number(_) => self.verify_number_obj_well_definedness_by_def(verify_state),
             Obj::ImaginaryUnit(_) => {

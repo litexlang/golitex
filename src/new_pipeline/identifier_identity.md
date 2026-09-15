@@ -14,7 +14,8 @@ Related owners:
 | Area | Path |
 |------|------|
 | Parse occupy / no-shadow | `parse/`, `runtime::ParseScope` / `OccupiedName` |
-| AST atoms | `ast/obj.rs` `Identifier` / `IdentifierWithMod` (name only) |
+| AST atoms | `ast/obj.rs` `IdentifierObj` (Plain / WithMod / WithModAndExport) |
+| Binder params | `ast/obj.rs` `Identifier` (plain name only) |
 | IR spelling | `display_and_ir/` (`ir()` = surface name; no `#id#`) |
 | Fact store / IR index | `exec_env/known_fact_memory.rs` |
 | Obj WD ByKnown | `execute_fact_stmt/verify_well_defined/verify_obj/` |
@@ -29,7 +30,8 @@ At any time, a surface name denotes **one** symbol identity for the whole
 session:
 
 - Plain `y` is always that same `y`.
-- `mod::y` is always that same `mod::y` (distinct from plain `y`).
+- `Mod::y` is always that same `Mod::y` (distinct from plain `y`).
+- `Mod::Export::y` is always that same three-segment name (no submodule; at most three `::` parts).
 - Reusing the letter after a binder scope ends is **letter reuse**, like on
   paper: stored AST may still contain binder spelling `y`, and a later
   `have y` is the same name identity, not a second binding instance.
@@ -69,7 +71,7 @@ identity it is wrong.
 Therefore:
 
 - **`IdentifierId` was removed** from new_pipeline AST and id allocation.
-- Atom IR is the surface name (`x` or `Mod::x`).
+- Atom IR is the surface name (`x`, `Mod::x`, or `Mod::Export::x`).
 - Exact `FactIR` may index **every closed `Fact` shape**, including
   `forall`, because same spelling ⇒ same identity (store / merge).
 
@@ -79,7 +81,7 @@ Therefore:
 |----|------|
 | `FactId` | Proof citation / store handle |
 | `WellDefinednessId` | WD proof citation (obj WD ByKnown cites this) |
-| `OccupiedName` / `IdentifierWithMod` | Module qualification, not occurrence |
+| `OccupiedName` / `IdentifierObj` / `AtomicName` | Module qualification (≤3 segments), not occurrence |
 
 ---
 
@@ -254,7 +256,7 @@ sameness** must be the nameless key, not a renamed speakable letter.
 
 ### Locally nameless contract (proposed)
 
-1. **Free** occurrences in IR stay surface names (`x`, `Mod::x`) — name is
+1. **Free** occurrences in IR stay surface names (`x`, `Mod::x`, `Mod::Export::x`) — name is
    identity unchanged.
 2. **Bound** occurrences under a binder-carrying object are emitted as
    De Bruijn indices (or equivalent nameless slots), never as the binder’s

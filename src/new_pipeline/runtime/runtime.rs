@@ -2,9 +2,7 @@ use super::error::{RuntimeError, RuntimeResult};
 use super::real_or_virtual_path::RealOrVirtualPath;
 use super::runtime_ids::{FactId, PropAlgebraicPropertyId, WellDefinednessId};
 use crate::new_pipeline::exec_env::exec_env::ExecEnv;
-use crate::new_pipeline::module_manager::{
-    ExportFileAndItsExecEnv, ModuleHierarchy, ModuleManager,
-};
+use crate::new_pipeline::module_manager::{ExportFileAndItsExecEnv, ModuleManager};
 use std::collections::HashSet;
 
 // -----------------------------------------------------------------------------
@@ -25,14 +23,20 @@ pub struct Runtime {
     pub ids: Ids,
 }
 
-/// Name occupied in a parse scope. Plain `x` and `mod::x` are distinct.
+/// Name occupied in a parse scope. Distinct spellings are distinct identities.
 ///
+/// At most three `::` segments (no submodule): `x` | `Mod::x` | `Mod::Export::x`.
 /// Under the locked name-is-identity premise (`identifier_identity.md`), this
 /// name *is* the symbol identity.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum OccupiedName {
     Plain(String),
     WithMod { mod_name: String, name: String },
+    WithModAndExport {
+        mod_name: String,
+        export_name: String,
+        name: String,
+    },
 }
 
 /// One parse layer's occupied names. Inner scopes must not reuse a visible outer name.
@@ -50,7 +54,7 @@ pub struct Ids {
 impl Runtime {
     pub fn new() -> Self {
         Self {
-            module_manager: ModuleManager::new(ModuleHierarchy::Module),
+            module_manager: ModuleManager::new(),
             execution_environments_stack: Vec::new(),
             parse_scope_stack: Vec::new(),
             current_file: RealOrVirtualPath::Eval,
@@ -256,6 +260,11 @@ impl std::fmt::Display for OccupiedName {
         match self {
             OccupiedName::Plain(name) => write!(f, "{name}"),
             OccupiedName::WithMod { mod_name, name } => write!(f, "{mod_name}::{name}"),
+            OccupiedName::WithModAndExport {
+                mod_name,
+                export_name,
+                name,
+            } => write!(f, "{mod_name}::{export_name}::{name}"),
         }
     }
 }

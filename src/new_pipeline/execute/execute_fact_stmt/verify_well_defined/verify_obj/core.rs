@@ -37,7 +37,7 @@ impl Runtime {
 
     fn collect_fn_obj_head_child_objs<'a>(&self, head: &'a FnObjHead, children: &mut Vec<&'a Obj>) {
         match head {
-            FnObjHead::Identifier(_) | FnObjHead::IdentifierWithMod(_) => {}
+            FnObjHead::Identifier(_) => {}
             FnObjHead::AnonymousFnLiteral(anon) => {
                 for group in &anon.alpha.body.set_bound_parameters.groups {
                     children.push(group.param_type.as_ref());

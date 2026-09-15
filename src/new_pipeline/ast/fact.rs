@@ -499,14 +499,8 @@ impl AtomicFact {
             IS_NONEMPTY_SET, IS_SET, IS_TUPLE, LESS, LESS_EQUAL, SUBSET, SUPERSET,
         };
         match self {
-            AtomicFact::NormalAtomicFact(f) => match &f.predicate {
-                AtomicName::WithoutMod(name) => name.clone(),
-                AtomicName::WithMod(module, name) => format!("{module}::{name}"),
-            },
-            AtomicFact::NotNormalAtomicFact(f) => match &f.predicate {
-                AtomicName::WithoutMod(name) => name.clone(),
-                AtomicName::WithMod(module, name) => format!("{module}::{name}"),
-            },
+            AtomicFact::NormalAtomicFact(f) => f.predicate.display_string(),
+            AtomicFact::NotNormalAtomicFact(f) => f.predicate.display_string(),
             AtomicFact::EqualFact(_) | AtomicFact::NotEqualFact(_) => EQUAL.to_string(),
             AtomicFact::LessFact(_) | AtomicFact::NotLessFact(_) => LESS.to_string(),
             AtomicFact::GreaterFact(_) | AtomicFact::NotGreaterFact(_) => GREATER.to_string(),

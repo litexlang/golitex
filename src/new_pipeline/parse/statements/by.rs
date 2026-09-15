@@ -272,7 +272,7 @@ impl Runtime {
         if !is_simple_name(&name_tok) {
             return Err(tb.parse_error(format!("invalid theorem name `{name_tok}`")));
         }
-        let name = AtomicName::WithoutMod(name_tok);
+        let name = AtomicName::Plain { name: name_tok };
         let arguments = if tb.peek() == Some(LEFT_PAREN) {
             tb.expect(LEFT_PAREN)?;
             let mut args = Vec::new();
