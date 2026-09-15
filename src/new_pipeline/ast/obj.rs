@@ -96,14 +96,20 @@ pub struct Identifier {
 
 // Free or module-qualified name used as an object (at most three `::` segments).
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum IdentifierObj {
-    Plain { name: String },
-    WithMod { mod_name: String, name: String },
-    WithModAndExport {
-        mod_name: String,
-        export_name: String,
-        name: String,
-    },
+pub struct IdentifierObj {
+    pub name: AtomicName,
+}
+
+impl IdentifierObj {
+    pub fn new(name: AtomicName) -> Self {
+        Self { name }
+    }
+
+    pub fn plain(name: String) -> Self {
+        Self {
+            name: AtomicName::plain(name),
+        }
+    }
 }
 
 // FnObj

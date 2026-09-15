@@ -4,13 +4,14 @@ use crate::new_pipeline::ast::obj::{
     Max, Min, Number, Obj, Quot, SetMinus, Sin, Sqrt, StandardSet, Tan, Tuple, Union,
 };
 use crate::new_pipeline::ast::param::{ParamType, SetBoundParameterGroup, SetBoundParameterList};
+use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::parse::keywords::{
     ABS, C, CART, CEIL, COLON, COMMA, COS, C_STAR, DOT, EXP, FLOOR, FN, GCD, INTERSECT, LCM,
     LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LN, MAX, MIN, MOD_SIGN, N, N_POS, Q, QUOT, Q_NEG, Q_POS,
     Q_STAR, R, RIGHT_BRACKET, RIGHT_CURLY, RIGHT_PAREN, R_NEG, R_POS, R_STAR, SET_MINUS, SIN, SQRT,
     STRUCT_VIEW_PREFIX, TAN, TUPLE, UNION, Z, Z_NEG, Z_POS, Z_STAR,
 };
-use crate::new_pipeline::runtime::{OccupiedName, Runtime, RuntimeResult};
+use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
 
 use super::expression::parse_obj;
@@ -447,38 +448,16 @@ fn parse_identifier_or_mod_or_standard_set(
             }
             parts.push(next);
         }
-        let (id, key) = match parts.len() {
-            2 => {
-                let mod_name = parts[0].clone();
-                let local = parts[1].clone();
-                (
-                    IdentifierObj::WithMod {
-                        mod_name: mod_name.clone(),
-                        name: local.clone(),
-                    },
-                    OccupiedName::WithMod {
-                        mod_name,
-                        name: local,
-                    },
-                )
-            }
-            3 => {
-                let mod_name = parts[0].clone();
-                let export_name = parts[1].clone();
-                let local = parts[2].clone();
-                (
-                    IdentifierObj::WithModAndExport {
-                        mod_name: mod_name.clone(),
-                        export_name: export_name.clone(),
-                        name: local.clone(),
-                    },
-                    OccupiedName::WithModAndExport {
-                        mod_name,
-                        export_name,
-                        name: local,
-                    },
-                )
-            }
+        let key = match parts.len() {
+            2 => AtomicName::WithMod {
+                mod_name: parts[0].clone(),
+                name: parts[1].clone(),
+            },
+            3 => AtomicName::WithModAndExport {
+                mod_name: parts[0].clone(),
+                export_name: parts[1].clone(),
+                name: parts[2].clone(),
+            },
             _ => {
                 return Err(tb.parse_error(
                     "qualified name must be `Mod::name` or `Mod::Export::name` (at most three segments)",
@@ -486,14 +465,14 @@ fn parse_identifier_or_mod_or_standard_set(
             }
         };
         if !rt.occupied_name_is_visible(&key) {
-            rt.define_atom(key).map_err(|err| match err {
+            rt.define_atom(key.clone()).map_err(|err| match err {
                 crate::new_pipeline::runtime::RuntimeError::Invariant(message) => {
                     tb.parse_error(message)
                 }
                 other => other,
             })?;
         }
-        return Ok(Obj::Identifier(id));
+        return Ok(Obj::Identifier(IdentifierObj::new(key)));
     }
 
     if let Some(set) = standard_set_from_name(&name) {
@@ -507,7 +486,7 @@ fn parse_identifier_or_mod_or_standard_set(
     if !rt.plain_atom_is_visible(&name) {
         return Err(tb.parse_error(format!("undefined name `{name}`")));
     }
-    Ok(Obj::Identifier(IdentifierObj::Plain { name }))
+    Ok(Obj::Identifier(IdentifierObj::plain(name)))
 }
 
 fn standard_set_from_name(name: &str) -> Option<StandardSet> {

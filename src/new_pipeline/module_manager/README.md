@@ -1,29 +1,69 @@
 # new_pipeline module management
 
-Design target for `new_pipeline` module loading. This supersedes the older
-module / submodule tree for the new pipeline. Legacy `module_system` and public
-CLI docs may still describe the old shape until migration catches up.
+Design target for `new_pipeline` module loading and `litex.config`.
 
 ## Goal
 
-Keep one flat unit of composition: a **module**. Nesting is done by **importing
-modules**, not by exporting child module folders. There is no hierarchy
-keyword and no submodule.
+One flat composition unit: a **module** (directory with `litex.config`).
+Nesting is by **importing modules**. No hierarchy keyword, no submodule, no
+flatten in this design.
 
-## Core rules
+## `litex.config` (import / export only)
 
-1. There is **no `submodule`** and **no `[hierarchy]`** section.
-2. A maintained directory is a **module** when it has a `litex.config`.
-3. **`[export]` may name only `.lit` files** (ordered, explicit selection list).
-   It must not export a child directory / nested config node.
-4. **`[import]` may mount another module** (a directory whose config is a
-   module). Import targets modules, not individual `.lit` files.
-5. **`[import std]`** mounts an installed standard package, same as before.
-6. Source `.lit` files still reject `import` as a statement. Reproducible
-   dependencies stay in `litex.config`. Interactive REPL import remains a
-   terminal command only.
+A module manifest has two user-facing tables for now:
 
-## Manifest shape (target)
+### `[export]`
+
+Ordered explicit list. Each entry is one `.lit` file only.
+
+```ini
+[export]
+chap1 = "./chapter01.lit"
+chap2 = "./chapter02.lit"
+```
+
+Invalid: exporting a folder / nested config node.
+
+### `[import]`
+
+Mount another module directory under an alias.
+
+```ini
+[import]
+Algebra = "../Algebra"
+```
+
+Meaning: alias `Algebra` → that folder (must itself be a module).
+
+### `[import std]`
+
+Syntax sugar for mounting a package under the std root. Same runtime object as
+`[import]` after path resolution.
+
+Two spellings when loading `litex.config`:
+
+```ini
+[import std]
+basics
+basics = basics
+myB = basics
+```
+
+- **no `=`:** a bare name `N` means `N = N` (left alias equals right package name).
+- **with `=`:** `Alias = StdName` as usual.
+
+Resolution rule (locked):
+
+- after normalizing the no-`=` form, always `Alias = StdName`
+- mount path is always `<std_root>/<StdName>`
+- examples: `basics` or `basics = basics` → `<std_root>/basics` as `basics`;
+  `myB = basics` → `<std_root>/basics` as `myB`
+
+Not in scope for now: writing a literal std path under ordinary `[import]`
+(e.g. `basics = "/.../std/basics"`). That would be equivalent in principle, but
+is not supported yet.
+
+### Full example
 
 ```ini
 [import]
@@ -31,6 +71,7 @@ Algebra = "../Algebra"
 
 [import std]
 basics
+basics = basics
 
 [export]
 chap1 = "./chapter01.lit"
@@ -38,85 +79,50 @@ chap2 = "./chapter02.lit"
 chap3 = "./chapter03.lit"
 ```
 
-Invalid under the new design:
+### Alias uniqueness
+
+`[import]` and `[import std]` share **one** alias namespace.
+
+These two aliases must not collide (config error / `record_import` error):
 
 ```ini
-[export]
-# child folder / nested config — not allowed
-Part2 = "./Part2"
+[import]
+basics = "../OtherBasics"
+
+[import std]
+basics = basics
 ```
 
-```ini
-[hierarchy]
-submodule
-```
+Canonical cites use the alias, e.g. `Algebra::chap1::name`, `basics::name`,
+`myB::name`.
 
-```ini
-[hierarchy]
-module
-```
+## Runtime sameness
 
-## Asymmetry: export vs import
-
-| Direction | Allowed target | Meaning |
+| Config section | After resolve | In `ModuleManager` |
 |---|---|---|
-| export | `.lit` file only | Ordered public file surface of this module |
-| import | another module | Mount that module's completed world under an alias |
-| import std | installed std package | Mount a standard library package |
+| `[import] Alias = path` | module at `path` | `ImportedModule { name: Alias, path, ... }` |
+| `[import std] N` | same as `N = N` | same `ImportedModule` shape |
+| `[import std] Alias = StdName` | module at `<std_root>/StdName` | same `ImportedModule` shape |
 
-So: you cannot export a module folder into your export table, but you can
-import a sibling or external module and cite it by its mount alias.
+There is no separate `import_std` store.
 
-## How larger projects compose
+## Ownership in `ModuleManager`
 
-Old model: one root module exported a mix of `.lit` files and submodule
-folders; submodules could re-export further children.
+```text
+ModuleManager
+  export_files_and_their_env: Vec<ExportFileAndItsExecEnv>
+  imports: Vec<ImportedModule>   # [import] + [import std]
+```
 
-New model:
+- `ImportedModule`: `name` (alias), `path` (resolved), `module_manager`
+- `record_import` rejects duplicate aliases
+- completed envs stay on the node that executed them; imports are not merged
+  into the importer’s export list
 
-- Each independently runnable / importable package is its own module.
-- A consumer module lists those packages under `[import]`.
-- Inside one module, the public file list is a flat ordered `[export]` of
-  `.lit` paths only.
-- Unlisted files and folders remain sidecars: not parsed, not executed, not
-  in the module namespace, unless some other module mounts them.
+## Explicit non-goals / deferred
 
-Canonical names follow the mount alias and export name, for example
-`Algebra::chap1::name` or `basics::name` after `[import std] basics`.
-
-## Run order (conceptual; not wired in new_pipeline yet)
-
-Within one module:
-
-1. Resolve and run each `[import]` / `[import std]` mount (each imported module
-   runs under its own rules).
-2. Run this module's `[export]` `.lit` files left to right.
-3. `litex -f <file>` on a registered export runs the same prefix through that
-   file, then that file.
-4. `litex -r <module>` runs the full ordered export list of that module after
-   its imports.
-
-There is no “trace back through a submodule parent chain” path, because there
-are no submodules. Cross-package dependency is only via import of modules.
-`new_pipeline` does not implement `-r` / project `-f` mount yet.
-
-## Ownership in `ModuleManager` (code-facing)
-
-Current shape:
-
-- `export_files_and_their_env` — completed export `.lit` files and their envs
-- `import_repos` — mounted imported modules (`ModuleManager` instances)
-- `import_std` — mounted std packages
-
-Completed environments stay on the node that executed them; imported modules
-are not merged into the importer’s export list. Import alias / path wrappers
-may be added later; they are intentionally deferred.
-
-## Explicit non-goals / not carried forward
-
-- No `submodule`.
-- No `[hierarchy]` section.
-- No exporting a configured child directory from `[export]`.
-- No importing a single `.lit` file as a package.
-- `flatten` is not part of this design.
-- `-r` / project `-f` wiring is deferred.
+- No `submodule`, no `[hierarchy]`, no `flatten`
+- No `-r` / project `-f` wiring yet
+- No importing a single `.lit` as a package
+- No ordinary `[import]` of a hand-written std filesystem path yet
+- Config parser / discovery implementation may follow this note later

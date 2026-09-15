@@ -377,20 +377,7 @@ impl IdentifierObj {
         ObjIR(self.display_string())
     }
     pub fn display_string(&self) -> String {
-        match self {
-            IdentifierObj::Plain { name } => name.clone(),
-            IdentifierObj::WithMod { mod_name, name } => {
-                format!("{}{}{}", mod_name, MOD_SIGN, name)
-            }
-            IdentifierObj::WithModAndExport {
-                mod_name,
-                export_name,
-                name,
-            } => format!(
-                "{}{}{}{}{}",
-                mod_name, MOD_SIGN, export_name, MOD_SIGN, name
-            ),
-        }
+        self.name.display_string()
     }
 }
 

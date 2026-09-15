@@ -1,24 +1,4 @@
-# Smoke: wired new_pipeline stmts (fact / let / have / prop / abstract_prop / trust)
+# Prove forall by local introduction: params → then.
 
-# trust
-trust 1 = 1
-
-# let
-let x = 1
-
-# fact (uses merged equality from let: x = 1)
-x = 1
-
-# have
-have y R
-
-# abstract_prop
-abstract_prop P(a)
-
-# prop
-prop is_one(z R):
-    z = 1
-
-# trust have
-trust have a R:
-    a = 1
+forall x R:
+    x = x

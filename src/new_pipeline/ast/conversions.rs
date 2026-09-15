@@ -2,11 +2,12 @@
 //! Prefer `leaf.into()` / `atomic.into()` over `AtomicFact::Variant(leaf)`.
 
 use crate::new_pipeline::ast::fact::{
-    AtomicFact, EqualFact, Fact, FnEqualFact, FnEqualInFact, GreaterEqualFact, GreaterFact, InFact,
-    IsCartFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact, IsTupleFact, LessEqualFact, LessFact,
-    NormalAtomicFact, NotEqualFact, NotGreaterEqualFact, NotGreaterFact, NotInFact, NotIsCartFact,
-    NotIsFiniteSetFact, NotIsNonemptySetFact, NotIsSetFact, NotIsTupleFact, NotLessEqualFact,
-    NotLessFact, NotNormalAtomicFact, NotSubsetFact, NotSupersetFact, SubsetFact, SupersetFact,
+    AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, FnEqualFact, FnEqualInFact,
+    GreaterEqualFact, GreaterFact, InFact, IsCartFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
+    IsTupleFact, LessEqualFact, LessFact, NormalAtomicFact, NotEqualFact, NotGreaterEqualFact,
+    NotGreaterFact, NotInFact, NotIsCartFact, NotIsFiniteSetFact, NotIsNonemptySetFact,
+    NotIsSetFact, NotIsTupleFact, NotLessEqualFact, NotLessFact, NotNormalAtomicFact,
+    NotSubsetFact, NotSupersetFact, SubsetFact, SupersetFact,
 };
 
 impl From<NormalAtomicFact> for AtomicFact {
@@ -372,5 +373,17 @@ impl From<NotSubsetFact> for Fact {
 impl From<NotSupersetFact> for Fact {
     fn from(f: NotSupersetFact) -> Self {
         Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<ExistOrAndChainAtomicFact> for Fact {
+    fn from(f: ExistOrAndChainAtomicFact) -> Self {
+        match f {
+            ExistOrAndChainAtomicFact::AtomicFact(a) => Fact::AtomicFact(a),
+            ExistOrAndChainAtomicFact::AndFact(a) => Fact::AndFact(a),
+            ExistOrAndChainAtomicFact::ChainFact(c) => Fact::ChainFact(c),
+            ExistOrAndChainAtomicFact::OrFact(o) => Fact::OrFact(o),
+            ExistOrAndChainAtomicFact::ExistFact(e) => Fact::ExistFact(e),
+        }
     }
 }

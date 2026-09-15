@@ -1,5 +1,5 @@
 mod module_manager;
 
 pub use module_manager::{
-    ExportFileAndItsExecEnv, ImportStdRepoAndItsExecEnv, ModuleManager,
+    ExportFileAndItsExecEnv, ImportedModule, ModuleManager,
 };

@@ -14,6 +14,7 @@ use super::fact::{
     NotIsTupleFact, NotLessEqualFact, NotLessFact, NotNormalAtomicFact, NotSubsetFact, NotSupersetFact,
     OrFact, QuantifierFreeFact, SubsetFact, SupersetFact,
 };
+use super::names::AtomicName;
 use super::obj::*;
 use super::param::{SetBoundParameterGroup, SetBoundParameterList};
 
@@ -202,14 +203,12 @@ fn alpha_normalize_fn_obj_head(head: FnObjHead, env: &RenameEnv, counter: &mut u
 }
 
 fn rename_identifier_obj(id: IdentifierObj, env: &RenameEnv) -> IdentifierObj {
-    match id {
-        IdentifierObj::Plain { name } => match env.get(&name) {
-            Some(slot) => IdentifierObj::Plain {
-                name: slot.clone(),
-            },
-            None => IdentifierObj::Plain { name },
+    match id.name {
+        AtomicName::Plain { name } => match env.get(&name) {
+            Some(slot) => IdentifierObj::plain(slot.clone()),
+            None => IdentifierObj::plain(name),
         },
-        other => other,
+        other => IdentifierObj::new(other),
     }
 }
 

@@ -13,8 +13,8 @@ Related owners:
 
 | Area | Path |
 |------|------|
-| Parse occupy / no-shadow | `parse/`, `runtime::ParseScope` / `OccupiedName` |
-| AST atoms | `ast/obj.rs` `IdentifierObj` (Plain / WithMod / WithModAndExport) |
+| Parse occupy / no-shadow | `parse/`, `runtime::ParseScope` / `AtomicName` |
+| AST atoms | `ast/obj.rs` `IdentifierObj { name: AtomicName }` |
 | Binder params | `ast/obj.rs` `Identifier` (plain name only) |
 | IR spelling | `display_and_ir/` (`ir()` = surface name; no `#id#`) |
 | Fact store / IR index | `exec_env/known_fact_memory.rs` |
@@ -81,7 +81,7 @@ Therefore:
 |----|------|
 | `FactId` | Proof citation / store handle |
 | `WellDefinednessId` | WD proof citation (obj WD ByKnown cites this) |
-| `OccupiedName` / `IdentifierObj` / `AtomicName` | Module qualification (≤3 segments), not occurrence |
+| `AtomicName` / `IdentifierObj` | Module qualification (≤3 segments), not occurrence |
 
 ---
 
@@ -91,7 +91,7 @@ Therefore:
    outside (`occupy` only).
 2. **No same-name nesting.** Forms such as `{x R: … {x R: …}}` are forever
    forbidden; nested binders must use different names.
-3. At most one **live** binding of a given `OccupiedName` exists.
+3. At most one **live** binding of a given `AtomicName` exists.
 4. Cache / known-fact keys may treat IR spellings that use the same name as
    the same symbol. Sequential `forall x` / `{x R: …}` with the same binder
    spelling are intended to share identity for lookup.
@@ -391,7 +391,7 @@ paths can still hit the bug.
 | **Define / AST identity** | **Allow** `□N` for binder slots after `alpha_normalize` so checks use AST/`ir` directly |
 
 Do not free-`occupy` / `have` / `let` `□N` as session free atoms. Binder slots
-are AST identity strings, not free `OccupiedName` entries.
+are AST identity strings, not free `AtomicName` occupy entries.
 
 #### Costs
 
@@ -448,7 +448,7 @@ nested free-obj binder problem. Do not alpha_normalize quantified facts in
 phase 1.
 
 **Still required when implementing phase 1:** structural substitute only;
-`□N` never free `OccupiedName`; outer root re-numbers nested obj trees;
+`□N` never free `AtomicName` occupy; outer root re-numbers nested obj trees;
 tracers for `{x:…}` vs `{y:…}` and nested builders.
 
 ---
@@ -474,7 +474,8 @@ Before changing identity, IR, occupy, or IR indexing, check:
       return).
 - [ ] Parse still rejects shadowing and same-name nested binders.
 - [ ] `DefinitionMemory` maps stay keyed by **`PlainName`** (unqualified local
-      name). `Mod::Export::name` is a reference path, not a store key.
+      name; `type PlainName = String`). `Mod::Export::name` is a reference
+      path, not a store key.
 - [ ] Closed composite facts still enter `fact_ir_to_id` (not atomic-only).
 - [ ] Binder instantiate/substitute is structural, not global rename-by-string.
 - [ ] Open scraps under binders are not ambient-indexed as if free.

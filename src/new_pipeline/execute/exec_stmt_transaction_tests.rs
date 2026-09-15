@@ -111,6 +111,47 @@ fn second_wd_of_same_obj_hits_known_memory_after_merge() {
 }
 
 #[test]
+fn forall_reflexive_equality_succeeds_and_stores() {
+    let mut runtime = runtime_with_file_env();
+    let outcome = exec_one(
+        &mut runtime,
+        "forall x R:\n    x = x",
+    );
+    assert!(
+        !outcome.is_failed(),
+        "expected Success for forall x R: x = x"
+    );
+    assert!(
+        runtime
+            .top_exec_env()
+            .facts
+            .facts_by_id
+            .values()
+            .any(|f| matches!(f, crate::new_pipeline::ast::fact::Fact::ForallFact(_))),
+        "Success must store the forall fact in parent env"
+    );
+}
+
+#[test]
+fn forall_unprovable_then_does_not_store() {
+    let mut runtime = runtime_with_file_env();
+    let before = runtime.top_exec_env().facts.facts_by_id.len();
+    let outcome = exec_one(
+        &mut runtime,
+        "forall x R:\n    x = 1",
+    );
+    assert!(
+        outcome.is_failed(),
+        "expected soft fail for forall with unprovable then"
+    );
+    assert_eq!(
+        runtime.top_exec_env().facts.facts_by_id.len(),
+        before,
+        "Failed forall must not store into parent"
+    );
+}
+
+#[test]
 fn success_merges_equality_so_later_stmt_can_prove_transitivity() {
     let mut runtime = runtime_with_file_env();
 

@@ -92,7 +92,7 @@ impl Runtime {
                     )));
                 }
                 self.top_exec_env_mut().definitions.identifiers.insert(
-                    identifier.name.clone().into(),
+                    identifier.name.clone(),
                     DefinedIdentifierInfo {
                         identifier: identifier.clone(),
                     },

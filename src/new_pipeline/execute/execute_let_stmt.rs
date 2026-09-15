@@ -46,16 +46,14 @@ impl Runtime {
             )));
         }
         self.top_exec_env_mut().definitions.identifiers.insert(
-            let_stmt.name.clone().into(),
+            let_stmt.name.clone(),
             DefinedIdentifierInfo {
                 identifier: Identifier::new(let_stmt.name.clone()),
             },
         );
 
         let equality_fact_id = self.ids.allocate_fact_id();
-        let left = Obj::Identifier(IdentifierObj::Plain {
-            name: let_stmt.name.clone(),
-        });
+        let left = Obj::Identifier(IdentifierObj::plain(let_stmt.name.clone()));
         let equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
             fact_id: equality_fact_id,
             left,
