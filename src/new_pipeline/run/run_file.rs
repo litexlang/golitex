@@ -19,7 +19,7 @@ pub fn run_file(path: PathBuf) -> RuntimeResult<RunFileResult> {
 
     let mut runtime = Runtime::new();
     // Pretend module mount already succeeded with an empty context.
-    runtime.begin_file(RealOrVirtualPath::Real(path.clone()), false);
+    runtime.begin_file(RealOrVirtualPath::Real(path.clone()));
     let code_result = match runtime.run_litex_code(&source) {
         Ok(result) => result,
         Err(error) => {

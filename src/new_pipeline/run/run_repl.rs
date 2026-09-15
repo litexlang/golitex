@@ -10,7 +10,7 @@ pub fn run_repl() -> RuntimeResult<()> {
     println!("{} REPL {}", LITEX, NEW_PIPELINE_VERSION);
     println!("type `exit` or Ctrl-D to quit; end a block with a blank line");
 
-    runtime.begin_file(RealOrVirtualPath::Repl, false);
+    runtime.begin_file(RealOrVirtualPath::Repl);
 
     loop {
         let Some(code) = read_repl_block()? else {
