@@ -3,7 +3,7 @@ use crate::new_pipeline::runtime::{RealOrVirtualPath, Runtime, RuntimeResult};
 
 pub fn run_eval(code: String) -> RuntimeResult<RunEvalResult> {
     let mut runtime = Runtime::new();
-    runtime.begin_file(RealOrVirtualPath::Eval, false);
+    runtime.begin_file(RealOrVirtualPath::Eval);
     let code_result = match runtime.run_litex_code(&code) {
         Ok(result) => result,
         Err(error) => {

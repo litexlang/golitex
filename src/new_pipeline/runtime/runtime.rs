@@ -18,7 +18,6 @@ use std::collections::HashSet;
 /// one interpreter session; `ExecEnv` instances on
 /// `execution_environments_stack` are the per-scope stores it pushes and pops.
 pub struct Runtime {
-    pub is_current_file_trusted: bool,
     pub module_manager: ModuleManager,
     pub execution_environments_stack: Vec<Box<ExecEnv>>,
     pub parse_scope_stack: Vec<Box<ParseScope>>,
@@ -51,7 +50,6 @@ pub struct Ids {
 impl Runtime {
     pub fn new() -> Self {
         Self {
-            is_current_file_trusted: false,
             module_manager: ModuleManager::new(ModuleHierarchy::Module),
             execution_environments_stack: Vec::new(),
             parse_scope_stack: Vec::new(),
@@ -60,9 +58,8 @@ impl Runtime {
         }
     }
 
-    pub fn begin_file(&mut self, file: RealOrVirtualPath, trusted: bool) {
+    pub fn begin_file(&mut self, file: RealOrVirtualPath) {
         self.current_file = file;
-        self.is_current_file_trusted = trusted;
         self.execution_environments_stack
             .push(Box::new(ExecEnv::new()));
         self.push_parse_scope();
@@ -75,14 +72,12 @@ impl Runtime {
             .pop()
             .expect("no file ExecEnv");
         self.parse_scope_stack.clear();
-        self.is_current_file_trusted = false;
         (file, exec_env)
     }
 
     pub fn abort_file(&mut self) {
         self.execution_environments_stack.clear();
         self.parse_scope_stack.clear();
-        self.is_current_file_trusted = false;
     }
 
     pub fn publish_completed_export_file(

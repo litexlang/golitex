@@ -7,7 +7,7 @@ use crate::new_pipeline::tokenize::Tokenizer;
 
 fn runtime_with_file_env() -> Runtime {
     let mut runtime = Runtime::new();
-    runtime.begin_file(RealOrVirtualPath::Eval, false);
+    runtime.begin_file(RealOrVirtualPath::Eval);
     runtime
 }
 
