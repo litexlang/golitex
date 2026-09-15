@@ -12,12 +12,12 @@ pub fn run_eval(code: String) -> RuntimeResult<RunEvalResult> {
         }
     };
 
-    if code_result.all_stmts_succeeded {
+    if code_result.success {
         let (file, exec_env) = runtime.finish_file();
         runtime.publish_completed_export_file(file, exec_env);
     } else {
         runtime.abort_file();
     }
 
-    Ok(RunEvalResult::from_code_result(code_result))
+    Ok(RunEvalResult::new(code_result))
 }

@@ -2,39 +2,50 @@ use crate::new_pipeline::execute::ExecStmtResult;
 use crate::new_pipeline::runtime::RuntimeError;
 use std::path::PathBuf;
 
-/// CLI command outcome. Run* carry payloads for later JSON; Help/Version are meta.
+/// CLI command outcome. Run* carry payloads for later JSON; Help/Version/Repl are meta.
 pub enum RunCommandOutcome {
     RunFile(RunFileResult),
     RunEval(RunEvalResult),
     RunRepo(RunRepoResult),
+    /// Interactive REPL: prints each step; no accumulated payload.
+    RunRepl,
     Help(HelpResult),
     Version(VersionResult),
 }
 
-/// Session-stopping failure while a run was already under way.
-/// Soft stmt Failed stays in `statement_results`, not here.
-pub struct RunSessionError {
-    pub cause: RuntimeError,
+/// Session-stopping failure.
+/// Soft stmt Failed stays in `statement_results` / `failed_statement_results`.
+/// `FailToImport` is reserved for future module mount / import failures (not defined yet).
+#[derive(Clone, Debug)]
+pub enum RunSessionError {
+    Runtime(RuntimeError),
+    FailToImport,
+}
+
+/// Shared body of one source-string run (`-e` / `-f` / repo aggregate).
+pub struct RunLitexCodeResult {
+    pub success: bool,
+    pub statement_results: Vec<ExecStmtResult>,
+    /// Indices into `statement_results` of soft-Failed stmts.
+    /// `None` when there is no soft Failed (JSON: null). `ExecStmtResult` is not
+    /// Clone yet, so Rust stores indices; JSON can expand them to objects.
+    pub failed_statement_results: Option<Vec<usize>>,
+    pub session_error: Option<RunSessionError>,
 }
 
 pub struct RunFileResult {
     pub path: PathBuf,
-    pub all_stmts_succeeded: bool,
-    pub statement_results: Vec<ExecStmtResult>,
-    pub session_error: Option<RunSessionError>,
+    pub run: RunLitexCodeResult,
 }
 
 pub struct RunEvalResult {
-    pub all_stmts_succeeded: bool,
-    pub statement_results: Vec<ExecStmtResult>,
-    pub session_error: Option<RunSessionError>,
+    pub run: RunLitexCodeResult,
 }
 
 pub struct RunRepoResult {
     pub path: PathBuf,
-    pub all_stmts_succeeded: bool,
+    pub run: RunLitexCodeResult,
     pub files: Vec<RunFileResult>,
-    pub session_error: Option<RunSessionError>,
 }
 
 pub struct HelpResult {
@@ -45,105 +56,85 @@ pub struct VersionResult {
     pub version: String,
 }
 
-/// Shared body of one source string run (`-e` / one `-f` file / one repo export).
-pub struct RunLitexCodeResult {
-    pub all_stmts_succeeded: bool,
-    pub statement_results: Vec<ExecStmtResult>,
-    pub session_error: Option<RunSessionError>,
+fn failed_indices(statement_results: &[ExecStmtResult]) -> Option<Vec<usize>> {
+    let indices: Vec<usize> = statement_results
+        .iter()
+        .enumerate()
+        .filter(|(_, result)| result.is_failed())
+        .map(|(index, _)| index)
+        .collect();
+    if indices.is_empty() {
+        None
+    } else {
+        Some(indices)
+    }
 }
 
-impl RunSessionError {
-    pub fn new(cause: RuntimeError) -> Self {
-        Self { cause }
-    }
+fn success_flag(
+    statement_results: &[ExecStmtResult],
+    session_error: &Option<RunSessionError>,
+) -> bool {
+    session_error.is_none() && statement_results.iter().all(|result| !result.is_failed())
 }
 
 impl RunLitexCodeResult {
     pub fn new(
-        all_stmts_succeeded: bool,
         statement_results: Vec<ExecStmtResult>,
         session_error: Option<RunSessionError>,
     ) -> Self {
+        let failed_statement_results = failed_indices(&statement_results);
+        let success = success_flag(&statement_results, &session_error);
         Self {
-            all_stmts_succeeded,
+            success,
             statement_results,
+            failed_statement_results,
             session_error,
         }
+    }
+
+    pub fn process_failed(&self) -> bool {
+        !self.success
     }
 }
 
 impl RunFileResult {
-    pub fn new(
-        path: PathBuf,
-        all_stmts_succeeded: bool,
-        statement_results: Vec<ExecStmtResult>,
-        session_error: Option<RunSessionError>,
-    ) -> Self {
-        Self {
-            path,
-            all_stmts_succeeded,
-            statement_results,
-            session_error,
-        }
-    }
-
-    pub fn from_code_result(path: PathBuf, code_result: RunLitexCodeResult) -> Self {
-        Self::new(
-            path,
-            code_result.all_stmts_succeeded,
-            code_result.statement_results,
-            code_result.session_error,
-        )
+    pub fn new(path: PathBuf, run: RunLitexCodeResult) -> Self {
+        Self { path, run }
     }
 
     pub fn process_failed(&self) -> bool {
-        !self.all_stmts_succeeded
+        self.run.process_failed()
     }
 }
 
 impl RunEvalResult {
-    pub fn new(
-        all_stmts_succeeded: bool,
-        statement_results: Vec<ExecStmtResult>,
-        session_error: Option<RunSessionError>,
-    ) -> Self {
-        Self {
-            all_stmts_succeeded,
-            statement_results,
-            session_error,
-        }
-    }
-
-    pub fn from_code_result(code_result: RunLitexCodeResult) -> Self {
-        Self::new(
-            code_result.all_stmts_succeeded,
-            code_result.statement_results,
-            code_result.session_error,
-        )
+    pub fn new(run: RunLitexCodeResult) -> Self {
+        Self { run }
     }
 
     pub fn process_failed(&self) -> bool {
-        !self.all_stmts_succeeded
+        self.run.process_failed()
     }
 }
 
 impl RunRepoResult {
     pub fn new(
         path: PathBuf,
-        all_stmts_succeeded: bool,
         files: Vec<RunFileResult>,
         session_error: Option<RunSessionError>,
     ) -> Self {
-        Self {
-            path,
-            all_stmts_succeeded,
-            files,
+        let success = session_error.is_none() && files.iter().all(|file| file.run.success);
+        let run = RunLitexCodeResult {
+            success,
+            statement_results: Vec::new(),
+            failed_statement_results: None,
             session_error,
-        }
+        };
+        Self { path, run, files }
     }
 
     pub fn process_failed(&self) -> bool {
-        !self.all_stmts_succeeded
+        self.run.process_failed()
     }
 }
 
@@ -167,7 +158,7 @@ impl RunCommandOutcome {
             Self::RunFile(r) => r.process_failed(),
             Self::RunEval(r) => r.process_failed(),
             Self::RunRepo(r) => r.process_failed(),
-            Self::Help(_) | Self::Version(_) => false,
+            Self::RunRepl | Self::Help(_) | Self::Version(_) => false,
         }
     }
 }

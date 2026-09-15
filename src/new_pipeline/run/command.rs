@@ -5,6 +5,7 @@ use std::path::PathBuf;
 pub enum CliCommand {
     Help,
     Version,
+    Repl,
     Eval(String),
     File(PathBuf),
     Repository(PathBuf),
@@ -12,7 +13,7 @@ pub enum CliCommand {
 
 pub fn parse_cli_command(args: &[String]) -> RuntimeResult<CliCommand> {
     match args {
-        [] => Ok(CliCommand::Help),
+        [] => Ok(CliCommand::Repl),
         [flag] if flag == "-help" || flag == "--help" || flag == "-h" => Ok(CliCommand::Help),
         [flag] if flag == "-version" || flag == "--version" => Ok(CliCommand::Version),
         [flag, value] if flag == "-e" && is_value(value) => Ok(CliCommand::Eval(value.clone())),
@@ -23,7 +24,7 @@ pub fn parse_cli_command(args: &[String]) -> RuntimeResult<CliCommand> {
             Ok(CliCommand::Repository(PathBuf::from(value)))
         }
         _ => Err(RuntimeError::InvalidArguments(
-            "new_pipeline supports `-e <code>`, `-f <file>`, `-r <repository>`, `-help`, `-version`"
+            "new_pipeline supports bare REPL, `-e <code>`, `-f <file>`, `-r <repository>`, `-help`, `-version`"
                 .to_string(),
         )),
     }
@@ -48,8 +49,8 @@ mod tests {
     }
 
     #[test]
-    fn parses_help_and_version() {
-        assert_eq!(parse_cli_command(&args(&[])).unwrap(), CliCommand::Help);
+    fn parses_help_version_and_repl() {
+        assert_eq!(parse_cli_command(&args(&[])).unwrap(), CliCommand::Repl);
         assert_eq!(
             parse_cli_command(&args(&["-help"])).unwrap(),
             CliCommand::Help

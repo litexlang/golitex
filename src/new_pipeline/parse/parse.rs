@@ -42,7 +42,10 @@ impl Runtime {
             .into()),
             TRUST => self.parse_trust_stmt(block),
             IMPORT => Err(RuntimeParseError::new(
-                "`import` is not a Litex statement; declare dependencies in litex.config",
+                format!(
+                    "`import` is not a {} statement; declare dependencies in litex.config",
+                    crate::new_pipeline::LITEX
+                ),
                 block.line,
                 block.source_path.clone(),
             )

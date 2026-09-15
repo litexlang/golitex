@@ -5,6 +5,7 @@ pub mod run_command_outcome;
 pub mod run_eval;
 pub mod run_file;
 pub mod run_litex_code;
+pub mod run_repl;
 pub mod run_repo;
 
 pub use command::{parse_cli_command, CliCommand};

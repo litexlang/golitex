@@ -233,7 +233,10 @@ impl Tokenizer {
             for token in &header_tokens {
                 if token.starts_with("__") {
                     return Err(RuntimeParseError::new(
-                        "names starting with `__` are reserved for Lean/codegen and cannot appear in Litex source",
+                        format!(
+                            "names starting with `__` are reserved for Lean/codegen and cannot appear in {} source",
+                            crate::new_pipeline::LITEX
+                        ),
                         line_no,
                         source_path.clone(),
                     )

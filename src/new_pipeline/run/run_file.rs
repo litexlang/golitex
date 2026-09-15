@@ -3,6 +3,8 @@ use crate::new_pipeline::runtime::{RealOrVirtualPath, Runtime, RuntimeError, Run
 use std::fs;
 use std::path::PathBuf;
 
+/// Run one file.
+/// Module mount / litex.config preload is assumed elsewhere later; not defined here.
 pub fn run_file(path: PathBuf) -> RuntimeResult<RunFileResult> {
     if path.as_os_str().is_empty() {
         return Err(RuntimeError::InvalidArguments(
@@ -16,6 +18,7 @@ pub fn run_file(path: PathBuf) -> RuntimeResult<RunFileResult> {
     })?;
 
     let mut runtime = Runtime::new();
+    // Pretend module mount already succeeded with an empty context.
     runtime.begin_file(RealOrVirtualPath::Real(path.clone()), false);
     let code_result = match runtime.run_litex_code(&source) {
         Ok(result) => result,
@@ -25,12 +28,12 @@ pub fn run_file(path: PathBuf) -> RuntimeResult<RunFileResult> {
         }
     };
 
-    if code_result.all_stmts_succeeded {
+    if code_result.success {
         let (file, exec_env) = runtime.finish_file();
         runtime.publish_completed_export_file(file, exec_env);
     } else {
         runtime.abort_file();
     }
 
-    Ok(RunFileResult::from_code_result(path, code_result))
+    Ok(RunFileResult::new(path, code_result))
 }
