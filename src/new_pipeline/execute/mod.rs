@@ -11,13 +11,19 @@ pub mod execute_unsafe_stmt;
 #[cfg(test)]
 mod exec_stmt_transaction_tests;
 
-pub use exec_stmt_result::{
-    ExecDefPropStmtFailed, ExecDefinitionStmtFailed, ExecDefinitionStmtSuccess,
-    ExecHaveObjInNonemptySetStmtFailed, ExecHaveObjInNonemptySetStmtResult, ExecLetObjStmtResult,
-    ExecStmtFailed, ExecStmtResult, ExecStmtSuccess, ExecTrustHaveStmtFailed, ExecUnsafeStmtFailed,
-    HaveObjGroupNonemptyCheckResult, StoreHaveObjAndInferResult,
+pub use exec_stmt_result::{ExecDefinitionStmtResult, ExecStmtResult};
+pub use execute_def_abstract_prop_stmt::ExecDefAbstractPropStmtSuccessResult;
+pub use execute_def_prop_stmt::{
+    ExecDefPropStmtFailed, ExecDefPropStmtResult, ExecDefPropStmtSuccessResult,
 };
-pub use execute_def_abstract_prop_stmt::ExecDefAbstractPropStmtResult;
-pub use execute_def_prop_stmt::ExecDefPropStmtResult;
-pub use execute_fact_stmt::{ExecFactStmtResult, VerifyState};
-pub use execute_unsafe_stmt::{ExecTrustHaveStmtResult, ExecTrustStmtResult, ExecUnsafeStmtResult};
+pub use execute_fact_stmt::{ExecFactStmtResult, ExecFactStmtSuccessResult, VerifyState};
+pub use execute_have_obj_in_nonempty_set_stmt::{
+    ExecHaveObjInNonemptySetStmtFailed, ExecHaveObjInNonemptySetStmtResult,
+    ExecHaveObjInNonemptySetStmtSuccessResult, HaveObjGroupNonemptyCheckResult,
+    StoreHaveObjAndInferResult,
+};
+pub use execute_let_stmt::{ExecLetObjStmtResult, ExecLetObjStmtSuccessResult};
+pub use execute_unsafe_stmt::{
+    ExecTrustHaveStmtFailed, ExecTrustHaveStmtResult, ExecTrustHaveStmtSuccessResult,
+    ExecTrustStmtResult, ExecTrustStmtSuccessResult, ExecUnsafeStmtResult,
+};

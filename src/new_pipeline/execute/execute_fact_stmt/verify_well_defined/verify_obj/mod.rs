@@ -12,4 +12,6 @@ mod scalar;
 mod sets;
 mod structs;
 
-pub use entry::{ObjWellDefinedProofByDef, VerifyObjWellDefinedResult};
+pub use entry::{
+    FailToVerifyWellDefinedResult, ObjWellDefinedProofByDef, VerifyObjWellDefinedResult,
+};

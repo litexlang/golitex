@@ -15,15 +15,22 @@ not another `exec_stmt`.
 ## Result shape
 
 ```text
-ExecStmtResult
-  Success(ExecStmtSuccess)     // merge temp → parent
-  Failed(ExecStmtFailed)       // discard temp; session continues
-RuntimeResult::Err             // SessionError; stop session
+ExecStmtResult                    // stmt-kind dispatch only
+  Fact(ExecFactStmtResult)
+  Definition(ExecDefinitionStmtResult)
+  Unsafe(ExecUnsafeStmtResult)
 
-ExecStmtSuccess / ExecStmtFailed mirror stmt kind:
-  Fact | Definition | Unsafe
-Definition / Unsafe nest further (let / have / prop / trust / …).
+Leaf *Result = Success(*SuccessResult) | Failed(...)
+  (AbstractProp has only SuccessResult; no soft-fail path yet)
+
+is_failed() on ExecStmtResult walks into the leaf.
+  Failed  → discard temp; session continues
+  Success → merge temp → parent
+RuntimeResult::Err               // SessionError; stop session
 ```
+
+Leaf Success/Fail types live at the head of each statement file;
+`exec_stmt_result.rs` keeps only the top-level dispatch shells.
 
 JSON presentation (not Rust names): Success → `"success"`, Failed → `"error"`,
 SessionError → `"session_error"`.
@@ -35,12 +42,10 @@ exec_stmt (pub only)
   push empty temp ExecEnv
     exec_xxx_stmt  (execute-module private; writes current top only)
   pop temp
-    Failed  → Ok(Failed); no merge
-    Success → parent.merge_from(temp) → Ok(Success)
+    is_failed  → Ok(result); no merge
+    else       → parent.merge_from(temp) → Ok(result)
 Err → merge/invariant bugs (SessionError)
 ```
 
 - Success does not carry the closed temp env.
 - Binder locals (forall / prop params) are inner scopes inside the temp shell.
-- Object WD: stack lookup → ByCache; else ByDef; when
-  `store_well_defined_fact`, record on current top so Success merge persists it.

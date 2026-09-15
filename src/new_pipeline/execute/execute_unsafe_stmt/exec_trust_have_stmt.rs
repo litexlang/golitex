@@ -1,16 +1,21 @@
 //! `trust have` statement: WD param types and body facts, then bind and store.
 
-use super::super::exec_stmt_result::{ExecTrustHaveStmtFailed, StoreHaveObjAndInferResult};
 use super::exec_trust_stmt::trust_verify_state;
 use crate::new_pipeline::ast::stmt::TrustHaveStmt;
 use crate::new_pipeline::exec_env::DefinedIdentifierInfo;
 use crate::new_pipeline::execute::execute_fact_stmt::{
-    FactWellDefinedProof, ParamTypeWellDefinedProof, StoreFactAndInferResult, VerifyFactResult,
-    VerifyObjWellDefinedResult,
+    FactWellDefinedProof, FailToVerifyWellDefinedResult, ParamTypeWellDefinedProof,
+    StoreFactAndInferResult, VerifyFactResult, VerifyObjWellDefinedResult,
 };
+use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
-pub struct ExecTrustHaveStmtResult {
+pub enum ExecTrustHaveStmtFailed {
+    ParamType(VerifyObjWellDefinedResult),
+    BodyFactWellDefined(VerifyFactResult),
+}
+
+pub struct ExecTrustHaveStmtSuccessResult {
     pub statement: TrustHaveStmt,
     pub param_type_well_defined: Vec<ParamTypeWellDefinedProof>,
     pub body_facts_well_defined: Vec<FactWellDefinedProof>,
@@ -18,30 +23,54 @@ pub struct ExecTrustHaveStmtResult {
     pub body_store_and_infer_results: Vec<StoreFactAndInferResult>,
 }
 
+pub enum ExecTrustHaveStmtResult {
+    Success(ExecTrustHaveStmtSuccessResult),
+    Failed(ExecTrustHaveStmtFailed),
+}
+
+impl ExecTrustHaveStmtResult {
+    pub fn is_failed(&self) -> bool {
+        matches!(self, Self::Failed(_))
+    }
+}
+
 impl Runtime {
     pub(in crate::new_pipeline::execute) fn exec_trust_have_stmt(
         &mut self,
         stmt: &TrustHaveStmt,
-    ) -> RuntimeResult<Result<ExecTrustHaveStmtResult, ExecTrustHaveStmtFailed>> {
+    ) -> RuntimeResult<ExecTrustHaveStmtResult> {
         let verify_state = trust_verify_state();
 
         let param_type_well_defined =
             self.verify_typed_parameters_well_definedness(&stmt.param_def, verify_state.clone())?;
-        for proof in &param_type_well_defined {
+        let mut kept_param_type_well_defined = Vec::with_capacity(param_type_well_defined.len());
+        for proof in param_type_well_defined {
             if proof.is_failed() {
-                return Ok(Err(ExecTrustHaveStmtFailed::ParamType(
-                    VerifyObjWellDefinedResult::FailToVerifyWellDefined,
-                )));
+                let failed = match proof {
+                    ParamTypeWellDefinedProof::Obj(wd) => wd,
+                    _ => VerifyObjWellDefinedResult::FailToVerifyWellDefined(
+                        FailToVerifyWellDefinedResult::Others(
+                            "param type well-definedness failed".to_string(),
+                        ),
+                    ),
+                };
+                return Ok(ExecTrustHaveStmtResult::Failed(
+                    ExecTrustHaveStmtFailed::ParamType(failed),
+                ));
             }
+            kept_param_type_well_defined.push(proof);
         }
+        let param_type_well_defined = kept_param_type_well_defined;
 
         let mut body_facts_well_defined = Vec::with_capacity(stmt.facts.len());
         for fact in &stmt.facts {
             let wd = self.verify_fact_well_definedness(fact, verify_state.clone())?;
             if wd.is_failed() {
-                return Ok(Err(ExecTrustHaveStmtFailed::BodyFactWellDefined(
-                    VerifyFactResult::FailToVerifyWellDefined,
-                )));
+                return Ok(ExecTrustHaveStmtResult::Failed(
+                    ExecTrustHaveStmtFailed::BodyFactWellDefined(
+                        VerifyFactResult::FailToVerifyWellDefined,
+                    ),
+                ));
             }
             body_facts_well_defined.push(wd);
         }
@@ -53,13 +82,15 @@ impl Runtime {
             body_store_and_infer_results.push(self.store_fact_and_infer(fact)?);
         }
 
-        Ok(Ok(ExecTrustHaveStmtResult {
-            statement: stmt.clone(),
-            param_type_well_defined,
-            body_facts_well_defined,
-            defined_param_store_and_infer,
-            body_store_and_infer_results,
-        }))
+        Ok(ExecTrustHaveStmtResult::Success(
+            ExecTrustHaveStmtSuccessResult {
+                statement: stmt.clone(),
+                param_type_well_defined,
+                body_facts_well_defined,
+                defined_param_store_and_infer,
+                body_store_and_infer_results,
+            },
+        ))
     }
 
     fn define_trust_have_params(

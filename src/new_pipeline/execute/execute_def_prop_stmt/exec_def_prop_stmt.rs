@@ -7,28 +7,44 @@
 //! 4. close local env into the result
 //! 5. store the prop definition in the parent ExecEnv
 
-use super::super::exec_stmt_result::{ExecDefPropStmtFailed, StoreHaveObjAndInferResult};
 use crate::new_pipeline::ast::stmt::DefPropStmt;
 use crate::new_pipeline::exec_env::exec_env::ExecEnv;
 use crate::new_pipeline::exec_env::DefinedIdentifierInfo;
 use crate::new_pipeline::execute::execute_fact_stmt::{
-    FactWellDefinedProof, ParamTypeWellDefinedProof, VerifyFactResult, VerifyObjWellDefinedResult,
-    VerifyState,
+    FactWellDefinedProof, FailToVerifyWellDefinedResult, ParamTypeWellDefinedProof,
+    VerifyFactResult, VerifyObjWellDefinedResult, VerifyState,
 };
+use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
 use crate::new_pipeline::parse::keywords::{ABSTRACT_PROP, PROP};
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
-/// `prop name(...): body` pipeline result.
+pub enum ExecDefPropStmtFailed {
+    ParamType(VerifyObjWellDefinedResult),
+    IffFactWellDefined(VerifyFactResult),
+}
+
+/// `prop name(...): body` pipeline success payload.
 ///
 /// `iff_fact_well_defined` is parallel to `statement.iff_facts`.
 /// `local_env` is the closed binder scope (params + any local WD records);
 /// it is not merged into the parent. The parent only gains the prop definition.
-pub struct ExecDefPropStmtResult {
+pub struct ExecDefPropStmtSuccessResult {
     pub statement: DefPropStmt,
     pub param_type_well_defined: Vec<ParamTypeWellDefinedProof>,
     pub defined_params: StoreHaveObjAndInferResult,
     pub iff_fact_well_defined: Vec<FactWellDefinedProof>,
     pub local_env: Box<ExecEnv>,
+}
+
+pub enum ExecDefPropStmtResult {
+    Success(ExecDefPropStmtSuccessResult),
+    Failed(ExecDefPropStmtFailed),
+}
+
+impl ExecDefPropStmtResult {
+    pub fn is_failed(&self) -> bool {
+        matches!(self, Self::Failed(_))
+    }
 }
 
 impl Runtime {
@@ -41,7 +57,7 @@ impl Runtime {
     pub(in crate::new_pipeline::execute) fn exec_def_prop_stmt(
         &mut self,
         def_prop: &DefPropStmt,
-    ) -> RuntimeResult<Result<ExecDefPropStmtResult, ExecDefPropStmtFailed>> {
+    ) -> RuntimeResult<ExecDefPropStmtResult> {
         self.ensure_def_prop_name_free(&def_prop.name)?;
 
         let (local_outcome, local_env) =
@@ -49,12 +65,12 @@ impl Runtime {
 
         let (param_type_well_defined, defined_params, iff_fact_well_defined) = match local_outcome {
             Ok(parts) => parts,
-            Err(failed) => return Ok(Err(failed)),
+            Err(failed) => return Ok(ExecDefPropStmtResult::Failed(failed)),
         };
 
         self.top_exec_env_mut().store_def_prop(def_prop.clone());
 
-        Ok(Ok(ExecDefPropStmtResult {
+        Ok(ExecDefPropStmtResult::Success(ExecDefPropStmtSuccessResult {
             statement: def_prop.clone(),
             param_type_well_defined,
             defined_params,
@@ -100,13 +116,22 @@ impl Runtime {
             &def_prop.typed_parameters,
             verify_state.clone(),
         )?;
-        for proof in &param_type_well_defined {
+        let mut kept_param_type_well_defined = Vec::with_capacity(param_type_well_defined.len());
+        for proof in param_type_well_defined {
             if proof.is_failed() {
-                return Ok(Err(ExecDefPropStmtFailed::ParamType(
-                    VerifyObjWellDefinedResult::FailToVerifyWellDefined,
-                )));
+                let failed = match proof {
+                    ParamTypeWellDefinedProof::Obj(wd) => wd,
+                    _ => VerifyObjWellDefinedResult::FailToVerifyWellDefined(
+                        FailToVerifyWellDefinedResult::Others(
+                            "param type well-definedness failed".to_string(),
+                        ),
+                    ),
+                };
+                return Ok(Err(ExecDefPropStmtFailed::ParamType(failed)));
             }
+            kept_param_type_well_defined.push(proof);
         }
+        let param_type_well_defined = kept_param_type_well_defined;
 
         let defined_params = self.define_def_prop_params_in_local(def_prop)?;
 

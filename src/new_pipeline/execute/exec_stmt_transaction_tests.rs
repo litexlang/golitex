@@ -36,10 +36,11 @@ fn failed_fact_does_not_pollute_parent_env() {
         .object_to_wd_id
         .len();
 
-    match exec_one(&mut runtime, "1 = 2") {
-        ExecStmtResult::Failed(_) => {}
-        ExecStmtResult::Success(_) => panic!("expected soft fail for unprovable 1 = 2"),
-    }
+    let outcome = exec_one(&mut runtime, "1 = 2");
+    assert!(
+        outcome.is_failed(),
+        "expected soft fail for unprovable 1 = 2"
+    );
 
     assert_eq!(
         runtime.top_exec_env().facts.facts_by_id.len(),
@@ -61,10 +62,8 @@ fn failed_fact_does_not_pollute_parent_env() {
 fn success_let_merges_identifier_and_wd() {
     let mut runtime = runtime_with_file_env();
 
-    match exec_one(&mut runtime, "let x = 1") {
-        ExecStmtResult::Success(_) => {}
-        ExecStmtResult::Failed(_) => panic!("expected Success for let x = 1"),
-    }
+    let outcome = exec_one(&mut runtime, "let x = 1");
+    assert!(!outcome.is_failed(), "expected Success for let x = 1");
 
     assert!(
         runtime
@@ -87,20 +86,14 @@ fn success_let_merges_identifier_and_wd() {
 #[test]
 fn second_wd_of_same_obj_hits_cache_after_merge() {
     let mut runtime = runtime_with_file_env();
-    assert!(matches!(
-        exec_one(&mut runtime, "let x = 1"),
-        ExecStmtResult::Success(_)
-    ));
+    assert!(!exec_one(&mut runtime, "let x = 1").is_failed());
     let wd_len_after_first = runtime
         .top_exec_env()
         .well_defined_objects
         .object_to_wd_id
         .len();
 
-    assert!(matches!(
-        exec_one(&mut runtime, "let y = 1"),
-        ExecStmtResult::Success(_)
-    ));
+    assert!(!exec_one(&mut runtime, "let y = 1").is_failed());
     assert_eq!(
         runtime
             .top_exec_env()
@@ -121,19 +114,12 @@ fn second_wd_of_same_obj_hits_cache_after_merge() {
 fn success_merges_equality_so_later_stmt_can_prove_transitivity() {
     let mut runtime = runtime_with_file_env();
 
-    assert!(matches!(
-        exec_one(&mut runtime, "trust 1 = 2"),
-        ExecStmtResult::Success(_)
-    ));
-    assert!(matches!(
-        exec_one(&mut runtime, "trust 2 = 3"),
-        ExecStmtResult::Success(_)
-    ));
+    assert!(!exec_one(&mut runtime, "trust 1 = 2").is_failed());
+    assert!(!exec_one(&mut runtime, "trust 2 = 3").is_failed());
 
-    match exec_one(&mut runtime, "1 = 3") {
-        ExecStmtResult::Success(_) => {}
-        ExecStmtResult::Failed(_) => {
-            panic!("expected Success: parent-merged 1=2 and 2=3 should prove 1=3")
-        }
-    }
+    let outcome = exec_one(&mut runtime, "1 = 3");
+    assert!(
+        !outcome.is_failed(),
+        "expected Success: parent-merged 1=2 and 2=3 should prove 1=3"
+    );
 }

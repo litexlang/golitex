@@ -1,92 +1,45 @@
 //! Statement execution results for new_pipeline.
 //!
-//! Top level is always Success | Failed (soft miss). Session-stopping bugs stay
-//! in `RuntimeResult::Err` (SessionError).
-//!
-//! Success / Failed each mirror stmt kind; definition / unsafe nest further.
+//! Top level dispatches by stmt kind only. Soft Success|Failed lives inside
+//! each leaf `*Result`. Session-stopping bugs stay in `RuntimeResult::Err`.
 
-use crate::new_pipeline::ast::stmt::{HaveObjInNonemptySetOrParamTypeStmt, LetObjStmt};
-use crate::new_pipeline::execute::execute_def_abstract_prop_stmt::ExecDefAbstractPropStmtResult;
+use crate::new_pipeline::execute::execute_def_abstract_prop_stmt::ExecDefAbstractPropStmtSuccessResult;
 use crate::new_pipeline::execute::execute_def_prop_stmt::ExecDefPropStmtResult;
-use crate::new_pipeline::execute::execute_fact_stmt::{
-    ExecFactStmtResult, ParamTypeWellDefinedProof, VerifyFactResult, VerifyObjWellDefinedResult,
-};
+use crate::new_pipeline::execute::execute_fact_stmt::ExecFactStmtResult;
+use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::ExecHaveObjInNonemptySetStmtResult;
+use crate::new_pipeline::execute::execute_let_stmt::ExecLetObjStmtResult;
 use crate::new_pipeline::execute::execute_unsafe_stmt::ExecUnsafeStmtResult;
-use crate::new_pipeline::runtime::FactId;
 
 pub enum ExecStmtResult {
-    Success(ExecStmtSuccess),
-    Failed(ExecStmtFailed),
-}
-
-pub enum ExecStmtSuccess {
     Fact(ExecFactStmtResult),
-    Definition(ExecDefinitionStmtSuccess),
+    Definition(ExecDefinitionStmtResult),
     Unsafe(ExecUnsafeStmtResult),
 }
 
-pub enum ExecStmtFailed {
-    Fact(VerifyFactResult),
-    Definition(ExecDefinitionStmtFailed),
-    Unsafe(ExecUnsafeStmtFailed),
-}
-
-pub enum ExecDefinitionStmtSuccess {
+pub enum ExecDefinitionStmtResult {
     LetObj(ExecLetObjStmtResult),
     HaveObjInNonemptySet(ExecHaveObjInNonemptySetStmtResult),
     DefProp(ExecDefPropStmtResult),
-    DefAbstractProp(ExecDefAbstractPropStmtResult),
+    DefAbstractProp(ExecDefAbstractPropStmtSuccessResult),
 }
 
-pub enum ExecDefinitionStmtFailed {
-    LetObj(VerifyObjWellDefinedResult),
-    HaveObjInNonemptySet(ExecHaveObjInNonemptySetStmtFailed),
-    DefProp(ExecDefPropStmtFailed),
+impl ExecStmtResult {
+    pub fn is_failed(&self) -> bool {
+        match self {
+            Self::Fact(r) => r.is_failed(),
+            Self::Definition(r) => r.is_failed(),
+            Self::Unsafe(r) => r.is_failed(),
+        }
+    }
 }
 
-pub enum ExecHaveObjInNonemptySetStmtFailed {
-    ParamType(VerifyObjWellDefinedResult),
-    NonemptyCheck(VerifyFactResult),
-}
-
-pub enum ExecDefPropStmtFailed {
-    ParamType(VerifyObjWellDefinedResult),
-    IffFactWellDefined(VerifyFactResult),
-}
-
-pub enum ExecUnsafeStmtFailed {
-    Trust(VerifyFactResult),
-    TrustHave(ExecTrustHaveStmtFailed),
-}
-
-pub enum ExecTrustHaveStmtFailed {
-    ParamType(VerifyObjWellDefinedResult),
-    BodyFactWellDefined(VerifyFactResult),
-}
-
-// Pipeline: WD the RHS value → affect global env. No local env.
-pub struct ExecLetObjStmtResult {
-    pub statement: LetObjStmt,
-    pub value_well_defined: VerifyObjWellDefinedResult,
-    pub stored_fact_ids: Vec<FactId>,
-}
-
-// Pipeline: WD param types → nonempty obligations → define symbols.
-pub struct ExecHaveObjInNonemptySetStmtResult {
-    pub statement: HaveObjInNonemptySetOrParamTypeStmt,
-    pub param_type_well_defined: Vec<ParamTypeWellDefinedProof>,
-    pub nonempty_checks: Vec<HaveObjGroupNonemptyCheckResult>,
-    pub store_and_infer_result: StoreHaveObjAndInferResult,
-}
-
-// One entry per TypedParameterGroup, mirroring ParamType.
-pub enum HaveObjGroupNonemptyCheckResult {
-    Set,
-    NonemptySet,
-    FiniteSet,
-    Obj(VerifyFactResult),
-}
-
-pub struct StoreHaveObjAndInferResult {
-    pub stored_fact_ids: Vec<FactId>,
+impl ExecDefinitionStmtResult {
+    pub fn is_failed(&self) -> bool {
+        match self {
+            Self::LetObj(r) => r.is_failed(),
+            Self::HaveObjInNonemptySet(r) => r.is_failed(),
+            Self::DefProp(r) => r.is_failed(),
+            Self::DefAbstractProp(_) => false,
+        }
+    }
 }

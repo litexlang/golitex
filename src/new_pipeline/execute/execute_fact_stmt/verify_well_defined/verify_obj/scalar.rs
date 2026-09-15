@@ -232,7 +232,7 @@ impl Runtime {
             return Ok(self.with_requirements(proof, reqs));
         }
         // Neither nonzero obligation proved: keep a failed requirement so
-        // entry collapses to VerifyObjWellDefinedResult::FailToVerifyWellDefined.
+        // entry collapses soft misses to FailToVerifyWellDefined(Requirement { ... }).
         reqs.push(left_r);
         Ok(self.with_requirements(proof, reqs))
     }

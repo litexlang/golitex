@@ -7,8 +7,8 @@ use crate::new_pipeline::ast::stmt::DefAbstractPropStmt;
 use crate::new_pipeline::parse::keywords::{ABSTRACT_PROP, PROP};
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
-/// `abstract_prop name(params)` pipeline result.
-pub struct ExecDefAbstractPropStmtResult {
+/// `abstract_prop name(params)` success payload (no soft-fail path yet).
+pub struct ExecDefAbstractPropStmtSuccessResult {
     pub statement: DefAbstractPropStmt,
 }
 
@@ -21,10 +21,10 @@ impl Runtime {
     pub(in crate::new_pipeline::execute) fn exec_def_abstract_prop_stmt(
         &mut self,
         stmt: &DefAbstractPropStmt,
-    ) -> RuntimeResult<ExecDefAbstractPropStmtResult> {
+    ) -> RuntimeResult<ExecDefAbstractPropStmtSuccessResult> {
         self.ensure_def_abstract_prop_name_free(&stmt.name)?;
         self.top_exec_env_mut().store_def_abstract_prop(stmt.clone());
-        Ok(ExecDefAbstractPropStmtResult {
+        Ok(ExecDefAbstractPropStmtSuccessResult {
             statement: stmt.clone(),
         })
     }
