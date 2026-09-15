@@ -4,12 +4,11 @@ use crate::new_pipeline::ast::obj::{
     Max, Min, Number, Obj, Quot, SetMinus, Sin, Sqrt, StandardSet, Tan, Tuple, Union,
 };
 use crate::new_pipeline::ast::param::{ParamType, SetBoundParameterGroup, SetBoundParameterList};
-use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::parse::keywords::{
     ABS, C, CART, CEIL, COLON, COMMA, COS, C_STAR, DOT, EXP, FLOOR, FN, GCD, INTERSECT, LCM,
-    LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LN, MAX, MIN, MOD_SIGN, N, N_POS, Q, QUOT, Q_NEG, Q_POS,
-    Q_STAR, R, RIGHT_BRACKET, RIGHT_CURLY, RIGHT_PAREN, R_NEG, R_POS, R_STAR, SET_MINUS, SIN, SQRT,
-    STRUCT_VIEW_PREFIX, TAN, TUPLE, UNION, Z, Z_NEG, Z_POS, Z_STAR,
+    LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LN, MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS, Q, QUOT,
+    Q_NEG, Q_POS, Q_STAR, R, RIGHT_BRACKET, RIGHT_CURLY, RIGHT_PAREN, R_NEG, R_POS, R_STAR,
+    SET_MINUS, SIN, SQRT, STRUCT_VIEW_PREFIX, TAN, TUPLE, UNION, Z, Z_NEG, Z_POS, Z_STAR,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -438,6 +437,30 @@ fn parse_identifier_or_mod_or_standard_set(
     tb: &mut TokenBlock,
 ) -> RuntimeResult<Obj> {
     let name = tb.advance()?;
+    if tb.peek() == Some(MOD_FLAT_SIGN) {
+        tb.advance()?;
+        let next = tb.advance()?;
+        if !is_simple_name(&next) {
+            return Err(tb.parse_error(format!("expected identifier after `:::`, got `{next}`")));
+        }
+        let key = rt
+            .elaborate_flat_import(&name, next)
+            .map_err(|err| match err {
+                crate::new_pipeline::runtime::RuntimeError::Invariant(message) => {
+                    tb.parse_error(message)
+                }
+                other => other,
+            })?;
+        if !rt.occupied_name_is_visible(&key) {
+            rt.define_atom(key.clone()).map_err(|err| match err {
+                crate::new_pipeline::runtime::RuntimeError::Invariant(message) => {
+                    tb.parse_error(message)
+                }
+                other => other,
+            })?;
+        }
+        return Ok(Obj::Identifier(IdentifierObj::new(key)));
+    }
     if tb.peek() == Some(MOD_SIGN) {
         let mut parts = vec![name];
         while tb.peek() == Some(MOD_SIGN) {
@@ -448,22 +471,18 @@ fn parse_identifier_or_mod_or_standard_set(
             }
             parts.push(next);
         }
-        let key = match parts.len() {
-            2 => AtomicName::WithMod {
-                mod_name: parts[0].clone(),
-                name: parts[1].clone(),
-            },
-            3 => AtomicName::WithModAndExport {
-                mod_name: parts[0].clone(),
-                export_name: parts[1].clone(),
-                name: parts[2].clone(),
-            },
-            _ => {
-                return Err(tb.parse_error(
-                    "qualified name must be `Mod::name` or `Mod::Export::name` (at most three segments)",
-                ));
+        if parts.len() != 2 && parts.len() != 3 {
+            return Err(tb.parse_error(
+                "qualified name must be `a::b`, `a:::b`, or `a::b::c`",
+            ));
+        }
+        let key = rt.elaborate_name_parts(&parts).map_err(|err| match err {
+            crate::new_pipeline::runtime::RuntimeError::Invariant(message) => {
+                tb.parse_error(message)
             }
-        };
+            other => other,
+        })?;
+
         if !rt.occupied_name_is_visible(&key) {
             rt.define_atom(key.clone()).map_err(|err| match err {
                 crate::new_pipeline::runtime::RuntimeError::Invariant(message) => {

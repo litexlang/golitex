@@ -30,8 +30,9 @@ At any time, a surface name denotes **one** symbol identity for the whole
 session:
 
 - Plain `y` is always that same `y`.
-- `Mod::y` is always that same `Mod::y` (distinct from plain `y`).
-- `Mod::Export::y` is always that same three-segment name (no submodule; at most three `::` parts).
+- Qualified atoms use **indices**: `WithMod { file_id, name }` and
+  `WithModAndExport { mod_id, file_id, name }` (not surface import aliases).
+  Same physical import under local alias `T` vs global `G` shares one `mod_id`.
 - Reusing the letter after a binder scope ends is **letter reuse**, like on
   paper: stored AST may still contain binder spelling `y`, and a later
   `have y` is the same name identity, not a second binding instance.

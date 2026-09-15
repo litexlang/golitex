@@ -70,6 +70,7 @@ pub const POW: &str = "^";
 pub const DOT_DOT_DOT: &str = "...";
 pub const DOT: &str = ".";
 pub const MOD_SIGN: &str = "::";
+pub const MOD_FLAT_SIGN: &str = ":::";
 pub const LEFT_PAREN: &str = "(";
 pub const RIGHT_PAREN: &str = ")";
 pub const LEFT_CURLY: &str = "{";

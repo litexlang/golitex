@@ -1,7 +1,7 @@
 use super::fact_prop::is_infix_prop_name;
 use super::keywords::{
-    is_comparison_op, AND, EQUIVALENT_SIGN, EXIST, EXIST_BANG, FACT_PREFIX, FORALL, IN, MOD_SIGN,
-    NOT, OR, RIGHT_ARROW,
+    is_comparison_op, AND, EQUIVALENT_SIGN, EXIST, EXIST_BANG, FACT_PREFIX, FORALL, IN, MOD_FLAT_SIGN,
+    MOD_SIGN, NOT, OR, RIGHT_ARROW,
 };
 use super::object::{parse_obj, parse_obj_list_paren};
 use crate::new_pipeline::ast::fact::{
@@ -603,6 +603,11 @@ impl Runtime {
 
     fn parse_prop_name(&mut self, tb: &mut TokenBlock) -> RuntimeResult<AtomicName> {
         let first = tb.advance()?;
+        if tb.peek() == Some(MOD_FLAT_SIGN) {
+            tb.advance()?;
+            let next = tb.advance()?;
+            return self.elaborate_flat_import(&first, next);
+        }
         if tb.peek() != Some(MOD_SIGN) {
             return Ok(AtomicName::Plain { name: first });
         }
@@ -613,17 +618,9 @@ impl Runtime {
             parts.push(next);
         }
         match parts.len() {
-            2 => Ok(AtomicName::WithMod {
-                mod_name: parts[0].clone(),
-                name: parts[1].clone(),
-            }),
-            3 => Ok(AtomicName::WithModAndExport {
-                mod_name: parts[0].clone(),
-                export_name: parts[1].clone(),
-                name: parts[2].clone(),
-            }),
+            2 | 3 => self.elaborate_name_parts(&parts),
             _ => Err(RuntimeParseError::new(
-                "qualified prop name must be `Mod::name` or `Mod::Export::name` (at most three segments)",
+                "qualified prop name must be `a::b`, `a:::b`, or `a::b::c`",
                 tb.line,
                 tb.source_path.clone(),
             )

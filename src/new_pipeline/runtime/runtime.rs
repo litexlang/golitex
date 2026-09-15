@@ -18,6 +18,8 @@ use std::collections::HashSet;
 /// `execution_environments_stack` are the per-scope stores it pushes and pops.
 pub struct Runtime {
     pub global_module_manager: GlobalModuleManager,
+    /// Module owning the `.lit` currently parsed/run: `None` = root, `Some(i)` = `imports[i]`.
+    pub current_mod_id: Option<usize>,
     pub execution_environments_stack: Vec<Box<ExecEnv>>,
     pub parse_scope_stack: Vec<Box<ParseScope>>,
     pub current_file: RealOrVirtualPath,
@@ -26,9 +28,9 @@ pub struct Runtime {
 
 /// One parse layer's occupied names. Inner scopes must not reuse a visible outer name.
 ///
-/// Keys are `AtomicName` (at most three `::` segments). Under the locked
-/// name-is-identity premise (`identifier_identity.md`), the name *is* the
-/// symbol identity.
+/// Keys are `AtomicName` (plain / `file_id` / `mod_id`+`file_id`). Under the
+/// locked identity premise, qualified atoms use indices from
+/// `GlobalModuleManager`, not surface import aliases.
 pub struct ParseScope {
     pub occupied: HashSet<AtomicName>,
 }
@@ -44,6 +46,7 @@ impl Runtime {
     pub fn new() -> Self {
         Self {
             global_module_manager: GlobalModuleManager::new(),
+            current_mod_id: None,
             execution_environments_stack: Vec::new(),
             parse_scope_stack: Vec::new(),
             current_file: RealOrVirtualPath::Eval,
@@ -157,6 +160,20 @@ impl Runtime {
 
     pub fn plain_atom_is_visible(&self, name: &str) -> bool {
         self.occupied_name_is_visible(&AtomicName::plain(name.to_string()))
+    }
+
+    /// Elaborate surface `::` segments using `global_module_manager` + `current_mod_id`.
+    pub fn elaborate_name_parts(&self, parts: &[String]) -> RuntimeResult<AtomicName> {
+        self.global_module_manager
+            .elaborate_name_parts(self.current_mod_id, parts)
+            .map_err(RuntimeError::Invariant)
+    }
+
+    /// Elaborate `a:::b` flatten sugar.
+    pub fn elaborate_flat_import(&self, alias: &str, name: String) -> RuntimeResult<AtomicName> {
+        self.global_module_manager
+            .elaborate_flat_import(self.current_mod_id, alias, name)
+            .map_err(RuntimeError::Invariant)
     }
 
     pub fn top_exec_env(&self) -> &ExecEnv {
