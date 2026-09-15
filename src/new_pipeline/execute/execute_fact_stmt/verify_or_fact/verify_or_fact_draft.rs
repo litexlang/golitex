@@ -48,8 +48,8 @@ impl Runtime {
         for (chosen_branch_index, branch) in fact.facts.iter().enumerate() {
             let proof_of_chosen_branch =
                 self.verify_and_chain_atomic_fact(branch, verify_state.clone())?;
-            // A successful branch closes the or-fact. Unknown branches are skipped.
-            if matches!(proof_of_chosen_branch, VerifyFactResult::Unknown(_)) {
+            // A successful branch closes the or-fact. Failed branches are skipped.
+            if matches!(proof_of_chosen_branch, VerifyFactResult::FailToVerifyWellDefined | VerifyFactResult::FailToSearchProof) {
                 continue;
             }
             return Ok(Some((chosen_branch_index, proof_of_chosen_branch)));

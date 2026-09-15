@@ -1,10 +1,9 @@
 //! Statement execution results for new_pipeline.
 //!
-//! Contract:
-//! - `exec_stmt` matches stmt kind and calls `exec_xxx_stmt`
-//! - each `exec_xxx_stmt` returns a dedicated `ExecXxxStmtResult`
-//! - fields sit flat on that result (no nested Effect / WellDefined wrappers):
-//!   how it ran, env effect mirrors, optional closed local env
+//! Top level is always Success | Failed (soft miss). Session-stopping bugs stay
+//! in `RuntimeResult::Err` (SessionError).
+//!
+//! Success / Failed each mirror stmt kind; definition / unsafe nest further.
 
 use crate::new_pipeline::ast::stmt::{HaveObjInNonemptySetOrParamTypeStmt, LetObjStmt};
 use crate::new_pipeline::execute::execute_def_abstract_prop_stmt::ExecDefAbstractPropStmtResult;
@@ -16,16 +15,53 @@ use crate::new_pipeline::execute::execute_unsafe_stmt::ExecUnsafeStmtResult;
 use crate::new_pipeline::runtime::FactId;
 
 pub enum ExecStmtResult {
+    Success(ExecStmtSuccess),
+    Failed(ExecStmtFailed),
+}
+
+pub enum ExecStmtSuccess {
     Fact(ExecFactStmtResult),
-    Definition(ExecDefinitionStmtResult),
+    Definition(ExecDefinitionStmtSuccess),
     Unsafe(ExecUnsafeStmtResult),
 }
 
-pub enum ExecDefinitionStmtResult {
+pub enum ExecStmtFailed {
+    Fact(VerifyFactResult),
+    Definition(ExecDefinitionStmtFailed),
+    Unsafe(ExecUnsafeStmtFailed),
+}
+
+pub enum ExecDefinitionStmtSuccess {
     LetObj(ExecLetObjStmtResult),
     HaveObjInNonemptySet(ExecHaveObjInNonemptySetStmtResult),
     DefProp(ExecDefPropStmtResult),
     DefAbstractProp(ExecDefAbstractPropStmtResult),
+}
+
+pub enum ExecDefinitionStmtFailed {
+    LetObj(VerifyObjWellDefinedResult),
+    HaveObjInNonemptySet(ExecHaveObjInNonemptySetStmtFailed),
+    DefProp(ExecDefPropStmtFailed),
+}
+
+pub enum ExecHaveObjInNonemptySetStmtFailed {
+    ParamType(VerifyObjWellDefinedResult),
+    NonemptyCheck(VerifyFactResult),
+}
+
+pub enum ExecDefPropStmtFailed {
+    ParamType(VerifyObjWellDefinedResult),
+    IffFactWellDefined(VerifyFactResult),
+}
+
+pub enum ExecUnsafeStmtFailed {
+    Trust(VerifyFactResult),
+    TrustHave(ExecTrustHaveStmtFailed),
+}
+
+pub enum ExecTrustHaveStmtFailed {
+    ParamType(VerifyObjWellDefinedResult),
+    BodyFactWellDefined(VerifyFactResult),
 }
 
 // Pipeline: WD the RHS value → affect global env. No local env.

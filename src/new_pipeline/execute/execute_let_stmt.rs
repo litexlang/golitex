@@ -1,9 +1,9 @@
 use super::exec_stmt_result::ExecLetObjStmtResult;
-use crate::new_pipeline::ast::fact::{EqualFact, Fact};
+use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact};
 use crate::new_pipeline::ast::obj::{AtomObj, Identifier, Obj};
 use crate::new_pipeline::ast::stmt::LetObjStmt;
 use crate::new_pipeline::exec_env::DefinedIdentifierInfo;
-use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
+use crate::new_pipeline::execute::execute_fact_stmt::{VerifyObjWellDefinedResult, VerifyState};
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
 impl Runtime {
@@ -14,25 +14,18 @@ impl Runtime {
     pub(super) fn exec_let_obj(
         &mut self,
         let_stmt: &LetObjStmt,
-    ) -> RuntimeResult<ExecLetObjStmtResult> {
+    ) -> RuntimeResult<Result<ExecLetObjStmtResult, VerifyObjWellDefinedResult>> {
         let verify_state = VerifyState {
             can_use_forall_fact: true,
             can_use_known_algebraic_rewrite: true,
             store_well_defined_fact: true,
         };
         let value_well_defined = self.verify_obj_well_definedness(&let_stmt.value, verify_state)?;
-        if value_well_defined.is_unknown() {
-            return Err(RuntimeError::Unknown(
-                "exec_let_obj: unable to establish well-definedness of RHS".to_string(),
-            ));
+        if value_well_defined.is_failed() {
+            return Ok(Err(value_well_defined));
         }
 
-        if self
-            .top_exec_env()
-            .definitions
-            .identifiers
-            .contains_key(&let_stmt.name)
-        {
+        if self.identifier_defined_in_stack(&let_stmt.name) {
             return Err(RuntimeError::Invariant(format!(
                 "identifier `{}` is already defined in this ExecEnv",
                 let_stmt.name
@@ -47,19 +40,18 @@ impl Runtime {
 
         let equality_fact_id = self.ids.allocate_fact_id();
         let left = Obj::Atom(AtomObj::Identifier(Identifier::new(let_stmt.name.clone())));
-        let equal_fact: Fact = EqualFact {
+        let equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
             fact_id: equality_fact_id,
             left,
             right: let_stmt.value.clone(),
             line_file: Some(let_stmt.line_file.clone()),
-        }
-        .into();
+        }));
         let store_and_infer_result = self.store_fact_and_infer(&equal_fact)?;
 
-        Ok(ExecLetObjStmtResult {
+        Ok(Ok(ExecLetObjStmtResult {
             statement: let_stmt.clone(),
             value_well_defined,
             stored_fact_ids: store_and_infer_result.stored_fact_ids,
-        })
+        }))
     }
 }

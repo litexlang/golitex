@@ -25,9 +25,8 @@ impl Runtime {
     pub fn search_not_equal_fact_proof_by_builtin_rule(
         &mut self,
         fact: &NotEqualFact,
-        verify_state: VerifyState,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotEqualFactSearchProofByBuiltinRule>> {
-        let _ = verify_state;
         if let (Obj::ListSet(left), Obj::ListSet(right)) = (&fact.left, &fact.right) {
             if left.list.len() != right.list.len() {
                 return Ok(Some(

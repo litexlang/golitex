@@ -1,5 +1,5 @@
 use super::verify_fact_result::{
-    UnknownVerifyFactResult, VerifyAndFactResult, VerifyChainFactResult, VerifyExistFactResult,
+    VerifyAndFactResult, VerifyChainFactResult, VerifyExistFactResult,
     VerifyFactResult, VerifyForallFactResult, VerifyForallFactWithIffResult,
     VerifyNotForallFactResult, VerifyOrFactResult,
 };
@@ -47,47 +47,33 @@ impl Runtime {
             Fact::AtomicFact(fact) => self.verify_atomic_fact(fact, verify_state),
             Fact::AndFact(fact) => match self.verify_and_fact(fact, verify_state)? {
                 Some(r) => Ok(VerifyFactResult::AndFact(Box::new(r))),
-                None => Ok(VerifyFactResult::Unknown(
-                    UnknownVerifyFactResult::UnableToSearchProof,
-                )),
+                None => Ok(VerifyFactResult::FailToSearchProof),
             },
             Fact::ChainFact(fact) => match self.verify_chain_fact(fact, verify_state)? {
                 Some(r) => Ok(VerifyFactResult::ChainFact(Box::new(r))),
-                None => Ok(VerifyFactResult::Unknown(
-                    UnknownVerifyFactResult::UnableToSearchProof,
-                )),
+                None => Ok(VerifyFactResult::FailToSearchProof),
             },
             Fact::OrFact(fact) => match self.verify_or_fact(fact, verify_state)? {
                 Some(r) => Ok(VerifyFactResult::OrFact(Box::new(r))),
-                None => Ok(VerifyFactResult::Unknown(
-                    UnknownVerifyFactResult::UnableToSearchProof,
-                )),
+                None => Ok(VerifyFactResult::FailToSearchProof),
             },
             Fact::ExistFact(fact) => match self.verify_exist_fact(fact, verify_state)? {
                 Some(r) => Ok(VerifyFactResult::ExistFact(Box::new(r))),
-                None => Ok(VerifyFactResult::Unknown(
-                    UnknownVerifyFactResult::UnableToSearchProof,
-                )),
+                None => Ok(VerifyFactResult::FailToSearchProof),
             },
             Fact::ForallFact(fact) => match self.verify_forall_fact(fact, verify_state)? {
                 Some(r) => Ok(VerifyFactResult::ForallFact(Box::new(r))),
-                None => Ok(VerifyFactResult::Unknown(
-                    UnknownVerifyFactResult::UnableToSearchProof,
-                )),
+                None => Ok(VerifyFactResult::FailToSearchProof),
             },
             Fact::ForallFactWithIff(fact) => {
                 match self.verify_forall_fact_with_iff(fact, verify_state)? {
                     Some(r) => Ok(VerifyFactResult::ForallFactWithIff(Box::new(r))),
-                    None => Ok(VerifyFactResult::Unknown(
-                        UnknownVerifyFactResult::UnableToSearchProof,
-                    )),
+                    None => Ok(VerifyFactResult::FailToSearchProof),
                 }
             }
             Fact::NotForall(fact) => match self.verify_not_forall_fact(fact, verify_state)? {
                 Some(r) => Ok(VerifyFactResult::NotForall(Box::new(r))),
-                None => Ok(VerifyFactResult::Unknown(
-                    UnknownVerifyFactResult::UnableToSearchProof,
-                )),
+                None => Ok(VerifyFactResult::FailToSearchProof),
             },
         }
     }

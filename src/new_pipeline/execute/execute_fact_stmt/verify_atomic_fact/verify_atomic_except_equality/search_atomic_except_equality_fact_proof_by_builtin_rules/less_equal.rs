@@ -22,9 +22,8 @@ impl Runtime {
     pub fn search_less_equal_fact_proof_by_builtin_rule(
         &mut self,
         fact: &LessEqualFact,
-        verify_state: VerifyState,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
-        let _ = verify_state;
         if fact.left == fact.right {
             return Ok(Some(
                 LessEqualFactSearchProofByBuiltinRule::OrderReflexivity(

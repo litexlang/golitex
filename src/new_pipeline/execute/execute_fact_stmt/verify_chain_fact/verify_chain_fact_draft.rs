@@ -29,7 +29,7 @@ impl Runtime {
         let mut proof_of_each_edge = Vec::new();
         for edge in edges.iter() {
             let proof = self.verify_atomic_fact(edge, verify_state.clone())?;
-            if proof.is_unknown() {
+            if proof.is_failed() {
                 return Ok(vec![proof]);
             }
             proof_of_each_edge.push(proof);

@@ -80,7 +80,6 @@ fn run_module_dir(runtime: &mut Runtime, module_dir: &Path) -> RuntimeResult<()>
     }
 
     for name in std_imports {
-        let _ = runtime;
         return Err(RuntimeError::Unsupported(format!(
             "import std `{name}` is not wired yet"
         )));

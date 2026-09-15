@@ -7,10 +7,9 @@ impl Runtime {
     // Exact ByCache is handled in `verify_fact` before this entry.
     pub fn verify_forall_fact_with_iff(
         &mut self,
-        fact: &ForallFactWithIff,
-        verify_state: VerifyState,
+        _fact: &ForallFactWithIff,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<VerifyForallFactWithIffResult>> {
-        let _ = (fact, verify_state);
         Ok(None)
     }
 }

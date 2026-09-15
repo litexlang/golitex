@@ -30,23 +30,27 @@ consumers while the new Result and pipeline shapes are still being drafted.
 `RuntimeResult<VerifyFactResult>`:
 
 - `Ok(Equality(...))` / `Ok(AtomicExceptEquality(...))` when a proof route succeeds
-- `Ok(Unknown(UnknownWellDefined))` when object WD is not established
-- `Ok(Unknown(UnableToSearchProof))` when WD succeeds but every truth-search slot fails
+- `Ok(FailToVerifyWellDefined)` when object WD is not established
+- `Ok(FailToSearchProof)` when WD succeeds but every truth-search slot fails
 - `Err(...)` only for real runtime / invariant failures
 
 Object WD (`verify_obj_well_definedness`) returns
 `RuntimeResult<VerifyObjWellDefinedResult>`:
 
-- `Ok(ByCache / ByDef)` when WD is established
-- `Ok(Unknown)` when a child WD or requirement-fact search misses
+- `Ok(ByCache)` when a WD id is visible on the env stack
+- `Ok(ByDef)` when WD is established by definition (and, if
+  `store_well_defined_fact`, recorded on the current top env)
+- `Ok(FailToVerifyWellDefined)` when a child WD or requirement-fact search misses
 - `Err(...)` only for real runtime / invariant failures
 
-Requirement search aggregators return `Ok(Unknown)` on exhaustion; they must not
-emit `Err(RuntimeError::Unknown)` for “no proof found”.
+Requirement search aggregators return soft fail variants on exhaustion; they
+must not emit `Err(RuntimeError::Unknown)` for “no proof found”.
 
-Must-prove callers (`execute_fact_statement`, `exec_let_obj`, `have` /
-`trust` / `trust have` / `prop`, nonempty obligations) reject `Unknown` at
-their boundary and must not `?` treat it as proven evidence.
+Nested must-prove callers reject soft fails at their boundary. Top-level soft
+fails become `Ok(ExecStmtResult::Failed)` (temp env discarded, no merge).
+
+`exec_stmt` always runs the stmt in a temp `ExecEnv` and merges only on
+`Success`.
 
 `verify_atomic_fact_search_proof` is the truth-proof phase after atomic-fact
 well-definedness. Its ordinary search pipeline is intentionally limited to the

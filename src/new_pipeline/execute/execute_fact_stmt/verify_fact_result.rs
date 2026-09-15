@@ -4,18 +4,15 @@
 //! `Equality` / `AtomicExceptEquality` (no intermediate AtomicFact layer).
 //!
 //! Verify entry points return `RuntimeResult<VerifyFactResult>`:
-//! - `Ok(Unknown)` = unable to prove (not a runtime error)
-//! - `Err` = real operational / invariant failure
-//!
-//! Unknown splits WD miss vs truth-search miss:
-//! - `UnknownWellDefined` = object/fact WD not established
-//! - `UnableToSearchProof` = WD ok, truth proof search exhausted
+//! - `Ok(FailToVerifyWellDefined)` / `Ok(FailToSearchProof)` = soft miss
+//! - `Err` = real operational / invariant failure (SessionError)
 
 use super::cache_search_proof::CacheSearchProof;
 use super::verify_atomic_fact::{VerifyAtomicExceptEqualityFactResult, VerifyEqualityResult};
 
 pub enum VerifyFactResult {
-    Unknown(UnknownVerifyFactResult),
+    FailToVerifyWellDefined,
+    FailToSearchProof,
     Equality(Box<VerifyEqualityResult>),
     AtomicExceptEquality(Box<VerifyAtomicExceptEqualityFactResult>),
     AndFact(Box<VerifyAndFactResult>),
@@ -25,11 +22,6 @@ pub enum VerifyFactResult {
     ForallFact(Box<VerifyForallFactResult>),
     ForallFactWithIff(Box<VerifyForallFactWithIffResult>),
     NotForall(Box<VerifyNotForallFactResult>),
-}
-
-pub enum UnknownVerifyFactResult {
-    UnknownWellDefined,
-    UnableToSearchProof,
 }
 
 // Composite stubs currently expose only exact FactIR ByCache; fuller search
@@ -63,7 +55,10 @@ pub enum VerifyNotForallFactResult {
 }
 
 impl VerifyFactResult {
-    pub fn is_unknown(&self) -> bool {
-        matches!(self, Self::Unknown(_))
+    pub fn is_failed(&self) -> bool {
+        matches!(
+            self,
+            Self::FailToVerifyWellDefined | Self::FailToSearchProof
+        )
     }
 }

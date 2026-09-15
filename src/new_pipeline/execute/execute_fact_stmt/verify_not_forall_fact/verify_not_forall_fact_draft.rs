@@ -24,10 +24,9 @@ impl Runtime {
 
     pub fn search_not_forall_fact_proof(
         &mut self,
-        fact: &NotForallFact,
-        verify_state: VerifyState,
+        _fact: &NotForallFact,
+        _verify_state: VerifyState,
     ) -> Result<NotForallFactSearchedProof, RuntimeError> {
-        let _ = (fact, verify_state);
         todo!("not forall search routes not implemented yet")
     }
 }

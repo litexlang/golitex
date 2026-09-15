@@ -12,10 +12,9 @@ pub struct ClosedNumericComparisonBuiltinRuleProof {}
 impl Runtime {
     pub fn search_less_fact_proof_by_builtin_rule(
         &mut self,
-        fact: &LessFact,
-        verify_state: VerifyState,
+        _fact: &LessFact,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessFactSearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
         Ok(None)
     }
 }

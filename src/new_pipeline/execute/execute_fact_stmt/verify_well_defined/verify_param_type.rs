@@ -12,9 +12,9 @@ pub enum ParamTypeWellDefinedProof {
 }
 
 impl ParamTypeWellDefinedProof {
-    pub fn is_unknown(&self) -> bool {
+    pub fn is_failed(&self) -> bool {
         match self {
-            Self::Obj(wd) => wd.is_unknown(),
+            Self::Obj(wd) => wd.is_failed(),
             Self::Set | Self::NonemptySet | Self::FiniteSet => false,
         }
     }

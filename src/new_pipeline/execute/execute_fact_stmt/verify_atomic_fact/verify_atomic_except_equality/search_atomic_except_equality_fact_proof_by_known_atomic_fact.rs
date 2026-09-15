@@ -15,9 +15,8 @@ impl Runtime {
     pub fn search_atomic_except_equality_fact_proof_by_known_atomic_fact(
         &mut self,
         fact: &AtomicFact,
-        verify_state: VerifyState,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByKnownAtomicFact>> {
-        let _ = verify_state;
         if matches!(fact, AtomicFact::EqualFact(_)) {
             return Ok(None);
         }

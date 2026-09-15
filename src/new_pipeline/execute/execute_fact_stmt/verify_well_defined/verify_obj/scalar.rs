@@ -17,7 +17,6 @@ impl Runtime {
         &mut self,
         _verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedProofByDef> {
-        let _ = self;
         Ok(ObjWellDefinedProofByDef::leaf())
     }
 
@@ -25,7 +24,6 @@ impl Runtime {
         &mut self,
         _verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedProofByDef> {
-        let _ = self;
         Ok(ObjWellDefinedProofByDef::leaf())
     }
 
@@ -33,7 +31,6 @@ impl Runtime {
         &mut self,
         _verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedProofByDef> {
-        let _ = self;
         Ok(ObjWellDefinedProofByDef::leaf())
     }
 
@@ -41,7 +38,6 @@ impl Runtime {
         &mut self,
         _verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedProofByDef> {
-        let _ = self;
         Ok(ObjWellDefinedProofByDef::leaf())
     }
 
@@ -222,7 +218,7 @@ impl Runtime {
             verify_state.clone(),
             "gcd left nonzero".to_string(),
         )?;
-        if !left_r.is_unknown() {
+        if !left_r.is_failed() {
             reqs.push(left_r);
             return Ok(self.with_requirements(proof, reqs));
         }
@@ -231,12 +227,12 @@ impl Runtime {
             verify_state,
             "gcd right nonzero".to_string(),
         )?;
-        if !right_r.is_unknown() {
+        if !right_r.is_failed() {
             reqs.push(right_r);
             return Ok(self.with_requirements(proof, reqs));
         }
-        // Neither nonzero obligation proved: keep an Unknown requirement so
-        // entry collapses to VerifyObjWellDefinedResult::Unknown.
+        // Neither nonzero obligation proved: keep a failed requirement so
+        // entry collapses to VerifyObjWellDefinedResult::FailToVerifyWellDefined.
         reqs.push(left_r);
         Ok(self.with_requirements(proof, reqs))
     }
@@ -414,14 +410,14 @@ impl Runtime {
             verify_state.clone(),
         )?;
         let reqs_n = self.try_pow_domain_complex_natural(value, verify_state.clone())?;
-        if reqs_n.iter().all(|r| !r.is_unknown()) {
+        if reqs_n.iter().all(|r| !r.is_failed()) {
             return Ok(self.with_requirements(proof, reqs_n));
         }
         let reqs_z = self.try_pow_domain_nonzero_complex_integer(value, verify_state)?;
-        if reqs_z.iter().all(|r| !r.is_unknown()) {
+        if reqs_z.iter().all(|r| !r.is_failed()) {
             return Ok(self.with_requirements(proof, reqs_z));
         }
-        // No pow domain branch proved: keep Unknown requirements for collapse.
+        // No pow domain branch proved: keep failed requirements for collapse.
         Ok(self.with_requirements(proof, reqs_z))
     }
 

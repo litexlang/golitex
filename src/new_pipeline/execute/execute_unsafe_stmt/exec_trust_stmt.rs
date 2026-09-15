@@ -9,9 +9,9 @@
 
 use crate::new_pipeline::ast::stmt::TrustStmt;
 use crate::new_pipeline::execute::execute_fact_stmt::{
-    FactWellDefinedProof, StoreFactAndInferResult, VerifyState,
+    FactWellDefinedProof, StoreFactAndInferResult, VerifyFactResult, VerifyState,
 };
-use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
+use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 /// `trust` / `trust:` pipeline result.
 ///
@@ -26,17 +26,18 @@ impl Runtime {
     // Mathematical contract: `trust` requires well-definedness of every fact
     // (and its objects) but skips truth verification. Example:
     //   trust 1 + 1 = 3   // ok: WD passes; equality is assumed
-    //   trust 1 / 0 = 0   // error: division WD fails
-    pub fn exec_trust_stmt(&mut self, stmt: &TrustStmt) -> RuntimeResult<ExecTrustStmtResult> {
+    //   trust 1 / 0 = 0   // soft fail: division WD fails
+    pub(in crate::new_pipeline::execute) fn exec_trust_stmt(
+        &mut self,
+        stmt: &TrustStmt,
+    ) -> RuntimeResult<Result<ExecTrustStmtResult, VerifyFactResult>> {
         let verify_state = trust_verify_state();
 
         let mut facts_well_defined = Vec::with_capacity(stmt.facts.len());
         for fact in &stmt.facts {
             let wd = self.verify_fact_well_definedness(fact, verify_state.clone())?;
-            if wd.is_unknown() {
-                return Err(RuntimeError::Unknown(
-                    "trust: unable to establish well-definedness of fact".to_string(),
-                ));
+            if wd.is_failed() {
+                return Ok(Err(VerifyFactResult::FailToVerifyWellDefined));
             }
             facts_well_defined.push(wd);
         }
@@ -46,11 +47,11 @@ impl Runtime {
             store_and_infer_results.push(self.store_fact_and_infer(fact)?);
         }
 
-        Ok(ExecTrustStmtResult {
+        Ok(Ok(ExecTrustStmtResult {
             statement: stmt.clone(),
             facts_well_defined,
             store_and_infer_results,
-        })
+        }))
     }
 }
 

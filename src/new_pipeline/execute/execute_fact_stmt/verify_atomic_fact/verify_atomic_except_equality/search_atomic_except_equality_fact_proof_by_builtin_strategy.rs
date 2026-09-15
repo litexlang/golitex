@@ -16,10 +16,9 @@ pub struct PosAddPosIsPosStrategySingleStep {
 impl Runtime {
     pub fn search_atomic_except_equality_fact_proof_by_builtin_strategy(
         &mut self,
-        fact: &AtomicFact,
-        verify_state: VerifyState,
+        _fact: &AtomicFact,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByBuiltinStrategy>> {
-        let _ = (fact, verify_state);
         Ok(None)
     }
 }

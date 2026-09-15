@@ -16,9 +16,8 @@ impl Runtime {
     pub fn search_equal_fact_builtin_rule_equal_ir(
         &mut self,
         fact: &EqualFact,
-        verify_state: VerifyState,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<ByEqualIrBuiltinRuleProof>> {
-        let _ = verify_state;
         if fact.left.ir() == fact.right.ir() {
             Ok(Some(ByEqualIrBuiltinRuleProof {}))
         } else {

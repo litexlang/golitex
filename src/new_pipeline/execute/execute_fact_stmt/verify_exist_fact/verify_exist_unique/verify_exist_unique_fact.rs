@@ -42,10 +42,9 @@ impl Runtime {
 
     pub fn search_exist_unique_fact_proof_by_exist_and_uniqueness(
         &mut self,
-        fact: &PlainExistFact,
-        verify_state: VerifyState,
+        _fact: &PlainExistFact,
+        _verify_state: VerifyState,
     ) -> Result<Option<ExistUniqueFactSearchedProofByExistAndUniqueness>, RuntimeError> {
-        let _ = (fact, verify_state);
         todo!("search exist unique by exist and uniqueness")
     }
 }

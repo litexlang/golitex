@@ -12,10 +12,9 @@ pub struct ClosedNumericComparisonBuiltinRuleProof {}
 impl Runtime {
     pub fn search_greater_fact_proof_by_builtin_rule(
         &mut self,
-        fact: &GreaterFact,
-        verify_state: VerifyState,
+        _fact: &GreaterFact,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<GreaterFactSearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
         Ok(None)
     }
 }

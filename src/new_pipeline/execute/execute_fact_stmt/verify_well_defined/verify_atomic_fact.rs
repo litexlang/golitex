@@ -9,17 +9,16 @@ pub struct AtomicFactWellDefinedProof {
 }
 
 impl AtomicFactWellDefinedProof {
-    pub fn is_unknown(&self) -> bool {
+    pub fn is_failed(&self) -> bool {
         self.well_defined_of_each_parameter
             .iter()
-            .any(|p| p.is_unknown())
+            .any(|p| p.is_failed())
     }
 }
 
 impl Runtime {
     // Classify atomic fact shape, then WD each argument object.
-    // A parameter may be VerifyObjWellDefinedResult::Unknown; callers treat that
-    // as UnknownWellDefined rather than a runtime error.
+    // A parameter may be FailToVerifyWellDefined; callers treat that as soft miss.
     pub fn verify_atomic_fact_well_definedness(
         &mut self,
         fact: &AtomicFact,

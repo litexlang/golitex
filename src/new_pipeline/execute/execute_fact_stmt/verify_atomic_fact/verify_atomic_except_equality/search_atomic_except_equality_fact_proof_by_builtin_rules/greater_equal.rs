@@ -22,9 +22,8 @@ impl Runtime {
     pub fn search_greater_equal_fact_proof_by_builtin_rule(
         &mut self,
         fact: &GreaterEqualFact,
-        verify_state: VerifyState,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<GreaterEqualFactSearchProofByBuiltinRule>> {
-        let _ = verify_state;
         if fact.left == fact.right {
             return Ok(Some(
                 GreaterEqualFactSearchProofByBuiltinRule::OrderReflexivity(

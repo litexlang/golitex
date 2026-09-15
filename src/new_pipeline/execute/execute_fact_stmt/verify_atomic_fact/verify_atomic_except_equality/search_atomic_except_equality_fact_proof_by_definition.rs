@@ -6,10 +6,9 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 impl Runtime {
     pub fn search_atomic_except_equality_fact_proof_by_definition(
         &mut self,
-        fact: &AtomicFact,
-        verify_state: VerifyState,
+        _fact: &AtomicFact,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByDefinition>> {
-        let _ = (fact, verify_state);
         Ok(None)
     }
 }

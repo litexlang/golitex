@@ -4,6 +4,7 @@
 //! No local env, no parameter carriers, no iff-facts.
 
 use crate::new_pipeline::ast::stmt::DefAbstractPropStmt;
+use crate::new_pipeline::parse::keywords::{ABSTRACT_PROP, PROP};
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
 /// `abstract_prop name(params)` pipeline result.
@@ -17,28 +18,26 @@ impl Runtime {
     // object-domain WD obligation. Example:
     //   abstract_prop prime(n)
     //   // stores the interface; $prime(17) stays unknown until assumed/proved
-    pub fn exec_def_abstract_prop_stmt(
+    pub(in crate::new_pipeline::execute) fn exec_def_abstract_prop_stmt(
         &mut self,
         stmt: &DefAbstractPropStmt,
     ) -> RuntimeResult<ExecDefAbstractPropStmtResult> {
         self.ensure_def_abstract_prop_name_free(&stmt.name)?;
-        self.top_exec_env_mut()
-            .store_def_abstract_prop(stmt.clone());
+        self.top_exec_env_mut().store_def_abstract_prop(stmt.clone());
         Ok(ExecDefAbstractPropStmtResult {
             statement: stmt.clone(),
         })
     }
 
     fn ensure_def_abstract_prop_name_free(&self, name: &str) -> RuntimeResult<()> {
-        let env = self.top_exec_env();
-        if env.lookup_def_abstract_prop(name).is_some() {
+        if self.def_abstract_prop_visible_in_stack(name).is_some() {
             return Err(RuntimeError::Invariant(format!(
-                "name `{name}` is already used in this scope as abstract_prop"
+                "name `{name}` is already used in this scope as {ABSTRACT_PROP}"
             )));
         }
-        if env.lookup_def_prop(name).is_some() {
+        if self.def_prop_visible_in_stack(name).is_some() {
             return Err(RuntimeError::Invariant(format!(
-                "name `{name}` is already used in this scope as prop"
+                "name `{name}` is already used in this scope as {PROP}"
             )));
         }
         Ok(())

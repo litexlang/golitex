@@ -119,136 +119,121 @@ impl Runtime {
 
     pub fn search_normal_atomic_fact_proof_by_builtin_rule(
         &mut self,
-        fact: &NormalAtomicFact,
-        verify_state: VerifyState,
+        _fact: &NormalAtomicFact,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<NormalAtomicFactSearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
         Ok(None)
     }
 
     pub fn search_not_normal_atomic_fact_proof_by_builtin_rule(
         &mut self,
-        fact: &NotNormalAtomicFact,
-        verify_state: VerifyState,
+        _fact: &NotNormalAtomicFact,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotNormalAtomicFactSearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
         Ok(None)
     }
 
     pub fn search_not_less_fact_proof_by_builtin_rule(
         &mut self,
-        fact: &NotLessFact,
-        verify_state: VerifyState,
+        _fact: &NotLessFact,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotLessFactSearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
         Ok(None)
     }
 
     pub fn search_not_greater_fact_proof_by_builtin_rule(
         &mut self,
-        fact: &NotGreaterFact,
-        verify_state: VerifyState,
+        _fact: &NotGreaterFact,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotGreaterFactSearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
         Ok(None)
     }
 
     pub fn search_not_less_equal_fact_proof_by_builtin_rule(
         &mut self,
-        fact: &NotLessEqualFact,
-        verify_state: VerifyState,
+        _fact: &NotLessEqualFact,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotLessEqualFactSearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
         Ok(None)
     }
 
     pub fn search_not_greater_equal_fact_proof_by_builtin_rule(
         &mut self,
-        fact: &NotGreaterEqualFact,
-        verify_state: VerifyState,
+        _fact: &NotGreaterEqualFact,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotGreaterEqualFactSearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
         Ok(None)
     }
 
     pub fn search_not_is_set_fact_proof_by_builtin_rule(
         &mut self,
-        fact: &NotIsSetFact,
-        verify_state: VerifyState,
+        _fact: &NotIsSetFact,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotIsSetFactSearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
         Ok(None)
     }
 
     pub fn search_not_is_finite_set_fact_proof_by_builtin_rule(
         &mut self,
-        fact: &NotIsFiniteSetFact,
-        verify_state: VerifyState,
+        _fact: &NotIsFiniteSetFact,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotIsFiniteSetFactSearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
         Ok(None)
     }
 
     pub fn search_not_in_fact_proof_by_builtin_rule(
         &mut self,
-        fact: &NotInFact,
-        verify_state: VerifyState,
+        _fact: &NotInFact,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotInFactSearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
         Ok(None)
     }
 
     pub fn search_not_is_cart_fact_proof_by_builtin_rule(
         &mut self,
-        fact: &NotIsCartFact,
-        verify_state: VerifyState,
+        _fact: &NotIsCartFact,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotIsCartFactSearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
         Ok(None)
     }
 
     pub fn search_not_is_tuple_fact_proof_by_builtin_rule(
         &mut self,
-        fact: &NotIsTupleFact,
-        verify_state: VerifyState,
+        _fact: &NotIsTupleFact,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotIsTupleFactSearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
         Ok(None)
     }
 
     pub fn search_not_subset_fact_proof_by_builtin_rule(
         &mut self,
-        fact: &NotSubsetFact,
-        verify_state: VerifyState,
+        _fact: &NotSubsetFact,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotSubsetFactSearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
         Ok(None)
     }
 
     pub fn search_not_superset_fact_proof_by_builtin_rule(
         &mut self,
-        fact: &NotSupersetFact,
-        verify_state: VerifyState,
+        _fact: &NotSupersetFact,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotSupersetFactSearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
         Ok(None)
     }
 
     pub fn search_fn_equal_in_fact_proof_by_builtin_rule(
         &mut self,
-        fact: &FnEqualInFact,
-        verify_state: VerifyState,
+        _fact: &FnEqualInFact,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<FnEqualInFactSearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
         Ok(None)
     }
 
     pub fn search_fn_equal_fact_proof_by_builtin_rule(
         &mut self,
-        fact: &FnEqualFact,
-        verify_state: VerifyState,
+        _fact: &FnEqualFact,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<FnEqualFactSearchProofByBuiltinRule>> {
-        let _ = (fact, verify_state);
         Ok(None)
     }
 }

@@ -140,6 +140,11 @@ impl ExecEnv {
             .abstract_predicate_definitions
             .insert(def_abstract_prop.name.clone(), def_abstract_prop);
     }
+
+    // Commit a closed child ExecEnv into this parent (Success path of exec_stmt).
+    pub fn merge_from(&mut self, child: &ExecEnv) -> crate::new_pipeline::runtime::RuntimeResult<()> {
+        super::merge_exec_env::merge_exec_env_from(self, child)
+    }
 }
 
 impl Default for ExecEnv {

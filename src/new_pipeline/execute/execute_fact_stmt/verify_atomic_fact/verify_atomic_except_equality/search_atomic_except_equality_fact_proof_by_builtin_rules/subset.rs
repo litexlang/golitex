@@ -49,9 +49,8 @@ impl Runtime {
     pub fn search_subset_fact_proof_by_builtin_rule(
         &mut self,
         fact: &SubsetFact,
-        verify_state: VerifyState,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<SubsetFactSearchProofByBuiltinRule>> {
-        let _ = verify_state;
         if let (Obj::StandardSet(left), Obj::StandardSet(right)) = (&fact.left, &fact.right) {
             if standard_set_is_subset_eq(left, right) {
                 return Ok(Some(SubsetFactSearchProofByBuiltinRule::StandardSetSubset(

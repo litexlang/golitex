@@ -23,9 +23,8 @@ impl Runtime {
     pub fn search_is_finite_set_fact_proof_by_builtin_rule(
         &mut self,
         fact: &IsFiniteSetFact,
-        verify_state: VerifyState,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<IsFiniteSetFactSearchProofByBuiltinRule>> {
-        let _ = verify_state;
         match &fact.set {
             Obj::ListSet(_) => Ok(Some(IsFiniteSetFactSearchProofByBuiltinRule::ListSet(
                 ListSetFiniteBuiltinRuleProof {},

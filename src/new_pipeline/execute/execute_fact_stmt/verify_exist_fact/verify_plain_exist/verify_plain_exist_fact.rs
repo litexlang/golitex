@@ -54,28 +54,25 @@ impl Runtime {
 
     pub fn search_plain_exist_fact_proof_by_known_exist_fact(
         &mut self,
-        fact: &PlainExistFact,
-        verify_state: VerifyState,
+        _fact: &PlainExistFact,
+        _verify_state: VerifyState,
     ) -> Result<Option<PlainExistFactSearchedProofByKnownExistFact>, RuntimeError> {
-        let _ = (fact, verify_state);
         todo!("search plain exist by known exist fact")
     }
 
     pub fn search_plain_exist_fact_proof_by_builtin_rule(
         &mut self,
-        fact: &PlainExistFact,
-        verify_state: VerifyState,
+        _fact: &PlainExistFact,
+        _verify_state: VerifyState,
     ) -> Result<Option<PlainExistFactSearchedProofByBuiltinRule>, RuntimeError> {
-        let _ = (fact, verify_state);
         todo!("search plain exist by builtin rule")
     }
 
     pub fn search_plain_exist_fact_proof_by_known_forall_fact(
         &mut self,
-        fact: &PlainExistFact,
-        verify_state: VerifyState,
+        _fact: &PlainExistFact,
+        _verify_state: VerifyState,
     ) -> Result<Option<PlainExistFactSearchedProofByKnownForallFact>, RuntimeError> {
-        let _ = (fact, verify_state);
         todo!("search plain exist by known forall fact")
     }
 }

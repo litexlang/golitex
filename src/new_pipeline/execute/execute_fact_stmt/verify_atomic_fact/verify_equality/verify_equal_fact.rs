@@ -4,7 +4,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::{
     EqualFactSearchedProof, EqualFactSearchedProofByKnownForallFact, VerifyEqualityResult,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::{
-    UnknownVerifyFactResult, VerifyFactResult,
+    VerifyFactResult,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
@@ -19,10 +19,8 @@ impl Runtime {
     ) -> RuntimeResult<VerifyFactResult> {
         let well_defined_proof =
             self.verify_atomic_fact_well_definedness(&(fact.clone().into()), verify_state.clone())?;
-        if well_defined_proof.is_unknown() {
-            return Ok(VerifyFactResult::Unknown(
-                UnknownVerifyFactResult::UnknownWellDefined,
-            ));
+        if well_defined_proof.is_failed() {
+            return Ok(VerifyFactResult::FailToVerifyWellDefined);
         }
         match self.search_equal_fact_proof(fact, verify_state)? {
             Some(searched_proof) => {
@@ -32,9 +30,7 @@ impl Runtime {
                     searched_proof,
                 })))
             }
-            None => Ok(VerifyFactResult::Unknown(
-                UnknownVerifyFactResult::UnableToSearchProof,
-            )),
+            None => Ok(VerifyFactResult::FailToSearchProof),
         }
     }
 
@@ -82,27 +78,24 @@ impl Runtime {
     pub fn search_equal_fact_proof_by_cache(
         &mut self,
         fact: &EqualFact,
-        verify_state: VerifyState,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<CacheSearchProof>> {
-        let _ = verify_state;
         Ok(self.search_atomic_fact_proof_by_cache(&(fact.clone().into())))
     }
 
     pub fn search_equal_fact_proof_by_builtin_strategy(
         &mut self,
-        fact: &EqualFact,
-        verify_state: VerifyState,
+        _fact: &EqualFact,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualitySearchProofByBuiltinStrategy>> {
-        let _ = (fact, verify_state);
         Ok(None)
     }
 
     pub fn search_equal_fact_proof_by_known_forall_fact(
         &mut self,
-        fact: &EqualFact,
-        verify_state: VerifyState,
+        _fact: &EqualFact,
+        _verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualFactSearchedProofByKnownForallFact>> {
-        let _ = (fact, verify_state);
         Ok(None)
     }
 }

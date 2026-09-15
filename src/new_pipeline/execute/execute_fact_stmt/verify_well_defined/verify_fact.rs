@@ -12,9 +12,9 @@ pub enum FactWellDefinedProof {
 }
 
 impl FactWellDefinedProof {
-    pub fn is_unknown(&self) -> bool {
+    pub fn is_failed(&self) -> bool {
         match self {
-            Self::AtomicFact(proof) => proof.is_unknown(),
+            Self::AtomicFact(proof) => proof.is_failed(),
             Self::CompositePending => false,
         }
     }

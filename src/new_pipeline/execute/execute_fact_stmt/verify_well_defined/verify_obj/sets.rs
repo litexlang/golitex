@@ -119,7 +119,6 @@ impl Runtime {
         value: &SetBuilder,
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedProofByDef> {
-        let _ = &value.alpha.facts;
         self.verify_unary_obj_well_definedness_by_def(value.alpha.param_set.as_ref(), verify_state)
     }
     pub(super) fn verify_cart_obj_well_definedness_by_def(
