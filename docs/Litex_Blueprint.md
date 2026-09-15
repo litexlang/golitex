@@ -2,7 +2,7 @@
 
 Created and maintained by Jiachen Shen.
 
-Last updated: September 14, 2026.
+Last updated: September 15, 2026.
 
 Website: https://litexlang.com/doc/Litex_Blueprint
 
@@ -64,7 +64,19 @@ The document develops along four connected questions: what the user sees, what t
 3. **Bottom-up accumulation**: accepted facts enter the context for later reasoning; this is only the default direction.
 4. **Lean rechecking**: covered routes can be translated into Lean proof objects and checked by its kernel; coverage is still incomplete.
 
-By comparing Litex and Lean writing styles, the document shows how four design choices lower understanding cost. It then discusses Litex's role in the AI for Math ecosystem and how it helps more people take part in formalization. If you are a Lean user, you may roughly compare the default flows of Litex and Lean as:
+By comparing Litex and Lean writing styles, the document shows how four design choices lower understanding cost. It then discusses Litex's role in the AI for Math ecosystem and how it helps more people take part in formalization.
+
+> **For Lean users:**
+>
+> Why is Lean especially hard for many beginners? Is there a way to design a formal language that lets people move almost seamlessly from everyday mathematical expression?
+>
+> Real insight often comes from rethinking first principles; sometimes reversing the problem and the solution yields unexpected success. Here is what I did:
+>
+> 1. **Rethink first principles**: on the user side, default back to sets, elements, functions, and relations—rather than crossing type engineering first.
+> 2. **Flip the default interface**: write *what to prove* bottom-up in the source, rather than first writing *how to attack the goal*.
+> 3. **What follows**: the kernel searches for *how*; users need not name and cite common facts by hand; and a readable proof trace is generated automatically.
+>
+> (Lean can also be written forward, and Litex can also be organized around explicit goals; this is about the default feel and the design starting point.) The later sections explain how the kernel honors that choice. For a rough comparison of default flows:
 
 ```text
 Lean: proposition → proof goal → proof tactics and refinement → proof term → kernel check
