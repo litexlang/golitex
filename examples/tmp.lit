@@ -3,4 +3,3 @@
 {x R: x > 0} = {y R: y > 0}
 
 {a R: a $in {b R: b > 0}} = {c R: c $in {d R: d > 0}}
-`

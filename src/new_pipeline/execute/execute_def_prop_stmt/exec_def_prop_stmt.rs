@@ -89,13 +89,25 @@ impl Runtime {
             &def_prop.typed_parameters,
             verify_state.clone(),
         )?;
+        for proof in &param_type_well_defined {
+            if proof.is_unknown() {
+                return Err(RuntimeError::Unknown(
+                    "prop: unable to establish well-definedness of parameter type".to_string(),
+                ));
+            }
+        }
 
         let defined_params = self.define_def_prop_params_in_local(def_prop)?;
 
         let mut iff_fact_well_defined = Vec::with_capacity(def_prop.iff_facts.len());
         for fact in &def_prop.iff_facts {
-            iff_fact_well_defined
-                .push(self.verify_fact_well_definedness(fact, verify_state.clone())?);
+            let wd = self.verify_fact_well_definedness(fact, verify_state.clone())?;
+            if wd.is_unknown() {
+                return Err(RuntimeError::Unknown(
+                    "prop: unable to establish well-definedness of iff fact".to_string(),
+                ));
+            }
+            iff_fact_well_defined.push(wd);
         }
 
         Ok((

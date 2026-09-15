@@ -11,6 +11,15 @@ pub enum FactWellDefinedProof {
     CompositePending,
 }
 
+impl FactWellDefinedProof {
+    pub fn is_unknown(&self) -> bool {
+        match self {
+            Self::AtomicFact(proof) => proof.is_unknown(),
+            Self::CompositePending => false,
+        }
+    }
+}
+
 impl Runtime {
     // Main WD entry for facts: match Fact shape, then dispatch.
     pub fn verify_fact_well_definedness(

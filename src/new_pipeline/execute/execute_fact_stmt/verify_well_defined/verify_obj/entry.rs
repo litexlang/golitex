@@ -1,4 +1,7 @@
 //! Object WD entry: cache lookup, then match Obj → family branch.
+//!
+//! `Ok(Unknown)` means WD was not established (not a runtime error).
+//! Must-prove callers reject Unknown at their boundary.
 
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
@@ -6,16 +9,23 @@ use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::runtime_ids::WellDefinednessId;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
-// Top-level object WD result: only cache hit or prove-by-definition.
+// Top-level object WD result: cache hit, prove-by-definition, or unknown.
 pub enum VerifyObjWellDefinedResult {
     ByCache { wd_id: WellDefinednessId },
     ByDef(ObjWellDefinedProofByDef),
+    Unknown,
 }
 
 // One by-def shape for every Obj: child WD + verified domain requirements.
 pub struct ObjWellDefinedProofByDef {
     pub child_obj_well_defined: Vec<VerifyObjWellDefinedResult>,
     pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+
+impl VerifyObjWellDefinedResult {
+    pub fn is_unknown(&self) -> bool {
+        matches!(self, Self::Unknown)
+    }
 }
 
 impl ObjWellDefinedProofByDef {
@@ -32,10 +42,25 @@ impl ObjWellDefinedProofByDef {
             requirement_fact_verified: Vec::new(),
         }
     }
+
+    pub fn is_fully_known(&self) -> bool {
+        for child in &self.child_obj_well_defined {
+            if child.is_unknown() {
+                return false;
+            }
+        }
+        for req in &self.requirement_fact_verified {
+            if req.is_unknown() {
+                return false;
+            }
+        }
+        true
+    }
 }
 
 impl Runtime {
     // Prove by definition. WD cache will use well_defined_objects when Ast Obj is wired.
+    // Ok(Unknown) when a child WD or requirement fact is unknown; that is not a runtime error.
     pub fn verify_obj_well_definedness(
         &mut self,
         obj: &Obj,
@@ -43,7 +68,11 @@ impl Runtime {
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
         let _ = verify_state.store_well_defined_fact;
         let by_def = self.verify_obj_well_definedness_by_def(obj, verify_state)?;
-        Ok(VerifyObjWellDefinedResult::ByDef(by_def))
+        if by_def.is_fully_known() {
+            Ok(VerifyObjWellDefinedResult::ByDef(by_def))
+        } else {
+            Ok(VerifyObjWellDefinedResult::Unknown)
+        }
     }
 
     // Big match: every Obj variant has its own by-def branch function.

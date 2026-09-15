@@ -26,6 +26,13 @@ impl Runtime {
 
         let param_type_well_defined =
             self.verify_typed_parameters_well_definedness(&stmt.param_def, verify_state.clone())?;
+        for proof in &param_type_well_defined {
+            if proof.is_unknown() {
+                return Err(RuntimeError::Unknown(
+                    "have: unable to establish well-definedness of parameter type".to_string(),
+                ));
+            }
+        }
 
         let nonempty_checks =
             self.verify_have_obj_nonempty_obligations(&stmt.param_def, verify_state)?;

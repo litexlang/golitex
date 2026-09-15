@@ -30,15 +30,23 @@ consumers while the new Result and pipeline shapes are still being drafted.
 `RuntimeResult<VerifyFactResult>`:
 
 - `Ok(Equality(...))` / `Ok(AtomicExceptEquality(...))` when a proof route succeeds
-- `Ok(Unknown(UnableToSearchProof))` when every search slot fails
+- `Ok(Unknown(UnknownWellDefined))` when object WD is not established
+- `Ok(Unknown(UnableToSearchProof))` when WD succeeds but every truth-search slot fails
 - `Err(...)` only for real runtime / invariant failures
 
-Search aggregators return `Ok(None)` on exhaustion; they must not emit
-`Err(RuntimeError::Unknown)` for “no proof found”.
+Object WD (`verify_obj_well_definedness`) returns
+`RuntimeResult<VerifyObjWellDefinedResult>`:
 
-Must-prove callers (`execute_fact_statement`, WD requirements, `have`
-nonempty obligations) reject `Unknown` at their boundary and must not `?`
-treat it as proven evidence.
+- `Ok(ByCache / ByDef)` when WD is established
+- `Ok(Unknown)` when a child WD or requirement-fact search misses
+- `Err(...)` only for real runtime / invariant failures
+
+Requirement search aggregators return `Ok(Unknown)` on exhaustion; they must not
+emit `Err(RuntimeError::Unknown)` for “no proof found”.
+
+Must-prove callers (`execute_fact_statement`, `exec_let_obj`, `have` /
+`trust` / `trust have` / `prop`, nonempty obligations) reject `Unknown` at
+their boundary and must not `?` treat it as proven evidence.
 
 `verify_atomic_fact_search_proof` is the truth-proof phase after atomic-fact
 well-definedness. Its ordinary search pipeline is intentionally limited to the

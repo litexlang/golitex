@@ -11,7 +11,7 @@ use crate::new_pipeline::ast::stmt::TrustStmt;
 use crate::new_pipeline::execute::execute_fact_stmt::{
     FactWellDefinedProof, StoreFactAndInferResult, VerifyState,
 };
-use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
+use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
 /// `trust` / `trust:` pipeline result.
 ///
@@ -32,7 +32,13 @@ impl Runtime {
 
         let mut facts_well_defined = Vec::with_capacity(stmt.facts.len());
         for fact in &stmt.facts {
-            facts_well_defined.push(self.verify_fact_well_definedness(fact, verify_state.clone())?);
+            let wd = self.verify_fact_well_definedness(fact, verify_state.clone())?;
+            if wd.is_unknown() {
+                return Err(RuntimeError::Unknown(
+                    "trust: unable to establish well-definedness of fact".to_string(),
+                ));
+            }
+            facts_well_defined.push(wd);
         }
 
         let mut store_and_infer_results = Vec::with_capacity(stmt.facts.len());
