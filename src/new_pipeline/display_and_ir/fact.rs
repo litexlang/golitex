@@ -410,7 +410,7 @@ macro_rules! impl_normal_atomic {
                         s.push_str(&self.body[0].ir());
                         s.push(' ');
                         s.push_str(FACT_PREFIX);
-                        s.push_str(name);
+                        s.push_str(name.as_str());
                         s.push(' ');
                         s.push_str(&self.body[1].ir());
                         return FactIR(s);
@@ -446,7 +446,7 @@ macro_rules! impl_normal_atomic {
                         s.push_str(&self.body[0].display_string());
                         s.push(' ');
                         s.push_str(FACT_PREFIX);
-                        s.push_str(name);
+                        s.push_str(name.as_str());
                         s.push(' ');
                         s.push_str(&self.body[1].display_string());
                         return s;

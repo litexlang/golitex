@@ -1,5 +1,5 @@
+use crate::new_pipeline::ast::fact::Fact;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
-use crate::prelude::*;
 
 pub enum EqualitySearchProofByBuiltinStrategy {
     ExtremumEquality(ExtremumEqualityStrategySingleStep),

@@ -11,6 +11,6 @@ pub mod stmt;
 
 pub use fact::Fact;
 pub use line_file::LineFile;
-pub use names::{AtomicName, PropName};
+pub use names::{AtomicName, PlainName};
 pub use obj::Obj;
 pub use stmt::Stmt;

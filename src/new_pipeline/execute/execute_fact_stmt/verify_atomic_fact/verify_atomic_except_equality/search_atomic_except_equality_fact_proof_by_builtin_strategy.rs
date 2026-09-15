@@ -1,8 +1,7 @@
-use crate::new_pipeline::ast::fact::AtomicFact;
+use crate::new_pipeline::ast::fact::{AtomicFact, Fact};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
-use crate::prelude::*;
 
 pub enum AtomicExceptEqualityFactSearchProofByBuiltinStrategy {
     PosAddPosIsPos(PosAddPosIsPosStrategySingleStep),

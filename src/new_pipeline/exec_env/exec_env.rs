@@ -1,9 +1,18 @@
-use crate::new_pipeline::ast::obj::{Identifier, Obj as PipelineObj};
-use crate::new_pipeline::ast::stmt::DefAbstractPropStmt as NewDefAbstractPropStmt;
-use crate::new_pipeline::ast::stmt::DefPropStmt as NewDefPropStmt;
+use crate::new_pipeline::ast::names::{AtomicName, PlainName};
+use crate::new_pipeline::ast::obj::{
+    Cart, Div, FiniteSeqListObj, FiniteSeqSet, FnSetBody, Identifier, Number, Obj, SetBuilder, Tuple,
+};
+use crate::new_pipeline::ast::stmt::AxiomStmt;
+use crate::new_pipeline::ast::stmt::DefAbstractPropStmt;
+use crate::new_pipeline::ast::stmt::DefAlgoStmt;
+use crate::new_pipeline::ast::stmt::DefPropStmt;
+use crate::new_pipeline::ast::stmt::DefSettingStmt;
+use crate::new_pipeline::ast::stmt::DefStrategyStmt;
+use crate::new_pipeline::ast::stmt::DefStructStmt;
+use crate::new_pipeline::ast::stmt::DefTemplateStmt;
+use crate::new_pipeline::ast::stmt::DefThmStmt;
 use crate::new_pipeline::exec_env::known_fact_memory::ObjIR;
 use crate::new_pipeline::runtime::runtime_ids::{FactId, WellDefinednessId};
-use crate::prelude::*;
 use std::collections::HashMap;
 
 pub use super::known_fact_memory::{
@@ -33,11 +42,10 @@ pub struct ExecEnv {
     pub facts: KnownFactMemory,
 
     /// Shape/value properties attached to special objects by stored facts.
-    pub special_object_properties:
-        HashMap<ObjIR, Vec<SpecialObjProperty>>,
+    pub special_object_properties: HashMap<ObjIR, Vec<SpecialObjProperty>>,
 
     /// Algebraic properties proved for predicates in this scope.
-    pub prop_algebraic_properties: HashMap<PropName, Vec<PropAlgebraicProperty>>,
+    pub prop_algebraic_properties: HashMap<AtomicName, Vec<PropAlgebraicProperty>>,
 
     /// Well-definedness records owned by this scope.
     ///
@@ -55,25 +63,27 @@ pub struct WellDefinedObjectMemory {
     pub object_to_wd_id: HashMap<ObjIR, WellDefinednessId>,
 
     /// Proof identity back to the object carried by a result or citation.
-    pub wd_id_to_object: HashMap<WellDefinednessId, PipelineObj>,
+    pub wd_id_to_object: HashMap<WellDefinednessId, Obj>,
 }
 
 /// Definitions introduced in one execution environment.
+///
+/// All maps are keyed by `PlainName`: defs are stored under the local
+/// unqualified name; `Mod::Export::name` is a reference path, not a store key.
 #[derive(Clone)]
 pub struct DefinitionMemory {
     /// Named atoms defined in this scope (`let`, `have`, forall/exist locals, …).
-    /// Keyed by plain name (name is identity).
-    pub identifiers: HashMap<String, DefinedIdentifierInfo>,
+    pub identifiers: HashMap<PlainName, DefinedIdentifierInfo>,
 
-    pub predicate_definitions: HashMap<PropName, NewDefPropStmt>,
-    pub abstract_predicate_definitions: HashMap<AbstractPropName, NewDefAbstractPropStmt>,
-    pub algorithm_definitions: HashMap<AlgoName, DefAlgoStmt>,
-    pub structure_definitions: HashMap<StructName, DefStructStmt>,
-    pub template_definitions: HashMap<TemplateName, DefTemplateStmt>,
-    pub setting_definitions: HashMap<String, DefSettingStmt>,
-    pub theorem_definitions: HashMap<ThmName, DefThmStmt>,
-    pub axiom_definitions: HashMap<ThmName, AxiomStmt>,
-    pub strategy_definitions: HashMap<StrategyName, DefStrategyStmt>,
+    pub predicate_definitions: HashMap<PlainName, DefPropStmt>,
+    pub abstract_predicate_definitions: HashMap<PlainName, DefAbstractPropStmt>,
+    pub algorithm_definitions: HashMap<PlainName, DefAlgoStmt>,
+    pub structure_definitions: HashMap<PlainName, DefStructStmt>,
+    pub template_definitions: HashMap<PlainName, DefTemplateStmt>,
+    pub setting_definitions: HashMap<PlainName, DefSettingStmt>,
+    pub theorem_definitions: HashMap<PlainName, DefThmStmt>,
+    pub axiom_definitions: HashMap<PlainName, AxiomStmt>,
+    pub strategy_definitions: HashMap<PlainName, DefStrategyStmt>,
 }
 
 /// One defined atom in `DefinitionMemory.identifiers`.
@@ -89,6 +99,13 @@ pub enum PropAlgebraicProperty {
     SymmetricArgumentPermutate(Vec<Vec<usize>>),
     Reflexive,
     Antisymmetric,
+}
+
+/// Canonical simplified value retained as reusable object knowledge.
+#[derive(Clone)]
+pub enum KnownObjValue {
+    SimplifiedNumber(Number),
+    SimplifiedFraction(Div),
 }
 
 /// Properties recorded for objects whose structure has a reusable fact-based
@@ -121,28 +138,31 @@ impl ExecEnv {
         }
     }
 
-    pub fn lookup_def_prop(&self, name: &str) -> Option<&NewDefPropStmt> {
+    pub fn lookup_def_prop(&self, name: &str) -> Option<&DefPropStmt> {
         self.definitions.predicate_definitions.get(name)
     }
 
-    pub fn store_def_prop(&mut self, def_prop: NewDefPropStmt) {
+    pub fn store_def_prop(&mut self, def_prop: DefPropStmt) {
         self.definitions
             .predicate_definitions
-            .insert(def_prop.name.clone(), def_prop);
+            .insert(def_prop.name.clone().into(), def_prop);
     }
 
-    pub fn lookup_def_abstract_prop(&self, name: &str) -> Option<&NewDefAbstractPropStmt> {
+    pub fn lookup_def_abstract_prop(&self, name: &str) -> Option<&DefAbstractPropStmt> {
         self.definitions.abstract_predicate_definitions.get(name)
     }
 
-    pub fn store_def_abstract_prop(&mut self, def_abstract_prop: NewDefAbstractPropStmt) {
+    pub fn store_def_abstract_prop(&mut self, def_abstract_prop: DefAbstractPropStmt) {
         self.definitions
             .abstract_predicate_definitions
-            .insert(def_abstract_prop.name.clone(), def_abstract_prop);
+            .insert(def_abstract_prop.name.clone().into(), def_abstract_prop);
     }
 
     // Commit a closed child ExecEnv into this parent (Success path of exec_stmt).
-    pub fn merge_from(&mut self, child: &ExecEnv) -> crate::new_pipeline::runtime::RuntimeResult<()> {
+    pub fn merge_from(
+        &mut self,
+        child: &ExecEnv,
+    ) -> crate::new_pipeline::runtime::RuntimeResult<()> {
         super::merge_exec_env::merge_exec_env_from(self, child)
     }
 }
@@ -159,15 +179,13 @@ impl WellDefinedObjectMemory {
     }
 
     /// Return the WD proof identity for an object, if this scope owns one.
-    pub fn lookup(&self, object: &PipelineObj) -> Option<WellDefinednessId> {
-        self.object_to_wd_id
-            .get(&object.ir())
-            .copied()
+    pub fn lookup(&self, object: &Obj) -> Option<WellDefinednessId> {
+        self.object_to_wd_id.get(&object.ir()).copied()
     }
 
     /// Record a WD proof and its object payload in both directions.
     /// Re-recording the same object or proof id is idempotent.
-    pub fn record(&mut self, object: PipelineObj, wd_id: WellDefinednessId) {
+    pub fn record(&mut self, object: Obj, wd_id: WellDefinednessId) {
         let object_key = object.ir();
 
         self.object_to_wd_id.insert(object_key, wd_id);

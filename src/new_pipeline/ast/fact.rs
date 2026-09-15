@@ -493,37 +493,65 @@ impl AtomicFact {
     }
 
     // Predicate-family name shared by a fact and its negation (e.g. both use `in`).
-    pub fn prop_name(&self) -> String {
+    pub fn prop_name(&self) -> AtomicName {
         use crate::new_pipeline::parse::keywords::{
             EQUAL, FN_EQ, FN_EQ_IN, GREATER, GREATER_EQUAL, IN, IS_CART, IS_FINITE_SET,
             IS_NONEMPTY_SET, IS_SET, IS_TUPLE, LESS, LESS_EQUAL, SUBSET, SUPERSET,
         };
         match self {
-            AtomicFact::NormalAtomicFact(f) => f.predicate.display_string(),
-            AtomicFact::NotNormalAtomicFact(f) => f.predicate.display_string(),
-            AtomicFact::EqualFact(_) | AtomicFact::NotEqualFact(_) => EQUAL.to_string(),
-            AtomicFact::LessFact(_) | AtomicFact::NotLessFact(_) => LESS.to_string(),
-            AtomicFact::GreaterFact(_) | AtomicFact::NotGreaterFact(_) => GREATER.to_string(),
-            AtomicFact::LessEqualFact(_) | AtomicFact::NotLessEqualFact(_) => {
-                LESS_EQUAL.to_string()
-            }
+            AtomicFact::NormalAtomicFact(f) => f.predicate.clone(),
+            AtomicFact::NotNormalAtomicFact(f) => f.predicate.clone(),
+            AtomicFact::EqualFact(_) | AtomicFact::NotEqualFact(_) => AtomicName::Plain {
+                name: EQUAL.into(),
+            },
+            AtomicFact::LessFact(_) | AtomicFact::NotLessFact(_) => AtomicName::Plain {
+                name: LESS.into(),
+            },
+            AtomicFact::GreaterFact(_) | AtomicFact::NotGreaterFact(_) => AtomicName::Plain {
+                name: GREATER.into(),
+            },
+            AtomicFact::LessEqualFact(_) | AtomicFact::NotLessEqualFact(_) => AtomicName::Plain {
+                name: LESS_EQUAL.into(),
+            },
             AtomicFact::GreaterEqualFact(_) | AtomicFact::NotGreaterEqualFact(_) => {
-                GREATER_EQUAL.to_string()
+                AtomicName::Plain {
+                    name: GREATER_EQUAL.into(),
+                }
             }
-            AtomicFact::IsSetFact(_) | AtomicFact::NotIsSetFact(_) => IS_SET.to_string(),
+            AtomicFact::IsSetFact(_) | AtomicFact::NotIsSetFact(_) => AtomicName::Plain {
+                name: IS_SET.into(),
+            },
             AtomicFact::IsNonemptySetFact(_) | AtomicFact::NotIsNonemptySetFact(_) => {
-                IS_NONEMPTY_SET.to_string()
+                AtomicName::Plain {
+                    name: IS_NONEMPTY_SET.into(),
+                }
             }
             AtomicFact::IsFiniteSetFact(_) | AtomicFact::NotIsFiniteSetFact(_) => {
-                IS_FINITE_SET.to_string()
+                AtomicName::Plain {
+                    name: IS_FINITE_SET.into(),
+                }
             }
-            AtomicFact::InFact(_) | AtomicFact::NotInFact(_) => IN.to_string(),
-            AtomicFact::IsCartFact(_) | AtomicFact::NotIsCartFact(_) => IS_CART.to_string(),
-            AtomicFact::IsTupleFact(_) | AtomicFact::NotIsTupleFact(_) => IS_TUPLE.to_string(),
-            AtomicFact::SubsetFact(_) | AtomicFact::NotSubsetFact(_) => SUBSET.to_string(),
-            AtomicFact::SupersetFact(_) | AtomicFact::NotSupersetFact(_) => SUPERSET.to_string(),
-            AtomicFact::FnEqualInFact(_) => FN_EQ_IN.to_string(),
-            AtomicFact::FnEqualFact(_) => FN_EQ.to_string(),
+            AtomicFact::InFact(_) | AtomicFact::NotInFact(_) => AtomicName::Plain {
+                name: IN.into(),
+            },
+            AtomicFact::IsCartFact(_) | AtomicFact::NotIsCartFact(_) => AtomicName::Plain {
+                name: IS_CART.into(),
+            },
+            AtomicFact::IsTupleFact(_) | AtomicFact::NotIsTupleFact(_) => AtomicName::Plain {
+                name: IS_TUPLE.into(),
+            },
+            AtomicFact::SubsetFact(_) | AtomicFact::NotSubsetFact(_) => AtomicName::Plain {
+                name: SUBSET.into(),
+            },
+            AtomicFact::SupersetFact(_) | AtomicFact::NotSupersetFact(_) => AtomicName::Plain {
+                name: SUPERSET.into(),
+            },
+            AtomicFact::FnEqualInFact(_) => AtomicName::Plain {
+                name: FN_EQ_IN.into(),
+            },
+            AtomicFact::FnEqualFact(_) => AtomicName::Plain {
+                name: FN_EQ.into(),
+            },
         }
     }
 }
