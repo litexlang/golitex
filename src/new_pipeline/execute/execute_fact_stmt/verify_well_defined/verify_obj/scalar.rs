@@ -10,7 +10,7 @@ use crate::new_pipeline::ast::obj::{
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
-use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
+use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
     pub(super) fn verify_number_obj_well_definedness_by_def(
@@ -217,25 +217,28 @@ impl Runtime {
             right: zero,
             line_file: None,
         });
-        if let Ok(r) = self.verify_required_atomic_fact(
+        let left_r = self.verify_required_atomic_fact(
             left_nz,
             verify_state.clone(),
             "gcd left nonzero".to_string(),
-        ) {
-            reqs.push(r);
+        )?;
+        if !left_r.is_unknown() {
+            reqs.push(left_r);
             return Ok(self.with_requirements(proof, reqs));
         }
-        if let Ok(r) = self.verify_required_atomic_fact(
+        let right_r = self.verify_required_atomic_fact(
             right_nz,
             verify_state,
             "gcd right nonzero".to_string(),
-        ) {
-            reqs.push(r);
+        )?;
+        if !right_r.is_unknown() {
+            reqs.push(right_r);
             return Ok(self.with_requirements(proof, reqs));
         }
-        Err(RuntimeError::Unknown(
-            "gcd requires at least one non-zero argument".to_string(),
-        ))
+        // Neither nonzero obligation proved: keep an Unknown requirement so
+        // entry collapses to VerifyObjWellDefinedResult::Unknown.
+        reqs.push(left_r);
+        Ok(self.with_requirements(proof, reqs))
     }
 
     pub(super) fn verify_lcm_obj_well_definedness_by_def(
@@ -410,15 +413,16 @@ impl Runtime {
             value.exponent.as_ref(),
             verify_state.clone(),
         )?;
-        if let Ok(reqs) = self.try_pow_domain_complex_natural(value, verify_state.clone()) {
-            return Ok(self.with_requirements(proof, reqs));
+        let reqs_n = self.try_pow_domain_complex_natural(value, verify_state.clone())?;
+        if reqs_n.iter().all(|r| !r.is_unknown()) {
+            return Ok(self.with_requirements(proof, reqs_n));
         }
-        if let Ok(reqs) = self.try_pow_domain_nonzero_complex_integer(value, verify_state.clone()) {
-            return Ok(self.with_requirements(proof, reqs));
+        let reqs_z = self.try_pow_domain_nonzero_complex_integer(value, verify_state)?;
+        if reqs_z.iter().all(|r| !r.is_unknown()) {
+            return Ok(self.with_requirements(proof, reqs_z));
         }
-        Err(RuntimeError::Unknown(
-            "base and exponent do not satisfy the pow domain".to_string(),
-        ))
+        // No pow domain branch proved: keep Unknown requirements for collapse.
+        Ok(self.with_requirements(proof, reqs_z))
     }
 
     pub(super) fn verify_sin_obj_well_definedness_by_def(

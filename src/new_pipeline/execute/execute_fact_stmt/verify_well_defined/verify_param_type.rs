@@ -11,6 +11,15 @@ pub enum ParamTypeWellDefinedProof {
     Obj(VerifyObjWellDefinedResult),
 }
 
+impl ParamTypeWellDefinedProof {
+    pub fn is_unknown(&self) -> bool {
+        match self {
+            Self::Obj(wd) => wd.is_unknown(),
+            Self::Set | Self::NonemptySet | Self::FiniteSet => false,
+        }
+    }
+}
+
 impl Runtime {
     // One entry per TypedParameterGroup, in source order.
     pub fn verify_typed_parameters_well_definedness(

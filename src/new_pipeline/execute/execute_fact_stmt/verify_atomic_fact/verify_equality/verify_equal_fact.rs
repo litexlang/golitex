@@ -19,6 +19,11 @@ impl Runtime {
     ) -> RuntimeResult<VerifyFactResult> {
         let well_defined_proof =
             self.verify_atomic_fact_well_definedness(&(fact.clone().into()), verify_state.clone())?;
+        if well_defined_proof.is_unknown() {
+            return Ok(VerifyFactResult::Unknown(
+                UnknownVerifyFactResult::UnknownWellDefined,
+            ));
+        }
         match self.search_equal_fact_proof(fact, verify_state)? {
             Some(searched_proof) => {
                 Ok(VerifyFactResult::Equality(Box::new(VerifyEqualityResult {

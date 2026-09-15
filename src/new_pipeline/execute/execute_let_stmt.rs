@@ -21,6 +21,11 @@ impl Runtime {
             store_well_defined_fact: true,
         };
         let value_well_defined = self.verify_obj_well_definedness(&let_stmt.value, verify_state)?;
+        if value_well_defined.is_unknown() {
+            return Err(RuntimeError::Unknown(
+                "exec_let_obj: unable to establish well-definedness of RHS".to_string(),
+            ));
+        }
 
         if self
             .top_exec_env()

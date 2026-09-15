@@ -6,6 +6,10 @@
 //! Verify entry points return `RuntimeResult<VerifyFactResult>`:
 //! - `Ok(Unknown)` = unable to prove (not a runtime error)
 //! - `Err` = real operational / invariant failure
+//!
+//! Unknown splits WD miss vs truth-search miss:
+//! - `UnknownWellDefined` = object/fact WD not established
+//! - `UnableToSearchProof` = WD ok, truth proof search exhausted
 
 use super::cache_search_proof::CacheSearchProof;
 use super::verify_atomic_fact::{VerifyAtomicExceptEqualityFactResult, VerifyEqualityResult};
@@ -24,7 +28,7 @@ pub enum VerifyFactResult {
 }
 
 pub enum UnknownVerifyFactResult {
-    WellDefinedKnown,
+    UnknownWellDefined,
     UnableToSearchProof,
 }
 

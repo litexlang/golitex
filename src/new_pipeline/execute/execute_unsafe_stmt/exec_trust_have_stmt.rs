@@ -45,11 +45,24 @@ impl Runtime {
 
         let param_type_well_defined =
             self.verify_typed_parameters_well_definedness(&stmt.param_def, verify_state.clone())?;
+        for proof in &param_type_well_defined {
+            if proof.is_unknown() {
+                return Err(RuntimeError::Unknown(
+                    "trust have: unable to establish well-definedness of parameter type"
+                        .to_string(),
+                ));
+            }
+        }
 
         let mut body_facts_well_defined = Vec::with_capacity(stmt.facts.len());
         for fact in &stmt.facts {
-            body_facts_well_defined
-                .push(self.verify_fact_well_definedness(fact, verify_state.clone())?);
+            let wd = self.verify_fact_well_definedness(fact, verify_state.clone())?;
+            if wd.is_unknown() {
+                return Err(RuntimeError::Unknown(
+                    "trust have: unable to establish well-definedness of body fact".to_string(),
+                ));
+            }
+            body_facts_well_defined.push(wd);
         }
 
         let defined_param_store_and_infer = self.define_trust_have_params(stmt)?;
