@@ -1,40 +1,42 @@
-//! Framework AST data shapes for new_pipeline.
-//! Field taxonomy follows the legacy language; methods are added later.
-//! Identity: String names (name is identity); FactId; LineFile.
+//! Framework AST name shapes for new_pipeline.
 //!
-//! Qualified names: at most three `::` segments (no submodule).
-//! `name` | `Mod::name` | `Mod::Export::name`
+//! Qualified atoms use module/export **indices** (not surface alias strings):
+//! `name` | `file_id::name` | `mod_id::file_id::name`
+//! Surface `a::b` / `a::b::c` / `a:::b` are elaborated via GlobalModuleManager.
 //!
-//! Definition-side store keys are unqualified local plain names.
-//! Reference / occupy / prop identity uses `AtomicName`.
+//! Definition-side store keys remain unqualified `PlainName`.
 
 use std::fmt;
 
-/// Unqualified local name (`foo`, never `Mod::foo`). Alias of `String`.
+/// Unqualified local name (`foo`). Alias of `String`.
 pub type PlainName = String;
 
-/// Qualified or plain name: at most three `::` segments (no submodule).
+/// Qualified or plain atom name. Identity for quals is ids + `name`.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum AtomicName {
     Plain { name: PlainName },
-    WithMod { mod_name: PlainName, name: PlainName },
+    /// Current module: `a::b` → export index + symbol.
+    WithMod { file_id: usize, name: PlainName },
+    /// Import: `a::b::c` / elaborated `a:::b` → global mod index + export index + symbol.
     WithModAndExport {
-        mod_name: PlainName,
-        export_name: PlainName,
+        mod_id: usize,
+        file_id: usize,
         name: PlainName,
     },
 }
 
 impl AtomicName {
+    /// Placeholder spelling for IR/debug without a module table.
+    /// Prefer display through `GlobalModuleManager` when showing to users.
     pub fn display_string(&self) -> String {
         match self {
             AtomicName::Plain { name } => name.clone(),
-            AtomicName::WithMod { mod_name, name } => format!("{mod_name}::{name}"),
+            AtomicName::WithMod { file_id, name } => format!("f{file_id}::{name}"),
             AtomicName::WithModAndExport {
-                mod_name,
-                export_name,
+                mod_id,
+                file_id,
                 name,
-            } => format!("{mod_name}::{export_name}::{name}"),
+            } => format!("m{mod_id}::f{file_id}::{name}"),
         }
     }
 

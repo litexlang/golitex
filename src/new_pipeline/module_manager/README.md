@@ -5,19 +5,20 @@ Struct / AST approval when coding.
 
 ## Package layout (`src/new_pipeline/module_manager/`)
 
-All new_pipeline module-world types live here:
-
 | File | Owns |
 |------|------|
 | `global_module_manager.rs` | `GlobalModuleManager`, `path_to_mod_id`, record APIs |
 | `imported_module.rs` | `ImportedModule` |
 | `export_file.rs` | `ExportFileAndItsExecEnv` |
 | `litex_config.rs` | `LitexConfig` + import/export rows |
+| `parse_litex_config.rs` | parse `[import]` / `[import std]` / `[export]` |
+| `mount.rs` | `set_root_config` / `ensure_imports_ready` / `mount_module` (no `.lit` run) |
+| `elaborate_name.rs` | `::` / `:::` → id-based `AtomicName` |
 | `README.md` | this contract |
 
 `Runtime.global_module_manager` holds the single `GlobalModuleManager` for a
-run. Config parse, mount scheduling, and `:::` elaborate belong in later
-phases; still land under this package (or thin `run/` callers).
+run. **`-r` / project `-f` execution is out of scope** for this package’s
+current work; only tables + parse + name elaborate live here.
 
 ## Name forms (syntax)
 
@@ -135,13 +136,11 @@ a::b::c
 
 | Phase | Work |
 |-------|------|
-| **0** | ✅ `GlobalModuleManager` package under `module_manager/`; flatten `ImportedModule`; `path_to_mod_id`. |
-| **1** | Parse `LitexConfig` (`[import]` / `[import std]` / `[export]` only). |
-| **2** | Mount + readiness (deps already in `path_to_mod_id`); fill export envs. |
-| **3** | Elaborate names → id-based `AtomicName`; `:::` sugar; display via tables. |
-| **4** | Wire `-r` / project `-f`. |
-
-Phase 0 needs Core Struct approval. Phase 3 needs AST approval for `AtomicName` field change + identity-doc update (`name is identity` for quals → id-based).
+| **0** | ✅ `GlobalModuleManager` package; flatten `ImportedModule`; `path_to_mod_id`. |
+| **1** | ✅ Parse `LitexConfig` (`[import]` / `[import std]` / `[export]`). |
+| **2** | ✅ Mount + readiness **table** APIs (`mount_module` / `ensure_imports_ready`); no `.lit` execution. |
+| **3** | ✅ Id-based `AtomicName` + `::` / `:::` elaborate. |
+| **4** | Deferred: wire `-r` / project `-f` (explicitly not in this pass). |
 
 ---
 
