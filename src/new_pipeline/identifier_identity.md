@@ -3,8 +3,11 @@
 Status: **locked** (new_pipeline)
 
 Canonical design note for symbol identity, binder discipline, IR keys, and
-exact `ByCache`. Do not reintroduce occurrence ids or shadowing without an
+exact IR indexing. Do not reintroduce occurrence ids or shadowing without an
 explicit redesign.
+
+Fact **verify** has no exact-IR cite path; `fact_ir_to_id` is for
+store / merge dedup. Object WD reuses `VerifyObjWellDefinedResult::ByKnown`.
 
 Related owners:
 
@@ -13,7 +16,9 @@ Related owners:
 | Parse occupy / no-shadow | `parse/`, `runtime::ParseScope` / `OccupiedName` |
 | AST atoms | `ast/obj.rs` `Identifier` / `IdentifierWithMod` (name only) |
 | IR spelling | `display_and_ir/` (`ir()` = surface name; no `#id#`) |
-| Fact store / ByCache | `exec_env/known_fact_memory.rs`, `execute_fact_stmt/cache_search_proof.rs` |
+| Fact store / IR index | `exec_env/known_fact_memory.rs` |
+| Obj WD ByKnown | `execute_fact_stmt/verify_well_defined/verify_obj/` |
+| WD memory | `exec_env/exec_env.rs` `WellDefinedObjectMemory` |
 | Def atoms in ExecEnv | `DefinitionMemory.identifiers: HashMap<String, …>` |
 
 ---
@@ -57,7 +62,7 @@ trust:  forall x R: $p(x)     // IR … #1#x …
 prove:  forall x R: $p(x)     // IR … #2#x …  ≠ cache key
 ```
 
-Same mathematics, same spelling, **exact ByCache miss**. That is not a
+Same mathematics, same spelling, **exact IR-key miss**. That is not a
 mathematical distinction; it is an implementation artifact. Under name-is-
 identity it is wrong.
 
@@ -65,19 +70,16 @@ Therefore:
 
 - **`IdentifierId` was removed** from new_pipeline AST and id allocation.
 - Atom IR is the surface name (`x` or `Mod::x`).
-- Exact `FactIR` ByCache may index **every closed `Fact` shape**, including
-  `forall`, because same spelling ⇒ same identity.
+- Exact `FactIR` may index **every closed `Fact` shape**, including
+  `forall`, because same spelling ⇒ same identity (store / merge).
 
 ### What still needs a separate id
 
 | Id | Role |
 |----|------|
-| `FactId` | Proof citation / store handle (`CacheSearchProof` is **only** this) |
-| `WellDefinednessId` | WD proof citation |
+| `FactId` | Proof citation / store handle |
+| `WellDefinednessId` | WD proof citation (obj WD ByKnown cites this) |
 | `OccupiedName` / `IdentifierWithMod` | Module qualification, not occurrence |
-
-Do **not** put a full `Fact` payload on `CacheSearchProof`; look up
-`facts_by_id[cite_fact_id]` when the AST is needed.
 
 ---
 
@@ -106,7 +108,7 @@ before trusting name-keyed IR again.
 - **Not** “global string replace by name.” Instantiate / substitute by binder
   structure only.
 - **Not** a license to index binder-internal **open scraps** as ambient facts.
-  Prefer full closed-fact IR for `ByCache`.
+  Prefer full closed-fact IR for store / merge keys.
 - Export of open terms that mention a local name still needs claim/export
   discipline; that is orthogonal to this premise.
 
@@ -114,7 +116,7 @@ before trusting name-keyed IR again.
 
 ## Capture hazard: free letter reuse vs binder spelling in stored AST
 
-Exact ByCache does **not** identify alpha-variants. The dangerous mistake is
+Exact FactIR / ObjIR keys do **not** identify alpha-variants. The dangerous mistake is
 elsewhere: later known-* / alpha / “rename binder to match” / global
 replace-by-name.
 
@@ -128,8 +130,8 @@ prove:  $p({y R: y > 0})
 
 What must hold:
 
-1. **Exact ByCache:** goal IR uses `y`, known IR uses `x` ⇒ **no** cache hit.
-   That miss is intentional under “no alpha in cache”.
+1. **Exact IR key:** goal IR uses `y`, known IR uses `x` ⇒ **no** key hit.
+   That miss is intentional under “no alpha in IR keys”.
 2. **Do not** “fix” the miss by renaming known `{x …}` ↔ goal `{y …}`
    without a real binder-aware alpha that respects capture. After `have x`,
    free `x` is live: renaming the goal binder `y` to `x` (or walking into
@@ -142,7 +144,7 @@ What must hold:
    only structural instantiate/substitute is allowed.
 4. If a future alpha or set-equality rule proves
    `{x R: x > 0} = {y R: y > 0}`, that rule owns capture-avoidance; it must
-   not be smuggled into exact `FactIR` ByCache.
+   not be smuggled into exact `FactIR` keys.
 
 So the user’s worry is real for **matching beyond exact IR**, not for
 today’s cite-by-identical-`FactIR` path. Record it here so alpha / known-*
@@ -163,7 +165,7 @@ cannot mix free `x` with binder `x`. The leftover risk is only **stored**
 closed AST that still spells binder `x` after later letter reuse
 (`have x`).
 
-### Layer B — Exact `ObjIR` / `FactIR` (ByCache, known-atomic keys, equality graph keys)
+### Layer B — Exact `ObjIR` / `FactIR` (IR indexes, known-atomic keys, equality graph keys)
 
 Same spelling ⇒ same key; different binder letters ⇒ different keys.
 
@@ -211,7 +213,7 @@ Intended sound pipeline (when Layer D exists):
    `$p(B)`.
 
 Until Layer D exists: exact miss is **correct**; do not paper over it inside
-ByCache or naive known-atomic string match.
+exact-IR cite or naive known-atomic string match.
 
 ### Non-goals for Layer B
 
@@ -260,7 +262,7 @@ sameness** must be the nameless key, not a renamed speakable letter.
 3. Binder **arity / order / type annotations** that matter for meaning stay
    in the key; the binder *letter* does not.
 4. `display_string` keeps today’s user-facing spelling (from AST names).
-5. Exact ByCache / known-atomic / equality-class keys use this `ir()`.
+5. Exact IR indexes / known-atomic / equality-class keys use this `ir()`.
 
 Sketch:
 
@@ -288,7 +290,7 @@ Minimum object family (user examples):
 - Closely related: `FnSet` / set-bound parameter blobs that bind names
 
 Same nameless rule should later apply to binder-carrying **facts**
-(`forall` / `exist` / …) so `FactIR` ByCache gets the same 一劳永逸
+(`forall` / `exist` / …) so `FactIR` indexes get the same 一劳永逸
 property; can stage after objects if needed.
 
 ### Construct-time vs `ir()`-time
@@ -331,7 +333,7 @@ Operation name: **`alpha_normalize`**.
 When constructing binder-carrying objects (`SetBuilder`, `FnSet`,
 `AnonymousFn`), `new_set_builder` / `new_fn_set` / `new_anonymous_fn` rewrite
 AST binders to reserved generated names; originals stay **display-only**.
-Matching / ByCache use the normalized spelling.
+Matching / IR indexes use the normalized spelling.
 
 **Namespace split (locked):**
 
@@ -349,7 +351,7 @@ Target shape:
 ```text
 user wrote:     {x R: x $in {y R: y > 0}}
 surface:         {x R: x $in {y R: y > 0}}   // display
-alpha / ir:      {□0 R: □0 $in {□1 R: □1 > 0}} // ops / ByCache
+alpha / ir:      {□0 R: □0 $in {□1 R: □1 > 0}} // ops / IR keys
 ```
 
 `SetBuilder` / `FnSet` / `AnonymousFn` store both: `surface` (user letters) and
@@ -449,43 +451,36 @@ tracers for `{x:…}` vs `{y:…}` and nested builders.
 
 ---
 
-## ByCache contract (exact FactIR)
+## FactIR index contract (store / merge; no fact verify exact-IR cite)
 
 1. On store: `fact_ir_to_id[fact.ir()] = fact.fact_id()`, and
    `facts_by_id[fact_id] = fact` (every closed `Fact` shape).
-2. On search: walk `execution_environments_stack` (inner first); hit ⇒
-   `CacheSearchProof { cite_fact_id }` only.
-3. Equality-class / parameter matching / alpha belong to **later** known-*
-   slots, not to cache.
-4. Acceptance sketch:
-
-```text
-abstract_prop p(x R)
-trust:
-    forall x R:
-        $p(x)
-forall x R:
-    $p(x)    // exact FactIR ByCache cite
-```
+2. On merge: reuse parent FactId when child IR already exists in parent.
+3. Fact **verify** does **not** cite via exact FactIR. Reuse happens
+   through known-equality / known-atomic / known-forall (and future composite
+   local-proof pipelines). Object WD reuses `WellDefinedObjectMemory` via ByKnown.
+4. Equality-class / parameter matching / alpha belong to known-* slots, not
+   to a silent IR cite.
 
 ---
 
 ## Do-not-break checklist
 
-Before changing identity, IR, occupy, or ByCache, check:
+Before changing identity, IR, occupy, or IR indexing, check:
 
 - [ ] No new per-occurrence id on `Identifier` / IR (`#digits#name` must not
       return).
 - [ ] Parse still rejects shadowing and same-name nested binders.
 - [ ] `DefinitionMemory.identifiers` stays keyed by plain **name**.
-- [ ] `CacheSearchProof` stays cite-id-only (payload in `facts_by_id`).
 - [ ] Closed composite facts still enter `fact_ir_to_id` (not atomic-only).
 - [ ] Binder instantiate/substitute is structural, not global rename-by-string.
-- [ ] Open scraps under binders are not ambient-cached as if free.
-- [ ] Exact ByCache does not alpha-match set-builders / forall
+- [ ] Open scraps under binders are not ambient-indexed as if free.
+- [ ] Exact FactIR keys do not alpha-match set-builders / forall
       (`$p({x:…})` ↛ `$p({y:…})`). Capture-safe alpha, if any, is a later slot.
 - [ ] After `have x`, never treat binder `x` inside an already-stored
       `{x:…}` / `forall x` as that free `x` via string walk.
+- [ ] Obj WD ByKnown remains; do not reintroduce fact verify exact-IR cite without
+      an explicit redesign.
 
 ---
 
@@ -493,6 +488,5 @@ Before changing identity, IR, occupy, or ByCache, check:
 
 - Full composite well-definedness pipelines may still be stubbed
   (`FactWellDefinedProof::CompositePending`) so `trust` can store closed
-  composites for ByCache. That is **WD debt**, not identity debt.
-- Non-cache search for `forall` / `exist` / `or` / … remains draft until
-  wired; ByCache is the exact-match path only.
+  composites. That is **WD debt**, not identity debt.
+- Search for `forall` / `exist` / `or` / … remains draft until wired.

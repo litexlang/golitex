@@ -4,7 +4,7 @@ This module owns two views of new_pipeline AST:
 
 | API | Role |
 |-----|------|
-| `ir` | Typed semantic key (`*IR` newtypes) for cache / lookup / compare |
+| `ir` | Typed semantic key (`*IR` newtypes) for lookup / compare |
 | `display_string` | User-facing `String` (binder objs use `.surface`; otherwise usually IR spelling) |
 
 Surface spelling (operators, `$in`, precedence parentheses, keywords) follows the
@@ -15,16 +15,16 @@ For every AST type in this module, these are the **only** two methods.
 ## Symbol identity (locked)
 
 See [`../identifier_identity.md`](../identifier_identity.md) — the canonical
-note on **name is identity**, why `IdentifierId` was removed (false ByCache
-misses / true shadowing conflicts), ByCache contracts, and the do-not-break
-checklist.
+note on **name is identity**, why `IdentifierId` was removed (false IR-key
+misses / true shadowing conflicts), FactIR index / Obj WD ByKnown contracts,
+and the do-not-break checklist.
 
 **Name is identity:** the same surface name (plain or `mod::name`) always
-denotes the same symbol. No shadowing; no same-name nested binders. IR cache
+denotes the same symbol. No shadowing; no same-name nested binders. IR
 keys use the surface name spelling directly.
 
 Binder-carrying objects (`SetBuilder`, `FnSet`, `AnonymousFn`) store
-`surface` (user letters, display) and `alpha` (`□N`, ops / `ir` / ByCache).
+`surface` (user letters, display) and `alpha` (`□N`, ops / `ir` / known-memory keys).
 Tokenizer rejects source tokens starting with `__` (Lean/codegen reserve).
 Do not free-occupy `□N`.
 

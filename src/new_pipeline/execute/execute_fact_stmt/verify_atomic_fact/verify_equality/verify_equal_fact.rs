@@ -1,11 +1,8 @@
 use crate::new_pipeline::ast::fact::EqualFact;
-use crate::new_pipeline::execute::execute_fact_stmt::cache_search_proof::CacheSearchProof;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::{
     EqualFactSearchedProof, EqualFactSearchedProofByKnownForallFact, VerifyEqualityResult,
 };
-use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::{
-    VerifyFactResult,
-};
+use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
@@ -34,18 +31,14 @@ impl Runtime {
         }
     }
 
-    // Stage order: cache → builtin rule → known equality → builtin strategy →
-    // known forall. Equality algebraic properties are intrinsic.
+    // Stage order: builtin rule → known equality → builtin strategy → known forall.
+    // Equality algebraic properties are intrinsic.
     // Ok(None) means no proof found; that is not a runtime error.
     pub fn search_equal_fact_proof(
         &mut self,
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualFactSearchedProof>> {
-        if let Some(result) = self.search_equal_fact_proof_by_cache(fact, verify_state.clone())? {
-            return Ok(Some(EqualFactSearchedProof::ByCache(result)));
-        }
-
         if let Some(result) =
             self.search_equal_fact_builtin_rule(fact, verify_state.clone())?
         {
@@ -73,14 +66,6 @@ impl Runtime {
         }
 
         Ok(None)
-    }
-
-    pub fn search_equal_fact_proof_by_cache(
-        &mut self,
-        fact: &EqualFact,
-        _verify_state: VerifyState,
-    ) -> RuntimeResult<Option<CacheSearchProof>> {
-        Ok(self.search_atomic_fact_proof_by_cache(&(fact.clone().into())))
     }
 
     pub fn search_equal_fact_proof_by_builtin_strategy(

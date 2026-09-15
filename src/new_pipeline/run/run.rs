@@ -1,5 +1,6 @@
 use super::command::parse_cli_command;
-use super::run_command::{run_command, RunCommandOutcome};
+use super::run_command::run_command;
+use super::run_command_outcome::RunCommandOutcome;
 use crate::new_pipeline::runtime::RuntimeResult;
 
 /// New-pipeline CLI entry: argv -> CliCommand -> run_command.

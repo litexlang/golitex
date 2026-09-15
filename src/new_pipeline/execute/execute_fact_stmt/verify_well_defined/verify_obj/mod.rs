@@ -1,4 +1,4 @@
-//! Object well-definedness: ByCache | ByDef.
+//! Object well-definedness: ByKnown | ByDef.
 //!
 //! Entry matches every Obj variant; families live in sibling modules.
 //! Scalar (P0) also verifies requirement facts into requirement_fact_verified.

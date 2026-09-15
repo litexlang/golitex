@@ -37,7 +37,7 @@ consumers while the new Result and pipeline shapes are still being drafted.
 Object WD (`verify_obj_well_definedness`) returns
 `RuntimeResult<VerifyObjWellDefinedResult>`:
 
-- `Ok(ByCache)` when a WD id is visible on the env stack
+- `Ok(ByKnown)` when a WD id is visible on the env stack
 - `Ok(ByDef)` when WD is established by definition (and, if
   `store_well_defined_fact`, recorded on the current top env)
 - `Ok(FailToVerifyWellDefined(reason))` when a child WD or requirement-fact
@@ -64,21 +64,23 @@ The stage also derives a read-only verification state, so trying proof routes
 does not write new well-definedness records into the current scope.
 
 The equality and atomic-except-equality pipelines keep their search slots in a fixed
-order. Atomic-except-equality search is:
+order. There is **no fact-level exact-IR cite** search slot (composites and
+atomics alike). Object WD reuses recorded proofs via
+`VerifyObjWellDefinedResult::ByKnown`.
 
-cache → builtin rule → known atomic → builtin strategy → by definition →
+Atomic-except-equality search is:
+
+builtin rule → known atomic → builtin strategy → by definition →
 known forall → builtin algebraic rewrite → known algebraic rewrite.
 
-`cache` is exact `FactIR` lookup in `KnownFactMemory.fact_ir_to_id` across the
-current `execution_environments_stack`. The cache stores and cites **every**
-closed `Fact` shape (atomic and composite). A cache hit requires full IR match
-under name-is-identity; equality-class parameter matching and alpha-renaming
-belong to later known-* slots, not cache. Do not index binder-internal open
-scraps as ambient facts.
+Equality search is:
 
-`CacheSearchProof` carries only `cite_fact_id` (payload lives in
-`facts_by_id`). Design rationale and the identifier-conflict / do-not-break
-checklist: [`../../identifier_identity.md`](../../identifier_identity.md).
+builtin rule → known equality → builtin strategy → known forall.
+
+`KnownFactMemory.fact_ir_to_id` remains for store / merge dedup of closed
+facts under name-is-identity; it is not a verify cite path. Design rationale
+and the identifier-conflict / do-not-break checklist:
+[`../../identifier_identity.md`](../../identifier_identity.md).
 
 Here `by definition` means ambient prop / builtin definition expansion in the
 current execution-environment stack. Cross-module definitions and theorems are

@@ -1,6 +1,5 @@
 //! Fact-statement execution: verify, then store and infer.
 
-mod cache_search_proof;
 mod exec_fact_stmt;
 mod result;
 mod verify;

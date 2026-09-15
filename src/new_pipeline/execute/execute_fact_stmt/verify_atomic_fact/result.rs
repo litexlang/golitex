@@ -1,6 +1,5 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact};
 use crate::new_pipeline::ast::obj::Obj;
-use crate::new_pipeline::execute::execute_fact_stmt::cache_search_proof::CacheSearchProof;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::{
     EqualitySearchProofByBuiltinRule, EqualitySearchProofByBuiltinStrategy,
 };
@@ -23,7 +22,6 @@ pub struct VerifyEqualityResult {
 // Equality algebraic properties are intrinsic to equality search, so there is
 // no separate algebraic-rewrite stage.
 pub enum EqualFactSearchedProof {
-    ByCache(CacheSearchProof),
     ByBuiltinRule(EqualitySearchProofByBuiltinRule),
     ByKnownEquality(EqualFactSearchedProofByKnownEquality),
     ByBuiltinStrategy(EqualitySearchProofByBuiltinStrategy),
@@ -52,7 +50,6 @@ pub struct VerifyAtomicExceptEqualityFactResult {
 
 // Mirrors search_atomic_except_equality_fact_proof stage order.
 pub enum AtomicExceptEqualityFactSearchedProof {
-    ByCache(CacheSearchProof),
     ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule),
     ByKnownAtomicFact(AtomicExceptEqualityFactSearchProofByKnownAtomicFact),
     ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy),

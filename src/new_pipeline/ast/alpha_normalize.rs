@@ -1,6 +1,6 @@
 //! Alpha-normalize binder-carrying objects at construction.
 //!
-//! Surface keeps user letters for display. Alpha uses `□N` for ops / ir / ByCache.
+//! Surface keeps user letters for display. Alpha uses `□N` for ops / ir / known-memory keys.
 //! Example: surface `{x R: x $in {y R: y > 0}}`,
 //! alpha `{□0 R: □0 $in {□1 R: □1 > 0}}`.
 

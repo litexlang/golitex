@@ -4,8 +4,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
-    // Non-cache and/or/chain/exist/forall search is still draft-only.
-    // Exact ByCache is handled in `verify_fact` before this entry.
+    // and/or/chain/exist/forall search is still draft-only.
     pub fn verify_and_fact(
         &mut self,
         _fact: &AndFact,
