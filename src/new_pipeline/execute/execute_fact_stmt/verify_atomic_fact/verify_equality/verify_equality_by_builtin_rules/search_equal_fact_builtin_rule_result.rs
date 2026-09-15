@@ -1,8 +1,8 @@
-use super::literally_the_same::LiterallyTheSameBuiltinRuleProof;
+use super::by_equal_ir::ByEqualIrBuiltinRuleProof;
 
 // Each equality builtin rule gets its own variant and payload.
 pub enum EqualitySearchProofByBuiltinRule {
-    LiterallyTheSame(LiterallyTheSameBuiltinRuleProof),
+    ByEqualIr(ByEqualIrBuiltinRuleProof),
     Calculation(EqualitySearchProofByCalculation),
 }
 

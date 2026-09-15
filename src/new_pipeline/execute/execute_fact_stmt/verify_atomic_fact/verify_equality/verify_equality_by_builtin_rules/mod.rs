@@ -1,5 +1,5 @@
-pub mod literally_the_same;
-pub mod search_equal_fact_proof_by_builtin_rule;
-pub mod search_equal_fact_proof_by_builtin_rule_result;
+pub mod by_equal_ir;
+pub mod search_equal_fact_builtin_rule;
+pub mod search_equal_fact_builtin_rule_result;
 
-pub use search_equal_fact_proof_by_builtin_rule_result::EqualitySearchProofByBuiltinRule;
+pub use search_equal_fact_builtin_rule_result::EqualitySearchProofByBuiltinRule;
