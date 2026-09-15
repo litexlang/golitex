@@ -1,20 +1,19 @@
 //! `prop` definition: check WD in a local param scope, then store globally.
 //!
 //! Pipeline stages (field order matches):
-//! 1. param-type WD (inside local env)
-//! 2. define typed params into that local env
+//! 1–2. introduce typed params in local env (param-type WD + define)
 //! 3. iff-fact WD under those params
 //! 4. close local env into the result
 //! 5. store the prop definition in the parent ExecEnv
 
 use crate::new_pipeline::ast::stmt::DefPropStmt;
 use crate::new_pipeline::exec_env::exec_env::ExecEnv;
-use crate::new_pipeline::exec_env::DefinedIdentifierInfo;
 use crate::new_pipeline::execute::execute_fact_stmt::{
-    FactWellDefinedProof, FailToVerifyWellDefinedResult, ParamTypeWellDefinedProof,
-    VerifyFactResult, VerifyObjWellDefinedResult, VerifyState,
+    FactWellDefinedProof, ParamTypeWellDefinedProof, VerifyFactResult, VerifyObjWellDefinedResult,
+    VerifyState,
 };
 use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
+use crate::new_pipeline::execute::IntroduceTypedParametersResult;
 use crate::new_pipeline::parse::keywords::{ABSTRACT_PROP, PROP};
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
@@ -63,7 +62,7 @@ impl Runtime {
         let (local_outcome, local_env) =
             self.run_in_local_env_and_take_env(|rt| rt.exec_def_prop_stmt_in_local(def_prop))?;
 
-        let (param_type_well_defined, defined_params, iff_fact_well_defined) = match local_outcome {
+        let (introduced, iff_fact_well_defined) = match local_outcome {
             Ok(parts) => parts,
             Err(failed) => return Ok(ExecDefPropStmtResult::Failed(failed)),
         };
@@ -72,8 +71,8 @@ impl Runtime {
 
         Ok(ExecDefPropStmtResult::Success(ExecDefPropStmtSuccessResult {
             statement: def_prop.clone(),
-            param_type_well_defined,
-            defined_params,
+            param_type_well_defined: introduced.param_type_well_defined,
+            defined_params: introduced.defined_params,
             iff_fact_well_defined,
             local_env,
         }))
@@ -97,14 +96,7 @@ impl Runtime {
         &mut self,
         def_prop: &DefPropStmt,
     ) -> RuntimeResult<
-        Result<
-            (
-                Vec<ParamTypeWellDefinedProof>,
-                StoreHaveObjAndInferResult,
-                Vec<FactWellDefinedProof>,
-            ),
-            ExecDefPropStmtFailed,
-        >,
+        Result<(IntroduceTypedParametersResult, Vec<FactWellDefinedProof>), ExecDefPropStmtFailed>,
     > {
         let verify_state = VerifyState {
             can_use_forall_fact: true,
@@ -112,28 +104,12 @@ impl Runtime {
             store_well_defined_fact: true,
         };
 
-        let param_type_well_defined = self.verify_typed_parameters_well_definedness(
-            &def_prop.typed_parameters,
-            verify_state.clone(),
-        )?;
-        let mut kept_param_type_well_defined = Vec::with_capacity(param_type_well_defined.len());
-        for proof in param_type_well_defined {
-            if proof.is_failed() {
-                let failed = match proof {
-                    ParamTypeWellDefinedProof::Obj(wd) => wd,
-                    _ => VerifyObjWellDefinedResult::FailToVerifyWellDefined(
-                        FailToVerifyWellDefinedResult::Others(
-                            "param type well-definedness failed".to_string(),
-                        ),
-                    ),
-                };
-                return Ok(Err(ExecDefPropStmtFailed::ParamType(failed)));
-            }
-            kept_param_type_well_defined.push(proof);
-        }
-        let param_type_well_defined = kept_param_type_well_defined;
-
-        let defined_params = self.define_def_prop_params_in_local(def_prop)?;
+        let introduced = match self
+            .introduce_typed_parameters(&def_prop.typed_parameters, verify_state.clone())?
+        {
+            Ok(result) => result,
+            Err(failed) => return Ok(Err(ExecDefPropStmtFailed::ParamType(failed))),
+        };
 
         let mut iff_fact_well_defined = Vec::with_capacity(def_prop.iff_facts.len());
         for fact in &def_prop.iff_facts {
@@ -146,41 +122,6 @@ impl Runtime {
             iff_fact_well_defined.push(wd);
         }
 
-        Ok(Ok((
-            param_type_well_defined,
-            defined_params,
-            iff_fact_well_defined,
-        )))
-    }
-
-    fn define_def_prop_params_in_local(
-        &mut self,
-        def_prop: &DefPropStmt,
-    ) -> RuntimeResult<StoreHaveObjAndInferResult> {
-        let mut stored_fact_ids = Vec::new();
-        for group in &def_prop.typed_parameters.groups {
-            for identifier in &group.params {
-                if self
-                    .top_exec_env()
-                    .definitions
-                    .identifiers
-                    .contains_key(&identifier.name)
-                {
-                    return Err(RuntimeError::Invariant(format!(
-                        "identifier `{}` is already defined in this ExecEnv",
-                        identifier.name
-                    )));
-                }
-                self.top_exec_env_mut().definitions.identifiers.insert(
-                    identifier.name.clone(),
-                    DefinedIdentifierInfo {
-                        identifier: identifier.clone(),
-                    },
-                );
-                // Type facts belong in KnownFactMemory once that store is wired.
-                stored_fact_ids.push(self.ids.allocate_fact_id());
-            }
-        }
-        Ok(StoreHaveObjAndInferResult { stored_fact_ids })
+        Ok(Ok((introduced, iff_fact_well_defined)))
     }
 }

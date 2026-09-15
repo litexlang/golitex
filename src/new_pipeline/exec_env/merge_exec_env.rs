@@ -1,5 +1,6 @@
 use super::exec_env::ExecEnv;
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact};
+use crate::new_pipeline::ast::names::PlainName;
 use crate::new_pipeline::parse::keywords::{
     ABSTRACT_PROP, ALGO, AXIOM, PROP, SETTING, STRATEGY, STRUCT, TEMPLATE, THM,
 };
@@ -77,8 +78,8 @@ fn merge_definitions_from(parent: &mut ExecEnv, child: &ExecEnv) -> RuntimeResul
 }
 
 fn merge_named_map<V: Clone>(
-    parent: &mut HashMap<String, V>,
-    child: &HashMap<String, V>,
+    parent: &mut HashMap<PlainName, V>,
+    child: &HashMap<PlainName, V>,
     kind: &str,
 ) -> RuntimeResult<()> {
     for (name, value) in child.iter() {

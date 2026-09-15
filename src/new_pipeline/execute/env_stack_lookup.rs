@@ -1,7 +1,5 @@
 use crate::new_pipeline::ast::obj::Obj;
-use crate::new_pipeline::ast::stmt::{
-    DefAbstractPropStmt as NewDefAbstractPropStmt, DefPropStmt as NewDefPropStmt,
-};
+use crate::new_pipeline::ast::stmt::{DefAbstractPropStmt, DefPropStmt};
 use crate::new_pipeline::runtime::runtime_ids::WellDefinednessId;
 use crate::new_pipeline::runtime::Runtime;
 
@@ -17,7 +15,7 @@ impl Runtime {
     pub(in crate::new_pipeline::execute) fn def_prop_visible_in_stack(
         &self,
         name: &str,
-    ) -> Option<&NewDefPropStmt> {
+    ) -> Option<&DefPropStmt> {
         for env in self.execution_environments_stack.iter().rev() {
             if let Some(def) = env.lookup_def_prop(name) {
                 return Some(def);
@@ -29,7 +27,7 @@ impl Runtime {
     pub(in crate::new_pipeline::execute) fn def_abstract_prop_visible_in_stack(
         &self,
         name: &str,
-    ) -> Option<&NewDefAbstractPropStmt> {
+    ) -> Option<&DefAbstractPropStmt> {
         for env in self.execution_environments_stack.iter().rev() {
             if let Some(def) = env.lookup_def_abstract_prop(name) {
                 return Some(def);

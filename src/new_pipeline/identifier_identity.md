@@ -20,7 +20,7 @@ Related owners:
 | Fact store / IR index | `exec_env/known_fact_memory.rs` |
 | Obj WD ByKnown | `execute_fact_stmt/verify_well_defined/verify_obj/` |
 | WD memory | `exec_env/exec_env.rs` `WellDefinedObjectMemory` |
-| Def atoms in ExecEnv | `DefinitionMemory.identifiers: HashMap<String, …>` |
+| Def atoms in ExecEnv | `DefinitionMemory.identifiers: HashMap<PlainName, …>` |
 
 ---
 
@@ -473,7 +473,8 @@ Before changing identity, IR, occupy, or IR indexing, check:
 - [ ] No new per-occurrence id on `Identifier` / IR (`#digits#name` must not
       return).
 - [ ] Parse still rejects shadowing and same-name nested binders.
-- [ ] `DefinitionMemory.identifiers` stays keyed by plain **name**.
+- [ ] `DefinitionMemory` maps stay keyed by **`PlainName`** (unqualified local
+      name). `Mod::Export::name` is a reference path, not a store key.
 - [ ] Closed composite facts still enter `fact_ir_to_id` (not atomic-only).
 - [ ] Binder instantiate/substitute is structural, not global rename-by-string.
 - [ ] Open scraps under binders are not ambient-indexed as if free.

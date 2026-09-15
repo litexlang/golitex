@@ -2,12 +2,10 @@ use crate::new_pipeline::ast::fact::{AtomicFact, Fact, IsNonemptySetFact};
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::ast::stmt::HaveObjInNonemptySetOrParamTypeStmt;
-use crate::new_pipeline::exec_env::DefinedIdentifierInfo;
 use crate::new_pipeline::execute::execute_fact_stmt::{
-    FailToVerifyWellDefinedResult, ParamTypeWellDefinedProof, VerifyFactResult,
-    VerifyObjWellDefinedResult, VerifyState,
+    ParamTypeWellDefinedProof, VerifyFactResult, VerifyObjWellDefinedResult, VerifyState,
 };
-use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeError, RuntimeResult};
+use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeResult};
 
 pub struct StoreHaveObjAndInferResult {
     pub stored_fact_ids: Vec<FactId>,
@@ -47,6 +45,8 @@ impl ExecHaveObjInNonemptySetStmtResult {
 
 impl Runtime {
     // `have x S` / `have A nonempty_set` / …
+    // Nonempty checks sit between WD and define, so this does not call
+    // `introduce_typed_parameters` as one shot.
     pub(super) fn exec_have_obj_in_nonempty_set_stmt(
         &mut self,
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,
@@ -57,26 +57,16 @@ impl Runtime {
             store_well_defined_fact: true,
         };
 
-        let param_type_well_defined =
-            self.verify_typed_parameters_well_definedness(&stmt.param_def, verify_state.clone())?;
-        let mut kept_param_type_well_defined = Vec::with_capacity(param_type_well_defined.len());
-        for proof in param_type_well_defined {
-            if proof.is_failed() {
-                let failed = match proof {
-                    ParamTypeWellDefinedProof::Obj(wd) => wd,
-                    _ => VerifyObjWellDefinedResult::FailToVerifyWellDefined(
-                        FailToVerifyWellDefinedResult::Others(
-                            "param type well-definedness failed".to_string(),
-                        ),
-                    ),
-                };
+        let param_type_well_defined = match self
+            .verify_typed_parameters_well_definedness_or_fail(&stmt.param_def, verify_state.clone())?
+        {
+            Ok(proofs) => proofs,
+            Err(failed) => {
                 return Ok(ExecHaveObjInNonemptySetStmtResult::Failed(
                     ExecHaveObjInNonemptySetStmtFailed::ParamType(failed),
                 ));
             }
-            kept_param_type_well_defined.push(proof);
-        }
-        let param_type_well_defined = kept_param_type_well_defined;
+        };
 
         let nonempty_checks =
             match self.verify_have_obj_nonempty_obligations(&stmt.param_def, verify_state)? {
@@ -86,7 +76,8 @@ impl Runtime {
                 }
             };
 
-        let store_and_infer_result = self.affect_have_obj_in_nonempty_set_environment(stmt)?;
+        let store_and_infer_result =
+            self.define_typed_parameters_in_current_env(&stmt.param_def)?;
 
         Ok(ExecHaveObjInNonemptySetStmtResult::Success(
             ExecHaveObjInNonemptySetStmtSuccessResult {
@@ -130,32 +121,6 @@ impl Runtime {
             out.push(check);
         }
         Ok(Ok(out))
-    }
-
-    fn affect_have_obj_in_nonempty_set_environment(
-        &mut self,
-        stmt: &HaveObjInNonemptySetOrParamTypeStmt,
-    ) -> RuntimeResult<StoreHaveObjAndInferResult> {
-        let mut stored_fact_ids = Vec::new();
-        for group in &stmt.param_def.groups {
-            for identifier in &group.params {
-                if self.identifier_defined_in_stack(&identifier.name) {
-                    return Err(RuntimeError::Invariant(format!(
-                        "identifier `{}` is already defined in this ExecEnv",
-                        identifier.name
-                    )));
-                }
-                self.top_exec_env_mut().definitions.identifiers.insert(
-                    identifier.name.clone(),
-                    DefinedIdentifierInfo {
-                        identifier: identifier.clone(),
-                    },
-                );
-
-                stored_fact_ids.push(self.ids.allocate_fact_id());
-            }
-        }
-        Ok(StoreHaveObjAndInferResult { stored_fact_ids })
     }
 }
 

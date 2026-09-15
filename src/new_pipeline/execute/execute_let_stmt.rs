@@ -46,7 +46,7 @@ impl Runtime {
             )));
         }
         self.top_exec_env_mut().definitions.identifiers.insert(
-            let_stmt.name.clone(),
+            let_stmt.name.clone().into(),
             DefinedIdentifierInfo {
                 identifier: Identifier::new(let_stmt.name.clone()),
             },

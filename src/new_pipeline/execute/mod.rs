@@ -7,6 +7,7 @@ pub mod execute_fact_stmt;
 mod execute_have_obj_in_nonempty_set_stmt;
 mod execute_let_stmt;
 pub mod execute_unsafe_stmt;
+mod introduce_typed_parameters;
 
 #[cfg(test)]
 mod exec_stmt_transaction_tests;
@@ -27,3 +28,4 @@ pub use execute_unsafe_stmt::{
     ExecTrustHaveStmtFailed, ExecTrustHaveStmtResult, ExecTrustHaveStmtSuccessResult,
     ExecTrustStmtResult, ExecTrustStmtSuccessResult, ExecUnsafeStmtResult,
 };
+pub use introduce_typed_parameters::IntroduceTypedParametersResult;

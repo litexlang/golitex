@@ -1,8 +1,8 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact};
+use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::display_and_ir::FactIR;
 use crate::new_pipeline::runtime::FactId;
-use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
@@ -42,12 +42,12 @@ pub struct KnownEqualityMemory {
     pub class_members: HashMap<ObjIR, Rc<Vec<Obj>>>,
 }
 
-// Non-equality atomics indexed by prop_name, polarity, and arity.
+// Non-equality atomics indexed by AtomicName, polarity, and arity.
 #[derive(Clone, Default)]
 pub struct AtomicExceptEqualityFactMemory {
-    pub by_other_arg_count: HashMap<(PropName, bool), Vec<AtomicFact>>,
-    pub by_one_arg: HashMap<(PropName, bool), HashMap<ObjIR, AtomicFact>>,
-    pub by_two_args: HashMap<(PropName, bool), HashMap<(ObjIR, ObjIR), AtomicFact>>,
+    pub by_other_arg_count: HashMap<(AtomicName, bool), Vec<AtomicFact>>,
+    pub by_one_arg: HashMap<(AtomicName, bool), HashMap<ObjIR, AtomicFact>>,
+    pub by_two_args: HashMap<(AtomicName, bool), HashMap<(ObjIR, ObjIR), AtomicFact>>,
 }
 
 impl KnownFactMemory {
@@ -179,7 +179,7 @@ impl AtomicExceptEqualityFactMemory {
 
     pub fn store_one_arg(
         &mut self,
-        key: PropName,
+        key: AtomicName,
         positive_polarity: bool,
         arg_key: ObjIR,
         fact: AtomicFact,
@@ -192,7 +192,7 @@ impl AtomicExceptEqualityFactMemory {
 
     pub fn store_two_args(
         &mut self,
-        key: PropName,
+        key: AtomicName,
         positive_polarity: bool,
         arg_key0: ObjIR,
         arg_key1: ObjIR,
@@ -206,7 +206,7 @@ impl AtomicExceptEqualityFactMemory {
 
     pub fn store_other_arg_count(
         &mut self,
-        key: PropName,
+        key: AtomicName,
         positive_polarity: bool,
         fact: AtomicFact,
     ) {
