@@ -2483,12 +2483,12 @@ Important rules:
    `[import std]` accepts either a bare name `N` (meaning `N = N`) or
    `Alias = StdName`; both mount `<std_root>/<StdName>` under `Alias`.
    After resolution `[import]` and `[import std]` are the same kind of
-   import. Import aliases from both sections share one namespace, must not
-   collide with each other, and must not reuse a name from the same
-   manifest’s `[export]` table. Imports are processed before exports.
+   import. Import aliases from both sections must not collide with each
+   other. An export name may reuse an import spelling: `a::b` is always a
+   current export, `a::b::c` is an import path, and `a:::b` is explicit
+   single-export sugar for `a::<sole_export>::b`.
 4. Canonical names follow the mount alias and export name, for example
-   `Algebra::chap1::name` or `basics::name` (single-export fill-in when
-   applicable).
+   `Algebra::chap1::name` or `basics:::name` when `basics` has one export.
 
 Cross-module references always use canonical qualified names. Module aliases
 and symbols are separate, so a local symbol may also be named `A`; field
