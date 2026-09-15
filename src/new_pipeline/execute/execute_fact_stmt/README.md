@@ -57,7 +57,7 @@ discarded, no merge).
 `verify_atomic_fact_search_proof` is the truth-proof phase after atomic-fact
 well-definedness. Its ordinary search pipeline is intentionally limited to the
 current `Runtime.execution_environments_stack` (including the parent scopes
-represented by that stack). It does not search `Runtime.module_manager` or
+represented by that stack). It does not search `Runtime.global_module_manager` or
 merge loaded module main environments into ambient facts.
 
 The stage also derives a read-only verification state, so trying proof routes

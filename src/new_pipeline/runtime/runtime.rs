@@ -3,7 +3,7 @@ use super::real_or_virtual_path::RealOrVirtualPath;
 use super::runtime_ids::{FactId, PropAlgebraicPropertyId, WellDefinednessId};
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::exec_env::exec_env::ExecEnv;
-use crate::new_pipeline::module_manager::{ExportFileAndItsExecEnv, ModuleManager};
+use crate::new_pipeline::module_manager::{ExportFileAndItsExecEnv, GlobalModuleManager};
 use std::collections::HashSet;
 
 // -----------------------------------------------------------------------------
@@ -13,11 +13,11 @@ use std::collections::HashSet;
 /// Process-wide owner of new_pipeline execution and parse state.
 ///
 /// Like `ExecEnv`, this is core data model: it owns the live stacks, current
-/// file, global id counters, and module manager.  A single `Runtime` drives
+/// file, global id counters, and global module manager.  A single `Runtime` drives
 /// one interpreter session; `ExecEnv` instances on
 /// `execution_environments_stack` are the per-scope stores it pushes and pops.
 pub struct Runtime {
-    pub module_manager: ModuleManager,
+    pub global_module_manager: GlobalModuleManager,
     pub execution_environments_stack: Vec<Box<ExecEnv>>,
     pub parse_scope_stack: Vec<Box<ParseScope>>,
     pub current_file: RealOrVirtualPath,
@@ -43,7 +43,7 @@ pub struct Ids {
 impl Runtime {
     pub fn new() -> Self {
         Self {
-            module_manager: ModuleManager::new(),
+            global_module_manager: GlobalModuleManager::new(),
             execution_environments_stack: Vec::new(),
             parse_scope_stack: Vec::new(),
             current_file: RealOrVirtualPath::Eval,
@@ -80,8 +80,8 @@ impl Runtime {
     ) {
         let name = file.name();
         let path = file.display_path();
-        self.module_manager
-            .record_export_file(ExportFileAndItsExecEnv::new(name, path, exec_env));
+        self.global_module_manager
+            .record_root_export(ExportFileAndItsExecEnv::new(name, path, exec_env));
     }
 
     pub fn push_parse_scope(&mut self) {

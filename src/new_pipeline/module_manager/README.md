@@ -1,192 +1,153 @@
-# new_pipeline module management
+# new_pipeline module management — final data plan
 
-Canonical design for `litex.config` and the global module world.
-Implementation may lag; this note is the contract.
+Canonical contract. Implementation may lag; further Rust renames need Core
+Struct / AST approval when coding.
 
-## Goal
+## Package layout (`src/new_pipeline/module_manager/`)
 
-One **global** mount table for a run. Nesting is by importing modules.
-There is no hierarchy keyword, no submodule, no explicit `flatten` field.
+All new_pipeline module-world types live here:
 
-Same physical module folder is mounted **once** (normalized path). Local
-aliases in nested configs that point at that path **silently merge** into the
-existing global entry. Surface names are for config and display; **IR uses
-stable indices**.
+| File | Owns |
+|------|------|
+| `global_module_manager.rs` | `GlobalModuleManager`, `path_to_mod_id`, record APIs |
+| `imported_module.rs` | `ImportedModule` |
+| `export_file.rs` | `ExportFileAndItsExecEnv` |
+| `litex_config.rs` | `LitexConfig` + import/export rows |
+| `README.md` | this contract |
 
-## Rename (conceptual)
+`Runtime.global_module_manager` holds the single `GlobalModuleManager` for a
+run. Config parse, mount scheduling, and `:::` elaborate belong in later
+phases; still land under this package (or thin `run/` callers).
 
-Today’s type is still named `ModuleManager` in code. Target name:
+## Name forms (syntax)
 
-**`GlobalModuleManager`** — the single owner of current exports and all
-imports for the session/project run.
+| Form | Meaning after elaborate |
+|------|-------------------------|
+| `x` | local / current-module plain name |
+| `a::b` | current module export file `a`, symbol `b` → `WithMod { file_id, name }` |
+| `a::b::c` | import alias `a` → global module, export `b`, symbol `c` → `WithModAndExport` |
+| `a:::b` | flatten sugar only → sole export `F` → same as `a::F::b` |
 
-Do not nest a full manager inside each import.
+- No `[hierarchy]`, no `submodule`, no config `flatten`.
+- Export name may equal an import alias; forms disambiguate.
+- Import aliases within one config must not collide with each other.
+- Imports before exports. Deps of a module must already be on global before it runs.
 
-## `litex.config` (import / export only)
+---
 
-### `[export]`
+## Data structures and what each is for
 
-Ordered. Each entry is one `.lit` file only.
+### `GlobalModuleManager` (session / project owner)
 
-```ini
-[export]
-chap1 = "./chapter01.lit"
-chap2 = "./chapter02.lit"
-```
+One per run. Not nested inside imports.
 
-### `[import]`
+| Field | Type | Purpose |
+|-------|------|---------|
+| `litex_config` | `LitexConfig` | Root module’s parsed `litex.config`. |
+| `root_exports` | `Vec<ExportFileAndItsExecEnv>` | Root’s ordered completed export files + envs. Root is **not** an `imports` slot / not a `mod_id`. |
+| `imports` | `Vec<ImportedModule>` | Global mount table. **Index = `mod_id`**. Display global name = `imports[mod_id].name`. |
+| `path_to_mod_id` | `HashMap<PathBuf, usize>` | Normalized module dir path → `mod_id`. Dedup + resolve: local alias → path → `mod_id`. First registration wins; silent merge does not overwrite. |
 
-```ini
-[import]
-Algebra = "../Algebra"
-```
+No `HashMap<mod_id, name>`: name is `imports[mod_id].name`. Missing / bad id → error (deps must be ready).
 
-### `[import std]`
+**API sketch:** `record_import` by path (merge or push); `record_root_export`; lookup `path_to_mod_id`.
 
-Same runtime mount as `[import]` after path resolve. Two spellings:
+---
 
-```ini
-[import std]
-basics
-basics = basics
-myB = basics
-```
+### `ImportedModule` (one global mount)
 
-- bare `N` means `N = N`
-- `Alias = StdName` → `<std_root>/<StdName>` under `Alias`
+| Field | Type | Purpose |
+|-------|------|---------|
+| `name` | `String` | Preferred global alias (first registration). |
+| `path` | `PathBuf` | Normalized dir; same as key in `path_to_mod_id`. |
+| `litex_config` | `LitexConfig` | That folder’s manifest (for its own imports/exports when running its files). |
+| `export_files_and_their_env` | `Vec<ExportFileAndItsExecEnv>` | That module’s ordered exports + envs. **Index = `file_id`** inside this module. |
 
-Hand-written std paths under ordinary `[import]` are deferred.
+No nested manager. No per-module alias→global map: use `litex_config.imports` (alias→path) + global `path_to_mod_id`.
 
-### Alias / export name clash at one config layer (tightened)
+---
 
-Within one `litex.config`:
+### `ExportFileAndItsExecEnv`
 
-1. Aliases from `[import]` and `[import std]` share one namespace and must
-   not collide with each other.
-2. An import alias must **not** reuse a name from that same file’s
-   `[export]` table (and conversely). This keeps two-segment `a::b`
-   unambiguous even with single-export fill-in sugar.
-3. Manifest sections are always **imports first, then exports** (run and
-   elaborate assume imports are already on the global table before that
-   module’s export files run).
+| Field | Type | Purpose |
+|-------|------|---------|
+| `name` | `String` | Config export name (display; `file_id` → this when displaying). |
+| `path` | `PathBuf` | `.lit` path. |
+| `exec_env` | `Box<ExecEnv>` | Top-level env after that file finished. |
 
-Across nested configs, the same path may use different aliases; see
-**path dedup / silent merge** below (not a clash — a remapping to one `m_i`).
+Used in `root_exports` and in each `ImportedModule.export_files_and_their_env`.
 
-## Global shape (target)
+---
+
+### `LitexConfig` (config AST only; rows not separate public types)
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `imports` | `Vec<{ alias, path }>` | Resolved mounts: relative path or `<std_root>/<StdName>`. Bare `[import std] N` ⇒ `N = N`. |
+| `exports` | `Vec<{ name, path }>` | Ordered `.lit` only. |
+
+Root and every `ImportedModule` each own one.
+
+---
+
+### `AtomicName` (qualified atom identity; keep this name — do **not** reuse binder `Identifier`)
+
+Replace string `mod_name` / `export_name` with ids after elaborate:
+
+| Variant | Fields | Purpose |
+|---------|--------|---------|
+| `Plain` | `name: String` | Unqualified atom. |
+| `WithMod` | `file_id: usize`, `name: String` | `a::b` in **current** module: export index + symbol. |
+| `WithModAndExport` | `mod_id: usize`, `file_id: usize`, `name: String` | Cross-module ref: global import index + that module’s export index + symbol. |
+
+- Identity of qualified refs = these ids + `name` (not local alias strings). Same path under `T` vs `G` → same `mod_id`.
+- Display: `mod_id` → `imports[mod_id].name`; `file_id` → that module’s (or root’s) `exports[file_id].name`.
+- `ModuleId` / `ExportFileId` newtypes: deferred; `usize` is enough.
+
+Binder plain names stay the existing AST `Identifier` / `PlainName` — unchanged by this plan.
+
+---
+
+## Resolve cheat-sheet (one file running at a time)
+
+Current module = owner of the running `.lit`.
 
 ```text
-GlobalModuleManager
-  current_exports: Vec<ExportFileAndItsExecEnv>
-      # the module currently being run; ordered; does NOT occupy an m_i
-  imports: Vec<ImportedModule>
-      # every mounted module in the project world (including transitive)
+a::b
+  → file_id = index of export "a" in *current* export list
+  → AtomicName::WithMod { file_id, name: b }
+
+a:::b
+  → alias a in current LitexConfig.imports → path
+  → mod_id = path_to_mod_id[path]          # must exist
+  → that ImportedModule must have exactly one export F
+  → same as a::F::b → WithModAndExport { mod_id, file_id: 0, name: b }
+
+a::b::c
+  → alias a → path → mod_id = path_to_mod_id[path]
+  → file_id = index of export "b" in imports[mod_id].exports / export_files
+  → WithModAndExport { mod_id, file_id, name: c }
 ```
 
-```text
-ImportedModule
-  name: String           # preferred global display alias (first registration wins)
-  path: PathBuf          # normalized path; dedup key
-  litex_config: ...      # recorded manifest of that module
-  export_files_and_their_env: Vec<ExportFileAndItsExecEnv>
-  # NO nested ModuleManager / NO per-import import subtree
-```
+---
 
-### Transitive imports and readiness (no circular import)
+## Implementation phases
 
-Imports are recorded on the **global** table (by path), not left in a
-per-module import subtree.
+| Phase | Work |
+|-------|------|
+| **0** | ✅ `GlobalModuleManager` package under `module_manager/`; flatten `ImportedModule`; `path_to_mod_id`. |
+| **1** | Parse `LitexConfig` (`[import]` / `[import std]` / `[export]` only). |
+| **2** | Mount + readiness (deps already in `path_to_mod_id`); fill export envs. |
+| **3** | Elaborate names → id-based `AtomicName`; `:::` sugar; display via tables. |
+| **4** | Wire `-r` / project `-f`. |
 
-**Readiness rule (locked):** before module `A` may be mounted / run, every
-module that `A`’s own `[import]` / `[import std]` names must **already** be
-present on the global import table (same path → already merged as some
-`m_i`). `A` must not be the first place that introduces a still-missing
-dependency.
+Phase 0 needs Core Struct approval. Phase 3 needs AST approval for `AtomicName` field change + identity-doc update (`name is identity` for quals → id-based).
 
-Under this rule a cycle `A ↔ B` cannot succeed: neither can become ready
-while waiting for the other to be on global first. Implementation-wise it is
-enough to check “dep path already in `imports` (and ready)” when entering
-`A`; a separate fancy cycle graph is unnecessary if this check is always
-applied.
+---
 
-Typical outer setup: the root (or earlier mounts) registers `B` before `A`
-is entered; `A`’s local alias for `B` only remaps to the existing `m_i`.
+## Explicit non-goals
 
-### Path dedup / silent merge (locked)
-
-Dedup key: **normalized directory path**. Same folder → at most one
-`ImportedModule` / one `m_i`.
-
-Example:
-
-- Global config: `G = "../Foo"` → register `m1`, display name `G`
-- Nested config of `A`: `T = "../Foo"` (same path)
-  - do **not** mount again
-  - local name `T` means “the existing `m1`”
-  - while running in the global world, identity is `m1`; display may prefer `G`
-
-This is why an **internal representation** is required: local alias ≠ identity.
-
-### Ordering
-
-- **`[export]` order matters** (run order / prefix).
-- **`[import]` order need not define identity.** Loading may still schedule
-  “ensure dependency mounted before running a module’s exports,” but imports
-  are not a second ordered world inside each `ImportedModule`.
-
-### Root / current module
-
-The outermost root does not take an `m_i` slot. When elaborating `a::b`,
-step 1 looks at the `[export]` table of the module that owns the `.lit`
-file currently being run (only one file runs at a time).
-
-## Internal IR vs display (locked)
-
-| Layer | Module | Export file inside a module |
-|---|---|---|
-| Display / config | `G`, `basics`, … | `chap1`, `main`, … |
-| IR | `m1`, `m2`, … (registration index in `imports`) | `f1`, `f2`, … (index in that module’s `[export]` order) |
-
-Parse / elaborate maps surface quals into IR. Display maps IR back.
-
-Examples (after elaborate):
-
-- `G::chap1::x` → `m1::f2::x` (indices illustrative)
-- single-export sugar: `basics::x` → fill only export → then `m_k::f1::x`
-
-## Two-segment name `a::b` (parse vs global table)
-
-When elaborating `a::b`:
-
-1. If `a` is a name in **current** `[export]` → `current f_* :: b` (no fill).
-2. Else `a` must resolve to some import alias (possibly after local→`m_i` map).
-   - that `ImportedModule` has **exactly one** export → treat as
-     `a::<that export>::b` then to `m_i::f1::b`
-   - zero or more than one export → two-segment form is illegal; require
-     `a::export::b`
-
-Three-segment `a::b::c` is always import-alias / `m_i` + export/`f_j` + name.
-Explicit three-segment form remains allowed when single-export sugar also
-applies.
-
-No fourth segment (no submodule).
-
-## Runtime sameness of std
-
-| Config | After resolve | Global table |
-|---|---|---|
-| `[import] Alias = path` | module at `path` | one `ImportedModule` (or merge by path) |
-| `[import std] N` | `N = N` | same |
-| `[import std] Alias = StdName` | `<std_root>/StdName` | same |
-
-## Code debt vs this note
-
-Current code may still have nested `ModuleManager` inside imports and the
-old type name. Treat that as lagging implementation. Changing the Rust
-structs requires an explicit Core Struct approval when editing.
-
-## Explicit non-goals / deferred
-
-- Config parser and `-r` / project `-f` wiring
-- Ordinary `[import]` of a hand-written std filesystem path
-- Explicit `flatten` / `[hierarchy]` / `submodule`
+- Legacy `module_system` / old `ProjectConfig` hierarchy & flatten
+- Hand-written std path via ordinary `[import]`
+- Extra `mod_id → name` HashMap
+- Nesting `ModuleManager` inside imports
