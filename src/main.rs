@@ -15,18 +15,19 @@
 use litex::cli::run_command_line_commands;
 use litex::new_pipeline::run::run as run_new_pipeline;
 use litex::new_pipeline::runtime::RuntimeError;
+use litex::new_pipeline::LITEX;
 use std::process;
 
 const CLI_STACK_SIZE: usize = 64 * 1024 * 1024;
 
 fn main() {
     std::thread::Builder::new()
-        .name("litex-cli".to_string())
+        .name(format!("{}-cli", LITEX.to_ascii_lowercase()))
         .stack_size(CLI_STACK_SIZE)
         .spawn(run_selected_cli)
-        .expect("start Litex CLI thread")
+        .expect(&format!("start {} CLI thread", LITEX))
         .join()
-        .expect("Litex CLI thread panicked");
+        .expect(&format!("{} CLI thread panicked", LITEX));
 }
 
 fn run_selected_cli() {

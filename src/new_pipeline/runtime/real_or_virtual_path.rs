@@ -5,6 +5,7 @@ use std::path::PathBuf;
 pub enum RealOrVirtualPath {
     Real(PathBuf),
     Eval,
+    Repl,
 }
 
 impl RealOrVirtualPath {
@@ -12,6 +13,7 @@ impl RealOrVirtualPath {
         match self {
             RealOrVirtualPath::Real(path) => path.clone(),
             RealOrVirtualPath::Eval => PathBuf::from("<eval>"),
+            RealOrVirtualPath::Repl => PathBuf::from("<repl>"),
         }
     }
 
@@ -23,6 +25,7 @@ impl RealOrVirtualPath {
                 .map(str::to_owned)
                 .unwrap_or_else(|| path.to_string_lossy().into_owned()),
             RealOrVirtualPath::Eval => "<eval>".to_string(),
+            RealOrVirtualPath::Repl => "<repl>".to_string(),
         }
     }
 }
@@ -32,6 +35,7 @@ impl fmt::Display for RealOrVirtualPath {
         match self {
             RealOrVirtualPath::Real(path) => write!(f, "{}", path.display()),
             RealOrVirtualPath::Eval => write!(f, "<eval>"),
+            RealOrVirtualPath::Repl => write!(f, "<repl>"),
         }
     }
 }

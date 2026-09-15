@@ -5,6 +5,9 @@
 //! unset.  Submodules own the new runtime, command dispatch, tokenization,
 //! parse, execute, environment, and module-manager boundaries.
 
+/// Product display name for user-facing messages.
+pub const LITEX: &str = "Litex";
+
 pub mod ast;
 pub mod display_and_ir;
 pub mod exec_env;
