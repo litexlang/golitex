@@ -1,16 +1,15 @@
-use super::result::ExecFactStmtResult;
+use super::result::{ExecFactStmtResult, ExecFactStmtSuccessResult};
 use super::VerifyState;
 use crate::new_pipeline::ast::fact::Fact;
-use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
     // Fact stmt inside the exec_stmt temp env: verify → store on current top.
-    // Err(VerifyFactResult) = soft miss (maps to ExecStmtResult::Failed).
+    // Failed soft miss stays in ExecFactStmtResult::Failed (temp discarded by exec_stmt).
     pub(in crate::new_pipeline::execute) fn execute_fact_statement(
         &mut self,
         fact: &Fact,
-    ) -> RuntimeResult<Result<ExecFactStmtResult, VerifyFactResult>> {
+    ) -> RuntimeResult<ExecFactStmtResult> {
         let verify_state = VerifyState {
             can_use_forall_fact: true,
             can_use_known_algebraic_rewrite: true,
@@ -18,10 +17,10 @@ impl Runtime {
         };
         let verify_result = self.verify_fact(fact, verify_state)?;
         if verify_result.is_failed() {
-            return Ok(Err(verify_result));
+            return Ok(ExecFactStmtResult::Failed(verify_result));
         }
         let store_and_infer_result = self.store_fact_and_infer(fact)?;
-        Ok(Ok(ExecFactStmtResult {
+        Ok(ExecFactStmtResult::Success(ExecFactStmtSuccessResult {
             verify_result,
             store_and_infer_result,
         }))

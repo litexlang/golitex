@@ -1,6 +1,6 @@
 //! Object WD entry: cache lookup, then match Obj → family branch.
 //!
-//! `Ok(FailToVerifyWellDefined)` means WD was not established (soft miss).
+//! `Ok(FailToVerifyWellDefined(...))` means WD was not established (soft miss).
 //! Must-prove callers reject that at their boundary.
 
 use crate::new_pipeline::ast::obj::Obj;
@@ -9,22 +9,39 @@ use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::runtime_ids::WellDefinednessId;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
-// Top-level object WD result: cache hit, prove-by-definition, or soft fail.
+// Top-level object WD result: cache hit, prove-by-definition, or soft fail with reason.
 pub enum VerifyObjWellDefinedResult {
     ByCache { wd_id: WellDefinednessId },
     ByDef(ObjWellDefinedProofByDef),
-    FailToVerifyWellDefined,
+    FailToVerifyWellDefined(FailToVerifyWellDefinedResult),
 }
 
 // One by-def shape for every Obj: child WD + verified domain requirements.
 pub struct ObjWellDefinedProofByDef {
-    pub child_obj_well_defined: Vec<VerifyObjWellDefinedResult>,
+    pub child_obj_well_defined: Vec<(Obj, VerifyObjWellDefinedResult)>,
     pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+
+pub enum FailToVerifyWellDefinedResult {
+    // Direct child failed; `obj` is that child, `child` is why.
+    Child {
+        obj: Obj,
+        child: Box<FailToVerifyWellDefinedResult>,
+    },
+    // Domain requirement fact was not established; `obj` is the root being proved.
+    Requirement {
+        obj: Obj,
+        result: VerifyFactResult,
+    },
+    IdentifierUndefined {
+        obj: Obj,
+    },
+    Others(String),
 }
 
 impl VerifyObjWellDefinedResult {
     pub fn is_failed(&self) -> bool {
-        matches!(self, Self::FailToVerifyWellDefined)
+        matches!(self, Self::FailToVerifyWellDefined(_))
     }
 }
 
@@ -36,7 +53,7 @@ impl ObjWellDefinedProofByDef {
         }
     }
 
-    pub fn from_children(child_obj_well_defined: Vec<VerifyObjWellDefinedResult>) -> Self {
+    pub fn from_children(child_obj_well_defined: Vec<(Obj, VerifyObjWellDefinedResult)>) -> Self {
         Self {
             child_obj_well_defined,
             requirement_fact_verified: Vec::new(),
@@ -44,7 +61,7 @@ impl ObjWellDefinedProofByDef {
     }
 
     pub fn is_fully_known(&self) -> bool {
-        for child in &self.child_obj_well_defined {
+        for (_obj, child) in &self.child_obj_well_defined {
             if child.is_failed() {
                 return false;
             }
@@ -55,6 +72,29 @@ impl ObjWellDefinedProofByDef {
             }
         }
         true
+    }
+
+    // Consume a failed by-def proof into the first soft-fail reason.
+    pub fn into_fail_reason(self, root: &Obj) -> FailToVerifyWellDefinedResult {
+        for (child_obj, child_result) in self.child_obj_well_defined {
+            if let VerifyObjWellDefinedResult::FailToVerifyWellDefined(reason) = child_result {
+                return FailToVerifyWellDefinedResult::Child {
+                    obj: child_obj,
+                    child: Box::new(reason),
+                };
+            }
+        }
+        for req in self.requirement_fact_verified {
+            if req.is_failed() {
+                return FailToVerifyWellDefinedResult::Requirement {
+                    obj: root.clone(),
+                    result: req,
+                };
+            }
+        }
+        FailToVerifyWellDefinedResult::Others(
+            "object well-definedness failed without child or requirement detail".to_string(),
+        )
     }
 }
 
@@ -72,7 +112,9 @@ impl Runtime {
 
         let by_def = self.verify_obj_well_definedness_by_def(obj, verify_state.clone())?;
         if !by_def.is_fully_known() {
-            return Ok(VerifyObjWellDefinedResult::FailToVerifyWellDefined);
+            return Ok(VerifyObjWellDefinedResult::FailToVerifyWellDefined(
+                by_def.into_fail_reason(obj),
+            ));
         }
 
         if verify_state.store_well_defined_fact {

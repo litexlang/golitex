@@ -25,7 +25,7 @@ pub enum VerifyFactResult {
 }
 
 // Composite stubs currently expose only exact FactIR ByCache; fuller search
-// pipelines live in draft files until wired.
+// pipelines are not wired yet.
 pub enum VerifyAndFactResult {
     ByCache(CacheSearchProof),
 }

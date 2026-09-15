@@ -40,17 +40,19 @@ Object WD (`verify_obj_well_definedness`) returns
 - `Ok(ByCache)` when a WD id is visible on the env stack
 - `Ok(ByDef)` when WD is established by definition (and, if
   `store_well_defined_fact`, recorded on the current top env)
-- `Ok(FailToVerifyWellDefined)` when a child WD or requirement-fact search misses
+- `Ok(FailToVerifyWellDefined(reason))` when a child WD or requirement-fact
+  search misses (`Child` / `Requirement` / `IdentifierUndefined` / `Others`)
 - `Err(...)` only for real runtime / invariant failures
 
 Requirement search aggregators return soft fail variants on exhaustion; they
 must not emit `Err(RuntimeError::Unknown)` for “no proof found”.
 
 Nested must-prove callers reject soft fails at their boundary. Top-level soft
-fails become `Ok(ExecStmtResult::Failed)` (temp env discarded, no merge).
+fails become a leaf `*Result::Failed` inside `ExecStmtResult` (temp env
+discarded, no merge).
 
-`exec_stmt` always runs the stmt in a temp `ExecEnv` and merges only on
-`Success`.
+`exec_stmt` always runs the stmt in a temp `ExecEnv` and merges only when
+`!outcome.is_failed()`.
 
 `verify_atomic_fact_search_proof` is the truth-proof phase after atomic-fact
 well-definedness. Its ordinary search pipeline is intentionally limited to the

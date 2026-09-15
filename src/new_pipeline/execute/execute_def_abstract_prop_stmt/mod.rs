@@ -2,4 +2,4 @@
 
 mod exec_def_abstract_prop_stmt;
 
-pub use exec_def_abstract_prop_stmt::ExecDefAbstractPropStmtResult;
+pub use exec_def_abstract_prop_stmt::ExecDefAbstractPropStmtSuccessResult;

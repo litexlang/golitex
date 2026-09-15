@@ -1,20 +1,34 @@
-use super::exec_stmt_result::ExecLetObjStmtResult;
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact};
 use crate::new_pipeline::ast::obj::{AtomObj, Identifier, Obj};
 use crate::new_pipeline::ast::stmt::LetObjStmt;
 use crate::new_pipeline::exec_env::DefinedIdentifierInfo;
 use crate::new_pipeline::execute::execute_fact_stmt::{VerifyObjWellDefinedResult, VerifyState};
-use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
+use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeError, RuntimeResult};
+
+// Pipeline: WD the RHS value → affect global env. No local env.
+pub struct ExecLetObjStmtSuccessResult {
+    pub statement: LetObjStmt,
+    pub value_well_defined: VerifyObjWellDefinedResult,
+    pub stored_fact_ids: Vec<FactId>,
+}
+
+pub enum ExecLetObjStmtResult {
+    Success(ExecLetObjStmtSuccessResult),
+    Failed(VerifyObjWellDefinedResult),
+}
+
+impl ExecLetObjStmtResult {
+    pub fn is_failed(&self) -> bool {
+        matches!(self, Self::Failed(_))
+    }
+}
 
 impl Runtime {
     // `let name = value`
     // 1. WD the RHS value object
     // 2. bind the identifier
     // 3. store `name = value` into known equality (and facts_by_id)
-    pub(super) fn exec_let_obj(
-        &mut self,
-        let_stmt: &LetObjStmt,
-    ) -> RuntimeResult<Result<ExecLetObjStmtResult, VerifyObjWellDefinedResult>> {
+    pub(super) fn exec_let_obj(&mut self, let_stmt: &LetObjStmt) -> RuntimeResult<ExecLetObjStmtResult> {
         let verify_state = VerifyState {
             can_use_forall_fact: true,
             can_use_known_algebraic_rewrite: true,
@@ -22,7 +36,7 @@ impl Runtime {
         };
         let value_well_defined = self.verify_obj_well_definedness(&let_stmt.value, verify_state)?;
         if value_well_defined.is_failed() {
-            return Ok(Err(value_well_defined));
+            return Ok(ExecLetObjStmtResult::Failed(value_well_defined));
         }
 
         if self.identifier_defined_in_stack(&let_stmt.name) {
@@ -48,7 +62,7 @@ impl Runtime {
         }));
         let store_and_infer_result = self.store_fact_and_infer(&equal_fact)?;
 
-        Ok(Ok(ExecLetObjStmtResult {
+        Ok(ExecLetObjStmtResult::Success(ExecLetObjStmtSuccessResult {
             statement: let_stmt.clone(),
             value_well_defined,
             stored_fact_ids: store_and_infer_result.stored_fact_ids,
