@@ -553,8 +553,10 @@ not append help text. For example, `litex -j` returns:
 ## Project Modules
 
 > **new_pipeline design target:** no `submodule` and no `[hierarchy]`;
-> `[export]` is `.lit` files only; cross-package nesting uses `[import]` of
-> modules. Canonical write-up:
+> `[export]` is `.lit` files only; `[import]` / `[import std]` both mount
+> modules under one shared alias namespace (`[import std]` bare `N` means
+> `N = N`; `Alias = StdName` resolves to `<std_root>/<StdName>`). Canonical
+> write-up:
 > [`src/new_pipeline/module_manager/README.md`](../src/new_pipeline/module_manager/README.md).
 > Legacy runners may still accept older manifests until migration finishes.
 
@@ -562,8 +564,10 @@ Use `litex.config` to organize a module:
 
 - select each participating `.lit` file exactly once, in mathematical order,
   under `[export]` (files only; no child-folder export);
-- declare external module folders under `[import]` and installed packages under
-  `[import std]`;
+- declare external module folders under `[import] Alias = path` and std
+  packages under `[import std]` as either bare `N` (meaning `N = N`) or
+  `Alias = StdName` (path `<std_root>/<StdName>`);
+- keep import aliases unique across both import sections;
 - cite mounted packages and exports with canonical names, such as
   `Algebra::chap1::name` or `basics::name`.
 

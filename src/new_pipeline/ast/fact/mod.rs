@@ -1,0 +1,26 @@
+//! Framework AST fact shapes for new_pipeline.
+//! Field taxonomy follows the legacy language; methods are added later.
+//! Identity: String names, FactId, LineFile (name is identity; no IdentifierId).
+//!
+//! Layout: `Fact` is the root enum; each Fact variant payload lives in its own file.
+//! `AtomicFact` and all atomic payloads stay together in `atomic.rs`.
+
+mod fact;
+mod atomic;
+mod and_fact;
+mod chain_fact;
+mod or_fact;
+mod exist_fact;
+mod forall_fact;
+mod forall_fact_with_iff;
+mod not_forall_fact;
+
+pub use fact::Fact;
+pub use atomic::*;
+pub use and_fact::*;
+pub use chain_fact::*;
+pub use or_fact::*;
+pub use exist_fact::*;
+pub use forall_fact::*;
+pub use forall_fact_with_iff::*;
+pub use not_forall_fact::*;

@@ -27,10 +27,7 @@ impl Runtime {
                 Some(r) => Ok(VerifyFactResult::ExistFact(Box::new(r))),
                 None => Ok(VerifyFactResult::FailToSearchProof),
             },
-            Fact::ForallFact(fact) => match self.verify_forall_fact(fact, verify_state)? {
-                Some(r) => Ok(VerifyFactResult::ForallFact(Box::new(r))),
-                None => Ok(VerifyFactResult::FailToSearchProof),
-            },
+            Fact::ForallFact(fact) => self.verify_forall_fact(fact, verify_state),
             Fact::ForallFactWithIff(fact) => {
                 match self.verify_forall_fact_with_iff(fact, verify_state)? {
                     Some(r) => Ok(VerifyFactResult::ForallFactWithIff(Box::new(r))),

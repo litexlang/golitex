@@ -1,6 +1,7 @@
 use super::error::{RuntimeError, RuntimeResult};
 use super::real_or_virtual_path::RealOrVirtualPath;
 use super::runtime_ids::{FactId, PropAlgebraicPropertyId, WellDefinednessId};
+use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::exec_env::exec_env::ExecEnv;
 use crate::new_pipeline::module_manager::{ExportFileAndItsExecEnv, ModuleManager};
 use std::collections::HashSet;
@@ -23,25 +24,13 @@ pub struct Runtime {
     pub ids: Ids,
 }
 
-/// Name occupied in a parse scope. Distinct spellings are distinct identities.
-///
-/// At most three `::` segments (no submodule): `x` | `Mod::x` | `Mod::Export::x`.
-/// Under the locked name-is-identity premise (`identifier_identity.md`), this
-/// name *is* the symbol identity.
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub enum OccupiedName {
-    Plain(String),
-    WithMod { mod_name: String, name: String },
-    WithModAndExport {
-        mod_name: String,
-        export_name: String,
-        name: String,
-    },
-}
-
 /// One parse layer's occupied names. Inner scopes must not reuse a visible outer name.
+///
+/// Keys are `AtomicName` (at most three `::` segments). Under the locked
+/// name-is-identity premise (`identifier_identity.md`), the name *is* the
+/// symbol identity.
 pub struct ParseScope {
-    pub occupied: HashSet<OccupiedName>,
+    pub occupied: HashSet<AtomicName>,
 }
 
 /// Global monotonic id counters owned by `Runtime` (facts / WD / prop properties).
@@ -105,7 +94,7 @@ impl Runtime {
             .expect("parse scope stack empty");
     }
 
-    pub fn occupied_name_is_visible(&self, key: &OccupiedName) -> bool {
+    pub fn occupied_name_is_visible(&self, key: &AtomicName) -> bool {
         for scope in &self.parse_scope_stack {
             if scope.occupied.contains(key) {
                 return true;
@@ -115,8 +104,8 @@ impl Runtime {
     }
 
     // Occupy `key` in the current scope (name is identity; no per-occurrence id).
-    pub fn define_atom(&mut self, key: OccupiedName) -> RuntimeResult<()> {
-        if let OccupiedName::Plain(name) = &key {
+    pub fn define_atom(&mut self, key: AtomicName) -> RuntimeResult<()> {
+        if let AtomicName::Plain { name } = &key {
             if crate::new_pipeline::ast::obj::is_binder_slot_name(name) {
                 return Err(RuntimeError::Invariant(format!(
                     "binder-slot name `{name}` cannot be occupied as a free atom"
@@ -137,8 +126,8 @@ impl Runtime {
     }
 
     // Occupy an already-known name in the current scope (e.g. re-open forall binders).
-    pub fn occupy_atom(&mut self, key: OccupiedName) -> RuntimeResult<()> {
-        if let OccupiedName::Plain(name) = &key {
+    pub fn occupy_atom(&mut self, key: AtomicName) -> RuntimeResult<()> {
+        if let AtomicName::Plain { name } = &key {
             if crate::new_pipeline::ast::obj::is_binder_slot_name(name) {
                 return Err(RuntimeError::Invariant(format!(
                     "binder-slot name `{name}` cannot be occupied as a free atom"
@@ -159,15 +148,15 @@ impl Runtime {
     }
 
     pub fn define_plain_atom(&mut self, name: String) -> RuntimeResult<()> {
-        self.define_atom(OccupiedName::Plain(name))
+        self.define_atom(AtomicName::plain(name))
     }
 
     pub fn occupy_plain_atom(&mut self, name: String) -> RuntimeResult<()> {
-        self.occupy_atom(OccupiedName::Plain(name))
+        self.occupy_atom(AtomicName::plain(name))
     }
 
     pub fn plain_atom_is_visible(&self, name: &str) -> bool {
-        self.occupied_name_is_visible(&OccupiedName::Plain(name.to_string()))
+        self.occupied_name_is_visible(&AtomicName::plain(name.to_string()))
     }
 
     pub fn top_exec_env(&self) -> &ExecEnv {
@@ -252,20 +241,6 @@ impl Ids {
         self.next_prop_algebraic_property_id =
             PropAlgebraicPropertyId::new(bump(current.value(), "prop algebraic property"));
         current
-    }
-}
-
-impl std::fmt::Display for OccupiedName {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            OccupiedName::Plain(name) => write!(f, "{name}"),
-            OccupiedName::WithMod { mod_name, name } => write!(f, "{mod_name}::{name}"),
-            OccupiedName::WithModAndExport {
-                mod_name,
-                export_name,
-                name,
-            } => write!(f, "{mod_name}::{export_name}::{name}"),
-        }
     }
 }
 

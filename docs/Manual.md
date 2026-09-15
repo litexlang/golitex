@@ -2451,7 +2451,8 @@ statements are no longer part of the language.
 
 > **new_pipeline design:** there is no `submodule` and no `[hierarchy]`.
 > A maintained package is a single module. `[export]` lists only `.lit` files;
-> nesting across packages is done by `[import]` of other modules. See
+> `[import]` and `[import std]` both mount modules under aliases that share one
+> namespace. See
 > [`src/new_pipeline/module_manager/README.md`](../src/new_pipeline/module_manager/README.md).
 
 A maintained project directory has one `litex.config`.
@@ -2462,6 +2463,7 @@ Algebra = "../Algebra"
 
 [import std]
 basics
+basics = basics
 
 [export]
 chap1 = "./chapter01.lit"
@@ -2477,9 +2479,12 @@ Important rules:
    inventory. Unlisted files and folders are sidecars: discovery does not
    parse, execute, or expose them in the module namespace. Every declared
    export path must exist and point to a `.lit` file.
-3. `[import]` mounts another module (a directory with its own
-   `litex.config`). `[import std]` mounts an installed standard package.
-   Imports target modules, not individual `.lit` files.
+3. `[import] Alias = path` mounts another module directory.
+   `[import std]` accepts either a bare name `N` (meaning `N = N`) or
+   `Alias = StdName`; both mount `<std_root>/<StdName>` under `Alias`.
+   After resolution `[import]` and `[import std]` are the same kind of
+   import. Import aliases from both sections share one namespace and must
+   not collide.
 4. Canonical names follow the mount alias and export name, for example
    `Algebra::chap1::name` or `basics::name`.
 
@@ -2511,8 +2516,17 @@ submodule
 Part2 = "./Part2"
 ```
 
+```ini
+[import]
+basics = "../OtherBasics"
+
+[import std]
+basics = basics
+```
+
 These manifests are invalid under the new_pipeline design: `[hierarchy]` and
-`submodule` are removed, and `[export]` cannot name a folder.
+`submodule` are removed, `[export]` cannot name a folder, and import aliases
+must be unique across `[import]` and `[import std]`.
 
 Project execution, persistent sessions, output modes, and graph commands are
 CLI contracts rather than language syntax. See the [CLI reference](cli.md) for

@@ -68,8 +68,8 @@ pub struct WellDefinedObjectMemory {
 
 /// Definitions introduced in one execution environment.
 ///
-/// All maps are keyed by `PlainName`: defs are stored under the local
-/// unqualified name; `Mod::Export::name` is a reference path, not a store key.
+/// All maps are keyed by `PlainName` (unqualified local name);
+/// `Mod::Export::name` is a reference path, not a store key.
 #[derive(Clone)]
 pub struct DefinitionMemory {
     /// Named atoms defined in this scope (`let`, `have`, forall/exist locals, …).
@@ -145,7 +145,7 @@ impl ExecEnv {
     pub fn store_def_prop(&mut self, def_prop: DefPropStmt) {
         self.definitions
             .predicate_definitions
-            .insert(def_prop.name.clone().into(), def_prop);
+            .insert(def_prop.name.clone(), def_prop);
     }
 
     pub fn lookup_def_abstract_prop(&self, name: &str) -> Option<&DefAbstractPropStmt> {
@@ -155,7 +155,7 @@ impl ExecEnv {
     pub fn store_def_abstract_prop(&mut self, def_abstract_prop: DefAbstractPropStmt) {
         self.definitions
             .abstract_predicate_definitions
-            .insert(def_abstract_prop.name.clone().into(), def_abstract_prop);
+            .insert(def_abstract_prop.name.clone(), def_abstract_prop);
     }
 
     // Commit a closed child ExecEnv into this parent (Success path of exec_stmt).

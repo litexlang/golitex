@@ -560,7 +560,7 @@ impl Runtime {
             }
             if is_comparison_op(&tok) {
                 tb.advance()?;
-                prop_names.push(AtomicName::Plain { name: tok.into() });
+                prop_names.push(AtomicName::Plain { name: tok });
                 objs.push(parse_obj(self, tb)?);
                 continue;
             }
@@ -604,7 +604,7 @@ impl Runtime {
     fn parse_prop_name(&mut self, tb: &mut TokenBlock) -> RuntimeResult<AtomicName> {
         let first = tb.advance()?;
         if tb.peek() != Some(MOD_SIGN) {
-            return Ok(AtomicName::Plain { name: first.into() });
+            return Ok(AtomicName::Plain { name: first });
         }
         let mut parts = vec![first];
         while tb.peek() == Some(MOD_SIGN) {
@@ -614,13 +614,13 @@ impl Runtime {
         }
         match parts.len() {
             2 => Ok(AtomicName::WithMod {
-                mod_name: parts[0].clone().into(),
-                name: parts[1].clone().into(),
+                mod_name: parts[0].clone(),
+                name: parts[1].clone(),
             }),
             3 => Ok(AtomicName::WithModAndExport {
-                mod_name: parts[0].clone().into(),
-                export_name: parts[1].clone().into(),
-                name: parts[2].clone().into(),
+                mod_name: parts[0].clone(),
+                export_name: parts[1].clone(),
+                name: parts[2].clone(),
             }),
             _ => Err(RuntimeParseError::new(
                 "qualified prop name must be `Mod::name` or `Mod::Export::name` (at most three segments)",

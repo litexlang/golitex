@@ -19,7 +19,9 @@ pub use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 pub use crate::new_pipeline::store_fact_and_infer::StoreFactAndInferResult;
 pub use result::{ExecFactStmtResult, ExecFactStmtSuccessResult};
 pub use verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinRule;
-pub use verify_fact_result::VerifyFactResult;
+pub use verify_fact_result::{
+    AssumeDomFactResult, ProveAndStoreThenFactResult, VerifyFactResult, VerifyForallFactResult,
+};
 pub use verify_state::VerifyState;
 pub use verify_well_defined::{
     AtomicFactWellDefinedProof, FactWellDefinedProof, FailToVerifyWellDefinedResult,

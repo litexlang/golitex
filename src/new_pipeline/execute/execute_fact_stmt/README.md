@@ -77,6 +77,12 @@ Equality search is:
 
 builtin rule → known equality → builtin strategy → known forall.
 
+`forall` local proof (when proving a forall fact) is:
+
+introduce typed params → assume each dom (WD + store) → prove+store each then
+→ take binder `local_env` (not merged). Parent stores the whole forall only on
+Success.
+
 `KnownFactMemory.fact_ir_to_id` remains for store / merge dedup of closed
 facts under name-is-identity; it is not a verify cite path. Design rationale
 and the identifier-conflict / do-not-break checklist:
