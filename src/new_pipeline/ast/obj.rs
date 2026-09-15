@@ -404,7 +404,7 @@ pub struct SetBuilderBody {
 pub struct SetBuilder {
     /// User spelling; display only.
     pub surface: SetBuilderBody,
-    /// Alpha-normalized identity (`□N`); ops / ir / ByCache.
+    /// Alpha-normalized identity (`□N`); ops / ir / known-memory keys.
     pub alpha: SetBuilderBody,
 }
 
@@ -421,7 +421,7 @@ pub struct FnSetBody {
 pub struct FnSet {
     /// User spelling; display only.
     pub surface: FnSetBody,
-    /// Alpha-normalized identity (`□N`); ops / ir / ByCache.
+    /// Alpha-normalized identity (`□N`); ops / ir / known-memory keys.
     pub alpha: FnSetBody,
 }
 
@@ -436,7 +436,7 @@ pub struct AnonymousFnBody {
 pub struct AnonymousFn {
     /// User spelling; display only.
     pub surface: AnonymousFnBody,
-    /// Alpha-normalized identity (`□N`); ops / ir / ByCache.
+    /// Alpha-normalized identity (`□N`); ops / ir / known-memory keys.
     pub alpha: AnonymousFnBody,
 }
 

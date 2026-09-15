@@ -107,7 +107,7 @@ pub enum SpecialObjProperty {
 }
 
 // -----------------------------------------------------------------------------
-// Construction and cache operations
+// Construction and memory operations
 // -----------------------------------------------------------------------------
 
 impl ExecEnv {

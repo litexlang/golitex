@@ -38,7 +38,7 @@ impl Runtime {
         None
     }
 
-    // WD cache: inner scopes first, then parents (same walk as definitions).
+    // WD memory: inner scopes first, then parents (same walk as definitions).
     pub(in crate::new_pipeline::execute) fn well_defined_visible_in_stack(
         &self,
         obj: &Obj,

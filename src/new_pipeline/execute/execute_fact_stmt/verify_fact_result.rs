@@ -6,8 +6,10 @@
 //! Verify entry points return `RuntimeResult<VerifyFactResult>`:
 //! - `Ok(FailToVerifyWellDefined)` / `Ok(FailToSearchProof)` = soft miss
 //! - `Err` = real operational / invariant failure (SessionError)
+//!
+//! There is no fact-level exact-IR cite path: reuse known atomics / equality /
+//! forall search instead. Object WD reuses `WellDefinedObjectMemory` via ByKnown.
 
-use super::cache_search_proof::CacheSearchProof;
 use super::verify_atomic_fact::{VerifyAtomicExceptEqualityFactResult, VerifyEqualityResult};
 
 pub enum VerifyFactResult {
@@ -24,35 +26,20 @@ pub enum VerifyFactResult {
     NotForall(Box<VerifyNotForallFactResult>),
 }
 
-// Composite stubs currently expose only exact FactIR ByCache; fuller search
-// pipelines are not wired yet.
-pub enum VerifyAndFactResult {
-    ByCache(CacheSearchProof),
-}
+// Composite search pipelines are not wired yet (always FailToSearchProof).
+pub enum VerifyAndFactResult {}
 
-pub enum VerifyChainFactResult {
-    ByCache(CacheSearchProof),
-}
+pub enum VerifyChainFactResult {}
 
-pub enum VerifyOrFactResult {
-    ByCache(CacheSearchProof),
-}
+pub enum VerifyOrFactResult {}
 
-pub enum VerifyExistFactResult {
-    ByCache(CacheSearchProof),
-}
+pub enum VerifyExistFactResult {}
 
-pub enum VerifyForallFactResult {
-    ByCache(CacheSearchProof),
-}
+pub enum VerifyForallFactResult {}
 
-pub enum VerifyForallFactWithIffResult {
-    ByCache(CacheSearchProof),
-}
+pub enum VerifyForallFactWithIffResult {}
 
-pub enum VerifyNotForallFactResult {
-    ByCache(CacheSearchProof),
-}
+pub enum VerifyNotForallFactResult {}
 
 impl VerifyFactResult {
     pub fn is_failed(&self) -> bool {

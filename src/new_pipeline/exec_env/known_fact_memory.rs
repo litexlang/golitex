@@ -9,12 +9,13 @@ use std::rc::Rc;
 pub use crate::new_pipeline::display_and_ir::ObjIR;
 
 // Known facts and search indexes for one ExecEnv scope.
-// Exact FactIR ByCache indexes every closed Fact shape (name is identity).
+// Exact FactIR indexes every closed Fact shape (name is identity) for store /
+// merge dedup. Fact verify has no exact-IR cite slot; reuse known-* search.
 // Rationale / do-not-break: `new_pipeline/identifier_identity.md`.
 #[derive(Clone)]
 pub struct KnownFactMemory {
     pub facts_by_id: HashMap<FactId, Fact>,
-    // Exact IR → FactId for ByCache. Same string key as `fact.ir()`.
+    // Exact IR → FactId for store / merge. Same string key as `fact.ir()`.
     pub fact_ir_to_id: HashMap<FactIR, FactId>,
     pub known_equality: KnownEqualityMemory,
     pub known_atomic_except_equality_facts: AtomicExceptEqualityFactMemory,
@@ -59,7 +60,7 @@ impl KnownFactMemory {
         }
     }
 
-    // Record any closed fact under both id and IR indexes (ByCache).
+    // Record any closed fact under both id and IR indexes.
     pub fn record_fact(&mut self, fact_id: FactId, fact: Fact) {
         self.fact_ir_to_id.insert(fact.ir(), fact_id);
         self.facts_by_id.insert(fact_id, fact);

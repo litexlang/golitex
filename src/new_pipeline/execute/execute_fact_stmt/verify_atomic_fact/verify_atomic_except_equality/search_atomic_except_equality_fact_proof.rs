@@ -4,7 +4,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
-    // Stage order: cache → builtin rule → known atomic → builtin strategy →
+    // Stage order: builtin rule → known atomic → builtin strategy →
     // by definition → known forall → builtin algebraic rewrite →
     // known algebraic rewrite.
     // Ok(None) means no proof found; that is not a runtime error.
@@ -13,12 +13,6 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchedProof>> {
-        if let Some(result) =
-            self.search_atomic_except_equality_fact_proof_by_cache(fact, verify_state.clone())?
-        {
-            return Ok(Some(AtomicExceptEqualityFactSearchedProof::ByCache(result)));
-        }
-
         if let Some(result) = self
             .search_atomic_except_equality_fact_proof_by_builtin_rule(fact, verify_state.clone())?
         {

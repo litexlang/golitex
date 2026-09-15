@@ -7,7 +7,7 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 pub enum FactWellDefinedProof {
     AtomicFact(AtomicFactWellDefinedProof),
     // Temporary: full composite WD pipelines are still draft-only. Allows
-    // `trust` / store of closed composite facts so exact FactIR ByCache works.
+    // `trust` / store of closed composite facts into known-fact memory.
     CompositePending,
 }
 

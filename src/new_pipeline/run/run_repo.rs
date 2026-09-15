@@ -1,18 +1,26 @@
+use super::run_command_outcome::{RunFileResult, RunRepoResult};
 use crate::new_pipeline::runtime::{RealOrVirtualPath, Runtime, RuntimeError, RuntimeResult};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-pub fn run_repo(path: PathBuf) -> RuntimeResult<()> {
+pub fn run_repo(path: PathBuf) -> RuntimeResult<RunRepoResult> {
     if path.as_os_str().is_empty() {
         return Err(RuntimeError::InvalidArguments(
             "-r requires a repository path".to_string(),
         ));
     }
     let mut runtime = Runtime::new();
-    run_module_dir(&mut runtime, &path)
+    let mut files = Vec::new();
+    run_module_dir(&mut runtime, &path, &mut files)?;
+    let all_stmts_succeeded = files.iter().all(|file| !file.process_failed());
+    Ok(RunRepoResult::new(path, all_stmts_succeeded, files, None))
 }
 
-fn run_module_dir(runtime: &mut Runtime, module_dir: &Path) -> RuntimeResult<()> {
+fn run_module_dir(
+    runtime: &mut Runtime,
+    module_dir: &Path,
+    files: &mut Vec<RunFileResult>,
+) -> RuntimeResult<()> {
     let config_path = module_dir.join("litex.config");
     let source = fs::read_to_string(&config_path).map_err(|error| RuntimeError::Io {
         path: config_path.clone(),
@@ -86,13 +94,13 @@ fn run_module_dir(runtime: &mut Runtime, module_dir: &Path) -> RuntimeResult<()>
     }
 
     for (_name, rel) in imports {
-        run_module_dir(runtime, &module_dir.join(&rel))?;
+        run_module_dir(runtime, &module_dir.join(&rel), files)?;
     }
 
     for (_name, rel) in exports {
         let export_path = module_dir.join(&rel);
         if export_path.is_dir() || export_path.join("litex.config").is_file() {
-            run_module_dir(runtime, &export_path)?;
+            run_module_dir(runtime, &export_path, files)?;
             continue;
         }
 
@@ -100,13 +108,24 @@ fn run_module_dir(runtime: &mut Runtime, module_dir: &Path) -> RuntimeResult<()>
             path: export_path.clone(),
             message: error.to_string(),
         })?;
-        runtime.begin_file(RealOrVirtualPath::Real(export_path), false);
-        if let Err(error) = runtime.run_litex_code(&file_source) {
+        runtime.begin_file(RealOrVirtualPath::Real(export_path.clone()), false);
+        let code_result = match runtime.run_litex_code(&file_source) {
+            Ok(result) => result,
+            Err(error) => {
+                runtime.abort_file();
+                return Err(error);
+            }
+        };
+
+        if code_result.all_stmts_succeeded {
+            let (file, exec_env) = runtime.finish_file();
+            runtime.publish_completed_export_file(file, exec_env);
+            files.push(RunFileResult::from_code_result(export_path, code_result));
+        } else {
             runtime.abort_file();
-            return Err(error);
+            files.push(RunFileResult::from_code_result(export_path, code_result));
+            return Ok(());
         }
-        let (file, exec_env) = runtime.finish_file();
-        runtime.publish_completed_export_file(file, exec_env);
     }
 
     Ok(())

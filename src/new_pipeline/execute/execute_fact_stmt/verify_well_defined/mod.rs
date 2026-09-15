@@ -1,7 +1,7 @@
 //! Well-definedness verification for new_pipeline.
 //!
 //! Main entries classify by AST shape, then dispatch.
-//! Object WD top-level result is only ByCache | ByDef.
+//! Object WD top-level result is only ByKnown | ByDef.
 
 mod verify_atomic_fact;
 mod verify_fact;

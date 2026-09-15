@@ -1,4 +1,4 @@
-//! Object WD entry: cache lookup, then match Obj → family branch.
+//! Object WD entry: known-memory lookup, then match Obj → family branch.
 //!
 //! `Ok(FailToVerifyWellDefined(...))` means WD was not established (soft miss).
 //! Must-prove callers reject that at their boundary.
@@ -9,9 +9,9 @@ use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::runtime_ids::WellDefinednessId;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
-// Top-level object WD result: cache hit, prove-by-definition, or soft fail with reason.
+// Top-level object WD result: already known in memory, prove-by-definition, or soft fail.
 pub enum VerifyObjWellDefinedResult {
-    ByCache { wd_id: WellDefinednessId },
+    ByKnown { wd_id: WellDefinednessId },
     ByDef(ObjWellDefinedProofByDef),
     FailToVerifyWellDefined(FailToVerifyWellDefinedResult),
 }
@@ -99,7 +99,7 @@ impl ObjWellDefinedProofByDef {
 }
 
 impl Runtime {
-    // Cache lookup across the env stack, then prove by definition.
+    // Known-memory lookup across the env stack, then prove by definition.
     // When store_well_defined_fact is set and ByDef succeeds, record on current top.
     pub fn verify_obj_well_definedness(
         &mut self,
@@ -107,7 +107,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
         if let Some(wd_id) = self.well_defined_visible_in_stack(obj) {
-            return Ok(VerifyObjWellDefinedResult::ByCache { wd_id });
+            return Ok(VerifyObjWellDefinedResult::ByKnown { wd_id });
         }
 
         let by_def = self.verify_obj_well_definedness_by_def(obj, verify_state.clone())?;

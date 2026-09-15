@@ -4,7 +4,7 @@
 //! stores live in `ExecEnv` on `execution_environments_stack`.
 //!
 //! Symbol identity premise: `../identifier_identity.md` (name is identity;
-//! no IdentifierId; ByCache / conflict checklist lives there).
+//! no IdentifierId; IR / conflict checklist lives there).
 
 pub mod error;
 pub mod real_or_virtual_path;

@@ -1,8 +1,4 @@
-use super::verify_fact_result::{
-    VerifyAndFactResult, VerifyChainFactResult, VerifyExistFactResult,
-    VerifyFactResult, VerifyForallFactResult, VerifyForallFactWithIffResult,
-    VerifyNotForallFactResult, VerifyOrFactResult,
-};
+use super::verify_fact_result::VerifyFactResult;
 use super::VerifyState;
 use crate::new_pipeline::ast::fact::Fact;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
@@ -13,36 +9,6 @@ impl Runtime {
         fact: &Fact,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
-        // Exact FactIR ByCache applies to every closed Fact shape.
-        if !matches!(fact, Fact::AtomicFact(_)) {
-            if let Some(cache) = self.search_fact_proof_by_cache(fact) {
-                return Ok(match fact {
-                    Fact::AndFact(_) => VerifyFactResult::AndFact(Box::new(
-                        VerifyAndFactResult::ByCache(cache),
-                    )),
-                    Fact::ChainFact(_) => VerifyFactResult::ChainFact(Box::new(
-                        VerifyChainFactResult::ByCache(cache),
-                    )),
-                    Fact::OrFact(_) => {
-                        VerifyFactResult::OrFact(Box::new(VerifyOrFactResult::ByCache(cache)))
-                    }
-                    Fact::ExistFact(_) => VerifyFactResult::ExistFact(Box::new(
-                        VerifyExistFactResult::ByCache(cache),
-                    )),
-                    Fact::ForallFact(_) => VerifyFactResult::ForallFact(Box::new(
-                        VerifyForallFactResult::ByCache(cache),
-                    )),
-                    Fact::ForallFactWithIff(_) => VerifyFactResult::ForallFactWithIff(Box::new(
-                        VerifyForallFactWithIffResult::ByCache(cache),
-                    )),
-                    Fact::NotForall(_) => VerifyFactResult::NotForall(Box::new(
-                        VerifyNotForallFactResult::ByCache(cache),
-                    )),
-                    Fact::AtomicFact(_) => unreachable!(),
-                });
-            }
-        }
-
         match fact {
             Fact::AtomicFact(fact) => self.verify_atomic_fact(fact, verify_state),
             Fact::AndFact(fact) => match self.verify_and_fact(fact, verify_state)? {

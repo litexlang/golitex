@@ -1,4 +1,4 @@
-//! Transactional exec_stmt + WD-cache regression tests.
+//! Transactional exec_stmt + WD-memory regression tests.
 
 use crate::new_pipeline::ast::obj::{Number, Obj};
 use crate::new_pipeline::execute::ExecStmtResult;
@@ -84,7 +84,7 @@ fn success_let_merges_identifier_and_wd() {
 }
 
 #[test]
-fn second_wd_of_same_obj_hits_cache_after_merge() {
+fn second_wd_of_same_obj_hits_known_memory_after_merge() {
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "let x = 1").is_failed());
     let wd_len_after_first = runtime
@@ -101,7 +101,7 @@ fn second_wd_of_same_obj_hits_cache_after_merge() {
             .object_to_wd_id
             .len(),
         wd_len_after_first,
-        "ByCache must not insert a second WD entry for the same ObjIR"
+        "ByKnown must not insert a second WD entry for the same ObjIR"
     );
     assert!(runtime
         .top_exec_env()

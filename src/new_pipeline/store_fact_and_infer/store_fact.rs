@@ -13,8 +13,8 @@ impl Runtime {
         Ok(StoreFactAndInferResult::from_stored_ids(stored_fact_ids))
     }
 
-    // Index every closed Fact by FactIR for ByCache; atomics also update
-    // equality / atomic-except-equality side indexes.
+    // Index every closed Fact by FactIR (store / merge dedup); atomics also
+    // update equality / atomic-except-equality side indexes.
     pub fn store_fact(&mut self, fact: &Fact) -> RuntimeResult<Vec<FactId>> {
         match fact {
             Fact::AtomicFact(atomic_fact) => self.store_atomic_fact(atomic_fact),
