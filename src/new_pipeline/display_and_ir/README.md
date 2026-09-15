@@ -19,7 +19,8 @@ note on **name is identity**, why `IdentifierId` was removed (false IR-key
 misses / true shadowing conflicts), FactIR index / Obj WD ByKnown contracts,
 and the do-not-break checklist.
 
-**Name is identity:** the same surface name (plain or `mod::name`) always
+**Name is identity:** the same surface name (plain, `Mod::name`, or
+`Mod::Export::name`) always
 denotes the same symbol. No shadowing; no same-name nested binders. IR
 keys use the surface name spelling directly.
 

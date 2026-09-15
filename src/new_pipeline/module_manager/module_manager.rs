@@ -1,21 +1,14 @@
-//! Config-shaped module tree for the new pipeline.
+//! Config-shaped module node for the new pipeline.
 
 use crate::new_pipeline::exec_env::exec_env::ExecEnv;
 use std::path::PathBuf;
 
-/// One module/config node.  Completed environments are owned by the node that
-/// executed them; child nodes are never merged into their parent.
+/// One module/config node. Completed environments are owned by the node that
+/// executed them; imported modules are never merged into their importer.
 pub struct ModuleManager {
-    pub(crate) hierarchy: ModuleHierarchy,
     pub(crate) export_files_and_their_env: Vec<ExportFileAndItsExecEnv>,
     pub(crate) import_repos: Vec<ModuleManager>,
     pub(crate) import_std: Vec<ImportStdRepoAndItsExecEnv>,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ModuleHierarchy {
-    Module,
-    Submodule,
 }
 
 /// A completed export file and its top-level execution environment.
@@ -42,17 +35,12 @@ pub struct ImportStdRepoAndItsExecEnv {
 }
 
 impl ModuleManager {
-    pub fn new(hierarchy: ModuleHierarchy) -> Self {
+    pub fn new() -> Self {
         Self {
-            hierarchy,
             export_files_and_their_env: Vec::new(),
             import_repos: Vec::new(),
             import_std: Vec::new(),
         }
-    }
-
-    pub fn hierarchy(&self) -> ModuleHierarchy {
-        self.hierarchy
     }
 
     pub fn record_export_file(&mut self, export: ExportFileAndItsExecEnv) {

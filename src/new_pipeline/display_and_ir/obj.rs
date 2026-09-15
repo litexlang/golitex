@@ -300,7 +300,7 @@ impl Obj {
                 Obj::BigIntersect(x) => s.push_str(&x.ir()),
                 Obj::IndexUnion(x) => s.push_str(&x.ir()),
                 Obj::IndexIntersect(x) => s.push_str(&x.ir()),
-                Obj::Atom(x) => s.push_str(&x.ir()),
+                Obj::Identifier(x) => s.push_str(&x.ir()),
                 Obj::FnObj(x) => s.push_str(&x.ir()),
                 Obj::Number(x) => s.push_str(&x.ir()),
                 Obj::ImaginaryUnit(_) => s.push_str(I),
@@ -354,7 +354,7 @@ impl Obj {
 
     pub fn display_string(&self) -> String {
         match self {
-            Obj::Atom(a) => a.display_string(),
+            Obj::Identifier(a) => a.display_string(),
             Obj::SetBuilder(x) => x.display_string(),
             Obj::FnSet(x) => x.display_string(),
             Obj::AnonymousFn(x) => x.display_string(),
@@ -372,24 +372,24 @@ impl Identifier {
     }
 }
 
-impl IdentifierWithMod {
+impl IdentifierObj {
     pub fn ir(&self) -> ObjIR {
-        ObjIR(format!("{}{}{}", self.mod_name, MOD_SIGN, self.name))
-    }
-    impl_display_pair!();
-}
-
-impl AtomObj {
-    pub fn ir(&self) -> ObjIR {
-        match self {
-            AtomObj::Identifier(x) => x.ir(),
-            AtomObj::IdentifierWithMod(x) => x.ir(),
-        }
+        ObjIR(self.display_string())
     }
     pub fn display_string(&self) -> String {
         match self {
-            AtomObj::Identifier(x) => x.display_string(),
-            AtomObj::IdentifierWithMod(x) => x.display_string(),
+            IdentifierObj::Plain { name } => name.clone(),
+            IdentifierObj::WithMod { mod_name, name } => {
+                format!("{}{}{}", mod_name, MOD_SIGN, name)
+            }
+            IdentifierObj::WithModAndExport {
+                mod_name,
+                export_name,
+                name,
+            } => format!(
+                "{}{}{}{}{}",
+                mod_name, MOD_SIGN, export_name, MOD_SIGN, name
+            ),
         }
     }
 }
@@ -398,7 +398,6 @@ impl FnObjHead {
     pub fn ir(&self) -> ObjIR {
         match self {
             FnObjHead::Identifier(x) => x.ir(),
-            FnObjHead::IdentifierWithMod(x) => x.ir(),
             FnObjHead::AnonymousFnLiteral(a) => a.ir(),
             FnObjHead::FiniteSeqListObj(v) => v.ir(),
             FnObjHead::ObjAtIndex(v) => v.ir(),

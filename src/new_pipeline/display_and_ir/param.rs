@@ -6,20 +6,11 @@ use crate::new_pipeline::ast::param::{
     FiniteSet, NonemptySet, ParamType, Set, SetBoundParameterGroup, SetBoundParameterList,
     TypedParameterGroup, TypedParameterList,
 };
-use crate::new_pipeline::parse::keywords::{COMMA, FINITE_SET, MOD_SIGN, NONEMPTY_SET, SET};
+use crate::new_pipeline::parse::keywords::{COMMA, FINITE_SET, NONEMPTY_SET, SET};
 
 impl AtomicName {
     pub fn ir(&self) -> ParamIR {
-        match self {
-            AtomicName::WithoutMod(name) => ParamIR(name.clone()),
-            AtomicName::WithMod(mod_name, name) => ParamIR(format!(
-                "{}{}{}",
-                mod_name, MOD_SIGN, name
-            )),
-        }
-    }
-    pub fn display_string(&self) -> String {
-        self.ir().display_string()
+        ParamIR(self.display_string())
     }
 }
 
@@ -28,7 +19,7 @@ impl TypedParameterList {
         ParamIR(
             self.groups
                 .iter()
-                .map(|g| g.ir())
+                .map(|g| g.ir().0)
                 .collect::<Vec<_>>()
                 .join(&format!("{} ", COMMA)),
         )
@@ -43,7 +34,7 @@ impl SetBoundParameterList {
         ParamIR(
             self.groups
                 .iter()
-                .map(|g| g.ir())
+                .map(|g| g.ir().0)
                 .collect::<Vec<_>>()
                 .join(&format!("{} ", COMMA)),
         )
@@ -58,14 +49,10 @@ impl TypedParameterGroup {
         let params = self
             .params
             .iter()
-            .map(|p| p.ir())
+            .map(|p| p.ir().0)
             .collect::<Vec<_>>()
             .join(", ");
-        ParamIR(format!(
-            "{} {}",
-            params,
-            self.param_type.ir()
-        ))
+        ParamIR(format!("{} {}", params, self.param_type.ir().0))
     }
     pub fn display_string(&self) -> String {
         let params = self
@@ -83,14 +70,10 @@ impl SetBoundParameterGroup {
         let params = self
             .params
             .iter()
-            .map(|p| p.ir())
+            .map(|p| p.ir().0)
             .collect::<Vec<_>>()
             .join(", ");
-        ParamIR(format!(
-            "{} {}",
-            params,
-            self.param_type.as_ref().ir()
-        ))
+        ParamIR(format!("{} {}", params, self.param_type.as_ref().ir().0))
     }
     pub fn display_string(&self) -> String {
         let params = self
@@ -109,10 +92,7 @@ impl ParamType {
             ParamType::Set(set) => set.ir(),
             ParamType::NonemptySet(nonempty_set) => nonempty_set.ir(),
             ParamType::FiniteSet(finite_set) => finite_set.ir(),
-            ParamType::Obj(obj) => ParamIR(format!(
-                "{}",
-                obj.ir()
-            )),
+            ParamType::Obj(obj) => ParamIR(format!("{}", obj.ir().0)),
         }
     }
     pub fn display_string(&self) -> String {

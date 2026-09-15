@@ -398,7 +398,7 @@ macro_rules! impl_normal_atomic {
     ($ty:ty, $negated:expr) => {
         impl $ty {
             pub fn ir(&self) -> FactIR {
-                if let AtomicName::WithoutMod(name) = &self.predicate {
+                if let AtomicName::Plain { name } = &self.predicate {
                     if self.body.len() == 2
                         && (name.as_str() == PROPER_SUBSET || name.as_str() == PROPER_SUPERSET)
                     {
@@ -434,7 +434,7 @@ macro_rules! impl_normal_atomic {
                 FactIR(s)
             }
             pub fn display_string(&self) -> String {
-                if let AtomicName::WithoutMod(name) = &self.predicate {
+                if let AtomicName::Plain { name } = &self.predicate {
                     if self.body.len() == 2
                         && (name.as_str() == PROPER_SUBSET || name.as_str() == PROPER_SUPERSET)
                     {

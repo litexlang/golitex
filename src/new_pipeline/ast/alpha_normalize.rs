@@ -139,13 +139,6 @@ fn alpha_normalize_anonymous_fn_body(
     AnonymousFnBody { body, equal_to }
 }
 
-fn rename_identifier(id: Identifier, env: &RenameEnv) -> Identifier {
-    match env.get(&id.name) {
-        Some(slot) => Identifier::new(slot.clone()),
-        None => id,
-    }
-}
-
 fn map_interval(s: IntervalObjStruct, env: &RenameEnv, counter: &mut usize) -> IntervalObjStruct {
     IntervalObjStruct {
         start: Box::new(alpha_normalize_obj(*s.start, env, counter)),
@@ -166,8 +159,7 @@ fn alpha_normalize_struct_obj(s: StructObj, env: &RenameEnv, counter: &mut usize
 
 fn alpha_normalize_fn_obj_head(head: FnObjHead, env: &RenameEnv, counter: &mut usize) -> FnObjHead {
     match head {
-        FnObjHead::Identifier(id) => FnObjHead::Identifier(rename_identifier(id, env)),
-        FnObjHead::IdentifierWithMod(m) => FnObjHead::IdentifierWithMod(m),
+        FnObjHead::Identifier(id) => FnObjHead::Identifier(rename_identifier_obj(id, env)),
         FnObjHead::AnonymousFnLiteral(a) => {
             let alpha = alpha_normalize_anonymous_fn_body(a.surface.clone(), env, counter);
             FnObjHead::AnonymousFnLiteral(Box::new(AnonymousFn {
@@ -209,12 +201,21 @@ fn alpha_normalize_fn_obj_head(head: FnObjHead, env: &RenameEnv, counter: &mut u
     }
 }
 
+fn rename_identifier_obj(id: IdentifierObj, env: &RenameEnv) -> IdentifierObj {
+    match id {
+        IdentifierObj::Plain { name } => match env.get(&name) {
+            Some(slot) => IdentifierObj::Plain {
+                name: slot.clone(),
+            },
+            None => IdentifierObj::Plain { name },
+        },
+        other => other,
+    }
+}
+
 fn alpha_normalize_obj(obj: Obj, env: &RenameEnv, counter: &mut usize) -> Obj {
     match obj {
-        Obj::Atom(a) => Obj::Atom(match a {
-            AtomObj::Identifier(id) => AtomObj::Identifier(rename_identifier(id, env)),
-            AtomObj::IdentifierWithMod(m) => AtomObj::IdentifierWithMod(m),
-        }),
+        Obj::Identifier(id) => Obj::Identifier(rename_identifier_obj(id, env)),
         Obj::FnObj(FnObj { head, body }) => Obj::FnObj(FnObj {
             head: Box::new(alpha_normalize_fn_obj_head(*head, env, counter)),
             body: body

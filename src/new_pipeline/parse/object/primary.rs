@@ -1,8 +1,7 @@
 use crate::new_pipeline::ast::alpha_normalize::{new_anonymous_fn, new_fn_set, new_set_builder};
 use crate::new_pipeline::ast::obj::{
-    Abs, AtomObj, Cart, Ceil, Cos, Exp, Floor, FnObjHead, Gcd, Identifier, IdentifierWithMod,
-    Intersect, Lcm, ListSet, Ln, Max, Min, Number, Obj, Quot, SetMinus, Sin, Sqrt, StandardSet,
-    Tan, Tuple, Union,
+    Abs, Cart, Ceil, Cos, Exp, Floor, FnObjHead, Gcd, IdentifierObj, Intersect, Lcm, ListSet, Ln,
+    Max, Min, Number, Obj, Quot, SetMinus, Sin, Sqrt, StandardSet, Tan, Tuple, Union,
 };
 use crate::new_pipeline::ast::param::{ParamType, SetBoundParameterGroup, SetBoundParameterList};
 use crate::new_pipeline::parse::keywords::{
@@ -79,8 +78,7 @@ pub fn parse_primary(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
 
 pub(super) fn fn_obj_head_from_obj(obj: Obj) -> Option<FnObjHead> {
     match obj {
-        Obj::Atom(AtomObj::Identifier(id)) => Some(FnObjHead::Identifier(id)),
-        Obj::Atom(AtomObj::IdentifierWithMod(m)) => Some(FnObjHead::IdentifierWithMod(m)),
+        Obj::Identifier(id) => Some(FnObjHead::Identifier(id)),
         Obj::ObjAtIndex(v) => Some(FnObjHead::ObjAtIndex(v)),
         Obj::ObjAsStructInstanceWithFieldAccess(v) => {
             Some(FnObjHead::ObjAsStructInstanceWithFieldAccess(v))
@@ -449,11 +447,43 @@ fn parse_identifier_or_mod_or_standard_set(
             }
             parts.push(next);
         }
-        let local = parts.pop().expect("qualified name has a local part");
-        let mod_name = parts.join(MOD_SIGN);
-        let key = OccupiedName::WithMod {
-            mod_name: mod_name.clone(),
-            name: local.clone(),
+        let (id, key) = match parts.len() {
+            2 => {
+                let mod_name = parts[0].clone();
+                let local = parts[1].clone();
+                (
+                    IdentifierObj::WithMod {
+                        mod_name: mod_name.clone(),
+                        name: local.clone(),
+                    },
+                    OccupiedName::WithMod {
+                        mod_name,
+                        name: local,
+                    },
+                )
+            }
+            3 => {
+                let mod_name = parts[0].clone();
+                let export_name = parts[1].clone();
+                let local = parts[2].clone();
+                (
+                    IdentifierObj::WithModAndExport {
+                        mod_name: mod_name.clone(),
+                        export_name: export_name.clone(),
+                        name: local.clone(),
+                    },
+                    OccupiedName::WithModAndExport {
+                        mod_name,
+                        export_name,
+                        name: local,
+                    },
+                )
+            }
+            _ => {
+                return Err(tb.parse_error(
+                    "qualified name must be `Mod::name` or `Mod::Export::name` (at most three segments)",
+                ));
+            }
         };
         if !rt.occupied_name_is_visible(&key) {
             rt.define_atom(key).map_err(|err| match err {
@@ -463,10 +493,7 @@ fn parse_identifier_or_mod_or_standard_set(
                 other => other,
             })?;
         }
-        return Ok(Obj::Atom(AtomObj::IdentifierWithMod(IdentifierWithMod {
-            mod_name,
-            name: local,
-        })));
+        return Ok(Obj::Identifier(id));
     }
 
     if let Some(set) = standard_set_from_name(&name) {
@@ -480,7 +507,7 @@ fn parse_identifier_or_mod_or_standard_set(
     if !rt.plain_atom_is_visible(&name) {
         return Err(tb.parse_error(format!("undefined name `{name}`")));
     }
-    Ok(Obj::Atom(AtomObj::Identifier(Identifier::new(name))))
+    Ok(Obj::Identifier(IdentifierObj::Plain { name }))
 }
 
 fn standard_set_from_name(name: &str) -> Option<StandardSet> {

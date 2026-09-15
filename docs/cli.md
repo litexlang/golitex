@@ -221,9 +221,9 @@ language-code token in the prefix.
 |---------|----------|
 | `litex` | Start an isolated interactive verifier REPL. |
 | `litex -e <code>` | Run a Litex source string. |
-| `litex -f <file>` | If the direct parent contains `litex.config`, trace to the module root and run the recursive `[export]` prefix through this registered file; otherwise run it as an isolated script. Exit after the batch result. |
+| `litex -f <file>` | If the direct parent contains `litex.config`, run that module's imports plus the ordered `[export]` prefix through this registered `.lit` file; otherwise run it as an isolated script. Exit after the batch result. |
 | `litex -isolated -f <file>` | Ignore any direct-parent project configuration, run one isolated batch file, and exit. |
-| `litex -r <project>` | Run a module's complete recursive `[export]` tree, or trace to the module and run the prefix through a selected submodule's complete subtree. |
+| `litex -r <project>` | Run a module's imports, then its complete ordered `[export]` `.lit` list. |
 | `litex -session -f <file>` | Select project or isolated context by the same direct-parent rule as `-f`, run the file, then keep that Runtime alive as a framed persistent session. |
 | `litex -isolated -session -f <file>` | Run one standalone file, then keep that same Runtime alive as a framed persistent session. |
 
@@ -248,12 +248,12 @@ This preserves source order without leaking names between examples. Unsupported
 or trusted routes fail closed; the compiler does not emit `sorry` or project
 axioms.
 
-Declare local project files and child submodules in recursive ordered
-`[export]` entries. Only a `[hierarchy] module` declares non-standard packages
-in `[import]` or installed packages in `[import std]`. Files cite canonical
-names such as `Part2::chap3::theorem` or
-`basics::theorem`. No `.lit` source file can write imports; this includes
-standalone files selected automatically by `-f` or forced with `-isolated -f`.
+Declare local project files in ordered `[export]` entries. A module
+`litex.config` may declare non-standard packages in `[import]` or installed
+packages in `[import std]`. Files cite canonical names such as
+`Algebra::chap3::theorem` or `basics::theorem`. No `.lit` source file can
+write imports; this includes standalone files selected automatically by `-f`
+or forced with `-isolated -f`.
 
 The ordinary REPL may load further interfaces dynamically with terminal
 commands:
@@ -266,9 +266,9 @@ litex> import std basics
 litex> basics::some_fact
 ```
 
-The quoted target must be a folder whose `litex.config` declares
-`[hierarchy] module`. The import runs that module's declared imports and full
-ordered `[export]` tree. Conceptually, each command appends a dependency to an
+The quoted target must be a folder with a module `litex.config`. The import
+runs that module's declared imports and full ordered `[export]` list.
+Conceptually, each command appends a dependency to an
 invisible, in-memory `litex.config` owned by that REPL. It is not written to
 disk, disappears when the process exits, and never becomes a Litex statement
 or statement Result. For reproducible source, declare the dependency in the
@@ -552,46 +552,46 @@ not append help text. For example, `litex -j` returns:
 
 ## Project Modules
 
-Use `litex.config` to organize a folder tree:
+> **new_pipeline design target:** no `submodule` and no `[hierarchy]`;
+> `[export]` is `.lit` files only; cross-package nesting uses `[import]` of
+> modules. Canonical write-up:
+> [`src/new_pipeline/module_manager/README.md`](../src/new_pipeline/module_manager/README.md).
+> Legacy runners may still accept older manifests until migration finishes.
 
-- put `module` under `[hierarchy]` at an independently runnable/importable root;
-- put `submodule` under `[hierarchy]` in every exported child folder;
-- select each participating direct child `.lit` file and module folder exactly
-  once, in mathematical order, under `[export]`;
+Use `litex.config` to organize a module:
+
+- select each participating `.lit` file exactly once, in mathematical order,
+  under `[export]` (files only; no child-folder export);
 - declare external module folders under `[import]` and installed packages under
-  `[import std]`, only in the top-level module;
-- cite earlier entries with their canonical export path, such as
-  `Part2::chap7::name` or `basics::name`.
+  `[import std]`;
+- cite mounted packages and exports with canonical names, such as
+  `Algebra::chap1::name` or `basics::name`.
 
 `[export]` is an explicit selection list, not an inventory of the directory.
 Unlisted files and folders are sidecars: module discovery does not parse them,
 execute them, or add them to the module namespace. Declared export paths still
-must exist, name distinct direct children, and point to a `.lit` file or a
-configured `submodule` folder. Imported targets must be external module
-folders; imports cannot target files, submodules, or descendants of the
-importing module.
+must exist and point to a `.lit` file. Imported targets must be external
+module folders; imports cannot target individual `.lit` files.
 
-`-r` and `-f` share one recursive left-to-right order. Running a top-level
-module runs the whole tree. Running a submodule traces back to its module,
-executes every preceding entry, then executes the selected submodule in full.
+`-r` and `-f` share one left-to-right order inside a module: run imports, then
+run the ordered `[export]` `.lit` list. Running a module runs that full list.
 Running a registered file follows the same prefix and stops after that file.
 When the direct parent has no `litex.config`, `litex -f` instead performs one
 isolated batch run. It does not search ancestor folders. A present but invalid
 configuration, or a target that is not exported exactly once, remains a
 project error and never falls back. Use `litex -isolated -f` to force isolation
-when configuration is present.
+when configuration is present. `new_pipeline` does not wire project `-r` /
+`-f` mount yet.
 
-Dependency order is the recursive `[export]` order. A `module` with exactly
-one `.lit` export may write `[module]` then `flatten = true`; its public
-interface omits that export-name segment. `std/basics` uses this form, so `[import std] basics` exposes
-`basics::name`. Source-level `import` is rejected everywhere; project source
-uses its manifest, while only an interactive terminal recognizes import commands.
+Dependency order is the module's `[export]` order after its imports.
+Source-level `import` is rejected everywhere; project source uses its
+manifest, while only an interactive terminal recognizes import commands.
 
 Each `[import]` declaration creates a private module instance. Two aliases of
 one physical folder remain distinct, and imports internal to an imported module
 do not become public to its importer.
 
-`litex -r <project>` verifies the complete ordered `[export]` tree. In contrast,
+`litex -r <project>` verifies the complete ordered `[export]` list. In contrast,
 `litex -f <file>` trusts and loads only the earlier `[export]` entries needed to
 provide that file's project context, then verifies the selected file. Litex
 reports those prefix entries as `unverified_imports`. `[import]` and `[import std]`

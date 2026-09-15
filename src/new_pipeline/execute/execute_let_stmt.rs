@@ -1,5 +1,5 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact};
-use crate::new_pipeline::ast::obj::{AtomObj, Identifier, Obj};
+use crate::new_pipeline::ast::obj::{Identifier, IdentifierObj, Obj};
 use crate::new_pipeline::ast::stmt::LetObjStmt;
 use crate::new_pipeline::exec_env::DefinedIdentifierInfo;
 use crate::new_pipeline::execute::execute_fact_stmt::{VerifyObjWellDefinedResult, VerifyState};
@@ -53,7 +53,9 @@ impl Runtime {
         );
 
         let equality_fact_id = self.ids.allocate_fact_id();
-        let left = Obj::Atom(AtomObj::Identifier(Identifier::new(let_stmt.name.clone())));
+        let left = Obj::Identifier(IdentifierObj::Plain {
+            name: let_stmt.name.clone(),
+        });
         let equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
             fact_id: equality_fact_id,
             left,

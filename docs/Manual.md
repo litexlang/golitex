@@ -2449,14 +2449,14 @@ statements are no longer part of the language.
 
 ### Modules and manifests (preview)
 
-A maintained project is an ordered module tree. Each participating directory
-has one `litex.config` and declares either a top-level `module` or an exported
-`submodule`.
+> **new_pipeline design:** there is no `submodule` and no `[hierarchy]`.
+> A maintained package is a single module. `[export]` lists only `.lit` files;
+> nesting across packages is done by `[import]` of other modules. See
+> [`src/new_pipeline/module_manager/README.md`](../src/new_pipeline/module_manager/README.md).
+
+A maintained project directory has one `litex.config`.
 
 ```ini
-[hierarchy]
-module
-
 [import]
 Algebra = "../Algebra"
 
@@ -2465,26 +2465,23 @@ basics
 
 [export]
 chap1 = "./chapter01.lit"
-Part2 = "./Part2"
+chap2 = "./chapter02.lit"
 chap3 = "./chapter03.lit"
 ```
 
 Important rules:
 
-1. `[export]` is ordered and each entry names one direct `.lit` file or one
-   configured child directory.
+1. `[export]` is ordered and each entry names one `.lit` file. Exporting a
+   child directory or nested config node is not allowed.
 2. `[export]` is an explicit selection list, not a complete directory
-   inventory. Each participating direct child `.lit` file or configured
-   submodule directory appears once. Unlisted files and folders are sidecars:
-   discovery does not parse, execute, or expose them in the module namespace.
-   Every declared path must still exist and have the required file or submodule
-   shape.
-3. Only a `module` imports. `[import]` mounts another module; `[import std]`
-   mounts an installed standard package.
-4. An optional module-only `[module] flatten = true` removes one file namespace
-   layer and requires exactly one `.lit` export.
-5. Canonical names follow the mounted module and export path, for example
-   `Algebra::chapter::name`.
+   inventory. Unlisted files and folders are sidecars: discovery does not
+   parse, execute, or expose them in the module namespace. Every declared
+   export path must exist and point to a `.lit` file.
+3. `[import]` mounts another module (a directory with its own
+   `litex.config`). `[import std]` mounts an installed standard package.
+   Imports target modules, not individual `.lit` files.
+4. Canonical names follow the mount alias and export name, for example
+   `Algebra::chap1::name` or `basics::name`.
 
 Cross-module references always use canonical qualified names. Module aliases
 and symbols are separate, so a local symbol may also be named `A`; field
@@ -2499,15 +2496,23 @@ manifest. Every `.lit` file—including one run with `-isolated -f`—rejects
 `import`; reproducible dependencies belong in `litex.config`. Terminal imports
 remain qualified-only.
 
-```text
+```ini
 [hierarchy]
-submodule
-
-[import std]
-basics
+module
 ```
 
-This manifest is invalid because a `submodule` cannot declare imports.
+```ini
+[hierarchy]
+submodule
+```
+
+```ini
+[export]
+Part2 = "./Part2"
+```
+
+These manifests are invalid under the new_pipeline design: `[hierarchy]` and
+`submodule` are removed, and `[export]` cannot name a folder.
 
 Project execution, persistent sessions, output modes, and graph commands are
 CLI contracts rather than language syntax. See the [CLI reference](cli.md) for
