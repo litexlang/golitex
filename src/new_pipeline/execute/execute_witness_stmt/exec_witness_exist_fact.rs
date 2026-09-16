@@ -18,7 +18,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::{
     FactWellDefinedProof, VerifyFactResult, VerifyFactWellDefinedResult, VerifyObjWellDefinedResult,
     VerifyState,
 };
-use crate::new_pipeline::execute::helper::substitute_quantifier_free_fact;
+use crate::new_pipeline::instantiate::{quantifier_free_fact_to_fact, SubstitutionMode};
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 use crate::new_pipeline::store_fact_and_infer::StoreFactAndInferResult;
 
@@ -90,7 +90,7 @@ impl Runtime {
     ) -> RuntimeResult<ExecWitnessExistFactStmtResult> {
         let verify_state = VerifyState {
             can_use_forall_fact: true,
-            can_use_known_algebraic_rewrite: true,
+            can_use_algebraic_rewrite: true,
             store_well_defined_fact: true,
         };
 
@@ -241,13 +241,17 @@ impl Runtime {
 
         let mut body_checks = Vec::with_capacity(plain.facts.len());
         for body_fact in &plain.facts {
-            let Some(instantiated) = ({
-                let ids = &mut self.ids;
-                substitute_quantifier_free_fact(body_fact, &subst, &mut || ids.allocate_fact_id())
-            }) else {
-                return Ok(Err(ExecWitnessExistFactStmtFailed::BodyCheck(
-                    VerifyFactResult::FailToSearchProof,
-                )));
+            let instantiated = match self.inst_quantifier_free_fact(
+                body_fact,
+                &subst,
+                SubstitutionMode::Exact,
+            ) {
+                Ok(qf) => quantifier_free_fact_to_fact(qf),
+                Err(_) => {
+                    return Ok(Err(ExecWitnessExistFactStmtFailed::BodyCheck(
+                        VerifyFactResult::FailToSearchProof,
+                    )));
+                }
             };
             let verify_result = self.verify_fact(&instantiated, verify_state.clone())?;
             if verify_result.is_failed() {

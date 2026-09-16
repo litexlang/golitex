@@ -28,10 +28,13 @@ impl Runtime {
     // 1. WD the RHS value object
     // 2. bind the identifier
     // 3. store `name = value` into known equality (and facts_by_id)
-    pub(super) fn exec_let_obj(&mut self, let_stmt: &LetObjStmt) -> RuntimeResult<ExecLetObjStmtResult> {
+    pub(super) fn exec_let_obj(
+        &mut self,
+        let_stmt: &LetObjStmt,
+    ) -> RuntimeResult<ExecLetObjStmtResult> {
         let verify_state = VerifyState {
             can_use_forall_fact: true,
-            can_use_known_algebraic_rewrite: true,
+            can_use_algebraic_rewrite: true,
             store_well_defined_fact: true,
         };
         let value_well_defined = self.verify_obj_well_definedness(&let_stmt.value, verify_state)?;
@@ -65,7 +68,7 @@ impl Runtime {
         Ok(ExecLetObjStmtResult::Success(ExecLetObjStmtSuccessResult {
             statement: let_stmt.clone(),
             value_well_defined,
-            stored_fact_ids: store_and_infer_result.stored_fact_ids,
+            stored_fact_ids: store_and_infer_result.stored_fact_ids(),
         }))
     }
 }

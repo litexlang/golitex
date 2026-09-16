@@ -196,6 +196,12 @@ does global “replace every `x` string in the session.” When applying a
 stored fact that contains binder spelling `x` while free `x` is live, the
 binder region stays binder-scoped.
 
+**Owner:** [`crate::new_pipeline::instantiate`](../instantiate/mod.rs) —
+`Runtime::inst_obj` / `Runtime::inst_fact` / … . These are Runtime methods
+because newly built facts must allocate and advance `FactId` via
+`Runtime.ids.allocate_fact_id`. No `ExecEnv` lookup; struct field access
+requires an already-filled `resolved_struct_carrier`.
+
 ### Layer D — Dedicated alpha / set-equality (optional, later slot)
 
 Mathematical sameness of `{x R: P}` and `{y R: P}` (and similar) is a

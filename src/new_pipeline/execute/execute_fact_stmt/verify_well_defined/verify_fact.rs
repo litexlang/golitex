@@ -8,8 +8,13 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 // Success-only evidence that a Fact is well-defined.
 pub enum FactWellDefinedProof {
     AtomicFact(AtomicFactWellDefinedProof),
-    // Temporary: full composite WD pipelines are still draft-only. Allows
-    // `trust` / store of closed composite facts into known-fact memory.
+    AndFact {
+        components: Vec<AtomicFactWellDefinedProof>,
+    },
+    ChainFact {
+        adjacent: Vec<AtomicFactWellDefinedProof>,
+    },
+    // Temporary: remaining composite WD pipelines are still draft-only.
     CompositePending,
 }
 
@@ -45,9 +50,40 @@ impl Runtime {
                     }
                 }
             }
-            Fact::AndFact(_)
-            | Fact::ChainFact(_)
-            | Fact::OrFact(_)
+            Fact::AndFact(and_fact) => {
+                let mut components = Vec::with_capacity(and_fact.facts.len());
+                for atomic in &and_fact.facts {
+                    match self.verify_atomic_fact_well_definedness(atomic, verify_state.clone())? {
+                        VerifyAtomicFactWellDefinedResult::Success(proof) => {
+                            components.push(proof);
+                        }
+                        VerifyAtomicFactWellDefinedResult::Failed(reason) => {
+                            return Ok(VerifyFactWellDefinedResult::Failed(reason));
+                        }
+                    }
+                }
+                Ok(VerifyFactWellDefinedResult::Success(
+                    FactWellDefinedProof::AndFact { components },
+                ))
+            }
+            Fact::ChainFact(chain_fact) => {
+                let adjacent_atomics = self.chain_adjacent_atomics(chain_fact)?;
+                let mut adjacent = Vec::with_capacity(adjacent_atomics.len());
+                for atomic in &adjacent_atomics {
+                    match self.verify_atomic_fact_well_definedness(atomic, verify_state.clone())? {
+                        VerifyAtomicFactWellDefinedResult::Success(proof) => {
+                            adjacent.push(proof);
+                        }
+                        VerifyAtomicFactWellDefinedResult::Failed(reason) => {
+                            return Ok(VerifyFactWellDefinedResult::Failed(reason));
+                        }
+                    }
+                }
+                Ok(VerifyFactWellDefinedResult::Success(
+                    FactWellDefinedProof::ChainFact { adjacent },
+                ))
+            }
+            Fact::OrFact(_)
             | Fact::ExistFact(_)
             | Fact::ForallFact(_)
             | Fact::ForallFactWithIff(_)

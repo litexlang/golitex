@@ -30,6 +30,14 @@ impl Runtime {
             ));
         }
 
+        if let Some(result) =
+            self.search_atomic_except_equality_fact_proof_by_definition(fact, verify_state.clone())?
+        {
+            return Ok(Some(AtomicExceptEqualityFactSearchedProof::ByDefinition(
+                result,
+            )));
+        }
+
         if let Some(result) = self.search_atomic_except_equality_fact_proof_by_builtin_strategy(
             fact,
             verify_state.clone(),
@@ -37,14 +45,6 @@ impl Runtime {
             return Ok(Some(
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(result),
             ));
-        }
-
-        if let Some(result) =
-            self.search_atomic_except_equality_fact_proof_by_definition(fact, verify_state.clone())?
-        {
-            return Ok(Some(AtomicExceptEqualityFactSearchedProof::ByDefinition(
-                result,
-            )));
         }
 
         if verify_state.can_use_forall_fact {
@@ -60,18 +60,18 @@ impl Runtime {
             }
         }
 
-        if let Some(result) = self
-            .search_atomic_except_equality_fact_proof_by_builtin_algebraic_rewrite(
-                fact,
-                verify_state.clone(),
-            )?
-        {
-            return Ok(Some(
-                AtomicExceptEqualityFactSearchedProof::ByBuiltinAlgebraicRewrite(result),
-            ));
-        }
+        if verify_state.can_use_algebraic_rewrite {
+            if let Some(result) = self
+                .search_atomic_except_equality_fact_proof_by_builtin_algebraic_rewrite(
+                    fact,
+                    verify_state.clone(),
+                )?
+            {
+                return Ok(Some(
+                    AtomicExceptEqualityFactSearchedProof::ByBuiltinAlgebraicRewrite(result),
+                ));
+            }
 
-        if verify_state.can_use_known_algebraic_rewrite {
             if let Some(result) = self
                 .search_atomic_except_equality_fact_proof_by_known_algebraic_rewrite(
                     fact,

@@ -111,10 +111,14 @@ are not projected into atomic buckets. Matching binds forall param identifiers
 in then args; nested param occurrences inside compound objs are not matched yet.
 Param-type obligations are not yet required at use (dom instantiation is).
 
-There is no `fact_ir_to_id` map: store/merge key facts by `FactId` only.
-Reuse for later proofs goes through known-equality / known-atomic /
-known-forall. Design rationale and the identifier-conflict / do-not-break
-checklist: [`../../identifier_identity.md`](../../identifier_identity.md).
+`KnownFactMemory` stores facts by `FactId` in `facts_by_id` and projects
+searchable atomics into known-equality / known-atomic / known-forall indexes.
+And/chain store also records the whole fact, then stores adjacent (and for
+comparison chains, transitive closures with BuiltinEquality /
+BuiltinNumericOrder / KnownTransitive cites). There is no whole-fact exact-IR
+cite path for verify. Design rationale and the identifier-conflict /
+do-not-break checklist:
+[`../../identifier_identity.md`](../../identifier_identity.md).
 
 Here `by definition` means ambient prop / builtin definition expansion in the
 current execution-environment stack. Cross-module definitions and theorems are
