@@ -1,4 +1,4 @@
-use crate::new_pipeline::ast::fact::{AndFact, AtomicFact, ChainFact};
+use crate::new_pipeline::ast::fact::{AndFact, AtomicFact, ChainFact, OrFact};
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::runtime::FactId;
 
@@ -8,7 +8,8 @@ pub enum StoreFactAndInferResult {
     AtomicFact(StoreAtomicFactResult),
     AndFact(StoreAndFactResult),
     ChainFact(StoreChainFactResult),
-    // Or / exist / forall / … until specialized store pipelines exist.
+    OrFact(StoreOrFactResult),
+    // Exist / forall / … until specialized store pipelines exist.
     RecordedFact { fact_id: FactId },
 }
 
@@ -41,6 +42,12 @@ pub struct StoreChainAdjacentResult {
     pub edge_index: usize,
     pub fact_id: FactId,
     pub fact: AtomicFact,
+}
+
+// Whole or only; branches are not projected into known-atomic indexes.
+pub struct StoreOrFactResult {
+    pub whole_fact_id: FactId,
+    pub fact: OrFact,
 }
 
 pub struct StoreChainTransitiveClosureResult {
@@ -83,6 +90,7 @@ impl StoreFactAndInferResult {
                 }
                 ids
             }
+            Self::OrFact(r) => vec![r.whole_fact_id],
             Self::RecordedFact { fact_id } => vec![*fact_id],
         }
     }

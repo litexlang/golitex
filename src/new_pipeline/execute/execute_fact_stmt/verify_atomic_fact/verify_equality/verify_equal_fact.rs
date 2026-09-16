@@ -37,9 +37,9 @@ impl Runtime {
     }
 
     // Stage order: builtin rule → known equality → builtin strategy →
-    // known forall → (if allowed) builtin algebraic rewrite →
-    // known algebraic rewrite.
-    // Algebraic rewrite replaces legacy opaque resolve_obj.
+    // known forall → (if allowed) builtin rewrite →
+    // known rewrite.
+    // Rewrite replaces legacy opaque resolve_obj.
     // Ok(None) means no proof found; that is not a runtime error.
     pub fn search_equal_fact_proof(
         &mut self,
@@ -72,22 +72,22 @@ impl Runtime {
             }
         }
 
-        if verify_state.can_use_algebraic_rewrite {
+        if verify_state.can_use_rewrite {
             if let Some(result) = self
-                .search_equal_fact_proof_by_builtin_algebraic_rewrite(
+                .search_equal_fact_proof_by_builtin_rewrite(
                     fact,
                     verify_state.clone(),
                 )?
             {
-                return Ok(Some(EqualFactSearchedProof::ByBuiltinAlgebraicRewrite(
+                return Ok(Some(EqualFactSearchedProof::ByBuiltinRewrite(
                     result,
                 )));
             }
 
             if let Some(result) = self
-                .search_equal_fact_proof_by_known_algebraic_rewrite(fact, verify_state)?
+                .search_equal_fact_proof_by_known_rewrite(fact, verify_state)?
             {
-                return Ok(Some(EqualFactSearchedProof::ByKnownAlgebraicRewrite(
+                return Ok(Some(EqualFactSearchedProof::ByKnownRewrite(
                     result,
                 )));
             }

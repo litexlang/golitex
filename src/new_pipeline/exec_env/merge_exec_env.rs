@@ -13,7 +13,7 @@ pub fn merge_exec_env_from(parent: &mut ExecEnv, child: &ExecEnv) -> RuntimeResu
     merge_facts_from(parent, child)?;
     merge_well_defined_objects_from(parent, child)?;
     merge_special_object_properties_from(parent, child);
-    merge_prop_algebraic_properties_from(parent, child);
+    merge_prop_rewrite_properties_from(parent, child);
     Ok(())
 }
 
@@ -115,6 +115,10 @@ fn merge_facts_from(parent: &mut ExecEnv, child: &ExecEnv) -> RuntimeResult<()> 
                 index_atomic_except_equality(parent, atomic);
                 parent.facts.record_fact(fact_id, fact.clone());
             }
+            Fact::OrFact(or_fact) => {
+                parent.facts.known_or.store(or_fact);
+                parent.facts.record_fact(fact_id, fact.clone());
+            }
             _ => {
                 parent.facts.record_fact(fact_id, fact.clone());
             }
@@ -170,10 +174,10 @@ fn merge_special_object_properties_from(parent: &mut ExecEnv, child: &ExecEnv) {
     }
 }
 
-fn merge_prop_algebraic_properties_from(parent: &mut ExecEnv, child: &ExecEnv) {
-    for (key, values) in child.prop_algebraic_properties.iter() {
+fn merge_prop_rewrite_properties_from(parent: &mut ExecEnv, child: &ExecEnv) {
+    for (key, values) in child.prop_rewrite_properties.iter() {
         parent
-            .prop_algebraic_properties
+            .prop_rewrite_properties
             .entry(key.clone())
             .or_default()
             .extend(values.iter().cloned());

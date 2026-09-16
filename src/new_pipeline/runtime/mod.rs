@@ -14,4 +14,4 @@ pub mod runtime_ids;
 pub use error::{RuntimeError, RuntimeParseError, RuntimeResult};
 pub use real_or_virtual_path::RealOrVirtualPath;
 pub use runtime::{Ids, ParseScope, Runtime};
-pub use runtime_ids::{FactId, IdentifierId, PropAlgebraicPropertyId, WellDefinednessId};
+pub use runtime_ids::{FactId, IdentifierId, PropRewritePropertyId, WellDefinednessId};

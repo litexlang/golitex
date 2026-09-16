@@ -45,7 +45,7 @@ pub struct ExecEnv {
     pub special_object_properties: HashMap<ObjIR, Vec<SpecialObjProperty>>,
 
     /// Algebraic properties proved for predicates in this scope.
-    pub prop_algebraic_properties: HashMap<AtomicName, Vec<PropAlgebraicProperty>>,
+    pub prop_rewrite_properties: HashMap<AtomicName, Vec<PropRewriteProperty>>,
 
     /// Well-definedness records owned by this scope.
     ///
@@ -94,7 +94,7 @@ pub struct DefinedIdentifierInfo {
 
 /// Algebraic properties that can be proved for a predicate.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub enum PropAlgebraicProperty {
+pub enum PropRewriteProperty {
     Transitive,
     SymmetricArgumentPermutate(Vec<Vec<usize>>),
     Reflexive,
@@ -133,7 +133,7 @@ impl ExecEnv {
             definitions: DefinitionMemory::new(),
             facts: KnownFactMemory::new(),
             special_object_properties: HashMap::new(),
-            prop_algebraic_properties: HashMap::new(),
+            prop_rewrite_properties: HashMap::new(),
             well_defined_objects: WellDefinedObjectMemory::new(),
         }
     }

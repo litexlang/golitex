@@ -1,13 +1,13 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact};
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::{
-    EqualitySearchProofByBuiltinAlgebraicRewrite, EqualitySearchProofByBuiltinRule,
-    EqualitySearchProofByBuiltinStrategy, EqualitySearchProofByKnownAlgebraicRewrite,
+    EqualitySearchProofByBuiltinRewrite, EqualitySearchProofByBuiltinRule,
+    EqualitySearchProofByBuiltinStrategy, EqualitySearchProofByKnownRewrite,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::{
-    AtomicExceptEqualityFactSearchProofByBuiltinAlgebraicRewrite,
+    AtomicExceptEqualityFactSearchProofByBuiltinRewrite,
     AtomicExceptEqualityFactSearchProofByBuiltinRule, AtomicExceptEqualityFactSearchProofByBuiltinStrategy,
-    AtomicExceptEqualityFactSearchProofByKnownAlgebraicRewrite,
+    AtomicExceptEqualityFactSearchProofByKnownRewrite,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_well_defined::AtomicFactWellDefinedProof;
@@ -20,15 +20,15 @@ pub struct VerifyEqualityResult {
 }
 
 // Mirrors search_equal_fact_proof stage order.
-// Algebraic rewrite stages replace legacy opaque resolve_obj: rewrites must be
-// explicit certificates (see ByBuiltinAlgebraicRewrite / ByKnownAlgebraicRewrite).
+// Rewrite stages replace legacy opaque resolve_obj: rewrites must be
+// explicit certificates (see ByBuiltinRewrite / ByKnownRewrite).
 pub enum EqualFactSearchedProof {
     ByBuiltinRule(EqualitySearchProofByBuiltinRule),
     ByKnownEquality(EqualFactSearchedProofByKnownEquality),
     ByBuiltinStrategy(EqualitySearchProofByBuiltinStrategy),
     ByKnownForallFact(SearchProofByKnownForallFact),
-    ByBuiltinAlgebraicRewrite(EqualitySearchProofByBuiltinAlgebraicRewrite),
-    ByKnownAlgebraicRewrite(EqualitySearchProofByKnownAlgebraicRewrite),
+    ByBuiltinRewrite(EqualitySearchProofByBuiltinRewrite),
+    ByKnownRewrite(EqualitySearchProofByKnownRewrite),
 }
 
 // Oriented cite chain from goal.left to goal.right over generating equality
@@ -52,8 +52,8 @@ pub enum AtomicExceptEqualityFactSearchedProof {
     ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy),
     ByDefinition(AtomicExceptEqualityFactSearchProofByDefinition),
     ByKnownForallFact(SearchProofByKnownForallFact),
-    ByBuiltinAlgebraicRewrite(AtomicExceptEqualityFactSearchProofByBuiltinAlgebraicRewrite),
-    ByKnownAlgebraicRewrite(AtomicExceptEqualityFactSearchProofByKnownAlgebraicRewrite),
+    ByBuiltinRewrite(AtomicExceptEqualityFactSearchProofByBuiltinRewrite),
+    ByKnownRewrite(AtomicExceptEqualityFactSearchProofByKnownRewrite),
 }
 
 pub struct AtomicExceptEqualityFactSearchProofByKnownAtomicFact {
