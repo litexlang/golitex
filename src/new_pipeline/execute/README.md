@@ -14,10 +14,25 @@ not another `exec_stmt`.
 
 ## Result shape
 
+### Proof vs Result (hard convention)
+
+```text
+*Proof     = success evidence only (never embeds soft-fail)
+*Result    = Success(*Proof | *SuccessResult) | Failed(...)
+
+WD / search-proof / verify / exec outcomes that can miss
+must be *Result. Do not put Fail inside a *Proof and scan
+with is_failed() on the proof payload.
+```
+
+`is_failed()` is allowed only as a thin match on a real `*Result` enum
+(Success | Failed, or Fail* variants). It must not walk mixed proof bags.
+
 ```text
 ExecStmtResult                    // stmt-kind dispatch only
   Fact(ExecFactStmtResult)
   Definition(ExecDefinitionStmtResult)
+  Witness(ExecWitnessStmtResult)
   Unsafe(ExecUnsafeStmtResult)
 
 Leaf *Result = Success(*SuccessResult) | Failed(...)
@@ -30,7 +45,12 @@ RuntimeResult::Err               // SessionError; stop session
 ```
 
 Leaf Success/Fail types live at the head of each statement file;
-`exec_stmt_result.rs` keeps only the top-level dispatch shells.
+`exec_stmt_result.rs` keeps the top-level dispatch shells plus shared
+ParamType shells:
+
+- `ParamTypeWellDefinedProof` — type-annotation WD
+- `ParamTypeFactCheckResult` — fact obligation by ParamType (`have` nonempty,
+  `witness` membership, …)
 
 JSON presentation (not Rust names): Success → `"success"`, Failed → `"error"`,
 SessionError → `"session_error"`.

@@ -3,7 +3,9 @@ use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::{
     EqualFactSearchedProof, SearchProofByKnownForallFact, VerifyEqualityResult,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
-use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
+use crate::new_pipeline::execute::execute_fact_stmt::{
+    VerifyAtomicFactWellDefinedResult, VerifyState,
+};
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 use super::EqualitySearchProofByBuiltinStrategy;
@@ -14,11 +16,14 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
-        let well_defined_proof =
-            self.verify_atomic_fact_well_definedness(&(fact.clone().into()), verify_state.clone())?;
-        if well_defined_proof.is_failed() {
-            return Ok(VerifyFactResult::FailToVerifyWellDefined);
-        }
+        let well_defined_proof = match self
+            .verify_atomic_fact_well_definedness(&(fact.clone().into()), verify_state.clone())?
+        {
+            VerifyAtomicFactWellDefinedResult::Success(proof) => proof,
+            VerifyAtomicFactWellDefinedResult::Failed(_) => {
+                return Ok(VerifyFactResult::FailToVerifyWellDefined);
+            }
+        };
         match self.search_equal_fact_proof(fact, verify_state)? {
             Some(searched_proof) => {
                 Ok(VerifyFactResult::Equality(Box::new(VerifyEqualityResult {

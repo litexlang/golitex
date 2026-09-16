@@ -3,11 +3,13 @@
 Status: **locked** (new_pipeline)
 
 Canonical design note for symbol identity, binder discipline, IR keys, and
-exact IR indexing. Do not reintroduce occurrence ids or shadowing without an
+known-* indexing. Do not reintroduce occurrence ids or shadowing without an
 explicit redesign.
 
-Fact **verify** has no exact-IR cite path; `fact_ir_to_id` is for
-store / merge dedup. Object WD reuses `VerifyObjWellDefinedResult::ByKnown`.
+Fact **verify** has no exact-IR cite path. Store/merge keep facts by
+`FactId` in `facts_by_id`; later reuse goes through known-equality /
+known-atomic / known-forall. Object WD reuses
+`VerifyObjWellDefinedResult::ByKnown`.
 
 Related owners:
 
@@ -17,7 +19,7 @@ Related owners:
 | AST atoms | `ast/obj.rs` `IdentifierObj { name: AtomicName }` |
 | Binder params | `ast/obj.rs` `Identifier` (plain name only) |
 | IR spelling | `display_and_ir/` (`ir()` = surface name; no `#id#`) |
-| Fact store / IR index | `exec_env/known_fact_memory.rs` |
+| Fact store | `exec_env/known_fact_memory.rs` |
 | Obj WD ByKnown | `execute_fact_stmt/verify_well_defined/verify_obj/` |
 | WD memory | `exec_env/exec_env.rs` `WellDefinedObjectMemory` |
 | Def atoms in ExecEnv | `DefinitionMemory.identifiers: HashMap<PlainName, …>` |
@@ -78,8 +80,9 @@ Therefore:
 
 - **`IdentifierId` was removed** from new_pipeline AST and id allocation.
 - Atom IR is the surface name (`x`, `Mod::x`, or `Mod::Export::x`).
-- Exact `FactIR` may index **every closed `Fact` shape**, including
-  `forall`, because same spelling ⇒ same identity (store / merge).
+- `Fact.ir()` / `FactIR` remain for display and for building known-* keys
+  (e.g. ObjIR inside equality / atomic indexes). There is **no**
+  whole-fact `FactIR → FactId` map.
 
 ### What still needs a separate id
 
@@ -225,7 +228,7 @@ exact-IR cite or naive known-atomic string match.
 
 ### Non-goals for Layer B
 
-- Do not put alpha into `fact_ir_to_id` / `ObjIR` keys **by silently
+- Do not put alpha into `ObjIR` keys **by silently
   renaming surface strings**.
 - Do not reintroduce occurrence ids just to make Layer B look like alpha.
 - Do not “normalize all binders to a canonical *speakable* letter” in IR
@@ -459,22 +462,24 @@ tracers for `{x:…}` vs `{y:…}` and nested builders.
 
 ---
 
-## FactIR index contract (store / merge; no fact verify exact-IR cite)
+## Fact store contract (no whole-fact exact-IR cite)
 
-1. On store: `fact_ir_to_id[fact.ir()] = fact.fact_id()`, and
-   `facts_by_id[fact_id] = fact` (every closed `Fact` shape).
-2. On merge: reuse parent FactId when child IR already exists in parent.
+1. On store: `facts_by_id[fact_id] = fact` (every closed `Fact` shape).
+   Atomics also update `known_equality` / `known_atomic_except_equality_facts`.
+   Forall also projects atomic then leaves into `known_forall_conclusions`.
+2. On merge: skip a child fact when parent already has the same `FactId`;
+   otherwise replay into parent indexes. Do not dedup by whole-fact IR.
 3. Fact **verify** does **not** cite via exact FactIR. Reuse happens
    through known-equality / known-atomic / known-forall (and future composite
    local-proof pipelines). Object WD reuses `WellDefinedObjectMemory` via ByKnown.
 4. Equality-class / parameter matching / alpha belong to known-* slots, not
-   to a silent IR cite.
+   to a silent whole-fact IR cite.
 
 ---
 
 ## Do-not-break checklist
 
-Before changing identity, IR, occupy, or IR indexing, check:
+Before changing identity, IR, occupy, or known-* indexing, check:
 
 - [ ] No new per-occurrence id on `Identifier` / IR (`#digits#name` must not
       return).
@@ -482,10 +487,10 @@ Before changing identity, IR, occupy, or IR indexing, check:
 - [ ] `DefinitionMemory` maps stay keyed by **`PlainName`** (unqualified local
       name; `type PlainName = String`). `Mod::Export::name` is a reference
       path, not a store key.
-- [ ] Closed composite facts still enter `fact_ir_to_id` (not atomic-only).
+- [ ] Closed facts enter `facts_by_id` by `FactId` (composites included).
 - [ ] Binder instantiate/substitute is structural, not global rename-by-string.
 - [ ] Open scraps under binders are not ambient-indexed as if free.
-- [ ] Exact FactIR keys do not alpha-match set-builders / forall
+- [ ] Exact ObjIR / atomic keys do not alpha-match set-builders / forall
       (`$p({x:…})` ↛ `$p({y:…})`). Capture-safe alpha, if any, is a later slot.
 - [ ] After `have x`, never treat binder `x` inside an already-stored
       `{x:…}` / `forall x` as that free `x` via string walk.

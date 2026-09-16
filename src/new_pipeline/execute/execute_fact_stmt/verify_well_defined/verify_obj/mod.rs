@@ -13,5 +13,5 @@ mod sets;
 mod structs;
 
 pub use entry::{
-    FailToVerifyWellDefinedResult, ObjWellDefinedProofByDef, VerifyObjWellDefinedResult,
+    FailToVerifyObjWellDefinedResult, ObjWellDefinedProofByDef, VerifyObjWellDefinedResult,
 };

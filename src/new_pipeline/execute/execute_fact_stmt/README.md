@@ -34,6 +34,24 @@ consumers while the new Result and pipeline shapes are still being drafted.
 - `Ok(FailToSearchProof)` when WD succeeds but every truth-search slot fails
 - `Err(...)` only for real runtime / invariant failures
 
+### Proof vs Result
+
+`*Proof` is success evidence only. Soft miss belongs on a `*Result`
+(`Success(Proof) | Failed(...)`, or an enum with explicit Fail variants).
+Do not embed Fail inside a Proof and call `is_failed()` on that Proof.
+
+Atomic-fact WD (`verify_atomic_fact_well_definedness`) returns
+`RuntimeResult<VerifyAtomicFactWellDefinedResult>`:
+
+- `Ok(Success(AtomicFactWellDefinedProof))` when every argument Obj WD succeeds
+- `Ok(Failed(reason))` when some argument Obj WD soft-misses
+- `Err(...)` only for real runtime / invariant failures
+
+Fact WD (`verify_fact_well_definedness`) returns
+`RuntimeResult<VerifyFactWellDefinedResult>` with the same Success / Failed
+split; success payload is `FactWellDefinedProof` (atomic proof or
+`CompositePending`).
+
 Object WD (`verify_obj_well_definedness`) returns
 `RuntimeResult<VerifyObjWellDefinedResult>`:
 
@@ -93,10 +111,10 @@ are not projected into atomic buckets. Matching binds forall param identifiers
 in then args; nested param occurrences inside compound objs are not matched yet.
 Param-type obligations are not yet required at use (dom instantiation is).
 
-`KnownFactMemory.fact_ir_to_id` remains for store / merge dedup of closed
-facts under name-is-identity; it is not a verify cite path. Design rationale
-and the identifier-conflict / do-not-break checklist:
-[`../../identifier_identity.md`](../../identifier_identity.md).
+There is no `fact_ir_to_id` map: store/merge key facts by `FactId` only.
+Reuse for later proofs goes through known-equality / known-atomic /
+known-forall. Design rationale and the identifier-conflict / do-not-break
+checklist: [`../../identifier_identity.md`](../../identifier_identity.md).
 
 Here `by definition` means ambient prop / builtin definition expansion in the
 current execution-environment stack. Cross-module definitions and theorems are

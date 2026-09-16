@@ -58,11 +58,14 @@ impl Runtime {
                     ),
                 ))
             }
+            Stmt::Witness(witness_stmt) => {
+                Ok(ExecStmtResult::Witness(self.exec_witness_stmt(witness_stmt)?))
+            }
             Stmt::UnsafeStmt(unsafe_stmt) => {
                 Ok(ExecStmtResult::Unsafe(self.exec_unsafe_stmt(unsafe_stmt)?))
             }
             _ => Err(RuntimeError::Unsupported(
-                "new_pipeline exec_stmt: only Fact, let, have-obj-in-nonempty, prop, abstract_prop, and trust are wired for the tracer"
+                "new_pipeline exec_stmt: only Fact, let, have-obj-in-nonempty, prop, abstract_prop, witness, and trust are wired for the tracer"
                     .to_string(),
             )),
         }

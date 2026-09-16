@@ -2,7 +2,7 @@ use crate::new_pipeline::ast::fact::ForallFact;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::{
     AssumeDomFactResult, ProveAndStoreThenFactResult, VerifyFactResult, VerifyForallFactResult,
 };
-use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
+use crate::new_pipeline::execute::execute_fact_stmt::{VerifyFactWellDefinedResult, VerifyState};
 use crate::new_pipeline::execute::introduce_typed_parameters::IntroduceTypedParametersResult;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::store_fact_and_infer::StoreFactAndInferResult;
@@ -91,10 +91,12 @@ impl Runtime {
         dom: &crate::new_pipeline::ast::fact::Fact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Result<AssumeDomFactResult, VerifyFactResult>> {
-        let well_defined = self.verify_fact_well_definedness(dom, verify_state)?;
-        if well_defined.is_failed() {
-            return Ok(Err(VerifyFactResult::FailToVerifyWellDefined));
-        }
+        let well_defined = match self.verify_fact_well_definedness(dom, verify_state)? {
+            VerifyFactWellDefinedResult::Success(proof) => proof,
+            VerifyFactWellDefinedResult::Failed(_) => {
+                return Ok(Err(VerifyFactResult::FailToVerifyWellDefined));
+            }
+        };
         let store_and_infer: StoreFactAndInferResult = self.store_fact_and_infer(dom)?;
         Ok(Ok(AssumeDomFactResult {
             well_defined,

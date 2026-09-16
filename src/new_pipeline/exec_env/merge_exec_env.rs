@@ -106,14 +106,6 @@ fn merge_facts_from(parent: &mut ExecEnv, child: &ExecEnv) -> RuntimeResult<()> 
         if parent.facts.facts_by_id.contains_key(&fact_id) {
             continue;
         }
-        if let Some(existing_id) = parent.facts.fact_ir_to_id.get(&fact.ir()) {
-            if *existing_id != fact_id {
-                return Err(RuntimeError::InternalBug(format!(
-                    "merge_exec_env_from: fact IR collides with a different FactId"
-                )));
-            }
-            continue;
-        }
         match fact {
             Fact::AtomicFact(AtomicFact::EqualFact(equal_fact)) => {
                 parent.facts.known_equality.store(equal_fact);

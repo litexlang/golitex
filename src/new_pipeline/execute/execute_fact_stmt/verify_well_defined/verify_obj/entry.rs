@@ -13,7 +13,7 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 pub enum VerifyObjWellDefinedResult {
     ByKnown { wd_id: WellDefinednessId },
     ByDef(ObjWellDefinedProofByDef),
-    FailToVerifyWellDefined(FailToVerifyWellDefinedResult),
+    FailToVerifyWellDefined(FailToVerifyObjWellDefinedResult),
 }
 
 // One by-def shape for every Obj: child WD + verified domain requirements.
@@ -22,11 +22,11 @@ pub struct ObjWellDefinedProofByDef {
     pub requirement_fact_verified: Vec<VerifyFactResult>,
 }
 
-pub enum FailToVerifyWellDefinedResult {
+pub enum FailToVerifyObjWellDefinedResult {
     // Direct child failed; `obj` is that child, `child` is why.
     Child {
         obj: Obj,
-        child: Box<FailToVerifyWellDefinedResult>,
+        child: Box<FailToVerifyObjWellDefinedResult>,
     },
     // Domain requirement fact was not established; `obj` is the root being proved.
     Requirement {
@@ -75,10 +75,10 @@ impl ObjWellDefinedProofByDef {
     }
 
     // Consume a failed by-def proof into the first soft-fail reason.
-    pub fn into_fail_reason(self, root: &Obj) -> FailToVerifyWellDefinedResult {
+    pub fn into_fail_reason(self, root: &Obj) -> FailToVerifyObjWellDefinedResult {
         for (child_obj, child_result) in self.child_obj_well_defined {
             if let VerifyObjWellDefinedResult::FailToVerifyWellDefined(reason) = child_result {
-                return FailToVerifyWellDefinedResult::Child {
+                return FailToVerifyObjWellDefinedResult::Child {
                     obj: child_obj,
                     child: Box::new(reason),
                 };
@@ -86,13 +86,13 @@ impl ObjWellDefinedProofByDef {
         }
         for req in self.requirement_fact_verified {
             if req.is_failed() {
-                return FailToVerifyWellDefinedResult::Requirement {
+                return FailToVerifyObjWellDefinedResult::Requirement {
                     obj: root.clone(),
                     result: req,
                 };
             }
         }
-        FailToVerifyWellDefinedResult::Others(
+        FailToVerifyObjWellDefinedResult::Others(
             "object well-definedness failed without child or requirement detail".to_string(),
         )
     }

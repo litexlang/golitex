@@ -9,8 +9,8 @@
 use crate::new_pipeline::ast::stmt::DefPropStmt;
 use crate::new_pipeline::exec_env::exec_env::ExecEnv;
 use crate::new_pipeline::execute::execute_fact_stmt::{
-    FactWellDefinedProof, ParamTypeWellDefinedProof, VerifyFactResult, VerifyObjWellDefinedResult,
-    VerifyState,
+    FactWellDefinedProof, ParamTypeWellDefinedProof, VerifyFactResult, VerifyFactWellDefinedResult,
+    VerifyObjWellDefinedResult, VerifyState,
 };
 use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
 use crate::new_pipeline::execute::IntroduceTypedParametersResult;
@@ -113,13 +113,16 @@ impl Runtime {
 
         let mut iff_fact_well_defined = Vec::with_capacity(def_prop.iff_facts.len());
         for fact in &def_prop.iff_facts {
-            let wd = self.verify_fact_well_definedness(fact, verify_state.clone())?;
-            if wd.is_failed() {
-                return Ok(Err(ExecDefPropStmtFailed::IffFactWellDefined(
-                    VerifyFactResult::FailToVerifyWellDefined,
-                )));
+            match self.verify_fact_well_definedness(fact, verify_state.clone())? {
+                VerifyFactWellDefinedResult::Success(proof) => {
+                    iff_fact_well_defined.push(proof);
+                }
+                VerifyFactWellDefinedResult::Failed(_) => {
+                    return Ok(Err(ExecDefPropStmtFailed::IffFactWellDefined(
+                        VerifyFactResult::FailToVerifyWellDefined,
+                    )));
+                }
             }
-            iff_fact_well_defined.push(wd);
         }
 
         Ok(Ok((introduced, iff_fact_well_defined)))

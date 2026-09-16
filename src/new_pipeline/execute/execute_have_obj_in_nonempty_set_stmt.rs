@@ -2,21 +2,16 @@ use crate::new_pipeline::ast::fact::{AtomicFact, Fact, IsNonemptySetFact};
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::ast::stmt::HaveObjInNonemptySetOrParamTypeStmt;
+use crate::new_pipeline::execute::exec_stmt_result::{
+    ParamTypeFactCheckResult, ParamTypeWellDefinedProof,
+};
 use crate::new_pipeline::execute::execute_fact_stmt::{
-    ParamTypeWellDefinedProof, VerifyFactResult, VerifyObjWellDefinedResult, VerifyState,
+    VerifyFactResult, VerifyObjWellDefinedResult, VerifyState,
 };
 use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeResult};
 
 pub struct StoreHaveObjAndInferResult {
     pub stored_fact_ids: Vec<FactId>,
-}
-
-// One entry per TypedParameterGroup, mirroring ParamType.
-pub enum HaveObjGroupNonemptyCheckResult {
-    Set,
-    NonemptySet,
-    FiniteSet,
-    Obj(VerifyFactResult),
 }
 
 pub enum ExecHaveObjInNonemptySetStmtFailed {
@@ -28,7 +23,7 @@ pub enum ExecHaveObjInNonemptySetStmtFailed {
 pub struct ExecHaveObjInNonemptySetStmtSuccessResult {
     pub statement: HaveObjInNonemptySetOrParamTypeStmt,
     pub param_type_well_defined: Vec<ParamTypeWellDefinedProof>,
-    pub nonempty_checks: Vec<HaveObjGroupNonemptyCheckResult>,
+    pub nonempty_checks: Vec<ParamTypeFactCheckResult>,
     pub store_and_infer_result: StoreHaveObjAndInferResult,
 }
 
@@ -93,14 +88,14 @@ impl Runtime {
         &mut self,
         param_def: &TypedParameterList,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Result<Vec<HaveObjGroupNonemptyCheckResult>, ExecHaveObjInNonemptySetStmtFailed>>
+    ) -> RuntimeResult<Result<Vec<ParamTypeFactCheckResult>, ExecHaveObjInNonemptySetStmtFailed>>
     {
         let mut out = Vec::new();
         for group in &param_def.groups {
             let check = match &group.param_type {
-                ParamType::Set(_) => HaveObjGroupNonemptyCheckResult::Set,
-                ParamType::NonemptySet(_) => HaveObjGroupNonemptyCheckResult::NonemptySet,
-                ParamType::FiniteSet(_) => HaveObjGroupNonemptyCheckResult::FiniteSet,
+                ParamType::Set(_) => ParamTypeFactCheckResult::Set,
+                ParamType::NonemptySet(_) => ParamTypeFactCheckResult::NonemptySet,
+                ParamType::FiniteSet(_) => ParamTypeFactCheckResult::FiniteSet,
                 ParamType::Obj(param_set) => {
                     let nonempty_set = nonempty_check_set_for_param_obj(param_set);
                     let fact_id = self.ids.allocate_fact_id();
@@ -115,7 +110,7 @@ impl Runtime {
                             verify_result,
                         )));
                     }
-                    HaveObjGroupNonemptyCheckResult::Obj(verify_result)
+                    ParamTypeFactCheckResult::Obj(verify_result)
                 }
             };
             out.push(check);

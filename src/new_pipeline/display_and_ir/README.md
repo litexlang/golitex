@@ -16,7 +16,7 @@ For every AST type in this module, these are the **only** two methods.
 
 See [`../identifier_identity.md`](../identifier_identity.md) — the canonical
 note on **name is identity**, why `IdentifierId` was removed (false IR-key
-misses / true shadowing conflicts), FactIR index / Obj WD ByKnown contracts,
+misses / true shadowing conflicts), Obj WD ByKnown contracts,
 and the do-not-break checklist.
 
 **Name is identity:** the same surface name (plain, `Mod::name`, or
