@@ -17,6 +17,23 @@ impl Runtime {
 
     // Runs with the current top as the writable work env (the temp shell).
     fn exec_stmt_in_current_env(&mut self, stmt: &Stmt) -> RuntimeResult<ExecStmtResult> {
+        if self.launch_command.is_strict() {
+            match stmt {
+                Stmt::UnsafeStmt(_) => {
+                    return Err(RuntimeError::InvalidArguments(format!(
+                        "`trust` / `trust have` are forbidden under {} `-strict`",
+                        crate::new_pipeline::LITEX
+                    )));
+                }
+                Stmt::Definition(DefinitionStmt::DefAbstractPropStmt(_)) => {
+                    return Err(RuntimeError::InvalidArguments(format!(
+                        "`abstract_prop` is forbidden under {} `-strict`",
+                        crate::new_pipeline::LITEX
+                    )));
+                }
+                _ => {}
+            }
+        }
         match stmt {
             Stmt::Fact(fact) => Ok(ExecStmtResult::Fact(self.execute_fact_statement(fact)?)),
             Stmt::Definition(DefinitionStmt::LetObjStmt(let_stmt)) => Ok(ExecStmtResult::Definition(
