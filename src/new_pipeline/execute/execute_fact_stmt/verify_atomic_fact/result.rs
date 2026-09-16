@@ -1,7 +1,8 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact};
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::{
-    EqualitySearchProofByBuiltinRule, EqualitySearchProofByBuiltinStrategy,
+    EqualitySearchProofByBuiltinAlgebraicRewrite, EqualitySearchProofByBuiltinRule,
+    EqualitySearchProofByBuiltinStrategy, EqualitySearchProofByKnownAlgebraicRewrite,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::{
     AtomicExceptEqualityFactSearchProofByBuiltinAlgebraicRewrite,
@@ -19,13 +20,15 @@ pub struct VerifyEqualityResult {
 }
 
 // Mirrors search_equal_fact_proof stage order.
-// Equality algebraic properties are intrinsic to equality search, so there is
-// no separate algebraic-rewrite stage.
+// Algebraic rewrite stages replace legacy opaque resolve_obj: rewrites must be
+// explicit certificates (see ByBuiltinAlgebraicRewrite / ByKnownAlgebraicRewrite).
 pub enum EqualFactSearchedProof {
     ByBuiltinRule(EqualitySearchProofByBuiltinRule),
     ByKnownEquality(EqualFactSearchedProofByKnownEquality),
     ByBuiltinStrategy(EqualitySearchProofByBuiltinStrategy),
     ByKnownForallFact(SearchProofByKnownForallFact),
+    ByBuiltinAlgebraicRewrite(EqualitySearchProofByBuiltinAlgebraicRewrite),
+    ByKnownAlgebraicRewrite(EqualitySearchProofByKnownAlgebraicRewrite),
 }
 
 // Oriented cite chain from goal.left to goal.right over generating equality

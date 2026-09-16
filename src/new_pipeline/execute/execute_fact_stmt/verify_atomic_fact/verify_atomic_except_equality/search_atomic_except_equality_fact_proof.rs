@@ -5,8 +5,10 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
     // Stage order: builtin rule → known atomic → builtin strategy →
-    // by definition → known forall → builtin algebraic rewrite →
+    // by definition → known forall → (if allowed) builtin algebraic rewrite →
     // known algebraic rewrite.
+    // Algebraic rewrite stages replace legacy opaque resolve_obj with explicit
+    // certificates (OrderDual, registered reflexivity/symmetry, …).
     // Ok(None) means no proof found; that is not a runtime error.
     pub fn search_atomic_except_equality_fact_proof(
         &mut self,

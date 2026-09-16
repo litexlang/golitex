@@ -9,7 +9,11 @@ use super::is_tuple::IsTupleFactSearchProofByBuiltinRule;
 use super::less::LessFactSearchProofByBuiltinRule;
 use super::less_equal::LessEqualFactSearchProofByBuiltinRule;
 use super::not_equal::NotEqualFactSearchProofByBuiltinRule;
+use super::not_greater::NotGreaterFactSearchProofByBuiltinRule;
+use super::not_greater_equal::NotGreaterEqualFactSearchProofByBuiltinRule;
 use super::not_is_nonempty_set::NotIsNonemptySetFactSearchProofByBuiltinRule;
+use super::not_less::NotLessFactSearchProofByBuiltinRule;
+use super::not_less_equal::NotLessEqualFactSearchProofByBuiltinRule;
 use super::subset::SubsetFactSearchProofByBuiltinRule;
 use super::superset::SupersetFactSearchProofByBuiltinRule;
 
@@ -51,10 +55,6 @@ pub enum AtomicExceptEqualityFactSearchProofByBuiltinRule {
 // Uninhabited stubs: split into a predicate file when the first builtin rule is added.
 pub enum NormalAtomicFactSearchProofByBuiltinRule {}
 pub enum NotNormalAtomicFactSearchProofByBuiltinRule {}
-pub enum NotLessFactSearchProofByBuiltinRule {}
-pub enum NotGreaterFactSearchProofByBuiltinRule {}
-pub enum NotLessEqualFactSearchProofByBuiltinRule {}
-pub enum NotGreaterEqualFactSearchProofByBuiltinRule {}
 pub enum NotIsSetFactSearchProofByBuiltinRule {}
 pub enum NotIsFiniteSetFactSearchProofByBuiltinRule {}
 pub enum NotInFactSearchProofByBuiltinRule {}

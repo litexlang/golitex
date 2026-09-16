@@ -242,33 +242,25 @@ impl Ids {
 
     pub fn allocate_fact_id(&mut self) -> FactId {
         let current = self.next_fact_id;
-        self.next_fact_id = FactId::new(bump(current.value(), "fact"));
+        self.next_fact_id = current.add_one();
         current
     }
 
     pub fn allocate_well_definedness_id(&mut self) -> WellDefinednessId {
         let current = self.next_well_definedness_id;
-        self.next_well_definedness_id =
-            WellDefinednessId::new(bump(current.value(), "well-definedness"));
+        self.next_well_definedness_id = current.add_one();
         current
     }
 
     pub fn allocate_prop_algebraic_property_id(&mut self) -> PropAlgebraicPropertyId {
         let current = self.next_prop_algebraic_property_id;
-        self.next_prop_algebraic_property_id =
-            PropAlgebraicPropertyId::new(bump(current.value(), "prop algebraic property"));
+        self.next_prop_algebraic_property_id = current.add_one();
         current
     }
 
     pub fn allocate_identifier_id(&mut self) -> IdentifierId {
         let current = self.next_identifier_id;
-        self.next_identifier_id = IdentifierId::new(bump(current.value(), "identifier"));
+        self.next_identifier_id = current.add_one();
         current
     }
-}
-
-fn bump(value: u64, label: &str) -> u64 {
-    value
-        .checked_add(1)
-        .unwrap_or_else(|| panic!("{label} ID space exhausted"))
 }

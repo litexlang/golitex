@@ -1,7 +1,7 @@
 use crate::new_pipeline::ast::fact::{
-    AtomicFact, FnEqualFact, FnEqualInFact, NormalAtomicFact, NotGreaterEqualFact, NotGreaterFact,
-    NotInFact, NotIsCartFact, NotIsFiniteSetFact, NotIsSetFact, NotIsTupleFact, NotLessEqualFact,
-    NotLessFact, NotNormalAtomicFact, NotSubsetFact, NotSupersetFact,
+    AtomicFact, FnEqualFact, FnEqualInFact, NormalAtomicFact, NotInFact, NotIsCartFact,
+    NotIsFiniteSetFact, NotIsSetFact, NotIsTupleFact, NotNormalAtomicFact, NotSubsetFact,
+    NotSupersetFact,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
@@ -9,11 +9,9 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use super::search_atomic_except_equality_fact_proof_by_builtin_rule_result::{
     AtomicExceptEqualityFactSearchProofByBuiltinRule, FnEqualFactSearchProofByBuiltinRule,
     FnEqualInFactSearchProofByBuiltinRule, NormalAtomicFactSearchProofByBuiltinRule,
-    NotGreaterEqualFactSearchProofByBuiltinRule, NotGreaterFactSearchProofByBuiltinRule,
     NotInFactSearchProofByBuiltinRule, NotIsCartFactSearchProofByBuiltinRule,
     NotIsFiniteSetFactSearchProofByBuiltinRule, NotIsSetFactSearchProofByBuiltinRule,
-    NotIsTupleFactSearchProofByBuiltinRule, NotLessEqualFactSearchProofByBuiltinRule,
-    NotLessFactSearchProofByBuiltinRule, NotNormalAtomicFactSearchProofByBuiltinRule,
+    NotIsTupleFactSearchProofByBuiltinRule, NotNormalAtomicFactSearchProofByBuiltinRule,
     NotSubsetFactSearchProofByBuiltinRule, NotSupersetFactSearchProofByBuiltinRule,
 };
 
@@ -130,38 +128,6 @@ impl Runtime {
         _fact: &NotNormalAtomicFact,
         _verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotNormalAtomicFactSearchProofByBuiltinRule>> {
-        Ok(None)
-    }
-
-    pub fn search_not_less_fact_proof_by_builtin_rule(
-        &mut self,
-        _fact: &NotLessFact,
-        _verify_state: VerifyState,
-    ) -> RuntimeResult<Option<NotLessFactSearchProofByBuiltinRule>> {
-        Ok(None)
-    }
-
-    pub fn search_not_greater_fact_proof_by_builtin_rule(
-        &mut self,
-        _fact: &NotGreaterFact,
-        _verify_state: VerifyState,
-    ) -> RuntimeResult<Option<NotGreaterFactSearchProofByBuiltinRule>> {
-        Ok(None)
-    }
-
-    pub fn search_not_less_equal_fact_proof_by_builtin_rule(
-        &mut self,
-        _fact: &NotLessEqualFact,
-        _verify_state: VerifyState,
-    ) -> RuntimeResult<Option<NotLessEqualFactSearchProofByBuiltinRule>> {
-        Ok(None)
-    }
-
-    pub fn search_not_greater_equal_fact_proof_by_builtin_rule(
-        &mut self,
-        _fact: &NotGreaterEqualFact,
-        _verify_state: VerifyState,
-    ) -> RuntimeResult<Option<NotGreaterEqualFactSearchProofByBuiltinRule>> {
         Ok(None)
     }
 
