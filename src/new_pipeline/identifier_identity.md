@@ -189,7 +189,9 @@ goal:   $p({y R: y > 0})   // Layer B: miss (not a bug)
 
 `known_atomic` argument matching that uses equality classes still compares
 **exact** `ObjIR` members of classes. It must not silently alpha-rename
-set-builder / forall binders to force a hit.
+set-builder / forall binders to force a hit. Lookup is two-pass: exact
+`ObjIR` first (`EqualIr` per arg), then equality-class match
+(`EqualIr` / `ByKnownEquality` paths).
 
 ### Layer C — Structural instantiate / substitute
 

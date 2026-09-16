@@ -11,4 +11,5 @@ pub use result::{
     AtomicExceptEqualityFactSearchProofByKnownAtomicFact, AtomicExceptEqualityFactSearchedProof,
     EqualFactSearchedProof, EqualFactSearchedProofByKnownEquality, SearchProofByKnownForallFact,
     VerifyAtomicExceptEqualityFactResult, VerifyEqualityResult,
+    WhyKnownAtomicParameterMatchesGiven,
 };

@@ -55,9 +55,16 @@ pub enum AtomicExceptEqualityFactSearchedProof {
 
 pub struct AtomicExceptEqualityFactSearchProofByKnownAtomicFact {
     pub cite_fact_id: FactId,
-    // One ByKnownEquality path per argument (empty path when keys already match).
+    // One justification per argument: EqualIr when ObjIR already matches,
+    // otherwise a generating-edge path through known_equality.
     pub why_parameters_of_known_fact_are_equal_to_givens:
-        Vec<EqualFactSearchedProofByKnownEquality>,
+        Vec<WhyKnownAtomicParameterMatchesGiven>,
+}
+
+// Why a stored known-atomic argument matches the goal argument.
+pub enum WhyKnownAtomicParameterMatchesGiven {
+    EqualIr,
+    ByKnownEquality(EqualFactSearchedProofByKnownEquality),
 }
 
 pub struct AtomicExceptEqualityFactSearchProofByDefinition {

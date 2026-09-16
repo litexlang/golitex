@@ -29,6 +29,38 @@ fn number_one() -> Obj {
     })
 }
 
+
+#[test]
+fn rational_sum_of_two_fractions_with_product_denominator() {
+    use crate::new_pipeline::execute::ExecStmtResult;
+    use crate::new_pipeline::execute::execute_fact_stmt::{ExecFactStmtResult, VerifyFactResult};
+
+    let code = "a / b + c / d = (a * d + b * c) / (b * d)";
+
+    // Only b != 0 and d != 0: WD needs (b * d) != 0 for the right denominator.
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have a R, b R, c R, d R").is_failed());
+    assert!(!exec_one(&mut runtime, "trust b != 0").is_failed());
+    assert!(!exec_one(&mut runtime, "trust d != 0").is_failed());
+    match exec_one(&mut runtime, code) {
+        ExecStmtResult::Fact(ExecFactStmtResult::Failed(
+            VerifyFactResult::FailToVerifyWellDefined,
+        )) => {}
+        other => panic!("expected WD fail without b*d != 0, got failed={}", other.is_failed()),
+    }
+
+    // With explicit product nonzero, equality should succeed.
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have a R, b R, c R, d R").is_failed());
+    assert!(!exec_one(&mut runtime, "trust b != 0").is_failed());
+    assert!(!exec_one(&mut runtime, "trust d != 0").is_failed());
+    assert!(!exec_one(&mut runtime, "trust b * d != 0").is_failed());
+    assert!(
+        !exec_one(&mut runtime, code).is_failed(),
+        "expected Success when b*d != 0 is trusted"
+    );
+}
+
 #[test]
 fn calculation_lib_closed_decimal_smoke() {
     use crate::new_pipeline::ast::obj::{Add, Number, Obj};
