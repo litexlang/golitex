@@ -15,6 +15,7 @@ mod verify_or_fact;
 mod verify_state;
 pub mod verify_well_defined;
 
+pub use crate::new_pipeline::execute::exec_stmt_result::ParamTypeWellDefinedProof;
 pub use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 pub use crate::new_pipeline::store_fact_and_infer::StoreFactAndInferResult;
 pub use result::{ExecFactStmtResult, ExecFactStmtSuccessResult};
@@ -24,6 +25,7 @@ pub use verify_fact_result::{
 };
 pub use verify_state::VerifyState;
 pub use verify_well_defined::{
-    AtomicFactWellDefinedProof, FactWellDefinedProof, FailToVerifyWellDefinedResult,
-    ObjWellDefinedProofByDef, ParamTypeWellDefinedProof, VerifyObjWellDefinedResult,
+    AtomicFactWellDefinedProof, FactWellDefinedProof, FailToVerifyObjWellDefinedResult,
+    ObjWellDefinedProofByDef, VerifyAtomicFactWellDefinedResult, VerifyFactWellDefinedResult,
+    VerifyObjWellDefinedResult,
 };

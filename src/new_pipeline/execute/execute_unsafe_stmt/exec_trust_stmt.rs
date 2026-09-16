@@ -9,7 +9,8 @@
 
 use crate::new_pipeline::ast::stmt::TrustStmt;
 use crate::new_pipeline::execute::execute_fact_stmt::{
-    FactWellDefinedProof, StoreFactAndInferResult, VerifyFactResult, VerifyState,
+    FactWellDefinedProof, StoreFactAndInferResult, VerifyFactResult, VerifyFactWellDefinedResult,
+    VerifyState,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
@@ -46,13 +47,16 @@ impl Runtime {
 
         let mut facts_well_defined = Vec::with_capacity(stmt.facts.len());
         for fact in &stmt.facts {
-            let wd = self.verify_fact_well_definedness(fact, verify_state.clone())?;
-            if wd.is_failed() {
-                return Ok(ExecTrustStmtResult::Failed(
-                    VerifyFactResult::FailToVerifyWellDefined,
-                ));
+            match self.verify_fact_well_definedness(fact, verify_state.clone())? {
+                VerifyFactWellDefinedResult::Success(proof) => {
+                    facts_well_defined.push(proof);
+                }
+                VerifyFactWellDefinedResult::Failed(_) => {
+                    return Ok(ExecTrustStmtResult::Failed(
+                        VerifyFactResult::FailToVerifyWellDefined,
+                    ));
+                }
             }
-            facts_well_defined.push(wd);
         }
 
         let mut store_and_infer_results = Vec::with_capacity(stmt.facts.len());

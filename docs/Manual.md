@@ -2875,6 +2875,13 @@ This is an `error` because an abstract predicate has no definition to unfold.
 
 ### Witnesses, `obtain`, and preimages
 
+> **Preview (`new_pipeline`):** `witness exist … from …` has **no** indented
+> proof body and opens **no** local binder scope. Prove type and body
+> obligations in the ambient environment first, then submit the witnesses in
+> one line. `exist!` uniqueness and `witness $P` / nonempty-set forms are not
+> wired on this track yet. The legacy examples below (with `:` proof blocks)
+> still describe the default pipeline.
+
 Use `witness` to prove an existential or nonempty-set goal. Use `obtain` to
 name witnesses from an already known existential, from one concrete prop
 definition, or from the sole direct existential conclusion of a named theorem.

@@ -4,7 +4,7 @@ use super::exec_trust_stmt::trust_verify_state;
 use crate::new_pipeline::ast::stmt::TrustHaveStmt;
 use crate::new_pipeline::execute::execute_fact_stmt::{
     FactWellDefinedProof, ParamTypeWellDefinedProof, StoreFactAndInferResult, VerifyFactResult,
-    VerifyObjWellDefinedResult,
+    VerifyFactWellDefinedResult, VerifyObjWellDefinedResult,
 };
 use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
@@ -55,15 +55,18 @@ impl Runtime {
 
         let mut body_facts_well_defined = Vec::with_capacity(stmt.facts.len());
         for fact in &stmt.facts {
-            let wd = self.verify_fact_well_definedness(fact, verify_state.clone())?;
-            if wd.is_failed() {
-                return Ok(ExecTrustHaveStmtResult::Failed(
-                    ExecTrustHaveStmtFailed::BodyFactWellDefined(
-                        VerifyFactResult::FailToVerifyWellDefined,
-                    ),
-                ));
+            match self.verify_fact_well_definedness(fact, verify_state.clone())? {
+                VerifyFactWellDefinedResult::Success(proof) => {
+                    body_facts_well_defined.push(proof);
+                }
+                VerifyFactWellDefinedResult::Failed(_) => {
+                    return Ok(ExecTrustHaveStmtResult::Failed(
+                        ExecTrustHaveStmtFailed::BodyFactWellDefined(
+                            VerifyFactResult::FailToVerifyWellDefined,
+                        ),
+                    ));
+                }
             }
-            body_facts_well_defined.push(wd);
         }
 
         let defined_param_store_and_infer =

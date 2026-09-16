@@ -1,9 +1,11 @@
-use super::AtomicFactWellDefinedProof;
+use super::{
+    AtomicFactWellDefinedProof, FailToVerifyObjWellDefinedResult, VerifyAtomicFactWellDefinedResult,
+};
 use crate::new_pipeline::ast::fact::Fact;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
-// Result of classifying a Fact and running its WD path.
+// Success-only evidence that a Fact is well-defined.
 pub enum FactWellDefinedProof {
     AtomicFact(AtomicFactWellDefinedProof),
     // Temporary: full composite WD pipelines are still draft-only. Allows
@@ -11,12 +13,15 @@ pub enum FactWellDefinedProof {
     CompositePending,
 }
 
-impl FactWellDefinedProof {
+// Soft miss vs success for fact WD. Proof never embeds Fail.
+pub enum VerifyFactWellDefinedResult {
+    Success(FactWellDefinedProof),
+    Failed(FailToVerifyObjWellDefinedResult),
+}
+
+impl VerifyFactWellDefinedResult {
     pub fn is_failed(&self) -> bool {
-        match self {
-            Self::AtomicFact(proof) => proof.is_failed(),
-            Self::CompositePending => false,
-        }
+        matches!(self, Self::Failed(_))
     }
 }
 
@@ -26,18 +31,29 @@ impl Runtime {
         &mut self,
         fact: &Fact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<FactWellDefinedProof> {
+    ) -> RuntimeResult<VerifyFactWellDefinedResult> {
         match fact {
-            Fact::AtomicFact(fact) => Ok(FactWellDefinedProof::AtomicFact(
-                self.verify_atomic_fact_well_definedness(fact, verify_state)?,
-            )),
+            Fact::AtomicFact(fact) => {
+                match self.verify_atomic_fact_well_definedness(fact, verify_state)? {
+                    VerifyAtomicFactWellDefinedResult::Success(proof) => {
+                        Ok(VerifyFactWellDefinedResult::Success(
+                            FactWellDefinedProof::AtomicFact(proof),
+                        ))
+                    }
+                    VerifyAtomicFactWellDefinedResult::Failed(reason) => {
+                        Ok(VerifyFactWellDefinedResult::Failed(reason))
+                    }
+                }
+            }
             Fact::AndFact(_)
             | Fact::ChainFact(_)
             | Fact::OrFact(_)
             | Fact::ExistFact(_)
             | Fact::ForallFact(_)
             | Fact::ForallFactWithIff(_)
-            | Fact::NotForall(_) => Ok(FactWellDefinedProof::CompositePending),
+            | Fact::NotForall(_) => Ok(VerifyFactWellDefinedResult::Success(
+                FactWellDefinedProof::CompositePending,
+            )),
         }
     }
 }

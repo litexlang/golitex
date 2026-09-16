@@ -1,4 +1,2 @@
-# Prove forall by local introduction: params → then.
-
-forall x R:
-    x = x
+# Tracer: identifier WD soft-fail → VerifyAtomicFactWellDefinedResult::Failed path.
+x = x

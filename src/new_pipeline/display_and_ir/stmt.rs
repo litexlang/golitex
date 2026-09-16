@@ -1,7 +1,6 @@
 //! Stmt and statement variants: IR + display_string.
 
 use super::types::StmtIR;
-use crate::new_pipeline::ast::fact::ExistFact;
 use crate::new_pipeline::ast::stmt::*;
 use crate::new_pipeline::parse::keywords::*;
 
@@ -1138,50 +1137,14 @@ impl ReleaseThmStmt {
 
 impl WitnessExistFact {
     pub fn ir(&self) -> StmtIR {
-        let mut out = String::new();
-        let equal_tos: Vec<_> = self
-            .equal_tos
-            .iter()
-            .map(|o| o.ir())
-            .collect();
-        let spec = match &self.exist_fact_in_witness {
-            ExistFact::PlainExistFact(b)
-            | ExistFact::ExistUniqueFact(b)
-            | ExistFact::NotExistFact(b) => b,
-        };
-        let facts: Vec<_> = spec
-            .facts
-            .iter()
-            .map(|fact| fact.ir())
-            .collect();
-        out.push_str(&format!(
-            "{} {}{} {} {} {}",
+        let equal_tos: Vec<_> = self.equal_tos.iter().map(|o| o.ir()).collect();
+        StmtIR(format!(
+            "{} {} {} {}",
             WITNESS,
-            equal_tos.join(", "),
-            COLON,
-            spec.typed_parameters.ir(),
-            ST,
-            facts.join(", ")
-        ));
-        if !self.proof.is_empty() {
-            out.push_str(&format!(
-                "{}\n{}",
-                COLON,
-                indent!(
-                    &self
-                        .proof
-                        .iter()
-                        .map(|s| s.ir())
-                        .collect::<Vec<_>>()
-                        .join(
-                            "
-"
-                        ),
-                    1
-                )
-            ));
-        }
-        StmtIR(out)
+            self.exist_fact_in_witness.ir(),
+            FROM,
+            equal_tos.join(", ")
+        ))
     }
     impl_display_pair!();
 }

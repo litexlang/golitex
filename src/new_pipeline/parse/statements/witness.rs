@@ -1,4 +1,4 @@
-use super::super::keywords::{COLON, EXIST, FROM, WITNESS};
+use super::super::keywords::{EXIST, FROM, WITNESS};
 use super::super::object::parse_obj;
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::stmt::{Stmt, WitnessExistFact, WitnessStmt};
@@ -6,8 +6,8 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
 
 impl Runtime {
-    // witness exist … from objs [: proof]
-    // other witness forms → clear parse_error
+    // witness exist … from objs
+    // no `:` proof body; other witness forms → clear parse_error
     pub(in super::super) fn parse_witness_stmt(
         &mut self,
         block: &TokenBlock,
@@ -28,31 +28,21 @@ impl Runtime {
             equal_tos.push(parse_obj(self, &mut tb)?);
         }
 
-        let proof = if tb.exceed_end_of_head() {
-            if !tb.body.is_empty() {
-                return Err(tb.parse_error(
-                    "witness exist: indented proof body requires `:` at end of header",
-                ));
-            }
-            Vec::new()
-        } else {
-            tb.expect(COLON)?;
-            if !tb.exceed_end_of_head() {
-                return Err(tb.parse_error("witness exist: unexpected tokens after `:` in header"));
-            }
-            let params = match &exist_fact_in_witness {
-                crate::new_pipeline::ast::fact::ExistFact::PlainExistFact(b)
-                | crate::new_pipeline::ast::fact::ExistFact::ExistUniqueFact(b)
-                | crate::new_pipeline::ast::fact::ExistFact::NotExistFact(b) => &b.typed_parameters,
-            };
-            self.with_forall_params_occupied(params, &tb, |this| this.parse_body_stmts(&tb.body))?
-        };
+        if !tb.exceed_end_of_head() {
+            return Err(tb.parse_error(
+                "witness exist: unexpected tokens after witnesses; proof body is not supported",
+            ));
+        }
+        if !tb.body.is_empty() {
+            return Err(tb.parse_error(
+                "witness exist: indented proof body is not supported; prove obligations before witness",
+            ));
+        }
 
         Ok(Stmt::Witness(WitnessStmt::WitnessExistFact(
             WitnessExistFact {
                 equal_tos,
                 exist_fact_in_witness,
-                proof,
                 line_file: LineFile::new(block.line, block.source_path.clone()),
             },
         )))

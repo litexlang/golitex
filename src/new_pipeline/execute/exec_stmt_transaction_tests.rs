@@ -192,3 +192,32 @@ fn success_merges_equality_so_later_stmt_can_prove_transitivity() {
         "expected Success: parent-merged 1=2 and 2=3 should prove 1=3"
     );
 }
+
+#[test]
+fn witness_exist_succeeds_without_local_proof_body() {
+    let mut runtime = runtime_with_file_env();
+
+    let outcome = exec_one(&mut runtime, "witness exist x set st {x = 0} from 0");
+    assert!(
+        !outcome.is_failed(),
+        "expected Success for witness exist with ambient-provable body"
+    );
+    assert!(matches!(outcome, ExecStmtResult::Witness(_)));
+}
+
+#[test]
+fn witness_exist_body_miss_is_soft_fail_and_does_not_store() {
+    let mut runtime = runtime_with_file_env();
+    let before = runtime.top_exec_env().facts.facts_by_id.len();
+
+    let outcome = exec_one(&mut runtime, "witness exist x set st {x = 1} from 0");
+    assert!(
+        outcome.is_failed(),
+        "expected Failed: substituted body 0 = 1 is not provable"
+    );
+    assert_eq!(
+        runtime.top_exec_env().facts.facts_by_id.len(),
+        before,
+        "Failed witness must not merge exist into parent"
+    );
+}

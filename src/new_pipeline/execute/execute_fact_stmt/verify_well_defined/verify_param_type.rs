@@ -1,24 +1,7 @@
-use super::VerifyObjWellDefinedResult;
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
+use crate::new_pipeline::execute::exec_stmt_result::ParamTypeWellDefinedProof;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
-
-// WD of one parameter-type annotation (not a Fact).
-pub enum ParamTypeWellDefinedProof {
-    Set,
-    NonemptySet,
-    FiniteSet,
-    Obj(VerifyObjWellDefinedResult),
-}
-
-impl ParamTypeWellDefinedProof {
-    pub fn is_failed(&self) -> bool {
-        match self {
-            Self::Obj(wd) => wd.is_failed(),
-            Self::Set | Self::NonemptySet | Self::FiniteSet => false,
-        }
-    }
-}
 
 impl Runtime {
     // One entry per TypedParameterGroup, in source order.

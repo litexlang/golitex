@@ -17,7 +17,20 @@ use crate::new_pipeline::tokenize::TokenBlock;
 impl Runtime {
     pub(super) fn parse_fact_stmt(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
         let mut tb = block.clone();
-        Ok(Stmt::Fact(self.parse_fact(&mut tb)?))
+        let fact = self.parse_fact(&mut tb)?;
+        match &fact {
+            Fact::ForallFact(_) | Fact::ForallFactWithIff(_) | Fact::NotForall(_) => {}
+            _ if !tb.exceed_end_of_head() => {
+                return Err(RuntimeParseError::new(
+                    format!("trailing tokens after fact: `{}`", tb.peek().unwrap_or("")),
+                    tb.line,
+                    tb.source_path.clone(),
+                )
+                .into());
+            }
+            _ => {}
+        }
+        Ok(Stmt::Fact(fact))
     }
 
     pub(super) fn parse_fact(&mut self, tb: &mut TokenBlock) -> RuntimeResult<Fact> {
@@ -266,14 +279,6 @@ impl Runtime {
                 tb.expect(super::keywords::COMMA)?;
             }
             tb.expect(super::keywords::RIGHT_CURLY)?;
-            if !tb.exceed_end_of_head() {
-                return Err(RuntimeParseError::new(
-                    "trailing tokens after exist fact",
-                    tb.line,
-                    tb.source_path.clone(),
-                )
-                .into());
-            }
             if !tb.body.is_empty() {
                 return Err(RuntimeParseError::new(
                     "inline `exist … st {…}` cannot have an indented body",
