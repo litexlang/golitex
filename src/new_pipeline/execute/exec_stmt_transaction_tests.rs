@@ -61,6 +61,29 @@ fn rational_sum_of_two_fractions_with_product_denominator() {
     );
 }
 
+
+#[test]
+fn closed_numeric_order_comparisons() {
+    let mut runtime = runtime_with_file_env();
+    for code in [
+        "1 < 2",
+        "2 > 1",
+        "1 <= 2",
+        "2 >= 1",
+        "2 <= 2",
+        "2 >= 2",
+        "1 + 1 < 5",
+        "not 2 < 1",
+        "not 1 > 2",
+        "not 3 <= 1",
+        "not 1 >= 3",
+        "1 != 0",
+    ] {
+        assert!(!exec_one(&mut runtime, code).is_failed(), "expected Success for {code}");
+    }
+    assert!(exec_one(&mut runtime, "2 < 1").is_failed());
+}
+
 #[test]
 fn calculation_lib_closed_decimal_smoke() {
     use crate::new_pipeline::ast::obj::{Add, Number, Obj};

@@ -20,6 +20,10 @@ impl FactId {
     pub fn value(self) -> u64 {
         self.0
     }
+
+    pub fn add_one(self) -> Self {
+        Self(self.0 + 1)
+    }
 }
 
 impl WellDefinednessId {
@@ -29,6 +33,10 @@ impl WellDefinednessId {
 
     pub fn value(self) -> u64 {
         self.0
+    }
+
+    pub fn add_one(self) -> Self {
+        Self(self.0 + 1)
     }
 }
 
@@ -40,6 +48,10 @@ impl PropAlgebraicPropertyId {
     pub fn value(self) -> u64 {
         self.0
     }
+
+    pub fn add_one(self) -> Self {
+        Self(self.0 + 1)
+    }
 }
 
 impl IdentifierId {
@@ -49,6 +61,10 @@ impl IdentifierId {
 
     pub fn value(self) -> u64 {
         self.0
+    }
+
+    pub fn add_one(self) -> Self {
+        Self(self.0 + 1)
     }
 }
 

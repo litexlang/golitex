@@ -1,43 +1,41 @@
-use crate::new_pipeline::ast::fact::LessFact;
+use crate::new_pipeline::ast::fact::NotGreaterFact;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::rational_expression::{
     compare_closed_objs_by_normalized_decimal, NumberCompareResult,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
-// Builtin rules for `a < b`.
-pub enum LessFactSearchProofByBuiltinRule {
-    // Closed numeric comparison by evaluation.
-    // Mathematical property: if both sides evaluate to decimals L, R with L < R,
-    // then `left < right`.
-    // Examples: `1 < 2`, `1 + 1 < 5`.
+// Builtin rules for `not a > b` (i.e. a <= b on numbers).
+pub enum NotGreaterFactSearchProofByBuiltinRule {
+    // Closed numeric comparison: evaluated L is not strictly greater than R.
+    // Mathematical property: if L <= R as decimals, then `not (left > right)`.
+    // Examples: `not 1 > 2`, `not 2 > 2`.
     ClosedNumericComparison(ClosedNumericComparisonBuiltinRuleProof),
 }
 
-// Payload: both evaluated normals with left_normal < right_normal.
 pub struct ClosedNumericComparisonBuiltinRuleProof {
     pub left_normal: String,
     pub right_normal: String,
 }
 
 impl Runtime {
-    // Builtin: closed decimal proves strict less.
-    // Example: prove `1 < 2`.
-    pub fn search_less_fact_proof_by_builtin_rule(
+    // Builtin: closed decimal proves `not a > b`.
+    // Example: prove `not 1 > 3`.
+    pub fn search_not_greater_fact_proof_by_builtin_rule(
         &mut self,
-        fact: &LessFact,
+        fact: &NotGreaterFact,
         _verify_state: VerifyState,
-    ) -> RuntimeResult<Option<LessFactSearchProofByBuiltinRule>> {
+    ) -> RuntimeResult<Option<NotGreaterFactSearchProofByBuiltinRule>> {
         let Some((cmp, left_normal, right_normal)) =
             compare_closed_objs_by_normalized_decimal(&fact.left, &fact.right)
         else {
             return Ok(None);
         };
-        if cmp != NumberCompareResult::Less {
+        if cmp == NumberCompareResult::Greater {
             return Ok(None);
         }
         Ok(Some(
-            LessFactSearchProofByBuiltinRule::ClosedNumericComparison(
+            NotGreaterFactSearchProofByBuiltinRule::ClosedNumericComparison(
                 ClosedNumericComparisonBuiltinRuleProof {
                     left_normal,
                     right_normal,
