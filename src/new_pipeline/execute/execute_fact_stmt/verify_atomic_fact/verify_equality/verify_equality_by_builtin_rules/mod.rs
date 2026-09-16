@@ -1,4 +1,5 @@
 pub mod by_equal_ir;
+pub mod search_equal_fact_by_calculation;
 pub mod search_equal_fact_builtin_rule;
 pub mod search_equal_fact_builtin_rule_result;
 

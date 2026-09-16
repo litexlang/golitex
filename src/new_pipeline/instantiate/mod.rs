@@ -16,7 +16,6 @@
 mod capture;
 mod error;
 mod fact;
-mod mode;
 mod obj;
 mod param;
 
@@ -25,7 +24,6 @@ mod tests;
 
 pub use error::InstError;
 pub use fact::quantifier_free_fact_to_fact;
-pub use mode::SubstitutionMode;
 
 use std::collections::HashMap;
 
@@ -33,82 +31,44 @@ use crate::new_pipeline::ast::fact::{AtomicFact, Fact, QuantifierFreeFact};
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::runtime::Runtime;
 
-pub(crate) struct InstCtx<'a> {
-    pub rt: &'a mut Runtime,
-    pub subst: HashMap<String, Obj>,
-    pub mode: SubstitutionMode,
-    pub fresh_counter: u64,
-    pub binder_renames: HashMap<String, String>,
-}
-
-impl InstCtx<'_> {
-    pub fn inst_obj(&mut self, obj: &Obj) -> Result<Obj, InstError> {
-        obj::inst_obj(self, obj)
-    }
-}
-
 impl Runtime {
     pub fn inst_obj(
         &mut self,
         obj: &Obj,
-        subst: &HashMap<String, Obj>,
-        mode: SubstitutionMode,
+        param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Obj, InstError> {
-        let mut ctx = InstCtx {
-            rt: self,
-            subst: subst.clone(),
-            mode,
-            fresh_counter: 0,
-            binder_renames: HashMap::new(),
-        };
-        ctx.inst_obj(obj)
+        let mut fresh = 0u64;
+        let binder_renames = HashMap::new();
+        self.inst_obj_rec(obj, param_to_arg_map, &mut fresh, &binder_renames)
     }
 
     pub fn inst_fact(
         &mut self,
         fact: &Fact,
-        subst: &HashMap<String, Obj>,
-        mode: SubstitutionMode,
+        param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<Fact, InstError> {
-        let mut ctx = InstCtx {
-            rt: self,
-            subst: subst.clone(),
-            mode,
-            fresh_counter: 0,
-            binder_renames: HashMap::new(),
-        };
-        fact::inst_fact(&mut ctx, fact)
+        let mut fresh = 0u64;
+        let binder_renames = HashMap::new();
+        self.inst_fact_rec(fact, param_to_arg_map, &mut fresh, &binder_renames)
     }
 
     pub fn inst_atomic_fact(
         &mut self,
         atomic: &AtomicFact,
-        subst: &HashMap<String, Obj>,
-        mode: SubstitutionMode,
+        param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<AtomicFact, InstError> {
-        let mut ctx = InstCtx {
-            rt: self,
-            subst: subst.clone(),
-            mode,
-            fresh_counter: 0,
-            binder_renames: HashMap::new(),
-        };
-        fact::inst_atomic_fact(&mut ctx, atomic)
+        let mut fresh = 0u64;
+        let binder_renames = HashMap::new();
+        self.inst_atomic_fact_rec(atomic, param_to_arg_map, &mut fresh, &binder_renames)
     }
 
     pub fn inst_quantifier_free_fact(
         &mut self,
         fact: &QuantifierFreeFact,
-        subst: &HashMap<String, Obj>,
-        mode: SubstitutionMode,
+        param_to_arg_map: &HashMap<String, Obj>,
     ) -> Result<QuantifierFreeFact, InstError> {
-        let mut ctx = InstCtx {
-            rt: self,
-            subst: subst.clone(),
-            mode,
-            fresh_counter: 0,
-            binder_renames: HashMap::new(),
-        };
-        fact::inst_quantifier_free_fact(&mut ctx, fact)
+        let mut fresh = 0u64;
+        let binder_renames = HashMap::new();
+        self.inst_quantifier_free_fact_rec(fact, param_to_arg_map, &mut fresh, &binder_renames)
     }
 }

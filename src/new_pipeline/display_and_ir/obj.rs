@@ -363,15 +363,6 @@ impl Obj {
     }
 }
 
-impl Identifier {
-    pub fn ir(&self) -> ObjIR {
-        ObjIR(self.name.clone())
-    }
-    pub fn display_string(&self) -> String {
-        self.name.clone()
-    }
-}
-
 impl IdentifierObj {
     pub fn ir(&self) -> ObjIR {
         ObjIR(self.display_string())
@@ -531,7 +522,7 @@ impl SetBuilderBody {
     pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
         out.push_str(&format!("{}", LEFT_CURLY));
-        out.push_str(&self.param_binding.ir());
+        out.push_str(&self.param_binding);
         out.push_str(&format!(" "));
         out.push_str(&self.param_set.ir());
         out.push_str(&format!("{}", COLON));
@@ -544,7 +535,7 @@ impl SetBuilderBody {
     pub fn display_string(&self) -> String {
         let mut out = String::new();
         out.push_str(&format!("{}", LEFT_CURLY));
-        out.push_str(&self.param_binding.display_string());
+        out.push_str(&self.param_binding);
         out.push_str(&format!(" "));
         out.push_str(&self.param_set.display_string());
         out.push_str(&format!("{}", COLON));

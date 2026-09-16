@@ -1,33 +1,9 @@
-# and / chain verify + store (new_pipeline)
+# calculation + zero-premise rational (new_pipeline)
 
-trust:
-    1 < 2
-    2 < 3
+1 + 1 = 2
+2 * 3 = 6
 
-# prove and from known components
-1 < 2 and 2 < 3
-
-# reuse and component
-1 < 2
-
-# prove chain from known adjacent edges
-1 < 2 < 3
-
-# reuse numeric-order transitive closure stored from the chain
-1 < 3
-
-have a R, b R, c R
-trust:
-    a = b
-    b = c
-
-# equality chain + builtin equality closure
-a = b = c
-a = c
-
-trust:
-    1 < 2
-    2 > 0
-
-# broken polarity: adjacent only, no extra 1 ? 0 fact
-1 < 2 > 0
+have x R
+(x + 1) * (x - 1) = x^2 - 1
+x + 0 = x
+1 * x = x

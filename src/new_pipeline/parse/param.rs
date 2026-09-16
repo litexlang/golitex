@@ -2,7 +2,6 @@ use super::keywords::{
     COLON, COMMA, EQUAL, FINITE_SET, LEFT_PAREN, NONEMPTY_SET, RIGHT_PAREN, SET,
 };
 use super::object::{is_atom_name, parse_obj};
-use crate::new_pipeline::ast::obj::Identifier;
 use crate::new_pipeline::ast::param::{
     FiniteSet, NonemptySet, ParamType, Set, TypedParameterGroup, TypedParameterList,
 };
@@ -110,7 +109,7 @@ impl Runtime {
     pub(super) fn parse_name_list_in_parens(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> RuntimeResult<Vec<Identifier>> {
+    ) -> RuntimeResult<Vec<String>> {
         tb.expect(LEFT_PAREN)?;
         let mut names = Vec::new();
         while !tb.exceed_end_of_head() && tb.peek() != Some(RIGHT_PAREN) {
@@ -198,7 +197,7 @@ impl Runtime {
         &mut self,
         tb: &TokenBlock,
         name: String,
-    ) -> RuntimeResult<Identifier> {
+    ) -> RuntimeResult<String> {
         self.define_plain_atom(name.clone())
             .map_err(|err| match err {
                 crate::new_pipeline::runtime::RuntimeError::InternalBug(message) => {
@@ -206,7 +205,7 @@ impl Runtime {
                 }
                 other => other,
             })?;
-        Ok(Identifier::new(name))
+        Ok(name)
     }
 
     pub(super) fn occupy_plain_atom_as_parse(

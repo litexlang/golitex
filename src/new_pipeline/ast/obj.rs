@@ -88,13 +88,8 @@ pub enum Obj {
     IntervalObj(IntervalObj),
 }
 
-// Binder / parameter name (always plain; never module-qualified).
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Identifier {
-    pub name: String,
-}
-
 // Free or module-qualified name used as an object (at most three `::` segments).
+// Binder / parameter names are plain `String` (never module-qualified).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IdentifierObj {
     pub name: AtomicName,
@@ -400,7 +395,7 @@ pub struct ListSet {
 // SetBuilder
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SetBuilderBody {
-    pub param_binding: Identifier,
+    pub param_binding: String,
     pub param_set: Box<Obj>,
     pub facts: Vec<QuantifierFreeFact>,
 }
@@ -673,12 +668,6 @@ pub enum IntervalObj {
 pub struct IntervalObjStruct {
     pub start: Box<Obj>,
     pub end: Box<Obj>,
-}
-
-impl Identifier {
-    pub fn new(name: String) -> Self {
-        Self { name }
-    }
 }
 
 /// Litex binder-slot identity after `alpha_normalize` (U+25A1 + index).

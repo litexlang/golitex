@@ -255,7 +255,7 @@ pub struct DefPropStmt {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DefAbstractPropStmt {
     pub name: String,
-    pub params: Vec<crate::new_pipeline::ast::obj::Identifier>,
+    pub params: Vec<String>,
     pub line_file: LineFile,
 }
 

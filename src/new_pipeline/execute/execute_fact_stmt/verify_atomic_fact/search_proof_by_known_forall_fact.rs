@@ -7,7 +7,6 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact, ForallFact};
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::Obj;
-use crate::new_pipeline::instantiate::SubstitutionMode;
 use crate::new_pipeline::ast::param::TypedParameterList;
 use crate::new_pipeline::exec_env::helper::{
     atomic_fact_args_ref, atomic_fact_has_positive_polarity,
@@ -152,7 +151,7 @@ impl Runtime {
         // Param-type obligations deferred until type-fact store is wired.
         let mut requirements = Vec::new();
         for dom in &forall.dom_facts {
-            let fact = match self.inst_fact(dom, subst, SubstitutionMode::Exact) {
+            let fact = match self.inst_fact(dom, subst) {
                 Ok(fact) => fact,
                 Err(_) => return Ok(None),
             };
@@ -166,7 +165,7 @@ fn ordered_param_names(params: &TypedParameterList) -> Vec<String> {
     let mut names = Vec::new();
     for group in &params.groups {
         for param in &group.params {
-            names.push(param.name.clone());
+            names.push(param.clone());
         }
     }
     names

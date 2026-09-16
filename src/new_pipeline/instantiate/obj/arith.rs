@@ -1,142 +1,359 @@
+use std::collections::HashMap;
+
 use crate::new_pipeline::ast::obj::{
     Abs, Add, Arcsin, Ceil, ComplexAbs, Cos, Cot, Div, Exp, Factorial, Floor, Gcd, ImaginaryPart,
     Lcm, Ln, Log, Max, Min, Mod, Mul, Obj, Pow, Quot, RealPart, Sign, Sin, Sqrt, Sub, Tan,
 };
+use crate::new_pipeline::runtime::Runtime;
 
-use super::super::InstCtx;
 use super::super::error::InstError;
 
-macro_rules! unary {
-    ($ctx:expr, $inner:expr, $cons:ident) => {
-        Ok(Obj::$cons($cons {
-            arg: Box::new($ctx.inst_obj($inner)?),
+impl Runtime {
+    pub(crate) fn inst_add_obj(
+        &mut self,
+        a: &Add,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Add(Add {
+            left: Box::new(self.inst_obj_rec(&a.left, param_to_arg_map, fresh, binder_renames)?),
+            right: Box::new(self.inst_obj_rec(&a.right, param_to_arg_map, fresh, binder_renames)?),
         }))
-    };
-}
+    }
 
-macro_rules! binary {
-    ($ctx:expr, $left:expr, $right:expr, $cons:ident) => {
-        Ok(Obj::$cons($cons {
-            left: Box::new($ctx.inst_obj($left)?),
-            right: Box::new($ctx.inst_obj($right)?),
+    pub(crate) fn inst_sub_obj(
+        &mut self,
+        a: &Sub,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Sub(Sub {
+            left: Box::new(self.inst_obj_rec(&a.left, param_to_arg_map, fresh, binder_renames)?),
+            right: Box::new(self.inst_obj_rec(&a.right, param_to_arg_map, fresh, binder_renames)?),
         }))
-    };
-}
+    }
 
-pub fn inst_add(ctx: &mut InstCtx<'_>, a: &Add) -> Result<Obj, InstError> {
-    binary!(ctx, &a.left, &a.right, Add)
-}
+    pub(crate) fn inst_mul_obj(
+        &mut self,
+        a: &Mul,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Mul(Mul {
+            left: Box::new(self.inst_obj_rec(&a.left, param_to_arg_map, fresh, binder_renames)?),
+            right: Box::new(self.inst_obj_rec(&a.right, param_to_arg_map, fresh, binder_renames)?),
+        }))
+    }
 
-pub fn inst_sub(ctx: &mut InstCtx<'_>, a: &Sub) -> Result<Obj, InstError> {
-    binary!(ctx, &a.left, &a.right, Sub)
-}
+    pub(crate) fn inst_div_obj(
+        &mut self,
+        a: &Div,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Div(Div {
+            left: Box::new(self.inst_obj_rec(&a.left, param_to_arg_map, fresh, binder_renames)?),
+            right: Box::new(self.inst_obj_rec(&a.right, param_to_arg_map, fresh, binder_renames)?),
+        }))
+    }
 
-pub fn inst_mul(ctx: &mut InstCtx<'_>, a: &Mul) -> Result<Obj, InstError> {
-    binary!(ctx, &a.left, &a.right, Mul)
-}
+    pub(crate) fn inst_mod_obj(
+        &mut self,
+        a: &Mod,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Mod(Mod {
+            left: Box::new(self.inst_obj_rec(&a.left, param_to_arg_map, fresh, binder_renames)?),
+            right: Box::new(self.inst_obj_rec(&a.right, param_to_arg_map, fresh, binder_renames)?),
+        }))
+    }
 
-pub fn inst_div(ctx: &mut InstCtx<'_>, a: &Div) -> Result<Obj, InstError> {
-    binary!(ctx, &a.left, &a.right, Div)
-}
+    pub(crate) fn inst_quot_obj(
+        &mut self,
+        a: &Quot,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Quot(Quot {
+            left: Box::new(self.inst_obj_rec(&a.left, param_to_arg_map, fresh, binder_renames)?),
+            right: Box::new(self.inst_obj_rec(&a.right, param_to_arg_map, fresh, binder_renames)?),
+        }))
+    }
 
-pub fn inst_mod(ctx: &mut InstCtx<'_>, a: &Mod) -> Result<Obj, InstError> {
-    binary!(ctx, &a.left, &a.right, Mod)
-}
+    pub(crate) fn inst_gcd_obj(
+        &mut self,
+        a: &Gcd,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Gcd(Gcd {
+            left: Box::new(self.inst_obj_rec(&a.left, param_to_arg_map, fresh, binder_renames)?),
+            right: Box::new(self.inst_obj_rec(&a.right, param_to_arg_map, fresh, binder_renames)?),
+        }))
+    }
 
-pub fn inst_quot(ctx: &mut InstCtx<'_>, a: &Quot) -> Result<Obj, InstError> {
-    binary!(ctx, &a.left, &a.right, Quot)
-}
+    pub(crate) fn inst_lcm_obj(
+        &mut self,
+        a: &Lcm,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Lcm(Lcm {
+            left: Box::new(self.inst_obj_rec(&a.left, param_to_arg_map, fresh, binder_renames)?),
+            right: Box::new(self.inst_obj_rec(&a.right, param_to_arg_map, fresh, binder_renames)?),
+        }))
+    }
 
-pub fn inst_gcd(ctx: &mut InstCtx<'_>, a: &Gcd) -> Result<Obj, InstError> {
-    binary!(ctx, &a.left, &a.right, Gcd)
-}
+    pub(crate) fn inst_min_obj(
+        &mut self,
+        a: &Min,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Min(Min {
+            left: Box::new(self.inst_obj_rec(&a.left, param_to_arg_map, fresh, binder_renames)?),
+            right: Box::new(self.inst_obj_rec(&a.right, param_to_arg_map, fresh, binder_renames)?),
+        }))
+    }
 
-pub fn inst_lcm(ctx: &mut InstCtx<'_>, a: &Lcm) -> Result<Obj, InstError> {
-    binary!(ctx, &a.left, &a.right, Lcm)
-}
+    pub(crate) fn inst_max_obj(
+        &mut self,
+        a: &Max,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Max(Max {
+            left: Box::new(self.inst_obj_rec(&a.left, param_to_arg_map, fresh, binder_renames)?),
+            right: Box::new(self.inst_obj_rec(&a.right, param_to_arg_map, fresh, binder_renames)?),
+        }))
+    }
 
-pub fn inst_min(ctx: &mut InstCtx<'_>, a: &Min) -> Result<Obj, InstError> {
-    binary!(ctx, &a.left, &a.right, Min)
-}
+    pub(crate) fn inst_pow_obj(
+        &mut self,
+        a: &Pow,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Pow(Pow {
+            base: Box::new(self.inst_obj_rec(&a.base, param_to_arg_map, fresh, binder_renames)?),
+            exponent: Box::new(self.inst_obj_rec(&a.exponent, param_to_arg_map, fresh, binder_renames)?),
+        }))
+    }
 
-pub fn inst_max(ctx: &mut InstCtx<'_>, a: &Max) -> Result<Obj, InstError> {
-    binary!(ctx, &a.left, &a.right, Max)
-}
+    pub(crate) fn inst_log_obj(
+        &mut self,
+        a: &Log,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Log(Log {
+            base: Box::new(self.inst_obj_rec(&a.base, param_to_arg_map, fresh, binder_renames)?),
+            arg: Box::new(self.inst_obj_rec(&a.arg, param_to_arg_map, fresh, binder_renames)?),
+        }))
+    }
 
-pub fn inst_pow(ctx: &mut InstCtx<'_>, a: &Pow) -> Result<Obj, InstError> {
-    Ok(Obj::Pow(Pow {
-        base: Box::new(ctx.inst_obj(&a.base)?),
-        exponent: Box::new(ctx.inst_obj(&a.exponent)?),
-    }))
-}
+    pub(crate) fn inst_floor_obj(
+        &mut self,
+        a: &Floor,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Floor(Floor {
+            arg: Box::new(self.inst_obj_rec(&a.arg, param_to_arg_map, fresh, binder_renames)?),
+        }))
+    }
 
-pub fn inst_log(ctx: &mut InstCtx<'_>, a: &Log) -> Result<Obj, InstError> {
-    Ok(Obj::Log(Log {
-        base: Box::new(ctx.inst_obj(&a.base)?),
-        arg: Box::new(ctx.inst_obj(&a.arg)?),
-    }))
-}
+    pub(crate) fn inst_ceil_obj(
+        &mut self,
+        a: &Ceil,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Ceil(Ceil {
+            arg: Box::new(self.inst_obj_rec(&a.arg, param_to_arg_map, fresh, binder_renames)?),
+        }))
+    }
 
-pub fn inst_floor(ctx: &mut InstCtx<'_>, a: &Floor) -> Result<Obj, InstError> {
-    unary!(ctx, &a.arg, Floor)
-}
+    pub(crate) fn inst_exp_obj(
+        &mut self,
+        a: &Exp,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Exp(Exp {
+            arg: Box::new(self.inst_obj_rec(&a.arg, param_to_arg_map, fresh, binder_renames)?),
+        }))
+    }
 
-pub fn inst_ceil(ctx: &mut InstCtx<'_>, a: &Ceil) -> Result<Obj, InstError> {
-    unary!(ctx, &a.arg, Ceil)
-}
+    pub(crate) fn inst_ln_obj(
+        &mut self,
+        a: &Ln,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Ln(Ln {
+            arg: Box::new(self.inst_obj_rec(&a.arg, param_to_arg_map, fresh, binder_renames)?),
+        }))
+    }
 
-pub fn inst_exp(ctx: &mut InstCtx<'_>, a: &Exp) -> Result<Obj, InstError> {
-    unary!(ctx, &a.arg, Exp)
-}
+    pub(crate) fn inst_sign_obj(
+        &mut self,
+        a: &Sign,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Sign(Sign {
+            arg: Box::new(self.inst_obj_rec(&a.arg, param_to_arg_map, fresh, binder_renames)?),
+        }))
+    }
 
-pub fn inst_ln(ctx: &mut InstCtx<'_>, a: &Ln) -> Result<Obj, InstError> {
-    unary!(ctx, &a.arg, Ln)
-}
+    pub(crate) fn inst_factorial_obj(
+        &mut self,
+        a: &Factorial,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Factorial(Factorial {
+            arg: Box::new(self.inst_obj_rec(&a.arg, param_to_arg_map, fresh, binder_renames)?),
+        }))
+    }
 
-pub fn inst_sign(ctx: &mut InstCtx<'_>, a: &Sign) -> Result<Obj, InstError> {
-    unary!(ctx, &a.arg, Sign)
-}
+    pub(crate) fn inst_abs_obj(
+        &mut self,
+        a: &Abs,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Abs(Abs {
+            arg: Box::new(self.inst_obj_rec(&a.arg, param_to_arg_map, fresh, binder_renames)?),
+        }))
+    }
 
-pub fn inst_factorial(ctx: &mut InstCtx<'_>, a: &Factorial) -> Result<Obj, InstError> {
-    unary!(ctx, &a.arg, Factorial)
-}
+    pub(crate) fn inst_sin_obj(
+        &mut self,
+        a: &Sin,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Sin(Sin {
+            arg: Box::new(self.inst_obj_rec(&a.arg, param_to_arg_map, fresh, binder_renames)?),
+        }))
+    }
 
-pub fn inst_abs(ctx: &mut InstCtx<'_>, a: &Abs) -> Result<Obj, InstError> {
-    unary!(ctx, &a.arg, Abs)
-}
+    pub(crate) fn inst_arcsin_obj(
+        &mut self,
+        a: &Arcsin,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Arcsin(Arcsin {
+            arg: Box::new(self.inst_obj_rec(&a.arg, param_to_arg_map, fresh, binder_renames)?),
+        }))
+    }
 
-pub fn inst_sin(ctx: &mut InstCtx<'_>, a: &Sin) -> Result<Obj, InstError> {
-    unary!(ctx, &a.arg, Sin)
-}
+    pub(crate) fn inst_cos_obj(
+        &mut self,
+        a: &Cos,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Cos(Cos {
+            arg: Box::new(self.inst_obj_rec(&a.arg, param_to_arg_map, fresh, binder_renames)?),
+        }))
+    }
 
-pub fn inst_arcsin(ctx: &mut InstCtx<'_>, a: &Arcsin) -> Result<Obj, InstError> {
-    unary!(ctx, &a.arg, Arcsin)
-}
+    pub(crate) fn inst_tan_obj(
+        &mut self,
+        a: &Tan,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Tan(Tan {
+            arg: Box::new(self.inst_obj_rec(&a.arg, param_to_arg_map, fresh, binder_renames)?),
+        }))
+    }
 
-pub fn inst_cos(ctx: &mut InstCtx<'_>, a: &Cos) -> Result<Obj, InstError> {
-    unary!(ctx, &a.arg, Cos)
-}
+    pub(crate) fn inst_cot_obj(
+        &mut self,
+        a: &Cot,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Cot(Cot {
+            arg: Box::new(self.inst_obj_rec(&a.arg, param_to_arg_map, fresh, binder_renames)?),
+        }))
+    }
 
-pub fn inst_tan(ctx: &mut InstCtx<'_>, a: &Tan) -> Result<Obj, InstError> {
-    unary!(ctx, &a.arg, Tan)
-}
+    pub(crate) fn inst_real_part_obj(
+        &mut self,
+        a: &RealPart,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::RealPart(RealPart {
+            arg: Box::new(self.inst_obj_rec(&a.arg, param_to_arg_map, fresh, binder_renames)?),
+        }))
+    }
 
-pub fn inst_cot(ctx: &mut InstCtx<'_>, a: &Cot) -> Result<Obj, InstError> {
-    unary!(ctx, &a.arg, Cot)
-}
+    pub(crate) fn inst_imaginary_part_obj(
+        &mut self,
+        a: &ImaginaryPart,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::ImaginaryPart(ImaginaryPart {
+            arg: Box::new(self.inst_obj_rec(&a.arg, param_to_arg_map, fresh, binder_renames)?),
+        }))
+    }
 
-pub fn inst_real_part(ctx: &mut InstCtx<'_>, a: &RealPart) -> Result<Obj, InstError> {
-    unary!(ctx, &a.arg, RealPart)
-}
+    pub(crate) fn inst_complex_abs_obj(
+        &mut self,
+        a: &ComplexAbs,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::ComplexAbs(ComplexAbs {
+            arg: Box::new(self.inst_obj_rec(&a.arg, param_to_arg_map, fresh, binder_renames)?),
+        }))
+    }
 
-pub fn inst_imaginary_part(ctx: &mut InstCtx<'_>, a: &ImaginaryPart) -> Result<Obj, InstError> {
-    unary!(ctx, &a.arg, ImaginaryPart)
-}
-
-pub fn inst_complex_abs(ctx: &mut InstCtx<'_>, a: &ComplexAbs) -> Result<Obj, InstError> {
-    unary!(ctx, &a.arg, ComplexAbs)
-}
-
-pub fn inst_sqrt(ctx: &mut InstCtx<'_>, a: &Sqrt) -> Result<Obj, InstError> {
-    unary!(ctx, &a.arg, Sqrt)
+    pub(crate) fn inst_sqrt_obj(
+        &mut self,
+        a: &Sqrt,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Sqrt(Sqrt {
+            arg: Box::new(self.inst_obj_rec(&a.arg, param_to_arg_map, fresh, binder_renames)?),
+        }))
+    }
 }

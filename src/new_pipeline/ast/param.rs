@@ -1,8 +1,8 @@
 //! Framework AST data shapes for new_pipeline.
 //! Field taxonomy follows the legacy language; methods are added later.
-//! Identity: parameter lists store Identifier (name only; name is identity).
+//! Identity: parameter lists store plain String names (name is identity).
 
-use super::obj::{Identifier, Obj};
+use super::obj::Obj;
 
 // from statement/definitions/parameters.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -28,14 +28,14 @@ pub struct SetBoundParameterList {
 // from statement/definitions/parameters.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SetBoundParameterGroup {
-    pub params: Vec<Identifier>,
+    pub params: Vec<String>,
     pub param_type: Box<Obj>,
 }
 
 // from statement/definitions/parameters.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TypedParameterGroup {
-    pub params: Vec<Identifier>,
+    pub params: Vec<String>,
     pub param_type: ParamType,
 }
 

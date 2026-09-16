@@ -17,7 +17,7 @@ Related owners:
 |------|------|
 | Parse occupy / no-shadow | `parse/`, `runtime::ParseScope` / `AtomicName` |
 | AST atoms | `ast/obj.rs` `IdentifierObj { name: AtomicName }` |
-| Binder params | `ast/obj.rs` `Identifier` (plain name only) |
+| Binder params | plain `String` (never module-qualified) |
 | IR spelling | `display_and_ir/` (`ir()` = surface name; no `#id#`) |
 | Fact store | `exec_env/known_fact_memory.rs` |
 | Obj WD ByKnown | `execute_fact_stmt/verify_well_defined/verify_obj/` |
@@ -361,7 +361,7 @@ Matching / IR indexes use the normalized spelling.
 
 User atom names stay ASCII letter/`_` style; `□` is not a valid user atom start
 in new_pipeline name rules, so users cannot introduce free `□0`. Internal AST
-may still store `□N` as `Identifier.name`.
+may still store `□N` as the binder `String`.
 
 Target shape:
 
@@ -372,7 +372,7 @@ alpha / ir:      {□0 R: □0 $in {□1 R: □1 > 0}} // ops / IR keys
 ```
 
 `SetBuilder` / `FnSet` / `AnonymousFn` store both: `surface` (user letters) and
-`alpha` (`□N`). `Identifier` stays a single `name` field.
+`alpha` (`□N`). Binder names stay a plain `String`.
 
 #### Why put it in AST at **new** time (user rationale — locked)
 
@@ -487,7 +487,7 @@ tracers for `{x:…}` vs `{y:…}` and nested builders.
 
 Before changing identity, IR, occupy, or known-* indexing, check:
 
-- [ ] No new per-occurrence id on `Identifier` / IR (`#digits#name` must not
+- [ ] No new per-occurrence id on binder names / IR (`#digits#name` must not
       return).
 - [ ] Parse still rejects shadowing and same-name nested binders.
 - [ ] `DefinitionMemory` maps stay keyed by **`PlainName`** (unqualified local
