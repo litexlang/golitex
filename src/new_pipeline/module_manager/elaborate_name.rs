@@ -34,8 +34,8 @@ impl GlobalModuleManager {
             ));
         }
         Ok(AtomicName::WithModAndExportFileId {
-            mod_id,
-            file_id: 0,
+            global_mod_id: mod_id,
+            export_file_id: 0,
             name,
         })
     }
@@ -43,8 +43,8 @@ impl GlobalModuleManager {
     /// Turn surface segments into `AtomicName`.
     ///
     /// - 1 segment: `Plain`
-    /// - 2 segments: current-module export `a` + name `b` → `WithMod`
-    /// - 3 segments: import alias `a` + export `b` + name `c` → `WithModAndExport`
+    /// - 2 segments: current-module export `a` + name `b` → `WithExportFileId`
+    /// - 3 segments: import alias `a` + export `b` + name `c` → `WithModAndExportFileId`
     ///
     /// `a:::b` is handled by `elaborate_flat_import`, not this function.
     pub fn elaborate_name_parts(&self, parts: &[String]) -> Result<AtomicName, String> {
@@ -53,18 +53,18 @@ impl GlobalModuleManager {
                 name: parts[0].clone(),
             }),
             2 => {
-                let file_id = self.file_id_in_current(&parts[0])?;
+                let export_file_id = self.file_id_in_current(&parts[0])?;
                 Ok(AtomicName::WithExportFileId {
-                    file_id,
+                    export_file_id,
                     name: parts[1].clone(),
                 })
             }
             3 => {
-                let mod_id = self.mod_id_for_local_alias(&parts[0])?;
-                let file_id = self.file_id_in_mod(mod_id, &parts[1])?;
+                let global_mod_id = self.mod_id_for_local_alias(&parts[0])?;
+                let export_file_id = self.file_id_in_mod(global_mod_id, &parts[1])?;
                 Ok(AtomicName::WithModAndExportFileId {
-                    mod_id,
-                    file_id,
+                    global_mod_id,
+                    export_file_id,
                     name: parts[2].clone(),
                 })
             }

@@ -128,6 +128,8 @@ fn merge_facts_from(parent: &mut ExecEnv, child: &ExecEnv) -> RuntimeResult<()> 
             }
         }
     }
+    // Forall indexes are rebuilt inside record_fact; also merge any orphan
+    // index entries is unnecessary when every forall goes through record_fact.
     Ok(())
 }
 

@@ -3,14 +3,18 @@ use crate::new_pipeline::runtime::{RealOrVirtualPath, Runtime, RuntimeError, Run
 use crate::new_pipeline::LITEX;
 use std::io::{self, Write};
 
-/// Interactive REPL: print each step immediately; no accumulated run payload.
+/// Interactive REPL on a fresh empty Runtime.
 pub fn run_repl() -> RuntimeResult<()> {
     let mut runtime = Runtime::new();
     // Pretend module mount already succeeded with an empty context.
+    runtime.begin_file(RealOrVirtualPath::Repl);
+    run_repl_loop(&mut runtime)
+}
+
+/// Continue a REPL in an already-open file/eval Runtime env (used by `-session`).
+pub fn run_repl_loop(runtime: &mut Runtime) -> RuntimeResult<()> {
     println!("{} REPL {}", LITEX, NEW_PIPELINE_VERSION);
     println!("type `exit` or Ctrl-D to quit; end a block with a blank line");
-
-    runtime.begin_file(RealOrVirtualPath::Repl);
 
     loop {
         let Some(code) = read_repl_block()? else {
@@ -25,10 +29,16 @@ pub fn run_repl() -> RuntimeResult<()> {
             }
         };
 
-        if let Some(session_error) = &code_result.session_error {
+        if let Some(session_error) = code_result.session_error {
             eprintln!("session_error: {:?}", session_error);
             runtime.abort_file();
-            return Ok(());
+            return match session_error {
+                super::run_command_outcome::RunSessionError::Runtime(error) => Err(error),
+                other => {
+                    let _ = other;
+                    Ok(())
+                }
+            };
         }
 
         if code_result.success {

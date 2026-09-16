@@ -2,6 +2,7 @@ use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact};
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::display_and_ir::FactIR;
+use crate::new_pipeline::exec_env::known_forall_conclusion_memory::KnownForallConclusionMemory;
 use crate::new_pipeline::runtime::FactId;
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
@@ -19,6 +20,7 @@ pub struct KnownFactMemory {
     pub fact_ir_to_id: HashMap<FactIR, FactId>,
     pub known_equality: KnownEqualityMemory,
     pub known_atomic_except_equality_facts: AtomicExceptEqualityFactMemory,
+    pub known_forall_conclusions: KnownForallConclusionMemory,
 }
 
 // Equality equivalence-class store for one ExecEnv.
@@ -57,11 +59,16 @@ impl KnownFactMemory {
             fact_ir_to_id: HashMap::new(),
             known_equality: KnownEqualityMemory::new(),
             known_atomic_except_equality_facts: AtomicExceptEqualityFactMemory::new(),
+            known_forall_conclusions: KnownForallConclusionMemory::new(),
         }
     }
 
     // Record any closed fact under both id and IR indexes.
+    // Forall also projects atomic then-clauses into known_forall_conclusions.
     pub fn record_fact(&mut self, fact_id: FactId, fact: Fact) {
+        if let Fact::ForallFact(forall) = &fact {
+            self.known_forall_conclusions.index_forall(forall);
+        }
         self.fact_ir_to_id.insert(fact.ir(), fact_id);
         self.facts_by_id.insert(fact_id, fact);
     }

@@ -1,11 +1,13 @@
 use super::run_command_outcome::RunFileResult;
+use super::run_repl::run_repl_loop;
 use crate::new_pipeline::runtime::{RealOrVirtualPath, Runtime, RuntimeError, RuntimeResult};
 use std::fs;
 use std::path::PathBuf;
 
 /// Run one file.
 /// Module mount / litex.config preload is assumed elsewhere later; not defined here.
-pub fn run_file(path: PathBuf) -> RuntimeResult<RunFileResult> {
+/// With `session`, a successful run keeps the file env open and enters REPL.
+pub fn run_file(path: PathBuf, session: bool) -> RuntimeResult<RunFileResult> {
     if path.as_os_str().is_empty() {
         return Err(RuntimeError::InvalidArguments(
             "-f requires a source file".to_string(),
@@ -28,12 +30,18 @@ pub fn run_file(path: PathBuf) -> RuntimeResult<RunFileResult> {
         }
     };
 
-    if code_result.success {
-        let (file, exec_env) = runtime.finish_file();
-        runtime.publish_completed_export_file(file, exec_env);
-    } else {
+    if !code_result.success {
         runtime.abort_file();
+        return Ok(RunFileResult::new(path, code_result));
     }
 
+    if session {
+        // Keep the same file ExecEnv; REPL continues this environment.
+        run_repl_loop(&mut runtime)?;
+        return Ok(RunFileResult::new(path, code_result));
+    }
+
+    let (file, exec_env) = runtime.finish_file();
+    runtime.publish_completed_export_file(file, exec_env);
     Ok(RunFileResult::new(path, code_result))
 }

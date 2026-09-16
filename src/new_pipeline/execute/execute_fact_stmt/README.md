@@ -81,7 +81,15 @@ builtin rule → known equality → builtin strategy → known forall.
 
 introduce typed params → assume each dom (WD + store) → prove+store each then
 → take binder `local_env` (not merged). Parent stores the whole forall only on
-Success.
+Success, and projects atomic then-clauses into
+`KnownFactMemory.known_forall_conclusions` (`=` → `equal_conclusions`; other
+atomics including `≠` → `by_atomic_prop`).
+
+Atomic / equality search may then use `ByKnownForallFact` via
+`SearchProofByKnownForallFact` (cite FactId + then index + instantiation args +
+requirement proofs). Phase 1 matching binds forall param identifiers in then
+args; nested param occurrences inside compound objs are not matched yet.
+Param-type obligations are not yet required at use (dom instantiation is).
 
 `KnownFactMemory.fact_ir_to_id` remains for store / merge dedup of closed
 facts under name-is-identity; it is not a verify cite path. Design rationale
