@@ -1,7 +1,7 @@
 use crate::new_pipeline::launch_command::LaunchCommand;
 use super::run_command_outcome::RunFileResult;
 use super::run_repl::run_repl_loop;
-use crate::new_pipeline::runtime::{RealOrVirtualPath, Runtime, RuntimeError, RuntimeResult};
+use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 use std::fs;
 
 /// Run one file.
@@ -27,10 +27,7 @@ pub fn run_file(command: LaunchCommand) -> RuntimeResult<RunFileResult> {
         message: error.to_string(),
     })?;
 
-    let mut runtime = Runtime::new();
-    runtime.launch_command = command;
-    // Pretend module mount already succeeded with an empty context.
-    runtime.begin_file(RealOrVirtualPath::Real(path.clone()));
+    let mut runtime = Runtime::new(command);
     let code_result = match runtime.run_litex_code(&source) {
         Ok(result) => result,
         Err(error) => {

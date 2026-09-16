@@ -86,9 +86,11 @@ Success, and projects atomic then-clauses into
 atomics including `≠` → `by_atomic_prop`).
 
 Atomic / equality search may then use `ByKnownForallFact` via
-`SearchProofByKnownForallFact` (cite FactId + then index + instantiation args +
-requirement proofs). Phase 1 matching binds forall param identifiers in then
-args; nested param occurrences inside compound objs are not matched yet.
+`SearchProofByKnownForallFact` (`cite: ForallConclusionCite` = FactId +
+`ForallConclusionLocation`, plus instantiation args and requirement proofs).
+And-then components are projected as `AndFactComponent` cites; or/exist thens
+are not projected into atomic buckets. Matching binds forall param identifiers
+in then args; nested param occurrences inside compound objs are not matched yet.
 Param-type obligations are not yet required at use (dom instantiation is).
 
 `KnownFactMemory.fact_ir_to_id` remains for store / merge dedup of closed

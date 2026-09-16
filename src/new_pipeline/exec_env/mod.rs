@@ -9,5 +9,5 @@ pub use known_fact_memory::{
     AtomicExceptEqualityFactMemory, KnownEqualityMemory, KnownFactMemory, ObjIR,
 };
 pub use known_forall_conclusion_memory::{
-    IndexedForallAtomicConclusion, KnownForallConclusionMemory,
+    ForallConclusionCite, KnownForallConclusionMemory,
 };
