@@ -4,5 +4,5 @@ pub mod store_fact_and_infer_result;
 pub use store_fact_and_infer_result::{
     ChainTransitiveCite, StoreAndComponentResult, StoreAndFactResult, StoreAtomicFactResult,
     StoreChainAdjacentResult, StoreChainFactResult, StoreChainTransitiveClosureResult,
-    StoreFactAndInferResult,
+    StoreFactAndInferResult, StoreOrFactResult,
 };

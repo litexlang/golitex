@@ -34,7 +34,7 @@ impl Runtime {
     ) -> RuntimeResult<ExecLetObjStmtResult> {
         let verify_state = VerifyState {
             can_use_forall_fact: true,
-            can_use_algebraic_rewrite: true,
+            can_use_rewrite: true,
             store_well_defined_fact: true,
         };
         let value_well_defined = self.verify_obj_well_definedness(&let_stmt.value, verify_state)?;

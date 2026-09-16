@@ -5,10 +5,10 @@
 
 use crate::new_pipeline::ast::fact::{
     AndFactComponentForallConclusionLocation, AtomicFact, DirectForallConclusionLocation,
-    ExistOrAndChainAtomicFact, ForallConclusionLocation, ForallFact,
+    ExistOrAndChainAtomicFact, ForallConclusionLocation, ForallFact, OrFact,
 };
 use crate::new_pipeline::ast::names::AtomicName;
-use crate::new_pipeline::exec_env::helper::atomic_fact_has_positive_polarity;
+use crate::new_pipeline::exec_env::helper::{atomic_fact_has_positive_polarity, or_fact_index_key};
 use crate::new_pipeline::runtime::FactId;
 use std::collections::HashMap;
 
@@ -25,6 +25,8 @@ pub struct KnownForallConclusionMemory {
     pub by_atomic_prop: HashMap<(AtomicName, bool), Vec<ForallConclusionCite>>,
     /// Only `=` leaves (not `≠`).
     pub equal_conclusions: Vec<ForallConclusionCite>,
+    /// Whole or then-clauses, keyed by structural or index key.
+    pub by_or: HashMap<String, Vec<ForallConclusionCite>>,
 }
 
 impl KnownForallConclusionMemory {
@@ -32,8 +34,8 @@ impl KnownForallConclusionMemory {
         Self::default()
     }
 
-    // Project atomic leaves from each then (direct / and components).
-    // Or/exist thens are not projected into atomic buckets.
+    // Project atomic leaves and whole or thens from each then.
+    // Exist / chain thens are not projected into these buckets yet.
     pub fn index_forall(&mut self, forall: &ForallFact) {
         let fact_id = forall.fact_id;
         for (then_fact_index, then) in forall.then_facts.iter().enumerate() {
@@ -65,8 +67,16 @@ impl KnownForallConclusionMemory {
                         );
                     }
                 }
+                ExistOrAndChainAtomicFact::OrFact(or_fact) => {
+                    let key = or_fact_index_key(or_fact);
+                    self.by_or.entry(key).or_default().push(ForallConclusionCite {
+                        fact_id,
+                        location: ForallConclusionLocation::DirectThenFact(
+                            DirectForallConclusionLocation { then_fact_index },
+                        ),
+                    });
+                }
                 ExistOrAndChainAtomicFact::ChainFact(_)
-                | ExistOrAndChainAtomicFact::OrFact(_)
                 | ExistOrAndChainAtomicFact::ExistFact(_) => {}
             }
         }
@@ -80,6 +90,14 @@ impl KnownForallConclusionMemory {
         }
         for (key, child_entries) in &child.by_atomic_prop {
             let parent_entries = self.by_atomic_prop.entry(key.clone()).or_default();
+            for entry in child_entries {
+                if !parent_entries.iter().any(|e| e == entry) {
+                    parent_entries.push(entry.clone());
+                }
+            }
+        }
+        for (key, child_entries) in &child.by_or {
+            let parent_entries = self.by_or.entry(key.clone()).or_default();
             for entry in child_entries {
                 if !parent_entries.iter().any(|e| e == entry) {
                     parent_entries.push(entry.clone());
@@ -120,5 +138,21 @@ pub fn atomic_at_forall_location(
             and_fact.facts.get(loc.component_index).cloned()
         }
         ForallConclusionLocation::ChainFactComponent(_) => None,
+    }
+}
+
+/// Resolve a whole or then at `location` inside a stored forall.
+pub fn or_at_forall_location(
+    forall: &ForallFact,
+    location: &ForallConclusionLocation,
+) -> Option<OrFact> {
+    match location {
+        ForallConclusionLocation::DirectThenFact(loc) => {
+            match forall.then_facts.get(loc.then_fact_index)? {
+                ExistOrAndChainAtomicFact::OrFact(or_fact) => Some(or_fact.clone()),
+                _ => None,
+            }
+        }
+        _ => None,
     }
 }

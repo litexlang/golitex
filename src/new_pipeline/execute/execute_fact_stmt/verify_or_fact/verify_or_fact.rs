@@ -1,15 +1,356 @@
-use crate::new_pipeline::ast::fact::OrFact;
-use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyOrFactResult;
-use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
+use crate::new_pipeline::ast::fact::{AndChainAtomicFact, Fact, ForallFact, OrFact};
+use crate::new_pipeline::ast::obj::{IdentifierObj, Obj};
+use crate::new_pipeline::ast::param::TypedParameterList;
+use crate::new_pipeline::exec_env::helper::{
+    and_chain_as_fact, atomic_fact_has_positive_polarity, negate_atomic_fact, or_fact_args_ref,
+    or_fact_index_key,
+};
+use crate::new_pipeline::exec_env::known_forall_conclusion_memory::{
+    or_at_forall_location, ForallConclusionCite,
+};
+use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::{
+    AssumeNegatedOrBranchResult, OrFactSearchProofByKnownOrFact,
+    OrFactSearchProofBySelectedBranch, OrFactSearchedProof, VerifyFactResult, VerifyOrFactResult,
+};
+use crate::new_pipeline::execute::execute_fact_stmt::{
+    VerifyFactWellDefinedResult, VerifyState,
+};
+use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
+use crate::new_pipeline::store_fact_and_infer::StoreFactAndInferResult;
+use std::collections::{HashMap, HashSet};
 
 impl Runtime {
-    // or-fact search is still draft-only.
+    // Prove or: builtin → selected branch (¬ others) → known_or → known_forall.
+    // Example: known `1 = 1` proves `1 = 1 or 1 = 2` by assuming `not 1 = 2` locally.
     pub fn verify_or_fact(
+        &mut self,
+        fact: &OrFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<VerifyFactResult> {
+        if let Some(proof) = self.search_or_fact_proof_by_builtin_rule(fact, verify_state.clone())? {
+            return Ok(VerifyFactResult::OrFact(Box::new(VerifyOrFactResult {
+                fact: fact.clone(),
+                searched_proof: proof,
+            })));
+        }
+        if let Some(proof) =
+            self.search_or_fact_proof_by_selected_branch(fact, verify_state.clone())?
+        {
+            return Ok(VerifyFactResult::OrFact(Box::new(VerifyOrFactResult {
+                fact: fact.clone(),
+                searched_proof: proof,
+            })));
+        }
+        if let Some(proof) =
+            self.search_or_fact_proof_by_known_or_fact(fact, verify_state.clone())?
+        {
+            return Ok(VerifyFactResult::OrFact(Box::new(VerifyOrFactResult {
+                fact: fact.clone(),
+                searched_proof: proof,
+            })));
+        }
+        if let Some(proof) =
+            self.search_or_fact_proof_by_known_forall_fact(fact, verify_state)?
+        {
+            return Ok(VerifyFactResult::OrFact(Box::new(VerifyOrFactResult {
+                fact: fact.clone(),
+                searched_proof: proof,
+            })));
+        }
+        Ok(VerifyFactResult::FailToSearchProof)
+    }
+
+    fn search_or_fact_proof_by_builtin_rule(
         &mut self,
         _fact: &OrFact,
         _verify_state: VerifyState,
-    ) -> RuntimeResult<Option<VerifyOrFactResult>> {
+    ) -> RuntimeResult<Option<OrFactSearchedProof>> {
         Ok(None)
     }
+
+    fn search_or_fact_proof_by_selected_branch(
+        &mut self,
+        fact: &OrFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<OrFactSearchedProof>> {
+        for selected_index in 0..fact.facts.len() {
+            if !other_branches_are_atomic(fact, selected_index) {
+                continue;
+            }
+            let (attempt, local_env) = self.run_in_local_env_and_take_env(|rt| {
+                rt.try_or_selected_branch_in_local(fact, selected_index, verify_state.clone())
+            })?;
+            if let Some((assumed_negated_branches, selected_branch)) = attempt {
+                return Ok(Some(OrFactSearchedProof::BySelectedBranch(
+                    OrFactSearchProofBySelectedBranch {
+                        selected_index,
+                        assumed_negated_branches,
+                        selected_branch,
+                        local_env,
+                    },
+                )));
+            }
+        }
+        Ok(None)
+    }
+
+    fn try_or_selected_branch_in_local(
+        &mut self,
+        fact: &OrFact,
+        selected_index: usize,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<(Vec<AssumeNegatedOrBranchResult>, VerifyFactResult)>> {
+        let mut assumed_negated_branches = Vec::new();
+        for (branch_index, branch) in fact.facts.iter().enumerate() {
+            if branch_index == selected_index {
+                continue;
+            }
+            let AndChainAtomicFact::AtomicFact(atomic) = branch else {
+                return Ok(None);
+            };
+            let Some(negated_atomic) =
+                negate_atomic_fact(atomic, self.ids.allocate_fact_id())
+            else {
+                return Ok(None);
+            };
+            let negated_fact = Fact::AtomicFact(negated_atomic);
+            let well_defined =
+                match self.verify_fact_well_definedness(&negated_fact, verify_state.clone())? {
+                    VerifyFactWellDefinedResult::Success(proof) => proof,
+                    VerifyFactWellDefinedResult::Failed(_) => return Ok(None),
+                };
+            let store_and_infer: StoreFactAndInferResult =
+                self.store_fact_and_infer(&negated_fact)?;
+            assumed_negated_branches.push(AssumeNegatedOrBranchResult {
+                branch_index,
+                negated_fact,
+                well_defined,
+                store_and_infer,
+            });
+        }
+
+        let selected_fact = and_chain_as_fact(&fact.facts[selected_index]);
+        let selected_branch = self.verify_fact(&selected_fact, verify_state)?;
+        if selected_branch.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some((assumed_negated_branches, selected_branch)))
+    }
+
+    fn search_or_fact_proof_by_known_or_fact(
+        &mut self,
+        fact: &OrFact,
+        _verify_state: VerifyState,
+    ) -> RuntimeResult<Option<OrFactSearchedProof>> {
+        let lookup_key = or_fact_index_key(fact);
+        let goal_args = or_fact_args_ref(fact);
+        let class_per_arg: Vec<Vec<_>> = goal_args
+            .iter()
+            .map(|arg| self.known_equality_class_keys(arg))
+            .collect();
+
+        for env in self.execution_environments_stack.iter().rev() {
+            let Some(knowns) = env.facts.known_or.by_key.get(&lookup_key) else {
+                continue;
+            };
+            for known in knowns {
+                if !or_facts_same_shape(known, fact) {
+                    continue;
+                }
+                let known_args = or_fact_args_ref(known);
+                if known_args.len() != goal_args.len() {
+                    continue;
+                }
+                let args_match = known_args.iter().zip(class_per_arg.iter()).all(
+                    |(known_arg, class)| class.contains(&known_arg.ir()),
+                );
+                if args_match {
+                    return Ok(Some(OrFactSearchedProof::ByKnownOrFact(
+                        OrFactSearchProofByKnownOrFact {
+                            cite_fact_id: known.fact_id,
+                        },
+                    )));
+                }
+            }
+        }
+        Ok(None)
+    }
+
+    fn search_or_fact_proof_by_known_forall_fact(
+        &mut self,
+        fact: &OrFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<OrFactSearchedProof>> {
+        if !verify_state.can_use_forall_fact {
+            return Ok(None);
+        }
+        let lookup_key = or_fact_index_key(fact);
+        let mut candidates = Vec::new();
+        for env in self.execution_environments_stack.iter().rev() {
+            if let Some(entries) = env.facts.known_forall_conclusions.by_or.get(&lookup_key) {
+                candidates.extend(entries.iter().cloned());
+            }
+        }
+        for cite in candidates {
+            if let Some(proof) =
+                self.try_apply_forall_or_conclusion_cite(fact, &cite, verify_state.clone())?
+            {
+                return Ok(Some(OrFactSearchedProof::ByKnownForallFact(proof)));
+            }
+        }
+        Ok(None)
+    }
+
+    fn try_apply_forall_or_conclusion_cite(
+        &mut self,
+        goal: &OrFact,
+        cite: &ForallConclusionCite,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<SearchProofByKnownForallFact>> {
+        let forall = {
+            let mut found = None;
+            for env in self.execution_environments_stack.iter().rev() {
+                if let Some(Fact::ForallFact(f)) = env.facts.facts_by_id.get(&cite.fact_id) {
+                    found = Some(f.clone());
+                    break;
+                }
+            }
+            match found {
+                Some(f) => f,
+                None => return Ok(None),
+            }
+        };
+        let Some(conclusion) = or_at_forall_location(&forall, &cite.location) else {
+            return Ok(None);
+        };
+        if or_fact_index_key(&conclusion) != or_fact_index_key(goal)
+            || !or_facts_same_shape(&conclusion, goal)
+        {
+            return Ok(None);
+        }
+
+        let param_ids = ordered_param_ids(&forall.typed_parameters);
+        let param_set: HashSet<IdentifierId> = param_ids.iter().copied().collect();
+        let conclusion_args = or_fact_args_ref(&conclusion);
+        let goal_args = or_fact_args_ref(goal);
+        if conclusion_args.len() != goal_args.len() {
+            return Ok(None);
+        }
+
+        let mut subst: HashMap<IdentifierId, Obj> = HashMap::new();
+        for (pattern_arg, goal_arg) in conclusion_args.iter().zip(goal_args.iter()) {
+            if !unify_obj_phase1(pattern_arg, goal_arg, &param_set, &mut subst) {
+                return Ok(None);
+            }
+        }
+        for id in &param_ids {
+            if !subst.contains_key(id) {
+                return Ok(None);
+            }
+        }
+
+        let forall_parameters_match_what_args: Vec<Obj> = param_ids
+            .iter()
+            .map(|id| subst.get(id).expect("checked").clone())
+            .collect();
+
+        let requirement_facts = match self.build_or_forall_requirement_facts(&forall, &subst)? {
+            Some(facts) => facts,
+            None => return Ok(None),
+        };
+        let mut proof_of_requirement_facts = Vec::with_capacity(requirement_facts.len());
+        for req in &requirement_facts {
+            let proof = self.verify_fact(req, verify_state.clone())?;
+            if proof.is_failed() {
+                return Ok(None);
+            }
+            proof_of_requirement_facts.push(proof);
+        }
+
+        Ok(Some(SearchProofByKnownForallFact {
+            cite: cite.clone(),
+            forall_parameters_match_what_args,
+            requirement_facts,
+            proof_of_requirement_facts,
+        }))
+    }
+
+    fn build_or_forall_requirement_facts(
+        &mut self,
+        forall: &ForallFact,
+        subst: &HashMap<IdentifierId, Obj>,
+    ) -> RuntimeResult<Option<Vec<Fact>>> {
+        let mut requirements = Vec::new();
+        for dom in &forall.dom_facts {
+            let fact = match self.inst_fact(dom, subst) {
+                Ok(fact) => fact,
+                Err(_) => return Ok(None),
+            };
+            requirements.push(fact);
+        }
+        Ok(Some(requirements))
+    }
+}
+
+fn other_branches_are_atomic(fact: &OrFact, selected_index: usize) -> bool {
+    fact.facts.iter().enumerate().all(|(i, branch)| {
+        i == selected_index || matches!(branch, AndChainAtomicFact::AtomicFact(_))
+    })
+}
+
+fn or_facts_same_shape(left: &OrFact, right: &OrFact) -> bool {
+    if left.facts.len() != right.facts.len() {
+        return false;
+    }
+    left.facts
+        .iter()
+        .zip(right.facts.iter())
+        .all(|(a, b)| match (a, b) {
+            (AndChainAtomicFact::AtomicFact(x), AndChainAtomicFact::AtomicFact(y)) => {
+                x.prop_name() == y.prop_name()
+                    && atomic_fact_has_positive_polarity(x) == atomic_fact_has_positive_polarity(y)
+            }
+            (AndChainAtomicFact::AndFact(x), AndChainAtomicFact::AndFact(y)) => {
+                x.facts.len() == y.facts.len()
+                    && x.facts.iter().zip(y.facts.iter()).all(|(xa, ya)| {
+                        xa.prop_name() == ya.prop_name()
+                            && atomic_fact_has_positive_polarity(xa)
+                                == atomic_fact_has_positive_polarity(ya)
+                    })
+            }
+            (AndChainAtomicFact::ChainFact(x), AndChainAtomicFact::ChainFact(y)) => {
+                x.prop_names == y.prop_names && x.objs.len() == y.objs.len()
+            }
+            _ => false,
+        })
+}
+
+fn ordered_param_ids(params: &TypedParameterList) -> Vec<IdentifierId> {
+    let mut ids = Vec::new();
+    for group in &params.groups {
+        for param in &group.params {
+            ids.push(param.id);
+        }
+    }
+    ids
+}
+
+fn unify_obj_phase1(
+    pattern: &Obj,
+    goal: &Obj,
+    param_ids: &HashSet<IdentifierId>,
+    subst: &mut HashMap<IdentifierId, Obj>,
+) -> bool {
+    if let Obj::Identifier(IdentifierObj::Plain { id, .. }) = pattern {
+        if param_ids.contains(id) {
+            if let Some(existing) = subst.get(id) {
+                return existing.ir() == goal.ir();
+            }
+            subst.insert(*id, goal.clone());
+            return true;
+        }
+    }
+    pattern.ir() == goal.ir()
 }

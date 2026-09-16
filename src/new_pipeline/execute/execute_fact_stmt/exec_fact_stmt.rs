@@ -12,7 +12,7 @@ impl Runtime {
     ) -> RuntimeResult<ExecFactStmtResult> {
         let verify_state = VerifyState {
             can_use_forall_fact: true,
-            can_use_algebraic_rewrite: true,
+            can_use_rewrite: true,
             store_well_defined_fact: true,
         };
         let verify_result = self.verify_fact(fact, verify_state)?;

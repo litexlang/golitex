@@ -1,12 +1,12 @@
 use super::store_fact_and_infer_result::{
     ChainTransitiveCite, StoreAndComponentResult, StoreAndFactResult, StoreAtomicFactResult,
     StoreChainAdjacentResult, StoreChainFactResult, StoreChainTransitiveClosureResult,
-    StoreFactAndInferResult,
+    StoreFactAndInferResult, StoreOrFactResult,
 };
-use crate::new_pipeline::ast::fact::{AndFact, AtomicFact, ChainFact, Fact};
+use crate::new_pipeline::ast::fact::{AndFact, AtomicFact, ChainFact, Fact, OrFact};
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::names::AtomicName;
-use crate::new_pipeline::exec_env::exec_env::PropAlgebraicProperty;
+use crate::new_pipeline::exec_env::exec_env::PropRewriteProperty;
 use crate::new_pipeline::exec_env::helper::atomic_fact_has_positive_polarity;
 use crate::new_pipeline::parse::keywords::{
     EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL,
@@ -31,8 +31,11 @@ impl Runtime {
                 let stored = self.store_chain_fact(chain_fact)?;
                 Ok(StoreFactAndInferResult::ChainFact(stored))
             }
-            Fact::OrFact(_)
-            | Fact::ExistFact(_)
+            Fact::OrFact(or_fact) => {
+                let stored = self.store_or_fact(or_fact)?;
+                Ok(StoreFactAndInferResult::OrFact(stored))
+            }
+            Fact::ExistFact(_)
             | Fact::ForallFact(_)
             | Fact::ForallFactWithIff(_)
             | Fact::NotForall(_) => {
@@ -66,6 +69,20 @@ impl Runtime {
             whole_fact_id,
             fact: and_fact.clone(),
             components,
+        })
+    }
+
+    // Or: record whole into facts_by_id and known_or. Do not split branches.
+    // Example: `1 = 1 or 1 = 2` → known_or only.
+    fn store_or_fact(&mut self, or_fact: &OrFact) -> RuntimeResult<StoreOrFactResult> {
+        let whole_fact_id = or_fact.fact_id;
+        let env = self.top_exec_env_mut();
+        env.facts.known_or.store(or_fact);
+        env.facts
+            .record_fact(whole_fact_id, Fact::OrFact(or_fact.clone()));
+        Ok(StoreOrFactResult {
+            whole_fact_id,
+            fact: or_fact.clone(),
         })
     }
 
@@ -329,10 +346,10 @@ impl Runtime {
 
     fn prop_is_known_transitive(&self, prop: &AtomicName) -> bool {
         for env in self.execution_environments_stack.iter().rev() {
-            if let Some(props) = env.prop_algebraic_properties.get(prop) {
+            if let Some(props) = env.prop_rewrite_properties.get(prop) {
                 if props
                     .iter()
-                    .any(|p| matches!(p, PropAlgebraicProperty::Transitive))
+                    .any(|p| matches!(p, PropRewriteProperty::Transitive))
                 {
                     return true;
                 }

@@ -75,7 +75,7 @@ impl Runtime {
 pub(super) fn trust_verify_state() -> VerifyState {
     VerifyState {
         can_use_forall_fact: true,
-        can_use_algebraic_rewrite: true,
+        can_use_rewrite: true,
         store_well_defined_fact: true,
     }
 }

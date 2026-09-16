@@ -1,4 +1,4 @@
-use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact};
+use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact, OrFact};
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::exec_env::known_forall_conclusion_memory::KnownForallConclusionMemory;
@@ -16,6 +16,7 @@ pub struct KnownFactMemory {
     pub facts_by_id: HashMap<FactId, Fact>,
     pub known_equality: KnownEqualityMemory,
     pub known_atomic_except_equality_facts: AtomicExceptEqualityFactMemory,
+    pub known_or: OrFactMemory,
     pub known_forall_conclusions: KnownForallConclusionMemory,
 }
 
@@ -47,12 +48,19 @@ pub struct AtomicExceptEqualityFactMemory {
     pub by_prop: HashMap<(AtomicName, bool), Vec<AtomicFact>>,
 }
 
+// Stored whole or-facts by structural index key (not full arg IR).
+#[derive(Clone, Default)]
+pub struct OrFactMemory {
+    pub by_key: HashMap<String, Vec<OrFact>>,
+}
+
 impl KnownFactMemory {
     pub fn new() -> Self {
         Self {
             facts_by_id: HashMap::new(),
             known_equality: KnownEqualityMemory::new(),
             known_atomic_except_equality_facts: AtomicExceptEqualityFactMemory::new(),
+            known_or: OrFactMemory::new(),
             known_forall_conclusions: KnownForallConclusionMemory::new(),
         }
     }
@@ -168,5 +176,16 @@ impl AtomicExceptEqualityFactMemory {
             .entry((key, positive_polarity))
             .or_default()
             .push(fact);
+    }
+}
+
+impl OrFactMemory {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn store(&mut self, or_fact: &OrFact) {
+        let key = crate::new_pipeline::exec_env::helper::or_fact_index_key(or_fact);
+        self.by_key.entry(key).or_default().push(or_fact.clone());
     }
 }

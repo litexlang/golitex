@@ -5,9 +5,9 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
     // Stage order: builtin rule → known atomic → builtin strategy →
-    // by definition → known forall → (if allowed) builtin algebraic rewrite →
-    // known algebraic rewrite.
-    // Algebraic rewrite stages replace legacy opaque resolve_obj with explicit
+    // by definition → known forall → (if allowed) builtin rewrite →
+    // known rewrite.
+    // Rewrite stages replace legacy opaque resolve_obj with explicit
     // certificates (OrderDual, registered reflexivity/symmetry, …).
     // Ok(None) means no proof found; that is not a runtime error.
     pub fn search_atomic_except_equality_fact_proof(
@@ -62,26 +62,26 @@ impl Runtime {
             }
         }
 
-        if verify_state.can_use_algebraic_rewrite {
+        if verify_state.can_use_rewrite {
             if let Some(result) = self
-                .search_atomic_except_equality_fact_proof_by_builtin_algebraic_rewrite(
+                .search_atomic_except_equality_fact_proof_by_builtin_rewrite(
                     fact,
                     verify_state.clone(),
                 )?
             {
                 return Ok(Some(
-                    AtomicExceptEqualityFactSearchedProof::ByBuiltinAlgebraicRewrite(result),
+                    AtomicExceptEqualityFactSearchedProof::ByBuiltinRewrite(result),
                 ));
             }
 
             if let Some(result) = self
-                .search_atomic_except_equality_fact_proof_by_known_algebraic_rewrite(
+                .search_atomic_except_equality_fact_proof_by_known_rewrite(
                     fact,
                     verify_state,
                 )?
             {
                 return Ok(Some(
-                    AtomicExceptEqualityFactSearchedProof::ByKnownAlgebraicRewrite(result),
+                    AtomicExceptEqualityFactSearchedProof::ByKnownRewrite(result),
                 ));
             }
         }

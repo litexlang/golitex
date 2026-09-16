@@ -14,6 +14,9 @@ pub enum FactWellDefinedProof {
     ChainFact {
         adjacent: Vec<AtomicFactWellDefinedProof>,
     },
+    OrFact {
+        branches: Vec<FactWellDefinedProof>,
+    },
     // Temporary: remaining composite WD pipelines are still draft-only.
     CompositePending,
 }
@@ -83,8 +86,24 @@ impl Runtime {
                     FactWellDefinedProof::ChainFact { adjacent },
                 ))
             }
-            Fact::OrFact(_)
-            | Fact::ExistFact(_)
+            Fact::OrFact(or_fact) => {
+                let mut branches = Vec::with_capacity(or_fact.facts.len());
+                for branch in &or_fact.facts {
+                    let branch_fact = crate::new_pipeline::exec_env::helper::and_chain_as_fact(branch);
+                    match self.verify_fact_well_definedness(&branch_fact, verify_state.clone())? {
+                        VerifyFactWellDefinedResult::Success(proof) => {
+                            branches.push(proof);
+                        }
+                        VerifyFactWellDefinedResult::Failed(reason) => {
+                            return Ok(VerifyFactWellDefinedResult::Failed(reason));
+                        }
+                    }
+                }
+                Ok(VerifyFactWellDefinedResult::Success(
+                    FactWellDefinedProof::OrFact { branches },
+                ))
+            }
+            Fact::ExistFact(_)
             | Fact::ForallFact(_)
             | Fact::ForallFactWithIff(_)
             | Fact::NotForall(_) => Ok(VerifyFactWellDefinedResult::Success(

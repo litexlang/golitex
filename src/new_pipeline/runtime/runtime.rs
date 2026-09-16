@@ -1,6 +1,6 @@
 use super::error::{RuntimeError, RuntimeResult};
 use super::real_or_virtual_path::RealOrVirtualPath;
-use super::runtime_ids::{FactId, IdentifierId, PropAlgebraicPropertyId, WellDefinednessId};
+use super::runtime_ids::{FactId, IdentifierId, PropRewritePropertyId, WellDefinednessId};
 use crate::new_pipeline::ast::names::{AtomicName, BoundName};
 use crate::new_pipeline::launch_command::LaunchCommand;
 use crate::new_pipeline::exec_env::exec_env::ExecEnv;
@@ -37,7 +37,7 @@ pub struct ParseScope {
 pub struct Ids {
     next_fact_id: FactId,
     next_well_definedness_id: WellDefinednessId,
-    next_prop_algebraic_property_id: PropAlgebraicPropertyId,
+    next_prop_rewrite_property_id: PropRewritePropertyId,
     next_identifier_id: IdentifierId,
 }
 
@@ -235,7 +235,7 @@ impl Ids {
         Self {
             next_fact_id: FactId::new(1),
             next_well_definedness_id: WellDefinednessId::new(1),
-            next_prop_algebraic_property_id: PropAlgebraicPropertyId::new(1),
+            next_prop_rewrite_property_id: PropRewritePropertyId::new(1),
             next_identifier_id: IdentifierId::new(1),
         }
     }
@@ -252,9 +252,9 @@ impl Ids {
         current
     }
 
-    pub fn allocate_prop_algebraic_property_id(&mut self) -> PropAlgebraicPropertyId {
-        let current = self.next_prop_algebraic_property_id;
-        self.next_prop_algebraic_property_id = current.add_one();
+    pub fn allocate_prop_rewrite_property_id(&mut self) -> PropRewritePropertyId {
+        let current = self.next_prop_rewrite_property_id;
+        self.next_prop_rewrite_property_id = current.add_one();
         current
     }
 

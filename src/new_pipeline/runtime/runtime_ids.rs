@@ -7,7 +7,7 @@ pub struct FactId(u64);
 pub struct WellDefinednessId(u64);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct PropAlgebraicPropertyId(u64);
+pub struct PropRewritePropertyId(u64);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct IdentifierId(u64);
@@ -40,7 +40,7 @@ impl WellDefinednessId {
     }
 }
 
-impl PropAlgebraicPropertyId {
+impl PropRewritePropertyId {
     pub fn new(value: u64) -> Self {
         Self(value)
     }
@@ -80,9 +80,9 @@ impl fmt::Display for WellDefinednessId {
     }
 }
 
-impl fmt::Display for PropAlgebraicPropertyId {
+impl fmt::Display for PropRewritePropertyId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "pap{}", self.0)
+        write!(f, "prp{}", self.0)
     }
 }
 

@@ -13,10 +13,7 @@ impl Runtime {
             Fact::AtomicFact(fact) => self.verify_atomic_fact(fact, verify_state),
             Fact::AndFact(fact) => self.verify_and_fact(fact, verify_state),
             Fact::ChainFact(fact) => self.verify_chain_fact(fact, verify_state),
-            Fact::OrFact(fact) => match self.verify_or_fact(fact, verify_state)? {
-                Some(r) => Ok(VerifyFactResult::OrFact(Box::new(r))),
-                None => Ok(VerifyFactResult::FailToSearchProof),
-            },
+            Fact::OrFact(fact) => self.verify_or_fact(fact, verify_state),
             Fact::ExistFact(fact) => match self.verify_exist_fact(fact, verify_state)? {
                 Some(r) => Ok(VerifyFactResult::ExistFact(Box::new(r))),
                 None => Ok(VerifyFactResult::FailToSearchProof),
