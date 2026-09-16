@@ -1,11 +1,13 @@
+use crate::new_pipeline::launch_command::LaunchCommand;
 use super::run_command::NEW_PIPELINE_VERSION;
 use crate::new_pipeline::runtime::{RealOrVirtualPath, Runtime, RuntimeError, RuntimeResult};
 use crate::new_pipeline::LITEX;
 use std::io::{self, Write};
 
 /// Interactive REPL on a fresh empty Runtime.
-pub fn run_repl() -> RuntimeResult<()> {
+pub fn run_repl(command: LaunchCommand) -> RuntimeResult<()> {
     let mut runtime = Runtime::new();
+    runtime.launch_command = command;
     // Pretend module mount already succeeded with an empty context.
     runtime.begin_file(RealOrVirtualPath::Repl);
     run_repl_loop(&mut runtime)

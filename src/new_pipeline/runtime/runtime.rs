@@ -2,6 +2,7 @@ use super::error::{RuntimeError, RuntimeResult};
 use super::real_or_virtual_path::RealOrVirtualPath;
 use super::runtime_ids::{FactId, PropAlgebraicPropertyId, WellDefinednessId};
 use crate::new_pipeline::ast::names::AtomicName;
+use crate::new_pipeline::launch_command::LaunchCommand;
 use crate::new_pipeline::exec_env::exec_env::ExecEnv;
 use crate::new_pipeline::module_manager::{ExportFileAndItsExecEnv, GlobalModuleManager};
 use std::collections::HashSet;
@@ -22,6 +23,8 @@ pub struct Runtime {
     pub parse_scope_stack: Vec<Box<ParseScope>>,
     pub current_file: RealOrVirtualPath,
     pub ids: Ids,
+    /// How this Runtime session was launched (`-strict` / `-session` live here).
+    pub launch_command: LaunchCommand,
 }
 
 /// One parse layer's occupied names. Inner scopes must not reuse a visible outer name.
@@ -48,6 +51,7 @@ impl Runtime {
             parse_scope_stack: Vec::new(),
             current_file: RealOrVirtualPath::Eval,
             ids: Ids::new(),
+            launch_command: LaunchCommand::Repl { strict: false },
         }
     }
 
