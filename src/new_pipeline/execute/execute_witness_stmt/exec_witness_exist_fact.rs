@@ -234,7 +234,7 @@ impl Runtime {
         let mut witness_index = 0;
         for group in &plain.typed_parameters.groups {
             for param in &group.params {
-                subst.insert(param.clone(), equal_tos[witness_index].clone());
+                subst.insert(param.id, equal_tos[witness_index].clone());
                 witness_index += 1;
             }
         }

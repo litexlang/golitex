@@ -5,29 +5,25 @@ This module owns two views of new_pipeline AST:
 | API | Role |
 |-----|------|
 | `ir` | Typed semantic key (`*IR` newtypes) for lookup / compare |
-| `display_string` | User-facing `String` (binder objs use `.surface`; otherwise usually IR spelling) |
+| `display_string` | User-facing `String` |
 
 Surface spelling (operators, `$in`, precedence parentheses, keywords) follows the
 legacy Litex Display contract. FactId and line_file never appear in either view.
 
 For every AST type in this module, these are the **only** two methods.
 
-## Symbol identity (locked)
+## Symbol identity
 
-See [`../identifier_identity.md`](../identifier_identity.md) — the canonical
-note on **name is identity**, why `IdentifierId` was removed (false IR-key
-misses / true shadowing conflicts), Obj WD ByKnown contracts,
-and the do-not-break checklist.
+See [`../identifier_identity.md`](../identifier_identity.md).
 
-**Name is identity:** the same surface name (plain, `Mod::name`, or
-`Mod::Export::name`) always
-denotes the same symbol. No shadowing; no same-name nested binders. IR
-keys use the surface name spelling directly.
-
-Binder-carrying objects (`SetBuilder`, `FnSet`, `AnonymousFn`) store
-`surface` (user letters, display) and `alpha` (`□N`, ops / `ir` / known-memory keys).
-Tokenizer rejects source tokens starting with `__` (Lean/codegen reserve).
-Do not free-occupy `□N`.
+- **Plain** identifiers: `ir` = `#<IdentifierId>#<name>` (e.g. `#3#x`);
+  `display_string` = surface name only (`x`).
+- **Qualified** identifiers: IR and display use the same qualified spelling
+  (no `IdentifierId`).
+- **Binder objs** (`SetBuilder` / `FnSet` / `AnonymousFn`): single body;
+  binder slots are `BoundName`, so their IR also embeds `#id#name`.
+- No shadowing; no same-name nested binders (parse occupy).
+- Tokenizer rejects source tokens starting with `__` (Lean/codegen reserve).
 
 ## Typed IR wrappers
 
@@ -36,15 +32,12 @@ Do not free-occupy `□N`.
 | `ObjIR` | `Obj` and obj leaves |
 | `FactIR` | `Fact` / `AtomicFact` and fact leaves |
 | `StmtIR` | `Stmt` and statement leaves |
-| `ParamIR` | parameter lists / `AtomicName` |
+| `ParamIR` | parameter lists / `AtomicName` / `BoundName` |
 
 Construction is only through `ir()` in this module
 (the `String` field is module-private). Arbitrary `String` values cannot become
 IR keys by conversion. When user-facing text is needed, call `display_string()`
 on the AST value or on the IR wrapper.
-
-Binder slots use `□N` in `ir` (Litex-internal identity). `__…` is Lean-only and
-must not appear in Litex source.
 
 ## Two methods only
 
@@ -56,6 +49,9 @@ pub fn display_string(&self) -> String {
     self.ir().display_string()
 }
 ```
+
+Exception: plain identifiers and binder-carrying objs override `display_string`
+to show surface names while `ir` keeps `#id#name`.
 
 Obj arithmetic precedence parentheses are handled inside `Obj::ir`
 (via a local nested function when needed).

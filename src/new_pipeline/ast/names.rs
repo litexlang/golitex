@@ -9,11 +9,37 @@
 //!
 //! Surface `a::b` / `a::b::c` / `a:::b` are elaborated via GlobalModuleManager.
 //! Definition-side store keys remain unqualified `PlainName`.
+//! Plain object/binder occurrences carry [`BoundName`] / `IdentifierId`.
 
 use std::fmt;
 
+use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
+
 /// Unqualified local name (`foo`). Alias of `String`.
 pub type PlainName = String;
+
+/// Local binder / defined plain name with a parse-allocated occurrence id.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct BoundName {
+    pub id: IdentifierId,
+    pub name: PlainName,
+}
+
+impl BoundName {
+    pub fn new(id: IdentifierId, name: PlainName) -> Self {
+        Self { id, name }
+    }
+
+    pub fn ir_string(&self) -> String {
+        format!("#{}#{}", self.id.value(), self.name)
+    }
+}
+
+impl fmt::Display for BoundName {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.name)
+    }
+}
 
 /// Qualified or plain atom name. Identity for quals is ids + `name`.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]

@@ -4,10 +4,10 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 // Builtin ByEqualIr: left and right have the same ObjIR ⇒ equality.
 //
-// Mathematical property: after binder objs are alpha-normalized into IR
-// (`□N` slots), two objects with identical IR are the same identity key.
-// Example: prove `{x R: x > 0} = {y R: y > 0}` because both IR as
-// `{□0 R: □0 > 0}`.
+// Mathematical property: identical IR keys denote the same object identity
+// for exact match. Plain IR embeds `#id#name`, so two binders that only share
+// a letter are not EqualIr-equal. Set-builder alpha equality is deferred.
+// Example: prove `1 + 0 = 1 + 0` because both sides share the same ObjIR.
 //
 // Proof payload is empty: the compared sides live on the surrounding EqualFact.
 pub struct ByEqualIrBuiltinRuleProof {}

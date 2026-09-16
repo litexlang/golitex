@@ -89,19 +89,19 @@ impl Runtime {
         let mut stored_fact_ids = Vec::new();
         for group in &typed_parameters.groups {
             for identifier in &group.params {
-                if self.identifier_defined_in_stack(identifier) {
+                if self.identifier_defined_in_stack(&identifier.name) {
                     return Err(RuntimeError::InternalBug(format!(
                         "identifier `{}` is already defined in this ExecEnv",
-                        identifier
+                        identifier.name
                     )));
                 }
                 self.top_exec_env_mut().definitions.identifiers.insert(
-                    identifier.clone(),
+                    identifier.name.clone(),
                     DefinedIdentifierInfo {
-                        identifier: identifier.clone(),
+                        identifier: identifier.name.clone(),
                     },
                 );
-                let element = Obj::Identifier(IdentifierObj::plain(identifier.clone()));
+                let element = Obj::Identifier(IdentifierObj::from_bound_name(identifier));
                 let type_fact = match &group.param_type {
                     ParamType::Obj(param_set) => Fact::AtomicFact(AtomicFact::InFact(InFact {
                         fact_id: self.ids.allocate_fact_id(),

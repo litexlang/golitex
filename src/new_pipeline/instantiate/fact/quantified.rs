@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
+
 use crate::new_pipeline::ast::fact::{
     ExistFact, ExistOrAndChainAtomicFact, Fact, ForallFact, ForallFactWithIff, NotForallFact,
     PlainExistFact,
@@ -15,18 +17,17 @@ impl Runtime {
     pub(crate) fn inst_fact_rec(
         &mut self,
         fact: &Fact,
-        param_to_arg_map: &HashMap<String, Obj>,
-        fresh: &mut u64,
-        binder_renames: &HashMap<String, String>,
+        param_to_arg_map: &HashMap<IdentifierId, Obj>,
+
     ) -> Result<Fact, InstError> {
         match fact {
             Fact::AtomicFact(a) => Ok(Fact::AtomicFact(
-                self.inst_atomic_fact_rec(a, param_to_arg_map, fresh, binder_renames)?,
+                self.inst_atomic_fact_rec(a, param_to_arg_map)?,
             )),
             Fact::AndFact(a) => {
                 let mut facts = Vec::with_capacity(a.facts.len());
                 for f in &a.facts {
-                    facts.push(self.inst_atomic_fact_rec(f, param_to_arg_map, fresh, binder_renames)?);
+                    facts.push(self.inst_atomic_fact_rec(f, param_to_arg_map)?);
                 }
                 Ok(Fact::AndFact(crate::new_pipeline::ast::fact::AndFact {
                     fact_id: self.ids.allocate_fact_id(),
@@ -37,7 +38,7 @@ impl Runtime {
             Fact::ChainFact(c) => {
                 let mut objs = Vec::with_capacity(c.objs.len());
                 for o in &c.objs {
-                    objs.push(self.inst_obj_rec(o, param_to_arg_map, fresh, binder_renames)?);
+                    objs.push(self.inst_obj_rec(o, param_to_arg_map)?);
                 }
                 Ok(Fact::ChainFact(crate::new_pipeline::ast::fact::ChainFact {
                     fact_id: self.ids.allocate_fact_id(),
@@ -49,7 +50,7 @@ impl Runtime {
             Fact::OrFact(o) => {
                 let mut facts = Vec::with_capacity(o.facts.len());
                 for f in &o.facts {
-                    facts.push(self.inst_and_chain_atomic(f, param_to_arg_map, fresh, binder_renames)?);
+                    facts.push(self.inst_and_chain_atomic(f, param_to_arg_map)?);
                 }
                 Ok(Fact::OrFact(crate::new_pipeline::ast::fact::OrFact {
                     fact_id: self.ids.allocate_fact_id(),
@@ -60,23 +61,17 @@ impl Runtime {
             Fact::ExistFact(e) => Ok(Fact::ExistFact(self.inst_exist_fact(
                 e,
                 param_to_arg_map,
-                fresh,
-                binder_renames,
             )?)),
             Fact::ForallFact(f) => Ok(Fact::ForallFact(self.inst_forall_fact(
                 f,
                 param_to_arg_map,
-                fresh,
-                binder_renames,
             )?)),
             Fact::ForallFactWithIff(f) => Ok(Fact::ForallFactWithIff(
-                self.inst_forall_fact_with_iff(f, param_to_arg_map, fresh, binder_renames)?,
+                self.inst_forall_fact_with_iff(f, param_to_arg_map)?,
             )),
             Fact::NotForall(f) => Ok(Fact::NotForall(self.inst_not_forall_fact(
                 f,
                 param_to_arg_map,
-                fresh,
-                binder_renames,
             )?)),
         }
     }
@@ -84,17 +79,14 @@ impl Runtime {
     fn inst_plain_exist_fact_contents(
         &mut self,
         plain: &PlainExistFact,
-        param_to_arg_map: &HashMap<String, Obj>,
-        fresh: &mut u64,
-        binder_renames: &HashMap<String, String>,
+        param_to_arg_map: &HashMap<IdentifierId, Obj>,
+
     ) -> Result<PlainExistFact, InstError> {
         let typed_parameters = self.inst_typed_parameter_list(
             &plain.typed_parameters,
             param_to_arg_map,
-            fresh,
-            binder_renames,
         )?;
-        let facts = self.inst_qf_facts_rec(&plain.facts, param_to_arg_map, fresh, binder_renames)?;
+        let facts = self.inst_qf_facts_rec(&plain.facts, param_to_arg_map)?;
         Ok(PlainExistFact {
             fact_id: self.ids.allocate_fact_id(),
             typed_parameters,
@@ -106,42 +98,31 @@ impl Runtime {
     fn inst_plain_exist_fact(
         &mut self,
         plain: &PlainExistFact,
-        param_to_arg_map: &HashMap<String, Obj>,
-        fresh: &mut u64,
-        binder_renames: &HashMap<String, String>,
+        param_to_arg_map: &HashMap<IdentifierId, Obj>,
     ) -> Result<PlainExistFact, InstError> {
-        let names = param::typed_param_names(&plain.typed_parameters);
-        let binders = capture::prepare_binders(&names, param_to_arg_map, fresh);
-        let (shadowed, new_renames) =
-            capture::shadowed_subst_and_renames(param_to_arg_map, binder_renames, &binders);
-        self.inst_plain_exist_fact_contents(plain, &shadowed, fresh, &new_renames)
+        let ids = param::typed_param_ids(&plain.typed_parameters);
+        let shadowed = capture::shadow_binder_ids(param_to_arg_map, &ids);
+        self.inst_plain_exist_fact_contents(plain, &shadowed)
     }
 
     fn inst_exist_fact(
         &mut self,
         exist: &ExistFact,
-        param_to_arg_map: &HashMap<String, Obj>,
-        fresh: &mut u64,
-        binder_renames: &HashMap<String, String>,
+        param_to_arg_map: &HashMap<IdentifierId, Obj>,
+
     ) -> Result<ExistFact, InstError> {
         match exist {
             ExistFact::PlainExistFact(p) => Ok(ExistFact::PlainExistFact(self.inst_plain_exist_fact(
                 p,
                 param_to_arg_map,
-                fresh,
-                binder_renames,
             )?)),
             ExistFact::ExistUniqueFact(p) => Ok(ExistFact::ExistUniqueFact(self.inst_plain_exist_fact(
                 p,
                 param_to_arg_map,
-                fresh,
-                binder_renames,
             )?)),
             ExistFact::NotExistFact(p) => Ok(ExistFact::NotExistFact(self.inst_plain_exist_fact(
                 p,
                 param_to_arg_map,
-                fresh,
-                binder_renames,
             )?)),
         }
     }
@@ -149,27 +130,22 @@ impl Runtime {
     fn inst_forall_fact_contents(
         &mut self,
         forall: &ForallFact,
-        param_to_arg_map: &HashMap<String, Obj>,
-        fresh: &mut u64,
-        binder_renames: &HashMap<String, String>,
+        param_to_arg_map: &HashMap<IdentifierId, Obj>,
+
     ) -> Result<ForallFact, InstError> {
         let typed_parameters = self.inst_typed_parameter_list(
             &forall.typed_parameters,
             param_to_arg_map,
-            fresh,
-            binder_renames,
         )?;
         let mut dom_facts = Vec::with_capacity(forall.dom_facts.len());
         for dom in &forall.dom_facts {
-            dom_facts.push(self.inst_fact_rec(dom, param_to_arg_map, fresh, binder_renames)?);
+            dom_facts.push(self.inst_fact_rec(dom, param_to_arg_map)?);
         }
         let mut then_facts = Vec::with_capacity(forall.then_facts.len());
         for then in &forall.then_facts {
             then_facts.push(self.inst_exist_or_and_chain_atomic(
                 then,
                 param_to_arg_map,
-                fresh,
-                binder_renames,
             )?);
         }
         Ok(ForallFact {
@@ -184,36 +160,26 @@ impl Runtime {
     fn inst_forall_fact(
         &mut self,
         forall: &ForallFact,
-        param_to_arg_map: &HashMap<String, Obj>,
-        fresh: &mut u64,
-        binder_renames: &HashMap<String, String>,
+        param_to_arg_map: &HashMap<IdentifierId, Obj>,
     ) -> Result<ForallFact, InstError> {
-        let names = param::typed_param_names(&forall.typed_parameters);
-        let binders = capture::prepare_binders(&names, param_to_arg_map, fresh);
-        let (shadowed, new_renames) =
-            capture::shadowed_subst_and_renames(param_to_arg_map, binder_renames, &binders);
-        self.inst_forall_fact_contents(forall, &shadowed, fresh, &new_renames)
+        let ids = param::typed_param_ids(&forall.typed_parameters);
+        let shadowed = capture::shadow_binder_ids(param_to_arg_map, &ids);
+        self.inst_forall_fact_contents(forall, &shadowed)
     }
 
     fn inst_forall_fact_with_iff(
         &mut self,
         f: &ForallFactWithIff,
-        param_to_arg_map: &HashMap<String, Obj>,
-        fresh: &mut u64,
-        binder_renames: &HashMap<String, String>,
+        param_to_arg_map: &HashMap<IdentifierId, Obj>,
     ) -> Result<ForallFactWithIff, InstError> {
-        let names = param::typed_param_names(&f.forall_fact.typed_parameters);
-        let binders = capture::prepare_binders(&names, param_to_arg_map, fresh);
-        let (shadowed, new_renames) =
-            capture::shadowed_subst_and_renames(param_to_arg_map, binder_renames, &binders);
-        let forall_fact = self.inst_forall_fact_contents(&f.forall_fact, &shadowed, fresh, &new_renames)?;
+        let ids = param::typed_param_ids(&f.forall_fact.typed_parameters);
+        let shadowed = capture::shadow_binder_ids(param_to_arg_map, &ids);
+        let forall_fact = self.inst_forall_fact_contents(&f.forall_fact, &shadowed)?;
         let mut iff_facts = Vec::with_capacity(f.iff_facts.len());
         for iff in &f.iff_facts {
             iff_facts.push(self.inst_exist_or_and_chain_atomic(
                 iff,
                 &shadowed,
-                fresh,
-                &new_renames,
             )?);
         }
         Ok(ForallFactWithIff {
@@ -227,31 +193,29 @@ impl Runtime {
     fn inst_not_forall_fact(
         &mut self,
         f: &NotForallFact,
-        param_to_arg_map: &HashMap<String, Obj>,
-        fresh: &mut u64,
-        binder_renames: &HashMap<String, String>,
+        param_to_arg_map: &HashMap<IdentifierId, Obj>,
+
     ) -> Result<NotForallFact, InstError> {
         Ok(NotForallFact {
             fact_id: self.ids.allocate_fact_id(),
-            forall_fact: self.inst_forall_fact(&f.forall_fact, param_to_arg_map, fresh, binder_renames)?,
+            forall_fact: self.inst_forall_fact(&f.forall_fact, param_to_arg_map)?,
         })
     }
 
     fn inst_exist_or_and_chain_atomic(
         &mut self,
         fact: &ExistOrAndChainAtomicFact,
-        param_to_arg_map: &HashMap<String, Obj>,
-        fresh: &mut u64,
-        binder_renames: &HashMap<String, String>,
+        param_to_arg_map: &HashMap<IdentifierId, Obj>,
+
     ) -> Result<ExistOrAndChainAtomicFact, InstError> {
         match fact {
             ExistOrAndChainAtomicFact::AtomicFact(a) => Ok(ExistOrAndChainAtomicFact::AtomicFact(
-                self.inst_atomic_fact_rec(a, param_to_arg_map, fresh, binder_renames)?,
+                self.inst_atomic_fact_rec(a, param_to_arg_map)?,
             )),
             ExistOrAndChainAtomicFact::AndFact(a) => {
                 let mut facts = Vec::with_capacity(a.facts.len());
                 for f in &a.facts {
-                    facts.push(self.inst_atomic_fact_rec(f, param_to_arg_map, fresh, binder_renames)?);
+                    facts.push(self.inst_atomic_fact_rec(f, param_to_arg_map)?);
                 }
                 Ok(ExistOrAndChainAtomicFact::AndFact(
                     crate::new_pipeline::ast::fact::AndFact {
@@ -264,7 +228,7 @@ impl Runtime {
             ExistOrAndChainAtomicFact::ChainFact(c) => {
                 let mut objs = Vec::with_capacity(c.objs.len());
                 for o in &c.objs {
-                    objs.push(self.inst_obj_rec(o, param_to_arg_map, fresh, binder_renames)?);
+                    objs.push(self.inst_obj_rec(o, param_to_arg_map)?);
                 }
                 Ok(ExistOrAndChainAtomicFact::ChainFact(
                     crate::new_pipeline::ast::fact::ChainFact {
@@ -278,7 +242,7 @@ impl Runtime {
             ExistOrAndChainAtomicFact::OrFact(o) => {
                 let mut facts = Vec::with_capacity(o.facts.len());
                 for f in &o.facts {
-                    facts.push(self.inst_and_chain_atomic(f, param_to_arg_map, fresh, binder_renames)?);
+                    facts.push(self.inst_and_chain_atomic(f, param_to_arg_map)?);
                 }
                 Ok(ExistOrAndChainAtomicFact::OrFact(
                     crate::new_pipeline::ast::fact::OrFact {
@@ -289,7 +253,7 @@ impl Runtime {
                 ))
             }
             ExistOrAndChainAtomicFact::ExistFact(e) => Ok(ExistOrAndChainAtomicFact::ExistFact(
-                self.inst_exist_fact(e, param_to_arg_map, fresh, binder_renames)?,
+                self.inst_exist_fact(e, param_to_arg_map)?,
             )),
         }
     }

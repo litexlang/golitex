@@ -390,7 +390,7 @@ impl FnSetClause {
 
 impl HaveFnEqualStmt {
     pub fn ir(&self) -> StmtIR {
-        let body = &self.equal_to_anonymous_fn.alpha.body;
+        let body = &self.equal_to_anonymous_fn.body;
         let params: Vec<_> = body
             .set_bound_parameters
             .groups
@@ -418,12 +418,12 @@ impl HaveFnEqualStmt {
         out.push_str(&format!(
             " {} {}",
             EQUAL,
-            self.equal_to_anonymous_fn.alpha.equal_to.as_ref().ir()
+            self.equal_to_anonymous_fn.equal_to.as_ref().ir()
         ));
         StmtIR(out)
     }
     pub fn display_string(&self) -> String {
-        let body = &self.equal_to_anonymous_fn.surface.body;
+        let body = &self.equal_to_anonymous_fn.body;
         let params: Vec<_> = body
             .set_bound_parameters
             .groups
@@ -452,7 +452,6 @@ impl HaveFnEqualStmt {
             " {} {}",
             EQUAL,
             self.equal_to_anonymous_fn
-                .surface
                 .equal_to
                 .as_ref()
                 .display_string()

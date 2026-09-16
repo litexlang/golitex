@@ -5,8 +5,7 @@
 //! inside compound objs are not matched yet.
 
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact, ForallFact};
-use crate::new_pipeline::ast::names::AtomicName;
-use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::ast::obj::{IdentifierObj, Obj};
 use crate::new_pipeline::ast::param::TypedParameterList;
 use crate::new_pipeline::exec_env::helper::{
     atomic_fact_args_ref, atomic_fact_has_positive_polarity,
@@ -16,6 +15,7 @@ use crate::new_pipeline::exec_env::known_forall_conclusion_memory::{
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
+use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeResult};
 use std::collections::{HashMap, HashSet};
 
@@ -88,29 +88,29 @@ impl Runtime {
             return Ok(None);
         }
 
-        let param_names = ordered_param_names(&forall.typed_parameters);
-        let param_set: HashSet<String> = param_names.iter().cloned().collect();
+        let param_ids = ordered_param_ids(&forall.typed_parameters);
+        let param_set: HashSet<IdentifierId> = param_ids.iter().copied().collect();
         let conclusion_args = atomic_fact_args_ref(&conclusion);
         let goal_args = atomic_fact_args_ref(goal);
         if conclusion_args.len() != goal_args.len() {
             return Ok(None);
         }
 
-        let mut subst: HashMap<String, Obj> = HashMap::new();
+        let mut subst: HashMap<IdentifierId, Obj> = HashMap::new();
         for (pattern_arg, goal_arg) in conclusion_args.iter().zip(goal_args.iter()) {
             if !unify_obj_phase1(pattern_arg, goal_arg, &param_set, &mut subst) {
                 return Ok(None);
             }
         }
-        for name in &param_names {
-            if !subst.contains_key(name) {
+        for id in &param_ids {
+            if !subst.contains_key(id) {
                 return Ok(None);
             }
         }
 
-        let forall_parameters_match_what_args: Vec<Obj> = param_names
+        let forall_parameters_match_what_args: Vec<Obj> = param_ids
             .iter()
-            .map(|name| subst.get(name).expect("checked").clone())
+            .map(|id| subst.get(id).expect("checked").clone())
             .collect();
 
         let requirement_facts = match self.build_requirement_facts(&forall, &subst)? {
@@ -146,7 +146,7 @@ impl Runtime {
     fn build_requirement_facts(
         &mut self,
         forall: &ForallFact,
-        subst: &HashMap<String, Obj>,
+        subst: &HashMap<IdentifierId, Obj>,
     ) -> RuntimeResult<Option<Vec<Fact>>> {
         // Param-type obligations deferred until type-fact store is wired.
         let mut requirements = Vec::new();
@@ -161,31 +161,29 @@ impl Runtime {
     }
 }
 
-fn ordered_param_names(params: &TypedParameterList) -> Vec<String> {
-    let mut names = Vec::new();
+fn ordered_param_ids(params: &TypedParameterList) -> Vec<IdentifierId> {
+    let mut ids = Vec::new();
     for group in &params.groups {
         for param in &group.params {
-            names.push(param.clone());
+            ids.push(param.id);
         }
     }
-    names
+    ids
 }
 
 fn unify_obj_phase1(
     pattern: &Obj,
     goal: &Obj,
-    param_names: &HashSet<String>,
-    subst: &mut HashMap<String, Obj>,
+    param_ids: &HashSet<IdentifierId>,
+    subst: &mut HashMap<IdentifierId, Obj>,
 ) -> bool {
-    if let Obj::Identifier(id) = pattern {
-        if let AtomicName::Plain { name } = &id.name {
-            if param_names.contains(name) {
-                if let Some(existing) = subst.get(name) {
-                    return existing.ir() == goal.ir();
-                }
-                subst.insert(name.clone(), goal.clone());
-                return true;
+    if let Obj::Identifier(IdentifierObj::Plain { id, .. }) = pattern {
+        if param_ids.contains(id) {
+            if let Some(existing) = subst.get(id) {
+                return existing.ir() == goal.ir();
             }
+            subst.insert(*id, goal.clone());
+            return true;
         }
     }
     pattern.ir() == goal.ir()

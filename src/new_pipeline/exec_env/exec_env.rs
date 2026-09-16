@@ -1,6 +1,6 @@
 use crate::new_pipeline::ast::names::{AtomicName, PlainName};
 use crate::new_pipeline::ast::obj::{
-    Cart, Div, FiniteSeqListObj, FiniteSeqSet, FnSetBody, Number, Obj, SetBuilder, Tuple,
+    Cart, Div, FiniteSeqListObj, FiniteSeqSet, FnSet, Number, Obj, SetBuilder, Tuple,
 };
 use crate::new_pipeline::ast::stmt::AxiomStmt;
 use crate::new_pipeline::ast::stmt::DefAbstractPropStmt;
@@ -119,7 +119,7 @@ pub enum SpecialObjProperty {
     FiniteSeqOwner((FiniteSeqSet, FactId)),
     SetBuilderEquality((SetBuilder, FactId)),
     SimplifiedValue((KnownObjValue, FactId)),
-    InFunctionSet((FnSetBody, FactId)),
+    InFunctionSet((FnSet, FactId)),
     EqualToFunction((Obj, FactId)),
 }
 

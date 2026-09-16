@@ -25,7 +25,11 @@ impl TypedParameterList {
         )
     }
     pub fn display_string(&self) -> String {
-        self.ir().display_string()
+        self.groups
+            .iter()
+            .map(|g| g.display_string())
+            .collect::<Vec<_>>()
+            .join(&format!("{} ", COMMA))
     }
 }
 
@@ -40,7 +44,11 @@ impl SetBoundParameterList {
         )
     }
     pub fn display_string(&self) -> String {
-        self.ir().display_string()
+        self.groups
+            .iter()
+            .map(|g| g.display_string())
+            .collect::<Vec<_>>()
+            .join(&format!("{} ", COMMA))
     }
 }
 
@@ -49,13 +57,18 @@ impl TypedParameterGroup {
         let params = self
             .params
             .iter()
-            .cloned()
+            .map(|p| p.ir_string())
             .collect::<Vec<_>>()
             .join(", ");
         ParamIR(format!("{} {}", params, self.param_type.ir().0))
     }
     pub fn display_string(&self) -> String {
-        let params = self.params.join(", ");
+        let params = self
+            .params
+            .iter()
+            .map(|p| p.name.as_str())
+            .collect::<Vec<_>>()
+            .join(", ");
         format!("{} {}", params, self.param_type.display_string())
     }
 }
@@ -65,13 +78,18 @@ impl SetBoundParameterGroup {
         let params = self
             .params
             .iter()
-            .cloned()
+            .map(|p| p.ir_string())
             .collect::<Vec<_>>()
             .join(", ");
         ParamIR(format!("{} {}", params, self.param_type.as_ref().ir().0))
     }
     pub fn display_string(&self) -> String {
-        let params = self.params.join(", ");
+        let params = self
+            .params
+            .iter()
+            .map(|p| p.name.as_str())
+            .collect::<Vec<_>>()
+            .join(", ");
         format!("{} {}", params, self.param_type.display_string())
     }
 }

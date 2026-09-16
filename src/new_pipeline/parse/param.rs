@@ -106,6 +106,7 @@ impl Runtime {
     }
 
     // Parse `(x, y)` bare names — defines each atom.
+    // Returns surface strings for stmt-only param lists (e.g. abstract_prop).
     pub(super) fn parse_name_list_in_parens(
         &mut self,
         tb: &mut TokenBlock,
@@ -122,7 +123,8 @@ impl Runtime {
                 )
                 .into());
             }
-            names.push(self.define_plain_atom_as_parse(tb, name)?);
+            let bound = self.define_plain_atom_as_parse(tb, name)?;
+            names.push(bound.name);
             if tb.peek() == Some(COMMA) {
                 tb.advance()?;
             }
@@ -197,23 +199,21 @@ impl Runtime {
         &mut self,
         tb: &TokenBlock,
         name: String,
-    ) -> RuntimeResult<String> {
-        self.define_plain_atom(name.clone())
-            .map_err(|err| match err {
-                crate::new_pipeline::runtime::RuntimeError::InternalBug(message) => {
-                    RuntimeParseError::new(message, tb.line, tb.source_path.clone()).into()
-                }
-                other => other,
-            })?;
-        Ok(name)
+    ) -> RuntimeResult<crate::new_pipeline::ast::names::BoundName> {
+        self.define_plain_atom(name).map_err(|err| match err {
+            crate::new_pipeline::runtime::RuntimeError::InternalBug(message) => {
+                RuntimeParseError::new(message, tb.line, tb.source_path.clone()).into()
+            }
+            other => other,
+        })
     }
 
-    pub(super) fn occupy_plain_atom_as_parse(
+    pub(super) fn occupy_bound_name_as_parse(
         &mut self,
         tb: &TokenBlock,
-        name: String,
+        bound: &crate::new_pipeline::ast::names::BoundName,
     ) -> RuntimeResult<()> {
-        self.occupy_plain_atom(name).map_err(|err| match err {
+        self.occupy_bound_name(bound).map_err(|err| match err {
             crate::new_pipeline::runtime::RuntimeError::InternalBug(message) => {
                 RuntimeParseError::new(message, tb.line, tb.source_path.clone()).into()
             }

@@ -20,7 +20,7 @@ impl Runtime {
         self.push_parse_scope();
         let result = (|| {
             let param_def = self.parse_typed_param_list_until_eq_colon_or_end(&mut tb)?;
-            let identifiers: Vec<String> = param_def
+            let identifiers: Vec<crate::new_pipeline::ast::names::BoundName> = param_def
                 .groups
                 .iter()
                 .flat_map(|g| g.params.iter().cloned())
@@ -71,8 +71,8 @@ impl Runtime {
 
         match result? {
             HaveObjKind::InSet(param_def, identifiers) => {
-                for identifier in identifiers {
-                    self.occupy_plain_atom_as_parse(block, identifier)?;
+                for identifier in &identifiers {
+                    self.occupy_bound_name_as_parse(block, identifier)?;
                 }
                 Ok(Stmt::Definition(DefinitionStmt::HaveObjInNonemptySetStmt(
                     HaveObjInNonemptySetOrParamTypeStmt {
@@ -82,8 +82,8 @@ impl Runtime {
                 )))
             }
             HaveObjKind::Equal(param_def, objs_equal_to, identifiers) => {
-                for identifier in identifiers {
-                    self.occupy_plain_atom_as_parse(block, identifier)?;
+                for identifier in &identifiers {
+                    self.occupy_bound_name_as_parse(block, identifier)?;
                 }
                 Ok(Stmt::Definition(DefinitionStmt::HaveObjEqualStmt(
                     HaveObjEqualStmt {
@@ -94,8 +94,8 @@ impl Runtime {
                 )))
             }
             HaveObjKind::ByExist(param_def, facts, identifiers) => {
-                for identifier in identifiers {
-                    self.occupy_plain_atom_as_parse(block, identifier)?;
+                for identifier in &identifiers {
+                    self.occupy_bound_name_as_parse(block, identifier)?;
                 }
                 Ok(Stmt::Definition(DefinitionStmt::HaveObjByExistFactsStmt(
                     HaveObjByExistFactsStmt {
@@ -112,16 +112,16 @@ impl Runtime {
 enum HaveObjKind {
     InSet(
         crate::new_pipeline::ast::param::TypedParameterList,
-        Vec<String>,
+        Vec<crate::new_pipeline::ast::names::BoundName>,
     ),
     Equal(
         crate::new_pipeline::ast::param::TypedParameterList,
         Vec<crate::new_pipeline::ast::obj::Obj>,
-        Vec<String>,
+        Vec<crate::new_pipeline::ast::names::BoundName>,
     ),
     ByExist(
         crate::new_pipeline::ast::param::TypedParameterList,
         Vec<crate::new_pipeline::ast::fact::QuantifierFreeFact>,
-        Vec<String>,
+        Vec<crate::new_pipeline::ast::names::BoundName>,
     ),
 }

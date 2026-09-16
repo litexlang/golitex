@@ -42,21 +42,21 @@ impl Runtime {
             return Ok(ExecLetObjStmtResult::Failed(value_well_defined));
         }
 
-        if self.identifier_defined_in_stack(&let_stmt.name) {
+        if self.identifier_defined_in_stack(&let_stmt.name.name) {
             return Err(RuntimeError::InternalBug(format!(
                 "identifier `{}` is already defined in this ExecEnv",
-                let_stmt.name
+                let_stmt.name.name
             )));
         }
         self.top_exec_env_mut().definitions.identifiers.insert(
-            let_stmt.name.clone(),
+            let_stmt.name.name.clone(),
             DefinedIdentifierInfo {
-                identifier: let_stmt.name.clone(),
+                identifier: let_stmt.name.name.clone(),
             },
         );
 
         let equality_fact_id = self.ids.allocate_fact_id();
-        let left = Obj::Identifier(IdentifierObj::plain(let_stmt.name.clone()));
+        let left = Obj::Identifier(IdentifierObj::from_bound_name(&let_stmt.name));
         let equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
             fact_id: equality_fact_id,
             left,

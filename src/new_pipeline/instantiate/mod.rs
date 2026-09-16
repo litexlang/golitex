@@ -12,6 +12,7 @@
 //! nested fact bodies (e.g. inside set builders) can allocate ids the same way.
 //!
 //! Pure structural replace: no `ExecEnv` or definition-table lookup.
+//! Substitution keys are [`IdentifierId`] for plain binders/refs.
 
 mod capture;
 mod error;
@@ -29,46 +30,39 @@ use std::collections::HashMap;
 
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact, QuantifierFreeFact};
 use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 use crate::new_pipeline::runtime::Runtime;
 
 impl Runtime {
     pub fn inst_obj(
         &mut self,
         obj: &Obj,
-        param_to_arg_map: &HashMap<String, Obj>,
+        param_to_arg_map: &HashMap<IdentifierId, Obj>,
     ) -> Result<Obj, InstError> {
-        let mut fresh = 0u64;
-        let binder_renames = HashMap::new();
-        self.inst_obj_rec(obj, param_to_arg_map, &mut fresh, &binder_renames)
+        self.inst_obj_rec(obj, param_to_arg_map)
     }
 
     pub fn inst_fact(
         &mut self,
         fact: &Fact,
-        param_to_arg_map: &HashMap<String, Obj>,
+        param_to_arg_map: &HashMap<IdentifierId, Obj>,
     ) -> Result<Fact, InstError> {
-        let mut fresh = 0u64;
-        let binder_renames = HashMap::new();
-        self.inst_fact_rec(fact, param_to_arg_map, &mut fresh, &binder_renames)
+        self.inst_fact_rec(fact, param_to_arg_map)
     }
 
     pub fn inst_atomic_fact(
         &mut self,
         atomic: &AtomicFact,
-        param_to_arg_map: &HashMap<String, Obj>,
+        param_to_arg_map: &HashMap<IdentifierId, Obj>,
     ) -> Result<AtomicFact, InstError> {
-        let mut fresh = 0u64;
-        let binder_renames = HashMap::new();
-        self.inst_atomic_fact_rec(atomic, param_to_arg_map, &mut fresh, &binder_renames)
+        self.inst_atomic_fact_rec(atomic, param_to_arg_map)
     }
 
     pub fn inst_quantifier_free_fact(
         &mut self,
         fact: &QuantifierFreeFact,
-        param_to_arg_map: &HashMap<String, Obj>,
+        param_to_arg_map: &HashMap<IdentifierId, Obj>,
     ) -> Result<QuantifierFreeFact, InstError> {
-        let mut fresh = 0u64;
-        let binder_renames = HashMap::new();
-        self.inst_quantifier_free_fact_rec(fact, param_to_arg_map, &mut fresh, &binder_renames)
+        self.inst_quantifier_free_fact_rec(fact, param_to_arg_map)
     }
 }
