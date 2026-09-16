@@ -1,6 +1,6 @@
 use crate::new_pipeline::ast::fact::EqualFact;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::{
-    EqualFactSearchedProof, EqualFactSearchedProofByKnownForallFact, VerifyEqualityResult,
+    EqualFactSearchedProof, SearchProofByKnownForallFact, VerifyEqualityResult,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
@@ -78,9 +78,9 @@ impl Runtime {
 
     pub fn search_equal_fact_proof_by_known_forall_fact(
         &mut self,
-        _fact: &EqualFact,
-        _verify_state: VerifyState,
-    ) -> RuntimeResult<Option<EqualFactSearchedProofByKnownForallFact>> {
-        Ok(None)
+        fact: &EqualFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<SearchProofByKnownForallFact>> {
+        self.search_atomic_fact_proof_by_known_forall_fact(&(fact.clone().into()), verify_state)
     }
 }

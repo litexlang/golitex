@@ -25,7 +25,7 @@ pub enum EqualFactSearchedProof {
     ByBuiltinRule(EqualitySearchProofByBuiltinRule),
     ByKnownEquality(EqualFactSearchedProofByKnownEquality),
     ByBuiltinStrategy(EqualitySearchProofByBuiltinStrategy),
-    ByKnownForallFact(EqualFactSearchedProofByKnownForallFact),
+    ByKnownForallFact(SearchProofByKnownForallFact),
 }
 
 // Oriented cite chain from goal.left to goal.right over generating equality
@@ -34,12 +34,6 @@ pub enum EqualFactSearchedProof {
 // class-id handle alone.
 pub struct EqualFactSearchedProofByKnownEquality {
     pub path: Vec<(Obj, Obj, FactId)>,
-}
-
-pub struct EqualFactSearchedProofByKnownForallFact {
-    pub cite_fact_id: FactId,
-    pub requirement_facts: Vec<Fact>,
-    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
 pub struct VerifyAtomicExceptEqualityFactResult {
@@ -54,7 +48,7 @@ pub enum AtomicExceptEqualityFactSearchedProof {
     ByKnownAtomicFact(AtomicExceptEqualityFactSearchProofByKnownAtomicFact),
     ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy),
     ByDefinition(AtomicExceptEqualityFactSearchProofByDefinition),
-    ByKnownForallFact(AtomicExceptEqualityFactSearchProofByKnownForallFact),
+    ByKnownForallFact(SearchProofByKnownForallFact),
     ByBuiltinAlgebraicRewrite(AtomicExceptEqualityFactSearchProofByBuiltinAlgebraicRewrite),
     ByKnownAlgebraicRewrite(AtomicExceptEqualityFactSearchProofByKnownAlgebraicRewrite),
 }
@@ -71,8 +65,13 @@ pub struct AtomicExceptEqualityFactSearchProofByDefinition {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
-pub struct AtomicExceptEqualityFactSearchProofByKnownForallFact {
+// Shared known-forall application certificate (equality and non-equality).
+// Lean cite: FactId (+ then index); args instantiate the forall; requirements
+// are instantiated type obligations + dom, with recursive verify proofs.
+pub struct SearchProofByKnownForallFact {
     pub cite_fact_id: FactId,
+    pub then_fact_index: usize,
     pub forall_parameters_match_what_args: Vec<Obj>,
+    pub requirement_facts: Vec<Fact>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }

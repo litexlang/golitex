@@ -30,9 +30,14 @@ At any time, a surface name denotes **one** symbol identity for the whole
 session:
 
 - Plain `y` is always that same `y`.
-- Qualified atoms use **indices**: `WithMod { file_id, name }` and
-  `WithModAndExport { mod_id, file_id, name }` (not surface import aliases).
-  Same physical import under local alias `T` vs global `G` shares one `mod_id`.
+- Qualified atoms use **two id spaces** (not surface import aliases):
+  - `WithExportFileId { export_file_id, name }` — `export_file_id` is an index
+    in the **current** module's `LitexConfig.exports` (that module's config).
+  - `WithModAndExportFileId { global_mod_id, export_file_id, name }` —
+    `global_mod_id` is an index in **this run's** `GlobalModuleManager.imports`
+    (global table assigns it; local alias `T`/`G` both map to the same id);
+    `export_file_id` is an index in **that imported module's**
+    `LitexConfig.exports` (that module's config assigns it).
 - Reusing the letter after a binder scope ends is **letter reuse**, like on
   paper: stored AST may still contain binder spelling `y`, and a later
   `have y` is the same name identity, not a second binding instance.

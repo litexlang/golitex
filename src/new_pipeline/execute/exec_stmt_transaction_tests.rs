@@ -152,6 +152,27 @@ fn forall_unprovable_then_does_not_store() {
 }
 
 #[test]
+fn stored_forall_indexes_equal_then_in_known_forall_conclusions() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "forall x R:\n    x = x").is_failed());
+    let facts = &runtime.top_exec_env().facts;
+    assert!(
+        facts
+            .facts_by_id
+            .values()
+            .any(|f| matches!(f, crate::new_pipeline::ast::fact::Fact::ForallFact(_))),
+        "forall must be in facts_by_id"
+    );
+    assert_eq!(
+        facts.known_forall_conclusions.equal_conclusions.len(),
+        1,
+        "atomic `=` then must be indexed under equal_conclusions"
+    );
+    let entry = &facts.known_forall_conclusions.equal_conclusions[0];
+    assert_eq!(entry.then_fact_index, 0);
+}
+
+#[test]
 fn success_merges_equality_so_later_stmt_can_prove_transitivity() {
     let mut runtime = runtime_with_file_env();
 

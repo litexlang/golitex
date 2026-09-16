@@ -25,8 +25,8 @@ current work; only tables + parse + name elaborate live here.
 | Form | Meaning after elaborate |
 |------|-------------------------|
 | `x` | local / current-module plain name |
-| `a::b` | current module export file `a`, symbol `b` → `WithMod { file_id, name }` |
-| `a::b::c` | import alias `a` → global module, export `b`, symbol `c` → `WithModAndExport` |
+| `a::b` | current module export file `a`, symbol `b` → `WithExportFileId` |
+| `a::b::c` | import alias `a` → global module, export `b`, symbol `c` → `WithModAndExportFileId` |
 | `a:::b` | flatten sugar only → sole export `F` → same as `a::F::b` |
 
 - No `[hierarchy]`, no `submodule`, no config `flatten`.
@@ -94,16 +94,21 @@ Root and every `ImportedModule` each own one.
 
 ### `AtomicName` (qualified atom identity; keep this name — do **not** reuse binder `Identifier`)
 
-Replace string `mod_name` / `export_name` with ids after elaborate:
+Two different id namespaces — do not confuse them:
+
+| Id | Who assigns it | Where it indexes |
+|----|----------------|------------------|
+| `export_file_id` | The **module's own** `litex.config` `[export]` order | That module's `LitexConfig.exports` |
+| `global_mod_id` | **This run's** `GlobalModuleManager` when mounting | `GlobalModuleManager.imports` |
 
 | Variant | Fields | Purpose |
 |---------|--------|---------|
 | `Plain` | `name: String` | Unqualified atom. |
-| `WithMod` | `file_id: usize`, `name: String` | `a::b` in **current** module: export index + symbol. |
-| `WithModAndExport` | `mod_id: usize`, `file_id: usize`, `name: String` | Cross-module ref: global import index + that module’s export index + symbol. |
+| `WithExportFileId` | `export_file_id`, `name` | `a::b` in **current** module: config export index + symbol. |
+| `WithModAndExportFileId` | `global_mod_id`, `export_file_id`, `name` | Cross-module: global import index + **that** module's export index + symbol. |
 
-- Identity of qualified refs = these ids + `name` (not local alias strings). Same path under `T` vs `G` → same `mod_id`.
-- Display: `mod_id` → `imports[mod_id].name`; `file_id` → that module’s (or root’s) `exports[file_id].name`.
+- Same path under local alias `T` vs global `G` → same `global_mod_id`.
+- Display: `global_mod_id` → `imports[i].name`; `export_file_id` → that module's `exports[j].name`.
 - `ModuleId` / `ExportFileId` newtypes: deferred; `usize` is enough.
 
 Binder plain names stay the existing AST `Identifier` / `PlainName` — unchanged by this plan.
@@ -116,19 +121,19 @@ Current module = owner of the running `.lit`.
 
 ```text
 a::b
-  → file_id = index of export "a" in *current* export list
-  → AtomicName::WithMod { file_id, name: b }
+  → export_file_id = index of export "a" in *current* LitexConfig.exports
+  → AtomicName::WithExportFileId { export_file_id, name: b }
 
 a:::b
   → alias a in current LitexConfig.imports → path
-  → mod_id = path_to_mod_id[path]          # must exist
+  → global_mod_id = path_to_mod_id[path]          # must exist
   → that ImportedModule must have exactly one export F
-  → same as a::F::b → WithModAndExport { mod_id, file_id: 0, name: b }
+  → same as a::F::b → WithModAndExportFileId { global_mod_id, export_file_id: 0, name: b }
 
 a::b::c
-  → alias a → path → mod_id = path_to_mod_id[path]
-  → file_id = index of export "b" in imports[mod_id].exports / export_files
-  → WithModAndExport { mod_id, file_id, name: c }
+  → alias a → path → global_mod_id = path_to_mod_id[path]
+  → export_file_id = index of export "b" in imports[global_mod_id].litex_config.exports
+  → WithModAndExportFileId { global_mod_id, export_file_id, name: c }
 ```
 
 ---

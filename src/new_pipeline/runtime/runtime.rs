@@ -26,9 +26,9 @@ pub struct Runtime {
 
 /// One parse layer's occupied names. Inner scopes must not reuse a visible outer name.
 ///
-/// Keys are `AtomicName` (plain / `file_id` / `mod_id`+`file_id`). Under the
-/// locked identity premise, qualified atoms use indices from
-/// `GlobalModuleManager`, not surface import aliases.
+/// Keys are `AtomicName` (`Plain` / `WithExportFileId` / `WithModAndExportFileId`).
+/// Qualified atoms use `export_file_id` (module litex.config) and optional
+/// `global_mod_id` (this run's GlobalModuleManager.imports).
 pub struct ParseScope {
     pub occupied: HashSet<AtomicName>,
 }
