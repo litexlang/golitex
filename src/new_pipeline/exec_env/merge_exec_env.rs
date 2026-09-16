@@ -20,7 +20,7 @@ pub fn merge_exec_env_from(parent: &mut ExecEnv, child: &ExecEnv) -> RuntimeResu
 fn merge_definitions_from(parent: &mut ExecEnv, child: &ExecEnv) -> RuntimeResult<()> {
     for (name, info) in child.definitions.identifiers.iter() {
         if parent.definitions.identifiers.contains_key(name) {
-            return Err(RuntimeError::Invariant(format!(
+            return Err(RuntimeError::InternalBug(format!(
                 "merge_exec_env_from: identifier `{name}` already defined in parent"
             )));
         }
@@ -84,7 +84,7 @@ fn merge_named_map<V: Clone>(
 ) -> RuntimeResult<()> {
     for (name, value) in child.iter() {
         if parent.contains_key(name) {
-            return Err(RuntimeError::Invariant(format!(
+            return Err(RuntimeError::InternalBug(format!(
                 "merge_exec_env_from: {kind} `{name}` already defined in parent"
             )));
         }
@@ -108,7 +108,7 @@ fn merge_facts_from(parent: &mut ExecEnv, child: &ExecEnv) -> RuntimeResult<()> 
         }
         if let Some(existing_id) = parent.facts.fact_ir_to_id.get(&fact.ir()) {
             if *existing_id != fact_id {
-                return Err(RuntimeError::Invariant(format!(
+                return Err(RuntimeError::InternalBug(format!(
                     "merge_exec_env_from: fact IR collides with a different FactId"
                 )));
             }
@@ -171,7 +171,7 @@ fn merge_well_defined_objects_from(parent: &mut ExecEnv, child: &ExecEnv) -> Run
     for (object_key, wd_id) in child.well_defined_objects.object_to_wd_id.iter() {
         if let Some(existing) = parent.well_defined_objects.object_to_wd_id.get(object_key) {
             if existing != wd_id {
-                return Err(RuntimeError::Invariant(
+                return Err(RuntimeError::InternalBug(
                     "merge_exec_env_from: WD object key collides with a different WellDefinednessId"
                         .to_string(),
                 ));

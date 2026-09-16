@@ -201,7 +201,7 @@ impl Runtime {
     ) -> RuntimeResult<Identifier> {
         self.define_plain_atom(name.clone())
             .map_err(|err| match err {
-                crate::new_pipeline::runtime::RuntimeError::Invariant(message) => {
+                crate::new_pipeline::runtime::RuntimeError::InternalBug(message) => {
                     RuntimeParseError::new(message, tb.line, tb.source_path.clone()).into()
                 }
                 other => other,
@@ -215,7 +215,7 @@ impl Runtime {
         name: String,
     ) -> RuntimeResult<()> {
         self.occupy_plain_atom(name).map_err(|err| match err {
-            crate::new_pipeline::runtime::RuntimeError::Invariant(message) => {
+            crate::new_pipeline::runtime::RuntimeError::InternalBug(message) => {
                 RuntimeParseError::new(message, tb.line, tb.source_path.clone()).into()
             }
             other => other,

@@ -1,14 +1,12 @@
 use crate::new_pipeline::launch_command::LaunchCommand;
 use super::run_command_outcome::RunEvalResult;
 use super::run_repl::run_repl_loop;
-use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
+use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 /// With `session`, a successful eval keeps the env open and enters REPL.
 pub fn run_eval(command: LaunchCommand) -> RuntimeResult<RunEvalResult> {
     let LaunchCommand::Eval { code, session, .. } = &command else {
-        return Err(RuntimeError::Invariant(
-            "run_eval expects LaunchCommand::Eval".to_string(),
-        ));
+        panic!("run_eval expects LaunchCommand::Eval");
     };
     let code = code.clone();
     let session = *session;

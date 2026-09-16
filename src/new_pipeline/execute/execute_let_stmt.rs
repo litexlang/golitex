@@ -40,7 +40,7 @@ impl Runtime {
         }
 
         if self.identifier_defined_in_stack(&let_stmt.name) {
-            return Err(RuntimeError::Invariant(format!(
+            return Err(RuntimeError::InternalBug(format!(
                 "identifier `{}` is already defined in this ExecEnv",
                 let_stmt.name
             )));

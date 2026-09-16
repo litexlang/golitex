@@ -1,5 +1,5 @@
-use crate::new_pipeline::launch_command::LaunchCommand;
 use super::run_command::NEW_PIPELINE_VERSION;
+use crate::new_pipeline::launch_command::LaunchCommand;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 use crate::new_pipeline::LITEX;
 use std::io::{self, Write};
@@ -59,7 +59,7 @@ fn format_runtime_error(error: &RuntimeError) -> String {
             format!("{} at line {} in {}", error.message, error.line, error.path)
         }
         RuntimeError::Unsupported(message)
-        | RuntimeError::Invariant(message)
+        | RuntimeError::InternalBug(message)
         | RuntimeError::Unknown(message) => message.clone(),
     }
 }
