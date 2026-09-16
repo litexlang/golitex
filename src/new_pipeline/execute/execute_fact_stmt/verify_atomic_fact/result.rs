@@ -66,11 +66,9 @@ pub struct AtomicExceptEqualityFactSearchProofByDefinition {
 }
 
 // Shared known-forall application certificate (equality and non-equality).
-// Lean cite: FactId (+ then index); args instantiate the forall; requirements
-// are instantiated type obligations + dom, with recursive verify proofs.
+// `cite` is the same handle as in KnownForallConclusionMemory.
 pub struct SearchProofByKnownForallFact {
-    pub cite_fact_id: FactId,
-    pub then_fact_index: usize,
+    pub cite: crate::new_pipeline::exec_env::ForallConclusionCite,
     pub forall_parameters_match_what_args: Vec<Obj>,
     pub requirement_facts: Vec<Fact>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,

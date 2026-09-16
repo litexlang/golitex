@@ -2,13 +2,16 @@
 
 use crate::new_pipeline::ast::obj::{Number, Obj};
 use crate::new_pipeline::execute::ExecStmtResult;
-use crate::new_pipeline::runtime::{RealOrVirtualPath, Runtime};
+use crate::new_pipeline::launch_command::LaunchCommand;
+use crate::new_pipeline::runtime::Runtime;
 use crate::new_pipeline::tokenize::Tokenizer;
 
 fn runtime_with_file_env() -> Runtime {
-    let mut runtime = Runtime::new();
-    runtime.begin_file(RealOrVirtualPath::Eval);
-    runtime
+    Runtime::new(LaunchCommand::Eval {
+        code: String::new(),
+        session: false,
+        strict: false,
+    })
 }
 
 fn exec_one(runtime: &mut Runtime, code: &str) -> ExecStmtResult {
@@ -169,7 +172,11 @@ fn stored_forall_indexes_equal_then_in_known_forall_conclusions() {
         "atomic `=` then must be indexed under equal_conclusions"
     );
     let entry = &facts.known_forall_conclusions.equal_conclusions[0];
-    assert_eq!(entry.then_fact_index, 0);
+    assert!(matches!(
+        entry.location,
+        crate::new_pipeline::ast::fact::ForallConclusionLocation::DirectThenFact(ref loc)
+            if loc.then_fact_index == 0
+    ));
 }
 
 #[test]

@@ -44,15 +44,28 @@ pub struct Ids {
 }
 
 impl Runtime {
-    pub fn new() -> Self {
-        Self {
+    /// Create a session from its launch contract and open the matching file env.
+    pub fn new(command: LaunchCommand) -> Self {
+        let file = match &command {
+            LaunchCommand::Repl { .. } => RealOrVirtualPath::Repl,
+            LaunchCommand::Eval { .. } => RealOrVirtualPath::Eval,
+            LaunchCommand::File { path, .. } | LaunchCommand::Repository { path, .. } => {
+                RealOrVirtualPath::Real(path.clone())
+            }
+            LaunchCommand::Help | LaunchCommand::Version => {
+                panic!("Runtime::new does not accept Help/Version LaunchCommand")
+            }
+        };
+        let mut runtime = Self {
             global_module_manager: GlobalModuleManager::new(),
             execution_environments_stack: Vec::new(),
             parse_scope_stack: Vec::new(),
-            current_file: RealOrVirtualPath::Eval,
+            current_file: file.clone(),
             ids: Ids::new(),
-            launch_command: LaunchCommand::Repl { strict: false },
-        }
+            launch_command: command,
+        };
+        runtime.begin_file(file);
+        runtime
     }
 
     pub fn begin_file(&mut self, file: RealOrVirtualPath) {
