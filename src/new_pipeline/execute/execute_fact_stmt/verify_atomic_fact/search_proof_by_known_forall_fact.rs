@@ -7,6 +7,7 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact, ForallFact};
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::instantiate::SubstitutionMode;
 use crate::new_pipeline::ast::param::TypedParameterList;
 use crate::new_pipeline::exec_env::helper::{
     atomic_fact_args_ref, atomic_fact_has_positive_polarity,
@@ -113,7 +114,7 @@ impl Runtime {
             .map(|name| subst.get(name).expect("checked").clone())
             .collect();
 
-        let requirement_facts = match build_requirement_facts(&forall, &subst)? {
+        let requirement_facts = match self.build_requirement_facts(&forall, &subst)? {
             Some(facts) => facts,
             None => return Ok(None),
         };
@@ -141,6 +142,23 @@ impl Runtime {
             }
         }
         None
+    }
+
+    fn build_requirement_facts(
+        &mut self,
+        forall: &ForallFact,
+        subst: &HashMap<String, Obj>,
+    ) -> RuntimeResult<Option<Vec<Fact>>> {
+        // Param-type obligations deferred until type-fact store is wired.
+        let mut requirements = Vec::new();
+        for dom in &forall.dom_facts {
+            let fact = match self.inst_fact(dom, subst, SubstitutionMode::Exact) {
+                Ok(fact) => fact,
+                Err(_) => return Ok(None),
+            };
+            requirements.push(fact);
+        }
+        Ok(Some(requirements))
     }
 }
 
@@ -174,154 +192,3 @@ fn unify_obj_phase1(
     pattern.ir() == goal.ir()
 }
 
-fn build_requirement_facts(
-    forall: &ForallFact,
-    subst: &HashMap<String, Obj>,
-) -> RuntimeResult<Option<Vec<Fact>>> {
-    // Param-type obligations deferred until type-fact store is wired.
-    let mut requirements = Vec::new();
-    for dom in &forall.dom_facts {
-        let Some(fact) = substitute_fact_phase1(dom, subst) else {
-            return Ok(None);
-        };
-        requirements.push(fact);
-    }
-    Ok(Some(requirements))
-}
-
-fn substitute_fact_phase1(fact: &Fact, subst: &HashMap<String, Obj>) -> Option<Fact> {
-    match fact {
-        Fact::AtomicFact(atomic) => {
-            Some(Fact::AtomicFact(substitute_atomic_phase1(atomic, subst)?))
-        }
-        _ => None,
-    }
-}
-
-fn substitute_atomic_phase1(
-    atomic: &AtomicFact,
-    subst: &HashMap<String, Obj>,
-) -> Option<AtomicFact> {
-    let args = atomic_fact_args_ref(atomic);
-    let mut new_args = Vec::with_capacity(args.len());
-    for arg in args {
-        new_args.push(substitute_obj_phase1(arg, subst)?);
-    }
-    rebuild_atomic_with_args(atomic, &new_args)
-}
-
-fn substitute_obj_phase1(obj: &Obj, subst: &HashMap<String, Obj>) -> Option<Obj> {
-    if let Obj::Identifier(id) = obj {
-        if let AtomicName::Plain { name } = &id.name {
-            if let Some(replacement) = subst.get(name) {
-                return Some(replacement.clone());
-            }
-        }
-    }
-    if obj_contains_param_name(obj, &subst.keys().cloned().collect()) {
-        return None;
-    }
-    Some(obj.clone())
-}
-
-fn obj_contains_param_name(obj: &Obj, param_names: &HashSet<String>) -> bool {
-    if let Obj::Identifier(id) = obj {
-        if let AtomicName::Plain { name } = &id.name {
-            return param_names.contains(name);
-        }
-    }
-    false
-}
-
-fn rebuild_atomic_with_args(atomic: &AtomicFact, args: &[Obj]) -> Option<AtomicFact> {
-    match atomic {
-        AtomicFact::EqualFact(f) => {
-            let [left, right] = take_two(args)?;
-            Some(AtomicFact::EqualFact(crate::new_pipeline::ast::fact::EqualFact {
-                fact_id: f.fact_id,
-                left,
-                right,
-                line_file: f.line_file.clone(),
-            }))
-        }
-        AtomicFact::NotEqualFact(f) => {
-            let [left, right] = take_two(args)?;
-            Some(AtomicFact::NotEqualFact(
-                crate::new_pipeline::ast::fact::NotEqualFact {
-                    fact_id: f.fact_id,
-                    left,
-                    right,
-                    line_file: f.line_file.clone(),
-                },
-            ))
-        }
-        AtomicFact::InFact(f) => {
-            let [element, set] = take_two(args)?;
-            Some(AtomicFact::InFact(crate::new_pipeline::ast::fact::InFact {
-                fact_id: f.fact_id,
-                element,
-                set,
-                line_file: f.line_file.clone(),
-            }))
-        }
-        AtomicFact::NormalAtomicFact(f) => Some(AtomicFact::NormalAtomicFact(
-            crate::new_pipeline::ast::fact::NormalAtomicFact {
-                fact_id: f.fact_id,
-                predicate: f.predicate.clone(),
-                body: args.to_vec(),
-                line_file: f.line_file.clone(),
-            },
-        )),
-        AtomicFact::NotNormalAtomicFact(f) => Some(AtomicFact::NotNormalAtomicFact(
-            crate::new_pipeline::ast::fact::NotNormalAtomicFact {
-                fact_id: f.fact_id,
-                predicate: f.predicate.clone(),
-                body: args.to_vec(),
-                line_file: f.line_file.clone(),
-            },
-        )),
-        AtomicFact::LessFact(f) => {
-            let [left, right] = take_two(args)?;
-            Some(AtomicFact::LessFact(crate::new_pipeline::ast::fact::LessFact {
-                fact_id: f.fact_id,
-                left,
-                right,
-                line_file: f.line_file.clone(),
-            }))
-        }
-        AtomicFact::GreaterFact(f) => {
-            let [left, right] = take_two(args)?;
-            Some(AtomicFact::GreaterFact(
-                crate::new_pipeline::ast::fact::GreaterFact {
-                    fact_id: f.fact_id,
-                    left,
-                    right,
-                    line_file: f.line_file.clone(),
-                },
-            ))
-        }
-        AtomicFact::IsSetFact(f) => {
-            let [set] = take_one(args)?;
-            Some(AtomicFact::IsSetFact(crate::new_pipeline::ast::fact::IsSetFact {
-                fact_id: f.fact_id,
-                set,
-                line_file: f.line_file.clone(),
-            }))
-        }
-        _ => None,
-    }
-}
-
-fn take_one(args: &[Obj]) -> Option<[Obj; 1]> {
-    match args {
-        [a] => Some([a.clone()]),
-        _ => None,
-    }
-}
-
-fn take_two(args: &[Obj]) -> Option<[Obj; 2]> {
-    match args {
-        [a, b] => Some([a.clone(), b.clone()]),
-        _ => None,
-    }
-}

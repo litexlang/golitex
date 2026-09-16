@@ -12,7 +12,7 @@
 
 use super::verify_atomic_fact::{VerifyAtomicExceptEqualityFactResult, VerifyEqualityResult};
 use super::verify_well_defined::FactWellDefinedProof;
-use crate::new_pipeline::ast::fact::ForallFact;
+use crate::new_pipeline::ast::fact::{AndFact, ChainFact, ForallFact};
 use crate::new_pipeline::exec_env::exec_env::ExecEnv;
 use crate::new_pipeline::execute::introduce_typed_parameters::IntroduceTypedParametersResult;
 use crate::new_pipeline::store_fact_and_infer::StoreFactAndInferResult;
@@ -31,10 +31,16 @@ pub enum VerifyFactResult {
     NotForall(Box<VerifyNotForallFactResult>),
 }
 
-// Composite search pipelines not yet wired (except forall local proof).
-pub enum VerifyAndFactResult {}
+// Composite search pipelines not yet wired (except forall / and / chain).
+pub struct VerifyAndFactResult {
+    pub fact: AndFact,
+    pub components: Vec<VerifyFactResult>,
+}
 
-pub enum VerifyChainFactResult {}
+pub struct VerifyChainFactResult {
+    pub fact: ChainFact,
+    pub adjacent: Vec<VerifyFactResult>,
+}
 
 pub enum VerifyOrFactResult {}
 

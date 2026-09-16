@@ -180,18 +180,65 @@ fn stored_forall_indexes_equal_then_in_known_forall_conclusions() {
 }
 
 #[test]
-fn success_merges_equality_so_later_stmt_can_prove_transitivity() {
+fn and_fact_proves_from_known_components_and_projects_store() {
     let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "trust 1 < 2").is_failed());
+    assert!(!exec_one(&mut runtime, "trust 2 < 3").is_failed());
 
-    assert!(!exec_one(&mut runtime, "trust 1 = 2").is_failed());
-    assert!(!exec_one(&mut runtime, "trust 2 = 3").is_failed());
-
-    let outcome = exec_one(&mut runtime, "1 = 3");
+    let outcome = exec_one(&mut runtime, "1 < 2 and 2 < 3");
+    assert!(!outcome.is_failed(), "expected Success for and from known components");
     assert!(
-        !outcome.is_failed(),
-        "expected Success: parent-merged 1=2 and 2=3 should prove 1=3"
+        runtime
+            .top_exec_env()
+            .facts
+            .facts_by_id
+            .values()
+            .any(|f| matches!(f, crate::new_pipeline::ast::fact::Fact::AndFact(_))),
+        "and whole must be stored"
+    );
+    assert!(
+        !exec_one(&mut runtime, "1 < 2").is_failed(),
+        "and component must remain usable"
     );
 }
+
+#[test]
+fn chain_fact_stores_numeric_order_closure() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "trust 1 < 2").is_failed());
+    assert!(!exec_one(&mut runtime, "trust 2 < 3").is_failed());
+    assert!(!exec_one(&mut runtime, "1 < 2 < 3").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "1 < 3").is_failed(),
+        "expected BuiltinNumericOrder closure 1 < 3"
+    );
+}
+
+#[test]
+fn chain_fact_broken_polarity_does_not_store_cross_edge() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "trust 1 < 2").is_failed());
+    assert!(!exec_one(&mut runtime, "trust 2 > 0").is_failed());
+    assert!(!exec_one(&mut runtime, "1 < 2 > 0").is_failed());
+    assert!(
+        exec_one(&mut runtime, "1 < 0").is_failed(),
+        "broken polarity must not invent 1 < 0"
+    );
+}
+
+#[test]
+fn chain_fact_stores_equality_closure() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have a R, b R, c R").is_failed());
+    assert!(!exec_one(&mut runtime, "trust a = b").is_failed());
+    assert!(!exec_one(&mut runtime, "trust b = c").is_failed());
+    assert!(!exec_one(&mut runtime, "a = b = c").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "a = c").is_failed(),
+        "expected BuiltinEquality closure a = c"
+    );
+}
+
 
 #[test]
 fn witness_exist_succeeds_without_local_proof_body() {

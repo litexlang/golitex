@@ -8,7 +8,6 @@ mod execute_have_obj_in_nonempty_set_stmt;
 mod execute_let_stmt;
 pub mod execute_unsafe_stmt;
 mod execute_witness_stmt;
-mod helper;
 mod introduce_typed_parameters;
 
 #[cfg(test)]

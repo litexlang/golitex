@@ -43,7 +43,7 @@ pub fn is_infix_prop_name(name: &str) -> bool {
 }
 
 impl Runtime {
-    pub(super) fn atomic_from_prop(
+    pub(crate) fn atomic_from_prop(
         &mut self,
         prop: AtomicName,
         args: Vec<Obj>,
