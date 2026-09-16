@@ -1,7 +1,6 @@
 use crate::new_pipeline::ast::names::{AtomicName, PlainName};
 use crate::new_pipeline::ast::obj::{
-    Cart, Div, FiniteSeqListObj, FiniteSeqSet, FnSetBody, Identifier, Number, Obj, SetBuilder,
-    Tuple,
+    Cart, Div, FiniteSeqListObj, FiniteSeqSet, FnSetBody, Number, Obj, SetBuilder, Tuple,
 };
 use crate::new_pipeline::ast::stmt::AxiomStmt;
 use crate::new_pipeline::ast::stmt::DefAbstractPropStmt;
@@ -90,7 +89,7 @@ pub struct DefinitionMemory {
 /// One defined atom in `DefinitionMemory.identifiers`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DefinedIdentifierInfo {
-    pub identifier: Identifier,
+    pub identifier: String,
 }
 
 /// Algebraic properties that can be proved for a predicate.

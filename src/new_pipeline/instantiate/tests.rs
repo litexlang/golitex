@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, QuantifierFreeFact};
 use crate::new_pipeline::ast::obj::{IdentifierObj, Number, Obj};
-use crate::new_pipeline::instantiate::SubstitutionMode;
 use crate::new_pipeline::launch_command::LaunchCommand;
 use crate::new_pipeline::runtime::Runtime;
 
@@ -34,7 +33,7 @@ fn inst_equality_replaces_plain_identifier() {
     subst.insert("x".into(), one.clone());
 
     let result = runtime
-        .inst_quantifier_free_fact(&fact, &subst, SubstitutionMode::Exact)
+        .inst_quantifier_free_fact(&fact, &subst)
         .expect("inst");
 
     match result {

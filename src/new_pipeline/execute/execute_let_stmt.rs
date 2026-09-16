@@ -1,5 +1,5 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact};
-use crate::new_pipeline::ast::obj::{Identifier, IdentifierObj, Obj};
+use crate::new_pipeline::ast::obj::{IdentifierObj, Obj};
 use crate::new_pipeline::ast::stmt::LetObjStmt;
 use crate::new_pipeline::exec_env::DefinedIdentifierInfo;
 use crate::new_pipeline::execute::execute_fact_stmt::{VerifyObjWellDefinedResult, VerifyState};
@@ -51,7 +51,7 @@ impl Runtime {
         self.top_exec_env_mut().definitions.identifiers.insert(
             let_stmt.name.clone(),
             DefinedIdentifierInfo {
-                identifier: Identifier::new(let_stmt.name.clone()),
+                identifier: let_stmt.name.clone(),
             },
         );
 

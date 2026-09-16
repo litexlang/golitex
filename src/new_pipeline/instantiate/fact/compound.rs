@@ -1,97 +1,118 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use crate::new_pipeline::ast::fact::{
     AndChainAtomicFact, AndFact, AtomicFact, ChainFact, Fact, OrFact, QuantifierFreeFact,
 };
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::runtime::Runtime;
 
-use super::atomic;
-use super::super::InstCtx;
 use super::super::error::InstError;
 
-pub fn inst_quantifier_free_fact(
-    ctx: &mut InstCtx<'_>,
-    fact: &QuantifierFreeFact,
-) -> Result<QuantifierFreeFact, InstError> {
-    match fact {
-        QuantifierFreeFact::AtomicFact(a) => Ok(QuantifierFreeFact::AtomicFact(
-            atomic::inst_atomic_fact(ctx, a)?,
-        )),
-        QuantifierFreeFact::AndFact(a) => {
-            let mut facts = Vec::with_capacity(a.facts.len());
-            for f in &a.facts {
-                facts.push(atomic::inst_atomic_fact(ctx, f)?);
+impl Runtime {
+    pub(crate) fn inst_quantifier_free_fact_rec(
+        &mut self,
+        fact: &QuantifierFreeFact,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<QuantifierFreeFact, InstError> {
+        match fact {
+            QuantifierFreeFact::AtomicFact(a) => Ok(QuantifierFreeFact::AtomicFact(
+                self.inst_atomic_fact_rec(a, param_to_arg_map, fresh, binder_renames)?,
+            )),
+            QuantifierFreeFact::AndFact(a) => {
+                let mut facts = Vec::with_capacity(a.facts.len());
+                for f in &a.facts {
+                    facts.push(self.inst_atomic_fact_rec(f, param_to_arg_map, fresh, binder_renames)?);
+                }
+                Ok(QuantifierFreeFact::AndFact(AndFact {
+                    fact_id: self.ids.allocate_fact_id(),
+                    facts,
+                    line_file: a.line_file.clone(),
+                }))
             }
-            Ok(QuantifierFreeFact::AndFact(AndFact {
-                fact_id: ctx.rt.ids.allocate_fact_id(),
-                facts,
-                line_file: a.line_file.clone(),
-            }))
-        }
-        QuantifierFreeFact::ChainFact(c) => Ok(QuantifierFreeFact::ChainFact(inst_chain_fact(
-            ctx, c,
-        )?)),
-        QuantifierFreeFact::OrFact(o) => {
-            let mut facts = Vec::with_capacity(o.facts.len());
-            for f in &o.facts {
-                facts.push(inst_and_chain_atomic(ctx, f)?);
+            QuantifierFreeFact::ChainFact(c) => Ok(QuantifierFreeFact::ChainFact(
+                self.inst_chain_fact(c, param_to_arg_map, fresh, binder_renames)?,
+            )),
+            QuantifierFreeFact::OrFact(o) => {
+                let mut facts = Vec::with_capacity(o.facts.len());
+                for f in &o.facts {
+                    facts.push(self.inst_and_chain_atomic(f, param_to_arg_map, fresh, binder_renames)?);
+                }
+                Ok(QuantifierFreeFact::OrFact(OrFact {
+                    fact_id: self.ids.allocate_fact_id(),
+                    facts,
+                    line_file: o.line_file.clone(),
+                }))
             }
-            Ok(QuantifierFreeFact::OrFact(OrFact {
-                fact_id: ctx.rt.ids.allocate_fact_id(),
-                facts,
-                line_file: o.line_file.clone(),
-            }))
         }
     }
-}
 
-pub(crate) fn inst_qf_facts(
-    ctx: &mut InstCtx<'_>,
-    facts: &[QuantifierFreeFact],
-) -> Result<Vec<QuantifierFreeFact>, InstError> {
-    let mut out = Vec::with_capacity(facts.len());
-    for f in facts {
-        out.push(inst_quantifier_free_fact(ctx, f)?);
-    }
-    Ok(out)
-}
-
-fn inst_chain_fact(ctx: &mut InstCtx<'_>, fact: &ChainFact) -> Result<ChainFact, InstError> {
-    let mut objs = Vec::with_capacity(fact.objs.len());
-    for o in &fact.objs {
-        objs.push(ctx.inst_obj(o)?);
-    }
-    Ok(ChainFact {
-        fact_id: ctx.rt.ids.allocate_fact_id(),
-        objs,
-        prop_names: fact.prop_names.clone(),
-        line_file: fact.line_file.clone(),
-    })
-}
-
-pub(crate) fn inst_and_chain_atomic(
-    ctx: &mut InstCtx<'_>,
-    fact: &AndChainAtomicFact,
-) -> Result<AndChainAtomicFact, InstError> {
-    match fact {
-        AndChainAtomicFact::AtomicFact(a) => Ok(AndChainAtomicFact::AtomicFact(
-            atomic::inst_atomic_fact(ctx, a)?,
-        )),
-        AndChainAtomicFact::AndFact(a) => {
-            let mut facts = Vec::with_capacity(a.facts.len());
-            for f in &a.facts {
-                facts.push(atomic::inst_atomic_fact(ctx, f)?);
-            }
-            Ok(AndChainAtomicFact::AndFact(AndFact {
-                fact_id: ctx.rt.ids.allocate_fact_id(),
-                facts,
-                line_file: a.line_file.clone(),
-            }))
+    pub(crate) fn inst_qf_facts_rec(
+        &mut self,
+        facts: &[QuantifierFreeFact],
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Vec<QuantifierFreeFact>, InstError> {
+        let mut out = Vec::with_capacity(facts.len());
+        for f in facts {
+            out.push(self.inst_quantifier_free_fact_rec(
+                f,
+                param_to_arg_map,
+                fresh,
+                binder_renames,
+            )?);
         }
-        AndChainAtomicFact::ChainFact(c) => Ok(AndChainAtomicFact::ChainFact(inst_chain_fact(
-            ctx, c,
-        )?)),
+        Ok(out)
+    }
+
+    fn inst_chain_fact(
+        &mut self,
+        fact: &ChainFact,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<ChainFact, InstError> {
+        let mut objs = Vec::with_capacity(fact.objs.len());
+        for o in &fact.objs {
+            objs.push(self.inst_obj_rec(o, param_to_arg_map, fresh, binder_renames)?);
+        }
+        Ok(ChainFact {
+            fact_id: self.ids.allocate_fact_id(),
+            objs,
+            prop_names: fact.prop_names.clone(),
+            line_file: fact.line_file.clone(),
+        })
+    }
+
+    pub(crate) fn inst_and_chain_atomic(
+        &mut self,
+        fact: &AndChainAtomicFact,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<AndChainAtomicFact, InstError> {
+        match fact {
+            AndChainAtomicFact::AtomicFact(a) => Ok(AndChainAtomicFact::AtomicFact(
+                self.inst_atomic_fact_rec(a, param_to_arg_map, fresh, binder_renames)?,
+            )),
+            AndChainAtomicFact::AndFact(a) => {
+                let mut facts = Vec::with_capacity(a.facts.len());
+                for f in &a.facts {
+                    facts.push(self.inst_atomic_fact_rec(f, param_to_arg_map, fresh, binder_renames)?);
+                }
+                Ok(AndChainAtomicFact::AndFact(AndFact {
+                    fact_id: self.ids.allocate_fact_id(),
+                    facts,
+                    line_file: a.line_file.clone(),
+                }))
+            }
+            AndChainAtomicFact::ChainFact(c) => Ok(AndChainAtomicFact::ChainFact(
+                self.inst_chain_fact(c, param_to_arg_map, fresh, binder_renames)?,
+            )),
+        }
     }
 }
 

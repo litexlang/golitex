@@ -37,7 +37,7 @@ impl Runtime {
         }
 
         // Occupy the name before parsing the value (name is identity).
-        let identifier = self.define_plain_atom_as_parse(&tb, name)?;
+        let name = self.define_plain_atom_as_parse(&tb, name)?;
 
         tb.expect(EQUAL).map_err(|_| {
             RuntimeParseError::new(
@@ -58,7 +58,7 @@ impl Runtime {
         }
 
         Ok(Stmt::Definition(DefinitionStmt::LetObjStmt(LetObjStmt {
-            name: identifier.name,
+            name,
             value,
             line_file: LineFile::new(block.line, block.source_path.clone()),
         })))

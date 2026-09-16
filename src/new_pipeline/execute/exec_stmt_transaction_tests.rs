@@ -30,6 +30,59 @@ fn number_one() -> Obj {
 }
 
 #[test]
+fn calculation_lib_closed_decimal_smoke() {
+    use crate::new_pipeline::ast::obj::{Add, Number, Obj};
+    use crate::new_pipeline::rational_expression::{
+        evaluate_obj_to_normalized_decimal_number, two_objs_equal_by_closed_decimal_calculation,
+    };
+    let one = Obj::Number(Number { normalized_value: "1".into() });
+    let two = Obj::Number(Number { normalized_value: "2".into() });
+    let add = Obj::Add(Add { left: Box::new(one.clone()), right: Box::new(one.clone()) });
+    let n = evaluate_obj_to_normalized_decimal_number(&add).expect("eval 1+1");
+    assert_eq!(n.normalized_value, "2");
+    assert!(two_objs_equal_by_closed_decimal_calculation(&add, &two));
+}
+
+#[test]
+fn calculation_closed_decimal_and_rational_zero_premise() {
+    let mut runtime = runtime_with_file_env();
+
+    assert!(
+        !exec_one(&mut runtime, "1 $in C").is_failed(),
+        "expected Success for 1 $in C"
+    );
+    assert!(
+        !exec_one(&mut runtime, "1 + 1 = 2").is_failed(),
+        "expected Success for 1 + 1 = 2"
+    );
+    assert!(
+        !exec_one(&mut runtime, "2 * 3 = 6").is_failed(),
+        "expected Success for 2 * 3 = 6"
+    );
+
+    assert!(
+        !exec_one(&mut runtime, "have x R").is_failed(),
+        "expected Success for have x R"
+    );
+    assert!(
+        !exec_one(&mut runtime, "(x + 1) * (x - 1) = x^2 - 1").is_failed(),
+        "expected Success for (x + 1) * (x - 1) = x^2 - 1"
+    );
+    assert!(
+        !exec_one(&mut runtime, "x + 0 = x").is_failed(),
+        "expected Success for x + 0 = x"
+    );
+    assert!(
+        !exec_one(&mut runtime, "1 * x = x").is_failed(),
+        "expected Success for 1 * x = x"
+    );
+    assert!(
+        exec_one(&mut runtime, "x / x = 1").is_failed(),
+        "expected soft fail for x / x = 1 (nonzero premise)"
+    );
+}
+
+#[test]
 fn failed_fact_does_not_pollute_parent_env() {
     let mut runtime = runtime_with_file_env();
     let before_facts = runtime.top_exec_env().facts.facts_by_id.len();

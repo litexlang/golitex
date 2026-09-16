@@ -21,7 +21,7 @@ use super::param::{SetBoundParameterGroup, SetBoundParameterList};
 type RenameEnv = HashMap<String, String>;
 
 pub fn new_set_builder(
-    param_binding: Identifier,
+    param_binding: String,
     param_set: Obj,
     facts: Vec<QuantifierFreeFact>,
 ) -> Obj {
@@ -75,7 +75,7 @@ fn alpha_normalize_set_builder_body(
     counter: &mut usize,
 ) -> SetBuilderBody {
     let param_set = Box::new(alpha_normalize_obj(*body.param_set, env, counter));
-    let old_name = body.param_binding.name;
+    let old_name = body.param_binding;
     let slot = binder_slot_name(*counter);
     *counter += 1;
     let mut env2 = env.clone();
@@ -86,7 +86,7 @@ fn alpha_normalize_set_builder_body(
         .map(|f| alpha_normalize_qf_fact(f, &env2, counter))
         .collect();
     SetBuilderBody {
-        param_binding: Identifier::new(slot),
+        param_binding: slot,
         param_set,
         facts,
     }
@@ -103,11 +103,11 @@ fn alpha_normalize_fn_set_body(
         let param_type = Box::new(alpha_normalize_obj(*group.param_type, &env2, counter));
         let mut params = Vec::new();
         for p in group.params {
-            let old_name = p.name;
+            let old_name = p;
             let slot = binder_slot_name(*counter);
             *counter += 1;
             env2.insert(old_name, slot.clone());
-            params.push(Identifier::new(slot));
+            params.push(slot);
         }
         groups.push(SetBoundParameterGroup {
             params,

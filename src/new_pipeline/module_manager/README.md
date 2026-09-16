@@ -92,7 +92,7 @@ Root and every `ImportedModule` each own one.
 
 ---
 
-### `AtomicName` (qualified atom identity; keep this name — do **not** reuse binder `Identifier`)
+### `AtomicName` (qualified atom identity; keep this name — do **not** reuse binder plain `String` names as AtomicName)
 
 Two different id namespaces — do not confuse them:
 
@@ -111,7 +111,7 @@ Two different id namespaces — do not confuse them:
 - Display: `global_mod_id` → `imports[i].name`; `export_file_id` → that module's `exports[j].name`.
 - `ModuleId` / `ExportFileId` newtypes: deferred; `usize` is enough.
 
-Binder plain names stay the existing AST `Identifier` / `PlainName` — unchanged by this plan.
+Binder plain names stay plain `String` / `PlainName` — unchanged by this plan.
 
 ---
 

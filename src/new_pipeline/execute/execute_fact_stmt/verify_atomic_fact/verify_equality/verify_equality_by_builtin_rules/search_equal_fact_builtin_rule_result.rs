@@ -6,5 +6,13 @@ pub enum EqualitySearchProofByBuiltinRule {
     Calculation(EqualitySearchProofByCalculation),
 }
 
-// Placeholder until calculation builtin is wired.
-pub struct EqualitySearchProofByCalculation {}
+// Closed decimal keeps both normal forms; symbolic rational keeps no Obj nf
+// (legacy compares monomial vectors, not reconstructed expressions).
+// Lean can still choose norm_num vs ring_nf from the EqualFact + variant.
+pub enum EqualitySearchProofByCalculation {
+    ClosedDecimal {
+        left_normal: String,
+        right_normal: String,
+    },
+    Rational {},
+}

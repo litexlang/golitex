@@ -2,12 +2,13 @@ use std::collections::{HashMap, HashSet};
 
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::{
-    AnonymousFn, AnonymousFnBody, FnSet, FnSetBody, Identifier, Obj, SetBuilder, SetBuilderBody,
+    AnonymousFn, AnonymousFnBody, FnSet, FnSetBody, Obj, SetBuilder, SetBuilderBody,
 };
 use crate::new_pipeline::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
+use crate::new_pipeline::runtime::Runtime;
 
-use super::InstCtx;
 use super::error::InstError;
+use super::fact;
 
 fn collect_unary(arg: &Obj, bound: &HashSet<String>, out: &mut HashSet<String>) {
     collect_free_plain_names(arg, bound, out);
@@ -164,9 +165,9 @@ pub fn collect_free_plain_names(
         Obj::SetBuilder(sb) => {
             collect_free_plain_names(&sb.surface.param_set, bound, out);
             let mut bound2 = bound.clone();
-            bound2.insert(sb.surface.param_binding.name.clone());
+            bound2.insert(sb.surface.param_binding.clone());
             for fact in &sb.surface.facts {
-                super::fact::collect_free_plain_names_in_qf_fact(fact, &bound2, out);
+                fact::collect_free_plain_names_in_qf_fact(fact, &bound2, out);
             }
         }
         Obj::FnSet(fs) => collect_free_in_fn_set_body(&fs.surface, bound, out),
@@ -272,22 +273,22 @@ fn collect_free_in_fn_set_body(body: &FnSetBody, bound: &HashSet<String>, out: &
     let mut bound2 = bound.clone();
     for group in &body.set_bound_parameters.groups {
         for param in &group.params {
-            bound2.insert(param.name.clone());
+            bound2.insert(param.clone());
         }
         collect_free_plain_names(&group.param_type, &bound2, out);
     }
     for fact in &body.dom_facts {
-        super::fact::collect_free_plain_names_in_qf_fact(fact, &bound2, out);
+        fact::collect_free_plain_names_in_qf_fact(fact, &bound2, out);
     }
     collect_free_plain_names(&body.ret_set, &bound2, out);
 }
 
 pub fn prepare_binders(
     names: &[String],
-    subst: &HashMap<String, Obj>,
+    param_to_arg_map: &HashMap<String, Obj>,
     fresh_counter: &mut u64,
 ) -> Vec<(String, String)> {
-    let free = free_plain_names_in_subst(subst);
+    let free = free_plain_names_in_subst(param_to_arg_map);
     names
         .iter()
         .map(|name| {
@@ -300,131 +301,181 @@ pub fn prepare_binders(
         .collect()
 }
 
-pub fn with_shadowed_binders<T>(
-    ctx: &mut InstCtx<'_>,
+pub fn shadowed_subst_and_renames(
+    param_to_arg_map: &HashMap<String, Obj>,
+    binder_renames: &HashMap<String, String>,
     binders: &[(String, String)],
-    f: impl FnOnce(&mut InstCtx<'_>) -> Result<T, InstError>,
-) -> Result<T, InstError> {
-    let saved: Vec<(String, Obj)> = binders
-        .iter()
-        .filter_map(|(name, _)| ctx.subst.get(name).map(|v| (name.clone(), v.clone())))
-        .collect();
+) -> (HashMap<String, Obj>, HashMap<String, String>) {
+    let mut shadowed = param_to_arg_map.clone();
     for (name, _) in binders {
-        ctx.subst.remove(name);
+        shadowed.remove(name);
     }
+    let mut new_renames = binder_renames.clone();
     for (old, new) in binders {
-        ctx.binder_renames.insert(old.clone(), new.clone());
+        new_renames.insert(old.clone(), new.clone());
     }
-    let result = f(ctx);
-    for (old, _) in binders {
-        ctx.binder_renames.remove(old);
-    }
-    for (name, value) in saved {
-        ctx.subst.insert(name, value);
-    }
-    result
+    (shadowed, new_renames)
 }
 
 pub fn binder_names_from_set_bound_parameters(list: &SetBoundParameterList) -> Vec<String> {
     let mut names = Vec::new();
     for group in &list.groups {
         for param in &group.params {
-            names.push(param.name.clone());
+            names.push(param.clone());
         }
     }
     names
 }
 
-fn inst_set_builder_body_contents(
-    ctx: &mut InstCtx<'_>,
-    body: &SetBuilderBody,
-    binders: &[(String, String)],
-    param_set: Obj,
-) -> Result<SetBuilderBody, InstError> {
-    let facts = super::fact::inst_qf_facts(ctx, &body.facts)?;
-    Ok(SetBuilderBody {
-        param_binding: Identifier::new(binders[0].1.clone()),
-        param_set: Box::new(param_set),
-        facts,
-    })
-}
-
-pub fn inst_set_builder_body(
-    ctx: &mut InstCtx<'_>,
-    body: &SetBuilderBody,
-) -> Result<SetBuilderBody, InstError> {
-    let param_set = ctx.inst_obj(&body.param_set)?;
-    let binders = prepare_binders(&[body.param_binding.name.clone()], &ctx.subst, &mut ctx.fresh_counter);
-    with_shadowed_binders(ctx, &binders, |ctx| {
-        inst_set_builder_body_contents(ctx, body, &binders, param_set)
-    })
-}
-
-fn inst_fn_set_body_contents(
-    ctx: &mut InstCtx<'_>,
-    body: &FnSetBody,
-    binders: &[(String, String)],
-) -> Result<FnSetBody, InstError> {
-    let mut rename_iter = binders.iter();
-    let mut groups = Vec::with_capacity(body.set_bound_parameters.groups.len());
-    for group in &body.set_bound_parameters.groups {
-        let param_type = ctx.inst_obj(&group.param_type)?;
-        let mut params = Vec::with_capacity(group.params.len());
-        for _ in &group.params {
-            let (_, new_name) = rename_iter.next().expect("binder count matches");
-            params.push(Identifier::new(new_name.clone()));
-        }
-        groups.push(SetBoundParameterGroup {
-            params,
-            param_type: Box::new(param_type),
-        });
+impl Runtime {
+    fn inst_set_builder_body_contents(
+        &mut self,
+        body: &SetBuilderBody,
+        binders: &[(String, String)],
+        param_set: Obj,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<SetBuilderBody, InstError> {
+        let facts = self.inst_qf_facts_rec(&body.facts, param_to_arg_map, fresh, binder_renames)?;
+        Ok(SetBuilderBody {
+            param_binding: binders[0].1.clone(),
+            param_set: Box::new(param_set),
+            facts,
+        })
     }
-    let dom_facts = super::fact::inst_qf_facts(ctx, &body.dom_facts)?;
-    let ret_set = ctx.inst_obj(&body.ret_set)?;
-    Ok(FnSetBody {
-        set_bound_parameters: SetBoundParameterList { groups },
-        dom_facts,
-        ret_set: Box::new(ret_set),
-    })
-}
 
-pub fn inst_fn_set_body(ctx: &mut InstCtx<'_>, body: &FnSetBody) -> Result<FnSetBody, InstError> {
-    let binder_names = binder_names_from_set_bound_parameters(&body.set_bound_parameters);
-    let binders = prepare_binders(&binder_names, &ctx.subst, &mut ctx.fresh_counter);
-    with_shadowed_binders(ctx, &binders, |ctx| inst_fn_set_body_contents(ctx, body, &binders))
-}
+    fn inst_set_builder_body(
+        &mut self,
+        body: &SetBuilderBody,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<SetBuilderBody, InstError> {
+        let param_set = self.inst_obj_rec(&body.param_set, param_to_arg_map, fresh, binder_renames)?;
+        let binders = prepare_binders(&[body.param_binding.clone()], param_to_arg_map, fresh);
+        let (shadowed, new_renames) =
+            shadowed_subst_and_renames(param_to_arg_map, binder_renames, &binders);
+        self.inst_set_builder_body_contents(
+            body,
+            &binders,
+            param_set,
+            &shadowed,
+            fresh,
+            &new_renames,
+        )
+    }
 
-pub fn inst_set_builder(ctx: &mut InstCtx<'_>, sb: &SetBuilder) -> Result<SetBuilder, InstError> {
-    let surface = inst_set_builder_body(ctx, &sb.surface)?;
-    let alpha = inst_set_builder_body(ctx, &sb.alpha)?;
-    Ok(SetBuilder { surface, alpha })
-}
+    fn inst_fn_set_body_contents(
+        &mut self,
+        body: &FnSetBody,
+        binders: &[(String, String)],
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<FnSetBody, InstError> {
+        let mut rename_iter = binders.iter();
+        let mut groups = Vec::with_capacity(body.set_bound_parameters.groups.len());
+        for group in &body.set_bound_parameters.groups {
+            let param_type =
+                self.inst_obj_rec(&group.param_type, param_to_arg_map, fresh, binder_renames)?;
+            let mut params = Vec::with_capacity(group.params.len());
+            for _ in &group.params {
+                let (_, new_name) = rename_iter.next().expect("binder count matches");
+                params.push(new_name.clone());
+            }
+            groups.push(SetBoundParameterGroup {
+                params,
+                param_type: Box::new(param_type),
+            });
+        }
+        let dom_facts = self.inst_qf_facts_rec(&body.dom_facts, param_to_arg_map, fresh, binder_renames)?;
+        let ret_set = self.inst_obj_rec(&body.ret_set, param_to_arg_map, fresh, binder_renames)?;
+        Ok(FnSetBody {
+            set_bound_parameters: SetBoundParameterList { groups },
+            dom_facts,
+            ret_set: Box::new(ret_set),
+        })
+    }
 
-pub fn inst_fn_set(ctx: &mut InstCtx<'_>, fs: &FnSet) -> Result<FnSet, InstError> {
-    let surface = inst_fn_set_body(ctx, &fs.surface)?;
-    let alpha = inst_fn_set_body(ctx, &fs.alpha)?;
-    Ok(FnSet { surface, alpha })
-}
+    fn inst_fn_set_body(
+        &mut self,
+        body: &FnSetBody,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<FnSetBody, InstError> {
+        let binder_names = binder_names_from_set_bound_parameters(&body.set_bound_parameters);
+        let binders = prepare_binders(&binder_names, param_to_arg_map, fresh);
+        let (shadowed, new_renames) =
+            shadowed_subst_and_renames(param_to_arg_map, binder_renames, &binders);
+        self.inst_fn_set_body_contents(body, &binders, &shadowed, fresh, &new_renames)
+    }
 
-fn inst_anonymous_fn_body(
-    ctx: &mut InstCtx<'_>,
-    body: &AnonymousFnBody,
-) -> Result<AnonymousFnBody, InstError> {
-    let binder_names = binder_names_from_set_bound_parameters(&body.body.set_bound_parameters);
-    let binders = prepare_binders(&binder_names, &ctx.subst, &mut ctx.fresh_counter);
-    with_shadowed_binders(ctx, &binders, |ctx| {
-        let fn_body = inst_fn_set_body_contents(ctx, &body.body, &binders)?;
-        let equal_to = ctx.inst_obj(&body.equal_to)?;
+    pub(crate) fn inst_set_builder(
+        &mut self,
+        sb: &SetBuilder,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<SetBuilder, InstError> {
+        let surface = self.inst_set_builder_body(&sb.surface, param_to_arg_map, fresh, binder_renames)?;
+        let alpha = self.inst_set_builder_body(&sb.alpha, param_to_arg_map, fresh, binder_renames)?;
+        Ok(SetBuilder { surface, alpha })
+    }
+
+    pub(crate) fn inst_fn_set(
+        &mut self,
+        fs: &FnSet,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<FnSet, InstError> {
+        let surface = self.inst_fn_set_body(&fs.surface, param_to_arg_map, fresh, binder_renames)?;
+        let alpha = self.inst_fn_set_body(&fs.alpha, param_to_arg_map, fresh, binder_renames)?;
+        Ok(FnSet { surface, alpha })
+    }
+
+    fn inst_anonymous_fn_body_inner(
+        &mut self,
+        body: &AnonymousFnBody,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<AnonymousFnBody, InstError> {
+        let binder_names = binder_names_from_set_bound_parameters(&body.body.set_bound_parameters);
+        let binders = prepare_binders(&binder_names, param_to_arg_map, fresh);
+        let (shadowed, new_renames) =
+            shadowed_subst_and_renames(param_to_arg_map, binder_renames, &binders);
+        let fn_body =
+            self.inst_fn_set_body_contents(&body.body, &binders, &shadowed, fresh, &new_renames)?;
+        let equal_to = self.inst_obj_rec(&body.equal_to, &shadowed, fresh, &new_renames)?;
         Ok(AnonymousFnBody {
             body: fn_body,
             equal_to: Box::new(equal_to),
         })
-    })
-}
+    }
 
-pub fn inst_anonymous_fn(ctx: &mut InstCtx<'_>, af: &AnonymousFn) -> Result<AnonymousFn, InstError> {
-    Ok(AnonymousFn {
-        surface: inst_anonymous_fn_body(ctx, &af.surface)?,
-        alpha: inst_anonymous_fn_body(ctx, &af.alpha)?,
-    })
+    pub(crate) fn inst_anonymous_fn(
+        &mut self,
+        af: &AnonymousFn,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<AnonymousFn, InstError> {
+        Ok(AnonymousFn {
+            surface: self.inst_anonymous_fn_body_inner(
+                &af.surface,
+                param_to_arg_map,
+                fresh,
+                binder_renames,
+            )?,
+            alpha: self.inst_anonymous_fn_body_inner(
+                &af.alpha,
+                param_to_arg_map,
+                fresh,
+                binder_renames,
+            )?,
+        })
+    }
 }

@@ -748,13 +748,9 @@ impl DefPropStmt {
 impl DefAbstractPropStmt {
     pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
-        let params: Vec<_> = self
-            .params
-            .iter()
-            .map(|p| p.ir())
-            .collect();
+        let params = self.params.join(", ");
         out.push_str(&format!("{} {}{}", ABSTRACT_PROP, self.name, LEFT_PAREN));
-        out.push_str(&format!("{}{}", params.join(", "), RIGHT_PAREN));
+        out.push_str(&format!("{}{}", params, RIGHT_PAREN));
 
         StmtIR(out)
     }

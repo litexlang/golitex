@@ -16,6 +16,7 @@ pub mod execute;
 pub mod instantiate;
 pub mod module_manager;
 pub mod parse;
+pub mod rational_expression;
 pub mod run;
 pub mod runtime;
 pub mod store_fact_and_infer;

@@ -18,7 +18,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::{
     FactWellDefinedProof, VerifyFactResult, VerifyFactWellDefinedResult, VerifyObjWellDefinedResult,
     VerifyState,
 };
-use crate::new_pipeline::instantiate::{quantifier_free_fact_to_fact, SubstitutionMode};
+use crate::new_pipeline::instantiate::quantifier_free_fact_to_fact;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 use crate::new_pipeline::store_fact_and_infer::StoreFactAndInferResult;
 
@@ -234,18 +234,14 @@ impl Runtime {
         let mut witness_index = 0;
         for group in &plain.typed_parameters.groups {
             for param in &group.params {
-                subst.insert(param.name.clone(), equal_tos[witness_index].clone());
+                subst.insert(param.clone(), equal_tos[witness_index].clone());
                 witness_index += 1;
             }
         }
 
         let mut body_checks = Vec::with_capacity(plain.facts.len());
         for body_fact in &plain.facts {
-            let instantiated = match self.inst_quantifier_free_fact(
-                body_fact,
-                &subst,
-                SubstitutionMode::Exact,
-            ) {
+            let instantiated = match self.inst_quantifier_free_fact(body_fact, &subst) {
                 Ok(qf) => quantifier_free_fact_to_fact(qf),
                 Err(_) => {
                     return Ok(Err(ExecWitnessExistFactStmtFailed::BodyCheck(

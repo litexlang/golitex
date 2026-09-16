@@ -1,243 +1,464 @@
+use std::collections::HashMap;
+
 use crate::new_pipeline::ast::obj::{
     BigIntersect, BigUnion, Cart, CartDim, ClosedRange, FiniteSeqListObj, FiniteSeqSet, FiniteSetMax,
     FiniteSetMin, FiniteSetReduce, FiniteSetSize, FnRange, GeneralCart, IndexIntersect, IndexUnion,
     Intersect, ListSet, Obj, PowerSet, Product, ProductOfFiniteSet, Proj, Range, Reduce,
     Replacement, SeqSet, SetMinus, Sum, SumOfFiniteSet, Tuple, TupleDim, Union,
 };
+use crate::new_pipeline::runtime::Runtime;
 
-use super::super::InstCtx;
 use super::super::error::InstError;
 
-pub fn inst_union(ctx: &mut InstCtx<'_>, a: &Union) -> Result<Obj, InstError> {
+impl Runtime {
+    pub(crate) fn inst_union_obj(
+        &mut self,
+        a: &Union,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::Union(Union {
-        left: Box::new(ctx.inst_obj(&a.left)?),
-        right: Box::new(ctx.inst_obj(&a.right)?),
+        left: Box::new(self.inst_obj_rec(&a.left, param_to_arg_map, fresh, binder_renames)?),
+        right: Box::new(self.inst_obj_rec(&a.right, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_intersect(ctx: &mut InstCtx<'_>, a: &Intersect) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_intersect_obj(
+        &mut self,
+        a: &Intersect,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::Intersect(Intersect {
-        left: Box::new(ctx.inst_obj(&a.left)?),
-        right: Box::new(ctx.inst_obj(&a.right)?),
+        left: Box::new(self.inst_obj_rec(&a.left, param_to_arg_map, fresh, binder_renames)?),
+        right: Box::new(self.inst_obj_rec(&a.right, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_set_minus(ctx: &mut InstCtx<'_>, a: &SetMinus) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_set_minus_obj(
+        &mut self,
+        a: &SetMinus,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::SetMinus(SetMinus {
-        left: Box::new(ctx.inst_obj(&a.left)?),
-        right: Box::new(ctx.inst_obj(&a.right)?),
+        left: Box::new(self.inst_obj_rec(&a.left, param_to_arg_map, fresh, binder_renames)?),
+        right: Box::new(self.inst_obj_rec(&a.right, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_big_union(ctx: &mut InstCtx<'_>, a: &BigUnion) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_big_union_obj(
+        &mut self,
+        a: &BigUnion,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::BigUnion(BigUnion {
-        left: Box::new(ctx.inst_obj(&a.left)?),
+        left: Box::new(self.inst_obj_rec(&a.left, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_big_intersect(ctx: &mut InstCtx<'_>, a: &BigIntersect) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_big_intersect_obj(
+        &mut self,
+        a: &BigIntersect,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::BigIntersect(BigIntersect {
-        left: Box::new(ctx.inst_obj(&a.left)?),
+        left: Box::new(self.inst_obj_rec(&a.left, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_index_union(ctx: &mut InstCtx<'_>, a: &IndexUnion) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_index_union_obj(
+        &mut self,
+        a: &IndexUnion,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::IndexUnion(IndexUnion {
-        index_set: Box::new(ctx.inst_obj(&a.index_set)?),
-        ambient_set: Box::new(ctx.inst_obj(&a.ambient_set)?),
-        family_fn: Box::new(ctx.inst_obj(&a.family_fn)?),
+        index_set: Box::new(self.inst_obj_rec(&a.index_set, param_to_arg_map, fresh, binder_renames)?),
+        ambient_set: Box::new(self.inst_obj_rec(&a.ambient_set, param_to_arg_map, fresh, binder_renames)?),
+        family_fn: Box::new(self.inst_obj_rec(&a.family_fn, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_index_intersect(ctx: &mut InstCtx<'_>, a: &IndexIntersect) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_index_intersect_obj(
+        &mut self,
+        a: &IndexIntersect,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::IndexIntersect(IndexIntersect {
-        index_set: Box::new(ctx.inst_obj(&a.index_set)?),
-        ambient_set: Box::new(ctx.inst_obj(&a.ambient_set)?),
-        family_fn: Box::new(ctx.inst_obj(&a.family_fn)?),
+        index_set: Box::new(self.inst_obj_rec(&a.index_set, param_to_arg_map, fresh, binder_renames)?),
+        ambient_set: Box::new(self.inst_obj_rec(&a.ambient_set, param_to_arg_map, fresh, binder_renames)?),
+        family_fn: Box::new(self.inst_obj_rec(&a.family_fn, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_power_set(ctx: &mut InstCtx<'_>, a: &PowerSet) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_power_set_obj(
+        &mut self,
+        a: &PowerSet,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::PowerSet(PowerSet {
-        set: Box::new(ctx.inst_obj(&a.set)?),
+        set: Box::new(self.inst_obj_rec(&a.set, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_general_cart(ctx: &mut InstCtx<'_>, a: &GeneralCart) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_general_cart_obj(
+        &mut self,
+        a: &GeneralCart,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::GeneralCart(GeneralCart {
-        index_set: Box::new(ctx.inst_obj(&a.index_set)?),
-        family_set: Box::new(ctx.inst_obj(&a.family_set)?),
-        family_fn: Box::new(ctx.inst_obj(&a.family_fn)?),
+        index_set: Box::new(self.inst_obj_rec(&a.index_set, param_to_arg_map, fresh, binder_renames)?),
+        family_set: Box::new(self.inst_obj_rec(&a.family_set, param_to_arg_map, fresh, binder_renames)?),
+        family_fn: Box::new(self.inst_obj_rec(&a.family_fn, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_list_set(ctx: &mut InstCtx<'_>, a: &ListSet) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_list_set_obj(
+        &mut self,
+        a: &ListSet,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     let mut list = Vec::with_capacity(a.list.len());
     for o in &a.list {
-        list.push(Box::new(ctx.inst_obj(o)?));
+        list.push(Box::new(self.inst_obj_rec(o, param_to_arg_map, fresh, binder_renames)?));
     }
     Ok(Obj::ListSet(ListSet { list }))
 }
 
-pub fn inst_cart(ctx: &mut InstCtx<'_>, a: &Cart) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_cart_obj(
+        &mut self,
+        a: &Cart,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     let mut args = Vec::with_capacity(a.args.len());
     for o in &a.args {
-        args.push(Box::new(ctx.inst_obj(o)?));
+        args.push(Box::new(self.inst_obj_rec(o, param_to_arg_map, fresh, binder_renames)?));
     }
     Ok(Obj::Cart(Cart { args }))
 }
 
-pub fn inst_tuple(ctx: &mut InstCtx<'_>, a: &Tuple) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_tuple_obj(
+        &mut self,
+        a: &Tuple,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     let mut args = Vec::with_capacity(a.args.len());
     for o in &a.args {
-        args.push(Box::new(ctx.inst_obj(o)?));
+        args.push(Box::new(self.inst_obj_rec(o, param_to_arg_map, fresh, binder_renames)?));
     }
     Ok(Obj::Tuple(Tuple { args }))
 }
 
-pub fn inst_cart_dim(ctx: &mut InstCtx<'_>, a: &CartDim) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_cart_dim_obj(
+        &mut self,
+        a: &CartDim,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::CartDim(CartDim {
-        set: Box::new(ctx.inst_obj(&a.set)?),
+        set: Box::new(self.inst_obj_rec(&a.set, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_proj(ctx: &mut InstCtx<'_>, a: &Proj) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_proj_obj(
+        &mut self,
+        a: &Proj,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::Proj(Proj {
-        set: Box::new(ctx.inst_obj(&a.set)?),
-        dim: Box::new(ctx.inst_obj(&a.dim)?),
+        set: Box::new(self.inst_obj_rec(&a.set, param_to_arg_map, fresh, binder_renames)?),
+        dim: Box::new(self.inst_obj_rec(&a.dim, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_tuple_dim(ctx: &mut InstCtx<'_>, a: &TupleDim) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_tuple_dim_obj(
+        &mut self,
+        a: &TupleDim,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::TupleDim(TupleDim {
-        arg: Box::new(ctx.inst_obj(&a.arg)?),
+        arg: Box::new(self.inst_obj_rec(&a.arg, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_finite_set_size(ctx: &mut InstCtx<'_>, a: &FiniteSetSize) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_finite_set_size_obj(
+        &mut self,
+        a: &FiniteSetSize,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::FiniteSetSize(FiniteSetSize {
-        set: Box::new(ctx.inst_obj(&a.set)?),
+        set: Box::new(self.inst_obj_rec(&a.set, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_finite_set_max(ctx: &mut InstCtx<'_>, a: &FiniteSetMax) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_finite_set_max_obj(
+        &mut self,
+        a: &FiniteSetMax,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::FiniteSetMax(FiniteSetMax {
-        set: Box::new(ctx.inst_obj(&a.set)?),
+        set: Box::new(self.inst_obj_rec(&a.set, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_finite_set_min(ctx: &mut InstCtx<'_>, a: &FiniteSetMin) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_finite_set_min_obj(
+        &mut self,
+        a: &FiniteSetMin,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::FiniteSetMin(FiniteSetMin {
-        set: Box::new(ctx.inst_obj(&a.set)?),
+        set: Box::new(self.inst_obj_rec(&a.set, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_fn_range(ctx: &mut InstCtx<'_>, a: &FnRange) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_fn_range_obj(
+        &mut self,
+        a: &FnRange,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::FnRange(FnRange {
-        function: Box::new(ctx.inst_obj(&a.function)?),
+        function: Box::new(self.inst_obj_rec(&a.function, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_replacement(ctx: &mut InstCtx<'_>, a: &Replacement) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_replacement_obj(
+        &mut self,
+        a: &Replacement,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::Replacement(Replacement {
         prop_name: a.prop_name.clone(),
-        source_set: Box::new(ctx.inst_obj(&a.source_set)?),
+        source_set: Box::new(self.inst_obj_rec(&a.source_set, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_sum(ctx: &mut InstCtx<'_>, a: &Sum) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_sum_obj(
+        &mut self,
+        a: &Sum,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::Sum(Sum {
-        start: Box::new(ctx.inst_obj(&a.start)?),
-        end: Box::new(ctx.inst_obj(&a.end)?),
-        func: Box::new(ctx.inst_obj(&a.func)?),
+        start: Box::new(self.inst_obj_rec(&a.start, param_to_arg_map, fresh, binder_renames)?),
+        end: Box::new(self.inst_obj_rec(&a.end, param_to_arg_map, fresh, binder_renames)?),
+        func: Box::new(self.inst_obj_rec(&a.func, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_sum_of_finite_set(ctx: &mut InstCtx<'_>, a: &SumOfFiniteSet) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_sum_of_finite_set_obj(
+        &mut self,
+        a: &SumOfFiniteSet,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::SumOfFiniteSet(SumOfFiniteSet {
-        set: Box::new(ctx.inst_obj(&a.set)?),
-        func: Box::new(ctx.inst_obj(&a.func)?),
+        set: Box::new(self.inst_obj_rec(&a.set, param_to_arg_map, fresh, binder_renames)?),
+        func: Box::new(self.inst_obj_rec(&a.func, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_product(ctx: &mut InstCtx<'_>, a: &Product) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_product_obj(
+        &mut self,
+        a: &Product,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::Product(Product {
-        start: Box::new(ctx.inst_obj(&a.start)?),
-        end: Box::new(ctx.inst_obj(&a.end)?),
-        func: Box::new(ctx.inst_obj(&a.func)?),
+        start: Box::new(self.inst_obj_rec(&a.start, param_to_arg_map, fresh, binder_renames)?),
+        end: Box::new(self.inst_obj_rec(&a.end, param_to_arg_map, fresh, binder_renames)?),
+        func: Box::new(self.inst_obj_rec(&a.func, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_product_of_finite_set(
-    ctx: &mut InstCtx<'_>,
-    a: &ProductOfFiniteSet,
-) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_product_of_finite_set_obj(
+        &mut self,
+        a: &ProductOfFiniteSet,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::ProductOfFiniteSet(ProductOfFiniteSet {
-        set: Box::new(ctx.inst_obj(&a.set)?),
-        func: Box::new(ctx.inst_obj(&a.func)?),
+        set: Box::new(self.inst_obj_rec(&a.set, param_to_arg_map, fresh, binder_renames)?),
+        func: Box::new(self.inst_obj_rec(&a.func, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_reduce(ctx: &mut InstCtx<'_>, a: &Reduce) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_reduce_obj(
+        &mut self,
+        a: &Reduce,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::Reduce(Reduce {
-        start: Box::new(ctx.inst_obj(&a.start)?),
-        end: Box::new(ctx.inst_obj(&a.end)?),
-        func: Box::new(ctx.inst_obj(&a.func)?),
-        op: Box::new(ctx.inst_obj(&a.op)?),
-        seed: Box::new(ctx.inst_obj(&a.seed)?),
+        start: Box::new(self.inst_obj_rec(&a.start, param_to_arg_map, fresh, binder_renames)?),
+        end: Box::new(self.inst_obj_rec(&a.end, param_to_arg_map, fresh, binder_renames)?),
+        func: Box::new(self.inst_obj_rec(&a.func, param_to_arg_map, fresh, binder_renames)?),
+        op: Box::new(self.inst_obj_rec(&a.op, param_to_arg_map, fresh, binder_renames)?),
+        seed: Box::new(self.inst_obj_rec(&a.seed, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_finite_set_reduce(ctx: &mut InstCtx<'_>, a: &FiniteSetReduce) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_finite_set_reduce_obj(
+        &mut self,
+        a: &FiniteSetReduce,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::FiniteSetReduce(FiniteSetReduce {
-        set: Box::new(ctx.inst_obj(&a.set)?),
-        func: Box::new(ctx.inst_obj(&a.func)?),
-        op: Box::new(ctx.inst_obj(&a.op)?),
-        seed: Box::new(ctx.inst_obj(&a.seed)?),
+        set: Box::new(self.inst_obj_rec(&a.set, param_to_arg_map, fresh, binder_renames)?),
+        func: Box::new(self.inst_obj_rec(&a.func, param_to_arg_map, fresh, binder_renames)?),
+        op: Box::new(self.inst_obj_rec(&a.op, param_to_arg_map, fresh, binder_renames)?),
+        seed: Box::new(self.inst_obj_rec(&a.seed, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_range(ctx: &mut InstCtx<'_>, a: &Range) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_range_obj(
+        &mut self,
+        a: &Range,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::Range(Range {
-        start: Box::new(ctx.inst_obj(&a.start)?),
-        end: Box::new(ctx.inst_obj(&a.end)?),
+        start: Box::new(self.inst_obj_rec(&a.start, param_to_arg_map, fresh, binder_renames)?),
+        end: Box::new(self.inst_obj_rec(&a.end, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_closed_range(ctx: &mut InstCtx<'_>, a: &ClosedRange) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_closed_range_obj(
+        &mut self,
+        a: &ClosedRange,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::ClosedRange(ClosedRange {
-        start: Box::new(ctx.inst_obj(&a.start)?),
-        end: Box::new(ctx.inst_obj(&a.end)?),
+        start: Box::new(self.inst_obj_rec(&a.start, param_to_arg_map, fresh, binder_renames)?),
+        end: Box::new(self.inst_obj_rec(&a.end, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_finite_seq_set(ctx: &mut InstCtx<'_>, a: &FiniteSeqSet) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_finite_seq_set_obj(
+        &mut self,
+        a: &FiniteSeqSet,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::FiniteSeqSet(FiniteSeqSet {
-        set: Box::new(ctx.inst_obj(&a.set)?),
-        n: Box::new(ctx.inst_obj(&a.n)?),
+        set: Box::new(self.inst_obj_rec(&a.set, param_to_arg_map, fresh, binder_renames)?),
+        n: Box::new(self.inst_obj_rec(&a.n, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_seq_set(ctx: &mut InstCtx<'_>, a: &SeqSet) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_seq_set_obj(
+        &mut self,
+        a: &SeqSet,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::SeqSet(SeqSet {
-        set: Box::new(ctx.inst_obj(&a.set)?),
+        set: Box::new(self.inst_obj_rec(&a.set, param_to_arg_map, fresh, binder_renames)?),
     }))
 }
 
-pub fn inst_finite_seq_list_obj(ctx: &mut InstCtx<'_>, a: &FiniteSeqListObj) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_finite_seq_list_obj(
+        &mut self,
+        a: &FiniteSeqListObj,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     let mut objs = Vec::with_capacity(a.objs.len());
     for o in &a.objs {
-        objs.push(Box::new(ctx.inst_obj(o)?));
+        objs.push(Box::new(self.inst_obj_rec(o, param_to_arg_map, fresh, binder_renames)?));
     }
     Ok(Obj::FiniteSeqListObj(FiniteSeqListObj { objs }))
 }
 
-pub fn inst_obj_at_index(
-    ctx: &mut InstCtx<'_>,
-    a: &crate::new_pipeline::ast::obj::ObjAtIndex,
-) -> Result<Obj, InstError> {
+
+    pub(crate) fn inst_obj_at_index_obj(
+        &mut self,
+        a: &crate::new_pipeline::ast::obj::ObjAtIndex,
+        param_to_arg_map: &HashMap<String, Obj>,
+        fresh: &mut u64,
+        binder_renames: &HashMap<String, String>,
+    ) -> Result<Obj, InstError> {
     Ok(Obj::ObjAtIndex(crate::new_pipeline::ast::obj::ObjAtIndex {
-        obj: Box::new(ctx.inst_obj(&a.obj)?),
-        index: Box::new(ctx.inst_obj(&a.index)?),
+        obj: Box::new(self.inst_obj_rec(&a.obj, param_to_arg_map, fresh, binder_renames)?),
+        index: Box::new(self.inst_obj_rec(&a.index, param_to_arg_map, fresh, binder_renames)?),
     }))
+}
 }

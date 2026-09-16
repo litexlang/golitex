@@ -12,7 +12,11 @@
 //! `verify_typed_parameters_well_definedness` then
 //! `define_typed_parameters_in_current_env`.
 
-use crate::new_pipeline::ast::param::TypedParameterList;
+use crate::new_pipeline::ast::fact::{
+    AtomicFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
+};
+use crate::new_pipeline::ast::obj::{IdentifierObj, Obj};
+use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::exec_env::DefinedIdentifierInfo;
 use crate::new_pipeline::execute::execute_fact_stmt::{
     FailToVerifyObjWellDefinedResult, ParamTypeWellDefinedProof, VerifyObjWellDefinedResult,
@@ -76,8 +80,8 @@ impl Runtime {
         Ok(Ok(kept))
     }
 
-    // Stage 2: bind each identifier in the current top ExecEnv and record
-    // type-fact ids. Type facts themselves still need KnownFactMemory wiring.
+    // Stage 2: bind each identifier and store its type fact into KnownFactMemory.
+    // Example: `have x R` stores `x $in R`.
     pub fn define_typed_parameters_in_current_env(
         &mut self,
         typed_parameters: &TypedParameterList,
@@ -85,20 +89,48 @@ impl Runtime {
         let mut stored_fact_ids = Vec::new();
         for group in &typed_parameters.groups {
             for identifier in &group.params {
-                if self.identifier_defined_in_stack(&identifier.name) {
+                if self.identifier_defined_in_stack(identifier) {
                     return Err(RuntimeError::InternalBug(format!(
                         "identifier `{}` is already defined in this ExecEnv",
-                        identifier.name
+                        identifier
                     )));
                 }
                 self.top_exec_env_mut().definitions.identifiers.insert(
-                    identifier.name.clone(),
+                    identifier.clone(),
                     DefinedIdentifierInfo {
                         identifier: identifier.clone(),
                     },
                 );
-                // Type facts belong in KnownFactMemory once that store is wired.
-                stored_fact_ids.push(self.ids.allocate_fact_id());
+                let element = Obj::Identifier(IdentifierObj::plain(identifier.clone()));
+                let type_fact = match &group.param_type {
+                    ParamType::Obj(param_set) => Fact::AtomicFact(AtomicFact::InFact(InFact {
+                        fact_id: self.ids.allocate_fact_id(),
+                        element,
+                        set: param_set.clone(),
+                        line_file: None,
+                    })),
+                    ParamType::Set(_) => Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact {
+                        fact_id: self.ids.allocate_fact_id(),
+                        set: element,
+                        line_file: None,
+                    })),
+                    ParamType::NonemptySet(_) => {
+                        Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact {
+                            fact_id: self.ids.allocate_fact_id(),
+                            set: element,
+                            line_file: None,
+                        }))
+                    }
+                    ParamType::FiniteSet(_) => {
+                        Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact {
+                            fact_id: self.ids.allocate_fact_id(),
+                            set: element,
+                            line_file: None,
+                        }))
+                    }
+                };
+                let store_result = self.store_fact_and_infer(&type_fact)?;
+                stored_fact_ids.extend(store_result.stored_fact_ids());
             }
         }
         Ok(StoreHaveObjAndInferResult { stored_fact_ids })
