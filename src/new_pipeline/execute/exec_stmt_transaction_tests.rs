@@ -80,6 +80,22 @@ fn calculation_closed_decimal_and_rational_zero_premise() {
         exec_one(&mut runtime, "x / x = 1").is_failed(),
         "expected soft fail for x / x = 1 (nonzero premise)"
     );
+
+    assert!(
+        !exec_one(&mut runtime, "trust x != 0").is_failed(),
+        "expected Success for trust x != 0"
+    );
+    assert!(
+        !exec_one(&mut runtime, "x / x = 1").is_failed(),
+        "expected Success for x / x = 1 under x != 0"
+    );
+
+    assert!(!exec_one(&mut runtime, "have a R, b R, c R").is_failed());
+    assert!(!exec_one(&mut runtime, "trust b != 0").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "a / b + c / b = (a + c) / b").is_failed(),
+        "expected Success for same-denominator sum identity"
+    );
 }
 
 #[test]

@@ -75,9 +75,16 @@ impl Runtime {
 
     pub fn search_equal_fact_proof_by_builtin_strategy(
         &mut self,
-        _fact: &EqualFact,
-        _verify_state: VerifyState,
+        fact: &EqualFact,
+        verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualitySearchProofByBuiltinStrategy>> {
+        if let Some(proof) =
+            self.search_equal_fact_by_rational_with_nonzero_premises(fact, verify_state)?
+        {
+            return Ok(Some(
+                EqualitySearchProofByBuiltinStrategy::RationalWithNonzeroPremises(proof),
+            ));
+        }
         Ok(None)
     }
 

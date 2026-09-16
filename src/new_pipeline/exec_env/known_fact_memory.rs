@@ -40,12 +40,11 @@ pub struct KnownEqualityMemory {
     pub class_members: HashMap<ObjIR, Rc<Vec<Obj>>>,
 }
 
-// Non-equality atomics indexed by AtomicName, polarity, and arity.
+// Non-equality atomics bucketed by (prop name, positive polarity).
+// Lookup is a linear scan; arg sameness uses equality-class ObjIR, not a hash key.
 #[derive(Clone, Default)]
 pub struct AtomicExceptEqualityFactMemory {
-    pub by_other_arg_count: HashMap<(AtomicName, bool), Vec<AtomicFact>>,
-    pub by_one_arg: HashMap<(AtomicName, bool), HashMap<ObjIR, AtomicFact>>,
-    pub by_two_args: HashMap<(AtomicName, bool), HashMap<(ObjIR, ObjIR), AtomicFact>>,
+    pub by_prop: HashMap<(AtomicName, bool), Vec<AtomicFact>>,
 }
 
 impl KnownFactMemory {
@@ -164,40 +163,8 @@ impl AtomicExceptEqualityFactMemory {
         Self::default()
     }
 
-    pub fn store_one_arg(
-        &mut self,
-        key: AtomicName,
-        positive_polarity: bool,
-        arg_key: ObjIR,
-        fact: AtomicFact,
-    ) {
-        self.by_one_arg
-            .entry((key, positive_polarity))
-            .or_default()
-            .insert(arg_key, fact);
-    }
-
-    pub fn store_two_args(
-        &mut self,
-        key: AtomicName,
-        positive_polarity: bool,
-        arg_key0: ObjIR,
-        arg_key1: ObjIR,
-        fact: AtomicFact,
-    ) {
-        self.by_two_args
-            .entry((key, positive_polarity))
-            .or_default()
-            .insert((arg_key0, arg_key1), fact);
-    }
-
-    pub fn store_other_arg_count(
-        &mut self,
-        key: AtomicName,
-        positive_polarity: bool,
-        fact: AtomicFact,
-    ) {
-        self.by_other_arg_count
+    pub fn store(&mut self, key: AtomicName, positive_polarity: bool, fact: AtomicFact) {
+        self.by_prop
             .entry((key, positive_polarity))
             .or_default()
             .push(fact);

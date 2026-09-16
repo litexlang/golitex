@@ -1,4 +1,4 @@
-# calculation + zero-premise rational (new_pipeline)
+# calculation + zero-premise rational + nonzero-premise rational (new_pipeline)
 
 1 + 1 = 2
 2 * 3 = 6
@@ -7,3 +7,10 @@ have x R
 (x + 1) * (x - 1) = x^2 - 1
 x + 0 = x
 1 * x = x
+
+trust x != 0
+x / x = 1
+
+have a R, b R, c R
+trust b != 0
+a / b + c / b = (a + c) / b
