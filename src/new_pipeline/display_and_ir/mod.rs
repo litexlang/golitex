@@ -1,8 +1,7 @@
 //! Obj / Fact / Stmt IR and display strings.
 //!
-//! Internal strings use ordinary Litex surface spelling (name is identity).
-//! `display_string` currently equals the IR string. See README.md in this
-//! directory.
+//! Plain identifier IR embeds `#id#name`; display uses the surface name.
+//! See README.md and `../identifier_identity.md`.
 
 pub mod fact;
 pub mod obj;

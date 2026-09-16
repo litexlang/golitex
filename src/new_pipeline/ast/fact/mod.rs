@@ -1,6 +1,7 @@
 //! Framework AST fact shapes for new_pipeline.
 //! Field taxonomy follows the legacy language; methods are added later.
-//! Identity: String names, FactId, LineFile (name is identity; no IdentifierId).
+//! Identity: prop/predicate names as AtomicName; FactId; LineFile.
+//! Plain objs inside facts use IdentifierId (see `identifier_identity.md`).
 //!
 //! Layout: `Fact` is the root enum; each Fact variant payload lives in its own file.
 //! `AtomicFact` and all atomic payloads stay together in `atomic.rs`.

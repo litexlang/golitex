@@ -39,11 +39,11 @@ impl Runtime {
         match head {
             FnObjHead::Identifier(_) => {}
             FnObjHead::AnonymousFnLiteral(anon) => {
-                for group in &anon.alpha.body.set_bound_parameters.groups {
+                for group in &anon.body.set_bound_parameters.groups {
                     children.push(group.param_type.as_ref());
                 }
-                children.push(anon.alpha.body.ret_set.as_ref());
-                children.push(anon.alpha.equal_to.as_ref());
+                children.push(anon.body.ret_set.as_ref());
+                children.push(anon.equal_to.as_ref());
             }
             FnObjHead::FiniteSeqListObj(list) => {
                 for obj in &list.objs {
@@ -76,10 +76,10 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedProofByDef> {
         let mut children = Vec::new();
-        for group in &value.alpha.set_bound_parameters.groups {
+        for group in &value.set_bound_parameters.groups {
             children.push(group.param_type.as_ref());
         }
-        children.push(value.alpha.ret_set.as_ref());
+        children.push(value.ret_set.as_ref());
         self.verify_objs_as_children(&children, verify_state)
     }
 
@@ -89,11 +89,11 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedProofByDef> {
         let mut children = Vec::new();
-        for group in &value.alpha.body.set_bound_parameters.groups {
+        for group in &value.body.set_bound_parameters.groups {
             children.push(group.param_type.as_ref());
         }
-        children.push(value.alpha.body.ret_set.as_ref());
-        children.push(value.alpha.equal_to.as_ref());
+        children.push(value.body.ret_set.as_ref());
+        children.push(value.equal_to.as_ref());
         self.verify_objs_as_children(&children, verify_state)
     }
 }

@@ -1,13 +1,14 @@
 //! Framework AST data shapes for new_pipeline.
 //! Field taxonomy follows the legacy language; methods are added later.
-//! Identity: String names (name is identity); FactId; LineFile.
+//! Identity: BoundName / IdentifierId for plain refs; FactId; LineFile.
 //!
 //! Layout: `Obj` first; each payload type follows in the same order as its `Obj` variant.
 //! Nested helpers that are not themselves `Obj` variants sit with their owning variant.
 
 use super::fact::QuantifierFreeFact;
-use super::names::AtomicName;
+use super::names::{AtomicName, BoundName, PlainName};
 use super::param::SetBoundParameterList;
+use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Obj {
@@ -89,20 +90,75 @@ pub enum Obj {
 }
 
 // Free or module-qualified name used as an object (at most three `::` segments).
-// Binder / parameter names are plain `String` (never module-qualified).
+// Plain occurrences carry IdentifierId; qualified names do not.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct IdentifierObj {
-    pub name: AtomicName,
+pub enum IdentifierObj {
+    Plain {
+        id: IdentifierId,
+        name: PlainName,
+    },
+    WithExportFileId {
+        export_file_id: usize,
+        name: PlainName,
+    },
+    WithModAndExportFileId {
+        global_mod_id: usize,
+        export_file_id: usize,
+        name: PlainName,
+    },
 }
 
 impl IdentifierObj {
-    pub fn new(name: AtomicName) -> Self {
-        Self { name }
+    pub fn plain(id: IdentifierId, name: PlainName) -> Self {
+        IdentifierObj::Plain { id, name }
     }
 
-    pub fn plain(name: String) -> Self {
-        Self {
-            name: AtomicName::plain(name),
+    pub fn from_bound_name(bound: &BoundName) -> Self {
+        IdentifierObj::Plain {
+            id: bound.id,
+            name: bound.name.clone(),
+        }
+    }
+
+    pub fn with_export_file_id(export_file_id: usize, name: PlainName) -> Self {
+        IdentifierObj::WithExportFileId {
+            export_file_id,
+            name,
+        }
+    }
+
+    pub fn with_mod_and_export_file_id(
+        global_mod_id: usize,
+        export_file_id: usize,
+        name: PlainName,
+    ) -> Self {
+        IdentifierObj::WithModAndExportFileId {
+            global_mod_id,
+            export_file_id,
+            name,
+        }
+    }
+
+    pub fn display_string(&self) -> String {
+        match self {
+            IdentifierObj::Plain { name, .. } => name.clone(),
+            IdentifierObj::WithExportFileId {
+                export_file_id,
+                name,
+            } => format!("f{export_file_id}::{name}"),
+            IdentifierObj::WithModAndExportFileId {
+                global_mod_id,
+                export_file_id,
+                name,
+            } => format!("m{global_mod_id}::f{export_file_id}::{name}"),
+        }
+    }
+
+    // IR key: plain embeds IdentifierId; qualified matches AtomicName spelling.
+    pub fn ir_string(&self) -> String {
+        match self {
+            IdentifierObj::Plain { id, name } => format!("#{}#{}", id.value(), name),
+            other => other.display_string(),
         }
     }
 }
@@ -394,50 +450,26 @@ pub struct ListSet {
 
 // SetBuilder
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SetBuilderBody {
-    pub param_binding: String,
+pub struct SetBuilder {
+    pub param_binding: BoundName,
     pub param_set: Box<Obj>,
     pub facts: Vec<QuantifierFreeFact>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SetBuilder {
-    /// User spelling; display only.
-    pub surface: SetBuilderBody,
-    /// Alpha-normalized identity (`□N`); ops / ir / known-memory keys.
-    pub alpha: SetBuilderBody,
-}
-
 // FnSet
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct FnSetBody {
+pub struct FnSet {
     pub set_bound_parameters: SetBoundParameterList,
     pub dom_facts: Vec<QuantifierFreeFact>,
     /// The return set may depend on the function's parameters and is instantiated at application.
     pub ret_set: Box<Obj>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct FnSet {
-    /// User spelling; display only.
-    pub surface: FnSetBody,
-    /// Alpha-normalized identity (`□N`); ops / ir / known-memory keys.
-    pub alpha: FnSetBody,
-}
-
 // AnonymousFn
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct AnonymousFnBody {
-    pub body: FnSetBody,
-    pub equal_to: Box<Obj>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct AnonymousFn {
-    /// User spelling; display only.
-    pub surface: AnonymousFnBody,
-    /// Alpha-normalized identity (`□N`); ops / ir / known-memory keys.
-    pub alpha: AnonymousFnBody,
+    pub body: FnSet,
+    pub equal_to: Box<Obj>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -668,20 +700,5 @@ pub enum IntervalObj {
 pub struct IntervalObjStruct {
     pub start: Box<Obj>,
     pub end: Box<Obj>,
-}
-
-/// Litex binder-slot identity after `alpha_normalize` (U+25A1 + index).
-pub const BINDER_SLOT_PREFIX: &str = "□";
-
-pub fn binder_slot_name(index: usize) -> String {
-    format!("{BINDER_SLOT_PREFIX}{index}")
-}
-
-pub fn is_binder_slot_name(name: &str) -> bool {
-    let rest = match name.strip_prefix(BINDER_SLOT_PREFIX) {
-        Some(r) => r,
-        None => return false,
-    };
-    !rest.is_empty() && rest.chars().all(|c| c.is_ascii_digit())
 }
 

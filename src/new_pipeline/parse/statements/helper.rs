@@ -81,7 +81,7 @@ impl Runtime {
         let result = (|| {
             for group in &params.groups {
                 for identifier in &group.params {
-                    self.occupy_plain_atom_as_parse(tb, identifier.clone())?;
+                    self.occupy_bound_name_as_parse(tb, identifier)?;
                 }
             }
             f(self)

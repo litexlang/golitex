@@ -365,10 +365,7 @@ impl Obj {
 
 impl IdentifierObj {
     pub fn ir(&self) -> ObjIR {
-        ObjIR(self.display_string())
-    }
-    pub fn display_string(&self) -> String {
-        self.name.display_string()
+        ObjIR(self.ir_string())
     }
 }
 
@@ -518,11 +515,11 @@ impl ListSet {
     }
     impl_display_pair!();
 }
-impl SetBuilderBody {
+impl SetBuilder {
     pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
         out.push_str(&format!("{}", LEFT_CURLY));
-        out.push_str(&self.param_binding);
+        out.push_str(&self.param_binding.ir_string());
         out.push_str(&format!(" "));
         out.push_str(&self.param_set.ir());
         out.push_str(&format!("{}", COLON));
@@ -535,7 +532,7 @@ impl SetBuilderBody {
     pub fn display_string(&self) -> String {
         let mut out = String::new();
         out.push_str(&format!("{}", LEFT_CURLY));
-        out.push_str(&self.param_binding);
+        out.push_str(&self.param_binding.name);
         out.push_str(&format!(" "));
         out.push_str(&self.param_set.display_string());
         out.push_str(&format!("{}", COLON));
@@ -550,15 +547,7 @@ impl SetBuilderBody {
         out
     }
 }
-impl SetBuilder {
-    pub fn ir(&self) -> ObjIR {
-        self.alpha.ir()
-    }
-    pub fn display_string(&self) -> String {
-        self.surface.display_string()
-    }
-}
-impl FnSetBody {
+impl FnSet {
     pub fn ir(&self) -> ObjIR {
         let params: Vec<_> = self
             .set_bound_parameters
@@ -618,15 +607,7 @@ impl FnSetBody {
         out
     }
 }
-impl FnSet {
-    pub fn ir(&self) -> ObjIR {
-        self.alpha.ir()
-    }
-    pub fn display_string(&self) -> String {
-        self.surface.display_string()
-    }
-}
-impl AnonymousFnBody {
+impl AnonymousFn {
     pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
         out.push_str(&self.body.ir());
@@ -642,14 +623,6 @@ impl AnonymousFnBody {
         out.push_str(&self.equal_to.display_string());
         out.push_str(&format!("{}", RIGHT_CURLY));
         out
-    }
-}
-impl AnonymousFn {
-    pub fn ir(&self) -> ObjIR {
-        self.alpha.ir()
-    }
-    pub fn display_string(&self) -> String {
-        self.surface.display_string()
     }
 }
 impl StandardSet {

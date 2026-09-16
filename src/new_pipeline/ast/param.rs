@@ -1,10 +1,10 @@
 //! Framework AST data shapes for new_pipeline.
 //! Field taxonomy follows the legacy language; methods are added later.
-//! Identity: parameter lists store plain String names (name is identity).
+//! Identity: parameter lists store BoundName (name + IdentifierId).
 
+use super::names::BoundName;
 use super::obj::Obj;
 
-// from statement/definitions/parameters.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ParamType {
     Set(Set),
@@ -13,40 +13,33 @@ pub enum ParamType {
     Obj(Obj),
 }
 
-// from statement/definitions/parameters.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TypedParameterList {
     pub groups: Vec<TypedParameterGroup>,
 }
 
-// from statement/definitions/parameters.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SetBoundParameterList {
     pub groups: Vec<SetBoundParameterGroup>,
 }
 
-// from statement/definitions/parameters.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SetBoundParameterGroup {
-    pub params: Vec<String>,
+    pub params: Vec<BoundName>,
     pub param_type: Box<Obj>,
 }
 
-// from statement/definitions/parameters.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TypedParameterGroup {
-    pub params: Vec<String>,
+    pub params: Vec<BoundName>,
     pub param_type: ParamType,
 }
 
-// from statement/definitions/parameters.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Set {}
 
-// from statement/definitions/parameters.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NonemptySet {}
 
-// from statement/definitions/parameters.rs
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FiniteSet {}

@@ -3,6 +3,7 @@ use std::fmt;
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum InstError {
     MissingStructCarrier,
+    CannotUseAsFnHead,
 }
 
 impl fmt::Display for InstError {
@@ -13,6 +14,9 @@ impl fmt::Display for InstError {
                     f,
                     "ObjAsStructInstanceWithFieldAccess has no resolved_struct_carrier"
                 )
+            }
+            InstError::CannotUseAsFnHead => {
+                write!(f, "substituted object cannot be used as a function head")
             }
         }
     }

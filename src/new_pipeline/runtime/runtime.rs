@@ -1,11 +1,11 @@
 use super::error::{RuntimeError, RuntimeResult};
 use super::real_or_virtual_path::RealOrVirtualPath;
-use super::runtime_ids::{FactId, PropAlgebraicPropertyId, WellDefinednessId};
-use crate::new_pipeline::ast::names::AtomicName;
+use super::runtime_ids::{FactId, IdentifierId, PropAlgebraicPropertyId, WellDefinednessId};
+use crate::new_pipeline::ast::names::{AtomicName, BoundName};
 use crate::new_pipeline::launch_command::LaunchCommand;
 use crate::new_pipeline::exec_env::exec_env::ExecEnv;
 use crate::new_pipeline::module_manager::{ExportFileAndItsExecEnv, GlobalModuleManager};
-use std::collections::HashSet;
+use std::collections::HashMap;
 
 // -----------------------------------------------------------------------------
 // Core data model
@@ -27,20 +27,18 @@ pub struct Runtime {
     pub launch_command: LaunchCommand,
 }
 
-/// One parse layer's occupied names. Inner scopes must not reuse a visible outer name.
-///
-/// Keys are `AtomicName` (`Plain` / `WithExportFileId` / `WithModAndExportFileId`).
-/// Qualified atoms use `export_file_id` (module litex.config) and optional
-/// `global_mod_id` (this run's GlobalModuleManager.imports).
+/// One parse layer's plain names → [`IdentifierId`].
+/// Inner scopes must not reuse a visible outer plain name.
 pub struct ParseScope {
-    pub occupied: HashSet<AtomicName>,
+    pub plain: HashMap<String, IdentifierId>,
 }
 
-/// Global monotonic id counters owned by `Runtime` (facts / WD / prop properties).
+/// Global monotonic id counters owned by `Runtime`.
 pub struct Ids {
     next_fact_id: FactId,
     next_well_definedness_id: WellDefinednessId,
     next_prop_algebraic_property_id: PropAlgebraicPropertyId,
+    next_identifier_id: IdentifierId,
 }
 
 impl Runtime {
@@ -111,69 +109,56 @@ impl Runtime {
             .expect("parse scope stack empty");
     }
 
-    pub fn occupied_name_is_visible(&self, key: &AtomicName) -> bool {
+    pub fn plain_atom_is_visible(&self, name: &str) -> bool {
         for scope in &self.parse_scope_stack {
-            if scope.occupied.contains(key) {
+            if scope.plain.contains_key(name) {
                 return true;
             }
         }
         false
     }
 
-    // Occupy `key` in the current scope (name is identity; no per-occurrence id).
-    pub fn define_atom(&mut self, key: AtomicName) -> RuntimeResult<()> {
-        if let AtomicName::Plain { name } = &key {
-            if crate::new_pipeline::ast::obj::is_binder_slot_name(name) {
-                return Err(RuntimeError::InternalBug(format!(
-                    "binder-slot name `{name}` cannot be occupied as a free atom"
-                )));
+    pub fn resolve_plain_atom(&self, name: &str) -> RuntimeResult<IdentifierId> {
+        for scope in self.parse_scope_stack.iter().rev() {
+            if let Some(id) = scope.plain.get(name) {
+                return Ok(*id);
             }
         }
-        if self.occupied_name_is_visible(&key) {
+        Err(RuntimeError::InternalBug(format!(
+            "undefined name `{name}`"
+        )))
+    }
+
+    // Allocate a new IdentifierId and occupy `name` in the current scope.
+    pub fn define_plain_atom(&mut self, name: String) -> RuntimeResult<BoundName> {
+        if self.plain_atom_is_visible(&name) {
             return Err(RuntimeError::InternalBug(format!(
-                "name `{key}` is already bound in an enclosing parse scope"
+                "name `{name}` is already bound in an enclosing parse scope"
+            )));
+        }
+        let id = self.ids.allocate_identifier_id();
+        let scope = self
+            .parse_scope_stack
+            .last_mut()
+            .ok_or_else(|| RuntimeError::InternalBug("no parse scope".to_string()))?;
+        scope.plain.insert(name.clone(), id);
+        Ok(BoundName::new(id, name))
+    }
+
+    // Re-occupy an existing BoundName (e.g. re-open forall binders) without reallocating.
+    pub fn occupy_bound_name(&mut self, bound: &BoundName) -> RuntimeResult<()> {
+        if self.plain_atom_is_visible(&bound.name) {
+            return Err(RuntimeError::InternalBug(format!(
+                "name `{}` is already bound in an enclosing parse scope",
+                bound.name
             )));
         }
         let scope = self
             .parse_scope_stack
             .last_mut()
             .ok_or_else(|| RuntimeError::InternalBug("no parse scope".to_string()))?;
-        scope.occupied.insert(key);
+        scope.plain.insert(bound.name.clone(), bound.id);
         Ok(())
-    }
-
-    // Occupy an already-known name in the current scope (e.g. re-open forall binders).
-    pub fn occupy_atom(&mut self, key: AtomicName) -> RuntimeResult<()> {
-        if let AtomicName::Plain { name } = &key {
-            if crate::new_pipeline::ast::obj::is_binder_slot_name(name) {
-                return Err(RuntimeError::InternalBug(format!(
-                    "binder-slot name `{name}` cannot be occupied as a free atom"
-                )));
-            }
-        }
-        if self.occupied_name_is_visible(&key) {
-            return Err(RuntimeError::InternalBug(format!(
-                "name `{key}` is already bound in an enclosing parse scope"
-            )));
-        }
-        let scope = self
-            .parse_scope_stack
-            .last_mut()
-            .ok_or_else(|| RuntimeError::InternalBug("no parse scope".to_string()))?;
-        scope.occupied.insert(key);
-        Ok(())
-    }
-
-    pub fn define_plain_atom(&mut self, name: String) -> RuntimeResult<()> {
-        self.define_atom(AtomicName::plain(name))
-    }
-
-    pub fn occupy_plain_atom(&mut self, name: String) -> RuntimeResult<()> {
-        self.occupy_atom(AtomicName::plain(name))
-    }
-
-    pub fn plain_atom_is_visible(&self, name: &str) -> bool {
-        self.occupied_name_is_visible(&AtomicName::plain(name.to_string()))
     }
 
     /// Elaborate surface `::` segments using `global_module_manager.current_mod_id`.
@@ -240,7 +225,7 @@ impl Runtime {
 impl ParseScope {
     pub fn new() -> Self {
         Self {
-            occupied: HashSet::new(),
+            plain: HashMap::new(),
         }
     }
 }
@@ -251,6 +236,7 @@ impl Ids {
             next_fact_id: FactId::new(1),
             next_well_definedness_id: WellDefinednessId::new(1),
             next_prop_algebraic_property_id: PropAlgebraicPropertyId::new(1),
+            next_identifier_id: IdentifierId::new(1),
         }
     }
 
@@ -271,6 +257,12 @@ impl Ids {
         let current = self.next_prop_algebraic_property_id;
         self.next_prop_algebraic_property_id =
             PropAlgebraicPropertyId::new(bump(current.value(), "prop algebraic property"));
+        current
+    }
+
+    pub fn allocate_identifier_id(&mut self) -> IdentifierId {
+        let current = self.next_identifier_id;
+        self.next_identifier_id = IdentifierId::new(bump(current.value(), "identifier"));
         current
     }
 }

@@ -1,7 +1,8 @@
-use crate::new_pipeline::ast::alpha_normalize::{new_anonymous_fn, new_fn_set, new_set_builder};
+use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::{
-    Abs, Cart, Ceil, Cos, Exp, Floor, FnObjHead, Gcd, IdentifierObj, Intersect, Lcm, ListSet, Ln,
-    Max, Min, Number, Obj, Quot, SetMinus, Sin, Sqrt, StandardSet, Tan, Tuple, Union,
+    Abs, AnonymousFn, Cart, Ceil, Cos, Exp, Floor, FnObjHead, FnSet, Gcd, IdentifierObj, Intersect,
+    Lcm, ListSet, Ln, Max, Min, Number, Obj, Quot, SetBuilder, SetMinus, Sin, Sqrt, StandardSet,
+    Tan, Tuple, Union,
 };
 use crate::new_pipeline::ast::param::{ParamType, SetBoundParameterGroup, SetBoundParameterList};
 use crate::new_pipeline::parse::keywords::{
@@ -167,7 +168,11 @@ impl Runtime {
                 tb.expect(COMMA)?;
             }
             tb.expect(RIGHT_CURLY)?;
-            Ok(new_set_builder(binding, param_set, facts))
+            Ok(Obj::SetBuilder(SetBuilder {
+                param_binding: binding,
+                param_set: Box::new(param_set),
+                facts,
+            }))
         })();
         self.pop_parse_scope();
         result
@@ -179,13 +184,21 @@ impl Runtime {
         let result = (|| {
             let (params, dom_facts) = self.parse_fn_set_header(tb)?;
             let ret_set = parse_obj(self, tb)?;
+            let body = FnSet {
+                set_bound_parameters: params,
+                dom_facts,
+                ret_set: Box::new(ret_set),
+            };
             if tb.peek() == Some(LEFT_CURLY) {
                 tb.advance()?;
                 let equal_to = parse_obj(self, tb)?;
                 tb.expect(RIGHT_CURLY)?;
-                Ok(new_anonymous_fn(params, dom_facts, ret_set, equal_to))
+                Ok(Obj::AnonymousFn(AnonymousFn {
+                    body,
+                    equal_to: Box::new(equal_to),
+                }))
             } else {
-                Ok(new_fn_set(params, dom_facts, ret_set))
+                Ok(Obj::FnSet(body))
             }
         })();
         self.pop_parse_scope();
@@ -451,15 +464,7 @@ fn parse_identifier_or_mod_or_standard_set(
                 }
                 other => other,
             })?;
-        if !rt.occupied_name_is_visible(&key) {
-            rt.define_atom(key.clone()).map_err(|err| match err {
-                crate::new_pipeline::runtime::RuntimeError::InternalBug(message) => {
-                    tb.parse_error(message)
-                }
-                other => other,
-            })?;
-        }
-        return Ok(Obj::Identifier(IdentifierObj::new(key)));
+        return Ok(Obj::Identifier(identifier_obj_from_qualified_atomic(tb, key)?));
     }
     if tb.peek() == Some(MOD_SIGN) {
         let mut parts = vec![name];
@@ -483,15 +488,7 @@ fn parse_identifier_or_mod_or_standard_set(
             other => other,
         })?;
 
-        if !rt.occupied_name_is_visible(&key) {
-            rt.define_atom(key.clone()).map_err(|err| match err {
-                crate::new_pipeline::runtime::RuntimeError::InternalBug(message) => {
-                    tb.parse_error(message)
-                }
-                other => other,
-            })?;
-        }
-        return Ok(Obj::Identifier(IdentifierObj::new(key)));
+        return Ok(Obj::Identifier(identifier_obj_from_qualified_atomic(tb, key)?));
     }
 
     if let Some(set) = standard_set_from_name(&name) {
@@ -502,10 +499,11 @@ fn parse_identifier_or_mod_or_standard_set(
         return Err(tb.parse_error(format!("expected name, got `{name}`")));
     }
 
-    if !rt.plain_atom_is_visible(&name) {
-        return Err(tb.parse_error(format!("undefined name `{name}`")));
-    }
-    Ok(Obj::Identifier(IdentifierObj::plain(name)))
+    let id = rt.resolve_plain_atom(&name).map_err(|err| match err {
+        crate::new_pipeline::runtime::RuntimeError::InternalBug(message) => tb.parse_error(message),
+        other => other,
+    })?;
+    Ok(Obj::Identifier(IdentifierObj::plain(id, name)))
 }
 
 fn standard_set_from_name(name: &str) -> Option<StandardSet> {
@@ -552,4 +550,28 @@ fn is_number_literal(s: &str) -> bool {
         }
     }
     true
+}
+
+fn identifier_obj_from_qualified_atomic(
+    tb: &TokenBlock,
+    key: AtomicName,
+) -> RuntimeResult<IdentifierObj> {
+    match key {
+        AtomicName::WithExportFileId {
+            export_file_id,
+            name,
+        } => Ok(IdentifierObj::with_export_file_id(export_file_id, name)),
+        AtomicName::WithModAndExportFileId {
+            global_mod_id,
+            export_file_id,
+            name,
+        } => Ok(IdentifierObj::with_mod_and_export_file_id(
+            global_mod_id,
+            export_file_id,
+            name,
+        )),
+        AtomicName::Plain { name } => Err(tb.parse_error(format!(
+            "internal: expected qualified atom, got plain `{name}`"
+        ))),
+    }
 }

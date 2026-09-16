@@ -64,7 +64,7 @@ impl Runtime {
                 }
                 Vec::new()
             };
-            let identifiers: Vec<String> = param_def
+            let identifiers: Vec<crate::new_pipeline::ast::names::BoundName> = param_def
                 .groups
                 .iter()
                 .flat_map(|g| g.params.iter().cloned())
@@ -73,8 +73,8 @@ impl Runtime {
         })();
         self.pop_parse_scope();
         let (param_def, facts, identifiers) = result?;
-        for identifier in identifiers {
-            self.occupy_plain_atom_as_parse(block, identifier)?;
+        for identifier in &identifiers {
+            self.occupy_bound_name_as_parse(block, identifier)?;
         }
         Ok(Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(TrustHaveStmt {
             param_def,

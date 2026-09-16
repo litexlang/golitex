@@ -1,6 +1,7 @@
 //! Framework AST data shapes for new_pipeline.
 //! Field taxonomy follows the legacy language; methods are added later.
-//! Identity: String names, FactId, LineFile (name is identity; no IdentifierId).
+//! Identity: stmt def names are often PlainName; binder params use BoundName /
+//! IdentifierId where wired (see `identifier_identity.md`). FactId; LineFile.
 
 use super::fact::{
     AndChainAtomicFact, AtomicFact, ExistFact, ExistOrAndChainAtomicFact, Fact, ForallFact, InFact,
@@ -89,7 +90,7 @@ pub enum DefinitionStmt {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct LetObjStmt {
-    pub name: String,
+    pub name: crate::new_pipeline::ast::names::BoundName,
     pub value: Obj,
     pub line_file: LineFile,
 }

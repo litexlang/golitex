@@ -36,7 +36,7 @@ impl Runtime {
             .into());
         }
 
-        // Occupy the name before parsing the value (name is identity).
+        // Occupy the name before parsing the value (allocates IdentifierId).
         let name = self.define_plain_atom_as_parse(&tb, name)?;
 
         tb.expect(EQUAL).map_err(|_| {
