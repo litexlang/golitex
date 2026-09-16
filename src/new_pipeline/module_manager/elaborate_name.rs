@@ -7,9 +7,9 @@ use super::litex_config::LitexConfig;
 
 impl GlobalModuleManager {
     /// Config of the module that owns the file currently being parsed/run.
-    /// `None` = root.
-    pub fn current_litex_config(&self, current_mod_id: Option<usize>) -> Result<&LitexConfig, String> {
-        match current_mod_id {
+    /// Uses `self.current_mod_id`: `None` → root config.
+    pub fn current_litex_config(&self) -> Result<&LitexConfig, String> {
+        match self.current_mod_id {
             None => Ok(&self.litex_config),
             Some(mod_id) => self
                 .imports
@@ -20,13 +20,8 @@ impl GlobalModuleManager {
     }
 
     /// `a:::b` flatten sugar: import alias `a` with exactly one export → that file + `b`.
-    pub fn elaborate_flat_import(
-        &self,
-        current_mod_id: Option<usize>,
-        alias: &str,
-        name: String,
-    ) -> Result<AtomicName, String> {
-        let mod_id = self.mod_id_for_local_alias(current_mod_id, alias)?;
+    pub fn elaborate_flat_import(&self, alias: &str, name: String) -> Result<AtomicName, String> {
+        let mod_id = self.mod_id_for_local_alias(alias)?;
         let module = self
             .imports
             .get(mod_id)
@@ -38,7 +33,7 @@ impl GlobalModuleManager {
                 module.litex_config.exports.len()
             ));
         }
-        Ok(AtomicName::WithModAndExport {
+        Ok(AtomicName::WithModAndExportFileId {
             mod_id,
             file_id: 0,
             name,
@@ -52,26 +47,22 @@ impl GlobalModuleManager {
     /// - 3 segments: import alias `a` + export `b` + name `c` → `WithModAndExport`
     ///
     /// `a:::b` is handled by `elaborate_flat_import`, not this function.
-    pub fn elaborate_name_parts(
-        &self,
-        current_mod_id: Option<usize>,
-        parts: &[String],
-    ) -> Result<AtomicName, String> {
+    pub fn elaborate_name_parts(&self, parts: &[String]) -> Result<AtomicName, String> {
         match parts.len() {
             1 => Ok(AtomicName::Plain {
                 name: parts[0].clone(),
             }),
             2 => {
-                let file_id = self.file_id_in_current(current_mod_id, &parts[0])?;
-                Ok(AtomicName::WithMod {
+                let file_id = self.file_id_in_current(&parts[0])?;
+                Ok(AtomicName::WithExportFileId {
                     file_id,
                     name: parts[1].clone(),
                 })
             }
             3 => {
-                let mod_id = self.mod_id_for_local_alias(current_mod_id, &parts[0])?;
+                let mod_id = self.mod_id_for_local_alias(&parts[0])?;
                 let file_id = self.file_id_in_mod(mod_id, &parts[1])?;
-                Ok(AtomicName::WithModAndExport {
+                Ok(AtomicName::WithModAndExportFileId {
                     mod_id,
                     file_id,
                     name: parts[2].clone(),
@@ -81,12 +72,8 @@ impl GlobalModuleManager {
         }
     }
 
-    fn file_id_in_current(
-        &self,
-        current_mod_id: Option<usize>,
-        export_name: &str,
-    ) -> Result<usize, String> {
-        let config = self.current_litex_config(current_mod_id)?;
+    fn file_id_in_current(&self, export_name: &str) -> Result<usize, String> {
+        let config = self.current_litex_config()?;
         index_of_export(config, export_name).ok_or_else(|| {
             format!("unknown export `{export_name}` in the current module's litex.config")
         })
@@ -105,12 +92,8 @@ impl GlobalModuleManager {
         })
     }
 
-    fn mod_id_for_local_alias(
-        &self,
-        current_mod_id: Option<usize>,
-        alias: &str,
-    ) -> Result<usize, String> {
-        let config = self.current_litex_config(current_mod_id)?;
+    fn mod_id_for_local_alias(&self, alias: &str) -> Result<usize, String> {
+        let config = self.current_litex_config()?;
         let path = config
             .imports
             .iter()

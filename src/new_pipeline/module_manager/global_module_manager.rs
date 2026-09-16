@@ -11,11 +11,14 @@ use std::path::PathBuf;
 /// - `imports` index = `mod_id`; global display name = `imports[mod_id].name`
 /// - root is not an import slot
 /// - resolve local alias via config path then `path_to_mod_id`
+/// - `current_mod_id`: `None` = not inside an imported module (root / -e / REPL);
+///   `Some(i)` = currently parsing/running `imports[i]`
 pub struct GlobalModuleManager {
     pub(crate) litex_config: LitexConfig,
     pub(crate) root_exports: Vec<ExportFileAndItsExecEnv>,
     pub(crate) imports: Vec<ImportedModule>,
     pub(crate) path_to_mod_id: HashMap<PathBuf, usize>,
+    pub(crate) current_mod_id: Option<usize>,
 }
 
 impl GlobalModuleManager {
@@ -25,6 +28,7 @@ impl GlobalModuleManager {
             root_exports: Vec::new(),
             imports: Vec::new(),
             path_to_mod_id: HashMap::new(),
+            current_mod_id: None,
         }
     }
 
@@ -34,6 +38,7 @@ impl GlobalModuleManager {
             root_exports: Vec::new(),
             imports: Vec::new(),
             path_to_mod_id: HashMap::new(),
+            current_mod_id: None,
         }
     }
 
@@ -51,6 +56,21 @@ impl GlobalModuleManager {
 
     pub fn path_to_mod_id(&self) -> &HashMap<PathBuf, usize> {
         &self.path_to_mod_id
+    }
+
+    pub fn current_mod_id(&self) -> Option<usize> {
+        self.current_mod_id
+    }
+
+    /// `None` = leave imported-module context; `Some(i)` = enter `imports[i]`.
+    pub fn set_current_mod_id(&mut self, mod_id: Option<usize>) -> Result<(), String> {
+        if let Some(i) = mod_id {
+            if i >= self.imports.len() {
+                return Err(format!("unknown mod_id {i}"));
+            }
+        }
+        self.current_mod_id = mod_id;
+        Ok(())
     }
 
     pub fn record_root_export(&mut self, export: ExportFileAndItsExecEnv) {

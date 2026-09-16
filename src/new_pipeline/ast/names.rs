@@ -14,13 +14,18 @@ pub type PlainName = String;
 /// Qualified or plain atom name. Identity for quals is ids + `name`.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum AtomicName {
-    Plain { name: PlainName },
+    Plain {
+        name: PlainName,
+    },
     /// Current module: `a::b` → export index + symbol.
-    WithMod { file_id: usize, name: PlainName },
+    WithExportFileId {
+        file_id: usize, // file index of that file in the litex.config of corresponding module
+        name: PlainName,
+    },
     /// Import: `a::b::c` / elaborated `a:::b` → global mod index + export index + symbol.
-    WithModAndExport {
-        mod_id: usize,
-        file_id: usize,
+    WithModAndExportFileId {
+        mod_id: usize,  // index of that module inside global module manager
+        file_id: usize, // file index of that file in the litex.config of corresponding module
         name: PlainName,
     },
 }
@@ -31,8 +36,8 @@ impl AtomicName {
     pub fn display_string(&self) -> String {
         match self {
             AtomicName::Plain { name } => name.clone(),
-            AtomicName::WithMod { file_id, name } => format!("f{file_id}::{name}"),
-            AtomicName::WithModAndExport {
+            AtomicName::WithExportFileId { file_id, name } => format!("f{file_id}::{name}"),
+            AtomicName::WithModAndExportFileId {
                 mod_id,
                 file_id,
                 name,

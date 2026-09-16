@@ -52,7 +52,7 @@ impl Runtime {
     ) -> RuntimeResult<AtomicFact> {
         let name = match &prop {
             AtomicName::Plain { name } => name.as_str(),
-            AtomicName::WithMod { .. } | AtomicName::WithModAndExport { .. } => {
+            AtomicName::WithExportFileId { .. } | AtomicName::WithModAndExportFileId { .. } => {
                 return Ok(normal_or_not(
                     self.ids.allocate_fact_id(),
                     prop,

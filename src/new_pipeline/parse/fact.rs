@@ -1,7 +1,7 @@
 use super::fact_prop::is_infix_prop_name;
 use super::keywords::{
-    is_comparison_op, AND, EQUIVALENT_SIGN, EXIST, EXIST_BANG, FACT_PREFIX, FORALL, IN, MOD_FLAT_SIGN,
-    MOD_SIGN, NOT, OR, RIGHT_ARROW,
+    is_comparison_op, AND, EQUIVALENT_SIGN, EXIST, EXIST_BANG, FACT_PREFIX, FORALL, IN,
+    MOD_FLAT_SIGN, MOD_SIGN, NOT, OR, RIGHT_ARROW,
 };
 use super::object::{parse_obj, parse_obj_list_paren};
 use crate::new_pipeline::ast::fact::{
@@ -501,7 +501,8 @@ impl Runtime {
                 let prop = self.parse_prop_name(tb)?;
                 let prop_str = match &prop {
                     AtomicName::Plain { name } => name.as_str(),
-                    AtomicName::WithMod { .. } | AtomicName::WithModAndExport { .. } => {
+                    AtomicName::WithExportFileId { .. }
+                    | AtomicName::WithModAndExportFileId { .. } => {
                         return Err(RuntimeParseError::new(
                             "mod-qualified infix `$Mod::prop` is not supported; use `$Mod::prop(...)`",
                             tb.line,

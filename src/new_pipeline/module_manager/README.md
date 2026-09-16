@@ -7,7 +7,7 @@ Struct / AST approval when coding.
 
 | File | Owns |
 |------|------|
-| `global_module_manager.rs` | `GlobalModuleManager`, `path_to_mod_id`, record APIs |
+| `global_module_manager.rs` | `GlobalModuleManager`, `path_to_mod_id`, `current_mod_id`, record APIs |
 | `imported_module.rs` | `ImportedModule` |
 | `export_file.rs` | `ExportFileAndItsExecEnv` |
 | `litex_config.rs` | `LitexConfig` + import/export rows |
@@ -48,6 +48,7 @@ One per run. Not nested inside imports.
 | `root_exports` | `Vec<ExportFileAndItsExecEnv>` | Root’s ordered completed export files + envs. Root is **not** an `imports` slot / not a `mod_id`. |
 | `imports` | `Vec<ImportedModule>` | Global mount table. **Index = `mod_id`**. Display global name = `imports[mod_id].name`. |
 | `path_to_mod_id` | `HashMap<PathBuf, usize>` | Normalized module dir path → `mod_id`. Dedup + resolve: local alias → path → `mod_id`. First registration wins; silent merge does not overwrite. |
+| `current_mod_id` | `Option<usize>` | `None` = not inside an imported module (root / -e / REPL); `Some(i)` = currently parsing/running `imports[i]`. |
 
 No `HashMap<mod_id, name>`: name is `imports[mod_id].name`. Missing / bad id → error (deps must be ready).
 
