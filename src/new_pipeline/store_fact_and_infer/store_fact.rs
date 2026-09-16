@@ -7,9 +7,7 @@ use crate::new_pipeline::ast::fact::{AndFact, AtomicFact, ChainFact, Fact};
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::exec_env::exec_env::PropAlgebraicProperty;
-use crate::new_pipeline::exec_env::helper::{
-    atomic_fact_args_ref, atomic_fact_has_positive_polarity,
-};
+use crate::new_pipeline::exec_env::helper::atomic_fact_has_positive_polarity;
 use crate::new_pipeline::parse::keywords::{
     EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL,
 };
@@ -113,32 +111,12 @@ impl Runtime {
                 let fact_id = atomic_fact.fact_id();
                 let key = atomic_fact.prop_name();
                 let positive_polarity = atomic_fact_has_positive_polarity(atomic_fact);
-                let args = atomic_fact_args_ref(atomic_fact);
                 let env = self.top_exec_env_mut();
-                match args.as_slice() {
-                    [arg0] => {
-                        env.facts.known_atomic_except_equality_facts.store_one_arg(
-                            key,
-                            positive_polarity,
-                            arg0.ir(),
-                            atomic_fact.clone(),
-                        );
-                    }
-                    [arg0, arg1] => {
-                        env.facts.known_atomic_except_equality_facts.store_two_args(
-                            key,
-                            positive_polarity,
-                            arg0.ir(),
-                            arg1.ir(),
-                            atomic_fact.clone(),
-                        );
-                    }
-                    _ => {
-                        env.facts
-                            .known_atomic_except_equality_facts
-                            .store_other_arg_count(key, positive_polarity, atomic_fact.clone());
-                    }
-                }
+                env.facts.known_atomic_except_equality_facts.store(
+                    key,
+                    positive_polarity,
+                    atomic_fact.clone(),
+                );
                 env.facts.record_atomic_fact(fact_id, atomic_fact.clone());
                 Ok(vec![fact_id])
             }

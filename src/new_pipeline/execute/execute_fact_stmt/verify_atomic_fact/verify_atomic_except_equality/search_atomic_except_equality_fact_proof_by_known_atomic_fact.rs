@@ -33,40 +33,19 @@ impl Runtime {
 
         for env in self.execution_environments_stack.iter().rev() {
             let memory = &env.facts.known_atomic_except_equality_facts;
-            let hit = match goal_args.len() {
-                1 => memory.by_one_arg.get(&lookup_key).and_then(|map| {
-                    class_per_arg[0]
-                        .iter()
-                        .find_map(|cand| map.get(cand).cloned())
-                }),
-                2 => memory.by_two_args.get(&lookup_key).and_then(|map| {
-                    for k0 in class_per_arg[0].iter() {
-                        for k1 in class_per_arg[1].iter() {
-                            if let Some(known) = map.get(&(k0.clone(), k1.clone())) {
-                                return Some(known.clone());
-                            }
-                        }
-                    }
-                    None
-                }),
-                _ => memory
-                    .by_other_arg_count
-                    .get(&lookup_key)
-                    .and_then(|knowns| {
-                        knowns
-                            .iter()
-                            .find(|known| {
-                                let known_args = atomic_fact_args_ref(known);
-                                known_args.len() == goal_args.len()
-                                    && known_args.iter().zip(class_per_arg.iter()).all(
-                                        |(known_arg, class)| {
-                                            class.contains(&known_arg.ir())
-                                        },
-                                    )
-                            })
-                            .cloned()
-                    }),
-            };
+            let hit = memory.by_prop.get(&lookup_key).and_then(|knowns| {
+                knowns
+                    .iter()
+                    .find(|known| {
+                        let known_args = atomic_fact_args_ref(known);
+                        known_args.len() == goal_args.len()
+                            && known_args
+                                .iter()
+                                .zip(class_per_arg.iter())
+                                .all(|(known_arg, class)| class.contains(&known_arg.ir()))
+                    })
+                    .cloned()
+            });
 
             if let Some(known) = hit {
                 return Ok(self.build_known_atomic_proof(fact, &known));

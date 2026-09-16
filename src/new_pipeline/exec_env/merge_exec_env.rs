@@ -128,35 +128,11 @@ fn merge_facts_from(parent: &mut ExecEnv, child: &ExecEnv) -> RuntimeResult<()> 
 fn index_atomic_except_equality(parent: &mut ExecEnv, atomic_fact: &AtomicFact) {
     let key = atomic_fact.prop_name();
     let positive_polarity = super::helper::atomic_fact_has_positive_polarity(atomic_fact);
-    let args = super::helper::atomic_fact_args_ref(atomic_fact);
-    match args.as_slice() {
-        [arg0] => {
-            parent.facts.known_atomic_except_equality_facts.store_one_arg(
-                key,
-                positive_polarity,
-                arg0.ir(),
-                atomic_fact.clone(),
-            );
-        }
-        [arg0, arg1] => {
-            parent
-                .facts
-                .known_atomic_except_equality_facts
-                .store_two_args(
-                    key,
-                    positive_polarity,
-                    arg0.ir(),
-                    arg1.ir(),
-                    atomic_fact.clone(),
-                );
-        }
-        _ => {
-            parent
-                .facts
-                .known_atomic_except_equality_facts
-                .store_other_arg_count(key, positive_polarity, atomic_fact.clone());
-        }
-    }
+    parent.facts.known_atomic_except_equality_facts.store(
+        key,
+        positive_polarity,
+        atomic_fact.clone(),
+    );
 }
 
 fn merge_well_defined_objects_from(parent: &mut ExecEnv, child: &ExecEnv) -> RuntimeResult<()> {

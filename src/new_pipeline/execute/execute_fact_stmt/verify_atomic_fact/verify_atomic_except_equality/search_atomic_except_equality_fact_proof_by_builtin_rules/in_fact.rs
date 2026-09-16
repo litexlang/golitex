@@ -7,14 +7,21 @@ use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeResult};
 
 use super::subset::standard_set_is_subset_eq;
 
+// Builtin rules for `$in` facts (zero-premise or known-cite routes).
 pub enum InFactSearchProofByBuiltinRule {
-    // Closed numeric membership by evaluation, e.g. prove `2 $in N`.
+    // Closed numeric membership by decimal evaluation.
+    // Mathematical property: a closed expression that evaluates to a normalized
+    // decimal inhabits the matching standard set (N/Z/Q/R/C families).
+    // Examples: `2 $in N`, `1 + 1 $in C`, `-3 $in Z`.
     ClosedNumericMembership(ClosedNumericMembershipBuiltinRuleProof),
     // Well-defined complex arithmetic expressions inhabit C.
-    // Example: prove `(x + 1) $in C` after WD of `x + 1`.
+    // Mathematical property: after child WD, `+ - * / …` over C-carriers stay in C.
+    // Example: prove `(x + 1) $in C` (used when Add/Mul WD asks for `$in C`).
     ComplexArithmeticClosure(ComplexArithmeticClosureBuiltinRuleProof),
     // Membership lifts along the standard-set inclusion chain.
-    // Example: prove `x $in C` from known `x $in R` because `R $subset C`.
+    // Mathematical property: if `x $in S` and `S $subset T` among standard sets,
+    // then `x $in T`.
+    // Example: known `x $in R` proves `x $in C`.
     StandardSetSubsetMembership(StandardSetSubsetMembershipBuiltinRuleProof),
     // Set-builder membership from base membership plus defining facts.
     // Example: prove `x $in {t R: t > 0}` from `x $in R` and `x > 0`.
@@ -24,10 +31,16 @@ pub enum InFactSearchProofByBuiltinRule {
     NativeConstantMembership(NativeConstantMembershipBuiltinRuleProof),
 }
 
+// Closed decimal membership certificate (sides live on the InFact).
+// Example: `2 $in N`.
 pub struct ClosedNumericMembershipBuiltinRuleProof {}
 
+// C-arithmetic closure certificate (sides live on the InFact).
+// Example: `(x + 1) $in C`.
 pub struct ComplexArithmeticClosureBuiltinRuleProof {}
 
+// Subset-lift certificate: cite a known smaller-set membership.
+// Example: source_set `R`, cite `x $in R`, goal `x $in C`.
 pub struct StandardSetSubsetMembershipBuiltinRuleProof {
     pub source_set: StandardSet,
     pub cite_fact_id: FactId,

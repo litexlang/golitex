@@ -8,8 +8,9 @@ use crate::new_pipeline::rational_expression::{
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
-    // Builtin calculation: closed decimal normals match, or zero-premise rational
-    // monomial identity. Example: `1 + 1 = 2`; `(x + 1) * (x - 1) = x^2 - 1`.
+    // Builtin Calculation search for EqualFact.
+    // Mathematical property: see EqualitySearchProofByCalculation.
+    // Examples: `1 + 1 = 2`; `(x + 1) * (x - 1) = x^2 - 1`.
     // Identities that need nonzero premises are not accepted here.
     pub fn search_equal_fact_by_calculation(
         &mut self,

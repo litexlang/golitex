@@ -176,9 +176,11 @@ cannot mix free `x` with binder `x`. The leftover risk is only **stored**
 closed AST that still spells binder `x` after later letter reuse
 (`have x`).
 
-### Layer B — Exact `ObjIR` / `FactIR` (IR indexes, known-atomic keys, equality graph keys)
+### Layer B — Exact `ObjIR` / `FactIR` (equality graph keys; known-atomic arg compare)
 
-Same spelling ⇒ same key; different binder letters ⇒ different keys.
+Same spelling ⇒ same `ObjIR`; different binder letters ⇒ different keys.
+Non-equality `known_atomic_except_equality_facts` buckets by `(prop, polarity)`
+and **linear-scans** args (equality-class `ObjIR` compare), not hash-by-arg-IR.
 
 ```text
 known:  $p({x R: x > 0})
@@ -187,7 +189,7 @@ goal:   $p({y R: y > 0})   // Layer B: miss (not a bug)
 
 `known_atomic` argument matching that uses equality classes still compares
 **exact** `ObjIR` members of classes. It must not silently alpha-rename
-set-builder / forall binders to force a key hit.
+set-builder / forall binders to force a hit.
 
 ### Layer C — Structural instantiate / substitute
 
