@@ -124,20 +124,20 @@ impl Runtime {
     pub fn define_atom(&mut self, key: AtomicName) -> RuntimeResult<()> {
         if let AtomicName::Plain { name } = &key {
             if crate::new_pipeline::ast::obj::is_binder_slot_name(name) {
-                return Err(RuntimeError::Invariant(format!(
+                return Err(RuntimeError::InternalBug(format!(
                     "binder-slot name `{name}` cannot be occupied as a free atom"
                 )));
             }
         }
         if self.occupied_name_is_visible(&key) {
-            return Err(RuntimeError::Invariant(format!(
+            return Err(RuntimeError::InternalBug(format!(
                 "name `{key}` is already bound in an enclosing parse scope"
             )));
         }
         let scope = self
             .parse_scope_stack
             .last_mut()
-            .ok_or_else(|| RuntimeError::Invariant("no parse scope".to_string()))?;
+            .ok_or_else(|| RuntimeError::InternalBug("no parse scope".to_string()))?;
         scope.occupied.insert(key);
         Ok(())
     }
@@ -146,20 +146,20 @@ impl Runtime {
     pub fn occupy_atom(&mut self, key: AtomicName) -> RuntimeResult<()> {
         if let AtomicName::Plain { name } = &key {
             if crate::new_pipeline::ast::obj::is_binder_slot_name(name) {
-                return Err(RuntimeError::Invariant(format!(
+                return Err(RuntimeError::InternalBug(format!(
                     "binder-slot name `{name}` cannot be occupied as a free atom"
                 )));
             }
         }
         if self.occupied_name_is_visible(&key) {
-            return Err(RuntimeError::Invariant(format!(
+            return Err(RuntimeError::InternalBug(format!(
                 "name `{key}` is already bound in an enclosing parse scope"
             )));
         }
         let scope = self
             .parse_scope_stack
             .last_mut()
-            .ok_or_else(|| RuntimeError::Invariant("no parse scope".to_string()))?;
+            .ok_or_else(|| RuntimeError::InternalBug("no parse scope".to_string()))?;
         scope.occupied.insert(key);
         Ok(())
     }
@@ -180,14 +180,14 @@ impl Runtime {
     pub fn elaborate_name_parts(&self, parts: &[String]) -> RuntimeResult<AtomicName> {
         self.global_module_manager
             .elaborate_name_parts(parts)
-            .map_err(RuntimeError::Invariant)
+            .map_err(RuntimeError::InternalBug)
     }
 
     /// Elaborate `a:::b` flatten sugar.
     pub fn elaborate_flat_import(&self, alias: &str, name: String) -> RuntimeResult<AtomicName> {
         self.global_module_manager
             .elaborate_flat_import(alias, name)
-            .map_err(RuntimeError::Invariant)
+            .map_err(RuntimeError::InternalBug)
     }
 
     pub fn top_exec_env(&self) -> &ExecEnv {

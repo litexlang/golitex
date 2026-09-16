@@ -7,9 +7,7 @@ use crate::new_pipeline::runtime::{RuntimeError, RuntimeResult};
 /// `session` will keep the last export env and enter REPL once mount exists.
 pub fn run_repo(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
     let LaunchCommand::Repository { path, .. } = &command else {
-        return Err(RuntimeError::Invariant(
-            "run_repo expects LaunchCommand::Repository".to_string(),
-        ));
+        panic!("run_repo expects LaunchCommand::Repository");
     };
     if path.as_os_str().is_empty() {
         return Err(RuntimeError::InvalidArguments(

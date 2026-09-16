@@ -13,7 +13,7 @@
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
 use litex::cli::run_command_line_commands;
-use litex::new_pipeline::run::run as run_new_pipeline;
+use litex::new_pipeline::run::launch as launch_new_pipeline;
 use litex::new_pipeline::runtime::RuntimeError;
 use litex::new_pipeline::LITEX;
 use std::process;
@@ -32,7 +32,7 @@ fn main() {
 
 fn run_selected_cli() {
     if use_new_pipeline_track() {
-        run_new_pipeline_track();
+        launch_new_pipeline_track();
     } else {
         run_command_line_commands();
     }
@@ -49,8 +49,8 @@ fn use_new_pipeline_track() -> bool {
     }
 }
 
-fn run_new_pipeline_track() {
-    match run_new_pipeline() {
+fn launch_new_pipeline_track() {
+    match launch_new_pipeline() {
         Ok(outcome) => {
             if outcome.process_failed() {
                 // Soft Failed / session_error stay in the outcome payload for later JSON.
@@ -81,7 +81,7 @@ fn format_runtime_error(error: &RuntimeError) -> String {
             )
         }
         RuntimeError::Unsupported(message) => format!("unsupported: {}", message),
-        RuntimeError::Invariant(message) => format!("invariant: {}", message),
+        RuntimeError::InternalBug(message) => format!("internal_bug: {}", message),
         RuntimeError::Unknown(message) => format!("unknown: {}", message),
     }
 }

@@ -14,7 +14,7 @@ pub enum RuntimeError {
     Io { path: PathBuf, message: String },
     ParseError(RuntimeParseError),
     Unsupported(String),
-    Invariant(String),
+    InternalBug(String),
     Unknown(String),
 }
 

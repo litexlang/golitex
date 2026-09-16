@@ -9,9 +9,7 @@ use std::fs;
 /// With `session`, a successful run keeps the file env open and enters REPL.
 pub fn run_file(command: LaunchCommand) -> RuntimeResult<RunFileResult> {
     let LaunchCommand::File { path, session, .. } = &command else {
-        return Err(RuntimeError::Invariant(
-            "run_file expects LaunchCommand::File".to_string(),
-        ));
+        panic!("run_file expects LaunchCommand::File");
     };
     let path = path.clone();
     let session = *session;

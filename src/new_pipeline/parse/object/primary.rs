@@ -446,14 +446,14 @@ fn parse_identifier_or_mod_or_standard_set(
         let key = rt
             .elaborate_flat_import(&name, next)
             .map_err(|err| match err {
-                crate::new_pipeline::runtime::RuntimeError::Invariant(message) => {
+                crate::new_pipeline::runtime::RuntimeError::InternalBug(message) => {
                     tb.parse_error(message)
                 }
                 other => other,
             })?;
         if !rt.occupied_name_is_visible(&key) {
             rt.define_atom(key.clone()).map_err(|err| match err {
-                crate::new_pipeline::runtime::RuntimeError::Invariant(message) => {
+                crate::new_pipeline::runtime::RuntimeError::InternalBug(message) => {
                     tb.parse_error(message)
                 }
                 other => other,
@@ -477,7 +477,7 @@ fn parse_identifier_or_mod_or_standard_set(
             ));
         }
         let key = rt.elaborate_name_parts(&parts).map_err(|err| match err {
-            crate::new_pipeline::runtime::RuntimeError::Invariant(message) => {
+            crate::new_pipeline::runtime::RuntimeError::InternalBug(message) => {
                 tb.parse_error(message)
             }
             other => other,
@@ -485,7 +485,7 @@ fn parse_identifier_or_mod_or_standard_set(
 
         if !rt.occupied_name_is_visible(&key) {
             rt.define_atom(key.clone()).map_err(|err| match err {
-                crate::new_pipeline::runtime::RuntimeError::Invariant(message) => {
+                crate::new_pipeline::runtime::RuntimeError::InternalBug(message) => {
                     tb.parse_error(message)
                 }
                 other => other,

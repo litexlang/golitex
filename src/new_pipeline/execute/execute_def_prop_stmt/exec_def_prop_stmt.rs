@@ -80,12 +80,12 @@ impl Runtime {
 
     fn ensure_def_prop_name_free(&self, name: &str) -> RuntimeResult<()> {
         if self.def_prop_visible_in_stack(name).is_some() {
-            return Err(RuntimeError::Invariant(format!(
+            return Err(RuntimeError::InternalBug(format!(
                 "name `{name}` is already used in this scope as {PROP}"
             )));
         }
         if self.def_abstract_prop_visible_in_stack(name).is_some() {
-            return Err(RuntimeError::Invariant(format!(
+            return Err(RuntimeError::InternalBug(format!(
                 "name `{name}` is already used in this scope as {ABSTRACT_PROP}"
             )));
         }

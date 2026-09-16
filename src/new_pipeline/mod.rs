@@ -1,6 +1,6 @@
 //! Standalone execution-pipeline rewrite.
 //!
-//! Dual-track entry: set `LITEX_NEW_PIPELINE=1` to use `new_pipeline::run`
+//! Dual-track entry: set `LITEX_NEW_PIPELINE=1` to use `new_pipeline::run::launch`
 //! from the binary.  The legacy CLI remains the default when the variable is
 //! unset.  Submodules own the new runtime, command dispatch, tokenization,
 //! parse, execute, environment, and module-manager boundaries.

@@ -29,7 +29,7 @@ pub struct IntroduceTypedParametersResult {
 
 impl Runtime {
     // WD param types, then define params into the current top ExecEnv.
-    // Soft miss: Ok(Err(wd)); operational / invariant: Err(...).
+    // Soft miss: Ok(Err(wd)); operational / internal bug: Err(...).
     pub fn introduce_typed_parameters(
         &mut self,
         typed_parameters: &TypedParameterList,
@@ -86,7 +86,7 @@ impl Runtime {
         for group in &typed_parameters.groups {
             for identifier in &group.params {
                 if self.identifier_defined_in_stack(&identifier.name) {
-                    return Err(RuntimeError::Invariant(format!(
+                    return Err(RuntimeError::InternalBug(format!(
                         "identifier `{}` is already defined in this ExecEnv",
                         identifier.name
                     )));
