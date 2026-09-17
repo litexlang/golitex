@@ -1,9 +1,11 @@
 use super::store_fact_and_infer_result::{
     ChainTransitiveCite, StoreAndComponentResult, StoreAndFactResult, StoreAtomicFactResult,
     StoreChainAdjacentResult, StoreChainFactResult, StoreChainTransitiveClosureResult,
-    StoreFactAndInferResult, StoreOrFactResult,
+    StoreExistFactResult, StoreFactAndInferResult, StoreNotForallFactResult, StoreOrFactResult,
 };
-use crate::new_pipeline::ast::fact::{AndFact, AtomicFact, ChainFact, Fact, OrFact};
+use crate::new_pipeline::ast::fact::{
+    exist_fact_id, AndFact, AtomicFact, ChainFact, ExistFact, Fact, NotForallFact, OrFact,
+};
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::exec_env::exec_env::PropRewriteProperty;
@@ -35,10 +37,15 @@ impl Runtime {
                 let stored = self.store_or_fact(or_fact)?;
                 Ok(StoreFactAndInferResult::OrFact(stored))
             }
-            Fact::ExistFact(_)
-            | Fact::ForallFact(_)
-            | Fact::ForallFactWithIff(_)
-            | Fact::NotForall(_) => {
+            Fact::ExistFact(exist_fact) => {
+                let stored = self.store_exist_fact(exist_fact)?;
+                Ok(StoreFactAndInferResult::ExistFact(stored))
+            }
+            Fact::NotForall(not_forall) => {
+                let stored = self.store_not_forall_fact(not_forall)?;
+                Ok(StoreFactAndInferResult::NotForallFact(stored))
+            }
+            Fact::ForallFact(_) | Fact::ForallFactWithIff(_) => {
                 let fact_id = fact.fact_id();
                 self.top_exec_env_mut()
                     .facts
@@ -83,6 +90,43 @@ impl Runtime {
         Ok(StoreOrFactResult {
             whole_fact_id,
             fact: or_fact.clone(),
+        })
+    }
+
+    // Exist: record whole into facts_by_id and known_exist. Do not split body.
+    // Example: `exist x N st {x = 1}` → known_exist only.
+    fn store_exist_fact(&mut self, exist_fact: &ExistFact) -> RuntimeResult<StoreExistFactResult> {
+        let whole_fact_id = exist_fact_id(exist_fact);
+        let env = self.top_exec_env_mut();
+        env.facts.known_exist.store(exist_fact);
+        env.facts
+            .record_fact(whole_fact_id, Fact::ExistFact(exist_fact.clone()));
+        Ok(StoreExistFactResult {
+            whole_fact_id,
+            fact: exist_fact.clone(),
+        })
+    }
+
+    // NotForall: record the sugar fact, and store De Morgan exist into known_exist.
+    // Example: `not forall x R: x > 0` → facts_by_id(not forall) + known_exist(exist x R st {not x > 0}).
+    fn store_not_forall_fact(
+        &mut self,
+        not_forall: &NotForallFact,
+    ) -> RuntimeResult<StoreNotForallFactResult> {
+        let Some(derived_exist) = self.not_forall_to_counterexample_exist(not_forall)? else {
+            return Err(crate::new_pipeline::runtime::RuntimeError::InternalBug(
+                "store not forall: cannot negate body into exist counterexample".to_string(),
+            ));
+        };
+        let derived_exist = self.store_exist_fact(&derived_exist)?;
+        let whole_fact_id = not_forall.fact_id;
+        self.top_exec_env_mut()
+            .facts
+            .record_fact(whole_fact_id, Fact::NotForall(not_forall.clone()));
+        Ok(StoreNotForallFactResult {
+            whole_fact_id,
+            fact: not_forall.clone(),
+            derived_exist,
         })
     }
 

@@ -65,10 +65,7 @@ pub fn typed_param_bound_names(list: &TypedParameterList) -> Vec<BoundName> {
 }
 
 pub fn typed_param_ids(list: &TypedParameterList) -> Vec<IdentifierId> {
-    typed_param_bound_names(list)
-        .into_iter()
-        .map(|b| b.id)
-        .collect()
+    list.ordered_param_ids()
 }
 
 impl Runtime {

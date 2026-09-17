@@ -1,15 +1,14 @@
 //! Apply a stored forall's atomic then (or and-component leaf) to a goal atomic.
 //!
-//! Matching: each conclusion arg is either a forall param identifier (bind to
-//! the goal arg) or a closed term matching by `ir()`. Nested param occurrences
-//! inside compound objs are not matched yet.
+//! Matching: shared `match_forall_conclusion_args` — bind bare forall params,
+//! otherwise strict equal (forall/rewrite off). Nested param occurrences inside
+//! compound objs are not matched yet.
 
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact, ForallFact};
-use crate::new_pipeline::ast::obj::{IdentifierObj, Obj};
-use crate::new_pipeline::ast::param::TypedParameterList;
 use crate::new_pipeline::ast::fact::{
     atomic_fact_args_ref, atomic_fact_has_positive_polarity,
 };
+use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::exec_env::known_forall_conclusion_memory::{
     atomic_at_forall_location, ForallConclusionCite,
 };
@@ -17,7 +16,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::SearchP
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeResult};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 impl Runtime {
     pub fn search_atomic_fact_proof_by_known_forall_fact(
@@ -81,6 +80,7 @@ impl Runtime {
         let Some(conclusion) = atomic_at_forall_location(&forall, &cite.location) else {
             return Ok(None);
         };
+        // Prop name and polarity must match before trying to instantiate.
         if conclusion.prop_name() != goal.prop_name()
             || atomic_fact_has_positive_polarity(&conclusion)
                 != atomic_fact_has_positive_polarity(goal)
@@ -88,31 +88,21 @@ impl Runtime {
             return Ok(None);
         }
 
-        let param_ids = ordered_param_ids(&forall.typed_parameters);
-        let param_set: HashSet<IdentifierId> = param_ids.iter().copied().collect();
+        // Step 1: list forall params in declaration order.
+        let param_ids = forall.typed_parameters.ordered_param_ids();
         let conclusion_args = atomic_fact_args_ref(&conclusion);
         let goal_args = atomic_fact_args_ref(goal);
-        if conclusion_args.len() != goal_args.len() {
+
+        // Step 2–3: bind params / strict-equal non-params; every param must be bound.
+        // Example: conclusion `x + 1 > 1`, goal `3 + 1 > 1` with known equalities as needed.
+        let Some(matched) =
+            self.match_forall_conclusion_args(&conclusion_args, &goal_args, &param_ids)?
+        else {
             return Ok(None);
-        }
+        };
 
-        let mut subst: HashMap<IdentifierId, Obj> = HashMap::new();
-        for (pattern_arg, goal_arg) in conclusion_args.iter().zip(goal_args.iter()) {
-            if !unify_obj_phase1(pattern_arg, goal_arg, &param_set, &mut subst) {
-                return Ok(None);
-            }
-        }
-        for id in &param_ids {
-            if !subst.contains_key(id) {
-                return Ok(None);
-            }
-        }
-
-        let forall_parameters_match_what_args: Vec<Obj> = param_ids
-            .iter()
-            .map(|id| subst.get(id).expect("checked").clone())
-            .collect();
-
+        // Step 4: instantiate forall dom facts with subst, then verify each.
+        let subst = subst_from_ordered_params(&param_ids, &matched.forall_parameters_match_what_args);
         let requirement_facts = match self.build_requirement_facts(&forall, &subst)? {
             Some(facts) => facts,
             None => return Ok(None),
@@ -128,7 +118,8 @@ impl Runtime {
 
         Ok(Some(SearchProofByKnownForallFact {
             cite: cite.clone(),
-            forall_parameters_match_what_args,
+            forall_parameters_match_what_args: matched.forall_parameters_match_what_args,
+            arg_match_proofs: matched.arg_match_proofs,
             requirement_facts,
             proof_of_requirement_facts,
         }))
@@ -161,31 +152,13 @@ impl Runtime {
     }
 }
 
-fn ordered_param_ids(params: &TypedParameterList) -> Vec<IdentifierId> {
-    let mut ids = Vec::new();
-    for group in &params.groups {
-        for param in &group.params {
-            ids.push(param.id);
-        }
+fn subst_from_ordered_params(
+    param_ids: &[IdentifierId],
+    args: &[Obj],
+) -> HashMap<IdentifierId, Obj> {
+    let mut subst = HashMap::new();
+    for (id, arg) in param_ids.iter().zip(args.iter()) {
+        subst.insert(*id, arg.clone());
     }
-    ids
+    subst
 }
-
-fn unify_obj_phase1(
-    pattern: &Obj,
-    goal: &Obj,
-    param_ids: &HashSet<IdentifierId>,
-    subst: &mut HashMap<IdentifierId, Obj>,
-) -> bool {
-    if let Obj::Identifier(IdentifierObj::Plain { id, .. }) = pattern {
-        if param_ids.contains(id) {
-            if let Some(existing) = subst.get(id) {
-                return existing.ir() == goal.ir();
-            }
-            subst.insert(*id, goal.clone());
-            return true;
-        }
-    }
-    pattern.ir() == goal.ir()
-}
-

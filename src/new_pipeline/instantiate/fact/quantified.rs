@@ -194,11 +194,24 @@ impl Runtime {
         &mut self,
         f: &NotForallFact,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
-
     ) -> Result<NotForallFact, InstError> {
+        let ids = param::typed_param_ids(&f.typed_parameters);
+        let shadowed = capture::shadow_binder_ids(param_to_arg_map, &ids);
+        let typed_parameters = self.inst_typed_parameter_list(&f.typed_parameters, &shadowed)?;
+        let mut dom_facts = Vec::with_capacity(f.dom_facts.len());
+        for dom in &f.dom_facts {
+            dom_facts.push(self.inst_quantifier_free_fact_rec(dom, &shadowed)?);
+        }
+        let mut then_facts = Vec::with_capacity(f.then_facts.len());
+        for then in &f.then_facts {
+            then_facts.push(self.inst_quantifier_free_fact_rec(then, &shadowed)?);
+        }
         Ok(NotForallFact {
             fact_id: self.ids.allocate_fact_id(),
-            forall_fact: self.inst_forall_fact(&f.forall_fact, param_to_arg_map)?,
+            typed_parameters,
+            dom_facts,
+            then_facts,
+            line_file: f.line_file.clone(),
         })
     }
 

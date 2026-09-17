@@ -1,0 +1,4 @@
+# Node: atomic.ByBuiltinRule.GreaterEqualFact.OrderReflexivity
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/atomic/by_builtin_rule/greater_equal_order_reflexivity.lit
+
+2 >= 2

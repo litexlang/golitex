@@ -4,6 +4,7 @@
 
 use super::names::BoundName;
 use super::obj::Obj;
+use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ParamType {
@@ -43,3 +44,17 @@ pub struct NonemptySet {}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FiniteSet {}
+
+impl TypedParameterList {
+    // Flatten `groups -> params` into declaration order.
+    // Example: `x, y R, z N` -> [id(x), id(y), id(z)].
+    pub fn ordered_param_ids(&self) -> Vec<IdentifierId> {
+        let mut ids = Vec::new();
+        for group in &self.groups {
+            for param in &group.params {
+                ids.push(param.id);
+            }
+        }
+        ids
+    }
+}

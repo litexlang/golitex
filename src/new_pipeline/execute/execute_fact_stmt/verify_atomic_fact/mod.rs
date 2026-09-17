@@ -1,14 +1,18 @@
 //! Verification stages for atomic facts.
 
+pub mod verify_equality;
+pub mod match_forall_conclusion_args;
 pub mod result;
 pub mod search_proof_by_known_forall_fact;
 pub mod verify_atomic_except_equality;
 pub mod verify_atomic_fact;
-pub mod verify_equality;
 pub mod verify_well_defined;
 pub mod well_defined_result;
 
-pub use result::SearchProofByKnownForallFact;
+pub use verify_equality::{
+    ForallConclusionArgMatchProof, MatchForallConclusionArgsProof, SearchProofByKnownForallFact,
+    StrictEqualArgProof, StrictEqualWithFact,
+};
 pub use verify_atomic_except_equality::{
     AtomicExceptEqualityFactSearchProofByDefinition,
     AtomicExceptEqualityFactSearchProofByKnownAtomicFact, AtomicExceptEqualityFactSearchedProof,

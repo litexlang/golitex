@@ -1,11 +1,9 @@
-# Known atomic-except-equality: one-pass equality-class match + known-equality paths.
+# new_pipeline: $fn_eq removed; not $fn_eq_in is an ordinary atomic
 
-have a R, b R
+have f set, g set, h set, k set
 
-# Exact class hit (reflexive empty paths).
-trust a > 0
-a > 0
+trust not $fn_eq_in(f, g, R)
+not $fn_eq_in(f, g, R)
 
-# Class hit via equality edge a = b.
-trust a = b
-b > 0
+trust $fn_eq_in(h, k, R)
+$fn_eq_in(h, k, R)

@@ -113,10 +113,13 @@ atomics including `≠` → `by_atomic_prop`; whole `or` thens → `by_or`).
 
 Atomic / equality / or search may then use `ByKnownForallFact` via
 `SearchProofByKnownForallFact` (`cite: ForallConclusionCite` = FactId +
-`ForallConclusionLocation`, plus instantiation args and requirement proofs).
+`ForallConclusionLocation`, plus instantiation args, optional
+`proof_of_arg_equalities` from strict equal matching, and requirement proofs).
 And-then components are projected as `AndFactComponent` cites; exist thens
-are not projected yet. Matching binds forall param identifiers
-in then args; nested param occurrences inside compound objs are not matched yet.
+are projected into `by_exist`. Matching binds forall param identifiers in then
+args (exist: re-bound / non-param positions use equal search with
+`can_use_forall_fact = false` and `can_use_rewrite = false`); nested param
+occurrences inside compound objs are not matched yet.
 Param-type obligations are not yet required at use (dom instantiation is).
 
 `or` search order is:

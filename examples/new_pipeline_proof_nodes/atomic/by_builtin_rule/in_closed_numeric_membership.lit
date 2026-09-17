@@ -1,0 +1,4 @@
+# Node: atomic.ByBuiltinRule.InFact.ClosedNumericMembership
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/atomic/by_builtin_rule/in_closed_numeric_membership.lit
+
+1 $in C

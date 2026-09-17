@@ -1,3 +1,4 @@
+use crate::new_pipeline::ast::fact::ForallFactWithIff;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 
 pub enum VerifyForallFactWithIffResult {
@@ -5,10 +6,23 @@ pub enum VerifyForallFactWithIffResult {
     Failed(VerifyForallFactWithIffFailed),
 }
 
-pub struct VerifyForallFactWithIffSuccess {}
+// Stage order: then⇒iff, then iff⇒then. Each direction is a full forall verify.
+pub struct VerifyForallFactWithIffSuccess {
+    pub fact: ForallFactWithIff,
+    pub then_implies_iff: VerifyFactResult,
+    pub iff_implies_then: VerifyFactResult,
+}
 
 pub enum VerifyForallFactWithIffFailed {
-    FailToSearchProof,
+    FailThenImpliesIff {
+        fact: ForallFactWithIff,
+        then_implies_iff: VerifyFactResult,
+    },
+    FailIffImpliesThen {
+        fact: ForallFactWithIff,
+        then_implies_iff: VerifyFactResult,
+        iff_implies_then: VerifyFactResult,
+    },
 }
 
 impl VerifyForallFactWithIffResult {
@@ -17,8 +31,42 @@ impl VerifyForallFactWithIffResult {
     }
 }
 
-pub fn forall_fact_with_iff_result_from_search_fail() -> VerifyFactResult {
+pub fn forall_fact_with_iff_result_from_success(
+    fact: &ForallFactWithIff,
+    then_implies_iff: VerifyFactResult,
+    iff_implies_then: VerifyFactResult,
+) -> VerifyFactResult {
+    VerifyFactResult::ForallFactWithIff(Box::new(VerifyForallFactWithIffResult::Success(
+        VerifyForallFactWithIffSuccess {
+            fact: fact.clone(),
+            then_implies_iff,
+            iff_implies_then,
+        },
+    )))
+}
+
+pub fn forall_fact_with_iff_result_from_then_implies_iff_fail(
+    fact: &ForallFactWithIff,
+    then_implies_iff: VerifyFactResult,
+) -> VerifyFactResult {
     VerifyFactResult::ForallFactWithIff(Box::new(VerifyForallFactWithIffResult::Failed(
-        VerifyForallFactWithIffFailed::FailToSearchProof,
+        VerifyForallFactWithIffFailed::FailThenImpliesIff {
+            fact: fact.clone(),
+            then_implies_iff,
+        },
+    )))
+}
+
+pub fn forall_fact_with_iff_result_from_iff_implies_then_fail(
+    fact: &ForallFactWithIff,
+    then_implies_iff: VerifyFactResult,
+    iff_implies_then: VerifyFactResult,
+) -> VerifyFactResult {
+    VerifyFactResult::ForallFactWithIff(Box::new(VerifyForallFactWithIffResult::Failed(
+        VerifyForallFactWithIffFailed::FailIffImpliesThen {
+            fact: fact.clone(),
+            then_implies_iff,
+            iff_implies_then,
+        },
     )))
 }

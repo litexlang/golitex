@@ -1,0 +1,15 @@
+# Node: or.ByKnownForallFact
+# Struct: SearchProofByKnownForallFact (or conclusion)
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/or/by_known_forall/instantiate_forall_then_or.lit
+#
+# Neither arm is ambient-true; goal comes from forall then-or instantiate.
+
+prop P(x R)
+trust:
+    forall x R:
+        $P(x)
+        =>:
+            x = 0 or x = 1
+have a R
+trust $P(a)
+a = 0 or a = 1

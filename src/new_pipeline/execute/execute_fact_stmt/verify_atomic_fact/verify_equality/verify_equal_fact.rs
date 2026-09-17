@@ -70,7 +70,9 @@ impl Runtime {
             if let Some(result) = self
                 .search_equal_fact_proof_by_known_forall_fact(fact, verify_state.clone())?
             {
-                return Ok(Some(EqualFactSearchedProof::ByKnownForallFact(result)));
+                return Ok(Some(EqualFactSearchedProof::ByKnownForallFact(Box::new(
+                    result,
+                ))));
             }
         }
 

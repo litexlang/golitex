@@ -61,7 +61,7 @@ impl AtomicFact {
             AtomicFact::NotSubsetFact(x) => x.ir(),
             AtomicFact::NotSupersetFact(x) => x.ir(),
             AtomicFact::FnEqualInFact(x) => x.ir(),
-            AtomicFact::FnEqualFact(x) => x.ir(),
+            AtomicFact::NotFnEqualInFact(x) => x.ir(),
         }
     }
     pub fn display_string(&self) -> String {
@@ -95,7 +95,7 @@ impl AtomicFact {
             AtomicFact::NotSubsetFact(x) => x.display_string(),
             AtomicFact::NotSupersetFact(x) => x.display_string(),
             AtomicFact::FnEqualInFact(x) => x.display_string(),
-            AtomicFact::FnEqualFact(x) => x.display_string(),
+            AtomicFact::NotFnEqualInFact(x) => x.display_string(),
         }
     }
 }
@@ -507,28 +507,34 @@ impl FnEqualInFact {
     }
 }
 
-impl FnEqualFact {
+impl NotFnEqualInFact {
     pub fn ir(&self) -> FactIR {
         FactIR(format!(
-            "{}{}{}{}{} {}{}",
+            "{} {}{}{}{}{} {}{} {}{}",
+            NOT,
             FACT_PREFIX,
-            FN_EQ,
+            FN_EQ_IN,
             LEFT_PAREN,
             self.left.ir(),
             COMMA,
             self.right.ir(),
+            COMMA,
+            self.set.ir(),
             RIGHT_PAREN
         ))
     }
     pub fn display_string(&self) -> String {
         format!(
-            "{}{}{}{}{} {}{}",
+            "{} {}{}{}{}{} {}{} {}{}",
+            NOT,
             FACT_PREFIX,
-            FN_EQ,
+            FN_EQ_IN,
             LEFT_PAREN,
             self.left.display_string(),
             COMMA,
             self.right.display_string(),
+            COMMA,
+            self.set.display_string(),
             RIGHT_PAREN
         )
     }
@@ -895,9 +901,79 @@ impl ForallFactWithIff {
 
 impl NotForallFact {
     pub fn ir(&self) -> FactIR {
-        FactIR(format!("{} {}", NOT, self.forall_fact.ir()))
+        let indent = |text: &str, n: usize| -> String {
+            let prefix = "    ".repeat(n);
+            text.split('\n')
+                .map(|line| format!("{}{}", prefix, line))
+                .collect::<Vec<_>>()
+                .join("\n")
+        };
+        let mut s = format!(
+            "{} {} {}{}",
+            NOT,
+            FORALL,
+            self.typed_parameters.ir(),
+            COLON
+        );
+        if self.dom_facts.is_empty() {
+            s.push('\n');
+            let then_parts: Vec<_> = self.then_facts.iter().map(|t| t.ir()).collect();
+            s.push_str(&indent(&then_parts.join("\n"), 1));
+        } else {
+            s.push('\n');
+            let dom_parts: Vec<_> = self.dom_facts.iter().map(|d| d.ir()).collect();
+            s.push_str(&indent(&dom_parts.join("\n"), 1));
+            s.push('\n');
+            s.push_str(&indent(RIGHT_ARROW, 1));
+            s.push_str(COLON);
+            s.push('\n');
+            let then_parts: Vec<_> = self.then_facts.iter().map(|t| t.ir()).collect();
+            s.push_str(&indent(&then_parts.join("\n"), 2));
+        }
+        FactIR(s)
     }
     pub fn display_string(&self) -> String {
-        format!("{} {}", NOT, self.forall_fact.display_string())
+        let indent = |text: &str, n: usize| -> String {
+            let prefix = "    ".repeat(n);
+            text.split('\n')
+                .map(|line| format!("{}{}", prefix, line))
+                .collect::<Vec<_>>()
+                .join("\n")
+        };
+        let mut s = format!(
+            "{} {} {}{}",
+            NOT,
+            FORALL,
+            self.typed_parameters.display_string(),
+            COLON
+        );
+        if self.dom_facts.is_empty() {
+            s.push('\n');
+            let then_parts: Vec<_> = self
+                .then_facts
+                .iter()
+                .map(|t| t.display_string())
+                .collect();
+            s.push_str(&indent(&then_parts.join("\n"), 1));
+        } else {
+            s.push('\n');
+            let dom_parts: Vec<_> = self
+                .dom_facts
+                .iter()
+                .map(|d| d.display_string())
+                .collect();
+            s.push_str(&indent(&dom_parts.join("\n"), 1));
+            s.push('\n');
+            s.push_str(&indent(RIGHT_ARROW, 1));
+            s.push_str(COLON);
+            s.push('\n');
+            let then_parts: Vec<_> = self
+                .then_facts
+                .iter()
+                .map(|t| t.display_string())
+                .collect();
+            s.push_str(&indent(&then_parts.join("\n"), 2));
+        }
+        s
     }
 }

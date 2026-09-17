@@ -1,0 +1,16 @@
+# Moved: fine-grained trichotomy tracers live under
+#   examples/new_pipeline_proof_nodes/or/by_builtin_rule/
+#
+# This file remains a short smoke check of all three orders.
+# Canonical one-rule-per-file tracers:
+#   real_line_trichotomy_eq_less_greater.lit
+#   real_line_trichotomy_less_eq_greater.lit
+#   real_line_trichotomy_greater_eq_less.lit
+#
+# Run:
+#   LITEX_NEW_PIPELINE=1 litex -f examples/01_proof_patterns/or_fact_trichotomy_builtin.lit
+
+have a R, b R
+a = b or a < b or a > b
+a < b or a = b or a > b
+a > b or a = b or a < b

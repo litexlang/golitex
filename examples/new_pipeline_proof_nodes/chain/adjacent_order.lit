@@ -1,0 +1,6 @@
+# Node: chain (adjacent order)
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/chain/adjacent_order.lit
+
+trust 1 < 2
+trust 2 < 3
+1 < 2 < 3

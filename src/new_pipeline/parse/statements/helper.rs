@@ -93,7 +93,7 @@ impl Runtime {
     pub(in super::super) fn forall_params_of_fact(fact: &Fact) -> Option<&TypedParameterList> {
         match fact {
             Fact::ForallFact(f) => Some(&f.typed_parameters),
-            Fact::NotForall(n) => Some(&n.forall_fact.typed_parameters),
+            Fact::NotForall(n) => Some(&n.typed_parameters),
             _ => None,
         }
     }

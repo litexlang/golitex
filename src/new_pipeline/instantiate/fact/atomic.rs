@@ -3,11 +3,12 @@ use std::collections::HashMap;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 
 use crate::new_pipeline::ast::fact::{
-    AtomicFact, EqualFact, FnEqualFact, FnEqualInFact, GreaterEqualFact, GreaterFact, InFact,
-    IsCartFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact, IsTupleFact, LessEqualFact, LessFact,
-    NormalAtomicFact, NotEqualFact, NotGreaterEqualFact, NotGreaterFact, NotInFact, NotIsCartFact,
-    NotIsFiniteSetFact, NotIsNonemptySetFact, NotIsSetFact, NotIsTupleFact, NotLessEqualFact,
-    NotLessFact, NotNormalAtomicFact, NotSubsetFact, NotSupersetFact, SubsetFact, SupersetFact,
+    AtomicFact, EqualFact, FnEqualInFact, GreaterEqualFact, GreaterFact, InFact, IsCartFact,
+    IsFiniteSetFact, IsNonemptySetFact, IsSetFact, IsTupleFact, LessEqualFact, LessFact,
+    NormalAtomicFact, NotEqualFact, NotFnEqualInFact, NotGreaterEqualFact, NotGreaterFact,
+    NotInFact, NotIsCartFact, NotIsFiniteSetFact, NotIsNonemptySetFact, NotIsSetFact,
+    NotIsTupleFact, NotLessEqualFact, NotLessFact, NotNormalAtomicFact, NotSubsetFact,
+    NotSupersetFact, SubsetFact, SupersetFact,
 };
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::runtime::Runtime;
@@ -206,10 +207,11 @@ impl Runtime {
             set: self.inst_obj_rec(&f.set, param_to_arg_map)?,
             line_file: f.line_file.clone(),
         })),
-        AtomicFact::FnEqualFact(f) => Ok(AtomicFact::FnEqualFact(FnEqualFact {
+        AtomicFact::NotFnEqualInFact(f) => Ok(AtomicFact::NotFnEqualInFact(NotFnEqualInFact {
             fact_id,
             left: self.inst_obj_rec(&f.left, param_to_arg_map)?,
             right: self.inst_obj_rec(&f.right, param_to_arg_map)?,
+            set: self.inst_obj_rec(&f.set, param_to_arg_map)?,
             line_file: f.line_file.clone(),
         })),
     }

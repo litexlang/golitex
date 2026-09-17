@@ -1,0 +1,5 @@
+# Node: exist.ByKnownExistFact
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/exist/by_known_exist_fact/reuse_stored_exist.lit
+
+trust exist x R st {x = 1}
+exist x R st {x = 1}

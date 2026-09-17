@@ -258,6 +258,166 @@ fn forall_reflexive_equality_succeeds_and_stores() {
 }
 
 #[test]
+fn forall_with_iff_splits_and_proves_both_directions() {
+    let mut runtime = runtime_with_file_env();
+    let outcome = exec_one(
+        &mut runtime,
+        "forall x, y R:\n    =>:\n        x = y\n    <=>:\n        y = x",
+    );
+    assert!(
+        !outcome.is_failed(),
+        "expected Success for forall <=> equality symmetry"
+    );
+    assert!(
+        runtime
+            .top_exec_env()
+            .facts
+            .facts_by_id
+            .values()
+            .any(|f| matches!(
+                f,
+                crate::new_pipeline::ast::fact::Fact::ForallFactWithIff(_)
+            )),
+        "Success must store the forall-with-iff fact in parent env"
+    );
+}
+
+#[test]
+fn forall_with_iff_one_direction_fail_does_not_store() {
+    let mut runtime = runtime_with_file_env();
+    let before = runtime.top_exec_env().facts.facts_by_id.len();
+    // then⇒iff needs proving y = 1 from x = y (false); should soft-fail.
+    let outcome = exec_one(
+        &mut runtime,
+        "forall x, y R:\n    =>:\n        x = y\n    <=>:\n        y = 1",
+    );
+    assert!(
+        outcome.is_failed(),
+        "expected soft fail when one iff direction is unprovable"
+    );
+    assert_eq!(
+        runtime.top_exec_env().facts.facts_by_id.len(),
+        before,
+        "Failed forall-with-iff must not store into parent"
+    );
+}
+
+#[test]
+fn not_forall_parses_quantifier_free_body() {
+    let mut runtime = runtime_with_file_env();
+    // Without a known counterexample exist, prove soft-fails.
+    let outcome = exec_one(&mut runtime, "not forall x R:\n    x > 0");
+    assert!(
+        outcome.is_failed(),
+        "not forall without known exist counterexample soft-fails"
+    );
+}
+
+#[test]
+fn not_forall_rejects_exist_in_body() {
+    let mut runtime = runtime_with_file_env();
+    let tokens = Tokenizer::new()
+        .tokenize(
+            "not forall x R:\n    exist y R st {y = x}",
+            runtime.current_file.clone(),
+        )
+        .expect("tokenize");
+    assert!(
+        runtime.parse(&tokens).is_err(),
+        "nested exist inside not forall must be a parse error"
+    );
+}
+
+#[test]
+fn not_forall_proves_via_known_counterexample_exist() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(&mut runtime, "trust exist x R st {not x > 0}").is_failed(),
+        "trust counterexample exist"
+    );
+    assert!(
+        !exec_one(&mut runtime, "not forall x R:\n    x > 0").is_failed(),
+        "not forall proves via known exist counterexample"
+    );
+}
+
+#[test]
+fn not_forall_trust_stores_derived_exist() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(
+            &mut runtime,
+            "trust:\n    not forall x R:\n        x > 0",
+        )
+        .is_failed(),
+        "trust not forall must store"
+    );
+    let facts = &runtime.top_exec_env().facts;
+    assert!(
+        facts
+            .facts_by_id
+            .values()
+            .any(|f| matches!(f, crate::new_pipeline::ast::fact::Fact::NotForall(_))),
+        "not forall itself is recorded"
+    );
+    assert!(
+        !facts.known_exist.by_key.is_empty(),
+        "derived exist must be indexed in known_exist"
+    );
+    assert!(
+        !exec_one(&mut runtime, "exist x R st {not x > 0}").is_failed(),
+        "derived exist must be reusable via known_exist"
+    );
+}
+
+#[test]
+fn fn_eq_is_removed_parse_error() {
+    let mut runtime = runtime_with_file_env();
+    let tokens = Tokenizer::new()
+        .tokenize("$fn_eq(0, 1)", runtime.current_file.clone())
+        .expect("tokenize");
+    let err = runtime.parse(&tokens).expect_err("`$fn_eq` must be a parse error");
+    let msg = format!("{err:?}");
+    assert!(
+        msg.contains("`$fn_eq` is removed"),
+        "expected removal message, got: {msg}"
+    );
+}
+
+#[test]
+fn not_fn_eq_in_parses_trusts_and_proves_known() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(&mut runtime, "have f set, g set, h set, k set").is_failed(),
+        "declare carriers"
+    );
+    assert!(
+        !exec_one(
+            &mut runtime,
+            "trust not $fn_eq_in(f, g, R)",
+        )
+        .is_failed(),
+        "trust not $fn_eq_in must store"
+    );
+    assert!(
+        !exec_one(&mut runtime, "not $fn_eq_in(f, g, R)").is_failed(),
+        "known not $fn_eq_in must prove"
+    );
+    assert!(
+        !exec_one(
+            &mut runtime,
+            "trust $fn_eq_in(h, k, R)",
+        )
+        .is_failed(),
+        "trust $fn_eq_in still works"
+    );
+    assert!(
+        !exec_one(&mut runtime, "$fn_eq_in(h, k, R)").is_failed(),
+        "known $fn_eq_in must prove"
+    );
+}
+
+#[test]
 fn forall_unprovable_then_does_not_store() {
     let mut runtime = runtime_with_file_env();
     let before = runtime.top_exec_env().facts.facts_by_id.len();
@@ -385,6 +545,130 @@ fn forall_or_then_indexes_by_or_and_instantiates() {
 }
 
 #[test]
+fn or_fact_trichotomy_eq_less_greater_by_builtin() {
+    use crate::new_pipeline::execute::execute_fact_stmt::{
+        ExecFactStmtResult, OrFactSearchProofByBuiltinRule, OrFactSearchedProof, VerifyFactResult,
+        VerifyOrFactResult,
+    };
+
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have a R, b R").is_failed());
+    let outcome = exec_one(&mut runtime, "a = b or a < b or a > b");
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(success)) = outcome else {
+        panic!("expected Success for trichotomy EqLessGreater");
+    };
+    let VerifyFactResult::OrFact(or_result) = success.verify_result else {
+        panic!("expected OrFact verify result");
+    };
+    match or_result.as_ref() {
+        VerifyOrFactResult::Success(s) => match &s.searched_proof {
+            OrFactSearchedProof::ByBuiltinRule(
+                OrFactSearchProofByBuiltinRule::RealLineTrichotomyEqLessGreater(p),
+            ) => {
+                assert!(!p.left_in_r.is_failed());
+                assert!(!p.right_in_r.is_failed());
+            }
+            _other => panic!("expected EqLessGreater builtin, got other searched_proof"),
+        },
+        VerifyOrFactResult::Failed(_) => panic!("expected Success"),
+    }
+}
+
+#[test]
+fn or_fact_trichotomy_less_eq_greater_by_builtin() {
+    use crate::new_pipeline::execute::execute_fact_stmt::{
+        ExecFactStmtResult, OrFactSearchProofByBuiltinRule, OrFactSearchedProof, VerifyFactResult,
+        VerifyOrFactResult,
+    };
+
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have a R, b R").is_failed());
+    let outcome = exec_one(&mut runtime, "a < b or a = b or a > b");
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(success)) = outcome else {
+        panic!("expected Success for trichotomy LessEqGreater");
+    };
+    let VerifyFactResult::OrFact(or_result) = success.verify_result else {
+        panic!("expected OrFact verify result");
+    };
+    match or_result.as_ref() {
+        VerifyOrFactResult::Success(s) => assert!(matches!(
+            &s.searched_proof,
+            OrFactSearchedProof::ByBuiltinRule(
+                OrFactSearchProofByBuiltinRule::RealLineTrichotomyLessEqGreater(_)
+            )
+        )),
+        VerifyOrFactResult::Failed(_) => panic!("expected Success"),
+    }
+}
+
+#[test]
+fn or_fact_trichotomy_greater_eq_less_by_builtin() {
+    use crate::new_pipeline::execute::execute_fact_stmt::{
+        ExecFactStmtResult, OrFactSearchProofByBuiltinRule, OrFactSearchedProof, VerifyFactResult,
+        VerifyOrFactResult,
+    };
+
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have a R, b R").is_failed());
+    let outcome = exec_one(&mut runtime, "a > b or a = b or a < b");
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(success)) = outcome else {
+        panic!("expected Success for trichotomy GreaterEqLess");
+    };
+    let VerifyFactResult::OrFact(or_result) = success.verify_result else {
+        panic!("expected OrFact verify result");
+    };
+    match or_result.as_ref() {
+        VerifyOrFactResult::Success(s) => assert!(matches!(
+            &s.searched_proof,
+            OrFactSearchedProof::ByBuiltinRule(
+                OrFactSearchProofByBuiltinRule::RealLineTrichotomyGreaterEqLess(_)
+            )
+        )),
+        VerifyOrFactResult::Failed(_) => panic!("expected Success"),
+    }
+}
+
+#[test]
+fn or_fact_trichotomy_unlisted_order_is_not_builtin() {
+    use crate::new_pipeline::execute::execute_fact_stmt::{
+        ExecFactStmtResult, OrFactSearchedProof, VerifyFactResult, VerifyOrFactResult,
+    };
+
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have a R, b R").is_failed());
+    // Supported orders only; this permutation must not hit trichotomy builtin.
+    // Without SelectedBranch/forall help it soft-fails.
+    let outcome = exec_one(&mut runtime, "a < b or a > b or a = b");
+    match outcome {
+        ExecStmtResult::Fact(ExecFactStmtResult::Failed(_)) => {}
+        ExecStmtResult::Fact(ExecFactStmtResult::Success(success)) => {
+            let VerifyFactResult::OrFact(or_result) = success.verify_result else {
+                panic!("expected OrFact");
+            };
+            if let VerifyOrFactResult::Success(s) = or_result.as_ref() {
+                assert!(
+                    !matches!(&s.searched_proof, OrFactSearchedProof::ByBuiltinRule(_)),
+                    "unlisted branch order must not use trichotomy builtin"
+                );
+            }
+        }
+        other => panic!("unexpected stmt outcome: failed={}", other.is_failed()),
+    }
+}
+
+#[test]
+fn or_fact_trichotomy_without_reals_does_not_use_builtin() {
+    let mut runtime = runtime_with_file_env();
+    // a,b introduced without R membership → trichotomy premise miss.
+    assert!(!exec_one(&mut runtime, "have a C, b C").is_failed());
+    let outcome = exec_one(&mut runtime, "a = b or a < b or a > b");
+    assert!(
+        outcome.is_failed(),
+        "trichotomy requires both sides in R; C alone must soft-fail"
+    );
+}
+
+#[test]
 fn and_fact_proves_from_known_components_and_projects_store() {
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "trust 1 < 2").is_failed());
@@ -502,5 +786,67 @@ fn known_atomic_except_equality_by_equality_class() {
     assert!(
         exec_one(&mut runtime, "b > 0").is_failed(),
         "expected soft fail for b > 0 without a = b"
+    );
+}
+
+#[test]
+fn exist_fact_known_exist_proves_and_stores() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(&mut runtime, "trust exist x R st {x = 1}").is_failed(),
+        "trust exist must store"
+    );
+    let facts = &runtime.top_exec_env().facts;
+    assert!(
+        !facts.known_exist.by_key.is_empty(),
+        "exist must be indexed in known_exist"
+    );
+    assert!(
+        !exec_one(&mut runtime, "exist x R st {x = 1}").is_failed(),
+        "stored exist must be reusable via known_exist"
+    );
+}
+
+#[test]
+fn exist_fact_unprovable_is_soft_fail_and_does_not_store() {
+    let mut runtime = runtime_with_file_env();
+    let before = runtime.top_exec_env().facts.facts_by_id.len();
+    let known_exist_before = runtime.top_exec_env().facts.known_exist.by_key.len();
+    let outcome = exec_one(&mut runtime, "exist x R st {x = 1}");
+    assert!(
+        outcome.is_failed(),
+        "expected soft fail when exist has no known/forall proof"
+    );
+    assert_eq!(
+        runtime.top_exec_env().facts.facts_by_id.len(),
+        before,
+        "Failed exist must not store into parent"
+    );
+    assert_eq!(
+        runtime.top_exec_env().facts.known_exist.by_key.len(),
+        known_exist_before,
+        "Failed exist must not index known_exist"
+    );
+}
+
+#[test]
+fn forall_exist_then_indexes_by_exist_and_instantiates() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(
+            &mut runtime,
+            "trust:\n    forall a R:\n        exist x R st {x = a}",
+        )
+        .is_failed(),
+        "trust forall with exist then must store"
+    );
+    let facts = &runtime.top_exec_env().facts;
+    assert!(
+        !facts.known_forall_conclusions.by_exist.is_empty(),
+        "exist then must be indexed under by_exist"
+    );
+    assert!(
+        !exec_one(&mut runtime, "exist x R st {x = 2}").is_failed(),
+        "goal exist must instantiate from forall then-exist"
     );
 }
