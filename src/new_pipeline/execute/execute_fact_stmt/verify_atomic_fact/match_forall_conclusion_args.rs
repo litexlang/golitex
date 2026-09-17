@@ -117,6 +117,17 @@ impl Runtime {
     }
 }
 
+pub(crate) fn subst_from_ordered_params(
+    param_ids: &[IdentifierId],
+    args: &[Obj],
+) -> HashMap<IdentifierId, Obj> {
+    let mut subst = HashMap::new();
+    for (id, arg) in param_ids.iter().zip(args.iter()) {
+        subst.insert(*id, arg.clone());
+    }
+    subst
+}
+
 enum ForallParamBindResult {
     Bound {
         param_id: IdentifierId,

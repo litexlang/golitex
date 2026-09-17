@@ -2,6 +2,7 @@ pub mod exec_env;
 pub mod exist_fact_index_key;
 pub mod known_fact_memory;
 pub mod known_forall_conclusion_memory;
+// Temp child → merge on Success / discard on Failed. See merge_exec_env.rs.
 mod merge_exec_env;
 pub mod or_fact_index_key;
 

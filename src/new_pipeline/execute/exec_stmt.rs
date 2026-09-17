@@ -3,7 +3,8 @@ use crate::new_pipeline::ast::stmt::{DefinitionStmt, Stmt};
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
 impl Runtime {
-    // Only public stmt entry: temp ExecEnv → exec_xxx → Failed | merge+Success.
+    // Temp ExecEnv → run stmt → Failed discards child; Success merges into parent.
+    // Soft-fail must not pollute the parent session (see exec_env/merge_exec_env.rs).
     pub fn exec_stmt(&mut self, stmt: &Stmt) -> RuntimeResult<ExecStmtResult> {
         let (outcome, child_env) =
             self.run_in_local_env_and_take_env(|runtime| runtime.exec_stmt_in_current_env(stmt))?;

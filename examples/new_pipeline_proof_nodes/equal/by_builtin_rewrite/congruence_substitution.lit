@@ -1,0 +1,6 @@
+# Node: equal.ByBuiltinRewrite.CongruenceSubstitution
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/equal/by_builtin_rewrite/congruence_substitution.lit
+
+have a R
+trust a = 1
+a + 1 = 2

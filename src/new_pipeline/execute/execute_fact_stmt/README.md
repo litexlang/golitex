@@ -111,16 +111,22 @@ Success, and projects then-clauses into
 `KnownFactMemory.known_forall_conclusions` (`=` → `equal_conclusions`; other
 atomics including `≠` → `by_atomic_prop`; whole `or` thens → `by_or`).
 
-Atomic / equality / or search may then use `ByKnownForallFact` via
+Atomic / equality / or / exist search may then use `ByKnownForallFact` via
 `SearchProofByKnownForallFact` (`cite: ForallConclusionCite` = FactId +
-`ForallConclusionLocation`, plus instantiation args, optional
-`proof_of_arg_equalities` from strict equal matching, and requirement proofs).
+`ForallConclusionLocation`, ordered `forall_parameters_match_what_args`,
+per-arg `arg_match_proofs` (`BoundParam` / `ReboundParamEqual` /
+`NonParamEqual` with `StrictEqualWithFact`), then
+`instantiation_requirements` from `prove_forall_instantiation_requirements`:
+param-type facts (same shapes as introduce: `$in` / `isSet` / …) verified per
+parameter, then instantiated dom facts verified).
 And-then components are projected as `AndFactComponent` cites; exist thens
-are projected into `by_exist`. Matching binds forall param identifiers in then
-args (exist: re-bound / non-param positions use equal search with
-`can_use_forall_fact = false` and `can_use_rewrite = false`); nested param
-occurrences inside compound objs are not matched yet.
-Param-type obligations are not yet required at use (dom instantiation is).
+are projected into `by_exist`. Matching is shared
+(`match_forall_conclusion_args`): bind bare forall params, otherwise prove
+pattern = goal by equal search with `can_use_forall_fact = false` and
+`can_use_rewrite = false` (certificate type `StrictEqualArgProof`). Nested
+param occurrences inside compound objs are not matched yet. Exist apply also
+instantiates the conclusion and alpha-compares to the goal before
+instantiation requirements.
 
 `or` search order is:
 

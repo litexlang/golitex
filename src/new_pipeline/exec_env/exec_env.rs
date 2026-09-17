@@ -158,7 +158,8 @@ impl ExecEnv {
             .insert(def_abstract_prop.name.clone(), def_abstract_prop);
     }
 
-    // Commit a closed child ExecEnv into this parent (Success path of exec_stmt).
+    // Success path of exec_stmt: commit the temp child into this parent.
+    // Failed discards the child instead — see merge_exec_env.rs module docs.
     pub fn merge_from(
         &mut self,
         child: &ExecEnv,
