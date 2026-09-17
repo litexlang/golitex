@@ -151,7 +151,6 @@ pub const SUPERSET: &str = "superset";
 pub const PROPER_SUBSET: &str = "proper_subset";
 pub const PROPER_SUPERSET: &str = "proper_superset";
 pub const FN_EQ_IN: &str = "fn_eq_in";
-pub const FN_EQ: &str = "fn_eq";
 pub const ENUMERATE: &str = "enumerate";
 pub const EXTENSION: &str = "extension";
 pub const TRANSITIVE_PROP: &str = "transitive_prop";

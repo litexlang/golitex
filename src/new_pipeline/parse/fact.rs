@@ -45,20 +45,7 @@ impl Runtime {
     fn parse_not_fact(&mut self, tb: &mut TokenBlock) -> RuntimeResult<Fact> {
         tb.expect(NOT)?;
         match tb.peek() {
-            Some(FORALL) => {
-                let Fact::ForallFact(inner) = self.parse_forall_fact(tb)? else {
-                    return Err(RuntimeParseError::new(
-                        "`not forall` expects a forall fact",
-                        tb.line,
-                        tb.source_path.clone(),
-                    )
-                    .into());
-                };
-                Ok(Fact::NotForall(NotForallFact {
-                    fact_id: self.ids.allocate_fact_id(),
-                    forall_fact: inner,
-                }))
-            }
+            Some(FORALL) => Ok(Fact::NotForall(self.parse_not_forall_fact(tb)?)),
             Some(EXIST) | Some(EXIST_BANG) => {
                 if tb.peek() == Some(EXIST_BANG)
                     || (tb.peek() == Some(EXIST) && tb.peek_at(1) == Some(super::keywords::BANG))
@@ -94,6 +81,95 @@ impl Runtime {
                 }
             }
         }
+    }
+
+    // `not forall` body is QuantifierFree only (same as exist body shapes).
+    // Reject `<=>:` and nested exist/forall at parse.
+    fn parse_not_forall_fact(&mut self, tb: &mut TokenBlock) -> RuntimeResult<NotForallFact> {
+        self.push_parse_scope();
+        let result = (|| {
+            tb.expect(FORALL)?;
+            let params = self.parse_typed_param_list_until_colon(tb)?;
+            if !tb.exceed_end_of_head() {
+                return Err(RuntimeParseError::new(
+                    "trailing tokens after `not forall` header",
+                    tb.line,
+                    tb.source_path.clone(),
+                )
+                .into());
+            }
+            if tb.body.is_empty() {
+                return Err(RuntimeParseError::new(
+                    "`not forall` expects an indented body",
+                    tb.line,
+                    tb.source_path.clone(),
+                )
+                .into());
+            }
+
+            let last_header = tb
+                .body
+                .last()
+                .and_then(|b| b.header.first())
+                .map(String::as_str);
+            if last_header == Some(EQUIVALENT_SIGN) {
+                return Err(RuntimeParseError::new(
+                    "`not forall` does not support `<=>:`",
+                    tb.line,
+                    tb.source_path.clone(),
+                )
+                .into());
+            }
+
+            let mut dom_facts = Vec::new();
+            let mut then_facts = Vec::new();
+            if last_header == Some(RIGHT_ARROW) {
+                let n = tb.body.len();
+                for block in tb.body.iter().take(n - 1) {
+                    let mut child = block.clone();
+                    dom_facts.push(self.parse_quantifier_free_fact_top(&mut child)?);
+                }
+                let mut then_block = tb.body[n - 1].clone();
+                then_block.expect(RIGHT_ARROW)?;
+                then_block.expect(super::keywords::COLON)?;
+                if !then_block.exceed_end_of_head() {
+                    return Err(RuntimeParseError::new(
+                        "trailing tokens after `=>:`",
+                        then_block.line,
+                        then_block.source_path.clone(),
+                    )
+                    .into());
+                }
+                for block in &then_block.body {
+                    let mut child = block.clone();
+                    then_facts.push(self.parse_quantifier_free_fact_top(&mut child)?);
+                }
+            } else {
+                for block in &tb.body {
+                    let mut child = block.clone();
+                    then_facts.push(self.parse_quantifier_free_fact_top(&mut child)?);
+                }
+            }
+
+            if then_facts.is_empty() {
+                return Err(RuntimeParseError::new(
+                    "`not forall` expects at least one conclusion fact",
+                    tb.line,
+                    tb.source_path.clone(),
+                )
+                .into());
+            }
+
+            Ok(NotForallFact {
+                fact_id: self.ids.allocate_fact_id(),
+                typed_parameters: params,
+                dom_facts,
+                then_facts,
+                line_file: Some(tb.line_file()),
+            })
+        })();
+        self.pop_parse_scope();
+        result
     }
 
     fn parse_forall_fact(&mut self, tb: &mut TokenBlock) -> RuntimeResult<Fact> {
@@ -382,11 +458,13 @@ impl Runtime {
         &mut self,
         tb: &mut TokenBlock,
     ) -> RuntimeResult<QuantifierFreeFact> {
-        let first = self.parse_and_chain_atomic_fact(tb)?;
+        // Allow leading `not` so exist bodies can hold De Morgan counterexamples
+        // like `exist x R st {not x > 0}`.
+        let first = self.parse_and_chain_atomic_fact_allow_not(tb)?;
         let mut list = vec![first];
         while tb.peek() == Some(OR) {
             tb.advance()?;
-            list.push(self.parse_and_chain_atomic_fact(tb)?);
+            list.push(self.parse_and_chain_atomic_fact_allow_not(tb)?);
         }
         if list.len() == 1 {
             return Ok(match list.remove(0) {
@@ -541,7 +619,6 @@ impl Runtime {
                     && (prop_str == IN
                         || prop_str == super::fact_prop::SUBSET
                         || prop_str == super::fact_prop::SUPERSET
-                        || prop_str == super::fact_prop::FN_EQ
                         || prop_str == super::fact_prop::FN_EQ_IN)
                 {
                     if !tb.exceed_end_of_head()

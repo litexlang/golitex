@@ -1580,7 +1580,14 @@ forall x, y R:
         y = x
 ```
 
-`not forall` negates a universal claim:
+`not forall` negates a universal claim. In `new_pipeline`, its domain and
+conclusions are restricted to quantifier-free shapes (atomic / `and` / chain /
+`or`) — the same shapes allowed inside an `exist … st {…}` body. Prove and store
+both reduce to the De Morgan counterexample exist
+`exist binders st { dom…, not(then)… }` (the `not forall` fact itself is still
+recorded in `facts_by_id`; search reuses `known_exist`). Nested `exist` or
+`forall` inside `not forall` is a parse error; name such content as a `prop`
+instead.
 
 ```litex
 by contra:
@@ -1667,33 +1674,32 @@ fact or theorem.
 
 ### Function predicates
 
-`$fn_eq_in(f, g, S)` means pointwise equality on `S`. `$fn_eq(f, g)` means
-global equality after compatible function-space information is checked.
+`$fn_eq_in(f, g, S)` means pointwise equality on `S`.
+
+> **Preview (`new_pipeline`):** `$fn_eq` is removed. Prefer ordinary equality
+> `f = g` when global function equality is intended, or `$fn_eq_in(f, g, S)` for
+> pointwise agreement on `S`. Negation `not $fn_eq_in(f, g, S)` is an ordinary
+> atomic form (same polarity rules as other dollar predicates).
 
 ```litex
 have fn f(x R) R = x
 have fn g(x R) R = x
 
 by def $fn_eq_in(f, g, R)
-by def $fn_eq(f, g)
 ```
 
-Once a verified `$fn_eq(f, g)` is stored, forward inference also stores the
-ordinary equality `f = g`. Normal known-equality congruence can therefore reuse
-it inside a larger object, such as `power_set(f) = power_set(g)`. The local
-predicate `$fn_eq_in(f, g, S)` does not imply global equality.
+The local predicate `$fn_eq_in(f, g, S)` does not imply global equality.
 
-For named functions with alpha-equivalent defined function carriers, a bare
-`$fn_eq(f, g)` can also consume the exact already-known pointwise `forall`
-directly. It does not synthesize pointwise equalities or bridge different
-domain or return carriers.
+Default-pipeline note: legacy code may still mention `$fn_eq(f, g)` for global
+function equality that also stores ordinary `f = g`; that form is not available
+on `new_pipeline`.
 
 Mapping predicates describe standard function properties:
 
 | Form | Meaning |
 |---|---|
 | `$fn_eq_in(f, g, S)` | `f` and `g` agree on `S` |
-| `$fn_eq(f, g)` | Globally equal compatible functions |
+| `not $fn_eq_in(f, g, S)` | pointwise disagreement on `S` (new_pipeline) |
 | `$is_choice_function_for(I, S, g, f)` | `f` selects one member of `g(alpha)` for every `alpha` in `I` |
 | `$injective(A, B, f)` | `f : A -> B` is injective |
 | `$surjective(A, B, f)` | `f : A -> B` is surjective |
@@ -1705,11 +1711,11 @@ objects with the same value at one point:
 ```text
 have f, g set
 f(0) = g(0)
-$fn_eq(f, g)
+$fn_eq_in(f, g, R)
 ```
 
-This produces `error` before equality verification because `f` and `g` do not
-have known function sets.
+This produces `error` before equality verification when `f` and `g` do not
+have known function sets / pointwise evidence.
 
 ### User-defined predicates
 
@@ -2636,7 +2642,7 @@ explanation; this index does not repeat its examples.
 | Compound | `and`, relation chains, `or` | [Conjunctions, chains, and disjunctions](#conjunctions-chains-and-disjunctions) |
 | Existential | `exist`, `exist!`, `not exist` | [Existential facts](#existential-facts) |
 | Universal | `forall`, `forall [Setting]`, `forall [Setting(fresh_names)]`, `forall ... <=>:`, `not forall` | [Universal facts](#universal-facts) |
-| Function predicates | `$fn_eq_in`, `$fn_eq`, mapping properties | [Function predicates](#function-predicates) |
+| Function predicates | `$fn_eq_in`, mapping properties | [Function predicates](#function-predicates) |
 
 ### Statement syntax index
 
@@ -2846,7 +2852,8 @@ atomic target. The older `by def:` goal block remains accepted for compatibility
 `by def` also names the mathematical-definition route for these builtin
 positive forms: subset, superset, proper subset, proper superset,
 `$prime`, `$coprime`, `$dvd`, `$injective`, `$surjective`, `$bijective`,
-`$fn_eq_in`, and `$fn_eq`.
+`$fn_eq_in`, and (default pipeline only) `$fn_eq`. On `new_pipeline`, `$fn_eq`
+is removed.
 
 When a grouped universal law binds shared convenience variables, a conclusion
 may use only some of them. Litex stores the corresponding reduced universal
@@ -3941,9 +3948,11 @@ claim:
 by def $fn_eq(fn(x R) R {x}, fn(y R) R {y})
 ```
 
-`$fn_eq` and `$fn_eq_in` do not have ordinary negated atomic forms. The
-mapping predicates `$injective`, `$surjective`, and `$bijective` may be
-negated, but the checker does not automatically search for a counterexample.
+In the default pipeline, `$fn_eq` / `$fn_eq_in` historically lacked ordinary
+negated atomic forms. On `new_pipeline`, `$fn_eq` is removed and
+`not $fn_eq_in(f, g, S)` is supported. The mapping predicates `$injective`,
+`$surjective`, and `$bijective` may be negated, but the checker does not
+automatically search for a counterexample.
 
 ### Existential and disjunctive builtin results
 
@@ -4001,6 +4010,16 @@ The `or` verifier recognizes these exhaustive forms:
 | `a=0 or b=0` | `a,b $in R` and known `a*b=0` (either product order). |
 | `a!=0 or b!=0` | A known real square-sum nonzero fact in the supported `a^2+b^2` or `a*a+b*b` shape. |
 | `not A or B` | Classical implication packaging: under a temporary local assumption `A`, the ordinary atomic verifier proves `B`. |
+
+> **Preview (`new_pipeline`):** real-line trichotomy currently matches only these
+> exact branch orders (each is its own builtin, with nested proofs of
+> `left $in R` and `right $in R`):
+> `a = b or a < b or a > b`,
+> `a < b or a = b or a > b`,
+> `a > b or a = b or a < b`.
+> One `.lit` per rule:
+> [`examples/new_pipeline_proof_nodes/or/by_builtin_rule/`](../examples/new_pipeline_proof_nodes/or/by_builtin_rule/).
+> Other or-builtins above remain legacy-only until ported.
 
 ```litex
 forall a, b R:
@@ -4088,7 +4107,7 @@ Most triggers are atomic facts. A few larger shapes have explicit behavior.
 | Order against a resolved concrete bound | Selected sign information, including the equivalent comparison after multiplying both sides by `(-1)` when that normalized shape is supported. |
 | `exist!` | A universal saying any two complete witness tuples satisfying the body are componentwise equal. |
 | `not exist` | The corresponding universal De Morgan negation when the body shape is supported. |
-| `not forall` | An existential counterexample containing the instantiated domain facts and negation of the conclusions, when those facts can be represented in an existential body. |
+| `not forall` | An existential counterexample: domain facts plus negated conclusions, all quantifier-free by syntax (`new_pipeline`). |
 | Equality/order chain | Atomic consequences from its transitive closure, followed by the ordinary inference for each consequence. |
 
 An outer `and`, `or`, or `forall` does not receive the same general extra

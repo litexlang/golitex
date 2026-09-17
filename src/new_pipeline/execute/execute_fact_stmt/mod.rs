@@ -28,6 +28,11 @@ pub use verify_fact_result::VerifyFactResult;
 pub use verify_forall_fact::{
     AssumeDomFactResult, ProveAndStoreThenFactResult, VerifyForallFactResult,
 };
+pub use verify_or_fact::{
+    OrBuiltinRealLineTrichotomyEqLessGreater, OrBuiltinRealLineTrichotomyGreaterEqLess,
+    OrBuiltinRealLineTrichotomyLessEqGreater, OrFactSearchProofByBuiltinRule,
+    OrFactSearchedProof, VerifyOrFactFailed, VerifyOrFactResult, VerifyOrFactSuccess,
+};
 pub use verify_state::VerifyState;
 pub use well_defined_results::{
     AtomicFactWellDefinedProof, ExistFactWellDefinedProof, FactWellDefinedProof,

@@ -3,12 +3,13 @@
 //! and known-exist search stays a simple shape bucket + exact/unify match.
 //! Exact match is separate: known uses alpha body equality; forall uses unify.
 
-use crate::new_pipeline::ast::fact::{ExistFact, QuantifierFreeFact};
+use crate::new_pipeline::ast::fact::{ExistFact, PlainExistFact, QuantifierFreeFact};
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::param::TypedParameterList;
 use crate::new_pipeline::exec_env::or_fact_index_key::{
     atomic_fact_shape, or_fact_index_key, AtomicAndChainFactShape, AtomicFactShape,
 };
+use crate::new_pipeline::parse::keywords::ST;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum ExistFactKind {
@@ -65,6 +66,52 @@ pub fn exist_fact_known_lookup_keys(goal: &ExistFact) -> Vec<ExistFactIndexKey> 
         });
     }
     keys
+}
+
+// exist! may prove exist; other cross-kind pairs are rejected.
+// Example: known `exist! x N st {x = 1}` proves goal `exist x N st {x = 1}`.
+pub fn exist_fact_can_prove_goal(known: &ExistFact, goal: &ExistFact) -> bool {
+    match known {
+        ExistFact::PlainExistFact(_) => matches!(goal, ExistFact::PlainExistFact(_)),
+        ExistFact::ExistUniqueFact(_) => {
+            matches!(
+                goal,
+                ExistFact::PlainExistFact(_) | ExistFact::ExistUniqueFact(_)
+            )
+        }
+        ExistFact::NotExistFact(_) => matches!(goal, ExistFact::NotExistFact(_)),
+    }
+}
+
+pub fn plain_exist_fact(exist: &ExistFact) -> &PlainExistFact {
+    match exist {
+        ExistFact::PlainExistFact(p)
+        | ExistFact::ExistUniqueFact(p)
+        | ExistFact::NotExistFact(p) => p,
+    }
+}
+
+// Alpha body key: binder `#id#name` → `#0`, `#1`, … (keyword stripped).
+// Example: `exist x N st {x = 1}` and `exist y N st {y = 1}` share one key.
+pub fn exist_fact_alpha_match_key(exist: &ExistFact) -> String {
+    let plain = plain_exist_fact(exist);
+    let mut binder_irs = Vec::new();
+    for group in &plain.typed_parameters.groups {
+        for param in &group.params {
+            binder_irs.push(param.ir_string());
+        }
+    }
+    let facts = plain
+        .facts
+        .iter()
+        .map(|fact| fact.ir().to_string())
+        .collect::<Vec<_>>()
+        .join(", ");
+    let mut text = format!("{} {} {{{}}}", plain.typed_parameters.ir(), ST, facts);
+    for (i, binder_ir) in binder_irs.iter().enumerate() {
+        text = text.replace(binder_ir.as_str(), &format!("#{i}"));
+    }
+    text
 }
 
 fn typed_parameter_count(params: &TypedParameterList) -> usize {

@@ -5,10 +5,11 @@
 
 use crate::new_pipeline::ast::fact::{
     AndFactComponentForallConclusionLocation, AtomicFact, DirectForallConclusionLocation,
-    ExistOrAndChainAtomicFact, ForallConclusionLocation, ForallFact, OrFact,
+    ExistFact, ExistOrAndChainAtomicFact, ForallConclusionLocation, ForallFact, OrFact,
 };
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::fact::atomic_fact_has_positive_polarity;
+use crate::new_pipeline::exec_env::exist_fact_index_key::{exist_fact_index_key, ExistFactIndexKey};
 use crate::new_pipeline::exec_env::or_fact_index_key::{or_fact_index_key, OrFactIndexKey};
 use crate::new_pipeline::runtime::FactId;
 use std::collections::HashMap;
@@ -28,6 +29,8 @@ pub struct KnownForallConclusionMemory {
     pub equal_conclusions: Vec<ForallConclusionCite>,
     /// Whole or then-clauses, keyed by structural or index key.
     pub by_or: HashMap<OrFactIndexKey, Vec<ForallConclusionCite>>,
+    /// Whole exist then-clauses, keyed by structural exist index key.
+    pub by_exist: HashMap<ExistFactIndexKey, Vec<ForallConclusionCite>>,
 }
 
 impl KnownForallConclusionMemory {
@@ -35,8 +38,8 @@ impl KnownForallConclusionMemory {
         Self::default()
     }
 
-    // Project atomic leaves and whole or thens from each then.
-    // Exist / chain thens are not projected into these buckets yet.
+    // Project atomic leaves, whole or thens, and whole exist thens.
+    // Chain thens are not projected into these buckets yet.
     pub fn index_forall(&mut self, forall: &ForallFact) {
         let fact_id = forall.fact_id;
         for (then_fact_index, then) in forall.then_facts.iter().enumerate() {
@@ -77,8 +80,19 @@ impl KnownForallConclusionMemory {
                         ),
                     });
                 }
-                ExistOrAndChainAtomicFact::ChainFact(_)
-                | ExistOrAndChainAtomicFact::ExistFact(_) => {}
+                ExistOrAndChainAtomicFact::ExistFact(exist_fact) => {
+                    let key = exist_fact_index_key(exist_fact);
+                    self.by_exist
+                        .entry(key)
+                        .or_default()
+                        .push(ForallConclusionCite {
+                            fact_id,
+                            location: ForallConclusionLocation::DirectThenFact(
+                                DirectForallConclusionLocation { then_fact_index },
+                            ),
+                        });
+                }
+                ExistOrAndChainAtomicFact::ChainFact(_) => {}
             }
         }
     }
@@ -99,6 +113,14 @@ impl KnownForallConclusionMemory {
         }
         for (key, child_entries) in &child.by_or {
             let parent_entries = self.by_or.entry(key.clone()).or_default();
+            for entry in child_entries {
+                if !parent_entries.iter().any(|e| e == entry) {
+                    parent_entries.push(entry.clone());
+                }
+            }
+        }
+        for (key, child_entries) in &child.by_exist {
+            let parent_entries = self.by_exist.entry(key.clone()).or_default();
             for entry in child_entries {
                 if !parent_entries.iter().any(|e| e == entry) {
                     parent_entries.push(entry.clone());
@@ -151,6 +173,22 @@ pub fn or_at_forall_location(
         ForallConclusionLocation::DirectThenFact(loc) => {
             match forall.then_facts.get(loc.then_fact_index)? {
                 ExistOrAndChainAtomicFact::OrFact(or_fact) => Some(or_fact.clone()),
+                _ => None,
+            }
+        }
+        _ => None,
+    }
+}
+
+/// Resolve a whole exist then at `location` inside a stored forall.
+pub fn exist_at_forall_location(
+    forall: &ForallFact,
+    location: &ForallConclusionLocation,
+) -> Option<ExistFact> {
+    match location {
+        ForallConclusionLocation::DirectThenFact(loc) => {
+            match forall.then_facts.get(loc.then_fact_index)? {
+                ExistOrAndChainAtomicFact::ExistFact(exist_fact) => Some(exist_fact.clone()),
                 _ => None,
             }
         }

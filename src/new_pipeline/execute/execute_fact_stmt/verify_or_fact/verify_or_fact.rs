@@ -3,7 +3,6 @@ use crate::new_pipeline::ast::fact::{
     AndChainAtomicFact, Fact, ForallFact, OrFact,
 };
 use crate::new_pipeline::ast::obj::{IdentifierObj, Obj};
-use crate::new_pipeline::ast::param::TypedParameterList;
 use crate::new_pipeline::exec_env::or_fact_index_key::or_fact_index_key;
 use crate::new_pipeline::exec_env::known_forall_conclusion_memory::{
     or_at_forall_location, ForallConclusionCite,
@@ -73,14 +72,6 @@ impl Runtime {
         {
             return Ok(Some(proof));
         }
-        Ok(None)
-    }
-
-    fn search_or_fact_proof_by_builtin_rule(
-        &mut self,
-        _fact: &OrFact,
-        _verify_state: VerifyState,
-    ) -> RuntimeResult<Option<OrFactSearchedProof>> {
         Ok(None)
     }
 
@@ -245,7 +236,8 @@ impl Runtime {
             return Ok(None);
         }
 
-        let param_ids = ordered_param_ids(&forall.typed_parameters);
+        // Step 1: list forall params in declaration order.
+        let param_ids = forall.typed_parameters.ordered_param_ids();
         let param_set: HashSet<IdentifierId> = param_ids.iter().copied().collect();
         let conclusion_args = or_fact_args_ref(&conclusion);
         let goal_args = or_fact_args_ref(goal);
@@ -253,12 +245,14 @@ impl Runtime {
             return Ok(None);
         }
 
+        // Step 2: unify conclusion args against goal args to build subst.
         let mut subst: HashMap<IdentifierId, Obj> = HashMap::new();
         for (pattern_arg, goal_arg) in conclusion_args.iter().zip(goal_args.iter()) {
             if !unify_obj_phase1(pattern_arg, goal_arg, &param_set, &mut subst) {
                 return Ok(None);
             }
         }
+        // Step 3: every forall param must appear in subst (no unused params).
         for id in &param_ids {
             if !subst.contains_key(id) {
                 return Ok(None);
@@ -270,6 +264,7 @@ impl Runtime {
             .map(|id| subst.get(id).expect("checked").clone())
             .collect();
 
+        // Step 4: instantiate forall dom facts with subst, then verify each.
         let requirement_facts = match self.build_or_forall_requirement_facts(&forall, &subst)? {
             Some(facts) => facts,
             None => return Ok(None),
@@ -286,6 +281,7 @@ impl Runtime {
         Ok(Some(SearchProofByKnownForallFact {
             cite: cite.clone(),
             forall_parameters_match_what_args,
+            proof_of_arg_equalities: Vec::new(),
             requirement_facts,
             proof_of_requirement_facts,
         }))
@@ -341,16 +337,7 @@ fn or_facts_same_shape(left: &OrFact, right: &OrFact) -> bool {
         })
 }
 
-fn ordered_param_ids(params: &TypedParameterList) -> Vec<IdentifierId> {
-    let mut ids = Vec::new();
-    for group in &params.groups {
-        for param in &group.params {
-            ids.push(param.id);
-        }
-    }
-    ids
-}
-
+// Phase-1 unify: bind a bare forall param, or require identical ir().
 fn unify_obj_phase1(
     pattern: &Obj,
     goal: &Obj,

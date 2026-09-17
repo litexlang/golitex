@@ -1,6 +1,7 @@
-use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact, OrFact};
+use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, ExistFact, Fact, OrFact};
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::exec_env::exist_fact_index_key::{exist_fact_index_key, ExistFactIndexKey};
 use crate::new_pipeline::exec_env::known_forall_conclusion_memory::KnownForallConclusionMemory;
 use crate::new_pipeline::runtime::FactId;
 use std::collections::{HashMap, HashSet};
@@ -17,6 +18,7 @@ pub struct KnownFactMemory {
     pub known_equality: KnownEqualityMemory,
     pub known_atomic_except_equality_facts: AtomicExceptEqualityFactMemory,
     pub known_or: OrFactMemory,
+    pub known_exist: ExistFactMemory,
     pub known_forall_conclusions: KnownForallConclusionMemory,
 }
 
@@ -54,6 +56,12 @@ pub struct OrFactMemory {
     pub by_key: HashMap<crate::new_pipeline::exec_env::or_fact_index_key::OrFactIndexKey, Vec<OrFact>>,
 }
 
+// Stored whole exist-facts by structural index key (binders/free objs not included).
+#[derive(Clone, Default)]
+pub struct ExistFactMemory {
+    pub by_key: HashMap<ExistFactIndexKey, Vec<ExistFact>>,
+}
+
 impl KnownFactMemory {
     pub fn new() -> Self {
         Self {
@@ -61,6 +69,7 @@ impl KnownFactMemory {
             known_equality: KnownEqualityMemory::new(),
             known_atomic_except_equality_facts: AtomicExceptEqualityFactMemory::new(),
             known_or: OrFactMemory::new(),
+            known_exist: ExistFactMemory::new(),
             known_forall_conclusions: KnownForallConclusionMemory::new(),
         }
     }
@@ -187,5 +196,17 @@ impl OrFactMemory {
     pub fn store(&mut self, or_fact: &OrFact) {
         let key = crate::new_pipeline::exec_env::or_fact_index_key::or_fact_index_key(or_fact);
         self.by_key.entry(key).or_default().push(or_fact.clone());
+    }
+}
+
+impl ExistFactMemory {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    // Example: store `exist x N st {x = 1}` under its ExistFactIndexKey bucket.
+    pub fn store(&mut self, exist_fact: &ExistFact) {
+        let key = exist_fact_index_key(exist_fact);
+        self.by_key.entry(key).or_default().push(exist_fact.clone());
     }
 }

@@ -1,4 +1,5 @@
 use crate::new_pipeline::ast::fact::{Fact, OrFact};
+use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::exec_env::exec_env::ExecEnv;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
@@ -42,8 +43,43 @@ pub enum OrFactSearchedProof {
     ByKnownForallFact(SearchProofByKnownForallFact),
 }
 
-// Placeholder until numeric/structural or-builtins are ported.
-pub struct OrFactSearchProofByBuiltinRule {}
+// Or-fact builtin search evidence. One variant per rule (branch order is rigid).
+pub enum OrFactSearchProofByBuiltinRule {
+    // Exact order: `a = b or a < b or a > b`.
+    // Property: any two reals are comparable by =, <, or >.
+    // Example: have a R, b R => a = b or a < b or a > b
+    RealLineTrichotomyEqLessGreater(OrBuiltinRealLineTrichotomyEqLessGreater),
+    // Exact order: `a < b or a = b or a > b`.
+    // Example: have a R, b R => a < b or a = b or a > b
+    RealLineTrichotomyLessEqGreater(OrBuiltinRealLineTrichotomyLessEqGreater),
+    // Exact order: `a > b or a = b or a < b`.
+    // Example: have a R, b R => a > b or a = b or a < b
+    RealLineTrichotomyGreaterEqLess(OrBuiltinRealLineTrichotomyGreaterEqLess),
+}
+
+// Evidence for `a = b or a < b or a > b` after proving both sides in R.
+pub struct OrBuiltinRealLineTrichotomyEqLessGreater {
+    pub left: Obj,
+    pub right: Obj,
+    pub left_in_r: VerifyFactResult,
+    pub right_in_r: VerifyFactResult,
+}
+
+// Evidence for `a < b or a = b or a > b` after proving both sides in R.
+pub struct OrBuiltinRealLineTrichotomyLessEqGreater {
+    pub left: Obj,
+    pub right: Obj,
+    pub left_in_r: VerifyFactResult,
+    pub right_in_r: VerifyFactResult,
+}
+
+// Evidence for `a > b or a = b or a < b` after proving both sides in R.
+pub struct OrBuiltinRealLineTrichotomyGreaterEqLess {
+    pub left: Obj,
+    pub right: Obj,
+    pub left_in_r: VerifyFactResult,
+    pub right_in_r: VerifyFactResult,
+}
 
 // Classical: assume ¬ of every other branch in a local env, prove selected.
 // Example: assume `not (1 = 2)`, prove `1 = 1` ⇒ `1 = 1 or 1 = 2`.

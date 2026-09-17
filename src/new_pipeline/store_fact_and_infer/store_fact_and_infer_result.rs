@@ -1,4 +1,4 @@
-use crate::new_pipeline::ast::fact::{AndFact, AtomicFact, ChainFact, OrFact};
+use crate::new_pipeline::ast::fact::{AndFact, AtomicFact, ChainFact, ExistFact, NotForallFact, OrFact};
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::runtime::FactId;
 
@@ -9,7 +9,9 @@ pub enum StoreFactAndInferResult {
     AndFact(StoreAndFactResult),
     ChainFact(StoreChainFactResult),
     OrFact(StoreOrFactResult),
-    // Exist / forall / … until specialized store pipelines exist.
+    ExistFact(StoreExistFactResult),
+    NotForallFact(StoreNotForallFactResult),
+    // Forall / forall-iff until specialized store pipelines exist.
     RecordedFact { fact_id: FactId },
 }
 
@@ -48,6 +50,19 @@ pub struct StoreChainAdjacentResult {
 pub struct StoreOrFactResult {
     pub whole_fact_id: FactId,
     pub fact: OrFact,
+}
+
+// Whole exist only; body clauses are not projected into known-atomic indexes.
+pub struct StoreExistFactResult {
+    pub whole_fact_id: FactId,
+    pub fact: ExistFact,
+}
+
+// Record not-forall, and store its De Morgan counterexample exist into known_exist.
+pub struct StoreNotForallFactResult {
+    pub whole_fact_id: FactId,
+    pub fact: NotForallFact,
+    pub derived_exist: StoreExistFactResult,
 }
 
 pub struct StoreChainTransitiveClosureResult {
@@ -91,6 +106,12 @@ impl StoreFactAndInferResult {
                 ids
             }
             Self::OrFact(r) => vec![r.whole_fact_id],
+            Self::ExistFact(r) => vec![r.whole_fact_id],
+            Self::NotForallFact(r) => {
+                let mut ids = vec![r.whole_fact_id];
+                ids.push(r.derived_exist.whole_fact_id);
+                ids
+            }
             Self::RecordedFact { fact_id } => vec![*fact_id],
         }
     }

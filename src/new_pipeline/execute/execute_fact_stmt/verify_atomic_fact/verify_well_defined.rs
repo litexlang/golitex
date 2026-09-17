@@ -68,8 +68,8 @@ fn atomic_fact_arg_objs(fact: &AtomicFact) -> Vec<&Obj> {
         AtomicFact::NotIsTupleFact(f) => vec![&f.set],
         AtomicFact::IsCartFact(f) => vec![&f.set],
         AtomicFact::NotIsCartFact(f) => vec![&f.set],
-        AtomicFact::FnEqualFact(f) => vec![&f.left, &f.right],
         AtomicFact::FnEqualInFact(f) => vec![&f.left, &f.right, &f.set],
+        AtomicFact::NotFnEqualInFact(f) => vec![&f.left, &f.right, &f.set],
         AtomicFact::NormalAtomicFact(f) => f.body.iter().collect(),
         AtomicFact::NotNormalAtomicFact(f) => f.body.iter().collect(),
     }

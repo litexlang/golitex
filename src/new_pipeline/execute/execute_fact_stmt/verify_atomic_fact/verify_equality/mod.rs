@@ -15,6 +15,9 @@ pub use verify_equality_by_builtin_rules::EqualitySearchProofByBuiltinRule;
 
 pub use result::{
     equal_fact_result_from_search_fail, equal_fact_result_from_success,
-    equal_fact_result_from_wd_fail, EqualFactSearchedProof, EqualFactSearchedProofByKnownEquality,
-    VerifyEqualityFailed, VerifyEqualityResult, VerifyEqualitySuccess,
+    equal_fact_result_from_wd_fail, strict_equal_arg_proof_from_searched,
+    EqualFactSearchedProof, EqualFactSearchedProofByKnownEquality,
+    ForallConclusionArgMatchProof, MatchForallConclusionArgsProof, SearchProofByKnownForallFact,
+    StrictEqualArgProof, StrictEqualWithFact, VerifyEqualityFailed, VerifyEqualityResult,
+    VerifyEqualitySuccess,
 };

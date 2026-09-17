@@ -34,7 +34,7 @@ pub enum AtomicFact {
     NotSubsetFact(NotSubsetFact),
     NotSupersetFact(NotSupersetFact),
     FnEqualInFact(FnEqualInFact),
-    FnEqualFact(FnEqualFact),
+    NotFnEqualInFact(NotFnEqualInFact),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -63,10 +63,11 @@ pub struct FnEqualInFact {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct FnEqualFact {
+pub struct NotFnEqualInFact {
     pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
+    pub set: Obj,
     pub line_file: Option<LineFile>,
 }
 
@@ -300,14 +301,14 @@ impl AtomicFact {
             AtomicFact::NotSubsetFact(f) => f.fact_id,
             AtomicFact::NotSupersetFact(f) => f.fact_id,
             AtomicFact::FnEqualInFact(f) => f.fact_id,
-            AtomicFact::FnEqualFact(f) => f.fact_id,
+            AtomicFact::NotFnEqualInFact(f) => f.fact_id,
         }
     }
 
     // Predicate-family name shared by a fact and its negation (e.g. both use `in`).
     pub fn prop_name(&self) -> AtomicName {
         use crate::new_pipeline::parse::keywords::{
-            EQUAL, FN_EQ, FN_EQ_IN, GREATER, GREATER_EQUAL, IN, IS_CART, IS_FINITE_SET,
+            EQUAL, FN_EQ_IN, GREATER, GREATER_EQUAL, IN, IS_CART, IS_FINITE_SET,
             IS_NONEMPTY_SET, IS_SET, IS_TUPLE, LESS, LESS_EQUAL, SUBSET, SUPERSET,
         };
         match self {
@@ -358,11 +359,8 @@ impl AtomicFact {
             AtomicFact::SupersetFact(_) | AtomicFact::NotSupersetFact(_) => AtomicName::Plain {
                 name: SUPERSET.into(),
             },
-            AtomicFact::FnEqualInFact(_) => AtomicName::Plain {
+            AtomicFact::FnEqualInFact(_) | AtomicFact::NotFnEqualInFact(_) => AtomicName::Plain {
                 name: FN_EQ_IN.into(),
-            },
-            AtomicFact::FnEqualFact(_) => AtomicName::Plain {
-                name: FN_EQ.into(),
             },
         }
     }

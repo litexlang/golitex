@@ -2,12 +2,12 @@
 //! Prefer `leaf.into()` / `atomic.into()` over `AtomicFact::Variant(leaf)`.
 
 use crate::new_pipeline::ast::fact::{
-    AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, FnEqualFact, FnEqualInFact,
-    GreaterEqualFact, GreaterFact, InFact, IsCartFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
-    IsTupleFact, LessEqualFact, LessFact, NormalAtomicFact, NotEqualFact, NotGreaterEqualFact,
-    NotGreaterFact, NotInFact, NotIsCartFact, NotIsFiniteSetFact, NotIsNonemptySetFact,
-    NotIsSetFact, NotIsTupleFact, NotLessEqualFact, NotLessFact, NotNormalAtomicFact,
-    NotSubsetFact, NotSupersetFact, SubsetFact, SupersetFact,
+    AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, FnEqualInFact, GreaterEqualFact,
+    GreaterFact, InFact, IsCartFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact, IsTupleFact,
+    LessEqualFact, LessFact, NormalAtomicFact, NotEqualFact, NotFnEqualInFact,
+    NotGreaterEqualFact, NotGreaterFact, NotInFact, NotIsCartFact, NotIsFiniteSetFact,
+    NotIsNonemptySetFact, NotIsSetFact, NotIsTupleFact, NotLessEqualFact, NotLessFact,
+    NotNormalAtomicFact, NotSubsetFact, NotSupersetFact, SubsetFact, SupersetFact,
 };
 
 impl From<NormalAtomicFact> for AtomicFact {
@@ -184,9 +184,9 @@ impl From<FnEqualInFact> for AtomicFact {
     }
 }
 
-impl From<FnEqualFact> for AtomicFact {
-    fn from(f: FnEqualFact) -> Self {
-        AtomicFact::FnEqualFact(f)
+impl From<NotFnEqualInFact> for AtomicFact {
+    fn from(f: NotFnEqualInFact) -> Self {
+        AtomicFact::NotFnEqualInFact(f)
     }
 }
 
@@ -286,8 +286,8 @@ impl From<FnEqualInFact> for Fact {
     }
 }
 
-impl From<FnEqualFact> for Fact {
-    fn from(f: FnEqualFact) -> Self {
+impl From<NotFnEqualInFact> for Fact {
+    fn from(f: NotFnEqualInFact) -> Self {
         Fact::AtomicFact(f.into())
     }
 }

@@ -1,20 +1,18 @@
-# Tracer: or-fact prove / store / forall instantiate
+# Moved: fine-grained or proof-node tracers live under
+#   examples/new_pipeline_proof_nodes/or/
 #
-# Before (new_pipeline stub):
-# 1 = 1 or 1 = 2
-# Former behavior: FailToSearchProof; no known_or; forall or-then not indexed.
+# This file remains a short smoke check (SelectedBranch + known_or + forall).
+# Canonical one-rule-per-file tracers:
+#   by_selected_branch/assume_negated_others_prove_one_arm.lit
+#   by_known_or/reuse_stored_whole_or.lit
+#   by_known_forall/instantiate_forall_then_or.lit
 #
-# Now (verified):
-# Focused command:
-#   LITEX_NEW_PIPELINE=1 target/release/litex -f examples/01_proof_patterns/or_fact_selected_branch_and_forall.lit
-#
-# 1) SelectedBranch: assume not of other arms, prove one arm.
+# Run:
+#   LITEX_NEW_PIPELINE=1 litex -f examples/01_proof_patterns/or_fact_selected_branch_and_forall.lit
+
+1 = 1 or 1 = 2
 1 = 1 or 1 = 2
 
-# 2) known_or reuse of the stored whole or.
-1 = 1 or 1 = 2
-
-# 3) forall then-or index + instantiate (neither arm ambient-true).
 prop P(x R)
 trust:
     forall x R:
@@ -24,9 +22,3 @@ trust:
 have a R
 trust $P(a)
 a = 0 or a = 1
-
-# Boundary: neither disjunct provable → soft fail (see
-# or_fact_unprovable_is_soft_fail_and_does_not_store).
-# WD boundary: ill-defined arm → FailToVerifyWellDefined (see
-# or_fact_ill_defined_branch_is_wd_fail), e.g. `1 / 0 = 1 or 1 = 1`.
-# Non-goals this tracer: numeric or-builtins; by cases.
