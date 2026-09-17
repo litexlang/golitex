@@ -15,6 +15,7 @@ mod exist_fact;
 mod forall_fact;
 mod forall_fact_with_iff;
 mod not_forall_fact;
+mod helper;
 
 pub use fact::Fact;
 pub use atomic::*;
@@ -25,3 +26,4 @@ pub use exist_fact::*;
 pub use forall_fact::*;
 pub use forall_fact_with_iff::*;
 pub use not_forall_fact::*;
+pub use helper::*;

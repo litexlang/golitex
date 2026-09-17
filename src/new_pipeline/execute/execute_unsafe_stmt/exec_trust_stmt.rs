@@ -9,8 +9,8 @@
 
 use crate::new_pipeline::ast::stmt::TrustStmt;
 use crate::new_pipeline::execute::execute_fact_stmt::{
-    FactWellDefinedProof, StoreFactAndInferResult, VerifyFactResult, VerifyFactWellDefinedResult,
-    VerifyState,
+    FactWellDefinedProof, FailToVerifyFactWellDefinedResult, StoreFactAndInferResult,
+    VerifyFactWellDefinedResult, VerifyState,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
@@ -25,7 +25,7 @@ pub struct ExecTrustStmtSuccessResult {
 
 pub enum ExecTrustStmtResult {
     Success(ExecTrustStmtSuccessResult),
-    Failed(VerifyFactResult),
+    Failed(FailToVerifyFactWellDefinedResult),
 }
 
 impl ExecTrustStmtResult {
@@ -51,10 +51,8 @@ impl Runtime {
                 VerifyFactWellDefinedResult::Success(proof) => {
                     facts_well_defined.push(proof);
                 }
-                VerifyFactWellDefinedResult::Failed(_) => {
-                    return Ok(ExecTrustStmtResult::Failed(
-                        VerifyFactResult::FailToVerifyWellDefined,
-                    ));
+                VerifyFactWellDefinedResult::Failed(reason) => {
+                    return Ok(ExecTrustStmtResult::Failed(reason));
                 }
             }
         }

@@ -131,7 +131,8 @@ fn merge_facts_from(parent: &mut ExecEnv, child: &ExecEnv) -> RuntimeResult<()> 
 
 fn index_atomic_except_equality(parent: &mut ExecEnv, atomic_fact: &AtomicFact) {
     let key = atomic_fact.prop_name();
-    let positive_polarity = super::helper::atomic_fact_has_positive_polarity(atomic_fact);
+    let positive_polarity =
+        crate::new_pipeline::ast::fact::atomic_fact_has_positive_polarity(atomic_fact);
     parent.facts.known_atomic_except_equality_facts.store(
         key,
         positive_polarity,

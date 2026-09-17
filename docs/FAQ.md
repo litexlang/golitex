@@ -139,7 +139,8 @@ Because Litex uses a fixed precedence hierarchy for facts. An `and` is
 deliberately flat and contains only atomic facts. The parser finishes one
 atomic, relation-chain, or flat-`and` branch before the outer `or` collects
 those branches. Internally, this is why an `AndFact` stores atomic facts while
-an `OrFact` stores `AndChainAtomicFact` branches.
+an `OrFact` stores `AndChainAtomicFact` branches. The same fixed branch shapes
+also make searching a known `or` against a goal `or` comparatively convenient.
 
 For example, Litex reads
 
@@ -1239,10 +1240,13 @@ when the quantified check ends.
 ## Why can't an existential or set-builder body contain `forall`?
 
 Those bodies intentionally use a small property grammar: atomic facts, flat
-conjunctions, chains, and disjunctions. An anonymous universal creates another
-binder scope inside a body that is also reused for witnesses, matching,
-set-builder membership, substitution, and inference. Keeping that extra scope
-out makes the body representation and every consumer unambiguous.
+conjunctions, chains, and disjunctions. The main engineering reason is index
+keys: with only those four shapes, an `exist` lookup key stays easy to design,
+so searching a known `exist` is a simple shape bucket plus exact or unify match.
+An anonymous universal would add another binder scope inside a body that is also
+reused for witnesses, matching, set-builder membership, substitution, and
+inference. Keeping that extra scope out keeps both the key and every consumer
+unambiguous.
 
 Name the quantified condition instead:
 

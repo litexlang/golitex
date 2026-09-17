@@ -15,8 +15,9 @@ use crate::new_pipeline::ast::param::ParamType;
 use crate::new_pipeline::ast::stmt::{WitnessExistFact, WitnessStmt};
 use crate::new_pipeline::execute::exec_stmt_result::ParamTypeFactCheckResult;
 use crate::new_pipeline::execute::execute_fact_stmt::{
-    FactWellDefinedProof, VerifyFactResult, VerifyFactWellDefinedResult, VerifyObjWellDefinedResult,
-    VerifyState,
+    FactWellDefinedProof, FailToVerifyFactWellDefinedResult, VerifyExistFactFailed,
+    VerifyExistFactResult, VerifyExistUniqueFactResult, VerifyFactResult,
+    VerifyFactWellDefinedResult, VerifyObjWellDefinedResult, VerifyState,
 };
 use crate::new_pipeline::instantiate::quantifier_free_fact_to_fact;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
@@ -47,10 +48,11 @@ impl ExecWitnessExistFactStmtResult {
 
 pub enum ExecWitnessExistFactStmtFailed {
     WitnessCountMismatch,
-    ExistFactWellDefined(VerifyFactResult),
+    ExistFactWellDefined(FailToVerifyFactWellDefinedResult),
     WitnessObjWellDefined(VerifyObjWellDefinedResult),
     WitnessType(VerifyFactResult),
     BodyCheck(VerifyFactResult),
+    BodyInstantiate,
     Uniqueness(VerifyFactResult),
 }
 
@@ -115,18 +117,16 @@ impl Runtime {
             ));
         }
 
-        let exist_as_fact = Fact::ExistFact(stmt.exist_fact_in_witness.clone());
-        let exist_fact_well_defined =
-            match self.verify_fact_well_definedness(&exist_as_fact, verify_state.clone())? {
-                VerifyFactWellDefinedResult::Success(proof) => proof,
-                VerifyFactWellDefinedResult::Failed(_) => {
-                    return Ok(ExecWitnessExistFactStmtResult::Failed(
-                        ExecWitnessExistFactStmtFailed::ExistFactWellDefined(
-                            VerifyFactResult::FailToVerifyWellDefined,
-                        ),
-                    ));
-                }
-            };
+        let exist_fact_well_defined = match self
+            .wrap_exist_fact_wd(&stmt.exist_fact_in_witness, verify_state.clone())?
+        {
+            VerifyFactWellDefinedResult::Success(proof) => proof,
+            VerifyFactWellDefinedResult::Failed(reason) => {
+                return Ok(ExecWitnessExistFactStmtResult::Failed(
+                    ExecWitnessExistFactStmtFailed::ExistFactWellDefined(reason),
+                ));
+            }
+        };
 
         let mut witness_obj_well_defined = Vec::with_capacity(stmt.equal_tos.len());
         for witness in &stmt.equal_tos {
@@ -163,13 +163,27 @@ impl Runtime {
             ExistFact::ExistUniqueFact(_)
         ) {
             // Uniqueness forall builder is not ported to new_pipeline yet.
+            let FactWellDefinedProof::ExistFact(well_defined_proof) = exist_fact_well_defined
+            else {
+                return Err(RuntimeError::InternalBug(
+                    "witness exist!: exist WD proof must be ExistFact".to_string(),
+                ));
+            };
             return Ok(ExecWitnessExistFactStmtResult::Failed(
-                ExecWitnessExistFactStmtFailed::Uniqueness(VerifyFactResult::FailToSearchProof),
+                ExecWitnessExistFactStmtFailed::Uniqueness(VerifyFactResult::ExistFact(Box::new(
+                    VerifyExistFactResult::ExistUniqueFact(VerifyExistUniqueFactResult::Failed(
+                        VerifyExistFactFailed::FailToSearchProof {
+                            fact: stmt.exist_fact_in_witness.clone(),
+                            well_defined_proof,
+                        },
+                    )),
+                ))),
             ));
         } else {
             None
         };
 
+        let exist_as_fact = Fact::ExistFact(stmt.exist_fact_in_witness.clone());
         let store_and_infer_result = self.store_fact_and_infer(&exist_as_fact)?;
 
         Ok(ExecWitnessExistFactStmtResult::Success(
@@ -244,9 +258,7 @@ impl Runtime {
             let instantiated = match self.inst_quantifier_free_fact(body_fact, &subst) {
                 Ok(qf) => quantifier_free_fact_to_fact(qf),
                 Err(_) => {
-                    return Ok(Err(ExecWitnessExistFactStmtFailed::BodyCheck(
-                        VerifyFactResult::FailToSearchProof,
-                    )));
+                    return Ok(Err(ExecWitnessExistFactStmtFailed::BodyInstantiate));
                 }
             };
             let verify_result = self.verify_fact(&instantiated, verify_state.clone())?;

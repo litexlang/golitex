@@ -7,7 +7,7 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact, ForallFact};
 use crate::new_pipeline::ast::obj::{IdentifierObj, Obj};
 use crate::new_pipeline::ast::param::TypedParameterList;
-use crate::new_pipeline::exec_env::helper::{
+use crate::new_pipeline::ast::fact::{
     atomic_fact_args_ref, atomic_fact_has_positive_polarity,
 };
 use crate::new_pipeline::exec_env::known_forall_conclusion_memory::{

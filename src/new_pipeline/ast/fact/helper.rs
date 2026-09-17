@@ -1,12 +1,12 @@
-use crate::new_pipeline::ast::fact::{
-    AndChainAtomicFact, AtomicFact, EqualFact, GreaterEqualFact, GreaterFact, InFact, IsCartFact,
-    IsFiniteSetFact, IsNonemptySetFact, IsSetFact, IsTupleFact, LessEqualFact, LessFact,
-    NormalAtomicFact, NotEqualFact, NotGreaterEqualFact, NotGreaterFact, NotInFact, NotIsCartFact,
-    NotIsFiniteSetFact, NotIsNonemptySetFact, NotIsSetFact, NotIsTupleFact, NotLessEqualFact,
-    NotLessFact, NotNormalAtomicFact, NotSubsetFact, NotSupersetFact, OrFact, SubsetFact,
-    SupersetFact,
+use super::{
+    AndChainAtomicFact, AtomicFact, EqualFact, Fact, GreaterEqualFact, GreaterFact, InFact,
+    IsCartFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact, IsTupleFact, LessEqualFact,
+    LessFact, NormalAtomicFact, NotEqualFact, NotGreaterEqualFact, NotGreaterFact, NotInFact,
+    NotIsCartFact, NotIsFiniteSetFact, NotIsNonemptySetFact, NotIsSetFact, NotIsTupleFact,
+    NotLessEqualFact, NotLessFact, NotNormalAtomicFact, NotSubsetFact, NotSupersetFact, OrFact,
+    SubsetFact, SupersetFact,
 };
-use crate::new_pipeline::ast::obj::Obj;
+use super::super::obj::Obj;
 use crate::new_pipeline::runtime::FactId;
 
 pub fn atomic_fact_has_positive_polarity(fact: &AtomicFact) -> bool {
@@ -64,16 +64,6 @@ pub fn atomic_fact_args_ref(fact: &AtomicFact) -> Vec<&Obj> {
     }
 }
 
-// Structural key for known_or / forall by_or buckets (args not included).
-pub fn or_fact_index_key(or_fact: &OrFact) -> String {
-    or_fact
-        .facts
-        .iter()
-        .map(and_chain_index_key)
-        .collect::<Vec<_>>()
-        .join(" or ")
-}
-
 pub fn or_fact_args_ref(or_fact: &OrFact) -> Vec<&Obj> {
     let mut out = Vec::new();
     for branch in &or_fact.facts {
@@ -94,15 +84,11 @@ pub fn or_fact_args_ref(or_fact: &OrFact) -> Vec<&Obj> {
     out
 }
 
-pub fn and_chain_as_fact(branch: &AndChainAtomicFact) -> crate::new_pipeline::ast::fact::Fact {
+pub fn and_chain_as_fact(branch: &AndChainAtomicFact) -> Fact {
     match branch {
-        AndChainAtomicFact::AtomicFact(a) => {
-            crate::new_pipeline::ast::fact::Fact::AtomicFact(a.clone())
-        }
-        AndChainAtomicFact::AndFact(a) => crate::new_pipeline::ast::fact::Fact::AndFact(a.clone()),
-        AndChainAtomicFact::ChainFact(c) => {
-            crate::new_pipeline::ast::fact::Fact::ChainFact(c.clone())
-        }
+        AndChainAtomicFact::AtomicFact(a) => Fact::AtomicFact(a.clone()),
+        AndChainAtomicFact::AndFact(a) => Fact::AndFact(a.clone()),
+        AndChainAtomicFact::ChainFact(c) => Fact::ChainFact(c.clone()),
     }
 }
 
@@ -297,34 +283,4 @@ pub fn negate_atomic_fact(fact: &AtomicFact, new_fact_id: FactId) -> Option<Atom
         .into(),
         AtomicFact::FnEqualFact(_) | AtomicFact::FnEqualInFact(_) => return None,
     })
-}
-
-fn and_chain_index_key(branch: &AndChainAtomicFact) -> String {
-    match branch {
-        AndChainAtomicFact::AtomicFact(a) => atomic_index_key(a),
-        AndChainAtomicFact::AndFact(a) => a
-            .facts
-            .iter()
-            .map(atomic_index_key)
-            .collect::<Vec<_>>()
-            .join(" and "),
-        AndChainAtomicFact::ChainFact(c) => {
-            let props = c
-                .prop_names
-                .iter()
-                .map(|p| format!("{}", p))
-                .collect::<Vec<_>>()
-                .join(" ");
-            format!("chain:{}:{}", c.objs.len(), props)
-        }
-    }
-}
-
-fn atomic_index_key(fact: &AtomicFact) -> String {
-    format!(
-        "{}:{}:{}",
-        fact.prop_name(),
-        atomic_fact_has_positive_polarity(fact),
-        atomic_fact_args_ref(fact).len()
-    )
 }

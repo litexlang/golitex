@@ -1,6 +1,10 @@
 use crate::new_pipeline::ast::fact::EqualFact;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::{
-    EqualFactSearchedProof, SearchProofByKnownForallFact, VerifyEqualityResult,
+    EqualFactSearchedProof, SearchProofByKnownForallFact,
+};
+use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::{
+    equal_fact_result_from_search_fail, equal_fact_result_from_success,
+    equal_fact_result_from_wd_fail,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::{
@@ -20,19 +24,17 @@ impl Runtime {
             .verify_atomic_fact_well_definedness(&(fact.clone().into()), verify_state.clone())?
         {
             VerifyAtomicFactWellDefinedResult::Success(proof) => proof,
-            VerifyAtomicFactWellDefinedResult::Failed(_) => {
-                return Ok(VerifyFactResult::FailToVerifyWellDefined);
+            VerifyAtomicFactWellDefinedResult::Failed(reason) => {
+                return Ok(equal_fact_result_from_wd_fail(reason));
             }
         };
         match self.search_equal_fact_proof(fact, verify_state)? {
-            Some(searched_proof) => {
-                Ok(VerifyFactResult::Equality(Box::new(VerifyEqualityResult {
-                    fact: fact.clone(),
-                    well_defined_proof,
-                    searched_proof,
-                })))
-            }
-            None => Ok(VerifyFactResult::FailToSearchProof),
+            Some(searched_proof) => Ok(equal_fact_result_from_success(
+                fact,
+                well_defined_proof,
+                searched_proof,
+            )),
+            None => Ok(equal_fact_result_from_search_fail(fact, well_defined_proof)),
         }
     }
 

@@ -8,7 +8,8 @@ use crate::new_pipeline::ast::fact::{
     ExistOrAndChainAtomicFact, ForallConclusionLocation, ForallFact, OrFact,
 };
 use crate::new_pipeline::ast::names::AtomicName;
-use crate::new_pipeline::exec_env::helper::{atomic_fact_has_positive_polarity, or_fact_index_key};
+use crate::new_pipeline::ast::fact::atomic_fact_has_positive_polarity;
+use crate::new_pipeline::exec_env::or_fact_index_key::{or_fact_index_key, OrFactIndexKey};
 use crate::new_pipeline::runtime::FactId;
 use std::collections::HashMap;
 
@@ -26,7 +27,7 @@ pub struct KnownForallConclusionMemory {
     /// Only `=` leaves (not `≠`).
     pub equal_conclusions: Vec<ForallConclusionCite>,
     /// Whole or then-clauses, keyed by structural or index key.
-    pub by_or: HashMap<String, Vec<ForallConclusionCite>>,
+    pub by_or: HashMap<OrFactIndexKey, Vec<ForallConclusionCite>>,
 }
 
 impl KnownForallConclusionMemory {

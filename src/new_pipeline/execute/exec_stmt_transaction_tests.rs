@@ -33,7 +33,7 @@ fn number_one() -> Obj {
 #[test]
 fn rational_sum_of_two_fractions_with_product_denominator() {
     use crate::new_pipeline::execute::ExecStmtResult;
-    use crate::new_pipeline::execute::execute_fact_stmt::{ExecFactStmtResult, VerifyFactResult};
+    use crate::new_pipeline::execute::execute_fact_stmt::ExecFactStmtResult;
 
     let code = "a / b + c / d = (a * d + b * c) / (b * d)";
 
@@ -43,9 +43,7 @@ fn rational_sum_of_two_fractions_with_product_denominator() {
     assert!(!exec_one(&mut runtime, "trust b != 0").is_failed());
     assert!(!exec_one(&mut runtime, "trust d != 0").is_failed());
     match exec_one(&mut runtime, code) {
-        ExecStmtResult::Fact(ExecFactStmtResult::Failed(
-            VerifyFactResult::FailToVerifyWellDefined,
-        )) => {}
+        ExecStmtResult::Fact(ExecFactStmtResult::Failed(r)) if r.is_wd_failed() => {}
         other => panic!("expected WD fail without b*d != 0, got failed={}", other.is_failed()),
     }
 
@@ -304,6 +302,89 @@ fn stored_forall_indexes_equal_then_in_known_forall_conclusions() {
 }
 
 #[test]
+fn or_fact_selected_branch_proves_and_stores_known_or() {
+    let mut runtime = runtime_with_file_env();
+    let outcome = exec_one(&mut runtime, "1 = 1 or 1 = 2");
+    assert!(!outcome.is_failed(), "expected Success for or via selected branch");
+    let facts = &runtime.top_exec_env().facts;
+    assert!(
+        facts
+            .facts_by_id
+            .values()
+            .any(|f| matches!(f, crate::new_pipeline::ast::fact::Fact::OrFact(_))),
+        "or whole must be stored in facts_by_id"
+    );
+    assert!(
+        !facts.known_or.by_key.is_empty(),
+        "or must be indexed in known_or"
+    );
+    // Second prove should hit known_or.
+    assert!(
+        !exec_one(&mut runtime, "1 = 1 or 1 = 2").is_failed(),
+        "stored or must be reusable via known_or"
+    );
+}
+
+#[test]
+fn or_fact_ill_defined_branch_is_wd_fail() {
+    use crate::new_pipeline::execute::execute_fact_stmt::ExecFactStmtResult;
+
+    let mut runtime = runtime_with_file_env();
+    match exec_one(&mut runtime, "1 / 0 = 1 or 1 = 1") {
+        ExecStmtResult::Fact(ExecFactStmtResult::Failed(r)) if r.is_wd_failed() => {}
+        other => panic!(
+            "expected WD fail for ill-defined or branch, got failed={}",
+            other.is_failed()
+        ),
+    }
+}
+
+#[test]
+fn or_fact_unprovable_is_soft_fail_and_does_not_store() {
+    let mut runtime = runtime_with_file_env();
+    let before = runtime.top_exec_env().facts.facts_by_id.len();
+    let known_or_before = runtime.top_exec_env().facts.known_or.by_key.len();
+    let outcome = exec_one(&mut runtime, "1 = 2 or 2 = 3");
+    assert!(outcome.is_failed(), "expected soft fail when no disjunct proves");
+    assert_eq!(
+        runtime.top_exec_env().facts.facts_by_id.len(),
+        before,
+        "Failed or must not store into parent"
+    );
+    assert_eq!(
+        runtime.top_exec_env().facts.known_or.by_key.len(),
+        known_or_before,
+        "Failed or must not index known_or"
+    );
+}
+
+#[test]
+fn forall_or_then_indexes_by_or_and_instantiates() {
+    let mut runtime = runtime_with_file_env();
+    // Neither branch is ambient-true, so SelectedBranch fails and known_forall fires.
+    assert!(!exec_one(&mut runtime, "prop P(x R)").is_failed());
+    assert!(
+        !exec_one(
+            &mut runtime,
+            "trust:\n    forall x R:\n        $P(x)\n        =>:\n            x = 0 or x = 1",
+        )
+        .is_failed(),
+        "trust forall with or then must store"
+    );
+    let facts = &runtime.top_exec_env().facts;
+    assert!(
+        !facts.known_forall_conclusions.by_or.is_empty(),
+        "or then must be indexed under by_or"
+    );
+    assert!(!exec_one(&mut runtime, "have a R").is_failed());
+    assert!(!exec_one(&mut runtime, "trust $P(a)").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "a = 0 or a = 1").is_failed(),
+        "goal or must instantiate from forall then-or (SelectedBranch cannot prove either arm)"
+    );
+}
+
+#[test]
 fn and_fact_proves_from_known_components_and_projects_store() {
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "trust 1 < 2").is_failed());
@@ -390,5 +471,36 @@ fn witness_exist_body_miss_is_soft_fail_and_does_not_store() {
         runtime.top_exec_env().facts.facts_by_id.len(),
         before,
         "Failed witness must not merge exist into parent"
+    );
+}
+
+#[test]
+fn known_atomic_except_equality_by_equality_class() {
+    // Exact class hit (reflexive): known `a > 0` proves `a > 0`.
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have a R, b R").is_failed());
+    assert!(!exec_one(&mut runtime, "trust a > 0").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "a > 0").is_failed(),
+        "expected Success for a > 0 from known atomic"
+    );
+
+    // Class hit via equality edge: known `a > 0`, `a = b` proves `b > 0`.
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have a R, b R").is_failed());
+    assert!(!exec_one(&mut runtime, "trust a > 0").is_failed());
+    assert!(!exec_one(&mut runtime, "trust a = b").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "b > 0").is_failed(),
+        "expected Success for b > 0 via known atomic + a = b"
+    );
+
+    // No equality edge: known `a > 0` does not prove `b > 0`.
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have a R, b R").is_failed());
+    assert!(!exec_one(&mut runtime, "trust a > 0").is_failed());
+    assert!(
+        exec_one(&mut runtime, "b > 0").is_failed(),
+        "expected soft fail for b > 0 without a = b"
     );
 }

@@ -7,7 +7,7 @@ use crate::new_pipeline::ast::fact::{AndFact, AtomicFact, ChainFact, Fact, OrFac
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::exec_env::exec_env::PropRewriteProperty;
-use crate::new_pipeline::exec_env::helper::atomic_fact_has_positive_polarity;
+use crate::new_pipeline::ast::fact::atomic_fact_has_positive_polarity;
 use crate::new_pipeline::parse::keywords::{
     EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL,
 };

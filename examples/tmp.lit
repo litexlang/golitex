@@ -1,12 +1,11 @@
-# IdentifierId smoke (new_pipeline): plain ids, letter reuse across scopes is N/A at top level,
-# nested same-name binders remain forbidden, set-builder is single-body.
+# Known atomic-except-equality: one-pass equality-class match + known-equality paths.
 
-have x R
-x = x
-x + 0 = x
+have a R, b R
 
-have y R
-y = y
+# Exact class hit (reflexive empty paths).
+trust a > 0
+a > 0
 
-# Same-shape facts with free plain names share the parse-allocated id.
-1 + 1 = 2
+# Class hit via equality edge a = b.
+trust a = b
+b > 0
