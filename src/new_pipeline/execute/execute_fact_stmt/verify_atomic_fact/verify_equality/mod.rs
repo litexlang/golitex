@@ -17,7 +17,8 @@ pub use result::{
     equal_fact_result_from_search_fail, equal_fact_result_from_success,
     equal_fact_result_from_wd_fail, strict_equal_arg_proof_from_searched,
     EqualFactSearchedProof, EqualFactSearchedProofByKnownEquality,
-    ForallConclusionArgMatchProof, MatchForallConclusionArgsProof, SearchProofByKnownForallFact,
-    StrictEqualArgProof, StrictEqualWithFact, VerifyEqualityFailed, VerifyEqualityResult,
-    VerifyEqualitySuccess,
+    ForallConclusionArgMatchProof, ForallParamTypeRequirementProof,
+    MatchForallConclusionArgsProof, ProveForallInstantiationRequirementsProof,
+    SearchProofByKnownForallFact, StrictEqualArgProof, StrictEqualWithFact,
+    VerifyEqualityFailed, VerifyEqualityResult, VerifyEqualitySuccess,
 };

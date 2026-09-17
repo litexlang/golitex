@@ -12,13 +12,14 @@ LITEX_NEW_PIPELINE=1 target/release/litex -f <this-file>
 Exit 0 is enough. No requirement to assert which `searched_proof` variant won.
 
 Stub / not-yet-wired nodes are **omitted** (no SKIP placeholders).
+Still open: KnownRewrite, ByDefinition search slot, atomic OrderDual rewrite, exist BuiltinRule.
 
 ## Layout
 
 ```text
 or/           ByBuiltinRule (trichotomy ×3), SelectedBranch, KnownOr, KnownForall
-equal/        ByBuiltinRule, KnownEquality, BuiltinStrategy
-atomic/       ByBuiltinRule (order/in/set/…), KnownAtomicFact
+equal/        ByBuiltinRule, KnownEquality, BuiltinStrategy, BuiltinRewrite
+atomic/       ByBuiltinRule (order/in/set/set-builder/…), KnownAtomicFact
 and/          per-component verify
 chain/        adjacent order / equality
 exist/        KnownExist, KnownForall

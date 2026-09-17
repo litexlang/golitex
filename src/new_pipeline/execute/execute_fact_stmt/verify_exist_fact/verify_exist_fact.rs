@@ -1,14 +1,13 @@
 use crate::new_pipeline::ast::fact::{
-    exist_fact_free_args_ref, exist_fact_id, EqualFact, ExistFact, Fact, ForallFact,
+    exist_fact_free_args_ref, exist_fact_id, ExistFact, Fact, ForallFact,
 };
-use crate::new_pipeline::ast::obj::{IdentifierObj, Obj};
 use crate::new_pipeline::exec_env::exist_fact_index_key::{
     exist_fact_alpha_match_key, exist_fact_can_prove_goal, exist_fact_known_lookup_keys,
 };
 use crate::new_pipeline::exec_env::known_forall_conclusion_memory::{
     exist_at_forall_location, ForallConclusionCite,
 };
-use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualFactSearchedProof;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::match_forall_conclusion_args::subst_from_ordered_params;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_fact::result::{
     exist_fact_result_from_search_fail, exist_fact_result_from_success,
@@ -18,9 +17,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyF
 use crate::new_pipeline::execute::execute_fact_stmt::{
     VerifyExistFactWellDefinedResult, VerifyState,
 };
-use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
-use std::collections::{HashMap, HashSet};
 
 impl Runtime {
     // Split plain exist / exist! / not exist.
@@ -160,52 +157,17 @@ impl Runtime {
 
         // Step 1: list forall params in declaration order.
         let param_ids = forall.typed_parameters.ordered_param_ids();
-        let param_set: HashSet<IdentifierId> = param_ids.iter().copied().collect();
         let conclusion_args = exist_fact_free_args_ref(&conclusion);
         let goal_args = exist_fact_free_args_ref(goal);
-        if conclusion_args.len() != goal_args.len() {
-            return Ok(None);
-        }
 
-        // Nested equal must not invent proofs via forall / rewrite.
-        let equality_state = VerifyState {
-            can_use_forall_fact: false,
-            can_use_rewrite: false,
-            store_well_defined_fact: false,
-        };
-
-        // Step 2: match conclusion free args to goal free args.
-        // Bind bare forall params; otherwise prove pattern = goal by strict equal.
+        // Step 2–3: bind params / strict-equal non-params; every param must be bound.
         // Example: forall a: exist x st {x = a} vs exist x st {x = 2} -> bind a ↦ 2.
-        let mut subst: HashMap<IdentifierId, Obj> = HashMap::new();
-        let mut proof_of_arg_equalities = Vec::new();
-        for (pattern_arg, goal_arg) in conclusion_args.iter().zip(goal_args.iter()) {
-            match try_bind_forall_param(pattern_arg, goal_arg, &param_set, &mut subst) {
-                ForallParamBindResult::Bound => {}
-                ForallParamBindResult::NeedEqual(left, right) => {
-                    let Some(eq_proof) =
-                        self.prove_objs_equal(&left, &right, equality_state.clone())?
-                    else {
-                        return Ok(None);
-                    };
-                    proof_of_arg_equalities.push(eq_proof);
-                }
-                ForallParamBindResult::NotAParam => {
-                    let Some(eq_proof) =
-                        self.prove_objs_equal(pattern_arg, goal_arg, equality_state.clone())?
-                    else {
-                        return Ok(None);
-                    };
-                    proof_of_arg_equalities.push(eq_proof);
-                }
-            }
-        }
-        // Step 3: every forall param must appear in subst (no unused params).
-        for id in &param_ids {
-            if !subst.contains_key(id) {
-                return Ok(None);
-            }
-        }
+        let Some(matched) =
+            self.match_forall_conclusion_args(&conclusion_args, &goal_args, &param_ids)?
+        else {
+            return Ok(None);
+        };
+        let subst = subst_from_ordered_params(&param_ids, &matched.forall_parameters_match_what_args);
 
         // Step 4: instantiate the exist conclusion and alpha-compare to the goal.
         let instantiated = match self.inst_fact(&Fact::ExistFact(conclusion.clone()), &subst) {
@@ -216,105 +178,18 @@ impl Runtime {
             return Ok(None);
         }
 
-        let forall_parameters_match_what_args: Vec<Obj> = param_ids
-            .iter()
-            .map(|id| subst.get(id).expect("checked").clone())
-            .collect();
-
-        // Step 5: instantiate forall dom facts with subst, then verify each.
-        let requirement_facts = match self.build_exist_forall_requirement_facts(&forall, &subst)? {
-            Some(facts) => facts,
-            None => return Ok(None),
+        // Step 5: prove param-type obligations, then dom facts.
+        let Some(instantiation_requirements) =
+            self.prove_forall_instantiation_requirements(&forall, &subst, verify_state)?
+        else {
+            return Ok(None);
         };
-        let mut proof_of_requirement_facts = Vec::with_capacity(requirement_facts.len());
-        for req in &requirement_facts {
-            let proof = self.verify_fact(req, verify_state.clone())?;
-            if proof.is_failed() {
-                return Ok(None);
-            }
-            proof_of_requirement_facts.push(proof);
-        }
 
         Ok(Some(SearchProofByKnownForallFact {
             cite: cite.clone(),
-            forall_parameters_match_what_args,
-            proof_of_arg_equalities,
-            requirement_facts,
-            proof_of_requirement_facts,
+            forall_parameters_match_what_args: matched.forall_parameters_match_what_args,
+            arg_match_proofs: matched.arg_match_proofs,
+            instantiation_requirements,
         }))
-    }
-
-    fn build_exist_forall_requirement_facts(
-        &mut self,
-        forall: &ForallFact,
-        subst: &HashMap<IdentifierId, Obj>,
-    ) -> RuntimeResult<Option<Vec<Fact>>> {
-        let mut requirements = Vec::new();
-        for dom in &forall.dom_facts {
-            let fact = match self.inst_fact(dom, subst) {
-                Ok(fact) => fact,
-                Err(_) => return Ok(None),
-            };
-            requirements.push(fact);
-        }
-        Ok(Some(requirements))
-    }
-
-    // Prove left = right with forall/rewrite off. Reject forall/rewrite certificates.
-    fn prove_objs_equal(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        equality_state: VerifyState,
-    ) -> RuntimeResult<Option<EqualFactSearchedProof>> {
-        let equal_fact = EqualFact {
-            fact_id: self.ids.allocate_fact_id(),
-            left: left.clone(),
-            right: right.clone(),
-            line_file: None,
-        };
-        let Some(proof) = self.search_equal_fact_proof(&equal_fact, equality_state)? else {
-            return Ok(None);
-        };
-        Ok(strict_equal_proof_without_forall_or_rewrite(proof))
-    }
-}
-
-enum ForallParamBindResult {
-    Bound,
-    NeedEqual(Obj, Obj),
-    NotAParam,
-}
-
-// If pattern is a bare forall param: first sight binds goal; later sight needs equal.
-// Example: pattern `a` (param) vs goal `2` -> Bound with subst[a]=2.
-fn try_bind_forall_param(
-    pattern: &Obj,
-    goal: &Obj,
-    param_ids: &HashSet<IdentifierId>,
-    subst: &mut HashMap<IdentifierId, Obj>,
-) -> ForallParamBindResult {
-    if let Obj::Identifier(IdentifierObj::Plain { id, .. }) = pattern {
-        if param_ids.contains(id) {
-            if let Some(existing) = subst.get(id) {
-                return ForallParamBindResult::NeedEqual(existing.clone(), goal.clone());
-            }
-            subst.insert(*id, goal.clone());
-            return ForallParamBindResult::Bound;
-        }
-    }
-    ForallParamBindResult::NotAParam
-}
-
-fn strict_equal_proof_without_forall_or_rewrite(
-    proof: EqualFactSearchedProof,
-) -> Option<EqualFactSearchedProof> {
-    match proof {
-        EqualFactSearchedProof::ByBuiltinRule(_)
-        | EqualFactSearchedProof::ByKnownEquality(_)
-        | EqualFactSearchedProof::ByBuiltinStrategy(_) => Some(proof),
-        EqualFactSearchedProof::ByKnownForallFact(_)
-        | EqualFactSearchedProof::ByBuiltinRewrite(_)
-        | EqualFactSearchedProof::ByKnownRewrite(_) => None,
     }
 }

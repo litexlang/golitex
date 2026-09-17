@@ -1,3 +1,15 @@
+//! Why merge exists (with `exec_stmt`'s temp ExecEnv):
+//!
+//! `exec_stmt` first opens a local child ExecEnv and runs the statement there.
+//! Definitions, facts, WD records, etc. land in that small workspace.
+//! If a later step in the same statement fails soft verification (Failed), the
+//! child is discarded and never merged — so a half-done / wrong statement does
+//! not pollute the parent session. Already-verified definitions and facts in
+//! the parent stay intact; the session can continue there.
+//! Success is the only path that commits the child into the parent via merge.
+//!
+//! FactIds are global session counters; merge only mounts child-owned state.
+
 use super::exec_env::ExecEnv;
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact};
 use crate::new_pipeline::ast::names::PlainName;
@@ -7,7 +19,7 @@ use crate::new_pipeline::parse::keywords::{
 use crate::new_pipeline::runtime::{FactId, RuntimeError, RuntimeResult};
 use std::collections::HashMap;
 
-// Commit a closed child ExecEnv into `parent`. FactIds are global; only mounts move.
+// Success path: commit the closed child into `parent`. See module docs above.
 pub fn merge_exec_env_from(parent: &mut ExecEnv, child: &ExecEnv) -> RuntimeResult<()> {
     merge_definitions_from(parent, child)?;
     merge_facts_from(parent, child)?;

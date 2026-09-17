@@ -11,15 +11,31 @@ use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyF
 use crate::new_pipeline::runtime::runtime_ids::{FactId, IdentifierId};
 
 // Shared known-forall application certificate.
-// Field order mirrors successful apply stages: match args → requirements.
+// Field order mirrors successful apply stages:
+// match args → prove param-type + dom requirements.
 // `arg_match_proofs` is one entry per conclusion/goal arg (Lean-aligned).
 // Boxed under EqualFactSearchedProof::ByKnownForallFact to break the type cycle.
 pub struct SearchProofByKnownForallFact {
     pub cite: crate::new_pipeline::exec_env::ForallConclusionCite,
     pub forall_parameters_match_what_args: Vec<Obj>,
     pub arg_match_proofs: Vec<ForallConclusionArgMatchProof>,
-    pub requirement_facts: Vec<Fact>,
-    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+    pub instantiation_requirements: ProveForallInstantiationRequirementsProof,
+}
+
+// After match: prove each instantiated arg meets param type, then prove dom facts.
+// Field order = stage order.
+pub struct ProveForallInstantiationRequirementsProof {
+    pub param_type_requirements: Vec<ForallParamTypeRequirementProof>,
+    pub dom_facts: Vec<Fact>,
+    pub proof_of_dom_facts: Vec<VerifyFactResult>,
+}
+
+// One entry per forall parameter (declaration order).
+pub struct ForallParamTypeRequirementProof {
+    pub param_id: IdentifierId,
+    pub arg: Obj,
+    pub type_fact: Fact,
+    pub proof: VerifyFactResult,
 }
 
 // Output of matching conclusion args to goal args (before dom requirements).

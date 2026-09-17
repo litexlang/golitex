@@ -1,22 +1,20 @@
 //! Apply a stored forall's atomic then (or and-component leaf) to a goal atomic.
 //!
 //! Matching: shared `match_forall_conclusion_args` — bind bare forall params,
-//! otherwise strict equal (forall/rewrite off). Nested param occurrences inside
-//! compound objs are not matched yet.
+//! otherwise strict equal (forall/rewrite off). Then
+//! `prove_forall_instantiation_requirements` (param types, then dom).
 
-use crate::new_pipeline::ast::fact::{AtomicFact, Fact, ForallFact};
+use crate::new_pipeline::ast::fact::{AtomicFact, Fact};
 use crate::new_pipeline::ast::fact::{
     atomic_fact_args_ref, atomic_fact_has_positive_polarity,
 };
-use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::exec_env::known_forall_conclusion_memory::{
     atomic_at_forall_location, ForallConclusionCite,
 };
+use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::match_forall_conclusion_args::subst_from_ordered_params;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
-use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeResult};
-use std::collections::HashMap;
 
 impl Runtime {
     pub fn search_atomic_fact_proof_by_known_forall_fact(
@@ -94,34 +92,25 @@ impl Runtime {
         let goal_args = atomic_fact_args_ref(goal);
 
         // Step 2–3: bind params / strict-equal non-params; every param must be bound.
-        // Example: conclusion `x + 1 > 1`, goal `3 + 1 > 1` with known equalities as needed.
         let Some(matched) =
             self.match_forall_conclusion_args(&conclusion_args, &goal_args, &param_ids)?
         else {
             return Ok(None);
         };
 
-        // Step 4: instantiate forall dom facts with subst, then verify each.
+        // Step 4: prove param-type obligations, then dom facts.
         let subst = subst_from_ordered_params(&param_ids, &matched.forall_parameters_match_what_args);
-        let requirement_facts = match self.build_requirement_facts(&forall, &subst)? {
-            Some(facts) => facts,
-            None => return Ok(None),
+        let Some(instantiation_requirements) =
+            self.prove_forall_instantiation_requirements(&forall, &subst, verify_state)?
+        else {
+            return Ok(None);
         };
-        let mut proof_of_requirement_facts = Vec::with_capacity(requirement_facts.len());
-        for req in &requirement_facts {
-            let proof = self.verify_fact(req, verify_state.clone())?;
-            if proof.is_failed() {
-                return Ok(None);
-            }
-            proof_of_requirement_facts.push(proof);
-        }
 
         Ok(Some(SearchProofByKnownForallFact {
             cite: cite.clone(),
             forall_parameters_match_what_args: matched.forall_parameters_match_what_args,
             arg_match_proofs: matched.arg_match_proofs,
-            requirement_facts,
-            proof_of_requirement_facts,
+            instantiation_requirements,
         }))
     }
 
@@ -133,32 +122,4 @@ impl Runtime {
         }
         None
     }
-
-    fn build_requirement_facts(
-        &mut self,
-        forall: &ForallFact,
-        subst: &HashMap<IdentifierId, Obj>,
-    ) -> RuntimeResult<Option<Vec<Fact>>> {
-        // Param-type obligations deferred until type-fact store is wired.
-        let mut requirements = Vec::new();
-        for dom in &forall.dom_facts {
-            let fact = match self.inst_fact(dom, subst) {
-                Ok(fact) => fact,
-                Err(_) => return Ok(None),
-            };
-            requirements.push(fact);
-        }
-        Ok(Some(requirements))
-    }
-}
-
-fn subst_from_ordered_params(
-    param_ids: &[IdentifierId],
-    args: &[Obj],
-) -> HashMap<IdentifierId, Obj> {
-    let mut subst = HashMap::new();
-    for (id, arg) in param_ids.iter().zip(args.iter()) {
-        subst.insert(*id, arg.clone());
-    }
-    subst
 }

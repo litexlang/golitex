@@ -67,8 +67,9 @@ pub struct NativeConstantMembershipBuiltinRuleProof {
 
 impl Runtime {
     // Builtin InFact search: closed decimal, C-arithmetic closure, subset lift,
-    // then native constants.
-    // Example: `1 $in C`, `(x + 1) $in C`, `x $in C` from `x $in R`, `e $in R+`.
+    // set-builder membership, then native constants.
+    // Example: `1 $in C`, `(x + 1) $in C`, `x $in C` from `x $in R`,
+    // `a $in {x R: x > 0}` from `a $in R` and `a > 0`.
     pub fn search_in_fact_proof_by_builtin_rule(
         &mut self,
         fact: &InFact,
@@ -80,7 +81,10 @@ impl Runtime {
         if let Some(proof) = complex_arithmetic_in_c_proof(fact) {
             return Ok(Some(proof));
         }
-        if let Some(proof) = self.standard_set_subset_membership_proof(fact, verify_state)? {
+        if let Some(proof) = self.standard_set_subset_membership_proof(fact, verify_state.clone())? {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) = self.set_builder_membership_proof(fact, verify_state.clone())? {
             return Ok(Some(proof));
         }
         if let Some(kind) = native_constant_membership_kind(&fact.element, &fact.set) {
@@ -127,6 +131,49 @@ impl Runtime {
             }
         }
         Ok(None)
+    }
+
+    // Prove `element $in {x T: P(x), …}` from `element $in T` and instantiated P.
+    // Example: known `a > 0` proves `a $in {x R: x > 0}`.
+    fn set_builder_membership_proof(
+        &mut self,
+        fact: &InFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        let Obj::SetBuilder(builder) = &fact.set else {
+            return Ok(None);
+        };
+        let mut requirement_facts = Vec::new();
+        let base_in_id = self.ids.allocate_fact_id();
+        requirement_facts.push(Fact::AtomicFact(AtomicFact::InFact(InFact {
+            fact_id: base_in_id,
+            element: fact.element.clone(),
+            set: builder.param_set.as_ref().clone(),
+            line_file: None,
+        })));
+        let mut subst = std::collections::HashMap::new();
+        subst.insert(builder.param_binding.id, fact.element.clone());
+        for defining in &builder.facts {
+            let instantiated = match self.inst_quantifier_free_fact(defining, &subst) {
+                Ok(qf) => crate::new_pipeline::instantiate::quantifier_free_fact_to_fact(qf),
+                Err(_) => return Ok(None),
+            };
+            requirement_facts.push(instantiated);
+        }
+        let mut proof_of_requirement_facts = Vec::with_capacity(requirement_facts.len());
+        for requirement in &requirement_facts {
+            let proof = self.verify_fact(requirement, verify_state.clone())?;
+            if proof.is_failed() {
+                return Ok(None);
+            }
+            proof_of_requirement_facts.push(proof);
+        }
+        Ok(Some(InFactSearchProofByBuiltinRule::SetBuilderMembership(
+            SetBuilderMembershipBuiltinRuleProof {
+                requirement_facts,
+                proof_of_requirement_facts,
+            },
+        )))
     }
 }
 
