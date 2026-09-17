@@ -48,10 +48,10 @@ pub struct AtomicExceptEqualityFactMemory {
     pub by_prop: HashMap<(AtomicName, bool), Vec<AtomicFact>>,
 }
 
-// Stored whole or-facts by structural index key (not full arg IR).
+// Stored whole or-facts by structural index key (args not included).
 #[derive(Clone, Default)]
 pub struct OrFactMemory {
-    pub by_key: HashMap<String, Vec<OrFact>>,
+    pub by_key: HashMap<crate::new_pipeline::exec_env::or_fact_index_key::OrFactIndexKey, Vec<OrFact>>,
 }
 
 impl KnownFactMemory {
@@ -185,7 +185,7 @@ impl OrFactMemory {
     }
 
     pub fn store(&mut self, or_fact: &OrFact) {
-        let key = crate::new_pipeline::exec_env::helper::or_fact_index_key(or_fact);
+        let key = crate::new_pipeline::exec_env::or_fact_index_key::or_fact_index_key(or_fact);
         self.by_key.entry(key).or_default().push(or_fact.clone());
     }
 }

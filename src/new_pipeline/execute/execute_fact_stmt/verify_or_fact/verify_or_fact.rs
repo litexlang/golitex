@@ -1,20 +1,24 @@
-use crate::new_pipeline::ast::fact::{AndChainAtomicFact, Fact, ForallFact, OrFact};
+use crate::new_pipeline::ast::fact::{
+    and_chain_as_fact, atomic_fact_has_positive_polarity, negate_atomic_fact, or_fact_args_ref,
+    AndChainAtomicFact, Fact, ForallFact, OrFact,
+};
 use crate::new_pipeline::ast::obj::{IdentifierObj, Obj};
 use crate::new_pipeline::ast::param::TypedParameterList;
-use crate::new_pipeline::exec_env::helper::{
-    and_chain_as_fact, atomic_fact_has_positive_polarity, negate_atomic_fact, or_fact_args_ref,
-    or_fact_index_key,
-};
+use crate::new_pipeline::exec_env::or_fact_index_key::or_fact_index_key;
 use crate::new_pipeline::exec_env::known_forall_conclusion_memory::{
     or_at_forall_location, ForallConclusionCite,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
-use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::{
+use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_or_fact::result::{
+    or_fact_result_from_search_fail, or_fact_result_from_success, or_fact_result_from_wd_fail,
+};
+use crate::new_pipeline::execute::execute_fact_stmt::verify_or_fact::{
     AssumeNegatedOrBranchResult, OrFactSearchProofByKnownOrFact,
-    OrFactSearchProofBySelectedBranch, OrFactSearchedProof, VerifyFactResult, VerifyOrFactResult,
+    OrFactSearchProofBySelectedBranch, OrFactSearchedProof,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::{
-    VerifyFactWellDefinedResult, VerifyState,
+    VerifyFactWellDefinedResult, VerifyOrFactWellDefinedResult, VerifyState,
 };
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
@@ -22,44 +26,54 @@ use crate::new_pipeline::store_fact_and_infer::StoreFactAndInferResult;
 use std::collections::{HashMap, HashSet};
 
 impl Runtime {
-    // Prove or: builtin → selected branch (¬ others) → known_or → known_forall.
+    // Prove or: WD → builtin → selected branch (¬ others) → known_or → known_forall.
     // Example: known `1 = 1` proves `1 = 1 or 1 = 2` by assuming `not 1 = 2` locally.
     pub fn verify_or_fact(
         &mut self,
         fact: &OrFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
+        let well_defined_proof =
+            match self.verify_or_fact_well_definedness(fact, verify_state.clone())? {
+                VerifyOrFactWellDefinedResult::Success(proof) => proof,
+                VerifyOrFactWellDefinedResult::Failed(reason) => {
+                    return Ok(or_fact_result_from_wd_fail(reason));
+                }
+            };
+        let Some(searched_proof) = self.search_or_fact_proof(fact, verify_state)? else {
+            return Ok(or_fact_result_from_search_fail(fact, well_defined_proof));
+        };
+        Ok(or_fact_result_from_success(
+            fact,
+            well_defined_proof,
+            searched_proof,
+        ))
+    }
+
+    fn search_or_fact_proof(
+        &mut self,
+        fact: &OrFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<OrFactSearchedProof>> {
         if let Some(proof) = self.search_or_fact_proof_by_builtin_rule(fact, verify_state.clone())? {
-            return Ok(VerifyFactResult::OrFact(Box::new(VerifyOrFactResult {
-                fact: fact.clone(),
-                searched_proof: proof,
-            })));
+            return Ok(Some(proof));
         }
         if let Some(proof) =
             self.search_or_fact_proof_by_selected_branch(fact, verify_state.clone())?
         {
-            return Ok(VerifyFactResult::OrFact(Box::new(VerifyOrFactResult {
-                fact: fact.clone(),
-                searched_proof: proof,
-            })));
+            return Ok(Some(proof));
         }
         if let Some(proof) =
             self.search_or_fact_proof_by_known_or_fact(fact, verify_state.clone())?
         {
-            return Ok(VerifyFactResult::OrFact(Box::new(VerifyOrFactResult {
-                fact: fact.clone(),
-                searched_proof: proof,
-            })));
+            return Ok(Some(proof));
         }
         if let Some(proof) =
             self.search_or_fact_proof_by_known_forall_fact(fact, verify_state)?
         {
-            return Ok(VerifyFactResult::OrFact(Box::new(VerifyOrFactResult {
-                fact: fact.clone(),
-                searched_proof: proof,
-            })));
+            return Ok(Some(proof));
         }
-        Ok(VerifyFactResult::FailToSearchProof)
+        Ok(None)
     }
 
     fn search_or_fact_proof_by_builtin_rule(
@@ -115,12 +129,12 @@ impl Runtime {
             else {
                 return Ok(None);
             };
-            let negated_fact = Fact::AtomicFact(negated_atomic);
             let well_defined =
-                match self.verify_fact_well_definedness(&negated_fact, verify_state.clone())? {
+                match self.wrap_atomic_fact_wd(&negated_atomic, verify_state.clone())? {
                     VerifyFactWellDefinedResult::Success(proof) => proof,
                     VerifyFactWellDefinedResult::Failed(_) => return Ok(None),
                 };
+            let negated_fact = Fact::AtomicFact(negated_atomic);
             let store_and_infer: StoreFactAndInferResult =
                 self.store_fact_and_infer(&negated_fact)?;
             assumed_negated_branches.push(AssumeNegatedOrBranchResult {

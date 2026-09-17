@@ -9,8 +9,8 @@
 use crate::new_pipeline::ast::stmt::DefPropStmt;
 use crate::new_pipeline::exec_env::exec_env::ExecEnv;
 use crate::new_pipeline::execute::execute_fact_stmt::{
-    FactWellDefinedProof, ParamTypeWellDefinedProof, VerifyFactResult, VerifyFactWellDefinedResult,
-    VerifyObjWellDefinedResult, VerifyState,
+    FactWellDefinedProof, FailToVerifyFactWellDefinedResult, ParamTypeWellDefinedProof,
+    VerifyFactWellDefinedResult, VerifyObjWellDefinedResult, VerifyState,
 };
 use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
 use crate::new_pipeline::execute::IntroduceTypedParametersResult;
@@ -19,7 +19,7 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
 pub enum ExecDefPropStmtFailed {
     ParamType(VerifyObjWellDefinedResult),
-    IffFactWellDefined(VerifyFactResult),
+    IffFactWellDefined(FailToVerifyFactWellDefinedResult),
 }
 
 /// `prop name(...): body` pipeline success payload.
@@ -117,10 +117,8 @@ impl Runtime {
                 VerifyFactWellDefinedResult::Success(proof) => {
                     iff_fact_well_defined.push(proof);
                 }
-                VerifyFactWellDefinedResult::Failed(_) => {
-                    return Ok(Err(ExecDefPropStmtFailed::IffFactWellDefined(
-                        VerifyFactResult::FailToVerifyWellDefined,
-                    )));
+                VerifyFactWellDefinedResult::Failed(reason) => {
+                    return Ok(Err(ExecDefPropStmtFailed::IffFactWellDefined(reason)));
                 }
             }
         }

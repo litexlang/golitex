@@ -1300,7 +1300,9 @@ The fact grammar has a deliberate canonical hierarchy rather than arbitrary
 recursive nesting. A conjunction is a flat list of atomic facts. A disjunction
 is the outer layer, and each of its branches is one atomic fact, one relation
 chain, or one flat conjunction. In ordinary operator terms, `and` binds more
-tightly than `or`.
+tightly than `or`. That parser precedence is also why the verifier can treat
+`or` branches as a small fixed set of shapes when matching known and goal
+disjunctions.
 
 For example:
 
@@ -2657,8 +2659,10 @@ explanation; this index does not repeat its examples.
 - `[]` is index access. Function arguments use `()`.
 - `{a, b}` is a displayed set; `{x S: facts}` is a set comprehension.
 - `st { ... }` delimits an existential body. Its entries are atomic facts or
-  their supported boolean combinations; name a quantified condition with
-  `prop` before using it there. The same restriction applies to set builders.
+  their supported boolean combinations (`and` / chain / `or`); name a quantified
+  condition with `prop` before using it there. Restricting the body this way
+  keeps exist index keys easy to design for known-fact search. The same
+  restriction applies to set builders.
 - `#` starts a line comment. Indentation defines block structure.
 - Inline aside `"..."` (ASCII quotes, single line) is stripped at tokenize time
   and is not part of the AST. Unclosed `"..."` is a parse error. Distinct from

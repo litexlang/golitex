@@ -2,27 +2,30 @@
 //!
 //! Mirrors `Fact` for compound shapes; atomic facts are flattened into
 //! `Equality` / `AtomicExceptEquality` (no intermediate AtomicFact layer).
+//! Soft miss lives inside each branch `VerifyXXXResult` as `Failed`, not here.
 //!
 //! Verify entry points return `RuntimeResult<VerifyFactResult>`:
-//! - `Ok(FailToVerifyWellDefined)` / `Ok(FailToSearchProof)` = soft miss
+//! - `Ok(branch(Failed(...)))` = soft miss (WD or search)
 //! - `Err` = real operational / invariant failure (SessionError)
 //!
 //! There is no fact-level exact-IR cite path: reuse known atomics / equality /
 //! forall search instead. Object WD reuses `WellDefinedObjectMemory` via ByKnown.
 
+use super::verify_and_fact::{VerifyAndFactFailed, VerifyAndFactResult};
 use super::verify_atomic_fact::{
-    SearchProofByKnownForallFact, VerifyAtomicExceptEqualityFactResult, VerifyEqualityResult,
+    VerifyAtomicExceptEqualityFactResult, VerifyEqualityResult,
 };
-use super::verify_well_defined::FactWellDefinedProof;
-use crate::new_pipeline::ast::fact::{AndFact, ChainFact, Fact, ForallFact, OrFact};
-use crate::new_pipeline::exec_env::exec_env::ExecEnv;
-use crate::new_pipeline::execute::introduce_typed_parameters::IntroduceTypedParametersResult;
-use crate::new_pipeline::runtime::FactId;
-use crate::new_pipeline::store_fact_and_infer::StoreFactAndInferResult;
+use super::verify_chain_fact::{VerifyChainFactFailed, VerifyChainFactResult};
+use super::verify_exist_fact::{
+    VerifyExistFactFailed, VerifyExistFactResult, VerifyExistUniqueFactResult,
+    VerifyNotExistFactResult, VerifyPlainExistFactResult,
+};
+use super::verify_forall_fact::{VerifyForallFactFailed, VerifyForallFactResult};
+use super::verify_forall_fact_with_iff::VerifyForallFactWithIffResult;
+use super::verify_not_forall_fact::VerifyNotForallFactResult;
+use super::verify_or_fact::{VerifyOrFactFailed, VerifyOrFactResult};
 
 pub enum VerifyFactResult {
-    FailToVerifyWellDefined,
-    FailToSearchProof,
     Equality(Box<VerifyEqualityResult>),
     AtomicExceptEquality(Box<VerifyAtomicExceptEqualityFactResult>),
     AndFact(Box<VerifyAndFactResult>),
@@ -34,86 +37,68 @@ pub enum VerifyFactResult {
     NotForall(Box<VerifyNotForallFactResult>),
 }
 
-pub struct VerifyAndFactResult {
-    pub fact: AndFact,
-    pub components: Vec<VerifyFactResult>,
-}
-
-pub struct VerifyChainFactResult {
-    pub fact: ChainFact,
-    pub adjacent: Vec<VerifyFactResult>,
-}
-
-pub struct VerifyOrFactResult {
-    pub fact: OrFact,
-    pub searched_proof: OrFactSearchedProof,
-}
-
-// Search order: builtin → selected branch (¬ others) → known_or → known_forall.
-pub enum OrFactSearchedProof {
-    ByBuiltinRule(OrFactSearchProofByBuiltinRule),
-    BySelectedBranch(OrFactSearchProofBySelectedBranch),
-    ByKnownOrFact(OrFactSearchProofByKnownOrFact),
-    ByKnownForallFact(SearchProofByKnownForallFact),
-}
-
-// Placeholder until numeric/structural or-builtins are ported.
-pub struct OrFactSearchProofByBuiltinRule {}
-
-// Classical: assume ¬ of every other branch in a local env, prove selected.
-// Example: assume `not (1 = 2)`, prove `1 = 1` ⇒ `1 = 1 or 1 = 2`.
-pub struct OrFactSearchProofBySelectedBranch {
-    pub selected_index: usize,
-    pub assumed_negated_branches: Vec<AssumeNegatedOrBranchResult>,
-    pub selected_branch: VerifyFactResult,
-    pub local_env: Box<ExecEnv>,
-}
-
-pub struct AssumeNegatedOrBranchResult {
-    pub branch_index: usize,
-    pub negated_fact: Fact,
-    pub well_defined: FactWellDefinedProof,
-    pub store_and_infer: StoreFactAndInferResult,
-}
-
-pub struct OrFactSearchProofByKnownOrFact {
-    pub cite_fact_id: FactId,
-}
-
-pub enum VerifyExistFactResult {}
-
-pub enum VerifyForallFactWithIffResult {}
-
-pub enum VerifyNotForallFactResult {}
-
-// forall local-proof pipeline (field order = stage order).
-// `local_env` is the closed binder scope; it is not merged into the parent.
-// The parent stores the whole forall only after this verify succeeds.
-pub struct VerifyForallFactResult {
-    pub fact: ForallFact,
-    pub introduced_params: IntroduceTypedParametersResult,
-    pub assumed_dom_facts: Vec<AssumeDomFactResult>,
-    pub proved_then_facts: Vec<ProveAndStoreThenFactResult>,
-    pub local_env: Box<ExecEnv>,
-}
-
-// Dom: assume (WD + store), do not prove truth.
-pub struct AssumeDomFactResult {
-    pub well_defined: FactWellDefinedProof,
-    pub store_and_infer: StoreFactAndInferResult,
-}
-
-// Then: prove, then local-store (option 2).
-pub struct ProveAndStoreThenFactResult {
-    pub verify_result: VerifyFactResult,
-    pub store_and_infer: StoreFactAndInferResult,
-}
-
 impl VerifyFactResult {
     pub fn is_failed(&self) -> bool {
-        matches!(
-            self,
-            Self::FailToVerifyWellDefined | Self::FailToSearchProof
-        )
+        match self {
+            Self::Equality(r) => r.is_failed(),
+            Self::AtomicExceptEquality(r) => r.is_failed(),
+            Self::AndFact(r) => r.is_failed(),
+            Self::ChainFact(r) => r.is_failed(),
+            Self::OrFact(r) => r.is_failed(),
+            Self::ExistFact(r) => r.is_failed(),
+            Self::ForallFact(r) => r.is_failed(),
+            Self::ForallFactWithIff(r) => r.is_failed(),
+            Self::NotForall(r) => r.is_failed(),
+        }
+    }
+
+    // True when this soft miss is a WD failure (possibly nested under And/Chain/…).
+    pub fn is_wd_failed(&self) -> bool {
+        match self {
+            Self::Equality(r) => matches!(
+                r.as_ref(),
+                VerifyEqualityResult::Failed(
+                    super::verify_atomic_fact::VerifyEqualityFailed::FailToVerifyWellDefined(_)
+                )
+            ),
+            Self::AtomicExceptEquality(r) => matches!(
+                r.as_ref(),
+                VerifyAtomicExceptEqualityFactResult::Failed(
+                    super::verify_atomic_fact::VerifyAtomicExceptEqualityFactFailed::FailToVerifyWellDefined(
+                        _
+                    )
+                )
+            ),
+            Self::AndFact(r) => matches!(
+                r.as_ref(),
+                VerifyAndFactResult::Failed(VerifyAndFactFailed::FailToVerifyWellDefined { .. })
+            ),
+            Self::ChainFact(r) => matches!(
+                r.as_ref(),
+                VerifyChainFactResult::Failed(VerifyChainFactFailed::FailToVerifyWellDefined { .. })
+            ),
+            Self::OrFact(r) => matches!(
+                r.as_ref(),
+                VerifyOrFactResult::Failed(VerifyOrFactFailed::FailToVerifyWellDefined(_))
+            ),
+            Self::ExistFact(r) => match r.as_ref() {
+                VerifyExistFactResult::PlainExistFact(VerifyPlainExistFactResult::Failed(
+                    VerifyExistFactFailed::FailToVerifyWellDefined(_),
+                ))
+                | VerifyExistFactResult::ExistUniqueFact(VerifyExistUniqueFactResult::Failed(
+                    VerifyExistFactFailed::FailToVerifyWellDefined(_),
+                ))
+                | VerifyExistFactResult::NotExistFact(VerifyNotExistFactResult::Failed(
+                    VerifyExistFactFailed::FailToVerifyWellDefined(_),
+                )) => true,
+                _ => false,
+            },
+            Self::ForallFact(r) => matches!(
+                r.as_ref(),
+                VerifyForallFactResult::Failed(VerifyForallFactFailed::FailToVerifyWellDefined(_))
+            ),
+            Self::ForallFactWithIff(_) | Self::NotForall(_) => false,
+        }
     }
 }
+

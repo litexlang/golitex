@@ -36,8 +36,9 @@ indexing.
 9. **Forall / exact IR.** Two source-identical `forall x …` may get different
    binder ids and different IR. Exact IR miss is **accepted**; prove via
    instantiate / other paths, not whole-fact IR equality.
-10. **known-atomic (non-equality).** Bucket by `(prop, polarity)`, linear scan:
-    exact `ObjIR` first (`EqualIr` per arg), then equality-class match.
+10. **known-atomic (non-equality).** Bucket by `(prop, polarity)`, linear scan
+    by equality-class (`ObjIR`); each arg justified by proving
+    `known_arg = goal_arg` via equality search with forall/rewrite off.
 11. **known_equality** stays a graph + equivalence classes keyed by `ObjIR`.
 
 ## Definition table vs IdentifierId
@@ -61,5 +62,5 @@ free `x` in a term is by id.
 - [ ] Nested same-name binders remain parse-forbidden.
 - [ ] `inst_*` uses `HashMap<IdentifierId, Obj>` only.
 - [ ] No `surface`/`alpha` dual fields on binder objs.
-- [ ] Non-equality known-atomic stays linear + two-pass; equality graph untouched.
+- [ ] Non-equality known-atomic stays linear + class filter; equality graph untouched.
 - [ ] Obj WD ByKnown still keys by `ObjIR` (which now includes plain ids).

@@ -1,11 +1,15 @@
 //! Requirement-fact verification for object WD (new_pipeline AST).
 //!
 //! Mirrors old target_requirements: after child WD, prove domain facts true.
-//! Search miss returns Ok(FailTo*), same as fact proof search — not Err.
+//! Search miss returns Ok(branch Failed), same as fact proof search — not Err.
 
 use crate::new_pipeline::ast::fact::{AtomicFact, InFact};
 use crate::new_pipeline::ast::obj::{Obj, StandardSet};
-use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::VerifyAtomicExceptEqualityFactResult;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::{
+    atomic_except_equality_fact_result_from_search_fail,
+    atomic_except_equality_fact_result_from_success,
+    atomic_except_equality_fact_result_from_wd_fail,
+};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::{
     VerifyAtomicFactWellDefinedResult, VerifyState,
@@ -13,7 +17,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::{
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
-    // Prove one atomic requirement. Ok(FailTo*) if WD or truth search fails.
+    // Prove one atomic requirement. Ok(Failed) if WD or truth search fails.
     pub(super) fn verify_required_atomic_fact(
         &mut self,
         fact: AtomicFact,
@@ -24,19 +28,20 @@ impl Runtime {
             .verify_atomic_fact_well_definedness(&fact, verify_state.clone())?
         {
             VerifyAtomicFactWellDefinedResult::Success(proof) => proof,
-            VerifyAtomicFactWellDefinedResult::Failed(_) => {
-                return Ok(VerifyFactResult::FailToVerifyWellDefined);
+            VerifyAtomicFactWellDefinedResult::Failed(reason) => {
+                return Ok(atomic_except_equality_fact_result_from_wd_fail(reason));
             }
         };
         match self.search_atomic_except_equality_fact_proof(&fact, verify_state)? {
-            Some(searched_proof) => Ok(VerifyFactResult::AtomicExceptEquality(Box::new(
-                VerifyAtomicExceptEqualityFactResult {
-                    fact,
-                    well_defined_proof,
-                    searched_proof,
-                },
-            ))),
-            None => Ok(VerifyFactResult::FailToSearchProof),
+            Some(searched_proof) => Ok(atomic_except_equality_fact_result_from_success(
+                &fact,
+                well_defined_proof,
+                searched_proof,
+            )),
+            None => Ok(atomic_except_equality_fact_result_from_search_fail(
+                &fact,
+                well_defined_proof,
+            )),
         }
     }
 

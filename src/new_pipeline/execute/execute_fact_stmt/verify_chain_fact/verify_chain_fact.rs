@@ -1,7 +1,8 @@
 use crate::new_pipeline::ast::fact::ChainFact;
-use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::{
-    VerifyChainFactResult, VerifyFactResult,
+use crate::new_pipeline::execute::execute_fact_stmt::verify_chain_fact::result::{
+    chain_fact_result_from_adjacent_fail, chain_fact_result_from_success,
 };
+use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
@@ -15,16 +16,18 @@ impl Runtime {
     ) -> RuntimeResult<VerifyFactResult> {
         let adjacent_atomics = self.chain_adjacent_atomics(fact)?;
         let mut adjacent = Vec::with_capacity(adjacent_atomics.len());
-        for atomic in &adjacent_atomics {
+        for (failed_index, atomic) in adjacent_atomics.iter().enumerate() {
             let step = self.verify_atomic_fact(atomic, verify_state.clone())?;
             if step.is_failed() {
-                return Ok(step);
+                return Ok(chain_fact_result_from_adjacent_fail(
+                    fact,
+                    failed_index,
+                    adjacent,
+                    step,
+                ));
             }
             adjacent.push(step);
         }
-        Ok(VerifyFactResult::ChainFact(Box::new(VerifyChainFactResult {
-            fact: fact.clone(),
-            adjacent,
-        })))
+        Ok(chain_fact_result_from_success(fact, adjacent))
     }
 }

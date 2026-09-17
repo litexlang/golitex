@@ -3,6 +3,11 @@ use super::super::line_file::LineFile;
 use super::super::param::TypedParameterList;
 use crate::new_pipeline::runtime::FactId;
 
+// Forall then-clause shapes. Exist is allowed here; nested forall is not.
+// Nested forall flattens like nested exist (`forall x: forall y:` → one forall
+// with more binders / dom). Keeping then free of forall makes conclusion indexes
+// (atomic / or / later exist) a single non-universal layer. Need a nested
+// universal? Name it as a prop and conclude that atomic instead.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ExistOrAndChainAtomicFact {
     AtomicFact(AtomicFact),

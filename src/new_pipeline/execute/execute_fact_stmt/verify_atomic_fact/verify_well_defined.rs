@@ -1,26 +1,12 @@
-use super::{FailToVerifyObjWellDefinedResult, VerifyObjWellDefinedResult};
 use crate::new_pipeline::ast::fact::AtomicFact;
 use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::{
+    AtomicFactWellDefinedProof, FailToVerifyAtomicFactWellDefinedResult,
+    VerifyAtomicFactWellDefinedResult,
+};
+use crate::new_pipeline::execute::execute_fact_stmt::well_defined_results::VerifyObjWellDefinedResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
-
-// Success-only evidence that every argument of an atomic fact is well-defined.
-pub struct AtomicFactWellDefinedProof {
-    // Constructed only under Success; each entry is ByKnown or ByDef.
-    pub well_defined_of_each_parameter: Vec<VerifyObjWellDefinedResult>,
-}
-
-// Soft miss vs success for atomic-fact WD. Proof never embeds Fail.
-pub enum VerifyAtomicFactWellDefinedResult {
-    Success(AtomicFactWellDefinedProof),
-    Failed(FailToVerifyObjWellDefinedResult),
-}
-
-impl VerifyAtomicFactWellDefinedResult {
-    pub fn is_failed(&self) -> bool {
-        matches!(self, Self::Failed(_))
-    }
-}
 
 impl Runtime {
     // Classify atomic fact shape, then WD each argument object.
@@ -31,18 +17,24 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyAtomicFactWellDefinedResult> {
         let args = atomic_fact_arg_objs(fact);
-        let mut well_defined_of_each_parameter = Vec::new();
-        for arg in args {
+        let mut succeeded_args = Vec::new();
+        for (failed_arg_index, arg) in args.into_iter().enumerate() {
             match self.verify_obj_well_definedness(arg, verify_state.clone())? {
                 VerifyObjWellDefinedResult::FailToVerifyWellDefined(reason) => {
-                    return Ok(VerifyAtomicFactWellDefinedResult::Failed(reason));
+                    return Ok(VerifyAtomicFactWellDefinedResult::Failed(
+                        FailToVerifyAtomicFactWellDefinedResult {
+                            failed_arg_index,
+                            succeeded_args,
+                            reason,
+                        },
+                    ));
                 }
-                success => well_defined_of_each_parameter.push(success),
+                success => succeeded_args.push(success),
             }
         }
         Ok(VerifyAtomicFactWellDefinedResult::Success(
             AtomicFactWellDefinedProof {
-                well_defined_of_each_parameter,
+                well_defined_of_each_parameter: succeeded_args,
             },
         ))
     }

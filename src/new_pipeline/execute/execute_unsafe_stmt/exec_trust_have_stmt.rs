@@ -3,15 +3,15 @@
 use super::exec_trust_stmt::trust_verify_state;
 use crate::new_pipeline::ast::stmt::TrustHaveStmt;
 use crate::new_pipeline::execute::execute_fact_stmt::{
-    FactWellDefinedProof, ParamTypeWellDefinedProof, StoreFactAndInferResult, VerifyFactResult,
-    VerifyFactWellDefinedResult, VerifyObjWellDefinedResult,
+    FactWellDefinedProof, FailToVerifyFactWellDefinedResult, ParamTypeWellDefinedProof,
+    StoreFactAndInferResult, VerifyFactWellDefinedResult, VerifyObjWellDefinedResult,
 };
 use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 pub enum ExecTrustHaveStmtFailed {
     ParamType(VerifyObjWellDefinedResult),
-    BodyFactWellDefined(VerifyFactResult),
+    BodyFactWellDefined(FailToVerifyFactWellDefinedResult),
 }
 
 pub struct ExecTrustHaveStmtSuccessResult {
@@ -59,11 +59,9 @@ impl Runtime {
                 VerifyFactWellDefinedResult::Success(proof) => {
                     body_facts_well_defined.push(proof);
                 }
-                VerifyFactWellDefinedResult::Failed(_) => {
+                VerifyFactWellDefinedResult::Failed(reason) => {
                     return Ok(ExecTrustHaveStmtResult::Failed(
-                        ExecTrustHaveStmtFailed::BodyFactWellDefined(
-                            VerifyFactResult::FailToVerifyWellDefined,
-                        ),
+                        ExecTrustHaveStmtFailed::BodyFactWellDefined(reason),
                     ));
                 }
             }

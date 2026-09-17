@@ -1,3 +1,4 @@
+pub mod result;
 pub mod by_builtin_strategy_result;
 pub mod known_equality_graph;
 pub mod search_equal_fact_by_rational_with_nonzero_premises;
@@ -11,3 +12,9 @@ pub use by_builtin_strategy_result::EqualitySearchProofByBuiltinStrategy;
 pub use search_equal_fact_proof_by_builtin_rewrite::EqualitySearchProofByBuiltinRewrite;
 pub use search_equal_fact_proof_by_known_rewrite::EqualitySearchProofByKnownRewrite;
 pub use verify_equality_by_builtin_rules::EqualitySearchProofByBuiltinRule;
+
+pub use result::{
+    equal_fact_result_from_search_fail, equal_fact_result_from_success,
+    equal_fact_result_from_wd_fail, EqualFactSearchedProof, EqualFactSearchedProofByKnownEquality,
+    VerifyEqualityFailed, VerifyEqualityResult, VerifyEqualitySuccess,
+};

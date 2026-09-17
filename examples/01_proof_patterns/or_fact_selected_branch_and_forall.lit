@@ -1,0 +1,32 @@
+# Tracer: or-fact prove / store / forall instantiate
+#
+# Before (new_pipeline stub):
+# 1 = 1 or 1 = 2
+# Former behavior: FailToSearchProof; no known_or; forall or-then not indexed.
+#
+# Now (verified):
+# Focused command:
+#   LITEX_NEW_PIPELINE=1 target/release/litex -f examples/01_proof_patterns/or_fact_selected_branch_and_forall.lit
+#
+# 1) SelectedBranch: assume not of other arms, prove one arm.
+1 = 1 or 1 = 2
+
+# 2) known_or reuse of the stored whole or.
+1 = 1 or 1 = 2
+
+# 3) forall then-or index + instantiate (neither arm ambient-true).
+prop P(x R)
+trust:
+    forall x R:
+        $P(x)
+        =>:
+            x = 0 or x = 1
+have a R
+trust $P(a)
+a = 0 or a = 1
+
+# Boundary: neither disjunct provable → soft fail (see
+# or_fact_unprovable_is_soft_fail_and_does_not_store).
+# WD boundary: ill-defined arm → FailToVerifyWellDefined (see
+# or_fact_ill_defined_branch_is_wd_fail), e.g. `1 / 0 = 1 or 1 = 1`.
+# Non-goals this tracer: numeric or-builtins; by cases.
