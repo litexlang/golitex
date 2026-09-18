@@ -59,12 +59,14 @@ pub enum ForallConclusionArgMatchProof {
         goal_arg: Obj,
         equal: StrictEqualWithFact,
     },
-    // Pattern is not a forall param: prove pattern = goal_arg under strict equal.
-    NonParamEqual {
-        pattern: Obj,
-        goal_arg: Obj,
-        equal: StrictEqualWithFact,
-    },
+// Pattern is not a forall param: instantiate under current subst, then prove
+// instantiated = goal_arg under strict equal (forall/rewrite/store WD off).
+NonParamEqual {
+    pattern: Obj,
+    pattern_after_subst: Obj,
+    goal_arg: Obj,
+    equal: StrictEqualWithFact,
+},
 }
 
 // EqualFact that was searched, plus a strict (no forall/rewrite) certificate.

@@ -24,9 +24,18 @@ pub use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_fact::{
     ExistFactWellDefinedProof, FailToVerifyExistFactWellDefinedResult,
     VerifyExistFactWellDefinedResult,
 };
-pub use crate::new_pipeline::execute::execute_fact_stmt::verify_forall_fact::FailToVerifyForallFactWellDefinedResult;
-pub use crate::new_pipeline::execute::execute_fact_stmt::verify_forall_fact_with_iff::FailToVerifyForallFactWithIffWellDefinedResult;
-pub use crate::new_pipeline::execute::execute_fact_stmt::verify_not_forall_fact::FailToVerifyNotForallFactWellDefinedResult;
+pub use crate::new_pipeline::execute::execute_fact_stmt::verify_forall_fact::{
+    FailToVerifyForallFactWellDefinedResult, ForallFactWellDefinedProof,
+    VerifyForallFactWellDefinedResult,
+};
+pub use crate::new_pipeline::execute::execute_fact_stmt::verify_forall_fact_with_iff::{
+    FailToVerifyForallFactWithIffWellDefinedResult, ForallFactWithIffWellDefinedProof,
+    VerifyForallFactWithIffWellDefinedResult,
+};
+pub use crate::new_pipeline::execute::execute_fact_stmt::verify_not_forall_fact::{
+    FailToVerifyNotForallFactWellDefinedResult, NotForallFactWellDefinedProof,
+    VerifyNotForallFactWellDefinedResult,
+};
 pub use crate::new_pipeline::execute::execute_fact_stmt::verify_or_fact::{
     FailToVerifyOrFactWellDefinedResult, OrFactWellDefinedProof, VerifyOrFactWellDefinedResult,
 };

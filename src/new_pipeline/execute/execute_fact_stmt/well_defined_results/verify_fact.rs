@@ -3,6 +3,9 @@ use crate::new_pipeline::execute::execute_fact_stmt::verify_and_fact::VerifyAndF
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::VerifyAtomicFactWellDefinedResult;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_chain_fact::VerifyChainFactWellDefinedResult;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_fact::VerifyExistFactWellDefinedResult;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_forall_fact::VerifyForallFactWellDefinedResult;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_forall_fact_with_iff::VerifyForallFactWithIffWellDefinedResult;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_not_forall_fact::VerifyNotForallFactWellDefinedResult;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_or_fact::VerifyOrFactWellDefinedResult;
 use crate::new_pipeline::execute::execute_fact_stmt::well_defined_results::well_defined_result::{
     FactWellDefinedProof, FailToVerifyFactWellDefinedResult, VerifyFactWellDefinedResult,
@@ -24,9 +27,13 @@ impl Runtime {
             Fact::ChainFact(chain_fact) => Ok(self.wrap_chain_fact_wd(chain_fact, verify_state)?),
             Fact::OrFact(or_fact) => Ok(self.wrap_or_fact_wd(or_fact, verify_state)?),
             Fact::ExistFact(exist_fact) => Ok(self.wrap_exist_fact_wd(exist_fact, verify_state)?),
-            Fact::ForallFact(_) | Fact::ForallFactWithIff(_) | Fact::NotForall(_) => Ok(
-                VerifyFactWellDefinedResult::Success(FactWellDefinedProof::CompositePending),
-            ),
+            Fact::ForallFact(forall_fact) => Ok(self.wrap_forall_fact_wd(forall_fact, verify_state)?),
+            Fact::ForallFactWithIff(forall_iff) => {
+                Ok(self.wrap_forall_fact_with_iff_wd(forall_iff, verify_state)?)
+            }
+            Fact::NotForall(not_forall) => {
+                Ok(self.wrap_not_forall_fact_wd(not_forall, verify_state)?)
+            }
         }
     }
 }
@@ -37,17 +44,21 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactWellDefinedResult> {
-        Ok(match self.verify_atomic_fact_well_definedness(fact, verify_state)? {
-            VerifyAtomicFactWellDefinedResult::Success(proof) => {
-                VerifyFactWellDefinedResult::Success(FactWellDefinedProof::AtomicFact(proof))
-            }
-            VerifyAtomicFactWellDefinedResult::Failed(reason) => {
-                VerifyFactWellDefinedResult::Failed(match fact {
-                    AtomicFact::EqualFact(_) => FailToVerifyFactWellDefinedResult::Equality(reason),
-                    _ => FailToVerifyFactWellDefinedResult::AtomicExceptEquality(reason),
-                })
-            }
-        })
+        Ok(
+            match self.verify_atomic_fact_well_definedness(fact, verify_state)? {
+                VerifyAtomicFactWellDefinedResult::Success(proof) => {
+                    VerifyFactWellDefinedResult::Success(FactWellDefinedProof::AtomicFact(proof))
+                }
+                VerifyAtomicFactWellDefinedResult::Failed(reason) => {
+                    VerifyFactWellDefinedResult::Failed(match fact {
+                        AtomicFact::EqualFact(_) => {
+                            FailToVerifyFactWellDefinedResult::Equality(reason)
+                        }
+                        _ => FailToVerifyFactWellDefinedResult::AtomicExceptEquality(reason),
+                    })
+                }
+            },
+        )
     }
 
     pub(crate) fn wrap_and_fact_wd(
@@ -55,18 +66,20 @@ impl Runtime {
         fact: &crate::new_pipeline::ast::fact::AndFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactWellDefinedResult> {
-        Ok(match self.verify_and_fact_well_definedness(fact, verify_state)? {
-            VerifyAndFactWellDefinedResult::Success(proof) => {
-                VerifyFactWellDefinedResult::Success(FactWellDefinedProof::AndFact {
-                    components: proof.components,
-                })
-            }
-            VerifyAndFactWellDefinedResult::Failed(reason) => {
-                VerifyFactWellDefinedResult::Failed(FailToVerifyFactWellDefinedResult::AndFact(
-                    reason,
-                ))
-            }
-        })
+        Ok(
+            match self.verify_and_fact_well_definedness(fact, verify_state)? {
+                VerifyAndFactWellDefinedResult::Success(proof) => {
+                    VerifyFactWellDefinedResult::Success(FactWellDefinedProof::AndFact {
+                        components: proof.components,
+                    })
+                }
+                VerifyAndFactWellDefinedResult::Failed(reason) => {
+                    VerifyFactWellDefinedResult::Failed(FailToVerifyFactWellDefinedResult::AndFact(
+                        reason,
+                    ))
+                }
+            },
+        )
     }
 
     pub(crate) fn wrap_chain_fact_wd(
@@ -74,18 +87,20 @@ impl Runtime {
         fact: &crate::new_pipeline::ast::fact::ChainFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactWellDefinedResult> {
-        Ok(match self.verify_chain_fact_well_definedness(fact, verify_state)? {
-            VerifyChainFactWellDefinedResult::Success(proof) => {
-                VerifyFactWellDefinedResult::Success(FactWellDefinedProof::ChainFact {
-                    adjacent: proof.adjacent,
-                })
-            }
-            VerifyChainFactWellDefinedResult::Failed(reason) => {
-                VerifyFactWellDefinedResult::Failed(FailToVerifyFactWellDefinedResult::ChainFact(
-                    reason,
-                ))
-            }
-        })
+        Ok(
+            match self.verify_chain_fact_well_definedness(fact, verify_state)? {
+                VerifyChainFactWellDefinedResult::Success(proof) => {
+                    VerifyFactWellDefinedResult::Success(FactWellDefinedProof::ChainFact {
+                        adjacent: proof.adjacent,
+                    })
+                }
+                VerifyChainFactWellDefinedResult::Failed(reason) => {
+                    VerifyFactWellDefinedResult::Failed(
+                        FailToVerifyFactWellDefinedResult::ChainFact(reason),
+                    )
+                }
+            },
+        )
     }
 
     pub(crate) fn wrap_or_fact_wd(
@@ -118,6 +133,65 @@ impl Runtime {
                 VerifyExistFactWellDefinedResult::Failed(reason) => {
                     VerifyFactWellDefinedResult::Failed(
                         FailToVerifyFactWellDefinedResult::ExistFact(reason),
+                    )
+                }
+            },
+        )
+    }
+
+    pub(crate) fn wrap_forall_fact_wd(
+        &mut self,
+        fact: &crate::new_pipeline::ast::fact::ForallFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<VerifyFactWellDefinedResult> {
+        Ok(
+            match self.verify_forall_fact_well_definedness(fact, verify_state)? {
+                VerifyForallFactWellDefinedResult::Success(proof) => {
+                    VerifyFactWellDefinedResult::Success(FactWellDefinedProof::ForallFact(proof))
+                }
+                VerifyForallFactWellDefinedResult::Failed(reason) => {
+                    VerifyFactWellDefinedResult::Failed(
+                        FailToVerifyFactWellDefinedResult::ForallFact(reason),
+                    )
+                }
+            },
+        )
+    }
+
+    pub(crate) fn wrap_forall_fact_with_iff_wd(
+        &mut self,
+        fact: &crate::new_pipeline::ast::fact::ForallFactWithIff,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<VerifyFactWellDefinedResult> {
+        Ok(
+            match self.verify_forall_fact_with_iff_well_definedness(fact, verify_state)? {
+                VerifyForallFactWithIffWellDefinedResult::Success(proof) => {
+                    VerifyFactWellDefinedResult::Success(FactWellDefinedProof::ForallFactWithIff(
+                        proof,
+                    ))
+                }
+                VerifyForallFactWithIffWellDefinedResult::Failed(reason) => {
+                    VerifyFactWellDefinedResult::Failed(
+                        FailToVerifyFactWellDefinedResult::ForallFactWithIff(reason),
+                    )
+                }
+            },
+        )
+    }
+
+    pub(crate) fn wrap_not_forall_fact_wd(
+        &mut self,
+        fact: &crate::new_pipeline::ast::fact::NotForallFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<VerifyFactWellDefinedResult> {
+        Ok(
+            match self.verify_not_forall_fact_well_definedness(fact, verify_state)? {
+                VerifyNotForallFactWellDefinedResult::Success(proof) => {
+                    VerifyFactWellDefinedResult::Success(FactWellDefinedProof::NotForall(proof))
+                }
+                VerifyNotForallFactWellDefinedResult::Failed(reason) => {
+                    VerifyFactWellDefinedResult::Failed(
+                        FailToVerifyFactWellDefinedResult::NotForall(reason),
                     )
                 }
             },

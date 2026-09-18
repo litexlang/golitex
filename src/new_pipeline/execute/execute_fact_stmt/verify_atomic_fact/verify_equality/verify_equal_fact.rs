@@ -106,10 +106,29 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualitySearchProofByBuiltinStrategy>> {
         if let Some(proof) =
-            self.search_equal_fact_by_rational_with_nonzero_premises(fact, verify_state)?
+            self.search_equal_fact_by_rational_with_nonzero_premises(fact, verify_state.clone())?
         {
             return Ok(Some(
                 EqualitySearchProofByBuiltinStrategy::RationalWithNonzeroPremises(proof),
+            ));
+        }
+        if let Some(proof) =
+            self.search_equal_fact_by_extremum_equality(fact, verify_state.clone())?
+        {
+            return Ok(Some(
+                EqualitySearchProofByBuiltinStrategy::ExtremumEquality(proof),
+            ));
+        }
+        if let Some(proof) = self
+            .search_equal_fact_by_finite_set_product_pointwise(fact, verify_state.clone())?
+        {
+            return Ok(Some(
+                EqualitySearchProofByBuiltinStrategy::FiniteSetProductPointwiseEquality(proof),
+            ));
+        }
+        if let Some(proof) = self.search_equal_fact_by_mod_congruence(fact, verify_state)? {
+            return Ok(Some(
+                EqualitySearchProofByBuiltinStrategy::ModCongruence(proof),
             ));
         }
         Ok(None)

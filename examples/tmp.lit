@@ -1,9 +1,8 @@
-# new_pipeline: $fn_eq removed; not $fn_eq_in is an ordinary atomic
-
-have f set, g set, h set, k set
-
-trust not $fn_eq_in(f, g, R)
-not $fn_eq_in(f, g, R)
-
-trust $fn_eq_in(h, k, R)
-$fn_eq_in(h, k, R)
+have X finite_set
+trust X $subset Z
+have f fn(x X) Z
+have g fn(x X) Z
+trust:
+    forall x X:
+        f(x) = g(x)
+finite_set_product(X, f) = finite_set_product(X, g)

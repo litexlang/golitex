@@ -121,12 +121,14 @@ param-type facts (same shapes as introduce: `$in` / `isSet` / …) verified per
 parameter, then instantiated dom facts verified).
 And-then components are projected as `AndFactComponent` cites; exist thens
 are projected into `by_exist`. Matching is shared
-(`match_forall_conclusion_args`): bind bare forall params, otherwise prove
-pattern = goal by equal search with `can_use_forall_fact = false` and
-`can_use_rewrite = false` (certificate type `StrictEqualArgProof`). Nested
-param occurrences inside compound objs are not matched yet. Exist apply also
-instantiates the conclusion and alpha-compares to the goal before
-instantiation requirements.
+(`match_forall_conclusion_args`): bind bare forall params; otherwise
+instantiate the pattern under the subst so far and prove
+`pattern_after_subst = goal` by equal search with all `VerifyState` flags
+false (`can_use_forall_fact`, `can_use_rewrite`, `store_well_defined_fact`;
+certificate type `StrictEqualArgProof`). Nested param occurrences inside
+compound objs are handled only via that subst-then-equal path, not by
+recursive structural matching. Exist apply also instantiates the conclusion
+and alpha-compares to the goal before instantiation requirements.
 
 `or` search order is:
 

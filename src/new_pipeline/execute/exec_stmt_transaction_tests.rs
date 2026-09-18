@@ -812,10 +812,11 @@ fn exist_fact_unprovable_is_soft_fail_and_does_not_store() {
     let mut runtime = runtime_with_file_env();
     let before = runtime.top_exec_env().facts.facts_by_id.len();
     let known_exist_before = runtime.top_exec_env().facts.known_exist.by_key.len();
-    let outcome = exec_one(&mut runtime, "exist x R st {x = 1}");
+    // Not covered by RealLineComparisonWitness (both sides are the witness).
+    let outcome = exec_one(&mut runtime, "exist x R st {x > x}");
     assert!(
         outcome.is_failed(),
-        "expected soft fail when exist has no known/forall proof"
+        "expected soft fail when exist has no known/forall/builtin proof"
     );
     assert_eq!(
         runtime.top_exec_env().facts.facts_by_id.len(),

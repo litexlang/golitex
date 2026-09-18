@@ -1,6 +1,7 @@
 use crate::new_pipeline::ast::fact::{
-    exist_fact_free_args_ref, exist_fact_id, ExistFact, Fact, ForallFact,
+    exist_fact_free_args_ref, exist_fact_id, ExistFact, Fact, ForallFact, InFact,
 };
+use crate::new_pipeline::ast::obj::{Obj, StandardSet};
 use crate::new_pipeline::exec_env::exist_fact_index_key::{
     exist_fact_alpha_match_key, exist_fact_can_prove_goal, exist_fact_known_lookup_keys,
 };
@@ -9,9 +10,11 @@ use crate::new_pipeline::exec_env::known_forall_conclusion_memory::{
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::match_forall_conclusion_args::subst_from_ordered_params;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_fact::helper::real_line_comparison_free_operands;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_fact::result::{
     exist_fact_result_from_search_fail, exist_fact_result_from_success,
-    exist_fact_result_from_wd_fail, ExistFactSearchProofByKnownExistFact, ExistFactSearchedProof,
+    exist_fact_result_from_wd_fail, ExistBuiltinRealLineComparisonWitness,
+    ExistFactSearchProofByBuiltinRule, ExistFactSearchProofByKnownExistFact, ExistFactSearchedProof,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::{
@@ -46,7 +49,7 @@ impl Runtime {
         ))
     }
 
-    // Builtin → known_exist → known_forall. Builtin is scaffold-only for now.
+    // Builtin → known_exist → known_forall.
     fn search_exist_fact_proof(
         &mut self,
         fact: &ExistFact,
@@ -55,7 +58,7 @@ impl Runtime {
         if let Some(proof) =
             self.search_exist_fact_proof_by_builtin_rule(fact, verify_state.clone())?
         {
-            return Ok(Some(proof));
+            return Ok(Some(ExistFactSearchedProof::ByBuiltinRule(proof)));
         }
         if let Some(proof) =
             self.search_exist_fact_proof_by_known_exist_fact(fact, verify_state.clone())?
@@ -72,10 +75,61 @@ impl Runtime {
 
     fn search_exist_fact_proof_by_builtin_rule(
         &mut self,
-        _fact: &ExistFact,
-        _verify_state: VerifyState,
-    ) -> RuntimeResult<Option<ExistFactSearchedProof>> {
+        fact: &ExistFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<ExistFactSearchProofByBuiltinRule>> {
+        if let Some(proof) =
+            self.search_exist_builtin_real_line_comparison_witness(fact, verify_state)?
+        {
+            return Ok(Some(
+                ExistFactSearchProofByBuiltinRule::RealLineComparisonWitness(proof),
+            ));
+        }
         Ok(None)
+    }
+
+    // Builtin: real-line comparison witness. See ExistBuiltinRealLineComparisonWitness.
+    fn search_exist_builtin_real_line_comparison_witness(
+        &mut self,
+        fact: &ExistFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<ExistBuiltinRealLineComparisonWitness>> {
+        let Some(free_operands) = real_line_comparison_free_operands(fact) else {
+            return Ok(None);
+        };
+        let line_file = match fact {
+            ExistFact::PlainExistFact(p)
+            | ExistFact::ExistUniqueFact(p)
+            | ExistFact::NotExistFact(p) => p.line_file.clone(),
+        };
+        let child_state = verify_state.without_well_defined_storage();
+        let mut requirement_facts = Vec::with_capacity(free_operands.len());
+        let mut proof_of_requirement_facts = Vec::with_capacity(free_operands.len());
+        let mut seen = Vec::new();
+        for operand in free_operands {
+            let key = operand.display_string();
+            if seen.contains(&key) {
+                continue;
+            }
+            seen.push(key);
+            let premise: Fact = InFact {
+                fact_id: self.ids.allocate_fact_id(),
+                element: operand,
+                set: Obj::StandardSet(StandardSet::R),
+                line_file: line_file.clone(),
+            }
+            .into();
+            let proof = self.verify_fact(&premise, child_state.clone())?;
+            if proof.is_failed() {
+                return Ok(None);
+            }
+            requirement_facts.push(premise);
+            proof_of_requirement_facts.push(proof);
+        }
+        Ok(Some(ExistBuiltinRealLineComparisonWitness {
+            requirement_facts,
+            proof_of_requirement_facts,
+        }))
     }
 
     fn search_exist_fact_proof_by_known_exist_fact(

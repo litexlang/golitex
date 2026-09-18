@@ -1,0 +1,4 @@
+# Expected: exit 1 (WD fail on param type under trust)
+trust:
+    forall x (1 / 0):
+        x = x
