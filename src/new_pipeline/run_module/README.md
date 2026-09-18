@@ -6,6 +6,12 @@ Does not parse statements or verify facts (those stay in `parse` / `execute`).
 `module_manager/` owns tables + config parse + mount APIs (no `.lit` execution).
 This package **calls** those APIs and runs files.
 
+| Related | Link |
+|---------|------|
+| LaunchCommand design | [`../run/README.md`](../run/README.md) |
+| Module tables / `::` | [`../module_manager/README.md`](../module_manager/README.md) |
+| Fixtures | [`examples/new_pipeline_module_manager/`](../../../examples/new_pipeline_module_manager/) |
+
 ## Layout
 
 | File | Owns |

@@ -15,6 +15,9 @@ corresponding Litex source close to that description.
 1c. [`new_pipeline_stmt_nodes/`](new_pipeline_stmt_nodes/) contains one `.lit`
    per currently wired `exec_stmt` arm (Fact, let/have/prop, witness, trust,
    by reflexive/symmetric); same `LITEX_NEW_PIPELINE=1` acceptance bar.
+1d. [`new_pipeline_module_manager/`](new_pipeline_module_manager/) exercises
+   LaunchCommand + `litex.config` mount (`-r` / `-f` / cwd `-e`); see its
+   README and [`src/new_pipeline/run/README.md`](../src/new_pipeline/run/README.md).
 2. [`02_builtin_math/`](02_builtin_math/) shows arithmetic, order, finite-set,
    function, and numeric rules provided by the verifier, including native
    natural-number primality and coprimality.

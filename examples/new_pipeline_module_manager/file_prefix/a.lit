@@ -1,0 +1,2 @@
+# Listed export. `-f a.lit` must stop here and not run `b.lit`.
+1 = 1

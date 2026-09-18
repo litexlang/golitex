@@ -552,12 +552,18 @@ not append help text. For example, `litex -j` returns:
 
 ## Project Modules
 
-> **new_pipeline design target:** no `submodule` and no `[hierarchy]`;
+> **new_pipeline (`LITEX_NEW_PIPELINE=1`):** no `submodule` and no `[hierarchy]`;
 > `[export]` is `.lit` files only; `[import]` / `[import std]` both mount
 > modules under one shared alias namespace (`[import std]` bare `N` means
-> `N = N`; `Alias = StdName` resolves to `<std_root>/<StdName>`). Canonical
-> write-up:
+> `N = N`; `Alias = StdName` resolves to `<std_root>/<StdName>`).
+>
+> LaunchCommand design:
+> [`src/new_pipeline/run/README.md`](../src/new_pipeline/run/README.md).
+> Tables / parse / elaborate:
 > [`src/new_pipeline/module_manager/README.md`](../src/new_pipeline/module_manager/README.md).
+> Fixtures:
+> [`examples/new_pipeline_module_manager/`](../examples/new_pipeline_module_manager/).
+>
 > Legacy runners may still accept older manifests until migration finishes.
 
 Use `litex.config` to organize a module:
@@ -569,13 +575,29 @@ Use `litex.config` to organize a module:
   `Alias = StdName` (path `<std_root>/<StdName>`);
 - keep import aliases unique across both import sections;
 - cite mounted packages and exports with canonical names, such as
-  `Algebra::chap1::name` or `basics::name`.
+  `Algebra::chap1::name` or `basics:::name`.
 
 `[export]` is an explicit selection list, not an inventory of the directory.
 Unlisted files and folders are sidecars: module discovery does not parse them,
 execute them, or add them to the module namespace. Declared export paths still
 must exist and point to a `.lit` file. Imported targets must be external
 module folders; imports cannot target individual `.lit` files.
+
+### new_pipeline launch behavior
+
+| Command | Config lookup | Mount behavior |
+|---------|---------------|----------------|
+| `litex -r <dir>` | `<dir>/litex.config` (required) | all imports, then all exports |
+| `litex -f <file>` | `parent(file)/litex.config` (missing → empty) | if listed: imports + exports through that file; if unlisted: all exports then the file; if no config: isolated |
+| `litex -e <code>` | `cwd/litex.config` (missing → empty) | all imports + all exports, then eval |
+| bare `litex` (REPL) | `cwd/litex.config` (missing → empty) | all imports + all exports, then REPL |
+
+Mount soft Failed → session `FailToImport`. For `-f`, soft Failed on the
+**target** file itself is a normal file failure, not `FailToImport`.
+
+Source-level `import` is rejected; project source uses its manifest.
+
+### Legacy default pipeline (when `LITEX_NEW_PIPELINE` is unset)
 
 `-r` and `-f` share one left-to-right order inside a module: run imports, then
 run the ordered `[export]` `.lit` list. Running a module runs that full list.
@@ -584,24 +606,17 @@ When the direct parent has no `litex.config`, `litex -f` instead performs one
 isolated batch run. It does not search ancestor folders. A present but invalid
 configuration, or a target that is not exported exactly once, remains a
 project error and never falls back. Use `litex -isolated -f` to force isolation
-when configuration is present. `new_pipeline` does not wire project `-r` /
-`-f` mount yet.
+when configuration is present.
 
 Dependency order is the module's `[export]` order after its imports.
-Source-level `import` is rejected everywhere; project source uses its
-manifest, while only an interactive terminal recognizes import commands.
-
-Each `[import]` declaration creates a private module instance. Two aliases of
-one physical folder remain distinct, and imports internal to an imported module
-do not become public to its importer.
+`[import]` and `[import std]` are trusted by default under the legacy runner;
+rerun with `-strict` to verify every loaded dependency. Do not write `trust` in
+`litex.config`: remove that prefix when migrating an older project.
 
 `litex -r <project>` verifies the complete ordered `[export]` list. In contrast,
 `litex -f <file>` trusts and loads only the earlier `[export]` entries needed to
 provide that file's project context, then verifies the selected file. Litex
-reports those prefix entries as `unverified_imports`. `[import]` and `[import std]`
-are also trusted by default; rerun with `-strict` to verify every loaded
-dependency. Do not write `trust` in `litex.config`: remove that prefix when
-migrating an older project.
+reports those prefix entries as `unverified_imports`.
 
 ## Reserved Helper Commands
 
