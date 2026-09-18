@@ -2,8 +2,8 @@ use crate::new_pipeline::parse::prop_registration_shape::{
     plain_prop_name, reflexive_prop_name_from_forall,
 };
 use super::result::{
-    ExecByPropRegistrationStmtFailed, ExecByPropRegistrationStmtResult,
-    ExecByPropRegistrationStmtSuccess, ExecByStmtResult,
+    ExecByReflexivePropStmtFailed, ExecByReflexivePropStmtResult, ExecByReflexivePropStmtSuccess,
+    ExecByStmtResult,
 };
 use crate::new_pipeline::ast::stmt::ByReflexivePropStmt;
 use crate::new_pipeline::exec_env::exec_env::PropRewriteProperty;
@@ -17,19 +17,17 @@ pub fn exec_by_reflexive_prop_stmt(
     let prop = match reflexive_prop_name_from_forall(&stmt.forall_fact) {
         Ok(p) => p,
         Err(msg) => {
-            return Ok(ExecByStmtResult::PropRegistration(
-                ExecByPropRegistrationStmtResult::Failed(
-                    ExecByPropRegistrationStmtFailed::Shape(msg),
-                ),
+            return Ok(ExecByStmtResult::ReflexiveProp(
+                ExecByReflexivePropStmtResult::Failed(ExecByReflexivePropStmtFailed::Shape(msg)),
             ));
         }
     };
     let name = plain_prop_name(&prop);
     let Some(definition) = runtime.def_prop_visible_in_stack(name) else {
-        return Ok(ExecByStmtResult::PropRegistration(
-            ExecByPropRegistrationStmtResult::Failed(
-                ExecByPropRegistrationStmtFailed::PropNotDefined(name.to_string()),
-            ),
+        return Ok(ExecByStmtResult::ReflexiveProp(
+            ExecByReflexivePropStmtResult::Failed(ExecByReflexivePropStmtFailed::PropNotDefined(
+                name.to_string(),
+            )),
         ));
     };
     let arity = definition
@@ -39,14 +37,12 @@ pub fn exec_by_reflexive_prop_stmt(
         .map(|g| g.params.len())
         .sum::<usize>();
     if arity != 2 {
-        return Ok(ExecByStmtResult::PropRegistration(
-            ExecByPropRegistrationStmtResult::Failed(
-                ExecByPropRegistrationStmtFailed::WrongArity {
-                    prop: prop.clone(),
-                    expected: 2,
-                    actual: arity,
-                },
-            ),
+        return Ok(ExecByStmtResult::ReflexiveProp(
+            ExecByReflexivePropStmtResult::Failed(ExecByReflexivePropStmtFailed::WrongArity {
+                prop: prop.clone(),
+                expected: 2,
+                actual: arity,
+            }),
         ));
     }
 
@@ -60,8 +56,8 @@ pub fn exec_by_reflexive_prop_stmt(
     };
     let forall_proof = runtime.verify_forall_fact(&stmt.forall_fact, verify_state)?;
     if forall_proof.is_failed() {
-        return Ok(ExecByStmtResult::PropRegistration(
-            ExecByPropRegistrationStmtResult::Failed(ExecByPropRegistrationStmtFailed::Forall(
+        return Ok(ExecByStmtResult::ReflexiveProp(
+            ExecByReflexivePropStmtResult::Failed(ExecByReflexivePropStmtFailed::Forall(
                 forall_proof,
             )),
         ));
@@ -74,8 +70,8 @@ pub fn exec_by_reflexive_prop_stmt(
         .or_default()
         .push(PropRewriteProperty::Reflexive);
 
-    Ok(ExecByStmtResult::PropRegistration(
-        ExecByPropRegistrationStmtResult::Success(ExecByPropRegistrationStmtSuccess {
+    Ok(ExecByStmtResult::ReflexiveProp(
+        ExecByReflexivePropStmtResult::Success(ExecByReflexivePropStmtSuccess {
             prop,
             forall_proof,
         }),

@@ -9,7 +9,7 @@ mod monomial;
 mod monomial_collection;
 mod normalization;
 
-pub use closed_numeric_expr::is_closed_numeric_expr;
+pub use closed_numeric_expr::{is_closed_numeric_expr, ClosedNumericExpr};
 pub use decimal_arithmetic::{
     evaluate_obj_to_normalized_decimal_number, two_objs_equal_by_closed_decimal_calculation,
 };

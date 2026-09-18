@@ -15,9 +15,6 @@ pub(in crate::verification) const SOURCE: &str = concat!(
     include_str!(
         "../../../src/verification/builtin_rules/equality_dispatch/literal_set_intersections.rs"
     ),
-    include_str!(
-        "../../../src/verification/builtin_rules/equality_dispatch/registered_antisymmetry.rs"
-    ),
     include_str!("../../../src/verification/builtin_rules/equality_dispatch/set_builders.rs"),
     include_str!("../../../src/verification/builtin_rules/equality_dispatch/set_operations.rs"),
     include_str!("../../../src/verification/builtin_rules/equality_dispatch/subtraction.rs"),

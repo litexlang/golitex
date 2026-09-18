@@ -39,8 +39,12 @@ impl Runtime {
 
     // Stage order: builtin rule → known equality → builtin strategy →
     // matching one arg by one → known forall → (if allowed) builtin rewrite.
-    // MatchingOneArgByOne is constructor peel (not rewrite). Rewrite is only
-    // ClosedNumericEqualSubstitution (legacy opaque resolve_obj replacement).
+    // MatchingOneArgByOne is constructor peel (not rewrite).
+    //
+    // Why rewrite: Calculation needs closed numeric trees; goals may still
+    // mention identifiers equal to a stored closed form. Rewrite substitutes
+    // those representatives, then proves the residual with rewrite off — see
+    // EqualitySearchProofByBuiltinRewrite (ClosedNumeric only; not general congruence).
     // Ok(None) means no proof found; that is not a runtime error.
     pub fn search_equal_fact_proof(
         &mut self,

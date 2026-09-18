@@ -16,11 +16,15 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 // Builtin rewrite for atomic-except-equality facts.
 //
-// Replaces legacy opaque resolve_obj with explicit certificates:
-// - ClosedNumericEqualSubstitution: fill closed numeric representatives into args
-// - OrderDual: prove via order / proper-subset / fn_eq_in dual
+// Why this stage exists (ClosedNumeric part):
+//   Order / membership builtins such as ClosedNumericComparison need closed
+//   numeric args. Goals often still carry identifiers equal to a stored closed
+//   form (`have a R = 10`, goal `a > 0`). Rewrite fills those representatives
+//   into the goal, then proves the residual with rewrite off — explicit cite,
+//   not silent resolve_obj.
 //
-// Search tries ClosedNumeric first, then OrderDual.
+// Also here: OrderDual (prove via order / proper-subset / fn_eq_in dual).
+// Search order: ClosedNumeric first, then OrderDual.
 pub enum AtomicExceptEqualityFactSearchProofByBuiltinRewrite {
     ClosedNumericEqualSubstitution(
         AtomicExceptEqualityFactSearchProofByClosedNumericEqualSubstitution,
@@ -29,8 +33,8 @@ pub enum AtomicExceptEqualityFactSearchProofByBuiltinRewrite {
 }
 
 // Closed-numeric index substitution on a non-equality atomic goal.
-// Mathematical property: if `a = closed` is indexed, then P(F[a], …) follows from
-// P(F[closed], …) for supported F (same as equality-side ClosedNumeric rewrite).
+// Mathematical property: if `a = closed` is indexed (`ClosedNumericExpr` view),
+// then P(F[a], …) follows from P(F[closed], …) for supported F.
 //
 // Example:
 //   trust a = 10
@@ -93,11 +97,12 @@ impl Runtime {
         let mut cited_equal_fact_ids = Vec::new();
 
         for (from_ir, closed, fact_id) in &entries {
+            let closed_obj = closed.to_obj();
             let mut changed = false;
             let next_args: Vec<Obj> = rewritten_args
                 .iter()
                 .map(|arg| {
-                    let next = replace_obj_matching_ir(arg, from_ir, closed);
+                    let next = replace_obj_matching_ir(arg, from_ir, &closed_obj);
                     if next.ir() != arg.ir() {
                         changed = true;
                     }

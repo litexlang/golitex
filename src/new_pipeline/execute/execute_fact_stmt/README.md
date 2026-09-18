@@ -112,7 +112,12 @@ known forall → builtin algebraic rewrite → known algebraic rewrite.
 
 Equality search is:
 
-builtin rule → known equality → builtin strategy → known forall.
+builtin rule → known equality → builtin strategy → MatchingOneArgByOne →
+known forall → builtin rewrite (ClosedNumericEqualSubstitution only).
+
+MatchingOneArgByOne peels same-shape constructors (numeric, FnObj application
+layers, sets/tuples/carts, ranges, sums/products/reduces, struct field access,
+…); binder shapes (SetBuilder / AnonymousFn / FnSet) are intentionally skipped.
 
 `forall` local proof (when proving a forall fact) is:
 
