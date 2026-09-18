@@ -1,6 +1,7 @@
 mod env_stack_lookup;
 mod exec_stmt;
 mod exec_stmt_result;
+pub mod execute_by_stmt;
 pub mod execute_def_abstract_prop_stmt;
 pub mod execute_def_prop_stmt;
 pub mod execute_fact_stmt;

@@ -1,6 +1,6 @@
 use crate::new_pipeline::ast::names::{AtomicName, PlainName};
 use crate::new_pipeline::ast::obj::{
-    Cart, Div, FiniteSeqListObj, FiniteSeqSet, FnSet, Number, Obj, SetBuilder, Tuple,
+    Cart, FiniteSeqListObj, FiniteSeqSet, FnSet, Obj, SetBuilder, Tuple,
 };
 use crate::new_pipeline::ast::stmt::AxiomStmt;
 use crate::new_pipeline::ast::stmt::DefAbstractPropStmt;
@@ -101,13 +101,6 @@ pub enum PropRewriteProperty {
     Antisymmetric,
 }
 
-/// Canonical simplified value retained as reusable object knowledge.
-#[derive(Clone)]
-pub enum KnownObjValue {
-    SimplifiedNumber(Number),
-    SimplifiedFraction(Div),
-}
-
 /// Properties recorded for objects whose structure has a reusable fact-based
 /// interpretation.
 #[derive(Clone)]
@@ -118,7 +111,9 @@ pub enum SpecialObjProperty {
     FiniteSeqEquality((FiniteSeqListObj, FactId)),
     FiniteSeqOwner((FiniteSeqSet, FactId)),
     SetBuilderEquality((SetBuilder, FactId)),
-    SimplifiedValue((KnownObjValue, FactId)),
+    /// Non-closed object equals a closed numeric expr; cite `FactId`.
+    /// Example: from `a = 2^3/7 + 10 * 2.5`, key `a` stores the closed RHS.
+    ClosedNumericEqual((Obj, FactId)),
     InFunctionSet((FnSet, FactId)),
     EqualToFunction((Obj, FactId)),
 }

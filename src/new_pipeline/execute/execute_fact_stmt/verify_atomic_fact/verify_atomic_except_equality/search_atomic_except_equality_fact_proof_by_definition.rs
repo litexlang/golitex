@@ -25,18 +25,23 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByDefinition>> {
         let AtomicFact::NormalAtomicFact(normal) = fact else {
+            eprintln!("by_def: not normal atomic");
             return Ok(None);
         };
         let AtomicName::Plain { name } = &normal.predicate else {
+            eprintln!("by_def: predicate not plain");
             return Ok(None);
         };
         if self.def_abstract_prop_visible_in_stack(name).is_some() {
+            eprintln!("by_def: is abstract_prop {name}");
             return Ok(None);
         }
         let Some(definition) = self.def_prop_visible_in_stack(name) else {
+            eprintln!("by_def: no def_prop for {name}");
             return Ok(None);
         };
         if definition.iff_facts.is_empty() {
+            eprintln!("by_def: empty iff for {name}");
             return Ok(None);
         }
         let definition = definition.clone();
@@ -51,6 +56,7 @@ impl Runtime {
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByDefinition>> {
         let flat = flatten_typed_parameters(&definition.typed_parameters);
         if flat.len() != normal.body.len() {
+            eprintln!("by_def: arity mismatch {} vs {}", flat.len(), normal.body.len());
             return Ok(None);
         }
         let mut subst: HashMap<IdentifierId, Obj> = HashMap::new();
@@ -58,6 +64,7 @@ impl Runtime {
         for ((param, param_type), arg) in flat.iter().zip(normal.body.iter()) {
             subst.insert(param.id, arg.clone());
             let Some(type_fact) = type_obligation_fact(arg, param_type, &mut self.ids) else {
+                eprintln!("by_def: type_obligation None");
                 return Ok(None);
             };
             requirement_facts.push(type_fact);
@@ -65,7 +72,7 @@ impl Runtime {
         for iff_fact in &definition.iff_facts {
             let instantiated = match self.inst_fact(iff_fact, &subst) {
                 Ok(f) => f,
-                Err(_) => return Ok(None),
+                Err(e) => { eprintln!("by_def: inst_fact err {e:?}"); return Ok(None); },
             };
             requirement_facts.push(instantiated);
         }
@@ -73,6 +80,7 @@ impl Runtime {
         for requirement in &requirement_facts {
             let proof = self.verify_fact(requirement, verify_state.clone())?;
             if proof.is_failed() {
+                eprintln!("by_def: requirement failed wd={} idx={}", proof.is_wd_failed(), proof_of_requirement_facts.len());
                 return Ok(None);
             }
             proof_of_requirement_facts.push(proof);

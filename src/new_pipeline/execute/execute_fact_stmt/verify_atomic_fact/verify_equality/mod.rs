@@ -2,6 +2,7 @@ pub mod result;
 pub mod by_builtin_rewrite_result;
 pub mod by_builtin_strategy_result;
 pub mod known_equality_graph;
+pub mod search_equal_fact_by_closed_numeric_equal_substitution;
 pub mod search_equal_fact_by_congruence_substitution;
 pub mod search_equal_fact_by_extremum_equality;
 pub mod search_equal_fact_by_finite_set_product_pointwise;

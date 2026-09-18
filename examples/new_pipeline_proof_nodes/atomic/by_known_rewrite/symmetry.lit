@@ -1,0 +1,18 @@
+# Node: atomic.ByKnownRewrite.Symmetry
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/atomic/by_known_rewrite/symmetry.lit
+#
+# Registers symmetric swap for `same`, trusts `$same(a, b)`, proves `$same(b, a)`
+# via KnownRewrite Symmetry (positional known-atomic cannot match alone).
+
+prop same(x set, y set):
+    x = y
+
+by symmetric_prop:
+    ? forall x, y set:
+        $same(x, y)
+        =>:
+            $same(y, x)
+
+have a set, b set
+trust $same(a, b)
+$same(b, a)

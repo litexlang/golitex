@@ -26,3 +26,5 @@ mod object;
 mod param;
 mod parse;
 mod statements;
+
+pub use statements::prop_registration_shape;

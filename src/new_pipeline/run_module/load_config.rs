@@ -52,6 +52,15 @@ pub fn load_config(module_dir: &Path, std_root: &Path) -> RuntimeResult<LitexCon
     parse_litex_config(&source, module_dir, std_root).map_err(RuntimeError::InvalidArguments)
 }
 
+/// Like `load_config`, but missing `litex.config` → empty config (isolated `-f`).
+pub fn load_config_or_empty(module_dir: &Path, std_root: &Path) -> RuntimeResult<LitexConfig> {
+    let path = litex_config_path(module_dir);
+    if !path.is_file() {
+        return Ok(LitexConfig::new());
+    }
+    load_config(module_dir, std_root)
+}
+
 /// Normalize a module directory path for done/running sets.
 pub fn normalize_module_dir(path: &Path) -> PathBuf {
     match path.canonicalize() {

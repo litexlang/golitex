@@ -1,3 +1,4 @@
+mod closed_numeric_expr;
 mod decimal_arithmetic;
 mod decimal_comparison;
 mod denominator_clearing;
@@ -8,6 +9,7 @@ mod monomial;
 mod monomial_collection;
 mod normalization;
 
+pub use closed_numeric_expr::is_closed_numeric_expr;
 pub use decimal_arithmetic::{
     evaluate_obj_to_normalized_decimal_number, two_objs_equal_by_closed_decimal_calculation,
 };

@@ -1,0 +1,166 @@
+use crate::new_pipeline::ast::fact::{
+    AtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact, NormalAtomicFact,
+};
+use crate::new_pipeline::ast::names::{AtomicName, BoundName};
+use crate::new_pipeline::ast::obj::{IdentifierObj, Obj};
+use crate::new_pipeline::ast::param::ParamType;
+use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
+use std::collections::HashMap;
+
+// Shape check for `by reflexive_prop`: forall x set: $p(x, x).
+pub fn reflexive_prop_name_from_forall(forall_fact: &ForallFact) -> Result<AtomicName, String> {
+    let params = flatten_set_params(forall_fact, "by reflexive_prop")?;
+    if params.len() != 1 {
+        return Err("by reflexive_prop: forall must bind exactly one parameter".to_string());
+    }
+    if !forall_fact.dom_facts.is_empty() {
+        return Err("by reflexive_prop: forall dom must be empty".to_string());
+    }
+    if forall_fact.then_facts.len() != 1 {
+        return Err("by reflexive_prop: forall then must contain exactly one fact".to_string());
+    }
+    let then = normal_atomic_from_then(&forall_fact.then_facts[0], "by reflexive_prop")?;
+    let x = &params[0];
+    if then.body.len() != 2
+        || !obj_is_bound_param(&then.body[0], x)
+        || !obj_is_bound_param(&then.body[1], x)
+    {
+        return Err("by reflexive_prop: expected `forall x set: $p(x, x)`".to_string());
+    }
+    Ok(then.predicate.clone())
+}
+
+// Shape check for `by symmetric_prop`: returns (prop, gather) where gather maps
+// then-arg index -> dom-arg index.
+pub fn symmetric_prop_registration_from_forall(
+    forall_fact: &ForallFact,
+) -> Result<(AtomicName, Vec<usize>), String> {
+    let params = flatten_set_params(forall_fact, "by symmetric_prop")?;
+    if params.len() < 2 {
+        return Err("by symmetric_prop: forall must bind at least two parameters".to_string());
+    }
+    if forall_fact.dom_facts.len() != 1 {
+        return Err("by symmetric_prop: forall dom must contain exactly one fact".to_string());
+    }
+    if forall_fact.then_facts.len() != 1 {
+        return Err("by symmetric_prop: forall then must contain exactly one fact".to_string());
+    }
+    let n = params.len();
+    let dom_f = normal_atomic_from_dom(&forall_fact.dom_facts[0], "by symmetric_prop")?;
+    let then_f = normal_atomic_from_then(&forall_fact.then_facts[0], "by symmetric_prop")?;
+    if dom_f.predicate != then_f.predicate {
+        return Err("by symmetric_prop: dom and then must use the same prop".to_string());
+    }
+    if dom_f.body.len() != n || then_f.body.len() != n {
+        return Err(format!(
+            "by symmetric_prop: dom and then must each have {} arguments",
+            n
+        ));
+    }
+    let dom_ids = bound_param_ids_in_order(&dom_f.body, "by symmetric_prop")?;
+    let then_ids = bound_param_ids_in_order(&then_f.body, "by symmetric_prop")?;
+
+    let mut param_ids: Vec<_> = params.iter().map(|p| p.id).collect();
+    param_ids.sort_by_key(|id| id.value());
+    let mut dom_sorted = dom_ids.clone();
+    dom_sorted.sort_by_key(|id| id.value());
+    if dom_sorted != param_ids {
+        return Err(
+            "by symmetric_prop: dom fact must use each forall parameter exactly once".to_string(),
+        );
+    }
+    let mut then_sorted = then_ids.clone();
+    then_sorted.sort_by_key(|id| id.value());
+    if then_sorted != param_ids {
+        return Err(
+            "by symmetric_prop: then fact must use each forall parameter exactly once".to_string(),
+        );
+    }
+
+    let mut id_to_dom_ix: HashMap<u64, usize> = HashMap::new();
+    for (i, id) in dom_ids.iter().enumerate() {
+        if id_to_dom_ix.insert(id.value(), i).is_some() {
+            return Err("by symmetric_prop: duplicate parameter in dom arguments".to_string());
+        }
+    }
+    let mut gather = Vec::with_capacity(n);
+    for id in &then_ids {
+        let Some(&i) = id_to_dom_ix.get(&id.value()) else {
+            return Err("by symmetric_prop: then argument is not a forall parameter".to_string());
+        };
+        gather.push(i);
+    }
+    if gather.iter().enumerate().all(|(k, &g)| g == k) {
+        return Err("by symmetric_prop: dom and then argument order are identical".to_string());
+    }
+    Ok((dom_f.predicate.clone(), gather))
+}
+
+fn flatten_set_params(
+    forall_fact: &ForallFact,
+    syntax: &str,
+) -> Result<Vec<BoundName>, String> {
+    let mut params = Vec::new();
+    for group in &forall_fact.typed_parameters.groups {
+        match &group.param_type {
+            ParamType::Set(_) => {}
+            _ => {
+                return Err(format!("{syntax}: each forall parameter type must be set"));
+            }
+        }
+        for p in &group.params {
+            params.push(p.clone());
+        }
+    }
+    Ok(params)
+}
+
+fn normal_atomic_from_then<'a>(
+    fact: &'a ExistOrAndChainAtomicFact,
+    syntax: &str,
+) -> Result<&'a NormalAtomicFact, String> {
+    match fact {
+        ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::NormalAtomicFact(f)) => Ok(f),
+        _ => Err(format!(
+            "{syntax}: then fact must be a positive user-defined prop fact"
+        )),
+    }
+}
+
+fn normal_atomic_from_dom<'a>(fact: &'a Fact, syntax: &str) -> Result<&'a NormalAtomicFact, String> {
+    match fact {
+        Fact::AtomicFact(AtomicFact::NormalAtomicFact(f)) => Ok(f),
+        _ => Err(format!(
+            "{syntax}: dom fact must be a positive user-defined prop fact"
+        )),
+    }
+}
+
+fn obj_is_bound_param(obj: &Obj, param: &BoundName) -> bool {
+    match obj {
+        Obj::Identifier(IdentifierObj::Plain { id, .. }) => *id == param.id,
+        _ => false,
+    }
+}
+
+fn bound_param_ids_in_order(body: &[Obj], syntax: &str) -> Result<Vec<IdentifierId>, String> {
+    let mut ids = Vec::new();
+    for obj in body {
+        match obj {
+            Obj::Identifier(IdentifierObj::Plain { id, .. }) => ids.push(*id),
+            _ => {
+                return Err(format!(
+                    "{syntax}: each argument must be a forall parameter"
+                ));
+            }
+        }
+    }
+    Ok(ids)
+}
+
+pub fn plain_prop_name(prop: &AtomicName) -> Option<&str> {
+    match prop {
+        AtomicName::Plain { name } => Some(name.as_str()),
+        _ => None,
+    }
+}

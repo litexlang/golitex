@@ -1,5 +1,8 @@
 use super::exec_stmt_result::{ExecDefinitionStmtResult, ExecStmtResult};
-use crate::new_pipeline::ast::stmt::{DefinitionStmt, Stmt};
+use crate::new_pipeline::ast::stmt::{ByStmt, DefinitionStmt, Stmt};
+use crate::new_pipeline::execute::execute_by_stmt::{
+    exec_by_reflexive_prop_stmt, exec_by_symmetric_prop_stmt,
+};
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
 impl Runtime {
@@ -65,8 +68,14 @@ impl Runtime {
             Stmt::UnsafeStmt(unsafe_stmt) => {
                 Ok(ExecStmtResult::Unsafe(self.exec_unsafe_stmt(unsafe_stmt)?))
             }
+            Stmt::By(ByStmt::ByReflexivePropStmt(stmt)) => {
+                Ok(ExecStmtResult::By(exec_by_reflexive_prop_stmt(self, stmt)?))
+            }
+            Stmt::By(ByStmt::BySymmetricPropStmt(stmt)) => {
+                Ok(ExecStmtResult::By(exec_by_symmetric_prop_stmt(self, stmt)?))
+            }
             _ => Err(RuntimeError::Unsupported(
-                "new_pipeline exec_stmt: only Fact, let, have-obj-in-nonempty, prop, abstract_prop, witness, and trust are wired for the tracer"
+                "new_pipeline exec_stmt: only Fact, let, have-obj-in-nonempty, prop, abstract_prop, witness, trust, by reflexive_prop, and by symmetric_prop are wired for the tracer"
                     .to_string(),
             )),
         }

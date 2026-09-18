@@ -11,7 +11,26 @@ use crate::new_pipeline::runtime::runtime_ids::FactId;
 // Dispatcher: `search_equal_fact_proof_by_builtin_rewrite` tries variants in
 // order (same pattern as builtin strategy).
 pub enum EqualitySearchProofByBuiltinRewrite {
+    ClosedNumericEqualSubstitution(ClosedNumericEqualSubstitutionBuiltinRewriteProof),
     CongruenceSubstitution(CongruenceSubstitutionBuiltinRewriteProof),
+}
+
+// Closed-numeric index substitution: a non-closed object indexed under
+// ClosedNumericEqual is rewritten to its closed numeric representative
+// (including as a subterm), then the residual equality is proved without rewrite.
+// Mathematical property: congruence toward a stored closed numeric form —
+// if `a = closed` is known and indexed, then F[a] = F[closed] for supported F.
+//
+// Example:
+//   trust a = 2^3 / 7 + 10 * 2.5
+//   a + 1 = 2^3 / 7 + 10 * 2.5 + 1
+// rewrite left `a + 1` → closed + 1, then Calculation / EqualIr finishes.
+pub struct ClosedNumericEqualSubstitutionBuiltinRewriteProof {
+    pub rewritten_left: Obj,
+    pub rewritten_right: Obj,
+    pub cited_equal_fact_ids: Vec<FactId>,
+    // Prove rewritten_left = rewritten_right with can_use_rewrite = false.
+    pub residual_equal: VerifyFactResult,
 }
 
 // Congruence substitution: known `a = b` rewrites F[a] to F[b] under supported
