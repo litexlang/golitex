@@ -883,11 +883,7 @@ fn store_equality_indexes_closed_numeric_equal() {
     use crate::new_pipeline::rational_expression::is_closed_numeric_expr;
 
     let mut runtime = runtime_with_file_env();
-    assert!(!exec_one(&mut runtime, "have a R").is_failed());
-    assert!(
-        !exec_one(&mut runtime, "trust a = 2^3 / 7 + 10 * 2.5").is_failed(),
-        "trust closed numeric equality"
-    );
+    assert!(!exec_one(&mut runtime, "have a R = 10").is_failed());
 
     let props = &runtime.top_exec_env().special_object_properties;
     let mut closed_hits = 0;
@@ -904,11 +900,11 @@ fn store_equality_indexes_closed_numeric_equal() {
     }
     assert_eq!(
         closed_hits, 1,
-        "exactly one ClosedNumericEqual for a = closed"
+        "exactly one ClosedNumericEqual for have a R = 10"
     );
 
     let mut runtime = runtime_with_file_env();
-    assert!(!exec_one(&mut runtime, "trust 1 + 1 = 2").is_failed());
+    assert!(!exec_one(&mut runtime, "1 + 1 = 2").is_failed());
     let props = &runtime.top_exec_env().special_object_properties;
     let closed_hits = props
         .values()
@@ -921,21 +917,105 @@ fn store_equality_indexes_closed_numeric_equal() {
     );
 }
 
-
-
-
-
+#[test]
+fn closed_numeric_equal_rewrite_proves_subterm_goal() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have a R = 10").is_failed());
+    assert!(!exec_one(&mut runtime, "have b R = 20").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "a + b = 30").is_failed(),
+        "multi-subterm ClosedNumericEqual rewrite then calculation"
+    );
+}
 
 
 #[test]
-fn known_rewrite_debug_same_by_def() {
+fn known_rewrite_reflexivity_registers_and_proves() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(
+        &mut runtime,
+        "prop same(x set, y set):\n    x = y"
+    )
+    .is_failed());
+    assert!(
+        !exec_one(
+            &mut runtime,
+            "by reflexive_prop:\n    ? forall x set:\n        $same(x, x)"
+        )
+        .is_failed(),
+        "by reflexive_prop must register"
+    );
+    assert!(!exec_one(&mut runtime, "have a set").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "$same(a, a)").is_failed(),
+        "reflexive goal must succeed after registration"
+    );
+}
+
+#[test]
+fn known_rewrite_reflexivity_search_on_abstract_prop() {
+    use crate::new_pipeline::exec_env::exec_env::PropRewriteProperty;
+
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "abstract_prop P(x, y)").is_failed());
+    let cite = runtime.atomic_name_for_file_root_symbol("P".to_string());
+    runtime
+        .top_exec_env_mut()
+        .prop_rewrite_properties
+        .insert(cite, vec![PropRewriteProperty::Reflexive]);
+    assert!(!exec_one(&mut runtime, "have a set").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "$P(a, a)").is_failed(),
+        "KnownRewrite Reflexivity must prove $P(a, a) for abstract prop"
+    );
+    assert!(!exec_one(&mut runtime, "have b set").is_failed());
+    assert!(
+        exec_one(&mut runtime, "$P(a, b)").is_failed(),
+        "reflexivity must not prove $P(a, b)"
+    );
+}
+
+#[test]
+fn known_rewrite_symmetry_proves_swapped_args() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(
+        &mut runtime,
+        "prop same(x set, y set):\n    x = y"
+    )
+    .is_failed());
+    assert!(
+        !exec_one(
+            &mut runtime,
+            "by symmetric_prop:\n    ? forall x, y set:\n        $same(x, y)\n        =>:\n            $same(y, x)"
+        )
+        .is_failed(),
+        "by symmetric_prop must register"
+    );
+    assert!(!exec_one(&mut runtime, "have a set, b set").is_failed());
+    assert!(!exec_one(&mut runtime, "trust $same(a, b)").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "$same(b, a)").is_failed(),
+        "symmetry must prove swapped args"
+    );
+}
+
+#[test]
+fn known_rewrite_unregistered_reflexive_soft_fails_on_abstract() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "abstract_prop P(x, y)").is_failed());
+    assert!(!exec_one(&mut runtime, "have a set").is_failed());
+    assert!(
+        exec_one(&mut runtime, "$P(a, a)").is_failed(),
+        "without registration, abstract reflexive goal must soft-fail"
+    );
+}
+
+#[test]
+fn ambient_by_definition_expands_user_prop() {
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "prop above_zero(x R):\n    x > 0").is_failed());
-    let inn = exec_one(&mut runtime, "1 $in R");
-    eprintln!("1 $in R failed={}", inn.is_failed());
-    let gt = exec_one(&mut runtime, "1 > 0");
-    eprintln!("1 > 0 failed={}", gt.is_failed());
-    let g = exec_one(&mut runtime, "$above_zero(1)");
-    eprintln!("$above_zero(1) failed={}", g.is_failed());
-    assert!(false, "diag");
+    assert!(
+        !exec_one(&mut runtime, "$above_zero(1)").is_failed(),
+        "ByDefinition must expand file-root WithExportFileId props"
+    );
 }

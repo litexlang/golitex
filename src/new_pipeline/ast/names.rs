@@ -89,6 +89,15 @@ impl AtomicName {
     pub fn plain(name: PlainName) -> Self {
         AtomicName::Plain { name }
     }
+
+    // Unqualified local spelling shared by Plain and file-root qualified forms.
+    pub fn local_name(&self) -> &str {
+        match self {
+            AtomicName::Plain { name } => name.as_str(),
+            AtomicName::WithExportFileId { name, .. } => name.as_str(),
+            AtomicName::WithModAndExportFileId { name, .. } => name.as_str(),
+        }
+    }
 }
 
 impl fmt::Display for AtomicName {

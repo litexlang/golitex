@@ -4,10 +4,12 @@ use super::store_fact_and_infer_result::{
     StoreExistFactResult, StoreFactAndInferResult, StoreNotForallFactResult, StoreOrFactResult,
 };
 use crate::new_pipeline::ast::fact::{
-    exist_fact_id, AndFact, AtomicFact, ChainFact, EqualFact, ExistFact, Fact, NotForallFact, OrFact,
+    exist_fact_id, AndFact, AtomicFact, ChainFact, EqualFact, ExistFact, Fact, NormalAtomicFact,
+    NotForallFact, OrFact,
 };
 use crate::new_pipeline::ast::line_file::LineFile;
-use crate::new_pipeline::ast::names::AtomicName;
+use crate::new_pipeline::ast::names::{AtomicName, BoundName};
+use crate::new_pipeline::ast::param::TypedParameterList;
 use crate::new_pipeline::exec_env::exec_env::{ExecEnv, PropRewriteProperty, SpecialObjProperty};
 use crate::new_pipeline::ast::fact::atomic_fact_has_positive_polarity;
 use crate::new_pipeline::parse::keywords::{
@@ -161,6 +163,18 @@ impl Runtime {
     }
 
     pub fn store_atomic_fact(&mut self, atomic_fact: &AtomicFact) -> RuntimeResult<Vec<FactId>> {
+        let fact_ids = self.store_atomic_fact_without_definition_expand(atomic_fact)?;
+        if let AtomicFact::NormalAtomicFact(normal) = atomic_fact {
+            self.store_prop_definition_iff_consequences(normal)?;
+        }
+        Ok(fact_ids)
+    }
+
+    // Index the atomic only (no prop-definition unfolding).
+    fn store_atomic_fact_without_definition_expand(
+        &mut self,
+        atomic_fact: &AtomicFact,
+    ) -> RuntimeResult<Vec<FactId>> {
         match atomic_fact {
             AtomicFact::EqualFact(equal_fact) => {
                 let fact_id = equal_fact.fact_id;
@@ -184,6 +198,48 @@ impl Runtime {
                 Ok(vec![fact_id])
             }
         }
+    }
+
+    // Knowing `$P(args)` also stores the prop's defining iff facts (one layer).
+    // Example: `prop same(x set, y set): x = y` and store `$same(a, b)` → also store `a = b`.
+    fn store_prop_definition_iff_consequences(
+        &mut self,
+        normal: &NormalAtomicFact,
+    ) -> RuntimeResult<()> {
+        let name = normal.predicate.local_name();
+        if self.def_abstract_prop_visible_in_stack(name).is_some() {
+            return Ok(());
+        }
+        let Some(definition) = self.def_prop_visible_in_stack(name) else {
+            return Ok(());
+        };
+        if definition.iff_facts.is_empty() {
+            return Ok(());
+        }
+        let definition = definition.clone();
+        let flat = flatten_def_prop_params(&definition.typed_parameters);
+        if flat.len() != normal.body.len() {
+            return Ok(());
+        }
+        let mut subst = std::collections::HashMap::new();
+        for (param, arg) in flat.iter().zip(normal.body.iter()) {
+            subst.insert(param.id, arg.clone());
+        }
+        for iff_fact in &definition.iff_facts {
+            let Ok(instantiated) = self.inst_fact(iff_fact, &subst) else {
+                continue;
+            };
+            match instantiated {
+                Fact::AtomicFact(atomic) => {
+                    // Index only — avoid cyclic re-expansion through nested NormalAtomic.
+                    self.store_atomic_fact_without_definition_expand(&atomic)?;
+                }
+                other => {
+                    let _ = self.store_fact_and_infer(&other)?;
+                }
+            }
+        }
+        Ok(())
     }
 
     pub(crate) fn chain_adjacent_atomics(
@@ -468,4 +524,14 @@ fn maybe_store_closed_numeric_equal(env: &mut ExecEnv, equal_fact: &EqualFact) {
         }
         _ => {}
     }
+}
+
+fn flatten_def_prop_params(list: &TypedParameterList) -> Vec<BoundName> {
+    let mut out = Vec::new();
+    for group in &list.groups {
+        for param in &group.params {
+            out.push(param.clone());
+        }
+    }
+    out
 }

@@ -50,6 +50,13 @@ impl Runtime {
                     ),
                 ))
             }
+            Stmt::Definition(DefinitionStmt::HaveObjEqualStmt(have_stmt)) => {
+                Ok(ExecStmtResult::Definition(
+                    ExecDefinitionStmtResult::HaveObjEqual(
+                        self.exec_have_obj_equal_stmt(have_stmt)?,
+                    ),
+                ))
+            }
             Stmt::Definition(DefinitionStmt::DefPropStmt(def_prop)) => {
                 Ok(ExecStmtResult::Definition(ExecDefinitionStmtResult::DefProp(
                     self.exec_def_prop_stmt(def_prop)?,
@@ -75,7 +82,7 @@ impl Runtime {
                 Ok(ExecStmtResult::By(exec_by_symmetric_prop_stmt(self, stmt)?))
             }
             _ => Err(RuntimeError::Unsupported(
-                "new_pipeline exec_stmt: only Fact, let, have-obj-in-nonempty, prop, abstract_prop, witness, trust, by reflexive_prop, and by symmetric_prop are wired for the tracer"
+                "new_pipeline exec_stmt: only Fact, let, have-obj-in-nonempty, have-obj-equal, prop, abstract_prop, witness, trust, by reflexive_prop, and by symmetric_prop are wired for the tracer"
                     .to_string(),
             )),
         }

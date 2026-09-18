@@ -12,6 +12,7 @@ use crate::new_pipeline::execute::execute_def_prop_stmt::ExecDefPropStmtResult;
 use crate::new_pipeline::execute::execute_fact_stmt::{
     ExecFactStmtResult, VerifyFactResult, VerifyObjWellDefinedResult,
 };
+use crate::new_pipeline::execute::execute_have_obj_equal_stmt::ExecHaveObjEqualStmtResult;
 use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::ExecHaveObjInNonemptySetStmtResult;
 use crate::new_pipeline::execute::execute_let_stmt::ExecLetObjStmtResult;
 use crate::new_pipeline::execute::execute_unsafe_stmt::ExecUnsafeStmtResult;
@@ -64,6 +65,7 @@ pub enum ExecStmtResult {
 pub enum ExecDefinitionStmtResult {
     LetObj(ExecLetObjStmtResult),
     HaveObjInNonemptySet(ExecHaveObjInNonemptySetStmtResult),
+    HaveObjEqual(ExecHaveObjEqualStmtResult),
     DefProp(ExecDefPropStmtResult),
     DefAbstractProp(ExecDefAbstractPropStmtSuccessResult),
 }
@@ -85,6 +87,7 @@ impl ExecDefinitionStmtResult {
         match self {
             Self::LetObj(r) => r.is_failed(),
             Self::HaveObjInNonemptySet(r) => r.is_failed(),
+            Self::HaveObjEqual(r) => r.is_failed(),
             Self::DefProp(r) => r.is_failed(),
             Self::DefAbstractProp(_) => false,
         }
