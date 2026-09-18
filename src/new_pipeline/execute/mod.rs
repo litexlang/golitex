@@ -5,6 +5,7 @@ pub mod execute_by_stmt;
 pub mod execute_def_abstract_prop_stmt;
 pub mod execute_def_prop_stmt;
 pub mod execute_fact_stmt;
+mod execute_have_obj_equal_stmt;
 mod execute_have_obj_in_nonempty_set_stmt;
 mod execute_let_stmt;
 pub mod execute_unsafe_stmt;
@@ -22,6 +23,9 @@ pub use execute_def_prop_stmt::{
     ExecDefPropStmtFailed, ExecDefPropStmtResult, ExecDefPropStmtSuccessResult,
 };
 pub use execute_fact_stmt::{ExecFactStmtResult, ExecFactStmtSuccessResult, VerifyState};
+pub use execute_have_obj_equal_stmt::{
+    ExecHaveObjEqualStmtFailed, ExecHaveObjEqualStmtResult, ExecHaveObjEqualStmtSuccessResult,
+};
 pub use execute_have_obj_in_nonempty_set_stmt::{
     ExecHaveObjInNonemptySetStmtFailed, ExecHaveObjInNonemptySetStmtResult,
     ExecHaveObjInNonemptySetStmtSuccessResult, StoreHaveObjAndInferResult,

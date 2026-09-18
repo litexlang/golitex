@@ -24,13 +24,7 @@ pub fn exec_by_symmetric_prop_stmt(
             ));
         }
     };
-    let Some(name) = plain_prop_name(&prop) else {
-        return Ok(ExecByStmtResult::PropRegistration(
-            ExecByPropRegistrationStmtResult::Failed(ExecByPropRegistrationStmtFailed::Shape(
-                "by symmetric_prop: prop name must be a plain atomic name".to_string(),
-            )),
-        ));
-    };
+    let name = plain_prop_name(&prop);
     let Some(definition) = runtime.def_prop_visible_in_stack(name) else {
         return Ok(ExecByStmtResult::PropRegistration(
             ExecByPropRegistrationStmtResult::Failed(

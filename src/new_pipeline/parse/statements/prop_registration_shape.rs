@@ -158,9 +158,6 @@ fn bound_param_ids_in_order(body: &[Obj], syntax: &str) -> Result<Vec<Identifier
     Ok(ids)
 }
 
-pub fn plain_prop_name(prop: &AtomicName) -> Option<&str> {
-    match prop {
-        AtomicName::Plain { name } => Some(name.as_str()),
-        _ => None,
-    }
+pub fn plain_prop_name(prop: &AtomicName) -> &str {
+    prop.local_name()
 }

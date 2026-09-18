@@ -1,10 +1,5 @@
-# ClosedNumericEqual: store closed numeric RHS, then rewrite subterms.
+# ClosedNumericEqual via have-equal (no trust).
 
-have a R
-trust a = 2^3 / 7 + 10 * 2.5
-
-# Top-level: a rewrites to the closed form.
-a = 2^3 / 7 + 10 * 2.5
-
-# Subterm: a inside a + 1 rewrites, then calculation finishes.
-a + 1 = 2^3 / 7 + 10 * 2.5 + 1
+have a R = 10
+have b R = 20
+a + b = 30

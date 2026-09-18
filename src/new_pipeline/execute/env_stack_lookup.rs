@@ -12,7 +12,7 @@ impl Runtime {
             .any(|env| env.definitions.identifiers.contains_key(name))
     }
 
-    pub(in crate::new_pipeline::execute) fn def_prop_visible_in_stack(
+    pub(crate) fn def_prop_visible_in_stack(
         &self,
         name: &str,
     ) -> Option<&DefPropStmt> {
@@ -24,7 +24,7 @@ impl Runtime {
         None
     }
 
-    pub(in crate::new_pipeline::execute) fn def_abstract_prop_visible_in_stack(
+    pub(crate) fn def_abstract_prop_visible_in_stack(
         &self,
         name: &str,
     ) -> Option<&DefAbstractPropStmt> {
