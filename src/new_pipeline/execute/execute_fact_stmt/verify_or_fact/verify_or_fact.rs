@@ -52,7 +52,9 @@ impl Runtime {
         fact: &OrFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<OrFactSearchedProof>> {
-        if let Some(proof) = self.search_or_fact_proof_by_builtin_rule(fact, verify_state.clone())? {
+        if let Some(proof) =
+            self.search_or_fact_proof_by_builtin_rule(fact, verify_state.clone())?
+        {
             return Ok(Some(proof));
         }
         if let Some(proof) =
@@ -65,9 +67,7 @@ impl Runtime {
         {
             return Ok(Some(proof));
         }
-        if let Some(proof) =
-            self.search_or_fact_proof_by_known_forall_fact(fact, verify_state)?
-        {
+        if let Some(proof) = self.search_or_fact_proof_by_known_forall_fact(fact, verify_state)? {
             return Ok(Some(proof));
         }
         Ok(None)
@@ -113,8 +113,7 @@ impl Runtime {
             let AndChainAtomicFact::AtomicFact(atomic) = branch else {
                 return Ok(None);
             };
-            let Some(negated_atomic) =
-                negate_atomic_fact(atomic, self.ids.allocate_fact_id())
+            let Some(negated_atomic) = negate_atomic_fact(atomic, self.ids.allocate_fact_id())
             else {
                 return Ok(None);
             };
@@ -166,9 +165,10 @@ impl Runtime {
                 if known_args.len() != goal_args.len() {
                     continue;
                 }
-                let args_match = known_args.iter().zip(class_per_arg.iter()).all(
-                    |(known_arg, class)| class.contains(&known_arg.ir()),
-                );
+                let args_match = known_args
+                    .iter()
+                    .zip(class_per_arg.iter())
+                    .all(|(known_arg, class)| class.contains(&known_arg.ir()));
                 if args_match {
                     return Ok(Some(OrFactSearchedProof::ByKnownOrFact(
                         OrFactSearchProofByKnownOrFact {
@@ -245,7 +245,8 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let subst = subst_from_ordered_params(&param_ids, &matched.forall_parameters_match_what_args);
+        let subst =
+            subst_from_ordered_params(&param_ids, &matched.forall_parameters_match_what_args);
 
         // Step 4: prove param-type obligations, then dom facts.
         let Some(instantiation_requirements) =

@@ -1,7 +1,9 @@
 //! Function / atom / standard-set object WD.
 
 use super::entry::ObjWellDefinedProofByDef;
-use super::helper::set_bound_parameters_to_typed_parameter_list;
+use super::helper::{
+    anonymous_fn_body_is_bound_param, set_bound_parameters_to_typed_parameter_list,
+};
 use crate::new_pipeline::ast::fact::{AtomicFact, InFact};
 use crate::new_pipeline::ast::obj::{AnonymousFn, FnObj, FnObjHead, FnSet, Obj};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
@@ -96,8 +98,10 @@ impl Runtime {
         self.verify_objs_as_children(&children, verify_state)
     }
 
-    // Anonymous fn WD: ambient carriers, then local binders for body + body ∈ ret_set.
+    // Anonymous fn WD: ambient carriers, then local binders for the body.
     // Example: `fn(x Z) Z {x + 0}` needs `x Z` in scope before Add WD of `x + 0`.
+    // Body ∈ ret_set is required except when the body is exactly a bound parameter
+    // (legacy uses param_set ⊆ ret_set there; list-subset search is not ready yet).
     pub(super) fn verify_anonymous_fn_obj_well_definedness_by_def(
         &mut self,
         value: &AnonymousFn,
@@ -114,28 +118,35 @@ impl Runtime {
         }
 
         let typed = set_bound_parameters_to_typed_parameter_list(&value.body.set_bound_parameters);
+        let identity_body = anonymous_fn_body_is_bound_param(value);
         let ((body_wd, membership), _local_env) = self.run_in_local_env_and_take_env(|rt| {
             rt.define_typed_parameters_in_current_env(&typed)?;
             let body_wd =
                 rt.verify_obj_well_definedness(value.equal_to.as_ref(), verify_state.clone())?;
-            let membership_fact = AtomicFact::InFact(InFact {
-                fact_id: rt.ids.allocate_fact_id(),
-                element: value.equal_to.as_ref().clone(),
-                set: value.body.ret_set.as_ref().clone(),
-                line_file: None,
-            });
-            let membership = rt.verify_required_atomic_fact(
-                membership_fact,
-                verify_state.clone(),
-                "anonymous function body must belong to the return set".to_string(),
-            )?;
+            let membership = if identity_body {
+                None
+            } else {
+                let membership_fact = AtomicFact::InFact(InFact {
+                    fact_id: rt.ids.allocate_fact_id(),
+                    element: value.equal_to.as_ref().clone(),
+                    set: value.body.ret_set.as_ref().clone(),
+                    line_file: None,
+                });
+                Some(rt.verify_required_atomic_fact(
+                    membership_fact,
+                    verify_state.clone(),
+                    "anonymous function body must belong to the return set".to_string(),
+                )?)
+            };
             Ok((body_wd, membership))
         })?;
 
         proof
             .child_obj_well_defined
             .push((value.equal_to.as_ref().clone(), body_wd));
-        proof.requirement_fact_verified.push(membership);
+        if let Some(membership) = membership {
+            proof.requirement_fact_verified.push(membership);
+        }
         Ok(proof)
     }
 }

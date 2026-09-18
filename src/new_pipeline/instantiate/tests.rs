@@ -79,7 +79,7 @@ fn set_builder_ir_uses_bound_name_id_display_uses_letter() {
 }
 
 #[test]
-fn parse_have_allocates_plain_id_and_resolves_refs() {
+fn parse_have_then_free_ref_qualifies_at_file_root() {
     let mut runtime = test_runtime();
     let tokens = Tokenizer::new()
         .tokenize("have x R", runtime.current_file.clone())
@@ -87,7 +87,7 @@ fn parse_have_allocates_plain_id_and_resolves_refs() {
     let stmts = runtime.parse(&tokens).expect("parse");
     assert_eq!(stmts.len(), 1);
 
-    // After have, a following fact mentioning x should resolve the same id.
+    // File-root free refs become WithExportFileId (export slot 0 for bare -e).
     let tokens2 = Tokenizer::new()
         .tokenize("x = x", runtime.current_file.clone())
         .expect("tokenize");
@@ -99,14 +99,99 @@ fn parse_have_allocates_plain_id_and_resolves_refs() {
     let Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(eq))) = &stmts2[0] else {
         panic!("expected EqualFact stmt");
     };
-    let Obj::Identifier(IdentifierObj::Plain { id: left_id, name: left_name }) = &eq.left else {
-        panic!("left");
+    let Obj::Identifier(IdentifierObj::WithExportFileId {
+        export_file_id: left_fid,
+        name: left_name,
+    }) = &eq.left
+    else {
+        panic!("left should be file-root qualified, got {:?}", eq.left);
     };
-    let Obj::Identifier(IdentifierObj::Plain { id: right_id, name: right_name }) = &eq.right else {
-        panic!("right");
+    let Obj::Identifier(IdentifierObj::WithExportFileId {
+        export_file_id: right_fid,
+        name: right_name,
+    }) = &eq.right
+    else {
+        panic!("right should be file-root qualified, got {:?}", eq.right);
     };
     assert_eq!(left_name, "x");
     assert_eq!(right_name, "x");
-    assert_eq!(left_id, right_id);
-    assert_eq!(eq.left.ir().as_str(), format!("#{}#x", left_id.value()));
+    assert_eq!(*left_fid, 0);
+    assert_eq!(*right_fid, 0);
+    assert_eq!(eq.left.ir().as_str(), "f0::x");
+}
+
+#[test]
+fn sketch_local_have_free_ref_stays_plain() {
+    let mut runtime = test_runtime();
+    let code = "\
+sketch:
+    have x R
+    x = x
+";
+    let tokens = Tokenizer::new()
+        .tokenize(code, runtime.current_file.clone())
+        .expect("tokenize");
+    let stmts = runtime.parse(&tokens).expect("parse");
+    assert_eq!(stmts.len(), 1);
+
+    use crate::new_pipeline::ast::fact::Fact;
+    use crate::new_pipeline::ast::stmt::{ProofBlockStmt, Stmt};
+    let Stmt::ProofBlock(ProofBlockStmt::SketchStmt(sketch)) = &stmts[0] else {
+        panic!("expected sketch");
+    };
+    assert_eq!(sketch.proof.len(), 2);
+    let Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(eq))) = &sketch.proof[1] else {
+        panic!("expected x = x inside sketch");
+    };
+    let Obj::Identifier(IdentifierObj::Plain {
+        name: left_name, ..
+    }) = &eq.left
+    else {
+        panic!("sketch-local x must stay Plain, got {:?}", eq.left);
+    };
+    assert_eq!(left_name, "x");
+}
+
+#[test]
+fn imported_mod_context_qualifies_with_mod_id() {
+    let mut runtime = test_runtime();
+    // Pretend we are parsing inside imports[0] as current module.
+    let mod_id = runtime
+        .global_module_manager
+        .record_import(
+            "modB".to_string(),
+            std::path::PathBuf::from("/tmp/modB"),
+            crate::new_pipeline::module_manager::LitexConfig::new(),
+        )
+        .expect("record_import");
+    runtime
+        .global_module_manager
+        .set_current_mod_id(Some(mod_id))
+        .expect("set_current_mod_id");
+    runtime.set_current_export_file_id(0);
+
+    let tokens = Tokenizer::new()
+        .tokenize("have x R", runtime.current_file.clone())
+        .expect("tokenize");
+    runtime.parse(&tokens).expect("parse have");
+    let tokens2 = Tokenizer::new()
+        .tokenize("x = 1", runtime.current_file.clone())
+        .expect("tokenize");
+    let stmts2 = runtime.parse(&tokens2).expect("parse fact");
+    use crate::new_pipeline::ast::fact::Fact;
+    use crate::new_pipeline::ast::stmt::Stmt;
+    let Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(eq))) = &stmts2[0] else {
+        panic!("expected EqualFact");
+    };
+    let Obj::Identifier(IdentifierObj::WithModAndExportFileId {
+        global_mod_id,
+        export_file_id,
+        name,
+    }) = &eq.left
+    else {
+        panic!("expected WithModAndExportFileId, got {:?}", eq.left);
+    };
+    assert_eq!(*global_mod_id, mod_id);
+    assert_eq!(*export_file_id, 0);
+    assert_eq!(name, "x");
 }

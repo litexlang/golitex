@@ -4,8 +4,8 @@ use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_
     EqualitySearchProofByBuiltinRewrite, EqualitySearchProofByBuiltinRule,
     EqualitySearchProofByBuiltinStrategy, EqualitySearchProofByKnownRewrite,
 };
-use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::{
-    AtomicFactWellDefinedProof, FailToVerifyAtomicFactWellDefinedResult,
+use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::well_defined_result::{
+    EqualFactWellDefinedProof, FailToVerifyEqualFactWellDefinedResult,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::runtime::runtime_ids::{FactId, IdentifierId};
@@ -89,15 +89,15 @@ pub enum VerifyEqualityResult {
 
 pub struct VerifyEqualitySuccess {
     pub fact: EqualFact,
-    pub well_defined_proof: AtomicFactWellDefinedProof,
+    pub well_defined_proof: EqualFactWellDefinedProof,
     pub searched_proof: EqualFactSearchedProof,
 }
 
 pub enum VerifyEqualityFailed {
-    FailToVerifyWellDefined(FailToVerifyAtomicFactWellDefinedResult),
+    FailToVerifyWellDefined(FailToVerifyEqualFactWellDefinedResult),
     FailToSearchProof {
         fact: EqualFact,
-        well_defined_proof: AtomicFactWellDefinedProof,
+        well_defined_proof: EqualFactWellDefinedProof,
     },
 }
 
@@ -128,7 +128,7 @@ pub struct EqualFactSearchedProofByKnownEquality {
 }
 
 pub fn equal_fact_result_from_wd_fail(
-    reason: FailToVerifyAtomicFactWellDefinedResult,
+    reason: FailToVerifyEqualFactWellDefinedResult,
 ) -> VerifyFactResult {
     VerifyFactResult::Equality(Box::new(VerifyEqualityResult::Failed(
         VerifyEqualityFailed::FailToVerifyWellDefined(reason),
@@ -137,7 +137,7 @@ pub fn equal_fact_result_from_wd_fail(
 
 pub fn equal_fact_result_from_search_fail(
     fact: &EqualFact,
-    well_defined_proof: AtomicFactWellDefinedProof,
+    well_defined_proof: EqualFactWellDefinedProof,
 ) -> VerifyFactResult {
     VerifyFactResult::Equality(Box::new(VerifyEqualityResult::Failed(
         VerifyEqualityFailed::FailToSearchProof {
@@ -149,7 +149,7 @@ pub fn equal_fact_result_from_search_fail(
 
 pub fn equal_fact_result_from_success(
     fact: &EqualFact,
-    well_defined_proof: AtomicFactWellDefinedProof,
+    well_defined_proof: EqualFactWellDefinedProof,
     searched_proof: EqualFactSearchedProof,
 ) -> VerifyFactResult {
     VerifyFactResult::Equality(Box::new(VerifyEqualityResult::Success(

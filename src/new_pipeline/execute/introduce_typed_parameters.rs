@@ -15,7 +15,7 @@
 use crate::new_pipeline::ast::fact::{
     AtomicFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
 };
-use crate::new_pipeline::ast::obj::{IdentifierObj, Obj};
+use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::exec_env::DefinedIdentifierInfo;
 use crate::new_pipeline::execute::execute_fact_stmt::{
@@ -101,7 +101,8 @@ impl Runtime {
                         identifier: identifier.name.clone(),
                     },
                 );
-                let element = Obj::Identifier(IdentifierObj::from_bound_name(identifier));
+                // Env key is plain; type-fact mention qualifies at file root.
+                let element = Obj::Identifier(self.identifier_obj_for_stored_mention(identifier));
                 let type_fact = match &group.param_type {
                     ParamType::Obj(param_set) => Fact::AtomicFact(AtomicFact::InFact(InFact {
                         fact_id: self.ids.allocate_fact_id(),

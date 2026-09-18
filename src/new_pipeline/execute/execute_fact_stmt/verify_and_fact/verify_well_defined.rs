@@ -16,7 +16,7 @@ impl Runtime {
     ) -> RuntimeResult<VerifyAndFactWellDefinedResult> {
         let mut components = Vec::with_capacity(fact.facts.len());
         for (failed_index, atomic) in fact.facts.iter().enumerate() {
-            match self.verify_atomic_fact_well_definedness(atomic, verify_state.clone())? {
+            match self.verify_atomic_component_well_definedness(atomic, verify_state.clone())? {
                 VerifyAtomicFactWellDefinedResult::Success(proof) => {
                     components.push(proof);
                 }

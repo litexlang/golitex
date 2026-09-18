@@ -18,7 +18,7 @@ impl Runtime {
         let adjacent_atomics = self.chain_adjacent_atomics(fact)?;
         let mut adjacent = Vec::with_capacity(adjacent_atomics.len());
         for (failed_index, atomic) in adjacent_atomics.iter().enumerate() {
-            match self.verify_atomic_fact_well_definedness(atomic, verify_state.clone())? {
+            match self.verify_atomic_component_well_definedness(atomic, verify_state.clone())? {
                 VerifyAtomicFactWellDefinedResult::Success(proof) => {
                     adjacent.push(proof);
                 }

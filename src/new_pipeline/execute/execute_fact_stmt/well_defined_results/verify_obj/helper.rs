@@ -1,5 +1,5 @@
 use super::entry::ObjWellDefinedProofByDef;
-use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::ast::obj::{AnonymousFn, Obj};
 use crate::new_pipeline::ast::param::{
     ParamType, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
 };
@@ -75,4 +75,21 @@ pub(super) fn set_bound_parameters_to_typed_parameter_list(
             })
             .collect(),
     }
+}
+
+// True when `equal_to` is exactly one of the anonymous fn's bound parameters.
+pub(super) fn anonymous_fn_body_is_bound_param(value: &AnonymousFn) -> bool {
+    let Obj::Identifier(crate::new_pipeline::ast::obj::IdentifierObj::Plain { id, .. }) =
+        value.equal_to.as_ref()
+    else {
+        return false;
+    };
+    for group in &value.body.set_bound_parameters.groups {
+        for param in &group.params {
+            if param.id == *id {
+                return true;
+            }
+        }
+    }
+    false
 }

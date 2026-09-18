@@ -22,7 +22,8 @@ pub use verify_atomic_except_equality::{
     VerifyAtomicExceptEqualityFactSuccess,
 };
 pub use verify_equality::{
-    EqualFactSearchedProof, EqualFactSearchedProofByKnownEquality, VerifyEqualityFailed,
+    EqualFactSearchedProof, EqualFactSearchedProofByKnownEquality, EqualFactWellDefinedProof,
+    FailToVerifyEqualFactWellDefinedResult, VerifyEqualFactWellDefinedResult, VerifyEqualityFailed,
     VerifyEqualityResult, VerifyEqualitySuccess,
 };
 pub use well_defined_result::{

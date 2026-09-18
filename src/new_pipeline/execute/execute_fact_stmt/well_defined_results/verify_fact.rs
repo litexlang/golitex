@@ -1,5 +1,6 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_and_fact::VerifyAndFactWellDefinedResult;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::VerifyEqualFactWellDefinedResult;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::VerifyAtomicFactWellDefinedResult;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_chain_fact::VerifyChainFactWellDefinedResult;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_fact::VerifyExistFactWellDefinedResult;
@@ -44,21 +45,38 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactWellDefinedResult> {
-        Ok(
-            match self.verify_atomic_fact_well_definedness(fact, verify_state)? {
-                VerifyAtomicFactWellDefinedResult::Success(proof) => {
-                    VerifyFactWellDefinedResult::Success(FactWellDefinedProof::AtomicFact(proof))
-                }
-                VerifyAtomicFactWellDefinedResult::Failed(reason) => {
-                    VerifyFactWellDefinedResult::Failed(match fact {
-                        AtomicFact::EqualFact(_) => {
-                            FailToVerifyFactWellDefinedResult::Equality(reason)
+        match fact {
+            AtomicFact::EqualFact(equal_fact) => {
+                Ok(
+                    match self.verify_equal_fact_well_definedness(equal_fact, verify_state)? {
+                        VerifyEqualFactWellDefinedResult::Success(proof) => {
+                            VerifyFactWellDefinedResult::Success(FactWellDefinedProof::Equality(
+                                proof,
+                            ))
                         }
-                        _ => FailToVerifyFactWellDefinedResult::AtomicExceptEquality(reason),
-                    })
-                }
-            },
-        )
+                        VerifyEqualFactWellDefinedResult::Failed(reason) => {
+                            VerifyFactWellDefinedResult::Failed(
+                                FailToVerifyFactWellDefinedResult::Equality(reason),
+                            )
+                        }
+                    },
+                )
+            }
+            _ => Ok(
+                match self.verify_atomic_fact_well_definedness(fact, verify_state)? {
+                    VerifyAtomicFactWellDefinedResult::Success(proof) => {
+                        VerifyFactWellDefinedResult::Success(
+                            FactWellDefinedProof::AtomicExceptEquality(proof),
+                        )
+                    }
+                    VerifyAtomicFactWellDefinedResult::Failed(reason) => {
+                        VerifyFactWellDefinedResult::Failed(
+                            FailToVerifyFactWellDefinedResult::AtomicExceptEquality(reason),
+                        )
+                    }
+                },
+            ),
+        }
     }
 
     pub(crate) fn wrap_and_fact_wd(

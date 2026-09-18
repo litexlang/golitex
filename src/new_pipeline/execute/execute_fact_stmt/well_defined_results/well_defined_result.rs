@@ -1,7 +1,10 @@
-use crate::new_pipeline::execute::execute_fact_stmt::verify_and_fact::FailToVerifyAndFactWellDefinedResult;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::{
+    EqualFactWellDefinedProof, FailToVerifyEqualFactWellDefinedResult,
+};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::{
     AtomicFactWellDefinedProof, FailToVerifyAtomicFactWellDefinedResult,
 };
+use crate::new_pipeline::execute::execute_fact_stmt::verify_and_fact::FailToVerifyAndFactWellDefinedResult;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_chain_fact::FailToVerifyChainFactWellDefinedResult;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_fact::{
     ExistFactWellDefinedProof, FailToVerifyExistFactWellDefinedResult,
@@ -20,7 +23,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::verify_or_fact::{
 };
 
 pub enum FailToVerifyFactWellDefinedResult {
-    Equality(FailToVerifyAtomicFactWellDefinedResult),
+    Equality(FailToVerifyEqualFactWellDefinedResult),
     AtomicExceptEquality(FailToVerifyAtomicFactWellDefinedResult),
     AndFact(FailToVerifyAndFactWellDefinedResult),
     ChainFact(FailToVerifyChainFactWellDefinedResult),
@@ -33,7 +36,8 @@ pub enum FailToVerifyFactWellDefinedResult {
 
 // Success-only evidence that a Fact is well-defined.
 pub enum FactWellDefinedProof {
-    AtomicFact(AtomicFactWellDefinedProof),
+    Equality(EqualFactWellDefinedProof),
+    AtomicExceptEquality(AtomicFactWellDefinedProof),
     AndFact {
         components: Vec<AtomicFactWellDefinedProof>,
     },

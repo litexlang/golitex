@@ -692,7 +692,8 @@ impl Runtime {
             return self.elaborate_flat_import(&first, next);
         }
         if tb.peek() != Some(MOD_SIGN) {
-            return Ok(AtomicName::Plain { name: first });
+            // File-root defined props qualify; builtins / unknowns stay Plain.
+            return Ok(self.atomic_name_for_plain_prop_ref(first));
         }
         let mut parts = vec![first];
         while tb.peek() == Some(MOD_SIGN) {
