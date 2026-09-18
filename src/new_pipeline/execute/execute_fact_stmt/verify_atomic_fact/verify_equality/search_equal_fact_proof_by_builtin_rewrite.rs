@@ -12,6 +12,13 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualitySearchProofByBuiltinRewrite>> {
         if let Some(proof) =
+            self.search_equal_fact_by_closed_numeric_equal_substitution(fact, verify_state)?
+        {
+            return Ok(Some(
+                EqualitySearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(proof),
+            ));
+        }
+        if let Some(proof) =
             self.search_equal_fact_by_congruence_substitution(fact, verify_state)?
         {
             return Ok(Some(

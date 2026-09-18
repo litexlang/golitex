@@ -6,6 +6,7 @@
 //! Shared ParamType-indexed shells live here so `have` / `witness` / later
 //! args:type checks reuse one shape.
 
+use crate::new_pipeline::execute::execute_by_stmt::ExecByStmtResult;
 use crate::new_pipeline::execute::execute_def_abstract_prop_stmt::ExecDefAbstractPropStmtSuccessResult;
 use crate::new_pipeline::execute::execute_def_prop_stmt::ExecDefPropStmtResult;
 use crate::new_pipeline::execute::execute_fact_stmt::{
@@ -57,6 +58,7 @@ pub enum ExecStmtResult {
     Definition(ExecDefinitionStmtResult),
     Witness(ExecWitnessStmtResult),
     Unsafe(ExecUnsafeStmtResult),
+    By(ExecByStmtResult),
 }
 
 pub enum ExecDefinitionStmtResult {
@@ -73,6 +75,7 @@ impl ExecStmtResult {
             Self::Definition(r) => r.is_failed(),
             Self::Witness(r) => r.is_failed(),
             Self::Unsafe(r) => r.is_failed(),
+            Self::By(r) => r.is_failed(),
         }
     }
 }

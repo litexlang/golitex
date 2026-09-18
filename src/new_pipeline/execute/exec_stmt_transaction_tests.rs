@@ -20,7 +20,9 @@ fn exec_one(runtime: &mut Runtime, code: &str) -> ExecStmtResult {
         .expect("tokenize");
     let stmts = runtime.parse(&tokens).expect("parse");
     assert_eq!(stmts.len(), 1, "expected exactly one stmt in:\n{code}");
-    runtime.exec_stmt(&stmts[0]).expect("exec_stmt RuntimeResult")
+    runtime
+        .exec_stmt(&stmts[0])
+        .expect("exec_stmt RuntimeResult")
 }
 
 fn number_one() -> Obj {
@@ -29,11 +31,10 @@ fn number_one() -> Obj {
     })
 }
 
-
 #[test]
 fn rational_sum_of_two_fractions_with_product_denominator() {
-    use crate::new_pipeline::execute::ExecStmtResult;
     use crate::new_pipeline::execute::execute_fact_stmt::ExecFactStmtResult;
+    use crate::new_pipeline::execute::ExecStmtResult;
 
     let code = "a / b + c / d = (a * d + b * c) / (b * d)";
 
@@ -44,7 +45,10 @@ fn rational_sum_of_two_fractions_with_product_denominator() {
     assert!(!exec_one(&mut runtime, "trust d != 0").is_failed());
     match exec_one(&mut runtime, code) {
         ExecStmtResult::Fact(ExecFactStmtResult::Failed(r)) if r.is_wd_failed() => {}
-        other => panic!("expected WD fail without b*d != 0, got failed={}", other.is_failed()),
+        other => panic!(
+            "expected WD fail without b*d != 0, got failed={}",
+            other.is_failed()
+        ),
     }
 
     // With explicit product nonzero, equality should succeed.
@@ -58,7 +62,6 @@ fn rational_sum_of_two_fractions_with_product_denominator() {
         "expected Success when b*d != 0 is trusted"
     );
 }
-
 
 #[test]
 fn closed_numeric_order_comparisons() {
@@ -77,7 +80,10 @@ fn closed_numeric_order_comparisons() {
         "not 1 >= 3",
         "1 != 0",
     ] {
-        assert!(!exec_one(&mut runtime, code).is_failed(), "expected Success for {code}");
+        assert!(
+            !exec_one(&mut runtime, code).is_failed(),
+            "expected Success for {code}"
+        );
     }
     assert!(exec_one(&mut runtime, "2 < 1").is_failed());
 }
@@ -88,9 +94,16 @@ fn calculation_lib_closed_decimal_smoke() {
     use crate::new_pipeline::rational_expression::{
         evaluate_obj_to_normalized_decimal_number, two_objs_equal_by_closed_decimal_calculation,
     };
-    let one = Obj::Number(Number { normalized_value: "1".into() });
-    let two = Obj::Number(Number { normalized_value: "2".into() });
-    let add = Obj::Add(Add { left: Box::new(one.clone()), right: Box::new(one.clone()) });
+    let one = Obj::Number(Number {
+        normalized_value: "1".into(),
+    });
+    let two = Obj::Number(Number {
+        normalized_value: "2".into(),
+    });
+    let add = Obj::Add(Add {
+        left: Box::new(one.clone()),
+        right: Box::new(one.clone()),
+    });
     let n = evaluate_obj_to_normalized_decimal_number(&add).expect("eval 1+1");
     assert_eq!(n.normalized_value, "2");
     assert!(two_objs_equal_by_closed_decimal_calculation(&add, &two));
@@ -238,10 +251,7 @@ fn second_wd_of_same_obj_hits_known_memory_after_merge() {
 #[test]
 fn forall_reflexive_equality_succeeds_and_stores() {
     let mut runtime = runtime_with_file_env();
-    let outcome = exec_one(
-        &mut runtime,
-        "forall x R:\n    x = x",
-    );
+    let outcome = exec_one(&mut runtime, "forall x R:\n    x = x");
     assert!(
         !outcome.is_failed(),
         "expected Success for forall x R: x = x"
@@ -345,11 +355,7 @@ fn not_forall_proves_via_known_counterexample_exist() {
 fn not_forall_trust_stores_derived_exist() {
     let mut runtime = runtime_with_file_env();
     assert!(
-        !exec_one(
-            &mut runtime,
-            "trust:\n    not forall x R:\n        x > 0",
-        )
-        .is_failed(),
+        !exec_one(&mut runtime, "trust:\n    not forall x R:\n        x > 0",).is_failed(),
         "trust not forall must store"
     );
     let facts = &runtime.top_exec_env().facts;
@@ -376,7 +382,9 @@ fn fn_eq_is_removed_parse_error() {
     let tokens = Tokenizer::new()
         .tokenize("$fn_eq(0, 1)", runtime.current_file.clone())
         .expect("tokenize");
-    let err = runtime.parse(&tokens).expect_err("`$fn_eq` must be a parse error");
+    let err = runtime
+        .parse(&tokens)
+        .expect_err("`$fn_eq` must be a parse error");
     let msg = format!("{err:?}");
     assert!(
         msg.contains("`$fn_eq` is removed"),
@@ -392,11 +400,7 @@ fn not_fn_eq_in_parses_trusts_and_proves_known() {
         "declare carriers"
     );
     assert!(
-        !exec_one(
-            &mut runtime,
-            "trust not $fn_eq_in(f, g, R)",
-        )
-        .is_failed(),
+        !exec_one(&mut runtime, "trust not $fn_eq_in(f, g, R)",).is_failed(),
         "trust not $fn_eq_in must store"
     );
     assert!(
@@ -404,11 +408,7 @@ fn not_fn_eq_in_parses_trusts_and_proves_known() {
         "known not $fn_eq_in must prove"
     );
     assert!(
-        !exec_one(
-            &mut runtime,
-            "trust $fn_eq_in(h, k, R)",
-        )
-        .is_failed(),
+        !exec_one(&mut runtime, "trust $fn_eq_in(h, k, R)",).is_failed(),
         "trust $fn_eq_in still works"
     );
     assert!(
@@ -421,10 +421,7 @@ fn not_fn_eq_in_parses_trusts_and_proves_known() {
 fn forall_unprovable_then_does_not_store() {
     let mut runtime = runtime_with_file_env();
     let before = runtime.top_exec_env().facts.facts_by_id.len();
-    let outcome = exec_one(
-        &mut runtime,
-        "forall x R:\n    x = 1",
-    );
+    let outcome = exec_one(&mut runtime, "forall x R:\n    x = 1");
     assert!(
         outcome.is_failed(),
         "expected soft fail for forall with unprovable then"
@@ -465,7 +462,10 @@ fn stored_forall_indexes_equal_then_in_known_forall_conclusions() {
 fn or_fact_selected_branch_proves_and_stores_known_or() {
     let mut runtime = runtime_with_file_env();
     let outcome = exec_one(&mut runtime, "1 = 1 or 1 = 2");
-    assert!(!outcome.is_failed(), "expected Success for or via selected branch");
+    assert!(
+        !outcome.is_failed(),
+        "expected Success for or via selected branch"
+    );
     let facts = &runtime.top_exec_env().facts;
     assert!(
         facts
@@ -505,7 +505,10 @@ fn or_fact_unprovable_is_soft_fail_and_does_not_store() {
     let before = runtime.top_exec_env().facts.facts_by_id.len();
     let known_or_before = runtime.top_exec_env().facts.known_or.by_key.len();
     let outcome = exec_one(&mut runtime, "1 = 2 or 2 = 3");
-    assert!(outcome.is_failed(), "expected soft fail when no disjunct proves");
+    assert!(
+        outcome.is_failed(),
+        "expected soft fail when no disjunct proves"
+    );
     assert_eq!(
         runtime.top_exec_env().facts.facts_by_id.len(),
         before,
@@ -675,7 +678,10 @@ fn and_fact_proves_from_known_components_and_projects_store() {
     assert!(!exec_one(&mut runtime, "trust 2 < 3").is_failed());
 
     let outcome = exec_one(&mut runtime, "1 < 2 and 2 < 3");
-    assert!(!outcome.is_failed(), "expected Success for and from known components");
+    assert!(
+        !outcome.is_failed(),
+        "expected Success for and from known components"
+    );
     assert!(
         runtime
             .top_exec_env()
@@ -727,7 +733,6 @@ fn chain_fact_stores_equality_closure() {
         "expected BuiltinEquality closure a = c"
     );
 }
-
 
 #[test]
 fn witness_exist_succeeds_without_local_proof_body() {
@@ -870,4 +875,67 @@ fn forall_exist_then_indexes_by_exist_and_instantiates() {
         !exec_one(&mut runtime, "exist x R st {x = 2}").is_failed(),
         "goal exist must instantiate from forall then-exist"
     );
+}
+
+#[test]
+fn store_equality_indexes_closed_numeric_equal() {
+    use crate::new_pipeline::exec_env::SpecialObjProperty;
+    use crate::new_pipeline::rational_expression::is_closed_numeric_expr;
+
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have a R").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "trust a = 2^3 / 7 + 10 * 2.5").is_failed(),
+        "trust closed numeric equality"
+    );
+
+    let props = &runtime.top_exec_env().special_object_properties;
+    let mut closed_hits = 0;
+    for values in props.values() {
+        for value in values {
+            if let SpecialObjProperty::ClosedNumericEqual((expr, _)) = value {
+                assert!(
+                    is_closed_numeric_expr(expr),
+                    "stored representative must be closed"
+                );
+                closed_hits += 1;
+            }
+        }
+    }
+    assert_eq!(
+        closed_hits, 1,
+        "exactly one ClosedNumericEqual for a = closed"
+    );
+
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "trust 1 + 1 = 2").is_failed());
+    let props = &runtime.top_exec_env().special_object_properties;
+    let closed_hits = props
+        .values()
+        .flat_map(|values| values.iter())
+        .filter(|value| matches!(value, SpecialObjProperty::ClosedNumericEqual(_)))
+        .count();
+    assert_eq!(
+        closed_hits, 0,
+        "both-closed equality must not index ClosedNumericEqual"
+    );
+}
+
+
+
+
+
+
+
+#[test]
+fn known_rewrite_debug_same_by_def() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "prop above_zero(x R):\n    x > 0").is_failed());
+    let inn = exec_one(&mut runtime, "1 $in R");
+    eprintln!("1 $in R failed={}", inn.is_failed());
+    let gt = exec_one(&mut runtime, "1 > 0");
+    eprintln!("1 > 0 failed={}", gt.is_failed());
+    let g = exec_one(&mut runtime, "$above_zero(1)");
+    eprintln!("$above_zero(1) failed={}", g.is_failed());
+    assert!(false, "diag");
 }

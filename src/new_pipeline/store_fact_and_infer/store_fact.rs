@@ -4,15 +4,16 @@ use super::store_fact_and_infer_result::{
     StoreExistFactResult, StoreFactAndInferResult, StoreNotForallFactResult, StoreOrFactResult,
 };
 use crate::new_pipeline::ast::fact::{
-    exist_fact_id, AndFact, AtomicFact, ChainFact, ExistFact, Fact, NotForallFact, OrFact,
+    exist_fact_id, AndFact, AtomicFact, ChainFact, EqualFact, ExistFact, Fact, NotForallFact, OrFact,
 };
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::names::AtomicName;
-use crate::new_pipeline::exec_env::exec_env::PropRewriteProperty;
+use crate::new_pipeline::exec_env::exec_env::{ExecEnv, PropRewriteProperty, SpecialObjProperty};
 use crate::new_pipeline::ast::fact::atomic_fact_has_positive_polarity;
 use crate::new_pipeline::parse::keywords::{
     EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL,
 };
+use crate::new_pipeline::rational_expression::is_closed_numeric_expr;
 use crate::new_pipeline::runtime::{FactId, RealOrVirtualPath, Runtime, RuntimeResult};
 
 impl Runtime {
@@ -166,6 +167,7 @@ impl Runtime {
                 let env = self.top_exec_env_mut();
                 env.facts.known_equality.store(equal_fact);
                 env.facts.record_atomic_fact(fact_id, atomic_fact.clone());
+                maybe_store_closed_numeric_equal(env, equal_fact);
                 Ok(vec![fact_id])
             }
             _ => {
@@ -437,4 +439,33 @@ fn chain_order_edges(prop_names: &[AtomicName]) -> Option<Vec<OrderEdge>> {
         edges.push(edge);
     }
     Some(edges)
+}
+
+// When exactly one side of `a = e` is a closed numeric expr, index the other
+// side under ClosedNumericEqual. Both-closed or neither-closed: skip (v1).
+// Example: `a = 2^3/7 + 10 * 2.5` → key `a` stores the closed RHS + fact_id.
+fn maybe_store_closed_numeric_equal(env: &mut ExecEnv, equal_fact: &EqualFact) {
+    let left_closed = is_closed_numeric_expr(&equal_fact.left);
+    let right_closed = is_closed_numeric_expr(&equal_fact.right);
+    match (left_closed, right_closed) {
+        (true, false) => {
+            env.special_object_properties
+                .entry(equal_fact.right.ir())
+                .or_default()
+                .push(SpecialObjProperty::ClosedNumericEqual((
+                    equal_fact.left.clone(),
+                    equal_fact.fact_id,
+                )));
+        }
+        (false, true) => {
+            env.special_object_properties
+                .entry(equal_fact.left.ir())
+                .or_default()
+                .push(SpecialObjProperty::ClosedNumericEqual((
+                    equal_fact.right.clone(),
+                    equal_fact.fact_id,
+                )));
+        }
+        _ => {}
+    }
 }

@@ -1,14 +1,18 @@
 use super::super::keywords::{
     BY, CASE, CASES, COLON, COMMA, CONTRA, DEF, FINITE_SET_INDUC, IMPOSSIBLE, INDUC, LEFT_PAREN,
-    QUESTION_GOAL, RELEASE, RIGHT_ARROW, RIGHT_PAREN, STRONG_INDUC, THM,
+    QUESTION_GOAL, REFLEXIVE_PROP, RELEASE, RIGHT_ARROW, RIGHT_PAREN, STRONG_INDUC, SYMMETRIC_PROP,
+    THM,
 };
 use super::super::object::{is_simple_name, parse_obj};
 use crate::new_pipeline::ast::fact::{AndChainAtomicFact, AtomicFact};
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::stmt::{
-    ByCasesStmt, ByContraStmt, ByDefStmt, ByStmt, ByThmStmt, ReleaseThmStmt, Stmt, TheoremCall,
-    TheoremCallArguments,
+    ByCasesStmt, ByContraStmt, ByDefStmt, ByReflexivePropStmt, ByStmt, BySymmetricPropStmt,
+    ByThmStmt, ReleaseThmStmt, Stmt, TheoremCall, TheoremCallArguments,
+};
+use crate::new_pipeline::parse::prop_registration_shape::{
+    reflexive_prop_name_from_forall, symmetric_prop_registration_from_forall,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -25,11 +29,65 @@ impl Runtime {
                 "by induc / strong_induc / finite_set_induc: not wired (binder reuse)",
             )),
             Some(THM) => self.parse_by_thm_or_release(&mut tb, block),
+            Some(REFLEXIVE_PROP) => self.parse_by_reflexive_prop_stmt(&mut tb, block),
+            Some(SYMMETRIC_PROP) => self.parse_by_symmetric_prop_stmt(&mut tb, block),
             Some(other) => Err(tb.parse_error(format!(
-                "by: `{other}` is not wired yet (supported: cases, contra, def, thm; induc deferred)"
+                "by: `{other}` is not wired yet (supported: cases, contra, def, thm, reflexive_prop, symmetric_prop; induc deferred)"
             ))),
             None => Err(tb.parse_error("by: expected a proof directive after `by`")),
         }
+    }
+
+    fn parse_by_reflexive_prop_stmt(
+        &mut self,
+        tb: &mut TokenBlock,
+        block: &TokenBlock,
+    ) -> RuntimeResult<Stmt> {
+        tb.expect(REFLEXIVE_PROP)?;
+        tb.expect_colon_end_of_header()?;
+        if tb.body.is_empty() {
+            return Err(tb.parse_error("by reflexive_prop: expects a body"));
+        }
+        let mut goal = tb.body[0].clone();
+        let forall_fact = self.parse_goal_forall_fact(&mut goal, "by reflexive_prop")?;
+        if let Err(msg) = reflexive_prop_name_from_forall(&forall_fact) {
+            return Err(tb.parse_error(msg));
+        }
+        let proof_blocks = &tb.body[1..];
+        let proof = self.with_forall_params_occupied(&forall_fact.typed_parameters, tb, |this| {
+            this.parse_body_stmts(proof_blocks)
+        })?;
+        Ok(Stmt::By(ByStmt::ByReflexivePropStmt(ByReflexivePropStmt {
+            forall_fact,
+            proof,
+            line_file: LineFile::new(block.line, block.source_path.clone()),
+        })))
+    }
+
+    fn parse_by_symmetric_prop_stmt(
+        &mut self,
+        tb: &mut TokenBlock,
+        block: &TokenBlock,
+    ) -> RuntimeResult<Stmt> {
+        tb.expect(SYMMETRIC_PROP)?;
+        tb.expect_colon_end_of_header()?;
+        if tb.body.is_empty() {
+            return Err(tb.parse_error("by symmetric_prop: expects a body"));
+        }
+        let mut goal = tb.body[0].clone();
+        let forall_fact = self.parse_goal_forall_fact(&mut goal, "by symmetric_prop")?;
+        if let Err(msg) = symmetric_prop_registration_from_forall(&forall_fact) {
+            return Err(tb.parse_error(msg));
+        }
+        let proof_blocks = &tb.body[1..];
+        let proof = self.with_forall_params_occupied(&forall_fact.typed_parameters, tb, |this| {
+            this.parse_body_stmts(proof_blocks)
+        })?;
+        Ok(Stmt::By(ByStmt::BySymmetricPropStmt(BySymmetricPropStmt {
+            forall_fact,
+            proof,
+            line_file: LineFile::new(block.line, block.source_path.clone()),
+        })))
     }
 
     fn parse_by_cases_stmt(

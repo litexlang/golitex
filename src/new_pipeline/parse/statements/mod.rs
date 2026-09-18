@@ -8,6 +8,7 @@ mod have;
 mod helper;
 mod obtain;
 mod prop;
+pub mod prop_registration_shape;
 mod thm_axiom;
 mod trust;
 mod try_sketch;

@@ -10,12 +10,13 @@ This package **calls** those APIs and runs files.
 
 | File | Owns |
 |------|------|
-| `load_config.rs` | Find `litex.config`, read, `parse_litex_config` (incl. `std_root`) |
+| `load_config.rs` | Find `litex.config`, read, `parse_litex_config` (incl. `std_root`); `load_config_or_empty` for `-f` |
 | `run_export_file.rs` | Run one export `.lit`; set mod/export ids; record env |
 | `run_import_module.rs` | One imported package: recurse imports (config order), then exports |
 | `run_project.rs` | Root / `-r`: root imports then root exports; optional `-session` |
+| `run_file_with_config.rs` | `-f`: directory-local config mount + target file |
 
-## Run order
+## Run order (`-r`)
 
 ```text
 run_project(root):
@@ -39,11 +40,26 @@ run_import_module(dir, alias):
   mark done(dir)
 ```
 
+## Run order (`-f`)
+
+```text
+run_file_with_config(file):
+  dir = parent(file)                         # no ancestor search
+  cfg = load_config_or_empty(dir)            # missing → empty / isolated
+  if cfg empty: run file alone; return
+  run all imports
+  if file in cfg.exports:
+      run exports up to and including file   # later exports skipped
+  else:
+      run all exports, then file as extra    # not an entry contract
+  mount soft fail → FailToImport
+  target soft fail → normal RunFile failure
+```
+
 `[import std]` is path sugar only (`std_root/Name`); same `run_import_module` path.
-`-session` keeps the last root export env open and enters REPL.
+`-session` keeps the last target file env open and enters REPL.
 
 ## Non-goals
 
 - Topological sort file (config order + recursion is enough)
 - Extra `ensure_imports_ready` pass after recursion
-- Project-aware `-f` (still bare unless added later)

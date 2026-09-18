@@ -75,8 +75,9 @@ impl Runtime {
 }
 
 // Replace every subtree whose IR equals `from_ir` with `to` (top-down).
-// Owned by CongruenceSubstitution only — not a global resolve_obj.
-fn replace_obj_matching_ir(obj: &Obj, from_ir: &ObjIR, to: &Obj) -> Obj {
+// Shared by CongruenceSubstitution and ClosedNumericEqualSubstitution —
+// not a global resolve_obj.
+pub(super) fn replace_obj_matching_ir(obj: &Obj, from_ir: &ObjIR, to: &Obj) -> Obj {
     if &obj.ir() == from_ir {
         return to.clone();
     }
