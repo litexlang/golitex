@@ -880,7 +880,7 @@ fn forall_exist_then_indexes_by_exist_and_instantiates() {
 #[test]
 fn store_equality_indexes_closed_numeric_equal() {
     use crate::new_pipeline::exec_env::SpecialObjProperty;
-    use crate::new_pipeline::rational_expression::is_closed_numeric_expr;
+    use crate::new_pipeline::rational_expression::ClosedNumericExpr;
 
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "have a R = 10").is_failed());
@@ -891,8 +891,8 @@ fn store_equality_indexes_closed_numeric_equal() {
         for value in values {
             if let SpecialObjProperty::ClosedNumericEqual((expr, _)) = value {
                 assert!(
-                    is_closed_numeric_expr(expr),
-                    "stored representative must be closed"
+                    ClosedNumericExpr::try_from_obj(expr).is_some(),
+                    "stored representative must classify as ClosedNumericExpr"
                 );
                 closed_hits += 1;
             }

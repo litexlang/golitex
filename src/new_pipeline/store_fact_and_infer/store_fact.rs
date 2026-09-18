@@ -15,7 +15,7 @@ use crate::new_pipeline::ast::fact::atomic_fact_has_positive_polarity;
 use crate::new_pipeline::parse::keywords::{
     EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL,
 };
-use crate::new_pipeline::rational_expression::is_closed_numeric_expr;
+use crate::new_pipeline::rational_expression::ClosedNumericExpr;
 use crate::new_pipeline::runtime::{FactId, RealOrVirtualPath, Runtime, RuntimeResult};
 
 impl Runtime {
@@ -498,28 +498,29 @@ fn chain_order_edges(prop_names: &[AtomicName]) -> Option<Vec<OrderEdge>> {
     Some(edges)
 }
 
-// When exactly one side of `a = e` is a closed numeric expr, index the other
-// side under ClosedNumericEqual. Both-closed or neither-closed: skip (v1).
-// Example: `a = 2^3/7 + 10 * 2.5` → key `a` stores the closed RHS + fact_id.
+// When exactly one side of `a = e` classifies as [`ClosedNumericExpr`], index
+// the other side under ClosedNumericEqual (store the classified view as Obj).
+// Both-closed or neither-closed: skip (v1).
+// Example: `a = 2^3/7 + 10 * 2.5` → key `a` stores closed RHS + fact_id.
 fn maybe_store_closed_numeric_equal(env: &mut ExecEnv, equal_fact: &EqualFact) {
-    let left_closed = is_closed_numeric_expr(&equal_fact.left);
-    let right_closed = is_closed_numeric_expr(&equal_fact.right);
-    match (left_closed, right_closed) {
-        (true, false) => {
+    let left = ClosedNumericExpr::try_from_obj(&equal_fact.left);
+    let right = ClosedNumericExpr::try_from_obj(&equal_fact.right);
+    match (left, right) {
+        (Some(closed), None) => {
             env.special_object_properties
                 .entry(equal_fact.right.ir())
                 .or_default()
                 .push(SpecialObjProperty::ClosedNumericEqual((
-                    equal_fact.left.clone(),
+                    closed.to_obj(),
                     equal_fact.fact_id,
                 )));
         }
-        (false, true) => {
+        (None, Some(closed)) => {
             env.special_object_properties
                 .entry(equal_fact.left.ir())
                 .or_default()
                 .push(SpecialObjProperty::ClosedNumericEqual((
-                    equal_fact.right.clone(),
+                    closed.to_obj(),
                     equal_fact.fact_id,
                 )));
         }

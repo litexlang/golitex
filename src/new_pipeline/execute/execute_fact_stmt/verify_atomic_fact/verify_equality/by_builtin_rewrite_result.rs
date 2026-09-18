@@ -4,10 +4,16 @@ use crate::new_pipeline::runtime::runtime_ids::FactId;
 
 // Builtin rewrite for EqualFact.
 //
-// Only ClosedNumericEqualSubstitution is allowed: rewrite toward a stored
-// closed numeric representative. Do not add a general known-equality
-// subterm substitution here (that is not congruence and is forbidden).
-// True constructor-wise / pointwise equality belongs elsewhere, not in rewrite.
+// Why this stage exists:
+//   Calculation (and similar builtins) only fire on closed numeric trees.
+//   After `have a R = 10`, the goal may still mention `a` (not closed). This
+//   rewrite substitutes indexed ClosedNumericEqual representatives into the
+//   goal, then proves the residual with rewrite off — an explicit certificate
+//   instead of legacy opaque resolve_obj.
+//
+// Allowed here: only ClosedNumericEqualSubstitution (see `ClosedNumericExpr`
+// for what "closed numeric" means). No general known-equality subterm rewrite.
+// Constructor-wise / pointwise equality belongs elsewhere, not in rewrite.
 //
 // Dispatcher: `search_equal_fact_proof_by_builtin_rewrite`.
 pub enum EqualitySearchProofByBuiltinRewrite {
@@ -15,12 +21,10 @@ pub enum EqualitySearchProofByBuiltinRewrite {
 }
 
 // Closed-numeric index substitution: a non-closed object indexed under
-// ClosedNumericEqual is rewritten to its closed numeric representative
+// ClosedNumericEqual is rewritten to its `ClosedNumericExpr` representative
 // (including as a subterm), then the residual equality is proved without rewrite.
-// Mathematical property: congruence toward a stored closed numeric form —
-// if `a = closed` is known and indexed, then F[a] = F[closed] for supported F.
-// All matching ClosedNumericEqual entries that appear in the goal are applied
-// together so multi-variable goals work in one rewrite step.
+// Mathematical property: if `a = closed` is known and indexed, then F[a] = F[closed]
+// for supported F. All matching entries in the goal are applied in one step.
 //
 // Example:
 //   have a R = 10

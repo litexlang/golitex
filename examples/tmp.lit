@@ -1,5 +1,8 @@
-# ClosedNumericEqual: have-equal definitions, no trust.
-
-have a R = 10
-have b R = 20
-a + b = 30
+# MatchingOneArgByOne: multi-layer FnObj with distinct heads
+have a R = 1
+have b R = a
+have x R = 2
+have y R = x
+have f R
+have g R = f
+f(x)(a) = g(y)(b)

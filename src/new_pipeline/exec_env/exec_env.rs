@@ -111,6 +111,7 @@ pub enum SpecialObjProperty {
     FiniteSeqOwner((FiniteSeqSet, FactId)),
     SetBuilderEquality((SetBuilder, FactId)),
     /// Non-closed object equals a closed numeric expr; cite `FactId`.
+    /// Payload is the closed side as `Obj` (must classify as `ClosedNumericExpr`).
     /// Example: from `a = 2^3/7 + 10 * 2.5`, key `a` stores the closed RHS.
     ClosedNumericEqual((Obj, FactId)),
     InFunctionSet((FnSet, FactId)),

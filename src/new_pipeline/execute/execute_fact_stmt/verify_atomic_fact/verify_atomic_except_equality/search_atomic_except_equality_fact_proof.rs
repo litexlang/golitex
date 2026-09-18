@@ -7,8 +7,11 @@ impl Runtime {
     // Stage order: builtin rule → known atomic → builtin strategy →
     // by definition → known forall → (if allowed) builtin rewrite →
     // known rewrite.
-    // Rewrite stages replace legacy opaque resolve_obj with explicit
-    // certificates (OrderDual, registered reflexivity/symmetry, …).
+    //
+    // Why rewrite (after known/search slots): bridge goals that still mention
+    // identifiers to closed-numeric / dual forms so specialized builtins can
+    // fire, with an explicit certificate (not opaque resolve_obj). See
+    // AtomicExceptEqualityFactSearchProofByBuiltinRewrite.
     // Ok(None) means no proof found; that is not a runtime error.
     pub fn search_atomic_except_equality_fact_proof(
         &mut self,

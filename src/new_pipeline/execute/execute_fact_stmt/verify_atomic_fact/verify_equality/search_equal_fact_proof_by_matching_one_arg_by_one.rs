@@ -5,15 +5,26 @@ use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 // Pointwise / constructor-wise equality: same outer shape ⇒ prove each
-// corresponding child equal. Inspired by legacy same_shape_and_corresponding_args_match.
+// corresponding child equal. Port of legacy same_shape_and_corresponding_args_match
+// over new_pipeline Obj (except binder shapes: SetBuilder / AnonymousFn / FnSet).
 //
 // Mathematical property: congruence of constructors —
-// if a = a' and b = b', then a + b = a' + b' (and likewise for other shapes).
+// if corresponding children are equal, the constructed terms are equal.
 //
-// Example:
-//   trust a = b
+// Examples:
+//   have a R = 1
+//   have b R = a
 //   a + 1 = b + 1
-// peels Add → prove a = b (known equality) and 1 = 1 (EqualIr).
+// peels Add → prove a = b and 1 = 1.
+//
+//   have a R = 1
+//   have b R = a
+//   have f set
+//   f(a) = f(b)
+// peels FnObj → prove a = b and f = f (prefix).
+//
+//   f(x)(a) = h(y)(b) with f = h, x = y, a = b
+// peels shared application layers then prefixes in one certificate.
 //
 // Child searches use can_use_forall_fact = false, can_use_rewrite = false
 // (this stage itself is not a rewrite). Nested peel is still available because

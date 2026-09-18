@@ -1,0 +1,10 @@
+# Node: equal.ByMatchingOneArgByOne (multi-layer FnObj peel)
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/equal/by_matching_one_arg_by_one/fn_app_multi.lit
+
+have a R = 1
+have b R = a
+have x R = 2
+have y R = x
+have f R
+have g R = f
+f(x)(a) = g(y)(b)
