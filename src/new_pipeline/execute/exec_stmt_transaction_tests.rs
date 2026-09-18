@@ -790,6 +790,26 @@ fn known_atomic_except_equality_by_equality_class() {
 }
 
 #[test]
+fn atomic_order_dual_rewrite_proves_greater_from_known_less() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have a R, b R").is_failed());
+    assert!(!exec_one(&mut runtime, "trust a < b").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "b > a").is_failed(),
+        "OrderDual must prove b > a from known a < b"
+    );
+}
+
+#[test]
+fn atomic_order_dual_does_not_steal_closed_numeric_greater() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(&mut runtime, "2 > 1").is_failed(),
+        "closed 2 > 1 must succeed (builtin ClosedNumericComparison, not dual)"
+    );
+}
+
+#[test]
 fn exist_fact_known_exist_proves_and_stores() {
     let mut runtime = runtime_with_file_env();
     assert!(
