@@ -1,3 +1,4 @@
+mod helper;
 mod result;
 mod verify_exist_fact;
 mod verify_well_defined;

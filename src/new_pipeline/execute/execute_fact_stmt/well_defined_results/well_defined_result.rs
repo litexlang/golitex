@@ -3,12 +3,18 @@ use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::{
     AtomicFactWellDefinedProof, FailToVerifyAtomicFactWellDefinedResult,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_chain_fact::FailToVerifyChainFactWellDefinedResult;
-use crate::new_pipeline::execute::execute_fact_stmt::verify_forall_fact::FailToVerifyForallFactWellDefinedResult;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_fact::{
     ExistFactWellDefinedProof, FailToVerifyExistFactWellDefinedResult,
 };
-use crate::new_pipeline::execute::execute_fact_stmt::verify_forall_fact_with_iff::FailToVerifyForallFactWithIffWellDefinedResult;
-use crate::new_pipeline::execute::execute_fact_stmt::verify_not_forall_fact::FailToVerifyNotForallFactWellDefinedResult;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_forall_fact::{
+    FailToVerifyForallFactWellDefinedResult, ForallFactWellDefinedProof,
+};
+use crate::new_pipeline::execute::execute_fact_stmt::verify_forall_fact_with_iff::{
+    FailToVerifyForallFactWithIffWellDefinedResult, ForallFactWithIffWellDefinedProof,
+};
+use crate::new_pipeline::execute::execute_fact_stmt::verify_not_forall_fact::{
+    FailToVerifyNotForallFactWellDefinedResult, NotForallFactWellDefinedProof,
+};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_or_fact::{
     FailToVerifyOrFactWellDefinedResult, OrFactWellDefinedProof,
 };
@@ -36,8 +42,9 @@ pub enum FactWellDefinedProof {
     },
     OrFact(OrFactWellDefinedProof),
     ExistFact(ExistFactWellDefinedProof),
-    // Temporary: forall / not-forall WD pipelines are still draft-only.
-    CompositePending,
+    ForallFact(ForallFactWellDefinedProof),
+    ForallFactWithIff(ForallFactWithIffWellDefinedProof),
+    NotForall(NotForallFactWellDefinedProof),
 }
 
 // Soft miss vs success for fact WD. Proof never embeds Fail.

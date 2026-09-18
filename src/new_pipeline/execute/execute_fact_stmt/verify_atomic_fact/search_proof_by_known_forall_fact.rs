@@ -1,8 +1,19 @@
 //! Apply a stored forall's atomic then (or and-component leaf) to a goal atomic.
 //!
-//! Matching: shared `match_forall_conclusion_args` — bind bare forall params,
-//! otherwise strict equal (forall/rewrite off). Then
-//! `prove_forall_instantiation_requirements` (param types, then dom).
+//! Shared by equality and non-equality atomics. Non-equality entry is
+//! `search_atomic_except_equality_fact_proof_by_known_forall_fact`.
+//!
+//! Pipeline for one cite (soft miss → Ok(None)):
+//! 1. Load the forall and the atomic conclusion at `cite.location`
+//! 2. Require same prop name and polarity as the goal
+//! 3. `match_forall_conclusion_args` — bind bare params; non-param positions
+//!    subst-under-current-subst then strict equal (VerifyState all false)
+//! 4. `prove_forall_instantiation_requirements` — param-type facts, then dom
+//!
+//! Example (non-equality):
+//!   known `forall a R: a > 0 =>: a + 1 > 1`
+//!   goal  `3 + 1 > 1`
+//!   → match binds/equals args, prove `3 $in R` and `3 > 0`, done.
 
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact};
 use crate::new_pipeline::ast::fact::{
@@ -17,6 +28,8 @@ use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeResult};
 
 impl Runtime {
+    // Search known-forall atomic conclusions that can prove `goal`.
+    // Candidates come from equal_conclusions or by_atomic_prop; first success wins.
     pub fn search_atomic_fact_proof_by_known_forall_fact(
         &mut self,
         goal: &AtomicFact,
@@ -36,6 +49,8 @@ impl Runtime {
         Ok(None)
     }
 
+    // Collect cites from the execution-environment stack (inner env first).
+    // `=` goals read `equal_conclusions`; other atomics key by (prop, polarity).
     fn visible_forall_atomic_conclusion_candidates(
         &self,
         goal: &AtomicFact,
@@ -65,12 +80,14 @@ impl Runtime {
         out
     }
 
+    // Try one ForallConclusionCite against `goal`. Stages 1–4 in the file header.
     fn try_apply_forall_conclusion_cite(
         &mut self,
         goal: &AtomicFact,
         cite: &ForallConclusionCite,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<SearchProofByKnownForallFact>> {
+        // Stage 1: resolve forall + atomic conclusion at the cite location.
         let forall = match self.fact_by_id_in_stack(cite.fact_id) {
             Some(Fact::ForallFact(f)) => f.clone(),
             _ => return Ok(None),
@@ -78,7 +95,8 @@ impl Runtime {
         let Some(conclusion) = atomic_at_forall_location(&forall, &cite.location) else {
             return Ok(None);
         };
-        // Prop name and polarity must match before trying to instantiate.
+
+        // Stage 2: prop name and polarity must match before matching args.
         if conclusion.prop_name() != goal.prop_name()
             || atomic_fact_has_positive_polarity(&conclusion)
                 != atomic_fact_has_positive_polarity(goal)
@@ -86,19 +104,18 @@ impl Runtime {
             return Ok(None);
         }
 
-        // Step 1: list forall params in declaration order.
         let param_ids = forall.typed_parameters.ordered_param_ids();
         let conclusion_args = atomic_fact_args_ref(&conclusion);
         let goal_args = atomic_fact_args_ref(goal);
 
-        // Step 2–3: bind params / strict-equal non-params; every param must be bound.
+        // Stage 3: match conclusion args to goal args (shared helper).
         let Some(matched) =
             self.match_forall_conclusion_args(&conclusion_args, &goal_args, &param_ids)?
         else {
             return Ok(None);
         };
 
-        // Step 4: prove param-type obligations, then dom facts.
+        // Stage 4: param-type obligations, then dom facts (shared helper).
         let subst = subst_from_ordered_params(&param_ids, &matched.forall_parameters_match_what_args);
         let Some(instantiation_requirements) =
             self.prove_forall_instantiation_requirements(&forall, &subst, verify_state)?

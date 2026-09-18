@@ -110,7 +110,8 @@ impl Runtime {
                     return Ok(ForallLocalOutcome::FailWd(
                         FailToVerifyForallFactWellDefinedResult::DomFact {
                             failed_index,
-                            succeeded_dom_well_defined: assumed_dom_facts
+                            param_type_well_defined: introduced_params.param_type_well_defined,
+                            succeeded_dom: assumed_dom_facts
                                 .into_iter()
                                 .map(|a| a.well_defined)
                                 .collect(),

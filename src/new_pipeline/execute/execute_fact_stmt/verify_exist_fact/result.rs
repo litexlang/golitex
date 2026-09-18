@@ -1,4 +1,4 @@
-use crate::new_pipeline::ast::fact::ExistFact;
+use crate::new_pipeline::ast::fact::{ExistFact, Fact};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_fact::well_defined_result::{
     ExistFactWellDefinedProof, FailToVerifyExistFactWellDefinedResult,
@@ -90,8 +90,23 @@ pub enum ExistFactSearchedProof {
     ByKnownForallFact(SearchProofByKnownForallFact),
 }
 
-// Placeholder until numeric/set exist builtins are ported.
-pub struct ExistFactSearchProofByBuiltinRule {}
+// One exist-builtin rule ↔ one dedicated evidence struct.
+pub enum ExistFactSearchProofByBuiltinRule {
+    RealLineComparisonWitness(ExistBuiltinRealLineComparisonWitness),
+}
+
+// Existential witness on the real line for a comparison atom.
+// Mathematical property: for any known real `c`, there exist reals above,
+// below, equal to, and distinct from `c`; also there exist pairs `a, b R`
+// satisfying any of the six order/equality comparisons.
+//
+// Examples:
+// - `exist x R st {x > 100}` after proving `100 $in R`
+// - `exist a, b R st {a > b}` (no free operands)
+pub struct ExistBuiltinRealLineComparisonWitness {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
 
 pub struct ExistFactSearchProofByKnownExistFact {
     pub cite_fact_id: FactId,

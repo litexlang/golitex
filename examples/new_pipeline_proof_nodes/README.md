@@ -12,17 +12,19 @@ LITEX_NEW_PIPELINE=1 target/release/litex -f <this-file>
 Exit 0 is enough. No requirement to assert which `searched_proof` variant won.
 
 Stub / not-yet-wired nodes are **omitted** (no SKIP placeholders).
-Still open: KnownRewrite, ByDefinition search slot, atomic OrderDual rewrite, exist BuiltinRule.
+Still open (non-rewrite): empty atomic builtin-rule families (`NormalAtomic` / several `Not*` / `FnEqualIn`); more exist builtins.
+Deferred: KnownRewrite, atomic OrderDual rewrite.
+WD negatives (must fail): `examples/new_pipeline_wd_negative/`.
 
 ## Layout
 
 ```text
 or/           ByBuiltinRule (trichotomy ×3), SelectedBranch, KnownOr, KnownForall
-equal/        ByBuiltinRule, KnownEquality, BuiltinStrategy, BuiltinRewrite
-atomic/       ByBuiltinRule (order/in/set/set-builder/…), KnownAtomicFact
+equal/        ByBuiltinRule, KnownEquality, BuiltinStrategy (rational/extremum/mod), BuiltinRewrite
+atomic/       ByBuiltinRule, KnownAtomicFact, ByDefinition, BuiltinStrategy (PosAddPos)
 and/          per-component verify
 chain/        adjacent order / equality
-exist/        KnownExist, KnownForall
+exist/        ByBuiltinRule (real-line), KnownExist, KnownForall
 forall/       introduce → assume → then
 forall_iff/   both directions
 not_forall/   via derived counterexample exist

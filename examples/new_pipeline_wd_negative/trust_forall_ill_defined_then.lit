@@ -1,0 +1,4 @@
+# Expected: exit 1 (WD fail on then under trust)
+trust:
+    forall x R:
+        1 / 0 = x

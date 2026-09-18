@@ -1,15 +1,15 @@
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::{
     Abs, AnonymousFn, Cart, Ceil, Cos, Exp, Floor, FnObjHead, FnSet, Gcd, IdentifierObj, Intersect,
-    Lcm, ListSet, Ln, Max, Min, Number, Obj, Quot, SetBuilder, SetMinus, Sin, Sqrt, StandardSet,
-    Tan, Tuple, Union,
+    Lcm, ListSet, Ln, Max, Min, Number, Obj, ProductOfFiniteSet, Quot, SetBuilder, SetMinus, Sin,
+    Sqrt, StandardSet, Tan, Tuple, Union,
 };
 use crate::new_pipeline::ast::param::{ParamType, SetBoundParameterGroup, SetBoundParameterList};
 use crate::new_pipeline::parse::keywords::{
-    ABS, C, CART, CEIL, COLON, COMMA, COS, C_STAR, DOT, EXP, FLOOR, FN, GCD, INTERSECT, LCM,
-    LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LN, MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS, Q, QUOT,
-    Q_NEG, Q_POS, Q_STAR, R, RIGHT_BRACKET, RIGHT_CURLY, RIGHT_PAREN, R_NEG, R_POS, R_STAR,
-    SET_MINUS, SIN, SQRT, STRUCT_VIEW_PREFIX, TAN, TUPLE, UNION, Z, Z_NEG, Z_POS, Z_STAR,
+    ABS, C, CART, CEIL, COLON, COMMA, COS, C_STAR, DOT, EXP, FINITE_SET_PRODUCT, FLOOR, FN, GCD,
+    INTERSECT, LCM, LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LN, MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N,
+    N_POS, Q, QUOT, Q_NEG, Q_POS, Q_STAR, R, RIGHT_BRACKET, RIGHT_CURLY, RIGHT_PAREN, R_NEG, R_POS,
+    R_STAR, SET_MINUS, SIN, SQRT, STRUCT_VIEW_PREFIX, TAN, TUPLE, UNION, Z, Z_NEG, Z_POS, Z_STAR,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -367,6 +367,17 @@ fn try_parse_keyword_primary(
                 right: Box::new(right),
             })
         })?)),
+        FINITE_SET_PRODUCT => Ok(Some(parse_binary_keyword(
+            rt,
+            tb,
+            FINITE_SET_PRODUCT,
+            |set, func| {
+                Obj::ProductOfFiniteSet(ProductOfFiniteSet {
+                    set: Box::new(set),
+                    func: Box::new(func),
+                })
+            },
+        )?)),
         CART => {
             tb.advance()?;
             let args = parse_obj_list_paren(rt, tb)?;

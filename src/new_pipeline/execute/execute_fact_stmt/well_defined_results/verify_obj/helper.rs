@@ -1,5 +1,8 @@
 use super::entry::ObjWellDefinedProofByDef;
 use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::ast::param::{
+    ParamType, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
+};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
@@ -56,5 +59,20 @@ impl Runtime {
     ) -> ObjWellDefinedProofByDef {
         proof.requirement_fact_verified = requirement_fact_verified;
         proof
+    }
+}
+
+pub(super) fn set_bound_parameters_to_typed_parameter_list(
+    list: &SetBoundParameterList,
+) -> TypedParameterList {
+    TypedParameterList {
+        groups: list
+            .groups
+            .iter()
+            .map(|group| TypedParameterGroup {
+                params: group.params.clone(),
+                param_type: ParamType::Obj(group.param_type.as_ref().clone()),
+            })
+            .collect(),
     }
 }

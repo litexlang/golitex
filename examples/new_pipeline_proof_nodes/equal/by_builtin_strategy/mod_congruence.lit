@@ -1,0 +1,10 @@
+# Node: equal.ByBuiltinStrategy.ModCongruence
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/equal/by_builtin_strategy/mod_congruence.lit
+
+have a, b, c, d, m Z
+trust m != 0
+trust a % m = b % m
+trust c % m = d % m
+trust (a + c) $in Z
+trust (b + d) $in Z
+(a + c) % m = (b + d) % m

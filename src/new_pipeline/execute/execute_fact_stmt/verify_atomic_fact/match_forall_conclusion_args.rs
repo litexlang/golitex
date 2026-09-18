@@ -1,4 +1,8 @@
 //! Match forall conclusion args to a goal's args: bind params, else strict equal.
+//!
+//! Non-param positions: instantiate the pattern under the subst built so far,
+//! then prove instantiated = goal with VerifyState all flags false
+//! (`can_use_forall_fact`, `can_use_rewrite`, `store_well_defined_fact`).
 
 use crate::new_pipeline::ast::fact::EqualFact;
 use crate::new_pipeline::ast::obj::{IdentifierObj, Obj};
@@ -13,8 +17,9 @@ use std::collections::{HashMap, HashSet};
 
 impl Runtime {
     // Match pattern args to goal args under forall params.
-    // Example: pattern `[a, a+1]`, goal `[2, 2+1]`, params `{a}` -> bind a↦2, then NonParamEqual on `a+1`.
-    // Nested equal: forall/rewrite off. Returns None on soft miss.
+    // Example: pattern `[a, a+1]`, goal `[3, 4]`, params `{a}`
+    //   -> BoundParam a↦3, then NonParamEqual on `3+1 = 4` (after subst).
+    // Nested equal: all VerifyState flags false. Returns None on soft miss.
     pub(crate) fn match_forall_conclusion_args(
         &mut self,
         pattern_args: &[&Obj],
@@ -60,13 +65,22 @@ impl Runtime {
                     });
                 }
                 ForallParamBindResult::NotAParam => {
-                    let Some(equal) =
-                        self.prove_objs_equal_strict(pattern_arg, goal_arg, equality_state.clone())?
+                    // Substitute already-bound params into the pattern before equal.
+                    let pattern_after_subst = match self.inst_obj(pattern_arg, &subst) {
+                        Ok(obj) => obj,
+                        Err(_) => return Ok(None),
+                    };
+                    let Some(equal) = self.prove_objs_equal_strict(
+                        &pattern_after_subst,
+                        goal_arg,
+                        equality_state.clone(),
+                    )?
                     else {
                         return Ok(None);
                     };
                     arg_match_proofs.push(ForallConclusionArgMatchProof::NonParamEqual {
                         pattern: (*pattern_arg).clone(),
+                        pattern_after_subst,
                         goal_arg: (*goal_arg).clone(),
                         equal,
                     });
@@ -91,7 +105,7 @@ impl Runtime {
         }))
     }
 
-    // Prove left = right with forall/rewrite off; keep only StrictEqualArgProof routes.
+    // Prove left = right with all VerifyState flags false; keep StrictEqualArgProof only.
     fn prove_objs_equal_strict(
         &mut self,
         left: &Obj,
