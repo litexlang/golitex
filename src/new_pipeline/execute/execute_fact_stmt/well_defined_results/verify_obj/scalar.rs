@@ -1,7 +1,7 @@
 //! Scalar object WD (P0): children + carrier / domain requirement facts.
 //! Ported from verification/well_definedness/object/scalar.rs into new_pipeline AST.
 
-use super::entry::ObjWellDefinedProofByDef;
+use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use crate::new_pipeline::ast::fact::{AtomicFact, GreaterFact, LessEqualFact, NotEqualFact};
 use crate::new_pipeline::ast::obj::StandardSet;
 use crate::new_pipeline::ast::obj::{
@@ -16,36 +16,36 @@ impl Runtime {
     pub(super) fn verify_number_obj_well_definedness_by_def(
         &mut self,
         _verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
-        Ok(ObjWellDefinedProofByDef::leaf())
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
+        Ok(ObjWellDefinedByDefCommonStages::leaf())
     }
 
     pub(super) fn verify_imaginary_unit_obj_well_definedness_by_def(
         &mut self,
         _verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
-        Ok(ObjWellDefinedProofByDef::leaf())
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
+        Ok(ObjWellDefinedByDefCommonStages::leaf())
     }
 
     pub(super) fn verify_euler_number_obj_well_definedness_by_def(
         &mut self,
         _verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
-        Ok(ObjWellDefinedProofByDef::leaf())
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
+        Ok(ObjWellDefinedByDefCommonStages::leaf())
     }
 
     pub(super) fn verify_pi_obj_well_definedness_by_def(
         &mut self,
         _verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
-        Ok(ObjWellDefinedProofByDef::leaf())
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
+        Ok(ObjWellDefinedByDefCommonStages::leaf())
     }
 
     pub(super) fn verify_add_obj_well_definedness_by_def(
         &mut self,
         value: &Add,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_binary_in_c_obj_well_definedness_by_def(
             value.left.as_ref(),
             value.right.as_ref(),
@@ -57,7 +57,7 @@ impl Runtime {
         &mut self,
         value: &Sub,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_binary_in_c_obj_well_definedness_by_def(
             value.left.as_ref(),
             value.right.as_ref(),
@@ -69,7 +69,7 @@ impl Runtime {
         &mut self,
         value: &Mul,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_binary_in_c_obj_well_definedness_by_def(
             value.left.as_ref(),
             value.right.as_ref(),
@@ -81,7 +81,7 @@ impl Runtime {
         &mut self,
         value: &Div,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         let proof = self.verify_binary_obj_well_definedness_by_def(
             value.left.as_ref(),
             value.right.as_ref(),
@@ -111,7 +111,7 @@ impl Runtime {
         &mut self,
         value: &Mod,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         let proof = self.verify_binary_obj_well_definedness_by_def(
             value.left.as_ref(),
             value.right.as_ref(),
@@ -153,7 +153,7 @@ impl Runtime {
         &mut self,
         value: &Quot,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         let proof = self.verify_binary_obj_well_definedness_by_def(
             value.left.as_ref(),
             value.right.as_ref(),
@@ -179,7 +179,7 @@ impl Runtime {
         &mut self,
         value: &Gcd,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         let proof = self.verify_binary_obj_well_definedness_by_def(
             value.left.as_ref(),
             value.right.as_ref(),
@@ -241,7 +241,7 @@ impl Runtime {
         &mut self,
         value: &Lcm,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         let proof = self.verify_binary_obj_well_definedness_by_def(
             value.left.as_ref(),
             value.right.as_ref(),
@@ -267,7 +267,7 @@ impl Runtime {
         &mut self,
         value: &Abs,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_unary_carrier_obj_well_definedness_by_def(
             value.arg.as_ref(),
             StandardSet::R,
@@ -280,7 +280,7 @@ impl Runtime {
         &mut self,
         value: &Floor,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_unary_carrier_obj_well_definedness_by_def(
             value.arg.as_ref(),
             StandardSet::R,
@@ -293,7 +293,7 @@ impl Runtime {
         &mut self,
         value: &Ceil,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_unary_carrier_obj_well_definedness_by_def(
             value.arg.as_ref(),
             StandardSet::R,
@@ -306,7 +306,7 @@ impl Runtime {
         &mut self,
         value: &Min,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_binary_carrier_obj_well_definedness_by_def(
             value.left.as_ref(),
             value.right.as_ref(),
@@ -319,7 +319,7 @@ impl Runtime {
         &mut self,
         value: &Max,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_binary_carrier_obj_well_definedness_by_def(
             value.left.as_ref(),
             value.right.as_ref(),
@@ -332,7 +332,7 @@ impl Runtime {
         &mut self,
         value: &Exp,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_unary_carrier_obj_well_definedness_by_def(
             value.arg.as_ref(),
             StandardSet::R,
@@ -345,7 +345,7 @@ impl Runtime {
         &mut self,
         value: &Ln,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         let proof = self
             .verify_unary_obj_well_definedness_by_def(value.arg.as_ref(), verify_state.clone())?;
         let mut reqs = Vec::new();
@@ -376,7 +376,7 @@ impl Runtime {
         &mut self,
         value: &Sign,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_unary_carrier_obj_well_definedness_by_def(
             value.arg.as_ref(),
             StandardSet::R,
@@ -389,7 +389,7 @@ impl Runtime {
         &mut self,
         value: &Factorial,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_unary_carrier_obj_well_definedness_by_def(
             value.arg.as_ref(),
             StandardSet::N,
@@ -402,7 +402,7 @@ impl Runtime {
         &mut self,
         value: &Pow,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         // Simplified port of old multi-branch pow domain: try C×N then C×Z×base≠0.
         let proof = self.verify_binary_obj_well_definedness_by_def(
             value.base.as_ref(),
@@ -425,7 +425,7 @@ impl Runtime {
         &mut self,
         value: &Sin,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_unary_carrier_obj_well_definedness_by_def(
             value.arg.as_ref(),
             StandardSet::R,
@@ -438,7 +438,7 @@ impl Runtime {
         &mut self,
         value: &Arcsin,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         let proof = self
             .verify_unary_obj_well_definedness_by_def(value.arg.as_ref(), verify_state.clone())?;
         let mut reqs = Vec::new();
@@ -483,7 +483,7 @@ impl Runtime {
         &mut self,
         value: &Cos,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_unary_carrier_obj_well_definedness_by_def(
             value.arg.as_ref(),
             StandardSet::R,
@@ -496,7 +496,7 @@ impl Runtime {
         &mut self,
         value: &Tan,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         let proof = self
             .verify_unary_obj_well_definedness_by_def(value.arg.as_ref(), verify_state.clone())?;
         let mut reqs = Vec::new();
@@ -530,7 +530,7 @@ impl Runtime {
         &mut self,
         value: &Cot,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         let proof = self
             .verify_unary_obj_well_definedness_by_def(value.arg.as_ref(), verify_state.clone())?;
         let mut reqs = Vec::new();
@@ -564,7 +564,7 @@ impl Runtime {
         &mut self,
         value: &RealPart,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_unary_carrier_obj_well_definedness_by_def(
             value.arg.as_ref(),
             StandardSet::C,
@@ -577,7 +577,7 @@ impl Runtime {
         &mut self,
         value: &ImaginaryPart,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_unary_carrier_obj_well_definedness_by_def(
             value.arg.as_ref(),
             StandardSet::C,
@@ -590,7 +590,7 @@ impl Runtime {
         &mut self,
         value: &ComplexAbs,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_unary_carrier_obj_well_definedness_by_def(
             value.arg.as_ref(),
             StandardSet::C,
@@ -603,7 +603,7 @@ impl Runtime {
         &mut self,
         value: &Sqrt,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         let proof = self
             .verify_unary_obj_well_definedness_by_def(value.arg.as_ref(), verify_state.clone())?;
         let mut reqs = Vec::new();
@@ -634,7 +634,7 @@ impl Runtime {
         &mut self,
         value: &Log,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         let proof = self.verify_binary_obj_well_definedness_by_def(
             value.base.as_ref(),
             value.arg.as_ref(),
@@ -700,7 +700,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         let proof =
             self.verify_binary_obj_well_definedness_by_def(left, right, verify_state.clone())?;
         let mut reqs = Vec::new();
@@ -715,7 +715,7 @@ impl Runtime {
         carrier: StandardSet,
         name: &str,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         let proof = self.verify_unary_obj_well_definedness_by_def(arg, verify_state.clone())?;
         let req = self.require_obj_in_standard_set(
             arg,
@@ -732,7 +732,7 @@ impl Runtime {
         right: &Obj,
         carrier: StandardSet,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         let proof =
             self.verify_binary_obj_well_definedness_by_def(left, right, verify_state.clone())?;
         let mut reqs = Vec::new();

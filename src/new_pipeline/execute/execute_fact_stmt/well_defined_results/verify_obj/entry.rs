@@ -1,100 +1,31 @@
 //! Object WD entry: known-memory lookup, then match Obj → family branch.
 //!
-//! `Ok(FailToVerifyWellDefined(...))` means WD was not established (soft miss).
-//! Must-prove callers reject that at their boundary.
+//! Soft miss is `Ok(Failed(...))`. Must-prove callers reject that at their boundary.
 
+use super::fail_to_verify_obj_well_defined::FailToVerifyObjWellDefinedResult;
+use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
+use super::obj_well_defined_proof_by_def::ObjWellDefinedProofByDef;
+use super::wrap_obj_well_defined_by_def::finish_by_def;
 use crate::new_pipeline::ast::obj::Obj;
-use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::runtime_ids::WellDefinednessId;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
-// Top-level object WD result: already known in memory, prove-by-definition, or soft fail.
+// Top-level object WD: Success(proof) | Failed(reason). Proof never embeds Fail.
 pub enum VerifyObjWellDefinedResult {
+    Success(ObjWellDefinedProof),
+    Failed(FailToVerifyObjWellDefinedResult),
+}
+
+// Success-only evidence that an object is well-defined.
+pub enum ObjWellDefinedProof {
     ByKnown { wd_id: WellDefinednessId },
     ByDef(ObjWellDefinedProofByDef),
-    FailToVerifyWellDefined(FailToVerifyObjWellDefinedResult),
-}
-
-// One by-def shape for every Obj: child WD + verified domain requirements.
-pub struct ObjWellDefinedProofByDef {
-    pub child_obj_well_defined: Vec<(Obj, VerifyObjWellDefinedResult)>,
-    pub requirement_fact_verified: Vec<VerifyFactResult>,
-}
-
-pub enum FailToVerifyObjWellDefinedResult {
-    // Direct child failed; `obj` is that child, `child` is why.
-    Child {
-        obj: Obj,
-        child: Box<FailToVerifyObjWellDefinedResult>,
-    },
-    // Domain requirement fact was not established; `obj` is the root being proved.
-    Requirement {
-        obj: Obj,
-        result: VerifyFactResult,
-    },
-    IdentifierUndefined {
-        obj: Obj,
-    },
-    Others(String),
 }
 
 impl VerifyObjWellDefinedResult {
     pub fn is_failed(&self) -> bool {
-        matches!(self, Self::FailToVerifyWellDefined(_))
-    }
-}
-
-impl ObjWellDefinedProofByDef {
-    pub fn leaf() -> Self {
-        Self {
-            child_obj_well_defined: Vec::new(),
-            requirement_fact_verified: Vec::new(),
-        }
-    }
-
-    pub fn from_children(child_obj_well_defined: Vec<(Obj, VerifyObjWellDefinedResult)>) -> Self {
-        Self {
-            child_obj_well_defined,
-            requirement_fact_verified: Vec::new(),
-        }
-    }
-
-    pub fn is_fully_known(&self) -> bool {
-        for (_obj, child) in &self.child_obj_well_defined {
-            if child.is_failed() {
-                return false;
-            }
-        }
-        for req in &self.requirement_fact_verified {
-            if req.is_failed() {
-                return false;
-            }
-        }
-        true
-    }
-
-    // Consume a failed by-def proof into the first soft-fail reason.
-    pub fn into_fail_reason(self, root: &Obj) -> FailToVerifyObjWellDefinedResult {
-        for (child_obj, child_result) in self.child_obj_well_defined {
-            if let VerifyObjWellDefinedResult::FailToVerifyWellDefined(reason) = child_result {
-                return FailToVerifyObjWellDefinedResult::Child {
-                    obj: child_obj,
-                    child: Box::new(reason),
-                };
-            }
-        }
-        for req in self.requirement_fact_verified {
-            if req.is_failed() {
-                return FailToVerifyObjWellDefinedResult::Requirement {
-                    obj: root.clone(),
-                    result: req,
-                };
-            }
-        }
-        FailToVerifyObjWellDefinedResult::Others(
-            "object well-definedness failed without child or requirement detail".to_string(),
-        )
+        matches!(self, Self::Failed(_))
     }
 }
 
@@ -107,32 +38,35 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
         if let Some(wd_id) = self.well_defined_visible_in_stack(obj) {
-            return Ok(VerifyObjWellDefinedResult::ByKnown { wd_id });
+            return Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByKnown {
+                wd_id,
+            }));
         }
 
-        let by_def = self.verify_obj_well_definedness_by_def(obj, verify_state.clone())?;
-        if !by_def.is_fully_known() {
-            return Ok(VerifyObjWellDefinedResult::FailToVerifyWellDefined(
-                by_def.into_fail_reason(obj),
-            ));
+        let stages = self.verify_obj_well_definedness_by_def(obj, verify_state.clone())?;
+        match finish_by_def(obj, stages) {
+            Ok(by_def) => {
+                if verify_state.store_well_defined_fact {
+                    let wd_id = self.ids.allocate_well_definedness_id();
+                    self.top_exec_env_mut()
+                        .well_defined_objects
+                        .record(obj.clone(), wd_id);
+                }
+                Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef(
+                    by_def,
+                )))
+            }
+            Err(fail) => Ok(VerifyObjWellDefinedResult::Failed(fail)),
         }
-
-        if verify_state.store_well_defined_fact {
-            let wd_id = self.ids.allocate_well_definedness_id();
-            self.top_exec_env_mut()
-                .well_defined_objects
-                .record(obj.clone(), wd_id);
-        }
-
-        Ok(VerifyObjWellDefinedResult::ByDef(by_def))
     }
 
     // Big match: every Obj variant has its own by-def branch function.
+    // Branches return CommonStages; entry packs into Obj-mirrored Success/Failed.
     fn verify_obj_well_definedness_by_def(
         &mut self,
         obj: &Obj,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         match obj {
             Obj::Identifier(_) => self.verify_atom_obj_well_definedness_by_def(verify_state),
             Obj::FnObj(value) => self.verify_fn_obj_well_definedness_by_def(value, verify_state),

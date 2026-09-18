@@ -1,6 +1,6 @@
 //! Struct / template object WD (children only until P3).
 
-use super::entry::ObjWellDefinedProofByDef;
+use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use crate::new_pipeline::ast::obj::{
     InstantiatedTemplateObj, Obj, ObjAsStructInstanceWithFieldAccess, StructObj,
 };
@@ -12,7 +12,7 @@ impl Runtime {
         &mut self,
         value: &StructObj,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         let refs: Vec<&Obj> = value.params.iter().collect();
         self.verify_objs_as_children(&refs, verify_state)
     }
@@ -21,7 +21,7 @@ impl Runtime {
         &mut self,
         value: &ObjAsStructInstanceWithFieldAccess,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         let mut children = Vec::new();
         children.push(value.obj.as_ref());
         if let Some(carrier) = &value.resolved_struct_carrier {
@@ -36,7 +36,7 @@ impl Runtime {
         &mut self,
         value: &InstantiatedTemplateObj,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         let refs: Vec<&Obj> = value.args.iter().collect();
         self.verify_objs_as_children(&refs, verify_state)
     }

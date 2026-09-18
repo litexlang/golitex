@@ -44,5 +44,6 @@ pub use well_defined_result::{
     FactWellDefinedProof, FailToVerifyFactWellDefinedResult, VerifyFactWellDefinedResult,
 };
 pub use verify_obj::{
-    FailToVerifyObjWellDefinedResult, ObjWellDefinedProofByDef, VerifyObjWellDefinedResult,
+    fail_to_verify_obj_well_defined_others, FailToVerifyObjWellDefinedResult, ObjWellDefinedProof,
+    ObjWellDefinedProofByDef, VerifyObjWellDefinedResult,
 };
