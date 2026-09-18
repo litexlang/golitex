@@ -4,6 +4,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_
     EqualitySearchProofByBuiltinRewrite, EqualitySearchProofByBuiltinRule,
     EqualitySearchProofByBuiltinStrategy, EqualitySearchProofByKnownRewrite,
 };
+use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::search_equal_fact_proof_by_matching_one_arg_by_one::EqualFactSearchedProofByMatchingOneArgByOne;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::well_defined_result::{
     EqualFactWellDefinedProof, FailToVerifyEqualFactWellDefinedResult,
 };
@@ -80,6 +81,7 @@ pub enum StrictEqualArgProof {
     ByBuiltinRule(EqualitySearchProofByBuiltinRule),
     ByKnownEquality(EqualFactSearchedProofByKnownEquality),
     ByBuiltinStrategy(EqualitySearchProofByBuiltinStrategy),
+    ByMatchingOneArgByOne(EqualFactSearchedProofByMatchingOneArgByOne),
 }
 
 pub enum VerifyEqualityResult {
@@ -108,12 +110,13 @@ impl VerifyEqualityResult {
 }
 
 // Mirrors search_equal_fact_proof stage order.
-// Rewrite stages replace legacy opaque resolve_obj: rewrites must be
-// explicit certificates (see ByBuiltinRewrite / ByKnownRewrite).
+// MatchingOneArgByOne = constructor peel (not rewrite).
+// Rewrite stages replace legacy opaque resolve_obj (ClosedNumeric only).
 pub enum EqualFactSearchedProof {
     ByBuiltinRule(EqualitySearchProofByBuiltinRule),
     ByKnownEquality(EqualFactSearchedProofByKnownEquality),
     ByBuiltinStrategy(EqualitySearchProofByBuiltinStrategy),
+    ByMatchingOneArgByOne(EqualFactSearchedProofByMatchingOneArgByOne),
     ByKnownForallFact(Box<SearchProofByKnownForallFact>),
     ByBuiltinRewrite(EqualitySearchProofByBuiltinRewrite),
     ByKnownRewrite(EqualitySearchProofByKnownRewrite),
@@ -171,6 +174,9 @@ pub fn strict_equal_arg_proof_from_searched(
         }
         EqualFactSearchedProof::ByBuiltinStrategy(p) => {
             Some(StrictEqualArgProof::ByBuiltinStrategy(p))
+        }
+        EqualFactSearchedProof::ByMatchingOneArgByOne(p) => {
+            Some(StrictEqualArgProof::ByMatchingOneArgByOne(p))
         }
         EqualFactSearchedProof::ByKnownForallFact(_)
         | EqualFactSearchedProof::ByBuiltinRewrite(_)

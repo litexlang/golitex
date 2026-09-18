@@ -10,7 +10,8 @@ This package **calls** those APIs and runs files.
 
 | File | Owns |
 |------|------|
-| `load_config.rs` | Find `litex.config`, read, `parse_litex_config` (incl. `std_root`); `load_config_or_empty` for `-f` |
+| `load_config.rs` | Find `litex.config`, read, `parse_litex_config` (incl. `std_root`); `load_config_or_empty` |
+| `mount_cwd_config.rs` | `-e` / bare REPL: mount cwd config (missing → empty) |
 | `run_export_file.rs` | Run one export `.lit`; set mod/export ids; record env |
 | `run_import_module.rs` | One imported package: recurse imports (config order), then exports |
 | `run_project.rs` | Root / `-r`: root imports then root exports; optional `-session` |
@@ -20,24 +21,11 @@ This package **calls** those APIs and runs files.
 
 ```text
 run_project(root):
-  cfg = load_config(root, std_root)
-  for imp in cfg.imports:                    # config order
-      run_import_module(imp.path, imp.alias) # missing/broken → FailToImport
-  for exp in cfg.exports:
-      run_export_file(exp)                   # current_mod_id = None
-      # soft Failed → FailToImport (stop)
-
-run_import_module(dir, alias):
-  if already done(dir): return
-  if currently running(dir): FailToImport (cycle)
-  cfg = load_config(dir, std_root)
+  cfg = load_config(root, std_root)          # missing → Err
   for imp in cfg.imports:
-      run_import_module(imp.path, imp.alias)
-  mount(alias, dir, cfg)                     # fail → FailToImport
+      run_import_module(...)                 # soft fail → FailToImport
   for exp in cfg.exports:
-      run_export_file(exp)                   # current_mod_id = Some(mod_id)
-      # soft Failed → FailToImport
-  mark done(dir)
+      run_export_file(...)                   # soft fail → FailToImport
 ```
 
 ## Run order (`-f`)
@@ -49,15 +37,27 @@ run_file_with_config(file):
   if cfg empty: run file alone; return
   run all imports
   if file in cfg.exports:
-      run exports up to and including file   # later exports skipped
+      run exports up to and including file
   else:
-      run all exports, then file as extra    # not an entry contract
+      run all exports, then file as extra
   mount soft fail → FailToImport
   target soft fail → normal RunFile failure
 ```
 
-`[import std]` is path sugar only (`std_root/Name`); same `run_import_module` path.
-`-session` keeps the last target file env open and enters REPL.
+## Run order (`-e` / bare REPL)
+
+```text
+mount_cwd_config():
+  cfg = load_config_or_empty(cwd)            # missing → empty / no-op
+  run all imports + all exports
+  mount soft fail → FailToImport
+then:
+  -e: begin Eval env, run code
+  REPL: begin Repl env, interactive loop
+```
+
+`[import std]` is path sugar only (`std_root/Name`).
+`-session` keeps the last target/eval env open and enters REPL.
 
 ## Non-goals
 

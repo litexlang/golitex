@@ -1,8 +1,4 @@
-# Allowed: ClosedNumericEqual rewrite only.
-have a R = 10
-a + 1 = 11
-
-# Forbidden path removed: arbitrary trust equality must NOT rewrite subterms.
-# have a R, b R
-# trust a = b
-# a + 1 = b + 1
+have a R, b R
+trust a + 1 > 0
+trust a = b
+b + 1 > 0

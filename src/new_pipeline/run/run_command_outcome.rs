@@ -15,7 +15,7 @@ pub enum RunCommandOutcome {
 
 /// Session-stopping failure.
 /// Soft stmt Failed stays in `statement_results` / `failed_statement_results`.
-/// `FailToImport`: mount / import / export soft-fail while loading a project (`-r` / `-f`).
+/// `FailToImport`: mount / import / export soft-fail while loading a project (`-r` / `-f` / `-e` / REPL).
 #[derive(Clone, Debug)]
 pub enum RunSessionError {
     Runtime(RuntimeError),

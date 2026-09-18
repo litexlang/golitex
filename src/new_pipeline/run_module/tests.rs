@@ -2,7 +2,9 @@
 
 use crate::new_pipeline::launch_command::LaunchCommand;
 use crate::new_pipeline::run::run_command_outcome::RunSessionError;
-use crate::new_pipeline::run_module::{run_file_with_config, run_project};
+use crate::new_pipeline::run_module::{
+    mount_cwd_config, run_file_with_config, run_project, MountCwdConfigOutcome,
+};
 use std::fs;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -218,5 +220,78 @@ fn run_file_target_soft_fail_is_normal_failure() {
     assert!(!result.run.success);
     assert!(result.run.session_error.is_none());
 
+    let _ = fs::remove_dir_all(&root);
+}
+
+#[test]
+fn mount_cwd_config_empty_when_missing() {
+    let root = temp_dir("cwd_empty");
+    let previous = std::env::current_dir().expect("cwd");
+    std::env::set_current_dir(&root).expect("chdir");
+
+    let mut runtime = crate::new_pipeline::runtime::Runtime::new(LaunchCommand::Eval {
+        code: "1 = 1".to_string(),
+        session: false,
+        strict: false,
+    });
+    runtime.abort_file();
+    let outcome = mount_cwd_config(&mut runtime).expect("mount");
+    assert!(matches!(outcome, MountCwdConfigOutcome::Done));
+
+    std::env::set_current_dir(previous).expect("restore cwd");
+    let _ = fs::remove_dir_all(&root);
+}
+
+#[test]
+fn mount_cwd_config_runs_exports() {
+    let root = temp_dir("cwd_mount");
+    write(
+        &root.join("litex.config"),
+        "[export]\nmain = \"./main.lit\"\n",
+    );
+    write(&root.join("main.lit"), "1 = 1\n");
+
+    let previous = std::env::current_dir().expect("cwd");
+    std::env::set_current_dir(&root).expect("chdir");
+
+    let mut runtime = crate::new_pipeline::runtime::Runtime::new(LaunchCommand::Eval {
+        code: "1 = 1".to_string(),
+        session: false,
+        strict: false,
+    });
+    runtime.abort_file();
+    let outcome = mount_cwd_config(&mut runtime).expect("mount");
+    assert!(matches!(outcome, MountCwdConfigOutcome::Done));
+    assert_eq!(runtime.global_module_manager.root_exports().len(), 1);
+
+    std::env::set_current_dir(previous).expect("restore cwd");
+    let _ = fs::remove_dir_all(&root);
+}
+
+#[test]
+fn mount_cwd_config_soft_fail_is_fail_to_import() {
+    let root = temp_dir("cwd_fail");
+    write(
+        &root.join("litex.config"),
+        "[export]\nbad = \"./bad.lit\"\n",
+    );
+    write(&root.join("bad.lit"), "1 = 2\n");
+
+    let previous = std::env::current_dir().expect("cwd");
+    std::env::set_current_dir(&root).expect("chdir");
+
+    let mut runtime = crate::new_pipeline::runtime::Runtime::new(LaunchCommand::Eval {
+        code: "1 = 1".to_string(),
+        session: false,
+        strict: false,
+    });
+    runtime.abort_file();
+    let outcome = mount_cwd_config(&mut runtime).expect("mount");
+    assert!(matches!(
+        outcome,
+        MountCwdConfigOutcome::SessionError(RunSessionError::FailToImport)
+    ));
+
+    std::env::set_current_dir(previous).expect("restore cwd");
     let _ = fs::remove_dir_all(&root);
 }
