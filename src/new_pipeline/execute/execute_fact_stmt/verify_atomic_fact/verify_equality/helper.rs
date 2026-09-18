@@ -84,6 +84,30 @@ pub(crate) fn replace_obj_matching_ir(obj: &Obj, from_ir: &ObjIR, to: &Obj) -> O
             left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
             right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
         }),
+        Obj::Mod(a) => Obj::Mod(Mod {
+            left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
+            right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
+        }),
+        Obj::Quot(a) => Obj::Quot(Quot {
+            left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
+            right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
+        }),
+        Obj::Gcd(a) => Obj::Gcd(Gcd {
+            left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
+            right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
+        }),
+        Obj::Lcm(a) => Obj::Lcm(Lcm {
+            left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
+            right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
+        }),
+        Obj::Min(a) => Obj::Min(Min {
+            left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
+            right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
+        }),
+        Obj::Max(a) => Obj::Max(Max {
+            left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
+            right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
+        }),
         Obj::Pow(a) => Obj::Pow(Pow {
             base: Box::new(replace_obj_matching_ir(&a.base, from_ir, to)),
             exponent: Box::new(replace_obj_matching_ir(&a.exponent, from_ir, to)),
