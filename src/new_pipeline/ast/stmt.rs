@@ -4,7 +4,7 @@
 //! IdentifierId where wired (see `identifier_identity.md`). FactId; LineFile.
 
 use super::fact::{
-    AndChainAtomicFact, AtomicFact, ExistFact, ExistOrAndChainAtomicFact, Fact, ForallFact, InFact,
+    AndChainAtomicFact, AtomicFact, ExistFactFamily, ExistOrAndChainAtomicFact, Fact, ForallFact, InFact,
     NormalAtomicFact, QuantifierFreeFact,
 };
 use super::line_file::LineFile;
@@ -118,7 +118,7 @@ pub struct HaveObjByExistFactsStmt {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ObtainObjFromExistFact {
     pub equal_tos: Vec<String>,
-    pub fact: ExistFact,
+    pub fact: ExistFactFamily,
     pub line_file: LineFile,
 }
 
@@ -383,6 +383,7 @@ pub enum ByStmt {
     ByEnumerateFiniteSetStmt(ByEnumerateFiniteSetStmt),
     ByFiniteSetInducStmt(ByFiniteSetInducStmt),
     ByInducStmt(ByInducStmt),
+    ByStrongInducStmt(ByStrongInducStmt),
     ByForStmt(ByForStmt),
     ByExtensionStmt(ByExtensionStmt),
     ByEnumerateRangeStmt(ByEnumerateRangeStmt),
@@ -442,8 +443,17 @@ pub struct ByInducStmt {
     pub step_proof: Option<Vec<Stmt>>,
     pub param_binding: String,
     pub induc_from: Obj,
-    /// When true, the induction step uses `forall y` with `m <= y <= n` as the hypothesis band (strong / complete induction).
-    pub strong: bool,
+    pub line_file: LineFile,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ByStrongInducStmt {
+    pub to_prove: Vec<ExistOrAndChainAtomicFact>,
+    pub proof: Vec<Stmt>,
+    pub base_proof: Option<Vec<Stmt>>,
+    pub step_proof: Option<Vec<Stmt>>,
+    pub param_binding: String,
+    pub induc_from: Obj,
     pub line_file: LineFile,
 }
 
@@ -571,7 +581,7 @@ pub enum WitnessStmt {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WitnessExistFact {
     pub equal_tos: Vec<Obj>,
-    pub exist_fact_in_witness: ExistFact,
+    pub exist_fact_in_witness: ExistFactFamily,
     pub line_file: LineFile,
 }
 

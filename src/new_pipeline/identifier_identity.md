@@ -45,9 +45,9 @@ indexing.
 10. **Forall / exact IR.** Two source-identical `forall x …` may get different
     binder ids and different IR. Exact IR miss is **accepted**; prove via
     instantiate / other paths, not whole-fact IR equality.
-11. **known-atomic (non-equality).** Bucket by `(prop, polarity)`, linear scan
-    by equality-class (`ObjIR`); each arg justified by proving
-    `known_arg = goal_arg` via equality search with forall/rewrite off.
+11. **known-atomic (non-equality).** Bucket by `(prop, polarity)`, scan same
+    arity; each arg justified by proving `known_arg = goal_arg` via equality
+    search with forall/rewrite off (includes MatchingOneArgByOne peel).
 12. **known_equality** stays a graph + equivalence classes keyed by `ObjIR`.
 
 ## Definition table vs IdentifierId

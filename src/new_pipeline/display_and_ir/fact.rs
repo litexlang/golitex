@@ -17,7 +17,9 @@ impl Fact {
     pub fn ir(&self) -> FactIR {
         match self {
             Fact::AtomicFact(x) => x.ir(),
-            Fact::ExistFact(x) => x.ir(),
+            Fact::ExistFact(x) => ExistFactFamily::Exist(x.clone()).ir(),
+            Fact::ExistUniqueFact(x) => ExistFactFamily::ExistUnique(x.clone()).ir(),
+            Fact::NotExistFact(x) => ExistFactFamily::NotExist(x.clone()).ir(),
             Fact::OrFact(x) => x.ir(),
             Fact::AndFact(x) => x.ir(),
             Fact::ChainFact(x) => x.ir(),
@@ -665,7 +667,11 @@ impl ExistOrAndChainAtomicFact {
             ExistOrAndChainAtomicFact::AndFact(a) => a.ir(),
             ExistOrAndChainAtomicFact::ChainFact(c) => c.ir(),
             ExistOrAndChainAtomicFact::OrFact(o) => o.ir(),
-            ExistOrAndChainAtomicFact::ExistFact(e) => e.ir(),
+            ExistOrAndChainAtomicFact::ExistFact(e) => ExistFactFamily::Exist(e.clone()).ir(),
+            ExistOrAndChainAtomicFact::ExistUniqueFact(e) => {
+                ExistFactFamily::ExistUnique(e.clone()).ir()
+            }
+            ExistOrAndChainAtomicFact::NotExistFact(e) => ExistFactFamily::NotExist(e.clone()).ir(),
         }
     }
     impl_display_pair!();
@@ -706,19 +712,19 @@ impl PlainExistFact {
     }
 }
 
-impl ExistFact {
+impl ExistFactFamily {
     pub fn ir(&self) -> FactIR {
-        let keyword = if matches!(self, ExistFact::NotExistFact(_)) {
+        let keyword = if matches!(self, ExistFactFamily::NotExist(_)) {
             format!("{} {}", NOT, EXIST)
-        } else if matches!(self, ExistFact::ExistUniqueFact(_)) {
+        } else if matches!(self, ExistFactFamily::ExistUnique(_)) {
             EXIST_BANG.to_string()
         } else {
             EXIST.to_string()
         };
         let body = match self {
-            ExistFact::PlainExistFact(b)
-            | ExistFact::ExistUniqueFact(b)
-            | ExistFact::NotExistFact(b) => b,
+            ExistFactFamily::Exist(b)
+            | ExistFactFamily::ExistUnique(b)
+            | ExistFactFamily::NotExist(b) => b,
         };
         let parts: Vec<_> = body
             .facts
@@ -736,17 +742,17 @@ impl ExistFact {
         ))
     }
     pub fn display_string(&self) -> String {
-        let keyword = if matches!(self, ExistFact::NotExistFact(_)) {
+        let keyword = if matches!(self, ExistFactFamily::NotExist(_)) {
             format!("{} {}", NOT, EXIST)
-        } else if matches!(self, ExistFact::ExistUniqueFact(_)) {
+        } else if matches!(self, ExistFactFamily::ExistUnique(_)) {
             EXIST_BANG.to_string()
         } else {
             EXIST.to_string()
         };
         let body = match self {
-            ExistFact::PlainExistFact(b)
-            | ExistFact::ExistUniqueFact(b)
-            | ExistFact::NotExistFact(b) => b,
+            ExistFactFamily::Exist(b)
+            | ExistFactFamily::ExistUnique(b)
+            | ExistFactFamily::NotExist(b) => b,
         };
         let parts: Vec<_> = body
             .facts

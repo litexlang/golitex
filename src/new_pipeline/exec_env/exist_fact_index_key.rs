@@ -3,7 +3,7 @@
 //! and known-exist search stays a simple shape bucket + exact/unify match.
 //! Exact match is separate: known uses alpha body equality; forall uses unify.
 
-use crate::new_pipeline::ast::fact::{ExistFact, PlainExistFact, QuantifierFreeFact};
+use crate::new_pipeline::ast::fact::{ExistFactFamily, PlainExistFact, QuantifierFreeFact};
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::param::TypedParameterList;
 use crate::new_pipeline::exec_env::or_fact_index_key::{
@@ -41,11 +41,11 @@ pub struct ExistFactIndexKey {
     pub body_shape: Vec<QuantifierFreeShape>,
 }
 
-pub fn exist_fact_index_key(exist: &ExistFact) -> ExistFactIndexKey {
+pub fn exist_fact_index_key(exist: &ExistFactFamily) -> ExistFactIndexKey {
     let (kind, plain) = match exist {
-        ExistFact::PlainExistFact(p) => (ExistFactKind::Plain, p),
-        ExistFact::ExistUniqueFact(p) => (ExistFactKind::Unique, p),
-        ExistFact::NotExistFact(p) => (ExistFactKind::Not, p),
+        ExistFactFamily::Exist(p) => (ExistFactKind::Plain, p),
+        ExistFactFamily::ExistUnique(p) => (ExistFactKind::Unique, p),
+        ExistFactFamily::NotExist(p) => (ExistFactKind::Not, p),
     };
     ExistFactIndexKey {
         kind,
@@ -55,10 +55,10 @@ pub fn exist_fact_index_key(exist: &ExistFact) -> ExistFactIndexKey {
 }
 
 // Lookup keys for a goal: plain may also hit Unique buckets (exist! ⇒ exist).
-pub fn exist_fact_known_lookup_keys(goal: &ExistFact) -> Vec<ExistFactIndexKey> {
+pub fn exist_fact_known_lookup_keys(goal: &ExistFactFamily) -> Vec<ExistFactIndexKey> {
     let primary = exist_fact_index_key(goal);
     let mut keys = vec![primary.clone()];
-    if matches!(goal, ExistFact::PlainExistFact(_)) {
+    if matches!(goal, ExistFactFamily::Exist(_)) {
         keys.push(ExistFactIndexKey {
             kind: ExistFactKind::Unique,
             n_params: primary.n_params,
@@ -70,30 +70,30 @@ pub fn exist_fact_known_lookup_keys(goal: &ExistFact) -> Vec<ExistFactIndexKey> 
 
 // exist! may prove exist; other cross-kind pairs are rejected.
 // Example: known `exist! x N st {x = 1}` proves goal `exist x N st {x = 1}`.
-pub fn exist_fact_can_prove_goal(known: &ExistFact, goal: &ExistFact) -> bool {
+pub fn exist_fact_can_prove_goal(known: &ExistFactFamily, goal: &ExistFactFamily) -> bool {
     match known {
-        ExistFact::PlainExistFact(_) => matches!(goal, ExistFact::PlainExistFact(_)),
-        ExistFact::ExistUniqueFact(_) => {
+        ExistFactFamily::Exist(_) => matches!(goal, ExistFactFamily::Exist(_)),
+        ExistFactFamily::ExistUnique(_) => {
             matches!(
                 goal,
-                ExistFact::PlainExistFact(_) | ExistFact::ExistUniqueFact(_)
+                ExistFactFamily::Exist(_) | ExistFactFamily::ExistUnique(_)
             )
         }
-        ExistFact::NotExistFact(_) => matches!(goal, ExistFact::NotExistFact(_)),
+        ExistFactFamily::NotExist(_) => matches!(goal, ExistFactFamily::NotExist(_)),
     }
 }
 
-pub fn plain_exist_fact(exist: &ExistFact) -> &PlainExistFact {
+pub fn plain_exist_fact(exist: &ExistFactFamily) -> &PlainExistFact {
     match exist {
-        ExistFact::PlainExistFact(p)
-        | ExistFact::ExistUniqueFact(p)
-        | ExistFact::NotExistFact(p) => p,
+        ExistFactFamily::Exist(p)
+        | ExistFactFamily::ExistUnique(p)
+        | ExistFactFamily::NotExist(p) => p,
     }
 }
 
 // Alpha body key: binder `#id#name` → `#0`, `#1`, … (keyword stripped).
 // Example: `exist x N st {x = 1}` and `exist y N st {y = 1}` share one key.
-pub fn exist_fact_alpha_match_key(exist: &ExistFact) -> String {
+pub fn exist_fact_alpha_match_key(exist: &ExistFactFamily) -> String {
     let plain = plain_exist_fact(exist);
     let mut binder_irs = Vec::new();
     for group in &plain.typed_parameters.groups {

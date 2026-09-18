@@ -1,5 +1,5 @@
 use crate::new_pipeline::ast::fact::{
-    exist_fact_free_args_ref, exist_fact_id, ExistFact, Fact, ForallFact, InFact,
+    exist_fact_family_free_args_ref, exist_fact_family_id, ExistFactFamily, Fact, ForallFact, InFact,
 };
 use crate::new_pipeline::ast::obj::{Obj, StandardSet};
 use crate::new_pipeline::exec_env::exist_fact_index_key::{
@@ -29,7 +29,7 @@ impl Runtime {
     // Example (forall): known `forall a N: exist x N st {x = a}` proves `exist x N st {x = 2}`.
     pub fn verify_exist_fact(
         &mut self,
-        fact: &ExistFact,
+        fact: &ExistFactFamily,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
         let well_defined_proof =
@@ -52,7 +52,7 @@ impl Runtime {
     // Builtin → known_exist → known_forall.
     fn search_exist_fact_proof(
         &mut self,
-        fact: &ExistFact,
+        fact: &ExistFactFamily,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<ExistFactSearchedProof>> {
         if let Some(proof) =
@@ -75,7 +75,7 @@ impl Runtime {
 
     fn search_exist_fact_proof_by_builtin_rule(
         &mut self,
-        fact: &ExistFact,
+        fact: &ExistFactFamily,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<ExistFactSearchProofByBuiltinRule>> {
         if let Some(proof) =
@@ -91,17 +91,13 @@ impl Runtime {
     // Builtin: real-line comparison witness. See ExistBuiltinRealLineComparisonWitness.
     fn search_exist_builtin_real_line_comparison_witness(
         &mut self,
-        fact: &ExistFact,
+        fact: &ExistFactFamily,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<ExistBuiltinRealLineComparisonWitness>> {
         let Some(free_operands) = real_line_comparison_free_operands(fact) else {
             return Ok(None);
         };
-        let line_file = match fact {
-            ExistFact::PlainExistFact(p)
-            | ExistFact::ExistUniqueFact(p)
-            | ExistFact::NotExistFact(p) => p.line_file.clone(),
-        };
+        let line_file = fact.plain().line_file.clone();
         let child_state = verify_state.without_well_defined_storage();
         let mut requirement_facts = Vec::with_capacity(free_operands.len());
         let mut proof_of_requirement_facts = Vec::with_capacity(free_operands.len());
@@ -134,15 +130,15 @@ impl Runtime {
 
     fn search_exist_fact_proof_by_known_exist_fact(
         &mut self,
-        fact: &ExistFact,
+        fact: &ExistFactFamily,
         _verify_state: VerifyState,
     ) -> RuntimeResult<Option<ExistFactSearchedProof>> {
-        let goal_id = exist_fact_id(fact);
+        let goal_id = exist_fact_family_id(fact);
         for key in exist_fact_known_lookup_keys(fact) {
             for env in self.execution_environments_stack.iter().rev() {
                 if let Some(entries) = env.facts.known_exist.by_key.get(&key) {
                     for entry in entries {
-                        let cite_fact_id = exist_fact_id(entry);
+                        let cite_fact_id = exist_fact_family_id(entry);
                         if cite_fact_id != goal_id {
                             return Ok(Some(ExistFactSearchedProof::ByKnownExistFact(
                                 ExistFactSearchProofByKnownExistFact { cite_fact_id },
@@ -158,7 +154,7 @@ impl Runtime {
     // After: SearchProofByKnownForallFact cite.
     fn search_exist_fact_proof_by_known_forall_fact(
         &mut self,
-        fact: &ExistFact,
+        fact: &ExistFactFamily,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<SearchProofByKnownForallFact>> {
         if !verify_state.can_use_forall_fact {
@@ -185,7 +181,7 @@ impl Runtime {
 
     fn try_apply_forall_exist_conclusion_cite(
         &mut self,
-        goal: &ExistFact,
+        goal: &ExistFactFamily,
         cite: &ForallConclusionCite,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<SearchProofByKnownForallFact>> {
@@ -211,8 +207,8 @@ impl Runtime {
 
         // Step 1: list forall params in declaration order.
         let param_ids = forall.typed_parameters.ordered_param_ids();
-        let conclusion_args = exist_fact_free_args_ref(&conclusion);
-        let goal_args = exist_fact_free_args_ref(goal);
+        let conclusion_args = exist_fact_family_free_args_ref(&conclusion);
+        let goal_args = exist_fact_family_free_args_ref(goal);
 
         // Step 2–3: bind params / strict-equal non-params; every param must be bound.
         // Example: forall a: exist x st {x = a} vs exist x st {x = 2} -> bind a ↦ 2.
@@ -224,9 +220,12 @@ impl Runtime {
         let subst = subst_from_ordered_params(&param_ids, &matched.forall_parameters_match_what_args);
 
         // Step 4: instantiate the exist conclusion and alpha-compare to the goal.
-        let instantiated = match self.inst_fact(&Fact::ExistFact(conclusion.clone()), &subst) {
-            Ok(Fact::ExistFact(e)) => e,
-            Ok(_) | Err(_) => return Ok(None),
+        let instantiated = match self.inst_fact(&conclusion.to_fact(), &subst) {
+            Ok(f) => match ExistFactFamily::from_fact(&f) {
+                Some(e) => e,
+                None => return Ok(None),
+            },
+            Err(_) => return Ok(None),
         };
         if exist_fact_alpha_match_key(&instantiated) != exist_fact_alpha_match_key(goal) {
             return Ok(None);

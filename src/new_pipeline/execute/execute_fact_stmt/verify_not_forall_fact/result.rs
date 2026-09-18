@@ -1,4 +1,4 @@
-use crate::new_pipeline::ast::fact::{ExistFact, NotForallFact};
+use crate::new_pipeline::ast::fact::{ExistFactFamily, NotForallFact};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 
 pub enum VerifyNotForallFactResult {
@@ -9,7 +9,7 @@ pub enum VerifyNotForallFactResult {
 // Prove by De Morgan counterexample exist, then reuse exist verify.
 pub struct VerifyNotForallFactSuccess {
     pub fact: NotForallFact,
-    pub derived_exist: ExistFact,
+    pub derived_exist: ExistFactFamily,
     pub prove_derived_exist: VerifyFactResult,
 }
 
@@ -20,7 +20,7 @@ pub enum VerifyNotForallFactFailed {
     },
     FailToProveDerivedExist {
         fact: NotForallFact,
-        derived_exist: ExistFact,
+        derived_exist: ExistFactFamily,
         prove_derived_exist: VerifyFactResult,
     },
 }
@@ -33,7 +33,7 @@ impl VerifyNotForallFactResult {
 
 pub fn not_forall_fact_result_from_success(
     fact: &NotForallFact,
-    derived_exist: ExistFact,
+    derived_exist: ExistFactFamily,
     prove_derived_exist: VerifyFactResult,
 ) -> VerifyFactResult {
     VerifyFactResult::NotForall(Box::new(VerifyNotForallFactResult::Success(
@@ -55,7 +55,7 @@ pub fn not_forall_fact_result_from_unsupported(fact: &NotForallFact) -> VerifyFa
 
 pub fn not_forall_fact_result_from_exist_fail(
     fact: &NotForallFact,
-    derived_exist: ExistFact,
+    derived_exist: ExistFactFamily,
     prove_derived_exist: VerifyFactResult,
 ) -> VerifyFactResult {
     VerifyFactResult::NotForall(Box::new(VerifyNotForallFactResult::Failed(

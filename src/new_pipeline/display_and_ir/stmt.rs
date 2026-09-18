@@ -93,6 +93,7 @@ impl ByStmt {
             ByStmt::ByEnumerateFiniteSetStmt(x) => x.ir(),
             ByStmt::ByFiniteSetInducStmt(x) => x.ir(),
             ByStmt::ByInducStmt(x) => x.ir(),
+            ByStmt::ByStrongInducStmt(x) => x.ir(),
             ByStmt::ByForStmt(x) => x.ir(),
             ByStmt::ByExtensionStmt(x) => x.ir(),
             ByStmt::ByEnumerateRangeStmt(x) => x.ir(),
@@ -1665,10 +1666,8 @@ impl ByInducStmt {
             .iter()
             .map(|fact| format!("{} {}", QUESTION_GOAL, fact.ir()))
             .collect();
-        let keyword = if self.strong { STRONG_INDUC } else { INDUC };
         let has_structured = self.base_proof.is_some() || self.step_proof.is_some();
         if has_structured {
-            let step_keyword = if self.strong { STRONG_INDUC } else { INDUC };
             let base_proof = match &self.base_proof {
                 Some(proof) => indent!(
                     &proof
@@ -1705,7 +1704,7 @@ impl ByInducStmt {
 {} {}{}
 {}",
                 BY,
-                keyword,
+                INDUC,
                 self.param_binding,
                 FROM,
                 self.induc_from.ir(),
@@ -1725,7 +1724,7 @@ impl ByInducStmt {
                 COLON,
                 base_proof,
                 indent!(QUESTION_GOAL, 1),
-                step_keyword,
+                INDUC,
                 COLON,
                 step_proof
             ));
@@ -1734,7 +1733,114 @@ impl ByInducStmt {
             "{} {} {} {} {}{}
 {}",
             BY,
-            keyword,
+            INDUC,
+            self.param_binding,
+            FROM,
+            self.induc_from.ir(),
+            COLON,
+            indent!(
+                &question_goals.join(
+                    "
+"
+                ),
+                1
+            )
+        );
+        if !self.proof.is_empty() {
+            out.push_str("\n");
+            out.push_str(&indent!(
+                &self
+                    .proof
+                    .iter()
+                    .map(|s| s.ir())
+                    .collect::<Vec<_>>()
+                    .join(
+                        "
+"
+                    ),
+                1
+            ));
+        }
+        StmtIR(out)
+    }
+    impl_display_pair!();
+}
+
+impl ByStrongInducStmt {
+    pub fn ir(&self) -> StmtIR {
+        let question_goals: Vec<_> = self
+            .to_prove
+            .iter()
+            .map(|fact| format!("{} {}", QUESTION_GOAL, fact.ir()))
+            .collect();
+        let has_structured = self.base_proof.is_some() || self.step_proof.is_some();
+        if has_structured {
+            let base_proof = match &self.base_proof {
+                Some(proof) => indent!(
+                    &proof
+                        .iter()
+                        .map(|s| s.ir())
+                        .collect::<Vec<_>>()
+                        .join(
+                            "
+"
+                        ),
+                    2
+                ),
+                None => String::new(),
+            };
+            let step_proof = match &self.step_proof {
+                Some(proof) => indent!(
+                    &proof
+                        .iter()
+                        .map(|s| s.ir())
+                        .collect::<Vec<_>>()
+                        .join(
+                            "
+"
+                        ),
+                    2
+                ),
+                None => String::new(),
+            };
+            return StmtIR(format!(
+                "{} {} {} {} {}{}
+{}
+{} {} {} {} {}{}
+{}
+{} {}{}
+{}",
+                BY,
+                STRONG_INDUC,
+                self.param_binding,
+                FROM,
+                self.induc_from.ir(),
+                COLON,
+                indent!(
+                    &question_goals.join(
+                        "
+"
+                    ),
+                    1
+                ),
+                indent!(QUESTION_GOAL, 1),
+                FROM,
+                self.param_binding,
+                EQUAL,
+                self.induc_from.ir(),
+                COLON,
+                base_proof,
+                indent!(QUESTION_GOAL, 1),
+                STRONG_INDUC,
+                COLON,
+                step_proof
+            ));
+        }
+        let mut out = format!(
+            "{} {} {} {} {}{}
+{}",
+            BY,
+            STRONG_INDUC,
             self.param_binding,
             FROM,
             self.induc_from.ir(),

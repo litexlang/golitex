@@ -27,7 +27,9 @@ impl Runtime {
             Fact::AndFact(and_fact) => Ok(self.wrap_and_fact_wd(and_fact, verify_state)?),
             Fact::ChainFact(chain_fact) => Ok(self.wrap_chain_fact_wd(chain_fact, verify_state)?),
             Fact::OrFact(or_fact) => Ok(self.wrap_or_fact_wd(or_fact, verify_state)?),
-            Fact::ExistFact(exist_fact) => Ok(self.wrap_exist_fact_wd(exist_fact, verify_state)?),
+            Fact::ExistFact(exist_fact) => Ok(self.wrap_exist_fact_wd(&ExistFactFamily::Exist(exist_fact.clone()), verify_state)?),
+            Fact::ExistUniqueFact(exist_fact) => Ok(self.wrap_exist_fact_wd(&ExistFactFamily::ExistUnique(exist_fact.clone()), verify_state)?),
+            Fact::NotExistFact(exist_fact) => Ok(self.wrap_exist_fact_wd(&ExistFactFamily::NotExist(exist_fact.clone()), verify_state)?),
             Fact::ForallFact(forall_fact) => Ok(self.wrap_forall_fact_wd(forall_fact, verify_state)?),
             Fact::ForallFactWithIff(forall_iff) => {
                 Ok(self.wrap_forall_fact_with_iff_wd(forall_iff, verify_state)?)
@@ -140,7 +142,7 @@ impl Runtime {
 
     pub(crate) fn wrap_exist_fact_wd(
         &mut self,
-        fact: &crate::new_pipeline::ast::fact::ExistFact,
+        fact: &crate::new_pipeline::ast::fact::ExistFactFamily,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactWellDefinedResult> {
         Ok(

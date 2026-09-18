@@ -4,8 +4,8 @@ use super::store_fact_and_infer_result::{
     StoreExistFactResult, StoreFactAndInferResult, StoreNotForallFactResult, StoreOrFactResult,
 };
 use crate::new_pipeline::ast::fact::{
-    exist_fact_id, AndFact, AtomicFact, ChainFact, EqualFact, ExistFact, Fact, NormalAtomicFact,
-    NotForallFact, OrFact,
+    exist_fact_family_from_fact, exist_fact_family_id, AndFact, AtomicFact, ChainFact, EqualFact, ExistFactFamily, Fact,
+    NormalAtomicFact, NotForallFact, OrFact,
 };
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::names::{AtomicName, BoundName};
@@ -40,8 +40,9 @@ impl Runtime {
                 let stored = self.store_or_fact(or_fact)?;
                 Ok(StoreFactAndInferResult::OrFact(stored))
             }
-            Fact::ExistFact(exist_fact) => {
-                let stored = self.store_exist_fact(exist_fact)?;
+            Fact::ExistFact(_) | Fact::ExistUniqueFact(_) | Fact::NotExistFact(_) => {
+                let family = exist_fact_family_from_fact(fact).expect("exist family from fact");
+                let stored = self.store_exist_fact(&family)?;
                 Ok(StoreFactAndInferResult::ExistFact(stored))
             }
             Fact::NotForall(not_forall) => {
@@ -98,12 +99,12 @@ impl Runtime {
 
     // Exist: record whole into facts_by_id and known_exist. Do not split body.
     // Example: `exist x N st {x = 1}` → known_exist only.
-    fn store_exist_fact(&mut self, exist_fact: &ExistFact) -> RuntimeResult<StoreExistFactResult> {
-        let whole_fact_id = exist_fact_id(exist_fact);
+    fn store_exist_fact(&mut self, exist_fact: &ExistFactFamily) -> RuntimeResult<StoreExistFactResult> {
+        let whole_fact_id = exist_fact_family_id(exist_fact);
         let env = self.top_exec_env_mut();
         env.facts.known_exist.store(exist_fact);
         env.facts
-            .record_fact(whole_fact_id, Fact::ExistFact(exist_fact.clone()));
+            .record_fact(whole_fact_id, exist_fact.to_fact());
         Ok(StoreExistFactResult {
             whole_fact_id,
             fact: exist_fact.clone(),

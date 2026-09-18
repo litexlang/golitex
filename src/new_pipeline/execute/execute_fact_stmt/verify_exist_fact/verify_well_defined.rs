@@ -1,4 +1,4 @@
-use crate::new_pipeline::ast::fact::{ExistFact, PlainExistFact, QuantifierFreeFact};
+use crate::new_pipeline::ast::fact::{ExistFactFamily, PlainExistFact, QuantifierFreeFact};
 use crate::new_pipeline::execute::exec_stmt_result::ParamTypeWellDefinedProof;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_fact::well_defined_result::{
     ExistFactWellDefinedProof, FailToVerifyExistFactWellDefinedResult,
@@ -15,7 +15,7 @@ impl Runtime {
     // Shared by plain exist / exist! / not exist (same PlainExistFact payload).
     pub fn verify_exist_fact_well_definedness(
         &mut self,
-        fact: &ExistFact,
+        fact: &ExistFactFamily,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyExistFactWellDefinedResult> {
         let plain = plain_exist_body(fact);
@@ -97,11 +97,11 @@ impl Runtime {
     }
 }
 
-fn plain_exist_body(fact: &ExistFact) -> &PlainExistFact {
+fn plain_exist_body(fact: &ExistFactFamily) -> &PlainExistFact {
     match fact {
-        ExistFact::PlainExistFact(p)
-        | ExistFact::ExistUniqueFact(p)
-        | ExistFact::NotExistFact(p) => p,
+        ExistFactFamily::Exist(p)
+        | ExistFactFamily::ExistUnique(p)
+        | ExistFactFamily::NotExist(p) => p,
     }
 }
 

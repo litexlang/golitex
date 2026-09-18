@@ -1,5 +1,5 @@
 use super::{
-    AndChainAtomicFact, AtomicFact, EqualFact, ExistFact, Fact, FnEqualInFact, GreaterEqualFact,
+    AndChainAtomicFact, AtomicFact, EqualFact, ExistFactFamily, Fact, PlainExistFact, FnEqualInFact, GreaterEqualFact,
     GreaterFact, InFact, IsCartFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact, IsTupleFact,
     LessEqualFact, LessFact, NormalAtomicFact, NotEqualFact, NotFnEqualInFact,
     NotGreaterEqualFact, NotGreaterFact, NotInFact, NotIsCartFact, NotIsFiniteSetFact,
@@ -106,12 +106,7 @@ pub fn quantifier_free_fact_args_ref(fact: &QuantifierFreeFact) -> Vec<&Obj> {
 
 // Free objs in an exist fact: param-type carriers plus body args that are not binders.
 // Example: `exist x N st {x = a}` → free args `[N, a]` (binder `x` skipped).
-pub fn exist_fact_free_args_ref(exist: &ExistFact) -> Vec<&Obj> {
-    let plain = match exist {
-        ExistFact::PlainExistFact(p)
-        | ExistFact::ExistUniqueFact(p)
-        | ExistFact::NotExistFact(p) => p,
-    };
+pub fn plain_exist_fact_free_args_ref(plain: &PlainExistFact) -> Vec<&Obj> {
     let mut binder_ids = HashSet::new();
     for group in &plain.typed_parameters.groups {
         for param in &group.params {
@@ -137,20 +132,19 @@ pub fn exist_fact_free_args_ref(exist: &ExistFact) -> Vec<&Obj> {
     out
 }
 
-pub fn exist_fact_id(exist: &ExistFact) -> FactId {
-    match exist {
-        ExistFact::PlainExistFact(p)
-        | ExistFact::ExistUniqueFact(p)
-        | ExistFact::NotExistFact(p) => p.fact_id,
-    }
+pub fn exist_fact_family_free_args_ref(exist: &ExistFactFamily) -> Vec<&Obj> {
+    plain_exist_fact_free_args_ref(exist.plain())
 }
 
-pub fn exist_binder_ids(exist: &ExistFact) -> HashSet<IdentifierId> {
-    let plain = match exist {
-        ExistFact::PlainExistFact(p)
-        | ExistFact::ExistUniqueFact(p)
-        | ExistFact::NotExistFact(p) => p,
-    };
+pub fn plain_exist_fact_id(plain: &PlainExistFact) -> FactId {
+    plain.fact_id
+}
+
+pub fn exist_fact_family_id(exist: &ExistFactFamily) -> FactId {
+    plain_exist_fact_id(exist.plain())
+}
+
+pub fn plain_exist_binder_ids(plain: &PlainExistFact) -> HashSet<IdentifierId> {
     let mut ids = HashSet::new();
     for group in &plain.typed_parameters.groups {
         for param in &group.params {
@@ -158,6 +152,27 @@ pub fn exist_binder_ids(exist: &ExistFact) -> HashSet<IdentifierId> {
         }
     }
     ids
+}
+
+pub fn exist_fact_family_binder_ids(exist: &ExistFactFamily) -> HashSet<IdentifierId> {
+    plain_exist_binder_ids(exist.plain())
+}
+
+pub fn exist_fact_family_to_fact(exist: &ExistFactFamily) -> Fact {
+    match exist {
+        ExistFactFamily::Exist(p) => Fact::ExistFact(p.clone()),
+        ExistFactFamily::ExistUnique(p) => Fact::ExistUniqueFact(p.clone()),
+        ExistFactFamily::NotExist(p) => Fact::NotExistFact(p.clone()),
+    }
+}
+
+pub fn exist_fact_family_from_fact(fact: &Fact) -> Option<ExistFactFamily> {
+    match fact {
+        Fact::ExistFact(p) => Some(ExistFactFamily::Exist(p.clone())),
+        Fact::ExistUniqueFact(p) => Some(ExistFactFamily::ExistUnique(p.clone())),
+        Fact::NotExistFact(p) => Some(ExistFactFamily::NotExist(p.clone())),
+        _ => None,
+    }
 }
 
 pub fn and_chain_as_fact(branch: &AndChainAtomicFact) -> Fact {
@@ -374,4 +389,17 @@ pub fn negate_atomic_fact(fact: &AtomicFact, new_fact_id: FactId) -> Option<Atom
         }
         .into(),
     })
+}
+
+
+pub fn exist_fact_free_args_ref(exist: &ExistFactFamily) -> Vec<&Obj> {
+    exist_fact_family_free_args_ref(exist)
+}
+
+pub fn exist_fact_id(exist: &ExistFactFamily) -> FactId {
+    exist_fact_family_id(exist)
+}
+
+pub fn exist_binder_ids(exist: &ExistFactFamily) -> HashSet<IdentifierId> {
+    exist_fact_family_binder_ids(exist)
 }

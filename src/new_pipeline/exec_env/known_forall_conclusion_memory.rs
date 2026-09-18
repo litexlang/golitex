@@ -5,7 +5,7 @@
 
 use crate::new_pipeline::ast::fact::{
     AndFactComponentForallConclusionLocation, AtomicFact, DirectForallConclusionLocation,
-    ExistFact, ExistOrAndChainAtomicFact, ForallConclusionLocation, ForallFact, OrFact,
+    ExistFactFamily, ExistOrAndChainAtomicFact, ForallConclusionLocation, ForallFact, OrFact,
 };
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::fact::atomic_fact_has_positive_polarity;
@@ -80,8 +80,32 @@ impl KnownForallConclusionMemory {
                         ),
                     });
                 }
-                ExistOrAndChainAtomicFact::ExistFact(exist_fact) => {
-                    let key = exist_fact_index_key(exist_fact);
+                ExistOrAndChainAtomicFact::ExistFact(plain) => {
+                    let key = exist_fact_index_key(&ExistFactFamily::Exist(plain.clone()));
+                    self.by_exist
+                        .entry(key)
+                        .or_default()
+                        .push(ForallConclusionCite {
+                            fact_id,
+                            location: ForallConclusionLocation::DirectThenFact(
+                                DirectForallConclusionLocation { then_fact_index },
+                            ),
+                        });
+                }
+                ExistOrAndChainAtomicFact::ExistUniqueFact(plain) => {
+                    let key = exist_fact_index_key(&ExistFactFamily::ExistUnique(plain.clone()));
+                    self.by_exist
+                        .entry(key)
+                        .or_default()
+                        .push(ForallConclusionCite {
+                            fact_id,
+                            location: ForallConclusionLocation::DirectThenFact(
+                                DirectForallConclusionLocation { then_fact_index },
+                            ),
+                        });
+                }
+                ExistOrAndChainAtomicFact::NotExistFact(plain) => {
+                    let key = exist_fact_index_key(&ExistFactFamily::NotExist(plain.clone()));
                     self.by_exist
                         .entry(key)
                         .or_default()
@@ -184,11 +208,19 @@ pub fn or_at_forall_location(
 pub fn exist_at_forall_location(
     forall: &ForallFact,
     location: &ForallConclusionLocation,
-) -> Option<ExistFact> {
+) -> Option<ExistFactFamily> {
     match location {
         ForallConclusionLocation::DirectThenFact(loc) => {
             match forall.then_facts.get(loc.then_fact_index)? {
-                ExistOrAndChainAtomicFact::ExistFact(exist_fact) => Some(exist_fact.clone()),
+                ExistOrAndChainAtomicFact::ExistFact(plain) => {
+                    Some(ExistFactFamily::Exist(plain.clone()))
+                }
+                ExistOrAndChainAtomicFact::ExistUniqueFact(plain) => {
+                    Some(ExistFactFamily::ExistUnique(plain.clone()))
+                }
+                ExistOrAndChainAtomicFact::NotExistFact(plain) => {
+                    Some(ExistFactFamily::NotExist(plain.clone()))
+                }
                 _ => None,
             }
         }

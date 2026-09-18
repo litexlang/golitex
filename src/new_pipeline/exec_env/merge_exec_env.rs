@@ -131,8 +131,16 @@ fn merge_facts_from(parent: &mut ExecEnv, child: &ExecEnv) -> RuntimeResult<()> 
                 parent.facts.known_or.store(or_fact);
                 parent.facts.record_fact(fact_id, fact.clone());
             }
-            Fact::ExistFact(exist_fact) => {
-                parent.facts.known_exist.store(exist_fact);
+            Fact::ExistFact(plain) => {
+                parent.facts.known_exist.store(&ExistFactFamily::Exist(plain.clone()));
+                parent.facts.record_fact(fact_id, fact.clone());
+            }
+            Fact::ExistUniqueFact(plain) => {
+                parent.facts.known_exist.store(&ExistFactFamily::ExistUnique(plain.clone()));
+                parent.facts.record_fact(fact_id, fact.clone());
+            }
+            Fact::NotExistFact(plain) => {
+                parent.facts.known_exist.store(&ExistFactFamily::NotExist(plain.clone()));
                 parent.facts.record_fact(fact_id, fact.clone());
             }
             _ => {
