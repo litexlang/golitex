@@ -22,7 +22,7 @@ WD negatives (must fail): `examples/new_pipeline_wd_negative/`.
 
 ```text
 or/           ByBuiltinRule (trichotomy ×3), SelectedBranch, KnownOr, KnownForall
-equal/        ByBuiltinRule, KnownEquality, BuiltinStrategy, BuiltinRewrite (ClosedNumericEqualSubstitution only)
+equal/        ByBuiltinRule, KnownEquality, BuiltinStrategy, MatchingOneArgByOne, BuiltinRewrite (ClosedNumericEqualSubstitution only)
 atomic/       ByBuiltinRule, KnownAtomicFact, ByDefinition, BuiltinStrategy (PosAddPos), BuiltinRewrite (OrderDual), KnownRewrite (Reflexivity/Symmetry)
 and/          per-component verify
 chain/        adjacent order / equality

@@ -38,9 +38,10 @@ impl Runtime {
     }
 
     // Stage order: builtin rule → known equality → builtin strategy →
-    // known forall → (if allowed) builtin rewrite →
+    // matching one arg by one → known forall → (if allowed) builtin rewrite →
     // known rewrite.
-    // Rewrite replaces legacy opaque resolve_obj.
+    // MatchingOneArgByOne is constructor peel (not rewrite). Rewrite replaces
+    // legacy opaque resolve_obj (ClosedNumericEqualSubstitution only).
     // Ok(None) means no proof found; that is not a runtime error.
     pub fn search_equal_fact_proof(
         &mut self,
@@ -63,6 +64,18 @@ impl Runtime {
             self.search_equal_fact_proof_by_builtin_strategy(fact, verify_state.clone())?
         {
             return Ok(Some(EqualFactSearchedProof::ByBuiltinStrategy(result)));
+        }
+
+        // Child equalities: no forall, no rewrite, no WD store.
+        let matching_child_state = VerifyState {
+            can_use_forall_fact: false,
+            can_use_rewrite: false,
+            store_well_defined_fact: false,
+        };
+        if let Some(result) = self
+            .search_equal_fact_proof_by_matching_one_arg_by_one(fact, matching_child_state)?
+        {
+            return Ok(Some(EqualFactSearchedProof::ByMatchingOneArgByOne(result)));
         }
 
         if verify_state.can_use_forall_fact {

@@ -1,12 +1,24 @@
 use super::run_command::NEW_PIPELINE_VERSION;
 use crate::new_pipeline::launch_command::LaunchCommand;
-use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
+use crate::new_pipeline::run_module::{mount_cwd_config, MountCwdConfigOutcome};
+use crate::new_pipeline::runtime::{RealOrVirtualPath, Runtime, RuntimeError, RuntimeResult};
 use crate::new_pipeline::LITEX;
 use std::io::{self, Write};
 
-/// Interactive REPL on a fresh Runtime opened from `LaunchCommand::Repl`.
+/// Interactive REPL: mount cwd `litex.config` when present (else empty), then loop.
 pub fn run_repl(command: LaunchCommand) -> RuntimeResult<()> {
     let mut runtime = Runtime::new(command);
+    // Drop placeholder Repl env so mount can open export files.
+    runtime.abort_file();
+
+    match mount_cwd_config(&mut runtime)? {
+        MountCwdConfigOutcome::Done => {}
+        MountCwdConfigOutcome::SessionError(session_error) => {
+            return Err(mount_session_error_to_runtime_error(session_error));
+        }
+    }
+
+    runtime.begin_file(RealOrVirtualPath::Repl);
     run_repl_loop(&mut runtime)
 }
 
@@ -49,6 +61,19 @@ pub fn run_repl_loop(runtime: &mut Runtime) -> RuntimeResult<()> {
 
     runtime.abort_file();
     Ok(())
+}
+
+fn mount_session_error_to_runtime_error(
+    session_error: super::run_command_outcome::RunSessionError,
+) -> RuntimeError {
+    match session_error {
+        super::run_command_outcome::RunSessionError::Runtime(error) => error,
+        super::run_command_outcome::RunSessionError::FailToImport => {
+            RuntimeError::InvalidArguments(
+                "failed to import project from cwd `litex.config`".to_string(),
+            )
+        }
+    }
 }
 
 fn format_runtime_error(error: &RuntimeError) -> String {
