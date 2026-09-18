@@ -17,8 +17,9 @@ Struct / AST approval when coding.
 | `README.md` | this contract |
 
 `Runtime.global_module_manager` holds the single `GlobalModuleManager` for a
-run. **`-r` / project `-f` execution is out of scope** for this package’s
-current work; only tables + parse + name elaborate live here.
+run. This package owns **tables + parse + mount APIs + name elaborate** only.
+`.lit` execution and LaunchCommand orchestration live in `run_module/` and
+`run/` — see [`../run/README.md`](../run/README.md).
 
 ## Name forms (syntax)
 
@@ -146,7 +147,7 @@ a::b::c
 | **1** | ✅ Parse `LitexConfig` (`[import]` / `[import std]` / `[export]`). |
 | **2** | ✅ Mount + readiness **table** APIs (`mount_module` / `ensure_imports_ready`); no `.lit` execution. |
 | **3** | ✅ Id-based `AtomicName` + `::` / `:::` elaborate. |
-| **4** | Deferred: wire `-r` / project `-f` (explicitly not in this pass). |
+| **4** | ✅ Wire `-r` / `-f` / `-e` / REPL via `run_module` + `run` (see [`../run/README.md`](../run/README.md)). |
 
 ---
 
@@ -156,3 +157,4 @@ a::b::c
 - Hand-written std path via ordinary `[import]`
 - Extra `mod_id → name` HashMap
 - Nesting `ModuleManager` inside imports
+- Topological sort beyond config order + recursive import mount

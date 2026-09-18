@@ -1,0 +1,2 @@
+# Intentionally false. If `-f a.lit` ever runs this file, the project fails.
+1 = 2

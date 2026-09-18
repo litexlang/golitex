@@ -2460,8 +2460,14 @@ statements are no longer part of the language.
 > **new_pipeline design:** there is no `submodule` and no `[hierarchy]`.
 > A maintained package is a single module. `[export]` lists only `.lit` files;
 > `[import]` and `[import std]` both mount modules under aliases that share one
-> namespace. See
-> [`src/new_pipeline/module_manager/README.md`](../src/new_pipeline/module_manager/README.md).
+> namespace.
+>
+> - Tables / parse / `::` elaborate:
+>   [`src/new_pipeline/module_manager/README.md`](../src/new_pipeline/module_manager/README.md)
+> - How `-r` / `-f` / `-e` / REPL mount and run:
+>   [`src/new_pipeline/run/README.md`](../src/new_pipeline/run/README.md)
+> - Fixtures:
+>   [`examples/new_pipeline_module_manager/`](../examples/new_pipeline_module_manager/)
 
 A maintained project directory has one `litex.config`.
 
@@ -2478,6 +2484,17 @@ chap1 = "./chapter01.lit"
 chap2 = "./chapter02.lit"
 chap3 = "./chapter03.lit"
 ```
+
+Under `LITEX_NEW_PIPELINE=1`:
+
+| Command | Config | Behavior |
+|---------|--------|----------|
+| `-r <dir>` | required at `<dir>` | all imports, then all exports |
+| `-f <file>` | optional at `parent(file)` | listed → prefix through file; unlisted → full mount then file; missing → isolated |
+| `-e` / bare REPL | optional at cwd | full mount (or empty), then eval / REPL |
+
+Mount soft Failed becomes session `FailToImport`. Soft Failed on a `-f`
+**target** itself stays a normal file failure.
 
 Important rules:
 

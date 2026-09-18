@@ -1,0 +1,2 @@
+# Mounted when cwd is this directory and the user runs `-e`.
+1 = 1
