@@ -45,20 +45,31 @@ And/Chain/Forall soft misses stay under `AndFact(Failed(...))` /
 (`Success(Proof) | Failed(...)`, or an enum with explicit Fail variants).
 Do not embed Fail inside a Proof and call `is_failed()` on that Proof.
 
-Atomic-fact WD (`verify_atomic_fact_well_definedness`) returns
+Atomic-fact WD (`verify_atomic_fact_well_definedness`) is for
+atomic-except-equality only and returns
 `RuntimeResult<VerifyAtomicFactWellDefinedResult>`:
 
 - `Ok(Success(AtomicFactWellDefinedProof))` when every argument Obj WD succeeds
 - `Ok(Failed(FailToVerifyAtomicFactWellDefinedResult))` when some argument Obj WD
   soft-misses (`failed_arg_index` + `succeeded_args` + Obj `reason`)
+- `Err(...)` only for real runtime / invariant failures (including calling it on
+  `EqualFact`)
+
+Equality WD (`verify_equal_fact_well_definedness`) is independent and returns
+`RuntimeResult<VerifyEqualFactWellDefinedResult>`:
+
+- `Ok(Success(EqualFactWellDefinedProof { left, right }))` when both sides succeed
+- `Ok(Failed(FailToVerifyEqualFactWellDefinedResult))` when left or right soft-misses
 - `Err(...)` only for real runtime / invariant failures
 
 Fact WD dispatcher (`verify_fact_well_definedness`) returns
 `RuntimeResult<VerifyFactWellDefinedResult>` with the same Success / Failed
 split; fail payload is `FailToVerifyFactWellDefinedResult` (mirrors Fact:
-index + nested WD fail, not a bare Obj fail). It only matches `Fact` and
+index + nested WD fail, not a bare Obj fail). Success proof splits
+`Equality` vs `AtomicExceptEquality`. It only matches `Fact` and
 delegates to `verify_xxx_fact_well_definedness`. Prefer the fine-grained
-entry when the Fact shape is already known (and / chain / or / exist / atomic).
+entry when the Fact shape is already known (and / chain / or / exist /
+equal / atomic-except-equality).
 
 Object WD (`verify_obj_well_definedness`) returns
 `RuntimeResult<VerifyObjWellDefinedResult>`:

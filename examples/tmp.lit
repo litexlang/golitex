@@ -1,8 +1,6 @@
-have X finite_set
-trust X $subset Z
-have f fn(x X) Z
-have g fn(x X) Z
-trust:
-    forall x X:
-        f(x) = g(x)
-finite_set_product(X, f) = finite_set_product(X, g)
+# CongruenceSubstitution builtin rewrite (new_pipeline)
+# LITEX_NEW_PIPELINE=1 litex -f examples/tmp.lit
+
+have a R
+trust a = 1
+a + 1 = 2

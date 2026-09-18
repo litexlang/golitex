@@ -13,8 +13,9 @@ pub use crate::new_pipeline::execute::execute_fact_stmt::verify_and_fact::{
     AndFactWellDefinedProof, FailToVerifyAndFactWellDefinedResult, VerifyAndFactWellDefinedResult,
 };
 pub use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::{
-    AtomicFactWellDefinedProof, FailToVerifyAtomicFactWellDefinedResult,
-    VerifyAtomicFactWellDefinedResult,
+    AtomicFactWellDefinedProof, EqualFactWellDefinedProof, FailToVerifyAtomicFactWellDefinedResult,
+    FailToVerifyEqualFactWellDefinedResult, VerifyAtomicFactWellDefinedResult,
+    VerifyEqualFactWellDefinedResult,
 };
 pub use crate::new_pipeline::execute::execute_fact_stmt::verify_chain_fact::{
     ChainFactWellDefinedProof, FailToVerifyChainFactWellDefinedResult,

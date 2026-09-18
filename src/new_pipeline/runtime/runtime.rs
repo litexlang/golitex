@@ -1,9 +1,10 @@
 use super::error::{RuntimeError, RuntimeResult};
 use super::real_or_virtual_path::RealOrVirtualPath;
 use super::runtime_ids::{FactId, IdentifierId, PropRewritePropertyId, WellDefinednessId};
-use crate::new_pipeline::ast::names::{AtomicName, BoundName};
-use crate::new_pipeline::launch_command::LaunchCommand;
+use crate::new_pipeline::ast::names::{AtomicName, BoundName, PlainName};
+use crate::new_pipeline::ast::obj::IdentifierObj;
 use crate::new_pipeline::exec_env::exec_env::ExecEnv;
+use crate::new_pipeline::launch_command::LaunchCommand;
 use crate::new_pipeline::module_manager::{ExportFileAndItsExecEnv, GlobalModuleManager};
 use std::collections::HashMap;
 
@@ -25,6 +26,9 @@ pub struct Runtime {
     pub ids: Ids,
     /// How this Runtime session was launched (`-strict` / `-session` live here).
     pub launch_command: LaunchCommand,
+    /// Export-file index of the `.lit` currently being parsed/run in the
+    /// *current* module's `LitexConfig.exports` (0 for bare `-e` / `-f` / REPL).
+    pub current_export_file_id: usize,
 }
 
 /// One parse layer's plain names → [`IdentifierId`].
@@ -61,6 +65,7 @@ impl Runtime {
             current_file: file.clone(),
             ids: Ids::new(),
             launch_command: command,
+            current_export_file_id: 0,
         };
         runtime.begin_file(file);
         runtime
@@ -71,6 +76,11 @@ impl Runtime {
         self.execution_environments_stack
             .push(Box::new(ExecEnv::new()));
         self.push_parse_scope();
+    }
+
+    /// Set which export slot of the current module is being parsed/run.
+    pub fn set_current_export_file_id(&mut self, export_file_id: usize) {
+        self.current_export_file_id = export_file_id;
     }
 
     pub fn finish_file(&mut self) -> (RealOrVirtualPath, Box<ExecEnv>) {
@@ -119,14 +129,96 @@ impl Runtime {
     }
 
     pub fn resolve_plain_atom(&self, name: &str) -> RuntimeResult<IdentifierId> {
-        for scope in self.parse_scope_stack.iter().rev() {
+        Ok(self.resolve_plain_atom_with_scope_index(name)?.0)
+    }
+
+    /// Resolve a plain name and report which parse-scope index holds it.
+    /// Index `0` is the file-root scope pushed by `begin_file`.
+    pub fn resolve_plain_atom_with_scope_index(
+        &self,
+        name: &str,
+    ) -> RuntimeResult<(IdentifierId, usize)> {
+        for (scope_index, scope) in self.parse_scope_stack.iter().enumerate().rev() {
             if let Some(id) = scope.plain.get(name) {
-                return Ok(*id);
+                return Ok((*id, scope_index));
             }
         }
         Err(RuntimeError::InternalBug(format!(
             "undefined name `{name}`"
         )))
+    }
+
+    /// True when `name` is bound in the file-root parse scope (scope 0).
+    pub fn is_bound_in_file_root_parse_scope(&self, name: &str) -> bool {
+        self.parse_scope_stack
+            .first()
+            .is_some_and(|scope| scope.plain.contains_key(name))
+    }
+
+    /// Global reference form for a file-root symbol (no IdentifierId).
+    ///
+    /// - root module: `WithExportFileId { current_export_file_id, name }`
+    /// - inside imported mod: `WithModAndExportFileId { current_mod_id, … }`
+    pub fn atomic_name_for_file_root_symbol(&self, name: PlainName) -> AtomicName {
+        match self.global_module_manager.current_mod_id() {
+            None => AtomicName::WithExportFileId {
+                export_file_id: self.current_export_file_id,
+                name,
+            },
+            Some(global_mod_id) => AtomicName::WithModAndExportFileId {
+                global_mod_id,
+                export_file_id: self.current_export_file_id,
+                name,
+            },
+        }
+    }
+
+    pub fn identifier_obj_for_file_root_symbol(&self, name: PlainName) -> IdentifierObj {
+        match self.atomic_name_for_file_root_symbol(name) {
+            AtomicName::WithExportFileId {
+                export_file_id,
+                name,
+            } => IdentifierObj::with_export_file_id(export_file_id, name),
+            AtomicName::WithModAndExportFileId {
+                global_mod_id,
+                export_file_id,
+                name,
+            } => IdentifierObj::with_mod_and_export_file_id(global_mod_id, export_file_id, name),
+            AtomicName::Plain { name } => {
+                panic!("file-root symbol must not stay Plain: `{name}`")
+            }
+        }
+    }
+
+    /// Free reference: file-root binding → qualified; inner binding → Plain+id.
+    pub fn identifier_obj_for_plain_free_ref(
+        &self,
+        name: String,
+    ) -> RuntimeResult<IdentifierObj> {
+        let (id, scope_index) = self.resolve_plain_atom_with_scope_index(&name)?;
+        if scope_index == 0 {
+            Ok(self.identifier_obj_for_file_root_symbol(name))
+        } else {
+            Ok(IdentifierObj::plain(id, name))
+        }
+    }
+
+    /// Exec/store mention of a defined symbol: qualify iff it is a file-root name.
+    pub fn identifier_obj_for_stored_mention(&self, bound: &BoundName) -> IdentifierObj {
+        if self.is_bound_in_file_root_parse_scope(&bound.name) {
+            self.identifier_obj_for_file_root_symbol(bound.name.clone())
+        } else {
+            IdentifierObj::from_bound_name(bound)
+        }
+    }
+
+    /// Prop/atomic name free ref: file-root prop → qualified; else stay Plain.
+    pub fn atomic_name_for_plain_prop_ref(&self, name: String) -> AtomicName {
+        if self.is_bound_in_file_root_parse_scope(&name) {
+            self.atomic_name_for_file_root_symbol(name)
+        } else {
+            AtomicName::Plain { name }
+        }
     }
 
     // Allocate a new IdentifierId and occupy `name` in the current scope.

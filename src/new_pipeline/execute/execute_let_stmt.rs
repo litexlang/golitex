@@ -1,5 +1,5 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact};
-use crate::new_pipeline::ast::obj::{IdentifierObj, Obj};
+use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::stmt::LetObjStmt;
 use crate::new_pipeline::exec_env::DefinedIdentifierInfo;
 use crate::new_pipeline::execute::execute_fact_stmt::{VerifyObjWellDefinedResult, VerifyState};
@@ -56,7 +56,8 @@ impl Runtime {
         );
 
         let equality_fact_id = self.ids.allocate_fact_id();
-        let left = Obj::Identifier(IdentifierObj::from_bound_name(&let_stmt.name));
+        // Definition key stays plain; stored equality LHS uses global name at file root.
+        let left = Obj::Identifier(self.identifier_obj_for_stored_mention(&let_stmt.name));
         let equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
             fact_id: equality_fact_id,
             left,

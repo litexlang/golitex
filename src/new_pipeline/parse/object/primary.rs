@@ -510,11 +510,17 @@ fn parse_identifier_or_mod_or_standard_set(
         return Err(tb.parse_error(format!("expected name, got `{name}`")));
     }
 
-    let id = rt.resolve_plain_atom(&name).map_err(|err| match err {
-        crate::new_pipeline::runtime::RuntimeError::InternalBug(message) => tb.parse_error(message),
-        other => other,
-    })?;
-    Ok(Obj::Identifier(IdentifierObj::plain(id, name)))
+    // File-root free refs become WithExportFileId / WithModAndExportFileId;
+    // inner-scope binders stay Plain { id, name }.
+    let identifier = rt
+        .identifier_obj_for_plain_free_ref(name)
+        .map_err(|err| match err {
+            crate::new_pipeline::runtime::RuntimeError::InternalBug(message) => {
+                tb.parse_error(message)
+            }
+            other => other,
+        })?;
+    Ok(Obj::Identifier(identifier))
 }
 
 fn standard_set_from_name(name: &str) -> Option<StandardSet> {

@@ -13,14 +13,14 @@ Exit 0 is enough. No requirement to assert which `searched_proof` variant won.
 
 Stub / not-yet-wired nodes are **omitted** (no SKIP placeholders).
 Still open (non-rewrite): empty atomic builtin-rule families (`NormalAtomic` / several `Not*` / `FnEqualIn`); more exist builtins.
-Deferred: KnownRewrite, atomic OrderDual rewrite.
+Deferred: KnownRewrite, atomic OrderDual rewrite; further equality BuiltinRewrite variants beyond CongruenceSubstitution.
 WD negatives (must fail): `examples/new_pipeline_wd_negative/`.
 
 ## Layout
 
 ```text
 or/           ByBuiltinRule (trichotomy ×3), SelectedBranch, KnownOr, KnownForall
-equal/        ByBuiltinRule, KnownEquality, BuiltinStrategy (rational/extremum/mod), BuiltinRewrite
+equal/        ByBuiltinRule, KnownEquality, BuiltinStrategy, BuiltinRewrite (CongruenceSubstitution)
 atomic/       ByBuiltinRule, KnownAtomicFact, ByDefinition, BuiltinStrategy (PosAddPos)
 and/          per-component verify
 chain/        adjacent order / equality
