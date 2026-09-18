@@ -11,7 +11,7 @@ pub use object_evaluation::{
 pub use statement::result::{ProveFactResult, StmtResult, UnknownStmtResult};
 pub use statement::success::{
     CaseDisjointnessOrientation, FactStatementEvidence, SuccessAxiomStmtResult,
-    SuccessByAntisymmetricPropStmtResult, SuccessByAxiomOfChoiceStmtResult,
+    SuccessByAxiomOfChoiceStmtResult,
     SuccessByCasesStmtResult, SuccessByClosedRangeAsCasesStmtResult, SuccessByContraStmtResult,
     SuccessByDefStmtResult, SuccessByEnumerateFiniteSetStmtResult,
     SuccessByEnumerateRangeStmtResult, SuccessByExtensionStmtResult,
@@ -78,7 +78,6 @@ pub use verification::builtin_evidence::{
     RationalAlgebraicNormalizationBuiltinRuleEvidence, RationalMembershipClosureBuiltinRule,
     RationalNormalizationBuiltinRuleEvidence, RealArithmeticMembershipClosureBuiltinRule,
     RealIntervalSubsetRealBuiltinRuleEvidence, RefinedNumericMembershipBuiltinRuleEvidence,
-    RegisteredAntisymmetricPredicateBuiltinRuleEvidence,
     RegisteredReflexivePredicateBuiltinRuleEvidence,
     RegisteredSymmetricPredicateBuiltinRuleEvidence,
     RuntimeResolvedNumericComparisonBuiltinRuleEvidence, SetBuilderMembershipBuiltinRuleEvidence,

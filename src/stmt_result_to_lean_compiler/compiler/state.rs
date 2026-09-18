@@ -53,7 +53,6 @@ pub(super) enum RegisteredPredicatePropertyCompilationKind {
     Reflexive,
     Symmetric,
     Transitive,
-    Antisymmetric,
 }
 
 impl RegisteredPredicatePropertyCompilationKind {
@@ -62,7 +61,6 @@ impl RegisteredPredicatePropertyCompilationKind {
             Self::Reflexive => "reflexive",
             Self::Symmetric => "symmetric",
             Self::Transitive => "transitive",
-            Self::Antisymmetric => "antisymmetric",
         }
     }
 }

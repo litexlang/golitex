@@ -104,13 +104,6 @@ by symmetric_prop:
     x = y
     y = x
 
-by antisymmetric_prop:
-    ? forall x, y set:
-        $tmp_same_obj(x, y)
-        $tmp_same_obj(y, x)
-        =>:
-            x = y
-    x = y
 
 # Explicit choice-backed theorem interface.
 have tmp_index set

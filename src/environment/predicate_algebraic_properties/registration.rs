@@ -15,12 +15,6 @@ impl ExecEnv {
             .is_reflexive = true;
     }
 
-    pub fn store_antisymmetric_prop_name(&mut self, prop_name: String) {
-        self.prop_algebraic_properties
-            .properties_mut(prop_name)
-            .is_antisymmetric = true;
-    }
-
     pub fn store_symmetric_prop_permutation(
         &mut self,
         prop_name: String,

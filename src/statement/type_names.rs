@@ -152,11 +152,6 @@ impl ByReflexivePropStmt {
     }
 }
 
-impl ByAntisymmetricPropStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "ByAntisymmetricPropStmt".to_string()
-    }
-}
 
 impl ByZornLemmaStmt {
     pub fn stmt_type_name(&self) -> String {
@@ -476,11 +471,6 @@ impl ByReflexivePropStmt {
     }
 }
 
-impl ByAntisymmetricPropStmt {
-    pub fn output_type_string() -> String {
-        "proof by antisymmetry".to_string()
-    }
-}
 
 impl ByZornLemmaStmt {
     pub fn output_type_string() -> String {

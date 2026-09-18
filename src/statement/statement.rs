@@ -64,7 +64,6 @@ pub enum ByStmt {
     ByTransitivePropStmt(ByTransitivePropStmt),
     BySymmetricPropStmt(BySymmetricPropStmt),
     ByReflexivePropStmt(ByReflexivePropStmt),
-    ByAntisymmetricPropStmt(ByAntisymmetricPropStmt),
     ByZornLemmaStmt(ByZornLemmaStmt),
     ByAxiomOfChoiceStmt(ByAxiomOfChoiceStmt),
     ByRegularityAxiomStmt(ByRegularityAxiomStmt),

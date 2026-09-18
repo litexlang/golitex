@@ -1,5 +1,8 @@
-forall f fn(x R) R:
-    forall y R:
-        f(y) = f(y - 1)
-    =>:
-        f(2) = f(1)
+claim:
+    ? forall x, y R:
+        x < y
+        =>:
+            exist z R st {x < z, z < y}
+    witness exist z R st {x < z, z < y} from (x + y) / 2:
+        x < (x + y) / 2
+        (x + y) / 2 < y

@@ -151,15 +151,6 @@ impl StatementResultRenderer {
                     vec![("verification".to_string(), verification)],
                 )
             }
-            SuccessByStmtResult::ByAntisymmetricPropStmt(result) => {
-                let verification = optional_prop_registration(self, result.verification.as_ref());
-                self.non_fact_stmt(
-                    "ByAntisymmetricPropStmt",
-                    result.statement.to_string(),
-                    &result.common,
-                    vec![("verification".to_string(), verification)],
-                )
-            }
             SuccessByStmtResult::ByZornLemmaStmt(result) => {
                 let verification = optional_choice_verification(self, result.verification.as_ref());
                 self.non_fact_stmt(

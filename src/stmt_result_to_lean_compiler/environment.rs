@@ -214,8 +214,6 @@ pub(super) struct StmtResultToLeanCompilerBindings {
         HashMap<String, Vec<RegisteredPredicatePropertyTheoremBinding>>,
     pub(super) registered_transitive_predicate_theorem_bindings:
         HashMap<String, RegisteredPredicatePropertyTheoremBinding>,
-    pub(super) registered_antisymmetric_predicate_theorem_bindings:
-        HashMap<String, RegisteredPredicatePropertyTheoremBinding>,
 }
 
 #[derive(Clone)]

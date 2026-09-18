@@ -441,9 +441,6 @@ impl SuccessByStmtResult {
             Self::ByReflexivePropStmt(result) => {
                 visit_prop_registration_children(result.verification.as_ref(), visitor)
             }
-            Self::ByAntisymmetricPropStmt(result) => {
-                visit_prop_registration_children(result.verification.as_ref(), visitor)
-            }
             Self::ByZornLemmaStmt(result) => {
                 visit_choice_children(result.verification.as_ref(), visitor)
             }
@@ -569,9 +566,6 @@ impl SuccessByStmtResult {
             Self::ByReflexivePropStmt(result) => {
                 try_visit_prop_registration_children_mut(result.verification.as_mut(), visitor)?
             }
-            Self::ByAntisymmetricPropStmt(result) => {
-                try_visit_prop_registration_children_mut(result.verification.as_mut(), visitor)?
-            }
             Self::ByZornLemmaStmt(result) => {
                 try_visit_choice_children_mut(result.verification.as_mut(), visitor)?
             }
@@ -667,9 +661,6 @@ impl SuccessByStmtResult {
                 into_prop_registration_children(result.common, result.verification)
             }
             Self::ByReflexivePropStmt(result) => {
-                into_prop_registration_children(result.common, result.verification)
-            }
-            Self::ByAntisymmetricPropStmt(result) => {
                 into_prop_registration_children(result.common, result.verification)
             }
             Self::ByZornLemmaStmt(result) => {
@@ -1861,7 +1852,6 @@ impl SuccessByStmtResult {
             Self::ByTransitivePropStmt(result) => result.common,
             Self::BySymmetricPropStmt(result) => result.common,
             Self::ByReflexivePropStmt(result) => result.common,
-            Self::ByAntisymmetricPropStmt(result) => result.common,
             Self::ByZornLemmaStmt(result) => result.common,
             Self::ByAxiomOfChoiceStmt(result) => result.common,
             Self::ByRegularityAxiomStmt(result) => result.common,
@@ -1885,7 +1875,6 @@ impl SuccessByStmtResult {
             Self::ByTransitivePropStmt(result) => result.statement.clone().into(),
             Self::BySymmetricPropStmt(result) => result.statement.clone().into(),
             Self::ByReflexivePropStmt(result) => result.statement.clone().into(),
-            Self::ByAntisymmetricPropStmt(result) => result.statement.clone().into(),
             Self::ByZornLemmaStmt(result) => result.statement.clone().into(),
             Self::ByAxiomOfChoiceStmt(result) => result.statement.clone().into(),
             Self::ByRegularityAxiomStmt(result) => result.statement.clone().into(),
@@ -1909,7 +1898,6 @@ impl SuccessByStmtResult {
             Self::ByTransitivePropStmt(result) => &result.common,
             Self::BySymmetricPropStmt(result) => &result.common,
             Self::ByReflexivePropStmt(result) => &result.common,
-            Self::ByAntisymmetricPropStmt(result) => &result.common,
             Self::ByZornLemmaStmt(result) => &result.common,
             Self::ByAxiomOfChoiceStmt(result) => &result.common,
             Self::ByRegularityAxiomStmt(result) => &result.common,
@@ -1933,7 +1921,6 @@ impl SuccessByStmtResult {
             Self::ByTransitivePropStmt(result) => &mut result.common,
             Self::BySymmetricPropStmt(result) => &mut result.common,
             Self::ByReflexivePropStmt(result) => &mut result.common,
-            Self::ByAntisymmetricPropStmt(result) => &mut result.common,
             Self::ByZornLemmaStmt(result) => &mut result.common,
             Self::ByAxiomOfChoiceStmt(result) => &mut result.common,
             Self::ByRegularityAxiomStmt(result) => &mut result.common,

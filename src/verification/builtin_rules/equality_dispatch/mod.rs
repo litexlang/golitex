@@ -4,7 +4,6 @@ mod empty_sets;
 mod finite_set_cardinality;
 mod indexed_set_families;
 mod literal_set_intersections;
-mod registered_antisymmetry;
 mod set_builders;
 mod set_operations;
 mod subtraction;

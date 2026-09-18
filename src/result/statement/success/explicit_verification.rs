@@ -74,11 +74,6 @@ pub struct SuccessByReflexivePropStmtResult {
     pub verification: Option<SuccessVerifyByPropRegistrationResult>,
 }
 
-pub struct SuccessByAntisymmetricPropStmtResult {
-    pub statement: ByAntisymmetricPropStmt,
-    pub common: SuccessStmtCommonResult,
-    pub verification: Option<SuccessVerifyByPropRegistrationResult>,
-}
 
 pub struct SuccessByZornLemmaStmtResult {
     pub statement: ByZornLemmaStmt,
@@ -136,7 +131,6 @@ pub enum SuccessByStmtResult {
     ByTransitivePropStmt(Box<SuccessByTransitivePropStmtResult>),
     BySymmetricPropStmt(Box<SuccessBySymmetricPropStmtResult>),
     ByReflexivePropStmt(Box<SuccessByReflexivePropStmtResult>),
-    ByAntisymmetricPropStmt(Box<SuccessByAntisymmetricPropStmtResult>),
     ByZornLemmaStmt(Box<SuccessByZornLemmaStmtResult>),
     ByAxiomOfChoiceStmt(Box<SuccessByAxiomOfChoiceStmtResult>),
     ByRegularityAxiomStmt(Box<SuccessByRegularityAxiomStmtResult>),

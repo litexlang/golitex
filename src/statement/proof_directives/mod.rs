@@ -1,7 +1,6 @@
 //! Statements that explicitly choose a verifier operation.
 //!
 //! This includes both `by …` selection forms and `release thm …`.
-mod antisymmetric_prop;
 mod axiom_of_choice;
 mod cases;
 mod contra;
@@ -20,7 +19,6 @@ mod theorem_release;
 mod theorem_selection;
 mod transitive_prop;
 mod zorn_lemma;
-pub use antisymmetric_prop::ByAntisymmetricPropStmt;
 pub use axiom_of_choice::ByAxiomOfChoiceStmt;
 pub use cases::ByCasesStmt;
 pub use contra::ByContraStmt;

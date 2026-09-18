@@ -377,7 +377,6 @@ pub use crate::result::{
     RationalMembershipClosureBuiltinRule, RationalNormalizationBuiltinRuleEvidence,
     RealArithmeticMembershipClosureBuiltinRule, RealIntervalSubsetRealBuiltinRuleEvidence,
     RefinedNumericMembershipBuiltinRuleEvidence,
-    RegisteredAntisymmetricPredicateBuiltinRuleEvidence,
     RegisteredReflexivePredicateBuiltinRuleEvidence,
     RegisteredSymmetricPredicateBuiltinRuleEvidence,
     RuntimeResolvedNumericComparisonBuiltinRuleEvidence, SetBuilderMembershipBuiltinRuleEvidence,
@@ -389,7 +388,7 @@ pub use crate::result::{
 };
 pub use crate::result::{
     AtomicPredicateDomainCheckRole, CaseDisjointnessOrientation, FactStatementEvidence,
-    SuccessAxiomStmtResult, SuccessByAntisymmetricPropStmtResult, SuccessByAxiomOfChoiceStmtResult,
+    SuccessAxiomStmtResult, SuccessByAxiomOfChoiceStmtResult,
     SuccessByCasesStmtResult, SuccessByClosedRangeAsCasesStmtResult, SuccessByContraStmtResult,
     SuccessByDefStmtResult, SuccessByEnumerateFiniteSetStmtResult,
     SuccessByEnumerateRangeStmtResult, SuccessByExtensionStmtResult,
@@ -528,7 +527,6 @@ pub use crate::statement::parameters::SetBoundParameterGroup;
 pub use crate::statement::parameters::SetBoundParameterList;
 pub use crate::statement::parameters::TypedParameterGroup;
 pub use crate::statement::parameters::TypedParameterList;
-pub use crate::statement::proof_directives::ByAntisymmetricPropStmt;
 pub use crate::statement::proof_directives::ByAxiomOfChoiceStmt;
 pub use crate::statement::proof_directives::ByCasesStmt;
 pub use crate::statement::proof_directives::ByContraStmt;
@@ -595,7 +593,6 @@ pub use crate::syntax::keywords::ABSTRACT_PROP;
 pub use crate::syntax::keywords::ADD;
 pub use crate::syntax::keywords::ALGO;
 pub use crate::syntax::keywords::AND;
-pub use crate::syntax::keywords::ANTISYMMETRIC_PROP;
 pub use crate::syntax::keywords::ARCSIN;
 pub use crate::syntax::keywords::AS;
 pub use crate::syntax::keywords::AXIOM;

@@ -9,5 +9,4 @@ pub struct EnvironmentPredicateProperties {
     pub is_transitive: bool,
     pub symmetric_argument_permutations: Vec<Vec<usize>>,
     pub is_reflexive: bool,
-    pub is_antisymmetric: bool,
 }

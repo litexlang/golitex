@@ -29,7 +29,7 @@
 # is not to prove a new goal immediately, but to let Litex remember the property
 # and use it later during proof checking.
 
-# The four registration keywords are:
+# The three registration keywords are:
 
 # - `by reflexive_prop`: after proving `forall x set: $p(x, x)`, Litex can later
 #   close goals of the form `$p(a, a)`.
@@ -37,9 +37,6 @@
 #   a known `$p(a, b)` to prove `$p(b, a)` without repeating the proof.
 # - `by transitive_prop`: after proving `$p(x, y)` and `$p(y, z) => $p(x, z)`,
 #   Litex can use chains like `a $p b $p c` and remember `$p(a, c)` without
-#   repeating the proof.
-# - `by antisymmetric_prop`: after proving `$p(x, y)` and `$p(y, x) => x = y`,
-#   Litex can later prove `a = b` from `$p(a, b)` and `$p(b, a)` without
 #   repeating the proof.
 
 # Here is the basic pattern, made executable with the equality relation on sets.
@@ -75,15 +72,6 @@ sketch:
         x = y = z
         by def $rel(x, z)
 
-    by antisymmetric_prop:
-        ? forall x, y set:
-            $rel(x, y)
-            $rel(y, x)
-            =>:
-                x = y
-        $rel(x, y)
-        x = y
-
     have a, b, c set
 
     claim:
@@ -102,13 +90,6 @@ sketch:
             =>:
                 $rel(u, w)
         u $rel v $rel w
-
-    claim:
-        ? forall u, v set:
-            $rel(u, v)
-            $rel(v, u)
-            =>:
-                u = v
 
 # After these registrations, later proofs can be shorter: you state the local
 # facts, and Litex uses the registered relation properties as background steps.
@@ -714,9 +695,9 @@ sketch:
 # - Transitive: two related steps can be composed into one.
 
 # In ordinary proofs, these properties are useful because they become reusable
-# background facts. Litex mirrors that idea with `by reflexive_prop`,
-# `by symmetric_prop`, `by transitive_prop`, and `by antisymmetric_prop`: first you
-# prove the property for a user-defined relation, then Litex can use it later
+# background facts. Litex mirrors the reflexive, symmetric, and transitive cases
+# with `by reflexive_prop`, `by symmetric_prop`, and `by transitive_prop`: first
+# you prove the property for a user-defined relation, then Litex can use it later
 # without making you restate the same argument. This is why equivalence relations
 # and order-like relations are so convenient: once their basic properties are
 # registered, later proofs can focus on the mathematical idea rather than on

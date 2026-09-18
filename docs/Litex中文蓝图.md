@@ -9,7 +9,7 @@
 英文版: https://litexlang.com/doc/Litex_Blueprint
 
 
-*Litex 是一门易学易用的形式化语言。源码按日常数学书写集合与事实，而不必先与 tactic 搏斗；系统自下而上检查，并给出每一步的成立依据。由此，人类给出意图、AI 提出候选、Litex 负责把关，共同积累可检查的数学知识。它亦设计为可编译到 Lean 并接入 Mathlib——现已覆盖部分场景，预计 2026 年底完成更广覆盖。*
+*Litex 是一门易学易用的基于集合论的形式化语言。源码按日常数学书写的风格书写——用户直接写下想要证明什么；系统自下而上验证，并反馈每一步的成立依据或停止位置。它亦设计为可编译到 Lean —— 现已覆盖部分场景，预计 2026 年底完成更广覆盖。由此形成人类–AI–Litex 协作闭环，为 Math for AI 提供可积累的验证动力。*
 
 > **Litex 是测试版（beta）的实验性爱好项目，可能存在边缘问题。**
 
@@ -29,6 +29,7 @@ Litex 定位四层检查（写作时逐层核对；面向不同受众可以调�
 - [0. Litex 蓝图总览](#overview)
   - [0.1 不同读者的入口](#overview-readers)
   - [0.2 五条主线](#overview-spine)
+  - [0.2 源码速览（gallery）](#overview-gallery)
 - [1. Litex 的数学基础：从最广为人熟悉的集合论出发](#set-theory)
 - [2. 事实导向：把“什么成立”写进源码](#fact-oriented)
 - [3. 自下而上：让已证明的事实推动后续证明](#bottom-up)
@@ -241,6 +242,236 @@ Litex 的设计初衷其实非常简单：正如 Fortran 和 C 抽象了部分�
 3. **自下而上积累**：每个通过验证的事实都会进入上下文，供后续推理使用；这是默认的推理方向。
 4. **可追溯的证明流**：系统整理并输出从定义、前提到结论的前后依赖关系，使整个证明过程成为可阅读、可检查、可复用的结构化信息；出错时指出失败发生在哪里。
 5. **Lean 复核**：从一开始的设计上，Litex 就被设计成能编译成 Lean 证明对象，并交由 Lean 内核独立检查；现已覆盖部分数学场景，预计 2026 年底完成。
+
+<a id="overview-gallery"></a>
+
+#### 源码速览（gallery）
+
+下面几段不是教程，只展示「直接写要证的东西」在 Litex 里长什么样；后文各节再展开设计与边界。
+
+最简单的等式：
+
+```litex
+1 + 1 = 2
+```
+
+多项式恒等式：
+
+```litex
+forall a, b R:
+    (a + b)^2 = a^2 + 2 * a * b + b^2
+```
+
+集合事实：
+
+```litex
+forall s, t, u set:
+    s $subset t
+    =>:
+        intersect(s, u) $subset intersect(t, u)
+```
+
+非负数相加仍非负：
+
+```litex
+forall x, y R:
+    x >= 0
+    y >= 0
+    =>:
+        x + y >= 0
+```
+
+定义域条件已知时的良定义调用：
+
+```litex
+forall f fn(t R: t > 0) R, x R:
+    x > 0
+    =>:
+        f(x) = f(x)
+```
+
+谓词——先定义，再当作原子事实使用：
+
+```litex
+prop is_positive(x R):
+    x > 0
+
+forall a, b R:
+    $is_positive(a)
+    a = b
+    =>:
+        $is_positive(b)
+```
+
+已知全称事实，用来推出具体的原子事实：
+
+```litex
+prop is_positive(n R):
+    exist a R+ st {n > a}
+
+claim:
+    ? forall x R:
+        x > 10
+        =>:
+            $is_positive(x)
+    witness exist a R+ st {x > a} from 10
+
+have a R:
+    a > 10
+
+$is_positive(a)
+```
+
+存在量词——先见证，再从 `exist` 事实取出对象：
+
+```litex
+witness exist x R st {x = 0} from 0
+
+obtain zero from exist x R st {x = 0}
+zero = 0
+```
+
+定理——命名可复用结论，再按需引用（整除传递性）：
+
+```litex
+prop divides_by(d, n Z):
+    exist k Z st {n = d * k}
+
+thm divides_transitive:
+    ? forall a, b, c Z:
+        $divides_by(a, b)
+        $divides_by(b, c)
+        =>:
+            $divides_by(a, c)
+    obtain k from $divides_by(a, b)
+    obtain m from $divides_by(b, c)
+    c = b * m = (a * k) * m = a * (k * m)
+    witness $divides_by(a, c) from k * m:
+        c = a * (k * m)
+
+witness $divides_by(2, 6) from 3
+witness $divides_by(6, 30) from 5
+
+by thm divides_transitive(2, 6, 30) => $divides_by(2, 30)
+```
+
+具名函数：
+
+```litex
+have fn reciprocal(x R: x != 0) R = 1 / x
+reciprocal(2) = 1 / 2
+```
+
+局部证明块 `claim`——写出沿途应当成立的等式，不必点名改写方向：
+
+```litex
+claim:
+    ? forall a, b, c, d, g, f R:
+        a * b = c * d
+        g = f
+        =>:
+            a * (b * g) = c * (d * f)
+    c * (d * f) = (c * d) * f = (a * b) * f = a * (b * f) = a * (b * g)
+```
+
+反证法——否定「每个实数都满足 `x^2 >= x`」：
+
+```litex
+by contra:
+    ? not forall x R:
+        x^2 >= x
+    impossible 0.5^2 >= 0.5
+```
+
+分类讨论——穷尽分支，再在每个分支里关闭目标：
+
+```litex
+have fn k(x R) R by cases:
+    case x = 2: 3
+    case x != 2: 4
+
+have x R
+
+by cases:
+    ? k(x) > 2
+    case x = 2:
+        k(x) = 3 > 2
+    case x != 2:
+        k(x) = 4 > 2
+```
+
+归纳法——前 `n` 个正奇数之和等于 `n^2`：
+
+```litex
+have fn kth_odd(k Z) Z = 2 * k - 1
+
+thm sum_first_odds:
+    ? forall n Z:
+        n >= 1
+        =>:
+            sum(1, n, kth_odd) = n^2
+    by induc n from 1:
+        ? sum(1, n, kth_odd) = n^2
+
+        ? from n = 1:
+            kth_odd(1) = 2 * 1 - 1 = 1
+            sum(1, 1, kth_odd) = kth_odd(1) = 1 = 1^2
+
+        ? induc:
+            kth_odd(n + 1) = 2 * (n + 1) - 1
+            sum(1, n + 1, kth_odd) = sum(1, n, kth_odd) + kth_odd(n + 1) = n^2 + (2 * (n + 1) - 1) = (n + 1)^2
+```
+
+结构体——群：载体上的运算、单位元、逆元，以及单位元唯一性：
+
+```litex
+struct Group<s nonempty_set>:
+    mul fn(x, y s) s
+    one s
+    inv fn(x s) s
+    <=>:
+        forall x, y, z s:
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+        forall x s:
+            mul(x, one) = x
+            mul(one, x) = x
+            mul(inv(x), x) = one
+
+forall s nonempty_set, G &Group<s>, identity s:
+    forall a s:
+        G.mul(identity, a) = a
+        G.mul(a, identity) = a
+    =>:
+        identity = G.mul(G.one, identity) = G.one
+```
+
+模板——按参数族实例化定义，再用 `\name<args>` 取出：
+
+```litex
+struct Triple<X set>:
+    first X
+    second X
+    third X
+
+template<X set>:
+    have fn triple(a, b, c X) &Triple<X> = (a, b, c)
+
+\triple<R>(1, 2, 3) = (1, 2, 3)
+
+have p &Triple<R> = \triple<R>(1, 2, 3)
+p.first = 1
+```
+
+一道简单应用题——变量名可以用中文：
+
+```litex
+# 妈妈年龄是小明年龄的 3 倍再加 4；小明 15 岁。妈妈几岁？
+have 小明年龄 R = 15
+have 妈妈年龄 R = 3 * 小明年龄 + 4
+妈妈年龄 = 3 * 15 + 4 = 49
+```
+
+你写出数学步骤；Litex 检查每一步的衔接，并把通过的事实留在上下文里。
 
 <a id="set-theory"></a>
 

@@ -7,124 +7,200 @@
 
 Created and maintained by Jiachen Shen.
 
-
-**Litex is a small, readable, fact-oriented formal language for turning**
-**mathematical reasoning into checkable, traceable statements; it also keeps the**
-**processing of definitions, verification, and repairs readable, traceable, and**
-**repairable, so users can understand what it is doing and participate in the**
-**human–AI–Litex loop.**
-
-It is a set-theoretic, fact-oriented formal language that builds proof flows
-from the bottom up. It puts humans, AI, and the verifier in the same loop:
-humans provide mathematical intent, AI proposes or repairs the next fact, and
-Litex checks it and returns either its supporting evidence or the point where
-verification stops. Through this cycle, checkable mathematical knowledge
-accumulates. In principle, any Litex code can be compiled to Lean and connected
-to the Lean/Mathlib ecosystem.
+*Litex is an easy-to-learn, easy-to-use set-theoretic formal language. Its
+source follows ordinary mathematical writing—users state directly what they
+want to prove; the system verifies bottom-up and returns the grounds for each
+step, or where checking stops. It is also designed to compile to Lean—some
+scenarios are already covered, with broader coverage expected by the end of
+2026. This forms a human–AI–Litex collaboration loop that supplies accumulable
+verification momentum for Math for AI.*
 
 > **Litex is an experimental hobby project in beta; expect rough edges.**
 
-Litex can be viewed as a scientific question in mathematics: can we design a
-formal language whose source stays close to natural mathematical expression,
-while its verification flow lets users understand what each line does and how
-it is proved? The value of such a language lies not only in its source code,
-but also in the plain, rigorous, structured verification flow and the
-mathematical dependencies it reveals. If readers can understand every step of a
-formal proof rather than only a few selected steps, the proof may even prompt
-the next important mathematical question.
+Natural language is easy to understand but hard to verify rigorously; formal
+code can be verified but is often hard to understand. Litex aims to bridge the
+two: even if you are not a formalization expert and do not use Lean day to day,
+you can still bring rigorous checking into your own work.
 
-In a time when reasoning is becoming more abundant while understanding is
-becoming scarcer, Litex rethinks the first principles of formal-language design
-as a tool for helping more people become formalization experts. Litex is not
-only a tool for formalization experts; it aims to help more people become
-formalization experts and bring formal rigor into every industry.
-
-Lean is an elegant formal language, and without it AI for Math could not have
-developed so rapidly. Litex does not replace Lean: it keeps the goal of
-compiling source to Lean while exploring a different design philosophy based
-on facts and bottom-up construction. The Litex-to-Lean compiler is expected by
-the end of 2026. A future mathematician's workflow may have humans and AI
-produce a proof together, then generate Lean or Litex code to check its
-correctness; Litex aims to be a more readable front end to Lean for that
-workflow.
-
-This README is a five-minute introduction. For the complete design argument,
-detailed comparisons, examples, and trust boundaries, read the
+This README is a short introduction. For the full design argument, comparisons,
+and trust boundaries, read the
 [Litex Blueprint](docs/Litex_Blueprint.md)
 ([中文蓝图](docs/Litex中文蓝图.md)).
 </div>
-
-## Why another formal-language path?
-
-The question is not only which formal language is the most powerful, mature, or
-widely adopted. We should also ask what other forms of mathematical thought
-could become possible if the interface were different. As AI produces more
-mathematical reasoning, solving more problems and producing shorter proofs are
-useful goals—but they are not the whole purpose of mathematics. Different
-formal paths can preserve the attention needed for deep understanding and
-discovery.
-
-Litex begins from this possibility. It treats formalization as a way of
-shaping mathematical attention, not only as a way of satisfying a kernel. Its
-fact-oriented and bottom-up design is an invitation to explore another relation
-between human intuition, machine verification, and mathematical knowledge.
-
-Litex may not become the only path, and it does not need to. Its contribution
-may be to show that formal mathematics has more than one possible future. A
-second rigorous route can make different structures visible, support new ideas,
-and give different readers a way into the same mathematics. Read the
-[Litex Blueprint](docs/Litex_Blueprint.md) for the fuller argument.
-
-Litex's longer-term vision is that its implementation may grow large while its
-core execution model remains easy to understand. It can make the dependencies
-readers silently track in mathematics visible and explorable, so users can
-inspect, repair, and participate in interactive textbooks.
-
-<!-- README spine: scientific question → write one fact → accepted facts become context → build a mathematical language with Group → a readable execution process users can join → human–AI verification loop → formal language → AI for Math → toward safe and efficient reasoning → ToLean and Lean rechecking → ecosystem fit and boundaries → action -->
 
 <!--
 Litex positioning layers:
 - Scientific object: how checkable knowledge is represented and constructed step by step.
 - Scientific hypothesis: whether fact-oriented representation and transactional interaction form a useful formal-language design paradigm.
 - Result variables: how that paradigm changes the cost of constructing, understanding, reviewing, repairing, and reusing checked knowledge.
-- Potential impact: broader participation in verification and, over time, safer and more efficient AI reasoning.
-The first three are the scientific core. The fourth is a possible downstream impact, not a result already established.
+- Potential impact: broader participation in verification; longer-term safer and more efficient AI reasoning.
+The first three are the scientific core. The fourth is possible downstream impact, not an established result.
 -->
 
 ## Start with the mathematics
 
-Litex begins from the next mathematical fact you want to establish:
+Write the next fact you want to establish:
 
 ```litex
 1 + 1 = 2
 ```
 
-This is a complete statement, not a proof hole. Litex checks that the
-expression is well-defined, establishes the equality through a calculation
-rule, and records that route. When the current context and supported rules
-cannot establish a requested fact, Litex stops there instead of silently
-accepting it.
+Litex checks well-definedness, finds a supported route when it can, and
+records that route. When the context and rules cannot establish a fact, it
+stops instead of silently accepting it. Accepted conclusions enter the context
+for later reasoning—bottom-up, like an ordinary mathematical draft.
 
-The aim is simple: conditions remain explicit and verification remains strict,
-while the source stays close to the mathematics a reader wants to inspect.
+## The human–AI–Litex loop
 
-## Verified facts become the next context
+```text
+write what to prove
+    → Litex verifies and returns grounds or a stopping point
+    → keep valid progress
+    → repair the local failure
+    → continue from the checked context
+```
 
-The first accepted conclusion is not merely output; it becomes context for
-what comes next.
+Failed attempts can roll back without polluting the accepted context. Five
+design lines carry this loop (see the Blueprint for detail):
 
-Here is a complete divisibility development. The definition says that
-<code>d</code> divides <code>n</code> when an integer witness
-<code>k</code> satisfies <code>n = d * k</code>. The theorem composes two
-such witnesses. The final statements construct <code>3 | 12</code> and
-<code>12 | 60</code>, then reuse the theorem to establish
-<code>3 | 60</code>.
+| Line | What the author sees |
+| --- | --- |
+| **Set-theoretic objects** | Sets, elements, functions, and relations first. |
+| **Fact-centered** | Write what should hold; the verifier searches by shape. |
+| **Bottom-up** | Accepted facts extend the context for later steps. |
+| **Traceable proof flow** | Readable dependencies; clear stop points on failure. |
+| **Lean rechecking** | Compile supported routes to Lean for independent checking. |
+
+Litex and Lean take nearly inverse defaults—one source leans toward *how*, the
+other toward *what*. That is not a replacement claim; it is another entrance
+into formalization for different habits of thought.
+
+## Write in Litex. Recheck in Lean.
+
+```text
+Litex source → Litex verifier → ToLean → Lean proof terms → Lean kernel
+```
+
+Coverage is still partial. A Litex success is not automatically a Lean-kernel
+success until the route is compiled and accepted by Lean. See
+[ToLean](lean/README.md) and the
+[Litex → Lean → Mathlib showcase](showcases/Litex_to_Lean_Mathlib_Pipeline/README.md).
+
+## Try Litex
+
+[Try Litex](https://litexlang.com) ·
+[Blueprint](docs/Litex_Blueprint.md) ·
+[中文蓝图](docs/Litex中文蓝图.md) ·
+[Learner Cheatsheet](docs/Litex_Learner_Cheatsheet.md) ·
+[Manual](docs/Manual.md) ·
+[GitHub](https://github.com/litexlang/golitex)
+
+Local install (macOS / Linux with Homebrew):
+
+```bash
+brew install litexlang/tap/litex
+litex -version
+litex -e '1 = 1'
+```
+
+See the [setup guide](docs/setup.md), [examples](examples/README.md), and
+[CLI reference](docs/cli.md).
+
+## Source gallery
+
+A short look at what Litex source can look like. These snippets match the
+Blueprint gallery; they are not a tutorial. For a larger runnable build-out, see
+[Example of Building a Math System With Litex](showcases/Example_of_Building_A_Math_System_With_Litex/README.md).
+
+The simplest equality:
+
+```litex
+1 + 1 = 2
+```
+
+A polynomial identity:
+
+```litex
+forall a, b R:
+    (a + b)^2 = a^2 + 2 * a * b + b^2
+```
+
+A set fact:
+
+```litex
+forall s, t, u set:
+    s $subset t
+    =>:
+        intersect(s, u) $subset intersect(t, u)
+```
+
+Nonnegative numbers stay nonnegative under addition:
+
+```litex
+forall x, y R:
+    x >= 0
+    y >= 0
+    =>:
+        x + y >= 0
+```
+
+A well-defined call when the domain condition is already known:
+
+```litex
+forall f fn(t R: t > 0) R, x R:
+    x > 0
+    =>:
+        f(x) = f(x)
+```
+
+A proposition—define once, then use as an atomic fact:
+
+```litex
+prop is_positive(x R):
+    x > 0
+
+forall a, b R:
+    $is_positive(a)
+    a = b
+    =>:
+        $is_positive(b)
+```
+
+A known `forall` fact used to prove a concrete atomic fact:
+
+```litex
+prop is_positive(n R):
+    exist a R+ st {n > a}
+
+claim:
+    ? forall x R:
+        x > 10
+        =>:
+            $is_positive(x)
+    witness exist a R+ st {x > a} from 10
+
+have a R:
+    a > 10
+
+$is_positive(a)
+```
+
+Existential quantifiers—witness first, then obtain from the `exist` fact:
+
+```litex
+witness exist x R st {x = 0} from 0
+
+obtain zero from exist x R st {x = 0}
+zero = 0
+```
+
+A theorem—name a reusable conclusion, then cite it (transitivity of divisibility):
 
 ```litex
 prop divides_by(d, n Z):
     exist k Z st {n = d * k}
 
-thm divisibility_is_transitive:
+thm divides_transitive:
     ? forall a, b, c Z:
         $divides_by(a, b)
         $divides_by(b, c)
@@ -136,27 +212,80 @@ thm divisibility_is_transitive:
     witness $divides_by(a, c) from k * m:
         c = a * (k * m)
 
-witness $divides_by(3, 12) from 4:
-    12 = 3 * 4
-witness $divides_by(12, 60) from 5:
-    60 = 12 * 5
-by thm divisibility_is_transitive(3, 12, 60) => $divides_by(3, 60)
+witness $divides_by(2, 6) from 3
+witness $divides_by(6, 30) from 5
+
+by thm divides_transitive(2, 6, 30) => $divides_by(2, 30)
 ```
 
-The author supplies the mathematical move: expose the witnesses, multiply
-them, and package the result. Litex checks each connection and stores accepted
-facts for later use. This bottom-up proof flow is close to an ordinary
-mathematical draft: establish something useful, keep it, and continue.
+A named function:
 
-## Build a language for your mathematics
+```litex
+have fn reciprocal(x R: x != 0) R = 1 / x
+reciprocal(2) = 1 / 2
+```
 
-Litex is not only a way to check isolated answers. Definitions and structures
-let a project create its own reusable mathematical language.
+A local `claim`—write the equalities that should hold along the way, without naming rewrite directions:
 
-This example defines a group over a nonempty set, including multiplication,
-identity, inverse, and the group laws. It then uses that interface to establish
-that any element acting as a two-sided identity must equal the group's
-declared identity.
+```litex
+claim:
+    ? forall a, b, c, d, g, f R:
+        a * b = c * d
+        g = f
+        =>:
+            a * (b * g) = c * (d * f)
+    c * (d * f) = (c * d) * f = (a * b) * f = a * (b * f) = a * (b * g)
+```
+
+Proof by contradiction—show that “every real satisfies `x^2 >= x`” fails:
+
+```litex
+by contra:
+    ? not forall x R:
+        x^2 >= x
+    impossible 0.5^2 >= 0.5
+```
+
+Proof by cases—exhaust the split, then close the goal in each branch:
+
+```litex
+have fn k(x R) R by cases:
+    case x = 2: 3
+    case x != 2: 4
+
+have x R
+
+by cases:
+    ? k(x) > 2
+    case x = 2:
+        k(x) = 3 > 2
+    case x != 2:
+        k(x) = 4 > 2
+```
+
+Proof by induction—the sum of the first `n` odd positives is `n^2`:
+
+```litex
+have fn kth_odd(k Z) Z = 2 * k - 1
+
+thm sum_first_odds:
+    ? forall n Z:
+        n >= 1
+        =>:
+            sum(1, n, kth_odd) = n^2
+    by induc n from 1:
+        ? sum(1, n, kth_odd) = n^2
+
+        ? from n = 1:
+            kth_odd(1) = 2 * 1 - 1 = 1
+            sum(1, 1, kth_odd) = kth_odd(1) = 1 = 1^2
+
+        ? induc:
+            kth_odd(n + 1) = 2 * (n + 1) - 1
+            sum(1, n + 1, kth_odd) = sum(1, n, kth_odd) + kth_odd(n + 1) = n^2 + (2 * (n + 1) - 1) = (n + 1)^2
+```
+
+A `struct`—a group: operation, identity, inverse on a carrier, and uniqueness of the identity:
 
 ```litex
 struct Group<s nonempty_set>:
@@ -179,197 +308,40 @@ forall s nonempty_set, G &Group<s>, identity s:
         identity = G.mul(G.one, identity) = G.one
 ```
 
-The structure is more than a bundle of fields. It establishes a vocabulary
-and a body of laws that later mathematics can use. A small team can begin from
-sets, functions, and facts, then grow a domain interface without pretending
-that mature libraries no longer matter.
+A `template`—a parameterized definition family, then `\name<args>` to materialize:
 
-For a larger, runnable example of this process, see
-[Example of Building a Math System With Litex](showcases/Example_of_Building_A_Math_System_With_Litex/README.md).
-Formal geometry itself is not new—projects such as
-[LeanGeo](https://github.com/project-numina/LeanGeo) already build substantial
-systems in Lean. This showcase asks a different question: can building a
-checked mathematical system become direct enough for learners to participate,
-so that formalization is part of learning mathematics rather than its final
-translation? It grows a coordinate model of the Euclidean plane into geometric
-predicates, bridge lemmas, and reusable theorems, then uses that system to
-solve a concrete geometry problem. It also points toward interactive
-textbooks in which explanation, experimentation, exercises, and verification
-share one environment, while stating the example's remaining axiom boundary
-explicitly.
+```litex
+struct Triple<X set>:
+    first X
+    second X
+    third X
 
-## The human–AI verification loop
+template<X set>:
+    have fn triple(a, b, c X) &Triple<X> = (a, b, c)
 
-Fact growth becomes especially useful when a human or AI is exploring a proof:
+\triple<R>(1, 2, 3) = (1, 2, 3)
 
-```text
-write a fact
-    → inspect its verification route
-    → retain valid progress
-    → stop at an unknown or invalid step
-    → repair that local step
-    → continue from the checked context
+have p &Triple<R> = \triple<R>(1, 2, 3)
+p.first = 1
 ```
 
-An <code>unknown</code> result does not mean the proposition is false. It
-means the current context and verifier have not established it. The next move
-might be to add a missing condition, expose a witness, split a case, cite a
-known theorem, or correct the formal statement.
+A simple word problem—identifiers may be written in Chinese:
 
-Litex also supports transactional attempts: a failed attempt can roll back
-without contaminating the context that was already checked. This gives humans
-and agents a concrete repair boundary rather than an all-or-nothing answer.
-
-The same design lets users follow how definitions and facts are processed: what
-entered the context, why a fact passed or stopped, and what can be repaired
-next. A **Checkable Knowledge Record** keeps this path available to tools and
-interactive views; JSON is only its machine-readable form when needed, while
-the graph command offers a quick view of the relationships.
-
-Four connected design choices support this loop:
-
-| Design choice | What it changes for the author |
-| --- | --- |
-| **Set-theoretic surface** | Begin with sets, membership, functions on sets, and familiar mathematical structures. |
-| **Fact-oriented** | Write the next fact that should hold; let the verifier look for supported local grounds. |
-| **Bottom-up** | Let each accepted fact extend the context from which later facts can grow. |
-| **Lean-compatible** | Compile supported recorded verification routes into Lean proof terms for independent checking. |
-
-These are interface choices, not claims of universal superiority. Lean's type
-theory, abstraction mechanisms, kernel, and Mathlib ecosystem remain much
-stronger for many large formal developments.
-
-## From formal language to AI for Math—and toward safe, efficient reasoning
-
-These are three stages of one research direction, not three capabilities that
-Litex already possesses at the same maturity.
-
-### 1. Formal language
-
-Litex's direct scientific object is the representation and step-by-step
-construction of checkable knowledge. It tests whether mathematical facts,
-immediate checking, growing context, and transactional repair can form a
-useful formal-language interface for humans and AI.
-
-The hypothesis must be measured: how long does formalization take, how much
-breaks after a definition changes, can readers recover the intended
-mathematics, can failed attempts be repaired locally, and can results be
-reused?
-
-### 2. AI for Math
-
-Mathematics is the first rigorous testbed. Statements can be made precise,
-proof attempts can receive machine-checkable feedback, and both successful
-translations and failures can become evidence. Textbooks, datasets, and small
-domain libraries therefore pressure-test Litex's language, standard library,
-verifier, diagnostics, and proof organization.
-
-Litex can expose local failures that an agent may repair and can produce
-checked facts, provenance, and repair traces. This does not mean that Litex
-has solved autoformalization or automated mathematical discovery.
-
-### 3. Toward safe and efficient reasoning
-
-Explicit facts, local grounds, transactional rollback, provenance, and
-fail-closed compilation are also relevant beyond mathematics. If these
-mechanisms prove useful under rigorous mathematical pressure tests, they may
-inform AI systems whose reasoning is easier to inspect, repair, reuse, and
-independently check.
-
-That is a longer-term research direction. Litex currently checks a growing
-body of mathematics; it does not claim to make general AI reasoning safe.
-
-## Write in Litex. Recheck in Lean.
-
-Litex aims to combine a readable front end with an increasingly rigorous
-compatibility path:
-
-```text
-Litex source
-    → Litex verifier and recorded evidence
-    → ToLean
-    → Lean proof terms
-    → Lean kernel rechecking
-    → optional handwritten Adapter / Mathlib interface
+```litex
+# Mom's age is 3 times Xiao Ming's age plus 4; Xiao Ming is 15. How old is Mom?
+have 小明年龄 R = 15
+have 妈妈年龄 R = 3 * 小明年龄 + 4
+妈妈年龄 = 3 * 15 + 4 = 49
 ```
-
-For **supported verification paths**, ToLean compiles source-owned Litex
-declarations and recorded evidence into Lean proof terms. Lean can then check
-those terms independently. Unsupported or trusted routes must fail closed
-rather than silently becoming <code>sorry</code> or hidden project axioms.
-
-The optional adapter is separate from generated proofs: a human or AI may use
-it to expose ordinary Lean/Mathlib concepts without allowing the compiler to
-invent mathematics that was absent from the Litex source.
-
-Coverage is still partial. A statement accepted by the Litex verifier has not
-automatically passed the Lean kernel; only a route that is fully compiled and
-actually accepted by Lean gains that additional check. See the
-[ToLean implementation and coverage](lean/README.md) and the
-[Litex → Lean → Mathlib showcase](showcases/Litex_to_Lean_Mathlib_Pipeline/README.md).
-
-## Where Litex can be useful
-
-The following are potential areas of strength to test through real work:
-
-- **Mathematical notebook:** turn everyday derivations into checked mathematics quickly.
-- **Formalization middle layer:** connect natural-language mathematics with mature systems such as Lean.
-- **New-domain incubator:** experiment with definitions, interfaces, and small domain libraries at low initial cost.
-- **AI proof training ground:** produce local feedback, repair trajectories, and classified failures.
-- **Interactive mathematics:** let readers inspect and participate in definitions, facts, dependencies, and verification steps.
-
-Current areas where mature systems such as Lean/Mathlib are stronger:
-
-- **Mature-library reuse:** large developments that depend heavily on existing formal mathematics.
-- **Deep abstraction engineering:** complex type structures and large, highly abstract theory hierarchies.
-- **Long-lived trusted assets:** public-library maintenance, auditing, compatibility, and final trusted delivery.
-
-These boundaries are part of the project, not disclaimers to hide. Successful
-translations provide evidence about cost and reuse; failed translations reveal
-language, library, verifier, diagnostic, kernel, or compiler gaps.
-
-## Try Litex
-
-[Try Litex](https://litexlang.com) ·
-[Website](https://litexlang.com) ·
-[Blueprint](docs/Litex_Blueprint.md) ·
-[Learner Cheatsheet](docs/Litex_Learner_Cheatsheet.md) ·
-[Manual](docs/Manual.md) ·
-[GitHub](https://github.com/litexlang/golitex)
-
-For a local installation, see the short [setup guide](docs/setup.md). On macOS
-and Linux with Homebrew:
-
-```bash
-brew install litexlang/tap/litex
-litex -version
-litex -e '1 = 1'
-```
-
-Continue with the [examples](examples/README.md), the
-[Litex Learner Cheatsheet](docs/Litex_Learner_Cheatsheet.md), the full
-[manual](docs/Manual.md), or the [CLI reference](docs/cli.md).
 
 ## About
 
-I am Jiachen Shen (沈嘉辰), a mathematics PhD student at Fudan University who
-loves both mathematics and programming. Lean showed me that these worlds can
-meet in a real language. It also made me wonder whether formal source could
-follow more closely the mental flow I use when solving mathematical problems.
-Litex is the result of that exploration.
+I am Jiachen Shen (沈嘉辰), a mathematics PhD student at Fudan University.
+Lean showed me that mathematics and programming can meet in a real language.
+Litex explores whether formal source can follow more closely the mental flow
+of solving mathematical problems.
 
 Special thanks to Wei Lin, Siqi Sun, Peng Sun, Yi Wang, Chenxuan Huang, Yan Lu,
 Sheng Xu, Keyao Zhu, Xingjian Ma, and Zhaoxuan Hong for their support and advice.
-
-Mathematics is the unseen skeleton deep within the edifice of science. We
-believe that any mathematics can be formalized, and that formalized mathematics
-will ultimately become the future of mathematics. Litex hopes to become one of
-the building blocks of that future.
-
-Natural language is easy to understand but often ambiguous; existing
-formalization tools such as Lean are rigorous and reliable, but typically have
-a high technical barrier. Litex starts from the premise that mathematical
-expression can be both understandable and rigorous. Between comprehensibility
-and verifiability, we do not have to choose.
 
 Litex is released under the [Apache License 2.0](LICENSE).

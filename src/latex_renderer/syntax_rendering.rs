@@ -385,22 +385,6 @@ impl ByReflexivePropStmt {
     }
 }
 
-impl ByAntisymmetricPropStmt {
-    pub fn syntax_rendering(&self) -> String {
-        let mut rows = vec![format!(
-            r"\text{{\textbf{{by antisymmetric_prop}}:}} & {}",
-            self.forall_fact.syntax_rendering()
-        )];
-        for st in &self.proof {
-            rows.push(format!(r"& \quad {}", st.syntax_rendering()));
-        }
-        format!(
-            "\\begin{{aligned}}\n{}\n\\end{{aligned}}",
-            rows.join(" \\\\\n")
-        )
-    }
-}
-
 impl ByZornLemmaStmt {
     pub fn syntax_rendering(&self) -> String {
         let mut rows = vec![format!(
@@ -2452,7 +2436,6 @@ impl Stmt {
             Stmt::By(ByStmt::ByTransitivePropStmt(x)) => x.syntax_rendering(),
             Stmt::By(ByStmt::BySymmetricPropStmt(x)) => x.syntax_rendering(),
             Stmt::By(ByStmt::ByReflexivePropStmt(x)) => x.syntax_rendering(),
-            Stmt::By(ByStmt::ByAntisymmetricPropStmt(x)) => x.syntax_rendering(),
             Stmt::By(ByStmt::ByZornLemmaStmt(x)) => x.syntax_rendering(),
             Stmt::By(ByStmt::ByAxiomOfChoiceStmt(x)) => x.syntax_rendering(),
             Stmt::By(ByStmt::ByRegularityAxiomStmt(x)) => x.syntax_rendering(),

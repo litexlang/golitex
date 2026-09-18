@@ -257,9 +257,6 @@ impl ExecEnv {
             if properties.is_reflexive {
                 self.store_reflexive_prop_name(name.clone());
             }
-            if properties.is_antisymmetric {
-                self.store_antisymmetric_prop_name(name.clone());
-            }
             for permutation in properties.symmetric_argument_permutations {
                 self.store_symmetric_prop_permutation(
                     name.clone(),

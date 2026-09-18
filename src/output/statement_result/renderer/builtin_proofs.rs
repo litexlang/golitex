@@ -169,11 +169,6 @@ impl StatementResultRenderer {
                 ),
                 string_field("expected_alternate", result.expected_alternate.to_string()),
             ]),
-            BuiltinRuleEvidence::RegisteredAntisymmetricPredicate(result) => object(vec![
-                string_field("kind", "RegisteredAntisymmetricPredicate"),
-                string_field("expected_target", result.expected_target.to_string()),
-                string_field("predicate_name", result.predicate_name.clone()),
-            ]),
             BuiltinRuleEvidence::ObjectReflexivity(result) => object(vec![
                 string_field("kind", "ObjectReflexivity"),
                 string_field("expected_target", result.expected_target.to_string()),

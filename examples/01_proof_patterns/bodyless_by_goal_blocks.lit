@@ -69,12 +69,6 @@ by transitive_prop:
         =>:
             $bodyless_same(x, z)
 
-by antisymmetric_prop:
-    ? forall x, y set:
-        $bodyless_same(x, y)
-        $bodyless_same(y, x)
-        =>:
-            x = y
 
 # Boundary: `by contra` is the one goal-block route that still requires an
 # explicit final `impossible` statement.

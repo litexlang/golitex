@@ -98,7 +98,6 @@ pub enum PropRewriteProperty {
     Transitive,
     SymmetricArgumentPermutate(Vec<Vec<usize>>),
     Reflexive,
-    Antisymmetric,
 }
 
 /// Properties recorded for objects whose structure has a reusable fact-based

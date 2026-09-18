@@ -154,7 +154,7 @@ with both membership directions visible.
 
 A named relation is a `prop`. Its positive instances are introduced with
 `by def` after the relation body is known. The commands `by reflexive_prop`,
-`by symmetric_prop`, `by transitive_prop`, and `by antisymmetric_prop` register
+`by symmetric_prop` and `by transitive_prop` register
 checked universal behavior for later use; registration does not fold the
 relation definition.
 

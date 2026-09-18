@@ -153,7 +153,6 @@ pub(in super::super) fn direct_builtin_rule_compiler_limitation(
         | BuiltinRuleEvidence::RuntimeResolvedNumericComparison(_)
         | BuiltinRuleEvidence::RegisteredReflexivePredicate(_)
         | BuiltinRuleEvidence::RegisteredSymmetricPredicate(_)
-        | BuiltinRuleEvidence::RegisteredAntisymmetricPredicate(_)
         | BuiltinRuleEvidence::ObjectReflexivity(_)
         | BuiltinRuleEvidence::RationalNormalization(_)
         | BuiltinRuleEvidence::RationalAlgebraicNormalization(_)
