@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinStrategy.ExtremumEquality
 # Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/equal/by_builtin_strategy/extremum_equality.lit
 
-forall a R:
-    max(a, a) = a
+have a R = 1
+max(a, a) = a
