@@ -1,6 +1,1 @@
-# CongruenceSubstitution builtin rewrite (new_pipeline)
-# LITEX_NEW_PIPELINE=1 litex -f examples/tmp.lit
-
-have a R
-trust a = 1
-a + 1 = 2
+1 = 1
