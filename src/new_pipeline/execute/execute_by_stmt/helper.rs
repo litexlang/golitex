@@ -71,7 +71,7 @@ pub(super) fn store_goal_fact(
 pub(super) fn negate_fact_for_contra(runtime: &mut Runtime, fact: &Fact) -> Result<Fact, String> {
     match fact {
         Fact::AtomicFact(atomic) => {
-            let neg = negate_atomic_fact(atomic, runtime.allocate_fact_id())
+            let neg = negate_atomic_fact(atomic, runtime.ids.allocate_fact_id())
                 .ok_or_else(|| "by contra: cannot negate this atomic fact".to_string())?;
             Ok(Fact::AtomicFact(neg))
         }
@@ -93,7 +93,9 @@ pub(super) fn close_by_contradiction(
             impossible_proof,
         )));
     }
-    let Some(negated_atomic) = negate_atomic_fact(impossible, runtime.allocate_fact_id()) else {
+    let Some(negated_atomic) =
+        negate_atomic_fact(impossible, runtime.ids.allocate_fact_id())
+    else {
         return Ok(Err(
             ByContradictionClosingFailed::NegateImpossibleUnsupported(
                 "cannot negate impossible atomic fact".to_string(),
@@ -119,7 +121,7 @@ pub(super) fn or_fact_from_and_chains(
     line_file: &LineFile,
 ) -> OrFact {
     OrFact {
-        fact_id: runtime.allocate_fact_id(),
+        fact_id: runtime.ids.allocate_fact_id(),
         facts: branches.to_vec(),
         line_file: Some(line_file.clone()),
     }

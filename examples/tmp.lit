@@ -1,8 +1,15 @@
-# MatchingOneArgByOne: multi-layer FnObj with distinct heads
-have a R = 1
-have b R = a
-have x R = 2
-have y R = x
-have f R
-have g R = f
-f(x)(a) = g(y)(b)
+# new_pipeline: by contra / by cases (Fact-only proof body v1)
+
+by cases:
+    ? 1 = 1
+    case 1 = 1
+
+by cases:
+    ? 1 = 1
+    case 1 = 1
+    case 1 != 1:
+        impossible 1 = 1
+
+by contra:
+    ? 1 = 1
+    impossible 1 != 1
