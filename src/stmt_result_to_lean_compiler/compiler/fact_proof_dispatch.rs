@@ -317,15 +317,6 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
-                if let Some(BuiltinRuleEvidence::RegisteredAntisymmetricPredicate(evidence)) =
-                    builtin.evidence.typed()
-                {
-                    return self.construct_lean_registered_antisymmetric_predicate_from_result(
-                        &source_fact,
-                        evidence,
-                        &builtin.subgoals,
-                    );
-                }
                 if let Some(BuiltinRuleEvidence::StructuralDefinitionCongruence(evidence)) =
                     builtin.evidence.typed()
                 {

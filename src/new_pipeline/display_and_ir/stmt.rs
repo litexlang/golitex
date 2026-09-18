@@ -100,7 +100,6 @@ impl ByStmt {
             ByStmt::ByTransitivePropStmt(x) => x.ir(),
             ByStmt::BySymmetricPropStmt(x) => x.ir(),
             ByStmt::ByReflexivePropStmt(x) => x.ir(),
-            ByStmt::ByAntisymmetricPropStmt(x) => x.ir(),
             ByStmt::ByZornLemmaStmt(x) => x.ir(),
             ByStmt::ByAxiomOfChoiceStmt(x) => x.ir(),
             ByStmt::ByRegularityAxiomStmt(x) => x.ir(),
@@ -1396,7 +1395,6 @@ macro_rules! impl_by_prop {
 impl_by_prop!(ByTransitivePropStmt, TRANSITIVE_PROP);
 impl_by_prop!(BySymmetricPropStmt, SYMMETRIC_PROP);
 impl_by_prop!(ByReflexivePropStmt, REFLEXIVE_PROP);
-impl_by_prop!(ByAntisymmetricPropStmt, ANTISYMMETRIC_PROP);
 impl_by_prop!(ByForStmt, FOR);
 
 impl ByEnumerateFiniteSetStmt {

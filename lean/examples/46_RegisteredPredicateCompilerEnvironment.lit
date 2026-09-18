@@ -31,10 +31,3 @@ by transitive_prop:
     x = z
     by def $same_set(x, z)
 
-by antisymmetric_prop:
-    ? forall x, y set:
-        $same_set(x, y)
-        $same_set(y, x)
-        =>:
-            x = y
-    x = y

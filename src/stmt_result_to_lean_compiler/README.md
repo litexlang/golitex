@@ -1403,8 +1403,7 @@ outer compiler environment. Later typed builtin evidence cites the predicate
 name and resolves this target-side binding; it does not search Runtime facts
 or parse the verifier's diagnostic label.
 
-The same Combine function compiles symmetric, transitive, and antisymmetric
-registrations. Their `dom_facts` become ordered Lean hypotheses such as
+The same Combine function compiles symmetric and transitive registrations. Their `dom_facts` become ordered Lean hypotheses such as
 `__domain1` and `__domain2` in the same frame. When assuming a concrete
 predicate also infers one of its defining clauses, the assumption store owns
 that inferred FactId; the compiler projects the exact clause from the named
@@ -1414,8 +1413,7 @@ lookup crosses the frame boundary.
 Later uses exercise three different composition modes. Registered reflexivity
 is a leaf. Registered symmetry is a `Wrap` whose sole child is the reordered
 predicate premise; the compiler may apply the registered permutation theorem
-more than once when the permutation is not an involution. Registered
-antisymmetry is a `Combine` with two ordered predicate-premise children.
+more than once when the permutation is not an involution.
 Registered transitivity appears in the store/infer Result rather than the
 verifier proof Result: storing a relation chain returns one typed closure
 application for every object interval. Each application owns its predicate

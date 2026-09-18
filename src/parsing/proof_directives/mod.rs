@@ -1,5 +1,4 @@
 //! Parsing for statements that explicitly choose a verifier operation.
-mod antisymmetry;
 mod cases;
 mod choice;
 mod closed_range_cases;

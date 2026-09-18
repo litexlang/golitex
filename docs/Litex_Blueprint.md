@@ -8,7 +8,7 @@ Website: https://litexlang.com/doc/Litex_Blueprint
 
 Chinese version: https://litexlang.com/doc/Litex中文蓝图
 
-*Litex is an easy-to-learn, easy-to-use formal language. Its source writes sets and facts in ordinary mathematical style, without first wrestling with tactics; the system checks bottom-up and reports the grounds for each step. Humans supply intent, AI proposes candidates, and Litex guards the result—together accumulating checkable mathematical knowledge. It is also designed to compile to Lean and connect to Mathlib: some scenarios are already covered, with broader coverage expected by the end of 2026.*
+*Litex is an easy-to-learn, easy-to-use set-theoretic formal language. Its source follows ordinary mathematical writing—users state directly what they want to prove; the system verifies bottom-up and returns the grounds for each step, or where checking stops. It is also designed to compile to Lean—some scenarios are already covered, with broader coverage expected by the end of 2026. This forms a human–AI–Litex collaboration loop that supplies accumulable verification momentum for Math for AI.*
 
 > **Litex is an experimental hobby project in beta; expect rough edges.**
 
@@ -28,6 +28,7 @@ Writing boundary: the first three layers are Litex's scientific core; the fourth
 - [0. Litex Blueprint Overview](#overview)
   - [0.1 Entry Points for Different Readers](#overview-readers)
   - [0.2 Five Spine Lines](#overview-spine)
+  - [0.2 Source Gallery](#overview-gallery)
 - [1. Litex's Mathematical Foundation: Starting from Familiar Set Theory](#set-theory)
 - [2. Fact-Oriented: Writing “What Holds” into the Source](#fact-oriented)
 - [3. Bottom-Up: Let Verified Facts Drive Later Proofs](#bottom-up)
@@ -238,6 +239,236 @@ The document unfolds along five connected questions: what the user sees, what th
 3. **Bottom-up accumulation**: every verified fact enters the context for later reasoning; this is the default direction of reasoning.
 4. **Traceable proof flow**: the system organizes and outputs the forward and backward dependencies from definitions and premises to conclusions, so that the whole proof process becomes structured information that is readable, checkable, and reusable; on failure, it points to where the failure occurred.
 5. **Lean rechecking**: from the start, Litex was designed to compile to Lean proof objects and hand them to the Lean kernel for independent checking; it already covers some mathematical settings, with broader coverage expected by the end of 2026.
+
+<a id="overview-gallery"></a>
+
+#### Source gallery
+
+These snippets are not a tutorial—only a look at what “write what you want to prove” looks like in Litex. Later sections develop the design and its boundaries.
+
+The simplest equality:
+
+```litex
+1 + 1 = 2
+```
+
+A polynomial identity:
+
+```litex
+forall a, b R:
+    (a + b)^2 = a^2 + 2 * a * b + b^2
+```
+
+A set fact:
+
+```litex
+forall s, t, u set:
+    s $subset t
+    =>:
+        intersect(s, u) $subset intersect(t, u)
+```
+
+Nonnegative numbers stay nonnegative under addition:
+
+```litex
+forall x, y R:
+    x >= 0
+    y >= 0
+    =>:
+        x + y >= 0
+```
+
+A well-defined call when the domain condition is already known:
+
+```litex
+forall f fn(t R: t > 0) R, x R:
+    x > 0
+    =>:
+        f(x) = f(x)
+```
+
+A proposition—define once, then use as an atomic fact:
+
+```litex
+prop is_positive(x R):
+    x > 0
+
+forall a, b R:
+    $is_positive(a)
+    a = b
+    =>:
+        $is_positive(b)
+```
+
+A known `forall` fact used to prove a concrete atomic fact:
+
+```litex
+prop is_positive(n R):
+    exist a R+ st {n > a}
+
+claim:
+    ? forall x R:
+        x > 10
+        =>:
+            $is_positive(x)
+    witness exist a R+ st {x > a} from 10
+
+have a R:
+    a > 10
+
+$is_positive(a)
+```
+
+Existential quantifiers—witness first, then obtain from the `exist` fact:
+
+```litex
+witness exist x R st {x = 0} from 0
+
+obtain zero from exist x R st {x = 0}
+zero = 0
+```
+
+A theorem—name a reusable conclusion, then cite it (transitivity of divisibility):
+
+```litex
+prop divides_by(d, n Z):
+    exist k Z st {n = d * k}
+
+thm divides_transitive:
+    ? forall a, b, c Z:
+        $divides_by(a, b)
+        $divides_by(b, c)
+        =>:
+            $divides_by(a, c)
+    obtain k from $divides_by(a, b)
+    obtain m from $divides_by(b, c)
+    c = b * m = (a * k) * m = a * (k * m)
+    witness $divides_by(a, c) from k * m:
+        c = a * (k * m)
+
+witness $divides_by(2, 6) from 3
+witness $divides_by(6, 30) from 5
+
+by thm divides_transitive(2, 6, 30) => $divides_by(2, 30)
+```
+
+A named function:
+
+```litex
+have fn reciprocal(x R: x != 0) R = 1 / x
+reciprocal(2) = 1 / 2
+```
+
+A local `claim`—write the equalities that should hold along the way, without naming rewrite directions:
+
+```litex
+claim:
+    ? forall a, b, c, d, g, f R:
+        a * b = c * d
+        g = f
+        =>:
+            a * (b * g) = c * (d * f)
+    c * (d * f) = (c * d) * f = (a * b) * f = a * (b * f) = a * (b * g)
+```
+
+Proof by contradiction—show that “every real satisfies `x^2 >= x`” fails:
+
+```litex
+by contra:
+    ? not forall x R:
+        x^2 >= x
+    impossible 0.5^2 >= 0.5
+```
+
+Proof by cases—exhaust the split, then close the goal in each branch:
+
+```litex
+have fn k(x R) R by cases:
+    case x = 2: 3
+    case x != 2: 4
+
+have x R
+
+by cases:
+    ? k(x) > 2
+    case x = 2:
+        k(x) = 3 > 2
+    case x != 2:
+        k(x) = 4 > 2
+```
+
+Proof by induction—the sum of the first `n` odd positives is `n^2`:
+
+```litex
+have fn kth_odd(k Z) Z = 2 * k - 1
+
+thm sum_first_odds:
+    ? forall n Z:
+        n >= 1
+        =>:
+            sum(1, n, kth_odd) = n^2
+    by induc n from 1:
+        ? sum(1, n, kth_odd) = n^2
+
+        ? from n = 1:
+            kth_odd(1) = 2 * 1 - 1 = 1
+            sum(1, 1, kth_odd) = kth_odd(1) = 1 = 1^2
+
+        ? induc:
+            kth_odd(n + 1) = 2 * (n + 1) - 1
+            sum(1, n + 1, kth_odd) = sum(1, n, kth_odd) + kth_odd(n + 1) = n^2 + (2 * (n + 1) - 1) = (n + 1)^2
+```
+
+A `struct`—a group: operation, identity, inverse on a carrier, and uniqueness of the identity:
+
+```litex
+struct Group<s nonempty_set>:
+    mul fn(x, y s) s
+    one s
+    inv fn(x s) s
+    <=>:
+        forall x, y, z s:
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+        forall x s:
+            mul(x, one) = x
+            mul(one, x) = x
+            mul(inv(x), x) = one
+
+forall s nonempty_set, G &Group<s>, identity s:
+    forall a s:
+        G.mul(identity, a) = a
+        G.mul(a, identity) = a
+    =>:
+        identity = G.mul(G.one, identity) = G.one
+```
+
+A `template`—a parameterized definition family, then `\name<args>` to materialize:
+
+```litex
+struct Triple<X set>:
+    first X
+    second X
+    third X
+
+template<X set>:
+    have fn triple(a, b, c X) &Triple<X> = (a, b, c)
+
+\triple<R>(1, 2, 3) = (1, 2, 3)
+
+have p &Triple<R> = \triple<R>(1, 2, 3)
+p.first = 1
+```
+
+A simple word problem—identifiers may be written in Chinese:
+
+```litex
+# Mom's age is 3 times Xiao Ming's age plus 4; Xiao Ming is 15. How old is Mom?
+have 小明年龄 R = 15
+have 妈妈年龄 R = 3 * 小明年龄 + 4
+妈妈年龄 = 3 * 15 + 4 = 49
+```
+
+You supply the mathematical move; Litex checks each connection and keeps what passed.
 
 <a id="set-theory"></a>
 

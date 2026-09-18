@@ -179,7 +179,6 @@ pub const EXTENSION: &str = "extension";
 pub const TRANSITIVE_PROP: &str = "transitive_prop";
 pub const SYMMETRIC_PROP: &str = "symmetric_prop";
 pub const REFLEXIVE_PROP: &str = "reflexive_prop";
-pub const ANTISYMMETRIC_PROP: &str = "antisymmetric_prop";
 pub const ZORN_LEMMA: &str = "zorn_lemma";
 pub const AXIOM_OF_CHOICE: &str = "axiom_of_choice";
 pub const REGULARITY_AXIOM: &str = "regularity_axiom";

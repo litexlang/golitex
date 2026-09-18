@@ -2595,7 +2595,7 @@ introductions.
 | Enumeration, induction, `by for`, `by extension` | The target has the exact finite/range/discrete/extensional shape and every generated subgoal closes. | The requested universal/equality/atomic target. |
 | `by def` | One positive concrete/builtin definitional target and every defining clause. | The target with explicit definition provenance. |
 | `by struct def e` | `e` has a definition-owned struct carrier and `e $in &Struct` verifies. | Exactly one layer of tuple/identity bridges, field carriers, and instantiated struct laws. |
-| Predicate-property registrations | The proof has the exact reflexive/symmetric/transitive/antisymmetric predicate shape. | A reusable property route; antisymmetry may later close equality. |
+| Predicate-property registrations | The proof has the exact reflexive/symmetric/transitive predicate shape. | A reusable property route for later rewriting. |
 | `by regularity_axiom` | Its displayed set/nonemptiness obligations. | An explicitly trusted set-theoretic conclusion; strict mode rejects the step. |
 | `by axiom_of_choice` | The family is a set and every member is proved nonempty. | Stores `exist f fn(A S)big_union(S) st {$is_choice_function_for(S,S,fn(A S)S {A},f)}`. The existential body is atomic. |
 | `by zorn_lemma` | The set, binary relation, exact named upper-bound/maximality definitions, nonemptiness, partial-order laws, and chain-upper-bound obligation. | Stores `exist m S st {$M(m)}` using the supplied named maximality prop. The chain witness likewise uses the supplied atomic upper-bound prop. |
@@ -3199,7 +3199,6 @@ user-defined binary predicate:
 | `by reflexive_prop` | `P(x, x)` | Close reflexive positive goals. |
 | `by symmetric_prop` | One nontrivial argument permutation | Retry positive goals in that permutation. |
 | `by transitive_prop` | `P(x, y)` and `P(y, z)` imply `P(x, z)` | Store non-adjacent chain consequences. |
-| `by antisymmetric_prop` | `P(x, y)` and `P(y, x)` imply `x = y` | Close equality from both directions. |
 
 ```litex
 prop same(x set, y set):
@@ -3577,7 +3576,7 @@ aggregate, and remainder rows.
 | Remainder and divisibility | Special residues, Euclidean-remainder uniqueness, compatible nested moduli, and congruence under matching `+`, `-`, and `*` operands. `gcd(a,b)` divides both inputs, and `(a*b)%a=(a*b)%b=0` when the objects are well-defined. |
 | Set and cardinality objects | Union/intersection/difference algebra, intersection reduction from a known subset, cardinality of products, differences, unions and power sets, and empty-set equality from emptiness or zero finite cardinality. |
 | Tuples, Cartesian products, and matrices | Tuple reconstruction from Cartesian membership; tuple/cart equality from equal dimensions and projections; canonical `general_cart` expansion; matrix positive-power base and successor equations. |
-| Functions and materialized definitions | Application equations, alpha-equivalent anonymous functions, pointwise `$fn_eq_in`/`$fn_eq`, same-signature function-set equality, registered antisymmetry, and equality of materialized template or struct values when their resolved objects agree. |
+| Functions and materialized definitions | Application equations, alpha-equivalent anonymous functions, pointwise `$fn_eq_in`/`$fn_eq`, same-signature function-set equality, and equality of materialized template or struct values when their resolved objects agree. |
 | Finite aggregates and reductions | Empty, singleton, endpoint, split, insertion/removal, distribution, congruence, and supported reindexing rules described under [Powers, logarithms, sums, products, and remainder](#powers-logarithms-sums-products-and-remainder). |
 
 ```litex

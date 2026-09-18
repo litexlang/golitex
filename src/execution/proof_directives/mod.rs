@@ -1,5 +1,4 @@
 //! Execution for statements that explicitly choose a verifier operation.
-mod antisymmetry;
 mod assignment_assumption;
 mod cases;
 mod choice;

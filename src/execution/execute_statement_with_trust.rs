@@ -245,9 +245,6 @@ impl Runtime {
             Stmt::By(ByStmt::ByReflexivePropStmt(s)) => {
                 self.exec_by_reflexive_prop_stmt_affect_environment_only(s)
             }
-            Stmt::By(ByStmt::ByAntisymmetricPropStmt(s)) => {
-                self.exec_by_antisymmetric_prop_stmt_affect_environment_only(s)
-            }
             Stmt::By(ByStmt::ByZornLemmaStmt(s)) => {
                 self.exec_by_zorn_lemma_stmt_affect_environment_only(s)
             }

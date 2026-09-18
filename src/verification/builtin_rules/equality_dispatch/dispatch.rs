@@ -296,12 +296,6 @@ impl Runtime {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_equality_from_known_antisymmetric_props(equal_fact, builtin_state)?
-        {
-            return Ok(done);
-        }
-
         if let Some(done) = self.try_verify_positive_base_equal_from_equal_nonzero_integer_power(
             equal_fact,
             builtin_state,

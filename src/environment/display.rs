@@ -62,12 +62,6 @@ impl fmt::Display for ExecEnv {
         )?;
         write!(
             f,
-            "    known_antisymmetric_props: {:?}\n",
-            self.prop_algebraic_properties
-                .antisymmetric_predicate_count()
-        )?;
-        write!(
-            f,
             "    known_atomic_facts_with_0_or_more_than_two_params: {:?}\n",
             self.facts
                 .known_atomic_except_equality_facts

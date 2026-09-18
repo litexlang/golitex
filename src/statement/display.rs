@@ -81,7 +81,6 @@ impl fmt::Display for ByStmt {
             ByStmt::ByTransitivePropStmt(x) => write!(f, "{}", x),
             ByStmt::BySymmetricPropStmt(x) => write!(f, "{}", x),
             ByStmt::ByReflexivePropStmt(x) => write!(f, "{}", x),
-            ByStmt::ByAntisymmetricPropStmt(x) => write!(f, "{}", x),
             ByStmt::ByZornLemmaStmt(x) => write!(f, "{}", x),
             ByStmt::ByAxiomOfChoiceStmt(x) => write!(f, "{}", x),
             ByStmt::ByRegularityAxiomStmt(x) => write!(f, "{}", x),

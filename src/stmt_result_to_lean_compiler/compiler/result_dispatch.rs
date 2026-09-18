@@ -235,14 +235,6 @@ impl StmtResultToLeanCompiler {
                         result.verification.as_ref(),
                         RegisteredPredicatePropertyCompilationKind::Transitive,
                     ),
-                SuccessByStmtResult::ByAntisymmetricPropStmt(result) => self
-                    .compile_registered_predicate_property_stmt_result_to_lean_source(
-                        &result.statement.forall_fact,
-                        result.statement.proof.len(),
-                        &result.common,
-                        result.verification.as_ref(),
-                        RegisteredPredicatePropertyCompilationKind::Antisymmetric,
-                    ),
                 SuccessByStmtResult::ByExtensionStmt(result) => {
                     if self.compile_by_extension_stmt_result_to_lean_source(result)? {
                         Ok(())

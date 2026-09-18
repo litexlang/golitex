@@ -272,11 +272,6 @@ impl From<ByReflexivePropStmt> for Stmt {
     }
 }
 
-impl From<ByAntisymmetricPropStmt> for Stmt {
-    fn from(v: ByAntisymmetricPropStmt) -> Self {
-        ByStmt::ByAntisymmetricPropStmt(v).into()
-    }
-}
 
 impl From<ByZornLemmaStmt> for Stmt {
     fn from(v: ByZornLemmaStmt) -> Self {

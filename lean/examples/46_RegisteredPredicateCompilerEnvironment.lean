@@ -62,16 +62,5 @@ theorem __litex_registered_transitive_same_set_2 :
   have __c2_0 : same_set x z := __step2_8
   exact __c2_0
 
-theorem __litex_registered_antisymmetric_same_set_3 :
-    ∀ (x : Litex.Set) (y : Litex.Set) (__domain_f48 : same_set x y) (__domain_f50 : same_set y x),
-      Litex.Same x y := by
-  intro x y __domain_f48 __domain_f50
-  have __step3_9 : Litex.Same x y := by
-    exact (show Litex.Same x y from (by
-    have __definition := __domain_f48
-    unfold same_set at __definition
-    simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using __definition.2.2))
-  have __c3_0 : Litex.Same x y := __step3_9
-  exact __c3_0
 
 end __Compiler_46_RegisteredPredicateCompilerEnvironment

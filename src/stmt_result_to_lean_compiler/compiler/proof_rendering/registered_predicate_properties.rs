@@ -1,4 +1,4 @@
-//! Registered reflexive, symmetric, antisymmetric, and transitive predicate proofs.
+//! Registered reflexive, symmetric, and transitive predicate proofs.
 
 use super::super::*;
 
@@ -348,89 +348,6 @@ pub(in super::super) fn instantiate_registered_symmetric_predicate_transition(
         "conclusion",
     )?;
     Ok((instantiated_conclusion, parameter_arguments))
-}
-
-pub(in super::super) fn instantiate_registered_antisymmetric_predicate_application(
-    runtime: &Runtime,
-    forall_fact: &ForallFact,
-    predicate_name: &str,
-    target: &Fact,
-) -> Result<(Vec<Obj>, Vec<Fact>), String> {
-    let parameter_objects =
-        registered_predicate_property_parameter_objects(forall_fact, "antisymmetry")?;
-    if parameter_objects.len() != 2 || forall_fact.dom_facts.len() != 2 {
-        return Err("registered antisymmetry theorem changed its binary domain shape".into());
-    }
-    let [conclusion] = forall_fact.then_facts.as_slice() else {
-        return Err("registered antisymmetry theorem changed its single-conclusion shape".into());
-    };
-    let conclusion_fact = conclusion.clone().to_fact();
-    let Fact::AtomicFact(AtomicFact::EqualFact(conclusion_equality)) = &conclusion_fact else {
-        return Err("registered antisymmetry theorem retained a non-equality conclusion".into());
-    };
-    let Fact::AtomicFact(AtomicFact::EqualFact(target_equality)) = target else {
-        return Err(
-            "registered antisymmetric-predicate evidence targets a non-equality fact".into(),
-        );
-    };
-    let parameter_keys = parameter_objects
-        .iter()
-        .map(obj_equality_key)
-        .collect::<HashSet<_>>();
-    let conclusion_keys = [
-        obj_equality_key(&conclusion_equality.left),
-        obj_equality_key(&conclusion_equality.right),
-    ];
-    if conclusion_keys[0] == conclusion_keys[1]
-        || conclusion_keys
-            .iter()
-            .any(|key| !parameter_keys.contains(key))
-    {
-        return Err(
-            "registered antisymmetry theorem conclusion does not use both binders exactly once"
-                .into(),
-        );
-    }
-    let mut substitution = HashMap::new();
-    substitution.insert(conclusion_keys[0].clone(), target_equality.left.clone());
-    substitution.insert(conclusion_keys[1].clone(), target_equality.right.clone());
-    let parameter_arguments = parameter_objects
-        .iter()
-        .map(|parameter| {
-            substitution
-                .get(&obj_equality_key(parameter))
-                .cloned()
-                .ok_or_else(|| {
-                    "registered antisymmetry theorem lost a parameter substitution".to_string()
-                })
-        })
-        .collect::<Result<Vec<_>, _>>()?;
-    let expected_premises = forall_fact
-        .dom_facts
-        .iter()
-        .enumerate()
-        .map(|(index, premise)| {
-            let premise = registered_positive_user_predicate_fact(
-                premise,
-                "antisymmetry",
-                &format!("domain {index}"),
-            )?;
-            if premise.body.len() != 2 {
-                return Err(format!(
-                    "registered antisymmetry theorem changed domain {index} arity"
-                ));
-            }
-            instantiate_registered_positive_user_predicate_pattern(
-                runtime,
-                premise,
-                &substitution,
-                predicate_name,
-                "antisymmetry",
-                &format!("domain {index}"),
-            )
-        })
-        .collect::<Result<Vec<_>, _>>()?;
-    Ok((parameter_arguments, expected_premises))
 }
 
 pub(in super::super) fn instantiate_registered_transitive_predicate_application(

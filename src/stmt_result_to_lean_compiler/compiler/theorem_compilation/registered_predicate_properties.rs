@@ -4,10 +4,10 @@ use super::super::*;
 
 impl StmtResultToLeanCompiler {
     /// `Combine`: compile the exact forall proof owned by a successful
-    /// `by reflexive_prop`/`symmetric_prop`/`transitive_prop`/
-    /// `antisymmetric_prop` Result, then remember the generated theorem only
-    /// in the active compiler environment. The registration is not a stored
-    /// Litex fact, so it deliberately has no fabricated FactId.
+    /// `by reflexive_prop`/`symmetric_prop`/`transitive_prop` Result, then
+    /// remember the generated theorem only in the active compiler environment.
+    /// The registration is not a stored Litex fact, so it deliberately has no
+    /// fabricated FactId.
     pub(in super::super) fn compile_registered_predicate_property_stmt_result_to_lean_source(
         &mut self,
         statement_forall_fact: &ForallFact,
@@ -142,11 +142,6 @@ impl StmtResultToLeanCompiler {
             RegisteredPredicatePropertyCompilationKind::Transitive => {
                 self.environment_stack
                     .registered_transitive_predicate_theorem_bindings
-                    .insert(verification.prop_name.clone(), binding);
-            }
-            RegisteredPredicatePropertyCompilationKind::Antisymmetric => {
-                self.environment_stack
-                    .registered_antisymmetric_predicate_theorem_bindings
                     .insert(verification.prop_name.clone(), binding);
             }
         }

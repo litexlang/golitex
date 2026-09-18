@@ -48,11 +48,6 @@ impl PropAlgebraicPropertyMemory {
             .is_some_and(|properties| properties.is_reflexive)
     }
 
-    pub fn is_antisymmetric(&self, predicate_name: &str) -> bool {
-        self.properties(predicate_name)
-            .is_some_and(|properties| properties.is_antisymmetric)
-    }
-
     pub fn transitive_predicate_count(&self) -> usize {
         self.properties_by_predicate
             .values()
@@ -81,19 +76,11 @@ impl PropAlgebraicPropertyMemory {
             .count()
     }
 
-    pub fn antisymmetric_predicate_count(&self) -> usize {
-        self.properties_by_predicate
-            .values()
-            .filter(|properties| properties.is_antisymmetric)
-            .count()
-    }
-
     /// Preserve the old summary's property-registration counting semantics:
     /// one predicate may contribute once to each independent property kind.
     pub fn property_registration_count(&self) -> usize {
         self.transitive_predicate_count()
             + self.symmetric_predicate_count()
             + self.reflexive_predicate_count()
-            + self.antisymmetric_predicate_count()
     }
 }

@@ -394,9 +394,6 @@ impl RunSummary {
             SuccessByStmtResult::ByReflexivePropStmt(result) => {
                 self.visit_prop_registration_result(result.verification.as_ref())
             }
-            SuccessByStmtResult::ByAntisymmetricPropStmt(result) => {
-                self.visit_prop_registration_result(result.verification.as_ref())
-            }
             SuccessByStmtResult::ByAxiomOfChoiceStmt(_) => self.bump_by_method("axiom of choice"),
             SuccessByStmtResult::ByZornLemmaStmt(_) => self.bump_by_method("zorn lemma"),
             SuccessByStmtResult::ByRegularityAxiomStmt(_) => {
@@ -772,15 +769,6 @@ impl EnvironmentSummary {
             environment
                 .prop_algebraic_properties
                 .reflexive_predicate_count(),
-        );
-        summary.add_field_counts(
-            "known_antisymmetric_props",
-            environment
-                .prop_algebraic_properties
-                .antisymmetric_predicate_count(),
-            environment
-                .prop_algebraic_properties
-                .antisymmetric_predicate_count(),
         );
         summary.add_field_counts(
             "stored_fact_lookup_keys",

@@ -25,7 +25,6 @@ pub enum BuiltinRuleEvidence {
     RuntimeResolvedNumericComparison(RuntimeResolvedNumericComparisonBuiltinRuleEvidence),
     RegisteredReflexivePredicate(RegisteredReflexivePredicateBuiltinRuleEvidence),
     RegisteredSymmetricPredicate(RegisteredSymmetricPredicateBuiltinRuleEvidence),
-    RegisteredAntisymmetricPredicate(RegisteredAntisymmetricPredicateBuiltinRuleEvidence),
     ObjectReflexivity(ObjectReflexivityBuiltinRuleEvidence),
     RationalNormalization(RationalNormalizationBuiltinRuleEvidence),
     RationalAlgebraicNormalization(RationalAlgebraicNormalizationBuiltinRuleEvidence),
@@ -111,7 +110,6 @@ impl BuiltinRuleEvidence {
             }
             Self::RegisteredReflexivePredicate(_) => "predicate.registered_reflexive",
             Self::RegisteredSymmetricPredicate(_) => "predicate.registered_symmetric",
-            Self::RegisteredAntisymmetricPredicate(_) => "predicate.registered_antisymmetric",
             Self::ObjectReflexivity(_) => "equality.object_reflexivity",
             Self::RationalNormalization(_) => "equality.rational_normalization",
             Self::RationalAlgebraicNormalization(_) => "equality.rational_algebraic_normalization",
@@ -233,10 +231,6 @@ impl fmt::Debug for BuiltinRuleEvidence {
                 .finish(),
             BuiltinRuleEvidence::RegisteredSymmetricPredicate(evidence) => f
                 .debug_tuple("RegisteredSymmetricPredicate")
-                .field(evidence)
-                .finish(),
-            BuiltinRuleEvidence::RegisteredAntisymmetricPredicate(evidence) => f
-                .debug_tuple("RegisteredAntisymmetricPredicate")
                 .field(evidence)
                 .finish(),
             BuiltinRuleEvidence::ObjectReflexivity(evidence) => {

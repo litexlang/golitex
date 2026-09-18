@@ -390,7 +390,6 @@ pub enum ByStmt {
     ByTransitivePropStmt(ByTransitivePropStmt),
     BySymmetricPropStmt(BySymmetricPropStmt),
     ByReflexivePropStmt(ByReflexivePropStmt),
-    ByAntisymmetricPropStmt(ByAntisymmetricPropStmt),
     ByZornLemmaStmt(ByZornLemmaStmt),
     ByAxiomOfChoiceStmt(ByAxiomOfChoiceStmt),
     ByRegularityAxiomStmt(ByRegularityAxiomStmt),
@@ -511,13 +510,6 @@ pub struct BySymmetricPropStmt {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ByReflexivePropStmt {
-    pub forall_fact: ForallFact,
-    pub proof: Vec<Stmt>,
-    pub line_file: LineFile,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ByAntisymmetricPropStmt {
     pub forall_fact: ForallFact,
     pub proof: Vec<Stmt>,
     pub line_file: LineFile,

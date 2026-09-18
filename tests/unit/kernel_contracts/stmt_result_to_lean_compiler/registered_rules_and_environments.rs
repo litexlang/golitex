@@ -867,10 +867,6 @@ fn all_predicate_property_registrations_compile_in_result_owned_forall_environme
             generated.contains("theorem __litex_registered_transitive_same_set_"),
             "{generated}"
         );
-        assert!(
-            generated.contains("theorem __litex_registered_antisymmetric_same_set_"),
-            "{generated}"
-        );
         assert!(generated.contains(": same_set x y)"), "{generated}");
         assert!(generated.contains(": same_set y z)"), "{generated}");
         assert!(
@@ -1278,114 +1274,6 @@ fn registered_symmetric_predicate_use_rejects_a_corrupted_permutation() {
             error.contains("changed its reordered premise")
                 || error.contains("invalid permutation"),
             "{error}"
-        );
-    });
-}
-
-fn install_registered_antisymmetric_predicate_proof(
-    results: &mut Vec<StmtResult>,
-) -> &mut RegisteredAntisymmetricPredicateBuiltinRuleEvidence {
-    let child_index = results
-        .len()
-        .checked_sub(2)
-        .expect("antisymmetric fixture retains children and target");
-    let mut second_premise = results.remove(child_index);
-    let child_index = results
-        .len()
-        .checked_sub(2)
-        .expect("antisymmetric fixture retains its first child and target");
-    let mut first_premise = results.remove(child_index);
-    let premise_fact = first_premise
-        .factual_success()
-        .expect("antisymmetric fixture premise is factual")
-        .fact();
-    clear_visible_property_source_inferred_children(results, &premise_fact);
-    let source_fact_id = exact_visible_stored_fact_id(results, &premise_fact)
-        .expect("antisymmetric fixture retains the exact visible premise FactId");
-    replace_embedded_property_rule_child_with_exact_fact_citation(
-        &mut first_premise,
-        source_fact_id,
-    );
-    replace_embedded_property_rule_child_with_exact_fact_citation(
-        &mut second_premise,
-        source_fact_id,
-    );
-    let Some(StmtResult::Success(SuccessStmtResult::Fact(target_result))) = results.last_mut()
-    else {
-        panic!("antisymmetric fixture target is factual")
-    };
-    let target = target_result.fact();
-    target_result.store.infers.rule_applications.clear();
-    for output in &mut target_result.store.infers.store_fact_outputs {
-        output.inferred_facts.clear();
-        output.inferred_fact_ids.clear();
-    }
-    let verification = target_result
-        .verification_mut()
-        .expect("test owns the antisymmetric target verification Result");
-    *verification.proof_mut() =
-        SuccessFactProofResult::BuiltinRule(SuccessBuiltinFactProofResult {
-            msg: "registered antisymmetric predicate".to_string(),
-            evidence: SuccessBuiltinFactProofEvidenceResult::Typed(
-                BuiltinRuleEvidence::RegisteredAntisymmetricPredicate(
-                    RegisteredAntisymmetricPredicateBuiltinRuleEvidence::new(
-                        target,
-                        "same_set".to_string(),
-                    ),
-                ),
-            ),
-            subgoals: vec![
-                into_verified_fact_check(first_premise),
-                into_verified_fact_check(second_premise),
-            ],
-        });
-    let SuccessFactProofResult::BuiltinRule(builtin) = verification.proof_mut() else {
-        unreachable!("test just installed a builtin proof")
-    };
-    let Some(BuiltinRuleEvidence::RegisteredAntisymmetricPredicate(evidence)) =
-        builtin.evidence.typed_mut()
-    else {
-        unreachable!("test just installed antisymmetric evidence")
-    };
-    evidence
-}
-
-fn execute_registered_antisymmetric_predicate_and_use() -> Vec<StmtResult> {
-    let source = format!(
-        "{}\nR = R\ntrust $same_set(R, R)\n$same_set(R, R)\n$same_set(R, R)\nR = R\n",
-        include_str!(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/lean/examples/46_RegisteredPredicateCompilerEnvironment.lit"
-        ))
-    );
-    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
-        &source,
-        "direct_registered_antisymmetric_predicate_environment.lit",
-    )
-    .expect("execute a registered user-predicate antisymmetry theorem and its premises")
-}
-
-#[test]
-fn registered_antisymmetric_predicate_use_combines_its_two_exact_children() {
-    run_registered_rule_test(|| {
-        let mut results = execute_registered_antisymmetric_predicate_and_use();
-        install_registered_antisymmetric_predicate_proof(&mut results);
-
-        let generated = StmtResultToLeanCompiler::new(
-            "direct_registered_antisymmetric_predicate_environment.lit",
-        )
-        .compile_stmt_results_to_lean_source(&results)
-        .expect("compile registered antisymmetry from its two exact child Results");
-        assert!(
-            generated.contains("theorem __litex_registered_antisymmetric_same_set_"),
-            "{generated}"
-        );
-        assert!(
-            generated
-                .matches("__litex_registered_antisymmetric_same_set_")
-                .count()
-                >= 2,
-            "{generated}"
         );
     });
 }
