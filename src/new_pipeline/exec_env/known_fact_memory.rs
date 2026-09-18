@@ -1,4 +1,4 @@
-use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, ExistFact, Fact, OrFact};
+use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, ExistFactFamily, Fact, OrFact};
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::exec_env::exist_fact_index_key::{exist_fact_index_key, ExistFactIndexKey};
@@ -59,7 +59,7 @@ pub struct OrFactMemory {
 // Stored whole exist-facts by structural index key (binders/free objs not included).
 #[derive(Clone, Default)]
 pub struct ExistFactMemory {
-    pub by_key: HashMap<ExistFactIndexKey, Vec<ExistFact>>,
+    pub by_key: HashMap<ExistFactIndexKey, Vec<ExistFactFamily>>,
 }
 
 impl KnownFactMemory {
@@ -205,7 +205,7 @@ impl ExistFactMemory {
     }
 
     // Example: store `exist x N st {x = 1}` under its ExistFactIndexKey bucket.
-    pub fn store(&mut self, exist_fact: &ExistFact) {
+    pub fn store(&mut self, exist_fact: &ExistFactFamily) {
         let key = exist_fact_index_key(exist_fact);
         self.by_key.entry(key).or_default().push(exist_fact.clone());
     }

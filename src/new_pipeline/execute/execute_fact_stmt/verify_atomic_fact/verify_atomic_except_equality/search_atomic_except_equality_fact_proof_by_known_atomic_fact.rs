@@ -3,7 +3,6 @@ use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::fact::{
     atomic_fact_args_ref, atomic_fact_has_positive_polarity,
 };
-use crate::new_pipeline::exec_env::known_fact_memory::ObjIR;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::{
     AtomicExceptEqualityFactSearchProofByKnownAtomicFact, EqualFactSearchedProof,
 };
@@ -11,14 +10,14 @@ use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
-    // One pass: filter known non-equality atomics by equality-class (ObjIR),
-    // then prove known_arg = goal_arg for each parameter via equality search.
+    // Cite a known non-equality atomic by proving each known_arg = goal_arg.
     //
-    // Nested equality: can_use_forall_fact = false, can_use_rewrite = false.
-    // Same ObjIR usually proves by EqualIr builtin; class peers by known-equality.
+    // Candidates: same prop name, polarity, and arity (no equality-class filter).
+    // Arg equality search: can_use_forall_fact = false, can_use_rewrite = false.
+    // Nested MatchingOneArgByOne is still available there (scheduled before rewrite).
     //
-    // Example: known `a > 0`, goal `a > 0` → EqualIr, EqualIr.
-    // Example: known `a > 0`, `a = b`, goal `b > 0` → known-equality path, EqualIr.
+    // Example: known `a > 0`, `a = b`, goal `b > 0`.
+    // Example: known `a + 1 > 0`, `a = b`, goal `b + 1 > 0` (peel Add, then a = b).
     pub fn search_atomic_except_equality_fact_proof_by_known_atomic_fact(
         &mut self,
         fact: &AtomicFact,
@@ -28,7 +27,6 @@ impl Runtime {
             return Ok(None);
         }
 
-        // Arg equality must not invent proofs via forall / rewrite.
         let equality_state = VerifyState {
             can_use_forall_fact: false,
             can_use_rewrite: false,
@@ -41,10 +39,6 @@ impl Runtime {
             atomic_fact_has_positive_polarity(fact),
         );
         let goal_args = atomic_fact_args_ref(fact);
-        let class_per_arg: Vec<Vec<ObjIR>> = goal_args
-            .iter()
-            .map(|arg| self.known_equality_class_keys(arg))
-            .collect();
 
         // Clone candidates first so nested equality search can borrow &mut self.
         let mut candidates: Vec<AtomicFact> = Vec::new();
@@ -52,17 +46,10 @@ impl Runtime {
             let memory = &env.facts.known_atomic_except_equality_facts;
             if let Some(knowns) = memory.by_prop.get(&lookup_key) {
                 for known in knowns {
-                    let known_args = atomic_fact_args_ref(known);
-                    if known_args.len() != goal_args.len() {
+                    if atomic_fact_args_ref(known).len() != goal_args.len() {
                         continue;
                     }
-                    let in_class = known_args
-                        .iter()
-                        .zip(class_per_arg.iter())
-                        .all(|(known_arg, class)| class.contains(&known_arg.ir()));
-                    if in_class {
-                        candidates.push(known.clone());
-                    }
+                    candidates.push(known.clone());
                 }
             }
         }

@@ -1,12 +1,12 @@
-use crate::new_pipeline::ast::fact::{AtomicFact, ExistFact, QuantifierFreeFact};
+use crate::new_pipeline::ast::fact::{AtomicFact, ExistFactFamily, QuantifierFreeFact};
 use crate::new_pipeline::ast::obj::{IdentifierObj, Obj, StandardSet};
 use crate::new_pipeline::ast::param::ParamType;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 
 // Soft match: plain exist over 1–2 real binders with a single comparison atom.
 // Returns free (non-witness) operands that must be known reals.
-pub(super) fn real_line_comparison_free_operands(exist_fact: &ExistFact) -> Option<Vec<Obj>> {
-    let ExistFact::PlainExistFact(plain) = exist_fact else {
+pub(super) fn real_line_comparison_free_operands(exist_fact: &ExistFactFamily) -> Option<Vec<Obj>> {
+    let ExistFactFamily::Exist(plain) = exist_fact else {
         return None;
     };
     if plain.facts.len() != 1 {

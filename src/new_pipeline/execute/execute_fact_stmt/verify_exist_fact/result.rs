@@ -1,4 +1,4 @@
-use crate::new_pipeline::ast::fact::{ExistFact, Fact};
+use crate::new_pipeline::ast::fact::{ExistFactFamily, Fact};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_fact::well_defined_result::{
     ExistFactWellDefinedProof, FailToVerifyExistFactWellDefinedResult,
@@ -6,7 +6,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_fact::well_def
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::runtime::FactId;
 
-// Mirrors ExistFact: plain exist / exist! / not exist are separate owners.
+// Mirrors ExistFactFamily: plain exist / exist! / not exist are separate owners.
 pub enum VerifyExistFactResult {
     PlainExistFact(VerifyPlainExistFactResult),
     ExistUniqueFact(VerifyExistUniqueFactResult),
@@ -39,19 +39,19 @@ pub enum VerifyNotExistFactResult {
 }
 
 pub struct VerifyPlainExistFactSuccess {
-    pub fact: ExistFact,
+    pub fact: ExistFactFamily,
     pub well_defined_proof: ExistFactWellDefinedProof,
     pub searched_proof: ExistFactSearchedProof,
 }
 
 pub struct VerifyExistUniqueFactSuccess {
-    pub fact: ExistFact,
+    pub fact: ExistFactFamily,
     pub well_defined_proof: ExistFactWellDefinedProof,
     pub searched_proof: ExistFactSearchedProof,
 }
 
 pub struct VerifyNotExistFactSuccess {
-    pub fact: ExistFact,
+    pub fact: ExistFactFamily,
     pub well_defined_proof: ExistFactWellDefinedProof,
     pub searched_proof: ExistFactSearchedProof,
 }
@@ -60,7 +60,7 @@ pub struct VerifyNotExistFactSuccess {
 pub enum VerifyExistFactFailed {
     FailToVerifyWellDefined(FailToVerifyExistFactWellDefinedResult),
     FailToSearchProof {
-        fact: ExistFact,
+        fact: ExistFactFamily,
         well_defined_proof: ExistFactWellDefinedProof,
     },
 }
@@ -115,7 +115,7 @@ pub struct ExistFactSearchProofByKnownExistFact {
 // Wrap plain / unique / not-exist into VerifyFactResult::ExistFact(...).
 
 pub fn exist_fact_result_from_wd_fail(
-    fact: &ExistFact,
+    fact: &ExistFactFamily,
     reason: FailToVerifyExistFactWellDefinedResult,
 ) -> VerifyFactResult {
     VerifyFactResult::ExistFact(Box::new(exist_fact_result_failed(
@@ -125,7 +125,7 @@ pub fn exist_fact_result_from_wd_fail(
 }
 
 pub fn exist_fact_result_from_search_fail(
-    fact: &ExistFact,
+    fact: &ExistFactFamily,
     well_defined_proof: ExistFactWellDefinedProof,
 ) -> VerifyFactResult {
     VerifyFactResult::ExistFact(Box::new(exist_fact_result_failed(
@@ -138,12 +138,12 @@ pub fn exist_fact_result_from_search_fail(
 }
 
 pub fn exist_fact_result_from_success(
-    fact: &ExistFact,
+    fact: &ExistFactFamily,
     well_defined_proof: ExistFactWellDefinedProof,
     searched_proof: ExistFactSearchedProof,
 ) -> VerifyFactResult {
     VerifyFactResult::ExistFact(Box::new(match fact {
-        ExistFact::PlainExistFact(_) => {
+        ExistFactFamily::Exist(_) => {
             VerifyExistFactResult::PlainExistFact(VerifyPlainExistFactResult::Success(
                 VerifyPlainExistFactSuccess {
                     fact: fact.clone(),
@@ -152,7 +152,7 @@ pub fn exist_fact_result_from_success(
                 },
             ))
         }
-        ExistFact::ExistUniqueFact(_) => {
+        ExistFactFamily::ExistUnique(_) => {
             VerifyExistFactResult::ExistUniqueFact(VerifyExistUniqueFactResult::Success(
                 VerifyExistUniqueFactSuccess {
                     fact: fact.clone(),
@@ -161,7 +161,7 @@ pub fn exist_fact_result_from_success(
                 },
             ))
         }
-        ExistFact::NotExistFact(_) => {
+        ExistFactFamily::NotExist(_) => {
             VerifyExistFactResult::NotExistFact(VerifyNotExistFactResult::Success(
                 VerifyNotExistFactSuccess {
                     fact: fact.clone(),
@@ -173,15 +173,15 @@ pub fn exist_fact_result_from_success(
     }))
 }
 
-fn exist_fact_result_failed(fact: &ExistFact, failed: VerifyExistFactFailed) -> VerifyExistFactResult {
+fn exist_fact_result_failed(fact: &ExistFactFamily, failed: VerifyExistFactFailed) -> VerifyExistFactResult {
     match fact {
-        ExistFact::PlainExistFact(_) => {
+        ExistFactFamily::Exist(_) => {
             VerifyExistFactResult::PlainExistFact(VerifyPlainExistFactResult::Failed(failed))
         }
-        ExistFact::ExistUniqueFact(_) => {
+        ExistFactFamily::ExistUnique(_) => {
             VerifyExistFactResult::ExistUniqueFact(VerifyExistUniqueFactResult::Failed(failed))
         }
-        ExistFact::NotExistFact(_) => {
+        ExistFactFamily::NotExist(_) => {
             VerifyExistFactResult::NotExistFact(VerifyNotExistFactResult::Failed(failed))
         }
     }

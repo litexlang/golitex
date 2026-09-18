@@ -1,9 +1,9 @@
-use super::{AndFact, AtomicFact, ChainFact, ExistFact, Fact, OrFact};
+use super::{AndFact, AtomicFact, ChainFact, Fact, OrFact, PlainExistFact};
 use super::super::line_file::LineFile;
 use super::super::param::TypedParameterList;
 use crate::new_pipeline::runtime::FactId;
 
-// Forall then-clause shapes. Exist is allowed here; nested forall is not.
+// Forall then-clause shapes. Exist-family facts are allowed here; nested forall is not.
 // Nested forall flattens like nested exist (`forall x: forall y:` → one forall
 // with more binders / dom). Keeping then free of forall makes conclusion indexes
 // (atomic / or / later exist) a single non-universal layer. Need a nested
@@ -14,7 +14,9 @@ pub enum ExistOrAndChainAtomicFact {
     AndFact(AndFact),
     ChainFact(ChainFact),
     OrFact(OrFact),
-    ExistFact(ExistFact),
+    ExistFact(PlainExistFact),
+    ExistUniqueFact(PlainExistFact),
+    NotExistFact(PlainExistFact),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

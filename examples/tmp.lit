@@ -1,3 +1,5 @@
+# Nested KnownAtomic: a+1 > 0 and a = b prove b+1 > 0.
+
 have a R, b R
 trust a + 1 > 0
 trust a = b

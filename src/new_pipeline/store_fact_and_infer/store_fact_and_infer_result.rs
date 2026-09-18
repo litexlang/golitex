@@ -1,4 +1,4 @@
-use crate::new_pipeline::ast::fact::{AndFact, AtomicFact, ChainFact, ExistFact, NotForallFact, OrFact};
+use crate::new_pipeline::ast::fact::{AndFact, AtomicFact, ChainFact, ExistFactFamily, NotForallFact, OrFact};
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::runtime::FactId;
 
@@ -55,7 +55,7 @@ pub struct StoreOrFactResult {
 // Whole exist only; body clauses are not projected into known-atomic indexes.
 pub struct StoreExistFactResult {
     pub whole_fact_id: FactId,
-    pub fact: ExistFact,
+    pub fact: ExistFactFamily,
 }
 
 // Record not-forall, and store its De Morgan counterexample exist into known_exist.

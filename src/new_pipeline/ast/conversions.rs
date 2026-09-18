@@ -384,6 +384,8 @@ impl From<ExistOrAndChainAtomicFact> for Fact {
             ExistOrAndChainAtomicFact::ChainFact(c) => Fact::ChainFact(c),
             ExistOrAndChainAtomicFact::OrFact(o) => Fact::OrFact(o),
             ExistOrAndChainAtomicFact::ExistFact(e) => Fact::ExistFact(e),
+            ExistOrAndChainAtomicFact::ExistUniqueFact(e) => Fact::ExistUniqueFact(e),
+            ExistOrAndChainAtomicFact::NotExistFact(e) => Fact::NotExistFact(e),
         }
     }
 }

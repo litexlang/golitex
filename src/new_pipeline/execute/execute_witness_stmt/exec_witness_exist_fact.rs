@@ -9,7 +9,7 @@
 
 use std::collections::HashMap;
 
-use crate::new_pipeline::ast::fact::{AtomicFact, ExistFact, Fact, InFact, PlainExistFact};
+use crate::new_pipeline::ast::fact::{AtomicFact, ExistFactFamily, Fact, InFact, PlainExistFact};
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::param::ParamType;
 use crate::new_pipeline::ast::stmt::{WitnessExistFact, WitnessStmt};
@@ -97,8 +97,8 @@ impl Runtime {
         };
 
         let plain = match &stmt.exist_fact_in_witness {
-            ExistFact::PlainExistFact(p) | ExistFact::ExistUniqueFact(p) => p,
-            ExistFact::NotExistFact(_) => {
+            ExistFactFamily::Exist(p) | ExistFactFamily::ExistUnique(p) => p,
+            ExistFactFamily::NotExist(_) => {
                 return Err(RuntimeError::Unsupported(
                     "witness exist: `not exist` cannot be introduced by witness".to_string(),
                 ));
@@ -160,13 +160,13 @@ impl Runtime {
 
         let uniqueness_check = if matches!(
             &stmt.exist_fact_in_witness,
-            ExistFact::ExistUniqueFact(_)
+            ExistFactFamily::ExistUnique(_)
         ) {
             // Uniqueness forall builder is not ported to new_pipeline yet.
             let FactWellDefinedProof::ExistFact(well_defined_proof) = exist_fact_well_defined
             else {
                 return Err(RuntimeError::InternalBug(
-                    "witness exist!: exist WD proof must be ExistFact".to_string(),
+                    "witness exist!: exist WD proof must be ExistFactFamily".to_string(),
                 ));
             };
             return Ok(ExecWitnessExistFactStmtResult::Failed(
