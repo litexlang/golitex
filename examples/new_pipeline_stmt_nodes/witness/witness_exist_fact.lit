@@ -1,0 +1,5 @@
+# Stmt: Witness.WitnessExistFact → exec_witness_stmt / exec_witness_exist_fact
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_stmt_nodes/witness/witness_exist_fact.lit
+
+witness exist x R st {x = 0} from 0:
+    0 = 0

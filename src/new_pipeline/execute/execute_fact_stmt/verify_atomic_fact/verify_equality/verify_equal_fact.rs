@@ -50,18 +50,21 @@ impl Runtime {
         if let Some(result) =
             self.search_equal_fact_builtin_rule(fact, verify_state.clone())?
         {
+            eprintln!("DBG equal proof ByBuiltinRule for {}", fact_debug(fact));
             return Ok(Some(EqualFactSearchedProof::ByBuiltinRule(result)));
         }
 
         if let Some(result) =
             self.search_equal_fact_proof_by_known_equality(fact, verify_state.clone())?
         {
+            eprintln!("DBG equal proof ByKnownEquality for {}", fact_debug(fact));
             return Ok(Some(EqualFactSearchedProof::ByKnownEquality(result)));
         }
 
         if let Some(result) =
             self.search_equal_fact_proof_by_builtin_strategy(fact, verify_state.clone())?
         {
+            eprintln!("DBG equal proof ByBuiltinStrategy for {}", fact_debug(fact));
             return Ok(Some(EqualFactSearchedProof::ByBuiltinStrategy(result)));
         }
 
@@ -69,6 +72,7 @@ impl Runtime {
             if let Some(result) = self
                 .search_equal_fact_proof_by_known_forall_fact(fact, verify_state.clone())?
             {
+                eprintln!("DBG equal proof ByKnownForallFact for {}", fact_debug(fact));
                 return Ok(Some(EqualFactSearchedProof::ByKnownForallFact(Box::new(
                     result,
                 ))));
@@ -82,6 +86,7 @@ impl Runtime {
                     verify_state.clone(),
                 )?
             {
+                eprintln!("DBG equal proof ByBuiltinRewrite for {}", fact_debug(fact));
                 return Ok(Some(EqualFactSearchedProof::ByBuiltinRewrite(
                     result,
                 )));
@@ -90,6 +95,7 @@ impl Runtime {
             if let Some(result) = self
                 .search_equal_fact_proof_by_known_rewrite(fact, verify_state)?
             {
+                eprintln!("DBG equal proof ByKnownRewrite for {}", fact_debug(fact));
                 return Ok(Some(EqualFactSearchedProof::ByKnownRewrite(
                     result,
                 )));
@@ -140,4 +146,8 @@ impl Runtime {
     ) -> RuntimeResult<Option<SearchProofByKnownForallFact>> {
         self.search_atomic_fact_proof_by_known_forall_fact(&(fact.clone().into()), verify_state)
     }
+}
+
+fn fact_debug(fact: &EqualFact) -> String {
+    format!("{:?} = {:?}", fact.left.ir(), fact.right.ir())
 }
