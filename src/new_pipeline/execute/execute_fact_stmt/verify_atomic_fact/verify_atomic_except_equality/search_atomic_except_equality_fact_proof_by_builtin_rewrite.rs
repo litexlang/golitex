@@ -1,9 +1,13 @@
+use super::helper::atomic_fact_with_args;
 use crate::new_pipeline::ast::fact::{
     AtomicFact, Fact, FnEqualInFact, GreaterEqualFact, GreaterFact, LessEqualFact, LessFact,
     NormalAtomicFact, NotFnEqualInFact, NotGreaterEqualFact, NotGreaterFact, NotLessEqualFact,
     NotLessFact, NotNormalAtomicFact,
 };
+use crate::new_pipeline::ast::fact::atomic_fact_args_ref;
 use crate::new_pipeline::ast::names::AtomicName;
+use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::helper::replace_obj_matching_ir;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::parse::keywords::{PROPER_SUBSET, PROPER_SUPERSET};
@@ -12,23 +16,30 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 // Builtin rewrite for atomic-except-equality facts.
 //
-// Part of replacing legacy opaque resolve_obj: order duals must appear as
-// explicit Result certificates, not silent pre-normalization of objects.
+// Replaces legacy opaque resolve_obj with explicit certificates:
+// - ClosedNumericEqualSubstitution: fill closed numeric representatives into args
+// - OrderDual: prove via order / proper-subset / fn_eq_in dual
 //
-// Mathematical property: binary order / proper-subset / fn_eq_in duality —
-// `a > b` iff `b < a`, and likewise for weak/negated order, proper subset, and
-// fn_eq_in argument swap.
+// Search tries ClosedNumeric first, then OrderDual.
+pub enum AtomicExceptEqualityFactSearchProofByBuiltinRewrite {
+    ClosedNumericEqualSubstitution(
+        AtomicExceptEqualityFactSearchProofByClosedNumericEqualSubstitution,
+    ),
+    OrderDual(AtomicExceptEqualityFactSearchProofByBuiltinOrderDual),
+}
+
+// Closed-numeric index substitution on a non-equality atomic goal.
+// Mathematical property: if `a = closed` is indexed, then P(F[a], …) follows from
+// P(F[closed], …) for supported F (same as equality-side ClosedNumeric rewrite).
 //
 // Example:
-//   have a R, b R
-//   trust a < b
-//   b > a
-// Search order places this after builtin/known/strategy/definition/forall, so
-// closed numerics like `2 > 1` still win on ClosedNumericComparison first.
-pub enum AtomicExceptEqualityFactSearchProofByBuiltinRewrite {
-    // Rewrite a goal to an order-dual alternate fact, then prove the alternate.
-    // Example: goal `b > a` via alternate `a < b`.
-    OrderDual(AtomicExceptEqualityFactSearchProofByBuiltinOrderDual),
+//   trust a = 10
+//   a > 0
+// rewrite goal to `10 > 0`, then ClosedNumericComparison proves it.
+pub struct AtomicExceptEqualityFactSearchProofByClosedNumericEqualSubstitution {
+    pub rewritten_fact: Fact,
+    pub cited_equal_fact_ids: Vec<FactId>,
+    pub proof_of_rewritten_fact: VerifyFactResult,
 }
 
 pub struct AtomicExceptEqualityFactSearchProofByBuiltinOrderDual {
@@ -37,13 +48,101 @@ pub struct AtomicExceptEqualityFactSearchProofByBuiltinOrderDual {
 }
 
 impl Runtime {
-    // Builtin rewrite: prove goal by proving its order dual (rewrite off).
-    // Example: see AtomicExceptEqualityFactSearchProofByBuiltinRewrite.
+    // Builtin rewrite dispatcher: ClosedNumericEqualSubstitution then OrderDual.
     pub fn search_atomic_except_equality_fact_proof_by_builtin_rewrite(
         &mut self,
         fact: &AtomicFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByBuiltinRewrite>> {
+        if let Some(proof) = self
+            .search_atomic_except_equality_by_closed_numeric_equal_substitution(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(
+                AtomicExceptEqualityFactSearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(
+                    proof,
+                ),
+            ));
+        }
+        if let Some(proof) =
+            self.search_atomic_except_equality_by_order_dual(fact, verify_state)?
+        {
+            return Ok(Some(
+                AtomicExceptEqualityFactSearchProofByBuiltinRewrite::OrderDual(proof),
+            ));
+        }
+        Ok(None)
+    }
+
+    fn search_atomic_except_equality_by_closed_numeric_equal_substitution(
+        &mut self,
+        fact: &AtomicFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByClosedNumericEqualSubstitution>>
+    {
+        if matches!(fact, AtomicFact::EqualFact(_)) {
+            return Ok(None);
+        }
+        let entries = self.visible_closed_numeric_equal_entries();
+        let mut rewritten_args: Vec<Obj> = atomic_fact_args_ref(fact)
+            .into_iter()
+            .cloned()
+            .collect();
+        let mut cited_equal_fact_ids = Vec::new();
+
+        for (from_ir, closed, fact_id) in &entries {
+            let mut changed = false;
+            let next_args: Vec<Obj> = rewritten_args
+                .iter()
+                .map(|arg| {
+                    let next = replace_obj_matching_ir(arg, from_ir, closed);
+                    if next.ir() != arg.ir() {
+                        changed = true;
+                    }
+                    next
+                })
+                .collect();
+            if !changed {
+                continue;
+            }
+            rewritten_args = next_args;
+            cited_equal_fact_ids.push(*fact_id);
+        }
+
+        if cited_equal_fact_ids.is_empty() {
+            return Ok(None);
+        }
+
+        let Some(rewritten) =
+            atomic_fact_with_args(fact, rewritten_args, self.ids.allocate_fact_id())
+        else {
+            return Ok(None);
+        };
+        let residual_state = VerifyState {
+            can_use_forall_fact: verify_state.can_use_forall_fact,
+            can_use_rewrite: false,
+            store_well_defined_fact: false,
+        };
+        let proof_of_rewritten_fact = self.verify_atomic_fact(&rewritten, residual_state)?;
+        if proof_of_rewritten_fact.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(
+            AtomicExceptEqualityFactSearchProofByClosedNumericEqualSubstitution {
+                rewritten_fact: rewritten.into(),
+                cited_equal_fact_ids,
+                proof_of_rewritten_fact,
+            },
+        ))
+    }
+
+    fn search_atomic_except_equality_by_order_dual(
+        &mut self,
+        fact: &AtomicFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByBuiltinOrderDual>> {
         let Some(alternate) = order_dual_atomic_fact(fact, || self.ids.allocate_fact_id()) else {
             return Ok(None);
         };
@@ -56,14 +155,10 @@ impl Runtime {
         if proof_of_alternate_fact.is_failed() {
             return Ok(None);
         }
-        Ok(Some(
-            AtomicExceptEqualityFactSearchProofByBuiltinRewrite::OrderDual(
-                AtomicExceptEqualityFactSearchProofByBuiltinOrderDual {
-                    alternate_fact: alternate.into(),
-                    proof_of_alternate_fact,
-                },
-            ),
-        ))
+        Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinOrderDual {
+            alternate_fact: alternate.into(),
+            proof_of_alternate_fact,
+        }))
     }
 }
 

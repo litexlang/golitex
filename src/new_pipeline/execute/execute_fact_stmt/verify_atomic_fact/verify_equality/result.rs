@@ -2,7 +2,7 @@ use crate::new_pipeline::ast::fact::{EqualFact, Fact};
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::{
     EqualitySearchProofByBuiltinRewrite, EqualitySearchProofByBuiltinRule,
-    EqualitySearchProofByBuiltinStrategy, EqualitySearchProofByKnownRewrite,
+    EqualitySearchProofByBuiltinStrategy,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::search_equal_fact_proof_by_matching_one_arg_by_one::EqualFactSearchedProofByMatchingOneArgByOne;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::well_defined_result::{
@@ -119,7 +119,6 @@ pub enum EqualFactSearchedProof {
     ByMatchingOneArgByOne(EqualFactSearchedProofByMatchingOneArgByOne),
     ByKnownForallFact(Box<SearchProofByKnownForallFact>),
     ByBuiltinRewrite(EqualitySearchProofByBuiltinRewrite),
-    ByKnownRewrite(EqualitySearchProofByKnownRewrite),
 }
 
 // Oriented cite chain from goal.left to goal.right over generating equality
@@ -179,7 +178,6 @@ pub fn strict_equal_arg_proof_from_searched(
             Some(StrictEqualArgProof::ByMatchingOneArgByOne(p))
         }
         EqualFactSearchedProof::ByKnownForallFact(_)
-        | EqualFactSearchedProof::ByBuiltinRewrite(_)
-        | EqualFactSearchedProof::ByKnownRewrite(_) => None,
+        | EqualFactSearchedProof::ByBuiltinRewrite(_) => None,
     }
 }

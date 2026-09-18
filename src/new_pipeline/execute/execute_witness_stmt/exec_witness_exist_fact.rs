@@ -9,7 +9,7 @@
 
 use std::collections::HashMap;
 
-use crate::new_pipeline::ast::fact::{AtomicFact, ExistFactFamily, Fact, InFact, PlainExistFact};
+use crate::new_pipeline::ast::fact::{exist_fact_family_to_fact, AtomicFact, ExistFactFamily, Fact, InFact, PlainExistFact};
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::param::ParamType;
 use crate::new_pipeline::ast::stmt::{WitnessExistFact, WitnessStmt};
@@ -166,7 +166,7 @@ impl Runtime {
             let FactWellDefinedProof::ExistFact(well_defined_proof) = exist_fact_well_defined
             else {
                 return Err(RuntimeError::InternalBug(
-                    "witness exist!: exist WD proof must be ExistFactFamily".to_string(),
+                    "witness exist!: exist WD proof must be ExistFact".to_string(),
                 ));
             };
             return Ok(ExecWitnessExistFactStmtResult::Failed(
@@ -183,7 +183,7 @@ impl Runtime {
             None
         };
 
-        let exist_as_fact = Fact::ExistFact(stmt.exist_fact_in_witness.clone());
+        let exist_as_fact = exist_fact_family_to_fact(&stmt.exist_fact_in_witness);
         let store_and_infer_result = self.store_fact_and_infer(&exist_as_fact)?;
 
         Ok(ExecWitnessExistFactStmtResult::Success(

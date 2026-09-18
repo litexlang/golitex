@@ -1,4 +1,4 @@
-use crate::new_pipeline::ast::fact::{
+use crate::new_pipeline::ast::fact::{exist_fact_family_from_fact, exist_fact_family_to_fact, 
     exist_fact_family_free_args_ref, exist_fact_family_id, ExistFactFamily, Fact, ForallFact, InFact,
 };
 use crate::new_pipeline::ast::obj::{Obj, StandardSet};
@@ -220,8 +220,8 @@ impl Runtime {
         let subst = subst_from_ordered_params(&param_ids, &matched.forall_parameters_match_what_args);
 
         // Step 4: instantiate the exist conclusion and alpha-compare to the goal.
-        let instantiated = match self.inst_fact(&conclusion.to_fact(), &subst) {
-            Ok(f) => match ExistFactFamily::from_fact(&f) {
+        let instantiated = match self.inst_fact(&exist_fact_family_to_fact(&conclusion), &subst) {
+            Ok(f) => match exist_fact_family_from_fact(&f) {
                 Some(e) => e,
                 None => return Ok(None),
             },

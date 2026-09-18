@@ -1,10 +1,9 @@
 # Node: atomic.ByBuiltinRewrite.OrderDual
 # Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/atomic/by_builtin_rewrite/order_dual.lit
 #
-# Uses variables so ClosedNumericComparison cannot prove `b > a` first.
-# After other search slots miss, OrderDual rewrites to `a < b` (known) with
-# can_use_rewrite = false.
+# Under the assumption `a < b`, prove `b > a` (OrderDual rewrite).
 
-have a R, b R
-trust a < b
-b > a
+forall a, b R:
+    a < b
+    =>:
+        b > a

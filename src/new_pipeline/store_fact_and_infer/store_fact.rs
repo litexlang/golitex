@@ -4,7 +4,7 @@ use super::store_fact_and_infer_result::{
     StoreExistFactResult, StoreFactAndInferResult, StoreNotForallFactResult, StoreOrFactResult,
 };
 use crate::new_pipeline::ast::fact::{
-    exist_fact_family_from_fact, exist_fact_family_id, AndFact, AtomicFact, ChainFact, EqualFact, ExistFactFamily, Fact,
+    exist_fact_family_from_fact, exist_fact_family_id, exist_fact_family_to_fact, AndFact, AtomicFact, ChainFact, EqualFact, ExistFactFamily, Fact,
     NormalAtomicFact, NotForallFact, OrFact,
 };
 use crate::new_pipeline::ast::line_file::LineFile;
@@ -104,7 +104,7 @@ impl Runtime {
         let env = self.top_exec_env_mut();
         env.facts.known_exist.store(exist_fact);
         env.facts
-            .record_fact(whole_fact_id, exist_fact.to_fact());
+            .record_fact(whole_fact_id, exist_fact_family_to_fact(exist_fact));
         Ok(StoreExistFactResult {
             whole_fact_id,
             fact: exist_fact.clone(),

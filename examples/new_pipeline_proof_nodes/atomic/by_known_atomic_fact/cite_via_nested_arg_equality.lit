@@ -1,7 +1,7 @@
 # Node: atomic.ByKnownAtomicFact (nested arg equality via MatchingOneArgByOne)
 # Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/atomic/by_known_atomic_fact/cite_via_nested_arg_equality.lit
 
-have a R, b R
-trust a + 1 > 0
-trust a = b
+have a R = 1
+have b R = a
+a + 1 > 0
 b + 1 > 0

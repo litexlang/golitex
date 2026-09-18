@@ -1,4 +1,4 @@
-use crate::new_pipeline::ast::fact::{AtomicFact, Fact};
+use crate::new_pipeline::ast::fact::{AtomicFact, ExistFactFamily, Fact};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_and_fact::VerifyAndFactWellDefinedResult;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::VerifyEqualFactWellDefinedResult;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::VerifyAtomicFactWellDefinedResult;

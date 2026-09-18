@@ -1,6 +1,6 @@
 # Node: and (per-component verify)
 # Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/and/components.lit
 
-trust 1 < 2
-trust 2 < 3
+1 < 2
+2 < 3
 1 < 2 and 2 < 3

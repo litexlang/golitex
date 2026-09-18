@@ -98,11 +98,7 @@ impl Runtime {
 }
 
 fn plain_exist_body(fact: &ExistFactFamily) -> &PlainExistFact {
-    match fact {
-        ExistFactFamily::Exist(p)
-        | ExistFactFamily::ExistUnique(p)
-        | ExistFactFamily::NotExist(p) => p,
-    }
+    fact.plain()
 }
 
 fn extract_obj_wd_fail(failed: VerifyObjWellDefinedResult) -> FailToVerifyObjWellDefinedResult {
