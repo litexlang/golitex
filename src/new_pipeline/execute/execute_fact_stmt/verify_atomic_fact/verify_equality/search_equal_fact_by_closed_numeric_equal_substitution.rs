@@ -1,5 +1,5 @@
 use super::by_builtin_rewrite_result::ClosedNumericEqualSubstitutionBuiltinRewriteProof;
-use super::search_equal_fact_by_congruence_substitution::replace_obj_matching_ir;
+use super::helper::replace_obj_matching_ir;
 use crate::new_pipeline::ast::fact::EqualFact;
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::exec_env::exec_env::SpecialObjProperty;

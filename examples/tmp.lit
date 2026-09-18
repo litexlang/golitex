@@ -1,4 +1,8 @@
-# Mom's age is 3 times Xiao Ming's age plus 4; Xiao Ming is 15. How old is Mom?
-have 小明年龄 R = 15
-have 妈妈年龄 R = 3 * 小明年龄 + 4
-妈妈年龄 = 3 * 15 + 4 = 49
+# Allowed: ClosedNumericEqual rewrite only.
+have a R = 10
+a + 1 = 11
+
+# Forbidden path removed: arbitrary trust equality must NOT rewrite subterms.
+# have a R, b R
+# trust a = b
+# a + 1 = b + 1

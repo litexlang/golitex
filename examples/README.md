@@ -12,6 +12,9 @@ corresponding Litex source close to that description.
 1b. [`new_pipeline_proof_nodes/`](new_pipeline_proof_nodes/) contains one `.lit`
    per concrete new_pipeline proof rule/path (or builtins first); exit 0 under
    `LITEX_NEW_PIPELINE=1` is the acceptance bar.
+1c. [`new_pipeline_stmt_nodes/`](new_pipeline_stmt_nodes/) contains one `.lit`
+   per currently wired `exec_stmt` arm (Fact, let/have/prop, witness, trust,
+   by reflexive/symmetric); same `LITEX_NEW_PIPELINE=1` acceptance bar.
 2. [`02_builtin_math/`](02_builtin_math/) shows arithmetic, order, finite-set,
    function, and numeric rules provided by the verifier, including native
    natural-number primality and coprimality.

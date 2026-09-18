@@ -4,15 +4,14 @@ use crate::new_pipeline::runtime::runtime_ids::FactId;
 
 // Builtin rewrite for EqualFact.
 //
-// Replaces legacy opaque `Runtime::resolve_obj`: each variant is an explicit
-// rewrite certificate with cites, then a residual equality is verified with
-// rewrite disabled. Do not fold all rewrites into one silent "resolve objs".
+// Only ClosedNumericEqualSubstitution is allowed: rewrite toward a stored
+// closed numeric representative. Do not add a general known-equality
+// subterm substitution here (that is not congruence and is forbidden).
+// True constructor-wise / pointwise equality belongs elsewhere, not in rewrite.
 //
-// Dispatcher: `search_equal_fact_proof_by_builtin_rewrite` tries variants in
-// order (same pattern as builtin strategy).
+// Dispatcher: `search_equal_fact_proof_by_builtin_rewrite`.
 pub enum EqualitySearchProofByBuiltinRewrite {
     ClosedNumericEqualSubstitution(ClosedNumericEqualSubstitutionBuiltinRewriteProof),
-    CongruenceSubstitution(CongruenceSubstitutionBuiltinRewriteProof),
 }
 
 // Closed-numeric index substitution: a non-closed object indexed under
@@ -29,23 +28,6 @@ pub enum EqualitySearchProofByBuiltinRewrite {
 //   a + b = 30
 // rewrite both sides' `a`/`b` to 10/20, then Calculation proves `10 + 20 = 30`.
 pub struct ClosedNumericEqualSubstitutionBuiltinRewriteProof {
-    pub rewritten_left: Obj,
-    pub rewritten_right: Obj,
-    pub cited_equal_fact_ids: Vec<FactId>,
-    // Prove rewritten_left = rewritten_right with can_use_rewrite = false.
-    pub residual_equal: VerifyFactResult,
-}
-
-// Congruence substitution: known `a = b` rewrites F[a] to F[b] under supported
-// constructors, then the residual equality is proved without rewrite.
-// Mathematical property: congruence — if a = b is known, then F[a] = F[b]
-// when F is built from the supported constructors in the search helper.
-//
-// Example:
-//   trust a = 1
-//   a + 1 = 2
-// rewrite left `a + 1` → `1 + 1`, then Calculation proves `1 + 1 = 2`.
-pub struct CongruenceSubstitutionBuiltinRewriteProof {
     pub rewritten_left: Obj,
     pub rewritten_right: Obj,
     pub cited_equal_fact_ids: Vec<FactId>,
