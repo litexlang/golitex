@@ -1,8 +1,9 @@
-use super::entry::ObjWellDefinedProofByDef;
+use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use crate::new_pipeline::ast::obj::{AnonymousFn, Obj};
 use crate::new_pipeline::ast::param::{
     ParamType, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
 };
+use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
@@ -11,7 +12,7 @@ impl Runtime {
         &mut self,
         objs: &[&Obj],
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         let mut child_obj_well_defined = Vec::new();
         for obj in objs {
             child_obj_well_defined.push((
@@ -19,7 +20,7 @@ impl Runtime {
                 self.verify_obj_well_definedness(obj, verify_state.clone())?,
             ));
         }
-        Ok(ObjWellDefinedProofByDef::from_children(
+        Ok(ObjWellDefinedByDefCommonStages::from_children(
             child_obj_well_defined,
         ))
     }
@@ -28,7 +29,7 @@ impl Runtime {
         &mut self,
         objs: &[Box<Obj>],
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         let refs: Vec<&Obj> = objs.iter().map(|o| o.as_ref()).collect();
         self.verify_objs_as_children(&refs, verify_state)
     }
@@ -37,7 +38,7 @@ impl Runtime {
         &mut self,
         arg: &Obj,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_objs_as_children(&[arg], verify_state)
     }
 
@@ -46,19 +47,16 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_objs_as_children(&[left, right], verify_state)
     }
 
     pub(super) fn with_requirements(
         &self,
-        mut proof: ObjWellDefinedProofByDef,
-        requirement_fact_verified: Vec<
-            crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult,
-        >,
-    ) -> ObjWellDefinedProofByDef {
-        proof.requirement_fact_verified = requirement_fact_verified;
-        proof
+        proof: ObjWellDefinedByDefCommonStages,
+        requirement_fact_verified: Vec<VerifyFactResult>,
+    ) -> ObjWellDefinedByDefCommonStages {
+        proof.with_requirements(requirement_fact_verified)
     }
 }
 

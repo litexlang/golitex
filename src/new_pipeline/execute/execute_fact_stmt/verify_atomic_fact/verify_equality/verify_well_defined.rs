@@ -16,7 +16,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyEqualFactWellDefinedResult> {
         let left = match self.verify_obj_well_definedness(&fact.left, verify_state.clone())? {
-            VerifyObjWellDefinedResult::FailToVerifyWellDefined(reason) => {
+            VerifyObjWellDefinedResult::Failed(reason) => {
                 return Ok(VerifyEqualFactWellDefinedResult::Failed(
                     FailToVerifyEqualFactWellDefinedResult {
                         failed_arg_index: 0,
@@ -28,7 +28,7 @@ impl Runtime {
             success => success,
         };
         let right = match self.verify_obj_well_definedness(&fact.right, verify_state)? {
-            VerifyObjWellDefinedResult::FailToVerifyWellDefined(reason) => {
+            VerifyObjWellDefinedResult::Failed(reason) => {
                 return Ok(VerifyEqualFactWellDefinedResult::Failed(
                     FailToVerifyEqualFactWellDefinedResult {
                         failed_arg_index: 1,

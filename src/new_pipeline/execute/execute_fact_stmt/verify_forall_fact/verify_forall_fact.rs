@@ -8,7 +8,9 @@ use crate::new_pipeline::execute::execute_fact_stmt::verify_forall_fact::FailToV
 use crate::new_pipeline::execute::execute_fact_stmt::verify_forall_fact::{
     AssumeDomFactResult, ProveAndStoreThenFactResult,
 };
-use crate::new_pipeline::execute::execute_fact_stmt::well_defined_results::FailToVerifyObjWellDefinedResult;
+use crate::new_pipeline::execute::execute_fact_stmt::well_defined_results::{
+    fail_to_verify_obj_well_defined_others, FailToVerifyObjWellDefinedResult,
+};
 use crate::new_pipeline::execute::execute_fact_stmt::{
     VerifyFactWellDefinedResult, VerifyObjWellDefinedResult, VerifyState,
 };
@@ -89,8 +91,8 @@ impl Runtime {
                 Ok(result) => result,
                 Err(failed) => {
                     let reason = match failed {
-                        VerifyObjWellDefinedResult::FailToVerifyWellDefined(reason) => reason,
-                        _ => FailToVerifyObjWellDefinedResult::Others(
+                        VerifyObjWellDefinedResult::Failed(reason) => reason,
+                        _ => fail_to_verify_obj_well_defined_others(
                             "forall: typed parameter well-definedness failed".to_string(),
                         ),
                     };

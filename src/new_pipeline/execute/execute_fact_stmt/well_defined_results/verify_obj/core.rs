@@ -1,6 +1,6 @@
 //! Function / atom / standard-set object WD.
 
-use super::entry::ObjWellDefinedProofByDef;
+use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::helper::{
     anonymous_fn_body_is_bound_param, set_bound_parameters_to_typed_parameter_list,
 };
@@ -13,22 +13,22 @@ impl Runtime {
     pub(super) fn verify_atom_obj_well_definedness_by_def(
         &mut self,
         _verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
-        Ok(ObjWellDefinedProofByDef::leaf())
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
+        Ok(ObjWellDefinedByDefCommonStages::leaf())
     }
 
     pub(super) fn verify_standard_set_obj_well_definedness_by_def(
         &mut self,
         _verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
-        Ok(ObjWellDefinedProofByDef::leaf())
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
+        Ok(ObjWellDefinedByDefCommonStages::leaf())
     }
 
     pub(super) fn verify_fn_obj_well_definedness_by_def(
         &mut self,
         value: &FnObj,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         // Bare anonymous literal as FnObj head: same binder WD as Obj::AnonymousFn.
         if let FnObjHead::AnonymousFnLiteral(anon) = value.head.as_ref() {
             let mut proof =
@@ -89,7 +89,7 @@ impl Runtime {
         &mut self,
         value: &FnSet,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         let mut children = Vec::new();
         for group in &value.set_bound_parameters.groups {
             children.push(group.param_type.as_ref());
@@ -106,7 +106,7 @@ impl Runtime {
         &mut self,
         value: &AnonymousFn,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         let mut ambient_children = Vec::new();
         for group in &value.body.set_bound_parameters.groups {
             ambient_children.push(group.param_type.as_ref());

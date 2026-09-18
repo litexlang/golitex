@@ -35,11 +35,11 @@ pub use verify_or_fact::{
 };
 pub use verify_state::VerifyState;
 pub use well_defined_results::{
-    AtomicFactWellDefinedProof, EqualFactWellDefinedProof, ExistFactWellDefinedProof,
-    FactWellDefinedProof, FailToVerifyAtomicFactWellDefinedResult,
+    fail_to_verify_obj_well_defined_others, AtomicFactWellDefinedProof, EqualFactWellDefinedProof,
+    ExistFactWellDefinedProof, FactWellDefinedProof, FailToVerifyAtomicFactWellDefinedResult,
     FailToVerifyEqualFactWellDefinedResult, FailToVerifyExistFactWellDefinedResult,
     FailToVerifyFactWellDefinedResult, FailToVerifyForallFactWellDefinedResult,
-    FailToVerifyObjWellDefinedResult, FailToVerifyOrFactWellDefinedResult,
+    FailToVerifyObjWellDefinedResult, FailToVerifyOrFactWellDefinedResult, ObjWellDefinedProof,
     ObjWellDefinedProofByDef, OrFactWellDefinedProof, VerifyAtomicFactWellDefinedResult,
     VerifyEqualFactWellDefinedResult, VerifyExistFactWellDefinedResult,
     VerifyFactWellDefinedResult, VerifyObjWellDefinedResult, VerifyOrFactWellDefinedResult,

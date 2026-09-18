@@ -74,11 +74,11 @@ equal / atomic-except-equality).
 Object WD (`verify_obj_well_definedness`) returns
 `RuntimeResult<VerifyObjWellDefinedResult>`:
 
-- `Ok(ByKnown)` when a WD id is visible on the env stack
-- `Ok(ByDef)` when WD is established by definition (and, if
-  `store_well_defined_fact`, recorded on the current top env)
-- `Ok(FailToVerifyWellDefined(reason))` when a child WD or requirement-fact
-  search misses (`Child` / `Requirement` / `IdentifierUndefined` / `Others`)
+- `Ok(Success(ByKnown { wd_id }))` when a WD id is visible on the env stack
+- `Ok(Success(ByDef(proof)))` when by-definition succeeds; `ObjWellDefinedProofByDef`
+  mirrors `Obj` (one dedicated proof struct per variant)
+- `Ok(Failed(reason))` when a child WD or requirement soft-misses;
+  `FailToVerifyObjWellDefinedResult` also mirrors `Obj`
 - `Err(...)` only for real runtime / invariant failures
 
 Requirement search aggregators return soft fail variants on exhaustion; they
@@ -103,7 +103,7 @@ does not write new well-definedness records into the current scope.
 The equality and atomic-except-equality pipelines keep their search slots in a fixed
 order. There is **no fact-level exact-IR cite** search slot (composites and
 atomics alike). Object WD reuses recorded proofs via
-`VerifyObjWellDefinedResult::ByKnown`.
+`VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByKnown { .. })`.
 
 Atomic-except-equality search is:
 

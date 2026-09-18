@@ -5,7 +5,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_fact::well_def
     VerifyExistFactWellDefinedResult,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::well_defined_results::{
-    FactWellDefinedProof, FailToVerifyObjWellDefinedResult, VerifyFactWellDefinedResult,
+    FactWellDefinedProof, fail_to_verify_obj_well_defined_others, FailToVerifyObjWellDefinedResult, VerifyFactWellDefinedResult,
     VerifyObjWellDefinedResult,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
@@ -103,8 +103,8 @@ fn plain_exist_body(fact: &ExistFactFamily) -> &PlainExistFact {
 
 fn extract_obj_wd_fail(failed: VerifyObjWellDefinedResult) -> FailToVerifyObjWellDefinedResult {
     match failed {
-        VerifyObjWellDefinedResult::FailToVerifyWellDefined(reason) => reason,
-        _ => FailToVerifyObjWellDefinedResult::Others(
+        VerifyObjWellDefinedResult::Failed(reason) => reason,
+        _ => fail_to_verify_obj_well_defined_others(
             "param type well-definedness failed".to_string(),
         ),
     }

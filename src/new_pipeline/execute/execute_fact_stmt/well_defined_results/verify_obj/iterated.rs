@@ -1,6 +1,6 @@
 //! Iterated / range / sequence object WD (children only until P3).
 
-use super::entry::ObjWellDefinedProofByDef;
+use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use crate::new_pipeline::ast::obj::{
     ClosedRange, FiniteSeqListObj, FiniteSeqSet, FiniteSetReduce, ObjAtIndex, Product,
     ProductOfFiniteSet, Range, Reduce, SeqSet, Sum, SumOfFiniteSet,
@@ -13,7 +13,7 @@ impl Runtime {
         &mut self,
         value: &Sum,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_objs_as_children(
             &[
                 value.start.as_ref(),
@@ -27,7 +27,7 @@ impl Runtime {
         &mut self,
         value: &SumOfFiniteSet,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_binary_obj_well_definedness_by_def(
             value.set.as_ref(),
             value.func.as_ref(),
@@ -38,7 +38,7 @@ impl Runtime {
         &mut self,
         value: &Product,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_objs_as_children(
             &[
                 value.start.as_ref(),
@@ -52,7 +52,7 @@ impl Runtime {
         &mut self,
         value: &ProductOfFiniteSet,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_binary_obj_well_definedness_by_def(
             value.set.as_ref(),
             value.func.as_ref(),
@@ -63,7 +63,7 @@ impl Runtime {
         &mut self,
         value: &Reduce,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_objs_as_children(
             &[
                 value.start.as_ref(),
@@ -79,7 +79,7 @@ impl Runtime {
         &mut self,
         value: &FiniteSetReduce,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_objs_as_children(
             &[
                 value.set.as_ref(),
@@ -94,7 +94,7 @@ impl Runtime {
         &mut self,
         value: &Range,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_binary_obj_well_definedness_by_def(
             value.start.as_ref(),
             value.end.as_ref(),
@@ -105,7 +105,7 @@ impl Runtime {
         &mut self,
         value: &ClosedRange,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_binary_obj_well_definedness_by_def(
             value.start.as_ref(),
             value.end.as_ref(),
@@ -116,7 +116,7 @@ impl Runtime {
         &mut self,
         value: &FiniteSeqSet,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_binary_obj_well_definedness_by_def(
             value.set.as_ref(),
             value.n.as_ref(),
@@ -127,21 +127,21 @@ impl Runtime {
         &mut self,
         value: &SeqSet,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_unary_obj_well_definedness_by_def(value.set.as_ref(), verify_state)
     }
     pub(super) fn verify_finite_seq_list_obj_well_definedness_by_def(
         &mut self,
         value: &FiniteSeqListObj,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_boxed_objs_as_children(&value.objs, verify_state)
     }
     pub(super) fn verify_obj_at_index_obj_well_definedness_by_def(
         &mut self,
         value: &ObjAtIndex,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedProofByDef> {
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_binary_obj_well_definedness_by_def(
             value.obj.as_ref(),
             value.index.as_ref(),

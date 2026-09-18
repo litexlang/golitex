@@ -19,7 +19,7 @@ use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::exec_env::DefinedIdentifierInfo;
 use crate::new_pipeline::execute::execute_fact_stmt::{
-    FailToVerifyObjWellDefinedResult, ParamTypeWellDefinedProof, VerifyObjWellDefinedResult,
+    fail_to_verify_obj_well_defined_others, ParamTypeWellDefinedProof, VerifyObjWellDefinedResult,
     VerifyState,
 };
 use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
@@ -67,8 +67,8 @@ impl Runtime {
             if proof.is_failed() {
                 let failed = match proof {
                     ParamTypeWellDefinedProof::Obj(wd) => wd,
-                    _ => VerifyObjWellDefinedResult::FailToVerifyWellDefined(
-                        FailToVerifyObjWellDefinedResult::Others(
+                    _ => VerifyObjWellDefinedResult::Failed(
+                        fail_to_verify_obj_well_defined_others(
                             "param type well-definedness failed".to_string(),
                         ),
                     ),
