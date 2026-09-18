@@ -7,13 +7,14 @@
 
 Created and maintained by Jiachen Shen.
 
-*Litex is an easy-to-learn, easy-to-use set-theoretic formal language. Its
-source follows ordinary mathematical writing—users state directly what they
-want to prove; the system verifies bottom-up and returns the grounds for each
-step, or where checking stops. It is also designed to compile to Lean—some
-scenarios are already covered, with broader coverage expected by the end of
-2026. This forms a human–AI–Litex collaboration loop that supplies accumulable
-verification momentum for Math for AI.*
+*Litex is a set-theoretic formal language designed to be easy to learn and use.
+Its source follows ordinary mathematical writing: users state objects and facts
+directly—what they want to prove—while the system verifies bottom-up and returns
+the grounds for each step, or where checking stops. It is also designed to
+compile to Lean; some scenarios are already covered, with broader coverage
+expected by the end of 2026. Together with humans and AI, this aims to form a
+collaboration loop that can accumulate checkable verification work for Math for
+AI.*
 
 > **Litex is an experimental hobby project in beta; expect rough edges.**
 

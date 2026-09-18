@@ -11,6 +11,7 @@
 //! FactIds are global session counters; merge only mounts child-owned state.
 
 use super::exec_env::ExecEnv;
+use crate::new_pipeline::ast::fact::ExistFactFamily;
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact};
 use crate::new_pipeline::ast::names::PlainName;
 use crate::new_pipeline::parse::keywords::{

@@ -65,7 +65,7 @@ impl Runtime {
         }))
     }
 
-    fn visible_closed_numeric_equal_entries(&self) -> Vec<(ObjIR, Obj, FactId)> {
+    pub(crate) fn visible_closed_numeric_equal_entries(&self) -> Vec<(ObjIR, Obj, FactId)> {
         let mut seen: HashSet<u64> = HashSet::new();
         let mut out = Vec::new();
         for env in self.execution_environments_stack.iter().rev() {

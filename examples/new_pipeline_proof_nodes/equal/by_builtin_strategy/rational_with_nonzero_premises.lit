@@ -1,6 +1,5 @@
 # Node: equal.ByBuiltinStrategy.RationalWithNonzeroPremises
 # Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/equal/by_builtin_strategy/rational_with_nonzero_premises.lit
 
-have x R
-trust x != 0
+have x R = 2
 x / x = 1

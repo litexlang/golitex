@@ -63,7 +63,7 @@ pub(super) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Ob
 // Replace every subtree whose IR equals `from_ir` with `to` (top-down).
 // Owned by ClosedNumericEqualSubstitution only — not a global resolve_obj,
 // and not a general known-equality congruence rewrite.
-pub(super) fn replace_obj_matching_ir(obj: &Obj, from_ir: &ObjIR, to: &Obj) -> Obj {
+pub(crate) fn replace_obj_matching_ir(obj: &Obj, from_ir: &ObjIR, to: &Obj) -> Obj {
     if &obj.ir() == from_ir {
         return to.clone();
     }

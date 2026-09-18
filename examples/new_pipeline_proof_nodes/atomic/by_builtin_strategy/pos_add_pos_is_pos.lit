@@ -1,7 +1,8 @@
 # Node: atomic.ByBuiltinStrategy.PosAddPosIsPos
 # Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/atomic/by_builtin_strategy/pos_add_pos_is_pos.lit
 
-have a, b R
-trust a > 0
-trust b > 0
-a + b > 0
+forall a, b R:
+    a > 0
+    b > 0
+    =>:
+        a + b > 0

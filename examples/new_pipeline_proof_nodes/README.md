@@ -3,6 +3,12 @@
 One concrete builtin rule or search path → one `.lit` file.
 File names mirror Rust variants / structs for easy cross-check.
 
+## Writing style
+
+Prefer `have … = …` and `forall` binders. Do **not** use `trust` to fake
+definitions or ambient assumptions in these tracers (see
+`examples/new_pipeline_stmt_nodes/unsafe/` for trust-stmt coverage).
+
 ## Acceptance
 
 ```bash
@@ -13,8 +19,9 @@ Exit 0 is enough. No requirement to assert which `searched_proof` variant won.
 
 Stub / not-yet-wired nodes are **omitted** (no SKIP placeholders).
 Still open (non-rewrite): empty atomic builtin-rule families (`NormalAtomic` / several `Not*` / `FnEqualIn`); more exist builtins.
-Equality BuiltinRewrite: only ClosedNumericEqualSubstitution (no general known-equality subterm rewrite).
-OrderDual rewrite: `atomic/by_builtin_rewrite/order_dual.lit`.
+Equality BuiltinRewrite: only ClosedNumericEqualSubstitution (equality and non-eq atomic).
+No equality KnownRewrite slot (dead; = uses EqualIr / KnownEquality graph).
+OrderDual rewrite: `atomic/by_builtin_rewrite/order_dual*.lit`.
 KnownRewrite: `atomic/by_known_rewrite/reflexivity.lit`, `symmetry.lit`.
 WD negatives (must fail): `examples/new_pipeline_wd_negative/`.
 
@@ -23,7 +30,7 @@ WD negatives (must fail): `examples/new_pipeline_wd_negative/`.
 ```text
 or/           ByBuiltinRule (trichotomy ×3), SelectedBranch, KnownOr, KnownForall
 equal/        ByBuiltinRule, KnownEquality, BuiltinStrategy, MatchingOneArgByOne, BuiltinRewrite (ClosedNumericEqualSubstitution only)
-atomic/       ByBuiltinRule, KnownAtomicFact, ByDefinition, BuiltinStrategy (PosAddPos), BuiltinRewrite (OrderDual), KnownRewrite (Reflexivity/Symmetry)
+atomic/       ByBuiltinRule, KnownAtomicFact, ByDefinition, BuiltinStrategy (PosAddPos), BuiltinRewrite (ClosedNumericEqualSubstitution, OrderDual), KnownRewrite (Reflexivity/Symmetry)
 and/          per-component verify
 chain/        adjacent order / equality
 exist/        ByBuiltinRule (real-line), KnownExist, KnownForall

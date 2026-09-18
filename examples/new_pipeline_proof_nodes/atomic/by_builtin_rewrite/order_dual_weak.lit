@@ -1,0 +1,7 @@
+# Node: atomic.ByBuiltinRewrite.OrderDual (weak order)
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/atomic/by_builtin_rewrite/order_dual_weak.lit
+
+forall a, b R:
+    a <= b
+    =>:
+        b >= a

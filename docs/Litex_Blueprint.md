@@ -2,13 +2,13 @@
 
 Created and maintained by Jiachen Shen.
 
-Last updated: September 15, 2026.
+Last updated: September 18, 2026.
 
 Website: https://litexlang.com/doc/Litex_Blueprint
 
 Chinese version: https://litexlang.com/doc/Litex中文蓝图
 
-*Litex is an easy-to-learn, easy-to-use set-theoretic formal language. Its source follows ordinary mathematical writing—users state directly what they want to prove; the system verifies bottom-up and returns the grounds for each step, or where checking stops. It is also designed to compile to Lean—some scenarios are already covered, with broader coverage expected by the end of 2026. This forms a human–AI–Litex collaboration loop that supplies accumulable verification momentum for Math for AI.*
+*Litex is a set-theoretic formal language designed to be easy to learn and use. Its source follows ordinary mathematical writing: users state objects and facts directly—what they want to prove—while the system verifies bottom-up and returns the grounds for each step, or where checking stops. It is also designed to compile to Lean; some scenarios are already covered, with broader coverage expected by the end of 2026. Together with humans and AI, this aims to form a collaboration loop that can accumulate checkable verification work for Math for AI.*
 
 > **Litex is an experimental hobby project in beta; expect rough edges.**
 
@@ -75,6 +75,8 @@ If one starts from everyday mathematical expression and flips Lean’s default d
 Lean:  proposition → proof goal → tactic refinement → proof term → kernel check
 Litex: objects and facts → kernel checks and searches for grounds → verified facts extend the context
 ```
+
+A related difference sits one layer below tactics. Lean’s default surface, via dependent type theory, gathers mathematical objects, propositions, proofs, and types into one term/type universe—so values and evidence are often packed together (as in the subtype example below). Litex keeps those categories apart on the user surface: objects, facts, and statements stay separate, closer to how everyday mathematics already talks. That is not a claim about proof power; it is a claim about what the source asks you to see first.
 
 Modern formal languages with Lean as a leading representative laid an irreplaceable foundation for AI for Math and the “engineering of mathematics.” Yet no matter how AI develops, people who can master Lean, type theory, and its engineering stack may still remain a minority. Litex does not try to replace Lean; it explores another formalization perspective: letting more people write, check, and understand rigorous mathematical knowledge directly. Litex and Lean take nearly *inverse* defaults—one source leans toward *how*, the other toward *what*; one accumulates conclusions from conditions, the other simplifies the conclusion until it matches the conditions—turning over the large half of a formal system that used to stay hidden behind the interface. People with different habits of thought can each find the language that fits them.
 
@@ -210,11 +212,20 @@ Litex does not oppose applications, nor deny that mathematics needs to land in p
 
 What Litex aims to do is exactly to add a readable abstraction layer between formal verification and everyday mathematical thinking: so that you need not first become a proof-assistant expert to write down clearly “what I understand,” hand it to a machine to check, and then see the checking process and the mathematical structure behind it. What we seek is not a flashier tool, but a state in which anyone who has mathematics in mind can express it naturally in Litex and thereby deepen their grasp of the mathematics itself.
 
+Part of that simplicity is categorical, not only notational. In ordinary mathematical writing, a number is not a theorem, and a theorem is not a type. Litex keeps that habit on the surface: objects, facts, and statements stay separate, so reading a file feels closer to reading mathematics than to learning a new encoding of mathematics. The claim is about expression and reading cost—not that every theorem becomes easier to prove.
+
 Historically influential theories often began from pure curiosity about the problem itself, not from calculation of short-term returns. The author of Litex hopes to push Math for AI from language—the lowest layer of the stack. Honestly, he did it because he was interested. May this blueprint spark an impulse to experience the beauty of mathematics through Litex.
 
-#### For programming-language designers
+#### For programmers
 
 Litex’s design intent is in fact very simple: just as Fortran and C abstracted over parts of assembly language and made systems engineering and scientific computing easier, Python later abstracted over some uses of C and let people without a professional programming background take part. As programming languages became easier to learn and use, more people became programmers, and the computing industry expanded with them.
+
+If you already write code, one useful way to see Litex is as a language that keeps mathematical categories apart the way ordinary programs keep values, statements, and types apart. Lean’s default surface gathers objects, propositions, proofs, and types into one dependent term/type universe—powerful and uniform, but easy to read as “everything lives in one encoding.” Litex’s user surface separates objects, facts, and statements; a function remains an operation on objects, and a fact remains a claim that something holds. The verifier still checks well-definedness and grounds; what changes is what the source asks you to hold in working memory.
+
+```text
+Lean surface:  terms / types   (objects, propositions, proofs share one universe)
+Litex surface: objects · facts · statements
+```
 
 Roughly, Litex stands to Lean as C stands to assembly: Lean tactic proofs often name facts and call them explicitly; that is a burden on working memory—people usually remember proof *patterns* (shapes), not fact names. Assembly writes many memory addresses; C maintains a table from variable names to addresses. Litex is similar: it maintains a fact table and a rule table; you write directly what should be proved, and the kernel matches and replaces by the predicate name of each atomic fact as key (see Section 2)—without first memorizing scattered fact names. Lean cannot easily grow the same default mechanism, precisely because its language allows highly first-class quantification over propositions; Section 2 explains that boundary.
 

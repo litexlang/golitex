@@ -38,10 +38,9 @@ impl Runtime {
     }
 
     // Stage order: builtin rule → known equality → builtin strategy →
-    // matching one arg by one → known forall → (if allowed) builtin rewrite →
-    // known rewrite.
-    // MatchingOneArgByOne is constructor peel (not rewrite). Rewrite replaces
-    // legacy opaque resolve_obj (ClosedNumericEqualSubstitution only).
+    // matching one arg by one → known forall → (if allowed) builtin rewrite.
+    // MatchingOneArgByOne is constructor peel (not rewrite). Rewrite is only
+    // ClosedNumericEqualSubstitution (legacy opaque resolve_obj replacement).
     // Ok(None) means no proof found; that is not a runtime error.
     pub fn search_equal_fact_proof(
         &mut self,
@@ -92,18 +91,10 @@ impl Runtime {
             if let Some(result) = self
                 .search_equal_fact_proof_by_builtin_rewrite(
                     fact,
-                    verify_state.clone(),
+                    verify_state,
                 )?
             {
                 return Ok(Some(EqualFactSearchedProof::ByBuiltinRewrite(
-                    result,
-                )));
-            }
-
-            if let Some(result) = self
-                .search_equal_fact_proof_by_known_rewrite(fact, verify_state)?
-            {
-                return Ok(Some(EqualFactSearchedProof::ByKnownRewrite(
                     result,
                 )));
             }

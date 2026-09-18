@@ -1,7 +1,7 @@
 # Node: equal.ByKnownEquality
 # Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/equal/by_known_equality/path_from_generating_edges.lit
 
-have a R, b R, c R
-trust a = b
-trust b = c
+have a R = 1
+have b R = a
+have c R = b
 a = c
