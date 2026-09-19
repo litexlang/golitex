@@ -5,7 +5,9 @@ use crate::new_pipeline::ast::param::{
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
+use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
+use std::collections::HashMap;
 
 impl Runtime {
     pub(super) fn verify_objs_as_children(
@@ -73,6 +75,31 @@ pub(super) fn set_bound_parameters_to_typed_parameter_list(
             })
             .collect(),
     }
+}
+
+pub(super) fn set_bound_parameter_count(list: &SetBoundParameterList) -> usize {
+    let mut n = 0;
+    for group in &list.groups {
+        n += group.params.len();
+    }
+    n
+}
+
+pub(super) fn set_bound_params_to_arg_map(
+    list: &SetBoundParameterList,
+    args: &[Obj],
+) -> HashMap<IdentifierId, Obj> {
+    let mut map = HashMap::new();
+    let mut i = 0;
+    for group in &list.groups {
+        for param in &group.params {
+            if i < args.len() {
+                map.insert(param.id, args[i].clone());
+            }
+            i += 1;
+        }
+    }
+    map
 }
 
 // True when `equal_to` is exactly one of the anonymous fn's bound parameters.

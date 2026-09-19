@@ -1,17 +1,15 @@
 use crate::new_pipeline::execute::execute_fact_stmt::well_defined_results::{
-    FailToVerifyObjWellDefinedResult, VerifyObjWellDefinedResult,
+    FailToVerifyObjWellDefinedResult, ObjWellDefinedProof,
 };
 
+// Soft miss: the first argument Obj WD that failed, and why.
 pub struct FailToVerifyAtomicFactWellDefinedResult {
-    pub failed_arg_index: usize,
-    pub succeeded_args: Vec<VerifyObjWellDefinedResult>,
     pub reason: FailToVerifyObjWellDefinedResult,
 }
 
 // Success-only evidence that every argument of an atomic fact is well-defined.
 pub struct AtomicFactWellDefinedProof {
-    // Constructed only under Success; each entry is ByKnown or ByDef.
-    pub well_defined_of_each_parameter: Vec<VerifyObjWellDefinedResult>,
+    pub well_defined_of_each_parameter: Vec<ObjWellDefinedProof>,
 }
 
 // Soft miss vs success for atomic-fact WD. Proof never embeds Fail.

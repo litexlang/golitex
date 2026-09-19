@@ -50,8 +50,9 @@ atomic-except-equality only and returns
 `RuntimeResult<VerifyAtomicFactWellDefinedResult>`:
 
 - `Ok(Success(AtomicFactWellDefinedProof))` when every argument Obj WD succeeds
-- `Ok(Failed(FailToVerifyAtomicFactWellDefinedResult))` when some argument Obj WD
-  soft-misses (`failed_arg_index` + `succeeded_args` + Obj `reason`)
+  (`well_defined_of_each_parameter: Vec<ObjWellDefinedProof>`)
+- `Ok(Failed(FailToVerifyAtomicFactWellDefinedResult { reason }))` when some
+  argument Obj WD soft-misses (`reason` is the Obj fail only)
 - `Err(...)` only for real runtime / invariant failures (including calling it on
   `EqualFact`)
 
@@ -59,7 +60,9 @@ Equality WD (`verify_equal_fact_well_definedness`) is independent and returns
 `RuntimeResult<VerifyEqualFactWellDefinedResult>`:
 
 - `Ok(Success(EqualFactWellDefinedProof { left, right }))` when both sides succeed
-- `Ok(Failed(FailToVerifyEqualFactWellDefinedResult))` when left or right soft-misses
+  (`left` / `right` are `ObjWellDefinedProof`)
+- `Ok(Failed(FailToVerifyEqualFactWellDefinedResult { reason }))` when left or
+  right soft-misses (`reason` is the Obj fail only)
 - `Err(...)` only for real runtime / invariant failures
 
 Fact WD dispatcher (`verify_fact_well_definedness`) returns

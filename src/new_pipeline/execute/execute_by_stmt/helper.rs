@@ -10,7 +10,7 @@ use crate::new_pipeline::execute::execute_by_stmt::result::{
 use crate::new_pipeline::execute::execute_fact_stmt::{
     VerifyFactResult, VerifyFactWellDefinedResult, VerifyState,
 };
-use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
+use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeResult};
 use crate::new_pipeline::store_fact_and_infer::StoreFactAndInferResult;
 
 pub(super) fn proof_verify_state() -> VerifyState {
@@ -102,16 +102,21 @@ pub(super) fn close_by_contradiction(
             ),
         ));
     };
-    let negated_fact: Fact = negated_atomic.into();
+    let negated_fact: Fact = negated_atomic.clone().into();
     let negated_proof = verify_goal_fact(runtime, &negated_fact)?;
     if negated_proof.is_failed() {
         return Ok(Err(ByContradictionClosingFailed::NegatedImpossible(
             negated_proof,
         )));
     }
+    let impossible_fact_id = lookup_known_atomic_fact_id(runtime, impossible);
+    let negated_impossible_fact_id = lookup_known_atomic_fact_id(runtime, &negated_atomic);
     Ok(Ok(ByContradictionClosingSuccess {
+        impossible_fact: impossible.clone(),
         impossible: impossible_proof,
         negated_impossible: negated_proof,
+        impossible_fact_id,
+        negated_impossible_fact_id,
     }))
 }
 
@@ -129,4 +134,19 @@ pub(super) fn or_fact_from_and_chains(
 
 pub(super) fn and_chain_fact(branch: &AndChainAtomicFact) -> Fact {
     and_chain_as_fact(branch)
+}
+
+pub(super) fn lookup_known_atomic_fact_id(
+    runtime: &Runtime,
+    atomic: &AtomicFact,
+) -> Option<FactId> {
+    let target = atomic.ir();
+    for (id, fact) in &runtime.top_exec_env().facts.facts_by_id {
+        if let Fact::AtomicFact(known) = fact {
+            if known.ir() == target {
+                return Some(*id);
+            }
+        }
+    }
+    None
 }

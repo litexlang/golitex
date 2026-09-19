@@ -1019,3 +1019,40 @@ fn ambient_by_definition_expands_user_prop() {
         "ByDefinition must expand file-root WithExportFileId props"
     );
 }
+
+#[test]
+fn fn_obj_application_requires_in_function_set() {
+    use crate::new_pipeline::exec_env::exec_env::SpecialObjProperty;
+
+    // No registration → soft fail.
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have a R = 1").is_failed());
+    assert!(!exec_one(&mut runtime, "have f R").is_failed());
+    assert!(
+        exec_one(&mut runtime, "f(a) = f(a)").is_failed(),
+        "f R must not make f(a) well-defined"
+    );
+
+    // AnonymousFn registration via let.
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "let f = fn(x R) R {x}").is_failed());
+    assert!(
+        runtime
+            .top_exec_env()
+            .special_object_properties
+            .values()
+            .flatten()
+            .any(|p| matches!(p, SpecialObjProperty::InFunctionSet(_))),
+        "let f = anon must store InFunctionSet"
+    );
+    assert!(!exec_one(&mut runtime, "have a R = 1").is_failed());
+    assert!(!exec_one(&mut runtime, "f(a) = f(a)").is_failed());
+
+    // Curried FnSet signature registration.
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "let f = fn(p R) fn(q R) R").is_failed());
+    assert!(!exec_one(&mut runtime, "have u R = 2").is_failed());
+    assert!(!exec_one(&mut runtime, "have a R = 1").is_failed());
+    assert!(!exec_one(&mut runtime, "f(u)(a) = f(u)(a)").is_failed());
+}
+

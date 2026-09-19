@@ -26,18 +26,14 @@ impl Runtime {
         }
         let args = atomic_except_equality_fact_arg_objs(fact);
         let mut succeeded_args = Vec::new();
-        for (failed_arg_index, arg) in args.into_iter().enumerate() {
+        for arg in args {
             match self.verify_obj_well_definedness(arg, verify_state.clone())? {
                 VerifyObjWellDefinedResult::Failed(reason) => {
                     return Ok(VerifyAtomicFactWellDefinedResult::Failed(
-                        FailToVerifyAtomicFactWellDefinedResult {
-                            failed_arg_index,
-                            succeeded_args,
-                            reason,
-                        },
+                        FailToVerifyAtomicFactWellDefinedResult { reason },
                     ));
                 }
-                success => succeeded_args.push(success),
+                VerifyObjWellDefinedResult::Success(proof) => succeeded_args.push(proof),
             }
         }
         Ok(VerifyAtomicFactWellDefinedResult::Success(

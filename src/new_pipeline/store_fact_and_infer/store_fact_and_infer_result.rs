@@ -82,6 +82,41 @@ pub enum ChainTransitiveCite {
 }
 
 impl StoreFactAndInferResult {
+    // Whole fact written by this store step (and-root / or-root / atomic / …).
+    pub fn primary_fact_id(&self) -> FactId {
+        match self {
+            Self::AtomicFact(r) => r.fact_id,
+            Self::AndFact(r) => r.whole_fact_id,
+            Self::ChainFact(r) => r.whole_fact_id,
+            Self::OrFact(r) => r.whole_fact_id,
+            Self::ExistFact(r) => r.whole_fact_id,
+            Self::NotForallFact(r) => r.whole_fact_id,
+            Self::RecordedFact { fact_id } => *fact_id,
+        }
+    }
+
+    // Atomic pieces projected into known-atomic indexes (and/chain components).
+    // Empty for or / exist / forall-shaped stores that only record the whole.
+    pub fn atomic_components(&self) -> Vec<(FactId, AtomicFact)> {
+        match self {
+            Self::AtomicFact(r) => vec![(r.fact_id, r.fact.clone())],
+            Self::AndFact(r) => r
+                .components
+                .iter()
+                .map(|c| (c.fact_id, c.fact.clone()))
+                .collect(),
+            Self::ChainFact(r) => r
+                .adjacent
+                .iter()
+                .map(|a| (a.fact_id, a.fact.clone()))
+                .collect(),
+            Self::OrFact(_)
+            | Self::ExistFact(_)
+            | Self::NotForallFact(_)
+            | Self::RecordedFact { .. } => Vec::new(),
+        }
+    }
+
     pub fn stored_fact_ids(&self) -> Vec<FactId> {
         match self {
             Self::AtomicFact(r) => vec![r.fact_id],
