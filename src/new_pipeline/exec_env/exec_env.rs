@@ -153,6 +153,20 @@ impl ExecEnv {
             .insert(def_abstract_prop.name.clone(), def_abstract_prop);
     }
 
+    pub fn lookup_def_thm(&self, name: &str) -> Option<&DefThmStmt> {
+        self.definitions.theorem_definitions.get(name)
+    }
+
+    pub fn store_def_thm(&mut self, def_thm: DefThmStmt) {
+        self.definitions
+            .theorem_definitions
+            .insert(def_thm.name.clone(), def_thm);
+    }
+
+    pub fn lookup_axiom(&self, name: &str) -> Option<&AxiomStmt> {
+        self.definitions.axiom_definitions.get(name)
+    }
+
     // Success path of exec_stmt: commit the temp child into this parent.
     // Failed discards the child instead — see merge_exec_env.rs module docs.
     pub fn merge_from(

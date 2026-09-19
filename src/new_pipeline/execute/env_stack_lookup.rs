@@ -1,5 +1,5 @@
 use crate::new_pipeline::ast::obj::Obj;
-use crate::new_pipeline::ast::stmt::{DefAbstractPropStmt, DefPropStmt};
+use crate::new_pipeline::ast::stmt::{AxiomStmt, DefAbstractPropStmt, DefPropStmt, DefThmStmt};
 use crate::new_pipeline::runtime::runtime_ids::WellDefinednessId;
 use crate::new_pipeline::runtime::Runtime;
 
@@ -30,6 +30,24 @@ impl Runtime {
     ) -> Option<&DefAbstractPropStmt> {
         for env in self.execution_environments_stack.iter().rev() {
             if let Some(def) = env.lookup_def_abstract_prop(name) {
+                return Some(def);
+            }
+        }
+        None
+    }
+
+    pub(crate) fn def_thm_visible_in_stack(&self, name: &str) -> Option<&DefThmStmt> {
+        for env in self.execution_environments_stack.iter().rev() {
+            if let Some(def) = env.lookup_def_thm(name) {
+                return Some(def);
+            }
+        }
+        None
+    }
+
+    pub(crate) fn axiom_visible_in_stack(&self, name: &str) -> Option<&AxiomStmt> {
+        for env in self.execution_environments_stack.iter().rev() {
+            if let Some(def) = env.lookup_axiom(name) {
                 return Some(def);
             }
         }

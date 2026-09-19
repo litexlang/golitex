@@ -7,12 +7,21 @@ use crate::new_pipeline::execute::execute_fact_stmt::{
 use crate::new_pipeline::runtime::FactId;
 use crate::new_pipeline::store_fact_and_infer::StoreFactAndInferResult;
 
+// `local_env` on by-stmt Success (and nested branch/case Success):
+// Taken ExecEnv for that statement's local proof / instantiation scope.
+// It is the FactId / WdId → entity table for ids cited by Store* / Verify*
+// under that scope. Success carries the *route* (stage proofs + id cites);
+// resolve payloads through `local_env` (and the parent env for `stored`).
+// Do not scrape `local_env` to rediscover a proof. Export ignores env scraping.
+
 // Dispatcher mirrors wired ByStmt branches.
 pub enum ExecByStmtResult {
     ReflexiveProp(ExecByReflexivePropStmtResult),
     SymmetricProp(ExecBySymmetricPropStmtResult),
     Cases(ExecByCasesStmtResult),
     Contra(ExecByContraStmtResult),
+    Def(ExecByDefStmtResult),
+    Thm(ExecByThmStmtResult),
     Induc(ExecByInducStmtResult),
     StrongInduc(ExecByStrongInducStmtResult),
 }
@@ -24,6 +33,8 @@ impl ExecByStmtResult {
             Self::SymmetricProp(r) => r.is_failed(),
             Self::Cases(r) => r.is_failed(),
             Self::Contra(r) => r.is_failed(),
+            Self::Def(r) => r.is_failed(),
+            Self::Thm(r) => r.is_failed(),
             Self::Induc(r) => r.is_failed(),
             Self::StrongInduc(r) => r.is_failed(),
         }
@@ -225,6 +236,102 @@ pub enum ByCasesBranchFailed {
 }
 
 impl ExecByCasesStmtResult {
+    pub fn is_failed(&self) -> bool {
+        matches!(self, Self::Failed(_))
+    }
+}
+
+// ---------------------------------------------------------------------------
+// by def
+// ---------------------------------------------------------------------------
+
+pub enum ExecByDefStmtResult {
+    Success(ExecByDefStmtSuccess),
+    Failed(ExecByDefStmtFailed),
+}
+
+// Stage order: goal_wd → proof → local_env → stored.
+pub struct ExecByDefStmtSuccess {
+    pub goal_wd: VerifyFactWellDefinedResult,
+    pub proof: VerifyFactResult,
+    pub local_env: Box<ExecEnv>,
+    pub stored: StoreFactAndInferResult,
+}
+
+pub enum ExecByDefStmtFailed {
+    GoalWd(VerifyFactWellDefinedResult),
+    Proof(VerifyFactResult),
+    Store(String),
+}
+
+impl ExecByDefStmtResult {
+    pub fn is_failed(&self) -> bool {
+        matches!(self, Self::Failed(_))
+    }
+}
+
+// ---------------------------------------------------------------------------
+// release thm (top-level Stmt; result lives here next to by thm)
+// ---------------------------------------------------------------------------
+
+pub enum ExecReleaseThmStmtResult {
+    Success(ExecReleaseThmStmtSuccess),
+    Failed(ExecReleaseThmStmtFailed),
+}
+
+// Stage order: dom_proofs → local_env → stored conclusions.
+pub struct ExecReleaseThmStmtSuccess {
+    pub thm_name: String,
+    pub dom_proofs: Vec<VerifyFactResult>,
+    pub local_env: Box<ExecEnv>,
+    pub stored: Vec<StoreFactAndInferResult>,
+}
+
+pub enum ExecReleaseThmStmtFailed {
+    ThmNotFound(String),
+    Shape(String),
+    Dom {
+        index: usize,
+        result: VerifyFactResult,
+    },
+    Instantiate(String),
+    Store {
+        index: usize,
+        message: String,
+    },
+}
+
+impl ExecReleaseThmStmtResult {
+    pub fn is_failed(&self) -> bool {
+        matches!(self, Self::Failed(_))
+    }
+}
+
+// ---------------------------------------------------------------------------
+// by thm
+// ---------------------------------------------------------------------------
+
+pub enum ExecByThmStmtResult {
+    Success(ExecByThmStmtSuccess),
+    Failed(ExecByThmStmtFailed),
+}
+
+// Stage order: release (into local) → selected_proof → local_env → stored.
+pub struct ExecByThmStmtSuccess {
+    pub thm_name: String,
+    pub dom_proofs: Vec<VerifyFactResult>,
+    pub selected_proof: VerifyFactResult,
+    pub local_env: Box<ExecEnv>,
+    pub stored: StoreFactAndInferResult,
+}
+
+pub enum ExecByThmStmtFailed {
+    Release(ExecReleaseThmStmtFailed),
+    Selected(VerifyFactResult),
+    Store(String),
+}
+
+impl ExecByThmStmtResult {
     pub fn is_failed(&self) -> bool {
         matches!(self, Self::Failed(_))
     }

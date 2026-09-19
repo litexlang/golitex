@@ -1,9 +1,11 @@
 use super::exec_stmt_result::{ExecDefinitionStmtResult, ExecStmtResult};
 use crate::new_pipeline::ast::stmt::{ByStmt, DefinitionStmt, Stmt};
 use crate::new_pipeline::execute::execute_by_stmt::{
-    exec_by_cases_stmt, exec_by_contra_stmt, exec_by_induc_stmt, exec_by_reflexive_prop_stmt,
-    exec_by_strong_induc_stmt, exec_by_symmetric_prop_stmt,
+    exec_by_cases_stmt, exec_by_contra_stmt, exec_by_def_stmt, exec_by_induc_stmt,
+    exec_by_reflexive_prop_stmt, exec_by_strong_induc_stmt, exec_by_symmetric_prop_stmt,
+    exec_by_thm_stmt, exec_release_thm_stmt,
 };
+use crate::new_pipeline::execute::execute_def_thm_stmt::exec_def_thm_stmt;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
 impl Runtime {
@@ -20,7 +22,6 @@ impl Runtime {
         Ok(outcome)
     }
 
-    // Runs with the current top as the writable work env (the temp shell).
     fn exec_stmt_in_current_env(&mut self, stmt: &Stmt) -> RuntimeResult<ExecStmtResult> {
         if self.launch_command.is_strict() {
             match stmt {
@@ -70,11 +71,19 @@ impl Runtime {
                     ),
                 ))
             }
+            Stmt::Definition(DefinitionStmt::DefThmStmt(def_thm)) => {
+                Ok(ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
+                    exec_def_thm_stmt(self, def_thm)?,
+                )))
+            }
             Stmt::Witness(witness_stmt) => {
                 Ok(ExecStmtResult::Witness(self.exec_witness_stmt(witness_stmt)?))
             }
             Stmt::UnsafeStmt(unsafe_stmt) => {
                 Ok(ExecStmtResult::Unsafe(self.exec_unsafe_stmt(unsafe_stmt)?))
+            }
+            Stmt::ReleaseThmStmt(stmt) => {
+                Ok(ExecStmtResult::ReleaseThm(exec_release_thm_stmt(self, stmt)?))
             }
             Stmt::By(ByStmt::ByReflexivePropStmt(stmt)) => {
                 Ok(ExecStmtResult::By(exec_by_reflexive_prop_stmt(self, stmt)?))
@@ -88,6 +97,12 @@ impl Runtime {
             Stmt::By(ByStmt::ByCasesStmt(stmt)) => {
                 Ok(ExecStmtResult::By(exec_by_cases_stmt(self, stmt)?))
             }
+            Stmt::By(ByStmt::ByDefStmt(stmt)) => {
+                Ok(ExecStmtResult::By(exec_by_def_stmt(self, stmt)?))
+            }
+            Stmt::By(ByStmt::ByThmStmt(stmt)) => {
+                Ok(ExecStmtResult::By(exec_by_thm_stmt(self, stmt)?))
+            }
             Stmt::By(ByStmt::ByInducStmt(stmt)) => {
                 Ok(ExecStmtResult::By(exec_by_induc_stmt(self, stmt)?))
             }
@@ -95,7 +110,7 @@ impl Runtime {
                 Ok(ExecStmtResult::By(exec_by_strong_induc_stmt(self, stmt)?))
             }
             _ => Err(RuntimeError::Unsupported(
-                "new_pipeline exec_stmt: Fact, let, have-obj-in-nonempty, have-obj-equal, prop, abstract_prop, witness, trust, by reflexive_prop / symmetric_prop / contra / cases / induc / strong_induc are wired for the tracer"
+                "new_pipeline exec_stmt: Fact, let, have-obj-in-nonempty, have-obj-equal, prop, abstract_prop, thm, witness, trust, release thm, by reflexive_prop / symmetric_prop / contra / cases / def / thm / induc / strong_induc are wired for the tracer"
                     .to_string(),
             )),
         }

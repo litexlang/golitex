@@ -13,7 +13,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::{
 use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeResult};
 use crate::new_pipeline::store_fact_and_infer::StoreFactAndInferResult;
 
-pub(super) fn proof_verify_state() -> VerifyState {
+pub(crate) fn proof_verify_state() -> VerifyState {
     VerifyState {
         can_use_forall_fact: true,
         can_use_rewrite: true,
@@ -21,7 +21,7 @@ pub(super) fn proof_verify_state() -> VerifyState {
     }
 }
 
-pub(super) fn run_fact_only_proof_steps(
+pub(crate) fn run_fact_only_proof_steps(
     runtime: &mut Runtime,
     proof: &[Stmt],
 ) -> RuntimeResult<Result<Vec<ByProofStepResult>, ByProofBodyFailed>> {
@@ -50,14 +50,14 @@ pub(super) fn assume_fact(
     Ok(Ok(runtime.store_fact_and_infer(fact)?))
 }
 
-pub(super) fn verify_goal_fact(
+pub(crate) fn verify_goal_fact(
     runtime: &mut Runtime,
     fact: &Fact,
 ) -> RuntimeResult<VerifyFactResult> {
     runtime.verify_fact(fact, proof_verify_state())
 }
 
-pub(super) fn store_goal_fact(
+pub(crate) fn store_goal_fact(
     runtime: &mut Runtime,
     fact: &Fact,
 ) -> RuntimeResult<Result<StoreFactAndInferResult, String>> {
