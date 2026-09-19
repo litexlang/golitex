@@ -1,20 +1,51 @@
 //! Function / atom / standard-set object WD.
 
 use super::fail_to_verify_obj_well_defined::{
-    FailToVerifyFnObjObjWellDefined, FailToVerifyObjWellDefinedResult,
+    FailToVerifyFnObjObjWellDefined, FailToVerifyFnRangeObjWellDefined,
+    FailToVerifyIdentifierObjWellDefined, FailToVerifyObjWellDefinedResult,
 };
 use super::helper::{set_bound_parameter_count, set_bound_params_to_arg_map};
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
-use super::obj_well_defined_proof_by_def::{FnObjObjWellDefinedProof, ObjWellDefinedProofByDef};
+use super::obj_well_defined_proof_by_def::{
+    FnObjObjWellDefinedProof, FnRangeObjWellDefinedProof, IdentifierObjWellDefinedProof,
+    NumberObjWellDefinedProof, ObjWellDefinedProofByDef, StandardSetObjWellDefinedProof,
+};
 use super::entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
 use crate::new_pipeline::ast::fact::{AtomicFact, InFact};
-use crate::new_pipeline::ast::obj::{FnObj, FnObjHead, FnSet, Obj};
+use crate::new_pipeline::ast::obj::{FnObj, FnObjHead, FnRange, FnSet, IdentifierObj, Obj};
 use crate::new_pipeline::exec_env::exec_env::SpecialObjProperty;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::runtime_ids::FactId;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
+    // Identifier: must be defined in the exec-env stack (let/have/binder/…).
+    // Example: after `have a R = 1`, WD of `a` succeeds; bare `ghost` fails Undefined.
+    pub(super) fn verify_identifier_obj_well_definedness(
+        &mut self,
+        value: &IdentifierObj,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<VerifyObjWellDefinedResult> {
+        let name = match value {
+            IdentifierObj::Plain { name, .. } => name.clone(),
+            // Qualified names are treated as already resolved references.
+            IdentifierObj::WithExportFileId { .. }
+            | IdentifierObj::WithModAndExportFileId { .. } => {
+                return self.finish_leaf_obj_success(Obj::Identifier(value.clone()), verify_state);
+            }
+        };
+        if !self.identifier_defined_in_stack(&name) {
+            return Ok(VerifyObjWellDefinedResult::Failed(
+                FailToVerifyObjWellDefinedResult::Identifier(
+                    FailToVerifyIdentifierObjWellDefined::Undefined {
+                        obj: Obj::Identifier(value.clone()),
+                    },
+                ),
+            ));
+        }
+        self.finish_leaf_obj_success(Obj::Identifier(value.clone()), verify_state)
+    }
+
     pub(super) fn verify_atom_obj_well_definedness_by_def(
         &mut self,
         _verify_state: VerifyState,
@@ -27,6 +58,30 @@ impl Runtime {
         _verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         Ok(ObjWellDefinedByDefCommonStages::leaf())
+    }
+
+    fn finish_leaf_obj_success(
+        &mut self,
+        obj: Obj,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<VerifyObjWellDefinedResult> {
+        if verify_state.store_well_defined_fact {
+            let wd_id = self.ids.allocate_well_definedness_id();
+            self.top_exec_env_mut()
+                .well_defined_objects
+                .record(obj.clone(), wd_id);
+        }
+        let by_def = match &obj {
+            Obj::Identifier(_) => ObjWellDefinedProofByDef::Identifier(IdentifierObjWellDefinedProof::new()),
+            Obj::Number(_) => ObjWellDefinedProofByDef::Number(NumberObjWellDefinedProof::new()),
+            Obj::StandardSet(_) => {
+                ObjWellDefinedProofByDef::StandardSet(StandardSetObjWellDefinedProof::new())
+            }
+            _ => ObjWellDefinedProofByDef::Identifier(IdentifierObjWellDefinedProof::new()),
+        };
+        Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef(
+            by_def,
+        )))
     }
 
     // Identifier-headed application: look up InFunctionSet, check arity, param $in,
@@ -165,7 +220,7 @@ impl Runtime {
     }
 
     // Visible InFunctionSet rows for `obj` and its equality-class neighbors.
-    fn collect_in_function_set_candidates(&self, obj: &Obj) -> Vec<(FnSet, FactId)> {
+    pub(super) fn collect_in_function_set_candidates(&self, obj: &Obj) -> Vec<(FnSet, FactId)> {
         let mut keys = self.known_equality_class_keys(obj);
         let self_ir = obj.ir();
         if !keys.iter().any(|k| k == &self_ir) {
@@ -275,5 +330,48 @@ impl Runtime {
             }
         }
         Ok(Ok(proof))
+    }
+
+    // fn_range(f): children, then f must have a visible InFunctionSet registration.
+    // Example: after `let f = fn(x R) R {x}`, `fn_range(f)` is WD.
+    pub(super) fn verify_fn_range_obj_well_definedness(
+        &mut self,
+        value: &FnRange,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<VerifyObjWellDefinedResult> {
+        let stages = self.verify_unary_obj_well_definedness_by_def(
+            value.function.as_ref(),
+            verify_state.clone(),
+        )?;
+        if !stages.is_fully_known() {
+            return Ok(VerifyObjWellDefinedResult::Failed(
+                FailToVerifyObjWellDefinedResult::FnRange(FailToVerifyFnRangeObjWellDefined::Domain(
+                    stages.into_common_fail(&Obj::FnRange(value.clone())),
+                )),
+            ));
+        }
+        if self
+            .collect_in_function_set_candidates(value.function.as_ref())
+            .is_empty()
+        {
+            return Ok(VerifyObjWellDefinedResult::Failed(
+                FailToVerifyObjWellDefinedResult::FnRange(
+                    FailToVerifyFnRangeObjWellDefined::NotInFunctionSet,
+                ),
+            ));
+        }
+        if verify_state.store_well_defined_fact {
+            let wd_id = self.ids.allocate_well_definedness_id();
+            self.top_exec_env_mut()
+                .well_defined_objects
+                .record(Obj::FnRange(value.clone()), wd_id);
+        }
+        Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef(
+            ObjWellDefinedProofByDef::FnRange(FnRangeObjWellDefinedProof::from_stages(stages)),
+        )))
+    }
+
+    pub(super) fn obj_has_in_function_set(&self, obj: &Obj) -> bool {
+        !self.collect_in_function_set_candidates(obj).is_empty()
     }
 }

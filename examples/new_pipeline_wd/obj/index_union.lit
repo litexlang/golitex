@@ -1,0 +1,8 @@
+# Obj WD: index_union / index_intersect — `$is_set` + family ∈ FnSet
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_wd/obj/index_union.lit
+#
+# Registration half only: family need not yet prove `$in fn(k I) power_set(X)`.
+
+let family = fn(k {1, 2}) R {k}
+let u = index_union({1, 2}, N, family)
+let v = index_intersect({1, 2}, N, family)

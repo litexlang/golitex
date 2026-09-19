@@ -1,0 +1,8 @@
+# Negative: undefined Identifier is rejected (parse resolves names first).
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_wd_negative/identifier_undefined.lit
+# expect exit != 0
+#
+# Obj WD also has Fail::Identifier::Undefined for exec-stack misses; parse
+# usually fails earlier on bare undefined names.
+
+let x = ghost

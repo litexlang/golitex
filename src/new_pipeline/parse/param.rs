@@ -1,5 +1,5 @@
 use super::keywords::{
-    COLON, COMMA, EQUAL, FINITE_SET, LEFT_PAREN, NONEMPTY_SET, RIGHT_PAREN, SET,
+    COLON, COMMA, EQUAL, FINITE_SET, LEFT_PAREN, NONEMPTY_SET, RIGHT_ARROW, RIGHT_PAREN, SET,
 };
 use super::object::{is_atom_name, parse_obj};
 use crate::new_pipeline::ast::param::{
@@ -15,14 +15,27 @@ impl Runtime {
         &mut self,
         tb: &mut TokenBlock,
     ) -> RuntimeResult<TypedParameterList> {
+        let params = self.parse_typed_param_list_until_colon_or_arrow(tb)?;
+        tb.expect(COLON)?;
+        Ok(params)
+    }
+
+    // Parse `x R` / `x, y R` groups until `:` or `=>` (delimiter not consumed).
+    // Used by inline `forall x Dom => P` and block `forall x Dom:`.
+    pub(super) fn parse_typed_param_list_until_colon_or_arrow(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> RuntimeResult<TypedParameterList> {
         let mut groups = Vec::new();
-        while !tb.exceed_end_of_head() && tb.peek() != Some(COLON) {
+        while !tb.exceed_end_of_head()
+            && tb.peek() != Some(COLON)
+            && tb.peek() != Some(RIGHT_ARROW)
+        {
             groups.push(self.parse_one_typed_param_group(tb)?);
             if tb.peek() == Some(COMMA) {
                 tb.advance()?;
             }
         }
-        tb.expect(COLON)?;
         if groups.is_empty() {
             return Err(RuntimeParseError::new(
                 "expected at least one parameter",

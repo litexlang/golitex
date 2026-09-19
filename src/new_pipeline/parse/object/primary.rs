@@ -1,18 +1,19 @@
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::{
     Abs, AnonymousFn, Cart, CartDim, Ceil, ClosedRange, Cos, Exp, FiniteSetMax, FiniteSetMin,
-    FiniteSetSize, Floor, FnObjHead, FnSet, Gcd, IdentifierObj, Intersect, Lcm, ListSet, Ln, Max,
-    Min, Number, Obj, PowerSet, ProductOfFiniteSet, Proj, Quot, Range, SetBuilder, SetMinus, Sin,
-    Sqrt, StandardSet, Tan, Tuple, TupleDim, Union,
+    FiniteSetSize, Floor, FnObjHead, FnRange, FnSet, Gcd, GeneralCart, IdentifierObj,
+    IndexIntersect, IndexUnion, Intersect, Lcm, ListSet, Ln, Max, Min, Number, Obj, PowerSet,
+    ProductOfFiniteSet, Proj, Quot, Range, SetBuilder, SetMinus, Sin, Sqrt, StandardSet, Tan, Tuple,
+    TupleDim, Union,
 };
 use crate::new_pipeline::ast::param::{ParamType, SetBoundParameterGroup, SetBoundParameterList};
 use crate::new_pipeline::parse::keywords::{
     ABS, C, CART, CART_DIM, CEIL, CLOSED_RANGE, COLON, COMMA, COS, C_STAR, DOT, EXP,
-    FINITE_SET_MAX, FINITE_SET_MIN, FINITE_SET_PRODUCT, FINITE_SET_SIZE, FLOOR, FN, GCD, INTERSECT,
-    LCM, LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LN, MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS,
-    POWER_SET, PROJ, Q, QUOT, Q_NEG, Q_POS, Q_STAR, R, RANGE, RIGHT_BRACKET, RIGHT_CURLY,
-    RIGHT_PAREN, R_NEG, R_POS, R_STAR, SET_MINUS, SIN, SQRT, STRUCT_VIEW_PREFIX, TAN, TUPLE,
-    TUPLE_DIM, UNION, Z, Z_NEG, Z_POS, Z_STAR,
+    FINITE_SET_MAX, FINITE_SET_MIN, FINITE_SET_PRODUCT, FINITE_SET_SIZE, FLOOR, FN, FN_RANGE, GCD,
+    GENERAL_CART, INDEX_INTERSECT, INDEX_UNION, INTERSECT, LCM, LEFT_BRACKET, LEFT_CURLY,
+    LEFT_PAREN, LN, MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS, POWER_SET, PROJ, Q, QUOT, Q_NEG,
+    Q_POS, Q_STAR, R, RANGE, RIGHT_BRACKET, RIGHT_CURLY, RIGHT_PAREN, R_NEG, R_POS, R_STAR,
+    SET_MINUS, SIN, SQRT, STRUCT_VIEW_PREFIX, TAN, TUPLE, TUPLE_DIM, UNION, Z, Z_NEG, Z_POS, Z_STAR,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -455,6 +456,47 @@ fn try_parse_keyword_primary(
                 set: Box::new(set),
             })
         })?)),
+        FN_RANGE => Ok(Some(parse_unary_keyword(rt, tb, FN_RANGE, |function| {
+            Obj::FnRange(FnRange {
+                function: Box::new(function),
+            })
+        })?)),
+        INDEX_UNION => Ok(Some(parse_ternary_keyword(
+            rt,
+            tb,
+            INDEX_UNION,
+            |index_set, ambient_set, family_fn| {
+                Obj::IndexUnion(IndexUnion {
+                    index_set: Box::new(index_set),
+                    ambient_set: Box::new(ambient_set),
+                    family_fn: Box::new(family_fn),
+                })
+            },
+        )?)),
+        INDEX_INTERSECT => Ok(Some(parse_ternary_keyword(
+            rt,
+            tb,
+            INDEX_INTERSECT,
+            |index_set, ambient_set, family_fn| {
+                Obj::IndexIntersect(IndexIntersect {
+                    index_set: Box::new(index_set),
+                    ambient_set: Box::new(ambient_set),
+                    family_fn: Box::new(family_fn),
+                })
+            },
+        )?)),
+        GENERAL_CART => Ok(Some(parse_ternary_keyword(
+            rt,
+            tb,
+            GENERAL_CART,
+            |index_set, family_set, family_fn| {
+                Obj::GeneralCart(GeneralCart {
+                    index_set: Box::new(index_set),
+                    family_set: Box::new(family_set),
+                    family_fn: Box::new(family_fn),
+                })
+            },
+        )?)),
         _ => Ok(None),
     }
 }
@@ -487,6 +529,23 @@ fn parse_binary_keyword(
     let right = args.pop().expect("arity checked");
     let left = args.pop().expect("arity checked");
     Ok(build(left, right))
+}
+
+fn parse_ternary_keyword(
+    rt: &mut Runtime,
+    tb: &mut TokenBlock,
+    name: &str,
+    build: impl FnOnce(Obj, Obj, Obj) -> Obj,
+) -> RuntimeResult<Obj> {
+    tb.advance()?;
+    let mut args = parse_obj_list_paren(rt, tb)?;
+    if args.len() != 3 {
+        return Err(tb.parse_error(format!("`{name}` expects 3 arguments")));
+    }
+    let third = args.pop().expect("arity checked");
+    let second = args.pop().expect("arity checked");
+    let first = args.pop().expect("arity checked");
+    Ok(build(first, second, third))
 }
 
 fn parse_number(tb: &mut TokenBlock) -> RuntimeResult<Obj> {

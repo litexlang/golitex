@@ -198,13 +198,22 @@ pub struct FailToVerifyBigUnionObjWellDefined(pub FailToVerifyObjWellDefinedByDe
 
 pub struct FailToVerifyBigIntersectObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
-pub struct FailToVerifyIndexUnionObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub enum FailToVerifyIndexUnionObjWellDefined {
+    NotInFunctionSet,
+    Domain(FailToVerifyObjWellDefinedByDefCommon),
+}
 
-pub struct FailToVerifyIndexIntersectObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub enum FailToVerifyIndexIntersectObjWellDefined {
+    NotInFunctionSet,
+    Domain(FailToVerifyObjWellDefinedByDefCommon),
+}
 
 pub struct FailToVerifyPowerSetObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
-pub struct FailToVerifyGeneralCartObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub enum FailToVerifyGeneralCartObjWellDefined {
+    NotInFunctionSet,
+    Domain(FailToVerifyObjWellDefinedByDefCommon),
+}
 
 pub struct FailToVerifyListSetObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
@@ -288,7 +297,11 @@ pub struct FailToVerifyFiniteSetMaxObjWellDefined(pub FailToVerifyObjWellDefined
 
 pub struct FailToVerifyFiniteSetMinObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
-pub struct FailToVerifyFnRangeObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub enum FailToVerifyFnRangeObjWellDefined {
+    // Function argument has no visible InFunctionSet registration.
+    NotInFunctionSet,
+    Domain(FailToVerifyObjWellDefinedByDefCommon),
+}
 
 pub struct FailToVerifyReplacementObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 

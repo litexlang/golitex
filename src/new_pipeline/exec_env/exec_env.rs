@@ -163,6 +163,16 @@ impl ExecEnv {
             .insert(def_thm.name.clone(), def_thm);
     }
 
+    pub fn lookup_def_struct(&self, name: &str) -> Option<&DefStructStmt> {
+        self.definitions.structure_definitions.get(name)
+    }
+
+    pub fn store_def_struct(&mut self, def_struct: DefStructStmt) {
+        self.definitions
+            .structure_definitions
+            .insert(def_struct.name.clone(), def_struct);
+    }
+
     pub fn lookup_axiom(&self, name: &str) -> Option<&AxiomStmt> {
         self.definitions.axiom_definitions.get(name)
     }

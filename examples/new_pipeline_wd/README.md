@@ -7,13 +7,13 @@ Negatives stay in `../new_pipeline_wd_negative/`.
 LITEX_NEW_PIPELINE=1 target/release/litex -f <this-file>
 ```
 
-## Status (Obj) — after Option 1 light fill
+## Status (Obj) — after Identifier / FnRange / Index* InFunctionSet half
 
 | Status | What |
 |--------|------|
-| **Done** | Scalar P0; Identifier-headed `FnObj`; binder `FnSet`/`AnonymousFn`/`SetBuilder`; `CartDim`/`Proj`/`TupleDim`/`ObjAtIndex`; `ListSet` pairwise `!=`; `FiniteSetSize`/`Max`/`Min`; `Range`/`ClosedRange` (∈Z); Interval/Ray (∈R); IndexUnion/Intersect + GeneralCart light `$is_set`/`nonempty` half; FiniteSeqSet/SeqSet light `$is_set`(+`n∈N`) |
+| **Done** | Scalar P0; Identifier (defined check); Identifier-headed `FnObj`; binder `FnSet`/`AnonymousFn`/`SetBuilder`; `CartDim`/`Proj`/`TupleDim`/`ObjAtIndex`; `ListSet` pairwise `!=`; `FiniteSetSize`/`Max`/`Min`; `Range`/`ClosedRange` (∈Z); Interval/Ray (∈R); `FnRange` (∈FnSet); IndexUnion/Intersect + GeneralCart `$is_set`/`nonempty` + family ∈ FnSet (registration half); FiniteSeqSet/SeqSet light `$is_set`(+`n∈N`) |
 | **Leaf / children-only OK (legacy also)** | `Number`/`π`/`i`/`e`/`StandardSet`; `Union`/`Intersect`/`SetMinus`/`Big*`; `PowerSet`; `Cart`/`Tuple`; `FiniteSeqList` |
-| **Still TODO** | Sum/Product/Reduce (iteration binder); FnRange (known fn body); Replacement (prop+uniqueness); Index*/GeneralCart full family∈FnSet; Struct/Template; Identifier undefined Fail; FnObj non-Identifier heads |
+| **Still TODO** | Sum/Product/Reduce (iteration binder); Replacement (prop+uniqueness); Index*/GeneralCart full `family $in fn(...)` type check; Struct/Template; FnObj non-Identifier heads |
 
 ## Status (Fact)
 
