@@ -1,14 +1,15 @@
-# Integer induc / strong_induc smoke under new_pipeline
+# new_pipeline: exec_def_struct_stmt tracer
+# Only definition WD + store; no `&Struct` / by struct def / membership yet.
 
-by induc n from 0:
-    ? n = n
+struct Point:
+    x R
+    y R
+    <=>:
+        x = x
 
-by strong_induc m from 0:
-    ? m = m
+struct Scalar:
+    value R
 
-by induc k from -1:
-    ? k + 1 = k + 1
-    ? from k = -1:
-        -1 + 1 = -1 + 1
-    ? induc:
-        k + 1 + 1 = k + 1 + 1
+struct Pair(A set):
+    left A
+    right A

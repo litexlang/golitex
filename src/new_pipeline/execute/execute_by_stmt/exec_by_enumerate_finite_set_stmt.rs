@@ -45,3 +45,4 @@ fn map_failed(failed: EnumerateForallFailed) -> ExecByEnumerateFiniteSetStmtFail
         EnumerateForallFailed::Store(s) => ExecByEnumerateFiniteSetStmtFailed::Store(s),
     }
 }
+

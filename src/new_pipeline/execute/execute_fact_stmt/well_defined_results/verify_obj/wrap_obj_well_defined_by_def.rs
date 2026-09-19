@@ -309,16 +309,16 @@ pub(super) fn wrap_common_fail(
             FailToVerifyBigIntersectObjWellDefined(common),
         ),
         Obj::IndexUnion(_) => FailToVerifyObjWellDefinedResult::IndexUnion(
-            FailToVerifyIndexUnionObjWellDefined(common),
+            FailToVerifyIndexUnionObjWellDefined::Domain(common),
         ),
         Obj::IndexIntersect(_) => FailToVerifyObjWellDefinedResult::IndexIntersect(
-            FailToVerifyIndexIntersectObjWellDefined(common),
+            FailToVerifyIndexIntersectObjWellDefined::Domain(common),
         ),
         Obj::PowerSet(_) => FailToVerifyObjWellDefinedResult::PowerSet(
             FailToVerifyPowerSetObjWellDefined(common),
         ),
         Obj::GeneralCart(_) => FailToVerifyObjWellDefinedResult::GeneralCart(
-            FailToVerifyGeneralCartObjWellDefined(common),
+            FailToVerifyGeneralCartObjWellDefined::Domain(common),
         ),
         Obj::ListSet(_) => FailToVerifyObjWellDefinedResult::ListSet(
             FailToVerifyListSetObjWellDefined(common),
@@ -366,7 +366,7 @@ pub(super) fn wrap_common_fail(
             FailToVerifyFiniteSetMinObjWellDefined(common),
         ),
         Obj::FnRange(_) => FailToVerifyObjWellDefinedResult::FnRange(
-            FailToVerifyFnRangeObjWellDefined(common),
+            FailToVerifyFnRangeObjWellDefined::Domain(common),
         ),
         Obj::Replacement(_) => FailToVerifyObjWellDefinedResult::Replacement(
             FailToVerifyReplacementObjWellDefined(common),

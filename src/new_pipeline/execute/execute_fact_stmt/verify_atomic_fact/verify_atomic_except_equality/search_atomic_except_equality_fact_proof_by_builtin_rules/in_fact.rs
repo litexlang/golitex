@@ -1,4 +1,4 @@
-use crate::new_pipeline::ast::fact::{AtomicFact, Fact, InFact};
+use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact, InFact};
 use crate::new_pipeline::ast::obj::{Obj, StandardSet};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
@@ -29,6 +29,11 @@ pub enum InFactSearchProofByBuiltinRule {
     // Native mathematical constants inhabit fixed carriers.
     // Example: prove `e $in R+`, `pi $in R`, `i $in C`.
     NativeConstantMembership(NativeConstantMembershipBuiltinRuleProof),
+    // Explicit finite list-set membership by equality to one listed element.
+    // Mathematical property: if `x = a_i` for some `a_i` in `{a_1, …, a_n}`,
+    // then `x $in {a_1, …, a_n}`.
+    // Example: `1 $in {1, 2}`.
+    ListSetElementMembership(ListSetElementMembershipBuiltinRuleProof),
 }
 
 // Closed decimal membership certificate (sides live on the InFact).
@@ -65,6 +70,11 @@ pub struct NativeConstantMembershipBuiltinRuleProof {
     pub kind: NativeConstantMembershipKind,
 }
 
+pub struct ListSetElementMembershipBuiltinRuleProof {
+    pub selected_index: usize,
+    pub equality_proof: VerifyFactResult,
+}
+
 impl Runtime {
     // Builtin InFact search: closed decimal, C-arithmetic closure, subset lift,
     // set-builder membership, then native constants.
@@ -93,6 +103,9 @@ impl Runtime {
                     NativeConstantMembershipBuiltinRuleProof { kind },
                 ),
             ));
+        }
+        if let Some(proof) = self.list_set_element_membership_proof(fact, verify_state)? {
+            return Ok(Some(proof));
         }
         Ok(None)
     }
@@ -175,6 +188,40 @@ impl Runtime {
             },
         )))
     }
+
+    // Prove `element $in {a, b, …}` when `element = a_i` for some listed element.
+    // Example: `1 $in {1, 2}`.
+    fn list_set_element_membership_proof(
+        &mut self,
+        fact: &InFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        let Obj::ListSet(list_set) = &fact.set else {
+            return Ok(None);
+        };
+        for (selected_index, listed) in list_set.list.iter().enumerate() {
+            let equality = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
+                fact_id: self.ids.allocate_fact_id(),
+                left: fact.element.clone(),
+                right: listed.as_ref().clone(),
+                line_file: None,
+            }));
+            let equality_proof = self.verify_fact(&equality, verify_state.clone())?;
+            if equality_proof.is_failed() {
+                continue;
+            }
+            return Ok(Some(
+                InFactSearchProofByBuiltinRule::ListSetElementMembership(
+                    ListSetElementMembershipBuiltinRuleProof {
+                        selected_index,
+                        equality_proof,
+                    },
+                ),
+            ));
+        }
+        Ok(None)
+    }
+
 }
 
 // Prove `element $in set` when element evaluates to a closed decimal that

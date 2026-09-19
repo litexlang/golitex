@@ -4,6 +4,7 @@ mod exec_stmt_result;
 pub mod execute_by_stmt;
 pub mod execute_def_abstract_prop_stmt;
 pub mod execute_def_prop_stmt;
+pub mod execute_def_struct_stmt;
 pub mod execute_def_thm_stmt;
 pub mod execute_fact_stmt;
 mod execute_have_obj_equal_stmt;
@@ -22,6 +23,10 @@ pub use exec_stmt_result::{
 pub use execute_def_abstract_prop_stmt::ExecDefAbstractPropStmtSuccessResult;
 pub use execute_def_prop_stmt::{
     ExecDefPropStmtFailed, ExecDefPropStmtResult, ExecDefPropStmtSuccessResult,
+};
+pub use execute_def_struct_stmt::{
+    ExecDefStructFieldScopeSuccessResult, ExecDefStructStmtFailed, ExecDefStructStmtResult,
+    ExecDefStructStmtSuccessResult,
 };
 pub use execute_fact_stmt::{ExecFactStmtResult, ExecFactStmtSuccessResult, VerifyState};
 pub use execute_have_obj_equal_stmt::{

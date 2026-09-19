@@ -176,15 +176,30 @@ impl Runtime {
         self.push_parse_scope();
         let result = (|| {
             tb.expect(FORALL)?;
-            let params = self.parse_typed_param_list_until_colon(tb)?;
-            if !tb.exceed_end_of_head() {
-                return Err(RuntimeParseError::new(
-                    "trailing tokens after forall header",
-                    tb.line,
-                    tb.source_path.clone(),
-                )
-                .into());
+            let params = self.parse_typed_param_list_until_colon_or_arrow(tb)?;
+
+            match tb.peek() {
+                Some(RIGHT_ARROW) => {
+                    // `forall x Dom => P`
+                    return self.finish_inline_forall(tb, params, false);
+                }
+                Some(super::keywords::COLON) => {
+                    tb.expect(super::keywords::COLON)?;
+                    if !tb.exceed_end_of_head() {
+                        // `forall x Dom: D => P`
+                        return self.finish_inline_forall(tb, params, true);
+                    }
+                }
+                _ => {
+                    return Err(RuntimeParseError::new(
+                        "forall: expected `:` or `=>` after parameters",
+                        tb.line,
+                        tb.source_path.clone(),
+                    )
+                    .into());
+                }
             }
+
             if tb.body.is_empty() {
                 return Err(RuntimeParseError::new(
                     "forall expects an indented body",
@@ -313,6 +328,67 @@ impl Runtime {
         })();
         self.pop_parse_scope();
         result
+    }
+
+    // Finish inline forall after binders (and optional `:` already consumed).
+    // `has_dom_segment`: true for `forall x Dom: D => P`, false for `forall x Dom => P`.
+    fn finish_inline_forall(
+        &mut self,
+        tb: &mut TokenBlock,
+        params: crate::new_pipeline::ast::param::TypedParameterList,
+        has_dom_segment: bool,
+    ) -> RuntimeResult<Fact> {
+        if !tb.body.is_empty() {
+            return Err(RuntimeParseError::new(
+                "inline forall must be on one line (no indented body)",
+                tb.line,
+                tb.source_path.clone(),
+            )
+            .into());
+        }
+
+        let mut dom_facts = Vec::new();
+        if has_dom_segment {
+            if tb.exceed_end_of_head() || tb.peek() == Some(RIGHT_ARROW) {
+                return Err(RuntimeParseError::new(
+                    "inline forall with `:` expects one domain fact before `=>`",
+                    tb.line,
+                    tb.source_path.clone(),
+                )
+                .into());
+            }
+            dom_facts.push(self.parse_fact(tb)?);
+        }
+
+        tb.expect(RIGHT_ARROW)?;
+        if tb.exceed_end_of_head() {
+            return Err(RuntimeParseError::new(
+                "inline forall: `=>` expects a conclusion fact",
+                tb.line,
+                tb.source_path.clone(),
+            )
+            .into());
+        }
+        let then_fact = self.parse_exist_or_and_chain_atomic_fact(tb)?;
+        if !tb.exceed_end_of_head() {
+            return Err(RuntimeParseError::new(
+                format!(
+                    "trailing tokens after inline forall: `{}`",
+                    tb.peek().unwrap_or("")
+                ),
+                tb.line,
+                tb.source_path.clone(),
+            )
+            .into());
+        }
+
+        Ok(Fact::ForallFact(ForallFact {
+            fact_id: self.ids.allocate_fact_id(),
+            typed_parameters: params,
+            dom_facts,
+            then_facts: vec![then_fact],
+            line_file: Some(tb.line_file()),
+        }))
     }
 
     pub(super) fn parse_exist_fact(&mut self, tb: &mut TokenBlock) -> RuntimeResult<ExistFactFamily> {

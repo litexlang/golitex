@@ -15,6 +15,7 @@ use crate::new_pipeline::execute::execute_by_stmt::ExecByStmtResult;
 use crate::new_pipeline::execute::execute_by_stmt::ExecReleaseThmStmtResult;
 use crate::new_pipeline::execute::execute_def_abstract_prop_stmt::ExecDefAbstractPropStmtSuccessResult;
 use crate::new_pipeline::execute::execute_def_prop_stmt::ExecDefPropStmtResult;
+use crate::new_pipeline::execute::execute_def_struct_stmt::ExecDefStructStmtResult;
 use crate::new_pipeline::execute::execute_def_thm_stmt::ExecDefThmStmtResult;
 use crate::new_pipeline::execute::execute_fact_stmt::{
     ExecFactStmtResult, VerifyFactResult, VerifyObjWellDefinedResult,
@@ -76,6 +77,7 @@ pub enum ExecDefinitionStmtResult {
     HaveObjEqual(ExecHaveObjEqualStmtResult),
     DefProp(ExecDefPropStmtResult),
     DefAbstractProp(ExecDefAbstractPropStmtSuccessResult),
+    DefStruct(ExecDefStructStmtResult),
     DefThm(ExecDefThmStmtResult),
 }
 
@@ -100,6 +102,7 @@ impl ExecDefinitionStmtResult {
             Self::HaveObjEqual(r) => r.is_failed(),
             Self::DefProp(r) => r.is_failed(),
             Self::DefAbstractProp(_) => false,
+            Self::DefStruct(r) => r.is_failed(),
             Self::DefThm(r) => r.is_failed(),
         }
     }

@@ -43,11 +43,35 @@ impl Runtime {
             }));
         }
 
+        // Identifier: must be defined in the current env stack.
+        if let Obj::Identifier(value) = obj {
+            return self.verify_identifier_obj_well_definedness(value, verify_state);
+        }
+
         // Identifier-headed FnObj application: InFunctionSet + domain (not children-only).
         if let Obj::FnObj(value) = obj {
             if matches!(value.head.as_ref(), FnObjHead::Identifier(_)) {
                 return self.verify_identifier_headed_fn_obj_well_definedness(value, verify_state);
             }
+        }
+
+        // fn_range(f): requires f registered in some FnSet.
+        if let Obj::FnRange(value) = obj {
+            return self.verify_fn_range_obj_well_definedness(value, verify_state);
+        }
+
+        // Indexed family / choice: `$is_set` half + family ∈ FnSet registration.
+        match obj {
+            Obj::IndexUnion(value) => {
+                return self.verify_index_union_obj_well_definedness(value, verify_state);
+            }
+            Obj::IndexIntersect(value) => {
+                return self.verify_index_intersect_obj_well_definedness(value, verify_state);
+            }
+            Obj::GeneralCart(value) => {
+                return self.verify_general_cart_obj_well_definedness(value, verify_state);
+            }
+            _ => {}
         }
 
         // Binder objects: dedicated pipelines that keep proof-scope local_env.
@@ -89,7 +113,9 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         match obj {
-            Obj::Identifier(_) => self.verify_atom_obj_well_definedness_by_def(verify_state),
+            Obj::Identifier(_) => {
+                unreachable!("Identifier WD uses verify_identifier_obj_well_definedness")
+            }
             Obj::FnObj(value) => self.verify_fn_obj_well_definedness_by_def(value, verify_state),
             Obj::Number(_) => self.verify_number_obj_well_definedness_by_def(verify_state),
             Obj::ImaginaryUnit(_) => {
@@ -150,17 +176,17 @@ impl Runtime {
             Obj::BigIntersect(value) => {
                 self.verify_big_intersect_obj_well_definedness_by_def(value, verify_state)
             }
-            Obj::IndexUnion(value) => {
-                self.verify_index_union_obj_well_definedness_by_def(value, verify_state)
+            Obj::IndexUnion(_) => {
+                unreachable!("IndexUnion WD uses verify_index_union_obj_well_definedness")
             }
-            Obj::IndexIntersect(value) => {
-                self.verify_index_intersect_obj_well_definedness_by_def(value, verify_state)
+            Obj::IndexIntersect(_) => {
+                unreachable!("IndexIntersect WD uses verify_index_intersect_obj_well_definedness")
             }
             Obj::PowerSet(value) => {
                 self.verify_power_set_obj_well_definedness_by_def(value, verify_state)
             }
-            Obj::GeneralCart(value) => {
-                self.verify_general_cart_obj_well_definedness_by_def(value, verify_state)
+            Obj::GeneralCart(_) => {
+                unreachable!("GeneralCart WD uses verify_general_cart_obj_well_definedness")
             }
             Obj::ListSet(value) => {
                 self.verify_list_set_obj_well_definedness_by_def(value, verify_state)
@@ -187,8 +213,8 @@ impl Runtime {
             Obj::FiniteSetMin(value) => {
                 self.verify_finite_set_min_obj_well_definedness_by_def(value, verify_state)
             }
-            Obj::FnRange(value) => {
-                self.verify_fn_range_obj_well_definedness_by_def(value, verify_state)
+            Obj::FnRange(_) => {
+                unreachable!("FnRange WD uses verify_fn_range_obj_well_definedness")
             }
             Obj::Replacement(value) => {
                 self.verify_replacement_obj_well_definedness_by_def(value, verify_state)

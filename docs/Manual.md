@@ -1643,6 +1643,10 @@ by def {1} $subset {1, 2}
 by def {1, 2} $superset {1}
 ```
 
+> **Preview (`new_pipeline`):** `x $in {a, b, …}` is proved when `x` equals one
+> listed element (used by bodyless `by enumerate finite_set`). One-line
+> `forall x Dom => P` (no `:`) is accepted alongside the block `forall` form.
+
 | Positive form | Negative form | Meaning |
 |---|---|---|
 | `a = b` | `a != b` | Equality |
