@@ -52,14 +52,23 @@ pub fn exec_by_symmetric_prop_stmt(
         can_use_rewrite: true,
         store_well_defined_fact: true,
     };
-    let forall_proof = runtime.verify_forall_fact(&stmt.forall_fact, verify_state)?;
-    if forall_proof.is_failed() {
-        return Ok(ExecByStmtResult::SymmetricProp(
-            ExecBySymmetricPropStmtResult::Failed(ExecBySymmetricPropStmtFailed::Forall(
-                forall_proof,
-            )),
-        ));
-    }
+    let (forall_outcome, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
+        let forall_proof = rt.verify_forall_fact(&stmt.forall_fact, verify_state)?;
+        if forall_proof.is_failed() {
+            return Ok(Err(forall_proof));
+        }
+        Ok(Ok(forall_proof))
+    })?;
+    let forall_proof = match forall_outcome {
+        Ok(p) => p,
+        Err(failed) => {
+            return Ok(ExecByStmtResult::SymmetricProp(
+                ExecBySymmetricPropStmtResult::Failed(ExecBySymmetricPropStmtFailed::Forall(
+                    failed,
+                )),
+            ));
+        }
+    };
 
     runtime
         .top_exec_env_mut()
@@ -72,6 +81,7 @@ pub fn exec_by_symmetric_prop_stmt(
         ExecBySymmetricPropStmtResult::Success(ExecBySymmetricPropStmtSuccess {
             prop,
             forall_proof,
+            local_env,
         }),
     ))
 }

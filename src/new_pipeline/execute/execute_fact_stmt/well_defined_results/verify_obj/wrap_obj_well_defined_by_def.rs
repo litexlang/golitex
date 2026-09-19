@@ -1,7 +1,9 @@
 use super::fail_to_verify_obj_well_defined::*;
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::obj_well_defined_proof_by_def::*;
+use super::entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
 use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 
 // Pack CommonStages into the Obj-mirrored ByDef proof, or the mirrored fail.
 pub(super) fn finish_by_def(
@@ -14,9 +16,41 @@ pub(super) fn finish_by_def(
     Ok(pack_success_by_def(obj, stages))
 }
 
+fn expect_success_obj_proof(result: VerifyObjWellDefinedResult) -> Box<ObjWellDefinedProof> {
+    match result {
+        VerifyObjWellDefinedResult::Success(proof) => Box::new(proof),
+        VerifyObjWellDefinedResult::Failed(_) => {
+            unreachable!("finish_by_def only packs fully-known stages")
+        }
+    }
+}
+
+fn take_child_proofs(
+    stages: &mut ObjWellDefinedByDefCommonStages,
+    n: usize,
+) -> Vec<Box<ObjWellDefinedProof>> {
+    let mut out = Vec::with_capacity(n);
+    for _ in 0..n {
+        let (_obj, result) = stages.child_obj_well_defined.remove(0);
+        out.push(expect_success_obj_proof(result));
+    }
+    out
+}
+
+fn take_requirements(
+    stages: &mut ObjWellDefinedByDefCommonStages,
+    n: usize,
+) -> Vec<VerifyFactResult> {
+    let mut out = Vec::with_capacity(n);
+    for _ in 0..n {
+        out.push(stages.requirement_fact_verified.remove(0));
+    }
+    out
+}
+
 fn pack_success_by_def(
     obj: &Obj,
-    stages: ObjWellDefinedByDefCommonStages,
+    mut stages: ObjWellDefinedByDefCommonStages,
 ) -> ObjWellDefinedProofByDef {
     match obj {
         Obj::Identifier(_) | Obj::Number(_) | Obj::ImaginaryUnit(_) | Obj::EulerNumber(_) | Obj::Pi(_) | Obj::StandardSet(_) => {
@@ -74,9 +108,33 @@ fn pack_success_by_def(
             unreachable!("binder object WD must use dedicated binder pipelines, not CommonStages")
         }
         Obj::Cart(_) => ObjWellDefinedProofByDef::Cart(CartObjWellDefinedProof::from_stages(stages)),
-        Obj::CartDim(_) => ObjWellDefinedProofByDef::CartDim(CartDimObjWellDefinedProof::from_stages(stages)),
-        Obj::Proj(_) => ObjWellDefinedProofByDef::Proj(ProjObjWellDefinedProof::from_stages(stages)),
-        Obj::TupleDim(_) => ObjWellDefinedProofByDef::TupleDim(TupleDimObjWellDefinedProof::from_stages(stages)),
+        Obj::CartDim(_) => {
+            let mut children = take_child_proofs(&mut stages, 1);
+            let mut reqs = take_requirements(&mut stages, 1);
+            ObjWellDefinedProofByDef::CartDim(CartDimObjWellDefinedProof {
+                set_well_defined: children.remove(0),
+                set_is_cart: reqs.remove(0),
+            })
+        }
+        Obj::Proj(_) => {
+            let mut children = take_child_proofs(&mut stages, 2);
+            let mut reqs = take_requirements(&mut stages, 3);
+            ObjWellDefinedProofByDef::Proj(ProjObjWellDefinedProof {
+                set_well_defined: children.remove(0),
+                dim_well_defined: children.remove(0),
+                dim_in_npos: reqs.remove(0),
+                set_is_cart: reqs.remove(0),
+                dim_le_cart_dim: reqs.remove(0),
+            })
+        }
+        Obj::TupleDim(_) => {
+            let mut children = take_child_proofs(&mut stages, 1);
+            let mut reqs = take_requirements(&mut stages, 1);
+            ObjWellDefinedProofByDef::TupleDim(TupleDimObjWellDefinedProof {
+                arg_well_defined: children.remove(0),
+                arg_is_tuple: reqs.remove(0),
+            })
+        }
         Obj::Tuple(_) => ObjWellDefinedProofByDef::Tuple(TupleObjWellDefinedProof::from_stages(stages)),
         Obj::FiniteSetSize(_) => ObjWellDefinedProofByDef::FiniteSetSize(FiniteSetSizeObjWellDefinedProof::from_stages(stages)),
         Obj::FiniteSetMax(_) => ObjWellDefinedProofByDef::FiniteSetMax(FiniteSetMaxObjWellDefinedProof::from_stages(stages)),
@@ -94,7 +152,17 @@ fn pack_success_by_def(
         Obj::FiniteSeqSet(_) => ObjWellDefinedProofByDef::FiniteSeqSet(FiniteSeqSetObjWellDefinedProof::from_stages(stages)),
         Obj::SeqSet(_) => ObjWellDefinedProofByDef::SeqSet(SeqSetObjWellDefinedProof::from_stages(stages)),
         Obj::FiniteSeqListObj(_) => ObjWellDefinedProofByDef::FiniteSeqListObj(FiniteSeqListObjObjWellDefinedProof::from_stages(stages)),
-        Obj::ObjAtIndex(_) => ObjWellDefinedProofByDef::ObjAtIndex(ObjAtIndexObjWellDefinedProof::from_stages(stages)),
+        Obj::ObjAtIndex(_) => {
+            let mut children = take_child_proofs(&mut stages, 2);
+            let mut reqs = take_requirements(&mut stages, 3);
+            ObjWellDefinedProofByDef::ObjAtIndex(ObjAtIndexObjWellDefinedProof {
+                obj_well_defined: children.remove(0),
+                index_well_defined: children.remove(0),
+                index_in_npos: reqs.remove(0),
+                obj_is_tuple: reqs.remove(0),
+                index_le_tuple_dim: reqs.remove(0),
+            })
+        }
         Obj::StructObj(_) => ObjWellDefinedProofByDef::StructObj(StructObjObjWellDefinedProof::from_stages(stages)),
         Obj::ObjAsStructInstanceWithFieldAccess(_) => ObjWellDefinedProofByDef::ObjAsStructInstanceWithFieldAccess(ObjAsStructInstanceWithFieldAccessObjWellDefinedProof::from_stages(stages)),
         Obj::InstantiatedTemplateObj(_) => ObjWellDefinedProofByDef::InstantiatedTemplateObj(InstantiatedTemplateObjObjWellDefinedProof::from_stages(stages)),

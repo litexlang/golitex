@@ -49,6 +49,8 @@ Behind that design sits a mathematical question: can a formal language be both e
 
 Natural language is easy to understand but hard to verify rigorously; formal code can be verified but is often hard to understand. Litex aims to be a bridge between the two: even if you are not a formalization expert and do not use Lean day to day, you can still bring rigorous checking into your own work—seeing what the system is checking, where it stops, and what to repair next. It also hopes to be a tool that helps you understand the mysteries behind mathematics.
 
+In one line: Litex wants to be the Python of formal languages—easier to learn and use for writing and reading checkable mathematics, without pretending the hard problems underneath have vanished.
+
 <a id="overview-readers"></a>
 
 ### 0.1 Value Projections and Positioning of Litex in Different Settings
@@ -221,6 +223,8 @@ Litex’s design intent is in fact very simple: just as Fortran and C abstracted
 
 Programmers already know a related contrast: functional style leans toward *what* should hold; imperative style leans toward *how* to change state step by step. Here is the strange twist. Lean itself is a functional language, yet the everyday way of writing mathematics in Lean—tactic proofs—often reads as imperative *how*: each line attacks the current goal and rewrites the proof state. Litex flips that default back toward *what*: the source states the objects and facts that should hold; the verifier searches for *how*. The language underneath Lean is still functional; what feels inverted is the default *mathematical* authoring surface.
 
+Here is a second twist, about typing *feel*. Classic functional languages such as Lisp are often dynamically typed, and that flexibility is part of what makes them convenient. Lean is also functional, yet when you use it to write mathematics—not ordinary programs—its type discipline is very strict, so the authoring surface feels closer to a static type system. Litex sits nearer the other pole: an object may belong to many sets when that is mathematically warranted, so the day-to-day interface feels more like Python—dynamic in spirit. This is an interface analogy, not a claim that Litex implements a dynamic type system in the programming-language sense.
+
 If you already write code, another useful way to see Litex is as a language that keeps mathematical categories apart the way ordinary programs keep values, statements, and types apart. Lean’s default surface gathers objects, propositions, proofs, and types into one dependent term/type universe—powerful and uniform, but easy to read as “everything lives in one encoding.” Litex’s user surface separates objects, facts, and statements; a function remains an operation on objects, and a fact remains a claim that something holds. The verifier still checks well-definedness and grounds; what changes is what the source asks you to hold in working memory.
 
 ```text
@@ -230,6 +234,9 @@ Litex surface: objects · facts · statements
 Lean (as a language): functional / declarative
 Lean tactic proofs:   often read as imperative how
 Litex source:         declarative what; verifier finds how
+
+Lean (writing math):  strict typing feel  ≈ static
+Litex:                many-set membership ≈ dynamic (Python-like)
 ```
 
 Roughly, Litex stands to Lean as C stands to assembly: Lean tactic proofs often name facts and call them explicitly; that is a burden on working memory—people usually remember proof *patterns* (shapes), not fact names. Assembly writes many memory addresses; C maintains a table from variable names to addresses. Litex is similar: it maintains a fact table and a rule table; you write directly what should be proved, and the kernel matches and replaces by the predicate name of each atomic fact as key (see Section 2)—without first memorizing scattered fact names. Lean cannot easily grow the same default mechanism, precisely because its language allows highly first-class quantification over propositions; Section 2 explains that boundary.

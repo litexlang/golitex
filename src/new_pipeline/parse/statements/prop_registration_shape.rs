@@ -158,6 +158,46 @@ fn bound_param_ids_in_order(body: &[Obj], syntax: &str) -> Result<Vec<Identifier
     Ok(ids)
 }
 
+
+// Shape check for `by transitive_prop`:
+// forall x, y, z set: $p(x, y); $p(y, z) => $p(x, z).
+pub fn transitive_prop_name_from_forall(forall_fact: &ForallFact) -> Result<AtomicName, String> {
+    let params = flatten_set_params(forall_fact, "by transitive_prop")?;
+    if params.len() != 3 {
+        return Err("by transitive_prop: forall must bind exactly three parameters".to_string());
+    }
+    if forall_fact.dom_facts.len() != 2 {
+        return Err("by transitive_prop: forall dom must contain exactly two facts".to_string());
+    }
+    if forall_fact.then_facts.len() != 1 {
+        return Err("by transitive_prop: forall then must contain exactly one fact".to_string());
+    }
+    let x = &params[0];
+    let y = &params[1];
+    let z = &params[2];
+    let first = normal_atomic_from_dom(&forall_fact.dom_facts[0], "by transitive_prop")?;
+    let second = normal_atomic_from_dom(&forall_fact.dom_facts[1], "by transitive_prop")?;
+    let then = normal_atomic_from_then(&forall_fact.then_facts[0], "by transitive_prop")?;
+    if first.predicate != second.predicate || first.predicate != then.predicate {
+        return Err("by transitive_prop: all facts must use the same prop".to_string());
+    }
+    if first.body.len() != 2
+        || second.body.len() != 2
+        || then.body.len() != 2
+        || !obj_is_bound_param(&first.body[0], x)
+        || !obj_is_bound_param(&first.body[1], y)
+        || !obj_is_bound_param(&second.body[0], y)
+        || !obj_is_bound_param(&second.body[1], z)
+        || !obj_is_bound_param(&then.body[0], x)
+        || !obj_is_bound_param(&then.body[1], z)
+    {
+        return Err(
+            "by transitive_prop: expected `$p(x, y)`, `$p(y, z)` => `$p(x, z)`".to_string(),
+        );
+    }
+    Ok(first.predicate.clone())
+}
+
 pub fn plain_prop_name(prop: &AtomicName) -> &str {
     prop.local_name()
 }

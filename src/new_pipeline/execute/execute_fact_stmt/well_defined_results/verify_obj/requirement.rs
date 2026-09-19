@@ -3,7 +3,9 @@
 //! Mirrors old target_requirements: after child WD, prove domain facts true.
 //! Search miss returns Ok(branch Failed), same as fact proof search — not Err.
 
-use crate::new_pipeline::ast::fact::{AtomicFact, InFact, QuantifierFreeFact};
+use crate::new_pipeline::ast::fact::{
+    AtomicFact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact, QuantifierFreeFact,
+};
 use crate::new_pipeline::ast::obj::{Obj, StandardSet};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::{
     atomic_except_equality_fact_result_from_search_fail,
@@ -73,6 +75,48 @@ impl Runtime {
             verify_state,
             "obj is not in C".to_string(),
         )
+    }
+
+    pub(super) fn require_is_set(
+        &mut self,
+        set: &Obj,
+        verify_state: VerifyState,
+        failure_message: String,
+    ) -> RuntimeResult<VerifyFactResult> {
+        let fact = AtomicFact::IsSetFact(IsSetFact {
+            fact_id: self.ids.allocate_fact_id(),
+            set: set.clone(),
+            line_file: None,
+        });
+        self.verify_required_atomic_fact(fact, verify_state, failure_message)
+    }
+
+    pub(super) fn require_is_finite_set(
+        &mut self,
+        set: &Obj,
+        verify_state: VerifyState,
+        failure_message: String,
+    ) -> RuntimeResult<VerifyFactResult> {
+        let fact = AtomicFact::IsFiniteSetFact(IsFiniteSetFact {
+            fact_id: self.ids.allocate_fact_id(),
+            set: set.clone(),
+            line_file: None,
+        });
+        self.verify_required_atomic_fact(fact, verify_state, failure_message)
+    }
+
+    pub(super) fn require_is_nonempty_set(
+        &mut self,
+        set: &Obj,
+        verify_state: VerifyState,
+        failure_message: String,
+    ) -> RuntimeResult<VerifyFactResult> {
+        let fact = AtomicFact::IsNonemptySetFact(IsNonemptySetFact {
+            fact_id: self.ids.allocate_fact_id(),
+            set: set.clone(),
+            line_file: None,
+        });
+        self.verify_required_atomic_fact(fact, verify_state, failure_message)
     }
 
     // Prove a FnSet domain fact (already instantiated at the call site).

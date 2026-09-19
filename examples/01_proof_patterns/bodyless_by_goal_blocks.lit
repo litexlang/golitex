@@ -44,11 +44,6 @@ by induc n from 0:
 by strong_induc m from 0:
     ? m = m
 
-by induc P:
-    ? P = P
-    ? from P = {}
-    ? induc x, S
-
 prop bodyless_same(x set, y set):
     x = y
 

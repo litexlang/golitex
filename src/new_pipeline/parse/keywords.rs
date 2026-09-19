@@ -37,7 +37,6 @@ pub const CASE: &str = "case";
 pub const CONTRA: &str = "contra";
 pub const DEF: &str = "def";
 pub const INDUC: &str = "induc";
-pub const FINITE_SET_INDUC: &str = "finite_set_induc";
 pub const IMPOSSIBLE: &str = "impossible";
 pub const FROM: &str = "from";
 pub const AS: &str = "as";

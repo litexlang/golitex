@@ -381,7 +381,6 @@ pub enum ByStmt {
     ByCasesStmt(ByCasesStmt),
     ByContraStmt(ByContraStmt),
     ByEnumerateFiniteSetStmt(ByEnumerateFiniteSetStmt),
-    ByFiniteSetInducStmt(ByFiniteSetInducStmt),
     ByInducStmt(ByInducStmt),
     ByStrongInducStmt(ByStrongInducStmt),
     ByForStmt(ByForStmt),
@@ -423,17 +422,7 @@ pub struct ByEnumerateFiniteSetStmt {
     pub line_file: LineFile,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ByFiniteSetInducStmt {
-    pub to_prove: Vec<ExistOrAndChainAtomicFact>,
-    pub param_binding: String,
-    pub carrier_set: Option<Obj>,
-    pub element_param_binding: String,
-    pub smaller_set_param_binding: String,
-    pub base_proof: Vec<Stmt>,
-    pub step_proof: Vec<Stmt>,
-    pub line_file: LineFile,
-}
+
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ByInducStmt {

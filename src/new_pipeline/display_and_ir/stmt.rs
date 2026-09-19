@@ -91,7 +91,6 @@ impl ByStmt {
             ByStmt::ByCasesStmt(x) => x.ir(),
             ByStmt::ByContraStmt(x) => x.ir(),
             ByStmt::ByEnumerateFiniteSetStmt(x) => x.ir(),
-            ByStmt::ByFiniteSetInducStmt(x) => x.ir(),
             ByStmt::ByInducStmt(x) => x.ir(),
             ByStmt::ByStrongInducStmt(x) => x.ir(),
             ByStmt::ByForStmt(x) => x.ir(),
@@ -1873,93 +1872,4 @@ impl ByStrongInducStmt {
     impl_display_pair!();
 }
 
-impl ByFiniteSetInducStmt {
-    pub fn ir(&self) -> StmtIR {
-        let question_goals: Vec<_> = self
-            .to_prove
-            .iter()
-            .map(|fact| format!("{} {}", QUESTION_GOAL, fact.ir()))
-            .collect();
-        let mut out = format!("{} {} {}", BY, INDUC, self.param_binding);
-        if let Some(carrier_set) = &self.carrier_set {
-            out.push_str(&format!(
-                " {} {}",
-                IN,
-                carrier_set.ir()
-            ));
-        }
-        out.push_str(&format!(
-            ":
-{}",
-            indent!(
-                &question_goals.join(
-                    "
-"
-                ),
-                1
-            )
-        ));
-        let base_colon = if self.base_proof.is_empty() {
-            ""
-        } else {
-            COLON
-        };
-        out.push_str("\n");
-        out.push_str(&indent!(
-            &format!(
-                "{} {} {} {} {}{}",
-                QUESTION_GOAL, FROM, self.param_binding, EQUAL, "{}", base_colon
-            ),
-            1
-        ));
-        if !self.base_proof.is_empty() {
-            out.push_str("\n");
-            out.push_str(&indent!(
-                &self
-                    .base_proof
-                    .iter()
-                    .map(|s| s.ir())
-                    .collect::<Vec<_>>()
-                    .join(
-                        "
-"
-                    ),
-                2
-            ));
-        }
-        let step_colon = if self.step_proof.is_empty() {
-            ""
-        } else {
-            COLON
-        };
-        out.push_str("\n");
-        out.push_str(&indent!(
-            &format!(
-                "{} {} {}, {}{}",
-                QUESTION_GOAL,
-                INDUC,
-                self.element_param_binding,
-                self.smaller_set_param_binding,
-                step_colon
-            ),
-            1
-        ));
-        if !self.step_proof.is_empty() {
-            out.push_str("\n");
-            out.push_str(&indent!(
-                &self
-                    .step_proof
-                    .iter()
-                    .map(|s| s.ir())
-                    .collect::<Vec<_>>()
-                    .join(
-                        "
-"
-                    ),
-                2
-            ));
-        }
-        StmtIR(out)
-    }
-    impl_display_pair!();
-}
+

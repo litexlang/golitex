@@ -703,46 +703,25 @@ impl CartObjWellDefinedProof {
     }
 }
 
+// cart_dim(S): set WD, then `$is_cart(S)`.
 pub struct CartDimObjWellDefinedProof {
-    pub child_obj_well_defined: Vec<(Obj, VerifyObjWellDefinedResult)>,
-    pub requirement_fact_verified: Vec<VerifyFactResult>,
+    pub set_well_defined: Box<ObjWellDefinedProof>,
+    pub set_is_cart: VerifyFactResult,
 }
 
-impl CartDimObjWellDefinedProof {
-    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        Self {
-            child_obj_well_defined: stages.child_obj_well_defined,
-            requirement_fact_verified: stages.requirement_fact_verified,
-        }
-    }
-}
-
+// proj(S, i): set/dim WD, then `i $in N+`, `$is_cart(S)`, `i <= cart_dim(S)`.
 pub struct ProjObjWellDefinedProof {
-    pub child_obj_well_defined: Vec<(Obj, VerifyObjWellDefinedResult)>,
-    pub requirement_fact_verified: Vec<VerifyFactResult>,
+    pub set_well_defined: Box<ObjWellDefinedProof>,
+    pub dim_well_defined: Box<ObjWellDefinedProof>,
+    pub dim_in_npos: VerifyFactResult,
+    pub set_is_cart: VerifyFactResult,
+    pub dim_le_cart_dim: VerifyFactResult,
 }
 
-impl ProjObjWellDefinedProof {
-    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        Self {
-            child_obj_well_defined: stages.child_obj_well_defined,
-            requirement_fact_verified: stages.requirement_fact_verified,
-        }
-    }
-}
-
+// tuple_dim(t): arg WD, then `$is_tuple(t)`.
 pub struct TupleDimObjWellDefinedProof {
-    pub child_obj_well_defined: Vec<(Obj, VerifyObjWellDefinedResult)>,
-    pub requirement_fact_verified: Vec<VerifyFactResult>,
-}
-
-impl TupleDimObjWellDefinedProof {
-    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        Self {
-            child_obj_well_defined: stages.child_obj_well_defined,
-            requirement_fact_verified: stages.requirement_fact_verified,
-        }
-    }
+    pub arg_well_defined: Box<ObjWellDefinedProof>,
+    pub arg_is_tuple: VerifyFactResult,
 }
 
 pub struct TupleObjWellDefinedProof {
@@ -983,18 +962,13 @@ impl FiniteSeqListObjObjWellDefinedProof {
     }
 }
 
+// t[i]: obj/index WD, then `i $in N+`, `$is_tuple(t)`, `i <= tuple_dim(t)`.
 pub struct ObjAtIndexObjWellDefinedProof {
-    pub child_obj_well_defined: Vec<(Obj, VerifyObjWellDefinedResult)>,
-    pub requirement_fact_verified: Vec<VerifyFactResult>,
-}
-
-impl ObjAtIndexObjWellDefinedProof {
-    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        Self {
-            child_obj_well_defined: stages.child_obj_well_defined,
-            requirement_fact_verified: stages.requirement_fact_verified,
-        }
-    }
+    pub obj_well_defined: Box<ObjWellDefinedProof>,
+    pub index_well_defined: Box<ObjWellDefinedProof>,
+    pub index_in_npos: VerifyFactResult,
+    pub obj_is_tuple: VerifyFactResult,
+    pub index_le_tuple_dim: VerifyFactResult,
 }
 
 pub struct StandardSetObjWellDefinedProof {}
