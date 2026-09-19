@@ -70,9 +70,9 @@ fn pack_success_by_def(
         Obj::PowerSet(_) => ObjWellDefinedProofByDef::PowerSet(PowerSetObjWellDefinedProof::from_stages(stages)),
         Obj::GeneralCart(_) => ObjWellDefinedProofByDef::GeneralCart(GeneralCartObjWellDefinedProof::from_stages(stages)),
         Obj::ListSet(_) => ObjWellDefinedProofByDef::ListSet(ListSetObjWellDefinedProof::from_stages(stages)),
-        Obj::SetBuilder(_) => ObjWellDefinedProofByDef::SetBuilder(SetBuilderObjWellDefinedProof::from_stages(stages)),
-        Obj::FnSet(_) => ObjWellDefinedProofByDef::FnSet(FnSetObjWellDefinedProof::from_stages(stages)),
-        Obj::AnonymousFn(_) => ObjWellDefinedProofByDef::AnonymousFn(AnonymousFnObjWellDefinedProof::from_stages(stages)),
+        Obj::SetBuilder(_) | Obj::FnSet(_) | Obj::AnonymousFn(_) => {
+            unreachable!("binder object WD must use dedicated binder pipelines, not CommonStages")
+        }
         Obj::Cart(_) => ObjWellDefinedProofByDef::Cart(CartObjWellDefinedProof::from_stages(stages)),
         Obj::CartDim(_) => ObjWellDefinedProofByDef::CartDim(CartDimObjWellDefinedProof::from_stages(stages)),
         Obj::Proj(_) => ObjWellDefinedProofByDef::Proj(ProjObjWellDefinedProof::from_stages(stages)),
@@ -256,13 +256,22 @@ pub(super) fn wrap_common_fail(
             FailToVerifyListSetObjWellDefined(common),
         ),
         Obj::SetBuilder(_) => FailToVerifyObjWellDefinedResult::SetBuilder(
-            FailToVerifySetBuilderObjWellDefined(common),
+            FailToVerifySetBuilderObjWellDefined::Others(match common {
+                FailToVerifyObjWellDefinedByDefCommon::Others(s) => s,
+                _ => "SetBuilder well-definedness failed".to_string(),
+            }),
         ),
         Obj::FnSet(_) => FailToVerifyObjWellDefinedResult::FnSet(
-            FailToVerifyFnSetObjWellDefined(common),
+            FailToVerifyFnSetObjWellDefined::Others(match common {
+                FailToVerifyObjWellDefinedByDefCommon::Others(s) => s,
+                _ => "FnSet well-definedness failed".to_string(),
+            }),
         ),
         Obj::AnonymousFn(_) => FailToVerifyObjWellDefinedResult::AnonymousFn(
-            FailToVerifyAnonymousFnObjWellDefined(common),
+            FailToVerifyAnonymousFnObjWellDefined::Others(match common {
+                FailToVerifyObjWellDefinedByDefCommon::Others(s) => s,
+                _ => "AnonymousFn well-definedness failed".to_string(),
+            }),
         ),
         Obj::Cart(_) => FailToVerifyObjWellDefinedResult::Cart(
             FailToVerifyCartObjWellDefined(common),

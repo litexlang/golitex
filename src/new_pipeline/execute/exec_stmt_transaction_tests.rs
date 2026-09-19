@@ -1056,3 +1056,31 @@ fn fn_obj_application_requires_in_function_set() {
     assert!(!exec_one(&mut runtime, "f(u)(a) = f(u)(a)").is_failed());
 }
 
+#[test]
+fn binder_obj_well_definedness_keeps_local_env() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(&mut runtime, "let S = fn(x R: x > 0) R").is_failed(),
+        "FnSet with dom_fact must WD"
+    );
+    assert!(
+        !exec_one(&mut runtime, "let f = fn(x R: x > 0) R {x}").is_failed(),
+        "AnonymousFn with dom_fact must WD"
+    );
+    assert!(
+        !exec_one(&mut runtime, "let A = {x R: x > 0}").is_failed(),
+        "SetBuilder with fact must WD"
+    );
+
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        exec_one(&mut runtime, "let S = fn(x R: 1 / 0 = x) R").is_failed(),
+        "ill-defined FnSet dom_fact must soft-fail"
+    );
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        exec_one(&mut runtime, "let A = {x R: 1 / 0 = x}").is_failed(),
+        "ill-defined SetBuilder fact must soft-fail"
+    );
+}
+

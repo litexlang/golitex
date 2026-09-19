@@ -4,8 +4,7 @@ use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use crate::new_pipeline::ast::obj::{
     BigIntersect, BigUnion, Cart, CartDim, FiniteSetMax, FiniteSetMin, FiniteSetSize, FnRange,
     GeneralCart, IndexIntersect, IndexUnion, Intersect, IntervalObj, IntervalObjStruct, ListSet,
-    OneSideInfinityIntervalObj, PowerSet, Proj, Replacement, SetBuilder, SetMinus, Tuple, TupleDim,
-    Union,
+    OneSideInfinityIntervalObj, PowerSet, Proj, Replacement, SetMinus, Tuple, TupleDim, Union,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
@@ -114,13 +113,7 @@ impl Runtime {
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_boxed_objs_as_children(&value.list, verify_state)
     }
-    pub(super) fn verify_set_builder_obj_well_definedness_by_def(
-        &mut self,
-        value: &SetBuilder,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
-        self.verify_unary_obj_well_definedness_by_def(value.param_set.as_ref(), verify_state)
-    }
+    // SetBuilder: dedicated binder pipeline in binder.rs.
     pub(super) fn verify_cart_obj_well_definedness_by_def(
         &mut self,
         value: &Cart,

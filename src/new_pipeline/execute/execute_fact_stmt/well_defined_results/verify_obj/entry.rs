@@ -50,6 +50,20 @@ impl Runtime {
             }
         }
 
+        // Binder objects: dedicated pipelines that keep proof-scope local_env.
+        match obj {
+            Obj::FnSet(value) => {
+                return self.verify_fn_set_obj_well_definedness(value, verify_state);
+            }
+            Obj::AnonymousFn(value) => {
+                return self.verify_anonymous_fn_obj_well_definedness(value, verify_state);
+            }
+            Obj::SetBuilder(value) => {
+                return self.verify_set_builder_obj_well_definedness(value, verify_state);
+            }
+            _ => {}
+        }
+
         let stages = self.verify_obj_well_definedness_by_def(obj, verify_state.clone())?;
         match finish_by_def(obj, stages) {
             Ok(by_def) => {
@@ -151,14 +165,9 @@ impl Runtime {
             Obj::ListSet(value) => {
                 self.verify_list_set_obj_well_definedness_by_def(value, verify_state)
             }
-            Obj::SetBuilder(value) => {
-                self.verify_set_builder_obj_well_definedness_by_def(value, verify_state)
-            }
-            Obj::FnSet(value) => {
-                self.verify_fn_set_obj_well_definedness_by_def(value, verify_state)
-            }
-            Obj::AnonymousFn(value) => {
-                self.verify_anonymous_fn_obj_well_definedness_by_def(value, verify_state)
+            Obj::SetBuilder(_) | Obj::FnSet(_) | Obj::AnonymousFn(_) => {
+                // Handled in verify_obj_well_definedness via binder pipelines.
+                Ok(ObjWellDefinedByDefCommonStages::leaf())
             }
             Obj::Cart(value) => self.verify_cart_obj_well_definedness_by_def(value, verify_state),
             Obj::CartDim(value) => {
