@@ -1,13 +1,21 @@
-# Fn application WD closed loop (no trust)
+# new_pipeline: thm / release thm / by thm / by def
 # LITEX_NEW_PIPELINE=1 litex -f examples/tmp.lit
 
-have a R = 1
-let f = fn(x R) R {x}
-f(a) = f(a)
+thm one_is_one:
+    ? 1 = 1
 
-let g = fn(p R: p > 0) R {p}
-g(a) = g(a)
+release thm one_is_one
+by thm one_is_one => 1 = 1
 
-let h = fn(p R) fn(q R) R
-have u R = 2
-h(u)(a) = h(u)(a)
+thm add_zero_right:
+    ? forall x R:
+        x + 0 = x
+    x + 0 = x
+
+release thm add_zero_right(2)
+by thm add_zero_right(2) => 2 + 0 = 2
+
+prop same_obj(x R, y R):
+    x = y
+
+by def $same_obj(1, 1)

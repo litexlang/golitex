@@ -5,10 +5,17 @@
 //!
 //! Shared ParamType-indexed shells live here so `have` / `witness` / later
 //! args:type checks reuse one shape.
+//!
+//! Leaf Success payloads that open a local proof / binder / instantiation
+//! scope often carry `local_env: Box<ExecEnv>`: the taken FactId/WdId → entity
+//! table for that scope. Resolve id cites through it; do not scrape it to
+//! rediscover the proof route (see `execute_by_stmt/result.rs`).
 
 use crate::new_pipeline::execute::execute_by_stmt::ExecByStmtResult;
+use crate::new_pipeline::execute::execute_by_stmt::ExecReleaseThmStmtResult;
 use crate::new_pipeline::execute::execute_def_abstract_prop_stmt::ExecDefAbstractPropStmtSuccessResult;
 use crate::new_pipeline::execute::execute_def_prop_stmt::ExecDefPropStmtResult;
+use crate::new_pipeline::execute::execute_def_thm_stmt::ExecDefThmStmtResult;
 use crate::new_pipeline::execute::execute_fact_stmt::{
     ExecFactStmtResult, VerifyFactResult, VerifyObjWellDefinedResult,
 };
@@ -60,6 +67,7 @@ pub enum ExecStmtResult {
     Witness(ExecWitnessStmtResult),
     Unsafe(ExecUnsafeStmtResult),
     By(ExecByStmtResult),
+    ReleaseThm(ExecReleaseThmStmtResult),
 }
 
 pub enum ExecDefinitionStmtResult {
@@ -68,6 +76,7 @@ pub enum ExecDefinitionStmtResult {
     HaveObjEqual(ExecHaveObjEqualStmtResult),
     DefProp(ExecDefPropStmtResult),
     DefAbstractProp(ExecDefAbstractPropStmtSuccessResult),
+    DefThm(ExecDefThmStmtResult),
 }
 
 impl ExecStmtResult {
@@ -78,6 +87,7 @@ impl ExecStmtResult {
             Self::Witness(r) => r.is_failed(),
             Self::Unsafe(r) => r.is_failed(),
             Self::By(r) => r.is_failed(),
+            Self::ReleaseThm(r) => r.is_failed(),
         }
     }
 }
@@ -90,6 +100,7 @@ impl ExecDefinitionStmtResult {
             Self::HaveObjEqual(r) => r.is_failed(),
             Self::DefProp(r) => r.is_failed(),
             Self::DefAbstractProp(_) => false,
+            Self::DefThm(r) => r.is_failed(),
         }
     }
 }
