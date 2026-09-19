@@ -1,9 +1,14 @@
-# Binder-object WD closed loop (definition side, with local_env)
-# LITEX_NEW_PIPELINE=1 litex -f examples/tmp.lit
+# Integer induc / strong_induc smoke under new_pipeline
 
-let S = fn(x R: x > 0) R
-let f = fn(x R: x > 0) R {x}
-let A = {x R: x > 0}
+by induc n from 0:
+    ? n = n
 
-have a R = 1
-f(a) = f(a)
+by strong_induc m from 0:
+    ? m = m
+
+by induc k from -1:
+    ? k + 1 = k + 1
+    ? from k = -1:
+        -1 + 1 = -1 + 1
+    ? induc:
+        k + 1 + 1 = k + 1 + 1

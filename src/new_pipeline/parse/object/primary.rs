@@ -1,15 +1,18 @@
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::{
-    Abs, AnonymousFn, Cart, Ceil, Cos, Exp, Floor, FnObjHead, FnSet, Gcd, IdentifierObj, Intersect,
-    Lcm, ListSet, Ln, Max, Min, Number, Obj, ProductOfFiniteSet, Quot, SetBuilder, SetMinus, Sin,
-    Sqrt, StandardSet, Tan, Tuple, Union,
+    Abs, AnonymousFn, Cart, CartDim, Ceil, ClosedRange, Cos, Exp, FiniteSetMax, FiniteSetMin,
+    FiniteSetSize, Floor, FnObjHead, FnSet, Gcd, IdentifierObj, Intersect, Lcm, ListSet, Ln, Max,
+    Min, Number, Obj, PowerSet, ProductOfFiniteSet, Proj, Quot, Range, SetBuilder, SetMinus, Sin,
+    Sqrt, StandardSet, Tan, Tuple, TupleDim, Union,
 };
 use crate::new_pipeline::ast::param::{ParamType, SetBoundParameterGroup, SetBoundParameterList};
 use crate::new_pipeline::parse::keywords::{
-    ABS, C, CART, CEIL, COLON, COMMA, COS, C_STAR, DOT, EXP, FINITE_SET_PRODUCT, FLOOR, FN, GCD,
-    INTERSECT, LCM, LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LN, MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N,
-    N_POS, Q, QUOT, Q_NEG, Q_POS, Q_STAR, R, RIGHT_BRACKET, RIGHT_CURLY, RIGHT_PAREN, R_NEG, R_POS,
-    R_STAR, SET_MINUS, SIN, SQRT, STRUCT_VIEW_PREFIX, TAN, TUPLE, UNION, Z, Z_NEG, Z_POS, Z_STAR,
+    ABS, C, CART, CART_DIM, CEIL, CLOSED_RANGE, COLON, COMMA, COS, C_STAR, DOT, EXP,
+    FINITE_SET_MAX, FINITE_SET_MIN, FINITE_SET_PRODUCT, FINITE_SET_SIZE, FLOOR, FN, GCD, INTERSECT,
+    LCM, LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LN, MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS,
+    POWER_SET, PROJ, Q, QUOT, Q_NEG, Q_POS, Q_STAR, R, RANGE, RIGHT_BRACKET, RIGHT_CURLY,
+    RIGHT_PAREN, R_NEG, R_POS, R_STAR, SET_MINUS, SIN, SQRT, STRUCT_VIEW_PREFIX, TAN, TUPLE,
+    TUPLE_DIM, UNION, Z, Z_NEG, Z_POS, Z_STAR,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -395,6 +398,63 @@ fn try_parse_keyword_primary(
                 args: args.into_iter().map(Box::new).collect(),
             })))
         }
+        CART_DIM => Ok(Some(parse_unary_keyword(rt, tb, CART_DIM, |set| {
+            Obj::CartDim(CartDim {
+                set: Box::new(set),
+            })
+        })?)),
+        TUPLE_DIM => Ok(Some(parse_unary_keyword(rt, tb, TUPLE_DIM, |arg| {
+            Obj::TupleDim(TupleDim {
+                arg: Box::new(arg),
+            })
+        })?)),
+        PROJ => Ok(Some(parse_binary_keyword(rt, tb, PROJ, |set, dim| {
+            Obj::Proj(Proj {
+                set: Box::new(set),
+                dim: Box::new(dim),
+            })
+        })?)),
+        // Half-open integer interval [start, end).
+        // Example: `range(1, 3)` is {1, 2}.
+        RANGE => Ok(Some(parse_binary_keyword(rt, tb, RANGE, |start, end| {
+            Obj::Range(Range {
+                start: Box::new(start),
+                end: Box::new(end),
+            })
+        })?)),
+        // Closed integer interval [start, end]. Same as `start...end`.
+        // Example: `closed_range(1, 2)` is {1, 2}.
+        CLOSED_RANGE => Ok(Some(parse_binary_keyword(
+            rt,
+            tb,
+            CLOSED_RANGE,
+            |start, end| {
+                Obj::ClosedRange(ClosedRange {
+                    start: Box::new(start),
+                    end: Box::new(end),
+                })
+            },
+        )?)),
+        POWER_SET => Ok(Some(parse_unary_keyword(rt, tb, POWER_SET, |set| {
+            Obj::PowerSet(PowerSet {
+                set: Box::new(set),
+            })
+        })?)),
+        FINITE_SET_SIZE => Ok(Some(parse_unary_keyword(rt, tb, FINITE_SET_SIZE, |set| {
+            Obj::FiniteSetSize(FiniteSetSize {
+                set: Box::new(set),
+            })
+        })?)),
+        FINITE_SET_MAX => Ok(Some(parse_unary_keyword(rt, tb, FINITE_SET_MAX, |set| {
+            Obj::FiniteSetMax(FiniteSetMax {
+                set: Box::new(set),
+            })
+        })?)),
+        FINITE_SET_MIN => Ok(Some(parse_unary_keyword(rt, tb, FINITE_SET_MIN, |set| {
+            Obj::FiniteSetMin(FiniteSetMin {
+                set: Box::new(set),
+            })
+        })?)),
         _ => Ok(None),
     }
 }

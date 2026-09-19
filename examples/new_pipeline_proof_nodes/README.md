@@ -25,6 +25,7 @@ OrderDual rewrite: `atomic/by_builtin_rewrite/order_dual*.lit`.
 KnownRewrite: `atomic/by_known_rewrite/reflexivity.lit`, `symmetry.lit`.
 WD negatives (must fail): `examples/new_pipeline_wd_negative/`
 (including `fn_app_not_in_function_set.lit`: `have f R` then `f(a)`).
+WD gallery (positives for done Obj/Fact WD): `examples/new_pipeline_wd/`.
 
 ## Layout
 
@@ -38,7 +39,7 @@ exist/        ByBuiltinRule (real-line), KnownExist, KnownForall
 forall/       introduce → assume → then
 forall_iff/   both directions
 not_forall/   via derived counterexample exist
-obj_wd/       FnSet / AnonymousFn / SetBuilder definition-side binder WD
+obj_wd/       FnSet / AnonymousFn / SetBuilder binder WD; cart_dim / proj / ObjAtIndex
 ```
 
 ## Run all

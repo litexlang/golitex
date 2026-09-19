@@ -1,0 +1,5 @@
+# WD negative: index beyond tuple_dim must fail.
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_wd_negative/obj_at_index_oob.lit
+# expect exit != 0
+
+let a = (1, 2)[3]

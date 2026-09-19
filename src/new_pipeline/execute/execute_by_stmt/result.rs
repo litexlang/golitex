@@ -18,9 +18,15 @@ use crate::new_pipeline::store_fact_and_infer::StoreFactAndInferResult;
 pub enum ExecByStmtResult {
     ReflexiveProp(ExecByReflexivePropStmtResult),
     SymmetricProp(ExecBySymmetricPropStmtResult),
+    TransitiveProp(ExecByTransitivePropStmtResult),
     Cases(ExecByCasesStmtResult),
     Contra(ExecByContraStmtResult),
     Def(ExecByDefStmtResult),
+    Extension(ExecByExtensionStmtResult),
+    EnumerateFiniteSet(ExecByEnumerateFiniteSetStmtResult),
+    For(ExecByForStmtResult),
+    EnumerateRange(ExecByEnumerateRangeStmtResult),
+    ClosedRangeAsCases(ExecByClosedRangeAsCasesStmtResult),
     Thm(ExecByThmStmtResult),
     Induc(ExecByInducStmtResult),
     StrongInduc(ExecByStrongInducStmtResult),
@@ -31,9 +37,15 @@ impl ExecByStmtResult {
         match self {
             Self::ReflexiveProp(r) => r.is_failed(),
             Self::SymmetricProp(r) => r.is_failed(),
+            Self::TransitiveProp(r) => r.is_failed(),
             Self::Cases(r) => r.is_failed(),
             Self::Contra(r) => r.is_failed(),
             Self::Def(r) => r.is_failed(),
+            Self::Extension(r) => r.is_failed(),
+            Self::EnumerateFiniteSet(r) => r.is_failed(),
+            Self::For(r) => r.is_failed(),
+            Self::EnumerateRange(r) => r.is_failed(),
+            Self::ClosedRangeAsCases(r) => r.is_failed(),
             Self::Thm(r) => r.is_failed(),
             Self::Induc(r) => r.is_failed(),
             Self::StrongInduc(r) => r.is_failed(),
@@ -53,6 +65,7 @@ pub enum ExecByReflexivePropStmtResult {
 pub struct ExecByReflexivePropStmtSuccess {
     pub prop: AtomicName,
     pub forall_proof: VerifyFactResult,
+    pub local_env: Box<ExecEnv>,
 }
 
 pub enum ExecByReflexivePropStmtFailed {
@@ -80,6 +93,7 @@ pub enum ExecBySymmetricPropStmtResult {
 pub struct ExecBySymmetricPropStmtSuccess {
     pub prop: AtomicName,
     pub forall_proof: VerifyFactResult,
+    pub local_env: Box<ExecEnv>,
 }
 
 pub enum ExecBySymmetricPropStmtFailed {
@@ -94,6 +108,72 @@ pub enum ExecBySymmetricPropStmtFailed {
 }
 
 impl ExecBySymmetricPropStmtResult {
+    pub fn is_failed(&self) -> bool {
+        matches!(self, Self::Failed(_))
+    }
+}
+
+// ---------------------------------------------------------------------------
+// transitive_prop
+// ---------------------------------------------------------------------------
+
+pub enum ExecByTransitivePropStmtResult {
+    Success(ExecByTransitivePropStmtSuccess),
+    Failed(ExecByTransitivePropStmtFailed),
+}
+
+// Stage order: forall_proof → local_env (registration is a parent-env side effect).
+pub struct ExecByTransitivePropStmtSuccess {
+    pub prop: AtomicName,
+    pub forall_proof: VerifyFactResult,
+    pub local_env: Box<ExecEnv>,
+}
+
+pub enum ExecByTransitivePropStmtFailed {
+    Shape(String),
+    PropNotDefined(String),
+    WrongArity {
+        prop: AtomicName,
+        expected: usize,
+        actual: usize,
+    },
+    Forall(VerifyFactResult),
+}
+
+impl ExecByTransitivePropStmtResult {
+    pub fn is_failed(&self) -> bool {
+        matches!(self, Self::Failed(_))
+    }
+}
+
+// ---------------------------------------------------------------------------
+// extension
+// ---------------------------------------------------------------------------
+
+pub enum ExecByExtensionStmtResult {
+    Success(ExecByExtensionStmtSuccess),
+    Failed(ExecByExtensionStmtFailed),
+}
+
+// Stage order: goal_wd → proof_steps → left_to_right → right_to_left → local_env → stored.
+pub struct ExecByExtensionStmtSuccess {
+    pub goal_wd: VerifyFactWellDefinedResult,
+    pub proof_steps: Vec<ByProofStepResult>,
+    pub left_to_right: VerifyFactResult,
+    pub right_to_left: VerifyFactResult,
+    pub local_env: Box<ExecEnv>,
+    pub stored: StoreFactAndInferResult,
+}
+
+pub enum ExecByExtensionStmtFailed {
+    GoalWd(VerifyFactWellDefinedResult),
+    ProofBody(ByProofBodyFailed),
+    LeftToRight(VerifyFactResult),
+    RightToLeft(VerifyFactResult),
+    Store(String),
+}
+
+impl ExecByExtensionStmtResult {
     pub fn is_failed(&self) -> bool {
         matches!(self, Self::Failed(_))
     }
@@ -416,6 +496,122 @@ pub enum ExecByStrongInducStmtFailed {
 }
 
 impl ExecByStrongInducStmtResult {
+    pub fn is_failed(&self) -> bool {
+        matches!(self, Self::Failed(_))
+    }
+}
+
+
+// ---------------------------------------------------------------------------
+// enumerate finite_set / for / enumerate range / closed_range as cases
+// ---------------------------------------------------------------------------
+
+pub enum ExecByEnumerateFiniteSetStmtResult {
+    Success(ExecByEnumerateFiniteSetStmtSuccess),
+    Failed(ExecByEnumerateFiniteSetStmtFailed),
+}
+
+pub struct ExecByEnumerateFiniteSetStmtSuccess {
+    pub goal_wd: VerifyFactWellDefinedResult,
+    pub assignments: Vec<EnumerateAssignmentSuccess>,
+    pub stored: StoreFactAndInferResult,
+}
+
+pub struct EnumerateAssignmentSuccess {
+    pub then_proofs: Vec<VerifyFactResult>,
+    pub local_env: Box<ExecEnv>,
+}
+
+pub enum ExecByEnumerateFiniteSetStmtFailed {
+    GoalWd(VerifyFactWellDefinedResult),
+    Domain(String),
+    Assignment {
+        index: usize,
+        then_index: usize,
+        result: VerifyFactResult,
+    },
+    Instantiate(String),
+    Store(String),
+}
+
+impl ExecByEnumerateFiniteSetStmtResult {
+    pub fn is_failed(&self) -> bool {
+        matches!(self, Self::Failed(_))
+    }
+}
+
+pub enum ExecByForStmtResult {
+    Success(ExecByForStmtSuccess),
+    Failed(ExecByForStmtFailed),
+}
+
+pub struct ExecByForStmtSuccess {
+    pub goal_wd: VerifyFactWellDefinedResult,
+    pub assignments: Vec<EnumerateAssignmentSuccess>,
+    pub stored: StoreFactAndInferResult,
+}
+
+pub enum ExecByForStmtFailed {
+    GoalWd(VerifyFactWellDefinedResult),
+    Domain(String),
+    Assignment {
+        index: usize,
+        then_index: usize,
+        result: VerifyFactResult,
+    },
+    Instantiate(String),
+    Store(String),
+}
+
+impl ExecByForStmtResult {
+    pub fn is_failed(&self) -> bool {
+        matches!(self, Self::Failed(_))
+    }
+}
+
+pub enum ExecByEnumerateRangeStmtResult {
+    Success(ExecByEnumerateRangeStmtSuccess),
+    Failed(ExecByEnumerateRangeStmtFailed),
+}
+
+pub struct ExecByEnumerateRangeStmtSuccess {
+    pub values: Vec<crate::new_pipeline::ast::obj::Obj>,
+    pub membership: VerifyFactResult,
+    pub local_env: Box<ExecEnv>,
+    pub stored: StoreFactAndInferResult,
+}
+
+pub enum ExecByEnumerateRangeStmtFailed {
+    Domain(String),
+    Membership(VerifyFactResult),
+    Store(String),
+}
+
+impl ExecByEnumerateRangeStmtResult {
+    pub fn is_failed(&self) -> bool {
+        matches!(self, Self::Failed(_))
+    }
+}
+
+pub enum ExecByClosedRangeAsCasesStmtResult {
+    Success(ExecByClosedRangeAsCasesStmtSuccess),
+    Failed(ExecByClosedRangeAsCasesStmtFailed),
+}
+
+pub struct ExecByClosedRangeAsCasesStmtSuccess {
+    pub values: Vec<crate::new_pipeline::ast::obj::Obj>,
+    pub membership: VerifyFactResult,
+    pub local_env: Box<ExecEnv>,
+    pub stored: StoreFactAndInferResult,
+}
+
+pub enum ExecByClosedRangeAsCasesStmtFailed {
+    Domain(String),
+    Membership(VerifyFactResult),
+    Store(String),
+}
+
+impl ExecByClosedRangeAsCasesStmtResult {
     pub fn is_failed(&self) -> bool {
         matches!(self, Self::Failed(_))
     }

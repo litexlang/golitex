@@ -2,8 +2,10 @@ use super::exec_stmt_result::{ExecDefinitionStmtResult, ExecStmtResult};
 use crate::new_pipeline::ast::stmt::{ByStmt, DefinitionStmt, Stmt};
 use crate::new_pipeline::execute::execute_by_stmt::{
     exec_by_cases_stmt, exec_by_contra_stmt, exec_by_def_stmt, exec_by_induc_stmt,
-    exec_by_reflexive_prop_stmt, exec_by_strong_induc_stmt, exec_by_symmetric_prop_stmt,
-    exec_by_thm_stmt, exec_release_thm_stmt,
+    exec_by_extension_stmt, exec_by_enumerate_finite_set_stmt, exec_by_for_stmt,
+    exec_by_enumerate_range_stmt, exec_by_closed_range_as_cases_stmt, exec_by_reflexive_prop_stmt, exec_by_strong_induc_stmt,
+    exec_by_symmetric_prop_stmt, exec_by_thm_stmt, exec_by_transitive_prop_stmt,
+    exec_release_thm_stmt,
 };
 use crate::new_pipeline::execute::execute_def_thm_stmt::exec_def_thm_stmt;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
@@ -91,6 +93,24 @@ impl Runtime {
             Stmt::By(ByStmt::BySymmetricPropStmt(stmt)) => {
                 Ok(ExecStmtResult::By(exec_by_symmetric_prop_stmt(self, stmt)?))
             }
+            Stmt::By(ByStmt::ByTransitivePropStmt(stmt)) => {
+                Ok(ExecStmtResult::By(exec_by_transitive_prop_stmt(self, stmt)?))
+            }
+            Stmt::By(ByStmt::ByExtensionStmt(stmt)) => {
+                Ok(ExecStmtResult::By(exec_by_extension_stmt(self, stmt)?))
+            }
+            Stmt::By(ByStmt::ByEnumerateFiniteSetStmt(stmt)) => {
+                Ok(ExecStmtResult::By(exec_by_enumerate_finite_set_stmt(self, stmt)?))
+            }
+            Stmt::By(ByStmt::ByForStmt(stmt)) => {
+                Ok(ExecStmtResult::By(exec_by_for_stmt(self, stmt)?))
+            }
+            Stmt::By(ByStmt::ByEnumerateRangeStmt(stmt)) => {
+                Ok(ExecStmtResult::By(exec_by_enumerate_range_stmt(self, stmt)?))
+            }
+            Stmt::By(ByStmt::ByClosedRangeAsCasesStmt(stmt)) => {
+                Ok(ExecStmtResult::By(exec_by_closed_range_as_cases_stmt(self, stmt)?))
+            }
             Stmt::By(ByStmt::ByContraStmt(stmt)) => {
                 Ok(ExecStmtResult::By(exec_by_contra_stmt(self, stmt)?))
             }
@@ -110,7 +130,7 @@ impl Runtime {
                 Ok(ExecStmtResult::By(exec_by_strong_induc_stmt(self, stmt)?))
             }
             _ => Err(RuntimeError::Unsupported(
-                "new_pipeline exec_stmt: Fact, let, have-obj-in-nonempty, have-obj-equal, prop, abstract_prop, thm, witness, trust, release thm, by reflexive_prop / symmetric_prop / contra / cases / def / thm / induc / strong_induc are wired for the tracer"
+                "new_pipeline exec_stmt: Fact, let, have-obj-in-nonempty, have-obj-equal, prop, abstract_prop, thm, witness, trust, release thm, by reflexive_prop / symmetric_prop / transitive_prop / extension / contra / cases / def / thm / induc / strong_induc are wired for the tracer"
                     .to_string(),
             )),
         }

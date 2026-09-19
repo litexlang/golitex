@@ -3,7 +3,7 @@ mod decimal_arithmetic;
 mod decimal_comparison;
 mod denominator_clearing;
 mod exact_division;
-mod exact_rational;
+pub mod exact_rational;
 mod helper;
 mod monomial;
 mod monomial_collection;

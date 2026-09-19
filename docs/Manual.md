@@ -3112,8 +3112,29 @@ This is an `error` because `N` is not a finite displayed domain available for
 exhaustive enumeration.
 
 The related forms are `by enumerate range` and `by enumerate closed_range`.
+Half-open domains use `range(start, end)` (elements `start..end`); closed
+domains use `closed_range(start, end)` or `start...end`.
 
-### Integer and finite-set induction
+```litex
+have x Z
+trust x $in range(1, 3)
+by enumerate range: x $in range(1, 3)
+
+have y Z
+trust y $in closed_range(1, 2)
+by enumerate closed_range: y $in closed_range(1, 2)
+
+have z Z
+trust z $in 1...2
+by closed_range as cases: z $in 1...2
+```
+
+> **Preview (`new_pipeline`):** `range(...)` / `closed_range(...)` are keyword
+> object constructors (same surface as display). `1...n` still parses as a
+> closed range. These `by` forms first require the membership fact, then store
+> the expanded equality cases.
+
+### Integer induction
 
 `by induc n from base` proves a discrete target from a base case and a
 successor step. `by strong_induc` supplies the corresponding bounded universal
@@ -3153,18 +3174,13 @@ by induc x from 0:
 This is an `error`; an arbitrary real is not a valid discrete induction
 measure.
 
-`by induc S` also supports structural induction on finite sets. The restricted
-form `by induc S in A` proves the result only for finite subsets of `A`.
-Its empty-set and insertion headers remain necessary, but either branch may be
-bodyless when the generated assumptions already close the target. Omit the
-colon on an empty branch:
+Finite-set structural induction (`by induc S` / `by induc S in A`) has been
+removed. Prefer `by enumerate finite_set` or `by for` when the domain is a
+concrete finite list set.
 
-```litex
-by induc P:
-    ? P = P
-    ? from P = {}
-    ? induc x, S
-```
+> **Preview (`new_pipeline`):** integer `by induc` / `by strong_induc` are
+> available. The induction parameter is bound in `Z`, and the stored conclusion
+> is `forall n Z: n >= base => P(n)`.
 
 ### Bounded iteration and extensionality
 
