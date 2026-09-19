@@ -5,10 +5,11 @@ use super::store_fact_and_infer_result::{
 };
 use crate::new_pipeline::ast::fact::{
     exist_fact_family_from_fact, exist_fact_family_id, exist_fact_family_to_fact, AndFact, AtomicFact, ChainFact, EqualFact, ExistFactFamily, Fact,
-    NormalAtomicFact, NotForallFact, OrFact,
+    InFact, NormalAtomicFact, NotForallFact, OrFact,
 };
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::names::{AtomicName, BoundName};
+use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::param::TypedParameterList;
 use crate::new_pipeline::exec_env::exec_env::{ExecEnv, PropRewriteProperty, SpecialObjProperty};
 use crate::new_pipeline::ast::fact::atomic_fact_has_positive_polarity;
@@ -183,6 +184,7 @@ impl Runtime {
                 env.facts.known_equality.store(equal_fact);
                 env.facts.record_atomic_fact(fact_id, atomic_fact.clone());
                 maybe_store_closed_numeric_equal(env, equal_fact);
+                maybe_store_in_function_set_from_equal(env, equal_fact);
                 Ok(vec![fact_id])
             }
             _ => {
@@ -196,6 +198,9 @@ impl Runtime {
                     atomic_fact.clone(),
                 );
                 env.facts.record_atomic_fact(fact_id, atomic_fact.clone());
+                if let AtomicFact::InFact(in_fact) = atomic_fact {
+                    maybe_store_in_function_set_from_in(env, in_fact);
+                }
                 Ok(vec![fact_id])
             }
         }
@@ -526,6 +531,64 @@ fn maybe_store_closed_numeric_equal(env: &mut ExecEnv, equal_fact: &EqualFact) {
         }
         _ => {}
     }
+}
+
+// `f $in fn(x R) R` → key `f` stores InFunctionSet(that FnSet, fact_id).
+// Example: after this store, WD of `f(a)` can look up the signature.
+fn maybe_store_in_function_set_from_in(env: &mut ExecEnv, in_fact: &InFact) {
+    let Obj::FnSet(fn_set) = &in_fact.set else {
+        return;
+    };
+    env.special_object_properties
+        .entry(in_fact.element.ir())
+        .or_default()
+        .push(SpecialObjProperty::InFunctionSet((
+            fn_set.clone(),
+            in_fact.fact_id,
+        )));
+}
+
+// `let f = fn(x R) R {x}` / `f = fn(...)` → key on the non-anon side stores
+// InFunctionSet(anon.body). Equality neighbors can reuse this via class lookup.
+//
+// `let f = fn(x R) fn(y R) R` (FnSet, no body) also registers the signature so
+// curried applications can look up InFunctionSet without `have fn`.
+fn maybe_store_in_function_set_from_equal(env: &mut ExecEnv, equal_fact: &EqualFact) {
+    let (name_side, fn_set, equal_to_function) = match (&equal_fact.left, &equal_fact.right) {
+        (Obj::AnonymousFn(anon), other) => (
+            other,
+            anon.body.clone(),
+            Some(Obj::AnonymousFn(anon.clone())),
+        ),
+        (other, Obj::AnonymousFn(anon)) => (
+            other,
+            anon.body.clone(),
+            Some(Obj::AnonymousFn(anon.clone())),
+        ),
+        (Obj::FnSet(fn_set), other) => (other, fn_set.clone(), None),
+        (other, Obj::FnSet(fn_set)) => (other, fn_set.clone(), None),
+        _ => return,
+    };
+    if matches!(
+        name_side,
+        Obj::AnonymousFn(_) | Obj::FnSet(_)
+    ) {
+        return;
+    }
+    let mut props = vec![SpecialObjProperty::InFunctionSet((
+        fn_set,
+        equal_fact.fact_id,
+    ))];
+    if let Some(fun) = equal_to_function {
+        props.push(SpecialObjProperty::EqualToFunction((
+            fun,
+            equal_fact.fact_id,
+        )));
+    }
+    env.special_object_properties
+        .entry(name_side.ir())
+        .or_default()
+        .extend(props);
 }
 
 fn flatten_def_prop_params(list: &TypedParameterList) -> Vec<BoundName> {

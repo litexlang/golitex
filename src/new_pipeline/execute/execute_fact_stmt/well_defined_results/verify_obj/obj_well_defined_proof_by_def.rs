@@ -2,9 +2,10 @@
 // Transition: non-leaf proofs share CommonStages fields; specialize later per family.
 
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
-use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::ast::obj::{FnSet, Obj};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::well_defined_results::VerifyObjWellDefinedResult;
+use crate::new_pipeline::runtime::FactId;
 
 pub enum ObjWellDefinedProofByDef {
     Identifier(IdentifierObjWellDefinedProof),
@@ -91,6 +92,8 @@ impl IdentifierObjWellDefinedProof {
 }
 
 pub struct FnObjObjWellDefinedProof {
+    // Selected signature when the head is an Identifier applied against InFunctionSet.
+    pub applied_fn_set: Option<(FnSet, FactId)>,
     pub child_obj_well_defined: Vec<(Obj, VerifyObjWellDefinedResult)>,
     pub requirement_fact_verified: Vec<VerifyFactResult>,
 }
@@ -98,6 +101,7 @@ pub struct FnObjObjWellDefinedProof {
 impl FnObjObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
         Self {
+            applied_fn_set: None,
             child_obj_well_defined: stages.child_obj_well_defined,
             requirement_fact_verified: stages.requirement_fact_verified,
         }

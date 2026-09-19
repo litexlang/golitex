@@ -1,15 +1,13 @@
-# new_pipeline: by contra / by cases (Fact-only proof body v1)
+# Fn application WD closed loop (no trust)
+# LITEX_NEW_PIPELINE=1 litex -f examples/tmp.lit
 
-by cases:
-    ? 1 = 1
-    case 1 = 1
+have a R = 1
+let f = fn(x R) R {x}
+f(a) = f(a)
 
-by cases:
-    ? 1 = 1
-    case 1 = 1
-    case 1 != 1:
-        impossible 1 = 1
+let g = fn(p R: p > 0) R {p}
+g(a) = g(a)
 
-by contra:
-    ? 1 = 1
-    impossible 1 != 1
+let h = fn(p R) fn(q R) R
+have u R = 2
+h(u)(a) = h(u)(a)

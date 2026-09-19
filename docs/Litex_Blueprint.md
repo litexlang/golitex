@@ -46,11 +46,7 @@ Writing boundary: the first three layers are Litex's scientific core; the fourth
 
 Behind that design sits a mathematical question: can a formal language be both easy to write and read, and strictly checkable—with source close to ordinary mathematical expression, and a verification process that lays out what each step does and which mathematical dependencies it rests on?
 
-AI is pushing humanity into an age of *reasoning abundance*: answers and proofs can be generated at scale, yet large-model outputs are not automatically trustworthy or explainable, nor do they necessarily deepen human understanding. Take mathematics: as [Terence Tao said in his 2026 ICM public lecture](https://www.youtube.com/watch?v=M0--ZH1lOzg), the future of mathematics needs to shift from focusing on proof generation toward verification, exposition, and digestion of proofs. More generally: how can AI-generated reasoning become shared knowledge that is checkable, understandable, and reusable?
-
-This question concerns not only mathematics, but knowledge production in every industry ahead. If it can be answered, humans can more reliably understand and use AI reasoning, form genuinely effective human–machine collaboration, and create conditions for new scientific theories.
-
-Natural language is easy to understand but hard to verify rigorously; formal code can be verified but is often hard to understand. Litex aims to be a bridge between the two: even if you are not a formalization expert and do not use Lean day to day, you can still bring rigorous checking into your own work—seeing what the system is checking, where it stops, and what to repair next.
+Natural language is easy to understand but hard to verify rigorously; formal code can be verified but is often hard to understand. Litex aims to be a bridge between the two: even if you are not a formalization expert and do not use Lean day to day, you can still bring rigorous checking into your own work—seeing what the system is checking, where it stops, and what to repair next. It also hopes to be a tool that helps you understand the mysteries behind mathematics.
 
 <a id="overview-readers"></a>
 
@@ -205,6 +201,8 @@ Ideally, Litex users attend to objects, conditions, facts, and conclusions, whil
 #### For mathematicians
 
 If you work in mathematics, what you may care about first is not yet another tool, but how mathematical understanding—and the traditional values mathematics represents—can be preserved in the AI era.
+
+AI is bringing *reasoning abundance*: answers and proofs can be generated at scale, yet they are not automatically trustworthy or explainable, nor do they necessarily deepen understanding. As [Terence Tao said in his 2026 ICM public lecture](https://www.youtube.com/watch?v=M0--ZH1lOzg), the future of mathematics needs to shift toward verification, exposition, and digestion of proofs. More generally: how can AI-generated reasoning become shared knowledge that is checkable, understandable, and reusable—not only in mathematics, but across knowledge work?
 
 Today’s mathematical world is not calm: hot topics rotate quickly, and AI sometimes makes mathematical problems chaseable like “mining.” In September 2026, Terence Tao and 25 Fields medalists warned that AI companies treating “fast problem-solving” as a measure of mathematical progress may sacrifice genuine understanding, originality, scholarly transmission, and norms of attribution, severely misaligning AI development goals with the mathematical community. [Original post](https://terrytao.wordpress.com/2026/09/11/a-severe-misalignment-of-ai-in-mathematics/)
 

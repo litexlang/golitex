@@ -1,8 +1,10 @@
+use crate::new_pipeline::ast::fact::{AndChainAtomicFact, AtomicFact, Fact};
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::exec_env::exec_env::ExecEnv;
 use crate::new_pipeline::execute::execute_fact_stmt::{
     ExecFactStmtResult, VerifyFactResult, VerifyFactWellDefinedResult,
 };
+use crate::new_pipeline::runtime::FactId;
 use crate::new_pipeline::store_fact_and_infer::StoreFactAndInferResult;
 
 // Dispatcher mirrors wired ByStmt branches.
@@ -105,8 +107,12 @@ pub enum ByProofBodyFailed {
 }
 
 pub struct ByContradictionClosingSuccess {
+    pub impossible_fact: AtomicFact,
     pub impossible: VerifyFactResult,
     pub negated_impossible: VerifyFactResult,
+    // Present when that atom was already known in the local env (cite handle).
+    pub impossible_fact_id: Option<FactId>,
+    pub negated_impossible_fact_id: Option<FactId>,
 }
 
 pub enum ByContradictionClosingFailed {
@@ -125,8 +131,13 @@ pub enum ExecByContraStmtResult {
 }
 
 // Stage order: goal_wd → negation_assumed → proof_steps → closing → local_env → stored.
+// Lean-replay cites: goal / reverse_assumption(+fact_id) / assumption_components / closing.
 pub struct ExecByContraStmtSuccess {
     pub goal_wd: VerifyFactWellDefinedResult,
+    pub goal: Fact,
+    pub reverse_assumption: Fact,
+    pub reverse_assumption_fact_id: FactId,
+    pub assumption_components: Vec<(FactId, AtomicFact)>,
     pub negation_assumed: StoreFactAndInferResult,
     pub proof_steps: Vec<ByProofStepResult>,
     pub closing: ByContradictionClosingSuccess,
@@ -166,7 +177,11 @@ pub struct ExecByCasesStmtSuccess {
     pub stored: Vec<StoreFactAndInferResult>,
 }
 
+// Lean-replay cites: assumption(+fact_id) / assumption_components / closing.
 pub struct ByCasesBranchSuccess {
+    pub assumption: AndChainAtomicFact,
+    pub assumption_fact_id: FactId,
+    pub assumption_components: Vec<(FactId, AtomicFact)>,
     pub assumptions_stored: StoreFactAndInferResult,
     pub proof_steps: Vec<ByProofStepResult>,
     pub closing: ByCasesBranchClosingSuccess,
@@ -174,7 +189,11 @@ pub struct ByCasesBranchSuccess {
 }
 
 pub enum ByCasesBranchClosingSuccess {
-    ThenFacts(Vec<VerifyFactResult>),
+    ThenFacts {
+        checks: Vec<VerifyFactResult>,
+        // Aligned with `then_facts`; Some when the branch stored that conclusion locally.
+        conclusion_fact_ids: Vec<Option<FactId>>,
+    },
     Impossible(ByContradictionClosingSuccess),
 }
 

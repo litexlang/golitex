@@ -87,12 +87,15 @@ fn exec_one_case_branch(
     stmt: &ByCasesStmt,
     index: usize,
 ) -> RuntimeResult<Result<ByCasesBranchSuccess, ByCasesBranchFailed>> {
-    let case_fact = and_chain_fact(&stmt.cases[index]);
+    let assumption = stmt.cases[index].clone();
+    let case_fact = and_chain_fact(&assumption);
     let (outcome, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
         let assumptions_stored = match assume_fact(rt, &case_fact)? {
             Ok(s) => s,
             Err(msg) => return Ok(Err(ByCasesBranchFailed::AssumeCase(msg))),
         };
+        let assumption_fact_id = assumptions_stored.primary_fact_id();
+        let assumption_components = assumptions_stored.atomic_components();
         let proof_steps = match run_fact_only_proof_steps(rt, &stmt.proofs[index])? {
             Ok(steps) => steps,
             Err(failed) => return Ok(Err(ByCasesBranchFailed::ProofBody(failed))),
@@ -105,7 +108,8 @@ fn exec_one_case_branch(
                 }
             }
         } else {
-            let mut then_proofs = Vec::with_capacity(stmt.then_facts.len());
+            let mut checks = Vec::with_capacity(stmt.then_facts.len());
+            let mut conclusion_fact_ids = Vec::with_capacity(stmt.then_facts.len());
             for (then_index, then_fact) in stmt.then_facts.iter().enumerate() {
                 let proof = verify_goal_fact(rt, then_fact)?;
                 if proof.is_failed() {
@@ -114,16 +118,35 @@ fn exec_one_case_branch(
                         result: proof,
                     }));
                 }
-                let _ = rt.store_fact_and_infer(then_fact)?;
-                then_proofs.push(proof);
+                let stored = rt.store_fact_and_infer(then_fact)?;
+                conclusion_fact_ids.push(Some(stored.primary_fact_id()));
+                checks.push(proof);
             }
-            ByCasesBranchClosingSuccess::ThenFacts(then_proofs)
+            ByCasesBranchClosingSuccess::ThenFacts {
+                checks,
+                conclusion_fact_ids,
+            }
         };
-        Ok(Ok((assumptions_stored, proof_steps, closing)))
+        Ok(Ok((
+            assumption_fact_id,
+            assumption_components,
+            assumptions_stored,
+            proof_steps,
+            closing,
+        )))
     })?;
 
     match outcome {
-        Ok((assumptions_stored, proof_steps, closing)) => Ok(Ok(ByCasesBranchSuccess {
+        Ok((
+            assumption_fact_id,
+            assumption_components,
+            assumptions_stored,
+            proof_steps,
+            closing,
+        )) => Ok(Ok(ByCasesBranchSuccess {
+            assumption,
+            assumption_fact_id,
+            assumption_components,
             assumptions_stored,
             proof_steps,
             closing,

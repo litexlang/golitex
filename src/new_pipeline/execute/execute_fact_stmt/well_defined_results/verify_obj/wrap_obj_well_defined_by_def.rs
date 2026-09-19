@@ -115,7 +115,7 @@ pub(super) fn wrap_common_fail(
             }),
         ),
         Obj::FnObj(_) => FailToVerifyObjWellDefinedResult::FnObj(
-            FailToVerifyFnObjObjWellDefined(common),
+            FailToVerifyFnObjObjWellDefined::Domain(common),
         ),
         Obj::Number(_) => FailToVerifyObjWellDefinedResult::Number(
             FailToVerifyNumberObjWellDefined::Others(match common {

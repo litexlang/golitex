@@ -106,7 +106,11 @@ pub fn fail_to_verify_obj_well_defined_others(message: String) -> FailToVerifyOb
     ))
 }
 
-pub struct FailToVerifyFnObjObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub enum FailToVerifyFnObjObjWellDefined {
+    // No InFunctionSet (or equality-neighbor) candidate for the applied head.
+    NotInFunctionSet,
+    Domain(FailToVerifyObjWellDefinedByDefCommon),
+}
 
 pub enum FailToVerifyNumberObjWellDefined {
     Others(String),

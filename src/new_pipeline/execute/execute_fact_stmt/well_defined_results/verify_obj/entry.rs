@@ -6,7 +6,7 @@ use super::fail_to_verify_obj_well_defined::FailToVerifyObjWellDefinedResult;
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::obj_well_defined_proof_by_def::ObjWellDefinedProofByDef;
 use super::wrap_obj_well_defined_by_def::finish_by_def;
-use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::ast::obj::{FnObjHead, Obj};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::runtime_ids::WellDefinednessId;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
@@ -41,6 +41,13 @@ impl Runtime {
             return Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByKnown {
                 wd_id,
             }));
+        }
+
+        // Identifier-headed FnObj application: InFunctionSet + domain (not children-only).
+        if let Obj::FnObj(value) = obj {
+            if matches!(value.head.as_ref(), FnObjHead::Identifier(_)) {
+                return self.verify_identifier_headed_fn_obj_well_definedness(value, verify_state);
+            }
         }
 
         let stages = self.verify_obj_well_definedness_by_def(obj, verify_state.clone())?;

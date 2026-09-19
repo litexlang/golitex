@@ -34,6 +34,8 @@ pub fn exec_by_contra_stmt(
             Ok(stored) => stored,
             Err(msg) => return Ok(Err(ExecByContraStmtFailed::NegationAssume(msg))),
         };
+        let reverse_assumption_fact_id = negation_assumed.primary_fact_id();
+        let assumption_components = negation_assumed.atomic_components();
         let proof_steps = match run_fact_only_proof_steps(rt, &stmt.proof)? {
             Ok(steps) => steps,
             Err(failed) => return Ok(Err(ExecByContraStmtFailed::ProofBody(failed))),
@@ -42,17 +44,24 @@ pub fn exec_by_contra_stmt(
             Ok(c) => c,
             Err(failed) => return Ok(Err(ExecByContraStmtFailed::Closing(failed))),
         };
-        Ok(Ok((negation_assumed, proof_steps, closing)))
+        Ok(Ok((
+            negation_assumed,
+            reverse_assumption_fact_id,
+            assumption_components,
+            proof_steps,
+            closing,
+        )))
     })?;
 
-    let (negation_assumed, proof_steps, closing) = match local_outcome {
-        Ok(v) => v,
-        Err(failed) => {
-            return Ok(ExecByStmtResult::Contra(ExecByContraStmtResult::Failed(
-                failed,
-            )));
-        }
-    };
+    let (negation_assumed, reverse_assumption_fact_id, assumption_components, proof_steps, closing) =
+        match local_outcome {
+            Ok(v) => v,
+            Err(failed) => {
+                return Ok(ExecByStmtResult::Contra(ExecByContraStmtResult::Failed(
+                    failed,
+                )));
+            }
+        };
 
     let stored = match store_goal_fact(runtime, &stmt.to_prove)? {
         Ok(s) => s,
@@ -66,6 +75,10 @@ pub fn exec_by_contra_stmt(
     Ok(ExecByStmtResult::Contra(ExecByContraStmtResult::Success(
         ExecByContraStmtSuccess {
             goal_wd,
+            goal: stmt.to_prove.clone(),
+            reverse_assumption: negation,
+            reverse_assumption_fact_id,
+            assumption_components,
             negation_assumed,
             proof_steps,
             closing,

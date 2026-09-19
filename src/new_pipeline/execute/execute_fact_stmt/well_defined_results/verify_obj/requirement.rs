@@ -3,7 +3,7 @@
 //! Mirrors old target_requirements: after child WD, prove domain facts true.
 //! Search miss returns Ok(branch Failed), same as fact proof search — not Err.
 
-use crate::new_pipeline::ast::fact::{AtomicFact, InFact};
+use crate::new_pipeline::ast::fact::{AtomicFact, InFact, QuantifierFreeFact};
 use crate::new_pipeline::ast::obj::{Obj, StandardSet};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::{
     atomic_except_equality_fact_result_from_search_fail,
@@ -14,6 +14,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyF
 use crate::new_pipeline::execute::execute_fact_stmt::{
     VerifyAtomicFactWellDefinedResult, VerifyState,
 };
+use crate::new_pipeline::instantiate::quantifier_free_fact_to_fact;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
@@ -72,5 +73,14 @@ impl Runtime {
             verify_state,
             "obj is not in C".to_string(),
         )
+    }
+
+    // Prove a FnSet domain fact (already instantiated at the call site).
+    pub(super) fn verify_required_quantifier_free_fact(
+        &mut self,
+        fact: QuantifierFreeFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<VerifyFactResult> {
+        self.verify_fact(&quantifier_free_fact_to_fact(fact), verify_state)
     }
 }

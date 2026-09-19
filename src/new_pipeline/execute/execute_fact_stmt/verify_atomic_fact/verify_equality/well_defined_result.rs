@@ -2,21 +2,18 @@ use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::well_de
     AtomicFactWellDefinedProof, FailToVerifyAtomicFactWellDefinedResult,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::well_defined_results::{
-    FailToVerifyObjWellDefinedResult, VerifyObjWellDefinedResult,
+    FailToVerifyObjWellDefinedResult, ObjWellDefinedProof,
 };
 
-// Soft miss while checking left/right of an EqualFact.
-// Index 0 = left, 1 = right.
+// Soft miss: which Obj WD failed (left or right), as Obj fail reason only.
 pub struct FailToVerifyEqualFactWellDefinedResult {
-    pub failed_arg_index: usize,
-    pub succeeded_args: Vec<VerifyObjWellDefinedResult>,
     pub reason: FailToVerifyObjWellDefinedResult,
 }
 
 // Success-only evidence that both sides of an equality are well-defined.
 pub struct EqualFactWellDefinedProof {
-    pub left: VerifyObjWellDefinedResult,
-    pub right: VerifyObjWellDefinedResult,
+    pub left: ObjWellDefinedProof,
+    pub right: ObjWellDefinedProof,
 }
 
 pub enum VerifyEqualFactWellDefinedResult {
@@ -42,8 +39,6 @@ impl From<EqualFactWellDefinedProof> for AtomicFactWellDefinedProof {
 impl From<FailToVerifyEqualFactWellDefinedResult> for FailToVerifyAtomicFactWellDefinedResult {
     fn from(fail: FailToVerifyEqualFactWellDefinedResult) -> Self {
         FailToVerifyAtomicFactWellDefinedResult {
-            failed_arg_index: fail.failed_arg_index,
-            succeeded_args: fail.succeeded_args,
             reason: fail.reason,
         }
     }
