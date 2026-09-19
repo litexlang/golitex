@@ -1,10 +1,13 @@
 // ObjWellDefinedProofByDef mirrors Obj: one dedicated success proof per variant.
 // Transition: non-leaf proofs share CommonStages fields; specialize later per family.
 
+use super::entry::ObjWellDefinedProof;
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use crate::new_pipeline::ast::obj::{FnSet, Obj};
+use crate::new_pipeline::exec_env::exec_env::ExecEnv;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::well_defined_results::VerifyObjWellDefinedResult;
+use crate::new_pipeline::execute::execute_fact_stmt::well_defined_results::well_defined_result::FactWellDefinedProof;
 use crate::new_pipeline::runtime::FactId;
 
 pub enum ObjWellDefinedProofByDef {
@@ -665,45 +668,25 @@ impl ListSetObjWellDefinedProof {
 }
 
 pub struct SetBuilderObjWellDefinedProof {
-    pub child_obj_well_defined: Vec<(Obj, VerifyObjWellDefinedResult)>,
-    pub requirement_fact_verified: Vec<VerifyFactResult>,
-}
-
-impl SetBuilderObjWellDefinedProof {
-    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        Self {
-            child_obj_well_defined: stages.child_obj_well_defined,
-            requirement_fact_verified: stages.requirement_fact_verified,
-        }
-    }
+    pub param_set_well_defined: Box<ObjWellDefinedProof>,
+    pub fact_well_defined: Vec<FactWellDefinedProof>,
+    pub local_env: Box<ExecEnv>,
 }
 
 pub struct FnSetObjWellDefinedProof {
-    pub child_obj_well_defined: Vec<(Obj, VerifyObjWellDefinedResult)>,
-    pub requirement_fact_verified: Vec<VerifyFactResult>,
-}
-
-impl FnSetObjWellDefinedProof {
-    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        Self {
-            child_obj_well_defined: stages.child_obj_well_defined,
-            requirement_fact_verified: stages.requirement_fact_verified,
-        }
-    }
+    pub param_type_well_defined: Vec<(Obj, Box<ObjWellDefinedProof>)>,
+    pub dom_fact_well_defined: Vec<FactWellDefinedProof>,
+    pub ret_set_well_defined: Box<ObjWellDefinedProof>,
+    pub local_env: Box<ExecEnv>,
 }
 
 pub struct AnonymousFnObjWellDefinedProof {
-    pub child_obj_well_defined: Vec<(Obj, VerifyObjWellDefinedResult)>,
-    pub requirement_fact_verified: Vec<VerifyFactResult>,
-}
-
-impl AnonymousFnObjWellDefinedProof {
-    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        Self {
-            child_obj_well_defined: stages.child_obj_well_defined,
-            requirement_fact_verified: stages.requirement_fact_verified,
-        }
-    }
+    pub param_type_well_defined: Vec<(Obj, Box<ObjWellDefinedProof>)>,
+    pub dom_fact_well_defined: Vec<FactWellDefinedProof>,
+    pub ret_set_well_defined: Box<ObjWellDefinedProof>,
+    pub body_well_defined: Box<ObjWellDefinedProof>,
+    pub body_in_ret_set: Option<VerifyFactResult>,
+    pub local_env: Box<ExecEnv>,
 }
 
 pub struct CartObjWellDefinedProof {

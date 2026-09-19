@@ -1,0 +1,5 @@
+# WD negative: SetBuilder fact itself is not well-defined.
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_wd_negative/set_builder_fact_ill_defined.lit
+# expect exit != 0
+
+let A = {x R: 1 / 0 = x}

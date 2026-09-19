@@ -3,6 +3,7 @@
 //! Entry matches every Obj variant; families live in sibling modules.
 //! ByDef success proofs mirror Obj. Scalar (P0) fills requirement facts.
 
+mod binder;
 mod core;
 mod entry;
 mod fail_to_verify_obj_well_defined;

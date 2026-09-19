@@ -1,0 +1,4 @@
+# Obj WD: SetBuilder definition (binder + facts)
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/obj_wd/set_builder.lit
+
+let A = {x R: x > 0}

@@ -2,7 +2,7 @@
 
 Created and maintained by Jiachen Shen.
 
-Last updated: September 18, 2026.
+Last updated: September 19, 2026.
 
 Website: https://litexlang.com/doc/Litex_Blueprint
 
@@ -32,10 +32,11 @@ Writing boundary: the first three layers are Litex's scientific core; the fourth
 - [3. Bottom-Up: Let Verified Facts Drive Later Proofs](#bottom-up)
 - [4. What Each Statement Leaves Behind: Checkable Knowledge Records](#execution-model)
 - [5. Building the Human–AI–Litex Loop Workflow](#interaction-loop)
-- [6. How Litex Code Compiles to Lean and Interoperates with Mathlib](#compatibility)
+- [6. How Litex Code Compiles to Lean and Interoperates with Mathlib (Experimental)](#compatibility)
   - [Personal reflection: does Litex fill a paradigm gap in AI reasoning?](#summary-bottom-up-and-top-down)
-- [7. From Language to Ecosystem: The Role Litex Aims to Play](#ecosystem-role)
-- [8. The Art of Seeking What Is Different](#conclusions)
+- [7. Compiling Proofs to Executable Code (Python / C) (Experimental)](#executable-code)
+- [8. From Language to Ecosystem: The Role Litex Aims to Play](#ecosystem-role)
+- [9. The Art of Seeking What Is Different](#conclusions)
   - [Special Thanks](#special-thanks)
 
 <a id="overview"></a>
@@ -234,6 +235,8 @@ Litex source:         declarative what; verifier finds how
 Roughly, Litex stands to Lean as C stands to assembly: Lean tactic proofs often name facts and call them explicitly; that is a burden on working memory—people usually remember proof *patterns* (shapes), not fact names. Assembly writes many memory addresses; C maintains a table from variable names to addresses. Litex is similar: it maintains a fact table and a rule table; you write directly what should be proved, and the kernel matches and replaces by the predicate name of each atomic fact as key (see Section 2)—without first memorizing scattered fact names. Lean cannot easily grow the same default mechanism, precisely because its language allows highly first-class quantification over propositions; Section 2 explains that boundary.
 
 One can also look one layer deeper at the object interface: Litex’s user-visible layer is closer to set theory—the same object may belong to several sets; Lean’s default user layer emphasizes that each term lives under a definite type. Litex hopes to build a similar abstraction layer between mathematical reasoning and formal verification, so that users are not entangled in low-level implementation details and can keep attention on thinking itself.
+
+There is a second experimental compilation route that programmers often care about: once a computational fragment is checked in Litex, Litex can try to emit runnable Python or C from it (Section 7)—again experimental, and narrow, not a full language backend.
 
 #### For readers in other knowledge domains
 
@@ -1593,7 +1596,7 @@ After review, this convergence interface and scalar-multiplication theorem can b
 
 <a id="compatibility"></a>
 
-## 6. How Litex Code Compiles to Lean and Interoperates with Mathlib
+## 6. How Litex Code Compiles to Lean and Interoperates with Mathlib (Experimental)
 
 Litex can work independently; it has syntax, a runtime, and a verification kernel. If you trust that the Litex kernel has no bugs, it can check well-definedness and facts and give feedback without compiling to Lean.
 
@@ -1802,27 +1805,16 @@ Therefore both modes of thinking are valuable: bottom-up suits accumulating reus
 
 </details>
 
-<a id="ecosystem-role"></a>
+<a id="executable-code"></a>
 
-## 7. From Language to Ecosystem: The Role Litex Aims to Play
+## 7. Compiling Proofs to Executable Code (Python / C) (Experimental)
 
-Taken together, the designs make Litex hope to become infrastructure on which humans and AI jointly produce and use checkable reasoning.
+Litex is also experimenting with a second compilation route: turn (parts of) a verified proof into runnable code—today mainly supported numeric definitions and `algo` fragments into Python or C. The point is not “export a whole theorem library,” but: once a computational step is checked in Litex, the same writing can become executable code you can run.
 
-**Litex faces humans and AI: it is both a readable reasoning front end and a trustworthy-reasoning data production layer, and it tries to connect to the existing ecosystem through Lean/Mathlib.** It also hopes to serve AI, engineers, and practitioners in other domains.
-
-The mathematicians' workflow of the future will involve AI and humans working together to produce a proof and then generating formal code so that its correctness can be checked. That formal code may be Lean or Litex. Litex hopes to become a more readable front end to Lean, lowering the barrier to reading and writing formal code.
-
-Earlier sections showed that this role is not a simple sum of several features. Set-theoretic objects, fact-oriented source, a bottom-up growing verified context, minimal syntax, expression close to natural mathematics, and structured verification results enter the same protocol together, so that both mathematics itself and the construction evidence of mathematics can be preserved.
-
-| Ecosystem role | Practical outcomes Litex hopes to produce |
-| --- | --- |
-| Front end for readable reasoning | Mathematical objects, conditions, intermediate facts, and conclusions that humans can audit directly |
-| Production layer for trustworthy reasoning data | Machine-checked facts and verification sources, clear stopping boundaries, and explicitly marked trust boundaries |
-| Access layer to the existing ecosystem | Designed from the start for Lean compilation and rechecking; Lean proof objects for some mathematical scenarios already covered, with broader coverage expected by the end of 2026; plus newly written Lean/Mathlib adapters, cleanly separated and authored by AI or humans |
-| Scientific-computing proofs → executable code (experimental) | Turn proofs used for scientific computing into runnable Python / C (see the fold below) |
+This route is deliberately narrow and experimental. It is not a whole-Litex-to-Python/C compiler; coverage is limited to extractable definitions. For the CLI surface, see `-extractpython` / `-extractc` in the CLI docs.
 
 <details>
-<summary><strong>Sketch: scientific-computing proofs → executable code (experimental)</strong></summary>
+<summary><strong>Sketch: Newton step for √2 → Python / C</strong></summary>
 
 The same Litex proof used for scientific computing can become executable code. For example, one Newton step toward √2:
 
@@ -1872,6 +1864,25 @@ double newton_sqrt_two_step(double x) {
 
 </details>
 
+<a id="ecosystem-role"></a>
+
+## 8. From Language to Ecosystem: The Role Litex Aims to Play
+
+Taken together, the designs make Litex hope to become infrastructure on which humans and AI jointly produce and use checkable reasoning.
+
+**Litex faces humans and AI: it is both a readable reasoning front end and a trustworthy-reasoning data production layer, and it tries to connect to the existing ecosystem through Lean/Mathlib.** It also hopes to serve AI, engineers, and practitioners in other domains.
+
+The mathematicians' workflow of the future will involve AI and humans working together to produce a proof and then generating formal code so that its correctness can be checked. That formal code may be Lean or Litex. Litex hopes to become a more readable front end to Lean, lowering the barrier to reading and writing formal code.
+
+Earlier sections showed that this role is not a simple sum of several features. Set-theoretic objects, fact-oriented source, a bottom-up growing verified context, minimal syntax, expression close to natural mathematics, and structured verification results enter the same protocol together, so that both mathematics itself and the construction evidence of mathematics can be preserved.
+
+| Ecosystem role | Practical outcomes Litex hopes to produce |
+| --- | --- |
+| Front end for readable reasoning | Mathematical objects, conditions, intermediate facts, and conclusions that humans can audit directly |
+| Production layer for trustworthy reasoning data | Machine-checked facts and verification sources, clear stopping boundaries, and explicitly marked trust boundaries |
+| Access layer to the existing ecosystem | Designed from the start for Lean compilation and rechecking (Section 6, experimental); Lean proof objects for some mathematical scenarios already covered, with broader coverage expected by the end of 2026; plus newly written Lean/Mathlib adapters, cleanly separated and authored by AI or humans |
+| Proofs → executable code (experimental) | Turn checked computational fragments into runnable Python / C (Section 7) |
+
 Of course, Litex at this stage is more like a `proof of an idea`. Even though it already has hundreds of thousands of lines of code, exploration of its place in industry upstream and downstream remains scarce. That is what Litex's next stage will focus on: how to turn zero-to-one original innovation into one-to-ten early value realization. Friends interested in Litex can contact litexlang@outlook.com .
 
 <details>
@@ -1889,7 +1900,7 @@ What Litex seeks is precisely the next scene that the AI era is incubating and t
 
 <a id="conclusions"></a>
 
-## 8. The Art of Seeking What Is Different
+## 9. The Art of Seeking What Is Different
 
 <!-- This passage is a bit more idealistic. In the AI era, everyone focuses too much on pragmatism and easily overlooks the long-term influence of a native, innovative, distinctive new solution. Whether in mathematics or in any science, people encourage different angles and different solutions to the same problem. Such different viewpoints are often the true sources of breakthroughs in the history of science, and may ultimately bring greater gains in effectiveness. -->
 

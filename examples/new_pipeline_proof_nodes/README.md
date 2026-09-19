@@ -38,6 +38,7 @@ exist/        ByBuiltinRule (real-line), KnownExist, KnownForall
 forall/       introduce → assume → then
 forall_iff/   both directions
 not_forall/   via derived counterexample exist
+obj_wd/       FnSet / AnonymousFn / SetBuilder definition-side binder WD
 ```
 
 ## Run all

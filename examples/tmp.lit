@@ -1,21 +1,9 @@
-# new_pipeline: thm / release thm / by thm / by def
+# Binder-object WD closed loop (definition side, with local_env)
 # LITEX_NEW_PIPELINE=1 litex -f examples/tmp.lit
 
-thm one_is_one:
-    ? 1 = 1
+let S = fn(x R: x > 0) R
+let f = fn(x R: x > 0) R {x}
+let A = {x R: x > 0}
 
-release thm one_is_one
-by thm one_is_one => 1 = 1
-
-thm add_zero_right:
-    ? forall x R:
-        x + 0 = x
-    x + 0 = x
-
-release thm add_zero_right(2)
-by thm add_zero_right(2) => 2 + 0 = 2
-
-prop same_obj(x R, y R):
-    x = y
-
-by def $same_obj(1, 1)
+have a R = 1
+f(a) = f(a)

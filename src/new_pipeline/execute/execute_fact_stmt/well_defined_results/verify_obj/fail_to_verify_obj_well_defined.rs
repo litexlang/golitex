@@ -1,8 +1,12 @@
 // FailToVerifyObjWellDefinedResult mirrors Obj.
 // Non-leaf failures wrap the shared Child/Requirement/Others reason.
 
+use super::entry::ObjWellDefinedProof;
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
+use crate::new_pipeline::execute::execute_fact_stmt::well_defined_results::well_defined_result::{
+    FactWellDefinedProof, FailToVerifyFactWellDefinedResult,
+};
 
 pub enum FailToVerifyObjWellDefinedResult {
     Identifier(FailToVerifyIdentifierObjWellDefined),
@@ -204,11 +208,69 @@ pub struct FailToVerifyGeneralCartObjWellDefined(pub FailToVerifyObjWellDefinedB
 
 pub struct FailToVerifyListSetObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
-pub struct FailToVerifySetBuilderObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub enum FailToVerifySetBuilderObjWellDefined {
+    ParamSet(Box<FailToVerifyObjWellDefinedResult>),
+    Fact {
+        failed_index: usize,
+        param_set_well_defined: Box<ObjWellDefinedProof>,
+        succeeded: Vec<FactWellDefinedProof>,
+        failed: Box<FailToVerifyFactWellDefinedResult>,
+    },
+    Others(String),
+}
 
-pub struct FailToVerifyFnSetObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub enum FailToVerifyFnSetObjWellDefined {
+    ParamType {
+        failed_index: usize,
+        succeeded: Vec<(Obj, Box<ObjWellDefinedProof>)>,
+        failed: Box<FailToVerifyObjWellDefinedResult>,
+    },
+    DomFact {
+        failed_index: usize,
+        param_type_well_defined: Vec<(Obj, Box<ObjWellDefinedProof>)>,
+        succeeded_dom: Vec<FactWellDefinedProof>,
+        failed_dom: Box<FailToVerifyFactWellDefinedResult>,
+    },
+    RetSet {
+        param_type_well_defined: Vec<(Obj, Box<ObjWellDefinedProof>)>,
+        dom_fact_well_defined: Vec<FactWellDefinedProof>,
+        failed: Box<FailToVerifyObjWellDefinedResult>,
+    },
+    Others(String),
+}
 
-pub struct FailToVerifyAnonymousFnObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub enum FailToVerifyAnonymousFnObjWellDefined {
+    ParamType {
+        failed_index: usize,
+        succeeded: Vec<(Obj, Box<ObjWellDefinedProof>)>,
+        failed: Box<FailToVerifyObjWellDefinedResult>,
+    },
+    DomFact {
+        failed_index: usize,
+        param_type_well_defined: Vec<(Obj, Box<ObjWellDefinedProof>)>,
+        succeeded_dom: Vec<FactWellDefinedProof>,
+        failed_dom: Box<FailToVerifyFactWellDefinedResult>,
+    },
+    RetSet {
+        param_type_well_defined: Vec<(Obj, Box<ObjWellDefinedProof>)>,
+        dom_fact_well_defined: Vec<FactWellDefinedProof>,
+        failed: Box<FailToVerifyObjWellDefinedResult>,
+    },
+    Body {
+        param_type_well_defined: Vec<(Obj, Box<ObjWellDefinedProof>)>,
+        dom_fact_well_defined: Vec<FactWellDefinedProof>,
+        ret_set_well_defined: Box<ObjWellDefinedProof>,
+        failed: Box<FailToVerifyObjWellDefinedResult>,
+    },
+    BodyInRetSet {
+        param_type_well_defined: Vec<(Obj, Box<ObjWellDefinedProof>)>,
+        dom_fact_well_defined: Vec<FactWellDefinedProof>,
+        ret_set_well_defined: Box<ObjWellDefinedProof>,
+        body_well_defined: Box<ObjWellDefinedProof>,
+        failed: VerifyFactResult,
+    },
+    Others(String),
+}
 
 pub struct FailToVerifyCartObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 

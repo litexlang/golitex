@@ -1,0 +1,5 @@
+# WD negative: FnSet dom_fact itself is not well-defined (division by zero).
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_wd_negative/fn_set_dom_ill_defined.lit
+# expect exit != 0
+
+let S = fn(x R: 1 / 0 = x) R
