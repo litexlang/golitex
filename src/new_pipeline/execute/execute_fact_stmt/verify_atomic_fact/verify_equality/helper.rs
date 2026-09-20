@@ -211,10 +211,10 @@ pub(super) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Ob
             obj_slice_pairs!(l.params, r.params)
         }
         (
-            Obj::ObjAsStructInstanceWithFieldAccess(l),
-            Obj::ObjAsStructInstanceWithFieldAccess(r),
+            Obj::FieldAccess(l),
+            Obj::FieldAccess(r),
         ) => {
-            if l.field_name != r.field_name {
+            if l.fields != r.fields {
                 return None;
             }
             Some(vec![(l.obj.as_ref().clone(), r.obj.as_ref().clone())])
@@ -360,8 +360,8 @@ fn fn_obj_head_as_obj(head: &FnObjHead) -> Obj {
         FnObjHead::AnonymousFnLiteral(a) => Obj::AnonymousFn(a.as_ref().clone()),
         FnObjHead::FiniteSeqListObj(v) => Obj::FiniteSeqListObj(v.clone()),
         FnObjHead::ObjAtIndex(v) => Obj::ObjAtIndex(v.clone()),
-        FnObjHead::ObjAsStructInstanceWithFieldAccess(v) => {
-            Obj::ObjAsStructInstanceWithFieldAccess(v.clone())
+        FnObjHead::FieldAccess(v) => {
+            Obj::FieldAccess(v.clone())
         }
         FnObjHead::InstantiatedTemplateObj(v) => Obj::InstantiatedTemplateObj(v.clone()),
     }

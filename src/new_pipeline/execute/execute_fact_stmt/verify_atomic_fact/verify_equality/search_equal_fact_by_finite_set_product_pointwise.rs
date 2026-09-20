@@ -110,8 +110,8 @@ fn unary_function_at(rt: &mut Runtime, func: &Obj, x: &Obj) -> Option<Obj> {
     let head = match func {
         Obj::Identifier(id) => FnObjHead::Identifier(id.clone()),
         Obj::ObjAtIndex(v) => FnObjHead::ObjAtIndex(v.clone()),
-        Obj::ObjAsStructInstanceWithFieldAccess(v) => {
-            FnObjHead::ObjAsStructInstanceWithFieldAccess(v.clone())
+        Obj::FieldAccess(v) => {
+            FnObjHead::FieldAccess(v.clone())
         }
         Obj::InstantiatedTemplateObj(v) => FnObjHead::InstantiatedTemplateObj(v.clone()),
         _ => return None,

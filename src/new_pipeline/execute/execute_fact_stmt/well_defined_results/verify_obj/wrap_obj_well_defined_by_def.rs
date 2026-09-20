@@ -164,7 +164,7 @@ fn pack_success_by_def(
             })
         }
         Obj::StructObj(_) => ObjWellDefinedProofByDef::StructObj(StructObjObjWellDefinedProof::from_stages(stages)),
-        Obj::ObjAsStructInstanceWithFieldAccess(_) => ObjWellDefinedProofByDef::ObjAsStructInstanceWithFieldAccess(ObjAsStructInstanceWithFieldAccessObjWellDefinedProof::from_stages(stages)),
+        Obj::FieldAccess(_) => ObjWellDefinedProofByDef::FieldAccess(FieldAccessObjWellDefinedProof::from_stages(stages)),
         Obj::InstantiatedTemplateObj(_) => ObjWellDefinedProofByDef::InstantiatedTemplateObj(InstantiatedTemplateObjObjWellDefinedProof::from_stages(stages)),
         Obj::OneSideInfinityIntervalObj(_) => ObjWellDefinedProofByDef::OneSideInfinityIntervalObj(OneSideInfinityIntervalObjObjWellDefinedProof::from_stages(stages)),
         Obj::IntervalObj(_) => ObjWellDefinedProofByDef::IntervalObj(IntervalObjObjWellDefinedProof::from_stages(stages)),
@@ -416,8 +416,8 @@ pub(super) fn wrap_common_fail(
         Obj::StructObj(_) => FailToVerifyObjWellDefinedResult::StructObj(
             FailToVerifyStructObjObjWellDefined(common),
         ),
-        Obj::ObjAsStructInstanceWithFieldAccess(_) => FailToVerifyObjWellDefinedResult::ObjAsStructInstanceWithFieldAccess(
-            FailToVerifyObjAsStructInstanceWithFieldAccessObjWellDefined(common),
+        Obj::FieldAccess(_) => FailToVerifyObjWellDefinedResult::FieldAccess(
+            FailToVerifyFieldAccessObjWellDefined(common),
         ),
         Obj::InstantiatedTemplateObj(_) => FailToVerifyObjWellDefinedResult::InstantiatedTemplateObj(
             FailToVerifyInstantiatedTemplateObjObjWellDefined(common),

@@ -59,7 +59,7 @@ impl Runtime {
     }
 
     // struct Name: fields [<=>: facts]
-    // struct Name(...): …  (typed params; angle-bracket / setting refs deferred)
+    // struct Name<typed params>: …  (setting refs inside `<>` still deferred)
     pub(in super::super) fn parse_def_struct_stmt(
         &mut self,
         block: &TokenBlock,
@@ -75,12 +75,12 @@ impl Runtime {
 
         self.push_parse_scope();
         let result = (|| {
-            let param_def_with_dom = if tb.peek() == Some(LEFT_PAREN) {
-                let params = self.parse_typed_param_list_in_parens(&mut tb)?;
+            let param_def_with_dom = if tb.peek() == Some(LESS) {
+                let params = self.parse_typed_param_list_in_angles(&mut tb)?;
                 Some((params, Vec::new()))
-            } else if tb.peek() == Some(LESS) {
+            } else if tb.peek() == Some(LEFT_PAREN) {
                 return Err(tb.parse_error(
-                    "struct<...>: angle-bracket params / setting references are not wired yet",
+                    "struct parameters use `<...>` (e.g. `struct Pair<A set>:`), not `(...)`",
                 ));
             } else {
                 None

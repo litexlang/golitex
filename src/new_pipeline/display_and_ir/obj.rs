@@ -336,7 +336,7 @@ impl Obj {
                 Obj::GeneralCart(x) => s.push_str(&x.ir()),
                 Obj::ObjAtIndex(x) => s.push_str(&x.ir()),
                 Obj::StructObj(x) => s.push_str(&x.ir()),
-                Obj::ObjAsStructInstanceWithFieldAccess(x) => {
+                Obj::FieldAccess(x) => {
                     s.push_str(&x.ir())
                 }
                 Obj::InstantiatedTemplateObj(x) => s.push_str(&x.ir()),
@@ -376,7 +376,7 @@ impl FnObjHead {
             FnObjHead::AnonymousFnLiteral(a) => a.ir(),
             FnObjHead::FiniteSeqListObj(v) => v.ir(),
             FnObjHead::ObjAtIndex(v) => v.ir(),
-            FnObjHead::ObjAsStructInstanceWithFieldAccess(v) => v.ir(),
+            FnObjHead::FieldAccess(v) => v.ir(),
             FnObjHead::InstantiatedTemplateObj(t) => t.ir(),
         }
     }
@@ -803,11 +803,17 @@ impl StructObj {
     }
     impl_display_pair!();
 }
-impl ObjAsStructInstanceWithFieldAccess {
+impl FieldAccess {
     pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
         out.push_str(&self.obj.ir());
-        out.push_str(&format!("{}{}", DOT_AKA_FIELD_ACCESS_SIGN, self.field_name));
+        out.push_str(
+            &self
+                .fields
+                .iter()
+                .map(|f| format!("{}{}", DOT_AKA_FIELD_ACCESS_SIGN, f))
+                .collect::<String>(),
+        );
 
         ObjIR(out)
     }

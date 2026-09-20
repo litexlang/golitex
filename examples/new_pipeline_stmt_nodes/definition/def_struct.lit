@@ -11,6 +11,6 @@ struct Point:
 struct Scalar:
     value R
 
-struct Pair(A set):
+struct Pair<A set>:
     left A
     right A

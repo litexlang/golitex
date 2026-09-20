@@ -1,5 +1,6 @@
 use super::keywords::{
-    COLON, COMMA, EQUAL, FINITE_SET, LEFT_PAREN, NONEMPTY_SET, RIGHT_ARROW, RIGHT_PAREN, SET,
+    COLON, COMMA, EQUAL, FINITE_SET, GREATER, LEFT_PAREN, LESS, NONEMPTY_SET, RIGHT_ARROW,
+    RIGHT_PAREN, SET,
 };
 use super::object::{is_atom_name, parse_obj};
 use crate::new_pipeline::ast::param::{
@@ -110,6 +111,31 @@ impl Runtime {
         if groups.is_empty() {
             return Err(RuntimeParseError::new(
                 "expected at least one parameter inside `(...)`",
+                tb.line,
+                tb.source_path.clone(),
+            )
+            .into());
+        }
+        Ok(TypedParameterList { groups })
+    }
+
+    // Parse `<x R, y S>` — same groups as `(...)`, for `struct Name<...>:`.
+    pub(super) fn parse_typed_param_list_in_angles(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> RuntimeResult<TypedParameterList> {
+        tb.expect(LESS)?;
+        let mut groups = Vec::new();
+        while !tb.exceed_end_of_head() && tb.peek() != Some(GREATER) {
+            groups.push(self.parse_one_typed_param_group(tb)?);
+            if tb.peek() == Some(COMMA) {
+                tb.advance()?;
+            }
+        }
+        tb.expect(GREATER)?;
+        if groups.is_empty() {
+            return Err(RuntimeParseError::new(
+                "expected at least one parameter inside `<...>`",
                 tb.line,
                 tb.source_path.clone(),
             )

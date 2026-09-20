@@ -79,7 +79,7 @@ pub fn collect_free_plain_ids(
                     collect_free_plain_ids(&a.obj, bound, out);
                     collect_free_plain_ids(&a.index, bound, out);
                 }
-                crate::new_pipeline::ast::obj::FnObjHead::ObjAsStructInstanceWithFieldAccess(a) => {
+                crate::new_pipeline::ast::obj::FnObjHead::FieldAccess(a) => {
                     collect_free_plain_ids(&a.obj, bound, out);
                 }
                 crate::new_pipeline::ast::obj::FnObjHead::InstantiatedTemplateObj(a) => {
@@ -208,7 +208,7 @@ pub fn collect_free_plain_ids(
                 collect_free_plain_ids(o, bound, out);
             }
         }
-        Obj::ObjAsStructInstanceWithFieldAccess(a) => {
+        Obj::FieldAccess(a) => {
             collect_free_plain_ids(&a.obj, bound, out);
         }
         Obj::InstantiatedTemplateObj(a) => {

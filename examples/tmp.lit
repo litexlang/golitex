@@ -1,9 +1,16 @@
-# Slice 1: HaveObjByExistFacts + HaveFnEqual (new_pipeline)
+# FieldAccess: `x.y` and `x.y.z` as one node with fields: Vec
 # Run: LITEX_NEW_PIPELINE=1 litex -f examples/tmp.lit
 
-have left_greater R:
-    left_greater > 100
+struct Coordinates:
+    x R
+    y R
 
-have fn id(x R) R = x
-have a R = 1
-id(a) = id(a)
+struct TaggedPoint:
+    point &Coordinates
+    tag N
+
+forall p &TaggedPoint:
+    p.point = p.point
+    p.tag = p.tag
+    p.point.x = p.point.x
+    p.point.y = p.point.y

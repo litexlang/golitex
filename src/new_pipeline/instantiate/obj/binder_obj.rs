@@ -23,8 +23,8 @@ impl Runtime {
                     Obj::AnonymousFn(af) => Ok(FnObjHead::AnonymousFnLiteral(Box::new(af))),
                     Obj::FiniteSeqListObj(v) => Ok(FnObjHead::FiniteSeqListObj(v)),
                     Obj::ObjAtIndex(v) => Ok(FnObjHead::ObjAtIndex(v)),
-                    Obj::ObjAsStructInstanceWithFieldAccess(v) => {
-                        Ok(FnObjHead::ObjAsStructInstanceWithFieldAccess(v))
+                    Obj::FieldAccess(v) => {
+                        Ok(FnObjHead::FieldAccess(v))
                     }
                     Obj::InstantiatedTemplateObj(v) => Ok(FnObjHead::InstantiatedTemplateObj(v)),
                     _ => Err(InstError::CannotUseAsFnHead),
@@ -41,9 +41,9 @@ impl Runtime {
                 self.inst_obj_at_index_obj(a, param_to_arg_map)?
                     .expect_obj_at_index(),
             )),
-            FnObjHead::ObjAsStructInstanceWithFieldAccess(a) => Ok(
-                FnObjHead::ObjAsStructInstanceWithFieldAccess(
-                    self.inst_obj_as_struct(a, param_to_arg_map)?,
+            FnObjHead::FieldAccess(a) => Ok(
+                FnObjHead::FieldAccess(
+                    self.inst_field_access(a, param_to_arg_map)?,
                 ),
             ),
             FnObjHead::InstantiatedTemplateObj(a) => Ok(FnObjHead::InstantiatedTemplateObj(

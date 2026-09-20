@@ -120,8 +120,8 @@ impl Runtime {
             Obj::StructObj(s) => Ok(Obj::StructObj(
                 self.inst_struct_obj(s, param_to_arg_map)?,
             )),
-            Obj::ObjAsStructInstanceWithFieldAccess(a) => Ok(Obj::ObjAsStructInstanceWithFieldAccess(
-                self.inst_obj_as_struct(a, param_to_arg_map)?,
+            Obj::FieldAccess(a) => Ok(Obj::FieldAccess(
+                self.inst_field_access(a, param_to_arg_map)?,
             )),
             Obj::InstantiatedTemplateObj(a) => Ok(Obj::InstantiatedTemplateObj(
                 self.inst_instantiated_template(a, param_to_arg_map)?,
