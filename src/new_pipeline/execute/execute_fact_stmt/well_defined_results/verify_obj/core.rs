@@ -203,7 +203,7 @@ impl Runtime {
                 children.push(at.obj.as_ref());
                 children.push(at.index.as_ref());
             }
-            FnObjHead::ObjAsStructInstanceWithFieldAccess(access) => {
+            FnObjHead::FieldAccess(access) => {
                 children.push(access.obj.as_ref());
             }
             FnObjHead::InstantiatedTemplateObj(inst) => {

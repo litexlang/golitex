@@ -53,13 +53,9 @@ impl Runtime {
             return self.verify_struct_obj_well_definedness(value, verify_state);
         }
 
-        // `x.y`: definition-time struct carrier of `x`, then field name check.
-        if let Obj::ObjAsStructInstanceWithFieldAccess(value) = obj {
-            return self
-                .verify_obj_as_struct_instance_with_field_access_obj_well_definedness(
-                    value,
-                    verify_state,
-                );
+        // `x.y` / `x.y.z`: definition-time struct carrier walk along `fields`.
+        if let Obj::FieldAccess(value) = obj {
+            return self.verify_field_access_obj_well_definedness(value, verify_state);
         }
 
         // Identifier-headed FnObj application: InFunctionSet + domain (not children-only).
@@ -271,10 +267,8 @@ impl Runtime {
             Obj::StructObj(_) => {
                 unreachable!("StructObj WD uses verify_struct_obj_well_definedness")
             }
-            Obj::ObjAsStructInstanceWithFieldAccess(_) => {
-                unreachable!(
-                    "field-access WD uses verify_obj_as_struct_instance_with_field_access_obj_well_definedness"
-                )
+            Obj::FieldAccess(_) => {
+                unreachable!("field-access WD uses verify_field_access_obj_well_definedness")
             }
             Obj::InstantiatedTemplateObj(value) => {
                 self.verify_instantiated_template_obj_well_definedness_by_def(value, verify_state)

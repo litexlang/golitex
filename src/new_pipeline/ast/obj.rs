@@ -83,7 +83,7 @@ pub enum Obj {
     ObjAtIndex(ObjAtIndex),
     StandardSet(StandardSet),
     StructObj(StructObj),
-    ObjAsStructInstanceWithFieldAccess(ObjAsStructInstanceWithFieldAccess),
+    FieldAccess(FieldAccess),
     InstantiatedTemplateObj(InstantiatedTemplateObj),
     OneSideInfinityIntervalObj(OneSideInfinityIntervalObj),
     IntervalObj(IntervalObj),
@@ -171,7 +171,7 @@ pub enum FnObjHead {
     AnonymousFnLiteral(Box<AnonymousFn>),
     FiniteSeqListObj(FiniteSeqListObj),
     ObjAtIndex(ObjAtIndex),
-    ObjAsStructInstanceWithFieldAccess(ObjAsStructInstanceWithFieldAccess),
+    FieldAccess(FieldAccess),
     InstantiatedTemplateObj(InstantiatedTemplateObj),
 }
 
@@ -656,11 +656,11 @@ pub struct StructObj {
     pub params: Vec<Obj>,
 }
 
-// ObjAsStructInstanceWithFieldAccess — surface `x.y` only.
+// FieldAccess — surface `x.y` / `x.y.z` (one node, fields left-to-right).
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ObjAsStructInstanceWithFieldAccess {
+pub struct FieldAccess {
     pub obj: Box<Obj>,
-    pub field_name: String,
+    pub fields: Vec<String>,
 }
 
 // InstantiatedTemplateObj

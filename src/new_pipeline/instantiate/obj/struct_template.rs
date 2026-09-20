@@ -4,7 +4,7 @@ use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 
 use crate::new_pipeline::ast::obj::{
     InstantiatedTemplateObj, IntervalObj, IntervalObjStruct, Obj,
-    ObjAsStructInstanceWithFieldAccess, OneSideInfinityIntervalObj,
+    FieldAccess, OneSideInfinityIntervalObj,
     OneSideInfinityIntervalObjStruct, StructObj,
 };
 use crate::new_pipeline::runtime::Runtime;
@@ -28,15 +28,15 @@ impl Runtime {
         })
     }
 
-    pub(crate) fn inst_obj_as_struct(
+    pub(crate) fn inst_field_access(
         &mut self,
-        a: &ObjAsStructInstanceWithFieldAccess,
+        a: &FieldAccess,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
-    ) -> Result<ObjAsStructInstanceWithFieldAccess, InstError> {
-        Ok(ObjAsStructInstanceWithFieldAccess {
+    ) -> Result<FieldAccess, InstError> {
+        Ok(FieldAccess {
             obj: Box::new(self.inst_obj_rec(&a.obj, param_to_arg_map)?),
-            field_name: a.field_name.clone(),
+            fields: a.fields.clone(),
         })
     }
 

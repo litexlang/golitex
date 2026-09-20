@@ -1,7 +1,7 @@
 use super::primary::{fn_obj_head_from_obj, parse_primary};
 use crate::new_pipeline::ast::obj::{
     Add, Cart, ClosedRange, Div, FnObj, Intersect, Mod, Mul, Number, Obj,
-    ObjAsStructInstanceWithFieldAccess, ObjAtIndex, Pow, Sub, Union,
+    FieldAccess, ObjAtIndex, Pow, Sub, Union,
 };
 use crate::new_pipeline::parse::keywords::{
     ADD, DIV, DOT, DOT_DOT_DOT, LEFT_BRACKET, LEFT_PAREN, MOD_OP, MUL, POW, RIGHT_BRACKET, SUB,
@@ -190,10 +190,16 @@ fn parse_field_and_call_postfixes(
                     tb.parse_error(format!("expected field name after `.`, got `{field_name}`"))
                 );
             }
-            result = Obj::ObjAsStructInstanceWithFieldAccess(ObjAsStructInstanceWithFieldAccess {
-                obj: Box::new(result),
-                field_name,
-            });
+            result = match result {
+                Obj::FieldAccess(mut access) => {
+                    access.fields.push(field_name);
+                    Obj::FieldAccess(access)
+                }
+                other => Obj::FieldAccess(FieldAccess {
+                    obj: Box::new(other),
+                    fields: vec![field_name],
+                }),
+            };
             continue;
         }
 

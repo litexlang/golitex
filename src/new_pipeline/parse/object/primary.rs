@@ -85,8 +85,8 @@ pub(super) fn fn_obj_head_from_obj(obj: Obj) -> Option<FnObjHead> {
     match obj {
         Obj::Identifier(id) => Some(FnObjHead::Identifier(id)),
         Obj::ObjAtIndex(v) => Some(FnObjHead::ObjAtIndex(v)),
-        Obj::ObjAsStructInstanceWithFieldAccess(v) => {
-            Some(FnObjHead::ObjAsStructInstanceWithFieldAccess(v))
+        Obj::FieldAccess(v) => {
+            Some(FnObjHead::FieldAccess(v))
         }
         _ => None,
     }
@@ -111,7 +111,7 @@ pub fn is_atom_name(s: &str) -> bool {
     )
 }
 
-// `&Name` / `&Name(...)` / `&Name<...>` → StructObj. No `&Struct{obj}` form.
+// `&Name` / `&Name<...>` → StructObj. No `&Struct{obj}` / `&Name(...)` form.
 fn parse_struct_view(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
     tb.expect(STRUCT_VIEW_PREFIX)?;
     let name_tok = tb
@@ -128,10 +128,13 @@ fn parse_struct_view(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
             "explicit struct selection `&Struct{object}.field` has been removed; define the object or function return directly with `&Struct` and write `object.field`",
         ));
     }
+    if tb.peek() == Some(LEFT_PAREN) {
+        return Err(tb.parse_error(
+            "struct view parameters use `<...>` (e.g. `&Pair<R>`), not `(...)`",
+        ));
+    }
 
-    let params = if tb.peek() == Some(LEFT_PAREN) {
-        parse_obj_list_paren(rt, tb)?
-    } else if tb.peek() == Some(LESS) {
+    let params = if tb.peek() == Some(LESS) {
         parse_obj_list_angle(rt, tb)?
     } else {
         Vec::new()

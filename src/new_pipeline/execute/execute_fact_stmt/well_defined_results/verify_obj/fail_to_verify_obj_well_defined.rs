@@ -80,7 +80,7 @@ pub enum FailToVerifyObjWellDefinedResult {
     ObjAtIndex(FailToVerifyObjAtIndexObjWellDefined),
     StandardSet(FailToVerifyStandardSetObjWellDefined),
     StructObj(FailToVerifyStructObjObjWellDefined),
-    ObjAsStructInstanceWithFieldAccess(FailToVerifyObjAsStructInstanceWithFieldAccessObjWellDefined),
+    FieldAccess(FailToVerifyFieldAccessObjWellDefined),
     InstantiatedTemplateObj(FailToVerifyInstantiatedTemplateObjObjWellDefined),
     OneSideInfinityIntervalObj(FailToVerifyOneSideInfinityIntervalObjObjWellDefined),
     IntervalObj(FailToVerifyIntervalObjObjWellDefined),
@@ -335,7 +335,7 @@ pub enum FailToVerifyStandardSetObjWellDefined {
 
 pub struct FailToVerifyStructObjObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
-pub struct FailToVerifyObjAsStructInstanceWithFieldAccessObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub struct FailToVerifyFieldAccessObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
 pub struct FailToVerifyInstantiatedTemplateObjObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
