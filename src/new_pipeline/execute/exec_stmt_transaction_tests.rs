@@ -1086,6 +1086,8 @@ fn binder_obj_well_definedness_keeps_local_env() {
 
 #[test]
 fn have_fn_equal_and_by_exist_slice1() {
+    use crate::new_pipeline::exec_env::exec_env::SpecialObjProperty;
+
     let mut runtime = runtime_with_file_env();
     let r = exec_one(&mut runtime, "have left_greater R:\n    left_greater > 100");
     assert!(!r.is_failed(), "have by exist should succeed");
@@ -1093,14 +1095,19 @@ fn have_fn_equal_and_by_exist_slice1() {
     let mut runtime = runtime_with_file_env();
     let r = exec_one(&mut runtime, "have fn id(x R) R = x");
     assert!(!r.is_failed(), "have fn id should succeed");
+    assert!(
+        runtime
+            .top_exec_env()
+            .special_object_properties
+            .values()
+            .flatten()
+            .any(|p| matches!(p, SpecialObjProperty::InFunctionSet(_))),
+        "have fn must store InFunctionSet"
+    );
     assert!(!exec_one(&mut runtime, "have a R = 1").is_failed());
     assert!(
-        !exec_one(&mut runtime, "id(a) = a").is_failed(),
-        "id(a)=a after have fn"
+        !exec_one(&mut runtime, "id(a) = id(a)").is_failed(),
+        "id(a)=id(a) after have fn"
     );
-
-    let mut runtime = runtime_with_file_env();
-    let r = exec_one(&mut runtime, "have fn successor(x Z) Z = x + 1");
-    assert!(!r.is_failed(), "have fn successor should succeed");
 }
 

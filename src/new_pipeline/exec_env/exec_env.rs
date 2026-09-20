@@ -118,8 +118,9 @@ pub enum SpecialObjProperty {
     EqualToFunction((Obj, FactId)),
     /// Definition-time struct carrier only (`have p &Point`, `forall p &Point`, …).
     /// Never written from a later `$in &Struct` proof (avoids carrier conflicts).
-    /// Example: after `have p &Point`, key `p` stores `&Point` for `p.x` WD.
-    DefinedAsStruct(StructObj),
+    /// `FactId` cites the definition-time membership `p $in &Point`.
+    /// Example: after `have p &Point`, key `p` stores `(&Point, fact_id)` for `p.x` WD.
+    DefinedAsStruct((StructObj, FactId)),
 }
 
 // -----------------------------------------------------------------------------

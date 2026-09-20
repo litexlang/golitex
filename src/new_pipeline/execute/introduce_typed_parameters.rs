@@ -24,7 +24,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::{
     VerifyState,
 };
 use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
-use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
+use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeError, RuntimeResult};
 
 // Stage-ordered evidence for introducing a TypedParameterList.
 pub struct IntroduceTypedParametersResult {
@@ -104,16 +104,23 @@ impl Runtime {
                 );
                 // Env key is plain; type-fact mention qualifies at file root.
                 let element = Obj::Identifier(self.identifier_obj_for_stored_mention(identifier));
-                if let ParamType::Obj(Obj::StructObj(struct_obj)) = &group.param_type {
-                    self.record_defined_as_struct(&element, struct_obj.clone());
-                }
                 let type_fact = match &group.param_type {
-                    ParamType::Obj(param_set) => Fact::AtomicFact(AtomicFact::InFact(InFact {
-                        fact_id: self.ids.allocate_fact_id(),
-                        element: element.clone(),
-                        set: param_set.clone(),
-                        line_file: None,
-                    })),
+                    ParamType::Obj(param_set) => {
+                        let fact_id = self.ids.allocate_fact_id();
+                        if let Obj::StructObj(struct_obj) = param_set {
+                            self.record_defined_as_struct(
+                                &element,
+                                struct_obj.clone(),
+                                fact_id,
+                            );
+                        }
+                        Fact::AtomicFact(AtomicFact::InFact(InFact {
+                            fact_id,
+                            element: element.clone(),
+                            set: param_set.clone(),
+                            line_file: None,
+                        }))
+                    }
                     ParamType::Set(_) => Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact {
                         fact_id: self.ids.allocate_fact_id(),
                         set: element,
@@ -141,12 +148,17 @@ impl Runtime {
         Ok(StoreHaveObjAndInferResult { stored_fact_ids })
     }
 
-    // Definition-time only: attach the written `&Struct` carrier to the bound object.
-    fn record_defined_as_struct(&mut self, element: &Obj, struct_obj: StructObj) {
+    // Definition-time only: attach the written `&Struct` carrier and its `$in` fact id.
+    fn record_defined_as_struct(
+        &mut self,
+        element: &Obj,
+        struct_obj: StructObj,
+        fact_id: FactId,
+    ) {
         self.top_exec_env_mut()
             .special_object_properties
             .entry(element.ir())
             .or_default()
-            .push(SpecialObjProperty::DefinedAsStruct(struct_obj));
+            .push(SpecialObjProperty::DefinedAsStruct((struct_obj, fact_id)));
     }
 }

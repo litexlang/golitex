@@ -64,8 +64,10 @@ files uses `file::x` / `mod::file::x`.
   will need something like `alpha_normalize` again later. Not in tree now.
 - Some stmt-only binder slots (induction / `for`) may still be bare `String`;
   migrate to `BoundName` when those paths are wired.
-- **`have fn` / `by induc` parse** still not wired; when wired, occupy `f` at
-  file root first so body free refs to `f` qualify via the same rule.
+- **`have fn … = …` / `have …:` (by exist)** are wired in new_pipeline
+  (`HaveFnEqualStmt`, `HaveObjByExistFactsStmt`). Occupy `f` at file root
+  before parsing the body so free refs to `f` qualify via the same rule.
+  `have fn by cases` / `by induc` / `by exist!` still not wired.
 - **`-r` / project mount run loop** still deferred; set `current_mod_id` +
   `current_export_file_id` before parsing each export file.
 

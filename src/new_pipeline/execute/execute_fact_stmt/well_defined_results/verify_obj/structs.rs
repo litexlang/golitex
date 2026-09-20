@@ -168,7 +168,7 @@ impl Runtime {
                 continue;
             };
             for prop in props {
-                if let SpecialObjProperty::DefinedAsStruct(carrier) = prop {
+                if let SpecialObjProperty::DefinedAsStruct((carrier, _)) = prop {
                     return Some(carrier.clone());
                 }
             }
