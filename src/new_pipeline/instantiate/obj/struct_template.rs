@@ -34,14 +34,9 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<ObjAsStructInstanceWithFieldAccess, InstError> {
-        let carrier = match &a.resolved_struct_carrier {
-            None => return Err(InstError::MissingStructCarrier),
-            Some(c) => Some(Box::new(self.inst_struct_obj(c, param_to_arg_map)?)),
-        };
         Ok(ObjAsStructInstanceWithFieldAccess {
             obj: Box::new(self.inst_obj_rec(&a.obj, param_to_arg_map)?),
             field_name: a.field_name.clone(),
-            resolved_struct_carrier: carrier,
         })
     }
 

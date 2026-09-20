@@ -1,0 +1,10 @@
+# Field access WD via definition-time DefinedAsStruct
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/tmp.lit
+
+struct Point:
+    x R
+    y R
+
+forall p &Point:
+    p.x = p.x
+    p.y = p.y

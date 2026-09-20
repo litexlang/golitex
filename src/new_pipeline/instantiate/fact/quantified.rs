@@ -58,9 +58,9 @@ impl Runtime {
                     line_file: o.line_file.clone(),
                 }))
             }
-            Fact::ExistFact(e)
-            | Fact::ExistUniqueFact(e)
-            | Fact::NotExistFact(e) => {
+            Fact::ExistFact(_e)
+            | Fact::ExistUniqueFact(_e)
+            | Fact::NotExistFact(_e) => {
                 let family = match fact {
                     Fact::ExistFact(p) => ExistFactFamily::Exist(p.clone()),
                     Fact::ExistUniqueFact(p) => ExistFactFamily::ExistUnique(p.clone()),

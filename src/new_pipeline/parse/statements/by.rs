@@ -8,7 +8,7 @@ use super::super::keywords::{
     FINITE_SET,
     FACT_PREFIX, AS, RANGE, IN};
 use super::super::object::{is_simple_name, parse_obj};
-use crate::new_pipeline::ast::obj::{ClosedRange, Obj, Range};
+use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::fact::{
     AndChainAtomicFact, AtomicFact, ExistOrAndChainAtomicFact, Fact,
 };

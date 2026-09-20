@@ -1,7 +1,7 @@
 //! Verification for atomic-except-equality atomic predicates.
 
 use crate::error::RuntimeError;
-use crate::fact::{AtomicFact, Fact, NotEqualFact};
+use crate::fact::{AtomicFact, Fact};
 use crate::inference::SuccessInferResult;
 use crate::object::Obj;
 use crate::result::{

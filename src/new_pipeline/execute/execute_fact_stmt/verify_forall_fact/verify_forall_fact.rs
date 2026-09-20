@@ -8,9 +8,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::verify_forall_fact::FailToV
 use crate::new_pipeline::execute::execute_fact_stmt::verify_forall_fact::{
     AssumeDomFactResult, ProveAndStoreThenFactResult,
 };
-use crate::new_pipeline::execute::execute_fact_stmt::well_defined_results::{
-    fail_to_verify_obj_well_defined_others, FailToVerifyObjWellDefinedResult,
-};
+use crate::new_pipeline::execute::execute_fact_stmt::well_defined_results::fail_to_verify_obj_well_defined_others;
 use crate::new_pipeline::execute::execute_fact_stmt::{
     VerifyFactWellDefinedResult, VerifyObjWellDefinedResult, VerifyState,
 };

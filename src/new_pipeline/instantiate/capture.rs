@@ -81,11 +81,6 @@ pub fn collect_free_plain_ids(
                 }
                 crate::new_pipeline::ast::obj::FnObjHead::ObjAsStructInstanceWithFieldAccess(a) => {
                     collect_free_plain_ids(&a.obj, bound, out);
-                    if let Some(carrier) = &a.resolved_struct_carrier {
-                        for o in &carrier.params {
-                            collect_free_plain_ids(o, bound, out);
-                        }
-                    }
                 }
                 crate::new_pipeline::ast::obj::FnObjHead::InstantiatedTemplateObj(a) => {
                     for o in &a.args {
@@ -215,11 +210,6 @@ pub fn collect_free_plain_ids(
         }
         Obj::ObjAsStructInstanceWithFieldAccess(a) => {
             collect_free_plain_ids(&a.obj, bound, out);
-            if let Some(carrier) = &a.resolved_struct_carrier {
-                for o in &carrier.params {
-                    collect_free_plain_ids(o, bound, out);
-                }
-            }
         }
         Obj::InstantiatedTemplateObj(a) => {
             for o in &a.args {

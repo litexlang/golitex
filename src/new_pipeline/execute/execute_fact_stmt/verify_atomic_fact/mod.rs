@@ -10,21 +10,16 @@ pub mod verify_atomic_fact;
 pub mod verify_well_defined;
 pub mod well_defined_result;
 
-pub use verify_equality::{
-    ForallConclusionArgMatchProof, ForallParamTypeRequirementProof,
-    MatchForallConclusionArgsProof, ProveForallInstantiationRequirementsProof,
-    SearchProofByKnownForallFact, StrictEqualArgProof, StrictEqualWithFact,
-};
+pub use verify_equality::SearchProofByKnownForallFact;
 pub use verify_atomic_except_equality::{
     AtomicExceptEqualityFactSearchProofByDefinition,
     AtomicExceptEqualityFactSearchProofByKnownAtomicFact, AtomicExceptEqualityFactSearchedProof,
     VerifyAtomicExceptEqualityFactFailed, VerifyAtomicExceptEqualityFactResult,
-    VerifyAtomicExceptEqualityFactSuccess,
 };
 pub use verify_equality::{
     EqualFactSearchedProof, EqualFactSearchedProofByKnownEquality, EqualFactWellDefinedProof,
     FailToVerifyEqualFactWellDefinedResult, VerifyEqualFactWellDefinedResult, VerifyEqualityFailed,
-    VerifyEqualityResult, VerifyEqualitySuccess,
+    VerifyEqualityResult,
 };
 pub use well_defined_result::{
     AtomicFactWellDefinedProof, FailToVerifyAtomicFactWellDefinedResult,

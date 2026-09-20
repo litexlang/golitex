@@ -193,7 +193,6 @@ fn parse_field_and_call_postfixes(
             result = Obj::ObjAsStructInstanceWithFieldAccess(ObjAsStructInstanceWithFieldAccess {
                 obj: Box::new(result),
                 field_name,
-                resolved_struct_carrier: None,
             });
             continue;
         }

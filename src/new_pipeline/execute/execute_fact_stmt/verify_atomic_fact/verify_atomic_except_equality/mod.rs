@@ -16,11 +16,7 @@ pub use search_atomic_except_equality_fact_proof_by_builtin_strategy::AtomicExce
 pub use search_atomic_except_equality_fact_proof_by_known_rewrite::AtomicExceptEqualityFactSearchProofByKnownRewrite;
 
 pub use result::{
-    atomic_except_equality_fact_result_from_search_fail,
-    atomic_except_equality_fact_result_from_success,
-    atomic_except_equality_fact_result_from_wd_fail,
     AtomicExceptEqualityFactSearchProofByDefinition,
     AtomicExceptEqualityFactSearchProofByKnownAtomicFact, AtomicExceptEqualityFactSearchedProof,
     VerifyAtomicExceptEqualityFactFailed, VerifyAtomicExceptEqualityFactResult,
-    VerifyAtomicExceptEqualityFactSuccess,
 };

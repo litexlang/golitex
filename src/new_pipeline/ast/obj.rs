@@ -656,14 +656,11 @@ pub struct StructObj {
     pub params: Vec<Obj>,
 }
 
-// ObjAsStructInstanceWithFieldAccess
+// ObjAsStructInstanceWithFieldAccess — surface `x.y` only.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ObjAsStructInstanceWithFieldAccess {
     pub obj: Box<Obj>,
     pub field_name: String,
-    /// Filled by execution/instantiation, never by parsing. It preserves the
-    /// field owner when substituting a typed receiver with an arbitrary value.
-    pub resolved_struct_carrier: Option<Box<StructObj>>,
 }
 
 // InstantiatedTemplateObj

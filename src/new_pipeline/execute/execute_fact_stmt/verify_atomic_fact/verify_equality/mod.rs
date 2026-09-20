@@ -18,7 +18,6 @@ pub mod well_defined_result;
 
 pub use by_builtin_rewrite_result::EqualitySearchProofByBuiltinRewrite;
 pub use by_builtin_strategy_result::EqualitySearchProofByBuiltinStrategy;
-pub use search_equal_fact_proof_by_matching_one_arg_by_one::EqualFactSearchedProofByMatchingOneArgByOne;
 pub use verify_equality_by_builtin_rules::EqualitySearchProofByBuiltinRule;
 pub use well_defined_result::{
     EqualFactWellDefinedProof, FailToVerifyEqualFactWellDefinedResult,
@@ -26,11 +25,7 @@ pub use well_defined_result::{
 };
 
 pub use result::{
-    equal_fact_result_from_search_fail, equal_fact_result_from_success,
-    equal_fact_result_from_wd_fail, strict_equal_arg_proof_from_searched,
     EqualFactSearchedProof, EqualFactSearchedProofByKnownEquality,
-    ForallConclusionArgMatchProof, ForallParamTypeRequirementProof,
-    MatchForallConclusionArgsProof, ProveForallInstantiationRequirementsProof,
-    SearchProofByKnownForallFact, StrictEqualArgProof, StrictEqualWithFact,
-    VerifyEqualityFailed, VerifyEqualityResult, VerifyEqualitySuccess,
+    SearchProofByKnownForallFact,
+    VerifyEqualityFailed, VerifyEqualityResult,
 };

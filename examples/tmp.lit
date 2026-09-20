@@ -1,15 +1,10 @@
-# new_pipeline: exec_def_struct_stmt tracer
-# Only definition WD + store; no `&Struct` / by struct def / membership yet.
+# Field access WD via definition-time DefinedAsStruct
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/tmp.lit
 
 struct Point:
     x R
     y R
-    <=>:
-        x = x
 
-struct Scalar:
-    value R
-
-struct Pair(A set):
-    left A
-    right A
+forall p &Point:
+    p.x = p.x
+    p.y = p.y

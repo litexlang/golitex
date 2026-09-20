@@ -3,16 +3,16 @@ use crate::new_pipeline::ast::obj::{
     Abs, AnonymousFn, Cart, CartDim, Ceil, ClosedRange, Cos, Exp, FiniteSetMax, FiniteSetMin,
     FiniteSetSize, Floor, FnObjHead, FnRange, FnSet, Gcd, GeneralCart, IdentifierObj,
     IndexIntersect, IndexUnion, Intersect, Lcm, ListSet, Ln, Max, Min, Number, Obj, PowerSet,
-    ProductOfFiniteSet, Proj, Quot, Range, SetBuilder, SetMinus, Sin, Sqrt, StandardSet, Tan, Tuple,
-    TupleDim, Union,
+    ProductOfFiniteSet, Proj, Quot, Range, SetBuilder, SetMinus, Sin, Sqrt, StandardSet, StructObj,
+    Tan, Tuple, TupleDim, Union,
 };
 use crate::new_pipeline::ast::param::{ParamType, SetBoundParameterGroup, SetBoundParameterList};
 use crate::new_pipeline::parse::keywords::{
     ABS, C, CART, CART_DIM, CEIL, CLOSED_RANGE, COLON, COMMA, COS, C_STAR, DOT, EXP,
     FINITE_SET_MAX, FINITE_SET_MIN, FINITE_SET_PRODUCT, FINITE_SET_SIZE, FLOOR, FN, FN_RANGE, GCD,
-    GENERAL_CART, INDEX_INTERSECT, INDEX_UNION, INTERSECT, LCM, LEFT_BRACKET, LEFT_CURLY,
-    LEFT_PAREN, LN, MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS, POWER_SET, PROJ, Q, QUOT, Q_NEG,
-    Q_POS, Q_STAR, R, RANGE, RIGHT_BRACKET, RIGHT_CURLY, RIGHT_PAREN, R_NEG, R_POS, R_STAR,
+    GENERAL_CART, GREATER, INDEX_INTERSECT, INDEX_UNION, INTERSECT, LCM, LEFT_BRACKET, LEFT_CURLY,
+    LEFT_PAREN, LESS, LN, MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS, POWER_SET, PROJ, Q, QUOT,
+    Q_NEG, Q_POS, Q_STAR, R, RANGE, RIGHT_BRACKET, RIGHT_CURLY, RIGHT_PAREN, R_NEG, R_POS, R_STAR,
     SET_MINUS, SIN, SQRT, STRUCT_VIEW_PREFIX, TAN, TUPLE, TUPLE_DIM, UNION, Z, Z_NEG, Z_POS, Z_STAR,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
@@ -63,7 +63,7 @@ pub fn parse_primary(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
         return rt.parse_fn_set_or_anonymous_fn(tb);
     }
     if token == STRUCT_VIEW_PREFIX {
-        return Err(tb.parse_error("struct view `&` is not wired in phase 1 object parse"));
+        return parse_struct_view(rt, tb);
     }
 
     if let Some(obj) = try_parse_keyword_primary(rt, tb, &token)? {
@@ -109,6 +109,50 @@ pub fn is_atom_name(s: &str) -> bool {
         s,
         "N+" | "Z+" | "Q+" | "R+" | "Z-" | "Q-" | "R-" | "Z*" | "Q*" | "R*" | "C*"
     )
+}
+
+// `&Name` / `&Name(...)` / `&Name<...>` → StructObj. No `&Struct{obj}` form.
+fn parse_struct_view(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
+    tb.expect(STRUCT_VIEW_PREFIX)?;
+    let name_tok = tb
+        .advance()
+        .map_err(|_| tb.parse_error("`&` expects a struct name"))?;
+    if !is_simple_name(&name_tok) {
+        return Err(tb.parse_error(format!("invalid struct name `{name_tok}` after `&`")));
+    }
+    // Same file-root qualification rule as prop refs; store lookup still uses plain name.
+    let name = rt.atomic_name_for_plain_prop_ref(name_tok);
+
+    if tb.peek() == Some(LEFT_CURLY) {
+        return Err(tb.parse_error(
+            "explicit struct selection `&Struct{object}.field` has been removed; define the object or function return directly with `&Struct` and write `object.field`",
+        ));
+    }
+
+    let params = if tb.peek() == Some(LEFT_PAREN) {
+        parse_obj_list_paren(rt, tb)?
+    } else if tb.peek() == Some(LESS) {
+        parse_obj_list_angle(rt, tb)?
+    } else {
+        Vec::new()
+    };
+
+    Ok(Obj::StructObj(StructObj { name, params }))
+}
+
+fn parse_obj_list_angle(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Vec<Obj>> {
+    tb.expect(LESS)?;
+    if tb.peek() == Some(GREATER) {
+        tb.advance()?;
+        return Ok(vec![]);
+    }
+    let mut objs = vec![parse_obj(rt, tb)?];
+    while tb.peek() == Some(COMMA) {
+        tb.advance()?;
+        objs.push(parse_obj(rt, tb)?);
+    }
+    tb.expect(GREATER)?;
+    Ok(objs)
 }
 
 fn parse_paren_or_tuple(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
@@ -209,7 +253,7 @@ impl Runtime {
         result
     }
 
-    fn parse_fn_set_header(
+    pub(in crate::new_pipeline::parse) fn parse_fn_set_header(
         &mut self,
         tb: &mut TokenBlock,
     ) -> RuntimeResult<(SetBoundParameterList, Vec<crate::new_pipeline::ast::fact::QuantifierFreeFact>)>
