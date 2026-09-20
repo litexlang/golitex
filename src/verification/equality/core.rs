@@ -10,7 +10,7 @@ use crate::algebraic_normalization::{
 };
 use crate::error::RuntimeError;
 use crate::fact::id::FactId;
-use crate::fact::{AtomicFact, EqualFact, Fact, NotEqualFact};
+use crate::fact::{AtomicFact, EqualFact, Fact};
 use crate::inference::SuccessInferResult;
 use crate::object::{
     obj_equality_key, objs_equal_with_nested_binder_alpha_equivalence, AnonymousFn, FnObjHead, Mul,

@@ -20,6 +20,8 @@ use crate::new_pipeline::execute::execute_def_thm_stmt::ExecDefThmStmtResult;
 use crate::new_pipeline::execute::execute_fact_stmt::{
     ExecFactStmtResult, VerifyFactResult, VerifyObjWellDefinedResult,
 };
+use crate::new_pipeline::execute::execute_have_fn_equal_stmt::ExecHaveFnEqualStmtResult;
+use crate::new_pipeline::execute::execute_have_obj_by_exist_facts_stmt::ExecHaveObjByExistFactsStmtResult;
 use crate::new_pipeline::execute::execute_have_obj_equal_stmt::ExecHaveObjEqualStmtResult;
 use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::ExecHaveObjInNonemptySetStmtResult;
 use crate::new_pipeline::execute::execute_let_stmt::ExecLetObjStmtResult;
@@ -75,6 +77,8 @@ pub enum ExecDefinitionStmtResult {
     LetObj(ExecLetObjStmtResult),
     HaveObjInNonemptySet(ExecHaveObjInNonemptySetStmtResult),
     HaveObjEqual(ExecHaveObjEqualStmtResult),
+    HaveObjByExistFacts(ExecHaveObjByExistFactsStmtResult),
+    HaveFnEqual(ExecHaveFnEqualStmtResult),
     DefProp(ExecDefPropStmtResult),
     DefAbstractProp(ExecDefAbstractPropStmtSuccessResult),
     DefStruct(ExecDefStructStmtResult),
@@ -100,6 +104,8 @@ impl ExecDefinitionStmtResult {
             Self::LetObj(r) => r.is_failed(),
             Self::HaveObjInNonemptySet(r) => r.is_failed(),
             Self::HaveObjEqual(r) => r.is_failed(),
+            Self::HaveObjByExistFacts(r) => r.is_failed(),
+            Self::HaveFnEqual(r) => r.is_failed(),
             Self::DefProp(r) => r.is_failed(),
             Self::DefAbstractProp(_) => false,
             Self::DefStruct(r) => r.is_failed(),

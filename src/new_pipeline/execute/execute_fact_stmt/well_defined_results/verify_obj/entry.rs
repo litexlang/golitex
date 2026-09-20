@@ -48,6 +48,20 @@ impl Runtime {
             return self.verify_identifier_obj_well_definedness(value, verify_state);
         }
 
+        // Struct view `&Name` / `&Name(args)`: known definition + arity + param WD.
+        if let Obj::StructObj(value) = obj {
+            return self.verify_struct_obj_well_definedness(value, verify_state);
+        }
+
+        // `x.y`: definition-time struct carrier of `x`, then field name check.
+        if let Obj::ObjAsStructInstanceWithFieldAccess(value) = obj {
+            return self
+                .verify_obj_as_struct_instance_with_field_access_obj_well_definedness(
+                    value,
+                    verify_state,
+                );
+        }
+
         // Identifier-headed FnObj application: InFunctionSet + domain (not children-only).
         if let Obj::FnObj(value) = obj {
             if matches!(value.head.as_ref(), FnObjHead::Identifier(_)) {
@@ -254,14 +268,14 @@ impl Runtime {
             Obj::StandardSet(_) => {
                 self.verify_standard_set_obj_well_definedness_by_def(verify_state)
             }
-            Obj::StructObj(value) => {
-                self.verify_struct_obj_well_definedness_by_def(value, verify_state)
+            Obj::StructObj(_) => {
+                unreachable!("StructObj WD uses verify_struct_obj_well_definedness")
             }
-            Obj::ObjAsStructInstanceWithFieldAccess(value) => self
-                .verify_obj_as_struct_instance_with_field_access_obj_well_definedness_by_def(
-                    value,
-                    verify_state,
-                ),
+            Obj::ObjAsStructInstanceWithFieldAccess(_) => {
+                unreachable!(
+                    "field-access WD uses verify_obj_as_struct_instance_with_field_access_obj_well_definedness"
+                )
+            }
             Obj::InstantiatedTemplateObj(value) => {
                 self.verify_instantiated_template_obj_well_definedness_by_def(value, verify_state)
             }

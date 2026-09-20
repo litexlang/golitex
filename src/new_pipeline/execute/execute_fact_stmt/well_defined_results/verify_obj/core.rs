@@ -205,11 +205,6 @@ impl Runtime {
             }
             FnObjHead::ObjAsStructInstanceWithFieldAccess(access) => {
                 children.push(access.obj.as_ref());
-                if let Some(carrier) = &access.resolved_struct_carrier {
-                    for param in &carrier.params {
-                        children.push(param);
-                    }
-                }
             }
             FnObjHead::InstantiatedTemplateObj(inst) => {
                 for arg in &inst.args {

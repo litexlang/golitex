@@ -7,7 +7,7 @@ use super::super::*;
 /// again here; equality orientation and the `R+` target must match the retained
 /// certificate exactly.
 pub(in super::super) fn render_closed_positive_power_equality_membership_inference(
-    runtime: &Runtime,
+    _runtime: &Runtime,
     rule: &ClosedPositivePowerEqualityImpliesEqualSideMembershipInferRule,
     source: &Fact,
     target: &Fact,

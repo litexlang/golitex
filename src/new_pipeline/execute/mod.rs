@@ -7,6 +7,8 @@ pub mod execute_def_prop_stmt;
 pub mod execute_def_struct_stmt;
 pub mod execute_def_thm_stmt;
 pub mod execute_fact_stmt;
+mod execute_have_fn_equal_stmt;
+mod execute_have_obj_by_exist_facts_stmt;
 mod execute_have_obj_equal_stmt;
 mod execute_have_obj_in_nonempty_set_stmt;
 mod execute_let_stmt;
@@ -29,6 +31,14 @@ pub use execute_def_struct_stmt::{
     ExecDefStructStmtSuccessResult,
 };
 pub use execute_fact_stmt::{ExecFactStmtResult, ExecFactStmtSuccessResult, VerifyState};
+pub use execute_have_fn_equal_stmt::{
+    ExecHaveFnEqualStmtFailed, ExecHaveFnEqualStmtResult, ExecHaveFnEqualStmtSuccessResult,
+    StoreHaveFnEqualAndInferResult,
+};
+pub use execute_have_obj_by_exist_facts_stmt::{
+    ExecHaveObjByExistFactsStmtFailed, ExecHaveObjByExistFactsStmtResult,
+    ExecHaveObjByExistFactsStmtSuccessResult,
+};
 pub use execute_have_obj_equal_stmt::{
     ExecHaveObjEqualStmtFailed, ExecHaveObjEqualStmtResult, ExecHaveObjEqualStmtSuccessResult,
 };

@@ -1,6 +1,6 @@
 use crate::new_pipeline::ast::names::{AtomicName, PlainName};
 use crate::new_pipeline::ast::obj::{
-    Cart, FiniteSeqListObj, FiniteSeqSet, FnSet, Obj, SetBuilder, Tuple,
+    Cart, FiniteSeqListObj, FiniteSeqSet, FnSet, Obj, SetBuilder, StructObj, Tuple,
 };
 use crate::new_pipeline::ast::stmt::AxiomStmt;
 use crate::new_pipeline::ast::stmt::DefAbstractPropStmt;
@@ -116,6 +116,10 @@ pub enum SpecialObjProperty {
     ClosedNumericEqual((Obj, FactId)),
     InFunctionSet((FnSet, FactId)),
     EqualToFunction((Obj, FactId)),
+    /// Definition-time struct carrier only (`have p &Point`, `forall p &Point`, …).
+    /// Never written from a later `$in &Struct` proof (avoids carrier conflicts).
+    /// Example: after `have p &Point`, key `p` stores `&Point` for `p.x` WD.
+    DefinedAsStruct(StructObj),
 }
 
 // -----------------------------------------------------------------------------

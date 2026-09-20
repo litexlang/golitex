@@ -1,6 +1,6 @@
 use crate::new_pipeline::ast::fact::{
     and_chain_as_fact, atomic_fact_has_positive_polarity, negate_atomic_fact, or_fact_args_ref,
-    AndChainAtomicFact, Fact, ForallFact, OrFact,
+    AndChainAtomicFact, Fact, OrFact,
 };
 use crate::new_pipeline::exec_env::or_fact_index_key::or_fact_index_key;
 use crate::new_pipeline::exec_env::known_forall_conclusion_memory::{

@@ -22,7 +22,7 @@ pub use result::{ExecFactStmtResult, ExecFactStmtSuccessResult};
 pub use verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinRule;
 pub use verify_exist_fact::{
     VerifyExistFactFailed, VerifyExistFactResult, VerifyExistUniqueFactResult,
-    VerifyPlainExistFactResult,
+    VerifyPlainExistFactResult, VerifyPlainExistFactSuccess,
 };
 pub use verify_fact_result::VerifyFactResult;
 pub use verify_forall_fact::{

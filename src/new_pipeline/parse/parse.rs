@@ -115,12 +115,7 @@ impl Runtime {
                 block.source_path.clone(),
             )
             .into()),
-            Some(FN) => Err(RuntimeParseError::new(
-                "have fn: not wired yet in new_pipeline",
-                block.line,
-                block.source_path.clone(),
-            )
-            .into()),
+            Some(FN) => self.parse_have_fn_stmt(block),
             Some(BY) => match block.header.get(2).map(String::as_str) {
                 Some(PREIMAGE) => Err(RuntimeParseError::new(
                     "have by preimage: not wired yet in new_pipeline",

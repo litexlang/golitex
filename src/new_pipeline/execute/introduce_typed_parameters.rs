@@ -15,8 +15,9 @@
 use crate::new_pipeline::ast::fact::{
     AtomicFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
 };
-use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::ast::obj::{Obj, StructObj};
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
+use crate::new_pipeline::exec_env::exec_env::SpecialObjProperty;
 use crate::new_pipeline::exec_env::DefinedIdentifierInfo;
 use crate::new_pipeline::execute::execute_fact_stmt::{
     fail_to_verify_obj_well_defined_others, ParamTypeWellDefinedProof, VerifyObjWellDefinedResult,
@@ -103,10 +104,13 @@ impl Runtime {
                 );
                 // Env key is plain; type-fact mention qualifies at file root.
                 let element = Obj::Identifier(self.identifier_obj_for_stored_mention(identifier));
+                if let ParamType::Obj(Obj::StructObj(struct_obj)) = &group.param_type {
+                    self.record_defined_as_struct(&element, struct_obj.clone());
+                }
                 let type_fact = match &group.param_type {
                     ParamType::Obj(param_set) => Fact::AtomicFact(AtomicFact::InFact(InFact {
                         fact_id: self.ids.allocate_fact_id(),
-                        element,
+                        element: element.clone(),
                         set: param_set.clone(),
                         line_file: None,
                     })),
@@ -135,5 +139,14 @@ impl Runtime {
             }
         }
         Ok(StoreHaveObjAndInferResult { stored_fact_ids })
+    }
+
+    // Definition-time only: attach the written `&Struct` carrier to the bound object.
+    fn record_defined_as_struct(&mut self, element: &Obj, struct_obj: StructObj) {
+        self.top_exec_env_mut()
+            .special_object_properties
+            .entry(element.ir())
+            .or_default()
+            .push(SpecialObjProperty::DefinedAsStruct(struct_obj));
     }
 }

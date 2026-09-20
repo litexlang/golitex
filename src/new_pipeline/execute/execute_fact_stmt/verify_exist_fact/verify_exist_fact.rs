@@ -1,5 +1,5 @@
 use crate::new_pipeline::ast::fact::{exist_fact_family_from_fact, exist_fact_family_to_fact, 
-    exist_fact_family_free_args_ref, exist_fact_family_id, ExistFactFamily, Fact, ForallFact, InFact,
+    exist_fact_family_free_args_ref, exist_fact_family_id, ExistFactFamily, Fact, InFact,
 };
 use crate::new_pipeline::ast::obj::{Obj, StandardSet};
 use crate::new_pipeline::exec_env::exist_fact_index_key::{
