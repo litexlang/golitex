@@ -1,10 +1,9 @@
-# Field access WD via definition-time DefinedAsStruct
+# Slice 1: HaveObjByExistFacts + HaveFnEqual (new_pipeline)
 # Run: LITEX_NEW_PIPELINE=1 litex -f examples/tmp.lit
 
-struct Point:
-    x R
-    y R
+have left_greater R:
+    left_greater > 100
 
-forall p &Point:
-    p.x = p.x
-    p.y = p.y
+have fn id(x R) R = x
+have a R = 1
+id(a) = id(a)

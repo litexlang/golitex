@@ -1,1 +1,0 @@
-have fn successor(x Z) Z = x + 1

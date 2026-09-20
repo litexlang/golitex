@@ -1,2 +1,0 @@
-have fn successor(x Z) Z = x + 1
-successor(1) = 2
