@@ -5,8 +5,11 @@ pub mod execute_by_stmt;
 pub mod execute_def_abstract_prop_stmt;
 pub mod execute_def_prop_stmt;
 pub mod execute_def_struct_stmt;
+pub mod execute_def_template_stmt;
 pub mod execute_def_thm_stmt;
 pub mod execute_fact_stmt;
+mod execute_have_fn_by_forall_exist_unique_stmt;
+mod execute_have_fn_equal_case_by_case_stmt;
 mod execute_have_fn_equal_stmt;
 mod execute_have_obj_by_exist_facts_stmt;
 mod execute_have_obj_equal_stmt;
@@ -30,7 +33,19 @@ pub use execute_def_struct_stmt::{
     ExecDefStructFieldScopeSuccessResult, ExecDefStructStmtFailed, ExecDefStructStmtResult,
     ExecDefStructStmtSuccessResult,
 };
+pub use execute_def_template_stmt::{
+    AssumedTemplateDomFactResult, ExecDefTemplateStmtFailed, ExecDefTemplateStmtResult,
+    ExecDefTemplateStmtSuccessResult, ExecTemplateDefBodyResult,
+};
 pub use execute_fact_stmt::{ExecFactStmtResult, ExecFactStmtSuccessResult, VerifyState};
+pub use execute_have_fn_by_forall_exist_unique_stmt::{
+    ExecHaveFnByForallExistUniqueStmtFailed, ExecHaveFnByForallExistUniqueStmtResult,
+    ExecHaveFnByForallExistUniqueStmtSuccessResult, StoreHaveFnByExistUniqueAndInferResult,
+};
+pub use execute_have_fn_equal_case_by_case_stmt::{
+    ExecHaveFnEqualCaseByCaseStmtFailed, ExecHaveFnEqualCaseByCaseStmtResult,
+    ExecHaveFnEqualCaseByCaseStmtSuccessResult, StoreHaveFnCaseByCaseAndInferResult,
+};
 pub use execute_have_fn_equal_stmt::{
     ExecHaveFnEqualStmtFailed, ExecHaveFnEqualStmtResult, ExecHaveFnEqualStmtSuccessResult,
     StoreHaveFnEqualAndInferResult,

@@ -16,10 +16,13 @@ use crate::new_pipeline::execute::execute_by_stmt::ExecReleaseThmStmtResult;
 use crate::new_pipeline::execute::execute_def_abstract_prop_stmt::ExecDefAbstractPropStmtSuccessResult;
 use crate::new_pipeline::execute::execute_def_prop_stmt::ExecDefPropStmtResult;
 use crate::new_pipeline::execute::execute_def_struct_stmt::ExecDefStructStmtResult;
+use crate::new_pipeline::execute::execute_def_template_stmt::ExecDefTemplateStmtResult;
 use crate::new_pipeline::execute::execute_def_thm_stmt::ExecDefThmStmtResult;
 use crate::new_pipeline::execute::execute_fact_stmt::{
     ExecFactStmtResult, VerifyFactResult, VerifyObjWellDefinedResult,
 };
+use crate::new_pipeline::execute::execute_have_fn_by_forall_exist_unique_stmt::ExecHaveFnByForallExistUniqueStmtResult;
+use crate::new_pipeline::execute::execute_have_fn_equal_case_by_case_stmt::ExecHaveFnEqualCaseByCaseStmtResult;
 use crate::new_pipeline::execute::execute_have_fn_equal_stmt::ExecHaveFnEqualStmtResult;
 use crate::new_pipeline::execute::execute_have_obj_by_exist_facts_stmt::ExecHaveObjByExistFactsStmtResult;
 use crate::new_pipeline::execute::execute_have_obj_equal_stmt::ExecHaveObjEqualStmtResult;
@@ -79,9 +82,12 @@ pub enum ExecDefinitionStmtResult {
     HaveObjEqual(ExecHaveObjEqualStmtResult),
     HaveObjByExistFacts(ExecHaveObjByExistFactsStmtResult),
     HaveFnEqual(ExecHaveFnEqualStmtResult),
+    HaveFnEqualCaseByCase(ExecHaveFnEqualCaseByCaseStmtResult),
+    HaveFnByForallExistUnique(ExecHaveFnByForallExistUniqueStmtResult),
     DefProp(ExecDefPropStmtResult),
     DefAbstractProp(ExecDefAbstractPropStmtSuccessResult),
     DefStruct(ExecDefStructStmtResult),
+    DefTemplate(ExecDefTemplateStmtResult),
     DefThm(ExecDefThmStmtResult),
 }
 
@@ -106,9 +112,12 @@ impl ExecDefinitionStmtResult {
             Self::HaveObjEqual(r) => r.is_failed(),
             Self::HaveObjByExistFacts(r) => r.is_failed(),
             Self::HaveFnEqual(r) => r.is_failed(),
+            Self::HaveFnEqualCaseByCase(r) => r.is_failed(),
+            Self::HaveFnByForallExistUnique(r) => r.is_failed(),
             Self::DefProp(r) => r.is_failed(),
             Self::DefAbstractProp(_) => false,
             Self::DefStruct(r) => r.is_failed(),
+            Self::DefTemplate(r) => r.is_failed(),
             Self::DefThm(r) => r.is_failed(),
         }
     }

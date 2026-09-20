@@ -1,4 +1,6 @@
-use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact, InFact};
+use crate::new_pipeline::ast::fact::{
+    AtomicFact, EqualFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
+};
 use crate::new_pipeline::ast::names::BoundName;
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
@@ -8,7 +10,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::{
     VerifyFactResult, VerifyObjWellDefinedResult, VerifyState,
 };
 use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
-use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
+use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 pub enum ExecHaveObjEqualStmtFailed {
     ParamCountMismatch,
@@ -38,8 +40,9 @@ impl ExecHaveObjEqualStmtResult {
 }
 
 impl Runtime {
-    // `have a R = 10` / `have a, b R = 10, 20`
+    // `have a R = 10` / `have a, b R = 10, 20` / `have S set = T`
     // Example: have a R = 10 stores `a $in R` and `a = 10` (ClosedNumericEqual indexes a).
+    // Example: have carrier_copy set = S stores `$is_set(carrier_copy)` and `carrier_copy = S`.
     pub(super) fn exec_have_obj_equal_stmt(
         &mut self,
         stmt: &HaveObjEqualStmt,
@@ -81,33 +84,40 @@ impl Runtime {
 
         let mut membership_checks = Vec::with_capacity(bindings.len());
         for ((_, param_type), obj) in bindings.iter().zip(stmt.objs_equal_to.iter()) {
-            match param_type {
-                ParamType::Obj(param_set) => {
-                    let fact_id = self.ids.allocate_fact_id();
-                    let in_fact = InFact {
-                        fact_id,
-                        element: obj.clone(),
-                        set: param_set.clone(),
+            let type_fact = match param_type {
+                ParamType::Obj(param_set) => Fact::AtomicFact(AtomicFact::InFact(InFact {
+                    fact_id: self.ids.allocate_fact_id(),
+                    element: obj.clone(),
+                    set: param_set.clone(),
+                    line_file: Some(stmt.line_file.clone()),
+                })),
+                ParamType::Set(_) => Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact {
+                    fact_id: self.ids.allocate_fact_id(),
+                    set: obj.clone(),
+                    line_file: Some(stmt.line_file.clone()),
+                })),
+                ParamType::NonemptySet(_) => {
+                    Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact {
+                        fact_id: self.ids.allocate_fact_id(),
+                        set: obj.clone(),
                         line_file: Some(stmt.line_file.clone()),
-                    };
-                    let checked = self.verify_fact(
-                        &Fact::AtomicFact(AtomicFact::InFact(in_fact)),
-                        verify_state.clone(),
-                    )?;
-                    if checked.is_failed() {
-                        return Ok(ExecHaveObjEqualStmtResult::Failed(
-                            ExecHaveObjEqualStmtFailed::Membership(checked),
-                        ));
-                    }
-                    membership_checks.push(checked);
+                    }))
                 }
-                ParamType::Set(_) | ParamType::NonemptySet(_) | ParamType::FiniteSet(_) => {
-                    return Err(RuntimeError::Unsupported(
-                        "new_pipeline `have ... =` currently supports only Obj param types (e.g. `have a R = 10`)"
-                            .to_string(),
-                    ));
+                ParamType::FiniteSet(_) => {
+                    Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact {
+                        fact_id: self.ids.allocate_fact_id(),
+                        set: obj.clone(),
+                        line_file: Some(stmt.line_file.clone()),
+                    }))
                 }
+            };
+            let checked = self.verify_fact(&type_fact, verify_state.clone())?;
+            if checked.is_failed() {
+                return Ok(ExecHaveObjEqualStmtResult::Failed(
+                    ExecHaveObjEqualStmtFailed::Membership(checked),
+                ));
             }
+            membership_checks.push(checked);
         }
 
         let mut store_and_infer_result =

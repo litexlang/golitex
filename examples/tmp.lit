@@ -1,16 +1,5 @@
-# FieldAccess: `x.y` and `x.y.z` as one node with fields: Vec
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/tmp.lit
+template<S set>:
+    have carrier_copy set = S
 
-struct Coordinates:
-    x R
-    y R
-
-struct TaggedPoint:
-    point &Coordinates
-    tag N
-
-forall p &TaggedPoint:
-    p.point = p.point
-    p.tag = p.tag
-    p.point.x = p.point.x
-    p.point.y = p.point.y
+# Bare `\T<a>` is not a statement; equality forces instance WD.
+\carrier_copy<R> = \carrier_copy<R>

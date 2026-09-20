@@ -1,16 +1,23 @@
 //! Struct / template / field-access object WD.
 
 use super::fail_to_verify_obj_well_defined::{
-    FailToVerifyFieldAccessObjWellDefined, FailToVerifyObjWellDefinedByDefCommon,
-    FailToVerifyObjWellDefinedResult, FailToVerifyStructObjObjWellDefined,
+    FailToVerifyFieldAccessObjWellDefined, FailToVerifyInstantiatedTemplateObjObjWellDefined,
+    FailToVerifyObjWellDefinedByDefCommon, FailToVerifyObjWellDefinedResult,
+    FailToVerifyStructObjObjWellDefined,
 };
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::wrap_obj_well_defined_by_def::finish_by_def;
 use super::entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
+use crate::new_pipeline::ast::fact::{
+    AtomicFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
+};
 use crate::new_pipeline::ast::obj::{FieldAccess, InstantiatedTemplateObj, Obj, StructObj};
+use crate::new_pipeline::ast::param::ParamType;
 use crate::new_pipeline::exec_env::exec_env::SpecialObjProperty;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
+use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
+use std::collections::HashMap;
 
 impl Runtime {
     // `&Name` / `&Name<args>`: known structure definition, matching arity, param WD.
@@ -204,14 +211,139 @@ impl Runtime {
         None
     }
 
-    pub(super) fn verify_instantiated_template_obj_well_definedness_by_def(
+    // `\Name<args>`: known template, matching arity, args WD, param-type + domain obligations.
+    // Surface stays InstantiatedTemplateObj (no materialization).
+    // Example: after `template<S set>: have carrier_copy set = S`, WD of `\carrier_copy<R>`.
+    pub(super) fn verify_instantiated_template_obj_well_definedness(
         &mut self,
         value: &InstantiatedTemplateObj,
         verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
-        let refs: Vec<&Obj> = value.args.iter().collect();
-        self.verify_objs_as_children(&refs, verify_state)
+    ) -> RuntimeResult<VerifyObjWellDefinedResult> {
+        let plain = value.template_name.local_name();
+        let (expected_arity, param_groups, dom_facts) = {
+            let Some(def) = self.def_template_visible_in_stack(plain) else {
+                return Ok(template_fail(FailToVerifyObjWellDefinedByDefCommon::Others(
+                    format!("template `{plain}` is not defined"),
+                )));
+            };
+            (
+                def.template_arg_def.ordered_param_ids().len(),
+                def.template_arg_def.groups.clone(),
+                def.template_arg_dom.clone(),
+            )
+        };
+        if value.args.len() != expected_arity {
+            return Ok(template_fail(FailToVerifyObjWellDefinedByDefCommon::Others(
+                format!(
+                    "template `{plain}` expects {expected_arity} argument(s), got {}",
+                    value.args.len()
+                ),
+            )));
+        }
+
+        let mut stages = ObjWellDefinedByDefCommonStages::leaf();
+        for arg in &value.args {
+            let child = self.verify_obj_well_definedness(arg, verify_state.clone())?;
+            let failed = child.is_failed();
+            stages.child_obj_well_defined.push((arg.clone(), child));
+            if failed {
+                let root = Obj::InstantiatedTemplateObj(value.clone());
+                return Ok(match finish_by_def(&root, stages) {
+                    Ok(_) => unreachable!(),
+                    Err(fail) => VerifyObjWellDefinedResult::Failed(fail),
+                });
+            }
+        }
+
+        let param_ids = {
+            let mut ids = Vec::with_capacity(expected_arity);
+            for group in &param_groups {
+                for param in &group.params {
+                    ids.push(param.id);
+                }
+            }
+            ids
+        };
+        let mut subst: HashMap<IdentifierId, Obj> = HashMap::new();
+        for (id, arg) in param_ids.iter().zip(value.args.iter()) {
+            subst.insert(*id, arg.clone());
+        }
+
+        let mut arg_index = 0;
+        for group in &param_groups {
+            let param_type = match self.inst_param_type(&group.param_type, &subst) {
+                Ok(param_type) => param_type,
+                Err(_) => {
+                    return Ok(template_fail(FailToVerifyObjWellDefinedByDefCommon::Others(
+                        format!("template `{plain}`: failed to instantiate parameter type"),
+                    )));
+                }
+            };
+            for _param in &group.params {
+                let arg = &value.args[arg_index];
+                let type_fact = type_fact_for_instantiated_template_arg(
+                    arg.clone(),
+                    &param_type,
+                    self.ids.allocate_fact_id(),
+                );
+                let req = self.verify_fact(&type_fact, verify_state.clone())?;
+                let failed = req.is_failed();
+                stages.requirement_fact_verified.push(req);
+                if failed {
+                    let root = Obj::InstantiatedTemplateObj(value.clone());
+                    return Ok(match finish_by_def(&root, stages) {
+                        Ok(_) => unreachable!(),
+                        Err(fail) => VerifyObjWellDefinedResult::Failed(fail),
+                    });
+                }
+                arg_index += 1;
+            }
+        }
+
+        for dom in &dom_facts {
+            let instantiated = match self.inst_quantifier_free_fact(dom, &subst) {
+                Ok(f) => f,
+                Err(_) => {
+                    return Ok(template_fail(FailToVerifyObjWellDefinedByDefCommon::Others(
+                        format!("template `{plain}`: failed to instantiate domain fact"),
+                    )));
+                }
+            };
+            let req =
+                self.verify_required_quantifier_free_fact(instantiated, verify_state.clone())?;
+            let failed = req.is_failed();
+            stages.requirement_fact_verified.push(req);
+            if failed {
+                let root = Obj::InstantiatedTemplateObj(value.clone());
+                return Ok(match finish_by_def(&root, stages) {
+                    Ok(_) => unreachable!(),
+                    Err(fail) => VerifyObjWellDefinedResult::Failed(fail),
+                });
+            }
+        }
+
+        let root = Obj::InstantiatedTemplateObj(value.clone());
+        match finish_by_def(&root, stages) {
+            Ok(by_def) => {
+                if verify_state.store_well_defined_fact {
+                    let wd_id = self.ids.allocate_well_definedness_id();
+                    self.top_exec_env_mut()
+                        .well_defined_objects
+                        .record(root, wd_id);
+                }
+                Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef(
+                    by_def,
+                )))
+            }
+            Err(fail) => Ok(VerifyObjWellDefinedResult::Failed(fail)),
+        }
     }
+}
+
+fn template_fail(common: FailToVerifyObjWellDefinedByDefCommon) -> VerifyObjWellDefinedResult {
+    VerifyObjWellDefinedResult::Failed(FailToVerifyObjWellDefinedResult::InstantiatedTemplateObj(
+        FailToVerifyInstantiatedTemplateObjObjWellDefined(common),
+    ))
 }
 
 fn field_access_fail(message: String) -> VerifyObjWellDefinedResult {
@@ -220,4 +352,37 @@ fn field_access_fail(message: String) -> VerifyObjWellDefinedResult {
             message,
         )),
     ))
+}
+
+// Same shapes as forall instantiation param-type obligations.
+fn type_fact_for_instantiated_template_arg(
+    arg: Obj,
+    param_type: &ParamType,
+    fact_id: crate::new_pipeline::runtime::FactId,
+) -> Fact {
+    match param_type {
+        ParamType::Obj(param_set) => Fact::AtomicFact(AtomicFact::InFact(InFact {
+            fact_id,
+            element: arg,
+            set: param_set.clone(),
+            line_file: None,
+        })),
+        ParamType::Set(_) => Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact {
+            fact_id,
+            set: arg,
+            line_file: None,
+        })),
+        ParamType::NonemptySet(_) => {
+            Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact {
+                fact_id,
+                set: arg,
+                line_file: None,
+            }))
+        }
+        ParamType::FiniteSet(_) => Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact {
+            fact_id,
+            set: arg,
+            line_file: None,
+        })),
+    }
 }

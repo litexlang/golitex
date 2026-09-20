@@ -178,6 +178,17 @@ impl ExecEnv {
             .insert(def_struct.name.clone(), def_struct);
     }
 
+    pub fn lookup_def_template(&self, name: &str) -> Option<&DefTemplateStmt> {
+        self.definitions.template_definitions.get(name)
+    }
+
+    pub fn store_def_template(&mut self, def_template: DefTemplateStmt) {
+        self.definitions.template_definitions.insert(
+            def_template.template_name.clone(),
+            def_template,
+        );
+    }
+
     pub fn lookup_axiom(&self, name: &str) -> Option<&AxiomStmt> {
         self.definitions.axiom_definitions.get(name)
     }

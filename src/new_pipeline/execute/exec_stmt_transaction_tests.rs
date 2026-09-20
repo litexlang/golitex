@@ -1111,3 +1111,125 @@ fn have_fn_equal_and_by_exist_slice1() {
     );
 }
 
+#[test]
+fn have_fn_by_cases_slice2() {
+    use crate::new_pipeline::exec_env::exec_env::SpecialObjProperty;
+    use crate::new_pipeline::execute::execute_have_fn_equal_case_by_case_stmt::{
+        ExecHaveFnEqualCaseByCaseStmtFailed, ExecHaveFnEqualCaseByCaseStmtResult,
+    };
+    use crate::new_pipeline::execute::ExecDefinitionStmtResult;
+    use crate::new_pipeline::execute::ExecStmtResult;
+
+    let mut runtime = runtime_with_file_env();
+    let code = "have fn nonzero_flag(x R) R by cases:\n    case x = 0: 0\n    case x != 0: 1";
+    let r = exec_one(&mut runtime, code);
+    match &r {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqualCaseByCase(
+            ExecHaveFnEqualCaseByCaseStmtResult::Success(_),
+        )) => {}
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqualCaseByCase(
+            ExecHaveFnEqualCaseByCaseStmtResult::Failed(f),
+        )) => {
+            let msg = match f {
+                ExecHaveFnEqualCaseByCaseStmtFailed::CaseCountMismatch => "CaseCountMismatch",
+                ExecHaveFnEqualCaseByCaseStmtFailed::EmptyCases => "EmptyCases",
+                ExecHaveFnEqualCaseByCaseStmtFailed::FnSetWellDefined(_) => "FnSetWellDefined",
+                ExecHaveFnEqualCaseByCaseStmtFailed::Coverage(_) => "Coverage",
+                ExecHaveFnEqualCaseByCaseStmtFailed::Disjoint { i, j } => {
+                    panic!("Disjoint {i},{j}")
+                }
+                ExecHaveFnEqualCaseByCaseStmtFailed::CaseBodyWellDefined(i, _) => {
+                    panic!("CaseBodyWellDefined {i}")
+                }
+                ExecHaveFnEqualCaseByCaseStmtFailed::CaseBodyInRetSet(i, _) => {
+                    panic!("CaseBodyInRetSet {i}")
+                }
+            };
+            panic!("have fn by cases failed: {msg}");
+        }
+        _other => panic!("unexpected result shape for by cases"),
+    }
+    assert!(
+        runtime
+            .top_exec_env()
+            .special_object_properties
+            .values()
+            .flatten()
+            .any(|p| matches!(p, SpecialObjProperty::InFunctionSet(_))),
+        "by cases must store InFunctionSet"
+    );
+    assert!(!exec_one(&mut runtime, "have a R = 2").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "nonzero_flag(a) = nonzero_flag(a)").is_failed(),
+        "nonzero_flag(a)=nonzero_flag(a) after by cases"
+    );
+}
+
+#[test]
+fn have_fn_by_exist_slice2() {
+    use crate::new_pipeline::exec_env::exec_env::SpecialObjProperty;
+    use crate::new_pipeline::execute::execute_have_fn_by_forall_exist_unique_stmt::{
+        ExecHaveFnByForallExistUniqueStmtFailed, ExecHaveFnByForallExistUniqueStmtResult,
+    };
+    use crate::new_pipeline::execute::ExecDefinitionStmtResult;
+    use crate::new_pipeline::execute::ExecStmtResult;
+
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "abstract_prop F(x, y)").is_failed());
+    assert!(!exec_one(&mut runtime, "have A set").is_failed());
+    assert!(!exec_one(&mut runtime, "have B set").is_failed());
+    assert!(
+        !exec_one(
+            &mut runtime,
+            "trust:\n    forall x A:\n        exist! y B st {$F(x, y)}"
+        )
+        .is_failed()
+    );
+
+    let code = "have fn f by exist!:\n    ? forall x A:\n        exist! y B st {$F(x, y)}";
+    let r = exec_one(&mut runtime, code);
+    match &r {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByForallExistUnique(
+            ExecHaveFnByForallExistUniqueStmtResult::Success(_),
+        )) => {}
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByForallExistUnique(
+            ExecHaveFnByForallExistUniqueStmtResult::Failed(f),
+        )) => {
+            let msg = match f {
+                ExecHaveFnByForallExistUniqueStmtFailed::Shape(s) => format!("Shape({s})"),
+                ExecHaveFnByForallExistUniqueStmtFailed::ForallWellDefined(_) => {
+                    "ForallWellDefined".to_string()
+                }
+                ExecHaveFnByForallExistUniqueStmtFailed::FnSetWellDefined(_) => {
+                    "FnSetWellDefined".to_string()
+                }
+                ExecHaveFnByForallExistUniqueStmtFailed::Introduce(s) => {
+                    format!("Introduce({s})")
+                }
+                ExecHaveFnByForallExistUniqueStmtFailed::ProofBody(_) => "ProofBody".to_string(),
+                ExecHaveFnByForallExistUniqueStmtFailed::ForallProof(_) => {
+                    "ForallProof".to_string()
+                }
+                ExecHaveFnByForallExistUniqueStmtFailed::PropertyWellDefined(_) => {
+                    "PropertyWellDefined".to_string()
+                }
+            };
+            panic!("have fn by exist! failed: {msg}");
+        }
+        other => panic!("unexpected result shape for by exist!: failed={}", other.is_failed()),
+    }
+    assert!(
+        runtime
+            .top_exec_env()
+            .special_object_properties
+            .values()
+            .flatten()
+            .any(|p| matches!(p, SpecialObjProperty::InFunctionSet(_))),
+        "by exist! must store InFunctionSet"
+    );
+    assert!(
+        !exec_one(&mut runtime, "forall x A:\n    $F(x, f(x))").is_failed(),
+        "$F(x, f(x)) after have fn by exist!"
+    );
+}
+

@@ -2,9 +2,9 @@ use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::{
     Abs, AnonymousFn, Cart, CartDim, Ceil, ClosedRange, Cos, Exp, FiniteSetMax, FiniteSetMin,
     FiniteSetSize, Floor, FnObjHead, FnRange, FnSet, Gcd, GeneralCart, IdentifierObj,
-    IndexIntersect, IndexUnion, Intersect, Lcm, ListSet, Ln, Max, Min, Number, Obj, PowerSet,
-    ProductOfFiniteSet, Proj, Quot, Range, SetBuilder, SetMinus, Sin, Sqrt, StandardSet, StructObj,
-    Tan, Tuple, TupleDim, Union,
+    IndexIntersect, IndexUnion, InstantiatedTemplateObj, Intersect, Lcm, ListSet, Ln, Max, Min,
+    Number, Obj, PowerSet, ProductOfFiniteSet, Proj, Quot, Range, SetBuilder, SetMinus, Sin, Sqrt,
+    StandardSet, StructObj, Tan, Tuple, TupleDim, Union,
 };
 use crate::new_pipeline::ast::param::{ParamType, SetBoundParameterGroup, SetBoundParameterList};
 use crate::new_pipeline::parse::keywords::{
@@ -13,7 +13,8 @@ use crate::new_pipeline::parse::keywords::{
     GENERAL_CART, GREATER, INDEX_INTERSECT, INDEX_UNION, INTERSECT, LCM, LEFT_BRACKET, LEFT_CURLY,
     LEFT_PAREN, LESS, LN, MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS, POWER_SET, PROJ, Q, QUOT,
     Q_NEG, Q_POS, Q_STAR, R, RANGE, RIGHT_BRACKET, RIGHT_CURLY, RIGHT_PAREN, R_NEG, R_POS, R_STAR,
-    SET_MINUS, SIN, SQRT, STRUCT_VIEW_PREFIX, TAN, TUPLE, TUPLE_DIM, UNION, Z, Z_NEG, Z_POS, Z_STAR,
+    SET_MINUS, SIN, SQRT, STRUCT_VIEW_PREFIX, TAN, TEMPLATE_INSTANCE_PREFIX, TUPLE, TUPLE_DIM,
+    UNION, Z, Z_NEG, Z_POS, Z_STAR,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -65,6 +66,9 @@ pub fn parse_primary(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
     if token == STRUCT_VIEW_PREFIX {
         return parse_struct_view(rt, tb);
     }
+    if token == TEMPLATE_INSTANCE_PREFIX {
+        return parse_instantiated_template(rt, tb);
+    }
 
     if let Some(obj) = try_parse_keyword_primary(rt, tb, &token)? {
         return Ok(obj);
@@ -85,9 +89,8 @@ pub(super) fn fn_obj_head_from_obj(obj: Obj) -> Option<FnObjHead> {
     match obj {
         Obj::Identifier(id) => Some(FnObjHead::Identifier(id)),
         Obj::ObjAtIndex(v) => Some(FnObjHead::ObjAtIndex(v)),
-        Obj::FieldAccess(v) => {
-            Some(FnObjHead::FieldAccess(v))
-        }
+        Obj::FieldAccess(v) => Some(FnObjHead::FieldAccess(v)),
+        Obj::InstantiatedTemplateObj(v) => Some(FnObjHead::InstantiatedTemplateObj(v)),
         _ => None,
     }
 }
@@ -141,6 +144,30 @@ fn parse_struct_view(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
     };
 
     Ok(Obj::StructObj(StructObj { name, params }))
+}
+
+// `\Name<args>` → InstantiatedTemplateObj. Angle args are required.
+fn parse_instantiated_template(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
+    tb.expect(TEMPLATE_INSTANCE_PREFIX)?;
+    let name_tok = tb
+        .advance()
+        .map_err(|_| tb.parse_error("`\\` expects a template name"))?;
+    if !is_simple_name(&name_tok) {
+        return Err(tb.parse_error(format!(
+            "invalid template name `{name_tok}` after `\\`"
+        )));
+    }
+    let template_name = rt.atomic_name_for_plain_prop_ref(name_tok);
+    if tb.peek() != Some(LESS) {
+        return Err(tb.parse_error(
+            "template instance expects `<...>` arguments (e.g. `\\T<a>`)",
+        ));
+    }
+    let args = parse_obj_list_angle(rt, tb)?;
+    Ok(Obj::InstantiatedTemplateObj(InstantiatedTemplateObj {
+        template_name,
+        args,
+    }))
 }
 
 fn parse_obj_list_angle(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Vec<Obj>> {
