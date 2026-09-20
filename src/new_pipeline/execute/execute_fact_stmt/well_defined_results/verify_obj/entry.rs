@@ -53,6 +53,11 @@ impl Runtime {
             return self.verify_struct_obj_well_definedness(value, verify_state);
         }
 
+        // Template instance `\Name<args>`: known definition + arity + args/requirements WD.
+        if let Obj::InstantiatedTemplateObj(value) = obj {
+            return self.verify_instantiated_template_obj_well_definedness(value, verify_state);
+        }
+
         // `x.y` / `x.y.z`: definition-time struct carrier walk along `fields`.
         if let Obj::FieldAccess(value) = obj {
             return self.verify_field_access_obj_well_definedness(value, verify_state);
@@ -270,8 +275,10 @@ impl Runtime {
             Obj::FieldAccess(_) => {
                 unreachable!("field-access WD uses verify_field_access_obj_well_definedness")
             }
-            Obj::InstantiatedTemplateObj(value) => {
-                self.verify_instantiated_template_obj_well_definedness_by_def(value, verify_state)
+            Obj::InstantiatedTemplateObj(_) => {
+                unreachable!(
+                    "InstantiatedTemplateObj WD uses verify_instantiated_template_obj_well_definedness"
+                )
             }
             Obj::OneSideInfinityIntervalObj(value) => self
                 .verify_one_side_infinity_interval_obj_well_definedness_by_def(value, verify_state),

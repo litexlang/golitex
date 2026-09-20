@@ -75,6 +75,20 @@ impl Runtime {
                     ),
                 ))
             }
+            Stmt::Definition(DefinitionStmt::HaveFnEqualCaseByCaseStmt(have_stmt)) => {
+                Ok(ExecStmtResult::Definition(
+                    ExecDefinitionStmtResult::HaveFnEqualCaseByCase(
+                        self.exec_have_fn_equal_case_by_case_stmt(have_stmt)?,
+                    ),
+                ))
+            }
+            Stmt::Definition(DefinitionStmt::HaveFnByForallExistUniqueStmt(have_stmt)) => {
+                Ok(ExecStmtResult::Definition(
+                    ExecDefinitionStmtResult::HaveFnByForallExistUnique(
+                        self.exec_have_fn_by_forall_exist_unique_stmt(have_stmt)?,
+                    ),
+                ))
+            }
             Stmt::Definition(DefinitionStmt::DefPropStmt(def_prop)) => {
                 Ok(ExecStmtResult::Definition(ExecDefinitionStmtResult::DefProp(
                     self.exec_def_prop_stmt(def_prop)?,
@@ -90,6 +104,13 @@ impl Runtime {
             Stmt::Definition(DefinitionStmt::DefStructStmt(def_struct)) => {
                 Ok(ExecStmtResult::Definition(
                     ExecDefinitionStmtResult::DefStruct(self.exec_def_struct_stmt(def_struct)?),
+                ))
+            }
+            Stmt::Definition(DefinitionStmt::DefTemplateStmt(def_template)) => {
+                Ok(ExecStmtResult::Definition(
+                    ExecDefinitionStmtResult::DefTemplate(
+                        self.exec_def_template_stmt(def_template)?,
+                    ),
                 ))
             }
             Stmt::Definition(DefinitionStmt::DefThmStmt(def_thm)) => {
@@ -149,7 +170,7 @@ impl Runtime {
                 Ok(ExecStmtResult::By(exec_by_strong_induc_stmt(self, stmt)?))
             }
             _ => Err(RuntimeError::Unsupported(
-                "new_pipeline exec_stmt: Fact, let, have-obj-in-nonempty, have-obj-equal, have-obj-by-exist, have-fn-equal, prop, abstract_prop, struct, thm, witness, trust, release thm, by reflexive_prop / symmetric_prop / transitive_prop / extension / contra / cases / def / thm / induc / strong_induc are wired for the tracer"
+                "new_pipeline exec_stmt: Fact, let, have-obj-in-nonempty, have-obj-equal, have-obj-by-exist, have-fn-equal, have-fn-by-cases, have-fn-by-exist!, prop, abstract_prop, struct, template, thm, witness, trust, release thm, by reflexive_prop / symmetric_prop / transitive_prop / extension / contra / cases / def / thm / induc / strong_induc are wired for the tracer"
                     .to_string(),
             )),
         }

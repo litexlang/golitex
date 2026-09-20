@@ -1,8 +1,13 @@
-use super::super::keywords::{COLON, EQUIVALENT_SIGN, LEFT_PAREN, LESS, SETTING, STRATEGY, STRUCT};
+use super::super::keywords::{
+    COLON, COMMA, EQUIVALENT_SIGN, GREATER, LEFT_PAREN, LESS, SETTING, STRATEGY, STRUCT, TEMPLATE,
+};
 use super::super::object::{is_simple_name, parse_obj};
+use crate::new_pipeline::ast::fact::QuantifierFreeFact;
 use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::param::TypedParameterList;
 use crate::new_pipeline::ast::stmt::{
-    DefSettingStmt, DefStrategyStmt, DefStructStmt, DefinitionStmt, Stmt, StructFieldDef,
+    DefSettingStmt, DefStrategyStmt, DefStructStmt, DefTemplateStmt, DefinitionStmt, Stmt,
+    StructFieldDef, TemplateDefEnum, UnsafeStmt,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -170,11 +175,94 @@ impl Runtime {
         )))
     }
 
+    // template<params [: dom…]>:
+    //     <one have / trust have / obtain body>
+    // Name comes from the body definition, not the header.
     pub(in super::super) fn parse_def_template_stmt(
         &mut self,
         block: &TokenBlock,
     ) -> RuntimeResult<Stmt> {
-        Err(block.parse_error("template: not wired yet in new_pipeline (parse → AST deferred)"))
+        let mut tb = block.clone();
+        tb.expect(TEMPLATE)?;
+
+        self.push_parse_scope();
+        let parsed = (|| {
+            let (template_arg_def, template_arg_dom) =
+                self.parse_template_arg_header_in_angles(&mut tb)?;
+            tb.expect(COLON)?;
+            if !tb.exceed_end_of_head() {
+                return Err(tb.parse_error("template: unexpected tokens after header `:`"));
+            }
+            if tb.body.len() != 1 {
+                return Err(tb.parse_error(
+                    "template definition expects exactly one body statement",
+                ));
+            }
+            let body_stmt = self.parse_token_block(&tb.body[0])?;
+            let template_def_stmt = template_def_enum_from_body_stmt(body_stmt, &tb)?;
+            let template_name = template_def_enum_name(&template_def_stmt).ok_or_else(|| {
+                tb.parse_error(
+                    "template body must define exactly one object or function name",
+                )
+            })?;
+            Ok((
+                template_name,
+                template_arg_def,
+                template_arg_dom,
+                template_def_stmt,
+            ))
+        })();
+        self.pop_parse_scope();
+        let (template_name, template_arg_def, template_arg_dom, template_def_stmt) = parsed?;
+
+        self.define_plain_atom_as_parse(&tb, template_name.clone())?;
+        Ok(Stmt::Definition(DefinitionStmt::DefTemplateStmt(
+            DefTemplateStmt {
+                template_name,
+                template_arg_def,
+                template_arg_dom,
+                template_def_stmt,
+                line_file: LineFile::new(block.line, block.source_path.clone()),
+            },
+        )))
+    }
+
+    // `<x R, y S [: dom, …]>` for template headers (dom facts optional before `>`).
+    fn parse_template_arg_header_in_angles(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> RuntimeResult<(TypedParameterList, Vec<QuantifierFreeFact>)> {
+        tb.expect(LESS)?;
+        let mut groups = Vec::new();
+        while !tb.exceed_end_of_head()
+            && tb.peek() != Some(GREATER)
+            && tb.peek() != Some(COLON)
+        {
+            groups.push(self.parse_one_typed_param_group(tb)?);
+            if tb.peek() == Some(COMMA) {
+                tb.advance()?;
+            }
+        }
+        if groups.is_empty() {
+            return Err(tb.parse_error(
+                "template header expects at least one parameter inside `<...>`",
+            ));
+        }
+
+        let mut template_arg_dom = Vec::new();
+        if tb.peek() == Some(COLON) {
+            tb.advance()?;
+            while !tb.exceed_end_of_head() && tb.peek() != Some(GREATER) {
+                template_arg_dom.push(self.parse_quantifier_free_fact_inline(tb)?);
+                if tb.peek() == Some(COMMA) {
+                    tb.advance()?;
+                } else {
+                    break;
+                }
+            }
+        }
+        tb.expect(GREATER)?;
+        Ok((TypedParameterList { groups }, template_arg_dom))
     }
 
     // strategy Name:
@@ -215,4 +303,88 @@ impl Runtime {
             },
         )))
     }
+}
+
+fn template_def_enum_from_body_stmt(
+    body: Stmt,
+    tb: &TokenBlock,
+) -> RuntimeResult<TemplateDefEnum> {
+    match body {
+        Stmt::Definition(DefinitionStmt::HaveObjInNonemptySetStmt(stmt)) => {
+            Ok(TemplateDefEnum::HaveObjInNonemptySetStmt(stmt))
+        }
+        Stmt::Definition(DefinitionStmt::HaveObjEqualStmt(stmt)) => {
+            Ok(TemplateDefEnum::HaveObjEqualStmt(stmt))
+        }
+        Stmt::Definition(DefinitionStmt::HaveObjByExistFactsStmt(stmt)) => {
+            Ok(TemplateDefEnum::HaveObjByExistFactsStmt(stmt))
+        }
+        Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(stmt)) => {
+            Ok(TemplateDefEnum::TrustHaveStmt(stmt))
+        }
+        Stmt::Definition(DefinitionStmt::ObtainObjFromExistFact(stmt)) => {
+            Ok(TemplateDefEnum::ObtainObjFromExistFact(stmt))
+        }
+        Stmt::Definition(DefinitionStmt::ObtainObjFromAtomicFact(stmt)) => {
+            Ok(TemplateDefEnum::ObtainObjFromAtomicFact(stmt))
+        }
+        Stmt::Definition(DefinitionStmt::ObtainObjFromThm(stmt)) => {
+            Ok(TemplateDefEnum::ObtainObjFromThm(stmt))
+        }
+        Stmt::Definition(DefinitionStmt::HaveFnEqualStmt(stmt)) => {
+            Ok(TemplateDefEnum::HaveFnEqualStmt(stmt))
+        }
+        Stmt::Definition(DefinitionStmt::HaveFnEqualCaseByCaseStmt(stmt)) => {
+            Ok(TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt))
+        }
+        Stmt::Definition(DefinitionStmt::HaveFnByInducStmt(stmt)) => {
+            Ok(TemplateDefEnum::HaveFnByInducStmt(stmt))
+        }
+        Stmt::Definition(DefinitionStmt::HaveFnByForallExistUniqueStmt(stmt)) => {
+            Ok(TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt))
+        }
+        Stmt::Definition(DefinitionStmt::HaveTupleStmt(stmt)) => {
+            Ok(TemplateDefEnum::HaveTupleStmt(stmt))
+        }
+        Stmt::Definition(DefinitionStmt::HaveCartStmt(stmt)) => {
+            Ok(TemplateDefEnum::HaveCartStmt(stmt))
+        }
+        Stmt::Definition(DefinitionStmt::HaveSeqStmt(stmt)) => {
+            Ok(TemplateDefEnum::HaveSeqStmt(stmt))
+        }
+        Stmt::Definition(DefinitionStmt::HaveFiniteSeqStmt(stmt)) => {
+            Ok(TemplateDefEnum::HaveFiniteSeqStmt(stmt))
+        }
+        _ => Err(tb.parse_error(
+            "template body only supports `have` / `trust have` / `obtain` definition statements",
+        )),
+    }
+}
+
+fn template_def_enum_name(body: &TemplateDefEnum) -> Option<String> {
+    match body {
+        TemplateDefEnum::HaveObjInNonemptySetStmt(stmt) => first_typed_param_name(&stmt.param_def),
+        TemplateDefEnum::HaveObjEqualStmt(stmt) => first_typed_param_name(&stmt.param_def),
+        TemplateDefEnum::HaveObjByExistFactsStmt(stmt) => first_typed_param_name(&stmt.param_def),
+        TemplateDefEnum::TrustHaveStmt(stmt) => first_typed_param_name(&stmt.param_def),
+        TemplateDefEnum::ObtainObjFromExistFact(stmt) => stmt.equal_tos.first().cloned(),
+        TemplateDefEnum::ObtainObjFromAtomicFact(stmt) => stmt.equal_tos.first().cloned(),
+        TemplateDefEnum::ObtainObjFromThm(stmt) => stmt.equal_tos.first().cloned(),
+        TemplateDefEnum::HaveFnEqualStmt(stmt) => Some(stmt.name.clone()),
+        TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => Some(stmt.name.clone()),
+        TemplateDefEnum::HaveFnByInducStmt(stmt) => Some(stmt.name.clone()),
+        TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => Some(stmt.name.clone()),
+        TemplateDefEnum::HaveTupleStmt(stmt) => Some(stmt.name.clone()),
+        TemplateDefEnum::HaveCartStmt(stmt) => Some(stmt.name.clone()),
+        TemplateDefEnum::HaveSeqStmt(stmt) => Some(stmt.name.clone()),
+        TemplateDefEnum::HaveFiniteSeqStmt(stmt) => Some(stmt.name.clone()),
+    }
+}
+
+fn first_typed_param_name(param_def: &TypedParameterList) -> Option<String> {
+    param_def
+        .groups
+        .first()
+        .and_then(|g| g.params.first())
+        .map(|p| p.name.clone())
 }
