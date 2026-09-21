@@ -26,12 +26,14 @@ impl Runtime {
         let AtomicFact::NormalAtomicFact(normal) = fact else {
             return Ok(None);
         };
-        // File-root props are WithExportFileId; store keys stay unqualified.
-        let name = normal.predicate.local_name();
-        if self.def_abstract_prop_visible_in_stack(name).is_some() {
+        // Plain / file-root / cross-mod: store keys stay unqualified local names.
+        if self
+            .def_abstract_prop_visible(&normal.predicate)
+            .is_some()
+        {
             return Ok(None);
         }
-        let Some(definition) = self.def_prop_visible_in_stack(name) else {
+        let Some(definition) = self.def_prop_visible(&normal.predicate) else {
             return Ok(None);
         };
         if definition.iff_facts.is_empty() {

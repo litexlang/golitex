@@ -1,8 +1,9 @@
 use super::super::keywords::{
     AXIOM_OF_CHOICE, BY, CASE, CASES, COLON, COMMA, CONTRA, DEF, EQUAL, FROM, IMPOSSIBLE, INDUC,
-    LEFT_PAREN, OBJ, PROP, QUESTION_GOAL, REFLEXIVE_PROP, REGULARITY_AXIOM, RELEASE, RIGHT_ARROW,
-    RIGHT_PAREN, SET, STRONG_INDUC, STRUCT, SYMMETRIC_PROP, TRANSITIVE_PROP, EXTENSION, THM,
-    ENUMERATE, FOR, CLOSED_RANGE, FINITE_SET, FACT_PREFIX, AS, RANGE, IN, ZORN_LEMMA,
+    LEFT_PAREN, MOD_FLAT_SIGN, MOD_SIGN, OBJ, PROP, QUESTION_GOAL, REFLEXIVE_PROP,
+    REGULARITY_AXIOM, RELEASE, RIGHT_ARROW, RIGHT_PAREN, SET, STRONG_INDUC, STRUCT, SYMMETRIC_PROP,
+    TRANSITIVE_PROP, EXTENSION, THM, ENUMERATE, FOR, CLOSED_RANGE, FINITE_SET, FACT_PREFIX, AS,
+    RANGE, IN, ZORN_LEMMA,
 };
 use super::super::object::{is_simple_name, parse_obj, parse_obj_list_paren};
 use crate::new_pipeline::ast::obj::Obj;
@@ -588,13 +589,7 @@ impl Runtime {
         &mut self,
         tb: &mut TokenBlock,
     ) -> RuntimeResult<TheoremCall> {
-        let name_tok = tb
-            .advance()
-            .map_err(|_| tb.parse_error("theorem call expects a name"))?;
-        if !is_simple_name(&name_tok) {
-            return Err(tb.parse_error(format!("invalid theorem name `{name_tok}`")));
-        }
-        let name = AtomicName::Plain { name: name_tok };
+        let name = self.parse_theorem_call_name(tb)?;
         let arguments = if tb.peek() == Some(LEFT_PAREN) {
             tb.expect(LEFT_PAREN)?;
             let mut args = Vec::new();
@@ -614,6 +609,60 @@ impl Runtime {
             TheoremCallArguments::Bare
         };
         Ok(TheoremCall { name, arguments })
+    }
+
+    // `name`, `export::name`, `Mod::export::name`, or `Mod:::name`.
+    fn parse_theorem_call_name(&mut self, tb: &mut TokenBlock) -> RuntimeResult<AtomicName> {
+        let first = tb
+            .advance()
+            .map_err(|_| tb.parse_error("theorem call expects a name"))?;
+        if !is_simple_name(&first) {
+            return Err(tb.parse_error(format!("invalid theorem name `{first}`")));
+        }
+        if tb.peek() == Some(MOD_FLAT_SIGN) {
+            tb.advance()?;
+            let next = tb.advance().map_err(|_| {
+                tb.parse_error("theorem call: expected identifier after `:::`")
+            })?;
+            if !is_simple_name(&next) {
+                return Err(tb.parse_error(format!(
+                    "theorem call: expected identifier after `:::`, got `{next}`"
+                )));
+            }
+            return self.elaborate_flat_import(&first, next).map_err(|err| match err {
+                crate::new_pipeline::runtime::RuntimeError::InternalBug(message) => {
+                    tb.parse_error(message)
+                }
+                other => other,
+            });
+        }
+        if tb.peek() != Some(MOD_SIGN) {
+            return Ok(AtomicName::Plain { name: first });
+        }
+        let mut parts = vec![first];
+        while tb.peek() == Some(MOD_SIGN) {
+            tb.advance()?;
+            let next = tb.advance().map_err(|_| {
+                tb.parse_error("theorem call: expected identifier after `::`")
+            })?;
+            if !is_simple_name(&next) {
+                return Err(tb.parse_error(format!(
+                    "theorem call: expected identifier after `::`, got `{next}`"
+                )));
+            }
+            parts.push(next);
+        }
+        if parts.len() != 2 && parts.len() != 3 {
+            return Err(tb.parse_error(
+                "qualified theorem name must be `a::b`, `a:::b`, or `a::b::c`",
+            ));
+        }
+        self.elaborate_name_parts(&parts).map_err(|err| match err {
+            crate::new_pipeline::runtime::RuntimeError::InternalBug(message) => {
+                tb.parse_error(message)
+            }
+            other => other,
+        })
     }
 }
 

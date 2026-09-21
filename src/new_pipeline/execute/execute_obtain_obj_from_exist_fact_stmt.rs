@@ -74,15 +74,6 @@ impl Runtime {
             ));
         }
 
-        let plain = stmt.fact.plain();
-        let expected = plain.typed_parameters.ordered_param_ids().len();
-        let got = stmt.equal_tos.len();
-        if expected != got {
-            return Ok(ExecObtainObjFromExistFactStmtResult::Failed(
-                ExecObtainObjFromExistFactStmtFailed::ArityMismatch { expected, got },
-            ));
-        }
-
         let verify_state = VerifyState {
             can_use_forall_fact: true,
             can_use_rewrite: true,
@@ -98,8 +89,46 @@ impl Runtime {
             }
         };
 
+        match self.apply_obtain_from_known_exist_family(&stmt.fact, &stmt.equal_tos)? {
+            Ok((store_and_infer_result, uniqueness_forall_fact_id)) => {
+                Ok(ExecObtainObjFromExistFactStmtResult::Success(
+                    ExecObtainObjFromExistFactStmtSuccessResult {
+                        statement: stmt.clone(),
+                        verify_exist,
+                        store_and_infer_result,
+                        uniqueness_forall_fact_id,
+                    },
+                ))
+            }
+            Err(failed) => Ok(ExecObtainObjFromExistFactStmtResult::Failed(failed)),
+        }
+    }
+
+    // Shared eliminator for a known Exist / ExistUnique family (no verify).
+    // Used by obtain-from-exist, obtain-from-$P, and obtain-from-thm.
+    pub(in crate::new_pipeline::execute) fn apply_obtain_from_known_exist_family(
+        &mut self,
+        family: &ExistFactFamily,
+        equal_tos: &[String],
+    ) -> RuntimeResult<
+        Result<(StoreHaveObjAndInferResult, Option<FactId>), ExecObtainObjFromExistFactStmtFailed>,
+    > {
+        if matches!(family, ExistFactFamily::NotExist(_)) {
+            return Ok(Err(ExecObtainObjFromExistFactStmtFailed::NotExistSource));
+        }
+
+        let plain = family.plain();
+        let expected = plain.typed_parameters.ordered_param_ids().len();
+        let got = equal_tos.len();
+        if expected != got {
+            return Ok(Err(ExecObtainObjFromExistFactStmtFailed::ArityMismatch {
+                expected,
+                got,
+            }));
+        }
+
         let (renamed_params, subst) =
-            self.build_obtain_renamed_params_and_subst(plain, &stmt.equal_tos)?;
+            self.build_obtain_renamed_params_and_subst(plain, equal_tos)?;
 
         let mut store_and_infer_result =
             self.define_typed_parameters_in_current_env(&renamed_params, None)?;
@@ -119,27 +148,19 @@ impl Runtime {
                 .extend(stored.stored_fact_ids());
         }
 
-        let uniqueness_forall_fact_id =
-            if matches!(stmt.fact, ExistFactFamily::ExistUnique(_)) {
-                let uniqueness = self.build_exist_unique_uniqueness_forall_fact(plain)?;
-                let fact_id = uniqueness.fact_id;
-                let stored = self.store_fact_and_infer(&Fact::ForallFact(uniqueness))?;
-                store_and_infer_result
-                    .stored_fact_ids
-                    .extend(stored.stored_fact_ids());
-                Some(fact_id)
-            } else {
-                None
-            };
+        let uniqueness_forall_fact_id = if matches!(family, ExistFactFamily::ExistUnique(_)) {
+            let uniqueness = self.build_exist_unique_uniqueness_forall_fact(plain)?;
+            let fact_id = uniqueness.fact_id;
+            let stored = self.store_fact_and_infer(&Fact::ForallFact(uniqueness))?;
+            store_and_infer_result
+                .stored_fact_ids
+                .extend(stored.stored_fact_ids());
+            Some(fact_id)
+        } else {
+            None
+        };
 
-        Ok(ExecObtainObjFromExistFactStmtResult::Success(
-            ExecObtainObjFromExistFactStmtSuccessResult {
-                statement: stmt.clone(),
-                verify_exist,
-                store_and_infer_result,
-                uniqueness_forall_fact_id,
-            },
-        ))
+        Ok(Ok((store_and_infer_result, uniqueness_forall_fact_id)))
     }
 
     fn unwrap_obtain_exist_verify(

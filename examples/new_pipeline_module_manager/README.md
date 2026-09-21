@@ -37,6 +37,7 @@ export LITEX_NEW_PIPELINE=1
 BIN=target/debug/litex   # or target/release/litex
 
 $BIN -r examples/new_pipeline_module_manager/repo
+# repo/main.lit also checks cross-mod `release thm` / `by thm` / `by def`
 $BIN -f examples/new_pipeline_module_manager/file_prefix/a.lit
 $BIN -f examples/new_pipeline_module_manager/file_extra/scratch.lit
 $BIN -f examples/new_pipeline_module_manager/isolated/alone.lit
