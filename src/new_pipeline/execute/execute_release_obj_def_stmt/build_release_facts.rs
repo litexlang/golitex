@@ -349,6 +349,8 @@ fn build_have_fn_by_forall_exist_unique(
                 defined_as_struct: None,
             }))
         }
+        // Shape rebuild should not fail after parse; reuse Instantiate as the
+        // catch-all string error bucket shared with other release builders.
         Err(msg) => Ok(Err(BuildReleaseFactsFailed::Instantiate(msg))),
     }
 }

@@ -1,17 +1,40 @@
 use super::primary::{fn_obj_head_from_obj, parse_primary};
 use crate::new_pipeline::ast::obj::{
-    Add, Cart, ClosedRange, Div, FnObj, Intersect, Mod, Mul, Number, Obj,
-    FieldAccess, ObjAtIndex, Pow, Sub, Union,
+    Add, Cart, ClosedRange, Div, FnObj, FnSet, Intersect, Mod, Mul, Number, Obj, FieldAccess,
+    ObjAtIndex, Pow, Sub, Union,
 };
+use crate::new_pipeline::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
 use crate::new_pipeline::parse::keywords::{
-    ADD, DIV, DOT, DOT_DOT_DOT, LEFT_BRACKET, LEFT_PAREN, MOD_OP, MUL, POW, RIGHT_BRACKET, SUB,
-    UNICODE_CART, UNICODE_INTERSECT, UNICODE_UNION,
+    ADD, DIV, DOT, DOT_DOT_DOT, FN_ARROW, LEFT_BRACKET, LEFT_PAREN, MOD_OP, MUL, POW, RIGHT_BRACKET,
+    SUB, UNICODE_CART, UNICODE_INTERSECT, UNICODE_UNION,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
 
 pub fn parse_obj(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
-    parse_unicode_union(rt, tb)
+    parse_fn_arrow(rt, tb)
+}
+
+// `A -> B` desugars to `fn(__param_<id> A) B` (right-associative).
+// Example: `R -> R -> Z` = `R -> (R -> Z)`.
+fn parse_fn_arrow(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
+    let left = parse_unicode_union(rt, tb)?;
+    if tb.peek() != Some(FN_ARROW) {
+        return Ok(left);
+    }
+    tb.advance()?;
+    let right = parse_fn_arrow(rt, tb)?;
+    let param = rt.fresh_internal_param();
+    Ok(Obj::FnSet(FnSet {
+        set_bound_parameters: SetBoundParameterList {
+            groups: vec![SetBoundParameterGroup {
+                params: vec![param],
+                param_type: Box::new(left),
+            }],
+        },
+        dom_facts: vec![],
+        ret_set: Box::new(right),
+    }))
 }
 
 fn parse_unicode_union(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {

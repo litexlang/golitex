@@ -1,18 +1,17 @@
-# Obtain from known exist / exist! (top-level + template body).
-# Run: LITEX_NEW_PIPELINE=1 target/release/litex -f examples/tmp.lit
+# Preview: `A -> B` FnSet sugar (phase 1).
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/tmp.lit
+#
+# Do not compare two separately parsed arrows for equality: each allocates a
+# fresh `__param_<id>`, and FnSet EqualIR does not alpha-identify binders yet.
 
-# --- ordinary obtain from exist ---
-witness exist u R st {u = 0} from 0
-obtain w from exist u R st {u = 0}
-w = 0
-w $in R
+let S = R -> R
+S = S
 
-# --- ordinary obtain from exist! (stores uniqueness forall) ---
-trust exist! z R st {z = 1}
-obtain uniq from exist! z R st {z = 1}
-uniq = 1
+let T = R -> R -> Z
+T = T
 
-# --- template body obtain (exactly one body stmt; source exist known from parent) ---
-witness exist t R st {t = 2} from 2
-template<_S set>:
-    obtain tw from exist t R st {t = 2}
+let U = R × R -> R
+U = U
+
+let V = R -> (R -> Z)
+V = V

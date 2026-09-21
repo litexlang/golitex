@@ -1,5 +1,10 @@
-# Tracer: have fn by exist! — exec, release, template.
+# Tracer: have fn by exist! — exec, release, template def-check.
 # Run: LITEX_NEW_PIPELINE=1 target/release/litex -f examples/tmp_have_fn_by_exist.lit
+#
+# Intentionally omitted: `f $in fn(x A) B` after release (surface FnSet spelling
+# may not alpha-match the stored membership). Property forall is the smoke check.
+# Template below only checks that the **definition** body runs; `\choose_t<...>`
+# instance use is not wired yet (unlike by cases / by induc).
 
 abstract_prop F(x, y)
 have A set
