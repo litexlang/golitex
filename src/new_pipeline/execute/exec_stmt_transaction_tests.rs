@@ -1694,3 +1694,47 @@ fn release_struct_def_without_carrier_soft_fails() {
         ),
     }
 }
+
+#[test]
+fn release_obj_def_smoke() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "let x = 1").is_failed(), "let");
+    assert!(!exec_one(&mut runtime, "release obj def x").is_failed(), "release let");
+    assert!(!exec_one(&mut runtime, "x = 1").is_failed(), "check let");
+
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have a R = 2").is_failed(), "have equal");
+    assert!(!exec_one(&mut runtime, "release obj def a").is_failed(), "release have equal");
+    assert!(!exec_one(&mut runtime, "a $in R").is_failed(), "check in");
+    assert!(!exec_one(&mut runtime, "a = 2").is_failed(), "check equal");
+
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have c R:\n    c > 10").is_failed(), "have by exist");
+    assert!(!exec_one(&mut runtime, "release obj def c").is_failed(), "release have by exist");
+    assert!(!exec_one(&mut runtime, "c $in R").is_failed(), "check c in");
+    assert!(!exec_one(&mut runtime, "c > 10").is_failed(), "check c body");
+
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(&mut runtime, "trust have b R:\n    b > 0").is_failed(),
+        "trust have"
+    );
+    assert!(!exec_one(&mut runtime, "release obj def b").is_failed(), "release trust have");
+    assert!(!exec_one(&mut runtime, "b $in R").is_failed(), "check b in");
+    assert!(!exec_one(&mut runtime, "b > 0").is_failed(), "check b body");
+
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have fn f(t R) R = t").is_failed(), "have fn");
+    assert!(!exec_one(&mut runtime, "release obj def f").is_failed(), "release have fn");
+    assert!(!exec_one(&mut runtime, "f(1) = 1").is_failed(), "check f application");
+}
+
+#[test]
+fn template_have_fn_by_cases_object_definition_debug() {
+    let mut runtime = runtime_with_file_env();
+    let def = "template<a R>:\n    have fn above_a(x R) Z by cases:\n        case x > a: 1\n        case x = a: 0\n        case x < a: (-1)";
+    let r = exec_one(&mut runtime, def);
+    assert!(!r.is_failed(), "template by cases def failed");
+    let eq = exec_one(&mut runtime, "\\above_a<0>(-2) = (-1)");
+    assert!(!eq.is_failed(), "template by cases unfold failed");
+}

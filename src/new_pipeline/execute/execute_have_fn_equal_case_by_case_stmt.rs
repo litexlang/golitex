@@ -417,7 +417,7 @@ fn fn_set_from_clause(clause: &FnSetClause) -> FnSet {
     }
 }
 
-fn set_bound_to_typed(list: &SetBoundParameterList) -> TypedParameterList {
+pub(crate) fn set_bound_to_typed(list: &SetBoundParameterList) -> TypedParameterList {
     TypedParameterList {
         groups: list
             .groups

@@ -107,7 +107,9 @@ impl Runtime {
         }))
     }
 
-    fn match_induc_case_body(
+    // Shared with template have-fn-by-induc unfold: `subst` may already include
+    // template-parameter bindings.
+    pub(crate) fn match_induc_case_body(
         &mut self,
         cases: &[HaveFnByInducCase],
         subst: &HashMap<IdentifierId, Obj>,

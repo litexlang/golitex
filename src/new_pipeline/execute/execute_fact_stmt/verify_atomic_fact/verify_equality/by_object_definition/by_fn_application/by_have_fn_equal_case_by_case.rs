@@ -112,7 +112,9 @@ impl Runtime {
         ))
     }
 
-    fn match_case_by_case_body(
+    // Shared with template have-fn-by-cases unfold: `subst` may already include
+    // template-parameter bindings.
+    pub(crate) fn match_case_by_case_body(
         &mut self,
         stmt: &HaveFnEqualCaseByCaseStmt,
         subst: &HashMap<IdentifierId, Obj>,

@@ -138,8 +138,9 @@ pub struct FnApplicationInCodomainBuiltinRuleProof {
 }
 
 impl Runtime {
-    // Builtin InFact search: closed decimal, C-arithmetic closure, subset lift,
-    // set-builder membership, then native constants.
+    // Builtin InFact search: dispatch by set shape first, then only try rules
+    // that can apply to that shape (and element shape when needed).
+    // Relative first-hit order among overlapping rules is preserved.
     // Example: `1 $in C`, `(x + 1) $in C`, `x $in C` from `x $in R`,
     // `a $in {x R: x > 0}` from `a $in R` and `a > 0`.
     pub fn search_in_fact_proof_by_builtin_rule(
@@ -147,43 +148,120 @@ impl Runtime {
         fact: &InFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        match &fact.set {
+            Obj::StandardSet(set) => {
+                self.search_in_fact_standard_set_builtin_rule(fact, set, verify_state)
+            }
+            Obj::SetBuilder(_) => {
+                if matches!(&fact.element, Obj::FnObj(_)) {
+                    if let Some(proof) =
+                        self.fn_application_in_codomain_proof(fact, verify_state.clone())?
+                    {
+                        return Ok(Some(proof));
+                    }
+                }
+                self.set_builder_membership_proof(fact, verify_state)
+            }
+            Obj::Cart(_) => {
+                if matches!(&fact.element, Obj::FnObj(_)) {
+                    if let Some(proof) =
+                        self.fn_application_in_codomain_proof(fact, verify_state.clone())?
+                    {
+                        return Ok(Some(proof));
+                    }
+                }
+                self.cart_membership_proof(fact, verify_state)
+            }
+            Obj::PowerSet(_) => {
+                if matches!(&fact.element, Obj::FnObj(_)) {
+                    if let Some(proof) =
+                        self.fn_application_in_codomain_proof(fact, verify_state.clone())?
+                    {
+                        return Ok(Some(proof));
+                    }
+                }
+                self.power_set_membership_proof(fact, verify_state)
+            }
+            Obj::StructObj(_) => {
+                if matches!(&fact.element, Obj::FnObj(_)) {
+                    if let Some(proof) =
+                        self.fn_application_in_codomain_proof(fact, verify_state.clone())?
+                    {
+                        return Ok(Some(proof));
+                    }
+                }
+                self.struct_obj_membership_proof(fact, verify_state)
+            }
+            Obj::ListSet(_) => {
+                if matches!(&fact.element, Obj::FnObj(_)) {
+                    if let Some(proof) =
+                        self.fn_application_in_codomain_proof(fact, verify_state.clone())?
+                    {
+                        return Ok(Some(proof));
+                    }
+                }
+                self.list_set_element_membership_proof(fact, verify_state)
+            }
+            _ => {
+                if matches!(&fact.element, Obj::FnObj(_)) {
+                    return self.fn_application_in_codomain_proof(fact, verify_state);
+                }
+                Ok(None)
+            }
+        }
+    }
+
+    // Standard-set `$in`: closed numeric → C-arithmetic / N-predecessor by set
+    // → fn-codomain by element → subset lift → native constants by element.
+    fn search_in_fact_standard_set_builtin_rule(
+        &mut self,
+        fact: &InFact,
+        set: &StandardSet,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
         if let Some(proof) = closed_numeric_membership_proof(fact) {
             return Ok(Some(proof));
         }
-        if let Some(proof) = complex_arithmetic_in_c_proof(fact) {
+
+        match set {
+            StandardSet::C => {
+                if let Some(proof) = complex_arithmetic_in_c_proof(fact) {
+                    return Ok(Some(proof));
+                }
+            }
+            StandardSet::N => {
+                if let Some(proof) = self.predecessor_in_natural_proof(fact)? {
+                    return Ok(Some(proof));
+                }
+            }
+            _ => {}
+        }
+
+        if matches!(&fact.element, Obj::FnObj(_)) {
+            if let Some(proof) =
+                self.fn_application_in_codomain_proof(fact, verify_state.clone())?
+            {
+                return Ok(Some(proof));
+            }
+        }
+
+        if let Some(proof) = self.standard_set_subset_membership_proof(fact, verify_state)? {
             return Ok(Some(proof));
         }
-        if let Some(proof) = self.predecessor_in_natural_proof(fact)? {
-            return Ok(Some(proof));
+
+        match &fact.element {
+            Obj::ImaginaryUnit(_) | Obj::EulerNumber(_) | Obj::Pi(_) => {
+                if let Some(kind) = native_constant_membership_kind(&fact.element, &fact.set) {
+                    return Ok(Some(
+                        InFactSearchProofByBuiltinRule::NativeConstantMembership(
+                            NativeConstantMembershipBuiltinRuleProof { kind },
+                        ),
+                    ));
+                }
+            }
+            _ => {}
         }
-        if let Some(proof) = self.fn_application_in_codomain_proof(fact, verify_state.clone())? {
-            return Ok(Some(proof));
-        }
-        if let Some(proof) = self.standard_set_subset_membership_proof(fact, verify_state.clone())? {
-            return Ok(Some(proof));
-        }
-        if let Some(proof) = self.set_builder_membership_proof(fact, verify_state.clone())? {
-            return Ok(Some(proof));
-        }
-        if let Some(proof) = self.cart_membership_proof(fact, verify_state.clone())? {
-            return Ok(Some(proof));
-        }
-        if let Some(proof) = self.power_set_membership_proof(fact, verify_state.clone())? {
-            return Ok(Some(proof));
-        }
-        if let Some(proof) = self.struct_obj_membership_proof(fact, verify_state.clone())? {
-            return Ok(Some(proof));
-        }
-        if let Some(kind) = native_constant_membership_kind(&fact.element, &fact.set) {
-            return Ok(Some(
-                InFactSearchProofByBuiltinRule::NativeConstantMembership(
-                    NativeConstantMembershipBuiltinRuleProof { kind },
-                ),
-            ));
-        }
-        if let Some(proof) = self.list_set_element_membership_proof(fact, verify_state)? {
-            return Ok(Some(proof));
-        }
+
         Ok(None)
     }
 

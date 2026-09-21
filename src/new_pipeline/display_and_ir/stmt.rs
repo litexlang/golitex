@@ -34,6 +34,7 @@ impl Stmt {
             Stmt::Definition(x) => x.ir(),
             Stmt::ReleaseThmStmt(x) => x.ir(),
             Stmt::ReleaseStructDefStmt(x) => x.ir(),
+            Stmt::ReleaseObjDefStmt(x) => x.ir(),
             Stmt::By(x) => x.ir(),
             Stmt::Witness(x) => x.ir(),
             Stmt::ProofBlock(x) => x.ir(),
@@ -1437,6 +1438,19 @@ impl ReleaseStructDefStmt {
             STRUCT,
             DEF,
             &self.obj.ir()
+        ))
+    }
+    impl_display_pair!();
+}
+
+impl ReleaseObjDefStmt {
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!(
+            "{} {} {} {}",
+            RELEASE,
+            OBJ,
+            DEF,
+            self.name.ir()
         ))
     }
     impl_display_pair!();

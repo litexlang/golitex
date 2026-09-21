@@ -23,6 +23,7 @@ pub const TEMPLATE: &str = "template";
 pub const SETTING: &str = "setting";
 pub const STRONG_INDUC: &str = "strong_induc";
 pub const RELEASE: &str = "release";
+pub const OBJ: &str = "obj";
 pub const BY: &str = "by";
 pub const ALGO: &str = "algo";
 pub const FOR: &str = "for";

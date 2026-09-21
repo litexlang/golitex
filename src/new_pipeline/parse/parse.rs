@@ -1,6 +1,6 @@
 use super::keywords::{
     ABSTRACT_PROP, ALGO, AXIOM, BY, CART, CLAIM, EVAL, EXAMPLE, FINITE_SEQ, FN, FOR, HAVE, IMPORT,
-    LET, MATRIX, OBTAIN, PREIMAGE, PROP, QUESTION_GOAL, RELEASE, SEQ, SETTING, SKETCH, STRATEGY,
+    LET, MATRIX, OBJ, OBTAIN, PREIMAGE, PROP, QUESTION_GOAL, RELEASE, SEQ, SETTING, SKETCH, STRATEGY,
     STRONG_INDUC, STRUCT, TEMPLATE, THM, TRUST, TRY, TUPLE, WITNESS,
 };
 use crate::new_pipeline::ast::stmt::Stmt;
@@ -64,8 +64,9 @@ impl Runtime {
             RELEASE => match block.header.get(1).map(String::as_str) {
                 Some(THM) => self.parse_release_thm_stmt(block),
                 Some(STRUCT) => self.parse_release_struct_def_stmt(block),
+                Some(OBJ) => self.parse_release_obj_def_stmt(block),
                 _ => Err(RuntimeParseError::new(
-                    "release: expected `thm …` or `struct def …`",
+                    "release: expected `thm …`, `struct def …`, or `obj def …`",
                     block.line,
                     block.source_path.clone(),
                 )

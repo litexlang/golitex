@@ -241,7 +241,7 @@ impl Runtime {
     }
 
     // Definition-time only: attach the written `&Struct` carrier and its `$in` fact id.
-    fn record_defined_as_struct(
+    pub(crate) fn record_defined_as_struct(
         &mut self,
         element: &Obj,
         struct_obj: StructObj,

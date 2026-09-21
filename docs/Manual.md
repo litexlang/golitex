@@ -896,6 +896,25 @@ idempotent. Opening is never recursive: `release struct def outer` does not also
 open a struct-valued `outer.inner`; write `release struct def outer.inner` when its
 properties are needed.
 
+#### Explicit object-definition release: `release obj def` (preview)
+
+> **Preview (`new_pipeline`):** `release obj def I` takes exactly one identifier
+> `I` (plain or `mod::export::`-qualified). It looks up
+> `StoredIdentifierDefinition` for that name — in the live Env stack or in a
+> finished export file's Env — and stores the definition's accompanying facts
+> into the **current** Env. Subjects use the written spelling of `I`.
+>
+> Supported sources: `let`, `have` / `have … = …` / `have …:`, `trust have`,
+> and `have fn` / `by cases` / `by induc`. Binder-only `ParamType` rows are
+> rejected. This does **not** open a struct layer; use `release struct def`
+> for that.
+>
+> ```litex
+> have a R = 2
+> release obj def a
+> a = 2
+> ```
+
 #### Field-access well-definedness
 
 Field syntax and property release are separate. To decide whether `e.y` is a
@@ -1995,7 +2014,10 @@ sign_value(-2) = (-1)
 > by the equality **object-definition** stage (same idea as `\Template<args>(...)`
 > and `have` / `let` identifier unfolds). For `by cases` / `by induc`, Litex looks
 > up the stored definition, matches a case guard at the concrete arguments, and
-> unfolds that case body. `by exist!` still does not get that equality unfold.
+> unfolds that case body. The same unfolds apply when the definition lives in a
+> `template<…>:` body: `\name<args>(fn_args)` matches the template parameters,
+> then the case/induc guards and body, exactly as for ordinary `have fn`.
+> `by exist!` still does not get that equality unfold.
 
 Overlapping conditions are rejected:
 
@@ -2095,6 +2117,27 @@ template<S set, z S>:
 
 \const_on_S<R, 0>(2) = 0
 ```
+
+> **Preview (`new_pipeline`):** a template body may also be `have fn … by cases`
+> or `have fn … by induc`. Instantiated applications unfold by the same
+> object-definition stage as ordinary have-fn:
+>
+> ```litex
+> template<S set>:
+>     have fn sign_on(x S) Z by cases:
+>         case x > 0: 1
+>         case x = 0: 0
+>         case x < 0: (-1)
+>
+> \sign_on<R>(-2) = (-1)
+>
+> template<_S set>:
+>     have fn countdown_t(n N) N by induc n from 0:
+>         case n = 0: 0
+>         case n >= 1: \countdown_t<_S>(n - 1)
+>
+> \countdown_t<{0}>(0) = 0
+> ```
 
 The template body defines exactly one object or function:
 
@@ -2622,6 +2665,7 @@ introductions.
 | Enumeration, induction, `by for`, `by extension` | The target has the exact finite/range/discrete/extensional shape and every generated subgoal closes. | The requested universal/equality/atomic target. |
 | `by def` | One positive concrete/builtin definitional target and every defining clause. | The target with explicit definition provenance. |
 | `release struct def e` | `e` has a definition-owned struct carrier and `e $in &Struct` verifies. | Exactly one layer of tuple/identity bridges, field carriers, and instantiated struct laws. |
+| `release obj def I` | Preview (`new_pipeline`): `I` is one identifier (optionally `mod::export::`-qualified) with a `StoredIdentifierDefinition` other than a binder `ParamType`. | Re-stores that definition's type / equality / body / fn facts into the current Env (subjects use the written spelling of `I`). |
 | Predicate-property registrations | The proof has the exact reflexive/symmetric/transitive predicate shape. | A reusable property route for later rewriting. |
 | `by regularity_axiom` | Its displayed set/nonemptiness obligations. Preview (`new_pipeline`): parse+exec wired; fact-only local proofs N/A (no body). | An explicitly trusted set-theoretic conclusion; strict mode rejects the step. |
 | `by axiom_of_choice` | The family is a set and every member is proved nonempty. Preview (`new_pipeline`): parse+exec wired; proof body is fact-only. | Stores `exist f fn(A S)big_union(S) st {$is_choice_function_for(S,S,fn(A S)S {A},f)}`. The existential body is atomic. |

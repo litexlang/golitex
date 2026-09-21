@@ -9,7 +9,7 @@ use super::fact::{
 };
 use super::line_file::LineFile;
 use super::names::AtomicName;
-use super::obj::{AnonymousFn, ClosedRange, ListSet, Obj, Range};
+use super::obj::{AnonymousFn, ClosedRange, IdentifierObj, ListSet, Obj, Range};
 use super::param::{SetBoundParameterList, TypedParameterList};
 
 // -----------------------------------------------------------------------------
@@ -23,6 +23,7 @@ pub enum Stmt {
     Definition(DefinitionStmt),
     ReleaseThmStmt(ReleaseThmStmt),
     ReleaseStructDefStmt(ReleaseStructDefStmt),
+    ReleaseObjDefStmt(ReleaseObjDefStmt),
     By(ByStmt),
     Witness(WitnessStmt),
     ProofBlock(ProofBlockStmt),
@@ -501,6 +502,12 @@ pub struct ByDefStmt {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ReleaseStructDefStmt {
     pub obj: Obj,
+    pub line_file: LineFile,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ReleaseObjDefStmt {
+    pub name: IdentifierObj,
     pub line_file: LineFile,
 }
 

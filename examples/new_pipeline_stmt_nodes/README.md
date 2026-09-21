@@ -18,7 +18,7 @@ Exit 0 is enough. Stub / not-yet-wired stmt arms are **omitted**.
 
 ```text
 fact/          Stmt::Fact
-definition/    LetObj, HaveObjInNonemptySet, HaveObjEqual, DefProp, DefAbstractProp
+definition/    LetObj, HaveObj*, DefProp, DefAbstractProp, ReleaseStructDef, ReleaseObjDef
 witness/       WitnessExistFact
 unsafe/        TrustStmt, TrustHaveStmt
 by/            ByReflexiveProp, BySymmetricProp

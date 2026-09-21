@@ -489,7 +489,7 @@ fn fresh_set_bound_params(
     Ok((groups, subst))
 }
 
-fn flatten_induc_to_case_by_case(
+pub(crate) fn flatten_induc_to_case_by_case(
     runtime: &mut Runtime,
     stmt: &HaveFnByInducStmt,
 ) -> Result<HaveFnEqualCaseByCaseStmt, String> {

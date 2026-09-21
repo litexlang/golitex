@@ -1,6 +1,6 @@
 use super::super::keywords::{
     AXIOM_OF_CHOICE, BY, CASE, CASES, COLON, COMMA, CONTRA, DEF, EQUAL, FROM, IMPOSSIBLE, INDUC,
-    LEFT_PAREN, PROP, QUESTION_GOAL, REFLEXIVE_PROP, REGULARITY_AXIOM, RELEASE, RIGHT_ARROW,
+    LEFT_PAREN, OBJ, PROP, QUESTION_GOAL, REFLEXIVE_PROP, REGULARITY_AXIOM, RELEASE, RIGHT_ARROW,
     RIGHT_PAREN, SET, STRONG_INDUC, STRUCT, SYMMETRIC_PROP, TRANSITIVE_PROP, EXTENSION, THM,
     ENUMERATE, FOR, CLOSED_RANGE, FINITE_SET, FACT_PREFIX, AS, RANGE, IN, ZORN_LEMMA,
 };
@@ -15,8 +15,8 @@ use crate::new_pipeline::ast::stmt::{
     ByAxiomOfChoiceStmt, ByCasesStmt, ByContraStmt, ByDefStmt, ByInducStmt, ByReflexivePropStmt,
     ByRegularityAxiomStmt, ByStmt, ByStrongInducStmt, BySymmetricPropStmt, ByTransitivePropStmt,
     ByExtensionStmt, ByZornLemmaStmt, ClosedRangeOrRange, ByClosedRangeAsCasesStmt,
-    ByEnumerateRangeStmt, ByForStmt, ByEnumerateFiniteSetStmt, ByThmStmt, ReleaseStructDefStmt,
-    ReleaseThmStmt, Stmt, TheoremCall, TheoremCallArguments,
+    ByEnumerateRangeStmt, ByForStmt, ByEnumerateFiniteSetStmt, ByThmStmt, ReleaseObjDefStmt,
+    ReleaseStructDefStmt, ReleaseThmStmt, Stmt, TheoremCall, TheoremCallArguments,
 };
 use crate::new_pipeline::parse::prop_registration_shape::{
     reflexive_prop_name_from_forall, symmetric_prop_registration_from_forall,
@@ -553,6 +553,33 @@ impl Runtime {
         }
         Ok(Stmt::ReleaseStructDefStmt(ReleaseStructDefStmt {
             obj,
+            line_file: LineFile::new(block.line, block.source_path.clone()),
+        }))
+    }
+
+    pub(in super::super) fn parse_release_obj_def_stmt(
+        &mut self,
+        block: &TokenBlock,
+    ) -> RuntimeResult<Stmt> {
+        let mut tb = block.clone();
+        tb.expect(RELEASE)?;
+        tb.expect(OBJ)?;
+        tb.expect(DEF)?;
+        if tb.exceed_end_of_head() {
+            return Err(tb.parse_error("release obj def expects exactly one identifier"));
+        }
+        if !tb.body.is_empty() {
+            return Err(tb.parse_error("release obj def does not accept an indented body"));
+        }
+        let obj = parse_obj(self, &mut tb)?;
+        if !tb.exceed_end_of_head() {
+            return Err(tb.parse_error("release obj def expects exactly one identifier"));
+        }
+        let Obj::Identifier(name) = obj else {
+            return Err(tb.parse_error("release obj def expects an identifier"));
+        };
+        Ok(Stmt::ReleaseObjDefStmt(ReleaseObjDefStmt {
+            name,
             line_file: LineFile::new(block.line, block.source_path.clone()),
         }))
     }

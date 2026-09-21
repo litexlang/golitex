@@ -30,6 +30,7 @@ use crate::new_pipeline::execute::execute_have_obj_equal_stmt::ExecHaveObjEqualS
 use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::ExecHaveObjInNonemptySetStmtResult;
 use crate::new_pipeline::execute::execute_let_stmt::ExecLetObjStmtResult;
 use crate::new_pipeline::execute::execute_release_struct_def_stmt::ExecReleaseStructDefStmtResult;
+use crate::new_pipeline::execute::execute_release_obj_def_stmt::ExecReleaseObjDefStmtResult;
 use crate::new_pipeline::execute::execute_unsafe_stmt::ExecUnsafeStmtResult;
 use crate::new_pipeline::execute::execute_witness_stmt::ExecWitnessStmtResult;
 
@@ -77,6 +78,7 @@ pub enum ExecStmtResult {
     By(ExecByStmtResult),
     ReleaseThm(ExecReleaseThmStmtResult),
     ReleaseStructDef(ExecReleaseStructDefStmtResult),
+    ReleaseObjDef(ExecReleaseObjDefStmtResult),
 }
 
 pub enum ExecDefinitionStmtResult {
@@ -105,6 +107,7 @@ impl ExecStmtResult {
             Self::By(r) => r.is_failed(),
             Self::ReleaseThm(r) => r.is_failed(),
             Self::ReleaseStructDef(r) => r.is_failed(),
+            Self::ReleaseObjDef(r) => r.is_failed(),
         }
     }
 }
