@@ -9,8 +9,8 @@
 //!    `release obj def` (rebuilds the same three facts on the written surface)
 //!
 //! Template: a `template` **definition** may call this exec as its body check.
-//! Instantiating `\Name<args>` does **not** yet install FnSet membership /
-//! property / uniqueness on the instance (unlike `by cases` / `by induc`).
+//! Instantiating `\Name<args>` installs FnSet membership + property + uniqueness
+//! on the instance (same three facts as a plain `have fn by exist!`).
 //!
 //! ```text
 //! trust:
@@ -136,7 +136,7 @@ impl Runtime {
         }));
         let mut stored_fact_ids = self.store_fact_and_infer(&membership)?.stored_fact_ids();
 
-        let applied = applied_function_obj(&function_ident, &stmt.forall.typed_parameters);
+        let applied = applied_function_obj(&Obj::Identifier(function_ident.clone()), &stmt.forall.typed_parameters);
         let property_forall =
             self.build_have_fn_by_exist_property_forall(stmt, &shape, applied.clone())?;
         let property_fact = Fact::ForallFact(property_forall);
@@ -179,9 +179,10 @@ impl Runtime {
     }
 
     // Rebuild membership + property + uniqueness for `release obj def` (subjects = surface).
+    // `surface` is the function subject: plain identifier or InstantiatedTemplateObj.
     pub(crate) fn build_have_fn_by_forall_exist_unique_facts_for_surface(
         &mut self,
-        surface: &IdentifierObj,
+        surface: &Obj,
         stmt: &HaveFnByForallExistUniqueStmt,
     ) -> RuntimeResult<Result<(Fact, Fact, Fact), String>> {
         let shape = match self.have_fn_by_exist_shape(stmt) {
@@ -191,7 +192,7 @@ impl Runtime {
         let fn_set = fn_set_from_clause(&shape.fn_set_clause);
         let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
             fact_id: self.ids.allocate_fact_id(),
-            element: Obj::Identifier(surface.clone()),
+            element: surface.clone(),
             set: Obj::FnSet(fn_set),
             line_file: Some(stmt.line_file.clone()),
         }));
@@ -338,7 +339,12 @@ fn fn_set_from_clause(clause: &FnSetClause) -> FnSet {
     }
 }
 
-fn applied_function_obj(head: &IdentifierObj, params: &TypedParameterList) -> Obj {
+fn applied_function_obj(surface: &Obj, params: &TypedParameterList) -> Obj {
+    let head = match surface {
+        Obj::Identifier(id) => FnObjHead::Identifier(id.clone()),
+        Obj::InstantiatedTemplateObj(inst) => FnObjHead::InstantiatedTemplateObj(inst.clone()),
+        other => panic!("have fn by exist!: applied head must be identifier or template instance, got {other:?}"),
+    };
     let mut args = Vec::new();
     for group in &params.groups {
         for param in &group.params {
@@ -348,7 +354,7 @@ fn applied_function_obj(head: &IdentifierObj, params: &TypedParameterList) -> Ob
         }
     }
     Obj::FnObj(FnObj {
-        head: Box::new(FnObjHead::Identifier(head.clone())),
+        head: Box::new(head),
         body: vec![args],
     })
 }

@@ -15,6 +15,8 @@ pub enum RunCommandOutcome {
 
 /// Session-stopping failure.
 /// Soft stmt Failed stays in `statement_results` / `failed_statement_results`.
+/// JSON maps Failed → `"error"` (presentation only; Rust stays Failed, not Error).
+/// Top-level / hard stop is SessionError → `"session_error"`.
 /// `FailToImport`: mount / import / export soft-fail while loading a project (`-r` / `-f` / `-e` / REPL).
 #[derive(Clone, Debug)]
 pub enum RunSessionError {

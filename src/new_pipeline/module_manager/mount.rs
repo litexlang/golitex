@@ -12,7 +12,8 @@ impl GlobalModuleManager {
     /// Every import path in `config` must already be on `path_to_mod_id`.
     pub fn ensure_imports_ready(&self, config: &LitexConfig) -> Result<(), String> {
         for row in &config.imports {
-            if !self.path_to_mod_id.contains_key(&row.path) {
+            let key = row.path.canonicalize().unwrap_or_else(|_| row.path.clone());
+            if !self.path_to_mod_id.contains_key(&key) {
                 return Err(format!(
                     "import `{}` path `{}` is not on the global module table yet (deps must be ready first)",
                     row.alias,

@@ -23,6 +23,7 @@ pub enum ExistOrAndChainAtomicFact {
 pub struct ForallFact {
     pub fact_id: FactId,
     pub typed_parameters: TypedParameterList,
+    // Left-to-right WD: each succeeds, then is assumed for later dom / then facts (temporary).
     pub dom_facts: Vec<Fact>,
     pub then_facts: Vec<ExistOrAndChainAtomicFact>,
     pub line_file: Option<LineFile>,

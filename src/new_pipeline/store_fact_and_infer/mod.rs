@@ -1,3 +1,6 @@
+//! Store accepted facts into the env and run local inference from them.
+//! Callers verify first; this path is not open-ended proof search.
+
 pub mod store_fact;
 pub mod store_fact_and_infer_result;
 

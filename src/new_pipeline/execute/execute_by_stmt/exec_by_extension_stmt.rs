@@ -9,6 +9,7 @@ use crate::new_pipeline::ast::fact::{EqualFact, Fact, SubsetFact};
 use crate::new_pipeline::ast::stmt::ByExtensionStmt;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
+// `by extension`: prove equality from both subset directions (pure-set object equality).
 pub fn exec_by_extension_stmt(
     runtime: &mut Runtime,
     stmt: &ByExtensionStmt,

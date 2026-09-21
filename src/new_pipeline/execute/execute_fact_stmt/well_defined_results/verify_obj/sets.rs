@@ -2,6 +2,9 @@
 //! Light legacy requirements: CartDim/Proj/TupleDim, ListSet pairwise !=,
 //! FiniteSetSize/Max/Min, Interval/Ray in R, Index*/GeneralCart `$is_set` +
 //! family ∈ FnSet (registration half). Union/PowerSet/Cart/Tuple stay children-only.
+//!
+//! Replacement is stricter in intent: Manual requires functionality of P on A
+//! before the image object is WD (not only `source_set` children WD).
 
 use super::entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
 use super::fail_to_verify_obj_well_defined::{
@@ -485,6 +488,7 @@ impl Runtime {
         value: &Replacement,
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
+        // TODO: Manual also requires functionality of `prop_name` on `source_set`.
         self.verify_unary_obj_well_definedness_by_def(value.source_set.as_ref(), verify_state)
     }
     // one-sided ray: endpoint WD + endpoint $in R.

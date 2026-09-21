@@ -4,12 +4,20 @@
 //!
 //! Layout: `Obj` first; each payload type follows in the same order as its `Obj` variant.
 //! Nested helpers that are not themselves `Obj` variants sit with their owning variant.
+//!
+//! Pure-set model: every well-defined Litex object satisfies `$is_set`. Numerals,
+//! function values, N/Z/Q/R/C, user sets, and fn spaces are all `Obj` — different
+//! math interfaces, one carrier. Membership `$in` is a Fact between two objects.
+//! The host `Object` type is meta-level only: not an internal universal set writable
+//! on either side of `$in`. Unrestricted comprehension is forbidden; set formers
+//! are bounded (SetBuilder, replacement, …) with their own WD obligations.
 
 use super::fact::QuantifierFreeFact;
 use super::names::{AtomicName, BoundName, PlainName};
 use super::param::SetBoundParameterList;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 
+// Mathematical value / expression. Not a proposition (see Fact) and not an env action (see Stmt).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Obj {
     Identifier(IdentifierObj),
@@ -450,7 +458,8 @@ pub struct ListSet {
     pub list: Vec<Box<Obj>>,
 }
 
-// SetBuilder
+// Bounded comprehension `{x S: facts}` over an already available set `S`.
+// Not `{x: P(x)}`. Facts stay quantifier-free so the builder has a simple index shape.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SetBuilder {
     pub param_binding: BoundName,
@@ -458,16 +467,18 @@ pub struct SetBuilder {
     pub facts: Vec<QuantifierFreeFact>,
 }
 
-// FnSet
+// Function space `fn(x S, ...) T`. Parameters are SetBound only (`x S`), never `A set`.
+// Dom facts are ordered WD assumptions; `ret_set` may depend on parameters and is
+// instantiated at application. For definitions over an arbitrary set, use template.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FnSet {
     pub set_bound_parameters: SetBoundParameterList,
     pub dom_facts: Vec<QuantifierFreeFact>,
-    /// The return set may depend on the function's parameters and is instantiated at application.
+    // May depend on the function's parameters; instantiated at application.
     pub ret_set: Box<Obj>,
 }
 
-// AnonymousFn
+// Concrete function value belonging to a FnSet (same binder / WD story as FnSet).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct AnonymousFn {
     pub body: FnSet,
@@ -535,7 +546,8 @@ pub struct FnRange {
     pub function: Box<Obj>,
 }
 
-// Replacement
+// `replacement(P, A)`: image of A under a functional set-valued relation P.
+// WD requires more than children: uniqueness / functionality of P on A (Manual Sets).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Replacement {
     pub prop_name: AtomicName,
