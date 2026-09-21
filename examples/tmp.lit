@@ -1,21 +1,20 @@
-# Object-definition unfolds for have fn = / by cases / by induc.
-# Run: LITEX_NEW_PIPELINE=1 target/release/litex -f examples/tmp_have_fn_object_definition.lit
+# Template have-fn by cases / by induc object-definition unfolds (option C).
+# Run: LITEX_NEW_PIPELINE=1 target/release/litex -f examples/tmp.lit
 
-have fn id(x R) R = x
-id(1) = 1
+template<S set>:
+    have fn sign_on(x S) Z by cases:
+        case x > 0: 1
+        case x = 0: 0
+        case x < 0: (-1)
 
-have fn sign_value(x R) Z by cases:
-    case x > 0: 1
-    case x = 0: 0
-    case x < 0: (-1)
+\sign_on<R>(-2) = (-1)
+\sign_on<R>(0) = 0
+\sign_on<R>(3) = 1
 
-sign_value(-2) = (-1)
-sign_value(0) = 0
-sign_value(3) = 1
+template<_S set>:
+    have fn countdown_t(n N) N by induc n from 0:
+        case n = 0: 0
+        case n >= 1: \countdown_t<_S>(n - 1)
 
-have fn countdown(n N) N by induc n from 0:
-    case n = 0: 0
-    case n >= 1: countdown(n - 1)
-
-countdown(0) = 0
-countdown(1) = 0
+\countdown_t<{0}>(0) = 0
+\countdown_t<{0}>(1) = 0

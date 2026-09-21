@@ -138,6 +138,9 @@ impl Runtime {
             Stmt::ReleaseStructDefStmt(stmt) => Ok(ExecStmtResult::ReleaseStructDef(
                 self.exec_release_struct_def_stmt(stmt)?,
             )),
+            Stmt::ReleaseObjDefStmt(stmt) => Ok(ExecStmtResult::ReleaseObjDef(
+                self.exec_release_obj_def_stmt(stmt)?,
+            )),
             Stmt::By(ByStmt::ByReflexivePropStmt(stmt)) => {
                 Ok(ExecStmtResult::By(exec_by_reflexive_prop_stmt(self, stmt)?))
             }

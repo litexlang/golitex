@@ -178,14 +178,39 @@ impl Runtime {
         parent_fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualitySearchProofByObjectDefinition>> {
+        // Match on template body kind (not a flat try-chain across unrelated shapes).
         if let Some(proof) = self.try_unfold_instantiated_template_have_fn_equal_application(
+            def_side,
+            other_side,
+            parent_fact,
+            verify_state.clone(),
+        )? {
+            return Ok(Some(EqualitySearchProofByObjectDefinition::ByTemplate(
+                EqualitySearchProofByTemplateObjectDefinition::HaveFnEqualApplication(proof),
+            )));
+        }
+        if let Some(proof) = self
+            .try_unfold_instantiated_template_have_fn_equal_case_by_case_application(
+                def_side,
+                other_side,
+                parent_fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(EqualitySearchProofByObjectDefinition::ByTemplate(
+                EqualitySearchProofByTemplateObjectDefinition::HaveFnEqualCaseByCaseApplication(
+                    proof,
+                ),
+            )));
+        }
+        if let Some(proof) = self.try_unfold_instantiated_template_have_fn_by_induc_application(
             def_side,
             other_side,
             parent_fact,
             verify_state,
         )? {
             return Ok(Some(EqualitySearchProofByObjectDefinition::ByTemplate(
-                EqualitySearchProofByTemplateObjectDefinition::HaveFnEqualApplication(proof),
+                EqualitySearchProofByTemplateObjectDefinition::HaveFnByInducApplication(proof),
             )));
         }
         Ok(None)
