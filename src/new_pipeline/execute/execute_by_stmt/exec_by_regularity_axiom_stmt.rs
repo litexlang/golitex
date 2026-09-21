@@ -100,5 +100,5 @@ fn regularity_axiom_exist_fact(
 
 fn fresh_bound_name(runtime: &mut Runtime, prefix: &str) -> BoundName {
     let id = runtime.ids.allocate_identifier_id();
-    BoundName::new(id, format!("{prefix}{}", id.value()))
+    BoundName::new(id, format!("{}{}", prefix, id.value()))
 }

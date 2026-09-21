@@ -1,6 +1,9 @@
-//! `have fn name by exist!:` — parse/AST kept; exec not wired in new_pipeline.
+//! `have fn name by exist!:` — parse shape-checked; exec not wired in new_pipeline.
 //!
-//! Kept surface (no proof body):
+//! Parse requires: forall params all Obj (≥1); dom facts quantifier-free; exactly
+//! one then which is `exist!`; that `exist!` binds exactly one Obj witness.
+//! No proof body under the stmt (prove the forall outside).
+//!
 //! ```text
 //! have fn f by exist!:
 //!     ? forall x A:

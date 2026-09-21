@@ -27,7 +27,6 @@ the AST definition). Callers / other modules must own them:
 
 | Gap | Where it should live | Notes |
 |-----|----------------------|--------|
-| Prove `$in &Struct` (opaque membership) | `in_fact` / struct membership builtin | Manual: membership checks tuple carrier + `<=>:` internally **without** storing bridges/laws. **No StructObj branch in new_pipeline `in_fact` builtins yet.** `release struct def` can still succeed when `e $in &Struct` is already known (e.g. after `trust have e &Struct` / direct bind). |
 | Non-direct auto-open | already intentional | Only direct `&Struct` binder auto-opens one layer. Function returns, nested fields, equality, later membership still need `release struct def`. |
 
 ## Adjacent gaps (not in this folder, but block “full struct”)
@@ -37,10 +36,13 @@ the AST definition). Callers / other modules must own them:
 | Setting refs inside `struct Name<…>` | parse `def_misc.rs` | Comment: setting refs in `<>` still deferred. |
 | `struct Name(...)` paren params | parse | Rejected; Manual wants `<…>` only. |
 | Lean / JSON tracers for `ReleaseStructDef` | stmt result / compiler | Exec result type exists; Lean replay still deferred. |
+| Non-literal `$in cart(...)` when `$is_tuple` / `tuple_dim` are unknown | `CartMembership` non-literal branch | Literal `(a,b) $in cart(A,B)` works; symbolic `e $in cart(...)` needs known tuple shape/dim. |
 
 ## Wired elsewhere (not this module)
 
 - `release struct def e` → `exec_release_struct_def_stmt` (carrier resolve → prove membership → `release_one_struct_layer`), matched from `exec_stmt`.
+- Opaque `$in &Struct` → `InFactSearchProofByBuiltinRule::StructObjMembership` (literal tuple field carriers + `<=>:` laws; does not store bridges).
+- `$in cart(...)` → `InFactSearchProofByBuiltinRule::CartMembership` (literal tuple coordinates; or `$is_tuple` + `tuple_dim` + coordinates).
 
 ## What this module deliberately does **not** do
 

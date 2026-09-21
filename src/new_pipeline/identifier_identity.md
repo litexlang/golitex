@@ -70,7 +70,8 @@ files uses `file::x` / `mod::file::x`.
 - **`have fn … = …` / `have …:` (by exist) / `have fn by cases` / `have fn by induc`**
   are wired in new_pipeline. Occupy `f` at file root before parsing the body so
   free refs to `f` qualify via the same rule.
-  `have fn by exist!` parses (goal-only) but **exec is not wired**.
+  `have fn by exist!` parses goal-only with forall/`exist!` shape checks, but
+  **exec is not wired**.
 - **`-r` / project mount run loop** still deferred; set `current_mod_id` +
   `current_export_file_id` before parsing each export file.
 
