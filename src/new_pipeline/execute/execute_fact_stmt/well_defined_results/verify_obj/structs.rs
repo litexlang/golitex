@@ -348,7 +348,8 @@ impl Runtime {
     }
 
     // After WD of `\Name<args>`, store definitional facts for supported bodies:
-    // - have fn: `\Name<args> $in inst(FnSet)` and `\Name<args> = inst(anon)`
+    // - have fn =: `\Name<args> $in inst(FnSet)` and `\Name<args> = inst(anon)`
+    // - have fn by cases / by induc: `\Name<args> $in inst(FnSet)` (no anon equality)
     // - have =: `\Name<args> = subst(rhs)`
     fn maybe_register_instantiated_template_definitional_facts(
         &mut self,
@@ -358,17 +359,17 @@ impl Runtime {
         let Some(def) = self.def_template_visible_in_stack(plain).cloned() else {
             return Ok(());
         };
+        let mut subst: HashMap<IdentifierId, Obj> = HashMap::new();
+        for (id, arg) in def
+            .template_arg_def
+            .ordered_param_ids()
+            .into_iter()
+            .zip(value.args.iter())
+        {
+            subst.insert(id, arg.clone());
+        }
         match &def.template_def_stmt {
             TemplateDefEnum::HaveFnEqualStmt(have_fn) => {
-                let mut subst: HashMap<IdentifierId, Obj> = HashMap::new();
-                for (id, arg) in def
-                    .template_arg_def
-                    .ordered_param_ids()
-                    .into_iter()
-                    .zip(value.args.iter())
-                {
-                    subst.insert(id, arg.clone());
-                }
                 let Ok(anon) = self.inst_obj(
                     &Obj::AnonymousFn(have_fn.equal_to_anonymous_fn.clone()),
                     &subst,
@@ -394,6 +395,20 @@ impl Runtime {
                 }));
                 self.store_fact_and_infer(&defining_equal)?;
             }
+            TemplateDefEnum::HaveFnEqualCaseByCaseStmt(have_fn) => {
+                self.store_instantiated_template_fn_set_membership(
+                    value,
+                    &have_fn.fn_set_clause,
+                    &subst,
+                )?;
+            }
+            TemplateDefEnum::HaveFnByInducStmt(have_fn) => {
+                self.store_instantiated_template_fn_set_membership(
+                    value,
+                    &have_fn.fn_set_clause,
+                    &subst,
+                )?;
+            }
             TemplateDefEnum::HaveObjEqualStmt(_) => {
                 let Some(expanded_rhs) =
                     self.expanded_have_obj_equal_rhs_of_instantiated_template(value)?
@@ -411,6 +426,34 @@ impl Runtime {
             }
             _ => {}
         }
+        Ok(())
+    }
+
+    fn store_instantiated_template_fn_set_membership(
+        &mut self,
+        value: &InstantiatedTemplateObj,
+        clause: &crate::new_pipeline::ast::stmt::FnSetClause,
+        subst: &HashMap<IdentifierId, Obj>,
+    ) -> RuntimeResult<()> {
+        let fn_set = crate::new_pipeline::ast::obj::FnSet {
+            set_bound_parameters: clause.set_bound_parameters.clone(),
+            dom_facts: clause.dom_facts.clone(),
+            ret_set: Box::new(clause.ret_set.clone()),
+        };
+        let Ok(inst_set) = self.inst_obj(&Obj::FnSet(fn_set), subst) else {
+            return Ok(());
+        };
+        let Obj::FnSet(_) = &inst_set else {
+            return Ok(());
+        };
+        let surface = Obj::InstantiatedTemplateObj(value.clone());
+        let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
+            fact_id: self.ids.allocate_fact_id(),
+            element: surface,
+            set: inst_set,
+            line_file: None,
+        }));
+        self.store_fact_and_infer(&membership)?;
         Ok(())
     }
 }
