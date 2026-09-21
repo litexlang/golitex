@@ -3,7 +3,7 @@ use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::rational_expression::evaluate_obj_to_normalized_decimal_number;
-use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
+use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeResult};
 
 // Builtin rules for `!=` facts (zero-premise routes).
 pub enum NotEqualFactSearchProofByBuiltinRule {
@@ -18,27 +18,30 @@ pub enum NotEqualFactSearchProofByBuiltinRule {
     // List sets of different lengths are unequal.
     // Example: prove `{1} != {1, 2}`.
     ListSetDifferentLength(ListSetDifferentLengthBuiltinRuleProof),
+    // Strict order implies inequality.
+    // Mathematical property: `a > b` or `a < b` ⇒ `a != b`.
+    // Example: known `x > 0` proves `x != 0`.
+    FromKnownStrictOrder(FromKnownStrictOrderBuiltinRuleProof),
 }
 
-// Payload for ClosedDecimal not-equal: both evaluated normals (must differ).
-// Example: `1 != 0` stores left_normal `"1"`, right_normal `"0"`.
 pub struct ClosedDecimalNotEqualBuiltinRuleProof {
     pub left_normal: String,
     pub right_normal: String,
 }
 
-// Payload for symmetry: the flipped fact and its successful proof.
 pub struct NotEqualSymmetryBuiltinRuleProof {
     pub alternate_fact: Fact,
     pub proof_of_alternate_fact: VerifyFactResult,
 }
 
-// Payload for different-length list sets (no extra data; sides live on the fact).
 pub struct ListSetDifferentLengthBuiltinRuleProof {}
 
+pub struct FromKnownStrictOrderBuiltinRuleProof {
+    pub cite_fact_id: FactId,
+}
+
 impl Runtime {
-    // Builtin not-equal search order: closed decimal, then list-set length.
-    // Examples: `1 != 0`; `{1} != {1, 2}`.
+    // Builtin not-equal: closed decimal, known strict order, then list-set length.
     pub fn search_not_equal_fact_proof_by_builtin_rule(
         &mut self,
         fact: &NotEqualFact,
@@ -56,6 +59,16 @@ impl Runtime {
                     },
                 )));
             }
+        }
+        if let Some(cite_fact_id) = self
+            .known_greater_fact_id(&fact.left, &fact.right)
+            .or_else(|| self.known_less_fact_id(&fact.left, &fact.right))
+        {
+            return Ok(Some(
+                NotEqualFactSearchProofByBuiltinRule::FromKnownStrictOrder(
+                    FromKnownStrictOrderBuiltinRuleProof { cite_fact_id },
+                ),
+            ));
         }
         if let (Obj::ListSet(left), Obj::ListSet(right)) = (&fact.left, &fact.right) {
             if left.list.len() != right.list.len() {

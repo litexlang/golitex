@@ -125,6 +125,9 @@ impl SuccessStmtResult {
         if let Self::ReleaseThmStmt(result) = self {
             result.visit_named_child_results(&mut visitor);
         }
+        if let Self::ReleaseStructDefStmt(result) = self {
+            result.visit_named_child_results(&mut visitor);
+        }
     }
 
     /// Visits verifier-generated fact-process children without treating them
@@ -148,6 +151,9 @@ impl SuccessStmtResult {
             by.visit_named_child_results(&mut visitor);
         }
         if let Self::ReleaseThmStmt(result) = self {
+            result.visit_named_child_results(&mut visitor);
+        }
+        if let Self::ReleaseStructDefStmt(result) = self {
             result.visit_named_child_results(&mut visitor);
         }
     }
@@ -176,6 +182,9 @@ impl SuccessStmtResult {
         if let Self::ReleaseThmStmt(result) = self {
             result.try_visit_named_child_results_mut(&mut visitor)?;
         }
+        if let Self::ReleaseStructDefStmt(result) = self {
+            result.try_visit_named_child_results_mut(&mut visitor)?;
+        }
         Ok(())
     }
 
@@ -201,6 +210,7 @@ impl SuccessStmtResult {
             Self::UnsafeStmt(statement) => statement.statement(),
             Self::Definition(statement) => statement.statement(),
             Self::ReleaseThmStmt(statement) => statement.statement.clone().into(),
+            Self::ReleaseStructDefStmt(statement) => statement.statement.clone().into(),
             Self::By(statement) => statement.statement(),
             Self::Witness(statement) => statement.statement(),
             Self::ProofBlock(statement) => statement.statement(),
@@ -228,6 +238,7 @@ impl SuccessStmtResult {
             Self::UnsafeStmt(statement) => Some(statement.common()),
             Self::Definition(statement) => statement.common(),
             Self::ReleaseThmStmt(statement) => Some(&statement.common),
+            Self::ReleaseStructDefStmt(statement) => Some(&statement.common),
             Self::By(statement) => Some(statement.common()),
             Self::Witness(statement) => Some(statement.common()),
             Self::ProofBlock(statement) => statement.common(),
@@ -253,6 +264,7 @@ impl SuccessStmtResult {
             Self::UnsafeStmt(statement) => Some(statement.common_mut()),
             Self::Definition(statement) => statement.common_mut(),
             Self::ReleaseThmStmt(statement) => Some(&mut statement.common),
+            Self::ReleaseStructDefStmt(statement) => Some(&mut statement.common),
             Self::By(statement) => Some(statement.common_mut()),
             Self::Witness(statement) => Some(statement.common_mut()),
             Self::ProofBlock(statement) => statement.common_mut(),
@@ -266,6 +278,7 @@ impl SuccessStmtResult {
             Self::UnsafeStmt(statement) => Some(statement.into_common()),
             Self::Definition(statement) => statement.into_common(),
             Self::ReleaseThmStmt(statement) => Some(statement.common),
+            Self::ReleaseStructDefStmt(statement) => Some(statement.common),
             Self::By(statement) => Some(statement.into_common()),
             Self::Witness(statement) => Some(statement.into_common()),
             Self::ProofBlock(statement) => statement.into_common(),
@@ -281,6 +294,7 @@ impl SuccessStmtResult {
             Self::Witness(witness) => witness.into_child_results(),
             Self::By(by) => by.into_child_results(),
             Self::ReleaseThmStmt(result) => result.into_child_results(),
+            Self::ReleaseStructDefStmt(result) => result.into_child_results(),
             _other => Vec::new(),
         }
     }
@@ -353,6 +367,29 @@ impl SuccessReleaseThmStmtResult {
         Vec::new()
     }
 }
+
+impl SuccessReleaseStructDefStmtResult {
+    fn visit_named_child_results(&self, visitor: &mut ResultChildVisitor<'_>) {
+        if let Some(check) = &self.membership_check {
+            visitor.visit(check);
+        }
+    }
+
+    fn try_visit_named_child_results_mut<E>(
+        &mut self,
+        visitor: &mut ResultChildMutVisitor<'_, E>,
+    ) -> Result<(), E> {
+        if let Some(check) = &mut self.membership_check {
+            visitor.visit(check)?;
+        }
+        Ok(())
+    }
+
+    fn into_child_results(self) -> Vec<StmtResult> {
+        Vec::new()
+    }
+}
+
 
 impl SuccessByStmtResult {
     fn visit_named_child_results(&self, visitor: &mut ResultChildVisitor<'_>) {
@@ -460,11 +497,6 @@ impl SuccessByStmtResult {
                     for check in &verification.clause_checks {
                         visitor.visit(check);
                     }
-                }
-            }
-            Self::ByStructDefStmt(result) => {
-                if let Some(check) = &result.membership_check {
-                    visitor.visit(check);
                 }
             }
             Self::ByThmStmt(result) => {
@@ -587,11 +619,6 @@ impl SuccessByStmtResult {
                     }
                 }
             }
-            Self::ByStructDefStmt(result) => {
-                if let Some(check) = &mut result.membership_check {
-                    visitor.visit(check)?;
-                }
-            }
             Self::ByThmStmt(result) => {
                 if let Some(verification) = &mut result.verification {
                     visitor.visit(&mut verification.temporary_application)?;
@@ -673,10 +700,6 @@ impl SuccessByStmtResult {
                 into_choice_children(result.common, result.verification)
             }
             Self::ByDefStmt(result) => {
-                let _ = result;
-                Vec::new()
-            }
-            Self::ByStructDefStmt(result) => {
                 let _ = result;
                 Vec::new()
             }
@@ -1255,21 +1278,6 @@ impl SuccessDefinitionStmtResult {
                     }
                 }
             }
-            Self::HaveTupleStmt(result) => {
-                visit_tuple_or_cart_children(result.verification.as_ref(), visitor)
-            }
-            Self::HaveCartStmt(result) => {
-                visit_tuple_or_cart_children(result.verification.as_ref(), visitor)
-            }
-            Self::HaveSeqStmt(result) => {
-                visit_indexed_function_children(result.verification.as_ref(), visitor)
-            }
-            Self::HaveFiniteSeqStmt(result) => {
-                visit_indexed_function_children(result.verification.as_ref(), visitor)
-            }
-            Self::HaveMatrixStmt(result) => {
-                visit_indexed_function_children(result.verification.as_ref(), visitor)
-            }
             Self::DefThmStmt(result) => {
                 if let Some(verification) = &result.verification {
                     for step in &verification.proof_steps {
@@ -1384,21 +1392,6 @@ impl SuccessDefinitionStmtResult {
                     }
                 }
             }
-            Self::HaveTupleStmt(result) => {
-                try_visit_tuple_or_cart_children_mut(result.verification.as_mut(), visitor)?
-            }
-            Self::HaveCartStmt(result) => {
-                try_visit_tuple_or_cart_children_mut(result.verification.as_mut(), visitor)?
-            }
-            Self::HaveSeqStmt(result) => {
-                try_visit_indexed_function_children_mut(result.verification.as_mut(), visitor)?
-            }
-            Self::HaveFiniteSeqStmt(result) => {
-                try_visit_indexed_function_children_mut(result.verification.as_mut(), visitor)?
-            }
-            Self::HaveMatrixStmt(result) => {
-                try_visit_indexed_function_children_mut(result.verification.as_mut(), visitor)?
-            }
             Self::DefThmStmt(result) => {
                 if let Some(verification) = &mut result.verification {
                     for step in &mut verification.proof_steps {
@@ -1488,21 +1481,6 @@ impl SuccessDefinitionStmtResult {
                     children.extend(verification.proof_steps);
                 }
                 children
-            }
-            Self::HaveTupleStmt(result) => {
-                into_tuple_or_cart_children(result.common, result.verification)
-            }
-            Self::HaveCartStmt(result) => {
-                into_tuple_or_cart_children(result.common, result.verification)
-            }
-            Self::HaveSeqStmt(result) => {
-                into_indexed_function_children(result.common, result.verification)
-            }
-            Self::HaveFiniteSeqStmt(result) => {
-                into_indexed_function_children(result.common, result.verification)
-            }
-            Self::HaveMatrixStmt(result) => {
-                into_indexed_function_children(result.common, result.verification)
             }
             Self::DefTemplateStmt(result) => vec![(*result.body_statement_result).into()],
             Self::DefThmStmt(result) => result
@@ -1619,67 +1597,6 @@ fn try_visit_have_fn_by_induc_case_list_children_mut<E>(
     Ok(())
 }
 
-fn visit_tuple_or_cart_children(
-    verification: Option<&SuccessVerifyTupleOrCartDefinitionResult>,
-    visitor: &mut ResultChildVisitor<'_>,
-) {
-    if let Some(verification) = verification {
-        visitor.visit(&verification.dimension.positive_check);
-        visitor.visit(&verification.dimension.at_least_two_check);
-    }
-}
-
-fn try_visit_tuple_or_cart_children_mut<E>(
-    verification: Option<&mut SuccessVerifyTupleOrCartDefinitionResult>,
-    visitor: &mut ResultChildMutVisitor<'_, E>,
-) -> Result<(), E> {
-    if let Some(verification) = verification {
-        visitor.visit(&mut verification.dimension.positive_check)?;
-        visitor.visit(&mut verification.dimension.at_least_two_check)?;
-    }
-    Ok(())
-}
-
-fn into_tuple_or_cart_children(
-    _common: SuccessStmtCommonResult,
-    verification: Option<SuccessVerifyTupleOrCartDefinitionResult>,
-) -> Vec<StmtResult> {
-    let _ = verification;
-    Vec::new()
-}
-
-fn visit_indexed_function_children(
-    verification: Option<&SuccessVerifyIndexedFunctionDefinitionResult>,
-    visitor: &mut ResultChildVisitor<'_>,
-) {
-    if let Some(verification) = verification {
-        for check in &verification.bound_checks {
-            visitor.visit(check);
-        }
-        visitor.visit(&verification.return_check);
-    }
-}
-
-fn try_visit_indexed_function_children_mut<E>(
-    verification: Option<&mut SuccessVerifyIndexedFunctionDefinitionResult>,
-    visitor: &mut ResultChildMutVisitor<'_, E>,
-) -> Result<(), E> {
-    if let Some(verification) = verification {
-        for check in &mut verification.bound_checks {
-            visitor.visit(check)?;
-        }
-        visitor.visit(&mut verification.return_check)?;
-    }
-    Ok(())
-}
-
-fn into_indexed_function_children(
-    _common: SuccessStmtCommonResult,
-    verification: Option<SuccessVerifyIndexedFunctionDefinitionResult>,
-) -> Vec<StmtResult> {
-    let _ = verification;
-    Vec::new()
-}
 
 impl SuccessUnsafeStmtResult {
     fn into_common(self) -> SuccessStmtCommonResult {
@@ -1726,11 +1643,6 @@ impl SuccessDefinitionStmtResult {
             Self::HaveFnEqualCaseByCaseStmt(result) => Some(result.common),
             Self::HaveFnByInducStmt(result) => Some(result.common),
             Self::HaveFnByForallExistUniqueStmt(result) => Some(result.common),
-            Self::HaveTupleStmt(result) => Some(result.common),
-            Self::HaveCartStmt(result) => Some(result.common),
-            Self::HaveSeqStmt(result) => Some(result.common),
-            Self::HaveFiniteSeqStmt(result) => Some(result.common),
-            Self::HaveMatrixStmt(result) => Some(result.common),
             Self::DefPropStmt(result) => Some(result.common),
             Self::DefAbstractPropStmt(result) => Some(result.common),
             Self::DefSettingStmt(result) => Some(result.common),
@@ -1757,11 +1669,6 @@ impl SuccessDefinitionStmtResult {
             Self::HaveFnEqualCaseByCaseStmt(result) => result.statement.clone().into(),
             Self::HaveFnByInducStmt(result) => result.statement.clone().into(),
             Self::HaveFnByForallExistUniqueStmt(result) => result.statement.clone().into(),
-            Self::HaveTupleStmt(result) => result.statement.clone().into(),
-            Self::HaveCartStmt(result) => result.statement.clone().into(),
-            Self::HaveSeqStmt(result) => result.statement.clone().into(),
-            Self::HaveFiniteSeqStmt(result) => result.statement.clone().into(),
-            Self::HaveMatrixStmt(result) => result.statement.clone().into(),
             Self::DefPropStmt(result) => result.statement.clone().into(),
             Self::DefAbstractPropStmt(result) => result.statement.clone().into(),
             Self::DefSettingStmt(result) => result.statement.clone().into(),
@@ -1788,11 +1695,6 @@ impl SuccessDefinitionStmtResult {
             Self::HaveFnEqualCaseByCaseStmt(result) => Some(&result.common),
             Self::HaveFnByInducStmt(result) => Some(&result.common),
             Self::HaveFnByForallExistUniqueStmt(result) => Some(&result.common),
-            Self::HaveTupleStmt(result) => Some(&result.common),
-            Self::HaveCartStmt(result) => Some(&result.common),
-            Self::HaveSeqStmt(result) => Some(&result.common),
-            Self::HaveFiniteSeqStmt(result) => Some(&result.common),
-            Self::HaveMatrixStmt(result) => Some(&result.common),
             Self::DefPropStmt(result) => Some(&result.common),
             Self::DefAbstractPropStmt(result) => Some(&result.common),
             Self::DefSettingStmt(result) => Some(&result.common),
@@ -1819,11 +1721,6 @@ impl SuccessDefinitionStmtResult {
             Self::HaveFnEqualCaseByCaseStmt(result) => Some(&mut result.common),
             Self::HaveFnByInducStmt(result) => Some(&mut result.common),
             Self::HaveFnByForallExistUniqueStmt(result) => Some(&mut result.common),
-            Self::HaveTupleStmt(result) => Some(&mut result.common),
-            Self::HaveCartStmt(result) => Some(&mut result.common),
-            Self::HaveSeqStmt(result) => Some(&mut result.common),
-            Self::HaveFiniteSeqStmt(result) => Some(&mut result.common),
-            Self::HaveMatrixStmt(result) => Some(&mut result.common),
             Self::DefPropStmt(result) => Some(&mut result.common),
             Self::DefAbstractPropStmt(result) => Some(&mut result.common),
             Self::DefSettingStmt(result) => Some(&mut result.common),
@@ -1856,7 +1753,6 @@ impl SuccessByStmtResult {
             Self::ByAxiomOfChoiceStmt(result) => result.common,
             Self::ByRegularityAxiomStmt(result) => result.common,
             Self::ByDefStmt(result) => result.common,
-            Self::ByStructDefStmt(result) => result.common,
             Self::ByThmStmt(result) => result.common,
         }
     }
@@ -1879,7 +1775,6 @@ impl SuccessByStmtResult {
             Self::ByAxiomOfChoiceStmt(result) => result.statement.clone().into(),
             Self::ByRegularityAxiomStmt(result) => result.statement.clone().into(),
             Self::ByDefStmt(result) => result.statement.clone().into(),
-            Self::ByStructDefStmt(result) => result.statement.clone().into(),
             Self::ByThmStmt(result) => result.statement.clone().into(),
         }
     }
@@ -1902,7 +1797,6 @@ impl SuccessByStmtResult {
             Self::ByAxiomOfChoiceStmt(result) => &result.common,
             Self::ByRegularityAxiomStmt(result) => &result.common,
             Self::ByDefStmt(result) => &result.common,
-            Self::ByStructDefStmt(result) => &result.common,
             Self::ByThmStmt(result) => &result.common,
         }
     }
@@ -1925,7 +1819,6 @@ impl SuccessByStmtResult {
             Self::ByAxiomOfChoiceStmt(result) => &mut result.common,
             Self::ByRegularityAxiomStmt(result) => &mut result.common,
             Self::ByDefStmt(result) => &mut result.common,
-            Self::ByStructDefStmt(result) => &mut result.common,
             Self::ByThmStmt(result) => &mut result.common,
         }
     }

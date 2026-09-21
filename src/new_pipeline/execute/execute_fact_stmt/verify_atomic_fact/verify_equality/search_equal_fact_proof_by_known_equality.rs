@@ -34,7 +34,7 @@ impl Runtime {
         equality_class_keys_in_adjacency(&self.visible_equality_adjacency(), obj)
     }
 
-    fn visible_equality_adjacency(&self) -> EqualityAdjacency {
+    pub(crate) fn visible_equality_adjacency(&self) -> EqualityAdjacency {
         let mut adjacency: EqualityAdjacency = HashMap::new();
         for env in self.execution_environments_stack.iter().rev() {
             for (key, edges) in env.facts.known_equality.generating_edges.iter() {

@@ -1,5 +1,6 @@
-use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact, InFact};
-use crate::new_pipeline::ast::obj::{Obj, StandardSet};
+use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact, InFact, SubsetFact};
+use crate::new_pipeline::ast::obj::{FnObjHead, Number, Obj, StandardSet};
+use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::predecessor_helpers::match_sub_one;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::rational_expression::evaluate_obj_to_normalized_decimal_number;
@@ -34,6 +35,20 @@ pub enum InFactSearchProofByBuiltinRule {
     // then `x $in {a_1, …, a_n}`.
     // Example: `1 $in {1, 2}`.
     ListSetElementMembership(ListSetElementMembershipBuiltinRuleProof),
+    // Power-set membership from subset.
+    // Mathematical property: if `A $subset B`, then `A $in power_set(B)`.
+    // Example: `{x R: x > 0} $subset R` proves `{x R: x > 0} $in power_set(R)`.
+    PowerSetMembership(PowerSetMembershipBuiltinRuleProof),
+    // Natural predecessor stays in N under a known lower bound of one.
+    // Mathematical property: `x $in N` and `x >= 1` ⇒ `x - 1 $in N`.
+    // Example: known `n $in N` and `n >= 1` prove `n - 1 $in N`.
+    PredecessorInNatural(PredecessorInNaturalBuiltinRuleProof),
+    // Well-typed function application lands in the declared return set.
+    // Mathematical property: if `f $in fn(params) R` and `f(args)` matches that
+    // signature's domain, then `f(args) $in subst(R)`.
+    // Example: after restricted `countdown $in fn(_n N: …) N`, prove
+    // `countdown(n - 1) $in N`.
+    FnApplicationInCodomain(FnApplicationInCodomainBuiltinRuleProof),
 }
 
 // Closed decimal membership certificate (sides live on the InFact).
@@ -75,6 +90,19 @@ pub struct ListSetElementMembershipBuiltinRuleProof {
     pub equality_proof: VerifyFactResult,
 }
 
+pub struct PowerSetMembershipBuiltinRuleProof {
+    pub subset_proof: VerifyFactResult,
+}
+
+pub struct PredecessorInNaturalBuiltinRuleProof {
+    pub cite_in_n_fact_id: FactId,
+    pub cite_at_least_one_fact_id: FactId,
+}
+
+pub struct FnApplicationInCodomainBuiltinRuleProof {
+    pub cite_in_function_set_fact_id: FactId,
+}
+
 impl Runtime {
     // Builtin InFact search: closed decimal, C-arithmetic closure, subset lift,
     // set-builder membership, then native constants.
@@ -91,10 +119,19 @@ impl Runtime {
         if let Some(proof) = complex_arithmetic_in_c_proof(fact) {
             return Ok(Some(proof));
         }
+        if let Some(proof) = self.predecessor_in_natural_proof(fact)? {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) = self.fn_application_in_codomain_proof(fact, verify_state.clone())? {
+            return Ok(Some(proof));
+        }
         if let Some(proof) = self.standard_set_subset_membership_proof(fact, verify_state.clone())? {
             return Ok(Some(proof));
         }
         if let Some(proof) = self.set_builder_membership_proof(fact, verify_state.clone())? {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) = self.power_set_membership_proof(fact, verify_state.clone())? {
             return Ok(Some(proof));
         }
         if let Some(kind) = native_constant_membership_kind(&fact.element, &fact.set) {
@@ -106,6 +143,73 @@ impl Runtime {
         }
         if let Some(proof) = self.list_set_element_membership_proof(fact, verify_state)? {
             return Ok(Some(proof));
+        }
+        Ok(None)
+    }
+
+    // Prove `x - 1 $in N` from known `x $in N` and `x >= 1`.
+    // Example: after assuming `n $in N` and `n >= 1`, prove `n - 1 $in N`.
+    fn predecessor_in_natural_proof(
+        &mut self,
+        fact: &InFact,
+    ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        let Obj::StandardSet(StandardSet::N) = &fact.set else {
+            return Ok(None);
+        };
+        let Some(base) = match_sub_one(&fact.element) else {
+            return Ok(None);
+        };
+        let Some(cite_in_n_fact_id) = self.known_in_natural_fact_id(base) else {
+            return Ok(None);
+        };
+        let one = Obj::Number(Number {
+            normalized_value: "1".to_string(),
+        });
+        let Some(cite_at_least_one_fact_id) = self.known_greater_equal_fact_id(base, &one) else {
+            return Ok(None);
+        };
+        Ok(Some(InFactSearchProofByBuiltinRule::PredecessorInNatural(
+            PredecessorInNaturalBuiltinRuleProof {
+                cite_in_n_fact_id,
+                cite_at_least_one_fact_id,
+            },
+        )))
+    }
+
+    // Prove `f(args) $in R` from a matching InFunctionSet whose applied return is `R`.
+    // Example: restricted `countdown $in fn(_n N: …) N` proves `countdown(n - 1) $in N`.
+    fn fn_application_in_codomain_proof(
+        &mut self,
+        fact: &InFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        let Obj::FnObj(fn_obj) = &fact.element else {
+            return Ok(None);
+        };
+        let FnObjHead::Identifier(head) = fn_obj.head.as_ref() else {
+            return Ok(None);
+        };
+        let head_obj = Obj::Identifier(head.clone());
+        let candidates = self.collect_in_function_set_candidates(&head_obj);
+        for (fn_set, cite_in_function_set_fact_id) in candidates {
+            match self.try_verify_fn_obj_against_fn_set(fn_obj, &fn_set, verify_state.clone())? {
+                Ok(_) => {
+                    let Some(applied_ret) = self.applied_fn_set_return_set(fn_obj, &fn_set) else {
+                        continue;
+                    };
+                    if applied_ret.ir() != fact.set.ir() {
+                        continue;
+                    }
+                    return Ok(Some(
+                        InFactSearchProofByBuiltinRule::FnApplicationInCodomain(
+                            FnApplicationInCodomainBuiltinRuleProof {
+                                cite_in_function_set_fact_id,
+                            },
+                        ),
+                    ));
+                }
+                Err(_) => continue,
+            }
         }
         Ok(None)
     }
@@ -222,6 +326,30 @@ impl Runtime {
         Ok(None)
     }
 
+    // Prove `A $in power_set(B)` from `A $subset B`.
+    // Example: `{x R: x > 0} $in power_set(R)` via `{x R: x > 0} $subset R`.
+    fn power_set_membership_proof(
+        &mut self,
+        fact: &InFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        let Obj::PowerSet(power) = &fact.set else {
+            return Ok(None);
+        };
+        let subset = Fact::AtomicFact(AtomicFact::SubsetFact(SubsetFact {
+            fact_id: self.ids.allocate_fact_id(),
+            left: fact.element.clone(),
+            right: power.set.as_ref().clone(),
+            line_file: fact.line_file.clone(),
+        }));
+        let subset_proof = self.verify_fact(&subset, verify_state)?;
+        if subset_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(InFactSearchProofByBuiltinRule::PowerSetMembership(
+            PowerSetMembershipBuiltinRuleProof { subset_proof },
+        )))
+    }
 }
 
 // Prove `element $in set` when element evaluates to a closed decimal that

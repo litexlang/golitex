@@ -12,7 +12,7 @@ use crate::new_pipeline::exec_env::known_fact_memory::ObjIR;
 // sums/products/reduces, struct params / field access, ObjAtIndex, etc.
 // Not covered (intentional): Identifier/Number/StandardSet leaves; SetBuilder /
 // AnonymousFn / FnSet (binders); InstantiatedTemplateObj (legacy also skips).
-pub(super) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Obj, Obj)>> {
+pub(crate) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Obj, Obj)>> {
     macro_rules! binary {
         ($l:expr, $r:expr) => {
             Some(vec![

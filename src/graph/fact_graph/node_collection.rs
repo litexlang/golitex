@@ -66,7 +66,7 @@ impl FactGraphBuilder {
                     self.add_trust_nodes(&common.infers)
                 }
             }
-            Stmt::By(ByStmt::ByDefStmt(_)) | Stmt::By(ByStmt::ByStructDefStmt(_)) => {
+            Stmt::By(ByStmt::ByDefStmt(_)) | Stmt::ReleaseStructDefStmt(_) => {
                 if let Some(common) = success.common() {
                     self.add_infer_nodes(&common.infers)
                 }

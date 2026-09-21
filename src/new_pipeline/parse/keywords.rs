@@ -30,6 +30,7 @@ pub const TUPLE: &str = "tuple";
 pub const CART: &str = "cart";
 pub const SEQ: &str = "seq";
 pub const FINITE_SEQ: &str = "finite_seq";
+pub const MATRIX: &str = "matrix";
 pub const FN: &str = "fn";
 pub const PREIMAGE: &str = "preimage";
 pub const CASES: &str = "cases";

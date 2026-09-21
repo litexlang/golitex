@@ -7,8 +7,8 @@ use crate::new_pipeline::ast::fact::AndChainAtomicFact;
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::obj::{AnonymousFn, FnSet, Obj};
 use crate::new_pipeline::ast::stmt::{
-    DefinitionStmt, FnSetClause, HaveFnByForallExistUniqueStmt, HaveFnEqualCaseByCaseStmt,
-    HaveFnEqualStmt, Stmt,
+    DefinitionStmt, FnSetClause, HaveFnByForallExistUniqueStmt, HaveFnByInducCase,
+    HaveFnByInducCaseBody, HaveFnByInducStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt, Stmt,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeParseError, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -63,12 +63,7 @@ impl Runtime {
                     return self.parse_have_fn_by_cases_tail(block, &mut tb, name, fn_set_clause);
                 }
                 if tb.peek() == Some(INDUC) {
-                    return Err(RuntimeParseError::new(
-                        "have fn by induc: not wired yet in new_pipeline",
-                        block.line,
-                        block.source_path.clone(),
-                    )
-                    .into());
+                    return self.parse_have_fn_by_induc_tail(block, &mut tb, name, fn_set_clause);
                 }
                 return Err(tb.parse_error(
                     "have fn: expected `by cases` or `by induc` after signature",
@@ -168,7 +163,89 @@ impl Runtime {
         )))
     }
 
-    // `have fn name by exist!:` then `? forall …` + optional fact-only proof.
+    fn parse_have_fn_by_induc_tail(
+        &mut self,
+        block: &TokenBlock,
+        tb: &mut TokenBlock,
+        name: String,
+        fn_set_clause: FnSetClause,
+    ) -> RuntimeResult<Stmt> {
+        tb.expect(INDUC)?;
+        let measure = parse_obj(self, tb)?;
+        tb.expect(FROM)?;
+        let lower_bound = parse_obj(self, tb)?;
+        tb.expect(COLON)?;
+        if !tb.exceed_end_of_head() {
+            return Err(tb.parse_error("unexpected token after `by induc <measure> from <lower>:`"));
+        }
+        if block.body.is_empty() {
+            return Err(RuntimeParseError::new(
+                "have fn by induc: expects at least one `case` arm",
+                block.line,
+                block.source_path.clone(),
+            )
+            .into());
+        }
+        let cases = self.parse_have_fn_by_induc_cases(&block.body)?;
+        Ok(Stmt::Definition(DefinitionStmt::HaveFnByInducStmt(
+            HaveFnByInducStmt {
+                name,
+                fn_set_clause,
+                measure,
+                lower_bound,
+                cases,
+                line_file: LineFile::new(block.line, block.source_path.clone()),
+            },
+        )))
+    }
+
+    fn parse_have_fn_by_induc_cases(
+        &mut self,
+        blocks: &[TokenBlock],
+    ) -> RuntimeResult<Vec<HaveFnByInducCase>> {
+        let mut cases = Vec::with_capacity(blocks.len());
+        for child in blocks {
+            cases.push(self.parse_have_fn_by_induc_case(child)?);
+        }
+        Ok(cases)
+    }
+
+    fn parse_have_fn_by_induc_case(
+        &mut self,
+        block: &TokenBlock,
+    ) -> RuntimeResult<HaveFnByInducCase> {
+        let mut arm = block.clone();
+        arm.expect(CASE)?;
+        let case_fact = self.parse_and_chain_atomic_fact_allow_not(&mut arm)?;
+        arm.expect(COLON)?;
+        if !arm.exceed_end_of_head() {
+            let equal_to = parse_obj(self, &mut arm)?;
+            if !arm.exceed_end_of_head() {
+                return Err(arm.parse_error("unexpected token after case right-hand side"));
+            }
+            if !arm.body.is_empty() {
+                return Err(arm.parse_error(
+                    "a case with an inline right-hand side cannot also have nested cases",
+                ));
+            }
+            return Ok(HaveFnByInducCase {
+                case_fact,
+                body: HaveFnByInducCaseBody::EqualTo(equal_to),
+            });
+        }
+        if arm.body.is_empty() {
+            return Err(arm.parse_error(
+                "case must end with a right-hand side or nested case blocks",
+            ));
+        }
+        let nested = self.parse_have_fn_by_induc_cases(&arm.body)?;
+        Ok(HaveFnByInducCase {
+            case_fact,
+            body: HaveFnByInducCaseBody::NestedCases(nested),
+        })
+    }
+
+    // `have fn name by exist!:` then only `? forall …` (no proof body).
     fn parse_have_fn_by_exist_or_error(
         &mut self,
         block: &TokenBlock,
@@ -213,21 +290,23 @@ impl Runtime {
             )
             .into());
         }
+        if block.body.len() != 1 {
+            return Err(RuntimeParseError::new(
+                "`have fn … by exist!:` takes only a `? forall ...` goal; prove it outside with claim/thm/trust",
+                block.line,
+                block.source_path.clone(),
+            )
+            .into());
+        }
 
         let mut goal = block.body[0].clone();
         let forall = self.parse_goal_forall_fact(&mut goal, "have fn by exist!")?;
-        let proof_blocks = &block.body[1..];
-        let prove_process = self.with_forall_params_occupied(
-            &forall.typed_parameters,
-            block,
-            |this| this.parse_body_stmts(proof_blocks),
-        )?;
 
         Ok(Stmt::Definition(
             DefinitionStmt::HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt {
                 name,
                 forall,
-                prove_process,
+                prove_process: Vec::new(),
                 line_file: LineFile::new(block.line, block.source_path.clone()),
             }),
         ))

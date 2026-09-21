@@ -681,21 +681,6 @@ impl Runtime {
             Stmt::Definition(DefinitionStmt::HaveFnByForallExistUniqueStmt(stmt)) => {
                 Ok(TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt))
             }
-            Stmt::Definition(DefinitionStmt::HaveTupleStmt(stmt)) => {
-                Ok(TemplateDefEnum::HaveTupleStmt(stmt))
-            }
-            Stmt::Definition(DefinitionStmt::HaveCartStmt(stmt)) => {
-                Ok(TemplateDefEnum::HaveCartStmt(stmt))
-            }
-            Stmt::Definition(DefinitionStmt::HaveSeqStmt(stmt)) => {
-                Ok(TemplateDefEnum::HaveSeqStmt(stmt))
-            }
-            Stmt::Definition(DefinitionStmt::HaveFiniteSeqStmt(stmt)) => {
-                Ok(TemplateDefEnum::HaveFiniteSeqStmt(stmt))
-            }
-            Stmt::Definition(DefinitionStmt::HaveMatrixStmt(stmt)) => {
-                Ok(TemplateDefEnum::HaveMatrixStmt(stmt))
-            }
             _ => Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     "template body only supports `have` and `trust have` definition statements"

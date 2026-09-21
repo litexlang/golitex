@@ -19,10 +19,7 @@ example	classification	strict_positive_eligible	source_boundary_count	source_bou
 26_CollectionsAndAggregates.lit	trust_free	true	0			0	
 27_SetOperators.lit	trust_free	true	0			0	
 28_ExtendedSetRules.lit	trust_free	true	0			0	
-29_IndexedTupleCompilerEnvironment.lit	trust_free	true	0			0	
 2_OrderSystem.lit	trust_free	true	0			0	
-30_IndexedSequenceCompilerEnvironment.lit	trust_free	true	0			0	
-31_FiniteSequenceCompilerEnvironment.lit	trust_free	true	0			0	
 33_NonemptySetWitnessCompilerEnvironment.lit	trust_free	true	0			0	
 34_PredicateBackedWitnessResultComposition.lit	trust_free	true	0			0	
 35_SourceAxiomResultBoundary.lit	source_declared_trust_boundary	false	1	axiom:1	lean/examples/35_SourceAxiomResultBoundary.lit:10	1	lean/examples/35_SourceAxiomResultBoundary.lean:8

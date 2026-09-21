@@ -162,7 +162,7 @@ impl Runtime {
             };
 
         let typed = set_bound_parameters_to_typed_parameter_list(&value.set_bound_parameters);
-        self.define_typed_parameters_in_current_env(&typed)?;
+        self.define_typed_parameters_in_current_env(&typed, None)?;
 
         let dom_fact_well_defined = match self.verify_quantifier_free_facts_well_defined(
             &value.dom_facts,
@@ -227,7 +227,7 @@ impl Runtime {
             };
 
         let typed = set_bound_parameters_to_typed_parameter_list(&value.body.set_bound_parameters);
-        self.define_typed_parameters_in_current_env(&typed)?;
+        self.define_typed_parameters_in_current_env(&typed, None)?;
 
         let dom_fact_well_defined = match self.verify_quantifier_free_facts_well_defined(
             &value.body.dom_facts,
@@ -332,7 +332,7 @@ impl Runtime {
                 param_type: ParamType::Obj(value.param_set.as_ref().clone()),
             }],
         };
-        self.define_typed_parameters_in_current_env(&typed)?;
+        self.define_typed_parameters_in_current_env(&typed, None)?;
 
         let fact_well_defined =
             match self.verify_quantifier_free_facts_well_defined(&value.facts, verify_state)? {

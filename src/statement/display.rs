@@ -16,6 +16,7 @@ impl fmt::Display for Stmt {
             Stmt::UnsafeStmt(x) => write!(f, "{}", x),
             Stmt::Definition(x) => write!(f, "{}", x),
             Stmt::ReleaseThmStmt(x) => write!(f, "{}", x),
+            Stmt::ReleaseStructDefStmt(x) => write!(f, "{}", x),
             Stmt::By(x) => write!(f, "{}", x),
             Stmt::Witness(x) => write!(f, "{}", x),
             Stmt::ProofBlock(x) => write!(f, "{}", x),
@@ -48,11 +49,6 @@ impl fmt::Display for DefinitionStmt {
             DefinitionStmt::HaveFnEqualCaseByCaseStmt(x) => write!(f, "{}", x),
             DefinitionStmt::HaveFnByInducStmt(x) => write!(f, "{}", x),
             DefinitionStmt::HaveFnByForallExistUniqueStmt(x) => write!(f, "{}", x),
-            DefinitionStmt::HaveTupleStmt(x) => write!(f, "{}", x),
-            DefinitionStmt::HaveCartStmt(x) => write!(f, "{}", x),
-            DefinitionStmt::HaveSeqStmt(x) => write!(f, "{}", x),
-            DefinitionStmt::HaveFiniteSeqStmt(x) => write!(f, "{}", x),
-            DefinitionStmt::HaveMatrixStmt(x) => write!(f, "{}", x),
             DefinitionStmt::DefPropStmt(x) => write!(f, "{}", x),
             DefinitionStmt::DefAbstractPropStmt(x) => write!(f, "{}", x),
             DefinitionStmt::DefSettingStmt(x) => write!(f, "{}", x),
@@ -85,7 +81,6 @@ impl fmt::Display for ByStmt {
             ByStmt::ByAxiomOfChoiceStmt(x) => write!(f, "{}", x),
             ByStmt::ByRegularityAxiomStmt(x) => write!(f, "{}", x),
             ByStmt::ByDefStmt(x) => write!(f, "{}", x),
-            ByStmt::ByStructDefStmt(x) => write!(f, "{}", x),
             ByStmt::ByThmStmt(x) => write!(f, "{}", x),
         }
     }

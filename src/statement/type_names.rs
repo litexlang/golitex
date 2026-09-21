@@ -189,9 +189,9 @@ impl ByDefStmt {
     }
 }
 
-impl ByStructDefStmt {
+impl ReleaseStructDefStmt {
     pub fn stmt_type_name(&self) -> String {
-        "ByStructDefStmt".to_string()
+        "ReleaseStructDefStmt".to_string()
     }
 }
 
@@ -303,35 +303,10 @@ impl HaveFnByForallExistUniqueStmt {
     }
 }
 
-impl HaveTupleStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "HaveTupleStmt".to_string()
-    }
-}
 
-impl HaveCartStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "HaveCartStmt".to_string()
-    }
-}
 
-impl HaveSeqStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "HaveSeqStmt".to_string()
-    }
-}
 
-impl HaveFiniteSeqStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "HaveFiniteSeqStmt".to_string()
-    }
-}
 
-impl HaveMatrixStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "HaveMatrixStmt".to_string()
-    }
-}
 
 impl SketchStmt {
     pub fn output_type_string() -> String {
@@ -508,7 +483,7 @@ impl ByDefStmt {
     }
 }
 
-impl ByStructDefStmt {
+impl ReleaseStructDefStmt {
     pub fn output_type_string() -> String {
         "struct definition release".to_string()
     }
@@ -622,32 +597,7 @@ impl HaveFnByForallExistUniqueStmt {
     }
 }
 
-impl HaveTupleStmt {
-    pub fn output_type_string() -> String {
-        "tuple definition".to_string()
-    }
-}
 
-impl HaveCartStmt {
-    pub fn output_type_string() -> String {
-        "cart definition".to_string()
-    }
-}
 
-impl HaveSeqStmt {
-    pub fn output_type_string() -> String {
-        "sequence definition".to_string()
-    }
-}
 
-impl HaveFiniteSeqStmt {
-    pub fn output_type_string() -> String {
-        "finite sequence definition".to_string()
-    }
-}
 
-impl HaveMatrixStmt {
-    pub fn output_type_string() -> String {
-        "matrix definition".to_string()
-    }
-}

@@ -8,7 +8,7 @@
 # verify without an explicit request to open either struct layer.
 #
 # Now (verified below):
-# by struct def make_outer(1).inner
+# release struct def make_outer(1).inner
 # make_outer(1).inner.value >= 0
 # Current behavior: the field path is well-defined from declaration-owned
 # carriers, while the law becomes available only after the exact Inner object
@@ -38,7 +38,7 @@ have fn make_outer(x N) &Outer = ((x, 0), 0)
 # Field-path WD needs no prior opening and releases no facts by itself.
 make_outer(1).inner.value = make_outer(1).inner.value
 
-by struct def make_outer(1).inner
+release struct def make_outer(1).inner
 $is_tuple(make_outer(1).inner)
 tuple_dim(make_outer(1).inner) = 2
 make_outer(1).inner $in cart(R, R)
@@ -46,7 +46,7 @@ make_outer(1).inner.value = make_outer(1).inner[1]
 make_outer(1).inner.value >= 0
 
 # Repeating the same opening is idempotent.
-by struct def make_outer(1).inner
+release struct def make_outer(1).inner
 
 # A direct pure-symbol binding opens one layer automatically.
 forall direct &Inner:
@@ -60,5 +60,5 @@ struct ScalarView:
     value R
 
 have fn scalar_view(x R) &ScalarView = x
-by struct def scalar_view(1)
+release struct def scalar_view(1)
 scalar_view(1).value = scalar_view(1)

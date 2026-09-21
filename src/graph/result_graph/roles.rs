@@ -18,12 +18,7 @@ pub(super) fn success_stmt_role(success: &SuccessStmtResult) -> &'static str {
             | SuccessDefinitionStmtResult::HaveFnEqualStmt(_)
             | SuccessDefinitionStmtResult::HaveFnEqualCaseByCaseStmt(_)
             | SuccessDefinitionStmtResult::HaveFnByInducStmt(_)
-            | SuccessDefinitionStmtResult::HaveFnByForallExistUniqueStmt(_)
-            | SuccessDefinitionStmtResult::HaveTupleStmt(_)
-            | SuccessDefinitionStmtResult::HaveCartStmt(_)
-            | SuccessDefinitionStmtResult::HaveSeqStmt(_)
-            | SuccessDefinitionStmtResult::HaveFiniteSeqStmt(_)
-            | SuccessDefinitionStmtResult::HaveMatrixStmt(_) => "DefObjStmt",
+            | SuccessDefinitionStmtResult::HaveFnByForallExistUniqueStmt(_) => "DefObjStmt",
             SuccessDefinitionStmtResult::DefPropStmt(_)
             | SuccessDefinitionStmtResult::DefAbstractPropStmt(_) => "DefPredicateStmt",
             SuccessDefinitionStmtResult::DefSettingStmt(_)
@@ -35,6 +30,7 @@ pub(super) fn success_stmt_role(success: &SuccessStmtResult) -> &'static str {
             SuccessDefinitionStmtResult::DefStrategyStmt(_) => "DefStrategyStmt",
         },
         SuccessStmtResult::ReleaseThmStmt(_) => "ReleaseThmStmt",
+        SuccessStmtResult::ReleaseStructDefStmt(_) => "ReleaseStructDefStmt",
         SuccessStmtResult::By(_) => "ByStmt",
         SuccessStmtResult::Witness(_) => "WitnessStmt",
         SuccessStmtResult::ProofBlock(_) => "ProofBlockStmt",

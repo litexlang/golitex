@@ -185,6 +185,9 @@ impl RunSummary {
             Stmt::By(_) => {
                 self.by_statements += 1;
             }
+            Stmt::ReleaseStructDefStmt(_) | Stmt::ReleaseThmStmt(_) => {
+                self.by_statements += 1;
+            }
             Stmt::Witness(_) => {
                 self.record_witness_stmt();
             }
@@ -364,6 +367,9 @@ impl RunSummary {
                     bump_count(&mut self.by_theorem_counts, verification.theorem.as_str());
                 }
             }
+            SuccessStmtResult::ReleaseStructDefStmt(_) => {
+                self.bump_by_method("struct def");
+            }
             SuccessStmtResult::By(by) => self.visit_by_ir(by),
             _ => {}
         }
@@ -400,7 +406,6 @@ impl RunSummary {
                 self.bump_by_method("regularity axiom")
             }
             SuccessByStmtResult::ByDefStmt(_) => self.bump_by_method("def"),
-            SuccessByStmtResult::ByStructDefStmt(_) => self.bump_by_method("struct def"),
             SuccessByStmtResult::ByThmStmt(result) => {
                 self.bump_by_method("theorem selection");
                 if result.verification.is_some() {

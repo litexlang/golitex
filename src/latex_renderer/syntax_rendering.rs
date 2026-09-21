@@ -2386,19 +2386,6 @@ impl Stmt {
             Stmt::Definition(DefinitionStmt::HaveFnByForallExistUniqueStmt(x)) => {
                 x.syntax_rendering()
             }
-            Stmt::Definition(DefinitionStmt::HaveTupleStmt(x)) => {
-                latex_texttt_escape(&x.to_string())
-            }
-            Stmt::Definition(DefinitionStmt::HaveCartStmt(x)) => {
-                latex_texttt_escape(&x.to_string())
-            }
-            Stmt::Definition(DefinitionStmt::HaveSeqStmt(x)) => latex_texttt_escape(&x.to_string()),
-            Stmt::Definition(DefinitionStmt::HaveFiniteSeqStmt(x)) => {
-                latex_texttt_escape(&x.to_string())
-            }
-            Stmt::Definition(DefinitionStmt::HaveMatrixStmt(x)) => {
-                latex_texttt_escape(&x.to_string())
-            }
             Stmt::Definition(DefinitionStmt::DefPropStmt(x)) => x.syntax_rendering(),
             Stmt::Definition(DefinitionStmt::DefAbstractPropStmt(x)) => x.syntax_rendering(),
             Stmt::Definition(DefinitionStmt::DefAlgoStmt(x)) => x.syntax_rendering(),
@@ -2440,7 +2427,7 @@ impl Stmt {
             Stmt::By(ByStmt::ByAxiomOfChoiceStmt(x)) => x.syntax_rendering(),
             Stmt::By(ByStmt::ByRegularityAxiomStmt(x)) => x.syntax_rendering(),
             Stmt::By(ByStmt::ByDefStmt(x)) => latex_texttt_escape(&x.to_string()),
-            Stmt::By(ByStmt::ByStructDefStmt(x)) => latex_texttt_escape(&x.to_string()),
+            Stmt::ReleaseStructDefStmt(x) => latex_texttt_escape(&x.to_string()),
             Stmt::By(ByStmt::ByThmStmt(x)) => latex_texttt_escape(&x.to_string()),
             Stmt::ReleaseThmStmt(x) => latex_texttt_escape(&x.to_string()),
         }

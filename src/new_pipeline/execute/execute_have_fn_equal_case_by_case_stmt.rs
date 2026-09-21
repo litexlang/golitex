@@ -15,12 +15,13 @@ use crate::new_pipeline::ast::param::{
     ParamType, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
 };
 use crate::new_pipeline::ast::stmt::{FnSetClause, HaveFnEqualCaseByCaseStmt};
-use crate::new_pipeline::exec_env::{DefinedIdentifierInfo, ExecEnv};
+use crate::new_pipeline::exec_env::{DefinedIdentifierInfo, ExecEnv, StoredIdentifierDefinition};
 use crate::new_pipeline::execute::execute_fact_stmt::{
     VerifyFactResult, VerifyObjWellDefinedResult, VerifyState,
 };
 use crate::new_pipeline::instantiate::quantifier_free_fact_to_fact;
 use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeError, RuntimeResult};
+use std::rc::Rc;
 
 pub enum ExecHaveFnEqualCaseByCaseStmtFailed {
     CaseCountMismatch,
@@ -300,19 +301,19 @@ impl Runtime {
         }
     }
 
-    fn introduce_fn_set_clause_binders(
+    pub(crate) fn introduce_fn_set_clause_binders(
         &mut self,
         clause: &FnSetClause,
     ) -> RuntimeResult<()> {
         let typed = set_bound_to_typed(&clause.set_bound_parameters);
-        let _ = self.define_typed_parameters_in_current_env(&typed)?;
+        let _ = self.define_typed_parameters_in_current_env(&typed, None)?;
         for dom in &clause.dom_facts {
             let _ = self.store_fact_and_infer(&quantifier_free_fact_to_fact(dom.clone()))?;
         }
         Ok(())
     }
 
-    fn store_have_fn_case_by_case_facts(
+    pub(crate) fn store_have_fn_case_by_case_facts(
         &mut self,
         stmt: &HaveFnEqualCaseByCaseStmt,
         fn_set: &FnSet,
@@ -327,6 +328,9 @@ impl Runtime {
             stmt.name.clone(),
             DefinedIdentifierInfo {
                 identifier: stmt.name.clone(),
+                definition: StoredIdentifierDefinition::HaveFnEqualCaseByCase(Rc::new(
+                    stmt.clone(),
+                )),
             },
         );
 

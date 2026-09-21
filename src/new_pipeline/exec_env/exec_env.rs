@@ -1,7 +1,8 @@
-use crate::new_pipeline::ast::names::{AtomicName, PlainName};
+use crate::new_pipeline::ast::names::{AtomicName, BoundName, PlainName};
 use crate::new_pipeline::ast::obj::{
     Cart, FiniteSeqListObj, FiniteSeqSet, FnSet, Obj, SetBuilder, StructObj, Tuple,
 };
+use crate::new_pipeline::ast::param::ParamType;
 use crate::new_pipeline::ast::stmt::AxiomStmt;
 use crate::new_pipeline::ast::stmt::DefAbstractPropStmt;
 use crate::new_pipeline::ast::stmt::DefAlgoStmt;
@@ -11,9 +12,18 @@ use crate::new_pipeline::ast::stmt::DefStrategyStmt;
 use crate::new_pipeline::ast::stmt::DefStructStmt;
 use crate::new_pipeline::ast::stmt::DefTemplateStmt;
 use crate::new_pipeline::ast::stmt::DefThmStmt;
+use crate::new_pipeline::ast::stmt::HaveFnByInducStmt;
+use crate::new_pipeline::ast::stmt::HaveFnEqualCaseByCaseStmt;
+use crate::new_pipeline::ast::stmt::HaveFnEqualStmt;
+use crate::new_pipeline::ast::stmt::HaveObjByExistFactsStmt;
+use crate::new_pipeline::ast::stmt::HaveObjEqualStmt;
+use crate::new_pipeline::ast::stmt::HaveObjInNonemptySetOrParamTypeStmt;
+use crate::new_pipeline::ast::stmt::LetObjStmt;
+use crate::new_pipeline::ast::stmt::TrustHaveStmt;
 use crate::new_pipeline::exec_env::known_fact_memory::ObjIR;
 use crate::new_pipeline::runtime::runtime_ids::{FactId, WellDefinednessId};
 use std::collections::HashMap;
+use std::rc::Rc;
 
 pub use super::known_fact_memory::{
     AtomicExceptEqualityFactMemory, KnownEqualityMemory, KnownFactMemory,
@@ -66,6 +76,28 @@ pub struct WellDefinedObjectMemory {
     pub wd_id_to_object: HashMap<WellDefinednessId, Obj>,
 }
 
+/// Where a name in `DefinitionMemory.identifiers` came from.
+///
+/// User-level object defs keep the introducing stmt (`Rc`).
+/// Scoped binders (forall / prop params / struct fields / …) share one
+/// `ParamType` variant — same introduce mechanism, no outer-stmt tag.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum StoredIdentifierDefinition {
+    HaveObjInNonemptySetOrParamType(Rc<HaveObjInNonemptySetOrParamTypeStmt>),
+    HaveObjEqual(Rc<HaveObjEqualStmt>),
+    HaveObjByExistFacts(Rc<HaveObjByExistFactsStmt>),
+    TrustHave(Rc<TrustHaveStmt>),
+    LetObj(Rc<LetObjStmt>),
+    HaveFnEqual(Rc<HaveFnEqualStmt>),
+    HaveFnEqualCaseByCase(Rc<HaveFnEqualCaseByCaseStmt>),
+    HaveFnByInduc(Rc<HaveFnByInducStmt>),
+    /// Local / scoped typed binder (`forall`, `prop` params, struct fields, …).
+    ParamType {
+        binding: BoundName,
+        param_type: ParamType,
+    },
+}
+
 /// Definitions introduced in one execution environment.
 ///
 /// All maps are keyed by `PlainName` (unqualified local name);
@@ -90,6 +122,7 @@ pub struct DefinitionMemory {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DefinedIdentifierInfo {
     pub identifier: String,
+    pub definition: StoredIdentifierDefinition,
 }
 
 /// Algebraic properties that can be proved for a predicate.
@@ -183,10 +216,9 @@ impl ExecEnv {
     }
 
     pub fn store_def_template(&mut self, def_template: DefTemplateStmt) {
-        self.definitions.template_definitions.insert(
-            def_template.template_name.clone(),
-            def_template,
-        );
+        self.definitions
+            .template_definitions
+            .insert(def_template.template_name.clone(), def_template);
     }
 
     pub fn lookup_axiom(&self, name: &str) -> Option<&AxiomStmt> {

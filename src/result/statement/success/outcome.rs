@@ -7,6 +7,7 @@ pub enum SuccessStmtResult {
     UnsafeStmt(SuccessUnsafeStmtResult),
     Definition(SuccessDefinitionStmtResult),
     ReleaseThmStmt(Box<SuccessReleaseThmStmtResult>),
+    ReleaseStructDefStmt(Box<SuccessReleaseStructDefStmtResult>),
     By(SuccessByStmtResult),
     Witness(SuccessWitnessStmtResult),
     ProofBlock(SuccessProofBlockStmtResult),

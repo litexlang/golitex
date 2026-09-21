@@ -860,15 +860,15 @@ one field.
 The tuple representation is deliberately opaque outside two places:
 
 1. the verifier may inspect it internally while proving `e $in &Struct`; and
-2. a successful `by struct def e` (or the automatic direct-binding case below)
+2. a successful `release struct def e` (or the automatic direct-binding case below)
    stores the public representation facts.
 
 A generic membership fact `e $in &Struct` does not itself store tuple shape,
 field carriers, field-to-index equalities, or struct laws.
 
-#### Explicit property release: `by struct def`
+#### Explicit property release: `release struct def`
 
-`by struct def e` opens exactly one definition-owned struct layer. It has no
+`release struct def e` opens exactly one definition-owned struct layer. It has no
 `as &Struct` form: the struct must already be fixed by the definition of `e`,
 by a function's explicit return carrier, or by the direct struct carrier of the
 previous field in a chain.
@@ -886,8 +886,8 @@ For a struct with fields `a : A` and `b : B`, success releases:
 
 For a one-field struct it instead releases `e.only = e`, the sole carrier for
 both spellings, and the instantiated laws. Repeating the same statement is
-idempotent. Opening is never recursive: `by struct def outer` does not also
-open a struct-valued `outer.inner`; write `by struct def outer.inner` when its
+idempotent. Opening is never recursive: `release struct def outer` does not also
+open a struct-valued `outer.inner`; write `release struct def outer.inner` when its
 properties are needed.
 
 #### Field-access well-definedness
@@ -902,7 +902,7 @@ it, for example when calling a function-valued field.
 
 Consequently, `f(t).x = f(t).x` can be well-defined and reflexive before any
 opening, while a theorem that needs a law about `f(t).x` still requires
-`by struct def f(t)` or `by struct def f(t).x`, depending on which layer owns
+`release struct def f(t)` or `release struct def f(t).x`, depending on which layer owns
 that law.
 
 #### The only automatic property release
@@ -913,7 +913,7 @@ properties of a directly bound `p` are immediately available.
 
 No other form opens properties automatically. In particular, a function
 result defined as `&Point`, a nested struct-valued field, an equality, and a
-later proof of membership still require `by struct def ...`. Those definitions
+later proof of membership still require `release struct def ...`. Those definitions
 are sufficient for field-access WD, but not for importing the struct laws.
 Named fields therefore belong to definitions, never to membership search.
 Litex has no `&Point{p}.x` form for selecting another view later.
@@ -947,7 +947,7 @@ have fn make_point(x, y R) &Point = (x, y)
 # The defined return makes the field path well-defined, but does not release
 # Point's tuple bridge or properties.
 make_point(1, 2).x = make_point(1, 2).x
-by struct def make_point(1, 2)
+release struct def make_point(1, 2)
 make_point(1, 2).x = 1
 ```
 
@@ -989,7 +989,7 @@ struct TaggedPoint:
 release thm struct_member((1, 2), &Coordinates)
 release thm struct_member(((1, 2), 0), &TaggedPoint)
 have item &TaggedPoint = ((1, 2), 0)
-by struct def item.point
+release struct def item.point
 item.point.x $in R
 ```
 
@@ -1029,7 +1029,7 @@ p.x = 1
 The last line is a parse `error`. The membership still exposes the ordinary
 struct-membership proposition for later proof use, but it exposes neither
 positional Cartesian facts nor `Point` field names. There is deliberately no
-`by struct def p as &Point` escape hatch. To use those names, construct a new
+`release struct def p as &Point` escape hatch. To use those names, construct a new
 definition-owned object explicitly:
 
 ```litex
@@ -1062,25 +1062,31 @@ template<S set>:
 ```
 
 A template parameter such as `S set` is not a function argument ranging over a
-set of all sets. The body is checked once in the parameterized context and is
-materialized at an instance.
+set of all sets. The body is checked once in the parameterized context; later
+`\name<args>` keeps the surface form and uses definitional unfold for equality
+and membership.
 
-When a template selects a set-builder value, the instantiated object preserves
-that defining view in both directions:
+When a template selects a set-builder value, membership in the instance unfolds
+to membership in the defining set-builder:
 
 ```litex
 abstract_prop marked(x)
 
 template<S set>:
-    have marked_elements power_set(S) = {x S: $marked(x)}
+    have marked_elements set = {x S: $marked(x)}
 
 trust $marked(1)
-release thm defined_set_member(1, \marked_elements<R>)
+1 $in R
+1 $in \marked_elements<R>
 ```
 
-Conversely, known membership in `\marked_elements<R>` exposes `$marked(1)`.
-The explicit builtin theorem still requires the base-set membership and every
-defining fact; the named definition does not invent membership.
+Known membership in `\marked_elements<R>` is proved from the base-set membership
+and every defining fact of the set-builder after definitional unfold.
+
+> **Preview (`new_pipeline`):** storing `x $in {t S: P(t), …}` (or `x $in Name`
+> when `Name` is known equal to that set-builder) also stores `x $in S` and the
+> instantiated defining facts. That is the store-time reverse of set-builder
+> membership.
 
 ```text
 template<S set>:
@@ -1937,37 +1943,25 @@ supports it.
 
 ### Constants and symbolic indexed data
 
-Use dedicated `have` forms when a tuple, Cartesian product, sequence, or matrix
-has a symbolic dimension or coordinate formula.
+Dedicated `have tuple` / `have cart` / `have seq` / `have finite_seq` /
+`have matrix` introduction statements are **removed**. Introduce indexed data
+with ordinary `have fn` (same pipeline as other named functions):
 
 ```litex
 have n N+ = 3
-have tuple t for i1 <= n, t[i1] = i1
-have cart c for i1 <= n, proj(c, i1) = R
+have fn t(i1 N+: i1 <= n) N+ = i1
+have fn factor(i1 N+: i1 <= n) set = R
+have fn s(i1 N+) N+ = i1
+have fn M(i1 N+: i1 <= 2, j N+: j <= n) N+ = j
 
-have finite_seq s finite_seq(N+, n) for i1 <= n, s(i1) = i1
-have matrix M matrix(N+, 2, n) for i1 <= 2, j <= n, M(i1, j) = j
-
-t[2] = 2
+t(2) = 2
 s(3) = 3
 M(2, 3) = 3
 ```
 
-| Statement | Purpose |
-|---|---|
-| `have tuple t for i1 <= n, t[i1] = expr` | Symbolic tuple coordinates |
-| `have cart c for i1 <= n, proj(c, i1) = expr` | Symbolic product factors |
-| `have seq s seq(S) for i1, s(i1) = expr` | Infinite sequence entries |
-| `have finite_seq s finite_seq(S, n) for i1 <= n, ...` | Finite sequence entries |
-| `have matrix M matrix(S, r, c) for i1 <= r, j <= c, ...` | Matrix entries |
-
-The defined bounds and object type must agree:
-
-```text
-have matrix M matrix(Z, 2, 3) for i1 <= 3, j <= 2, M(i1, j) = 0
-```
-
-This is an `error`; the row and column bounds are reversed.
+Object / type forms such as `tuple(...)`, `cart(...)`, `seq(S)`,
+`finite_seq(S, n)`, and `matrix(S, r, c)` remain as carriers and expressions.
+Writing `have tuple` (etc.) is a parse error: use `have fn` for indexed data.
 
 ### Functions from an expression or cases
 
@@ -1987,6 +1981,11 @@ successor(2) = 3
 sign_value(-2) = (-1)
 ```
 
+> **Preview (`new_pipeline`):** after `have fn f(...) T = body`, application
+> equalities such as `f(args) = subst(body)` are proved by a definitional
+> unfold builtin (same idea as `\Template<args>(...)`). `by cases` / `by exist!`
+> / `by induc` still do not get that equality unfold.
+
 Overlapping conditions are rejected:
 
 ```text
@@ -2000,39 +1999,36 @@ This is an `error`: `x != 0` and `x > 0` overlap.
 
 ### Functions from unique existence
 
-`have fn name by exist!` turns a proved unique-existence statement into a
-function. The proof must establish both existence and uniqueness.
-Inside a template, the proof may use local `obtain` and `witness` statements;
-materializing the template substitutes the template arguments through those
-local proof statements before committing the selected function. Local
-`have candidate T = value`, `have fn ... = ...`, `have fn ... by cases`,
-`by cases`, and `by extension` steps are materialized in the same way. This
-permits a selected function to be built from a local object or piecewise
-function candidate and proved unique by extensionality. If the selected return
-carrier is itself a refined function space, the materialized result remains
-callable.
+> **Preview (`new_pipeline`):** `have fn … by exist!` **parses** (goal-only, no
+> proof body) but **exec is not wired**. Prefer `have fn f(...) T = body` when
+> you need a callable name whose applications unfold by equality.
+
+`have fn name by exist!` is intended to turn an **already proved**
+unique-existence statement into a function. Prove the `forall … exist!`
+outside with `claim`, `thm`, or `trust`; the `have fn` block only displays
+that goal and selects the function. It does **not** take a proof body.
 
 ```litex
+# Surface shape (parse OK; new_pipeline exec soft-fails until rewired)
 have fn identity_choice by exist!:
     ? forall x R:
         exist! y R st {y = x}
-    witness exist! y R st {y = x} from x:
-        claim:
-            ? forall y1, y2 R:
-                y1 = x
-                y2 = x
-                =>:
-                    y1 = y2
-            y1 = x = y2
+```
+
+Until exec is wired again, define an explicit formula instead:
+
+```litex
+have fn identity_choice(x R) R = x
 
 forall x R:
     identity_choice(x) = x
 ```
 
-Giving a witness without uniqueness is insufficient:
+Giving a witness without uniqueness is insufficient when proving the goal
+outside:
 
 ```text
-have fn choose_square_root by exist!:
+claim:
     ? forall x R:
         x >= 0
         =>:
@@ -2040,9 +2036,9 @@ have fn choose_square_root by exist!:
     witness exist y R st {y^2 = x} from sqrt(x)
 ```
 
-This is an `error`: the goal asks for `exist!`, and the displayed body neither
-uses `witness exist!` nor proves uniqueness. The mathematical statement is
-also false without selecting a sign.
+This is an `error`: the goal asks for `exist!`, and the body neither uses
+`witness exist!` nor proves uniqueness. The mathematical statement is also
+false without selecting a sign.
 
 ### Recursive functions by an integer measure
 
@@ -2078,8 +2074,8 @@ This is an `error` because the induction measure must be integer-valued.
 ### Templates
 
 `template<params>:` checks one supported definition statement in a
-parameterized context and stores a reusable family. Use `\name<args>` to
-materialize it. The complete instance example is in
+parameterized context and stores a reusable family. Use `\name<args>` for the
+instance surface (no second name). The complete instance example is in
 [Template instances](#template-instances).
 
 ```litex
@@ -2596,8 +2592,7 @@ introductions.
 | `have fn ... = ...` | Ordered parameter domains, return carrier, body membership, and side conditions. | A callable function, its signature, and checked defining equation. |
 | `have fn ... by cases` | Cases are exhaustive, pairwise disjoint, and every result belongs to the return set. | A callable piecewise function and guarded case equations. |
 | `have fn ... by induc` | Integer measure/lower bound and strictly decreasing in-domain recursive calls. | A callable recursive function and checked case equations. |
-| `have fn ... by exist!` | The displayed universal unique-existence goal, including uniqueness. | A selected callable function and its defining property. |
-| `have tuple/cart/seq/finite_seq/matrix ... for ...` | Symbolic dimensions, index bounds, coordinate carriers, and formulas. | A named indexed object, its type, and coordinate equations. |
+| `have fn ... by exist!` | Preview (`new_pipeline`): parses; exec not wired yet. Intended: proved universal unique-existence goal. | Intended: selected callable function and defining property. |
 | `prop`, `abstract_prop` | Parameter definitions; concrete `prop` clauses must be well-defined. | A foldable concrete definition or an uninterpreted predicate interface. |
 | `struct`, `setting`, `template` | Field/setting/template parameters and body contracts. | A named view, reusable binder prefix, or one parameterized definition family. |
 | `have algo for ...` | A defined function exists and the implementation agrees on its cases/results. | An executable presentation; it does not replace the mathematical function facts. |
@@ -2615,7 +2610,7 @@ introductions.
 | `by cases`, `by contra` | Every branch closes the target, or an explicit contradiction is produced. | The requested target only. |
 | Enumeration, induction, `by for`, `by extension` | The target has the exact finite/range/discrete/extensional shape and every generated subgoal closes. | The requested universal/equality/atomic target. |
 | `by def` | One positive concrete/builtin definitional target and every defining clause. | The target with explicit definition provenance. |
-| `by struct def e` | `e` has a definition-owned struct carrier and `e $in &Struct` verifies. | Exactly one layer of tuple/identity bridges, field carriers, and instantiated struct laws. |
+| `release struct def e` | `e` has a definition-owned struct carrier and `e $in &Struct` verifies. | Exactly one layer of tuple/identity bridges, field carriers, and instantiated struct laws. |
 | Predicate-property registrations | The proof has the exact reflexive/symmetric/transitive predicate shape. | A reusable property route for later rewriting. |
 | `by regularity_axiom` | Its displayed set/nonemptiness obligations. | An explicitly trusted set-theoretic conclusion; strict mode rejects the step. |
 | `by axiom_of_choice` | The family is a set and every member is proved nonempty. | Stores `exist f fn(A S)big_union(S) st {$is_choice_function_for(S,S,fn(A S)S {A},f)}`. The existential body is atomic. |
@@ -3508,6 +3503,11 @@ The declarative set schemas cover the following groups:
 | Finiteness and infiniteness | Union/intersection of finite sets is finite; removing anything from a finite left operand is finite; removing a finite set from an infinite set remains infinite. |
 | Nonemptiness | A nonempty union operand makes the union nonempty. `power_set(A)` is nonempty for every set `A`. |
 | Power set | `A $subset B` introduces both `A $in power_set(B)` and `power_set(A) $subset power_set(B)`; a finite base gives a finite power set. |
+
+> **Preview (`new_pipeline`):** `A $in power_set(B)` is proved from `A $subset B`.
+> In particular `{x S: …} $subset S` is recognized, so
+> `have name power_set(S) = {x S: …}` type-checks. Storing `x $in power_set(B)`
+> also records `x $subset B`.
 | Empty set | `{}` is a subset of every set. |
 
 Representative set algebra and containment rules verify directly:
@@ -4226,7 +4226,7 @@ Main families are:
 | `x` in a real interval | Real membership and endpoint bounds |
 | `x $in {y S: filters}` | `x $in S` and instantiated filters |
 | Function/sequence/matrix type membership | A callable function interface; sequence and matrix sets are expanded to their corresponding function set, while matrix metadata also records its entry carrier and dimensions. |
-| `x $in &Struct<...>` | No eager public consequences. The membership verifier checks the instantiated tuple carrier and `<=>:` conditions internally; use a definition-owned `by struct def x` to release one layer. |
+| `x $in &Struct<...>` | No eager public consequences. The membership verifier checks the instantiated tuple carrier and `<=>:` conditions internally; use a definition-owned `release struct def x` to release one layer. |
 
 Membership inference also transports through concrete equal set
 representatives and through one checked set-valued function or template

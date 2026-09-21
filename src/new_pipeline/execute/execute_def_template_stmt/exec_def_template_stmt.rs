@@ -18,6 +18,16 @@ use crate::new_pipeline::execute::execute_fact_stmt::{
     FactWellDefinedProof, FailToVerifyFactWellDefinedResult, StoreFactAndInferResult,
     VerifyFactWellDefinedResult, VerifyObjWellDefinedResult, VerifyState,
 };
+use crate::new_pipeline::execute::execute_have_fn_by_induc_stmt::{
+    ExecHaveFnByInducStmtFailed, ExecHaveFnByInducStmtResult, ExecHaveFnByInducStmtSuccessResult,
+};
+use crate::new_pipeline::execute::execute_have_fn_by_forall_exist_unique_stmt::{
+    ExecHaveFnByForallExistUniqueStmtFailed, ExecHaveFnByForallExistUniqueStmtSuccessResult,
+};
+use crate::new_pipeline::execute::execute_have_fn_equal_case_by_case_stmt::{
+    ExecHaveFnEqualCaseByCaseStmtFailed, ExecHaveFnEqualCaseByCaseStmtResult,
+    ExecHaveFnEqualCaseByCaseStmtSuccessResult,
+};
 use crate::new_pipeline::execute::execute_have_fn_equal_stmt::{
     ExecHaveFnEqualStmtFailed, ExecHaveFnEqualStmtResult, ExecHaveFnEqualStmtSuccessResult,
 };
@@ -35,18 +45,24 @@ use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::{
 use crate::new_pipeline::execute::execute_unsafe_stmt::{
     ExecTrustHaveStmtFailed, ExecTrustHaveStmtResult, ExecTrustHaveStmtSuccessResult,
 };
-use crate::new_pipeline::execute::IntroduceTypedParametersResult;
+use crate::new_pipeline::execute::{
+    IntroduceTypedParametersFailed, IntroduceTypedParametersResult,
+};
 use crate::new_pipeline::instantiate::quantifier_free_fact_to_fact;
 use crate::new_pipeline::parse::keywords::TEMPLATE;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
 pub enum ExecDefTemplateStmtFailed {
     ParamType(VerifyObjWellDefinedResult),
+    AutoOpenStructLayer(crate::new_pipeline::execute::FailToReleaseOneStructLayer),
     DomainFact(FailToVerifyFactWellDefinedResult),
     BodyHaveObjInNonemptySet(ExecHaveObjInNonemptySetStmtFailed),
     BodyHaveObjEqual(ExecHaveObjEqualStmtFailed),
     BodyHaveObjByExistFacts(ExecHaveObjByExistFactsStmtFailed),
     BodyHaveFnEqual(ExecHaveFnEqualStmtFailed),
+    BodyHaveFnEqualCaseByCase(ExecHaveFnEqualCaseByCaseStmtFailed),
+    BodyHaveFnByForallExistUnique(ExecHaveFnByForallExistUniqueStmtFailed),
+    BodyHaveFnByInduc(ExecHaveFnByInducStmtFailed),
     BodyTrustHave(ExecTrustHaveStmtFailed),
     UnsupportedBody(String),
 }
@@ -56,6 +72,9 @@ pub enum ExecTemplateDefBodyResult {
     HaveObjEqual(ExecHaveObjEqualStmtSuccessResult),
     HaveObjByExistFacts(ExecHaveObjByExistFactsStmtSuccessResult),
     HaveFnEqual(ExecHaveFnEqualStmtSuccessResult),
+    HaveFnEqualCaseByCase(ExecHaveFnEqualCaseByCaseStmtSuccessResult),
+    HaveFnByForallExistUnique(ExecHaveFnByForallExistUniqueStmtSuccessResult),
+    HaveFnByInduc(ExecHaveFnByInducStmtSuccessResult),
     TrustHave(ExecTrustHaveStmtSuccessResult),
 }
 
@@ -147,8 +166,11 @@ impl Runtime {
             .introduce_typed_parameters(&def_template.template_arg_def, verify_state.clone())?
         {
             Ok(result) => result,
-            Err(failed) => {
+            Err(IntroduceTypedParametersFailed::ParamType(failed)) => {
                 return Ok(Err(ExecDefTemplateStmtFailed::ParamType(failed)));
+            }
+            Err(IntroduceTypedParametersFailed::AutoOpenStructLayer { failed, .. }) => {
+                return Ok(Err(ExecDefTemplateStmtFailed::AutoOpenStructLayer(failed)));
             }
         };
 
@@ -226,6 +248,31 @@ impl Runtime {
                     }
                 }
             }
+            TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => {
+                match self.exec_have_fn_equal_case_by_case_stmt(stmt)? {
+                    ExecHaveFnEqualCaseByCaseStmtResult::Success(ok) => {
+                        Ok(Ok(ExecTemplateDefBodyResult::HaveFnEqualCaseByCase(ok)))
+                    }
+                    ExecHaveFnEqualCaseByCaseStmtResult::Failed(failed) => Ok(Err(
+                        ExecDefTemplateStmtFailed::BodyHaveFnEqualCaseByCase(failed),
+                    )),
+                }
+            }
+            TemplateDefEnum::HaveFnByForallExistUniqueStmt(_) => Ok(Err(
+                ExecDefTemplateStmtFailed::UnsupportedBody(
+                    "template body `have fn by exist!` is not wired yet".to_string(),
+                ),
+            )),
+            TemplateDefEnum::HaveFnByInducStmt(stmt) => {
+                match self.exec_have_fn_by_induc_stmt(stmt)? {
+                    ExecHaveFnByInducStmtResult::Success(ok) => {
+                        Ok(Ok(ExecTemplateDefBodyResult::HaveFnByInduc(ok)))
+                    }
+                    ExecHaveFnByInducStmtResult::Failed(failed) => {
+                        Ok(Err(ExecDefTemplateStmtFailed::BodyHaveFnByInduc(failed)))
+                    }
+                }
+            }
             TemplateDefEnum::TrustHaveStmt(stmt) => match self.exec_trust_have_stmt(stmt)? {
                 ExecTrustHaveStmtResult::Success(ok) => {
                     Ok(Ok(ExecTemplateDefBodyResult::TrustHave(ok)))
@@ -247,41 +294,6 @@ impl Runtime {
             TemplateDefEnum::ObtainObjFromThm(_) => Ok(Err(
                 ExecDefTemplateStmtFailed::UnsupportedBody(
                     "template body `obtain` from thm is not wired yet".to_string(),
-                ),
-            )),
-            TemplateDefEnum::HaveFnEqualCaseByCaseStmt(_) => Ok(Err(
-                ExecDefTemplateStmtFailed::UnsupportedBody(
-                    "template body `have fn` case-by-case is not wired yet".to_string(),
-                ),
-            )),
-            TemplateDefEnum::HaveFnByInducStmt(_) => Ok(Err(
-                ExecDefTemplateStmtFailed::UnsupportedBody(
-                    "template body `have fn` by induc is not wired yet".to_string(),
-                ),
-            )),
-            TemplateDefEnum::HaveFnByForallExistUniqueStmt(_) => Ok(Err(
-                ExecDefTemplateStmtFailed::UnsupportedBody(
-                    "template body `have fn` by forall-exist-unique is not wired yet".to_string(),
-                ),
-            )),
-            TemplateDefEnum::HaveTupleStmt(_) => Ok(Err(
-                ExecDefTemplateStmtFailed::UnsupportedBody(
-                    "template body `have` tuple is not wired yet".to_string(),
-                ),
-            )),
-            TemplateDefEnum::HaveCartStmt(_) => Ok(Err(
-                ExecDefTemplateStmtFailed::UnsupportedBody(
-                    "template body `have` cart is not wired yet".to_string(),
-                ),
-            )),
-            TemplateDefEnum::HaveSeqStmt(_) => Ok(Err(
-                ExecDefTemplateStmtFailed::UnsupportedBody(
-                    "template body `have` seq is not wired yet".to_string(),
-                ),
-            )),
-            TemplateDefEnum::HaveFiniteSeqStmt(_) => Ok(Err(
-                ExecDefTemplateStmtFailed::UnsupportedBody(
-                    "template body `have` finite_seq is not wired yet".to_string(),
                 ),
             )),
         }

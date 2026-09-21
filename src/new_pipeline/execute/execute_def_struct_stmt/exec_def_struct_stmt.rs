@@ -20,7 +20,6 @@
 //!   // R WD; fields bound in field scope; <=>: WD; Point stored globally
 
 use crate::new_pipeline::ast::fact::{Fact, QuantifierFreeFact};
-use crate::new_pipeline::ast::names::BoundName;
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
 use crate::new_pipeline::ast::stmt::{DefStructStmt, StructFieldDef};
 use crate::new_pipeline::exec_env::exec_env::ExecEnv;
@@ -29,12 +28,15 @@ use crate::new_pipeline::execute::execute_fact_stmt::{
     VerifyFactWellDefinedResult, VerifyObjWellDefinedResult, VerifyState,
 };
 use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
-use crate::new_pipeline::execute::IntroduceTypedParametersResult;
+use crate::new_pipeline::execute::{
+    IntroduceTypedParametersFailed, IntroduceTypedParametersResult,
+};
 use crate::new_pipeline::parse::keywords::STRUCT;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
 pub enum ExecDefStructStmtFailed {
     ParamType(VerifyObjWellDefinedResult),
+    AutoOpenStructLayer(crate::new_pipeline::execute::FailToReleaseOneStructLayer),
     StructureDomain(FailToVerifyFactWellDefinedResult),
     FieldType(VerifyObjWellDefinedResult),
     EquivalentFact(FailToVerifyFactWellDefinedResult),
@@ -73,7 +75,7 @@ impl Runtime {
     // header-parameter environment and a nested field binder environment; only
     // the struct definition escapes to the parent. Field carriers and `<=>:`
     // laws must be well-defined under those binders; property release
-    // (`by struct def`, `$in &Struct`) is deferred.
+    // (`release struct def`, `$in &Struct`) is deferred.
     pub(in crate::new_pipeline::execute) fn exec_def_struct_stmt(
         &mut self,
         def_struct: &DefStructStmt,
@@ -134,8 +136,11 @@ impl Runtime {
         let introduced_params = if let Some((params, _)) = &def_struct.param_def_with_dom {
             match self.introduce_typed_parameters(params, verify_state.clone())? {
                 Ok(result) => Some(result),
-                Err(failed) => {
+                Err(IntroduceTypedParametersFailed::ParamType(failed)) => {
                     return Ok(Err(ExecDefStructStmtFailed::ParamType(failed)));
+                }
+                Err(IntroduceTypedParametersFailed::AutoOpenStructLayer { failed, .. }) => {
+                    return Ok(Err(ExecDefStructStmtFailed::AutoOpenStructLayer(failed)));
                 }
             }
         } else {
@@ -203,8 +208,8 @@ impl Runtime {
             store_well_defined_fact: true,
         };
 
-        let field_params = self.allocate_field_typed_parameters(fields);
-        let defined_fields = self.define_typed_parameters_in_current_env(&field_params)?;
+        let field_params = field_typed_parameters(fields);
+        let defined_fields = self.define_typed_parameters_in_current_env(&field_params, None)?;
 
         let mut equivalent_facts_well_defined = Vec::with_capacity(equivalent_facts.len());
         for fact in equivalent_facts {
@@ -220,20 +225,18 @@ impl Runtime {
 
         Ok(Ok((defined_fields, equivalent_facts_well_defined)))
     }
+}
 
-    // Field AST stores plain names only; allocate fresh binder ids for the
-    // field scope (Identifier WD looks up by surface name).
-    fn allocate_field_typed_parameters(&mut self, fields: &[StructFieldDef]) -> TypedParameterList {
-        let mut groups = Vec::with_capacity(fields.len());
-        for field in fields {
-            let id = self.ids.allocate_identifier_id();
-            groups.push(TypedParameterGroup {
-                params: vec![BoundName::new(id, field.binding.clone())],
-                param_type: ParamType::Obj(field.field_type.clone()),
-            });
-        }
-        TypedParameterList { groups }
+// Reuse parse-time BoundName ids so `<=>:` free refs and InFunctionSet keys match.
+fn field_typed_parameters(fields: &[StructFieldDef]) -> TypedParameterList {
+    let mut groups = Vec::with_capacity(fields.len());
+    for field in fields {
+        groups.push(TypedParameterGroup {
+            params: vec![field.binding.clone()],
+            param_type: ParamType::Obj(field.field_type.clone()),
+        });
     }
+    TypedParameterList { groups }
 }
 
 fn fact_from_quantifier_free(fact: &QuantifierFreeFact) -> Fact {

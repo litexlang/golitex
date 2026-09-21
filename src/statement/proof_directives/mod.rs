@@ -1,6 +1,7 @@
 //! Statements that explicitly choose a verifier operation.
 //!
-//! This includes both `by …` selection forms and `release thm …`.
+//! This includes both `by …` selection forms and `release thm` /
+//! `release struct def`.
 mod axiom_of_choice;
 mod cases;
 mod contra;
@@ -13,7 +14,7 @@ mod induc;
 mod range;
 mod reflexive_prop;
 mod regularity_axiom;
-mod struct_definition;
+mod struct_release;
 mod symmetric_prop;
 mod theorem_release;
 mod theorem_selection;
@@ -31,7 +32,7 @@ pub use induc::ByInducStmt;
 pub use range::{ByClosedRangeAsCasesStmt, ByEnumerateRangeStmt};
 pub use reflexive_prop::ByReflexivePropStmt;
 pub use regularity_axiom::ByRegularityAxiomStmt;
-pub use struct_definition::ByStructDefStmt;
+pub use struct_release::ReleaseStructDefStmt;
 pub use symmetric_prop::BySymmetricPropStmt;
 pub use theorem_release::ReleaseThmStmt;
 pub use theorem_selection::ByThmStmt;

@@ -106,54 +106,6 @@ pub struct HaveFnByForallExistUniqueStmt {
     pub line_file: LineFile,
 }
 
-#[derive(Clone)]
-pub struct HaveTupleStmt {
-    pub symbol_binding: SymbolBinding,
-    pub index_binding: SymbolBinding,
-    pub dimension: Obj,
-    pub value: Obj,
-    pub line_file: LineFile,
-}
-
-#[derive(Clone)]
-pub struct HaveCartStmt {
-    pub symbol_binding: SymbolBinding,
-    pub index_binding: SymbolBinding,
-    pub dimension: Obj,
-    pub value: Obj,
-    pub line_file: LineFile,
-}
-
-#[derive(Clone)]
-pub struct HaveSeqStmt {
-    pub symbol_binding: SymbolBinding,
-    pub seq_set: SeqSet,
-    pub index_binding: SymbolBinding,
-    pub value: Obj,
-    pub line_file: LineFile,
-}
-
-#[derive(Clone)]
-pub struct HaveFiniteSeqStmt {
-    pub symbol_binding: SymbolBinding,
-    pub finite_seq_set: FiniteSeqSet,
-    pub index_binding: SymbolBinding,
-    pub bound: Obj,
-    pub value: Obj,
-    pub line_file: LineFile,
-}
-
-#[derive(Clone)]
-pub struct HaveMatrixStmt {
-    pub symbol_binding: SymbolBinding,
-    pub matrix_set: MatrixSet,
-    pub row_index_binding: SymbolBinding,
-    pub row_bound: Obj,
-    pub col_index_binding: SymbolBinding,
-    pub col_bound: Obj,
-    pub value: Obj,
-    pub line_file: LineFile,
-}
 
 #[derive(Clone)]
 pub struct DefTemplateStmt {
@@ -223,11 +175,6 @@ pub enum TemplateDefEnum {
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
     HaveFnByInducStmt(HaveFnByInducStmt),
     HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt),
-    HaveTupleStmt(HaveTupleStmt),
-    HaveCartStmt(HaveCartStmt),
-    HaveSeqStmt(HaveSeqStmt),
-    HaveFiniteSeqStmt(HaveFiniteSeqStmt),
-    HaveMatrixStmt(HaveMatrixStmt),
 }
 
 // obtain a from exist x R st {$p(x)}
@@ -497,273 +444,6 @@ impl fmt::Display for HaveObjEqualStmt {
     }
 }
 
-impl HaveTupleStmt {
-    pub fn new(
-        symbol_binding: SymbolBinding,
-        index_binding: SymbolBinding,
-        dimension: Obj,
-        value: Obj,
-        line_file: LineFile,
-    ) -> Self {
-        HaveTupleStmt {
-            symbol_binding,
-            index_binding,
-            dimension,
-            value,
-            line_file,
-        }
-    }
-
-    pub fn name(&self) -> &str {
-        self.symbol_binding.name()
-    }
-
-    pub fn index_name(&self) -> &str {
-        self.index_binding.name()
-    }
-
-    pub fn store_reason() -> &'static str {
-        "tuple definition"
-    }
-}
-
-impl fmt::Display for HaveTupleStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(
-            f,
-            "{} {} {} {} {} {} {}, {}[{}] {} {}",
-            HAVE,
-            TUPLE,
-            self.name(),
-            FOR,
-            self.index_name(),
-            LESS_EQUAL,
-            self.dimension,
-            self.name(),
-            self.index_name(),
-            EQUAL,
-            self.value
-        )
-    }
-}
-
-impl HaveCartStmt {
-    pub fn new(
-        symbol_binding: SymbolBinding,
-        index_binding: SymbolBinding,
-        dimension: Obj,
-        value: Obj,
-        line_file: LineFile,
-    ) -> Self {
-        HaveCartStmt {
-            symbol_binding,
-            index_binding,
-            dimension,
-            value,
-            line_file,
-        }
-    }
-
-    pub fn name(&self) -> &str {
-        self.symbol_binding.name()
-    }
-
-    pub fn index_name(&self) -> &str {
-        self.index_binding.name()
-    }
-
-    pub fn store_reason() -> &'static str {
-        "cart definition"
-    }
-}
-
-impl fmt::Display for HaveCartStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(
-            f,
-            "{} {} {} {} {} {} {}, {}({}, {}) {} {}",
-            HAVE,
-            CART,
-            self.name(),
-            FOR,
-            self.index_name(),
-            LESS_EQUAL,
-            self.dimension,
-            PROJ,
-            self.name(),
-            self.index_name(),
-            EQUAL,
-            self.value
-        )
-    }
-}
-
-impl HaveSeqStmt {
-    pub fn new(
-        symbol_binding: SymbolBinding,
-        seq_set: SeqSet,
-        index_binding: SymbolBinding,
-        value: Obj,
-        line_file: LineFile,
-    ) -> Self {
-        HaveSeqStmt {
-            symbol_binding,
-            seq_set,
-            index_binding,
-            value,
-            line_file,
-        }
-    }
-
-    pub fn name(&self) -> &str {
-        self.symbol_binding.name()
-    }
-
-    pub fn index_name(&self) -> &str {
-        self.index_binding.name()
-    }
-
-    pub fn store_reason() -> &'static str {
-        "sequence definition"
-    }
-}
-
-impl fmt::Display for HaveSeqStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(
-            f,
-            "{} {} {} {} {} {}, {}({}) {} {}",
-            HAVE,
-            SEQ,
-            self.name(),
-            self.seq_set,
-            FOR,
-            self.index_name(),
-            self.name(),
-            self.index_name(),
-            EQUAL,
-            self.value
-        )
-    }
-}
-
-impl HaveFiniteSeqStmt {
-    pub fn new(
-        symbol_binding: SymbolBinding,
-        finite_seq_set: FiniteSeqSet,
-        index_binding: SymbolBinding,
-        bound: Obj,
-        value: Obj,
-        line_file: LineFile,
-    ) -> Self {
-        HaveFiniteSeqStmt {
-            symbol_binding,
-            finite_seq_set,
-            index_binding,
-            bound,
-            value,
-            line_file,
-        }
-    }
-
-    pub fn name(&self) -> &str {
-        self.symbol_binding.name()
-    }
-
-    pub fn index_name(&self) -> &str {
-        self.index_binding.name()
-    }
-
-    pub fn store_reason() -> &'static str {
-        "finite sequence definition"
-    }
-}
-
-impl fmt::Display for HaveFiniteSeqStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(
-            f,
-            "{} {} {} {} {} {} {} {}, {}({}) {} {}",
-            HAVE,
-            FINITE_SEQ,
-            self.name(),
-            self.finite_seq_set,
-            FOR,
-            self.index_name(),
-            LESS_EQUAL,
-            self.bound,
-            self.name(),
-            self.index_name(),
-            EQUAL,
-            self.value
-        )
-    }
-}
-
-impl HaveMatrixStmt {
-    pub fn new(
-        symbol_binding: SymbolBinding,
-        matrix_set: MatrixSet,
-        row_index_binding: SymbolBinding,
-        row_bound: Obj,
-        col_index_binding: SymbolBinding,
-        col_bound: Obj,
-        value: Obj,
-        line_file: LineFile,
-    ) -> Self {
-        HaveMatrixStmt {
-            symbol_binding,
-            matrix_set,
-            row_index_binding,
-            row_bound,
-            col_index_binding,
-            col_bound,
-            value,
-            line_file,
-        }
-    }
-
-    pub fn name(&self) -> &str {
-        self.symbol_binding.name()
-    }
-
-    pub fn row_index_name(&self) -> &str {
-        self.row_index_binding.name()
-    }
-
-    pub fn col_index_name(&self) -> &str {
-        self.col_index_binding.name()
-    }
-
-    pub fn store_reason() -> &'static str {
-        "matrix definition"
-    }
-}
-
-impl fmt::Display for HaveMatrixStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(
-            f,
-            "{} {} {} {} {} {} {} {}, {} {} {}, {}({}, {}) {} {}",
-            HAVE,
-            MATRIX,
-            self.name(),
-            self.matrix_set,
-            FOR,
-            self.row_index_name(),
-            LESS_EQUAL,
-            self.row_bound,
-            self.col_index_name(),
-            LESS_EQUAL,
-            self.col_bound,
-            self.name(),
-            self.row_index_name(),
-            self.col_index_name(),
-            EQUAL,
-            self.value
-        )
-    }
-}
 
 impl HaveObjInNonemptySetOrParamTypeStmt {
     pub fn single_defined_name(&self) -> Option<String> {
@@ -1114,11 +794,6 @@ impl TemplateDefEnum {
             TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => {
                 Some(stmt.fn_name().to_string())
             }
-            TemplateDefEnum::HaveTupleStmt(stmt) => Some(stmt.name().to_string()),
-            TemplateDefEnum::HaveCartStmt(stmt) => Some(stmt.name().to_string()),
-            TemplateDefEnum::HaveSeqStmt(stmt) => Some(stmt.name().to_string()),
-            TemplateDefEnum::HaveFiniteSeqStmt(stmt) => Some(stmt.name().to_string()),
-            TemplateDefEnum::HaveMatrixStmt(stmt) => Some(stmt.name().to_string()),
         }
     }
 
@@ -1135,11 +810,6 @@ impl TemplateDefEnum {
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => stmt.clone().into(),
             TemplateDefEnum::HaveFnByInducStmt(stmt) => stmt.clone().into(),
             TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => stmt.clone().into(),
-            TemplateDefEnum::HaveTupleStmt(stmt) => stmt.clone().into(),
-            TemplateDefEnum::HaveCartStmt(stmt) => stmt.clone().into(),
-            TemplateDefEnum::HaveSeqStmt(stmt) => stmt.clone().into(),
-            TemplateDefEnum::HaveFiniteSeqStmt(stmt) => stmt.clone().into(),
-            TemplateDefEnum::HaveMatrixStmt(stmt) => stmt.clone().into(),
         }
     }
 }
@@ -1158,11 +828,6 @@ impl fmt::Display for TemplateDefEnum {
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => write!(f, "{}", stmt),
             TemplateDefEnum::HaveFnByInducStmt(stmt) => write!(f, "{}", stmt),
             TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => write!(f, "{}", stmt),
-            TemplateDefEnum::HaveTupleStmt(stmt) => write!(f, "{}", stmt),
-            TemplateDefEnum::HaveCartStmt(stmt) => write!(f, "{}", stmt),
-            TemplateDefEnum::HaveSeqStmt(stmt) => write!(f, "{}", stmt),
-            TemplateDefEnum::HaveFiniteSeqStmt(stmt) => write!(f, "{}", stmt),
-            TemplateDefEnum::HaveMatrixStmt(stmt) => write!(f, "{}", stmt),
         }
     }
 }

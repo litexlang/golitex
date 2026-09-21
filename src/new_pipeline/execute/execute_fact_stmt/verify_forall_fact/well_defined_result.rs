@@ -6,6 +6,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::well_defined_results::{
 
 pub enum FailToVerifyForallFactWellDefinedResult {
     ParamType(FailToVerifyObjWellDefinedResult),
+    AutoOpenStructLayer(crate::new_pipeline::execute::FailToReleaseOneStructLayer),
     DomFact {
         failed_index: usize,
         param_type_well_defined: Vec<ParamTypeWellDefinedProof>,

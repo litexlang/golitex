@@ -98,7 +98,7 @@ claim:
         (y, z) $in container.order.le_rel
         =>:
             (x, z) $in container.order.le_rel
-    by struct def container.order
+    release struct def container.order
     (x, z) $in container.order.le_rel
 "#;
             let mut runtime = Runtime::default();
@@ -872,9 +872,9 @@ trust (1, 2) $in &Pair<R>
 }
 
 #[test]
-fn by_struct_def_releases_one_verified_layer_and_direct_bindings_open_automatically() {
+fn release_struct_def_releases_one_verified_layer_and_direct_bindings_open_automatically() {
     run_with_large_stack(
-        "by_struct_def_releases_one_verified_layer_and_direct_bindings_open_automatically",
+        "release_struct_def_releases_one_verified_layer_and_direct_bindings_open_automatically",
         || {
             let source_code = r#"
 struct Pair:
@@ -888,14 +888,14 @@ have fn make_pair(x N) &Pair = (x, 0)
 # Declaration-owned paths are well-defined before any release.
 make_pair(1).first = make_pair(1).first
 
-by struct def make_pair(1)
+release struct def make_pair(1)
 $is_tuple(make_pair(1))
 tuple_dim(make_pair(1)) = 2
 make_pair(1) $in cart(R, R)
 make_pair(1).first = make_pair(1)[1]
 make_pair(1).first $in R
 make_pair(1).first >= 0
-by struct def make_pair(1)
+release struct def make_pair(1)
 
 forall direct &Pair:
     $is_tuple(direct)
@@ -907,7 +907,7 @@ forall direct &Pair:
 
             let mut runtime = Runtime::default();
             runtime.start_isolated_source(
-                "by_struct_def_releases_one_verified_layer_and_direct_bindings_open_automatically",
+                "release_struct_def_releases_one_verified_layer_and_direct_bindings_open_automatically",
             );
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -917,8 +917,8 @@ forall direct &Pair:
                 "explicit and automatic releases should verify:\n{run_output}"
             );
             assert!(
-        run_output.contains("\"kind\": \"ByStructDefStmt\"")
-            && run_output.contains("\"reason\": \"by struct def\"")
+        run_output.contains("\"kind\": \"ReleaseStructDefStmt\"")
+            && run_output.contains("\"reason\": \"release struct def\"")
             && run_output.contains("\"membership_check\":"),
         "the result must expose explicit membership evidence and release provenance:\n{run_output}"
     );
@@ -927,8 +927,8 @@ forall direct &Pair:
 }
 
 #[test]
-fn by_struct_def_boundaries_are_explicit_and_atomic() {
-    run_with_large_stack("by_struct_def_boundaries_are_explicit_and_atomic", || {
+fn release_struct_def_boundaries_are_explicit_and_atomic() {
+    run_with_large_stack("release_struct_def_boundaries_are_explicit_and_atomic", || {
         let wd_only = r#"
 struct Inner:
     value R
@@ -977,7 +977,7 @@ make_pair(1, 2).first = 1
         let (succeeded, output) = render_run_output(&without_release_runtime, &results, &error);
         assert!(
         !succeeded,
-        "a function-result field must not acquire its tuple bridge before `by struct def`:\n{output}"
+        "a function-result field must not acquire its tuple bridge before `release struct def`:\n{output}"
     );
 
         let raw_membership = r#"
@@ -987,7 +987,7 @@ struct Pair:
 
 have raw cart(R, R) = (1, 2)
 trust raw $in &Pair
-by struct def raw
+release struct def raw
 "#;
         let mut raw_runtime = Runtime::default();
         raw_runtime.start_isolated_source("raw_membership_has_no_struct_view");
@@ -995,7 +995,7 @@ by struct def raw
         let (succeeded, output) = render_run_output(&raw_runtime, &results, &error);
         assert!(
             !succeeded && output.contains("definition-time struct carrier"),
-            "membership alone must not supply the struct selected by `by struct def`:\n{output}"
+            "membership alone must not supply the struct selected by `release struct def`:\n{output}"
         );
 
         let as_form = r#"
@@ -1004,15 +1004,15 @@ struct Pair:
     second R
 
 have fn make_pair(first, second R) &Pair = (first, second)
-by struct def make_pair(1, 2) as &Pair
+release struct def make_pair(1, 2) as &Pair
 "#;
         let mut as_form_runtime = Runtime::default();
-        as_form_runtime.start_isolated_source("by_struct_def_has_no_as_form");
+        as_form_runtime.start_isolated_source("release_struct_def_has_no_as_form");
         let (results, error) = execute_source(as_form, &mut as_form_runtime);
         let (succeeded, output) = render_run_output(&as_form_runtime, &results, &error);
         assert!(
             !succeeded && output.contains("no `as &Struct` form"),
-            "`by struct def` must reject caller-selected struct views:\n{output}"
+            "`release struct def` must reject caller-selected struct views:\n{output}"
         );
 
         let non_recursive = r#"
@@ -1054,7 +1054,7 @@ have A set
             "atomicity setup must succeed:\n{setup_output}"
         );
         let (failed_results, failed_error) =
-            execute_source("by struct def make_pair(A)", &mut atomic_runtime);
+            execute_source("release struct def make_pair(A)", &mut atomic_runtime);
         let (failed_succeeded, failed_output) =
             render_run_output(&atomic_runtime, &failed_results, &failed_error);
         assert!(
@@ -1070,7 +1070,7 @@ have A set
                 .any(|fact| {
                     fact.contains("$is_tuple(make_pair(A))") || fact.contains("make_pair(A).first")
                 }),
-            "a failed `by struct def` must store none of its release bundle"
+            "a failed `release struct def` must store none of its release bundle"
         );
     });
 }
@@ -1346,7 +1346,7 @@ template<n N>:
 template<n N>:
     have fn template_make_pair(value R) &Pair = (value, n)
 
-by struct def \template_make_pair<1>(2)
+release struct def \template_make_pair<1>(2)
 \template_make_pair<1>(2).second = 1
 
 struct IndexedValue:
@@ -1739,7 +1739,7 @@ thm local_struct_return_projection:
     claim:
         ? n = n
         have fn local_pair(k N) &NaturalPair = (k, k)
-        by struct def local_pair(1)
+        release struct def local_pair(1)
         local_pair(1).left = 1
         n = n
     n = n

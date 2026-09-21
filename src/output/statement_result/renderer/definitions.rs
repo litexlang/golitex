@@ -202,36 +202,6 @@ impl StatementResultRenderer {
                     ],
                 )
             }
-            SuccessDefinitionStmtResult::HaveTupleStmt(result) => self.tuple_or_cart_stmt(
-                "HaveTupleStmt",
-                result.statement.to_string(),
-                &result.common,
-                result.verification.as_ref(),
-            ),
-            SuccessDefinitionStmtResult::HaveCartStmt(result) => self.tuple_or_cart_stmt(
-                "HaveCartStmt",
-                result.statement.to_string(),
-                &result.common,
-                result.verification.as_ref(),
-            ),
-            SuccessDefinitionStmtResult::HaveSeqStmt(result) => self.indexed_function_stmt(
-                "HaveSeqStmt",
-                result.statement.to_string(),
-                &result.common,
-                result.verification.as_ref(),
-            ),
-            SuccessDefinitionStmtResult::HaveFiniteSeqStmt(result) => self.indexed_function_stmt(
-                "HaveFiniteSeqStmt",
-                result.statement.to_string(),
-                &result.common,
-                result.verification.as_ref(),
-            ),
-            SuccessDefinitionStmtResult::HaveMatrixStmt(result) => self.indexed_function_stmt(
-                "HaveMatrixStmt",
-                result.statement.to_string(),
-                &result.common,
-                result.verification.as_ref(),
-            ),
             SuccessDefinitionStmtResult::DefPropStmt(result) => {
                 let run_in_local_env = result
                     .run_in_local_env

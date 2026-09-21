@@ -64,12 +64,17 @@ impl Runtime {
             }
         };
 
-        self.define_typed_parameters_in_current_env(&fact.typed_parameters)?;
+        self.define_typed_parameters_in_current_env(&fact.typed_parameters, None)?;
 
         let mut succeeded_dom = Vec::with_capacity(fact.dom_facts.len());
         for (failed_index, dom) in fact.dom_facts.iter().enumerate() {
             match self.verify_fact_well_definedness(dom, verify_state.clone())? {
-                VerifyFactWellDefinedResult::Success(proof) => succeeded_dom.push(proof),
+                VerifyFactWellDefinedResult::Success(proof) => {
+                    // Assume each dom before then-WD so domain-restricted
+                    // applications (e.g. `f(x)` under `x > 0`) can pass.
+                    let _ = self.store_fact_and_infer(dom)?;
+                    succeeded_dom.push(proof);
+                }
                 VerifyFactWellDefinedResult::Failed(failed_dom) => {
                     return Ok(Err(FailToVerifyForallFactWellDefinedResult::DomFact {
                         failed_index,

@@ -26,7 +26,8 @@ pub use verify_exist_fact::{
 };
 pub use verify_fact_result::VerifyFactResult;
 pub use verify_forall_fact::{
-    AssumeDomFactResult, ProveAndStoreThenFactResult, VerifyForallFactResult,
+    AssumeDomFactResult, ProveAndStoreThenFactResult, VerifyForallFactFailed,
+    VerifyForallFactResult,
 };
 pub use verify_or_fact::{
     OrBuiltinRealLineTrichotomyEqLessGreater, OrBuiltinRealLineTrichotomyGreaterEqLess,

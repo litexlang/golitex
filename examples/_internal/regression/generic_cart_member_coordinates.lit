@@ -1,8 +1,11 @@
+# DISABLED (2026-9-21): uses removed `have tuple`/`have cart` stmts.
+# Rewrite with `have fn` before re-enabling.
 # A member of a symbolic Cartesian product inherits its tuple dimension and
 # coordinate-factor membership from the product metadata.
 
 have n N+ = 3
-have cart c for i1 <= n, proj(c, i1) = R
+# TODO: removed have-indexed stmt; use have fn
+# have cart c for i1 <= n, proj(c, i1) = R
 
 forall p c:
     tuple_dim(p) = n
@@ -34,7 +37,8 @@ claim:
     proj(c, 3) = R
     p[3] $in R
 
-have tuple q for i1 <= n, q[i1] = 0
+# TODO: removed have-indexed stmt; use have fn
+# have tuple q for i1 <= n, q[i1] = 0
 tuple_dim(q) = n
 
 forall i1 closed_range(1, n):
@@ -46,7 +50,8 @@ forall i1 closed_range(1, n):
 release thm cart_member_from_coordinates(q, c)
 q $in c
 
-have tuple r for i1 <= n, r[i1] = 0
+# TODO: removed have-indexed stmt; use have fn
+# have tuple r for i1 <= n, r[i1] = 0
 
 forall i1 closed_range(1, n):
     q[i1] = 0
@@ -91,7 +96,8 @@ claim:
         =>:
             m = m
     1 <= m
-    have tuple symbolic_tuple for i1 <= m, symbolic_tuple[i1] = 0
+    # TODO: removed have-indexed stmt; use have fn
+    # have tuple symbolic_tuple for i1 <= m, symbolic_tuple[i1] = 0
     tuple_dim(symbolic_tuple) = m
 
 claim:
@@ -105,5 +111,6 @@ claim:
         ? forall g S:
             g = g
         g $in {h fn(i1 closed_range(1, m)) V: $has_values_in_family(m, V, Y, h)}
-        have tuple tuple_from_member for i1 <= m, tuple_from_member[i1] = g(i1)
+        # TODO: removed have-indexed stmt; use have fn
+        # have tuple tuple_from_member for i1 <= m, tuple_from_member[i1] = g(i1)
         tuple_dim(tuple_from_member) = m

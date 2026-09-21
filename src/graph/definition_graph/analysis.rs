@@ -262,35 +262,6 @@ pub(super) fn collect_template_definition_dependencies(
             collector.add_local_name(statement.fn_name());
             collector.collect_forall_fact(&statement.forall);
         }
-        TemplateDefEnum::HaveTupleStmt(statement) => {
-            collector.add_local_name(statement.index_name());
-            collector.collect_obj(&statement.dimension);
-            collector.collect_obj(&statement.value);
-        }
-        TemplateDefEnum::HaveCartStmt(statement) => {
-            collector.add_local_name(statement.index_name());
-            collector.collect_obj(&statement.dimension);
-            collector.collect_obj(&statement.value);
-        }
-        TemplateDefEnum::HaveSeqStmt(statement) => {
-            collector.add_local_name(statement.index_name());
-            collector.collect_obj(&statement.seq_set.clone().into());
-            collector.collect_obj(&statement.value);
-        }
-        TemplateDefEnum::HaveFiniteSeqStmt(statement) => {
-            collector.add_local_name(statement.index_name());
-            collector.collect_obj(&statement.finite_seq_set.clone().into());
-            collector.collect_obj(&statement.bound);
-            collector.collect_obj(&statement.value);
-        }
-        TemplateDefEnum::HaveMatrixStmt(statement) => {
-            collector.add_local_name(statement.row_index_name());
-            collector.add_local_name(statement.col_index_name());
-            collector.collect_obj(&statement.matrix_set.clone().into());
-            collector.collect_obj(&statement.row_bound);
-            collector.collect_obj(&statement.col_bound);
-            collector.collect_obj(&statement.value);
-        }
     }
 }
 

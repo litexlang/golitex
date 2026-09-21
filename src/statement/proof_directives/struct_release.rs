@@ -2,23 +2,23 @@ use crate::prelude::*;
 use std::fmt;
 
 #[derive(Clone)]
-pub struct ByStructDefStmt {
+pub struct ReleaseStructDefStmt {
     pub obj: Obj,
     pub line_file: LineFile,
 }
 
-impl ByStructDefStmt {
+impl ReleaseStructDefStmt {
     pub fn new(obj: Obj, line_file: LineFile) -> Self {
         Self { obj, line_file }
     }
 
     pub fn store_reason() -> &'static str {
-        "by struct def"
+        "release struct def"
     }
 }
 
-impl fmt::Display for ByStructDefStmt {
+impl fmt::Display for ReleaseStructDefStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(f, "{} {} {} {}", BY, STRUCT, DEF, self.obj)
+        write!(f, "{} {} {} {}", RELEASE, STRUCT, DEF, self.obj)
     }
 }

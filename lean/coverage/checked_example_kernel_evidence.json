@@ -210,16 +210,6 @@
       "source_sha256": "18780f2d39b408ab027a26285acfeb02e4b5c7031586f750c797ced48c4f0199"
     },
     {
-      "checked_in_path": "lean/examples/29_IndexedTupleCompilerEnvironment.lean",
-      "checked_in_sha256": "981f15c812be9065c93d915338ae65835c44b197ac748bc3509095b327b999d6",
-      "example": "29_IndexedTupleCompilerEnvironment.lit",
-      "forbidden_hits": [],
-      "kernel_class": "pass",
-      "kernel_exit": 0,
-      "kernel_first_error": null,
-      "source_sha256": "a49069cb7bf92f9775181853f4390ee2c323e6f703f5280be9e8b35eb0067d63"
-    },
-    {
       "checked_in_path": "lean/examples/2_OrderSystem.lean",
       "checked_in_sha256": "d25077e8fc8fdc5be4b1d376f065f21ebb5988fa8f8c6e50e55a8eb567f3cb28",
       "example": "2_OrderSystem.lit",
@@ -228,26 +218,6 @@
       "kernel_exit": 0,
       "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/2_OrderSystem.lean:14:34: warning: this tactic is never executed",
       "source_sha256": "233c4ba932af2cc59969545540b28f43037fde81c861fa6769fbb86733516539"
-    },
-    {
-      "checked_in_path": "lean/examples/30_IndexedSequenceCompilerEnvironment.lean",
-      "checked_in_sha256": "f0b93bbcafad4305f65c1263798c2888fdc59aa3902e51151cd9199fe371673d",
-      "example": "30_IndexedSequenceCompilerEnvironment.lit",
-      "forbidden_hits": [],
-      "kernel_class": "kernel_reject",
-      "kernel_exit": 1,
-      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/30_IndexedSequenceCompilerEnvironment.lean:24:301: error: Application type mismatch: The argument",
-      "source_sha256": "d020e5f2d66c298efe56c0a46b5c716a4a490f68947d3f95e77cf3e80cad53c3"
-    },
-    {
-      "checked_in_path": "lean/examples/31_FiniteSequenceCompilerEnvironment.lean",
-      "checked_in_sha256": "c812a23b3cc9bb4289d4ca8acbe930527f74d46314f27515657776aca319349b",
-      "example": "31_FiniteSequenceCompilerEnvironment.lit",
-      "forbidden_hits": [],
-      "kernel_class": "kernel_reject",
-      "kernel_exit": 1,
-      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/31_FiniteSequenceCompilerEnvironment.lean:24:301: error: Application type mismatch: The argument",
-      "source_sha256": "2187342574eed306f32ebb9136612aae2e3e982299cc01dd589b37fd98f0c43d"
     },
     {
       "checked_in_path": "lean/examples/33_NonemptySetWitnessCompilerEnvironment.lean",

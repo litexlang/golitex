@@ -120,7 +120,7 @@ known forall → builtin algebraic rewrite → known algebraic rewrite.
 Equality search is:
 
 builtin rule → known equality → builtin strategy → MatchingOneArgByOne →
-known forall → builtin rewrite (ClosedNumericEqualSubstitution only).
+known forall → builtin rewrite (ClosedNumericEqualSubstitution, KnownEqualObjSubstitution, OrderDual).
 
 MatchingOneArgByOne peels same-shape constructors (numeric, FnObj application
 layers, sets/tuples/carts, ranges, sums/products/reduces, struct field access,
@@ -144,14 +144,15 @@ param-type facts (same shapes as introduce: `$in` / `isSet` / …) verified per
 parameter, then instantiated dom facts verified).
 And-then components are projected as `AndFactComponent` cites; exist thens
 are projected into `by_exist`. Matching is shared
-(`match_forall_conclusion_args`): bind bare forall params; otherwise
-instantiate the pattern under the subst so far and prove
-`pattern_after_subst = goal` by equal search with all `VerifyState` flags
-false (`can_use_forall_fact`, `can_use_rewrite`, `store_well_defined_fact`;
-certificate type `StrictEqualArgProof`). Nested param occurrences inside
-compound objs are handled only via that subst-then-equal path, not by
-recursive structural matching. Exist apply also instantiates the conclusion
-and alpha-compares to the goal before instantiation requirements.
+(`match_forall_conclusion_args`): bind bare forall params; recurse into
+same-shape compounds (`FnObj`, arithmetic, `FieldAccess`, …) via
+`ByStructure` child proofs (legacy-aligned); otherwise instantiate the
+pattern under the subst so far and prove `pattern_after_subst = goal` by
+equal search with all `VerifyState` flags false (`can_use_forall_fact`,
+`can_use_rewrite`, `store_well_defined_fact`; certificate type
+`StrictEqualArgProof`). Nested param occurrences inside compound objs are
+bound during that structural recursion. Exist apply also instantiates the
+conclusion and alpha-compares to the goal before instantiation requirements.
 
 `or` search order is:
 

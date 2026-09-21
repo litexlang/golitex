@@ -1,4 +1,7 @@
 pub mod by_equal_ir;
+pub mod by_unfold_instantiated_template_have_fn_equal_application;
+pub mod by_unfold_instantiated_template_have_obj_equal;
+pub mod by_unfold_named_have_fn_equal_application;
 pub mod search_equal_fact_by_calculation;
 pub mod search_equal_fact_builtin_rule;
 pub mod search_equal_fact_builtin_rule_result;

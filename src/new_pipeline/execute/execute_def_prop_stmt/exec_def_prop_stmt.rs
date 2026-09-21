@@ -13,12 +13,14 @@ use crate::new_pipeline::execute::execute_fact_stmt::{
     VerifyFactWellDefinedResult, VerifyObjWellDefinedResult, VerifyState,
 };
 use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
+use crate::new_pipeline::execute::IntroduceTypedParametersFailed;
 use crate::new_pipeline::execute::IntroduceTypedParametersResult;
 use crate::new_pipeline::parse::keywords::{ABSTRACT_PROP, PROP};
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
 pub enum ExecDefPropStmtFailed {
     ParamType(VerifyObjWellDefinedResult),
+    AutoOpenStructLayer(crate::new_pipeline::execute::FailToReleaseOneStructLayer),
     IffFactWellDefined(FailToVerifyFactWellDefinedResult),
 }
 
@@ -108,7 +110,12 @@ impl Runtime {
             .introduce_typed_parameters(&def_prop.typed_parameters, verify_state.clone())?
         {
             Ok(result) => result,
-            Err(failed) => return Ok(Err(ExecDefPropStmtFailed::ParamType(failed))),
+            Err(IntroduceTypedParametersFailed::ParamType(failed)) => {
+                return Ok(Err(ExecDefPropStmtFailed::ParamType(failed)));
+            }
+            Err(IntroduceTypedParametersFailed::AutoOpenStructLayer { failed, .. }) => {
+                return Ok(Err(ExecDefPropStmtFailed::AutoOpenStructLayer(failed)));
+            }
         };
 
         let mut iff_fact_well_defined = Vec::with_capacity(def_prop.iff_facts.len());

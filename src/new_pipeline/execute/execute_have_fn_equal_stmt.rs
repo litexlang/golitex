@@ -6,9 +6,10 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact, InFact};
 use crate::new_pipeline::ast::obj::{FnSet, Obj};
 use crate::new_pipeline::ast::stmt::HaveFnEqualStmt;
-use crate::new_pipeline::exec_env::DefinedIdentifierInfo;
+use crate::new_pipeline::exec_env::{DefinedIdentifierInfo, StoredIdentifierDefinition};
 use crate::new_pipeline::execute::execute_fact_stmt::{VerifyObjWellDefinedResult, VerifyState};
 use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeError, RuntimeResult};
+use std::rc::Rc;
 
 pub enum ExecHaveFnEqualStmtFailed {
     AnonymousFnWellDefined(VerifyObjWellDefinedResult),
@@ -99,6 +100,7 @@ impl Runtime {
             stmt.name.clone(),
             DefinedIdentifierInfo {
                 identifier: stmt.name.clone(),
+                definition: StoredIdentifierDefinition::HaveFnEqual(Rc::new(stmt.clone())),
             },
         );
 

@@ -1,16 +1,6 @@
 //! Case-function, unique-existence function, and strategy definition outcomes.
 
 use crate::prelude::*;
-use std::rc::Rc;
-
-/// The three object checks performed by the shared sequence/finite-sequence/
-/// matrix definition layer. Keeping them named prevents the statement result
-/// from collapsing constructor-specific WD work into an untyped vector.
-pub struct SuccessVerifyIndexedFunctionDefinitionWellDefinedResult {
-    pub surface_set: Rc<SuccessVerifyObjWellDefinedResult>,
-    pub anonymous_function: Rc<SuccessVerifyObjWellDefinedResult>,
-    pub function_set: Rc<SuccessVerifyObjWellDefinedResult>,
-}
 
 pub struct SuccessVerifyCaseFunctionDefinitionResult {
     pub coverage_check: Box<VerifyFactResult>,

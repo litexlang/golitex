@@ -22,6 +22,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::{
     ExecFactStmtResult, VerifyFactResult, VerifyObjWellDefinedResult,
 };
 use crate::new_pipeline::execute::execute_have_fn_by_forall_exist_unique_stmt::ExecHaveFnByForallExistUniqueStmtResult;
+use crate::new_pipeline::execute::execute_have_fn_by_induc_stmt::ExecHaveFnByInducStmtResult;
 use crate::new_pipeline::execute::execute_have_fn_equal_case_by_case_stmt::ExecHaveFnEqualCaseByCaseStmtResult;
 use crate::new_pipeline::execute::execute_have_fn_equal_stmt::ExecHaveFnEqualStmtResult;
 use crate::new_pipeline::execute::execute_have_obj_by_exist_facts_stmt::ExecHaveObjByExistFactsStmtResult;
@@ -84,6 +85,7 @@ pub enum ExecDefinitionStmtResult {
     HaveFnEqual(ExecHaveFnEqualStmtResult),
     HaveFnEqualCaseByCase(ExecHaveFnEqualCaseByCaseStmtResult),
     HaveFnByForallExistUnique(ExecHaveFnByForallExistUniqueStmtResult),
+    HaveFnByInduc(ExecHaveFnByInducStmtResult),
     DefProp(ExecDefPropStmtResult),
     DefAbstractProp(ExecDefAbstractPropStmtSuccessResult),
     DefStruct(ExecDefStructStmtResult),
@@ -114,6 +116,7 @@ impl ExecDefinitionStmtResult {
             Self::HaveFnEqual(r) => r.is_failed(),
             Self::HaveFnEqualCaseByCase(r) => r.is_failed(),
             Self::HaveFnByForallExistUnique(r) => r.is_failed(),
+            Self::HaveFnByInduc(r) => r.is_failed(),
             Self::DefProp(r) => r.is_failed(),
             Self::DefAbstractProp(_) => false,
             Self::DefStruct(r) => r.is_failed(),

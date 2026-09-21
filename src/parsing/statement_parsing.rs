@@ -53,11 +53,10 @@ impl Runtime {
                         "have algo: expected `for f(...)`",
                     )),
                 },
-                TUPLE => self.parse_have_tuple_stmt(tb),
-                CART => self.parse_have_cart_stmt(tb),
-                SEQ => self.parse_have_seq_stmt(tb),
-                FINITE_SEQ => self.parse_have_finite_seq_stmt(tb),
-                MATRIX => self.parse_have_matrix_stmt(tb),
+                TUPLE | CART | SEQ | FINITE_SEQ | MATRIX => Err(statement_dispatch_error(
+                    tb,
+                    "removed; use have fn for indexed data",
+                )),
                 FN_LOWER_CASE => self.parse_have_fn_stmt(tb),
                 BY => match tb.token_at_add_index(2) {
                     PREIMAGE => self.parse_have_preimage(tb),
@@ -99,9 +98,10 @@ impl Runtime {
             )),
             RELEASE => match tb.token_at_add_index(1) {
                 THM => self.parse_release_thm_stmt(tb),
+                STRUCT => self.parse_release_struct_def_stmt(tb),
                 _ => Err(statement_dispatch_error(
                     tb,
-                    "release: expected `thm name(args)`",
+                    "release: expected `thm …` or `struct def …`",
                 )),
             },
             BY => self.parse_by_prefixed_stmt(tb),

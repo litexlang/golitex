@@ -1691,35 +1691,6 @@ fn multi_parameter_named_function_uses_the_same_telescope_contract() {
 }
 
 #[test]
-fn indexed_tuple_definition_uses_the_recursive_result_environment() {
-    const SOURCE: &str = include_str!("../../lean/examples/29_IndexedTupleCompilerEnvironment.lit");
-    let generated = compile_on_verifier_stack(SOURCE, "29_IndexedTupleCompilerEnvironment.lit")
-        .expect("compile indexed tuple from its recursive statement Result");
-    assert!(generated.contains("noncomputable def coordinates : Litex.IndexedTuple 3 ℂ"));
-    assert!(generated.contains("fun __index"));
-    assert!(generated.contains("Litex.IsTuple coordinates"));
-    assert!(generated.contains("Litex.tupleDim coordinates"));
-    assert!(generated.contains("Litex.indexedTupleAt coordinates"));
-    assert!(!generated.contains("axiom "));
-    assert!(!generated.contains("sorry"));
-}
-
-#[test]
-fn indexed_sequence_definition_uses_the_recursive_result_environment() {
-    const SOURCE: &str =
-        include_str!("../../lean/examples/30_IndexedSequenceCompilerEnvironment.lit");
-    let generated = compile_on_verifier_stack(SOURCE, "30_IndexedSequenceCompilerEnvironment.lit")
-        .expect("compile indexed sequence from its recursive statement Result");
-    assert!(generated.contains("noncomputable def shifted_sequence : Litex.Fn Litex.NPos Litex.R"));
-    assert!(generated.contains("Litex.sequenceSet Litex.R"));
-    assert!(generated.contains("Litex.fnSet Litex.NPos Litex.R"));
-    assert!(generated.contains("Litex.In.rep __arg __arg_in"));
-    assert!(generated.contains("Litex.fnApplyCarrier (domain := Litex.NPos)"));
-    assert!(!generated.contains("axiom "));
-    assert!(!generated.contains("sorry"));
-}
-
-#[test]
 fn unsupported_template_compiler_shapes_remain_fail_closed() {
     for (label, source, expected_error) in [
         (
@@ -1745,21 +1716,6 @@ fn unsupported_template_compiler_shapes_remain_fail_closed() {
             "unexpected error for {label}: {error}"
         );
     }
-}
-
-#[test]
-fn finite_sequence_definition_uses_the_recursive_result_environment() {
-    const SOURCE: &str =
-        include_str!("../../lean/examples/31_FiniteSequenceCompilerEnvironment.lit");
-    let generated = compile_on_verifier_stack(SOURCE, "31_FiniteSequenceCompilerEnvironment.lit")
-        .expect("compile finite sequence from its recursive statement Result");
-    assert!(generated.contains("noncomputable def bounded_sequence : Litex.FnTelescope.Carrier"));
-    assert!(generated.contains("Litex.finiteSequenceSet.{0} Litex.R (3 : Nat)"));
-    assert!(generated.contains("Litex.FnTelescope.requirement"));
-    assert!(generated.contains("fun __arg_domain => ULift.up"));
-    assert!(generated.contains("Litex.fnTelescopeApplyOwn bounded_sequence"));
-    assert!(!generated.contains("axiom "));
-    assert!(!generated.contains("sorry"));
 }
 
 #[test]

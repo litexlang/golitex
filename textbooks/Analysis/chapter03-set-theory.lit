@@ -2096,8 +2096,8 @@ Cartesian products collect tuples with the ith component in the ith factor.
 
 # Concrete tuple literals and finite Cartesian products can be written directly.
 # Coordinate-wise definitions use
-# `have tuple f for i <= n, f[i] = expr` and
-# `have cart C for i <= n, proj(C, i) = expr`, where `i` ranges over
+# Indexed coordinates use `have fn` (old `have tuple` / `have cart` stmts removed),
+# where `i` ranges over
 # `closed_range(1,n)`.
 
 sketch:

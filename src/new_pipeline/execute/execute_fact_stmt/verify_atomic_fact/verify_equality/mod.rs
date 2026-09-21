@@ -26,6 +26,6 @@ pub use well_defined_result::{
 
 pub use result::{
     EqualFactSearchedProof, EqualFactSearchedProofByKnownEquality,
-    SearchProofByKnownForallFact,
+    EqualFactSearchedProofByKnownForallViaSymmetry, SearchProofByKnownForallFact,
     VerifyEqualityFailed, VerifyEqualityResult,
 };

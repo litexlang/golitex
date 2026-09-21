@@ -262,8 +262,8 @@ thm equiv_extensionality:
         left.inverse = right.inverse
         =>:
             left = right
-    by struct def left
-    by struct def right
+    release struct def left
+    release struct def right
     left[1] = left.forward = right.forward = right[1]
     left[2] = left.inverse = right.inverse = right[2]
     release thm tuple_equal_from_coordinates(left, (left[1], left[2]))
@@ -542,8 +542,8 @@ thm gauss_extensionality:
         left.im = right.im
         =>:
             left = right
-    by struct def left
-    by struct def right
+    release struct def left
+    release struct def right
     left[1] = left.real = right.real = right[1]
     left[2] = left.im = right.im = right[2]
     release thm tuple_equal_from_coordinates(left, (left[1], left[2]))
@@ -582,8 +582,8 @@ thm gauss_neg_im:
 thm gaussian_integer_commutative_ring_laws:
     ? forall gauss_ring_seed &GaussInt:
         $is_commutative_ring(&GaussInt, gauss_add, gauss_zero, gauss_neg, gauss_mul, gauss_one)
-    by struct def gauss_zero
-    by struct def gauss_one
+    release struct def gauss_zero
+    release struct def gauss_one
     gauss_zero.real = gauss_zero[1] = 0
     gauss_zero.im = gauss_zero[2] = 0
     gauss_one.real = gauss_one[1] = 1

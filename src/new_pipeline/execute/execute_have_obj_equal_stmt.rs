@@ -5,18 +5,21 @@ use crate::new_pipeline::ast::names::BoundName;
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::ast::stmt::HaveObjEqualStmt;
+use crate::new_pipeline::exec_env::StoredIdentifierDefinition;
 use crate::new_pipeline::execute::exec_stmt_result::ParamTypeWellDefinedProof;
 use crate::new_pipeline::execute::execute_fact_stmt::{
     VerifyFactResult, VerifyObjWellDefinedResult, VerifyState,
 };
 use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
+use std::rc::Rc;
 
 pub enum ExecHaveObjEqualStmtFailed {
     ParamCountMismatch,
     ParamType(VerifyObjWellDefinedResult),
     EqualToWellDefined(VerifyObjWellDefinedResult),
     Membership(VerifyFactResult),
+    AutoOpenStructLayer(crate::new_pipeline::execute::FailToReleaseOneStructLayer),
 }
 
 // Pipeline: check arity → WD param types → WD RHS → membership → define → store equals.
@@ -26,6 +29,8 @@ pub struct ExecHaveObjEqualStmtSuccessResult {
     pub equal_to_well_defined: Vec<VerifyObjWellDefinedResult>,
     pub membership_checks: Vec<VerifyFactResult>,
     pub store_and_infer_result: StoreHaveObjAndInferResult,
+    pub auto_opened_struct_layers:
+        Option<Vec<crate::new_pipeline::execute::ReleaseOneStructLayerProof>>,
 }
 
 pub enum ExecHaveObjEqualStmtResult {
@@ -120,8 +125,22 @@ impl Runtime {
             membership_checks.push(checked);
         }
 
-        let mut store_and_infer_result =
-            self.define_typed_parameters_in_current_env(&stmt.param_def)?;
+        let mut store_and_infer_result = self.define_typed_parameters_in_current_env(
+            &stmt.param_def,
+            Some(StoredIdentifierDefinition::HaveObjEqual(Rc::new(
+                stmt.clone(),
+            ))),
+        )?;
+
+        let auto_opened_struct_layers =
+            match self.auto_open_struct_layers_for_typed_parameters(&stmt.param_def)? {
+                Ok(layers) => layers,
+                Err((_, failed)) => {
+                    return Ok(ExecHaveObjEqualStmtResult::Failed(
+                        ExecHaveObjEqualStmtFailed::AutoOpenStructLayer(failed),
+                    ));
+                }
+            };
 
         for (binding, obj) in bindings.iter().zip(stmt.objs_equal_to.iter()) {
             let (name, _) = binding;
@@ -146,6 +165,7 @@ impl Runtime {
                 equal_to_well_defined,
                 membership_checks,
                 store_and_infer_result,
+                auto_opened_struct_layers,
             },
         ))
     }
