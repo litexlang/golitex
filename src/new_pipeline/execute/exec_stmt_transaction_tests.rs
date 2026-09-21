@@ -1612,6 +1612,22 @@ fn cart_membership_literal_tuple_succeeds() {
 }
 
 #[test]
+fn cart_membership_literal_tuple_succeeds_via_run_eval() {
+    use crate::new_pipeline::launch_command::LaunchCommand;
+    use crate::new_pipeline::run::run_eval::run_eval;
+    let cmd = LaunchCommand::Eval {
+        code: "(1, 2) $in cart(R, Z)".to_string(),
+        session: false,
+        strict: false,
+    };
+    let result = run_eval(cmd).expect("run_eval");
+    assert!(
+        !result.process_failed(),
+        "run_eval cart membership should succeed"
+    );
+}
+
+#[test]
 fn struct_obj_membership_literal_tuple_succeeds() {
     let mut runtime = runtime_with_file_env();
     assert!(

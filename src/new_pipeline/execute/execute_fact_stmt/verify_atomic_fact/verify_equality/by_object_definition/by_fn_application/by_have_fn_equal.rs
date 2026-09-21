@@ -50,7 +50,7 @@ impl Runtime {
         Ok(None)
     }
 
-    fn try_unfold_named_have_fn_equal_application(
+    pub(crate) fn try_unfold_named_have_fn_equal_application(
         &mut self,
         app_side: &Obj,
         other_side: &Obj,

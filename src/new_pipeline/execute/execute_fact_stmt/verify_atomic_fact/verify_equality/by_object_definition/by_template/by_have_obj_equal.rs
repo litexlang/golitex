@@ -54,7 +54,7 @@ impl Runtime {
 
     // If `template_side` is `\Name<args>` with HaveObjEqual body, prove
     // `subst(rhs) = other_side`.
-    fn try_unfold_instantiated_template_have_obj_equal(
+    pub(crate) fn try_unfold_instantiated_template_have_obj_equal(
         &mut self,
         template_side: &Obj,
         other_side: &Obj,
