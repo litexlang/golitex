@@ -1,10 +1,19 @@
-# Object-definition unfolds for have fn = / by cases / by induc,
-# including template-headed applications (option C).
+# Object-definition equality unfolds (all leaf shapes).
 # Run: LITEX_NEW_PIPELINE=1 target/release/litex -f examples/tmp_have_fn_object_definition.lit
 
+# --- Identifier: have … = … ---
+have sum_two R = 1 + 1
+sum_two = 2
+
+# --- Identifier: let … = … ---
+let let_sum = 1 + 1
+let_sum = 2
+
+# --- Fn application: have fn … = … ---
 have fn id(x R) R = x
 id(1) = 1
 
+# --- Fn application: have fn … by cases ---
 have fn sign_value(x R) Z by cases:
     case x > 0: 1
     case x = 0: 0
@@ -14,6 +23,7 @@ sign_value(-2) = (-1)
 sign_value(0) = 0
 sign_value(3) = 1
 
+# --- Fn application: have fn … by induc ---
 have fn countdown(n N) N by induc n from 0:
     case n = 0: 0
     case n >= 1: countdown(n - 1)
@@ -21,16 +31,30 @@ have fn countdown(n N) N by induc n from 0:
 countdown(0) = 0
 countdown(1) = 0
 
-template<a R>:
-    have fn above_a(x R) Z by cases:
-        case x > a: 1
-        case x = a: 0
-        case x < a: (-1)
+# --- Template: have … = … ---
+template<S set>:
+    have carrier_copy set = S
 
-\above_a<0>(-2) = (-1)
-\above_a<0>(0) = 0
-\above_a<0>(3) = 1
+\carrier_copy<R> = R
 
+# --- Template: have fn … = … ---
+template<S set, z S>:
+    have fn const_on_S(x S) S = z
+
+\const_on_S<R, 0>(2) = 0
+
+# --- Template: have fn … by cases ---
+template<t R>:
+    have fn above_t(x R) Z by cases:
+        case x > t: 1
+        case x = t: 0
+        case x < t: (-1)
+
+\above_t<0>(-2) = (-1)
+\above_t<0>(0) = 0
+\above_t<0>(3) = 1
+
+# --- Template: have fn … by induc ---
 template<_S set>:
     have fn countdown_t(n N) N by induc n from 0:
         case n = 0: 0

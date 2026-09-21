@@ -205,7 +205,10 @@ fn parse_field_and_call_postfixes(
 
         if tb.peek() == Some(LEFT_PAREN) {
             let Some(head) = fn_obj_head_from_obj(result.clone()) else {
-                return Ok(result);
+                return Err(tb.parse_error(format!(
+                    "`{}` cannot be applied as a function",
+                    result.display_string()
+                )));
             };
             let mut body_vectors = Vec::new();
             while tb.peek() == Some(LEFT_PAREN) {

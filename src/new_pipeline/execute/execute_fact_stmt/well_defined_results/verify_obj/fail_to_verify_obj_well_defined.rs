@@ -76,7 +76,6 @@ pub enum FailToVerifyObjWellDefinedResult {
     ClosedRange(FailToVerifyClosedRangeObjWellDefined),
     FiniteSeqSet(FailToVerifyFiniteSeqSetObjWellDefined),
     SeqSet(FailToVerifySeqSetObjWellDefined),
-    FiniteSeqListObj(FailToVerifyFiniteSeqListObjObjWellDefined),
     ObjAtIndex(FailToVerifyObjAtIndexObjWellDefined),
     StandardSet(FailToVerifyStandardSetObjWellDefined),
     StructObj(FailToVerifyStructObjObjWellDefined),
@@ -324,8 +323,6 @@ pub struct FailToVerifyClosedRangeObjWellDefined(pub FailToVerifyObjWellDefinedB
 pub struct FailToVerifyFiniteSeqSetObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
 pub struct FailToVerifySeqSetObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
-
-pub struct FailToVerifyFiniteSeqListObjObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
 pub struct FailToVerifyObjAtIndexObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 

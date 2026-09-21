@@ -9,11 +9,12 @@
 //! reduces to proving `1 + 1 = 2` after unfolding `a`.
 
 use crate::new_pipeline::ast::fact::EqualFact;
-use crate::new_pipeline::ast::obj::{IdentifierObj, Obj};
+use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::exec_env::StoredIdentifierDefinition;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
+use super::super::helper::identifier_plain_name;
 
 pub struct ByLetObjObjectDefinitionProof {
     pub expanded_rhs: Obj,
@@ -78,13 +79,3 @@ impl Runtime {
     }
 }
 
-fn identifier_plain_name(obj: &Obj) -> Option<&str> {
-    let Obj::Identifier(identifier) = obj else {
-        return None;
-    };
-    match identifier {
-        IdentifierObj::Plain { name, .. }
-        | IdentifierObj::WithExportFileId { name, .. }
-        | IdentifierObj::WithModAndExportFileId { name, .. } => Some(name.as_str()),
-    }
-}

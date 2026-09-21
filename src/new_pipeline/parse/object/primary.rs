@@ -56,9 +56,9 @@ pub fn parse_primary(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
         return parse_list_set(rt, tb);
     }
     if token == LEFT_BRACKET {
-        return Err(
-            tb.parse_error("finite_seq list literal `[...]` is not wired in phase 1 object parse")
-        );
+        return Err(tb.parse_error(
+            "`[...]` finite-sequence list literals are not in new_pipeline; use index postfix `obj[i]`",
+        ));
     }
     if token == FN {
         return rt.parse_fn_set_or_anonymous_fn(tb);
@@ -88,9 +88,9 @@ pub fn parse_primary(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
 pub(super) fn fn_obj_head_from_obj(obj: Obj) -> Option<FnObjHead> {
     match obj {
         Obj::Identifier(id) => Some(FnObjHead::Identifier(id)),
-        Obj::ObjAtIndex(v) => Some(FnObjHead::ObjAtIndex(v)),
         Obj::FieldAccess(v) => Some(FnObjHead::FieldAccess(v)),
         Obj::InstantiatedTemplateObj(v) => Some(FnObjHead::InstantiatedTemplateObj(v)),
+        Obj::AnonymousFn(a) => Some(FnObjHead::AnonymousFnLiteral(Box::new(a))),
         _ => None,
     }
 }

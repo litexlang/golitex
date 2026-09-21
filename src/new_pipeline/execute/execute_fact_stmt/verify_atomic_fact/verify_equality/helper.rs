@@ -177,7 +177,6 @@ pub(crate) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Ob
         (Obj::SeqSet(l), Obj::SeqSet(r)) => {
             Some(vec![(l.set.as_ref().clone(), r.set.as_ref().clone())])
         }
-        (Obj::FiniteSeqListObj(l), Obj::FiniteSeqListObj(r)) => slice_pairs!(l.objs, r.objs),
         (Obj::Proj(l), Obj::Proj(r)) => Some(vec![
             (l.set.as_ref().clone(), r.set.as_ref().clone()),
             (l.dim.as_ref().clone(), r.dim.as_ref().clone()),
@@ -358,8 +357,6 @@ fn fn_obj_head_as_obj(head: &FnObjHead) -> Obj {
     match head {
         FnObjHead::Identifier(id) => Obj::Identifier(id.clone()),
         FnObjHead::AnonymousFnLiteral(a) => Obj::AnonymousFn(a.as_ref().clone()),
-        FnObjHead::FiniteSeqListObj(v) => Obj::FiniteSeqListObj(v.clone()),
-        FnObjHead::ObjAtIndex(v) => Obj::ObjAtIndex(v.clone()),
         FnObjHead::FieldAccess(v) => {
             Obj::FieldAccess(v.clone())
         }

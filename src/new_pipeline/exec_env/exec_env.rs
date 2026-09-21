@@ -1,6 +1,6 @@
 use crate::new_pipeline::ast::names::{AtomicName, BoundName, PlainName};
 use crate::new_pipeline::ast::obj::{
-    Cart, FiniteSeqListObj, FiniteSeqSet, FnSet, Obj, SetBuilder, StructObj, Tuple,
+    Cart, FiniteSeqSet, FnSet, Obj, SetBuilder, StructObj, Tuple,
 };
 use crate::new_pipeline::ast::param::ParamType;
 use crate::new_pipeline::ast::stmt::AxiomStmt;
@@ -129,7 +129,6 @@ pub enum SpecialObjProperty {
     TupleEquality((Tuple, FactId)),
     TupleOwner((Cart, FactId)),
     CartEquality((Cart, FactId)),
-    FiniteSeqEquality((FiniteSeqListObj, FactId)),
     FiniteSeqOwner((FiniteSeqSet, FactId)),
     SetBuilderEquality((SetBuilder, FactId)),
     /// Non-closed object equals a closed numeric expr; cite `FactId`.

@@ -1,14 +1,15 @@
 //! Framework AST data shapes for new_pipeline.
 //! Field taxonomy follows the legacy language; methods are added later.
-//! Identity: stmt def names are often PlainName; binder params use BoundName /
-//! IdentifierId where wired (see `identifier_identity.md`). FactId; LineFile.
+//! Identity: definition / store-key names are PlainName; binder params use
+//! BoundName / IdentifierId where wired (see `identifier_identity.md`).
+//! FactId; LineFile.
 
 use super::fact::{
     AndChainAtomicFact, AtomicFact, ExistFactFamily, ExistOrAndChainAtomicFact, Fact, ForallFact, InFact,
     NormalAtomicFact, QuantifierFreeFact,
 };
 use super::line_file::LineFile;
-use super::names::AtomicName;
+use super::names::{AtomicName, PlainName};
 use super::obj::{AnonymousFn, ClosedRange, IdentifierObj, ListSet, Obj, Range};
 use super::param::{SetBoundParameterList, TypedParameterList};
 
@@ -115,14 +116,14 @@ pub struct HaveObjByExistFactsStmt {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ObtainObjFromExistFact {
-    pub equal_tos: Vec<String>,
+    pub equal_tos: Vec<PlainName>,
     pub fact: ExistFactFamily,
     pub line_file: LineFile,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ObtainObjFromAtomicFact {
-    pub equal_tos: Vec<String>,
+    pub equal_tos: Vec<PlainName>,
     pub fact: NormalAtomicFact,
     pub line_file: LineFile,
 }
@@ -141,21 +142,21 @@ pub struct TheoremCall {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ObtainObjFromThm {
-    pub equal_tos: Vec<String>,
+    pub equal_tos: Vec<PlainName>,
     pub call: TheoremCall,
     pub line_file: LineFile,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HaveByPreimageStmt {
-    pub preimage_names: Vec<String>,
+    pub preimage_names: Vec<PlainName>,
     pub range_membership: InFact,
     pub line_file: LineFile,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HaveFnEqualStmt {
-    pub name: String,
+    pub name: PlainName,
     pub equal_to_anonymous_fn: AnonymousFn,
     pub line_file: LineFile,
 }
@@ -169,7 +170,7 @@ pub struct FnSetClause {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HaveFnEqualCaseByCaseStmt {
-    pub name: String,
+    pub name: PlainName,
     pub fn_set_clause: FnSetClause,
     pub cases: Vec<AndChainAtomicFact>,
     pub equal_tos: Vec<Obj>,
@@ -190,7 +191,7 @@ pub struct HaveFnByInducCase {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HaveFnByInducStmt {
-    pub name: String,
+    pub name: PlainName,
     pub fn_set_clause: FnSetClause,
     pub measure: Obj,
     pub lower_bound: Obj,
@@ -200,14 +201,14 @@ pub struct HaveFnByInducStmt {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HaveFnByForallExistUniqueStmt {
-    pub name: String,
+    pub name: PlainName,
     pub forall: ForallFact,
     pub line_file: LineFile,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DefPropStmt {
-    pub name: String,
+    pub name: PlainName,
     pub typed_parameters: TypedParameterList,
     pub iff_facts: Vec<Fact>,
     pub line_file: LineFile,
@@ -215,14 +216,14 @@ pub struct DefPropStmt {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DefAbstractPropStmt {
-    pub name: String,
-    pub params: Vec<String>,
+    pub name: PlainName,
+    pub params: Vec<PlainName>,
     pub line_file: LineFile,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DefSettingStmt {
-    pub name: String,
+    pub name: PlainName,
     pub param_def: TypedParameterList,
     pub dom_facts: Vec<Fact>,
     pub line_file: LineFile,
@@ -245,7 +246,7 @@ pub enum TemplateDefEnum {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DefTemplateStmt {
-    pub template_name: String,
+    pub template_name: PlainName,
     pub template_arg_def: TypedParameterList,
     pub template_arg_dom: Vec<QuantifierFreeFact>,
     pub template_def_stmt: TemplateDefEnum,
@@ -261,7 +262,7 @@ pub struct StructFieldDef {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DefStructStmt {
-    pub name: String,
+    pub name: PlainName,
     pub param_def_with_dom: Option<(TypedParameterList, Vec<QuantifierFreeFact>)>,
     pub fields: Vec<StructFieldDef>,
     pub equivalent_facts: Vec<Fact>,
@@ -289,7 +290,7 @@ pub enum AlgoReturnOrAlgoCase {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DefAlgoStmt {
-    pub name: String,
+    pub name: PlainName,
     pub param_bindings: Vec<String>,
     pub default_return: Option<AlgoReturn>,
     pub cases: Vec<AlgoCase>,
@@ -298,7 +299,7 @@ pub struct DefAlgoStmt {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DefThmStmt {
-    pub name: String,
+    pub name: PlainName,
     pub fact: Fact,
     pub prove_process: Vec<Stmt>,
     pub line_file: LineFile,
@@ -306,14 +307,14 @@ pub struct DefThmStmt {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct AxiomStmt {
-    pub name: String,
+    pub name: PlainName,
     pub forall_fact: ForallFact,
     pub line_file: LineFile,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DefStrategyStmt {
-    pub name: String,
+    pub name: PlainName,
     pub forall_fact: ForallFact,
     pub prove_process: Vec<Stmt>,
     pub line_file: LineFile,

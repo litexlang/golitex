@@ -331,7 +331,6 @@ impl Obj {
                 Obj::ClosedRange(x) => s.push_str(&x.ir()),
                 Obj::FiniteSeqSet(x) => s.push_str(&x.ir()),
                 Obj::SeqSet(x) => s.push_str(&x.ir()),
-                Obj::FiniteSeqListObj(x) => s.push_str(&x.ir()),
                 Obj::PowerSet(x) => s.push_str(&x.ir()),
                 Obj::GeneralCart(x) => s.push_str(&x.ir()),
                 Obj::ObjAtIndex(x) => s.push_str(&x.ir()),
@@ -374,8 +373,6 @@ impl FnObjHead {
         match self {
             FnObjHead::Identifier(x) => x.ir(),
             FnObjHead::AnonymousFnLiteral(a) => a.ir(),
-            FnObjHead::FiniteSeqListObj(v) => v.ir(),
-            FnObjHead::ObjAtIndex(v) => v.ir(),
             FnObjHead::FieldAccess(v) => v.ir(),
             FnObjHead::InstantiatedTemplateObj(t) => t.ir(),
         }
@@ -753,23 +750,6 @@ impl_obj_kw_call!(FiniteSeqSet, FINITE_SEQ, set, n);
 
 impl_obj_kw_call!(SeqSet, SEQ, set);
 
-impl FiniteSeqListObj {
-    pub fn ir(&self) -> ObjIR {
-        let mut out = String::new();
-        out.push_str(&format!("{}", LEFT_BRACKET));
-        out.push_str(
-            &self
-                .objs
-                .iter()
-                .map(|o| o.ir())
-                .collect::<Vec<_>>()
-                .join(", "),
-        );
-        out.push_str(&format!("{}", RIGHT_BRACKET));
-        ObjIR(out)
-    }
-    impl_display_pair!();
-}
 impl ObjAtIndex {
     pub fn ir(&self) -> ObjIR {
         let mut out = String::new();

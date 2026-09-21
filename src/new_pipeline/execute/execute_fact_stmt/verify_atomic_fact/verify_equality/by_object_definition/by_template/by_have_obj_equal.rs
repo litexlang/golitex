@@ -27,31 +27,6 @@ pub struct ByUnfoldInstantiatedTemplateHaveObjEqualObjectDefinitionProof {
 }
 
 impl Runtime {
-    // Try both orientations: `\T<a> = X` and `X = \T<a>`.
-    pub fn search_equal_fact_object_definition_unfold_instantiated_template_have_obj_equal(
-        &mut self,
-        fact: &EqualFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<Option<ByUnfoldInstantiatedTemplateHaveObjEqualObjectDefinitionProof>> {
-        if let Some(proof) = self.try_unfold_instantiated_template_have_obj_equal(
-            &fact.left,
-            &fact.right,
-            fact,
-            verify_state.clone(),
-        )? {
-            return Ok(Some(proof));
-        }
-        if let Some(proof) = self.try_unfold_instantiated_template_have_obj_equal(
-            &fact.right,
-            &fact.left,
-            fact,
-            verify_state,
-        )? {
-            return Ok(Some(proof));
-        }
-        Ok(None)
-    }
-
     // If `template_side` is `\Name<args>` with HaveObjEqual body, prove
     // `subst(rhs) = other_side`.
     pub(crate) fn try_unfold_instantiated_template_have_obj_equal(

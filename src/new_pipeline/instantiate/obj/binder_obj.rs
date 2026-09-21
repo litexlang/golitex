@@ -21,8 +21,6 @@ impl Runtime {
                 match replaced {
                     Obj::Identifier(new_id) => Ok(FnObjHead::Identifier(new_id)),
                     Obj::AnonymousFn(af) => Ok(FnObjHead::AnonymousFnLiteral(Box::new(af))),
-                    Obj::FiniteSeqListObj(v) => Ok(FnObjHead::FiniteSeqListObj(v)),
-                    Obj::ObjAtIndex(v) => Ok(FnObjHead::ObjAtIndex(v)),
                     Obj::FieldAccess(v) => {
                         Ok(FnObjHead::FieldAccess(v))
                     }
@@ -33,14 +31,6 @@ impl Runtime {
             FnObjHead::AnonymousFnLiteral(af) => Ok(FnObjHead::AnonymousFnLiteral(Box::new(
                 self.inst_anonymous_fn(af, param_to_arg_map)?,
             ))),
-            FnObjHead::FiniteSeqListObj(a) => Ok(FnObjHead::FiniteSeqListObj(
-                self.inst_finite_seq_list_obj(a, param_to_arg_map)?
-                    .expect_finite_seq_list(),
-            )),
-            FnObjHead::ObjAtIndex(a) => Ok(FnObjHead::ObjAtIndex(
-                self.inst_obj_at_index_obj(a, param_to_arg_map)?
-                    .expect_obj_at_index(),
-            )),
             FnObjHead::FieldAccess(a) => Ok(
                 FnObjHead::FieldAccess(
                     self.inst_field_access(a, param_to_arg_map)?,
@@ -106,26 +96,5 @@ impl Runtime {
         Ok(Obj::AnonymousFn(
             self.inst_anonymous_fn(af, param_to_arg_map)?,
         ))
-    }
-}
-
-trait ObjExpect {
-    fn expect_finite_seq_list(self) -> crate::new_pipeline::ast::obj::FiniteSeqListObj;
-    fn expect_obj_at_index(self) -> crate::new_pipeline::ast::obj::ObjAtIndex;
-}
-
-impl ObjExpect for Obj {
-    fn expect_finite_seq_list(self) -> crate::new_pipeline::ast::obj::FiniteSeqListObj {
-        match self {
-            Obj::FiniteSeqListObj(a) => a,
-            _ => panic!("expected FiniteSeqListObj"),
-        }
-    }
-
-    fn expect_obj_at_index(self) -> crate::new_pipeline::ast::obj::ObjAtIndex {
-        match self {
-            Obj::ObjAtIndex(a) => a,
-            _ => panic!("expected ObjAtIndex"),
-        }
     }
 }

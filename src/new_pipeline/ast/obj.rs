@@ -79,7 +79,6 @@ pub enum Obj {
     ClosedRange(ClosedRange),
     FiniteSeqSet(FiniteSeqSet),
     SeqSet(SeqSet),
-    FiniteSeqListObj(FiniteSeqListObj),
     ObjAtIndex(ObjAtIndex),
     StandardSet(StandardSet),
     StructObj(StructObj),
@@ -164,13 +163,16 @@ impl IdentifierObj {
 }
 
 // FnObj
+// Applied heads only when a callable contract is easy to recover:
+// Identifier / template instance → InFunctionSet; AnonymousFnLiteral → its own FnSet;
+// FieldAccess → field carrier type. ObjAtIndex is intentionally not a head: `t[i]` is
+// just an element, with no stable function signature, so `t[i](a)` is rejected at parse.
+// Keep `Obj::ObjAtIndex` for tuple/cart indexing such as `(1, 2)[1]`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FnObjHead {
     Identifier(IdentifierObj),
     /// Anonymous function literal used as applied head, e.g. `fn(x R) R {x}(a)`.
     AnonymousFnLiteral(Box<AnonymousFn>),
-    FiniteSeqListObj(FiniteSeqListObj),
-    ObjAtIndex(ObjAtIndex),
     FieldAccess(FieldAccess),
     InstantiatedTemplateObj(InstantiatedTemplateObj),
 }
@@ -614,12 +616,6 @@ pub struct FiniteSeqSet {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SeqSet {
     pub set: Box<Obj>,
-}
-
-// FiniteSeqListObj
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct FiniteSeqListObj {
-    pub objs: Vec<Box<Obj>>,
 }
 
 // ObjAtIndex

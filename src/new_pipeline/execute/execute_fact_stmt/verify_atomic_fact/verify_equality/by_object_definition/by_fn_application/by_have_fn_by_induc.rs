@@ -32,30 +32,6 @@ pub struct ByUnfoldHaveFnByInducApplicationObjectDefinitionProof {
 }
 
 impl Runtime {
-    pub fn search_equal_fact_object_definition_unfold_have_fn_by_induc_application(
-        &mut self,
-        fact: &EqualFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<Option<ByUnfoldHaveFnByInducApplicationObjectDefinitionProof>> {
-        if let Some(proof) = self.try_unfold_have_fn_by_induc_application(
-            &fact.left,
-            &fact.right,
-            fact,
-            verify_state.clone(),
-        )? {
-            return Ok(Some(proof));
-        }
-        if let Some(proof) = self.try_unfold_have_fn_by_induc_application(
-            &fact.right,
-            &fact.left,
-            fact,
-            verify_state,
-        )? {
-            return Ok(Some(proof));
-        }
-        Ok(None)
-    }
-
     pub(crate) fn try_unfold_have_fn_by_induc_application(
         &mut self,
         app_side: &Obj,
