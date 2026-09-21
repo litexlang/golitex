@@ -1729,12 +1729,21 @@ fn release_obj_def_smoke() {
     assert!(!exec_one(&mut runtime, "f(1) = 1").is_failed(), "check f application");
 }
 
+
 #[test]
 fn template_have_fn_by_cases_object_definition_debug() {
     let mut runtime = runtime_with_file_env();
-    let def = "template<a R>:\n    have fn above_a(x R) Z by cases:\n        case x > a: 1\n        case x = a: 0\n        case x < a: (-1)";
-    let r = exec_one(&mut runtime, def);
-    assert!(!r.is_failed(), "template by cases def failed");
-    let eq = exec_one(&mut runtime, "\\above_a<0>(-2) = (-1)");
-    assert!(!eq.is_failed(), "template by cases unfold failed");
+    let def = "template<a R>:
+    have fn above_a(x R) Z by cases:
+        case x > a: 1
+        case x = a: 0
+        case x < a: (-1)";
+    assert!(!exec_one(&mut runtime, def).is_failed(), "def");
+    for code in [
+        "\\above_a<0>(-2) = (-1)",
+        "\\above_a<0>(0) = 0",
+        "\\above_a<0>(3) = 1",
+    ] {
+        assert!(!exec_one(&mut runtime, code).is_failed(), "failed: {code}");
+    }
 }
