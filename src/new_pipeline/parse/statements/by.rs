@@ -1,12 +1,9 @@
 use super::super::keywords::{
     BY, CASE, CASES, COLON, COMMA, CONTRA, DEF, EQUAL, FROM, IMPOSSIBLE, INDUC, LEFT_PAREN,
-    QUESTION_GOAL, REFLEXIVE_PROP, RELEASE, RIGHT_ARROW, RIGHT_PAREN, STRONG_INDUC, SYMMETRIC_PROP, TRANSITIVE_PROP, EXTENSION,
-    THM,
-    ENUMERATE,
-    FOR,
-    CLOSED_RANGE,
-    FINITE_SET,
-    FACT_PREFIX, AS, RANGE, IN};
+    QUESTION_GOAL, REFLEXIVE_PROP, RELEASE, RIGHT_ARROW, RIGHT_PAREN, STRONG_INDUC, STRUCT,
+    SYMMETRIC_PROP, TRANSITIVE_PROP, EXTENSION, THM, ENUMERATE, FOR, CLOSED_RANGE, FINITE_SET,
+    FACT_PREFIX, AS, RANGE, IN,
+};
 use super::super::object::{is_simple_name, parse_obj};
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::fact::{
@@ -18,7 +15,7 @@ use crate::new_pipeline::ast::stmt::{
     ByCasesStmt, ByContraStmt, ByDefStmt, ByInducStmt, ByReflexivePropStmt, ByStmt,
     ByStrongInducStmt, BySymmetricPropStmt, ByTransitivePropStmt, ByExtensionStmt,
     ClosedRangeOrRange, ByClosedRangeAsCasesStmt, ByEnumerateRangeStmt, ByForStmt,
-    ByEnumerateFiniteSetStmt, ByThmStmt, ReleaseThmStmt, Stmt, TheoremCall,
+    ByEnumerateFiniteSetStmt, ByThmStmt, ReleaseStructDefStmt, ReleaseThmStmt, Stmt, TheoremCall,
     TheoremCallArguments,
 };
 use crate::new_pipeline::parse::prop_registration_shape::{
@@ -527,6 +524,32 @@ impl Runtime {
         }
         Ok(Stmt::ReleaseThmStmt(ReleaseThmStmt {
             call,
+            line_file: LineFile::new(block.line, block.source_path.clone()),
+        }))
+    }
+
+    pub(in super::super) fn parse_release_struct_def_stmt(
+        &mut self,
+        block: &TokenBlock,
+    ) -> RuntimeResult<Stmt> {
+        let mut tb = block.clone();
+        tb.expect(RELEASE)?;
+        tb.expect(STRUCT)?;
+        tb.expect(DEF)?;
+        if tb.exceed_end_of_head() {
+            return Err(tb.parse_error("release struct def expects exactly one object"));
+        }
+        if !tb.body.is_empty() {
+            return Err(tb.parse_error("release struct def does not accept an indented body"));
+        }
+        let obj = parse_obj(self, &mut tb)?;
+        if !tb.exceed_end_of_head() {
+            return Err(tb.parse_error(
+                "release struct def expects exactly one object and has no `as &Struct` form",
+            ));
+        }
+        Ok(Stmt::ReleaseStructDefStmt(ReleaseStructDefStmt {
+            obj,
             line_file: LineFile::new(block.line, block.source_path.clone()),
         }))
     }

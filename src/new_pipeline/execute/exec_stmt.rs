@@ -89,6 +89,13 @@ impl Runtime {
                     ),
                 ))
             }
+            Stmt::Definition(DefinitionStmt::HaveFnByInducStmt(have_stmt)) => {
+                Ok(ExecStmtResult::Definition(
+                    ExecDefinitionStmtResult::HaveFnByInduc(
+                        self.exec_have_fn_by_induc_stmt(have_stmt)?,
+                    ),
+                ))
+            }
             Stmt::Definition(DefinitionStmt::DefPropStmt(def_prop)) => {
                 Ok(ExecStmtResult::Definition(ExecDefinitionStmtResult::DefProp(
                     self.exec_def_prop_stmt(def_prop)?,
@@ -170,7 +177,7 @@ impl Runtime {
                 Ok(ExecStmtResult::By(exec_by_strong_induc_stmt(self, stmt)?))
             }
             _ => Err(RuntimeError::Unsupported(
-                "new_pipeline exec_stmt: Fact, let, have-obj-in-nonempty, have-obj-equal, have-obj-by-exist, have-fn-equal, have-fn-by-cases, have-fn-by-exist!, prop, abstract_prop, struct, template, thm, witness, trust, release thm, by reflexive_prop / symmetric_prop / transitive_prop / extension / contra / cases / def / thm / induc / strong_induc are wired for the tracer"
+                "new_pipeline exec_stmt: Fact, let, have-obj-in-nonempty, have-obj-equal, have-obj-by-exist, have-fn-equal, have-fn-by-cases, have-fn-by-exist!, have-fn-by-induc, prop, abstract_prop, struct, template, thm, witness, trust, release thm, by reflexive_prop / symmetric_prop / transitive_prop / extension / contra / cases / def / thm / induc / strong_induc are wired for the tracer"
                     .to_string(),
             )),
         }

@@ -118,9 +118,8 @@ impl Runtime {
                             field_tb.parse_error("`<=>:` in struct must not have inline facts")
                         );
                     }
-                    for f in &fields {
-                        self.define_plain_atom_as_parse(&field_tb, f.binding.clone())?;
-                    }
+                    // Field binders were occupied when each field line was
+                    // parsed; free refs in `<=>:` resolve to those BoundNames.
                     equivalent_facts.extend(self.parse_facts_in_body(&field_tb.body)?);
                 } else {
                     if seen_equivalent {
@@ -129,23 +128,23 @@ impl Runtime {
                     if !field_tb.body.is_empty() {
                         return Err(field_tb.parse_error("struct field must fit on one line"));
                     }
-                    let binding = field_tb
+                    let binding_name = field_tb
                         .advance()
                         .map_err(|_| field_tb.parse_error("struct field expects a name"))?;
-                    if !is_simple_name(&binding) {
-                        return Err(
-                            field_tb.parse_error(format!("invalid struct field `{binding}`"))
-                        );
+                    if !is_simple_name(&binding_name) {
+                        return Err(field_tb
+                            .parse_error(format!("invalid struct field `{binding_name}`")));
                     }
+                    if fields.iter().any(|f| f.binding.name == binding_name) {
+                        return Err(field_tb
+                            .parse_error(format!("duplicate struct field `{binding_name}`")));
+                    }
+                    let binding =
+                        self.define_plain_atom_as_parse(&field_tb, binding_name)?;
                     let field_type = parse_obj(self, &mut field_tb)?;
                     if !field_tb.exceed_end_of_head() {
                         return Err(
                             field_tb.parse_error("unexpected token after struct field type")
-                        );
-                    }
-                    if fields.iter().any(|f| f.binding == binding) {
-                        return Err(
-                            field_tb.parse_error(format!("duplicate struct field `{binding}`"))
                         );
                     }
                     fields.push(StructFieldDef {
@@ -343,18 +342,6 @@ fn template_def_enum_from_body_stmt(
         Stmt::Definition(DefinitionStmt::HaveFnByForallExistUniqueStmt(stmt)) => {
             Ok(TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt))
         }
-        Stmt::Definition(DefinitionStmt::HaveTupleStmt(stmt)) => {
-            Ok(TemplateDefEnum::HaveTupleStmt(stmt))
-        }
-        Stmt::Definition(DefinitionStmt::HaveCartStmt(stmt)) => {
-            Ok(TemplateDefEnum::HaveCartStmt(stmt))
-        }
-        Stmt::Definition(DefinitionStmt::HaveSeqStmt(stmt)) => {
-            Ok(TemplateDefEnum::HaveSeqStmt(stmt))
-        }
-        Stmt::Definition(DefinitionStmt::HaveFiniteSeqStmt(stmt)) => {
-            Ok(TemplateDefEnum::HaveFiniteSeqStmt(stmt))
-        }
         _ => Err(tb.parse_error(
             "template body only supports `have` / `trust have` / `obtain` definition statements",
         )),
@@ -374,10 +361,6 @@ fn template_def_enum_name(body: &TemplateDefEnum) -> Option<String> {
         TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => Some(stmt.name.clone()),
         TemplateDefEnum::HaveFnByInducStmt(stmt) => Some(stmt.name.clone()),
         TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => Some(stmt.name.clone()),
-        TemplateDefEnum::HaveTupleStmt(stmt) => Some(stmt.name.clone()),
-        TemplateDefEnum::HaveCartStmt(stmt) => Some(stmt.name.clone()),
-        TemplateDefEnum::HaveSeqStmt(stmt) => Some(stmt.name.clone()),
-        TemplateDefEnum::HaveFiniteSeqStmt(stmt) => Some(stmt.name.clone()),
     }
 }
 

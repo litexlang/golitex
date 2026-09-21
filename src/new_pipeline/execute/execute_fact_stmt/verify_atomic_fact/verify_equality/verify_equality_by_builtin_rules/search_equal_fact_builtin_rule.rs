@@ -15,6 +15,38 @@ impl Runtime {
         {
             return Ok(Some(EqualitySearchProofByBuiltinRule::ByEqualIr(proof)));
         }
+        if let Some(proof) = self
+            .search_equal_fact_builtin_rule_unfold_instantiated_template_have_obj_equal(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(
+                EqualitySearchProofByBuiltinRule::ByUnfoldInstantiatedTemplateHaveObjEqual(proof),
+            ));
+        }
+        if let Some(proof) = self
+            .search_equal_fact_builtin_rule_unfold_instantiated_template_have_fn_equal_application(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(
+                EqualitySearchProofByBuiltinRule::ByUnfoldInstantiatedTemplateHaveFnEqualApplication(
+                    proof,
+                ),
+            ));
+        }
+        if let Some(proof) = self
+            .search_equal_fact_builtin_rule_unfold_named_have_fn_equal_application(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(
+                EqualitySearchProofByBuiltinRule::ByUnfoldNamedHaveFnEqualApplication(proof),
+            ));
+        }
         if let Some(proof) = self.search_equal_fact_by_calculation(fact, verify_state)? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::Calculation(proof)));
         }

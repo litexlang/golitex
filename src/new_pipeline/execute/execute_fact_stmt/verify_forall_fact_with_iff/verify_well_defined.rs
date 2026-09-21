@@ -66,7 +66,7 @@ impl Runtime {
             }
         };
 
-        self.define_typed_parameters_in_current_env(&inner.typed_parameters)?;
+        self.define_typed_parameters_in_current_env(&inner.typed_parameters, None)?;
 
         let mut succeeded_dom = Vec::with_capacity(inner.dom_facts.len());
         for (failed_index, dom) in inner.dom_facts.iter().enumerate() {

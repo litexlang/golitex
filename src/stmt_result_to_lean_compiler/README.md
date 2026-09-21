@@ -1,5 +1,7 @@
 # Turn Litex Kernel Execution Information into Lean Proofs
 
+
+> **Removed (2026-9-21):** dedicated `have tuple` / `have cart` / `have seq` / `have finite_seq` / `have matrix` statement Results and Lean compile paths are gone. Use `have fn` for indexed data.
 ## Start with one checked path
 
 The Litex example `2 * i + 1 = i * i + 2 + 2 * i` records `ComplexAlgebraicNormalization` evidence and compiles that exact route into Lean code.
@@ -1478,41 +1480,7 @@ re-render the proposition after the parameter/domain FactIds have disappeared.
 This is the compiler analogue of an `exec_*` or `verify_*` child returning its
 completed Result for the caller to wrap.
 
-Finite-sequence definitions show why this stack belongs to the compiler rather
-than in another proof IR. A `SuccessHaveFiniteSeqStmtResult` has two checked
-bound children at statement scope. Its verification child then owns one local
-parameter store, one local domain-premise store, and one recursive return check:
-
 ```text
-SuccessHaveFiniteSeqStmtResult
-  verification
-    bound_checks
-      bound in N+
-      bound = finite_sequence_length
-    well_definedness
-      surface_set
-      anonymous_function
-      function_set
-    assumption_infers
-      store index in N+       -> local FactId F_parameter
-      store index <= bound    -> local FactId F_domain
-    return_check
-      body in return_set
-  common.infers
-    store named value in finite_seq(...) -> persistent FactId F_surface
-    infer named value in fn(...)         -> persistent FactId F_function
-    store named value = anonymous fn     -> persistent FactId F_definition
-```
-
-`compile_have_finite_sequence_stmt_result_to_lean_source` first consumes the
-two outer checks, then pushes an inherited compiler environment. It binds the
-index name, maps `F_parameter` to the Lean membership argument, maps `F_domain`
-to the Lean domain argument, and recursively consumes `return_check`. It pops
-that environment before registering the three persistent FactIds. Thus the
-nesting is expressed once by Result fields and executed once by the compiler
-stack; neither `run_in_local_env` nor a separate scoped-fact IR needs to be
-reconstructed.
-
 The matrix path applies exactly the same rule with larger named collections:
 four `bound_checks` belong to statement verification; two parameter stores,
 two domain stores, and `return_check` belong to one child environment. The
@@ -1626,46 +1594,7 @@ proposition lookup or equality search is performed. This is a concrete reason
 that WD stores and proof transforms must travel upward inside Result rather
 than live only in a `Runtime` side table.
 
-An indexed tuple makes the same ownership rule visible for an object-WD child
-rather than a fact-proof child. `SuccessHaveTupleStmtResult.verification` is a
-`SuccessVerifyTupleOrCartDefinitionResult`: it owns the recursive
-`value_well_definedness` returned while the source index is locally bound, and
-a named `dimension` result owning the positive and at-least-two fact Results.
-The compiler validates both ambient dimension proofs, pushes an inherited
-environment for the source index, validates and renders the coordinate value
-from its recursive WD Result, then pops that environment. Only afterward does
-it publish the exact ordered `IsTuple`, dimension, and coordinate-forall
-FactIds. No mirrored tuple-statement compiler node is constructed on this path. The
-persistent pair is
-[`29_IndexedTupleCompilerEnvironment.lit`](../../lean/examples/29_IndexedTupleCompilerEnvironment.lit)
-and its generated Lean file.
-
-An indexed sequence extends the same rule from one local object check to a
-whole local function-verification layer. `SuccessHaveSeqStmtResult` owns a
-`SuccessVerifyIndexedFunctionDefinitionResult`. Its `well_definedness` field
-is a `SuccessVerifyIndexedFunctionDefinitionWellDefinedResult` with three
-named recursive children: `surface_set`, `anonymous_function`, and
-`function_set`. Its `assumption_infers` field retains the local
-`index $in N+` Store and exact `FactId`; `return_check` retains the proof that
-the source body belongs to the result set.
-
-`compile_have_sequence_stmt_result_to_lean_source` therefore performs this
-composition directly:
-
 ```text
-SuccessHaveSeqStmtResult
-  -> validate surface_set / anonymous_function / function_set WD Results
-  -> push inherited StmtResultToLeanCompilerEnvironment
-       install index SymbolId -> __arg
-       install local index-membership FactId -> __arg_in
-       consume recursive return_check
-       compile the real-valued function body
-     pop local environment
-  -> publish surface-membership FactId
-  -> publish inferred function-membership FactId
-  -> publish defining-equality FactId
-```
-
 The local index and its temporary FactIds cannot be observed after the pop.
 The callable contract deliberately keeps the surface membership FactId chosen
 by Runtime; the separate inferred function-membership FactId is also
@@ -1673,10 +1602,6 @@ published, but is not substituted for the verifier-selected identity. Lean's
 `sequenceSet values` is definitionally `fnSet NPos values`, so both facts
 refer to the same exact function carrier without a universal object box. The
 persistent pair is
-[`30_IndexedSequenceCompilerEnvironment.lit`](../../lean/examples/30_IndexedSequenceCompilerEnvironment.lit)
-and its generated Lean file. Its following function application checks that
-the parent compiler environment retained only the three intended outer facts.
-
 A Template definition is another nested statement composition, not a new IR.
 `SuccessDefTemplateStmtResult.template_parameter_groups` owns only the
 Template header binders, while `body_statement_result` owns the parameters of

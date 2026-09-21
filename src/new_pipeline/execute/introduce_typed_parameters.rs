@@ -6,11 +6,11 @@
 //! Pipeline (field order matches):
 //! 1. param-type WD
 //! 2. define identifiers + store type-membership facts
+//! 3. auto-open one struct layer for each `&Struct` binding (optional)
 //!
 //! Callers that insert extra stages between WD and define (e.g. `have`'s
-//! nonempty checks) should call the two stages separately:
-//! `verify_typed_parameters_well_definedness` then
-//! `define_typed_parameters_in_current_env`.
+//! nonempty checks) should call the stages separately, then
+//! `auto_open_struct_layers_for_typed_parameters`.
 
 use crate::new_pipeline::ast::fact::{
     AtomicFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
@@ -18,40 +18,88 @@ use crate::new_pipeline::ast::fact::{
 use crate::new_pipeline::ast::obj::{Obj, StructObj};
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::exec_env::exec_env::SpecialObjProperty;
-use crate::new_pipeline::exec_env::DefinedIdentifierInfo;
+use crate::new_pipeline::exec_env::{DefinedIdentifierInfo, StoredIdentifierDefinition};
 use crate::new_pipeline::execute::execute_fact_stmt::{
     fail_to_verify_obj_well_defined_others, ParamTypeWellDefinedProof, VerifyObjWellDefinedResult,
     VerifyState,
 };
 use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
+use crate::new_pipeline::execute::release_one_struct_layer::{
+    FailToReleaseOneStructLayer, ReleaseOneStructLayerProof,
+};
 use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeError, RuntimeResult};
+
+pub enum IntroduceTypedParametersFailed {
+    ParamType(VerifyObjWellDefinedResult),
+    AutoOpenStructLayer {
+        param_type_well_defined: Vec<ParamTypeWellDefinedProof>,
+        defined_params: StoreHaveObjAndInferResult,
+        opened_before_fail: Vec<ReleaseOneStructLayerProof>,
+        failed: FailToReleaseOneStructLayer,
+    },
+}
 
 // Stage-ordered evidence for introducing a TypedParameterList.
 pub struct IntroduceTypedParametersResult {
     pub param_type_well_defined: Vec<ParamTypeWellDefinedProof>,
     pub defined_params: StoreHaveObjAndInferResult,
+    /// `None` when no param had a `&Struct` carrier; otherwise one proof per such binding.
+    pub auto_opened_struct_layers: Option<Vec<ReleaseOneStructLayerProof>>,
 }
 
 impl Runtime {
-    // WD param types, then define params into the current top ExecEnv.
-    // Soft miss: Ok(Err(wd)); operational / internal bug: Err(...).
+    // Introduce groups in source order: WD each group's type, then define that
+    // group, then the next. Later groups may mention earlier params
+    // (`template<S set, z S>` / `forall S set, x S:`).
+    // After all groups: auto-open `&Struct` layers.
+    // Soft miss: Ok(Err(...)); operational / internal bug: Err(...).
     pub fn introduce_typed_parameters(
         &mut self,
         typed_parameters: &TypedParameterList,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Result<IntroduceTypedParametersResult, VerifyObjWellDefinedResult>> {
-        let param_type_well_defined = match self
-            .verify_typed_parameters_well_definedness_or_fail(typed_parameters, verify_state)?
-        {
-            Ok(proofs) => proofs,
-            Err(failed) => return Ok(Err(failed)),
-        };
+    ) -> RuntimeResult<Result<IntroduceTypedParametersResult, IntroduceTypedParametersFailed>> {
+        let mut param_type_well_defined = Vec::new();
+        let mut stored_fact_ids = Vec::new();
+        for group in &typed_parameters.groups {
+            let one = TypedParameterList {
+                groups: vec![group.clone()],
+            };
+            let proof = self
+                .verify_param_type_well_definedness(&group.param_type, verify_state.clone())?;
+            if proof.is_failed() {
+                let failed = match proof {
+                    ParamTypeWellDefinedProof::Obj(wd) => wd,
+                    _ => VerifyObjWellDefinedResult::Failed(
+                        fail_to_verify_obj_well_defined_others(
+                            "param type well-definedness failed".to_string(),
+                        ),
+                    ),
+                };
+                return Ok(Err(IntroduceTypedParametersFailed::ParamType(failed)));
+            }
+            param_type_well_defined.push(proof);
+            let defined = self.define_typed_parameters_in_current_env(&one, None)?;
+            stored_fact_ids.extend(defined.stored_fact_ids);
+        }
 
-        let defined_params = self.define_typed_parameters_in_current_env(typed_parameters)?;
+        let defined_params = StoreHaveObjAndInferResult { stored_fact_ids };
+        let auto_opened_struct_layers =
+            match self.auto_open_struct_layers_for_typed_parameters(typed_parameters)? {
+                Ok(layers) => layers,
+                Err((opened_before_fail, failed)) => {
+                    return Ok(Err(IntroduceTypedParametersFailed::AutoOpenStructLayer {
+                        param_type_well_defined,
+                        defined_params,
+                        opened_before_fail,
+                        failed,
+                    }));
+                }
+            };
 
         Ok(Ok(IntroduceTypedParametersResult {
             param_type_well_defined,
             defined_params,
+            auto_opened_struct_layers,
         }))
     }
 
@@ -83,9 +131,14 @@ impl Runtime {
 
     // Stage 2: bind each identifier and store its type fact into KnownFactMemory.
     // Example: `have x R` stores `x $in R`.
+    //
+    // `shared_definition`:
+    // - `None` → each name is a scoped `ParamType` binder
+    // - `Some(def)` → every name shares that user-level definition (`Rc` clone)
     pub fn define_typed_parameters_in_current_env(
         &mut self,
         typed_parameters: &TypedParameterList,
+        shared_definition: Option<StoredIdentifierDefinition>,
     ) -> RuntimeResult<StoreHaveObjAndInferResult> {
         let mut stored_fact_ids = Vec::new();
         for group in &typed_parameters.groups {
@@ -96,10 +149,18 @@ impl Runtime {
                         identifier.name
                     )));
                 }
+                let definition = match &shared_definition {
+                    Some(def) => def.clone(),
+                    None => StoredIdentifierDefinition::ParamType {
+                        binding: identifier.clone(),
+                        param_type: group.param_type.clone(),
+                    },
+                };
                 self.top_exec_env_mut().definitions.identifiers.insert(
                     identifier.name.clone(),
                     DefinedIdentifierInfo {
                         identifier: identifier.name.clone(),
+                        definition,
                     },
                 );
                 // Env key is plain; type-fact mention qualifies at file root.

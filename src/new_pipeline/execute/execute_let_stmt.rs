@@ -1,9 +1,10 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact};
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::stmt::LetObjStmt;
-use crate::new_pipeline::exec_env::DefinedIdentifierInfo;
+use crate::new_pipeline::exec_env::{DefinedIdentifierInfo, StoredIdentifierDefinition};
 use crate::new_pipeline::execute::execute_fact_stmt::{VerifyObjWellDefinedResult, VerifyState};
 use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeError, RuntimeResult};
+use std::rc::Rc;
 
 // Pipeline: WD the RHS value → affect global env. No local env.
 pub struct ExecLetObjStmtSuccessResult {
@@ -52,6 +53,7 @@ impl Runtime {
             let_stmt.name.name.clone(),
             DefinedIdentifierInfo {
                 identifier: let_stmt.name.name.clone(),
+                definition: StoredIdentifierDefinition::LetObj(Rc::new(let_stmt.clone())),
             },
         );
 

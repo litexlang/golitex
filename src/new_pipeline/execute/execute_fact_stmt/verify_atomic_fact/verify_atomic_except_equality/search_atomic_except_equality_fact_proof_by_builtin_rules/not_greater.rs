@@ -3,7 +3,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::rational_expression::{
     compare_closed_objs_by_normalized_decimal, NumberCompareResult,
 };
-use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
+use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeResult};
 
 // Builtin rules for `not a > b` (i.e. a <= b on numbers).
 pub enum NotGreaterFactSearchProofByBuiltinRule {
@@ -11,6 +11,10 @@ pub enum NotGreaterFactSearchProofByBuiltinRule {
     // Mathematical property: if L <= R as decimals, then `not (left > right)`.
     // Examples: `not 1 > 2`, `not 2 > 2`.
     ClosedNumericComparison(ClosedNumericComparisonBuiltinRuleProof),
+    // Strict less implies not-greater.
+    // Mathematical property: `a < b` ⇒ `not (a > b)`.
+    // Example: known `x < 0` proves `not x > 0`.
+    FromKnownLess(FromKnownLessBuiltinRuleProof),
 }
 
 pub struct ClosedNumericComparisonBuiltinRuleProof {
@@ -18,14 +22,24 @@ pub struct ClosedNumericComparisonBuiltinRuleProof {
     pub right_normal: String,
 }
 
+pub struct FromKnownLessBuiltinRuleProof {
+    pub cite_fact_id: FactId,
+}
+
 impl Runtime {
-    // Builtin: closed decimal proves `not a > b`.
-    // Example: prove `not 1 > 3`.
+    // Builtin: known `<`, then closed decimal.
     pub fn search_not_greater_fact_proof_by_builtin_rule(
         &mut self,
         fact: &NotGreaterFact,
         _verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotGreaterFactSearchProofByBuiltinRule>> {
+        if let Some(cite_fact_id) = self.known_less_fact_id(&fact.left, &fact.right) {
+            return Ok(Some(
+                NotGreaterFactSearchProofByBuiltinRule::FromKnownLess(
+                    FromKnownLessBuiltinRuleProof { cite_fact_id },
+                ),
+            ));
+        }
         let Some((cmp, left_normal, right_normal)) =
             compare_closed_objs_by_normalized_decimal(&fact.left, &fact.right)
         else {

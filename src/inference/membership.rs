@@ -396,7 +396,7 @@ impl Runtime {
     ) -> Result<SuccessInferResult, RuntimeError> {
         // Literal carts are handled by the dedicated `Obj::Cart` branch.  The
         // symbolic fallback requires either an exact stored `$is_cart(C)` fact
-        // (the representation used by `have cart C ...`) or concrete Cartesian
+        // (symbolic cart coordinate representation) or concrete Cartesian
         // metadata.  Restricting this lookup to known non-forall facts prevents
         // an unrelated dependent set parameter from being misclassified by a
         // theorem/forall search while preserving generic symbolic carts.
@@ -882,7 +882,7 @@ impl Runtime {
             // Struct membership is intentionally opaque. It proves only the
             // membership itself; tuple shape, named-field bridges, and struct
             // laws are released by a direct `x &Struct` binding or an explicit
-            // `by struct def x` statement.
+            // `release struct def x` statement.
             Obj::StructObj(_) => Ok(SuccessInferResult::new()),
             // Finite sequence space: desugar to `FnSet`, then same as function-space membership.
             Obj::FiniteSeqSet(fs) => {
@@ -1596,7 +1596,7 @@ impl Runtime {
 
     // Every Litex cartesian product has at least two coordinate factors.
     // Example: `$is_cart(C)` infers `cart_dim(C) >= 2`, which permits a
-    // symbolic `have tuple ... for i <= cart_dim(C)` construction.
+    // symbolic tuple coordinate construction via indexed functions / projections.
     pub(in crate::inference) fn infer_is_cart_dimension_lower_bound(
         &mut self,
         is_cart_fact: &IsCartFact,

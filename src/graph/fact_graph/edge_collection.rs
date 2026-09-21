@@ -45,10 +45,10 @@ impl FactGraphBuilder {
             }
             return;
         }
-        if let SuccessStmtResult::By(SuccessByStmtResult::ByStructDefStmt(result)) = success {
+        if let SuccessStmtResult::ReleaseStructDefStmt(result) = success {
             let common = success
                 .common()
-                .expect("by-struct-definition result carries common execution evidence");
+                .expect("release-struct-def result carries common execution evidence");
             self.add_infer_edges(&common.infers);
             let membership: Fact = self
                 .runtime

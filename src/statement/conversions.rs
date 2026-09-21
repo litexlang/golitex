@@ -98,35 +98,10 @@ impl From<HaveFnByForallExistUniqueStmt> for Stmt {
     }
 }
 
-impl From<HaveTupleStmt> for Stmt {
-    fn from(v: HaveTupleStmt) -> Self {
-        DefinitionStmt::HaveTupleStmt(v).into()
-    }
-}
 
-impl From<HaveCartStmt> for Stmt {
-    fn from(v: HaveCartStmt) -> Self {
-        DefinitionStmt::HaveCartStmt(v).into()
-    }
-}
 
-impl From<HaveSeqStmt> for Stmt {
-    fn from(v: HaveSeqStmt) -> Self {
-        DefinitionStmt::HaveSeqStmt(v).into()
-    }
-}
 
-impl From<HaveFiniteSeqStmt> for Stmt {
-    fn from(v: HaveFiniteSeqStmt) -> Self {
-        DefinitionStmt::HaveFiniteSeqStmt(v).into()
-    }
-}
 
-impl From<HaveMatrixStmt> for Stmt {
-    fn from(v: HaveMatrixStmt) -> Self {
-        DefinitionStmt::HaveMatrixStmt(v).into()
-    }
-}
 
 impl From<DefTemplateStmt> for Stmt {
     fn from(v: DefTemplateStmt) -> Self {
@@ -303,15 +278,15 @@ impl From<ReleaseThmStmt> for Stmt {
     }
 }
 
-impl From<ByDefStmt> for Stmt {
-    fn from(v: ByDefStmt) -> Self {
-        ByStmt::ByDefStmt(v).into()
+impl From<ReleaseStructDefStmt> for Stmt {
+    fn from(v: ReleaseStructDefStmt) -> Self {
+        Stmt::ReleaseStructDefStmt(v)
     }
 }
 
-impl From<ByStructDefStmt> for Stmt {
-    fn from(v: ByStructDefStmt) -> Self {
-        ByStmt::ByStructDefStmt(v).into()
+impl From<ByDefStmt> for Stmt {
+    fn from(v: ByDefStmt) -> Self {
+        ByStmt::ByDefStmt(v).into()
     }
 }
 

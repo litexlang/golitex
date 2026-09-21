@@ -1,6 +1,6 @@
 use super::keywords::{
     ABSTRACT_PROP, ALGO, AXIOM, BY, CART, CLAIM, EVAL, EXAMPLE, FINITE_SEQ, FN, FOR, HAVE, IMPORT,
-    LET, OBTAIN, PREIMAGE, PROP, QUESTION_GOAL, RELEASE, SEQ, SETTING, SKETCH, STRATEGY,
+    LET, MATRIX, OBTAIN, PREIMAGE, PROP, QUESTION_GOAL, RELEASE, SEQ, SETTING, SKETCH, STRATEGY,
     STRONG_INDUC, STRUCT, TEMPLATE, THM, TRUST, TRY, TUPLE, WITNESS,
 };
 use crate::new_pipeline::ast::stmt::Stmt;
@@ -63,8 +63,9 @@ impl Runtime {
             .into()),
             RELEASE => match block.header.get(1).map(String::as_str) {
                 Some(THM) => self.parse_release_thm_stmt(block),
+                Some(STRUCT) => self.parse_release_struct_def_stmt(block),
                 _ => Err(RuntimeParseError::new(
-                    "release: expected `thm …`",
+                    "release: expected `thm …` or `struct def …`",
                     block.line,
                     block.source_path.clone(),
                 )
@@ -91,30 +92,14 @@ impl Runtime {
                 )
                 .into()),
             },
-            Some(TUPLE) => Err(RuntimeParseError::new(
-                "have tuple: not wired yet in new_pipeline",
-                block.line,
-                block.source_path.clone(),
-            )
-            .into()),
-            Some(CART) => Err(RuntimeParseError::new(
-                "have cart: not wired yet in new_pipeline",
-                block.line,
-                block.source_path.clone(),
-            )
-            .into()),
-            Some(SEQ) => Err(RuntimeParseError::new(
-                "have seq: not wired yet in new_pipeline",
-                block.line,
-                block.source_path.clone(),
-            )
-            .into()),
-            Some(FINITE_SEQ) => Err(RuntimeParseError::new(
-                "have finite_seq: not wired yet in new_pipeline",
-                block.line,
-                block.source_path.clone(),
-            )
-            .into()),
+            Some(TUPLE) | Some(CART) | Some(SEQ) | Some(FINITE_SEQ) | Some(MATRIX) => {
+                Err(RuntimeParseError::new(
+                    "removed; use have fn for indexed data",
+                    block.line,
+                    block.source_path.clone(),
+                )
+                .into())
+            }
             Some(FN) => self.parse_have_fn_stmt(block),
             Some(BY) => match block.header.get(2).map(String::as_str) {
                 Some(PREIMAGE) => Err(RuntimeParseError::new(

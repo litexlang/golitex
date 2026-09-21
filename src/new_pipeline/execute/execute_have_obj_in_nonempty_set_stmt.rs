@@ -2,6 +2,7 @@ use crate::new_pipeline::ast::fact::{AtomicFact, Fact, IsNonemptySetFact};
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::ast::stmt::HaveObjInNonemptySetOrParamTypeStmt;
+use crate::new_pipeline::exec_env::StoredIdentifierDefinition;
 use crate::new_pipeline::execute::exec_stmt_result::{
     ParamTypeFactCheckResult, ParamTypeWellDefinedProof,
 };
@@ -9,6 +10,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::{
     VerifyFactResult, VerifyObjWellDefinedResult, VerifyState,
 };
 use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeResult};
+use std::rc::Rc;
 
 pub struct StoreHaveObjAndInferResult {
     pub stored_fact_ids: Vec<FactId>,
@@ -17,6 +19,7 @@ pub struct StoreHaveObjAndInferResult {
 pub enum ExecHaveObjInNonemptySetStmtFailed {
     ParamType(VerifyObjWellDefinedResult),
     NonemptyCheck(VerifyFactResult),
+    AutoOpenStructLayer(crate::new_pipeline::execute::FailToReleaseOneStructLayer),
 }
 
 // Pipeline: WD param types → nonempty obligations → define symbols.
@@ -25,6 +28,8 @@ pub struct ExecHaveObjInNonemptySetStmtSuccessResult {
     pub param_type_well_defined: Vec<ParamTypeWellDefinedProof>,
     pub nonempty_checks: Vec<ParamTypeFactCheckResult>,
     pub store_and_infer_result: StoreHaveObjAndInferResult,
+    pub auto_opened_struct_layers:
+        Option<Vec<crate::new_pipeline::execute::ReleaseOneStructLayerProof>>,
 }
 
 pub enum ExecHaveObjInNonemptySetStmtResult {
@@ -71,8 +76,22 @@ impl Runtime {
                 }
             };
 
-        let store_and_infer_result =
-            self.define_typed_parameters_in_current_env(&stmt.param_def)?;
+        let store_and_infer_result = self.define_typed_parameters_in_current_env(
+            &stmt.param_def,
+            Some(StoredIdentifierDefinition::HaveObjInNonemptySetOrParamType(
+                Rc::new(stmt.clone()),
+            )),
+        )?;
+
+        let auto_opened_struct_layers =
+            match self.auto_open_struct_layers_for_typed_parameters(&stmt.param_def)? {
+                Ok(layers) => layers,
+                Err((_, failed)) => {
+                    return Ok(ExecHaveObjInNonemptySetStmtResult::Failed(
+                        ExecHaveObjInNonemptySetStmtFailed::AutoOpenStructLayer(failed),
+                    ));
+                }
+            };
 
         Ok(ExecHaveObjInNonemptySetStmtResult::Success(
             ExecHaveObjInNonemptySetStmtSuccessResult {
@@ -80,6 +99,7 @@ impl Runtime {
                 param_type_well_defined,
                 nonempty_checks,
                 store_and_infer_result,
+                auto_opened_struct_layers,
             },
         ))
     }

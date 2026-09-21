@@ -9,10 +9,11 @@ use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::wrap_obj_well_defined_by_def::finish_by_def;
 use super::entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
 use crate::new_pipeline::ast::fact::{
-    AtomicFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
+    AtomicFact, EqualFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
 };
 use crate::new_pipeline::ast::obj::{FieldAccess, InstantiatedTemplateObj, Obj, StructObj};
 use crate::new_pipeline::ast::param::ParamType;
+use crate::new_pipeline::ast::stmt::TemplateDefEnum;
 use crate::new_pipeline::exec_env::exec_env::SpecialObjProperty;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
@@ -120,7 +121,7 @@ impl Runtime {
                     "struct `{plain}` is not defined"
                 )));
             };
-            let Some(field_def) = def.fields.iter().find(|f| f.binding == *field_name) else {
+            let Some(field_def) = def.fields.iter().find(|f| f.binding.name == *field_name) else {
                 return Ok(field_access_fail(format!(
                     "struct `{plain}` has no field `{field_name}`"
                 )));
@@ -176,7 +177,7 @@ impl Runtime {
         let mut carrier = self.resolve_definition_struct_carrier(access.obj.as_ref())?;
         for (index, field_name) in access.fields.iter().enumerate() {
             let def = self.def_struct_visible_in_stack(carrier.name.local_name())?;
-            let field = def.fields.iter().find(|f| f.binding == *field_name)?;
+            let field = def.fields.iter().find(|f| f.binding.name == *field_name)?;
             let is_last = index + 1 == access.fields.len();
             match &field.field_type {
                 Obj::StructObj(next) => {
@@ -329,7 +330,11 @@ impl Runtime {
                     let wd_id = self.ids.allocate_well_definedness_id();
                     self.top_exec_env_mut()
                         .well_defined_objects
-                        .record(root, wd_id);
+                        .record(root.clone(), wd_id);
+                    // Have-fn template bodies: register the surface as callable so
+                    // `\T<a>(x)` reuses ordinary InFunctionSet application WD.
+                    // Have-obj bodies: store `\T<a> = subst(rhs)` for definitional use.
+                    self.maybe_register_instantiated_template_definitional_facts(value)?;
                 }
                 Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef(
                     by_def,
@@ -337,6 +342,73 @@ impl Runtime {
             }
             Err(fail) => Ok(VerifyObjWellDefinedResult::Failed(fail)),
         }
+    }
+
+    // After WD of `\Name<args>`, store definitional facts for supported bodies:
+    // - have fn: `\Name<args> $in inst(FnSet)` and `\Name<args> = inst(anon)`
+    // - have =: `\Name<args> = subst(rhs)`
+    fn maybe_register_instantiated_template_definitional_facts(
+        &mut self,
+        value: &InstantiatedTemplateObj,
+    ) -> RuntimeResult<()> {
+        let plain = value.template_name.local_name();
+        let Some(def) = self.def_template_visible_in_stack(plain).cloned() else {
+            return Ok(());
+        };
+        match &def.template_def_stmt {
+            TemplateDefEnum::HaveFnEqualStmt(have_fn) => {
+                let mut subst: HashMap<IdentifierId, Obj> = HashMap::new();
+                for (id, arg) in def
+                    .template_arg_def
+                    .ordered_param_ids()
+                    .into_iter()
+                    .zip(value.args.iter())
+                {
+                    subst.insert(id, arg.clone());
+                }
+                let Ok(anon) = self.inst_obj(
+                    &Obj::AnonymousFn(have_fn.equal_to_anonymous_fn.clone()),
+                    &subst,
+                ) else {
+                    return Ok(());
+                };
+                let Obj::AnonymousFn(anon) = anon else {
+                    return Ok(());
+                };
+                let surface = Obj::InstantiatedTemplateObj(value.clone());
+                let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
+                    fact_id: self.ids.allocate_fact_id(),
+                    element: surface.clone(),
+                    set: Obj::FnSet(anon.body.clone()),
+                    line_file: None,
+                }));
+                self.store_fact_and_infer(&membership)?;
+                let defining_equal = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
+                    fact_id: self.ids.allocate_fact_id(),
+                    left: surface,
+                    right: Obj::AnonymousFn(anon),
+                    line_file: None,
+                }));
+                self.store_fact_and_infer(&defining_equal)?;
+            }
+            TemplateDefEnum::HaveObjEqualStmt(_) => {
+                let Some(expanded_rhs) =
+                    self.expanded_have_obj_equal_rhs_of_instantiated_template(value)?
+                else {
+                    return Ok(());
+                };
+                let surface = Obj::InstantiatedTemplateObj(value.clone());
+                let defining_equal = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
+                    fact_id: self.ids.allocate_fact_id(),
+                    left: surface,
+                    right: expanded_rhs,
+                    line_file: None,
+                }));
+                self.store_fact_and_infer(&defining_equal)?;
+            }
+            _ => {}
+        }
+        Ok(())
     }
 }
 

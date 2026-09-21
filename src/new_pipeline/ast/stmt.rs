@@ -9,7 +9,7 @@ use super::fact::{
 };
 use super::line_file::LineFile;
 use super::names::AtomicName;
-use super::obj::{AnonymousFn, ClosedRange, FiniteSeqSet, ListSet, Obj, Range, SeqSet};
+use super::obj::{AnonymousFn, ClosedRange, ListSet, Obj, Range};
 use super::param::{SetBoundParameterList, TypedParameterList};
 
 // -----------------------------------------------------------------------------
@@ -22,6 +22,7 @@ pub enum Stmt {
     UnsafeStmt(UnsafeStmt),
     Definition(DefinitionStmt),
     ReleaseThmStmt(ReleaseThmStmt),
+    ReleaseStructDefStmt(ReleaseStructDefStmt),
     By(ByStmt),
     Witness(WitnessStmt),
     ProofBlock(ProofBlockStmt),
@@ -73,10 +74,6 @@ pub enum DefinitionStmt {
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
     HaveFnByInducStmt(HaveFnByInducStmt),
     HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt),
-    HaveTupleStmt(HaveTupleStmt),
-    HaveCartStmt(HaveCartStmt),
-    HaveSeqStmt(HaveSeqStmt),
-    HaveFiniteSeqStmt(HaveFiniteSeqStmt),
     DefPropStmt(DefPropStmt),
     DefAbstractPropStmt(DefAbstractPropStmt),
     DefSettingStmt(DefSettingStmt),
@@ -209,43 +206,6 @@ pub struct HaveFnByForallExistUniqueStmt {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct HaveTupleStmt {
-    pub name: String,
-    pub index_name: String,
-    pub dimension: Obj,
-    pub value: Obj,
-    pub line_file: LineFile,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct HaveCartStmt {
-    pub name: String,
-    pub index_name: String,
-    pub dimension: Obj,
-    pub value: Obj,
-    pub line_file: LineFile,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct HaveSeqStmt {
-    pub name: String,
-    pub seq_set: SeqSet,
-    pub index_name: String,
-    pub value: Obj,
-    pub line_file: LineFile,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct HaveFiniteSeqStmt {
-    pub name: String,
-    pub finite_seq_set: FiniteSeqSet,
-    pub index_name: String,
-    pub bound: Obj,
-    pub value: Obj,
-    pub line_file: LineFile,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DefPropStmt {
     pub name: String,
     pub typed_parameters: TypedParameterList,
@@ -281,10 +241,6 @@ pub enum TemplateDefEnum {
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
     HaveFnByInducStmt(HaveFnByInducStmt),
     HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt),
-    HaveTupleStmt(HaveTupleStmt),
-    HaveCartStmt(HaveCartStmt),
-    HaveSeqStmt(HaveSeqStmt),
-    HaveFiniteSeqStmt(HaveFiniteSeqStmt),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -298,7 +254,8 @@ pub struct DefTemplateStmt {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct StructFieldDef {
-    pub binding: String,
+    /// Parse-allocated binder id; must match free refs in `<=>:` facts.
+    pub binding: crate::new_pipeline::ast::names::BoundName,
     pub field_type: Obj,
 }
 
@@ -394,7 +351,6 @@ pub enum ByStmt {
     ByAxiomOfChoiceStmt(ByAxiomOfChoiceStmt),
     ByRegularityAxiomStmt(ByRegularityAxiomStmt),
     ByDefStmt(ByDefStmt),
-    ByStructDefStmt(ByStructDefStmt),
     ByThmStmt(ByThmStmt),
 }
 
@@ -544,7 +500,7 @@ pub struct ByDefStmt {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ByStructDefStmt {
+pub struct ReleaseStructDefStmt {
     pub obj: Obj,
     pub line_file: LineFile,
 }

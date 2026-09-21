@@ -324,8 +324,6 @@ pub use crate::result::SuccessVerifyExistentialEliminationResult;
 pub use crate::result::SuccessVerifyFunctionDefinitionResult;
 pub use crate::result::SuccessVerifyFunctionFromUniqueExistenceResult;
 pub use crate::result::SuccessVerifyHaveObjEqualResult;
-pub use crate::result::SuccessVerifyIndexedFunctionDefinitionResult;
-pub use crate::result::SuccessVerifyIndexedFunctionDefinitionWellDefinedResult;
 pub use crate::result::SuccessVerifyKnownForallRequirementResult;
 pub use crate::result::SuccessVerifyLitexTheoremApplicationMode;
 pub use crate::result::SuccessVerifyLitexTheoremApplicationResult;
@@ -337,8 +335,6 @@ pub use crate::result::SuccessVerifyStrategyDefinitionResult;
 pub use crate::result::SuccessVerifyTheoremApplicationResult;
 pub use crate::result::SuccessVerifyTheoremApplicationSourceResult;
 pub use crate::result::SuccessVerifyTheoremResult;
-pub use crate::result::SuccessVerifyTupleOrCartDefinitionResult;
-pub use crate::result::SuccessVerifyTupleOrCartDimensionResult;
 pub use crate::result::SuccessVerifyWitnessAtomicFactResult;
 pub use crate::result::SuccessVerifyWitnessExistResult;
 pub use crate::result::TransparentDefinitionReductionEvidence;
@@ -394,7 +390,7 @@ pub use crate::result::{
     SuccessByEnumerateRangeStmtResult, SuccessByExtensionStmtResult,
     SuccessByFiniteSetInducStmtResult, SuccessByForStmtResult, SuccessByInducStmtResult,
     SuccessByReflexivePropStmtResult, SuccessByRegularityAxiomStmtResult, SuccessByStmtResult,
-    SuccessByStructDefStmtResult, SuccessBySymmetricPropStmtResult, SuccessByThmStmtResult,
+    SuccessReleaseStructDefStmtResult, SuccessBySymmetricPropStmtResult, SuccessByThmStmtResult,
     SuccessByTransitivePropStmtResult, SuccessByZornLemmaStmtResult, SuccessClaimStmtResult,
     SuccessCommandStmtResult, SuccessCreatedTemplateInstanceResult,
     SuccessDefAbstractPropStmtResult, SuccessDefAlgoStmtResult, SuccessDefPropStmtResult,
@@ -402,12 +398,11 @@ pub use crate::result::{
     SuccessDefTemplateStmtResult, SuccessDefThmStmtResult, SuccessDefinitionStmtResult,
     SuccessEvalStmtExecutionResult, SuccessEvalStmtResult, SuccessEvaluatedEvalStmtResult,
     SuccessExampleStmtResult, SuccessFactProofNode, SuccessHaveByPreimageStmtResult,
-    SuccessHaveCartStmtResult, SuccessHaveFiniteSeqStmtResult,
     SuccessHaveFnByForallExistUniqueStmtResult, SuccessHaveFnByInducStmtResult,
     SuccessHaveFnEqualCaseByCaseStmtResult, SuccessHaveFnEqualStmtResult,
-    SuccessHaveMatrixStmtResult, SuccessHaveObjByExistFactsStmtResult,
-    SuccessHaveObjEqualStmtResult, SuccessHaveObjInNonemptySetStmtResult, SuccessHaveSeqStmtResult,
-    SuccessHaveTupleStmtResult, SuccessLetObjStmtResult, SuccessObtainObjFromAtomicFactResult,
+    SuccessHaveObjByExistFactsStmtResult,
+    SuccessHaveObjEqualStmtResult, SuccessHaveObjInNonemptySetStmtResult,
+    SuccessLetObjStmtResult, SuccessObtainObjFromAtomicFactResult,
     SuccessObtainObjFromExistFactResult, SuccessObtainObjFromThmResult,
     SuccessProofBlockStmtResult, SuccessProveFactResult, SuccessReleaseThmStmtResult,
     SuccessReuseObjWellDefinedResult, SuccessReusedTemplateInstanceResult,
@@ -497,20 +492,15 @@ pub use crate::statement::definition_stmt::DefSettingStmt;
 pub use crate::statement::definition_stmt::DefTemplateStmt;
 pub use crate::statement::definition_stmt::FnSetClause;
 pub use crate::statement::definition_stmt::HaveByPreimageStmt;
-pub use crate::statement::definition_stmt::HaveCartStmt;
-pub use crate::statement::definition_stmt::HaveFiniteSeqStmt;
 pub use crate::statement::definition_stmt::HaveFnByForallExistUniqueStmt;
 pub use crate::statement::definition_stmt::HaveFnByInducCase;
 pub use crate::statement::definition_stmt::HaveFnByInducCaseBody;
 pub use crate::statement::definition_stmt::HaveFnByInducStmt;
 pub use crate::statement::definition_stmt::HaveFnEqualCaseByCaseStmt;
 pub use crate::statement::definition_stmt::HaveFnEqualStmt;
-pub use crate::statement::definition_stmt::HaveMatrixStmt;
 pub use crate::statement::definition_stmt::HaveObjByExistFactsStmt;
 pub use crate::statement::definition_stmt::HaveObjEqualStmt;
 pub use crate::statement::definition_stmt::HaveObjInNonemptySetOrParamTypeStmt;
-pub use crate::statement::definition_stmt::HaveSeqStmt;
-pub use crate::statement::definition_stmt::HaveTupleStmt;
 pub use crate::statement::definition_stmt::LetObjStmt;
 pub use crate::statement::definition_stmt::ObtainObjFromAtomicFact;
 pub use crate::statement::definition_stmt::ObtainObjFromExistFact;
@@ -553,7 +543,7 @@ pub use crate::statement::ByClosedRangeAsCasesStmt;
 pub use crate::statement::ByDefStmt;
 pub use crate::statement::ByEnumerateRangeStmt;
 pub use crate::statement::ByStmt;
-pub use crate::statement::ByStructDefStmt;
+pub use crate::statement::ReleaseStructDefStmt;
 pub use crate::statement::CommandStmt;
 pub use crate::statement::DefStrategyStmt;
 pub use crate::statement::DefStructStmt;

@@ -46,6 +46,6 @@ value as the power base. Public authoring still uses the explicit forms.
 | [`object/collections.rs`](object/collections.rs) | Parses argument groups, intervals, replacements, set builders, and set literals such as `{1, 2}`. |
 | [`object/reference.rs`](object/reference.rs) | Parses bare and module-qualified names plus struct-carrier syntax. Field postfixes retain only their receiver and field name; runtime definition state resolves the carrier later. |
 | [`statements/definition.rs`](statements/definition.rs) | Parses definition settings, templates, structs, propositions, trust definitions, and shared definition-header rules. |
-| [`statements/have_object.rs`](statements/have_object.rs) | Parses object, tuple, Cartesian, sequence, finite-sequence, and matrix `have` definitions. |
+| [`statements/have_object.rs`](statements/have_object.rs) | Parses ordinary object `have` definitions (`have x S`, equality, fact body). |
 | [`statements/have_function.rs`](statements/have_function.rs) | Parses equality, case-based, induction, and unique-existence function definitions. |
 | [`statements/obtain_and_algorithm.rs`](statements/obtain_and_algorithm.rs) | Parses `obtain`, preimage definitions, and algorithm branches. |

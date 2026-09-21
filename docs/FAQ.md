@@ -842,11 +842,11 @@ the only automatic property-release case: it opens one struct layer and stores
 the tuple shape, dimension, field/index bridges, field carriers, and laws.
 
 For any other definition-owned struct expression, write
-`by struct def expression`. The statement first verifies that exact expression
+`release struct def expression`. The statement first verifies that exact expression
 belongs to its already-defined struct carrier, then releases exactly one
 layer. There is no `as &Struct` syntax and no recursive opening. For example,
 if `make_outer(t)` returns `&Outer` and `Outer.inner` is defined as `&Inner`,
-then `by struct def make_outer(t).inner` opens `Inner`, not `Outer` and not any
+then `release struct def make_outer(t).inner` opens `Inner`, not `Outer` and not any
 struct below `Inner`.
 
 For a multi-field value `e`, opening stores `$is_tuple(e)`, its `tuple_dim`,
@@ -872,7 +872,7 @@ fact saying that `outer.inner` belongs to `&Inner` does not add fields.
 
 This validity is only well-definedness. Looking up `outer.inner.value` checks
 that the defined field path exists; it does not store field membership,
-field/index equalities, or struct laws. Use `by struct def outer.inner` before
+field/index equalities, or struct laws. Use `release struct def outer.inner` before
 a proof that needs `Inner`'s properties. A function's explicit struct return
 carrier behaves the same way: it makes `f(t).field` a legal path but does not
 open the result's properties.
@@ -885,7 +885,7 @@ struct-valued field and `mul` is callable. Likewise, after
 This is not a unique nominal type, and Litex does not infer fields from all
 known memberships. A later fact `p $in &FirstQuadrant` supplies only that
 membership proposition; it does not eagerly store positional consequences,
-laws, or `p.x`. Nor can it be opened with `by struct def p`, because `p` has no
+laws, or `p.x`. Nor can it be opened with `release struct def p`, because `p` has no
 definition-owned `FirstQuadrant` view. If a `p &Point` also belongs to
 `&ComplexPair`, `p.x` remains the `Point` field fixed by its definition. To use
 the other names, introduce a new object explicitly, for example
@@ -1351,7 +1351,7 @@ or Cartesian-product facts, it can infer basic membership and projection
 facts. Struct membership is intentionally different: a generic
 `e $in &Struct` stores no tuple, field, or law consequences. Those facts are
 released only by a direct `e &Struct` symbol binding or by an explicit,
-membership-checked `by struct def e`.
+membership-checked `release struct def e`.
 
 This is one reason Litex proofs can stay close to ordinary mathematical prose.
 The user states the meaningful structural fact once, and the checker records

@@ -63,10 +63,16 @@ impl Runtime {
             return self.verify_field_access_obj_well_definedness(value, verify_state);
         }
 
-        // Identifier-headed FnObj application: InFunctionSet + domain (not children-only).
+        // Identifier / template-instance headed FnObj: InFunctionSet + domain.
         if let Obj::FnObj(value) = obj {
-            if matches!(value.head.as_ref(), FnObjHead::Identifier(_)) {
-                return self.verify_identifier_headed_fn_obj_well_definedness(value, verify_state);
+            if matches!(
+                value.head.as_ref(),
+                FnObjHead::Identifier(_) | FnObjHead::InstantiatedTemplateObj(_)
+            ) {
+                return self.verify_in_function_set_headed_fn_obj_well_definedness(
+                    value,
+                    verify_state,
+                );
             }
         }
 

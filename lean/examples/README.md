@@ -241,26 +241,9 @@ An untrusted application of an abstract predicate remains unprovable. Litex
 `-strict` deliberately rejects this unsafe source tracer; its release gate is
 the ordinary runner plus the compiler's exact axiom-count audit and real Lean.
 
-`29_IndexedTupleCompilerEnvironment.lit` traces a statement whose verifier
-owns a genuinely local object check. The returned tuple Result contains the
-coordinate value's recursive WD Result plus two dimension-check statement
-Results. `StmtResultToLeanCompiler` binds the index in a child compiler
-environment, renders the coordinate body there, pops that environment, and
-only then publishes the tuple-shape, dimension, and coordinate FactIds.
 
-`30_IndexedSequenceCompilerEnvironment.lit` traces the corresponding local
-function-verification layer. The sequence Result retains three named WD
-children, the local positive-natural index Store/FactId, and the recursive
-return check. `StmtResultToLeanCompiler` consumes them inside one inherited
-compiler environment, pops it, and publishes only the sequence membership,
-its exact `N+ -> R` function membership, and its defining equality. The next
-application proves that Runtime's selected surface-membership FactId remains
-the callable contract after that local scope is gone.
 
-`31_FiniteSequenceCompilerEnvironment.lit` adds a domain-premise layer to that
-same recursive flow. Two bound-check Results remain outside the function
-binder; the parameter membership, `index <= 3` premise, and return check live
-inside one inherited compiler environment. The emitted Lean value is the exact
+
 `FnTelescope` described by `finiteSequenceSet`, and the following application
 must supply the verifier-owned membership and domain proofs before `.down`
 exposes its real result.

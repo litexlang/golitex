@@ -2,9 +2,9 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 impl Runtime {
-    pub fn exec_by_struct_def_stmt(
+    pub fn exec_release_struct_def_stmt(
         &mut self,
-        stmt: &ByStructDefStmt,
+        stmt: &ReleaseStructDefStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let struct_obj = self.direct_struct_carrier_for_obj(&stmt.obj, stmt.line_file.clone())?;
         let membership: AtomicFact = self
@@ -20,7 +20,7 @@ impl Runtime {
             return Err(short_exec_error(
                 stmt.clone().into(),
                 format!(
-                    "by struct def `{}`: cannot verify definition-owned membership `{}`",
+                    "release struct def `{}`: cannot verify definition-owned membership `{}`",
                     stmt.obj, membership
                 ),
                 None,
@@ -33,11 +33,11 @@ impl Runtime {
                 &stmt.obj,
                 &struct_obj,
                 stmt.line_file.clone(),
-                ByStructDefStmt::store_reason(),
+                ReleaseStructDefStmt::store_reason(),
             )
         })?;
         Ok(
-            SuccessByStmtResult::ByStructDefStmt(Box::new(SuccessByStructDefStmtResult {
+            SuccessStmtResult::ReleaseStructDefStmt(Box::new(SuccessReleaseStructDefStmtResult {
                 statement: stmt.clone(),
                 struct_obj,
                 common: SuccessStmtCommonResult::new(infer_result),
@@ -47,19 +47,19 @@ impl Runtime {
         )
     }
 
-    pub fn exec_by_struct_def_stmt_affect_environment_only(
+    pub fn exec_release_struct_def_stmt_affect_environment_only(
         &mut self,
-        stmt: &ByStructDefStmt,
+        stmt: &ReleaseStructDefStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let struct_obj = self.direct_struct_carrier_for_obj(&stmt.obj, stmt.line_file.clone())?;
         let infer_result = self.release_one_struct_definition_layer(
             &stmt.obj,
             &struct_obj,
             stmt.line_file.clone(),
-            ByStructDefStmt::store_reason(),
+            ReleaseStructDefStmt::store_reason(),
         )?;
         Ok(
-            SuccessByStmtResult::ByStructDefStmt(Box::new(SuccessByStructDefStmtResult {
+            SuccessStmtResult::ReleaseStructDefStmt(Box::new(SuccessReleaseStructDefStmtResult {
                 statement: stmt.clone(),
                 struct_obj,
                 common: SuccessStmtCommonResult::new(infer_result),

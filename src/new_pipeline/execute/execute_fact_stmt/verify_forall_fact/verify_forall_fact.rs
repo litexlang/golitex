@@ -12,7 +12,9 @@ use crate::new_pipeline::execute::execute_fact_stmt::well_defined_results::fail_
 use crate::new_pipeline::execute::execute_fact_stmt::{
     VerifyFactWellDefinedResult, VerifyObjWellDefinedResult, VerifyState,
 };
-use crate::new_pipeline::execute::introduce_typed_parameters::IntroduceTypedParametersResult;
+use crate::new_pipeline::execute::introduce_typed_parameters::{
+    IntroduceTypedParametersFailed, IntroduceTypedParametersResult,
+};
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::store_fact_and_infer::StoreFactAndInferResult;
 
@@ -87,7 +89,7 @@ impl Runtime {
         let introduced_params =
             match self.introduce_typed_parameters(&fact.typed_parameters, verify_state.clone())? {
                 Ok(result) => result,
-                Err(failed) => {
+                Err(IntroduceTypedParametersFailed::ParamType(failed)) => {
                     let reason = match failed {
                         VerifyObjWellDefinedResult::Failed(reason) => reason,
                         _ => fail_to_verify_obj_well_defined_others(
@@ -96,6 +98,11 @@ impl Runtime {
                     };
                     return Ok(ForallLocalOutcome::FailWd(
                         FailToVerifyForallFactWellDefinedResult::ParamType(reason),
+                    ));
+                }
+                Err(IntroduceTypedParametersFailed::AutoOpenStructLayer { failed, .. }) => {
+                    return Ok(ForallLocalOutcome::FailWd(
+                        FailToVerifyForallFactWellDefinedResult::AutoOpenStructLayer(failed),
                     ));
                 }
             };

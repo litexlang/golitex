@@ -33,6 +33,7 @@ impl Stmt {
             Stmt::UnsafeStmt(x) => x.ir(),
             Stmt::Definition(x) => x.ir(),
             Stmt::ReleaseThmStmt(x) => x.ir(),
+            Stmt::ReleaseStructDefStmt(x) => x.ir(),
             Stmt::By(x) => x.ir(),
             Stmt::Witness(x) => x.ir(),
             Stmt::ProofBlock(x) => x.ir(),
@@ -67,10 +68,6 @@ impl DefinitionStmt {
             DefinitionStmt::HaveFnEqualCaseByCaseStmt(x) => x.ir(),
             DefinitionStmt::HaveFnByInducStmt(x) => x.ir(),
             DefinitionStmt::HaveFnByForallExistUniqueStmt(x) => x.ir(),
-            DefinitionStmt::HaveTupleStmt(x) => x.ir(),
-            DefinitionStmt::HaveCartStmt(x) => x.ir(),
-            DefinitionStmt::HaveSeqStmt(x) => x.ir(),
-            DefinitionStmt::HaveFiniteSeqStmt(x) => x.ir(),
             DefinitionStmt::DefPropStmt(x) => x.ir(),
             DefinitionStmt::DefAbstractPropStmt(x) => x.ir(),
             DefinitionStmt::DefSettingStmt(x) => x.ir(),
@@ -104,7 +101,6 @@ impl ByStmt {
             ByStmt::ByAxiomOfChoiceStmt(x) => x.ir(),
             ByStmt::ByRegularityAxiomStmt(x) => x.ir(),
             ByStmt::ByDefStmt(x) => x.ir(),
-            ByStmt::ByStructDefStmt(x) => x.ir(),
             ByStmt::ByThmStmt(x) => x.ir(),
         }
     }
@@ -631,86 +627,6 @@ impl HaveFnByForallExistUniqueStmt {
     impl_display_pair!();
 }
 
-impl HaveTupleStmt {
-    pub fn ir(&self) -> StmtIR {
-        StmtIR(format!(
-            "{} {} {} {} {} {} {}, {}[{}] {} {}",
-            HAVE,
-            TUPLE,
-            self.name,
-            FOR,
-            self.index_name,
-            LESS_EQUAL,
-            &self.dimension.ir(),
-            self.name,
-            self.index_name,
-            EQUAL,
-            &self.value.ir()
-        ))
-    }
-    impl_display_pair!();
-}
-
-impl HaveCartStmt {
-    pub fn ir(&self) -> StmtIR {
-        StmtIR(format!(
-            "{} {} {} {} {} {} {}, {}[{}] {} {}",
-            HAVE,
-            CART,
-            self.name,
-            FOR,
-            self.index_name,
-            LESS_EQUAL,
-            &self.dimension.ir(),
-            self.name,
-            self.index_name,
-            EQUAL,
-            &self.value.ir()
-        ))
-    }
-    impl_display_pair!();
-}
-
-impl HaveSeqStmt {
-    pub fn ir(&self) -> StmtIR {
-        StmtIR(format!(
-            "{} {} {} {} {} {}, {}({}) {} {}",
-            HAVE,
-            SEQ,
-            self.name,
-            self.seq_set.ir(),
-            FOR,
-            self.index_name,
-            self.name,
-            self.index_name,
-            EQUAL,
-            &self.value.ir()
-        ))
-    }
-    impl_display_pair!();
-}
-
-impl HaveFiniteSeqStmt {
-    pub fn ir(&self) -> StmtIR {
-        StmtIR(format!(
-            "{} {} {} {} {} {} {} {}, {}({}) {} {}",
-            HAVE,
-            FINITE_SEQ,
-            self.name,
-            self.finite_seq_set.ir(),
-            FOR,
-            self.index_name,
-            LESS_EQUAL,
-            &self.bound.ir(),
-            self.name,
-            self.index_name,
-            EQUAL,
-            &self.value.ir()
-        ))
-    }
-    impl_display_pair!();
-}
-
 impl DefPropStmt {
     pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
@@ -791,10 +707,6 @@ impl TemplateDefEnum {
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(x) => x.ir(),
             TemplateDefEnum::HaveFnByInducStmt(x) => x.ir(),
             TemplateDefEnum::HaveFnByForallExistUniqueStmt(x) => x.ir(),
-            TemplateDefEnum::HaveTupleStmt(x) => x.ir(),
-            TemplateDefEnum::HaveCartStmt(x) => x.ir(),
-            TemplateDefEnum::HaveSeqStmt(x) => x.ir(),
-            TemplateDefEnum::HaveFiniteSeqStmt(x) => x.ir(),
         }
     }
     impl_display_pair!();
@@ -832,7 +744,7 @@ impl StructFieldDef {
     pub fn ir(&self) -> StmtIR {
         StmtIR(format!(
             "{} {}",
-            self.binding,
+            self.binding.name,
             &self.field_type.ir()
         ))
     }
@@ -1540,11 +1452,11 @@ impl ByDefStmt {
     impl_display_pair!();
 }
 
-impl ByStructDefStmt {
+impl ReleaseStructDefStmt {
     pub fn ir(&self) -> StmtIR {
         StmtIR(format!(
             "{} {} {} {}",
-            BY,
+            RELEASE,
             STRUCT,
             DEF,
             &self.obj.ir()

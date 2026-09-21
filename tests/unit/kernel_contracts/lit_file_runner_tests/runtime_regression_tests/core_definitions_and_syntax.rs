@@ -268,101 +268,6 @@ thm tmp_big_union_elim_to_exist:
 }
 
 #[test]
-fn have_tuple_and_have_cart_define_symbolic_coordinates() {
-    run_with_large_stack(
-        "have_tuple_and_have_cart_define_symbolic_coordinates",
-        || {
-            let source_code = r#"
-have n N+ = 3
-have tuple f for i1 <= n, f[i1] = i1
-$is_tuple(f)
-tuple_dim(f) = n
-forall i1 closed_range(1, n):
-    f[i1] = i1
-
-have cart c for i1 <= n, proj(c, i1) = f[i1]
-$is_set(c)
-$is_cart(c)
-cart_dim(c) = n
-forall i1 closed_range(1, n):
-    proj(c, i1) = f[i1]
-"#;
-
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source("have_tuple_and_have_cart_define_symbolic_coordinates");
-            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
-            let (run_succeeded, run_output) =
-                render_run_output(&runtime, &stmt_results, &runtime_error);
-
-            assert!(
-                run_succeeded,
-                "have_tuple_and_have_cart_define_symbolic_coordinates failed:\n{}",
-                run_output
-            );
-            assert!(run_output.contains("\"kind\": \"HaveTupleStmt\""));
-            assert!(run_output.contains("\"kind\": \"HaveCartStmt\""));
-            assert!(run_output.contains("\"kind\": \"SuccessVerifyTupleOrCartDefinitionResult\""));
-            assert!(run_output.contains("\"value_well_definedness\""));
-            assert!(run_output.contains("\"kind\": \"ForallFact\""));
-        },
-    );
-}
-
-#[test]
-fn have_seq_finite_seq_and_matrix_define_indexed_entries() {
-    run_with_large_stack(
-        "have_seq_finite_seq_and_matrix_define_indexed_entries",
-        || {
-            let source_code = r#"
-have seq s seq(N+) for i1, s(i1) = i1
-s $in seq(N+)
-s(3) = 3
-
-have n N+ = 3
-have finite_seq f finite_seq(N+, n) for i1 <= n, f(i1) = i1
-f $in finite_seq(N+, n)
-f(2) = 2
-
-have r N+ = 2
-have c N+ = 3
-have matrix M matrix(N+, r, c) for i1 <= r, j <= c, M(i1, j) = j
-M $in matrix(N+, r, c)
-M(2, 3) = 3
-"#;
-
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source("have_seq_finite_seq_and_matrix_define_indexed_entries");
-            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
-            let (run_succeeded, run_output) =
-                render_run_output(&runtime, &stmt_results, &runtime_error);
-
-            assert!(
-                run_succeeded,
-                "have_seq_finite_seq_and_matrix_define_indexed_entries failed:\n{}",
-                run_output
-            );
-            assert!(run_output.contains("\"kind\": \"HaveSeqStmt\""));
-            assert!(run_output.contains("\"kind\": \"HaveFiniteSeqStmt\""));
-            assert!(run_output.contains("\"kind\": \"HaveMatrixStmt\""));
-            assert!(
-                run_output.contains("\"kind\": \"SuccessVerifyIndexedFunctionDefinitionResult\"")
-            );
-            assert!(run_output
-                .contains("\"kind\": \"SuccessVerifyIndexedFunctionDefinitionWellDefinedResult\""));
-            for field in [
-                "\"surface_set\"",
-                "\"anonymous_function\"",
-                "\"function_set\"",
-                "\"assumption_infers\"",
-                "\"return_check\"",
-            ] {
-                assert!(run_output.contains(field), "missing Result field {field}");
-            }
-        },
-    );
-}
-
-#[test]
 fn finite_seq_is_its_bounded_positive_index_function_space() {
     run_with_large_stack(
         "finite_seq_is_its_bounded_positive_index_function_space",
@@ -486,220 +391,6 @@ fn(row, col N+: row <= rows, col <= cols) R = matrix(R, rows, cols)
 }
 
 #[test]
-fn failed_have_process_checks_do_not_bind_names() {
-    run_with_large_stack("failed_have_process_checks_do_not_bind_names", || {
-        let cases = [
-            (
-                "failed_have_obj_nonempty",
-                "have s set\nhave a s",
-                "have a R\na $in R",
-            ),
-            (
-                "failed_have_obj_equal_type",
-                "have a N = -1",
-                "have a R = 1\na = 1",
-            ),
-            (
-                "failed_have_fn_return_type",
-                "have fn bad(x R) N = x",
-                "have fn bad(x R) R = x\nbad(1) = 1",
-            ),
-            (
-                "failed_have_finite_seq_bound",
-                "have n N+ = 3\nhave m N+ = 2\nhave finite_seq f finite_seq(N+, n) for i1 <= m, f(i1) = i1",
-                "have finite_seq f finite_seq(N+, n) for i1 <= n, f(i1) = i1\nf(1) = 1",
-            ),
-        ];
-
-        for (case_name, failing_source, recovery_source) in cases {
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(case_name);
-
-            let (stmt_results, runtime_error) = execute_source(failing_source, &mut runtime);
-            let (run_succeeded, run_output) =
-                render_run_output(&runtime, &stmt_results, &runtime_error);
-            assert!(
-                !run_succeeded,
-                "{} should fail before recovery:\n{}",
-                case_name, run_output
-            );
-
-            let (stmt_results, runtime_error) = execute_source(recovery_source, &mut runtime);
-            let (run_succeeded, run_output) =
-                render_run_output(&runtime, &stmt_results, &runtime_error);
-            assert!(
-                run_succeeded,
-                "{} should not bind the failed have name:\n{}",
-                case_name, run_output
-            );
-        }
-    });
-}
-
-#[test]
-fn have_indexed_definitions_require_for_keyword() {
-    run_with_large_stack("have_indexed_definitions_require_for_keyword", || {
-        let source_code = r#"
-have n N+ = 3
-have tuple t for i1 <= n, t[i1] = i1
-t[2] = 2
-
-have seq s seq(N+) for i1, s(i1) = i1
-s(3) = 3
-"#;
-
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("have_indexed_definitions_require_for_keyword");
-        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
-        let (run_succeeded, run_output) =
-            render_run_output(&runtime, &stmt_results, &runtime_error);
-
-        assert!(
-            run_succeeded,
-            "indexed definitions with `for` should work:\n{}",
-            run_output
-        );
-        assert!(
-            run_output.contains("have tuple t for i1 <= n,"),
-            "tuple definition should render with `for`:\n{}",
-            run_output
-        );
-        assert!(
-            run_output.contains("have seq s seq(N+) for i1,"),
-            "sequence definition should render with `for`:\n{}",
-            run_output
-        );
-    });
-}
-
-#[test]
-fn have_seq_finite_seq_and_matrix_reject_bad_for_forms() {
-    run_with_large_stack(
-        "have_seq_finite_seq_and_matrix_reject_bad_for_forms",
-        || {
-            let cases = [
-                (
-                    "bad seq lhs",
-                    r#"
-have seq s seq(N+) for i1, t(i1) = i1
-"#,
-                    "have seq left side must apply the sequence being defined",
-                ),
-                (
-                    "bad matrix lhs arity",
-                    r#"
-have r N+ = 2
-have c N+ = 3
-have matrix M matrix(N+, r, c) for i1 <= r, j <= c, M(i1) = i1
-"#,
-                    "have matrix left side must use exactly two indices",
-                ),
-                (
-                    "bad finite_seq bound",
-                    r#"
-have n N+ = 3
-have m N+ = 4
-have finite_seq f finite_seq(N+, n) for i1 <= m, f(i1) = i1
-"#,
-                    "have finite_seq for-bound must match finite_seq length",
-                ),
-            ];
-
-            for (case_name, source_code, expected_error) in cases {
-                let mut runtime = Runtime::default();
-                runtime.start_isolated_source(case_name);
-                let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
-                let (run_succeeded, run_output) =
-                    render_run_output(&runtime, &stmt_results, &runtime_error);
-
-                assert!(!run_succeeded, "{} should fail:\n{}", case_name, run_output);
-                assert!(
-                    run_output.contains(expected_error),
-                    "{} should report `{}`:\n{}",
-                    case_name,
-                    expected_error,
-                    run_output
-                );
-            }
-        },
-    );
-}
-
-#[test]
-fn have_cart_can_equal_literal_cart_by_dimension_and_projections() {
-    run_with_large_stack(
-        "have_cart_can_equal_literal_cart_by_dimension_and_projections",
-        || {
-            let source_code = r#"
-have n N+ = 3
-
-have cart real_cart for i1 <= n, proj(real_cart, i1) = R
-real_cart = cart(R, R, R)
-
-have cart rational_cart for i1 <= n, proj(rational_cart, i1) = Q
-cart(Q, Q, Q) = rational_cart
-"#;
-
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "have_cart_can_equal_literal_cart_by_dimension_and_projections",
-            );
-            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
-            let (run_succeeded, run_output) =
-                render_run_output(&runtime, &stmt_results, &runtime_error);
-
-            assert!(
-                run_succeeded,
-                "have_cart_can_equal_literal_cart_by_dimension_and_projections failed:\n{}",
-                run_output
-            );
-            assert!(
-                run_output.contains("cart equality from dimension and projections"),
-                "cart extensionality rule should appear in verifier output:\n{}",
-                run_output
-            );
-        },
-    );
-}
-
-#[test]
-fn have_tuple_can_equal_literal_tuple_by_dimension_and_projections() {
-    run_with_large_stack(
-        "have_tuple_can_equal_literal_tuple_by_dimension_and_projections",
-        || {
-            let source_code = r#"
-have n N+ = 3
-
-have tuple index_tuple for i1 <= n, index_tuple[i1] = i1
-release thm tuple_equal_from_coordinates(index_tuple, (1, 2, 3))
-
-have tuple real_tuple for i1 <= n, real_tuple[i1] = R
-release thm tuple_equal_from_coordinates((R, R, R), real_tuple)
-"#;
-
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "have_tuple_can_equal_literal_tuple_by_dimension_and_projections",
-            );
-            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
-            let (run_succeeded, run_output) =
-                render_run_output(&runtime, &stmt_results, &runtime_error);
-
-            assert!(
-                run_succeeded,
-                "have_tuple_can_equal_literal_tuple_by_dimension_and_projections failed:\n{}",
-                run_output
-            );
-            assert!(
-                run_output.contains("tuple equality from dimension and projections"),
-                "tuple extensionality rule should appear in verifier output:\n{}",
-                run_output
-            );
-        },
-    );
-}
-
-#[test]
 fn literal_cart_member_reconstructs_only_its_canonical_coordinate_tuple() {
     run_with_large_stack(
         "literal_cart_member_reconstructs_only_its_canonical_coordinate_tuple",
@@ -814,131 +505,6 @@ forall family power_set(power_set(R)), container power_set(R), member family:
             assert!(
                 !run_output.contains("cart_dim(member)"),
                 "dependent set membership must not materialize symbolic cart coordinates:\n{run_output}"
-            );
-        },
-    );
-}
-
-#[test]
-fn have_tuple_and_have_cart_reject_bad_symbolic_definitions() {
-    run_with_large_stack(
-        "have_tuple_and_have_cart_reject_bad_symbolic_definitions",
-        || {
-            let cases = [
-                (
-                    "undefined dimension",
-                    "have tuple f for i1 <= n, f[i1] = i1",
-                    "identifier `n` not defined",
-                ),
-                (
-                    "small dimension",
-                    r#"
-have n N+ = 1
-have tuple f for i1 <= n, f[i1] = i1
-"#,
-                    "have tuple/cart needs 2 <= n",
-                ),
-                (
-                    "self reference",
-                    r#"
-have n N+ = 3
-have tuple f for i1 <= n, f[i1] = f[i1]
-"#,
-                    "identifier `f` not defined",
-                ),
-                (
-                    "wrong tuple lhs",
-                    r#"
-have n N+ = 3
-have tuple f for i1 <= n, g[i1] = i1
-"#,
-                    "have tuple left side must index the tuple being defined",
-                ),
-                (
-                    "wrong cart lhs",
-                    r#"
-have n N+ = 3
-have cart c for i1 <= n, proj(d, i1) = i1
-"#,
-                    "have cart left side must project the cart being defined",
-                ),
-            ];
-
-            for (label, source_code, expected_message) in cases {
-                let mut runtime = Runtime::default();
-                runtime.start_isolated_source(label);
-                let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
-                let (run_succeeded, run_output) =
-                    render_run_output(&runtime, &stmt_results, &runtime_error);
-
-                assert!(!run_succeeded, "{} should fail:\n{}", label, run_output);
-                assert!(
-                    run_output.contains(expected_message),
-                    "{} had unexpected output, expected `{}`:\n{}",
-                    label,
-                    expected_message,
-                    run_output
-                );
-            }
-        },
-    );
-}
-
-#[test]
-fn tuple_and_cart_coordinate_binders_reject_active_names_and_keep_outer_bounds() {
-    run_with_large_stack(
-        "tuple_and_cart_coordinate_binders_reject_active_names_and_keep_outer_bounds",
-        || {
-            let invalid_source_code = r#"
-claim:
-    ? forall i1 N+:
-        i1 = 2
-        =>:
-            0 = 0
-    have tuple t for i1 <= i1, t[i1] = 0
-    0 = 0
-"#;
-
-            let mut invalid_runtime = Runtime::default();
-            invalid_runtime.start_isolated_source("tuple_coordinate_rejects_active_outer_name");
-            let (invalid_results, invalid_error) =
-                execute_source(invalid_source_code, &mut invalid_runtime);
-            let (invalid_succeeded, invalid_output) =
-                render_run_output(&invalid_runtime, &invalid_results, &invalid_error);
-            assert!(
-                !invalid_succeeded,
-                "a coordinate binder must not reuse an active outer spelling:\n{}",
-                invalid_output
-            );
-            assert!(
-                invalid_output.contains("name `i1` is already active in this scope"),
-                "the parser should identify the active coordinate-name collision:\n{}",
-                invalid_output
-            );
-
-            let valid_source_code = r#"
-claim:
-    ? forall i1 N+:
-        i1 = 2
-        =>:
-            0 = 0
-    have tuple t for j <= i1, t[j] = 0
-    t[1] = 0
-    have cart c for j <= i1, proj(c, j) = R
-    proj(c, 1) = R
-    0 = 0
-"#;
-
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source("tuple_and_cart_coordinate_binders_keep_outer_bounds");
-            let (stmt_results, runtime_error) = execute_source(valid_source_code, &mut runtime);
-            let (run_succeeded, run_output) =
-                render_run_output(&runtime, &stmt_results, &runtime_error);
-
-            assert!(
-                run_succeeded,
-                "distinct coordinate binders should retain the captured outer dimension:\n{}",
-                run_output
             );
         },
     );
@@ -1267,41 +833,6 @@ trust result = \zero_box<2>
             );
         },
     );
-}
-
-#[test]
-fn template_can_define_symbolic_tuple_and_cart() {
-    run_with_large_stack("template_can_define_symbolic_tuple_and_cart", || {
-        let source_code = r#"
-template<n N+: 2 <= n>:
-    have tuple tuple_by_dim for i1 <= n, tuple_by_dim[i1] = i1
-
-$is_tuple(\tuple_by_dim<3>)
-tuple_dim(\tuple_by_dim<3>) = 3
-forall i1 closed_range(1, 3):
-    \tuple_by_dim<3>[i1] = i1
-
-template<n N+: 2 <= n>:
-    have cart cart_by_dim for i1 <= n, proj(cart_by_dim, i1) = R
-
-$is_cart(\cart_by_dim<3>)
-cart_dim(\cart_by_dim<3>) = 3
-forall i1 closed_range(1, 3):
-    proj(\cart_by_dim<3>, i1) = R
-"#;
-
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("template_can_define_symbolic_tuple_and_cart");
-        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
-        let (run_succeeded, run_output) =
-            render_run_output(&runtime, &stmt_results, &runtime_error);
-
-        assert!(
-            run_succeeded,
-            "template_can_define_symbolic_tuple_and_cart failed:\n{}",
-            run_output
-        );
-    });
 }
 
 #[test]
@@ -3248,3 +2779,26 @@ above(0) = {z R: z < 0}
         "definition unfolding must not identify set-builders with different predicates"
     );
 }
+
+#[test]
+fn have_indexed_stmts_are_removed() {
+    run_with_large_stack("have_indexed_stmts_are_removed", || {
+        for keyword in ["tuple", "cart", "seq", "finite_seq", "matrix"] {
+            let source_code = format!("have {keyword} x");
+            let mut runtime = Runtime::default();
+            runtime.start_isolated_source("have_indexed_stmts_are_removed");
+            let (stmt_results, runtime_error) = execute_source(&source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_output(&runtime, &stmt_results, &runtime_error);
+            assert!(
+                !run_succeeded,
+                "have {keyword} should fail to parse:\n{run_output}"
+            );
+            assert!(
+                run_output.contains("removed; use have fn for indexed data"),
+                "unexpected error for have {keyword}:\n{run_output}"
+            );
+        }
+    });
+}
+

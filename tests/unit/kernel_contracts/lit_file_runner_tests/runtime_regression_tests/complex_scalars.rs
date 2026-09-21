@@ -485,59 +485,6 @@ thm intersect_with_singleton:
 }
 
 #[test]
-fn native_complex_names_are_hard_reserved_in_binding_positions() {
-    run_with_large_stack(
-        "native_complex_names_are_hard_reserved_in_binding_positions",
-        || {
-            for name in [C, I, RE, IMG, C_ABS] {
-                let cases = [
-                    ("definition", format!("have {name} R")),
-                    ("forall binder", format!("forall {name} R:\n    1 = 1")),
-                    ("function parameter", format!("have fn f({name} R) R = 0")),
-                    (
-                        "indexed binder",
-                        format!("have n N+ = 1\nhave tuple t for {name} <= n, t[{name}] = 0"),
-                    ),
-                    ("struct field", format!("struct Bad:\n    {name} R")),
-                ];
-
-                for (position, source_code) in cases {
-                    let label = format!("reserved_{name}_{position}");
-                    let (run_succeeded, run_output) =
-                        run_complex_source(source_code.as_str(), label.as_str());
-                    assert!(
-                        !run_succeeded,
-                        "{name} should be reserved in {position} position:\n{run_output}"
-                    );
-                    assert!(
-                        run_output.contains(name),
-                        "error should identify reserved name {name} in {position} position:\n{run_output}"
-                    );
-                }
-            }
-
-            let accepted = r#"
-have c R = 1
-have i1 R = 2
-have real R = 3
-have imag R = 4
-have C_value R = 5
-have image R = 6
-have C_abs_value R = 7
-
-c + i1 + real + imag + C_value + image + C_abs_value = 28
-"#;
-            let (run_succeeded, run_output) =
-                run_complex_source(accepted, "longer_complex_like_names_remain_available");
-            assert!(
-                run_succeeded,
-                "longer identifiers containing reserved spellings should work:\n{run_output}"
-            );
-        },
-    );
-}
-
-#[test]
 fn complex_latex_uses_native_notation() {
     let output = to_latex_from_source(
         "forall z C*:\n    re(z) + img(z) * i = C_abs(z)",

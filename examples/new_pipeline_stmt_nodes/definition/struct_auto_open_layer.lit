@@ -1,0 +1,10 @@
+# Auto-open on direct `&Struct` bind releases one layer of `<=>:` laws.
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_stmt_nodes/definition/struct_auto_open_layer.lit
+
+struct Mono:
+    a R
+    <=>:
+        a = 0
+
+forall m &Mono:
+    m.a = 0

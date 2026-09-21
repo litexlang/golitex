@@ -48,7 +48,7 @@ setting VectorSpaceOperations(s, VSet nonempty_set, scalar_zero, scalar_one s, s
 thm vector_space_struct_has_system:
     ? forall s, VSet nonempty_set, space &VectorSpace<s, VSet>:
         $is_vector_space_system(s, VSet, unfold space.scalars, space.zero, space.add, space.smul)
-    by struct def space
+    release struct def space
 
 # Constructing a nested first-class value is explicit at each struct layer.
 thm vector_space_system_is_struct:
@@ -58,7 +58,7 @@ thm vector_space_system_is_struct:
             ((scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv), zero, add, smul) $in &VectorSpace<s, VSet>
     by def $is_vector_space_system(s, VSet, scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv, zero, add, smul)
     have scalars &chap1a::ScalarSystem<s> = (scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv)
-    by struct def scalars
+    release struct def scalars
     scalars.zero = scalar_zero
     scalars.one = scalar_one
     scalars.add = scalar_add

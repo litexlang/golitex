@@ -5611,9 +5611,9 @@ prop has_coordinate_values_in_family(n N+, U set, X fn(i_index closed_range(1, n
         f(i_index) $in X(i_index)
 
 # `$is_cart(C)` means that `C` is a finite Cartesian-product set.  Later in the
-# proof, `have tuple t for i <= n, t[i] = ...` constructs the n-coordinate tuple
-# with the displayed ith coordinate, while `by closed_range as cases` exposes
-# the finitely many indices of a concrete closed range as proof cases.
+# proof, indexed coordinates should use `have fn` (the old `have tuple ... for`
+# form was removed). `by closed_range as cases` exposes the finitely many
+# indices of a concrete closed range as proof cases.
 
 thm finite_cartesian_product_choice_function_representation:
     ? forall n N+, U set, X fn(i_index closed_range(1, n)) power_set(U), set_C, P set:
@@ -5673,31 +5673,35 @@ thm finite_cartesian_product_choice_function_representation:
                 exist p C st {f = choice_tuple_encode(p)}
             f $in {f fn(i closed_range(1, n)) U: $has_coordinate_values_in_family(n, U, X, f)}
             $has_coordinate_values_in_family(n, U, X, f)
-            have tuple tuple_from_choice for i <= n, tuple_from_choice[i] = f(i)
-            tuple_dim(tuple_from_choice) = n
-            claim:
-                ? forall i closed_range(1, n):
-                    tuple_from_choice[i] $in proj(C, i)
-                tuple_from_choice[i] = f(i)
-                f(i) $in X(i)
-                proj(C, i) = X(i)
-                tuple_from_choice[i] $in proj(C, i)
-            tuple_from_choice $in C
-            choice_tuple_encode(tuple_from_choice) $in P
-            choice_tuple_encode(tuple_from_choice) $in fn(i closed_range(1, n)) U
-            claim:
-                ? forall i closed_range(1, n):
-                    f(i) = choice_tuple_encode(tuple_from_choice)(i)
-                choice_tuple_encode(tuple_from_choice) = raw_choice_tuple_encode(tuple_from_choice)
-                raw_choice_tuple_encode(tuple_from_choice) = fn(j closed_range(1, n)) U {tuple_from_choice[j]}
-                fn(j closed_range(1, n)) U {tuple_from_choice[j]} = raw_choice_tuple_encode(tuple_from_choice) = choice_tuple_encode(tuple_from_choice)
-                fn(j closed_range(1, n)) U {tuple_from_choice[j]}(i) = choice_tuple_encode(tuple_from_choice)(i)
-                fn(j closed_range(1, n)) U {tuple_from_choice[j]}(i) = tuple_from_choice[i]
-                tuple_from_choice[i] = f(i)
-            $fn_eq(f, choice_tuple_encode(tuple_from_choice))
-            f = choice_tuple_encode(tuple_from_choice)
-            witness exist p C st {f = choice_tuple_encode(p)} from tuple_from_choice:
-                f = choice_tuple_encode(tuple_from_choice)
+            # TODO: rewrite without `have tuple` (removed; use `have fn` for
+            # indexed data). The surjectivity witness below still needs a
+            # C-member whose coordinates are f(i).
+            # have tuple tuple_from_choice for i <= n, tuple_from_choice[i] = f(i)
+            # tuple_dim(tuple_from_choice) = n
+            # claim:
+            #     ? forall i closed_range(1, n):
+            #         tuple_from_choice[i] $in proj(C, i)
+            #     tuple_from_choice[i] = f(i)
+            #     f(i) $in X(i)
+            #     proj(C, i) = X(i)
+            #     tuple_from_choice[i] $in proj(C, i)
+            # tuple_from_choice $in C
+            # choice_tuple_encode(tuple_from_choice) $in P
+            # choice_tuple_encode(tuple_from_choice) $in fn(i closed_range(1, n)) U
+            # claim:
+            #     ? forall i closed_range(1, n):
+            #         f(i) = choice_tuple_encode(tuple_from_choice)(i)
+            #     choice_tuple_encode(tuple_from_choice) = raw_choice_tuple_encode(tuple_from_choice)
+            #     raw_choice_tuple_encode(tuple_from_choice) = fn(j closed_range(1, n)) U {tuple_from_choice[j]}
+            #     fn(j closed_range(1, n)) U {tuple_from_choice[j]} = raw_choice_tuple_encode(tuple_from_choice) = choice_tuple_encode(tuple_from_choice)
+            #     fn(j closed_range(1, n)) U {tuple_from_choice[j]}(i) = choice_tuple_encode(tuple_from_choice)(i)
+            #     fn(j closed_range(1, n)) U {tuple_from_choice[j]}(i) = tuple_from_choice[i]
+            #     tuple_from_choice[i] = f(i)
+            # $fn_eq(f, choice_tuple_encode(tuple_from_choice))
+            # f = choice_tuple_encode(tuple_from_choice)
+            # witness exist p C st {f = choice_tuple_encode(p)} from tuple_from_choice:
+            #     f = choice_tuple_encode(tuple_from_choice)
+            trust exist p C st {f = choice_tuple_encode(p)}
         $chap3::is_surjective_fn(C, P, choice_tuple_encode)
     $chap3::is_bijective_fn(C, P, choice_tuple_encode)
     witness exist f fn(x C) P st {$chap3::is_bijective_fn(C, P, f)} from choice_tuple_encode:

@@ -84,20 +84,45 @@ impl Runtime {
         )))
     }
 
-    // Identifier-headed application: look up InFunctionSet, check arity, param $in,
-    // and instantiated dom_facts. Example: after `let f = fn(x R) R {x}`, WD of `f(a)`
-    // needs `a $in R` (and any `dom_facts` under that signature).
-    pub(super) fn verify_identifier_headed_fn_obj_well_definedness(
+    // Identifier- or template-instance-headed application: look up InFunctionSet,
+    // check arity, param $in, and instantiated dom_facts.
+    // Example: after `let f = fn(x R) R {x}`, WD of `f(a)` needs `a $in R`.
+    // Example: after a `have fn` template instance WD, `\const_on_S<R, 0>(2)`.
+    pub(super) fn verify_in_function_set_headed_fn_obj_well_definedness(
         &mut self,
         value: &FnObj,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
-        let FnObjHead::Identifier(head_id) = value.head.as_ref() else {
-            return Err(crate::new_pipeline::runtime::RuntimeError::InternalBug(
-                "verify_identifier_headed_fn_obj expects Identifier head".to_string(),
-            ));
+        let head_obj = match value.head.as_ref() {
+            FnObjHead::Identifier(head_id) => Obj::Identifier(head_id.clone()),
+            FnObjHead::InstantiatedTemplateObj(inst) => {
+                Obj::InstantiatedTemplateObj(inst.clone())
+            }
+            _ => {
+                return Err(crate::new_pipeline::runtime::RuntimeError::InternalBug(
+                    "verify_in_function_set_headed_fn_obj expects Identifier or InstantiatedTemplateObj head"
+                        .to_string(),
+                ));
+            }
         };
-        let head_obj = Obj::Identifier(head_id.clone());
+        // Template-instance heads register InFunctionSet during their own WD.
+        if matches!(value.head.as_ref(), FnObjHead::InstantiatedTemplateObj(_)) {
+            let head_wd =
+                self.verify_obj_well_definedness(&head_obj, verify_state.clone())?;
+            if head_wd.is_failed() {
+                return Ok(VerifyObjWellDefinedResult::Failed(
+                    FailToVerifyObjWellDefinedResult::FnObj(
+                        FailToVerifyFnObjObjWellDefined::Domain(
+                            ObjWellDefinedByDefCommonStages::from_children(vec![(
+                                head_obj,
+                                head_wd,
+                            )])
+                            .into_common_fail(&Obj::FnObj(value.clone())),
+                        ),
+                    ),
+                ));
+            }
+        }
         let candidates = self.collect_in_function_set_candidates(&head_obj);
         if candidates.is_empty() {
             return Ok(VerifyObjWellDefinedResult::Failed(
@@ -173,8 +198,12 @@ impl Runtime {
             });
         }
 
-        // Identifier head is handled in verify_identifier_headed_fn_obj_well_definedness.
-        if matches!(value.head.as_ref(), FnObjHead::Identifier(_)) {
+        // Identifier / InstantiatedTemplateObj heads are handled in
+        // verify_in_function_set_headed_fn_obj_well_definedness.
+        if matches!(
+            value.head.as_ref(),
+            FnObjHead::Identifier(_) | FnObjHead::InstantiatedTemplateObj(_)
+        ) {
             return Ok(ObjWellDefinedByDefCommonStages::leaf());
         }
 
@@ -215,7 +244,7 @@ impl Runtime {
     }
 
     // Visible InFunctionSet rows for `obj` and its equality-class neighbors.
-    pub(super) fn collect_in_function_set_candidates(&self, obj: &Obj) -> Vec<(FnSet, FactId)> {
+    pub(crate) fn collect_in_function_set_candidates(&self, obj: &Obj) -> Vec<(FnSet, FactId)> {
         let mut keys = self.known_equality_class_keys(obj);
         let self_ir = obj.ir();
         if !keys.iter().any(|k| k == &self_ir) {
@@ -238,7 +267,7 @@ impl Runtime {
     }
 
     // Ok(stages) = candidate matched; Err(stages) = soft miss for this candidate.
-    fn try_verify_fn_obj_against_fn_set(
+    pub(crate) fn try_verify_fn_obj_against_fn_set(
         &mut self,
         value: &FnObj,
         fn_set: &FnSet,
@@ -248,6 +277,35 @@ impl Runtime {
             rt.verify_fn_obj_against_fn_set_in_local(value, fn_set, verify_state)
         })?;
         Ok(proof)
+    }
+
+    // After a successful domain match, return the fully applied return set.
+    // Example: `f $in fn(x N) N` and args `[n-1]` → `N`.
+    pub(crate) fn applied_fn_set_return_set(
+        &mut self,
+        value: &FnObj,
+        fn_set: &FnSet,
+    ) -> Option<Obj> {
+        let mut space = fn_set.clone();
+        let last = value.body.len().checked_sub(1)?;
+        for (layer_index, layer) in value.body.iter().enumerate() {
+            let args: Vec<Obj> = layer.iter().map(|a| a.as_ref().clone()).collect();
+            if args.len() != set_bound_parameter_count(&space.set_bound_parameters) {
+                return None;
+            }
+            let subst = set_bound_params_to_arg_map(&space.set_bound_parameters, &args);
+            let next_ret = self.inst_obj(space.ret_set.as_ref(), &subst).ok()?;
+            if layer_index < last {
+                space = match next_ret {
+                    Obj::FnSet(next) => next,
+                    Obj::AnonymousFn(anon) => anon.body,
+                    _ => return None,
+                };
+            } else {
+                return Some(next_ret);
+            }
+        }
+        None
     }
 
     fn verify_fn_obj_against_fn_set_in_local(

@@ -91,21 +91,6 @@ impl Runtime {
             Stmt::Definition(DefinitionStmt::HaveFnByForallExistUniqueStmt(s)) => {
                 self.exec_have_fn_by_forall_exist_unique_stmt_affect_environment_only(s)
             }
-            Stmt::Definition(DefinitionStmt::HaveTupleStmt(s)) => {
-                self.exec_have_tuple_stmt_affect_environment_only(s)
-            }
-            Stmt::Definition(DefinitionStmt::HaveCartStmt(s)) => {
-                self.exec_have_cart_stmt_affect_environment_only(s)
-            }
-            Stmt::Definition(DefinitionStmt::HaveSeqStmt(s)) => {
-                self.exec_have_seq_stmt_affect_environment_only(s)
-            }
-            Stmt::Definition(DefinitionStmt::HaveFiniteSeqStmt(s)) => {
-                self.exec_have_finite_seq_stmt_affect_environment_only(s)
-            }
-            Stmt::Definition(DefinitionStmt::HaveMatrixStmt(s)) => {
-                self.exec_have_matrix_stmt_affect_environment_only(s)
-            }
             Stmt::Definition(DefinitionStmt::DefPropStmt(s)) => {
                 self.exec_def_prop_stmt_affect_environment_only(s)
             }
@@ -255,8 +240,8 @@ impl Runtime {
                 self.exec_by_regularity_axiom_stmt_affect_environment_only(s)
             }
             Stmt::By(ByStmt::ByDefStmt(s)) => self.exec_by_def_stmt_affect_environment_only(s),
-            Stmt::By(ByStmt::ByStructDefStmt(s)) => {
-                self.exec_by_struct_def_stmt_affect_environment_only(s)
+            Stmt::ReleaseStructDefStmt(s) => {
+                self.exec_release_struct_def_stmt_affect_environment_only(s)
             }
             Stmt::By(ByStmt::ByThmStmt(s)) => self.exec_by_thm_stmt_affect_environment_only(s),
         }

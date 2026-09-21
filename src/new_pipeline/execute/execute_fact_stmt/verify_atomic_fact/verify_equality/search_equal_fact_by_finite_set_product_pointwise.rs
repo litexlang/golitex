@@ -64,7 +64,7 @@ impl Runtime {
                     param_type: ParamType::Obj(pointwise_set.clone()),
                 }],
             };
-            rt.define_typed_parameters_in_current_env(&params)?;
+            rt.define_typed_parameters_in_current_env(&params, None)?;
             rt.verify_fact(&pointwise_goal, child_state.clone())
         })?;
         if pointwise_proof.is_failed() {

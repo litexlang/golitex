@@ -516,7 +516,7 @@ p.y = 2
 
 Direct symbols introduced in a struct carrier can open one definition-owned
 layer automatically. A later generic membership fact does not select field
-names; use <code>by struct def</code> or the explicit struct theorem when that
+names; use <code>release struct def</code> or the explicit struct theorem when that
 interface is needed.
 
 ### A reusable domain interface

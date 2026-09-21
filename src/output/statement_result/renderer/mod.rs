@@ -27,7 +27,6 @@ mod state;
 mod statement_dispatch;
 mod structure_definitions;
 mod template_instantiation;
-mod tuple_functions;
 mod witnesses;
 
 pub use state::render_statement_result_json;

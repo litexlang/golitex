@@ -1,11 +1,17 @@
-//! Match forall conclusion args to a goal's args: bind params, else strict equal.
+//! Match forall conclusion args to a goal's args: bind params, recurse into
+//! same-shape compounds, else strict equal.
 //!
-//! Non-param positions: instantiate the pattern under the subst built so far,
-//! then prove instantiated = goal with VerifyState all flags false
-//! (`can_use_forall_fact`, `can_use_rewrite`, `store_well_defined_fact`).
+//! Aligns with legacy `match_arg_in_atomic_fact_in_known_forall_with_given_arg`:
+//! forall params may sit inside `FnObj` / arithmetic / `FieldAccess`, not only
+//! as bare top-level args.
+//!
+//! Example: known `forall a: G.mul(a, identity) = a`, goal
+//! `G.mul(G.one, identity) = G.one` → ByStructure on the left binds `a↦G.one`,
+//! BoundParam on the right.
 
 use crate::new_pipeline::ast::fact::EqualFact;
 use crate::new_pipeline::ast::obj::{IdentifierObj, Obj};
+use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::helper::corresponding_arg_pairs;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::{
     strict_equal_arg_proof_from_searched, ForallConclusionArgMatchProof,
     MatchForallConclusionArgsProof, StrictEqualWithFact,
@@ -17,9 +23,9 @@ use std::collections::{HashMap, HashSet};
 
 impl Runtime {
     // Match pattern args to goal args under forall params.
-    // Example: pattern `[a, a+1]`, goal `[3, 4]`, params `{a}`
-    //   -> BoundParam a↦3, then NonParamEqual on `3+1 = 4` (after subst).
-    // Nested equal: all VerifyState flags false. Returns None on soft miss.
+    // Example: pattern `[G.mul(a, e), a]`, goal `[G.mul(G.one, e), G.one]`
+    //   -> ByStructure (bind a) then BoundParam / ReboundParamEqual on the right.
+    // Nested equal / rebound: VerifyState all flags false. Soft miss → Ok(None).
     pub(crate) fn match_forall_conclusion_args(
         &mut self,
         pattern_args: &[&Obj],
@@ -40,52 +46,17 @@ impl Runtime {
         let mut arg_match_proofs = Vec::with_capacity(pattern_args.len());
 
         for (pattern_arg, goal_arg) in pattern_args.iter().zip(goal_args.iter()) {
-            match try_bind_forall_param(pattern_arg, goal_arg, &param_set, &mut subst) {
-                ForallParamBindResult::Bound { param_id } => {
-                    arg_match_proofs.push(ForallConclusionArgMatchProof::BoundParam {
-                        param_id,
-                        pattern: (*pattern_arg).clone(),
-                        goal_arg: (*goal_arg).clone(),
-                    });
-                }
-                ForallParamBindResult::NeedEqual {
-                    param_id,
-                    previous,
-                } => {
-                    let Some(equal) =
-                        self.prove_objs_equal_strict(&previous, goal_arg, equality_state.clone())?
-                    else {
-                        return Ok(None);
-                    };
-                    arg_match_proofs.push(ForallConclusionArgMatchProof::ReboundParamEqual {
-                        param_id,
-                        previous,
-                        goal_arg: (*goal_arg).clone(),
-                        equal,
-                    });
-                }
-                ForallParamBindResult::NotAParam => {
-                    // Substitute already-bound params into the pattern before equal.
-                    let pattern_after_subst = match self.inst_obj(pattern_arg, &subst) {
-                        Ok(obj) => obj,
-                        Err(_) => return Ok(None),
-                    };
-                    let Some(equal) = self.prove_objs_equal_strict(
-                        &pattern_after_subst,
-                        goal_arg,
-                        equality_state.clone(),
-                    )?
-                    else {
-                        return Ok(None);
-                    };
-                    arg_match_proofs.push(ForallConclusionArgMatchProof::NonParamEqual {
-                        pattern: (*pattern_arg).clone(),
-                        pattern_after_subst,
-                        goal_arg: (*goal_arg).clone(),
-                        equal,
-                    });
-                }
-            }
+            let Some(proof) = self.match_forall_one_arg(
+                pattern_arg,
+                goal_arg,
+                &param_set,
+                &mut subst,
+                equality_state.clone(),
+            )?
+            else {
+                return Ok(None);
+            };
+            arg_match_proofs.push(proof);
         }
 
         for id in ordered_param_ids {
@@ -127,6 +98,90 @@ impl Runtime {
         Ok(Some(StrictEqualWithFact {
             equal_fact,
             equal_proof,
+        }))
+    }
+
+    // One pattern/goal pair: bare param, same-shape recurse, or NonParamEqual.
+    fn match_forall_one_arg(
+        &mut self,
+        pattern: &Obj,
+        goal: &Obj,
+        param_set: &HashSet<IdentifierId>,
+        subst: &mut HashMap<IdentifierId, Obj>,
+        equality_state: VerifyState,
+    ) -> RuntimeResult<Option<ForallConclusionArgMatchProof>> {
+        match try_bind_forall_param(pattern, goal, param_set, subst) {
+            ForallParamBindResult::Bound { param_id } => {
+                return Ok(Some(ForallConclusionArgMatchProof::BoundParam {
+                    param_id,
+                    pattern: pattern.clone(),
+                    goal_arg: goal.clone(),
+                }));
+            }
+            ForallParamBindResult::NeedEqual {
+                param_id,
+                previous,
+            } => {
+                let Some(equal) =
+                    self.prove_objs_equal_strict(&previous, goal, equality_state.clone())?
+                else {
+                    return Ok(None);
+                };
+                return Ok(Some(ForallConclusionArgMatchProof::ReboundParamEqual {
+                    param_id,
+                    previous,
+                    goal_arg: goal.clone(),
+                    equal,
+                }));
+            }
+            ForallParamBindResult::NotAParam => {}
+        }
+
+        if let Some(pairs) = corresponding_arg_pairs(pattern, goal) {
+            if !pairs.is_empty() {
+                let subst_checkpoint = subst.clone();
+                let mut child_matches = Vec::with_capacity(pairs.len());
+                let mut all_ok = true;
+                for (child_pattern, child_goal) in &pairs {
+                    match self.match_forall_one_arg(
+                        child_pattern,
+                        child_goal,
+                        param_set,
+                        subst,
+                        equality_state.clone(),
+                    )? {
+                        Some(child) => child_matches.push(child),
+                        None => {
+                            all_ok = false;
+                            break;
+                        }
+                    }
+                }
+                if all_ok {
+                    return Ok(Some(ForallConclusionArgMatchProof::ByStructure {
+                        pattern: pattern.clone(),
+                        goal_arg: goal.clone(),
+                        child_matches,
+                    }));
+                }
+                *subst = subst_checkpoint;
+            }
+        }
+
+        let pattern_after_subst = match self.inst_obj(pattern, subst) {
+            Ok(obj) => obj,
+            Err(_) => return Ok(None),
+        };
+        let Some(equal) =
+            self.prove_objs_equal_strict(&pattern_after_subst, goal, equality_state)?
+        else {
+            return Ok(None);
+        };
+        Ok(Some(ForallConclusionArgMatchProof::NonParamEqual {
+            pattern: pattern.clone(),
+            pattern_after_subst,
+            goal_arg: goal.clone(),
+            equal,
         }))
     }
 }

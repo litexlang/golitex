@@ -23,12 +23,16 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 //   into the goal, then proves the residual with rewrite off — explicit cite,
 //   not silent resolve_obj.
 //
-// Also here: OrderDual (prove via order / proper-subset / fn_eq_in dual).
-// Search order: ClosedNumeric first, then OrderDual.
+// Also here:
+//   KnownEqualObjSubstitution — replace a goal arg by a one-hop known equal
+//   peer (e.g. `1 $in S` with stored `S = {…}`), then prove the residual.
+//   OrderDual (prove via order / proper-subset / fn_eq_in dual).
+// Search order: ClosedNumeric, KnownEqualObj, then OrderDual.
 pub enum AtomicExceptEqualityFactSearchProofByBuiltinRewrite {
     ClosedNumericEqualSubstitution(
         AtomicExceptEqualityFactSearchProofByClosedNumericEqualSubstitution,
     ),
+    KnownEqualObjSubstitution(AtomicExceptEqualityFactSearchProofByKnownEqualObjSubstitution),
     OrderDual(AtomicExceptEqualityFactSearchProofByBuiltinOrderDual),
 }
 
@@ -46,13 +50,27 @@ pub struct AtomicExceptEqualityFactSearchProofByClosedNumericEqualSubstitution {
     pub proof_of_rewritten_fact: VerifyFactResult,
 }
 
+// One-hop known-equality substitution on a non-equality atomic goal.
+// Mathematical property: if `a = b` is a stored generating edge, then P(…, a, …)
+// follows from P(…, b, …).
+//
+// Example:
+//   have S set = {x R: x > 0}
+//   1 $in S
+// rewrite set arg to the stored set-builder, then SetBuilderMembership.
+pub struct AtomicExceptEqualityFactSearchProofByKnownEqualObjSubstitution {
+    pub rewritten_fact: Fact,
+    pub cited_equal_fact_ids: Vec<FactId>,
+    pub proof_of_rewritten_fact: VerifyFactResult,
+}
+
 pub struct AtomicExceptEqualityFactSearchProofByBuiltinOrderDual {
     pub alternate_fact: Fact,
     pub proof_of_alternate_fact: VerifyFactResult,
 }
 
 impl Runtime {
-    // Builtin rewrite dispatcher: ClosedNumericEqualSubstitution then OrderDual.
+    // Builtin rewrite dispatcher: ClosedNumeric, KnownEqualObj, then OrderDual.
     pub fn search_atomic_except_equality_fact_proof_by_builtin_rewrite(
         &mut self,
         fact: &AtomicFact,
@@ -66,6 +84,18 @@ impl Runtime {
         {
             return Ok(Some(
                 AtomicExceptEqualityFactSearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(
+                    proof,
+                ),
+            ));
+        }
+        if let Some(proof) = self
+            .search_atomic_except_equality_by_known_equal_obj_substitution(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(
+                AtomicExceptEqualityFactSearchProofByBuiltinRewrite::KnownEqualObjSubstitution(
                     proof,
                 ),
             ));
@@ -141,6 +171,70 @@ impl Runtime {
                 proof_of_rewritten_fact,
             },
         ))
+    }
+
+    // Try one-hop known equals for each goal arg; first residual success wins.
+    // Example: `1 $in S` with stored `S = {x R: x > 0}` → prove `1 $in {…}`.
+    fn search_atomic_except_equality_by_known_equal_obj_substitution(
+        &mut self,
+        fact: &AtomicFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByKnownEqualObjSubstitution>>
+    {
+        if matches!(fact, AtomicFact::EqualFact(_)) {
+            return Ok(None);
+        }
+        let args: Vec<Obj> = atomic_fact_args_ref(fact)
+            .into_iter()
+            .cloned()
+            .collect();
+        let adjacency = self.visible_equality_adjacency();
+        let residual_state = VerifyState {
+            can_use_forall_fact: verify_state.can_use_forall_fact,
+            can_use_rewrite: false,
+            store_well_defined_fact: false,
+        };
+
+        for (arg_index, arg) in args.iter().enumerate() {
+            let from_ir = arg.ir();
+            let Some(neighbors) = adjacency.get(&from_ir) else {
+                continue;
+            };
+            for (_peer_key, equal_fact) in neighbors.iter() {
+                let peer = if equal_fact.left.ir() == from_ir {
+                    &equal_fact.right
+                } else {
+                    &equal_fact.left
+                };
+                if peer.ir() == from_ir {
+                    continue;
+                }
+                let mut rewritten_args = args.clone();
+                rewritten_args[arg_index] =
+                    replace_obj_matching_ir(&rewritten_args[arg_index], &from_ir, peer);
+                if rewritten_args[arg_index].ir() == from_ir {
+                    continue;
+                }
+                let Some(rewritten) =
+                    atomic_fact_with_args(fact, rewritten_args, self.ids.allocate_fact_id())
+                else {
+                    continue;
+                };
+                let proof_of_rewritten_fact =
+                    self.verify_atomic_fact(&rewritten, residual_state.clone())?;
+                if proof_of_rewritten_fact.is_failed() {
+                    continue;
+                }
+                return Ok(Some(
+                    AtomicExceptEqualityFactSearchProofByKnownEqualObjSubstitution {
+                        rewritten_fact: rewritten.into(),
+                        cited_equal_fact_ids: vec![equal_fact.fact_id],
+                        proof_of_rewritten_fact,
+                    },
+                ));
+            }
+        }
+        Ok(None)
     }
 
     fn search_atomic_except_equality_by_order_dual(

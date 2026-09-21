@@ -6,6 +6,7 @@
 
 use crate::new_pipeline::ast::fact::{ExistFactFamily, PlainExistFact};
 use crate::new_pipeline::ast::stmt::HaveObjByExistFactsStmt;
+use crate::new_pipeline::exec_env::StoredIdentifierDefinition;
 use crate::new_pipeline::execute::execute_fact_stmt::{
     VerifyExistFactFailed, VerifyExistFactResult, VerifyFactResult, VerifyPlainExistFactResult,
     VerifyPlainExistFactSuccess, VerifyState,
@@ -13,6 +14,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::{
 use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
 use crate::new_pipeline::instantiate::quantifier_free_fact_to_fact;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
+use std::rc::Rc;
 
 pub enum ExecHaveObjByExistFactsStmtFailed {
     Exist(VerifyExistFactFailed),
@@ -66,8 +68,12 @@ impl Runtime {
             }
         };
 
-        let mut store_and_infer_result =
-            self.define_typed_parameters_in_current_env(&stmt.param_def)?;
+        let mut store_and_infer_result = self.define_typed_parameters_in_current_env(
+            &stmt.param_def,
+            Some(StoredIdentifierDefinition::HaveObjByExistFacts(Rc::new(
+                stmt.clone(),
+            ))),
+        )?;
 
         for body_fact in &stmt.facts {
             let as_fact = quantifier_free_fact_to_fact(body_fact.clone());

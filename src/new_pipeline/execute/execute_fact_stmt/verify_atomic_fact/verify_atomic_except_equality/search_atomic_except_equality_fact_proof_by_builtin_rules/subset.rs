@@ -19,6 +19,9 @@ pub enum SubsetFactSearchProofByBuiltinRule {
     ElementarySetSubset(ElementarySetSubsetBuiltinRuleProof),
     RealIntervalSubsetReal(RealIntervalSubsetRealBuiltinRuleProof),
     SubsetReflexivity(SubsetReflexivityBuiltinRuleProof),
+    // `{x S: P…} $subset S` — a set-builder is a subset of its parameter set.
+    // Example: `{x R: x > 0} $subset R`.
+    SetBuilderSubsetOfParamSet(SetBuilderSubsetOfParamSetBuiltinRuleProof),
 }
 
 pub struct StandardSetSubsetBuiltinRuleProof {
@@ -42,10 +45,13 @@ pub struct RealIntervalSubsetRealBuiltinRuleProof {}
 
 pub struct SubsetReflexivityBuiltinRuleProof {}
 
+pub struct SetBuilderSubsetOfParamSetBuiltinRuleProof {}
+
 impl Runtime {
     // Builtin: zero-premise subset rules for standard sets, elementary
-    // constructors, real intervals, and reflexivity.
-    // Example: prove `N $subset R`, `intersect(A, B) $subset A`, `'[a, b] $subset R`.
+    // constructors, real intervals, set-builder ⊆ param set, and reflexivity.
+    // Example: prove `N $subset R`, `intersect(A, B) $subset A`, `'[a, b] $subset R`,
+    // `{x R: x > 0} $subset R`.
     pub fn search_subset_fact_proof_by_builtin_rule(
         &mut self,
         fact: &SubsetFact,
@@ -80,6 +86,16 @@ impl Runtime {
                     RealIntervalSubsetRealBuiltinRuleProof {},
                 ),
             ));
+        }
+
+        if let Obj::SetBuilder(builder) = &fact.left {
+            if builder.param_set.as_ref().ir() == fact.right.ir() {
+                return Ok(Some(
+                    SubsetFactSearchProofByBuiltinRule::SetBuilderSubsetOfParamSet(
+                        SetBuilderSubsetOfParamSetBuiltinRuleProof {},
+                    ),
+                ));
+            }
         }
 
         if fact.left == fact.right {

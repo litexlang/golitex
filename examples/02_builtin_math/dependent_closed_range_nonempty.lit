@@ -1,3 +1,5 @@
+# DISABLED (2026-9-21): uses removed `have tuple`/`have cart` stmts.
+# Rewrite with `have fn` before re-enabling.
 # Tracer: dependent finite intervals reduce nonemptiness to endpoint order.
 #
 # Before (incorrectly rejected during template well-definedness):
@@ -10,13 +12,15 @@
 # Now (verified): finite interval constructors use a structural strategy whose
 # strictly smaller child is the required endpoint-order fact.
 template<n N+: 2 <= n>:
-    have tuple tuple_by_dim for i1 <= n, tuple_by_dim[i1] = i1
+    # TODO: removed have-indexed stmt; use have fn
+    # have tuple tuple_by_dim for i1 <= n, tuple_by_dim[i1] = i1
 
 $is_tuple(\tuple_by_dim<3>)
 tuple_dim(\tuple_by_dim<3>) = 3
 
 template<n N+: 2 <= n>:
-    have cart cart_by_dim for i1 <= n, proj(cart_by_dim, i1) = R
+    # TODO: removed have-indexed stmt; use have fn
+    # have cart cart_by_dim for i1 <= n, proj(cart_by_dim, i1) = R
 
 $is_cart(\cart_by_dim<3>)
 cart_dim(\cart_by_dim<3>) = 3

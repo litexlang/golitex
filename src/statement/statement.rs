@@ -8,6 +8,7 @@ pub enum Stmt {
     UnsafeStmt(UnsafeStmt),
     Definition(DefinitionStmt),
     ReleaseThmStmt(ReleaseThmStmt),
+    ReleaseStructDefStmt(ReleaseStructDefStmt),
     By(ByStmt),
     Witness(WitnessStmt),
     ProofBlock(ProofBlockStmt),
@@ -34,11 +35,6 @@ pub enum DefinitionStmt {
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
     HaveFnByInducStmt(HaveFnByInducStmt),
     HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt),
-    HaveTupleStmt(HaveTupleStmt),
-    HaveCartStmt(HaveCartStmt),
-    HaveSeqStmt(HaveSeqStmt),
-    HaveFiniteSeqStmt(HaveFiniteSeqStmt),
-    HaveMatrixStmt(HaveMatrixStmt),
     DefPropStmt(DefPropStmt),
     DefAbstractPropStmt(DefAbstractPropStmt),
     DefSettingStmt(DefSettingStmt),
@@ -68,7 +64,6 @@ pub enum ByStmt {
     ByAxiomOfChoiceStmt(ByAxiomOfChoiceStmt),
     ByRegularityAxiomStmt(ByRegularityAxiomStmt),
     ByDefStmt(ByDefStmt),
-    ByStructDefStmt(ByStructDefStmt),
     ByThmStmt(ByThmStmt),
 }
 

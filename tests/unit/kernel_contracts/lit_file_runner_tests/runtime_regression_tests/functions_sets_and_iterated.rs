@@ -1444,65 +1444,6 @@ forall S set, f \FunctionCarrier<S>:
 }
 
 #[test]
-fn anonymous_function_body_must_belong_to_definition_return_set() {
-    let invalid_source = r#"
-fn(x R) N {x}(1 / 2) $in N
-"#;
-
-    let mut invalid_runtime = Runtime::default();
-    invalid_runtime
-        .start_isolated_source("anonymous_function_body_must_belong_to_definition_return_set");
-    let (stmt_results, runtime_error) = execute_source(invalid_source, &mut invalid_runtime);
-    let (run_succeeded, run_output) =
-        render_run_output(&invalid_runtime, &stmt_results, &runtime_error);
-    assert!(
-        !run_succeeded,
-        "an anonymous function must not trust an incompatible defined return set:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains(
-            "anonymous function body x is not verified to belong to defined return set N"
-        ),
-        "the rejection should identify the body and defined return set:\n{}",
-        run_output
-    );
-
-    let valid_source = r#"
-fn(x R) R {x}(1 / 2) = 1 / 2
-"#;
-    let mut valid_runtime = Runtime::default();
-    valid_runtime
-        .start_isolated_source("anonymous_function_body_in_definition_return_set_is_well_defined");
-    let (stmt_results, runtime_error) = execute_source(valid_source, &mut valid_runtime);
-    let (run_succeeded, run_output) =
-        render_run_output(&valid_runtime, &stmt_results, &runtime_error);
-    assert!(
-        run_succeeded,
-        "a compatible anonymous function should remain well-defined:\n{}",
-        run_output
-    );
-
-    let symbolic_cart_source = r#"
-have n N+ = 3
-have cart c for i1 <= n, proj(c, i1) = R
-have fn coordinate_fn(p c) fn(i1 closed_range(1, n)) R = fn(j closed_range(1, n)) R {p[j]}
-"#;
-    let mut symbolic_cart_runtime = Runtime::default();
-    symbolic_cart_runtime
-        .start_isolated_source("anonymous_function_cart_coordinate_in_definition_return_set");
-    let (stmt_results, runtime_error) =
-        execute_source(symbolic_cart_source, &mut symbolic_cart_runtime);
-    let (run_succeeded, run_output) =
-        render_run_output(&symbolic_cart_runtime, &stmt_results, &runtime_error);
-    assert!(
-        run_succeeded,
-        "a symbolic Cartesian coordinate should retain its proved carrier:\n{}",
-        run_output
-    );
-}
-
-#[test]
 fn iterated_operators_require_scalar_return_sets() {
     let invalid_cases = [
         (

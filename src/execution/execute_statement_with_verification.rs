@@ -58,13 +58,6 @@ impl Runtime {
             Stmt::Definition(DefinitionStmt::HaveFnByForallExistUniqueStmt(d)) => {
                 self.exec_have_fn_by_forall_exist_unique_stmt(d)
             }
-            Stmt::Definition(DefinitionStmt::HaveTupleStmt(d)) => self.exec_have_tuple_stmt(d),
-            Stmt::Definition(DefinitionStmt::HaveCartStmt(d)) => self.exec_have_cart_stmt(d),
-            Stmt::Definition(DefinitionStmt::HaveSeqStmt(d)) => self.exec_have_seq_stmt(d),
-            Stmt::Definition(DefinitionStmt::HaveFiniteSeqStmt(d)) => {
-                self.exec_have_finite_seq_stmt(d)
-            }
-            Stmt::Definition(DefinitionStmt::HaveMatrixStmt(d)) => self.exec_have_matrix_stmt(d),
             Stmt::Definition(DefinitionStmt::DefPropStmt(d)) => self.exec_def_prop_stmt(d),
             Stmt::Definition(DefinitionStmt::DefAbstractPropStmt(d)) => {
                 self.exec_def_abstract_prop_stmt(d)
@@ -115,7 +108,7 @@ impl Runtime {
             Stmt::By(ByStmt::ByAxiomOfChoiceStmt(s)) => self.exec_by_axiom_of_choice_stmt(s),
             Stmt::By(ByStmt::ByRegularityAxiomStmt(s)) => self.exec_by_regularity_axiom_stmt(s),
             Stmt::By(ByStmt::ByDefStmt(s)) => self.exec_by_def_stmt(s),
-            Stmt::By(ByStmt::ByStructDefStmt(s)) => self.exec_by_struct_def_stmt(s),
+            Stmt::ReleaseStructDefStmt(s) => self.exec_release_struct_def_stmt(s),
             Stmt::By(ByStmt::ByThmStmt(s)) => self.exec_by_thm_stmt(s),
         }
     }

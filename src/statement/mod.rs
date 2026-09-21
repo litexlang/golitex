@@ -29,7 +29,7 @@ pub use definitions::strategy::DefStrategyStmt;
 pub use definitions::structure::{DefStructStmt, StructFieldDef};
 pub use definitions::theorem::DefThmStmt;
 pub use proof_directives::{
-    ByClosedRangeAsCasesStmt, ByDefStmt, ByEnumerateRangeStmt, ByStructDefStmt, ByThmStmt,
+    ByClosedRangeAsCasesStmt, ByDefStmt, ByEnumerateRangeStmt, ByThmStmt, ReleaseStructDefStmt,
     ReleaseThmStmt,
 };
 pub use statement::{

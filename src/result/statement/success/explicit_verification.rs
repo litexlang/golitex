@@ -99,8 +99,8 @@ pub struct SuccessByDefStmtResult {
     pub verification: Option<SuccessVerifyByDefinitionResult>,
 }
 
-pub struct SuccessByStructDefStmtResult {
-    pub statement: ByStructDefStmt,
+pub struct SuccessReleaseStructDefStmtResult {
+    pub statement: ReleaseStructDefStmt,
     pub struct_obj: StructObj,
     pub common: SuccessStmtCommonResult,
     pub membership_check: Option<Box<VerifyFactResult>>,
@@ -135,6 +135,5 @@ pub enum SuccessByStmtResult {
     ByAxiomOfChoiceStmt(Box<SuccessByAxiomOfChoiceStmtResult>),
     ByRegularityAxiomStmt(Box<SuccessByRegularityAxiomStmtResult>),
     ByDefStmt(Box<SuccessByDefStmtResult>),
-    ByStructDefStmt(Box<SuccessByStructDefStmtResult>),
     ByThmStmt(Box<SuccessByThmStmtResult>),
 }

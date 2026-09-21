@@ -9,5 +9,3 @@ mod let_binding;
 mod object_equality;
 mod object_membership;
 mod preimage;
-mod sequence_and_matrix;
-mod tuple_and_cartesian;

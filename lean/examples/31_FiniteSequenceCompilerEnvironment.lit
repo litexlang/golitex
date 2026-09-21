@@ -1,7 +1,0 @@
-# The finite-sequence verifier returns two outer bound-check Results, three
-# named WD Results, and a local index scope containing both the N+ parameter
-# FactId and the retained `index <= 3` domain FactId. The compiler pushes that
-# exact Result scope, compiles the return check, pops it, then publishes the
-# finite-sequence membership, function membership, and defining equality.
-have finite_seq bounded_sequence finite_seq(R, 3) for index <= 3, bounded_sequence(index) = index + 1
-bounded_sequence(2) = 2 + 1

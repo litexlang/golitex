@@ -47,6 +47,19 @@ impl StatementResultRenderer {
                     vec![("verification".to_string(), verification)],
                 )
             }
+            SuccessStmtResult::ReleaseStructDefStmt(result) => {
+                let membership_check = result
+                    .membership_check
+                    .as_ref()
+                    .map(|check| self.verify_fact_result(check))
+                    .unwrap_or(JsonValue::Null);
+                self.non_fact_stmt(
+                    "ReleaseStructDefStmt",
+                    result.statement.to_string(),
+                    &result.common,
+                    vec![("membership_check".to_string(), membership_check)],
+                )
+            }
             SuccessStmtResult::By(result) => self.by_stmt(result),
             SuccessStmtResult::Witness(result) => self.witness_stmt(result),
             SuccessStmtResult::ProofBlock(result) => self.proof_block_stmt(result),

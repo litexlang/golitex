@@ -14,7 +14,7 @@ indexing.
 | Qualified refs | `WithExportFileId` / `WithModAndExportFileId` (no id) |
 | Binder / param slots | `BoundName { id, name }` |
 | IR / display | `display_and_ir/` — plain IR `#id#name`, display = surface name |
-| Def table | `DefinitionMemory.identifiers: HashMap<PlainName, …>` (by name, not id) |
+| Def table | `DefinitionMemory.identifiers: HashMap<PlainName, DefinedIdentifierInfo>` (by name, not id); `definition: StoredIdentifierDefinition` records user-level stmt (`Rc`) or scoped `ParamType` |
 | Fact store | `facts_by_id` + known-equality / known-atomic (linear) / known-forall |
 | Instantiate | `instantiate/` — subst key = `IdentifierId` |
 
@@ -49,6 +49,9 @@ indexing.
     arity; each arg justified by proving `known_arg = goal_arg` via equality
     search with forall/rewrite off (includes MatchingOneArgByOne peel).
 12. **known_equality** stays a graph + equivalence classes keyed by `ObjIR`.
+13. **`StructFieldDef.binding`** is `BoundName` (allocated when the field line is
+    parsed). `<=>:` free refs reuse that id; exec must not allocate a second
+    field id for the field binder scope.
 
 ## Definition table vs IdentifierId
 
@@ -64,9 +67,10 @@ files uses `file::x` / `mod::file::x`.
   will need something like `alpha_normalize` again later. Not in tree now.
 - Some stmt-only binder slots (induction / `for`) may still be bare `String`;
   migrate to `BoundName` when those paths are wired.
-- **`have fn … = …` / `have …:` (by exist) / `have fn by cases` / `have fn by exist!`**
+- **`have fn … = …` / `have …:` (by exist) / `have fn by cases` / `have fn by induc`**
   are wired in new_pipeline. Occupy `f` at file root before parsing the body so
-  free refs to `f` qualify via the same rule. `have fn by induc` still not wired.
+  free refs to `f` qualify via the same rule.
+  `have fn by exist!` parses (goal-only) but **exec is not wired**.
 - **`-r` / project mount run loop** still deferred; set `current_mod_id` +
   `current_export_file_id` before parsing each export file.
 

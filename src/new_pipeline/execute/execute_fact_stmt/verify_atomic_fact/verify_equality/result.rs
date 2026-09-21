@@ -46,6 +46,7 @@ pub struct MatchForallConclusionArgsProof {
 }
 
 // One slot per (pattern_arg, goal_arg). Length equals arg arity.
+// Nested structure peels use ByStructure with the same enum recursively.
 pub enum ForallConclusionArgMatchProof {
     // First sight of a forall param: bind goal_arg, no equal subproof.
     BoundParam {
@@ -60,14 +61,23 @@ pub enum ForallConclusionArgMatchProof {
         goal_arg: Obj,
         equal: StrictEqualWithFact,
     },
-// Pattern is not a forall param: instantiate under current subst, then prove
-// instantiated = goal_arg under strict equal (forall/rewrite/store WD off).
-NonParamEqual {
-    pattern: Obj,
-    pattern_after_subst: Obj,
-    goal_arg: Obj,
-    equal: StrictEqualWithFact,
-},
+    // Same constructor shape: recurse on corresponding children (legacy-aligned).
+    // Example: pattern `G.mul(a, identity)`, goal `G.mul(G.one, identity)`
+    //   -> children bind `a↦G.one`, match `identity`, match head `G.mul`.
+    ByStructure {
+        pattern: Obj,
+        goal_arg: Obj,
+        child_matches: Vec<ForallConclusionArgMatchProof>,
+    },
+    // Pattern is not a forall param and not same-shape: instantiate under
+    // current subst, then prove instantiated = goal_arg under strict equal
+    // (forall/rewrite/store WD off).
+    NonParamEqual {
+        pattern: Obj,
+        pattern_after_subst: Obj,
+        goal_arg: Obj,
+        equal: StrictEqualWithFact,
+    },
 }
 
 // EqualFact that was searched, plus a strict (no forall/rewrite) certificate.
@@ -118,7 +128,16 @@ pub enum EqualFactSearchedProof {
     ByBuiltinStrategy(EqualitySearchProofByBuiltinStrategy),
     ByMatchingOneArgByOne(EqualFactSearchedProofByMatchingOneArgByOne),
     ByKnownForallFact(Box<SearchProofByKnownForallFact>),
+    // Legacy: match known forall on the swapped equality, then cite symmetry.
+    // Example: known `forall x: G.mul(G.one, x) = x`, goal `identity = G.mul(G.one, identity)`.
+    ByKnownForallFactViaSymmetry(Box<EqualFactSearchedProofByKnownForallViaSymmetry>),
     ByBuiltinRewrite(EqualitySearchProofByBuiltinRewrite),
+}
+
+// Prove `L = R` by proving `R = L` via known forall, then equality symmetry.
+pub struct EqualFactSearchedProofByKnownForallViaSymmetry {
+    pub reversed_equal: EqualFact,
+    pub known_forall: SearchProofByKnownForallFact,
 }
 
 // Oriented cite chain from goal.left to goal.right over generating equality
@@ -178,6 +197,7 @@ pub fn strict_equal_arg_proof_from_searched(
             Some(StrictEqualArgProof::ByMatchingOneArgByOne(p))
         }
         EqualFactSearchedProof::ByKnownForallFact(_)
+        | EqualFactSearchedProof::ByKnownForallFactViaSymmetry(_)
         | EqualFactSearchedProof::ByBuiltinRewrite(_) => None,
     }
 }

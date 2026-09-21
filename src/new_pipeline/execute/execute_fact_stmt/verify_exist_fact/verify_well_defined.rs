@@ -56,7 +56,7 @@ impl Runtime {
             }
         };
 
-        self.define_typed_parameters_in_current_env(&plain.typed_parameters)?;
+        self.define_typed_parameters_in_current_env(&plain.typed_parameters, None)?;
 
         let mut succeeded_body = Vec::with_capacity(plain.facts.len());
         for (failed_index, qf) in plain.facts.iter().enumerate() {

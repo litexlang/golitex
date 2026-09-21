@@ -1166,8 +1166,7 @@ fn have_fn_by_cases_slice2() {
 }
 
 #[test]
-fn have_fn_by_exist_slice2() {
-    use crate::new_pipeline::exec_env::exec_env::SpecialObjProperty;
+fn have_fn_by_exist_exec_not_wired() {
     use crate::new_pipeline::execute::execute_have_fn_by_forall_exist_unique_stmt::{
         ExecHaveFnByForallExistUniqueStmtFailed, ExecHaveFnByForallExistUniqueStmtResult,
     };
@@ -1190,46 +1189,321 @@ fn have_fn_by_exist_slice2() {
     let r = exec_one(&mut runtime, code);
     match &r {
         ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByForallExistUnique(
-            ExecHaveFnByForallExistUniqueStmtResult::Success(_),
+            ExecHaveFnByForallExistUniqueStmtResult::Failed(
+                ExecHaveFnByForallExistUniqueStmtFailed::NotWired,
+            ),
         )) => {}
-        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByForallExistUnique(
-            ExecHaveFnByForallExistUniqueStmtResult::Failed(f),
-        )) => {
-            let msg = match f {
-                ExecHaveFnByForallExistUniqueStmtFailed::Shape(s) => format!("Shape({s})"),
-                ExecHaveFnByForallExistUniqueStmtFailed::ForallWellDefined(_) => {
-                    "ForallWellDefined".to_string()
-                }
-                ExecHaveFnByForallExistUniqueStmtFailed::FnSetWellDefined(_) => {
-                    "FnSetWellDefined".to_string()
-                }
-                ExecHaveFnByForallExistUniqueStmtFailed::Introduce(s) => {
-                    format!("Introduce({s})")
-                }
-                ExecHaveFnByForallExistUniqueStmtFailed::ProofBody(_) => "ProofBody".to_string(),
-                ExecHaveFnByForallExistUniqueStmtFailed::ForallProof(_) => {
-                    "ForallProof".to_string()
-                }
-                ExecHaveFnByForallExistUniqueStmtFailed::PropertyWellDefined(_) => {
-                    "PropertyWellDefined".to_string()
-                }
-            };
-            panic!("have fn by exist! failed: {msg}");
-        }
-        other => panic!("unexpected result shape for by exist!: failed={}", other.is_failed()),
+        other => panic!(
+            "expected NotWired soft fail for by exist!, got failed={}",
+            other.is_failed()
+        ),
     }
+}
+
+#[test]
+fn have_fn_by_exist_rejects_proof_body() {
+    let mut runtime = runtime_with_file_env();
+    let code = "have fn f by exist!:\n    ? forall x R:\n        exist! y R st {y = x}\n    x = x";
+    let tokens = Tokenizer::new()
+        .tokenize(code, runtime.current_file.clone())
+        .expect("tokenize");
     assert!(
-        runtime
-            .top_exec_env()
-            .special_object_properties
-            .values()
-            .flatten()
-            .any(|p| matches!(p, SpecialObjProperty::InFunctionSet(_))),
-        "by exist! must store InFunctionSet"
-    );
-    assert!(
-        !exec_one(&mut runtime, "forall x A:\n    $F(x, f(x))").is_failed(),
-        "$F(x, f(x)) after have fn by exist!"
+        runtime.parse(&tokens).is_err(),
+        "by exist! with proof body must fail parse"
     );
 }
 
+#[test]
+fn template_have_fn_by_exist_not_wired() {
+    use crate::new_pipeline::execute::execute_def_template_stmt::{
+        ExecDefTemplateStmtFailed, ExecDefTemplateStmtResult,
+    };
+    use crate::new_pipeline::execute::ExecDefinitionStmtResult;
+    use crate::new_pipeline::execute::ExecStmtResult;
+
+    let mut runtime = runtime_with_file_env();
+    let code = "template<S set>:\n    have fn id_S by exist!:\n        ? forall x S:\n            exist! y S st {y = x}";
+    let r = exec_one(&mut runtime, code);
+    match &r {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefTemplate(
+            ExecDefTemplateStmtResult::Failed(ExecDefTemplateStmtFailed::UnsupportedBody(msg)),
+        )) if msg.contains("by exist!") => {}
+        other => panic!(
+            "expected UnsupportedBody for template by exist!, got failed={}",
+            other.is_failed()
+        ),
+    }
+}
+
+#[test]
+fn have_fn_by_cases_sign_trichotomy_slice() {
+    let mut runtime = runtime_with_file_env();
+    let code = "have fn sign(x R) Z by cases:\n    case x > 0: 1\n    case x = 0: 0\n    case x < 0: (-1)";
+    assert!(
+        !exec_one(&mut runtime, code).is_failed(),
+        "sign by cases (trichotomy) must succeed"
+    );
+    assert!(!exec_one(&mut runtime, "have a R = 2").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "sign(a) = sign(a)").is_failed(),
+        "sign(a)=sign(a)"
+    );
+}
+
+#[test]
+fn have_fn_by_induc_countdown_slice() {
+    use crate::new_pipeline::execute::execute_have_fn_by_induc_stmt::{
+        ExecHaveFnByInducStmtFailed, ExecHaveFnByInducStmtResult,
+    };
+    use crate::new_pipeline::execute::ExecDefinitionStmtResult;
+    use crate::new_pipeline::execute::ExecStmtResult;
+
+    let mut runtime = runtime_with_file_env();
+    let code = "have fn countdown(n N) N by induc n from 0:\n    case n = 0: 0\n    case n >= 1: countdown(n - 1)";
+    let r = exec_one(&mut runtime, code);
+    match &r {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByInduc(
+            ExecHaveFnByInducStmtResult::Success(_),
+        )) => {}
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByInduc(
+            ExecHaveFnByInducStmtResult::Failed(f),
+        )) => {
+            let msg = match f {
+                ExecHaveFnByInducStmtFailed::EmptyCases => "EmptyCases".to_string(),
+                ExecHaveFnByInducStmtFailed::FnSetWellDefined(_) => "FnSetWellDefined".to_string(),
+                ExecHaveFnByInducStmtFailed::MeasureWellDefined(_) => {
+                    "MeasureWellDefined".to_string()
+                }
+                ExecHaveFnByInducStmtFailed::LowerBoundWellDefined(_) => {
+                    "LowerBoundWellDefined".to_string()
+                }
+                ExecHaveFnByInducStmtFailed::MeasureNotInteger(_) => {
+                    "MeasureNotInteger".to_string()
+                }
+                ExecHaveFnByInducStmtFailed::LowerBoundNotInteger(_) => {
+                    "LowerBoundNotInteger".to_string()
+                }
+                ExecHaveFnByInducStmtFailed::MeasureBelowLower(_) => {
+                    "MeasureBelowLower".to_string()
+                }
+                ExecHaveFnByInducStmtFailed::Coverage(_) => "Coverage".to_string(),
+                ExecHaveFnByInducStmtFailed::Disjoint { i, j } => format!("Disjoint {i},{j}"),
+                ExecHaveFnByInducStmtFailed::CaseBodyWellDefined(i, _) => {
+                    format!("CaseBodyWellDefined {i}")
+                }
+                ExecHaveFnByInducStmtFailed::CaseBodyInRetSet(i, _) => {
+                    format!("CaseBodyInRetSet {i}")
+                }
+                ExecHaveFnByInducStmtFailed::Shape(s) => format!("Shape({s})"),
+            };
+            panic!("countdown by induc failed: {msg}");
+        }
+        other => panic!("unexpected result for induc: failed={}", other.is_failed()),
+    }
+    assert!(
+        !exec_one(&mut runtime, "forall n N:\n    countdown(n) $in N").is_failed(),
+        "countdown(n) $in N"
+    );
+}
+
+#[test]
+fn auto_open_point_forall_field_reflexive() {
+    use crate::new_pipeline::execute::execute_fact_stmt::ExecFactStmtResult;
+    use crate::new_pipeline::execute::execute_fact_stmt::{
+        FailToVerifyForallFactWellDefinedResult, VerifyFactResult, VerifyForallFactFailed,
+        VerifyForallFactResult,
+    };
+
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(&mut runtime, "struct Point:\n    x R\n    y R\n").is_failed(),
+        "def struct Point"
+    );
+    let result = exec_one(&mut runtime, "forall p &Point:\n    p.x = p.x\n");
+    match result {
+        ExecStmtResult::Fact(ExecFactStmtResult::Success(_)) => {}
+        ExecStmtResult::Fact(ExecFactStmtResult::Failed(VerifyFactResult::ForallFact(boxed))) => {
+            match *boxed {
+                VerifyForallFactResult::Failed(VerifyForallFactFailed::FailToVerifyWellDefined(
+                    FailToVerifyForallFactWellDefinedResult::AutoOpenStructLayer(failed),
+                )) => panic!("auto-open soft fail: {}", failed.reason),
+                VerifyForallFactResult::Failed(VerifyForallFactFailed::FailToVerifyWellDefined(
+                    _,
+                )) => panic!("forall WD fail (not auto-open)"),
+                VerifyForallFactResult::Failed(VerifyForallFactFailed::FailToSearchProof {
+                    failed_then_index,
+                    ..
+                }) => panic!("forall then fail at {failed_then_index}"),
+                VerifyForallFactResult::Success(_) => panic!("unexpected"),
+            }
+        }
+        other => panic!("unexpected failed={}", other.is_failed()),
+    }
+}
+
+#[test]
+fn group_struct_def_with_forall_law_succeeds() {
+    use crate::new_pipeline::execute::exec_stmt_result::{
+        ExecDefinitionStmtResult, ExecStmtResult as ESR,
+    };
+    use crate::new_pipeline::execute::execute_def_struct_stmt::ExecDefStructStmtResult;
+
+    let code = r#"
+struct Group<s nonempty_set>:
+    mul fn(x, y s) s
+    one s
+    inv fn(x s) s
+    <=>:
+        forall x, y, z s:
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+        forall x s:
+            mul(x, one) = x
+            mul(one, x) = x
+            mul(inv(x), x) = one
+"#;
+    let mut runtime = runtime_with_file_env();
+    match exec_one(&mut runtime, code) {
+        ESR::Definition(ExecDefinitionStmtResult::DefStruct(
+            ExecDefStructStmtResult::Success(_),
+        )) => {}
+        ESR::Definition(ExecDefinitionStmtResult::DefStruct(
+            ExecDefStructStmtResult::Failed(fail),
+        )) => panic!("struct Group failed: {:?}", std::mem::discriminant(&fail)),
+        other => panic!("unexpected {:?}", std::mem::discriminant(&other)),
+    }
+}
+
+#[test]
+fn group_auto_open_field_reflexive() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(
+            &mut runtime,
+            r#"
+struct Group<s nonempty_set>:
+    mul fn(x, y s) s
+    one s
+    inv fn(x s) s
+    <=>:
+        forall x s:
+            mul(x, one) = x
+"#
+        )
+        .is_failed(),
+        "def Group"
+    );
+    assert!(
+        !exec_one(
+            &mut runtime,
+            "forall s nonempty_set, G &Group<s>:
+    G.one = G.one
+    G.mul = G.mul
+",
+        )
+        .is_failed(),
+        "auto-open field reflexive"
+    );
+}
+
+#[test]
+fn forall_specialize_field_access_mul() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(
+            &mut runtime,
+            r#"
+struct Group<s nonempty_set>:
+    mul fn(x, y s) s
+    one s
+    <=>:
+        forall x s:
+            mul(x, one) = x
+            mul(one, x) = x
+"#
+        )
+        .is_failed(),
+        "def Group"
+    );
+    assert!(
+        !exec_one(
+            &mut runtime,
+            r#"forall s nonempty_set, G &Group<s>, identity s:
+    forall a s:
+        G.mul(a, identity) = a
+    =>:
+        G.mul(G.one, identity) = G.one
+"#
+        )
+        .is_failed(),
+        "specialize G.mul(a, identity)=a"
+    );
+}
+
+#[test]
+fn group_unit_law_after_auto_open() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(
+            &mut runtime,
+            r#"
+struct Group<s nonempty_set>:
+    mul fn(x, y s) s
+    one s
+    <=>:
+        forall x s:
+            mul(x, one) = x
+            mul(one, x) = x
+"#
+        )
+        .is_failed()
+    );
+    assert!(
+        !exec_one(
+            &mut runtime,
+            r#"forall s nonempty_set, G &Group<s>:
+    G.mul(G.one, G.one) = G.one
+"#
+        )
+        .is_failed(),
+        "auto-opened unit law"
+    );
+}
+
+#[test]
+fn group_identity_unique_via_auto_open() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(
+            &mut runtime,
+            r#"
+struct Group<s nonempty_set>:
+    mul fn(x, y s) s
+    one s
+    inv fn(x s) s
+    <=>:
+        forall x, y, z s:
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+        forall x s:
+            mul(x, one) = x
+            mul(one, x) = x
+            mul(inv(x), x) = one
+"#
+        )
+        .is_failed(),
+        "def Group"
+    );
+    assert!(
+        !exec_one(
+            &mut runtime,
+            r#"forall s nonempty_set, G &Group<s>, identity s:
+    forall a s:
+        G.mul(identity, a) = a
+        G.mul(a, identity) = a
+    =>:
+        identity = G.mul(G.one, identity) = G.one
+"#
+        )
+        .is_failed(),
+        "Group identity uniqueness"
+    );
+}

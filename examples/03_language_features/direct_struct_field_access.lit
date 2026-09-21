@@ -59,7 +59,7 @@ struct TaggedPoint:
     tag N
 
 have item &TaggedPoint = ((1, 2), 0)
-by struct def item.point
+release struct def item.point
 item.point.x = 1
 
 # Current behavior: argument lists are explicit; `item.point.x` obtains

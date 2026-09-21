@@ -102,34 +102,6 @@ impl StmtResultToLeanCompiler {
                         self.unsupported_success_stmt_result(success)
                     }
                 }
-                SuccessDefinitionStmtResult::HaveTupleStmt(result) => {
-                    if self.compile_have_tuple_stmt_result_to_lean_source(result)? {
-                        Ok(())
-                    } else {
-                        self.unsupported_success_stmt_result(success)
-                    }
-                }
-                SuccessDefinitionStmtResult::HaveSeqStmt(result) => {
-                    if self.compile_have_sequence_stmt_result_to_lean_source(result)? {
-                        Ok(())
-                    } else {
-                        self.unsupported_success_stmt_result(success)
-                    }
-                }
-                SuccessDefinitionStmtResult::HaveFiniteSeqStmt(result) => {
-                    if self.compile_have_finite_sequence_stmt_result_to_lean_source(result)? {
-                        Ok(())
-                    } else {
-                        self.unsupported_success_stmt_result(success)
-                    }
-                }
-                SuccessDefinitionStmtResult::HaveMatrixStmt(result) => {
-                    if self.compile_have_matrix_stmt_result_to_lean_source(result)? {
-                        Ok(())
-                    } else {
-                        self.unsupported_success_stmt_result(success)
-                    }
-                }
                 SuccessDefinitionStmtResult::ObtainObjFromThm(result) => {
                     if self.compile_obtain_obj_from_theorem_stmt_result_to_lean_source(result)? {
                         Ok(())
@@ -146,8 +118,7 @@ impl StmtResultToLeanCompiler {
                 }
                 SuccessDefinitionStmtResult::HaveByPreimageStmt(_)
                 | SuccessDefinitionStmtResult::HaveFnEqualCaseByCaseStmt(_)
-                | SuccessDefinitionStmtResult::HaveFnByInducStmt(_)
-                | SuccessDefinitionStmtResult::HaveCartStmt(_) => {
+                | SuccessDefinitionStmtResult::HaveFnByInducStmt(_) => {
                     self.unsupported_success_stmt_result(success)
                 }
                 SuccessDefinitionStmtResult::DefPropStmt(result) => {
@@ -291,9 +262,9 @@ impl StmtResultToLeanCompiler {
                 SuccessByStmtResult::ByRegularityAxiomStmt(_) => {
                     Err("regularity-axiom Result compilation is unavailable without a reviewed native Lean foundation theorem or an explicitly permitted project axiom".into())
                 }
-                SuccessByStmtResult::ByStructDefStmt(_) => {
-                    Err("by-struct-definition Result compilation requires an exact structure carrier and field-projection target ABI".into())
-                }
+            },
+            SuccessStmtResult::ReleaseStructDefStmt(_) => {
+                Err("release-struct-def Result compilation requires an exact structure carrier and field-projection target ABI".into())
             },
             SuccessStmtResult::Witness(SuccessWitnessStmtResult::WitnessExistFact(result)) => {
                 if self.compile_witness_exist_fact_stmt_result_to_lean_source(result)? {
