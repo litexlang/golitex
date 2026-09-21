@@ -2,13 +2,13 @@ use crate::new_pipeline::ast::fact::{AtomicFact, Fact, IsNonemptySetFact};
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::ast::stmt::HaveObjInNonemptySetOrParamTypeStmt;
-use crate::new_pipeline::exec_env::StoredIdentifierDefinition;
 use crate::new_pipeline::execute::exec_stmt_result::{
     ParamTypeFactCheckResult, ParamTypeWellDefinedProof,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::{
     VerifyFactResult, VerifyObjWellDefinedResult, VerifyState,
 };
+use crate::new_pipeline::execute::introduce_typed_parameters::SharedHaveDefinition;
 use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeResult};
 use std::rc::Rc;
 
@@ -78,9 +78,9 @@ impl Runtime {
 
         let store_and_infer_result = self.define_typed_parameters_in_current_env(
             &stmt.param_def,
-            Some(StoredIdentifierDefinition::HaveObjInNonemptySetOrParamType(
-                Rc::new(stmt.clone()),
-            )),
+            Some(SharedHaveDefinition::HaveObjInNonemptySetOrParamType(Rc::new(
+                stmt.clone(),
+            ))),
         )?;
 
         let auto_opened_struct_layers =

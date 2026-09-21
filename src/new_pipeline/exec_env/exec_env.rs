@@ -78,24 +78,20 @@ pub struct WellDefinedObjectMemory {
 
 /// Where a name in `DefinitionMemory.identifiers` came from.
 ///
-/// User-level object defs keep the introducing stmt (`Rc`).
-/// Scoped binders (forall / prop params / struct fields / …) share one
-/// `ParamType` variant — same introduce mechanism, no outer-stmt tag.
+/// User-level object defs keep `(name, introducing stmt)`.
+/// Scoped binders share `ParamType((BoundName, ParamType))` — name is on `BoundName`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum StoredIdentifierDefinition {
-    HaveObjInNonemptySetOrParamType(Rc<HaveObjInNonemptySetOrParamTypeStmt>),
-    HaveObjEqual(Rc<HaveObjEqualStmt>),
-    HaveObjByExistFacts(Rc<HaveObjByExistFactsStmt>),
-    TrustHave(Rc<TrustHaveStmt>),
-    LetObj(Rc<LetObjStmt>),
-    HaveFnEqual(Rc<HaveFnEqualStmt>),
-    HaveFnEqualCaseByCase(Rc<HaveFnEqualCaseByCaseStmt>),
-    HaveFnByInduc(Rc<HaveFnByInducStmt>),
+    HaveObjInNonemptySetOrParamType((String, Rc<HaveObjInNonemptySetOrParamTypeStmt>)),
+    HaveObjEqual((String, Rc<HaveObjEqualStmt>)),
+    HaveObjByExistFacts((String, Rc<HaveObjByExistFactsStmt>)),
+    TrustHave((String, Rc<TrustHaveStmt>)),
+    LetObj((String, Rc<LetObjStmt>)),
+    HaveFnEqual((String, Rc<HaveFnEqualStmt>)),
+    HaveFnEqualCaseByCase((String, Rc<HaveFnEqualCaseByCaseStmt>)),
+    HaveFnByInduc((String, Rc<HaveFnByInducStmt>)),
     /// Local / scoped typed binder (`forall`, `prop` params, struct fields, …).
-    ParamType {
-        binding: BoundName,
-        param_type: ParamType,
-    },
+    ParamType((BoundName, ParamType)),
 }
 
 /// Definitions introduced in one execution environment.
@@ -105,7 +101,7 @@ pub enum StoredIdentifierDefinition {
 #[derive(Clone)]
 pub struct DefinitionMemory {
     /// Named atoms defined in this scope (`let`, `have`, forall/exist locals, …).
-    pub identifiers: HashMap<PlainName, DefinedIdentifierInfo>,
+    pub identifiers: HashMap<PlainName, StoredIdentifierDefinition>,
 
     pub predicate_definitions: HashMap<PlainName, DefPropStmt>,
     pub abstract_predicate_definitions: HashMap<PlainName, DefAbstractPropStmt>,
@@ -116,13 +112,6 @@ pub struct DefinitionMemory {
     pub theorem_definitions: HashMap<PlainName, DefThmStmt>,
     pub axiom_definitions: HashMap<PlainName, AxiomStmt>,
     pub strategy_definitions: HashMap<PlainName, DefStrategyStmt>,
-}
-
-/// One defined atom in `DefinitionMemory.identifiers`.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct DefinedIdentifierInfo {
-    pub identifier: String,
-    pub definition: StoredIdentifierDefinition,
 }
 
 /// Algebraic properties that can be proved for a predicate.

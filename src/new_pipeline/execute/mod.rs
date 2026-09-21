@@ -76,7 +76,7 @@ pub use execute_witness_stmt::{
     ExecWitnessExistFactStmtSuccessResult, ExecWitnessStmtResult,
 };
 pub use introduce_typed_parameters::{
-    IntroduceTypedParametersFailed, IntroduceTypedParametersResult,
+    IntroduceTypedParametersFailed, IntroduceTypedParametersResult, SharedHaveDefinition,
 };
 pub use release_one_struct_layer::{
     FailToReleaseOneStructLayer, ReleaseOneStructLayerProof, ReleaseOneStructLayerResult,

@@ -14,7 +14,7 @@ indexing.
 | Qualified refs | `WithExportFileId` / `WithModAndExportFileId` (no id) |
 | Binder / param slots | `BoundName { id, name }` |
 | IR / display | `display_and_ir/` — plain IR `#id#name`, display = surface name |
-| Def table | `DefinitionMemory.identifiers: HashMap<PlainName, DefinedIdentifierInfo>` (by name, not id); `definition: StoredIdentifierDefinition` records user-level stmt (`Rc`) or scoped `ParamType` |
+| Def table | `DefinitionMemory.identifiers: HashMap<PlainName, StoredIdentifierDefinition>` (by name, not id); value carries `(name, stmt)` or scoped `ParamType((BoundName, ParamType))` |
 | Fact store | `facts_by_id` + known-equality / known-atomic (linear) / known-forall |
 | Instantiate | `instantiate/` — subst key = `IdentifierId` |
 

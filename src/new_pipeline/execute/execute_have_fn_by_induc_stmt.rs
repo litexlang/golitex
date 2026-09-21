@@ -23,7 +23,7 @@ use crate::new_pipeline::ast::stmt::{
     FnSetClause, HaveFnByInducCase, HaveFnByInducCaseBody, HaveFnByInducStmt,
     HaveFnEqualCaseByCaseStmt,
 };
-use crate::new_pipeline::exec_env::{DefinedIdentifierInfo, ExecEnv, StoredIdentifierDefinition};
+use crate::new_pipeline::exec_env::{ExecEnv, StoredIdentifierDefinition};
 use crate::new_pipeline::execute::execute_fact_stmt::{
     VerifyFactResult, VerifyObjWellDefinedResult, VerifyState,
 };
@@ -229,10 +229,10 @@ impl Runtime {
         } else {
             self.top_exec_env_mut().definitions.identifiers.insert(
                 stmt.name.clone(),
-                DefinedIdentifierInfo {
-                    identifier: stmt.name.clone(),
-                    definition: StoredIdentifierDefinition::HaveFnByInduc(Rc::new(stmt.clone())),
-                },
+                StoredIdentifierDefinition::HaveFnByInduc((
+                    stmt.name.clone(),
+                    Rc::new(stmt.clone()),
+                )),
             );
         }
 

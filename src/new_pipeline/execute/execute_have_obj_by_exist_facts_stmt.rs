@@ -6,12 +6,12 @@
 
 use crate::new_pipeline::ast::fact::{ExistFactFamily, PlainExistFact};
 use crate::new_pipeline::ast::stmt::HaveObjByExistFactsStmt;
-use crate::new_pipeline::exec_env::StoredIdentifierDefinition;
 use crate::new_pipeline::execute::execute_fact_stmt::{
     VerifyExistFactFailed, VerifyExistFactResult, VerifyFactResult, VerifyPlainExistFactResult,
     VerifyPlainExistFactSuccess, VerifyState,
 };
 use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
+use crate::new_pipeline::execute::introduce_typed_parameters::SharedHaveDefinition;
 use crate::new_pipeline::instantiate::quantifier_free_fact_to_fact;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 use std::rc::Rc;
@@ -70,7 +70,7 @@ impl Runtime {
 
         let mut store_and_infer_result = self.define_typed_parameters_in_current_env(
             &stmt.param_def,
-            Some(StoredIdentifierDefinition::HaveObjByExistFacts(Rc::new(
+            Some(SharedHaveDefinition::HaveObjByExistFacts(Rc::new(
                 stmt.clone(),
             ))),
         )?;
