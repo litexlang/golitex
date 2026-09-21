@@ -15,7 +15,7 @@ use crate::new_pipeline::ast::param::{
     ParamType, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
 };
 use crate::new_pipeline::ast::stmt::{FnSetClause, HaveFnEqualCaseByCaseStmt};
-use crate::new_pipeline::exec_env::{DefinedIdentifierInfo, ExecEnv, StoredIdentifierDefinition};
+use crate::new_pipeline::exec_env::{ExecEnv, StoredIdentifierDefinition};
 use crate::new_pipeline::execute::execute_fact_stmt::{
     VerifyFactResult, VerifyObjWellDefinedResult, VerifyState,
 };
@@ -326,12 +326,10 @@ impl Runtime {
         }
         self.top_exec_env_mut().definitions.identifiers.insert(
             stmt.name.clone(),
-            DefinedIdentifierInfo {
-                identifier: stmt.name.clone(),
-                definition: StoredIdentifierDefinition::HaveFnEqualCaseByCase(Rc::new(
-                    stmt.clone(),
-                )),
-            },
+            StoredIdentifierDefinition::HaveFnEqualCaseByCase((
+                stmt.name.clone(),
+                Rc::new(stmt.clone()),
+            )),
         );
 
         let function_ident =

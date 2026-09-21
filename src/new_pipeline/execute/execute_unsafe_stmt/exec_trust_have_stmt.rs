@@ -2,12 +2,12 @@
 
 use super::exec_trust_stmt::trust_verify_state;
 use crate::new_pipeline::ast::stmt::TrustHaveStmt;
-use crate::new_pipeline::exec_env::StoredIdentifierDefinition;
 use crate::new_pipeline::execute::execute_fact_stmt::{
     FactWellDefinedProof, FailToVerifyFactWellDefinedResult, ParamTypeWellDefinedProof,
     StoreFactAndInferResult, VerifyFactWellDefinedResult, VerifyObjWellDefinedResult,
 };
 use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
+use crate::new_pipeline::execute::introduce_typed_parameters::SharedHaveDefinition;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use std::rc::Rc;
 
@@ -74,7 +74,7 @@ impl Runtime {
 
         let defined_param_store_and_infer = self.define_typed_parameters_in_current_env(
             &stmt.param_def,
-            Some(StoredIdentifierDefinition::TrustHave(Rc::new(stmt.clone()))),
+            Some(SharedHaveDefinition::TrustHave(Rc::new(stmt.clone()))),
         )?;
 
         let auto_opened_struct_layers =

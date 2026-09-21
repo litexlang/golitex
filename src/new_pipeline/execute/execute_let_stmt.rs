@@ -1,7 +1,7 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact};
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::stmt::LetObjStmt;
-use crate::new_pipeline::exec_env::{DefinedIdentifierInfo, StoredIdentifierDefinition};
+use crate::new_pipeline::exec_env::StoredIdentifierDefinition;
 use crate::new_pipeline::execute::execute_fact_stmt::{VerifyObjWellDefinedResult, VerifyState};
 use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeError, RuntimeResult};
 use std::rc::Rc;
@@ -51,10 +51,10 @@ impl Runtime {
         }
         self.top_exec_env_mut().definitions.identifiers.insert(
             let_stmt.name.name.clone(),
-            DefinedIdentifierInfo {
-                identifier: let_stmt.name.name.clone(),
-                definition: StoredIdentifierDefinition::LetObj(Rc::new(let_stmt.clone())),
-            },
+            StoredIdentifierDefinition::LetObj((
+                let_stmt.name.name.clone(),
+                Rc::new(let_stmt.clone()),
+            )),
         );
 
         let equality_fact_id = self.ids.allocate_fact_id();

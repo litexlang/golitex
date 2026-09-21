@@ -136,6 +136,9 @@ atomics including `≠` → `by_atomic_prop`; whole `or` thens → `by_or`).
 
 Atomic / equality / or / exist search may then use `ByKnownForallFact` via
 `SearchProofByKnownForallFact` (`cite: ForallConclusionCite` = FactId +
+location into then / and-component / exist-then). Equality also tries the
+swapped sides and records `ByKnownForallFactViaSymmetry` when the forall
+matches only after reversing `L = R` (legacy equality symmetry).
 `ForallConclusionLocation`, ordered `forall_parameters_match_what_args`,
 per-arg `arg_match_proofs` (`BoundParam` / `ReboundParamEqual` /
 `NonParamEqual` with `StrictEqualWithFact`), then

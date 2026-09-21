@@ -17,8 +17,11 @@ use crate::new_pipeline::ast::fact::{
 };
 use crate::new_pipeline::ast::obj::{Obj, StructObj};
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
+use crate::new_pipeline::ast::stmt::{
+    HaveObjByExistFactsStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt, TrustHaveStmt,
+};
 use crate::new_pipeline::exec_env::exec_env::SpecialObjProperty;
-use crate::new_pipeline::exec_env::{DefinedIdentifierInfo, StoredIdentifierDefinition};
+use crate::new_pipeline::exec_env::StoredIdentifierDefinition;
 use crate::new_pipeline::execute::execute_fact_stmt::{
     fail_to_verify_obj_well_defined_others, ParamTypeWellDefinedProof, VerifyObjWellDefinedResult,
     VerifyState,
@@ -28,6 +31,37 @@ use crate::new_pipeline::execute::release_one_struct_layer::{
     FailToReleaseOneStructLayer, ReleaseOneStructLayerProof,
 };
 use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeError, RuntimeResult};
+use std::rc::Rc;
+
+/// Shared stmt body for multi-name `have` / `trust have` (name attached at insert).
+pub enum SharedHaveDefinition {
+    HaveObjInNonemptySetOrParamType(Rc<HaveObjInNonemptySetOrParamTypeStmt>),
+    HaveObjEqual(Rc<HaveObjEqualStmt>),
+    HaveObjByExistFacts(Rc<HaveObjByExistFactsStmt>),
+    TrustHave(Rc<TrustHaveStmt>),
+}
+
+impl SharedHaveDefinition {
+    fn with_name(&self, name: String) -> StoredIdentifierDefinition {
+        match self {
+            SharedHaveDefinition::HaveObjInNonemptySetOrParamType(stmt) => {
+                StoredIdentifierDefinition::HaveObjInNonemptySetOrParamType((
+                    name,
+                    Rc::clone(stmt),
+                ))
+            }
+            SharedHaveDefinition::HaveObjEqual(stmt) => {
+                StoredIdentifierDefinition::HaveObjEqual((name, Rc::clone(stmt)))
+            }
+            SharedHaveDefinition::HaveObjByExistFacts(stmt) => {
+                StoredIdentifierDefinition::HaveObjByExistFacts((name, Rc::clone(stmt)))
+            }
+            SharedHaveDefinition::TrustHave(stmt) => {
+                StoredIdentifierDefinition::TrustHave((name, Rc::clone(stmt)))
+            }
+        }
+    }
+}
 
 pub enum IntroduceTypedParametersFailed {
     ParamType(VerifyObjWellDefinedResult),
@@ -132,13 +166,13 @@ impl Runtime {
     // Stage 2: bind each identifier and store its type fact into KnownFactMemory.
     // Example: `have x R` stores `x $in R`.
     //
-    // `shared_definition`:
+    // `shared_have`:
     // - `None` → each name is a scoped `ParamType` binder
-    // - `Some(def)` → every name shares that user-level definition (`Rc` clone)
+    // - `Some(...)` → every name gets that have/trust-have stmt with its own name
     pub fn define_typed_parameters_in_current_env(
         &mut self,
         typed_parameters: &TypedParameterList,
-        shared_definition: Option<StoredIdentifierDefinition>,
+        shared_have: Option<SharedHaveDefinition>,
     ) -> RuntimeResult<StoreHaveObjAndInferResult> {
         let mut stored_fact_ids = Vec::new();
         for group in &typed_parameters.groups {
@@ -149,20 +183,17 @@ impl Runtime {
                         identifier.name
                     )));
                 }
-                let definition = match &shared_definition {
-                    Some(def) => def.clone(),
-                    None => StoredIdentifierDefinition::ParamType {
-                        binding: identifier.clone(),
-                        param_type: group.param_type.clone(),
-                    },
+                let definition = match &shared_have {
+                    Some(shared) => shared.with_name(identifier.name.clone()),
+                    None => StoredIdentifierDefinition::ParamType((
+                        identifier.clone(),
+                        group.param_type.clone(),
+                    )),
                 };
-                self.top_exec_env_mut().definitions.identifiers.insert(
-                    identifier.name.clone(),
-                    DefinedIdentifierInfo {
-                        identifier: identifier.name.clone(),
-                        definition,
-                    },
-                );
+                self.top_exec_env_mut()
+                    .definitions
+                    .identifiers
+                    .insert(identifier.name.clone(), definition);
                 // Env key is plain; type-fact mention qualifies at file root.
                 let element = Obj::Identifier(self.identifier_obj_for_stored_mention(identifier));
                 let type_fact = match &group.param_type {

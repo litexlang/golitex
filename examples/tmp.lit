@@ -1,3 +1,6 @@
+# Blueprint Group uniqueness of identity (direct `&Group` bind auto-opens one layer).
+# Run: LITEX_NEW_PIPELINE=1 cargo run --bin litex -- -f examples/tmp.lit
+
 struct Group<s nonempty_set>:
     mul fn(x, y s) s
     one s

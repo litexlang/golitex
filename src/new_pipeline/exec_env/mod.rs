@@ -6,7 +6,7 @@ pub mod known_forall_conclusion_memory;
 mod merge_exec_env;
 pub mod or_fact_index_key;
 
-pub use exec_env::{DefinedIdentifierInfo, ExecEnv, SpecialObjProperty, StoredIdentifierDefinition};
+pub use exec_env::{ExecEnv, SpecialObjProperty, StoredIdentifierDefinition};
 pub use exist_fact_index_key::{
     exist_fact_alpha_match_key, exist_fact_can_prove_goal, exist_fact_index_key,
     exist_fact_known_lookup_keys, plain_exist_fact, ExistFactIndexKey, ExistFactKind,
