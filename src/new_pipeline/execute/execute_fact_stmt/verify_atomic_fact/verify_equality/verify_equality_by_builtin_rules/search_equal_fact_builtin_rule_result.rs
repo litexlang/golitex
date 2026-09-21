@@ -1,19 +1,10 @@
 use super::by_equal_ir::ByEqualIrBuiltinRuleProof;
-use super::by_unfold_instantiated_template_have_fn_equal_application::ByUnfoldInstantiatedTemplateHaveFnEqualApplicationBuiltinRuleProof;
-use super::by_unfold_instantiated_template_have_obj_equal::ByUnfoldInstantiatedTemplateHaveObjEqualBuiltinRuleProof;
-use super::by_unfold_named_have_fn_equal_application::ByUnfoldNamedHaveFnEqualApplicationBuiltinRuleProof;
 
 // Each equality builtin rule gets its own variant and payload.
+// Definitional unfolds are EqualitySearchProofByObjectDefinition, not here.
 pub enum EqualitySearchProofByBuiltinRule {
     ByEqualIr(ByEqualIrBuiltinRuleProof),
     Calculation(EqualitySearchProofByCalculation),
-    ByUnfoldInstantiatedTemplateHaveObjEqual(
-        ByUnfoldInstantiatedTemplateHaveObjEqualBuiltinRuleProof,
-    ),
-    ByUnfoldInstantiatedTemplateHaveFnEqualApplication(
-        ByUnfoldInstantiatedTemplateHaveFnEqualApplicationBuiltinRuleProof,
-    ),
-    ByUnfoldNamedHaveFnEqualApplication(ByUnfoldNamedHaveFnEqualApplicationBuiltinRuleProof),
 }
 
 // Builtin Calculation: both sides of an equality reduce to the same value

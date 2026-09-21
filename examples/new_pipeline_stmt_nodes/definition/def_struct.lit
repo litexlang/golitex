@@ -8,9 +8,6 @@ struct Point:
     <=>:
         x = x
 
-struct Scalar:
-    value R
-
 struct Pair<A set>:
     left A
     right A

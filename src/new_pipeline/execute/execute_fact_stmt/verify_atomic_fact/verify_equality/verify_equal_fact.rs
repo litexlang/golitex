@@ -10,6 +10,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 use super::EqualitySearchProofByBuiltinStrategy;
+use super::EqualitySearchProofByObjectDefinition;
 
 impl Runtime {
     pub fn verify_equal_fact(
@@ -34,7 +35,7 @@ impl Runtime {
         }
     }
 
-    // Stage order: builtin rule → known equality → builtin strategy →
+    // Stage order: builtin rule → known equality → object definition → builtin strategy →
     // matching one arg by one → known forall → (if allowed) builtin rewrite.
     // MatchingOneArgByOne is constructor peel (not rewrite).
     //
@@ -56,6 +57,12 @@ impl Runtime {
             self.search_equal_fact_proof_by_known_equality(fact, verify_state.clone())?
         {
             return Ok(Some(EqualFactSearchedProof::ByKnownEquality(result)));
+        }
+
+        if let Some(result) =
+            self.search_equal_fact_proof_by_object_definition(fact, verify_state.clone())?
+        {
+            return Ok(Some(EqualFactSearchedProof::ByObjectDefinition(result)));
         }
 
         if let Some(result) =
@@ -92,6 +99,87 @@ impl Runtime {
             }
         }
 
+        Ok(None)
+    }
+
+    // Prove left = right by unfolding an object/function definition.
+    // Order: identifier HaveObjEqual / LetObj, then named have-fn application,
+    // then template have-obj / have-fn unfolds. First hit wins.
+    // Lives here (same file as other equality search stages) so call sites and
+    // IDE navigation stay with the stage dispatcher.
+    pub fn search_equal_fact_proof_by_object_definition(
+        &mut self,
+        fact: &EqualFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<EqualitySearchProofByObjectDefinition>> {
+        if let Some(proof) =
+            self.search_equal_fact_object_definition_have_obj_equal(fact, verify_state.clone())?
+        {
+            return Ok(Some(EqualitySearchProofByObjectDefinition::ByHaveObjEqual(
+                proof,
+            )));
+        }
+        if let Some(proof) =
+            self.search_equal_fact_object_definition_let_obj(fact, verify_state.clone())?
+        {
+            return Ok(Some(EqualitySearchProofByObjectDefinition::ByLetObj(proof)));
+        }
+        if let Some(proof) = self
+            .search_equal_fact_object_definition_unfold_named_have_fn_equal_application(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(
+                EqualitySearchProofByObjectDefinition::ByUnfoldNamedHaveFnEqualApplication(proof),
+            ));
+        }
+        if let Some(proof) = self
+            .search_equal_fact_object_definition_unfold_have_fn_equal_case_by_case_application(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(
+                EqualitySearchProofByObjectDefinition::ByUnfoldHaveFnEqualCaseByCaseApplication(
+                    proof,
+                ),
+            ));
+        }
+        if let Some(proof) = self
+            .search_equal_fact_object_definition_unfold_have_fn_by_induc_application(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(
+                EqualitySearchProofByObjectDefinition::ByUnfoldHaveFnByInducApplication(proof),
+            ));
+        }
+        if let Some(proof) = self
+            .search_equal_fact_object_definition_unfold_instantiated_template_have_obj_equal(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(
+                EqualitySearchProofByObjectDefinition::ByUnfoldInstantiatedTemplateHaveObjEqual(
+                    proof,
+                ),
+            ));
+        }
+        if let Some(proof) = self
+            .search_equal_fact_object_definition_unfold_instantiated_template_have_fn_equal_application(
+                fact,
+                verify_state,
+            )?
+        {
+            return Ok(Some(
+                EqualitySearchProofByObjectDefinition::ByUnfoldInstantiatedTemplateHaveFnEqualApplication(
+                    proof,
+                ),
+            ));
+        }
         Ok(None)
     }
 
@@ -134,9 +222,10 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualFactSearchedProof>> {
-        if let Some(proof) = self
-            .search_atomic_fact_proof_by_known_forall_fact(&(fact.clone().into()), verify_state.clone())?
-        {
+        if let Some(proof) = self.search_atomic_fact_proof_by_known_forall_fact(
+            &(fact.clone().into()),
+            verify_state.clone(),
+        )? {
             return Ok(Some(EqualFactSearchedProof::ByKnownForallFact(Box::new(
                 proof,
             ))));
@@ -152,14 +241,12 @@ impl Runtime {
             &(reversed.clone().into()),
             verify_state,
         )? {
-            return Ok(Some(
-                EqualFactSearchedProof::ByKnownForallFactViaSymmetry(Box::new(
-                    EqualFactSearchedProofByKnownForallViaSymmetry {
-                        reversed_equal: reversed,
-                        known_forall: proof,
-                    },
-                )),
-            ));
+            return Ok(Some(EqualFactSearchedProof::ByKnownForallFactViaSymmetry(
+                Box::new(EqualFactSearchedProofByKnownForallViaSymmetry {
+                    reversed_equal: reversed,
+                    known_forall: proof,
+                }),
+            )));
         }
         Ok(None)
     }

@@ -1,10 +1,10 @@
 use super::super::keywords::{
-    BY, CASE, CASES, COLON, COMMA, CONTRA, DEF, EQUAL, FROM, IMPOSSIBLE, INDUC, LEFT_PAREN,
-    QUESTION_GOAL, REFLEXIVE_PROP, RELEASE, RIGHT_ARROW, RIGHT_PAREN, STRONG_INDUC, STRUCT,
-    SYMMETRIC_PROP, TRANSITIVE_PROP, EXTENSION, THM, ENUMERATE, FOR, CLOSED_RANGE, FINITE_SET,
-    FACT_PREFIX, AS, RANGE, IN,
+    AXIOM_OF_CHOICE, BY, CASE, CASES, COLON, COMMA, CONTRA, DEF, EQUAL, FROM, IMPOSSIBLE, INDUC,
+    LEFT_PAREN, PROP, QUESTION_GOAL, REFLEXIVE_PROP, REGULARITY_AXIOM, RELEASE, RIGHT_ARROW,
+    RIGHT_PAREN, SET, STRONG_INDUC, STRUCT, SYMMETRIC_PROP, TRANSITIVE_PROP, EXTENSION, THM,
+    ENUMERATE, FOR, CLOSED_RANGE, FINITE_SET, FACT_PREFIX, AS, RANGE, IN, ZORN_LEMMA,
 };
-use super::super::object::{is_simple_name, parse_obj};
+use super::super::object::{is_simple_name, parse_obj, parse_obj_list_paren};
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::fact::{
     AndChainAtomicFact, AtomicFact, ExistOrAndChainAtomicFact, Fact,
@@ -12,11 +12,11 @@ use crate::new_pipeline::ast::fact::{
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::stmt::{
-    ByCasesStmt, ByContraStmt, ByDefStmt, ByInducStmt, ByReflexivePropStmt, ByStmt,
-    ByStrongInducStmt, BySymmetricPropStmt, ByTransitivePropStmt, ByExtensionStmt,
-    ClosedRangeOrRange, ByClosedRangeAsCasesStmt, ByEnumerateRangeStmt, ByForStmt,
-    ByEnumerateFiniteSetStmt, ByThmStmt, ReleaseStructDefStmt, ReleaseThmStmt, Stmt, TheoremCall,
-    TheoremCallArguments,
+    ByAxiomOfChoiceStmt, ByCasesStmt, ByContraStmt, ByDefStmt, ByInducStmt, ByReflexivePropStmt,
+    ByRegularityAxiomStmt, ByStmt, ByStrongInducStmt, BySymmetricPropStmt, ByTransitivePropStmt,
+    ByExtensionStmt, ByZornLemmaStmt, ClosedRangeOrRange, ByClosedRangeAsCasesStmt,
+    ByEnumerateRangeStmt, ByForStmt, ByEnumerateFiniteSetStmt, ByThmStmt, ReleaseStructDefStmt,
+    ReleaseThmStmt, Stmt, TheoremCall, TheoremCallArguments,
 };
 use crate::new_pipeline::parse::prop_registration_shape::{
     reflexive_prop_name_from_forall, symmetric_prop_registration_from_forall,
@@ -42,8 +42,11 @@ impl Runtime {
             Some(ENUMERATE) => self.parse_by_enumerate_stmt(&mut tb, block),
             Some(FOR) => self.parse_by_for_stmt(&mut tb, block),
             Some(CLOSED_RANGE) => self.parse_by_closed_range_as_cases_stmt(&mut tb, block),
+            Some(REGULARITY_AXIOM) => self.parse_by_regularity_axiom_stmt(&mut tb, block),
+            Some(AXIOM_OF_CHOICE) => self.parse_by_axiom_of_choice_stmt(&mut tb, block),
+            Some(ZORN_LEMMA) => self.parse_by_zorn_lemma_stmt(&mut tb, block),
             Some(other) => Err(tb.parse_error(format!(
-                "by: `{other}` is not wired yet (supported: cases, contra, def, thm, reflexive_prop, symmetric_prop, transitive_prop, extension, induc, strong_induc)"
+                "by: `{other}` is not wired yet (supported: cases, contra, def, thm, reflexive_prop, symmetric_prop, transitive_prop, extension, induc, strong_induc, regularity_axiom, axiom_of_choice, zorn_lemma)"
             ))),
             None => Err(tb.parse_error("by: expected a proof directive after `by`")),
         }
@@ -824,4 +827,144 @@ fn is_negative_atomic(fact: &AtomicFact) -> bool {
             | AtomicFact::NotSubsetFact(_)
             | AtomicFact::NotSupersetFact(_)
     )
+}
+
+fn parse_optional_trailing_proof_colon(
+    tb: &mut TokenBlock,
+    syntax_name: &str,
+) -> RuntimeResult<bool> {
+    if tb.peek() == Some(COLON) {
+        tb.expect(COLON)?;
+        if !tb.exceed_end_of_head() {
+            return Err(tb.parse_error(format!(
+                "{syntax_name}: unexpected token after trailing `:`"
+            )));
+        }
+        return Ok(true);
+    }
+    if tb.exceed_end_of_head() {
+        return Ok(false);
+    }
+    Err(tb.parse_error(format!(
+        "{syntax_name}: expected end of head or trailing `:`"
+    )))
+}
+
+impl Runtime {
+    fn parse_by_regularity_axiom_stmt(
+        &mut self,
+        tb: &mut TokenBlock,
+        block: &TokenBlock,
+    ) -> RuntimeResult<Stmt> {
+        tb.expect(REGULARITY_AXIOM)?;
+        let args = parse_obj_list_paren(self, tb)?;
+        if args.len() != 1 {
+            return Err(tb.parse_error(format!(
+                "by regularity_axiom: expected exactly one set argument, got {}",
+                args.len()
+            )));
+        }
+        if !tb.exceed_end_of_head() {
+            return Err(tb.parse_error(
+                "by regularity_axiom: unexpected token after argument",
+            ));
+        }
+        if !tb.body.is_empty() {
+            return Err(tb.parse_error(
+                "by regularity_axiom: does not accept an indented body",
+            ));
+        }
+        Ok(Stmt::By(ByStmt::ByRegularityAxiomStmt(
+            ByRegularityAxiomStmt {
+                set: args[0].clone(),
+                line_file: LineFile::new(block.line, block.source_path.clone()),
+            },
+        )))
+    }
+
+    fn parse_by_axiom_of_choice_stmt(
+        &mut self,
+        tb: &mut TokenBlock,
+        block: &TokenBlock,
+    ) -> RuntimeResult<Stmt> {
+        tb.expect(AXIOM_OF_CHOICE)?;
+        if tb.peek() != Some(COLON) {
+            return Err(tb.parse_error(
+                "by axiom_of_choice: expected `by axiom_of_choice: set S:` or `by axiom_of_choice: set S`",
+            ));
+        }
+        tb.expect(COLON)?;
+        tb.expect(SET)?;
+        let family = parse_obj(self, tb)?;
+        let has_proof_body = parse_optional_trailing_proof_colon(tb, "by axiom_of_choice")?;
+        let proof = if has_proof_body {
+            self.parse_body_stmts(&tb.body)?
+        } else {
+            if !tb.body.is_empty() {
+                return Err(tb.parse_error(
+                    "by axiom_of_choice: indented body requires a trailing `:` after the family",
+                ));
+            }
+            Vec::new()
+        };
+        Ok(Stmt::By(ByStmt::ByAxiomOfChoiceStmt(ByAxiomOfChoiceStmt {
+            family,
+            proof,
+            line_file: LineFile::new(block.line, block.source_path.clone()),
+        })))
+    }
+
+    fn parse_by_zorn_lemma_stmt(
+        &mut self,
+        tb: &mut TokenBlock,
+        block: &TokenBlock,
+    ) -> RuntimeResult<Stmt> {
+        tb.expect(ZORN_LEMMA)?;
+        if tb.peek() != Some(COLON) {
+            return Err(tb.parse_error(
+                "by zorn_lemma: expected `by zorn_lemma: set S, prop P, prop U, prop M:` or the same form without a proof body",
+            ));
+        }
+        tb.expect(COLON)?;
+        tb.expect(SET)?;
+        let set = parse_obj(self, tb)?;
+        tb.expect(COMMA)?;
+        tb.expect(PROP)?;
+        let prop_name = self.parse_by_atomic_prop_name(tb)?;
+        tb.expect(COMMA)?;
+        tb.expect(PROP)?;
+        let upper_bound_prop_name = self.parse_by_atomic_prop_name(tb)?;
+        tb.expect(COMMA)?;
+        tb.expect(PROP)?;
+        let maximal_prop_name = self.parse_by_atomic_prop_name(tb)?;
+        let has_proof_body = parse_optional_trailing_proof_colon(tb, "by zorn_lemma")?;
+        let proof = if has_proof_body {
+            self.parse_body_stmts(&tb.body)?
+        } else {
+            if !tb.body.is_empty() {
+                return Err(tb.parse_error(
+                    "by zorn_lemma: indented body requires a trailing `:` after the header",
+                ));
+            }
+            Vec::new()
+        };
+        Ok(Stmt::By(ByStmt::ByZornLemmaStmt(ByZornLemmaStmt {
+            set,
+            prop_name,
+            upper_bound_prop_name,
+            maximal_prop_name,
+            proof,
+            line_file: LineFile::new(block.line, block.source_path.clone()),
+        })))
+    }
+
+    fn parse_by_atomic_prop_name(&mut self, tb: &mut TokenBlock) -> RuntimeResult<AtomicName> {
+        let name = tb.advance()?;
+        if !is_simple_name(&name) {
+            return Err(tb.parse_error(format!(
+                "expected a simple prop name, got `{name}`"
+            )));
+        }
+        Ok(AtomicName::plain(name))
+    }
 }

@@ -1,11 +1,12 @@
 use super::exec_stmt_result::{ExecDefinitionStmtResult, ExecStmtResult};
 use crate::new_pipeline::ast::stmt::{ByStmt, DefinitionStmt, Stmt};
 use crate::new_pipeline::execute::execute_by_stmt::{
-    exec_by_cases_stmt, exec_by_contra_stmt, exec_by_def_stmt, exec_by_induc_stmt,
-    exec_by_extension_stmt, exec_by_enumerate_finite_set_stmt, exec_by_for_stmt,
-    exec_by_enumerate_range_stmt, exec_by_closed_range_as_cases_stmt, exec_by_reflexive_prop_stmt, exec_by_strong_induc_stmt,
+    exec_by_axiom_of_choice_stmt, exec_by_cases_stmt, exec_by_closed_range_as_cases_stmt,
+    exec_by_contra_stmt, exec_by_def_stmt, exec_by_enumerate_finite_set_stmt,
+    exec_by_enumerate_range_stmt, exec_by_extension_stmt, exec_by_for_stmt, exec_by_induc_stmt,
+    exec_by_reflexive_prop_stmt, exec_by_regularity_axiom_stmt, exec_by_strong_induc_stmt,
     exec_by_symmetric_prop_stmt, exec_by_thm_stmt, exec_by_transitive_prop_stmt,
-    exec_release_thm_stmt,
+    exec_by_zorn_lemma_stmt, exec_release_thm_stmt,
 };
 use crate::new_pipeline::execute::execute_def_thm_stmt::exec_def_thm_stmt;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
@@ -134,6 +135,9 @@ impl Runtime {
             Stmt::ReleaseThmStmt(stmt) => {
                 Ok(ExecStmtResult::ReleaseThm(exec_release_thm_stmt(self, stmt)?))
             }
+            Stmt::ReleaseStructDefStmt(stmt) => Ok(ExecStmtResult::ReleaseStructDef(
+                self.exec_release_struct_def_stmt(stmt)?,
+            )),
             Stmt::By(ByStmt::ByReflexivePropStmt(stmt)) => {
                 Ok(ExecStmtResult::By(exec_by_reflexive_prop_stmt(self, stmt)?))
             }
@@ -176,8 +180,17 @@ impl Runtime {
             Stmt::By(ByStmt::ByStrongInducStmt(stmt)) => {
                 Ok(ExecStmtResult::By(exec_by_strong_induc_stmt(self, stmt)?))
             }
+            Stmt::By(ByStmt::ByRegularityAxiomStmt(stmt)) => {
+                Ok(ExecStmtResult::By(exec_by_regularity_axiom_stmt(self, stmt)?))
+            }
+            Stmt::By(ByStmt::ByAxiomOfChoiceStmt(stmt)) => {
+                Ok(ExecStmtResult::By(exec_by_axiom_of_choice_stmt(self, stmt)?))
+            }
+            Stmt::By(ByStmt::ByZornLemmaStmt(stmt)) => {
+                Ok(ExecStmtResult::By(exec_by_zorn_lemma_stmt(self, stmt)?))
+            }
             _ => Err(RuntimeError::Unsupported(
-                "new_pipeline exec_stmt: Fact, let, have-obj-in-nonempty, have-obj-equal, have-obj-by-exist, have-fn-equal, have-fn-by-cases, have-fn-by-exist!, have-fn-by-induc, prop, abstract_prop, struct, template, thm, witness, trust, release thm, by reflexive_prop / symmetric_prop / transitive_prop / extension / contra / cases / def / thm / induc / strong_induc are wired for the tracer"
+                "new_pipeline exec_stmt: Fact, let, have-obj-in-nonempty, have-obj-equal, have-obj-by-exist, have-fn-equal, have-fn-by-cases, have-fn-by-exist!, have-fn-by-induc, prop, abstract_prop, struct, template, thm, witness, trust, release thm, release struct def, by reflexive_prop / symmetric_prop / transitive_prop / extension / contra / cases / def / thm / induc / strong_induc / regularity_axiom / axiom_of_choice / zorn_lemma are wired for the tracer"
                     .to_string(),
             )),
         }

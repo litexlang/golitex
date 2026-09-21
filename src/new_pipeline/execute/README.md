@@ -34,6 +34,9 @@ ExecStmtResult                    // stmt-kind dispatch only
   Definition(ExecDefinitionStmtResult)
   Witness(ExecWitnessStmtResult)
   Unsafe(ExecUnsafeStmtResult)
+  By(ExecByStmtResult)
+  ReleaseThm(ExecReleaseThmStmtResult)
+  ReleaseStructDef(ExecReleaseStructDefStmtResult)
 
 Leaf *Result = Success(*SuccessResult) | Failed(...)
   (AbstractProp has only SuccessResult; no soft-fail path yet)

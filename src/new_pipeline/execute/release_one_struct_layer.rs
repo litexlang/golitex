@@ -3,24 +3,25 @@
 //! Shared by direct `&Struct` binding auto-open and (later) `release struct def`.
 //! Does not re-check `e $in &Struct`; callers must already have that membership.
 //!
+//! A struct must have at least two fields (parse-enforced). Release always uses
+//! the tuple representation: bridges `e.f_i = e[i]`, cart membership, laws.
+//!
 //! Example (auto-open on bind):
 //!   forall G &Group<s>:
 //!       G.mul(G.one, G.one) = G.one
 //!   // binding `G` stores bridges and instantiated `<=>:` laws
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use crate::new_pipeline::ast::fact::{
-    atomic_fact_args_ref, AndChainAtomicFact, AtomicFact, EqualFact, ExistOrAndChainAtomicFact,
-    Fact, InFact, IsTupleFact, QuantifierFreeFact,
+    AtomicFact, EqualFact, Fact, InFact, IsTupleFact,
 };
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::{
-    Cart, FieldAccess, FnObjHead, IdentifierObj, Number, Obj, ObjAtIndex, StructObj, TupleDim,
+    Cart, FieldAccess, Number, Obj, ObjAtIndex, StructObj, TupleDim,
 };
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::ast::stmt::DefStructStmt;
-use crate::new_pipeline::instantiate::quantifier_free_fact_to_fact;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::store_fact_and_infer::StoreFactAndInferResult;
@@ -85,50 +86,44 @@ impl Runtime {
 
         let mut store_and_infer = Vec::new();
 
-        if def.fields.len() > 1 {
-            let cart = Obj::Cart(Cart {
-                args: field_types.iter().cloned().map(Box::new).collect(),
-            });
-            let is_tuple = Fact::AtomicFact(AtomicFact::IsTupleFact(IsTupleFact {
-                fact_id: self.ids.allocate_fact_id(),
-                set: obj.clone(),
-                line_file: None,
-            }));
-            store_and_infer.push(self.store_fact_and_infer(&is_tuple)?);
+        let cart = Obj::Cart(Cart {
+            args: field_types.iter().cloned().map(Box::new).collect(),
+        });
+        let is_tuple = Fact::AtomicFact(AtomicFact::IsTupleFact(IsTupleFact {
+            fact_id: self.ids.allocate_fact_id(),
+            set: obj.clone(),
+            line_file: None,
+        }));
+        store_and_infer.push(self.store_fact_and_infer(&is_tuple)?);
 
-            let tuple_dim = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
-                fact_id: self.ids.allocate_fact_id(),
-                left: Obj::TupleDim(TupleDim {
-                    arg: Box::new(obj.clone()),
-                }),
-                right: Obj::Number(Number {
-                    normalized_value: def.fields.len().to_string(),
-                }),
-                line_file: None,
-            }));
-            store_and_infer.push(self.store_fact_and_infer(&tuple_dim)?);
+        let tuple_dim = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
+            fact_id: self.ids.allocate_fact_id(),
+            left: Obj::TupleDim(TupleDim {
+                arg: Box::new(obj.clone()),
+            }),
+            right: Obj::Number(Number {
+                normalized_value: def.fields.len().to_string(),
+            }),
+            line_file: None,
+        }));
+        store_and_infer.push(self.store_fact_and_infer(&tuple_dim)?);
 
-            let cart_membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
-                fact_id: self.ids.allocate_fact_id(),
-                element: obj.clone(),
-                set: cart,
-                line_file: None,
-            }));
-            store_and_infer.push(self.store_fact_and_infer(&cart_membership)?);
-        }
+        let cart_membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
+            fact_id: self.ids.allocate_fact_id(),
+            element: obj.clone(),
+            set: cart,
+            line_file: None,
+        }));
+        store_and_infer.push(self.store_fact_and_infer(&cart_membership)?);
 
         for (index, field) in def.fields.iter().enumerate() {
             let field_value = field_access_obj(obj, &field.binding.name);
-            let projection = if def.fields.len() == 1 {
-                obj.clone()
-            } else {
-                Obj::ObjAtIndex(ObjAtIndex {
-                    obj: Box::new(obj.clone()),
-                    index: Box::new(Obj::Number(Number {
-                        normalized_value: (index + 1).to_string(),
-                    })),
-                })
-            };
+            let projection = Obj::ObjAtIndex(ObjAtIndex {
+                obj: Box::new(obj.clone()),
+                index: Box::new(Obj::Number(Number {
+                    normalized_value: (index + 1).to_string(),
+                })),
+            });
             let bridge = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
                 fact_id: self.ids.allocate_fact_id(),
                 left: field_value,
@@ -147,15 +142,6 @@ impl Runtime {
                 line_file: None,
             }));
             store_and_infer.push(self.store_fact_and_infer(&field_membership)?);
-            if def.fields.len() == 1 {
-                let carrier_membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
-                    fact_id: self.ids.allocate_fact_id(),
-                    element: obj.clone(),
-                    set: named_field_type.clone(),
-                    line_file: None,
-                }));
-                store_and_infer.push(self.store_fact_and_infer(&carrier_membership)?);
-            }
         }
 
         for fact in &def.equivalent_facts {
@@ -170,22 +156,6 @@ impl Runtime {
                 }
             };
             store_and_infer.push(self.store_fact_and_infer(&named)?);
-
-            if def.fields.len() == 1 {
-                let mut carrier_subst = subst.clone();
-                carrier_subst.insert(def.fields[0].binding.id, obj.clone());
-                let carrier_law = match self.inst_fact(fact, &carrier_subst) {
-                    Ok(f) => f,
-                    Err(e) => {
-                        return Ok(failed_release(
-                            obj,
-                            struct_obj,
-                            format!("instantiate one-field carrier law: {e}"),
-                        ));
-                    }
-                };
-                store_and_infer.push(self.store_fact_and_infer(&carrier_law)?);
-            }
         }
 
         Ok(ReleaseOneStructLayerResult::Success(
@@ -250,12 +220,14 @@ impl Runtime {
                 struct_obj.params.len()
             ));
         }
-        if def.fields.is_empty() {
-            return Err(format!("struct `{name}` has no fields"));
+        if def.fields.len() < 2 {
+            return Err(format!("struct `{name}` expects at least two fields"));
         }
         Ok(def)
     }
 
+    // Header params + each field BoundName → field access. `<=>:` and field
+    // types already reuse those BoundName ids at parse time.
     fn struct_release_subst(
         &self,
         obj: &Obj,
@@ -275,30 +247,8 @@ impl Runtime {
                 }
             }
         }
-
-        let field_names: HashSet<String> =
-            def.fields.iter().map(|f| f.binding.name.clone()).collect();
-        for fact in &def.equivalent_facts {
-            visit_plain_ids_in_fact(fact, &mut |id, name| {
-                if field_names.contains(name) {
-                    subst
-                        .entry(id)
-                        .or_insert_with(|| field_access_obj(obj, name));
-                }
-            });
-        }
         for field in &def.fields {
-            // Prefer the field's own BoundName id for release subst.
-            subst
-                .entry(field.binding.id)
-                .or_insert_with(|| field_access_obj(obj, &field.binding.name));
-            visit_plain_ids_in_obj(&field.field_type, &mut |id, name| {
-                if field_names.contains(name) {
-                    subst
-                        .entry(id)
-                        .or_insert_with(|| field_access_obj(obj, name));
-                }
-            });
+            subst.insert(field.binding.id, field_access_obj(obj, &field.binding.name));
         }
         Ok(subst)
     }
@@ -321,279 +271,4 @@ fn field_access_obj(obj: &Obj, field: &str) -> Obj {
         obj: Box::new(obj.clone()),
         fields: vec![field.to_string()],
     })
-}
-
-fn visit_plain_ids_in_fact(fact: &Fact, on_id: &mut dyn FnMut(IdentifierId, &str)) {
-    match fact {
-        Fact::AtomicFact(a) => {
-            for o in atomic_fact_args_ref(a) {
-                visit_plain_ids_in_obj(o, on_id);
-            }
-        }
-        Fact::AndFact(a) => {
-            for atomic in &a.facts {
-                for o in atomic_fact_args_ref(atomic) {
-                    visit_plain_ids_in_obj(o, on_id);
-                }
-            }
-        }
-        Fact::OrFact(o) => {
-            for branch in &o.facts {
-                visit_plain_ids_in_and_chain(branch, on_id);
-            }
-        }
-        Fact::ChainFact(c) => {
-            for o in &c.objs {
-                visit_plain_ids_in_obj(o, on_id);
-            }
-        }
-        Fact::ForallFact(f) => {
-            for d in &f.dom_facts {
-                visit_plain_ids_in_fact(d, on_id);
-            }
-            for t in &f.then_facts {
-                visit_plain_ids_in_exist_or_and(t, on_id);
-            }
-        }
-        Fact::ForallFactWithIff(f) => {
-            visit_plain_ids_in_fact(&Fact::ForallFact(f.forall_fact.clone()), on_id);
-            for i in &f.iff_facts {
-                visit_plain_ids_in_exist_or_and(i, on_id);
-            }
-        }
-        Fact::ExistFact(e) | Fact::ExistUniqueFact(e) | Fact::NotExistFact(e) => {
-            for b in &e.facts {
-                visit_plain_ids_in_qf(b, on_id);
-            }
-        }
-        Fact::NotForall(n) => {
-            for d in &n.dom_facts {
-                visit_plain_ids_in_qf(d, on_id);
-            }
-            for t in &n.then_facts {
-                visit_plain_ids_in_qf(t, on_id);
-            }
-        }
-    }
-}
-
-fn visit_plain_ids_in_obj(obj: &Obj, on_id: &mut dyn FnMut(IdentifierId, &str)) {
-    match obj {
-        Obj::Identifier(IdentifierObj::Plain { id, name }) => on_id(*id, name),
-        Obj::FnObj(f) => {
-            match f.head.as_ref() {
-                FnObjHead::Identifier(IdentifierObj::Plain { id, name }) => on_id(*id, name),
-                FnObjHead::FieldAccess(a) => visit_plain_ids_in_obj(&a.obj, on_id),
-                FnObjHead::ObjAtIndex(a) => {
-                    visit_plain_ids_in_obj(&a.obj, on_id);
-                    visit_plain_ids_in_obj(&a.index, on_id);
-                }
-                FnObjHead::AnonymousFnLiteral(a) => {
-                    visit_plain_ids_in_obj(&Obj::AnonymousFn((**a).clone()), on_id);
-                }
-                FnObjHead::FiniteSeqListObj(a) => {
-                    for o in &a.objs {
-                        visit_plain_ids_in_obj(o, on_id);
-                    }
-                }
-                FnObjHead::InstantiatedTemplateObj(a) => {
-                    for o in &a.args {
-                        visit_plain_ids_in_obj(o, on_id);
-                    }
-                }
-                FnObjHead::Identifier(_) => {}
-            }
-            for row in &f.body {
-                for o in row {
-                    visit_plain_ids_in_obj(o, on_id);
-                }
-            }
-        }
-        Obj::FieldAccess(a) => visit_plain_ids_in_obj(&a.obj, on_id),
-        Obj::Add(a) => {
-            visit_plain_ids_in_obj(&a.left, on_id);
-            visit_plain_ids_in_obj(&a.right, on_id);
-        }
-        Obj::Sub(a) => {
-            visit_plain_ids_in_obj(&a.left, on_id);
-            visit_plain_ids_in_obj(&a.right, on_id);
-        }
-        Obj::Mul(a) => {
-            visit_plain_ids_in_obj(&a.left, on_id);
-            visit_plain_ids_in_obj(&a.right, on_id);
-        }
-        Obj::Div(a) => {
-            visit_plain_ids_in_obj(&a.left, on_id);
-            visit_plain_ids_in_obj(&a.right, on_id);
-        }
-        Obj::Mod(a) => {
-            visit_plain_ids_in_obj(&a.left, on_id);
-            visit_plain_ids_in_obj(&a.right, on_id);
-        }
-        Obj::Quot(a) => {
-            visit_plain_ids_in_obj(&a.left, on_id);
-            visit_plain_ids_in_obj(&a.right, on_id);
-        }
-        Obj::Gcd(a) => {
-            visit_plain_ids_in_obj(&a.left, on_id);
-            visit_plain_ids_in_obj(&a.right, on_id);
-        }
-        Obj::Lcm(a) => {
-            visit_plain_ids_in_obj(&a.left, on_id);
-            visit_plain_ids_in_obj(&a.right, on_id);
-        }
-        Obj::Min(a) => {
-            visit_plain_ids_in_obj(&a.left, on_id);
-            visit_plain_ids_in_obj(&a.right, on_id);
-        }
-        Obj::Max(a) => {
-            visit_plain_ids_in_obj(&a.left, on_id);
-            visit_plain_ids_in_obj(&a.right, on_id);
-        }
-        Obj::Union(a) => {
-            visit_plain_ids_in_obj(&a.left, on_id);
-            visit_plain_ids_in_obj(&a.right, on_id);
-        }
-        Obj::Intersect(a) => {
-            visit_plain_ids_in_obj(&a.left, on_id);
-            visit_plain_ids_in_obj(&a.right, on_id);
-        }
-        Obj::SetMinus(a) => {
-            visit_plain_ids_in_obj(&a.left, on_id);
-            visit_plain_ids_in_obj(&a.right, on_id);
-        }
-        Obj::Pow(a) => {
-            visit_plain_ids_in_obj(&a.base, on_id);
-            visit_plain_ids_in_obj(&a.exponent, on_id);
-        }
-        Obj::Log(a) => {
-            visit_plain_ids_in_obj(&a.base, on_id);
-            visit_plain_ids_in_obj(&a.arg, on_id);
-        }
-        Obj::Floor(a) => visit_plain_ids_in_obj(&a.arg, on_id),
-        Obj::Ceil(a) => visit_plain_ids_in_obj(&a.arg, on_id),
-        Obj::Exp(a) => visit_plain_ids_in_obj(&a.arg, on_id),
-        Obj::Ln(a) => visit_plain_ids_in_obj(&a.arg, on_id),
-        Obj::Sign(a) => visit_plain_ids_in_obj(&a.arg, on_id),
-        Obj::Factorial(a) => visit_plain_ids_in_obj(&a.arg, on_id),
-        Obj::Abs(a) => visit_plain_ids_in_obj(&a.arg, on_id),
-        Obj::Sin(a) => visit_plain_ids_in_obj(&a.arg, on_id),
-        Obj::Arcsin(a) => visit_plain_ids_in_obj(&a.arg, on_id),
-        Obj::Cos(a) => visit_plain_ids_in_obj(&a.arg, on_id),
-        Obj::Tan(a) => visit_plain_ids_in_obj(&a.arg, on_id),
-        Obj::Cot(a) => visit_plain_ids_in_obj(&a.arg, on_id),
-        Obj::RealPart(a) => visit_plain_ids_in_obj(&a.arg, on_id),
-        Obj::ImaginaryPart(a) => visit_plain_ids_in_obj(&a.arg, on_id),
-        Obj::ComplexAbs(a) => visit_plain_ids_in_obj(&a.arg, on_id),
-        Obj::Sqrt(a) => visit_plain_ids_in_obj(&a.arg, on_id),
-        Obj::BigUnion(a) => visit_plain_ids_in_obj(&a.left, on_id),
-        Obj::BigIntersect(a) => visit_plain_ids_in_obj(&a.left, on_id),
-        Obj::PowerSet(a) => visit_plain_ids_in_obj(&a.set, on_id),
-        Obj::CartDim(a) => visit_plain_ids_in_obj(&a.set, on_id),
-        Obj::TupleDim(a) => visit_plain_ids_in_obj(&a.arg, on_id),
-        Obj::ObjAtIndex(a) => {
-            visit_plain_ids_in_obj(&a.obj, on_id);
-            visit_plain_ids_in_obj(&a.index, on_id);
-        }
-        Obj::Cart(a) => {
-            for o in &a.args {
-                visit_plain_ids_in_obj(o, on_id);
-            }
-        }
-        Obj::Tuple(a) => {
-            for o in &a.args {
-                visit_plain_ids_in_obj(o, on_id);
-            }
-        }
-        Obj::ListSet(a) => {
-            for o in &a.list {
-                visit_plain_ids_in_obj(o, on_id);
-            }
-        }
-        Obj::StructObj(s) => {
-            for o in &s.params {
-                visit_plain_ids_in_obj(o, on_id);
-            }
-        }
-        Obj::FnSet(fs) => {
-            for group in &fs.set_bound_parameters.groups {
-                visit_plain_ids_in_obj(&group.param_type, on_id);
-            }
-            for d in &fs.dom_facts {
-                visit_plain_ids_in_qf(d, on_id);
-            }
-            visit_plain_ids_in_obj(&fs.ret_set, on_id);
-        }
-        Obj::AnonymousFn(af) => {
-            visit_plain_ids_in_obj(&Obj::FnSet(af.body.clone()), on_id);
-            visit_plain_ids_in_obj(&af.equal_to, on_id);
-        }
-        _ => {}
-    }
-}
-
-fn visit_plain_ids_in_qf(fact: &QuantifierFreeFact, on_id: &mut dyn FnMut(IdentifierId, &str)) {
-    visit_plain_ids_in_fact(&quantifier_free_fact_to_fact(fact.clone()), on_id);
-}
-
-fn visit_plain_ids_in_and_chain(
-    branch: &AndChainAtomicFact,
-    on_id: &mut dyn FnMut(IdentifierId, &str),
-) {
-    match branch {
-        AndChainAtomicFact::AtomicFact(a) => {
-            for o in atomic_fact_args_ref(a) {
-                visit_plain_ids_in_obj(o, on_id);
-            }
-        }
-        AndChainAtomicFact::AndFact(a) => {
-            for atomic in &a.facts {
-                for o in atomic_fact_args_ref(atomic) {
-                    visit_plain_ids_in_obj(o, on_id);
-                }
-            }
-        }
-        AndChainAtomicFact::ChainFact(c) => {
-            for o in &c.objs {
-                visit_plain_ids_in_obj(o, on_id);
-            }
-        }
-    }
-}
-
-fn visit_plain_ids_in_exist_or_and(
-    branch: &ExistOrAndChainAtomicFact,
-    on_id: &mut dyn FnMut(IdentifierId, &str),
-) {
-    match branch {
-        ExistOrAndChainAtomicFact::AtomicFact(a) => {
-            for o in atomic_fact_args_ref(a) {
-                visit_plain_ids_in_obj(o, on_id);
-            }
-        }
-        ExistOrAndChainAtomicFact::AndFact(a) => {
-            for atomic in &a.facts {
-                for o in atomic_fact_args_ref(atomic) {
-                    visit_plain_ids_in_obj(o, on_id);
-                }
-            }
-        }
-        ExistOrAndChainAtomicFact::ChainFact(c) => {
-            for o in &c.objs {
-                visit_plain_ids_in_obj(o, on_id);
-            }
-        }
-        ExistOrAndChainAtomicFact::OrFact(o) => {
-            for b in &o.facts {
-                visit_plain_ids_in_and_chain(b, on_id);
-            }
-        }
-        ExistOrAndChainAtomicFact::ExistFact(e)
-        | ExistOrAndChainAtomicFact::ExistUniqueFact(e)
-        | ExistOrAndChainAtomicFact::NotExistFact(e) => {
-            for b in &e.facts {
-                visit_plain_ids_in_qf(b, on_id);
-            }
-        }
-    }
 }

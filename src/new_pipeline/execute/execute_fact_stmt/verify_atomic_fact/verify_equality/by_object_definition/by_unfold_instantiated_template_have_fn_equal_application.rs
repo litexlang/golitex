@@ -1,4 +1,4 @@
-//! Equality builtin: unfold `\Name<args>(…)` when the template body is `have fn … = …`.
+//! Equality by object definition: unfold `\Name<args>(…)` when the template body is `have fn … = …`.
 //!
 //! Mathematical property:
 //!   If `template<params>:` defines `have fn name(…) T = body`, then
@@ -19,17 +19,17 @@ use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use std::collections::HashMap;
 
-pub struct ByUnfoldInstantiatedTemplateHaveFnEqualApplicationBuiltinRuleProof {
+pub struct ByUnfoldInstantiatedTemplateHaveFnEqualApplicationObjectDefinitionProof {
     pub expanded_body: Obj,
     pub residual_equal: VerifyFactResult,
 }
 
 impl Runtime {
-    pub fn search_equal_fact_builtin_rule_unfold_instantiated_template_have_fn_equal_application(
+    pub fn search_equal_fact_object_definition_unfold_instantiated_template_have_fn_equal_application(
         &mut self,
         fact: &EqualFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<ByUnfoldInstantiatedTemplateHaveFnEqualApplicationBuiltinRuleProof>>
+    ) -> RuntimeResult<Option<ByUnfoldInstantiatedTemplateHaveFnEqualApplicationObjectDefinitionProof>>
     {
         if let Some(proof) = self.try_unfold_instantiated_template_have_fn_equal_application(
             &fact.left,
@@ -56,7 +56,7 @@ impl Runtime {
         other_side: &Obj,
         parent_fact: &EqualFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<ByUnfoldInstantiatedTemplateHaveFnEqualApplicationBuiltinRuleProof>>
+    ) -> RuntimeResult<Option<ByUnfoldInstantiatedTemplateHaveFnEqualApplicationObjectDefinitionProof>>
     {
         let Obj::FnObj(fn_obj) = app_side else {
             return Ok(None);
@@ -86,7 +86,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            ByUnfoldInstantiatedTemplateHaveFnEqualApplicationBuiltinRuleProof {
+            ByUnfoldInstantiatedTemplateHaveFnEqualApplicationObjectDefinitionProof {
                 expanded_body,
                 residual_equal,
             },

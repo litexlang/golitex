@@ -164,7 +164,10 @@ impl Runtime {
     // Definition-time `DefinedAsStruct` only (exact ObjIR; not equality class).
     // Nested field access: walk all fields; result carrier is the last field's
     // type when that type is `&Struct`.
-    pub(super) fn resolve_definition_struct_carrier(&self, obj: &Obj) -> Option<StructObj> {
+    pub(in crate::new_pipeline::execute) fn resolve_definition_struct_carrier(
+        &self,
+        obj: &Obj,
+    ) -> Option<StructObj> {
         if let Some(carrier) = self.defined_as_struct_visible_in_stack(obj) {
             return Some(carrier);
         }

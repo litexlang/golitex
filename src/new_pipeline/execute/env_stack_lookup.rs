@@ -74,6 +74,18 @@ impl Runtime {
         None
     }
 
+    pub(crate) fn stored_identifier_definition_visible_in_stack(
+        &self,
+        name: &str,
+    ) -> Option<&crate::new_pipeline::exec_env::StoredIdentifierDefinition> {
+        for env in self.execution_environments_stack.iter().rev() {
+            if let Some(def) = env.definitions.identifiers.get(name) {
+                return Some(def);
+            }
+        }
+        None
+    }
+
     // WD memory: inner scopes first, then parents (same walk as definitions).
     pub(in crate::new_pipeline::execute) fn well_defined_visible_in_stack(
         &self,

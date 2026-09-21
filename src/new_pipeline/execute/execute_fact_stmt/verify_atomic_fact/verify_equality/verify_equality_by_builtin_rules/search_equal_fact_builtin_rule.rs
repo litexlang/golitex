@@ -5,6 +5,7 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
     // Try equality builtin rules in order. First hit wins.
+    // Definitional unfolds live in by_object_definition, not here.
     pub fn search_equal_fact_builtin_rule(
         &mut self,
         fact: &EqualFact,
@@ -14,38 +15,6 @@ impl Runtime {
             self.search_equal_fact_builtin_rule_equal_ir(fact, verify_state.clone())?
         {
             return Ok(Some(EqualitySearchProofByBuiltinRule::ByEqualIr(proof)));
-        }
-        if let Some(proof) = self
-            .search_equal_fact_builtin_rule_unfold_instantiated_template_have_obj_equal(
-                fact,
-                verify_state.clone(),
-            )?
-        {
-            return Ok(Some(
-                EqualitySearchProofByBuiltinRule::ByUnfoldInstantiatedTemplateHaveObjEqual(proof),
-            ));
-        }
-        if let Some(proof) = self
-            .search_equal_fact_builtin_rule_unfold_instantiated_template_have_fn_equal_application(
-                fact,
-                verify_state.clone(),
-            )?
-        {
-            return Ok(Some(
-                EqualitySearchProofByBuiltinRule::ByUnfoldInstantiatedTemplateHaveFnEqualApplication(
-                    proof,
-                ),
-            ));
-        }
-        if let Some(proof) = self
-            .search_equal_fact_builtin_rule_unfold_named_have_fn_equal_application(
-                fact,
-                verify_state.clone(),
-            )?
-        {
-            return Ok(Some(
-                EqualitySearchProofByBuiltinRule::ByUnfoldNamedHaveFnEqualApplication(proof),
-            ));
         }
         if let Some(proof) = self.search_equal_fact_by_calculation(fact, verify_state)? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::Calculation(proof)));

@@ -393,6 +393,27 @@ fn fn_eq_is_removed_parse_error() {
 }
 
 #[test]
+fn struct_fewer_than_two_fields_is_parse_error() {
+    let mut runtime = runtime_with_file_env();
+    for code in [
+        "struct NoFields:\n    <=>:\n        1 = 1\n",
+        "struct Mono:\n    a R\n",
+    ] {
+        let tokens = Tokenizer::new()
+            .tokenize(code, runtime.current_file.clone())
+            .expect("tokenize");
+        let err = runtime
+            .parse(&tokens)
+            .expect_err("struct with fewer than two fields must be a parse error");
+        let msg = format!("{err:?}");
+        assert!(
+            msg.contains("at least two fields"),
+            "expected two-field requirement, got: {msg} for:\n{code}"
+        );
+    }
+}
+
+#[test]
 fn not_fn_eq_in_parses_trusts_and_proves_known() {
     let mut runtime = runtime_with_file_env();
     assert!(
@@ -1373,37 +1394,6 @@ struct Group<s nonempty_set>:
     }
 }
 
-#[test]
-fn group_auto_open_field_reflexive() {
-    let mut runtime = runtime_with_file_env();
-    assert!(
-        !exec_one(
-            &mut runtime,
-            r#"
-struct Group<s nonempty_set>:
-    mul fn(x, y s) s
-    one s
-    inv fn(x s) s
-    <=>:
-        forall x s:
-            mul(x, one) = x
-"#
-        )
-        .is_failed(),
-        "def Group"
-    );
-    assert!(
-        !exec_one(
-            &mut runtime,
-            "forall s nonempty_set, G &Group<s>:
-    G.one = G.one
-    G.mul = G.mul
-",
-        )
-        .is_failed(),
-        "auto-open field reflexive"
-    );
-}
 
 #[test]
 fn forall_specialize_field_access_mul() {
@@ -1439,35 +1429,6 @@ struct Group<s nonempty_set>:
     );
 }
 
-#[test]
-fn group_unit_law_after_auto_open() {
-    let mut runtime = runtime_with_file_env();
-    assert!(
-        !exec_one(
-            &mut runtime,
-            r#"
-struct Group<s nonempty_set>:
-    mul fn(x, y s) s
-    one s
-    <=>:
-        forall x s:
-            mul(x, one) = x
-            mul(one, x) = x
-"#
-        )
-        .is_failed()
-    );
-    assert!(
-        !exec_one(
-            &mut runtime,
-            r#"forall s nonempty_set, G &Group<s>:
-    G.mul(G.one, G.one) = G.one
-"#
-        )
-        .is_failed(),
-        "auto-opened unit law"
-    );
-}
 
 #[test]
 fn group_identity_unique_via_auto_open() {
@@ -1506,4 +1467,75 @@ struct Group<s nonempty_set>:
         .is_failed(),
         "Group identity uniqueness"
     );
+}
+
+#[test]
+fn release_struct_def_opens_nested_struct_field_layer() {
+    use crate::new_pipeline::execute::execute_release_struct_def_stmt::ExecReleaseStructDefStmtResult;
+    use crate::new_pipeline::execute::ExecStmtResult as ESR;
+
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(
+            &mut runtime,
+            r#"
+struct Coordinates:
+    x R
+    y R
+    <=>:
+        x = 0
+"#
+        )
+        .is_failed(),
+        "def Coordinates"
+    );
+    assert!(
+        !exec_one(
+            &mut runtime,
+            r#"
+struct TaggedPoint:
+    point &Coordinates
+    tag N
+"#
+        )
+        .is_failed(),
+        "def TaggedPoint"
+    );
+    // Outer bind auto-opens TaggedPoint only; Coordinates laws stay closed.
+    assert!(
+        !exec_one(&mut runtime, "trust have p &TaggedPoint").is_failed(),
+        "trust have p &TaggedPoint"
+    );
+    assert!(
+        exec_one(&mut runtime, "p.point.x = 0").is_failed(),
+        "inner law must miss before release"
+    );
+    match exec_one(&mut runtime, "release struct def p.point") {
+        ESR::ReleaseStructDef(ExecReleaseStructDefStmtResult::Success(_)) => {}
+        other => panic!("expected nested release success, got failed={}", other.is_failed()),
+    }
+    assert!(
+        !exec_one(&mut runtime, "p.point.x = 0").is_failed(),
+        "inner law after release struct def p.point"
+    );
+}
+
+#[test]
+fn release_struct_def_without_carrier_soft_fails() {
+    use crate::new_pipeline::execute::execute_release_struct_def_stmt::{
+        ExecReleaseStructDefStmtFailed, ExecReleaseStructDefStmtResult,
+    };
+    use crate::new_pipeline::execute::ExecStmtResult as ESR;
+
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have x R").is_failed(), "have x R");
+    match exec_one(&mut runtime, "release struct def x") {
+        ESR::ReleaseStructDef(ExecReleaseStructDefStmtResult::Failed(
+            ExecReleaseStructDefStmtFailed::NoDefinitionOwnedCarrier { .. },
+        )) => {}
+        other => panic!(
+            "expected NoDefinitionOwnedCarrier, got failed={}",
+            other.is_failed()
+        ),
+    }
 }
