@@ -1235,6 +1235,84 @@ fn have_fn_by_exist_rejects_proof_body() {
 }
 
 #[test]
+fn have_fn_by_exist_rejects_non_obj_forall_param() {
+    let mut runtime = runtime_with_file_env();
+    let code = "have fn f by exist!:\n    ? forall S set:\n        exist! y R st {y = 0}";
+    let tokens = Tokenizer::new()
+        .tokenize(code, runtime.current_file.clone())
+        .expect("tokenize");
+    assert!(
+        runtime.parse(&tokens).is_err(),
+        "forall set param must fail parse"
+    );
+}
+
+#[test]
+fn have_fn_by_exist_rejects_plain_exist_then() {
+    let mut runtime = runtime_with_file_env();
+    let code = "have fn f by exist!:\n    ? forall x R:\n        exist y R st {y = x}";
+    let tokens = Tokenizer::new()
+        .tokenize(code, runtime.current_file.clone())
+        .expect("tokenize");
+    assert!(
+        runtime.parse(&tokens).is_err(),
+        "plain exist then must fail parse"
+    );
+}
+
+#[test]
+fn have_fn_by_exist_rejects_two_then_facts() {
+    let mut runtime = runtime_with_file_env();
+    let code = "have fn f by exist!:\n    ? forall x R:\n        exist! y R st {y = x}\n        exist! z R st {z = x}";
+    let tokens = Tokenizer::new()
+        .tokenize(code, runtime.current_file.clone())
+        .expect("tokenize");
+    assert!(
+        runtime.parse(&tokens).is_err(),
+        "two then facts must fail parse"
+    );
+}
+
+#[test]
+fn have_fn_by_exist_rejects_exist_in_dom() {
+    let mut runtime = runtime_with_file_env();
+    let code = "have fn f by exist!:\n    ? forall x R:\n        exist y R st {y = x}\n        =>:\n            exist! z R st {z = x}";
+    let tokens = Tokenizer::new()
+        .tokenize(code, runtime.current_file.clone())
+        .expect("tokenize");
+    assert!(
+        runtime.parse(&tokens).is_err(),
+        "exist in forall dom must fail parse"
+    );
+}
+
+#[test]
+fn have_fn_by_exist_rejects_two_exist_bang_witnesses() {
+    let mut runtime = runtime_with_file_env();
+    let code = "have fn f by exist!:\n    ? forall x R:\n        exist! y, z R st {y = x, z = x}";
+    let tokens = Tokenizer::new()
+        .tokenize(code, runtime.current_file.clone())
+        .expect("tokenize");
+    assert!(
+        runtime.parse(&tokens).is_err(),
+        "exist! with two witnesses must fail parse"
+    );
+}
+
+#[test]
+fn have_fn_by_exist_rejects_set_typed_witness() {
+    let mut runtime = runtime_with_file_env();
+    let code = "have fn f by exist!:\n    ? forall x R:\n        exist! S set st {x = x}";
+    let tokens = Tokenizer::new()
+        .tokenize(code, runtime.current_file.clone())
+        .expect("tokenize");
+    assert!(
+        runtime.parse(&tokens).is_err(),
+        "set-typed exist! witness must fail parse"
+    );
+}
+
+#[test]
 fn template_have_fn_by_exist_not_wired() {
     use crate::new_pipeline::execute::execute_def_template_stmt::{
         ExecDefTemplateStmtFailed, ExecDefTemplateStmtResult,
@@ -1517,6 +1595,67 @@ struct TaggedPoint:
     assert!(
         !exec_one(&mut runtime, "p.point.x = 0").is_failed(),
         "inner law after release struct def p.point"
+    );
+}
+
+#[test]
+fn cart_membership_literal_tuple_succeeds() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(&mut runtime, "(1, 2) $in cart(R, Z)").is_failed(),
+        "(1, 2) $in cart(R, Z)"
+    );
+    assert!(
+        exec_one(&mut runtime, "(1, 2, 3) $in cart(R, Z)").is_failed(),
+        "arity mismatch must miss"
+    );
+}
+
+#[test]
+fn struct_obj_membership_literal_tuple_succeeds() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(
+            &mut runtime,
+            r#"
+struct Point:
+    x R
+    y R
+"#
+        )
+        .is_failed(),
+        "def Point"
+    );
+    assert!(
+        !exec_one(&mut runtime, "(1, 2) $in &Point").is_failed(),
+        "(1, 2) $in &Point"
+    );
+}
+
+#[test]
+fn struct_obj_membership_checks_equivalent_laws() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(
+            &mut runtime,
+            r#"
+struct PosPoint:
+    x R
+    y R
+    <=>:
+        x > 0
+"#
+        )
+        .is_failed(),
+        "def PosPoint"
+    );
+    assert!(
+        exec_one(&mut runtime, "(0, 2) $in &PosPoint").is_failed(),
+        "(0, 2) must miss x > 0"
+    );
+    assert!(
+        !exec_one(&mut runtime, "(1, 2) $in &PosPoint").is_failed(),
+        "(1, 2) $in &PosPoint"
     );
 }
 

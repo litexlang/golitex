@@ -1,16 +1,18 @@
-# Nested release: outer auto-open does not open inner struct laws.
+# Cart + struct membership builtins.
 # Run: LITEX_NEW_PIPELINE=1 cargo run --bin litex -- -f examples/tmp.lit
 
-struct Coordinates:
+(1, 2) $in cart(R, Z)
+
+struct Point:
+    x R
+    y R
+
+(1, 2) $in &Point
+
+struct PosPoint:
     x R
     y R
     <=>:
-        x = 0
+        x > 0
 
-struct TaggedPoint:
-    point &Coordinates
-    tag N
-
-trust have p &TaggedPoint
-release struct def p.point
-p.point.x = 0
+(1, 2) $in &PosPoint

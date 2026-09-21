@@ -3,9 +3,12 @@
 
 use super::super::keywords::{BY, CASE, CASES, COLON, EQUAL, EXIST, EXIST_BANG, FN, FROM, INDUC};
 use super::super::object::{is_simple_name, parse_obj};
-use crate::new_pipeline::ast::fact::AndChainAtomicFact;
+use crate::new_pipeline::ast::fact::{
+    AndChainAtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact,
+};
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::obj::{AnonymousFn, FnSet, Obj};
+use crate::new_pipeline::ast::param::ParamType;
 use crate::new_pipeline::ast::stmt::{
     DefinitionStmt, FnSetClause, HaveFnByForallExistUniqueStmt, HaveFnByInducCase,
     HaveFnByInducCaseBody, HaveFnByInducStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt, Stmt,
@@ -301,6 +304,7 @@ impl Runtime {
 
         let mut goal = block.body[0].clone();
         let forall = self.parse_goal_forall_fact(&mut goal, "have fn by exist!")?;
+        check_have_fn_by_exist_forall_shape(block, &forall)?;
 
         Ok(Stmt::Definition(
             DefinitionStmt::HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt {
@@ -310,4 +314,105 @@ impl Runtime {
             }),
         ))
     }
+}
+
+// Shape required so the forall can become an AnonymousFn / FnSet later:
+// - every forall param type is Obj (set-bound), at least one param
+// - every dom fact is quantifier-free (atomic / and / chain / or)
+// - exactly one then, and it is exist!
+// - that exist! binds exactly one Obj-typed witness (the return set)
+//
+// Example (ok):
+//   have fn f by exist!:
+//       ? forall x A:
+//           exist! y B st {$F(x, y)}
+fn check_have_fn_by_exist_forall_shape(
+    block: &TokenBlock,
+    forall: &ForallFact,
+) -> RuntimeResult<()> {
+    let mut forall_param_count = 0usize;
+    for group in &forall.typed_parameters.groups {
+        forall_param_count += group.params.len();
+        match &group.param_type {
+            ParamType::Obj(_) => {}
+            _ => {
+                return Err(RuntimeParseError::new(
+                    "`have fn … by exist!`: forall parameters must all be Obj-typed (e.g. `x A`), not `set` / `nonempty_set` / `finite_set`",
+                    block.line,
+                    block.source_path.clone(),
+                )
+                .into());
+            }
+        }
+    }
+    if forall_param_count == 0 {
+        return Err(RuntimeParseError::new(
+            "`have fn … by exist!`: forall must bind at least one Obj parameter",
+            block.line,
+            block.source_path.clone(),
+        )
+        .into());
+    }
+
+    for dom in &forall.dom_facts {
+        if !fact_is_fn_set_dom_shape(dom) {
+            return Err(RuntimeParseError::new(
+                "`have fn … by exist!`: forall domain facts must be usable as anonymous-fn / fn-set domain facts (atomic / and / chain / or)",
+                block.line,
+                block.source_path.clone(),
+            )
+            .into());
+        }
+    }
+
+    if forall.then_facts.len() != 1 {
+        return Err(RuntimeParseError::new(
+            "`have fn … by exist!`: forall must have exactly one then fact, and it must be `exist!`",
+            block.line,
+            block.source_path.clone(),
+        )
+        .into());
+    }
+
+    let ExistOrAndChainAtomicFact::ExistUniqueFact(exist_body) = &forall.then_facts[0] else {
+        return Err(RuntimeParseError::new(
+            "`have fn … by exist!`: the only forall then fact must be `exist!`",
+            block.line,
+            block.source_path.clone(),
+        )
+        .into());
+    };
+
+    let mut witness_count = 0usize;
+    for group in &exist_body.typed_parameters.groups {
+        witness_count += group.params.len();
+        match &group.param_type {
+            ParamType::Obj(_) => {}
+            _ => {
+                return Err(RuntimeParseError::new(
+                    "`have fn … by exist!`: `exist!` witness type must be Obj (e.g. `y B`), not `set` / `nonempty_set` / `finite_set`",
+                    block.line,
+                    block.source_path.clone(),
+                )
+                .into());
+            }
+        }
+    }
+    if witness_count != 1 {
+        return Err(RuntimeParseError::new(
+            "`have fn … by exist!`: `exist!` must bind exactly one Obj-typed witness",
+            block.line,
+            block.source_path.clone(),
+        )
+        .into());
+    }
+
+    Ok(())
+}
+
+fn fact_is_fn_set_dom_shape(fact: &Fact) -> bool {
+    matches!(
+        fact,
+        Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_) | Fact::OrFact(_)
+    )
 }

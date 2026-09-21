@@ -6,15 +6,14 @@ use super::result::{
     ExecByStmtResult,
 };
 use crate::new_pipeline::ast::fact::{
-    AtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact, IsNonemptySetFact, IsSetFact,
-    NormalAtomicFact, PlainExistFact, QuantifierFreeFact,
+    AtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact, IsNonemptySetFact, IsSetFact, NormalAtomicFact,
+    PlainExistFact, QuantifierFreeFact,
 };
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::names::{AtomicName, BoundName};
 use crate::new_pipeline::ast::obj::{AnonymousFn, BigUnion, FnSet, IdentifierObj, Obj};
 use crate::new_pipeline::ast::param::{
-    ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup,
-    TypedParameterList,
+    ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
 };
 use crate::new_pipeline::ast::stmt::ByAxiomOfChoiceStmt;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
@@ -33,16 +32,12 @@ pub fn exec_by_axiom_of_choice_stmt(
         ));
     }
 
-    let obligations = axiom_of_choice_obligation_facts(runtime, &stmt.family, &stmt.line_file);
-
+    let obligations = ac_obligations(runtime, &stmt.family, &stmt.line_file);
     let (local_outcome, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
         let proof_steps = match run_fact_only_proof_steps(rt, &stmt.proof)? {
             Ok(steps) => steps,
-            Err(failed) => {
-                return Ok(Err(ExecByAxiomOfChoiceStmtFailed::ProofBody(failed)));
-            }
+            Err(failed) => return Ok(Err(ExecByAxiomOfChoiceStmtFailed::ProofBody(failed))),
         };
-
         let mut obligation_proofs = Vec::with_capacity(obligations.len());
         for (index, obligation) in obligations.iter().enumerate() {
             let proof = verify_goal_fact(rt, obligation)?;
@@ -67,11 +62,9 @@ pub fn exec_by_axiom_of_choice_stmt(
         }
     };
 
-    // Trusted AC step. Selection stays atomic via a named builtin predicate:
-    // exist f fn(A S) big_union(S) st {
-    //   $is_choice_function_for(S, S, fn(A S) S {A}, f)
-    // }.
-    let choice_fact = axiom_of_choice_exist_fact(runtime, &stmt.family, &stmt.line_file);
+    // Trusted AC step. Selection stays atomic:
+    // exist f fn(A S) big_union(S) st { $is_choice_function_for(S, S, fn(A S) S {A}, f) }.
+    let choice_fact = ac_exist_fact(runtime, &stmt.family, &stmt.line_file);
     let stored = match store_goal_fact(runtime, &choice_fact)? {
         Ok(s) => s,
         Err(msg) => {
@@ -92,29 +85,18 @@ pub fn exec_by_axiom_of_choice_stmt(
     ))
 }
 
-fn axiom_of_choice_obligation_facts(
-    runtime: &mut Runtime,
-    family: &Obj,
-    line_file: &LineFile,
-) -> Vec<Fact> {
-    let family_is_set: Fact = IsSetFact {
+fn ac_obligations(runtime: &mut Runtime, family: &Obj, line_file: &LineFile) -> Vec<Fact> {
+    let is_set: Fact = IsSetFact {
         fact_id: runtime.ids.allocate_fact_id(),
         set: family.clone(),
         line_file: Some(line_file.clone()),
     }
     .into();
-    vec![
-        family_is_set,
-        axiom_of_choice_members_nonempty_fact(runtime, family, line_file),
-    ]
+    vec![is_set, ac_members_nonempty(runtime, family, line_file)]
 }
 
-fn axiom_of_choice_members_nonempty_fact(
-    runtime: &mut Runtime,
-    family: &Obj,
-    line_file: &LineFile,
-) -> Fact {
-    let a = fresh_bound_name(runtime, "_ac_a");
+fn ac_members_nonempty(runtime: &mut Runtime, family: &Obj, line_file: &LineFile) -> Fact {
+    let a = fresh(runtime, "_ac_a");
     let a_obj = Obj::Identifier(IdentifierObj::from_bound_name(&a));
     let nonempty: AtomicFact = IsNonemptySetFact {
         fact_id: runtime.ids.allocate_fact_id(),
@@ -136,16 +118,12 @@ fn axiom_of_choice_members_nonempty_fact(
     })
 }
 
-fn axiom_of_choice_exist_fact(
-    runtime: &mut Runtime,
-    family: &Obj,
-    line_file: &LineFile,
-) -> Fact {
-    let choice_index = fresh_bound_name(runtime, "_ac_i");
-    let choice_fn_set = FnSet {
+fn ac_exist_fact(runtime: &mut Runtime, family: &Obj, line_file: &LineFile) -> Fact {
+    let idx = fresh(runtime, "_ac_i");
+    let fn_set = FnSet {
         set_bound_parameters: SetBoundParameterList {
             groups: vec![SetBoundParameterGroup {
-                params: vec![choice_index],
+                params: vec![idx],
                 param_type: Box::new(family.clone()),
             }],
         },
@@ -154,48 +132,44 @@ fn axiom_of_choice_exist_fact(
             left: Box::new(family.clone()),
         })),
     };
-
-    let f = fresh_bound_name(runtime, "_ac_f");
+    let f = fresh(runtime, "_ac_f");
     let f_obj = Obj::Identifier(IdentifierObj::from_bound_name(&f));
-
-    let identity_index = fresh_bound_name(runtime, "_ac_id");
-    let identity_value = Obj::Identifier(IdentifierObj::from_bound_name(&identity_index));
-    let identity_family = Obj::AnonymousFn(AnonymousFn {
+    let id_idx = fresh(runtime, "_ac_id");
+    let id_val = Obj::Identifier(IdentifierObj::from_bound_name(&id_idx));
+    let identity = Obj::AnonymousFn(AnonymousFn {
         body: FnSet {
             set_bound_parameters: SetBoundParameterList {
                 groups: vec![SetBoundParameterGroup {
-                    params: vec![identity_index],
+                    params: vec![id_idx],
                     param_type: Box::new(family.clone()),
                 }],
             },
             dom_facts: vec![],
             ret_set: Box::new(family.clone()),
         },
-        equal_to: Box::new(identity_value),
+        equal_to: Box::new(id_val),
     });
-
-    let named_choice: AtomicFact = NormalAtomicFact {
+    let named: AtomicFact = NormalAtomicFact {
         fact_id: runtime.ids.allocate_fact_id(),
         predicate: AtomicName::plain("is_choice_function_for".to_string()),
-        body: vec![family.clone(), family.clone(), identity_family, f_obj],
+        body: vec![family.clone(), family.clone(), identity, f_obj],
         line_file: Some(line_file.clone()),
     }
     .into();
-
     Fact::ExistFact(PlainExistFact {
         fact_id: runtime.ids.allocate_fact_id(),
         typed_parameters: TypedParameterList {
             groups: vec![TypedParameterGroup {
                 params: vec![f],
-                param_type: ParamType::Obj(Obj::FnSet(choice_fn_set)),
+                param_type: ParamType::Obj(Obj::FnSet(fn_set)),
             }],
         },
-        facts: vec![QuantifierFreeFact::AtomicFact(named_choice)],
+        facts: vec![QuantifierFreeFact::AtomicFact(named)],
         line_file: Some(line_file.clone()),
     })
 }
 
-fn fresh_bound_name(runtime: &mut Runtime, prefix: &str) -> BoundName {
+fn fresh(runtime: &mut Runtime, prefix: &str) -> BoundName {
     let id = runtime.ids.allocate_identifier_id();
-    BoundName::new(id, format!("{prefix}{}", id.value()))
+    BoundName::new(id, format!("{}{}", prefix, id.value()))
 }

@@ -865,6 +865,14 @@ The tuple representation is deliberately opaque outside two places:
 A generic membership fact `e $in &Struct` does not itself store tuple shape,
 field carriers, field-to-index equalities, or struct laws.
 
+> **Preview (`new_pipeline`):** `e $in &Struct` is proved by the
+> `StructObjMembership` builtin: check field carriers (literal tuple components
+> `$in Ti`, or else `e $in cart(T1,…,Tn)` via `CartMembership`) and each
+> instantiated `<=>:` law. Success is opaque membership only — still no
+> automatic property release. `CartMembership` itself proves
+> `(a1,…,an) $in cart(A1,…,An)` by coordinate memberships (and, for a
+> non-literal `e`, `$is_tuple(e)` plus `tuple_dim(e)=n`).
+
 #### Explicit property release: `release struct def`
 
 `release struct def e` opens exactly one definition-owned struct layer. It has no
@@ -2615,9 +2623,9 @@ introductions.
 | `by def` | One positive concrete/builtin definitional target and every defining clause. | The target with explicit definition provenance. |
 | `release struct def e` | `e` has a definition-owned struct carrier and `e $in &Struct` verifies. | Exactly one layer of tuple/identity bridges, field carriers, and instantiated struct laws. |
 | Predicate-property registrations | The proof has the exact reflexive/symmetric/transitive predicate shape. | A reusable property route for later rewriting. |
-| `by regularity_axiom` | Its displayed set/nonemptiness obligations. | An explicitly trusted set-theoretic conclusion; strict mode rejects the step. |
-| `by axiom_of_choice` | The family is a set and every member is proved nonempty. | Stores `exist f fn(A S)big_union(S) st {$is_choice_function_for(S,S,fn(A S)S {A},f)}`. The existential body is atomic. |
-| `by zorn_lemma` | The set, binary relation, exact named upper-bound/maximality definitions, nonemptiness, partial-order laws, and chain-upper-bound obligation. | Stores `exist m S st {$M(m)}` using the supplied named maximality prop. The chain witness likewise uses the supplied atomic upper-bound prop. |
+| `by regularity_axiom` | Its displayed set/nonemptiness obligations. Preview (`new_pipeline`): parse+exec wired; fact-only local proofs N/A (no body). | An explicitly trusted set-theoretic conclusion; strict mode rejects the step. |
+| `by axiom_of_choice` | The family is a set and every member is proved nonempty. Preview (`new_pipeline`): parse+exec wired; proof body is fact-only. | Stores `exist f fn(A S)big_union(S) st {$is_choice_function_for(S,S,fn(A S)S {A},f)}`. The existential body is atomic. |
+| `by zorn_lemma` | The set, binary relation, exact named upper-bound/maximality definitions, nonemptiness, partial-order laws, and chain-upper-bound obligation. Preview (`new_pipeline`): parse+exec wired; prop-definition equality uses IR alignment (no alpha_normalize yet). | Stores `exist m S st {$M(m)}` using the supplied named maximality prop. The chain witness likewise uses the supplied atomic upper-bound prop. |
 | Terminal `import` command | Only the interactive REPL command grammar and module constraints; it is not a statement. | A qualified environment in the REPL's ephemeral manifest; maintained modules use real manifests instead. |
 | `eval` | The expression belongs to the supported executable subset. | Evaluation output, not a new mathematical proof fact. |
 
@@ -3183,6 +3191,12 @@ concrete finite list set.
 > **Preview (`new_pipeline`):** integer `by induc` / `by strong_induc` are
 > available. The induction parameter is bound in `Z`, and the stored conclusion
 > is `forall n Z: n >= base => P(n)`.
+>
+> Also wired under `LITEX_NEW_PIPELINE=1`: `by regularity_axiom(A)`,
+> `by axiom_of_choice: set F` (optional fact-only proof body), and
+> `by zorn_lemma: set S, prop P, prop U, prop M` (optional fact-only proof body).
+> Semantics match the default pipeline: prove the displayed obligations, then
+> store the trusted axiomatic conclusion.
 
 ### Bounded iteration and extensionality
 
@@ -3267,6 +3281,11 @@ This is an `error` because the domain and conclusion must be positive calls to
 the same user-defined predicate.
 
 ### Trusted preview proof steps
+
+> **Preview (`new_pipeline`):** `by regularity_axiom`, `by axiom_of_choice`, and
+> `by zorn_lemma` are parse+exec wired. Local proof bodies are fact-only (same
+> restriction as other NP by-stmts). Soft-fail on missing obligations or prop
+> interface checks; the trusted conclusions are stored after checks succeed.
 
 `by regularity_axiom` exposes set-theoretic foundation as an explicit trusted
 step:

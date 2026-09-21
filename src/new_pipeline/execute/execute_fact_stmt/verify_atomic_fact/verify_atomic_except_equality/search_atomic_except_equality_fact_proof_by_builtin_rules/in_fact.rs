@@ -1,10 +1,15 @@
-use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact, InFact, SubsetFact};
-use crate::new_pipeline::ast::obj::{FnObjHead, Number, Obj, StandardSet};
+use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact, InFact, IsTupleFact, SubsetFact};
+use crate::new_pipeline::ast::names::AtomicName;
+use crate::new_pipeline::ast::obj::{
+    Cart, FnObjHead, Number, Obj, ObjAtIndex, StandardSet, StructObj, TupleDim,
+};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::predecessor_helpers::match_sub_one;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::rational_expression::evaluate_obj_to_normalized_decimal_number;
+use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeResult};
+use std::collections::HashMap;
 
 use super::subset::standard_set_is_subset_eq;
 
@@ -35,10 +40,22 @@ pub enum InFactSearchProofByBuiltinRule {
     // then `x $in {a_1, …, a_n}`.
     // Example: `1 $in {1, 2}`.
     ListSetElementMembership(ListSetElementMembershipBuiltinRuleProof),
+    // Cartesian-product membership.
+    // Mathematical property: `e $in cart(A1,…,An)` (n≥2) from coordinate
+    // memberships (literal tuple directly; otherwise after `$is_tuple` and
+    // `tuple_dim(e)=n`).
+    // Example: `(1, 2) $in cart(R, Z)`.
+    CartMembership(CartMembershipBuiltinRuleProof),
     // Power-set membership from subset.
     // Mathematical property: if `A $subset B`, then `A $in power_set(B)`.
     // Example: `{x R: x > 0} $subset R` proves `{x R: x > 0} $in power_set(R)`.
     PowerSetMembership(PowerSetMembershipBuiltinRuleProof),
+    // Opaque struct-set membership from Cartesian/tuple carrier + `<=>:` laws.
+    // Mathematical property: `e` inhabits `&Struct` when it meets the field
+    // carriers (as `cart` / literal tuple components) and all instantiated
+    // equivalent facts. Does not store bridges or laws.
+    // Example: `(1, 2) $in &Point` after `struct Point: x R; y R`.
+    StructObjMembership(StructObjMembershipBuiltinRuleProof),
     // Natural predecessor stays in N under a known lower bound of one.
     // Mathematical property: `x $in N` and `x >= 1` ⇒ `x - 1 $in N`.
     // Example: known `n $in N` and `n >= 1` prove `n - 1 $in N`.
@@ -90,8 +107,25 @@ pub struct ListSetElementMembershipBuiltinRuleProof {
     pub equality_proof: VerifyFactResult,
 }
 
+// Coordinate `$in` factor proofs; optional shape/dim for non-literal elements.
+pub struct CartMembershipBuiltinRuleProof {
+    pub shape_and_dimension: Option<CartMembershipShapeProof>,
+    pub coordinate_memberships: Vec<VerifyFactResult>,
+}
+
+pub struct CartMembershipShapeProof {
+    pub is_tuple: VerifyFactResult,
+    pub dimension: VerifyFactResult,
+}
+
 pub struct PowerSetMembershipBuiltinRuleProof {
     pub subset_proof: VerifyFactResult,
+}
+
+// Carrier obligations + each instantiated `<=>:` law (order matches search).
+pub struct StructObjMembershipBuiltinRuleProof {
+    pub carrier_obligations: Vec<VerifyFactResult>,
+    pub equivalent_fact_proofs: Vec<VerifyFactResult>,
 }
 
 pub struct PredecessorInNaturalBuiltinRuleProof {
@@ -131,7 +165,13 @@ impl Runtime {
         if let Some(proof) = self.set_builder_membership_proof(fact, verify_state.clone())? {
             return Ok(Some(proof));
         }
+        if let Some(proof) = self.cart_membership_proof(fact, verify_state.clone())? {
+            return Ok(Some(proof));
+        }
         if let Some(proof) = self.power_set_membership_proof(fact, verify_state.clone())? {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) = self.struct_obj_membership_proof(fact, verify_state.clone())? {
             return Ok(Some(proof));
         }
         if let Some(kind) = native_constant_membership_kind(&fact.element, &fact.set) {
@@ -349,6 +389,228 @@ impl Runtime {
         Ok(Some(InFactSearchProofByBuiltinRule::PowerSetMembership(
             PowerSetMembershipBuiltinRuleProof { subset_proof },
         )))
+    }
+
+    // Prove `e $in cart(A1,…,An)` (n≥2).
+    // Literal tuple: each `ai $in Ai`.
+    // Otherwise: `$is_tuple(e)`, `tuple_dim(e)=n`, and each `e[i] $in Ai`.
+    // Example: `(1, 2) $in cart(R, Z)`.
+    fn cart_membership_proof(
+        &mut self,
+        fact: &InFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        let Obj::Cart(cart) = &fact.set else {
+            return Ok(None);
+        };
+        if cart.args.len() < 2 {
+            return Ok(None);
+        }
+
+        let (shape_and_dimension, coordinates): (Option<CartMembershipShapeProof>, Vec<Obj>) =
+            match &fact.element {
+                Obj::Tuple(tuple) if tuple.args.len() == cart.args.len() => (
+                    None,
+                    tuple.args.iter().map(|a| a.as_ref().clone()).collect(),
+                ),
+                Obj::Tuple(_) => return Ok(None),
+                _ => {
+                    let is_tuple_fact = Fact::AtomicFact(AtomicFact::IsTupleFact(IsTupleFact {
+                        fact_id: self.ids.allocate_fact_id(),
+                        set: fact.element.clone(),
+                        line_file: fact.line_file.clone(),
+                    }));
+                    let is_tuple = self.verify_fact(&is_tuple_fact, verify_state.clone())?;
+                    if is_tuple.is_failed() {
+                        return Ok(None);
+                    }
+                    let dimension_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
+                        fact_id: self.ids.allocate_fact_id(),
+                        left: Obj::TupleDim(TupleDim {
+                            arg: Box::new(fact.element.clone()),
+                        }),
+                        right: Obj::Number(Number {
+                            normalized_value: cart.args.len().to_string(),
+                        }),
+                        line_file: fact.line_file.clone(),
+                    }));
+                    let dimension = self.verify_fact(&dimension_fact, verify_state.clone())?;
+                    if dimension.is_failed() {
+                        return Ok(None);
+                    }
+                    let coordinates = (0..cart.args.len())
+                        .map(|index| {
+                            Obj::ObjAtIndex(ObjAtIndex {
+                                obj: Box::new(fact.element.clone()),
+                                index: Box::new(Obj::Number(Number {
+                                    normalized_value: (index + 1).to_string(),
+                                })),
+                            })
+                        })
+                        .collect();
+                    (
+                        Some(CartMembershipShapeProof {
+                            is_tuple,
+                            dimension,
+                        }),
+                        coordinates,
+                    )
+                }
+            };
+
+        let mut coordinate_memberships = Vec::with_capacity(cart.args.len());
+        for (coordinate, factor) in coordinates.iter().zip(cart.args.iter()) {
+            let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
+                fact_id: self.ids.allocate_fact_id(),
+                element: coordinate.clone(),
+                set: factor.as_ref().clone(),
+                line_file: fact.line_file.clone(),
+            }));
+            let proof = self.verify_fact(&membership, verify_state.clone())?;
+            if proof.is_failed() {
+                return Ok(None);
+            }
+            coordinate_memberships.push(proof);
+        }
+        Ok(Some(InFactSearchProofByBuiltinRule::CartMembership(
+            CartMembershipBuiltinRuleProof {
+                shape_and_dimension,
+                coordinate_memberships,
+            },
+        )))
+    }
+
+    // Prove `e $in &Struct` from field carriers + instantiated `<=>:` laws.
+    // Literal tuple: each component `$in Ti`. Otherwise: `e $in cart(T1,…,Tn)`.
+    // Example: `(1, 2) $in &Point` after `struct Point: x R; y R`.
+    fn struct_obj_membership_proof(
+        &mut self,
+        fact: &InFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        let Obj::StructObj(struct_obj) = &fact.set else {
+            return Ok(None);
+        };
+        let Some((def, mut subst)) = self.struct_def_and_header_subst(struct_obj) else {
+            return Ok(None);
+        };
+        if def.fields.len() < 2 {
+            return Ok(None);
+        }
+
+        let field_values: Vec<Obj> = match &fact.element {
+            Obj::Tuple(tuple) if tuple.args.len() == def.fields.len() => {
+                tuple.args.iter().map(|a| a.as_ref().clone()).collect()
+            }
+            Obj::Tuple(_) => return Ok(None),
+            _ => (0..def.fields.len())
+                .map(|index| {
+                    Obj::ObjAtIndex(ObjAtIndex {
+                        obj: Box::new(fact.element.clone()),
+                        index: Box::new(Obj::Number(Number {
+                            normalized_value: (index + 1).to_string(),
+                        })),
+                    })
+                })
+                .collect(),
+        };
+        for (field, value) in def.fields.iter().zip(field_values.iter()) {
+            subst.insert(field.binding.id, value.clone());
+        }
+
+        let mut field_types = Vec::with_capacity(def.fields.len());
+        for field in &def.fields {
+            let Ok(ty) = self.inst_obj(&field.field_type, &subst) else {
+                return Ok(None);
+            };
+            field_types.push(ty);
+        }
+
+        let mut carrier_obligations = Vec::new();
+        match &fact.element {
+            Obj::Tuple(_) => {
+                for (value, field_type) in field_values.iter().zip(field_types.iter()) {
+                    let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
+                        fact_id: self.ids.allocate_fact_id(),
+                        element: value.clone(),
+                        set: field_type.clone(),
+                        line_file: fact.line_file.clone(),
+                    }));
+                    let proof = self.verify_fact(&membership, verify_state.clone())?;
+                    if proof.is_failed() {
+                        return Ok(None);
+                    }
+                    carrier_obligations.push(proof);
+                }
+            }
+            _ => {
+                let cart = Obj::Cart(Cart {
+                    args: field_types.iter().cloned().map(Box::new).collect(),
+                });
+                let cart_membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
+                    fact_id: self.ids.allocate_fact_id(),
+                    element: fact.element.clone(),
+                    set: cart,
+                    line_file: fact.line_file.clone(),
+                }));
+                let proof = self.verify_fact(&cart_membership, verify_state.clone())?;
+                if proof.is_failed() {
+                    return Ok(None);
+                }
+                carrier_obligations.push(proof);
+            }
+        }
+
+        let mut equivalent_fact_proofs = Vec::with_capacity(def.equivalent_facts.len());
+        for law in &def.equivalent_facts {
+            let Ok(instantiated) = self.inst_fact(law, &subst) else {
+                return Ok(None);
+            };
+            let proof = self.verify_fact(&instantiated, verify_state.clone())?;
+            if proof.is_failed() {
+                return Ok(None);
+            }
+            equivalent_fact_proofs.push(proof);
+        }
+
+        Ok(Some(InFactSearchProofByBuiltinRule::StructObjMembership(
+            StructObjMembershipBuiltinRuleProof {
+                carrier_obligations,
+                equivalent_fact_proofs,
+            },
+        )))
+    }
+
+    fn struct_def_and_header_subst(
+        &self,
+        struct_obj: &StructObj,
+    ) -> Option<(crate::new_pipeline::ast::stmt::DefStructStmt, HashMap<IdentifierId, Obj>)> {
+        let name = match &struct_obj.name {
+            AtomicName::Plain { name }
+            | AtomicName::WithExportFileId { name, .. }
+            | AtomicName::WithModAndExportFileId { name, .. } => name.clone(),
+        };
+        let def = self.def_struct_visible_in_stack(&name)?.clone();
+        let expected = def
+            .param_def_with_dom
+            .as_ref()
+            .map(|(p, _)| p.groups.iter().map(|g| g.params.len()).sum::<usize>())
+            .unwrap_or(0);
+        if expected != struct_obj.params.len() || def.fields.len() < 2 {
+            return None;
+        }
+        let mut subst = HashMap::new();
+        if let Some((params, _)) = &def.param_def_with_dom {
+            let mut arg_index = 0;
+            for group in &params.groups {
+                for binding in &group.params {
+                    let arg = struct_obj.params.get(arg_index)?;
+                    subst.insert(binding.id, arg.clone());
+                    arg_index += 1;
+                }
+            }
+        }
+        Some((def, subst))
     }
 }
 
