@@ -27,12 +27,14 @@ use crate::new_pipeline::ast::param::{
     ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
 };
 use crate::new_pipeline::ast::stmt::{FnSetClause, HaveFnByForallExistUniqueStmt};
+use crate::new_pipeline::exec_env::StoredIdentifierDefinition;
 use crate::new_pipeline::execute::execute_fact_stmt::{
     FailToVerifyFactWellDefinedResult, VerifyFactResult, VerifyFactWellDefinedResult,
     VerifyObjWellDefinedResult, VerifyState,
 };
 use crate::new_pipeline::instantiate::quantifier_free_fact_to_fact;
 use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeError, RuntimeResult};
+use std::rc::Rc;
 
 pub enum ExecHaveFnByForallExistUniqueStmtFailed {
     SourceForall(VerifyFactResult),
@@ -82,6 +84,13 @@ impl Runtime {
             can_use_rewrite: true,
             store_well_defined_fact: true,
         };
+
+        if self.identifier_defined_in_stack(&stmt.name) {
+            return Err(RuntimeError::InternalBug(format!(
+                "identifier `{}` is already defined in this ExecEnv",
+                stmt.name
+            )));
+        }
 
         let shape = match self.have_fn_by_exist_shape(stmt) {
             Ok(shape) => shape,
@@ -142,6 +151,14 @@ impl Runtime {
         let uniqueness_forall_fact_id = uniqueness_fact.fact_id();
         stored_fact_ids.extend(self.store_fact_and_infer(&uniqueness_fact)?.stored_fact_ids());
 
+        self.top_exec_env_mut().definitions.identifiers.insert(
+            stmt.name.clone(),
+            StoredIdentifierDefinition::HaveFnByForallExistUnique((
+                stmt.name.clone(),
+                Rc::new(stmt.clone()),
+            )),
+        );
+
         Ok(ExecHaveFnByForallExistUniqueStmtResult::Success(
             ExecHaveFnByForallExistUniqueStmtSuccessResult {
                 statement: stmt.clone(),
@@ -153,6 +170,33 @@ impl Runtime {
                 stored_fact_ids,
             },
         ))
+    }
+
+    // Rebuild membership + property + uniqueness for `release obj def` (subjects = surface).
+    pub(crate) fn build_have_fn_by_forall_exist_unique_facts_for_surface(
+        &mut self,
+        surface: &IdentifierObj,
+        stmt: &HaveFnByForallExistUniqueStmt,
+    ) -> RuntimeResult<Result<(Fact, Fact, Fact), String>> {
+        let shape = match self.have_fn_by_exist_shape(stmt) {
+            Ok(shape) => shape,
+            Err(message) => return Ok(Err(message)),
+        };
+        let fn_set = fn_set_from_clause(&shape.fn_set_clause);
+        let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
+            fact_id: self.ids.allocate_fact_id(),
+            element: Obj::Identifier(surface.clone()),
+            set: Obj::FnSet(fn_set),
+            line_file: Some(stmt.line_file.clone()),
+        }));
+        let applied = applied_function_obj(surface, &stmt.forall.typed_parameters);
+        let property = Fact::ForallFact(
+            self.build_have_fn_by_exist_property_forall(stmt, &shape, applied.clone())?,
+        );
+        let uniqueness = Fact::ForallFact(
+            self.build_have_fn_by_exist_uniqueness_forall(stmt, &shape, applied)?,
+        );
+        Ok(Ok((membership, property, uniqueness)))
     }
 
     fn have_fn_by_exist_shape(

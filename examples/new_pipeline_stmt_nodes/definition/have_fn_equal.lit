@@ -1,0 +1,5 @@
+# Stmt: Definition.HaveFnEqualStmt → exec_have_fn_equal_stmt
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_stmt_nodes/definition/have_fn_equal.lit
+
+have fn id(x R) R = x
+id(1) = 1

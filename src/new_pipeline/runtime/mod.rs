@@ -7,6 +7,7 @@
 //! (plain occurrences carry IdentifierId; qualified atoms do not).
 
 pub mod error;
+pub mod internal_names;
 pub mod real_or_virtual_path;
 pub mod runtime;
 pub mod runtime_ids;

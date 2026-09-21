@@ -905,9 +905,9 @@ properties are needed.
 > into the **current** Env. Subjects use the written spelling of `I`.
 >
 > Supported sources: `let`, `have` / `have … = …` / `have …:`, `trust have`,
-> and `have fn` / `by cases` / `by induc`. Binder-only `ParamType` rows are
-> rejected. This does **not** open a struct layer; use `release struct def`
-> for that.
+> and `have fn` / `by cases` / `by exist!` / `by induc`. Binder-only `ParamType`
+> rows are rejected. This does **not** open a struct layer; use
+> `release struct def` for that.
 >
 > ```litex
 > have a R = 2
@@ -2041,7 +2041,8 @@ This is an `error`: `x != 0` and `x > 0` overlap.
 > forall (`body` with the witness replaced by `f(args)`), and the uniqueness
 > forall (`body ⇒ witness = f(args)`). It does **not** store `f = AnonymousFn`,
 > so applications do not unfold by equality the way `have fn f(...) T = body`
-> does.
+> does. The name is recorded in the definition table, so `release obj def f`
+> re-stores the same three facts; a `template` body may use this form.
 
 `have fn name by exist!` turns an **already proved** unique-existence
 statement into a function. Prove the `forall … exist!` outside; the `have fn`
@@ -2673,7 +2674,7 @@ introductions.
 | Enumeration, induction, `by for`, `by extension` | The target has the exact finite/range/discrete/extensional shape and every generated subgoal closes. | The requested universal/equality/atomic target. |
 | `by def` | One positive concrete/builtin definitional target and every defining clause. | The target with explicit definition provenance. |
 | `release struct def e` | `e` has a definition-owned struct carrier and `e $in &Struct` verifies. | Exactly one layer of tuple/identity bridges, field carriers, and instantiated struct laws. |
-| `release obj def I` | Preview (`new_pipeline`): `I` is one identifier (optionally `mod::export::`-qualified) with a `StoredIdentifierDefinition` other than a binder `ParamType`. | Re-stores that definition's type / equality / body / fn facts into the current Env (subjects use the written spelling of `I`). |
+| `release obj def I` | Preview (`new_pipeline`): `I` is one identifier (optionally `mod::export::`-qualified) with a `StoredIdentifierDefinition` other than a binder `ParamType`. | Re-stores that definition's type / equality / body / fn facts into the current Env (subjects use the written spelling of `I`). For `have fn … by exist!`, re-stores membership + property + uniqueness. |
 | Predicate-property registrations | The proof has the exact reflexive/symmetric/transitive predicate shape. | A reusable property route for later rewriting. |
 | `by regularity_axiom` | Its displayed set/nonemptiness obligations. Preview (`new_pipeline`): parse+exec wired; fact-only local proofs N/A (no body). | An explicitly trusted set-theoretic conclusion; strict mode rejects the step. |
 | `by axiom_of_choice` | The family is a set and every member is proved nonempty. Preview (`new_pipeline`): parse+exec wired; proof body is fact-only. | Stores `exist f fn(A S)big_union(S) st {$is_choice_function_for(S,S,fn(A S)S {A},f)}`. The existential body is atomic. |
@@ -2968,9 +2969,12 @@ This is an `error` because an abstract predicate has no definition to unfold.
 > **Preview (`new_pipeline`):** `witness exist … from …` has **no** indented
 > proof body and opens **no** local binder scope. Prove type and body
 > obligations in the ambient environment first, then submit the witnesses in
-> one line. `exist!` uniqueness and `witness $P` / nonempty-set forms are not
-> wired on this track yet. The legacy examples below (with `:` proof blocks)
-> still describe the default pipeline.
+> one line. `obtain … from exist` / `exist!` is wired at top level and as a
+> `template` body (names the known existential; `exist!` also stores the
+> uniqueness forall). `obtain` from `$P` / `thm`, `exist!` uniqueness for
+> `witness`, and `witness $P` / nonempty-set forms are not wired on this track
+> yet. The legacy examples below (with `:` proof blocks) still describe the
+> default pipeline.
 
 Use `witness` to prove an existential or nonempty-set goal. Use `obtain` to
 name witnesses from an already known existential, from one concrete prop

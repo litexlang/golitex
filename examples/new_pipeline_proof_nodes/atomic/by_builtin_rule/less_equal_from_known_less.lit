@@ -1,0 +1,7 @@
+# Node: atomic.ByBuiltinRule.LessEqual.FromKnownLess
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/atomic/by_builtin_rule/less_equal_from_known_less.lit
+
+have a R = 1
+have b R = 2
+a < b
+a <= b

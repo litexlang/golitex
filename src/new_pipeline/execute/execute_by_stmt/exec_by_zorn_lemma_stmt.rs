@@ -10,7 +10,7 @@ use crate::new_pipeline::ast::fact::{
     NormalAtomicFact, OrFact, PlainExistFact, QuantifierFreeFact,
 };
 use crate::new_pipeline::ast::line_file::LineFile;
-use crate::new_pipeline::ast::names::{AtomicName, BoundName};
+use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::{IdentifierObj, Obj, PowerSet};
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
 use crate::new_pipeline::ast::stmt::{ByZornLemmaStmt, DefPropStmt};
@@ -211,7 +211,7 @@ fn zorn_reflexive(
     prop_name: &AtomicName,
     line_file: &LineFile,
 ) -> Fact {
-    let x = fresh(runtime, "_zorn_x");
+    let x = runtime.fresh_internal_param();
     let x_obj = Obj::Identifier(IdentifierObj::from_bound_name(&x));
     let atom = prop_atom(runtime, prop_name, vec![x_obj.clone(), x_obj], line_file);
     Fact::ForallFact(ForallFact {
@@ -234,9 +234,9 @@ fn zorn_transitive(
     prop_name: &AtomicName,
     line_file: &LineFile,
 ) -> Fact {
-    let x = fresh(runtime, "_zorn_x");
-    let y = fresh(runtime, "_zorn_y");
-    let z = fresh(runtime, "_zorn_z");
+    let x = runtime.fresh_internal_param();
+    let y = runtime.fresh_internal_param();
+    let z = runtime.fresh_internal_param();
     let xo = Obj::Identifier(IdentifierObj::from_bound_name(&x));
     let yo = Obj::Identifier(IdentifierObj::from_bound_name(&y));
     let zo = Obj::Identifier(IdentifierObj::from_bound_name(&z));
@@ -263,8 +263,8 @@ fn zorn_antisymmetric(
     prop_name: &AtomicName,
     line_file: &LineFile,
 ) -> Fact {
-    let x = fresh(runtime, "_zorn_x");
-    let y = fresh(runtime, "_zorn_y");
+    let x = runtime.fresh_internal_param();
+    let y = runtime.fresh_internal_param();
     let xo = Obj::Identifier(IdentifierObj::from_bound_name(&x));
     let yo = Obj::Identifier(IdentifierObj::from_bound_name(&y));
     let xy = prop_atom(runtime, prop_name, vec![xo.clone(), yo.clone()], line_file);
@@ -297,7 +297,7 @@ fn zorn_chain_upper_bound(
     upper_bound_prop_name: &AtomicName,
     line_file: &LineFile,
 ) -> Fact {
-    let c = fresh(runtime, "_zorn_c");
+    let c = runtime.fresh_internal_param();
     let c_obj = Obj::Identifier(IdentifierObj::from_bound_name(&c));
     let power = Obj::PowerSet(PowerSet {
         set: Box::new(set.clone()),
@@ -327,8 +327,8 @@ fn zorn_chain_total(
     prop_name: &AtomicName,
     line_file: &LineFile,
 ) -> Fact {
-    let x = fresh(runtime, "_zorn_x");
-    let y = fresh(runtime, "_zorn_y");
+    let x = runtime.fresh_internal_param();
+    let y = runtime.fresh_internal_param();
     let xo = Obj::Identifier(IdentifierObj::from_bound_name(&x));
     let yo = Obj::Identifier(IdentifierObj::from_bound_name(&y));
     let left = prop_atom(runtime, prop_name, vec![xo.clone(), yo.clone()], line_file);
@@ -362,7 +362,7 @@ fn zorn_upper_exist(
     upper_bound_prop_name: &AtomicName,
     line_file: &LineFile,
 ) -> Fact {
-    let u = fresh(runtime, "_zorn_u");
+    let u = runtime.fresh_internal_param();
     let u_obj = Obj::Identifier(IdentifierObj::from_bound_name(&u));
     let atom = prop_atom(
         runtime,
@@ -389,7 +389,7 @@ fn zorn_maximal_exist(
     maximal_prop_name: &AtomicName,
     line_file: &LineFile,
 ) -> Fact {
-    let m = fresh(runtime, "_zorn_m");
+    let m = runtime.fresh_internal_param();
     let m_obj = Obj::Identifier(IdentifierObj::from_bound_name(&m));
     let atom = prop_atom(runtime, maximal_prop_name, vec![m_obj], line_file);
     Fact::ExistFact(PlainExistFact {
@@ -418,9 +418,4 @@ fn prop_atom(
         line_file: Some(line_file.clone()),
     }
     .into()
-}
-
-fn fresh(runtime: &mut Runtime, prefix: &str) -> BoundName {
-    let id = runtime.ids.allocate_identifier_id();
-    BoundName::new(id, format!("{}{}", prefix, id.value()))
 }

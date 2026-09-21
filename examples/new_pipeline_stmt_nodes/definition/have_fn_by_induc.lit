@@ -1,0 +1,9 @@
+# Stmt: Definition.HaveFnByInducStmt → exec_have_fn_by_induc_stmt
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_stmt_nodes/definition/have_fn_by_induc.lit
+
+have fn countdown(n N) N by induc n from 0:
+    case n = 0: 0
+    case n >= 1: countdown(n - 1)
+
+countdown(0) = 0
+countdown(1) = 0

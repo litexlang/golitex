@@ -69,6 +69,13 @@ impl Runtime {
                     ),
                 ))
             }
+            Stmt::Definition(DefinitionStmt::ObtainObjFromExistFact(obtain_stmt)) => {
+                Ok(ExecStmtResult::Definition(
+                    ExecDefinitionStmtResult::ObtainObjFromExistFact(
+                        self.exec_obtain_obj_from_exist_fact_stmt(obtain_stmt)?,
+                    ),
+                ))
+            }
             Stmt::Definition(DefinitionStmt::HaveFnEqualStmt(have_stmt)) => {
                 Ok(ExecStmtResult::Definition(
                     ExecDefinitionStmtResult::HaveFnEqual(

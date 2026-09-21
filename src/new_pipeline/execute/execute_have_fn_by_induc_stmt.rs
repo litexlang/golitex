@@ -17,7 +17,6 @@ use crate::new_pipeline::ast::fact::{
     and_chain_as_fact, negate_atomic_fact, AndChainAtomicFact, AndFact, AtomicFact, Fact,
     GreaterEqualFact, InFact, LessFact, OrFact, QuantifierFreeFact,
 };
-use crate::new_pipeline::ast::names::BoundName;
 use crate::new_pipeline::ast::obj::{FnObjHead, FnSet, IdentifierObj, Obj, StandardSet};
 use crate::new_pipeline::ast::param::{ParamType, SetBoundParameterGroup, TypedParameterList};
 use crate::new_pipeline::ast::stmt::{
@@ -486,10 +485,7 @@ fn fresh_set_bound_params(
     for group in &clause.set_bound_parameters.groups {
         let mut params = Vec::new();
         for p in &group.params {
-            let fresh = BoundName::new(
-                runtime.ids.allocate_identifier_id(),
-                format!("_{}", p.name),
-            );
+            let fresh = runtime.fresh_internal_param();
             subst.insert(
                 p.id,
                 Obj::Identifier(IdentifierObj::from_bound_name(&fresh)),

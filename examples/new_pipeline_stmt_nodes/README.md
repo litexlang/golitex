@@ -18,11 +18,18 @@ Exit 0 is enough. Stub / not-yet-wired stmt arms are **omitted**.
 
 ```text
 fact/          Stmt::Fact
-definition/    LetObj, HaveObj*, DefProp, DefAbstractProp, ReleaseStructDef, ReleaseObjDef
-witness/       WitnessExistFact
+definition/    LetObj, HaveObj*, HaveFn*, DefProp, DefAbstractProp, DefStruct*,
+               DefTemplate, DefThm, ReleaseObjDef, ReleaseStructDef, ReleaseThm
+witness/       WitnessExistFact (no indented body in new_pipeline)
 unsafe/        TrustStmt, TrustHaveStmt
-by/            ByReflexiveProp, BySymmetricProp
+by/            ByReflexive/Symmetric/TransitiveProp, Extension, Enumerate*,
+               For, Contra, Cases, Def, Thm, Induc, StrongInduc,
+               RegularityAxiom, AxiomOfChoice
 ```
+
+Omitted for now: `by zorn_lemma` (wired; chain-upper-bound obligation still
+needs a green tracer). Parse-only / unwired: obtain, claim/example/sketch/try,
+eval, setting, axiom, strategy.
 
 ## Run all
 

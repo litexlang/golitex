@@ -1,0 +1,4 @@
+# Node: atomic.ByBuiltinRule.In.ListSetElementMembership
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/atomic/by_builtin_rule/in_list_set_element_membership.lit
+
+1 $in {1, 2, 3}

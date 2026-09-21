@@ -1,0 +1,5 @@
+# Node: equal.ByObjectDefinition.ByIdentifier.HaveObjEqual
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/equal/by_object_definition/by_identifier/have_obj_equal.lit
+
+have sum_two R = 1 + 1
+sum_two = 2
