@@ -1,4 +1,4 @@
-//! Equality builtin: unfold `f(args)` when `f = fn(...) { body }` is known.
+//! Equality by object definition: unfold `f(args)` when `f = fn(...) { body }` is known.
 //!
 //! Mathematical property:
 //!   If `have fn f(params) T = body` (or `let f = fn(...) { body }`) stores
@@ -13,23 +13,24 @@ use crate::new_pipeline::ast::fact::EqualFact;
 use crate::new_pipeline::ast::obj::{FnObj, FnObjHead, Obj};
 use crate::new_pipeline::ast::param::SetBoundParameterList;
 use crate::new_pipeline::exec_env::exec_env::SpecialObjProperty;
+use crate::new_pipeline::exec_env::StoredIdentifierDefinition;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use std::collections::HashMap;
 
-pub struct ByUnfoldNamedHaveFnEqualApplicationBuiltinRuleProof {
+pub struct ByUnfoldNamedHaveFnEqualApplicationObjectDefinitionProof {
     pub expanded_body: Obj,
     pub residual_equal: VerifyFactResult,
 }
 
 impl Runtime {
-    pub fn search_equal_fact_builtin_rule_unfold_named_have_fn_equal_application(
+    pub fn search_equal_fact_object_definition_unfold_named_have_fn_equal_application(
         &mut self,
         fact: &EqualFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<ByUnfoldNamedHaveFnEqualApplicationBuiltinRuleProof>> {
+    ) -> RuntimeResult<Option<ByUnfoldNamedHaveFnEqualApplicationObjectDefinitionProof>> {
         if let Some(proof) = self.try_unfold_named_have_fn_equal_application(
             &fact.left,
             &fact.right,
@@ -55,7 +56,7 @@ impl Runtime {
         other_side: &Obj,
         parent_fact: &EqualFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<ByUnfoldNamedHaveFnEqualApplicationBuiltinRuleProof>> {
+    ) -> RuntimeResult<Option<ByUnfoldNamedHaveFnEqualApplicationObjectDefinitionProof>> {
         let Obj::FnObj(fn_obj) = app_side else {
             return Ok(None);
         };
@@ -80,7 +81,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            ByUnfoldNamedHaveFnEqualApplicationBuiltinRuleProof {
+            ByUnfoldNamedHaveFnEqualApplicationObjectDefinitionProof {
                 expanded_body,
                 residual_equal,
             },
@@ -102,13 +103,17 @@ impl Runtime {
         let anon = match fn_obj.head.as_ref() {
             FnObjHead::AnonymousFnLiteral(anon) => anon.as_ref().clone(),
             FnObjHead::Identifier(head) => {
-                let head_obj = Obj::Identifier(head.clone());
-                let Some(Obj::AnonymousFn(anon)) =
-                    self.visible_equal_to_function_obj(&head_obj)
-                else {
-                    return Ok(None);
-                };
-                anon
+                if let Some(anon) = self.anonymous_fn_from_have_fn_equal_definition(head) {
+                    anon
+                } else {
+                    let head_obj = Obj::Identifier(head.clone());
+                    let Some(Obj::AnonymousFn(anon)) =
+                        self.visible_equal_to_function_obj(&head_obj)
+                    else {
+                        return Ok(None);
+                    };
+                    anon
+                }
             }
             _ => return Ok(None),
         };
@@ -122,6 +127,26 @@ impl Runtime {
             Ok(body) => Ok(Some(body)),
             Err(_) => Ok(None),
         }
+    }
+
+
+    fn anonymous_fn_from_have_fn_equal_definition(
+        &self,
+        head: &crate::new_pipeline::ast::obj::IdentifierObj,
+    ) -> Option<crate::new_pipeline::ast::obj::AnonymousFn> {
+        let name = match head {
+            crate::new_pipeline::ast::obj::IdentifierObj::Plain { name, .. }
+            | crate::new_pipeline::ast::obj::IdentifierObj::WithExportFileId { name, .. }
+            | crate::new_pipeline::ast::obj::IdentifierObj::WithModAndExportFileId { name, .. } => {
+                name.as_str()
+            }
+        };
+        let StoredIdentifierDefinition::HaveFnEqual((_, stmt)) =
+            self.stored_identifier_definition_visible_in_stack(name)?
+        else {
+            return None;
+        };
+        Some(stmt.equal_to_anonymous_fn.clone())
     }
 
     fn visible_equal_to_function_obj(&self, obj: &Obj) -> Option<Obj> {

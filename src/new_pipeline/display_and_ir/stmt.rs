@@ -587,8 +587,7 @@ impl HaveFnByInducStmt {
 
 impl HaveFnByForallExistUniqueStmt {
     pub fn ir(&self) -> StmtIR {
-        let mut out = String::new();
-        out.push_str(&format!(
+        StmtIR(format!(
             "{} {} {} {} {}{}\n{}",
             HAVE,
             FN,
@@ -597,32 +596,10 @@ impl HaveFnByForallExistUniqueStmt {
             SET,
             COLON,
             indent!(
-                &format!(
-                    "{} {}",
-                    QUESTION_GOAL,
-                    self.forall.ir()
-                ),
+                &format!("{} {}", QUESTION_GOAL, self.forall.ir()),
                 1
             )
-        ));
-        if !self.prove_process.is_empty() {
-            out.push_str(&format!(
-                "\n{}",
-                indent!(
-                    &self
-                        .prove_process
-                        .iter()
-                        .map(|s| s.ir())
-                        .collect::<Vec<_>>()
-                        .join(
-                            "
-"
-                        ),
-                    1
-                )
-            ));
-        }
-        StmtIR(out)
+        ))
     }
     impl_display_pair!();
 }

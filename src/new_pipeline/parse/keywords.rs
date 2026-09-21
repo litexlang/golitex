@@ -159,6 +159,7 @@ pub const REFLEXIVE_PROP: &str = "reflexive_prop";
 pub const ZORN_LEMMA: &str = "zorn_lemma";
 pub const AXIOM_OF_CHOICE: &str = "axiom_of_choice";
 pub const REGULARITY_AXIOM: &str = "regularity_axiom";
+pub const IS_CHOICE_FUNCTION_FOR: &str = "is_choice_function_for";
 
 pub const N: &str = "N";
 pub const Z: &str = "Z";

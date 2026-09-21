@@ -846,16 +846,15 @@ therefore also accepts a struct carrier.
 
 #### Tuple representation
 
-A structure with two or more fields is represented by a tuple in definition
-order. If `Point` defines `x` and then `y`, opening a `Point` value `p`
-establishes `p.x = p[1]` and `p.y = p[2]`. The field-to-index relation belongs
-to the struct definition; Litex does not guess it from field names.
+A structure must define at least two fields. It is represented by a tuple in
+definition order. If `Point` defines `x` and then `y`, opening a `Point` value
+`p` establishes `p.x = p[1]` and `p.y = p[2]`. The field-to-index relation
+belongs to the struct definition; Litex does not guess it from field names.
 
-A one-field structure is instead an identity view of the sole field carrier.
-Opening `v &ScalarView` establishes `v.value = v`, not `v.value = v[1]`.
-This supports objects such as a metric space carrying only its distance
-operation without inventing a dummy field. A structure must define at least
-one field.
+> **Preview (`new_pipeline`):** a struct with fewer than two fields is a parse
+> error (`struct definition expects at least two fields`). There is no
+> one-field “identity view” of a sole carrier. The default pipeline still
+> allows that degenerate case; it is not part of the `new_pipeline` contract.
 
 The tuple representation is deliberately opaque outside two places:
 
@@ -884,8 +883,7 @@ For a struct with fields `a : A` and `b : B`, success releases:
 - the instantiated field-carrier facts; and
 - the struct's instantiated `<=>:` facts.
 
-For a one-field struct it instead releases `e.only = e`, the sole carrier for
-both spellings, and the instantiated laws. Repeating the same statement is
+Repeating the same statement is
 idempotent. Opening is never recursive: `release struct def outer` does not also
 open a struct-valued `outer.inner`; write `release struct def outer.inner` when its
 properties are needed.
@@ -1163,8 +1161,9 @@ justify a later partial expression, both when the struct is defined and when
 an instantiated struct carrier is checked:
 
 ```litex
-struct NonzeroRealView:
+struct NonzeroPair:
     value R
+    tag N
     <=>:
         value != 0
         1 / value = 1 / value
@@ -1860,9 +1859,11 @@ A callable struct field keeps its function parameters when it is named with
 ```litex
 struct ScalarOps:
     add fn(x, y R) R
+    mul fn(x, y R) R
 
 struct Space:
     scalars &ScalarOps
+    dim N
 
 thm use_short_operation_name:
     ? forall space &Space, x, y R:
@@ -1981,10 +1982,12 @@ successor(2) = 3
 sign_value(-2) = (-1)
 ```
 
-> **Preview (`new_pipeline`):** after `have fn f(...) T = body`, application
-> equalities such as `f(args) = subst(body)` are proved by a definitional
-> unfold builtin (same idea as `\Template<args>(...)`). `by cases` / `by exist!`
-> / `by induc` still do not get that equality unfold.
+> **Preview (`new_pipeline`):** after `have fn f(...) T = body`, `by cases`, or
+> `by induc`, application equalities such as `f(args) = subst(body)` are proved
+> by the equality **object-definition** stage (same idea as `\Template<args>(...)`
+> and `have` / `let` identifier unfolds). For `by cases` / `by induc`, Litex looks
+> up the stored definition, matches a case guard at the concrete arguments, and
+> unfolds that case body. `by exist!` still does not get that equality unfold.
 
 Overlapping conditions are rejected:
 

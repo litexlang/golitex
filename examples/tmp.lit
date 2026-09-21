@@ -1,21 +1,16 @@
-# Blueprint Group uniqueness of identity (direct `&Group` bind auto-opens one layer).
+# Nested release: outer auto-open does not open inner struct laws.
 # Run: LITEX_NEW_PIPELINE=1 cargo run --bin litex -- -f examples/tmp.lit
 
-struct Group<s nonempty_set>:
-    mul fn(x, y s) s
-    one s
-    inv fn(x s) s
+struct Coordinates:
+    x R
+    y R
     <=>:
-        forall x, y, z s:
-            mul(mul(x, y), z) = mul(x, mul(y, z))
-        forall x s:
-            mul(x, one) = x
-            mul(one, x) = x
-            mul(inv(x), x) = one
+        x = 0
 
-forall s nonempty_set, G &Group<s>, identity s:
-    forall a s:
-        G.mul(identity, a) = a
-        G.mul(a, identity) = a
-    =>:
-        identity = G.mul(G.one, identity) = G.one
+struct TaggedPoint:
+    point &Coordinates
+    tag N
+
+trust have p &TaggedPoint
+release struct def p.point
+p.point.x = 0

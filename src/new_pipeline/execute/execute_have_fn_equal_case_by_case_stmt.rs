@@ -331,7 +331,16 @@ impl Runtime {
                 Rc::new(stmt.clone()),
             )),
         );
+        self.store_piecewise_fn_membership_and_case_foralls(stmt, fn_set)
+    }
 
+    // Shared by `by cases` and `by induc`: membership + one forall equation per leaf case.
+    // Caller must already have occupied the name in the definition table.
+    pub(crate) fn store_piecewise_fn_membership_and_case_foralls(
+        &mut self,
+        stmt: &HaveFnEqualCaseByCaseStmt,
+        fn_set: &FnSet,
+    ) -> RuntimeResult<StoreHaveFnCaseByCaseAndInferResult> {
         let function_ident =
             self.identifier_obj_for_file_root_symbol(stmt.name.clone());
         let function_obj = Obj::Identifier(function_ident.clone());

@@ -12,12 +12,14 @@ pub mod search_equal_fact_proof_by_builtin_rewrite;
 pub mod search_equal_fact_proof_by_matching_one_arg_by_one;
 pub mod search_equal_fact_proof_by_known_equality;
 pub mod verify_equal_fact;
+pub mod by_object_definition;
 pub mod verify_equality_by_builtin_rules;
 pub mod verify_well_defined;
 pub mod well_defined_result;
 
 pub use by_builtin_rewrite_result::EqualitySearchProofByBuiltinRewrite;
 pub use by_builtin_strategy_result::EqualitySearchProofByBuiltinStrategy;
+pub use by_object_definition::EqualitySearchProofByObjectDefinition;
 pub use verify_equality_by_builtin_rules::EqualitySearchProofByBuiltinRule;
 pub use well_defined_result::{
     EqualFactWellDefinedProof, FailToVerifyEqualFactWellDefinedResult,

@@ -1,13 +1,12 @@
-//! Match forall conclusion args to a goal's args: bind params, recurse into
-//! same-shape compounds, else strict equal.
+//! Match forall conclusion args to a goal's args.
 //!
-//! Aligns with legacy `match_arg_in_atomic_fact_in_known_forall_with_given_arg`:
-//! forall params may sit inside `FnObj` / arithmetic / `FieldAccess`, not only
-//! as bare top-level args.
+//! Same idea as legacy `match_arg_in_atomic_fact_in_known_forall_with_given_arg`:
+//! 1. bare forall param → bind (or rebound + strict equal)
+//! 2. same constructor shape → recurse on corresponding children
+//! 3. otherwise → instantiate under current subst, then strict equal
 //!
-//! Example: known `forall a: G.mul(a, identity) = a`, goal
-//! `G.mul(G.one, identity) = G.one` → ByStructure on the left binds `a↦G.one`,
-//! BoundParam on the right.
+//! Example: pattern `f(a)`, goal `f(t)` with param `a` → bind `a↦t` inside
+//! the application (ByStructure), not “whole term already equal”.
 
 use crate::new_pipeline::ast::fact::EqualFact;
 use crate::new_pipeline::ast::obj::{IdentifierObj, Obj};
@@ -22,10 +21,7 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use std::collections::{HashMap, HashSet};
 
 impl Runtime {
-    // Match pattern args to goal args under forall params.
-    // Example: pattern `[G.mul(a, e), a]`, goal `[G.mul(G.one, e), G.one]`
-    //   -> ByStructure (bind a) then BoundParam / ReboundParamEqual on the right.
-    // Nested equal / rebound: VerifyState all flags false. Soft miss → Ok(None).
+    // Soft miss → Ok(None). Nested equal / rebound use VerifyState all flags false.
     pub(crate) fn match_forall_conclusion_args(
         &mut self,
         pattern_args: &[&Obj],
@@ -76,7 +72,6 @@ impl Runtime {
         }))
     }
 
-    // Prove left = right with all VerifyState flags false; keep StrictEqualArgProof only.
     fn prove_objs_equal_strict(
         &mut self,
         left: &Obj,
@@ -101,7 +96,7 @@ impl Runtime {
         }))
     }
 
-    // One pattern/goal pair: bare param, same-shape recurse, or NonParamEqual.
+    // Legacy-shaped: param bind → same-shape recurse (commit or fail) → else equal.
     fn match_forall_one_arg(
         &mut self,
         pattern: &Obj,
@@ -137,34 +132,28 @@ impl Runtime {
             ForallParamBindResult::NotAParam => {}
         }
 
+        // Same constructor: recurse. No fallback to NonParamEqual (legacy-aligned).
         if let Some(pairs) = corresponding_arg_pairs(pattern, goal) {
             if !pairs.is_empty() {
-                let subst_checkpoint = subst.clone();
                 let mut child_matches = Vec::with_capacity(pairs.len());
-                let mut all_ok = true;
                 for (child_pattern, child_goal) in &pairs {
-                    match self.match_forall_one_arg(
+                    let Some(child) = self.match_forall_one_arg(
                         child_pattern,
                         child_goal,
                         param_set,
                         subst,
                         equality_state.clone(),
-                    )? {
-                        Some(child) => child_matches.push(child),
-                        None => {
-                            all_ok = false;
-                            break;
-                        }
-                    }
+                    )?
+                    else {
+                        return Ok(None);
+                    };
+                    child_matches.push(child);
                 }
-                if all_ok {
-                    return Ok(Some(ForallConclusionArgMatchProof::ByStructure {
-                        pattern: pattern.clone(),
-                        goal_arg: goal.clone(),
-                        child_matches,
-                    }));
-                }
-                *subst = subst_checkpoint;
+                return Ok(Some(ForallConclusionArgMatchProof::ByStructure {
+                    pattern: pattern.clone(),
+                    goal_arg: goal.clone(),
+                    child_matches,
+                }));
             }
         }
 
@@ -208,7 +197,6 @@ enum ForallParamBindResult {
     NotAParam,
 }
 
-// If pattern is a bare forall param: first sight binds goal; later sight needs equal.
 fn try_bind_forall_param(
     pattern: &Obj,
     goal: &Obj,

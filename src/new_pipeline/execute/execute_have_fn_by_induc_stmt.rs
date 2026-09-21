@@ -1,7 +1,8 @@
 //! `have fn f(...) R by induc measure from lower:` — inductive function definition.
 //!
 //! Stages: FnSet WD → introduce params → measure/lower in Z + measure >= lower →
-//! register restricted recursive f → coverage/disjoint/returns → flatten+store.
+//! register restricted recursive f → coverage/disjoint/returns →
+//! parent keeps HaveFnByInduc + store piecewise case foralls.
 //!
 //! Example:
 //! ```text
@@ -29,7 +30,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::{
 };
 use crate::new_pipeline::execute::execute_have_fn_equal_case_by_case_stmt::StoreHaveFnCaseByCaseAndInferResult;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
-use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
+use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 use std::rc::Rc;
 
 pub enum ExecHaveFnByInducStmtFailed {
@@ -181,15 +182,19 @@ impl Runtime {
             Err(failed) => return Ok(ExecHaveFnByInducStmtResult::Failed(failed)),
         };
 
-        let flat = match flatten_induc_to_case_by_case(self, stmt) {
-            Ok(f) => f,
-            Err(msg) => {
+        let store_and_infer_result = match self.store_have_fn_by_induc_facts(stmt, &fn_set) {
+            Ok(r) => r,
+            Err(RuntimeError::InternalBug(msg)) if msg.starts_with("flatten induc:") => {
                 return Ok(ExecHaveFnByInducStmtResult::Failed(
-                    ExecHaveFnByInducStmtFailed::Shape(msg),
+                    ExecHaveFnByInducStmtFailed::Shape(
+                        msg.strip_prefix("flatten induc: ")
+                            .unwrap_or(&msg)
+                            .to_string(),
+                    ),
                 ));
             }
+            Err(e) => return Err(e),
         };
-        let store_and_infer_result = self.store_have_fn_case_by_case_facts(&flat, &fn_set)?;
 
         Ok(ExecHaveFnByInducStmtResult::Success(
             ExecHaveFnByInducStmtSuccessResult {
@@ -203,6 +208,38 @@ impl Runtime {
                 local_env,
             },
         ))
+    }
+
+    // Parent definition identity is HaveFnByInduc; leaf case equations are still
+    // stored as foralls (flatten only for those facts, not for the definition row).
+    pub(crate) fn store_have_fn_by_induc_facts(
+        &mut self,
+        stmt: &HaveFnByInducStmt,
+        fn_set: &FnSet,
+    ) -> RuntimeResult<StoreHaveFnCaseByCaseAndInferResult> {
+        if self.identifier_defined_in_stack(&stmt.name) {
+            return Err(crate::new_pipeline::runtime::RuntimeError::InternalBug(
+                format!(
+                    "identifier `{}` is already defined in this ExecEnv",
+                    stmt.name
+                ),
+            ));
+        }
+        self.top_exec_env_mut().definitions.identifiers.insert(
+            stmt.name.clone(),
+            StoredIdentifierDefinition::HaveFnByInduc((
+                stmt.name.clone(),
+                Rc::new(stmt.clone()),
+            )),
+        );
+
+        let flat = flatten_induc_to_case_by_case(self, stmt)
+            .map_err(|msg| {
+                crate::new_pipeline::runtime::RuntimeError::InternalBug(format!(
+                    "flatten induc: {msg}"
+                ))
+            })?;
+        self.store_piecewise_fn_membership_and_case_foralls(&flat, fn_set)
     }
 
     fn verify_in_z(

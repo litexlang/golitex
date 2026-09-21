@@ -807,11 +807,10 @@ A `struct` is not a class or a record object with hidden fields. It is a named
 view of a subset of a Cartesian product. The field names label the positions in
 that product.
 
-There is one deliberate degenerate case: a one-field structure is a named view
-of that field's carrier itself, and selecting the field is the identity
-projection. This lets a metric space store only its distance or a partial
-order store only its relation. Litex does not require a dummy second field,
-but it still rejects a structure with no fields.
+A structure must declare at least two fields. There is no one-field “identity
+view” of a sole carrier under the `new_pipeline` contract (parse error:
+`struct definition expects at least two fields`). The default pipeline still
+allows a one-field degenerate case; that is not the forward language rule.
 
 For example:
 
@@ -850,10 +849,9 @@ then `release struct def make_outer(t).inner` opens `Inner`, not `Outer` and not
 struct below `Inner`.
 
 For a multi-field value `e`, opening stores `$is_tuple(e)`, its `tuple_dim`,
-Cartesian membership, and equations such as `e.x = e[1]`. For a one-field
-identity view it stores `e.only = e` instead. These tuple/struct bridge facts
-are not stored anywhere else, except that the struct-membership verifier may
-use the tuple representation internally while checking membership.
+Cartesian membership, and equations such as `e.x = e[1]`. These tuple/struct
+bridge facts are not stored anywhere else, except that the struct-membership
+verifier may use the tuple representation internally while checking membership.
 
 For a parameterized struct, `&Name<a>` is the instantiated struct set. For a
 non-parameterized struct, `&Name` is the struct set. Both are ordinary sets and

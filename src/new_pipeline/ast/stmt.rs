@@ -201,7 +201,6 @@ pub struct HaveFnByInducStmt {
 pub struct HaveFnByForallExistUniqueStmt {
     pub name: String,
     pub forall: ForallFact,
-    pub prove_process: Vec<Stmt>,
     pub line_file: LineFile,
 }
 

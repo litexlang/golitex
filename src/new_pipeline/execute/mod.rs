@@ -16,6 +16,7 @@ mod execute_have_obj_by_exist_facts_stmt;
 mod execute_have_obj_equal_stmt;
 mod execute_have_obj_in_nonempty_set_stmt;
 mod execute_let_stmt;
+mod execute_release_struct_def_stmt;
 pub mod execute_unsafe_stmt;
 mod execute_witness_stmt;
 mod introduce_typed_parameters;
@@ -67,6 +68,10 @@ pub use execute_have_obj_in_nonempty_set_stmt::{
     ExecHaveObjInNonemptySetStmtSuccessResult, StoreHaveObjAndInferResult,
 };
 pub use execute_let_stmt::{ExecLetObjStmtResult, ExecLetObjStmtSuccessResult};
+pub use execute_release_struct_def_stmt::{
+    ExecReleaseStructDefStmtFailed, ExecReleaseStructDefStmtResult,
+    ExecReleaseStructDefStmtSuccess,
+};
 pub use execute_unsafe_stmt::{
     ExecTrustHaveStmtFailed, ExecTrustHaveStmtResult, ExecTrustHaveStmtSuccessResult,
     ExecTrustStmtResult, ExecTrustStmtSuccessResult, ExecUnsafeStmtResult,

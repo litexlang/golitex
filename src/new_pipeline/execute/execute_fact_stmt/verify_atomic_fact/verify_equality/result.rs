@@ -2,7 +2,7 @@ use crate::new_pipeline::ast::fact::{EqualFact, Fact};
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::{
     EqualitySearchProofByBuiltinRewrite, EqualitySearchProofByBuiltinRule,
-    EqualitySearchProofByBuiltinStrategy,
+    EqualitySearchProofByBuiltinStrategy, EqualitySearchProofByObjectDefinition,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::search_equal_fact_proof_by_matching_one_arg_by_one::EqualFactSearchedProofByMatchingOneArgByOne;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::well_defined_result::{
@@ -62,15 +62,13 @@ pub enum ForallConclusionArgMatchProof {
         equal: StrictEqualWithFact,
     },
     // Same constructor shape: recurse on corresponding children (legacy-aligned).
-    // Example: pattern `G.mul(a, identity)`, goal `G.mul(G.one, identity)`
-    //   -> children bind `a↦G.one`, match `identity`, match head `G.mul`.
+    // Example: pattern `f(a)`, goal `f(t)` → child BoundParam `a↦t`.
     ByStructure {
         pattern: Obj,
         goal_arg: Obj,
         child_matches: Vec<ForallConclusionArgMatchProof>,
     },
-    // Pattern is not a forall param and not same-shape: instantiate under
-    // current subst, then prove instantiated = goal_arg under strict equal
+    // No same-shape peel: instantiate under current subst, then strict equal
     // (forall/rewrite/store WD off).
     NonParamEqual {
         pattern: Obj,
@@ -90,6 +88,7 @@ pub struct StrictEqualWithFact {
 pub enum StrictEqualArgProof {
     ByBuiltinRule(EqualitySearchProofByBuiltinRule),
     ByKnownEquality(EqualFactSearchedProofByKnownEquality),
+    ByObjectDefinition(EqualitySearchProofByObjectDefinition),
     ByBuiltinStrategy(EqualitySearchProofByBuiltinStrategy),
     ByMatchingOneArgByOne(EqualFactSearchedProofByMatchingOneArgByOne),
 }
@@ -125,11 +124,12 @@ impl VerifyEqualityResult {
 pub enum EqualFactSearchedProof {
     ByBuiltinRule(EqualitySearchProofByBuiltinRule),
     ByKnownEquality(EqualFactSearchedProofByKnownEquality),
+    ByObjectDefinition(EqualitySearchProofByObjectDefinition),
     ByBuiltinStrategy(EqualitySearchProofByBuiltinStrategy),
     ByMatchingOneArgByOne(EqualFactSearchedProofByMatchingOneArgByOne),
     ByKnownForallFact(Box<SearchProofByKnownForallFact>),
     // Legacy: match known forall on the swapped equality, then cite symmetry.
-    // Example: known `forall x: G.mul(G.one, x) = x`, goal `identity = G.mul(G.one, identity)`.
+    // Example: known `forall x: f(c, x) = x`, goal `t = f(c, t)`.
     ByKnownForallFactViaSymmetry(Box<EqualFactSearchedProofByKnownForallViaSymmetry>),
     ByBuiltinRewrite(EqualitySearchProofByBuiltinRewrite),
 }
@@ -189,6 +189,9 @@ pub fn strict_equal_arg_proof_from_searched(
         EqualFactSearchedProof::ByBuiltinRule(p) => Some(StrictEqualArgProof::ByBuiltinRule(p)),
         EqualFactSearchedProof::ByKnownEquality(p) => {
             Some(StrictEqualArgProof::ByKnownEquality(p))
+        }
+        EqualFactSearchedProof::ByObjectDefinition(p) => {
+            Some(StrictEqualArgProof::ByObjectDefinition(p))
         }
         EqualFactSearchedProof::ByBuiltinStrategy(p) => {
             Some(StrictEqualArgProof::ByBuiltinStrategy(p))

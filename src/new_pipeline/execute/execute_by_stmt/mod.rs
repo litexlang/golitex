@@ -11,6 +11,9 @@ mod exec_by_for_stmt;
 mod exec_by_enumerate_range_stmt;
 mod exec_by_closed_range_as_cases_stmt;
 mod exec_by_thm_stmt;
+mod exec_by_regularity_axiom_stmt;
+mod exec_by_axiom_of_choice_stmt;
+mod exec_by_zorn_lemma_stmt;
 mod helper;
 mod enumerate_helpers;
 mod enumerate_forall;
@@ -29,6 +32,9 @@ pub use exec_by_for_stmt::exec_by_for_stmt;
 pub use exec_by_enumerate_range_stmt::exec_by_enumerate_range_stmt;
 pub use exec_by_closed_range_as_cases_stmt::exec_by_closed_range_as_cases_stmt;
 pub use exec_by_thm_stmt::{exec_by_thm_stmt, exec_release_thm_stmt};
+pub use exec_by_regularity_axiom_stmt::exec_by_regularity_axiom_stmt;
+pub use exec_by_axiom_of_choice_stmt::exec_by_axiom_of_choice_stmt;
+pub use exec_by_zorn_lemma_stmt::exec_by_zorn_lemma_stmt;
 pub use result::{
     ByProofBodyFailed, ByProofStepResult, ExecByStmtResult, ExecReleaseThmStmtResult,
 };

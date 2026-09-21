@@ -96,7 +96,7 @@ impl Runtime {
                 return Err(tb.parse_error("struct: unexpected tokens after `:`"));
             }
             if tb.body.is_empty() {
-                return Err(tb.parse_error("struct definition expects at least one field"));
+                return Err(tb.parse_error("struct definition expects at least two fields"));
             }
 
             let mut fields: Vec<StructFieldDef> = Vec::new();
@@ -154,8 +154,8 @@ impl Runtime {
                 }
             }
 
-            if fields.is_empty() {
-                return Err(tb.parse_error("struct definition expects at least one field"));
+            if fields.len() < 2 {
+                return Err(tb.parse_error("struct definition expects at least two fields"));
             }
             Ok((param_def_with_dom, fields, equivalent_facts))
         })();

@@ -306,7 +306,6 @@ impl Runtime {
             DefinitionStmt::HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt {
                 name,
                 forall,
-                prove_process: Vec::new(),
                 line_file: LineFile::new(block.line, block.source_path.clone()),
             }),
         ))

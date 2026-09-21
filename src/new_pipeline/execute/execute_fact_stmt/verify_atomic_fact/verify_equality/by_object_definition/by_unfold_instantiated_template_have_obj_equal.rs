@@ -1,4 +1,4 @@
-//! Equality builtin: unfold `\Name<args>` when the template body is `have … = …`.
+//! Equality by object definition: unfold `\Name<args>` when the template body is `have … = …`.
 //!
 //! Mathematical property (definitional unfold):
 //!   If `template<params>:` defines `have name T = rhs`, then for concrete args
@@ -21,18 +21,18 @@ use std::collections::HashMap;
 
 // Success evidence for one orientation of the unfold.
 // Field order: expanded RHS, then residual equality proof.
-pub struct ByUnfoldInstantiatedTemplateHaveObjEqualBuiltinRuleProof {
+pub struct ByUnfoldInstantiatedTemplateHaveObjEqualObjectDefinitionProof {
     pub expanded_rhs: Obj,
     pub residual_equal: VerifyFactResult,
 }
 
 impl Runtime {
     // Try both orientations: `\T<a> = X` and `X = \T<a>`.
-    pub fn search_equal_fact_builtin_rule_unfold_instantiated_template_have_obj_equal(
+    pub fn search_equal_fact_object_definition_unfold_instantiated_template_have_obj_equal(
         &mut self,
         fact: &EqualFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<ByUnfoldInstantiatedTemplateHaveObjEqualBuiltinRuleProof>> {
+    ) -> RuntimeResult<Option<ByUnfoldInstantiatedTemplateHaveObjEqualObjectDefinitionProof>> {
         if let Some(proof) = self.try_unfold_instantiated_template_have_obj_equal(
             &fact.left,
             &fact.right,
@@ -60,7 +60,7 @@ impl Runtime {
         other_side: &Obj,
         parent_fact: &EqualFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<ByUnfoldInstantiatedTemplateHaveObjEqualBuiltinRuleProof>> {
+    ) -> RuntimeResult<Option<ByUnfoldInstantiatedTemplateHaveObjEqualObjectDefinitionProof>> {
         let Obj::InstantiatedTemplateObj(inst) = template_side else {
             return Ok(None);
         };
@@ -87,7 +87,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            ByUnfoldInstantiatedTemplateHaveObjEqualBuiltinRuleProof {
+            ByUnfoldInstantiatedTemplateHaveObjEqualObjectDefinitionProof {
                 expanded_rhs,
                 residual_equal,
             },
