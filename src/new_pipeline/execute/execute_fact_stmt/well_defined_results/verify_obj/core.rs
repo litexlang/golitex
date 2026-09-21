@@ -172,37 +172,84 @@ impl Runtime {
         ))
     }
 
+    // `fn(x R: x > 0) R {x}(a)`: WD the literal, then check args against its own FnSet
+    // (param membership + instantiated dom_facts). No InFunctionSet lookup.
+    // Example: `fn(x R: x > 0) R {x}(1)` needs `1 $in R` and `1 > 0`.
+    pub(super) fn verify_anonymous_fn_literal_headed_fn_obj_well_definedness(
+        &mut self,
+        value: &FnObj,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<VerifyObjWellDefinedResult> {
+        let FnObjHead::AnonymousFnLiteral(anon) = value.head.as_ref() else {
+            return Err(crate::new_pipeline::runtime::RuntimeError::InternalBug(
+                "verify_anonymous_fn_literal_headed_fn_obj expects AnonymousFnLiteral head"
+                    .to_string(),
+            ));
+        };
+        let anon_obj = Obj::AnonymousFn(anon.as_ref().clone());
+        let head_wd = self.verify_obj_well_definedness(&anon_obj, verify_state.clone())?;
+        if head_wd.is_failed() {
+            return Ok(VerifyObjWellDefinedResult::Failed(
+                FailToVerifyObjWellDefinedResult::FnObj(FailToVerifyFnObjObjWellDefined::Domain(
+                    ObjWellDefinedByDefCommonStages::from_children(vec![(anon_obj, head_wd)])
+                        .into_common_fail(&Obj::FnObj(value.clone())),
+                )),
+            ));
+        }
+        if value.body.is_empty() {
+            return Ok(VerifyObjWellDefinedResult::Failed(
+                FailToVerifyObjWellDefinedResult::FnObj(FailToVerifyFnObjObjWellDefined::Domain(
+                    ObjWellDefinedByDefCommonStages::from_children(vec![(anon_obj, head_wd)])
+                        .into_common_fail(&Obj::FnObj(value.clone())),
+                )),
+            ));
+        }
+
+        let fn_set = anon.body.clone();
+        match self.try_verify_fn_obj_against_fn_set(value, &fn_set, verify_state.clone())? {
+            Ok(mut stages) => {
+                let mut children = vec![(anon_obj, head_wd)];
+                children.append(&mut stages.child_obj_well_defined);
+                let proof = FnObjObjWellDefinedProof {
+                    // Literal carries its FnSet; no InFunctionSet FactId.
+                    applied_fn_set: None,
+                    child_obj_well_defined: children,
+                    requirement_fact_verified: stages.requirement_fact_verified,
+                };
+                if verify_state.store_well_defined_fact {
+                    let wd_id = self.ids.allocate_well_definedness_id();
+                    self.top_exec_env_mut()
+                        .well_defined_objects
+                        .record(Obj::FnObj(value.clone()), wd_id);
+                }
+                Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef(
+                    ObjWellDefinedProofByDef::FnObj(proof),
+                )))
+            }
+            Err(mut stages) => {
+                let mut children = vec![(anon_obj, head_wd)];
+                children.append(&mut stages.child_obj_well_defined);
+                stages.child_obj_well_defined = children;
+                Ok(VerifyObjWellDefinedResult::Failed(
+                    FailToVerifyObjWellDefinedResult::FnObj(FailToVerifyFnObjObjWellDefined::Domain(
+                        stages.into_common_fail(&Obj::FnObj(value.clone())),
+                    )),
+                ))
+            }
+        }
+    }
+
     pub(super) fn verify_fn_obj_well_definedness_by_def(
         &mut self,
         value: &FnObj,
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
-        // Bare anonymous literal as FnObj head: reuse Obj::AnonymousFn binder WD.
-        if let FnObjHead::AnonymousFnLiteral(anon) = value.head.as_ref() {
-            let anon_obj = Obj::AnonymousFn(anon.as_ref().clone());
-            let mut children = vec![(
-                anon_obj.clone(),
-                self.verify_obj_well_definedness(&anon_obj, verify_state.clone())?,
-            )];
-            for layer in &value.body {
-                for arg in layer {
-                    children.push((
-                        arg.as_ref().clone(),
-                        self.verify_obj_well_definedness(arg.as_ref(), verify_state.clone())?,
-                    ));
-                }
-            }
-            return Ok(ObjWellDefinedByDefCommonStages {
-                child_obj_well_defined: children,
-                requirement_fact_verified: Vec::new(),
-            });
-        }
-
-        // Identifier / InstantiatedTemplateObj heads are handled in
-        // verify_in_function_set_headed_fn_obj_well_definedness.
+        // AnonymousFnLiteral / Identifier / InstantiatedTemplateObj: dedicated entry paths.
         if matches!(
             value.head.as_ref(),
-            FnObjHead::Identifier(_) | FnObjHead::InstantiatedTemplateObj(_)
+            FnObjHead::AnonymousFnLiteral(_)
+                | FnObjHead::Identifier(_)
+                | FnObjHead::InstantiatedTemplateObj(_)
         ) {
             return Ok(ObjWellDefinedByDefCommonStages::leaf());
         }
@@ -219,19 +266,7 @@ impl Runtime {
 
     fn collect_fn_obj_head_child_objs<'a>(&self, head: &'a FnObjHead, children: &mut Vec<&'a Obj>) {
         match head {
-            FnObjHead::Identifier(_) => {}
-            FnObjHead::AnonymousFnLiteral(_) => {
-                // Handled in verify_fn_obj_well_definedness_by_def via AnonymousFn WD.
-            }
-            FnObjHead::FiniteSeqListObj(list) => {
-                for obj in &list.objs {
-                    children.push(obj.as_ref());
-                }
-            }
-            FnObjHead::ObjAtIndex(at) => {
-                children.push(at.obj.as_ref());
-                children.push(at.index.as_ref());
-            }
+            FnObjHead::Identifier(_) | FnObjHead::AnonymousFnLiteral(_) => {}
             FnObjHead::FieldAccess(access) => {
                 children.push(access.obj.as_ref());
             }

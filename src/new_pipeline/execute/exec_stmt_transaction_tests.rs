@@ -1187,12 +1187,11 @@ fn have_fn_by_cases_slice2() {
 }
 
 #[test]
-fn have_fn_by_exist_exec_not_wired() {
-    use crate::new_pipeline::execute::execute_have_fn_by_forall_exist_unique_stmt::{
-        ExecHaveFnByForallExistUniqueStmtFailed, ExecHaveFnByForallExistUniqueStmtResult,
-    };
+fn have_fn_by_exist_stores_membership_and_properties() {
+    use crate::new_pipeline::execute::execute_have_fn_by_forall_exist_unique_stmt::ExecHaveFnByForallExistUniqueStmtResult;
     use crate::new_pipeline::execute::ExecDefinitionStmtResult;
     use crate::new_pipeline::execute::ExecStmtResult;
+    use crate::new_pipeline::exec_env::exec_env::SpecialObjProperty;
 
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "abstract_prop F(x, y)").is_failed());
@@ -1210,12 +1209,55 @@ fn have_fn_by_exist_exec_not_wired() {
     let r = exec_one(&mut runtime, code);
     match &r {
         ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByForallExistUnique(
+            ExecHaveFnByForallExistUniqueStmtResult::Success(ok),
+        )) => {
+            assert!(
+                !ok.source_forall.is_failed(),
+                "source forall must be proven"
+            );
+            assert!(
+                !ok.fn_set_well_defined.is_failed(),
+                "FnSet must be well-defined"
+            );
+        }
+        other => panic!(
+            "expected Success for by exist!, got failed={}",
+            other.is_failed()
+        ),
+    }
+
+    let props_ok = runtime
+        .top_exec_env()
+        .special_object_properties
+        .values()
+        .flatten()
+        .any(|p| matches!(p, SpecialObjProperty::InFunctionSet(_)));
+    assert!(props_ok, "by exist! must store InFunctionSet");
+}
+
+#[test]
+fn have_fn_by_exist_fails_when_forall_unproven() {
+    use crate::new_pipeline::execute::execute_have_fn_by_forall_exist_unique_stmt::{
+        ExecHaveFnByForallExistUniqueStmtFailed, ExecHaveFnByForallExistUniqueStmtResult,
+    };
+    use crate::new_pipeline::execute::ExecDefinitionStmtResult;
+    use crate::new_pipeline::execute::ExecStmtResult;
+
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "abstract_prop F(x, y)").is_failed());
+    assert!(!exec_one(&mut runtime, "have A set").is_failed());
+    assert!(!exec_one(&mut runtime, "have B set").is_failed());
+    // No trust of the forall — selection must soft-fail.
+    let code = "have fn f by exist!:\n    ? forall x A:\n        exist! y B st {$F(x, y)}";
+    let r = exec_one(&mut runtime, code);
+    match &r {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByForallExistUnique(
             ExecHaveFnByForallExistUniqueStmtResult::Failed(
-                ExecHaveFnByForallExistUniqueStmtFailed::NotWired,
+                ExecHaveFnByForallExistUniqueStmtFailed::SourceForall(_),
             ),
         )) => {}
         other => panic!(
-            "expected NotWired soft fail for by exist!, got failed={}",
+            "expected SourceForall soft fail, got failed={}",
             other.is_failed()
         ),
     }
@@ -1731,7 +1773,7 @@ fn release_obj_def_smoke() {
 
 
 #[test]
-fn template_have_fn_by_cases_object_definition_debug() {
+fn template_have_fn_by_cases_object_definition_unfold() {
     let mut runtime = runtime_with_file_env();
     let def = "template<a R>:
     have fn above_a(x R) Z by cases:
@@ -1747,3 +1789,26 @@ fn template_have_fn_by_cases_object_definition_debug() {
         assert!(!exec_one(&mut runtime, code).is_failed(), "failed: {code}");
     }
 }
+
+
+
+
+#[test]
+fn template_have_fn_by_induc_object_definition_unfold() {
+    let mut runtime = runtime_with_file_env();
+    let def = "template<_S set>:
+    have fn countdown_t(n N) N by induc n from 0:
+        case n = 0: 0
+        case n >= 1: countdown_t(n - 1)";
+    assert!(!exec_one(&mut runtime, def).is_failed(), "template induc def");
+    assert!(
+        !exec_one(&mut runtime, "\\countdown_t<{0}>(0) = 0").is_failed(),
+        "template induc unfold 0"
+    );
+    assert!(
+        !exec_one(&mut runtime, "\\countdown_t<{0}>(1) = 0").is_failed(),
+        "template induc unfold 1"
+    );
+}
+
+

@@ -5,7 +5,7 @@
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use crate::new_pipeline::ast::fact::{AtomicFact, IsTupleFact, LessEqualFact};
 use crate::new_pipeline::ast::obj::{
-    ClosedRange, FiniteSeqListObj, FiniteSeqSet, FiniteSetReduce, Obj, ObjAtIndex, Product,
+    ClosedRange, FiniteSeqSet, FiniteSetReduce, Obj, ObjAtIndex, Product,
     ProductOfFiniteSet, Range, Reduce, SeqSet, StandardSet, Sum, SumOfFiniteSet, TupleDim,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
@@ -194,13 +194,6 @@ impl Runtime {
             format!("seq_set: argument {} is not a set", value.set.ir()),
         )?;
         Ok(self.with_requirements(proof, vec![req]))
-    }
-    pub(super) fn verify_finite_seq_list_obj_well_definedness_by_def(
-        &mut self,
-        value: &FiniteSeqListObj,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
-        self.verify_boxed_objs_as_children(&value.objs, verify_state)
     }
     // t[i]: children, then `i $in N+`, `$is_tuple(t)`, `i <= tuple_dim(t)`.
     // Example: `(1, 2)[1]` is WD; `(1, 2)[0]` fails `0 $in N+`; `(1, 2)[3]` fails bound.

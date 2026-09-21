@@ -7,12 +7,12 @@
 //!   substituting template parameters and function arguments.
 //!
 //! Example:
-//!   template<S set>:
-//!       have fn sign_on(x S) Z by cases:
-//!           case x > 0: 1
-//!           case x = 0: 0
-//!           case x < 0: (-1)
-//!   \sign_on<R>(-2) = (-1)
+//!   template<a R>:
+//!       have fn above_a(x R) Z by cases:
+//!           case x > a: 1
+//!           case x = a: 0
+//!           case x < a: (-1)
+//!   \above_a<0>(-2) = (-1)
 
 use crate::new_pipeline::ast::fact::EqualFact;
 use crate::new_pipeline::ast::obj::{FnObjHead, Obj};

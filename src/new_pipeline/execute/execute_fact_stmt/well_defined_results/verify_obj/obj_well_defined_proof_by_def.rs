@@ -78,7 +78,6 @@ pub enum ObjWellDefinedProofByDef {
     ClosedRange(ClosedRangeObjWellDefinedProof),
     FiniteSeqSet(FiniteSeqSetObjWellDefinedProof),
     SeqSet(SeqSetObjWellDefinedProof),
-    FiniteSeqListObj(FiniteSeqListObjObjWellDefinedProof),
     ObjAtIndex(ObjAtIndexObjWellDefinedProof),
     StandardSet(StandardSetObjWellDefinedProof),
     StructObj(StructObjObjWellDefinedProof),
@@ -95,7 +94,8 @@ impl IdentifierObjWellDefinedProof {
 }
 
 pub struct FnObjObjWellDefinedProof {
-    // Selected signature when the head is an Identifier applied against InFunctionSet.
+    // Selected InFunctionSet signature when the head is Identifier / template.
+    // AnonymousFnLiteral applications leave this None (space is the literal's FnSet).
     pub applied_fn_set: Option<(FnSet, FactId)>,
     pub child_obj_well_defined: Vec<(Obj, VerifyObjWellDefinedResult)>,
     pub requirement_fact_verified: Vec<VerifyFactResult>,
@@ -940,20 +940,6 @@ pub struct SeqSetObjWellDefinedProof {
 }
 
 impl SeqSetObjWellDefinedProof {
-    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        Self {
-            child_obj_well_defined: stages.child_obj_well_defined,
-            requirement_fact_verified: stages.requirement_fact_verified,
-        }
-    }
-}
-
-pub struct FiniteSeqListObjObjWellDefinedProof {
-    pub child_obj_well_defined: Vec<(Obj, VerifyObjWellDefinedResult)>,
-    pub requirement_fact_verified: Vec<VerifyFactResult>,
-}
-
-impl FiniteSeqListObjObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
         Self {
             child_obj_well_defined: stages.child_obj_well_defined,

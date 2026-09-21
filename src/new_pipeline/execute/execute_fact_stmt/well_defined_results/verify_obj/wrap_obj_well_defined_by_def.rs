@@ -151,7 +151,6 @@ fn pack_success_by_def(
         Obj::ClosedRange(_) => ObjWellDefinedProofByDef::ClosedRange(ClosedRangeObjWellDefinedProof::from_stages(stages)),
         Obj::FiniteSeqSet(_) => ObjWellDefinedProofByDef::FiniteSeqSet(FiniteSeqSetObjWellDefinedProof::from_stages(stages)),
         Obj::SeqSet(_) => ObjWellDefinedProofByDef::SeqSet(SeqSetObjWellDefinedProof::from_stages(stages)),
-        Obj::FiniteSeqListObj(_) => ObjWellDefinedProofByDef::FiniteSeqListObj(FiniteSeqListObjObjWellDefinedProof::from_stages(stages)),
         Obj::ObjAtIndex(_) => {
             let mut children = take_child_proofs(&mut stages, 2);
             let mut reqs = take_requirements(&mut stages, 3);
@@ -400,9 +399,6 @@ pub(super) fn wrap_common_fail(
         ),
         Obj::SeqSet(_) => FailToVerifyObjWellDefinedResult::SeqSet(
             FailToVerifySeqSetObjWellDefined(common),
-        ),
-        Obj::FiniteSeqListObj(_) => FailToVerifyObjWellDefinedResult::FiniteSeqListObj(
-            FailToVerifyFiniteSeqListObjObjWellDefined(common),
         ),
         Obj::ObjAtIndex(_) => FailToVerifyObjWellDefinedResult::ObjAtIndex(
             FailToVerifyObjAtIndexObjWellDefined(common),

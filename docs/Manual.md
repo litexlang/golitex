@@ -2017,6 +2017,9 @@ sign_value(-2) = (-1)
 > unfolds that case body. The same unfolds apply when the definition lives in a
 > `template<…>:` body: `\name<args>(fn_args)` matches the template parameters,
 > then the case/induc guards and body, exactly as for ordinary `have fn`.
+> Runnable coverage of all nine leaf shapes (identifier `have`/`let`, three
+> ordinary `have fn` forms, four template forms) is in
+> `examples/tmp_have_fn_object_definition.lit`.
 > `by exist!` still does not get that equality unfold.
 
 Overlapping conditions are rejected:
@@ -2032,23 +2035,28 @@ This is an `error`: `x != 0` and `x > 0` overlap.
 
 ### Functions from unique existence
 
-> **Preview (`new_pipeline`):** `have fn … by exist!` **parses** (goal-only, no
-> proof body) but **exec is not wired**. Prefer `have fn f(...) T = body` when
-> you need a callable name whose applications unfold by equality.
+> **Preview (`new_pipeline`):** `have fn … by exist!` is goal-only (no proof
+> body). Exec requires the `forall … exist!` goal to be already proved
+> (`claim` / `thm` / `trust`), then stores `f $in FnSet(...)`, the property
+> forall (`body` with the witness replaced by `f(args)`), and the uniqueness
+> forall (`body ⇒ witness = f(args)`). It does **not** store `f = AnonymousFn`,
+> so applications do not unfold by equality the way `have fn f(...) T = body`
+> does.
 
-`have fn name by exist!` is intended to turn an **already proved**
-unique-existence statement into a function. Prove the `forall … exist!`
-outside with `claim`, `thm`, or `trust`; the `have fn` block only displays
-that goal and selects the function. It does **not** take a proof body.
+`have fn name by exist!` turns an **already proved** unique-existence
+statement into a function. Prove the `forall … exist!` outside; the `have fn`
+block only names the goal and selects the function.
 
 ```litex
-# Surface shape (parse OK; new_pipeline exec soft-fails until rewired)
+trust:
+    forall x R:
+        exist! y R st {y = x}
 have fn identity_choice by exist!:
     ? forall x R:
         exist! y R st {y = x}
 ```
 
-Until exec is wired again, define an explicit formula instead:
+When you need equality unfold of applications, prefer an explicit formula:
 
 ```litex
 have fn identity_choice(x R) R = x
@@ -2123,18 +2131,18 @@ template<S set, z S>:
 > object-definition stage as ordinary have-fn:
 >
 > ```litex
-> template<S set>:
->     have fn sign_on(x S) Z by cases:
->         case x > 0: 1
->         case x = 0: 0
->         case x < 0: (-1)
+> template<a R>:
+>     have fn above_a(x R) Z by cases:
+>         case x > a: 1
+>         case x = a: 0
+>         case x < a: (-1)
 >
-> \sign_on<R>(-2) = (-1)
+> \above_a<0>(-2) = (-1)
 >
 > template<_S set>:
 >     have fn countdown_t(n N) N by induc n from 0:
 >         case n = 0: 0
->         case n >= 1: \countdown_t<_S>(n - 1)
+>         case n >= 1: countdown_t(n - 1)
 >
 > \countdown_t<{0}>(0) = 0
 > ```
@@ -2646,7 +2654,7 @@ introductions.
 | `have fn ... = ...` | Ordered parameter domains, return carrier, body membership, and side conditions. | A callable function, its signature, and checked defining equation. |
 | `have fn ... by cases` | Cases are exhaustive, pairwise disjoint, and every result belongs to the return set. | A callable piecewise function and guarded case equations. |
 | `have fn ... by induc` | Integer measure/lower bound and strictly decreasing in-domain recursive calls. | A callable recursive function and checked case equations. |
-| `have fn ... by exist!` | Preview (`new_pipeline`): parses; exec not wired yet. Intended: proved universal unique-existence goal. | Intended: selected callable function and defining property. |
+| `have fn ... by exist!` | Preview (`new_pipeline`): proved `forall … exist!` goal; FnSet well-defined. | `f $in FnSet`, property forall, uniqueness forall (no equality unfold). |
 | `prop`, `abstract_prop` | Parameter definitions; concrete `prop` clauses must be well-defined. | A foldable concrete definition or an uninterpreted predicate interface. |
 | `struct`, `setting`, `template` | Field/setting/template parameters and body contracts. | A named view, reusable binder prefix, or one parameterized definition family. |
 | `have algo for ...` | A defined function exists and the implementation agrees on its cases/results. | An executable presentation; it does not replace the mathematical function facts. |

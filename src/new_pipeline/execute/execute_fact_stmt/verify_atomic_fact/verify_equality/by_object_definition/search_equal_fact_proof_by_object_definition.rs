@@ -16,6 +16,11 @@ use super::by_template::EqualitySearchProofByTemplateObjectDefinition;
 use super::EqualitySearchProofByObjectDefinition;
 
 impl Runtime {
+    // When: goal is `L = R`, and at least one side is an identifier / named fn
+    // application / instantiated template whose definition is stored.
+    // After: prove by unfolding that definition into a residual equality
+    // (rewrite off on the residual). Tries left-as-def-side, then right.
+    // Example: `have a R = 1 + 1` then goal `a = 2` → residual `1 + 1 = 2`.
     pub fn search_equal_fact_proof_by_object_definition(
         &mut self,
         fact: &EqualFact,
@@ -40,6 +45,14 @@ impl Runtime {
         Ok(None)
     }
 
+    // When: `def_side` is the candidate unfold side of `def_side = other_side`.
+    // Dispatch by shape only (no unrelated definition kinds):
+    //   Identifier → have/let obj
+    //   FnObj (identifier / anonymous head) → have-fn (= / by cases / by induc)
+    //   InstantiatedTemplateObj / template-headed FnObj → template unfolds
+    // After: first matching unfold proof, or None if shape has no applicable def.
+    // Example: def_side `f(2)`, other_side `3`, with `have fn f(x N) = x + 1`
+    // → residual `(2 + 1) = 3`.
     fn search_object_definition_on_def_side(
         &mut self,
         def_side: &Obj,

@@ -63,16 +63,22 @@ impl Runtime {
             return self.verify_field_access_obj_well_definedness(value, verify_state);
         }
 
-        // Identifier / template-instance headed FnObj: InFunctionSet + domain.
+        // Identifier / template-instance / anonymous-literal headed FnObj: domain check.
         if let Obj::FnObj(value) = obj {
-            if matches!(
-                value.head.as_ref(),
-                FnObjHead::Identifier(_) | FnObjHead::InstantiatedTemplateObj(_)
-            ) {
-                return self.verify_in_function_set_headed_fn_obj_well_definedness(
-                    value,
-                    verify_state,
-                );
+            match value.head.as_ref() {
+                FnObjHead::Identifier(_) | FnObjHead::InstantiatedTemplateObj(_) => {
+                    return self.verify_in_function_set_headed_fn_obj_well_definedness(
+                        value,
+                        verify_state,
+                    );
+                }
+                FnObjHead::AnonymousFnLiteral(_) => {
+                    return self.verify_anonymous_fn_literal_headed_fn_obj_well_definedness(
+                        value,
+                        verify_state,
+                    );
+                }
+                FnObjHead::FieldAccess(_) => {}
             }
         }
 
@@ -265,9 +271,6 @@ impl Runtime {
             }
             Obj::SeqSet(value) => {
                 self.verify_seq_set_obj_well_definedness_by_def(value, verify_state)
-            }
-            Obj::FiniteSeqListObj(value) => {
-                self.verify_finite_seq_list_obj_well_definedness_by_def(value, verify_state)
             }
             Obj::ObjAtIndex(value) => {
                 self.verify_obj_at_index_obj_well_definedness_by_def(value, verify_state)

@@ -18,7 +18,7 @@ use crate::new_pipeline::ast::fact::{
     GreaterEqualFact, InFact, LessFact, OrFact, QuantifierFreeFact,
 };
 use crate::new_pipeline::ast::names::BoundName;
-use crate::new_pipeline::ast::obj::{FnSet, IdentifierObj, Obj, StandardSet};
+use crate::new_pipeline::ast::obj::{FnObjHead, FnSet, IdentifierObj, Obj, StandardSet};
 use crate::new_pipeline::ast::param::{ParamType, SetBoundParameterGroup, TypedParameterList};
 use crate::new_pipeline::ast::stmt::{
     FnSetClause, HaveFnByInducCase, HaveFnByInducCaseBody, HaveFnByInducStmt,
@@ -312,17 +312,35 @@ impl Runtime {
             dom_facts,
             ret_set: Box::new(generated_ret),
         };
-        let function_obj =
-            Obj::Identifier(self.identifier_obj_for_file_root_symbol(stmt.name.clone()));
-        let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
-            fact_id: self.ids.allocate_fact_id(),
-            element: function_obj,
-            set: Obj::FnSet(restricted),
-            line_file: Some(stmt.line_file.clone()),
-        }));
-        let _ = self
-            .store_fact_and_infer(&membership)
-            .map_err(|e| format!("recursive membership store: {e:?}"))?;
+        // Prefer Identifier heads as they appear in recursive bodies. Template
+        // bodies are parsed under a temporary parse scope, so those ids can
+        // differ from the post-pop file-root template name id.
+        let mut self_heads = Vec::new();
+        collect_induc_self_application_heads(stmt, &mut self_heads);
+        // Ordinary (non-template) induc: body heads already match the file-root
+        // symbol. Template induc: body heads carry the temporary-scope ids and
+        // must be preferred; only fall back to file-root when there is no
+        // recursive self-application in the body.
+        if self_heads.is_empty() {
+            self_heads.push(self.identifier_obj_for_file_root_symbol(stmt.name.clone()));
+        }
+        let mut seen = std::collections::HashSet::new();
+        for head in self_heads {
+            let function_obj = Obj::Identifier(head);
+            let key = function_obj.ir();
+            if !seen.insert(key) {
+                continue;
+            }
+            let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
+                fact_id: self.ids.allocate_fact_id(),
+                element: function_obj,
+                set: Obj::FnSet(restricted.clone()),
+                line_file: Some(stmt.line_file.clone()),
+            }));
+            let _ = self
+                .store_fact_and_infer(&membership)
+                .map_err(|e| format!("recursive membership store: {e:?}"))?;
+        }
         Ok(())
     }
 
@@ -574,6 +592,59 @@ fn flatten_and_chain_atoms(fact: &AndChainAtomicFact) -> Vec<AtomicFact> {
     }
 }
 
-// Silence unused TypedParameterList import path if needed via ParamType.
-#[allow(dead_code)]
-fn _typed_touch(_: &TypedParameterList, _: &ParamType) {}
+// Collect Identifier heads of recursive self-applications in induc case bodies.
+// Template body parse uses a temporary scope, so these ids may differ from the
+// later file-root template name id.
+fn collect_induc_self_application_heads(
+    stmt: &HaveFnByInducStmt,
+    out: &mut Vec<IdentifierObj>,
+) {
+    for case in &stmt.cases {
+        collect_induc_self_application_heads_in_case_body(&stmt.name, &case.body, out);
+    }
+}
+
+fn collect_induc_self_application_heads_in_case_body(
+    self_name: &str,
+    body: &HaveFnByInducCaseBody,
+    out: &mut Vec<IdentifierObj>,
+) {
+    match body {
+        HaveFnByInducCaseBody::EqualTo(obj) => {
+            collect_induc_self_application_heads_in_obj(self_name, obj, out);
+        }
+        HaveFnByInducCaseBody::NestedCases(nested) => {
+            for case in nested {
+                collect_induc_self_application_heads_in_case_body(self_name, &case.body, out);
+            }
+        }
+    }
+}
+
+fn collect_induc_self_application_heads_in_obj(
+    self_name: &str,
+    obj: &Obj,
+    out: &mut Vec<IdentifierObj>,
+) {
+    let Obj::FnObj(fn_obj) = obj else {
+        return;
+    };
+    if let FnObjHead::Identifier(head) = fn_obj.head.as_ref() {
+        if identifier_obj_plain_name(head) == Some(self_name) {
+            out.push(head.clone());
+        }
+    }
+    for layer in &fn_obj.body {
+        for arg in layer {
+            collect_induc_self_application_heads_in_obj(self_name, arg, out);
+        }
+    }
+}
+
+fn identifier_obj_plain_name(head: &IdentifierObj) -> Option<&str> {
+    match head {
+        IdentifierObj::Plain { name, .. }
+        | IdentifierObj::WithExportFileId { name, .. }
+        | IdentifierObj::WithModAndExportFileId { name, .. } => Some(name.as_str()),
+    }
+}

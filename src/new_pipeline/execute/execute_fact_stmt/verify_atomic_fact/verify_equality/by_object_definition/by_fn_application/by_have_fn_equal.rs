@@ -11,14 +11,13 @@
 
 use crate::new_pipeline::ast::fact::EqualFact;
 use crate::new_pipeline::ast::obj::{FnObj, FnObjHead, Obj};
-use crate::new_pipeline::ast::param::SetBoundParameterList;
 use crate::new_pipeline::exec_env::exec_env::SpecialObjProperty;
 use crate::new_pipeline::exec_env::StoredIdentifierDefinition;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
-use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
-use std::collections::HashMap;
+
+use super::super::helper::{set_bound_parameter_count, set_bound_params_to_arg_map};
 
 pub struct ByUnfoldNamedHaveFnEqualApplicationObjectDefinitionProof {
     pub expanded_body: Obj,
@@ -26,30 +25,6 @@ pub struct ByUnfoldNamedHaveFnEqualApplicationObjectDefinitionProof {
 }
 
 impl Runtime {
-    pub fn search_equal_fact_object_definition_unfold_named_have_fn_equal_application(
-        &mut self,
-        fact: &EqualFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<Option<ByUnfoldNamedHaveFnEqualApplicationObjectDefinitionProof>> {
-        if let Some(proof) = self.try_unfold_named_have_fn_equal_application(
-            &fact.left,
-            &fact.right,
-            fact,
-            verify_state.clone(),
-        )? {
-            return Ok(Some(proof));
-        }
-        if let Some(proof) = self.try_unfold_named_have_fn_equal_application(
-            &fact.right,
-            &fact.left,
-            fact,
-            verify_state,
-        )? {
-            return Ok(Some(proof));
-        }
-        Ok(None)
-    }
-
     pub(crate) fn try_unfold_named_have_fn_equal_application(
         &mut self,
         app_side: &Obj,
@@ -165,27 +140,3 @@ impl Runtime {
     }
 }
 
-fn set_bound_parameter_count(list: &SetBoundParameterList) -> usize {
-    let mut n = 0;
-    for group in &list.groups {
-        n += group.params.len();
-    }
-    n
-}
-
-fn set_bound_params_to_arg_map(
-    list: &SetBoundParameterList,
-    args: &[Obj],
-) -> HashMap<IdentifierId, Obj> {
-    let mut map = HashMap::new();
-    let mut i = 0;
-    for group in &list.groups {
-        for param in &group.params {
-            if i < args.len() {
-                map.insert(param.id, args[i].clone());
-                i += 1;
-            }
-        }
-    }
-    map
-}

@@ -56,6 +56,9 @@ indexing.
 ## Definition table vs IdentifierId
 
 The definition table stores definitions under the **surface plain name**.
+Stmt payload fields that are definition / store keys (`Def*Stmt.name`,
+`HaveFn*Stmt.name`, `DefTemplateStmt.template_name`, obtain `equal_tos`,
+`HaveByPreimageStmt.preimage_names`, …) are typed as `PlainName`.
 Occurrence identity for objects/facts uses `IdentifierId` on plain AST/IR,
 or qualified indices+name after file-root promotion.
 Looking up “what is `x` defined as?” is by plain name; citing it across
@@ -70,8 +73,8 @@ files uses `file::x` / `mod::file::x`.
 - **`have fn … = …` / `have …:` (by exist) / `have fn by cases` / `have fn by induc`**
   are wired in new_pipeline. Occupy `f` at file root before parsing the body so
   free refs to `f` qualify via the same rule.
-  `have fn by exist!` parses goal-only with forall/`exist!` shape checks, but
-  **exec is not wired**.
+  `have fn by exist!` parses goal-only with forall/`exist!` shape checks; exec
+  stores `f $in FnSet`, property forall, and uniqueness forall (no EqualToFunction).
 - **`-r` / project mount run loop** still deferred; set `current_mod_id` +
   `current_export_file_id` before parsing each export file.
 

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 
 use crate::new_pipeline::ast::obj::{
-    BigIntersect, BigUnion, Cart, CartDim, ClosedRange, FiniteSeqListObj, FiniteSeqSet, FiniteSetMax,
+    BigIntersect, BigUnion, Cart, CartDim, ClosedRange, FiniteSeqSet, FiniteSetMax,
     FiniteSetMin, FiniteSetReduce, FiniteSetSize, FnRange, GeneralCart, IndexIntersect, IndexUnion,
     Intersect, ListSet, Obj, PowerSet, Product, ProductOfFiniteSet, Proj, Range, Reduce,
     Replacement, SeqSet, SetMinus, Sum, SumOfFiniteSet, Tuple, TupleDim, Union,
@@ -403,20 +403,6 @@ impl Runtime {
     Ok(Obj::SeqSet(SeqSet {
         set: Box::new(self.inst_obj_rec(&a.set, param_to_arg_map)?),
     }))
-}
-
-
-    pub(crate) fn inst_finite_seq_list_obj(
-        &mut self,
-        a: &FiniteSeqListObj,
-        param_to_arg_map: &HashMap<IdentifierId, Obj>,
-
-    ) -> Result<Obj, InstError> {
-    let mut objs = Vec::with_capacity(a.objs.len());
-    for o in &a.objs {
-        objs.push(Box::new(self.inst_obj_rec(o, param_to_arg_map)?));
-    }
-    Ok(Obj::FiniteSeqListObj(FiniteSeqListObj { objs }))
 }
 
 

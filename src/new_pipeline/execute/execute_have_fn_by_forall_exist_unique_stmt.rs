@@ -1,27 +1,54 @@
-//! `have fn name by exist!:` — parse shape-checked; exec not wired in new_pipeline.
+//! `have fn name by exist!:` — choice from unique existence.
 //!
-//! Parse requires: forall params all Obj (≥1); dom facts quantifier-free; exactly
-//! one then which is `exist!`; that `exist!` binds exactly one Obj witness.
-//! No proof body under the stmt (prove the forall outside).
+//! Pipeline (confirmed):
+//! 1. Prove the source `forall` (outside claim/thm/trust) and WD the derived FnSet
+//! 2. Store `f $in FnSet(...)` only (no `f = AnonymousFn` / EqualToFunction)
+//! 3. Release property forall (`body[y ↦ f(x)]`) and uniqueness forall
+//!    (`forall …, y: body ⇒ y = f(x)`, stored like other foralls)
 //!
 //! ```text
+//! trust:
+//!     forall x A:
+//!         exist! y B st {$F(x, y)}
 //! have fn f by exist!:
 //!     ? forall x A:
 //!         exist! y B st {$F(x, y)}
 //! ```
-//!
-//! Exec always soft-fails `NotWired` until the EqualToFunction / property
-//! design is settled.
 
-use crate::new_pipeline::ast::stmt::HaveFnByForallExistUniqueStmt;
-use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
+use std::collections::HashMap;
+
+use crate::new_pipeline::ast::fact::{
+    AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, ForallFact, InFact, PlainExistFact,
+    QuantifierFreeFact,
+};
+use crate::new_pipeline::ast::names::BoundName;
+use crate::new_pipeline::ast::obj::{FnObj, FnObjHead, FnSet, IdentifierObj, Obj};
+use crate::new_pipeline::ast::param::{
+    ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
+};
+use crate::new_pipeline::ast::stmt::{FnSetClause, HaveFnByForallExistUniqueStmt};
+use crate::new_pipeline::execute::execute_fact_stmt::{
+    FailToVerifyFactWellDefinedResult, VerifyFactResult, VerifyFactWellDefinedResult,
+    VerifyObjWellDefinedResult, VerifyState,
+};
+use crate::new_pipeline::instantiate::quantifier_free_fact_to_fact;
+use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeError, RuntimeResult};
 
 pub enum ExecHaveFnByForallExistUniqueStmtFailed {
-    NotWired,
+    SourceForall(VerifyFactResult),
+    FnSetWellDefined(VerifyObjWellDefinedResult),
+    PropertyWellDefined(FailToVerifyFactWellDefinedResult),
 }
 
+// Stages: prove source forall → WD FnSet → membership → property → uniqueness.
 pub struct ExecHaveFnByForallExistUniqueStmtSuccessResult {
     pub statement: HaveFnByForallExistUniqueStmt,
+    pub source_forall: VerifyFactResult,
+    pub fn_set_well_defined: VerifyObjWellDefinedResult,
+    pub membership_fact_id: FactId,
+    pub property_forall_fact_id: FactId,
+    pub uniqueness_forall_fact_id: FactId,
+    pub stored_fact_ids: Vec<FactId>,
 }
 
 pub enum ExecHaveFnByForallExistUniqueStmtResult {
@@ -35,13 +62,286 @@ impl ExecHaveFnByForallExistUniqueStmtResult {
     }
 }
 
+struct HaveFnByExistShape {
+    fn_set_clause: FnSetClause,
+    witness: BoundName,
+    witness_param_type: ParamType,
+    exist_body_facts: Vec<QuantifierFreeFact>,
+}
+
 impl Runtime {
+    // Mathematical contract: unique existence of a witness for each input yields
+    // a set-theoretic function `f` in the matching FnSet, the property
+    // `body[y ↦ f(x)]`, and the uniqueness direction `body ⇒ y = f(x)`.
     pub(super) fn exec_have_fn_by_forall_exist_unique_stmt(
         &mut self,
-        _stmt: &HaveFnByForallExistUniqueStmt,
+        stmt: &HaveFnByForallExistUniqueStmt,
     ) -> RuntimeResult<ExecHaveFnByForallExistUniqueStmtResult> {
-        Ok(ExecHaveFnByForallExistUniqueStmtResult::Failed(
-            ExecHaveFnByForallExistUniqueStmtFailed::NotWired,
+        let verify_state = VerifyState {
+            can_use_forall_fact: true,
+            can_use_rewrite: true,
+            store_well_defined_fact: true,
+        };
+
+        let shape = match self.have_fn_by_exist_shape(stmt) {
+            Ok(shape) => shape,
+            Err(message) => {
+                return Err(RuntimeError::InternalBug(format!(
+                    "have fn by exist!: {message}"
+                )));
+            }
+        };
+
+        let source_forall =
+            self.verify_fact(&Fact::ForallFact(stmt.forall.clone()), verify_state.clone())?;
+        if source_forall.is_failed() {
+            return Ok(ExecHaveFnByForallExistUniqueStmtResult::Failed(
+                ExecHaveFnByForallExistUniqueStmtFailed::SourceForall(source_forall),
+            ));
+        }
+
+        let fn_set = fn_set_from_clause(&shape.fn_set_clause);
+        let fn_set_well_defined =
+            self.verify_obj_well_definedness(&Obj::FnSet(fn_set.clone()), verify_state.clone())?;
+        if fn_set_well_defined.is_failed() {
+            return Ok(ExecHaveFnByForallExistUniqueStmtResult::Failed(
+                ExecHaveFnByForallExistUniqueStmtFailed::FnSetWellDefined(fn_set_well_defined),
+            ));
+        }
+
+        let function_ident = self.identifier_obj_for_file_root_symbol(stmt.name.clone());
+        let function_obj = Obj::Identifier(function_ident.clone());
+
+        let membership_fact_id = self.ids.allocate_fact_id();
+        let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
+            fact_id: membership_fact_id,
+            element: function_obj,
+            set: Obj::FnSet(fn_set),
+            line_file: Some(stmt.line_file.clone()),
+        }));
+        let mut stored_fact_ids = self.store_fact_and_infer(&membership)?.stored_fact_ids();
+
+        let applied = applied_function_obj(&function_ident, &stmt.forall.typed_parameters);
+        let property_forall =
+            self.build_have_fn_by_exist_property_forall(stmt, &shape, applied.clone())?;
+        let property_fact = Fact::ForallFact(property_forall);
+        match self.verify_fact_well_definedness(&property_fact, verify_state)? {
+            VerifyFactWellDefinedResult::Success(_) => {}
+            VerifyFactWellDefinedResult::Failed(reason) => {
+                return Ok(ExecHaveFnByForallExistUniqueStmtResult::Failed(
+                    ExecHaveFnByForallExistUniqueStmtFailed::PropertyWellDefined(reason),
+                ));
+            }
+        }
+        let property_forall_fact_id = property_fact.fact_id();
+        stored_fact_ids.extend(self.store_fact_and_infer(&property_fact)?.stored_fact_ids());
+
+        let uniqueness_forall =
+            self.build_have_fn_by_exist_uniqueness_forall(stmt, &shape, applied)?;
+        let uniqueness_fact = Fact::ForallFact(uniqueness_forall);
+        let uniqueness_forall_fact_id = uniqueness_fact.fact_id();
+        stored_fact_ids.extend(self.store_fact_and_infer(&uniqueness_fact)?.stored_fact_ids());
+
+        Ok(ExecHaveFnByForallExistUniqueStmtResult::Success(
+            ExecHaveFnByForallExistUniqueStmtSuccessResult {
+                statement: stmt.clone(),
+                source_forall,
+                fn_set_well_defined,
+                membership_fact_id,
+                property_forall_fact_id,
+                uniqueness_forall_fact_id,
+                stored_fact_ids,
+            },
         ))
+    }
+
+    fn have_fn_by_exist_shape(
+        &self,
+        stmt: &HaveFnByForallExistUniqueStmt,
+    ) -> Result<HaveFnByExistShape, String> {
+        let mut set_bound_groups = Vec::new();
+        for group in &stmt.forall.typed_parameters.groups {
+            let ParamType::Obj(param_set) = &group.param_type else {
+                return Err("forall parameters must all be Obj-typed".to_string());
+            };
+            set_bound_groups.push(SetBoundParameterGroup {
+                params: group.params.clone(),
+                param_type: Box::new(param_set.clone()),
+            });
+        }
+        if set_bound_groups.is_empty() {
+            return Err("forall must bind at least one Obj parameter".to_string());
+        }
+
+        let mut dom_facts = Vec::with_capacity(stmt.forall.dom_facts.len());
+        for dom in &stmt.forall.dom_facts {
+            let Some(qf) = fact_as_quantifier_free(dom) else {
+                return Err(
+                    "forall domain facts must be quantifier-free (atomic / and / chain / or)"
+                        .to_string(),
+                );
+            };
+            dom_facts.push(qf);
+        }
+
+        if stmt.forall.then_facts.len() != 1 {
+            return Err("forall must have exactly one then fact".to_string());
+        }
+        let ExistOrAndChainAtomicFact::ExistUniqueFact(exist_body) = &stmt.forall.then_facts[0]
+        else {
+            return Err("the only forall then fact must be exist!".to_string());
+        };
+
+        let (witness, witness_param_type, ret_set) = single_obj_witness(exist_body)?;
+
+        Ok(HaveFnByExistShape {
+            fn_set_clause: FnSetClause {
+                set_bound_parameters: SetBoundParameterList {
+                    groups: set_bound_groups,
+                },
+                dom_facts,
+                ret_set,
+            },
+            witness,
+            witness_param_type,
+            exist_body_facts: exist_body.facts.clone(),
+        })
+    }
+
+    fn build_have_fn_by_exist_property_forall(
+        &mut self,
+        stmt: &HaveFnByForallExistUniqueStmt,
+        shape: &HaveFnByExistShape,
+        applied: Obj,
+    ) -> RuntimeResult<ForallFact> {
+        let mut subst = HashMap::new();
+        subst.insert(shape.witness.id, applied);
+        let mut then_facts = Vec::with_capacity(shape.exist_body_facts.len());
+        for body in &shape.exist_body_facts {
+            let inst = self
+                .inst_quantifier_free_fact(body, &subst)
+                .map_err(|e| RuntimeError::InternalBug(format!("have fn by exist! property: {e}")))?;
+            then_facts.push(quantifier_free_to_exist_or_and_chain(inst));
+        }
+        Ok(ForallFact {
+            fact_id: self.ids.allocate_fact_id(),
+            typed_parameters: stmt.forall.typed_parameters.clone(),
+            dom_facts: stmt.forall.dom_facts.clone(),
+            then_facts,
+            line_file: Some(stmt.line_file.clone()),
+        })
+    }
+
+    fn build_have_fn_by_exist_uniqueness_forall(
+        &mut self,
+        stmt: &HaveFnByForallExistUniqueStmt,
+        shape: &HaveFnByExistShape,
+        applied: Obj,
+    ) -> RuntimeResult<ForallFact> {
+        let fresh_witness = BoundName::new(
+            self.ids.allocate_identifier_id(),
+            shape.witness.name.clone(),
+        );
+        let fresh_obj = Obj::Identifier(IdentifierObj::from_bound_name(&fresh_witness));
+        let mut subst = HashMap::new();
+        subst.insert(shape.witness.id, fresh_obj.clone());
+
+        let mut params = stmt.forall.typed_parameters.groups.clone();
+        params.push(TypedParameterGroup {
+            params: vec![fresh_witness],
+            param_type: shape.witness_param_type.clone(),
+        });
+
+        let mut dom_facts = stmt.forall.dom_facts.clone();
+        for body in &shape.exist_body_facts {
+            let inst = self
+                .inst_quantifier_free_fact(body, &subst)
+                .map_err(|e| {
+                    RuntimeError::InternalBug(format!("have fn by exist! uniqueness: {e}"))
+                })?;
+            dom_facts.push(quantifier_free_fact_to_fact(inst));
+        }
+
+        let equal_fact_id = self.ids.allocate_fact_id();
+        Ok(ForallFact {
+            fact_id: self.ids.allocate_fact_id(),
+            typed_parameters: TypedParameterList { groups: params },
+            dom_facts,
+            then_facts: vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
+                EqualFact {
+                    fact_id: equal_fact_id,
+                    left: fresh_obj,
+                    right: applied,
+                    line_file: Some(stmt.line_file.clone()),
+                },
+            ))],
+            line_file: Some(stmt.line_file.clone()),
+        })
+    }
+}
+
+fn fn_set_from_clause(clause: &FnSetClause) -> FnSet {
+    FnSet {
+        set_bound_parameters: clause.set_bound_parameters.clone(),
+        dom_facts: clause.dom_facts.clone(),
+        ret_set: Box::new(clause.ret_set.clone()),
+    }
+}
+
+fn applied_function_obj(head: &IdentifierObj, params: &TypedParameterList) -> Obj {
+    let mut args = Vec::new();
+    for group in &params.groups {
+        for param in &group.params {
+            args.push(Box::new(Obj::Identifier(IdentifierObj::from_bound_name(
+                param,
+            ))));
+        }
+    }
+    Obj::FnObj(FnObj {
+        head: Box::new(FnObjHead::Identifier(head.clone())),
+        body: vec![args],
+    })
+}
+
+fn single_obj_witness(
+    exist_body: &PlainExistFact,
+) -> Result<(BoundName, ParamType, Obj), String> {
+    let mut witness: Option<(BoundName, ParamType, Obj)> = None;
+    let mut count = 0usize;
+    for group in &exist_body.typed_parameters.groups {
+        count += group.params.len();
+        let ParamType::Obj(ret_set) = &group.param_type else {
+            return Err("exist! witness type must be Obj".to_string());
+        };
+        if let Some(param) = group.params.first() {
+            witness = Some((
+                param.clone(),
+                group.param_type.clone(),
+                ret_set.clone(),
+            ));
+        }
+    }
+    if count != 1 {
+        return Err("exist! must bind exactly one Obj-typed witness".to_string());
+    }
+    witness.ok_or_else(|| "exist! must bind exactly one Obj-typed witness".to_string())
+}
+
+fn fact_as_quantifier_free(fact: &Fact) -> Option<QuantifierFreeFact> {
+    match fact {
+        Fact::AtomicFact(a) => Some(QuantifierFreeFact::AtomicFact(a.clone())),
+        Fact::AndFact(a) => Some(QuantifierFreeFact::AndFact(a.clone())),
+        Fact::ChainFact(c) => Some(QuantifierFreeFact::ChainFact(c.clone())),
+        Fact::OrFact(o) => Some(QuantifierFreeFact::OrFact(o.clone())),
+        _ => None,
+    }
+}
+
+fn quantifier_free_to_exist_or_and_chain(fact: QuantifierFreeFact) -> ExistOrAndChainAtomicFact {
+    match fact {
+        QuantifierFreeFact::AtomicFact(a) => ExistOrAndChainAtomicFact::AtomicFact(a),
+        QuantifierFreeFact::AndFact(a) => ExistOrAndChainAtomicFact::AndFact(a),
+        QuantifierFreeFact::ChainFact(c) => ExistOrAndChainAtomicFact::ChainFact(c),
+        QuantifierFreeFact::OrFact(o) => ExistOrAndChainAtomicFact::OrFact(o),
     }
 }

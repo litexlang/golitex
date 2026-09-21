@@ -70,15 +70,6 @@ pub fn collect_free_plain_ids(
                 crate::new_pipeline::ast::obj::FnObjHead::AnonymousFnLiteral(af) => {
                     collect_free_in_anonymous_fn(af, bound, out);
                 }
-                crate::new_pipeline::ast::obj::FnObjHead::FiniteSeqListObj(a) => {
-                    for o in &a.objs {
-                        collect_free_plain_ids(o, bound, out);
-                    }
-                }
-                crate::new_pipeline::ast::obj::FnObjHead::ObjAtIndex(a) => {
-                    collect_free_plain_ids(&a.obj, bound, out);
-                    collect_free_plain_ids(&a.index, bound, out);
-                }
                 crate::new_pipeline::ast::obj::FnObjHead::FieldAccess(a) => {
                     collect_free_plain_ids(&a.obj, bound, out);
                 }
@@ -194,11 +185,6 @@ pub fn collect_free_plain_ids(
             collect_free_plain_ids(&a.n, bound, out);
         }
         Obj::SeqSet(a) => collect_free_plain_ids(&a.set, bound, out),
-        Obj::FiniteSeqListObj(a) => {
-            for o in &a.objs {
-                collect_free_plain_ids(o, bound, out);
-            }
-        }
         Obj::ObjAtIndex(a) => {
             collect_free_plain_ids(&a.obj, bound, out);
             collect_free_plain_ids(&a.index, bound, out);

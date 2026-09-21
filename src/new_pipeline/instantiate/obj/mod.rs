@@ -107,9 +107,6 @@ impl Runtime {
                 self.inst_finite_seq_set_obj(a, param_to_arg_map)
             }
             Obj::SeqSet(a) => self.inst_seq_set_obj(a, param_to_arg_map),
-            Obj::FiniteSeqListObj(a) => {
-                self.inst_finite_seq_list_obj(a, param_to_arg_map)
-            }
             Obj::ObjAtIndex(a) => {
                 self.inst_obj_at_index_obj(a, param_to_arg_map)
             }
