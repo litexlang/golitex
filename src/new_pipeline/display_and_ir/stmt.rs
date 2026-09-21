@@ -592,8 +592,8 @@ impl HaveFnByForallExistUniqueStmt {
             HAVE,
             FN,
             self.name,
-            AS,
-            SET,
+            BY,
+            EXIST_BANG,
             COLON,
             indent!(
                 &format!("{} {}", QUESTION_GOAL, self.forall.ir()),

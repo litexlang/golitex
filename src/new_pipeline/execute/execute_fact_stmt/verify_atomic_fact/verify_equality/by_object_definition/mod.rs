@@ -1,11 +1,8 @@
-pub mod by_have_obj_equal;
-pub mod by_let_obj;
-pub mod by_unfold_have_fn_by_induc_application;
-pub mod by_unfold_have_fn_equal_case_by_case_application;
-pub mod by_unfold_instantiated_template_have_fn_equal_application;
-pub mod by_unfold_instantiated_template_have_obj_equal;
-pub mod by_unfold_named_have_fn_equal_application;
+pub mod by_fn_application;
+pub mod by_identifier;
+pub mod by_template;
 pub mod helper;
+pub mod search_equal_fact_proof_by_object_definition;
 pub mod search_equal_fact_proof_by_object_definition_result;
 
 pub use search_equal_fact_proof_by_object_definition_result::EqualitySearchProofByObjectDefinition;

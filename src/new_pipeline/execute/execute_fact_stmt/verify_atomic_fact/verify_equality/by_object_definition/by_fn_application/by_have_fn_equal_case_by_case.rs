@@ -23,7 +23,7 @@ use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use super::helper::{
+use super::super::helper::{
     fn_app_name_and_args, set_bound_parameter_count, set_bound_params_to_arg_map,
 };
 
@@ -58,7 +58,7 @@ impl Runtime {
         Ok(None)
     }
 
-    fn try_unfold_have_fn_equal_case_by_case_application(
+    pub(crate) fn try_unfold_have_fn_equal_case_by_case_application(
         &mut self,
         app_side: &Obj,
         other_side: &Obj,

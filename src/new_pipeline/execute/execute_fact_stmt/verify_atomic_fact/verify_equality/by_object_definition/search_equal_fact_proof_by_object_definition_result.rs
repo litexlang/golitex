@@ -1,26 +1,10 @@
-use super::by_have_obj_equal::ByHaveObjEqualObjectDefinitionProof;
-use super::by_let_obj::ByLetObjObjectDefinitionProof;
-use super::by_unfold_have_fn_by_induc_application::ByUnfoldHaveFnByInducApplicationObjectDefinitionProof;
-use super::by_unfold_have_fn_equal_case_by_case_application::ByUnfoldHaveFnEqualCaseByCaseApplicationObjectDefinitionProof;
-use super::by_unfold_instantiated_template_have_fn_equal_application::ByUnfoldInstantiatedTemplateHaveFnEqualApplicationObjectDefinitionProof;
-use super::by_unfold_instantiated_template_have_obj_equal::ByUnfoldInstantiatedTemplateHaveObjEqualObjectDefinitionProof;
-use super::by_unfold_named_have_fn_equal_application::ByUnfoldNamedHaveFnEqualApplicationObjectDefinitionProof;
+use super::by_fn_application::EqualitySearchProofByFnApplicationObjectDefinition;
+use super::by_identifier::EqualitySearchProofByIdentifierObjectDefinition;
+use super::by_template::EqualitySearchProofByTemplateObjectDefinition;
 
-// Each object-definition equality rule gets its own variant and payload.
+// Object-definition equality: dispatch by the definition-side object shape first.
 pub enum EqualitySearchProofByObjectDefinition {
-    ByHaveObjEqual(ByHaveObjEqualObjectDefinitionProof),
-    ByLetObj(ByLetObjObjectDefinitionProof),
-    ByUnfoldNamedHaveFnEqualApplication(
-        ByUnfoldNamedHaveFnEqualApplicationObjectDefinitionProof,
-    ),
-    ByUnfoldHaveFnEqualCaseByCaseApplication(
-        ByUnfoldHaveFnEqualCaseByCaseApplicationObjectDefinitionProof,
-    ),
-    ByUnfoldHaveFnByInducApplication(ByUnfoldHaveFnByInducApplicationObjectDefinitionProof),
-    ByUnfoldInstantiatedTemplateHaveObjEqual(
-        ByUnfoldInstantiatedTemplateHaveObjEqualObjectDefinitionProof,
-    ),
-    ByUnfoldInstantiatedTemplateHaveFnEqualApplication(
-        ByUnfoldInstantiatedTemplateHaveFnEqualApplicationObjectDefinitionProof,
-    ),
+    ByIdentifier(EqualitySearchProofByIdentifierObjectDefinition),
+    ByFnApplication(EqualitySearchProofByFnApplicationObjectDefinition),
+    ByTemplate(EqualitySearchProofByTemplateObjectDefinition),
 }
