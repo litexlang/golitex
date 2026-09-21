@@ -7,8 +7,9 @@ use crate::new_pipeline::ast::fact::{
 use crate::new_pipeline::ast::obj::{FnObj, FnObjHead, IdentifierObj, Obj, StructObj};
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::ast::stmt::{
-    HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt, HaveObjByExistFactsStmt, HaveObjEqualStmt,
-    HaveObjInNonemptySetOrParamTypeStmt, LetObjStmt, TrustHaveStmt,
+    HaveFnByForallExistUniqueStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt,
+    HaveObjByExistFactsStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt, LetObjStmt,
+    TrustHaveStmt,
 };
 use crate::new_pipeline::exec_env::StoredIdentifierDefinition;
 use crate::new_pipeline::execute::execute_have_fn_by_induc_stmt::flatten_induc_to_case_by_case;
@@ -66,6 +67,9 @@ impl Runtime {
             }
             StoredIdentifierDefinition::HaveFnEqualCaseByCase((_, stmt)) => {
                 Ok(Ok(build_have_fn_case_by_case(self, surface, stmt.as_ref())))
+            }
+            StoredIdentifierDefinition::HaveFnByForallExistUnique((_, stmt)) => {
+                build_have_fn_by_forall_exist_unique(self, surface, stmt.as_ref())
             }
             StoredIdentifierDefinition::HaveFnByInduc((_, stmt)) => {
                 match flatten_induc_to_case_by_case(self, stmt) {
@@ -320,6 +324,32 @@ fn build_have_fn_case_by_case(
         },
         facts,
         defined_as_struct: None,
+    }
+}
+
+fn build_have_fn_by_forall_exist_unique(
+    runtime: &mut Runtime,
+    surface: &IdentifierObj,
+    stmt: &HaveFnByForallExistUniqueStmt,
+) -> RuntimeResult<Result<BuiltReleaseFacts, BuildReleaseFactsFailed>> {
+    match runtime.build_have_fn_by_forall_exist_unique_facts_for_surface(surface, stmt)? {
+        Ok((membership, property_forall, uniqueness_forall)) => {
+            let facts = vec![
+                membership.clone(),
+                property_forall.clone(),
+                uniqueness_forall.clone(),
+            ];
+            Ok(Ok(BuiltReleaseFacts {
+                kind: ReleaseObjDefByKind::HaveFnByForallExistUnique {
+                    membership,
+                    property_forall,
+                    uniqueness_forall,
+                },
+                facts,
+                defined_as_struct: None,
+            }))
+        }
+        Err(msg) => Ok(Err(BuildReleaseFactsFailed::Instantiate(msg))),
     }
 }
 

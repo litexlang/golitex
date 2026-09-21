@@ -1,0 +1,5 @@
+# Stmt: By.ByEnumerateFiniteSetStmt → exec_by_enumerate_finite_set_stmt
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_stmt_nodes/by/by_enumerate_finite_set.lit
+
+by enumerate finite_set:
+    ? forall x {1, 2} => x $in {1, 2}

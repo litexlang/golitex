@@ -7,8 +7,9 @@ use super::fail_to_verify_obj_well_defined::{
 use super::helper::{set_bound_parameter_count, set_bound_params_to_arg_map};
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::obj_well_defined_proof_by_def::{
-    FnObjObjWellDefinedProof, FnRangeObjWellDefinedProof, IdentifierObjWellDefinedProof,
-    NumberObjWellDefinedProof, ObjWellDefinedProofByDef, StandardSetObjWellDefinedProof,
+    FnObjDomainFnSetEvidence, FnObjObjWellDefinedProof, FnRangeObjWellDefinedProof,
+    IdentifierObjWellDefinedProof, NumberObjWellDefinedProof, ObjWellDefinedProofByDef,
+    StandardSetObjWellDefinedProof,
 };
 use super::entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
 use crate::new_pipeline::ast::fact::{AtomicFact, InFact};
@@ -144,7 +145,10 @@ impl Runtime {
             match self.try_verify_fn_obj_against_fn_set(value, &fn_set, verify_state.clone())? {
                 Ok(stages) => {
                     let proof = FnObjObjWellDefinedProof {
-                        applied_fn_set: Some((fn_set, fact_id)),
+                        domain_fn_set: Some(FnObjDomainFnSetEvidence::InFunctionSet {
+                            fn_set,
+                            fact_id,
+                        }),
                         child_obj_well_defined: stages.child_obj_well_defined,
                         requirement_fact_verified: stages.requirement_fact_verified,
                     };
@@ -211,8 +215,7 @@ impl Runtime {
                 let mut children = vec![(anon_obj, head_wd)];
                 children.append(&mut stages.child_obj_well_defined);
                 let proof = FnObjObjWellDefinedProof {
-                    // Literal carries its FnSet; no InFunctionSet FactId.
-                    applied_fn_set: None,
+                    domain_fn_set: Some(FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set }),
                     child_obj_well_defined: children,
                     requirement_fact_verified: stages.requirement_fact_verified,
                 };

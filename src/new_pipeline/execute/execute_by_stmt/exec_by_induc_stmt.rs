@@ -403,10 +403,9 @@ fn mk_strong_ih(
     induc_from: &Obj,
     goal: &Fact,
 ) -> Result<Fact, String> {
-    // Binder name must not collide with the live induction parameter name on the
-    // ExecEnv stack (`identifier_defined_in_stack` is name-based).
-    let y_id = runtime.ids.allocate_identifier_id();
-    let y = BoundName::new(y_id, format!("_{}", param.name));
+    // Fresh binder so the IH forall does not reuse the live induction param name
+    // (`identifier_defined_in_stack` is name-based).
+    let y = runtime.fresh_internal_param();
     let y_obj = param_obj(&y);
     let p_y = inst_at(runtime, goal, param.id, y_obj.clone())?;
     Ok(Fact::ForallFact(ForallFact {

@@ -1,4 +1,4 @@
-# Tracer: have fn by exist! exec (membership + property + uniqueness).
+# Tracer: have fn by exist! — exec, release, template.
 # Run: LITEX_NEW_PIPELINE=1 target/release/litex -f examples/tmp_have_fn_by_exist.lit
 
 abstract_prop F(x, y)
@@ -13,12 +13,20 @@ have fn f by exist!:
     ? forall x A:
         exist! y B st {$F(x, y)}
 
-# Property direction: f(x) satisfies the exist! body.
 forall x A:
     $F(x, f(x))
 
-# Uniqueness direction: any witness equal to f(x).
 forall x A, y B:
     $F(x, y)
     =>:
         y = f(x)
+
+release obj def f
+
+forall x A:
+    $F(x, f(x))
+
+template<_S set>:
+    have fn choose_t by exist!:
+        ? forall x A:
+            exist! y B st {$F(x, y)}

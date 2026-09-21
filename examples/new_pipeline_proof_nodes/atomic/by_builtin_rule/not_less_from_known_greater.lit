@@ -1,0 +1,7 @@
+# Node: atomic.ByBuiltinRule.NotLess.FromKnownGreater
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/atomic/by_builtin_rule/not_less_from_known_greater.lit
+
+have a R = 2
+have b R = 1
+a > b
+not a < b

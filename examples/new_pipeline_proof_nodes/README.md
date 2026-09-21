@@ -18,8 +18,10 @@ LITEX_NEW_PIPELINE=1 target/release/litex -f <this-file>
 Exit 0 is enough. No requirement to assert which `searched_proof` variant won.
 
 Stub / not-yet-wired nodes are **omitted** (no SKIP placeholders).
-Still open (non-rewrite): empty atomic builtin-rule families (`NormalAtomic` / several `Not*` / `FnEqualIn`); more exist builtins.
-Equality BuiltinRewrite: only ClosedNumericEqualSubstitution (equality and non-eq atomic).
+Still open (non-rewrite): empty atomic builtin-rule families (`NormalAtomic` / several `Not*` / `FnEqualIn`); more exist builtins;
+some secondary In/order/subset leaves; MatchingOneArgByOne beyond the traced constructors.
+Equality BuiltinRewrite: ClosedNumericEqualSubstitution (equal + atomic) and
+atomic KnownEqualObjSubstitution.
 No equality KnownRewrite slot (dead; = uses EqualIr / KnownEquality graph).
 OrderDual rewrite: `atomic/by_builtin_rewrite/order_dual*.lit`.
 KnownRewrite: `atomic/by_known_rewrite/reflexivity.lit`, `symmetry.lit`.
@@ -30,9 +32,14 @@ WD gallery (positives for done Obj/Fact WD): `examples/new_pipeline_wd/`.
 ## Layout
 
 ```text
-or/           ByBuiltinRule (trichotomy ×3), SelectedBranch, KnownOr, KnownForall
-equal/        ByBuiltinRule, KnownEquality, BuiltinStrategy, MatchingOneArgByOne (full constructor peel except binders), BuiltinRewrite (ClosedNumericEqualSubstitution only)
-atomic/       ByBuiltinRule, KnownAtomicFact, ByDefinition, BuiltinStrategy (PosAddPos), BuiltinRewrite (ClosedNumericEqualSubstitution, OrderDual), KnownRewrite (Reflexivity/Symmetry)
+or/           ByBuiltinRule (trichotomy ×3, NaturalZeroOrAtLeastOne), SelectedBranch,
+              KnownOr, KnownForall
+equal/        ByBuiltinRule, KnownEquality, ObjectDefinition (identifier / fn /
+              template), BuiltinStrategy, MatchingOneArgByOne, KnownForall (+ViaSymmetry),
+              BuiltinRewrite (ClosedNumericEqualSubstitution)
+atomic/       ByBuiltinRule, KnownAtomicFact, ByDefinition, BuiltinStrategy (PosAddPos),
+              KnownForall, BuiltinRewrite (ClosedNumeric, KnownEqualObj, OrderDual),
+              KnownRewrite (Reflexivity/Symmetry)
 and/          per-component verify
 chain/        adjacent order / equality
 exist/        ByBuiltinRule (real-line), KnownExist, KnownForall

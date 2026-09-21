@@ -10,7 +10,7 @@ use crate::new_pipeline::ast::fact::{
     PlainExistFact, QuantifierFreeFact,
 };
 use crate::new_pipeline::ast::line_file::LineFile;
-use crate::new_pipeline::ast::names::{AtomicName, BoundName};
+use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::{AnonymousFn, BigUnion, FnSet, IdentifierObj, Obj};
 use crate::new_pipeline::ast::param::{
     ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
@@ -96,7 +96,7 @@ fn ac_obligations(runtime: &mut Runtime, family: &Obj, line_file: &LineFile) -> 
 }
 
 fn ac_members_nonempty(runtime: &mut Runtime, family: &Obj, line_file: &LineFile) -> Fact {
-    let a = fresh(runtime, "_ac_a");
+    let a = runtime.fresh_internal_param();
     let a_obj = Obj::Identifier(IdentifierObj::from_bound_name(&a));
     let nonempty: AtomicFact = IsNonemptySetFact {
         fact_id: runtime.ids.allocate_fact_id(),
@@ -119,7 +119,7 @@ fn ac_members_nonempty(runtime: &mut Runtime, family: &Obj, line_file: &LineFile
 }
 
 fn ac_exist_fact(runtime: &mut Runtime, family: &Obj, line_file: &LineFile) -> Fact {
-    let idx = fresh(runtime, "_ac_i");
+    let idx = runtime.fresh_internal_param();
     let fn_set = FnSet {
         set_bound_parameters: SetBoundParameterList {
             groups: vec![SetBoundParameterGroup {
@@ -132,9 +132,9 @@ fn ac_exist_fact(runtime: &mut Runtime, family: &Obj, line_file: &LineFile) -> F
             left: Box::new(family.clone()),
         })),
     };
-    let f = fresh(runtime, "_ac_f");
+    let f = runtime.fresh_internal_param();
     let f_obj = Obj::Identifier(IdentifierObj::from_bound_name(&f));
-    let id_idx = fresh(runtime, "_ac_id");
+    let id_idx = runtime.fresh_internal_param();
     let id_val = Obj::Identifier(IdentifierObj::from_bound_name(&id_idx));
     let identity = Obj::AnonymousFn(AnonymousFn {
         body: FnSet {
@@ -167,9 +167,4 @@ fn ac_exist_fact(runtime: &mut Runtime, family: &Obj, line_file: &LineFile) -> F
         facts: vec![QuantifierFreeFact::AtomicFact(named)],
         line_file: Some(line_file.clone()),
     })
-}
-
-fn fresh(runtime: &mut Runtime, prefix: &str) -> BoundName {
-    let id = runtime.ids.allocate_identifier_id();
-    BoundName::new(id, format!("{}{}", prefix, id.value()))
 }

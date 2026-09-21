@@ -93,10 +93,23 @@ impl IdentifierObjWellDefinedProof {
     pub fn new() -> Self { Self {} }
 }
 
+// Which FnSet supplied the domain check for a successful FnObj application.
+// Identifier / template heads cite an InFunctionSet store; anonymous literals
+// carry their own `body` FnSet and have no registration FactId.
+pub enum FnObjDomainFnSetEvidence {
+    InFunctionSet {
+        fn_set: FnSet,
+        fact_id: FactId,
+    },
+    AnonymousLiteral {
+        fn_set: FnSet,
+    },
+}
+
 pub struct FnObjObjWellDefinedProof {
-    // Selected InFunctionSet signature when the head is Identifier / template.
-    // AnonymousFnLiteral applications leave this None (space is the literal's FnSet).
-    pub applied_fn_set: Option<(FnSet, FactId)>,
+    // Domain-check space for this application (see FnObjDomainFnSetEvidence).
+    // None only on incomplete/from_stages packing, not on a successful literal apply.
+    pub domain_fn_set: Option<FnObjDomainFnSetEvidence>,
     pub child_obj_well_defined: Vec<(Obj, VerifyObjWellDefinedResult)>,
     pub requirement_fact_verified: Vec<VerifyFactResult>,
 }
@@ -104,7 +117,7 @@ pub struct FnObjObjWellDefinedProof {
 impl FnObjObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
         Self {
-            applied_fn_set: None,
+            domain_fn_set: None,
             child_obj_well_defined: stages.child_obj_well_defined,
             requirement_fact_verified: stages.requirement_fact_verified,
         }

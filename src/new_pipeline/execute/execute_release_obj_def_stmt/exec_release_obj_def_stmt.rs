@@ -43,6 +43,11 @@ pub enum ReleaseObjDefByKind {
         membership: Fact,
         case_foralls: Vec<Fact>,
     },
+    HaveFnByForallExistUnique {
+        membership: Fact,
+        property_forall: Fact,
+        uniqueness_forall: Fact,
+    },
     HaveFnByInduc {
         membership: Fact,
         case_foralls: Vec<Fact>,

@@ -1355,28 +1355,6 @@ fn have_fn_by_exist_rejects_set_typed_witness() {
 }
 
 #[test]
-fn template_have_fn_by_exist_not_wired() {
-    use crate::new_pipeline::execute::execute_def_template_stmt::{
-        ExecDefTemplateStmtFailed, ExecDefTemplateStmtResult,
-    };
-    use crate::new_pipeline::execute::ExecDefinitionStmtResult;
-    use crate::new_pipeline::execute::ExecStmtResult;
-
-    let mut runtime = runtime_with_file_env();
-    let code = "template<S set>:\n    have fn id_S by exist!:\n        ? forall x S:\n            exist! y S st {y = x}";
-    let r = exec_one(&mut runtime, code);
-    match &r {
-        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefTemplate(
-            ExecDefTemplateStmtResult::Failed(ExecDefTemplateStmtFailed::UnsupportedBody(msg)),
-        )) if msg.contains("by exist!") => {}
-        other => panic!(
-            "expected UnsupportedBody for template by exist!, got failed={}",
-            other.is_failed()
-        ),
-    }
-}
-
-#[test]
 fn have_fn_by_cases_sign_trichotomy_slice() {
     let mut runtime = runtime_with_file_env();
     let code = "have fn sign(x R) Z by cases:\n    case x > 0: 1\n    case x = 0: 0\n    case x < 0: (-1)";
@@ -1769,6 +1747,38 @@ fn release_obj_def_smoke() {
     assert!(!exec_one(&mut runtime, "have fn f(t R) R = t").is_failed(), "have fn");
     assert!(!exec_one(&mut runtime, "release obj def f").is_failed(), "release have fn");
     assert!(!exec_one(&mut runtime, "f(1) = 1").is_failed(), "check f application");
+
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "abstract_prop F(x, y)").is_failed());
+    assert!(!exec_one(&mut runtime, "have A set").is_failed());
+    assert!(!exec_one(&mut runtime, "have B set").is_failed());
+    assert!(
+        !exec_one(
+            &mut runtime,
+            "trust:\n    forall x A:\n        exist! y B st {$F(x, y)}"
+        )
+        .is_failed()
+    );
+    assert!(
+        !exec_one(
+            &mut runtime,
+            "have fn choose by exist!:\n    ? forall x A:\n        exist! y B st {$F(x, y)}"
+        )
+        .is_failed(),
+        "have fn by exist!"
+    );
+    assert!(
+        !exec_one(&mut runtime, "release obj def choose").is_failed(),
+        "release have fn by exist!"
+    );
+    assert!(
+        !exec_one(
+            &mut runtime,
+            "forall x A:\n    $F(x, choose(x))"
+        )
+        .is_failed(),
+        "property forall still holds after release"
+    );
 }
 
 
@@ -1811,4 +1821,100 @@ fn template_have_fn_by_induc_object_definition_unfold() {
     );
 }
 
+#[test]
+fn template_have_fn_by_exist_wires_body() {
+    use crate::new_pipeline::execute::execute_def_template_stmt::{
+        ExecDefTemplateStmtResult, ExecTemplateDefBodyResult,
+    };
+    use crate::new_pipeline::execute::ExecDefinitionStmtResult;
+    use crate::new_pipeline::execute::ExecStmtResult;
 
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "abstract_prop F(x, y)").is_failed());
+    assert!(!exec_one(&mut runtime, "have A set").is_failed());
+    assert!(!exec_one(&mut runtime, "have B set").is_failed());
+    assert!(
+        !exec_one(
+            &mut runtime,
+            "trust:\n    forall x A:\n        exist! y B st {$F(x, y)}"
+        )
+        .is_failed()
+    );
+    let def = "template<_S set>:
+    have fn choose_t by exist!:
+        ? forall x A:
+            exist! y B st {$F(x, y)}";
+    match exec_one(&mut runtime, def) {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefTemplate(
+            ExecDefTemplateStmtResult::Success(ok),
+        )) => {
+            assert!(
+                matches!(
+                    ok.body,
+                    ExecTemplateDefBodyResult::HaveFnByForallExistUnique(_)
+                ),
+                "template body must be HaveFnByForallExistUnique"
+            );
+        }
+        other => panic!(
+            "expected template Success, got failed={}",
+            other.is_failed()
+        ),
+    }
+}
+
+
+
+
+#[test]
+fn obtain_from_exist_introduces_witness_and_body() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(&mut runtime, "witness exist u R st {u = 0} from 0").is_failed(),
+        "witness exist"
+    );
+    assert!(
+        !exec_one(&mut runtime, "obtain w from exist u R st {u = 0}").is_failed(),
+        "obtain from exist"
+    );
+    assert!(!exec_one(&mut runtime, "w = 0").is_failed(), "body fact after obtain");
+    assert!(!exec_one(&mut runtime, "w $in R").is_failed(), "type fact after obtain");
+}
+
+#[test]
+fn obtain_from_exist_unique_succeeds_with_trust() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(&mut runtime, "trust exist! z R st {z = 1}").is_failed(),
+        "trust exist!"
+    );
+    assert!(
+        !exec_one(&mut runtime, "obtain uniq from exist! z R st {z = 1}").is_failed(),
+        "obtain from exist!"
+    );
+    assert!(!exec_one(&mut runtime, "uniq = 1").is_failed(), "exist! body after obtain");
+}
+
+#[test]
+fn obtain_arity_mismatch_soft_fails() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "witness exist u R st {u = 0} from 0").is_failed());
+    assert!(
+        exec_one(&mut runtime, "obtain a, b from exist u R st {u = 0}").is_failed(),
+        "arity mismatch must soft-fail"
+    );
+}
+
+#[test]
+fn template_body_obtain_from_exist_wires() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(&mut runtime, "witness exist t R st {t = 2} from 2").is_failed(),
+        "parent exist for template obtain"
+    );
+    let code = "template<_S set>:\n    obtain tw from exist t R st {t = 2}";
+    assert!(
+        !exec_one(&mut runtime, code).is_failed(),
+        "template body obtain from exist"
+    );
+}

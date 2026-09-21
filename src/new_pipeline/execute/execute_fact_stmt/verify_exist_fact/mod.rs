@@ -5,7 +5,7 @@ mod verify_well_defined;
 mod well_defined_result;
 
 pub use result::{
-    VerifyExistFactFailed, VerifyExistFactResult, VerifyExistUniqueFactResult,
+    VerifyExistFactFailed, VerifyExistFactResult, VerifyExistUniqueFactResult, VerifyExistUniqueFactSuccess,
     VerifyNotExistFactResult, VerifyPlainExistFactResult, VerifyPlainExistFactSuccess,
 };
 pub use well_defined_result::{

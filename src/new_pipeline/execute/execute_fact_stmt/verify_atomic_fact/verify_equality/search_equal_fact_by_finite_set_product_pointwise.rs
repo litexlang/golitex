@@ -1,6 +1,5 @@
 use super::by_builtin_strategy_result::FiniteSetProductPointwiseEqualityStrategySingleStep;
 use crate::new_pipeline::ast::fact::{EqualFact, Fact};
-use crate::new_pipeline::ast::names::BoundName;
 use crate::new_pipeline::ast::obj::{AnonymousFn, FnObj, FnObjHead, IdentifierObj, Obj};
 use crate::new_pipeline::ast::param::{ParamType, SetBoundParameterList, TypedParameterGroup, TypedParameterList};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
@@ -22,7 +21,7 @@ impl Runtime {
             return Ok(None);
         };
 
-        let binder = fresh_fsp_binder(self);
+        let binder = self.fresh_internal_param();
         let x_obj = Obj::Identifier(IdentifierObj::from_bound_name(&binder));
         let Some(left_at_x) = unary_function_at(self, left.func.as_ref(), &x_obj) else {
             return Ok(None);
@@ -77,16 +76,6 @@ impl Runtime {
             requirement_facts,
             proof_of_requirement_facts,
         }))
-    }
-}
-
-fn fresh_fsp_binder(rt: &mut Runtime) -> BoundName {
-    loop {
-        let id = rt.ids.allocate_identifier_id();
-        let name = format!("__fsp_{}", id.value());
-        if !rt.plain_atom_is_visible(&name) && !rt.identifier_defined_in_stack(&name) {
-            return BoundName::new(id, name);
-        }
     }
 }
 

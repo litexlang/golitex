@@ -22,7 +22,8 @@ use crate::new_pipeline::execute::execute_have_fn_by_induc_stmt::{
     ExecHaveFnByInducStmtFailed, ExecHaveFnByInducStmtResult, ExecHaveFnByInducStmtSuccessResult,
 };
 use crate::new_pipeline::execute::execute_have_fn_by_forall_exist_unique_stmt::{
-    ExecHaveFnByForallExistUniqueStmtFailed, ExecHaveFnByForallExistUniqueStmtSuccessResult,
+    ExecHaveFnByForallExistUniqueStmtFailed, ExecHaveFnByForallExistUniqueStmtResult,
+    ExecHaveFnByForallExistUniqueStmtSuccessResult,
 };
 use crate::new_pipeline::execute::execute_have_fn_equal_case_by_case_stmt::{
     ExecHaveFnEqualCaseByCaseStmtFailed, ExecHaveFnEqualCaseByCaseStmtResult,
@@ -34,6 +35,10 @@ use crate::new_pipeline::execute::execute_have_fn_equal_stmt::{
 use crate::new_pipeline::execute::execute_have_obj_by_exist_facts_stmt::{
     ExecHaveObjByExistFactsStmtFailed, ExecHaveObjByExistFactsStmtResult,
     ExecHaveObjByExistFactsStmtSuccessResult,
+};
+use crate::new_pipeline::execute::execute_obtain_obj_from_exist_fact_stmt::{
+    ExecObtainObjFromExistFactStmtFailed, ExecObtainObjFromExistFactStmtResult,
+    ExecObtainObjFromExistFactStmtSuccessResult,
 };
 use crate::new_pipeline::execute::execute_have_obj_equal_stmt::{
     ExecHaveObjEqualStmtFailed, ExecHaveObjEqualStmtResult, ExecHaveObjEqualStmtSuccessResult,
@@ -59,6 +64,7 @@ pub enum ExecDefTemplateStmtFailed {
     BodyHaveObjInNonemptySet(ExecHaveObjInNonemptySetStmtFailed),
     BodyHaveObjEqual(ExecHaveObjEqualStmtFailed),
     BodyHaveObjByExistFacts(ExecHaveObjByExistFactsStmtFailed),
+    BodyObtainObjFromExistFact(ExecObtainObjFromExistFactStmtFailed),
     BodyHaveFnEqual(ExecHaveFnEqualStmtFailed),
     BodyHaveFnEqualCaseByCase(ExecHaveFnEqualCaseByCaseStmtFailed),
     BodyHaveFnByForallExistUnique(ExecHaveFnByForallExistUniqueStmtFailed),
@@ -71,6 +77,7 @@ pub enum ExecTemplateDefBodyResult {
     HaveObjInNonemptySet(ExecHaveObjInNonemptySetStmtSuccessResult),
     HaveObjEqual(ExecHaveObjEqualStmtSuccessResult),
     HaveObjByExistFacts(ExecHaveObjByExistFactsStmtSuccessResult),
+    ObtainObjFromExistFact(ExecObtainObjFromExistFactStmtSuccessResult),
     HaveFnEqual(ExecHaveFnEqualStmtSuccessResult),
     HaveFnEqualCaseByCase(ExecHaveFnEqualCaseByCaseStmtSuccessResult),
     HaveFnByForallExistUnique(ExecHaveFnByForallExistUniqueStmtSuccessResult),
@@ -258,11 +265,16 @@ impl Runtime {
                     )),
                 }
             }
-            TemplateDefEnum::HaveFnByForallExistUniqueStmt(_) => Ok(Err(
-                ExecDefTemplateStmtFailed::UnsupportedBody(
-                    "template body `have fn by exist!` is not wired yet".to_string(),
-                ),
-            )),
+            TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => {
+                match self.exec_have_fn_by_forall_exist_unique_stmt(stmt)? {
+                    ExecHaveFnByForallExistUniqueStmtResult::Success(ok) => Ok(Ok(
+                        ExecTemplateDefBodyResult::HaveFnByForallExistUnique(ok),
+                    )),
+                    ExecHaveFnByForallExistUniqueStmtResult::Failed(failed) => Ok(Err(
+                        ExecDefTemplateStmtFailed::BodyHaveFnByForallExistUnique(failed),
+                    )),
+                }
+            }
             TemplateDefEnum::HaveFnByInducStmt(stmt) => {
                 match self.exec_have_fn_by_induc_stmt(stmt)? {
                     ExecHaveFnByInducStmtResult::Success(ok) => {
@@ -281,11 +293,16 @@ impl Runtime {
                     Ok(Err(ExecDefTemplateStmtFailed::BodyTrustHave(failed)))
                 }
             },
-            TemplateDefEnum::ObtainObjFromExistFact(_) => Ok(Err(
-                ExecDefTemplateStmtFailed::UnsupportedBody(
-                    "template body `obtain` from exist fact is not wired yet".to_string(),
-                ),
-            )),
+                        TemplateDefEnum::ObtainObjFromExistFact(stmt) => {
+                match self.exec_obtain_obj_from_exist_fact_stmt(stmt)? {
+                    ExecObtainObjFromExistFactStmtResult::Success(ok) => {
+                        Ok(Ok(ExecTemplateDefBodyResult::ObtainObjFromExistFact(ok)))
+                    }
+                    ExecObtainObjFromExistFactStmtResult::Failed(failed) => Ok(Err(
+                        ExecDefTemplateStmtFailed::BodyObtainObjFromExistFact(failed),
+                    )),
+                }
+            }
             TemplateDefEnum::ObtainObjFromAtomicFact(_) => Ok(Err(
                 ExecDefTemplateStmtFailed::UnsupportedBody(
                     "template body `obtain` from atomic fact is not wired yet".to_string(),
