@@ -1,4 +1,6 @@
-//! Fact-statement execution: verify, then store and infer.
+//! Fact-statement execution: verify the goal, then store and infer.
+//! Verify closes the current goal; store+infer writes accepted facts and runs
+//! local inference — not a second open-ended proof search.
 
 mod exec_fact_stmt;
 mod result;

@@ -4,6 +4,8 @@ use super::{
 };
 use crate::new_pipeline::runtime::FactId;
 
+// Proposition about objects. Membership, equality, forall, … live here — not as Obj "types".
+// Contrast: Obj = value/expression; Stmt = env-changing action that may assert or define.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Fact {
     AtomicFact(AtomicFact),

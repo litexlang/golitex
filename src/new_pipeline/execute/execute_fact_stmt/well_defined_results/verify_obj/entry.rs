@@ -1,6 +1,7 @@
 //! Object WD entry: known-memory lookup, then match Obj → family branch.
 //!
-//! Soft miss is `Ok(Failed(...))`. Must-prove callers reject that at their boundary.
+//! Soft miss is `Ok(Failed(...))` — ill-formed / not WD, not "unknown theorem".
+//! Must-prove callers reject that at their boundary.
 
 use super::fail_to_verify_obj_well_defined::FailToVerifyObjWellDefinedResult;
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;

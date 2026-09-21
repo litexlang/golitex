@@ -332,7 +332,7 @@ fn build_have_fn_by_forall_exist_unique(
     surface: &IdentifierObj,
     stmt: &HaveFnByForallExistUniqueStmt,
 ) -> RuntimeResult<Result<BuiltReleaseFacts, BuildReleaseFactsFailed>> {
-    match runtime.build_have_fn_by_forall_exist_unique_facts_for_surface(surface, stmt)? {
+    match runtime.build_have_fn_by_forall_exist_unique_facts_for_surface(&Obj::Identifier(surface.clone()), stmt)? {
         Ok((membership, property_forall, uniqueness_forall)) => {
             let facts = vec![
                 membership.clone(),

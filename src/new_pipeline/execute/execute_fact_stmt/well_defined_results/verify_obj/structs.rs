@@ -409,10 +409,25 @@ impl Runtime {
                     &subst,
                 )?;
             }
-            // `have fn … by exist!` template body is checked at def time, but
-            // `\Name<args>` does not yet install FnSet membership / property /
-            // uniqueness (no FnSetClause on the stmt; deferred).
-            TemplateDefEnum::HaveFnByForallExistUniqueStmt(_) => {}
+            TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => {
+                // Same three facts as plain `have fn by exist!` / `release obj def`,
+                // with subjects = `\Name<args>` and template params substituted.
+                let surface = Obj::InstantiatedTemplateObj(value.clone());
+                match self.build_have_fn_by_forall_exist_unique_facts_for_surface(
+                    &surface,
+                    stmt,
+                )? {
+                    Ok((membership, property, uniqueness)) => {
+                        for fact in [membership, property, uniqueness] {
+                            let Ok(inst) = self.inst_fact(&fact, &subst) else {
+                                return Ok(());
+                            };
+                            self.store_fact_and_infer(&inst)?;
+                        }
+                    }
+                    Err(_) => {}
+                }
+            }
             TemplateDefEnum::HaveObjEqualStmt(_) => {
                 let Some(expanded_rhs) =
                     self.expanded_have_obj_equal_rhs_of_instantiated_template(value)?

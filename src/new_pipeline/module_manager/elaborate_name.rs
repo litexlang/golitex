@@ -100,7 +100,10 @@ impl GlobalModuleManager {
             .find(|row| row.alias == alias)
             .map(|row| row.path.clone())
             .ok_or_else(|| format!("unknown import alias `{alias}` in the current module"))?;
-        self.path_to_mod_id.get(&path).copied().ok_or_else(|| {
+        // Mount keys use canonicalize (see run_module::normalize_module_dir);
+        // config rows keep normalize_join spelling. Align before lookup.
+        let key = path.canonicalize().unwrap_or_else(|_| path.clone());
+        self.path_to_mod_id.get(&key).copied().ok_or_else(|| {
             format!(
                 "import alias `{alias}` path is not on the global module table yet (deps must be ready first)"
             )

@@ -17,6 +17,8 @@ use super::param::{SetBoundParameterList, TypedParameterList};
 // Stmt (file spine)
 // -----------------------------------------------------------------------------
 
+// Env-changing action: assert a Fact, define, prove by …, trust, … .
+// Not a value (Obj) and not itself a proposition (Fact); a bare Fact stmt asserts one.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Stmt {
     Fact(Fact),
@@ -39,6 +41,7 @@ pub enum Stmt {
 // UnsafeStmt
 // -----------------------------------------------------------------------------
 
+// Trust boundary: assert without proof search. Still requires WD; `-strict` rejects these.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum UnsafeStmt {
     TrustStmt(TrustStmt),
@@ -199,6 +202,8 @@ pub struct HaveFnByInducStmt {
     pub line_file: LineFile,
 }
 
+// `have fn f ... by exist!`: goal-only; must prove forall…exist! first.
+// Stores `f ∈ FnSet` + property + uniqueness — not `f = AnonymousFn` (no unfold-as-formula).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HaveFnByForallExistUniqueStmt {
     pub name: PlainName,
@@ -244,6 +249,8 @@ pub enum TemplateDefEnum {
     HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt),
 }
 
+// Uniform definition over binder kinds such as `A set`. Not a function domain:
+// `fn(A set)` is forbidden; use `template<A set>:` when the def itself is set-parameterized.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DefTemplateStmt {
     pub template_name: PlainName,
@@ -428,6 +435,8 @@ pub struct ByForStmt {
     pub line_file: LineFile,
 }
 
+// Prove `left = right` from both `$subset` directions. In the pure-set model this is
+// ordinary object equality, not a separate host-language Set equality.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ByExtensionStmt {
     pub left: Obj,
