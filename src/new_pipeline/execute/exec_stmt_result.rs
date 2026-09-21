@@ -26,7 +26,9 @@ use crate::new_pipeline::execute::execute_have_fn_by_induc_stmt::ExecHaveFnByInd
 use crate::new_pipeline::execute::execute_have_fn_equal_case_by_case_stmt::ExecHaveFnEqualCaseByCaseStmtResult;
 use crate::new_pipeline::execute::execute_have_fn_equal_stmt::ExecHaveFnEqualStmtResult;
 use crate::new_pipeline::execute::execute_have_obj_by_exist_facts_stmt::ExecHaveObjByExistFactsStmtResult;
+use crate::new_pipeline::execute::execute_obtain_obj_from_atomic_fact_stmt::ExecObtainObjFromAtomicFactStmtResult;
 use crate::new_pipeline::execute::execute_obtain_obj_from_exist_fact_stmt::ExecObtainObjFromExistFactStmtResult;
+use crate::new_pipeline::execute::execute_obtain_obj_from_thm_stmt::ExecObtainObjFromThmStmtResult;
 use crate::new_pipeline::execute::execute_have_obj_equal_stmt::ExecHaveObjEqualStmtResult;
 use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::ExecHaveObjInNonemptySetStmtResult;
 use crate::new_pipeline::execute::execute_let_stmt::ExecLetObjStmtResult;
@@ -88,6 +90,8 @@ pub enum ExecDefinitionStmtResult {
     HaveObjEqual(ExecHaveObjEqualStmtResult),
     HaveObjByExistFacts(ExecHaveObjByExistFactsStmtResult),
     ObtainObjFromExistFact(ExecObtainObjFromExistFactStmtResult),
+    ObtainObjFromAtomicFact(ExecObtainObjFromAtomicFactStmtResult),
+    ObtainObjFromThm(ExecObtainObjFromThmStmtResult),
     HaveFnEqual(ExecHaveFnEqualStmtResult),
     HaveFnEqualCaseByCase(ExecHaveFnEqualCaseByCaseStmtResult),
     HaveFnByForallExistUnique(ExecHaveFnByForallExistUniqueStmtResult),
@@ -122,6 +126,8 @@ impl ExecDefinitionStmtResult {
             Self::HaveObjEqual(r) => r.is_failed(),
             Self::HaveObjByExistFacts(r) => r.is_failed(),
             Self::ObtainObjFromExistFact(r) => r.is_failed(),
+            Self::ObtainObjFromAtomicFact(r) => r.is_failed(),
+            Self::ObtainObjFromThm(r) => r.is_failed(),
             Self::HaveFnEqual(r) => r.is_failed(),
             Self::HaveFnEqualCaseByCase(r) => r.is_failed(),
             Self::HaveFnByForallExistUnique(r) => r.is_failed(),

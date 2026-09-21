@@ -17,7 +17,8 @@ impl Runtime {
                 .stored_identifier_definition_visible_in_stack(plain)
                 .cloned(),
             IdentifierObj::WithExportFileId { export_file_id, .. } => self
-                .lookup_in_export_env(None, *export_file_id, plain)
+                .finished_export_exec_env(None, *export_file_id)
+                .and_then(|env| env.definitions.identifiers.get(plain).cloned())
                 .or_else(|| {
                     if *export_file_id == self.current_export_file_id {
                         self.stored_identifier_definition_visible_in_stack(plain)
@@ -31,7 +32,8 @@ impl Runtime {
                 export_file_id,
                 ..
             } => self
-                .lookup_in_export_env(Some(*global_mod_id), *export_file_id, plain)
+                .finished_export_exec_env(Some(*global_mod_id), *export_file_id)
+                .and_then(|env| env.definitions.identifiers.get(plain).cloned())
                 .or_else(|| {
                     if self.global_module_manager.current_mod_id() == Some(*global_mod_id)
                         && *export_file_id == self.current_export_file_id
@@ -43,30 +45,6 @@ impl Runtime {
                     }
                 }),
         }
-    }
-
-    fn lookup_in_export_env(
-        &self,
-        global_mod_id: Option<usize>,
-        export_file_id: usize,
-        plain: &str,
-    ) -> Option<StoredIdentifierDefinition> {
-        let exports = match global_mod_id {
-            None => self.global_module_manager.root_exports(),
-            Some(mod_id) => self
-                .global_module_manager
-                .imports()
-                .get(mod_id)?
-                .export_files_and_their_env
-                .as_slice(),
-        };
-        let export = exports.get(export_file_id)?;
-        export
-            .exec_env
-            .definitions
-            .identifiers
-            .get(plain)
-            .cloned()
     }
 }
 

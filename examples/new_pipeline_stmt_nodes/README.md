@@ -18,7 +18,8 @@ Exit 0 is enough. Stub / not-yet-wired stmt arms are **omitted**.
 
 ```text
 fact/          Stmt::Fact
-definition/    LetObj, HaveObj*, HaveFn*, ObtainObjFromExistFact, DefProp,
+definition/    LetObj, HaveObj*, HaveFn*, ObtainObjFromExistFact,
+               ObtainObjFromAtomicFact, ObtainObjFromThm, DefProp,
                DefAbstractProp, DefStruct*, DefTemplate (incl. obtain body),
                DefThm, ReleaseObjDef, ReleaseStructDef, ReleaseThm
 witness/       WitnessExistFact (no indented body in new_pipeline)
@@ -29,10 +30,10 @@ by/            ByReflexive/Symmetric/TransitiveProp, Extension, Enumerate*,
 ```
 
 Omitted for now: `by zorn_lemma` (wired; chain-upper-bound obligation still
-needs a green tracer). Parse-only / unwired: obtain from `$P` / `thm`, claim/example/sketch/try,
+needs a green tracer). Parse-only / unwired: claim/example/sketch/try,
 eval, setting, axiom, strategy.
-`obtain … from exist` / `exist!` is wired (see `definition/obtain_*.lit`
-and `definition/def_template_obtain_from_exist.lit`).
+`obtain … from exist` / `exist!` / `$P` / `thm` is wired (see `definition/obtain_*.lit`
+and `definition/def_template_obtain_from_*.lit`).
 
 ## Run all
 

@@ -1976,3 +1976,64 @@ fn template_body_obtain_from_exist_wires() {
         "template body obtain from exist"
     );
 }
+
+#[test]
+fn obtain_from_atomic_fact_introduces_witness_and_body() {
+    let mut runtime = runtime_with_file_env();
+    let prop = "prop has_copy(a R):\n    exist x R st {x = a}";
+    assert!(!exec_one(&mut runtime, prop).is_failed(), "def prop has_copy");
+    assert!(
+        !exec_one(&mut runtime, "$has_copy(2)").is_failed(),
+        "$has_copy(2) must verify"
+    );
+    assert!(
+        !exec_one(&mut runtime, "obtain copy from $has_copy(2)").is_failed(),
+        "obtain from $P"
+    );
+    assert!(!exec_one(&mut runtime, "copy = 2").is_failed(), "body after obtain from $P");
+    assert!(!exec_one(&mut runtime, "copy $in R").is_failed(), "type after obtain from $P");
+}
+
+#[test]
+fn obtain_from_thm_introduces_witness_and_body() {
+    let mut runtime = runtime_with_file_env();
+    let thm = "thm self_exists:\n    ? forall a R:\n        exist x R st {x = a}";
+    assert!(!exec_one(&mut runtime, thm).is_failed(), "def thm self_exists");
+    assert!(
+        !exec_one(&mut runtime, "obtain theorem_copy from thm self_exists(3)").is_failed(),
+        "obtain from thm"
+    );
+    assert!(
+        !exec_one(&mut runtime, "theorem_copy = 3").is_failed(),
+        "body after obtain from thm"
+    );
+    assert!(
+        !exec_one(&mut runtime, "theorem_copy $in R").is_failed(),
+        "type after obtain from thm"
+    );
+}
+
+#[test]
+fn template_body_obtain_from_atomic_fact_wires() {
+    let mut runtime = runtime_with_file_env();
+    let prop = "prop has_copy(a R):\n    exist x R st {x = a}";
+    assert!(!exec_one(&mut runtime, prop).is_failed(), "def prop for template");
+    assert!(!exec_one(&mut runtime, "$has_copy(2)").is_failed(), "$has_copy for template");
+    let code = "template<_S set>:\n    obtain tw from $has_copy(2)";
+    assert!(
+        !exec_one(&mut runtime, code).is_failed(),
+        "template body obtain from $P"
+    );
+}
+
+#[test]
+fn template_body_obtain_from_thm_wires() {
+    let mut runtime = runtime_with_file_env();
+    let thm = "thm self_exists:\n    ? forall a R:\n        exist x R st {x = a}";
+    assert!(!exec_one(&mut runtime, thm).is_failed(), "def thm for template");
+    let code = "template<_S set>:\n    obtain tw from thm self_exists(2)";
+    assert!(
+        !exec_one(&mut runtime, code).is_failed(),
+        "template body obtain from thm"
+    );
+}

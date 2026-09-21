@@ -36,8 +36,10 @@ pub use exec_by_regularity_axiom_stmt::exec_by_regularity_axiom_stmt;
 pub use exec_by_axiom_of_choice_stmt::exec_by_axiom_of_choice_stmt;
 pub use exec_by_zorn_lemma_stmt::exec_by_zorn_lemma_stmt;
 pub use result::{
-    ByProofBodyFailed, ByProofStepResult, ExecByStmtResult, ExecReleaseThmStmtResult,
+    ByProofBodyFailed, ByProofStepResult, ExecByStmtResult, ExecReleaseThmStmtFailed,
+    ExecReleaseThmStmtResult,
 };
+pub(crate) use exec_by_thm_stmt::{prepare_release_conclusions, PreparedRelease};
 pub(crate) use helper::{
     proof_verify_state, run_fact_only_proof_steps, store_goal_fact, verify_goal_fact,
 };

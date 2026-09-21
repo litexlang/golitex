@@ -1,17 +1,16 @@
-# Preview: `A -> B` FnSet sugar (phase 1).
+# Preview: obtain from `$P` and from `thm` (new_pipeline).
 # Run: LITEX_NEW_PIPELINE=1 litex -f examples/tmp.lit
-#
-# Do not compare two separately parsed arrows for equality: each allocates a
-# fresh `__param_<id>`, and FnSet EqualIR does not alpha-identify binders yet.
 
-let S = R -> R
-S = S
+prop has_copy(a R):
+    exist x R st {x = a}
 
-let T = R -> R -> Z
-T = T
+$has_copy(2)
+obtain copy from $has_copy(2)
+copy = 2
 
-let U = R × R -> R
-U = U
+thm self_exists:
+    ? forall a R:
+        exist x R st {x = a}
 
-let V = R -> (R -> Z)
-V = V
+obtain theorem_copy from thm self_exists(3)
+theorem_copy = 3

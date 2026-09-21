@@ -1,0 +1,11 @@
+# Stmt: Definition.DefTemplateStmt body ObtainObjFromThm
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_stmt_nodes/definition/def_template_obtain_from_thm.lit
+#
+# Theorem is defined in the ambient env; template body only performs obtain.
+
+thm self_exists:
+    ? forall a R:
+        exist x R st {x = a}
+
+template<_S set>:
+    obtain tw from thm self_exists(2)

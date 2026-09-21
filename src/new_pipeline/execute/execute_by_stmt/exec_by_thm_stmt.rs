@@ -121,21 +121,21 @@ pub fn exec_by_thm_stmt(
     )))
 }
 
-struct PreparedRelease {
-    dom_facts: Vec<Fact>,
-    conclusions: Vec<Fact>,
+pub(crate) struct PreparedRelease {
+    pub(crate) dom_facts: Vec<Fact>,
+    pub(crate) conclusions: Vec<Fact>,
 }
 
-fn prepare_release_conclusions(
+pub(crate) fn prepare_release_conclusions(
     runtime: &mut Runtime,
     call: &TheoremCall,
 ) -> RuntimeResult<Result<PreparedRelease, ExecReleaseThmStmtFailed>> {
-    let thm_name = call.name.local_name();
-    let Some(def_thm) = runtime.def_thm_visible_in_stack(thm_name).cloned() else {
+    let Some(def_thm) = runtime.def_thm_visible(&call.name).cloned() else {
         return Ok(Err(ExecReleaseThmStmtFailed::ThmNotFound(
-            thm_name.to_string(),
+            call.name.display_string(),
         )));
     };
+    let thm_name = call.name.local_name();
 
     match &def_thm.fact {
         Fact::ForallFact(forall) => prepare_forall_release(runtime, forall, &call.arguments),

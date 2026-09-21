@@ -2374,6 +2374,12 @@ theorem is available both for explicit theorem calls and ordinary
 known-`forall` matching. `axiom` remains universal-only and gives the same
 parenthesized call interface to a trusted fact without proving it.
 
+> **Preview (`new_pipeline`):** theorem calls accept plain or qualified names
+> (`export::thm`, `Mod::export::thm`, `Mod:::thm`). Lookup uses the live Env
+> stack for plain names and a finished export file's Env for qualified names —
+> the same path as `release obj def`. Fact search still does not merge another
+> module's ambient facts; only the named theorem definition is resolved.
+
 The call spelling records whether instantiation is taking place:
 
 - call a root `forall` theorem, including a zero-parameter `forall`, with
@@ -2678,15 +2684,15 @@ introductions.
 | `sketch` | Every contained statement checks. | Nothing outside the block. |
 | `try` | The statement always succeeds after parsing; its isolated body either commits or rolls back with a retained diagnostic. | All block effects when committed; none when rolled back. |
 | `thm`, `axiom` | `thm` proves its target; `axiom` checks its interface but trusts truth. | A named reusable theorem interface; universal facts also enter ordinary matching. |
-| `release thm` | Arity/domains/premises; the form is bare and has no goal/proof body. | All instantiated conclusions and their ordinary inferred consequences. |
-| `by thm ... => fact` | Arity/domains/premises and one selected atomic target. | Only the requested atomic selection and its ordinary inferred consequences. |
+| `release thm` | Arity/domains/premises; the form is bare and has no goal/proof body. Plain or `mod::export::`-qualified theorem name (preview). | All instantiated conclusions and their ordinary inferred consequences. |
+| `by thm ... => fact` | Arity/domains/premises and one selected atomic target. Same qualified-name lookup as `release thm` (preview). | Only the requested atomic selection and its ordinary inferred consequences. |
 | `strategy` | The statement proves its restricted atomic universal pattern. | A named definition whose proved `forall` enters ordinary matching. |
 | `witness exist/exist!` | Witness count/types/body; `exist!` additionally verifies the generated two-candidate uniqueness universal. | The exact existential fact. Binder names stay local. |
 | `witness $P(args)` | The concrete prop has one positive ordinary `exist` clause; ordinary witness checks run after substitution. `exist!` uses explicit `witness exist! ...` followed by `by def`. | `$P(args)` as the primary fact, then definition inference. |
 | `witness $is_nonempty_set(S)` | The proposed object is in `S`. | Nonemptiness of `S`. |
 | `by cases`, `by contra` | Every branch closes the target, or an explicit contradiction is produced. | The requested target only. |
 | Enumeration, induction, `by for`, `by extension` | The target has the exact finite/range/discrete/extensional shape and every generated subgoal closes. | The requested universal/equality/atomic target. |
-| `by def` | One positive concrete/builtin definitional target and every defining clause. | The target with explicit definition provenance. |
+| `by def` | One positive concrete/builtin definitional target and every defining clause. Preview: qualified `$Mod::export::P` looks up the prop in a finished export Env. | The target with explicit definition provenance. |
 | `release struct def e` | `e` has a definition-owned struct carrier and `e $in &Struct` verifies. | Exactly one layer of tuple/identity bridges, field carriers, and instantiated struct laws. |
 | `release obj def I` | Preview (`new_pipeline`): `I` is one identifier (optionally `mod::export::`-qualified) with a `StoredIdentifierDefinition` other than a binder `ParamType`. | Re-stores that definition's type / equality / body / fn facts into the current Env (subjects use the written spelling of `I`). For `have fn … by exist!`, re-stores membership + property + uniqueness. |
 | Predicate-property registrations | The proof has the exact reflexive/symmetric/transitive predicate shape. | A reusable property route for later rewriting. |
@@ -2939,6 +2945,12 @@ definition route explicitly:
 by def $P(args)
 ```
 
+> **Preview (`new_pipeline`):** `$P` may be plain or qualified
+> (`$export::P`, `$Mod::export::P`, `$Mod:::P`). Definition expansion looks up
+> the concrete `prop` in the live Env stack or in a finished export file's Env.
+> Ambient by-definition search and statement `by def` share this lookup. Other
+> modules' stored facts are still not searched automatically.
+
 Unlike ordinary atomic verification, explicit `by def` rechecks the definition
 even if the target predicate is already known. It accepts exactly one positive
 atomic target. The older `by def:` goal block remains accepted for compatibility.
@@ -2985,10 +2997,10 @@ This is an `error` because an abstract predicate has no definition to unfold.
 > obligations in the ambient environment first, then submit the witnesses in
 > one line. `obtain … from exist` / `exist!` is wired at top level and as a
 > `template` body (names the known existential; `exist!` also stores the
-> uniqueness forall). `obtain` from `$P` / `thm`, `exist!` uniqueness for
-> `witness`, and `witness $P` / nonempty-set forms are not wired on this track
-> yet. The legacy examples below (with `:` proof blocks) still describe the
-> default pipeline.
+> uniqueness forall). `obtain` from `$P` / `thm` is also wired at top level and
+> as a `template` body. `exist!` uniqueness for `witness`, and `witness $P` /
+> nonempty-set forms are not wired on this track yet. The legacy examples below
+> (with `:` proof blocks) still describe the default pipeline.
 
 Use `witness` to prove an existential or nonempty-set goal. Use `obtain` to
 name witnesses from an already known existential, from one concrete prop

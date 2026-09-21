@@ -36,9 +36,17 @@ use crate::new_pipeline::execute::execute_have_obj_by_exist_facts_stmt::{
     ExecHaveObjByExistFactsStmtFailed, ExecHaveObjByExistFactsStmtResult,
     ExecHaveObjByExistFactsStmtSuccessResult,
 };
+use crate::new_pipeline::execute::execute_obtain_obj_from_atomic_fact_stmt::{
+    ExecObtainObjFromAtomicFactStmtFailed, ExecObtainObjFromAtomicFactStmtResult,
+    ExecObtainObjFromAtomicFactStmtSuccessResult,
+};
 use crate::new_pipeline::execute::execute_obtain_obj_from_exist_fact_stmt::{
     ExecObtainObjFromExistFactStmtFailed, ExecObtainObjFromExistFactStmtResult,
     ExecObtainObjFromExistFactStmtSuccessResult,
+};
+use crate::new_pipeline::execute::execute_obtain_obj_from_thm_stmt::{
+    ExecObtainObjFromThmStmtFailed, ExecObtainObjFromThmStmtResult,
+    ExecObtainObjFromThmStmtSuccessResult,
 };
 use crate::new_pipeline::execute::execute_have_obj_equal_stmt::{
     ExecHaveObjEqualStmtFailed, ExecHaveObjEqualStmtResult, ExecHaveObjEqualStmtSuccessResult,
@@ -65,6 +73,8 @@ pub enum ExecDefTemplateStmtFailed {
     BodyHaveObjEqual(ExecHaveObjEqualStmtFailed),
     BodyHaveObjByExistFacts(ExecHaveObjByExistFactsStmtFailed),
     BodyObtainObjFromExistFact(ExecObtainObjFromExistFactStmtFailed),
+    BodyObtainObjFromAtomicFact(ExecObtainObjFromAtomicFactStmtFailed),
+    BodyObtainObjFromThm(ExecObtainObjFromThmStmtFailed),
     BodyHaveFnEqual(ExecHaveFnEqualStmtFailed),
     BodyHaveFnEqualCaseByCase(ExecHaveFnEqualCaseByCaseStmtFailed),
     BodyHaveFnByForallExistUnique(ExecHaveFnByForallExistUniqueStmtFailed),
@@ -78,6 +88,8 @@ pub enum ExecTemplateDefBodyResult {
     HaveObjEqual(ExecHaveObjEqualStmtSuccessResult),
     HaveObjByExistFacts(ExecHaveObjByExistFactsStmtSuccessResult),
     ObtainObjFromExistFact(ExecObtainObjFromExistFactStmtSuccessResult),
+    ObtainObjFromAtomicFact(ExecObtainObjFromAtomicFactStmtSuccessResult),
+    ObtainObjFromThm(ExecObtainObjFromThmStmtSuccessResult),
     HaveFnEqual(ExecHaveFnEqualStmtSuccessResult),
     HaveFnEqualCaseByCase(ExecHaveFnEqualCaseByCaseStmtSuccessResult),
     HaveFnByForallExistUnique(ExecHaveFnByForallExistUniqueStmtSuccessResult),
@@ -293,7 +305,7 @@ impl Runtime {
                     Ok(Err(ExecDefTemplateStmtFailed::BodyTrustHave(failed)))
                 }
             },
-                        TemplateDefEnum::ObtainObjFromExistFact(stmt) => {
+            TemplateDefEnum::ObtainObjFromExistFact(stmt) => {
                 match self.exec_obtain_obj_from_exist_fact_stmt(stmt)? {
                     ExecObtainObjFromExistFactStmtResult::Success(ok) => {
                         Ok(Ok(ExecTemplateDefBodyResult::ObtainObjFromExistFact(ok)))
@@ -303,16 +315,26 @@ impl Runtime {
                     )),
                 }
             }
-            TemplateDefEnum::ObtainObjFromAtomicFact(_) => Ok(Err(
-                ExecDefTemplateStmtFailed::UnsupportedBody(
-                    "template body `obtain` from atomic fact is not wired yet".to_string(),
-                ),
-            )),
-            TemplateDefEnum::ObtainObjFromThm(_) => Ok(Err(
-                ExecDefTemplateStmtFailed::UnsupportedBody(
-                    "template body `obtain` from thm is not wired yet".to_string(),
-                ),
-            )),
+            TemplateDefEnum::ObtainObjFromAtomicFact(stmt) => {
+                match self.exec_obtain_obj_from_atomic_fact_stmt(stmt)? {
+                    ExecObtainObjFromAtomicFactStmtResult::Success(ok) => {
+                        Ok(Ok(ExecTemplateDefBodyResult::ObtainObjFromAtomicFact(ok)))
+                    }
+                    ExecObtainObjFromAtomicFactStmtResult::Failed(failed) => Ok(Err(
+                        ExecDefTemplateStmtFailed::BodyObtainObjFromAtomicFact(failed),
+                    )),
+                }
+            }
+            TemplateDefEnum::ObtainObjFromThm(stmt) => {
+                match self.exec_obtain_obj_from_thm_stmt(stmt)? {
+                    ExecObtainObjFromThmStmtResult::Success(ok) => {
+                        Ok(Ok(ExecTemplateDefBodyResult::ObtainObjFromThm(ok)))
+                    }
+                    ExecObtainObjFromThmStmtResult::Failed(failed) => Ok(Err(
+                        ExecDefTemplateStmtFailed::BodyObtainObjFromThm(failed),
+                    )),
+                }
+            }
         }
     }
 }

@@ -76,6 +76,20 @@ impl Runtime {
                     ),
                 ))
             }
+            Stmt::Definition(DefinitionStmt::ObtainObjFromAtomicFact(obtain_stmt)) => {
+                Ok(ExecStmtResult::Definition(
+                    ExecDefinitionStmtResult::ObtainObjFromAtomicFact(
+                        self.exec_obtain_obj_from_atomic_fact_stmt(obtain_stmt)?,
+                    ),
+                ))
+            }
+            Stmt::Definition(DefinitionStmt::ObtainObjFromThm(obtain_stmt)) => {
+                Ok(ExecStmtResult::Definition(
+                    ExecDefinitionStmtResult::ObtainObjFromThm(
+                        self.exec_obtain_obj_from_thm_stmt(obtain_stmt)?,
+                    ),
+                ))
+            }
             Stmt::Definition(DefinitionStmt::HaveFnEqualStmt(have_stmt)) => {
                 Ok(ExecStmtResult::Definition(
                     ExecDefinitionStmtResult::HaveFnEqual(

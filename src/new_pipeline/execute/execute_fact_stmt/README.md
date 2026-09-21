@@ -104,6 +104,12 @@ current `Runtime.execution_environments_stack` (including the parent scopes
 represented by that stack). It does not search `Runtime.global_module_manager` or
 merge loaded module main environments into ambient facts.
 
+Qualified **definition** lookup is separate: `def_prop_visible` /
+`def_thm_visible` (and `release obj def`) may resolve a `mod::export::`-qualified
+name in a finished export file's recorded `ExecEnv`. That brings a named
+definition into the current statement; it does not dump that export's known-fact
+table into ambient search.
+
 The stage also derives a read-only verification state, so trying proof routes
 does not write new well-definedness records into the current scope.
 

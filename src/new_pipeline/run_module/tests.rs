@@ -56,6 +56,43 @@ fn run_project_runs_import_then_root_export() {
 }
 
 #[test]
+fn run_project_cross_mod_release_thm_and_by_def() {
+    let root = temp_dir("cross_def");
+    write(
+        &root.join("lib/litex.config"),
+        "[export]\nbase = \"./base.lit\"\n",
+    );
+    write(
+        &root.join("lib/base.lit"),
+        "prop above_zero(x R):\n    x > 0\n\n\
+         thm add_zero_right:\n    ? forall x R:\n        x + 0 = x\n    x + 0 = x\n",
+    );
+    write(
+        &root.join("litex.config"),
+        "[import]\nLib = \"./lib\"\n\n[export]\nmain = \"./main.lit\"\n",
+    );
+    write(
+        &root.join("main.lit"),
+        "by def $Lib::base::above_zero(1)\n\n\
+         release thm Lib::base::add_zero_right(2)\n\
+         2 + 0 = 2\n\n\
+         by thm Lib:::add_zero_right(3) => 3 + 0 = 3\n",
+    );
+
+    let result = run_project(LaunchCommand::Repository {
+        path: root.clone(),
+        session: false,
+        strict: false,
+    })
+    .expect("run_project");
+
+    assert!(result.run.success, "{:?}", result.run.session_error);
+    assert!(result.files.iter().all(|file| file.run.success));
+
+    let _ = fs::remove_dir_all(&root);
+}
+
+#[test]
 fn run_project_soft_fail_becomes_fail_to_import() {
     let root = temp_dir("soft");
     write(
