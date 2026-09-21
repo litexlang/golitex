@@ -630,6 +630,14 @@ square_plus_one(3) $in fn_range(square_plus_one)
 | `fn_range(f)` | Image of the known domain of `f` |
 | `fn_range(fn(x A) T {f(x)})` | Image of an explicit restriction to `A` |
 
+> **Preview (`new_pipeline`):** `A -> B` is sugar for the simple function set
+> `fn(_ A) B` (internal binder `__param_<id>`). It is right-associative:
+> `A -> B -> C` means `A -> (B -> C)`. Arithmetic, `×`, `∩`, and `∪` bind
+> tighter than `->`, so `R × R -> R` means `(R × R) -> R`. Use `=>` for logical
+> implication; `->` is only the function-set arrow. This sugar does not support
+> `{body}`, domain `: conditions`, or a return set that must name the domain
+> binder — write those with full `fn(...)`.
+
 Function parameter domains are read from left to right, so a later domain may
 cite an earlier parameter. The return set is checked in the scope of all
 function parameters and may cite them too. At application, Litex substitutes
@@ -2042,7 +2050,13 @@ This is an `error`: `x != 0` and `x > 0` overlap.
 > forall (`body ⇒ witness = f(args)`). It does **not** store `f = AnonymousFn`,
 > so applications do not unfold by equality the way `have fn f(...) T = body`
 > does. The name is recorded in the definition table, so `release obj def f`
-> re-stores the same three facts; a `template` body may use this form.
+> re-stores the same three facts.
+>
+> A `template` **definition** may use this form as its body (the body is
+> checked under the template parameters). Instantiating that template as
+> `\Name<args>` does **not** yet install FnSet membership / property /
+> uniqueness the way `by cases` / `by induc` template instances do — so
+> `\Name<args>(x)` is not yet usable like a selected function.
 
 `have fn name by exist!` turns an **already proved** unique-existence
 statement into a function. Prove the `forall … exist!` outside; the `have fn`
@@ -2655,7 +2669,7 @@ introductions.
 | `have fn ... = ...` | Ordered parameter domains, return carrier, body membership, and side conditions. | A callable function, its signature, and checked defining equation. |
 | `have fn ... by cases` | Cases are exhaustive, pairwise disjoint, and every result belongs to the return set. | A callable piecewise function and guarded case equations. |
 | `have fn ... by induc` | Integer measure/lower bound and strictly decreasing in-domain recursive calls. | A callable recursive function and checked case equations. |
-| `have fn ... by exist!` | Preview (`new_pipeline`): proved `forall … exist!` goal; FnSet well-defined. | `f $in FnSet`, property forall, uniqueness forall (no equality unfold). |
+| `have fn ... by exist!` | Preview (`new_pipeline`): proved `forall … exist!` goal; FnSet well-defined. | `f $in FnSet`, property forall, uniqueness forall (no equality unfold); def-table + `release obj def`. `template` def-body OK; `\Name<args>` instance FnSet not yet. |
 | `prop`, `abstract_prop` | Parameter definitions; concrete `prop` clauses must be well-defined. | A foldable concrete definition or an uninterpreted predicate interface. |
 | `struct`, `setting`, `template` | Field/setting/template parameters and body contracts. | A named view, reusable binder prefix, or one parameterized definition family. |
 | `have algo for ...` | A defined function exists and the implementation agrees on its cases/results. | An executable presentation; it does not replace the mathematical function facts. |

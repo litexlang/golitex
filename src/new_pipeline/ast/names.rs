@@ -41,10 +41,12 @@ impl fmt::Display for BoundName {
     }
 }
 
-/// Qualified or plain atom name. Identity for quals is ids + `name`.
+/// Qualified or plain atom name. Identity for equals is ids + `name`.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum AtomicName {
-    Plain { name: PlainName },
+    Plain {
+        name: PlainName,
+    },
 
     /// `a::b` in the **current** module.
     ///

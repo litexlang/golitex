@@ -74,7 +74,12 @@ files uses `file::x` / `mod::file::x`.
   are wired in new_pipeline. Occupy `f` at file root before parsing the body so
   free refs to `f` qualify via the same rule.
   `have fn by exist!` parses goal-only with forall/`exist!` shape checks; exec
-  stores `f $in FnSet`, property forall, and uniqueness forall (no EqualToFunction).
+  stores `f $in FnSet`, property forall, and uniqueness forall (no EqualToFunction),
+  and records `StoredIdentifierDefinition::HaveFnByForallExistUnique` so
+  `release obj def` can rebuild those three facts.
+  A `template` **def** may run this body under local params; `\Name<args>`
+  instance use (FnSet membership / property release on the instance) is **not**
+  wired yet — unlike `by cases` / `by induc`.
 - **`-r` / project mount run loop** still deferred; set `current_mod_id` +
   `current_export_file_id` before parsing each export file.
 

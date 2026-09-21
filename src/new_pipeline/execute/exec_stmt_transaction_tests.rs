@@ -1078,6 +1078,26 @@ fn fn_obj_application_requires_in_function_set() {
 }
 
 #[test]
+fn fn_arrow_sugar_desugars_to_fn_set() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(&mut runtime, "let S = R -> R").is_failed(),
+        "R -> R must parse and WD as FnSet"
+    );
+    assert!(!exec_one(&mut runtime, "S = S").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "let T = R -> R -> Z").is_failed(),
+        "right-associative arrow must WD"
+    );
+    assert!(!exec_one(&mut runtime, "T = T").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "let U = R × R -> R").is_failed(),
+        "cart must bind tighter than arrow"
+    );
+    assert!(!exec_one(&mut runtime, "U = U").is_failed());
+}
+
+#[test]
 fn binder_obj_well_definedness_keeps_local_env() {
     let mut runtime = runtime_with_file_env();
     assert!(
@@ -1767,10 +1787,41 @@ fn release_obj_def_smoke() {
         .is_failed(),
         "have fn by exist!"
     );
-    assert!(
-        !exec_one(&mut runtime, "release obj def choose").is_failed(),
-        "release have fn by exist!"
-    );
+    // Assert the release *kind*, not only a fact that already held before release.
+    {
+        use crate::new_pipeline::exec_env::StoredIdentifierDefinition;
+        use crate::new_pipeline::execute::execute_release_obj_def_stmt::{
+            ExecReleaseObjDefStmtResult, ReleaseObjDefByKind,
+        };
+        use crate::new_pipeline::execute::ExecStmtResult;
+        match exec_one(&mut runtime, "release obj def choose") {
+            ExecStmtResult::ReleaseObjDef(ExecReleaseObjDefStmtResult::Success(ok)) => {
+                assert!(
+                    matches!(
+                        ok.looked_up,
+                        StoredIdentifierDefinition::HaveFnByForallExistUnique(_)
+                    ),
+                    "def-table row must be HaveFnByForallExistUnique"
+                );
+                assert!(
+                    matches!(
+                        ok.released,
+                        ReleaseObjDefByKind::HaveFnByForallExistUnique { .. }
+                    ),
+                    "release kind must rebuild membership+property+uniqueness"
+                );
+                assert_eq!(
+                    ok.store_and_infer.len(),
+                    3,
+                    "release stores exactly three facts"
+                );
+            }
+            other => panic!(
+                "expected release Success for by exist!, got failed={}",
+                other.is_failed()
+            ),
+        }
+    }
     assert!(
         !exec_one(
             &mut runtime,
@@ -1829,6 +1880,8 @@ fn template_have_fn_by_exist_wires_body() {
     use crate::new_pipeline::execute::ExecDefinitionStmtResult;
     use crate::new_pipeline::execute::ExecStmtResult;
 
+    // Def-time only: body exec runs under template params. Instance use
+    // (`\choose_t<...>`) does not yet install FnSet membership (unlike cases/induc).
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "abstract_prop F(x, y)").is_failed());
     assert!(!exec_one(&mut runtime, "have A set").is_failed());
@@ -1861,6 +1914,11 @@ fn template_have_fn_by_exist_wires_body() {
             other.is_failed()
         ),
     }
+    // Boundary lock: instance does not yet get FnSet membership (unlike cases/induc).
+    assert!(
+        exec_one(&mut runtime, "\\choose_t<{0}> $in fn(x A) B").is_failed(),
+        "by exist! template instance must soft-fail until instance FnSet wiring exists"
+    );
 }
 
 

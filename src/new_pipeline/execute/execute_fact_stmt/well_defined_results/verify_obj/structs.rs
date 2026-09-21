@@ -409,6 +409,10 @@ impl Runtime {
                     &subst,
                 )?;
             }
+            // `have fn … by exist!` template body is checked at def time, but
+            // `\Name<args>` does not yet install FnSet membership / property /
+            // uniqueness (no FnSetClause on the stmt; deferred).
+            TemplateDefEnum::HaveFnByForallExistUniqueStmt(_) => {}
             TemplateDefEnum::HaveObjEqualStmt(_) => {
                 let Some(expanded_rhs) =
                     self.expanded_have_obj_equal_rhs_of_instantiated_template(value)?

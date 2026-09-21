@@ -54,6 +54,7 @@ pub const SET: &str = "set";
 pub const NONEMPTY_SET: &str = "nonempty_set";
 pub const FINITE_SET: &str = "finite_set";
 pub const RIGHT_ARROW: &str = "=>";
+pub const FN_ARROW: &str = "->";
 pub const EQUIVALENT_SIGN: &str = "<=>";
 
 pub const EQUAL: &str = "=";

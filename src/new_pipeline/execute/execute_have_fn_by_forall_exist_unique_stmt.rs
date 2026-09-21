@@ -5,6 +5,12 @@
 //! 2. Store `f $in FnSet(...)` only (no `f = AnonymousFn` / EqualToFunction)
 //! 3. Release property forall (`body[y ↦ f(x)]`) and uniqueness forall
 //!    (`forall …, y: body ⇒ y = f(x)`, stored like other foralls)
+//! 4. Insert `StoredIdentifierDefinition::HaveFnByForallExistUnique` for
+//!    `release obj def` (rebuilds the same three facts on the written surface)
+//!
+//! Template: a `template` **definition** may call this exec as its body check.
+//! Instantiating `\Name<args>` does **not** yet install FnSet membership /
+//! property / uniqueness on the instance (unlike `by cases` / `by induc`).
 //!
 //! ```text
 //! trust:
