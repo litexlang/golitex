@@ -10,6 +10,7 @@ pub mod known_strict_order;
 pub mod less;
 pub mod less_equal;
 pub mod not_equal;
+pub mod not_in_fact;
 pub mod not_greater;
 pub mod not_greater_equal;
 pub mod not_is_nonempty_set;

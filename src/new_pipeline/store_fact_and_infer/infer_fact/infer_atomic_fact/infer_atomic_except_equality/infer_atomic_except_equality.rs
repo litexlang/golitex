@@ -2,15 +2,14 @@ use crate::new_pipeline::ast::fact::AtomicFact;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::store_fact_and_infer::{
     InferAtomicExceptEqualityResult, InferFnEqualInFactResult, InferGreaterEqualFactResult,
-    InferGreaterFactResult, InferIsCartFactResult, InferIsFiniteSetFactResult,
-    InferIsNonemptySetFactResult, InferIsSetFactResult, InferIsTupleFactResult,
-    InferLessEqualFactResult, InferLessFactResult, InferNotEqualFactResult,
-    InferNotFnEqualInFactResult, InferNotGreaterEqualFactResult, InferNotGreaterFactResult,
-    InferNotInFactResult, InferNotIsCartFactResult, InferNotIsFiniteSetFactResult,
-    InferNotIsNonemptySetFactResult, InferNotIsSetFactResult, InferNotIsTupleFactResult,
-    InferNotLessEqualFactResult, InferNotLessFactResult, InferNotNormalAtomicFactResult,
-    InferNotSubsetFactResult, InferNotSupersetFactResult, InferSubsetFactResult,
-    InferSupersetFactResult,
+    InferGreaterFactResult, InferIsFiniteSetFactResult, InferIsNonemptySetFactResult,
+    InferIsSetFactResult, InferIsTupleFactResult, InferLessEqualFactResult, InferLessFactResult,
+    InferNotEqualFactResult, InferNotFnEqualInFactResult, InferNotGreaterEqualFactResult,
+    InferNotGreaterFactResult, InferNotInFactResult, InferNotIsCartFactResult,
+    InferNotIsFiniteSetFactResult, InferNotIsNonemptySetFactResult, InferNotIsSetFactResult,
+    InferNotIsTupleFactResult, InferNotLessEqualFactResult, InferNotLessFactResult,
+    InferNotNormalAtomicFactResult, InferNotSubsetFactResult, InferNotSupersetFactResult,
+    InferSubsetFactResult, InferSupersetFactResult,
 };
 
 impl Runtime {
@@ -52,9 +51,9 @@ impl Runtime {
             AtomicFact::InFact(in_fact) => {
                 Ok(InferAtomicExceptEqualityResult::InFact(self.infer_in_fact(in_fact)?))
             }
-            AtomicFact::IsCartFact(_) => {
-                Ok(InferAtomicExceptEqualityResult::IsCartFact(InferIsCartFactResult {}))
-            }
+            AtomicFact::IsCartFact(is_cart) => Ok(InferAtomicExceptEqualityResult::IsCartFact(
+                self.infer_is_cart_fact(is_cart)?,
+            )),
             AtomicFact::IsTupleFact(_) => {
                 Ok(InferAtomicExceptEqualityResult::IsTupleFact(InferIsTupleFactResult {}))
             }

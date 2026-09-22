@@ -1,4 +1,4 @@
-use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact, InFact, IsTupleFact, SubsetFact};
+use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact, InFact, IsTupleFact, NotInFact, SubsetFact};
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::{Cart, FnObjHead, Number, Obj, ObjAtIndex, StandardSet, StructObj, TupleDim, ArithmeticOperator, ExpLogOperator, IntegerOperator, Literal, ProductShape, SetFormer, SetOperator, StructAndFieldAccessObj, TrigOperator};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::predecessor_helpers::match_sub_one;
@@ -69,6 +69,22 @@ pub enum InFactSearchProofByBuiltinRule {
     // Example: after restricted `countdown $in fn(_n N: …) N`, prove
     // `countdown(n - 1) $in N`.
     FnApplicationInCodomain(FnApplicationInCodomainBuiltinRuleProof),
+    // Union membership from the left factor.
+    // Mathematical property: `x $in A` ⇒ `x $in union(A, B)`.
+    // Example: `1 $in {1}` proves `1 $in union({1}, {2})`.
+    UnionMembershipFromLeft(UnionMembershipFromLeftBuiltinRuleProof),
+    // Union membership from the right factor.
+    // Mathematical property: `x $in B` ⇒ `x $in union(A, B)`.
+    // Example: `2 $in {2}` proves `2 $in union({1}, {2})`.
+    UnionMembershipFromRight(UnionMembershipFromRightBuiltinRuleProof),
+    // Intersection membership from both factors.
+    // Mathematical property: `x $in A` and `x $in B` ⇒ `x $in intersect(A, B)`.
+    // Example: `2 $in {1, 2}` and `2 $in {2, 3}` prove `2 $in intersect({1, 2}, {2, 3})`.
+    IntersectMembership(IntersectMembershipBuiltinRuleProof),
+    // Set-minus membership from membership and non-membership.
+    // Mathematical property: `x $in A` and `not x $in B` ⇒ `x $in set_minus(A, B)`.
+    // Example: `2 $in {1, 2}` and `not 2 $in {1}` prove `2 $in set_minus({1, 2}, {1})`.
+    SetMinusMembership(SetMinusMembershipBuiltinRuleProof),
 }
 
 // Closed decimal membership certificate (sides live on the InFact).
@@ -144,6 +160,25 @@ pub struct FnApplicationInCodomainBuiltinRuleProof {
     pub cite_in_function_set_fact_id: FactId,
 }
 
+
+pub struct UnionMembershipFromLeftBuiltinRuleProof {
+    pub left_membership_proof: VerifyFactResult,
+}
+
+pub struct UnionMembershipFromRightBuiltinRuleProof {
+    pub right_membership_proof: VerifyFactResult,
+}
+
+pub struct IntersectMembershipBuiltinRuleProof {
+    pub left_membership_proof: VerifyFactResult,
+    pub right_membership_proof: VerifyFactResult,
+}
+
+pub struct SetMinusMembershipBuiltinRuleProof {
+    pub left_membership_proof: VerifyFactResult,
+    pub right_non_membership_proof: VerifyFactResult,
+}
+
 impl Runtime {
     // Builtin InFact search: dispatch by set shape first, then only try rules
     // that can apply to that shape (and element shape when needed).
@@ -208,6 +243,15 @@ impl Runtime {
                     }
                 }
                 self.list_set_element_membership_proof(fact, verify_state)
+            }
+            Obj::SetOperator(SetOperator::Union(_)) => {
+                self.union_membership_proof(fact, verify_state)
+            }
+            Obj::SetOperator(SetOperator::Intersect(_)) => {
+                self.intersect_membership_proof(fact, verify_state)
+            }
+            Obj::SetOperator(SetOperator::SetMinus(_)) => {
+                self.set_minus_membership_proof(fact, verify_state)
             }
             _ => {
                 if matches!(&fact.element, Obj::FnObj(_)) {
@@ -702,6 +746,120 @@ impl Runtime {
         }
         Some((def, subst))
     }
+
+    // Prove `x $in union(A, B)` from `x $in A` or `x $in B` (separate rules).
+    fn union_membership_proof(
+        &mut self,
+        fact: &InFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        let Obj::SetOperator(SetOperator::Union(union)) = &fact.set else {
+            return Ok(None);
+        };
+        let left_goal = Fact::AtomicFact(AtomicFact::InFact(InFact {
+            fact_id: self.ids.allocate_fact_id(),
+            element: fact.element.clone(),
+            set: union.left.as_ref().clone(),
+            line_file: None,
+        }));
+        let left_proof = self.verify_fact(&left_goal, verify_state.clone())?;
+        if !left_proof.is_failed() {
+            return Ok(Some(InFactSearchProofByBuiltinRule::UnionMembershipFromLeft(
+                UnionMembershipFromLeftBuiltinRuleProof {
+                    left_membership_proof: left_proof,
+                },
+            )));
+        }
+        let right_goal = Fact::AtomicFact(AtomicFact::InFact(InFact {
+            fact_id: self.ids.allocate_fact_id(),
+            element: fact.element.clone(),
+            set: union.right.as_ref().clone(),
+            line_file: None,
+        }));
+        let right_proof = self.verify_fact(&right_goal, verify_state)?;
+        if right_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(InFactSearchProofByBuiltinRule::UnionMembershipFromRight(
+            UnionMembershipFromRightBuiltinRuleProof {
+                right_membership_proof: right_proof,
+            },
+        )))
+    }
+
+    // Prove `x $in intersect(A, B)` from both memberships.
+    fn intersect_membership_proof(
+        &mut self,
+        fact: &InFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        let Obj::SetOperator(SetOperator::Intersect(intersect)) = &fact.set else {
+            return Ok(None);
+        };
+        let left_goal = Fact::AtomicFact(AtomicFact::InFact(InFact {
+            fact_id: self.ids.allocate_fact_id(),
+            element: fact.element.clone(),
+            set: intersect.left.as_ref().clone(),
+            line_file: None,
+        }));
+        let left_proof = self.verify_fact(&left_goal, verify_state.clone())?;
+        if left_proof.is_failed() {
+            return Ok(None);
+        }
+        let right_goal = Fact::AtomicFact(AtomicFact::InFact(InFact {
+            fact_id: self.ids.allocate_fact_id(),
+            element: fact.element.clone(),
+            set: intersect.right.as_ref().clone(),
+            line_file: None,
+        }));
+        let right_proof = self.verify_fact(&right_goal, verify_state)?;
+        if right_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(InFactSearchProofByBuiltinRule::IntersectMembership(
+            IntersectMembershipBuiltinRuleProof {
+                left_membership_proof: left_proof,
+                right_membership_proof: right_proof,
+            },
+        )))
+    }
+
+    // Prove `x $in set_minus(A, B)` from `x $in A` and `not x $in B`.
+    fn set_minus_membership_proof(
+        &mut self,
+        fact: &InFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        let Obj::SetOperator(SetOperator::SetMinus(set_minus)) = &fact.set else {
+            return Ok(None);
+        };
+        let left_goal = Fact::AtomicFact(AtomicFact::InFact(InFact {
+            fact_id: self.ids.allocate_fact_id(),
+            element: fact.element.clone(),
+            set: set_minus.left.as_ref().clone(),
+            line_file: None,
+        }));
+        let left_proof = self.verify_fact(&left_goal, verify_state.clone())?;
+        if left_proof.is_failed() {
+            return Ok(None);
+        }
+        let right_goal = Fact::AtomicFact(AtomicFact::NotInFact(NotInFact {
+            fact_id: self.ids.allocate_fact_id(),
+            element: fact.element.clone(),
+            set: set_minus.right.as_ref().clone(),
+            line_file: None,
+        }));
+        let right_proof = self.verify_fact(&right_goal, verify_state)?;
+        if right_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(InFactSearchProofByBuiltinRule::SetMinusMembership(
+            SetMinusMembershipBuiltinRuleProof {
+                left_membership_proof: left_proof,
+                right_non_membership_proof: right_proof,
+            },
+        )))
+    }
 }
 
 // Prove `element $in set` when element evaluates to a closed decimal that
@@ -719,7 +877,7 @@ fn closed_numeric_membership_proof(fact: &InFact) -> Option<InFactSearchProofByB
     ))
 }
 
-fn normalized_decimal_inhabits_standard_set(v: &str, set: &StandardSet) -> bool {
+pub(super) fn normalized_decimal_inhabits_standard_set(v: &str, set: &StandardSet) -> bool {
     let v = v.trim();
     let is_integer = !v.contains('.');
     let is_negative = v.starts_with('-');

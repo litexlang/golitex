@@ -401,6 +401,81 @@ fn not_forall_trust_stores_derived_exist() {
 }
 
 #[test]
+fn is_cart_trust_infers_dimension_lower_bound() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(&mut runtime, "have s set").is_failed(),
+        "introduce s"
+    );
+    assert!(
+        !exec_one(&mut runtime, "trust $is_cart(s)").is_failed(),
+        "trust is_cart"
+    );
+    assert!(
+        !exec_one(&mut runtime, "cart_dim(s) >= 2").is_failed(),
+        "is_cart infer must store cart_dim(s) >= 2"
+    );
+}
+
+#[test]
+fn exist_unique_trust_infers_uniqueness_forall() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(&mut runtime, "trust exist! x R st {x = 0}").is_failed(),
+        "trust exist! must store"
+    );
+    let facts = &runtime.top_exec_env().facts;
+    assert!(
+        facts
+            .facts_by_id
+            .values()
+            .any(|f| matches!(f, crate::new_pipeline::ast::fact::Fact::ForallFact(_))),
+        "exist! infer must store uniqueness forall"
+    );
+    assert!(
+        !facts.known_forall_conclusions.equal_conclusions.is_empty(),
+        "uniqueness forall equal conclusion must be indexed"
+    );
+    assert!(
+        !exec_one(
+            &mut runtime,
+            "forall a R, b R:\n    a = 0\n    b = 0\n    =>:\n        a = b",
+        )
+        .is_failed(),
+        "uniqueness forall must prove two witnesses equal"
+    );
+}
+
+#[test]
+fn not_exist_trust_infers_demorgan_forall() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(&mut runtime, "trust not exist y R st {y > 0, y < 0}").is_failed(),
+        "trust not exist must store"
+    );
+    let facts = &runtime.top_exec_env().facts;
+    assert!(
+        facts
+            .facts_by_id
+            .values()
+            .any(|f| matches!(f, crate::new_pipeline::ast::fact::Fact::ForallFact(_))),
+        "not exist infer must store De Morgan forall"
+    );
+    assert!(
+        !facts.known_forall_conclusions.by_or.is_empty(),
+        "De Morgan forall or-conclusion must be indexed"
+    );
+    assert!(
+        !exec_one(
+            &mut runtime,
+            "forall z R:\n    =>:\n        not z > 0 or not z < 0",
+        )
+        .is_failed(),
+        "De Morgan forall must prove the disjunction of negations"
+    );
+}
+
+#[test]
 fn fn_eq_is_removed_parse_error() {
     let mut runtime = runtime_with_file_env();
     let tokens = Tokenizer::new()
@@ -2309,7 +2384,7 @@ fn fn_set_and_set_builder_alpha_equal_builtins() {
 
 #[test]
 fn builtin_prop_by_definition_fork() {
-    // Standard-set subset: forall obligation uses in-fact standard-set chain.
+    // Standard-set subset / superset: forall obligation via standard-set chain.
     let mut runtime = runtime_with_file_env();
     assert!(
         !exec_one(&mut runtime, "by def N $subset R").is_failed(),
@@ -2322,8 +2397,12 @@ fn builtin_prop_by_definition_fork() {
 
     // User prop fork still works.
     let mut runtime = runtime_with_file_env();
-    assert!(!exec_one(&mut runtime, "prop above_zero(x R):
-    x > 0").is_failed());
+    assert!(!exec_one(
+        &mut runtime,
+        "prop above_zero(x R):
+    x > 0"
+    )
+    .is_failed());
     assert!(
         !exec_one(&mut runtime, "by def $above_zero(1)").is_failed(),
         "user prop by definition"
@@ -2337,5 +2416,91 @@ fn builtin_prop_by_definition_fork() {
         !exec_one(&mut runtime, "by def $fn_eq_in(f, g, R)").is_failed(),
         "fn_eq_in by definition"
     );
+
+    // Coprime / dvd: concrete obligations already closed-numeric.
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(&mut runtime, "by def $coprime(14, 25)").is_failed(),
+        "coprime by definition"
+    );
+    assert!(!exec_one(&mut runtime, "4 % 2 = 0").is_failed());
+    assert!(!exec_one(
+        &mut runtime,
+        "witness exist a Z st {4 = a * 2} from 2"
+    )
+    .is_failed());
+    assert!(
+        !exec_one(&mut runtime, "by def $dvd(4, 2)").is_failed(),
+        "dvd by definition"
+    );
+
+    // Proper_* needs both inclusion and inequality; trust only the atoms.
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have A, B set").is_failed());
+    assert!(!exec_one(&mut runtime, "trust A $subset B").is_failed());
+    assert!(!exec_one(&mut runtime, "trust A != B").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "by def $proper_subset(A, B)").is_failed(),
+        "proper_subset by definition"
+    );
+    assert!(
+        !exec_one(&mut runtime, "by def $proper_superset(B, A)").is_failed(),
+        "proper_superset by definition"
+    );
 }
 
+#[test]
+fn builtin_prop_by_definition_finite_list_subset_is_not_by_def() {
+    // Finite list-set inclusion is `by enumerate finite_set`, not by-def forall.
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        exec_one(&mut runtime, "by def {1} $subset {1, 2}").is_failed(),
+        "list-set subset must soft-fail on by-def"
+    );
+}
+
+
+
+#[test]
+fn not_in_and_set_algebra_builtin_rules() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(&mut runtime, "not (-1) $in N").is_failed(),
+        "closed numeric not-in"
+    );
+    assert!(
+        !exec_one(&mut runtime, "not 4 $in {1, 2, 3}").is_failed(),
+        "list-set exhaustive not-in"
+    );
+    assert!(
+        !exec_one(&mut runtime, "1 $in union({1}, {2})").is_failed(),
+        "union membership from left"
+    );
+    assert!(
+        !exec_one(&mut runtime, "2 $in intersect({1, 2}, {2, 3})").is_failed(),
+        "intersect membership"
+    );
+    assert!(
+        !exec_one(&mut runtime, "2 $in set_minus({1, 2}, {1})").is_failed(),
+        "set_minus membership"
+    );
+    assert!(
+        !exec_one(&mut runtime, "not 0 $in union({1}, {2})").is_failed(),
+        "union non-membership"
+    );
+    assert!(
+        !exec_one(&mut runtime, "0 <= abs(0)").is_failed(),
+        "abs nonnegative on closed 0"
+    );
+    assert!(!exec_one(&mut runtime, "have a R").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "0 <= abs(a)").is_failed(),
+        "abs nonnegative on free real"
+    );
+    assert!(!exec_one(&mut runtime, "have x R").is_failed());
+    assert!(!exec_one(&mut runtime, "0 <= 1").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "x <= x + 1").is_failed(),
+        "add right nonnegative"
+    );
+}

@@ -17,7 +17,7 @@
 use std::collections::HashMap;
 
 use crate::new_pipeline::ast::fact::{
-    AtomicFact, EqualFact, ExistShapedFact, ExistOrAndChainAtomicFact, Fact, ForallFact,
+    AndFact, AtomicFact, EqualFact, ExistOrAndChainAtomicFact, ExistShapedFact, Fact, ForallFact,
     PlainExistFact,
 };
 use crate::new_pipeline::ast::names::BoundName;
@@ -219,13 +219,27 @@ impl Runtime {
         Ok((TypedParameterList { groups }, subst))
     }
 
-    // Uniqueness interface for `exist!`: any two witnesses satisfying the body
-    // are equal (componentwise via a tuple when there are several binders).
-    // Example: from `exist! x R st {x = 0}` store a forall whose premises are
-    // the two body copies and whose conclusion equates the two witness names.
-    pub(in crate::new_pipeline::execute) fn build_exist_unique_uniqueness_forall_fact(
+    // Uniqueness forall for `exist!` (tuple conclusion when several binders).
+    // Used by obtain; infer prefers componentwise — see `build_exist_unique_component_uniqueness_forall_fact`.
+    pub(crate) fn build_exist_unique_uniqueness_forall_fact(
         &mut self,
         plain: &PlainExistFact,
+    ) -> RuntimeResult<ForallFact> {
+        self.build_exist_unique_uniqueness_forall_fact_inner(plain, false)
+    }
+
+    // Manual / legacy infer: multi-binder uniqueness concludes componentwise equals (and of equals).
+    pub(crate) fn build_exist_unique_component_uniqueness_forall_fact(
+        &mut self,
+        plain: &PlainExistFact,
+    ) -> RuntimeResult<ForallFact> {
+        self.build_exist_unique_uniqueness_forall_fact_inner(plain, true)
+    }
+
+    fn build_exist_unique_uniqueness_forall_fact_inner(
+        &mut self,
+        plain: &PlainExistFact,
+        component_conclusion: bool,
     ) -> RuntimeResult<ForallFact> {
         let flat: Vec<BoundName> = plain
             .typed_parameters
@@ -236,7 +250,7 @@ impl Runtime {
         let n = flat.len();
         if n == 0 {
             return Err(RuntimeError::InternalBug(
-                "obtain exist!: existential has no binders".to_string(),
+                "exist! uniqueness: existential has no binders".to_string(),
             ));
         }
 
@@ -263,7 +277,7 @@ impl Runtime {
                 .inst_param_type(&group.param_type, &map_a)
                 .map_err(|e| {
                     RuntimeError::InternalBug(format!(
-                        "obtain exist! uniqueness: instantiate type (copy a): {e}"
+                        "exist! uniqueness: instantiate type (copy a): {e}"
                     ))
                 })?;
             let mut params = Vec::new();
@@ -285,7 +299,7 @@ impl Runtime {
                 .inst_param_type(&group.param_type, &map_b)
                 .map_err(|e| {
                     RuntimeError::InternalBug(format!(
-                        "obtain exist! uniqueness: instantiate type (copy b): {e}"
+                        "exist! uniqueness: instantiate type (copy b): {e}"
                     ))
                 })?;
             let mut params = Vec::new();
@@ -305,26 +319,44 @@ impl Runtime {
         for body in &plain.facts {
             let inst_a = self.inst_quantifier_free_fact(body, &map_a).map_err(|e| {
                 RuntimeError::InternalBug(format!(
-                    "obtain exist! uniqueness: instantiate body (copy a): {e}"
+                    "exist! uniqueness: instantiate body (copy a): {e}"
                 ))
             })?;
             dom_facts.push(quantifier_free_fact_to_fact(inst_a));
             let inst_b = self.inst_quantifier_free_fact(body, &map_b).map_err(|e| {
                 RuntimeError::InternalBug(format!(
-                    "obtain exist! uniqueness: instantiate body (copy b): {e}"
+                    "exist! uniqueness: instantiate body (copy b): {e}"
                 ))
             })?;
             dom_facts.push(quantifier_free_fact_to_fact(inst_b));
         }
 
-        let left = witness_tuple_or_single(&copy_a);
-        let right = witness_tuple_or_single(&copy_b);
-        let equal = AtomicFact::EqualFact(EqualFact {
-            fact_id: self.ids.allocate_fact_id(),
-            left,
-            right,
-            line_file: plain.line_file.clone(),
-        });
+        let then_facts = if n == 1 || !component_conclusion {
+            let left = witness_tuple_or_single(&copy_a);
+            let right = witness_tuple_or_single(&copy_b);
+            let equal = AtomicFact::EqualFact(EqualFact {
+                fact_id: self.ids.allocate_fact_id(),
+                left,
+                right,
+                line_file: plain.line_file.clone(),
+            });
+            vec![ExistOrAndChainAtomicFact::AtomicFact(equal)]
+        } else {
+            let mut equals = Vec::with_capacity(n);
+            for (left_b, right_b) in copy_a.iter().zip(copy_b.iter()) {
+                equals.push(AtomicFact::EqualFact(EqualFact {
+                    fact_id: self.ids.allocate_fact_id(),
+                    left: Obj::Identifier(IdentifierObj::from_bound_name(left_b)),
+                    right: Obj::Identifier(IdentifierObj::from_bound_name(right_b)),
+                    line_file: plain.line_file.clone(),
+                }));
+            }
+            vec![ExistOrAndChainAtomicFact::AndFact(AndFact {
+                fact_id: self.ids.allocate_fact_id(),
+                facts: equals,
+                line_file: plain.line_file.clone(),
+            })]
+        };
 
         Ok(ForallFact {
             fact_id: self.ids.allocate_fact_id(),
@@ -332,7 +364,7 @@ impl Runtime {
                 groups: forall_groups,
             },
             dom_facts,
-            then_facts: vec![ExistOrAndChainAtomicFact::AtomicFact(equal)],
+            then_facts,
             line_file: plain.line_file.clone(),
         })
     }

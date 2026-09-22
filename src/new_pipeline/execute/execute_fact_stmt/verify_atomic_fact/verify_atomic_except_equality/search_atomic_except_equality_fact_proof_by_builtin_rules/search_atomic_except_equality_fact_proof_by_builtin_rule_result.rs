@@ -9,6 +9,7 @@ use super::is_tuple::IsTupleFactSearchProofByBuiltinRule;
 use super::less::LessFactSearchProofByBuiltinRule;
 use super::less_equal::LessEqualFactSearchProofByBuiltinRule;
 use super::not_equal::NotEqualFactSearchProofByBuiltinRule;
+pub use super::not_in_fact::NotInFactSearchProofByBuiltinRule;
 use super::not_greater::NotGreaterFactSearchProofByBuiltinRule;
 use super::not_greater_equal::NotGreaterEqualFactSearchProofByBuiltinRule;
 use super::not_is_nonempty_set::NotIsNonemptySetFactSearchProofByBuiltinRule;
@@ -57,7 +58,6 @@ pub enum NormalAtomicFactSearchProofByBuiltinRule {}
 pub enum NotNormalAtomicFactSearchProofByBuiltinRule {}
 pub enum NotIsSetFactSearchProofByBuiltinRule {}
 pub enum NotIsFiniteSetFactSearchProofByBuiltinRule {}
-pub enum NotInFactSearchProofByBuiltinRule {}
 pub enum NotIsCartFactSearchProofByBuiltinRule {}
 pub enum NotIsTupleFactSearchProofByBuiltinRule {}
 pub enum NotSubsetFactSearchProofByBuiltinRule {}

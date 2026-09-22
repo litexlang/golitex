@@ -3,7 +3,7 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::store_fact_and_infer::InferNotForallFactResult;
 
 impl Runtime {
-    // NotForall: De Morgan counterexample exist, stored as an inferred fact.
+    // Shape rewrite (not atomic packaging): De Morgan counterexample exist, then store_inferred.
     // Example: `not forall x R: x > 0` → also store `exist x R st {not x > 0}`.
     pub(crate) fn infer_not_forall_fact(
         &mut self,

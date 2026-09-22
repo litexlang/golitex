@@ -1,19 +1,16 @@
-# Tracers for builtin prop by-definition (new_pipeline).
-# Run: LITEX_NEW_PIPELINE=1 cargo run --bin litex -- -f examples/tmp.lit
-#
-# Finite list-set inclusions like `{1} $subset {1, 2}` are not meant to pass
-# through by-def forall expansion; use `by enumerate finite_set` for those.
+# Batch1 tracers: exist! uniqueness + not-exist De Morgan
 
-# --- subset / superset (standard sets) ---
-by def N $subset R
-by def R $superset N
+trust exist! x R st {x = 0}
 
-# --- fn_eq_in ---
-have fn f(x R) R = x
-have fn g(x R) R = x
-by def $fn_eq_in(f, g, R)
+# uniqueness forall is stored by infer; reuse it
+forall a R, b R:
+    a = 0
+    b = 0
+    =>:
+        a = b
 
-# --- user prop still works via the other ByDefinition fork ---
-prop above_zero(x R):
-    x > 0
-by def $above_zero(1)
+trust not exist y R st {y > 0, y < 0}
+
+forall z R:
+    =>:
+        not z > 0 or not z < 0

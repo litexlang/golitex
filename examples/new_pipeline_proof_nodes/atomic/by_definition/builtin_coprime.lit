@@ -1,0 +1,4 @@
+# Node: atomic.ByDefinition.BuiltinProp.Coprime
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/atomic/by_definition/builtin_coprime.lit
+
+by def $coprime(14, 25)

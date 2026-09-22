@@ -23,7 +23,8 @@ LITEX_NEW_PIPELINE=1 target/release/litex -f <this-file>
 Exit 0 is enough. No requirement to assert which `searched_proof` variant won.
 
 Stub / not-yet-wired nodes are **omitted** (no SKIP placeholders).
-Still open (non-rewrite): empty atomic builtin-rule families (`NormalAtomic` / several `Not*` / `FnEqualIn`); more exist builtins;
+Still open (non-rewrite): empty atomic builtin-rule families (`NormalAtomic` /
+several remaining `Not*` / `FnEqualIn`); more exist builtins;
 some secondary In/order/subset leaves; MatchingOneArgByOne beyond the traced constructors.
 Equality BuiltinRewrite: ClosedNumericEqualSubstitution (equal + atomic) and
 atomic KnownEqualObjSubstitution.
@@ -45,9 +46,12 @@ equal/        ByBuiltinRule (FnSet / AnonymousFn / SetBuilder alpha-equal,
               (identifier / fn / template), BuiltinStrategy, MatchingOneArgByOne,
               KnownForall (+ViaSymmetry), BuiltinRewrite
               (ClosedNumericEqualSubstitution + arithmetic_ops)
-atomic/       ByBuiltinRule, KnownAtomicFact, ByDefinition, BuiltinStrategy (PosAddPos),
-              KnownForall, BuiltinRewrite (ClosedNumeric, KnownEqualObj, OrderDual,
-              ClosedNumeric arithmetic_ops),
+atomic/       ByBuiltinRule (incl. NotIn closed/list/intersect/union; In
+              union/intersect/set_minus; LessEqual abs/add-right), KnownAtomicFact,
+              ByDefinition (user prop + builtin official defs; see
+              atomic/by_definition/ and src/.../by_definition_design.md),
+              BuiltinStrategy (PosAddPos), KnownForall, BuiltinRewrite
+              (ClosedNumeric, KnownEqualObj, OrderDual, ClosedNumeric arithmetic_ops),
               KnownRewrite (Reflexivity/Symmetry)
 and/          per-component verify
 chain/        adjacent order / equality

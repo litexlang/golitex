@@ -147,14 +147,6 @@ impl Runtime {
         Ok(None)
     }
 
-    pub fn search_not_in_fact_proof_by_builtin_rule(
-        &mut self,
-        _fact: &NotInFact,
-        _verify_state: VerifyState,
-    ) -> RuntimeResult<Option<NotInFactSearchProofByBuiltinRule>> {
-        Ok(None)
-    }
-
     pub fn search_not_is_cart_fact_proof_by_builtin_rule(
         &mut self,
         _fact: &NotIsCartFact,

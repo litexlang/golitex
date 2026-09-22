@@ -175,7 +175,14 @@ pub struct InferGreaterEqualFactResult {}
 pub struct InferIsSetFactResult {}
 pub struct InferIsNonemptySetFactResult {}
 pub struct InferIsFiniteSetFactResult {}
-pub struct InferIsCartFactResult {}
+pub enum InferIsCartFactResult {
+    // Rule: `$is_cart(C)` exposes `cart_dim(C) >= 2` (every cart has ≥2 factors).
+    DimensionLowerBound(InferIsCartDimensionLowerBoundResult),
+}
+
+pub struct InferIsCartDimensionLowerBoundResult {
+    pub derived: Box<StoreFactAndInferResult>,
+}
 pub struct InferIsTupleFactResult {}
 pub struct InferSubsetFactResult {}
 pub struct InferSupersetFactResult {}
@@ -219,17 +226,55 @@ pub enum ChainTransitiveCite {
     KnownTransitive { prop_name: AtomicName },
 }
 
-pub struct InferOrFactResult {}
+pub enum InferOrFactResult {
+    // Or is not split on store; do not eager-infer a branch.
+    NoInfer,
+}
 
-pub struct InferExistShapedFactResult {}
+// Mirrors ExistShapedFact: plain exist has no default infer; exist! / not exist do.
+pub enum InferExistShapedFactResult {
+    Exist(InferPlainExistFactResult),
+    ExistUnique(InferExistUniqueFactResult),
+    NotExist(InferNotExistFactResult),
+}
+
+pub enum InferPlainExistFactResult {
+    NoInfer,
+}
+
+pub enum InferExistUniqueFactResult {
+    // Rule: `exist!` exposes componentwise uniqueness forall (Manual Builtin Inference).
+    UniquenessForall(InferExistUniqueUniquenessForallResult),
+    NoInfer,
+}
+
+pub struct InferExistUniqueUniquenessForallResult {
+    pub derived: Box<StoreFactAndInferResult>,
+}
+
+pub enum InferNotExistFactResult {
+    // Rule: `not exist` exposes De Morgan forall when body shape is supported.
+    DemorganForall(InferNotExistDemorganForallResult),
+    NoInfer,
+}
+
+pub struct InferNotExistDemorganForallResult {
+    pub derived: Box<StoreFactAndInferResult>,
+}
 
 pub struct InferNotForallFactResult {
     pub derived_exist: Box<StoreFactAndInferResult>,
 }
 
-pub struct InferForallFactResult {}
+pub enum InferForallFactResult {
+    // Forall is recorded for later use/instantiation; no eager conclusions here.
+    NoInfer,
+}
 
-pub struct InferForallFactWithIffResult {}
+pub enum InferForallFactWithIffResult {
+    // Bidirectional split belongs to store_fact, not infer.
+    NoInfer,
+}
 
 impl StoreFactResult {
     pub fn primary_fact_id(&self) -> FactId {
@@ -315,10 +360,25 @@ impl InferFactResult {
                 }
                 ids
             }
-            Self::OrFact(_) | Self::ExistShapedFact(_) | Self::ForallFact(_) | Self::ForallFactWithIff(_) => {
-                Vec::new()
-            }
+            Self::OrFact(_) | Self::ForallFact(_) | Self::ForallFactWithIff(_) => Vec::new(),
+            Self::ExistShapedFact(r) => r.stored_fact_ids(),
             Self::NotForallFact(r) => r.derived_exist.stored_fact_ids(),
+        }
+    }
+}
+
+impl InferExistShapedFactResult {
+    pub fn stored_fact_ids(&self) -> Vec<FactId> {
+        match self {
+            Self::Exist(_) => Vec::new(),
+            Self::ExistUnique(r) => match r {
+                InferExistUniqueFactResult::UniquenessForall(u) => u.derived.stored_fact_ids(),
+                InferExistUniqueFactResult::NoInfer => Vec::new(),
+            },
+            Self::NotExist(r) => match r {
+                InferNotExistFactResult::DemorganForall(d) => d.derived.stored_fact_ids(),
+                InferNotExistFactResult::NoInfer => Vec::new(),
+            },
         }
     }
 }
@@ -345,6 +405,7 @@ impl InferAtomicExceptEqualityResult {
         match self {
             Self::NormalAtomicFact(r) => r.stored_fact_ids(),
             Self::InFact(r) => r.stored_fact_ids(),
+            Self::IsCartFact(r) => r.stored_fact_ids(),
             Self::LessFact(_)
             | Self::GreaterFact(_)
             | Self::LessEqualFact(_)
@@ -352,7 +413,6 @@ impl InferAtomicExceptEqualityResult {
             | Self::IsSetFact(_)
             | Self::IsNonemptySetFact(_)
             | Self::IsFiniteSetFact(_)
-            | Self::IsCartFact(_)
             | Self::IsTupleFact(_)
             | Self::SubsetFact(_)
             | Self::SupersetFact(_)
@@ -372,6 +432,14 @@ impl InferAtomicExceptEqualityResult {
             | Self::NotSupersetFact(_)
             | Self::FnEqualInFact(_)
             | Self::NotFnEqualInFact(_) => Vec::new(),
+        }
+    }
+}
+
+impl InferIsCartFactResult {
+    pub fn stored_fact_ids(&self) -> Vec<FactId> {
+        match self {
+            Self::DimensionLowerBound(r) => r.derived.stored_fact_ids(),
         }
     }
 }
