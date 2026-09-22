@@ -29,7 +29,7 @@ use crate::new_pipeline::ast::fact::{
     QuantifierFreeFact,
 };
 use crate::new_pipeline::ast::names::BoundName;
-use crate::new_pipeline::ast::obj::{FnObj, FnObjHead, FnSet, IdentifierObj, Obj};
+use crate::new_pipeline::ast::obj::{FnObj, FnObjHead, FnSet, IdentifierObj, Obj, FunctionSpace, Structish};
 use crate::new_pipeline::ast::param::{
     ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
 };
@@ -118,7 +118,7 @@ impl Runtime {
 
         let fn_set = fn_set_from_clause(&shape.fn_set_clause);
         let fn_set_well_defined =
-            self.verify_obj_well_definedness(&Obj::FnSet(fn_set.clone()), verify_state.clone())?;
+            self.verify_obj_well_definedness(&Obj::FunctionSpace(FunctionSpace::FnSet(fn_set.clone())), verify_state.clone())?;
         if fn_set_well_defined.is_failed() {
             return Ok(ExecHaveFnByForallExistUniqueStmtResult::Failed(
                 ExecHaveFnByForallExistUniqueStmtFailed::FnSetWellDefined(fn_set_well_defined),
@@ -132,7 +132,7 @@ impl Runtime {
         let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
             fact_id: membership_fact_id,
             element: function_obj,
-            set: Obj::FnSet(fn_set),
+            set: Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)),
             line_file: Some(stmt.line_file.clone()),
         }));
         let mut stored_fact_ids = self.store_fact_and_infer(&membership)?.stored_fact_ids();
@@ -197,7 +197,7 @@ impl Runtime {
         let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
             fact_id: self.ids.allocate_fact_id(),
             element: surface.clone(),
-            set: Obj::FnSet(fn_set),
+            set: Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)),
             line_file: Some(stmt.line_file.clone()),
         }));
         let applied = applied_function_obj(surface, &stmt.forall.typed_parameters);
@@ -346,7 +346,7 @@ fn fn_set_from_clause(clause: &FnSetClause) -> FnSet {
 fn applied_function_obj(surface: &Obj, params: &TypedParameterList) -> Obj {
     let head = match surface {
         Obj::Identifier(id) => FnObjHead::Identifier(id.clone()),
-        Obj::InstantiatedTemplateObj(inst) => FnObjHead::InstantiatedTemplateObj(inst.clone()),
+        Obj::Structish(Structish::InstantiatedTemplateObj(inst)) => FnObjHead::InstantiatedTemplateObj(inst.clone()),
         other => panic!("have fn by exist!: applied head must be identifier or template instance, got {other:?}"),
     };
     let mut args = Vec::new();

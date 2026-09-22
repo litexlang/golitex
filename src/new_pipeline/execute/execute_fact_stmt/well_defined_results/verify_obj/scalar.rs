@@ -4,11 +4,7 @@
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use crate::new_pipeline::ast::fact::{AtomicFact, GreaterFact, LessEqualFact, NotEqualFact};
 use crate::new_pipeline::ast::obj::StandardSet;
-use crate::new_pipeline::ast::obj::{
-    Abs, Add, Arccos, Arccot, Arcsin, Arctan, Ceil, ComplexAbs, Cos, Cot, Div, Exp, Factorial,
-    Floor, Gcd, ImaginaryPart, Lcm, Ln, Log, Max, Min, Mod, Mul, Number, Obj, Pow, Quot, RealPart,
-    Sign, Sin, Sqrt, Sub, Tan,
-};
+use crate::new_pipeline::ast::obj::{Abs, Add, Arccos, Arccot, Arcsin, Arctan, Ceil, ComplexAbs, Cos, Cot, Div, Exp, Factorial, Floor, Gcd, ImaginaryPart, Lcm, Ln, Log, Max, Min, Mod, Mul, Number, Obj, Pow, Quot, RealPart, Sign, Sin, Sqrt, Sub, Tan, IntegerOperator, Literal, TrigOperator};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
@@ -88,9 +84,9 @@ impl Runtime {
             value.right.as_ref(),
             verify_state.clone(),
         )?;
-        let zero = Obj::Number(Number {
+        let zero = Obj::Literal(Literal::Number(Number {
             normalized_value: "0".to_string(),
-        });
+        }));
         let nonzero = AtomicFact::NotEqualFact(NotEqualFact {
             fact_id: self.ids.allocate_fact_id(),
             left: value.right.as_ref().clone(),
@@ -131,10 +127,10 @@ impl Runtime {
             verify_state.clone(),
             "mod modulus must belong to Z".to_string(),
         )?);
-        if !matches!(value.right.as_ref(), Obj::Gcd(_)) {
-            let zero = Obj::Number(Number {
+        if !matches!(value.right.as_ref(), Obj::IntegerOperator(IntegerOperator::Gcd(_))) {
+            let zero = Obj::Literal(Literal::Number(Number {
                 normalized_value: "0".to_string(),
-            });
+            }));
             let nonzero = AtomicFact::NotEqualFact(NotEqualFact {
                 fact_id: self.ids.allocate_fact_id(),
                 left: value.right.as_ref().clone(),
@@ -199,9 +195,9 @@ impl Runtime {
             verify_state.clone(),
             "gcd right argument must belong to Z".to_string(),
         )?);
-        let zero = Obj::Number(Number {
+        let zero = Obj::Literal(Literal::Number(Number {
             normalized_value: "0".to_string(),
-        });
+        }));
         let left_nz = AtomicFact::NotEqualFact(NotEqualFact {
             fact_id: self.ids.allocate_fact_id(),
             left: value.left.as_ref().clone(),
@@ -356,9 +352,9 @@ impl Runtime {
             verify_state.clone(),
             "ln argument must belong to R".to_string(),
         )?);
-        let zero = Obj::Number(Number {
+        let zero = Obj::Literal(Literal::Number(Number {
             normalized_value: "0".to_string(),
-        });
+        }));
         let positive = AtomicFact::GreaterFact(GreaterFact {
             fact_id: self.ids.allocate_fact_id(),
             left: value.arg.as_ref().clone(),
@@ -449,12 +445,12 @@ impl Runtime {
             verify_state.clone(),
             "arcsin argument must belong to R".to_string(),
         )?);
-        let neg_one = Obj::Number(Number {
+        let neg_one = Obj::Literal(Literal::Number(Number {
             normalized_value: "-1".to_string(),
-        });
-        let one = Obj::Number(Number {
+        }));
+        let one = Obj::Literal(Literal::Number(Number {
             normalized_value: "1".to_string(),
-        });
+        }));
         let lo = AtomicFact::LessEqualFact(LessEqualFact {
             fact_id: self.ids.allocate_fact_id(),
             left: neg_one,
@@ -494,12 +490,12 @@ impl Runtime {
             verify_state.clone(),
             "arccos argument must belong to R".to_string(),
         )?);
-        let neg_one = Obj::Number(Number {
+        let neg_one = Obj::Literal(Literal::Number(Number {
             normalized_value: "-1".to_string(),
-        });
-        let one = Obj::Number(Number {
+        }));
+        let one = Obj::Literal(Literal::Number(Number {
             normalized_value: "1".to_string(),
-        });
+        }));
         let lo = AtomicFact::LessEqualFact(LessEqualFact {
             fact_id: self.ids.allocate_fact_id(),
             left: neg_one,
@@ -579,15 +575,15 @@ impl Runtime {
             "tan argument must belong to R".to_string(),
         )?);
         // Principal arctan range is open around ±pi/2, so cos(arctan(x)) != 0.
-        if matches!(value.arg.as_ref(), Obj::Arctan(_)) {
+        if matches!(value.arg.as_ref(), Obj::TrigOperator(TrigOperator::Arctan(_))) {
             return Ok(self.with_requirements(proof, reqs));
         }
-        let denom = Obj::Cos(Cos {
+        let denom = Obj::TrigOperator(TrigOperator::Cos(Cos {
             arg: Box::new(value.arg.as_ref().clone()),
-        });
-        let zero = Obj::Number(Number {
+        }));
+        let zero = Obj::Literal(Literal::Number(Number {
             normalized_value: "0".to_string(),
-        });
+        }));
         let nonzero = AtomicFact::NotEqualFact(NotEqualFact {
             fact_id: self.ids.allocate_fact_id(),
             left: denom,
@@ -617,15 +613,15 @@ impl Runtime {
             "cot argument must belong to R".to_string(),
         )?);
         // Principal arccot range is (0, pi), so sin(arccot(x)) != 0.
-        if matches!(value.arg.as_ref(), Obj::Arccot(_)) {
+        if matches!(value.arg.as_ref(), Obj::TrigOperator(TrigOperator::Arccot(_))) {
             return Ok(self.with_requirements(proof, reqs));
         }
-        let denom = Obj::Sin(Sin {
+        let denom = Obj::TrigOperator(TrigOperator::Sin(Sin {
             arg: Box::new(value.arg.as_ref().clone()),
-        });
-        let zero = Obj::Number(Number {
+        }));
+        let zero = Obj::Literal(Literal::Number(Number {
             normalized_value: "0".to_string(),
-        });
+        }));
         let nonzero = AtomicFact::NotEqualFact(NotEqualFact {
             fact_id: self.ids.allocate_fact_id(),
             left: denom,
@@ -693,9 +689,9 @@ impl Runtime {
             verify_state.clone(),
             "sqrt argument must belong to R".to_string(),
         )?);
-        let zero = Obj::Number(Number {
+        let zero = Obj::Literal(Literal::Number(Number {
             normalized_value: "0".to_string(),
-        });
+        }));
         let ge = AtomicFact::LessEqualFact(LessEqualFact {
             fact_id: self.ids.allocate_fact_id(),
             left: zero,
@@ -733,12 +729,12 @@ impl Runtime {
             verify_state.clone(),
             "log argument must belong to R".to_string(),
         )?);
-        let zero = Obj::Number(Number {
+        let zero = Obj::Literal(Literal::Number(Number {
             normalized_value: "0".to_string(),
-        });
-        let one = Obj::Number(Number {
+        }));
+        let one = Obj::Literal(Literal::Number(Number {
             normalized_value: "1".to_string(),
-        });
+        }));
         let base_pos = AtomicFact::GreaterFact(GreaterFact {
             fact_id: self.ids.allocate_fact_id(),
             left: value.base.as_ref().clone(),
@@ -870,9 +866,9 @@ impl Runtime {
             verify_state.clone(),
             "pow exponent must belong to Z".to_string(),
         )?);
-        let zero = Obj::Number(Number {
+        let zero = Obj::Literal(Literal::Number(Number {
             normalized_value: "0".to_string(),
-        });
+        }));
         let nonzero = AtomicFact::NotEqualFact(NotEqualFact {
             fact_id: self.ids.allocate_fact_id(),
             left: value.base.as_ref().clone(),

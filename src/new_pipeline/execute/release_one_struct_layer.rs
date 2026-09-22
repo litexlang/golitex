@@ -17,9 +17,7 @@ use crate::new_pipeline::ast::fact::{
     AtomicFact, EqualFact, Fact, InFact, IsTupleFact,
 };
 use crate::new_pipeline::ast::names::AtomicName;
-use crate::new_pipeline::ast::obj::{
-    Cart, FieldAccess, Number, Obj, ObjAtIndex, StructObj, TupleDim,
-};
+use crate::new_pipeline::ast::obj::{Cart, FieldAccess, Number, Obj, ObjAtIndex, StructObj, TupleDim, Literal, ProductShape, Structish};
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::ast::stmt::DefStructStmt;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
@@ -86,9 +84,9 @@ impl Runtime {
 
         let mut store_and_infer = Vec::new();
 
-        let cart = Obj::Cart(Cart {
+        let cart = Obj::ProductShape(ProductShape::Cart(Cart {
             args: field_types.iter().cloned().map(Box::new).collect(),
-        });
+        }));
         let is_tuple = Fact::AtomicFact(AtomicFact::IsTupleFact(IsTupleFact {
             fact_id: self.ids.allocate_fact_id(),
             set: obj.clone(),
@@ -98,12 +96,12 @@ impl Runtime {
 
         let tuple_dim = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
             fact_id: self.ids.allocate_fact_id(),
-            left: Obj::TupleDim(TupleDim {
+            left: Obj::ProductShape(ProductShape::TupleDim(TupleDim {
                 arg: Box::new(obj.clone()),
-            }),
-            right: Obj::Number(Number {
+            })),
+            right: Obj::Literal(Literal::Number(Number {
                 normalized_value: def.fields.len().to_string(),
-            }),
+            })),
             line_file: None,
         }));
         store_and_infer.push(self.store_fact_and_infer(&tuple_dim)?);
@@ -118,12 +116,12 @@ impl Runtime {
 
         for (index, field) in def.fields.iter().enumerate() {
             let field_value = field_access_obj(obj, &field.binding.name);
-            let projection = Obj::ObjAtIndex(ObjAtIndex {
+            let projection = Obj::ProductShape(ProductShape::ObjAtIndex(ObjAtIndex {
                 obj: Box::new(obj.clone()),
-                index: Box::new(Obj::Number(Number {
+                index: Box::new(Obj::Literal(Literal::Number(Number {
                     normalized_value: (index + 1).to_string(),
-                })),
-            });
+                }))),
+            }));
             let bridge = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
                 fact_id: self.ids.allocate_fact_id(),
                 left: field_value,
@@ -179,7 +177,7 @@ impl Runtime {
     > {
         let mut opened = Vec::new();
         for group in &typed_parameters.groups {
-            let ParamType::Obj(Obj::StructObj(struct_obj)) = &group.param_type else {
+            let ParamType::Obj(Obj::Structish(Structish::StructObj(struct_obj))) = &group.param_type else {
                 continue;
             };
             for identifier in &group.params {
@@ -267,8 +265,8 @@ fn failed_release(
 }
 
 fn field_access_obj(obj: &Obj, field: &str) -> Obj {
-    Obj::FieldAccess(FieldAccess {
+    Obj::Structish(Structish::FieldAccess(FieldAccess {
         obj: Box::new(obj.clone()),
         fields: vec![field.to_string()],
-    })
+    }))
 }

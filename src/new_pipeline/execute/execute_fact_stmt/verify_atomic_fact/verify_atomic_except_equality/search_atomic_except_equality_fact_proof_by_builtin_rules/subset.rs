@@ -1,5 +1,5 @@
 use crate::new_pipeline::ast::fact::SubsetFact;
-use crate::new_pipeline::ast::obj::{Obj, StandardSet};
+use crate::new_pipeline::ast::obj::{Obj, StandardSet, SetFormer, SetOperator};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
@@ -78,7 +78,7 @@ impl Runtime {
 
         if matches!(
             &fact.left,
-            Obj::IntervalObj(_) | Obj::OneSideInfinityIntervalObj(_)
+            Obj::SetFormer(SetFormer::IntervalObj(_)) | Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(_))
         ) && matches!(&fact.right, Obj::StandardSet(StandardSet::R))
         {
             return Ok(Some(
@@ -88,7 +88,7 @@ impl Runtime {
             ));
         }
 
-        if let Obj::SetBuilder(builder) = &fact.left {
+        if let Obj::SetFormer(SetFormer::SetBuilder(builder)) = &fact.left {
             if builder.param_set.as_ref().ir() == fact.right.ir() {
                 return Ok(Some(
                     SubsetFactSearchProofByBuiltinRule::SetBuilderSubsetOfParamSet(
@@ -186,19 +186,19 @@ pub(super) fn standard_set_is_subset_eq(left: &StandardSet, right: &StandardSet)
 
 fn elementary_set_subset_kind(left: &Obj, right: &Obj) -> Option<ElementarySetSubsetKind> {
     match (left, right) {
-        (Obj::Intersect(intersect), right) if intersect.left.as_ref() == right => {
+        (Obj::SetOperator(SetOperator::Intersect(intersect)), right) if intersect.left.as_ref() == right => {
             Some(ElementarySetSubsetKind::IntersectSubsetLeft)
         }
-        (Obj::Intersect(intersect), right) if intersect.right.as_ref() == right => {
+        (Obj::SetOperator(SetOperator::Intersect(intersect)), right) if intersect.right.as_ref() == right => {
             Some(ElementarySetSubsetKind::IntersectSubsetRight)
         }
-        (left, Obj::Union(union)) if union.left.as_ref() == left => {
+        (left, Obj::SetOperator(SetOperator::Union(union))) if union.left.as_ref() == left => {
             Some(ElementarySetSubsetKind::SubsetUnionLeft)
         }
-        (left, Obj::Union(union)) if union.right.as_ref() == left => {
+        (left, Obj::SetOperator(SetOperator::Union(union))) if union.right.as_ref() == left => {
             Some(ElementarySetSubsetKind::SubsetUnionRight)
         }
-        (Obj::SetMinus(set_minus), right) if set_minus.left.as_ref() == right => {
+        (Obj::SetOperator(SetOperator::SetMinus(set_minus)), right) if set_minus.left.as_ref() == right => {
             Some(ElementarySetSubsetKind::SetMinusSubsetLeft)
         }
         _ => None,

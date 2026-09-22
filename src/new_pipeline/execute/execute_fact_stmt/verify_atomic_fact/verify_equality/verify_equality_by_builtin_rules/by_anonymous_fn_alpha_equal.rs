@@ -1,6 +1,6 @@
 use super::alpha_equal_helper::anonymous_fns_alpha_equal;
 use crate::new_pipeline::ast::fact::EqualFact;
-use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::ast::obj::{Obj, FunctionSpace};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
@@ -19,7 +19,7 @@ impl Runtime {
         fact: &EqualFact,
         _verify_state: VerifyState,
     ) -> RuntimeResult<Option<ByAnonymousFnAlphaEqualBuiltinRuleProof>> {
-        let (Obj::AnonymousFn(left), Obj::AnonymousFn(right)) = (&fact.left, &fact.right) else {
+        let (Obj::FunctionSpace(FunctionSpace::AnonymousFn(left)), Obj::FunctionSpace(FunctionSpace::AnonymousFn(right))) = (&fact.left, &fact.right) else {
             return Ok(None);
         };
         if anonymous_fns_alpha_equal(left, right) {

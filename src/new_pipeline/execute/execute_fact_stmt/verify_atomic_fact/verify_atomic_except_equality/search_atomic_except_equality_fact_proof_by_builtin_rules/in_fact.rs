@@ -1,8 +1,6 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact, InFact, IsTupleFact, SubsetFact};
 use crate::new_pipeline::ast::names::AtomicName;
-use crate::new_pipeline::ast::obj::{
-    Cart, FnObjHead, Number, Obj, ObjAtIndex, StandardSet, StructObj, TupleDim,
-};
+use crate::new_pipeline::ast::obj::{Cart, FnObjHead, Number, Obj, ObjAtIndex, StandardSet, StructObj, TupleDim, ArithmeticOperator, ExpLogOperator, IntegerOperator, Literal, ProductShape, SetFormer, SetOperator, Structish, TrigOperator};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::predecessor_helpers::match_sub_one;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
@@ -161,7 +159,7 @@ impl Runtime {
             Obj::StandardSet(set) => {
                 self.search_in_fact_standard_set_builtin_rule(fact, set, verify_state)
             }
-            Obj::SetBuilder(_) => {
+            Obj::SetFormer(SetFormer::SetBuilder(_)) => {
                 if matches!(&fact.element, Obj::FnObj(_)) {
                     if let Some(proof) =
                         self.fn_application_in_codomain_proof(fact, verify_state.clone())?
@@ -171,7 +169,7 @@ impl Runtime {
                 }
                 self.set_builder_membership_proof(fact, verify_state)
             }
-            Obj::Cart(_) => {
+            Obj::ProductShape(ProductShape::Cart(_)) => {
                 if matches!(&fact.element, Obj::FnObj(_)) {
                     if let Some(proof) =
                         self.fn_application_in_codomain_proof(fact, verify_state.clone())?
@@ -181,7 +179,7 @@ impl Runtime {
                 }
                 self.cart_membership_proof(fact, verify_state)
             }
-            Obj::PowerSet(_) => {
+            Obj::SetOperator(SetOperator::PowerSet(_)) => {
                 if matches!(&fact.element, Obj::FnObj(_)) {
                     if let Some(proof) =
                         self.fn_application_in_codomain_proof(fact, verify_state.clone())?
@@ -191,7 +189,7 @@ impl Runtime {
                 }
                 self.power_set_membership_proof(fact, verify_state)
             }
-            Obj::StructObj(_) => {
+            Obj::Structish(Structish::StructObj(_)) => {
                 if matches!(&fact.element, Obj::FnObj(_)) {
                     if let Some(proof) =
                         self.fn_application_in_codomain_proof(fact, verify_state.clone())?
@@ -201,7 +199,7 @@ impl Runtime {
                 }
                 self.struct_obj_membership_proof(fact, verify_state)
             }
-            Obj::ListSet(_) => {
+            Obj::SetFormer(SetFormer::ListSet(_)) => {
                 if matches!(&fact.element, Obj::FnObj(_)) {
                     if let Some(proof) =
                         self.fn_application_in_codomain_proof(fact, verify_state.clone())?
@@ -264,7 +262,7 @@ impl Runtime {
         }
 
         match &fact.element {
-            Obj::ImaginaryUnit(_) | Obj::EulerNumber(_) | Obj::Pi(_) => {
+            Obj::Literal(Literal::ImaginaryUnit(_)) | Obj::Literal(Literal::EulerNumber(_)) | Obj::Literal(Literal::Pi(_)) => {
                 if let Some(kind) = native_constant_membership_kind(&fact.element, &fact.set) {
                     return Ok(Some(
                         InFactSearchProofByBuiltinRule::NativeConstantMembership(
@@ -294,9 +292,9 @@ impl Runtime {
         let Some(cite_in_n_fact_id) = self.known_in_natural_fact_id(base) else {
             return Ok(None);
         };
-        let one = Obj::Number(Number {
+        let one = Obj::Literal(Literal::Number(Number {
             normalized_value: "1".to_string(),
-        });
+        }));
         let Some(cite_at_least_one_fact_id) = self.known_greater_equal_fact_id(base, &one) else {
             return Ok(None);
         };
@@ -389,7 +387,7 @@ impl Runtime {
         fact: &InFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
-        let Obj::SetBuilder(builder) = &fact.set else {
+        let Obj::SetFormer(SetFormer::SetBuilder(builder)) = &fact.set else {
             return Ok(None);
         };
         let mut requirement_facts = Vec::new();
@@ -432,7 +430,7 @@ impl Runtime {
         fact: &InFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
-        let Obj::ListSet(list_set) = &fact.set else {
+        let Obj::SetFormer(SetFormer::ListSet(list_set)) = &fact.set else {
             return Ok(None);
         };
         for (selected_index, listed) in list_set.list.iter().enumerate() {
@@ -465,7 +463,7 @@ impl Runtime {
         fact: &InFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
-        let Obj::PowerSet(power) = &fact.set else {
+        let Obj::SetOperator(SetOperator::PowerSet(power)) = &fact.set else {
             return Ok(None);
         };
         let subset = Fact::AtomicFact(AtomicFact::SubsetFact(SubsetFact {
@@ -492,7 +490,7 @@ impl Runtime {
         fact: &InFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
-        let Obj::Cart(cart) = &fact.set else {
+        let Obj::ProductShape(ProductShape::Cart(cart)) = &fact.set else {
             return Ok(None);
         };
         if cart.args.len() < 2 {
@@ -501,11 +499,11 @@ impl Runtime {
 
         let (shape_and_dimension, coordinates): (Option<CartMembershipShapeProof>, Vec<Obj>) =
             match &fact.element {
-                Obj::Tuple(tuple) if tuple.args.len() == cart.args.len() => (
+                Obj::ProductShape(ProductShape::Tuple(tuple)) if tuple.args.len() == cart.args.len() => (
                     None,
                     tuple.args.iter().map(|a| a.as_ref().clone()).collect(),
                 ),
-                Obj::Tuple(_) => return Ok(None),
+                Obj::ProductShape(ProductShape::Tuple(_)) => return Ok(None),
                 _ => {
                     let is_tuple_fact = Fact::AtomicFact(AtomicFact::IsTupleFact(IsTupleFact {
                         fact_id: self.ids.allocate_fact_id(),
@@ -518,12 +516,12 @@ impl Runtime {
                     }
                     let dimension_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
                         fact_id: self.ids.allocate_fact_id(),
-                        left: Obj::TupleDim(TupleDim {
+                        left: Obj::ProductShape(ProductShape::TupleDim(TupleDim {
                             arg: Box::new(fact.element.clone()),
-                        }),
-                        right: Obj::Number(Number {
+                        })),
+                        right: Obj::Literal(Literal::Number(Number {
                             normalized_value: cart.args.len().to_string(),
-                        }),
+                        })),
                         line_file: fact.line_file.clone(),
                     }));
                     let dimension = self.verify_fact(&dimension_fact, verify_state.clone())?;
@@ -532,12 +530,12 @@ impl Runtime {
                     }
                     let coordinates = (0..cart.args.len())
                         .map(|index| {
-                            Obj::ObjAtIndex(ObjAtIndex {
+                            Obj::ProductShape(ProductShape::ObjAtIndex(ObjAtIndex {
                                 obj: Box::new(fact.element.clone()),
-                                index: Box::new(Obj::Number(Number {
+                                index: Box::new(Obj::Literal(Literal::Number(Number {
                                     normalized_value: (index + 1).to_string(),
-                                })),
-                            })
+                                }))),
+                            }))
                         })
                         .collect();
                     (
@@ -580,7 +578,7 @@ impl Runtime {
         fact: &InFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
-        let Obj::StructObj(struct_obj) = &fact.set else {
+        let Obj::Structish(Structish::StructObj(struct_obj)) = &fact.set else {
             return Ok(None);
         };
         let Some((def, mut subst)) = self.struct_def_and_header_subst(struct_obj) else {
@@ -591,18 +589,18 @@ impl Runtime {
         }
 
         let field_values: Vec<Obj> = match &fact.element {
-            Obj::Tuple(tuple) if tuple.args.len() == def.fields.len() => {
+            Obj::ProductShape(ProductShape::Tuple(tuple)) if tuple.args.len() == def.fields.len() => {
                 tuple.args.iter().map(|a| a.as_ref().clone()).collect()
             }
-            Obj::Tuple(_) => return Ok(None),
+            Obj::ProductShape(ProductShape::Tuple(_)) => return Ok(None),
             _ => (0..def.fields.len())
                 .map(|index| {
-                    Obj::ObjAtIndex(ObjAtIndex {
+                    Obj::ProductShape(ProductShape::ObjAtIndex(ObjAtIndex {
                         obj: Box::new(fact.element.clone()),
-                        index: Box::new(Obj::Number(Number {
+                        index: Box::new(Obj::Literal(Literal::Number(Number {
                             normalized_value: (index + 1).to_string(),
-                        })),
-                    })
+                        }))),
+                    }))
                 })
                 .collect(),
         };
@@ -620,7 +618,7 @@ impl Runtime {
 
         let mut carrier_obligations = Vec::new();
         match &fact.element {
-            Obj::Tuple(_) => {
+            Obj::ProductShape(ProductShape::Tuple(_)) => {
                 for (value, field_type) in field_values.iter().zip(field_types.iter()) {
                     let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
                         fact_id: self.ids.allocate_fact_id(),
@@ -636,9 +634,9 @@ impl Runtime {
                 }
             }
             _ => {
-                let cart = Obj::Cart(Cart {
+                let cart = Obj::ProductShape(ProductShape::Cart(Cart {
                     args: field_types.iter().cloned().map(Box::new).collect(),
-                });
+                }));
                 let cart_membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
                     fact_id: self.ids.allocate_fact_id(),
                     element: fact.element.clone(),
@@ -748,16 +746,16 @@ fn complex_arithmetic_in_c_proof(fact: &InFact) -> Option<InFactSearchProofByBui
         return None;
     };
     match &fact.element {
-        Obj::Add(_)
-        | Obj::Sub(_)
-        | Obj::Mul(_)
-        | Obj::Div(_)
-        | Obj::Mod(_)
-        | Obj::Quot(_)
-        | Obj::Pow(_)
-        | Obj::Abs(_)
-        | Obj::Sqrt(_)
-        | Obj::Log(_) => Some(InFactSearchProofByBuiltinRule::ComplexArithmeticClosure(
+        Obj::ArithmeticOperator(ArithmeticOperator::Add(_))
+        | Obj::ArithmeticOperator(ArithmeticOperator::Sub(_))
+        | Obj::ArithmeticOperator(ArithmeticOperator::Mul(_))
+        | Obj::ArithmeticOperator(ArithmeticOperator::Div(_))
+        | Obj::IntegerOperator(IntegerOperator::Mod(_))
+        | Obj::IntegerOperator(IntegerOperator::Quot(_))
+        | Obj::ArithmeticOperator(ArithmeticOperator::Pow(_))
+        | Obj::ArithmeticOperator(ArithmeticOperator::Abs(_))
+        | Obj::ExpLogOperator(ExpLogOperator::Sqrt(_))
+        | Obj::ExpLogOperator(ExpLogOperator::Log(_)) => Some(InFactSearchProofByBuiltinRule::ComplexArithmeticClosure(
             ComplexArithmeticClosureBuiltinRuleProof {},
         )),
         _ => None,
@@ -771,14 +769,14 @@ fn real_trig_in_r_proof(fact: &InFact) -> Option<InFactSearchProofByBuiltinRule>
         return None;
     };
     match &fact.element {
-        Obj::Sin(_)
-        | Obj::Cos(_)
-        | Obj::Tan(_)
-        | Obj::Cot(_)
-        | Obj::Arcsin(_)
-        | Obj::Arccos(_)
-        | Obj::Arctan(_)
-        | Obj::Arccot(_) => Some(InFactSearchProofByBuiltinRule::RealTrigClosure(
+        Obj::TrigOperator(TrigOperator::Sin(_))
+        | Obj::TrigOperator(TrigOperator::Cos(_))
+        | Obj::TrigOperator(TrigOperator::Tan(_))
+        | Obj::TrigOperator(TrigOperator::Cot(_))
+        | Obj::TrigOperator(TrigOperator::Arcsin(_))
+        | Obj::TrigOperator(TrigOperator::Arccos(_))
+        | Obj::TrigOperator(TrigOperator::Arctan(_))
+        | Obj::TrigOperator(TrigOperator::Arccot(_)) => Some(InFactSearchProofByBuiltinRule::RealTrigClosure(
             RealTrigClosureBuiltinRuleProof {},
         )),
         _ => None,
@@ -812,25 +810,25 @@ fn native_constant_membership_kind(
     set: &Obj,
 ) -> Option<NativeConstantMembershipKind> {
     match (element, set) {
-        (Obj::ImaginaryUnit(_), Obj::StandardSet(StandardSet::C)) => {
+        (Obj::Literal(Literal::ImaginaryUnit(_)), Obj::StandardSet(StandardSet::C)) => {
             Some(NativeConstantMembershipKind::ImaginaryUnitInComplex)
         }
-        (Obj::EulerNumber(_), Obj::StandardSet(StandardSet::RPos)) => {
+        (Obj::Literal(Literal::EulerNumber(_)), Obj::StandardSet(StandardSet::RPos)) => {
             Some(NativeConstantMembershipKind::EulerNumberInPositiveReal)
         }
-        (Obj::EulerNumber(_), Obj::StandardSet(StandardSet::R)) => {
+        (Obj::Literal(Literal::EulerNumber(_)), Obj::StandardSet(StandardSet::R)) => {
             Some(NativeConstantMembershipKind::EulerNumberInReal)
         }
-        (Obj::EulerNumber(_), Obj::StandardSet(StandardSet::C)) => {
+        (Obj::Literal(Literal::EulerNumber(_)), Obj::StandardSet(StandardSet::C)) => {
             Some(NativeConstantMembershipKind::EulerNumberInComplex)
         }
-        (Obj::Pi(_), Obj::StandardSet(StandardSet::RPos)) => {
+        (Obj::Literal(Literal::Pi(_)), Obj::StandardSet(StandardSet::RPos)) => {
             Some(NativeConstantMembershipKind::PiInPositiveReal)
         }
-        (Obj::Pi(_), Obj::StandardSet(StandardSet::R)) => {
+        (Obj::Literal(Literal::Pi(_)), Obj::StandardSet(StandardSet::R)) => {
             Some(NativeConstantMembershipKind::PiInReal)
         }
-        (Obj::Pi(_), Obj::StandardSet(StandardSet::C)) => {
+        (Obj::Literal(Literal::Pi(_)), Obj::StandardSet(StandardSet::C)) => {
             Some(NativeConstantMembershipKind::PiInComplex)
         }
         _ => None,

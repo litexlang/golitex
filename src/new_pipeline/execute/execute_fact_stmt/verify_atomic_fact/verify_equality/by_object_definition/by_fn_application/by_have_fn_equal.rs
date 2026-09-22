@@ -10,7 +10,7 @@
 //!   id(a) = a
 
 use crate::new_pipeline::ast::fact::EqualFact;
-use crate::new_pipeline::ast::obj::{FnObj, FnObjHead, Obj};
+use crate::new_pipeline::ast::obj::{FnObj, FnObjHead, Obj, FunctionSpace};
 use crate::new_pipeline::exec_env::exec_env::SpecialObjectPropertyByDefinition;
 use crate::new_pipeline::exec_env::StoredIdentifierDefinition;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
@@ -82,7 +82,7 @@ impl Runtime {
                     anon
                 } else {
                     let head_obj = Obj::Identifier(head.clone());
-                    let Some(Obj::AnonymousFn(anon)) =
+                    let Some(Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon))) =
                         self.visible_equal_to_function_obj(&head_obj)
                     else {
                         return Ok(None);

@@ -16,33 +16,33 @@ impl Obj {
     pub fn ir(&self) -> ObjIR {
         fn precedence(o: &Obj) -> u8 {
             match o {
-                Obj::Add(_) | Obj::Sub(_) => 3,
-                Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) => 2,
-                Obj::Pow(_)
-                | Obj::Abs(_)
-                | Obj::Sin(_)
-                | Obj::Arcsin(_)
-                | Obj::Arccos(_)
-                | Obj::Arctan(_)
-                | Obj::Arccot(_)
-                | Obj::Cos(_)
-                | Obj::Tan(_)
-                | Obj::Cot(_)
-                | Obj::RealPart(_)
-                | Obj::ImaginaryPart(_)
-                | Obj::ComplexAbs(_)
-                | Obj::Sqrt(_)
-                | Obj::Log(_)
-                | Obj::Lcm(_)
-                | Obj::Quot(_)
-                | Obj::Floor(_)
-                | Obj::Ceil(_)
-                | Obj::Min(_)
-                | Obj::Max(_)
-                | Obj::Exp(_)
-                | Obj::Ln(_)
-                | Obj::Sign(_)
-                | Obj::Factorial(_) => 1,
+                Obj::ArithmeticOperator(ArithmeticOperator::Add(_)) | Obj::ArithmeticOperator(ArithmeticOperator::Sub(_)) => 3,
+                Obj::ArithmeticOperator(ArithmeticOperator::Mul(_)) | Obj::ArithmeticOperator(ArithmeticOperator::Div(_)) | Obj::IntegerOperator(IntegerOperator::Mod(_)) => 2,
+                Obj::ArithmeticOperator(ArithmeticOperator::Pow(_))
+                | Obj::ArithmeticOperator(ArithmeticOperator::Abs(_))
+                | Obj::TrigOperator(TrigOperator::Sin(_))
+                | Obj::TrigOperator(TrigOperator::Arcsin(_))
+                | Obj::TrigOperator(TrigOperator::Arccos(_))
+                | Obj::TrigOperator(TrigOperator::Arctan(_))
+                | Obj::TrigOperator(TrigOperator::Arccot(_))
+                | Obj::TrigOperator(TrigOperator::Cos(_))
+                | Obj::TrigOperator(TrigOperator::Tan(_))
+                | Obj::TrigOperator(TrigOperator::Cot(_))
+                | Obj::ComplexOperator(ComplexOperator::RealPart(_))
+                | Obj::ComplexOperator(ComplexOperator::ImaginaryPart(_))
+                | Obj::ComplexOperator(ComplexOperator::ComplexAbs(_))
+                | Obj::ExpLogOperator(ExpLogOperator::Sqrt(_))
+                | Obj::ExpLogOperator(ExpLogOperator::Log(_))
+                | Obj::IntegerOperator(IntegerOperator::Lcm(_))
+                | Obj::IntegerOperator(IntegerOperator::Quot(_))
+                | Obj::ArithmeticOperator(ArithmeticOperator::Floor(_))
+                | Obj::ArithmeticOperator(ArithmeticOperator::Ceil(_))
+                | Obj::ArithmeticOperator(ArithmeticOperator::Min(_))
+                | Obj::ArithmeticOperator(ArithmeticOperator::Max(_))
+                | Obj::ExpLogOperator(ExpLogOperator::Exp(_))
+                | Obj::ExpLogOperator(ExpLogOperator::Ln(_))
+                | Obj::ArithmeticOperator(ArithmeticOperator::Sign(_))
+                | Obj::IntegerOperator(IntegerOperator::Factorial(_)) => 1,
                 _ => 0,
             }
         }
@@ -56,32 +56,32 @@ impl Obj {
                 s.push_str(LEFT_PAREN);
             }
             match o {
-                Obj::Add(a) => {
+                Obj::ArithmeticOperator(ArithmeticOperator::Add(a)) => {
                     s.push_str(&fmt_with_prec(a.left.as_ref(), 3));
                     s.push_str(&format!(" {} ", ADD));
                     s.push_str(&fmt_with_prec(a.right.as_ref(), 2));
                 }
-                Obj::Sub(sub) => {
+                Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub)) => {
                     s.push_str(&fmt_with_prec(sub.left.as_ref(), 2));
                     s.push_str(&format!(" {} ", SUB));
                     s.push_str(&fmt_with_prec(sub.right.as_ref(), 2));
                 }
-                Obj::Mul(m) => {
+                Obj::ArithmeticOperator(ArithmeticOperator::Mul(m)) => {
                     s.push_str(&fmt_with_prec(m.left.as_ref(), 2));
                     s.push_str(&format!(" {} ", MUL));
                     s.push_str(&fmt_with_prec(m.right.as_ref(), 2));
                 }
-                Obj::Div(d) => {
+                Obj::ArithmeticOperator(ArithmeticOperator::Div(d)) => {
                     s.push_str(&fmt_with_prec(d.left.as_ref(), 2));
                     s.push_str(&format!(" {} ", DIV));
                     s.push_str(&fmt_with_prec(d.right.as_ref(), 1));
                 }
-                Obj::Mod(m) => {
+                Obj::IntegerOperator(IntegerOperator::Mod(m)) => {
                     s.push_str(&fmt_with_prec(m.left.as_ref(), 2));
                     s.push_str(&format!(" {} ", MOD_OP));
                     s.push_str(&fmt_with_prec(m.right.as_ref(), 2));
                 }
-                Obj::Quot(x) => {
+                Obj::IntegerOperator(IntegerOperator::Quot(x)) => {
                     s.push_str(&format!(
                         "{}{}{}{} {}{}",
                         QUOT,
@@ -92,7 +92,7 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
-                Obj::Gcd(g) => {
+                Obj::IntegerOperator(IntegerOperator::Gcd(g)) => {
                     s.push_str(&format!(
                         "{}{}{}{} {}{}",
                         GCD,
@@ -103,7 +103,7 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
-                Obj::Lcm(x) => {
+                Obj::IntegerOperator(IntegerOperator::Lcm(x)) => {
                     s.push_str(&format!(
                         "{}{}{}{} {}{}",
                         LCM,
@@ -114,7 +114,7 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
-                Obj::Floor(x) => {
+                Obj::ArithmeticOperator(ArithmeticOperator::Floor(x)) => {
                     s.push_str(&format!(
                         "{}{}{}{}",
                         FLOOR,
@@ -123,7 +123,7 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
-                Obj::Ceil(x) => {
+                Obj::ArithmeticOperator(ArithmeticOperator::Ceil(x)) => {
                     s.push_str(&format!(
                         "{}{}{}{}",
                         CEIL,
@@ -132,7 +132,7 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
-                Obj::Min(x) => {
+                Obj::ArithmeticOperator(ArithmeticOperator::Min(x)) => {
                     s.push_str(&format!(
                         "{}{}{}{} {}{}",
                         MIN,
@@ -143,7 +143,7 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
-                Obj::Max(x) => {
+                Obj::ArithmeticOperator(ArithmeticOperator::Max(x)) => {
                     s.push_str(&format!(
                         "{}{}{}{} {}{}",
                         MAX,
@@ -154,7 +154,7 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
-                Obj::Exp(x) => {
+                Obj::ExpLogOperator(ExpLogOperator::Exp(x)) => {
                     s.push_str(&format!(
                         "{}{}{}{}",
                         EXP,
@@ -163,7 +163,7 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
-                Obj::Ln(x) => {
+                Obj::ExpLogOperator(ExpLogOperator::Ln(x)) => {
                     s.push_str(&format!(
                         "{}{}{}{}",
                         LN,
@@ -172,7 +172,7 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
-                Obj::Sign(x) => {
+                Obj::ArithmeticOperator(ArithmeticOperator::Sign(x)) => {
                     s.push_str(&format!(
                         "{}{}{}{}",
                         SIGN,
@@ -181,7 +181,7 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
-                Obj::Factorial(x) => {
+                Obj::IntegerOperator(IntegerOperator::Factorial(x)) => {
                     s.push_str(&format!(
                         "{}{}{}{}",
                         FACTORIAL,
@@ -190,12 +190,12 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
-                Obj::Pow(p) => {
+                Obj::ArithmeticOperator(ArithmeticOperator::Pow(p)) => {
                     s.push_str(&fmt_with_prec(p.base.as_ref(), 1));
                     s.push_str(&format!(" {} ", POW));
                     s.push_str(&fmt_with_prec(p.exponent.as_ref(), 1));
                 }
-                Obj::Abs(a) => {
+                Obj::ArithmeticOperator(ArithmeticOperator::Abs(a)) => {
                     s.push_str(&format!(
                         "{} {}{}{}",
                         ABS,
@@ -204,7 +204,7 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
-                Obj::Sin(x) => {
+                Obj::TrigOperator(TrigOperator::Sin(x)) => {
                     s.push_str(&format!(
                         "{}{}{}{}",
                         SIN,
@@ -213,7 +213,7 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
-                Obj::Arcsin(x) => {
+                Obj::TrigOperator(TrigOperator::Arcsin(x)) => {
                     s.push_str(&format!(
                         "{}{}{}{}",
                         ARCSIN,
@@ -222,7 +222,7 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
-                Obj::Arccos(x) => {
+                Obj::TrigOperator(TrigOperator::Arccos(x)) => {
                     s.push_str(&format!(
                         "{}{}{}{}",
                         ARCCOS,
@@ -231,7 +231,7 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
-                Obj::Arctan(x) => {
+                Obj::TrigOperator(TrigOperator::Arctan(x)) => {
                     s.push_str(&format!(
                         "{}{}{}{}",
                         ARCTAN,
@@ -240,7 +240,7 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
-                Obj::Arccot(x) => {
+                Obj::TrigOperator(TrigOperator::Arccot(x)) => {
                     s.push_str(&format!(
                         "{}{}{}{}",
                         ARCCOT,
@@ -249,7 +249,7 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
-                Obj::Cos(x) => {
+                Obj::TrigOperator(TrigOperator::Cos(x)) => {
                     s.push_str(&format!(
                         "{}{}{}{}",
                         COS,
@@ -258,7 +258,7 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
-                Obj::Tan(x) => {
+                Obj::TrigOperator(TrigOperator::Tan(x)) => {
                     s.push_str(&format!(
                         "{}{}{}{}",
                         TAN,
@@ -267,7 +267,7 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
-                Obj::Cot(x) => {
+                Obj::TrigOperator(TrigOperator::Cot(x)) => {
                     s.push_str(&format!(
                         "{}{}{}{}",
                         COT,
@@ -276,7 +276,7 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
-                Obj::RealPart(x) => {
+                Obj::ComplexOperator(ComplexOperator::RealPart(x)) => {
                     s.push_str(&format!(
                         "{}{}{}{}",
                         RE,
@@ -285,7 +285,7 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
-                Obj::ImaginaryPart(x) => {
+                Obj::ComplexOperator(ComplexOperator::ImaginaryPart(x)) => {
                     s.push_str(&format!(
                         "{}{}{}{}",
                         IMG,
@@ -294,7 +294,7 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
-                Obj::ComplexAbs(x) => {
+                Obj::ComplexOperator(ComplexOperator::ComplexAbs(x)) => {
                     s.push_str(&format!(
                         "{}{}{}{}",
                         C_ABS,
@@ -303,7 +303,7 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
-                Obj::Sqrt(sq) => {
+                Obj::ExpLogOperator(ExpLogOperator::Sqrt(sq)) => {
                     s.push_str(&format!(
                         "{} {}{}{}",
                         SQRT,
@@ -312,7 +312,7 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
-                Obj::Log(l) => {
+                Obj::ExpLogOperator(ExpLogOperator::Log(l)) => {
                     s.push_str(&format!(
                         "{} {}{}{} {}{}",
                         LOG,
@@ -323,54 +323,54 @@ impl Obj {
                         RIGHT_PAREN
                     ));
                 }
-                Obj::Union(x) => s.push_str(&x.ir()),
-                Obj::Intersect(x) => s.push_str(&x.ir()),
-                Obj::SetMinus(x) => s.push_str(&x.ir()),
-                Obj::BigUnion(x) => s.push_str(&x.ir()),
-                Obj::BigIntersect(x) => s.push_str(&x.ir()),
-                Obj::IndexUnion(x) => s.push_str(&x.ir()),
-                Obj::IndexIntersect(x) => s.push_str(&x.ir()),
+                Obj::SetOperator(SetOperator::Union(x)) => s.push_str(&x.ir()),
+                Obj::SetOperator(SetOperator::Intersect(x)) => s.push_str(&x.ir()),
+                Obj::SetOperator(SetOperator::SetMinus(x)) => s.push_str(&x.ir()),
+                Obj::SetOperator(SetOperator::BigUnion(x)) => s.push_str(&x.ir()),
+                Obj::SetOperator(SetOperator::BigIntersect(x)) => s.push_str(&x.ir()),
+                Obj::SetOperator(SetOperator::IndexUnion(x)) => s.push_str(&x.ir()),
+                Obj::SetOperator(SetOperator::IndexIntersect(x)) => s.push_str(&x.ir()),
                 Obj::Identifier(x) => s.push_str(&x.ir()),
                 Obj::FnObj(x) => s.push_str(&x.ir()),
-                Obj::Number(x) => s.push_str(&x.ir()),
-                Obj::ImaginaryUnit(_) => s.push_str(I),
-                Obj::EulerNumber(_) => s.push_str(E),
-                Obj::Pi(_) => s.push_str(PI),
-                Obj::ListSet(x) => s.push_str(&x.ir()),
-                Obj::SetBuilder(x) => s.push_str(&x.ir()),
-                Obj::FnSet(x) => s.push_str(&x.ir()),
-                Obj::AnonymousFn(x) => s.push_str(&x.ir()),
+                Obj::Literal(Literal::Number(x)) => s.push_str(&x.ir()),
+                Obj::Literal(Literal::ImaginaryUnit(_)) => s.push_str(I),
+                Obj::Literal(Literal::EulerNumber(_)) => s.push_str(E),
+                Obj::Literal(Literal::Pi(_)) => s.push_str(PI),
+                Obj::SetFormer(SetFormer::ListSet(x)) => s.push_str(&x.ir()),
+                Obj::SetFormer(SetFormer::SetBuilder(x)) => s.push_str(&x.ir()),
+                Obj::FunctionSpace(FunctionSpace::FnSet(x)) => s.push_str(&x.ir()),
+                Obj::FunctionSpace(FunctionSpace::AnonymousFn(x)) => s.push_str(&x.ir()),
                 Obj::StandardSet(x) => s.push_str(&x.ir()),
-                Obj::Cart(x) => s.push_str(&x.ir()),
-                Obj::CartDim(x) => s.push_str(&x.ir()),
-                Obj::Proj(x) => s.push_str(&x.ir()),
-                Obj::TupleDim(x) => s.push_str(&x.ir()),
-                Obj::Tuple(x) => s.push_str(&x.ir()),
-                Obj::FiniteSetSize(x) => s.push_str(&x.ir()),
-                Obj::FiniteSetMax(x) => s.push_str(&x.ir()),
-                Obj::FiniteSetMin(x) => s.push_str(&x.ir()),
-                Obj::FnRange(x) => s.push_str(&x.ir()),
-                Obj::Replacement(x) => s.push_str(&x.ir()),
-                Obj::Sum(x) => s.push_str(&x.ir()),
-                Obj::SumOfFiniteSet(x) => s.push_str(&x.ir()),
-                Obj::Product(x) => s.push_str(&x.ir()),
-                Obj::ProductOfFiniteSet(x) => s.push_str(&x.ir()),
-                Obj::Reduce(x) => s.push_str(&x.ir()),
-                Obj::FiniteSetReduce(x) => s.push_str(&x.ir()),
-                Obj::Range(x) => s.push_str(&x.ir()),
-                Obj::ClosedRange(x) => s.push_str(&x.ir()),
-                Obj::FiniteSeqSet(x) => s.push_str(&x.ir()),
-                Obj::SeqSet(x) => s.push_str(&x.ir()),
-                Obj::PowerSet(x) => s.push_str(&x.ir()),
-                Obj::GeneralCart(x) => s.push_str(&x.ir()),
-                Obj::ObjAtIndex(x) => s.push_str(&x.ir()),
-                Obj::StructObj(x) => s.push_str(&x.ir()),
-                Obj::FieldAccess(x) => {
+                Obj::ProductShape(ProductShape::Cart(x)) => s.push_str(&x.ir()),
+                Obj::ProductShape(ProductShape::CartDim(x)) => s.push_str(&x.ir()),
+                Obj::ProductShape(ProductShape::Proj(x)) => s.push_str(&x.ir()),
+                Obj::ProductShape(ProductShape::TupleDim(x)) => s.push_str(&x.ir()),
+                Obj::ProductShape(ProductShape::Tuple(x)) => s.push_str(&x.ir()),
+                Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(x)) => s.push_str(&x.ir()),
+                Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(x)) => s.push_str(&x.ir()),
+                Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(x)) => s.push_str(&x.ir()),
+                Obj::FunctionSpace(FunctionSpace::FnRange(x)) => s.push_str(&x.ir()),
+                Obj::SetFormer(SetFormer::Replacement(x)) => s.push_str(&x.ir()),
+                Obj::IteratedOperator(IteratedOperator::Sum(x)) => s.push_str(&x.ir()),
+                Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(x)) => s.push_str(&x.ir()),
+                Obj::IteratedOperator(IteratedOperator::Product(x)) => s.push_str(&x.ir()),
+                Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(x)) => s.push_str(&x.ir()),
+                Obj::IteratedOperator(IteratedOperator::Reduce(x)) => s.push_str(&x.ir()),
+                Obj::IteratedOperator(IteratedOperator::FiniteSetReduce(x)) => s.push_str(&x.ir()),
+                Obj::SetFormer(SetFormer::Range(x)) => s.push_str(&x.ir()),
+                Obj::SetFormer(SetFormer::ClosedRange(x)) => s.push_str(&x.ir()),
+                Obj::SetFormer(SetFormer::FiniteSeqSet(x)) => s.push_str(&x.ir()),
+                Obj::SetFormer(SetFormer::SeqSet(x)) => s.push_str(&x.ir()),
+                Obj::SetOperator(SetOperator::PowerSet(x)) => s.push_str(&x.ir()),
+                Obj::SetOperator(SetOperator::GeneralCart(x)) => s.push_str(&x.ir()),
+                Obj::ProductShape(ProductShape::ObjAtIndex(x)) => s.push_str(&x.ir()),
+                Obj::Structish(Structish::StructObj(x)) => s.push_str(&x.ir()),
+                Obj::Structish(Structish::FieldAccess(x)) => {
                     s.push_str(&x.ir())
                 }
-                Obj::InstantiatedTemplateObj(x) => s.push_str(&x.ir()),
-                Obj::OneSideInfinityIntervalObj(x) => s.push_str(&x.ir()),
-                Obj::IntervalObj(x) => s.push_str(&x.ir()),
+                Obj::Structish(Structish::InstantiatedTemplateObj(x)) => s.push_str(&x.ir()),
+                Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(x)) => s.push_str(&x.ir()),
+                Obj::SetFormer(SetFormer::IntervalObj(x)) => s.push_str(&x.ir()),
             }
             if need_parens {
                 s.push_str(RIGHT_PAREN);
@@ -384,9 +384,9 @@ impl Obj {
     pub fn display_string(&self) -> String {
         match self {
             Obj::Identifier(a) => a.display_string(),
-            Obj::SetBuilder(x) => x.display_string(),
-            Obj::FnSet(x) => x.display_string(),
-            Obj::AnonymousFn(x) => x.display_string(),
+            Obj::SetFormer(SetFormer::SetBuilder(x)) => x.display_string(),
+            Obj::FunctionSpace(FunctionSpace::FnSet(x)) => x.display_string(),
+            Obj::FunctionSpace(FunctionSpace::AnonymousFn(x)) => x.display_string(),
             _ => self.ir().display_string(),
         }
     }

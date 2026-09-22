@@ -2,12 +2,7 @@ use std::collections::HashMap;
 
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 
-use crate::new_pipeline::ast::obj::{
-    BigIntersect, BigUnion, Cart, CartDim, ClosedRange, FiniteSeqSet, FiniteSetMax,
-    FiniteSetMin, FiniteSetReduce, FiniteSetSize, FnRange, GeneralCart, IndexIntersect, IndexUnion,
-    Intersect, ListSet, Obj, PowerSet, Product, ProductOfFiniteSet, Proj, Range, Reduce,
-    Replacement, SeqSet, SetMinus, Sum, SumOfFiniteSet, Tuple, TupleDim, Union,
-};
+use crate::new_pipeline::ast::obj::{BigIntersect, BigUnion, Cart, CartDim, ClosedRange, FiniteSeqSet, FiniteSetMax, FiniteSetMin, FiniteSetReduce, FiniteSetSize, FnRange, GeneralCart, IndexIntersect, IndexUnion, Intersect, ListSet, Obj, PowerSet, Product, ProductOfFiniteSet, Proj, Range, Reduce, Replacement, SeqSet, SetMinus, Sum, SumOfFiniteSet, Tuple, TupleDim, Union, FiniteSetStat, FunctionSpace, IteratedOperator, ProductShape, SetFormer, SetOperator};
 use crate::new_pipeline::runtime::Runtime;
 
 use super::super::error::InstError;
@@ -19,10 +14,10 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::Union(Union {
+    Ok(Obj::SetOperator(SetOperator::Union(Union {
         left: Box::new(self.inst_obj_rec(&a.left, param_to_arg_map)?),
         right: Box::new(self.inst_obj_rec(&a.right, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -32,10 +27,10 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::Intersect(Intersect {
+    Ok(Obj::SetOperator(SetOperator::Intersect(Intersect {
         left: Box::new(self.inst_obj_rec(&a.left, param_to_arg_map)?),
         right: Box::new(self.inst_obj_rec(&a.right, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -45,10 +40,10 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::SetMinus(SetMinus {
+    Ok(Obj::SetOperator(SetOperator::SetMinus(SetMinus {
         left: Box::new(self.inst_obj_rec(&a.left, param_to_arg_map)?),
         right: Box::new(self.inst_obj_rec(&a.right, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -58,9 +53,9 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::BigUnion(BigUnion {
+    Ok(Obj::SetOperator(SetOperator::BigUnion(BigUnion {
         left: Box::new(self.inst_obj_rec(&a.left, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -70,9 +65,9 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::BigIntersect(BigIntersect {
+    Ok(Obj::SetOperator(SetOperator::BigIntersect(BigIntersect {
         left: Box::new(self.inst_obj_rec(&a.left, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -82,11 +77,11 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::IndexUnion(IndexUnion {
+    Ok(Obj::SetOperator(SetOperator::IndexUnion(IndexUnion {
         index_set: Box::new(self.inst_obj_rec(&a.index_set, param_to_arg_map)?),
         ambient_set: Box::new(self.inst_obj_rec(&a.ambient_set, param_to_arg_map)?),
         family_fn: Box::new(self.inst_obj_rec(&a.family_fn, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -96,11 +91,11 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::IndexIntersect(IndexIntersect {
+    Ok(Obj::SetOperator(SetOperator::IndexIntersect(IndexIntersect {
         index_set: Box::new(self.inst_obj_rec(&a.index_set, param_to_arg_map)?),
         ambient_set: Box::new(self.inst_obj_rec(&a.ambient_set, param_to_arg_map)?),
         family_fn: Box::new(self.inst_obj_rec(&a.family_fn, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -110,9 +105,9 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::PowerSet(PowerSet {
+    Ok(Obj::SetOperator(SetOperator::PowerSet(PowerSet {
         set: Box::new(self.inst_obj_rec(&a.set, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -122,11 +117,11 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::GeneralCart(GeneralCart {
+    Ok(Obj::SetOperator(SetOperator::GeneralCart(GeneralCart {
         index_set: Box::new(self.inst_obj_rec(&a.index_set, param_to_arg_map)?),
         family_set: Box::new(self.inst_obj_rec(&a.family_set, param_to_arg_map)?),
         family_fn: Box::new(self.inst_obj_rec(&a.family_fn, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -140,7 +135,7 @@ impl Runtime {
     for o in &a.list {
         list.push(Box::new(self.inst_obj_rec(o, param_to_arg_map)?));
     }
-    Ok(Obj::ListSet(ListSet { list }))
+    Ok(Obj::SetFormer(SetFormer::ListSet(ListSet { list })))
 }
 
 
@@ -154,7 +149,7 @@ impl Runtime {
     for o in &a.args {
         args.push(Box::new(self.inst_obj_rec(o, param_to_arg_map)?));
     }
-    Ok(Obj::Cart(Cart { args }))
+    Ok(Obj::ProductShape(ProductShape::Cart(Cart { args })))
 }
 
 
@@ -168,7 +163,7 @@ impl Runtime {
     for o in &a.args {
         args.push(Box::new(self.inst_obj_rec(o, param_to_arg_map)?));
     }
-    Ok(Obj::Tuple(Tuple { args }))
+    Ok(Obj::ProductShape(ProductShape::Tuple(Tuple { args })))
 }
 
 
@@ -178,9 +173,9 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::CartDim(CartDim {
+    Ok(Obj::ProductShape(ProductShape::CartDim(CartDim {
         set: Box::new(self.inst_obj_rec(&a.set, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -190,10 +185,10 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::Proj(Proj {
+    Ok(Obj::ProductShape(ProductShape::Proj(Proj {
         set: Box::new(self.inst_obj_rec(&a.set, param_to_arg_map)?),
         dim: Box::new(self.inst_obj_rec(&a.dim, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -203,9 +198,9 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::TupleDim(TupleDim {
+    Ok(Obj::ProductShape(ProductShape::TupleDim(TupleDim {
         arg: Box::new(self.inst_obj_rec(&a.arg, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -215,9 +210,9 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::FiniteSetSize(FiniteSetSize {
+    Ok(Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(FiniteSetSize {
         set: Box::new(self.inst_obj_rec(&a.set, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -227,9 +222,9 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::FiniteSetMax(FiniteSetMax {
+    Ok(Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(FiniteSetMax {
         set: Box::new(self.inst_obj_rec(&a.set, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -239,9 +234,9 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::FiniteSetMin(FiniteSetMin {
+    Ok(Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(FiniteSetMin {
         set: Box::new(self.inst_obj_rec(&a.set, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -251,9 +246,9 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::FnRange(FnRange {
+    Ok(Obj::FunctionSpace(FunctionSpace::FnRange(FnRange {
         function: Box::new(self.inst_obj_rec(&a.function, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -263,10 +258,10 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::Replacement(Replacement {
+    Ok(Obj::SetFormer(SetFormer::Replacement(Replacement {
         prop_name: a.prop_name.clone(),
         source_set: Box::new(self.inst_obj_rec(&a.source_set, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -276,11 +271,11 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::Sum(Sum {
+    Ok(Obj::IteratedOperator(IteratedOperator::Sum(Sum {
         start: Box::new(self.inst_obj_rec(&a.start, param_to_arg_map)?),
         end: Box::new(self.inst_obj_rec(&a.end, param_to_arg_map)?),
         func: Box::new(self.inst_obj_rec(&a.func, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -290,10 +285,10 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::SumOfFiniteSet(SumOfFiniteSet {
+    Ok(Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(SumOfFiniteSet {
         set: Box::new(self.inst_obj_rec(&a.set, param_to_arg_map)?),
         func: Box::new(self.inst_obj_rec(&a.func, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -303,11 +298,11 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::Product(Product {
+    Ok(Obj::IteratedOperator(IteratedOperator::Product(Product {
         start: Box::new(self.inst_obj_rec(&a.start, param_to_arg_map)?),
         end: Box::new(self.inst_obj_rec(&a.end, param_to_arg_map)?),
         func: Box::new(self.inst_obj_rec(&a.func, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -317,10 +312,10 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::ProductOfFiniteSet(ProductOfFiniteSet {
+    Ok(Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(ProductOfFiniteSet {
         set: Box::new(self.inst_obj_rec(&a.set, param_to_arg_map)?),
         func: Box::new(self.inst_obj_rec(&a.func, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -330,13 +325,13 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::Reduce(Reduce {
+    Ok(Obj::IteratedOperator(IteratedOperator::Reduce(Reduce {
         start: Box::new(self.inst_obj_rec(&a.start, param_to_arg_map)?),
         end: Box::new(self.inst_obj_rec(&a.end, param_to_arg_map)?),
         func: Box::new(self.inst_obj_rec(&a.func, param_to_arg_map)?),
         op: Box::new(self.inst_obj_rec(&a.op, param_to_arg_map)?),
         seed: Box::new(self.inst_obj_rec(&a.seed, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -346,12 +341,12 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::FiniteSetReduce(FiniteSetReduce {
+    Ok(Obj::IteratedOperator(IteratedOperator::FiniteSetReduce(FiniteSetReduce {
         set: Box::new(self.inst_obj_rec(&a.set, param_to_arg_map)?),
         func: Box::new(self.inst_obj_rec(&a.func, param_to_arg_map)?),
         op: Box::new(self.inst_obj_rec(&a.op, param_to_arg_map)?),
         seed: Box::new(self.inst_obj_rec(&a.seed, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -361,10 +356,10 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::Range(Range {
+    Ok(Obj::SetFormer(SetFormer::Range(Range {
         start: Box::new(self.inst_obj_rec(&a.start, param_to_arg_map)?),
         end: Box::new(self.inst_obj_rec(&a.end, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -374,10 +369,10 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::ClosedRange(ClosedRange {
+    Ok(Obj::SetFormer(SetFormer::ClosedRange(ClosedRange {
         start: Box::new(self.inst_obj_rec(&a.start, param_to_arg_map)?),
         end: Box::new(self.inst_obj_rec(&a.end, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -387,10 +382,10 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::FiniteSeqSet(FiniteSeqSet {
+    Ok(Obj::SetFormer(SetFormer::FiniteSeqSet(FiniteSeqSet {
         set: Box::new(self.inst_obj_rec(&a.set, param_to_arg_map)?),
         n: Box::new(self.inst_obj_rec(&a.n, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -400,9 +395,9 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::SeqSet(SeqSet {
+    Ok(Obj::SetFormer(SetFormer::SeqSet(SeqSet {
         set: Box::new(self.inst_obj_rec(&a.set, param_to_arg_map)?),
-    }))
+    })))
 }
 
 
@@ -412,9 +407,9 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::ObjAtIndex(crate::new_pipeline::ast::obj::ObjAtIndex {
+    Ok(Obj::ProductShape(ProductShape::ObjAtIndex(crate::new_pipeline::ast::obj::ObjAtIndex {
         obj: Box::new(self.inst_obj_rec(&a.obj, param_to_arg_map)?),
         index: Box::new(self.inst_obj_rec(&a.index, param_to_arg_map)?),
-    }))
+    })))
 }
 }

@@ -18,9 +18,7 @@
 //! Closed-numeric store / rewrite paths should take this type (or produce it
 //! at the boundary) instead of re-testing Obj ad hoc.
 
-use crate::new_pipeline::ast::obj::{
-    Abs, Add, Ceil, Div, Floor, Max, Min, Mul, Number, Obj, Pow, Sign, Sub,
-};
+use crate::new_pipeline::ast::obj::{Abs, Add, Ceil, Div, Floor, Max, Min, Mul, Number, Obj, Pow, Sign, Sub, ArithmeticOperator, Literal};
 
 /// Classified closed-numeric tree. See module docs for the definition.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -47,45 +45,45 @@ impl ClosedNumericExpr {
     // Example: `2 + 3` → Some; `a + 1` → None; `abs(-3)` → Some.
     pub fn try_from_obj(obj: &Obj) -> Option<Self> {
         match obj {
-            Obj::Number(n) => Some(ClosedNumericExpr::Number(n.clone())),
-            Obj::Add(add) => Some(ClosedNumericExpr::Add(
+            Obj::Literal(Literal::Number(n)) => Some(ClosedNumericExpr::Number(n.clone())),
+            Obj::ArithmeticOperator(ArithmeticOperator::Add(add)) => Some(ClosedNumericExpr::Add(
                 Box::new(Self::try_from_obj(&add.left)?),
                 Box::new(Self::try_from_obj(&add.right)?),
             )),
-            Obj::Sub(sub) => Some(ClosedNumericExpr::Sub(
+            Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub)) => Some(ClosedNumericExpr::Sub(
                 Box::new(Self::try_from_obj(&sub.left)?),
                 Box::new(Self::try_from_obj(&sub.right)?),
             )),
-            Obj::Mul(mul) => Some(ClosedNumericExpr::Mul(
+            Obj::ArithmeticOperator(ArithmeticOperator::Mul(mul)) => Some(ClosedNumericExpr::Mul(
                 Box::new(Self::try_from_obj(&mul.left)?),
                 Box::new(Self::try_from_obj(&mul.right)?),
             )),
-            Obj::Div(div) => Some(ClosedNumericExpr::Div(
+            Obj::ArithmeticOperator(ArithmeticOperator::Div(div)) => Some(ClosedNumericExpr::Div(
                 Box::new(Self::try_from_obj(&div.left)?),
                 Box::new(Self::try_from_obj(&div.right)?),
             )),
-            Obj::Pow(pow) => Some(ClosedNumericExpr::Pow {
+            Obj::ArithmeticOperator(ArithmeticOperator::Pow(pow)) => Some(ClosedNumericExpr::Pow {
                 base: Box::new(Self::try_from_obj(&pow.base)?),
                 exponent: Box::new(Self::try_from_obj(&pow.exponent)?),
             }),
-            Obj::Abs(abs) => Some(ClosedNumericExpr::Abs(Box::new(Self::try_from_obj(
+            Obj::ArithmeticOperator(ArithmeticOperator::Abs(abs)) => Some(ClosedNumericExpr::Abs(Box::new(Self::try_from_obj(
                 &abs.arg,
             )?))),
-            Obj::Min(min) => Some(ClosedNumericExpr::Min(
+            Obj::ArithmeticOperator(ArithmeticOperator::Min(min)) => Some(ClosedNumericExpr::Min(
                 Box::new(Self::try_from_obj(&min.left)?),
                 Box::new(Self::try_from_obj(&min.right)?),
             )),
-            Obj::Max(max) => Some(ClosedNumericExpr::Max(
+            Obj::ArithmeticOperator(ArithmeticOperator::Max(max)) => Some(ClosedNumericExpr::Max(
                 Box::new(Self::try_from_obj(&max.left)?),
                 Box::new(Self::try_from_obj(&max.right)?),
             )),
-            Obj::Floor(floor) => Some(ClosedNumericExpr::Floor(Box::new(Self::try_from_obj(
+            Obj::ArithmeticOperator(ArithmeticOperator::Floor(floor)) => Some(ClosedNumericExpr::Floor(Box::new(Self::try_from_obj(
                 &floor.arg,
             )?))),
-            Obj::Ceil(ceil) => Some(ClosedNumericExpr::Ceil(Box::new(Self::try_from_obj(
+            Obj::ArithmeticOperator(ArithmeticOperator::Ceil(ceil)) => Some(ClosedNumericExpr::Ceil(Box::new(Self::try_from_obj(
                 &ceil.arg,
             )?))),
-            Obj::Sign(sign) => Some(ClosedNumericExpr::Sign(Box::new(Self::try_from_obj(
+            Obj::ArithmeticOperator(ArithmeticOperator::Sign(sign)) => Some(ClosedNumericExpr::Sign(Box::new(Self::try_from_obj(
                 &sign.arg,
             )?))),
             _ => None,
@@ -94,47 +92,47 @@ impl ClosedNumericExpr {
 
     pub fn to_obj(&self) -> Obj {
         match self {
-            ClosedNumericExpr::Number(n) => Obj::Number(n.clone()),
-            ClosedNumericExpr::Add(left, right) => Obj::Add(Add {
+            ClosedNumericExpr::Number(n) => Obj::Literal(Literal::Number(n.clone())),
+            ClosedNumericExpr::Add(left, right) => Obj::ArithmeticOperator(ArithmeticOperator::Add(Add {
                 left: Box::new(left.to_obj()),
                 right: Box::new(right.to_obj()),
-            }),
-            ClosedNumericExpr::Sub(left, right) => Obj::Sub(Sub {
+            })),
+            ClosedNumericExpr::Sub(left, right) => Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub {
                 left: Box::new(left.to_obj()),
                 right: Box::new(right.to_obj()),
-            }),
-            ClosedNumericExpr::Mul(left, right) => Obj::Mul(Mul {
+            })),
+            ClosedNumericExpr::Mul(left, right) => Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
                 left: Box::new(left.to_obj()),
                 right: Box::new(right.to_obj()),
-            }),
-            ClosedNumericExpr::Div(left, right) => Obj::Div(Div {
+            })),
+            ClosedNumericExpr::Div(left, right) => Obj::ArithmeticOperator(ArithmeticOperator::Div(Div {
                 left: Box::new(left.to_obj()),
                 right: Box::new(right.to_obj()),
-            }),
-            ClosedNumericExpr::Pow { base, exponent } => Obj::Pow(Pow {
+            })),
+            ClosedNumericExpr::Pow { base, exponent } => Obj::ArithmeticOperator(ArithmeticOperator::Pow(Pow {
                 base: Box::new(base.to_obj()),
                 exponent: Box::new(exponent.to_obj()),
-            }),
-            ClosedNumericExpr::Abs(arg) => Obj::Abs(Abs {
+            })),
+            ClosedNumericExpr::Abs(arg) => Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs {
                 arg: Box::new(arg.to_obj()),
-            }),
-            ClosedNumericExpr::Min(left, right) => Obj::Min(Min {
+            })),
+            ClosedNumericExpr::Min(left, right) => Obj::ArithmeticOperator(ArithmeticOperator::Min(Min {
                 left: Box::new(left.to_obj()),
                 right: Box::new(right.to_obj()),
-            }),
-            ClosedNumericExpr::Max(left, right) => Obj::Max(Max {
+            })),
+            ClosedNumericExpr::Max(left, right) => Obj::ArithmeticOperator(ArithmeticOperator::Max(Max {
                 left: Box::new(left.to_obj()),
                 right: Box::new(right.to_obj()),
-            }),
-            ClosedNumericExpr::Floor(arg) => Obj::Floor(Floor {
+            })),
+            ClosedNumericExpr::Floor(arg) => Obj::ArithmeticOperator(ArithmeticOperator::Floor(Floor {
                 arg: Box::new(arg.to_obj()),
-            }),
-            ClosedNumericExpr::Ceil(arg) => Obj::Ceil(Ceil {
+            })),
+            ClosedNumericExpr::Ceil(arg) => Obj::ArithmeticOperator(ArithmeticOperator::Ceil(Ceil {
                 arg: Box::new(arg.to_obj()),
-            }),
-            ClosedNumericExpr::Sign(arg) => Obj::Sign(Sign {
+            })),
+            ClosedNumericExpr::Sign(arg) => Obj::ArithmeticOperator(ArithmeticOperator::Sign(Sign {
                 arg: Box::new(arg.to_obj()),
-            }),
+            })),
         }
     }
 }
@@ -147,14 +145,12 @@ pub fn is_closed_numeric_expr(obj: &Obj) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{is_closed_numeric_expr, ClosedNumericExpr};
-    use crate::new_pipeline::ast::obj::{
-        Abs, Add, Div, Floor, Max, Min, Mul, Number, Obj, Pow, Sign,
-    };
+    use crate::new_pipeline::ast::obj::{Abs, Add, Div, Floor, Max, Min, Mul, Number, Obj, Pow, Sign, ArithmeticOperator, Literal};
 
     fn n(s: &str) -> Obj {
-        Obj::Number(Number {
+        Obj::Literal(Literal::Number(Number {
             normalized_value: s.to_string(),
-        })
+        }))
     }
 
     #[test]
@@ -162,31 +158,31 @@ mod tests {
         assert!(is_closed_numeric_expr(&n("2")));
 
         // 2^3/7 + 10 * 2.5
-        let pow = Obj::Pow(Pow {
+        let pow = Obj::ArithmeticOperator(ArithmeticOperator::Pow(Pow {
             base: Box::new(n("2")),
             exponent: Box::new(n("3")),
-        });
-        let frac = Obj::Div(Div {
+        }));
+        let frac = Obj::ArithmeticOperator(ArithmeticOperator::Div(Div {
             left: Box::new(pow),
             right: Box::new(n("7")),
-        });
-        let product = Obj::Mul(Mul {
+        }));
+        let product = Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
             left: Box::new(n("10")),
             right: Box::new(n("2.5")),
-        });
-        let sum = Obj::Add(Add {
+        }));
+        let sum = Obj::ArithmeticOperator(ArithmeticOperator::Add(Add {
             left: Box::new(frac),
             right: Box::new(product),
-        });
+        }));
         let view = ClosedNumericExpr::try_from_obj(&sum).expect("closed");
         assert_eq!(view.to_obj().ir(), sum.ir());
     }
 
     #[test]
     fn abs_min_max_floor_sign_of_numbers_are_closed() {
-        let abs = Obj::Abs(Abs {
+        let abs = Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs {
             arg: Box::new(n("-3")),
-        });
+        }));
         assert!(is_closed_numeric_expr(&abs));
         assert_eq!(
             ClosedNumericExpr::try_from_obj(&abs)
@@ -196,26 +192,26 @@ mod tests {
             abs.ir()
         );
 
-        let min = Obj::Min(Min {
+        let min = Obj::ArithmeticOperator(ArithmeticOperator::Min(Min {
             left: Box::new(n("1")),
             right: Box::new(n("2")),
-        });
+        }));
         assert!(is_closed_numeric_expr(&min));
 
-        let max = Obj::Max(Max {
+        let max = Obj::ArithmeticOperator(ArithmeticOperator::Max(Max {
             left: Box::new(n("1")),
             right: Box::new(n("2")),
-        });
+        }));
         assert!(is_closed_numeric_expr(&max));
 
-        let floor = Obj::Floor(Floor {
+        let floor = Obj::ArithmeticOperator(ArithmeticOperator::Floor(Floor {
             arg: Box::new(n("2.5")),
-        });
+        }));
         assert!(is_closed_numeric_expr(&floor));
 
-        let sign = Obj::Sign(Sign {
+        let sign = Obj::ArithmeticOperator(ArithmeticOperator::Sign(Sign {
             arg: Box::new(n("-4")),
-        });
+        }));
         assert!(is_closed_numeric_expr(&sign));
     }
 

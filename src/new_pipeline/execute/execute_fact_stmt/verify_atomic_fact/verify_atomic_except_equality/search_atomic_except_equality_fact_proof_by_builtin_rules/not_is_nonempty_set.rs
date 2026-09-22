@@ -1,5 +1,5 @@
 use crate::new_pipeline::ast::fact::NotIsNonemptySetFact;
-use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::ast::obj::{Obj, SetFormer};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
@@ -20,7 +20,7 @@ impl Runtime {
         _verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotIsNonemptySetFactSearchProofByBuiltinRule>> {
         match &fact.set {
-            Obj::ListSet(list_set) if list_set.list.is_empty() => Ok(Some(
+            Obj::SetFormer(SetFormer::ListSet(list_set)) if list_set.list.is_empty() => Ok(Some(
                 NotIsNonemptySetFactSearchProofByBuiltinRule::EmptyListSet(
                     EmptyListSetNotNonemptyBuiltinRuleProof {},
                 ),

@@ -6,7 +6,7 @@
 //! - Instantiated template (obj or fn head) → template body unfolds
 
 use crate::new_pipeline::ast::fact::EqualFact;
-use crate::new_pipeline::ast::obj::{FnObjHead, Obj};
+use crate::new_pipeline::ast::obj::{FnObjHead, Obj, Structish};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
@@ -84,7 +84,7 @@ impl Runtime {
                     ),
                 _ => Ok(None),
             },
-            Obj::InstantiatedTemplateObj(_) => self.search_object_definition_for_template_obj(
+            Obj::Structish(Structish::InstantiatedTemplateObj(_)) => self.search_object_definition_for_template_obj(
                 def_side,
                 other_side,
                 parent_fact,

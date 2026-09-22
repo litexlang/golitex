@@ -1,6 +1,6 @@
 use super::by_builtin_strategy_result::ExtremumEqualityStrategySingleStep;
 use crate::new_pipeline::ast::fact::{EqualFact, Fact, LessEqualFact};
-use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::ast::obj::{Obj, ArithmeticOperator, FiniteSetStat};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
@@ -15,17 +15,17 @@ impl Runtime {
         let has_extremum = matches!(
             (&fact.left, &fact.right),
             (
-                Obj::FiniteSetMax(_)
-                    | Obj::FiniteSetMin(_)
-                    | Obj::Max(_)
-                    | Obj::Min(_),
+                Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(_))
+                    | Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(_))
+                    | Obj::ArithmeticOperator(ArithmeticOperator::Max(_))
+                    | Obj::ArithmeticOperator(ArithmeticOperator::Min(_)),
                 _
             ) | (
                 _,
-                Obj::FiniteSetMax(_)
-                    | Obj::FiniteSetMin(_)
-                    | Obj::Max(_)
-                    | Obj::Min(_)
+                Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(_))
+                    | Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(_))
+                    | Obj::ArithmeticOperator(ArithmeticOperator::Max(_))
+                    | Obj::ArithmeticOperator(ArithmeticOperator::Min(_))
             )
         );
         if !has_extremum {

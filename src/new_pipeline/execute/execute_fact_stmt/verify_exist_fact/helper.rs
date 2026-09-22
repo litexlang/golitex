@@ -1,5 +1,5 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, ExistFactFamily, QuantifierFreeFact};
-use crate::new_pipeline::ast::obj::{IdentifierObj, Obj, StandardSet};
+use crate::new_pipeline::ast::obj::{IdentifierObj, Obj, StandardSet, Literal};
 use crate::new_pipeline::ast::param::ParamType;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 
@@ -89,11 +89,11 @@ fn plain_id(obj: &Obj) -> Option<IdentifierId> {
 fn obj_mentions_id(obj: &Obj, id: IdentifierId) -> bool {
     match obj {
         Obj::Identifier(IdentifierObj::Plain { id: plain, .. }) => *plain == id,
-        Obj::Number(_)
+        Obj::Literal(Literal::Number(_))
         | Obj::StandardSet(_)
-        | Obj::Pi(_)
-        | Obj::EulerNumber(_)
-        | Obj::ImaginaryUnit(_) => false,
+        | Obj::Literal(Literal::Pi(_))
+        | Obj::Literal(Literal::EulerNumber(_))
+        | Obj::Literal(Literal::ImaginaryUnit(_)) => false,
         _ => true,
     }
 }

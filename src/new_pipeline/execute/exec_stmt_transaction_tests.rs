@@ -1,6 +1,6 @@
 //! Transactional exec_stmt + WD-memory regression tests.
 
-use crate::new_pipeline::ast::obj::{Number, Obj};
+use crate::new_pipeline::ast::obj::{Number, Obj, ArithmeticOperator, Literal};
 use crate::new_pipeline::execute::ExecStmtResult;
 use crate::new_pipeline::launch_command::LaunchCommand;
 use crate::new_pipeline::runtime::Runtime;
@@ -26,9 +26,9 @@ fn exec_one(runtime: &mut Runtime, code: &str) -> ExecStmtResult {
 }
 
 fn number_one() -> Obj {
-    Obj::Number(Number {
+    Obj::Literal(Literal::Number(Number {
         normalized_value: "1".to_string(),
-    })
+    }))
 }
 
 #[test]
@@ -90,20 +90,20 @@ fn closed_numeric_order_comparisons() {
 
 #[test]
 fn calculation_lib_closed_decimal_smoke() {
-    use crate::new_pipeline::ast::obj::{Add, Number, Obj};
+    use crate::new_pipeline::ast::obj::{Add, Number, Obj, ArithmeticOperator, Literal};
     use crate::new_pipeline::rational_expression::{
         evaluate_obj_to_normalized_decimal_number, two_objs_equal_by_closed_decimal_calculation,
     };
-    let one = Obj::Number(Number {
+    let one = Obj::Literal(Literal::Number(Number {
         normalized_value: "1".into(),
-    });
-    let two = Obj::Number(Number {
+    }));
+    let two = Obj::Literal(Literal::Number(Number {
         normalized_value: "2".into(),
-    });
-    let add = Obj::Add(Add {
+    }));
+    let add = Obj::ArithmeticOperator(ArithmeticOperator::Add(Add {
         left: Box::new(one.clone()),
         right: Box::new(one.clone()),
-    });
+    }));
     let n = evaluate_obj_to_normalized_decimal_number(&add).expect("eval 1+1");
     assert_eq!(n.normalized_value, "2");
     assert!(two_objs_equal_by_closed_decimal_calculation(&add, &two));

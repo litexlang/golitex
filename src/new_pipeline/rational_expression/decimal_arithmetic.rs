@@ -1,4 +1,4 @@
-use crate::new_pipeline::ast::obj::{FiniteSetSize, Number, Obj};
+use crate::new_pipeline::ast::obj::{FiniteSetSize, Number, Obj, ArithmeticOperator, ExpLogOperator, FiniteSetStat, IntegerOperator, Literal, ProductShape, SetFormer};
 use crate::new_pipeline::rational_expression::exact_division::safe_div;
 use crate::new_pipeline::rational_expression::helper::{
     count_closed_range_integer_endpoints, count_half_open_range_integer_endpoints,
@@ -6,8 +6,8 @@ use crate::new_pipeline::rational_expression::helper::{
 
 pub fn evaluate_obj_to_normalized_decimal_number(obj: &Obj) -> Option<Number> {
     match obj {
-        Obj::Number(number) => Some(number.clone()),
-        Obj::Add(add) => {
+        Obj::Literal(Literal::Number(number)) => Some(number.clone()),
+        Obj::ArithmeticOperator(ArithmeticOperator::Add(add)) => {
             let left = evaluate_obj_to_normalized_decimal_number(&add.left)?;
             let right = evaluate_obj_to_normalized_decimal_number(&add.right)?;
             let a = &left.normalized_value;
@@ -21,7 +21,7 @@ pub fn evaluate_obj_to_normalized_decimal_number(obj: &Obj) -> Option<Number> {
             };
             Some(Number::new(sum))
         }
-        Obj::Sub(sub) => {
+        Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub)) => {
             let left = evaluate_obj_to_normalized_decimal_number(&sub.left)?;
             let right = evaluate_obj_to_normalized_decimal_number(&sub.right)?;
             let a = &left.normalized_value;
@@ -35,7 +35,7 @@ pub fn evaluate_obj_to_normalized_decimal_number(obj: &Obj) -> Option<Number> {
             };
             Some(Number::new(difference))
         }
-        Obj::Mul(mul) => {
+        Obj::ArithmeticOperator(ArithmeticOperator::Mul(mul)) => {
             let left = evaluate_obj_to_normalized_decimal_number(&mul.left)?;
             let right = evaluate_obj_to_normalized_decimal_number(&mul.right)?;
             Some(Number::new(mul_signed_decimal_str(
@@ -43,7 +43,7 @@ pub fn evaluate_obj_to_normalized_decimal_number(obj: &Obj) -> Option<Number> {
                 &right.normalized_value,
             )))
         }
-        Obj::Mod(mod_obj) => {
+        Obj::IntegerOperator(IntegerOperator::Mod(mod_obj)) => {
             let left = evaluate_obj_to_normalized_decimal_number(&mod_obj.left)?;
             let right = evaluate_obj_to_normalized_decimal_number(&mod_obj.right)?;
             Some(Number::new(mod_decimal_str_and_normalize(
@@ -51,7 +51,7 @@ pub fn evaluate_obj_to_normalized_decimal_number(obj: &Obj) -> Option<Number> {
                 &right.normalized_value,
             )))
         }
-        Obj::Quot(quot) => {
+        Obj::IntegerOperator(IntegerOperator::Quot(quot)) => {
             let left = evaluate_obj_to_normalized_decimal_number(&quot.left)?;
             let right = evaluate_obj_to_normalized_decimal_number(&quot.right)?;
             Some(Number::new(quot_decimal_str_and_normalize(
@@ -59,51 +59,51 @@ pub fn evaluate_obj_to_normalized_decimal_number(obj: &Obj) -> Option<Number> {
                 &right.normalized_value,
             )))
         }
-        Obj::Gcd(gcd) => {
+        Obj::IntegerOperator(IntegerOperator::Gcd(gcd)) => {
             let left = evaluate_obj_to_normalized_decimal_number(&gcd.left)?;
             let right = evaluate_obj_to_normalized_decimal_number(&gcd.right)?;
             gcd_decimal_str_and_normalize(&left.normalized_value, &right.normalized_value)
                 .map(Number::new)
         }
-        Obj::Lcm(lcm) => {
+        Obj::IntegerOperator(IntegerOperator::Lcm(lcm)) => {
             let left = evaluate_obj_to_normalized_decimal_number(&lcm.left)?;
             let right = evaluate_obj_to_normalized_decimal_number(&lcm.right)?;
             lcm_decimal_str_and_normalize(&left.normalized_value, &right.normalized_value)
                 .map(Number::new)
         }
-        Obj::Floor(floor) => {
+        Obj::ArithmeticOperator(ArithmeticOperator::Floor(floor)) => {
             let argument = evaluate_obj_to_normalized_decimal_number(&floor.arg)?;
             Some(Number::new(floor_decimal_str(&argument.normalized_value)))
         }
-        Obj::Ceil(ceil) => {
+        Obj::ArithmeticOperator(ArithmeticOperator::Ceil(ceil)) => {
             let argument = evaluate_obj_to_normalized_decimal_number(&ceil.arg)?;
             Some(Number::new(ceil_decimal_str(&argument.normalized_value)))
         }
-        Obj::Min(min) => {
+        Obj::ArithmeticOperator(ArithmeticOperator::Min(min)) => {
             let left = evaluate_obj_to_normalized_decimal_number(&min.left)?;
             let right = evaluate_obj_to_normalized_decimal_number(&min.right)?;
             Some(evaluated_min_or_max_value(&left, &right, false))
         }
-        Obj::Max(max) => {
+        Obj::ArithmeticOperator(ArithmeticOperator::Max(max)) => {
             let left = evaluate_obj_to_normalized_decimal_number(&max.left)?;
             let right = evaluate_obj_to_normalized_decimal_number(&max.right)?;
             Some(evaluated_min_or_max_value(&left, &right, true))
         }
-        Obj::Exp(exp) => {
+        Obj::ExpLogOperator(ExpLogOperator::Exp(exp)) => {
             let argument = evaluate_obj_to_normalized_decimal_number(&exp.arg)?;
             if argument.normalized_value != "0" {
                 return None;
             }
             Some(Number::new("1".to_string()))
         }
-        Obj::Ln(ln) => {
+        Obj::ExpLogOperator(ExpLogOperator::Ln(ln)) => {
             let argument = evaluate_obj_to_normalized_decimal_number(&ln.arg)?;
             if argument.normalized_value != "1" {
                 return None;
             }
             Some(Number::new("0".to_string()))
         }
-        Obj::Sign(sign) => {
+        Obj::ArithmeticOperator(ArithmeticOperator::Sign(sign)) => {
             let argument = evaluate_obj_to_normalized_decimal_number(&sign.arg)?;
             let value = if argument.normalized_value == "0" {
                 "0"
@@ -114,22 +114,22 @@ pub fn evaluate_obj_to_normalized_decimal_number(obj: &Obj) -> Option<Number> {
             };
             Some(Number::new(value.to_string()))
         }
-        Obj::Factorial(factorial) => {
+        Obj::IntegerOperator(IntegerOperator::Factorial(factorial)) => {
             let argument = evaluate_obj_to_normalized_decimal_number(&factorial.arg)?;
             factorial_decimal_str_and_normalize(&argument.normalized_value).map(Number::new)
         }
-        Obj::Pow(pow_obj) => {
+        Obj::ArithmeticOperator(ArithmeticOperator::Pow(pow_obj)) => {
             let left = evaluate_obj_to_normalized_decimal_number(&pow_obj.base)?;
             let right = evaluate_obj_to_normalized_decimal_number(&pow_obj.exponent)?;
             pow_decimal_str_and_normalize(&left.normalized_value, &right.normalized_value)
                 .map(Number::new)
         }
-        Obj::Div(div) => {
+        Obj::ArithmeticOperator(ArithmeticOperator::Div(div)) => {
             let left = evaluate_obj_to_normalized_decimal_number(&div.left)?;
             let right = evaluate_obj_to_normalized_decimal_number(&div.right)?;
             safe_div(&left.normalized_value, &right.normalized_value).map(Number::new)
         }
-        Obj::Abs(abs) => {
+        Obj::ArithmeticOperator(ArithmeticOperator::Abs(abs)) => {
             let argument = evaluate_obj_to_normalized_decimal_number(&abs.arg)?;
             if let Some(rest) = argument.normalized_value.trim().strip_prefix('-') {
                 Some(Number::new(rest.trim().to_string()))
@@ -137,42 +137,42 @@ pub fn evaluate_obj_to_normalized_decimal_number(obj: &Obj) -> Option<Number> {
                 Some(argument)
             }
         }
-        Obj::CartDim(cart_dim) => match &*cart_dim.set {
-            Obj::Cart(cart) => Some(Number::new(cart.args.len().to_string())),
+        Obj::ProductShape(ProductShape::CartDim(cart_dim)) => match &*cart_dim.set {
+            Obj::ProductShape(ProductShape::Cart(cart)) => Some(Number::new(cart.args.len().to_string())),
             _ => None,
         },
-        Obj::TupleDim(tuple_dim) => match &*tuple_dim.arg {
-            Obj::Tuple(tuple) => Some(Number::new(tuple.args.len().to_string())),
+        Obj::ProductShape(ProductShape::TupleDim(tuple_dim)) => match &*tuple_dim.arg {
+            Obj::ProductShape(ProductShape::Tuple(tuple)) => Some(Number::new(tuple.args.len().to_string())),
             _ => None,
         },
-        Obj::FiniteSetSize(finite_set_size) => match &*finite_set_size.set {
-            Obj::ListSet(list_set) => Some(Number::new(list_set.list.len().to_string())),
-            Obj::ClosedRange(cr) => {
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(finite_set_size)) => match &*finite_set_size.set {
+            Obj::SetFormer(SetFormer::ListSet(list_set)) => Some(Number::new(list_set.list.len().to_string())),
+            Obj::SetFormer(SetFormer::ClosedRange(cr)) => {
                 let start = evaluate_obj_to_normalized_decimal_number(&cr.start)?;
                 let end = evaluate_obj_to_normalized_decimal_number(&cr.end)?;
                 count_closed_range_integer_endpoints(&start, &end)
             }
-            Obj::Range(r) => {
+            Obj::SetFormer(SetFormer::Range(r)) => {
                 let start = evaluate_obj_to_normalized_decimal_number(&r.start)?;
                 let end = evaluate_obj_to_normalized_decimal_number(&r.end)?;
                 count_half_open_range_integer_endpoints(&start, &end)
             }
-            Obj::Cart(cart) => {
+            Obj::ProductShape(ProductShape::Cart(cart)) => {
                 let mut acc = "1".to_string();
                 for arg in cart.args.iter() {
-                    let factor = evaluate_obj_to_normalized_decimal_number(&Obj::FiniteSetSize(
+                    let factor = evaluate_obj_to_normalized_decimal_number(&Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(
                         FiniteSetSize {
                             set: Box::new((**arg).clone()),
                         },
-                    ))?;
+                    )))?;
                     acc = mul_signed_decimal_str(acc.trim(), factor.normalized_value.trim());
                 }
                 Some(Number::new(acc))
             }
             _ => None,
         },
-        Obj::FiniteSetMax(extremum) => evaluate_nonempty_numeric_list_set(extremum.set.as_ref(), true),
-        Obj::FiniteSetMin(extremum) => {
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(extremum)) => evaluate_nonempty_numeric_list_set(extremum.set.as_ref(), true),
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(extremum)) => {
             evaluate_nonempty_numeric_list_set(extremum.set.as_ref(), false)
         }
         _ => None,
@@ -205,7 +205,7 @@ fn evaluated_min_or_max_value(left: &Number, right: &Number, take_maximum: bool)
 }
 
 fn evaluate_nonempty_numeric_list_set(set: &Obj, take_maximum: bool) -> Option<Number> {
-    let Obj::ListSet(list_set) = set else {
+    let Obj::SetFormer(SetFormer::ListSet(list_set)) = set else {
         return None;
     };
     let mut evaluated = Vec::new();

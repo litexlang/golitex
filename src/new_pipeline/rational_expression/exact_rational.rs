@@ -1,4 +1,4 @@
-use crate::new_pipeline::ast::obj::{Number, Obj};
+use crate::new_pipeline::ast::obj::{Number, Obj, ArithmeticOperator, Literal};
 use crate::new_pipeline::rational_expression::helper::{div_objs, obj_from_number};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -27,28 +27,28 @@ impl EvalRational {
 
     pub fn from_obj(obj: &Obj) -> Option<Self> {
         match obj {
-            Obj::Number(number) => Self::from_number(number),
-            Obj::Add(add) => {
+            Obj::Literal(Literal::Number(number)) => Self::from_number(number),
+            Obj::ArithmeticOperator(ArithmeticOperator::Add(add)) => {
                 let left = Self::from_obj(&add.left)?;
                 let right = Self::from_obj(&add.right)?;
                 left.add(&right)
             }
-            Obj::Sub(sub) => {
+            Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub)) => {
                 let left = Self::from_obj(&sub.left)?;
                 let right = Self::from_obj(&sub.right)?;
                 left.sub(&right)
             }
-            Obj::Mul(mul) => {
+            Obj::ArithmeticOperator(ArithmeticOperator::Mul(mul)) => {
                 let left = Self::from_obj(&mul.left)?;
                 let right = Self::from_obj(&mul.right)?;
                 left.mul(&right)
             }
-            Obj::Div(div) => {
+            Obj::ArithmeticOperator(ArithmeticOperator::Div(div)) => {
                 let left = Self::from_obj(&div.left)?;
                 let right = Self::from_obj(&div.right)?;
                 left.div(&right)
             }
-            Obj::Pow(pow) => {
+            Obj::ArithmeticOperator(ArithmeticOperator::Pow(pow)) => {
                 let base = Self::from_obj(&pow.base)?;
                 let exponent = Self::from_obj(&pow.exponent)?;
                 let exponent = exponent.to_non_negative_usize_if_integer()?;

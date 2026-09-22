@@ -1,8 +1,5 @@
 use super::primary::{fn_obj_head_from_obj, parse_primary};
-use crate::new_pipeline::ast::obj::{
-    Add, Cart, ClosedRange, Div, FnObj, FnSet, Intersect, Mod, Mul, Number, Obj, FieldAccess,
-    ObjAtIndex, Pow, Sub, Union,
-};
+use crate::new_pipeline::ast::obj::{Add, Cart, ClosedRange, Div, FnObj, FnSet, Intersect, Mod, Mul, Number, Obj, FieldAccess, ObjAtIndex, Pow, Sub, Union, ArithmeticOperator, FunctionSpace, IntegerOperator, Literal, ProductShape, SetFormer, SetOperator, Structish};
 use crate::new_pipeline::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
 use crate::new_pipeline::parse::keywords::{
     ADD, DIV, DOT, DOT_DOT_DOT, FN_ARROW, LEFT_BRACKET, LEFT_PAREN, MOD_OP, MUL, POW, RIGHT_BRACKET,
@@ -25,7 +22,7 @@ fn parse_fn_arrow(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
     tb.advance()?;
     let right = parse_fn_arrow(rt, tb)?;
     let param = rt.fresh_internal_param();
-    Ok(Obj::FnSet(FnSet {
+    Ok(Obj::FunctionSpace(FunctionSpace::FnSet(FnSet {
         set_bound_parameters: SetBoundParameterList {
             groups: vec![SetBoundParameterGroup {
                 params: vec![param],
@@ -34,7 +31,7 @@ fn parse_fn_arrow(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
         },
         dom_facts: vec![],
         ret_set: Box::new(right),
-    }))
+    })))
 }
 
 fn parse_unicode_union(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
@@ -42,10 +39,10 @@ fn parse_unicode_union(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<O
     while tb.peek() == Some(UNICODE_UNION) {
         tb.advance()?;
         let right = parse_unicode_intersect(rt, tb)?;
-        left = Obj::Union(Union {
+        left = Obj::SetOperator(SetOperator::Union(Union {
             left: Box::new(left),
             right: Box::new(right),
-        });
+        }));
     }
     Ok(left)
 }
@@ -55,10 +52,10 @@ fn parse_unicode_intersect(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResu
     while tb.peek() == Some(UNICODE_INTERSECT) {
         tb.advance()?;
         let right = parse_unicode_cart(rt, tb)?;
-        left = Obj::Intersect(Intersect {
+        left = Obj::SetOperator(SetOperator::Intersect(Intersect {
             left: Box::new(left),
             right: Box::new(right),
-        });
+        }));
     }
     Ok(left)
 }
@@ -73,9 +70,9 @@ fn parse_unicode_cart(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Ob
         tb.advance()?;
         factors.push(parse_add_sub(rt, tb)?);
     }
-    Ok(Obj::Cart(Cart {
+    Ok(Obj::ProductShape(ProductShape::Cart(Cart {
         args: factors.into_iter().map(Box::new).collect(),
-    }))
+    })))
 }
 
 fn parse_add_sub(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
@@ -85,18 +82,18 @@ fn parse_add_sub(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
             Some(ADD) => {
                 tb.advance()?;
                 let right = parse_mul_div_mod(rt, tb)?;
-                left = Obj::Add(Add {
+                left = Obj::ArithmeticOperator(ArithmeticOperator::Add(Add {
                     left: Box::new(left),
                     right: Box::new(right),
-                });
+                }));
             }
             Some(SUB) => {
                 tb.advance()?;
                 let right = parse_mul_div_mod(rt, tb)?;
-                left = Obj::Sub(Sub {
+                left = Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub {
                     left: Box::new(left),
                     right: Box::new(right),
-                });
+                }));
             }
             _ => return Ok(left),
         }
@@ -110,26 +107,26 @@ fn parse_mul_div_mod(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
             Some(MUL) => {
                 tb.advance()?;
                 let right = parse_closed_range(rt, tb)?;
-                left = Obj::Mul(Mul {
+                left = Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
                     left: Box::new(left),
                     right: Box::new(right),
-                });
+                }));
             }
             Some(DIV) => {
                 tb.advance()?;
                 let right = parse_closed_range(rt, tb)?;
-                left = Obj::Div(Div {
+                left = Obj::ArithmeticOperator(ArithmeticOperator::Div(Div {
                     left: Box::new(left),
                     right: Box::new(right),
-                });
+                }));
             }
             Some(MOD_OP) => {
                 tb.advance()?;
                 let right = parse_closed_range(rt, tb)?;
-                left = Obj::Mod(Mod {
+                left = Obj::IntegerOperator(IntegerOperator::Mod(Mod {
                     left: Box::new(left),
                     right: Box::new(right),
-                });
+                }));
             }
             _ => return Ok(left),
         }
@@ -141,10 +138,10 @@ fn parse_closed_range(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Ob
     if tb.peek() == Some(DOT_DOT_DOT) {
         tb.advance()?;
         let right = parse_add_sub(rt, tb)?;
-        Ok(Obj::ClosedRange(ClosedRange {
+        Ok(Obj::SetFormer(SetFormer::ClosedRange(ClosedRange {
             start: Box::new(left),
             end: Box::new(right),
-        }))
+        })))
     } else {
         Ok(left)
     }
@@ -155,12 +152,12 @@ fn parse_unary(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
         tb.advance()?;
         let right = parse_unary(rt, tb)?;
         // Encode unary minus as `0 - right` (no Neg variant).
-        return Ok(Obj::Sub(Sub {
-            left: Box::new(Obj::Number(Number {
+        return Ok(Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub {
+            left: Box::new(Obj::Literal(Literal::Number(Number {
                 normalized_value: "0".to_string(),
-            })),
+            }))),
             right: Box::new(right),
-        }));
+        })));
     }
     parse_pow(rt, tb)
 }
@@ -171,10 +168,10 @@ fn parse_pow(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
         tb.advance()?;
         // Right-associative: a^b^c = a^(b^c); right side re-enters unary.
         let right = parse_unary(rt, tb)?;
-        Ok(Obj::Pow(Pow {
+        Ok(Obj::ArithmeticOperator(ArithmeticOperator::Pow(Pow {
             base: Box::new(left),
             exponent: Box::new(right),
-        }))
+        })))
     } else {
         Ok(left)
     }
@@ -190,10 +187,10 @@ fn parse_postfix(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
         tb.advance()?;
         let index = parse_obj(rt, tb)?;
         tb.expect(RIGHT_BRACKET)?;
-        left = Obj::ObjAtIndex(ObjAtIndex {
+        left = Obj::ProductShape(ProductShape::ObjAtIndex(ObjAtIndex {
             obj: Box::new(left),
             index: Box::new(index),
-        });
+        }));
         left = parse_field_and_call_postfixes(rt, tb, left)?;
     }
     Ok(left)
@@ -214,14 +211,14 @@ fn parse_field_and_call_postfixes(
                 );
             }
             result = match result {
-                Obj::FieldAccess(mut access) => {
+                Obj::Structish(Structish::FieldAccess(mut access)) => {
                     access.fields.push(field_name);
-                    Obj::FieldAccess(access)
+                    Obj::Structish(Structish::FieldAccess(access))
                 }
-                other => Obj::FieldAccess(FieldAccess {
+                other => Obj::Structish(Structish::FieldAccess(FieldAccess {
                     obj: Box::new(other),
                     fields: vec![field_name],
-                }),
+                })),
             };
             continue;
         }

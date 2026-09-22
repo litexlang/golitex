@@ -2,7 +2,11 @@ use super::fail_to_verify_obj_well_defined::*;
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::obj_well_defined_proof_by_def::*;
 use super::entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
-use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::ast::obj::{
+    ArithmeticOperator, ComplexOperator, ExpLogOperator, FiniteSetStat, FunctionSpace,
+    IntegerOperator, IteratedOperator, Literal, Obj, ProductShape, SetFormer, SetOperator,
+    Structish, TrigOperator,
+};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 
 // Pack CommonStages into the Obj-mirrored ByDef proof, or the mirrored fail.
@@ -53,123 +57,123 @@ fn pack_success_by_def(
     mut stages: ObjWellDefinedByDefCommonStages,
 ) -> ObjWellDefinedProofByDef {
     match obj {
-        Obj::Identifier(_) | Obj::Number(_) | Obj::ImaginaryUnit(_) | Obj::EulerNumber(_) | Obj::Pi(_) | Obj::StandardSet(_) => {
+        Obj::Identifier(_) | Obj::Literal(Literal::Number(_)) | Obj::Literal(Literal::ImaginaryUnit(_)) | Obj::Literal(Literal::EulerNumber(_)) | Obj::Literal(Literal::Pi(_)) | Obj::StandardSet(_) => {
             let _ = stages;
             match obj {
                 Obj::Identifier(_) => ObjWellDefinedProofByDef::Identifier(IdentifierObjWellDefinedProof::new()),
-                Obj::Number(_) => ObjWellDefinedProofByDef::Number(NumberObjWellDefinedProof::new()),
-                Obj::ImaginaryUnit(_) => ObjWellDefinedProofByDef::ImaginaryUnit(ImaginaryUnitObjWellDefinedProof::new()),
-                Obj::EulerNumber(_) => ObjWellDefinedProofByDef::EulerNumber(EulerNumberObjWellDefinedProof::new()),
-                Obj::Pi(_) => ObjWellDefinedProofByDef::Pi(PiObjWellDefinedProof::new()),
+                Obj::Literal(Literal::Number(_)) => ObjWellDefinedProofByDef::Literal(LiteralObjWellDefinedProofByDef::Number(NumberObjWellDefinedProof::new())),
+                Obj::Literal(Literal::ImaginaryUnit(_)) => ObjWellDefinedProofByDef::Literal(LiteralObjWellDefinedProofByDef::ImaginaryUnit(ImaginaryUnitObjWellDefinedProof::new())),
+                Obj::Literal(Literal::EulerNumber(_)) => ObjWellDefinedProofByDef::Literal(LiteralObjWellDefinedProofByDef::EulerNumber(EulerNumberObjWellDefinedProof::new())),
+                Obj::Literal(Literal::Pi(_)) => ObjWellDefinedProofByDef::Literal(LiteralObjWellDefinedProofByDef::Pi(PiObjWellDefinedProof::new())),
                 Obj::StandardSet(_) => ObjWellDefinedProofByDef::StandardSet(StandardSetObjWellDefinedProof::new()),
                 _ => unreachable!("leaf Obj arm"),
             }
         }
         Obj::FnObj(_) => ObjWellDefinedProofByDef::FnObj(FnObjObjWellDefinedProof::from_stages(stages)),
-        Obj::Add(_) => ObjWellDefinedProofByDef::Add(AddObjWellDefinedProof::from_stages(stages)),
-        Obj::Sub(_) => ObjWellDefinedProofByDef::Sub(SubObjWellDefinedProof::from_stages(stages)),
-        Obj::Mul(_) => ObjWellDefinedProofByDef::Mul(MulObjWellDefinedProof::from_stages(stages)),
-        Obj::Div(_) => ObjWellDefinedProofByDef::Div(DivObjWellDefinedProof::from_stages(stages)),
-        Obj::Mod(_) => ObjWellDefinedProofByDef::Mod(ModObjWellDefinedProof::from_stages(stages)),
-        Obj::Quot(_) => ObjWellDefinedProofByDef::Quot(QuotObjWellDefinedProof::from_stages(stages)),
-        Obj::Gcd(_) => ObjWellDefinedProofByDef::Gcd(GcdObjWellDefinedProof::from_stages(stages)),
-        Obj::Lcm(_) => ObjWellDefinedProofByDef::Lcm(LcmObjWellDefinedProof::from_stages(stages)),
-        Obj::Floor(_) => ObjWellDefinedProofByDef::Floor(FloorObjWellDefinedProof::from_stages(stages)),
-        Obj::Ceil(_) => ObjWellDefinedProofByDef::Ceil(CeilObjWellDefinedProof::from_stages(stages)),
-        Obj::Min(_) => ObjWellDefinedProofByDef::Min(MinObjWellDefinedProof::from_stages(stages)),
-        Obj::Max(_) => ObjWellDefinedProofByDef::Max(MaxObjWellDefinedProof::from_stages(stages)),
-        Obj::Exp(_) => ObjWellDefinedProofByDef::Exp(ExpObjWellDefinedProof::from_stages(stages)),
-        Obj::Ln(_) => ObjWellDefinedProofByDef::Ln(LnObjWellDefinedProof::from_stages(stages)),
-        Obj::Sign(_) => ObjWellDefinedProofByDef::Sign(SignObjWellDefinedProof::from_stages(stages)),
-        Obj::Factorial(_) => ObjWellDefinedProofByDef::Factorial(FactorialObjWellDefinedProof::from_stages(stages)),
-        Obj::Pow(_) => ObjWellDefinedProofByDef::Pow(PowObjWellDefinedProof::from_stages(stages)),
-        Obj::Abs(_) => ObjWellDefinedProofByDef::Abs(AbsObjWellDefinedProof::from_stages(stages)),
-        Obj::Sin(_) => ObjWellDefinedProofByDef::Sin(SinObjWellDefinedProof::from_stages(stages)),
-        Obj::Arcsin(_) => ObjWellDefinedProofByDef::Arcsin(ArcsinObjWellDefinedProof::from_stages(stages)),
-        Obj::Arccos(_) => ObjWellDefinedProofByDef::Arccos(ArccosObjWellDefinedProof::from_stages(stages)),
-        Obj::Arctan(_) => ObjWellDefinedProofByDef::Arctan(ArctanObjWellDefinedProof::from_stages(stages)),
-        Obj::Arccot(_) => ObjWellDefinedProofByDef::Arccot(ArccotObjWellDefinedProof::from_stages(stages)),
-        Obj::Cos(_) => ObjWellDefinedProofByDef::Cos(CosObjWellDefinedProof::from_stages(stages)),
-        Obj::Tan(_) => ObjWellDefinedProofByDef::Tan(TanObjWellDefinedProof::from_stages(stages)),
-        Obj::Cot(_) => ObjWellDefinedProofByDef::Cot(CotObjWellDefinedProof::from_stages(stages)),
-        Obj::RealPart(_) => ObjWellDefinedProofByDef::RealPart(RealPartObjWellDefinedProof::from_stages(stages)),
-        Obj::ImaginaryPart(_) => ObjWellDefinedProofByDef::ImaginaryPart(ImaginaryPartObjWellDefinedProof::from_stages(stages)),
-        Obj::ComplexAbs(_) => ObjWellDefinedProofByDef::ComplexAbs(ComplexAbsObjWellDefinedProof::from_stages(stages)),
-        Obj::Sqrt(_) => ObjWellDefinedProofByDef::Sqrt(SqrtObjWellDefinedProof::from_stages(stages)),
-        Obj::Log(_) => ObjWellDefinedProofByDef::Log(LogObjWellDefinedProof::from_stages(stages)),
-        Obj::Union(_) => ObjWellDefinedProofByDef::Union(UnionObjWellDefinedProof::from_stages(stages)),
-        Obj::Intersect(_) => ObjWellDefinedProofByDef::Intersect(IntersectObjWellDefinedProof::from_stages(stages)),
-        Obj::SetMinus(_) => ObjWellDefinedProofByDef::SetMinus(SetMinusObjWellDefinedProof::from_stages(stages)),
-        Obj::BigUnion(_) => ObjWellDefinedProofByDef::BigUnion(BigUnionObjWellDefinedProof::from_stages(stages)),
-        Obj::BigIntersect(_) => ObjWellDefinedProofByDef::BigIntersect(BigIntersectObjWellDefinedProof::from_stages(stages)),
-        Obj::IndexUnion(_) => ObjWellDefinedProofByDef::IndexUnion(IndexUnionObjWellDefinedProof::from_stages(stages)),
-        Obj::IndexIntersect(_) => ObjWellDefinedProofByDef::IndexIntersect(IndexIntersectObjWellDefinedProof::from_stages(stages)),
-        Obj::PowerSet(_) => ObjWellDefinedProofByDef::PowerSet(PowerSetObjWellDefinedProof::from_stages(stages)),
-        Obj::GeneralCart(_) => ObjWellDefinedProofByDef::GeneralCart(GeneralCartObjWellDefinedProof::from_stages(stages)),
-        Obj::ListSet(_) => ObjWellDefinedProofByDef::ListSet(ListSetObjWellDefinedProof::from_stages(stages)),
-        Obj::SetBuilder(_) | Obj::FnSet(_) | Obj::AnonymousFn(_) => {
+        Obj::ArithmeticOperator(ArithmeticOperator::Add(_)) => ObjWellDefinedProofByDef::ArithmeticOperator(ArithmeticOperatorObjWellDefinedProofByDef::Add(AddObjWellDefinedProof::from_stages(stages))),
+        Obj::ArithmeticOperator(ArithmeticOperator::Sub(_)) => ObjWellDefinedProofByDef::ArithmeticOperator(ArithmeticOperatorObjWellDefinedProofByDef::Sub(SubObjWellDefinedProof::from_stages(stages))),
+        Obj::ArithmeticOperator(ArithmeticOperator::Mul(_)) => ObjWellDefinedProofByDef::ArithmeticOperator(ArithmeticOperatorObjWellDefinedProofByDef::Mul(MulObjWellDefinedProof::from_stages(stages))),
+        Obj::ArithmeticOperator(ArithmeticOperator::Div(_)) => ObjWellDefinedProofByDef::ArithmeticOperator(ArithmeticOperatorObjWellDefinedProofByDef::Div(DivObjWellDefinedProof::from_stages(stages))),
+        Obj::IntegerOperator(IntegerOperator::Mod(_)) => ObjWellDefinedProofByDef::IntegerOperator(IntegerOperatorObjWellDefinedProofByDef::Mod(ModObjWellDefinedProof::from_stages(stages))),
+        Obj::IntegerOperator(IntegerOperator::Quot(_)) => ObjWellDefinedProofByDef::IntegerOperator(IntegerOperatorObjWellDefinedProofByDef::Quot(QuotObjWellDefinedProof::from_stages(stages))),
+        Obj::IntegerOperator(IntegerOperator::Gcd(_)) => ObjWellDefinedProofByDef::IntegerOperator(IntegerOperatorObjWellDefinedProofByDef::Gcd(GcdObjWellDefinedProof::from_stages(stages))),
+        Obj::IntegerOperator(IntegerOperator::Lcm(_)) => ObjWellDefinedProofByDef::IntegerOperator(IntegerOperatorObjWellDefinedProofByDef::Lcm(LcmObjWellDefinedProof::from_stages(stages))),
+        Obj::ArithmeticOperator(ArithmeticOperator::Floor(_)) => ObjWellDefinedProofByDef::ArithmeticOperator(ArithmeticOperatorObjWellDefinedProofByDef::Floor(FloorObjWellDefinedProof::from_stages(stages))),
+        Obj::ArithmeticOperator(ArithmeticOperator::Ceil(_)) => ObjWellDefinedProofByDef::ArithmeticOperator(ArithmeticOperatorObjWellDefinedProofByDef::Ceil(CeilObjWellDefinedProof::from_stages(stages))),
+        Obj::ArithmeticOperator(ArithmeticOperator::Min(_)) => ObjWellDefinedProofByDef::ArithmeticOperator(ArithmeticOperatorObjWellDefinedProofByDef::Min(MinObjWellDefinedProof::from_stages(stages))),
+        Obj::ArithmeticOperator(ArithmeticOperator::Max(_)) => ObjWellDefinedProofByDef::ArithmeticOperator(ArithmeticOperatorObjWellDefinedProofByDef::Max(MaxObjWellDefinedProof::from_stages(stages))),
+        Obj::ExpLogOperator(ExpLogOperator::Exp(_)) => ObjWellDefinedProofByDef::ExpLogOperator(ExpLogOperatorObjWellDefinedProofByDef::Exp(ExpObjWellDefinedProof::from_stages(stages))),
+        Obj::ExpLogOperator(ExpLogOperator::Ln(_)) => ObjWellDefinedProofByDef::ExpLogOperator(ExpLogOperatorObjWellDefinedProofByDef::Ln(LnObjWellDefinedProof::from_stages(stages))),
+        Obj::ArithmeticOperator(ArithmeticOperator::Sign(_)) => ObjWellDefinedProofByDef::ArithmeticOperator(ArithmeticOperatorObjWellDefinedProofByDef::Sign(SignObjWellDefinedProof::from_stages(stages))),
+        Obj::IntegerOperator(IntegerOperator::Factorial(_)) => ObjWellDefinedProofByDef::IntegerOperator(IntegerOperatorObjWellDefinedProofByDef::Factorial(FactorialObjWellDefinedProof::from_stages(stages))),
+        Obj::ArithmeticOperator(ArithmeticOperator::Pow(_)) => ObjWellDefinedProofByDef::ArithmeticOperator(ArithmeticOperatorObjWellDefinedProofByDef::Pow(PowObjWellDefinedProof::from_stages(stages))),
+        Obj::ArithmeticOperator(ArithmeticOperator::Abs(_)) => ObjWellDefinedProofByDef::ArithmeticOperator(ArithmeticOperatorObjWellDefinedProofByDef::Abs(AbsObjWellDefinedProof::from_stages(stages))),
+        Obj::TrigOperator(TrigOperator::Sin(_)) => ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Sin(SinObjWellDefinedProof::from_stages(stages))),
+        Obj::TrigOperator(TrigOperator::Arcsin(_)) => ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Arcsin(ArcsinObjWellDefinedProof::from_stages(stages))),
+        Obj::TrigOperator(TrigOperator::Arccos(_)) => ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Arccos(ArccosObjWellDefinedProof::from_stages(stages))),
+        Obj::TrigOperator(TrigOperator::Arctan(_)) => ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Arctan(ArctanObjWellDefinedProof::from_stages(stages))),
+        Obj::TrigOperator(TrigOperator::Arccot(_)) => ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Arccot(ArccotObjWellDefinedProof::from_stages(stages))),
+        Obj::TrigOperator(TrigOperator::Cos(_)) => ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Cos(CosObjWellDefinedProof::from_stages(stages))),
+        Obj::TrigOperator(TrigOperator::Tan(_)) => ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Tan(TanObjWellDefinedProof::from_stages(stages))),
+        Obj::TrigOperator(TrigOperator::Cot(_)) => ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Cot(CotObjWellDefinedProof::from_stages(stages))),
+        Obj::ComplexOperator(ComplexOperator::RealPart(_)) => ObjWellDefinedProofByDef::ComplexOperator(ComplexOperatorObjWellDefinedProofByDef::RealPart(RealPartObjWellDefinedProof::from_stages(stages))),
+        Obj::ComplexOperator(ComplexOperator::ImaginaryPart(_)) => ObjWellDefinedProofByDef::ComplexOperator(ComplexOperatorObjWellDefinedProofByDef::ImaginaryPart(ImaginaryPartObjWellDefinedProof::from_stages(stages))),
+        Obj::ComplexOperator(ComplexOperator::ComplexAbs(_)) => ObjWellDefinedProofByDef::ComplexOperator(ComplexOperatorObjWellDefinedProofByDef::ComplexAbs(ComplexAbsObjWellDefinedProof::from_stages(stages))),
+        Obj::ExpLogOperator(ExpLogOperator::Sqrt(_)) => ObjWellDefinedProofByDef::ExpLogOperator(ExpLogOperatorObjWellDefinedProofByDef::Sqrt(SqrtObjWellDefinedProof::from_stages(stages))),
+        Obj::ExpLogOperator(ExpLogOperator::Log(_)) => ObjWellDefinedProofByDef::ExpLogOperator(ExpLogOperatorObjWellDefinedProofByDef::Log(LogObjWellDefinedProof::from_stages(stages))),
+        Obj::SetOperator(SetOperator::Union(_)) => ObjWellDefinedProofByDef::SetOperator(SetOperatorObjWellDefinedProofByDef::Union(UnionObjWellDefinedProof::from_stages(stages))),
+        Obj::SetOperator(SetOperator::Intersect(_)) => ObjWellDefinedProofByDef::SetOperator(SetOperatorObjWellDefinedProofByDef::Intersect(IntersectObjWellDefinedProof::from_stages(stages))),
+        Obj::SetOperator(SetOperator::SetMinus(_)) => ObjWellDefinedProofByDef::SetOperator(SetOperatorObjWellDefinedProofByDef::SetMinus(SetMinusObjWellDefinedProof::from_stages(stages))),
+        Obj::SetOperator(SetOperator::BigUnion(_)) => ObjWellDefinedProofByDef::SetOperator(SetOperatorObjWellDefinedProofByDef::BigUnion(BigUnionObjWellDefinedProof::from_stages(stages))),
+        Obj::SetOperator(SetOperator::BigIntersect(_)) => ObjWellDefinedProofByDef::SetOperator(SetOperatorObjWellDefinedProofByDef::BigIntersect(BigIntersectObjWellDefinedProof::from_stages(stages))),
+        Obj::SetOperator(SetOperator::IndexUnion(_)) => ObjWellDefinedProofByDef::SetOperator(SetOperatorObjWellDefinedProofByDef::IndexUnion(IndexUnionObjWellDefinedProof::from_stages(stages))),
+        Obj::SetOperator(SetOperator::IndexIntersect(_)) => ObjWellDefinedProofByDef::SetOperator(SetOperatorObjWellDefinedProofByDef::IndexIntersect(IndexIntersectObjWellDefinedProof::from_stages(stages))),
+        Obj::SetOperator(SetOperator::PowerSet(_)) => ObjWellDefinedProofByDef::SetOperator(SetOperatorObjWellDefinedProofByDef::PowerSet(PowerSetObjWellDefinedProof::from_stages(stages))),
+        Obj::SetOperator(SetOperator::GeneralCart(_)) => ObjWellDefinedProofByDef::SetOperator(SetOperatorObjWellDefinedProofByDef::GeneralCart(GeneralCartObjWellDefinedProof::from_stages(stages))),
+        Obj::SetFormer(SetFormer::ListSet(_)) => ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::ListSet(ListSetObjWellDefinedProof::from_stages(stages))),
+        Obj::SetFormer(SetFormer::SetBuilder(_)) | Obj::FunctionSpace(FunctionSpace::FnSet(_)) | Obj::FunctionSpace(FunctionSpace::AnonymousFn(_)) => {
             unreachable!("binder object WD must use dedicated binder pipelines, not CommonStages")
         }
-        Obj::Cart(_) => ObjWellDefinedProofByDef::Cart(CartObjWellDefinedProof::from_stages(stages)),
-        Obj::CartDim(_) => {
+        Obj::ProductShape(ProductShape::Cart(_)) => ObjWellDefinedProofByDef::ProductShape(ProductShapeObjWellDefinedProofByDef::Cart(CartObjWellDefinedProof::from_stages(stages))),
+        Obj::ProductShape(ProductShape::CartDim(_)) => {
             let mut children = take_child_proofs(&mut stages, 1);
             let mut reqs = take_requirements(&mut stages, 1);
-            ObjWellDefinedProofByDef::CartDim(CartDimObjWellDefinedProof {
+            ObjWellDefinedProofByDef::ProductShape(ProductShapeObjWellDefinedProofByDef::CartDim(CartDimObjWellDefinedProof {
                 set_well_defined: children.remove(0),
                 set_is_cart: reqs.remove(0),
-            })
+            }))
         }
-        Obj::Proj(_) => {
+        Obj::ProductShape(ProductShape::Proj(_)) => {
             let mut children = take_child_proofs(&mut stages, 2);
             let mut reqs = take_requirements(&mut stages, 3);
-            ObjWellDefinedProofByDef::Proj(ProjObjWellDefinedProof {
+            ObjWellDefinedProofByDef::ProductShape(ProductShapeObjWellDefinedProofByDef::Proj(ProjObjWellDefinedProof {
                 set_well_defined: children.remove(0),
                 dim_well_defined: children.remove(0),
                 dim_in_npos: reqs.remove(0),
                 set_is_cart: reqs.remove(0),
                 dim_le_cart_dim: reqs.remove(0),
-            })
+            }))
         }
-        Obj::TupleDim(_) => {
+        Obj::ProductShape(ProductShape::TupleDim(_)) => {
             let mut children = take_child_proofs(&mut stages, 1);
             let mut reqs = take_requirements(&mut stages, 1);
-            ObjWellDefinedProofByDef::TupleDim(TupleDimObjWellDefinedProof {
+            ObjWellDefinedProofByDef::ProductShape(ProductShapeObjWellDefinedProofByDef::TupleDim(TupleDimObjWellDefinedProof {
                 arg_well_defined: children.remove(0),
                 arg_is_tuple: reqs.remove(0),
-            })
+            }))
         }
-        Obj::Tuple(_) => ObjWellDefinedProofByDef::Tuple(TupleObjWellDefinedProof::from_stages(stages)),
-        Obj::FiniteSetSize(_) => ObjWellDefinedProofByDef::FiniteSetSize(FiniteSetSizeObjWellDefinedProof::from_stages(stages)),
-        Obj::FiniteSetMax(_) => ObjWellDefinedProofByDef::FiniteSetMax(FiniteSetMaxObjWellDefinedProof::from_stages(stages)),
-        Obj::FiniteSetMin(_) => ObjWellDefinedProofByDef::FiniteSetMin(FiniteSetMinObjWellDefinedProof::from_stages(stages)),
-        Obj::FnRange(_) => ObjWellDefinedProofByDef::FnRange(FnRangeObjWellDefinedProof::from_stages(stages)),
-        Obj::Replacement(_) => ObjWellDefinedProofByDef::Replacement(ReplacementObjWellDefinedProof::from_stages(stages)),
-        Obj::Sum(_) => ObjWellDefinedProofByDef::Sum(SumObjWellDefinedProof::from_stages(stages)),
-        Obj::SumOfFiniteSet(_) => ObjWellDefinedProofByDef::SumOfFiniteSet(SumOfFiniteSetObjWellDefinedProof::from_stages(stages)),
-        Obj::Product(_) => ObjWellDefinedProofByDef::Product(ProductObjWellDefinedProof::from_stages(stages)),
-        Obj::ProductOfFiniteSet(_) => ObjWellDefinedProofByDef::ProductOfFiniteSet(ProductOfFiniteSetObjWellDefinedProof::from_stages(stages)),
-        Obj::Reduce(_) => ObjWellDefinedProofByDef::Reduce(ReduceObjWellDefinedProof::from_stages(stages)),
-        Obj::FiniteSetReduce(_) => ObjWellDefinedProofByDef::FiniteSetReduce(FiniteSetReduceObjWellDefinedProof::from_stages(stages)),
-        Obj::Range(_) => ObjWellDefinedProofByDef::Range(RangeObjWellDefinedProof::from_stages(stages)),
-        Obj::ClosedRange(_) => ObjWellDefinedProofByDef::ClosedRange(ClosedRangeObjWellDefinedProof::from_stages(stages)),
-        Obj::FiniteSeqSet(_) => ObjWellDefinedProofByDef::FiniteSeqSet(FiniteSeqSetObjWellDefinedProof::from_stages(stages)),
-        Obj::SeqSet(_) => ObjWellDefinedProofByDef::SeqSet(SeqSetObjWellDefinedProof::from_stages(stages)),
-        Obj::ObjAtIndex(_) => {
+        Obj::ProductShape(ProductShape::Tuple(_)) => ObjWellDefinedProofByDef::ProductShape(ProductShapeObjWellDefinedProofByDef::Tuple(TupleObjWellDefinedProof::from_stages(stages))),
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(_)) => ObjWellDefinedProofByDef::FiniteSetStat(FiniteSetStatObjWellDefinedProofByDef::FiniteSetSize(FiniteSetSizeObjWellDefinedProof::from_stages(stages))),
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(_)) => ObjWellDefinedProofByDef::FiniteSetStat(FiniteSetStatObjWellDefinedProofByDef::FiniteSetMax(FiniteSetMaxObjWellDefinedProof::from_stages(stages))),
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(_)) => ObjWellDefinedProofByDef::FiniteSetStat(FiniteSetStatObjWellDefinedProofByDef::FiniteSetMin(FiniteSetMinObjWellDefinedProof::from_stages(stages))),
+        Obj::FunctionSpace(FunctionSpace::FnRange(_)) => ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::FnRange(FnRangeObjWellDefinedProof::from_stages(stages))),
+        Obj::SetFormer(SetFormer::Replacement(_)) => ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::Replacement(ReplacementObjWellDefinedProof::from_stages(stages))),
+        Obj::IteratedOperator(IteratedOperator::Sum(_)) => ObjWellDefinedProofByDef::IteratedOperator(IteratedOperatorObjWellDefinedProofByDef::Sum(SumObjWellDefinedProof::from_stages(stages))),
+        Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(_)) => ObjWellDefinedProofByDef::IteratedOperator(IteratedOperatorObjWellDefinedProofByDef::SumOfFiniteSet(SumOfFiniteSetObjWellDefinedProof::from_stages(stages))),
+        Obj::IteratedOperator(IteratedOperator::Product(_)) => ObjWellDefinedProofByDef::IteratedOperator(IteratedOperatorObjWellDefinedProofByDef::Product(ProductObjWellDefinedProof::from_stages(stages))),
+        Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(_)) => ObjWellDefinedProofByDef::IteratedOperator(IteratedOperatorObjWellDefinedProofByDef::ProductOfFiniteSet(ProductOfFiniteSetObjWellDefinedProof::from_stages(stages))),
+        Obj::IteratedOperator(IteratedOperator::Reduce(_)) => ObjWellDefinedProofByDef::IteratedOperator(IteratedOperatorObjWellDefinedProofByDef::Reduce(ReduceObjWellDefinedProof::from_stages(stages))),
+        Obj::IteratedOperator(IteratedOperator::FiniteSetReduce(_)) => ObjWellDefinedProofByDef::IteratedOperator(IteratedOperatorObjWellDefinedProofByDef::FiniteSetReduce(FiniteSetReduceObjWellDefinedProof::from_stages(stages))),
+        Obj::SetFormer(SetFormer::Range(_)) => ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::Range(RangeObjWellDefinedProof::from_stages(stages))),
+        Obj::SetFormer(SetFormer::ClosedRange(_)) => ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::ClosedRange(ClosedRangeObjWellDefinedProof::from_stages(stages))),
+        Obj::SetFormer(SetFormer::FiniteSeqSet(_)) => ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::FiniteSeqSet(FiniteSeqSetObjWellDefinedProof::from_stages(stages))),
+        Obj::SetFormer(SetFormer::SeqSet(_)) => ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::SeqSet(SeqSetObjWellDefinedProof::from_stages(stages))),
+        Obj::ProductShape(ProductShape::ObjAtIndex(_)) => {
             let mut children = take_child_proofs(&mut stages, 2);
             let mut reqs = take_requirements(&mut stages, 3);
-            ObjWellDefinedProofByDef::ObjAtIndex(ObjAtIndexObjWellDefinedProof {
+            ObjWellDefinedProofByDef::ProductShape(ProductShapeObjWellDefinedProofByDef::ObjAtIndex(ObjAtIndexObjWellDefinedProof {
                 obj_well_defined: children.remove(0),
                 index_well_defined: children.remove(0),
                 index_in_npos: reqs.remove(0),
                 obj_is_tuple: reqs.remove(0),
                 index_le_tuple_dim: reqs.remove(0),
-            })
+            }))
         }
-        Obj::StructObj(_) => ObjWellDefinedProofByDef::StructObj(StructObjObjWellDefinedProof::from_stages(stages)),
-        Obj::FieldAccess(_) => ObjWellDefinedProofByDef::FieldAccess(FieldAccessObjWellDefinedProof::from_stages(stages)),
-        Obj::InstantiatedTemplateObj(_) => ObjWellDefinedProofByDef::InstantiatedTemplateObj(InstantiatedTemplateObjObjWellDefinedProof::from_stages(stages)),
-        Obj::OneSideInfinityIntervalObj(_) => ObjWellDefinedProofByDef::OneSideInfinityIntervalObj(OneSideInfinityIntervalObjObjWellDefinedProof::from_stages(stages)),
-        Obj::IntervalObj(_) => ObjWellDefinedProofByDef::IntervalObj(IntervalObjObjWellDefinedProof::from_stages(stages)),
+        Obj::Structish(Structish::StructObj(_)) => ObjWellDefinedProofByDef::Structish(StructishObjWellDefinedProofByDef::StructObj(StructObjObjWellDefinedProof::from_stages(stages))),
+        Obj::Structish(Structish::FieldAccess(_)) => ObjWellDefinedProofByDef::Structish(StructishObjWellDefinedProofByDef::FieldAccess(FieldAccessObjWellDefinedProof::from_stages(stages))),
+        Obj::Structish(Structish::InstantiatedTemplateObj(_)) => ObjWellDefinedProofByDef::Structish(StructishObjWellDefinedProofByDef::InstantiatedTemplateObj(InstantiatedTemplateObjObjWellDefinedProof::from_stages(stages))),
+        Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(_)) => ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::OneSideInfinityIntervalObj(OneSideInfinityIntervalObjObjWellDefinedProof::from_stages(stages))),
+        Obj::SetFormer(SetFormer::IntervalObj(_)) => ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::IntervalObj(IntervalObjObjWellDefinedProof::from_stages(stages))),
     }
 }
 
@@ -187,255 +191,255 @@ pub(super) fn wrap_common_fail(
         Obj::FnObj(_) => FailToVerifyObjWellDefinedResult::FnObj(
             FailToVerifyFnObjObjWellDefined::Domain(common),
         ),
-        Obj::Number(_) => FailToVerifyObjWellDefinedResult::Number(
+        Obj::Literal(Literal::Number(_)) => FailToVerifyObjWellDefinedResult::Literal(FailToVerifyLiteralObjWellDefinedResult::Number(
             FailToVerifyNumberObjWellDefined::Others(match common {
                 FailToVerifyObjWellDefinedByDefCommon::Others(s) => s,
                 _ => "Number well-definedness failed".to_string(),
             }),
-        ),
-        Obj::ImaginaryUnit(_) => FailToVerifyObjWellDefinedResult::ImaginaryUnit(
+        )),
+        Obj::Literal(Literal::ImaginaryUnit(_)) => FailToVerifyObjWellDefinedResult::Literal(FailToVerifyLiteralObjWellDefinedResult::ImaginaryUnit(
             FailToVerifyImaginaryUnitObjWellDefined::Others(match common {
                 FailToVerifyObjWellDefinedByDefCommon::Others(s) => s,
                 _ => "ImaginaryUnit well-definedness failed".to_string(),
             }),
-        ),
-        Obj::EulerNumber(_) => FailToVerifyObjWellDefinedResult::EulerNumber(
+        )),
+        Obj::Literal(Literal::EulerNumber(_)) => FailToVerifyObjWellDefinedResult::Literal(FailToVerifyLiteralObjWellDefinedResult::EulerNumber(
             FailToVerifyEulerNumberObjWellDefined::Others(match common {
                 FailToVerifyObjWellDefinedByDefCommon::Others(s) => s,
                 _ => "EulerNumber well-definedness failed".to_string(),
             }),
-        ),
-        Obj::Pi(_) => FailToVerifyObjWellDefinedResult::Pi(
+        )),
+        Obj::Literal(Literal::Pi(_)) => FailToVerifyObjWellDefinedResult::Literal(FailToVerifyLiteralObjWellDefinedResult::Pi(
             FailToVerifyPiObjWellDefined::Others(match common {
                 FailToVerifyObjWellDefinedByDefCommon::Others(s) => s,
                 _ => "Pi well-definedness failed".to_string(),
             }),
-        ),
-        Obj::Add(_) => FailToVerifyObjWellDefinedResult::Add(
+        )),
+        Obj::ArithmeticOperator(ArithmeticOperator::Add(_)) => FailToVerifyObjWellDefinedResult::ArithmeticOperator(FailToVerifyArithmeticOperatorObjWellDefinedResult::Add(
             FailToVerifyAddObjWellDefined(common),
-        ),
-        Obj::Sub(_) => FailToVerifyObjWellDefinedResult::Sub(
+        )),
+        Obj::ArithmeticOperator(ArithmeticOperator::Sub(_)) => FailToVerifyObjWellDefinedResult::ArithmeticOperator(FailToVerifyArithmeticOperatorObjWellDefinedResult::Sub(
             FailToVerifySubObjWellDefined(common),
-        ),
-        Obj::Mul(_) => FailToVerifyObjWellDefinedResult::Mul(
+        )),
+        Obj::ArithmeticOperator(ArithmeticOperator::Mul(_)) => FailToVerifyObjWellDefinedResult::ArithmeticOperator(FailToVerifyArithmeticOperatorObjWellDefinedResult::Mul(
             FailToVerifyMulObjWellDefined(common),
-        ),
-        Obj::Div(_) => FailToVerifyObjWellDefinedResult::Div(
+        )),
+        Obj::ArithmeticOperator(ArithmeticOperator::Div(_)) => FailToVerifyObjWellDefinedResult::ArithmeticOperator(FailToVerifyArithmeticOperatorObjWellDefinedResult::Div(
             FailToVerifyDivObjWellDefined(common),
-        ),
-        Obj::Mod(_) => FailToVerifyObjWellDefinedResult::Mod(
+        )),
+        Obj::IntegerOperator(IntegerOperator::Mod(_)) => FailToVerifyObjWellDefinedResult::IntegerOperator(FailToVerifyIntegerOperatorObjWellDefinedResult::Mod(
             FailToVerifyModObjWellDefined(common),
-        ),
-        Obj::Quot(_) => FailToVerifyObjWellDefinedResult::Quot(
+        )),
+        Obj::IntegerOperator(IntegerOperator::Quot(_)) => FailToVerifyObjWellDefinedResult::IntegerOperator(FailToVerifyIntegerOperatorObjWellDefinedResult::Quot(
             FailToVerifyQuotObjWellDefined(common),
-        ),
-        Obj::Gcd(_) => FailToVerifyObjWellDefinedResult::Gcd(
+        )),
+        Obj::IntegerOperator(IntegerOperator::Gcd(_)) => FailToVerifyObjWellDefinedResult::IntegerOperator(FailToVerifyIntegerOperatorObjWellDefinedResult::Gcd(
             FailToVerifyGcdObjWellDefined(common),
-        ),
-        Obj::Lcm(_) => FailToVerifyObjWellDefinedResult::Lcm(
+        )),
+        Obj::IntegerOperator(IntegerOperator::Lcm(_)) => FailToVerifyObjWellDefinedResult::IntegerOperator(FailToVerifyIntegerOperatorObjWellDefinedResult::Lcm(
             FailToVerifyLcmObjWellDefined(common),
-        ),
-        Obj::Floor(_) => FailToVerifyObjWellDefinedResult::Floor(
+        )),
+        Obj::ArithmeticOperator(ArithmeticOperator::Floor(_)) => FailToVerifyObjWellDefinedResult::ArithmeticOperator(FailToVerifyArithmeticOperatorObjWellDefinedResult::Floor(
             FailToVerifyFloorObjWellDefined(common),
-        ),
-        Obj::Ceil(_) => FailToVerifyObjWellDefinedResult::Ceil(
+        )),
+        Obj::ArithmeticOperator(ArithmeticOperator::Ceil(_)) => FailToVerifyObjWellDefinedResult::ArithmeticOperator(FailToVerifyArithmeticOperatorObjWellDefinedResult::Ceil(
             FailToVerifyCeilObjWellDefined(common),
-        ),
-        Obj::Min(_) => FailToVerifyObjWellDefinedResult::Min(
+        )),
+        Obj::ArithmeticOperator(ArithmeticOperator::Min(_)) => FailToVerifyObjWellDefinedResult::ArithmeticOperator(FailToVerifyArithmeticOperatorObjWellDefinedResult::Min(
             FailToVerifyMinObjWellDefined(common),
-        ),
-        Obj::Max(_) => FailToVerifyObjWellDefinedResult::Max(
+        )),
+        Obj::ArithmeticOperator(ArithmeticOperator::Max(_)) => FailToVerifyObjWellDefinedResult::ArithmeticOperator(FailToVerifyArithmeticOperatorObjWellDefinedResult::Max(
             FailToVerifyMaxObjWellDefined(common),
-        ),
-        Obj::Exp(_) => FailToVerifyObjWellDefinedResult::Exp(
+        )),
+        Obj::ExpLogOperator(ExpLogOperator::Exp(_)) => FailToVerifyObjWellDefinedResult::ExpLogOperator(FailToVerifyExpLogOperatorObjWellDefinedResult::Exp(
             FailToVerifyExpObjWellDefined(common),
-        ),
-        Obj::Ln(_) => FailToVerifyObjWellDefinedResult::Ln(
+        )),
+        Obj::ExpLogOperator(ExpLogOperator::Ln(_)) => FailToVerifyObjWellDefinedResult::ExpLogOperator(FailToVerifyExpLogOperatorObjWellDefinedResult::Ln(
             FailToVerifyLnObjWellDefined(common),
-        ),
-        Obj::Sign(_) => FailToVerifyObjWellDefinedResult::Sign(
+        )),
+        Obj::ArithmeticOperator(ArithmeticOperator::Sign(_)) => FailToVerifyObjWellDefinedResult::ArithmeticOperator(FailToVerifyArithmeticOperatorObjWellDefinedResult::Sign(
             FailToVerifySignObjWellDefined(common),
-        ),
-        Obj::Factorial(_) => FailToVerifyObjWellDefinedResult::Factorial(
+        )),
+        Obj::IntegerOperator(IntegerOperator::Factorial(_)) => FailToVerifyObjWellDefinedResult::IntegerOperator(FailToVerifyIntegerOperatorObjWellDefinedResult::Factorial(
             FailToVerifyFactorialObjWellDefined(common),
-        ),
-        Obj::Pow(_) => FailToVerifyObjWellDefinedResult::Pow(
+        )),
+        Obj::ArithmeticOperator(ArithmeticOperator::Pow(_)) => FailToVerifyObjWellDefinedResult::ArithmeticOperator(FailToVerifyArithmeticOperatorObjWellDefinedResult::Pow(
             FailToVerifyPowObjWellDefined(common),
-        ),
-        Obj::Abs(_) => FailToVerifyObjWellDefinedResult::Abs(
+        )),
+        Obj::ArithmeticOperator(ArithmeticOperator::Abs(_)) => FailToVerifyObjWellDefinedResult::ArithmeticOperator(FailToVerifyArithmeticOperatorObjWellDefinedResult::Abs(
             FailToVerifyAbsObjWellDefined(common),
-        ),
-        Obj::Sin(_) => FailToVerifyObjWellDefinedResult::Sin(
+        )),
+        Obj::TrigOperator(TrigOperator::Sin(_)) => FailToVerifyObjWellDefinedResult::TrigOperator(FailToVerifyTrigOperatorObjWellDefinedResult::Sin(
             FailToVerifySinObjWellDefined(common),
-        ),
-        Obj::Arcsin(_) => FailToVerifyObjWellDefinedResult::Arcsin(
+        )),
+        Obj::TrigOperator(TrigOperator::Arcsin(_)) => FailToVerifyObjWellDefinedResult::TrigOperator(FailToVerifyTrigOperatorObjWellDefinedResult::Arcsin(
             FailToVerifyArcsinObjWellDefined(common),
-        ),
-        Obj::Arccos(_) => FailToVerifyObjWellDefinedResult::Arccos(
+        )),
+        Obj::TrigOperator(TrigOperator::Arccos(_)) => FailToVerifyObjWellDefinedResult::TrigOperator(FailToVerifyTrigOperatorObjWellDefinedResult::Arccos(
             FailToVerifyArccosObjWellDefined(common),
-        ),
-        Obj::Arctan(_) => FailToVerifyObjWellDefinedResult::Arctan(
+        )),
+        Obj::TrigOperator(TrigOperator::Arctan(_)) => FailToVerifyObjWellDefinedResult::TrigOperator(FailToVerifyTrigOperatorObjWellDefinedResult::Arctan(
             FailToVerifyArctanObjWellDefined(common),
-        ),
-        Obj::Arccot(_) => FailToVerifyObjWellDefinedResult::Arccot(
+        )),
+        Obj::TrigOperator(TrigOperator::Arccot(_)) => FailToVerifyObjWellDefinedResult::TrigOperator(FailToVerifyTrigOperatorObjWellDefinedResult::Arccot(
             FailToVerifyArccotObjWellDefined(common),
-        ),
-        Obj::Cos(_) => FailToVerifyObjWellDefinedResult::Cos(
+        )),
+        Obj::TrigOperator(TrigOperator::Cos(_)) => FailToVerifyObjWellDefinedResult::TrigOperator(FailToVerifyTrigOperatorObjWellDefinedResult::Cos(
             FailToVerifyCosObjWellDefined(common),
-        ),
-        Obj::Tan(_) => FailToVerifyObjWellDefinedResult::Tan(
+        )),
+        Obj::TrigOperator(TrigOperator::Tan(_)) => FailToVerifyObjWellDefinedResult::TrigOperator(FailToVerifyTrigOperatorObjWellDefinedResult::Tan(
             FailToVerifyTanObjWellDefined(common),
-        ),
-        Obj::Cot(_) => FailToVerifyObjWellDefinedResult::Cot(
+        )),
+        Obj::TrigOperator(TrigOperator::Cot(_)) => FailToVerifyObjWellDefinedResult::TrigOperator(FailToVerifyTrigOperatorObjWellDefinedResult::Cot(
             FailToVerifyCotObjWellDefined(common),
-        ),
-        Obj::RealPart(_) => FailToVerifyObjWellDefinedResult::RealPart(
+        )),
+        Obj::ComplexOperator(ComplexOperator::RealPart(_)) => FailToVerifyObjWellDefinedResult::ComplexOperator(FailToVerifyComplexOperatorObjWellDefinedResult::RealPart(
             FailToVerifyRealPartObjWellDefined(common),
-        ),
-        Obj::ImaginaryPart(_) => FailToVerifyObjWellDefinedResult::ImaginaryPart(
+        )),
+        Obj::ComplexOperator(ComplexOperator::ImaginaryPart(_)) => FailToVerifyObjWellDefinedResult::ComplexOperator(FailToVerifyComplexOperatorObjWellDefinedResult::ImaginaryPart(
             FailToVerifyImaginaryPartObjWellDefined(common),
-        ),
-        Obj::ComplexAbs(_) => FailToVerifyObjWellDefinedResult::ComplexAbs(
+        )),
+        Obj::ComplexOperator(ComplexOperator::ComplexAbs(_)) => FailToVerifyObjWellDefinedResult::ComplexOperator(FailToVerifyComplexOperatorObjWellDefinedResult::ComplexAbs(
             FailToVerifyComplexAbsObjWellDefined(common),
-        ),
-        Obj::Sqrt(_) => FailToVerifyObjWellDefinedResult::Sqrt(
+        )),
+        Obj::ExpLogOperator(ExpLogOperator::Sqrt(_)) => FailToVerifyObjWellDefinedResult::ExpLogOperator(FailToVerifyExpLogOperatorObjWellDefinedResult::Sqrt(
             FailToVerifySqrtObjWellDefined(common),
-        ),
-        Obj::Log(_) => FailToVerifyObjWellDefinedResult::Log(
+        )),
+        Obj::ExpLogOperator(ExpLogOperator::Log(_)) => FailToVerifyObjWellDefinedResult::ExpLogOperator(FailToVerifyExpLogOperatorObjWellDefinedResult::Log(
             FailToVerifyLogObjWellDefined(common),
-        ),
-        Obj::Union(_) => FailToVerifyObjWellDefinedResult::Union(
+        )),
+        Obj::SetOperator(SetOperator::Union(_)) => FailToVerifyObjWellDefinedResult::SetOperator(FailToVerifySetOperatorObjWellDefinedResult::Union(
             FailToVerifyUnionObjWellDefined(common),
-        ),
-        Obj::Intersect(_) => FailToVerifyObjWellDefinedResult::Intersect(
+        )),
+        Obj::SetOperator(SetOperator::Intersect(_)) => FailToVerifyObjWellDefinedResult::SetOperator(FailToVerifySetOperatorObjWellDefinedResult::Intersect(
             FailToVerifyIntersectObjWellDefined(common),
-        ),
-        Obj::SetMinus(_) => FailToVerifyObjWellDefinedResult::SetMinus(
+        )),
+        Obj::SetOperator(SetOperator::SetMinus(_)) => FailToVerifyObjWellDefinedResult::SetOperator(FailToVerifySetOperatorObjWellDefinedResult::SetMinus(
             FailToVerifySetMinusObjWellDefined(common),
-        ),
-        Obj::BigUnion(_) => FailToVerifyObjWellDefinedResult::BigUnion(
+        )),
+        Obj::SetOperator(SetOperator::BigUnion(_)) => FailToVerifyObjWellDefinedResult::SetOperator(FailToVerifySetOperatorObjWellDefinedResult::BigUnion(
             FailToVerifyBigUnionObjWellDefined(common),
-        ),
-        Obj::BigIntersect(_) => FailToVerifyObjWellDefinedResult::BigIntersect(
+        )),
+        Obj::SetOperator(SetOperator::BigIntersect(_)) => FailToVerifyObjWellDefinedResult::SetOperator(FailToVerifySetOperatorObjWellDefinedResult::BigIntersect(
             FailToVerifyBigIntersectObjWellDefined(common),
-        ),
-        Obj::IndexUnion(_) => FailToVerifyObjWellDefinedResult::IndexUnion(
+        )),
+        Obj::SetOperator(SetOperator::IndexUnion(_)) => FailToVerifyObjWellDefinedResult::SetOperator(FailToVerifySetOperatorObjWellDefinedResult::IndexUnion(
             FailToVerifyIndexUnionObjWellDefined::Domain(common),
-        ),
-        Obj::IndexIntersect(_) => FailToVerifyObjWellDefinedResult::IndexIntersect(
+        )),
+        Obj::SetOperator(SetOperator::IndexIntersect(_)) => FailToVerifyObjWellDefinedResult::SetOperator(FailToVerifySetOperatorObjWellDefinedResult::IndexIntersect(
             FailToVerifyIndexIntersectObjWellDefined::Domain(common),
-        ),
-        Obj::PowerSet(_) => FailToVerifyObjWellDefinedResult::PowerSet(
+        )),
+        Obj::SetOperator(SetOperator::PowerSet(_)) => FailToVerifyObjWellDefinedResult::SetOperator(FailToVerifySetOperatorObjWellDefinedResult::PowerSet(
             FailToVerifyPowerSetObjWellDefined(common),
-        ),
-        Obj::GeneralCart(_) => FailToVerifyObjWellDefinedResult::GeneralCart(
+        )),
+        Obj::SetOperator(SetOperator::GeneralCart(_)) => FailToVerifyObjWellDefinedResult::SetOperator(FailToVerifySetOperatorObjWellDefinedResult::GeneralCart(
             FailToVerifyGeneralCartObjWellDefined::Domain(common),
-        ),
-        Obj::ListSet(_) => FailToVerifyObjWellDefinedResult::ListSet(
+        )),
+        Obj::SetFormer(SetFormer::ListSet(_)) => FailToVerifyObjWellDefinedResult::SetFormer(FailToVerifySetFormerObjWellDefinedResult::ListSet(
             FailToVerifyListSetObjWellDefined(common),
-        ),
-        Obj::SetBuilder(_) => FailToVerifyObjWellDefinedResult::SetBuilder(
+        )),
+        Obj::SetFormer(SetFormer::SetBuilder(_)) => FailToVerifyObjWellDefinedResult::SetFormer(FailToVerifySetFormerObjWellDefinedResult::SetBuilder(
             FailToVerifySetBuilderObjWellDefined::Others(match common {
                 FailToVerifyObjWellDefinedByDefCommon::Others(s) => s,
                 _ => "SetBuilder well-definedness failed".to_string(),
             }),
-        ),
-        Obj::FnSet(_) => FailToVerifyObjWellDefinedResult::FnSet(
+        )),
+        Obj::FunctionSpace(FunctionSpace::FnSet(_)) => FailToVerifyObjWellDefinedResult::FunctionSpace(FailToVerifyFunctionSpaceObjWellDefinedResult::FnSet(
             FailToVerifyFnSetObjWellDefined::Others(match common {
                 FailToVerifyObjWellDefinedByDefCommon::Others(s) => s,
                 _ => "FnSet well-definedness failed".to_string(),
             }),
-        ),
-        Obj::AnonymousFn(_) => FailToVerifyObjWellDefinedResult::AnonymousFn(
+        )),
+        Obj::FunctionSpace(FunctionSpace::AnonymousFn(_)) => FailToVerifyObjWellDefinedResult::FunctionSpace(FailToVerifyFunctionSpaceObjWellDefinedResult::AnonymousFn(
             FailToVerifyAnonymousFnObjWellDefined::Others(match common {
                 FailToVerifyObjWellDefinedByDefCommon::Others(s) => s,
                 _ => "AnonymousFn well-definedness failed".to_string(),
             }),
-        ),
-        Obj::Cart(_) => FailToVerifyObjWellDefinedResult::Cart(
+        )),
+        Obj::ProductShape(ProductShape::Cart(_)) => FailToVerifyObjWellDefinedResult::ProductShape(FailToVerifyProductShapeObjWellDefinedResult::Cart(
             FailToVerifyCartObjWellDefined(common),
-        ),
-        Obj::CartDim(_) => FailToVerifyObjWellDefinedResult::CartDim(
+        )),
+        Obj::ProductShape(ProductShape::CartDim(_)) => FailToVerifyObjWellDefinedResult::ProductShape(FailToVerifyProductShapeObjWellDefinedResult::CartDim(
             FailToVerifyCartDimObjWellDefined(common),
-        ),
-        Obj::Proj(_) => FailToVerifyObjWellDefinedResult::Proj(
+        )),
+        Obj::ProductShape(ProductShape::Proj(_)) => FailToVerifyObjWellDefinedResult::ProductShape(FailToVerifyProductShapeObjWellDefinedResult::Proj(
             FailToVerifyProjObjWellDefined(common),
-        ),
-        Obj::TupleDim(_) => FailToVerifyObjWellDefinedResult::TupleDim(
+        )),
+        Obj::ProductShape(ProductShape::TupleDim(_)) => FailToVerifyObjWellDefinedResult::ProductShape(FailToVerifyProductShapeObjWellDefinedResult::TupleDim(
             FailToVerifyTupleDimObjWellDefined(common),
-        ),
-        Obj::Tuple(_) => FailToVerifyObjWellDefinedResult::Tuple(
+        )),
+        Obj::ProductShape(ProductShape::Tuple(_)) => FailToVerifyObjWellDefinedResult::ProductShape(FailToVerifyProductShapeObjWellDefinedResult::Tuple(
             FailToVerifyTupleObjWellDefined(common),
-        ),
-        Obj::FiniteSetSize(_) => FailToVerifyObjWellDefinedResult::FiniteSetSize(
+        )),
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(_)) => FailToVerifyObjWellDefinedResult::FiniteSetStat(FailToVerifyFiniteSetStatObjWellDefinedResult::FiniteSetSize(
             FailToVerifyFiniteSetSizeObjWellDefined(common),
-        ),
-        Obj::FiniteSetMax(_) => FailToVerifyObjWellDefinedResult::FiniteSetMax(
+        )),
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(_)) => FailToVerifyObjWellDefinedResult::FiniteSetStat(FailToVerifyFiniteSetStatObjWellDefinedResult::FiniteSetMax(
             FailToVerifyFiniteSetMaxObjWellDefined(common),
-        ),
-        Obj::FiniteSetMin(_) => FailToVerifyObjWellDefinedResult::FiniteSetMin(
+        )),
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(_)) => FailToVerifyObjWellDefinedResult::FiniteSetStat(FailToVerifyFiniteSetStatObjWellDefinedResult::FiniteSetMin(
             FailToVerifyFiniteSetMinObjWellDefined(common),
-        ),
-        Obj::FnRange(_) => FailToVerifyObjWellDefinedResult::FnRange(
+        )),
+        Obj::FunctionSpace(FunctionSpace::FnRange(_)) => FailToVerifyObjWellDefinedResult::FunctionSpace(FailToVerifyFunctionSpaceObjWellDefinedResult::FnRange(
             FailToVerifyFnRangeObjWellDefined::Domain(common),
-        ),
-        Obj::Replacement(_) => FailToVerifyObjWellDefinedResult::Replacement(
+        )),
+        Obj::SetFormer(SetFormer::Replacement(_)) => FailToVerifyObjWellDefinedResult::SetFormer(FailToVerifySetFormerObjWellDefinedResult::Replacement(
             FailToVerifyReplacementObjWellDefined(common),
-        ),
-        Obj::Sum(_) => FailToVerifyObjWellDefinedResult::Sum(
+        )),
+        Obj::IteratedOperator(IteratedOperator::Sum(_)) => FailToVerifyObjWellDefinedResult::IteratedOperator(FailToVerifyIteratedOperatorObjWellDefinedResult::Sum(
             FailToVerifySumObjWellDefined(common),
-        ),
-        Obj::SumOfFiniteSet(_) => FailToVerifyObjWellDefinedResult::SumOfFiniteSet(
+        )),
+        Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(_)) => FailToVerifyObjWellDefinedResult::IteratedOperator(FailToVerifyIteratedOperatorObjWellDefinedResult::SumOfFiniteSet(
             FailToVerifySumOfFiniteSetObjWellDefined(common),
-        ),
-        Obj::Product(_) => FailToVerifyObjWellDefinedResult::Product(
+        )),
+        Obj::IteratedOperator(IteratedOperator::Product(_)) => FailToVerifyObjWellDefinedResult::IteratedOperator(FailToVerifyIteratedOperatorObjWellDefinedResult::Product(
             FailToVerifyProductObjWellDefined(common),
-        ),
-        Obj::ProductOfFiniteSet(_) => FailToVerifyObjWellDefinedResult::ProductOfFiniteSet(
+        )),
+        Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(_)) => FailToVerifyObjWellDefinedResult::IteratedOperator(FailToVerifyIteratedOperatorObjWellDefinedResult::ProductOfFiniteSet(
             FailToVerifyProductOfFiniteSetObjWellDefined(common),
-        ),
-        Obj::Reduce(_) => FailToVerifyObjWellDefinedResult::Reduce(
+        )),
+        Obj::IteratedOperator(IteratedOperator::Reduce(_)) => FailToVerifyObjWellDefinedResult::IteratedOperator(FailToVerifyIteratedOperatorObjWellDefinedResult::Reduce(
             FailToVerifyReduceObjWellDefined(common),
-        ),
-        Obj::FiniteSetReduce(_) => FailToVerifyObjWellDefinedResult::FiniteSetReduce(
+        )),
+        Obj::IteratedOperator(IteratedOperator::FiniteSetReduce(_)) => FailToVerifyObjWellDefinedResult::IteratedOperator(FailToVerifyIteratedOperatorObjWellDefinedResult::FiniteSetReduce(
             FailToVerifyFiniteSetReduceObjWellDefined(common),
-        ),
-        Obj::Range(_) => FailToVerifyObjWellDefinedResult::Range(
+        )),
+        Obj::SetFormer(SetFormer::Range(_)) => FailToVerifyObjWellDefinedResult::SetFormer(FailToVerifySetFormerObjWellDefinedResult::Range(
             FailToVerifyRangeObjWellDefined(common),
-        ),
-        Obj::ClosedRange(_) => FailToVerifyObjWellDefinedResult::ClosedRange(
+        )),
+        Obj::SetFormer(SetFormer::ClosedRange(_)) => FailToVerifyObjWellDefinedResult::SetFormer(FailToVerifySetFormerObjWellDefinedResult::ClosedRange(
             FailToVerifyClosedRangeObjWellDefined(common),
-        ),
-        Obj::FiniteSeqSet(_) => FailToVerifyObjWellDefinedResult::FiniteSeqSet(
+        )),
+        Obj::SetFormer(SetFormer::FiniteSeqSet(_)) => FailToVerifyObjWellDefinedResult::SetFormer(FailToVerifySetFormerObjWellDefinedResult::FiniteSeqSet(
             FailToVerifyFiniteSeqSetObjWellDefined(common),
-        ),
-        Obj::SeqSet(_) => FailToVerifyObjWellDefinedResult::SeqSet(
+        )),
+        Obj::SetFormer(SetFormer::SeqSet(_)) => FailToVerifyObjWellDefinedResult::SetFormer(FailToVerifySetFormerObjWellDefinedResult::SeqSet(
             FailToVerifySeqSetObjWellDefined(common),
-        ),
-        Obj::ObjAtIndex(_) => FailToVerifyObjWellDefinedResult::ObjAtIndex(
+        )),
+        Obj::ProductShape(ProductShape::ObjAtIndex(_)) => FailToVerifyObjWellDefinedResult::ProductShape(FailToVerifyProductShapeObjWellDefinedResult::ObjAtIndex(
             FailToVerifyObjAtIndexObjWellDefined(common),
-        ),
+        )),
         Obj::StandardSet(_) => FailToVerifyObjWellDefinedResult::StandardSet(
             FailToVerifyStandardSetObjWellDefined::Others(match common {
                 FailToVerifyObjWellDefinedByDefCommon::Others(s) => s,
                 _ => "StandardSet well-definedness failed".to_string(),
             }),
         ),
-        Obj::StructObj(_) => FailToVerifyObjWellDefinedResult::StructObj(
+        Obj::Structish(Structish::StructObj(_)) => FailToVerifyObjWellDefinedResult::Structish(FailToVerifyStructishObjWellDefinedResult::StructObj(
             FailToVerifyStructObjObjWellDefined(common),
-        ),
-        Obj::FieldAccess(_) => FailToVerifyObjWellDefinedResult::FieldAccess(
+        )),
+        Obj::Structish(Structish::FieldAccess(_)) => FailToVerifyObjWellDefinedResult::Structish(FailToVerifyStructishObjWellDefinedResult::FieldAccess(
             FailToVerifyFieldAccessObjWellDefined(common),
-        ),
-        Obj::InstantiatedTemplateObj(_) => FailToVerifyObjWellDefinedResult::InstantiatedTemplateObj(
+        )),
+        Obj::Structish(Structish::InstantiatedTemplateObj(_)) => FailToVerifyObjWellDefinedResult::Structish(FailToVerifyStructishObjWellDefinedResult::InstantiatedTemplateObj(
             FailToVerifyInstantiatedTemplateObjObjWellDefined(common),
-        ),
-        Obj::OneSideInfinityIntervalObj(_) => FailToVerifyObjWellDefinedResult::OneSideInfinityIntervalObj(
+        )),
+        Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(_)) => FailToVerifyObjWellDefinedResult::SetFormer(FailToVerifySetFormerObjWellDefinedResult::OneSideInfinityIntervalObj(
             FailToVerifyOneSideInfinityIntervalObjObjWellDefined(common),
-        ),
-        Obj::IntervalObj(_) => FailToVerifyObjWellDefinedResult::IntervalObj(
+        )),
+        Obj::SetFormer(SetFormer::IntervalObj(_)) => FailToVerifyObjWellDefinedResult::SetFormer(FailToVerifySetFormerObjWellDefinedResult::IntervalObj(
             FailToVerifyIntervalObjObjWellDefined(common),
-        ),
+        )),
     }
 }
 

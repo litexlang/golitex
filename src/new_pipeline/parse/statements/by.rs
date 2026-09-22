@@ -6,7 +6,7 @@ use super::super::keywords::{
     RANGE, IN, ZORN_LEMMA,
 };
 use super::super::object::{is_simple_name, parse_obj, parse_obj_list_paren};
-use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::ast::obj::{Obj, SetFormer};
 use crate::new_pipeline::ast::fact::{
     AndChainAtomicFact, AtomicFact, ExistOrAndChainAtomicFact, Fact,
 };
@@ -233,12 +233,12 @@ impl Runtime {
             return Err(tb.parse_error("by enumerate range: unexpected trailing tokens"));
         }
         let range = if is_closed {
-            let Obj::ClosedRange(closed) = domain else {
+            let Obj::SetFormer(SetFormer::ClosedRange(closed)) = domain else {
                 return Err(tb.parse_error("by enumerate closed_range: expected a closed_range object"));
             };
             ClosedRangeOrRange::ClosedRange(closed)
         } else {
-            let Obj::Range(range_obj) = domain else {
+            let Obj::SetFormer(SetFormer::Range(range_obj)) = domain else {
                 return Err(tb.parse_error("by enumerate range: expected a range object"));
             };
             ClosedRangeOrRange::Range(range_obj)
@@ -286,7 +286,7 @@ impl Runtime {
         tb.expect(FACT_PREFIX)?;
         tb.expect(IN)?;
         let domain = parse_obj(self, tb)?;
-        let Obj::ClosedRange(closed_range) = domain else {
+        let Obj::SetFormer(SetFormer::ClosedRange(closed_range)) = domain else {
             return Err(tb.parse_error("by closed_range as cases: expected a closed_range object"));
         };
         if !tb.exceed_end_of_head() || !tb.body.is_empty() {

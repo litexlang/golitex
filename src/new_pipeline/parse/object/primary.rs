@@ -1,12 +1,5 @@
 use crate::new_pipeline::ast::names::AtomicName;
-use crate::new_pipeline::ast::obj::{
-    Abs, AnonymousFn, Arccos, Arccot, Arcsin, Arctan, Cart, CartDim, Ceil, ClosedRange, Cos, Cot,
-    EulerNumber, Exp, FiniteSetMax, FiniteSetMin, FiniteSetSize, Floor, FnObjHead, FnRange, FnSet,
-    Gcd, GeneralCart, IdentifierObj, ImaginaryUnit, IndexIntersect, IndexUnion,
-    InstantiatedTemplateObj, Intersect, Lcm, ListSet, Ln, Max, Min, Number, Obj, Pi, PowerSet,
-    ProductOfFiniteSet, Proj, Quot, Range, SetBuilder, SetMinus, Sign, Sin, Sqrt, StandardSet,
-    StructObj, Tan, Tuple, TupleDim, Union,
-};
+use crate::new_pipeline::ast::obj::{Abs, AnonymousFn, Arccos, Arccot, Arcsin, Arctan, Cart, CartDim, Ceil, ClosedRange, Cos, Cot, EulerNumber, Exp, FiniteSetMax, FiniteSetMin, FiniteSetSize, Floor, FnObjHead, FnRange, FnSet, Gcd, GeneralCart, IdentifierObj, ImaginaryUnit, IndexIntersect, IndexUnion, InstantiatedTemplateObj, Intersect, Lcm, ListSet, Ln, Max, Min, Number, Obj, Pi, PowerSet, ProductOfFiniteSet, Proj, Quot, Range, SetBuilder, SetMinus, Sign, Sin, Sqrt, StandardSet, StructObj, Tan, Tuple, TupleDim, Union, ArithmeticOperator, ExpLogOperator, FiniteSetStat, FunctionSpace, IntegerOperator, IteratedOperator, Literal, ProductShape, SetFormer, SetOperator, Structish, TrigOperator};
 use crate::new_pipeline::ast::param::{ParamType, SetBoundParameterGroup, SetBoundParameterList};
 use crate::new_pipeline::parse::keywords::{
     ABS, ARCCOS, ARCCOT, ARCSIN, ARCTAN, C, CART, CART_DIM, CEIL, CLOSED_RANGE, COLON, COMMA, COS,
@@ -89,9 +82,9 @@ pub fn parse_primary(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
 pub(super) fn fn_obj_head_from_obj(obj: Obj) -> Option<FnObjHead> {
     match obj {
         Obj::Identifier(id) => Some(FnObjHead::Identifier(id)),
-        Obj::FieldAccess(v) => Some(FnObjHead::FieldAccess(v)),
-        Obj::InstantiatedTemplateObj(v) => Some(FnObjHead::InstantiatedTemplateObj(v)),
-        Obj::AnonymousFn(a) => Some(FnObjHead::AnonymousFnLiteral(Box::new(a))),
+        Obj::Structish(Structish::FieldAccess(v)) => Some(FnObjHead::FieldAccess(v)),
+        Obj::Structish(Structish::InstantiatedTemplateObj(v)) => Some(FnObjHead::InstantiatedTemplateObj(v)),
+        Obj::FunctionSpace(FunctionSpace::AnonymousFn(a)) => Some(FnObjHead::AnonymousFnLiteral(Box::new(a))),
         _ => None,
     }
 }
@@ -144,7 +137,7 @@ fn parse_struct_view(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
         Vec::new()
     };
 
-    Ok(Obj::StructObj(StructObj { name, params }))
+    Ok(Obj::Structish(Structish::StructObj(StructObj { name, params })))
 }
 
 // `\Name<args>` → InstantiatedTemplateObj. Angle args are required.
@@ -165,10 +158,10 @@ fn parse_instantiated_template(rt: &mut Runtime, tb: &mut TokenBlock) -> Runtime
         ));
     }
     let args = parse_obj_list_angle(rt, tb)?;
-    Ok(Obj::InstantiatedTemplateObj(InstantiatedTemplateObj {
+    Ok(Obj::Structish(Structish::InstantiatedTemplateObj(InstantiatedTemplateObj {
         template_name,
         args,
-    }))
+    })))
 }
 
 fn parse_obj_list_angle(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Vec<Obj>> {
@@ -190,7 +183,7 @@ fn parse_paren_or_tuple(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<
     tb.expect(LEFT_PAREN)?;
     if tb.peek() == Some(RIGHT_PAREN) {
         tb.advance()?;
-        return Ok(Obj::Tuple(Tuple { args: vec![] }));
+        return Ok(Obj::ProductShape(ProductShape::Tuple(Tuple { args: vec![] })));
     }
     let first = parse_obj(rt, tb)?;
     if tb.peek() == Some(COMMA) {
@@ -200,7 +193,7 @@ fn parse_paren_or_tuple(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<
             args.push(Box::new(parse_obj(rt, tb)?));
         }
         tb.expect(RIGHT_PAREN)?;
-        return Ok(Obj::Tuple(Tuple { args }));
+        return Ok(Obj::ProductShape(ProductShape::Tuple(Tuple { args })));
     }
     tb.expect(RIGHT_PAREN)?;
     Ok(first)
@@ -210,7 +203,7 @@ fn parse_list_set(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
     tb.expect(LEFT_CURLY)?;
     if tb.peek() == Some(RIGHT_CURLY) {
         tb.advance()?;
-        return Ok(Obj::ListSet(ListSet { list: vec![] }));
+        return Ok(Obj::SetFormer(SetFormer::ListSet(ListSet { list: vec![] })));
     }
     if braced_content_has_top_level_colon(tb) {
         return rt.parse_set_builder(tb);
@@ -221,7 +214,7 @@ fn parse_list_set(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
         list.push(Box::new(parse_obj(rt, tb)?));
     }
     tb.expect(RIGHT_CURLY)?;
-    Ok(Obj::ListSet(ListSet { list }))
+    Ok(Obj::SetFormer(SetFormer::ListSet(ListSet { list })))
 }
 
 impl Runtime {
@@ -247,11 +240,11 @@ impl Runtime {
                 tb.expect(COMMA)?;
             }
             tb.expect(RIGHT_CURLY)?;
-            Ok(Obj::SetBuilder(SetBuilder {
+            Ok(Obj::SetFormer(SetFormer::SetBuilder(SetBuilder {
                 param_binding: binding,
                 param_set: Box::new(param_set),
                 facts,
-            }))
+            })))
         })();
         self.pop_parse_scope();
         result
@@ -272,12 +265,12 @@ impl Runtime {
                 tb.advance()?;
                 let equal_to = parse_obj(self, tb)?;
                 tb.expect(RIGHT_CURLY)?;
-                Ok(Obj::AnonymousFn(AnonymousFn {
+                Ok(Obj::FunctionSpace(FunctionSpace::AnonymousFn(AnonymousFn {
                     body,
                     equal_to: Box::new(equal_to),
-                }))
+                })))
             } else {
-                Ok(Obj::FnSet(body))
+                Ok(Obj::FunctionSpace(FunctionSpace::FnSet(body)))
             }
         })();
         self.pop_parse_scope();
@@ -362,77 +355,77 @@ fn try_parse_keyword_primary(
 ) -> RuntimeResult<Option<Obj>> {
     match token {
         ABS => Ok(Some(parse_unary_keyword(rt, tb, ABS, |arg| {
-            Obj::Abs(Abs { arg: Box::new(arg) })
+            Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs { arg: Box::new(arg) }))
         })?)),
         "i" => {
             tb.advance()?;
-            Ok(Some(Obj::ImaginaryUnit(ImaginaryUnit)))
+            Ok(Some(Obj::Literal(Literal::ImaginaryUnit(ImaginaryUnit))))
         }
         "e" => {
             tb.advance()?;
-            Ok(Some(Obj::EulerNumber(EulerNumber)))
+            Ok(Some(Obj::Literal(Literal::EulerNumber(EulerNumber))))
         }
         "pi" => {
             tb.advance()?;
-            Ok(Some(Obj::Pi(Pi)))
+            Ok(Some(Obj::Literal(Literal::Pi(Pi))))
         }
         SIN => Ok(Some(parse_unary_keyword(rt, tb, SIN, |arg| {
-            Obj::Sin(Sin { arg: Box::new(arg) })
+            Obj::TrigOperator(TrigOperator::Sin(Sin { arg: Box::new(arg) }))
         })?)),
         ARCSIN => Ok(Some(parse_unary_keyword(rt, tb, ARCSIN, |arg| {
-            Obj::Arcsin(Arcsin { arg: Box::new(arg) })
+            Obj::TrigOperator(TrigOperator::Arcsin(Arcsin { arg: Box::new(arg) }))
         })?)),
         ARCCOS => Ok(Some(parse_unary_keyword(rt, tb, ARCCOS, |arg| {
-            Obj::Arccos(Arccos { arg: Box::new(arg) })
+            Obj::TrigOperator(TrigOperator::Arccos(Arccos { arg: Box::new(arg) }))
         })?)),
         ARCTAN => Ok(Some(parse_unary_keyword(rt, tb, ARCTAN, |arg| {
-            Obj::Arctan(Arctan { arg: Box::new(arg) })
+            Obj::TrigOperator(TrigOperator::Arctan(Arctan { arg: Box::new(arg) }))
         })?)),
         ARCCOT => Ok(Some(parse_unary_keyword(rt, tb, ARCCOT, |arg| {
-            Obj::Arccot(Arccot { arg: Box::new(arg) })
+            Obj::TrigOperator(TrigOperator::Arccot(Arccot { arg: Box::new(arg) }))
         })?)),
         COS => Ok(Some(parse_unary_keyword(rt, tb, COS, |arg| {
-            Obj::Cos(Cos { arg: Box::new(arg) })
+            Obj::TrigOperator(TrigOperator::Cos(Cos { arg: Box::new(arg) }))
         })?)),
         TAN => Ok(Some(parse_unary_keyword(rt, tb, TAN, |arg| {
-            Obj::Tan(Tan { arg: Box::new(arg) })
+            Obj::TrigOperator(TrigOperator::Tan(Tan { arg: Box::new(arg) }))
         })?)),
         COT => Ok(Some(parse_unary_keyword(rt, tb, COT, |arg| {
-            Obj::Cot(Cot { arg: Box::new(arg) })
+            Obj::TrigOperator(TrigOperator::Cot(Cot { arg: Box::new(arg) }))
         })?)),
         SQRT => Ok(Some(parse_unary_keyword(rt, tb, SQRT, |arg| {
-            Obj::Sqrt(Sqrt { arg: Box::new(arg) })
+            Obj::ExpLogOperator(ExpLogOperator::Sqrt(Sqrt { arg: Box::new(arg) }))
         })?)),
         FLOOR => Ok(Some(parse_unary_keyword(rt, tb, FLOOR, |arg| {
-            Obj::Floor(Floor { arg: Box::new(arg) })
+            Obj::ArithmeticOperator(ArithmeticOperator::Floor(Floor { arg: Box::new(arg) }))
         })?)),
         CEIL => Ok(Some(parse_unary_keyword(rt, tb, CEIL, |arg| {
-            Obj::Ceil(Ceil { arg: Box::new(arg) })
+            Obj::ArithmeticOperator(ArithmeticOperator::Ceil(Ceil { arg: Box::new(arg) }))
         })?)),
         SIGN => Ok(Some(parse_unary_keyword(rt, tb, SIGN, |arg| {
-            Obj::Sign(Sign { arg: Box::new(arg) })
+            Obj::ArithmeticOperator(ArithmeticOperator::Sign(Sign { arg: Box::new(arg) }))
         })?)),
         EXP => Ok(Some(parse_unary_keyword(rt, tb, EXP, |arg| {
-            Obj::Exp(Exp { arg: Box::new(arg) })
+            Obj::ExpLogOperator(ExpLogOperator::Exp(Exp { arg: Box::new(arg) }))
         })?)),
         LN => Ok(Some(parse_unary_keyword(rt, tb, LN, |arg| {
-            Obj::Ln(Ln { arg: Box::new(arg) })
+            Obj::ExpLogOperator(ExpLogOperator::Ln(Ln { arg: Box::new(arg) }))
         })?)),
         UNION => Ok(Some(parse_binary_keyword(rt, tb, UNION, |left, right| {
-            Obj::Union(Union {
+            Obj::SetOperator(SetOperator::Union(Union {
                 left: Box::new(left),
                 right: Box::new(right),
-            })
+            }))
         })?)),
         INTERSECT => Ok(Some(parse_binary_keyword(
             rt,
             tb,
             INTERSECT,
             |left, right| {
-                Obj::Intersect(Intersect {
+                Obj::SetOperator(SetOperator::Intersect(Intersect {
                     left: Box::new(left),
                     right: Box::new(right),
-                })
+                }))
             },
         )?)),
         SET_MINUS => Ok(Some(parse_binary_keyword(
@@ -440,51 +433,51 @@ fn try_parse_keyword_primary(
             tb,
             SET_MINUS,
             |left, right| {
-                Obj::SetMinus(SetMinus {
+                Obj::SetOperator(SetOperator::SetMinus(SetMinus {
                     left: Box::new(left),
                     right: Box::new(right),
-                })
+                }))
             },
         )?)),
         MIN => Ok(Some(parse_binary_keyword(rt, tb, MIN, |left, right| {
-            Obj::Min(Min {
+            Obj::ArithmeticOperator(ArithmeticOperator::Min(Min {
                 left: Box::new(left),
                 right: Box::new(right),
-            })
+            }))
         })?)),
         MAX => Ok(Some(parse_binary_keyword(rt, tb, MAX, |left, right| {
-            Obj::Max(Max {
+            Obj::ArithmeticOperator(ArithmeticOperator::Max(Max {
                 left: Box::new(left),
                 right: Box::new(right),
-            })
+            }))
         })?)),
         GCD => Ok(Some(parse_binary_keyword(rt, tb, GCD, |left, right| {
-            Obj::Gcd(Gcd {
+            Obj::IntegerOperator(IntegerOperator::Gcd(Gcd {
                 left: Box::new(left),
                 right: Box::new(right),
-            })
+            }))
         })?)),
         LCM => Ok(Some(parse_binary_keyword(rt, tb, LCM, |left, right| {
-            Obj::Lcm(Lcm {
+            Obj::IntegerOperator(IntegerOperator::Lcm(Lcm {
                 left: Box::new(left),
                 right: Box::new(right),
-            })
+            }))
         })?)),
         QUOT => Ok(Some(parse_binary_keyword(rt, tb, QUOT, |left, right| {
-            Obj::Quot(Quot {
+            Obj::IntegerOperator(IntegerOperator::Quot(Quot {
                 left: Box::new(left),
                 right: Box::new(right),
-            })
+            }))
         })?)),
         FINITE_SET_PRODUCT => Ok(Some(parse_binary_keyword(
             rt,
             tb,
             FINITE_SET_PRODUCT,
             |set, func| {
-                Obj::ProductOfFiniteSet(ProductOfFiniteSet {
+                Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(ProductOfFiniteSet {
                     set: Box::new(set),
                     func: Box::new(func),
-                })
+                }))
             },
         )?)),
         CART => {
@@ -493,40 +486,40 @@ fn try_parse_keyword_primary(
             if args.len() < 2 {
                 return Err(tb.parse_error("cart expects at least 2 arguments"));
             }
-            Ok(Some(Obj::Cart(Cart {
+            Ok(Some(Obj::ProductShape(ProductShape::Cart(Cart {
                 args: args.into_iter().map(Box::new).collect(),
-            })))
+            }))))
         }
         TUPLE => {
             tb.advance()?;
             let args = parse_obj_list_paren(rt, tb)?;
-            Ok(Some(Obj::Tuple(Tuple {
+            Ok(Some(Obj::ProductShape(ProductShape::Tuple(Tuple {
                 args: args.into_iter().map(Box::new).collect(),
-            })))
+            }))))
         }
         CART_DIM => Ok(Some(parse_unary_keyword(rt, tb, CART_DIM, |set| {
-            Obj::CartDim(CartDim {
+            Obj::ProductShape(ProductShape::CartDim(CartDim {
                 set: Box::new(set),
-            })
+            }))
         })?)),
         TUPLE_DIM => Ok(Some(parse_unary_keyword(rt, tb, TUPLE_DIM, |arg| {
-            Obj::TupleDim(TupleDim {
+            Obj::ProductShape(ProductShape::TupleDim(TupleDim {
                 arg: Box::new(arg),
-            })
+            }))
         })?)),
         PROJ => Ok(Some(parse_binary_keyword(rt, tb, PROJ, |set, dim| {
-            Obj::Proj(Proj {
+            Obj::ProductShape(ProductShape::Proj(Proj {
                 set: Box::new(set),
                 dim: Box::new(dim),
-            })
+            }))
         })?)),
         // Half-open integer interval [start, end).
         // Example: `range(1, 3)` is {1, 2}.
         RANGE => Ok(Some(parse_binary_keyword(rt, tb, RANGE, |start, end| {
-            Obj::Range(Range {
+            Obj::SetFormer(SetFormer::Range(Range {
                 start: Box::new(start),
                 end: Box::new(end),
-            })
+            }))
         })?)),
         // Closed integer interval [start, end]. Same as `start...end`.
         // Example: `closed_range(1, 2)` is {1, 2}.
@@ -535,47 +528,47 @@ fn try_parse_keyword_primary(
             tb,
             CLOSED_RANGE,
             |start, end| {
-                Obj::ClosedRange(ClosedRange {
+                Obj::SetFormer(SetFormer::ClosedRange(ClosedRange {
                     start: Box::new(start),
                     end: Box::new(end),
-                })
+                }))
             },
         )?)),
         POWER_SET => Ok(Some(parse_unary_keyword(rt, tb, POWER_SET, |set| {
-            Obj::PowerSet(PowerSet {
+            Obj::SetOperator(SetOperator::PowerSet(PowerSet {
                 set: Box::new(set),
-            })
+            }))
         })?)),
         FINITE_SET_SIZE => Ok(Some(parse_unary_keyword(rt, tb, FINITE_SET_SIZE, |set| {
-            Obj::FiniteSetSize(FiniteSetSize {
+            Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(FiniteSetSize {
                 set: Box::new(set),
-            })
+            }))
         })?)),
         FINITE_SET_MAX => Ok(Some(parse_unary_keyword(rt, tb, FINITE_SET_MAX, |set| {
-            Obj::FiniteSetMax(FiniteSetMax {
+            Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(FiniteSetMax {
                 set: Box::new(set),
-            })
+            }))
         })?)),
         FINITE_SET_MIN => Ok(Some(parse_unary_keyword(rt, tb, FINITE_SET_MIN, |set| {
-            Obj::FiniteSetMin(FiniteSetMin {
+            Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(FiniteSetMin {
                 set: Box::new(set),
-            })
+            }))
         })?)),
         FN_RANGE => Ok(Some(parse_unary_keyword(rt, tb, FN_RANGE, |function| {
-            Obj::FnRange(FnRange {
+            Obj::FunctionSpace(FunctionSpace::FnRange(FnRange {
                 function: Box::new(function),
-            })
+            }))
         })?)),
         INDEX_UNION => Ok(Some(parse_ternary_keyword(
             rt,
             tb,
             INDEX_UNION,
             |index_set, ambient_set, family_fn| {
-                Obj::IndexUnion(IndexUnion {
+                Obj::SetOperator(SetOperator::IndexUnion(IndexUnion {
                     index_set: Box::new(index_set),
                     ambient_set: Box::new(ambient_set),
                     family_fn: Box::new(family_fn),
-                })
+                }))
             },
         )?)),
         INDEX_INTERSECT => Ok(Some(parse_ternary_keyword(
@@ -583,11 +576,11 @@ fn try_parse_keyword_primary(
             tb,
             INDEX_INTERSECT,
             |index_set, ambient_set, family_fn| {
-                Obj::IndexIntersect(IndexIntersect {
+                Obj::SetOperator(SetOperator::IndexIntersect(IndexIntersect {
                     index_set: Box::new(index_set),
                     ambient_set: Box::new(ambient_set),
                     family_fn: Box::new(family_fn),
-                })
+                }))
             },
         )?)),
         GENERAL_CART => Ok(Some(parse_ternary_keyword(
@@ -595,11 +588,11 @@ fn try_parse_keyword_primary(
             tb,
             GENERAL_CART,
             |index_set, family_set, family_fn| {
-                Obj::GeneralCart(GeneralCart {
+                Obj::SetOperator(SetOperator::GeneralCart(GeneralCart {
                     index_set: Box::new(index_set),
                     family_set: Box::new(family_set),
                     family_fn: Box::new(family_fn),
-                })
+                }))
             },
         )?)),
         _ => Ok(None),
@@ -675,9 +668,9 @@ fn parse_number(tb: &mut TokenBlock) -> RuntimeResult<Obj> {
     if !is_number_literal(&normalized) {
         return Err(tb.parse_error(format!("invalid number `{normalized}`")));
     }
-    Ok(Obj::Number(Number {
+    Ok(Obj::Literal(Literal::Number(Number {
         normalized_value: normalized,
-    }))
+    })))
 }
 
 fn parse_identifier_or_mod_or_standard_set(

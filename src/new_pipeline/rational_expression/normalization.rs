@@ -1,4 +1,4 @@
-use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::ast::obj::{Obj, ArithmeticOperator};
 use crate::new_pipeline::rational_expression::decimal_arithmetic::evaluate_obj_to_normalized_decimal_number;
 use crate::new_pipeline::rational_expression::denominator_clearing::collect_rational_expression_monomials_after_denominator_clearing_process;
 use crate::new_pipeline::rational_expression::helper::obj_key;
@@ -23,19 +23,19 @@ pub fn objs_equal_by_rational_expression_evaluation(left: &Obj, right: &Obj) -> 
 pub fn algebraic_normalization_nonzero_requirements(left: &Obj, right: &Obj) -> Vec<Obj> {
     fn collect(object: &Obj, requirements: &mut Vec<Obj>, seen: &mut HashSet<String>) {
         match object {
-            Obj::Add(add) => {
+            Obj::ArithmeticOperator(ArithmeticOperator::Add(add)) => {
                 collect(&add.left, requirements, seen);
                 collect(&add.right, requirements, seen);
             }
-            Obj::Sub(sub) => {
+            Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub)) => {
                 collect(&sub.left, requirements, seen);
                 collect(&sub.right, requirements, seen);
             }
-            Obj::Mul(mul) => {
+            Obj::ArithmeticOperator(ArithmeticOperator::Mul(mul)) => {
                 collect(&mul.left, requirements, seen);
                 collect(&mul.right, requirements, seen);
             }
-            Obj::Div(div) => {
+            Obj::ArithmeticOperator(ArithmeticOperator::Div(div)) => {
                 collect(&div.left, requirements, seen);
                 collect(&div.right, requirements, seen);
                 let denominator = div.right.as_ref().clone();
@@ -43,7 +43,7 @@ pub fn algebraic_normalization_nonzero_requirements(left: &Obj, right: &Obj) -> 
                     requirements.push(denominator);
                 }
             }
-            Obj::Pow(pow) => {
+            Obj::ArithmeticOperator(ArithmeticOperator::Pow(pow)) => {
                 collect(&pow.base, requirements, seen);
                 collect(&pow.exponent, requirements, seen);
                 let exponent_is_negative_integer =

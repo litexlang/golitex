@@ -1,17 +1,15 @@
 //! Struct / template / field-access object WD.
 
-use super::fail_to_verify_obj_well_defined::{
-    FailToVerifyFieldAccessObjWellDefined, FailToVerifyInstantiatedTemplateObjObjWellDefined,
-    FailToVerifyObjWellDefinedByDefCommon, FailToVerifyObjWellDefinedResult,
-    FailToVerifyStructObjObjWellDefined,
-};
+use super::fail_to_verify_obj_well_defined::*;
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::wrap_obj_well_defined_by_def::finish_by_def;
 use super::entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
 use crate::new_pipeline::ast::fact::{
     AtomicFact, EqualFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
 };
-use crate::new_pipeline::ast::obj::{FieldAccess, InstantiatedTemplateObj, Obj, StructObj};
+use crate::new_pipeline::ast::obj::{
+    FieldAccess, FunctionSpace, InstantiatedTemplateObj, Obj, StructObj, Structish,
+};
 use crate::new_pipeline::ast::param::ParamType;
 use crate::new_pipeline::ast::stmt::TemplateDefEnum;
 use crate::new_pipeline::exec_env::exec_env::SpecialObjectPropertyByDefinition;
@@ -33,13 +31,13 @@ impl Runtime {
         let expected_arity = {
             let Some(def) = self.def_struct_visible_in_stack(plain) else {
                 return Ok(VerifyObjWellDefinedResult::Failed(
-                    FailToVerifyObjWellDefinedResult::StructObj(
+                    FailToVerifyObjWellDefinedResult::Structish(FailToVerifyStructishObjWellDefinedResult::StructObj(
                         FailToVerifyStructObjObjWellDefined(
                             FailToVerifyObjWellDefinedByDefCommon::Others(format!(
                                 "struct `{plain}` is not defined"
                             )),
                         ),
-                    ),
+                    )),
                 ));
             };
             match &def.param_def_with_dom {
@@ -49,18 +47,18 @@ impl Runtime {
         };
         if value.params.len() != expected_arity {
             return Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::StructObj(FailToVerifyStructObjObjWellDefined(
+                FailToVerifyObjWellDefinedResult::Structish(FailToVerifyStructishObjWellDefinedResult::StructObj(FailToVerifyStructObjObjWellDefined(
                     FailToVerifyObjWellDefinedByDefCommon::Others(format!(
                         "struct `{plain}` expects {expected_arity} parameter(s), got {}",
                         value.params.len()
                     )),
-                )),
+                ))),
             ));
         }
 
         let refs: Vec<&Obj> = value.params.iter().collect();
         let stages = self.verify_objs_as_children(&refs, verify_state.clone())?;
-        let root = Obj::StructObj(value.clone());
+        let root = Obj::Structish(Structish::StructObj(value.clone()));
         match finish_by_def(&root, stages) {
             Ok(by_def) => {
                 if verify_state.store_well_defined_fact {
@@ -95,7 +93,7 @@ impl Runtime {
             self.verify_obj_well_definedness(value.obj.as_ref(), verify_state.clone())?;
         if receiver_wd.is_failed() {
             return Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::FieldAccess(FailToVerifyFieldAccessObjWellDefined(
+                FailToVerifyObjWellDefinedResult::Structish(FailToVerifyStructishObjWellDefinedResult::FieldAccess(FailToVerifyFieldAccessObjWellDefined(
                     FailToVerifyObjWellDefinedByDefCommon::Child {
                         obj: value.obj.as_ref().clone(),
                         child: Box::new(match receiver_wd {
@@ -103,7 +101,7 @@ impl Runtime {
                             VerifyObjWellDefinedResult::Success(_) => unreachable!(),
                         }),
                     },
-                )),
+                ))),
             ));
         }
 
@@ -131,7 +129,7 @@ impl Runtime {
                 break;
             }
             match &field_def.field_type {
-                Obj::StructObj(next) => carrier = next.clone(),
+                Obj::Structish(Structish::StructObj(next)) => carrier = next.clone(),
                 _ => {
                     return Ok(field_access_fail(format!(
                         "field `{field_name}` of struct `{plain}` is not a struct carrier"
@@ -144,7 +142,7 @@ impl Runtime {
             value.obj.as_ref().clone(),
             receiver_wd,
         )]);
-        let root = Obj::FieldAccess(value.clone());
+        let root = Obj::Structish(Structish::FieldAccess(value.clone()));
         match finish_by_def(&root, stages) {
             Ok(by_def) => {
                 if verify_state.store_well_defined_fact {
@@ -171,7 +169,7 @@ impl Runtime {
         if let Some(carrier) = self.defined_as_struct_visible_in_stack(obj) {
             return Some(carrier);
         }
-        let Obj::FieldAccess(access) = obj else {
+        let Obj::Structish(Structish::FieldAccess(access)) = obj else {
             return None;
         };
         if access.fields.is_empty() {
@@ -183,7 +181,7 @@ impl Runtime {
             let field = def.fields.iter().find(|f| f.binding.name == *field_name)?;
             let is_last = index + 1 == access.fields.len();
             match &field.field_type {
-                Obj::StructObj(next) => {
+                Obj::Structish(Structish::StructObj(next)) => {
                     if is_last {
                         return Some(next.clone());
                     }
@@ -251,7 +249,7 @@ impl Runtime {
             let failed = child.is_failed();
             stages.child_obj_well_defined.push((arg.clone(), child));
             if failed {
-                let root = Obj::InstantiatedTemplateObj(value.clone());
+                let root = Obj::Structish(Structish::InstantiatedTemplateObj(value.clone()));
                 return Ok(match finish_by_def(&root, stages) {
                     Ok(_) => unreachable!(),
                     Err(fail) => VerifyObjWellDefinedResult::Failed(fail),
@@ -294,7 +292,7 @@ impl Runtime {
                 let failed = req.is_failed();
                 stages.requirement_fact_verified.push(req);
                 if failed {
-                    let root = Obj::InstantiatedTemplateObj(value.clone());
+                    let root = Obj::Structish(Structish::InstantiatedTemplateObj(value.clone()));
                     return Ok(match finish_by_def(&root, stages) {
                         Ok(_) => unreachable!(),
                         Err(fail) => VerifyObjWellDefinedResult::Failed(fail),
@@ -318,7 +316,7 @@ impl Runtime {
             let failed = req.is_failed();
             stages.requirement_fact_verified.push(req);
             if failed {
-                let root = Obj::InstantiatedTemplateObj(value.clone());
+                let root = Obj::Structish(Structish::InstantiatedTemplateObj(value.clone()));
                 return Ok(match finish_by_def(&root, stages) {
                     Ok(_) => unreachable!(),
                     Err(fail) => VerifyObjWellDefinedResult::Failed(fail),
@@ -326,7 +324,7 @@ impl Runtime {
             }
         }
 
-        let root = Obj::InstantiatedTemplateObj(value.clone());
+        let root = Obj::Structish(Structish::InstantiatedTemplateObj(value.clone()));
         match finish_by_def(&root, stages) {
             Ok(by_def) => {
                 if verify_state.store_well_defined_fact {
@@ -371,19 +369,19 @@ impl Runtime {
         match &def.template_def_stmt {
             TemplateDefEnum::HaveFnEqualStmt(have_fn) => {
                 let Ok(anon) = self.inst_obj(
-                    &Obj::AnonymousFn(have_fn.equal_to_anonymous_fn.clone()),
+                    &Obj::FunctionSpace(FunctionSpace::AnonymousFn(have_fn.equal_to_anonymous_fn.clone())),
                     &subst,
                 ) else {
                     return Ok(());
                 };
-                let Obj::AnonymousFn(anon) = anon else {
+                let Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) = anon else {
                     return Ok(());
                 };
-                let surface = Obj::InstantiatedTemplateObj(value.clone());
+                let surface = Obj::Structish(Structish::InstantiatedTemplateObj(value.clone()));
                 let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
                     fact_id: self.ids.allocate_fact_id(),
                     element: surface.clone(),
-                    set: Obj::FnSet(anon.body.clone()),
+                    set: Obj::FunctionSpace(FunctionSpace::FnSet(anon.body.clone())),
                     line_file: None,
                 }));
                 self.store_fact_and_infer(&membership)?;
@@ -393,7 +391,7 @@ impl Runtime {
                 let defining_equal = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
                     fact_id: self.ids.allocate_fact_id(),
                     left: surface,
-                    right: Obj::AnonymousFn(anon),
+                    right: Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)),
                     line_file: None,
                 }));
                 self.store_fact_and_infer(&defining_equal)?;
@@ -418,7 +416,7 @@ impl Runtime {
             TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => {
                 // Same three facts as plain `have fn by exist!` / `release obj def`,
                 // with subjects = `\Name<args>` and template params substituted.
-                let surface = Obj::InstantiatedTemplateObj(value.clone());
+                let surface = Obj::Structish(Structish::InstantiatedTemplateObj(value.clone()));
                 match self.build_have_fn_by_forall_exist_unique_facts_for_surface(
                     &surface,
                     stmt,
@@ -443,7 +441,7 @@ impl Runtime {
                 else {
                     return Ok(());
                 };
-                let surface = Obj::InstantiatedTemplateObj(value.clone());
+                let surface = Obj::Structish(Structish::InstantiatedTemplateObj(value.clone()));
                 let defining_equal = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
                     fact_id: self.ids.allocate_fact_id(),
                     left: surface,
@@ -471,13 +469,13 @@ impl Runtime {
             dom_facts: clause.dom_facts.clone(),
             ret_set: Box::new(clause.ret_set.clone()),
         };
-        let Ok(inst_set) = self.inst_obj(&Obj::FnSet(fn_set), subst) else {
+        let Ok(inst_set) = self.inst_obj(&Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)), subst) else {
             return Ok(());
         };
-        let Obj::FnSet(_) = &inst_set else {
+        let Obj::FunctionSpace(FunctionSpace::FnSet(_)) = &inst_set else {
             return Ok(());
         };
-        let surface = Obj::InstantiatedTemplateObj(value.clone());
+        let surface = Obj::Structish(Structish::InstantiatedTemplateObj(value.clone()));
         let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
             fact_id: self.ids.allocate_fact_id(),
             element: surface,
@@ -493,17 +491,17 @@ impl Runtime {
 }
 
 fn template_fail(common: FailToVerifyObjWellDefinedByDefCommon) -> VerifyObjWellDefinedResult {
-    VerifyObjWellDefinedResult::Failed(FailToVerifyObjWellDefinedResult::InstantiatedTemplateObj(
+    VerifyObjWellDefinedResult::Failed(FailToVerifyObjWellDefinedResult::Structish(FailToVerifyStructishObjWellDefinedResult::InstantiatedTemplateObj(
         FailToVerifyInstantiatedTemplateObjObjWellDefined(common),
-    ))
+    )))
 }
 
 fn field_access_fail(message: String) -> VerifyObjWellDefinedResult {
-    VerifyObjWellDefinedResult::Failed(FailToVerifyObjWellDefinedResult::FieldAccess(
+    VerifyObjWellDefinedResult::Failed(FailToVerifyObjWellDefinedResult::Structish(FailToVerifyStructishObjWellDefinedResult::FieldAccess(
         FailToVerifyFieldAccessObjWellDefined(FailToVerifyObjWellDefinedByDefCommon::Others(
             message,
         )),
-    ))
+    )))
 }
 
 // Same shapes as forall instantiation param-type obligations.

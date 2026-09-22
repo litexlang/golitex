@@ -10,7 +10,7 @@
 //!   \const_on_S<R, 0>(2) = 0
 
 use crate::new_pipeline::ast::fact::EqualFact;
-use crate::new_pipeline::ast::obj::{FnObj, FnObjHead, InstantiatedTemplateObj, Obj};
+use crate::new_pipeline::ast::obj::{FnObj, FnObjHead, InstantiatedTemplateObj, Obj, FunctionSpace};
 use crate::new_pipeline::ast::stmt::TemplateDefEnum;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
@@ -105,12 +105,12 @@ impl Runtime {
             subst.insert(id, arg.clone());
         }
         let Ok(inst_anon) = self.inst_obj(
-            &Obj::AnonymousFn(have_fn.equal_to_anonymous_fn.clone()),
+            &Obj::FunctionSpace(FunctionSpace::AnonymousFn(have_fn.equal_to_anonymous_fn.clone())),
             &subst,
         ) else {
             return Ok(None);
         };
-        let Obj::AnonymousFn(inst_anon) = inst_anon else {
+        let Obj::FunctionSpace(FunctionSpace::AnonymousFn(inst_anon)) = inst_anon else {
             return Ok(None);
         };
         let fn_subst =

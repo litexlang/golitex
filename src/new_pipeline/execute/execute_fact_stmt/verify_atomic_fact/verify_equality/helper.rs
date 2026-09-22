@@ -1,8 +1,4 @@
-use crate::new_pipeline::ast::obj::{
-    Abs, Add, Arccos, Arccot, Arcsin, Arctan, Ceil, Cos, Cot, Div, Exp, Factorial, Floor, FnObj,
-    FnObjHead, Gcd, IntervalObj, Lcm, Ln, Max, Min, Mod, Mul, Obj, OneSideInfinityIntervalObj, Pow,
-    Quot, Sign, Sin, Sqrt, Sub, Tan,
-};
+use crate::new_pipeline::ast::obj::{Abs, Add, Arccos, Arccot, Arcsin, Arctan, Ceil, Cos, Cot, Div, Exp, Factorial, Floor, FnObj, FnObjHead, Gcd, IntervalObj, Lcm, Ln, Max, Min, Mod, Mul, Obj, OneSideInfinityIntervalObj, Pow, Quot, Sign, Sin, Sqrt, Sub, Tan, ArithmeticOperator, ComplexOperator, ExpLogOperator, FiniteSetStat, FunctionSpace, IntegerOperator, IteratedOperator, ProductShape, SetFormer, SetOperator, Structish, TrigOperator};
 use crate::new_pipeline::exec_env::known_fact_memory::ObjIR;
 
 // Same-shape child pairs for MatchingOneArgByOne (legacy same_shape peel).
@@ -57,73 +53,73 @@ pub(crate) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Ob
     match (left, right) {
         (Obj::FnObj(l), Obj::FnObj(r)) => fn_obj_corresponding_arg_pairs(l, r),
 
-        (Obj::Add(l), Obj::Add(r)) => binary!(l, r),
-        (Obj::Sub(l), Obj::Sub(r)) => binary!(l, r),
-        (Obj::Mul(l), Obj::Mul(r)) => binary!(l, r),
-        (Obj::Div(l), Obj::Div(r)) => binary!(l, r),
-        (Obj::Mod(l), Obj::Mod(r)) => binary!(l, r),
-        (Obj::Quot(l), Obj::Quot(r)) => binary!(l, r),
-        (Obj::Gcd(l), Obj::Gcd(r)) => binary!(l, r),
-        (Obj::Lcm(l), Obj::Lcm(r)) => binary!(l, r),
-        (Obj::Min(l), Obj::Min(r)) => binary!(l, r),
-        (Obj::Max(l), Obj::Max(r)) => binary!(l, r),
-        (Obj::Pow(l), Obj::Pow(r)) => Some(vec![
+        (Obj::ArithmeticOperator(ArithmeticOperator::Add(l)), Obj::ArithmeticOperator(ArithmeticOperator::Add(r))) => binary!(l, r),
+        (Obj::ArithmeticOperator(ArithmeticOperator::Sub(l)), Obj::ArithmeticOperator(ArithmeticOperator::Sub(r))) => binary!(l, r),
+        (Obj::ArithmeticOperator(ArithmeticOperator::Mul(l)), Obj::ArithmeticOperator(ArithmeticOperator::Mul(r))) => binary!(l, r),
+        (Obj::ArithmeticOperator(ArithmeticOperator::Div(l)), Obj::ArithmeticOperator(ArithmeticOperator::Div(r))) => binary!(l, r),
+        (Obj::IntegerOperator(IntegerOperator::Mod(l)), Obj::IntegerOperator(IntegerOperator::Mod(r))) => binary!(l, r),
+        (Obj::IntegerOperator(IntegerOperator::Quot(l)), Obj::IntegerOperator(IntegerOperator::Quot(r))) => binary!(l, r),
+        (Obj::IntegerOperator(IntegerOperator::Gcd(l)), Obj::IntegerOperator(IntegerOperator::Gcd(r))) => binary!(l, r),
+        (Obj::IntegerOperator(IntegerOperator::Lcm(l)), Obj::IntegerOperator(IntegerOperator::Lcm(r))) => binary!(l, r),
+        (Obj::ArithmeticOperator(ArithmeticOperator::Min(l)), Obj::ArithmeticOperator(ArithmeticOperator::Min(r))) => binary!(l, r),
+        (Obj::ArithmeticOperator(ArithmeticOperator::Max(l)), Obj::ArithmeticOperator(ArithmeticOperator::Max(r))) => binary!(l, r),
+        (Obj::ArithmeticOperator(ArithmeticOperator::Pow(l)), Obj::ArithmeticOperator(ArithmeticOperator::Pow(r))) => Some(vec![
             (l.base.as_ref().clone(), r.base.as_ref().clone()),
             (l.exponent.as_ref().clone(), r.exponent.as_ref().clone()),
         ]),
-        (Obj::Log(l), Obj::Log(r)) => Some(vec![
+        (Obj::ExpLogOperator(ExpLogOperator::Log(l)), Obj::ExpLogOperator(ExpLogOperator::Log(r))) => Some(vec![
             (l.base.as_ref().clone(), r.base.as_ref().clone()),
             (l.arg.as_ref().clone(), r.arg.as_ref().clone()),
         ]),
-        (Obj::Abs(l), Obj::Abs(r)) => unary!(l, r),
-        (Obj::Floor(l), Obj::Floor(r)) => unary!(l, r),
-        (Obj::Ceil(l), Obj::Ceil(r)) => unary!(l, r),
-        (Obj::Exp(l), Obj::Exp(r)) => unary!(l, r),
-        (Obj::Ln(l), Obj::Ln(r)) => unary!(l, r),
-        (Obj::Sign(l), Obj::Sign(r)) => unary!(l, r),
-        (Obj::Factorial(l), Obj::Factorial(r)) => unary!(l, r),
-        (Obj::Sqrt(l), Obj::Sqrt(r)) => unary!(l, r),
-        (Obj::Sin(l), Obj::Sin(r)) => unary!(l, r),
-        (Obj::Cos(l), Obj::Cos(r)) => unary!(l, r),
-        (Obj::Tan(l), Obj::Tan(r)) => unary!(l, r),
-        (Obj::Cot(l), Obj::Cot(r)) => unary!(l, r),
-        (Obj::Arcsin(l), Obj::Arcsin(r)) => unary!(l, r),
-        (Obj::Arccos(l), Obj::Arccos(r)) => unary!(l, r),
-        (Obj::Arctan(l), Obj::Arctan(r)) => unary!(l, r),
-        (Obj::Arccot(l), Obj::Arccot(r)) => unary!(l, r),
-        (Obj::RealPart(l), Obj::RealPart(r)) => unary!(l, r),
-        (Obj::ImaginaryPart(l), Obj::ImaginaryPart(r)) => unary!(l, r),
-        (Obj::ComplexAbs(l), Obj::ComplexAbs(r)) => unary!(l, r),
+        (Obj::ArithmeticOperator(ArithmeticOperator::Abs(l)), Obj::ArithmeticOperator(ArithmeticOperator::Abs(r))) => unary!(l, r),
+        (Obj::ArithmeticOperator(ArithmeticOperator::Floor(l)), Obj::ArithmeticOperator(ArithmeticOperator::Floor(r))) => unary!(l, r),
+        (Obj::ArithmeticOperator(ArithmeticOperator::Ceil(l)), Obj::ArithmeticOperator(ArithmeticOperator::Ceil(r))) => unary!(l, r),
+        (Obj::ExpLogOperator(ExpLogOperator::Exp(l)), Obj::ExpLogOperator(ExpLogOperator::Exp(r))) => unary!(l, r),
+        (Obj::ExpLogOperator(ExpLogOperator::Ln(l)), Obj::ExpLogOperator(ExpLogOperator::Ln(r))) => unary!(l, r),
+        (Obj::ArithmeticOperator(ArithmeticOperator::Sign(l)), Obj::ArithmeticOperator(ArithmeticOperator::Sign(r))) => unary!(l, r),
+        (Obj::IntegerOperator(IntegerOperator::Factorial(l)), Obj::IntegerOperator(IntegerOperator::Factorial(r))) => unary!(l, r),
+        (Obj::ExpLogOperator(ExpLogOperator::Sqrt(l)), Obj::ExpLogOperator(ExpLogOperator::Sqrt(r))) => unary!(l, r),
+        (Obj::TrigOperator(TrigOperator::Sin(l)), Obj::TrigOperator(TrigOperator::Sin(r))) => unary!(l, r),
+        (Obj::TrigOperator(TrigOperator::Cos(l)), Obj::TrigOperator(TrigOperator::Cos(r))) => unary!(l, r),
+        (Obj::TrigOperator(TrigOperator::Tan(l)), Obj::TrigOperator(TrigOperator::Tan(r))) => unary!(l, r),
+        (Obj::TrigOperator(TrigOperator::Cot(l)), Obj::TrigOperator(TrigOperator::Cot(r))) => unary!(l, r),
+        (Obj::TrigOperator(TrigOperator::Arcsin(l)), Obj::TrigOperator(TrigOperator::Arcsin(r))) => unary!(l, r),
+        (Obj::TrigOperator(TrigOperator::Arccos(l)), Obj::TrigOperator(TrigOperator::Arccos(r))) => unary!(l, r),
+        (Obj::TrigOperator(TrigOperator::Arctan(l)), Obj::TrigOperator(TrigOperator::Arctan(r))) => unary!(l, r),
+        (Obj::TrigOperator(TrigOperator::Arccot(l)), Obj::TrigOperator(TrigOperator::Arccot(r))) => unary!(l, r),
+        (Obj::ComplexOperator(ComplexOperator::RealPart(l)), Obj::ComplexOperator(ComplexOperator::RealPart(r))) => unary!(l, r),
+        (Obj::ComplexOperator(ComplexOperator::ImaginaryPart(l)), Obj::ComplexOperator(ComplexOperator::ImaginaryPart(r))) => unary!(l, r),
+        (Obj::ComplexOperator(ComplexOperator::ComplexAbs(l)), Obj::ComplexOperator(ComplexOperator::ComplexAbs(r))) => unary!(l, r),
 
-        (Obj::Union(l), Obj::Union(r)) => binary!(l, r),
-        (Obj::Intersect(l), Obj::Intersect(r)) => binary!(l, r),
-        (Obj::SetMinus(l), Obj::SetMinus(r)) => binary!(l, r),
-        (Obj::BigUnion(l), Obj::BigUnion(r)) => {
+        (Obj::SetOperator(SetOperator::Union(l)), Obj::SetOperator(SetOperator::Union(r))) => binary!(l, r),
+        (Obj::SetOperator(SetOperator::Intersect(l)), Obj::SetOperator(SetOperator::Intersect(r))) => binary!(l, r),
+        (Obj::SetOperator(SetOperator::SetMinus(l)), Obj::SetOperator(SetOperator::SetMinus(r))) => binary!(l, r),
+        (Obj::SetOperator(SetOperator::BigUnion(l)), Obj::SetOperator(SetOperator::BigUnion(r))) => {
             Some(vec![(l.left.as_ref().clone(), r.left.as_ref().clone())])
         }
-        (Obj::BigIntersect(l), Obj::BigIntersect(r)) => {
+        (Obj::SetOperator(SetOperator::BigIntersect(l)), Obj::SetOperator(SetOperator::BigIntersect(r))) => {
             Some(vec![(l.left.as_ref().clone(), r.left.as_ref().clone())])
         }
-        (Obj::PowerSet(l), Obj::PowerSet(r)) => {
+        (Obj::SetOperator(SetOperator::PowerSet(l)), Obj::SetOperator(SetOperator::PowerSet(r))) => {
             Some(vec![(l.set.as_ref().clone(), r.set.as_ref().clone())])
         }
-        (Obj::CartDim(l), Obj::CartDim(r)) => {
+        (Obj::ProductShape(ProductShape::CartDim(l)), Obj::ProductShape(ProductShape::CartDim(r))) => {
             Some(vec![(l.set.as_ref().clone(), r.set.as_ref().clone())])
         }
-        (Obj::TupleDim(l), Obj::TupleDim(r)) => unary!(l, r),
-        (Obj::FiniteSetSize(l), Obj::FiniteSetSize(r)) => {
+        (Obj::ProductShape(ProductShape::TupleDim(l)), Obj::ProductShape(ProductShape::TupleDim(r))) => unary!(l, r),
+        (Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(l)), Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(r))) => {
             Some(vec![(l.set.as_ref().clone(), r.set.as_ref().clone())])
         }
-        (Obj::FiniteSetMax(l), Obj::FiniteSetMax(r)) => {
+        (Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(l)), Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(r))) => {
             Some(vec![(l.set.as_ref().clone(), r.set.as_ref().clone())])
         }
-        (Obj::FiniteSetMin(l), Obj::FiniteSetMin(r)) => {
+        (Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(l)), Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(r))) => {
             Some(vec![(l.set.as_ref().clone(), r.set.as_ref().clone())])
         }
-        (Obj::FnRange(l), Obj::FnRange(r)) => Some(vec![
+        (Obj::FunctionSpace(FunctionSpace::FnRange(l)), Obj::FunctionSpace(FunctionSpace::FnRange(r))) => Some(vec![
             (l.function.as_ref().clone(), r.function.as_ref().clone()),
         ]),
-        (Obj::Replacement(l), Obj::Replacement(r)) => {
+        (Obj::SetFormer(SetFormer::Replacement(l)), Obj::SetFormer(SetFormer::Replacement(r))) => {
             if l.prop_name.to_string() != r.prop_name.to_string() {
                 return None;
             }
@@ -131,91 +127,91 @@ pub(crate) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Ob
                 (l.source_set.as_ref().clone(), r.source_set.as_ref().clone()),
             ])
         }
-        (Obj::Range(l), Obj::Range(r)) => Some(vec![
+        (Obj::SetFormer(SetFormer::Range(l)), Obj::SetFormer(SetFormer::Range(r))) => Some(vec![
             (l.start.as_ref().clone(), r.start.as_ref().clone()),
             (l.end.as_ref().clone(), r.end.as_ref().clone()),
         ]),
-        (Obj::ClosedRange(l), Obj::ClosedRange(r)) => Some(vec![
+        (Obj::SetFormer(SetFormer::ClosedRange(l)), Obj::SetFormer(SetFormer::ClosedRange(r))) => Some(vec![
             (l.start.as_ref().clone(), r.start.as_ref().clone()),
             (l.end.as_ref().clone(), r.end.as_ref().clone()),
         ]),
-        (Obj::Sum(l), Obj::Sum(r)) => Some(vec![
+        (Obj::IteratedOperator(IteratedOperator::Sum(l)), Obj::IteratedOperator(IteratedOperator::Sum(r))) => Some(vec![
             (l.start.as_ref().clone(), r.start.as_ref().clone()),
             (l.end.as_ref().clone(), r.end.as_ref().clone()),
             (l.func.as_ref().clone(), r.func.as_ref().clone()),
         ]),
-        (Obj::SumOfFiniteSet(l), Obj::SumOfFiniteSet(r)) => Some(vec![
+        (Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(l)), Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(r))) => Some(vec![
             (l.set.as_ref().clone(), r.set.as_ref().clone()),
             (l.func.as_ref().clone(), r.func.as_ref().clone()),
         ]),
-        (Obj::Product(l), Obj::Product(r)) => Some(vec![
+        (Obj::IteratedOperator(IteratedOperator::Product(l)), Obj::IteratedOperator(IteratedOperator::Product(r))) => Some(vec![
             (l.start.as_ref().clone(), r.start.as_ref().clone()),
             (l.end.as_ref().clone(), r.end.as_ref().clone()),
             (l.func.as_ref().clone(), r.func.as_ref().clone()),
         ]),
-        (Obj::ProductOfFiniteSet(l), Obj::ProductOfFiniteSet(r)) => Some(vec![
+        (Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(l)), Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(r))) => Some(vec![
             (l.set.as_ref().clone(), r.set.as_ref().clone()),
             (l.func.as_ref().clone(), r.func.as_ref().clone()),
         ]),
-        (Obj::Reduce(l), Obj::Reduce(r)) => Some(vec![
+        (Obj::IteratedOperator(IteratedOperator::Reduce(l)), Obj::IteratedOperator(IteratedOperator::Reduce(r))) => Some(vec![
             (l.start.as_ref().clone(), r.start.as_ref().clone()),
             (l.end.as_ref().clone(), r.end.as_ref().clone()),
             (l.func.as_ref().clone(), r.func.as_ref().clone()),
             (l.op.as_ref().clone(), r.op.as_ref().clone()),
             (l.seed.as_ref().clone(), r.seed.as_ref().clone()),
         ]),
-        (Obj::FiniteSetReduce(l), Obj::FiniteSetReduce(r)) => Some(vec![
+        (Obj::IteratedOperator(IteratedOperator::FiniteSetReduce(l)), Obj::IteratedOperator(IteratedOperator::FiniteSetReduce(r))) => Some(vec![
             (l.set.as_ref().clone(), r.set.as_ref().clone()),
             (l.func.as_ref().clone(), r.func.as_ref().clone()),
             (l.op.as_ref().clone(), r.op.as_ref().clone()),
             (l.seed.as_ref().clone(), r.seed.as_ref().clone()),
         ]),
-        (Obj::IntervalObj(l), Obj::IntervalObj(r)) => interval_obj_pairs(l, r),
-        (Obj::OneSideInfinityIntervalObj(l), Obj::OneSideInfinityIntervalObj(r)) => {
+        (Obj::SetFormer(SetFormer::IntervalObj(l)), Obj::SetFormer(SetFormer::IntervalObj(r))) => interval_obj_pairs(l, r),
+        (Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(l)), Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(r))) => {
             one_side_interval_pairs(l, r)
         }
-        (Obj::FiniteSeqSet(l), Obj::FiniteSeqSet(r)) => Some(vec![
+        (Obj::SetFormer(SetFormer::FiniteSeqSet(l)), Obj::SetFormer(SetFormer::FiniteSeqSet(r))) => Some(vec![
             (l.set.as_ref().clone(), r.set.as_ref().clone()),
             (l.n.as_ref().clone(), r.n.as_ref().clone()),
         ]),
-        (Obj::SeqSet(l), Obj::SeqSet(r)) => {
+        (Obj::SetFormer(SetFormer::SeqSet(l)), Obj::SetFormer(SetFormer::SeqSet(r))) => {
             Some(vec![(l.set.as_ref().clone(), r.set.as_ref().clone())])
         }
-        (Obj::Proj(l), Obj::Proj(r)) => Some(vec![
+        (Obj::ProductShape(ProductShape::Proj(l)), Obj::ProductShape(ProductShape::Proj(r))) => Some(vec![
             (l.set.as_ref().clone(), r.set.as_ref().clone()),
             (l.dim.as_ref().clone(), r.dim.as_ref().clone()),
         ]),
-        (Obj::ObjAtIndex(l), Obj::ObjAtIndex(r)) => Some(vec![
+        (Obj::ProductShape(ProductShape::ObjAtIndex(l)), Obj::ProductShape(ProductShape::ObjAtIndex(r))) => Some(vec![
             (l.obj.as_ref().clone(), r.obj.as_ref().clone()),
             (l.index.as_ref().clone(), r.index.as_ref().clone()),
         ]),
-        (Obj::Tuple(l), Obj::Tuple(r)) => slice_pairs!(l.args, r.args),
-        (Obj::ListSet(l), Obj::ListSet(r)) => slice_pairs!(l.list, r.list),
-        (Obj::Cart(l), Obj::Cart(r)) => slice_pairs!(l.args, r.args),
-        (Obj::GeneralCart(l), Obj::GeneralCart(r)) => Some(vec![
+        (Obj::ProductShape(ProductShape::Tuple(l)), Obj::ProductShape(ProductShape::Tuple(r))) => slice_pairs!(l.args, r.args),
+        (Obj::SetFormer(SetFormer::ListSet(l)), Obj::SetFormer(SetFormer::ListSet(r))) => slice_pairs!(l.list, r.list),
+        (Obj::ProductShape(ProductShape::Cart(l)), Obj::ProductShape(ProductShape::Cart(r))) => slice_pairs!(l.args, r.args),
+        (Obj::SetOperator(SetOperator::GeneralCart(l)), Obj::SetOperator(SetOperator::GeneralCart(r))) => Some(vec![
             (l.index_set.as_ref().clone(), r.index_set.as_ref().clone()),
             (l.family_set.as_ref().clone(), r.family_set.as_ref().clone()),
             (l.family_fn.as_ref().clone(), r.family_fn.as_ref().clone()),
         ]),
-        (Obj::IndexUnion(l), Obj::IndexUnion(r)) => Some(vec![
+        (Obj::SetOperator(SetOperator::IndexUnion(l)), Obj::SetOperator(SetOperator::IndexUnion(r))) => Some(vec![
             (l.index_set.as_ref().clone(), r.index_set.as_ref().clone()),
             (l.ambient_set.as_ref().clone(), r.ambient_set.as_ref().clone()),
             (l.family_fn.as_ref().clone(), r.family_fn.as_ref().clone()),
         ]),
-        (Obj::IndexIntersect(l), Obj::IndexIntersect(r)) => Some(vec![
+        (Obj::SetOperator(SetOperator::IndexIntersect(l)), Obj::SetOperator(SetOperator::IndexIntersect(r))) => Some(vec![
             (l.index_set.as_ref().clone(), r.index_set.as_ref().clone()),
             (l.ambient_set.as_ref().clone(), r.ambient_set.as_ref().clone()),
             (l.family_fn.as_ref().clone(), r.family_fn.as_ref().clone()),
         ]),
-        (Obj::StructObj(l), Obj::StructObj(r)) => {
+        (Obj::Structish(Structish::StructObj(l)), Obj::Structish(Structish::StructObj(r))) => {
             if l.name.to_string() != r.name.to_string() {
                 return None;
             }
             obj_slice_pairs!(l.params, r.params)
         }
         (
-            Obj::FieldAccess(l),
-            Obj::FieldAccess(r),
+            Obj::Structish(Structish::FieldAccess(l)),
+            Obj::Structish(Structish::FieldAccess(r)),
         ) => {
             if l.fields != r.fields {
                 return None;
@@ -236,98 +232,98 @@ pub(crate) fn replace_obj_matching_ir(obj: &Obj, from_ir: &ObjIR, to: &Obj) -> O
         return to.clone();
     }
     match obj {
-        Obj::Add(a) => Obj::Add(Add {
+        Obj::ArithmeticOperator(ArithmeticOperator::Add(a)) => Obj::ArithmeticOperator(ArithmeticOperator::Add(Add {
             left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
             right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
-        }),
-        Obj::Sub(a) => Obj::Sub(Sub {
+        })),
+        Obj::ArithmeticOperator(ArithmeticOperator::Sub(a)) => Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub {
             left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
             right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
-        }),
-        Obj::Mul(a) => Obj::Mul(Mul {
+        })),
+        Obj::ArithmeticOperator(ArithmeticOperator::Mul(a)) => Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
             left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
             right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
-        }),
-        Obj::Div(a) => Obj::Div(Div {
+        })),
+        Obj::ArithmeticOperator(ArithmeticOperator::Div(a)) => Obj::ArithmeticOperator(ArithmeticOperator::Div(Div {
             left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
             right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
-        }),
-        Obj::Mod(a) => Obj::Mod(Mod {
+        })),
+        Obj::IntegerOperator(IntegerOperator::Mod(a)) => Obj::IntegerOperator(IntegerOperator::Mod(Mod {
             left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
             right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
-        }),
-        Obj::Quot(a) => Obj::Quot(Quot {
+        })),
+        Obj::IntegerOperator(IntegerOperator::Quot(a)) => Obj::IntegerOperator(IntegerOperator::Quot(Quot {
             left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
             right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
-        }),
-        Obj::Gcd(a) => Obj::Gcd(Gcd {
+        })),
+        Obj::IntegerOperator(IntegerOperator::Gcd(a)) => Obj::IntegerOperator(IntegerOperator::Gcd(Gcd {
             left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
             right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
-        }),
-        Obj::Lcm(a) => Obj::Lcm(Lcm {
+        })),
+        Obj::IntegerOperator(IntegerOperator::Lcm(a)) => Obj::IntegerOperator(IntegerOperator::Lcm(Lcm {
             left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
             right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
-        }),
-        Obj::Min(a) => Obj::Min(Min {
+        })),
+        Obj::ArithmeticOperator(ArithmeticOperator::Min(a)) => Obj::ArithmeticOperator(ArithmeticOperator::Min(Min {
             left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
             right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
-        }),
-        Obj::Max(a) => Obj::Max(Max {
+        })),
+        Obj::ArithmeticOperator(ArithmeticOperator::Max(a)) => Obj::ArithmeticOperator(ArithmeticOperator::Max(Max {
             left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
             right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
-        }),
-        Obj::Pow(a) => Obj::Pow(Pow {
+        })),
+        Obj::ArithmeticOperator(ArithmeticOperator::Pow(a)) => Obj::ArithmeticOperator(ArithmeticOperator::Pow(Pow {
             base: Box::new(replace_obj_matching_ir(&a.base, from_ir, to)),
             exponent: Box::new(replace_obj_matching_ir(&a.exponent, from_ir, to)),
-        }),
-        Obj::Abs(a) => Obj::Abs(Abs {
+        })),
+        Obj::ArithmeticOperator(ArithmeticOperator::Abs(a)) => Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs {
             arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
-        }),
-        Obj::Floor(a) => Obj::Floor(Floor {
+        })),
+        Obj::ArithmeticOperator(ArithmeticOperator::Floor(a)) => Obj::ArithmeticOperator(ArithmeticOperator::Floor(Floor {
             arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
-        }),
-        Obj::Ceil(a) => Obj::Ceil(Ceil {
+        })),
+        Obj::ArithmeticOperator(ArithmeticOperator::Ceil(a)) => Obj::ArithmeticOperator(ArithmeticOperator::Ceil(Ceil {
             arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
-        }),
-        Obj::Exp(a) => Obj::Exp(Exp {
+        })),
+        Obj::ExpLogOperator(ExpLogOperator::Exp(a)) => Obj::ExpLogOperator(ExpLogOperator::Exp(Exp {
             arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
-        }),
-        Obj::Ln(a) => Obj::Ln(Ln {
+        })),
+        Obj::ExpLogOperator(ExpLogOperator::Ln(a)) => Obj::ExpLogOperator(ExpLogOperator::Ln(Ln {
             arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
-        }),
-        Obj::Sign(a) => Obj::Sign(Sign {
+        })),
+        Obj::ArithmeticOperator(ArithmeticOperator::Sign(a)) => Obj::ArithmeticOperator(ArithmeticOperator::Sign(Sign {
             arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
-        }),
-        Obj::Factorial(a) => Obj::Factorial(Factorial {
+        })),
+        Obj::IntegerOperator(IntegerOperator::Factorial(a)) => Obj::IntegerOperator(IntegerOperator::Factorial(Factorial {
             arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
-        }),
-        Obj::Sqrt(a) => Obj::Sqrt(Sqrt {
+        })),
+        Obj::ExpLogOperator(ExpLogOperator::Sqrt(a)) => Obj::ExpLogOperator(ExpLogOperator::Sqrt(Sqrt {
             arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
-        }),
-        Obj::Sin(a) => Obj::Sin(Sin {
+        })),
+        Obj::TrigOperator(TrigOperator::Sin(a)) => Obj::TrigOperator(TrigOperator::Sin(Sin {
             arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
-        }),
-        Obj::Cos(a) => Obj::Cos(Cos {
+        })),
+        Obj::TrigOperator(TrigOperator::Cos(a)) => Obj::TrigOperator(TrigOperator::Cos(Cos {
             arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
-        }),
-        Obj::Tan(a) => Obj::Tan(Tan {
+        })),
+        Obj::TrigOperator(TrigOperator::Tan(a)) => Obj::TrigOperator(TrigOperator::Tan(Tan {
             arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
-        }),
-        Obj::Cot(a) => Obj::Cot(Cot {
+        })),
+        Obj::TrigOperator(TrigOperator::Cot(a)) => Obj::TrigOperator(TrigOperator::Cot(Cot {
             arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
-        }),
-        Obj::Arcsin(a) => Obj::Arcsin(Arcsin {
+        })),
+        Obj::TrigOperator(TrigOperator::Arcsin(a)) => Obj::TrigOperator(TrigOperator::Arcsin(Arcsin {
             arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
-        }),
-        Obj::Arccos(a) => Obj::Arccos(Arccos {
+        })),
+        Obj::TrigOperator(TrigOperator::Arccos(a)) => Obj::TrigOperator(TrigOperator::Arccos(Arccos {
             arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
-        }),
-        Obj::Arctan(a) => Obj::Arctan(Arctan {
+        })),
+        Obj::TrigOperator(TrigOperator::Arctan(a)) => Obj::TrigOperator(TrigOperator::Arctan(Arctan {
             arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
-        }),
-        Obj::Arccot(a) => Obj::Arccot(Arccot {
+        })),
+        Obj::TrigOperator(TrigOperator::Arccot(a)) => Obj::TrigOperator(TrigOperator::Arccot(Arccot {
             arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
-        }),
+        })),
         _ => obj.clone(),
     }
 }
@@ -375,11 +371,11 @@ fn fn_obj_prefix_obj(fo: &FnObj, groups_to_keep: usize) -> Obj {
 fn fn_obj_head_as_obj(head: &FnObjHead) -> Obj {
     match head {
         FnObjHead::Identifier(id) => Obj::Identifier(id.clone()),
-        FnObjHead::AnonymousFnLiteral(a) => Obj::AnonymousFn(a.as_ref().clone()),
+        FnObjHead::AnonymousFnLiteral(a) => Obj::FunctionSpace(FunctionSpace::AnonymousFn(a.as_ref().clone())),
         FnObjHead::FieldAccess(v) => {
-            Obj::FieldAccess(v.clone())
+            Obj::Structish(Structish::FieldAccess(v.clone()))
         }
-        FnObjHead::InstantiatedTemplateObj(v) => Obj::InstantiatedTemplateObj(v.clone()),
+        FnObjHead::InstantiatedTemplateObj(v) => Obj::Structish(Structish::InstantiatedTemplateObj(v.clone())),
     }
 }
 

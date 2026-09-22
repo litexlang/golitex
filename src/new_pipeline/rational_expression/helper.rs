@@ -1,4 +1,4 @@
-use crate::new_pipeline::ast::obj::{Add, Div, Mul, Number, Obj, Sub};
+use crate::new_pipeline::ast::obj::{Add, Div, Mul, Number, Obj, Sub, ArithmeticOperator, Literal};
 use crate::syntax::source_formatting::is_number_string_literally_integer_without_dot;
 
 pub fn obj_key(obj: &Obj) -> String {
@@ -16,35 +16,35 @@ impl Number {
 }
 
 pub fn obj_from_number(number: Number) -> Obj {
-    Obj::Number(number)
+    Obj::Literal(Literal::Number(number))
 }
 
 pub fn add_objs(left: Obj, right: Obj) -> Obj {
-    Obj::Add(Add {
+    Obj::ArithmeticOperator(ArithmeticOperator::Add(Add {
         left: Box::new(left),
         right: Box::new(right),
-    })
+    }))
 }
 
 pub fn sub_objs(left: Obj, right: Obj) -> Obj {
-    Obj::Sub(Sub {
+    Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub {
         left: Box::new(left),
         right: Box::new(right),
-    })
+    }))
 }
 
 pub fn mul_objs(left: Obj, right: Obj) -> Obj {
-    Obj::Mul(Mul {
+    Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
         left: Box::new(left),
         right: Box::new(right),
-    })
+    }))
 }
 
 pub fn div_objs(left: Obj, right: Obj) -> Obj {
-    Obj::Div(Div {
+    Obj::ArithmeticOperator(ArithmeticOperator::Div(Div {
         left: Box::new(left),
         right: Box::new(right),
-    })
+    }))
 }
 
 pub fn number_string_is_literal_integer_without_dot(value: &str) -> bool {

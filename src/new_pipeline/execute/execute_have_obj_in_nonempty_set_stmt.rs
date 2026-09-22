@@ -1,5 +1,5 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact, IsNonemptySetFact};
-use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::ast::obj::{Obj, FunctionSpace};
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::ast::stmt::HaveObjInNonemptySetOrParamTypeStmt;
 use crate::new_pipeline::execute::exec_stmt_result::{
@@ -141,8 +141,8 @@ impl Runtime {
 
 fn nonempty_check_set_for_param_obj(param_set: &Obj) -> Obj {
     match param_set {
-        Obj::FnSet(fn_set) => fn_set.ret_set.as_ref().clone(),
-        Obj::AnonymousFn(anon) => anon.body.ret_set.as_ref().clone(),
+        Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)) => fn_set.ret_set.as_ref().clone(),
+        Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => anon.body.ret_set.as_ref().clone(),
         _ => param_set.clone(),
     }
 }

@@ -1,5 +1,5 @@
 use crate::new_pipeline::ast::fact::IsTupleFact;
-use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::ast::obj::{Obj, ProductShape};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
@@ -20,7 +20,7 @@ impl Runtime {
         _verify_state: VerifyState,
     ) -> RuntimeResult<Option<IsTupleFactSearchProofByBuiltinRule>> {
         match &fact.set {
-            Obj::Tuple(tuple) if tuple.args.len() >= 2 => Ok(Some(
+            Obj::ProductShape(ProductShape::Tuple(tuple)) if tuple.args.len() >= 2 => Ok(Some(
                 IsTupleFactSearchProofByBuiltinRule::TupleLiteral(TupleLiteralBuiltinRuleProof {}),
             )),
             _ => Ok(None),

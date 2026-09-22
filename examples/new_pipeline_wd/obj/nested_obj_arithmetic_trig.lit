@@ -1,0 +1,10 @@
+# Nested Obj family WD smoke (plan C): ArithmeticOperator + TrigOperator.
+# After Obj/WD 16-family reshape, these lets must still WD under new_pipeline.
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_wd/obj/nested_obj_arithmetic_trig.lit
+# Note: tan(0) is not used here — tan WD is a separate open surface.
+
+let a = 1 + 2 * 3
+let b = abs(-4)
+let s = sin(0)
+let c = cos(0)
+let p = 2 ^ 3

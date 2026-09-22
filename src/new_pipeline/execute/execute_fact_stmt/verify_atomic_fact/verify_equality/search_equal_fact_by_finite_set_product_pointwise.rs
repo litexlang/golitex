@@ -1,6 +1,6 @@
 use super::by_builtin_strategy_result::FiniteSetProductPointwiseEqualityStrategySingleStep;
 use crate::new_pipeline::ast::fact::{EqualFact, Fact};
-use crate::new_pipeline::ast::obj::{AnonymousFn, FnObj, FnObjHead, IdentifierObj, Obj};
+use crate::new_pipeline::ast::obj::{AnonymousFn, FnObj, FnObjHead, IdentifierObj, Obj, FunctionSpace, IteratedOperator, Structish};
 use crate::new_pipeline::ast::param::{ParamType, SetBoundParameterList, TypedParameterGroup, TypedParameterList};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
@@ -15,7 +15,7 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<FiniteSetProductPointwiseEqualityStrategySingleStep>> {
-        let (Obj::ProductOfFiniteSet(left), Obj::ProductOfFiniteSet(right)) =
+        let (Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(left)), Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(right))) =
             (&fact.left, &fact.right)
         else {
             return Ok(None);
@@ -98,11 +98,11 @@ fn unary_function_at(rt: &mut Runtime, func: &Obj, x: &Obj) -> Option<Obj> {
     }
     let head = match func {
         Obj::Identifier(id) => FnObjHead::Identifier(id.clone()),
-        Obj::FieldAccess(v) => {
+        Obj::Structish(Structish::FieldAccess(v)) => {
             FnObjHead::FieldAccess(v.clone())
         }
-        Obj::InstantiatedTemplateObj(v) => FnObjHead::InstantiatedTemplateObj(v.clone()),
-        Obj::AnonymousFn(af) => FnObjHead::AnonymousFnLiteral(Box::new(af.clone())),
+        Obj::Structish(Structish::InstantiatedTemplateObj(v)) => FnObjHead::InstantiatedTemplateObj(v.clone()),
+        Obj::FunctionSpace(FunctionSpace::AnonymousFn(af)) => FnObjHead::AnonymousFnLiteral(Box::new(af.clone())),
         _ => return None,
     };
     Some(Obj::FnObj(FnObj {
@@ -113,7 +113,7 @@ fn unary_function_at(rt: &mut Runtime, func: &Obj, x: &Obj) -> Option<Obj> {
 
 fn as_unary_anonymous_fn(func: &Obj) -> Option<&AnonymousFn> {
     match func {
-        Obj::AnonymousFn(af) => Some(af),
+        Obj::FunctionSpace(FunctionSpace::AnonymousFn(af)) => Some(af),
         Obj::FnObj(fo) => {
             if !fo.body.is_empty() {
                 return None;

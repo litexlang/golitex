@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use crate::new_pipeline::ast::names::BoundName;
-use crate::new_pipeline::ast::obj::{AnonymousFn, FnSet, IdentifierObj, Obj, SetBuilder};
+use crate::new_pipeline::ast::obj::{AnonymousFn, FnSet, IdentifierObj, Obj, SetBuilder, ArithmeticOperator, ComplexOperator, ExpLogOperator, FiniteSetStat, FunctionSpace, IntegerOperator, IteratedOperator, Literal, ProductShape, SetFormer, SetOperator, Structish, TrigOperator};
 use crate::new_pipeline::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 use crate::new_pipeline::runtime::Runtime;
@@ -85,127 +85,127 @@ pub fn collect_free_plain_ids(
                 }
             }
         }
-        Obj::Add(a) => collect_binary(&a.left, &a.right, bound, out),
-        Obj::Sub(a) => collect_binary(&a.left, &a.right, bound, out),
-        Obj::Mul(a) => collect_binary(&a.left, &a.right, bound, out),
-        Obj::Div(a) => collect_binary(&a.left, &a.right, bound, out),
-        Obj::Mod(a) => collect_binary(&a.left, &a.right, bound, out),
-        Obj::Quot(a) => collect_binary(&a.left, &a.right, bound, out),
-        Obj::Gcd(a) => collect_binary(&a.left, &a.right, bound, out),
-        Obj::Lcm(a) => collect_binary(&a.left, &a.right, bound, out),
-        Obj::Min(a) => collect_binary(&a.left, &a.right, bound, out),
-        Obj::Max(a) => collect_binary(&a.left, &a.right, bound, out),
-        Obj::Pow(a) => {
+        Obj::ArithmeticOperator(ArithmeticOperator::Add(a)) => collect_binary(&a.left, &a.right, bound, out),
+        Obj::ArithmeticOperator(ArithmeticOperator::Sub(a)) => collect_binary(&a.left, &a.right, bound, out),
+        Obj::ArithmeticOperator(ArithmeticOperator::Mul(a)) => collect_binary(&a.left, &a.right, bound, out),
+        Obj::ArithmeticOperator(ArithmeticOperator::Div(a)) => collect_binary(&a.left, &a.right, bound, out),
+        Obj::IntegerOperator(IntegerOperator::Mod(a)) => collect_binary(&a.left, &a.right, bound, out),
+        Obj::IntegerOperator(IntegerOperator::Quot(a)) => collect_binary(&a.left, &a.right, bound, out),
+        Obj::IntegerOperator(IntegerOperator::Gcd(a)) => collect_binary(&a.left, &a.right, bound, out),
+        Obj::IntegerOperator(IntegerOperator::Lcm(a)) => collect_binary(&a.left, &a.right, bound, out),
+        Obj::ArithmeticOperator(ArithmeticOperator::Min(a)) => collect_binary(&a.left, &a.right, bound, out),
+        Obj::ArithmeticOperator(ArithmeticOperator::Max(a)) => collect_binary(&a.left, &a.right, bound, out),
+        Obj::ArithmeticOperator(ArithmeticOperator::Pow(a)) => {
             collect_free_plain_ids(&a.base, bound, out);
             collect_free_plain_ids(&a.exponent, bound, out);
         }
-        Obj::Log(a) => {
+        Obj::ExpLogOperator(ExpLogOperator::Log(a)) => {
             collect_free_plain_ids(&a.base, bound, out);
             collect_free_plain_ids(&a.arg, bound, out);
         }
-        Obj::Floor(a) => collect_unary(&a.arg, bound, out),
-        Obj::Ceil(a) => collect_unary(&a.arg, bound, out),
-        Obj::Exp(a) => collect_unary(&a.arg, bound, out),
-        Obj::Ln(a) => collect_unary(&a.arg, bound, out),
-        Obj::Sign(a) => collect_unary(&a.arg, bound, out),
-        Obj::Factorial(a) => collect_unary(&a.arg, bound, out),
-        Obj::Abs(a) => collect_unary(&a.arg, bound, out),
-        Obj::Sin(a) => collect_unary(&a.arg, bound, out),
-        Obj::Arcsin(a) => collect_unary(&a.arg, bound, out),
-        Obj::Arccos(a) => collect_unary(&a.arg, bound, out),
-        Obj::Arctan(a) => collect_unary(&a.arg, bound, out),
-        Obj::Arccot(a) => collect_unary(&a.arg, bound, out),
-        Obj::Cos(a) => collect_unary(&a.arg, bound, out),
-        Obj::Tan(a) => collect_unary(&a.arg, bound, out),
-        Obj::Cot(a) => collect_unary(&a.arg, bound, out),
-        Obj::RealPart(a) => collect_unary(&a.arg, bound, out),
-        Obj::ImaginaryPart(a) => collect_unary(&a.arg, bound, out),
-        Obj::ComplexAbs(a) => collect_unary(&a.arg, bound, out),
-        Obj::Sqrt(a) => collect_unary(&a.arg, bound, out),
-        Obj::Union(a) => collect_binary(&a.left, &a.right, bound, out),
-        Obj::Intersect(a) => collect_binary(&a.left, &a.right, bound, out),
-        Obj::SetMinus(a) => collect_binary(&a.left, &a.right, bound, out),
-        Obj::BigUnion(a) => collect_free_plain_ids(&a.left, bound, out),
-        Obj::BigIntersect(a) => collect_free_plain_ids(&a.left, bound, out),
-        Obj::IndexUnion(a) => {
+        Obj::ArithmeticOperator(ArithmeticOperator::Floor(a)) => collect_unary(&a.arg, bound, out),
+        Obj::ArithmeticOperator(ArithmeticOperator::Ceil(a)) => collect_unary(&a.arg, bound, out),
+        Obj::ExpLogOperator(ExpLogOperator::Exp(a)) => collect_unary(&a.arg, bound, out),
+        Obj::ExpLogOperator(ExpLogOperator::Ln(a)) => collect_unary(&a.arg, bound, out),
+        Obj::ArithmeticOperator(ArithmeticOperator::Sign(a)) => collect_unary(&a.arg, bound, out),
+        Obj::IntegerOperator(IntegerOperator::Factorial(a)) => collect_unary(&a.arg, bound, out),
+        Obj::ArithmeticOperator(ArithmeticOperator::Abs(a)) => collect_unary(&a.arg, bound, out),
+        Obj::TrigOperator(TrigOperator::Sin(a)) => collect_unary(&a.arg, bound, out),
+        Obj::TrigOperator(TrigOperator::Arcsin(a)) => collect_unary(&a.arg, bound, out),
+        Obj::TrigOperator(TrigOperator::Arccos(a)) => collect_unary(&a.arg, bound, out),
+        Obj::TrigOperator(TrigOperator::Arctan(a)) => collect_unary(&a.arg, bound, out),
+        Obj::TrigOperator(TrigOperator::Arccot(a)) => collect_unary(&a.arg, bound, out),
+        Obj::TrigOperator(TrigOperator::Cos(a)) => collect_unary(&a.arg, bound, out),
+        Obj::TrigOperator(TrigOperator::Tan(a)) => collect_unary(&a.arg, bound, out),
+        Obj::TrigOperator(TrigOperator::Cot(a)) => collect_unary(&a.arg, bound, out),
+        Obj::ComplexOperator(ComplexOperator::RealPart(a)) => collect_unary(&a.arg, bound, out),
+        Obj::ComplexOperator(ComplexOperator::ImaginaryPart(a)) => collect_unary(&a.arg, bound, out),
+        Obj::ComplexOperator(ComplexOperator::ComplexAbs(a)) => collect_unary(&a.arg, bound, out),
+        Obj::ExpLogOperator(ExpLogOperator::Sqrt(a)) => collect_unary(&a.arg, bound, out),
+        Obj::SetOperator(SetOperator::Union(a)) => collect_binary(&a.left, &a.right, bound, out),
+        Obj::SetOperator(SetOperator::Intersect(a)) => collect_binary(&a.left, &a.right, bound, out),
+        Obj::SetOperator(SetOperator::SetMinus(a)) => collect_binary(&a.left, &a.right, bound, out),
+        Obj::SetOperator(SetOperator::BigUnion(a)) => collect_free_plain_ids(&a.left, bound, out),
+        Obj::SetOperator(SetOperator::BigIntersect(a)) => collect_free_plain_ids(&a.left, bound, out),
+        Obj::SetOperator(SetOperator::IndexUnion(a)) => {
             collect_free_plain_ids(&a.index_set, bound, out);
             collect_free_plain_ids(&a.ambient_set, bound, out);
             collect_free_plain_ids(&a.family_fn, bound, out);
         }
-        Obj::IndexIntersect(a) => {
+        Obj::SetOperator(SetOperator::IndexIntersect(a)) => {
             collect_free_plain_ids(&a.index_set, bound, out);
             collect_free_plain_ids(&a.ambient_set, bound, out);
             collect_free_plain_ids(&a.family_fn, bound, out);
         }
-        Obj::PowerSet(a) => collect_free_plain_ids(&a.set, bound, out),
-        Obj::GeneralCart(a) => {
+        Obj::SetOperator(SetOperator::PowerSet(a)) => collect_free_plain_ids(&a.set, bound, out),
+        Obj::SetOperator(SetOperator::GeneralCart(a)) => {
             collect_free_plain_ids(&a.index_set, bound, out);
             collect_free_plain_ids(&a.family_set, bound, out);
             collect_free_plain_ids(&a.family_fn, bound, out);
         }
-        Obj::ListSet(a) => {
+        Obj::SetFormer(SetFormer::ListSet(a)) => {
             for o in &a.list {
                 collect_free_plain_ids(o, bound, out);
             }
         }
-        Obj::SetBuilder(sb) => collect_free_in_set_builder(sb, bound, out),
-        Obj::FnSet(fs) => collect_free_in_fn_set(fs, bound, out),
-        Obj::AnonymousFn(af) => collect_free_in_anonymous_fn(af, bound, out),
-        Obj::Cart(a) => collect_obj_list(&a.args, bound, out),
-        Obj::Tuple(a) => collect_obj_list(&a.args, bound, out),
-        Obj::CartDim(a) => collect_free_plain_ids(&a.set, bound, out),
-        Obj::Proj(a) => {
+        Obj::SetFormer(SetFormer::SetBuilder(sb)) => collect_free_in_set_builder(sb, bound, out),
+        Obj::FunctionSpace(FunctionSpace::FnSet(fs)) => collect_free_in_fn_set(fs, bound, out),
+        Obj::FunctionSpace(FunctionSpace::AnonymousFn(af)) => collect_free_in_anonymous_fn(af, bound, out),
+        Obj::ProductShape(ProductShape::Cart(a)) => collect_obj_list(&a.args, bound, out),
+        Obj::ProductShape(ProductShape::Tuple(a)) => collect_obj_list(&a.args, bound, out),
+        Obj::ProductShape(ProductShape::CartDim(a)) => collect_free_plain_ids(&a.set, bound, out),
+        Obj::ProductShape(ProductShape::Proj(a)) => {
             collect_free_plain_ids(&a.set, bound, out);
             collect_free_plain_ids(&a.dim, bound, out);
         }
-        Obj::TupleDim(a) => collect_free_plain_ids(&a.arg, bound, out),
-        Obj::FiniteSetSize(a) => collect_free_plain_ids(&a.set, bound, out),
-        Obj::FiniteSetMax(a) => collect_free_plain_ids(&a.set, bound, out),
-        Obj::FiniteSetMin(a) => collect_free_plain_ids(&a.set, bound, out),
-        Obj::FnRange(a) => collect_free_plain_ids(&a.function, bound, out),
-        Obj::Replacement(a) => collect_free_plain_ids(&a.source_set, bound, out),
-        Obj::Sum(a) => collect_ternary(&a.start, &a.end, &a.func, bound, out),
-        Obj::Product(a) => collect_ternary(&a.start, &a.end, &a.func, bound, out),
-        Obj::Reduce(a) => {
+        Obj::ProductShape(ProductShape::TupleDim(a)) => collect_free_plain_ids(&a.arg, bound, out),
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(a)) => collect_free_plain_ids(&a.set, bound, out),
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(a)) => collect_free_plain_ids(&a.set, bound, out),
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(a)) => collect_free_plain_ids(&a.set, bound, out),
+        Obj::FunctionSpace(FunctionSpace::FnRange(a)) => collect_free_plain_ids(&a.function, bound, out),
+        Obj::SetFormer(SetFormer::Replacement(a)) => collect_free_plain_ids(&a.source_set, bound, out),
+        Obj::IteratedOperator(IteratedOperator::Sum(a)) => collect_ternary(&a.start, &a.end, &a.func, bound, out),
+        Obj::IteratedOperator(IteratedOperator::Product(a)) => collect_ternary(&a.start, &a.end, &a.func, bound, out),
+        Obj::IteratedOperator(IteratedOperator::Reduce(a)) => {
             collect_free_plain_ids(&a.start, bound, out);
             collect_free_plain_ids(&a.end, bound, out);
             collect_free_plain_ids(&a.func, bound, out);
             collect_free_plain_ids(&a.op, bound, out);
             collect_free_plain_ids(&a.seed, bound, out);
         }
-        Obj::SumOfFiniteSet(a) => collect_binary(&a.set, &a.func, bound, out),
-        Obj::ProductOfFiniteSet(a) => collect_binary(&a.set, &a.func, bound, out),
-        Obj::FiniteSetReduce(a) => {
+        Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(a)) => collect_binary(&a.set, &a.func, bound, out),
+        Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(a)) => collect_binary(&a.set, &a.func, bound, out),
+        Obj::IteratedOperator(IteratedOperator::FiniteSetReduce(a)) => {
             collect_free_plain_ids(&a.set, bound, out);
             collect_free_plain_ids(&a.func, bound, out);
             collect_free_plain_ids(&a.op, bound, out);
             collect_free_plain_ids(&a.seed, bound, out);
         }
-        Obj::Range(a) => collect_binary(&a.start, &a.end, bound, out),
-        Obj::ClosedRange(a) => collect_binary(&a.start, &a.end, bound, out),
-        Obj::FiniteSeqSet(a) => {
+        Obj::SetFormer(SetFormer::Range(a)) => collect_binary(&a.start, &a.end, bound, out),
+        Obj::SetFormer(SetFormer::ClosedRange(a)) => collect_binary(&a.start, &a.end, bound, out),
+        Obj::SetFormer(SetFormer::FiniteSeqSet(a)) => {
             collect_free_plain_ids(&a.set, bound, out);
             collect_free_plain_ids(&a.n, bound, out);
         }
-        Obj::SeqSet(a) => collect_free_plain_ids(&a.set, bound, out),
-        Obj::ObjAtIndex(a) => {
+        Obj::SetFormer(SetFormer::SeqSet(a)) => collect_free_plain_ids(&a.set, bound, out),
+        Obj::ProductShape(ProductShape::ObjAtIndex(a)) => {
             collect_free_plain_ids(&a.obj, bound, out);
             collect_free_plain_ids(&a.index, bound, out);
         }
-        Obj::StructObj(a) => {
+        Obj::Structish(Structish::StructObj(a)) => {
             for o in &a.params {
                 collect_free_plain_ids(o, bound, out);
             }
         }
-        Obj::FieldAccess(a) => {
+        Obj::Structish(Structish::FieldAccess(a)) => {
             collect_free_plain_ids(&a.obj, bound, out);
         }
-        Obj::InstantiatedTemplateObj(a) => {
+        Obj::Structish(Structish::InstantiatedTemplateObj(a)) => {
             for o in &a.args {
                 collect_free_plain_ids(o, bound, out);
             }
         }
-        Obj::OneSideInfinityIntervalObj(i) => match i {
+        Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(i)) => match i {
             crate::new_pipeline::ast::obj::OneSideInfinityIntervalObj::LeftOpen(s)
             | crate::new_pipeline::ast::obj::OneSideInfinityIntervalObj::LeftClosed(s)
             | crate::new_pipeline::ast::obj::OneSideInfinityIntervalObj::RightOpen(s)
@@ -213,7 +213,7 @@ pub fn collect_free_plain_ids(
                 collect_free_plain_ids(&s.start, bound, out);
             }
         },
-        Obj::IntervalObj(i) => match i {
+        Obj::SetFormer(SetFormer::IntervalObj(i)) => match i {
             crate::new_pipeline::ast::obj::IntervalObj::LeftOpenRightOpen(s)
             | crate::new_pipeline::ast::obj::IntervalObj::LeftOpenRightClosed(s)
             | crate::new_pipeline::ast::obj::IntervalObj::LeftClosedRightOpen(s)
@@ -222,10 +222,10 @@ pub fn collect_free_plain_ids(
                 collect_free_plain_ids(&s.end, bound, out);
             }
         },
-        Obj::Number(_)
-        | Obj::ImaginaryUnit(_)
-        | Obj::EulerNumber(_)
-        | Obj::Pi(_)
+        Obj::Literal(Literal::Number(_))
+        | Obj::Literal(Literal::ImaginaryUnit(_))
+        | Obj::Literal(Literal::EulerNumber(_))
+        | Obj::Literal(Literal::Pi(_))
         | Obj::StandardSet(_) => {}
     }
 }

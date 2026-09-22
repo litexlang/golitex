@@ -1,6 +1,6 @@
 use super::alpha_equal_helper::fn_sets_alpha_equal;
 use crate::new_pipeline::ast::fact::EqualFact;
-use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::ast::obj::{Obj, FunctionSpace};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
@@ -22,7 +22,7 @@ impl Runtime {
         fact: &EqualFact,
         _verify_state: VerifyState,
     ) -> RuntimeResult<Option<ByFnSetAlphaEqualBuiltinRuleProof>> {
-        let (Obj::FnSet(left), Obj::FnSet(right)) = (&fact.left, &fact.right) else {
+        let (Obj::FunctionSpace(FunctionSpace::FnSet(left)), Obj::FunctionSpace(FunctionSpace::FnSet(right))) = (&fact.left, &fact.right) else {
             return Ok(None);
         };
         if fn_sets_alpha_equal(left, right) {

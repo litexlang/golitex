@@ -1,6 +1,6 @@
 use crate::new_pipeline::ast::fact::GreaterEqualFact;
 use crate::new_pipeline::ast::names::AtomicName;
-use crate::new_pipeline::ast::obj::{Number, Obj, StandardSet};
+use crate::new_pipeline::ast::obj::{Number, Obj, StandardSet, Literal};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::predecessor_helpers::{
     is_number_value, match_sub_one,
 };
@@ -90,9 +90,9 @@ impl Runtime {
                 ));
             }
             if let Some(base) = match_sub_one(&fact.left) {
-                let one = Obj::Number(Number {
+                let one = Obj::Literal(Literal::Number(Number {
                     normalized_value: "1".to_string(),
-                });
+                }));
                 if let Some(cite_at_least_one_fact_id) =
                     self.known_greater_equal_fact_id(base, &one)
                 {

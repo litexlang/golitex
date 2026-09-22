@@ -1,4 +1,4 @@
-use crate::new_pipeline::ast::obj::{Add, ImaginaryUnit, Mul, Number, Obj, Pow, Sub};
+use crate::new_pipeline::ast::obj::{Add, ImaginaryUnit, Mul, Number, Obj, Pow, Sub, ArithmeticOperator, Literal};
 use crate::new_pipeline::rational_expression::decimal_arithmetic::{
     add_signed_decimal_str, evaluate_obj_to_normalized_decimal_number, mul_signed_decimal_str,
     sub_signed_decimal_str,
@@ -14,11 +14,11 @@ pub fn collect_monomials_in_obj(
     mode: AlgebraicNormalizationMode,
 ) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     match obj {
-        Obj::Number(number) => from_number_obj_to_monomial(number),
-        Obj::Add(add) => collect_monomials_in_add(add, mode),
-        Obj::Mul(mul) => collect_monomials_in_mul(mul, mode),
-        Obj::Pow(pow) => collect_monomials_in_pow(pow, mode),
-        Obj::Sub(sub) => collect_monomials_in_sub(sub, mode),
+        Obj::Literal(Literal::Number(number)) => from_number_obj_to_monomial(number),
+        Obj::ArithmeticOperator(ArithmeticOperator::Add(add)) => collect_monomials_in_add(add, mode),
+        Obj::ArithmeticOperator(ArithmeticOperator::Mul(mul)) => collect_monomials_in_mul(mul, mode),
+        Obj::ArithmeticOperator(ArithmeticOperator::Pow(pow)) => collect_monomials_in_pow(pow, mode),
+        Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub)) => collect_monomials_in_sub(sub, mode),
         obj => {
             if let Some(m) =
                 MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(
@@ -39,7 +39,7 @@ fn collect_monomials_in_sub(
     mode: AlgebraicNormalizationMode,
 ) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     if let Some(normalized_calculated_value) =
-        evaluate_obj_to_normalized_decimal_number(&Obj::Sub(sub.clone()))
+        evaluate_obj_to_normalized_decimal_number(&Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub.clone())))
     {
         return from_number_obj_to_monomial(&normalized_calculated_value);
     }
@@ -106,7 +106,7 @@ fn collect_monomials_in_add(
     mode: AlgebraicNormalizationMode,
 ) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     if let Some(normalized_calculated_value) =
-        evaluate_obj_to_normalized_decimal_number(&Obj::Add(add.clone()))
+        evaluate_obj_to_normalized_decimal_number(&Obj::ArithmeticOperator(ArithmeticOperator::Add(add.clone())))
     {
         return from_number_obj_to_monomial(&normalized_calculated_value);
     }
@@ -165,7 +165,7 @@ fn collect_monomials_in_mul(
     mode: AlgebraicNormalizationMode,
 ) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     if let Some(normalized_calculated_value) =
-        evaluate_obj_to_normalized_decimal_number(&Obj::Mul(mul.clone()))
+        evaluate_obj_to_normalized_decimal_number(&Obj::ArithmeticOperator(ArithmeticOperator::Mul(mul.clone())))
     {
         return from_number_obj_to_monomial(&normalized_calculated_value);
     }
@@ -262,13 +262,13 @@ fn collect_monomials_in_pow(
     mode: AlgebraicNormalizationMode,
 ) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     if let Some(normalized_calculated_value) =
-        evaluate_obj_to_normalized_decimal_number(&Obj::Pow(pow.clone()))
+        evaluate_obj_to_normalized_decimal_number(&Obj::ArithmeticOperator(ArithmeticOperator::Pow(pow.clone())))
     {
         return from_number_obj_to_monomial(&normalized_calculated_value);
     }
 
     if mode == AlgebraicNormalizationMode::ComplexImaginaryUnit
-        && matches!(pow.base.as_ref(), Obj::ImaginaryUnit(_))
+        && matches!(pow.base.as_ref(), Obj::Literal(Literal::ImaginaryUnit(_)))
     {
         if let Some(exponent) = evaluate_obj_to_normalized_decimal_number(&pow.exponent) {
             if number_string_is_literal_integer_without_dot(&exponent.normalized_value) {
@@ -279,7 +279,7 @@ fn collect_monomials_in_pow(
         }
     }
 
-    let (exponent_ok, exponent_value) = if let Obj::Number(num) = &*pow.exponent {
+    let (exponent_ok, exponent_value) = if let Obj::Literal(Literal::Number(num)) = &*pow.exponent {
         if number_string_is_literal_integer_without_dot(&num.normalized_value)
             && !num.normalized_value.starts_with('-')
         {
@@ -328,7 +328,7 @@ fn collect_monomials_in_pow(
 }
 
 fn default_pow_fallback(pow: &Pow) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
-    let pow_obj = Obj::Pow(pow.clone());
+    let pow_obj = Obj::ArithmeticOperator(ArithmeticOperator::Pow(pow.clone()));
     if let Some(m) = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(
         "1".to_string(),
         Some(vec![(pow_obj.clone(), obj_key(&pow_obj))]),
@@ -378,7 +378,7 @@ fn multiply_two_non_zero_monomials_with_operands(
     if mode == AlgebraicNormalizationMode::ComplexImaginaryUnit {
         let mut imaginary_unit_count = 0;
         new_operands.retain(|(obj, _)| {
-            if matches!(obj, Obj::ImaginaryUnit(_)) {
+            if matches!(obj, Obj::Literal(Literal::ImaginaryUnit(_))) {
                 imaginary_unit_count += 1;
                 false
             } else {
@@ -389,7 +389,7 @@ fn multiply_two_non_zero_monomials_with_operands(
             new_scalar = mul_signed_decimal_str(&new_scalar, "-1");
         }
         if imaginary_unit_count % 2 == 1 {
-            let imaginary_unit = Obj::ImaginaryUnit(ImaginaryUnit);
+            let imaginary_unit = Obj::Literal(Literal::ImaginaryUnit(ImaginaryUnit));
             new_operands.push((imaginary_unit.clone(), obj_key(&imaginary_unit)));
         }
     }
@@ -414,7 +414,7 @@ fn imaginary_unit_integer_power_monomials(
         _ => unreachable!(),
     };
     let ordered_operands = if include_imaginary_unit {
-        let imaginary_unit = Obj::ImaginaryUnit(ImaginaryUnit);
+        let imaginary_unit = Obj::Literal(Literal::ImaginaryUnit(ImaginaryUnit));
         Some(vec![(imaginary_unit.clone(), obj_key(&imaginary_unit))])
     } else {
         None

@@ -1,4 +1,4 @@
-use crate::new_pipeline::ast::obj::{Number, Obj};
+use crate::new_pipeline::ast::obj::{Number, Obj, ArithmeticOperator};
 use crate::new_pipeline::rational_expression::helper::{add_objs, mul_objs, obj_from_number};
 use crate::new_pipeline::rational_expression::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
 use crate::new_pipeline::rational_expression::monomial_collection::collect_monomials_in_obj;
@@ -87,7 +87,7 @@ fn split_monomial_into_fraction_factors_and_denominators(
     };
     if let Some(operands) = monomial.ordered_operands.as_ref() {
         for operand in operands {
-            if let Obj::Div(div) = &operand.0 {
+            if let Obj::ArithmeticOperator(ArithmeticOperator::Div(div)) = &operand.0 {
                 let denominator_factors = flatten_mul_obj_to_factors(&div.right);
                 for denominator_factor in denominator_factors {
                     denominators.push(denominator_factor);
@@ -145,7 +145,7 @@ fn multiply_monomial_factors_with_all_other_denominators_except_self(
 
 fn flatten_mul_obj_to_factors(obj: &Obj) -> Vec<Obj> {
     match obj {
-        Obj::Mul(mul) => {
+        Obj::ArithmeticOperator(ArithmeticOperator::Mul(mul)) => {
             let left_factors = flatten_mul_obj_to_factors(&mul.left);
             let right_factors = flatten_mul_obj_to_factors(&mul.right);
             let mut flattened_factors: Vec<Obj> =

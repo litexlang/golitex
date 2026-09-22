@@ -1,5 +1,5 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact, GreaterFact, LessFact};
-use crate::new_pipeline::ast::obj::{Number, Obj};
+use crate::new_pipeline::ast::obj::{Number, Obj, ArithmeticOperator, Literal};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
@@ -76,17 +76,17 @@ impl Runtime {
 }
 
 fn zero_obj() -> Obj {
-    Obj::Number(Number {
+    Obj::Literal(Literal::Number(Number {
         normalized_value: "0".to_string(),
-    })
+    }))
 }
 
 fn is_zero_obj(obj: &Obj) -> bool {
     matches!(
         obj,
-        Obj::Number(Number {
+        Obj::Literal(Literal::Number(Number {
             normalized_value,
-        }) if normalized_value == "0"
+        })) if normalized_value == "0"
     )
 }
 
@@ -99,7 +99,7 @@ fn positive_sum_goal_summands(fact: &AtomicFact) -> Option<(Obj, Obj, Option<cra
             line_file,
             ..
         }) if is_zero_obj(right) => {
-            if let Obj::Add(add) = left {
+            if let Obj::ArithmeticOperator(ArithmeticOperator::Add(add)) = left {
                 Some((
                     add.left.as_ref().clone(),
                     add.right.as_ref().clone(),
@@ -115,7 +115,7 @@ fn positive_sum_goal_summands(fact: &AtomicFact) -> Option<(Obj, Obj, Option<cra
             line_file,
             ..
         }) if is_zero_obj(left) => {
-            if let Obj::Add(add) = right {
+            if let Obj::ArithmeticOperator(ArithmeticOperator::Add(add)) = right {
                 Some((
                     add.left.as_ref().clone(),
                     add.right.as_ref().clone(),
