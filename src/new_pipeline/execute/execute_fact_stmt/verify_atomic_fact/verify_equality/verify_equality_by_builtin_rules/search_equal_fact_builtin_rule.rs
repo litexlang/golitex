@@ -16,9 +16,52 @@ impl Runtime {
         {
             return Ok(Some(EqualitySearchProofByBuiltinRule::ByEqualIr(proof)));
         }
-        if let Some(proof) = self.search_equal_fact_by_calculation(fact, verify_state)? {
+        if let Some(proof) =
+            self.search_equal_fact_builtin_rule_fn_set_alpha_equal(fact, verify_state.clone())?
+        {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::ByFnSetAlphaEqual(
+                proof,
+            )));
+        }
+        if let Some(proof) =
+            self.search_equal_fact_builtin_rule_set_builder_alpha_equal(fact, verify_state.clone())?
+        {
+            return Ok(Some(
+                EqualitySearchProofByBuiltinRule::BySetBuilderAlphaEqual(proof),
+            ));
+        }
+        if let Some(proof) = self.search_equal_fact_by_calculation(fact, verify_state.clone())? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::Calculation(proof)));
         }
+        if let Some(proof) =
+            self.search_equal_fact_builtin_rule_inverse_trig(fact, verify_state)?
+        {
+            return Ok(Some(map_inverse_trig_proof(proof)));
+        }
         Ok(None)
+    }
+}
+
+fn map_inverse_trig_proof(
+    proof: super::by_inverse_trig::InverseTrigEqualityBuiltinRuleProof,
+) -> EqualitySearchProofByBuiltinRule {
+    use super::by_inverse_trig::InverseTrigEqualityBuiltinRuleProof as I;
+    match proof {
+        I::SinArcsinLeftInverse(p) => EqualitySearchProofByBuiltinRule::SinArcsinLeftInverse(p),
+        I::CosArccosLeftInverse(p) => EqualitySearchProofByBuiltinRule::CosArccosLeftInverse(p),
+        I::TanArctanLeftInverse(p) => EqualitySearchProofByBuiltinRule::TanArctanLeftInverse(p),
+        I::CotArccotLeftInverse(p) => EqualitySearchProofByBuiltinRule::CotArccotLeftInverse(p),
+        I::ArcsinSinRightInverse(p) => EqualitySearchProofByBuiltinRule::ArcsinSinRightInverse(p),
+        I::ArccosCosRightInverse(p) => EqualitySearchProofByBuiltinRule::ArccosCosRightInverse(p),
+        I::ArctanTanRightInverse(p) => EqualitySearchProofByBuiltinRule::ArctanTanRightInverse(p),
+        I::ArccotCotRightInverse(p) => EqualitySearchProofByBuiltinRule::ArccotCotRightInverse(p),
+        I::ArcsinExactZero(p) => EqualitySearchProofByBuiltinRule::ArcsinExactZero(p),
+        I::ArcsinExactOne(p) => EqualitySearchProofByBuiltinRule::ArcsinExactOne(p),
+        I::ArcsinExactNegOne(p) => EqualitySearchProofByBuiltinRule::ArcsinExactNegOne(p),
+        I::ArccosExactOne(p) => EqualitySearchProofByBuiltinRule::ArccosExactOne(p),
+        I::ArccosExactZero(p) => EqualitySearchProofByBuiltinRule::ArccosExactZero(p),
+        I::ArccosExactNegOne(p) => EqualitySearchProofByBuiltinRule::ArccosExactNegOne(p),
+        I::ArctanExactZero(p) => EqualitySearchProofByBuiltinRule::ArctanExactZero(p),
+        I::ArccotExactZero(p) => EqualitySearchProofByBuiltinRule::ArccotExactZero(p),
     }
 }

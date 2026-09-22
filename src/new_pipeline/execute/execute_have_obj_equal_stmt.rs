@@ -46,7 +46,7 @@ impl ExecHaveObjEqualStmtResult {
 
 impl Runtime {
     // `have a R = 10` / `have a, b R = 10, 20` / `have S set = T`
-    // Example: have a R = 10 stores `a $in R` and `a = 10` (ClosedNumericEqual indexes a).
+    // Example: have a R = 10 stores `a $in R` and `a = 10` (known_closed_numeric_equal indexes a).
     // Example: have carrier_copy set = S stores `$is_set(carrier_copy)` and `carrier_copy = S`.
     pub(super) fn exec_have_obj_equal_stmt(
         &mut self,
@@ -151,6 +151,9 @@ impl Runtime {
                 line_file: Some(stmt.line_file.clone()),
             }));
             let stored = self.store_fact_and_infer(&equal_fact)?;
+            if let Fact::AtomicFact(AtomicFact::EqualFact(eq)) = &equal_fact {
+                self.record_fn_signature_from_definition_equal(eq);
+            }
             store_and_infer_result
                 .stored_fact_ids
                 .extend(stored.stored_fact_ids());

@@ -1,6 +1,7 @@
 use crate::new_pipeline::ast::obj::{
-    Abs, Add, Ceil, Cos, Div, Exp, Factorial, Floor, FnObj, FnObjHead, Gcd, IntervalObj, Lcm, Ln,
-    Max, Min, Mod, Mul, Obj, OneSideInfinityIntervalObj, Pow, Quot, Sign, Sin, Sqrt, Sub, Tan,
+    Abs, Add, Arccos, Arccot, Arcsin, Arctan, Ceil, Cos, Cot, Div, Exp, Factorial, Floor, FnObj,
+    FnObjHead, Gcd, IntervalObj, Lcm, Ln, Max, Min, Mod, Mul, Obj, OneSideInfinityIntervalObj, Pow,
+    Quot, Sign, Sin, Sqrt, Sub, Tan,
 };
 use crate::new_pipeline::exec_env::known_fact_memory::ObjIR;
 
@@ -87,6 +88,9 @@ pub(crate) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Ob
         (Obj::Tan(l), Obj::Tan(r)) => unary!(l, r),
         (Obj::Cot(l), Obj::Cot(r)) => unary!(l, r),
         (Obj::Arcsin(l), Obj::Arcsin(r)) => unary!(l, r),
+        (Obj::Arccos(l), Obj::Arccos(r)) => unary!(l, r),
+        (Obj::Arctan(l), Obj::Arctan(r)) => unary!(l, r),
+        (Obj::Arccot(l), Obj::Arccot(r)) => unary!(l, r),
         (Obj::RealPart(l), Obj::RealPart(r)) => unary!(l, r),
         (Obj::ImaginaryPart(l), Obj::ImaginaryPart(r)) => unary!(l, r),
         (Obj::ComplexAbs(l), Obj::ComplexAbs(r)) => unary!(l, r),
@@ -307,6 +311,21 @@ pub(crate) fn replace_obj_matching_ir(obj: &Obj, from_ir: &ObjIR, to: &Obj) -> O
             arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
         }),
         Obj::Tan(a) => Obj::Tan(Tan {
+            arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
+        }),
+        Obj::Cot(a) => Obj::Cot(Cot {
+            arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
+        }),
+        Obj::Arcsin(a) => Obj::Arcsin(Arcsin {
+            arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
+        }),
+        Obj::Arccos(a) => Obj::Arccos(Arccos {
+            arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
+        }),
+        Obj::Arctan(a) => Obj::Arctan(Arctan {
+            arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
+        }),
+        Obj::Arccot(a) => Obj::Arccot(Arccot {
             arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
         }),
         _ => obj.clone(),

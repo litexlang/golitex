@@ -7,7 +7,7 @@ use crate::new_pipeline::runtime::runtime_ids::FactId;
 // Why this stage exists:
 //   Calculation (and similar builtins) only fire on closed numeric trees.
 //   After `have a R = 10`, the goal may still mention `a` (not closed). This
-//   rewrite substitutes indexed ClosedNumericEqual representatives into the
+//   rewrite substitutes known_closed_numeric_equal representatives into the
 //   goal, then proves the residual with rewrite off — an explicit certificate
 //   instead of legacy opaque resolve_obj.
 //
@@ -21,7 +21,7 @@ pub enum EqualitySearchProofByBuiltinRewrite {
 }
 
 // Closed-numeric index substitution: a non-closed object indexed under
-// ClosedNumericEqual is rewritten to its `ClosedNumericExpr` representative
+// known_closed_numeric_equal is rewritten to its `ClosedNumericExpr` representative
 // (including as a subterm), then the residual equality is proved without rewrite.
 // Mathematical property: if `a = closed` is known and indexed, then F[a] = F[closed]
 // for supported F. All matching entries in the goal are applied in one step.

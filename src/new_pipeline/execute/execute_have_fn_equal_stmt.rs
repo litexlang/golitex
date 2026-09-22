@@ -115,6 +115,9 @@ impl Runtime {
             line_file: Some(stmt.line_file.clone()),
         }));
         let mut stored_fact_ids = self.store_fact_and_infer(&membership)?.stored_fact_ids();
+        if let Fact::AtomicFact(AtomicFact::InFact(in_fact)) = &membership {
+            self.record_fn_signature_from_definition_membership(in_fact);
+        }
 
         let defining_equal_fact_id = self.ids.allocate_fact_id();
         let defining_equal = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
@@ -127,6 +130,9 @@ impl Runtime {
             self.store_fact_and_infer(&defining_equal)?
                 .stored_fact_ids(),
         );
+        if let Fact::AtomicFact(AtomicFact::EqualFact(eq)) = &defining_equal {
+            self.record_fn_signature_from_definition_equal(eq);
+        }
 
         Ok(StoreHaveFnEqualAndInferResult {
             membership_fact_id,

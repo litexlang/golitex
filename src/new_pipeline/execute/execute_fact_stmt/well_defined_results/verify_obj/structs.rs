@@ -14,7 +14,7 @@ use crate::new_pipeline::ast::fact::{
 use crate::new_pipeline::ast::obj::{FieldAccess, InstantiatedTemplateObj, Obj, StructObj};
 use crate::new_pipeline::ast::param::ParamType;
 use crate::new_pipeline::ast::stmt::TemplateDefEnum;
-use crate::new_pipeline::exec_env::exec_env::SpecialObjProperty;
+use crate::new_pipeline::exec_env::exec_env::SpecialObjectPropertyByDefinition;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
@@ -207,7 +207,7 @@ impl Runtime {
                 continue;
             };
             for prop in props {
-                if let SpecialObjProperty::DefinedAsStruct((carrier, _)) = prop {
+                if let SpecialObjectPropertyByDefinition::DefinedAsStruct((carrier, _)) = prop {
                     return Some(carrier.clone());
                 }
             }
@@ -387,6 +387,9 @@ impl Runtime {
                     line_file: None,
                 }));
                 self.store_fact_and_infer(&membership)?;
+                if let Fact::AtomicFact(AtomicFact::InFact(in_fact)) = &membership {
+                    self.record_fn_signature_from_definition_membership(in_fact);
+                }
                 let defining_equal = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
                     fact_id: self.ids.allocate_fact_id(),
                     left: surface,
@@ -394,6 +397,9 @@ impl Runtime {
                     line_file: None,
                 }));
                 self.store_fact_and_infer(&defining_equal)?;
+                if let Fact::AtomicFact(AtomicFact::EqualFact(eq)) = &defining_equal {
+                    self.record_fn_signature_from_definition_equal(eq);
+                }
             }
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(have_fn) => {
                 self.store_instantiated_template_fn_set_membership(
@@ -422,6 +428,9 @@ impl Runtime {
                             let Ok(inst) = self.inst_fact(&fact, &subst) else {
                                 return Ok(());
                             };
+                            if let Fact::AtomicFact(AtomicFact::InFact(in_fact)) = &inst {
+                                self.record_fn_signature_from_definition_membership(in_fact);
+                            }
                             self.store_fact_and_infer(&inst)?;
                         }
                     }
@@ -442,6 +451,9 @@ impl Runtime {
                     line_file: None,
                 }));
                 self.store_fact_and_infer(&defining_equal)?;
+                if let Fact::AtomicFact(AtomicFact::EqualFact(eq)) = &defining_equal {
+                    self.record_fn_signature_from_definition_equal(eq);
+                }
             }
             _ => {}
         }
@@ -472,6 +484,9 @@ impl Runtime {
             set: inst_set,
             line_file: None,
         }));
+        if let Fact::AtomicFact(AtomicFact::InFact(in_fact)) = &membership {
+            self.record_fn_signature_from_definition_membership(in_fact);
+        }
         self.store_fact_and_infer(&membership)?;
         Ok(())
     }

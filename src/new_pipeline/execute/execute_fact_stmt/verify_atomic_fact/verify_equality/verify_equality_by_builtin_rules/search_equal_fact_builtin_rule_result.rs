@@ -1,10 +1,40 @@
 use super::by_equal_ir::ByEqualIrBuiltinRuleProof;
+use super::by_fn_set_alpha_equal::ByFnSetAlphaEqualBuiltinRuleProof;
+use super::by_inverse_trig::{
+    ArccosCosRightInverseBuiltinRuleProof, ArccosExactNegOneBuiltinRuleProof,
+    ArccosExactOneBuiltinRuleProof, ArccosExactZeroBuiltinRuleProof,
+    ArccotCotRightInverseBuiltinRuleProof, ArccotExactZeroBuiltinRuleProof,
+    ArcsinExactNegOneBuiltinRuleProof, ArcsinExactOneBuiltinRuleProof,
+    ArcsinExactZeroBuiltinRuleProof, ArcsinSinRightInverseBuiltinRuleProof,
+    ArctanExactZeroBuiltinRuleProof, ArctanTanRightInverseBuiltinRuleProof,
+    CosArccosLeftInverseBuiltinRuleProof, CotArccotLeftInverseBuiltinRuleProof,
+    SinArcsinLeftInverseBuiltinRuleProof, TanArctanLeftInverseBuiltinRuleProof,
+};
+use super::by_set_builder_alpha_equal::BySetBuilderAlphaEqualBuiltinRuleProof;
 
 // Each equality builtin rule gets its own variant and payload.
 // Definitional unfolds are EqualitySearchProofByObjectDefinition, not here.
 pub enum EqualitySearchProofByBuiltinRule {
     ByEqualIr(ByEqualIrBuiltinRuleProof),
+    ByFnSetAlphaEqual(ByFnSetAlphaEqualBuiltinRuleProof),
+    BySetBuilderAlphaEqual(BySetBuilderAlphaEqualBuiltinRuleProof),
     Calculation(EqualitySearchProofByCalculation),
+    SinArcsinLeftInverse(SinArcsinLeftInverseBuiltinRuleProof),
+    CosArccosLeftInverse(CosArccosLeftInverseBuiltinRuleProof),
+    TanArctanLeftInverse(TanArctanLeftInverseBuiltinRuleProof),
+    CotArccotLeftInverse(CotArccotLeftInverseBuiltinRuleProof),
+    ArcsinSinRightInverse(ArcsinSinRightInverseBuiltinRuleProof),
+    ArccosCosRightInverse(ArccosCosRightInverseBuiltinRuleProof),
+    ArctanTanRightInverse(ArctanTanRightInverseBuiltinRuleProof),
+    ArccotCotRightInverse(ArccotCotRightInverseBuiltinRuleProof),
+    ArcsinExactZero(ArcsinExactZeroBuiltinRuleProof),
+    ArcsinExactOne(ArcsinExactOneBuiltinRuleProof),
+    ArcsinExactNegOne(ArcsinExactNegOneBuiltinRuleProof),
+    ArccosExactOne(ArccosExactOneBuiltinRuleProof),
+    ArccosExactZero(ArccosExactZeroBuiltinRuleProof),
+    ArccosExactNegOne(ArccosExactNegOneBuiltinRuleProof),
+    ArctanExactZero(ArctanExactZeroBuiltinRuleProof),
+    ArccotExactZero(ArccotExactZeroBuiltinRuleProof),
 }
 
 // Builtin Calculation: both sides of an equality reduce to the same value

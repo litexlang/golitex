@@ -1,7 +1,6 @@
 use super::by_builtin_rewrite_result::ClosedNumericEqualSubstitutionBuiltinRewriteProof;
 use super::helper::replace_obj_matching_ir;
 use crate::new_pipeline::ast::fact::EqualFact;
-use crate::new_pipeline::exec_env::exec_env::SpecialObjProperty;
 use crate::new_pipeline::exec_env::known_fact_memory::ObjIR;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::rational_expression::ClosedNumericExpr;
@@ -10,14 +9,14 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use std::collections::HashSet;
 
 impl Runtime {
-    // Builtin rewrite: substitute ClosedNumericEqual representatives into the goal.
+    // Builtin rewrite: substitute known_closed_numeric_equal representatives into the goal.
     // Mathematical property / examples: see ClosedNumericEqualSubstitutionBuiltinRewriteProof.
     //
-    // All visible ClosedNumericEqual hits that appear as subterms are applied in
+    // All visible closed-numeric hits that appear as subterms are applied in
     // one shot (cite every used FactId), so `a + b = 30` works after
     // `have a R = 10` and `have b R = 20`.
     //
-    // Each stored representative is re-classified as [`ClosedNumericExpr`] at
+    // Each stored representative is re-classified as ClosedNumericExpr at
     // the boundary (skip corrupt / non-closed payloads).
     pub fn search_equal_fact_by_closed_numeric_equal_substitution(
         &mut self,
@@ -69,23 +68,21 @@ impl Runtime {
         }))
     }
 
-    // Visible ClosedNumericEqual rows, with the representative already classified.
+    // Visible known_closed_numeric_equal rows, with the representative already classified.
     pub(crate) fn visible_closed_numeric_equal_entries(
         &self,
     ) -> Vec<(ObjIR, ClosedNumericExpr, FactId)> {
         let mut seen: HashSet<u64> = HashSet::new();
         let mut out = Vec::new();
         for env in self.execution_environments_stack.iter().rev() {
-            for (key, props) in env.special_object_properties.iter() {
-                for prop in props {
-                    if let SpecialObjProperty::ClosedNumericEqual((closed, fact_id)) = prop {
-                        let id = fact_id.value();
-                        let Some(closed_expr) = ClosedNumericExpr::try_from_obj(closed) else {
-                            continue;
-                        };
-                        if seen.insert(id) {
-                            out.push((key.clone(), closed_expr, *fact_id));
-                        }
+            for (key, entries) in env.facts.known_closed_numeric_equal.by_non_closed.iter() {
+                for (closed, fact_id) in entries {
+                    let id = fact_id.value();
+                    let Some(closed_expr) = ClosedNumericExpr::try_from_obj(closed) else {
+                        continue;
+                    };
+                    if seen.insert(id) {
+                        out.push((key.clone(), closed_expr, *fact_id));
                     }
                 }
             }

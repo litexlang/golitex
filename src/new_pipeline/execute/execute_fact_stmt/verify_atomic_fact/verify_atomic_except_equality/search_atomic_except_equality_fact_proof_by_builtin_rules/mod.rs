@@ -20,5 +20,6 @@ pub mod search_atomic_except_equality_fact_proof_by_builtin_rule;
 pub mod search_atomic_except_equality_fact_proof_by_builtin_rule_result;
 pub mod subset;
 pub mod superset;
+pub mod trig_bounds;
 
 pub use search_atomic_except_equality_fact_proof_by_builtin_rule_result::AtomicExceptEqualityFactSearchProofByBuiltinRule;

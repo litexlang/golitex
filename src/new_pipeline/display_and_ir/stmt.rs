@@ -1035,70 +1035,29 @@ impl WitnessExistFact {
 
 impl WitnessAtomicFact {
     pub fn ir(&self) -> StmtIR {
-        let mut out = String::new();
-        let witnesses: Vec<_> = self
-            .witnesses
-            .iter()
-            .map(|o| o.ir())
-            .collect();
-        out.push_str(&format!(
+        let witnesses: Vec<_> = self.witnesses.iter().map(|o| o.ir()).collect();
+        StmtIR(format!(
             "{} {} {} {}",
             WITNESS,
             self.atomic_fact.ir(),
             FROM,
             witnesses.join(", ")
-        ));
-        if !self.proof.is_empty() {
-            out.push_str(&format!(
-                "{}\n{}",
-                COLON,
-                indent!(
-                    &self
-                        .proof
-                        .iter()
-                        .map(|s| s.ir())
-                        .collect::<Vec<_>>()
-                        .join(
-                            "
-"
-                        ),
-                    1
-                )
-            ));
-        }
-        StmtIR(out)
+        ))
     }
     impl_display_pair!();
 }
 
 impl WitnessNonemptySet {
     pub fn ir(&self) -> StmtIR {
-        let mut out = String::new();
-        out.push_str(&format!(
-            "{} {} {}",
+        StmtIR(format!(
+            "{} {}{}({}) {} {}",
             WITNESS,
-            &self.obj.ir(),
-            &self.set.ir()
-        ));
-        if !self.proof.is_empty() {
-            out.push_str(&format!(
-                "{}\n{}",
-                COLON,
-                indent!(
-                    &self
-                        .proof
-                        .iter()
-                        .map(|s| s.ir())
-                        .collect::<Vec<_>>()
-                        .join(
-                            "
-"
-                        ),
-                    1
-                )
-            ));
-        }
-        StmtIR(out)
+            FACT_PREFIX,
+            IS_NONEMPTY_SET,
+            self.set.ir(),
+            FROM,
+            self.obj.ir()
+        ))
     }
     impl_display_pair!();
 }

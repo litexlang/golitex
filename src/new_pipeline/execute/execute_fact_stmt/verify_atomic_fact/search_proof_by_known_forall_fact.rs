@@ -15,7 +15,7 @@
 //!   goal  `3 + 1 > 1`
 //!   → match binds/equals args, prove `3 $in R` and `3 > 0`, done.
 
-use crate::new_pipeline::ast::fact::{AtomicFact, Fact};
+use crate::new_pipeline::ast::fact::{AtomicFact, Fact, ForallConclusionLocation};
 use crate::new_pipeline::ast::fact::{
     atomic_fact_args_ref, atomic_fact_has_positive_polarity,
 };
@@ -92,8 +92,36 @@ impl Runtime {
             Some(Fact::ForallFact(f)) => f.clone(),
             _ => return Ok(None),
         };
-        let Some(conclusion) = atomic_at_forall_location(&forall, &cite.location) else {
-            return Ok(None);
+        let conclusion = match atomic_at_forall_location(&forall, &cite.location) {
+            Some(conclusion) => conclusion,
+            None => {
+                let ForallConclusionLocation::ChainFactComponent(loc) = &cite.location else {
+                    return Ok(None);
+                };
+                let Some(crate::new_pipeline::ast::fact::ExistOrAndChainAtomicFact::ChainFact(chain)) =
+                    forall.then_facts.get(loc.then_fact_index)
+                else {
+                    return Ok(None);
+                };
+                let (Some(left), Some(right), Some(prop)) = (
+                    chain.objs.get(loc.component_index),
+                    chain.objs.get(loc.component_index + 1),
+                    chain.prop_names.get(loc.component_index),
+                ) else {
+                    return Ok(None);
+                };
+                self.atomic_from_prop(
+                    prop.clone(),
+                    vec![left.clone(), right.clone()],
+                    true,
+                    chain.line_file.clone().unwrap_or_else(|| {
+                        crate::new_pipeline::ast::line_file::LineFile::new(
+                            0,
+                            crate::new_pipeline::runtime::RealOrVirtualPath::Eval,
+                        )
+                    }),
+                )?
+            }
         };
 
         // Stage 2: prop name and polarity must match before matching args.
@@ -131,7 +159,7 @@ impl Runtime {
         }))
     }
 
-    fn fact_by_id_in_stack(&self, fact_id: FactId) -> Option<&Fact> {
+    pub(crate) fn fact_by_id_in_stack(&self, fact_id: FactId) -> Option<&Fact> {
         for env in self.execution_environments_stack.iter().rev() {
             if let Some(fact) = env.facts.facts_by_id.get(&fact_id) {
                 return Some(fact);

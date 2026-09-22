@@ -35,6 +35,9 @@ pub enum FailToVerifyObjWellDefinedResult {
     Abs(FailToVerifyAbsObjWellDefined),
     Sin(FailToVerifySinObjWellDefined),
     Arcsin(FailToVerifyArcsinObjWellDefined),
+    Arccos(FailToVerifyArccosObjWellDefined),
+    Arctan(FailToVerifyArctanObjWellDefined),
+    Arccot(FailToVerifyArccotObjWellDefined),
     Cos(FailToVerifyCosObjWellDefined),
     Tan(FailToVerifyTanObjWellDefined),
     Cot(FailToVerifyCotObjWellDefined),
@@ -170,6 +173,12 @@ pub struct FailToVerifyAbsObjWellDefined(pub FailToVerifyObjWellDefinedByDefComm
 pub struct FailToVerifySinObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
 pub struct FailToVerifyArcsinObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+
+pub struct FailToVerifyArccosObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+
+pub struct FailToVerifyArctanObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+
+pub struct FailToVerifyArccotObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
 pub struct FailToVerifyCosObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 

@@ -5,18 +5,17 @@ use super::store_fact_and_infer_result::{
 };
 use crate::new_pipeline::ast::fact::{
     exist_fact_family_from_fact, exist_fact_family_id, exist_fact_family_to_fact, AndFact, AtomicFact, ChainFact, EqualFact, ExistFactFamily, Fact,
-    InFact, NormalAtomicFact, NotForallFact, OrFact,
+    InFact, NormalAtomicFact, NotForallFact, OrFact, ForallFact, ForallFactWithIff,
 };
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::names::{AtomicName, BoundName};
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::param::TypedParameterList;
-use crate::new_pipeline::exec_env::exec_env::{ExecEnv, PropRewriteProperty, SpecialObjProperty};
 use crate::new_pipeline::ast::fact::atomic_fact_has_positive_polarity;
+use crate::new_pipeline::exec_env::exec_env::{ExecEnv, PropRewriteProperty};
 use crate::new_pipeline::parse::keywords::{
     EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL,
 };
-use crate::new_pipeline::rational_expression::ClosedNumericExpr;
 use crate::new_pipeline::runtime::{FactId, RealOrVirtualPath, Runtime, RuntimeResult};
 
 impl Runtime {
@@ -50,14 +49,72 @@ impl Runtime {
                 let stored = self.store_not_forall_fact(not_forall)?;
                 Ok(StoreFactAndInferResult::NotForallFact(stored))
             }
-            Fact::ForallFact(_) | Fact::ForallFactWithIff(_) => {
-                let fact_id = fact.fact_id();
-                self.top_exec_env_mut()
-                    .facts
-                    .record_fact(fact_id, fact.clone());
+            Fact::ForallFact(forall) => {
+                let fact_id = forall.fact_id;
+                self.top_exec_env_mut().facts.record_fact(
+                    fact_id,
+                    Fact::ForallFact(forall.clone()),
+                );
+                self.index_forall_chain_components(forall)?;
                 Ok(StoreFactAndInferResult::RecordedFact { fact_id })
             }
+            Fact::ForallFactWithIff(forall_iff) => {
+                let (forward, reverse) = self.forall_with_iff_to_two_directions_for_store(forall_iff);
+                let original_id = forall_iff.fact_id;
+                self.top_exec_env_mut().facts.record_fact(
+                    forward.fact_id,
+                    Fact::ForallFact(forward.clone()),
+                );
+                self.index_forall_chain_components(&forward)?;
+                self.top_exec_env_mut().facts.record_fact(
+                    reverse.fact_id,
+                    Fact::ForallFact(reverse.clone()),
+                );
+                self.index_forall_chain_components(&reverse)?;
+                Ok(StoreFactAndInferResult::RecordedFact { fact_id: original_id })
+            }
         }
+    }
+
+    fn index_forall_chain_components(&mut self, forall: &ForallFact) -> RuntimeResult<()> {
+        let mut projections = Vec::new();
+        for (then_index, then) in forall.then_facts.iter().enumerate() {
+            if let crate::new_pipeline::ast::fact::ExistOrAndChainAtomicFact::ChainFact(chain) = then {
+                projections.push((then_index, self.chain_adjacent_atomics(chain)?));
+            }
+        }
+        let memory = &mut self.top_exec_env_mut().facts.known_forall_conclusions;
+        for (then_index, adjacent) in projections {
+            memory.index_chain_components(forall, then_index, &adjacent);
+        }
+        Ok(())
+    }
+
+    fn forall_with_iff_to_two_directions_for_store(
+        &mut self,
+        forall_iff: &ForallFactWithIff,
+    ) -> (ForallFact, ForallFact) {
+        let f = &forall_iff.forall_fact;
+        let line_file = forall_iff.line_file.clone().or_else(|| f.line_file.clone());
+        let mut dom_then = f.dom_facts.clone();
+        dom_then.extend(f.then_facts.iter().cloned().map(Fact::from));
+        let forward = ForallFact {
+            fact_id: self.ids.allocate_fact_id(),
+            typed_parameters: f.typed_parameters.clone(),
+            dom_facts: dom_then,
+            then_facts: forall_iff.iff_facts.clone(),
+            line_file: line_file.clone(),
+        };
+        let mut dom_iff = f.dom_facts.clone();
+        dom_iff.extend(forall_iff.iff_facts.iter().cloned().map(Fact::from));
+        let reverse = ForallFact {
+            fact_id: self.ids.allocate_fact_id(),
+            typed_parameters: f.typed_parameters.clone(),
+            dom_facts: dom_iff,
+            then_facts: f.then_facts.clone(),
+            line_file,
+        };
+        (forward, reverse)
     }
 
     // And: record whole, then store each atomic component into known-* indexes.
@@ -182,9 +239,9 @@ impl Runtime {
                 let fact_id = equal_fact.fact_id;
                 let env = self.top_exec_env_mut();
                 env.facts.known_equality.store(equal_fact);
+                env.facts.known_closed_numeric_equal.maybe_index(equal_fact);
+                env.facts.known_structural_equal.maybe_index(equal_fact);
                 env.facts.record_atomic_fact(fact_id, atomic_fact.clone());
-                maybe_store_closed_numeric_equal(env, equal_fact);
-                maybe_store_in_function_set_from_equal(env, equal_fact);
                 Ok(vec![fact_id])
             }
             _ => {
@@ -202,9 +259,6 @@ impl Runtime {
                     atomic_fact.clone(),
                 );
                 env.facts.record_atomic_fact(fact_id, atomic_fact.clone());
-                if let AtomicFact::InFact(in_fact) = atomic_fact {
-                    maybe_store_in_function_set_from_in(env, in_fact);
-                }
                 if let Some(in_fact) = in_fact_to_project {
                     self.infer_projections_from_stored_in_fact(&in_fact)?;
                 }
@@ -596,94 +650,6 @@ fn chain_order_edges(prop_names: &[AtomicName]) -> Option<Vec<OrderEdge>> {
         edges.push(edge);
     }
     Some(edges)
-}
-
-// When exactly one side of `a = e` classifies as [`ClosedNumericExpr`], index
-// the other side under ClosedNumericEqual (store the classified view as Obj).
-// Both-closed or neither-closed: skip (v1).
-// Example: `a = 2^3/7 + 10 * 2.5` → key `a` stores closed RHS + fact_id.
-fn maybe_store_closed_numeric_equal(env: &mut ExecEnv, equal_fact: &EqualFact) {
-    let left = ClosedNumericExpr::try_from_obj(&equal_fact.left);
-    let right = ClosedNumericExpr::try_from_obj(&equal_fact.right);
-    match (left, right) {
-        (Some(closed), None) => {
-            env.special_object_properties
-                .entry(equal_fact.right.ir())
-                .or_default()
-                .push(SpecialObjProperty::ClosedNumericEqual((
-                    closed.to_obj(),
-                    equal_fact.fact_id,
-                )));
-        }
-        (None, Some(closed)) => {
-            env.special_object_properties
-                .entry(equal_fact.left.ir())
-                .or_default()
-                .push(SpecialObjProperty::ClosedNumericEqual((
-                    closed.to_obj(),
-                    equal_fact.fact_id,
-                )));
-        }
-        _ => {}
-    }
-}
-
-// `f $in fn(x R) R` → key `f` stores InFunctionSet(that FnSet, fact_id).
-// Example: after this store, WD of `f(a)` can look up the signature.
-fn maybe_store_in_function_set_from_in(env: &mut ExecEnv, in_fact: &InFact) {
-    let Obj::FnSet(fn_set) = &in_fact.set else {
-        return;
-    };
-    env.special_object_properties
-        .entry(in_fact.element.ir())
-        .or_default()
-        .push(SpecialObjProperty::InFunctionSet((
-            fn_set.clone(),
-            in_fact.fact_id,
-        )));
-}
-
-// `let f = fn(x R) R {x}` / `f = fn(...)` → key on the non-anon side stores
-// InFunctionSet(anon.body). Equality neighbors can reuse this via class lookup.
-//
-// `let f = fn(x R) fn(y R) R` (FnSet, no body) also registers the signature so
-// curried applications can look up InFunctionSet without `have fn`.
-fn maybe_store_in_function_set_from_equal(env: &mut ExecEnv, equal_fact: &EqualFact) {
-    let (name_side, fn_set, equal_to_function) = match (&equal_fact.left, &equal_fact.right) {
-        (Obj::AnonymousFn(anon), other) => (
-            other,
-            anon.body.clone(),
-            Some(Obj::AnonymousFn(anon.clone())),
-        ),
-        (other, Obj::AnonymousFn(anon)) => (
-            other,
-            anon.body.clone(),
-            Some(Obj::AnonymousFn(anon.clone())),
-        ),
-        (Obj::FnSet(fn_set), other) => (other, fn_set.clone(), None),
-        (other, Obj::FnSet(fn_set)) => (other, fn_set.clone(), None),
-        _ => return,
-    };
-    if matches!(
-        name_side,
-        Obj::AnonymousFn(_) | Obj::FnSet(_)
-    ) {
-        return;
-    }
-    let mut props = vec![SpecialObjProperty::InFunctionSet((
-        fn_set,
-        equal_fact.fact_id,
-    ))];
-    if let Some(fun) = equal_to_function {
-        props.push(SpecialObjProperty::EqualToFunction((
-            fun,
-            equal_fact.fact_id,
-        )));
-    }
-    env.special_object_properties
-        .entry(name_side.ir())
-        .or_default()
-        .extend(props);
 }
 
 fn flatten_def_prop_params(list: &TypedParameterList) -> Vec<BoundName> {

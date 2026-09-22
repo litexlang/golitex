@@ -24,6 +24,11 @@ pub enum InFactSearchProofByBuiltinRule {
     // Mathematical property: after child WD, `+ - * / …` over C-carriers stay in C.
     // Example: prove `(x + 1) $in C` (used when Add/Mul WD asks for `$in C`).
     ComplexArithmeticClosure(ComplexArithmeticClosureBuiltinRuleProof),
+    // Well-defined real trigonometry / inverse trigonometry inhabits R.
+    // Mathematical property: after child WD, `sin`/`cos`/`tan`/`cot` and their
+    // principal inverses land in R.
+    // Example: prove `arcsin(x) $in R`, `tan(x) $in R`.
+    RealTrigClosure(RealTrigClosureBuiltinRuleProof),
     // Membership lifts along the standard-set inclusion chain.
     // Mathematical property: if `x $in S` and `S $subset T` among standard sets,
     // then `x $in T`.
@@ -75,6 +80,10 @@ pub struct ClosedNumericMembershipBuiltinRuleProof {}
 // C-arithmetic closure certificate (sides live on the InFact).
 // Example: `(x + 1) $in C`.
 pub struct ComplexArithmeticClosureBuiltinRuleProof {}
+
+// Real trig closure certificate (sides live on the InFact).
+// Example: `arcsin(x) $in R`.
+pub struct RealTrigClosureBuiltinRuleProof {}
 
 // Subset-lift certificate: cite a known smaller-set membership.
 // Example: source_set `R`, cite `x $in R`, goal `x $in C`.
@@ -226,6 +235,11 @@ impl Runtime {
         match set {
             StandardSet::C => {
                 if let Some(proof) = complex_arithmetic_in_c_proof(fact) {
+                    return Ok(Some(proof));
+                }
+            }
+            StandardSet::R => {
+                if let Some(proof) = real_trig_in_r_proof(fact) {
                     return Ok(Some(proof));
                 }
             }
@@ -745,6 +759,27 @@ fn complex_arithmetic_in_c_proof(fact: &InFact) -> Option<InFactSearchProofByBui
         | Obj::Sqrt(_)
         | Obj::Log(_) => Some(InFactSearchProofByBuiltinRule::ComplexArithmeticClosure(
             ComplexArithmeticClosureBuiltinRuleProof {},
+        )),
+        _ => None,
+    }
+}
+
+// WD already forces real domains for these forms; they inhabit R.
+// Example: prove `sin(x) $in R`, `arccos(x) $in R`.
+fn real_trig_in_r_proof(fact: &InFact) -> Option<InFactSearchProofByBuiltinRule> {
+    let Obj::StandardSet(StandardSet::R) = &fact.set else {
+        return None;
+    };
+    match &fact.element {
+        Obj::Sin(_)
+        | Obj::Cos(_)
+        | Obj::Tan(_)
+        | Obj::Cot(_)
+        | Obj::Arcsin(_)
+        | Obj::Arccos(_)
+        | Obj::Arctan(_)
+        | Obj::Arccot(_) => Some(InFactSearchProofByBuiltinRule::RealTrigClosure(
+            RealTrigClosureBuiltinRuleProof {},
         )),
         _ => None,
     }

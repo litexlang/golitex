@@ -14,7 +14,7 @@ use super::obj_well_defined_proof_by_def::{
 use super::entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
 use crate::new_pipeline::ast::fact::{AtomicFact, InFact};
 use crate::new_pipeline::ast::obj::{FnObj, FnObjHead, FnRange, FnSet, IdentifierObj, Obj};
-use crate::new_pipeline::exec_env::exec_env::SpecialObjProperty;
+use crate::new_pipeline::exec_env::exec_env::SpecialObjectPropertyByDefinition;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::runtime_ids::FactId;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
@@ -295,7 +295,7 @@ impl Runtime {
                     continue;
                 };
                 for prop in props {
-                    if let SpecialObjProperty::InFunctionSet((fn_set, fact_id)) = prop {
+                    if let SpecialObjectPropertyByDefinition::InFunctionSet((fn_set, fact_id)) = prop {
                         out.push((fn_set.clone(), *fact_id));
                     }
                 }

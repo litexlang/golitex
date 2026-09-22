@@ -22,6 +22,9 @@ impl Obj {
                 | Obj::Abs(_)
                 | Obj::Sin(_)
                 | Obj::Arcsin(_)
+                | Obj::Arccos(_)
+                | Obj::Arctan(_)
+                | Obj::Arccot(_)
                 | Obj::Cos(_)
                 | Obj::Tan(_)
                 | Obj::Cot(_)
@@ -214,6 +217,33 @@ impl Obj {
                     s.push_str(&format!(
                         "{}{}{}{}",
                         ARCSIN,
+                        LEFT_PAREN,
+                        fmt_with_prec(x.arg.as_ref(), 0),
+                        RIGHT_PAREN
+                    ));
+                }
+                Obj::Arccos(x) => {
+                    s.push_str(&format!(
+                        "{}{}{}{}",
+                        ARCCOS,
+                        LEFT_PAREN,
+                        fmt_with_prec(x.arg.as_ref(), 0),
+                        RIGHT_PAREN
+                    ));
+                }
+                Obj::Arctan(x) => {
+                    s.push_str(&format!(
+                        "{}{}{}{}",
+                        ARCTAN,
+                        LEFT_PAREN,
+                        fmt_with_prec(x.arg.as_ref(), 0),
+                        RIGHT_PAREN
+                    ));
+                }
+                Obj::Arccot(x) => {
+                    s.push_str(&format!(
+                        "{}{}{}{}",
+                        ARCCOT,
                         LEFT_PAREN,
                         fmt_with_prec(x.arg.as_ref(), 0),
                         RIGHT_PAREN
@@ -958,6 +988,12 @@ impl Abs {
 impl_obj_kw_unary!(Sin, SIN, arg);
 
 impl_obj_kw_unary!(Arcsin, ARCSIN, arg);
+
+impl_obj_kw_unary!(Arccos, ARCCOS, arg);
+
+impl_obj_kw_unary!(Arctan, ARCTAN, arg);
+
+impl_obj_kw_unary!(Arccot, ARCCOT, arg);
 
 impl_obj_kw_unary!(Cos, COS, arg);
 

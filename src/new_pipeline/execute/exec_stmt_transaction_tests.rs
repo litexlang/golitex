@@ -785,6 +785,76 @@ fn witness_exist_body_miss_is_soft_fail_and_does_not_store() {
 }
 
 #[test]
+fn witness_exist_unique_succeeds_when_body_forces_uniqueness() {
+    let mut runtime = runtime_with_file_env();
+    let outcome = exec_one(&mut runtime, "witness exist! x R st {x = 0} from 0");
+    assert!(
+        !outcome.is_failed(),
+        "expected Success: uniqueness forall closes from x = 0"
+    );
+    assert!(
+        !exec_one(&mut runtime, "exist! x R st {x = 0}").is_failed(),
+        "stored exist! must verify"
+    );
+}
+
+#[test]
+fn witness_atomic_fact_stores_prop_without_storing_exist_first() {
+    let mut runtime = runtime_with_file_env();
+    let prop = "prop has_copy(a R):\n    exist x R st {x = a}";
+    assert!(!exec_one(&mut runtime, prop).is_failed(), "def prop has_copy");
+    assert!(
+        !exec_one(&mut runtime, "witness $has_copy(2) from 2").is_failed(),
+        "witness $P"
+    );
+    assert!(
+        !exec_one(&mut runtime, "$has_copy(2)").is_failed(),
+        "stored $P must verify"
+    );
+}
+
+#[test]
+fn witness_atomic_fact_rejects_exist_unique_definition() {
+    let mut runtime = runtime_with_file_env();
+    let prop = "prop unique_value(a R):\n    exist! x R st {x = a}";
+    assert!(!exec_one(&mut runtime, prop).is_failed(), "def prop unique_value");
+    let outcome = exec_one(&mut runtime, "witness $unique_value(2) from 2");
+    assert!(
+        outcome.is_failed(),
+        "witness $P must soft-fail on exist! definition clause"
+    );
+}
+
+#[test]
+fn witness_nonempty_set_succeeds_from_membership() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(&mut runtime, "witness $is_nonempty_set({1, 2}) from 1").is_failed(),
+        "witness $is_nonempty_set"
+    );
+    assert!(
+        !exec_one(&mut runtime, "$is_nonempty_set({1, 2})").is_failed(),
+        "stored nonempty must verify"
+    );
+}
+
+#[test]
+fn witness_nonempty_set_membership_miss_is_soft_fail() {
+    let mut runtime = runtime_with_file_env();
+    let before = runtime.top_exec_env().facts.facts_by_id.len();
+    let outcome = exec_one(&mut runtime, "witness $is_nonempty_set({1, 2}) from 3");
+    assert!(
+        outcome.is_failed(),
+        "expected Failed: 3 is not in {{1, 2}}"
+    );
+    assert_eq!(
+        runtime.top_exec_env().facts.facts_by_id.len(),
+        before,
+        "Failed nonempty witness must not merge into parent"
+    );
+}
+
+#[test]
 fn known_atomic_except_equality_by_equality_class() {
     // Exact class hit (reflexive): known `a > 0` proves `a > 0`.
     let mut runtime = runtime_with_file_env();
@@ -900,45 +970,83 @@ fn forall_exist_then_indexes_by_exist_and_instantiates() {
 
 #[test]
 fn store_equality_indexes_closed_numeric_equal() {
-    use crate::new_pipeline::exec_env::SpecialObjProperty;
     use crate::new_pipeline::rational_expression::ClosedNumericExpr;
 
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "have a R = 10").is_failed());
 
-    let props = &runtime.top_exec_env().special_object_properties;
     let mut closed_hits = 0;
-    for values in props.values() {
-        for value in values {
-            if let SpecialObjProperty::ClosedNumericEqual((expr, _)) = value {
-                assert!(
-                    ClosedNumericExpr::try_from_obj(expr).is_some(),
-                    "stored representative must classify as ClosedNumericExpr"
-                );
-                closed_hits += 1;
-            }
+    for entries in runtime
+        .top_exec_env()
+        .facts
+        .known_closed_numeric_equal
+        .by_non_closed
+        .values()
+    {
+        for (expr, _) in entries {
+            assert!(
+                ClosedNumericExpr::try_from_obj(expr).is_some(),
+                "stored representative must classify as ClosedNumericExpr"
+            );
+            closed_hits += 1;
         }
     }
     assert_eq!(
         closed_hits, 1,
-        "exactly one ClosedNumericEqual for have a R = 10"
+        "exactly one known_closed_numeric_equal for have a R = 10"
     );
 
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "1 + 1 = 2").is_failed());
-    let props = &runtime.top_exec_env().special_object_properties;
-    let closed_hits = props
+    let closed_hits = runtime
+        .top_exec_env()
+        .facts
+        .known_closed_numeric_equal
+        .by_non_closed
         .values()
-        .flat_map(|values| values.iter())
-        .filter(|value| matches!(value, SpecialObjProperty::ClosedNumericEqual(_)))
-        .count();
+        .map(|entries| entries.len())
+        .sum::<usize>();
     assert_eq!(
         closed_hits, 0,
-        "both-closed equality must not index ClosedNumericEqual"
+        "both-closed equality must not index known_closed_numeric_equal"
     );
 }
 
 #[test]
+fn store_equality_indexes_structural_equal() {
+    use crate::new_pipeline::exec_env::KnownStructuralEqualShape;
+
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have a set = (1, 2)").is_failed());
+
+    let entries = &runtime
+        .top_exec_env()
+        .facts
+        .known_structural_equal
+        .by_non_structural;
+    let mut tuple_hits = 0;
+    for values in entries.values() {
+        for (shape, _) in values {
+            if matches!(shape, KnownStructuralEqualShape::Tuple(_)) {
+                tuple_hits += 1;
+            }
+        }
+    }
+    assert_eq!(tuple_hits, 1, "have a set = (1, 2) must index one tuple shape");
+
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "(1, 2) = (1, 2)").is_failed());
+    assert!(
+        runtime
+            .top_exec_env()
+            .facts
+            .known_structural_equal
+            .by_non_structural
+            .is_empty(),
+        "both-side structural equality must not index known_structural_equal"
+    );
+}
+
 fn closed_numeric_equal_rewrite_proves_subterm_goal() {
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "have a R = 10").is_failed());
@@ -1043,7 +1151,7 @@ fn ambient_by_definition_expands_user_prop() {
 
 #[test]
 fn fn_obj_application_requires_in_function_set() {
-    use crate::new_pipeline::exec_env::exec_env::SpecialObjProperty;
+    use crate::new_pipeline::exec_env::SpecialObjectPropertyByDefinition;
 
     // No registration → soft fail.
     let mut runtime = runtime_with_file_env();
@@ -1063,7 +1171,7 @@ fn fn_obj_application_requires_in_function_set() {
             .special_object_properties
             .values()
             .flatten()
-            .any(|p| matches!(p, SpecialObjProperty::InFunctionSet(_))),
+            .any(|p| matches!(p, SpecialObjectPropertyByDefinition::InFunctionSet(_))),
         "let f = anon must store InFunctionSet"
     );
     assert!(!exec_one(&mut runtime, "have a R = 1").is_failed());
@@ -1127,7 +1235,7 @@ fn binder_obj_well_definedness_keeps_local_env() {
 
 #[test]
 fn have_fn_equal_and_by_exist_slice1() {
-    use crate::new_pipeline::exec_env::exec_env::SpecialObjProperty;
+    use crate::new_pipeline::exec_env::SpecialObjectPropertyByDefinition;
 
     let mut runtime = runtime_with_file_env();
     let r = exec_one(&mut runtime, "have left_greater R:\n    left_greater > 100");
@@ -1142,7 +1250,7 @@ fn have_fn_equal_and_by_exist_slice1() {
             .special_object_properties
             .values()
             .flatten()
-            .any(|p| matches!(p, SpecialObjProperty::InFunctionSet(_))),
+            .any(|p| matches!(p, SpecialObjectPropertyByDefinition::InFunctionSet(_))),
         "have fn must store InFunctionSet"
     );
     assert!(!exec_one(&mut runtime, "have a R = 1").is_failed());
@@ -1154,7 +1262,7 @@ fn have_fn_equal_and_by_exist_slice1() {
 
 #[test]
 fn have_fn_by_cases_slice2() {
-    use crate::new_pipeline::exec_env::exec_env::SpecialObjProperty;
+    use crate::new_pipeline::exec_env::SpecialObjectPropertyByDefinition;
     use crate::new_pipeline::execute::execute_have_fn_equal_case_by_case_stmt::{
         ExecHaveFnEqualCaseByCaseStmtFailed, ExecHaveFnEqualCaseByCaseStmtResult,
     };
@@ -1196,7 +1304,7 @@ fn have_fn_by_cases_slice2() {
             .special_object_properties
             .values()
             .flatten()
-            .any(|p| matches!(p, SpecialObjProperty::InFunctionSet(_))),
+            .any(|p| matches!(p, SpecialObjectPropertyByDefinition::InFunctionSet(_))),
         "by cases must store InFunctionSet"
     );
     assert!(!exec_one(&mut runtime, "have a R = 2").is_failed());
@@ -1211,7 +1319,7 @@ fn have_fn_by_exist_stores_membership_and_properties() {
     use crate::new_pipeline::execute::execute_have_fn_by_forall_exist_unique_stmt::ExecHaveFnByForallExistUniqueStmtResult;
     use crate::new_pipeline::execute::ExecDefinitionStmtResult;
     use crate::new_pipeline::execute::ExecStmtResult;
-    use crate::new_pipeline::exec_env::exec_env::SpecialObjProperty;
+    use crate::new_pipeline::exec_env::SpecialObjectPropertyByDefinition;
 
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "abstract_prop F(x, y)").is_failed());
@@ -1251,7 +1359,7 @@ fn have_fn_by_exist_stores_membership_and_properties() {
         .special_object_properties
         .values()
         .flatten()
-        .any(|p| matches!(p, SpecialObjProperty::InFunctionSet(_)));
+        .any(|p| matches!(p, SpecialObjectPropertyByDefinition::InFunctionSet(_)));
     assert!(props_ok, "by exist! must store InFunctionSet");
 }
 
@@ -1880,8 +1988,7 @@ fn template_have_fn_by_exist_wires_body() {
     use crate::new_pipeline::execute::ExecDefinitionStmtResult;
     use crate::new_pipeline::execute::ExecStmtResult;
 
-    // Def-time only: body exec runs under template params. Instance use
-    // (`\choose_t<...>`) does not yet install FnSet membership (unlike cases/induc).
+    // Def-time body check + instance release of membership/property/uniqueness.
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "abstract_prop F(x, y)").is_failed());
     assert!(!exec_one(&mut runtime, "have A set").is_failed());
@@ -1914,13 +2021,19 @@ fn template_have_fn_by_exist_wires_body() {
             other.is_failed()
         ),
     }
-    // Boundary lock: instance does not yet get FnSet membership (unlike cases/induc).
     assert!(
-        exec_one(&mut runtime, "\\choose_t<{0}> $in fn(x A) B").is_failed(),
-        "by exist! template instance must soft-fail until instance FnSet wiring exists"
+        !exec_one(&mut runtime, "\\choose_t<{0}> = \\choose_t<{0}>").is_failed(),
+        "template instance reflexive equality"
+    );
+    assert!(
+        !exec_one(
+            &mut runtime,
+            "forall x A:\n    $F(x, \\choose_t<{0}>(x))"
+        )
+        .is_failed(),
+        "template instance property forall"
     );
 }
-
 
 
 
@@ -2035,5 +2148,36 @@ fn template_body_obtain_from_thm_wires() {
     assert!(
         !exec_one(&mut runtime, code).is_failed(),
         "template body obtain from thm"
+    );
+}
+
+#[test]
+fn fn_set_and_set_builder_alpha_equal_builtins() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(&mut runtime, "R -> R = R -> R").is_failed(),
+        "two literal FnSets must be alpha-equal"
+    );
+    assert!(
+        !exec_one(&mut runtime, "{x R: x > 0} = {y R: y > 0}").is_failed(),
+        "SetBuilders must be alpha-equal under binder rename"
+    );
+    assert!(
+        !exec_one(
+            &mut runtime,
+            "forall f R -> R:\n    f $in R -> R"
+        )
+        .is_failed(),
+        "forall membership must bridge via FnSet alpha equality"
+    );
+
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        exec_one(&mut runtime, "R -> N = R -> R").is_failed(),
+        "different FnSet return sets must not alpha-equal"
+    );
+    assert!(
+        exec_one(&mut runtime, "{x R: x > 0} = {x R: x > 1}").is_failed(),
+        "different SetBuilder bodies must not alpha-equal"
     );
 }

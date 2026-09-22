@@ -3,8 +3,9 @@ use std::collections::HashMap;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 
 use crate::new_pipeline::ast::obj::{
-    Abs, Add, Arcsin, Ceil, ComplexAbs, Cos, Cot, Div, Exp, Factorial, Floor, Gcd, ImaginaryPart,
-    Lcm, Ln, Log, Max, Min, Mod, Mul, Obj, Pow, Quot, RealPart, Sign, Sin, Sqrt, Sub, Tan,
+    Abs, Add, Arccos, Arccot, Arcsin, Arctan, Ceil, ComplexAbs, Cos, Cot, Div, Exp, Factorial,
+    Floor, Gcd, ImaginaryPart, Lcm, Ln, Log, Max, Min, Mod, Mul, Obj, Pow, Quot, RealPart, Sign,
+    Sin, Sqrt, Sub, Tan,
 };
 use crate::new_pipeline::runtime::Runtime;
 
@@ -250,6 +251,39 @@ impl Runtime {
 
     ) -> Result<Obj, InstError> {
         Ok(Obj::Arcsin(Arcsin {
+            arg: Box::new(self.inst_obj_rec(&a.arg, param_to_arg_map)?),
+        }))
+    }
+
+    pub(crate) fn inst_arccos_obj(
+        &mut self,
+        a: &Arccos,
+        param_to_arg_map: &HashMap<IdentifierId, Obj>,
+
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Arccos(Arccos {
+            arg: Box::new(self.inst_obj_rec(&a.arg, param_to_arg_map)?),
+        }))
+    }
+
+    pub(crate) fn inst_arctan_obj(
+        &mut self,
+        a: &Arctan,
+        param_to_arg_map: &HashMap<IdentifierId, Obj>,
+
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Arctan(Arctan {
+            arg: Box::new(self.inst_obj_rec(&a.arg, param_to_arg_map)?),
+        }))
+    }
+
+    pub(crate) fn inst_arccot_obj(
+        &mut self,
+        a: &Arccot,
+        param_to_arg_map: &HashMap<IdentifierId, Obj>,
+
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::Arccot(Arccot {
             arg: Box::new(self.inst_obj_rec(&a.arg, param_to_arg_map)?),
         }))
     }

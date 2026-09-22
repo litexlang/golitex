@@ -550,7 +550,6 @@ pub struct WitnessExistFact {
 pub struct WitnessAtomicFact {
     pub atomic_fact: NormalAtomicFact,
     pub witnesses: Vec<Obj>,
-    pub proof: Vec<Stmt>,
     pub line_file: LineFile,
 }
 
@@ -558,7 +557,6 @@ pub struct WitnessAtomicFact {
 pub struct WitnessNonemptySet {
     pub obj: Obj,
     pub set: Obj,
-    pub proof: Vec<Stmt>,
     pub line_file: LineFile,
 }
 

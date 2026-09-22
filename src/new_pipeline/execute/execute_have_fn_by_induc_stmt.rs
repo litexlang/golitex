@@ -336,6 +336,9 @@ impl Runtime {
                 set: Obj::FnSet(restricted.clone()),
                 line_file: Some(stmt.line_file.clone()),
             }));
+            if let Fact::AtomicFact(AtomicFact::InFact(in_fact)) = &membership {
+                self.record_fn_signature_from_definition_membership(in_fact);
+            }
             let _ = self
                 .store_fact_and_infer(&membership)
                 .map_err(|e| format!("recursive membership store: {e:?}"))?;

@@ -6,7 +6,8 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 //
 // Mathematical property: identical IR keys denote the same object identity
 // for exact match. Plain IR embeds `#id#name`, so two binders that only share
-// a letter are not EqualIr-equal. Set-builder alpha equality is deferred.
+// a letter are not EqualIr-equal. FnSet / SetBuilder alpha equality is handled
+// by dedicated builtins (ByFnSetAlphaEqual / BySetBuilderAlphaEqual).
 // Example: prove `1 + 0 = 1 + 0` because both sides share the same ObjIR.
 //
 // Proof payload is empty: the compared sides live on the surrounding EqualFact.

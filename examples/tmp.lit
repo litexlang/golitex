@@ -1,16 +1,54 @@
-# Preview: obtain from `$P` and from `thm` (new_pipeline).
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/tmp.lit
+# Inverse trig acceptance probes (new_pipeline).
+# Run: LITEX_NEW_PIPELINE=1 target/release/litex -f examples/tmp.lit
 
-prop has_copy(a R):
-    exist x R st {x = a}
+arcsin(0) = 0
+arcsin(1) = pi / 2
+arcsin(-1) = -pi / 2
+arccos(1) = 0
+arccos(0) = pi / 2
+arccos(-1) = pi
+arctan(0) = 0
+arccot(0) = pi / 2
 
-$has_copy(2)
-obtain copy from $has_copy(2)
-copy = 2
+forall x R:
+    (-1) <= x
+    x <= 1
+    =>:
+        arcsin(x) $in R
+        arccos(x) $in R
+        sin(arcsin(x)) = x
+        cos(arccos(x)) = x
+        -pi / 2 <= arcsin(x) <= pi / 2
+        0 <= arccos(x) <= pi
 
-thm self_exists:
-    ? forall a R:
-        exist x R st {x = a}
+forall x R:
+    arctan(x) $in R
+    arccot(x) $in R
+    tan(arctan(x)) = x
+    cot(arccot(x)) = x
+    -pi / 2 < arctan(x) < pi / 2
+    0 < arccot(x) < pi
 
-obtain theorem_copy from thm self_exists(3)
-theorem_copy = 3
+forall y R:
+    -pi / 2 <= y
+    y <= pi / 2
+    =>:
+        arcsin(sin(y)) = y
+
+forall y R:
+    0 <= y
+    y <= pi
+    =>:
+        arccos(cos(y)) = y
+
+forall y R:
+    -pi / 2 < y
+    y < pi / 2
+    =>:
+        arctan(tan(y)) = y
+
+forall y R:
+    0 < y
+    y < pi
+    =>:
+        arccot(cot(y)) = y

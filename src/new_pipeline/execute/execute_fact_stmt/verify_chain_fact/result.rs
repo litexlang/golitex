@@ -1,5 +1,6 @@
 use crate::new_pipeline::ast::fact::ChainFact;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
 
 pub enum VerifyChainFactResult {
     Success(VerifyChainFactSuccess),
@@ -9,6 +10,7 @@ pub enum VerifyChainFactResult {
 pub struct VerifyChainFactSuccess {
     pub fact: ChainFact,
     pub adjacent: Vec<VerifyFactResult>,
+    pub known_forall: Option<SearchProofByKnownForallFact>,
 }
 
 // Soft miss keeps the child VerifyFactResult as-is (WD detail stays inside it).
@@ -60,11 +62,13 @@ pub fn chain_fact_result_from_adjacent_fail(
 pub fn chain_fact_result_from_success(
     fact: &ChainFact,
     adjacent: Vec<VerifyFactResult>,
+    known_forall: Option<SearchProofByKnownForallFact>,
 ) -> VerifyFactResult {
     VerifyFactResult::ChainFact(Box::new(VerifyChainFactResult::Success(
         VerifyChainFactSuccess {
             fact: fact.clone(),
             adjacent,
+            known_forall,
         },
     )))
 }
