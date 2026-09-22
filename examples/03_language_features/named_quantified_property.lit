@@ -18,7 +18,7 @@ witness exist x R st {$has_universal_self_equality(x)} from 0:
     by def $has_universal_self_equality(0)
 
 # Before (now rejected):
-# general_cart(I, S, g) = {f fn(alpha I)big_union(S): forall alpha I => f(alpha) $in g(alpha)}
+# index_cart(I, S, g) = {f fn(alpha I)family_union(S): forall alpha I => f(alpha) $in g(alpha)}
 #
 # The builtin predicate names exactly that pointwise condition. It is usable
 # as one atomic set-builder filter and still unfolds in both proof directions.
@@ -26,10 +26,10 @@ have I set
 have S nonempty_set
 have g fn(g_index I) S
 
-general_cart(I, S, g) = {f fn(f_index I)big_union(S): $is_choice_function_for(I, S, g, f)}
+index_cart(I, S, g) = {f fn(f_index I)family_union(S): $is_choice_function_for(I, S, g, f)}
 
 claim:
-    ? forall f fn(f_index I)big_union(S):
+    ? forall f fn(f_index I)family_union(S):
         forall alpha I:
             f(alpha) $in g(alpha)
         =>:
@@ -37,15 +37,15 @@ claim:
     $is_choice_function_for(I, S, g, f)
 
 claim:
-    ? forall f fn(f_index I)big_union(S), alpha I:
+    ? forall f fn(f_index I)family_union(S), alpha I:
         $is_choice_function_for(I, S, g, f)
         =>:
             f(alpha) $in g(alpha)
     f(alpha) $in g(alpha)
 
 claim:
-    ? forall f fn(f_index I)big_union(S):
+    ? forall f fn(f_index I)family_union(S):
         $is_choice_function_for(I, S, g, f)
         =>:
-            f $in general_cart(I, S, g)
-    f $in general_cart(I, S, g)
+            f $in index_cart(I, S, g)
+    f $in index_cart(I, S, g)

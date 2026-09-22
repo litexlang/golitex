@@ -1,4 +1,4 @@
-// ObjWellDefinedProofByDef mirrors Obj's 16-family nesting.
+// ObjWellDefinedProofByDef mirrors Obj family nesting.
 // Family sub-enums wrap the existing per-leaf proof structs.
 // Transition: non-leaf proofs share CommonStages fields; specialize later per family.
 
@@ -28,6 +28,7 @@ pub enum ObjWellDefinedProofByDef {
     IteratedOperator(IteratedOperatorObjWellDefinedProofByDef),
     FiniteSetStat(FiniteSetStatObjWellDefinedProofByDef),
     Structish(StructishObjWellDefinedProofByDef),
+    InstantiatedTemplateObj(InstantiatedTemplateObjObjWellDefinedProof),
 }
 
 pub enum LiteralObjWellDefinedProofByDef {
@@ -87,18 +88,17 @@ pub enum SetOperatorObjWellDefinedProofByDef {
     Union(UnionObjWellDefinedProof),
     Intersect(IntersectObjWellDefinedProof),
     SetMinus(SetMinusObjWellDefinedProof),
-    BigUnion(BigUnionObjWellDefinedProof),
-    BigIntersect(BigIntersectObjWellDefinedProof),
+    FamilyUnion(FamilyUnionObjWellDefinedProof),
+    FamilyIntersect(FamilyIntersectObjWellDefinedProof),
     IndexUnion(IndexUnionObjWellDefinedProof),
     IndexIntersect(IndexIntersectObjWellDefinedProof),
     PowerSet(PowerSetObjWellDefinedProof),
-    GeneralCart(GeneralCartObjWellDefinedProof),
+    IndexCart(IndexCartObjWellDefinedProof),
 }
 
 pub enum SetFormerObjWellDefinedProofByDef {
     ListSet(ListSetObjWellDefinedProof),
     SetBuilder(SetBuilderObjWellDefinedProof),
-    Replacement(ReplacementObjWellDefinedProof),
     Range(RangeObjWellDefinedProof),
     ClosedRange(ClosedRangeObjWellDefinedProof),
     FiniteSeqSet(FiniteSeqSetObjWellDefinedProof),
@@ -140,7 +140,6 @@ pub enum FiniteSetStatObjWellDefinedProofByDef {
 pub enum StructishObjWellDefinedProofByDef {
     StructObj(StructObjObjWellDefinedProof),
     FieldAccess(FieldAccessObjWellDefinedProof),
-    InstantiatedTemplateObj(InstantiatedTemplateObjObjWellDefinedProof),
 }
 pub struct IdentifierObjWellDefinedProof {}
 
@@ -679,12 +678,12 @@ impl SetMinusObjWellDefinedProof {
     }
 }
 
-pub struct BigUnionObjWellDefinedProof {
+pub struct FamilyUnionObjWellDefinedProof {
     pub child_obj_well_defined: Vec<(Obj, VerifyObjWellDefinedResult)>,
     pub requirement_fact_verified: Vec<VerifyFactResult>,
 }
 
-impl BigUnionObjWellDefinedProof {
+impl FamilyUnionObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
         Self {
             child_obj_well_defined: stages.child_obj_well_defined,
@@ -693,12 +692,12 @@ impl BigUnionObjWellDefinedProof {
     }
 }
 
-pub struct BigIntersectObjWellDefinedProof {
+pub struct FamilyIntersectObjWellDefinedProof {
     pub child_obj_well_defined: Vec<(Obj, VerifyObjWellDefinedResult)>,
     pub requirement_fact_verified: Vec<VerifyFactResult>,
 }
 
-impl BigIntersectObjWellDefinedProof {
+impl FamilyIntersectObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
         Self {
             child_obj_well_defined: stages.child_obj_well_defined,
@@ -749,12 +748,12 @@ impl PowerSetObjWellDefinedProof {
     }
 }
 
-pub struct GeneralCartObjWellDefinedProof {
+pub struct IndexCartObjWellDefinedProof {
     pub child_obj_well_defined: Vec<(Obj, VerifyObjWellDefinedResult)>,
     pub requirement_fact_verified: Vec<VerifyFactResult>,
 }
 
-impl GeneralCartObjWellDefinedProof {
+impl IndexCartObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
         Self {
             child_obj_well_defined: stages.child_obj_well_defined,
@@ -896,20 +895,6 @@ pub struct FnRangeObjWellDefinedProof {
 }
 
 impl FnRangeObjWellDefinedProof {
-    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        Self {
-            child_obj_well_defined: stages.child_obj_well_defined,
-            requirement_fact_verified: stages.requirement_fact_verified,
-        }
-    }
-}
-
-pub struct ReplacementObjWellDefinedProof {
-    pub child_obj_well_defined: Vec<(Obj, VerifyObjWellDefinedResult)>,
-    pub requirement_fact_verified: Vec<VerifyFactResult>,
-}
-
-impl ReplacementObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
         Self {
             child_obj_well_defined: stages.child_obj_well_defined,

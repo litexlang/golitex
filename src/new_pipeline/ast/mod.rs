@@ -14,6 +14,6 @@ pub use names::{AtomicName, BoundName, PlainName};
 pub use obj::{
     ArithmeticOperator, ComplexOperator, ExpLogOperator, FiniteSetStat, FunctionSpace,
     IntegerOperator, IteratedOperator, Literal, Obj, ProductShape, SetFormer, SetOperator,
-    Structish, TrigOperator,
+    StructAndFieldAccessObj, TrigOperator,
 };
 pub use stmt::Stmt;

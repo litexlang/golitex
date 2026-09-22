@@ -1166,13 +1166,13 @@ impl Runtime {
                     None,
                 )
             }
-            "general_cart_member" => {
+            "index_cart_member" => {
                 require_arity!(2);
-                let Obj::GeneralCart(general_cart) = &stmt.args()[1] else {
+                let Obj::IndexCart(index_cart) = &stmt.args()[1] else {
                     return Err(builtin_thm_shape_error(
                         stmt,
                         name,
-                        "second argument must be `general_cart(...)`",
+                        "second argument must be `index_cart(...)`",
                     ));
                 };
                 let conclusion: AtomicFact = self
@@ -1187,9 +1187,9 @@ impl Runtime {
                     let AtomicFact::InFact(in_fact) = &conclusion else {
                         unreachable!()
                     };
-                    Some(self.verify_in_fact_in_general_cart_by_defining_facts(
+                    Some(self.verify_in_fact_in_index_cart_by_defining_facts(
                         in_fact,
-                        general_cart,
+                        index_cart,
                         &verify_state,
                     )?)
                 } else {
@@ -1197,19 +1197,19 @@ impl Runtime {
                 };
                 (
                     conclusion,
-                    BuiltinTheoremRequirementRole::GeneralCartesianPointwiseMembership,
+                    BuiltinTheoremRequirementRole::IndexCartesianPointwiseMembership,
                     verification,
                     None,
                 )
             }
-            "general_cart_nonempty_by_choice_from_family"
-            | "general_cart_nonempty_by_choice_from_pointwise" => {
+            "index_cart_nonempty_by_choice_from_family"
+            | "index_cart_nonempty_by_choice_from_pointwise" => {
                 require_arity!(1);
-                if !matches!(&stmt.args()[0], Obj::GeneralCart(_)) {
+                if !matches!(&stmt.args()[0], Obj::IndexCart(_)) {
                     return Err(builtin_thm_shape_error(
                         stmt,
                         name,
-                        "argument must be `general_cart(...)`",
+                        "argument must be `index_cart(...)`",
                     ));
                 }
                 let conclusion: AtomicFact = self
@@ -1221,7 +1221,7 @@ impl Runtime {
                     let AtomicFact::IsNonemptySetFact(nonempty) = &conclusion else {
                         unreachable!()
                     };
-                    Some(self.verify_general_cart_nonempty_by_choice_explicit(
+                    Some(self.verify_index_cart_nonempty_by_choice_explicit(
                         nonempty,
                         pointwise,
                         &verify_state,
@@ -1232,9 +1232,9 @@ impl Runtime {
                 (
                     conclusion,
                     if pointwise {
-                        BuiltinTheoremRequirementRole::GeneralCartesianPointwiseNonempty
+                        BuiltinTheoremRequirementRole::IndexCartesianPointwiseNonempty
                     } else {
-                        BuiltinTheoremRequirementRole::GeneralCartesianFamilyNonempty
+                        BuiltinTheoremRequirementRole::IndexCartesianFamilyNonempty
                     },
                     verification,
                     Some(BuiltinTheoremProvenance::AxiomOfChoice),

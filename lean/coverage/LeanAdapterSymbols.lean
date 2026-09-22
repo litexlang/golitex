@@ -224,8 +224,8 @@ namespace LitexCoverage
 #check Litex.ZNeg
 #check Litex.ZStar
 #check Litex.abs
-#check Litex.bigIntersect
-#check Litex.bigUnion
+#check Litex.familyIntersect
+#check Litex.familyUnion
 #check Litex.cartCons
 #check Litex.cartNil
 #check Litex.closedRange
@@ -248,7 +248,7 @@ namespace LitexCoverage
 #check Litex.fnTelescopeApplyOwn
 #check Litex.fnTelescopeSet
 #check Litex.fnWhereRangeOwnSubsetCodomain
-#check Litex.generalCart
+#check Litex.indexCart
 #check Litex.indexedTupleAt
 #check Litex.intersect
 #check Litex.matrixSet

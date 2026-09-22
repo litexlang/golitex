@@ -5,7 +5,7 @@
 //! FactId; LineFile.
 
 use super::fact::{
-    AndChainAtomicFact, AtomicFact, ExistFactFamily, ExistOrAndChainAtomicFact, Fact, ForallFact, InFact,
+    AndChainAtomicFact, AtomicFact, ExistShapedFact, ExistOrAndChainAtomicFact, Fact, ForallFact, InFact,
     NormalAtomicFact, QuantifierFreeFact,
 };
 use super::line_file::LineFile;
@@ -120,7 +120,7 @@ pub struct HaveObjByExistFactsStmt {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ObtainObjFromExistFact {
     pub equal_tos: Vec<PlainName>,
-    pub fact: ExistFactFamily,
+    pub fact: ExistShapedFact,
     pub line_file: LineFile,
 }
 
@@ -542,7 +542,7 @@ pub enum WitnessStmt {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WitnessExistFact {
     pub equal_tos: Vec<Obj>,
-    pub exist_fact_in_witness: ExistFactFamily,
+    pub exist_shaped_fact_in_witness: ExistShapedFact,
     pub line_file: LineFile,
 }
 

@@ -1,38 +1,38 @@
 use super::*;
 
-pub fn general_cart_member_fn_set(
+pub fn index_cart_member_fn_set(
     runtime: &Runtime,
-    general_cart: &GeneralCart,
+    index_cart: &IndexCart,
 ) -> Result<Obj, RuntimeError> {
     let param_name = runtime.generate_internal_binder_name();
     Ok(FnSet::new(
         vec![runtime.fresh_param_group_with_set(
             vec![param_name],
-            general_cart.index_set.as_ref().clone(),
+            index_cart.index_set.as_ref().clone(),
         )?],
         vec![],
-        BigUnion::new(general_cart.family_set.as_ref().clone()).into(),
+        FamilyUnion::new(index_cart.family_set.as_ref().clone()).into(),
     )?
     .into())
 }
 
-pub fn general_cart_member_pointwise_fact(
+pub fn index_cart_member_pointwise_fact(
     runtime: &Runtime,
-    general_cart: &GeneralCart,
+    index_cart: &IndexCart,
     member: &Obj,
     line_file: &LineFile,
 ) -> Result<Option<Fact>, RuntimeError> {
     let Some(member_head) = FnObjHead::from_callable_obj(member.clone()) else {
         return Ok(None);
     };
-    let Some(family_head) = FnObjHead::from_callable_obj(general_cart.family_fn.as_ref().clone())
+    let Some(family_head) = FnObjHead::from_callable_obj(index_cart.family_fn.as_ref().clone())
     else {
         return Ok(None);
     };
     let param_name = runtime.generate_internal_binder_name();
     let param_group = runtime.fresh_param_group_with_type(
         vec![param_name],
-        ParamType::Obj(general_cart.index_set.as_ref().clone()),
+        ParamType::Obj(index_cart.index_set.as_ref().clone()),
     )?;
     let param_obj = obj_for_bound_param_in_scope(&param_group.params[0]);
     let member_at_param_raw: Obj =
@@ -83,17 +83,17 @@ pub fn choice_function_for_fact(
         .into()
 }
 
-pub fn general_cart_member_choice_fact(
+pub fn index_cart_member_choice_fact(
     runtime: &Runtime,
-    general_cart: &GeneralCart,
+    index_cart: &IndexCart,
     member: Obj,
     line_file: LineFile,
 ) -> AtomicFact {
     choice_function_for_fact(
         runtime,
-        general_cart.index_set.as_ref().clone(),
-        general_cart.family_set.as_ref().clone(),
-        general_cart.family_fn.as_ref().clone(),
+        index_cart.index_set.as_ref().clone(),
+        index_cart.family_set.as_ref().clone(),
+        index_cart.family_fn.as_ref().clone(),
         member,
         line_file,
     )
@@ -107,11 +107,11 @@ pub fn choice_function_for_definition_facts(
     else {
         return Ok(None);
     };
-    let general_cart = GeneralCart::new(index_set, family_set, family_fn);
+    let index_cart = IndexCart::new(index_set, family_set, family_fn);
     Ok(
-        general_cart_member_pointwise_fact(
+        index_cart_member_pointwise_fact(
             runtime,
-            &general_cart,
+            &index_cart,
             &member,
             &normal_fact.line_file,
         )?
@@ -148,7 +148,7 @@ pub fn verify_choice_function_for_arg_types(
     let member_fn_set: Obj = FnSet::new(
         vec![runtime.fresh_param_group_with_set(vec![member_param_name], index_set.clone())?],
         vec![],
-        BigUnion::new(family_set.clone()).into(),
+        FamilyUnion::new(family_set.clone()).into(),
     )?
     .into();
     let requirements = vec![
@@ -184,7 +184,7 @@ pub fn verify_choice_function_for_arg_types(
             return Err(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     format!(
-                        "{} requires I and S to be sets, g in fn(alpha I)S, and f in fn(alpha I)big_union(S)",
+                        "{} requires I and S to be sets, g in fn(alpha I)S, and f in fn(alpha I)family_union(S)",
                         atomic_fact
                     ),
                     line_file.clone(),

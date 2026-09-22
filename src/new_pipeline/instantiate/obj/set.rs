@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 
-use crate::new_pipeline::ast::obj::{BigIntersect, BigUnion, Cart, CartDim, ClosedRange, FiniteSeqSet, FiniteSetMax, FiniteSetMin, FiniteSetReduce, FiniteSetSize, FnRange, GeneralCart, IndexIntersect, IndexUnion, Intersect, ListSet, Obj, PowerSet, Product, ProductOfFiniteSet, Proj, Range, Reduce, Replacement, SeqSet, SetMinus, Sum, SumOfFiniteSet, Tuple, TupleDim, Union, FiniteSetStat, FunctionSpace, IteratedOperator, ProductShape, SetFormer, SetOperator};
+use crate::new_pipeline::ast::obj::{FamilyIntersect, FamilyUnion, Cart, CartDim, ClosedRange, FiniteSeqSet, FiniteSetMax, FiniteSetMin, FiniteSetReduce, FiniteSetSize, FnRange, IndexCart, IndexIntersect, IndexUnion, Intersect, ListSet, Obj, PowerSet, Product, ProductOfFiniteSet, Proj, Range, Reduce, SeqSet, SetMinus, Sum, SumOfFiniteSet, Tuple, TupleDim, Union, FiniteSetStat, FunctionSpace, IteratedOperator, ProductShape, SetFormer, SetOperator};
 use crate::new_pipeline::runtime::Runtime;
 
 use super::super::error::InstError;
@@ -47,25 +47,25 @@ impl Runtime {
 }
 
 
-    pub(crate) fn inst_big_union_obj(
+    pub(crate) fn inst_family_union_obj(
         &mut self,
-        a: &BigUnion,
+        a: &FamilyUnion,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::SetOperator(SetOperator::BigUnion(BigUnion {
+    Ok(Obj::SetOperator(SetOperator::FamilyUnion(FamilyUnion {
         left: Box::new(self.inst_obj_rec(&a.left, param_to_arg_map)?),
     })))
 }
 
 
-    pub(crate) fn inst_big_intersect_obj(
+    pub(crate) fn inst_family_intersect_obj(
         &mut self,
-        a: &BigIntersect,
+        a: &FamilyIntersect,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::SetOperator(SetOperator::BigIntersect(BigIntersect {
+    Ok(Obj::SetOperator(SetOperator::FamilyIntersect(FamilyIntersect {
         left: Box::new(self.inst_obj_rec(&a.left, param_to_arg_map)?),
     })))
 }
@@ -111,13 +111,13 @@ impl Runtime {
 }
 
 
-    pub(crate) fn inst_general_cart_obj(
+    pub(crate) fn inst_index_cart_obj(
         &mut self,
-        a: &GeneralCart,
+        a: &IndexCart,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-    Ok(Obj::SetOperator(SetOperator::GeneralCart(GeneralCart {
+    Ok(Obj::SetOperator(SetOperator::IndexCart(IndexCart {
         index_set: Box::new(self.inst_obj_rec(&a.index_set, param_to_arg_map)?),
         family_set: Box::new(self.inst_obj_rec(&a.family_set, param_to_arg_map)?),
         family_fn: Box::new(self.inst_obj_rec(&a.family_fn, param_to_arg_map)?),
@@ -248,19 +248,6 @@ impl Runtime {
     ) -> Result<Obj, InstError> {
     Ok(Obj::FunctionSpace(FunctionSpace::FnRange(FnRange {
         function: Box::new(self.inst_obj_rec(&a.function, param_to_arg_map)?),
-    })))
-}
-
-
-    pub(crate) fn inst_replacement_obj(
-        &mut self,
-        a: &Replacement,
-        param_to_arg_map: &HashMap<IdentifierId, Obj>,
-
-    ) -> Result<Obj, InstError> {
-    Ok(Obj::SetFormer(SetFormer::Replacement(Replacement {
-        prop_name: a.prop_name.clone(),
-        source_set: Box::new(self.inst_obj_rec(&a.source_set, param_to_arg_map)?),
     })))
 }
 

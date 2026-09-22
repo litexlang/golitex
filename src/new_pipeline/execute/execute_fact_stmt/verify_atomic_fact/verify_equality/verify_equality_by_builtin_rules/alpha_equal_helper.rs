@@ -6,7 +6,7 @@ use crate::new_pipeline::ast::fact::{
     QuantifierFreeFact,
 };
 use crate::new_pipeline::ast::names::BoundName;
-use crate::new_pipeline::ast::obj::{AnonymousFn, FnObj, FnObjHead, FnSet, IdentifierObj, IntervalObj, Obj, OneSideInfinityIntervalObj, SetBuilder, ArithmeticOperator, ComplexOperator, ExpLogOperator, FiniteSetStat, FunctionSpace, IntegerOperator, IteratedOperator, Literal, ProductShape, SetFormer, SetOperator, Structish, TrigOperator};
+use crate::new_pipeline::ast::obj::{AnonymousFn, FnObj, FnObjHead, FnSet, IdentifierObj, IntervalObj, Obj, OneSideInfinityIntervalObj, SetBuilder, ArithmeticOperator, ComplexOperator, ExpLogOperator, FiniteSetStat, FunctionSpace, IntegerOperator, IteratedOperator, Literal, ProductShape, SetFormer, SetOperator, StructAndFieldAccessObj, TrigOperator};
 use crate::new_pipeline::ast::param::SetBoundParameterList;
 use crate::new_pipeline::exec_env::KnownEqualToObjWithFreeParamsShape;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
@@ -159,8 +159,8 @@ fn objs_alpha_equal(left: &Obj, right: &Obj, map: &HashMap<IdentifierId, Identif
         (Obj::ComplexOperator(ComplexOperator::ImaginaryPart(l)), Obj::ComplexOperator(ComplexOperator::ImaginaryPart(r))) => objs_alpha_equal(&l.arg, &r.arg, map),
         (Obj::ComplexOperator(ComplexOperator::ComplexAbs(l)), Obj::ComplexOperator(ComplexOperator::ComplexAbs(r))) => objs_alpha_equal(&l.arg, &r.arg, map),
         (Obj::ExpLogOperator(ExpLogOperator::Sqrt(l)), Obj::ExpLogOperator(ExpLogOperator::Sqrt(r))) => objs_alpha_equal(&l.arg, &r.arg, map),
-        (Obj::SetOperator(SetOperator::BigUnion(l)), Obj::SetOperator(SetOperator::BigUnion(r))) => objs_alpha_equal(&l.left, &r.left, map),
-        (Obj::SetOperator(SetOperator::BigIntersect(l)), Obj::SetOperator(SetOperator::BigIntersect(r))) => objs_alpha_equal(&l.left, &r.left, map),
+        (Obj::SetOperator(SetOperator::FamilyUnion(l)), Obj::SetOperator(SetOperator::FamilyUnion(r))) => objs_alpha_equal(&l.left, &r.left, map),
+        (Obj::SetOperator(SetOperator::FamilyIntersect(l)), Obj::SetOperator(SetOperator::FamilyIntersect(r))) => objs_alpha_equal(&l.left, &r.left, map),
         (Obj::ArithmeticOperator(ArithmeticOperator::Pow(l)), Obj::ArithmeticOperator(ArithmeticOperator::Pow(r))) => {
             objs_alpha_equal(&l.base, &r.base, map) && objs_alpha_equal(&l.exponent, &r.exponent, map)
         }
@@ -178,7 +178,7 @@ fn objs_alpha_equal(left: &Obj, right: &Obj, map: &HashMap<IdentifierId, Identif
                 && objs_alpha_equal(&l.family_fn, &r.family_fn, map)
         }
         (Obj::SetOperator(SetOperator::PowerSet(l)), Obj::SetOperator(SetOperator::PowerSet(r))) => objs_alpha_equal(&l.set, &r.set, map),
-        (Obj::SetOperator(SetOperator::GeneralCart(l)), Obj::SetOperator(SetOperator::GeneralCart(r))) => {
+        (Obj::SetOperator(SetOperator::IndexCart(l)), Obj::SetOperator(SetOperator::IndexCart(r))) => {
             objs_alpha_equal(&l.index_set, &r.index_set, map)
                 && objs_alpha_equal(&l.family_set, &r.family_set, map)
                 && objs_alpha_equal(&l.family_fn, &r.family_fn, map)
@@ -196,9 +196,6 @@ fn objs_alpha_equal(left: &Obj, right: &Obj, map: &HashMap<IdentifierId, Identif
         }
         (Obj::ProductShape(ProductShape::TupleDim(l)), Obj::ProductShape(ProductShape::TupleDim(r))) => objs_alpha_equal(&l.arg, &r.arg, map),
         (Obj::FunctionSpace(FunctionSpace::FnRange(l)), Obj::FunctionSpace(FunctionSpace::FnRange(r))) => objs_alpha_equal(&l.function, &r.function, map),
-        (Obj::SetFormer(SetFormer::Replacement(l)), Obj::SetFormer(SetFormer::Replacement(r))) => {
-            l.prop_name == r.prop_name && objs_alpha_equal(&l.source_set, &r.source_set, map)
-        }
         (Obj::IteratedOperator(IteratedOperator::Sum(l)), Obj::IteratedOperator(IteratedOperator::Sum(r))) => {
             objs_alpha_equal(&l.start, &r.start, map)
                 && objs_alpha_equal(&l.end, &r.end, map)
@@ -241,13 +238,13 @@ fn objs_alpha_equal(left: &Obj, right: &Obj, map: &HashMap<IdentifierId, Identif
             objs_alpha_equal(&l.obj, &r.obj, map) && objs_alpha_equal(&l.index, &r.index, map)
         }
         (Obj::StandardSet(l), Obj::StandardSet(r)) => l == r,
-        (Obj::Structish(Structish::StructObj(l)), Obj::Structish(Structish::StructObj(r))) => {
+        (Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(l)), Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(r))) => {
             l.name == r.name && objs_slice_alpha_equal(&l.params, &r.params, map)
         }
-        (Obj::Structish(Structish::FieldAccess(l)), Obj::Structish(Structish::FieldAccess(r))) => {
+        (Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(l)), Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(r))) => {
             l.fields == r.fields && objs_alpha_equal(l.obj.as_ref(), r.obj.as_ref(), map)
         }
-        (Obj::Structish(Structish::InstantiatedTemplateObj(l)), Obj::Structish(Structish::InstantiatedTemplateObj(r))) => {
+        (Obj::InstantiatedTemplateObj(l), Obj::InstantiatedTemplateObj(r)) => {
             l.template_name == r.template_name && objs_slice_alpha_equal(&l.args, &r.args, map)
         }
         (Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(l)), Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(r))) => {

@@ -257,7 +257,7 @@ impl StmtResultToLeanCompiler {
                     Err("Zorn-lemma Result compilation requires an exact set-valued-family and chain-upper-bound target ABI".into())
                 }
                 SuccessByStmtResult::ByAxiomOfChoiceStmt(_) => {
-                    Err("axiom-of-choice Result compilation requires an exact dependent set-valued-family and BigUnion target ABI".into())
+                    Err("axiom-of-choice Result compilation requires an exact dependent set-valued-family and FamilyUnion target ABI".into())
                 }
                 SuccessByStmtResult::ByRegularityAxiomStmt(_) => {
                     Err("regularity-axiom Result compilation is unavailable without a reviewed native Lean foundation theorem or an explicitly permitted project axiom".into())

@@ -191,7 +191,7 @@ pub(in super::super) fn object_ir_is_independent_of_symbols(
         LeanTargetObjectRepresentation::CartesianProduct { factors } => factors
             .iter()
             .all(|factor| object_ir_is_independent_of_symbols(factor, symbol_ids)),
-        LeanTargetObjectRepresentation::GeneralCartesianProduct {
+        LeanTargetObjectRepresentation::IndexCartesianProduct {
             index_set,
             family_set,
             family_function,

@@ -10,7 +10,7 @@
 use std::collections::HashMap;
 
 use crate::new_pipeline::ast::fact::{
-    exist_fact_family_to_fact, AtomicFact, ExistFactFamily, Fact, InFact, PlainExistFact,
+    exist_shaped_fact_to_fact, AtomicFact, ExistShapedFact, Fact, InFact, PlainExistFact,
 };
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::param::ParamType;
@@ -107,11 +107,11 @@ impl Runtime {
         stmt: &WitnessExistFact,
     ) -> RuntimeResult<ExecWitnessExistFactStmtResult> {
         match self.check_witness_exist_obligations(
-            &stmt.exist_fact_in_witness,
+            &stmt.exist_shaped_fact_in_witness,
             &stmt.equal_tos,
         )? {
             Ok(exist_check) => {
-                let exist_as_fact = exist_fact_family_to_fact(&stmt.exist_fact_in_witness);
+                let exist_as_fact = exist_shaped_fact_to_fact(&stmt.exist_shaped_fact_in_witness);
                 let store_and_infer_result = self.store_fact_and_infer(&exist_as_fact)?;
                 Ok(ExecWitnessExistFactStmtResult::Success(
                     ExecWitnessExistFactStmtSuccessResult {
@@ -128,7 +128,7 @@ impl Runtime {
     // Same WD / type / body / uniqueness checks as `witness exist`, without storing.
     pub(in crate::new_pipeline::execute) fn check_witness_exist_obligations(
         &mut self,
-        exist_fact: &ExistFactFamily,
+        exist_fact: &ExistShapedFact,
         equal_tos: &[Obj],
     ) -> RuntimeResult<Result<WitnessExistCheckSuccess, ExecWitnessExistFactStmtFailed>> {
         let verify_state = VerifyState {
@@ -138,8 +138,8 @@ impl Runtime {
         };
 
         let plain = match exist_fact {
-            ExistFactFamily::Exist(p) | ExistFactFamily::ExistUnique(p) => p,
-            ExistFactFamily::NotExist(_) => {
+            ExistShapedFact::Exist(p) | ExistShapedFact::ExistUnique(p) => p,
+            ExistShapedFact::NotExist(_) => {
                 return Err(RuntimeError::Unsupported(
                     "witness exist: `not exist` cannot be introduced by witness".to_string(),
                 ));
@@ -193,7 +193,7 @@ impl Runtime {
                 }
             };
 
-        let uniqueness_check = if matches!(exist_fact, ExistFactFamily::ExistUnique(_)) {
+        let uniqueness_check = if matches!(exist_fact, ExistShapedFact::ExistUnique(_)) {
             let uniqueness = self.build_exist_unique_uniqueness_forall_fact(plain)?;
             let uniqueness_as_fact = Fact::ForallFact(uniqueness);
             let verify_result = self.verify_fact(&uniqueness_as_fact, verify_state)?;

@@ -1,10 +1,7 @@
 //! Set-construction object WD.
 //! Light legacy requirements: CartDim/Proj/TupleDim, ListSet pairwise !=,
-//! FiniteSetSize/Max/Min, Interval/Ray in R, Index*/GeneralCart `$is_set` +
+//! FiniteSetSize/Max/Min, Interval/Ray in R, Index*/IndexCart `$is_set` +
 //! family ∈ FnSet (registration half). Union/PowerSet/Cart/Tuple stay children-only.
-//!
-//! Replacement is stricter in intent: Manual requires functionality of P on A
-//! before the image object is WD (not only `source_set` children WD).
 
 use super::entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
 use super::fail_to_verify_obj_well_defined::*;
@@ -14,9 +11,9 @@ use crate::new_pipeline::ast::fact::{
     AtomicFact, IsCartFact, IsTupleFact, LessEqualFact, NotEqualFact,
 };
 use crate::new_pipeline::ast::obj::{
-    BigIntersect, BigUnion, Cart, CartDim, FiniteSetMax, FiniteSetMin, FiniteSetSize, GeneralCart,
+    FamilyIntersect, FamilyUnion, Cart, CartDim, FiniteSetMax, FiniteSetMin, FiniteSetSize, IndexCart,
     IndexIntersect, IndexUnion, Intersect, IntervalObj, IntervalObjStruct, ListSet, Obj,
-    OneSideInfinityIntervalObj, PowerSet, ProductShape, Proj, Replacement, SetMinus,
+    OneSideInfinityIntervalObj, PowerSet, ProductShape, Proj, SetMinus,
     SetOperator, StandardSet, Tuple, TupleDim, Union,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
@@ -56,16 +53,16 @@ impl Runtime {
             verify_state,
         )
     }
-    pub(super) fn verify_big_union_obj_well_definedness_by_def(
+    pub(super) fn verify_family_union_obj_well_definedness_by_def(
         &mut self,
-        value: &BigUnion,
+        value: &FamilyUnion,
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_unary_obj_well_definedness_by_def(value.left.as_ref(), verify_state)
     }
-    pub(super) fn verify_big_intersect_obj_well_definedness_by_def(
+    pub(super) fn verify_family_intersect_obj_well_definedness_by_def(
         &mut self,
-        value: &BigIntersect,
+        value: &FamilyIntersect,
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_unary_obj_well_definedness_by_def(value.left.as_ref(), verify_state)
@@ -209,29 +206,29 @@ impl Runtime {
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_unary_obj_well_definedness_by_def(value.set.as_ref(), verify_state)
     }
-    // general_cart(I, S, g): children, `$is_set(I)`, `$is_nonempty_set(S)`, then g ∈ FnSet.
-    // Example: after `let g = fn(alpha {1}) power_set(N) {{1}}`, `general_cart({1}, power_set(N), g)` is WD.
+    // index_cart(I, S, g): children, `$is_set(I)`, `$is_nonempty_set(S)`, then g ∈ FnSet.
+    // Example: after `let g = fn(alpha {1}) power_set(N) {{1}}`, `index_cart({1}, power_set(N), g)` is WD.
     // Full legacy also checks `g $in fn(alpha I) S` (deferred).
-    pub(super) fn verify_general_cart_obj_well_definedness(
+    pub(super) fn verify_index_cart_obj_well_definedness(
         &mut self,
-        value: &GeneralCart,
+        value: &IndexCart,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
         let stages =
-            self.verify_general_cart_obj_well_definedness_by_def(value, verify_state.clone())?;
+            self.verify_index_cart_obj_well_definedness_by_def(value, verify_state.clone())?;
         if !stages.is_fully_known() {
             return Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::SetOperator(FailToVerifySetOperatorObjWellDefinedResult::GeneralCart(
-                    FailToVerifyGeneralCartObjWellDefined::Domain(
-                        stages.into_common_fail(&Obj::SetOperator(SetOperator::GeneralCart(value.clone()))),
+                FailToVerifyObjWellDefinedResult::SetOperator(FailToVerifySetOperatorObjWellDefinedResult::IndexCart(
+                    FailToVerifyIndexCartObjWellDefined::Domain(
+                        stages.into_common_fail(&Obj::SetOperator(SetOperator::IndexCart(value.clone()))),
                     ),
                 )),
             ));
         }
         if !self.obj_has_in_function_set(value.family_fn.as_ref()) {
             return Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::SetOperator(FailToVerifySetOperatorObjWellDefinedResult::GeneralCart(
-                    FailToVerifyGeneralCartObjWellDefined::NotInFunctionSet,
+                FailToVerifyObjWellDefinedResult::SetOperator(FailToVerifySetOperatorObjWellDefinedResult::IndexCart(
+                    FailToVerifyIndexCartObjWellDefined::NotInFunctionSet,
                 )),
             ));
         }
@@ -239,18 +236,18 @@ impl Runtime {
             let wd_id = self.ids.allocate_well_definedness_id();
             self.top_exec_env_mut()
                 .well_defined_objects
-                .record(Obj::SetOperator(SetOperator::GeneralCart(value.clone())), wd_id);
+                .record(Obj::SetOperator(SetOperator::IndexCart(value.clone())), wd_id);
         }
         Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef(
-            ObjWellDefinedProofByDef::SetOperator(SetOperatorObjWellDefinedProofByDef::GeneralCart(GeneralCartObjWellDefinedProof::from_stages(
+            ObjWellDefinedProofByDef::SetOperator(SetOperatorObjWellDefinedProofByDef::IndexCart(IndexCartObjWellDefinedProof::from_stages(
                 stages,
             ))),
         )))
     }
 
-    fn verify_general_cart_obj_well_definedness_by_def(
+    fn verify_index_cart_obj_well_definedness_by_def(
         &mut self,
-        value: &GeneralCart,
+        value: &IndexCart,
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         let proof = self.verify_objs_as_children(
@@ -266,7 +263,7 @@ impl Runtime {
             value.index_set.as_ref(),
             verify_state.clone(),
             format!(
-                "general_cart: index {} is not a set",
+                "index_cart: index {} is not a set",
                 value.index_set.ir()
             ),
         )?);
@@ -274,7 +271,7 @@ impl Runtime {
             value.family_set.as_ref(),
             verify_state,
             format!(
-                "general_cart: family {} is not a nonempty set",
+                "index_cart: family {} is not a nonempty set",
                 value.family_set.ir()
             ),
         )?);
@@ -476,14 +473,6 @@ impl Runtime {
             format!("finite_set_min requires a finite nonempty set, got {}", value.set.ir()),
         )?);
         Ok(self.with_requirements(proof, reqs))
-    }
-    pub(super) fn verify_replacement_obj_well_definedness_by_def(
-        &mut self,
-        value: &Replacement,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
-        // TODO: Manual also requires functionality of `prop_name` on `source_set`.
-        self.verify_unary_obj_well_definedness_by_def(value.source_set.as_ref(), verify_state)
     }
     // one-sided ray: endpoint WD + endpoint $in R.
     pub(super) fn verify_one_side_infinity_interval_obj_well_definedness_by_def(

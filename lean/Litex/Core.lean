@@ -2496,22 +2496,22 @@ proof-free object terms plus reflexive equality. Their native ABI therefore
 uses operator-specific typed syntax values until a verifier-owned semantic
 membership adapter is selected; this is deliberately not a universal object
 box. -/
-structure BigUnionExpr (family : Type u) where
+structure FamilyUnionExpr (family : Type u) where
   source : family
 
-structure BigIntersectExpr (family : Type u) where
+structure FamilyIntersectExpr (family : Type u) where
   source : family
 
-def bigUnion (family : alpha) : BigUnionExpr alpha := ⟨family⟩
-def bigIntersect (family : alpha) : BigIntersectExpr alpha := ⟨family⟩
+def familyUnion (family : alpha) : FamilyUnionExpr alpha := ⟨family⟩
+def familyIntersect (family : alpha) : FamilyIntersectExpr alpha := ⟨family⟩
 
-structure GeneralCartExpr (index : Type u) (family : Type v) (selector : Type w) where
+structure IndexCartExpr (index : Type u) (family : Type v) (selector : Type w) where
   indexSet : index
   familySet : family
   familyFunction : selector
 
-def generalCart (index : alpha) (family : beta) (selector : gamma) :
-    GeneralCartExpr alpha beta gamma :=
+def indexCart (index : alpha) (family : beta) (selector : gamma) :
+    IndexCartExpr alpha beta gamma :=
   ⟨index, family, selector⟩
 
 /-- The mathematical value of a Litex sum over the inclusive integer interval.

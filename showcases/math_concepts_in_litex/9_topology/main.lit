@@ -2,7 +2,7 @@
 # Topology — open sets and continuity, setting-first.
 #
 # All set constructions below are native Litex objects.  In particular,
-# arbitrary unions use big_union and preimages use set builders.
+# arbitrary unions use family_union and preimages use set builders.
 # Included: topology laws, finite unions, continuity and composition, the
 # closed-preimage characterization, compactness, and continuous compact images.
 
@@ -16,7 +16,7 @@ setting TopologicalSpaceSetting(X set, open_sets power_set(power_set(X))):
     forall family power_set(power_set(X)):
         family $subset open_sets
         =>:
-            big_union(family) $in open_sets
+            family_union(family) $in open_sets
 
 prop is_topology_on([TopologicalSpaceSetting])
 
@@ -46,11 +46,11 @@ thm topology_binary_union:
                     candidate $in open_sets
         by def:
             ? family $subset open_sets
-    big_union(family) $in open_sets
+    family_union(family) $in open_sets
     by extension:
-        ? big_union(family) = union(A, B)
+        ? family_union(family) = union(A, B)
         claim:
-            ? forall point big_union(family):
+            ? forall point family_union(family):
                 point $in union(A, B)
             obtain candidate from exist candidate family st {point $in candidate}
             candidate $in {choice power_set(X): choice = A or choice = B}
@@ -65,20 +65,20 @@ thm topology_binary_union:
                     point $in union(A, B)
         claim:
             ? forall point union(A, B):
-                point $in big_union(family)
+                point $in family_union(family)
             point $in A or point $in B
             by cases:
-                ? point $in big_union(family)
+                ? point $in family_union(family)
                 case point $in A:
                     A = A or A = B
                     by thm set_builder_member(A, {choice power_set(X): choice = A or choice = B}) => A $in {choice power_set(X): choice = A or choice = B}
                     A $in family
-                    point $in big_union(family)
+                    point $in family_union(family)
                 case point $in B:
                     B = A or B = B
                     by thm set_builder_member(B, {choice power_set(X): choice = A or choice = B}) => B $in {choice power_set(X): choice = A or choice = B}
                     B $in family
-                    point $in big_union(family)
+                    point $in family_union(family)
 
 setting TopologicalMapSetting([TopologicalSpaceSetting(X, open_sets_X)], [TopologicalSpaceSetting(Y, open_sets_Y)], f fn(x X) Y)
 
@@ -281,9 +281,9 @@ thm closed_preimages_imply_continuous:
 
 prop is_compact_subset([TopologicalSpaceSetting], K power_set(X)):
     forall Index set, cover fn(index Index) open_sets:
-        K $subset big_union(fn_range(cover))
+        K $subset family_union(fn_range(cover))
         =>:
-            exist J power_set(Index) st {$is_finite_set(J), K $subset big_union(fn_range(fn(index J) open_sets {cover(index)}))}
+            exist J power_set(Index) st {$is_finite_set(J), K $subset family_union(fn_range(fn(index J) open_sets {cover(index)}))}
 
 # Pull an open cover of f(K) back to K, choose a finite subcover there, and
 # push those finitely many open sets forward to cover the image.
@@ -295,19 +295,19 @@ thm continuous_image_of_compact_is_compact:
     let image_map = fn(source K) Y {f(source)}
     claim:
         ? forall Index set, cover fn(index Index) open_sets_Y:
-            fn_range(fn(x K) Y {f(x)}) $subset big_union(fn_range(cover))
+            fn_range(fn(x K) Y {f(x)}) $subset family_union(fn_range(cover))
             =>:
-                exist J power_set(Index) st {$is_finite_set(J), fn_range(fn(x K) Y {f(x)}) $subset big_union(fn_range(fn(index J) open_sets_Y {cover(index)}))}
+                exist J power_set(Index) st {$is_finite_set(J), fn_range(fn(x K) Y {f(x)}) $subset family_union(fn_range(fn(index J) open_sets_Y {cover(index)}))}
         have fn pullback_cover(index Index) open_sets_X = {x X: f(x) $in cover(index)}
         claim:
-            ? K $subset big_union(fn_range(pullback_cover))
+            ? K $subset family_union(fn_range(pullback_cover))
             claim:
                 ? forall point K:
-                    point $in big_union(fn_range(pullback_cover))
+                    point $in family_union(fn_range(pullback_cover))
                 image_map(point) $in fn_range(image_map)
                 image_map(point) = f(point)
                 f(point) $in fn_range(image_map)
-                f(point) $in big_union(fn_range(cover))
+                f(point) $in family_union(fn_range(cover))
                 obtain target_open from exist target_open fn_range(cover) st {f(point) $in target_open}
                 have by preimage selected_index from target_open $in fn_range(cover)
                 target_open = cover(selected_index)
@@ -316,23 +316,23 @@ thm continuous_image_of_compact_is_compact:
                 pullback_cover(selected_index) = {x X: f(x) $in cover(selected_index)}
                 point $in pullback_cover(selected_index)
                 pullback_cover(selected_index) $in fn_range(pullback_cover)
-                point $in big_union(fn_range(pullback_cover))
+                point $in family_union(fn_range(pullback_cover))
             by def:
-                ? K $subset big_union(fn_range(pullback_cover))
-        exist J power_set(Index) st {$is_finite_set(J), K $subset big_union(fn_range(fn(index J) open_sets_X {pullback_cover(index)}))}
-        obtain J from exist J power_set(Index) st {$is_finite_set(J), K $subset big_union(fn_range(fn(index J) open_sets_X {pullback_cover(index)}))}
-        witness exist finite_indices power_set(Index) st {$is_finite_set(finite_indices), fn_range(fn(x K) Y {f(x)}) $subset big_union(fn_range(fn(index finite_indices) open_sets_Y {cover(index)}))} from J:
+                ? K $subset family_union(fn_range(pullback_cover))
+        exist J power_set(Index) st {$is_finite_set(J), K $subset family_union(fn_range(fn(index J) open_sets_X {pullback_cover(index)}))}
+        obtain J from exist J power_set(Index) st {$is_finite_set(J), K $subset family_union(fn_range(fn(index J) open_sets_X {pullback_cover(index)}))}
+        witness exist finite_indices power_set(Index) st {$is_finite_set(finite_indices), fn_range(fn(x K) Y {f(x)}) $subset family_union(fn_range(fn(index finite_indices) open_sets_Y {cover(index)}))} from J:
             $is_finite_set(J)
             claim:
-                ? fn_range(image_map) $subset big_union(fn_range(fn(index J) open_sets_Y {cover(index)}))
+                ? fn_range(image_map) $subset family_union(fn_range(fn(index J) open_sets_Y {cover(index)}))
                 claim:
                     ? forall image_point fn_range(image_map):
-                        image_point $in big_union(fn_range(fn(index J) open_sets_Y {cover(index)}))
+                        image_point $in family_union(fn_range(fn(index J) open_sets_Y {cover(index)}))
                     have by preimage source_point from image_point $in fn_range(image_map)
                     source_point $in K
                     image_point = image_map(source_point)
                     image_map(source_point) = f(source_point)
-                    source_point $in big_union(fn_range(fn(index J) open_sets_X {pullback_cover(index)}))
+                    source_point $in family_union(fn_range(fn(index J) open_sets_X {pullback_cover(index)}))
                     obtain source_open from exist source_open fn_range(fn(index J) open_sets_X {pullback_cover(index)}) st {source_point $in source_open}
                     have by preimage selected_index from source_open $in fn_range(fn(index J) open_sets_X {pullback_cover(index)})
                     selected_index $in J
@@ -348,7 +348,7 @@ thm continuous_image_of_compact_is_compact:
                     image_point $in cover(selected_index)
                     witness exist target_open fn_range(fn(index J) open_sets_Y {cover(index)}) st {image_point $in target_open} from cover(selected_index):
                         image_point $in cover(selected_index)
-                    image_point $in big_union(fn_range(fn(index J) open_sets_Y {cover(index)}))
+                    image_point $in family_union(fn_range(fn(index J) open_sets_Y {cover(index)}))
                 by def:
-                    ? fn_range(image_map) $subset big_union(fn_range(fn(index J) open_sets_Y {cover(index)}))
+                    ? fn_range(image_map) $subset family_union(fn_range(fn(index J) open_sets_Y {cover(index)}))
     by def $is_compact_subset(Y, open_sets_Y, fn_range(fn(x K) Y {f(x)}))

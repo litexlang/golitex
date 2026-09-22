@@ -460,11 +460,11 @@ by def {x R: 0 <= x} $subset R
 | `{x S: facts}` | Set comprehension over `S` |
 | `union(A, B)`, `intersect(A, B)` | Binary union and intersection |
 | `set_minus(A, B)` | Relative complement; write symmetric difference as `union(set_minus(A, B), set_minus(B, A))` |
-| `big_union(F)`, `big_intersect(F)` | Union or intersection of a family |
+| `family_union(F)`, `family_intersect(F)` | Union or intersection of a family (formerly `big_union` / `big_intersect`) |
 | `index_union(I, X, A)`, `index_intersect(I, X, A)` | Union or intersection of the set-valued family `A : I -> power_set(X)`, with explicit ambient set `X` |
 | `power_set(A)` | Set of subsets of `A` |
 | `replacement(P, A)` | Replacement set defined by a functional predicate `P` |
-| `general_cart(I, S, g)` | Choice functions selecting one value from each factor `g(alpha)` |
+| `index_cart(I, S, g)` | Choice functions selecting one value from each factor `g(alpha)` (formerly `general_cart`) |
 
 The suffix must be adjacent to its base. These compact forms are canonical;
 the verifier prints the same spelling.
@@ -504,7 +504,7 @@ prop below_all_squares(a R):
 have lower_bounds set = {a R: $below_all_squares(a)}
 ```
 
-For a family `g` of nonempty sets indexed by `I`, `general_cart(I, S, g)` is
+For a family `g` of nonempty sets indexed by `I`, `index_cart(I, S, g)` is
 the set of choice functions selecting an element of each `g(alpha)`:
 
 ```litex
@@ -513,8 +513,8 @@ have S nonempty_set
 trust forall A S => $is_nonempty_set(A)
 have g fn(alpha I) S
 
-release thm general_cart_nonempty_by_choice_from_family(general_cart(I, S, g))
-have f general_cart(I, S, g)
+release thm index_cart_nonempty_by_choice_from_family(index_cart(I, S, g))
+have f index_cart(I, S, g)
 $is_choice_function_for(I, S, g, f)
 forall alpha I:
     f(alpha) $in g(alpha)
@@ -524,7 +524,7 @@ The `trust` line makes the required factor-nonemptiness background explicit,
 and the named builtin theorem makes the axiom-of-choice step explicit.
 The quantified selection condition has the named builtin interface
 `$is_choice_function_for(I, S, g, f)`. Its definition is
-`forall alpha I: f(alpha) $in g(alpha)`, and `general_cart` has the canonical
+`forall alpha I: f(alpha) $in g(alpha)`, and `index_cart` has the canonical
 atomic-filter expansion
 
 ```litex
@@ -533,7 +533,7 @@ have S nonempty_set
 trust forall A S => $is_nonempty_set(A)
 have g fn(alpha I) S
 
-general_cart(I, S, g) = {f fn(f_index I)big_union(S): $is_choice_function_for(I, S, g, f)}
+index_cart(I, S, g) = {f fn(f_index I)family_union(S): $is_choice_function_for(I, S, g, f)}
 ```
 
 General-cart membership exposes both the named predicate and its pointwise
@@ -546,8 +546,8 @@ similar set-valued syntax does not make them interchangeable:
 
 | Object | Construction requirement | Membership behavior |
 |---|---|---|
-| `big_union(F)` | `F` must be a well-defined family expression. | `A $in F` and `x $in A` introduce `x $in big_union(F)`. Conversely, known union membership exposes `exist A F st {x $in A}`. |
-| `big_intersect(F)` | `F` must be a well-defined family expression. | The current kernel has no matching automatic introduction/elimination package. Supply the needed family-membership theorem or facts explicitly. |
+| `family_union(F)` | `F` must be a well-defined family expression. | `A $in F` and `x $in A` introduce `x $in family_union(F)`. Conversely, known union membership exposes `exist A F st {x $in A}`. |
+| `family_intersect(F)` | `F` must be a well-defined family expression. | The current kernel has no matching automatic introduction/elimination package. Supply the needed family-membership theorem or facts explicitly. |
 | `index_union(I, X, A)` | `I` and `X` are sets and `A $in fn(index I) power_set(X)`. The function domain must be exactly `I`. | `x $in A(i)` for one `i $in I` introduces membership. Stored membership exposes `exist i I st {x $in A(i)}` and `x $in X`. The result belongs to `power_set(X)`. |
 | `index_intersect(I, X, A)` | Same signature as `index_union`; `I` may be empty. | `x $in X` together with `forall i I: x $in A(i)` introduces membership. Stored membership exposes both facts. The result belongs to `power_set(X)`. |
 | `replacement(P, A)` | `P` must be a binary user `prop`/`abstract_prop`; the context must already prove that each `x $in A` has at most one set-valued output. | A known relation witness introduces membership. Known membership exposes `exist x A st {$P(x, y)}`, and `have by preimage` gives that witness a name. |
@@ -562,8 +562,8 @@ index_intersect({}, N, empty_family) = N
 ```
 
 For compatibility with the older family-object forms,
-`index_union(I, X, A) = big_union(fn_range(A))`. The analogous
-`big_intersect(fn_range(A))` bridge is available when `I` is nonempty; the
+`index_union(I, X, A) = family_union(fn_range(A))`. The analogous
+`family_intersect(fn_range(A))` bridge is available when `I` is nonempty; the
 three-argument object remains the canonical form when empty-index semantics
 matter.
 
@@ -590,7 +590,7 @@ cart(Z, set_minus(N, {1})) = set_minus(cart(Z, N), cart(Z, {1}))
 The matcher keeps one-way laws one-way. In particular, an indexed union of
 pointwise intersections is only contained in the intersection of the indexed
 unions; a union of powersets is only contained in the powerset of the union;
-and a pointwise-union `general_cart` only contains the union of the two
+and a pointwise-union `index_cart` only contains the union of the two
 products. For arbitrary `C`, the exact relative-complement law is
 
 ```text
@@ -611,10 +611,10 @@ forall x set, F set, A set:
     A $in F
     x $in A
     =>:
-        x $in big_union(F)
+        x $in family_union(F)
 
 forall x set, F set:
-    x $in big_union(F)
+    x $in family_union(F)
     =>:
         exist A F st {x $in A}
 ```
@@ -1275,7 +1275,7 @@ Every row also requires its subobjects to be well-defined.
 | A set operation | Its operands have the required set or family-of-sets shape. |
 | A set comprehension | The base is a set and every filter fact is well-defined. |
 | `replacement(P, A)` | `A` is a set and `P` gives a unique output for each input used. |
-| `general_cart(I, S, g)` | `I` is a set, `S` is nonempty, and `g $in fn(alpha I) S`; factor nonemptiness is needed for nonemptiness. |
+| `index_cart(I, S, g)` | `I` is a set, `S` is nonempty, and `g $in fn(alpha I) S`; factor nonemptiness is needed for nonemptiness. |
 | `fn(...) T` | Parameter domains, conditions, and return set `T` are well-defined. |
 | `fn(...) T {body}` | The function-space conditions hold, `body` is well-defined under them, and `body $in T` is provable there. |
 | `f(args)` | `f` has a known function set and the arguments satisfy all domains. |
@@ -2743,7 +2743,7 @@ introductions.
 | `release obj def I` | Preview (`new_pipeline`): `I` is one identifier (optionally `mod::export::`-qualified) with a `StoredIdentifierDefinition` other than a binder `ParamType`. | Re-stores that definition's type / equality / body / fn facts into the current Env (subjects use the written spelling of `I`). For `have fn … by exist!`, re-stores membership + property + uniqueness. |
 | Predicate-property registrations | The proof has the exact reflexive/symmetric/transitive predicate shape. | A reusable property route for later rewriting. |
 | `by regularity_axiom` | Its displayed set/nonemptiness obligations. Preview (`new_pipeline`): parse+exec wired; fact-only local proofs N/A (no body). | An explicitly trusted set-theoretic conclusion; strict mode rejects the step. |
-| `by axiom_of_choice` | The family is a set and every member is proved nonempty. Preview (`new_pipeline`): parse+exec wired; proof body is fact-only. | Stores `exist f fn(A S)big_union(S) st {$is_choice_function_for(S,S,fn(A S)S {A},f)}`. The existential body is atomic. |
+| `by axiom_of_choice` | The family is a set and every member is proved nonempty. Preview (`new_pipeline`): parse+exec wired; proof body is fact-only. | Stores `exist f fn(A S)family_union(S) st {$is_choice_function_for(S,S,fn(A S)S {A},f)}`. The existential body is atomic. |
 | `by zorn_lemma` | The set, binary relation, exact named upper-bound/maximality definitions, nonemptiness, partial-order laws, and chain-upper-bound obligation. Preview (`new_pipeline`): parse+exec wired; prop-definition equality uses IR alignment (no alpha_normalize yet). | Stores `exist m S st {$M(m)}` using the supplied named maximality prop. The chain witness likewise uses the supplied atomic upper-bound prop. |
 | Terminal `import` command | Only the interactive REPL command grammar and module constraints; it is not a statement. | A qualified environment in the REPL's ephemeral manifest; maintained modules use real manifests instead. |
 | `eval` | The expression belongs to the supported executable subset. | Evaluation output, not a new mathematical proof fact. |
@@ -3442,7 +3442,7 @@ by axiom_of_choice: set F:
     forall A F:
         $is_nonempty_set(A)
 
-obtain chooser from exist f fn(A F)big_union(F) st {$is_choice_function_for(F, F, fn(A F) F {A}, f)}
+obtain chooser from exist f fn(A F)family_union(F) st {$is_choice_function_for(F, F, fn(A F) F {A}, f)}
 forall A F:
     chooser(A) $in A
 ```
@@ -3487,8 +3487,8 @@ by zorn_lemma: set S, prop leq, prop upper_bound, prop maximal:
 obtain m from exist m S st {$maximal(m)}
 ```
 
-The choice-backed `general_cart_nonempty_by_choice_from_family` and
-`general_cart_nonempty_by_choice_from_pointwise` theorem interfaces remain
+The choice-backed `index_cart_nonempty_by_choice_from_family` and
+`index_cart_nonempty_by_choice_from_pointwise` theorem interfaces remain
 available when only nonemptiness of a general Cartesian product is needed.
 
 ### Reading verifier output
@@ -3543,9 +3543,9 @@ its stated requirements before storing the conclusion:
 | `release thm defined_set_member(x, S)` | `x $in S` after one stored set-valued definition |
 | `release thm struct_member(x, S)` | `x $in S` |
 | `release thm cart_member_from_coordinates(x, C)` | `x $in C` |
-| `release thm general_cart_member(x, G)` | `x $in G` |
-| `release thm general_cart_nonempty_by_choice_from_family(G)` | `$is_nonempty_set(G)` |
-| `release thm general_cart_nonempty_by_choice_from_pointwise(G)` | `$is_nonempty_set(G)` |
+| `release thm index_cart_member(x, G)` | `x $in G` |
+| `release thm index_cart_nonempty_by_choice_from_family(G)` | `$is_nonempty_set(G)` |
+| `release thm index_cart_nonempty_by_choice_from_pointwise(G)` | `$is_nonempty_set(G)` |
 | `release thm sum_le_sum_from_pointwise(L, R)` | `L <= R` |
 | `release thm finite_set_sum_le_from_pointwise(L, R)` | `L <= R` |
 | `release thm finite_set_summand_le_sum(L, R)` | `L <= R` |
@@ -3768,7 +3768,7 @@ aggregate, and remainder rows.
 | Powers and logarithms | Zero/one, exponent addition, iterated power, product power, negative exponent, roots, and inverse logarithm/power shapes are supported only in the carrier branches listed below. |
 | Remainder and divisibility | Special residues, Euclidean-remainder uniqueness, compatible nested moduli, and congruence under matching `+`, `-`, and `*` operands. `gcd(a,b)` divides both inputs, and `(a*b)%a=(a*b)%b=0` when the objects are well-defined. |
 | Set and cardinality objects | Union/intersection/difference algebra, intersection reduction from a known subset, cardinality of products, differences, unions and power sets, and empty-set equality from emptiness or zero finite cardinality. |
-| Tuples, Cartesian products, and matrices | Tuple reconstruction from Cartesian membership; tuple/cart equality from equal dimensions and projections; canonical `general_cart` expansion; matrix positive-power base and successor equations. |
+| Tuples, Cartesian products, and matrices | Tuple reconstruction from Cartesian membership; tuple/cart equality from equal dimensions and projections; canonical `index_cart` expansion; matrix positive-power base and successor equations. |
 | Functions and materialized definitions | Application equations, alpha-equivalent anonymous functions, pointwise `$fn_eq_in`/`$fn_eq`, same-signature function-set equality, and equality of materialized template or struct values when their resolved objects agree. |
 | Finite aggregates and reductions | Empty, singleton, endpoint, split, insertion/removal, distribution, congruence, and supported reindexing rules described under [Powers, logarithms, sums, products, and remainder](#powers-logarithms-sums-products-and-remainder). |
 
@@ -4031,10 +4031,10 @@ presentation.
 | Standard numeric carriers | Literal classification; the inclusion chain among signed/nonzero `N`, `Z`, `Q`, `R`, and `C`; arithmetic closure at the narrowest supported carrier; refinement from integer/real carrier plus known sign; nonmembership for resolved literals; `floor`/`ceil` in `Z`, `sign` in `Z`, `factorial(N)` in `N+`, and numeric carriers for gcd/lcm/extrema/aggregates. |
 | Displayed sets and builders | Equality with one displayed element introduces membership, and disequality from every element introduces nonmembership. Builder membership requires base membership and all instantiated defining facts; stored builder membership exposes those facts. A builder over a finite base is finite. |
 | Binary set operations | Either-side membership introduces union membership; intersection requires both sides; difference requires left membership and right nonmembership. Corresponding stored intersection/difference facts expose their component facts. |
-| Family and image operators | `big_union` uses a member-set witness; `index_union(I,X,A)` uses an index witness; `index_intersect(I,X,A)` uses ambient membership plus every indexed fiber; `replacement` uses its functional relation witness; `fn_range` uses a well-defined application. Stored membership exposes the corresponding existential or universal source described in the object section. |
+| Family and image operators | `family_union` uses a member-set witness; `index_union(I,X,A)` uses an index witness; `index_intersect(I,X,A)` uses ambient membership plus every indexed fiber; `replacement` uses its functional relation witness; `fn_range` uses a well-defined application. Stored membership exposes the corresponding existential or universal source described in the object section. |
 | Ranges and intervals | `range(a,b)` uses integer `a<=i<b`; `closed_range(a,b)` uses `a<=i<=b`. Real intervals require real membership plus their open/closed endpoint bounds. Half-infinite intervals impose only their displayed endpoint bound. |
 | Power sets and inclusions | `A $subset B` introduces `A $in power_set(B)`. A displayed set or builder belongs to a power set after its elements/base are contained. One directly known inclusion can lift an element into the target set. |
-| Products and indexed objects | Tuple membership checks every component against the corresponding Cartesian factor. General Cartesian membership checks a function into `big_union(S)` plus every indexed factor. Sequence and matrix literals check length/shape and every entry. Projection and index access inherit the selected carrier. |
+| Products and indexed objects | Tuple membership checks every component against the corresponding Cartesian factor. General Cartesian membership checks a function into `family_union(S)` plus every indexed factor. Sequence and matrix literals check length/shape and every entry. Projection and index access inherit the selected carrier. |
 | Functions and structs | A known function signature or matching anonymous signature supplies function-set membership and the instantiated return carrier of applications. Struct membership checks the named carrier and instantiated equivalent facts. A set-valued function/template definition may be unfolded once for membership. |
 
 The type-predicate layer classifies set structure separately:
@@ -4377,14 +4377,14 @@ Main families are:
 | `x $in union(A,B)` | `x $in A or x $in B` |
 | `x $in intersect(A,B)` | Both component memberships |
 | `x $in set_minus(A,B)` | `x $in A` and `not x $in B`; a singleton right side also yields the matching disequality |
-| `x $in big_union(F)` | `exist A F st {x $in A}` |
+| `x $in family_union(F)` | `exist A F st {x $in A}` |
 | `x $in index_union(I,X,A)` | `x $in X` and `exist i I st {x $in A(i)}` |
 | `x $in index_intersect(I,X,A)` | `x $in X` and `forall i I: x $in A(i)` |
 | `y $in replacement(P,A)` | `exist x A st {$P(x,y)}` |
 | `y $in fn_range(f)` | Membership in the defined codomain plus an existential preimage carrying every instantiated domain condition and `y=f(args)` |
 | `A $in power_set(B)` | `A $subset B` |
 | `x $in cart(A, B, ...)` | Tuple shape, dimension, and coordinate memberships |
-| `f $in general_cart(I,S,g)` | `f $in fn(index I) big_union(S)`, `$is_choice_function_for(I,S,g,f)`, and its pointwise factor-membership universal |
+| `f $in index_cart(I,S,g)` | `f $in fn(index I) family_union(S)`, `$is_choice_function_for(I,S,g,f)`, and its pointwise factor-membership universal |
 | `x $in range(a, b)` | Integer membership and half-open bounds |
 | `x $in closed_range(a, b)` | Integer membership and closed bounds |
 | `x` in a real interval | Real membership and endpoint bounds |

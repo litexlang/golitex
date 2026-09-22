@@ -547,8 +547,8 @@ impl Runtime {
             (Obj::SetMinus(left), Obj::SetMinus(right)) => {
                 compare_pairs!((&left.left, &right.left), (&left.right, &right.right),)
             }
-            (Obj::BigUnion(left), Obj::BigUnion(right)) => compare(&left.left, &right.left),
-            (Obj::BigIntersect(left), Obj::BigIntersect(right)) => compare(&left.left, &right.left),
+            (Obj::FamilyUnion(left), Obj::FamilyUnion(right)) => compare(&left.left, &right.left),
+            (Obj::FamilyIntersect(left), Obj::FamilyIntersect(right)) => compare(&left.left, &right.left),
             (Obj::PowerSet(left), Obj::PowerSet(right)) => compare(&left.set, &right.set),
             (Obj::CartDim(left), Obj::CartDim(right)) => compare(&left.set, &right.set),
             (Obj::TupleDim(left), Obj::TupleDim(right)) => compare(&left.arg, &right.arg),
@@ -652,7 +652,7 @@ impl Runtime {
             (Obj::Tuple(left), Obj::Tuple(right)) => compare_slices!(left.args, right.args),
             (Obj::ListSet(left), Obj::ListSet(right)) => compare_slices!(left.list, right.list),
             (Obj::Cart(left), Obj::Cart(right)) => compare_slices!(left.args, right.args),
-            (Obj::GeneralCart(left), Obj::GeneralCart(right)) => compare_pairs!(
+            (Obj::IndexCart(left), Obj::IndexCart(right)) => compare_pairs!(
                 (&left.index_set, &right.index_set),
                 (&left.family_set, &right.family_set),
                 (&left.family_fn, &right.family_fn),

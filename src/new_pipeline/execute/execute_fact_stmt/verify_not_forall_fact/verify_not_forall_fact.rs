@@ -21,7 +21,7 @@ impl Runtime {
         let Some(derived_exist) = self.not_forall_to_counterexample_exist(fact)? else {
             return Ok(not_forall_fact_result_from_unsupported(fact));
         };
-        let prove_derived_exist = self.verify_exist_fact(&derived_exist, verify_state)?;
+        let prove_derived_exist = self.verify_exist_shaped_fact(&derived_exist, verify_state)?;
         if prove_derived_exist.is_failed() {
             return Ok(not_forall_fact_result_from_exist_fail(
                 fact,

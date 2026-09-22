@@ -157,11 +157,11 @@ impl Runtime {
             Obj::SetMinus(value) => self
                 .verify_set_minus_well_defined_result(value, verify_state)
                 .map(Some),
-            Obj::BigUnion(value) => self
-                .verify_big_union_well_defined_result(value, verify_state)
+            Obj::FamilyUnion(value) => self
+                .verify_family_union_well_defined_result(value, verify_state)
                 .map(Some),
-            Obj::BigIntersect(value) => self
-                .verify_big_intersect_well_defined_result(value, verify_state)
+            Obj::FamilyIntersect(value) => self
+                .verify_family_intersect_well_defined_result(value, verify_state)
                 .map(Some),
             Obj::IndexUnion(value) => self
                 .verify_index_union_well_defined_result(value, verify_state)
@@ -205,8 +205,8 @@ impl Runtime {
             Obj::PowerSet(value) => self
                 .verify_power_set_well_defined_result(value, verify_state)
                 .map(Some),
-            Obj::GeneralCart(value) => self
-                .verify_general_cart_well_defined_result(value, verify_state)
+            Obj::IndexCart(value) => self
+                .verify_index_cart_well_defined_result(value, verify_state)
                 .map(Some),
             Obj::ObjAtIndex(value) => self
                 .verify_obj_at_index_well_defined_result(value, verify_state)

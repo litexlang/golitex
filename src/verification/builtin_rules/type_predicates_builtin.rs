@@ -439,7 +439,7 @@ impl Runtime {
                     Ok((UnknownGenericStmtResult::new()).into())
                 }
             }
-            Obj::GeneralCart(_) => Ok((UnknownGenericStmtResult::new()).into()),
+            Obj::IndexCart(_) => Ok((UnknownGenericStmtResult::new()).into()),
             Obj::FiniteSeqSet(fs) => {
                 // A zero-length finite-sequence space contains the empty sequence,
                 // even when its codomain is empty. Example: `finite_seq({}, 0)`.
@@ -1254,40 +1254,40 @@ impl Runtime {
         Ok((UnknownGenericStmtResult::new()).into())
     }
 
-    pub fn verify_general_cart_nonempty_by_choice_explicit(
+    pub fn verify_index_cart_nonempty_by_choice_explicit(
         &mut self,
         conclusion: &IsNonemptySetFact,
         pointwise: bool,
         verify_state: &VerifyState,
     ) -> Result<ProveFactResult, RuntimeError> {
-        let Obj::GeneralCart(general_cart) = &conclusion.set else {
+        let Obj::IndexCart(index_cart) = &conclusion.set else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
         let requirement = if pointwise {
             let Some(requirement) =
-                general_cart_pointwise_family_nonempty_fact(self, general_cart, conclusion)?
+                index_cart_pointwise_family_nonempty_fact(self, index_cart, conclusion)?
             else {
                 return Ok(UnknownGenericStmtResult::new().into());
             };
             requirement
         } else {
-            general_cart_global_family_nonempty_fact(self, general_cart, conclusion)
+            index_cart_global_family_nonempty_fact(self, index_cart, conclusion)
         };
         let requirement_result = self.verify_fact_allow_unknown(&requirement, verify_state)?;
         if !requirement_result.is_success() {
             return Ok(UnknownGenericStmtResult::new().into());
         }
         let label = if pointwise {
-            "axiom_of_choice: general_cart is nonempty when every indexed factor is nonempty"
+            "axiom_of_choice: index_cart is nonempty when every indexed factor is nonempty"
         } else {
-            "axiom_of_choice: general_cart is nonempty when every set in the family set is nonempty"
+            "axiom_of_choice: index_cart is nonempty when every set in the family set is nonempty"
         };
         Ok(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 conclusion.clone().into(),
                 label.to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
-                    UncataloguedBuiltinRule::VerifyGeneralCartNonemptyByChoiceExplicit,
+                    UncataloguedBuiltinRule::VerifyIndexCartNonemptyByChoiceExplicit,
                 ),
                 vec![requirement_result],
             )
@@ -1296,16 +1296,16 @@ impl Runtime {
     }
 }
 
-fn general_cart_global_family_nonempty_fact(
+fn index_cart_global_family_nonempty_fact(
     runtime: &Runtime,
-    general_cart: &GeneralCart,
+    index_cart: &IndexCart,
     source_fact: &IsNonemptySetFact,
 ) -> Fact {
     let param_name = runtime.generate_internal_binder_name();
     let param_group = runtime
         .fresh_param_group_with_type(
             vec![param_name],
-            ParamType::Obj(general_cart.family_set.as_ref().clone()),
+            ParamType::Obj(index_cart.family_set.as_ref().clone()),
         )
         .expect("internal binder identity counter exhausted");
     let param_obj = obj_for_bound_param_in_scope(&param_group.params[0]);
@@ -1318,22 +1318,22 @@ fn general_cart_global_family_nonempty_fact(
                 .into()],
             source_fact.line_file.clone(),
         )
-        .expect("general_cart global nonempty forall has a fresh local parameter")
+        .expect("index_cart global nonempty forall has a fresh local parameter")
         .into()
 }
 
-fn general_cart_pointwise_family_nonempty_fact(
+fn index_cart_pointwise_family_nonempty_fact(
     runtime: &Runtime,
-    general_cart: &GeneralCart,
+    index_cart: &IndexCart,
     source_fact: &IsNonemptySetFact,
 ) -> Result<Option<Fact>, RuntimeError> {
-    let Some(head) = FnObjHead::from_callable_obj(general_cart.family_fn.as_ref().clone()) else {
+    let Some(head) = FnObjHead::from_callable_obj(index_cart.family_fn.as_ref().clone()) else {
         return Ok(None);
     };
     let param_name = runtime.generate_internal_binder_name();
     let param_group = runtime.fresh_param_group_with_type(
         vec![param_name],
-        ParamType::Obj(general_cart.index_set.as_ref().clone()),
+        ParamType::Obj(index_cart.index_set.as_ref().clone()),
     )?;
     let param_obj = obj_for_bound_param_in_scope(&param_group.params[0]);
     let factor: Obj = FnObj::new(head, vec![vec![Box::new(param_obj.clone())]]).into();
@@ -1363,7 +1363,7 @@ fn obj_can_trigger_nonempty_structural_builtin(obj: &Obj) -> bool {
             | Obj::OneSideInfinityIntervalObj(_)
             | Obj::Union(_)
             | Obj::Cart(_)
-            | Obj::GeneralCart(_)
+            | Obj::IndexCart(_)
             | Obj::FnSet(_)
             | Obj::AnonymousFn(_)
             | Obj::FiniteSeqSet(_)

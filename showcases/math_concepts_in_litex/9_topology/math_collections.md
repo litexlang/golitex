@@ -12,7 +12,7 @@ and quotient constructions remain outside this checkpoint.
 ## Modeling conventions
 
 For a carrier `X`, a candidate topology is an ordinary value in
-`power_set(power_set(X))`. Native `intersect`, `union`, `big_union`, set
+`power_set(power_set(X))`. Native `intersect`, `union`, `family_union`, set
 builders, subset, and function application are reused directly. Candidate
 properties remain relations with explicit parameters; settings abbreviate
 only universal theorem contexts.
@@ -29,7 +29,7 @@ only universal theorem contexts.
   axioms.
 - **Nearest wrong alternative:** A new topology object or custom union
   construction would duplicate native set objects and operations.
-- **Dependencies:** Power sets, intersection, `big_union`, and subset.
+- **Dependencies:** Power sets, intersection, `family_union`, and subset.
 - **Downstream uses:** `TopologicalSpaceSetting` and open-set closure laws.
 - **Allowable hole:** None in the first checkpoint.
 

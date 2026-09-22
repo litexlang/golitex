@@ -1,7 +1,11 @@
 use std::collections::{HashMap, HashSet};
 
 use crate::new_pipeline::ast::names::BoundName;
-use crate::new_pipeline::ast::obj::{AnonymousFn, FnSet, IdentifierObj, Obj, SetBuilder, ArithmeticOperator, ComplexOperator, ExpLogOperator, FiniteSetStat, FunctionSpace, IntegerOperator, IteratedOperator, Literal, ProductShape, SetFormer, SetOperator, Structish, TrigOperator};
+use crate::new_pipeline::ast::obj::{
+    AnonymousFn, ArithmeticOperator, ComplexOperator, ExpLogOperator, FiniteSetStat, FnSet,
+    FunctionSpace, IdentifierObj, IntegerOperator, IteratedOperator, Literal, Obj, ProductShape,
+    SetBuilder, SetFormer, SetOperator, StructAndFieldAccessObj, TrigOperator,
+};
 use crate::new_pipeline::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 use crate::new_pipeline::runtime::Runtime;
@@ -13,7 +17,11 @@ fn collect_unary(arg: &Obj, bound: &HashSet<IdentifierId>, out: &mut HashSet<Ide
     collect_free_plain_ids(arg, bound, out);
 }
 
-fn collect_obj_list(list: &[Box<Obj>], bound: &HashSet<IdentifierId>, out: &mut HashSet<IdentifierId>) {
+fn collect_obj_list(
+    list: &[Box<Obj>],
+    bound: &HashSet<IdentifierId>,
+    out: &mut HashSet<IdentifierId>,
+) {
     for o in list {
         collect_free_plain_ids(o, bound, out);
     }
@@ -85,16 +93,36 @@ pub fn collect_free_plain_ids(
                 }
             }
         }
-        Obj::ArithmeticOperator(ArithmeticOperator::Add(a)) => collect_binary(&a.left, &a.right, bound, out),
-        Obj::ArithmeticOperator(ArithmeticOperator::Sub(a)) => collect_binary(&a.left, &a.right, bound, out),
-        Obj::ArithmeticOperator(ArithmeticOperator::Mul(a)) => collect_binary(&a.left, &a.right, bound, out),
-        Obj::ArithmeticOperator(ArithmeticOperator::Div(a)) => collect_binary(&a.left, &a.right, bound, out),
-        Obj::IntegerOperator(IntegerOperator::Mod(a)) => collect_binary(&a.left, &a.right, bound, out),
-        Obj::IntegerOperator(IntegerOperator::Quot(a)) => collect_binary(&a.left, &a.right, bound, out),
-        Obj::IntegerOperator(IntegerOperator::Gcd(a)) => collect_binary(&a.left, &a.right, bound, out),
-        Obj::IntegerOperator(IntegerOperator::Lcm(a)) => collect_binary(&a.left, &a.right, bound, out),
-        Obj::ArithmeticOperator(ArithmeticOperator::Min(a)) => collect_binary(&a.left, &a.right, bound, out),
-        Obj::ArithmeticOperator(ArithmeticOperator::Max(a)) => collect_binary(&a.left, &a.right, bound, out),
+        Obj::ArithmeticOperator(ArithmeticOperator::Add(a)) => {
+            collect_binary(&a.left, &a.right, bound, out)
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Sub(a)) => {
+            collect_binary(&a.left, &a.right, bound, out)
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Mul(a)) => {
+            collect_binary(&a.left, &a.right, bound, out)
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Div(a)) => {
+            collect_binary(&a.left, &a.right, bound, out)
+        }
+        Obj::IntegerOperator(IntegerOperator::Mod(a)) => {
+            collect_binary(&a.left, &a.right, bound, out)
+        }
+        Obj::IntegerOperator(IntegerOperator::Quot(a)) => {
+            collect_binary(&a.left, &a.right, bound, out)
+        }
+        Obj::IntegerOperator(IntegerOperator::Gcd(a)) => {
+            collect_binary(&a.left, &a.right, bound, out)
+        }
+        Obj::IntegerOperator(IntegerOperator::Lcm(a)) => {
+            collect_binary(&a.left, &a.right, bound, out)
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Min(a)) => {
+            collect_binary(&a.left, &a.right, bound, out)
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Max(a)) => {
+            collect_binary(&a.left, &a.right, bound, out)
+        }
         Obj::ArithmeticOperator(ArithmeticOperator::Pow(a)) => {
             collect_free_plain_ids(&a.base, bound, out);
             collect_free_plain_ids(&a.exponent, bound, out);
@@ -119,14 +147,22 @@ pub fn collect_free_plain_ids(
         Obj::TrigOperator(TrigOperator::Tan(a)) => collect_unary(&a.arg, bound, out),
         Obj::TrigOperator(TrigOperator::Cot(a)) => collect_unary(&a.arg, bound, out),
         Obj::ComplexOperator(ComplexOperator::RealPart(a)) => collect_unary(&a.arg, bound, out),
-        Obj::ComplexOperator(ComplexOperator::ImaginaryPart(a)) => collect_unary(&a.arg, bound, out),
+        Obj::ComplexOperator(ComplexOperator::ImaginaryPart(a)) => {
+            collect_unary(&a.arg, bound, out)
+        }
         Obj::ComplexOperator(ComplexOperator::ComplexAbs(a)) => collect_unary(&a.arg, bound, out),
         Obj::ExpLogOperator(ExpLogOperator::Sqrt(a)) => collect_unary(&a.arg, bound, out),
         Obj::SetOperator(SetOperator::Union(a)) => collect_binary(&a.left, &a.right, bound, out),
-        Obj::SetOperator(SetOperator::Intersect(a)) => collect_binary(&a.left, &a.right, bound, out),
+        Obj::SetOperator(SetOperator::Intersect(a)) => {
+            collect_binary(&a.left, &a.right, bound, out)
+        }
         Obj::SetOperator(SetOperator::SetMinus(a)) => collect_binary(&a.left, &a.right, bound, out),
-        Obj::SetOperator(SetOperator::BigUnion(a)) => collect_free_plain_ids(&a.left, bound, out),
-        Obj::SetOperator(SetOperator::BigIntersect(a)) => collect_free_plain_ids(&a.left, bound, out),
+        Obj::SetOperator(SetOperator::FamilyUnion(a)) => {
+            collect_free_plain_ids(&a.left, bound, out)
+        }
+        Obj::SetOperator(SetOperator::FamilyIntersect(a)) => {
+            collect_free_plain_ids(&a.left, bound, out)
+        }
         Obj::SetOperator(SetOperator::IndexUnion(a)) => {
             collect_free_plain_ids(&a.index_set, bound, out);
             collect_free_plain_ids(&a.ambient_set, bound, out);
@@ -138,7 +174,7 @@ pub fn collect_free_plain_ids(
             collect_free_plain_ids(&a.family_fn, bound, out);
         }
         Obj::SetOperator(SetOperator::PowerSet(a)) => collect_free_plain_ids(&a.set, bound, out),
-        Obj::SetOperator(SetOperator::GeneralCart(a)) => {
+        Obj::SetOperator(SetOperator::IndexCart(a)) => {
             collect_free_plain_ids(&a.index_set, bound, out);
             collect_free_plain_ids(&a.family_set, bound, out);
             collect_free_plain_ids(&a.family_fn, bound, out);
@@ -150,7 +186,9 @@ pub fn collect_free_plain_ids(
         }
         Obj::SetFormer(SetFormer::SetBuilder(sb)) => collect_free_in_set_builder(sb, bound, out),
         Obj::FunctionSpace(FunctionSpace::FnSet(fs)) => collect_free_in_fn_set(fs, bound, out),
-        Obj::FunctionSpace(FunctionSpace::AnonymousFn(af)) => collect_free_in_anonymous_fn(af, bound, out),
+        Obj::FunctionSpace(FunctionSpace::AnonymousFn(af)) => {
+            collect_free_in_anonymous_fn(af, bound, out)
+        }
         Obj::ProductShape(ProductShape::Cart(a)) => collect_obj_list(&a.args, bound, out),
         Obj::ProductShape(ProductShape::Tuple(a)) => collect_obj_list(&a.args, bound, out),
         Obj::ProductShape(ProductShape::CartDim(a)) => collect_free_plain_ids(&a.set, bound, out),
@@ -159,13 +197,24 @@ pub fn collect_free_plain_ids(
             collect_free_plain_ids(&a.dim, bound, out);
         }
         Obj::ProductShape(ProductShape::TupleDim(a)) => collect_free_plain_ids(&a.arg, bound, out),
-        Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(a)) => collect_free_plain_ids(&a.set, bound, out),
-        Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(a)) => collect_free_plain_ids(&a.set, bound, out),
-        Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(a)) => collect_free_plain_ids(&a.set, bound, out),
-        Obj::FunctionSpace(FunctionSpace::FnRange(a)) => collect_free_plain_ids(&a.function, bound, out),
-        Obj::SetFormer(SetFormer::Replacement(a)) => collect_free_plain_ids(&a.source_set, bound, out),
-        Obj::IteratedOperator(IteratedOperator::Sum(a)) => collect_ternary(&a.start, &a.end, &a.func, bound, out),
-        Obj::IteratedOperator(IteratedOperator::Product(a)) => collect_ternary(&a.start, &a.end, &a.func, bound, out),
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(a)) => {
+            collect_free_plain_ids(&a.set, bound, out)
+        }
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(a)) => {
+            collect_free_plain_ids(&a.set, bound, out)
+        }
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(a)) => {
+            collect_free_plain_ids(&a.set, bound, out)
+        }
+        Obj::FunctionSpace(FunctionSpace::FnRange(a)) => {
+            collect_free_plain_ids(&a.function, bound, out)
+        }
+        Obj::IteratedOperator(IteratedOperator::Sum(a)) => {
+            collect_ternary(&a.start, &a.end, &a.func, bound, out)
+        }
+        Obj::IteratedOperator(IteratedOperator::Product(a)) => {
+            collect_ternary(&a.start, &a.end, &a.func, bound, out)
+        }
         Obj::IteratedOperator(IteratedOperator::Reduce(a)) => {
             collect_free_plain_ids(&a.start, bound, out);
             collect_free_plain_ids(&a.end, bound, out);
@@ -173,8 +222,12 @@ pub fn collect_free_plain_ids(
             collect_free_plain_ids(&a.op, bound, out);
             collect_free_plain_ids(&a.seed, bound, out);
         }
-        Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(a)) => collect_binary(&a.set, &a.func, bound, out),
-        Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(a)) => collect_binary(&a.set, &a.func, bound, out),
+        Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(a)) => {
+            collect_binary(&a.set, &a.func, bound, out)
+        }
+        Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(a)) => {
+            collect_binary(&a.set, &a.func, bound, out)
+        }
         Obj::IteratedOperator(IteratedOperator::FiniteSetReduce(a)) => {
             collect_free_plain_ids(&a.set, bound, out);
             collect_free_plain_ids(&a.func, bound, out);
@@ -192,15 +245,15 @@ pub fn collect_free_plain_ids(
             collect_free_plain_ids(&a.obj, bound, out);
             collect_free_plain_ids(&a.index, bound, out);
         }
-        Obj::Structish(Structish::StructObj(a)) => {
+        Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(a)) => {
             for o in &a.params {
                 collect_free_plain_ids(o, bound, out);
             }
         }
-        Obj::Structish(Structish::FieldAccess(a)) => {
+        Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(a)) => {
             collect_free_plain_ids(&a.obj, bound, out);
         }
-        Obj::Structish(Structish::InstantiatedTemplateObj(a)) => {
+        Obj::InstantiatedTemplateObj(a) => {
             for o in &a.args {
                 collect_free_plain_ids(o, bound, out);
             }
@@ -296,7 +349,9 @@ pub fn binder_ids_from_set_bound_parameters(list: &SetBoundParameterList) -> Vec
     ids
 }
 
-pub fn binder_bound_names_from_set_bound_parameters(list: &SetBoundParameterList) -> Vec<BoundName> {
+pub fn binder_bound_names_from_set_bound_parameters(
+    list: &SetBoundParameterList,
+) -> Vec<BoundName> {
     let mut names = Vec::new();
     for group in &list.groups {
         for param in &group.params {

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 
 use crate::new_pipeline::ast::fact::{
-    ExistFactFamily, ExistOrAndChainAtomicFact, Fact, ForallFact, ForallFactWithIff, NotForallFact,
+    ExistShapedFact, ExistOrAndChainAtomicFact, Fact, ForallFact, ForallFactWithIff, NotForallFact,
     PlainExistFact,
 };
 use crate::new_pipeline::ast::obj::Obj;
@@ -62,13 +62,13 @@ impl Runtime {
             | Fact::ExistUniqueFact(_e)
             | Fact::NotExistFact(_e) => {
                 let family = match fact {
-                    Fact::ExistFact(p) => ExistFactFamily::Exist(p.clone()),
-                    Fact::ExistUniqueFact(p) => ExistFactFamily::ExistUnique(p.clone()),
-                    Fact::NotExistFact(p) => ExistFactFamily::NotExist(p.clone()),
+                    Fact::ExistFact(p) => ExistShapedFact::Exist(p.clone()),
+                    Fact::ExistUniqueFact(p) => ExistShapedFact::ExistUnique(p.clone()),
+                    Fact::NotExistFact(p) => ExistShapedFact::NotExist(p.clone()),
                     _ => unreachable!(),
                 };
                 let inst = self.inst_exist_fact(&family, param_to_arg_map)?;
-                Ok(crate::new_pipeline::ast::fact::exist_fact_family_to_fact(&inst))
+                Ok(crate::new_pipeline::ast::fact::exist_shaped_fact_to_fact(&inst))
             }
             Fact::ForallFact(f) => Ok(Fact::ForallFact(self.inst_forall_fact(
                 f,
@@ -115,20 +115,20 @@ impl Runtime {
 
     fn inst_exist_fact(
         &mut self,
-        exist: &ExistFactFamily,
+        exist: &ExistShapedFact,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
-    ) -> Result<ExistFactFamily, InstError> {
+    ) -> Result<ExistShapedFact, InstError> {
         match exist {
-            ExistFactFamily::Exist(p) => Ok(ExistFactFamily::Exist(self.inst_plain_exist_fact(
+            ExistShapedFact::Exist(p) => Ok(ExistShapedFact::Exist(self.inst_plain_exist_fact(
                 p,
                 param_to_arg_map,
             )?)),
-            ExistFactFamily::ExistUnique(p) => Ok(ExistFactFamily::ExistUnique(self.inst_plain_exist_fact(
+            ExistShapedFact::ExistUnique(p) => Ok(ExistShapedFact::ExistUnique(self.inst_plain_exist_fact(
                 p,
                 param_to_arg_map,
             )?)),
-            ExistFactFamily::NotExist(p) => Ok(ExistFactFamily::NotExist(self.inst_plain_exist_fact(
+            ExistShapedFact::NotExist(p) => Ok(ExistShapedFact::NotExist(self.inst_plain_exist_fact(
                 p,
                 param_to_arg_map,
             )?)),

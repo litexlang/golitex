@@ -1,4 +1,4 @@
-use crate::new_pipeline::ast::obj::{Abs, Add, Arccos, Arccot, Arcsin, Arctan, Ceil, Cos, Cot, Div, Exp, Factorial, Floor, FnObj, FnObjHead, Gcd, IntervalObj, Lcm, Ln, Max, Min, Mod, Mul, Obj, OneSideInfinityIntervalObj, Pow, Quot, Sign, Sin, Sqrt, Sub, Tan, ArithmeticOperator, ComplexOperator, ExpLogOperator, FiniteSetStat, FunctionSpace, IntegerOperator, IteratedOperator, ProductShape, SetFormer, SetOperator, Structish, TrigOperator};
+use crate::new_pipeline::ast::obj::{Abs, Add, Arccos, Arccot, Arcsin, Arctan, Ceil, Cos, Cot, Div, Exp, Factorial, Floor, FnObj, FnObjHead, Gcd, IntervalObj, Lcm, Ln, Max, Min, Mod, Mul, Obj, OneSideInfinityIntervalObj, Pow, Quot, Sign, Sin, Sqrt, Sub, Tan, ArithmeticOperator, ComplexOperator, ExpLogOperator, FiniteSetStat, FunctionSpace, IntegerOperator, IteratedOperator, ProductShape, SetFormer, SetOperator, StructAndFieldAccessObj, TrigOperator};
 use crate::new_pipeline::exec_env::known_fact_memory::ObjIR;
 
 // Same-shape child pairs for MatchingOneArgByOne (legacy same_shape peel).
@@ -94,10 +94,10 @@ pub(crate) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Ob
         (Obj::SetOperator(SetOperator::Union(l)), Obj::SetOperator(SetOperator::Union(r))) => binary!(l, r),
         (Obj::SetOperator(SetOperator::Intersect(l)), Obj::SetOperator(SetOperator::Intersect(r))) => binary!(l, r),
         (Obj::SetOperator(SetOperator::SetMinus(l)), Obj::SetOperator(SetOperator::SetMinus(r))) => binary!(l, r),
-        (Obj::SetOperator(SetOperator::BigUnion(l)), Obj::SetOperator(SetOperator::BigUnion(r))) => {
+        (Obj::SetOperator(SetOperator::FamilyUnion(l)), Obj::SetOperator(SetOperator::FamilyUnion(r))) => {
             Some(vec![(l.left.as_ref().clone(), r.left.as_ref().clone())])
         }
-        (Obj::SetOperator(SetOperator::BigIntersect(l)), Obj::SetOperator(SetOperator::BigIntersect(r))) => {
+        (Obj::SetOperator(SetOperator::FamilyIntersect(l)), Obj::SetOperator(SetOperator::FamilyIntersect(r))) => {
             Some(vec![(l.left.as_ref().clone(), r.left.as_ref().clone())])
         }
         (Obj::SetOperator(SetOperator::PowerSet(l)), Obj::SetOperator(SetOperator::PowerSet(r))) => {
@@ -119,14 +119,6 @@ pub(crate) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Ob
         (Obj::FunctionSpace(FunctionSpace::FnRange(l)), Obj::FunctionSpace(FunctionSpace::FnRange(r))) => Some(vec![
             (l.function.as_ref().clone(), r.function.as_ref().clone()),
         ]),
-        (Obj::SetFormer(SetFormer::Replacement(l)), Obj::SetFormer(SetFormer::Replacement(r))) => {
-            if l.prop_name.to_string() != r.prop_name.to_string() {
-                return None;
-            }
-            Some(vec![
-                (l.source_set.as_ref().clone(), r.source_set.as_ref().clone()),
-            ])
-        }
         (Obj::SetFormer(SetFormer::Range(l)), Obj::SetFormer(SetFormer::Range(r))) => Some(vec![
             (l.start.as_ref().clone(), r.start.as_ref().clone()),
             (l.end.as_ref().clone(), r.end.as_ref().clone()),
@@ -188,7 +180,7 @@ pub(crate) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Ob
         (Obj::ProductShape(ProductShape::Tuple(l)), Obj::ProductShape(ProductShape::Tuple(r))) => slice_pairs!(l.args, r.args),
         (Obj::SetFormer(SetFormer::ListSet(l)), Obj::SetFormer(SetFormer::ListSet(r))) => slice_pairs!(l.list, r.list),
         (Obj::ProductShape(ProductShape::Cart(l)), Obj::ProductShape(ProductShape::Cart(r))) => slice_pairs!(l.args, r.args),
-        (Obj::SetOperator(SetOperator::GeneralCart(l)), Obj::SetOperator(SetOperator::GeneralCart(r))) => Some(vec![
+        (Obj::SetOperator(SetOperator::IndexCart(l)), Obj::SetOperator(SetOperator::IndexCart(r))) => Some(vec![
             (l.index_set.as_ref().clone(), r.index_set.as_ref().clone()),
             (l.family_set.as_ref().clone(), r.family_set.as_ref().clone()),
             (l.family_fn.as_ref().clone(), r.family_fn.as_ref().clone()),
@@ -203,15 +195,15 @@ pub(crate) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Ob
             (l.ambient_set.as_ref().clone(), r.ambient_set.as_ref().clone()),
             (l.family_fn.as_ref().clone(), r.family_fn.as_ref().clone()),
         ]),
-        (Obj::Structish(Structish::StructObj(l)), Obj::Structish(Structish::StructObj(r))) => {
+        (Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(l)), Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(r))) => {
             if l.name.to_string() != r.name.to_string() {
                 return None;
             }
             obj_slice_pairs!(l.params, r.params)
         }
         (
-            Obj::Structish(Structish::FieldAccess(l)),
-            Obj::Structish(Structish::FieldAccess(r)),
+            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(l)),
+            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(r)),
         ) => {
             if l.fields != r.fields {
                 return None;
@@ -373,9 +365,9 @@ fn fn_obj_head_as_obj(head: &FnObjHead) -> Obj {
         FnObjHead::Identifier(id) => Obj::Identifier(id.clone()),
         FnObjHead::AnonymousFnLiteral(a) => Obj::FunctionSpace(FunctionSpace::AnonymousFn(a.as_ref().clone())),
         FnObjHead::FieldAccess(v) => {
-            Obj::Structish(Structish::FieldAccess(v.clone()))
+            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(v.clone()))
         }
-        FnObjHead::InstantiatedTemplateObj(v) => Obj::Structish(Structish::InstantiatedTemplateObj(v.clone())),
+        FnObjHead::InstantiatedTemplateObj(v) => Obj::InstantiatedTemplateObj(v.clone()),
     }
 }
 

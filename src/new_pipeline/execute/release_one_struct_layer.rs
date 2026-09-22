@@ -13,11 +13,12 @@
 
 use std::collections::HashMap;
 
-use crate::new_pipeline::ast::fact::{
-    AtomicFact, EqualFact, Fact, InFact, IsTupleFact,
-};
+use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact, InFact, IsTupleFact};
 use crate::new_pipeline::ast::names::AtomicName;
-use crate::new_pipeline::ast::obj::{Cart, FieldAccess, Number, Obj, ObjAtIndex, StructObj, TupleDim, Literal, ProductShape, Structish};
+use crate::new_pipeline::ast::obj::{
+    Cart, FieldAccess, Literal, Number, Obj, ObjAtIndex, ProductShape, StructAndFieldAccessObj,
+    StructObj, TupleDim,
+};
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::ast::stmt::DefStructStmt;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
@@ -177,7 +178,9 @@ impl Runtime {
     > {
         let mut opened = Vec::new();
         for group in &typed_parameters.groups {
-            let ParamType::Obj(Obj::Structish(Structish::StructObj(struct_obj))) = &group.param_type else {
+            let ParamType::Obj(Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(struct_obj))) =
+                &group.param_type
+            else {
                 continue;
             };
             for identifier in &group.params {
@@ -265,7 +268,7 @@ fn failed_release(
 }
 
 fn field_access_obj(obj: &Obj, field: &str) -> Obj {
-    Obj::Structish(Structish::FieldAccess(FieldAccess {
+    Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(FieldAccess {
         obj: Box::new(obj.clone()),
         fields: vec![field.to_string()],
     }))

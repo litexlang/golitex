@@ -22,7 +22,7 @@
 //!   p.point.x = 0
 
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact, InFact};
-use crate::new_pipeline::ast::obj::{Obj, StructObj, Structish};
+use crate::new_pipeline::ast::obj::{Obj, StructAndFieldAccessObj, StructObj};
 use crate::new_pipeline::ast::stmt::ReleaseStructDefStmt;
 use crate::new_pipeline::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
 use crate::new_pipeline::execute::release_one_struct_layer::{
@@ -31,9 +31,7 @@ use crate::new_pipeline::execute::release_one_struct_layer::{
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 pub enum ExecReleaseStructDefStmtFailed {
-    NoDefinitionOwnedCarrier {
-        obj: Obj,
-    },
+    NoDefinitionOwnedCarrier { obj: Obj },
     Membership(VerifyFactResult),
     Release(FailToReleaseOneStructLayer),
 }
@@ -74,7 +72,7 @@ impl Runtime {
         let membership_fact = Fact::AtomicFact(AtomicFact::InFact(InFact {
             fact_id: self.ids.allocate_fact_id(),
             element: stmt.obj.clone(),
-            set: Obj::Structish(Structish::StructObj(struct_obj.clone())),
+            set: Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(struct_obj.clone())),
             line_file: Some(stmt.line_file.clone()),
         }));
         let verify_state = VerifyState {
@@ -90,19 +88,19 @@ impl Runtime {
         }
 
         match self.release_one_struct_layer(&stmt.obj, &struct_obj)? {
-            ReleaseOneStructLayerResult::Success(release) => {
-                Ok(ExecReleaseStructDefStmtResult::Success(
-                    ExecReleaseStructDefStmtSuccess {
-                        statement: stmt.clone(),
-                        struct_obj,
-                        membership,
-                        release,
-                    },
+            ReleaseOneStructLayerResult::Success(release) => Ok(
+                ExecReleaseStructDefStmtResult::Success(ExecReleaseStructDefStmtSuccess {
+                    statement: stmt.clone(),
+                    struct_obj,
+                    membership,
+                    release,
+                }),
+            ),
+            ReleaseOneStructLayerResult::Failed(failed) => {
+                Ok(ExecReleaseStructDefStmtResult::Failed(
+                    ExecReleaseStructDefStmtFailed::Release(failed),
                 ))
             }
-            ReleaseOneStructLayerResult::Failed(failed) => Ok(ExecReleaseStructDefStmtResult::Failed(
-                ExecReleaseStructDefStmtFailed::Release(failed),
-            )),
         }
     }
 }

@@ -4,10 +4,10 @@
 //!   have left_greater R:
 //!       left_greater > 100
 
-use crate::new_pipeline::ast::fact::{ExistFactFamily, PlainExistFact};
+use crate::new_pipeline::ast::fact::{ExistShapedFact, PlainExistFact};
 use crate::new_pipeline::ast::stmt::HaveObjByExistFactsStmt;
 use crate::new_pipeline::execute::execute_fact_stmt::{
-    VerifyExistFactFailed, VerifyExistFactResult, VerifyFactResult, VerifyPlainExistFactResult,
+    VerifyExistShapedFactFailed, VerifyExistShapedFactResult, VerifyFactResult, VerifyPlainExistFactResult,
     VerifyPlainExistFactSuccess, VerifyState,
 };
 use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
@@ -17,7 +17,7 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 use std::rc::Rc;
 
 pub enum ExecHaveObjByExistFactsStmtFailed {
-    Exist(VerifyExistFactFailed),
+    Exist(VerifyExistShapedFactFailed),
 }
 
 // Pipeline: synthesize exist → verify exist → define params + store body facts.
@@ -51,14 +51,14 @@ impl Runtime {
             store_well_defined_fact: true,
         };
 
-        let exist_family = ExistFactFamily::Exist(PlainExistFact {
+        let exist_family = ExistShapedFact::Exist(PlainExistFact {
             fact_id: self.ids.allocate_fact_id(),
             typed_parameters: stmt.param_def.clone(),
             facts: stmt.facts.clone(),
             line_file: Some(stmt.line_file.clone()),
         });
 
-        let verified = self.verify_exist_fact(&exist_family, verify_state)?;
+        let verified = self.verify_exist_shaped_fact(&exist_family, verify_state)?;
         let verify_exist = match self.unwrap_plain_exist_verify(verified)? {
             Ok(success) => success,
             Err(failed) => {
@@ -95,13 +95,13 @@ impl Runtime {
     fn unwrap_plain_exist_verify(
         &self,
         result: VerifyFactResult,
-    ) -> RuntimeResult<Result<VerifyPlainExistFactSuccess, VerifyExistFactFailed>> {
+    ) -> RuntimeResult<Result<VerifyPlainExistFactSuccess, VerifyExistShapedFactFailed>> {
         match result {
-            VerifyFactResult::ExistFact(boxed) => match *boxed {
-                VerifyExistFactResult::PlainExistFact(VerifyPlainExistFactResult::Success(s)) => {
+            VerifyFactResult::ExistShapedFact(boxed) => match *boxed {
+                VerifyExistShapedFactResult::PlainExistFact(VerifyPlainExistFactResult::Success(s)) => {
                     Ok(Ok(s))
                 }
-                VerifyExistFactResult::PlainExistFact(VerifyPlainExistFactResult::Failed(f)) => {
+                VerifyExistShapedFactResult::PlainExistFact(VerifyPlainExistFactResult::Failed(f)) => {
                     Ok(Err(f))
                 }
                 _ => Err(RuntimeError::InternalBug(

@@ -33,15 +33,15 @@ impl Runtime {
                             None,
                         )));
                     }
-                    if let Obj::BigUnion(big_union) = other_side {
-                        if let Obj::FnRange(fn_range) = big_union.left.as_ref() {
+                    if let Obj::FamilyUnion(family_union) = other_side {
+                        if let Obj::FnRange(fn_range) = family_union.left.as_ref() {
                             if objs_match_for_pattern(
                                 index_union.family_fn.as_ref(),
                                 fn_range.function.as_ref(),
                             ) {
                                 return Ok(Some(Self::set_equality_success(
                                     equal_fact,
-                                    "index_union agrees with big_union of the family range",
+                                    "index_union agrees with family_union of the family range",
                                     None,
                                 )));
                             }
@@ -68,8 +68,8 @@ impl Runtime {
                             None,
                         )));
                     }
-                    if let Obj::BigIntersect(big_intersect) = other_side {
-                        if let Obj::FnRange(fn_range) = big_intersect.left.as_ref() {
+                    if let Obj::FamilyIntersect(family_intersect) = other_side {
+                        if let Obj::FnRange(fn_range) = family_intersect.left.as_ref() {
                             if !objs_match_for_pattern(
                                 index_intersect.family_fn.as_ref(),
                                 fn_range.function.as_ref(),
@@ -106,7 +106,7 @@ impl Runtime {
                                 return Ok(Some(
                                     factual_equal_success_by_builtin_reason_with_subgoals(
                                         equal_fact,
-                                        "index_intersect agrees with big_intersect of the family range for a nonempty index set",
+                                        "index_intersect agrees with family_intersect of the family range for a nonempty index set",
                                         vec![nonempty_result],
                                     ),
                                 ));

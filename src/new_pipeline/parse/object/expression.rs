@@ -1,9 +1,13 @@
 use super::primary::{fn_obj_head_from_obj, parse_primary};
-use crate::new_pipeline::ast::obj::{Add, Cart, ClosedRange, Div, FnObj, FnSet, Intersect, Mod, Mul, Number, Obj, FieldAccess, ObjAtIndex, Pow, Sub, Union, ArithmeticOperator, FunctionSpace, IntegerOperator, Literal, ProductShape, SetFormer, SetOperator, Structish};
+use crate::new_pipeline::ast::obj::{
+    Add, ArithmeticOperator, Cart, ClosedRange, Div, FieldAccess, FnObj, FnSet, FunctionSpace,
+    IntegerOperator, Intersect, Literal, Mod, Mul, Number, Obj, ObjAtIndex, Pow, ProductShape,
+    SetFormer, SetOperator, StructAndFieldAccessObj, Sub, Union,
+};
 use crate::new_pipeline::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
 use crate::new_pipeline::parse::keywords::{
-    ADD, DIV, DOT, DOT_DOT_DOT, FN_ARROW, LEFT_BRACKET, LEFT_PAREN, MOD_OP, MUL, POW, RIGHT_BRACKET,
-    SUB, UNICODE_CART, UNICODE_INTERSECT, UNICODE_UNION,
+    ADD, DIV, DOT, DOT_DOT_DOT, FN_ARROW, LEFT_BRACKET, LEFT_PAREN, MOD_OP, MUL, POW,
+    RIGHT_BRACKET, SUB, UNICODE_CART, UNICODE_INTERSECT, UNICODE_UNION,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -211,11 +215,11 @@ fn parse_field_and_call_postfixes(
                 );
             }
             result = match result {
-                Obj::Structish(Structish::FieldAccess(mut access)) => {
+                Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(mut access)) => {
                     access.fields.push(field_name);
-                    Obj::Structish(Structish::FieldAccess(access))
+                    Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(access))
                 }
-                other => Obj::Structish(Structish::FieldAccess(FieldAccess {
+                other => Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(FieldAccess {
                     obj: Box::new(other),
                     fields: vec![field_name],
                 })),

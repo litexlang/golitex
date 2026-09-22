@@ -1,4 +1,4 @@
-// FailToVerifyObjWellDefinedResult mirrors Obj's 16-family nesting.
+// FailToVerifyObjWellDefinedResult mirrors Obj family nesting.
 // Family sub-enums wrap existing per-leaf FailToVerify*ObjWellDefined structs.
 // Non-leaf failures wrap the shared Child/Requirement/Others reason.
 
@@ -26,6 +26,7 @@ pub enum FailToVerifyObjWellDefinedResult {
     IteratedOperator(FailToVerifyIteratedOperatorObjWellDefinedResult),
     FiniteSetStat(FailToVerifyFiniteSetStatObjWellDefinedResult),
     Structish(FailToVerifyStructishObjWellDefinedResult),
+    InstantiatedTemplateObj(FailToVerifyInstantiatedTemplateObjObjWellDefined),
 }
 
 pub enum FailToVerifyLiteralObjWellDefinedResult {
@@ -85,18 +86,17 @@ pub enum FailToVerifySetOperatorObjWellDefinedResult {
     Union(FailToVerifyUnionObjWellDefined),
     Intersect(FailToVerifyIntersectObjWellDefined),
     SetMinus(FailToVerifySetMinusObjWellDefined),
-    BigUnion(FailToVerifyBigUnionObjWellDefined),
-    BigIntersect(FailToVerifyBigIntersectObjWellDefined),
+    FamilyUnion(FailToVerifyFamilyUnionObjWellDefined),
+    FamilyIntersect(FailToVerifyFamilyIntersectObjWellDefined),
     IndexUnion(FailToVerifyIndexUnionObjWellDefined),
     IndexIntersect(FailToVerifyIndexIntersectObjWellDefined),
     PowerSet(FailToVerifyPowerSetObjWellDefined),
-    GeneralCart(FailToVerifyGeneralCartObjWellDefined),
+    IndexCart(FailToVerifyIndexCartObjWellDefined),
 }
 
 pub enum FailToVerifySetFormerObjWellDefinedResult {
     ListSet(FailToVerifyListSetObjWellDefined),
     SetBuilder(FailToVerifySetBuilderObjWellDefined),
-    Replacement(FailToVerifyReplacementObjWellDefined),
     Range(FailToVerifyRangeObjWellDefined),
     ClosedRange(FailToVerifyClosedRangeObjWellDefined),
     FiniteSeqSet(FailToVerifyFiniteSeqSetObjWellDefined),
@@ -138,7 +138,6 @@ pub enum FailToVerifyFiniteSetStatObjWellDefinedResult {
 pub enum FailToVerifyStructishObjWellDefinedResult {
     StructObj(FailToVerifyStructObjObjWellDefined),
     FieldAccess(FailToVerifyFieldAccessObjWellDefined),
-    InstantiatedTemplateObj(FailToVerifyInstantiatedTemplateObjObjWellDefined),
 }
 pub enum FailToVerifyObjWellDefinedByDefCommon {
     Child {
@@ -254,9 +253,9 @@ pub struct FailToVerifyIntersectObjWellDefined(pub FailToVerifyObjWellDefinedByD
 
 pub struct FailToVerifySetMinusObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
-pub struct FailToVerifyBigUnionObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub struct FailToVerifyFamilyUnionObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
-pub struct FailToVerifyBigIntersectObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+pub struct FailToVerifyFamilyIntersectObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
 pub enum FailToVerifyIndexUnionObjWellDefined {
     NotInFunctionSet,
@@ -270,7 +269,7 @@ pub enum FailToVerifyIndexIntersectObjWellDefined {
 
 pub struct FailToVerifyPowerSetObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
-pub enum FailToVerifyGeneralCartObjWellDefined {
+pub enum FailToVerifyIndexCartObjWellDefined {
     NotInFunctionSet,
     Domain(FailToVerifyObjWellDefinedByDefCommon),
 }
@@ -362,8 +361,6 @@ pub enum FailToVerifyFnRangeObjWellDefined {
     NotInFunctionSet,
     Domain(FailToVerifyObjWellDefinedByDefCommon),
 }
-
-pub struct FailToVerifyReplacementObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
 pub struct FailToVerifySumObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 

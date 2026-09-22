@@ -15,7 +15,7 @@
 use crate::new_pipeline::ast::fact::{
     AtomicFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
 };
-use crate::new_pipeline::ast::obj::{FiniteSeqSet, Obj, SeqSet, StructObj, FunctionSpace, SetFormer, Structish};
+use crate::new_pipeline::ast::obj::{FiniteSeqSet, Obj, SeqSet, StructObj, FunctionSpace, SetFormer, StructAndFieldAccessObj};
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::ast::stmt::{
     HaveObjByExistFactsStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt, TrustHaveStmt,
@@ -240,7 +240,7 @@ impl Runtime {
     // Definition exit: typed `$in` membership → the matching ByDefinition shape row.
     pub(crate) fn record_definition_membership_shape(&mut self, in_fact: &InFact) {
         match &in_fact.set {
-            Obj::Structish(Structish::StructObj(struct_obj)) => {
+            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(struct_obj)) => {
                 self.record_defined_as_struct(
                     &in_fact.element,
                     struct_obj.clone(),

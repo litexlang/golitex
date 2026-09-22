@@ -1,5 +1,5 @@
 use crate::new_pipeline::ast::fact::{
-    negate_atomic_fact, AndChainAtomicFact, AtomicFact, ExistFactFamily, NotForallFact, OrFact,
+    negate_atomic_fact, AndChainAtomicFact, AtomicFact, ExistShapedFact, NotForallFact, OrFact,
     PlainExistFact, QuantifierFreeFact,
 };
 use crate::new_pipeline::ast::line_file::LineFile;
@@ -11,7 +11,7 @@ impl Runtime {
     pub(crate) fn not_forall_to_counterexample_exist(
         &mut self,
         not_forall: &NotForallFact,
-    ) -> RuntimeResult<Option<ExistFactFamily>> {
+    ) -> RuntimeResult<Option<ExistShapedFact>> {
         let mut body: Vec<QuantifierFreeFact> = not_forall.dom_facts.clone();
         for then in &not_forall.then_facts {
             let Some(conjuncts) = self.negate_quantifier_free_to_conjuncts(then)? else {
@@ -24,7 +24,7 @@ impl Runtime {
         if body.is_empty() {
             return Ok(None);
         }
-        Ok(Some(ExistFactFamily::Exist(PlainExistFact {
+        Ok(Some(ExistShapedFact::Exist(PlainExistFact {
             fact_id: self.ids.allocate_fact_id(),
             typed_parameters: not_forall.typed_parameters.clone(),
             facts: body,

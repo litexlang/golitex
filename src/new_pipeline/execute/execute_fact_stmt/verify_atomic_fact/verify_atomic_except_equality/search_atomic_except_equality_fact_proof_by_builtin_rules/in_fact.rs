@@ -1,6 +1,6 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact, InFact, IsTupleFact, SubsetFact};
 use crate::new_pipeline::ast::names::AtomicName;
-use crate::new_pipeline::ast::obj::{Cart, FnObjHead, Number, Obj, ObjAtIndex, StandardSet, StructObj, TupleDim, ArithmeticOperator, ExpLogOperator, IntegerOperator, Literal, ProductShape, SetFormer, SetOperator, Structish, TrigOperator};
+use crate::new_pipeline::ast::obj::{Cart, FnObjHead, Number, Obj, ObjAtIndex, StandardSet, StructObj, TupleDim, ArithmeticOperator, ExpLogOperator, IntegerOperator, Literal, ProductShape, SetFormer, SetOperator, StructAndFieldAccessObj, TrigOperator};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::predecessor_helpers::match_sub_one;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
@@ -189,7 +189,7 @@ impl Runtime {
                 }
                 self.power_set_membership_proof(fact, verify_state)
             }
-            Obj::Structish(Structish::StructObj(_)) => {
+            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(_)) => {
                 if matches!(&fact.element, Obj::FnObj(_)) {
                     if let Some(proof) =
                         self.fn_application_in_codomain_proof(fact, verify_state.clone())?
@@ -578,7 +578,7 @@ impl Runtime {
         fact: &InFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
-        let Obj::Structish(Structish::StructObj(struct_obj)) = &fact.set else {
+        let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(struct_obj)) = &fact.set else {
             return Ok(None);
         };
         let Some((def, mut subst)) = self.struct_def_and_header_subst(struct_obj) else {

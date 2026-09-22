@@ -1,5 +1,5 @@
 use super::{
-    AndChainAtomicFact, AtomicFact, EqualFact, ExistFactFamily, Fact, PlainExistFact, FnEqualInFact, GreaterEqualFact,
+    AndChainAtomicFact, AtomicFact, EqualFact, ExistShapedFact, Fact, PlainExistFact, FnEqualInFact, GreaterEqualFact,
     GreaterFact, InFact, IsCartFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact, IsTupleFact,
     LessEqualFact, LessFact, NormalAtomicFact, NotEqualFact, NotFnEqualInFact,
     NotGreaterEqualFact, NotGreaterFact, NotInFact, NotIsCartFact, NotIsFiniteSetFact,
@@ -132,7 +132,7 @@ pub fn plain_exist_fact_free_args_ref(plain: &PlainExistFact) -> Vec<&Obj> {
     out
 }
 
-pub fn exist_fact_family_free_args_ref(exist: &ExistFactFamily) -> Vec<&Obj> {
+pub fn exist_shaped_fact_free_args_ref(exist: &ExistShapedFact) -> Vec<&Obj> {
     plain_exist_fact_free_args_ref(exist.plain())
 }
 
@@ -140,7 +140,7 @@ pub fn plain_exist_fact_id(plain: &PlainExistFact) -> FactId {
     plain.fact_id
 }
 
-pub fn exist_fact_family_id(exist: &ExistFactFamily) -> FactId {
+pub fn exist_shaped_fact_id(exist: &ExistShapedFact) -> FactId {
     plain_exist_fact_id(exist.plain())
 }
 
@@ -154,23 +154,23 @@ pub fn plain_exist_binder_ids(plain: &PlainExistFact) -> HashSet<IdentifierId> {
     ids
 }
 
-pub fn exist_fact_family_binder_ids(exist: &ExistFactFamily) -> HashSet<IdentifierId> {
+pub fn exist_shaped_fact_binder_ids(exist: &ExistShapedFact) -> HashSet<IdentifierId> {
     plain_exist_binder_ids(exist.plain())
 }
 
-pub fn exist_fact_family_to_fact(exist: &ExistFactFamily) -> Fact {
+pub fn exist_shaped_fact_to_fact(exist: &ExistShapedFact) -> Fact {
     match exist {
-        ExistFactFamily::Exist(p) => Fact::ExistFact(p.clone()),
-        ExistFactFamily::ExistUnique(p) => Fact::ExistUniqueFact(p.clone()),
-        ExistFactFamily::NotExist(p) => Fact::NotExistFact(p.clone()),
+        ExistShapedFact::Exist(p) => Fact::ExistFact(p.clone()),
+        ExistShapedFact::ExistUnique(p) => Fact::ExistUniqueFact(p.clone()),
+        ExistShapedFact::NotExist(p) => Fact::NotExistFact(p.clone()),
     }
 }
 
-pub fn exist_fact_family_from_fact(fact: &Fact) -> Option<ExistFactFamily> {
+pub fn exist_shaped_fact_from_fact(fact: &Fact) -> Option<ExistShapedFact> {
     match fact {
-        Fact::ExistFact(p) => Some(ExistFactFamily::Exist(p.clone())),
-        Fact::ExistUniqueFact(p) => Some(ExistFactFamily::ExistUnique(p.clone())),
-        Fact::NotExistFact(p) => Some(ExistFactFamily::NotExist(p.clone())),
+        Fact::ExistFact(p) => Some(ExistShapedFact::Exist(p.clone())),
+        Fact::ExistUniqueFact(p) => Some(ExistShapedFact::ExistUnique(p.clone())),
+        Fact::NotExistFact(p) => Some(ExistShapedFact::NotExist(p.clone())),
         _ => None,
     }
 }
@@ -391,15 +391,3 @@ pub fn negate_atomic_fact(fact: &AtomicFact, new_fact_id: FactId) -> Option<Atom
     })
 }
 
-
-pub fn exist_fact_free_args_ref(exist: &ExistFactFamily) -> Vec<&Obj> {
-    exist_fact_family_free_args_ref(exist)
-}
-
-pub fn exist_fact_id(exist: &ExistFactFamily) -> FactId {
-    exist_fact_family_id(exist)
-}
-
-pub fn exist_binder_ids(exist: &ExistFactFamily) -> HashSet<IdentifierId> {
-    exist_fact_family_binder_ids(exist)
-}

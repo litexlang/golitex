@@ -1,8 +1,8 @@
-use crate::new_pipeline::ast::fact::{ExistFactFamily, PlainExistFact, QuantifierFreeFact};
+use crate::new_pipeline::ast::fact::{ExistShapedFact, PlainExistFact, QuantifierFreeFact};
 use crate::new_pipeline::execute::exec_stmt_result::ParamTypeWellDefinedProof;
-use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_fact::well_defined_result::{
-    ExistFactWellDefinedProof, FailToVerifyExistFactWellDefinedResult,
-    VerifyExistFactWellDefinedResult,
+use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_shaped_fact::well_defined_result::{
+    ExistShapedFactWellDefinedProof, FailToVerifyExistShapedFactWellDefinedResult,
+    VerifyExistShapedFactWellDefinedResult,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::well_defined_results::{
     FactWellDefinedProof, fail_to_verify_obj_well_defined_others, FailToVerifyObjWellDefinedResult, VerifyFactWellDefinedResult,
@@ -13,24 +13,24 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
     // Shared by plain exist / exist! / not exist (same PlainExistFact payload).
-    pub fn verify_exist_fact_well_definedness(
+    pub fn verify_exist_shaped_fact_well_definedness(
         &mut self,
-        fact: &ExistFactFamily,
+        fact: &ExistShapedFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<VerifyExistFactWellDefinedResult> {
+    ) -> RuntimeResult<VerifyExistShapedFactWellDefinedResult> {
         let plain = plain_exist_body(fact);
         let (stages, local_env) = self.run_in_local_env_and_take_env(|rt| {
             rt.verify_plain_exist_fact_well_definedness_in_local(plain, verify_state.clone())
         })?;
         match stages {
-            Ok((param_type_well_defined, body)) => Ok(VerifyExistFactWellDefinedResult::Success(
-                ExistFactWellDefinedProof {
+            Ok((param_type_well_defined, body)) => Ok(VerifyExistShapedFactWellDefinedResult::Success(
+                ExistShapedFactWellDefinedProof {
                     param_type_well_defined,
                     body,
                     local_env,
                 },
             )),
-            Err(reason) => Ok(VerifyExistFactWellDefinedResult::Failed(reason)),
+            Err(reason) => Ok(VerifyExistShapedFactWellDefinedResult::Failed(reason)),
         }
     }
 
@@ -41,7 +41,7 @@ impl Runtime {
     ) -> RuntimeResult<
         Result<
             (Vec<ParamTypeWellDefinedProof>, Vec<FactWellDefinedProof>),
-            FailToVerifyExistFactWellDefinedResult,
+            FailToVerifyExistShapedFactWellDefinedResult,
         >,
     > {
         let param_type_well_defined = match self.verify_typed_parameters_well_definedness_or_fail(
@@ -50,7 +50,7 @@ impl Runtime {
         )? {
             Ok(proofs) => proofs,
             Err(failed) => {
-                return Ok(Err(FailToVerifyExistFactWellDefinedResult::ParamType(
+                return Ok(Err(FailToVerifyExistShapedFactWellDefinedResult::ParamType(
                     extract_obj_wd_fail(failed),
                 )));
             }
@@ -63,7 +63,7 @@ impl Runtime {
             match self.verify_quantifier_free_fact_well_definedness(qf, verify_state.clone())? {
                 VerifyFactWellDefinedResult::Success(proof) => succeeded_body.push(proof),
                 VerifyFactWellDefinedResult::Failed(failed_body) => {
-                    return Ok(Err(FailToVerifyExistFactWellDefinedResult::BodyFact {
+                    return Ok(Err(FailToVerifyExistShapedFactWellDefinedResult::BodyFact {
                         failed_index,
                         param_type_well_defined,
                         succeeded_body,
@@ -97,7 +97,7 @@ impl Runtime {
     }
 }
 
-fn plain_exist_body(fact: &ExistFactFamily) -> &PlainExistFact {
+fn plain_exist_body(fact: &ExistShapedFact) -> &PlainExistFact {
     fact.plain()
 }
 

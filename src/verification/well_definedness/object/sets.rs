@@ -582,17 +582,17 @@ impl Runtime {
         )
     }
 
-    pub(in crate::verification) fn verify_big_union_well_defined_result(
+    pub(in crate::verification) fn verify_family_union_well_defined_result(
         &mut self,
-        value: &BigUnion,
+        value: &FamilyUnion,
         verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         self.verify_set_constructor_children_result(&[(*value.left).clone()], verify_state)
     }
 
-    pub(in crate::verification) fn verify_big_intersect_well_defined_result(
+    pub(in crate::verification) fn verify_family_intersect_well_defined_result(
         &mut self,
-        value: &BigIntersect,
+        value: &FamilyIntersect,
         verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         self.verify_set_constructor_children_result(&[(*value.left).clone()], verify_state)

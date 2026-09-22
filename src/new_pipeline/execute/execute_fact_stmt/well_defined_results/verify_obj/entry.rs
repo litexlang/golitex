@@ -7,7 +7,7 @@ use super::fail_to_verify_obj_well_defined::FailToVerifyObjWellDefinedResult;
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::obj_well_defined_proof_by_def::ObjWellDefinedProofByDef;
 use super::wrap_obj_well_defined_by_def::finish_by_def;
-use crate::new_pipeline::ast::obj::{FnObjHead, Obj, ArithmeticOperator, ComplexOperator, ExpLogOperator, FiniteSetStat, FunctionSpace, IntegerOperator, IteratedOperator, Literal, ProductShape, SetFormer, SetOperator, Structish, TrigOperator};
+use crate::new_pipeline::ast::obj::{FnObjHead, Obj, ArithmeticOperator, ComplexOperator, ExpLogOperator, FiniteSetStat, FunctionSpace, IntegerOperator, IteratedOperator, Literal, ProductShape, SetFormer, SetOperator, StructAndFieldAccessObj, TrigOperator};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::runtime_ids::WellDefinednessId;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
@@ -50,17 +50,17 @@ impl Runtime {
         }
 
         // Struct view `&Name` / `&Name(args)`: known definition + arity + param WD.
-        if let Obj::Structish(Structish::StructObj(value)) = obj {
+        if let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(value)) = obj {
             return self.verify_struct_obj_well_definedness(value, verify_state);
         }
 
         // Template instance `\Name<args>`: known definition + arity + args/requirements WD.
-        if let Obj::Structish(Structish::InstantiatedTemplateObj(value)) = obj {
+        if let Obj::InstantiatedTemplateObj(value) = obj {
             return self.verify_instantiated_template_obj_well_definedness(value, verify_state);
         }
 
         // `x.y` / `x.y.z`: definition-time struct carrier walk along `fields`.
-        if let Obj::Structish(Structish::FieldAccess(value)) = obj {
+        if let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(value)) = obj {
             return self.verify_field_access_obj_well_definedness(value, verify_state);
         }
 
@@ -96,8 +96,8 @@ impl Runtime {
             Obj::SetOperator(SetOperator::IndexIntersect(value)) => {
                 return self.verify_index_intersect_obj_well_definedness(value, verify_state);
             }
-            Obj::SetOperator(SetOperator::GeneralCart(value)) => {
-                return self.verify_general_cart_obj_well_definedness(value, verify_state);
+            Obj::SetOperator(SetOperator::IndexCart(value)) => {
+                return self.verify_index_cart_obj_well_definedness(value, verify_state);
             }
             _ => {}
         }
@@ -207,11 +207,11 @@ impl Runtime {
             Obj::SetOperator(SetOperator::SetMinus(value)) => {
                 self.verify_set_minus_obj_well_definedness_by_def(value, verify_state)
             }
-            Obj::SetOperator(SetOperator::BigUnion(value)) => {
-                self.verify_big_union_obj_well_definedness_by_def(value, verify_state)
+            Obj::SetOperator(SetOperator::FamilyUnion(value)) => {
+                self.verify_family_union_obj_well_definedness_by_def(value, verify_state)
             }
-            Obj::SetOperator(SetOperator::BigIntersect(value)) => {
-                self.verify_big_intersect_obj_well_definedness_by_def(value, verify_state)
+            Obj::SetOperator(SetOperator::FamilyIntersect(value)) => {
+                self.verify_family_intersect_obj_well_definedness_by_def(value, verify_state)
             }
             Obj::SetOperator(SetOperator::IndexUnion(_)) => {
                 unreachable!("IndexUnion WD uses verify_index_union_obj_well_definedness")
@@ -222,8 +222,8 @@ impl Runtime {
             Obj::SetOperator(SetOperator::PowerSet(value)) => {
                 self.verify_power_set_obj_well_definedness_by_def(value, verify_state)
             }
-            Obj::SetOperator(SetOperator::GeneralCart(_)) => {
-                unreachable!("GeneralCart WD uses verify_general_cart_obj_well_definedness")
+            Obj::SetOperator(SetOperator::IndexCart(_)) => {
+                unreachable!("IndexCart WD uses verify_index_cart_obj_well_definedness")
             }
             Obj::SetFormer(SetFormer::ListSet(value)) => {
                 self.verify_list_set_obj_well_definedness_by_def(value, verify_state)
@@ -252,9 +252,6 @@ impl Runtime {
             }
             Obj::FunctionSpace(FunctionSpace::FnRange(_)) => {
                 unreachable!("FnRange WD uses verify_fn_range_obj_well_definedness")
-            }
-            Obj::SetFormer(SetFormer::Replacement(value)) => {
-                self.verify_replacement_obj_well_definedness_by_def(value, verify_state)
             }
             Obj::IteratedOperator(IteratedOperator::Sum(value)) => self.verify_sum_obj_well_definedness_by_def(value, verify_state),
             Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(value)) => {
@@ -288,13 +285,13 @@ impl Runtime {
             Obj::StandardSet(_) => {
                 self.verify_standard_set_obj_well_definedness_by_def(verify_state)
             }
-            Obj::Structish(Structish::StructObj(_)) => {
+            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(_)) => {
                 unreachable!("StructObj WD uses verify_struct_obj_well_definedness")
             }
-            Obj::Structish(Structish::FieldAccess(_)) => {
+            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(_)) => {
                 unreachable!("field-access WD uses verify_field_access_obj_well_definedness")
             }
-            Obj::Structish(Structish::InstantiatedTemplateObj(_)) => {
+            Obj::InstantiatedTemplateObj(_) => {
                 unreachable!(
                     "InstantiatedTemplateObj WD uses verify_instantiated_template_obj_well_definedness"
                 )

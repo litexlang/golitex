@@ -148,8 +148,8 @@ fn collect_obj_binder_bindings(
             collect_obj_binder_bindings(&x.base, bindings, seen, depth);
             collect_obj_binder_bindings(&x.arg, bindings, seen, depth);
         }
-        Obj::BigUnion(x) => collect_obj_binder_bindings(&x.left, bindings, seen, depth),
-        Obj::BigIntersect(x) => collect_obj_binder_bindings(&x.left, bindings, seen, depth),
+        Obj::FamilyUnion(x) => collect_obj_binder_bindings(&x.left, bindings, seen, depth),
+        Obj::FamilyIntersect(x) => collect_obj_binder_bindings(&x.left, bindings, seen, depth),
         Obj::IndexUnion(x) => {
             collect_obj_binder_bindings(&x.index_set, bindings, seen, depth);
             collect_obj_binder_bindings(&x.ambient_set, bindings, seen, depth);
@@ -201,7 +201,7 @@ fn collect_obj_binder_bindings(
                 collect_obj_binder_bindings(value, bindings, seen, depth);
             }
         }
-        Obj::GeneralCart(x) => {
+        Obj::IndexCart(x) => {
             collect_obj_binder_bindings(&x.index_set, bindings, seen, depth);
             collect_obj_binder_bindings(&x.family_set, bindings, seen, depth);
             collect_obj_binder_bindings(&x.family_fn, bindings, seen, depth);

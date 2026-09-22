@@ -9203,9 +9203,9 @@ thm piecewise_constant_partition_has_constant_selector:
         witness $is_nonempty_set(A) from c:
             c $in A
     claim:
-        ? exist f fn(A fn_range(constant_value_set)) big_union(fn_range(constant_value_set)) st {$is_choice_function_for(fn_range(constant_value_set), fn_range(constant_value_set), fn(A fn_range(constant_value_set)) fn_range(constant_value_set) {A}, f)}
+        ? exist f fn(A fn_range(constant_value_set)) family_union(fn_range(constant_value_set)) st {$is_choice_function_for(fn_range(constant_value_set), fn_range(constant_value_set), fn(A fn_range(constant_value_set)) fn_range(constant_value_set) {A}, f)}
         by axiom_of_choice: set fn_range(constant_value_set)
-    obtain choose_constant from exist f fn(A fn_range(constant_value_set)) big_union(fn_range(constant_value_set)) st {$is_choice_function_for(fn_range(constant_value_set), fn_range(constant_value_set), fn(A fn_range(constant_value_set)) fn_range(constant_value_set) {A}, f)}
+    obtain choose_constant from exist f fn(A fn_range(constant_value_set)) family_union(fn_range(constant_value_set)) st {$is_choice_function_for(fn_range(constant_value_set), fn_range(constant_value_set), fn(A fn_range(constant_value_set)) fn_range(constant_value_set) {A}, f)}
     claim:
         ? forall J P:
             choose_constant(constant_value_set(J)) $in R
@@ -10716,9 +10716,9 @@ thm upper_riemann_sum_exists:
         witness $is_nonempty_set(A) from t:
             t $in A
     claim:
-        ? exist f fn(A fn_range(upper_piece_value_set)) big_union(fn_range(upper_piece_value_set)) st {$is_choice_function_for(fn_range(upper_piece_value_set), fn_range(upper_piece_value_set), fn(A fn_range(upper_piece_value_set)) fn_range(upper_piece_value_set) {A}, f)}
+        ? exist f fn(A fn_range(upper_piece_value_set)) family_union(fn_range(upper_piece_value_set)) st {$is_choice_function_for(fn_range(upper_piece_value_set), fn_range(upper_piece_value_set), fn(A fn_range(upper_piece_value_set)) fn_range(upper_piece_value_set) {A}, f)}
         by axiom_of_choice: set fn_range(upper_piece_value_set)
-    obtain choose_upper from exist f fn(A fn_range(upper_piece_value_set)) big_union(fn_range(upper_piece_value_set)) st {$is_choice_function_for(fn_range(upper_piece_value_set), fn_range(upper_piece_value_set), fn(A fn_range(upper_piece_value_set)) fn_range(upper_piece_value_set) {A}, f)}
+    obtain choose_upper from exist f fn(A fn_range(upper_piece_value_set)) family_union(fn_range(upper_piece_value_set)) st {$is_choice_function_for(fn_range(upper_piece_value_set), fn_range(upper_piece_value_set), fn(A fn_range(upper_piece_value_set)) fn_range(upper_piece_value_set) {A}, f)}
     claim:
         ? forall J P:
             choose_upper(upper_piece_value_set(J)) $in R
@@ -10767,9 +10767,9 @@ thm lower_riemann_sum_exists:
         witness $is_nonempty_set(A) from t:
             t $in A
     claim:
-        ? exist f fn(A fn_range(lower_piece_value_set)) big_union(fn_range(lower_piece_value_set)) st {$is_choice_function_for(fn_range(lower_piece_value_set), fn_range(lower_piece_value_set), fn(A fn_range(lower_piece_value_set)) fn_range(lower_piece_value_set) {A}, f)}
+        ? exist f fn(A fn_range(lower_piece_value_set)) family_union(fn_range(lower_piece_value_set)) st {$is_choice_function_for(fn_range(lower_piece_value_set), fn_range(lower_piece_value_set), fn(A fn_range(lower_piece_value_set)) fn_range(lower_piece_value_set) {A}, f)}
         by axiom_of_choice: set fn_range(lower_piece_value_set)
-    obtain choose_lower from exist f fn(A fn_range(lower_piece_value_set)) big_union(fn_range(lower_piece_value_set)) st {$is_choice_function_for(fn_range(lower_piece_value_set), fn_range(lower_piece_value_set), fn(A fn_range(lower_piece_value_set)) fn_range(lower_piece_value_set) {A}, f)}
+    obtain choose_lower from exist f fn(A fn_range(lower_piece_value_set)) family_union(fn_range(lower_piece_value_set)) st {$is_choice_function_for(fn_range(lower_piece_value_set), fn_range(lower_piece_value_set), fn(A fn_range(lower_piece_value_set)) fn_range(lower_piece_value_set) {A}, f)}
     claim:
         ? forall J P:
             choose_lower(lower_piece_value_set(J)) $in R

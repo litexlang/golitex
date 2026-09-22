@@ -54,12 +54,12 @@ pub(in super::super) fn render_builtin_object(
             render_lean_source_for_target_object_representation(left, context)?,
             render_lean_source_for_target_object_representation(right, context)?
         )),
-        (LeanTargetBuiltinObjectOperator::BigUnion, [family]) => Ok(format!(
-            "(Litex.bigUnion {})",
+        (LeanTargetBuiltinObjectOperator::FamilyUnion, [family]) => Ok(format!(
+            "(Litex.familyUnion {})",
             render_lean_source_for_target_object_representation(family, context)?
         )),
-        (LeanTargetBuiltinObjectOperator::BigIntersect, [family]) => Ok(format!(
-            "(Litex.bigIntersect {})",
+        (LeanTargetBuiltinObjectOperator::FamilyIntersect, [family]) => Ok(format!(
+            "(Litex.familyIntersect {})",
             render_lean_source_for_target_object_representation(family, context)?
         )),
         (LeanTargetBuiltinObjectOperator::PowerSet, [base]) => Ok(format!(

@@ -242,10 +242,10 @@ fn mark_forall_param_coverage_in_obj(
             mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
         }
-        Obj::BigUnion(unary) => {
+        Obj::FamilyUnion(unary) => {
             mark_forall_param_coverage_in_obj(unary.left.as_ref(), coverage_by_forall_param);
         }
-        Obj::BigIntersect(unary) => {
+        Obj::FamilyIntersect(unary) => {
             mark_forall_param_coverage_in_obj(unary.left.as_ref(), coverage_by_forall_param);
         }
         Obj::IndexUnion(index_union) => {
@@ -279,17 +279,17 @@ fn mark_forall_param_coverage_in_obj(
         Obj::PowerSet(unary) => {
             mark_forall_param_coverage_in_obj(unary.set.as_ref(), coverage_by_forall_param);
         }
-        Obj::GeneralCart(general_cart) => {
+        Obj::IndexCart(index_cart) => {
             mark_forall_param_coverage_in_obj(
-                general_cart.index_set.as_ref(),
+                index_cart.index_set.as_ref(),
                 coverage_by_forall_param,
             );
             mark_forall_param_coverage_in_obj(
-                general_cart.family_set.as_ref(),
+                index_cart.family_set.as_ref(),
                 coverage_by_forall_param,
             );
             mark_forall_param_coverage_in_obj(
-                general_cart.family_fn.as_ref(),
+                index_cart.family_fn.as_ref(),
                 coverage_by_forall_param,
             );
         }

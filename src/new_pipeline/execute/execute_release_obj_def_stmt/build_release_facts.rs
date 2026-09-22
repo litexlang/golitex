@@ -4,7 +4,7 @@ use crate::new_pipeline::ast::fact::{
     and_chain_as_fact, AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, ForallFact, InFact,
     IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
 };
-use crate::new_pipeline::ast::obj::{FnObj, FnObjHead, IdentifierObj, Obj, StructObj, FunctionSpace, Structish};
+use crate::new_pipeline::ast::obj::{FnObj, FnObjHead, IdentifierObj, Obj, StructObj, FunctionSpace, StructAndFieldAccessObj};
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::ast::stmt::{
     HaveFnByForallExistUniqueStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt,
@@ -365,7 +365,7 @@ fn type_fact_for_surface(
         ParamType::Obj(param_set) => {
             let fact_id = runtime.ids.allocate_fact_id();
             let defined_as_struct = match param_set {
-                Obj::Structish(Structish::StructObj(struct_obj)) => Some((element.clone(), struct_obj.clone())),
+                Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(struct_obj)) => Some((element.clone(), struct_obj.clone())),
                 _ => None,
             };
             (

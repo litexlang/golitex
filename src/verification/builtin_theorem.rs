@@ -39,9 +39,9 @@ pub enum BuiltinTheoremId {
     DefinedSetMember,
     StructMember,
     CartesianMemberFromCoordinates,
-    GeneralCartesianMember,
-    GeneralCartesianNonemptyByChoiceFromFamily,
-    GeneralCartesianNonemptyByChoiceFromPointwise,
+    IndexCartesianMember,
+    IndexCartesianNonemptyByChoiceFromFamily,
+    IndexCartesianNonemptyByChoiceFromPointwise,
     SumLessEqualFromPointwise,
     FiniteSetSumLessEqualFromPointwise,
     FiniteSetSummandLessEqualSum,
@@ -69,12 +69,12 @@ impl BuiltinTheoremId {
             "defined_set_member" => Self::DefinedSetMember,
             "struct_member" => Self::StructMember,
             "cart_member_from_coordinates" => Self::CartesianMemberFromCoordinates,
-            "general_cart_member" => Self::GeneralCartesianMember,
-            "general_cart_nonempty_by_choice_from_family" => {
-                Self::GeneralCartesianNonemptyByChoiceFromFamily
+            "index_cart_member" => Self::IndexCartesianMember,
+            "index_cart_nonempty_by_choice_from_family" => {
+                Self::IndexCartesianNonemptyByChoiceFromFamily
             }
-            "general_cart_nonempty_by_choice_from_pointwise" => {
-                Self::GeneralCartesianNonemptyByChoiceFromPointwise
+            "index_cart_nonempty_by_choice_from_pointwise" => {
+                Self::IndexCartesianNonemptyByChoiceFromPointwise
             }
             "sum_le_sum_from_pointwise" => Self::SumLessEqualFromPointwise,
             "finite_set_sum_le_from_pointwise" => Self::FiniteSetSumLessEqualFromPointwise,
@@ -106,12 +106,12 @@ impl BuiltinTheoremId {
             Self::DefinedSetMember => "defined_set_member",
             Self::StructMember => "struct_member",
             Self::CartesianMemberFromCoordinates => "cart_member_from_coordinates",
-            Self::GeneralCartesianMember => "general_cart_member",
-            Self::GeneralCartesianNonemptyByChoiceFromFamily => {
-                "general_cart_nonempty_by_choice_from_family"
+            Self::IndexCartesianMember => "index_cart_member",
+            Self::IndexCartesianNonemptyByChoiceFromFamily => {
+                "index_cart_nonempty_by_choice_from_family"
             }
-            Self::GeneralCartesianNonemptyByChoiceFromPointwise => {
-                "general_cart_nonempty_by_choice_from_pointwise"
+            Self::IndexCartesianNonemptyByChoiceFromPointwise => {
+                "index_cart_nonempty_by_choice_from_pointwise"
             }
             Self::SumLessEqualFromPointwise => "sum_le_sum_from_pointwise",
             Self::FiniteSetSumLessEqualFromPointwise => "finite_set_sum_le_from_pointwise",

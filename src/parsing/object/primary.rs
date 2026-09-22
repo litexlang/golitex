@@ -239,13 +239,13 @@ impl Runtime {
             })?;
             return Ok(SetMinus::new(left, right).into());
         }
-        if tok == BIG_INTERSECT {
+        if tok == FAMILY_INTERSECT {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 1 {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "big_intersect expects 1 argument".to_string(),
+                        "family_intersect expects 1 argument".to_string(),
                         tb.line_file.clone(),
                     ),
                 )));
@@ -254,20 +254,20 @@ impl Runtime {
             let value = it.next().ok_or_else(|| {
                 RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "big_intersect expects 1 argument".to_string(),
+                        "family_intersect expects 1 argument".to_string(),
                         tb.line_file.clone(),
                     ),
                 ))
             })?;
-            return Ok(BigIntersect::new(value).into());
+            return Ok(FamilyIntersect::new(value).into());
         }
-        if tok == BIG_UNION {
+        if tok == FAMILY_UNION {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 1 {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "big_union expects 1 argument".to_string(),
+                        "family_union expects 1 argument".to_string(),
                         tb.line_file.clone(),
                     ),
                 )));
@@ -276,12 +276,12 @@ impl Runtime {
             let value = it.next().ok_or_else(|| {
                 RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "big_union expects 1 argument".to_string(),
+                        "family_union expects 1 argument".to_string(),
                         tb.line_file.clone(),
                     ),
                 ))
             })?;
-            return Ok(BigUnion::new(value).into());
+            return Ok(FamilyUnion::new(value).into());
         }
         if tok == INDEX_UNION {
             tb.skip()?;
@@ -519,13 +519,13 @@ impl Runtime {
             })?;
             return Ok(PowerSet::new(value).into());
         }
-        if tok == GENERAL_CART {
+        if tok == INDEX_CART {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
             if args.len() != 3 {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "general_cart expects 3 arguments".to_string(),
+                        "index_cart expects 3 arguments".to_string(),
                         tb.line_file.clone(),
                     ),
                 )));
@@ -534,7 +534,7 @@ impl Runtime {
             let index_set = it.next().ok_or_else(|| {
                 RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "general_cart expects 3 arguments".to_string(),
+                        "index_cart expects 3 arguments".to_string(),
                         tb.line_file.clone(),
                     ),
                 ))
@@ -542,7 +542,7 @@ impl Runtime {
             let family_set = it.next().ok_or_else(|| {
                 RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "general_cart expects 3 arguments".to_string(),
+                        "index_cart expects 3 arguments".to_string(),
                         tb.line_file.clone(),
                     ),
                 ))
@@ -550,12 +550,12 @@ impl Runtime {
             let family_fn = it.next().ok_or_else(|| {
                 RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "general_cart expects 3 arguments".to_string(),
+                        "index_cart expects 3 arguments".to_string(),
                         tb.line_file.clone(),
                     ),
                 ))
             })?;
-            return Ok(GeneralCart::new(index_set, family_set, family_fn).into());
+            return Ok(IndexCart::new(index_set, family_set, family_fn).into());
         }
         if tok == CART_DIM {
             tb.skip()?;

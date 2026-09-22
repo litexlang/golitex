@@ -37,7 +37,7 @@ fn finite_set_induction_and_choice_report_their_exact_lean_abi_boundaries() {
         .compile_stmt_results_to_lean_source(std::slice::from_ref(choice_result))
         .expect_err("choice must fail closed at its dependent set-family ABI boundary");
     assert!(
-        choice_error.contains("dependent set-valued-family and BigUnion"),
+        choice_error.contains("dependent set-valued-family and FamilyUnion"),
         "{choice_error}"
     );
 }

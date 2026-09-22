@@ -1,7 +1,7 @@
 # Topology
 
 This settings-first topology showcase has a checked elementary theorem chain. It uses
-native `intersect`, `union`, `big_union`, subset, and set-builder preimages;
+native `intersect`, `union`, `family_union`, subset, and set-builder preimages;
 derives binary-union and three-way-intersection closure; defines continuity by
 open preimages; proves the closed-preimage characterization of continuity in
 both directions; defines compact subsets by indexed open covers; and proves

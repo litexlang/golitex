@@ -1025,7 +1025,7 @@ impl WitnessExistFact {
         StmtIR(format!(
             "{} {} {} {}",
             WITNESS,
-            self.exist_fact_in_witness.ir(),
+            self.exist_shaped_fact_in_witness.ir(),
             FROM,
             equal_tos.join(", ")
         ))

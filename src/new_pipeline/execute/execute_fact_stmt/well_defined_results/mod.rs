@@ -21,9 +21,9 @@ pub use crate::new_pipeline::execute::execute_fact_stmt::verify_chain_fact::{
     ChainFactWellDefinedProof, FailToVerifyChainFactWellDefinedResult,
     VerifyChainFactWellDefinedResult,
 };
-pub use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_fact::{
-    ExistFactWellDefinedProof, FailToVerifyExistFactWellDefinedResult,
-    VerifyExistFactWellDefinedResult,
+pub use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_shaped_fact::{
+    ExistShapedFactWellDefinedProof, FailToVerifyExistShapedFactWellDefinedResult,
+    VerifyExistShapedFactWellDefinedResult,
 };
 pub use crate::new_pipeline::execute::execute_fact_stmt::verify_forall_fact::{
     FailToVerifyForallFactWellDefinedResult, ForallFactWellDefinedProof,

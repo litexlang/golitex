@@ -18,7 +18,7 @@ fn primary_keyword_families_keep_their_ast_variants() {
         ("power_set(A)", ObjKind::PowerSet),
         ("finite_seq(R, 3)", ObjKind::FiniteSeqSet),
         ("matrix(R, 2, 3)", ObjKind::MatrixSet),
-        ("general_cart(I, A, f)", ObjKind::GeneralCart),
+        ("index_cart(I, A, f)", ObjKind::IndexCart),
         ("sum(1, n, f)", ObjKind::Sum),
         ("finite_set_product(A, f)", ObjKind::ProductOfFiniteSet),
         ("reduce(1, n, f, op, 0)", ObjKind::Reduce),

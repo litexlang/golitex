@@ -6,8 +6,8 @@ use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::{
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_and_fact::FailToVerifyAndFactWellDefinedResult;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_chain_fact::FailToVerifyChainFactWellDefinedResult;
-use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_fact::{
-    ExistFactWellDefinedProof, FailToVerifyExistFactWellDefinedResult,
+use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_shaped_fact::{
+    ExistShapedFactWellDefinedProof, FailToVerifyExistShapedFactWellDefinedResult,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_forall_fact::{
     FailToVerifyForallFactWellDefinedResult, ForallFactWellDefinedProof,
@@ -28,7 +28,7 @@ pub enum FailToVerifyFactWellDefinedResult {
     AndFact(FailToVerifyAndFactWellDefinedResult),
     ChainFact(FailToVerifyChainFactWellDefinedResult),
     OrFact(FailToVerifyOrFactWellDefinedResult),
-    ExistFact(FailToVerifyExistFactWellDefinedResult),
+    ExistFact(FailToVerifyExistShapedFactWellDefinedResult),
     ForallFact(FailToVerifyForallFactWellDefinedResult),
     ForallFactWithIff(FailToVerifyForallFactWithIffWellDefinedResult),
     NotForall(FailToVerifyNotForallFactWellDefinedResult),
@@ -45,7 +45,7 @@ pub enum FactWellDefinedProof {
         adjacent: Vec<AtomicFactWellDefinedProof>,
     },
     OrFact(OrFactWellDefinedProof),
-    ExistFact(ExistFactWellDefinedProof),
+    ExistFact(ExistShapedFactWellDefinedProof),
     ForallFact(ForallFactWellDefinedProof),
     ForallFactWithIff(ForallFactWithIffWellDefinedProof),
     NotForall(NotForallFactWellDefinedProof),

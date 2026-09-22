@@ -1,5 +1,5 @@
 pub mod exec_env;
-pub mod exist_fact_index_key;
+pub mod exist_shaped_fact_index_key;
 pub mod forall_conclusion_index_key;
 pub mod known_fact_memory;
 pub mod known_forall_conclusion_memory;
@@ -10,13 +10,13 @@ pub mod or_fact_index_key;
 pub use exec_env::{
     ExecEnv, SpecialObjectPropertyByDefinition, StoredIdentifierDefinition,
 };
-pub use exist_fact_index_key::{
-    exist_fact_alpha_match_key, exist_fact_can_prove_goal, exist_fact_index_key,
-    exist_fact_known_lookup_keys, plain_exist_fact, ExistFactIndexKey, ExistFactKind,
+pub use exist_shaped_fact_index_key::{
+    exist_shaped_fact_alpha_match_key, exist_shaped_fact_can_prove_goal, exist_shaped_fact_index_key,
+    exist_shaped_fact_known_lookup_keys, plain_exist_fact, ExistShapedFactIndexKey, ExistShapedFactKind,
     QuantifierFreeShape,
 };
 pub use known_fact_memory::{
-    AtomicExceptEqualityFactMemory, ExistFactMemory, maybe_index_known_closed_numeric_equal,
+    AtomicExceptEqualityFactMemory, ExistShapedFactMemory, maybe_index_known_closed_numeric_equal,
     KnownEqualToObjWithFreeParamsMemory, KnownEqualToObjWithFreeParamsShape,
     KnownEquivalenceClassMemory, KnownFactMemory, ObjIR, OrFactMemory,
 };

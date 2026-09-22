@@ -78,13 +78,13 @@ pub fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
         Obj::ComplexAbs(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
         Obj::Sqrt(u) => obj_expr_mentions_bare_id(u.arg.as_ref(), id),
         Obj::PowerSet(u) => obj_expr_mentions_bare_id(u.set.as_ref(), id),
-        Obj::GeneralCart(g) => {
+        Obj::IndexCart(g) => {
             obj_expr_mentions_bare_id(g.index_set.as_ref(), id)
                 || obj_expr_mentions_bare_id(g.family_set.as_ref(), id)
                 || obj_expr_mentions_bare_id(g.family_fn.as_ref(), id)
         }
-        Obj::BigUnion(u) => obj_expr_mentions_bare_id(u.left.as_ref(), id),
-        Obj::BigIntersect(u) => obj_expr_mentions_bare_id(u.left.as_ref(), id),
+        Obj::FamilyUnion(u) => obj_expr_mentions_bare_id(u.left.as_ref(), id),
+        Obj::FamilyIntersect(u) => obj_expr_mentions_bare_id(u.left.as_ref(), id),
         Obj::IndexUnion(u) => {
             obj_expr_mentions_bare_id(u.index_set.as_ref(), id)
                 || obj_expr_mentions_bare_id(u.ambient_set.as_ref(), id)

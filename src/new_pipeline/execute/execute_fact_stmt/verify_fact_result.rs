@@ -16,8 +16,8 @@ use super::verify_atomic_fact::{
     VerifyAtomicExceptEqualityFactResult, VerifyEqualityResult,
 };
 use super::verify_chain_fact::{VerifyChainFactFailed, VerifyChainFactResult};
-use super::verify_exist_fact::{
-    VerifyExistFactFailed, VerifyExistFactResult, VerifyExistUniqueFactResult,
+use super::verify_exist_shaped_fact::{
+    VerifyExistShapedFactFailed, VerifyExistShapedFactResult, VerifyExistUniqueFactResult,
     VerifyNotExistFactResult, VerifyPlainExistFactResult,
 };
 use super::verify_forall_fact::{VerifyForallFactFailed, VerifyForallFactResult};
@@ -31,7 +31,7 @@ pub enum VerifyFactResult {
     AndFact(Box<VerifyAndFactResult>),
     ChainFact(Box<VerifyChainFactResult>),
     OrFact(Box<VerifyOrFactResult>),
-    ExistFact(Box<VerifyExistFactResult>),
+    ExistShapedFact(Box<VerifyExistShapedFactResult>),
     ForallFact(Box<VerifyForallFactResult>),
     ForallFactWithIff(Box<VerifyForallFactWithIffResult>),
     NotForall(Box<VerifyNotForallFactResult>),
@@ -45,7 +45,7 @@ impl VerifyFactResult {
             Self::AndFact(r) => r.is_failed(),
             Self::ChainFact(r) => r.is_failed(),
             Self::OrFact(r) => r.is_failed(),
-            Self::ExistFact(r) => r.is_failed(),
+            Self::ExistShapedFact(r) => r.is_failed(),
             Self::ForallFact(r) => r.is_failed(),
             Self::ForallFactWithIff(r) => r.is_failed(),
             Self::NotForall(r) => r.is_failed(),
@@ -81,15 +81,15 @@ impl VerifyFactResult {
                 r.as_ref(),
                 VerifyOrFactResult::Failed(VerifyOrFactFailed::FailToVerifyWellDefined(_))
             ),
-            Self::ExistFact(r) => match r.as_ref() {
-                VerifyExistFactResult::PlainExistFact(VerifyPlainExistFactResult::Failed(
-                    VerifyExistFactFailed::FailToVerifyWellDefined(_),
+            Self::ExistShapedFact(r) => match r.as_ref() {
+                VerifyExistShapedFactResult::PlainExistFact(VerifyPlainExistFactResult::Failed(
+                    VerifyExistShapedFactFailed::FailToVerifyWellDefined(_),
                 ))
-                | VerifyExistFactResult::ExistUniqueFact(VerifyExistUniqueFactResult::Failed(
-                    VerifyExistFactFailed::FailToVerifyWellDefined(_),
+                | VerifyExistShapedFactResult::ExistUniqueFact(VerifyExistUniqueFactResult::Failed(
+                    VerifyExistShapedFactFailed::FailToVerifyWellDefined(_),
                 ))
-                | VerifyExistFactResult::NotExistFact(VerifyNotExistFactResult::Failed(
-                    VerifyExistFactFailed::FailToVerifyWellDefined(_),
+                | VerifyExistShapedFactResult::NotExistFact(VerifyNotExistFactResult::Failed(
+                    VerifyExistShapedFactFailed::FailToVerifyWellDefined(_),
                 )) => true,
                 _ => false,
             },

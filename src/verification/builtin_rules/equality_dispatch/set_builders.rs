@@ -27,9 +27,9 @@ impl Runtime {
     }
 
     // General Cartesian product definition with a named quantified condition.
-    // Example: `general_cart(I, S, g) =
-    // {f fn(alpha I)big_union(S): $is_choice_function_for(I, S, g, f)}`.
-    pub(super) fn try_verify_general_cart_set_builder_equality(
+    // Example: `index_cart(I, S, g) =
+    // {f fn(alpha I)family_union(S): $is_choice_function_for(I, S, g, f)}`.
+    pub(super) fn try_verify_index_cart_set_builder_equality(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
@@ -37,15 +37,15 @@ impl Runtime {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
-        for (general_cart_side, set_builder_side) in [(left, right), (right, left)] {
-            let Obj::GeneralCart(general_cart) = general_cart_side else {
+        for (index_cart_side, set_builder_side) in [(left, right), (right, left)] {
+            let Obj::IndexCart(index_cart) = index_cart_side else {
                 continue;
             };
             let Obj::SetBuilder(set_builder) = set_builder_side else {
                 continue;
             };
-            let Some(steps) = self.general_cart_named_set_builder_canonical_steps(
-                general_cart,
+            let Some(steps) = self.index_cart_named_set_builder_canonical_steps(
+                index_cart,
                 set_builder,
                 line_file.clone(),
                 builtin_state,
@@ -55,16 +55,16 @@ impl Runtime {
             };
             return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 equal_fact,
-                "general_cart equals its named-property set-builder definition",
+                "index_cart equals its named-property set-builder definition",
                 steps,
             )));
         }
         Ok(None)
     }
 
-    pub(super) fn general_cart_named_set_builder_canonical_steps(
+    pub(super) fn index_cart_named_set_builder_canonical_steps(
         &mut self,
-        general_cart: &GeneralCart,
+        index_cart: &IndexCart,
         set_builder: &SetBuilder,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
@@ -82,7 +82,7 @@ impl Runtime {
         let Some(domain_result) = self.try_verify_equal_fact_as_builtin_premise(
             &self.new_equal_fact_from_refs(
                 fn_set.body.set_bound_parameters[0].set_obj(),
-                general_cart.index_set.as_ref(),
+                index_cart.index_set.as_ref(),
                 line_file.clone(),
             ),
             builtin_state,
@@ -90,7 +90,7 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let expected_ret_set: Obj = BigUnion::new(general_cart.family_set.as_ref().clone()).into();
+        let expected_ret_set: Obj = FamilyUnion::new(index_cart.family_set.as_ref().clone()).into();
         let ret_result = self.try_verify_equal_fact_as_builtin_premise(
             &self.new_equal_fact_from_refs(
                 fn_set.body.ret_set.as_ref(),
@@ -127,9 +127,9 @@ impl Runtime {
 
         let mut steps = vec![domain_result, ret_result];
         for (actual, expected) in [
-            (choice_index, general_cart.index_set.as_ref()),
-            (choice_family_set, general_cart.family_set.as_ref()),
-            (choice_family_fn, general_cart.family_fn.as_ref()),
+            (choice_index, index_cart.index_set.as_ref()),
+            (choice_family_set, index_cart.family_set.as_ref()),
+            (choice_family_fn, index_cart.family_fn.as_ref()),
         ] {
             let Some(result) = self.try_verify_equal_fact_as_builtin_premise(
                 &self.new_equal_fact_from_refs(actual, expected, line_file.clone()),

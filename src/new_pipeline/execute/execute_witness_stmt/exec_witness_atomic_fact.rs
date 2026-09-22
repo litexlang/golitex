@@ -17,7 +17,7 @@
 use std::collections::HashMap;
 
 use crate::new_pipeline::ast::fact::{
-    exist_fact_family_from_fact, exist_fact_family_to_fact, AtomicFact, ExistFactFamily, Fact,
+    exist_shaped_fact_from_fact, exist_shaped_fact_to_fact, AtomicFact, ExistShapedFact, Fact,
 };
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::stmt::WitnessAtomicFact;
@@ -48,7 +48,7 @@ pub enum ExecWitnessAtomicFactStmtFailed {
 
 pub struct ExecWitnessAtomicFactStmtSuccessResult {
     pub statement: WitnessAtomicFact,
-    pub projected_exist: ExistFactFamily,
+    pub projected_exist: ExistShapedFact,
     pub exist_check: WitnessExistCheckSuccess,
     pub store_and_infer_result: StoreFactAndInferResult,
 }
@@ -99,8 +99,8 @@ impl Runtime {
             subst.insert(id, arg.clone());
         }
 
-        let projected_exist = match self.inst_fact(&exist_fact_family_to_fact(&projected), &subst) {
-            Ok(instantiated) => match exist_fact_family_from_fact(&instantiated) {
+        let projected_exist = match self.inst_fact(&exist_shaped_fact_to_fact(&projected), &subst) {
+            Ok(instantiated) => match exist_shaped_fact_from_fact(&instantiated) {
                 Some(family) => family,
                 None => {
                     return Ok(ExecWitnessAtomicFactStmtResult::Failed(
@@ -142,20 +142,20 @@ impl Runtime {
     }
 }
 
-fn project_sole_ordinary_exist_clause(iff_facts: &[Fact]) -> Result<ExistFactFamily, String> {
+fn project_sole_ordinary_exist_clause(iff_facts: &[Fact]) -> Result<ExistShapedFact, String> {
     if iff_facts.len() != 1 {
         return Err(format!(
             "witness `$P` requires exactly one definition clause, got {}",
             iff_facts.len()
         ));
     }
-    match exist_fact_family_from_fact(&iff_facts[0]) {
-        Some(ExistFactFamily::Exist(p)) => Ok(ExistFactFamily::Exist(p)),
-        Some(ExistFactFamily::ExistUnique(_)) => Err(
+    match exist_shaped_fact_from_fact(&iff_facts[0]) {
+        Some(ExistShapedFact::Exist(p)) => Ok(ExistShapedFact::Exist(p)),
+        Some(ExistShapedFact::ExistUnique(_)) => Err(
             "witness `$P` does not support an `exist!` definition clause; use explicit `witness exist! …` then `by def`"
                 .to_string(),
         ),
-        Some(ExistFactFamily::NotExist(_)) => Err(
+        Some(ExistShapedFact::NotExist(_)) => Err(
             "witness `$P` cannot introduce a `not exist` definition clause".to_string(),
         ),
         None => Err(

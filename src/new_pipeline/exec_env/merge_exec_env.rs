@@ -12,7 +12,7 @@
 
 use super::exec_env::ExecEnv;
 use super::maybe_index_known_closed_numeric_equal;
-use crate::new_pipeline::ast::fact::ExistFactFamily;
+use crate::new_pipeline::ast::fact::ExistShapedFact;
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact};
 use crate::new_pipeline::ast::names::PlainName;
 use crate::new_pipeline::parse::keywords::{
@@ -142,15 +142,15 @@ fn merge_facts_from(parent: &mut ExecEnv, child: &ExecEnv) -> RuntimeResult<()> 
                 parent.facts.record_fact(fact_id, fact.clone());
             }
             Fact::ExistFact(plain) => {
-                parent.facts.known_exist.store(&ExistFactFamily::Exist(plain.clone()));
+                parent.facts.known_exist.store(&ExistShapedFact::Exist(plain.clone()));
                 parent.facts.record_fact(fact_id, fact.clone());
             }
             Fact::ExistUniqueFact(plain) => {
-                parent.facts.known_exist.store(&ExistFactFamily::ExistUnique(plain.clone()));
+                parent.facts.known_exist.store(&ExistShapedFact::ExistUnique(plain.clone()));
                 parent.facts.record_fact(fact_id, fact.clone());
             }
             Fact::NotExistFact(plain) => {
-                parent.facts.known_exist.store(&ExistFactFamily::NotExist(plain.clone()));
+                parent.facts.known_exist.store(&ExistShapedFact::NotExist(plain.clone()));
                 parent.facts.record_fact(fact_id, fact.clone());
             }
             _ => {

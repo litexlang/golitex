@@ -16,7 +16,7 @@
 //!   obtain theorem_copy from thm self_exists(3)
 //!   // stores `theorem_copy $in R` and `theorem_copy = 3`
 
-use crate::new_pipeline::ast::fact::{exist_fact_family_from_fact, ExistFactFamily};
+use crate::new_pipeline::ast::fact::{exist_shaped_fact_from_fact, ExistShapedFact};
 use crate::new_pipeline::ast::stmt::ObtainObjFromThm;
 use crate::new_pipeline::exec_env::exec_env::ExecEnv;
 use crate::new_pipeline::execute::execute_by_stmt::{
@@ -42,7 +42,7 @@ pub struct ExecObtainObjFromThmStmtSuccessResult {
     pub thm_name: String,
     pub dom_proofs: Vec<VerifyFactResult>,
     pub local_env: Box<ExecEnv>,
-    pub projected_exist: ExistFactFamily,
+    pub projected_exist: ExistShapedFact,
     pub store_and_infer_result: StoreHaveObjAndInferResult,
 }
 
@@ -130,17 +130,17 @@ fn verify_release_doms(
 
 fn extract_sole_positive_exist_conclusion(
     prepared: &PreparedRelease,
-) -> Result<ExistFactFamily, String> {
+) -> Result<ExistShapedFact, String> {
     if prepared.conclusions.len() != 1 {
         return Err(format!(
             "obtain from thm requires exactly one direct conclusion, got {}",
             prepared.conclusions.len()
         ));
     }
-    match exist_fact_family_from_fact(&prepared.conclusions[0]) {
-        Some(ExistFactFamily::Exist(p)) => Ok(ExistFactFamily::Exist(p)),
-        Some(ExistFactFamily::ExistUnique(p)) => Ok(ExistFactFamily::ExistUnique(p)),
-        Some(ExistFactFamily::NotExist(_)) => Err(
+    match exist_shaped_fact_from_fact(&prepared.conclusions[0]) {
+        Some(ExistShapedFact::Exist(p)) => Ok(ExistShapedFact::Exist(p)),
+        Some(ExistShapedFact::ExistUnique(p)) => Ok(ExistShapedFact::ExistUnique(p)),
+        Some(ExistShapedFact::NotExist(_)) => Err(
             "obtain from thm cannot eliminate a `not exist` conclusion".to_string(),
         ),
         None => Err(

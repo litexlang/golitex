@@ -111,8 +111,8 @@ impl Obj {
             Obj::SetMinus(x) => {
                 collect_forall_free_param_names_in_pair(&x.left, &x.right, collector)
             }
-            Obj::BigUnion(x) => x.left.collect_free_param_names_into(collector),
-            Obj::BigIntersect(x) => x.left.collect_free_param_names_into(collector),
+            Obj::FamilyUnion(x) => x.left.collect_free_param_names_into(collector),
+            Obj::FamilyIntersect(x) => x.left.collect_free_param_names_into(collector),
             Obj::IndexUnion(x) => {
                 x.index_set.collect_free_param_names_into(collector);
                 x.ambient_set.collect_free_param_names_into(collector);
@@ -126,7 +126,7 @@ impl Obj {
             Obj::PowerSet(x) => x.set.collect_free_param_names_into(collector),
             Obj::FiniteSetMax(x) => x.set.collect_free_param_names_into(collector),
             Obj::FiniteSetMin(x) => x.set.collect_free_param_names_into(collector),
-            Obj::GeneralCart(x) => {
+            Obj::IndexCart(x) => {
                 x.index_set.collect_free_param_names_into(collector);
                 x.family_set.collect_free_param_names_into(collector);
                 x.family_fn.collect_free_param_names_into(collector);

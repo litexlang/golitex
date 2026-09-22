@@ -42,7 +42,7 @@ impl Runtime {
         tb: &mut TokenBlock,
         block: &TokenBlock,
     ) -> RuntimeResult<Stmt> {
-        let exist_fact_in_witness = self.parse_exist_fact(tb)?;
+        let exist_shaped_fact_in_witness = self.parse_exist_fact(tb)?;
         tb.expect(FROM)?;
         let mut equal_tos = vec![parse_obj(self, tb)?];
         while tb.peek() == Some(COMMA) {
@@ -64,7 +64,7 @@ impl Runtime {
         Ok(Stmt::Witness(WitnessStmt::WitnessExistFact(
             WitnessExistFact {
                 equal_tos,
-                exist_fact_in_witness,
+                exist_shaped_fact_in_witness,
                 line_file: LineFile::new(block.line, block.source_path.clone()),
             },
         )))

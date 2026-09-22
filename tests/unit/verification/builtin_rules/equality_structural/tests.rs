@@ -23,7 +23,7 @@ fn matcher_accepts_with_one_known_leaf(left: &Obj, right: &Obj, x: &Obj, y: &Obj
 }
 
 #[test]
-fn central_matcher_covers_obligation_free_complex_and_general_cart_congruence() {
+fn central_matcher_covers_obligation_free_complex_and_index_cart_congruence() {
     let x: Obj = Identifier::new("x".to_string()).into();
     let y: Obj = Identifier::new("y".to_string()).into();
     let index_set: Obj = Identifier::new("I".to_string()).into();
@@ -43,8 +43,8 @@ fn central_matcher_covers_obligation_free_complex_and_general_cart_congruence() 
             ComplexAbs::new(y.clone()).into(),
         ),
         (
-            GeneralCart::new(index_set.clone(), family_set.clone(), x.clone()).into(),
-            GeneralCart::new(index_set, family_set, y.clone()).into(),
+            IndexCart::new(index_set.clone(), family_set.clone(), x.clone()).into(),
+            IndexCart::new(index_set, family_set, y.clone()).into(),
         ),
     ];
 

@@ -201,12 +201,12 @@ fn check_obj_has_no_duplicate_free_parameter(
         Obj::SetMinus(obj) => {
             check_two_objs(&obj.left, &obj.right, free_param_type, params_already_used)
         }
-        Obj::BigUnion(obj) => check_obj_has_no_duplicate_free_parameter(
+        Obj::FamilyUnion(obj) => check_obj_has_no_duplicate_free_parameter(
             &obj.left,
             free_param_type,
             params_already_used,
         ),
-        Obj::BigIntersect(obj) => check_obj_has_no_duplicate_free_parameter(
+        Obj::FamilyIntersect(obj) => check_obj_has_no_duplicate_free_parameter(
             &obj.left,
             free_param_type,
             params_already_used,
@@ -250,7 +250,7 @@ fn check_obj_has_no_duplicate_free_parameter(
             free_param_type,
             params_already_used,
         ),
-        Obj::GeneralCart(obj) => {
+        Obj::IndexCart(obj) => {
             check_obj_has_no_duplicate_free_parameter(
                 &obj.index_set,
                 free_param_type,

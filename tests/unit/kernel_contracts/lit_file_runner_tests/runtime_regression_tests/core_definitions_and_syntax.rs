@@ -103,7 +103,7 @@ fn builtin_rules_do_not_add_unreviewed_full_verifier_calls() {
     // regain an unrestricted verifier through a new call site.
     let reviewed_bounded_semantic_premise_handlers = [
         "try_verify_in_fact_by_symbolic_cart",
-        "verify_in_fact_in_general_cart_by_defining_facts",
+        "verify_in_fact_in_index_cart_by_defining_facts",
         "verify_in_fact_in_set_builder_by_defining_facts",
         "verify_in_fact_by_struct_obj",
         "try_verify_tuple_equality_from_dim_and_projections",
@@ -111,7 +111,7 @@ fn builtin_rules_do_not_add_unreviewed_full_verifier_calls() {
         "try_less_equal_sum_pointwise_on_same_integer_range",
         "try_less_equal_finite_set_sum_pointwise_on_same_set",
         "try_less_equal_finite_set_summand_nonnegative_sum",
-        "verify_general_cart_nonempty_by_choice_explicit",
+        "verify_index_cart_nonempty_by_choice_explicit",
         "try_verify_reduce_order_preserving_translation",
         "try_verify_finite_set_reduce_bijective_reindexing",
         "verify_reduce_operation_matches_native",
@@ -227,41 +227,41 @@ by for:
 }
 
 #[test]
-fn big_union_membership_has_builtin_intro_and_elim() {
-    run_with_large_stack("big_union_membership_has_builtin_intro_and_elim", || {
+fn family_union_membership_has_builtin_intro_and_elim() {
+    run_with_large_stack("family_union_membership_has_builtin_intro_and_elim", || {
         let source_code = r#"
-thm tmp_big_union_intro_from_member:
+thm tmp_family_union_intro_from_member:
     ? forall x set, F set, A set:
         A $in F
         x $in A
         =>:
-            x $in big_union(F)
-    x $in big_union(F)
+            x $in family_union(F)
+    x $in family_union(F)
 
-thm tmp_big_union_intro_from_exist:
+thm tmp_family_union_intro_from_exist:
     ? forall x set, F set:
         exist A F st {x $in A}
         =>:
-            x $in big_union(F)
-    x $in big_union(F)
+            x $in family_union(F)
+    x $in family_union(F)
 
-thm tmp_big_union_elim_to_exist:
+thm tmp_family_union_elim_to_exist:
     ? forall x set, F set:
-        x $in big_union(F)
+        x $in family_union(F)
         =>:
             exist A F st {x $in A}
     exist A F st {x $in A}
 "#;
 
         let mut runtime = Runtime::default();
-        runtime.start_isolated_source("big_union_membership_has_builtin_intro_and_elim");
+        runtime.start_isolated_source("family_union_membership_has_builtin_intro_and_elim");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             run_succeeded,
-            "big_union_membership_has_builtin_intro_and_elim failed:\n{}",
+            "family_union_membership_has_builtin_intro_and_elim failed:\n{}",
             run_output
         );
     });
@@ -1153,9 +1153,9 @@ fn unsupported_compact_standard_set_suffixes_still_fail() {
 }
 
 #[test]
-fn general_cart_builtin_definition_choice_and_membership_inference() {
+fn index_cart_builtin_definition_choice_and_membership_inference() {
     run_with_large_stack(
-        "general_cart_builtin_definition_choice_and_membership_inference",
+        "index_cart_builtin_definition_choice_and_membership_inference",
         || {
             let source_code = r#"
 have I set
@@ -1163,18 +1163,18 @@ have X nonempty_set
 trust forall x X => $is_nonempty_set(x)
 have g fn(alpha I) X
 
-general_cart(I, X, g) = {c fn(t I)big_union(X): $is_choice_function_for(I, X, g, c)}
+index_cart(I, X, g) = {c fn(t I)family_union(X): $is_choice_function_for(I, X, g, c)}
 
-trust have d fn(t I)big_union(X)
+trust have d fn(t I)family_union(X)
 trust forall alpha I:
     d(alpha) $in g(alpha)
 $is_choice_function_for(I, X, g, d)
-d $in general_cart(I, X, g)
+d $in index_cart(I, X, g)
 
-release thm general_cart_nonempty_by_choice_from_family(general_cart(I, X, g))
-$is_nonempty_set(general_cart(I, X, g))
-have c general_cart(I, X, g)
-c $in fn(t I)big_union(X)
+release thm index_cart_nonempty_by_choice_from_family(index_cart(I, X, g))
+$is_nonempty_set(index_cart(I, X, g))
+have c index_cart(I, X, g)
+c $in fn(t I)family_union(X)
 $is_choice_function_for(I, X, g, c)
 forall alpha I:
     c(alpha) $in g(alpha)
@@ -1183,13 +1183,13 @@ have J set
 have h fn(beta J) X
 forall beta J:
     $is_nonempty_set(h(beta))
-release thm general_cart_nonempty_by_choice_from_pointwise(general_cart(J, X, h))
-$is_nonempty_set(general_cart(J, X, h))
+release thm index_cart_nonempty_by_choice_from_pointwise(index_cart(J, X, h))
+$is_nonempty_set(index_cart(J, X, h))
 "#;
 
             let mut runtime = Runtime::default();
             runtime.start_isolated_source(
-                "general_cart_builtin_definition_choice_and_membership_inference",
+                "index_cart_builtin_definition_choice_and_membership_inference",
             );
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -1197,7 +1197,7 @@ $is_nonempty_set(general_cart(J, X, h))
 
             assert!(
                 run_succeeded,
-                "general_cart builtin definition/choice test failed:\n{}",
+                "index_cart builtin definition/choice test failed:\n{}",
                 run_output
             );
         },
@@ -1205,51 +1205,51 @@ $is_nonempty_set(general_cart(J, X, h))
 }
 
 #[test]
-fn general_cart_named_set_builder_definition_rejects_a_different_family() {
+fn index_cart_named_set_builder_definition_rejects_a_different_family() {
     let source_code = r#"
 have I set
 have X nonempty_set
 have g fn(alpha I) X
 have h fn(alpha I) X
 
-general_cart(I, X, g) = {c fn(t I)big_union(X): $is_choice_function_for(I, X, h, c)}
+index_cart(I, X, g) = {c fn(t I)family_union(X): $is_choice_function_for(I, X, h, c)}
 "#;
 
     let mut runtime = Runtime::default();
     runtime.start_isolated_source(
-        "general_cart_named_set_builder_definition_rejects_a_different_family",
+        "index_cart_named_set_builder_definition_rejects_a_different_family",
     );
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         !run_succeeded,
-        "a different family must not match the general_cart definition:\n{}",
+        "a different family must not match the index_cart definition:\n{}",
         run_output
     );
 }
 
 #[test]
-fn general_cart_nonempty_requires_factor_nonempty_fact() {
+fn index_cart_nonempty_requires_factor_nonempty_fact() {
     run_with_large_stack(
-        "general_cart_nonempty_requires_factor_nonempty_fact",
+        "index_cart_nonempty_requires_factor_nonempty_fact",
         || {
             let source_code = r#"
 have I set
 have s nonempty_set
 have g fn(alpha I) s
 
-$is_nonempty_set(general_cart(I, s, g))
+$is_nonempty_set(index_cart(I, s, g))
 "#;
 
             let mut runtime = Runtime::default();
-            runtime.start_isolated_source("general_cart_nonempty_requires_factor_nonempty_fact");
+            runtime.start_isolated_source("index_cart_nonempty_requires_factor_nonempty_fact");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 !run_succeeded,
-                "general_cart nonempty should require factor nonempty evidence:\n{}",
+                "index_cart nonempty should require factor nonempty evidence:\n{}",
                 run_output
             );
         },

@@ -3,12 +3,12 @@
 use crate::prelude::*;
 
 #[derive(Clone)]
-pub struct BigUnion {
+pub struct FamilyUnion {
     pub left: Box<Obj>,
 }
 
 #[derive(Clone)]
-pub struct BigIntersect {
+pub struct FamilyIntersect {
     pub left: Box<Obj>,
 }
 
@@ -30,17 +30,17 @@ pub struct IndexIntersect {
     pub family_fn: Box<Obj>,
 }
 
-impl BigUnion {
+impl FamilyUnion {
     pub fn new(left: Obj) -> Self {
-        BigUnion {
+        FamilyUnion {
             left: Box::new(left),
         }
     }
 }
 
-impl BigIntersect {
+impl FamilyIntersect {
     pub fn new(left: Obj) -> Self {
-        BigIntersect {
+        FamilyIntersect {
             left: Box::new(left),
         }
     }

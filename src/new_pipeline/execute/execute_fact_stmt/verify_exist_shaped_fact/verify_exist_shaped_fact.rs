@@ -1,24 +1,24 @@
-use crate::new_pipeline::ast::fact::{exist_fact_family_from_fact, exist_fact_family_to_fact, 
-    exist_fact_family_free_args_ref, exist_fact_family_id, ExistFactFamily, Fact, InFact,
+use crate::new_pipeline::ast::fact::{exist_shaped_fact_from_fact, exist_shaped_fact_to_fact, 
+    exist_shaped_fact_free_args_ref, exist_shaped_fact_id, ExistShapedFact, Fact, InFact,
 };
 use crate::new_pipeline::ast::obj::{Obj, StandardSet};
-use crate::new_pipeline::exec_env::exist_fact_index_key::{
-    exist_fact_alpha_match_key, exist_fact_can_prove_goal, exist_fact_known_lookup_keys,
+use crate::new_pipeline::exec_env::exist_shaped_fact_index_key::{
+    exist_shaped_fact_alpha_match_key, exist_shaped_fact_can_prove_goal, exist_shaped_fact_known_lookup_keys,
 };
 use crate::new_pipeline::exec_env::known_forall_conclusion_memory::{
     exist_at_forall_location, ForallConclusionCite,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::match_forall_conclusion_args::subst_from_ordered_params;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
-use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_fact::helper::real_line_comparison_free_operands;
-use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_fact::result::{
-    exist_fact_result_from_search_fail, exist_fact_result_from_success,
-    exist_fact_result_from_wd_fail, ExistBuiltinRealLineComparisonWitness,
-    ExistFactSearchProofByBuiltinRule, ExistFactSearchProofByKnownExistFact, ExistFactSearchedProof,
+use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_shaped_fact::helper::real_line_comparison_free_operands;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_shaped_fact::result::{
+    exist_shaped_fact_result_from_search_fail, exist_shaped_fact_result_from_success,
+    exist_shaped_fact_result_from_wd_fail, ExistShapedBuiltinRealLineComparisonWitness,
+    ExistShapedFactSearchProofByBuiltinRule, ExistShapedFactSearchProofByKnownExistShapedFact, ExistShapedFactSearchedProof,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::{
-    VerifyExistFactWellDefinedResult, VerifyState,
+    VerifyExistShapedFactWellDefinedResult, VerifyState,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
@@ -27,22 +27,22 @@ impl Runtime {
     // Each: WD (Success|Failed, same shape as atomic) → Builtin → known → known_forall.
     // Example (known): stored `exist x N st {x = 1}` proves the same goal.
     // Example (forall): known `forall a N: exist x N st {x = a}` proves `exist x N st {x = 2}`.
-    pub fn verify_exist_fact(
+    pub fn verify_exist_shaped_fact(
         &mut self,
-        fact: &ExistFactFamily,
+        fact: &ExistShapedFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
         let well_defined_proof =
-            match self.verify_exist_fact_well_definedness(fact, verify_state.clone())? {
-                VerifyExistFactWellDefinedResult::Success(proof) => proof,
-                VerifyExistFactWellDefinedResult::Failed(reason) => {
-                    return Ok(exist_fact_result_from_wd_fail(fact, reason));
+            match self.verify_exist_shaped_fact_well_definedness(fact, verify_state.clone())? {
+                VerifyExistShapedFactWellDefinedResult::Success(proof) => proof,
+                VerifyExistShapedFactWellDefinedResult::Failed(reason) => {
+                    return Ok(exist_shaped_fact_result_from_wd_fail(fact, reason));
                 }
             };
-        let Some(searched_proof) = self.search_exist_fact_proof(fact, verify_state)? else {
-            return Ok(exist_fact_result_from_search_fail(fact, well_defined_proof));
+        let Some(searched_proof) = self.search_exist_shaped_fact_proof(fact, verify_state)? else {
+            return Ok(exist_shaped_fact_result_from_search_fail(fact, well_defined_proof));
         };
-        Ok(exist_fact_result_from_success(
+        Ok(exist_shaped_fact_result_from_success(
             fact,
             well_defined_proof,
             searched_proof,
@@ -50,50 +50,50 @@ impl Runtime {
     }
 
     // Builtin → known_exist → known_forall.
-    fn search_exist_fact_proof(
+    fn search_exist_shaped_fact_proof(
         &mut self,
-        fact: &ExistFactFamily,
+        fact: &ExistShapedFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<ExistFactSearchedProof>> {
+    ) -> RuntimeResult<Option<ExistShapedFactSearchedProof>> {
         if let Some(proof) =
-            self.search_exist_fact_proof_by_builtin_rule(fact, verify_state.clone())?
+            self.search_exist_shaped_fact_proof_by_builtin_rule(fact, verify_state.clone())?
         {
-            return Ok(Some(ExistFactSearchedProof::ByBuiltinRule(proof)));
+            return Ok(Some(ExistShapedFactSearchedProof::ByBuiltinRule(proof)));
         }
         if let Some(proof) =
-            self.search_exist_fact_proof_by_known_exist_fact(fact, verify_state.clone())?
+            self.search_exist_shaped_fact_proof_by_known_exist_shaped_fact(fact, verify_state.clone())?
         {
             return Ok(Some(proof));
         }
         if let Some(proof) =
-            self.search_exist_fact_proof_by_known_forall_fact(fact, verify_state)?
+            self.search_exist_shaped_fact_proof_by_known_forall_fact(fact, verify_state)?
         {
-            return Ok(Some(ExistFactSearchedProof::ByKnownForallFact(proof)));
+            return Ok(Some(ExistShapedFactSearchedProof::ByKnownForallFact(proof)));
         }
         Ok(None)
     }
 
-    fn search_exist_fact_proof_by_builtin_rule(
+    fn search_exist_shaped_fact_proof_by_builtin_rule(
         &mut self,
-        fact: &ExistFactFamily,
+        fact: &ExistShapedFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<ExistFactSearchProofByBuiltinRule>> {
+    ) -> RuntimeResult<Option<ExistShapedFactSearchProofByBuiltinRule>> {
         if let Some(proof) =
             self.search_exist_builtin_real_line_comparison_witness(fact, verify_state)?
         {
             return Ok(Some(
-                ExistFactSearchProofByBuiltinRule::RealLineComparisonWitness(proof),
+                ExistShapedFactSearchProofByBuiltinRule::RealLineComparisonWitness(proof),
             ));
         }
         Ok(None)
     }
 
-    // Builtin: real-line comparison witness. See ExistBuiltinRealLineComparisonWitness.
+    // Builtin: real-line comparison witness. See ExistShapedBuiltinRealLineComparisonWitness.
     fn search_exist_builtin_real_line_comparison_witness(
         &mut self,
-        fact: &ExistFactFamily,
+        fact: &ExistShapedFact,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Option<ExistBuiltinRealLineComparisonWitness>> {
+    ) -> RuntimeResult<Option<ExistShapedBuiltinRealLineComparisonWitness>> {
         let Some(free_operands) = real_line_comparison_free_operands(fact) else {
             return Ok(None);
         };
@@ -122,26 +122,26 @@ impl Runtime {
             requirement_facts.push(premise);
             proof_of_requirement_facts.push(proof);
         }
-        Ok(Some(ExistBuiltinRealLineComparisonWitness {
+        Ok(Some(ExistShapedBuiltinRealLineComparisonWitness {
             requirement_facts,
             proof_of_requirement_facts,
         }))
     }
 
-    fn search_exist_fact_proof_by_known_exist_fact(
+    fn search_exist_shaped_fact_proof_by_known_exist_shaped_fact(
         &mut self,
-        fact: &ExistFactFamily,
+        fact: &ExistShapedFact,
         _verify_state: VerifyState,
-    ) -> RuntimeResult<Option<ExistFactSearchedProof>> {
-        let goal_id = exist_fact_family_id(fact);
-        for key in exist_fact_known_lookup_keys(fact) {
+    ) -> RuntimeResult<Option<ExistShapedFactSearchedProof>> {
+        let goal_id = exist_shaped_fact_id(fact);
+        for key in exist_shaped_fact_known_lookup_keys(fact) {
             for env in self.execution_environments_stack.iter().rev() {
                 if let Some(entries) = env.facts.known_exist.by_key.get(&key) {
                     for entry in entries {
-                        let cite_fact_id = exist_fact_family_id(entry);
+                        let cite_fact_id = exist_shaped_fact_id(entry);
                         if cite_fact_id != goal_id {
-                            return Ok(Some(ExistFactSearchedProof::ByKnownExistFact(
-                                ExistFactSearchProofByKnownExistFact { cite_fact_id },
+                            return Ok(Some(ExistShapedFactSearchedProof::ByKnownExistShapedFact(
+                                ExistShapedFactSearchProofByKnownExistShapedFact { cite_fact_id },
                             )));
                         }
                     }
@@ -152,15 +152,15 @@ impl Runtime {
     }
 
     // After: SearchProofByKnownForallFact cite.
-    fn search_exist_fact_proof_by_known_forall_fact(
+    fn search_exist_shaped_fact_proof_by_known_forall_fact(
         &mut self,
-        fact: &ExistFactFamily,
+        fact: &ExistShapedFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<SearchProofByKnownForallFact>> {
         if !verify_state.can_use_forall_fact {
             return Ok(None);
         }
-        for lookup_key in exist_fact_known_lookup_keys(fact) {
+        for lookup_key in exist_shaped_fact_known_lookup_keys(fact) {
             let mut cites = Vec::new();
             for env in self.execution_environments_stack.iter().rev() {
                 if let Some(entries) = env.facts.known_forall_conclusions.by_exist.get(&lookup_key)
@@ -181,7 +181,7 @@ impl Runtime {
 
     fn try_apply_forall_exist_conclusion_cite(
         &mut self,
-        goal: &ExistFactFamily,
+        goal: &ExistShapedFact,
         cite: &ForallConclusionCite,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<SearchProofByKnownForallFact>> {
@@ -201,14 +201,14 @@ impl Runtime {
         let Some(conclusion) = exist_at_forall_location(&forall, &cite.location) else {
             return Ok(None);
         };
-        if !exist_fact_can_prove_goal(&conclusion, goal) {
+        if !exist_shaped_fact_can_prove_goal(&conclusion, goal) {
             return Ok(None);
         }
 
         // Step 1: list forall params in declaration order.
         let param_ids = forall.typed_parameters.ordered_param_ids();
-        let conclusion_args = exist_fact_family_free_args_ref(&conclusion);
-        let goal_args = exist_fact_family_free_args_ref(goal);
+        let conclusion_args = exist_shaped_fact_free_args_ref(&conclusion);
+        let goal_args = exist_shaped_fact_free_args_ref(goal);
 
         // Step 2–3: bind params / strict-equal non-params; every param must be bound.
         // Example: known `forall a N: exist x N st {x = a}` vs goal `exist x N st {x = 2}`
@@ -221,14 +221,14 @@ impl Runtime {
         let subst = subst_from_ordered_params(&param_ids, &matched.forall_parameters_match_what_args);
 
         // Step 4: instantiate the exist conclusion and alpha-compare to the goal.
-        let instantiated = match self.inst_fact(&exist_fact_family_to_fact(&conclusion), &subst) {
-            Ok(f) => match exist_fact_family_from_fact(&f) {
+        let instantiated = match self.inst_fact(&exist_shaped_fact_to_fact(&conclusion), &subst) {
+            Ok(f) => match exist_shaped_fact_from_fact(&f) {
                 Some(e) => e,
                 None => return Ok(None),
             },
             Err(_) => return Ok(None),
         };
-        if exist_fact_alpha_match_key(&instantiated) != exist_fact_alpha_match_key(goal) {
+        if exist_shaped_fact_alpha_match_key(&instantiated) != exist_shaped_fact_alpha_match_key(goal) {
             return Ok(None);
         }
 

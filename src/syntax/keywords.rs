@@ -66,12 +66,12 @@ pub const UNICODE_CART: &str = "×";
 /// Unicode-only negated membership. Canonical rendering remains `not x $in A`.
 pub const UNICODE_NOT_IN: &str = "∉";
 pub const SET_MINUS: &str = "set_minus";
-pub const BIG_UNION: &str = "big_union";
-pub const BIG_INTERSECT: &str = "big_intersect";
+pub const FAMILY_UNION: &str = "family_union";
+pub const FAMILY_INTERSECT: &str = "family_intersect";
 pub const INDEX_UNION: &str = "index_union";
 pub const INDEX_INTERSECT: &str = "index_intersect";
 pub const POWER_SET: &str = "power_set";
-pub const GENERAL_CART: &str = "general_cart";
+pub const INDEX_CART: &str = "index_cart";
 pub const FN_LOWER_CASE: &str = "fn";
 /// Prefix for a real interval literal, such as `'(a, b)`, `'[a,)`, or `'(,b]`.
 pub const INTERVAL_LITERAL_PREFIX: &str = "'";
@@ -307,12 +307,12 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         UNION,
         INTERSECT,
         SET_MINUS,
-        BIG_UNION,
-        BIG_INTERSECT,
+        FAMILY_UNION,
+        FAMILY_INTERSECT,
         INDEX_UNION,
         INDEX_INTERSECT,
         POWER_SET,
-        GENERAL_CART,
+        INDEX_CART,
         FN_LOWER_CASE,
         SET,
         NONEMPTY_SET,

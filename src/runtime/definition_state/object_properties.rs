@@ -680,8 +680,8 @@ impl Runtime {
             Obj::Tan(x) => collect(&x.arg),
             Obj::Cot(x) => collect(&x.arg),
             Obj::Sqrt(x) => collect(&x.arg),
-            Obj::BigUnion(x) => collect(&x.left),
-            Obj::BigIntersect(x) => collect(&x.left),
+            Obj::FamilyUnion(x) => collect(&x.left),
+            Obj::FamilyIntersect(x) => collect(&x.left),
             Obj::IndexUnion(x) => {
                 collect(&x.index_set) && collect(&x.ambient_set) && collect(&x.family_fn)
             }
@@ -710,7 +710,7 @@ impl Runtime {
                 .into_iter()
                 .all(|child| collect(child)),
             Obj::ListSet(x) => x.list.iter().all(|child| collect(child)),
-            Obj::GeneralCart(x) => {
+            Obj::IndexCart(x) => {
                 collect(&x.index_set) && collect(&x.family_set) && collect(&x.family_fn)
             }
             Obj::Cart(x) => x.args.iter().all(|child| collect(child)),
@@ -1447,8 +1447,8 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
         Obj::Tan(x) => collect_module_names_from_obj(&x.arg, module_names),
         Obj::Cot(x) => collect_module_names_from_obj(&x.arg, module_names),
         Obj::Sqrt(x) => collect_module_names_from_obj(&x.arg, module_names),
-        Obj::BigUnion(x) => collect_module_names_from_obj(&x.left, module_names),
-        Obj::BigIntersect(x) => collect_module_names_from_obj(&x.left, module_names),
+        Obj::FamilyUnion(x) => collect_module_names_from_obj(&x.left, module_names),
+        Obj::FamilyIntersect(x) => collect_module_names_from_obj(&x.left, module_names),
         Obj::IndexUnion(x) => {
             collect_module_names_from_obj(&x.index_set, module_names);
             collect_module_names_from_obj(&x.ambient_set, module_names);
@@ -1479,7 +1479,7 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
                 collect_module_names_from_obj(obj, module_names);
             }
         }
-        Obj::GeneralCart(x) => {
+        Obj::IndexCart(x) => {
             collect_module_names_from_obj(&x.index_set, module_names);
             collect_module_names_from_obj(&x.family_set, module_names);
             collect_module_names_from_obj(&x.family_fn, module_names);

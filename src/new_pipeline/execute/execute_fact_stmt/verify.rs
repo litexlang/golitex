@@ -1,6 +1,6 @@
 use super::verify_fact_result::VerifyFactResult;
 use super::VerifyState;
-use crate::new_pipeline::ast::fact::{exist_fact_family_from_fact, Fact};
+use crate::new_pipeline::ast::fact::{exist_shaped_fact_from_fact, Fact};
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
@@ -15,8 +15,8 @@ impl Runtime {
             Fact::ChainFact(fact) => self.verify_chain_fact(fact, verify_state),
             Fact::OrFact(fact) => self.verify_or_fact(fact, verify_state),
             Fact::ExistFact(_) | Fact::ExistUniqueFact(_) | Fact::NotExistFact(_) => {
-                let family = exist_fact_family_from_fact(fact).expect("exist family from fact");
-                self.verify_exist_fact(&family, verify_state)
+                let family = exist_shaped_fact_from_fact(fact).expect("exist family from fact");
+                self.verify_exist_shaped_fact(&family, verify_state)
             }
             Fact::ForallFact(fact) => self.verify_forall_fact(fact, verify_state),
             Fact::ForallFactWithIff(fact) => self.verify_forall_fact_with_iff(fact, verify_state),
