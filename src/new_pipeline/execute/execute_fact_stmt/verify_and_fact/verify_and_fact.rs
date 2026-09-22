@@ -18,7 +18,12 @@ impl Runtime {
         fact: &AndFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
+        // `and/components.lit` uses the structural whole-and key before the
+        // fallback path verifies individual conjuncts.
         let known_forall = self.search_and_fact_by_known_forall(fact, verify_state.clone())?;
+        if let Some(proof) = known_forall {
+            return Ok(and_fact_result_from_success(fact, Vec::new(), Some(proof)));
+        }
         let mut components = Vec::with_capacity(fact.facts.len());
         for (failed_index, atomic) in fact.facts.iter().enumerate() {
             let component = self.verify_atomic_fact(atomic, verify_state.clone())?;
@@ -32,7 +37,7 @@ impl Runtime {
             }
             components.push(component);
         }
-        Ok(and_fact_result_from_success(fact, components, known_forall))
+        Ok(and_fact_result_from_success(fact, components, None))
     }
 
     fn search_and_fact_by_known_forall(&mut self, goal: &AndFact, verify_state: VerifyState) -> RuntimeResult<Option<SearchProofByKnownForallFact>> {

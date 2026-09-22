@@ -1,0 +1,6 @@
+# Node: equal.ByBuiltinRule.ByAnonymousFnAlphaEqual
+# Run: LITEX_NEW_PIPELINE=1 target/release/litex -f examples/new_pipeline_proof_nodes/equal/by_builtin_rule/by_anonymous_fn_alpha_equal.lit
+
+# Two separately parsed anonymous functions share no ObjIR (binder ids differ)
+# but are alpha-equal.
+fn(x R) R {x} = fn(y R) R {y}

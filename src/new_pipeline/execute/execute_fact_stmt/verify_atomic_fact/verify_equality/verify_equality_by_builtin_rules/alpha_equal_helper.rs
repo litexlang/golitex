@@ -11,6 +11,7 @@ use crate::new_pipeline::ast::obj::{
     OneSideInfinityIntervalObj, SetBuilder,
 };
 use crate::new_pipeline::ast::param::SetBoundParameterList;
+use crate::new_pipeline::exec_env::KnownEqualToObjWithFreeParamsShape;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 
 // Structural alpha-equality for FnSet / SetBuilder (and nested objs/facts).
@@ -23,6 +24,10 @@ pub fn fn_sets_alpha_equal(left: &FnSet, right: &FnSet) -> bool {
 
 pub fn set_builders_alpha_equal(left: &SetBuilder, right: &SetBuilder) -> bool {
     set_builders_alpha_equal_under(left, right, &HashMap::new())
+}
+
+pub fn anonymous_fns_alpha_equal(left: &AnonymousFn, right: &AnonymousFn) -> bool {
+    anonymous_fns_alpha_equal_under(left, right, &HashMap::new())
 }
 
 fn fn_sets_alpha_equal_under(
@@ -119,7 +124,7 @@ fn objs_alpha_equal(left: &Obj, right: &Obj, map: &HashMap<IdentifierId, Identif
         (Obj::Identifier(l), Obj::Identifier(r)) => identifier_objs_alpha_equal(l, r, map),
         (Obj::FnSet(l), Obj::FnSet(r)) => fn_sets_alpha_equal_under(l, r, map),
         (Obj::SetBuilder(l), Obj::SetBuilder(r)) => set_builders_alpha_equal_under(l, r, map),
-        (Obj::AnonymousFn(l), Obj::AnonymousFn(r)) => anonymous_fns_alpha_equal(l, r, map),
+        (Obj::AnonymousFn(l), Obj::AnonymousFn(r)) => anonymous_fns_alpha_equal_under(l, r, map),
         (Obj::FnObj(l), Obj::FnObj(r)) => fn_objs_alpha_equal(l, r, map),
         (Obj::Number(l), Obj::Number(r)) => l.normalized_value == r.normalized_value,
         (Obj::ImaginaryUnit(_), Obj::ImaginaryUnit(_)) => true,
@@ -301,7 +306,7 @@ fn identifier_objs_alpha_equal(
     }
 }
 
-fn anonymous_fns_alpha_equal(
+fn anonymous_fns_alpha_equal_under(
     left: &AnonymousFn,
     right: &AnonymousFn,
     outer: &HashMap<IdentifierId, IdentifierId>,
@@ -352,7 +357,7 @@ fn fn_obj_heads_alpha_equal(
             identifier_objs_alpha_equal(l, r, map)
         }
         (FnObjHead::AnonymousFnLiteral(l), FnObjHead::AnonymousFnLiteral(r)) => {
-            anonymous_fns_alpha_equal(l, r, map)
+            anonymous_fns_alpha_equal_under(l, r, map)
         }
         (FnObjHead::FieldAccess(l), FnObjHead::FieldAccess(r)) => {
             l.fields == r.fields && objs_alpha_equal(l.obj.as_ref(), r.obj.as_ref(), map)
@@ -525,3 +530,25 @@ fn atomic_facts_alpha_equal(
             .zip(right_args.iter())
             .all(|(l, r)| objs_alpha_equal(l, r, map))
 }
+
+pub fn free_params_shapes_alpha_equal(
+    left: &KnownEqualToObjWithFreeParamsShape,
+    right: &KnownEqualToObjWithFreeParamsShape,
+) -> bool {
+    match (left, right) {
+        (
+            KnownEqualToObjWithFreeParamsShape::FnSet(l),
+            KnownEqualToObjWithFreeParamsShape::FnSet(r),
+        ) => fn_sets_alpha_equal(l, r),
+        (
+            KnownEqualToObjWithFreeParamsShape::AnonymousFn(l),
+            KnownEqualToObjWithFreeParamsShape::AnonymousFn(r),
+        ) => anonymous_fns_alpha_equal_under(l, r, &HashMap::new()),
+        (
+            KnownEqualToObjWithFreeParamsShape::SetBuilder(l),
+            KnownEqualToObjWithFreeParamsShape::SetBuilder(r),
+        ) => set_builders_alpha_equal(l, r),
+        _ => false,
+    }
+}
+

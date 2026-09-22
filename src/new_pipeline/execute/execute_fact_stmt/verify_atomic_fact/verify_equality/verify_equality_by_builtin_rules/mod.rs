@@ -1,5 +1,7 @@
 pub mod alpha_equal_helper;
 pub mod by_equal_ir;
+pub mod by_anonymous_fn_alpha_equal;
+pub mod by_equal_to_obj_with_free_params_lookup;
 pub mod by_fn_set_alpha_equal;
 pub mod by_inverse_trig;
 pub mod by_set_builder_alpha_equal;

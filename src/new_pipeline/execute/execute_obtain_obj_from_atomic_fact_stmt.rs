@@ -25,7 +25,7 @@ use crate::new_pipeline::ast::stmt::ObtainObjFromAtomicFact;
 use crate::new_pipeline::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
 use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
 use crate::new_pipeline::execute::execute_obtain_obj_from_exist_fact_stmt::ExecObtainObjFromExistFactStmtFailed;
-use crate::new_pipeline::runtime::{FactId, IdentifierId, Runtime, RuntimeResult};
+use crate::new_pipeline::runtime::{IdentifierId, Runtime, RuntimeResult};
 
 pub enum ExecObtainObjFromAtomicFactStmtFailed {
     AbstractProp,
@@ -41,7 +41,6 @@ pub struct ExecObtainObjFromAtomicFactStmtSuccessResult {
     pub verify_atomic: VerifyFactResult,
     pub projected_exist: ExistFactFamily,
     pub store_and_infer_result: StoreHaveObjAndInferResult,
-    pub uniqueness_forall_fact_id: Option<FactId>,
 }
 
 pub enum ExecObtainObjFromAtomicFactStmtResult {
@@ -133,17 +132,14 @@ impl Runtime {
         }
 
         match self.apply_obtain_from_known_exist_family(&projected_exist, &stmt.equal_tos)? {
-            Ok((store_and_infer_result, uniqueness_forall_fact_id)) => {
-                Ok(ExecObtainObjFromAtomicFactStmtResult::Success(
-                    ExecObtainObjFromAtomicFactStmtSuccessResult {
-                        statement: stmt.clone(),
-                        verify_atomic,
-                        projected_exist,
-                        store_and_infer_result,
-                        uniqueness_forall_fact_id,
-                    },
-                ))
-            }
+            Ok(store_and_infer_result) => Ok(ExecObtainObjFromAtomicFactStmtResult::Success(
+                ExecObtainObjFromAtomicFactStmtSuccessResult {
+                    statement: stmt.clone(),
+                    verify_atomic,
+                    projected_exist,
+                    store_and_infer_result,
+                },
+            )),
             Err(failed) => Ok(ExecObtainObjFromAtomicFactStmtResult::Failed(
                 ExecObtainObjFromAtomicFactStmtFailed::Apply(failed),
             )),

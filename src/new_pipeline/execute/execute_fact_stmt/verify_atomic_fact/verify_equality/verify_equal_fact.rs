@@ -34,7 +34,7 @@ impl Runtime {
         }
     }
 
-    // Stage order: builtin rule → known equality → object definition → builtin strategy →
+    // Stage order: builtin rule → equivalence class → object definition → builtin strategy →
     // matching one arg by one → known forall → (if allowed) builtin rewrite.
     // MatchingOneArgByOne is constructor peel (not rewrite).
     //
@@ -53,9 +53,9 @@ impl Runtime {
         }
 
         if let Some(result) =
-            self.search_equal_fact_proof_by_known_equality(fact, verify_state.clone())?
+            self.search_equal_fact_proof_by_equivalence_class(fact, verify_state.clone())?
         {
-            return Ok(Some(EqualFactSearchedProof::ByKnownEquality(result)));
+            return Ok(Some(EqualFactSearchedProof::ByEquivalenceClass(result)));
         }
 
         if let Some(result) =

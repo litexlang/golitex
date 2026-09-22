@@ -22,7 +22,7 @@ Still open (non-rewrite): empty atomic builtin-rule families (`NormalAtomic` / s
 some secondary In/order/subset leaves; MatchingOneArgByOne beyond the traced constructors.
 Equality BuiltinRewrite: ClosedNumericEqualSubstitution (equal + atomic) and
 atomic KnownEqualObjSubstitution.
-No equality KnownRewrite slot (dead; = uses EqualIr / KnownEquality graph).
+No equality KnownRewrite slot (dead; = uses EqualIr / known_equivalence_classes graph).
 OrderDual rewrite: `atomic/by_builtin_rewrite/order_dual*.lit`.
 KnownRewrite: `atomic/by_known_rewrite/reflexivity.lit`, `symmetry.lit`.
 WD negatives (must fail): `examples/new_pipeline_wd_negative/`
@@ -34,9 +34,10 @@ WD gallery (positives for done Obj/Fact WD): `examples/new_pipeline_wd/`.
 ```text
 or/           ByBuiltinRule (trichotomy ×3, NaturalZeroOrAtLeastOne), SelectedBranch,
               KnownOr, KnownForall
-equal/        ByBuiltinRule, KnownEquality, ObjectDefinition (identifier / fn /
-              template), BuiltinStrategy, MatchingOneArgByOne, KnownForall (+ViaSymmetry),
-              BuiltinRewrite (ClosedNumericEqualSubstitution)
+equal/        ByBuiltinRule (FnSet / AnonymousFn / SetBuilder alpha-equal,
+              EqualToObjWithFreeParamsLookup), EquivalenceClass, ObjectDefinition
+              (identifier / fn / template), BuiltinStrategy, MatchingOneArgByOne,
+              KnownForall (+ViaSymmetry), BuiltinRewrite (ClosedNumericEqualSubstitution)
 atomic/       ByBuiltinRule, KnownAtomicFact, ByDefinition, BuiltinStrategy (PosAddPos),
               KnownForall, BuiltinRewrite (ClosedNumeric, KnownEqualObj, OrderDual),
               KnownRewrite (Reflexivity/Symmetry)

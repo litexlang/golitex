@@ -16,9 +16,11 @@ pub use exist_fact_index_key::{
     QuantifierFreeShape,
 };
 pub use known_fact_memory::{
-    AtomicExceptEqualityFactMemory, ExistFactMemory, KnownClosedNumericEqualMemory,
-    KnownEqualityMemory, KnownFactMemory, KnownStructuralEqualMemory,
-    KnownStructuralEqualShape, ObjIR, OrFactMemory,
+    AtomicExceptEqualityFactMemory, ExistFactMemory, KnownCartTupleEqualMemory,
+    maybe_index_known_closed_numeric_equal, KnownCartTupleEqualShape,
+    KnownEqualToObjWithFreeParamsMemory,
+    KnownEqualToObjWithFreeParamsShape, KnownEquivalenceClassMemory, KnownFactMemory, ObjIR,
+    OrFactMemory,
 };
 pub use known_forall_conclusion_memory::{
     atomic_at_forall_location, exist_at_forall_location, or_at_forall_location, ForallConclusionCite,

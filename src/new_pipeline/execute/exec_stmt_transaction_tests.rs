@@ -980,7 +980,6 @@ fn store_equality_indexes_closed_numeric_equal() {
         .top_exec_env()
         .facts
         .known_closed_numeric_equal
-        .by_non_closed
         .values()
     {
         for (expr, _) in entries {
@@ -1002,7 +1001,6 @@ fn store_equality_indexes_closed_numeric_equal() {
         .top_exec_env()
         .facts
         .known_closed_numeric_equal
-        .by_non_closed
         .values()
         .map(|entries| entries.len())
         .sum::<usize>();
@@ -1013,8 +1011,8 @@ fn store_equality_indexes_closed_numeric_equal() {
 }
 
 #[test]
-fn store_equality_indexes_structural_equal() {
-    use crate::new_pipeline::exec_env::KnownStructuralEqualShape;
+fn store_equality_indexes_cart_tuple_equal() {
+    use crate::new_pipeline::exec_env::KnownCartTupleEqualShape;
 
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "have a set = (1, 2)").is_failed());
@@ -1022,12 +1020,12 @@ fn store_equality_indexes_structural_equal() {
     let entries = &runtime
         .top_exec_env()
         .facts
-        .known_structural_equal
-        .by_non_structural;
+        .known_cart_tuple_equal
+        .by_other_side;
     let mut tuple_hits = 0;
     for values in entries.values() {
         for (shape, _) in values {
-            if matches!(shape, KnownStructuralEqualShape::Tuple(_)) {
+            if matches!(shape, KnownCartTupleEqualShape::Tuple(_)) {
                 tuple_hits += 1;
             }
         }
@@ -1040,10 +1038,60 @@ fn store_equality_indexes_structural_equal() {
         runtime
             .top_exec_env()
             .facts
-            .known_structural_equal
-            .by_non_structural
+            .known_cart_tuple_equal
+            .by_other_side
             .is_empty(),
-        "both-side structural equality must not index known_structural_equal"
+        "both-side cart/tuple equality must not index known_cart_tuple_equal"
+    );
+}
+
+#[test]
+fn store_equality_indexes_equal_to_obj_with_free_params() {
+    use crate::new_pipeline::exec_env::KnownEqualToObjWithFreeParamsShape;
+
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "let f = fn(x R) R").is_failed());
+    let fn_set_hits = runtime
+        .top_exec_env()
+        .facts
+        .known_equal_to_obj_with_free_params
+        .by_other_side
+        .values()
+        .flat_map(|v| v.iter())
+        .filter(|(s, _)| matches!(s, KnownEqualToObjWithFreeParamsShape::FnSet(_)))
+        .count();
+    assert_eq!(fn_set_hits, 1, "let f = fn(x R) R must index FnSet on f");
+
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "let g = fn(x R) R {x}").is_failed());
+    let anon_hits = runtime
+        .top_exec_env()
+        .facts
+        .known_equal_to_obj_with_free_params
+        .by_other_side
+        .values()
+        .flat_map(|v| v.iter())
+        .filter(|(s, _)| matches!(s, KnownEqualToObjWithFreeParamsShape::AnonymousFn(_)))
+        .count();
+    assert_eq!(
+        anon_hits, 1,
+        "let g = fn(x R) R {{x}} must index AnonymousFn on g"
+    );
+
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "let s = {x R: x > 0}").is_failed());
+    let sb_hits = runtime
+        .top_exec_env()
+        .facts
+        .known_equal_to_obj_with_free_params
+        .by_other_side
+        .values()
+        .flat_map(|v| v.iter())
+        .filter(|(s, _)| matches!(s, KnownEqualToObjWithFreeParamsShape::SetBuilder(_)))
+        .count();
+    assert_eq!(
+        sb_hits, 1,
+        "let s = {{x R: x > 0}} must index SetBuilder on s"
     );
 }
 
@@ -2148,6 +2196,67 @@ fn template_body_obtain_from_thm_wires() {
     assert!(
         !exec_one(&mut runtime, code).is_failed(),
         "template body obtain from thm"
+    );
+}
+
+#[test]
+fn trust_stored_equality_proves_alpha_equal_fn_set_via_free_params_lookup() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have f set").is_failed());
+    assert!(!exec_one(&mut runtime, "trust f = fn(x R) R").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "f = fn(y R) R").is_failed(),
+        "known_equal_to_obj_with_free_params lookup + ByFnSetAlphaEqual shape match"
+    );
+}
+
+#[test]
+fn have_obj_equal_unfolds_like_let_for_alpha_equal_bridge() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have f set = fn(x R) R").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "f = fn(y R) R").is_failed(),
+        "have T = rhs stores RHS in definition table for unfold"
+    );
+}
+
+#[test]
+fn membership_in_identifier_fn_set_via_trust_stored_free_params_lookup() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have fn f(x R) R = x").is_failed());
+    assert!(!exec_one(&mut runtime, "have g set").is_failed());
+    assert!(!exec_one(&mut runtime, "trust g = fn(y R) R").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "f $in g").is_failed(),
+        "known f $in fn(x R) R and g indexed to fn(y R) R via trust"
+    );
+}
+
+#[test]
+fn membership_in_named_fn_set_from_known_membership_in_alpha_equal_fn_set() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "let R_TO_R = fn(x R) R").is_failed());
+    assert!(!exec_one(&mut runtime, "have f set").is_failed());
+    assert!(!exec_one(&mut runtime, "trust f $in fn(y R) R").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "f $in R_TO_R").is_failed(),
+        "f $in R_TO_R from known f $in fn(y R) R and R_TO_R = fn(x R) R"
+    );
+}
+
+#[test]
+#[test]
+fn anonymous_fn_alpha_equal_and_free_params_lookup_builtins() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(&mut runtime, "fn(x R) R {x} = fn(y R) R {y}").is_failed(),
+        "literal AnonymousFns must be alpha-equal"
+    );
+    assert!(!exec_one(&mut runtime, "let h = fn(x R) R {x}").is_failed());
+    assert!(!exec_one(&mut runtime, "have fn k(x R) R = x").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "k = h").is_failed(),
+        "have-fn name = let-bound anon via free-params lookup"
     );
 }
 

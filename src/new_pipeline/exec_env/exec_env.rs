@@ -25,7 +25,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 pub use super::known_fact_memory::{
-    AtomicExceptEqualityFactMemory, KnownEqualityMemory, KnownFactMemory,
+    AtomicExceptEqualityFactMemory, KnownEquivalenceClassMemory, KnownFactMemory,
 };
 
 // -----------------------------------------------------------------------------

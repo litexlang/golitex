@@ -4,11 +4,11 @@ use crate::new_pipeline::exec_env::known_fact_memory::ObjIR;
 use crate::new_pipeline::runtime::FactId;
 use std::collections::{HashMap, HashSet, VecDeque};
 
-pub type EqualityAdjacency = HashMap<ObjIR, Vec<(ObjIR, EqualFact)>>;
+pub type EquivalenceClassAdjacency = HashMap<ObjIR, Vec<(ObjIR, EqualFact)>>;
 
 // BFS path from left to right. Empty Vec means same key (reflexive).
-pub fn equality_path_in_adjacency(
-    adjacency: &EqualityAdjacency,
+pub fn equivalence_class_path_in_adjacency(
+    adjacency: &EquivalenceClassAdjacency,
     left: &Obj,
     right: &Obj,
 ) -> Option<Vec<(Obj, Obj, FactId)>> {
@@ -59,7 +59,10 @@ pub fn equality_path_in_adjacency(
 }
 
 // All obj keys in the same connected component as `obj` (including itself).
-pub fn equality_class_keys_in_adjacency(adjacency: &EqualityAdjacency, obj: &Obj) -> Vec<ObjIR> {
+pub fn equivalence_class_keys_in_adjacency(
+    adjacency: &EquivalenceClassAdjacency,
+    obj: &Obj,
+) -> Vec<ObjIR> {
     let start = obj.ir();
     let mut visited = HashSet::new();
     let mut queue = VecDeque::new();

@@ -25,7 +25,7 @@ use crate::new_pipeline::execute::execute_by_stmt::{
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyFactResult;
 use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
 use crate::new_pipeline::execute::execute_obtain_obj_from_exist_fact_stmt::ExecObtainObjFromExistFactStmtFailed;
-use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeResult};
+use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 pub enum ExecObtainObjFromThmStmtFailed {
     Release(ExecReleaseThmStmtFailed),
@@ -44,7 +44,6 @@ pub struct ExecObtainObjFromThmStmtSuccessResult {
     pub local_env: Box<ExecEnv>,
     pub projected_exist: ExistFactFamily,
     pub store_and_infer_result: StoreHaveObjAndInferResult,
-    pub uniqueness_forall_fact_id: Option<FactId>,
 }
 
 pub enum ExecObtainObjFromThmStmtResult {
@@ -94,19 +93,16 @@ impl Runtime {
         };
 
         match self.apply_obtain_from_known_exist_family(&projected_exist, &stmt.equal_tos)? {
-            Ok((store_and_infer_result, uniqueness_forall_fact_id)) => {
-                Ok(ExecObtainObjFromThmStmtResult::Success(
-                    ExecObtainObjFromThmStmtSuccessResult {
-                        statement: stmt.clone(),
-                        thm_name,
-                        dom_proofs,
-                        local_env,
-                        projected_exist,
-                        store_and_infer_result,
-                        uniqueness_forall_fact_id,
-                    },
-                ))
-            }
+            Ok(store_and_infer_result) => Ok(ExecObtainObjFromThmStmtResult::Success(
+                ExecObtainObjFromThmStmtSuccessResult {
+                    statement: stmt.clone(),
+                    thm_name,
+                    dom_proofs,
+                    local_env,
+                    projected_exist,
+                    store_and_infer_result,
+                },
+            )),
             Err(failed) => Ok(ExecObtainObjFromThmStmtResult::Failed(
                 ExecObtainObjFromThmStmtFailed::Apply(failed),
             )),

@@ -188,7 +188,7 @@ impl Runtime {
             .into_iter()
             .cloned()
             .collect();
-        let adjacency = self.visible_equality_adjacency();
+        let adjacency = self.visible_equivalence_class_adjacency();
         let residual_state = VerifyState {
             can_use_forall_fact: verify_state.can_use_forall_fact,
             can_use_rewrite: false,

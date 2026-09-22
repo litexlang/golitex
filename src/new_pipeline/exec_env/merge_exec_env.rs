@@ -11,6 +11,7 @@
 //! FactIds are global session counters; merge only mounts child-owned state.
 
 use super::exec_env::ExecEnv;
+use super::maybe_index_known_closed_numeric_equal;
 use crate::new_pipeline::ast::fact::ExistFactFamily;
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact};
 use crate::new_pipeline::ast::names::PlainName;
@@ -121,9 +122,16 @@ fn merge_facts_from(parent: &mut ExecEnv, child: &ExecEnv) -> RuntimeResult<()> 
         }
         match fact {
             Fact::AtomicFact(AtomicFact::EqualFact(equal_fact)) => {
-                parent.facts.known_equality.store(equal_fact);
-                parent.facts.known_closed_numeric_equal.maybe_index(equal_fact);
-                parent.facts.known_structural_equal.maybe_index(equal_fact);
+                parent.facts.known_equivalence_classes.store(equal_fact);
+                maybe_index_known_closed_numeric_equal(
+                    &mut parent.facts.known_closed_numeric_equal,
+                    equal_fact,
+                );
+                parent.facts.known_cart_tuple_equal.maybe_index(equal_fact);
+                parent
+                    .facts
+                    .known_equal_to_obj_with_free_params
+                    .maybe_index(equal_fact);
                 parent.facts.record_fact(fact_id, fact.clone());
             }
             Fact::AtomicFact(atomic) => {
