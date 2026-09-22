@@ -129,7 +129,7 @@ pub enum EqualFactSearchedProof {
     ByMatchingOneArgByOne(EqualFactSearchedProofByMatchingOneArgByOne),
     ByKnownForallFact(Box<SearchProofByKnownForallFact>),
     // Legacy: match known forall on the swapped equality, then cite symmetry.
-    // Example: known `forall x: f(c, x) = x`, goal `t = f(c, t)`.
+    // Example: known `forall x R: f(c, x) = x`, goal `t = f(c, t)`.
     ByKnownForallFactViaSymmetry(Box<EqualFactSearchedProofByKnownForallViaSymmetry>),
     ByBuiltinRewrite(EqualitySearchProofByBuiltinRewrite),
 }

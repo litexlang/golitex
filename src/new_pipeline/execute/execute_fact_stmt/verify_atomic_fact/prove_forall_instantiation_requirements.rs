@@ -4,7 +4,7 @@
 //! 1. for each param: build type fact for the instantiated arg, verify it
 //! 2. instantiate each dom fact under subst, verify it
 //!
-//! Example: `forall x R: x > 0 =>: x + 1 > 1` with subst `{x: 3}`
+//! Example: `forall x R: x > 0 => x + 1 > 1` with subst `{x: 3}`
 //! requires `3 $in R`, then `3 > 0`.
 
 use crate::new_pipeline::ast::fact::{

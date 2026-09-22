@@ -5,8 +5,9 @@
 //! - `equal_tos` length must match the existential binders.
 //! - Each obtained name is introduced with the binder's (possibly dependent)
 //!   parameter type, and each existential body fact is stored after renaming.
-//! - For `exist!`, also store the uniqueness forall
-//!   `forall a…, b…: body[a], body[b] => a = b` (tuple equality when n > 1).
+//! - For `exist!`, also store the uniqueness forall over two witness copies
+//!   whose premises are the body facts and whose conclusion equates the copies
+//!   (tuple equality when there are several binders).
 //!
 //! Example:
 //!   witness exist u R st {u = 0} from 0
@@ -220,8 +221,8 @@ impl Runtime {
 
     // Uniqueness interface for `exist!`: any two witnesses satisfying the body
     // are equal (componentwise via a tuple when there are several binders).
-    // Example: from `exist! x R st {x = 0}` store
-    //   forall x_a0 R, x_b0 R: x_a0 = 0, x_b0 = 0 => x_a0 = x_b0
+    // Example: from `exist! x R st {x = 0}` store a forall whose premises are
+    // the two body copies and whose conclusion equates the two witness names.
     pub(in crate::new_pipeline::execute) fn build_exist_unique_uniqueness_forall_fact(
         &mut self,
         plain: &PlainExistFact,

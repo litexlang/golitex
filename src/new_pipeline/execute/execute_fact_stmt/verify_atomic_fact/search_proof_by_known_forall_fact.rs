@@ -11,7 +11,7 @@
 //! 4. `prove_forall_instantiation_requirements` — param-type facts, then dom
 //!
 //! Example (non-equality):
-//!   known `forall a R: a > 0 =>: a + 1 > 1`
+//!   known `forall a R: a > 0 => a + 1 > 1`
 //!   goal  `3 + 1 > 1`
 //!   → match binds/equals args, prove `3 $in R` and `3 > 0`, done.
 

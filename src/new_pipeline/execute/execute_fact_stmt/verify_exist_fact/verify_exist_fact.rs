@@ -211,7 +211,8 @@ impl Runtime {
         let goal_args = exist_fact_family_free_args_ref(goal);
 
         // Step 2–3: bind params / strict-equal non-params; every param must be bound.
-        // Example: forall a: exist x st {x = a} vs exist x st {x = 2} -> bind a ↦ 2.
+        // Example: known `forall a N: exist x N st {x = a}` vs goal `exist x N st {x = 2}`
+        // → bind a ↦ 2.
         let Some(matched) =
             self.match_forall_conclusion_args(&conclusion_args, &goal_args, &param_ids)?
         else {

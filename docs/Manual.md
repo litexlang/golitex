@@ -4331,7 +4331,8 @@ Typical consequences include:
 
 - `u - v = 0` gives `u = v` when meaningful;
 - `$fn_eq(f, g)` gives the ordinary equality `f = g`;
-- an equality to a concrete number enables later numeric substitution;
+- an equality to a closed numeric expression (decimal literals under
+  `+ - * / ^ abs min max floor ceil sign`) enables later numeric substitution;
 - supported simple linear equalities record a solved value;
 - equality to a tuple or product records its shape and dimension;
 - equality to a displayed sequence, matrix, or anonymous function records the
