@@ -8,8 +8,8 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::store_fact_and_infer::helper::{
     chain_line_file, chain_order_edges, chain_props_all_equal, chain_uniform_prop, OrderEdge,
 };
-use crate::new_pipeline::store_fact_and_infer::store_fact_and_infer_result::{
-    ChainTransitiveCite, StoreChainAdjacentResult, StoreChainTransitiveClosureResult,
+use crate::new_pipeline::store_fact_and_infer::{
+    ChainTransitiveCite, InferChainTransitiveClosureResult,
 };
 
 impl Runtime {
@@ -18,9 +18,9 @@ impl Runtime {
     pub(super) fn infer_chain_transitive_closures(
         &mut self,
         chain_fact: &ChainFact,
-        adjacent: &[StoreChainAdjacentResult],
-    ) -> RuntimeResult<Vec<StoreChainTransitiveClosureResult>> {
-        if adjacent.len() < 2 {
+        adjacent_len: usize,
+    ) -> RuntimeResult<Vec<InferChainTransitiveClosureResult>> {
+        if adjacent_len < 2 {
             return Ok(Vec::new());
         }
 
@@ -55,7 +55,7 @@ impl Runtime {
     fn infer_builtin_equality_closures(
         &mut self,
         chain_fact: &ChainFact,
-    ) -> RuntimeResult<Vec<StoreChainTransitiveClosureResult>> {
+    ) -> RuntimeResult<Vec<InferChainTransitiveClosureResult>> {
         let line_file = chain_line_file(chain_fact);
         let mut closures = Vec::new();
         for start in 0..chain_fact.objs.len() {
@@ -68,15 +68,15 @@ impl Runtime {
                     true,
                     line_file.clone(),
                 )?;
-                let conclusion_fact_id = conclusion.fact_id();
-                let _ = self.store_fact_and_infer(&Fact::AtomicFact(conclusion.clone()))?;
-                closures.push(StoreChainTransitiveClosureResult {
+                let derived = Box::new(
+                    self.store_inferred_fact_and_infer(&Fact::AtomicFact(conclusion))?,
+                );
+                closures.push(InferChainTransitiveClosureResult {
                     cite: ChainTransitiveCite::BuiltinEquality,
                     start_object_index: start,
                     end_object_index: end,
                     premise_edge_indexes: (start..end).collect(),
-                    conclusion,
-                    conclusion_fact_id,
+                    derived,
                 });
             }
         }
@@ -88,7 +88,7 @@ impl Runtime {
         chain_fact: &ChainFact,
         edges: &[OrderEdge],
         has_up: bool,
-    ) -> RuntimeResult<Vec<StoreChainTransitiveClosureResult>> {
+    ) -> RuntimeResult<Vec<InferChainTransitiveClosureResult>> {
         let line_file = chain_line_file(chain_fact);
         let mut closures = Vec::new();
         for start in 0..chain_fact.objs.len() {
@@ -119,15 +119,15 @@ impl Runtime {
                     true,
                     line_file.clone(),
                 )?;
-                let conclusion_fact_id = conclusion.fact_id();
-                let _ = self.store_fact_and_infer(&Fact::AtomicFact(conclusion.clone()))?;
-                closures.push(StoreChainTransitiveClosureResult {
+                let derived = Box::new(
+                    self.store_inferred_fact_and_infer(&Fact::AtomicFact(conclusion))?,
+                );
+                closures.push(InferChainTransitiveClosureResult {
                     cite: ChainTransitiveCite::BuiltinNumericOrder,
                     start_object_index: start,
                     end_object_index: end,
                     premise_edge_indexes: (start..end).collect(),
-                    conclusion,
-                    conclusion_fact_id,
+                    derived,
                 });
             }
         }
@@ -138,7 +138,7 @@ impl Runtime {
         &mut self,
         chain_fact: &ChainFact,
         prop_name: AtomicName,
-    ) -> RuntimeResult<Vec<StoreChainTransitiveClosureResult>> {
+    ) -> RuntimeResult<Vec<InferChainTransitiveClosureResult>> {
         let line_file = chain_line_file(chain_fact);
         let mut closures = Vec::new();
         for start in 0..chain_fact.objs.len() {
@@ -149,17 +149,17 @@ impl Runtime {
                     true,
                     line_file.clone(),
                 )?;
-                let conclusion_fact_id = conclusion.fact_id();
-                let _ = self.store_fact_and_infer(&Fact::AtomicFact(conclusion.clone()))?;
-                closures.push(StoreChainTransitiveClosureResult {
+                let derived = Box::new(
+                    self.store_inferred_fact_and_infer(&Fact::AtomicFact(conclusion))?,
+                );
+                closures.push(InferChainTransitiveClosureResult {
                     cite: ChainTransitiveCite::KnownTransitive {
                         prop_name: prop_name.clone(),
                     },
                     start_object_index: start,
                     end_object_index: end,
                     premise_edge_indexes: (start..end).collect(),
-                    conclusion,
-                    conclusion_fact_id,
+                    derived,
                 });
             }
         }

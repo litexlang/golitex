@@ -1,16 +1,19 @@
-# Rename smoke: family_union / family_intersect / index_cart
-have fn family(k {1, 2, 3}) power_set(N) = {1, 2, 3}
-family(1) = {1, 2, 3}
-family(2) = {1, 2, 3}
-family(3) = {1, 2, 3}
-1 $in {1, 2, 3}
-1 $in family(1)
-1 $in family(2)
-1 $in family(3)
+# Tracers for builtin prop by-definition (new_pipeline).
+# Run: LITEX_NEW_PIPELINE=1 cargo run --bin litex -- -f examples/tmp.lit
+#
+# Finite list-set inclusions like `{1} $subset {1, 2}` are not meant to pass
+# through by-def forall expansion; use `by enumerate finite_set` for those.
 
-index_union({1, 2, 3}, N, family) = family_union(fn_range(family))
-$is_nonempty_set({1, 2, 3})
-index_intersect({1, 2, 3}, N, family) = family_intersect(fn_range(family))
+# --- subset / superset (standard sets) ---
+by def N $subset R
+by def R $superset N
 
-have fn g(alpha {1}) R = alpha
-let c = index_cart({1}, R, g)
+# --- fn_eq_in ---
+have fn f(x R) R = x
+have fn g(x R) R = x
+by def $fn_eq_in(f, g, R)
+
+# --- user prop still works via the other ByDefinition fork ---
+prop above_zero(x R):
+    x > 0
+by def $above_zero(1)

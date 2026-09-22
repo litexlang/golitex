@@ -218,3 +218,27 @@ impl Runtime {
         )
     }
 }
+
+impl Runtime {
+    // Infer-produced fact: WD must succeed, then store_fact + infer_fact.
+    // WD success is stored into ExecEnv (store_well_defined_fact).
+    // Example: membership projection stores `a $in R` through this path.
+    pub(crate) fn store_inferred_fact_and_infer(
+        &mut self,
+        fact: &Fact,
+    ) -> RuntimeResult<crate::new_pipeline::store_fact_and_infer::StoreFactAndInferResult> {
+        use crate::new_pipeline::runtime::RuntimeError;
+        let verify_state = VerifyState {
+            can_use_forall_fact: true,
+            can_use_rewrite: true,
+            store_well_defined_fact: true,
+        };
+        let wd = self.verify_fact_well_definedness(fact, verify_state)?;
+        if wd.is_failed() {
+            return Err(RuntimeError::InternalBug(
+                "inferred fact failed well-definedness check".to_string(),
+            ));
+        }
+        self.store_fact_and_infer(fact)
+    }
+}

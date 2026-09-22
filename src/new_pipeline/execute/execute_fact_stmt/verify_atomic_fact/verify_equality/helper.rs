@@ -119,6 +119,12 @@ pub(crate) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Ob
         (Obj::FunctionSpace(FunctionSpace::FnRange(l)), Obj::FunctionSpace(FunctionSpace::FnRange(r))) => Some(vec![
             (l.function.as_ref().clone(), r.function.as_ref().clone()),
         ]),
+        (Obj::ReplacementImage(l), Obj::ReplacementImage(r)) => {
+            if l.prop_name.to_string() != r.prop_name.to_string() {
+                return None;
+            }
+            Some(vec![(l.source_set.as_ref().clone(), r.source_set.as_ref().clone())])
+        }
         (Obj::SetFormer(SetFormer::Range(l)), Obj::SetFormer(SetFormer::Range(r))) => Some(vec![
             (l.start.as_ref().clone(), r.start.as_ref().clone()),
             (l.end.as_ref().clone(), r.end.as_ref().clone()),
@@ -316,6 +322,10 @@ pub(crate) fn replace_obj_matching_ir(obj: &Obj, from_ir: &ObjIR, to: &Obj) -> O
         Obj::TrigOperator(TrigOperator::Arccot(a)) => Obj::TrigOperator(TrigOperator::Arccot(Arccot {
             arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
         })),
+        Obj::ReplacementImage(a) => Obj::ReplacementImage(crate::new_pipeline::ast::obj::ReplacementImage {
+            prop_name: a.prop_name.clone(),
+            source_set: Box::new(replace_obj_matching_ir(&a.source_set, from_ir, to)),
+        }),
         _ => obj.clone(),
     }
 }

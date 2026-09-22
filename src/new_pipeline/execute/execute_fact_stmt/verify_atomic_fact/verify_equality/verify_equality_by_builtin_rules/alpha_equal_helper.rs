@@ -247,6 +247,9 @@ fn objs_alpha_equal(left: &Obj, right: &Obj, map: &HashMap<IdentifierId, Identif
         (Obj::InstantiatedTemplateObj(l), Obj::InstantiatedTemplateObj(r)) => {
             l.template_name == r.template_name && objs_slice_alpha_equal(&l.args, &r.args, map)
         }
+        (Obj::ReplacementImage(l), Obj::ReplacementImage(r)) => {
+            l.prop_name == r.prop_name && objs_alpha_equal(&l.source_set, &r.source_set, map)
+        }
         (Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(l)), Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(r))) => {
             one_side_intervals_alpha_equal(l, r, map)
         }

@@ -1,20 +1,22 @@
-use crate::new_pipeline::ast::fact::NotForallFact;
+use crate::new_pipeline::ast::fact::{exist_shaped_fact_to_fact, NotForallFact};
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
-use crate::new_pipeline::store_fact_and_infer::InferFactResult;
+use crate::new_pipeline::store_fact_and_infer::InferNotForallFactResult;
 
 impl Runtime {
-    // NotForall: De Morgan counterexample exist into known_exist.
+    // NotForall: De Morgan counterexample exist, stored as an inferred fact.
     // Example: `not forall x R: x > 0` → also store `exist x R st {not x > 0}`.
     pub(crate) fn infer_not_forall_fact(
         &mut self,
         not_forall: &NotForallFact,
-    ) -> RuntimeResult<InferFactResult> {
+    ) -> RuntimeResult<InferNotForallFactResult> {
         let Some(derived_exist) = self.not_forall_to_counterexample_exist(not_forall)? else {
             return Err(crate::new_pipeline::runtime::RuntimeError::InternalBug(
                 "infer not forall: cannot negate body into exist counterexample".to_string(),
             ));
         };
-        let derived_exist = self.store_exist_shaped_fact(&derived_exist)?;
-        Ok(InferFactResult::NotForallFact { derived_exist })
+        let derived_exist = Box::new(
+            self.store_inferred_fact_and_infer(&exist_shaped_fact_to_fact(&derived_exist))?,
+        );
+        Ok(InferNotForallFactResult { derived_exist })
     }
 }

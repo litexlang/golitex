@@ -463,7 +463,8 @@ by def {x R: 0 <= x} $subset R
 | `family_union(F)`, `family_intersect(F)` | Union or intersection of a family (formerly `big_union` / `big_intersect`) |
 | `index_union(I, X, A)`, `index_intersect(I, X, A)` | Union or intersection of the set-valued family `A : I -> power_set(X)`, with explicit ambient set `X` |
 | `power_set(A)` | Set of subsets of `A` |
-| `replacement(P, A)` | Replacement set defined by a functional predicate `P` |
+| `replacement(P, A)` | Replacement set defined by a functional predicate `P` (default pipeline) |
+| `replacement_image(P, A)` | Same ZF Replacement idea under `new_pipeline` (top-level Obj; see preview note below) |
 | `index_cart(I, S, g)` | Choice functions selecting one value from each factor `g(alpha)` (formerly `general_cart`) |
 
 The suffix must be adjacent to its base. These compact forms are canonical;
@@ -646,6 +647,17 @@ $image_rel(source, target)
 An arbitrary binary relation is not enough: without the exact uniqueness
 universal over `A`, even forming `replacement(P, A)` is a well-definedness
 `error`, before any membership goal is considered.
+
+> **Preview (`new_pipeline`):** the surface keyword is `replacement_image(P, A)`,
+> not `replacement(P, A)`. It is a **top-level** `Obj` variant (not nested under
+> set-former operators), so Replacement keeps a distinct prestige from
+> Separation / set-builder and from `fn_range`. Intended reading:
+> `replacement_image(P, A) = { y | exist x A st {P(x, y)} }` when `P` is
+> functional on `A`. Well-definedness requires a binary user
+> `prop`/`abstract_prop` and a known uniqueness forall of `P` over `A` (same
+> contract as default-pipeline `replacement`). Membership introduction and
+> `have by preimage` for this surface are not wired yet. Tracer:
+> [`examples/new_pipeline_wd/obj/replacement_image.lit`](../examples/new_pipeline_wd/obj/replacement_image.lit).
 
 ### Functions, application, and range
 
@@ -2996,6 +3008,13 @@ by def $P(args)
 > the concrete `prop` in the live Env stack or in a finished export file's Env.
 > Ambient by-definition search and statement `by def` share this lookup. Other
 > modules' stored facts are still not searched automatically.
+>
+> The same ByDefinition stage also expands **builtin** positive predicates that
+> have an official definition (for example `$subset` / `$superset` → membership
+> forall; `$fn_eq_in` → pointwise equality forall; `$proper_subset` → subset plus
+> inequality; `$injective` / `$surjective` / `$bijective`; `$prime` / `$coprime` /
+> `$dvd`; `$is_choice_function_for`). User `prop` and builtin predicates share
+> one fork: builtin first, then user `prop`.
 
 Unlike ordinary atomic verification, explicit `by def` rechecks the definition
 even if the target predicate is already known. It accepts exactly one positive

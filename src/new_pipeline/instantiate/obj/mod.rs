@@ -190,6 +190,12 @@ impl Runtime {
                     self.inst_instantiated_template(a, param_to_arg_map)?,
                 ))
             }
+            Obj::ReplacementImage(a) => Ok(Obj::ReplacementImage(
+                crate::new_pipeline::ast::obj::ReplacementImage {
+                    prop_name: a.prop_name.clone(),
+                    source_set: Box::new(self.inst_obj(&a.source_set, param_to_arg_map)?),
+                },
+            )),
             Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(i)) => {
                 self.inst_one_side_infinity_interval(i, param_to_arg_map)
             }
