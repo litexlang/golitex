@@ -2306,3 +2306,36 @@ fn fn_set_and_set_builder_alpha_equal_builtins() {
         "different SetBuilder bodies must not alpha-equal"
     );
 }
+
+#[test]
+fn builtin_prop_by_definition_fork() {
+    // Standard-set subset: forall obligation uses in-fact standard-set chain.
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(&mut runtime, "by def N $subset R").is_failed(),
+        "N subset R by definition"
+    );
+    assert!(
+        !exec_one(&mut runtime, "by def R $superset N").is_failed(),
+        "R superset N by definition"
+    );
+
+    // User prop fork still works.
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "prop above_zero(x R):
+    x > 0").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "by def $above_zero(1)").is_failed(),
+        "user prop by definition"
+    );
+
+    // fn_eq_in with identical extensions.
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have fn f(x R) R = x").is_failed());
+    assert!(!exec_one(&mut runtime, "have fn g(x R) R = x").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "by def $fn_eq_in(f, g, R)").is_failed(),
+        "fn_eq_in by definition"
+    );
+}
+

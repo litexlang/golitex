@@ -1,5 +1,6 @@
 pub mod result;
 pub mod helper;
+pub mod builtin_prop_definition;
 pub mod search_atomic_except_equality_fact_proof;
 pub mod search_atomic_except_equality_fact_proof_by_builtin_rewrite;
 pub mod search_atomic_except_equality_fact_proof_by_builtin_rules;

@@ -72,6 +72,11 @@ pub enum Obj {
 
     // Template instance. Example: `\carrier_copy<R>`.
     InstantiatedTemplateObj(InstantiatedTemplateObj),
+
+    // Replacement image under a functional prop (ZF Replacement surface).
+    // Top-level on purpose — not nested under SetFormer.
+    // Example: `replacement_image(P, A)` = { y | exist x A st {P(x, y)} }.
+    ReplacementImage(ReplacementImage),
 }
 
 // Named / numeric constants that are not StandardSet.
@@ -781,6 +786,14 @@ pub struct FiniteSetMin {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FnRange {
     pub function: Box<Obj>,
+}
+
+// Replacement image of A under functional prop P (ZF Replacement).
+// WD requires functionality of P on A (beyond child WD). Example: `replacement_image(P, A)`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ReplacementImage {
+    pub prop_name: AtomicName,
+    pub source_set: Box<Obj>,
 }
 
 // Sum of f(i) over a closed integer index range [start, end]. Example: `sum(1, n, f)`.

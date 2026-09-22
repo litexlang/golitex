@@ -375,6 +375,7 @@ impl Obj {
                     s.push_str(&x.ir())
                 }
                 Obj::InstantiatedTemplateObj(x) => s.push_str(&x.ir()),
+                Obj::ReplacementImage(x) => s.push_str(&x.ir()),
                 Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(x)) => s.push_str(&x.ir()),
                 Obj::SetFormer(SetFormer::IntervalObj(x)) => s.push_str(&x.ir()),
             }
@@ -743,6 +744,19 @@ impl_obj_kw_call!(FiniteSetMax, FINITE_SET_MAX, set);
 impl_obj_kw_call!(FiniteSetMin, FINITE_SET_MIN, set);
 
 impl_obj_kw_call!(FnRange, FN_RANGE, function);
+
+impl ReplacementImage {
+    pub fn ir(&self) -> ObjIR {
+        let mut out = String::new();
+        out.push_str(&format!("{}{}", REPLACEMENT_IMAGE, LEFT_PAREN));
+        out.push_str(&self.prop_name.ir().0);
+        out.push_str(&format!("{COMMA} "));
+        out.push_str(&self.source_set.ir());
+        out.push_str(RIGHT_PAREN);
+        ObjIR(out)
+    }
+    impl_display_pair!();
+}
 
 impl_obj_kw_call!(Sum, SUM, start, end, func);
 

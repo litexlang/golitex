@@ -27,6 +27,7 @@ pub enum FailToVerifyObjWellDefinedResult {
     FiniteSetStat(FailToVerifyFiniteSetStatObjWellDefinedResult),
     Structish(FailToVerifyStructishObjWellDefinedResult),
     InstantiatedTemplateObj(FailToVerifyInstantiatedTemplateObjObjWellDefined),
+    ReplacementImage(FailToVerifyReplacementImageObjWellDefined),
 }
 
 pub enum FailToVerifyLiteralObjWellDefinedResult {
@@ -361,6 +362,8 @@ pub enum FailToVerifyFnRangeObjWellDefined {
     NotInFunctionSet,
     Domain(FailToVerifyObjWellDefinedByDefCommon),
 }
+
+pub struct FailToVerifyReplacementImageObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
 pub struct FailToVerifySumObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 

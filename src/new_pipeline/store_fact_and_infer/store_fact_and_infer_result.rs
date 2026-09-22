@@ -5,7 +5,7 @@ use crate::new_pipeline::ast::fact::{
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::runtime::FactId;
 
-// What store_fact wrote into the current top ExecEnv (index only).
+// store_fact: index by shape into known-* / ExecEnv fields (not new mathematics).
 pub enum StoreFactResult {
     AtomicFact(StoreAtomicFactResult),
     AndFact(StoreAndFactResult),
@@ -17,28 +17,23 @@ pub enum StoreFactResult {
     ForallFactWithIff(StoreForallFactWithIffResult),
 }
 
-// What infer_fact derived from an already-stored fact.
+// infer_fact: only generate extra facts and store them (via store_inferred / store_fact_and_infer).
+// Never used to poke unrelated ExecEnv indexes — that belongs to store_fact.
 pub enum InferFactResult {
-    // No extra evidence fields; side effects may still have run.
-    Empty,
-    ChainFact {
-        transitive_closures: Vec<StoreChainTransitiveClosureResult>,
-    },
-    NotForallFact {
-        derived_exist: StoreExistShapedFactResult,
-    },
+    AtomicFact(InferAtomicFactResult),
+    AndFact(InferAndFactResult),
+    ChainFact(InferChainFactResult),
+    OrFact(InferOrFactResult),
+    ExistShapedFact(InferExistShapedFactResult),
+    NotForallFact(InferNotForallFactResult),
+    ForallFact(InferForallFactResult),
+    ForallFactWithIff(InferForallFactWithIffResult),
 }
 
-// Mirror of store_fact then infer_fact. ExecEnv remains authoritative.
-pub enum StoreFactAndInferResult {
-    AtomicFact(StoreAtomicFactResult),
-    AndFact(StoreAndFactResult),
-    ChainFact(StoreChainFactResult),
-    OrFact(StoreOrFactResult),
-    ExistShapedFact(StoreExistShapedFactResult),
-    NotForallFact(StoreNotForallFactResult),
-    ForallFact(StoreForallFactResult),
-    ForallFactWithIff(StoreForallFactWithIffResult),
+// Option A: always store then infer as two explicit stages.
+pub struct StoreFactAndInferResult {
+    pub store: StoreFactResult,
+    pub infer: InferFactResult,
 }
 
 pub struct StoreAtomicFactResult {
@@ -58,19 +53,10 @@ pub struct StoreAndComponentResult {
     pub fact: AtomicFact,
 }
 
-// Store-only chain: whole + adjacent edges (no transitive closures).
 pub struct StoreChainFactStorePart {
     pub whole_fact_id: FactId,
     pub fact: ChainFact,
     pub adjacent: Vec<StoreChainAdjacentResult>,
-}
-
-pub struct StoreChainFactResult {
-    pub whole_fact_id: FactId,
-    pub fact: ChainFact,
-    pub adjacent: Vec<StoreChainAdjacentResult>,
-    // Empty when polarity breaks or the predicate is not transitive.
-    pub transitive_closures: Vec<StoreChainTransitiveClosureResult>,
 }
 
 pub struct StoreChainAdjacentResult {
@@ -79,38 +65,26 @@ pub struct StoreChainAdjacentResult {
     pub fact: AtomicFact,
 }
 
-// Whole or only; branches are not projected into known-atomic indexes.
 pub struct StoreOrFactResult {
     pub whole_fact_id: FactId,
     pub fact: OrFact,
 }
 
-// Whole exist only; body clauses are not projected into known-atomic indexes.
 pub struct StoreExistShapedFactResult {
     pub whole_fact_id: FactId,
     pub fact: ExistShapedFact,
 }
 
-// Store-only not-forall (counterexample exist is infer).
 pub struct StoreNotForallFactStorePart {
     pub whole_fact_id: FactId,
     pub fact: NotForallFact,
 }
 
-// Record not-forall, and store its De Morgan counterexample exist into known_exist.
-pub struct StoreNotForallFactResult {
-    pub whole_fact_id: FactId,
-    pub fact: NotForallFact,
-    pub derived_exist: StoreExistShapedFactResult,
-}
-
-// Record forall into facts_by_id and project then-conclusions into known_forall.
 pub struct StoreForallFactResult {
     pub fact_id: FactId,
     pub fact: ForallFact,
 }
 
-// Split forall-iff into two forall directions, store each, keep surface id as primary.
 pub struct StoreForallFactWithIffResult {
     pub fact_id: FactId,
     pub fact: ForallFactWithIff,
@@ -118,24 +92,146 @@ pub struct StoreForallFactWithIffResult {
     pub reverse: StoreForallFactResult,
 }
 
-pub struct StoreChainTransitiveClosureResult {
+pub enum InferAtomicFactResult {
+    EqualFact(InferEqualFactResult),
+    ExceptEquality(InferAtomicExceptEqualityResult),
+}
+
+pub struct InferEqualFactResult {
+    // Empty when neither side is a literal cart/tuple usable for shape facts.
+    pub cart_tuple_shape: Option<InferEqualFactCartTupleShapeResult>,
+}
+
+// Rule: equality to literal cart/tuple records shape facts on the other side.
+pub struct InferEqualFactCartTupleShapeResult {
+    pub derived: Vec<StoreFactAndInferResult>,
+}
+
+// Mirrors atomic-except-equality `AtomicFact` constructors; each arm owns that
+// shape's infer evidence (no shared Option/Option stage bag).
+pub enum InferAtomicExceptEqualityResult {
+    NormalAtomicFact(InferNormalAtomicFactResult),
+    LessFact(InferLessFactResult),
+    GreaterFact(InferGreaterFactResult),
+    LessEqualFact(InferLessEqualFactResult),
+    GreaterEqualFact(InferGreaterEqualFactResult),
+    IsSetFact(InferIsSetFactResult),
+    IsNonemptySetFact(InferIsNonemptySetFactResult),
+    IsFiniteSetFact(InferIsFiniteSetFactResult),
+    InFact(InferInFactResult),
+    IsCartFact(InferIsCartFactResult),
+    IsTupleFact(InferIsTupleFactResult),
+    SubsetFact(InferSubsetFactResult),
+    SupersetFact(InferSupersetFactResult),
+    NotNormalAtomicFact(InferNotNormalAtomicFactResult),
+    NotEqualFact(InferNotEqualFactResult),
+    NotLessFact(InferNotLessFactResult),
+    NotGreaterFact(InferNotGreaterFactResult),
+    NotLessEqualFact(InferNotLessEqualFactResult),
+    NotGreaterEqualFact(InferNotGreaterEqualFactResult),
+    NotIsSetFact(InferNotIsSetFactResult),
+    NotIsNonemptySetFact(InferNotIsNonemptySetFactResult),
+    NotIsFiniteSetFact(InferNotIsFiniteSetFactResult),
+    NotInFact(InferNotInFactResult),
+    NotIsCartFact(InferNotIsCartFactResult),
+    NotIsTupleFact(InferNotIsTupleFactResult),
+    NotSubsetFact(InferNotSubsetFactResult),
+    NotSupersetFact(InferNotSupersetFactResult),
+    FnEqualInFact(InferFnEqualInFactResult),
+    NotFnEqualInFact(InferNotFnEqualInFactResult),
+}
+
+// NormalAtomicFact infer rules (mutually exclusive).
+pub enum InferNormalAtomicFactResult {
+    // Rule: concrete prop `$P(args)` exposes instantiated iff facts (one layer).
+    ExpandDefinition(InferExpandDefinitionResult),
+    NoInfer,
+}
+
+pub struct InferExpandDefinitionResult {
+    pub derived: Vec<StoreFactAndInferResult>,
+}
+
+// InFact infer rules (mutually exclusive).
+pub enum InferInFactResult {
+    SetBuilder(InferSetBuilderMembershipProjectionResult),
+    PowerSet(InferPowerSetMembershipProjectionResult),
+    NoInfer,
+}
+
+pub struct InferSetBuilderMembershipProjectionResult {
+    pub derived: Vec<StoreFactAndInferResult>,
+}
+
+pub struct InferPowerSetMembershipProjectionResult {
+    pub derived: Box<StoreFactAndInferResult>,
+}
+
+// Empty stubs: fill when the first infer rule for that shape exists.
+pub struct InferLessFactResult {}
+pub struct InferGreaterFactResult {}
+pub struct InferLessEqualFactResult {}
+pub struct InferGreaterEqualFactResult {}
+pub struct InferIsSetFactResult {}
+pub struct InferIsNonemptySetFactResult {}
+pub struct InferIsFiniteSetFactResult {}
+pub struct InferIsCartFactResult {}
+pub struct InferIsTupleFactResult {}
+pub struct InferSubsetFactResult {}
+pub struct InferSupersetFactResult {}
+pub struct InferNotNormalAtomicFactResult {}
+pub struct InferNotEqualFactResult {}
+pub struct InferNotLessFactResult {}
+pub struct InferNotGreaterFactResult {}
+pub struct InferNotLessEqualFactResult {}
+pub struct InferNotGreaterEqualFactResult {}
+pub struct InferNotIsSetFactResult {}
+pub struct InferNotIsNonemptySetFactResult {}
+pub struct InferNotIsFiniteSetFactResult {}
+pub struct InferNotInFactResult {}
+pub struct InferNotIsCartFactResult {}
+pub struct InferNotIsTupleFactResult {}
+pub struct InferNotSubsetFactResult {}
+pub struct InferNotSupersetFactResult {}
+pub struct InferFnEqualInFactResult {}
+pub struct InferNotFnEqualInFactResult {}
+
+pub struct InferAndFactResult {
+    pub components: Vec<InferAtomicFactResult>,
+}
+
+pub struct InferChainFactResult {
+    pub adjacent_infers: Vec<InferAtomicFactResult>,
+    pub transitive_closures: Vec<InferChainTransitiveClosureResult>,
+}
+
+pub struct InferChainTransitiveClosureResult {
     pub cite: ChainTransitiveCite,
     pub start_object_index: usize,
     pub end_object_index: usize,
     pub premise_edge_indexes: Vec<usize>,
-    pub conclusion: AtomicFact,
-    pub conclusion_fact_id: FactId,
+    pub derived: Box<StoreFactAndInferResult>,
 }
 
-// Provenance of a stored non-adjacent chain consequence.
 pub enum ChainTransitiveCite {
     BuiltinEquality,
     BuiltinNumericOrder,
     KnownTransitive { prop_name: AtomicName },
 }
 
-impl StoreFactAndInferResult {
-    // Whole fact written by this store step (and-root / or-root / atomic / …).
+pub struct InferOrFactResult {}
+
+pub struct InferExistShapedFactResult {}
+
+pub struct InferNotForallFactResult {
+    pub derived_exist: Box<StoreFactAndInferResult>,
+}
+
+pub struct InferForallFactResult {}
+
+pub struct InferForallFactWithIffResult {}
+
+impl StoreFactResult {
     pub fn primary_fact_id(&self) -> FactId {
         match self {
             Self::AtomicFact(r) => r.fact_id,
@@ -149,8 +245,6 @@ impl StoreFactAndInferResult {
         }
     }
 
-    // Atomic pieces projected into known-atomic indexes (and/chain components).
-    // Empty for or / exist / forall-shaped stores that only record the whole.
     pub fn atomic_components(&self) -> Vec<(FactId, AtomicFact)> {
         match self {
             Self::AtomicFact(r) => vec![(r.fact_id, r.fact.clone())],
@@ -184,79 +278,147 @@ impl StoreFactAndInferResult {
                 ids
             }
             Self::ChainFact(r) => {
-                let mut ids =
-                    Vec::with_capacity(1 + r.adjacent.len() + r.transitive_closures.len());
+                let mut ids = Vec::with_capacity(1 + r.adjacent.len());
                 ids.push(r.whole_fact_id);
                 for a in &r.adjacent {
                     ids.push(a.fact_id);
-                }
-                for c in &r.transitive_closures {
-                    ids.push(c.conclusion_fact_id);
                 }
                 ids
             }
             Self::OrFact(r) => vec![r.whole_fact_id],
             Self::ExistShapedFact(r) => vec![r.whole_fact_id],
-            Self::NotForallFact(r) => {
-                let mut ids = vec![r.whole_fact_id];
-                ids.push(r.derived_exist.whole_fact_id);
-                ids
-            }
+            Self::NotForallFact(r) => vec![r.whole_fact_id],
             Self::ForallFact(r) => vec![r.fact_id],
-            // Surface iff id is primary; env records the two generated foralls.
-            Self::ForallFactWithIff(r) => {
-                vec![r.forward.fact_id, r.reverse.fact_id]
-            }
+            Self::ForallFactWithIff(r) => vec![r.forward.fact_id, r.reverse.fact_id],
         }
     }
 }
 
-pub(crate) fn merge_store_and_infer(
-    stored: StoreFactResult,
-    inferred: InferFactResult,
-) -> StoreFactAndInferResult {
-    match (stored, inferred) {
-        (StoreFactResult::AtomicFact(r), InferFactResult::Empty) => {
-            StoreFactAndInferResult::AtomicFact(r)
+impl InferFactResult {
+    pub fn stored_fact_ids(&self) -> Vec<FactId> {
+        match self {
+            Self::AtomicFact(r) => r.stored_fact_ids(),
+            Self::AndFact(r) => {
+                let mut ids = Vec::new();
+                for c in &r.components {
+                    ids.extend(c.stored_fact_ids());
+                }
+                ids
+            }
+            Self::ChainFact(r) => {
+                let mut ids = Vec::new();
+                for a in &r.adjacent_infers {
+                    ids.extend(a.stored_fact_ids());
+                }
+                for c in &r.transitive_closures {
+                    ids.extend(c.derived.stored_fact_ids());
+                }
+                ids
+            }
+            Self::OrFact(_) | Self::ExistShapedFact(_) | Self::ForallFact(_) | Self::ForallFactWithIff(_) => {
+                Vec::new()
+            }
+            Self::NotForallFact(r) => r.derived_exist.stored_fact_ids(),
         }
-        (StoreFactResult::AndFact(r), InferFactResult::Empty) => StoreFactAndInferResult::AndFact(r),
-        (
-            StoreFactResult::ChainFact(store_part),
-            InferFactResult::ChainFact {
-                transitive_closures,
-            },
-        ) => StoreFactAndInferResult::ChainFact(StoreChainFactResult {
-            whole_fact_id: store_part.whole_fact_id,
-            fact: store_part.fact,
-            adjacent: store_part.adjacent,
-            transitive_closures,
-        }),
-        (StoreFactResult::ChainFact(store_part), InferFactResult::Empty) => {
-            StoreFactAndInferResult::ChainFact(StoreChainFactResult {
-                whole_fact_id: store_part.whole_fact_id,
-                fact: store_part.fact,
-                adjacent: store_part.adjacent,
-                transitive_closures: Vec::new(),
-            })
+    }
+}
+
+impl InferAtomicFactResult {
+    pub fn stored_fact_ids(&self) -> Vec<FactId> {
+        match self {
+            Self::EqualFact(r) => {
+                let mut ids = Vec::new();
+                if let Some(shape) = &r.cart_tuple_shape {
+                    for d in &shape.derived {
+                        ids.extend(d.stored_fact_ids());
+                    }
+                }
+                ids
+            }
+            Self::ExceptEquality(r) => r.stored_fact_ids(),
         }
-        (StoreFactResult::OrFact(r), InferFactResult::Empty) => StoreFactAndInferResult::OrFact(r),
-        (StoreFactResult::ExistShapedFact(r), InferFactResult::Empty) => {
-            StoreFactAndInferResult::ExistShapedFact(r)
+    }
+}
+
+impl InferAtomicExceptEqualityResult {
+    pub fn stored_fact_ids(&self) -> Vec<FactId> {
+        match self {
+            Self::NormalAtomicFact(r) => r.stored_fact_ids(),
+            Self::InFact(r) => r.stored_fact_ids(),
+            Self::LessFact(_)
+            | Self::GreaterFact(_)
+            | Self::LessEqualFact(_)
+            | Self::GreaterEqualFact(_)
+            | Self::IsSetFact(_)
+            | Self::IsNonemptySetFact(_)
+            | Self::IsFiniteSetFact(_)
+            | Self::IsCartFact(_)
+            | Self::IsTupleFact(_)
+            | Self::SubsetFact(_)
+            | Self::SupersetFact(_)
+            | Self::NotNormalAtomicFact(_)
+            | Self::NotEqualFact(_)
+            | Self::NotLessFact(_)
+            | Self::NotGreaterFact(_)
+            | Self::NotLessEqualFact(_)
+            | Self::NotGreaterEqualFact(_)
+            | Self::NotIsSetFact(_)
+            | Self::NotIsNonemptySetFact(_)
+            | Self::NotIsFiniteSetFact(_)
+            | Self::NotInFact(_)
+            | Self::NotIsCartFact(_)
+            | Self::NotIsTupleFact(_)
+            | Self::NotSubsetFact(_)
+            | Self::NotSupersetFact(_)
+            | Self::FnEqualInFact(_)
+            | Self::NotFnEqualInFact(_) => Vec::new(),
         }
-        (
-            StoreFactResult::NotForallFact(store_part),
-            InferFactResult::NotForallFact { derived_exist },
-        ) => StoreFactAndInferResult::NotForallFact(StoreNotForallFactResult {
-            whole_fact_id: store_part.whole_fact_id,
-            fact: store_part.fact,
-            derived_exist,
-        }),
-        (StoreFactResult::ForallFact(r), InferFactResult::Empty) => {
-            StoreFactAndInferResult::ForallFact(r)
+    }
+}
+
+impl InferNormalAtomicFactResult {
+    pub fn stored_fact_ids(&self) -> Vec<FactId> {
+        match self {
+            Self::ExpandDefinition(r) => {
+                let mut ids = Vec::new();
+                for d in &r.derived {
+                    ids.extend(d.stored_fact_ids());
+                }
+                ids
+            }
+            Self::NoInfer => Vec::new(),
         }
-        (StoreFactResult::ForallFactWithIff(r), InferFactResult::Empty) => {
-            StoreFactAndInferResult::ForallFactWithIff(r)
+    }
+}
+
+impl InferInFactResult {
+    pub fn stored_fact_ids(&self) -> Vec<FactId> {
+        match self {
+            Self::SetBuilder(r) => {
+                let mut ids = Vec::new();
+                for d in &r.derived {
+                    ids.extend(d.stored_fact_ids());
+                }
+                ids
+            }
+            Self::PowerSet(r) => r.derived.stored_fact_ids(),
+            Self::NoInfer => Vec::new(),
         }
-        _ => panic!("store_fact / infer_fact result shape mismatch"),
+    }
+}
+
+impl StoreFactAndInferResult {
+    pub fn primary_fact_id(&self) -> FactId {
+        self.store.primary_fact_id()
+    }
+
+    pub fn atomic_components(&self) -> Vec<(FactId, AtomicFact)> {
+        self.store.atomic_components()
+    }
+
+    pub fn stored_fact_ids(&self) -> Vec<FactId> {
+        let mut ids = self.store.stored_fact_ids();
+        ids.extend(self.infer.stored_fact_ids());
+        ids
     }
 }

@@ -4,25 +4,38 @@ use crate::new_pipeline::ast::fact::{
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::ast::stmt::DefPropStmt;
-use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::AtomicExceptEqualityFactSearchProofByDefinition;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::{
+    AtomicExceptEqualityFactSearchProofByDefinition, UserDefinedPropDefinitionProof,
+};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 use crate::new_pipeline::runtime::{Ids, Runtime, RuntimeResult};
 use std::collections::HashMap;
 
 impl Runtime {
-    // Ambient prop expansion: prove `$P(args)` from a concrete `prop` definition.
-    // Look up prop on the exec stack, instantiate iff clauses, verify obligations.
+    // Ambient definition expansion: builtin predicate defs, then user `prop` defs.
     // Soft miss → Ok(None). Does not handle abstract_prop or statement `by def`.
-    // Example:
+    // Example (user prop):
     //   prop above_zero(x R):
     //       x > 0
     //   $above_zero(1)
+    // Example (builtin):
+    //   by def N $subset R
+    // Finite list-set inclusions like `{1} $subset {1, 2}` belong to
+    // `by enumerate finite_set`, not this forall-definition route.
     pub fn search_atomic_except_equality_fact_proof_by_definition(
         &mut self,
         fact: &AtomicFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByDefinition>> {
+        if let Some(proof) =
+            self.search_builtin_prop_definition_proof(fact, verify_state.clone())?
+        {
+            return Ok(Some(
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(proof),
+            ));
+        }
+
         let AtomicFact::NormalAtomicFact(normal) = fact else {
             return Ok(None);
         };
@@ -40,10 +53,10 @@ impl Runtime {
             return Ok(None);
         }
         let definition = definition.clone();
-        self.prove_normal_atomic_by_prop_definition(normal, &definition, verify_state)
+        self.prove_normal_atomic_by_user_prop_definition(normal, &definition, verify_state)
     }
 
-    fn prove_normal_atomic_by_prop_definition(
+    fn prove_normal_atomic_by_user_prop_definition(
         &mut self,
         normal: &NormalAtomicFact,
         definition: &DefPropStmt,
@@ -77,10 +90,14 @@ impl Runtime {
             }
             proof_of_requirement_facts.push(proof);
         }
-        Ok(Some(AtomicExceptEqualityFactSearchProofByDefinition {
-            requirement_facts,
-            proof_of_requirement_facts,
-        }))
+        Ok(Some(
+            AtomicExceptEqualityFactSearchProofByDefinition::UserDefinedProp(
+                UserDefinedPropDefinitionProof {
+                    requirement_facts,
+                    proof_of_requirement_facts,
+                },
+            ),
+        ))
     }
 }
 

@@ -1,23 +1,28 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact, InFact};
 use crate::new_pipeline::ast::obj::{Obj, SetFormer, SetOperator};
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
+use crate::new_pipeline::store_fact_and_infer::{
+    InferInFactResult, InferPowerSetMembershipProjectionResult,
+    InferSetBuilderMembershipProjectionResult,
+};
 
 impl Runtime {
     // When: stored `x $in S` where `S` is (or equals) a set-builder / power_set.
     // Infers: base membership + defining facts, or `x $subset base` for power_set.
     // Example: trust `a $in {x R: x > 0}` also stores `a $in R` and `a > 0`.
-    pub(super) fn infer_membership_projection_stage(
+    pub(super) fn infer_in_fact(
         &mut self,
         in_fact: &InFact,
-    ) -> RuntimeResult<()> {
+    ) -> RuntimeResult<InferInFactResult> {
         if let Some(builder) = self.resolve_set_builder_for_membership_projection(&in_fact.set) {
+            let mut derived = Vec::new();
             let base_in = AtomicFact::InFact(InFact {
                 fact_id: self.ids.allocate_fact_id(),
                 element: in_fact.element.clone(),
                 set: builder.param_set.as_ref().clone(),
                 line_file: in_fact.line_file.clone(),
             });
-            self.store_atomic_fact(&base_in)?;
+            derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(base_in))?);
             let mut subst = std::collections::HashMap::new();
             subst.insert(builder.param_binding.id, in_fact.element.clone());
             for defining in &builder.facts {
@@ -25,16 +30,11 @@ impl Runtime {
                     continue;
                 };
                 let projected = crate::new_pipeline::instantiate::quantifier_free_fact_to_fact(qf);
-                match projected {
-                    Fact::AtomicFact(atomic) => {
-                        self.store_atomic_fact(&atomic)?;
-                    }
-                    other => {
-                        let _ = self.store_fact_and_infer(&other)?;
-                    }
-                }
+                derived.push(self.store_inferred_fact_and_infer(&projected)?);
             }
-            return Ok(());
+            return Ok(InferInFactResult::SetBuilder(
+                InferSetBuilderMembershipProjectionResult { derived },
+            ));
         }
         if let Some(base) = self.resolve_power_set_base_for_membership_projection(&in_fact.set) {
             let subset = AtomicFact::SubsetFact(crate::new_pipeline::ast::fact::SubsetFact {
@@ -43,9 +43,12 @@ impl Runtime {
                 right: base,
                 line_file: in_fact.line_file.clone(),
             });
-            self.store_atomic_fact(&subset)?;
+            let derived = Box::new(self.store_inferred_fact_and_infer(&Fact::AtomicFact(subset))?);
+            return Ok(InferInFactResult::PowerSet(
+                InferPowerSetMembershipProjectionResult { derived },
+            ));
         }
-        Ok(())
+        Ok(InferInFactResult::NoInfer)
     }
 
     fn resolve_set_builder_for_membership_projection(

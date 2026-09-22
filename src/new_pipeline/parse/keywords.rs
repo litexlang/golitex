@@ -134,6 +134,7 @@ pub const FINITE_SET_SIZE: &str = "finite_set_size";
 pub const FINITE_SET_MAX: &str = "finite_set_max";
 pub const FINITE_SET_MIN: &str = "finite_set_min";
 pub const FN_RANGE: &str = "fn_range";
+pub const REPLACEMENT_IMAGE: &str = "replacement_image";
 pub const RANGE: &str = "range";
 pub const CLOSED_RANGE: &str = "closed_range";
 pub const SUM: &str = "sum";

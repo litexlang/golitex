@@ -55,7 +55,89 @@ pub struct AtomicExceptEqualityFactSearchProofByKnownAtomicFact {
     pub why_parameters_of_known_fact_are_equal_to_givens: Vec<EqualFactSearchedProof>,
 }
 
-pub struct AtomicExceptEqualityFactSearchProofByDefinition {
+// By-definition fork: user `prop` vs builtin predicate definitions.
+pub enum AtomicExceptEqualityFactSearchProofByDefinition {
+    UserDefinedProp(UserDefinedPropDefinitionProof),
+    BuiltinProp(BuiltinPropDefinitionProof),
+}
+
+pub struct UserDefinedPropDefinitionProof {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+// One builtin predicate definition ↔ one dedicated evidence struct.
+pub enum BuiltinPropDefinitionProof {
+    Subset(BuiltinSubsetDefinitionProof),
+    Superset(BuiltinSupersetDefinitionProof),
+    FnEqualIn(BuiltinFnEqualInDefinitionProof),
+    ProperSubset(BuiltinProperSubsetDefinitionProof),
+    ProperSuperset(BuiltinProperSupersetDefinitionProof),
+    Injective(BuiltinInjectiveDefinitionProof),
+    Surjective(BuiltinSurjectiveDefinitionProof),
+    Bijective(BuiltinBijectiveDefinitionProof),
+    IsChoiceFunctionFor(BuiltinIsChoiceFunctionForDefinitionProof),
+    Prime(BuiltinPrimeDefinitionProof),
+    Coprime(BuiltinCoprimeDefinitionProof),
+    Dvd(BuiltinDvdDefinitionProof),
+}
+
+pub struct BuiltinSubsetDefinitionProof {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+pub struct BuiltinSupersetDefinitionProof {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+pub struct BuiltinFnEqualInDefinitionProof {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+pub struct BuiltinProperSubsetDefinitionProof {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+pub struct BuiltinProperSupersetDefinitionProof {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+pub struct BuiltinInjectiveDefinitionProof {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+pub struct BuiltinSurjectiveDefinitionProof {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+pub struct BuiltinBijectiveDefinitionProof {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+pub struct BuiltinIsChoiceFunctionForDefinitionProof {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+pub struct BuiltinPrimeDefinitionProof {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+pub struct BuiltinCoprimeDefinitionProof {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+pub struct BuiltinDvdDefinitionProof {
     pub requirement_facts: Vec<Fact>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
