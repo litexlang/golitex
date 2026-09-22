@@ -269,6 +269,8 @@ fn forall_reflexive_equality_succeeds_and_stores() {
 
 #[test]
 fn forall_with_iff_splits_and_proves_both_directions() {
+    // Store keeps only the two direction foralls (not ForallFactWithIff itself).
+    // Later proof search uses ordinary known-forall on those two facts.
     let mut runtime = runtime_with_file_env();
     let outcome = exec_one(
         &mut runtime,
@@ -278,17 +280,39 @@ fn forall_with_iff_splits_and_proves_both_directions() {
         !outcome.is_failed(),
         "expected Success for forall <=> equality symmetry"
     );
+    let facts = &runtime.top_exec_env().facts.facts_by_id;
     assert!(
-        runtime
-            .top_exec_env()
-            .facts
-            .facts_by_id
+        !facts
             .values()
             .any(|f| matches!(
                 f,
                 crate::new_pipeline::ast::fact::Fact::ForallFactWithIff(_)
             )),
-        "Success must store the forall-with-iff fact in parent env"
+        "ForallFactWithIff itself is not stored; only the two direction foralls"
+    );
+    let forall_count = facts
+        .values()
+        .filter(|f| matches!(f, crate::new_pipeline::ast::fact::Fact::ForallFact(_)))
+        .count();
+    assert!(
+        forall_count >= 2,
+        "expected both then⇒iff and iff⇒then foralls stored, got {forall_count}"
+    );
+
+    // Reverse direction is usable via ordinary known-forall instantiate.
+    assert!(!exec_one(&mut runtime, "abstract_prop Pp(x)").is_failed());
+    assert!(!exec_one(&mut runtime, "abstract_prop Qq(x)").is_failed());
+    assert!(
+        !exec_one(
+            &mut runtime,
+            "trust:\n    forall x R:\n        =>:\n            $Pp(x)\n        <=>:\n            $Qq(x)",
+        )
+        .is_failed()
+    );
+    assert!(!exec_one(&mut runtime, "trust $Pp(2)").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "$Qq(2)").is_failed(),
+        "stored iff⇒then forall should prove $Qq(2) from $Pp(2)"
     );
 }
 
@@ -1007,6 +1031,33 @@ fn store_equality_indexes_closed_numeric_equal() {
     assert_eq!(
         closed_hits, 0,
         "both-closed equality must not index known_closed_numeric_equal"
+    );
+}
+
+#[test]
+fn store_equality_infers_cart_and_tuple_shape() {
+    // `s = cart(R, R)` ⇒ `$is_cart(s)` and `cart_dim(s) = 2`.
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have s set = cart(R, R)").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "$is_cart(s)").is_failed(),
+        "expected $is_cart(s) after equality to a literal cart"
+    );
+    assert!(
+        !exec_one(&mut runtime, "cart_dim(s) = 2").is_failed(),
+        "expected cart_dim(s) = 2 after equality to cart(R, R)"
+    );
+
+    // `t = (1, 2)` ⇒ `$is_tuple(t)` and `tuple_dim(t) = 2`.
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have t set = (1, 2)").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "$is_tuple(t)").is_failed(),
+        "expected $is_tuple(t) after equality to a literal tuple"
+    );
+    assert!(
+        !exec_one(&mut runtime, "tuple_dim(t) = 2").is_failed(),
+        "expected tuple_dim(t) = 2 after equality to (1, 2)"
     );
 }
 

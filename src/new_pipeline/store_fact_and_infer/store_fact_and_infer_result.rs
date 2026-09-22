@@ -1,4 +1,7 @@
-use crate::new_pipeline::ast::fact::{AndFact, AtomicFact, ChainFact, ExistFactFamily, NotForallFact, OrFact};
+use crate::new_pipeline::ast::fact::{
+    AndFact, AtomicFact, ChainFact, ExistFactFamily, ForallFact, ForallFactWithIff, NotForallFact,
+    OrFact,
+};
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::runtime::FactId;
 
@@ -11,8 +14,8 @@ pub enum StoreFactAndInferResult {
     OrFact(StoreOrFactResult),
     ExistFact(StoreExistFactResult),
     NotForallFact(StoreNotForallFactResult),
-    // Forall / forall-iff until specialized store pipelines exist.
-    RecordedFact { fact_id: FactId },
+    ForallFact(StoreForallFactResult),
+    ForallFactWithIff(StoreForallFactWithIffResult),
 }
 
 pub struct StoreAtomicFactResult {
@@ -65,6 +68,20 @@ pub struct StoreNotForallFactResult {
     pub derived_exist: StoreExistFactResult,
 }
 
+// Record forall into facts_by_id and project then-conclusions into known_forall.
+pub struct StoreForallFactResult {
+    pub fact_id: FactId,
+    pub fact: ForallFact,
+}
+
+// Split forall-iff into two forall directions, store each, keep surface id as primary.
+pub struct StoreForallFactWithIffResult {
+    pub fact_id: FactId,
+    pub fact: ForallFactWithIff,
+    pub forward: StoreForallFactResult,
+    pub reverse: StoreForallFactResult,
+}
+
 pub struct StoreChainTransitiveClosureResult {
     pub cite: ChainTransitiveCite,
     pub start_object_index: usize,
@@ -91,7 +108,8 @@ impl StoreFactAndInferResult {
             Self::OrFact(r) => r.whole_fact_id,
             Self::ExistFact(r) => r.whole_fact_id,
             Self::NotForallFact(r) => r.whole_fact_id,
-            Self::RecordedFact { fact_id } => *fact_id,
+            Self::ForallFact(r) => r.fact_id,
+            Self::ForallFactWithIff(r) => r.fact_id,
         }
     }
 
@@ -113,7 +131,8 @@ impl StoreFactAndInferResult {
             Self::OrFact(_)
             | Self::ExistFact(_)
             | Self::NotForallFact(_)
-            | Self::RecordedFact { .. } => Vec::new(),
+            | Self::ForallFact(_)
+            | Self::ForallFactWithIff(_) => Vec::new(),
         }
     }
 
@@ -147,7 +166,11 @@ impl StoreFactAndInferResult {
                 ids.push(r.derived_exist.whole_fact_id);
                 ids
             }
-            Self::RecordedFact { fact_id } => vec![*fact_id],
+            Self::ForallFact(r) => vec![r.fact_id],
+            // Surface iff id is primary; env records the two generated foralls.
+            Self::ForallFactWithIff(r) => {
+                vec![r.forward.fact_id, r.reverse.fact_id]
+            }
         }
     }
 }
