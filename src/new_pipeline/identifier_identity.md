@@ -66,8 +66,12 @@ files uses `file::x` / `mod::file::x`.
 
 ## Deferred
 
-- **Alpha equality for set builders** (`{x: P} = {y: P}` as a dedicated rule)
-  will need something like `alpha_normalize` again later. Not in tree now.
+- Full `alpha_normalize` rewrite of binder objs is still absent (single body
+  only). **Structural alpha equality** for `FnSet` / `SetBuilder` is wired as
+  equality builtins (`ByFnSetAlphaEqual` / `BySetBuilderAlphaEqual`): binders
+  may differ; free structure must match. Example: `R -> R = R -> R`,
+  `{x R: x > 0} = {y R: y > 0}`. Membership reuse goes through known `$in` +
+  arg equality (no dedicated `$in` alpha rule).
 - Some stmt-only binder slots (induction / `for`) may still be bare `String`;
   migrate to `BoundName` when those paths are wired.
 - **`have fn … = …` / `have …:` (by exist) / `have fn by cases` / `have fn by induc`**
@@ -77,9 +81,8 @@ files uses `file::x` / `mod::file::x`.
   stores `f $in FnSet`, property forall, and uniqueness forall (no EqualToFunction),
   and records `StoredIdentifierDefinition::HaveFnByForallExistUnique` so
   `release obj def` can rebuild those three facts.
-  A `template` **def** may run this body under local params; `\Name<args>`
-  instance use (FnSet membership / property release on the instance) is **not**
-  wired yet — unlike `by cases` / `by induc`.
+  A `template` may run this body under local params; `\Name<args>` installs
+  the same three facts (membership / property / uniqueness) on the instance.
 - **`-r` / project mount run loop** still deferred; set `current_mod_id` +
   `current_export_file_id` before parsing each export file.
 

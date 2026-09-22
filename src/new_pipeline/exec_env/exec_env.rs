@@ -1,7 +1,5 @@
 use crate::new_pipeline::ast::names::{AtomicName, BoundName, PlainName};
-use crate::new_pipeline::ast::obj::{
-    Cart, FiniteSeqSet, FnSet, Obj, SetBuilder, StructObj, Tuple,
-};
+use crate::new_pipeline::ast::obj::{FiniteSeqSet, FnSet, Obj, SeqSet, StructObj};
 use crate::new_pipeline::ast::param::ParamType;
 use crate::new_pipeline::ast::stmt::AxiomStmt;
 use crate::new_pipeline::ast::stmt::DefAbstractPropStmt;
@@ -52,8 +50,8 @@ pub struct ExecEnv {
     /// Facts and fact indexes stored in this scope.
     pub facts: KnownFactMemory,
 
-    /// Shape/value properties attached to special objects by stored facts.
-    pub special_object_properties: HashMap<ObjIR, Vec<SpecialObjProperty>>,
+    /// Definition-time shape memory only. Never written from arbitrary stored facts.
+    pub special_object_properties: HashMap<ObjIR, Vec<SpecialObjectPropertyByDefinition>>,
 
     /// Algebraic properties proved for predicates in this scope.
     pub prop_rewrite_properties: HashMap<AtomicName, Vec<PropRewriteProperty>>,
@@ -124,26 +122,24 @@ pub enum PropRewriteProperty {
     Reflexive,
 }
 
-/// Properties recorded for objects whose structure has a reusable fact-based
-/// interpretation.
+/// Definition-channel object shapes. Only definition exits may write these
+/// (have/let/have fn/typed params/template WD/field-from-struct-def, …).
+/// Post-hoc `$in` / `=` proofs must not mutate this memory.
 #[derive(Clone)]
-pub enum SpecialObjProperty {
-    TupleEquality((Tuple, FactId)),
-    TupleOwner((Cart, FactId)),
-    CartEquality((Cart, FactId)),
-    FiniteSeqOwner((FiniteSeqSet, FactId)),
-    SetBuilderEquality((SetBuilder, FactId)),
-    /// Non-closed object equals a closed numeric expr; cite `FactId`.
-    /// Payload is the closed side as `Obj` (must classify as `ClosedNumericExpr`).
-    /// Example: from `a = 2^3/7 + 10 * 2.5`, key `a` stores the closed RHS.
-    ClosedNumericEqual((Obj, FactId)),
+pub enum SpecialObjectPropertyByDefinition {
+    /// Callable signature from a definition exit; cite the definitional membership FactId.
     InFunctionSet((FnSet, FactId)),
+    /// `f = anon` from a definition exit; cite the defining equality FactId.
     EqualToFunction((Obj, FactId)),
     /// Definition-time struct carrier only (`have p &Point`, `forall p &Point`, …).
     /// Never written from a later `$in &Struct` proof (avoids carrier conflicts).
     /// `FactId` cites the definition-time membership `p $in &Point`.
     /// Example: after `have p &Point`, key `p` stores `(&Point, fact_id)` for `p.x` WD.
     DefinedAsStruct((StructObj, FactId)),
+    /// Definition-time `a $in finite_seq(S, n)`; cite the definitional membership FactId.
+    DefinedAsFiniteSeq((FiniteSeqSet, FactId)),
+    /// Definition-time `a $in seq(S)`; cite the definitional membership FactId.
+    DefinedAsSeqSet((SeqSet, FactId)),
 }
 
 // -----------------------------------------------------------------------------

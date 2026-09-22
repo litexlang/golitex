@@ -22,7 +22,9 @@ definition/    LetObj, HaveObj*, HaveFn*, ObtainObjFromExistFact,
                ObtainObjFromAtomicFact, ObtainObjFromThm, DefProp,
                DefAbstractProp, DefStruct*, DefTemplate (incl. obtain body),
                DefThm, ReleaseObjDef, ReleaseStructDef, ReleaseThm
-witness/       WitnessExistFact (no indented body in new_pipeline)
+witness/       WitnessExistFact, WitnessExistUnique (via exist!),
+               WitnessAtomicFact, WitnessNonemptySet
+               (no indented body in new_pipeline; no FnSet shortcut)
 unsafe/        TrustStmt, TrustHaveStmt
 by/            ByReflexive/Symmetric/TransitiveProp, Extension, Enumerate*,
                For, Contra, Cases, Def, Thm, Induc, StrongInduc,

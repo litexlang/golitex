@@ -93,8 +93,11 @@ pub use execute_unsafe_stmt::{
     ExecTrustStmtResult, ExecTrustStmtSuccessResult, ExecUnsafeStmtResult,
 };
 pub use execute_witness_stmt::{
-    ExecWitnessExistFactStmtFailed, ExecWitnessExistFactStmtResult,
-    ExecWitnessExistFactStmtSuccessResult, ExecWitnessStmtResult,
+    ExecWitnessAtomicFactStmtFailed, ExecWitnessAtomicFactStmtResult,
+    ExecWitnessAtomicFactStmtSuccessResult, ExecWitnessExistFactStmtFailed,
+    ExecWitnessExistFactStmtResult, ExecWitnessExistFactStmtSuccessResult,
+    ExecWitnessNonemptySetStmtFailed, ExecWitnessNonemptySetStmtResult,
+    ExecWitnessNonemptySetStmtSuccessResult, ExecWitnessStmtResult, WitnessExistCheckSuccess,
 };
 pub use introduce_typed_parameters::{
     IntroduceTypedParametersFailed, IntroduceTypedParametersResult, SharedHaveDefinition,

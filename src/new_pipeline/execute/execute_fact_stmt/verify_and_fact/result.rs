@@ -1,5 +1,6 @@
 use crate::new_pipeline::ast::fact::AndFact;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
 
 pub enum VerifyAndFactResult {
     Success(VerifyAndFactSuccess),
@@ -9,6 +10,7 @@ pub enum VerifyAndFactResult {
 pub struct VerifyAndFactSuccess {
     pub fact: AndFact,
     pub components: Vec<VerifyFactResult>,
+    pub known_forall: Option<SearchProofByKnownForallFact>,
 }
 
 // And has no separate top-level WD stage: each conjunct runs WD+search.
@@ -61,11 +63,13 @@ pub fn and_fact_result_from_component_fail(
 pub fn and_fact_result_from_success(
     fact: &AndFact,
     components: Vec<VerifyFactResult>,
+    known_forall: Option<SearchProofByKnownForallFact>,
 ) -> VerifyFactResult {
     VerifyFactResult::AndFact(Box::new(VerifyAndFactResult::Success(
         VerifyAndFactSuccess {
             fact: fact.clone(),
             components,
+            known_forall,
         },
     )))
 }

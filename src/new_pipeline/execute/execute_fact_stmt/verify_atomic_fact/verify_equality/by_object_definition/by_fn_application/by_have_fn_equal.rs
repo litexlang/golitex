@@ -11,7 +11,7 @@
 
 use crate::new_pipeline::ast::fact::EqualFact;
 use crate::new_pipeline::ast::obj::{FnObj, FnObjHead, Obj};
-use crate::new_pipeline::exec_env::exec_env::SpecialObjProperty;
+use crate::new_pipeline::exec_env::exec_env::SpecialObjectPropertyByDefinition;
 use crate::new_pipeline::exec_env::StoredIdentifierDefinition;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
@@ -131,7 +131,7 @@ impl Runtime {
                 continue;
             };
             for prop in props {
-                if let SpecialObjProperty::EqualToFunction((fun, _)) = prop {
+                if let SpecialObjectPropertyByDefinition::EqualToFunction((fun, _)) = prop {
                     return Some(fun.clone());
                 }
             }

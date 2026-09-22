@@ -229,7 +229,7 @@ impl Runtime {
     // are equal (componentwise via a tuple when there are several binders).
     // Example: from `exist! x R st {x = 0}` store
     //   forall x_a0 R, x_b0 R: x_a0 = 0, x_b0 = 0 => x_a0 = x_b0
-    fn build_exist_unique_uniqueness_forall_fact(
+    pub(in crate::new_pipeline::execute) fn build_exist_unique_uniqueness_forall_fact(
         &mut self,
         plain: &PlainExistFact,
     ) -> RuntimeResult<ForallFact> {

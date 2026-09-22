@@ -67,6 +67,9 @@ impl Runtime {
             line_file: Some(let_stmt.line_file.clone()),
         }));
         let store_and_infer_result = self.store_fact_and_infer(&equal_fact)?;
+        if let Fact::AtomicFact(AtomicFact::EqualFact(eq)) = &equal_fact {
+            self.record_fn_signature_from_definition_equal(eq);
+        }
 
         Ok(ExecLetObjStmtResult::Success(ExecLetObjStmtSuccessResult {
             statement: let_stmt.clone(),

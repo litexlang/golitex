@@ -2,7 +2,8 @@
 //!
 //! Pipeline (confirmed):
 //! 1. Prove the source `forall` (outside claim/thm/trust) and WD the derived FnSet
-//! 2. Store `f $in FnSet(...)` only (no `f = AnonymousFn` / EqualToFunction)
+//! 2. Store `f $in FnSet(...)` and register InFunctionSet at the definition exit
+//!    (no `f = AnonymousFn` / EqualToFunction)
 //! 3. Release property forall (`body[y ↦ f(x)]`) and uniqueness forall
 //!    (`forall …, y: body ⇒ y = f(x)`, stored like other foralls)
 //! 4. Insert `StoredIdentifierDefinition::HaveFnByForallExistUnique` for
@@ -135,6 +136,9 @@ impl Runtime {
             line_file: Some(stmt.line_file.clone()),
         }));
         let mut stored_fact_ids = self.store_fact_and_infer(&membership)?.stored_fact_ids();
+        if let Fact::AtomicFact(AtomicFact::InFact(in_fact)) = &membership {
+            self.record_fn_signature_from_definition_membership(in_fact);
+        }
 
         let applied = applied_function_obj(&Obj::Identifier(function_ident.clone()), &stmt.forall.typed_parameters);
         let property_forall =

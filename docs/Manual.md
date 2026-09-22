@@ -186,7 +186,7 @@ sqrt(4) = 2
 | `a % b` | Euclidean integer remainder |
 | `a^b` | Exponentiation |
 | `abs(a)`, `sqrt(a)`, `log(base, a)` | Standard numeric objects |
-| `sin(a)`, `arcsin(a)`, `cos(a)`, `tan(a)`, `cot(a)` | Native symbolic real trigonometric objects; `arcsin` uses the principal branch |
+| `sin(a)`, `cos(a)`, `tan(a)`, `cot(a)`, `arcsin(a)`, `arccos(a)`, `arctan(a)`, `arccot(a)` | Native symbolic real trigonometric objects with principal inverse branches |
 | `re(z)`, `img(z)`, `C_abs(z)` | Real coordinate, imaginary coordinate, and complex modulus |
 | `finite_set_max(S)`, `finite_set_min(S)` | Extremum of a suitable finite set |
 
@@ -260,12 +260,20 @@ values.
 
 ### Native real trigonometry (beta preview)
 
-`sin(x)`, `arcsin(x)`, `cos(x)`, `tan(x)`, and `cot(x)` are dedicated builtin object forms,
-not source-defined functions or ordinary function calls. Their arguments are
-real angles in radians. `sin` and `cos` are total on `R`; `tan(x)` is
-well-defined only when `cos(x) != 0`, and `cot(x)` only when `sin(x) != 0`.
-`arcsin(x)` is well-defined exactly when `x R`, `(-1) <= x`, and `x <= 1`.
-It returns the principal value in `[(-pi)/2, pi/2]`.
+`sin(x)`, `cos(x)`, `tan(x)`, `cot(x)`, `arcsin(x)`, `arccos(x)`, `arctan(x)`, and
+`arccot(x)` are dedicated builtin object forms, not source-defined functions or
+ordinary function calls. Angles are in radians. `sin` and `cos` are total on
+`R`; `tan(x)` is well-defined only when `cos(x) != 0`, and `cot(x)` only when
+`sin(x) != 0`.
+
+Principal inverse domains and ranges:
+
+| Form | Well-defined when | Principal range |
+|---|---|---|
+| `arcsin(x)` | `x R` and `(-1) <= x <= 1` | `[(-pi)/2, pi/2]` |
+| `arccos(x)` | `x R` and `(-1) <= x <= 1` | `[0, pi]` |
+| `arctan(x)` | `x R` | `((-pi)/2, pi/2)` |
+| `arccot(x)` | `x R` | `(0, pi)` |
 
 The expressions remain symbolic, while common exact identities verify:
 
@@ -280,22 +288,54 @@ forall x R:
     x <= 1
     =>:
         sin(arcsin(x)) = x
+        cos(arccos(x)) = x
         (-pi) / 2 <= arcsin(x) <= pi / 2
+        0 <= arccos(x) <= pi
+
+forall x R:
+    tan(arctan(x)) = x
+    cot(arccot(x)) = x
+    (-pi) / 2 < arctan(x) < pi / 2
+    0 < arccot(x) < pi
 ```
 
 The preview intentionally does not assign every familiar special-angle value;
 for example, `sin(pi / 6) = 1 / 2` still needs an explicit source fact.
-Complex trigonometry, inverse cosine/tangent, analytic definitions, and
-continuity theorems are outside this interface. The reverse identity
-`arcsin(sin(y)) = y` is available only on the principal interval
-`(-pi)/2 <= y <= pi/2`.
+Complex trigonometry, analytic definitions, and continuity theorems are outside
+this interface. Right inverses require the principal interval:
 
-The names `sin`, `arcsin`, `cos`, `tan`, and `cot` are hard-reserved. Their bare names
-are not first-class function values; higher-order code can use
-`fn(x R) R {sin(x)}`. The evaluator does not assign approximate runtime values
-to symbolic trigonometric expressions. The supported exact identities, bounds,
-sign intervals, and monotonicity shapes are summarized under [Trigonometric
-rules](#trigonometric-rules).
+```litex
+forall y R:
+    (-pi) / 2 <= y
+    y <= pi / 2
+    =>:
+        arcsin(sin(y)) = y
+
+forall y R:
+    0 <= y
+    y <= pi
+    =>:
+        arccos(cos(y)) = y
+
+forall y R:
+    (-pi) / 2 < y
+    y < pi / 2
+    =>:
+        arctan(tan(y)) = y
+
+forall y R:
+    0 < y
+    y < pi
+    =>:
+        arccot(cot(y)) = y
+```
+
+The names `sin`, `cos`, `tan`, `cot`, `arcsin`, `arccos`, `arctan`, and `arccot`
+are hard-reserved. Their bare names are not first-class function values;
+higher-order code can use `fn(x R) R {sin(x)}`. The evaluator does not assign
+approximate runtime values to symbolic trigonometric expressions. The supported
+exact identities, bounds, sign intervals, and monotonicity shapes are summarized
+under [Trigonometric rules](#trigonometric-rules).
 
 ### Complex scalars (beta preview)
 
@@ -1686,6 +1726,13 @@ by def {1, 2} $superset {1}
 > **Preview (`new_pipeline`):** `x $in {a, b, …}` is proved when `x` equals one
 > listed element (used by bodyless `by enumerate finite_set`). One-line
 > `forall x Dom => P` (no `:`) is accepted alongside the block `forall` form.
+>
+> **Preview (`new_pipeline`):** FnSet and SetBuilder equality is structural
+> alpha-equality (binders may differ; free structure must match). So
+> `R -> R = R -> R` and `{x R: x > 0} = {y R: y > 0}` succeed as equality
+> builtins; known `$in` then bridges via the existing arg-equality path
+> (e.g. `forall f R -> R: f $in R -> R`). Different return sets / bodies still
+> fail.
 
 | Positive form | Negative form | Meaning |
 |---|---|---|
@@ -2052,11 +2099,10 @@ This is an `error`: `x != 0` and `x > 0` overlap.
 > does. The name is recorded in the definition table, so `release obj def f`
 > re-stores the same three facts.
 >
-> A `template` **definition** may use this form as its body (the body is
-> checked under the template parameters). Instantiating that template as
-> `\Name<args>` does **not** yet install FnSet membership / property /
-> uniqueness the way `by cases` / `by induc` template instances do — so
-> `\Name<args>(x)` is not yet usable like a selected function.
+> A `template` may use this form as its body. Instantiating `\Name<args>`
+> installs the same three facts as a plain `have fn by exist!` (FnSet
+> membership, property forall, uniqueness forall), with subjects equal to
+> the instance.
 
 `have fn name by exist!` turns an **already proved** unique-existence
 statement into a function. Prove the `forall … exist!` outside; the `have fn`
@@ -2675,7 +2721,7 @@ introductions.
 | `have fn ... = ...` | Ordered parameter domains, return carrier, body membership, and side conditions. | A callable function, its signature, and checked defining equation. |
 | `have fn ... by cases` | Cases are exhaustive, pairwise disjoint, and every result belongs to the return set. | A callable piecewise function and guarded case equations. |
 | `have fn ... by induc` | Integer measure/lower bound and strictly decreasing in-domain recursive calls. | A callable recursive function and checked case equations. |
-| `have fn ... by exist!` | Preview (`new_pipeline`): proved `forall … exist!` goal; FnSet well-defined. | `f $in FnSet`, property forall, uniqueness forall (no equality unfold); def-table + `release obj def`. `template` def-body OK; `\Name<args>` instance FnSet not yet. |
+| `have fn ... by exist!` | Preview (`new_pipeline`): proved `forall … exist!` goal; FnSet well-defined. | `f $in FnSet`, property forall, uniqueness forall (no equality unfold); def-table + `release obj def`; `template` instance releases the same three facts. |
 | `prop`, `abstract_prop` | Parameter definitions; concrete `prop` clauses must be well-defined. | A foldable concrete definition or an uninterpreted predicate interface. |
 | `struct`, `setting`, `template` | Field/setting/template parameters and body contracts. | A named view, reusable binder prefix, or one parameterized definition family. |
 | `have algo for ...` | A defined function exists and the implementation agrees on its cases/results. | An executable presentation; it does not replace the mathematical function facts. |
@@ -2992,15 +3038,21 @@ This is an `error` because an abstract predicate has no definition to unfold.
 
 ### Witnesses, `obtain`, and preimages
 
-> **Preview (`new_pipeline`):** `witness exist … from …` has **no** indented
-> proof body and opens **no** local binder scope. Prove type and body
-> obligations in the ambient environment first, then submit the witnesses in
-> one line. `obtain … from exist` / `exist!` is wired at top level and as a
-> `template` body (names the known existential; `exist!` also stores the
-> uniqueness forall). `obtain` from `$P` / `thm` is also wired at top level and
-> as a `template` body. `exist!` uniqueness for `witness`, and `witness $P` /
-> nonempty-set forms are not wired on this track yet. The legacy examples below
-> (with `:` proof blocks) still describe the default pipeline.
+> **Preview (`new_pipeline`):** `witness exist` / `exist!` / `$P(args)` /
+> `$is_nonempty_set(S)` are wired at top level. None of these forms has an
+> indented proof body or a local binder scope — prove type, body, membership,
+> and (for `exist!`) uniqueness obligations in the ambient environment first,
+> then submit witnesses in one line. `exist!` verifies the generated
+> two-candidate uniqueness forall via the same builder as `obtain` from
+> `exist!`. `witness $P` requires a concrete prop whose sole clause is
+> ordinary `exist` (reject `exist!` / `not exist` / multi-clause /
+> `abstract_prop`); after witness checks it stores `$P` (definition inference
+> may expose the exist). Nonemptiness stores `$is_nonempty_set(S)` after
+> verifying `o $in S` — there is **no** FnSet/codomain shortcut. `obtain … from
+> exist` / `exist!` / `$P` / `thm` is also wired at top level and as a
+> `template` body. The legacy examples below (with `:` proof blocks) still
+> describe the default pipeline.
+
 
 Use `witness` to prove an existential or nonempty-set goal. Use `obtain` to
 name witnesses from an already known existential, from one concrete prop
@@ -3869,13 +3921,16 @@ The symbolic trigonometric interface recognizes the following exact families:
 |---|---|
 | Core identities | Values at `0` and `pi / 2`, sine and cosine addition and difference formulas, the unit-circle identity, and `tan(x)=sin(x)/cos(x)` or `cot(x)=cos(x)/sin(x)` when the denominator is known nonzero. |
 | Principal inverse sine | `arcsin(x)` requires `x in [(-1),1]`, returns a value in `[(-pi)/2,pi/2]`, and satisfies `sin(arcsin(x))=x`. Conversely, `arcsin(sin(y))=y` requires `y` in that principal interval. |
+| Principal inverse cosine | `arccos(x)` requires `x in [(-1),1]`, returns a value in `[0,pi]`, and satisfies `cos(arccos(x))=x`. Conversely, `arccos(cos(y))=y` requires `y` in `[0,pi]`. |
+| Principal inverse tangent | `arctan(x)` is total on `R`, returns a value in `((-pi)/2,pi/2)`, and satisfies `tan(arctan(x))=x`. Conversely, `arctan(tan(y))=y` requires `y` in that open principal interval. |
+| Principal inverse cotangent | `arccot(x)` is total on `R`, returns a value in `(0,pi)`, and satisfies `cot(arccot(x))=x`. Conversely, `arccot(cot(y))=y` requires `y` in `(0,pi)`. |
 | Symmetry and angles | Odd/even parity, double-angle and cofunction formulas, supported integral and half-integral multiples of `pi`, shifts by `pi` and `pi/2`, and period `2*pi` for sine/cosine or `pi` for tangent/cotangent when defined. |
 | Bounds and signs | `(-1) <= sin(x), cos(x) <= 1`, `3 < pi < 4`, and the standard sign intervals for sine, cosine, tangent, and cotangent. Open-domain bounds remain necessary for tangent and cotangent. |
 | Local order | Sine is monotone on `[(-pi)/2, pi/2]`, cosine on `[0, pi]`, tangent on `((-pi)/2, pi/2)`, and cotangent in the reverse direction on `(0, pi)`. |
 
 These are exact symbolic rules, not numerical approximation. Unlisted special
-angles, inverse cosine/tangent or complex trigonometry, continuity, and analytic definitions
-need explicit source facts or library interfaces.
+angles, complex trigonometry, continuity, and analytic definitions need
+explicit source facts or library interfaces.
 
 ### Native numeric function rules
 

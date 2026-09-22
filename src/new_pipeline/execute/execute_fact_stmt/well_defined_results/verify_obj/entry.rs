@@ -177,6 +177,15 @@ impl Runtime {
             Obj::Arcsin(value) => {
                 self.verify_arcsin_obj_well_definedness_by_def(value, verify_state)
             }
+            Obj::Arccos(value) => {
+                self.verify_arccos_obj_well_definedness_by_def(value, verify_state)
+            }
+            Obj::Arctan(value) => {
+                self.verify_arctan_obj_well_definedness_by_def(value, verify_state)
+            }
+            Obj::Arccot(value) => {
+                self.verify_arccot_obj_well_definedness_by_def(value, verify_state)
+            }
             Obj::Cos(value) => self.verify_cos_obj_well_definedness_by_def(value, verify_state),
             Obj::Tan(value) => self.verify_tan_obj_well_definedness_by_def(value, verify_state),
             Obj::Cot(value) => self.verify_cot_obj_well_definedness_by_def(value, verify_state),

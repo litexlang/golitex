@@ -1,8 +1,13 @@
 use crate::new_pipeline::ast::fact::{Fact, NotEqualFact};
-use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::ast::obj::{Cos, Number, Obj, Sin};
+use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_inverse_trig::{
+    half_pi, negative_half_pi, pi_obj, zero_obj,
+};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
-use crate::new_pipeline::rational_expression::evaluate_obj_to_normalized_decimal_number;
+use crate::new_pipeline::rational_expression::{
+    evaluate_obj_to_normalized_decimal_number, objs_equal_by_rational_expression_evaluation,
+};
 use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeResult};
 
 // Builtin rules for `!=` facts (zero-premise routes).
@@ -22,6 +27,14 @@ pub enum NotEqualFactSearchProofByBuiltinRule {
     // Mathematical property: `a > b` or `a < b` ⇒ `a != b`.
     // Example: known `x > 0` proves `x != 0`.
     FromKnownStrictOrder(FromKnownStrictOrderBuiltinRuleProof),
+    // Cosine is nonzero on the open principal tangent interval.
+    // Mathematical property: `-pi/2 < y < pi/2` ⇒ `cos(y) != 0`.
+    // Example: after those bounds, prove `cos(y) != 0` for `tan(y)` WD.
+    CosNonzeroOnOpenHalfPi(CosNonzeroOnOpenHalfPiBuiltinRuleProof),
+    // Sine is nonzero on the open principal cotangent interval.
+    // Mathematical property: `0 < y < pi` ⇒ `sin(y) != 0`.
+    // Example: after those bounds, prove `sin(y) != 0` for `cot(y)` WD.
+    SinNonzeroOnOpenPi(SinNonzeroOnOpenPiBuiltinRuleProof),
 }
 
 pub struct ClosedDecimalNotEqualBuiltinRuleProof {
@@ -40,8 +53,11 @@ pub struct FromKnownStrictOrderBuiltinRuleProof {
     pub cite_fact_id: FactId,
 }
 
+pub struct CosNonzeroOnOpenHalfPiBuiltinRuleProof {}
+pub struct SinNonzeroOnOpenPiBuiltinRuleProof {}
+
 impl Runtime {
-    // Builtin not-equal: closed decimal, known strict order, then list-set length.
+    // Builtin not-equal: closed decimal, known strict order, trig nonzero, then list-set length.
     pub fn search_not_equal_fact_proof_by_builtin_rule(
         &mut self,
         fact: &NotEqualFact,
@@ -70,6 +86,12 @@ impl Runtime {
                 ),
             ));
         }
+        if let Some(proof) = self.cos_nonzero_on_open_half_pi_proof(fact) {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) = self.sin_nonzero_on_open_pi_proof(fact) {
+            return Ok(Some(proof));
+        }
         if let (Obj::ListSet(left), Obj::ListSet(right)) = (&fact.left, &fact.right) {
             if left.list.len() != right.list.len() {
                 return Ok(Some(
@@ -81,4 +103,65 @@ impl Runtime {
         }
         Ok(None)
     }
+
+    fn cos_nonzero_on_open_half_pi_proof(
+        &self,
+        fact: &NotEqualFact,
+    ) -> Option<NotEqualFactSearchProofByBuiltinRule> {
+        let arg = cos_arg_against_zero(fact)?;
+        let lower = negative_half_pi();
+        let upper = half_pi();
+        if self.known_less_fact_id(&lower, arg).is_none() {
+            return None;
+        }
+        if self.known_less_fact_id(arg, &upper).is_none() {
+            return None;
+        }
+        Some(NotEqualFactSearchProofByBuiltinRule::CosNonzeroOnOpenHalfPi(
+            CosNonzeroOnOpenHalfPiBuiltinRuleProof {},
+        ))
+    }
+
+    fn sin_nonzero_on_open_pi_proof(
+        &self,
+        fact: &NotEqualFact,
+    ) -> Option<NotEqualFactSearchProofByBuiltinRule> {
+        let arg = sin_arg_against_zero(fact)?;
+        let lower = zero_obj();
+        let upper = pi_obj();
+        if self.known_less_fact_id(&lower, arg).is_none() {
+            return None;
+        }
+        if self.known_less_fact_id(arg, &upper).is_none() {
+            return None;
+        }
+        Some(NotEqualFactSearchProofByBuiltinRule::SinNonzeroOnOpenPi(
+            SinNonzeroOnOpenPiBuiltinRuleProof {},
+        ))
+    }
+}
+
+fn cos_arg_against_zero(fact: &NotEqualFact) -> Option<&Obj> {
+    match (&fact.left, &fact.right) {
+        (Obj::Cos(Cos { arg }), right) if is_zero_obj(right) => Some(arg.as_ref()),
+        (left, Obj::Cos(Cos { arg })) if is_zero_obj(left) => Some(arg.as_ref()),
+        _ => None,
+    }
+}
+
+fn sin_arg_against_zero(fact: &NotEqualFact) -> Option<&Obj> {
+    match (&fact.left, &fact.right) {
+        (Obj::Sin(Sin { arg }), right) if is_zero_obj(right) => Some(arg.as_ref()),
+        (left, Obj::Sin(Sin { arg })) if is_zero_obj(left) => Some(arg.as_ref()),
+        _ => None,
+    }
+}
+
+fn is_zero_obj(obj: &Obj) -> bool {
+    matches!(
+        obj,
+        Obj::Number(Number {
+            normalized_value,
+        }) if normalized_value == "0"
+    ) || objs_equal_by_rational_expression_evaluation(obj, &zero_obj())
 }

@@ -86,12 +86,11 @@ impl Runtime {
     ) -> RuntimeResult<Vec<StoreFactAndInferResult>> {
         let mut out = Vec::with_capacity(built.facts.len());
         for fact in &built.facts {
-            if let Some((element, struct_obj)) = &built.defined_as_struct {
-                if let Fact::AtomicFact(AtomicFact::InFact(in_fact)) = fact {
-                    if &in_fact.element == element {
-                        self.record_defined_as_struct(element, struct_obj.clone(), in_fact.fact_id);
-                    }
-                }
+            if let Fact::AtomicFact(AtomicFact::InFact(in_fact)) = fact {
+                self.record_definition_membership_shape(in_fact);
+            }
+            if let Fact::AtomicFact(AtomicFact::EqualFact(eq)) = fact {
+                self.record_fn_signature_from_definition_equal(eq);
             }
             out.push(self.store_fact_and_infer(fact)?);
         }

@@ -86,6 +86,9 @@ fn pack_success_by_def(
         Obj::Abs(_) => ObjWellDefinedProofByDef::Abs(AbsObjWellDefinedProof::from_stages(stages)),
         Obj::Sin(_) => ObjWellDefinedProofByDef::Sin(SinObjWellDefinedProof::from_stages(stages)),
         Obj::Arcsin(_) => ObjWellDefinedProofByDef::Arcsin(ArcsinObjWellDefinedProof::from_stages(stages)),
+        Obj::Arccos(_) => ObjWellDefinedProofByDef::Arccos(ArccosObjWellDefinedProof::from_stages(stages)),
+        Obj::Arctan(_) => ObjWellDefinedProofByDef::Arctan(ArctanObjWellDefinedProof::from_stages(stages)),
+        Obj::Arccot(_) => ObjWellDefinedProofByDef::Arccot(ArccotObjWellDefinedProof::from_stages(stages)),
         Obj::Cos(_) => ObjWellDefinedProofByDef::Cos(CosObjWellDefinedProof::from_stages(stages)),
         Obj::Tan(_) => ObjWellDefinedProofByDef::Tan(TanObjWellDefinedProof::from_stages(stages)),
         Obj::Cot(_) => ObjWellDefinedProofByDef::Cot(CotObjWellDefinedProof::from_stages(stages)),
@@ -267,6 +270,15 @@ pub(super) fn wrap_common_fail(
         ),
         Obj::Arcsin(_) => FailToVerifyObjWellDefinedResult::Arcsin(
             FailToVerifyArcsinObjWellDefined(common),
+        ),
+        Obj::Arccos(_) => FailToVerifyObjWellDefinedResult::Arccos(
+            FailToVerifyArccosObjWellDefined(common),
+        ),
+        Obj::Arctan(_) => FailToVerifyObjWellDefinedResult::Arctan(
+            FailToVerifyArctanObjWellDefined(common),
+        ),
+        Obj::Arccot(_) => FailToVerifyObjWellDefinedResult::Arccot(
+            FailToVerifyArccotObjWellDefined(common),
         ),
         Obj::Cos(_) => FailToVerifyObjWellDefinedResult::Cos(
             FailToVerifyCosObjWellDefined(common),

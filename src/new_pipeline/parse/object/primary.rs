@@ -1,20 +1,21 @@
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::{
-    Abs, AnonymousFn, Cart, CartDim, Ceil, ClosedRange, Cos, Exp, FiniteSetMax, FiniteSetMin,
-    FiniteSetSize, Floor, FnObjHead, FnRange, FnSet, Gcd, GeneralCart, IdentifierObj,
-    IndexIntersect, IndexUnion, InstantiatedTemplateObj, Intersect, Lcm, ListSet, Ln, Max, Min,
-    Number, Obj, PowerSet, ProductOfFiniteSet, Proj, Quot, Range, SetBuilder, SetMinus, Sin, Sqrt,
-    StandardSet, StructObj, Tan, Tuple, TupleDim, Union,
+    Abs, AnonymousFn, Arccos, Arccot, Arcsin, Arctan, Cart, CartDim, Ceil, ClosedRange, Cos, Cot,
+    EulerNumber, Exp, FiniteSetMax, FiniteSetMin, FiniteSetSize, Floor, FnObjHead, FnRange, FnSet,
+    Gcd, GeneralCart, IdentifierObj, ImaginaryUnit, IndexIntersect, IndexUnion,
+    InstantiatedTemplateObj, Intersect, Lcm, ListSet, Ln, Max, Min, Number, Obj, Pi, PowerSet,
+    ProductOfFiniteSet, Proj, Quot, Range, SetBuilder, SetMinus, Sin, Sqrt, StandardSet, StructObj,
+    Tan, Tuple, TupleDim, Union,
 };
 use crate::new_pipeline::ast::param::{ParamType, SetBoundParameterGroup, SetBoundParameterList};
 use crate::new_pipeline::parse::keywords::{
-    ABS, C, CART, CART_DIM, CEIL, CLOSED_RANGE, COLON, COMMA, COS, C_STAR, DOT, EXP,
-    FINITE_SET_MAX, FINITE_SET_MIN, FINITE_SET_PRODUCT, FINITE_SET_SIZE, FLOOR, FN, FN_RANGE, GCD,
-    GENERAL_CART, GREATER, INDEX_INTERSECT, INDEX_UNION, INTERSECT, LCM, LEFT_BRACKET, LEFT_CURLY,
-    LEFT_PAREN, LESS, LN, MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS, POWER_SET, PROJ, Q, QUOT,
-    Q_NEG, Q_POS, Q_STAR, R, RANGE, RIGHT_BRACKET, RIGHT_CURLY, RIGHT_PAREN, R_NEG, R_POS, R_STAR,
-    SET_MINUS, SIN, SQRT, STRUCT_VIEW_PREFIX, TAN, TEMPLATE_INSTANCE_PREFIX, TUPLE, TUPLE_DIM,
-    UNION, Z, Z_NEG, Z_POS, Z_STAR,
+    ABS, ARCCOS, ARCCOT, ARCSIN, ARCTAN, C, CART, CART_DIM, CEIL, CLOSED_RANGE, COLON, COMMA, COS,
+    COT, C_STAR, DOT, EXP, FINITE_SET_MAX, FINITE_SET_MIN, FINITE_SET_PRODUCT, FINITE_SET_SIZE,
+    FLOOR, FN, FN_RANGE, GCD, GENERAL_CART, GREATER, INDEX_INTERSECT, INDEX_UNION, INTERSECT, LCM,
+    LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LESS, LN, MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS,
+    POWER_SET, PROJ, Q, QUOT, Q_NEG, Q_POS, Q_STAR, R, RANGE, RIGHT_BRACKET, RIGHT_CURLY,
+    RIGHT_PAREN, R_NEG, R_POS, R_STAR, SET_MINUS, SIN, SQRT, STRUCT_VIEW_PREFIX, TAN,
+    TEMPLATE_INSTANCE_PREFIX, TUPLE, TUPLE_DIM, UNION, Z, Z_NEG, Z_POS, Z_STAR,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -363,14 +364,41 @@ fn try_parse_keyword_primary(
         ABS => Ok(Some(parse_unary_keyword(rt, tb, ABS, |arg| {
             Obj::Abs(Abs { arg: Box::new(arg) })
         })?)),
+        "i" => {
+            tb.advance()?;
+            Ok(Some(Obj::ImaginaryUnit(ImaginaryUnit)))
+        }
+        "e" => {
+            tb.advance()?;
+            Ok(Some(Obj::EulerNumber(EulerNumber)))
+        }
+        "pi" => {
+            tb.advance()?;
+            Ok(Some(Obj::Pi(Pi)))
+        }
         SIN => Ok(Some(parse_unary_keyword(rt, tb, SIN, |arg| {
             Obj::Sin(Sin { arg: Box::new(arg) })
+        })?)),
+        ARCSIN => Ok(Some(parse_unary_keyword(rt, tb, ARCSIN, |arg| {
+            Obj::Arcsin(Arcsin { arg: Box::new(arg) })
+        })?)),
+        ARCCOS => Ok(Some(parse_unary_keyword(rt, tb, ARCCOS, |arg| {
+            Obj::Arccos(Arccos { arg: Box::new(arg) })
+        })?)),
+        ARCTAN => Ok(Some(parse_unary_keyword(rt, tb, ARCTAN, |arg| {
+            Obj::Arctan(Arctan { arg: Box::new(arg) })
+        })?)),
+        ARCCOT => Ok(Some(parse_unary_keyword(rt, tb, ARCCOT, |arg| {
+            Obj::Arccot(Arccot { arg: Box::new(arg) })
         })?)),
         COS => Ok(Some(parse_unary_keyword(rt, tb, COS, |arg| {
             Obj::Cos(Cos { arg: Box::new(arg) })
         })?)),
         TAN => Ok(Some(parse_unary_keyword(rt, tb, TAN, |arg| {
             Obj::Tan(Tan { arg: Box::new(arg) })
+        })?)),
+        COT => Ok(Some(parse_unary_keyword(rt, tb, COT, |arg| {
+            Obj::Cot(Cot { arg: Box::new(arg) })
         })?)),
         SQRT => Ok(Some(parse_unary_keyword(rt, tb, SQRT, |arg| {
             Obj::Sqrt(Sqrt { arg: Box::new(arg) })

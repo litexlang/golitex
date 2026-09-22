@@ -37,6 +37,9 @@ pub enum ObjWellDefinedProofByDef {
     Abs(AbsObjWellDefinedProof),
     Sin(SinObjWellDefinedProof),
     Arcsin(ArcsinObjWellDefinedProof),
+    Arccos(ArccosObjWellDefinedProof),
+    Arctan(ArctanObjWellDefinedProof),
+    Arccot(ArccotObjWellDefinedProof),
     Cos(CosObjWellDefinedProof),
     Tan(TanObjWellDefinedProof),
     Cot(CotObjWellDefinedProof),
@@ -420,6 +423,48 @@ pub struct ArcsinObjWellDefinedProof {
 }
 
 impl ArcsinObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        Self {
+            child_obj_well_defined: stages.child_obj_well_defined,
+            requirement_fact_verified: stages.requirement_fact_verified,
+        }
+    }
+}
+
+pub struct ArccosObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<(Obj, VerifyObjWellDefinedResult)>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+
+impl ArccosObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        Self {
+            child_obj_well_defined: stages.child_obj_well_defined,
+            requirement_fact_verified: stages.requirement_fact_verified,
+        }
+    }
+}
+
+pub struct ArctanObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<(Obj, VerifyObjWellDefinedResult)>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+
+impl ArctanObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        Self {
+            child_obj_well_defined: stages.child_obj_well_defined,
+            requirement_fact_verified: stages.requirement_fact_verified,
+        }
+    }
+}
+
+pub struct ArccotObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<(Obj, VerifyObjWellDefinedResult)>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+
+impl ArccotObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
         Self {
             child_obj_well_defined: stages.child_obj_well_defined,

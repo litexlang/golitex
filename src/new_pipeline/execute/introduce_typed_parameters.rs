@@ -15,12 +15,12 @@
 use crate::new_pipeline::ast::fact::{
     AtomicFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
 };
-use crate::new_pipeline::ast::obj::{Obj, StructObj};
+use crate::new_pipeline::ast::obj::{FiniteSeqSet, Obj, SeqSet, StructObj};
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::ast::stmt::{
     HaveObjByExistFactsStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt, TrustHaveStmt,
 };
-use crate::new_pipeline::exec_env::exec_env::SpecialObjProperty;
+use crate::new_pipeline::exec_env::exec_env::SpecialObjectPropertyByDefinition;
 use crate::new_pipeline::exec_env::StoredIdentifierDefinition;
 use crate::new_pipeline::execute::execute_fact_stmt::{
     fail_to_verify_obj_well_defined_others, ParamTypeWellDefinedProof, VerifyObjWellDefinedResult,
@@ -199,19 +199,16 @@ impl Runtime {
                 let type_fact = match &group.param_type {
                     ParamType::Obj(param_set) => {
                         let fact_id = self.ids.allocate_fact_id();
-                        if let Obj::StructObj(struct_obj) = param_set {
-                            self.record_defined_as_struct(
-                                &element,
-                                struct_obj.clone(),
-                                fact_id,
-                            );
-                        }
-                        Fact::AtomicFact(AtomicFact::InFact(InFact {
+                        let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
                             fact_id,
                             element: element.clone(),
                             set: param_set.clone(),
                             line_file: None,
-                        }))
+                        }));
+                        if let Fact::AtomicFact(AtomicFact::InFact(in_fact)) = &membership {
+                            self.record_definition_membership_shape(in_fact);
+                        }
+                        membership
                     }
                     ParamType::Set(_) => Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact {
                         fact_id: self.ids.allocate_fact_id(),
@@ -240,6 +237,41 @@ impl Runtime {
         Ok(StoreHaveObjAndInferResult { stored_fact_ids })
     }
 
+    // Definition exit: typed `$in` membership → the matching ByDefinition shape row.
+    pub(crate) fn record_definition_membership_shape(&mut self, in_fact: &InFact) {
+        match &in_fact.set {
+            Obj::StructObj(struct_obj) => {
+                self.record_defined_as_struct(
+                    &in_fact.element,
+                    struct_obj.clone(),
+                    in_fact.fact_id,
+                );
+            }
+            Obj::FnSet(fn_set) => {
+                self.record_in_function_set_by_definition(
+                    &in_fact.element,
+                    fn_set.clone(),
+                    in_fact.fact_id,
+                );
+            }
+            Obj::FiniteSeqSet(finite_seq_set) => {
+                self.record_defined_as_finite_seq(
+                    &in_fact.element,
+                    finite_seq_set.clone(),
+                    in_fact.fact_id,
+                );
+            }
+            Obj::SeqSet(seq_set) => {
+                self.record_defined_as_seq_set(
+                    &in_fact.element,
+                    seq_set.clone(),
+                    in_fact.fact_id,
+                );
+            }
+            _ => {}
+        }
+    }
+
     // Definition-time only: attach the written `&Struct` carrier and its `$in` fact id.
     pub(crate) fn record_defined_as_struct(
         &mut self,
@@ -251,6 +283,107 @@ impl Runtime {
             .special_object_properties
             .entry(element.ir())
             .or_default()
-            .push(SpecialObjProperty::DefinedAsStruct((struct_obj, fact_id)));
+            .push(SpecialObjectPropertyByDefinition::DefinedAsStruct((
+                struct_obj,
+                fact_id,
+            )));
+    }
+
+    // Definition-time only: register callable FnSet signature.
+    pub(crate) fn record_in_function_set_by_definition(
+        &mut self,
+        element: &Obj,
+        fn_set: crate::new_pipeline::ast::obj::FnSet,
+        fact_id: FactId,
+    ) {
+        self.top_exec_env_mut()
+            .special_object_properties
+            .entry(element.ir())
+            .or_default()
+            .push(SpecialObjectPropertyByDefinition::InFunctionSet((
+                fn_set, fact_id,
+            )));
+    }
+
+    // Definition-time only: register `element = AnonymousFn`.
+    pub(crate) fn record_equal_to_function_by_definition(
+        &mut self,
+        element: &Obj,
+        fun: Obj,
+        fact_id: FactId,
+    ) {
+        self.top_exec_env_mut()
+            .special_object_properties
+            .entry(element.ir())
+            .or_default()
+            .push(SpecialObjectPropertyByDefinition::EqualToFunction((
+                fun, fact_id,
+            )));
+    }
+
+    // Definition exit: `element $in FnSet` → InFunctionSet.
+    pub(crate) fn record_fn_signature_from_definition_membership(&mut self, in_fact: &InFact) {
+        self.record_definition_membership_shape(in_fact);
+    }
+
+    pub(crate) fn record_defined_as_finite_seq(
+        &mut self,
+        element: &Obj,
+        finite_seq_set: FiniteSeqSet,
+        fact_id: FactId,
+    ) {
+        self.top_exec_env_mut()
+            .special_object_properties
+            .entry(element.ir())
+            .or_default()
+            .push(SpecialObjectPropertyByDefinition::DefinedAsFiniteSeq((
+                finite_seq_set,
+                fact_id,
+            )));
+    }
+
+    pub(crate) fn record_defined_as_seq_set(
+        &mut self,
+        element: &Obj,
+        seq_set: SeqSet,
+        fact_id: FactId,
+    ) {
+        self.top_exec_env_mut()
+            .special_object_properties
+            .entry(element.ir())
+            .or_default()
+            .push(SpecialObjectPropertyByDefinition::DefinedAsSeqSet((
+                seq_set,
+                fact_id,
+            )));
+    }
+
+    // Definition exit: `name = anon` / `name = FnSet` → InFunctionSet (+ EqualToFunction).
+    pub(crate) fn record_fn_signature_from_definition_equal(
+        &mut self,
+        equal_fact: &crate::new_pipeline::ast::fact::EqualFact,
+    ) {
+        let (name_side, fn_set, equal_to_function) = match (&equal_fact.left, &equal_fact.right) {
+            (Obj::AnonymousFn(anon), other) => (
+                other,
+                anon.body.clone(),
+                Some(Obj::AnonymousFn(anon.clone())),
+            ),
+            (other, Obj::AnonymousFn(anon)) => (
+                other,
+                anon.body.clone(),
+                Some(Obj::AnonymousFn(anon.clone())),
+            ),
+            (Obj::FnSet(fn_set), other) => (other, fn_set.clone(), None),
+            (other, Obj::FnSet(fn_set)) => (other, fn_set.clone(), None),
+            _ => return,
+        };
+        if matches!(name_side, Obj::AnonymousFn(_) | Obj::FnSet(_)) {
+            return;
+        }
+        self.record_in_function_set_by_definition(name_side, fn_set, equal_fact.fact_id);
+        if let Some(fun) = equal_to_function {
+            self.record_equal_to_function_by_definition(name_side, fun, equal_fact.fact_id);
+        }
     }
 }

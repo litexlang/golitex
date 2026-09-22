@@ -30,8 +30,8 @@ pub enum Obj {
     Sub(Sub),
     Mul(Mul),
     Div(Div),
-    Mod(Mod),
-    Quot(Quot),
+    Mod(Mod),   // a % d
+    Quot(Quot), // a = d * quot(a, d) + a % d
     Gcd(Gcd),
     Lcm(Lcm),
     Floor(Floor),
@@ -46,6 +46,9 @@ pub enum Obj {
     Abs(Abs),
     Sin(Sin),
     Arcsin(Arcsin),
+    Arccos(Arccos),
+    Arctan(Arctan),
+    Arccot(Arccot),
     Cos(Cos),
     Tan(Tan),
     Cot(Cot),
@@ -340,6 +343,24 @@ pub struct Arcsin {
     pub arg: Box<Obj>,
 }
 
+// Arccos
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Arccos {
+    pub arg: Box<Obj>,
+}
+
+// Arctan
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Arctan {
+    pub arg: Box<Obj>,
+}
+
+// Arccot
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Arccot {
+    pub arg: Box<Obj>,
+}
+
 // Cos
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Cos {
@@ -617,7 +638,7 @@ pub struct ClosedRange {
     pub end: Box<Obj>,
 }
 
-// FiniteSeqSet
+// FiniteSeqSet， finite_seq(s, n) means a finite-length sequence with length n whose elements are in set s.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FiniteSeqSet {
     pub set: Box<Obj>,
@@ -706,4 +727,3 @@ pub struct IntervalObjStruct {
     pub start: Box<Obj>,
     pub end: Box<Obj>,
 }
-

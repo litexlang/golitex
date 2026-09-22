@@ -353,6 +353,9 @@ impl Runtime {
             line_file: Some(stmt.line_file.clone()),
         }));
         let mut stored_fact_ids = self.store_fact_and_infer(&membership)?.stored_fact_ids();
+        if let Fact::AtomicFact(AtomicFact::InFact(in_fact)) = &membership {
+            self.record_fn_signature_from_definition_membership(in_fact);
+        }
 
         let typed = set_bound_to_typed(&stmt.fn_set_clause.set_bound_parameters);
         let mut args = Vec::new();

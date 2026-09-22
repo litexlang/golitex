@@ -122,6 +122,8 @@ fn merge_facts_from(parent: &mut ExecEnv, child: &ExecEnv) -> RuntimeResult<()> 
         match fact {
             Fact::AtomicFact(AtomicFact::EqualFact(equal_fact)) => {
                 parent.facts.known_equality.store(equal_fact);
+                parent.facts.known_closed_numeric_equal.maybe_index(equal_fact);
+                parent.facts.known_structural_equal.maybe_index(equal_fact);
                 parent.facts.record_fact(fact_id, fact.clone());
             }
             Fact::AtomicFact(atomic) => {
