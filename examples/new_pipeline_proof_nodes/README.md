@@ -3,6 +3,11 @@
 One concrete builtin rule or search path → one `.lit` file.
 File names mirror Rust variants / structs for easy cross-check.
 
+When a kernel feature is **new** or an existing surface is **updated /
+widened**, add a **new** `.lit` here (or under the matching
+`new_pipeline_wd` / `stmt_nodes` / `wd_negative` folder) in the same turn.
+Do not leave acceptance only in `examples/tmp.lit`.
+
 ## Writing style
 
 Prefer `have … = …` and `forall` binders. Do **not** use `trust` to fake
@@ -35,11 +40,14 @@ WD gallery (positives for done Obj/Fact WD): `examples/new_pipeline_wd/`.
 or/           ByBuiltinRule (trichotomy ×3, NaturalZeroOrAtLeastOne), SelectedBranch,
               KnownOr, KnownForall
 equal/        ByBuiltinRule (FnSet / AnonymousFn / SetBuilder alpha-equal,
-              EqualToObjWithFreeParamsLookup), EquivalenceClass, ObjectDefinition
+              EqualToObjWithFreeParamsLookup, Calculation closed decimal +
+              arithmetic_ops), EquivalenceClass, ObjectDefinition
               (identifier / fn / template), BuiltinStrategy, MatchingOneArgByOne,
-              KnownForall (+ViaSymmetry), BuiltinRewrite (ClosedNumericEqualSubstitution)
+              KnownForall (+ViaSymmetry), BuiltinRewrite
+              (ClosedNumericEqualSubstitution + arithmetic_ops)
 atomic/       ByBuiltinRule, KnownAtomicFact, ByDefinition, BuiltinStrategy (PosAddPos),
-              KnownForall, BuiltinRewrite (ClosedNumeric, KnownEqualObj, OrderDual),
+              KnownForall, BuiltinRewrite (ClosedNumeric, KnownEqualObj, OrderDual,
+              ClosedNumeric arithmetic_ops),
               KnownRewrite (Reflexivity/Symmetry)
 and/          per-component verify
 chain/        adjacent order / equality
