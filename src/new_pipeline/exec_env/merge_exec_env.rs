@@ -127,7 +127,6 @@ fn merge_facts_from(parent: &mut ExecEnv, child: &ExecEnv) -> RuntimeResult<()> 
                     &mut parent.facts.known_closed_numeric_equal,
                     equal_fact,
                 );
-                parent.facts.known_cart_tuple_equal.maybe_index(equal_fact);
                 parent
                     .facts
                     .known_equal_to_obj_with_free_params

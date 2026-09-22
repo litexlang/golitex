@@ -246,7 +246,6 @@ impl Runtime {
                     &mut env.facts.known_closed_numeric_equal,
                     equal_fact,
                 );
-                env.facts.known_cart_tuple_equal.maybe_index(equal_fact);
                 env.facts
                     .known_equal_to_obj_with_free_params
                     .maybe_index(equal_fact);

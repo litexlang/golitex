@@ -1011,41 +1011,6 @@ fn store_equality_indexes_closed_numeric_equal() {
 }
 
 #[test]
-fn store_equality_indexes_cart_tuple_equal() {
-    use crate::new_pipeline::exec_env::KnownCartTupleEqualShape;
-
-    let mut runtime = runtime_with_file_env();
-    assert!(!exec_one(&mut runtime, "have a set = (1, 2)").is_failed());
-
-    let entries = &runtime
-        .top_exec_env()
-        .facts
-        .known_cart_tuple_equal
-        .by_other_side;
-    let mut tuple_hits = 0;
-    for values in entries.values() {
-        for (shape, _) in values {
-            if matches!(shape, KnownCartTupleEqualShape::Tuple(_)) {
-                tuple_hits += 1;
-            }
-        }
-    }
-    assert_eq!(tuple_hits, 1, "have a set = (1, 2) must index one tuple shape");
-
-    let mut runtime = runtime_with_file_env();
-    assert!(!exec_one(&mut runtime, "(1, 2) = (1, 2)").is_failed());
-    assert!(
-        runtime
-            .top_exec_env()
-            .facts
-            .known_cart_tuple_equal
-            .by_other_side
-            .is_empty(),
-        "both-side cart/tuple equality must not index known_cart_tuple_equal"
-    );
-}
-
-#[test]
 fn store_equality_indexes_equal_to_obj_with_free_params() {
     use crate::new_pipeline::exec_env::KnownEqualToObjWithFreeParamsShape;
 

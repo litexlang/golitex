@@ -1,6 +1,6 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, ExistFactFamily, Fact, OrFact};
 use crate::new_pipeline::ast::names::AtomicName;
-use crate::new_pipeline::ast::obj::{AnonymousFn, Cart, FnSet, Obj, SetBuilder, Tuple};
+use crate::new_pipeline::ast::obj::{AnonymousFn, FnSet, Obj, SetBuilder};
 use crate::new_pipeline::exec_env::exist_fact_index_key::{exist_fact_index_key, ExistFactIndexKey};
 use crate::new_pipeline::exec_env::known_forall_conclusion_memory::KnownForallConclusionMemory;
 use crate::new_pipeline::runtime::FactId;
@@ -22,8 +22,6 @@ pub struct KnownFactMemory {
     /// Non-closed side → closed numeric representative + citing equality FactId.
     /// Example: store `a = 10` → key `a` maps to `(10, fact_id)`.
     pub known_closed_numeric_equal: HashMap<ObjIR, Vec<(Obj, FactId)>>,
-    /// Non-literal side → tuple or cart representative + citing equality FactId.
-    pub known_cart_tuple_equal: KnownCartTupleEqualMemory,
     /// Non-literal side → binder-carrying obj (FnSet / AnonymousFn / SetBuilder) + FactId.
     /// Example: `trust R_TO_R = fn(x R) R`, `have x fn(y R) R`, then `x $in R_TO_R`
     /// via lookup on `R_TO_R` + alpha-equal FnSet (ByEqualToObjWithFreeParamsLookup).
@@ -32,18 +30,6 @@ pub struct KnownFactMemory {
     pub known_or: OrFactMemory,
     pub known_exist: ExistFactMemory,
     pub known_forall_conclusions: KnownForallConclusionMemory,
-}
-
-/// Fact-index: `a = (…)` / `a = cart(…)` with exactly one cart-or-tuple side.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum KnownCartTupleEqualShape {
-    Tuple(Tuple),
-    Cart(Cart),
-}
-
-#[derive(Clone, Default)]
-pub struct KnownCartTupleEqualMemory {
-    pub by_other_side: HashMap<ObjIR, Vec<(KnownCartTupleEqualShape, FactId)>>,
 }
 
 /// Fact-index: `a = fn(…)` / `a = fn(…){…}` / `a = {x T: …}` with exactly one such side.
@@ -105,7 +91,6 @@ impl KnownFactMemory {
             facts_by_id: HashMap::new(),
             known_equivalence_classes: KnownEquivalenceClassMemory::new(),
             known_closed_numeric_equal: HashMap::new(),
-            known_cart_tuple_equal: KnownCartTupleEqualMemory::new(),
             known_equal_to_obj_with_free_params: KnownEqualToObjWithFreeParamsMemory::new(),
             known_atomic_except_equality_facts: AtomicExceptEqualityFactMemory::new(),
             known_or: OrFactMemory::new(),
@@ -134,34 +119,6 @@ impl Default for KnownFactMemory {
     }
 }
 
-impl KnownCartTupleEqualMemory {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    // When exactly one side is Tuple or Cart, index the other side.
-    // Example: store `a = (1, 2)` → key `a` stores the tuple + fact_id.
-    pub fn maybe_index(&mut self, equal_fact: &EqualFact) {
-        let left = cart_tuple_shape_from_obj(&equal_fact.left);
-        let right = cart_tuple_shape_from_obj(&equal_fact.right);
-        match (left, right) {
-            (Some(shape), None) => {
-                self.by_other_side
-                    .entry(equal_fact.right.ir())
-                    .or_default()
-                    .push((shape, equal_fact.fact_id));
-            }
-            (None, Some(shape)) => {
-                self.by_other_side
-                    .entry(equal_fact.left.ir())
-                    .or_default()
-                    .push((shape, equal_fact.fact_id));
-            }
-            _ => {}
-        }
-    }
-}
-
 impl KnownEqualToObjWithFreeParamsMemory {
     pub fn new() -> Self {
         Self::default()
@@ -187,14 +144,6 @@ impl KnownEqualToObjWithFreeParamsMemory {
             }
             _ => {}
         }
-    }
-}
-
-fn cart_tuple_shape_from_obj(obj: &Obj) -> Option<KnownCartTupleEqualShape> {
-    match obj {
-        Obj::Tuple(tuple) => Some(KnownCartTupleEqualShape::Tuple(tuple.clone())),
-        Obj::Cart(cart) => Some(KnownCartTupleEqualShape::Cart(cart.clone())),
-        _ => None,
     }
 }
 
