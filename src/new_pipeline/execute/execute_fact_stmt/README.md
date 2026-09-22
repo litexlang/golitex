@@ -125,7 +125,7 @@ known forall → builtin algebraic rewrite → known algebraic rewrite.
 
 Equality search is:
 
-builtin rule → known equality → builtin strategy → MatchingOneArgByOne →
+builtin rule → equivalence class → builtin strategy → MatchingOneArgByOne →
 known forall → builtin rewrite (ClosedNumericEqualSubstitution, KnownEqualObjSubstitution, OrderDual).
 
 MatchingOneArgByOne peels same-shape constructors (numeric, FnObj application
@@ -170,7 +170,7 @@ other atomic arms in a local env, then prove the selected arm) → known_or →
 known_forall. Success payload carries `well_defined_proof` then `searched_proof`.
 
 `KnownFactMemory` stores facts by `FactId` in `facts_by_id` and projects
-searchable atomics into known-equality / known-atomic / known-forall indexes,
+searchable atomics into known_equivalence_classes / known-atomic / known-forall indexes,
 and whole ors into `known_or` (structural key; branches are not split).
 And/chain store also records the whole fact, then stores adjacent (and for
 comparison chains, transitive closures with BuiltinEquality /

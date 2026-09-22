@@ -1,15 +1,17 @@
 use super::store_fact_and_infer_result::{
     ChainTransitiveCite, StoreAndComponentResult, StoreAndFactResult, StoreAtomicFactResult,
     StoreChainAdjacentResult, StoreChainFactResult, StoreChainTransitiveClosureResult,
-    StoreExistFactResult, StoreFactAndInferResult, StoreNotForallFactResult, StoreOrFactResult,
+    StoreExistFactResult, StoreFactAndInferResult, StoreForallFactResult,
+    StoreForallFactWithIffResult, StoreNotForallFactResult, StoreOrFactResult,
 };
 use crate::new_pipeline::ast::fact::{
-    exist_fact_family_from_fact, exist_fact_family_id, exist_fact_family_to_fact, AndFact, AtomicFact, ChainFact, EqualFact, ExistFactFamily, Fact,
-    InFact, NormalAtomicFact, NotForallFact, OrFact, ForallFact, ForallFactWithIff,
+    exist_fact_family_from_fact, exist_fact_family_id, exist_fact_family_to_fact, AndFact, AtomicFact,
+    ChainFact, EqualFact, ExistFactFamily, Fact, InFact, IsCartFact, IsTupleFact, NormalAtomicFact,
+    NotForallFact, OrFact, ForallFact, ForallFactWithIff,
 };
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::names::{AtomicName, BoundName};
-use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::ast::obj::{Cart, CartDim, Number, Obj, Tuple, TupleDim};
 use crate::new_pipeline::ast::param::TypedParameterList;
 use crate::new_pipeline::ast::fact::atomic_fact_has_positive_polarity;
 use crate::new_pipeline::exec_env::exec_env::{ExecEnv, PropRewriteProperty};
@@ -51,30 +53,12 @@ impl Runtime {
                 Ok(StoreFactAndInferResult::NotForallFact(stored))
             }
             Fact::ForallFact(forall) => {
-                let fact_id = forall.fact_id;
-                self.top_exec_env_mut().facts.record_fact(
-                    fact_id,
-                    Fact::ForallFact(forall.clone()),
-                );
-                self.index_forall_chain_components(forall)?;
-                Ok(StoreFactAndInferResult::RecordedFact { fact_id })
+                let stored = self.store_forall_fact(forall)?;
+                Ok(StoreFactAndInferResult::ForallFact(stored))
             }
             Fact::ForallFactWithIff(forall_iff) => {
-                // `forall_iff/both_directions.lit` relies on both generated
-                // directions entering the ordinary forall indexes here.
-                let (forward, reverse) = self.forall_with_iff_to_two_directions_for_store(forall_iff);
-                let original_id = forall_iff.fact_id;
-                self.top_exec_env_mut().facts.record_fact(
-                    forward.fact_id,
-                    Fact::ForallFact(forward.clone()),
-                );
-                self.index_forall_chain_components(&forward)?;
-                self.top_exec_env_mut().facts.record_fact(
-                    reverse.fact_id,
-                    Fact::ForallFact(reverse.clone()),
-                );
-                self.index_forall_chain_components(&reverse)?;
-                Ok(StoreFactAndInferResult::RecordedFact { fact_id: original_id })
+                let stored = self.store_forall_fact_with_iff(forall_iff)?;
+                Ok(StoreFactAndInferResult::ForallFactWithIff(stored))
             }
         }
     }
@@ -91,6 +75,37 @@ impl Runtime {
             memory.index_chain_components(forall, then_index, &adjacent);
         }
         Ok(())
+    }
+
+    // Forall: record whole into facts_by_id / known_forall; index chain then-edges.
+    // Example: `forall x R: x < y < z` → known_forall + adjacent cites for x<y, y<z.
+    fn store_forall_fact(&mut self, forall: &ForallFact) -> RuntimeResult<StoreForallFactResult> {
+        let fact_id = forall.fact_id;
+        self.top_exec_env_mut()
+            .facts
+            .record_fact(fact_id, Fact::ForallFact(forall.clone()));
+        self.index_forall_chain_components(forall)?;
+        Ok(StoreForallFactResult {
+            fact_id,
+            fact: forall.clone(),
+        })
+    }
+
+    // Forall-iff: split into two foralls, store each direction.
+    // Example: `forall x R: P(x) <=> Q(x)` → store `P⇒Q` and `Q⇒P`.
+    fn store_forall_fact_with_iff(
+        &mut self,
+        forall_iff: &ForallFactWithIff,
+    ) -> RuntimeResult<StoreForallFactWithIffResult> {
+        let (forward, reverse) = self.forall_with_iff_to_two_directions_for_store(forall_iff);
+        let forward = self.store_forall_fact(&forward)?;
+        let reverse = self.store_forall_fact(&reverse)?;
+        Ok(StoreForallFactWithIffResult {
+            fact_id: forall_iff.fact_id,
+            fact: forall_iff.clone(),
+            forward,
+            reverse,
+        })
     }
 
     fn forall_with_iff_to_two_directions_for_store(
@@ -226,6 +241,9 @@ impl Runtime {
 
     pub fn store_atomic_fact(&mut self, atomic_fact: &AtomicFact) -> RuntimeResult<Vec<FactId>> {
         let fact_ids = self.store_atomic_fact_without_definition_expand(atomic_fact)?;
+        if let AtomicFact::EqualFact(equal_fact) = atomic_fact {
+            self.infer_cart_tuple_shape_from_stored_equal_fact(equal_fact)?;
+        }
         if let AtomicFact::NormalAtomicFact(normal) = atomic_fact {
             self.store_prop_definition_iff_consequences(normal)?;
         }
@@ -621,6 +639,89 @@ impl Runtime {
             }
         }
         None
+    }
+
+    // Infer: equality with a literal cart/tuple side records shape facts on the other side.
+    // Condition: store `s = cart(A, B)` or `t = (1, 2)` (exactly one usable literal side).
+    // After: `$is_cart(s)`, `cart_dim(s) = 2`; or `$is_tuple(t)`, `tuple_dim(t) = 2`.
+    // Example: `have s set = cart(R, R)` then `$is_cart(s)` and `cart_dim(s) = 2` are known.
+    fn infer_cart_tuple_shape_from_stored_equal_fact(
+        &mut self,
+        equal_fact: &EqualFact,
+    ) -> RuntimeResult<()> {
+        if let Obj::Cart(cart) = &equal_fact.left {
+            self.infer_equal_fact_cart_from_known_side(cart, &equal_fact.right, equal_fact)?;
+        }
+        if let Obj::Cart(cart) = &equal_fact.right {
+            self.infer_equal_fact_cart_from_known_side(cart, &equal_fact.left, equal_fact)?;
+        }
+        if let Obj::Tuple(tuple) = &equal_fact.left {
+            self.infer_equal_fact_tuple_from_known_side(tuple, &equal_fact.right, equal_fact)?;
+        } else if let Obj::Tuple(tuple) = &equal_fact.right {
+            self.infer_equal_fact_tuple_from_known_side(tuple, &equal_fact.left, equal_fact)?;
+        }
+        Ok(())
+    }
+
+    // Infer: `target = cart(...)` ⇒ `$is_cart(target)` and `cart_dim(target) = n`.
+    // Example: store `s = cart(R, Z)` also stores `$is_cart(s)` and `cart_dim(s) = 2`.
+    fn infer_equal_fact_cart_from_known_side(
+        &mut self,
+        known_cart: &Cart,
+        target: &Obj,
+        equal_fact: &EqualFact,
+    ) -> RuntimeResult<()> {
+        let is_cart = AtomicFact::IsCartFact(IsCartFact {
+            fact_id: self.ids.allocate_fact_id(),
+            set: target.clone(),
+            line_file: equal_fact.line_file.clone(),
+        });
+        self.store_atomic_fact_without_definition_expand(&is_cart)?;
+
+        let dim_equal = AtomicFact::EqualFact(EqualFact {
+            fact_id: self.ids.allocate_fact_id(),
+            left: Obj::CartDim(CartDim {
+                set: Box::new(target.clone()),
+            }),
+            right: Obj::Number(Number {
+                normalized_value: known_cart.args.len().to_string(),
+            }),
+            line_file: equal_fact.line_file.clone(),
+        });
+        self.store_atomic_fact_without_definition_expand(&dim_equal)?;
+        Ok(())
+    }
+
+    // Infer: `target = (…)` with len >= 2 ⇒ `$is_tuple(target)` and `tuple_dim(target) = n`.
+    // Example: store `t = (1, 2)` also stores `$is_tuple(t)` and `tuple_dim(t) = 2`.
+    fn infer_equal_fact_tuple_from_known_side(
+        &mut self,
+        known_tuple: &Tuple,
+        target: &Obj,
+        equal_fact: &EqualFact,
+    ) -> RuntimeResult<()> {
+        if known_tuple.args.len() < 2 {
+            return Ok(());
+        }
+        let is_tuple = AtomicFact::IsTupleFact(IsTupleFact {
+            fact_id: self.ids.allocate_fact_id(),
+            set: target.clone(),
+            line_file: equal_fact.line_file.clone(),
+        });
+        self.store_atomic_fact_without_definition_expand(&is_tuple)?;
+
+        let dim_equal = AtomicFact::EqualFact(EqualFact {
+            fact_id: self.ids.allocate_fact_id(),
+            left: Obj::TupleDim(TupleDim {
+                arg: Box::new(target.clone()),
+            }),
+            right: Obj::Number(Number {
+                normalized_value: known_tuple.args.len().to_string(),
+            }),
+            line_file: equal_fact.line_file.clone(),
+        });
+        self.store_atomic_fact_without_definition_expand(&dim_equal)?;
+        Ok(())
     }
 }
 

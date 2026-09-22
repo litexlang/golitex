@@ -1,7 +1,8 @@
-# manual check — canonical tracers under new_pipeline_proof_nodes/
+# Equality to a literal cart/tuple stores shape facts on the other side.
+have s set = cart(R, R)
+$is_cart(s)
+cart_dim(s) = 2
 
-fn(x R) R {x} = fn(y R) R {y}
-
-let h = fn(x R) R {x}
-have fn k(x R) R = x
-k = h
+have t set = (1, 2)
+$is_tuple(t)
+tuple_dim(t) = 2

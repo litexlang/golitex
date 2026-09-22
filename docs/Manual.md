@@ -4321,6 +4321,10 @@ x + 1 = 3
 have t cart(R, Z) = (1, 2)
 $is_tuple(t)
 tuple_dim(t) = 2
+
+have s set = cart(R, R)
+$is_cart(s)
+cart_dim(s) = 2
 ```
 
 Typical consequences include:
