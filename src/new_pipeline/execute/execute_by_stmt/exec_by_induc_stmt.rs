@@ -22,7 +22,7 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::store_fact_and_infer::StoreFactAndInferResult;
 
 // Integer `by induc` / `by strong_induc`.
-// Stores `forall n Z: n >= from => P(n)` after checking base and step.
+// Stores a forall over `n Z` with premise `n >= from` and the inducted conclusion.
 //
 // Example:
 //   by induc n from 0:

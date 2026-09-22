@@ -47,17 +47,17 @@ pub enum OrFactSearchedProof {
 pub enum OrFactSearchProofByBuiltinRule {
     // Exact order: `a = b or a < b or a > b`.
     // Property: any two reals are comparable by =, <, or >.
-    // Example: have a R, b R => a = b or a < b or a > b
+    // Example: after `have a, b R`, prove `a = b or a < b or a > b`.
     RealLineTrichotomyEqLessGreater(OrBuiltinRealLineTrichotomyEqLessGreater),
     // Exact order: `a < b or a = b or a > b`.
-    // Example: have a R, b R => a < b or a = b or a > b
+    // Example: after `have a, b R`, prove `a < b or a = b or a > b`.
     RealLineTrichotomyLessEqGreater(OrBuiltinRealLineTrichotomyLessEqGreater),
     // Exact order: `a > b or a = b or a < b`.
-    // Example: have a R, b R => a > b or a = b or a < b
+    // Example: after `have a, b R`, prove `a > b or a = b or a < b`.
     RealLineTrichotomyGreaterEqLess(OrBuiltinRealLineTrichotomyGreaterEqLess),
     // Exact order: `n = 0 or n >= 1` for `n $in N`.
     // Property: every natural is zero or at least one.
-    // Example: have n N => n = 0 or n >= 1
+    // Example: after `have n N`, prove `n = 0 or n >= 1`.
     NaturalZeroOrAtLeastOne(OrBuiltinNaturalZeroOrAtLeastOne),
 }
 

@@ -1,26 +1,26 @@
-//! Closed numeric expression view (not an AST change to `Obj`).
+//! Closed numeric expression view (not an AST change to Obj).
 //!
-//! # What is "closed numeric"?
+//! A closed numeric expression is a pure number-literal arithmetic tree:
+//! - leaves are only decimal Number values (e.g. `2`, `2.5`);
+//! - interior nodes are the arithmetic operators that evaluate under
+//!   evaluate_obj_to_normalized_decimal_number:
+//!   `+ - * / pow abs min max floor ceil sign`.
 //!
-//! A **closed numeric** expression is a pure number-literal arithmetic tree:
-//! - leaves are only decimal [`Number`] values (e.g. `2`, `2.5`);
-//! - interior nodes are only [`Add`] / [`Sub`] / [`Mul`] / [`Div`] / [`Pow`].
+//! It has no free identifiers, `%` / `quot` / gcd / trig / set ops, or
+//! other Obj constructors.
 //!
-//! It has **no** free identifiers, function calls, `%` / `quot` / `abs` /
-//! trig / set ops, or other `Obj` constructors.
+//! Examples that are closed: `2`, `2^3/7 + 10 * 2.5`, `abs(-3)`, `min(1, 2)`.
+//! Examples that are not: `a + 1`, `1 % 2`, `sin(0)`.
 //!
-//! Examples that **are** closed: `2`, `2^3/7 + 10 * 2.5`.
-//! Examples that are **not**: `a + 1`, `abs(1)`, `1 % 2`.
-//!
-//! # Why [`ClosedNumericExpr`]?
-//!
-//! `Obj` still owns the language surface. This enum is a **classified view**:
-//! `try_from_obj` succeeds only after the closed-numeric check, so a value of
-//! type `ClosedNumericExpr` already means "this tree is closed numeric".
+//! Obj still owns the language surface. This enum is a classified view:
+//! try_from_obj succeeds only after the closed-numeric check, so a value of
+//! type ClosedNumericExpr already means "this tree is closed numeric".
 //! Closed-numeric store / rewrite paths should take this type (or produce it
-//! at the boundary) instead of re-testing `Obj` ad hoc.
+//! at the boundary) instead of re-testing Obj ad hoc.
 
-use crate::new_pipeline::ast::obj::{Add, Div, Mul, Number, Obj, Pow, Sub};
+use crate::new_pipeline::ast::obj::{
+    Abs, Add, Ceil, Div, Floor, Max, Min, Mul, Number, Obj, Pow, Sign, Sub,
+};
 
 /// Classified closed-numeric tree. See module docs for the definition.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -34,11 +34,17 @@ pub enum ClosedNumericExpr {
         base: Box<ClosedNumericExpr>,
         exponent: Box<ClosedNumericExpr>,
     },
+    Abs(Box<ClosedNumericExpr>),
+    Min(Box<ClosedNumericExpr>, Box<ClosedNumericExpr>),
+    Max(Box<ClosedNumericExpr>, Box<ClosedNumericExpr>),
+    Floor(Box<ClosedNumericExpr>),
+    Ceil(Box<ClosedNumericExpr>),
+    Sign(Box<ClosedNumericExpr>),
 }
 
 impl ClosedNumericExpr {
     // Succeeds only when `obj` is closed numeric; failure means "not closed".
-    // Example: `2 + 3` → Some; `a + 1` → None.
+    // Example: `2 + 3` → Some; `a + 1` → None; `abs(-3)` → Some.
     pub fn try_from_obj(obj: &Obj) -> Option<Self> {
         match obj {
             Obj::Number(n) => Some(ClosedNumericExpr::Number(n.clone())),
@@ -62,6 +68,26 @@ impl ClosedNumericExpr {
                 base: Box::new(Self::try_from_obj(&pow.base)?),
                 exponent: Box::new(Self::try_from_obj(&pow.exponent)?),
             }),
+            Obj::Abs(abs) => Some(ClosedNumericExpr::Abs(Box::new(Self::try_from_obj(
+                &abs.arg,
+            )?))),
+            Obj::Min(min) => Some(ClosedNumericExpr::Min(
+                Box::new(Self::try_from_obj(&min.left)?),
+                Box::new(Self::try_from_obj(&min.right)?),
+            )),
+            Obj::Max(max) => Some(ClosedNumericExpr::Max(
+                Box::new(Self::try_from_obj(&max.left)?),
+                Box::new(Self::try_from_obj(&max.right)?),
+            )),
+            Obj::Floor(floor) => Some(ClosedNumericExpr::Floor(Box::new(Self::try_from_obj(
+                &floor.arg,
+            )?))),
+            Obj::Ceil(ceil) => Some(ClosedNumericExpr::Ceil(Box::new(Self::try_from_obj(
+                &ceil.arg,
+            )?))),
+            Obj::Sign(sign) => Some(ClosedNumericExpr::Sign(Box::new(Self::try_from_obj(
+                &sign.arg,
+            )?))),
             _ => None,
         }
     }
@@ -89,6 +115,26 @@ impl ClosedNumericExpr {
                 base: Box::new(base.to_obj()),
                 exponent: Box::new(exponent.to_obj()),
             }),
+            ClosedNumericExpr::Abs(arg) => Obj::Abs(Abs {
+                arg: Box::new(arg.to_obj()),
+            }),
+            ClosedNumericExpr::Min(left, right) => Obj::Min(Min {
+                left: Box::new(left.to_obj()),
+                right: Box::new(right.to_obj()),
+            }),
+            ClosedNumericExpr::Max(left, right) => Obj::Max(Max {
+                left: Box::new(left.to_obj()),
+                right: Box::new(right.to_obj()),
+            }),
+            ClosedNumericExpr::Floor(arg) => Obj::Floor(Floor {
+                arg: Box::new(arg.to_obj()),
+            }),
+            ClosedNumericExpr::Ceil(arg) => Obj::Ceil(Ceil {
+                arg: Box::new(arg.to_obj()),
+            }),
+            ClosedNumericExpr::Sign(arg) => Obj::Sign(Sign {
+                arg: Box::new(arg.to_obj()),
+            }),
         }
     }
 }
@@ -101,7 +147,9 @@ pub fn is_closed_numeric_expr(obj: &Obj) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{is_closed_numeric_expr, ClosedNumericExpr};
-    use crate::new_pipeline::ast::obj::{Add, Div, Mul, Number, Obj, Pow};
+    use crate::new_pipeline::ast::obj::{
+        Abs, Add, Div, Floor, Max, Min, Mul, Number, Obj, Pow, Sign,
+    };
 
     fn n(s: &str) -> Obj {
         Obj::Number(Number {
@@ -135,16 +183,48 @@ mod tests {
     }
 
     #[test]
-    fn identifier_and_abs_are_not_closed() {
-        use crate::new_pipeline::ast::obj::{Abs, IdentifierObj};
+    fn abs_min_max_floor_sign_of_numbers_are_closed() {
+        let abs = Obj::Abs(Abs {
+            arg: Box::new(n("-3")),
+        });
+        assert!(is_closed_numeric_expr(&abs));
+        assert_eq!(
+            ClosedNumericExpr::try_from_obj(&abs)
+                .unwrap()
+                .to_obj()
+                .ir(),
+            abs.ir()
+        );
+
+        let min = Obj::Min(Min {
+            left: Box::new(n("1")),
+            right: Box::new(n("2")),
+        });
+        assert!(is_closed_numeric_expr(&min));
+
+        let max = Obj::Max(Max {
+            left: Box::new(n("1")),
+            right: Box::new(n("2")),
+        });
+        assert!(is_closed_numeric_expr(&max));
+
+        let floor = Obj::Floor(Floor {
+            arg: Box::new(n("2.5")),
+        });
+        assert!(is_closed_numeric_expr(&floor));
+
+        let sign = Obj::Sign(Sign {
+            arg: Box::new(n("-4")),
+        });
+        assert!(is_closed_numeric_expr(&sign));
+    }
+
+    #[test]
+    fn identifier_is_not_closed() {
+        use crate::new_pipeline::ast::obj::IdentifierObj;
         use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 
         let ident = Obj::Identifier(IdentifierObj::plain(IdentifierId::new(0), "a".into()));
         assert!(ClosedNumericExpr::try_from_obj(&ident).is_none());
-
-        let abs = Obj::Abs(Abs {
-            arg: Box::new(n("1")),
-        });
-        assert!(ClosedNumericExpr::try_from_obj(&abs).is_none());
     }
 }

@@ -4,8 +4,8 @@ use crate::new_pipeline::ast::obj::{
     EulerNumber, Exp, FiniteSetMax, FiniteSetMin, FiniteSetSize, Floor, FnObjHead, FnRange, FnSet,
     Gcd, GeneralCart, IdentifierObj, ImaginaryUnit, IndexIntersect, IndexUnion,
     InstantiatedTemplateObj, Intersect, Lcm, ListSet, Ln, Max, Min, Number, Obj, Pi, PowerSet,
-    ProductOfFiniteSet, Proj, Quot, Range, SetBuilder, SetMinus, Sin, Sqrt, StandardSet, StructObj,
-    Tan, Tuple, TupleDim, Union,
+    ProductOfFiniteSet, Proj, Quot, Range, SetBuilder, SetMinus, Sign, Sin, Sqrt, StandardSet,
+    StructObj, Tan, Tuple, TupleDim, Union,
 };
 use crate::new_pipeline::ast::param::{ParamType, SetBoundParameterGroup, SetBoundParameterList};
 use crate::new_pipeline::parse::keywords::{
@@ -14,7 +14,7 @@ use crate::new_pipeline::parse::keywords::{
     FLOOR, FN, FN_RANGE, GCD, GENERAL_CART, GREATER, INDEX_INTERSECT, INDEX_UNION, INTERSECT, LCM,
     LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LESS, LN, MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS,
     POWER_SET, PROJ, Q, QUOT, Q_NEG, Q_POS, Q_STAR, R, RANGE, RIGHT_BRACKET, RIGHT_CURLY,
-    RIGHT_PAREN, R_NEG, R_POS, R_STAR, SET_MINUS, SIN, SQRT, STRUCT_VIEW_PREFIX, TAN,
+    RIGHT_PAREN, R_NEG, R_POS, R_STAR, SET_MINUS, SIGN, SIN, SQRT, STRUCT_VIEW_PREFIX, TAN,
     TEMPLATE_INSTANCE_PREFIX, TUPLE, TUPLE_DIM, UNION, Z, Z_NEG, Z_POS, Z_STAR,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
@@ -408,6 +408,9 @@ fn try_parse_keyword_primary(
         })?)),
         CEIL => Ok(Some(parse_unary_keyword(rt, tb, CEIL, |arg| {
             Obj::Ceil(Ceil { arg: Box::new(arg) })
+        })?)),
+        SIGN => Ok(Some(parse_unary_keyword(rt, tb, SIGN, |arg| {
+            Obj::Sign(Sign { arg: Box::new(arg) })
         })?)),
         EXP => Ok(Some(parse_unary_keyword(rt, tb, EXP, |arg| {
             Obj::Exp(Exp { arg: Box::new(arg) })

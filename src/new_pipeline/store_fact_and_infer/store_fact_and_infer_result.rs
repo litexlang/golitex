@@ -5,8 +5,31 @@ use crate::new_pipeline::ast::fact::{
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::runtime::FactId;
 
-// Mirror of what store_fact_and_infer wrote into the current top ExecEnv.
-// ExecEnv remains authoritative; this is stage-ordered replay evidence.
+// What store_fact wrote into the current top ExecEnv (index only).
+pub enum StoreFactResult {
+    AtomicFact(StoreAtomicFactResult),
+    AndFact(StoreAndFactResult),
+    ChainFact(StoreChainFactStorePart),
+    OrFact(StoreOrFactResult),
+    ExistFact(StoreExistFactResult),
+    NotForallFact(StoreNotForallFactStorePart),
+    ForallFact(StoreForallFactResult),
+    ForallFactWithIff(StoreForallFactWithIffResult),
+}
+
+// What infer_fact derived from an already-stored fact.
+pub enum InferFactResult {
+    // No extra evidence fields; side effects may still have run.
+    Empty,
+    ChainFact {
+        transitive_closures: Vec<StoreChainTransitiveClosureResult>,
+    },
+    NotForallFact {
+        derived_exist: StoreExistFactResult,
+    },
+}
+
+// Mirror of store_fact then infer_fact. ExecEnv remains authoritative.
 pub enum StoreFactAndInferResult {
     AtomicFact(StoreAtomicFactResult),
     AndFact(StoreAndFactResult),
@@ -35,6 +58,13 @@ pub struct StoreAndComponentResult {
     pub fact: AtomicFact,
 }
 
+// Store-only chain: whole + adjacent edges (no transitive closures).
+pub struct StoreChainFactStorePart {
+    pub whole_fact_id: FactId,
+    pub fact: ChainFact,
+    pub adjacent: Vec<StoreChainAdjacentResult>,
+}
+
 pub struct StoreChainFactResult {
     pub whole_fact_id: FactId,
     pub fact: ChainFact,
@@ -59,6 +89,12 @@ pub struct StoreOrFactResult {
 pub struct StoreExistFactResult {
     pub whole_fact_id: FactId,
     pub fact: ExistFactFamily,
+}
+
+// Store-only not-forall (counterexample exist is infer).
+pub struct StoreNotForallFactStorePart {
+    pub whole_fact_id: FactId,
+    pub fact: NotForallFact,
 }
 
 // Record not-forall, and store its De Morgan counterexample exist into known_exist.
@@ -172,5 +208,55 @@ impl StoreFactAndInferResult {
                 vec![r.forward.fact_id, r.reverse.fact_id]
             }
         }
+    }
+}
+
+pub(crate) fn merge_store_and_infer(
+    stored: StoreFactResult,
+    inferred: InferFactResult,
+) -> StoreFactAndInferResult {
+    match (stored, inferred) {
+        (StoreFactResult::AtomicFact(r), InferFactResult::Empty) => {
+            StoreFactAndInferResult::AtomicFact(r)
+        }
+        (StoreFactResult::AndFact(r), InferFactResult::Empty) => StoreFactAndInferResult::AndFact(r),
+        (
+            StoreFactResult::ChainFact(store_part),
+            InferFactResult::ChainFact {
+                transitive_closures,
+            },
+        ) => StoreFactAndInferResult::ChainFact(StoreChainFactResult {
+            whole_fact_id: store_part.whole_fact_id,
+            fact: store_part.fact,
+            adjacent: store_part.adjacent,
+            transitive_closures,
+        }),
+        (StoreFactResult::ChainFact(store_part), InferFactResult::Empty) => {
+            StoreFactAndInferResult::ChainFact(StoreChainFactResult {
+                whole_fact_id: store_part.whole_fact_id,
+                fact: store_part.fact,
+                adjacent: store_part.adjacent,
+                transitive_closures: Vec::new(),
+            })
+        }
+        (StoreFactResult::OrFact(r), InferFactResult::Empty) => StoreFactAndInferResult::OrFact(r),
+        (StoreFactResult::ExistFact(r), InferFactResult::Empty) => {
+            StoreFactAndInferResult::ExistFact(r)
+        }
+        (
+            StoreFactResult::NotForallFact(store_part),
+            InferFactResult::NotForallFact { derived_exist },
+        ) => StoreFactAndInferResult::NotForallFact(StoreNotForallFactResult {
+            whole_fact_id: store_part.whole_fact_id,
+            fact: store_part.fact,
+            derived_exist,
+        }),
+        (StoreFactResult::ForallFact(r), InferFactResult::Empty) => {
+            StoreFactAndInferResult::ForallFact(r)
+        }
+        (StoreFactResult::ForallFactWithIff(r), InferFactResult::Empty) => {
+            StoreFactAndInferResult::ForallFactWithIff(r)
+        }
+        _ => panic!("store_fact / infer_fact result shape mismatch"),
     }
 }

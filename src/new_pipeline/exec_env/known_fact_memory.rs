@@ -14,21 +14,44 @@ pub use crate::new_pipeline::display_and_ir::ObjIR;
 // exact-IR cite slot. Rationale: `new_pipeline/identifier_identity.md`.
 #[derive(Clone)]
 pub struct KnownFactMemory {
-    /// Canonical store: every stored fact’s full AST keyed by `FactId`.
-    /// Proof and exec results cite only ids; renderers resolve id → fact text
-    /// for per-statement JSON and later Lean compilation replay.
+    // Canonical store: every stored fact's full AST keyed by FactId.
+    // Proof and exec results cite only ids; renderers resolve id → fact text
+    // for per-statement JSON and later Lean compilation replay.
     pub facts_by_id: HashMap<FactId, Fact>,
+
+    // Equality classes: generating EqualFacts as undirected edges, plus shared
+    // member lists. Path search cites only FactIds from generating edges.
+    // Example: store `a = b` and `b = c` → a,b,c share one class; path a→b→c uses those edges.
     pub known_equivalence_classes: KnownEquivalenceClassMemory,
-    /// Non-closed side → closed numeric representative + citing equality FactId.
-    /// Example: store `a = 10` → key `a` maps to `(10, fact_id)`.
+
+    // Non-closed side → closed numeric representative + citing equality FactId.
+    // Example: store `a = 10` → key `a` maps to `(10, fact_id)`.
     pub known_closed_numeric_equal: HashMap<ObjIR, Vec<(Obj, FactId)>>,
-    /// Non-literal side → binder-carrying obj (FnSet / AnonymousFn / SetBuilder) + FactId.
-    /// Example: `trust R_TO_R = fn(x R) R`, `have x fn(y R) R`, then `x $in R_TO_R`
-    /// via lookup on `R_TO_R` + alpha-equal FnSet (ByEqualToObjWithFreeParamsLookup).
+
+    // Non-literal side → binder-carrying obj (FnSet / AnonymousFn / SetBuilder) + FactId.
+    // Example: `trust R_TO_R = fn(x R) R`, `have x fn(y R) R`, then `x $in R_TO_R`
+    // via lookup on `R_TO_R` + alpha-equal FnSet (ByEqualToObjWithFreeParamsLookup).
     pub known_equal_to_obj_with_free_params: KnownEqualToObjWithFreeParamsMemory,
+
+    // Non-equality atomics bucketed by (prop name, positive polarity).
+    // Example: `a > 0` and `not a > 0` land in different buckets.
     pub known_atomic_except_equality_facts: AtomicExceptEqualityFactMemory,
+
+    // Whole or-facts indexed by structural key (argument objs not part of the key).
+    // Example: `a = 0 or a != 0` stored under the or-shape key for later cite/match.
     pub known_or: OrFactMemory,
+
+    // Whole exist-facts indexed by structural key (binders / free objs not in the key).
+    // Example: `exist x R st {x > 0}` stored for later exist-fact lookup.
     pub known_exist: ExistFactMemory,
+
+    // Forall then-clauses projected for conclusion-shaped lookup.
+    // Example: after storing
+    //   forall x R:
+    //       x > 0
+    //       =>:
+    //           x != 0
+    // the then-clause shape is indexed so a goal `a != 0` can find matching foralls.
     pub known_forall_conclusions: KnownForallConclusionMemory,
 }
 
