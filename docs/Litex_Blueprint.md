@@ -2,7 +2,7 @@
 
 Created and maintained by Jiachen Shen.
 
-Last updated: September 19, 2026.
+Last updated: September 22, 2026.
 
 Website: https://litexlang.com/doc/Litex_Blueprint
 
@@ -43,13 +43,13 @@ Writing boundary: the first three layers are Litex's scientific core; the fourth
 
 ## 0. Litex Blueprint Overview
 
-*Litex is a set-theoretic formal language designed to be easy to learn and use. Its source follows ordinary mathematical writing: users state objects and facts directly—what they want to prove—while the system verifies bottom-up and returns the grounds for each step, or where checking stops. It is also designed to compile to Lean; some scenarios are already covered, with broader coverage expected by the end of 2026. Together with humans and AI, this aims to form a collaboration loop that can accumulate checkable verification work for Math for AI.*
+*Litex (begun in 2024) is a set-theoretic formal language designed to be easy to learn and use. Litex source follows ordinary mathematical writing: users state objects and facts directly—what they want to prove; the system verifies bottom-up and returns the grounds for each step, or where checking stops. It is also designed to compile to Lean (full coverage expected by the end of 2026). Together with humans and AI, Litex hopes to form a collaboration loop that can accumulate checkable verification work for Math for AI.*
 
-Behind that design sits a mathematical question: can a formal language be both easy to write and read, and strictly checkable—with source close to ordinary mathematical expression, and a verification process that lays out what each step does and which mathematical dependencies it rests on?
+Behind that sits a mathematical question: can a formal language be both easy to write and read, and strictly checkable—with source close to ordinary mathematical expression, and a verification process that lays out what each step does and which mathematical dependencies it rests on? Natural language is easy to understand but hard to verify rigorously; formal code can be verified but is often hard to understand. Litex aims to be a bridge between the two.
 
-Natural language is easy to understand but hard to verify rigorously; formal code can be verified but is often hard to understand. Litex aims to be a bridge between the two: even if you are not a formalization expert and do not use Lean day to day, you can still bring rigorous checking into your own work—seeing what the system is checking, where it stops, and what to repair next. It also hopes to be a tool that helps you understand the mysteries behind mathematics.
+*In one line: Litex wants to be the Python of formal languages—easier to learn and use for writing and reading checkable mathematics; and when you read, you get not only the source, but also the mathematical grounds behind it, deepening understanding and sparking inspiration; that way, more non-specialists can take up a formal language and put it to work.*
 
-In one line: Litex wants to be the Python of formal languages—easier to learn and use for writing and reading checkable mathematics, without pretending the hard problems underneath have vanished.
+The value of mathematics lies in helping humans understand the world we live in. Litex hopes to help keep [fostering understanding](https://terrytao.wordpress.com/2026/09/11/a-severe-misalignment-of-ai-in-mathematics/)—what people are most likely to lose, and most need to keep, in the AI era.
 
 <a id="overview-readers"></a>
 
@@ -60,6 +60,8 @@ The following are not mutually exclusive user classes, but four entry points for
 #### For Lean users
 
 Why another formal language?
+
+First, the author of Litex has always taken Lean as a model to learn from. Lean has greatly accelerated mathematics entering the AI for Math era. That is why I designed a Litex-to-Lean compiler. Any Litex code can compile to Lean (the full engineering effort is expected to finish by the end of 2026), so “wasting time on a language incompatible with Lean” should not be a reason not to try Litex. You can first think of Litex as a more approachable Lean frontend for ordinary users.
 
 Lean is hard often not only because “type theory is hard.” A more common friction is this: everyday mathematics talks about sets, elements, functions, and relations; many proof assistants’ default interface first places people in a world of goals and tactics. People care about *what is true*; the system’s default first asks *how do I attack the goal*.
 
@@ -75,11 +77,15 @@ Lean:  proposition → proof goal → tactic refinement → proof term → kerne
 Litex: objects and facts → kernel checks and searches for grounds → verified facts extend the context
 ```
 
-A related difference sits one layer below tactics. Lean’s default surface, via dependent type theory, gathers mathematical objects, propositions, proofs, and types into one term/type universe—so values and evidence are often packed together (as in the subtype example below). Litex keeps those categories apart on the user surface: objects, facts, and statements stay separate, closer to how everyday mathematics already talks. That is not a claim about proof power; it is a claim about what the source asks you to see first.
+A related difference sits one layer below tactics. Lean’s default surface, via dependent type theory, gathers mathematical objects, propositions, proofs, and types into one term/type universe—so values and evidence are often packed together (as in the subtype example below). Litex keeps those categories apart on the user surface: objects, facts, and statements stay separate, closer to how everyday mathematics already talks. That is not a claim about proof power; it is a claim about what the source asks you to see first. *Litex’s “type” feel is closer to Python; Lean’s is closer to Rust.*
 
 Modern formal languages with Lean as a leading representative laid an irreplaceable foundation for AI for Math and the “engineering of mathematics.” Yet no matter how AI develops, people who can master Lean, type theory, and its engineering stack may still remain a minority. Litex does not try to replace Lean; it explores another formalization perspective: letting more people write, check, and understand rigorous mathematical knowledge directly. Litex and Lean take nearly *inverse* defaults—one source leans toward *how*, the other toward *what*; one accumulates conclusions from conditions, the other simplifies the conclusion until it matches the conditions—turning over the large half of a formal system that used to stay hidden behind the interface. People with different habits of thought can each find the language that fits them.
 
+*Here sits a division of labor that is easy to underestimate, yet essential: **the language helps you prove; the user says what to prove**—not the reverse, where the user must first learn how to prove and then encode those proof steps into the source. So Litex output is not merely pass/fail: it tells you the mathematical grounds behind each statement. When you read Litex source, you are reading what should hold; from the output, you also read the mathematical principles that support each line—beyond the source text itself. Lean is usually the other way around: the source writes how to prove, and Lean’s output tells you what you have proved.*
+
 If you want to understand Litex’s design, the best way is to walk the path yourself: start from everyday mathematics, notice the interface mismatch, return *what* to people and hand *how* to the kernel. What you arrive at may not be called Litex; but you will see why it almost had to grow this way.
+
+Because Litex searches for the desired *how to verify* on your behalf, that search is itself rather complex; Litex must also have the common verify rules built in. So the Litex kernel is on the order of at least about 200,000 lines of Rust—dozens of times Lean. That is also why Litex was almost impossible to finish before the AI era: for a language to succeed, its design should stay coherent, so the number of authors is preferably no more than two; yet Litex is so large that one or two people could not complete such an engineering effort without AI help—especially for a formal language that nearly tolerates zero bugs. Precisely because the kernel is huge, the Litex author must give Litex a compiler to Lean, so that Lean’s kernel can independently recheck and help ensure Litex’s internal run is sound.
 
 <details>
 <summary><strong>Lean–Litex comparison examples</strong></summary>
@@ -215,6 +221,8 @@ What Litex aims to do is exactly to add a readable abstraction layer between for
 
 Part of that simplicity is categorical, not only notational. In ordinary mathematical writing, a number is not a theorem, and a theorem is not a type. Litex keeps that habit on the surface: objects, facts, and statements stay separate, so reading a file feels closer to reading mathematics than to learning a new encoding of mathematics. The claim is about expression and reading cost—not that every theorem becomes easier to prove.
 
+The history of science repeatedly shows that revisiting known problems from a fresh starting point often advances an existing field—and sometimes gives rise to a new one. Entering the AI era, complex problems keep appearing, and people increasingly need reasoning that is trustworthy, scalable, and explainable. Formal methods will play a larger role in that process. So another exploration like Litex is valuable in itself.
+
 Historically influential theories often began from pure curiosity about the problem itself, not from calculation of short-term returns. The author of Litex hopes to push Math for AI from language—the lowest layer of the stack. Honestly, he did it because he was interested. May this blueprint spark an impulse to experience the beauty of mathematics through Litex.
 
 #### For programmers
@@ -262,7 +270,7 @@ The document unfolds along five connected questions: what the user sees, what th
 1. **Set-theoretic objects**: users directly see sets, elements, functions, and relations, without first managing abstract carrier types.
 2. **Fact-centered**: the source records “what holds”; the verifier matches builtin rules, known facts, and definitions by shape, performs constrained matching and replacement, and checks well-definedness.
 3. **Bottom-up accumulation**: every verified fact enters the context for later reasoning; this is the default direction of reasoning.
-4. **Traceable proof flow**: the system organizes and outputs the forward and backward dependencies from definitions and premises to conclusions, so that the whole proof process becomes structured information that is readable, checkable, and reusable; on failure, it points to where the failure occurred.
+4. **Traceable proof flow**: the system organizes and outputs the mathematical grounds for each statement, together with the forward and backward dependencies from definitions and premises to conclusions, so that the proof process becomes structured information that is readable, checkable, and reusable—beyond reading the source, you can also read the principles behind it; on failure, it points to where the failure occurred.
 5. **Lean rechecking**: from the start, Litex was designed to compile to Lean proof objects and hand them to the Lean kernel for independent checking; it already covers some mathematical settings, with broader coverage expected by the end of 2026.
 
 <a id="overview-gallery"></a>
@@ -1114,7 +1122,7 @@ When we read mathematics, a sentence never appears in isolation. As we write dow
 
 What Litex aims to do is turn that mathematical mental flow—usually present only in the mind—into code sentence by sentence: the source writes the objects to introduce and the facts to verify; already defined concepts and already proved facts remain in the context; later statements continue to grow on top of them.
 
-*What makes Litex most distinctive is that its running process is not a black box. How any statement holds, what concepts it introduces, and what effect it has on the whole proof context are all output.* Precisely because Litex has such structured output, it can be compiled to Lean (or any formal language) relatively easily, and the relations among concepts and among facts throughout a mathematical proof can be presented strictly. It records and outputs why each sentence holds, which grounds were used, what inferences were produced, and which content truly entered the later mathematical context.
+*What makes Litex most distinctive is that its running process is not a black box. How any statement holds, what concepts it introduces, and what effect it has on the whole proof context are all output.* In other words: you are not only reading the source itself; beyond the source, the mathematical grounds behind each statement are laid out for you—the language helps you prove; you say what to prove. Precisely because Litex has such structured output, it can be compiled to Lean (or any formal language) relatively easily, and the relations among concepts and among facts throughout a mathematical proof can be presented strictly. It records and outputs why each sentence holds, which grounds were used, what inferences were produced, and which content truly entered the later mathematical context.
 
 First consider a minimal contiguous fragment:
 
@@ -1412,9 +1420,9 @@ Such error output is also valuable. When we design the human–AI–Litex intera
 
 </details>
 
-*The core of Litex is this concise, rigorous, formatted verification-flow output.* Starting from an execution path that a user can read and take part in, Litex also retains a structured knowledge record. That record serves four roles:
+*The core of Litex is this concise, rigorous, formatted verification-flow output—it turns “why this sentence holds” from tacit mental knowledge into a readable record.* Starting from an execution path that a user can read and take part in, Litex also retains a structured knowledge record. That record serves four roles:
 
-1. **For human reading**: turn statements, grounds, and context changes into an interactive textbook. Beginners need no longer stop because they do not know why a sentence holds.
+1. **For human reading**: turn statements, grounds, and context changes into an interactive textbook. You read the source; you simultaneously receive the mathematical principles behind it. Beginners need no longer stop because they do not know why a sentence holds.
 2. **For AI collaboration**: return grounds of each success, stop, and failure to AI, so that it can write Litex, auto-correct from feedback, and improve step by step, forming a human–AI–Litex loop.
 3. **For knowledge structure**: generate dependency graphs of definitions and theorems from definitions, facts, citations, and inferences, visually showing how concepts connect.
 4. **For Lean rechecking**: design a Litex-to-Lean compiler from the definitions, facts, and verification grounds in the record, hand generated equivalent Lean code to the Lean kernel for rechecking, and connect to the Lean ecosystem.
