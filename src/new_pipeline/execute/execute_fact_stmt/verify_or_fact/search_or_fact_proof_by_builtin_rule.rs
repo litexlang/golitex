@@ -1,5 +1,5 @@
 use crate::new_pipeline::ast::fact::{AndChainAtomicFact, AtomicFact, InFact, OrFact};
-use crate::new_pipeline::ast::obj::{Number, Obj, StandardSet};
+use crate::new_pipeline::ast::obj::{Number, Obj, StandardSet, Literal};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_or_fact::helper::{
     equal_matches_pair, objs_same,
 };
@@ -165,8 +165,8 @@ impl Runtime {
 fn is_number_obj(obj: &Obj, value: &str) -> bool {
     matches!(
         obj,
-        Obj::Number(Number {
+        Obj::Literal(Literal::Number(Number {
             normalized_value,
-        }) if normalized_value == value
+        })) if normalized_value == value
     )
 }

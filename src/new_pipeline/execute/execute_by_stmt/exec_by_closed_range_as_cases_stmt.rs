@@ -6,7 +6,7 @@ use super::result::{
     ExecByClosedRangeAsCasesStmtFailed, ExecByClosedRangeAsCasesStmtResult,
     ExecByClosedRangeAsCasesStmtSuccess, ExecByStmtResult,
 };
-use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::ast::obj::{Obj, SetFormer};
 use crate::new_pipeline::ast::stmt::ByClosedRangeAsCasesStmt;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
@@ -40,7 +40,7 @@ pub fn exec_by_closed_range_as_cases_stmt(
         ));
     }
 
-    let set = Obj::ClosedRange(stmt.closed_range.clone());
+    let set = Obj::SetFormer(SetFormer::ClosedRange(stmt.closed_range.clone()));
     let (outcome, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
         let membership_fact = membership_in_fact(rt, &stmt.element, set, &stmt.line_file);
         let membership = verify_goal_fact(rt, &membership_fact)?;

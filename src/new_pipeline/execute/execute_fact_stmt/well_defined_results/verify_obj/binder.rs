@@ -5,17 +5,11 @@
 //! Example: `fn(x R: x > 0) R` needs `R` WD, binder `x`, WD of `x > 0`, WD of ret `R`.
 
 use super::entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
-use super::fail_to_verify_obj_well_defined::{
-    FailToVerifyAnonymousFnObjWellDefined, FailToVerifyFnSetObjWellDefined,
-    FailToVerifyObjWellDefinedResult, FailToVerifySetBuilderObjWellDefined,
-};
+use super::fail_to_verify_obj_well_defined::*;
 use super::helper::set_bound_parameters_to_typed_parameter_list;
-use super::obj_well_defined_proof_by_def::{
-    AnonymousFnObjWellDefinedProof, FnSetObjWellDefinedProof, ObjWellDefinedProofByDef,
-    SetBuilderObjWellDefinedProof,
-};
+use super::obj_well_defined_proof_by_def::*;
 use crate::new_pipeline::ast::fact::{AtomicFact, InFact, QuantifierFreeFact};
-use crate::new_pipeline::ast::obj::{AnonymousFn, FnSet, Obj, SetBuilder};
+use crate::new_pipeline::ast::obj::{AnonymousFn, FnSet, FunctionSpace, Obj, SetBuilder, SetFormer};
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::well_defined_results::well_defined_result::{
@@ -43,12 +37,12 @@ impl Runtime {
                     ret_set_well_defined,
                     local_env,
                 };
-                self.finish_binder_obj_success(Obj::FnSet(value.clone()), verify_state, |p| {
-                    ObjWellDefinedProofByDef::FnSet(p)
+                self.finish_binder_obj_success(Obj::FunctionSpace(FunctionSpace::FnSet(value.clone())), verify_state, |p| {
+                    ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::FnSet(p))
                 }, proof)
             }
             Err(reason) => Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::FnSet(reason),
+                FailToVerifyObjWellDefinedResult::FunctionSpace(FailToVerifyFunctionSpaceObjWellDefinedResult::FnSet(reason)),
             )),
         }
     }
@@ -78,12 +72,12 @@ impl Runtime {
                     body_in_ret_set,
                     local_env,
                 };
-                self.finish_binder_obj_success(Obj::AnonymousFn(value.clone()), verify_state, |p| {
-                    ObjWellDefinedProofByDef::AnonymousFn(p)
+                self.finish_binder_obj_success(Obj::FunctionSpace(FunctionSpace::AnonymousFn(value.clone())), verify_state, |p| {
+                    ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(p))
                 }, proof)
             }
             Err(reason) => Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::AnonymousFn(reason),
+                FailToVerifyObjWellDefinedResult::FunctionSpace(FailToVerifyFunctionSpaceObjWellDefinedResult::AnonymousFn(reason)),
             )),
         }
     }
@@ -104,12 +98,12 @@ impl Runtime {
                     fact_well_defined,
                     local_env,
                 };
-                self.finish_binder_obj_success(Obj::SetBuilder(value.clone()), verify_state, |p| {
-                    ObjWellDefinedProofByDef::SetBuilder(p)
+                self.finish_binder_obj_success(Obj::SetFormer(SetFormer::SetBuilder(value.clone())), verify_state, |p| {
+                    ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::SetBuilder(p))
                 }, proof)
             }
             Err(reason) => Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::SetBuilder(reason),
+                FailToVerifyObjWellDefinedResult::SetFormer(FailToVerifySetFormerObjWellDefinedResult::SetBuilder(reason)),
             )),
         }
     }

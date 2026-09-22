@@ -21,7 +21,7 @@ use crate::new_pipeline::ast::fact::{
     PlainExistFact,
 };
 use crate::new_pipeline::ast::names::BoundName;
-use crate::new_pipeline::ast::obj::{IdentifierObj, Obj, Tuple};
+use crate::new_pipeline::ast::obj::{IdentifierObj, Obj, Tuple, ProductShape};
 use crate::new_pipeline::ast::param::{TypedParameterGroup, TypedParameterList};
 use crate::new_pipeline::ast::stmt::ObtainObjFromExistFact;
 use crate::new_pipeline::execute::execute_fact_stmt::{
@@ -342,11 +342,11 @@ fn witness_tuple_or_single(binders: &[BoundName]) -> Obj {
     if binders.len() == 1 {
         Obj::Identifier(IdentifierObj::from_bound_name(&binders[0]))
     } else {
-        Obj::Tuple(Tuple {
+        Obj::ProductShape(ProductShape::Tuple(Tuple {
             args: binders
                 .iter()
                 .map(|b| Box::new(Obj::Identifier(IdentifierObj::from_bound_name(b))))
                 .collect(),
-        })
+        }))
     }
 }

@@ -1,5 +1,5 @@
 use crate::new_pipeline::ast::fact::IsCartFact;
-use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::ast::obj::{Obj, ProductShape};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
@@ -20,7 +20,7 @@ impl Runtime {
         _verify_state: VerifyState,
     ) -> RuntimeResult<Option<IsCartFactSearchProofByBuiltinRule>> {
         match &fact.set {
-            Obj::Cart(_) => Ok(Some(IsCartFactSearchProofByBuiltinRule::CartConstructor(
+            Obj::ProductShape(ProductShape::Cart(_)) => Ok(Some(IsCartFactSearchProofByBuiltinRule::CartConstructor(
                 CartConstructorBuiltinRuleProof {},
             ))),
             _ => Ok(None),

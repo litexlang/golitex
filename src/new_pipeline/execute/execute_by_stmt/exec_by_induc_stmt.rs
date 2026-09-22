@@ -13,7 +13,7 @@ use crate::new_pipeline::ast::fact::{
     LessEqualFact,
 };
 use crate::new_pipeline::ast::names::BoundName;
-use crate::new_pipeline::ast::obj::{Add, IdentifierObj, Number, Obj, StandardSet};
+use crate::new_pipeline::ast::obj::{Add, IdentifierObj, Number, Obj, StandardSet, ArithmeticOperator, Literal};
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
 use crate::new_pipeline::ast::stmt::{ByInducStmt, ByStrongInducStmt, Stmt};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyFactWellDefinedResult;
@@ -499,7 +499,7 @@ fn bound_from_obj(name: &str, obj: &Obj) -> Option<BoundName> {
         Obj::Identifier(IdentifierObj::Plain { id, name: n }) if n == name => {
             Some(BoundName::new(*id, n.clone()))
         }
-        Obj::Add(Add { left, right }) => {
+        Obj::ArithmeticOperator(ArithmeticOperator::Add(Add { left, right })) => {
             bound_from_obj(name, left).or_else(|| bound_from_obj(name, right))
         }
         _ => None,
@@ -511,12 +511,12 @@ fn param_obj(param: &BoundName) -> Obj {
 }
 
 fn add_one(obj: Obj) -> Obj {
-    Obj::Add(Add {
+    Obj::ArithmeticOperator(ArithmeticOperator::Add(Add {
         left: Box::new(obj),
-        right: Box::new(Obj::Number(Number {
+        right: Box::new(Obj::Literal(Literal::Number(Number {
             normalized_value: "1".to_string(),
-        })),
-    })
+        }))),
+    }))
 }
 
 fn mk_in_z(runtime: &mut Runtime, element: Obj) -> Fact {

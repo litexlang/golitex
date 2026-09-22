@@ -1,4 +1,5 @@
-// FailToVerifyObjWellDefinedResult mirrors Obj.
+// FailToVerifyObjWellDefinedResult mirrors Obj's 16-family nesting.
+// Family sub-enums wrap existing per-leaf FailToVerify*ObjWellDefined structs.
 // Non-leaf failures wrap the shared Child/Requirement/Others reason.
 
 use super::entry::ObjWellDefinedProof;
@@ -11,41 +12,76 @@ use crate::new_pipeline::execute::execute_fact_stmt::well_defined_results::well_
 pub enum FailToVerifyObjWellDefinedResult {
     Identifier(FailToVerifyIdentifierObjWellDefined),
     FnObj(FailToVerifyFnObjObjWellDefined),
+    Literal(FailToVerifyLiteralObjWellDefinedResult),
+    StandardSet(FailToVerifyStandardSetObjWellDefined),
+    ArithmeticOperator(FailToVerifyArithmeticOperatorObjWellDefinedResult),
+    IntegerOperator(FailToVerifyIntegerOperatorObjWellDefinedResult),
+    TrigOperator(FailToVerifyTrigOperatorObjWellDefinedResult),
+    ExpLogOperator(FailToVerifyExpLogOperatorObjWellDefinedResult),
+    ComplexOperator(FailToVerifyComplexOperatorObjWellDefinedResult),
+    SetOperator(FailToVerifySetOperatorObjWellDefinedResult),
+    SetFormer(FailToVerifySetFormerObjWellDefinedResult),
+    ProductShape(FailToVerifyProductShapeObjWellDefinedResult),
+    FunctionSpace(FailToVerifyFunctionSpaceObjWellDefinedResult),
+    IteratedOperator(FailToVerifyIteratedOperatorObjWellDefinedResult),
+    FiniteSetStat(FailToVerifyFiniteSetStatObjWellDefinedResult),
+    Structish(FailToVerifyStructishObjWellDefinedResult),
+}
+
+pub enum FailToVerifyLiteralObjWellDefinedResult {
     Number(FailToVerifyNumberObjWellDefined),
     ImaginaryUnit(FailToVerifyImaginaryUnitObjWellDefined),
     EulerNumber(FailToVerifyEulerNumberObjWellDefined),
     Pi(FailToVerifyPiObjWellDefined),
+}
+
+pub enum FailToVerifyArithmeticOperatorObjWellDefinedResult {
     Add(FailToVerifyAddObjWellDefined),
     Sub(FailToVerifySubObjWellDefined),
     Mul(FailToVerifyMulObjWellDefined),
     Div(FailToVerifyDivObjWellDefined),
+    Pow(FailToVerifyPowObjWellDefined),
+    Abs(FailToVerifyAbsObjWellDefined),
+    Min(FailToVerifyMinObjWellDefined),
+    Max(FailToVerifyMaxObjWellDefined),
+    Floor(FailToVerifyFloorObjWellDefined),
+    Ceil(FailToVerifyCeilObjWellDefined),
+    Sign(FailToVerifySignObjWellDefined),
+}
+
+pub enum FailToVerifyIntegerOperatorObjWellDefinedResult {
     Mod(FailToVerifyModObjWellDefined),
     Quot(FailToVerifyQuotObjWellDefined),
     Gcd(FailToVerifyGcdObjWellDefined),
     Lcm(FailToVerifyLcmObjWellDefined),
-    Floor(FailToVerifyFloorObjWellDefined),
-    Ceil(FailToVerifyCeilObjWellDefined),
-    Min(FailToVerifyMinObjWellDefined),
-    Max(FailToVerifyMaxObjWellDefined),
-    Exp(FailToVerifyExpObjWellDefined),
-    Ln(FailToVerifyLnObjWellDefined),
-    Sign(FailToVerifySignObjWellDefined),
     Factorial(FailToVerifyFactorialObjWellDefined),
-    Pow(FailToVerifyPowObjWellDefined),
-    Abs(FailToVerifyAbsObjWellDefined),
+}
+
+pub enum FailToVerifyTrigOperatorObjWellDefinedResult {
     Sin(FailToVerifySinObjWellDefined),
+    Cos(FailToVerifyCosObjWellDefined),
+    Tan(FailToVerifyTanObjWellDefined),
+    Cot(FailToVerifyCotObjWellDefined),
     Arcsin(FailToVerifyArcsinObjWellDefined),
     Arccos(FailToVerifyArccosObjWellDefined),
     Arctan(FailToVerifyArctanObjWellDefined),
     Arccot(FailToVerifyArccotObjWellDefined),
-    Cos(FailToVerifyCosObjWellDefined),
-    Tan(FailToVerifyTanObjWellDefined),
-    Cot(FailToVerifyCotObjWellDefined),
+}
+
+pub enum FailToVerifyExpLogOperatorObjWellDefinedResult {
+    Exp(FailToVerifyExpObjWellDefined),
+    Ln(FailToVerifyLnObjWellDefined),
+    Log(FailToVerifyLogObjWellDefined),
+    Sqrt(FailToVerifySqrtObjWellDefined),
+}
+
+pub enum FailToVerifyComplexOperatorObjWellDefinedResult {
     RealPart(FailToVerifyRealPartObjWellDefined),
     ImaginaryPart(FailToVerifyImaginaryPartObjWellDefined),
     ComplexAbs(FailToVerifyComplexAbsObjWellDefined),
-    Sqrt(FailToVerifySqrtObjWellDefined),
-    Log(FailToVerifyLogObjWellDefined),
+}
+
+pub enum FailToVerifySetOperatorObjWellDefinedResult {
     Union(FailToVerifyUnionObjWellDefined),
     Intersect(FailToVerifyIntersectObjWellDefined),
     SetMinus(FailToVerifySetMinusObjWellDefined),
@@ -55,39 +91,55 @@ pub enum FailToVerifyObjWellDefinedResult {
     IndexIntersect(FailToVerifyIndexIntersectObjWellDefined),
     PowerSet(FailToVerifyPowerSetObjWellDefined),
     GeneralCart(FailToVerifyGeneralCartObjWellDefined),
+}
+
+pub enum FailToVerifySetFormerObjWellDefinedResult {
     ListSet(FailToVerifyListSetObjWellDefined),
     SetBuilder(FailToVerifySetBuilderObjWellDefined),
+    Replacement(FailToVerifyReplacementObjWellDefined),
+    Range(FailToVerifyRangeObjWellDefined),
+    ClosedRange(FailToVerifyClosedRangeObjWellDefined),
+    FiniteSeqSet(FailToVerifyFiniteSeqSetObjWellDefined),
+    SeqSet(FailToVerifySeqSetObjWellDefined),
+    OneSideInfinityIntervalObj(FailToVerifyOneSideInfinityIntervalObjObjWellDefined),
+    IntervalObj(FailToVerifyIntervalObjObjWellDefined),
+}
+
+pub enum FailToVerifyProductShapeObjWellDefinedResult {
+    Cart(FailToVerifyCartObjWellDefined),
+    Tuple(FailToVerifyTupleObjWellDefined),
+    CartDim(FailToVerifyCartDimObjWellDefined),
+    TupleDim(FailToVerifyTupleDimObjWellDefined),
+    Proj(FailToVerifyProjObjWellDefined),
+    ObjAtIndex(FailToVerifyObjAtIndexObjWellDefined),
+}
+
+pub enum FailToVerifyFunctionSpaceObjWellDefinedResult {
     FnSet(FailToVerifyFnSetObjWellDefined),
     AnonymousFn(FailToVerifyAnonymousFnObjWellDefined),
-    Cart(FailToVerifyCartObjWellDefined),
-    CartDim(FailToVerifyCartDimObjWellDefined),
-    Proj(FailToVerifyProjObjWellDefined),
-    TupleDim(FailToVerifyTupleDimObjWellDefined),
-    Tuple(FailToVerifyTupleObjWellDefined),
-    FiniteSetSize(FailToVerifyFiniteSetSizeObjWellDefined),
-    FiniteSetMax(FailToVerifyFiniteSetMaxObjWellDefined),
-    FiniteSetMin(FailToVerifyFiniteSetMinObjWellDefined),
     FnRange(FailToVerifyFnRangeObjWellDefined),
-    Replacement(FailToVerifyReplacementObjWellDefined),
+}
+
+pub enum FailToVerifyIteratedOperatorObjWellDefinedResult {
     Sum(FailToVerifySumObjWellDefined),
     SumOfFiniteSet(FailToVerifySumOfFiniteSetObjWellDefined),
     Product(FailToVerifyProductObjWellDefined),
     ProductOfFiniteSet(FailToVerifyProductOfFiniteSetObjWellDefined),
     Reduce(FailToVerifyReduceObjWellDefined),
     FiniteSetReduce(FailToVerifyFiniteSetReduceObjWellDefined),
-    Range(FailToVerifyRangeObjWellDefined),
-    ClosedRange(FailToVerifyClosedRangeObjWellDefined),
-    FiniteSeqSet(FailToVerifyFiniteSeqSetObjWellDefined),
-    SeqSet(FailToVerifySeqSetObjWellDefined),
-    ObjAtIndex(FailToVerifyObjAtIndexObjWellDefined),
-    StandardSet(FailToVerifyStandardSetObjWellDefined),
+}
+
+pub enum FailToVerifyFiniteSetStatObjWellDefinedResult {
+    FiniteSetSize(FailToVerifyFiniteSetSizeObjWellDefined),
+    FiniteSetMax(FailToVerifyFiniteSetMaxObjWellDefined),
+    FiniteSetMin(FailToVerifyFiniteSetMinObjWellDefined),
+}
+
+pub enum FailToVerifyStructishObjWellDefinedResult {
     StructObj(FailToVerifyStructObjObjWellDefined),
     FieldAccess(FailToVerifyFieldAccessObjWellDefined),
     InstantiatedTemplateObj(FailToVerifyInstantiatedTemplateObjObjWellDefined),
-    OneSideInfinityIntervalObj(FailToVerifyOneSideInfinityIntervalObjObjWellDefined),
-    IntervalObj(FailToVerifyIntervalObjObjWellDefined),
 }
-
 pub enum FailToVerifyObjWellDefinedByDefCommon {
     Child {
         obj: Obj,

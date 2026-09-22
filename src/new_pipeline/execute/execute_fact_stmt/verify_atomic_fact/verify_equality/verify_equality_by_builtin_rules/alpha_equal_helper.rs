@@ -6,10 +6,7 @@ use crate::new_pipeline::ast::fact::{
     QuantifierFreeFact,
 };
 use crate::new_pipeline::ast::names::BoundName;
-use crate::new_pipeline::ast::obj::{
-    AnonymousFn, FnObj, FnObjHead, FnSet, IdentifierObj, IntervalObj, Obj,
-    OneSideInfinityIntervalObj, SetBuilder,
-};
+use crate::new_pipeline::ast::obj::{AnonymousFn, FnObj, FnObjHead, FnSet, IdentifierObj, IntervalObj, Obj, OneSideInfinityIntervalObj, SetBuilder, ArithmeticOperator, ComplexOperator, ExpLogOperator, FiniteSetStat, FunctionSpace, IntegerOperator, IteratedOperator, Literal, ProductShape, SetFormer, SetOperator, Structish, TrigOperator};
 use crate::new_pipeline::ast::param::SetBoundParameterList;
 use crate::new_pipeline::exec_env::KnownEqualToObjWithFreeParamsShape;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
@@ -122,141 +119,141 @@ fn plain_ids_alpha_equal(
 fn objs_alpha_equal(left: &Obj, right: &Obj, map: &HashMap<IdentifierId, IdentifierId>) -> bool {
     match (left, right) {
         (Obj::Identifier(l), Obj::Identifier(r)) => identifier_objs_alpha_equal(l, r, map),
-        (Obj::FnSet(l), Obj::FnSet(r)) => fn_sets_alpha_equal_under(l, r, map),
-        (Obj::SetBuilder(l), Obj::SetBuilder(r)) => set_builders_alpha_equal_under(l, r, map),
-        (Obj::AnonymousFn(l), Obj::AnonymousFn(r)) => anonymous_fns_alpha_equal_under(l, r, map),
+        (Obj::FunctionSpace(FunctionSpace::FnSet(l)), Obj::FunctionSpace(FunctionSpace::FnSet(r))) => fn_sets_alpha_equal_under(l, r, map),
+        (Obj::SetFormer(SetFormer::SetBuilder(l)), Obj::SetFormer(SetFormer::SetBuilder(r))) => set_builders_alpha_equal_under(l, r, map),
+        (Obj::FunctionSpace(FunctionSpace::AnonymousFn(l)), Obj::FunctionSpace(FunctionSpace::AnonymousFn(r))) => anonymous_fns_alpha_equal_under(l, r, map),
         (Obj::FnObj(l), Obj::FnObj(r)) => fn_objs_alpha_equal(l, r, map),
-        (Obj::Number(l), Obj::Number(r)) => l.normalized_value == r.normalized_value,
-        (Obj::ImaginaryUnit(_), Obj::ImaginaryUnit(_)) => true,
-        (Obj::EulerNumber(_), Obj::EulerNumber(_)) => true,
-        (Obj::Pi(_), Obj::Pi(_)) => true,
-        (Obj::Add(l), Obj::Add(r)) => both(&l.left, &l.right, &r.left, &r.right, map),
-        (Obj::Sub(l), Obj::Sub(r)) => both(&l.left, &l.right, &r.left, &r.right, map),
-        (Obj::Mul(l), Obj::Mul(r)) => both(&l.left, &l.right, &r.left, &r.right, map),
-        (Obj::Div(l), Obj::Div(r)) => both(&l.left, &l.right, &r.left, &r.right, map),
-        (Obj::Mod(l), Obj::Mod(r)) => both(&l.left, &l.right, &r.left, &r.right, map),
-        (Obj::Quot(l), Obj::Quot(r)) => both(&l.left, &l.right, &r.left, &r.right, map),
-        (Obj::Gcd(l), Obj::Gcd(r)) => both(&l.left, &l.right, &r.left, &r.right, map),
-        (Obj::Lcm(l), Obj::Lcm(r)) => both(&l.left, &l.right, &r.left, &r.right, map),
-        (Obj::Min(l), Obj::Min(r)) => both(&l.left, &l.right, &r.left, &r.right, map),
-        (Obj::Max(l), Obj::Max(r)) => both(&l.left, &l.right, &r.left, &r.right, map),
-        (Obj::Union(l), Obj::Union(r)) => both(&l.left, &l.right, &r.left, &r.right, map),
-        (Obj::Intersect(l), Obj::Intersect(r)) => both(&l.left, &l.right, &r.left, &r.right, map),
-        (Obj::SetMinus(l), Obj::SetMinus(r)) => both(&l.left, &l.right, &r.left, &r.right, map),
-        (Obj::Floor(l), Obj::Floor(r)) => objs_alpha_equal(&l.arg, &r.arg, map),
-        (Obj::Ceil(l), Obj::Ceil(r)) => objs_alpha_equal(&l.arg, &r.arg, map),
-        (Obj::Exp(l), Obj::Exp(r)) => objs_alpha_equal(&l.arg, &r.arg, map),
-        (Obj::Ln(l), Obj::Ln(r)) => objs_alpha_equal(&l.arg, &r.arg, map),
-        (Obj::Sign(l), Obj::Sign(r)) => objs_alpha_equal(&l.arg, &r.arg, map),
-        (Obj::Factorial(l), Obj::Factorial(r)) => objs_alpha_equal(&l.arg, &r.arg, map),
-        (Obj::Abs(l), Obj::Abs(r)) => objs_alpha_equal(&l.arg, &r.arg, map),
-        (Obj::Sin(l), Obj::Sin(r)) => objs_alpha_equal(&l.arg, &r.arg, map),
-        (Obj::Arcsin(l), Obj::Arcsin(r)) => objs_alpha_equal(&l.arg, &r.arg, map),
-        (Obj::Arccos(l), Obj::Arccos(r)) => objs_alpha_equal(&l.arg, &r.arg, map),
-        (Obj::Arctan(l), Obj::Arctan(r)) => objs_alpha_equal(&l.arg, &r.arg, map),
-        (Obj::Arccot(l), Obj::Arccot(r)) => objs_alpha_equal(&l.arg, &r.arg, map),
-        (Obj::Cos(l), Obj::Cos(r)) => objs_alpha_equal(&l.arg, &r.arg, map),
-        (Obj::Tan(l), Obj::Tan(r)) => objs_alpha_equal(&l.arg, &r.arg, map),
-        (Obj::Cot(l), Obj::Cot(r)) => objs_alpha_equal(&l.arg, &r.arg, map),
-        (Obj::RealPart(l), Obj::RealPart(r)) => objs_alpha_equal(&l.arg, &r.arg, map),
-        (Obj::ImaginaryPart(l), Obj::ImaginaryPart(r)) => objs_alpha_equal(&l.arg, &r.arg, map),
-        (Obj::ComplexAbs(l), Obj::ComplexAbs(r)) => objs_alpha_equal(&l.arg, &r.arg, map),
-        (Obj::Sqrt(l), Obj::Sqrt(r)) => objs_alpha_equal(&l.arg, &r.arg, map),
-        (Obj::BigUnion(l), Obj::BigUnion(r)) => objs_alpha_equal(&l.left, &r.left, map),
-        (Obj::BigIntersect(l), Obj::BigIntersect(r)) => objs_alpha_equal(&l.left, &r.left, map),
-        (Obj::Pow(l), Obj::Pow(r)) => {
+        (Obj::Literal(Literal::Number(l)), Obj::Literal(Literal::Number(r))) => l.normalized_value == r.normalized_value,
+        (Obj::Literal(Literal::ImaginaryUnit(_)), Obj::Literal(Literal::ImaginaryUnit(_))) => true,
+        (Obj::Literal(Literal::EulerNumber(_)), Obj::Literal(Literal::EulerNumber(_))) => true,
+        (Obj::Literal(Literal::Pi(_)), Obj::Literal(Literal::Pi(_))) => true,
+        (Obj::ArithmeticOperator(ArithmeticOperator::Add(l)), Obj::ArithmeticOperator(ArithmeticOperator::Add(r))) => both(&l.left, &l.right, &r.left, &r.right, map),
+        (Obj::ArithmeticOperator(ArithmeticOperator::Sub(l)), Obj::ArithmeticOperator(ArithmeticOperator::Sub(r))) => both(&l.left, &l.right, &r.left, &r.right, map),
+        (Obj::ArithmeticOperator(ArithmeticOperator::Mul(l)), Obj::ArithmeticOperator(ArithmeticOperator::Mul(r))) => both(&l.left, &l.right, &r.left, &r.right, map),
+        (Obj::ArithmeticOperator(ArithmeticOperator::Div(l)), Obj::ArithmeticOperator(ArithmeticOperator::Div(r))) => both(&l.left, &l.right, &r.left, &r.right, map),
+        (Obj::IntegerOperator(IntegerOperator::Mod(l)), Obj::IntegerOperator(IntegerOperator::Mod(r))) => both(&l.left, &l.right, &r.left, &r.right, map),
+        (Obj::IntegerOperator(IntegerOperator::Quot(l)), Obj::IntegerOperator(IntegerOperator::Quot(r))) => both(&l.left, &l.right, &r.left, &r.right, map),
+        (Obj::IntegerOperator(IntegerOperator::Gcd(l)), Obj::IntegerOperator(IntegerOperator::Gcd(r))) => both(&l.left, &l.right, &r.left, &r.right, map),
+        (Obj::IntegerOperator(IntegerOperator::Lcm(l)), Obj::IntegerOperator(IntegerOperator::Lcm(r))) => both(&l.left, &l.right, &r.left, &r.right, map),
+        (Obj::ArithmeticOperator(ArithmeticOperator::Min(l)), Obj::ArithmeticOperator(ArithmeticOperator::Min(r))) => both(&l.left, &l.right, &r.left, &r.right, map),
+        (Obj::ArithmeticOperator(ArithmeticOperator::Max(l)), Obj::ArithmeticOperator(ArithmeticOperator::Max(r))) => both(&l.left, &l.right, &r.left, &r.right, map),
+        (Obj::SetOperator(SetOperator::Union(l)), Obj::SetOperator(SetOperator::Union(r))) => both(&l.left, &l.right, &r.left, &r.right, map),
+        (Obj::SetOperator(SetOperator::Intersect(l)), Obj::SetOperator(SetOperator::Intersect(r))) => both(&l.left, &l.right, &r.left, &r.right, map),
+        (Obj::SetOperator(SetOperator::SetMinus(l)), Obj::SetOperator(SetOperator::SetMinus(r))) => both(&l.left, &l.right, &r.left, &r.right, map),
+        (Obj::ArithmeticOperator(ArithmeticOperator::Floor(l)), Obj::ArithmeticOperator(ArithmeticOperator::Floor(r))) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (Obj::ArithmeticOperator(ArithmeticOperator::Ceil(l)), Obj::ArithmeticOperator(ArithmeticOperator::Ceil(r))) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (Obj::ExpLogOperator(ExpLogOperator::Exp(l)), Obj::ExpLogOperator(ExpLogOperator::Exp(r))) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (Obj::ExpLogOperator(ExpLogOperator::Ln(l)), Obj::ExpLogOperator(ExpLogOperator::Ln(r))) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (Obj::ArithmeticOperator(ArithmeticOperator::Sign(l)), Obj::ArithmeticOperator(ArithmeticOperator::Sign(r))) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (Obj::IntegerOperator(IntegerOperator::Factorial(l)), Obj::IntegerOperator(IntegerOperator::Factorial(r))) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (Obj::ArithmeticOperator(ArithmeticOperator::Abs(l)), Obj::ArithmeticOperator(ArithmeticOperator::Abs(r))) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (Obj::TrigOperator(TrigOperator::Sin(l)), Obj::TrigOperator(TrigOperator::Sin(r))) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (Obj::TrigOperator(TrigOperator::Arcsin(l)), Obj::TrigOperator(TrigOperator::Arcsin(r))) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (Obj::TrigOperator(TrigOperator::Arccos(l)), Obj::TrigOperator(TrigOperator::Arccos(r))) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (Obj::TrigOperator(TrigOperator::Arctan(l)), Obj::TrigOperator(TrigOperator::Arctan(r))) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (Obj::TrigOperator(TrigOperator::Arccot(l)), Obj::TrigOperator(TrigOperator::Arccot(r))) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (Obj::TrigOperator(TrigOperator::Cos(l)), Obj::TrigOperator(TrigOperator::Cos(r))) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (Obj::TrigOperator(TrigOperator::Tan(l)), Obj::TrigOperator(TrigOperator::Tan(r))) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (Obj::TrigOperator(TrigOperator::Cot(l)), Obj::TrigOperator(TrigOperator::Cot(r))) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (Obj::ComplexOperator(ComplexOperator::RealPart(l)), Obj::ComplexOperator(ComplexOperator::RealPart(r))) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (Obj::ComplexOperator(ComplexOperator::ImaginaryPart(l)), Obj::ComplexOperator(ComplexOperator::ImaginaryPart(r))) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (Obj::ComplexOperator(ComplexOperator::ComplexAbs(l)), Obj::ComplexOperator(ComplexOperator::ComplexAbs(r))) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (Obj::ExpLogOperator(ExpLogOperator::Sqrt(l)), Obj::ExpLogOperator(ExpLogOperator::Sqrt(r))) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (Obj::SetOperator(SetOperator::BigUnion(l)), Obj::SetOperator(SetOperator::BigUnion(r))) => objs_alpha_equal(&l.left, &r.left, map),
+        (Obj::SetOperator(SetOperator::BigIntersect(l)), Obj::SetOperator(SetOperator::BigIntersect(r))) => objs_alpha_equal(&l.left, &r.left, map),
+        (Obj::ArithmeticOperator(ArithmeticOperator::Pow(l)), Obj::ArithmeticOperator(ArithmeticOperator::Pow(r))) => {
             objs_alpha_equal(&l.base, &r.base, map) && objs_alpha_equal(&l.exponent, &r.exponent, map)
         }
-        (Obj::Log(l), Obj::Log(r)) => {
+        (Obj::ExpLogOperator(ExpLogOperator::Log(l)), Obj::ExpLogOperator(ExpLogOperator::Log(r))) => {
             objs_alpha_equal(&l.base, &r.base, map) && objs_alpha_equal(&l.arg, &r.arg, map)
         }
-        (Obj::IndexUnion(l), Obj::IndexUnion(r)) => {
+        (Obj::SetOperator(SetOperator::IndexUnion(l)), Obj::SetOperator(SetOperator::IndexUnion(r))) => {
             objs_alpha_equal(&l.index_set, &r.index_set, map)
                 && objs_alpha_equal(&l.ambient_set, &r.ambient_set, map)
                 && objs_alpha_equal(&l.family_fn, &r.family_fn, map)
         }
-        (Obj::IndexIntersect(l), Obj::IndexIntersect(r)) => {
+        (Obj::SetOperator(SetOperator::IndexIntersect(l)), Obj::SetOperator(SetOperator::IndexIntersect(r))) => {
             objs_alpha_equal(&l.index_set, &r.index_set, map)
                 && objs_alpha_equal(&l.ambient_set, &r.ambient_set, map)
                 && objs_alpha_equal(&l.family_fn, &r.family_fn, map)
         }
-        (Obj::PowerSet(l), Obj::PowerSet(r)) => objs_alpha_equal(&l.set, &r.set, map),
-        (Obj::GeneralCart(l), Obj::GeneralCart(r)) => {
+        (Obj::SetOperator(SetOperator::PowerSet(l)), Obj::SetOperator(SetOperator::PowerSet(r))) => objs_alpha_equal(&l.set, &r.set, map),
+        (Obj::SetOperator(SetOperator::GeneralCart(l)), Obj::SetOperator(SetOperator::GeneralCart(r))) => {
             objs_alpha_equal(&l.index_set, &r.index_set, map)
                 && objs_alpha_equal(&l.family_set, &r.family_set, map)
                 && objs_alpha_equal(&l.family_fn, &r.family_fn, map)
         }
-        (Obj::ListSet(l), Obj::ListSet(r)) => boxes_alpha_equal(&l.list, &r.list, map),
-        (Obj::Cart(l), Obj::Cart(r)) => boxes_alpha_equal(&l.args, &r.args, map),
-        (Obj::Tuple(l), Obj::Tuple(r)) => boxes_alpha_equal(&l.args, &r.args, map),
-        (Obj::CartDim(l), Obj::CartDim(r)) => objs_alpha_equal(&l.set, &r.set, map),
-        (Obj::FiniteSetSize(l), Obj::FiniteSetSize(r)) => objs_alpha_equal(&l.set, &r.set, map),
-        (Obj::FiniteSetMax(l), Obj::FiniteSetMax(r)) => objs_alpha_equal(&l.set, &r.set, map),
-        (Obj::FiniteSetMin(l), Obj::FiniteSetMin(r)) => objs_alpha_equal(&l.set, &r.set, map),
-        (Obj::SeqSet(l), Obj::SeqSet(r)) => objs_alpha_equal(&l.set, &r.set, map),
-        (Obj::Proj(l), Obj::Proj(r)) => {
+        (Obj::SetFormer(SetFormer::ListSet(l)), Obj::SetFormer(SetFormer::ListSet(r))) => boxes_alpha_equal(&l.list, &r.list, map),
+        (Obj::ProductShape(ProductShape::Cart(l)), Obj::ProductShape(ProductShape::Cart(r))) => boxes_alpha_equal(&l.args, &r.args, map),
+        (Obj::ProductShape(ProductShape::Tuple(l)), Obj::ProductShape(ProductShape::Tuple(r))) => boxes_alpha_equal(&l.args, &r.args, map),
+        (Obj::ProductShape(ProductShape::CartDim(l)), Obj::ProductShape(ProductShape::CartDim(r))) => objs_alpha_equal(&l.set, &r.set, map),
+        (Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(l)), Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(r))) => objs_alpha_equal(&l.set, &r.set, map),
+        (Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(l)), Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(r))) => objs_alpha_equal(&l.set, &r.set, map),
+        (Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(l)), Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(r))) => objs_alpha_equal(&l.set, &r.set, map),
+        (Obj::SetFormer(SetFormer::SeqSet(l)), Obj::SetFormer(SetFormer::SeqSet(r))) => objs_alpha_equal(&l.set, &r.set, map),
+        (Obj::ProductShape(ProductShape::Proj(l)), Obj::ProductShape(ProductShape::Proj(r))) => {
             objs_alpha_equal(&l.set, &r.set, map) && objs_alpha_equal(&l.dim, &r.dim, map)
         }
-        (Obj::TupleDim(l), Obj::TupleDim(r)) => objs_alpha_equal(&l.arg, &r.arg, map),
-        (Obj::FnRange(l), Obj::FnRange(r)) => objs_alpha_equal(&l.function, &r.function, map),
-        (Obj::Replacement(l), Obj::Replacement(r)) => {
+        (Obj::ProductShape(ProductShape::TupleDim(l)), Obj::ProductShape(ProductShape::TupleDim(r))) => objs_alpha_equal(&l.arg, &r.arg, map),
+        (Obj::FunctionSpace(FunctionSpace::FnRange(l)), Obj::FunctionSpace(FunctionSpace::FnRange(r))) => objs_alpha_equal(&l.function, &r.function, map),
+        (Obj::SetFormer(SetFormer::Replacement(l)), Obj::SetFormer(SetFormer::Replacement(r))) => {
             l.prop_name == r.prop_name && objs_alpha_equal(&l.source_set, &r.source_set, map)
         }
-        (Obj::Sum(l), Obj::Sum(r)) => {
+        (Obj::IteratedOperator(IteratedOperator::Sum(l)), Obj::IteratedOperator(IteratedOperator::Sum(r))) => {
             objs_alpha_equal(&l.start, &r.start, map)
                 && objs_alpha_equal(&l.end, &r.end, map)
                 && objs_alpha_equal(&l.func, &r.func, map)
         }
-        (Obj::Product(l), Obj::Product(r)) => {
+        (Obj::IteratedOperator(IteratedOperator::Product(l)), Obj::IteratedOperator(IteratedOperator::Product(r))) => {
             objs_alpha_equal(&l.start, &r.start, map)
                 && objs_alpha_equal(&l.end, &r.end, map)
                 && objs_alpha_equal(&l.func, &r.func, map)
         }
-        (Obj::SumOfFiniteSet(l), Obj::SumOfFiniteSet(r)) => {
+        (Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(l)), Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(r))) => {
             objs_alpha_equal(&l.set, &r.set, map) && objs_alpha_equal(&l.func, &r.func, map)
         }
-        (Obj::ProductOfFiniteSet(l), Obj::ProductOfFiniteSet(r)) => {
+        (Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(l)), Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(r))) => {
             objs_alpha_equal(&l.set, &r.set, map) && objs_alpha_equal(&l.func, &r.func, map)
         }
-        (Obj::Reduce(l), Obj::Reduce(r)) => {
+        (Obj::IteratedOperator(IteratedOperator::Reduce(l)), Obj::IteratedOperator(IteratedOperator::Reduce(r))) => {
             objs_alpha_equal(&l.start, &r.start, map)
                 && objs_alpha_equal(&l.end, &r.end, map)
                 && objs_alpha_equal(&l.func, &r.func, map)
                 && objs_alpha_equal(&l.op, &r.op, map)
                 && objs_alpha_equal(&l.seed, &r.seed, map)
         }
-        (Obj::FiniteSetReduce(l), Obj::FiniteSetReduce(r)) => {
+        (Obj::IteratedOperator(IteratedOperator::FiniteSetReduce(l)), Obj::IteratedOperator(IteratedOperator::FiniteSetReduce(r))) => {
             objs_alpha_equal(&l.set, &r.set, map)
                 && objs_alpha_equal(&l.func, &r.func, map)
                 && objs_alpha_equal(&l.op, &r.op, map)
                 && objs_alpha_equal(&l.seed, &r.seed, map)
         }
-        (Obj::Range(l), Obj::Range(r)) => {
+        (Obj::SetFormer(SetFormer::Range(l)), Obj::SetFormer(SetFormer::Range(r))) => {
             objs_alpha_equal(&l.start, &r.start, map) && objs_alpha_equal(&l.end, &r.end, map)
         }
-        (Obj::ClosedRange(l), Obj::ClosedRange(r)) => {
+        (Obj::SetFormer(SetFormer::ClosedRange(l)), Obj::SetFormer(SetFormer::ClosedRange(r))) => {
             objs_alpha_equal(&l.start, &r.start, map) && objs_alpha_equal(&l.end, &r.end, map)
         }
-        (Obj::FiniteSeqSet(l), Obj::FiniteSeqSet(r)) => {
+        (Obj::SetFormer(SetFormer::FiniteSeqSet(l)), Obj::SetFormer(SetFormer::FiniteSeqSet(r))) => {
             objs_alpha_equal(&l.set, &r.set, map) && objs_alpha_equal(&l.n, &r.n, map)
         }
-        (Obj::ObjAtIndex(l), Obj::ObjAtIndex(r)) => {
+        (Obj::ProductShape(ProductShape::ObjAtIndex(l)), Obj::ProductShape(ProductShape::ObjAtIndex(r))) => {
             objs_alpha_equal(&l.obj, &r.obj, map) && objs_alpha_equal(&l.index, &r.index, map)
         }
         (Obj::StandardSet(l), Obj::StandardSet(r)) => l == r,
-        (Obj::StructObj(l), Obj::StructObj(r)) => {
+        (Obj::Structish(Structish::StructObj(l)), Obj::Structish(Structish::StructObj(r))) => {
             l.name == r.name && objs_slice_alpha_equal(&l.params, &r.params, map)
         }
-        (Obj::FieldAccess(l), Obj::FieldAccess(r)) => {
+        (Obj::Structish(Structish::FieldAccess(l)), Obj::Structish(Structish::FieldAccess(r))) => {
             l.fields == r.fields && objs_alpha_equal(l.obj.as_ref(), r.obj.as_ref(), map)
         }
-        (Obj::InstantiatedTemplateObj(l), Obj::InstantiatedTemplateObj(r)) => {
+        (Obj::Structish(Structish::InstantiatedTemplateObj(l)), Obj::Structish(Structish::InstantiatedTemplateObj(r))) => {
             l.template_name == r.template_name && objs_slice_alpha_equal(&l.args, &r.args, map)
         }
-        (Obj::OneSideInfinityIntervalObj(l), Obj::OneSideInfinityIntervalObj(r)) => {
+        (Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(l)), Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(r))) => {
             one_side_intervals_alpha_equal(l, r, map)
         }
-        (Obj::IntervalObj(l), Obj::IntervalObj(r)) => intervals_alpha_equal(l, r, map),
+        (Obj::SetFormer(SetFormer::IntervalObj(l)), Obj::SetFormer(SetFormer::IntervalObj(r))) => intervals_alpha_equal(l, r, map),
         _ => false,
     }
 }

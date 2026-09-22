@@ -1,5 +1,5 @@
 use crate::new_pipeline::ast::fact::IsNonemptySetFact;
-use crate::new_pipeline::ast::obj::{Obj, StandardSet};
+use crate::new_pipeline::ast::obj::{Obj, StandardSet, SetFormer, SetOperator};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
@@ -48,17 +48,17 @@ impl Runtime {
                     },
                 ),
             )),
-            Obj::ListSet(list_set) if !list_set.list.is_empty() => Ok(Some(
+            Obj::SetFormer(SetFormer::ListSet(list_set)) if !list_set.list.is_empty() => Ok(Some(
                 IsNonemptySetFactSearchProofByBuiltinRule::LiteralListSetNonempty(
                     LiteralListSetNonemptyBuiltinRuleProof {},
                 ),
             )),
-            Obj::PowerSet(_) => Ok(Some(
+            Obj::SetOperator(SetOperator::PowerSet(_)) => Ok(Some(
                 IsNonemptySetFactSearchProofByBuiltinRule::PowerSetNonempty(
                     PowerSetNonemptyBuiltinRuleProof {},
                 ),
             )),
-            Obj::OneSideInfinityIntervalObj(_) => Ok(Some(
+            Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(_)) => Ok(Some(
                 IsNonemptySetFactSearchProofByBuiltinRule::OneSideInfinityIntervalNonempty(
                     OneSideInfinityIntervalNonemptyBuiltinRuleProof {},
                 ),

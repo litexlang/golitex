@@ -15,7 +15,7 @@
 use crate::new_pipeline::ast::fact::{
     AtomicFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
 };
-use crate::new_pipeline::ast::obj::{FiniteSeqSet, Obj, SeqSet, StructObj};
+use crate::new_pipeline::ast::obj::{FiniteSeqSet, Obj, SeqSet, StructObj, FunctionSpace, SetFormer, Structish};
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::ast::stmt::{
     HaveObjByExistFactsStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt, TrustHaveStmt,
@@ -240,28 +240,28 @@ impl Runtime {
     // Definition exit: typed `$in` membership → the matching ByDefinition shape row.
     pub(crate) fn record_definition_membership_shape(&mut self, in_fact: &InFact) {
         match &in_fact.set {
-            Obj::StructObj(struct_obj) => {
+            Obj::Structish(Structish::StructObj(struct_obj)) => {
                 self.record_defined_as_struct(
                     &in_fact.element,
                     struct_obj.clone(),
                     in_fact.fact_id,
                 );
             }
-            Obj::FnSet(fn_set) => {
+            Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)) => {
                 self.record_in_function_set_by_definition(
                     &in_fact.element,
                     fn_set.clone(),
                     in_fact.fact_id,
                 );
             }
-            Obj::FiniteSeqSet(finite_seq_set) => {
+            Obj::SetFormer(SetFormer::FiniteSeqSet(finite_seq_set)) => {
                 self.record_defined_as_finite_seq(
                     &in_fact.element,
                     finite_seq_set.clone(),
                     in_fact.fact_id,
                 );
             }
-            Obj::SeqSet(seq_set) => {
+            Obj::SetFormer(SetFormer::SeqSet(seq_set)) => {
                 self.record_defined_as_seq_set(
                     &in_fact.element,
                     seq_set.clone(),
@@ -364,21 +364,21 @@ impl Runtime {
         equal_fact: &crate::new_pipeline::ast::fact::EqualFact,
     ) {
         let (name_side, fn_set, equal_to_function) = match (&equal_fact.left, &equal_fact.right) {
-            (Obj::AnonymousFn(anon), other) => (
+            (Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)), other) => (
                 other,
                 anon.body.clone(),
-                Some(Obj::AnonymousFn(anon.clone())),
+                Some(Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon.clone()))),
             ),
-            (other, Obj::AnonymousFn(anon)) => (
+            (other, Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon))) => (
                 other,
                 anon.body.clone(),
-                Some(Obj::AnonymousFn(anon.clone())),
+                Some(Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon.clone()))),
             ),
-            (Obj::FnSet(fn_set), other) => (other, fn_set.clone(), None),
-            (other, Obj::FnSet(fn_set)) => (other, fn_set.clone(), None),
+            (Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)), other) => (other, fn_set.clone(), None),
+            (other, Obj::FunctionSpace(FunctionSpace::FnSet(fn_set))) => (other, fn_set.clone(), None),
             _ => return,
         };
-        if matches!(name_side, Obj::AnonymousFn(_) | Obj::FnSet(_)) {
+        if matches!(name_side, Obj::FunctionSpace(FunctionSpace::AnonymousFn(_)) | Obj::FunctionSpace(FunctionSpace::FnSet(_))) {
             return;
         }
         self.record_in_function_set_by_definition(name_side, fn_set, equal_fact.fact_id);

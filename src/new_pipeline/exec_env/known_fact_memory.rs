@@ -1,6 +1,6 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, ExistFactFamily, Fact, OrFact};
 use crate::new_pipeline::ast::names::AtomicName;
-use crate::new_pipeline::ast::obj::{AnonymousFn, FnSet, Obj, SetBuilder};
+use crate::new_pipeline::ast::obj::{AnonymousFn, FnSet, Obj, SetBuilder, FunctionSpace, SetFormer};
 use crate::new_pipeline::exec_env::exist_fact_index_key::{exist_fact_index_key, ExistFactIndexKey};
 use crate::new_pipeline::exec_env::known_forall_conclusion_memory::KnownForallConclusionMemory;
 use crate::new_pipeline::runtime::FactId;
@@ -172,11 +172,11 @@ impl KnownEqualToObjWithFreeParamsMemory {
 
 pub(crate) fn free_params_shape_from_obj(obj: &Obj) -> Option<KnownEqualToObjWithFreeParamsShape> {
     match obj {
-        Obj::FnSet(fn_set) => Some(KnownEqualToObjWithFreeParamsShape::FnSet(fn_set.clone())),
-        Obj::AnonymousFn(anon) => {
+        Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)) => Some(KnownEqualToObjWithFreeParamsShape::FnSet(fn_set.clone())),
+        Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => {
             Some(KnownEqualToObjWithFreeParamsShape::AnonymousFn(anon.clone()))
         }
-        Obj::SetBuilder(set_builder) => {
+        Obj::SetFormer(SetFormer::SetBuilder(set_builder)) => {
             Some(KnownEqualToObjWithFreeParamsShape::SetBuilder(set_builder.clone()))
         }
         _ => None,

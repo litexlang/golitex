@@ -4,7 +4,7 @@
 //!   have fn successor(x Z) Z = x + 1
 
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact, InFact};
-use crate::new_pipeline::ast::obj::{FnSet, Obj};
+use crate::new_pipeline::ast::obj::{FnSet, Obj, FunctionSpace};
 use crate::new_pipeline::ast::stmt::HaveFnEqualStmt;
 use crate::new_pipeline::exec_env::StoredIdentifierDefinition;
 use crate::new_pipeline::execute::execute_fact_stmt::{VerifyObjWellDefinedResult, VerifyState};
@@ -54,7 +54,7 @@ impl Runtime {
             store_well_defined_fact: true,
         };
 
-        let anon_obj = Obj::AnonymousFn(stmt.equal_to_anonymous_fn.clone());
+        let anon_obj = Obj::FunctionSpace(FunctionSpace::AnonymousFn(stmt.equal_to_anonymous_fn.clone()));
         let anonymous_fn_well_defined =
             self.verify_obj_well_definedness(&anon_obj, verify_state.clone())?;
         if anonymous_fn_well_defined.is_failed() {
@@ -64,7 +64,7 @@ impl Runtime {
         }
 
         let fn_set: FnSet = stmt.equal_to_anonymous_fn.body.clone();
-        let fn_set_obj = Obj::FnSet(fn_set.clone());
+        let fn_set_obj = Obj::FunctionSpace(FunctionSpace::FnSet(fn_set.clone()));
         let fn_set_well_defined =
             self.verify_obj_well_definedness(&fn_set_obj, verify_state)?;
         if fn_set_well_defined.is_failed() {
@@ -111,7 +111,7 @@ impl Runtime {
         let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
             fact_id: membership_fact_id,
             element: function_obj.clone(),
-            set: Obj::FnSet(fn_set.clone()),
+            set: Obj::FunctionSpace(FunctionSpace::FnSet(fn_set.clone())),
             line_file: Some(stmt.line_file.clone()),
         }));
         let mut stored_fact_ids = self.store_fact_and_infer(&membership)?.stored_fact_ids();
@@ -123,7 +123,7 @@ impl Runtime {
         let defining_equal = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
             fact_id: defining_equal_fact_id,
             left: function_obj,
-            right: Obj::AnonymousFn(stmt.equal_to_anonymous_fn.clone()),
+            right: Obj::FunctionSpace(FunctionSpace::AnonymousFn(stmt.equal_to_anonymous_fn.clone())),
             line_file: Some(stmt.line_file.clone()),
         }));
         stored_fact_ids.extend(

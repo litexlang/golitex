@@ -2,11 +2,7 @@ use std::collections::HashMap;
 
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 
-use crate::new_pipeline::ast::obj::{
-    InstantiatedTemplateObj, IntervalObj, IntervalObjStruct, Obj,
-    FieldAccess, OneSideInfinityIntervalObj,
-    OneSideInfinityIntervalObjStruct, StructObj,
-};
+use crate::new_pipeline::ast::obj::{InstantiatedTemplateObj, IntervalObj, IntervalObjStruct, Obj, FieldAccess, OneSideInfinityIntervalObj, OneSideInfinityIntervalObjStruct, StructObj, SetFormer};
 use crate::new_pipeline::runtime::Runtime;
 
 use super::super::error::InstError;
@@ -69,17 +65,17 @@ impl Runtime {
         };
         Ok(match i {
             OneSideInfinityIntervalObj::LeftOpen(s) => {
-                Obj::OneSideInfinityIntervalObj(OneSideInfinityIntervalObj::LeftOpen(inst_struct(s)?))
+                Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(OneSideInfinityIntervalObj::LeftOpen(inst_struct(s)?)))
             }
-            OneSideInfinityIntervalObj::LeftClosed(s) => Obj::OneSideInfinityIntervalObj(
+            OneSideInfinityIntervalObj::LeftClosed(s) => Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(
                 OneSideInfinityIntervalObj::LeftClosed(inst_struct(s)?),
-            ),
+            )),
             OneSideInfinityIntervalObj::RightOpen(s) => {
-                Obj::OneSideInfinityIntervalObj(OneSideInfinityIntervalObj::RightOpen(inst_struct(s)?))
+                Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(OneSideInfinityIntervalObj::RightOpen(inst_struct(s)?)))
             }
-            OneSideInfinityIntervalObj::RightClosed(s) => Obj::OneSideInfinityIntervalObj(
+            OneSideInfinityIntervalObj::RightClosed(s) => Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(
                 OneSideInfinityIntervalObj::RightClosed(inst_struct(s)?),
-            ),
+            )),
         })
     }
 
@@ -97,16 +93,16 @@ impl Runtime {
         };
         Ok(match i {
             IntervalObj::LeftOpenRightOpen(s) => {
-                Obj::IntervalObj(IntervalObj::LeftOpenRightOpen(inst_struct(s)?))
+                Obj::SetFormer(SetFormer::IntervalObj(IntervalObj::LeftOpenRightOpen(inst_struct(s)?)))
             }
             IntervalObj::LeftOpenRightClosed(s) => {
-                Obj::IntervalObj(IntervalObj::LeftOpenRightClosed(inst_struct(s)?))
+                Obj::SetFormer(SetFormer::IntervalObj(IntervalObj::LeftOpenRightClosed(inst_struct(s)?)))
             }
             IntervalObj::LeftClosedRightOpen(s) => {
-                Obj::IntervalObj(IntervalObj::LeftClosedRightOpen(inst_struct(s)?))
+                Obj::SetFormer(SetFormer::IntervalObj(IntervalObj::LeftClosedRightOpen(inst_struct(s)?)))
             }
             IntervalObj::LeftClosedRightClosed(s) => {
-                Obj::IntervalObj(IntervalObj::LeftClosedRightClosed(inst_struct(s)?))
+                Obj::SetFormer(SetFormer::IntervalObj(IntervalObj::LeftClosedRightClosed(inst_struct(s)?)))
             }
         })
     }

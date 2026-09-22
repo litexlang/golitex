@@ -4,7 +4,7 @@ use crate::new_pipeline::ast::fact::{
     and_chain_as_fact, AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, ForallFact, InFact,
     IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
 };
-use crate::new_pipeline::ast::obj::{FnObj, FnObjHead, IdentifierObj, Obj, StructObj};
+use crate::new_pipeline::ast::obj::{FnObj, FnObjHead, IdentifierObj, Obj, StructObj, FunctionSpace, Structish};
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::ast::stmt::{
     HaveFnByForallExistUniqueStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt,
@@ -234,8 +234,8 @@ fn build_have_fn_equal(
     surface: &IdentifierObj,
     stmt: &Rc<HaveFnEqualStmt>,
 ) -> BuiltReleaseFacts {
-    let fn_set = Obj::FnSet(stmt.equal_to_anonymous_fn.body.clone());
-    let anon = Obj::AnonymousFn(stmt.equal_to_anonymous_fn.clone());
+    let fn_set = Obj::FunctionSpace(FunctionSpace::FnSet(stmt.equal_to_anonymous_fn.body.clone()));
+    let anon = Obj::FunctionSpace(FunctionSpace::AnonymousFn(stmt.equal_to_anonymous_fn.clone()));
     let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
         fact_id: runtime.ids.allocate_fact_id(),
         element: Obj::Identifier(surface.clone()),
@@ -263,11 +263,11 @@ fn build_have_fn_case_by_case(
     surface: &IdentifierObj,
     stmt: &HaveFnEqualCaseByCaseStmt,
 ) -> BuiltReleaseFacts {
-    let fn_set = Obj::FnSet(crate::new_pipeline::ast::obj::FnSet {
+    let fn_set = Obj::FunctionSpace(FunctionSpace::FnSet(crate::new_pipeline::ast::obj::FnSet {
         set_bound_parameters: stmt.fn_set_clause.set_bound_parameters.clone(),
         dom_facts: stmt.fn_set_clause.dom_facts.clone(),
         ret_set: Box::new(stmt.fn_set_clause.ret_set.clone()),
-    });
+    }));
     let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
         fact_id: runtime.ids.allocate_fact_id(),
         element: Obj::Identifier(surface.clone()),
@@ -365,7 +365,7 @@ fn type_fact_for_surface(
         ParamType::Obj(param_set) => {
             let fact_id = runtime.ids.allocate_fact_id();
             let defined_as_struct = match param_set {
-                Obj::StructObj(struct_obj) => Some((element.clone(), struct_obj.clone())),
+                Obj::Structish(Structish::StructObj(struct_obj)) => Some((element.clone(), struct_obj.clone())),
                 _ => None,
             };
             (

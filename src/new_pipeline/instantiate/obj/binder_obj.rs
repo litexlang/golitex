@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 
-use crate::new_pipeline::ast::obj::{AnonymousFn, FnObj, FnObjHead, FnSet, Obj, SetBuilder};
+use crate::new_pipeline::ast::obj::{AnonymousFn, FnObj, FnObjHead, FnSet, Obj, SetBuilder, FunctionSpace, SetFormer, Structish};
 use crate::new_pipeline::runtime::Runtime;
 
 use super::super::error::InstError;
@@ -20,11 +20,11 @@ impl Runtime {
                 let replaced = self.inst_identifier_obj(&as_obj, param_to_arg_map)?;
                 match replaced {
                     Obj::Identifier(new_id) => Ok(FnObjHead::Identifier(new_id)),
-                    Obj::AnonymousFn(af) => Ok(FnObjHead::AnonymousFnLiteral(Box::new(af))),
-                    Obj::FieldAccess(v) => {
+                    Obj::FunctionSpace(FunctionSpace::AnonymousFn(af)) => Ok(FnObjHead::AnonymousFnLiteral(Box::new(af))),
+                    Obj::Structish(Structish::FieldAccess(v)) => {
                         Ok(FnObjHead::FieldAccess(v))
                     }
-                    Obj::InstantiatedTemplateObj(v) => Ok(FnObjHead::InstantiatedTemplateObj(v)),
+                    Obj::Structish(Structish::InstantiatedTemplateObj(v)) => Ok(FnObjHead::InstantiatedTemplateObj(v)),
                     _ => Err(InstError::CannotUseAsFnHead),
                 }
             }
@@ -71,9 +71,9 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-        Ok(Obj::SetBuilder(
+        Ok(Obj::SetFormer(SetFormer::SetBuilder(
             self.inst_set_builder(sb, param_to_arg_map)?,
-        ))
+        )))
     }
 
     pub(crate) fn inst_fn_set_obj(
@@ -82,9 +82,9 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-        Ok(Obj::FnSet(
+        Ok(Obj::FunctionSpace(FunctionSpace::FnSet(
             self.inst_fn_set(fs, param_to_arg_map)?,
-        ))
+        )))
     }
 
     pub(crate) fn inst_anonymous_fn_obj(
@@ -93,8 +93,8 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<Obj, InstError> {
-        Ok(Obj::AnonymousFn(
+        Ok(Obj::FunctionSpace(FunctionSpace::AnonymousFn(
             self.inst_anonymous_fn(af, param_to_arg_map)?,
-        ))
+        )))
     }
 }

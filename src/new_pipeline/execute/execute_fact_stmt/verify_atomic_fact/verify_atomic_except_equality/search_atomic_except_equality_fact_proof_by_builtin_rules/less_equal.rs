@@ -1,5 +1,5 @@
 use crate::new_pipeline::ast::fact::LessEqualFact;
-use crate::new_pipeline::ast::obj::{Number, Obj};
+use crate::new_pipeline::ast::obj::{Number, Obj, Literal};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::trig_bounds::{
     match_arccos_principal_lower, match_arccos_principal_upper, match_arcsin_principal_lower,
     match_arcsin_principal_upper, match_unit_circle_lower, match_unit_circle_upper,
@@ -167,8 +167,8 @@ impl Runtime {
 fn is_zero_obj(obj: &Obj) -> bool {
     matches!(
         obj,
-        Obj::Number(Number {
+        Obj::Literal(Literal::Number(Number {
             normalized_value,
-        }) if normalized_value == "0"
+        })) if normalized_value == "0"
     )
 }

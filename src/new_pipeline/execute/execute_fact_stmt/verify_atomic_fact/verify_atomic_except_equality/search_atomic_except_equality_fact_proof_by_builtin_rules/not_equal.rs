@@ -1,5 +1,5 @@
 use crate::new_pipeline::ast::fact::{Fact, NotEqualFact};
-use crate::new_pipeline::ast::obj::{Cos, Number, Obj, Sin};
+use crate::new_pipeline::ast::obj::{Cos, Number, Obj, Sin, Literal, SetFormer, TrigOperator};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_inverse_trig::{
     half_pi, negative_half_pi, pi_obj, zero_obj,
 };
@@ -92,7 +92,7 @@ impl Runtime {
         if let Some(proof) = self.sin_nonzero_on_open_pi_proof(fact) {
             return Ok(Some(proof));
         }
-        if let (Obj::ListSet(left), Obj::ListSet(right)) = (&fact.left, &fact.right) {
+        if let (Obj::SetFormer(SetFormer::ListSet(left)), Obj::SetFormer(SetFormer::ListSet(right))) = (&fact.left, &fact.right) {
             if left.list.len() != right.list.len() {
                 return Ok(Some(
                     NotEqualFactSearchProofByBuiltinRule::ListSetDifferentLength(
@@ -143,16 +143,16 @@ impl Runtime {
 
 fn cos_arg_against_zero(fact: &NotEqualFact) -> Option<&Obj> {
     match (&fact.left, &fact.right) {
-        (Obj::Cos(Cos { arg }), right) if is_zero_obj(right) => Some(arg.as_ref()),
-        (left, Obj::Cos(Cos { arg })) if is_zero_obj(left) => Some(arg.as_ref()),
+        (Obj::TrigOperator(TrigOperator::Cos(Cos { arg })), right) if is_zero_obj(right) => Some(arg.as_ref()),
+        (left, Obj::TrigOperator(TrigOperator::Cos(Cos { arg }))) if is_zero_obj(left) => Some(arg.as_ref()),
         _ => None,
     }
 }
 
 fn sin_arg_against_zero(fact: &NotEqualFact) -> Option<&Obj> {
     match (&fact.left, &fact.right) {
-        (Obj::Sin(Sin { arg }), right) if is_zero_obj(right) => Some(arg.as_ref()),
-        (left, Obj::Sin(Sin { arg })) if is_zero_obj(left) => Some(arg.as_ref()),
+        (Obj::TrigOperator(TrigOperator::Sin(Sin { arg })), right) if is_zero_obj(right) => Some(arg.as_ref()),
+        (left, Obj::TrigOperator(TrigOperator::Sin(Sin { arg }))) if is_zero_obj(left) => Some(arg.as_ref()),
         _ => None,
     }
 }
@@ -160,8 +160,8 @@ fn sin_arg_against_zero(fact: &NotEqualFact) -> Option<&Obj> {
 fn is_zero_obj(obj: &Obj) -> bool {
     matches!(
         obj,
-        Obj::Number(Number {
+        Obj::Literal(Literal::Number(Number {
             normalized_value,
-        }) if normalized_value == "0"
+        })) if normalized_value == "0"
     ) || objs_equal_by_rational_expression_evaluation(obj, &zero_obj())
 }

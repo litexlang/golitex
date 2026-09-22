@@ -6,7 +6,7 @@ use super::result::{
 use crate::new_pipeline::ast::fact::{
     AtomicFact, EqualFact, Fact, IsNonemptySetFact, PlainExistFact, QuantifierFreeFact,
 };
-use crate::new_pipeline::ast::obj::{IdentifierObj, Intersect, ListSet, Obj};
+use crate::new_pipeline::ast::obj::{IdentifierObj, Intersect, ListSet, Obj, SetFormer, SetOperator};
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
 use crate::new_pipeline::ast::stmt::ByRegularityAxiomStmt;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
@@ -73,13 +73,13 @@ fn regularity_axiom_exist_fact(
 ) -> Fact {
     let x = runtime.fresh_internal_param();
     let x_obj = Obj::Identifier(IdentifierObj::from_bound_name(&x));
-    let empty_set = Obj::ListSet(ListSet { list: vec![] });
+    let empty_set = Obj::SetFormer(SetFormer::ListSet(ListSet { list: vec![] }));
     let disjoint: AtomicFact = EqualFact {
         fact_id: runtime.ids.allocate_fact_id(),
-        left: Obj::Intersect(Intersect {
+        left: Obj::SetOperator(SetOperator::Intersect(Intersect {
             left: Box::new(x_obj),
             right: Box::new(set.clone()),
-        }),
+        })),
         right: empty_set,
         line_file: Some(line_file.clone()),
     }

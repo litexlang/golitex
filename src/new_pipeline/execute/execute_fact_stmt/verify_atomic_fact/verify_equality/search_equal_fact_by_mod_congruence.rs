@@ -1,6 +1,6 @@
 use super::by_builtin_strategy_result::ModCongruenceStrategySingleStep;
 use crate::new_pipeline::ast::fact::{EqualFact, Fact};
-use crate::new_pipeline::ast::obj::{Mod, Obj};
+use crate::new_pipeline::ast::obj::{Mod, Obj, ArithmeticOperator, IntegerOperator};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
@@ -12,19 +12,19 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<ModCongruenceStrategySingleStep>> {
-        let (Obj::Mod(left_mod), Obj::Mod(right_mod)) = (&fact.left, &fact.right) else {
+        let (Obj::IntegerOperator(IntegerOperator::Mod(left_mod)), Obj::IntegerOperator(IntegerOperator::Mod(right_mod))) = (&fact.left, &fact.right) else {
             return Ok(None);
         };
         let pairs = match (left_mod.left.as_ref(), right_mod.left.as_ref()) {
-            (Obj::Add(left), Obj::Add(right)) => [
+            (Obj::ArithmeticOperator(ArithmeticOperator::Add(left)), Obj::ArithmeticOperator(ArithmeticOperator::Add(right))) => [
                 (left.left.as_ref().clone(), right.left.as_ref().clone()),
                 (left.right.as_ref().clone(), right.right.as_ref().clone()),
             ],
-            (Obj::Sub(left), Obj::Sub(right)) => [
+            (Obj::ArithmeticOperator(ArithmeticOperator::Sub(left)), Obj::ArithmeticOperator(ArithmeticOperator::Sub(right))) => [
                 (left.left.as_ref().clone(), right.left.as_ref().clone()),
                 (left.right.as_ref().clone(), right.right.as_ref().clone()),
             ],
-            (Obj::Mul(left), Obj::Mul(right)) => [
+            (Obj::ArithmeticOperator(ArithmeticOperator::Mul(left)), Obj::ArithmeticOperator(ArithmeticOperator::Mul(right))) => [
                 (left.left.as_ref().clone(), right.left.as_ref().clone()),
                 (left.right.as_ref().clone(), right.right.as_ref().clone()),
             ],
@@ -75,13 +75,13 @@ impl Runtime {
 }
 
 fn residue_mod(obj: &Obj, modulus: &Obj) -> Obj {
-    if let Obj::Mod(inner) = obj {
+    if let Obj::IntegerOperator(IntegerOperator::Mod(inner)) = obj {
         if inner.right.as_ref() == modulus {
             return obj.clone();
         }
     }
-    Obj::Mod(Mod {
+    Obj::IntegerOperator(IntegerOperator::Mod(Mod {
         left: Box::new(obj.clone()),
         right: Box::new(modulus.clone()),
-    })
+    }))
 }

@@ -22,7 +22,7 @@
 //!   p.point.x = 0
 
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact, InFact};
-use crate::new_pipeline::ast::obj::{Obj, StructObj};
+use crate::new_pipeline::ast::obj::{Obj, StructObj, Structish};
 use crate::new_pipeline::ast::stmt::ReleaseStructDefStmt;
 use crate::new_pipeline::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
 use crate::new_pipeline::execute::release_one_struct_layer::{
@@ -74,7 +74,7 @@ impl Runtime {
         let membership_fact = Fact::AtomicFact(AtomicFact::InFact(InFact {
             fact_id: self.ids.allocate_fact_id(),
             element: stmt.obj.clone(),
-            set: Obj::StructObj(struct_obj.clone()),
+            set: Obj::Structish(Structish::StructObj(struct_obj.clone())),
             line_file: Some(stmt.line_file.clone()),
         }));
         let verify_state = VerifyState {

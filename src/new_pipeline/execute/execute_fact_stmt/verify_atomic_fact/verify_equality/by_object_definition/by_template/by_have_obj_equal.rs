@@ -11,7 +11,7 @@
 //! reduces to proving `R = R` after substituting `S := R`.
 
 use crate::new_pipeline::ast::fact::EqualFact;
-use crate::new_pipeline::ast::obj::{InstantiatedTemplateObj, Obj};
+use crate::new_pipeline::ast::obj::{InstantiatedTemplateObj, Obj, Structish};
 use crate::new_pipeline::ast::stmt::TemplateDefEnum;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
@@ -36,7 +36,7 @@ impl Runtime {
         parent_fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<ByUnfoldInstantiatedTemplateHaveObjEqualObjectDefinitionProof>> {
-        let Obj::InstantiatedTemplateObj(inst) = template_side else {
+        let Obj::Structish(Structish::InstantiatedTemplateObj(inst)) = template_side else {
             return Ok(None);
         };
         let Some(expanded_rhs) = self.expanded_have_obj_equal_rhs_of_instantiated_template(inst)?

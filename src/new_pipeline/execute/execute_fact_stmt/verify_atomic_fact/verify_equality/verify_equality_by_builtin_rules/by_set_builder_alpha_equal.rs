@@ -1,6 +1,6 @@
 use super::alpha_equal_helper::set_builders_alpha_equal;
 use crate::new_pipeline::ast::fact::EqualFact;
-use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::ast::obj::{Obj, SetFormer};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
@@ -21,7 +21,7 @@ impl Runtime {
         fact: &EqualFact,
         _verify_state: VerifyState,
     ) -> RuntimeResult<Option<BySetBuilderAlphaEqualBuiltinRuleProof>> {
-        let (Obj::SetBuilder(left), Obj::SetBuilder(right)) = (&fact.left, &fact.right) else {
+        let (Obj::SetFormer(SetFormer::SetBuilder(left)), Obj::SetFormer(SetFormer::SetBuilder(right))) = (&fact.left, &fact.right) else {
             return Ok(None);
         };
         if set_builders_alpha_equal(left, right) {

@@ -11,7 +11,7 @@ use crate::new_pipeline::ast::fact::{
 };
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::names::AtomicName;
-use crate::new_pipeline::ast::obj::{IdentifierObj, Obj, PowerSet};
+use crate::new_pipeline::ast::obj::{IdentifierObj, Obj, PowerSet, SetOperator};
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
 use crate::new_pipeline::ast::stmt::{ByZornLemmaStmt, DefPropStmt};
 use crate::new_pipeline::parse::prop_registration_shape::plain_prop_name;
@@ -120,9 +120,9 @@ fn validate_zorn_props(runtime: &Runtime, stmt: &ByZornLemmaStmt) -> Result<(), 
         ));
     }
     let expected_ub = [
-        Obj::PowerSet(PowerSet {
+        Obj::SetOperator(SetOperator::PowerSet(PowerSet {
             set: Box::new(stmt.set.clone()),
-        }),
+        })),
         stmt.set.clone(),
     ];
     if !prop_header_types_match(ub_def, &expected_ub) {
@@ -299,9 +299,9 @@ fn zorn_chain_upper_bound(
 ) -> Fact {
     let c = runtime.fresh_internal_param();
     let c_obj = Obj::Identifier(IdentifierObj::from_bound_name(&c));
-    let power = Obj::PowerSet(PowerSet {
+    let power = Obj::SetOperator(SetOperator::PowerSet(PowerSet {
         set: Box::new(set.clone()),
-    });
+    }));
     let chain_total = zorn_chain_total(runtime, &c_obj, prop_name, line_file);
     let upper = zorn_upper_exist(runtime, set, &c_obj, upper_bound_prop_name, line_file);
     let Fact::ExistFact(plain) = upper else {

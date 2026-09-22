@@ -11,5 +11,9 @@ pub mod stmt;
 pub use fact::Fact;
 pub use line_file::LineFile;
 pub use names::{AtomicName, BoundName, PlainName};
-pub use obj::Obj;
+pub use obj::{
+    ArithmeticOperator, ComplexOperator, ExpLogOperator, FiniteSetStat, FunctionSpace,
+    IntegerOperator, IteratedOperator, Literal, Obj, ProductShape, SetFormer, SetOperator,
+    Structish, TrigOperator,
+};
 pub use stmt::Stmt;

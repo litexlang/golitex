@@ -2,7 +2,7 @@ use crate::new_pipeline::ast::fact::{
     AndChainAtomicFact, EqualFact, Fact, ForallFact, InFact, OrFact,
 };
 use crate::new_pipeline::ast::line_file::LineFile;
-use crate::new_pipeline::ast::obj::{ClosedRange, IdentifierObj, ListSet, Number, Obj, Range};
+use crate::new_pipeline::ast::obj::{ClosedRange, IdentifierObj, ListSet, Number, Obj, Range, Literal, SetFormer};
 use crate::new_pipeline::ast::param::ParamType;
 use crate::new_pipeline::ast::stmt::ClosedRangeOrRange;
 use crate::new_pipeline::rational_expression::exact_rational::evaluate_obj_to_exact_rational_for_eval;
@@ -16,9 +16,9 @@ pub(super) fn obj_to_i128(obj: &Obj) -> Option<i128> {
 }
 
 pub(super) fn number_obj(n: i128) -> Obj {
-    Obj::Number(Number {
+    Obj::Literal(Literal::Number(Number {
         normalized_value: n.to_string(),
-    })
+    }))
 }
 
 pub(super) fn expand_closed_range_values(range: &ClosedRange) -> Result<Vec<Obj>, String> {
@@ -52,11 +52,11 @@ pub(super) fn expand_closed_range_or_range(range: &ClosedRangeOrRange) -> Result
 
 pub(super) fn resolve_param_domain_values(param_type: &ParamType) -> Result<Vec<Obj>, String> {
     match param_type {
-        ParamType::Obj(Obj::ListSet(ListSet { list })) => {
+        ParamType::Obj(Obj::SetFormer(SetFormer::ListSet(ListSet { list }))) => {
             Ok(list.iter().map(|x| (**x).clone()).collect())
         }
-        ParamType::Obj(Obj::ClosedRange(r)) => expand_closed_range_values(r),
-        ParamType::Obj(Obj::Range(r)) => expand_range_values(r),
+        ParamType::Obj(Obj::SetFormer(SetFormer::ClosedRange(r))) => expand_closed_range_values(r),
+        ParamType::Obj(Obj::SetFormer(SetFormer::Range(r))) => expand_range_values(r),
         ParamType::Obj(_) => Err(
             "parameter domain must be a displayed finite list set, range, or closed_range"
                 .to_string(),
@@ -131,8 +131,8 @@ pub(super) fn membership_or_equalities_fact(
 
 pub(super) fn closed_range_or_range_as_obj(range: &ClosedRangeOrRange) -> Obj {
     match range {
-        ClosedRangeOrRange::ClosedRange(r) => Obj::ClosedRange(r.clone()),
-        ClosedRangeOrRange::Range(r) => Obj::Range(r.clone()),
+        ClosedRangeOrRange::ClosedRange(r) => Obj::SetFormer(SetFormer::ClosedRange(r.clone())),
+        ClosedRangeOrRange::Range(r) => Obj::SetFormer(SetFormer::Range(r.clone())),
     }
 }
 

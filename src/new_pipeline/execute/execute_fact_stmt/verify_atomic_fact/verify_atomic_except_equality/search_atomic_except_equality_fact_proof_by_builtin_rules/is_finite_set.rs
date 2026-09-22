@@ -1,5 +1,5 @@
 use crate::new_pipeline::ast::fact::IsFiniteSetFact;
-use crate::new_pipeline::ast::obj::Obj;
+use crate::new_pipeline::ast::obj::{Obj, SetFormer};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
@@ -26,13 +26,13 @@ impl Runtime {
         _verify_state: VerifyState,
     ) -> RuntimeResult<Option<IsFiniteSetFactSearchProofByBuiltinRule>> {
         match &fact.set {
-            Obj::ListSet(_) => Ok(Some(IsFiniteSetFactSearchProofByBuiltinRule::ListSet(
+            Obj::SetFormer(SetFormer::ListSet(_)) => Ok(Some(IsFiniteSetFactSearchProofByBuiltinRule::ListSet(
                 ListSetFiniteBuiltinRuleProof {},
             ))),
-            Obj::ClosedRange(_) => Ok(Some(IsFiniteSetFactSearchProofByBuiltinRule::ClosedRange(
+            Obj::SetFormer(SetFormer::ClosedRange(_)) => Ok(Some(IsFiniteSetFactSearchProofByBuiltinRule::ClosedRange(
                 ClosedRangeFiniteBuiltinRuleProof {},
             ))),
-            Obj::Range(_) => Ok(Some(IsFiniteSetFactSearchProofByBuiltinRule::Range(
+            Obj::SetFormer(SetFormer::Range(_)) => Ok(Some(IsFiniteSetFactSearchProofByBuiltinRule::Range(
                 RangeFiniteBuiltinRuleProof {},
             ))),
             _ => Ok(None),

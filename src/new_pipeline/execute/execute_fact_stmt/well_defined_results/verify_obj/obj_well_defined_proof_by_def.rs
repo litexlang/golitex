@@ -1,4 +1,5 @@
-// ObjWellDefinedProofByDef mirrors Obj: one dedicated success proof per variant.
+// ObjWellDefinedProofByDef mirrors Obj's 16-family nesting.
+// Family sub-enums wrap the existing per-leaf proof structs.
 // Transition: non-leaf proofs share CommonStages fields; specialize later per family.
 
 use super::entry::ObjWellDefinedProof;
@@ -13,41 +14,76 @@ use crate::new_pipeline::runtime::FactId;
 pub enum ObjWellDefinedProofByDef {
     Identifier(IdentifierObjWellDefinedProof),
     FnObj(FnObjObjWellDefinedProof),
+    Literal(LiteralObjWellDefinedProofByDef),
+    StandardSet(StandardSetObjWellDefinedProof),
+    ArithmeticOperator(ArithmeticOperatorObjWellDefinedProofByDef),
+    IntegerOperator(IntegerOperatorObjWellDefinedProofByDef),
+    TrigOperator(TrigOperatorObjWellDefinedProofByDef),
+    ExpLogOperator(ExpLogOperatorObjWellDefinedProofByDef),
+    ComplexOperator(ComplexOperatorObjWellDefinedProofByDef),
+    SetOperator(SetOperatorObjWellDefinedProofByDef),
+    SetFormer(SetFormerObjWellDefinedProofByDef),
+    ProductShape(ProductShapeObjWellDefinedProofByDef),
+    FunctionSpace(FunctionSpaceObjWellDefinedProofByDef),
+    IteratedOperator(IteratedOperatorObjWellDefinedProofByDef),
+    FiniteSetStat(FiniteSetStatObjWellDefinedProofByDef),
+    Structish(StructishObjWellDefinedProofByDef),
+}
+
+pub enum LiteralObjWellDefinedProofByDef {
     Number(NumberObjWellDefinedProof),
     ImaginaryUnit(ImaginaryUnitObjWellDefinedProof),
     EulerNumber(EulerNumberObjWellDefinedProof),
     Pi(PiObjWellDefinedProof),
+}
+
+pub enum ArithmeticOperatorObjWellDefinedProofByDef {
     Add(AddObjWellDefinedProof),
     Sub(SubObjWellDefinedProof),
     Mul(MulObjWellDefinedProof),
     Div(DivObjWellDefinedProof),
+    Pow(PowObjWellDefinedProof),
+    Abs(AbsObjWellDefinedProof),
+    Min(MinObjWellDefinedProof),
+    Max(MaxObjWellDefinedProof),
+    Floor(FloorObjWellDefinedProof),
+    Ceil(CeilObjWellDefinedProof),
+    Sign(SignObjWellDefinedProof),
+}
+
+pub enum IntegerOperatorObjWellDefinedProofByDef {
     Mod(ModObjWellDefinedProof),
     Quot(QuotObjWellDefinedProof),
     Gcd(GcdObjWellDefinedProof),
     Lcm(LcmObjWellDefinedProof),
-    Floor(FloorObjWellDefinedProof),
-    Ceil(CeilObjWellDefinedProof),
-    Min(MinObjWellDefinedProof),
-    Max(MaxObjWellDefinedProof),
-    Exp(ExpObjWellDefinedProof),
-    Ln(LnObjWellDefinedProof),
-    Sign(SignObjWellDefinedProof),
     Factorial(FactorialObjWellDefinedProof),
-    Pow(PowObjWellDefinedProof),
-    Abs(AbsObjWellDefinedProof),
+}
+
+pub enum TrigOperatorObjWellDefinedProofByDef {
     Sin(SinObjWellDefinedProof),
+    Cos(CosObjWellDefinedProof),
+    Tan(TanObjWellDefinedProof),
+    Cot(CotObjWellDefinedProof),
     Arcsin(ArcsinObjWellDefinedProof),
     Arccos(ArccosObjWellDefinedProof),
     Arctan(ArctanObjWellDefinedProof),
     Arccot(ArccotObjWellDefinedProof),
-    Cos(CosObjWellDefinedProof),
-    Tan(TanObjWellDefinedProof),
-    Cot(CotObjWellDefinedProof),
+}
+
+pub enum ExpLogOperatorObjWellDefinedProofByDef {
+    Exp(ExpObjWellDefinedProof),
+    Ln(LnObjWellDefinedProof),
+    Log(LogObjWellDefinedProof),
+    Sqrt(SqrtObjWellDefinedProof),
+}
+
+pub enum ComplexOperatorObjWellDefinedProofByDef {
     RealPart(RealPartObjWellDefinedProof),
     ImaginaryPart(ImaginaryPartObjWellDefinedProof),
     ComplexAbs(ComplexAbsObjWellDefinedProof),
-    Sqrt(SqrtObjWellDefinedProof),
-    Log(LogObjWellDefinedProof),
+}
+
+pub enum SetOperatorObjWellDefinedProofByDef {
     Union(UnionObjWellDefinedProof),
     Intersect(IntersectObjWellDefinedProof),
     SetMinus(SetMinusObjWellDefinedProof),
@@ -57,39 +93,55 @@ pub enum ObjWellDefinedProofByDef {
     IndexIntersect(IndexIntersectObjWellDefinedProof),
     PowerSet(PowerSetObjWellDefinedProof),
     GeneralCart(GeneralCartObjWellDefinedProof),
+}
+
+pub enum SetFormerObjWellDefinedProofByDef {
     ListSet(ListSetObjWellDefinedProof),
     SetBuilder(SetBuilderObjWellDefinedProof),
+    Replacement(ReplacementObjWellDefinedProof),
+    Range(RangeObjWellDefinedProof),
+    ClosedRange(ClosedRangeObjWellDefinedProof),
+    FiniteSeqSet(FiniteSeqSetObjWellDefinedProof),
+    SeqSet(SeqSetObjWellDefinedProof),
+    OneSideInfinityIntervalObj(OneSideInfinityIntervalObjObjWellDefinedProof),
+    IntervalObj(IntervalObjObjWellDefinedProof),
+}
+
+pub enum ProductShapeObjWellDefinedProofByDef {
+    Cart(CartObjWellDefinedProof),
+    Tuple(TupleObjWellDefinedProof),
+    CartDim(CartDimObjWellDefinedProof),
+    TupleDim(TupleDimObjWellDefinedProof),
+    Proj(ProjObjWellDefinedProof),
+    ObjAtIndex(ObjAtIndexObjWellDefinedProof),
+}
+
+pub enum FunctionSpaceObjWellDefinedProofByDef {
     FnSet(FnSetObjWellDefinedProof),
     AnonymousFn(AnonymousFnObjWellDefinedProof),
-    Cart(CartObjWellDefinedProof),
-    CartDim(CartDimObjWellDefinedProof),
-    Proj(ProjObjWellDefinedProof),
-    TupleDim(TupleDimObjWellDefinedProof),
-    Tuple(TupleObjWellDefinedProof),
-    FiniteSetSize(FiniteSetSizeObjWellDefinedProof),
-    FiniteSetMax(FiniteSetMaxObjWellDefinedProof),
-    FiniteSetMin(FiniteSetMinObjWellDefinedProof),
     FnRange(FnRangeObjWellDefinedProof),
-    Replacement(ReplacementObjWellDefinedProof),
+}
+
+pub enum IteratedOperatorObjWellDefinedProofByDef {
     Sum(SumObjWellDefinedProof),
     SumOfFiniteSet(SumOfFiniteSetObjWellDefinedProof),
     Product(ProductObjWellDefinedProof),
     ProductOfFiniteSet(ProductOfFiniteSetObjWellDefinedProof),
     Reduce(ReduceObjWellDefinedProof),
     FiniteSetReduce(FiniteSetReduceObjWellDefinedProof),
-    Range(RangeObjWellDefinedProof),
-    ClosedRange(ClosedRangeObjWellDefinedProof),
-    FiniteSeqSet(FiniteSeqSetObjWellDefinedProof),
-    SeqSet(SeqSetObjWellDefinedProof),
-    ObjAtIndex(ObjAtIndexObjWellDefinedProof),
-    StandardSet(StandardSetObjWellDefinedProof),
+}
+
+pub enum FiniteSetStatObjWellDefinedProofByDef {
+    FiniteSetSize(FiniteSetSizeObjWellDefinedProof),
+    FiniteSetMax(FiniteSetMaxObjWellDefinedProof),
+    FiniteSetMin(FiniteSetMinObjWellDefinedProof),
+}
+
+pub enum StructishObjWellDefinedProofByDef {
     StructObj(StructObjObjWellDefinedProof),
     FieldAccess(FieldAccessObjWellDefinedProof),
     InstantiatedTemplateObj(InstantiatedTemplateObjObjWellDefinedProof),
-    OneSideInfinityIntervalObj(OneSideInfinityIntervalObjObjWellDefinedProof),
-    IntervalObj(IntervalObjObjWellDefinedProof),
 }
-
 pub struct IdentifierObjWellDefinedProof {}
 
 impl IdentifierObjWellDefinedProof {

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, QuantifierFreeFact};
-use crate::new_pipeline::ast::obj::{IdentifierObj, Number, Obj, SetBuilder};
+use crate::new_pipeline::ast::obj::{IdentifierObj, Number, Obj, SetBuilder, Literal};
 use crate::new_pipeline::ast::names::BoundName;
 use crate::new_pipeline::launch_command::LaunchCommand;
 use crate::new_pipeline::runtime::Runtime;
@@ -21,12 +21,12 @@ fn inst_equality_replaces_plain_identifier() {
     let mut runtime = test_runtime();
     let x_id = runtime.ids.allocate_identifier_id();
     let x = Obj::Identifier(IdentifierObj::plain(x_id, "x".into()));
-    let zero = Obj::Number(Number {
+    let zero = Obj::Literal(Literal::Number(Number {
         normalized_value: "0".into(),
-    });
-    let one = Obj::Number(Number {
+    }));
+    let one = Obj::Literal(Literal::Number(Number {
         normalized_value: "1".into(),
-    });
+    }));
     let fact = QuantifierFreeFact::AtomicFact(AtomicFact::EqualFact(EqualFact {
         fact_id: runtime.ids.allocate_fact_id(),
         left: x,
@@ -45,9 +45,9 @@ fn inst_equality_replaces_plain_identifier() {
             assert_eq!(f.left, one);
             assert_eq!(
                 f.right,
-                Obj::Number(Number {
+                Obj::Literal(Literal::Number(Number {
                     normalized_value: "0".into()
-                })
+                }))
             );
         }
         other => panic!("expected EqualFact, got {other:?}"),
@@ -68,9 +68,9 @@ fn set_builder_ir_uses_bound_name_id_display_uses_letter() {
     let binding = BoundName::new(IdentifierId::new(2), "x".into());
     let sb = SetBuilder {
         param_binding: binding,
-        param_set: Box::new(Obj::Number(Number {
+        param_set: Box::new(Obj::Literal(Literal::Number(Number {
             normalized_value: "0".into(),
-        })),
+        }))),
         facts: vec![],
     };
     assert!(sb.ir().as_str().contains("#2#x"));

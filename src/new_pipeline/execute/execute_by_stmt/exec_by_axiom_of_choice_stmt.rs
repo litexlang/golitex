@@ -11,7 +11,7 @@ use crate::new_pipeline::ast::fact::{
 };
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::names::AtomicName;
-use crate::new_pipeline::ast::obj::{AnonymousFn, BigUnion, FnSet, IdentifierObj, Obj};
+use crate::new_pipeline::ast::obj::{AnonymousFn, BigUnion, FnSet, IdentifierObj, Obj, FunctionSpace, SetOperator};
 use crate::new_pipeline::ast::param::{
     ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
 };
@@ -128,15 +128,15 @@ fn ac_exist_fact(runtime: &mut Runtime, family: &Obj, line_file: &LineFile) -> F
             }],
         },
         dom_facts: vec![],
-        ret_set: Box::new(Obj::BigUnion(BigUnion {
+        ret_set: Box::new(Obj::SetOperator(SetOperator::BigUnion(BigUnion {
             left: Box::new(family.clone()),
-        })),
+        }))),
     };
     let f = runtime.fresh_internal_param();
     let f_obj = Obj::Identifier(IdentifierObj::from_bound_name(&f));
     let id_idx = runtime.fresh_internal_param();
     let id_val = Obj::Identifier(IdentifierObj::from_bound_name(&id_idx));
-    let identity = Obj::AnonymousFn(AnonymousFn {
+    let identity = Obj::FunctionSpace(FunctionSpace::AnonymousFn(AnonymousFn {
         body: FnSet {
             set_bound_parameters: SetBoundParameterList {
                 groups: vec![SetBoundParameterGroup {
@@ -148,7 +148,7 @@ fn ac_exist_fact(runtime: &mut Runtime, family: &Obj, line_file: &LineFile) -> F
             ret_set: Box::new(family.clone()),
         },
         equal_to: Box::new(id_val),
-    });
+    }));
     let named: AtomicFact = NormalAtomicFact {
         fact_id: runtime.ids.allocate_fact_id(),
         predicate: AtomicName::plain("is_choice_function_for".to_string()),
@@ -161,7 +161,7 @@ fn ac_exist_fact(runtime: &mut Runtime, family: &Obj, line_file: &LineFile) -> F
         typed_parameters: TypedParameterList {
             groups: vec![TypedParameterGroup {
                 params: vec![f],
-                param_type: ParamType::Obj(Obj::FnSet(fn_set)),
+                param_type: ParamType::Obj(Obj::FunctionSpace(FunctionSpace::FnSet(fn_set))),
             }],
         },
         facts: vec![QuantifierFreeFact::AtomicFact(named)],

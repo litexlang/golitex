@@ -4,10 +4,7 @@
 
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use crate::new_pipeline::ast::fact::{AtomicFact, IsTupleFact, LessEqualFact};
-use crate::new_pipeline::ast::obj::{
-    ClosedRange, FiniteSeqSet, FiniteSetReduce, Obj, ObjAtIndex, Product,
-    ProductOfFiniteSet, Range, Reduce, SeqSet, StandardSet, Sum, SumOfFiniteSet, TupleDim,
-};
+use crate::new_pipeline::ast::obj::{ClosedRange, FiniteSeqSet, FiniteSetReduce, Obj, ObjAtIndex, Product, ProductOfFiniteSet, Range, Reduce, SeqSet, StandardSet, Sum, SumOfFiniteSet, TupleDim, ProductShape};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
@@ -224,9 +221,9 @@ impl Runtime {
             verify_state.clone(),
             format!("index target {} is not a tuple", value.obj.ir()),
         )?);
-        let tuple_dim: Obj = Obj::TupleDim(TupleDim {
+        let tuple_dim: Obj = Obj::ProductShape(ProductShape::TupleDim(TupleDim {
             arg: value.obj.clone(),
-        });
+        }));
         let bounded = AtomicFact::LessEqualFact(LessEqualFact {
             fact_id: self.ids.allocate_fact_id(),
             left: value.index.as_ref().clone(),

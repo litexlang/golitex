@@ -1,6 +1,6 @@
 use super::by_builtin_strategy_result::RationalWithNonzeroPremisesStrategySingleStep;
 use crate::new_pipeline::ast::fact::{EqualFact, Fact, NotEqualFact};
-use crate::new_pipeline::ast::obj::{Number, Obj};
+use crate::new_pipeline::ast::obj::{Number, Obj, Literal};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::rational_expression::{
     algebraic_normalization_nonzero_requirements, objs_equal_by_rational_expression_evaluation,
@@ -25,9 +25,9 @@ impl Runtime {
             return Ok(None);
         }
 
-        let zero = Obj::Number(Number {
+        let zero = Obj::Literal(Literal::Number(Number {
             normalized_value: "0".to_string(),
-        });
+        }));
         let mut requirement_facts = Vec::with_capacity(required_objects.len());
         let mut proof_of_requirement_facts = Vec::with_capacity(required_objects.len());
         let child_state = verify_state.without_well_defined_storage();

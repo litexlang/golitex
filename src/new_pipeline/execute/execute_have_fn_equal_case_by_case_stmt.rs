@@ -10,7 +10,7 @@ use crate::new_pipeline::ast::fact::{
     and_chain_as_fact, negate_atomic_fact, AndChainAtomicFact, AtomicFact, EqualFact,
     ExistOrAndChainAtomicFact, Fact, ForallFact, InFact, OrFact,
 };
-use crate::new_pipeline::ast::obj::{FnObj, FnObjHead, FnSet, IdentifierObj, Obj};
+use crate::new_pipeline::ast::obj::{FnObj, FnObjHead, FnSet, IdentifierObj, Obj, FunctionSpace};
 use crate::new_pipeline::ast::param::{
     ParamType, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
 };
@@ -96,7 +96,7 @@ impl Runtime {
 
         let fn_set = fn_set_from_clause(&stmt.fn_set_clause);
         let fn_set_well_defined =
-            self.verify_obj_well_definedness(&Obj::FnSet(fn_set.clone()), verify_state.clone())?;
+            self.verify_obj_well_definedness(&Obj::FunctionSpace(FunctionSpace::FnSet(fn_set.clone())), verify_state.clone())?;
         if fn_set_well_defined.is_failed() {
             return Ok(ExecHaveFnEqualCaseByCaseStmtResult::Failed(
                 ExecHaveFnEqualCaseByCaseStmtFailed::FnSetWellDefined(fn_set_well_defined),
@@ -349,7 +349,7 @@ impl Runtime {
         let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
             fact_id: membership_fact_id,
             element: function_obj.clone(),
-            set: Obj::FnSet(fn_set.clone()),
+            set: Obj::FunctionSpace(FunctionSpace::FnSet(fn_set.clone())),
             line_file: Some(stmt.line_file.clone()),
         }));
         let mut stored_fact_ids = self.store_fact_and_infer(&membership)?.stored_fact_ids();

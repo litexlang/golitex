@@ -17,7 +17,7 @@ use crate::new_pipeline::ast::fact::{
     and_chain_as_fact, negate_atomic_fact, AndChainAtomicFact, AndFact, AtomicFact, Fact,
     GreaterEqualFact, InFact, LessFact, OrFact, QuantifierFreeFact,
 };
-use crate::new_pipeline::ast::obj::{FnObjHead, FnSet, IdentifierObj, Obj, StandardSet};
+use crate::new_pipeline::ast::obj::{FnObjHead, FnSet, IdentifierObj, Obj, StandardSet, FunctionSpace};
 use crate::new_pipeline::ast::param::{ParamType, SetBoundParameterGroup, TypedParameterList};
 use crate::new_pipeline::ast::stmt::{
     FnSetClause, HaveFnByInducCase, HaveFnByInducCaseBody, HaveFnByInducStmt,
@@ -88,7 +88,7 @@ impl Runtime {
 
         let fn_set = fn_set_from_clause(&stmt.fn_set_clause);
         let fn_set_well_defined =
-            self.verify_obj_well_definedness(&Obj::FnSet(fn_set.clone()), verify_state.clone())?;
+            self.verify_obj_well_definedness(&Obj::FunctionSpace(FunctionSpace::FnSet(fn_set.clone())), verify_state.clone())?;
         if fn_set_well_defined.is_failed() {
             return Ok(ExecHaveFnByInducStmtResult::Failed(
                 ExecHaveFnByInducStmtFailed::FnSetWellDefined(fn_set_well_defined),
@@ -333,7 +333,7 @@ impl Runtime {
             let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
                 fact_id: self.ids.allocate_fact_id(),
                 element: function_obj,
-                set: Obj::FnSet(restricted.clone()),
+                set: Obj::FunctionSpace(FunctionSpace::FnSet(restricted.clone())),
                 line_file: Some(stmt.line_file.clone()),
             }));
             if let Fact::AtomicFact(AtomicFact::InFact(in_fact)) = &membership {

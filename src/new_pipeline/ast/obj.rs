@@ -2,8 +2,9 @@
 //! Field taxonomy follows the legacy language; methods are added later.
 //! Identity: BoundName / IdentifierId for plain refs; FactId; LineFile.
 //!
-//! Layout: `Obj` first; each payload type follows in the same order as its `Obj` variant.
-//! Nested helpers that are not themselves `Obj` variants sit with their owning variant.
+//! Layout: top-level `Obj` is 16 families; each family enum wraps the same leaf
+//! payload structs as before. Leaf structs follow in stable order after `Obj`.
+//! Nested helpers that are not themselves `Obj` variants sit with their owning leaf.
 //!
 //! Pure-set model: every well-defined Litex object satisfies `$is_set`. Numerals,
 //! function values, N/Z/Q/R/C, user sets, and fn spaces are all `Obj` — different
@@ -18,45 +19,88 @@ use super::param::SetBoundParameterList;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 
 // Mathematical value / expression. Not a proposition (see Fact) and not an env action (see Stmt).
+// Shape cut: one nesting level of family enums; leaf payloads unchanged.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Obj {
     Identifier(IdentifierObj),
     FnObj(FnObj),
+    Literal(Literal),
+    StandardSet(StandardSet),
+    ArithmeticOperator(ArithmeticOperator),
+    IntegerOperator(IntegerOperator),
+    TrigOperator(TrigOperator),
+    ExpLogOperator(ExpLogOperator),
+    ComplexOperator(ComplexOperator),
+    SetOperator(SetOperator),
+    SetFormer(SetFormer),
+    ProductShape(ProductShape),
+    FunctionSpace(FunctionSpace),
+    IteratedOperator(IteratedOperator),
+    FiniteSetStat(FiniteSetStat),
+    Structish(Structish),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Literal {
     Number(Number),
     ImaginaryUnit(ImaginaryUnit),
     EulerNumber(EulerNumber),
     Pi(Pi),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ArithmeticOperator {
     Add(Add),
     Sub(Sub),
     Mul(Mul),
     Div(Div),
+    Pow(Pow),
+    Abs(Abs),
+    Min(Min),
+    Max(Max),
+    Floor(Floor),
+    Ceil(Ceil),
+    Sign(Sign),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum IntegerOperator {
     Mod(Mod),   // a % d
     Quot(Quot), // a = d * quot(a, d) + a % d
     Gcd(Gcd),
     Lcm(Lcm),
-    Floor(Floor),
-    Ceil(Ceil),
-    Min(Min),
-    Max(Max),
-    Exp(Exp),
-    Ln(Ln),
-    Sign(Sign),
     Factorial(Factorial),
-    Pow(Pow),
-    Abs(Abs),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum TrigOperator {
     Sin(Sin),
+    Cos(Cos),
+    Tan(Tan),
+    Cot(Cot),
     Arcsin(Arcsin),
     Arccos(Arccos),
     Arctan(Arctan),
     Arccot(Arccot),
-    Cos(Cos),
-    Tan(Tan),
-    Cot(Cot),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ExpLogOperator {
+    Exp(Exp),
+    Ln(Ln),
+    Log(Log),
+    Sqrt(Sqrt),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ComplexOperator {
     RealPart(RealPart),
     ImaginaryPart(ImaginaryPart),
     ComplexAbs(ComplexAbs),
-    Sqrt(Sqrt),
-    Log(Log),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum SetOperator {
     Union(Union),
     Intersect(Intersect),
     SetMinus(SetMinus),
@@ -66,37 +110,60 @@ pub enum Obj {
     IndexIntersect(IndexIntersect),
     PowerSet(PowerSet),
     GeneralCart(GeneralCart),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum SetFormer {
     ListSet(ListSet),
     SetBuilder(SetBuilder),
+    Replacement(Replacement),
+    Range(Range),
+    ClosedRange(ClosedRange),
+    FiniteSeqSet(FiniteSeqSet),
+    SeqSet(SeqSet),
+    OneSideInfinityIntervalObj(OneSideInfinityIntervalObj),
+    IntervalObj(IntervalObj),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ProductShape {
+    Cart(Cart),
+    Tuple(Tuple),
+    CartDim(CartDim),
+    TupleDim(TupleDim),
+    Proj(Proj),
+    ObjAtIndex(ObjAtIndex),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum FunctionSpace {
     FnSet(FnSet),
     AnonymousFn(AnonymousFn),
-    Cart(Cart),
-    CartDim(CartDim),
-    Proj(Proj),
-    TupleDim(TupleDim),
-    Tuple(Tuple),
-    FiniteSetSize(FiniteSetSize),
-    FiniteSetMax(FiniteSetMax),
-    FiniteSetMin(FiniteSetMin),
     FnRange(FnRange),
-    Replacement(Replacement),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum IteratedOperator {
     Sum(Sum),
     SumOfFiniteSet(SumOfFiniteSet),
     Product(Product),
     ProductOfFiniteSet(ProductOfFiniteSet),
     Reduce(Reduce),
     FiniteSetReduce(FiniteSetReduce),
-    Range(Range),
-    ClosedRange(ClosedRange),
-    FiniteSeqSet(FiniteSeqSet),
-    SeqSet(SeqSet),
-    ObjAtIndex(ObjAtIndex),
-    StandardSet(StandardSet),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum FiniteSetStat {
+    FiniteSetSize(FiniteSetSize),
+    FiniteSetMax(FiniteSetMax),
+    FiniteSetMin(FiniteSetMin),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Structish {
     StructObj(StructObj),
     FieldAccess(FieldAccess),
     InstantiatedTemplateObj(InstantiatedTemplateObj),
-    OneSideInfinityIntervalObj(OneSideInfinityIntervalObj),
-    IntervalObj(IntervalObj),
 }
 
 // Free or module-qualified name used as an object (at most three `::` segments).
@@ -178,7 +245,7 @@ impl IdentifierObj {
 // Identifier / template instance → InFunctionSet; AnonymousFnLiteral → its own FnSet;
 // FieldAccess → field carrier type. ObjAtIndex is intentionally not a head: `t[i]` is
 // just an element, with no stable function signature, so `t[i](a)` is rejected at parse.
-// Keep `Obj::ObjAtIndex` for tuple/cart indexing such as `(1, 2)[1]`.
+// Keep `Obj::ProductShape(ProductShape::ObjAtIndex(...))` for tuple/cart indexing such as `(1, 2)[1]`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FnObjHead {
     Identifier(IdentifierObj),
