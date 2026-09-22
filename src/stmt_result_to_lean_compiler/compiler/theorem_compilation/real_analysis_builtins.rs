@@ -950,14 +950,14 @@ pub(super) fn builtin_theorem_requirement_roles(
         BuiltinTheoremId::DefinedSetMember => vec![Role::DefinedSetMembership],
         BuiltinTheoremId::StructMember => vec![Role::StructCarrierFacts],
         BuiltinTheoremId::CartesianMemberFromCoordinates => vec![Role::CartesianCoordinates],
-        BuiltinTheoremId::GeneralCartesianMember => {
-            vec![Role::GeneralCartesianPointwiseMembership]
+        BuiltinTheoremId::IndexCartesianMember => {
+            vec![Role::IndexCartesianPointwiseMembership]
         }
-        BuiltinTheoremId::GeneralCartesianNonemptyByChoiceFromFamily => {
-            vec![Role::GeneralCartesianFamilyNonempty]
+        BuiltinTheoremId::IndexCartesianNonemptyByChoiceFromFamily => {
+            vec![Role::IndexCartesianFamilyNonempty]
         }
-        BuiltinTheoremId::GeneralCartesianNonemptyByChoiceFromPointwise => {
-            vec![Role::GeneralCartesianPointwiseNonempty]
+        BuiltinTheoremId::IndexCartesianNonemptyByChoiceFromPointwise => {
+            vec![Role::IndexCartesianPointwiseNonempty]
         }
         BuiltinTheoremId::SumLessEqualFromPointwise => vec![Role::IntegerSumPointwiseOrder],
         BuiltinTheoremId::FiniteSetSumLessEqualFromPointwise => {

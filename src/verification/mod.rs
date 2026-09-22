@@ -34,8 +34,8 @@ pub use atomic::numeric_membership::{
 pub use atomic::set_relations as verify_proper_set_relations_builtin;
 pub use builtin_rules::{
     choice_function_for_definition_facts, choice_function_for_fact,
-    compare_normalized_number_str_to_zero, compare_number_strings, general_cart_member_choice_fact,
-    general_cart_member_fn_set, verify_choice_function_for_arg_types, NumberCompareResult,
+    compare_normalized_number_str_to_zero, compare_number_strings, index_cart_member_choice_fact,
+    index_cart_member_fn_set, verify_choice_function_for_arg_types, NumberCompareResult,
 };
 pub use proof_search::builtin_rule_state::BuiltinRuleSearchState;
 pub use proof_search::context_state::VerifyState;

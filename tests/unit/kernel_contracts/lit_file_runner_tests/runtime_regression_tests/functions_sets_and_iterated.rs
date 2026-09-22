@@ -541,7 +541,7 @@ fn function_space_membership_uses_same_domain_pointwise_values() {
         || {
             let source_code = r#"
 claim:
-    ? forall I set, X set, f fn(alpha I) big_union({X}):
+    ? forall I set, X set, f fn(alpha I) family_union({X}):
         forall alpha I:
             f(alpha) $in X
         =>:

@@ -41,8 +41,8 @@ exist k {1} st {1 $in family(k)}
 forall k {1}:
     1 $in family(k)
 
-index_union({1}, N, family) = big_union(fn_range(family))
-index_intersect({1}, N, family) = big_intersect(fn_range(family))
+index_union({1}, N, family) = family_union(fn_range(family))
+index_intersect({1}, N, family) = family_intersect(fn_range(family))
 
 have fn cases_family(k {1, 2, 3}) power_set(N) by cases:
     case k = 1: {2, 3}
@@ -643,19 +643,19 @@ index_union({1, 2}, N, fn(k {1, 2}) power_set(N) {set_minus(A(k), B(k))}) = set_
                 "the upper mixed set-difference law is only an inclusion",
             );
 
-            let false_general_cart_domain_split = r#"
+            let false_index_cart_domain_split = r#"
 have fn factors(k union({1}, {2})) power_set(N) = {1}
-general_cart(union({1}, {2}), power_set(N), factors) = cart(general_cart({1}, power_set(N), fn(k {1}) power_set(N) {factors(k)}), general_cart({2}, power_set(N), fn(k {2}) power_set(N) {factors(k)}))
+index_cart(union({1}, {2}), power_set(N), factors) = cart(index_cart({1}, power_set(N), fn(k {1}) power_set(N) {factors(k)}), index_cart({2}, power_set(N), fn(k {2}) power_set(N) {factors(k)}))
 "#;
             let (succeeded, output) = run(
-                false_general_cart_domain_split,
-                "indexed_false_general_cart_domain_split",
+                false_index_cart_domain_split,
+                "indexed_false_index_cart_domain_split",
             );
             assert_unknown_at_target(
                 succeeded,
                 &output,
-                "general_cart(union({1}, {2})",
-                "general_cart domain splitting must not be literal Cartesian equality",
+                "index_cart(union({1}, {2})",
+                "index_cart domain splitting must not be literal Cartesian equality",
             );
 
             let nonempty_fibers_without_common_member = r#"
@@ -699,8 +699,8 @@ cart(index_intersect({1, 2}, N, A), Z) = index_intersect({1, 2}, cart(N, Z), fn(
 cart(Z, set_minus(N, {1})) = set_minus(cart(Z, N), cart(Z, {1}))
 set_minus(cart(N, Z), cart({1}, Z)) = cart(set_minus(N, {1}), Z)
 
-general_cart({1, 2}, power_set(N), fn(k {1, 2}) power_set(N) {intersect(A(k), B(k))}) = intersect(general_cart({1, 2}, power_set(N), A), general_cart({1, 2}, power_set(N), B))
-union(general_cart({1, 2}, power_set(N), A), general_cart({1, 2}, power_set(N), B)) $subset general_cart({1, 2}, power_set(N), fn(k {1, 2}) power_set(N) {union(A(k), B(k))})
+index_cart({1, 2}, power_set(N), fn(k {1, 2}) power_set(N) {intersect(A(k), B(k))}) = intersect(index_cart({1, 2}, power_set(N), A), index_cart({1, 2}, power_set(N), B))
+union(index_cart({1, 2}, power_set(N), A), index_cart({1, 2}, power_set(N), B)) $subset index_cart({1, 2}, power_set(N), fn(k {1, 2}) power_set(N) {union(A(k), B(k))})
 "#;
             let (succeeded, output) = run(source, "indexed_set_family_phase_three_positive");
             assert!(
@@ -765,18 +765,18 @@ index_union({1, 2}, power_set(N), fn(k {1, 2}) power_set(power_set(N)) {power_se
                 "powerset over indexed union must remain an inclusion:\n{output}"
             );
 
-            let false_general_cart_union_equality = r#"
+            let false_index_cart_union_equality = r#"
 have fn A(k {1, 2}) power_set(N) = {1}
 have fn B(k {1, 2}) power_set(N) = {2}
-union(general_cart({1, 2}, power_set(N), A), general_cart({1, 2}, power_set(N), B)) = general_cart({1, 2}, power_set(N), fn(k {1, 2}) power_set(N) {union(A(k), B(k))})
+union(index_cart({1, 2}, power_set(N), A), index_cart({1, 2}, power_set(N), B)) = index_cart({1, 2}, power_set(N), fn(k {1, 2}) power_set(N) {union(A(k), B(k))})
 "#;
             let (succeeded, output) = run(
-                false_general_cart_union_equality,
-                "indexed_general_cart_false_union_equality",
+                false_index_cart_union_equality,
+                "indexed_index_cart_false_union_equality",
             );
             assert!(
                 !succeeded && output.contains("unknown_error"),
-                "general_cart of pointwise unions must remain an inclusion:\n{output}"
+                "index_cart of pointwise unions must remain an inclusion:\n{output}"
             );
         },
     );

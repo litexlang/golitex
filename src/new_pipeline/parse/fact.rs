@@ -5,7 +5,7 @@ use super::keywords::{
 };
 use super::object::{parse_obj, parse_obj_list_paren};
 use crate::new_pipeline::ast::fact::{
-    AndChainAtomicFact, AndFact, AtomicFact, ChainAtomicFact, ChainFact, ExistFactFamily,
+    AndChainAtomicFact, AndFact, AtomicFact, ChainAtomicFact, ChainFact, ExistShapedFact,
     ExistOrAndChainAtomicFact, Fact, ForallFact, ForallFactWithIff, NotForallFact, OrFact,
     PlainExistFact, QuantifierFreeFact,
 };
@@ -36,7 +36,7 @@ impl Runtime {
     pub(super) fn parse_fact(&mut self, tb: &mut TokenBlock) -> RuntimeResult<Fact> {
         match tb.peek() {
             Some(FORALL) => self.parse_forall_fact(tb),
-            Some(EXIST) | Some(EXIST_BANG) => Ok(crate::new_pipeline::ast::fact::exist_fact_family_to_fact(&self.parse_exist_fact(tb)?)),
+            Some(EXIST) | Some(EXIST_BANG) => Ok(crate::new_pipeline::ast::fact::exist_shaped_fact_to_fact(&self.parse_exist_fact(tb)?)),
             Some(NOT) => self.parse_not_fact(tb),
             _ => Ok(self.parse_quantifier_free_fact_top(tb)?.into_fact()),
         }
@@ -57,7 +57,7 @@ impl Runtime {
                     )
                     .into());
                 }
-                let ExistFactFamily::Exist(body) = self.parse_exist_fact(tb)? else {
+                let ExistShapedFact::Exist(body) = self.parse_exist_fact(tb)? else {
                     return Err(RuntimeParseError::new(
                         "`not exist` expects a plain exist fact",
                         tb.line,
@@ -391,7 +391,7 @@ impl Runtime {
         }))
     }
 
-    pub(super) fn parse_exist_fact(&mut self, tb: &mut TokenBlock) -> RuntimeResult<ExistFactFamily> {
+    pub(super) fn parse_exist_fact(&mut self, tb: &mut TokenBlock) -> RuntimeResult<ExistShapedFact> {
         self.push_parse_scope();
         let result = (|| {
             let unique = match tb.peek() {
@@ -455,9 +455,9 @@ impl Runtime {
                 line_file: Some(tb.line_file()),
             };
             Ok(if unique {
-                ExistFactFamily::ExistUnique(body)
+                ExistShapedFact::ExistUnique(body)
             } else {
-                ExistFactFamily::Exist(body)
+                ExistShapedFact::Exist(body)
             })
         })();
         self.pop_parse_scope();
@@ -471,11 +471,11 @@ impl Runtime {
         match tb.peek() {
             Some(EXIST) | Some(EXIST_BANG) => {
                 match self.parse_exist_fact(tb)? {
-                    ExistFactFamily::Exist(p) => Ok(ExistOrAndChainAtomicFact::ExistFact(p)),
-                    ExistFactFamily::ExistUnique(p) => {
+                    ExistShapedFact::Exist(p) => Ok(ExistOrAndChainAtomicFact::ExistFact(p)),
+                    ExistShapedFact::ExistUnique(p) => {
                         Ok(ExistOrAndChainAtomicFact::ExistUniqueFact(p))
                     }
-                    ExistFactFamily::NotExist(_) => Err(RuntimeParseError::new(
+                    ExistShapedFact::NotExist(_) => Err(RuntimeParseError::new(
                         "internal: parse_exist_fact returned not-exist",
                         tb.line,
                         tb.source_path.clone(),
@@ -495,7 +495,7 @@ impl Runtime {
                     )
                     .into());
                 }
-                let ExistFactFamily::Exist(body) = self.parse_exist_fact(tb)? else {
+                let ExistShapedFact::Exist(body) = self.parse_exist_fact(tb)? else {
                     return Err(RuntimeParseError::new(
                         "`not exist` expects a plain exist fact",
                         tb.line,

@@ -1,10 +1,10 @@
 forall F set:
-    big_union(F) = big_union(F)
+    family_union(F) = family_union(F)
 forall F set:
-    big_intersect(F) = big_intersect(F)
+    family_intersect(F) = family_intersect(F)
 power_set(R) = power_set(R)
 forall I set, S nonempty_set, g fn(i1 I) S:
-    general_cart(I, S, g) = general_cart(I, S, g)
+    index_cart(I, S, g) = index_cart(I, S, g)
 range(1, 4) = range(1, 4)
 closed_range(1, 4) = closed_range(1, 4)
 sum(1, 3, fn(k Z) Z {k}) = sum(1, 3, fn(k Z) Z {k})

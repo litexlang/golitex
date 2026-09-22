@@ -29,7 +29,7 @@ pub use in_fact_builtin::{
     builtin_in_fact_result_for_evaluation_in_standard_set,
     builtin_not_in_fact_result_for_evaluation_in_standard_set,
     choice_function_for_definition_facts, choice_function_for_fact,
-    general_cart_member_choice_fact, general_cart_member_fn_set,
+    index_cart_member_choice_fact, index_cart_member_fn_set,
     verify_choice_function_for_arg_types,
 };
 pub use number_compare::normalized_decimal_string_is_even_integer;

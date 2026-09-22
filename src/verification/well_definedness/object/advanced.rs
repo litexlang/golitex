@@ -103,9 +103,9 @@ impl Runtime {
         Ok(steps)
     }
 
-    pub(in crate::verification) fn verify_general_cart_well_defined_result(
+    pub(in crate::verification) fn verify_index_cart_well_defined_result(
         &mut self,
-        value: &GeneralCart,
+        value: &IndexCart,
         verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();

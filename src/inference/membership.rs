@@ -355,16 +355,16 @@ impl Runtime {
         Ok(result)
     }
 
-    pub(in crate::inference) fn infer_membership_in_general_cart_from_in_fact(
+    pub(in crate::inference) fn infer_membership_in_index_cart_from_in_fact(
         &mut self,
         in_fact: &InFact,
-        general_cart: &GeneralCart,
+        index_cart: &IndexCart,
         inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let fn_set_fact: Fact = self
             .new_in_fact(
                 in_fact.element.clone(),
-                general_cart_member_fn_set(self, general_cart)?,
+                index_cart_member_fn_set(self, index_cart)?,
                 in_fact.line_file.clone(),
             )
             .into();
@@ -373,9 +373,9 @@ impl Runtime {
         result.new_fact(&fn_set_fact);
         self.store_typed_inference_conclusion_and_infer(fn_set_fact, inference_state)?;
 
-        let choice_fact: Fact = crate::verification::general_cart_member_choice_fact(
+        let choice_fact: Fact = crate::verification::index_cart_member_choice_fact(
             self,
-            general_cart,
+            index_cart,
             in_fact.element.clone(),
             in_fact.line_file.clone(),
         )
@@ -575,11 +575,11 @@ impl Runtime {
             ),
             // General Cartesian product: membership gives the choice function type and the
             // pointwise factor-membership forall.
-            // Example: `c $in general_cart(I, s, g)` infers
-            // `c $in fn(t I)big_union(s)` and `forall t I: c(t) $in g(t)`.
-            Obj::GeneralCart(general_cart) => self.infer_membership_in_general_cart_from_in_fact(
+            // Example: `c $in index_cart(I, s, g)` infers
+            // `c $in fn(t I)family_union(s)` and `forall t I: c(t) $in g(t)`.
+            Obj::IndexCart(index_cart) => self.infer_membership_in_index_cart_from_in_fact(
                 in_fact,
-                general_cart,
+                index_cart,
                 inference_state,
             ),
             // Power set membership: `A $in power_set(B)` means `A $subset B`.
@@ -1051,10 +1051,10 @@ impl Runtime {
                 }
                 Ok(result)
             }
-            // Family union elimination: `x $in big_union(F)` means `x` lies in some member set of `F`.
-            // Example: from `x $in big_union(F)`, infer `exist item F st {x $in item}`.
-            Obj::BigUnion(big_union) => {
-                self.infer_membership_in_big_union(in_fact, big_union, inference_state)
+            // Family union elimination: `x $in family_union(F)` means `x` lies in some member set of `F`.
+            // Example: from `x $in family_union(F)`, infer `exist item F st {x $in item}`.
+            Obj::FamilyUnion(family_union) => {
+                self.infer_membership_in_family_union(in_fact, family_union, inference_state)
             }
             Obj::IndexUnion(index_union) => {
                 self.infer_membership_in_index_union(in_fact, index_union, inference_state)
@@ -1239,16 +1239,16 @@ impl Runtime {
         Ok(Some(ExistFact::PlainExistFact(exist_body).into()))
     }
 
-    fn infer_membership_in_big_union(
+    fn infer_membership_in_family_union(
         &mut self,
         in_fact: &InFact,
-        big_union: &BigUnion,
+        family_union: &FamilyUnion,
         inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let member_name = self.generate_internal_binder_name();
         let member_group = self.fresh_param_group_with_type(
             vec![member_name],
-            ParamType::Obj(big_union.left.as_ref().clone()),
+            ParamType::Obj(family_union.left.as_ref().clone()),
         )?;
         let member_obj = obj_for_bound_param_in_scope(&member_group.params[0]);
         let element_in_member: AtomicFact = self

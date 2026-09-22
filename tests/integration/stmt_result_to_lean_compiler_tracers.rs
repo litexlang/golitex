@@ -1750,7 +1750,7 @@ fn collections_and_aggregates_use_exact_typed_carriers() {
     for term in [
         "Litex.Set.coproduct",
         "Litex.SingletonCarrier.element",
-        "Litex.generalCart",
+        "Litex.indexCart",
         "Litex.FnTelescope.Carrier",
         "Litex.closedRange",
         "Litex.SequenceLiteral.mk",

@@ -148,7 +148,7 @@ impl Runtime {
         }
 
         if let Some(done) =
-            self.try_verify_general_cart_set_builder_equality(equal_fact, builtin_state)?
+            self.try_verify_index_cart_set_builder_equality(equal_fact, builtin_state)?
         {
             return Ok(done);
         }

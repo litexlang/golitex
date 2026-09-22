@@ -59,7 +59,7 @@ pub enum LeanTargetObjectRepresentation {
     CartesianProduct {
         factors: Vec<LeanTargetObjectRepresentation>,
     },
-    GeneralCartesianProduct {
+    IndexCartesianProduct {
         index_set: Box<LeanTargetObjectRepresentation>,
         family_set: Box<LeanTargetObjectRepresentation>,
         family_function: Box<LeanTargetObjectRepresentation>,
@@ -247,8 +247,8 @@ pub enum LeanTargetBuiltinObjectOperator {
     Union,
     Intersect,
     SetMinus,
-    BigUnion,
-    BigIntersect,
+    FamilyUnion,
+    FamilyIntersect,
     PowerSet,
 }
 
@@ -347,7 +347,7 @@ impl LeanTargetObjectRepresentation {
                     .map(|factor| LeanTargetObjectRepresentation::lower(factor.as_ref()))
                     .collect::<Result<Vec<_>, _>>()?,
             }),
-            Obj::GeneralCart(product) => Ok(LeanTargetObjectRepresentation::GeneralCartesianProduct {
+            Obj::IndexCart(product) => Ok(LeanTargetObjectRepresentation::IndexCartesianProduct {
                 index_set: Box::new(LeanTargetObjectRepresentation::lower(product.index_set.as_ref())?),
                 family_set: Box::new(LeanTargetObjectRepresentation::lower(product.family_set.as_ref())?),
                 family_function: Box::new(LeanTargetObjectRepresentation::lower(product.family_fn.as_ref())?),
@@ -588,14 +588,14 @@ impl LeanTargetObjectRepresentation {
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),
-            Obj::BigUnion(value) => unary(
+            Obj::FamilyUnion(value) => unary(
                 obj,
-                LeanTargetBuiltinObjectOperator::BigUnion,
+                LeanTargetBuiltinObjectOperator::FamilyUnion,
                 value.left.as_ref(),
             ),
-            Obj::BigIntersect(value) => unary(
+            Obj::FamilyIntersect(value) => unary(
                 obj,
-                LeanTargetBuiltinObjectOperator::BigIntersect,
+                LeanTargetBuiltinObjectOperator::FamilyIntersect,
                 value.left.as_ref(),
             ),
             Obj::IndexUnion(_) => Err(

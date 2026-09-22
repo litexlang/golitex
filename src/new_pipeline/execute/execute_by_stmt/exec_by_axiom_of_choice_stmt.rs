@@ -11,7 +11,7 @@ use crate::new_pipeline::ast::fact::{
 };
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::names::AtomicName;
-use crate::new_pipeline::ast::obj::{AnonymousFn, BigUnion, FnSet, IdentifierObj, Obj, FunctionSpace, SetOperator};
+use crate::new_pipeline::ast::obj::{AnonymousFn, FamilyUnion, FnSet, IdentifierObj, Obj, FunctionSpace, SetOperator};
 use crate::new_pipeline::ast::param::{
     ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
 };
@@ -63,7 +63,7 @@ pub fn exec_by_axiom_of_choice_stmt(
     };
 
     // Trusted AC step. Selection stays atomic:
-    // exist f fn(A S) big_union(S) st { $is_choice_function_for(S, S, fn(A S) S {A}, f) }.
+    // exist f fn(A S) family_union(S) st { $is_choice_function_for(S, S, fn(A S) S {A}, f) }.
     let choice_fact = ac_exist_fact(runtime, &stmt.family, &stmt.line_file);
     let stored = match store_goal_fact(runtime, &choice_fact)? {
         Ok(s) => s,
@@ -128,7 +128,7 @@ fn ac_exist_fact(runtime: &mut Runtime, family: &Obj, line_file: &LineFile) -> F
             }],
         },
         dom_facts: vec![],
-        ret_set: Box::new(Obj::SetOperator(SetOperator::BigUnion(BigUnion {
+        ret_set: Box::new(Obj::SetOperator(SetOperator::FamilyUnion(FamilyUnion {
             left: Box::new(family.clone()),
         }))),
     };

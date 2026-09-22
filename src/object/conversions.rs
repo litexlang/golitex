@@ -260,15 +260,15 @@ impl From<SetMinus> for Obj {
     }
 }
 
-impl From<BigUnion> for Obj {
-    fn from(c: BigUnion) -> Self {
-        Obj::BigUnion(c)
+impl From<FamilyUnion> for Obj {
+    fn from(c: FamilyUnion) -> Self {
+        Obj::FamilyUnion(c)
     }
 }
 
-impl From<BigIntersect> for Obj {
-    fn from(c: BigIntersect) -> Self {
-        Obj::BigIntersect(c)
+impl From<FamilyIntersect> for Obj {
+    fn from(c: FamilyIntersect) -> Self {
+        Obj::FamilyIntersect(c)
     }
 }
 
@@ -290,9 +290,9 @@ impl From<PowerSet> for Obj {
     }
 }
 
-impl From<GeneralCart> for Obj {
-    fn from(g: GeneralCart) -> Self {
-        Obj::GeneralCart(g)
+impl From<IndexCart> for Obj {
+    fn from(g: IndexCart) -> Self {
+        Obj::IndexCart(g)
     }
 }
 

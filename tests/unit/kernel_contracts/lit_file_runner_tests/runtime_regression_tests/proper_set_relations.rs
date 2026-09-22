@@ -219,8 +219,8 @@ A $proper_subset B $proper_superset c
 not A $proper_subset c
 x $in union(A, B)
 x $in intersect(A, B)
-x $in big_union(F)
-x $in big_intersect(F)
+x $in family_union(F)
+x $in family_intersect(F)
 "#,
         "set_relation_and_family_operator_latex_uses_standard_symbols",
     )

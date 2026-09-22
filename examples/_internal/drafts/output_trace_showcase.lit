@@ -111,4 +111,4 @@ have tmp_factors nonempty_set
 have tmp_family fn(tmp_coordinate tmp_index) tmp_factors
 trust forall X tmp_factors:
     $is_nonempty_set(X)
-release thm general_cart_nonempty_by_choice_from_family(general_cart(tmp_index, tmp_factors, tmp_family))
+release thm index_cart_nonempty_by_choice_from_family(index_cart(tmp_index, tmp_factors, tmp_family))

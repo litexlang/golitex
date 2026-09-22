@@ -38,7 +38,7 @@ mathematical interfaces, but their implementations use the native object.
 Several nearby forms remain intentionally local. Chapter 2 divisibility is
 part of the configured no-`std` source graph; real intervals are not integer
 `closed_range` objects; and ambient-typed indexed unions retain set-builder
-implementations until `big_union` can replay a `power_set(X)` carrier. Filter
+implementations until `family_union` can replay a `power_set(X)` carrier. Filter
 consumers are the next coherent refined-carrier migration rather than a
 one-signature change. The dependency DAG, session evidence, and exact kernel
 boundaries are in

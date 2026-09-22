@@ -186,12 +186,12 @@ pub(in super::super) fn render_lean_source_for_target_object_representation(
             render_integer_endpoint(start, context)?,
             render_integer_endpoint(end, context)?
         )),
-        LeanTargetObjectRepresentation::GeneralCartesianProduct {
+        LeanTargetObjectRepresentation::IndexCartesianProduct {
             index_set,
             family_set,
             family_function,
         } => Ok(format!(
-            "(Litex.generalCart {} {} {})",
+            "(Litex.indexCart {} {} {})",
             render_lean_source_for_target_object_representation(index_set, context)?,
             render_lean_source_for_target_object_representation(family_set, context)?,
             render_lean_source_for_target_object_representation(family_function, context)?

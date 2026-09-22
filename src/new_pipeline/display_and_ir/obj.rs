@@ -16,8 +16,11 @@ impl Obj {
     pub fn ir(&self) -> ObjIR {
         fn precedence(o: &Obj) -> u8 {
             match o {
-                Obj::ArithmeticOperator(ArithmeticOperator::Add(_)) | Obj::ArithmeticOperator(ArithmeticOperator::Sub(_)) => 3,
-                Obj::ArithmeticOperator(ArithmeticOperator::Mul(_)) | Obj::ArithmeticOperator(ArithmeticOperator::Div(_)) | Obj::IntegerOperator(IntegerOperator::Mod(_)) => 2,
+                Obj::ArithmeticOperator(ArithmeticOperator::Add(_))
+                | Obj::ArithmeticOperator(ArithmeticOperator::Sub(_)) => 3,
+                Obj::ArithmeticOperator(ArithmeticOperator::Mul(_))
+                | Obj::ArithmeticOperator(ArithmeticOperator::Div(_))
+                | Obj::IntegerOperator(IntegerOperator::Mod(_)) => 2,
                 Obj::ArithmeticOperator(ArithmeticOperator::Pow(_))
                 | Obj::ArithmeticOperator(ArithmeticOperator::Abs(_))
                 | Obj::TrigOperator(TrigOperator::Sin(_))
@@ -326,8 +329,8 @@ impl Obj {
                 Obj::SetOperator(SetOperator::Union(x)) => s.push_str(&x.ir()),
                 Obj::SetOperator(SetOperator::Intersect(x)) => s.push_str(&x.ir()),
                 Obj::SetOperator(SetOperator::SetMinus(x)) => s.push_str(&x.ir()),
-                Obj::SetOperator(SetOperator::BigUnion(x)) => s.push_str(&x.ir()),
-                Obj::SetOperator(SetOperator::BigIntersect(x)) => s.push_str(&x.ir()),
+                Obj::SetOperator(SetOperator::FamilyUnion(x)) => s.push_str(&x.ir()),
+                Obj::SetOperator(SetOperator::FamilyIntersect(x)) => s.push_str(&x.ir()),
                 Obj::SetOperator(SetOperator::IndexUnion(x)) => s.push_str(&x.ir()),
                 Obj::SetOperator(SetOperator::IndexIntersect(x)) => s.push_str(&x.ir()),
                 Obj::Identifier(x) => s.push_str(&x.ir()),
@@ -350,11 +353,12 @@ impl Obj {
                 Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(x)) => s.push_str(&x.ir()),
                 Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(x)) => s.push_str(&x.ir()),
                 Obj::FunctionSpace(FunctionSpace::FnRange(x)) => s.push_str(&x.ir()),
-                Obj::SetFormer(SetFormer::Replacement(x)) => s.push_str(&x.ir()),
                 Obj::IteratedOperator(IteratedOperator::Sum(x)) => s.push_str(&x.ir()),
                 Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(x)) => s.push_str(&x.ir()),
                 Obj::IteratedOperator(IteratedOperator::Product(x)) => s.push_str(&x.ir()),
-                Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(x)) => s.push_str(&x.ir()),
+                Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(x)) => {
+                    s.push_str(&x.ir())
+                }
                 Obj::IteratedOperator(IteratedOperator::Reduce(x)) => s.push_str(&x.ir()),
                 Obj::IteratedOperator(IteratedOperator::FiniteSetReduce(x)) => s.push_str(&x.ir()),
                 Obj::SetFormer(SetFormer::Range(x)) => s.push_str(&x.ir()),
@@ -362,13 +366,15 @@ impl Obj {
                 Obj::SetFormer(SetFormer::FiniteSeqSet(x)) => s.push_str(&x.ir()),
                 Obj::SetFormer(SetFormer::SeqSet(x)) => s.push_str(&x.ir()),
                 Obj::SetOperator(SetOperator::PowerSet(x)) => s.push_str(&x.ir()),
-                Obj::SetOperator(SetOperator::GeneralCart(x)) => s.push_str(&x.ir()),
+                Obj::SetOperator(SetOperator::IndexCart(x)) => s.push_str(&x.ir()),
                 Obj::ProductShape(ProductShape::ObjAtIndex(x)) => s.push_str(&x.ir()),
-                Obj::Structish(Structish::StructObj(x)) => s.push_str(&x.ir()),
-                Obj::Structish(Structish::FieldAccess(x)) => {
+                Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(x)) => {
                     s.push_str(&x.ir())
                 }
-                Obj::Structish(Structish::InstantiatedTemplateObj(x)) => s.push_str(&x.ir()),
+                Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(x)) => {
+                    s.push_str(&x.ir())
+                }
+                Obj::InstantiatedTemplateObj(x) => s.push_str(&x.ir()),
                 Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(x)) => s.push_str(&x.ir()),
                 Obj::SetFormer(SetFormer::IntervalObj(x)) => s.push_str(&x.ir()),
             }
@@ -417,13 +423,7 @@ impl FnObj {
         for group in self.body.iter() {
             {
                 out.push_str(LEFT_PAREN);
-                out.push_str(
-                    &group
-                        .iter()
-                        .map(|o| o.ir())
-                        .collect::<Vec<_>>()
-                        .join(", "),
-                );
+                out.push_str(&group.iter().map(|o| o.ir()).collect::<Vec<_>>().join(", "));
                 out.push_str(RIGHT_PAREN);
             };
         }
@@ -493,9 +493,9 @@ impl_obj_kw_call!(Intersect, INTERSECT, left, right);
 
 impl_obj_kw_call!(SetMinus, SET_MINUS, left, right);
 
-impl_obj_kw_call!(BigUnion, BIG_UNION, left);
+impl_obj_kw_call!(FamilyUnion, FAMILY_UNION, left);
 
-impl_obj_kw_call!(BigIntersect, BIG_INTERSECT, left);
+impl_obj_kw_call!(FamilyIntersect, FAMILY_INTERSECT, left);
 
 impl IndexUnion {
     pub fn ir(&self) -> ObjIR {
@@ -582,11 +582,7 @@ impl FnSet {
             .iter()
             .map(|g| g.ir())
             .collect();
-        let dom: Vec<_> = self
-            .dom_facts
-            .iter()
-            .map(|fact| fact.ir())
-            .collect();
+        let dom: Vec<_> = self.dom_facts.iter().map(|fact| fact.ir()).collect();
         let mut out = format!("{} ", FN);
         out.push_str(LEFT_PAREN);
         if !params.is_empty() && !dom.is_empty() {
@@ -726,10 +722,10 @@ impl Tuple {
     }
     impl_display_pair!();
 }
-impl GeneralCart {
+impl IndexCart {
     pub fn ir(&self) -> ObjIR {
         let mut out = String::new();
-        out.push_str(&format!("{}{}", GENERAL_CART, LEFT_PAREN));
+        out.push_str(&format!("{}{}", INDEX_CART, LEFT_PAREN));
         out.push_str(&self.index_set.ir());
         out.push_str(&format!("{COMMA} "));
         out.push_str(&self.family_set.ir());
@@ -748,18 +744,6 @@ impl_obj_kw_call!(FiniteSetMin, FINITE_SET_MIN, set);
 
 impl_obj_kw_call!(FnRange, FN_RANGE, function);
 
-impl Replacement {
-    pub fn ir(&self) -> ObjIR {
-        let mut out = String::new();
-        out.push_str(&format!("{}{}", REPLACEMENT, LEFT_PAREN));
-        out.push_str(&self.prop_name.ir());
-        out.push_str(&format!("{COMMA} "));
-        out.push_str(&self.source_set.ir());
-        out.push_str(&format!("{}", RIGHT_PAREN));
-        ObjIR(out)
-    }
-    impl_display_pair!();
-}
 impl_obj_kw_call!(Sum, SUM, start, end, func);
 
 impl_obj_kw_call!(SumOfFiniteSet, FINITE_SET_SUM, set, func);

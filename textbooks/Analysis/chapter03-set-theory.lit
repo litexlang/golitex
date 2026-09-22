@@ -734,7 +734,7 @@ sketch:
 # functional relation `S = proj(C,k)`: `cart(A,B,C)` is the Cartesian product
 # of its factors, and `proj(C,k)` recovers its kth factor.  `fn_range(f)` is the
 # image of `f`, the set of all values `f(x)` on its declared domain, and
-# `big_union(F)` is the union of every set belonging to the family `F`.  The
+# `family_union(F)` is the union of every set belonging to the family `F`.  The
 # three-dimensional example below exhibits this construction concretely.
 
 sketch:
@@ -761,9 +761,9 @@ sketch:
     1 $in {1, 2}
     3 $in {3, 4}
     5 $in {5, 6}
-    1 $in big_union(fn_range(projection_factor_on_three))
-    3 $in big_union(fn_range(projection_factor_on_three))
-    5 $in big_union(fn_range(projection_factor_on_three))
+    1 $in family_union(fn_range(projection_factor_on_three))
+    3 $in family_union(fn_range(projection_factor_on_three))
+    5 $in family_union(fn_range(projection_factor_on_three))
 
 # When the relation is already presented as a function, its image over a set is
 # simply `fn_range(f)`: the set of all values `f(x)` in its declared domain.
@@ -1817,15 +1817,15 @@ Axiom 3.11. The union of a set of sets contains exactly the elements of the
 member sets.
 """
 
-# The family union is written `big_union(F)`, where the elements of `F` are themselves
-# sets.  To prove `x $in big_union(F)`, it is enough to find one member set `A` of
-# the family with `x $in A`.  Conversely, a point of `big_union(F)` comes with such a
+# The family union is written `family_union(F)`, where the elements of `F` are themselves
+# sets.  To prove `x $in family_union(F)`, it is enough to find one member set `A` of
+# the family with `x $in A`.  Conversely, a point of `family_union(F)` comes with such a
 # witness set.
 
 forall F set, A F, x A:
-    x $in big_union(F)
+    x $in family_union(F)
 
-forall F set, x big_union(F):
+forall F set, x family_union(F):
     exist A F st {x $in A}
 
 """
@@ -1840,7 +1840,7 @@ objects that lie in at least one A_i.
 # Indexed unions first form the family `{A_i : i in I}` and then take its union.
 # The definition above states the same membership
 # condition directly: a point lies in the indexed union when it lies in some
-# indexed set.  The replacement-plus-`big_union` equality is a routine set-theory
+# indexed set.  The replacement-plus-`family_union` equality is a routine set-theory
 # fact left for later reuse.
 sketch:
     have fn A(i_index {1, 2, 3}) power_set(N) by cases:
@@ -1885,7 +1885,7 @@ sketch:
 Example 3.4.11. The union of {{2,3},{3,4},{4,5}} is {2,3,4,5}.
 """
 
-# The membership rule is: if `A $in F` and `x $in A`, then `x $in big_union(F)`.
+# The membership rule is: if `A $in F` and `x $in A`, then `x $in family_union(F)`.
 
 sketch:
     by contra:
@@ -1909,18 +1909,18 @@ sketch:
 
     {2, 3} $in {{2, 3}, {3, 4}, {4, 5}}
     2 $in {2, 3}
-    2 $in big_union({{2, 3}, {3, 4}, {4, 5}})
+    2 $in family_union({{2, 3}, {3, 4}, {4, 5}})
 
     3 $in {2, 3}
-    3 $in big_union({{2, 3}, {3, 4}, {4, 5}})
+    3 $in family_union({{2, 3}, {3, 4}, {4, 5}})
 
     {3, 4} $in {{2, 3}, {3, 4}, {4, 5}}
     4 $in {3, 4}
-    4 $in big_union({{2, 3}, {3, 4}, {4, 5}})
+    4 $in family_union({{2, 3}, {3, 4}, {4, 5}})
 
     {4, 5} $in {{2, 3}, {3, 4}, {4, 5}}
     5 $in {4, 5}
-    5 $in big_union({{2, 3}, {3, 4}, {4, 5}})
+    5 $in family_union({{2, 3}, {3, 4}, {4, 5}})
 
     by enumerate finite_set:
         ? forall x {2, 3}:
@@ -1939,15 +1939,15 @@ sketch:
             A $subset {2, 3, 4, 5}
 
     by extension:
-        ? big_union({{2, 3}, {3, 4}, {4, 5}}) = {2, 3, 4, 5}
+        ? family_union({{2, 3}, {3, 4}, {4, 5}}) = {2, 3, 4, 5}
         claim:
-            ? forall x big_union({{2, 3}, {3, 4}, {4, 5}}):
+            ? forall x family_union({{2, 3}, {3, 4}, {4, 5}}):
                 x $in {2, 3, 4, 5}
             obtain A from exist A {{2, 3}, {3, 4}, {4, 5}} st {x $in A}
             A $subset {2, 3, 4, 5}
         by enumerate finite_set:
             ? forall y {2, 3, 4, 5}:
-                y $in big_union({{2, 3}, {3, 4}, {4, 5}})
+                y $in family_union({{2, 3}, {3, 4}, {4, 5}})
 
 """
 Remark 3.4.12. The axioms in this section, except unrestricted comprehension,

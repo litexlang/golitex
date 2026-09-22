@@ -4,7 +4,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::well_defined_results::{
     FactWellDefinedProof, FailToVerifyFactWellDefinedResult, FailToVerifyObjWellDefinedResult,
 };
 
-pub enum FailToVerifyExistFactWellDefinedResult {
+pub enum FailToVerifyExistShapedFactWellDefinedResult {
     ParamType(FailToVerifyObjWellDefinedResult),
     BodyFact {
         failed_index: usize,
@@ -27,7 +27,7 @@ pub enum FailToVerifyExistFactWellDefinedResult {
 // Success-only evidence (same contract as AtomicFactWellDefinedProof).
 // Constructed only under Success; never embeds soft-fail.
 // Field order = stage order; `local_env` is the closed binder scope (not merged).
-pub struct ExistFactWellDefinedProof {
+pub struct ExistShapedFactWellDefinedProof {
     pub param_type_well_defined: Vec<ParamTypeWellDefinedProof>,
     pub body: Vec<FactWellDefinedProof>,
     pub local_env: Box<ExecEnv>,
@@ -36,12 +36,12 @@ pub struct ExistFactWellDefinedProof {
 // Soft miss vs success for exist-fact WD. Same shape as
 // VerifyAtomicFactWellDefinedResult: Success(Proof) | Failed(reason).
 // Proof never embeds Fail.
-pub enum VerifyExistFactWellDefinedResult {
-    Success(ExistFactWellDefinedProof),
-    Failed(FailToVerifyExistFactWellDefinedResult),
+pub enum VerifyExistShapedFactWellDefinedResult {
+    Success(ExistShapedFactWellDefinedProof),
+    Failed(FailToVerifyExistShapedFactWellDefinedResult),
 }
 
-impl VerifyExistFactWellDefinedResult {
+impl VerifyExistShapedFactWellDefinedResult {
     pub fn is_failed(&self) -> bool {
         matches!(self, Self::Failed(_))
     }

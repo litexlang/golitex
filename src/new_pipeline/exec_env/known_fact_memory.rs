@@ -1,7 +1,7 @@
-use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, ExistFactFamily, Fact, OrFact};
+use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, ExistShapedFact, Fact, OrFact};
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::{AnonymousFn, FnSet, Obj, SetBuilder, FunctionSpace, SetFormer};
-use crate::new_pipeline::exec_env::exist_fact_index_key::{exist_fact_index_key, ExistFactIndexKey};
+use crate::new_pipeline::exec_env::exist_shaped_fact_index_key::{exist_shaped_fact_index_key, ExistShapedFactIndexKey};
 use crate::new_pipeline::exec_env::known_forall_conclusion_memory::KnownForallConclusionMemory;
 use crate::new_pipeline::runtime::FactId;
 use std::collections::{HashMap, HashSet};
@@ -43,7 +43,7 @@ pub struct KnownFactMemory {
 
     // Whole exist-facts indexed by structural key (binders / free objs not in the key).
     // Example: `exist x R st {x > 0}` stored for later exist-fact lookup.
-    pub known_exist: ExistFactMemory,
+    pub known_exist: ExistShapedFactMemory,
 
     // Forall then-clauses projected for conclusion-shaped lookup.
     // Example: after storing
@@ -102,10 +102,10 @@ pub struct OrFactMemory {
     pub by_key: HashMap<crate::new_pipeline::exec_env::or_fact_index_key::OrFactIndexKey, Vec<OrFact>>,
 }
 
-// Stored whole exist-facts by structural index key (binders/free objs not included).
+// Stored exist / exist! / not-exist facts by structural index key (binders/free objs not included).
 #[derive(Clone, Default)]
-pub struct ExistFactMemory {
-    pub by_key: HashMap<ExistFactIndexKey, Vec<ExistFactFamily>>,
+pub struct ExistShapedFactMemory {
+    pub by_key: HashMap<ExistShapedFactIndexKey, Vec<ExistShapedFact>>,
 }
 
 impl KnownFactMemory {
@@ -117,7 +117,7 @@ impl KnownFactMemory {
             known_equal_to_obj_with_free_params: KnownEqualToObjWithFreeParamsMemory::new(),
             known_atomic_except_equality_facts: AtomicExceptEqualityFactMemory::new(),
             known_or: OrFactMemory::new(),
-            known_exist: ExistFactMemory::new(),
+            known_exist: ExistShapedFactMemory::new(),
             known_forall_conclusions: KnownForallConclusionMemory::new(),
         }
     }
@@ -288,14 +288,14 @@ impl OrFactMemory {
     }
 }
 
-impl ExistFactMemory {
+impl ExistShapedFactMemory {
     pub fn new() -> Self {
         Self::default()
     }
 
-    // Example: store `exist x N st {x = 1}` under its ExistFactIndexKey bucket.
-    pub fn store(&mut self, exist_fact: &ExistFactFamily) {
-        let key = exist_fact_index_key(exist_fact);
+    // Example: store `exist x N st {x = 1}` under its ExistShapedFactIndexKey bucket.
+    pub fn store(&mut self, exist_fact: &ExistShapedFact) {
+        let key = exist_shaped_fact_index_key(exist_fact);
         self.by_key.entry(key).or_default().push(exist_fact.clone());
     }
 }

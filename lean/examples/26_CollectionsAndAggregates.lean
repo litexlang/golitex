@@ -6,24 +6,24 @@ set_option linter.style.nameCheck false
 namespace __Compiler_26_CollectionsAndAggregates
 
 theorem __fact0 :
-    ∀ (__p1 : Litex.Set), Litex.Same (Litex.bigUnion __p1) (Litex.bigUnion __p1) := by
+    ∀ (__p1 : Litex.Set), Litex.Same (Litex.familyUnion __p1) (Litex.familyUnion __p1) := by
   intro F
-  have __prior0_0 : Litex.Same (Litex.bigUnion F) (Litex.bigUnion F) := Litex.Same.refl (Litex.bigUnion F)
+  have __prior0_0 : Litex.Same (Litex.familyUnion F) (Litex.familyUnion F) := Litex.Same.refl (Litex.familyUnion F)
   exact __prior0_0
 
 theorem __fact1 :
-    ∀ (__p1 : Litex.Set), Litex.Same (Litex.bigIntersect __p1) (Litex.bigIntersect __p1) := by
+    ∀ (__p1 : Litex.Set), Litex.Same (Litex.familyIntersect __p1) (Litex.familyIntersect __p1) := by
   intro F
-  have __prior1_0 : Litex.Same (Litex.bigIntersect F) (Litex.bigIntersect F) := Litex.Same.refl (Litex.bigIntersect F)
+  have __prior1_0 : Litex.Same (Litex.familyIntersect F) (Litex.familyIntersect F) := Litex.Same.refl (Litex.familyIntersect F)
   exact __prior1_0
 
 theorem __fact2 : Litex.Same (Litex.powerSet Litex.R) (Litex.powerSet Litex.R) := by
   exact Litex.Same.refl (Litex.powerSet Litex.R)
 
 theorem __fact3 :
-    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__type2 : Litex.Set.Nonempty __p2) (__p3 : ((Litex.fnSet (__p1 : Litex.Set.{0}) (__p2 : Litex.Set.{0}))).Carrier) (__type3 : Litex.In (α := ((Litex.fnSet (__p1 : Litex.Set.{0}) (__p2 : Litex.Set.{0}))).Carrier) __p3 (Litex.fnSet (__p1 : Litex.Set.{0}) (__p2 : Litex.Set.{0}))), Litex.Same (Litex.generalCart __p1 __p2 __p3) (Litex.generalCart __p1 __p2 __p3) := by
+    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__type2 : Litex.Set.Nonempty __p2) (__p3 : ((Litex.fnSet (__p1 : Litex.Set.{0}) (__p2 : Litex.Set.{0}))).Carrier) (__type3 : Litex.In (α := ((Litex.fnSet (__p1 : Litex.Set.{0}) (__p2 : Litex.Set.{0}))).Carrier) __p3 (Litex.fnSet (__p1 : Litex.Set.{0}) (__p2 : Litex.Set.{0}))), Litex.Same (Litex.indexCart __p1 __p2 __p3) (Litex.indexCart __p1 __p2 __p3) := by
   intro I S __h18 g __h21
-  have __prior3_0 : Litex.Same (Litex.generalCart I S g) (Litex.generalCart I S g) := Litex.Same.refl (Litex.generalCart I S g)
+  have __prior3_0 : Litex.Same (Litex.indexCart I S g) (Litex.indexCart I S g) := Litex.Same.refl (Litex.indexCart I S g)
   exact __prior3_0
 
 theorem __fact4 : Litex.Same (Litex.range (1 : ℤ) (4 : ℤ)) (Litex.range (1 : ℤ) (4 : ℤ)) := by

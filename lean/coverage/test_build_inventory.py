@@ -89,7 +89,7 @@ class CoverageInventoryTests(unittest.TestCase):
 
     def test_untyped_cart_constructor_is_an_abi_decision(self) -> None:
         mechanism, _ = BUILD_INVENTORY.mechanism_for_uncatalogued(
-            "VerifyInFactInGeneralCartByDefiningFacts", [], set()
+            "VerifyInFactInIndexCartByDefiningFacts", [], set()
         )
         self.assertEqual(mechanism, "target_abi_decision")
 
@@ -97,7 +97,7 @@ class CoverageInventoryTests(unittest.TestCase):
         inventory = self.inventory
         rows = {row["source_id"]: row for row in inventory["rows"]}
         cart = rows[
-            "builtin.verify.verify_builtin_rules.in_fact_builtin.set_membership.verify_in_fact_in_general_cart_by_defining_facts"
+            "builtin.verify.verify_builtin_rules.in_fact_builtin.set_membership.verify_in_fact_in_index_cart_by_defining_facts"
         ]
         self.assertEqual(cart["status"], "abi_decision")
         self.assertEqual(cart["owner"], "user")

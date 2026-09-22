@@ -11,7 +11,7 @@
 //! math interfaces, one carrier. Membership `$in` is a Fact between two objects.
 //! The host `Object` type is meta-level only: not an internal universal set writable
 //! on either side of `$in`. Unrestricted comprehension is forbidden; set formers
-//! are bounded (SetBuilder, replacement, …) with their own WD obligations.
+//! are bounded (SetBuilder, ranges, …) with their own WD obligations.
 
 use super::fact::QuantifierFreeFact;
 use super::names::{AtomicName, BoundName, PlainName};
@@ -22,32 +22,68 @@ use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 // Shape cut: one nesting level of family enums; leaf payloads unchanged.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Obj {
+    // Free or qualified name used as a value. Example: `a`, `m1::f0::Point`.
     Identifier(IdentifierObj),
+
+    // Function application. Example: `f(1)`, `fn(x R) R {x}(a)`.
     FnObj(FnObj),
+
+    // Numeric / named constants. Example: `2`, `2.5`, `i`, `e`, `pi`.
     Literal(Literal),
+
+    // Built-in number sets and signed/nonzero variants. Example: `N`, `R+`, `Z*`.
     StandardSet(StandardSet),
+
+    // Real arithmetic ops. Example: `a + b`, `abs(x)`, `min(a, b)`.
     ArithmeticOperator(ArithmeticOperator),
+
+    // Integer-specific ops. Example: `a % d`, `gcd(a, b)`, `n!`.
     IntegerOperator(IntegerOperator),
+
+    // Trig and inverse trig. Example: `sin(x)`, `arctan(x)`.
     TrigOperator(TrigOperator),
+
+    // Exp / log / sqrt. Example: `exp(x)`, `ln(x)`, `log(2, x)`, `sqrt(x)`.
     ExpLogOperator(ExpLogOperator),
+
+    // Complex-part ops. Example: `re(z)`, `img(z)`, `C_abs(z)`.
     ComplexOperator(ComplexOperator),
+
+    // Set algebra and indexed families. Example: `union(A, B)`, `power_set(S)`.
     SetOperator(SetOperator),
+
+    // Set constructors / formers. Example: `{1, 2}`, `{x R: x > 0}`, `range(1, 3)`.
     SetFormer(SetFormer),
+
+    // Cartesian products, tuples, and indexing. Example: `cart(R, Z)`, `(1, 2)`, `(1, 2)[1]`.
     ProductShape(ProductShape),
+
+    // Function spaces and concrete functions. Example: `fn(x R) R`, `fn(x R) R {x}`, `fn_range(f)`.
     FunctionSpace(FunctionSpace),
+
+    // Indexed sums / products / fold. Example: `sum(1, n, f)`, `finite_set_product(S, f)`.
     IteratedOperator(IteratedOperator),
+
+    // Finite-set statistics. Example: `finite_set_size(S)`, `finite_set_max(S)`.
     FiniteSetStat(FiniteSetStat),
-    Structish(Structish),
+
+    // Named structs and field paths. Example: `&Point`, `p.x`.
+    StructAndFieldAccessObj(StructAndFieldAccessObj),
+
+    // Template instance. Example: `\carrier_copy<R>`.
+    InstantiatedTemplateObj(InstantiatedTemplateObj),
 }
 
+// Named / numeric constants that are not StandardSet.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Literal {
-    Number(Number),
-    ImaginaryUnit(ImaginaryUnit),
-    EulerNumber(EulerNumber),
-    Pi(Pi),
+    Number(Number),               // `2`, `2.4`
+    ImaginaryUnit(ImaginaryUnit), // `i`
+    EulerNumber(EulerNumber),     // `e`
+    Pi(Pi),                       // `pi`
 }
 
+// Binary / unary real arithmetic.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ArithmeticOperator {
     Add(Add),
@@ -55,20 +91,34 @@ pub enum ArithmeticOperator {
     Mul(Mul),
     Div(Div),
     Pow(Pow),
+    // Absolute value on reals. Example: `abs(x)`.
     Abs(Abs),
     Min(Min),
     Max(Max),
+    // Greatest integer ≤ x. Example: `floor(x)`.
     Floor(Floor),
+    // Least integer ≥ x. Example: `ceil(x)`.
     Ceil(Ceil),
+    // Sign of a real (−1 / 0 / 1). Example: `sign(x)`.
     Sign(Sign),
 }
 
+// Ops whose primary meaning is on integers.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum IntegerOperator {
-    Mod(Mod),   // a % d
-    Quot(Quot), // a = d * quot(a, d) + a % d
+    // Remainder after integer division. Example: `a % d`.
+    Mod(Mod),
+
+    // Integer quotient: `a = d * quot(a, d) + a % d`. Example: `quot(a, d)`.
+    Quot(Quot),
+
+    // Greatest common divisor. Example: `gcd(a, b)`.
     Gcd(Gcd),
+
+    // Least common multiple. Example: `lcm(a, b)`.
     Lcm(Lcm),
+
+    // Factorial. Example: `factorial(n)`.
     Factorial(Factorial),
 }
 
@@ -86,98 +136,192 @@ pub enum TrigOperator {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ExpLogOperator {
-    Exp(Exp),
-    Ln(Ln),
-    Log(Log),
-    Sqrt(Sqrt),
+    Exp(Exp),   // exponential e^x. Example: `exp(x)`
+    Ln(Ln),     // natural log. Example: `ln(x)`
+    Log(Log),   // log with explicit base. Example: `log(2, x)`
+    Sqrt(Sqrt), // principal square root. Example: `sqrt(x)`
 }
 
+// Complex coordinate / modulus ops (not ordinary real `abs`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ComplexOperator {
+    // Real part of a complex. Example: `re(z)`.
     RealPart(RealPart),
+
+    // Imaginary part of a complex. Example: `img(z)`.
     ImaginaryPart(ImaginaryPart),
+
+    // Complex modulus. Example: `C_abs(z)`.
     ComplexAbs(ComplexAbs),
 }
 
+// Set-forming operators on already available sets / families.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SetOperator {
+    // Binary union: elements in A or in B. Example: `union(A, B)`.
     Union(Union),
+
+    // Binary intersection: elements in both A and B. Example: `intersect(A, B)`.
     Intersect(Intersect),
+
+    // Relative complement: elements in A but not in B. Example: `set_minus(A, B)`.
     SetMinus(SetMinus),
-    BigUnion(BigUnion),
-    BigIntersect(BigIntersect),
+
+    // Union of a family of sets. Example: `family_union(F)`.
+    FamilyUnion(FamilyUnion),
+
+    // Intersection of a family of sets. Example: `family_intersect(F)`.
+    FamilyIntersect(FamilyIntersect),
+
+    // Indexed union ∪_{i ∈ I} A(i), where A is a set-valued family into ambient X.
+    // Args: index set I, ambient set X, family function A : I → power_set(X).
+    // Example: `index_union(I, X, A)`.
     IndexUnion(IndexUnion),
+
+    // Indexed intersection ∩_{i ∈ I} A(i), same argument roles as IndexUnion.
+    // Args: index set I, ambient set X, family function A : I → power_set(X).
+    // Example: `index_intersect(I, X, A)`.
     IndexIntersect(IndexIntersect),
+
+    // Set of all subsets of S. Example: `power_set(S)`.
     PowerSet(PowerSet),
-    GeneralCart(GeneralCart),
+
+    // Set of choice functions picking one point from each factor g(α), α ∈ I.
+    // Args: index set I, ambient set S, family function g : I → S.
+    // Example: `index_cart(I, S, g)`.
+    IndexCart(IndexCart),
 }
 
+// Ways to build a set from elements, formulas, ranges, or sequence spaces.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SetFormer {
+    // Finite enumeration by listing elements. Example: `{1, 2}`.
     ListSet(ListSet),
+
+    // Bounded comprehension `{x S: facts}` over an already available set S.
+    // Example: `{x R: x > 0}`.
     SetBuilder(SetBuilder),
-    Replacement(Replacement),
+
+    // Half-open integer interval set {start, …, end-1}. Example: `range(1, 3)` = {1, 2}.
     Range(Range),
+
+    // Closed integer interval set {start, …, end}. Example: `closed_range(1, 2)` = {1, 2}.
     ClosedRange(ClosedRange),
+
+    // Length-n sequences in S (n may be 0). Essentially the FnSet of maps from
+    // the length-n index set into S. Example: `finite_seq(S, n)`.
     FiniteSeqSet(FiniteSeqSet),
+
+    // Infinite sequences in S. Essentially the FnSet `fn(N) S`. Example: `seq(S)`.
     SeqSet(SeqSet),
+
+    // One-sided real ray (unbounded on one side). Example: `'[a,)`, `'(,b]`.
     OneSideInfinityIntervalObj(OneSideInfinityIntervalObj),
+
+    // Bounded real interval with open/closed endpoints. Example: `'[a, b]`, `'(a, b)`.
     IntervalObj(IntervalObj),
 }
 
+// Fixed-arity products, tuples, and their dimensions / projections / indexing.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ProductShape {
+    // Cartesian product of two or more sets. Example: `cart(R, Z)`.
     Cart(Cart),
+
+    // Ordered tuple value (an element of some cart). Example: `(1, 2)`.
     Tuple(Tuple),
+
+    // Number of factors of a cart. Example: `cart_dim(cart(R, Z))` = 2.
     CartDim(CartDim),
+
+    // Length of a tuple. Example: `tuple_dim((1, 2))` = 2.
     TupleDim(TupleDim),
+
+    // i-th factor *set* of a cart (1-based). Example: `proj(cart(R, Z), 1)` = R.
     Proj(Proj),
+
+    // i-th *component* of a tuple / sequence (1-based). Example: `(1, 2)[1]`, `a[1]` when a = (1, 2).
     ObjAtIndex(ObjAtIndex),
 }
 
+// Function type, concrete function value, and image of a function.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FunctionSpace {
+    // Function space / type: maps with given domain carriers and return set.
+    // Example: `fn(x R) R`, `fn(x R: x > 0) R`.
     FnSet(FnSet),
+
+    // Concrete function belonging to a FnSet (binders + defining expression).
+    // Example: `fn(x R) R {x + 1}`.
     AnonymousFn(AnonymousFn),
+
+    // Image of a function (range as a set). Example: `fn_range(f)`.
     FnRange(FnRange),
 }
 
+// Indexed sums / products and folds over integer ranges or finite sets.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum IteratedOperator {
+    // Sum of f(i) over a closed integer index range. Example: `sum(1, n, f)`.
     Sum(Sum),
+
+    // Sum of f(x) over a finite set (order irrelevant). Example: `finite_set_sum(S, f)`.
     SumOfFiniteSet(SumOfFiniteSet),
+
+    // Product of f(i) over a closed integer index range. Example: `product(1, n, f)`.
     Product(Product),
+
+    // Product of f(x) over a finite set. Example: `finite_set_product(S, f)`.
     ProductOfFiniteSet(ProductOfFiniteSet),
+
+    // Left fold of f over a closed integer index range with binary op and seed.
+    // Example: `reduce(1, 3, f, op, seed)`.
     Reduce(Reduce),
+
+    // Order-independent fold of f over a finite set with binary op and seed.
+    // Example: `finite_set_reduce(S, f, op, seed)`.
     FiniteSetReduce(FiniteSetReduce),
 }
 
+// Statistics extracted from a finite set of numbers.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FiniteSetStat {
+    // Cardinality. Example: `finite_set_size({1, 2})`.
     FiniteSetSize(FiniteSetSize),
+
+    // Greatest element. Example: `finite_set_max({1, 3})`.
     FiniteSetMax(FiniteSetMax),
+
+    // Least element. Example: `finite_set_min({1, 3})`.
     FiniteSetMin(FiniteSetMin),
 }
 
+// Named structure types and field paths on structure values.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum Structish {
+pub enum StructAndFieldAccessObj {
+    // Structure type name, optionally parameterized. Example: `&Point`, `&Group<s>`.
     StructObj(StructObj),
+
+    // Field path into a structure value (left-to-right). Example: `p.x`, `g.mul`.
     FieldAccess(FieldAccess),
-    InstantiatedTemplateObj(InstantiatedTemplateObj),
 }
 
 // Free or module-qualified name used as an object (at most three `::` segments).
-// Plain occurrences carry IdentifierId; qualified names do not.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum IdentifierObj {
+    // Local / session name with runtime IdentifierId. Example: `a`.
     Plain {
         id: IdentifierId,
         name: PlainName,
     },
+
+    // Name qualified by export file id. Example surface: `f0::Point`.
     WithExportFileId {
         export_file_id: usize,
         name: PlainName,
     },
+
+    // Name qualified by module id and export file id. Example surface: `m1::f0::Point`.
     WithModAndExportFileId {
         global_mod_id: usize,
         export_file_id: usize,
@@ -249,7 +393,7 @@ impl IdentifierObj {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FnObjHead {
     Identifier(IdentifierObj),
-    /// Anonymous function literal used as applied head, e.g. `fn(x R) R {x}(a)`.
+    // Anonymous function literal used as applied head. Example: `fn(x R) R {x}(a)`.
     AnonymousFnLiteral(Box<AnonymousFn>),
     FieldAccess(FieldAccess),
     InstantiatedTemplateObj(InstantiatedTemplateObj),
@@ -258,10 +402,11 @@ pub enum FnObjHead {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FnObj {
     pub head: Box<FnObjHead>,
+    // Curried argument groups. Example: `f(a, b)(c)` → two groups.
     pub body: Vec<Vec<Box<Obj>>>,
 }
 
-// Number
+// Decimal / integer numeral text after normalization. Example: `2`, `2.40` → `"2.4"`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Number {
     pub normalized_value: String,
@@ -498,19 +643,21 @@ pub struct SetMinus {
     pub right: Box<Obj>,
 }
 
-// BigUnion
+// Family union ∪F. Example: `family_union(F)`.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct BigUnion {
+pub struct FamilyUnion {
     pub left: Box<Obj>,
 }
 
-// BigIntersect
+// Family intersection ∩F. Example: `family_intersect(F)`.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct BigIntersect {
+pub struct FamilyIntersect {
     pub left: Box<Obj>,
 }
 
-// IndexUnion
+// Indexed union ∪_{i ∈ I} A(i) ⊆ X.
+// `index_union(I, X, A)` ↔ fields: index_set=I, ambient_set=X, family_fn=A
+// where A : I → power_set(X).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IndexUnion {
     pub index_set: Box<Obj>,
@@ -518,7 +665,8 @@ pub struct IndexUnion {
     pub family_fn: Box<Obj>,
 }
 
-// IndexIntersect
+// Indexed intersection ∩_{i ∈ I} A(i) ⊆ X; same field roles as IndexUnion.
+// `index_intersect(I, X, A)` ↔ index_set=I, ambient_set=X, family_fn=A.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IndexIntersect {
     pub index_set: Box<Obj>,
@@ -526,21 +674,22 @@ pub struct IndexIntersect {
     pub family_fn: Box<Obj>,
 }
 
-// PowerSet
+// Power set. Example: `power_set(R)`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PowerSet {
     pub set: Box<Obj>,
 }
 
-// GeneralCart
+// Set of choice functions on a family g indexed by I (values live in ambient S).
+// `index_cart(I, S, g)` ↔ index_set=I, family_set=S, family_fn=g.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct GeneralCart {
+pub struct IndexCart {
     pub index_set: Box<Obj>,
     pub family_set: Box<Obj>,
     pub family_fn: Box<Obj>,
 }
 
-// ListSet
+// Finite enumeration set. Example: `{1, 2}`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ListSet {
     pub list: Vec<Box<Obj>>,
@@ -579,70 +728,62 @@ pub enum FnSetSpace {
     Anon(AnonymousFn),
 }
 
-// Cart
+// Fixed-arity cartesian product of sets. Example: `cart(R, Z)`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Cart {
     pub args: Vec<Box<Obj>>,
 }
 
-// CartDim
+// Dimension of a cartesian product set. Example: `cart_dim(cart(R, Z))` = 2.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CartDim {
     pub set: Box<Obj>,
 }
 
-// Proj
+// i-th factor set of a cart. Example: `proj(cart(R, Z), 1)`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Proj {
     pub set: Box<Obj>,
     pub dim: Box<Obj>,
 }
 
-// TupleDim
+// Length of a tuple. Example: `tuple_dim((1, 2))` = 2.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TupleDim {
     pub arg: Box<Obj>,
 }
 
-// Tuple
+// Ordered tuple value. Example: `(1, 2)`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Tuple {
     pub args: Vec<Box<Obj>>,
 }
 
-// FiniteSetSize
+// Cardinality of a finite set. Example: `finite_set_size({1, 2})`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FiniteSetSize {
     pub set: Box<Obj>,
 }
 
-// FiniteSetMax
+// Maximum element of a finite real/integer set. Example: `finite_set_max({1, 3})`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FiniteSetMax {
     pub set: Box<Obj>,
 }
 
-// FiniteSetMin
+// Minimum element of a finite real/integer set. Example: `finite_set_min({1, 3})`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FiniteSetMin {
     pub set: Box<Obj>,
 }
 
-// FnRange
+// Image of a function. Example: `fn_range(f)`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FnRange {
     pub function: Box<Obj>,
 }
 
-// `replacement(P, A)`: image of A under a functional set-valued relation P.
-// WD requires more than children: uniqueness / functionality of P on A (Manual Sets).
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Replacement {
-    pub prop_name: AtomicName,
-    pub source_set: Box<Obj>,
-}
-
-// Sum
+// Sum of f(i) over a closed integer index range [start, end]. Example: `sum(1, n, f)`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Sum {
     pub start: Box<Obj>,
@@ -650,14 +791,14 @@ pub struct Sum {
     pub func: Box<Obj>,
 }
 
-// SumOfFiniteSet
+// Sum of f over a finite set. Example: `finite_set_sum(S, f)`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SumOfFiniteSet {
     pub set: Box<Obj>,
     pub func: Box<Obj>,
 }
 
-// Product
+// Product of f(i) over a closed integer index range [start, end]. Example: `product(1, n, f)`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Product {
     pub start: Box<Obj>,
@@ -665,14 +806,15 @@ pub struct Product {
     pub func: Box<Obj>,
 }
 
-// ProductOfFiniteSet
+// Product of f over a finite set. Example: `finite_set_product(S, f)`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ProductOfFiniteSet {
     pub set: Box<Obj>,
     pub func: Box<Obj>,
 }
 
-// Reduce
+// Left fold of f over a closed integer index range with binary op and seed.
+// Example: `reduce(1, 3, f, op, seed)`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Reduce {
     pub start: Box<Obj>,
@@ -682,7 +824,7 @@ pub struct Reduce {
     pub seed: Box<Obj>,
 }
 
-// FiniteSetReduce
+// Fold over a finite set. Example: `finite_set_reduce(S, f, op, seed)`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FiniteSetReduce {
     pub set: Box<Obj>,
@@ -691,87 +833,92 @@ pub struct FiniteSetReduce {
     pub seed: Box<Obj>,
 }
 
-// Range
+// Half-open integer range {start, …, end-1}. Example: `range(1, 3)` = {1, 2}.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Range {
     pub start: Box<Obj>,
     pub end: Box<Obj>,
 }
 
-// ClosedRange
+// Closed integer range {start, …, end}. Example: `closed_range(1, 2)` = {1, 2}.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ClosedRange {
     pub start: Box<Obj>,
     pub end: Box<Obj>,
 }
 
-// FiniteSeqSet， finite_seq(s, n) means a finite-length sequence with length n whose elements are in set s.
+// Length-n sequences in S. Essentially the FnSet of maps from the length-n
+// index set into S. Example: `finite_seq(S, n)`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FiniteSeqSet {
     pub set: Box<Obj>,
     pub n: Box<Obj>,
 }
 
-// SeqSet
+// Infinite sequences in S. Essentially the FnSet `fn(N) S`. Example: `seq(S)`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SeqSet {
     pub set: Box<Obj>,
 }
 
-// ObjAtIndex
+// Tuple / sequence indexing. Example: `(1, 2)[1]`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ObjAtIndex {
     pub obj: Box<Obj>,
     pub index: Box<Obj>,
 }
 
-// StandardSet
+// Built-in number sets and common signed / nonzero variants.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum StandardSet {
-    NPos,
-    N,
-    Q,
-    Z,
-    R,
-    C,
-    QPos,
-    RPos,
-    QNeg,
-    ZNeg,
-    RNeg,
-    QStar,
-    ZStar,
-    RStar,
-    CStar,
+    NPos,  // positive naturals `N+`
+    N,     // naturals including 0 `N`
+    Q,     // rationals `Q`
+    Z,     // integers `Z`
+    R,     // reals `R`
+    C,     // complexes `C`
+    QPos,  // positive rationals `Q+`
+    RPos,  // positive reals `R+`
+    QNeg,  // negative rationals `Q-`
+    ZNeg,  // negative integers `Z-`
+    RNeg,  // negative reals `R-`
+    QStar, // nonzero rationals `Q*`
+    ZStar, // nonzero integers `Z*`
+    RStar, // nonzero reals `R*`
+    CStar, // nonzero complexes `C*`
 }
 
-// StructObj
+// Named structure type, possibly with parameters. Example: `&Point`, `&Group<s>`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct StructObj {
     pub name: AtomicName,
     pub params: Vec<Obj>,
 }
 
-// FieldAccess — surface `x.y` / `x.y.z` (one node, fields left-to-right).
+// Field path. Example: `p.x`, `g.mul`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FieldAccess {
     pub obj: Box<Obj>,
     pub fields: Vec<String>,
 }
 
-// InstantiatedTemplateObj
+// Instantiated template object. Example: `\carrier_copy<R>`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct InstantiatedTemplateObj {
     pub template_name: AtomicName,
     pub args: Vec<Obj>,
 }
 
-// OneSideInfinityIntervalObj
+// One-sided real rays (unbounded on one side). Endpoint openness is in the variant.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum OneSideInfinityIntervalObj {
+    // (−∞, a). Example: `'(,a)`.
     LeftOpen(OneSideInfinityIntervalObjStruct),
+    // (−∞, a]. Example: `'(,a]`.
     LeftClosed(OneSideInfinityIntervalObjStruct),
+    // (a, +∞). Example: `'(a,)`.
     RightOpen(OneSideInfinityIntervalObjStruct),
+    // [a, +∞). Example: `'[a,)`.
     RightClosed(OneSideInfinityIntervalObjStruct),
 }
 
@@ -780,12 +927,16 @@ pub struct OneSideInfinityIntervalObjStruct {
     pub start: Box<Obj>,
 }
 
-// IntervalObj
+// Bounded real intervals. Endpoint openness is in the variant.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum IntervalObj {
+    // (a, b). Example: `'(a, b)`.
     LeftOpenRightOpen(IntervalObjStruct),
+    // (a, b]. Example: `'(a, b]`.
     LeftOpenRightClosed(IntervalObjStruct),
+    // [a, b). Example: `'[a, b)`.
     LeftClosedRightOpen(IntervalObjStruct),
+    // [a, b]. Example: `'[a, b]`.
     LeftClosedRightClosed(IntervalObjStruct),
 }
 

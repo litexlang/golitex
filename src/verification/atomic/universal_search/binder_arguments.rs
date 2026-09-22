@@ -68,12 +68,12 @@ impl ArgMatcher<'_> {
         Ok(Some(merged))
     }
 
-    pub(super) fn match_arg_when_left_is_general_cart(
+    pub(super) fn match_arg_when_left_is_index_cart(
         &mut self,
-        left: &GeneralCart,
+        left: &IndexCart,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        let Obj::GeneralCart(given) = given_arg else {
+        let Obj::IndexCart(given) = given_arg else {
             return Ok(None);
         };
         self.match_args_in_active_binding_scope(

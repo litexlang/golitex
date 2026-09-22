@@ -17,7 +17,7 @@
 use std::collections::HashMap;
 
 use crate::new_pipeline::ast::fact::{
-    AtomicFact, EqualFact, ExistFactFamily, ExistOrAndChainAtomicFact, Fact, ForallFact,
+    AtomicFact, EqualFact, ExistShapedFact, ExistOrAndChainAtomicFact, Fact, ForallFact,
     PlainExistFact,
 };
 use crate::new_pipeline::ast::names::BoundName;
@@ -25,7 +25,7 @@ use crate::new_pipeline::ast::obj::{IdentifierObj, Obj, Tuple, ProductShape};
 use crate::new_pipeline::ast::param::{TypedParameterGroup, TypedParameterList};
 use crate::new_pipeline::ast::stmt::ObtainObjFromExistFact;
 use crate::new_pipeline::execute::execute_fact_stmt::{
-    VerifyExistFactFailed, VerifyExistFactResult, VerifyExistUniqueFactResult,
+    VerifyExistShapedFactFailed, VerifyExistShapedFactResult, VerifyExistUniqueFactResult,
     VerifyExistUniqueFactSuccess, VerifyFactResult, VerifyPlainExistFactResult,
     VerifyPlainExistFactSuccess, VerifyState,
 };
@@ -36,7 +36,7 @@ use crate::new_pipeline::runtime::{IdentifierId, Runtime, RuntimeError, RuntimeR
 pub enum ExecObtainObjFromExistFactStmtFailed {
     ArityMismatch { expected: usize, got: usize },
     NotExistSource,
-    Exist(VerifyExistFactFailed),
+    Exist(VerifyExistShapedFactFailed),
 }
 
 pub enum ObtainExistVerifySuccess {
@@ -68,7 +68,7 @@ impl Runtime {
         &mut self,
         stmt: &ObtainObjFromExistFact,
     ) -> RuntimeResult<ExecObtainObjFromExistFactStmtResult> {
-        if matches!(stmt.fact, ExistFactFamily::NotExist(_)) {
+        if matches!(stmt.fact, ExistShapedFact::NotExist(_)) {
             return Ok(ExecObtainObjFromExistFactStmtResult::Failed(
                 ExecObtainObjFromExistFactStmtFailed::NotExistSource,
             ));
@@ -79,7 +79,7 @@ impl Runtime {
             can_use_rewrite: true,
             store_well_defined_fact: true,
         };
-        let verified = self.verify_exist_fact(&stmt.fact, verify_state)?;
+        let verified = self.verify_exist_shaped_fact(&stmt.fact, verify_state)?;
         let verify_exist = match self.unwrap_obtain_exist_verify(verified)? {
             Ok(success) => success,
             Err(failed) => {
@@ -107,11 +107,11 @@ impl Runtime {
     // (no separate id field — resolve through Env / stored_fact_ids).
     pub(in crate::new_pipeline::execute) fn apply_obtain_from_known_exist_family(
         &mut self,
-        family: &ExistFactFamily,
+        family: &ExistShapedFact,
         equal_tos: &[String],
     ) -> RuntimeResult<Result<StoreHaveObjAndInferResult, ExecObtainObjFromExistFactStmtFailed>>
     {
-        if matches!(family, ExistFactFamily::NotExist(_)) {
+        if matches!(family, ExistShapedFact::NotExist(_)) {
             return Ok(Err(ExecObtainObjFromExistFactStmtFailed::NotExistSource));
         }
 
@@ -146,7 +146,7 @@ impl Runtime {
                 .extend(stored.stored_fact_ids());
         }
 
-        if matches!(family, ExistFactFamily::ExistUnique(_)) {
+        if matches!(family, ExistShapedFact::ExistUnique(_)) {
             let uniqueness = self.build_exist_unique_uniqueness_forall_fact(plain)?;
             let stored = self.store_fact_and_infer(&Fact::ForallFact(uniqueness))?;
             store_and_infer_result
@@ -160,19 +160,19 @@ impl Runtime {
     fn unwrap_obtain_exist_verify(
         &self,
         result: VerifyFactResult,
-    ) -> RuntimeResult<Result<ObtainExistVerifySuccess, VerifyExistFactFailed>> {
+    ) -> RuntimeResult<Result<ObtainExistVerifySuccess, VerifyExistShapedFactFailed>> {
         match result {
-            VerifyFactResult::ExistFact(boxed) => match *boxed {
-                VerifyExistFactResult::PlainExistFact(VerifyPlainExistFactResult::Success(s)) => {
+            VerifyFactResult::ExistShapedFact(boxed) => match *boxed {
+                VerifyExistShapedFactResult::PlainExistFact(VerifyPlainExistFactResult::Success(s)) => {
                     Ok(Ok(ObtainExistVerifySuccess::Exist(s)))
                 }
-                VerifyExistFactResult::PlainExistFact(VerifyPlainExistFactResult::Failed(f)) => {
+                VerifyExistShapedFactResult::PlainExistFact(VerifyPlainExistFactResult::Failed(f)) => {
                     Ok(Err(f))
                 }
-                VerifyExistFactResult::ExistUniqueFact(VerifyExistUniqueFactResult::Success(s)) => {
+                VerifyExistShapedFactResult::ExistUniqueFact(VerifyExistUniqueFactResult::Success(s)) => {
                     Ok(Ok(ObtainExistVerifySuccess::ExistUnique(s)))
                 }
-                VerifyExistFactResult::ExistUniqueFact(VerifyExistUniqueFactResult::Failed(f)) => {
+                VerifyExistShapedFactResult::ExistUniqueFact(VerifyExistUniqueFactResult::Failed(f)) => {
                     Ok(Err(f))
                 }
                 _ => Err(RuntimeError::InternalBug(

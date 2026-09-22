@@ -33,9 +33,9 @@ index_intersect({1, 2, 3}, N, family) $in power_set(N)
 
 # They agree with the older range encodings where those encodings have the
 # corresponding semantics. The intersection bridge requires a nonempty index.
-index_union({1, 2, 3}, N, family) = big_union(fn_range(family))
+index_union({1, 2, 3}, N, family) = family_union(fn_range(family))
 $is_nonempty_set({1, 2, 3})
-index_intersect({1, 2, 3}, N, family) = big_intersect(fn_range(family))
+index_intersect({1, 2, 3}, N, family) = family_intersect(fn_range(family))
 
 # Before (the domain-union equalities were well-defined but not recognized):
 # index_union(union({1}, {2}), N, domain_union_family) = union(index_union({1}, N, fn(left_index {1}) power_set(N) {domain_union_family(left_index)}), index_union({2}, N, fn(right_index {2}) power_set(N) {domain_union_family(right_index)}))

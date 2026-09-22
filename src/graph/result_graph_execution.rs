@@ -458,8 +458,8 @@ impl DepCollector {
             Obj::ImaginaryPart(x) => self.collect_obj(&x.arg),
             Obj::ComplexAbs(x) => self.collect_obj(&x.arg),
             Obj::Sqrt(x) => self.collect_obj(&x.arg),
-            Obj::BigUnion(x) => self.collect_obj(&x.left),
-            Obj::BigIntersect(x) => self.collect_obj(&x.left),
+            Obj::FamilyUnion(x) => self.collect_obj(&x.left),
+            Obj::FamilyIntersect(x) => self.collect_obj(&x.left),
             Obj::IndexUnion(x) => {
                 self.collect_obj(&x.index_set);
                 self.collect_obj(&x.ambient_set);
@@ -488,7 +488,7 @@ impl DepCollector {
                     self.collect_obj(obj);
                 }
             }
-            Obj::GeneralCart(x) => {
+            Obj::IndexCart(x) => {
                 self.collect_obj(&x.index_set);
                 self.collect_obj(&x.family_set);
                 self.collect_obj(&x.family_fn);

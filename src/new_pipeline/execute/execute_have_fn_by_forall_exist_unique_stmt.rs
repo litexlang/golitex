@@ -29,7 +29,7 @@ use crate::new_pipeline::ast::fact::{
     QuantifierFreeFact,
 };
 use crate::new_pipeline::ast::names::BoundName;
-use crate::new_pipeline::ast::obj::{FnObj, FnObjHead, FnSet, IdentifierObj, Obj, FunctionSpace, Structish};
+use crate::new_pipeline::ast::obj::{FnObj, FnObjHead, FnSet, IdentifierObj, Obj, FunctionSpace, StructAndFieldAccessObj};
 use crate::new_pipeline::ast::param::{
     ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
 };
@@ -346,7 +346,7 @@ fn fn_set_from_clause(clause: &FnSetClause) -> FnSet {
 fn applied_function_obj(surface: &Obj, params: &TypedParameterList) -> Obj {
     let head = match surface {
         Obj::Identifier(id) => FnObjHead::Identifier(id.clone()),
-        Obj::Structish(Structish::InstantiatedTemplateObj(inst)) => FnObjHead::InstantiatedTemplateObj(inst.clone()),
+        Obj::InstantiatedTemplateObj(inst) => FnObjHead::InstantiatedTemplateObj(inst.clone()),
         other => panic!("have fn by exist!: applied head must be identifier or template instance, got {other:?}"),
     };
     let mut args = Vec::new();

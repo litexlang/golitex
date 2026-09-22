@@ -179,10 +179,10 @@ impl Runtime {
                 }
             }
         }
-        if let Obj::GeneralCart(general_cart) = &in_fact.set {
-            let result = self.verify_in_fact_in_general_cart_by_defining_facts(
+        if let Obj::IndexCart(index_cart) = &in_fact.set {
+            let result = self.verify_in_fact_in_index_cart_by_defining_facts(
                 in_fact,
-                general_cart,
+                index_cart,
                 &verify_state.clone(),
             )?;
             if result.is_success() {
@@ -416,10 +416,10 @@ impl Runtime {
                     builtin_state,
                 );
             }
-            (_, Obj::BigUnion(big_union)) => {
-                return self.verify_in_fact_in_big_union_by_member_witness(
+            (_, Obj::FamilyUnion(family_union)) => {
+                return self.verify_in_fact_in_family_union_by_member_witness(
                     in_fact,
-                    big_union,
+                    family_union,
                     builtin_state,
                 );
             }

@@ -107,7 +107,7 @@ impl Runtime {
         // Trusted axiom-of-choice step. The quantified selection condition is
         // exposed through a named builtin predicate, so the existential body
         // remains atomic:
-        // exist f fn(A S) big_union(S) st {
+        // exist f fn(A S) family_union(S) st {
         //     $is_choice_function_for(S, S, fn(A S) S {A}, f)
         // }.
         let choice_fact =
@@ -226,7 +226,7 @@ fn axiom_of_choice_exist_fact(
     let choice_fn_set = FnSet::new(
         vec![choice_index_group],
         vec![],
-        BigUnion::new(family.clone()).into(),
+        FamilyUnion::new(family.clone()).into(),
     )?;
 
     let f_name = runtime.generate_internal_binder_name();

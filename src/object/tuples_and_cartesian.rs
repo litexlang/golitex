@@ -24,7 +24,7 @@ pub struct Proj {
 }
 
 #[derive(Clone)]
-pub struct GeneralCart {
+pub struct IndexCart {
     pub index_set: Box<Obj>,
     pub family_set: Box<Obj>,
     pub family_fn: Box<Obj>,
@@ -35,9 +35,9 @@ pub struct Cart {
     pub args: Vec<Box<Obj>>,
 }
 
-impl GeneralCart {
+impl IndexCart {
     pub fn new(index_set: Obj, family_set: Obj, family_fn: Obj) -> Self {
-        GeneralCart {
+        IndexCart {
             index_set: Box::new(index_set),
             family_set: Box::new(family_set),
             family_fn: Box::new(family_fn),

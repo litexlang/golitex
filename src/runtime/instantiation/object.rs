@@ -158,9 +158,9 @@ impl Runtime {
             Obj::Union(inner) => self.inst_union(inner, param_to_arg_map, param_obj_type),
             Obj::Intersect(inner) => self.inst_intersect(inner, param_to_arg_map, param_obj_type),
             Obj::SetMinus(inner) => self.inst_set_minus(inner, param_to_arg_map, param_obj_type),
-            Obj::BigUnion(inner) => self.inst_big_union(inner, param_to_arg_map, param_obj_type),
-            Obj::BigIntersect(inner) => {
-                self.inst_big_intersect(inner, param_to_arg_map, param_obj_type)
+            Obj::FamilyUnion(inner) => self.inst_family_union(inner, param_to_arg_map, param_obj_type),
+            Obj::FamilyIntersect(inner) => {
+                self.inst_family_intersect(inner, param_to_arg_map, param_obj_type)
             }
             Obj::IndexUnion(inner) => {
                 self.inst_index_union(inner, param_to_arg_map, param_obj_type)
@@ -231,8 +231,8 @@ impl Runtime {
                 self.inst_matrix_list_obj(inner, param_to_arg_map, param_obj_type)
             }
             Obj::PowerSet(inner) => self.inst_power_set(inner, param_to_arg_map, param_obj_type),
-            Obj::GeneralCart(inner) => {
-                self.inst_general_cart(inner, param_to_arg_map, param_obj_type)
+            Obj::IndexCart(inner) => {
+                self.inst_index_cart(inner, param_to_arg_map, param_obj_type)
             }
             Obj::ObjAtIndex(inner) => {
                 self.inst_obj_at_index(inner, param_to_arg_map, param_obj_type)
@@ -602,23 +602,23 @@ impl Runtime {
         .into())
     }
 
-    pub fn inst_big_union(
+    pub fn inst_family_union(
         &self,
-        big_union: &BigUnion,
+        family_union: &FamilyUnion,
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
-        Ok(BigUnion::new(self.inst_obj(&big_union.left, param_to_arg_map, param_obj_type)?).into())
+        Ok(FamilyUnion::new(self.inst_obj(&family_union.left, param_to_arg_map, param_obj_type)?).into())
     }
 
-    pub fn inst_big_intersect(
+    pub fn inst_family_intersect(
         &self,
-        big_intersect: &BigIntersect,
+        family_intersect: &FamilyIntersect,
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
-        Ok(BigIntersect::new(self.inst_obj(
-            &big_intersect.left,
+        Ok(FamilyIntersect::new(self.inst_obj(
+            &family_intersect.left,
             param_to_arg_map,
             param_obj_type,
         )?)
@@ -740,16 +740,16 @@ impl Runtime {
         .into())
     }
 
-    pub fn inst_general_cart(
+    pub fn inst_index_cart(
         &self,
-        general_cart: &GeneralCart,
+        index_cart: &IndexCart,
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
-        Ok(GeneralCart::new(
-            self.inst_obj(&general_cart.index_set, param_to_arg_map, param_obj_type)?,
-            self.inst_obj(&general_cart.family_set, param_to_arg_map, param_obj_type)?,
-            self.inst_obj(&general_cart.family_fn, param_to_arg_map, param_obj_type)?,
+        Ok(IndexCart::new(
+            self.inst_obj(&index_cart.index_set, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&index_cart.family_set, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&index_cart.family_fn, param_to_arg_map, param_obj_type)?,
         )
         .into())
     }

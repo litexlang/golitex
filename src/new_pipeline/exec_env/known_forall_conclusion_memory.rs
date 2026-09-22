@@ -5,11 +5,11 @@
 
 use crate::new_pipeline::ast::fact::{
     AndFactComponentForallConclusionLocation, AtomicFact, DirectForallConclusionLocation,
-    ExistFactFamily, ExistOrAndChainAtomicFact, ForallConclusionLocation, ForallFact, OrFact,
+    ExistShapedFact, ExistOrAndChainAtomicFact, ForallConclusionLocation, ForallFact, OrFact,
 };
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::fact::atomic_fact_has_positive_polarity;
-use crate::new_pipeline::exec_env::exist_fact_index_key::{exist_fact_index_key, ExistFactIndexKey};
+use crate::new_pipeline::exec_env::exist_shaped_fact_index_key::{exist_shaped_fact_index_key, ExistShapedFactIndexKey};
 use crate::new_pipeline::exec_env::or_fact_index_key::{or_fact_index_key, OrFactIndexKey};
 use crate::new_pipeline::exec_env::forall_conclusion_index_key::{
     and_forall_conclusion_index_key, chain_forall_conclusion_index_key,
@@ -34,7 +34,7 @@ pub struct KnownForallConclusionMemory {
     /// Whole or then-clauses, keyed by structural or index key.
     pub by_or: HashMap<OrFactIndexKey, Vec<ForallConclusionCite>>,
     /// Whole exist then-clauses, keyed by structural exist index key.
-    pub by_exist: HashMap<ExistFactIndexKey, Vec<ForallConclusionCite>>,
+    pub by_exist: HashMap<ExistShapedFactIndexKey, Vec<ForallConclusionCite>>,
     /// Whole and then-clauses, keyed by component shape. This is what lets
     /// `and/components.lit` match a forall conclusion before proving its
     /// components.
@@ -101,7 +101,7 @@ impl KnownForallConclusionMemory {
                     });
                 }
                 ExistOrAndChainAtomicFact::ExistFact(plain) => {
-                    let key = exist_fact_index_key(&ExistFactFamily::Exist(plain.clone()));
+                    let key = exist_shaped_fact_index_key(&ExistShapedFact::Exist(plain.clone()));
                     self.by_exist
                         .entry(key)
                         .or_default()
@@ -113,7 +113,7 @@ impl KnownForallConclusionMemory {
                         });
                 }
                 ExistOrAndChainAtomicFact::ExistUniqueFact(plain) => {
-                    let key = exist_fact_index_key(&ExistFactFamily::ExistUnique(plain.clone()));
+                    let key = exist_shaped_fact_index_key(&ExistShapedFact::ExistUnique(plain.clone()));
                     self.by_exist
                         .entry(key)
                         .or_default()
@@ -125,7 +125,7 @@ impl KnownForallConclusionMemory {
                         });
                 }
                 ExistOrAndChainAtomicFact::NotExistFact(plain) => {
-                    let key = exist_fact_index_key(&ExistFactFamily::NotExist(plain.clone()));
+                    let key = exist_shaped_fact_index_key(&ExistShapedFact::NotExist(plain.clone()));
                     self.by_exist
                         .entry(key)
                         .or_default()
@@ -295,18 +295,18 @@ pub fn or_at_forall_location(
 pub fn exist_at_forall_location(
     forall: &ForallFact,
     location: &ForallConclusionLocation,
-) -> Option<ExistFactFamily> {
+) -> Option<ExistShapedFact> {
     match location {
         ForallConclusionLocation::DirectThenFact(loc) => {
             match forall.then_facts.get(loc.then_fact_index)? {
                 ExistOrAndChainAtomicFact::ExistFact(plain) => {
-                    Some(ExistFactFamily::Exist(plain.clone()))
+                    Some(ExistShapedFact::Exist(plain.clone()))
                 }
                 ExistOrAndChainAtomicFact::ExistUniqueFact(plain) => {
-                    Some(ExistFactFamily::ExistUnique(plain.clone()))
+                    Some(ExistShapedFact::ExistUnique(plain.clone()))
                 }
                 ExistOrAndChainAtomicFact::NotExistFact(plain) => {
-                    Some(ExistFactFamily::NotExist(plain.clone()))
+                    Some(ExistShapedFact::NotExist(plain.clone()))
                 }
                 _ => None,
             }

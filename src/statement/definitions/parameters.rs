@@ -812,13 +812,13 @@ fn collect_cited_param_indices_from_obj(
             shadowed_names,
             out,
         ),
-        Obj::BigUnion(x) => collect_cited_param_indices_from_obj(
+        Obj::FamilyUnion(x) => collect_cited_param_indices_from_obj(
             &x.left,
             previous_param_indices,
             shadowed_names,
             out,
         ),
-        Obj::BigIntersect(x) => collect_cited_param_indices_from_obj(
+        Obj::FamilyIntersect(x) => collect_cited_param_indices_from_obj(
             &x.left,
             previous_param_indices,
             shadowed_names,
@@ -898,7 +898,7 @@ fn collect_cited_param_indices_from_obj(
             }
             shadowed_names.pop();
         }
-        Obj::GeneralCart(x) => {
+        Obj::IndexCart(x) => {
             collect_cited_param_indices_from_obj(
                 &x.index_set,
                 previous_param_indices,

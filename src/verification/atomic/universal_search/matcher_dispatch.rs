@@ -306,9 +306,9 @@ impl ArgMatcher<'_> {
             Obj::SetMinus(ref a) => {
                 self.match_arg_when_left_is_set_minus(&a.left, &a.right, given_arg)
             }
-            Obj::BigUnion(ref a) => self.match_arg_when_left_is_big_union(&a.left, given_arg),
-            Obj::BigIntersect(ref a) => {
-                self.match_arg_when_left_is_big_intersect(&a.left, given_arg)
+            Obj::FamilyUnion(ref a) => self.match_arg_when_left_is_family_union(&a.left, given_arg),
+            Obj::FamilyIntersect(ref a) => {
+                self.match_arg_when_left_is_family_intersect(&a.left, given_arg)
             }
             Obj::IndexUnion(ref left) => {
                 let Obj::IndexUnion(given) = given_arg else {
@@ -344,7 +344,7 @@ impl ArgMatcher<'_> {
                     ],
                 )
             }
-            Obj::GeneralCart(ref left) => self.match_arg_when_left_is_general_cart(left, given_arg),
+            Obj::IndexCart(ref left) => self.match_arg_when_left_is_index_cart(left, given_arg),
             Obj::ListSet(ref left) => self.match_arg_when_left_is_list_set(&left.list, given_arg),
             Obj::SetBuilder(ref left) => self.match_arg_when_left_is_set_builder(left, given_arg),
             Obj::FnSet(ref left) => self.match_arg_when_left_is_fn_set_with_params(left, given_arg),

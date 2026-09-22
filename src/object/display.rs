@@ -211,8 +211,8 @@ impl Obj {
             Obj::Union(x) => write!(f, "{}", x)?,
             Obj::Intersect(x) => write!(f, "{}", x)?,
             Obj::SetMinus(x) => write!(f, "{}", x)?,
-            Obj::BigUnion(x) => write!(f, "{}", x)?,
-            Obj::BigIntersect(x) => write!(f, "{}", x)?,
+            Obj::FamilyUnion(x) => write!(f, "{}", x)?,
+            Obj::FamilyIntersect(x) => write!(f, "{}", x)?,
             Obj::IndexUnion(x) => write!(f, "{}", x)?,
             Obj::IndexIntersect(x) => write!(f, "{}", x)?,
             Obj::Atom(x) => write!(f, "{}", x)?,
@@ -250,7 +250,7 @@ impl Obj {
             Obj::MatrixSet(x) => write!(f, "{}", x)?,
             Obj::MatrixListObj(x) => write!(f, "{}", x)?,
             Obj::PowerSet(x) => write!(f, "{}", x)?,
-            Obj::GeneralCart(x) => write!(f, "{}", x)?,
+            Obj::IndexCart(x) => write!(f, "{}", x)?,
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
             Obj::StructObj(x) => write!(f, "{}", x)?,
             Obj::ObjAsStructInstanceWithFieldAccess(x) => write!(f, "{}", x)?,
@@ -869,23 +869,23 @@ impl fmt::Display for SetMinus {
     }
 }
 
-impl fmt::Display for BigUnion {
+impl fmt::Display for FamilyUnion {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}",
-            BIG_UNION,
+            FAMILY_UNION,
             braced_vec_to_string(&vec![self.left.as_ref()])
         )
     }
 }
 
-impl fmt::Display for BigIntersect {
+impl fmt::Display for FamilyIntersect {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}{}",
-            BIG_INTERSECT,
+            FAMILY_INTERSECT,
             braced_vec_to_string(&vec![self.left.as_ref()])
         )
     }
@@ -941,12 +941,12 @@ impl fmt::Display for SetBuilder {
     }
 }
 
-impl fmt::Display for GeneralCart {
+impl fmt::Display for IndexCart {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
             "{}({}, {}, {})",
-            GENERAL_CART, self.index_set, self.family_set, self.family_fn
+            INDEX_CART, self.index_set, self.family_set, self.family_fn
         )
     }
 }

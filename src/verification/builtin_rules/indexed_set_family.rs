@@ -977,7 +977,7 @@ impl Runtime {
         if Self::cart_set_minus_matches(adapter_side, expanded_side) {
             return Some("Cartesian product preserves set difference in one coordinate");
         }
-        if Self::general_cart_pointwise_intersection_matches(adapter_side, expanded_side) {
+        if Self::index_cart_pointwise_intersection_matches(adapter_side, expanded_side) {
             return Some("general Cartesian product preserves pointwise intersection");
         }
         None
@@ -1012,16 +1012,16 @@ impl Runtime {
             }
         }
 
-        // general_cart(A) union general_cart(B) is contained in the product
+        // index_cart(A) union index_cart(B) is contained in the product
         // of the pointwise unions.
-        if let (Obj::Union(binary), Obj::GeneralCart(target)) = (left, right) {
-            let (Obj::GeneralCart(first), Obj::GeneralCart(second)) =
+        if let (Obj::Union(binary), Obj::IndexCart(target)) = (left, right) {
+            let (Obj::IndexCart(first), Obj::IndexCart(second)) =
                 (binary.left.as_ref(), binary.right.as_ref())
             else {
                 return None;
             };
-            if Self::general_cart_binary_target_matches(target, first, second, SetBinaryKind::Union)
-                || Self::general_cart_binary_target_matches(
+            if Self::index_cart_binary_target_matches(target, first, second, SetBinaryKind::Union)
+                || Self::index_cart_binary_target_matches(
                     target,
                     second,
                     first,
@@ -1260,22 +1260,22 @@ impl Runtime {
         false
     }
 
-    fn general_cart_pointwise_intersection_matches(
-        general_cart_side: &Obj,
+    fn index_cart_pointwise_intersection_matches(
+        index_cart_side: &Obj,
         intersection_side: &Obj,
     ) -> bool {
-        let (Obj::GeneralCart(target), Obj::Intersect(binary)) =
-            (general_cart_side, intersection_side)
+        let (Obj::IndexCart(target), Obj::Intersect(binary)) =
+            (index_cart_side, intersection_side)
         else {
             return false;
         };
-        let (Obj::GeneralCart(first), Obj::GeneralCart(second)) =
+        let (Obj::IndexCart(first), Obj::IndexCart(second)) =
             (binary.left.as_ref(), binary.right.as_ref())
         else {
             return false;
         };
-        Self::general_cart_binary_target_matches(target, first, second, SetBinaryKind::Intersect)
-            || Self::general_cart_binary_target_matches(
+        Self::index_cart_binary_target_matches(target, first, second, SetBinaryKind::Intersect)
+            || Self::index_cart_binary_target_matches(
                 target,
                 second,
                 first,
@@ -1283,10 +1283,10 @@ impl Runtime {
             )
     }
 
-    fn general_cart_binary_target_matches(
-        target: &GeneralCart,
-        first: &GeneralCart,
-        second: &GeneralCart,
+    fn index_cart_binary_target_matches(
+        target: &IndexCart,
+        first: &IndexCart,
+        second: &IndexCart,
         operation: SetBinaryKind,
     ) -> bool {
         if !objs_match_for_pattern(target.index_set.as_ref(), first.index_set.as_ref())

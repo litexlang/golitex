@@ -2412,7 +2412,7 @@ goal checks. Choice-family Results retain a typed proof kind and target,
 obligation roles/facts/FactIds/checks, and the trusted conclusion with its
 published FactId. Their Lean consumers deliberately remain unavailable: the
 exact `Litex.Set = Carrier` representation has no representation-invariant
-finite-set insertion induction, dependent set-valued-family/`BigUnion` ABI, or
+finite-set insertion induction, dependent set-valued-family/`FamilyUnion` ABI, or
 native foundation theorem. Project axioms and target-side proof search are not
 substitutes for those contracts.
 

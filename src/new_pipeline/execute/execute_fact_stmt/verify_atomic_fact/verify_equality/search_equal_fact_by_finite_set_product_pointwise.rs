@@ -1,6 +1,6 @@
 use super::by_builtin_strategy_result::FiniteSetProductPointwiseEqualityStrategySingleStep;
 use crate::new_pipeline::ast::fact::{EqualFact, Fact};
-use crate::new_pipeline::ast::obj::{AnonymousFn, FnObj, FnObjHead, IdentifierObj, Obj, FunctionSpace, IteratedOperator, Structish};
+use crate::new_pipeline::ast::obj::{AnonymousFn, FnObj, FnObjHead, IdentifierObj, Obj, FunctionSpace, IteratedOperator, StructAndFieldAccessObj};
 use crate::new_pipeline::ast::param::{ParamType, SetBoundParameterList, TypedParameterGroup, TypedParameterList};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
@@ -98,10 +98,10 @@ fn unary_function_at(rt: &mut Runtime, func: &Obj, x: &Obj) -> Option<Obj> {
     }
     let head = match func {
         Obj::Identifier(id) => FnObjHead::Identifier(id.clone()),
-        Obj::Structish(Structish::FieldAccess(v)) => {
+        Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(v)) => {
             FnObjHead::FieldAccess(v.clone())
         }
-        Obj::Structish(Structish::InstantiatedTemplateObj(v)) => FnObjHead::InstantiatedTemplateObj(v.clone()),
+        Obj::InstantiatedTemplateObj(v) => FnObjHead::InstantiatedTemplateObj(v.clone()),
         Obj::FunctionSpace(FunctionSpace::AnonymousFn(af)) => FnObjHead::AnonymousFnLiteral(Box::new(af.clone())),
         _ => return None,
     };

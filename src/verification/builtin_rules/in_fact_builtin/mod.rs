@@ -11,16 +11,16 @@ use std::collections::HashMap;
 
 mod cart_membership;
 mod dispatch;
-mod general_cart;
+mod index_cart;
 mod numeric_membership;
 mod numeric_values;
 mod operator_signature;
 mod set_membership;
 mod structured_membership;
 
-pub use general_cart::{
+pub use index_cart::{
     choice_function_for_definition_facts, choice_function_for_fact,
-    general_cart_member_choice_fact, general_cart_member_fn_set,
+    index_cart_member_choice_fact, index_cart_member_fn_set,
     verify_choice_function_for_arg_types,
 };
 pub use numeric_values::{

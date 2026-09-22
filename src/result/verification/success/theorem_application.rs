@@ -15,9 +15,9 @@ pub enum BuiltinTheoremRequirementRole {
     DefinedSetMembership,
     StructCarrierFacts,
     CartesianCoordinates,
-    GeneralCartesianPointwiseMembership,
-    GeneralCartesianFamilyNonempty,
-    GeneralCartesianPointwiseNonempty,
+    IndexCartesianPointwiseMembership,
+    IndexCartesianFamilyNonempty,
+    IndexCartesianPointwiseNonempty,
     IntegerSumPointwiseOrder,
     FiniteSetSumPointwiseOrder,
     FiniteSetSummandNonnegative,
@@ -59,11 +59,11 @@ impl BuiltinTheoremRequirementRole {
             }
             Self::StructCarrierFacts => "element satisfies the struct carrier and equivalent facts",
             Self::CartesianCoordinates => "tuple/cart dimensions and coordinate memberships hold",
-            Self::GeneralCartesianPointwiseMembership => {
+            Self::IndexCartesianPointwiseMembership => {
                 "function carrier and pointwise general-cart membership hold"
             }
-            Self::GeneralCartesianFamilyNonempty => "every member of the family set is nonempty",
-            Self::GeneralCartesianPointwiseNonempty => "every indexed factor is nonempty",
+            Self::IndexCartesianFamilyNonempty => "every member of the family set is nonempty",
+            Self::IndexCartesianPointwiseNonempty => "every indexed factor is nonempty",
             Self::IntegerSumPointwiseOrder => {
                 "summation bounds agree and summands are pointwise ordered"
             }

@@ -1,14 +1,24 @@
 use crate::new_pipeline::ast::names::AtomicName;
-use crate::new_pipeline::ast::obj::{Abs, AnonymousFn, Arccos, Arccot, Arcsin, Arctan, Cart, CartDim, Ceil, ClosedRange, Cos, Cot, EulerNumber, Exp, FiniteSetMax, FiniteSetMin, FiniteSetSize, Floor, FnObjHead, FnRange, FnSet, Gcd, GeneralCart, IdentifierObj, ImaginaryUnit, IndexIntersect, IndexUnion, InstantiatedTemplateObj, Intersect, Lcm, ListSet, Ln, Max, Min, Number, Obj, Pi, PowerSet, ProductOfFiniteSet, Proj, Quot, Range, SetBuilder, SetMinus, Sign, Sin, Sqrt, StandardSet, StructObj, Tan, Tuple, TupleDim, Union, ArithmeticOperator, ExpLogOperator, FiniteSetStat, FunctionSpace, IntegerOperator, IteratedOperator, Literal, ProductShape, SetFormer, SetOperator, Structish, TrigOperator};
+use crate::new_pipeline::ast::obj::{
+    Abs, AnonymousFn, Arccos, Arccot, Arcsin, Arctan, ArithmeticOperator, Cart, CartDim, Ceil,
+    ClosedRange, Cos, Cot, EulerNumber, Exp, ExpLogOperator, FamilyIntersect, FamilyUnion,
+    FiniteSetMax, FiniteSetMin, FiniteSetSize, FiniteSetStat, Floor, FnObjHead, FnRange, FnSet,
+    FunctionSpace, Gcd, IdentifierObj, ImaginaryUnit, IndexCart, IndexIntersect, IndexUnion,
+    InstantiatedTemplateObj, IntegerOperator, Intersect, IteratedOperator, Lcm, ListSet, Literal,
+    Ln, Max, Min, Number, Obj, Pi, PowerSet, ProductOfFiniteSet, ProductShape, Proj, Quot, Range,
+    SetBuilder, SetFormer, SetMinus, SetOperator, Sign, Sin, Sqrt, StandardSet,
+    StructAndFieldAccessObj, StructObj, Tan, TrigOperator, Tuple, TupleDim, Union,
+};
 use crate::new_pipeline::ast::param::{ParamType, SetBoundParameterGroup, SetBoundParameterList};
 use crate::new_pipeline::parse::keywords::{
     ABS, ARCCOS, ARCCOT, ARCSIN, ARCTAN, C, CART, CART_DIM, CEIL, CLOSED_RANGE, COLON, COMMA, COS,
-    COT, C_STAR, DOT, EXP, FINITE_SET_MAX, FINITE_SET_MIN, FINITE_SET_PRODUCT, FINITE_SET_SIZE,
-    FLOOR, FN, FN_RANGE, GCD, GENERAL_CART, GREATER, INDEX_INTERSECT, INDEX_UNION, INTERSECT, LCM,
-    LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LESS, LN, MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS,
-    POWER_SET, PROJ, Q, QUOT, Q_NEG, Q_POS, Q_STAR, R, RANGE, RIGHT_BRACKET, RIGHT_CURLY,
-    RIGHT_PAREN, R_NEG, R_POS, R_STAR, SET_MINUS, SIGN, SIN, SQRT, STRUCT_VIEW_PREFIX, TAN,
-    TEMPLATE_INSTANCE_PREFIX, TUPLE, TUPLE_DIM, UNION, Z, Z_NEG, Z_POS, Z_STAR,
+    COT, C_STAR, DOT, EXP, FAMILY_INTERSECT, FAMILY_UNION, FINITE_SET_MAX, FINITE_SET_MIN,
+    FINITE_SET_PRODUCT, FINITE_SET_SIZE, FLOOR, FN, FN_RANGE, GCD, GREATER, INDEX_CART,
+    INDEX_INTERSECT, INDEX_UNION, INTERSECT, LCM, LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LESS, LN,
+    MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS, POWER_SET, PROJ, Q, QUOT, Q_NEG, Q_POS, Q_STAR, R,
+    RANGE, RIGHT_BRACKET, RIGHT_CURLY, RIGHT_PAREN, R_NEG, R_POS, R_STAR, SET_MINUS, SIGN, SIN,
+    SQRT, STRUCT_VIEW_PREFIX, TAN, TEMPLATE_INSTANCE_PREFIX, TUPLE, TUPLE_DIM, UNION, Z, Z_NEG,
+    Z_POS, Z_STAR,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -82,9 +92,13 @@ pub fn parse_primary(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
 pub(super) fn fn_obj_head_from_obj(obj: Obj) -> Option<FnObjHead> {
     match obj {
         Obj::Identifier(id) => Some(FnObjHead::Identifier(id)),
-        Obj::Structish(Structish::FieldAccess(v)) => Some(FnObjHead::FieldAccess(v)),
-        Obj::Structish(Structish::InstantiatedTemplateObj(v)) => Some(FnObjHead::InstantiatedTemplateObj(v)),
-        Obj::FunctionSpace(FunctionSpace::AnonymousFn(a)) => Some(FnObjHead::AnonymousFnLiteral(Box::new(a))),
+        Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(v)) => {
+            Some(FnObjHead::FieldAccess(v))
+        }
+        Obj::InstantiatedTemplateObj(v) => Some(FnObjHead::InstantiatedTemplateObj(v)),
+        Obj::FunctionSpace(FunctionSpace::AnonymousFn(a)) => {
+            Some(FnObjHead::AnonymousFnLiteral(Box::new(a)))
+        }
         _ => None,
     }
 }
@@ -126,9 +140,9 @@ fn parse_struct_view(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
         ));
     }
     if tb.peek() == Some(LEFT_PAREN) {
-        return Err(tb.parse_error(
-            "struct view parameters use `<...>` (e.g. `&Pair<R>`), not `(...)`",
-        ));
+        return Err(
+            tb.parse_error("struct view parameters use `<...>` (e.g. `&Pair<R>`), not `(...)`")
+        );
     }
 
     let params = if tb.peek() == Some(LESS) {
@@ -137,7 +151,9 @@ fn parse_struct_view(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
         Vec::new()
     };
 
-    Ok(Obj::Structish(Structish::StructObj(StructObj { name, params })))
+    Ok(Obj::StructAndFieldAccessObj(
+        StructAndFieldAccessObj::StructObj(StructObj { name, params }),
+    ))
 }
 
 // `\Name<args>` → InstantiatedTemplateObj. Angle args are required.
@@ -147,21 +163,17 @@ fn parse_instantiated_template(rt: &mut Runtime, tb: &mut TokenBlock) -> Runtime
         .advance()
         .map_err(|_| tb.parse_error("`\\` expects a template name"))?;
     if !is_simple_name(&name_tok) {
-        return Err(tb.parse_error(format!(
-            "invalid template name `{name_tok}` after `\\`"
-        )));
+        return Err(tb.parse_error(format!("invalid template name `{name_tok}` after `\\`")));
     }
     let template_name = rt.atomic_name_for_plain_prop_ref(name_tok);
     if tb.peek() != Some(LESS) {
-        return Err(tb.parse_error(
-            "template instance expects `<...>` arguments (e.g. `\\T<a>`)",
-        ));
+        return Err(tb.parse_error("template instance expects `<...>` arguments (e.g. `\\T<a>`)"));
     }
     let args = parse_obj_list_angle(rt, tb)?;
-    Ok(Obj::Structish(Structish::InstantiatedTemplateObj(InstantiatedTemplateObj {
+    Ok(Obj::InstantiatedTemplateObj(InstantiatedTemplateObj {
         template_name,
         args,
-    })))
+    }))
 }
 
 fn parse_obj_list_angle(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Vec<Obj>> {
@@ -183,7 +195,9 @@ fn parse_paren_or_tuple(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<
     tb.expect(LEFT_PAREN)?;
     if tb.peek() == Some(RIGHT_PAREN) {
         tb.advance()?;
-        return Ok(Obj::ProductShape(ProductShape::Tuple(Tuple { args: vec![] })));
+        return Ok(Obj::ProductShape(ProductShape::Tuple(Tuple {
+            args: vec![],
+        })));
     }
     let first = parse_obj(rt, tb)?;
     if tb.peek() == Some(COMMA) {
@@ -224,9 +238,9 @@ impl Runtime {
         let result = (|| {
             let name = tb.advance()?;
             if !is_atom_name(&name) && !is_simple_name(&name) {
-                return Err(tb.parse_error(format!(
-                    "set-builder expects a binder name, got `{name}`"
-                )));
+                return Err(
+                    tb.parse_error(format!("set-builder expects a binder name, got `{name}`"))
+                );
             }
             let binding = self.define_plain_atom_as_parse(tb, name)?;
             let param_set = parse_obj(self, tb)?;
@@ -265,10 +279,12 @@ impl Runtime {
                 tb.advance()?;
                 let equal_to = parse_obj(self, tb)?;
                 tb.expect(RIGHT_CURLY)?;
-                Ok(Obj::FunctionSpace(FunctionSpace::AnonymousFn(AnonymousFn {
-                    body,
-                    equal_to: Box::new(equal_to),
-                })))
+                Ok(Obj::FunctionSpace(FunctionSpace::AnonymousFn(
+                    AnonymousFn {
+                        body,
+                        equal_to: Box::new(equal_to),
+                    },
+                )))
             } else {
                 Ok(Obj::FunctionSpace(FunctionSpace::FnSet(body)))
             }
@@ -280,13 +296,13 @@ impl Runtime {
     pub(in crate::new_pipeline::parse) fn parse_fn_set_header(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> RuntimeResult<(SetBoundParameterList, Vec<crate::new_pipeline::ast::fact::QuantifierFreeFact>)>
-    {
+    ) -> RuntimeResult<(
+        SetBoundParameterList,
+        Vec<crate::new_pipeline::ast::fact::QuantifierFreeFact>,
+    )> {
         tb.expect(LEFT_PAREN)?;
         let mut groups = Vec::new();
-        while !tb.exceed_end_of_head()
-            && tb.peek() != Some(COLON)
-            && tb.peek() != Some(RIGHT_PAREN)
+        while !tb.exceed_end_of_head() && tb.peek() != Some(COLON) && tb.peek() != Some(RIGHT_PAREN)
         {
             let typed = self.parse_one_typed_param_group(tb)?;
             groups.push(typed_group_to_set_bound(tb, typed)?);
@@ -439,6 +455,21 @@ fn try_parse_keyword_primary(
                 }))
             },
         )?)),
+        FAMILY_UNION => Ok(Some(parse_unary_keyword(rt, tb, FAMILY_UNION, |left| {
+            Obj::SetOperator(SetOperator::FamilyUnion(FamilyUnion {
+                left: Box::new(left),
+            }))
+        })?)),
+        FAMILY_INTERSECT => Ok(Some(parse_unary_keyword(
+            rt,
+            tb,
+            FAMILY_INTERSECT,
+            |left| {
+                Obj::SetOperator(SetOperator::FamilyIntersect(FamilyIntersect {
+                    left: Box::new(left),
+                }))
+            },
+        )?)),
         MIN => Ok(Some(parse_binary_keyword(rt, tb, MIN, |left, right| {
             Obj::ArithmeticOperator(ArithmeticOperator::Min(Min {
                 left: Box::new(left),
@@ -498,14 +529,10 @@ fn try_parse_keyword_primary(
             }))))
         }
         CART_DIM => Ok(Some(parse_unary_keyword(rt, tb, CART_DIM, |set| {
-            Obj::ProductShape(ProductShape::CartDim(CartDim {
-                set: Box::new(set),
-            }))
+            Obj::ProductShape(ProductShape::CartDim(CartDim { set: Box::new(set) }))
         })?)),
         TUPLE_DIM => Ok(Some(parse_unary_keyword(rt, tb, TUPLE_DIM, |arg| {
-            Obj::ProductShape(ProductShape::TupleDim(TupleDim {
-                arg: Box::new(arg),
-            }))
+            Obj::ProductShape(ProductShape::TupleDim(TupleDim { arg: Box::new(arg) }))
         })?)),
         PROJ => Ok(Some(parse_binary_keyword(rt, tb, PROJ, |set, dim| {
             Obj::ProductShape(ProductShape::Proj(Proj {
@@ -535,9 +562,7 @@ fn try_parse_keyword_primary(
             },
         )?)),
         POWER_SET => Ok(Some(parse_unary_keyword(rt, tb, POWER_SET, |set| {
-            Obj::SetOperator(SetOperator::PowerSet(PowerSet {
-                set: Box::new(set),
-            }))
+            Obj::SetOperator(SetOperator::PowerSet(PowerSet { set: Box::new(set) }))
         })?)),
         FINITE_SET_SIZE => Ok(Some(parse_unary_keyword(rt, tb, FINITE_SET_SIZE, |set| {
             Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(FiniteSetSize {
@@ -583,12 +608,12 @@ fn try_parse_keyword_primary(
                 }))
             },
         )?)),
-        GENERAL_CART => Ok(Some(parse_ternary_keyword(
+        INDEX_CART => Ok(Some(parse_ternary_keyword(
             rt,
             tb,
-            GENERAL_CART,
+            INDEX_CART,
             |index_set, family_set, family_fn| {
-                Obj::SetOperator(SetOperator::GeneralCart(GeneralCart {
+                Obj::SetOperator(SetOperator::IndexCart(IndexCart {
                     index_set: Box::new(index_set),
                     family_set: Box::new(family_set),
                     family_fn: Box::new(family_fn),
@@ -692,7 +717,9 @@ fn parse_identifier_or_mod_or_standard_set(
                 }
                 other => other,
             })?;
-        return Ok(Obj::Identifier(identifier_obj_from_qualified_atomic(tb, key)?));
+        return Ok(Obj::Identifier(identifier_obj_from_qualified_atomic(
+            tb, key,
+        )?));
     }
     if tb.peek() == Some(MOD_SIGN) {
         let mut parts = vec![name];
@@ -705,9 +732,7 @@ fn parse_identifier_or_mod_or_standard_set(
             parts.push(next);
         }
         if parts.len() != 2 && parts.len() != 3 {
-            return Err(tb.parse_error(
-                "qualified name must be `a::b`, `a:::b`, or `a::b::c`",
-            ));
+            return Err(tb.parse_error("qualified name must be `a::b`, `a:::b`, or `a::b::c`"));
         }
         let key = rt.elaborate_name_parts(&parts).map_err(|err| match err {
             crate::new_pipeline::runtime::RuntimeError::InternalBug(message) => {
@@ -716,7 +741,9 @@ fn parse_identifier_or_mod_or_standard_set(
             other => other,
         })?;
 
-        return Ok(Obj::Identifier(identifier_obj_from_qualified_atomic(tb, key)?));
+        return Ok(Obj::Identifier(identifier_obj_from_qualified_atomic(
+            tb, key,
+        )?));
     }
 
     if let Some(set) = standard_set_from_name(&name) {

@@ -1543,7 +1543,7 @@ thm adherent_integer_point_is_integer:
     by axiom_of_choice: set fn_range(integer_near_witness_set):
         forall A fn_range(integer_near_witness_set):
             $is_nonempty_set(A)
-    obtain choose_integer from exist f fn(A fn_range(integer_near_witness_set)) big_union(fn_range(integer_near_witness_set)) st {$is_choice_function_for(fn_range(integer_near_witness_set), fn_range(integer_near_witness_set), fn(A fn_range(integer_near_witness_set)) fn_range(integer_near_witness_set) {A}, f)}
+    obtain choose_integer from exist f fn(A fn_range(integer_near_witness_set)) family_union(fn_range(integer_near_witness_set)) st {$is_choice_function_for(fn_range(integer_near_witness_set), fn_range(integer_near_witness_set), fn(A fn_range(integer_near_witness_set)) fn_range(integer_near_witness_set) {A}, f)}
     claim:
         ? forall A fn_range(integer_near_witness_set):
             choose_integer(A) $in Z
@@ -1738,7 +1738,7 @@ thm adherent_point_sequence_characterization_forward:
     by axiom_of_choice: set fn_range(near_witness_set):
         forall A fn_range(near_witness_set):
             $is_nonempty_set(A)
-    obtain choose_point from exist f fn(A fn_range(near_witness_set)) big_union(fn_range(near_witness_set)) st {$is_choice_function_for(fn_range(near_witness_set), fn_range(near_witness_set), fn(A fn_range(near_witness_set)) fn_range(near_witness_set) {A}, f)}
+    obtain choose_point from exist f fn(A fn_range(near_witness_set)) family_union(fn_range(near_witness_set)) st {$is_choice_function_for(fn_range(near_witness_set), fn_range(near_witness_set), fn(A fn_range(near_witness_set)) fn_range(near_witness_set) {A}, f)}
     claim:
         ? forall A fn_range(near_witness_set):
             choose_point(A) $in R
@@ -2770,7 +2770,7 @@ thm unbounded_real_set_has_escaping_sequence:
     by axiom_of_choice: set fn_range(escaping_witness_set):
         forall A fn_range(escaping_witness_set):
             $is_nonempty_set(A)
-    obtain choose_point from exist f fn(A fn_range(escaping_witness_set)) big_union(fn_range(escaping_witness_set)) st {$is_choice_function_for(fn_range(escaping_witness_set), fn_range(escaping_witness_set), fn(A fn_range(escaping_witness_set)) fn_range(escaping_witness_set) {A}, f)}
+    obtain choose_point from exist f fn(A fn_range(escaping_witness_set)) family_union(fn_range(escaping_witness_set)) st {$is_choice_function_for(fn_range(escaping_witness_set), fn_range(escaping_witness_set), fn(A fn_range(escaping_witness_set)) fn_range(escaping_witness_set) {A}, f)}
     claim:
         ? forall A fn_range(escaping_witness_set):
             choose_point(A) $in R
@@ -3505,7 +3505,7 @@ thm sequence_limit_preservation_implies_function_limit:
             by axiom_of_choice: set fn_range(bad_witness_set):
                 forall A fn_range(bad_witness_set):
                     $is_nonempty_set(A)
-            obtain choose_point from exist choice_fn fn(A fn_range(bad_witness_set)) big_union(fn_range(bad_witness_set)) st {$is_choice_function_for(fn_range(bad_witness_set), fn_range(bad_witness_set), fn(A fn_range(bad_witness_set)) fn_range(bad_witness_set) {A}, choice_fn)}
+            obtain choose_point from exist choice_fn fn(A fn_range(bad_witness_set)) family_union(fn_range(bad_witness_set)) st {$is_choice_function_for(fn_range(bad_witness_set), fn_range(bad_witness_set), fn(A fn_range(bad_witness_set)) fn_range(bad_witness_set) {A}, choice_fn)}
             claim:
                 ? forall A fn_range(bad_witness_set):
                     choose_point(A) $in R
@@ -5957,7 +5957,7 @@ thm continuous_image_of_sequentially_compact_real_set_is_sequentially_compact:
         by axiom_of_choice: set fn_range(preimage_fiber):
             forall A fn_range(preimage_fiber):
                 $is_nonempty_set(A)
-        obtain choose_preimage from exist choice_fn fn(A fn_range(preimage_fiber)) big_union(fn_range(preimage_fiber)) st {$is_choice_function_for(fn_range(preimage_fiber), fn_range(preimage_fiber), fn(A fn_range(preimage_fiber)) fn_range(preimage_fiber) {A}, choice_fn)}
+        obtain choose_preimage from exist choice_fn fn(A fn_range(preimage_fiber)) family_union(fn_range(preimage_fiber)) st {$is_choice_function_for(fn_range(preimage_fiber), fn_range(preimage_fiber), fn(A fn_range(preimage_fiber)) fn_range(preimage_fiber) {A}, choice_fn)}
         claim:
             ? forall A fn_range(preimage_fiber):
                 choose_preimage(A) $in X

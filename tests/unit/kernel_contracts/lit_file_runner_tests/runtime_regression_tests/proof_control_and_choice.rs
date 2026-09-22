@@ -1646,8 +1646,8 @@ by axiom_of_choice: set S:
     trust forall A S:
         $is_nonempty_set(A)
 
-exist f fn(A S) big_union(S) st {$is_choice_function_for(S, S, fn(A S) S {A}, f)}
-obtain chooser from exist f fn(A S) big_union(S) st {$is_choice_function_for(S, S, fn(A S) S {A}, f)}
+exist f fn(A S) family_union(S) st {$is_choice_function_for(S, S, fn(A S) S {A}, f)}
+obtain chooser from exist f fn(A S) family_union(S) st {$is_choice_function_for(S, S, fn(A S) S {A}, f)}
 forall A S:
     chooser(A) $in A
 "#;
@@ -1725,11 +1725,11 @@ claim:
         forall member A:
             $is_nonempty_set(member)
         =>:
-            exist f fn(member A) big_union(A) st {$is_choice_function_for(A, A, fn(member A) A {member}, f)}
+            exist f fn(member A) family_union(A) st {$is_choice_function_for(A, A, fn(member A) A {member}, f)}
     by axiom_of_choice: set A:
         forall member A:
             $is_nonempty_set(member)
-    exist f fn(member A) big_union(A) st {$is_choice_function_for(A, A, fn(member A) A {member}, f)}
+    exist f fn(member A) family_union(A) st {$is_choice_function_for(A, A, fn(member A) A {member}, f)}
 "#;
 
     let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(

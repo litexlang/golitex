@@ -184,11 +184,11 @@ impl Obj {
                 Obj::replace_bound_identifier_with_runtime(*x.right, runtime, from, to),
             )
             .into(),
-            Obj::BigUnion(x) => BigUnion::new(Obj::replace_bound_identifier_with_runtime(
+            Obj::FamilyUnion(x) => FamilyUnion::new(Obj::replace_bound_identifier_with_runtime(
                 *x.left, runtime, from, to,
             ))
             .into(),
-            Obj::BigIntersect(x) => BigIntersect::new(Obj::replace_bound_identifier_with_runtime(
+            Obj::FamilyIntersect(x) => FamilyIntersect::new(Obj::replace_bound_identifier_with_runtime(
                 *x.left, runtime, from, to,
             ))
             .into(),
@@ -208,7 +208,7 @@ impl Obj {
                 *x.set, runtime, from, to,
             ))
             .into(),
-            Obj::GeneralCart(x) => GeneralCart::new(
+            Obj::IndexCart(x) => IndexCart::new(
                 Obj::replace_bound_identifier_with_runtime(*x.index_set, runtime, from, to),
                 Obj::replace_bound_identifier_with_runtime(*x.family_set, runtime, from, to),
                 Obj::replace_bound_identifier_with_runtime(*x.family_fn, runtime, from, to),

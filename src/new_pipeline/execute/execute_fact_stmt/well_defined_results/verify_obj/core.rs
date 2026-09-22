@@ -1,13 +1,13 @@
 //! Function / atom / standard-set object WD.
 
+use super::entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
 use super::fail_to_verify_obj_well_defined::*;
 use super::helper::{set_bound_parameter_count, set_bound_params_to_arg_map};
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::obj_well_defined_proof_by_def::*;
-use super::entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
 use crate::new_pipeline::ast::fact::{AtomicFact, InFact};
 use crate::new_pipeline::ast::obj::{
-    FnObj, FnObjHead, FnRange, FnSet, FunctionSpace, IdentifierObj, Literal, Obj, Structish,
+    FnObj, FnObjHead, FnRange, FnSet, FunctionSpace, IdentifierObj, Literal, Obj, StructAndFieldAccessObj,
 };
 use crate::new_pipeline::exec_env::exec_env::SpecialObjectPropertyByDefinition;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
@@ -68,16 +68,20 @@ impl Runtime {
                 .record(obj.clone(), wd_id);
         }
         let by_def = match &obj {
-            Obj::Identifier(_) => ObjWellDefinedProofByDef::Identifier(IdentifierObjWellDefinedProof::new()),
-            Obj::Literal(Literal::Number(_)) => ObjWellDefinedProofByDef::Literal(LiteralObjWellDefinedProofByDef::Number(NumberObjWellDefinedProof::new())),
+            Obj::Identifier(_) => {
+                ObjWellDefinedProofByDef::Identifier(IdentifierObjWellDefinedProof::new())
+            }
+            Obj::Literal(Literal::Number(_)) => ObjWellDefinedProofByDef::Literal(
+                LiteralObjWellDefinedProofByDef::Number(NumberObjWellDefinedProof::new()),
+            ),
             Obj::StandardSet(_) => {
                 ObjWellDefinedProofByDef::StandardSet(StandardSetObjWellDefinedProof::new())
             }
             _ => ObjWellDefinedProofByDef::Identifier(IdentifierObjWellDefinedProof::new()),
         };
-        Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef(
-            by_def,
-        )))
+        Ok(VerifyObjWellDefinedResult::Success(
+            ObjWellDefinedProof::ByDef(by_def),
+        ))
     }
 
     // Identifier- or template-instance-headed application: look up InFunctionSet,
@@ -92,7 +96,7 @@ impl Runtime {
         let head_obj = match value.head.as_ref() {
             FnObjHead::Identifier(head_id) => Obj::Identifier(head_id.clone()),
             FnObjHead::InstantiatedTemplateObj(inst) => {
-                Obj::Structish(Structish::InstantiatedTemplateObj(inst.clone()))
+                Obj::InstantiatedTemplateObj(inst.clone())
             }
             _ => {
                 return Err(crate::new_pipeline::runtime::RuntimeError::InternalBug(
@@ -103,15 +107,13 @@ impl Runtime {
         };
         // Template-instance heads register InFunctionSet during their own WD.
         if matches!(value.head.as_ref(), FnObjHead::InstantiatedTemplateObj(_)) {
-            let head_wd =
-                self.verify_obj_well_definedness(&head_obj, verify_state.clone())?;
+            let head_wd = self.verify_obj_well_definedness(&head_obj, verify_state.clone())?;
             if head_wd.is_failed() {
                 return Ok(VerifyObjWellDefinedResult::Failed(
                     FailToVerifyObjWellDefinedResult::FnObj(
                         FailToVerifyFnObjObjWellDefined::Domain(
                             ObjWellDefinedByDefCommonStages::from_children(vec![(
-                                head_obj,
-                                head_wd,
+                                head_obj, head_wd,
                             )])
                             .into_common_fail(&Obj::FnObj(value.clone())),
                         ),
@@ -130,7 +132,8 @@ impl Runtime {
         if value.body.is_empty() {
             return Ok(VerifyObjWellDefinedResult::Failed(
                 FailToVerifyObjWellDefinedResult::FnObj(FailToVerifyFnObjObjWellDefined::Domain(
-                    ObjWellDefinedByDefCommonStages::leaf().into_common_fail(&Obj::FnObj(value.clone())),
+                    ObjWellDefinedByDefCommonStages::leaf()
+                        .into_common_fail(&Obj::FnObj(value.clone())),
                 )),
             ));
         }
@@ -153,9 +156,9 @@ impl Runtime {
                             .well_defined_objects
                             .record(Obj::FnObj(value.clone()), wd_id);
                     }
-                    return Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef(
-                        ObjWellDefinedProofByDef::FnObj(proof),
-                    )));
+                    return Ok(VerifyObjWellDefinedResult::Success(
+                        ObjWellDefinedProof::ByDef(ObjWellDefinedProofByDef::FnObj(proof)),
+                    ));
                 }
                 Err(stages) => {
                     last_domain_fail = Some(stages);
@@ -220,18 +223,20 @@ impl Runtime {
                         .well_defined_objects
                         .record(Obj::FnObj(value.clone()), wd_id);
                 }
-                Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef(
-                    ObjWellDefinedProofByDef::FnObj(proof),
-                )))
+                Ok(VerifyObjWellDefinedResult::Success(
+                    ObjWellDefinedProof::ByDef(ObjWellDefinedProofByDef::FnObj(proof)),
+                ))
             }
             Err(mut stages) => {
                 let mut children = vec![(anon_obj, head_wd)];
                 children.append(&mut stages.child_obj_well_defined);
                 stages.child_obj_well_defined = children;
                 Ok(VerifyObjWellDefinedResult::Failed(
-                    FailToVerifyObjWellDefinedResult::FnObj(FailToVerifyFnObjObjWellDefined::Domain(
-                        stages.into_common_fail(&Obj::FnObj(value.clone())),
-                    )),
+                    FailToVerifyObjWellDefinedResult::FnObj(
+                        FailToVerifyFnObjObjWellDefined::Domain(
+                            stages.into_common_fail(&Obj::FnObj(value.clone())),
+                        ),
+                    ),
                 ))
             }
         }
@@ -290,7 +295,9 @@ impl Runtime {
                     continue;
                 };
                 for prop in props {
-                    if let SpecialObjectPropertyByDefinition::InFunctionSet((fn_set, fact_id)) = prop {
+                    if let SpecialObjectPropertyByDefinition::InFunctionSet((fn_set, fact_id)) =
+                        prop
+                    {
                         out.push((fn_set.clone(), *fact_id));
                     }
                 }
@@ -305,7 +312,8 @@ impl Runtime {
         value: &FnObj,
         fn_set: &FnSet,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Result<ObjWellDefinedByDefCommonStages, ObjWellDefinedByDefCommonStages>> {
+    ) -> RuntimeResult<Result<ObjWellDefinedByDefCommonStages, ObjWellDefinedByDefCommonStages>>
+    {
         let (proof, _local_env) = self.run_in_local_env_and_take_env(|rt| {
             rt.verify_fn_obj_against_fn_set_in_local(value, fn_set, verify_state)
         })?;
@@ -346,7 +354,8 @@ impl Runtime {
         value: &FnObj,
         fn_set: &FnSet,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Result<ObjWellDefinedByDefCommonStages, ObjWellDefinedByDefCommonStages>> {
+    ) -> RuntimeResult<Result<ObjWellDefinedByDefCommonStages, ObjWellDefinedByDefCommonStages>>
+    {
         let mut proof = ObjWellDefinedByDefCommonStages::leaf();
         let mut space = fn_set.clone();
         let last = value.body.len() - 1;
@@ -431,9 +440,13 @@ impl Runtime {
         )?;
         if !stages.is_fully_known() {
             return Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::FunctionSpace(FailToVerifyFunctionSpaceObjWellDefinedResult::FnRange(FailToVerifyFnRangeObjWellDefined::Domain(
-                    stages.into_common_fail(&Obj::FunctionSpace(FunctionSpace::FnRange(value.clone()))),
-                ))),
+                FailToVerifyObjWellDefinedResult::FunctionSpace(
+                    FailToVerifyFunctionSpaceObjWellDefinedResult::FnRange(
+                        FailToVerifyFnRangeObjWellDefined::Domain(stages.into_common_fail(
+                            &Obj::FunctionSpace(FunctionSpace::FnRange(value.clone())),
+                        )),
+                    ),
+                ),
             ));
         }
         if self
@@ -441,20 +454,27 @@ impl Runtime {
             .is_empty()
         {
             return Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::FunctionSpace(FailToVerifyFunctionSpaceObjWellDefinedResult::FnRange(
-                    FailToVerifyFnRangeObjWellDefined::NotInFunctionSet,
-                )),
+                FailToVerifyObjWellDefinedResult::FunctionSpace(
+                    FailToVerifyFunctionSpaceObjWellDefinedResult::FnRange(
+                        FailToVerifyFnRangeObjWellDefined::NotInFunctionSet,
+                    ),
+                ),
             ));
         }
         if verify_state.store_well_defined_fact {
             let wd_id = self.ids.allocate_well_definedness_id();
-            self.top_exec_env_mut()
-                .well_defined_objects
-                .record(Obj::FunctionSpace(FunctionSpace::FnRange(value.clone())), wd_id);
+            self.top_exec_env_mut().well_defined_objects.record(
+                Obj::FunctionSpace(FunctionSpace::FnRange(value.clone())),
+                wd_id,
+            );
         }
-        Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef(
-            ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::FnRange(FnRangeObjWellDefinedProof::from_stages(stages))),
-        )))
+        Ok(VerifyObjWellDefinedResult::Success(
+            ObjWellDefinedProof::ByDef(ObjWellDefinedProofByDef::FunctionSpace(
+                FunctionSpaceObjWellDefinedProofByDef::FnRange(
+                    FnRangeObjWellDefinedProof::from_stages(stages),
+                ),
+            )),
+        ))
     }
 
     pub(super) fn obj_has_in_function_set(&self, obj: &Obj) -> bool {

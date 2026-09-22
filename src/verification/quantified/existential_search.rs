@@ -386,8 +386,8 @@ impl Runtime {
                 Self::obj_depends_on_given_exist_param(x.arg.as_ref(), symbol_ids)
             }
             Obj::Sqrt(x) => Self::obj_depends_on_given_exist_param(x.arg.as_ref(), symbol_ids),
-            Obj::BigUnion(x) => Self::obj_depends_on_given_exist_param(x.left.as_ref(), symbol_ids),
-            Obj::BigIntersect(x) => {
+            Obj::FamilyUnion(x) => Self::obj_depends_on_given_exist_param(x.left.as_ref(), symbol_ids),
+            Obj::FamilyIntersect(x) => {
                 Self::obj_depends_on_given_exist_param(x.left.as_ref(), symbol_ids)
             }
             Obj::IndexUnion(x) => {
@@ -477,7 +477,7 @@ impl Runtime {
                         Self::quantifier_free_fact_depends_on_given_exist_param(fact, symbol_ids)
                     })
             }
-            Obj::GeneralCart(x) => {
+            Obj::IndexCart(x) => {
                 Self::obj_depends_on_given_exist_param(x.index_set.as_ref(), symbol_ids)
                     || Self::obj_depends_on_given_exist_param(x.family_set.as_ref(), symbol_ids)
                     || Self::obj_depends_on_given_exist_param(x.family_fn.as_ref(), symbol_ids)

@@ -578,7 +578,7 @@ setting TopologicalSpaceSetting(X set, open_sets power_set(power_set(X))):
     forall family power_set(power_set(X)):
         family $subset open_sets
         =>:
-            big_union(family) $in open_sets
+            family_union(family) $in open_sets
 ```
 
 开集就是该族中的成员：一旦绑定 `TopologicalSpaceSetting`，写 `U open_sets` 即表示 `U` 开。下文还有群与 Lean 的对照；这里只说明「词典」长什么样。覆盖仍在扩展，不宣称已经穷尽一切常用概念。

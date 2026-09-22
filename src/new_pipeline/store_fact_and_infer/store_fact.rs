@@ -1,12 +1,12 @@
 use super::helper::chain_line_file;
 use super::store_fact_and_infer_result::{
     StoreAndComponentResult, StoreAndFactResult, StoreAtomicFactResult, StoreChainAdjacentResult,
-    StoreChainFactStorePart, StoreExistFactResult, StoreFactResult, StoreForallFactResult,
+    StoreChainFactStorePart, StoreExistShapedFactResult, StoreFactResult, StoreForallFactResult,
     StoreForallFactWithIffResult, StoreNotForallFactStorePart, StoreOrFactResult,
 };
 use crate::new_pipeline::ast::fact::{
-    exist_fact_family_from_fact, exist_fact_family_id, exist_fact_family_to_fact, AndFact,
-    AtomicFact, ChainFact, ExistFactFamily, Fact, NotForallFact, OrFact, ForallFact,
+    exist_shaped_fact_from_fact, exist_shaped_fact_id, exist_shaped_fact_to_fact, AndFact,
+    AtomicFact, ChainFact, ExistShapedFact, Fact, NotForallFact, OrFact, ForallFact,
     ForallFactWithIff,
 };
 use crate::new_pipeline::ast::fact::atomic_fact_has_positive_polarity;
@@ -38,9 +38,9 @@ impl Runtime {
                 Ok(StoreFactResult::OrFact(stored))
             }
             Fact::ExistFact(_) | Fact::ExistUniqueFact(_) | Fact::NotExistFact(_) => {
-                let family = exist_fact_family_from_fact(fact).expect("exist family from fact");
-                let stored = self.store_exist_fact(&family)?;
-                Ok(StoreFactResult::ExistFact(stored))
+                let family = exist_shaped_fact_from_fact(fact).expect("exist family from fact");
+                let stored = self.store_exist_shaped_fact(&family)?;
+                Ok(StoreFactResult::ExistShapedFact(stored))
             }
             Fact::NotForall(not_forall) => {
                 let stored = self.store_not_forall_fact(not_forall)?;
@@ -210,16 +210,16 @@ impl Runtime {
 
     // Exist: record whole into facts_by_id and known_exist. Do not split body.
     // Example: `exist x N st {x = 1}` → known_exist only.
-    pub(crate) fn store_exist_fact(
+    pub(crate) fn store_exist_shaped_fact(
         &mut self,
-        exist_fact: &ExistFactFamily,
-    ) -> RuntimeResult<StoreExistFactResult> {
-        let whole_fact_id = exist_fact_family_id(exist_fact);
+        exist_fact: &ExistShapedFact,
+    ) -> RuntimeResult<StoreExistShapedFactResult> {
+        let whole_fact_id = exist_shaped_fact_id(exist_fact);
         let env = self.top_exec_env_mut();
         env.facts.known_exist.store(exist_fact);
         env.facts
-            .record_fact(whole_fact_id, exist_fact_family_to_fact(exist_fact));
-        Ok(StoreExistFactResult {
+            .record_fact(whole_fact_id, exist_shaped_fact_to_fact(exist_fact));
+        Ok(StoreExistShapedFactResult {
             whole_fact_id,
             fact: exist_fact.clone(),
         })

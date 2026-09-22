@@ -58,8 +58,8 @@ impl StmtResultToLeanCompiler {
             return Err("builtin theorem Result changed its typed requirement schema".into());
         }
         let expected_provenance = match source.theorem_id {
-            BuiltinTheoremId::GeneralCartesianNonemptyByChoiceFromFamily
-            | BuiltinTheoremId::GeneralCartesianNonemptyByChoiceFromPointwise => {
+            BuiltinTheoremId::IndexCartesianNonemptyByChoiceFromFamily
+            | BuiltinTheoremId::IndexCartesianNonemptyByChoiceFromPointwise => {
                 Some(BuiltinTheoremProvenance::AxiomOfChoice)
             }
             _ => None,

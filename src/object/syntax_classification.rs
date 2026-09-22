@@ -151,8 +151,8 @@ impl Obj {
                 binary.left.contains_native_complex_syntax()
                     || binary.right.contains_native_complex_syntax()
             }
-            Obj::BigUnion(union) => union.left.contains_native_complex_syntax(),
-            Obj::BigIntersect(intersect) => intersect.left.contains_native_complex_syntax(),
+            Obj::FamilyUnion(union) => union.left.contains_native_complex_syntax(),
+            Obj::FamilyIntersect(intersect) => intersect.left.contains_native_complex_syntax(),
             Obj::IndexUnion(index_union) => {
                 index_union.index_set.contains_native_complex_syntax()
                     || index_union.ambient_set.contains_native_complex_syntax()
@@ -178,7 +178,7 @@ impl Obj {
             }
             Obj::FnSet(function) => function.body.contains_native_complex_syntax(),
             Obj::AnonymousFn(function) => function.contains_native_complex_syntax(),
-            Obj::GeneralCart(cart) => {
+            Obj::IndexCart(cart) => {
                 cart.index_set.contains_native_complex_syntax()
                     || cart.family_set.contains_native_complex_syntax()
                     || cart.family_fn.contains_native_complex_syntax()
@@ -424,8 +424,8 @@ impl Obj {
                 binary.left.contains_native_transcendental_syntax()
                     || binary.right.contains_native_transcendental_syntax()
             }
-            Obj::BigUnion(union) => union.left.contains_native_transcendental_syntax(),
-            Obj::BigIntersect(intersect) => intersect.left.contains_native_transcendental_syntax(),
+            Obj::FamilyUnion(union) => union.left.contains_native_transcendental_syntax(),
+            Obj::FamilyIntersect(intersect) => intersect.left.contains_native_transcendental_syntax(),
             Obj::IndexUnion(index_union) => {
                 index_union
                     .index_set
@@ -463,7 +463,7 @@ impl Obj {
             }
             Obj::FnSet(function) => function.body.contains_native_transcendental_syntax(),
             Obj::AnonymousFn(function) => function.contains_native_transcendental_syntax(),
-            Obj::GeneralCart(cart) => {
+            Obj::IndexCart(cart) => {
                 cart.index_set.contains_native_transcendental_syntax()
                     || cart.family_set.contains_native_transcendental_syntax()
                     || cart.family_fn.contains_native_transcendental_syntax()

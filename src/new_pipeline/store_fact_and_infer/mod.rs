@@ -2,7 +2,7 @@
 //!
 //! Layering:
 //! - `store_fact`: index by fact shape into known-* / special properties
-//! - `infer_fact`: derive routine consequences and store them
+//! - `infer_fact`: fact-shape dispatch; atomic uses an additive stage pipeline
 //! - `store_fact_and_infer`: store_fact then infer_fact
 //!
 //! Callers verify first; this path is not open-ended proof search.
@@ -16,7 +16,7 @@ pub mod store_fact_and_infer_result;
 pub use store_fact_and_infer_result::{
     ChainTransitiveCite, InferFactResult, StoreAndComponentResult, StoreAndFactResult,
     StoreAtomicFactResult, StoreChainAdjacentResult, StoreChainFactResult,
-    StoreChainFactStorePart, StoreChainTransitiveClosureResult, StoreExistFactResult,
+    StoreChainFactStorePart, StoreChainTransitiveClosureResult, StoreExistShapedFactResult,
     StoreFactAndInferResult, StoreFactResult, StoreForallFactResult, StoreForallFactWithIffResult,
     StoreNotForallFactResult, StoreNotForallFactStorePart, StoreOrFactResult,
 };

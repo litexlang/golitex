@@ -460,7 +460,7 @@ impl ByInducStmt {
     }
 }
 
-impl BigIntersect {
+impl FamilyIntersect {
     pub fn syntax_rendering(&self) -> String {
         format!(r"\bigcap\left( {}\right)", self.left.syntax_rendering())
     }
@@ -684,7 +684,7 @@ impl FiniteSetReduce {
     }
 }
 
-impl BigUnion {
+impl FamilyUnion {
     pub fn syntax_rendering(&self) -> String {
         format!(r"\bigcup\left( {}\right)", self.left.syntax_rendering())
     }
@@ -2304,12 +2304,12 @@ impl Obj {
             Obj::Union(x) => x.syntax_rendering(),
             Obj::Intersect(x) => x.syntax_rendering(),
             Obj::SetMinus(x) => x.syntax_rendering(),
-            Obj::BigUnion(x) => x.syntax_rendering(),
-            Obj::BigIntersect(x) => x.syntax_rendering(),
+            Obj::FamilyUnion(x) => x.syntax_rendering(),
+            Obj::FamilyIntersect(x) => x.syntax_rendering(),
             Obj::IndexUnion(x) => x.syntax_rendering(),
             Obj::IndexIntersect(x) => x.syntax_rendering(),
             Obj::PowerSet(x) => x.syntax_rendering(),
-            Obj::GeneralCart(x) => x.syntax_rendering(),
+            Obj::IndexCart(x) => x.syntax_rendering(),
             Obj::ListSet(x) => x.syntax_rendering(),
             Obj::SetBuilder(x) => x.syntax_rendering(),
             Obj::FnSet(x) => x.syntax_rendering(),
@@ -2353,7 +2353,7 @@ impl Obj {
     }
 }
 
-impl GeneralCart {
+impl IndexCart {
     pub fn syntax_rendering(&self) -> String {
         format!(
             r"\operatorname{{general\_cart}}\left({}, {}, {}\right)",

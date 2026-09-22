@@ -1,5 +1,5 @@
 use crate::new_pipeline::ast::fact::{
-    AndFact, AtomicFact, ChainFact, ExistFactFamily, ForallFact, ForallFactWithIff, NotForallFact,
+    AndFact, AtomicFact, ChainFact, ExistShapedFact, ForallFact, ForallFactWithIff, NotForallFact,
     OrFact,
 };
 use crate::new_pipeline::ast::names::AtomicName;
@@ -11,7 +11,7 @@ pub enum StoreFactResult {
     AndFact(StoreAndFactResult),
     ChainFact(StoreChainFactStorePart),
     OrFact(StoreOrFactResult),
-    ExistFact(StoreExistFactResult),
+    ExistShapedFact(StoreExistShapedFactResult),
     NotForallFact(StoreNotForallFactStorePart),
     ForallFact(StoreForallFactResult),
     ForallFactWithIff(StoreForallFactWithIffResult),
@@ -25,7 +25,7 @@ pub enum InferFactResult {
         transitive_closures: Vec<StoreChainTransitiveClosureResult>,
     },
     NotForallFact {
-        derived_exist: StoreExistFactResult,
+        derived_exist: StoreExistShapedFactResult,
     },
 }
 
@@ -35,7 +35,7 @@ pub enum StoreFactAndInferResult {
     AndFact(StoreAndFactResult),
     ChainFact(StoreChainFactResult),
     OrFact(StoreOrFactResult),
-    ExistFact(StoreExistFactResult),
+    ExistShapedFact(StoreExistShapedFactResult),
     NotForallFact(StoreNotForallFactResult),
     ForallFact(StoreForallFactResult),
     ForallFactWithIff(StoreForallFactWithIffResult),
@@ -86,9 +86,9 @@ pub struct StoreOrFactResult {
 }
 
 // Whole exist only; body clauses are not projected into known-atomic indexes.
-pub struct StoreExistFactResult {
+pub struct StoreExistShapedFactResult {
     pub whole_fact_id: FactId,
-    pub fact: ExistFactFamily,
+    pub fact: ExistShapedFact,
 }
 
 // Store-only not-forall (counterexample exist is infer).
@@ -101,7 +101,7 @@ pub struct StoreNotForallFactStorePart {
 pub struct StoreNotForallFactResult {
     pub whole_fact_id: FactId,
     pub fact: NotForallFact,
-    pub derived_exist: StoreExistFactResult,
+    pub derived_exist: StoreExistShapedFactResult,
 }
 
 // Record forall into facts_by_id and project then-conclusions into known_forall.
@@ -142,7 +142,7 @@ impl StoreFactAndInferResult {
             Self::AndFact(r) => r.whole_fact_id,
             Self::ChainFact(r) => r.whole_fact_id,
             Self::OrFact(r) => r.whole_fact_id,
-            Self::ExistFact(r) => r.whole_fact_id,
+            Self::ExistShapedFact(r) => r.whole_fact_id,
             Self::NotForallFact(r) => r.whole_fact_id,
             Self::ForallFact(r) => r.fact_id,
             Self::ForallFactWithIff(r) => r.fact_id,
@@ -165,7 +165,7 @@ impl StoreFactAndInferResult {
                 .map(|a| (a.fact_id, a.fact.clone()))
                 .collect(),
             Self::OrFact(_)
-            | Self::ExistFact(_)
+            | Self::ExistShapedFact(_)
             | Self::NotForallFact(_)
             | Self::ForallFact(_)
             | Self::ForallFactWithIff(_) => Vec::new(),
@@ -196,7 +196,7 @@ impl StoreFactAndInferResult {
                 ids
             }
             Self::OrFact(r) => vec![r.whole_fact_id],
-            Self::ExistFact(r) => vec![r.whole_fact_id],
+            Self::ExistShapedFact(r) => vec![r.whole_fact_id],
             Self::NotForallFact(r) => {
                 let mut ids = vec![r.whole_fact_id];
                 ids.push(r.derived_exist.whole_fact_id);
@@ -240,8 +240,8 @@ pub(crate) fn merge_store_and_infer(
             })
         }
         (StoreFactResult::OrFact(r), InferFactResult::Empty) => StoreFactAndInferResult::OrFact(r),
-        (StoreFactResult::ExistFact(r), InferFactResult::Empty) => {
-            StoreFactAndInferResult::ExistFact(r)
+        (StoreFactResult::ExistShapedFact(r), InferFactResult::Empty) => {
+            StoreFactAndInferResult::ExistShapedFact(r)
         }
         (
             StoreFactResult::NotForallFact(store_part),

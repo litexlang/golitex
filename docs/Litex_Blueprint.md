@@ -578,7 +578,7 @@ setting TopologicalSpaceSetting(X set, open_sets power_set(power_set(X))):
     forall family power_set(power_set(X)):
         family $subset open_sets
         =>:
-            big_union(family) $in open_sets
+            family_union(family) $in open_sets
 ```
 
 An open set is simply a member of that family: once `TopologicalSpaceSetting` is bound, writing `U open_sets` means that `U` is open. The group–Lean comparison below is a fuller interface contrast; here the point is only what the “dictionary” looks like. Coverage is still expanding; this is not a claim that every common notion is already catalogued.

@@ -176,12 +176,12 @@ impl Runtime {
                 Obj::SetMinus(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::BigUnion(a) => match right {
-                Obj::BigUnion(b) => a.to_string() == b.to_string(),
+            Obj::FamilyUnion(a) => match right {
+                Obj::FamilyUnion(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::BigIntersect(a) => match right {
-                Obj::BigIntersect(b) => a.to_string() == b.to_string(),
+            Obj::FamilyIntersect(a) => match right {
+                Obj::FamilyIntersect(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::IndexUnion(a) => match right {
@@ -328,8 +328,8 @@ impl Runtime {
                 Obj::PowerSet(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::GeneralCart(a) => match right {
-                Obj::GeneralCart(b) => a.to_string() == b.to_string(),
+            Obj::IndexCart(a) => match right {
+                Obj::IndexCart(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::ObjAtIndex(a) => match right {

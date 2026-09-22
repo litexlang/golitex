@@ -905,6 +905,6 @@ fn forall_parameter_uses_exact_object_carrier_from_target_set(
             | LeanTargetObjectRepresentation::SequenceSet { .. }
             | LeanTargetObjectRepresentation::MatrixSet { .. }
             | LeanTargetObjectRepresentation::CartesianProduct { .. }
-            | LeanTargetObjectRepresentation::GeneralCartesianProduct { .. }
+            | LeanTargetObjectRepresentation::IndexCartesianProduct { .. }
     )
 }

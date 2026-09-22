@@ -11,9 +11,9 @@ LITEX_NEW_PIPELINE=1 target/release/litex -f <this-file>
 
 | Status | What |
 |--------|------|
-| **Done** | Scalar P0; Identifier (defined check); Identifier-headed `FnObj`; **AnonymousFnLiteral-headed `FnObj`** (literal FnSet + dom); binder `FnSet`/`AnonymousFn`/`SetBuilder`; `CartDim`/`Proj`/`TupleDim`/`ObjAtIndex`; `ListSet` pairwise `!=`; `FiniteSetSize`/`Max`/`Min`; `Range`/`ClosedRange` (∈Z); Interval/Ray (∈R); `FnRange` (∈FnSet); IndexUnion/Intersect + GeneralCart `$is_set`/`nonempty` + family ∈ FnSet (registration half); FiniteSeqSet/SeqSet light `$is_set`(+`n∈N`) |
-| **Leaf / children-only OK (legacy also)** | `Number`/`π`/`i`/`e`/`StandardSet`; `Union`/`Intersect`/`SetMinus`/`Big*`; `PowerSet`; `Cart`/`Tuple` |
-| **Still TODO** | Sum/Product/Reduce (iteration binder); Replacement (prop+uniqueness); Index*/GeneralCart full `family $in fn(...)` type check; Struct/Template depth; FnObj `FieldAccess` head domain (template already on InFunctionSet path) |
+| **Done** | Scalar P0; Identifier (defined check); Identifier-headed `FnObj`; **AnonymousFnLiteral-headed `FnObj`** (literal FnSet + dom); binder `FnSet`/`AnonymousFn`/`SetBuilder`; `CartDim`/`Proj`/`TupleDim`/`ObjAtIndex`; `ListSet` pairwise `!=`; `FiniteSetSize`/`Max`/`Min`; `Range`/`ClosedRange` (∈Z); Interval/Ray (∈R); `FnRange` (∈FnSet); IndexUnion/Intersect + IndexCart `$is_set`/`nonempty` + family ∈ FnSet (registration half); FiniteSeqSet/SeqSet light `$is_set`(+`n∈N`) |
+| **Leaf / children-only OK (legacy also)** | `Number`/`π`/`i`/`e`/`StandardSet`; `Union`/`Intersect`/`SetMinus`/`FamilyUnion`/`FamilyIntersect`; `PowerSet`; `Cart`/`Tuple` |
+| **Still TODO** | Sum/Product/Reduce (iteration binder); Index*/IndexCart full `family $in fn(...)` type check; Struct/Template depth; FnObj `FieldAccess` head domain (template already on InFunctionSet path) |
 
 ## Status (Fact)
 

@@ -635,16 +635,16 @@ impl Runtime {
         Ok(UnknownGenericStmtResult::new().into())
     }
 
-    // Family-union introduction: `x $in big_union(F)` follows from a member set
+    // Family-union introduction: `x $in family_union(F)` follows from a member set
     // containing `x`, either as a known existential or as concrete facts.
-    // Example: `A $in F` and `x $in A` prove `x $in big_union(F)`.
-    pub(super) fn verify_in_fact_in_big_union_by_member_witness(
+    // Example: `A $in F` and `x $in A` prove `x $in family_union(F)`.
+    pub(super) fn verify_in_fact_in_family_union_by_member_witness(
         &mut self,
         in_fact: &InFact,
-        big_union: &BigUnion,
+        family_union: &FamilyUnion,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<ProveFactResult, RuntimeError> {
-        let exist_fact = self.big_union_membership_exist_fact(in_fact, big_union)?;
+        let exist_fact = self.family_union_membership_exist_fact(in_fact, family_union)?;
         let exist_proof = self.verify_exist_fact_with_known_exist_fact(&exist_fact, &exist_fact)?;
         let exist_result = self.complete_fact_proof_result(
             &exist_fact.clone().into(),
@@ -655,10 +655,10 @@ impl Runtime {
             return Ok(
                 SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
-                    "big_union membership: an element of a member set is in the family union"
+                    "family_union membership: an element of a member set is in the family union"
                         .to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
-                        UncataloguedBuiltinRule::VerifyInFactInBigUnionByMemberWitness01,
+                        UncataloguedBuiltinRule::VerifyInFactInFamilyUnionByMemberWitness01,
                     ),
                     vec![exist_result],
                 )
@@ -667,12 +667,12 @@ impl Runtime {
         }
 
         for member_set in
-            self.known_member_sets_for_big_union_family(in_fact, big_union.left.as_ref())
+            self.known_member_sets_for_family_union_family(in_fact, family_union.left.as_ref())
         {
             let member_set_in_family: AtomicFact = self
                 .new_in_fact(
                     member_set.clone(),
-                    big_union.left.as_ref().clone(),
+                    family_union.left.as_ref().clone(),
                     in_fact.line_file.clone(),
                 )
                 .into();
@@ -699,9 +699,9 @@ impl Runtime {
                 return Ok(
                     SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
-                        "big_union membership: an element of a member set is in the family union"
+                        "family_union membership: an element of a member set is in the family union"
                             .to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactInBigUnionByMemberWitness02),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactInFamilyUnionByMemberWitness02),
                         vec![member_set_result, element_result],
                     )
                     .into(),
@@ -712,15 +712,15 @@ impl Runtime {
         Ok((UnknownGenericStmtResult::new()).into())
     }
 
-    pub(super) fn big_union_membership_exist_fact(
+    pub(super) fn family_union_membership_exist_fact(
         &self,
         in_fact: &InFact,
-        big_union: &BigUnion,
+        family_union: &FamilyUnion,
     ) -> Result<ExistFact, RuntimeError> {
         let member_name = self.generate_internal_binder_name();
         let member_group = self.fresh_param_group_with_type(
             vec![member_name],
-            ParamType::Obj(big_union.left.as_ref().clone()),
+            ParamType::Obj(family_union.left.as_ref().clone()),
         )?;
         let member_obj = obj_for_bound_param_in_scope(&member_group.params[0]);
         let element_in_member: AtomicFact = self
@@ -788,7 +788,7 @@ impl Runtime {
                 .collect::<Vec<_>>(),
             _ => Vec::new(),
         };
-        indices.extend(self.known_member_sets_for_big_union_family(in_fact, index_set));
+        indices.extend(self.known_member_sets_for_family_union_family(in_fact, index_set));
         let mut seen = Vec::new();
         indices.retain(|index| {
             let key = index.to_string();
@@ -1197,7 +1197,7 @@ impl Runtime {
         }
     }
 
-    pub(super) fn known_member_sets_for_big_union_family(
+    pub(super) fn known_member_sets_for_family_union_family(
         &self,
         in_fact: &InFact,
         family: &Obj,
@@ -1207,7 +1207,7 @@ impl Runtime {
         let family_keys = self.all_objs_equal_to_arg_for_known_atomic_fact(family, &module_names);
         let mut candidates = Vec::new();
         for environment in self.iter_environments_from_top() {
-            Self::extend_known_member_sets_for_big_union_family_from_environment(
+            Self::extend_known_member_sets_for_family_union_family_from_environment(
                 environment,
                 &family_keys,
                 &mut candidates,
@@ -1215,7 +1215,7 @@ impl Runtime {
         }
         for module_name in module_names.iter() {
             for environment in self.imported_module_environments(module_name) {
-                Self::extend_known_member_sets_for_big_union_family_from_environment(
+                Self::extend_known_member_sets_for_family_union_family_from_environment(
                     environment,
                     &family_keys,
                     &mut candidates,
@@ -1235,7 +1235,7 @@ impl Runtime {
         candidates
     }
 
-    pub(super) fn extend_known_member_sets_for_big_union_family_from_environment(
+    pub(super) fn extend_known_member_sets_for_family_union_family_from_environment(
         environment: &ExecEnv,
         family_keys: &[String],
         candidates: &mut Vec<Obj>,
@@ -1419,20 +1419,20 @@ impl Runtime {
         )
     }
 
-    // General Cartesian product membership: a member is a function on `I` into `big_union(s)`
+    // General Cartesian product membership: a member is a function on `I` into `family_union(s)`
     // satisfying the named pointwise choice-function property.
-    // Example: `f $in general_cart(I, s, g)` follows from
-    // `f $in fn(t I)big_union(s)` and `$is_choice_function_for(I, s, g, f)`.
-    pub fn verify_in_fact_in_general_cart_by_defining_facts(
+    // Example: `f $in index_cart(I, s, g)` follows from
+    // `f $in fn(t I)family_union(s)` and `$is_choice_function_for(I, s, g, f)`.
+    pub fn verify_in_fact_in_index_cart_by_defining_facts(
         &mut self,
         in_fact: &InFact,
-        general_cart: &GeneralCart,
+        index_cart: &IndexCart,
         verify_state: &VerifyState,
     ) -> Result<ProveFactResult, RuntimeError> {
         let fn_set_fact: AtomicFact = self
             .new_in_fact(
                 in_fact.element.clone(),
-                general_cart_member_fn_set(self, general_cart)?,
+                index_cart_member_fn_set(self, index_cart)?,
                 in_fact.line_file.clone(),
             )
             .into();
@@ -1441,9 +1441,9 @@ impl Runtime {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
 
-        let choice_fact = general_cart_member_choice_fact(
+        let choice_fact = index_cart_member_choice_fact(
             self,
-            general_cart,
+            index_cart,
             in_fact.element.clone(),
             in_fact.line_file.clone(),
         );
@@ -1455,10 +1455,10 @@ impl Runtime {
         Ok(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
-                "general_cart membership: function carrier and named pointwise choice property"
+                "index_cart membership: function carrier and named pointwise choice property"
                     .to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
-                    UncataloguedBuiltinRule::VerifyInFactInGeneralCartByDefiningFacts,
+                    UncataloguedBuiltinRule::VerifyInFactInIndexCartByDefiningFacts,
                 ),
                 vec![fn_set_result, choice_result],
             )
