@@ -75,7 +75,7 @@ impl Runtime {
         let mut seen: HashSet<u64> = HashSet::new();
         let mut out = Vec::new();
         for env in self.execution_environments_stack.iter().rev() {
-            for (key, entries) in env.facts.known_closed_numeric_equal.by_non_closed.iter() {
+            for (key, entries) in env.facts.known_closed_numeric_equal.iter() {
                 for (closed, fact_id) in entries {
                     let id = fact_id.value();
                     let Some(closed_expr) = ClosedNumericExpr::try_from_obj(closed) else {

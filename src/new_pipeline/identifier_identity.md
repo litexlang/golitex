@@ -48,7 +48,7 @@ indexing.
 11. **known-atomic (non-equality).** Bucket by `(prop, polarity)`, scan same
     arity; each arg justified by proving `known_arg = goal_arg` via equality
     search with forall/rewrite off (includes MatchingOneArgByOne peel).
-12. **known_equality** stays a graph + equivalence classes keyed by `ObjIR`.
+12. **known_equivalence_classes** stays a graph + equivalence classes keyed by `ObjIR`.
 13. **`StructFieldDef.binding`** is `BoundName` (allocated when the field line is
     parsed). `<=>:` free refs reuse that id; exec must not allocate a second
     field id for the field binder scope.
@@ -68,7 +68,8 @@ files uses `file::x` / `mod::file::x`.
 
 - Full `alpha_normalize` rewrite of binder objs is still absent (single body
   only). **Structural alpha equality** for `FnSet` / `SetBuilder` is wired as
-  equality builtins (`ByFnSetAlphaEqual` / `BySetBuilderAlphaEqual`): binders
+  equality builtins (`ByFnSetAlphaEqual` / `ByAnonymousFnAlphaEqual` /
+  `BySetBuilderAlphaEqual` / `ByEqualToObjWithFreeParamsLookup`): binders
   may differ; free structure must match. Example: `R -> R = R -> R`,
   `{x R: x > 0} = {y R: y > 0}`. Membership reuse goes through known `$in` +
   arg equality (no dedicated `$in` alpha rule).

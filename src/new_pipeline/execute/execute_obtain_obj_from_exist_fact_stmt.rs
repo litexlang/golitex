@@ -30,7 +30,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::{
 };
 use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
 use crate::new_pipeline::instantiate::quantifier_free_fact_to_fact;
-use crate::new_pipeline::runtime::{FactId, IdentifierId, Runtime, RuntimeError, RuntimeResult};
+use crate::new_pipeline::runtime::{IdentifierId, Runtime, RuntimeError, RuntimeResult};
 
 pub enum ExecObtainObjFromExistFactStmtFailed {
     ArityMismatch { expected: usize, got: usize },
@@ -49,7 +49,6 @@ pub struct ExecObtainObjFromExistFactStmtSuccessResult {
     pub statement: ObtainObjFromExistFact,
     pub verify_exist: ObtainExistVerifySuccess,
     pub store_and_infer_result: StoreHaveObjAndInferResult,
-    pub uniqueness_forall_fact_id: Option<FactId>,
 }
 
 pub enum ExecObtainObjFromExistFactStmtResult {
@@ -90,29 +89,27 @@ impl Runtime {
         };
 
         match self.apply_obtain_from_known_exist_family(&stmt.fact, &stmt.equal_tos)? {
-            Ok((store_and_infer_result, uniqueness_forall_fact_id)) => {
-                Ok(ExecObtainObjFromExistFactStmtResult::Success(
-                    ExecObtainObjFromExistFactStmtSuccessResult {
-                        statement: stmt.clone(),
-                        verify_exist,
-                        store_and_infer_result,
-                        uniqueness_forall_fact_id,
-                    },
-                ))
-            }
+            Ok(store_and_infer_result) => Ok(ExecObtainObjFromExistFactStmtResult::Success(
+                ExecObtainObjFromExistFactStmtSuccessResult {
+                    statement: stmt.clone(),
+                    verify_exist,
+                    store_and_infer_result,
+                },
+            )),
             Err(failed) => Ok(ExecObtainObjFromExistFactStmtResult::Failed(failed)),
         }
     }
 
     // Shared eliminator for a known Exist / ExistUnique family (no verify).
     // Used by obtain-from-exist, obtain-from-$P, and obtain-from-thm.
+    // For exist!, uniqueness forall is stored into Env via store_and_infer_result
+    // (no separate id field — resolve through Env / stored_fact_ids).
     pub(in crate::new_pipeline::execute) fn apply_obtain_from_known_exist_family(
         &mut self,
         family: &ExistFactFamily,
         equal_tos: &[String],
-    ) -> RuntimeResult<
-        Result<(StoreHaveObjAndInferResult, Option<FactId>), ExecObtainObjFromExistFactStmtFailed>,
-    > {
+    ) -> RuntimeResult<Result<StoreHaveObjAndInferResult, ExecObtainObjFromExistFactStmtFailed>>
+    {
         if matches!(family, ExistFactFamily::NotExist(_)) {
             return Ok(Err(ExecObtainObjFromExistFactStmtFailed::NotExistSource));
         }
@@ -148,19 +145,15 @@ impl Runtime {
                 .extend(stored.stored_fact_ids());
         }
 
-        let uniqueness_forall_fact_id = if matches!(family, ExistFactFamily::ExistUnique(_)) {
+        if matches!(family, ExistFactFamily::ExistUnique(_)) {
             let uniqueness = self.build_exist_unique_uniqueness_forall_fact(plain)?;
-            let fact_id = uniqueness.fact_id;
             let stored = self.store_fact_and_infer(&Fact::ForallFact(uniqueness))?;
             store_and_infer_result
                 .stored_fact_ids
                 .extend(stored.stored_fact_ids());
-            Some(fact_id)
-        } else {
-            None
-        };
+        }
 
-        Ok(Ok((store_and_infer_result, uniqueness_forall_fact_id)))
+        Ok(Ok(store_and_infer_result))
     }
 
     fn unwrap_obtain_exist_verify(

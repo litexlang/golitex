@@ -6,3 +6,17 @@ forall x, y R:
         x = y
     <=>:
         y = x
+
+# Store splits this iff into two independent forall facts. The two generated
+# conclusions are indexed normally, which makes this reverse-direction use
+# possible after trusting the forward direction.
+abstract_prop Pp(x)
+abstract_prop Qq(x)
+trust:
+    forall x R:
+        =>:
+            $Pp(x)
+        <=>:
+            $Qq(x)
+trust $Pp(2)
+$Qq(2)

@@ -1,4 +1,6 @@
+use super::by_anonymous_fn_alpha_equal::ByAnonymousFnAlphaEqualBuiltinRuleProof;
 use super::by_equal_ir::ByEqualIrBuiltinRuleProof;
+use super::by_equal_to_obj_with_free_params_lookup::ByEqualToObjWithFreeParamsLookupBuiltinRuleProof;
 use super::by_fn_set_alpha_equal::ByFnSetAlphaEqualBuiltinRuleProof;
 use super::by_inverse_trig::{
     ArccosCosRightInverseBuiltinRuleProof, ArccosExactNegOneBuiltinRuleProof,
@@ -16,7 +18,9 @@ use super::by_set_builder_alpha_equal::BySetBuilderAlphaEqualBuiltinRuleProof;
 // Definitional unfolds are EqualitySearchProofByObjectDefinition, not here.
 pub enum EqualitySearchProofByBuiltinRule {
     ByEqualIr(ByEqualIrBuiltinRuleProof),
+    ByEqualToObjWithFreeParamsLookup(ByEqualToObjWithFreeParamsLookupBuiltinRuleProof),
     ByFnSetAlphaEqual(ByFnSetAlphaEqualBuiltinRuleProof),
+    ByAnonymousFnAlphaEqual(ByAnonymousFnAlphaEqualBuiltinRuleProof),
     BySetBuilderAlphaEqual(BySetBuilderAlphaEqualBuiltinRuleProof),
     Calculation(EqualitySearchProofByCalculation),
     SinArcsinLeftInverse(SinArcsinLeftInverseBuiltinRuleProof),

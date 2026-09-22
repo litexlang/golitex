@@ -35,9 +35,12 @@ pub struct KnownForallConclusionMemory {
     pub by_or: HashMap<OrFactIndexKey, Vec<ForallConclusionCite>>,
     /// Whole exist then-clauses, keyed by structural exist index key.
     pub by_exist: HashMap<ExistFactIndexKey, Vec<ForallConclusionCite>>,
-    /// Whole and then-clauses, keyed by component shape.
+    /// Whole and then-clauses, keyed by component shape. This is what lets
+    /// `and/components.lit` match a forall conclusion before proving its
+    /// components.
     pub by_and: HashMap<AndForallConclusionIndexKey, Vec<ForallConclusionCite>>,
-    /// Whole chain then-clauses, keyed by ordered operator shape.
+    /// Whole chain then-clauses, keyed by ordered operator shape. This is what
+    /// lets `chain/adjacent_order.lit` instantiate `x < y < z` as a whole.
     pub by_chain: HashMap<ChainForallConclusionIndexKey, Vec<ForallConclusionCite>>,
 }
 

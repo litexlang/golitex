@@ -17,7 +17,7 @@ pub use verify_atomic_except_equality::{
     VerifyAtomicExceptEqualityFactFailed, VerifyAtomicExceptEqualityFactResult,
 };
 pub use verify_equality::{
-    EqualFactSearchedProof, EqualFactSearchedProofByKnownEquality, EqualFactWellDefinedProof,
+    EqualFactSearchedProof, EqualFactSearchedProofByEquivalenceClass, EqualFactWellDefinedProof,
     FailToVerifyEqualFactWellDefinedResult, VerifyEqualFactWellDefinedResult, VerifyEqualityFailed,
     VerifyEqualityResult,
 };

@@ -87,7 +87,7 @@ pub struct StrictEqualWithFact {
 // Equal search routes allowed when matching forall conclusion args.
 pub enum StrictEqualArgProof {
     ByBuiltinRule(EqualitySearchProofByBuiltinRule),
-    ByKnownEquality(EqualFactSearchedProofByKnownEquality),
+    ByEquivalenceClass(EqualFactSearchedProofByEquivalenceClass),
     ByObjectDefinition(EqualitySearchProofByObjectDefinition),
     ByBuiltinStrategy(EqualitySearchProofByBuiltinStrategy),
     ByMatchingOneArgByOne(EqualFactSearchedProofByMatchingOneArgByOne),
@@ -123,7 +123,7 @@ impl VerifyEqualityResult {
 // Rewrite stages replace legacy opaque resolve_obj (ClosedNumeric only).
 pub enum EqualFactSearchedProof {
     ByBuiltinRule(EqualitySearchProofByBuiltinRule),
-    ByKnownEquality(EqualFactSearchedProofByKnownEquality),
+    ByEquivalenceClass(EqualFactSearchedProofByEquivalenceClass),
     ByObjectDefinition(EqualitySearchProofByObjectDefinition),
     ByBuiltinStrategy(EqualitySearchProofByBuiltinStrategy),
     ByMatchingOneArgByOne(EqualFactSearchedProofByMatchingOneArgByOne),
@@ -142,9 +142,9 @@ pub struct EqualFactSearchedProofByKnownForallViaSymmetry {
 
 // Oriented cite chain from goal.left to goal.right over generating equality
 // edges only. Each entry: (from, to, cited_equal_fact_id). Empty <=> reflexive.
-// FactIds must come from KnownEqualityMemory.generating_edges, never from a
+// FactIds must come from KnownEquivalenceClassMemory.generating_edges, never from a
 // class-id handle alone.
-pub struct EqualFactSearchedProofByKnownEquality {
+pub struct EqualFactSearchedProofByEquivalenceClass {
     pub path: Vec<(Obj, Obj, FactId)>,
 }
 
@@ -187,8 +187,8 @@ pub fn strict_equal_arg_proof_from_searched(
 ) -> Option<StrictEqualArgProof> {
     match proof {
         EqualFactSearchedProof::ByBuiltinRule(p) => Some(StrictEqualArgProof::ByBuiltinRule(p)),
-        EqualFactSearchedProof::ByKnownEquality(p) => {
-            Some(StrictEqualArgProof::ByKnownEquality(p))
+        EqualFactSearchedProof::ByEquivalenceClass(p) => {
+            Some(StrictEqualArgProof::ByEquivalenceClass(p))
         }
         EqualFactSearchedProof::ByObjectDefinition(p) => {
             Some(StrictEqualArgProof::ByObjectDefinition(p))

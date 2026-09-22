@@ -1,0 +1,18 @@
+# Node: equal.ByBuiltinRule.ByEqualToObjWithFreeParamsLookup
+# Run: LITEX_NEW_PIPELINE=1 target/release/litex -f examples/new_pipeline_proof_nodes/equal/by_builtin_rule/by_equal_to_obj_with_free_params_lookup.lit
+#
+# Store-time index `known_equal_to_obj_with_free_params` remembers binder-carrying
+# equalities (`let` / stored `name = rhs`). Verify reads that index instead of
+# object-definition unfold or equality-graph BFS.
+
+# FnSet carrier: `let g = fn(x R) R` indexes g; known `f $in fn(x R) R` bridges
+# to `f $in g` via lookup + alpha-equal FnSets.
+let g = fn(x R) R
+have fn f(x R) R = x
+f $in g
+
+# AnonymousFn: `let h = fn(x R) R {x}` indexes h; `have fn k = same body` then
+# `k = h` cites the index on h and alpha-equal AnonymousFn shapes.
+let h = fn(x R) R {x}
+have fn k(x R) R = x
+k = h

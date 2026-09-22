@@ -150,7 +150,7 @@ impl Runtime {
         let goal_args = or_fact_args_ref(fact);
         let class_per_arg: Vec<Vec<_>> = goal_args
             .iter()
-            .map(|arg| self.known_equality_class_keys(arg))
+            .map(|arg| self.equivalence_class_keys(arg))
             .collect();
 
         for env in self.execution_environments_stack.iter().rev() {

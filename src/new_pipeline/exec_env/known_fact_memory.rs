@@ -1,6 +1,6 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, ExistFactFamily, Fact, OrFact};
 use crate::new_pipeline::ast::names::AtomicName;
-use crate::new_pipeline::ast::obj::{Cart, Obj, SetBuilder, Tuple};
+use crate::new_pipeline::ast::obj::{AnonymousFn, Cart, FnSet, Obj, SetBuilder, Tuple};
 use crate::new_pipeline::exec_env::exist_fact_index_key::{exist_fact_index_key, ExistFactIndexKey};
 use crate::new_pipeline::exec_env::known_forall_conclusion_memory::KnownForallConclusionMemory;
 use crate::new_pipeline::runtime::FactId;
@@ -14,37 +14,49 @@ pub use crate::new_pipeline::display_and_ir::ObjIR;
 // exact-IR cite slot. Rationale: `new_pipeline/identifier_identity.md`.
 #[derive(Clone)]
 pub struct KnownFactMemory {
+    /// Canonical store: every stored fact’s full AST keyed by `FactId`.
+    /// Proof and exec results cite only ids; renderers resolve id → fact text
+    /// for per-statement JSON and later Lean compilation replay.
     pub facts_by_id: HashMap<FactId, Fact>,
-    pub known_equality: KnownEqualityMemory,
+    pub known_equivalence_classes: KnownEquivalenceClassMemory,
     /// Non-closed side → closed numeric representative + citing equality FactId.
-    /// Written when storing an equality with exactly one closed side.
-    pub known_closed_numeric_equal: KnownClosedNumericEqualMemory,
-    /// Non-structural side → tuple / cart / set_builder shape + citing equality FactId.
-    pub known_structural_equal: KnownStructuralEqualMemory,
+    /// Example: store `a = 10` → key `a` maps to `(10, fact_id)`.
+    pub known_closed_numeric_equal: HashMap<ObjIR, Vec<(Obj, FactId)>>,
+    /// Non-literal side → tuple or cart representative + citing equality FactId.
+    pub known_cart_tuple_equal: KnownCartTupleEqualMemory,
+    /// Non-literal side → binder-carrying obj (FnSet / AnonymousFn / SetBuilder) + FactId.
+    /// Example: `trust R_TO_R = fn(x R) R`, `have x fn(y R) R`, then `x $in R_TO_R`
+    /// via lookup on `R_TO_R` + alpha-equal FnSet (ByEqualToObjWithFreeParamsLookup).
+    pub known_equal_to_obj_with_free_params: KnownEqualToObjWithFreeParamsMemory,
     pub known_atomic_except_equality_facts: AtomicExceptEqualityFactMemory,
     pub known_or: OrFactMemory,
     pub known_exist: ExistFactMemory,
     pub known_forall_conclusions: KnownForallConclusionMemory,
 }
 
-/// Fact-index: `a = closed` / `closed = a` with exactly one closed side.
-/// Example: store `a = 10` → key `a` maps to `(10, fact_id)`.
-#[derive(Clone, Default)]
-pub struct KnownClosedNumericEqualMemory {
-    pub by_non_closed: HashMap<ObjIR, Vec<(Obj, FactId)>>,
-}
-
-/// Fact-index: `a = tuple` / `a = cart` / `a = {x T: …}` with exactly one structural side.
+/// Fact-index: `a = (…)` / `a = cart(…)` with exactly one cart-or-tuple side.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum KnownStructuralEqualShape {
+pub enum KnownCartTupleEqualShape {
     Tuple(Tuple),
     Cart(Cart),
+}
+
+#[derive(Clone, Default)]
+pub struct KnownCartTupleEqualMemory {
+    pub by_other_side: HashMap<ObjIR, Vec<(KnownCartTupleEqualShape, FactId)>>,
+}
+
+/// Fact-index: `a = fn(…)` / `a = fn(…){…}` / `a = {x T: …}` with exactly one such side.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum KnownEqualToObjWithFreeParamsShape {
+    FnSet(FnSet),
+    AnonymousFn(AnonymousFn),
     SetBuilder(SetBuilder),
 }
 
 #[derive(Clone, Default)]
-pub struct KnownStructuralEqualMemory {
-    pub by_non_structural: HashMap<ObjIR, Vec<(KnownStructuralEqualShape, FactId)>>,
+pub struct KnownEqualToObjWithFreeParamsMemory {
+    pub by_other_side: HashMap<ObjIR, Vec<(KnownEqualToObjWithFreeParamsShape, FactId)>>,
 }
 
 // Equality equivalence-class store for one ExecEnv.
@@ -56,10 +68,10 @@ pub struct KnownStructuralEqualMemory {
 // 2. Evidence view: `generating_edges` — EqualFacts actually written into the
 //    env (user or infer). Not the closed set of all equal pairs.
 //
-// Path search (EqualFactSearchedProofByKnownEquality) must cite only FactIds
+// Path search (EqualFactSearchedProofByEquivalenceClass) must cite only FactIds
 // from generating_edges; the shared Rc is an index, not Lean-transformable proof.
 #[derive(Clone, Default)]
-pub struct KnownEqualityMemory {
+pub struct KnownEquivalenceClassMemory {
     // Undirected adjacency of generating EqualFacts, keyed by obj IR.
     // Each store(a = b) inserts both a→b and b→a with the same EqualFact.
     pub generating_edges: HashMap<ObjIR, Vec<(ObjIR, EqualFact)>>,
@@ -91,9 +103,10 @@ impl KnownFactMemory {
     pub fn new() -> Self {
         Self {
             facts_by_id: HashMap::new(),
-            known_equality: KnownEqualityMemory::new(),
-            known_closed_numeric_equal: KnownClosedNumericEqualMemory::new(),
-            known_structural_equal: KnownStructuralEqualMemory::new(),
+            known_equivalence_classes: KnownEquivalenceClassMemory::new(),
+            known_closed_numeric_equal: HashMap::new(),
+            known_cart_tuple_equal: KnownCartTupleEqualMemory::new(),
+            known_equal_to_obj_with_free_params: KnownEqualToObjWithFreeParamsMemory::new(),
             known_atomic_except_equality_facts: AtomicExceptEqualityFactMemory::new(),
             known_or: OrFactMemory::new(),
             known_exist: ExistFactMemory::new(),
@@ -121,56 +134,25 @@ impl Default for KnownFactMemory {
     }
 }
 
-impl KnownClosedNumericEqualMemory {
+impl KnownCartTupleEqualMemory {
     pub fn new() -> Self {
         Self::default()
     }
 
-    // When exactly one side classifies as ClosedNumericExpr, index the other.
-    // Both-closed or neither-closed: skip.
-    // Example: `a = 2^3/7 + 10 * 2.5` → key `a` stores closed RHS + fact_id.
-    pub fn maybe_index(&mut self, equal_fact: &EqualFact) {
-        use crate::new_pipeline::rational_expression::ClosedNumericExpr;
-
-        let left = ClosedNumericExpr::try_from_obj(&equal_fact.left);
-        let right = ClosedNumericExpr::try_from_obj(&equal_fact.right);
-        match (left, right) {
-            (Some(closed), None) => {
-                self.by_non_closed
-                    .entry(equal_fact.right.ir())
-                    .or_default()
-                    .push((closed.to_obj(), equal_fact.fact_id));
-            }
-            (None, Some(closed)) => {
-                self.by_non_closed
-                    .entry(equal_fact.left.ir())
-                    .or_default()
-                    .push((closed.to_obj(), equal_fact.fact_id));
-            }
-            _ => {}
-        }
-    }
-}
-
-impl KnownStructuralEqualMemory {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    // When exactly one side is Tuple / Cart / SetBuilder, index the other side.
+    // When exactly one side is Tuple or Cart, index the other side.
     // Example: store `a = (1, 2)` → key `a` stores the tuple + fact_id.
     pub fn maybe_index(&mut self, equal_fact: &EqualFact) {
-        let left = structural_shape_from_obj(&equal_fact.left);
-        let right = structural_shape_from_obj(&equal_fact.right);
+        let left = cart_tuple_shape_from_obj(&equal_fact.left);
+        let right = cart_tuple_shape_from_obj(&equal_fact.right);
         match (left, right) {
             (Some(shape), None) => {
-                self.by_non_structural
+                self.by_other_side
                     .entry(equal_fact.right.ir())
                     .or_default()
                     .push((shape, equal_fact.fact_id));
             }
             (None, Some(shape)) => {
-                self.by_non_structural
+                self.by_other_side
                     .entry(equal_fact.left.ir())
                     .or_default()
                     .push((shape, equal_fact.fact_id));
@@ -180,18 +162,56 @@ impl KnownStructuralEqualMemory {
     }
 }
 
-fn structural_shape_from_obj(obj: &Obj) -> Option<KnownStructuralEqualShape> {
+impl KnownEqualToObjWithFreeParamsMemory {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    // When exactly one side is FnSet / AnonymousFn / SetBuilder, index the other.
+    // Example: `trust R_TO_R = fn(x R) R` → key `R_TO_R` stores that FnSet + fact_id.
+    pub fn maybe_index(&mut self, equal_fact: &EqualFact) {
+        let left = free_params_shape_from_obj(&equal_fact.left);
+        let right = free_params_shape_from_obj(&equal_fact.right);
+        match (left, right) {
+            (Some(shape), None) => {
+                self.by_other_side
+                    .entry(equal_fact.right.ir())
+                    .or_default()
+                    .push((shape, equal_fact.fact_id));
+            }
+            (None, Some(shape)) => {
+                self.by_other_side
+                    .entry(equal_fact.left.ir())
+                    .or_default()
+                    .push((shape, equal_fact.fact_id));
+            }
+            _ => {}
+        }
+    }
+}
+
+fn cart_tuple_shape_from_obj(obj: &Obj) -> Option<KnownCartTupleEqualShape> {
     match obj {
-        Obj::Tuple(tuple) => Some(KnownStructuralEqualShape::Tuple(tuple.clone())),
-        Obj::Cart(cart) => Some(KnownStructuralEqualShape::Cart(cart.clone())),
+        Obj::Tuple(tuple) => Some(KnownCartTupleEqualShape::Tuple(tuple.clone())),
+        Obj::Cart(cart) => Some(KnownCartTupleEqualShape::Cart(cart.clone())),
+        _ => None,
+    }
+}
+
+pub(crate) fn free_params_shape_from_obj(obj: &Obj) -> Option<KnownEqualToObjWithFreeParamsShape> {
+    match obj {
+        Obj::FnSet(fn_set) => Some(KnownEqualToObjWithFreeParamsShape::FnSet(fn_set.clone())),
+        Obj::AnonymousFn(anon) => {
+            Some(KnownEqualToObjWithFreeParamsShape::AnonymousFn(anon.clone()))
+        }
         Obj::SetBuilder(set_builder) => {
-            Some(KnownStructuralEqualShape::SetBuilder(set_builder.clone()))
+            Some(KnownEqualToObjWithFreeParamsShape::SetBuilder(set_builder.clone()))
         }
         _ => None,
     }
 }
 
-impl KnownEqualityMemory {
+impl KnownEquivalenceClassMemory {
     pub fn new() -> Self {
         Self::default()
     }
@@ -305,5 +325,33 @@ impl ExistFactMemory {
     pub fn store(&mut self, exist_fact: &ExistFactFamily) {
         let key = exist_fact_index_key(exist_fact);
         self.by_key.entry(key).or_default().push(exist_fact.clone());
+    }
+}
+
+// When exactly one side classifies as ClosedNumericExpr, index the other.
+// Both-closed or neither-closed: skip.
+// Example: `a = 2^3/7 + 10 * 2.5` → key `a` stores closed RHS + fact_id.
+pub fn maybe_index_known_closed_numeric_equal(
+    index: &mut HashMap<ObjIR, Vec<(Obj, FactId)>>,
+    equal_fact: &EqualFact,
+) {
+    use crate::new_pipeline::rational_expression::ClosedNumericExpr;
+
+    let left = ClosedNumericExpr::try_from_obj(&equal_fact.left);
+    let right = ClosedNumericExpr::try_from_obj(&equal_fact.right);
+    match (left, right) {
+        (Some(closed), None) => {
+            index
+                .entry(equal_fact.right.ir())
+                .or_default()
+                .push((closed.to_obj(), equal_fact.fact_id));
+        }
+        (None, Some(closed)) => {
+            index
+                .entry(equal_fact.left.ir())
+                .or_default()
+                .push((closed.to_obj(), equal_fact.fact_id));
+        }
+        _ => {}
     }
 }

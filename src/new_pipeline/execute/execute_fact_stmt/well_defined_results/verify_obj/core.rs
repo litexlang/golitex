@@ -283,7 +283,7 @@ impl Runtime {
 
     // Visible InFunctionSet rows for `obj` and its equality-class neighbors.
     pub(crate) fn collect_in_function_set_candidates(&self, obj: &Obj) -> Vec<(FnSet, FactId)> {
-        let mut keys = self.known_equality_class_keys(obj);
+        let mut keys = self.equivalence_class_keys(obj);
         let self_ir = obj.ir();
         if !keys.iter().any(|k| k == &self_ir) {
             keys.push(self_ir);

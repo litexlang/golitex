@@ -13,6 +13,7 @@ use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::param::TypedParameterList;
 use crate::new_pipeline::ast::fact::atomic_fact_has_positive_polarity;
 use crate::new_pipeline::exec_env::exec_env::{ExecEnv, PropRewriteProperty};
+use crate::new_pipeline::exec_env::maybe_index_known_closed_numeric_equal;
 use crate::new_pipeline::parse::keywords::{
     EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL,
 };
@@ -59,6 +60,8 @@ impl Runtime {
                 Ok(StoreFactAndInferResult::RecordedFact { fact_id })
             }
             Fact::ForallFactWithIff(forall_iff) => {
+                // `forall_iff/both_directions.lit` relies on both generated
+                // directions entering the ordinary forall indexes here.
                 let (forward, reverse) = self.forall_with_iff_to_two_directions_for_store(forall_iff);
                 let original_id = forall_iff.fact_id;
                 self.top_exec_env_mut().facts.record_fact(
@@ -238,9 +241,15 @@ impl Runtime {
             AtomicFact::EqualFact(equal_fact) => {
                 let fact_id = equal_fact.fact_id;
                 let env = self.top_exec_env_mut();
-                env.facts.known_equality.store(equal_fact);
-                env.facts.known_closed_numeric_equal.maybe_index(equal_fact);
-                env.facts.known_structural_equal.maybe_index(equal_fact);
+                env.facts.known_equivalence_classes.store(equal_fact);
+                maybe_index_known_closed_numeric_equal(
+                    &mut env.facts.known_closed_numeric_equal,
+                    equal_fact,
+                );
+                env.facts.known_cart_tuple_equal.maybe_index(equal_fact);
+                env.facts
+                    .known_equal_to_obj_with_free_params
+                    .maybe_index(equal_fact);
                 env.facts.record_atomic_fact(fact_id, atomic_fact.clone());
                 Ok(vec![fact_id])
             }
@@ -581,7 +590,7 @@ impl Runtime {
         if let Obj::SetBuilder(builder) = set {
             return Some(builder.clone());
         }
-        let adjacency = self.visible_equality_adjacency();
+        let adjacency = self.visible_equivalence_class_adjacency();
         let neighbors = adjacency.get(&set.ir())?;
         for (_peer_key, equal_fact) in neighbors.iter() {
             let peer = if equal_fact.left.ir() == set.ir() {
@@ -600,7 +609,7 @@ impl Runtime {
         if let Obj::PowerSet(power) = set {
             return Some(power.set.as_ref().clone());
         }
-        let adjacency = self.visible_equality_adjacency();
+        let adjacency = self.visible_equivalence_class_adjacency();
         let neighbors = adjacency.get(&set.ir())?;
         for (_peer_key, equal_fact) in neighbors.iter() {
             let peer = if equal_fact.left.ir() == set.ir() {
