@@ -74,6 +74,7 @@ pub enum DefinitionStmt {
     ObtainObjFromExistFact(ObtainObjFromExistFact),
     ObtainObjFromAtomicFact(ObtainObjFromAtomicFact),
     ObtainObjFromThm(ObtainObjFromThm),
+    // Name preimages from known image membership (see HaveByPreimageStmt).
     HaveByPreimageStmt(HaveByPreimageStmt),
     HaveFnEqualStmt(HaveFnEqualStmt),
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
@@ -150,9 +151,34 @@ pub struct ObtainObjFromThm {
     pub line_file: LineFile,
 }
 
+// Name opaque preimage witnesses from a known image-membership fact.
+//
+// Design: membership inference already exposes an existential preimage from
+// `z $in fn_range(f)` or `y $in replacement_image(P, A)` / legacy `replacement`.
+// Multi-parameter `fn_range` makes that exist ugly to rewrite for `obtain`, so
+// this statement takes the `$in` shape directly and introduces one fresh name
+// per input coordinate (arity must match).
+//
+// What it stores (so later `f(x, y)` / `$P(x, y)` is WD):
+// - bind each name as a set-bound parameter of f's / P's input carrier
+// - `x $in Dom`, … (and f's extra domain facts, instantiated at those names)
+// - `z = f(x, …)` or `$P(x, y)` for replacement
+// Without those facts, naming alone would not let you feed the names back into f.
+//
+// Example (fn_range):
+//   have by preimage a from square(2) $in fn_range(square)
+//   // a $in R, square(2) = square(a)
+// Example (multi-arg):
+//   have by preimage x, y from z $in fn_range(f)
+// Example (replacement image):
+//   have by preimage source from target $in replacement_image(P, A)
+//   // source $in A, $P(source, target)
+//
+// new_pipeline: AST + keyword exist; parse/exec not wired yet.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HaveByPreimageStmt {
     pub preimage_names: Vec<PlainName>,
+    // Must be `… $in fn_range(…)` or `… $in replacement_image(…)` (legacy: replacement).
     pub range_membership: InFact,
     pub line_file: LineFile,
 }

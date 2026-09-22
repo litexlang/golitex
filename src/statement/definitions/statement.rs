@@ -201,7 +201,11 @@ pub struct ObtainObjFromThm {
     pub line_file: LineFile,
 }
 
-// have by preimage x from z $in fn_range(f)
+// Name opaque preimage witnesses from known image membership.
+// Multi-arg `fn_range` needs one fresh name per parameter; `obtain` on the
+// inferred exist is theoretically enough but usually unusable to write.
+// Example: `have by preimage x from z $in fn_range(f)`.
+// Example: `have by preimage x from y $in replacement(P, A)`.
 #[derive(Clone)]
 pub struct HaveByPreimageStmt {
     pub preimage_bindings: Vec<SymbolBinding>,

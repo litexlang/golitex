@@ -1,0 +1,6 @@
+# Node: atomic.ByBuiltinRule.LessEqualFact.AddRightNonnegative
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/atomic/by_builtin_rule/less_equal_add_right_nonnegative.lit
+
+have x R
+0 <= 1
+x <= x + 1

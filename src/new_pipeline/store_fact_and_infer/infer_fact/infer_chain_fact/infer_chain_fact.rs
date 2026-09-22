@@ -3,7 +3,7 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::store_fact_and_infer::InferChainFactResult;
 
 impl Runtime {
-    // Infer adjacent edges of a stored chain, then optional transitive closures.
+    // Adjacent edges: atomic packaging. Transitive closures: chain-level rules (not packaging).
     // Example: `a < b < c` infers on a<b and b<c, then stores BuiltinNumericOrder ⇒ a<c.
     pub(crate) fn infer_chain_fact(
         &mut self,

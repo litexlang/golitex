@@ -3014,7 +3014,10 @@ by def $P(args)
 > forall; `$fn_eq_in` → pointwise equality forall; `$proper_subset` → subset plus
 > inequality; `$injective` / `$surjective` / `$bijective`; `$prime` / `$coprime` /
 > `$dvd`; `$is_choice_function_for`). User `prop` and builtin predicates share
-> one fork: builtin first, then user `prop`.
+> one fork: builtin first, then user `prop`. Design note:
+> `src/new_pipeline/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/by_definition_design.md`.
+> Finite list-set inclusions such as `{1} $subset {1, 2}` are **not** a by-def
+> goal; use `by enumerate finite_set`.
 
 Unlike ordinary atomic verification, explicit `by def` rechecks the definition
 even if the target predicate is already known. It accepts exactly one positive
@@ -3077,7 +3080,21 @@ Use `witness` to prove an existential or nonempty-set goal. Use `obtain` to
 name witnesses from an already known existential, from one concrete prop
 definition, or from the sole direct existential conclusion of a named theorem.
 Use `have by preimage` to name a preimage from known range or replacement
-membership.
+membership. It is the dedicated eliminator for image membership: one fresh
+name per input coordinate, without rewriting the inferred `exist`. For
+multi-parameter `fn_range`, this is the practical way to name preimages;
+`obtain` on the inferred existential remains possible but usually too heavy
+to write by hand.
+
+The statement does not only bind names. For `fn_range` it also stores the
+parameter memberships and any extra domain facts of `f` at those names, plus
+the application equality (e.g. `z = f(x, y)`), so a later call `f(x, y)` is
+well-defined. For `replacement` it stores `x $in A` and `$P(x, y)`.
+
+> **Preview (`new_pipeline`):** `HaveByPreimageStmt` exists in the AST, but
+> parse/exec still reject with `have by preimage: not wired yet`. Default
+> pipeline supports `from z $in fn_range(f)` and `from y $in replacement(P, A)`.
+> When wired, `replacement_image` should be accepted in place of `replacement`.
 
 `obtain` exposes each direct fact in the existential body. Positive concrete
 predicates among those facts may expose positive clauses through forward

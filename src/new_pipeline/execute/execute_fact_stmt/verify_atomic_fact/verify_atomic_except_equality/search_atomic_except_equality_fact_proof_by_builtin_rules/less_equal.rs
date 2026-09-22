@@ -1,9 +1,12 @@
-use crate::new_pipeline::ast::fact::LessEqualFact;
-use crate::new_pipeline::ast::obj::{Number, Obj, Literal};
+use crate::new_pipeline::ast::fact::{AtomicFact, Fact, LessEqualFact};
+use crate::new_pipeline::ast::obj::{
+    Add, ArithmeticOperator, Literal, Number, Obj,
+};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::trig_bounds::{
     match_arccos_principal_lower, match_arccos_principal_upper, match_arcsin_principal_lower,
     match_arcsin_principal_upper, match_unit_circle_lower, match_unit_circle_upper,
 };
+use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::rational_expression::{
     compare_closed_objs_by_normalized_decimal, NumberCompareResult,
@@ -47,6 +50,14 @@ pub enum LessEqualFactSearchProofByBuiltinRule {
     // Unit-circle upper bound: `sin(x) <= 1` or `cos(x) <= 1`.
     // Example: prove `cos(x) <= 1`.
     UnitCircleUpperBound(UnitCircleUpperBoundBuiltinRuleProof),
+    // Absolute value is nonnegative: `0 <= abs(x)`.
+    // Mathematical property: for every real `x`, `abs(x) >= 0`.
+    // Example: prove `0 <= abs(a)`.
+    AbsNonnegative(AbsNonnegativeBuiltinRuleProof),
+    // Right translation by a nonnegative addend: `a <= a + b` from `0 <= b`.
+    // Mathematical property: adding a nonnegative quantity does not decrease.
+    // Example: known `0 <= c` proves `x <= x + c`.
+    AddRightNonnegative(AddRightNonnegativeBuiltinRuleProof),
 }
 
 pub struct ClosedNumericComparisonBuiltinRuleProof {
@@ -72,13 +83,18 @@ pub struct ArccosPrincipalLowerBoundBuiltinRuleProof {}
 pub struct ArccosPrincipalUpperBoundBuiltinRuleProof {}
 pub struct UnitCircleLowerBoundBuiltinRuleProof {}
 pub struct UnitCircleUpperBoundBuiltinRuleProof {}
+pub struct AbsNonnegativeBuiltinRuleProof {}
+
+pub struct AddRightNonnegativeBuiltinRuleProof {
+    pub nonnegative_addend_proof: VerifyFactResult,
+}
 
 impl Runtime {
-    // Builtin: reflexivity, known `<`, trig principal/unit bounds, then closed decimal `<=`.
+    // Builtin: reflexivity, known `<`, abs/add order algebra, trig bounds, closed decimal `<=`.
     pub fn search_less_equal_fact_proof_by_builtin_rule(
         &mut self,
         fact: &LessEqualFact,
-        _verify_state: VerifyState,
+        verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
         if fact.left.ir() == fact.right.ir() {
             return Ok(Some(
@@ -102,6 +118,17 @@ impl Runtime {
                     ),
                 ));
             }
+            if matches!(
+                &fact.right,
+                Obj::ArithmeticOperator(ArithmeticOperator::Abs(_))
+            ) {
+                return Ok(Some(LessEqualFactSearchProofByBuiltinRule::AbsNonnegative(
+                    AbsNonnegativeBuiltinRuleProof {},
+                )));
+            }
+        }
+        if let Some(proof) = self.add_right_nonnegative_proof(fact, verify_state)? {
+            return Ok(Some(proof));
         }
         if match_arcsin_principal_lower(&fact.left, &fact.right) {
             return Ok(Some(
@@ -162,6 +189,44 @@ impl Runtime {
             ),
         ))
     }
+
+    // Prove `a <= a + b` from a proved `0 <= b`.
+    fn add_right_nonnegative_proof(
+        &mut self,
+        fact: &LessEqualFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
+        let Obj::ArithmeticOperator(ArithmeticOperator::Add(Add { left, right })) = &fact.right
+        else {
+            return Ok(None);
+        };
+        if left.as_ref().ir() != fact.left.ir() {
+            return Ok(None);
+        }
+        let nonnegative = Fact::AtomicFact(AtomicFact::LessEqualFact(LessEqualFact {
+            fact_id: self.ids.allocate_fact_id(),
+            left: zero_obj(),
+            right: right.as_ref().clone(),
+            line_file: None,
+        }));
+        let nonnegative_addend_proof = self.verify_fact(&nonnegative, verify_state)?;
+        if nonnegative_addend_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(
+            LessEqualFactSearchProofByBuiltinRule::AddRightNonnegative(
+                AddRightNonnegativeBuiltinRuleProof {
+                    nonnegative_addend_proof,
+                },
+            ),
+        ))
+    }
+}
+
+fn zero_obj() -> Obj {
+    Obj::Literal(Literal::Number(Number {
+        normalized_value: "0".to_string(),
+    }))
 }
 
 fn is_zero_obj(obj: &Obj) -> bool {

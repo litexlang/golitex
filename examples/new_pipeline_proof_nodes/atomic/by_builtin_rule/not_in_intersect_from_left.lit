@@ -1,0 +1,4 @@
+# Node: atomic.ByBuiltinRule.NotInFact.NonMembershipOfIntersectFromLeft
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/atomic/by_builtin_rule/not_in_intersect_from_left.lit
+
+not 1 $in intersect({2}, {1, 2})
