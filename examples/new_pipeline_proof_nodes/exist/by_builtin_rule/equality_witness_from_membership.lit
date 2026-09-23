@@ -1,0 +1,5 @@
+# Node: exist.ByBuiltinRule.EqualityWitnessFromMembership
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/exist/by_builtin_rule/equality_witness_from_membership.lit
+
+2 $in {1, 2}
+exist x {1, 2} st {x = 2}

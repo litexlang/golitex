@@ -1,9 +1,14 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact, InFact, IsTupleFact, NotInFact, SubsetFact};
 use crate::new_pipeline::ast::names::AtomicName;
-use crate::new_pipeline::ast::obj::{Cart, FnObjHead, Number, Obj, ObjAtIndex, StandardSet, StructObj, TupleDim, ArithmeticOperator, ExpLogOperator, IntegerOperator, Literal, ProductShape, SetFormer, SetOperator, StructAndFieldAccessObj, TrigOperator};
+use crate::new_pipeline::ast::obj::{
+    Cart, FnObj, FnObjHead, Number, Obj, ObjAtIndex, StandardSet, StructObj, TupleDim,
+    ArithmeticOperator, ExpLogOperator, IntegerOperator, Literal, ProductShape, SetFormer,
+    SetOperator, StructAndFieldAccessObj, TrigOperator,
+};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::predecessor_helpers::match_sub_one;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
+use crate::new_pipeline::parse::keywords::IN;
 use crate::new_pipeline::rational_expression::evaluate_obj_to_normalized_decimal_number;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeResult};
@@ -85,6 +90,14 @@ pub enum InFactSearchProofByBuiltinRule {
     // Mathematical property: `x $in A` and `not x $in B` ⇒ `x $in set_minus(A, B)`.
     // Example: `2 $in {1, 2}` and `not 2 $in {1}` prove `2 $in set_minus({1, 2}, {1})`.
     SetMinusMembership(SetMinusMembershipBuiltinRuleProof),
+    // Family-union membership from a member-set witness.
+    // Mathematical property: `A $in F` and `x $in A` ⇒ `x $in family_union(F)`.
+    // Example: known `{1} $in {{1}}` and `1 $in {1}` prove `1 $in family_union({{1}})`.
+    FamilyUnionMembershipFromMember(FamilyUnionMembershipFromMemberBuiltinRuleProof),
+    // Indexed-union membership from an index-fiber witness.
+    // Mathematical property: `i $in I` and `x $in A(i)` ⇒ `x $in index_union(I, X, A)`.
+    // Example: known `1 $in {1}` and `3 $in A(1)` prove `3 $in index_union({1}, N, A)`.
+    IndexUnionMembershipFromIndex(IndexUnionMembershipFromIndexBuiltinRuleProof),
 }
 
 // Closed decimal membership certificate (sides live on the InFact).
@@ -179,6 +192,16 @@ pub struct SetMinusMembershipBuiltinRuleProof {
     pub right_non_membership_proof: VerifyFactResult,
 }
 
+pub struct FamilyUnionMembershipFromMemberBuiltinRuleProof {
+    pub cite_member_set_in_family_fact_id: FactId,
+    pub element_in_member_set_proof: VerifyFactResult,
+}
+
+pub struct IndexUnionMembershipFromIndexBuiltinRuleProof {
+    pub cite_index_in_index_set_fact_id: FactId,
+    pub element_in_fiber_proof: VerifyFactResult,
+}
+
 impl Runtime {
     // Builtin InFact search: dispatch by set shape first, then only try rules
     // that can apply to that shape (and element shape when needed).
@@ -252,6 +275,12 @@ impl Runtime {
             }
             Obj::SetOperator(SetOperator::SetMinus(_)) => {
                 self.set_minus_membership_proof(fact, verify_state)
+            }
+            Obj::SetOperator(SetOperator::FamilyUnion(_)) => {
+                self.family_union_membership_proof(fact, verify_state)
+            }
+            Obj::SetOperator(SetOperator::IndexUnion(_)) => {
+                self.index_union_membership_proof(fact, verify_state)
             }
             _ => {
                 if matches!(&fact.element, Obj::FnObj(_)) {
@@ -859,6 +888,149 @@ impl Runtime {
                 right_non_membership_proof: right_proof,
             },
         )))
+    }
+
+    // Prove `x $in family_union(F)` from a known `A $in F` and a proved `x $in A`.
+    fn family_union_membership_proof(
+        &mut self,
+        fact: &InFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        let Obj::SetOperator(SetOperator::FamilyUnion(family_union)) = &fact.set else {
+            return Ok(None);
+        };
+        let family = family_union.left.as_ref();
+        let family_ir = family.ir();
+        let key = (AtomicName::Plain { name: IN.into() }, true);
+        let mut candidates: Vec<(FactId, Obj)> = Vec::new();
+        for env in self.execution_environments_stack.iter().rev() {
+            let Some(knowns) = env
+                .facts
+                .known_atomic_except_equality_facts
+                .by_prop
+                .get(&key)
+            else {
+                continue;
+            };
+            for known in knowns {
+                if let AtomicFact::InFact(known_in) = known {
+                    if known_in.set.ir() == family_ir {
+                        candidates.push((known_in.fact_id, known_in.element.clone()));
+                    }
+                }
+            }
+        }
+        for (cite_member_set_in_family_fact_id, member_set) in candidates {
+            let element_goal = Fact::AtomicFact(AtomicFact::InFact(InFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                element: fact.element.clone(),
+                set: member_set,
+                line_file: None,
+            }));
+            let element_in_member_set_proof =
+                self.verify_fact(&element_goal, verify_state.clone())?;
+            if element_in_member_set_proof.is_failed() {
+                continue;
+            }
+            return Ok(Some(
+                InFactSearchProofByBuiltinRule::FamilyUnionMembershipFromMember(
+                    FamilyUnionMembershipFromMemberBuiltinRuleProof {
+                        cite_member_set_in_family_fact_id,
+                        element_in_member_set_proof,
+                    },
+                ),
+            ));
+        }
+        Ok(None)
+    }
+
+    // Prove `x $in index_union(I, X, A)` from a known `i $in I` and a proved `x $in A(i)`.
+    fn index_union_membership_proof(
+        &mut self,
+        fact: &InFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        let Obj::SetOperator(SetOperator::IndexUnion(index_union)) = &fact.set else {
+            return Ok(None);
+        };
+        let index_set_ir = index_union.index_set.as_ref().ir();
+        let key = (AtomicName::Plain { name: IN.into() }, true);
+        let mut candidates: Vec<(FactId, Obj)> = Vec::new();
+        for env in self.execution_environments_stack.iter().rev() {
+            let Some(knowns) = env
+                .facts
+                .known_atomic_except_equality_facts
+                .by_prop
+                .get(&key)
+            else {
+                continue;
+            };
+            for known in knowns {
+                if let AtomicFact::InFact(known_in) = known {
+                    if known_in.set.ir() == index_set_ir {
+                        candidates.push((known_in.fact_id, known_in.element.clone()));
+                    }
+                }
+            }
+        }
+        for (cite_index_in_index_set_fact_id, index) in candidates {
+            let Some(fiber) = apply_fn_one_arg(index_union.family_fn.as_ref(), index) else {
+                continue;
+            };
+            let fiber_goal = Fact::AtomicFact(AtomicFact::InFact(InFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                element: fact.element.clone(),
+                set: fiber,
+                line_file: None,
+            }));
+            let element_in_fiber_proof = self.verify_fact(&fiber_goal, verify_state.clone())?;
+            if element_in_fiber_proof.is_failed() {
+                continue;
+            }
+            return Ok(Some(
+                InFactSearchProofByBuiltinRule::IndexUnionMembershipFromIndex(
+                    IndexUnionMembershipFromIndexBuiltinRuleProof {
+                        cite_index_in_index_set_fact_id,
+                        element_in_fiber_proof,
+                    },
+                ),
+            ));
+        }
+        Ok(None)
+    }
+}
+
+fn apply_fn_one_arg(f: &Obj, arg: Obj) -> Option<Obj> {
+    match f {
+        Obj::Identifier(id) => Some(Obj::FnObj(FnObj {
+            head: Box::new(FnObjHead::Identifier(id.clone())),
+            body: vec![vec![Box::new(arg)]],
+        })),
+        Obj::FnObj(existing) => {
+            let mut body = existing.body.clone();
+            body.push(vec![Box::new(arg)]);
+            Some(Obj::FnObj(FnObj {
+                head: existing.head.clone(),
+                body,
+            }))
+        }
+        Obj::FunctionSpace(crate::new_pipeline::ast::obj::FunctionSpace::AnonymousFn(af)) => {
+            Some(Obj::FnObj(FnObj {
+                head: Box::new(FnObjHead::AnonymousFnLiteral(Box::new(af.clone()))),
+                body: vec![vec![Box::new(arg)]],
+            }))
+        }
+        Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(fa)) => {
+            Some(Obj::FnObj(FnObj {
+                head: Box::new(FnObjHead::FieldAccess(fa.clone())),
+                body: vec![vec![Box::new(arg)]],
+            }))
+        }
+        Obj::InstantiatedTemplateObj(t) => Some(Obj::FnObj(FnObj {
+            head: Box::new(FnObjHead::InstantiatedTemplateObj(t.clone())),
+            body: vec![vec![Box::new(arg)]],
+        })),
+        _ => None,
     }
 }
 

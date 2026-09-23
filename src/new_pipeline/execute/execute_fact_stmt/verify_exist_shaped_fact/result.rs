@@ -93,6 +93,10 @@ pub enum ExistShapedFactSearchedProof {
 // One exist-builtin rule ↔ one dedicated evidence struct.
 pub enum ExistShapedFactSearchProofByBuiltinRule {
     RealLineComparisonWitness(ExistShapedBuiltinRealLineComparisonWitness),
+    // Witness by a known member: `a $in S` ⇒ `exist x S st {x = a}` (or `a = x`).
+    EqualityWitnessFromMembership(ExistShapedBuiltinEqualityWitnessFromMembership),
+    // Witness from nonempty: `$is_nonempty_set(S)` ⇒ `exist x S st {x $in S}`.
+    NonemptySetMemberWitness(ExistShapedBuiltinNonemptySetMemberWitness),
 }
 
 // Existential witness on the real line for a comparison atom.
@@ -106,6 +110,20 @@ pub enum ExistShapedFactSearchProofByBuiltinRule {
 pub struct ExistShapedBuiltinRealLineComparisonWitness {
     pub requirement_facts: Vec<Fact>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+// Equality witness from membership.
+// Mathematical property: if `a $in S`, then `exist x S st {x = a}` (and `a = x`).
+// Example: known `2 $in {1, 2}` proves `exist x {1, 2} st {x = 2}`.
+pub struct ExistShapedBuiltinEqualityWitnessFromMembership {
+    pub membership_proof: VerifyFactResult,
+}
+
+// Nonempty-set member witness.
+// Mathematical property: `$is_nonempty_set(S)` ⇒ `exist x S st {x $in S}`.
+// Example: `$is_nonempty_set({1})` proves `exist x {1} st {x $in {1}}`.
+pub struct ExistShapedBuiltinNonemptySetMemberWitness {
+    pub nonempty_proof: VerifyFactResult,
 }
 
 pub struct ExistShapedFactSearchProofByKnownExistShapedFact {

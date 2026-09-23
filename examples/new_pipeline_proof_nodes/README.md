@@ -47,7 +47,8 @@ equal/        ByBuiltinRule (FnSet / AnonymousFn / SetBuilder alpha-equal,
               KnownForall (+ViaSymmetry), BuiltinRewrite
               (ClosedNumericEqualSubstitution + arithmetic_ops)
 atomic/       ByBuiltinRule (incl. NotIn closed/list/intersect/union; In
-              union/intersect/set_minus; LessEqual abs/add-right), KnownAtomicFact,
+              union/intersect/set_minus/family_union/index_union; LessEqual abs
+              + add/sub/mul order algebra + triangle/sandwich), KnownAtomicFact,
               ByDefinition (user prop + builtin official defs; see
               atomic/by_definition/ and src/.../by_definition_design.md),
               BuiltinStrategy (PosAddPos), KnownForall, BuiltinRewrite
@@ -55,7 +56,8 @@ atomic/       ByBuiltinRule (incl. NotIn closed/list/intersect/union; In
               KnownRewrite (Reflexivity/Symmetry)
 and/          per-component verify
 chain/        adjacent order / equality
-exist/        ByBuiltinRule (real-line), KnownExist, KnownForall
+exist/        ByBuiltinRule (real-line, equality-from-membership, nonempty-member),
+              KnownExist, KnownForall
 forall/       introduce → assume → then
 forall_iff/   both directions
 not_forall/   via derived counterexample exist
