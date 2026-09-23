@@ -31,7 +31,6 @@ impl AtomicFact {
             AtomicFact::NotIsTupleFact(_) => 1,
             AtomicFact::NotSubsetFact(_) => 2,
             AtomicFact::NotSupersetFact(_) => 2,
-            AtomicFact::FnEqualInFact(_) => 3,
             AtomicFact::FnEqualFact(_) => 2,
             AtomicFact::NormalAtomicFact(a)
                 if matches!(
@@ -139,7 +138,6 @@ impl AtomicFact {
             AtomicFact::NotSupersetFact(_) => 2,
             AtomicFact::NormalAtomicFact(a) => a.body.len(),
             AtomicFact::NotNormalAtomicFact(a) => a.body.len(),
-            AtomicFact::FnEqualInFact(_) => 3,
             AtomicFact::FnEqualFact(_) => 2,
         }
     }
@@ -174,7 +172,6 @@ impl AtomicFact {
             AtomicFact::NotIsTupleFact(a) => a.line_file.clone(),
             AtomicFact::NotSubsetFact(a) => a.line_file.clone(),
             AtomicFact::NotSupersetFact(a) => a.line_file.clone(),
-            AtomicFact::FnEqualInFact(a) => a.line_file.clone(),
             AtomicFact::FnEqualFact(a) => a.line_file.clone(),
         }
     }
@@ -209,7 +206,6 @@ impl AtomicFact {
             AtomicFact::NotIsTupleFact(a) => a.line_file = line_file,
             AtomicFact::NotSubsetFact(a) => a.line_file = line_file,
             AtomicFact::NotSupersetFact(a) => a.line_file = line_file,
-            AtomicFact::FnEqualInFact(a) => a.line_file = line_file,
             AtomicFact::FnEqualFact(a) => a.line_file = line_file,
         }
         self

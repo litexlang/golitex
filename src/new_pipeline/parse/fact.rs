@@ -703,8 +703,7 @@ impl Runtime {
                 if prop_names.is_empty()
                     && (prop_str == IN
                         || prop_str == super::fact_prop::SUBSET
-                        || prop_str == super::fact_prop::SUPERSET
-                        || prop_str == super::fact_prop::FN_EQ_IN)
+                        || prop_str == super::fact_prop::SUPERSET)
                 {
                     if !tb.exceed_end_of_head()
                         && (tb.peek().map(is_comparison_op).unwrap_or(false)

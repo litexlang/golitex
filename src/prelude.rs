@@ -65,7 +65,6 @@ pub use crate::fact::EqualFact;
 pub use crate::fact::ExistOrAndChainAtomicFact;
 pub use crate::fact::Fact;
 pub use crate::fact::FnEqualFact;
-pub use crate::fact::FnEqualInFact;
 pub use crate::fact::ForallFact;
 pub use crate::fact::ForallFactWithIff;
 pub use crate::fact::GreaterEqualFact;

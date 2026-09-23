@@ -358,28 +358,28 @@ impl Runtime {
             },
         )))?);
 
-        // Match display/legacy: Left* = ray (a, +∞) / [a, +∞); Right* = (−∞, a) / (−∞, a].
+        // Lower* = ray (a, +∞) / [a, +∞); Upper* = (−∞, a) / (−∞, a].
         let bound_id = self.global_ids.allocate_fact_id();
         let bound = match interval {
-            OneSideInfinityIntervalObj::LeftOpen(s) => AtomicFact::LessFact(LessFact {
+            OneSideInfinityIntervalObj::LowerOpen(s) => AtomicFact::LessFact(LessFact {
                 fact_id: bound_id,
                 left: s.start.as_ref().clone(),
                 right: element,
                 line_file: lf,
             }),
-            OneSideInfinityIntervalObj::LeftClosed(s) => AtomicFact::LessEqualFact(LessEqualFact {
+            OneSideInfinityIntervalObj::LowerClosed(s) => AtomicFact::LessEqualFact(LessEqualFact {
                 fact_id: bound_id,
                 left: s.start.as_ref().clone(),
                 right: element,
                 line_file: lf,
             }),
-            OneSideInfinityIntervalObj::RightOpen(s) => AtomicFact::LessFact(LessFact {
+            OneSideInfinityIntervalObj::UpperOpen(s) => AtomicFact::LessFact(LessFact {
                 fact_id: bound_id,
                 left: element,
                 right: s.start.as_ref().clone(),
                 line_file: lf,
             }),
-            OneSideInfinityIntervalObj::RightClosed(s) => AtomicFact::LessEqualFact(LessEqualFact {
+            OneSideInfinityIntervalObj::UpperClosed(s) => AtomicFact::LessEqualFact(LessEqualFact {
                 fact_id: bound_id,
                 left: element,
                 right: s.start.as_ref().clone(),

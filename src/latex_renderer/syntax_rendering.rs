@@ -2247,12 +2247,6 @@ impl AtomicFact {
             AtomicFact::NotIsTupleFact(x) => x.syntax_rendering(),
             AtomicFact::NotSubsetFact(x) => x.syntax_rendering(),
             AtomicFact::NotSupersetFact(x) => x.syntax_rendering(),
-            AtomicFact::FnEqualInFact(f) => format!(
-                r"\mathsf{{fn\_eq\_in}}({},{},{})",
-                f.left.syntax_rendering(),
-                f.right.syntax_rendering(),
-                f.set.syntax_rendering(),
-            ),
             AtomicFact::FnEqualFact(f) => format!(
                 r"\mathsf{{fn\_eq}}({},{})",
                 f.left.syntax_rendering(),

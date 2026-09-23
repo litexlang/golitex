@@ -33,7 +33,6 @@ impl fmt::Display for AtomicFact {
             AtomicFact::NotSubsetFact(x) => write!(f, "{}", x),
             AtomicFact::SupersetFact(x) => write!(f, "{}", x),
             AtomicFact::NotSupersetFact(x) => write!(f, "{}", x),
-            AtomicFact::FnEqualInFact(x) => write!(f, "{}", x),
             AtomicFact::FnEqualFact(x) => write!(f, "{}", x),
         }
     }

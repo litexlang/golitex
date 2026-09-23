@@ -1,7 +1,7 @@
 use super::{
-    AndChainAtomicFact, AtomicFact, EqualFact, ExistShapedFact, Fact, PlainExistFact, FnEqualInFact, GreaterEqualFact,
-    GreaterFact, InFact, IsCartFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact, IsTupleFact,
-    LessEqualFact, LessFact, NormalAtomicFact, NotEqualFact, NotFnEqualInFact,
+    AndChainAtomicFact, AtomicFact, EqualFact, ExistShapedFact, Fact, PlainExistFact,
+    GreaterEqualFact, GreaterFact, InFact, IsCartFact, IsFiniteSetFact, IsNonemptySetFact,
+    IsSetFact, IsTupleFact, LessEqualFact, LessFact, NormalAtomicFact, NotEqualFact,
     NotGreaterEqualFact, NotGreaterFact, NotInFact, NotIsCartFact, NotIsFiniteSetFact,
     NotIsNonemptySetFact, NotIsSetFact, NotIsTupleFact, NotLessEqualFact, NotLessFact,
     NotNormalAtomicFact, NotSubsetFact, NotSupersetFact, OrFact, QuantifierFreeFact, SubsetFact,
@@ -30,7 +30,6 @@ pub fn atomic_fact_has_positive_polarity(fact: &AtomicFact) -> bool {
             | AtomicFact::NotIsTupleFact(_)
             | AtomicFact::NotSubsetFact(_)
             | AtomicFact::NotSupersetFact(_)
-            | AtomicFact::NotFnEqualInFact(_)
     )
 }
 
@@ -64,8 +63,6 @@ pub fn atomic_fact_args_ref(fact: &AtomicFact) -> Vec<&Obj> {
         AtomicFact::NotSubsetFact(f) => vec![&f.left, &f.right],
         AtomicFact::SupersetFact(f) => vec![&f.left, &f.right],
         AtomicFact::NotSupersetFact(f) => vec![&f.left, &f.right],
-        AtomicFact::FnEqualInFact(f) => vec![&f.left, &f.right, &f.set],
-        AtomicFact::NotFnEqualInFact(f) => vec![&f.left, &f.right, &f.set],
     }
 }
 
@@ -183,7 +180,7 @@ pub fn and_chain_as_fact(branch: &AndChainAtomicFact) -> Fact {
     }
 }
 
-// Flip atomic polarity with a fresh FactId. FnEqual* has no not-form → None.
+// Flip atomic polarity with a fresh FactId.
 pub fn negate_atomic_fact(fact: &AtomicFact, new_fact_id: FactId) -> Option<AtomicFact> {
     Some(match fact {
         AtomicFact::NormalAtomicFact(f) => NotNormalAtomicFact {
@@ -369,22 +366,6 @@ pub fn negate_atomic_fact(fact: &AtomicFact, new_fact_id: FactId) -> Option<Atom
             fact_id: new_fact_id,
             left: f.left.clone(),
             right: f.right.clone(),
-            line_file: f.line_file.clone(),
-        }
-        .into(),
-        AtomicFact::FnEqualInFact(f) => NotFnEqualInFact {
-            fact_id: new_fact_id,
-            left: f.left.clone(),
-            right: f.right.clone(),
-            set: f.set.clone(),
-            line_file: f.line_file.clone(),
-        }
-        .into(),
-        AtomicFact::NotFnEqualInFact(f) => FnEqualInFact {
-            fact_id: new_fact_id,
-            left: f.left.clone(),
-            right: f.right.clone(),
-            set: f.set.clone(),
             line_file: f.line_file.clone(),
         }
         .into(),

@@ -64,17 +64,17 @@ impl Runtime {
             })
         };
         Ok(match i {
-            OneSideInfinityIntervalObj::LeftOpen(s) => {
-                Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(OneSideInfinityIntervalObj::LeftOpen(inst_struct(s)?)))
+            OneSideInfinityIntervalObj::LowerOpen(s) => {
+                Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(OneSideInfinityIntervalObj::LowerOpen(inst_struct(s)?)))
             }
-            OneSideInfinityIntervalObj::LeftClosed(s) => Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(
-                OneSideInfinityIntervalObj::LeftClosed(inst_struct(s)?),
+            OneSideInfinityIntervalObj::LowerClosed(s) => Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(
+                OneSideInfinityIntervalObj::LowerClosed(inst_struct(s)?),
             )),
-            OneSideInfinityIntervalObj::RightOpen(s) => {
-                Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(OneSideInfinityIntervalObj::RightOpen(inst_struct(s)?)))
+            OneSideInfinityIntervalObj::UpperOpen(s) => {
+                Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(OneSideInfinityIntervalObj::UpperOpen(inst_struct(s)?)))
             }
-            OneSideInfinityIntervalObj::RightClosed(s) => Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(
-                OneSideInfinityIntervalObj::RightClosed(inst_struct(s)?),
+            OneSideInfinityIntervalObj::UpperClosed(s) => Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(
+                OneSideInfinityIntervalObj::UpperClosed(inst_struct(s)?),
             )),
         })
     }

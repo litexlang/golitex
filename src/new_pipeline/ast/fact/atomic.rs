@@ -33,8 +33,6 @@ pub enum AtomicFact {
     NotIsTupleFact(NotIsTupleFact),
     NotSubsetFact(NotSubsetFact),
     NotSupersetFact(NotSupersetFact),
-    FnEqualInFact(FnEqualInFact),
-    NotFnEqualInFact(NotFnEqualInFact),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -50,24 +48,6 @@ pub struct NotEqualFact {
     pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: Option<LineFile>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct FnEqualInFact {
-    pub fact_id: FactId,
-    pub left: Obj,
-    pub right: Obj,
-    pub set: Obj,
-    pub line_file: Option<LineFile>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct NotFnEqualInFact {
-    pub fact_id: FactId,
-    pub left: Obj,
-    pub right: Obj,
-    pub set: Obj,
     pub line_file: Option<LineFile>,
 }
 
@@ -300,16 +280,14 @@ impl AtomicFact {
             AtomicFact::NotIsTupleFact(f) => f.fact_id,
             AtomicFact::NotSubsetFact(f) => f.fact_id,
             AtomicFact::NotSupersetFact(f) => f.fact_id,
-            AtomicFact::FnEqualInFact(f) => f.fact_id,
-            AtomicFact::NotFnEqualInFact(f) => f.fact_id,
         }
     }
 
     // Predicate-family name shared by a fact and its negation (e.g. both use `in`).
     pub fn prop_name(&self) -> AtomicName {
         use crate::new_pipeline::parse::keywords::{
-            EQUAL, FN_EQ_IN, GREATER, GREATER_EQUAL, IN, IS_CART, IS_FINITE_SET,
-            IS_NONEMPTY_SET, IS_SET, IS_TUPLE, LESS, LESS_EQUAL, SUBSET, SUPERSET,
+            EQUAL, GREATER, GREATER_EQUAL, IN, IS_CART, IS_FINITE_SET, IS_NONEMPTY_SET, IS_SET,
+            IS_TUPLE, LESS, LESS_EQUAL, SUBSET, SUPERSET,
         };
         match self {
             AtomicFact::NormalAtomicFact(f) => f.predicate.clone(),
@@ -358,9 +336,6 @@ impl AtomicFact {
             },
             AtomicFact::SupersetFact(_) | AtomicFact::NotSupersetFact(_) => AtomicName::Plain {
                 name: SUPERSET.into(),
-            },
-            AtomicFact::FnEqualInFact(_) | AtomicFact::NotFnEqualInFact(_) => AtomicName::Plain {
-                name: FN_EQ_IN.into(),
             },
         }
     }

@@ -181,14 +181,6 @@ impl AtomicFact {
                     x.line_file,
                 )
                 .into(),
-            AtomicFact::FnEqualInFact(x) => runtime
-                .new_fn_equal_in_fact(
-                    r(runtime, x.left, from, to),
-                    r(runtime, x.right, from, to),
-                    r(runtime, x.set, from, to),
-                    x.line_file,
-                )
-                .into(),
             AtomicFact::FnEqualFact(x) => runtime
                 .new_fn_equal_fact(
                     r(runtime, x.left, from, to),

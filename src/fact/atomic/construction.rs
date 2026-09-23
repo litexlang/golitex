@@ -261,29 +261,11 @@ impl AtomicFact {
                 }
             }
             FN_EQ_IN => {
-                if !positive_polarity {
-                    let msg = format!("{} does not support `not`", FN_EQ_IN);
-                    return Err(NewFactRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()),
-                    )
-                    .into());
-                }
-                if args.len() != 3 {
-                    let msg = format!(
-                        "{} requires 3 arguments (f, g, set), but got {}",
-                        FN_EQ_IN,
-                        args.len()
-                    );
-                    return Err(NewFactRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()),
-                    )
-                    .into());
-                }
-                let mut args = args;
-                let a0 = args.remove(0);
-                let a1 = args.remove(0);
-                let a2 = args.remove(0);
-                Ok(runtime.new_fn_equal_in_fact(a0, a1, a2, line_file).into())
+                let msg = "`$fn_eq_in` is removed".to_string();
+                Err(NewFactRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(msg, line_file.clone()),
+                )
+                .into())
             }
             FN_EQ => {
                 if !positive_polarity {

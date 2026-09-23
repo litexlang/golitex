@@ -11,6 +11,7 @@ examples/new_pipeline/
   wd_negative/      WD must-fail tracers
   infer/            store → Infer*Result consequences
                     (kernel: `src/new_pipeline/store_fact_and_infer/README.md`)
+  tokenize/         tokenizer surface (line continuation, …)
   module_manager/   -r / -f / litex.config mount
 ```
 

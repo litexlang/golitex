@@ -369,10 +369,10 @@ fn one_side_intervals_alpha_equal(
     map: &HashMap<IdentifierId, IdentifierId>,
 ) -> bool {
     match (left, right) {
-        (OneSideInfinityIntervalObj::LeftOpen(l), OneSideInfinityIntervalObj::LeftOpen(r))
-        | (OneSideInfinityIntervalObj::LeftClosed(l), OneSideInfinityIntervalObj::LeftClosed(r))
-        | (OneSideInfinityIntervalObj::RightOpen(l), OneSideInfinityIntervalObj::RightOpen(r))
-        | (OneSideInfinityIntervalObj::RightClosed(l), OneSideInfinityIntervalObj::RightClosed(r)) => {
+        (OneSideInfinityIntervalObj::LowerOpen(l), OneSideInfinityIntervalObj::LowerOpen(r))
+        | (OneSideInfinityIntervalObj::LowerClosed(l), OneSideInfinityIntervalObj::LowerClosed(r))
+        | (OneSideInfinityIntervalObj::UpperOpen(l), OneSideInfinityIntervalObj::UpperOpen(r))
+        | (OneSideInfinityIntervalObj::UpperClosed(l), OneSideInfinityIntervalObj::UpperClosed(r)) => {
             objs_alpha_equal(l.start.as_ref(), r.start.as_ref(), map)
         }
         _ => false,

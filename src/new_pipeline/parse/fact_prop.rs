@@ -1,9 +1,9 @@
 //! Map `$prop(...)` / infix `$prop` names onto AtomicFact variants.
 
 use crate::new_pipeline::ast::fact::{
-    AtomicFact, EqualFact, FnEqualInFact, GreaterEqualFact, GreaterFact, InFact, IsCartFact,
+    AtomicFact, EqualFact, GreaterEqualFact, GreaterFact, InFact, IsCartFact,
     IsFiniteSetFact, IsNonemptySetFact, IsSetFact, IsTupleFact, LessEqualFact, LessFact,
-    NormalAtomicFact, NotEqualFact, NotFnEqualInFact, NotGreaterEqualFact, NotGreaterFact,
+    NormalAtomicFact, NotEqualFact, NotGreaterEqualFact, NotGreaterFact,
     NotInFact, NotIsCartFact, NotIsFiniteSetFact, NotIsNonemptySetFact, NotIsSetFact,
     NotIsTupleFact, NotLessEqualFact, NotLessFact, NotNormalAtomicFact, NotSubsetFact,
     NotSupersetFact, SubsetFact, SupersetFact,
@@ -37,7 +37,7 @@ pub fn is_infix_prop_name(name: &str) -> bool {
             | GREATER
             | LESS_EQUAL
             | GREATER_EQUAL
-            | FN_EQ_IN
+            
     )
 }
 
@@ -216,41 +216,15 @@ impl Runtime {
                     }))
                 }
             }
-            FN_EQ => {
+            FN_EQ | FN_EQ_IN => {
                 return Err(RuntimeParseError::new(
-                    "`$fn_eq` is removed; use ordinary equality `f = g` or `$fn_eq_in`",
+                    format!(
+                        "`${name}` is removed; use ordinary equality `f = g` or `by fn_extension` / `forall` for pointwise agreement"
+                    ),
                     line_file.line,
                     line_file.path.clone(),
                 )
                 .into());
-            }
-            FN_EQ_IN => {
-                if args.len() != 3 {
-                    return Err(RuntimeParseError::new(
-                        format!("`{name}` requires 3 arguments, got {}", args.len()),
-                        line_file.line,
-                        line_file.path.clone(),
-                    )
-                    .into());
-                }
-                let fact_id = self.global_ids.allocate_fact_id();
-                if positive {
-                    Ok(AtomicFact::FnEqualInFact(FnEqualInFact {
-                        fact_id,
-                        left: args[0].clone(),
-                        right: args[1].clone(),
-                        set: args[2].clone(),
-                        line_file: Some(line_file),
-                    }))
-                } else {
-                    Ok(AtomicFact::NotFnEqualInFact(NotFnEqualInFact {
-                        fact_id,
-                        left: args[0].clone(),
-                        right: args[1].clone(),
-                        set: args[2].clone(),
-                        line_file: Some(line_file),
-                    }))
-                }
             }
             _ => Ok(normal_or_not(
                 self.global_ids.allocate_fact_id(),

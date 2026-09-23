@@ -86,9 +86,7 @@ impl Runtime {
             | AtomicFact::NotIsCartFact(_)
             | AtomicFact::NotIsTupleFact(_)
             | AtomicFact::NotSubsetFact(_)
-            | AtomicFact::NotSupersetFact(_)
-            | AtomicFact::FnEqualInFact(_)
-            | AtomicFact::NotFnEqualInFact(_) => {}
+            | AtomicFact::NotSupersetFact(_) => {}
         }
         Ok(rules)
     }

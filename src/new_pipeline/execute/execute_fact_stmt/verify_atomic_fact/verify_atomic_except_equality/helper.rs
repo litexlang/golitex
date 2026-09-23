@@ -1,7 +1,7 @@
 use crate::new_pipeline::ast::fact::{
-    AtomicFact, FnEqualInFact, GreaterEqualFact, GreaterFact, InFact, IsCartFact,
+    AtomicFact, GreaterEqualFact, GreaterFact, InFact, IsCartFact,
     IsFiniteSetFact, IsNonemptySetFact, IsSetFact, IsTupleFact, LessEqualFact, LessFact,
-    NormalAtomicFact, NotEqualFact, NotFnEqualInFact, NotGreaterEqualFact, NotGreaterFact,
+    NormalAtomicFact, NotEqualFact, NotGreaterEqualFact, NotGreaterFact,
     NotInFact, NotIsCartFact, NotIsFiniteSetFact, NotIsNonemptySetFact, NotIsSetFact,
     NotIsTupleFact, NotLessEqualFact, NotLessFact, NotNormalAtomicFact, NotSubsetFact,
     NotSupersetFact, SubsetFact, SupersetFact,
@@ -232,26 +232,6 @@ pub(super) fn atomic_fact_with_args(
                 fact_id,
                 left,
                 right,
-                line_file: f.line_file.clone(),
-            })
-        }
-        AtomicFact::FnEqualInFact(f) => {
-            let (left, right, set) = take3!(args);
-            AtomicFact::FnEqualInFact(FnEqualInFact {
-                fact_id,
-                left,
-                right,
-                set,
-                line_file: f.line_file.clone(),
-            })
-        }
-        AtomicFact::NotFnEqualInFact(f) => {
-            let (left, right, set) = take3!(args);
-            AtomicFact::NotFnEqualInFact(NotFnEqualInFact {
-                fact_id,
-                left,
-                right,
-                set,
                 line_file: f.line_file.clone(),
             })
         }

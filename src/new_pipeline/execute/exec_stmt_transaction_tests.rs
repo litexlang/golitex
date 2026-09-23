@@ -714,28 +714,21 @@ fn struct_fewer_than_two_fields_is_parse_error() {
 }
 
 #[test]
-fn not_fn_eq_in_parses_trusts_and_proves_known() {
+fn fn_eq_in_is_removed_parse_error() {
     let mut runtime = runtime_with_file_env();
-    assert!(
-        !exec_one(&mut runtime, "have f set, g set, h set, k set").is_failed(),
-        "declare carriers"
-    );
-    assert!(
-        !exec_one(&mut runtime, "trust not $fn_eq_in(f, g, R)",).is_failed(),
-        "trust not $fn_eq_in must store"
-    );
-    assert!(
-        !exec_one(&mut runtime, "not $fn_eq_in(f, g, R)").is_failed(),
-        "known not $fn_eq_in must prove"
-    );
-    assert!(
-        !exec_one(&mut runtime, "trust $fn_eq_in(h, k, R)",).is_failed(),
-        "trust $fn_eq_in still works"
-    );
-    assert!(
-        !exec_one(&mut runtime, "$fn_eq_in(h, k, R)").is_failed(),
-        "known $fn_eq_in must prove"
-    );
+    for code in ["$fn_eq_in(0, 1, R)", "not $fn_eq_in(0, 1, R)"] {
+        let tokens = Tokenizer::new()
+            .tokenize(code, runtime.current_file.clone())
+            .expect("tokenize");
+        let err = runtime
+            .parse(&tokens)
+            .expect_err("`$fn_eq_in` must be a parse error");
+        let msg = format!("{err:?}");
+        assert!(
+            msg.contains("`$fn_eq_in` is removed") || msg.contains("is removed"),
+            "expected removal message, got: {msg} for {code}"
+        );
+    }
 }
 
 #[test]
@@ -2626,15 +2619,6 @@ fn builtin_prop_by_definition_fork() {
     assert!(
         !exec_one(&mut runtime, "by def $above_zero(1)").is_failed(),
         "user prop by definition"
-    );
-
-    // fn_eq_in with identical extensions.
-    let mut runtime = runtime_with_file_env();
-    assert!(!exec_one(&mut runtime, "have fn f(x R) R = x").is_failed());
-    assert!(!exec_one(&mut runtime, "have fn g(x R) R = x").is_failed());
-    assert!(
-        !exec_one(&mut runtime, "by def $fn_eq_in(f, g, R)").is_failed(),
-        "fn_eq_in by definition"
     );
 
     // Coprime / dvd: concrete obligations already closed-numeric.

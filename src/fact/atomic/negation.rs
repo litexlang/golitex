@@ -14,10 +14,7 @@ impl AtomicFact {
         &self,
         runtime: &Runtime,
     ) -> Result<AtomicFact, RuntimeError> {
-        if matches!(
-            self,
-            AtomicFact::FnEqualInFact(_) | AtomicFact::FnEqualFact(_)
-        ) {
+        if matches!(self, AtomicFact::FnEqualFact(_)) {
             return Err(RuntimeError::from(NewFactRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     format!("logical negation is not supported for `{}`", self),
@@ -127,7 +124,7 @@ impl AtomicFact {
             AtomicFact::NotSupersetFact(a) => runtime
                 .new_superset_fact(a.left.clone(), a.right.clone(), a.line_file.clone())
                 .into(),
-            AtomicFact::FnEqualInFact(_) | AtomicFact::FnEqualFact(_) => {
+            AtomicFact::FnEqualFact(_) => {
                 unreachable!("function equality is handled before logical negation")
             }
         })

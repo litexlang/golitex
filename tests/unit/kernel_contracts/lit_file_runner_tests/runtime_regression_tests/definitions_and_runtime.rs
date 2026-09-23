@@ -309,7 +309,6 @@ by def $bijective({1}, {1}, singleton_identity)
 
 have fn real_identity(x R) R = x
 have fn second_real_identity(x R) R = x
-by def $fn_eq_in(real_identity, second_real_identity, R)
 by def $fn_eq(real_identity, second_real_identity)
 "#;
         let mut runtime = Runtime::default();

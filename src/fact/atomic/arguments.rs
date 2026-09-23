@@ -76,9 +76,6 @@ impl AtomicFact {
                 not_superset_fact.left.clone(),
                 not_superset_fact.right.clone(),
             ],
-            AtomicFact::FnEqualInFact(f) => {
-                vec![f.left.clone(), f.right.clone(), f.set.clone()]
-            }
             AtomicFact::FnEqualFact(f) => vec![f.left.clone(), f.right.clone()],
         }
     }
@@ -145,7 +142,6 @@ impl AtomicFact {
             AtomicFact::NotSupersetFact(not_superset_fact) => {
                 vec![&not_superset_fact.left, &not_superset_fact.right]
             }
-            AtomicFact::FnEqualInFact(f) => vec![&f.left, &f.right, &f.set],
             AtomicFact::FnEqualFact(f) => vec![&f.left, &f.right],
         }
     }

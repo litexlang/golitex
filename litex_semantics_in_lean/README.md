@@ -496,11 +496,10 @@ Litex.Finite A
 当前 Rust 中已经存在：
 
 - `HaveFnEqualStmt`
-- `FnEqualFact`
-- `FnEqualInFact`
+- `by fn_extension`（`new_pipeline`：点态外延 → 普通 `f = g`）
 - 对应 verifier evidence
 
-所以函数相等并不是不存在。
+所以函数相等并不是不存在。`$fn_eq` / `$fn_eq_in` 谓词已从 `new_pipeline` 移除。
 
 不过它不应成为 `Same` 的第三种 primitive。函数相等应该通过函数图的集合外延性导出：
 
