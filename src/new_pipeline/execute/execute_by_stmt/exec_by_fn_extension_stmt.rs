@@ -23,7 +23,7 @@ use crate::new_pipeline::ast::names::BoundName;
 use crate::new_pipeline::ast::obj::{FnObj, FnObjHead, FnSet, FunctionSpace, IdentifierObj, Obj};
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
 use crate::new_pipeline::ast::stmt::ByFnExtensionStmt;
-use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::alpha_equal_helper::fn_sets_alpha_equal;
+use crate::new_pipeline::execute::execute_fact_stmt::fn_sets_alpha_equal;
 use crate::new_pipeline::instantiate::quantifier_free_fact_to_fact;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};

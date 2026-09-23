@@ -14,6 +14,48 @@ not another `exec_stmt`.
 
 ## Result shape
 
+### Dual consumers and evidence granularity
+
+Name clarification: `RuntimeResult<T>` is only `Result<T, RuntimeError>`
+(SessionError). The contract below applies to the typed pipeline evidence
+tree: `Exec*Result`, `Verify*Result` / `*SearchedProof`, `Infer*Result`, and
+nested WD / builtin / known-fact payloads.
+
+That tree is **one IR with two consumers**, not two parallel logs:
+
+1. **Human / AI output** — JSON / `statement_results`: what each statement
+   did, which route succeeded or soft-failed, what was inferred or stored.
+   Source states *what*; results explain *how*.
+2. **Litex-to-Lean replay** — `stmt_result_to_lean_compiler` walks the same
+   winning evidence and emits Lean tactics / proof steps. Do not reconstruct
+   the proof from display text or ask Lean to search a different proof.
+
+`Exec` / `Verify` / `Infer` share this role with different slices:
+
+| Slice | Owns |
+| --- | --- |
+| Exec | Statement effect on the session (Success merge / Failed discard) |
+| Verify | Mathematical grounds (WD + winning search route) |
+| Infer | Forward consequences stored after success |
+
+**Granularity target:** one *named* proof route ≈ one replayable Lean step
+(a dedicated builtin evidence struct, a known-fact cite, a binder/local-env
+proof, a structured `by` branch, …).
+
+| Too fine (avoid) | Too coarse (avoid) |
+| --- | --- |
+| Unification internals, every cache miss, failed attempts inside `searched_proof` | Only pass/fail with no route identity |
+| Hard to maintain / read; weak Lean mapping | Neither readable nor Lean-replayable |
+
+Failed attempts belong in a separate `search_trace` if retained at all; never
+overload `searched_proof`. When adding a result field, ask: can a human
+explain this step from the JSON, and can the Lean compiler map this field to
+a tactic without re-searching?
+
+Product prose: `docs/Litex_Blueprint.md` (Section 4). Compiler consumption:
+`src/stmt_result_to_lean_compiler/README.md`. Agent constraint when reshaping
+types: `.cursor/skills/litex-pipeline-result-types/SKILL.md`.
+
 ### Proof vs Result (hard convention)
 
 ```text

@@ -3,6 +3,11 @@
 //! Top level dispatches by stmt kind only. Soft Success|Failed lives inside
 //! each leaf `*Result`. Session-stopping bugs stay in `RuntimeResult::Err`.
 //!
+//! Dual consumers of this evidence IR (same tree, not two logs): human/AI JSON
+//! (`statement_results`) and Litex-to-Lean replay. Granularity target: one
+//! named winning route ≈ one Lean tactic step — not search noise, not
+//! pass/fail-only. Full contract: `execute/README.md` (Result shape).
+//!
 //! Shared ParamType-indexed shells live here so `have` / `witness` / later
 //! args:type checks reuse one shape.
 //!

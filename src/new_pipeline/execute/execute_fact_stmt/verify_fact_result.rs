@@ -4,6 +4,10 @@
 //! `Equality` / `AtomicExceptEquality` (no intermediate AtomicFact layer).
 //! Soft miss lives inside each branch `VerifyXXXResult` as `Failed`, not here.
 //!
+//! Part of the Exec/Verify/Infer evidence IR: human/AI JSON and Lean replay
+//! share the winning route (see `execute/README.md` Result shape). Keep
+//! `searched_proof` as the named route only; not search noise, not pass/fail-only.
+//!
 //! Verify entry points return `RuntimeResult<VerifyFactResult>`:
 //! - `Ok(branch(Failed(...)))` = soft miss (WD or search)
 //! - `Err` = real operational / invariant failure (SessionError)
