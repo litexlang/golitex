@@ -4,21 +4,22 @@ use crate::new_pipeline::ast::obj::{
     ClosedRange, Cos, Cot, EulerNumber, Exp, ExpLogOperator, FamilyIntersect, FamilyUnion,
     FiniteSeqSet, FiniteSetMax, FiniteSetMin, FiniteSetSize, FiniteSetStat, Floor, FnObjHead,
     FnRange, FnSet, FunctionSpace, Gcd, IdentifierObj, ImaginaryUnit, IndexCart, IndexIntersect,
-    IndexUnion, InstantiatedTemplateObj, IntegerOperator, Intersect, IteratedOperator, Lcm,
-    ListSet, Literal, Ln, Max, Min, Number, Obj, Pi, PowerSet, ProductOfFiniteSet, ProductShape,
-    Proj, Quot, Range, SeqSet, SetBuilder, SetFormer, SetMinus, SetOperator, Sign, Sin, Sqrt,
-    StandardSet, StructAndFieldAccessObj, StructObj, Tan, TrigOperator, Tuple, TupleDim, Union,
+    IndexUnion, InstantiatedTemplateObj, IntegerOperator, Intersect, IntervalObj, IntervalObjStruct,
+    IteratedOperator, Lcm, ListSet, Literal, Ln, Max, Min, Number, Obj, OneSideInfinityIntervalObj,
+    OneSideInfinityIntervalObjStruct, Pi, PowerSet, ProductOfFiniteSet, ProductShape, Proj, Quot,
+    Range, SeqSet, SetBuilder, SetFormer, SetMinus, SetOperator, Sign, Sin, Sqrt, StandardSet,
+    StructAndFieldAccessObj, StructObj, Tan, TrigOperator, Tuple, TupleDim, Union,
 };
 use crate::new_pipeline::ast::param::{ParamType, SetBoundParameterGroup, SetBoundParameterList};
 use crate::new_pipeline::parse::keywords::{
     ABS, ARCCOS, ARCCOT, ARCSIN, ARCTAN, C, CART, CART_DIM, CEIL, CLOSED_RANGE, COLON, COMMA, COS,
     COT, C_STAR, DOT, EXP, FAMILY_INTERSECT, FAMILY_UNION, FINITE_SEQ, FINITE_SET_MAX,
     FINITE_SET_MIN, FINITE_SET_PRODUCT, FINITE_SET_SIZE, FLOOR, FN, FN_RANGE, GCD, GREATER,
-    INDEX_CART, INDEX_INTERSECT, INDEX_UNION, INTERSECT, LCM, LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN,
-    LESS, LN, MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS, POWER_SET, PROJ, Q, QUOT, Q_NEG, Q_POS,
-    Q_STAR, R, RANGE, RIGHT_BRACKET, RIGHT_CURLY, RIGHT_PAREN, R_NEG, R_POS, R_STAR, SEQ, SET_MINUS,
-    SIGN, SIN, SQRT, STRUCT_VIEW_PREFIX, TAN, TEMPLATE_INSTANCE_PREFIX, TUPLE, TUPLE_DIM, UNION, Z,
-    Z_NEG, Z_POS, Z_STAR,
+    INDEX_CART, INDEX_INTERSECT, INDEX_UNION, INTERSECT, INTERVAL_LITERAL_PREFIX, LCM,
+    LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LESS, LN, MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS,
+    POWER_SET, PROJ, Q, QUOT, Q_NEG, Q_POS, Q_STAR, R, RANGE, RIGHT_BRACKET, RIGHT_CURLY,
+    RIGHT_PAREN, R_NEG, R_POS, R_STAR, SEQ, SET_MINUS, SIGN, SIN, SQRT, STRUCT_VIEW_PREFIX, TAN,
+    TEMPLATE_INSTANCE_PREFIX, TUPLE, TUPLE_DIM, UNION, Z, Z_NEG, Z_POS, Z_STAR,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -72,6 +73,9 @@ pub fn parse_primary(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
     }
     if token == TEMPLATE_INSTANCE_PREFIX {
         return parse_instantiated_template(rt, tb);
+    }
+    if token == INTERVAL_LITERAL_PREFIX {
+        return parse_interval_literal(rt, tb);
     }
 
     if let Some(obj) = try_parse_keyword_primary(rt, tb, &token)? {
@@ -848,4 +852,115 @@ fn identifier_obj_from_qualified_atomic(
             "internal: expected qualified atom, got plain `{name}`"
         ))),
     }
+}
+
+// Parse `'[a,b]`, `'(a,b)`, `'[a,)`, `'(,b]` and the other endpoint/openness shapes.
+// Example: `'[0, 1)` → LeftClosedRightOpen with start=0, end=1.
+fn parse_interval_literal(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
+    tb.expect(INTERVAL_LITERAL_PREFIX)?;
+    let left_closed = match tb.current()? {
+        LEFT_PAREN => false,
+        LEFT_BRACKET => true,
+        _ => {
+            return Err(tb.parse_error(
+                "interval literal after `'` expects `(` or `[`",
+            ));
+        }
+    };
+    tb.advance()?;
+
+    // `'(,a)` / `'(,a]`: left-unbounded ray (must open with `(`).
+    if tb.peek() == Some(COMMA) {
+        if left_closed {
+            return Err(tb.parse_error(
+                "left-unbounded interval must start with `(`; use `'(,a)` or `'(,a]`",
+            ));
+        }
+        tb.expect(COMMA)?;
+        if tb.peek() == Some(RIGHT_PAREN) {
+            return Err(tb.parse_error(
+                "interval literal cannot omit both endpoints; use `R`",
+            ));
+        }
+        let right = parse_obj(rt, tb)?;
+        if tb.peek() == Some(COMMA) {
+            return Err(tb.parse_error(
+                "interval literal expects exactly two endpoints",
+            ));
+        }
+        let right_closed = match tb.current()? {
+            RIGHT_PAREN => false,
+            RIGHT_BRACKET => true,
+            _ => {
+                return Err(tb.parse_error(
+                    "interval literal expects `)` or `]` after its right endpoint",
+                ));
+            }
+        };
+        tb.advance()?;
+        let body = OneSideInfinityIntervalObjStruct {
+            start: Box::new(right),
+        };
+        let interval = if right_closed {
+            OneSideInfinityIntervalObj::RightClosed(body)
+        } else {
+            OneSideInfinityIntervalObj::RightOpen(body)
+        };
+        return Ok(Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(
+            interval,
+        )));
+    }
+
+    let left = parse_obj(rt, tb)?;
+    tb.expect(COMMA)?;
+
+    // `'(a,)` / `'[a,)`: right-unbounded ray (must end with `)`).
+    if tb.peek() == Some(RIGHT_PAREN) {
+        tb.advance()?;
+        let body = OneSideInfinityIntervalObjStruct {
+            start: Box::new(left),
+        };
+        let interval = if left_closed {
+            OneSideInfinityIntervalObj::LeftClosed(body)
+        } else {
+            OneSideInfinityIntervalObj::LeftOpen(body)
+        };
+        return Ok(Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(
+            interval,
+        )));
+    }
+    if tb.peek() == Some(RIGHT_BRACKET) {
+        return Err(tb.parse_error(
+            "right-unbounded interval must end with `)`; use `'(a,)` or `'[a,)`",
+        ));
+    }
+
+    let right = parse_obj(rt, tb)?;
+    if tb.peek() == Some(COMMA) {
+        return Err(tb.parse_error(
+            "interval literal expects exactly two endpoints",
+        ));
+    }
+    let right_closed = match tb.current()? {
+        RIGHT_PAREN => false,
+        RIGHT_BRACKET => true,
+        _ => {
+            return Err(tb.parse_error(
+                "interval literal expects `)` or `]` after its right endpoint",
+            ));
+        }
+    };
+    tb.advance()?;
+
+    let body = IntervalObjStruct {
+        start: Box::new(left),
+        end: Box::new(right),
+    };
+    let interval = match (left_closed, right_closed) {
+        (false, false) => IntervalObj::LeftOpenRightOpen(body),
+        (false, true) => IntervalObj::LeftOpenRightClosed(body),
+        (true, false) => IntervalObj::LeftClosedRightOpen(body),
+        (true, true) => IntervalObj::LeftClosedRightClosed(body),
+    };
+    Ok(Obj::SetFormer(SetFormer::IntervalObj(interval)))
 }

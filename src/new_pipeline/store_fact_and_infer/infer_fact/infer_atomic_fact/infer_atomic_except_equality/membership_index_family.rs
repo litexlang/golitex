@@ -1,20 +1,25 @@
 use crate::new_pipeline::ast::fact::{
-    AtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact, InFact, PlainExistFact,
-    QuantifierFreeFact,
+    AtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact, InFact, NormalAtomicFact,
+    PlainExistFact, QuantifierFreeFact,
 };
+use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::{
-    FnObj, FnObjHead, FunctionSpace, IdentifierObj, Obj, SetOperator,
+    FamilyUnion, FnObj, FnObjHead, FnSet, FunctionSpace, IdentifierObj, Obj, SetOperator,
 };
-use crate::new_pipeline::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
+use crate::new_pipeline::ast::param::{
+    ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
+};
+use crate::new_pipeline::parse::keywords::IS_CHOICE_FUNCTION_FOR;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::store_fact_and_infer::{
-    InferAtomicExceptEqualityResult, InferInFactFamilyUnionResult, InferInFactIndexIntersectResult,
-    InferInFactIndexUnionResult, StoreFactAndInferResult,
+    InferAtomicExceptEqualityResult, InferInFactFamilyUnionResult, InferInFactIndexCartResult,
+    InferInFactIndexIntersectResult, InferInFactIndexUnionResult, StoreFactAndInferResult,
 };
 
 impl Runtime {
-    // When: `x $in family_union(F)` / `index_union` / `index_intersect`.
-    // Infers: exist member / ambient + exist fiber / ambient + forall fiber.
+    // When: `x $in family_union(F)` / `index_union` / `index_intersect` / `index_cart`.
+    // Infers: exist member / ambient + exist fiber / ambient + forall fiber /
+    // FnSet + `$is_choice_function_for`.
     // Example: `x $in family_union(F)` ⇒ `exist item F st {x $in item}`.
     pub(super) fn infer_in_fact_index_family_rules(
         &mut self,
@@ -28,6 +33,9 @@ impl Runtime {
             rules.push(r);
         }
         if let Some(r) = self.infer_in_fact_index_intersect(in_fact)? {
+            rules.push(r);
+        }
+        if let Some(r) = self.infer_in_fact_index_cart(in_fact)? {
             rules.push(r);
         }
         Ok(rules)
@@ -196,6 +204,65 @@ impl Runtime {
                 InferInFactIndexIntersectResult { derived },
             ),
         ))
+    }
+
+    // When: `f $in index_cart(I, S, g)`.
+    // Infers: `f $in fn(alpha I) family_union(S)` and `$is_choice_function_for(I, S, g, f)`.
+    // Example: trust `f $in index_cart({1}, R, g)` ⇒ `$is_choice_function_for({1}, R, g, f)`.
+    fn infer_in_fact_index_cart(
+        &mut self,
+        in_fact: &InFact,
+    ) -> RuntimeResult<Option<InferAtomicExceptEqualityResult>> {
+        let Obj::SetOperator(SetOperator::IndexCart(index_cart)) = &in_fact.set else {
+            return Ok(None);
+        };
+        let mut derived: Vec<StoreFactAndInferResult> = Vec::new();
+
+        let binder = self.fresh_internal_param();
+        let fn_set = Obj::FunctionSpace(FunctionSpace::FnSet(FnSet {
+            set_bound_parameters: SetBoundParameterList {
+                groups: vec![SetBoundParameterGroup {
+                    params: vec![binder],
+                    param_type: Box::new(index_cart.index_set.as_ref().clone()),
+                }],
+            },
+            dom_facts: Vec::new(),
+            ret_set: Box::new(Obj::SetOperator(SetOperator::FamilyUnion(FamilyUnion {
+                left: Box::new(index_cart.family_set.as_ref().clone()),
+            }))),
+        }));
+        let fn_set_in = AtomicFact::InFact(InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: in_fact.element.clone(),
+            set: fn_set,
+            line_file: in_fact.line_file.clone(),
+        });
+        if let Some(stored) = self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(fn_set_in))?
+        {
+            derived.push(stored);
+        }
+
+        let choice = AtomicFact::NormalAtomicFact(NormalAtomicFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            predicate: AtomicName::plain(IS_CHOICE_FUNCTION_FOR.to_string()),
+            body: vec![
+                index_cart.index_set.as_ref().clone(),
+                index_cart.family_set.as_ref().clone(),
+                index_cart.family_fn.as_ref().clone(),
+                in_fact.element.clone(),
+            ],
+            line_file: in_fact.line_file.clone(),
+        });
+        if let Some(stored) = self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(choice))? {
+            derived.push(stored);
+        }
+
+        if derived.is_empty() {
+            return Ok(None);
+        }
+        Ok(Some(InferAtomicExceptEqualityResult::InFactIndexCart(
+            InferInFactIndexCartResult { derived },
+        )))
     }
 }
 

@@ -912,13 +912,13 @@ pub struct InstantiatedTemplateObj {
 // One-sided real rays (unbounded on one side). Endpoint openness is in the variant.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum OneSideInfinityIntervalObj {
-    // (−∞, a). Example: `'(,a)`.
-    LeftOpen(OneSideInfinityIntervalObjStruct),
-    // (−∞, a]. Example: `'(,a]`.
-    LeftClosed(OneSideInfinityIntervalObjStruct),
     // (a, +∞). Example: `'(a,)`.
-    RightOpen(OneSideInfinityIntervalObjStruct),
+    LeftOpen(OneSideInfinityIntervalObjStruct),
     // [a, +∞). Example: `'[a,)`.
+    LeftClosed(OneSideInfinityIntervalObjStruct),
+    // (−∞, a). Example: `'(,a)`.
+    RightOpen(OneSideInfinityIntervalObjStruct),
+    // (−∞, a]. Example: `'(,a]`.
     RightClosed(OneSideInfinityIntervalObjStruct),
 }
 

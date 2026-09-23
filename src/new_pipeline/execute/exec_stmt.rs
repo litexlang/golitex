@@ -3,10 +3,11 @@ use crate::new_pipeline::ast::stmt::{ByStmt, DefinitionStmt, Stmt};
 use crate::new_pipeline::execute::execute_by_stmt::{
     exec_by_axiom_of_choice_stmt, exec_by_cases_stmt, exec_by_closed_range_as_cases_stmt,
     exec_by_contra_stmt, exec_by_def_stmt, exec_by_enumerate_finite_set_stmt,
-    exec_by_enumerate_range_stmt, exec_by_extension_stmt, exec_by_for_stmt, exec_by_induc_stmt,
-    exec_by_reflexive_prop_stmt, exec_by_regularity_axiom_stmt, exec_by_strong_induc_stmt,
-    exec_by_symmetric_prop_stmt, exec_by_thm_stmt, exec_by_transitive_prop_stmt,
-    exec_by_zorn_lemma_stmt, exec_release_thm_stmt,
+    exec_by_enumerate_range_stmt, exec_by_extension_stmt, exec_by_fn_extension_stmt,
+    exec_by_for_stmt, exec_by_induc_stmt, exec_by_reflexive_prop_stmt,
+    exec_by_regularity_axiom_stmt, exec_by_strong_induc_stmt, exec_by_symmetric_prop_stmt,
+    exec_by_thm_stmt, exec_by_transitive_prop_stmt, exec_by_zorn_lemma_stmt,
+    exec_release_thm_stmt,
 };
 use crate::new_pipeline::execute::execute_def_thm_stmt::exec_def_thm_stmt;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
@@ -180,6 +181,9 @@ impl Runtime {
             }
             Stmt::By(ByStmt::ByExtensionStmt(stmt)) => {
                 Ok(ExecStmtResult::By(exec_by_extension_stmt(self, stmt)?))
+            }
+            Stmt::By(ByStmt::ByFnExtensionStmt(stmt)) => {
+                Ok(ExecStmtResult::By(exec_by_fn_extension_stmt(self, stmt)?))
             }
             Stmt::By(ByStmt::ByEnumerateFiniteSetStmt(stmt)) => {
                 Ok(ExecStmtResult::By(exec_by_enumerate_finite_set_stmt(self, stmt)?))

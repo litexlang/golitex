@@ -10,6 +10,8 @@
 #
 # Prefer `have` / `let`. Use `trust` only when typed `have x S` cannot WD the
 # carrier yet (same pragmatic escape as some existing proof-node files).
+#
+# Kernel overview: `src/new_pipeline/store_fact_and_infer/README.md`.
 
 ## Acceptance
 
@@ -23,7 +25,7 @@ Exit 0 is enough.
 
 ```text
 equal/    InferEqualityResult (PositiveRealPower, SubtractionEqualsZero, …)
-atomic/   InferAtomicExceptEqualityResult (InFact*, order flip, …)
+atomic/   InferAtomicExceptEqualityResult (InFact*, order flip, index_cart, …)
 ```
 
 ## Run all

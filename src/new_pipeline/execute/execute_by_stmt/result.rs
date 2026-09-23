@@ -1,5 +1,6 @@
 use crate::new_pipeline::ast::fact::{AndChainAtomicFact, AtomicFact, Fact};
 use crate::new_pipeline::ast::names::AtomicName;
+use crate::new_pipeline::ast::obj::FnSet;
 use crate::new_pipeline::exec_env::exec_env::ExecEnv;
 use crate::new_pipeline::execute::execute_fact_stmt::{
     ExecFactStmtResult, VerifyFactResult, VerifyFactWellDefinedResult, VerifyObjWellDefinedResult,
@@ -23,6 +24,7 @@ pub enum ExecByStmtResult {
     Contra(ExecByContraStmtResult),
     Def(ExecByDefStmtResult),
     Extension(ExecByExtensionStmtResult),
+    FnExtension(ExecByFnExtensionStmtResult),
     EnumerateFiniteSet(ExecByEnumerateFiniteSetStmtResult),
     For(ExecByForStmtResult),
     EnumerateRange(ExecByEnumerateRangeStmtResult),
@@ -45,6 +47,7 @@ impl ExecByStmtResult {
             Self::Contra(r) => r.is_failed(),
             Self::Def(r) => r.is_failed(),
             Self::Extension(r) => r.is_failed(),
+            Self::FnExtension(r) => r.is_failed(),
             Self::EnumerateFiniteSet(r) => r.is_failed(),
             Self::For(r) => r.is_failed(),
             Self::EnumerateRange(r) => r.is_failed(),
@@ -180,6 +183,39 @@ pub enum ExecByExtensionStmtFailed {
 }
 
 impl ExecByExtensionStmtResult {
+    pub fn is_failed(&self) -> bool {
+        matches!(self, Self::Failed(_))
+    }
+}
+
+// ---------------------------------------------------------------------------
+// fn_extension
+// ---------------------------------------------------------------------------
+
+pub enum ExecByFnExtensionStmtResult {
+    Success(ExecByFnExtensionStmtSuccess),
+    Failed(ExecByFnExtensionStmtFailed),
+}
+
+// Stage order: goal_wd → carrier → proof_steps → pointwise_proof → local_env → stored.
+pub struct ExecByFnExtensionStmtSuccess {
+    pub goal_wd: VerifyFactWellDefinedResult,
+    pub carrier: FnSet,
+    pub proof_steps: Vec<ByProofStepResult>,
+    pub pointwise_proof: VerifyFactResult,
+    pub local_env: Box<ExecEnv>,
+    pub stored: StoreFactAndInferResult,
+}
+
+pub enum ExecByFnExtensionStmtFailed {
+    GoalWd(VerifyFactWellDefinedResult),
+    NoCompatibleFnSet,
+    ProofBody(ByProofBodyFailed),
+    Pointwise(VerifyFactResult),
+    Store(String),
+}
+
+impl ExecByFnExtensionStmtResult {
     pub fn is_failed(&self) -> bool {
         matches!(self, Self::Failed(_))
     }

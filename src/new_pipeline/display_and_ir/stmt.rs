@@ -93,6 +93,7 @@ impl ByStmt {
             ByStmt::ByStrongInducStmt(x) => x.ir(),
             ByStmt::ByForStmt(x) => x.ir(),
             ByStmt::ByExtensionStmt(x) => x.ir(),
+            ByStmt::ByFnExtensionStmt(x) => x.ir(),
             ByStmt::ByEnumerateRangeStmt(x) => x.ir(),
             ByStmt::ByClosedRangeAsCasesStmt(x) => x.ir(),
             ByStmt::ByTransitivePropStmt(x) => x.ir(),
@@ -1296,6 +1297,47 @@ impl ByExtensionStmt {
             "{} {}{}\n{}",
             BY,
             EXTENSION,
+            COLON,
+            indent!(
+                &format!(
+                    "{} {} {} {}",
+                    QUESTION_GOAL,
+                    &self.left.ir(),
+                    EQUAL,
+                    &self.right.ir()
+                ),
+                1
+            )
+        ));
+        if !self.proof.is_empty() {
+            out.push_str(&format!(
+                "\n{}",
+                indent!(
+                    &self
+                        .proof
+                        .iter()
+                        .map(|s| s.ir())
+                        .collect::<Vec<_>>()
+                        .join(
+                            "
+"
+                        ),
+                    1
+                )
+            ));
+        }
+        StmtIR(out)
+    }
+    impl_display_pair!();
+}
+
+impl ByFnExtensionStmt {
+    pub fn ir(&self) -> StmtIR {
+        let mut out = String::new();
+        out.push_str(&format!(
+            "{} {}{}\n{}",
+            BY,
+            FN_EXTENSION,
             COLON,
             indent!(
                 &format!(

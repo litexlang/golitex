@@ -565,11 +565,12 @@ impl Runtime {
         let Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(interval)) = &fact.set else {
             return Ok(None);
         };
+        // Match display/infer/legacy: Left* = (a,+∞)/[a,+∞); Right* = (−∞,a)/(−∞,a].
         let (is_lower_bound, closed, endpoint) = match interval {
-            OneSideInfinityIntervalObj::LeftOpen(s) => (false, false, s.start.as_ref()),
-            OneSideInfinityIntervalObj::LeftClosed(s) => (false, true, s.start.as_ref()),
-            OneSideInfinityIntervalObj::RightOpen(s) => (true, false, s.start.as_ref()),
-            OneSideInfinityIntervalObj::RightClosed(s) => (true, true, s.start.as_ref()),
+            OneSideInfinityIntervalObj::LeftOpen(s) => (true, false, s.start.as_ref()),
+            OneSideInfinityIntervalObj::LeftClosed(s) => (true, true, s.start.as_ref()),
+            OneSideInfinityIntervalObj::RightOpen(s) => (false, false, s.start.as_ref()),
+            OneSideInfinityIntervalObj::RightClosed(s) => (false, true, s.start.as_ref()),
         };
 
         let in_real = Fact::AtomicFact(AtomicFact::InFact(InFact {

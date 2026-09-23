@@ -482,6 +482,7 @@ pub enum ByStmt {
     ByStrongInducStmt(ByStrongInducStmt),
     ByForStmt(ByForStmt),
     ByExtensionStmt(ByExtensionStmt),
+    ByFnExtensionStmt(ByFnExtensionStmt),
     ByEnumerateRangeStmt(ByEnumerateRangeStmt),
     ByClosedRangeAsCasesStmt(ByClosedRangeAsCasesStmt),
     ByTransitivePropStmt(ByTransitivePropStmt),
@@ -590,6 +591,18 @@ pub struct ByForStmt {
 // Stores: `A = B` as ordinary object equality in the pure-set model.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ByExtensionStmt {
+    pub left: Obj,
+    pub right: Obj,
+    pub proof: Vec<Stmt>,
+    pub line_file: LineFile,
+}
+
+// What: prove function object equality from pointwise equality on a shared FnSet.
+// Surface: `by fn_extension: f = g` (preview)
+// Stores: `f = g` as ordinary object equality when carriers are alpha-equivalent
+// and the reconstructed pointwise forall succeeds.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ByFnExtensionStmt {
     pub left: Obj,
     pub right: Obj,
     pub proof: Vec<Stmt>,

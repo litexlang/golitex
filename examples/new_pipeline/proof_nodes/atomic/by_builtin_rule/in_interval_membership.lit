@@ -1,10 +1,9 @@
 # Node: atomic.ByBuiltinRule.In.IntervalMembership
-# Status: blocked — `'[a, b]` surface syntax is not parsed in new_pipeline yet
-# (INTERVAL_LITERAL_PREFIX is display-only). Builtin matcher is already in in_fact.rs.
-# Run (once parse lands): LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/in_interval_membership.lit
+# Status: acceptance
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/in_interval_membership.lit
 
-# have x R
-# trust x $in R
-# trust 0 <= x
-# trust x < 1
-# x $in '[0, 1)
+have x R
+trust x $in R
+trust 0 <= x
+trust x < 1
+x $in '[0, 1)

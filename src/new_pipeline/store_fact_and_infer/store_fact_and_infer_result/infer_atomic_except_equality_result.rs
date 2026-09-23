@@ -56,6 +56,8 @@ pub enum InferAtomicExceptEqualityResult {
     InFactIndexUnion(InferInFactIndexUnionResult),
     // `x $in index_intersect(I, X, A)` → ambient + forall fiber.
     InFactIndexIntersect(InferInFactIndexIntersectResult),
+    // `f $in index_cart(I, S, g)` → FnSet membership + `$is_choice_function_for`.
+    InFactIndexCart(InferInFactIndexCartResult),
     // Order vs resolved numeric bound → sign vs 0.
     LessSign(InferNumericOrderSignResult),
     GreaterSign(InferNumericOrderSignResult),
@@ -168,6 +170,10 @@ pub struct InferInFactIndexUnionResult {
 }
 
 pub struct InferInFactIndexIntersectResult {
+    pub derived: Vec<StoreFactAndInferResult>,
+}
+
+pub struct InferInFactIndexCartResult {
     pub derived: Vec<StoreFactAndInferResult>,
 }
 
@@ -297,6 +303,13 @@ impl InferAtomicExceptEqualityResult {
                 ids
             }
             Self::InFactIndexIntersect(r) => {
+                let mut ids = Vec::new();
+                for d in &r.derived {
+                    ids.extend(d.stored_fact_ids());
+                }
+                ids
+            }
+            Self::InFactIndexCart(r) => {
                 let mut ids = Vec::new();
                 for d in &r.derived {
                     ids.extend(d.stored_fact_ids());

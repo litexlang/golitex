@@ -7,19 +7,19 @@
 //! - ExistUnique / NotExist: shape rewrite to uniqueness / De Morgan forall.
 //! - Or / plain Exist / Forall*: intentionally `NoInfer` unless a shape rule applies.
 //!
-//! # Legacy → new_pipeline migration batches (Builtin Inference)
-//!
-//! Move like packing boxes — one batch green before the next.
+//! # Legacy → new_pipeline migration (Builtin Inference) — closed
 //!
 //! | Batch | Legacy source | Status |
 //! |---|---|---|
-//! | 0 | And / Chain / NotForall / Or / Forall dispatch | done (framework) |
+//! | 0 | And / Chain / NotForall / Or / Forall dispatch | done |
 //! | 1 | `exist!` uniqueness forall; `not exist` De Morgan forall | done |
 //! | 2 | NormalAtomic: expand def + param-type projection | done |
-//! | 3 | InFact membership families (Manual membership table) | done for N/sign/list/union/intersect/set_minus/cart/range/interval (+ set-builder/power_set) + fn_range/equal-FnSet/finite_seq|seq + family_union/index_union/index_intersect; remaining replacement/index_cart/struct |
-//! | 4 | EqualFact: cart/tuple + `u-v=0` + positive-real power | done for fact-generating arms; set-builder/anon/numeric bind live on store indexes (known_equal_to_obj_with_free_params / closed numeric / InFunctionSet on store) |
-//! | 5 | Subset/Superset forall; order→sign; `$is_cart` dim bound; mul-by-(-1) flip | done |
-//! | 6 | FnEqual → ordinary `=`; remaining atomic stubs | pending |
+//! | 3 | InFact membership families | done (incl. index_cart) |
+//! | 4 | EqualFact fact-generating arms | done (indexes on store) |
+//! | 5 | Subset/Superset; order→sign; `$is_cart` dim; mul-by-(−1) | done |
+//! | — | `$fn_eq` / Replacement Obj / Struct eager infer | **won't migrate** (see README) |
+//!
+//! Details and won't-migrate rationale: `store_fact_and_infer/README.md`.
 
 pub mod infer_and_fact;
 pub mod infer_atomic_fact;

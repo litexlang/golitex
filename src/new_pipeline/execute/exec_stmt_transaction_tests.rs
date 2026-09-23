@@ -2786,8 +2786,19 @@ fn not_in_and_set_algebra_builtin_rules() {
         !exec_one(&mut runtime, "0 < u * v").is_failed(),
         "product both positive"
     );
-    // Interval membership builtin is implemented, but `'[a,b]` surface parse is
-    // not wired in new_pipeline yet (INTERVAL_LITERAL_PREFIX is display-only).
+    assert!(!exec_one(&mut runtime, "have x_iv R").is_failed());
+    assert!(!exec_one(&mut runtime, "trust x_iv $in R").is_failed());
+    assert!(!exec_one(&mut runtime, "trust 0 <= x_iv").is_failed());
+    assert!(!exec_one(&mut runtime, "trust x_iv < 1").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "x_iv $in '[0, 1)").is_failed(),
+        "closed-open interval membership"
+    );
+    assert!(!exec_one(&mut runtime, "trust 2 < x_iv").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "x_iv $in '(2,)").is_failed(),
+        "left-open ray membership"
+    );
     assert!(!exec_one(&mut runtime, "have m N").is_failed());
     assert!(!exec_one(&mut runtime, "have n N").is_failed());
     assert!(
