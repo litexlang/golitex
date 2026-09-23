@@ -1,16 +1,21 @@
-# Batch1 tracers: exist! uniqueness + not-exist De Morgan
+# Easy-batch tracers: subset, order-sign, param-type + expand
 
-trust exist! x R st {x = 0}
-
-# uniqueness forall is stored by infer; reuse it
-forall a R, b R:
-    a = 0
-    b = 0
+have S set
+have T set
+trust S $subset T
+forall x S:
     =>:
-        a = b
+        x $in T
 
-trust not exist y R st {y > 0, y < 0}
+have a R
+trust a >= 1
+0 < a
 
-forall z R:
-    =>:
-        not z > 0 or not z < 0
+prop same(x set, y set):
+    x = y
+
+have u set
+have v set
+trust $same(u, v)
+$is_set(u)
+u = v

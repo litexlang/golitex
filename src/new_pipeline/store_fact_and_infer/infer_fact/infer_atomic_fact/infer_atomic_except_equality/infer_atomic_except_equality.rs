@@ -1,124 +1,83 @@
 use crate::new_pipeline::ast::fact::AtomicFact;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
-use crate::new_pipeline::store_fact_and_infer::{
-    InferAtomicExceptEqualityResult, InferFnEqualInFactResult, InferGreaterEqualFactResult,
-    InferGreaterFactResult, InferIsFiniteSetFactResult, InferIsNonemptySetFactResult,
-    InferIsSetFactResult, InferIsTupleFactResult, InferLessEqualFactResult, InferLessFactResult,
-    InferNotEqualFactResult, InferNotFnEqualInFactResult, InferNotGreaterEqualFactResult,
-    InferNotGreaterFactResult, InferNotInFactResult, InferNotIsCartFactResult,
-    InferNotIsFiniteSetFactResult, InferNotIsNonemptySetFactResult, InferNotIsSetFactResult,
-    InferNotIsTupleFactResult, InferNotLessEqualFactResult, InferNotLessFactResult,
-    InferNotNormalAtomicFactResult, InferNotSubsetFactResult, InferNotSupersetFactResult,
-    InferSubsetFactResult, InferSupersetFactResult,
-};
+use crate::new_pipeline::store_fact_and_infer::InferAtomicExceptEqualityResult;
 
 impl Runtime {
-    // Dispatch non-equal atomic infer by fact shape (mirrors AtomicFact except EqualFact).
+    // Collect every non-equal atomic infer rule that fires for this fact.
+    // Empty Vec means no rule applied (not an error).
     pub(crate) fn infer_atomic_except_equality(
         &mut self,
         atomic_fact: &AtomicFact,
-    ) -> RuntimeResult<InferAtomicExceptEqualityResult> {
+    ) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
+        let mut rules = Vec::new();
         match atomic_fact {
             AtomicFact::EqualFact(_) => unreachable!(
                 "equality facts use infer_equal_fact, not infer_atomic_except_equality"
             ),
-            AtomicFact::NormalAtomicFact(normal) => Ok(
-                InferAtomicExceptEqualityResult::NormalAtomicFact(
-                    self.infer_normal_atomic_fact(normal)?,
-                ),
-            ),
-            AtomicFact::LessFact(_) => {
-                Ok(InferAtomicExceptEqualityResult::LessFact(InferLessFactResult {}))
+            AtomicFact::NormalAtomicFact(normal) => {
+                rules.extend(self.infer_normal_atomic_fact_rules(normal)?);
             }
-            AtomicFact::GreaterFact(_) => Ok(InferAtomicExceptEqualityResult::GreaterFact(
-                InferGreaterFactResult {},
-            )),
-            AtomicFact::LessEqualFact(_) => Ok(InferAtomicExceptEqualityResult::LessEqualFact(
-                InferLessEqualFactResult {},
-            )),
-            AtomicFact::GreaterEqualFact(_) => Ok(InferAtomicExceptEqualityResult::GreaterEqualFact(
-                InferGreaterEqualFactResult {},
-            )),
-            AtomicFact::IsSetFact(_) => {
-                Ok(InferAtomicExceptEqualityResult::IsSetFact(InferIsSetFactResult {}))
+            AtomicFact::LessFact(f) => {
+                if let Some(sign) = self.infer_less_order_sign(f)? {
+                    rules.push(InferAtomicExceptEqualityResult::LessSign(sign));
+                }
             }
-            AtomicFact::IsNonemptySetFact(_) => Ok(
-                InferAtomicExceptEqualityResult::IsNonemptySetFact(InferIsNonemptySetFactResult {}),
-            ),
-            AtomicFact::IsFiniteSetFact(_) => Ok(InferAtomicExceptEqualityResult::IsFiniteSetFact(
-                InferIsFiniteSetFactResult {},
-            )),
+            AtomicFact::GreaterFact(f) => {
+                if let Some(sign) = self.infer_greater_order_sign(f)? {
+                    rules.push(InferAtomicExceptEqualityResult::GreaterSign(sign));
+                }
+            }
+            AtomicFact::LessEqualFact(f) => {
+                if let Some(sign) = self.infer_less_equal_order_sign(f)? {
+                    rules.push(InferAtomicExceptEqualityResult::LessEqualSign(sign));
+                }
+            }
+            AtomicFact::GreaterEqualFact(f) => {
+                if let Some(sign) = self.infer_greater_equal_order_sign(f)? {
+                    rules.push(InferAtomicExceptEqualityResult::GreaterEqualSign(sign));
+                }
+            }
             AtomicFact::InFact(in_fact) => {
-                Ok(InferAtomicExceptEqualityResult::InFact(self.infer_in_fact(in_fact)?))
+                rules.extend(self.infer_in_fact_rules(in_fact)?);
             }
-            AtomicFact::IsCartFact(is_cart) => Ok(InferAtomicExceptEqualityResult::IsCartFact(
-                self.infer_is_cart_fact(is_cart)?,
-            )),
-            AtomicFact::IsTupleFact(_) => {
-                Ok(InferAtomicExceptEqualityResult::IsTupleFact(InferIsTupleFactResult {}))
+            AtomicFact::IsCartFact(is_cart) => {
+                rules.push(InferAtomicExceptEqualityResult::IsCartDimensionLowerBound(
+                    self.infer_is_cart_dimension_lower_bound(is_cart)?,
+                ));
             }
-            AtomicFact::SubsetFact(_) => {
-                Ok(InferAtomicExceptEqualityResult::SubsetFact(InferSubsetFactResult {}))
+            AtomicFact::SubsetFact(subset) => {
+                if let Some(r) = self.infer_subset_elementwise_membership(subset)? {
+                    rules.push(InferAtomicExceptEqualityResult::SubsetElementwiseMembership(r));
+                }
             }
-            AtomicFact::SupersetFact(_) => Ok(InferAtomicExceptEqualityResult::SupersetFact(
-                InferSupersetFactResult {},
-            )),
-            AtomicFact::NotNormalAtomicFact(_) => Ok(
-                InferAtomicExceptEqualityResult::NotNormalAtomicFact(
-                    InferNotNormalAtomicFactResult {},
-                ),
-            ),
-            AtomicFact::NotEqualFact(_) => Ok(InferAtomicExceptEqualityResult::NotEqualFact(
-                InferNotEqualFactResult {},
-            )),
-            AtomicFact::NotLessFact(_) => {
-                Ok(InferAtomicExceptEqualityResult::NotLessFact(InferNotLessFactResult {}))
+            AtomicFact::SupersetFact(superset) => {
+                rules.push(
+                    InferAtomicExceptEqualityResult::SupersetElementwiseMembership(
+                        self.infer_superset_elementwise_membership(superset)?,
+                    ),
+                );
             }
-            AtomicFact::NotGreaterFact(_) => Ok(InferAtomicExceptEqualityResult::NotGreaterFact(
-                InferNotGreaterFactResult {},
-            )),
-            AtomicFact::NotLessEqualFact(_) => Ok(InferAtomicExceptEqualityResult::NotLessEqualFact(
-                InferNotLessEqualFactResult {},
-            )),
-            AtomicFact::NotGreaterEqualFact(_) => Ok(
-                InferAtomicExceptEqualityResult::NotGreaterEqualFact(
-                    InferNotGreaterEqualFactResult {},
-                ),
-            ),
-            AtomicFact::NotIsSetFact(_) => Ok(InferAtomicExceptEqualityResult::NotIsSetFact(
-                InferNotIsSetFactResult {},
-            )),
-            AtomicFact::NotIsNonemptySetFact(_) => Ok(
-                InferAtomicExceptEqualityResult::NotIsNonemptySetFact(
-                    InferNotIsNonemptySetFactResult {},
-                ),
-            ),
-            AtomicFact::NotIsFiniteSetFact(_) => Ok(
-                InferAtomicExceptEqualityResult::NotIsFiniteSetFact(
-                    InferNotIsFiniteSetFactResult {},
-                ),
-            ),
-            AtomicFact::NotInFact(_) => {
-                Ok(InferAtomicExceptEqualityResult::NotInFact(InferNotInFactResult {}))
-            }
-            AtomicFact::NotIsCartFact(_) => Ok(InferAtomicExceptEqualityResult::NotIsCartFact(
-                InferNotIsCartFactResult {},
-            )),
-            AtomicFact::NotIsTupleFact(_) => Ok(InferAtomicExceptEqualityResult::NotIsTupleFact(
-                InferNotIsTupleFactResult {},
-            )),
-            AtomicFact::NotSubsetFact(_) => Ok(InferAtomicExceptEqualityResult::NotSubsetFact(
-                InferNotSubsetFactResult {},
-            )),
-            AtomicFact::NotSupersetFact(_) => Ok(InferAtomicExceptEqualityResult::NotSupersetFact(
-                InferNotSupersetFactResult {},
-            )),
-            AtomicFact::FnEqualInFact(_) => Ok(InferAtomicExceptEqualityResult::FnEqualInFact(
-                InferFnEqualInFactResult {},
-            )),
-            AtomicFact::NotFnEqualInFact(_) => Ok(
-                InferAtomicExceptEqualityResult::NotFnEqualInFact(InferNotFnEqualInFactResult {}),
-            ),
+            AtomicFact::IsSetFact(_)
+            | AtomicFact::IsNonemptySetFact(_)
+            | AtomicFact::IsFiniteSetFact(_)
+            | AtomicFact::IsTupleFact(_)
+            | AtomicFact::NotNormalAtomicFact(_)
+            | AtomicFact::NotEqualFact(_)
+            | AtomicFact::NotLessFact(_)
+            | AtomicFact::NotGreaterFact(_)
+            | AtomicFact::NotLessEqualFact(_)
+            | AtomicFact::NotGreaterEqualFact(_)
+            | AtomicFact::NotIsSetFact(_)
+            | AtomicFact::NotIsNonemptySetFact(_)
+            | AtomicFact::NotIsFiniteSetFact(_)
+            | AtomicFact::NotInFact(_)
+            | AtomicFact::NotIsCartFact(_)
+            | AtomicFact::NotIsTupleFact(_)
+            | AtomicFact::NotSubsetFact(_)
+            | AtomicFact::NotSupersetFact(_)
+            | AtomicFact::FnEqualInFact(_)
+            | AtomicFact::NotFnEqualInFact(_) => {}
         }
+        Ok(rules)
     }
 }

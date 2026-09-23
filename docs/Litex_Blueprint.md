@@ -1941,8 +1941,7 @@ The author of Litex has spent about two years on this project—almost every day
 ### Special Thanks
 
 Litex is created and maintained by Jiachen Shen and the Litex team. Special thanks to Wei Lin, Siqi Sun,
-Peng Sun, Yi Wang, Chenxuan Huang, Yan Lu, Sheng Xu, Keyao Zhu, Xingjian Ma,
-and Zhaoxuan Hong for their support and advice on the project.
+Peng Sun, Chenxuan Huang, Yan Lu, Sheng Xu, Keyao Zhu and Zhaoxuan Hong for their support and advice on the project.
 
 ### Related Links
 

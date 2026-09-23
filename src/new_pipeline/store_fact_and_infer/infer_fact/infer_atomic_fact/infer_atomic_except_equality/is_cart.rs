@@ -1,18 +1,15 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact, GreaterEqualFact, IsCartFact};
 use crate::new_pipeline::ast::obj::{CartDim, Literal, Number, Obj, ProductShape};
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
-use crate::new_pipeline::store_fact_and_infer::{
-    InferIsCartDimensionLowerBoundResult, InferIsCartFactResult,
-};
+use crate::new_pipeline::store_fact_and_infer::InferIsCartDimensionLowerBoundResult;
 
 impl Runtime {
     // When: stored `$is_cart(C)`.
     // Infers: `cart_dim(C) >= 2`.
-    // Example: trust `$is_cart(s)` also stores `cart_dim(s) >= 2`.
-    pub(super) fn infer_is_cart_fact(
+    pub(super) fn infer_is_cart_dimension_lower_bound(
         &mut self,
         is_cart: &IsCartFact,
-    ) -> RuntimeResult<InferIsCartFactResult> {
+    ) -> RuntimeResult<InferIsCartDimensionLowerBoundResult> {
         let lower_bound = AtomicFact::GreaterEqualFact(GreaterEqualFact {
             fact_id: self.ids.allocate_fact_id(),
             left: Obj::ProductShape(ProductShape::CartDim(CartDim {
@@ -26,8 +23,6 @@ impl Runtime {
         let derived = Box::new(
             self.store_inferred_fact_and_infer(&Fact::AtomicFact(lower_bound))?,
         );
-        Ok(InferIsCartFactResult::DimensionLowerBound(
-            InferIsCartDimensionLowerBoundResult { derived },
-        ))
+        Ok(InferIsCartDimensionLowerBoundResult { derived })
     }
 }

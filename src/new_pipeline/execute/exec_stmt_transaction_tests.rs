@@ -401,6 +401,56 @@ fn not_forall_trust_stores_derived_exist() {
 }
 
 #[test]
+fn subset_trust_infers_elementwise_forall() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have S set").is_failed());
+    assert!(!exec_one(&mut runtime, "have T set").is_failed());
+    assert!(!exec_one(&mut runtime, "trust S $subset T").is_failed());
+    assert!(
+        !exec_one(
+            &mut runtime,
+            "forall x S:\n    =>:\n        x $in T",
+        )
+        .is_failed(),
+        "subset infer must expose elementwise membership forall"
+    );
+}
+
+#[test]
+fn order_sign_infers_from_literal_bound() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have a R").is_failed());
+    assert!(!exec_one(&mut runtime, "trust a >= 1").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "0 < a").is_failed(),
+        "a >= 1 must infer 0 < a"
+    );
+}
+
+#[test]
+fn normal_atomic_param_type_projection() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(
+            &mut runtime,
+            "prop same(x set, y set):\n    x = y",
+        )
+        .is_failed()
+    );
+    assert!(!exec_one(&mut runtime, "have a set").is_failed());
+    assert!(!exec_one(&mut runtime, "have b set").is_failed());
+    assert!(!exec_one(&mut runtime, "trust $same(a, b)").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "$is_set(a)").is_failed(),
+        "param-type projection must store $is_set(a)"
+    );
+    assert!(
+        !exec_one(&mut runtime, "a = b").is_failed(),
+        "expand definition must store a = b"
+    );
+}
+
+#[test]
 fn is_cart_trust_infers_dimension_lower_bound() {
     let mut runtime = runtime_with_file_env();
     assert!(

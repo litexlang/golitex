@@ -342,7 +342,7 @@ Lean showed me that mathematics and programming can meet in a real language.
 Litex explores whether formal source can follow more closely the mental flow
 of solving mathematical problems.
 
-Special thanks to Wei Lin, Siqi Sun, Peng Sun, Yi Wang, Chenxuan Huang, Yan Lu,
-Sheng Xu, Keyao Zhu, Xingjian Ma, and Zhaoxuan Hong for their support and advice.
+Special thanks to Wei Lin, Siqi Sun, Peng Sun, Chenxuan Huang, Yan Lu,
+Sheng Xu, Keyao Zhu and Zhaoxuan Hong for their support and advice.
 
 Litex is released under the [Apache License 2.0](LICENSE).
