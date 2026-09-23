@@ -72,7 +72,7 @@ impl Runtime {
     }
 
     // Parse `x R` / `x, y R` groups until `=` / `:` / `by` / end of header
-    // (delimiter not consumed). `by` stops for `have Img set by replacement_axiom(...)`.
+    // (delimiter not consumed). `by` stops for `have Img set by replacement_axiom: …`.
     pub(super) fn parse_typed_param_list_until_eq_colon_or_end(
         &mut self,
         tb: &mut TokenBlock,

@@ -156,7 +156,7 @@ impl Runtime {
         let (inner, local_env) = self.run_in_local_env_and_take_env(|rt| {
             rt.introduce_fn_set_clause_binders(&stmt.fn_set_clause)?;
             let or_fact = Fact::OrFact(OrFact {
-                fact_id: rt.ids.allocate_fact_id(),
+                fact_id: rt.global_ids.allocate_fact_id(),
                 facts: stmt.cases.clone(),
                 line_file: Some(stmt.line_file.clone()),
             });
@@ -222,7 +222,7 @@ impl Runtime {
             let assumed_fact = and_chain_as_fact(assumed);
             let _ = rt.store_fact_and_infer(&assumed_fact)?;
             for atom in flatten_and_chain_atoms(other) {
-                let Some(negated) = negate_atomic_fact(&atom, rt.ids.allocate_fact_id()) else {
+                let Some(negated) = negate_atomic_fact(&atom, rt.global_ids.allocate_fact_id()) else {
                     continue;
                 };
                 let checked = rt.verify_fact(
@@ -234,7 +234,7 @@ impl Runtime {
                 }
                 // Strict order implies the weak opposite of the other branch.
                 // Example: assumed `x > 0`, other `x < 0` → prove `x >= 0` (= not x < 0).
-                if let Some(weak) = weak_order_from_strict_assumption(assumed, &atom, rt.ids.allocate_fact_id())
+                if let Some(weak) = weak_order_from_strict_assumption(assumed, &atom, rt.global_ids.allocate_fact_id())
                 {
                     let weak_checked =
                         rt.verify_fact(&Fact::AtomicFact(weak), verify_state.clone())?;
@@ -273,7 +273,7 @@ impl Runtime {
             }
 
             let in_fact = Fact::AtomicFact(AtomicFact::InFact(InFact {
-                fact_id: rt.ids.allocate_fact_id(),
+                fact_id: rt.global_ids.allocate_fact_id(),
                 element: equal_to.clone(),
                 set: stmt.fn_set_clause.ret_set.clone(),
                 line_file: Some(stmt.line_file.clone()),
@@ -345,7 +345,7 @@ impl Runtime {
             self.identifier_obj_for_file_root_symbol(stmt.name.clone());
         let function_obj = Obj::Identifier(function_ident.clone());
 
-        let membership_fact_id = self.ids.allocate_fact_id();
+        let membership_fact_id = self.global_ids.allocate_fact_id();
         let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
             fact_id: membership_fact_id,
             element: function_obj.clone(),
@@ -383,7 +383,7 @@ impl Runtime {
             let mut dom_facts = base_dom.clone();
             dom_facts.push(and_chain_as_fact(case_fact));
 
-            let equal_fact_id = self.ids.allocate_fact_id();
+            let equal_fact_id = self.global_ids.allocate_fact_id();
             let equal_atomic = AtomicFact::EqualFact(EqualFact {
                 fact_id: equal_fact_id,
                 left: applied.clone(),
@@ -391,7 +391,7 @@ impl Runtime {
                 line_file: Some(stmt.line_file.clone()),
             });
 
-            let forall_id = self.ids.allocate_fact_id();
+            let forall_id = self.global_ids.allocate_fact_id();
             let forall = Fact::ForallFact(ForallFact {
                 fact_id: forall_id,
                 typed_parameters: typed.clone(),

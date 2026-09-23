@@ -79,7 +79,7 @@ impl Runtime {
         equality_state: VerifyState,
     ) -> RuntimeResult<Option<StrictEqualWithFact>> {
         let equal_fact = EqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: left.clone(),
             right: right.clone(),
             line_file: None,

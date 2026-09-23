@@ -409,7 +409,7 @@ fn mk_strong_ih(
     let y_obj = param_obj(&y);
     let p_y = inst_at(runtime, goal, param.id, y_obj.clone())?;
     Ok(Fact::ForallFact(ForallFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         typed_parameters: TypedParameterList {
             groups: vec![TypedParameterGroup {
                 params: vec![y],
@@ -432,7 +432,7 @@ fn mk_concluding_forall(
     goals: &[ExistOrAndChainAtomicFact],
 ) -> Fact {
     Fact::ForallFact(ForallFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         typed_parameters: TypedParameterList {
             groups: vec![TypedParameterGroup {
                 params: vec![param.clone()],
@@ -521,7 +521,7 @@ fn add_one(obj: Obj) -> Obj {
 
 fn mk_in_z(runtime: &mut Runtime, element: Obj) -> Fact {
     InFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         element,
         set: Obj::StandardSet(StandardSet::Z),
         line_file: None,
@@ -531,7 +531,7 @@ fn mk_in_z(runtime: &mut Runtime, element: Obj) -> Fact {
 
 fn mk_greater_equal(runtime: &mut Runtime, left: Obj, right: Obj) -> Fact {
     GreaterEqualFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         left,
         right,
         line_file: None,
@@ -541,7 +541,7 @@ fn mk_greater_equal(runtime: &mut Runtime, left: Obj, right: Obj) -> Fact {
 
 fn mk_less_equal(runtime: &mut Runtime, left: Obj, right: Obj) -> Fact {
     LessEqualFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         left,
         right,
         line_file: None,
@@ -551,7 +551,7 @@ fn mk_less_equal(runtime: &mut Runtime, left: Obj, right: Obj) -> Fact {
 
 fn mk_equal(runtime: &mut Runtime, left: Obj, right: Obj) -> Fact {
     EqualFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         left,
         right,
         line_file: None,

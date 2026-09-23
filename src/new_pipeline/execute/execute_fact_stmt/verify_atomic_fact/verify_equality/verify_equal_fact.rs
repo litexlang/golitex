@@ -150,7 +150,7 @@ impl Runtime {
         }
         // Legacy equality symmetry: try known forall on the swapped sides.
         let reversed = EqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: fact.right.clone(),
             right: fact.left.clone(),
             line_file: fact.line_file.clone(),

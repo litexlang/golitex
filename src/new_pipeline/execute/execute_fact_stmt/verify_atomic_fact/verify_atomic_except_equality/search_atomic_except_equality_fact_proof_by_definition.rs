@@ -9,7 +9,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_
 };
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
-use crate::new_pipeline::runtime::{Ids, Runtime, RuntimeResult};
+use crate::new_pipeline::runtime::{GlobalIds, Runtime, RuntimeResult};
 use std::collections::HashMap;
 
 impl Runtime {
@@ -70,7 +70,7 @@ impl Runtime {
         let mut requirement_facts = Vec::new();
         for ((param, param_type), arg) in flat.iter().zip(normal.body.iter()) {
             subst.insert(param.id, arg.clone());
-            let Some(type_fact) = type_obligation_fact(arg, param_type, &mut self.ids) else {
+            let Some(type_fact) = type_obligation_fact(arg, param_type, &mut self.global_ids) else {
                 return Ok(None);
             };
             requirement_facts.push(type_fact);
@@ -113,8 +113,8 @@ fn flatten_typed_parameters(
     out
 }
 
-fn type_obligation_fact(arg: &Obj, param_type: &ParamType, ids: &mut Ids) -> Option<Fact> {
-    let fact_id = ids.allocate_fact_id();
+fn type_obligation_fact(arg: &Obj, param_type: &ParamType, global_ids: &mut GlobalIds) -> Option<Fact> {
+    let fact_id = global_ids.allocate_fact_id();
     match param_type {
         ParamType::Obj(set) => Some(Fact::AtomicFact(AtomicFact::InFact(InFact {
             fact_id,

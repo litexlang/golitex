@@ -89,14 +89,14 @@ impl Runtime {
             args: field_types.iter().cloned().map(Box::new).collect(),
         }));
         let is_tuple = Fact::AtomicFact(AtomicFact::IsTupleFact(IsTupleFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             set: obj.clone(),
             line_file: None,
         }));
         store_and_infer.push(self.store_fact_and_infer(&is_tuple)?);
 
         let tuple_dim = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: Obj::ProductShape(ProductShape::TupleDim(TupleDim {
                 arg: Box::new(obj.clone()),
             })),
@@ -108,7 +108,7 @@ impl Runtime {
         store_and_infer.push(self.store_fact_and_infer(&tuple_dim)?);
 
         let cart_membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             element: obj.clone(),
             set: cart,
             line_file: None,
@@ -124,7 +124,7 @@ impl Runtime {
                 }))),
             }));
             let bridge = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 left: field_value,
                 right: projection,
                 line_file: None,
@@ -135,7 +135,7 @@ impl Runtime {
         for (field, named_field_type) in def.fields.iter().zip(field_types.iter()) {
             let field_value = field_access_obj(obj, &field.binding.name);
             let field_membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 element: field_value,
                 set: named_field_type.clone(),
                 line_file: None,

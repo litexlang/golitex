@@ -128,7 +128,7 @@ impl Runtime {
             }
 
             let ge = Fact::AtomicFact(AtomicFact::GreaterEqualFact(GreaterEqualFact {
-                fact_id: rt.ids.allocate_fact_id(),
+                fact_id: rt.global_ids.allocate_fact_id(),
                 left: stmt.measure.clone(),
                 right: stmt.lower_bound.clone(),
                 line_file: Some(stmt.line_file.clone()),
@@ -147,7 +147,7 @@ impl Runtime {
             let top_cases: Vec<AndChainAtomicFact> =
                 stmt.cases.iter().map(|c| c.case_fact.clone()).collect();
             let coverage_fact = Fact::OrFact(OrFact {
-                fact_id: rt.ids.allocate_fact_id(),
+                fact_id: rt.global_ids.allocate_fact_id(),
                 facts: top_cases,
                 line_file: Some(stmt.line_file.clone()),
             });
@@ -248,7 +248,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
         let fact = Fact::AtomicFact(AtomicFact::InFact(InFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             element: obj.clone(),
             set: Obj::StandardSet(StandardSet::Z),
             line_file: Some(line_file.clone()),
@@ -289,7 +289,7 @@ impl Runtime {
 
         dom_facts.push(QuantifierFreeFact::AtomicFact(AtomicFact::LessFact(
             LessFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 left: generated_measure.clone(),
                 right: stmt.measure.clone(),
                 line_file: Some(stmt.line_file.clone()),
@@ -297,7 +297,7 @@ impl Runtime {
         )));
         dom_facts.push(QuantifierFreeFact::AtomicFact(
             AtomicFact::GreaterEqualFact(GreaterEqualFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 left: generated_measure,
                 right: stmt.lower_bound.clone(),
                 line_file: Some(stmt.line_file.clone()),
@@ -331,7 +331,7 @@ impl Runtime {
                 continue;
             }
             let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 element: function_obj,
                 set: Obj::FunctionSpace(FunctionSpace::FnSet(restricted.clone())),
                 line_file: Some(stmt.line_file.clone()),
@@ -393,7 +393,7 @@ impl Runtime {
         let (ok, _env) = self.run_in_local_env_and_take_env(|rt| {
             let _ = rt.store_fact_and_infer(&and_chain_as_fact(assumed))?;
             for atom in flatten_and_chain_atoms(other) {
-                let Some(negated) = negate_atomic_fact(&atom, rt.ids.allocate_fact_id()) else {
+                let Some(negated) = negate_atomic_fact(&atom, rt.global_ids.allocate_fact_id()) else {
                     continue;
                 };
                 let checked =
@@ -433,7 +433,7 @@ impl Runtime {
                             ));
                         }
                         let in_fact = Fact::AtomicFact(AtomicFact::InFact(InFact {
-                            fact_id: rt.ids.allocate_fact_id(),
+                            fact_id: rt.global_ids.allocate_fact_id(),
                             element: equal_to.clone(),
                             set: stmt.fn_set_clause.ret_set.clone(),
                             line_file: Some(stmt.line_file.clone()),
@@ -577,7 +577,7 @@ fn merge_and_chains(
         return Ok(AndChainAtomicFact::AtomicFact(atoms.remove(0)));
     }
     Ok(AndChainAtomicFact::AndFact(AndFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         facts: atoms,
         line_file: Some(line_file.clone()),
     }))

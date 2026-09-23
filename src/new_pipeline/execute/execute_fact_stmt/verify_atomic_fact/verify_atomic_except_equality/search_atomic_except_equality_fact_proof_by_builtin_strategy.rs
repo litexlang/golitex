@@ -54,7 +54,7 @@ impl Runtime {
 
         for summand in [left_summand, right_summand] {
             let premise: Fact = GreaterFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 left: summand,
                 right: zero_obj(),
                 line_file: line_file.clone(),

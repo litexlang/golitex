@@ -26,7 +26,7 @@ impl Runtime {
         let lf = in_fact.line_file.clone();
         match set {
             StandardSet::N => {
-                let fact_id = self.ids.allocate_fact_id();
+                let fact_id = self.global_ids.allocate_fact_id();
                 let atomic = AtomicFact::GreaterEqualFact(GreaterEqualFact {
                     fact_id,
                     left: in_fact.element.clone(),
@@ -42,7 +42,7 @@ impl Runtime {
                 ])
             }
             StandardSet::QPos | StandardSet::RPos | StandardSet::NPos => {
-                let fact_id = self.ids.allocate_fact_id();
+                let fact_id = self.global_ids.allocate_fact_id();
                 let atomic = AtomicFact::LessFact(LessFact {
                     fact_id,
                     left: zero,
@@ -58,7 +58,7 @@ impl Runtime {
                 ])
             }
             StandardSet::QNeg | StandardSet::ZNeg | StandardSet::RNeg => {
-                let fact_id = self.ids.allocate_fact_id();
+                let fact_id = self.global_ids.allocate_fact_id();
                 let atomic = AtomicFact::LessFact(LessFact {
                     fact_id,
                     left: in_fact.element.clone(),
@@ -74,7 +74,7 @@ impl Runtime {
                 ])
             }
             StandardSet::QStar | StandardSet::ZStar | StandardSet::RStar | StandardSet::CStar => {
-                let fact_id = self.ids.allocate_fact_id();
+                let fact_id = self.global_ids.allocate_fact_id();
                 let atomic = AtomicFact::NotEqualFact(NotEqualFact {
                     fact_id,
                     left: in_fact.element.clone(),

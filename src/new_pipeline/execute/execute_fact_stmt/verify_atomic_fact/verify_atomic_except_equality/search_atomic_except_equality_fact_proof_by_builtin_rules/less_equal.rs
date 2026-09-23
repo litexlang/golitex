@@ -58,6 +58,36 @@ pub enum LessEqualFactSearchProofByBuiltinRule {
     // Mathematical property: adding a nonnegative quantity does not decrease.
     // Example: known `0 <= c` proves `x <= x + c`.
     AddRightNonnegative(AddRightNonnegativeBuiltinRuleProof),
+    // Left translation by a nonnegative addend: `a <= b + a` from `0 <= b`.
+    // Example: known `0 <= c` proves `x <= c + x`.
+    AddLeftNonnegative(AddLeftNonnegativeBuiltinRuleProof),
+    // Right addend congruence: `a <= b` ⇒ `a + c <= b + c`.
+    // Example: known `x <= y` proves `x + 1 <= y + 1`.
+    AddRightCongruence(AddRightCongruenceBuiltinRuleProof),
+    // Left addend congruence: `a <= b` ⇒ `c + a <= c + b`.
+    // Example: known `x <= y` proves `1 + x <= 1 + y`.
+    AddLeftCongruence(AddLeftCongruenceBuiltinRuleProof),
+    // Subtract a nonnegative: `a - b <= a` from `0 <= b`.
+    // Example: known `0 <= c` proves `x - c <= x`.
+    SubNonnegative(SubNonnegativeBuiltinRuleProof),
+    // Left multiplication by a nonnegative: `0 <= k` and `a <= b` ⇒ `k * a <= k * b`.
+    // Example: known `0 <= 2` and `x <= y` prove `2 * x <= 2 * y`.
+    MulLeftNonnegativeMonotone(MulLeftNonnegativeMonotoneBuiltinRuleProof),
+    // Right multiplication by a nonnegative: `0 <= k` and `a <= b` ⇒ `a * k <= b * k`.
+    MulRightNonnegativeMonotone(MulRightNonnegativeMonotoneBuiltinRuleProof),
+    // Absolute-value upper bound from symmetric bounds: `x <= a` and `-x <= a` ⇒ `abs(x) <= a`.
+    // Example: known `x <= 3` and `-x <= 3` prove `abs(x) <= 3`.
+    AbsLeFromSymmetricBounds(AbsLeFromSymmetricBoundsBuiltinRuleProof),
+    // Absolute-value upper bound implies the positive side: known `abs(x) <= a` ⇒ `x <= a`.
+    AbsLeImpliesUpper(AbsLeImpliesUpperBuiltinRuleProof),
+    // Absolute-value upper bound implies the negative side: known `abs(x) <= a` ⇒ `-x <= a`.
+    AbsLeImpliesNegUpper(AbsLeImpliesNegUpperBuiltinRuleProof),
+    // Self upper bound: `x <= abs(x)`.
+    AbsSelfUpper(AbsSelfUpperBuiltinRuleProof),
+    // Self lower bound: `-abs(x) <= x`.
+    AbsSelfLower(AbsSelfLowerBuiltinRuleProof),
+    // Triangle inequality: `abs(x + y) <= abs(x) + abs(y)`.
+    AbsTriangleInequality(AbsTriangleInequalityBuiltinRuleProof),
 }
 
 pub struct ClosedNumericComparisonBuiltinRuleProof {
@@ -88,6 +118,49 @@ pub struct AbsNonnegativeBuiltinRuleProof {}
 pub struct AddRightNonnegativeBuiltinRuleProof {
     pub nonnegative_addend_proof: VerifyFactResult,
 }
+
+pub struct AddLeftNonnegativeBuiltinRuleProof {
+    pub nonnegative_addend_proof: VerifyFactResult,
+}
+
+pub struct AddRightCongruenceBuiltinRuleProof {
+    pub premise_proof: VerifyFactResult,
+}
+
+pub struct AddLeftCongruenceBuiltinRuleProof {
+    pub premise_proof: VerifyFactResult,
+}
+
+pub struct SubNonnegativeBuiltinRuleProof {
+    pub nonnegative_subtrahend_proof: VerifyFactResult,
+}
+
+pub struct MulLeftNonnegativeMonotoneBuiltinRuleProof {
+    pub nonnegative_factor_proof: VerifyFactResult,
+    pub order_premise_proof: VerifyFactResult,
+}
+
+pub struct MulRightNonnegativeMonotoneBuiltinRuleProof {
+    pub nonnegative_factor_proof: VerifyFactResult,
+    pub order_premise_proof: VerifyFactResult,
+}
+
+pub struct AbsLeFromSymmetricBoundsBuiltinRuleProof {
+    pub upper_proof: VerifyFactResult,
+    pub neg_upper_proof: VerifyFactResult,
+}
+
+pub struct AbsLeImpliesUpperBuiltinRuleProof {
+    pub cite_fact_id: FactId,
+}
+
+pub struct AbsLeImpliesNegUpperBuiltinRuleProof {
+    pub cite_fact_id: FactId,
+}
+
+pub struct AbsSelfUpperBuiltinRuleProof {}
+pub struct AbsSelfLowerBuiltinRuleProof {}
+pub struct AbsTriangleInequalityBuiltinRuleProof {}
 
 impl Runtime {
     // Builtin: reflexivity, known `<`, abs/add order algebra, trig bounds, closed decimal `<=`.
@@ -127,7 +200,10 @@ impl Runtime {
                 )));
             }
         }
-        if let Some(proof) = self.add_right_nonnegative_proof(fact, verify_state)? {
+        if let Some(proof) = self.add_right_nonnegative_proof(fact, verify_state.clone())? {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) = self.search_order_abs_algebra_less_equal_proof(fact, verify_state)? {
             return Ok(Some(proof));
         }
         if match_arcsin_principal_lower(&fact.left, &fact.right) {
@@ -204,7 +280,7 @@ impl Runtime {
             return Ok(None);
         }
         let nonnegative = Fact::AtomicFact(AtomicFact::LessEqualFact(LessEqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: zero_obj(),
             right: right.as_ref().clone(),
             line_file: None,
@@ -223,13 +299,13 @@ impl Runtime {
     }
 }
 
-fn zero_obj() -> Obj {
+pub(super) fn zero_obj() -> Obj {
     Obj::Literal(Literal::Number(Number {
         normalized_value: "0".to_string(),
     }))
 }
 
-fn is_zero_obj(obj: &Obj) -> bool {
+pub(super) fn is_zero_obj(obj: &Obj) -> bool {
     matches!(
         obj,
         Obj::Literal(Literal::Number(Number {

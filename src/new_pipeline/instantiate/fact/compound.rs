@@ -28,7 +28,7 @@ impl Runtime {
                     facts.push(self.inst_atomic_fact_rec(f, param_to_arg_map)?);
                 }
                 Ok(QuantifierFreeFact::AndFact(AndFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     facts,
                     line_file: a.line_file.clone(),
                 }))
@@ -42,7 +42,7 @@ impl Runtime {
                     facts.push(self.inst_and_chain_atomic(f, param_to_arg_map)?);
                 }
                 Ok(QuantifierFreeFact::OrFact(OrFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     facts,
                     line_file: o.line_file.clone(),
                 }))
@@ -77,7 +77,7 @@ impl Runtime {
             objs.push(self.inst_obj_rec(o, param_to_arg_map)?);
         }
         Ok(ChainFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             objs,
             prop_names: fact.prop_names.clone(),
             line_file: fact.line_file.clone(),
@@ -100,7 +100,7 @@ impl Runtime {
                     facts.push(self.inst_atomic_fact_rec(f, param_to_arg_map)?);
                 }
                 Ok(AndChainAtomicFact::AndFact(AndFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     facts,
                     line_file: a.line_file.clone(),
                 }))

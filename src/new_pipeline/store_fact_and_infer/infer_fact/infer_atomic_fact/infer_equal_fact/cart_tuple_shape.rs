@@ -56,12 +56,12 @@ impl Runtime {
         equal_fact: &EqualFact,
     ) -> RuntimeResult<Vec<StoreFactAndInferResult>> {
         let is_cart = AtomicFact::IsCartFact(IsCartFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             set: target.clone(),
             line_file: equal_fact.line_file.clone(),
         });
         let dim_equal = AtomicFact::EqualFact(EqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: Obj::ProductShape(ProductShape::CartDim(CartDim {
                 set: Box::new(target.clone()),
             })),
@@ -87,12 +87,12 @@ impl Runtime {
             return Ok(Vec::new());
         }
         let is_tuple = AtomicFact::IsTupleFact(IsTupleFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             set: target.clone(),
             line_file: equal_fact.line_file.clone(),
         });
         let dim_equal = AtomicFact::EqualFact(EqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: Obj::ProductShape(ProductShape::TupleDim(TupleDim {
                 arg: Box::new(target.clone()),
             })),

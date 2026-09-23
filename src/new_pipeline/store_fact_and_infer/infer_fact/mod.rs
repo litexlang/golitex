@@ -16,8 +16,8 @@
 //! | 0 | And / Chain / NotForall / Or / Forall dispatch | done (framework) |
 //! | 1 | `exist!` uniqueness forall; `not exist` De Morgan forall | done |
 //! | 2 | NormalAtomic: expand def + param-type projection | done |
-//! | 3 | InFact membership families (Manual membership table) | done for N/sign/list/union/intersect/set_minus/cart/range/interval (+ set-builder/power_set); remaining fn_range/index_*/family_*/replacement/seq/matrix/struct |
-//! | 4 | EqualFact: cart/tuple + `u-v=0` (partial); remaining numeric/seq/matrix/fn/… | partial |
+//! | 3 | InFact membership families (Manual membership table) | done for N/sign/list/union/intersect/set_minus/cart/range/interval (+ set-builder/power_set); remaining fn_range/index_*/family_*/replacement/finite_seq|seq/struct |
+//! | 4 | EqualFact: cart/tuple + `u-v=0` | partial; remaining: set-builder side, anonymous-fn knowledge, numeric value bind, positive-real power (no matrix — not in new_pipeline AST) |
 //! | 5 | Subset/Superset forall; order→sign; `$is_cart` dim bound; mul-by-(-1) flip | done |
 //! | 6 | FnEqual → ordinary `=`; remaining atomic stubs | pending |
 

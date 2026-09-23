@@ -18,7 +18,7 @@ impl Runtime {
         }
         let binder = self.fresh_internal_param();
         let forall = ForallFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters: TypedParameterList {
                 groups: vec![TypedParameterGroup {
                     params: vec![binder.clone()],
@@ -28,7 +28,7 @@ impl Runtime {
             dom_facts: Vec::new(),
             then_facts: vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
                 InFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     element: Obj::Identifier(IdentifierObj::from_bound_name(&binder)),
                     set: subset.right.clone(),
                     line_file: subset.line_file.clone(),

@@ -269,14 +269,14 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<Vec<VerifyFactResult>>> {
         let lo: Fact = AtomicFact::LessEqualFact(LessEqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: lower.clone(),
             right: value.clone(),
             line_file: fact.line_file.clone(),
         })
         .into();
         let hi: Fact = AtomicFact::LessEqualFact(LessEqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: value.clone(),
             right: upper.clone(),
             line_file: fact.line_file.clone(),
@@ -302,14 +302,14 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<Vec<VerifyFactResult>>> {
         let lo: Fact = AtomicFact::LessFact(LessFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: lower.clone(),
             right: value.clone(),
             line_file: fact.line_file.clone(),
         })
         .into();
         let hi: Fact = AtomicFact::LessFact(LessFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: value.clone(),
             right: upper.clone(),
             line_file: fact.line_file.clone(),

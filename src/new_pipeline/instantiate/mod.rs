@@ -3,7 +3,7 @@
 //! ## Why these are `Runtime` methods
 //!
 //! Instantiation **builds new facts**. Every new fact must receive a fresh
-//! [`FactId`] by calling [`crate::new_pipeline::runtime::Ids::allocate_fact_id`],
+//! [`FactId`] by calling [`crate::new_pipeline::runtime::GlobalGlobalIds::allocate_fact_id`],
 //! which lives on [`Runtime::ids`] and advances the session counter. That is the
 //! reason the public entry points are `Runtime::inst_*` rather than free
 //! functions or methods on AST types alone.

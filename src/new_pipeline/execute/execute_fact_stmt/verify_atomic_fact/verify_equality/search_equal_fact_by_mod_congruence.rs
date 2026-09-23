@@ -36,7 +36,7 @@ impl Runtime {
         let mut proof_of_requirement_facts = Vec::with_capacity(3);
 
         let modulus_goal: Fact = EqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: left_mod.right.as_ref().clone(),
             right: right_mod.right.as_ref().clone(),
             line_file: fact.line_file.clone(),
@@ -53,7 +53,7 @@ impl Runtime {
         let right_modulus = right_mod.right.as_ref();
         for (left_op, right_op) in pairs {
             let child: Fact = EqualFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 left: residue_mod(&left_op, left_modulus),
                 right: residue_mod(&right_op, right_modulus),
                 line_file: fact.line_file.clone(),

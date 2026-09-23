@@ -118,7 +118,7 @@ impl Runtime {
                 ParamType::FiniteSet(_) => ParamTypeFactCheckResult::FiniteSet,
                 ParamType::Obj(param_set) => {
                     let nonempty_set = nonempty_check_set_for_param_obj(param_set);
-                    let fact_id = self.ids.allocate_fact_id();
+                    let fact_id = self.global_ids.allocate_fact_id();
                     let fact = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact {
                         fact_id,
                         set: nonempty_set,

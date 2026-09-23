@@ -53,7 +53,7 @@ impl Runtime {
             AtomicName::Plain { name } => name.as_str(),
             AtomicName::WithExportFileId { .. } | AtomicName::WithModAndExportFileId { .. } => {
                 return Ok(normal_or_not(
-                    self.ids.allocate_fact_id(),
+                    self.global_ids.allocate_fact_id(),
                     prop,
                     args,
                     positive,
@@ -76,7 +76,7 @@ impl Runtime {
             }
             IN => {
                 two_args(name, &args, &line_file)?;
-                let fact_id = self.ids.allocate_fact_id();
+                let fact_id = self.global_ids.allocate_fact_id();
                 if positive {
                     Ok(AtomicFact::InFact(InFact {
                         fact_id,
@@ -95,7 +95,7 @@ impl Runtime {
             }
             SUBSET => {
                 two_args(name, &args, &line_file)?;
-                let fact_id = self.ids.allocate_fact_id();
+                let fact_id = self.global_ids.allocate_fact_id();
                 if positive {
                     Ok(AtomicFact::SubsetFact(SubsetFact {
                         fact_id,
@@ -114,7 +114,7 @@ impl Runtime {
             }
             SUPERSET => {
                 two_args(name, &args, &line_file)?;
-                let fact_id = self.ids.allocate_fact_id();
+                let fact_id = self.global_ids.allocate_fact_id();
                 if positive {
                     Ok(AtomicFact::SupersetFact(SupersetFact {
                         fact_id,
@@ -133,7 +133,7 @@ impl Runtime {
             }
             IS_SET => {
                 one_arg(name, &args, &line_file)?;
-                let fact_id = self.ids.allocate_fact_id();
+                let fact_id = self.global_ids.allocate_fact_id();
                 if positive {
                     Ok(AtomicFact::IsSetFact(IsSetFact {
                         fact_id,
@@ -150,7 +150,7 @@ impl Runtime {
             }
             IS_NONEMPTY_SET => {
                 one_arg(name, &args, &line_file)?;
-                let fact_id = self.ids.allocate_fact_id();
+                let fact_id = self.global_ids.allocate_fact_id();
                 if positive {
                     Ok(AtomicFact::IsNonemptySetFact(IsNonemptySetFact {
                         fact_id,
@@ -167,7 +167,7 @@ impl Runtime {
             }
             IS_FINITE_SET => {
                 one_arg(name, &args, &line_file)?;
-                let fact_id = self.ids.allocate_fact_id();
+                let fact_id = self.global_ids.allocate_fact_id();
                 if positive {
                     Ok(AtomicFact::IsFiniteSetFact(IsFiniteSetFact {
                         fact_id,
@@ -184,7 +184,7 @@ impl Runtime {
             }
             IS_CART => {
                 one_arg(name, &args, &line_file)?;
-                let fact_id = self.ids.allocate_fact_id();
+                let fact_id = self.global_ids.allocate_fact_id();
                 if positive {
                     Ok(AtomicFact::IsCartFact(IsCartFact {
                         fact_id,
@@ -201,7 +201,7 @@ impl Runtime {
             }
             IS_TUPLE => {
                 one_arg(name, &args, &line_file)?;
-                let fact_id = self.ids.allocate_fact_id();
+                let fact_id = self.global_ids.allocate_fact_id();
                 if positive {
                     Ok(AtomicFact::IsTupleFact(IsTupleFact {
                         fact_id,
@@ -233,7 +233,7 @@ impl Runtime {
                     )
                     .into());
                 }
-                let fact_id = self.ids.allocate_fact_id();
+                let fact_id = self.global_ids.allocate_fact_id();
                 if positive {
                     Ok(AtomicFact::FnEqualInFact(FnEqualInFact {
                         fact_id,
@@ -253,7 +253,7 @@ impl Runtime {
                 }
             }
             _ => Ok(normal_or_not(
-                self.ids.allocate_fact_id(),
+                self.global_ids.allocate_fact_id(),
                 prop,
                 args,
                 positive,
@@ -319,7 +319,7 @@ fn build_binary_compare(
     positive: bool,
     line_file: LineFile,
 ) -> RuntimeResult<AtomicFact> {
-    let fact_id = rt.ids.allocate_fact_id();
+    let fact_id = rt.global_ids.allocate_fact_id();
     Ok(match (op, positive) {
         (EQUAL, true) => AtomicFact::EqualFact(EqualFact {
             fact_id,

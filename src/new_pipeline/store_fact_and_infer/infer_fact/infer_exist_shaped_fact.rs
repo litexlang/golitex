@@ -106,7 +106,7 @@ impl Runtime {
         let mut fresh = Vec::with_capacity(flat.len());
         for (i, binder) in flat.iter().enumerate() {
             fresh.push(BoundName::new(
-                self.ids.allocate_identifier_id(),
+                self.global_ids.allocate_identifier_id(),
                 format!("{}_ne{i}", binder.name),
             ));
         }
@@ -154,14 +154,14 @@ impl Runtime {
             }
         } else {
             ExistOrAndChainAtomicFact::OrFact(OrFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 facts: disjuncts,
                 line_file: plain.line_file.clone(),
             })
         };
 
         Ok(Some(ForallFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters: TypedParameterList {
                 groups: forall_groups,
             },
@@ -178,7 +178,7 @@ impl Runtime {
     ) -> RuntimeResult<Option<Vec<AndChainAtomicFact>>> {
         match conjunct {
             QuantifierFreeFact::AtomicFact(a) => {
-                let Some(neg) = negate_atomic_fact(a, self.ids.allocate_fact_id()) else {
+                let Some(neg) = negate_atomic_fact(a, self.global_ids.allocate_fact_id()) else {
                     return Ok(None);
                 };
                 Ok(Some(vec![AndChainAtomicFact::AtomicFact(neg)]))
@@ -189,7 +189,7 @@ impl Runtime {
                 }
                 let mut out = Vec::with_capacity(af.facts.len());
                 for a in &af.facts {
-                    let Some(neg) = negate_atomic_fact(a, self.ids.allocate_fact_id()) else {
+                    let Some(neg) = negate_atomic_fact(a, self.global_ids.allocate_fact_id()) else {
                         return Ok(None);
                     };
                     out.push(AndChainAtomicFact::AtomicFact(neg));
@@ -203,7 +203,7 @@ impl Runtime {
                 }
                 let mut out = Vec::with_capacity(adjacent.len());
                 for a in &adjacent {
-                    let Some(neg) = negate_atomic_fact(a, self.ids.allocate_fact_id()) else {
+                    let Some(neg) = negate_atomic_fact(a, self.global_ids.allocate_fact_id()) else {
                         return Ok(None);
                     };
                     out.push(AndChainAtomicFact::AtomicFact(neg));

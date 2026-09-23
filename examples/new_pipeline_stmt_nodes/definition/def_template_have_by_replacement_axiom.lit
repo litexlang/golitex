@@ -1,0 +1,17 @@
+# Stmt: Definition.DefTemplateStmt body HaveByReplacementAxiomStmt
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_stmt_nodes/definition/def_template_have_by_replacement_axiom.lit
+
+abstract_prop image_rel(x, y)
+
+trust:
+    forall x {1, 2}, y, y2 set:
+        $image_rel(x, y)
+        $image_rel(x, y2)
+        =>:
+            y = y2
+
+template<_S set>:
+    have Img set by replacement_axiom: prop image_rel, set {1, 2}
+
+\Img<{0}> = \Img<{0}>
+$is_set(\Img<{0}>)

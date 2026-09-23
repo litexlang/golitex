@@ -116,7 +116,7 @@ impl Runtime {
         proof: P,
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
         if verify_state.store_well_defined_fact {
-            let wd_id = self.ids.allocate_well_definedness_id();
+            let wd_id = self.global_ids.allocate_well_definedness_id();
             self.top_exec_env_mut()
                 .well_defined_objects
                 .record(obj, wd_id);
@@ -287,7 +287,7 @@ impl Runtime {
             None
         } else {
             let membership_fact = AtomicFact::InFact(InFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 element: value.equal_to.as_ref().clone(),
                 set: value.body.ret_set.as_ref().clone(),
                 line_file: None,

@@ -55,7 +55,7 @@ impl Runtime {
         let n = cart.args.len();
         let mut derived: Vec<StoreFactAndInferResult> = Vec::new();
 
-        let is_tuple_id = self.ids.allocate_fact_id();
+        let is_tuple_id = self.global_ids.allocate_fact_id();
         if let Some(ok) = self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(
             AtomicFact::IsTupleFact(IsTupleFact {
                 fact_id: is_tuple_id,
@@ -66,7 +66,7 @@ impl Runtime {
             derived.push(ok);
         }
 
-        let dim_eq_id = self.ids.allocate_fact_id();
+        let dim_eq_id = self.global_ids.allocate_fact_id();
         if let Some(ok) = self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(
             AtomicFact::EqualFact(EqualFact {
                 fact_id: dim_eq_id,
@@ -96,7 +96,7 @@ impl Runtime {
                     },
                 )),
             };
-            let in_id = self.ids.allocate_fact_id();
+            let in_id = self.global_ids.allocate_fact_id();
             if let Some(ok) = self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(
                 AtomicFact::InFact(InFact {
                     fact_id: in_id,
@@ -168,7 +168,7 @@ impl Runtime {
         let lf = in_fact.line_file.clone();
         let mut derived = Vec::new();
 
-        let in_z_id = self.ids.allocate_fact_id();
+        let in_z_id = self.global_ids.allocate_fact_id();
         derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(AtomicFact::InFact(
             InFact {
                 fact_id: in_z_id,
@@ -178,7 +178,7 @@ impl Runtime {
             },
         )))?);
 
-        let lower_id = self.ids.allocate_fact_id();
+        let lower_id = self.global_ids.allocate_fact_id();
         derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(
             AtomicFact::LessEqualFact(LessEqualFact {
                 fact_id: lower_id,
@@ -189,7 +189,7 @@ impl Runtime {
         ))?);
 
         if end_inclusive {
-            let upper_id = self.ids.allocate_fact_id();
+            let upper_id = self.global_ids.allocate_fact_id();
             derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(
                 AtomicFact::LessEqualFact(LessEqualFact {
                     fact_id: upper_id,
@@ -199,7 +199,7 @@ impl Runtime {
                 }),
             ))?);
         } else {
-            let upper_id = self.ids.allocate_fact_id();
+            let upper_id = self.global_ids.allocate_fact_id();
             derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(
                 AtomicFact::LessFact(LessFact {
                     fact_id: upper_id,
@@ -213,7 +213,7 @@ impl Runtime {
         if let Some(singleton) =
             self.singleton_value_for_integer_interval(&start, &end, end_inclusive)
         {
-            let eq_id = self.ids.allocate_fact_id();
+            let eq_id = self.global_ids.allocate_fact_id();
             derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(
                 AtomicFact::EqualFact(EqualFact {
                     fact_id: eq_id,
@@ -276,7 +276,7 @@ impl Runtime {
         };
         let mut derived = Vec::new();
 
-        let in_r_id = self.ids.allocate_fact_id();
+        let in_r_id = self.global_ids.allocate_fact_id();
         derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(AtomicFact::InFact(
             InFact {
                 fact_id: in_r_id,
@@ -287,7 +287,7 @@ impl Runtime {
         )))?);
 
         if left_closed {
-            let lower_id = self.ids.allocate_fact_id();
+            let lower_id = self.global_ids.allocate_fact_id();
             derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(
                 AtomicFact::LessEqualFact(LessEqualFact {
                     fact_id: lower_id,
@@ -297,7 +297,7 @@ impl Runtime {
                 }),
             ))?);
         } else {
-            let lower_id = self.ids.allocate_fact_id();
+            let lower_id = self.global_ids.allocate_fact_id();
             derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(
                 AtomicFact::LessFact(LessFact {
                     fact_id: lower_id,
@@ -309,7 +309,7 @@ impl Runtime {
         }
 
         if right_closed {
-            let upper_id = self.ids.allocate_fact_id();
+            let upper_id = self.global_ids.allocate_fact_id();
             derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(
                 AtomicFact::LessEqualFact(LessEqualFact {
                     fact_id: upper_id,
@@ -319,7 +319,7 @@ impl Runtime {
                 }),
             ))?);
         } else {
-            let upper_id = self.ids.allocate_fact_id();
+            let upper_id = self.global_ids.allocate_fact_id();
             derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(
                 AtomicFact::LessFact(LessFact {
                     fact_id: upper_id,
@@ -348,7 +348,7 @@ impl Runtime {
         let lf = in_fact.line_file.clone();
         let mut derived = Vec::new();
 
-        let in_r_id = self.ids.allocate_fact_id();
+        let in_r_id = self.global_ids.allocate_fact_id();
         derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(AtomicFact::InFact(
             InFact {
                 fact_id: in_r_id,
@@ -359,7 +359,7 @@ impl Runtime {
         )))?);
 
         // Match display/legacy: Left* = ray (a, +∞) / [a, +∞); Right* = (−∞, a) / (−∞, a].
-        let bound_id = self.ids.allocate_fact_id();
+        let bound_id = self.global_ids.allocate_fact_id();
         let bound = match interval {
             OneSideInfinityIntervalObj::LeftOpen(s) => AtomicFact::LessFact(LessFact {
                 fact_id: bound_id,

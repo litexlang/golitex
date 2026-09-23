@@ -72,7 +72,7 @@ impl Runtime {
         }
 
         let membership_fact = Fact::AtomicFact(AtomicFact::InFact(InFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             element: stmt.obj.clone(),
             set: stmt.set.clone(),
             line_file: Some(stmt.line_file.clone()),
@@ -85,7 +85,7 @@ impl Runtime {
         }
 
         let nonempty_fact = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             set: stmt.set.clone(),
             line_file: Some(stmt.line_file.clone()),
         }));

@@ -19,7 +19,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyAtomicFactWellDefinedResult> {
         if matches!(fact, AtomicFact::EqualFact(_)) {
-            return Err(RuntimeError::Unknown(
+            return Err(RuntimeError::InternalBug(
                 "EqualFact well-definedness must use verify_equal_fact_well_definedness"
                     .to_string(),
             ));

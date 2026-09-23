@@ -34,7 +34,7 @@ impl Runtime {
         if a.ir() == b.ir() {
             return Ok(None);
         }
-        let fact_id = self.ids.allocate_fact_id();
+        let fact_id = self.global_ids.allocate_fact_id();
         let atomic = AtomicFact::EqualFact(EqualFact {
             fact_id,
             left: a,

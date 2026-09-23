@@ -81,12 +81,12 @@ impl Runtime {
         let x = self.fresh_internal_param();
         let x_obj = Obj::Identifier(IdentifierObj::from_bound_name(&x));
         let forall = Fact::ForallFact(ForallFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters: typed_obj_params(vec![x], fact.left.clone()),
             dom_facts: vec![],
             then_facts: vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
                 InFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     element: x_obj,
                     set: fact.right.clone(),
                     line_file: None,
@@ -116,12 +116,12 @@ impl Runtime {
         let x = self.fresh_internal_param();
         let x_obj = Obj::Identifier(IdentifierObj::from_bound_name(&x));
         let forall = Fact::ForallFact(ForallFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters: typed_obj_params(vec![x], fact.right.clone()),
             dom_facts: vec![],
             then_facts: vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
                 InFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     element: x_obj,
                     set: fact.left.clone(),
                     line_file: None,
@@ -157,12 +157,12 @@ impl Runtime {
             return Ok(None);
         };
         let forall = Fact::ForallFact(ForallFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters: typed_obj_params(vec![x], fact.set.clone()),
             dom_facts: vec![],
             then_facts: vec![ExistOrAndChainAtomicFact::AtomicFact(
                 AtomicFact::EqualFact(EqualFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     left: fx,
                     right: gx,
                     line_file: None,
@@ -196,13 +196,13 @@ impl Runtime {
         let right = fact.body[1].clone();
         let requirements = vec![
             Fact::AtomicFact(AtomicFact::SubsetFact(SubsetFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 left: left.clone(),
                 right: right.clone(),
                 line_file: None,
             })),
             Fact::AtomicFact(AtomicFact::NotEqualFact(NotEqualFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 left,
                 right,
                 line_file: None,
@@ -234,13 +234,13 @@ impl Runtime {
         let right = fact.body[1].clone();
         let requirements = vec![
             Fact::AtomicFact(AtomicFact::SubsetFact(SubsetFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 left: right.clone(),
                 right: left.clone(),
                 line_file: None,
             })),
             Fact::AtomicFact(AtomicFact::NotEqualFact(NotEqualFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 left,
                 right,
                 line_file: None,
@@ -281,17 +281,17 @@ impl Runtime {
             return Ok(None);
         };
         let forall = Fact::ForallFact(ForallFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters: typed_obj_params(vec![x1, x2], domain),
             dom_facts: vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 left: fx1,
                 right: fx2,
                 line_file: None,
             }))],
             then_facts: vec![ExistOrAndChainAtomicFact::AtomicFact(
                 AtomicFact::EqualFact(EqualFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     left: x1_obj,
                     right: x2_obj,
                     line_file: None,
@@ -332,11 +332,11 @@ impl Runtime {
             return Ok(None);
         };
         let exist = PlainExistFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters: typed_obj_params(vec![x], domain),
             facts: vec![QuantifierFreeFact::AtomicFact(AtomicFact::EqualFact(
                 EqualFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     left: y_obj,
                     right: fx,
                     line_file: None,
@@ -345,7 +345,7 @@ impl Runtime {
             line_file: None,
         };
         let forall = Fact::ForallFact(ForallFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters: typed_obj_params(vec![y], codomain),
             dom_facts: vec![],
             then_facts: vec![ExistOrAndChainAtomicFact::ExistFact(exist)],
@@ -375,13 +375,13 @@ impl Runtime {
         }
         let requirements = vec![
             Fact::AtomicFact(AtomicFact::NormalAtomicFact(NormalAtomicFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 predicate: AtomicName::plain(INJECTIVE.to_string()),
                 body: fact.body.clone(),
                 line_file: None,
             })),
             Fact::AtomicFact(AtomicFact::NormalAtomicFact(NormalAtomicFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 predicate: AtomicName::plain(SURJECTIVE.to_string()),
                 body: fact.body.clone(),
                 line_file: None,
@@ -421,12 +421,12 @@ impl Runtime {
             return Ok(None);
         };
         let forall = Fact::ForallFact(ForallFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters: typed_obj_params(vec![alpha], index),
             dom_facts: vec![],
             then_facts: vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
                 InFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     element: f_alpha,
                     set: g_alpha,
                     line_file: None,
@@ -460,7 +460,7 @@ impl Runtime {
         let two = number_literal("2");
         let zero = number_literal("0");
         let lower = Fact::AtomicFact(AtomicFact::LessEqualFact(LessEqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: two.clone(),
             right: p.clone(),
             line_file: None,
@@ -476,12 +476,12 @@ impl Runtime {
             right: Box::new(d_obj),
         }));
         let trial = Fact::ForallFact(ForallFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters: typed_obj_params(vec![d], range),
             dom_facts: vec![],
             then_facts: vec![ExistOrAndChainAtomicFact::AtomicFact(
                 AtomicFact::NotEqualFact(NotEqualFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     left: rem,
                     right: zero,
                     line_file: None,
@@ -516,16 +516,16 @@ impl Runtime {
         let zero = number_literal("0");
         let one = number_literal("1");
         let non_all_zero = Fact::OrFact(OrFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             facts: vec![
                 AndChainAtomicFact::AtomicFact(AtomicFact::NotEqualFact(NotEqualFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     left: a.clone(),
                     right: zero.clone(),
                     line_file: None,
                 })),
                 AndChainAtomicFact::AtomicFact(AtomicFact::NotEqualFact(NotEqualFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     left: b.clone(),
                     right: zero,
                     line_file: None,
@@ -534,7 +534,7 @@ impl Runtime {
             line_file: None,
         });
         let gcd_one = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: Obj::IntegerOperator(IntegerOperator::Gcd(Gcd {
                 left: Box::new(a),
                 right: Box::new(b),
@@ -568,7 +568,7 @@ impl Runtime {
         let y = fact.body[1].clone();
         let zero = number_literal("0");
         let rem_zero = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: Obj::IntegerOperator(IntegerOperator::Mod(Mod {
                 left: Box::new(x.clone()),
                 right: Box::new(y.clone()),
@@ -579,11 +579,11 @@ impl Runtime {
         let a = self.fresh_internal_param();
         let a_obj = Obj::Identifier(IdentifierObj::from_bound_name(&a));
         let multiple = Fact::ExistFact(PlainExistFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters: typed_obj_params(vec![a], Obj::StandardSet(StandardSet::Z)),
             facts: vec![QuantifierFreeFact::AtomicFact(AtomicFact::EqualFact(
                 EqualFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     left: x,
                     right: Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
                         left: Box::new(a_obj),

@@ -258,11 +258,11 @@ impl Runtime {
         let mut copy_b = Vec::with_capacity(n);
         for (i, binder) in flat.iter().enumerate() {
             copy_a.push(BoundName::new(
-                self.ids.allocate_identifier_id(),
+                self.global_ids.allocate_identifier_id(),
                 format!("{}_a{i}", binder.name),
             ));
             copy_b.push(BoundName::new(
-                self.ids.allocate_identifier_id(),
+                self.global_ids.allocate_identifier_id(),
                 format!("{}_b{i}", binder.name),
             ));
         }
@@ -335,7 +335,7 @@ impl Runtime {
             let left = witness_tuple_or_single(&copy_a);
             let right = witness_tuple_or_single(&copy_b);
             let equal = AtomicFact::EqualFact(EqualFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 left,
                 right,
                 line_file: plain.line_file.clone(),
@@ -345,21 +345,21 @@ impl Runtime {
             let mut equals = Vec::with_capacity(n);
             for (left_b, right_b) in copy_a.iter().zip(copy_b.iter()) {
                 equals.push(AtomicFact::EqualFact(EqualFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     left: Obj::Identifier(IdentifierObj::from_bound_name(left_b)),
                     right: Obj::Identifier(IdentifierObj::from_bound_name(right_b)),
                     line_file: plain.line_file.clone(),
                 }));
             }
             vec![ExistOrAndChainAtomicFact::AndFact(AndFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 facts: equals,
                 line_file: plain.line_file.clone(),
             })]
         };
 
         Ok(ForallFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters: TypedParameterList {
                 groups: forall_groups,
             },

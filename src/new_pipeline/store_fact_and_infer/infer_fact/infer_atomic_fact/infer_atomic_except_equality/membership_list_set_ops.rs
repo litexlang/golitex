@@ -47,7 +47,7 @@ impl Runtime {
         }
         let lf = in_fact.line_file.clone();
         if let [singleton] = list_set.list.as_slice() {
-            let fact_id = self.ids.allocate_fact_id();
+            let fact_id = self.global_ids.allocate_fact_id();
             let atomic = AtomicFact::EqualFact(EqualFact {
                 fact_id,
                 left: in_fact.element.clone(),
@@ -63,7 +63,7 @@ impl Runtime {
         }
         let mut branches = Vec::with_capacity(list_set.list.len());
         for item in &list_set.list {
-            let fact_id = self.ids.allocate_fact_id();
+            let fact_id = self.global_ids.allocate_fact_id();
             branches.push(AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
                 EqualFact {
                     fact_id,
@@ -73,7 +73,7 @@ impl Runtime {
                 },
             )));
         }
-        let fact_id = self.ids.allocate_fact_id();
+        let fact_id = self.global_ids.allocate_fact_id();
         let or_fact = Fact::OrFact(OrFact {
             fact_id,
             facts: branches,
@@ -95,9 +95,9 @@ impl Runtime {
             return Ok(None);
         };
         let lf = in_fact.line_file.clone();
-        let left_id = self.ids.allocate_fact_id();
-        let right_id = self.ids.allocate_fact_id();
-        let or_id = self.ids.allocate_fact_id();
+        let left_id = self.global_ids.allocate_fact_id();
+        let right_id = self.global_ids.allocate_fact_id();
+        let or_id = self.global_ids.allocate_fact_id();
         let or_fact = Fact::OrFact(OrFact {
             fact_id: or_id,
             facts: vec![
@@ -131,7 +131,7 @@ impl Runtime {
         };
         let lf = in_fact.line_file.clone();
         let mut derived: Vec<StoreFactAndInferResult> = Vec::with_capacity(2);
-        let left_id = self.ids.allocate_fact_id();
+        let left_id = self.global_ids.allocate_fact_id();
         derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(AtomicFact::InFact(
             InFact {
                 fact_id: left_id,
@@ -140,7 +140,7 @@ impl Runtime {
                 line_file: lf.clone(),
             },
         )))?);
-        let right_id = self.ids.allocate_fact_id();
+        let right_id = self.global_ids.allocate_fact_id();
         derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(AtomicFact::InFact(
             InFact {
                 fact_id: right_id,
@@ -166,7 +166,7 @@ impl Runtime {
         let lf = in_fact.line_file.clone();
         let right_set = sm.right.as_ref().clone();
         let mut derived: Vec<StoreFactAndInferResult> = Vec::new();
-        let in_left_id = self.ids.allocate_fact_id();
+        let in_left_id = self.global_ids.allocate_fact_id();
         derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(AtomicFact::InFact(
             InFact {
                 fact_id: in_left_id,
@@ -175,7 +175,7 @@ impl Runtime {
                 line_file: lf.clone(),
             },
         )))?);
-        let not_in_id = self.ids.allocate_fact_id();
+        let not_in_id = self.global_ids.allocate_fact_id();
         derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(
             AtomicFact::NotInFact(NotInFact {
                 fact_id: not_in_id,
@@ -186,7 +186,7 @@ impl Runtime {
         ))?);
         if let Obj::SetFormer(SetFormer::ListSet(list_set)) = &right_set {
             if let [excluded] = list_set.list.as_slice() {
-                let ne_id = self.ids.allocate_fact_id();
+                let ne_id = self.global_ids.allocate_fact_id();
                 derived.push(self.store_inferred_fact_and_infer(&Fact::AtomicFact(
                     AtomicFact::NotEqualFact(NotEqualFact {
                         fact_id: ne_id,

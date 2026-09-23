@@ -35,13 +35,13 @@ impl Runtime {
         let child_state = verify_state.without_well_defined_storage();
         let required = [
             LessEqualFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 left: fact.left.clone(),
                 right: fact.right.clone(),
                 line_file: fact.line_file.clone(),
             },
             LessEqualFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 left: fact.right.clone(),
                 right: fact.left.clone(),
                 line_file: fact.line_file.clone(),

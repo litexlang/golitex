@@ -15,7 +15,7 @@ impl Runtime {
         let mut rules = Vec::new();
         if let Some(builder) = self.resolve_set_builder_for_membership_projection(&in_fact.set) {
             let mut derived = Vec::new();
-            let fact_id = self.ids.allocate_fact_id();
+            let fact_id = self.global_ids.allocate_fact_id();
             let base_in = AtomicFact::InFact(InFact {
                 fact_id,
                 element: in_fact.element.clone(),
@@ -37,7 +37,7 @@ impl Runtime {
             ));
         }
         if let Some(base) = self.resolve_power_set_base_for_membership_projection(&in_fact.set) {
-            let fact_id = self.ids.allocate_fact_id();
+            let fact_id = self.global_ids.allocate_fact_id();
             let subset = AtomicFact::SubsetFact(crate::new_pipeline::ast::fact::SubsetFact {
                 fact_id,
                 left: in_fact.element.clone(),

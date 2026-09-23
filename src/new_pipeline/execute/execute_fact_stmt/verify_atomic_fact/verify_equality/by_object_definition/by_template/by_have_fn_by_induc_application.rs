@@ -94,7 +94,7 @@ impl Runtime {
             rewrite_plain_self_apps_to_template_instance(&raw_body, &stmt.name, inst);
 
         let residual = EqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: expanded_body.clone(),
             right: other_side.clone(),
             line_file: parent_fact.line_file.clone(),

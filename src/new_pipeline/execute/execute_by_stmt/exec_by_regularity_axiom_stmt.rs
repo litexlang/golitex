@@ -28,7 +28,7 @@ pub fn exec_by_regularity_axiom_stmt(
     // Obligation: A is nonempty before the foundation step applies.
     // Example: by regularity_axiom(A) requires $is_nonempty_set(A).
     let nonempty: Fact = IsNonemptySetFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         set: stmt.set.clone(),
         line_file: Some(stmt.line_file.clone()),
     }
@@ -75,7 +75,7 @@ fn regularity_axiom_exist_fact(
     let x_obj = Obj::Identifier(IdentifierObj::from_bound_name(&x));
     let empty_set = Obj::SetFormer(SetFormer::ListSet(ListSet { list: vec![] }));
     let disjoint: AtomicFact = EqualFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         left: Obj::SetOperator(SetOperator::Intersect(Intersect {
             left: Box::new(x_obj),
             right: Box::new(set.clone()),
@@ -85,7 +85,7 @@ fn regularity_axiom_exist_fact(
     }
     .into();
     Fact::ExistFact(PlainExistFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         typed_parameters: TypedParameterList {
             groups: vec![TypedParameterGroup {
                 params: vec![x],

@@ -23,13 +23,13 @@ pub fn format_internal_fact_name(id: FactId) -> String {
 impl Runtime {
     /// Allocate a fresh binder: `BoundName { id, name: __param_<id> }`.
     pub fn fresh_internal_param(&mut self) -> BoundName {
-        let id = self.ids.allocate_identifier_id();
+        let id = self.global_ids.allocate_identifier_id();
         BoundName::new(id, format_internal_param_name(id))
     }
 
     /// Allocate a FactId and a printable internal fact name `__fact_<id>`.
     pub fn fresh_internal_fact_name(&mut self) -> (String, FactId) {
-        let id = self.ids.allocate_fact_id();
+        let id = self.global_ids.allocate_fact_id();
         (format_internal_fact_name(id), id)
     }
 }

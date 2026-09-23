@@ -233,7 +233,7 @@ impl Runtime {
                     ParamType::NonemptySet(_) => ParamTypeFactCheckResult::NonemptySet,
                     ParamType::FiniteSet(_) => ParamTypeFactCheckResult::FiniteSet,
                     ParamType::Obj(param_set) => {
-                        let fact_id = self.ids.allocate_fact_id();
+                        let fact_id = self.global_ids.allocate_fact_id();
                         let fact = Fact::AtomicFact(AtomicFact::InFact(InFact {
                             fact_id,
                             element: witness.clone(),

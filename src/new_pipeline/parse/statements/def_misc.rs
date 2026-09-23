@@ -318,6 +318,9 @@ fn template_def_enum_from_body_stmt(
         Stmt::Definition(DefinitionStmt::HaveObjByExistFactsStmt(stmt)) => {
             Ok(TemplateDefEnum::HaveObjByExistFactsStmt(stmt))
         }
+        Stmt::Definition(DefinitionStmt::HaveByReplacementAxiomStmt(stmt)) => {
+            Ok(TemplateDefEnum::HaveByReplacementAxiomStmt(stmt))
+        }
         Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(stmt)) => {
             Ok(TemplateDefEnum::TrustHaveStmt(stmt))
         }
@@ -353,6 +356,7 @@ fn template_def_enum_name(body: &TemplateDefEnum) -> Option<String> {
         TemplateDefEnum::HaveObjInNonemptySetStmt(stmt) => first_typed_param_name(&stmt.param_def),
         TemplateDefEnum::HaveObjEqualStmt(stmt) => first_typed_param_name(&stmt.param_def),
         TemplateDefEnum::HaveObjByExistFactsStmt(stmt) => first_typed_param_name(&stmt.param_def),
+        TemplateDefEnum::HaveByReplacementAxiomStmt(stmt) => Some(stmt.name.name.clone()),
         TemplateDefEnum::TrustHaveStmt(stmt) => first_typed_param_name(&stmt.param_def),
         TemplateDefEnum::ObtainObjFromExistFact(stmt) => stmt.equal_tos.first().cloned(),
         TemplateDefEnum::ObtainObjFromAtomicFact(stmt) => stmt.equal_tos.first().cloned(),

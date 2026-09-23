@@ -128,7 +128,7 @@ impl Runtime {
         let function_ident = self.identifier_obj_for_file_root_symbol(stmt.name.clone());
         let function_obj = Obj::Identifier(function_ident.clone());
 
-        let membership_fact_id = self.ids.allocate_fact_id();
+        let membership_fact_id = self.global_ids.allocate_fact_id();
         let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
             fact_id: membership_fact_id,
             element: function_obj,
@@ -195,7 +195,7 @@ impl Runtime {
         };
         let fn_set = fn_set_from_clause(&shape.fn_set_clause);
         let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             element: surface.clone(),
             set: Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)),
             line_file: Some(stmt.line_file.clone()),
@@ -279,7 +279,7 @@ impl Runtime {
             then_facts.push(quantifier_free_to_exist_or_and_chain(inst));
         }
         Ok(ForallFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters: stmt.forall.typed_parameters.clone(),
             dom_facts: stmt.forall.dom_facts.clone(),
             then_facts,
@@ -294,7 +294,7 @@ impl Runtime {
         applied: Obj,
     ) -> RuntimeResult<ForallFact> {
         let fresh_witness = BoundName::new(
-            self.ids.allocate_identifier_id(),
+            self.global_ids.allocate_identifier_id(),
             shape.witness.name.clone(),
         );
         let fresh_obj = Obj::Identifier(IdentifierObj::from_bound_name(&fresh_witness));
@@ -317,9 +317,9 @@ impl Runtime {
             dom_facts.push(quantifier_free_fact_to_fact(inst));
         }
 
-        let equal_fact_id = self.ids.allocate_fact_id();
+        let equal_fact_id = self.global_ids.allocate_fact_id();
         Ok(ForallFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters: TypedParameterList { groups: params },
             dom_facts,
             then_facts: vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(

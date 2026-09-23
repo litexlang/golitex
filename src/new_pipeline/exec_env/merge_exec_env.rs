@@ -8,7 +8,9 @@
 //! the parent stay intact; the session can continue there.
 //! Success is the only path that commits the child into the parent via merge.
 //!
-//! FactIds are global session counters; merge only mounts child-owned state.
+//! FactIds are global session counters on `Runtime`; merge only mounts
+//! child-owned defs / facts / WD / special props / prop-rewrite props.
+//! `global_ids_at_enter` / `global_ids_at_leave` are never merged.
 
 use super::exec_env::ExecEnv;
 use super::maybe_index_known_closed_numeric_equal;
