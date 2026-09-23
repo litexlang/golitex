@@ -29,7 +29,6 @@ pub enum ObjWellDefinedProofByDef {
     FiniteSetStat(FiniteSetStatObjWellDefinedProofByDef),
     Structish(StructishObjWellDefinedProofByDef),
     InstantiatedTemplateObj(InstantiatedTemplateObjObjWellDefinedProof),
-    ReplacementImage(ReplacementImageObjWellDefinedProof),
 }
 
 pub enum LiteralObjWellDefinedProofByDef {
@@ -904,19 +903,6 @@ impl FnRangeObjWellDefinedProof {
     }
 }
 
-pub struct ReplacementImageObjWellDefinedProof {
-    pub child_obj_well_defined: Vec<(Obj, VerifyObjWellDefinedResult)>,
-    pub requirement_fact_verified: Vec<VerifyFactResult>,
-}
-
-impl ReplacementImageObjWellDefinedProof {
-    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
-        Self {
-            child_obj_well_defined: stages.child_obj_well_defined,
-            requirement_fact_verified: stages.requirement_fact_verified,
-        }
-    }
-}
 
 pub struct SumObjWellDefinedProof {
     pub child_obj_well_defined: Vec<(Obj, VerifyObjWellDefinedResult)>,

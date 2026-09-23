@@ -134,7 +134,6 @@ pub const FINITE_SET_SIZE: &str = "finite_set_size";
 pub const FINITE_SET_MAX: &str = "finite_set_max";
 pub const FINITE_SET_MIN: &str = "finite_set_min";
 pub const FN_RANGE: &str = "fn_range";
-pub const REPLACEMENT_IMAGE: &str = "replacement_image";
 pub const RANGE: &str = "range";
 pub const CLOSED_RANGE: &str = "closed_range";
 pub const SUM: &str = "sum";
@@ -164,6 +163,7 @@ pub const REFLEXIVE_PROP: &str = "reflexive_prop";
 pub const ZORN_LEMMA: &str = "zorn_lemma";
 pub const AXIOM_OF_CHOICE: &str = "axiom_of_choice";
 pub const REGULARITY_AXIOM: &str = "regularity_axiom";
+pub const REPLACEMENT_AXIOM: &str = "replacement_axiom";
 pub const IS_CHOICE_FUNCTION_FOR: &str = "is_choice_function_for";
 
 pub const N: &str = "N";

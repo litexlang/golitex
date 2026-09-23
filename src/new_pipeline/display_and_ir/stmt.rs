@@ -65,6 +65,7 @@ impl DefinitionStmt {
             DefinitionStmt::ObtainObjFromAtomicFact(x) => x.ir(),
             DefinitionStmt::ObtainObjFromThm(x) => x.ir(),
             DefinitionStmt::HaveByPreimageStmt(x) => x.ir(),
+            DefinitionStmt::HaveByReplacementAxiomStmt(x) => x.ir(),
             DefinitionStmt::HaveFnEqualStmt(x) => x.ir(),
             DefinitionStmt::HaveFnEqualCaseByCaseStmt(x) => x.ir(),
             DefinitionStmt::HaveFnByInducStmt(x) => x.ir(),
@@ -346,6 +347,24 @@ impl HaveByPreimageStmt {
             self.preimage_names.join(", "),
             FROM,
             self.range_membership.ir()
+        ))
+    }
+    impl_display_pair!();
+}
+
+impl HaveByReplacementAxiomStmt {
+    pub fn ir(&self) -> StmtIR {
+        StmtIR(format!(
+            "{} {} {} {} {}{}{}, {}{}",
+            HAVE,
+            self.name,
+            SET,
+            BY,
+            REPLACEMENT_AXIOM,
+            LEFT_PAREN,
+            self.prop_name.ir(),
+            self.source_set.ir(),
+            RIGHT_PAREN
         ))
     }
     impl_display_pair!();

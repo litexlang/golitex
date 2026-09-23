@@ -428,6 +428,126 @@ fn order_sign_infers_from_literal_bound() {
 }
 
 #[test]
+fn order_flip_mul_minus_one_from_less_zero() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have a R").is_failed());
+    assert!(!exec_one(&mut runtime, "trust a < 0").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "(-1) * a >= 0").is_failed(),
+        "a < 0 must infer (-1)*a >= 0"
+    );
+}
+
+#[test]
+fn natural_membership_infers_nonnegative() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have k N").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "k >= 0").is_failed(),
+        "k $in N must infer k >= 0"
+    );
+}
+
+#[test]
+fn positive_standard_set_membership_infers_positive() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have a R+").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "0 < a").is_failed(),
+        "a $in R+ must infer 0 < a"
+    );
+}
+
+#[test]
+fn list_set_singleton_membership_infers_equality() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have x {2}").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "x = 2").is_failed(),
+        "x $in {{2}} must infer x = 2"
+    );
+}
+
+#[test]
+fn list_set_membership_infers_or_equalities() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have a {1, 2}").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "a = 1 or a = 2").is_failed(),
+        "a $in {{1,2}} must infer a=1 or a=2"
+    );
+}
+
+#[test]
+fn union_membership_infers_or() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have A set").is_failed());
+    assert!(!exec_one(&mut runtime, "have B set").is_failed());
+    assert!(!exec_one(&mut runtime, "have x set").is_failed());
+    assert!(!exec_one(&mut runtime, "trust x $in union(A, B)").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "x $in A or x $in B").is_failed(),
+        "union membership must infer or of component memberships"
+    );
+}
+
+#[test]
+fn intersect_membership_infers_both() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have A set").is_failed());
+    assert!(!exec_one(&mut runtime, "have B set").is_failed());
+    assert!(!exec_one(&mut runtime, "have x set").is_failed());
+    assert!(!exec_one(&mut runtime, "trust x $in intersect(A, B)").is_failed());
+    assert!(!exec_one(&mut runtime, "x $in A").is_failed());
+    assert!(!exec_one(&mut runtime, "x $in B").is_failed());
+}
+
+#[test]
+fn set_minus_membership_infers_split() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have x set").is_failed());
+    assert!(!exec_one(&mut runtime, "trust x $in set_minus({1, 2}, {2})").is_failed());
+    assert!(!exec_one(&mut runtime, "x $in {1, 2}").is_failed());
+    assert!(!exec_one(&mut runtime, "not x $in {2}").is_failed());
+    assert!(!exec_one(&mut runtime, "x != 2").is_failed());
+}
+
+#[test]
+fn cart_membership_infers_coordinate_membership() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have u set").is_failed());
+    assert!(!exec_one(&mut runtime, "trust u $in cart(R, Z)").is_failed());
+    assert!(!exec_one(&mut runtime, "$is_tuple(u)").is_failed());
+    assert!(!exec_one(&mut runtime, "tuple_dim(u) = 2").is_failed());
+    assert!(!exec_one(&mut runtime, "u[1] $in R").is_failed());
+    assert!(!exec_one(&mut runtime, "u[2] $in Z").is_failed());
+}
+
+#[test]
+fn range_membership_infers_integer_bounds() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have i1 Z").is_failed());
+    assert!(!exec_one(&mut runtime, "trust i1 $in range(2, 6)").is_failed());
+    assert!(!exec_one(&mut runtime, "i1 $in Z").is_failed());
+    assert!(!exec_one(&mut runtime, "2 <= i1").is_failed());
+    assert!(!exec_one(&mut runtime, "i1 < 6").is_failed());
+}
+
+#[test]
+
+
+fn subtraction_equals_zero_infers_equality() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have a R").is_failed());
+    assert!(!exec_one(&mut runtime, "have b R").is_failed());
+    assert!(!exec_one(&mut runtime, "trust a - b = 0").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "a = b").is_failed(),
+        "a - b = 0 must infer a = b"
+    );
+}
+
+#[test]
 fn normal_atomic_param_type_projection() {
     let mut runtime = runtime_with_file_env();
     assert!(
@@ -1392,6 +1512,57 @@ fn fn_arrow_sugar_desugars_to_fn_set() {
         "cart must bind tighter than arrow"
     );
     assert!(!exec_one(&mut runtime, "U = U").is_failed());
+}
+
+#[test]
+fn fn_set_obj_param_domain_must_not_cite_earlier_binder() {
+    use crate::new_pipeline::execute::execute_fact_stmt::well_defined_results::{
+        FailToVerifyFnSetObjWellDefined, FailToVerifyFunctionSpaceObjWellDefinedResult,
+        FailToVerifyObjWellDefinedResult, VerifyObjWellDefinedResult,
+    };
+    use crate::new_pipeline::execute::execute_let_stmt::ExecLetObjStmtResult;
+    use crate::new_pipeline::execute::exec_stmt_result::ExecDefinitionStmtResult;
+    use crate::new_pipeline::execute::ExecStmtResult;
+
+    // Flat dependent obj carriers are rejected: domain sets must be fixed up front.
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have S fn(x R) power_set(R)").is_failed());
+    match exec_one(&mut runtime, "let F = fn(x R, y S(x)) R") {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::LetObj(
+            ExecLetObjStmtResult::Failed(VerifyObjWellDefinedResult::Failed(
+                FailToVerifyObjWellDefinedResult::FunctionSpace(
+                    FailToVerifyFunctionSpaceObjWellDefinedResult::FnSet(
+                        FailToVerifyFnSetObjWellDefined::ParamTypeCitesEarlierBinder {
+                            failed_index: 1,
+                        },
+                    ),
+                ),
+            )),
+        )) => {}
+        other => panic!(
+            "expected ParamTypeCitesEarlierBinder at group 1, got failed={}",
+            other.is_failed()
+        ),
+    }
+    assert!(
+        exec_one(&mut runtime, "let g = fn(x R, y S(x)) R {y}").is_failed(),
+        "anonymous fn with dependent obj carrier must soft-fail"
+    );
+
+    // Non-dependent multi-arg and curried return-set dependence remain OK.
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(&mut runtime, "let F = fn(x R, y Z) R").is_failed(),
+        "fn(x R, y Z) must WD"
+    );
+    assert!(
+        !exec_one(&mut runtime, "let G = fn(S power_set(R)) fn(x S) R").is_failed(),
+        "curried return may cite earlier parameter"
+    );
+    assert!(
+        !exec_one(&mut runtime, "let H = fn(x R, y Z: y > x) R").is_failed(),
+        "dom_facts may cite earlier parameters"
+    );
 }
 
 #[test]
@@ -2385,7 +2556,6 @@ fn membership_in_named_fn_set_from_known_membership_in_alpha_equal_fn_set() {
     );
 }
 
-#[test]
 #[test]
 fn anonymous_fn_alpha_equal_and_free_params_lookup_builtins() {
     let mut runtime = runtime_with_file_env();

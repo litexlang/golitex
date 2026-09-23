@@ -769,7 +769,10 @@ impl Runtime {
         }))
     }
 
-    fn parse_prop_name(&mut self, tb: &mut TokenBlock) -> RuntimeResult<AtomicName> {
+    pub(in crate::new_pipeline::parse) fn parse_prop_name(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> RuntimeResult<AtomicName> {
         let first = tb.advance()?;
         if tb.peek() == Some(MOD_FLAT_SIGN) {
             tb.advance()?;

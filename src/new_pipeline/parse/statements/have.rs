@@ -1,15 +1,17 @@
-use super::super::keywords::{COLON, EQUAL};
+use super::super::keywords::{BY, COLON, EQUAL, LEFT_PAREN, REPLACEMENT_AXIOM, RIGHT_PAREN};
 use super::super::object::parse_obj;
 use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::ast::stmt::{
-    DefinitionStmt, HaveObjByExistFactsStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt,
-    Stmt,
+    DefinitionStmt, HaveByReplacementAxiomStmt, HaveObjByExistFactsStmt, HaveObjEqualStmt,
+    HaveObjInNonemptySetOrParamTypeStmt, Stmt,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
 
 impl Runtime {
     // have x T | have x, y T | have x = obj | have x T: facts
+    // | have Img set by replacement_axiom(P, A)
     pub(in super::super) fn parse_have_obj_stmt(
         &mut self,
         block: &TokenBlock,
@@ -25,6 +27,14 @@ impl Runtime {
                 .iter()
                 .flat_map(|g| g.params.iter().cloned())
                 .collect();
+
+            if tb.peek() == Some(BY) {
+                return self.parse_have_by_replacement_axiom_tail(
+                    &mut tb,
+                    param_def,
+                    identifiers,
+                );
+            }
 
             if tb.peek() == Some(COLON) {
                 tb.expect(COLON)?;
@@ -58,9 +68,9 @@ impl Runtime {
             }
 
             if !tb.exceed_end_of_head() {
-                return Err(
-                    tb.parse_error("have: expected `=`, `:`, or end of header after parameters")
-                );
+                return Err(tb.parse_error(
+                    "have: expected `=`, `:`, `by replacement_axiom`, or end of header after parameters",
+                ));
             }
             if !tb.body.is_empty() {
                 return Err(tb.parse_error("have without `=`/`:` cannot have an indented body"));
@@ -105,7 +115,61 @@ impl Runtime {
                     },
                 )))
             }
+            HaveObjKind::ByReplacementAxiom(name, prop_name, source_set) => {
+                self.occupy_bound_name_as_parse(block, &name)?;
+                Ok(Stmt::Definition(
+                    DefinitionStmt::HaveByReplacementAxiomStmt(HaveByReplacementAxiomStmt {
+                        name,
+                        prop_name,
+                        source_set,
+                        line_file: LineFile::new(block.line, block.source_path.clone()),
+                    }),
+                ))
+            }
         }
+    }
+
+    // `by replacement_axiom(P, A)` after a single `name set` binding.
+    fn parse_have_by_replacement_axiom_tail(
+        &mut self,
+        tb: &mut TokenBlock,
+        param_def: TypedParameterList,
+        identifiers: Vec<crate::new_pipeline::ast::names::BoundName>,
+    ) -> RuntimeResult<HaveObjKind> {
+        tb.expect(BY)?;
+        tb.expect(REPLACEMENT_AXIOM)?;
+        tb.expect(LEFT_PAREN)?;
+        let prop_name = self.parse_prop_name(tb)?;
+        tb.expect(super::super::keywords::COMMA)?;
+        let source_set = parse_obj(self, tb)?;
+        tb.expect(RIGHT_PAREN)?;
+        if !tb.exceed_end_of_head() {
+            return Err(tb.parse_error(
+                "trailing tokens after `have … by replacement_axiom(...)`",
+            ));
+        }
+        if !tb.body.is_empty() {
+            return Err(tb.parse_error(
+                "`have … by replacement_axiom` cannot have an indented body",
+            ));
+        }
+        if identifiers.len() != 1 {
+            return Err(tb.parse_error(
+                "`have … by replacement_axiom` expects exactly one name",
+            ));
+        }
+        if param_def.groups.len() != 1
+            || !matches!(param_def.groups[0].param_type, ParamType::Set(_))
+        {
+            return Err(tb.parse_error(
+                "`have … by replacement_axiom` expects `name set`",
+            ));
+        }
+        Ok(HaveObjKind::ByReplacementAxiom(
+            identifiers.into_iter().next().unwrap(),
+            prop_name,
+            source_set,
+        ))
     }
 }
 
@@ -123,5 +187,10 @@ enum HaveObjKind {
         crate::new_pipeline::ast::param::TypedParameterList,
         Vec<crate::new_pipeline::ast::fact::QuantifierFreeFact>,
         Vec<crate::new_pipeline::ast::names::BoundName>,
+    ),
+    ByReplacementAxiom(
+        crate::new_pipeline::ast::names::BoundName,
+        crate::new_pipeline::ast::names::AtomicName,
+        crate::new_pipeline::ast::obj::Obj,
     ),
 }

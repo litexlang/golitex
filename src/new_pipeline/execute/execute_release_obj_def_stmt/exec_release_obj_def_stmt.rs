@@ -35,6 +35,11 @@ pub enum ReleaseObjDefByKind {
         type_fact: Fact,
         body_facts: Vec<Fact>,
     },
+    HaveByReplacementAxiom {
+        type_fact: Fact,
+        intro: Fact,
+        elim: Fact,
+    },
     HaveFnEqual {
         membership: Fact,
         equal_to_anon: Fact,

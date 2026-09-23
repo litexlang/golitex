@@ -5,9 +5,10 @@ use crate::new_pipeline::ast::param::{
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
+use crate::new_pipeline::instantiate::collect_free_plain_ids;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 impl Runtime {
     pub(super) fn verify_objs_as_children(
@@ -117,4 +118,37 @@ pub(super) fn anonymous_fn_body_is_bound_param(value: &AnonymousFn) -> bool {
         }
     }
     false
+}
+
+// FnSet / AnonymousFn obj carriers must be fixed sets: a later group's
+// `param_type` must not freely mention an earlier binder of the same signature.
+// Example reject: `fn(x R, y S(x))`.
+//
+// Why forall may look similar but is allowed: `forall S set, x S` uses binder
+// *kinds* on TypedParameterList (`ParamType::Set`, then `Obj(S)`). That is a
+// telescope over "introduce a set, then an element of it", not a function
+// domain object. A set-theoretic function signature must fix each ordinary
+// domain set up front, so SetBoundParameterList forbids the same dependence.
+// Kind telescopes stay on introduce_typed_parameters (sequential). Return sets
+// and `: dom_facts` may still cite parameters after binders are introduced.
+//
+// Returns the failing group index when a citation is found.
+pub(super) fn set_bound_param_type_cites_earlier_binder(
+    list: &SetBoundParameterList,
+) -> Option<usize> {
+    let mut earlier_binders = HashSet::new();
+    let empty_bound = HashSet::new();
+    for (index, group) in list.groups.iter().enumerate() {
+        let mut free = HashSet::new();
+        collect_free_plain_ids(group.param_type.as_ref(), &empty_bound, &mut free);
+        for id in &free {
+            if earlier_binders.contains(id) {
+                return Some(index);
+            }
+        }
+        for param in &group.params {
+            earlier_binders.insert(param.id);
+        }
+    }
+    None
 }

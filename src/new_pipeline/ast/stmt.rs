@@ -9,7 +9,7 @@ use super::fact::{
     NormalAtomicFact, QuantifierFreeFact,
 };
 use super::line_file::LineFile;
-use super::names::{AtomicName, PlainName};
+use super::names::{AtomicName, BoundName, PlainName};
 use super::obj::{AnonymousFn, ClosedRange, IdentifierObj, ListSet, Obj, Range};
 use super::param::{SetBoundParameterList, TypedParameterList};
 
@@ -76,6 +76,8 @@ pub enum DefinitionStmt {
     ObtainObjFromThm(ObtainObjFromThm),
     // Name preimages from known image membership (see HaveByPreimageStmt).
     HaveByPreimageStmt(HaveByPreimageStmt),
+    // Named set via ZF Replacement (no anonymous replacement_image Obj).
+    HaveByReplacementAxiomStmt(HaveByReplacementAxiomStmt),
     HaveFnEqualStmt(HaveFnEqualStmt),
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
     HaveFnByInducStmt(HaveFnByInducStmt),
@@ -154,32 +156,53 @@ pub struct ObtainObjFromThm {
 // Name opaque preimage witnesses from a known image-membership fact.
 //
 // Design: membership inference already exposes an existential preimage from
-// `z $in fn_range(f)` or `y $in replacement_image(P, A)` / legacy `replacement`.
-// Multi-parameter `fn_range` makes that exist ugly to rewrite for `obtain`, so
-// this statement takes the `$in` shape directly and introduces one fresh name
-// per input coordinate (arity must match).
+// `z $in fn_range(f)` or legacy `y $in replacement(P, A)`. Multi-parameter
+// `fn_range` makes that exist ugly to rewrite for `obtain`, so this statement
+// takes the `$in` shape directly and introduces one fresh name per input
+// coordinate (arity must match).
 //
-// What it stores (so later `f(x, y)` / `$P(x, y)` is WD):
-// - bind each name as a set-bound parameter of f's / P's input carrier
+// What it stores (so later `f(x, y)` is WD):
+// - bind each name as a set-bound parameter of f's input carrier
 // - `x $in Dom`, … (and f's extra domain facts, instantiated at those names)
-// - `z = f(x, …)` or `$P(x, y)` for replacement
-// Without those facts, naming alone would not let you feed the names back into f.
+// - `z = f(x, …)`
 //
-// Example (fn_range):
-//   have by preimage a from square(2) $in fn_range(square)
-//   // a $in R, square(2) = square(a)
-// Example (multi-arg):
-//   have by preimage x, y from z $in fn_range(f)
-// Example (replacement image):
-//   have by preimage source from target $in replacement_image(P, A)
-//   // source $in A, $P(source, target)
+// Example: `have by preimage a from square(2) $in fn_range(square)`
 //
 // new_pipeline: AST + keyword exist; parse/exec not wired yet.
+// Replacement images use `have … set by replacement_axiom(P, A)`, not an Obj.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HaveByPreimageStmt {
     pub preimage_names: Vec<PlainName>,
-    // Must be `… $in fn_range(…)` or `… $in replacement_image(…)` (legacy: replacement).
+    // Must be `… $in fn_range(…)` (legacy also `… $in replacement(…)`).
     pub range_membership: InFact,
+    pub line_file: LineFile,
+}
+
+// Introduce a named set as the Replacement image of `source_set` under binary
+// prop `prop_name`. No anonymous `replacement_image` object.
+//
+// Obligations: `prop_name` is a binary user prop/abstract_prop; `source_set` is
+// WD; uniqueness of the prop on the source is already known:
+//   forall x A, y, y2 set: $P(x,y) $P(x,y2) => y = y2
+//
+// Stores: `name` as a set, plus introduction/elimination:
+//   forall x A, y set: $P(x,y) => y $in name
+//   forall y name: exist x A st {$P(x,y)}
+//
+// Example:
+//   abstract_prop image_rel(x, y)
+//   trust:
+//       forall x {1, 2}, y, y2 set:
+//           $image_rel(x, y)
+//           $image_rel(x, y2)
+//           =>:
+//               y = y2
+//   have Img set by replacement_axiom(image_rel, {1, 2})
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct HaveByReplacementAxiomStmt {
+    pub name: BoundName,
+    pub prop_name: AtomicName,
+    pub source_set: Obj,
     pub line_file: LineFile,
 }
 

@@ -18,7 +18,8 @@ use crate::new_pipeline::ast::fact::{
 use crate::new_pipeline::ast::obj::{FiniteSeqSet, Obj, SeqSet, StructObj, FunctionSpace, SetFormer, StructAndFieldAccessObj};
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::ast::stmt::{
-    HaveObjByExistFactsStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt, TrustHaveStmt,
+    HaveByReplacementAxiomStmt, HaveObjByExistFactsStmt, HaveObjEqualStmt,
+    HaveObjInNonemptySetOrParamTypeStmt, TrustHaveStmt,
 };
 use crate::new_pipeline::exec_env::exec_env::SpecialObjectPropertyByDefinition;
 use crate::new_pipeline::exec_env::StoredIdentifierDefinition;
@@ -39,6 +40,7 @@ pub enum SharedHaveDefinition {
     HaveObjEqual(Rc<HaveObjEqualStmt>),
     HaveObjByExistFacts(Rc<HaveObjByExistFactsStmt>),
     TrustHave(Rc<TrustHaveStmt>),
+    HaveByReplacementAxiom(Rc<HaveByReplacementAxiomStmt>),
 }
 
 impl SharedHaveDefinition {
@@ -58,6 +60,9 @@ impl SharedHaveDefinition {
             }
             SharedHaveDefinition::TrustHave(stmt) => {
                 StoredIdentifierDefinition::TrustHave((name, Rc::clone(stmt)))
+            }
+            SharedHaveDefinition::HaveByReplacementAxiom(stmt) => {
+                StoredIdentifierDefinition::HaveByReplacementAxiom((name, Rc::clone(stmt)))
             }
         }
     }
@@ -84,7 +89,9 @@ pub struct IntroduceTypedParametersResult {
 impl Runtime {
     // Introduce groups in source order: WD each group's type, then define that
     // group, then the next. Later groups may mention earlier params
-    // (`template<S set, z S>` / `forall S set, x S:`).
+    // (`template<S set, z S>` / `forall S set, x S:`). That dependence is for
+    // binder *kinds* / typed headers, not for FnSet obj carriers (those must be
+    // fixed sets; see set_bound_param_type_cites_earlier_binder).
     // After all groups: auto-open `&Struct` layers.
     // Soft miss: Ok(Err(...)); operational / internal bug: Err(...).
     pub fn introduce_typed_parameters(

@@ -6,7 +6,7 @@ use crate::new_pipeline::ast::obj::{
     FunctionSpace, Gcd, IdentifierObj, ImaginaryUnit, IndexCart, IndexIntersect, IndexUnion,
     InstantiatedTemplateObj, IntegerOperator, Intersect, IteratedOperator, Lcm, ListSet, Literal,
     Ln, Max, Min, Number, Obj, Pi, PowerSet, ProductOfFiniteSet, ProductShape, Proj, Quot, Range,
-    ReplacementImage, SetBuilder, SetFormer, SetMinus, SetOperator, Sign, Sin, Sqrt, StandardSet,
+    SetBuilder, SetFormer, SetMinus, SetOperator, Sign, Sin, Sqrt, StandardSet,
     StructAndFieldAccessObj, StructObj, Tan, TrigOperator, Tuple, TupleDim, Union,
 };
 use crate::new_pipeline::ast::param::{ParamType, SetBoundParameterGroup, SetBoundParameterList};
@@ -16,9 +16,9 @@ use crate::new_pipeline::parse::keywords::{
     FINITE_SET_PRODUCT, FINITE_SET_SIZE, FLOOR, FN, FN_RANGE, GCD, GREATER, INDEX_CART,
     INDEX_INTERSECT, INDEX_UNION, INTERSECT, LCM, LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LESS, LN,
     MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS, POWER_SET, PROJ, Q, QUOT, Q_NEG, Q_POS, Q_STAR, R,
-    RANGE, REPLACEMENT_IMAGE, RIGHT_BRACKET, RIGHT_CURLY, RIGHT_PAREN, R_NEG, R_POS, R_STAR,
-    SET_MINUS, SIGN, SIN, SQRT, STRUCT_VIEW_PREFIX, TAN, TEMPLATE_INSTANCE_PREFIX, TUPLE, TUPLE_DIM,
-    UNION, Z, Z_NEG, Z_POS, Z_STAR,
+    RANGE, RIGHT_BRACKET, RIGHT_CURLY, RIGHT_PAREN, R_NEG, R_POS, R_STAR, SET_MINUS, SIGN, SIN,
+    SQRT, STRUCT_VIEW_PREFIX, TAN, TEMPLATE_INSTANCE_PREFIX, TUPLE, TUPLE_DIM, UNION, Z, Z_NEG,
+    Z_POS, Z_STAR,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -584,8 +584,6 @@ fn try_parse_keyword_primary(
                 function: Box::new(function),
             }))
         })?)),
-        // ZF Replacement image: `replacement_image(P, A)`.
-        REPLACEMENT_IMAGE => Ok(Some(parse_replacement_image(rt, tb)?)),
         INDEX_UNION => Ok(Some(parse_ternary_keyword(
             rt,
             tb,
@@ -638,24 +636,6 @@ fn parse_unary_keyword(
         return Err(tb.parse_error(format!("`{name}` expects 1 argument")));
     }
     Ok(build(args.remove(0)))
-}
-
-// `replacement_image(P, A)` — P is a prop name, A is the source set.
-fn parse_replacement_image(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
-    tb.advance()?;
-    tb.expect(LEFT_PAREN)?;
-    let Some(prop_tok) = tb.peek() else {
-        return Err(tb.parse_error("`replacement_image` expects a prop name"));
-    };
-    let prop_name = rt.atomic_name_for_plain_prop_ref(prop_tok.to_string());
-    tb.advance()?;
-    tb.expect(COMMA)?;
-    let source_set = parse_obj(rt, tb)?;
-    tb.expect(RIGHT_PAREN)?;
-    Ok(Obj::ReplacementImage(ReplacementImage {
-        prop_name,
-        source_set: Box::new(source_set),
-    }))
 }
 
 fn parse_binary_keyword(

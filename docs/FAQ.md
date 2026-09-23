@@ -557,15 +557,18 @@ set of all sets, so neither `A $in Litex.Set` nor erasing `$is_set(A)` to
 
 Function "types" are also set-theoretic function spaces. A definition such as
 `fn(x S) T` means a function object whose inputs come from `S` and whose values
-come from `T`. Later parameter domains may cite earlier parameters, and the
-return set may cite the function parameters; an application substitutes its
-actual arguments into those set expressions. These domains and return sets are
-still ordinary set objects. Broader parameter kinds such as `set`,
-`nonempty_set`, and `finite_set` belong in definition or theorem headers, not
-as ordinary function input domains. This is why `fn(x set) R` is not the right
-way to say "a function that accepts any set." Set-theoretic functions must have
-one concrete domain object, and Litex does not treat "the collection of all
-sets" as one ordinary set object.
+come from `T`. Each ordinary function parameter domain must be a fixed set
+object: a later obj domain must not cite an earlier parameter of the same
+`fn` signature (so `fn(x R, y S(x))` is rejected). The return set and
+`: domain conditions` may cite the function parameters; an application
+substitutes its actual arguments into those set expressions. These domains and
+return sets are still ordinary set objects. Broader parameter kinds such as
+`set`, `nonempty_set`, and `finite_set` belong in definition or theorem
+headers (where `forall S set, x S` is sequential and allowed), not as ordinary
+function input domains. This is why `fn(x set) R` is not the right way to say
+"a function that accepts any set." Set-theoretic functions must have one
+concrete domain object per parameter position, and Litex does not treat "the
+collection of all sets" as one ordinary set object.
 
 This has an important consequence: a Litex object does not have one unique
 canonical type that determines all later notation. The same object may be known

@@ -90,6 +90,13 @@ impl Runtime {
                     ),
                 ))
             }
+            Stmt::Definition(DefinitionStmt::HaveByReplacementAxiomStmt(have_stmt)) => {
+                Ok(ExecStmtResult::Definition(
+                    ExecDefinitionStmtResult::HaveByReplacementAxiom(
+                        self.exec_have_by_replacement_axiom_stmt(have_stmt)?,
+                    ),
+                ))
+            }
             Stmt::Definition(DefinitionStmt::HaveFnEqualStmt(have_stmt)) => {
                 Ok(ExecStmtResult::Definition(
                     ExecDefinitionStmtResult::HaveFnEqual(

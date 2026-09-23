@@ -13,6 +13,9 @@ impl Runtime {
         if let Some(shape) = self.infer_equal_fact_cart_tuple_shape(equal_fact)? {
             rules.push(InferEqualityResult::CartTupleShape(shape));
         }
+        if let Some(sub) = self.infer_equal_fact_subtraction_equals_zero(equal_fact)? {
+            rules.push(InferEqualityResult::SubtractionEqualsZero(sub));
+        }
         Ok(rules)
     }
 }

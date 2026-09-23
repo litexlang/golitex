@@ -258,9 +258,6 @@ pub fn collect_free_plain_ids(
                 collect_free_plain_ids(o, bound, out);
             }
         }
-        Obj::ReplacementImage(a) => {
-            collect_free_plain_ids(&a.source_set, bound, out);
-        }
         Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(i)) => match i {
             crate::new_pipeline::ast::obj::OneSideInfinityIntervalObj::LeftOpen(s)
             | crate::new_pipeline::ast::obj::OneSideInfinityIntervalObj::LeftClosed(s)

@@ -27,7 +27,6 @@ pub enum FailToVerifyObjWellDefinedResult {
     FiniteSetStat(FailToVerifyFiniteSetStatObjWellDefinedResult),
     Structish(FailToVerifyStructishObjWellDefinedResult),
     InstantiatedTemplateObj(FailToVerifyInstantiatedTemplateObjObjWellDefined),
-    ReplacementImage(FailToVerifyReplacementImageObjWellDefined),
 }
 
 pub enum FailToVerifyLiteralObjWellDefinedResult {
@@ -289,6 +288,12 @@ pub enum FailToVerifySetBuilderObjWellDefined {
 }
 
 pub enum FailToVerifyFnSetObjWellDefined {
+    // Obj carrier cites an earlier binder, e.g. `fn(x R, y S(x))`.
+    // Forbidden here: function domains must be fixed sets. Allowed elsewhere:
+    // `forall S set, x S` (kind telescope on TypedParameterList, not FnSet).
+    ParamTypeCitesEarlierBinder {
+        failed_index: usize,
+    },
     ParamType {
         failed_index: usize,
         succeeded: Vec<(Obj, Box<ObjWellDefinedProof>)>,
@@ -309,6 +314,10 @@ pub enum FailToVerifyFnSetObjWellDefined {
 }
 
 pub enum FailToVerifyAnonymousFnObjWellDefined {
+    // Same closed-carrier rule as FnSet (not the forall kind-telescope rule).
+    ParamTypeCitesEarlierBinder {
+        failed_index: usize,
+    },
     ParamType {
         failed_index: usize,
         succeeded: Vec<(Obj, Box<ObjWellDefinedProof>)>,
@@ -363,7 +372,6 @@ pub enum FailToVerifyFnRangeObjWellDefined {
     Domain(FailToVerifyObjWellDefinedByDefCommon),
 }
 
-pub struct FailToVerifyReplacementImageObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
 pub struct FailToVerifySumObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 

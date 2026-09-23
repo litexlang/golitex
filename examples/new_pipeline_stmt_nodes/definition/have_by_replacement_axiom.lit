@@ -1,0 +1,18 @@
+# Stmt: Definition.HaveByReplacementAxiomStmt → exec_have_by_replacement_axiom_stmt
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_stmt_nodes/definition/have_by_replacement_axiom.lit
+#
+# Named Replacement image (no anonymous replacement_image Obj).
+# Needs: binary prop + known uniqueness forall over the source set.
+
+abstract_prop image_rel(x, y)
+
+trust:
+    forall x {1, 2}, y, y2 set:
+        $image_rel(x, y)
+        $image_rel(x, y2)
+        =>:
+            y = y2
+
+have Img set by replacement_axiom(image_rel, {1, 2})
+
+release obj def Img
