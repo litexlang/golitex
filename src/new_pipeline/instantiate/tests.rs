@@ -79,7 +79,7 @@ fn set_builder_ir_uses_bound_name_id_display_uses_letter() {
 }
 
 #[test]
-fn parse_have_then_free_ref_qualifies_at_file_root() {
+fn parse_have_then_free_ref_stays_plain_under_eval() {
     let mut runtime = test_runtime();
     let tokens = Tokenizer::new()
         .tokenize("have x R", runtime.current_file.clone())
@@ -87,7 +87,7 @@ fn parse_have_then_free_ref_qualifies_at_file_root() {
     let stmts = runtime.parse(&tokens).expect("parse");
     assert_eq!(stmts.len(), 1);
 
-    // File-root free refs become WithExportFileId (export slot 0 for bare -e).
+    // Eval has no publication slot: outermost free refs stay Plain (+ id).
     let tokens2 = Tokenizer::new()
         .tokenize("x = x", runtime.current_file.clone())
         .expect("tokenize");
@@ -99,25 +99,20 @@ fn parse_have_then_free_ref_qualifies_at_file_root() {
     let Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(eq))) = &stmts2[0] else {
         panic!("expected EqualFact stmt");
     };
-    let Obj::Identifier(IdentifierObj::WithExportFileId {
-        export_file_id: left_fid,
-        name: left_name,
+    let Obj::Identifier(IdentifierObj::Plain {
+        name: left_name, ..
     }) = &eq.left
     else {
-        panic!("left should be file-root qualified, got {:?}", eq.left);
+        panic!("left should stay Plain under Eval, got {:?}", eq.left);
     };
-    let Obj::Identifier(IdentifierObj::WithExportFileId {
-        export_file_id: right_fid,
-        name: right_name,
+    let Obj::Identifier(IdentifierObj::Plain {
+        name: right_name, ..
     }) = &eq.right
     else {
-        panic!("right should be file-root qualified, got {:?}", eq.right);
+        panic!("right should stay Plain under Eval, got {:?}", eq.right);
     };
     assert_eq!(left_name, "x");
     assert_eq!(right_name, "x");
-    assert_eq!(*left_fid, 0);
-    assert_eq!(*right_fid, 0);
-    assert_eq!(eq.left.ir().as_str(), "f0::x");
 }
 
 #[test]
@@ -168,7 +163,10 @@ fn imported_mod_context_qualifies_with_mod_id() {
         .global_module_manager
         .set_current_mod_id(Some(mod_id))
         .expect("set_current_mod_id");
-    runtime.set_current_export_file_id(0);
+    runtime.set_code_source(crate::new_pipeline::runtime::CodeSource::ImportedExport {
+        global_mod_id: mod_id,
+        export_file_id: 0,
+    });
 
     let tokens = Tokenizer::new()
         .tokenize("have x R", runtime.current_file.clone())

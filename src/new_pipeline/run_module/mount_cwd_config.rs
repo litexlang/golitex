@@ -64,6 +64,7 @@ pub fn mount_cwd_config(runtime: &mut Runtime) -> RuntimeResult<MountCwdConfigOu
             &export.path,
             export_file_id,
             None,
+            crate::new_pipeline::runtime::CodeSource::RootExport { export_file_id },
             false,
         ) {
             Ok(file_result) => {

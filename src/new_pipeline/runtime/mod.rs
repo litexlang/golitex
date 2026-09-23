@@ -9,9 +9,11 @@
 pub mod error;
 pub mod internal_names;
 pub mod real_or_virtual_path;
+pub mod code_source;
 pub mod runtime;
 pub mod runtime_ids;
 
+pub use code_source::CodeSource;
 pub use error::{RuntimeError, RuntimeParseError, RuntimeResult};
 pub use real_or_virtual_path::RealOrVirtualPath;
 pub use runtime::{GlobalIds, ParseScope, Runtime};

@@ -71,6 +71,7 @@ pub fn run_project(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
             &export.path,
             export_file_id,
             None,
+            crate::new_pipeline::runtime::CodeSource::RootExport { export_file_id },
             keep_env_open,
         ) {
             Ok(file_result) => {

@@ -19,11 +19,13 @@ pub fn run_repl(command: LaunchCommand) -> RuntimeResult<()> {
     }
 
     runtime.begin_file(RealOrVirtualPath::Repl);
+    runtime.set_code_source(crate::new_pipeline::runtime::CodeSource::Repl);
     run_repl_loop(&mut runtime)
 }
 
 /// Continue a REPL in an already-open file/eval Runtime env (used by `-session`).
 pub fn run_repl_loop(runtime: &mut Runtime) -> RuntimeResult<()> {
+    runtime.set_code_source(crate::new_pipeline::runtime::CodeSource::Repl);
     println!("{} REPL {}", LITEX, NEW_PIPELINE_VERSION);
     println!("type `exit` or Ctrl-D to quit; end a block with a blank line");
 
