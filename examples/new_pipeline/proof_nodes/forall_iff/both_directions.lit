@@ -1,0 +1,22 @@
+# Node: forall_with_iff (then⇒iff and iff⇒then)
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/forall_iff/both_directions.lit
+
+forall x, y R:
+    =>:
+        x = y
+    <=>:
+        y = x
+
+# Store splits this iff into two independent forall facts. The two generated
+# conclusions are indexed normally, which makes this reverse-direction use
+# possible after trusting the forward direction.
+abstract_prop Pp(x)
+abstract_prop Qq(x)
+trust:
+    forall x R:
+        =>:
+            $Pp(x)
+        <=>:
+            $Qq(x)
+trust $Pp(2)
+$Qq(2)

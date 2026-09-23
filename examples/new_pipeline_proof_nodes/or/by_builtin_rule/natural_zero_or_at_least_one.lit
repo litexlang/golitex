@@ -1,6 +1,0 @@
-# Node: or.ByBuiltinRule.NaturalZeroOrAtLeastOne
-# Rule struct: OrBuiltinNaturalZeroOrAtLeastOne
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/or/by_builtin_rule/natural_zero_or_at_least_one.lit
-
-have n N
-n = 0 or n >= 1

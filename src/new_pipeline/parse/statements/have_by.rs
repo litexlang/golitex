@@ -99,7 +99,6 @@ impl Runtime {
 
     // Preimage names from known `… $in fn_range(…)`.
     // Example: `have by fn_preimage: source from shift(2) $in fn_range(shift)`
-    // Exec not wired yet; parse builds the AST for later.
     fn parse_have_by_fn_preimage_stmt(
         &mut self,
         tb: &mut TokenBlock,

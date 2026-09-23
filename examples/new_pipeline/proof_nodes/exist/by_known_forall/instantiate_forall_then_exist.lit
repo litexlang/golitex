@@ -1,0 +1,6 @@
+# Node: exist.ByKnownForallFact
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/exist/by_known_forall/instantiate_forall_then_exist.lit
+
+forall a R:
+    exist x R st {x = a}
+exist x R st {x = 2}

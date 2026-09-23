@@ -1,0 +1,7 @@
+# Node: equal.ByEquivalenceClass
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_equivalence_class/path_from_generating_edges.lit
+
+have a R = 1
+have b R = a
+have c R = b
+a = c

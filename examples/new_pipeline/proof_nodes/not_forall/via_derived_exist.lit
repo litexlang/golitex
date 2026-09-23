@@ -1,0 +1,6 @@
+# Node: not_forall (via derived counterexample exist)
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/not_forall/via_derived_exist.lit
+
+witness exist x R st {not x > 0} from 0
+not forall x R:
+    x > 0

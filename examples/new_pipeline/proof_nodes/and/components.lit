@@ -1,0 +1,17 @@
+# Node: and (per-component verify)
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/and/components.lit
+
+1 < 2
+2 < 3
+1 < 2 and 2 < 3
+
+# A whole and conclusion gets its own structural key, so the forall is matched
+# before the ordinary component proofs are assembled.
+abstract_prop Pp(x)
+abstract_prop Qq(x)
+trust:
+    forall x R:
+        =>:
+            $Pp(x) and $Qq(x)
+have a R
+$Pp(a) and $Qq(a)

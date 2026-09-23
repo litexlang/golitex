@@ -1,5 +1,0 @@
-# WD negative: index 0 is not in N+.
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_wd_negative/obj_at_index_zero.lit
-# expect exit != 0
-
-let a = (1, 2)[0]

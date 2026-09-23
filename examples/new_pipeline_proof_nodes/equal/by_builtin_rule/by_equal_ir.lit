@@ -1,5 +1,0 @@
-# Node: equal.ByBuiltinRule.ByEqualIr
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/equal/by_builtin_rule/by_equal_ir.lit
-
-forall x R:
-    x = x

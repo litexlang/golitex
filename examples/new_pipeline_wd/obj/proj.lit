@@ -1,4 +1,0 @@
-# Obj WD: proj(S, i) — i in N+, $is_cart, i <= cart_dim
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_wd/obj/proj.lit
-
-let P = proj(cart(R, R), 1)

@@ -1,0 +1,4 @@
+# Obj WD: Div (scalar P0) — divisor nonzero + args in C
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/wd/obj/scalar_div.lit
+
+let q = 1 / 2

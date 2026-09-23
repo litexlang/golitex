@@ -1,7 +1,0 @@
-# WD negative: applying an object not registered in any FnSet must fail.
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_wd_negative/fn_app_not_in_function_set.lit
-# expect exit != 0
-
-have a R = 1
-have f R
-f(a) = f(a)

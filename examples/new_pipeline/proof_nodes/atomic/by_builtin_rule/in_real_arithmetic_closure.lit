@@ -1,0 +1,7 @@
+# Node: atomic.ByBuiltinRule.InFact.RealArithmeticClosure
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/in_real_arithmetic_closure.lit
+
+have x R
+have y R
+x + y $in R
+abs(x) $in R

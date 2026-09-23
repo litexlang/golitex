@@ -1,0 +1,7 @@
+# Stmt: UnsafeStmt.TrustStmt → exec_trust_stmt
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/unsafe/trust_stmt.lit
+
+trust:
+    7 = 7
+
+7 = 7

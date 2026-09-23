@@ -1,5 +1,0 @@
-# Obj WD: fn_range(f) needs f registered in a FnSet
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_wd/obj/fn_range.lit
-
-let f = fn(x R) R {x}
-let r = fn_range(f)

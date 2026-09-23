@@ -1,0 +1,17 @@
+# Node: or.ByKnownForallFact
+# Struct: SearchProofByKnownForallFact (or conclusion)
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/or/by_known_forall/instantiate_forall_then_or.lit
+#
+# Defined prop + proved forall; instantiate to an or conclusion.
+
+prop zero_or_one(x R):
+    x = 0 or x = 1
+
+forall x R:
+    $zero_or_one(x)
+    =>:
+        x = 0 or x = 1
+
+have a R = 0
+$zero_or_one(a)
+a = 0 or a = 1

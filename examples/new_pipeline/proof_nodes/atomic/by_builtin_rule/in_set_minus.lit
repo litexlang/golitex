@@ -1,0 +1,4 @@
+# Node: atomic.ByBuiltinRule.InFact.SetMinusMembership
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/in_set_minus.lit
+
+2 $in set_minus({1, 2}, {1})

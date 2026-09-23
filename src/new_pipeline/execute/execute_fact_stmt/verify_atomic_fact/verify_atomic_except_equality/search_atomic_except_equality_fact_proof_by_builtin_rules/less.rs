@@ -1,6 +1,6 @@
 use crate::new_pipeline::ast::fact::LessFact;
-use crate::new_pipeline::ast::obj::Obj;
-use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::predecessor_helpers::match_sub_one;
+use crate::new_pipeline::ast::obj::{ArithmeticOperator, Obj, Sub, TrigOperator};
+use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::predecessor_helpers::is_number_value;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::trig_bounds::{
     match_arccot_principal_lower, match_arccot_principal_upper, match_arctan_principal_lower,
     match_arctan_principal_upper,
@@ -53,50 +53,76 @@ pub struct ArccotPrincipalLowerBoundBuiltinRuleProof {}
 pub struct ArccotPrincipalUpperBoundBuiltinRuleProof {}
 
 impl Runtime {
-    // Builtin: subtract-one decrease, trig principal open bounds, then closed decimal strict less.
-    // Example: prove `n - 1 < n` or `1 < 2`.
+    // Builtin search for `a < b`.
+    // B0: none (no known-cite / reflexivity for strict < here).
+    // A: match on Obj shapes of (left, right).
+    // B1: closed decimal evaluation.
+    // Example: prove `n - 1 < n`, `-pi/2 < arctan(x)`, or `1 < 2`.
     pub fn search_less_fact_proof_by_builtin_rule(
         &mut self,
         fact: &LessFact,
         _verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessFactSearchProofByBuiltinRule>> {
-        if let Some(minuend) = match_sub_one(&fact.left) {
-            if minuend.ir() == fact.right.ir() {
+        match (&fact.left, &fact.right) {
+            // `x - 1 < x`
+            (
+                Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left, right })),
+                minuend,
+            ) if is_number_value(right.as_ref(), "1") && left.as_ref().ir() == minuend.ir() => {
                 return Ok(Some(LessFactSearchProofByBuiltinRule::SubtractOneLess(
                     SubtractOneLessBuiltinRuleProof {
-                        minuend: minuend.clone(),
+                        minuend: left.as_ref().clone(),
                     },
                 )));
             }
+
+            // `-pi/2 < arctan(x)`
+            (_, Obj::TrigOperator(TrigOperator::Arctan(_)))
+                if match_arctan_principal_lower(&fact.left, &fact.right) =>
+            {
+                return Ok(Some(
+                    LessFactSearchProofByBuiltinRule::ArctanPrincipalLowerBound(
+                        ArctanPrincipalLowerBoundBuiltinRuleProof {},
+                    ),
+                ));
+            }
+
+            // `arctan(x) < pi/2`
+            (Obj::TrigOperator(TrigOperator::Arctan(_)), _)
+                if match_arctan_principal_upper(&fact.left, &fact.right) =>
+            {
+                return Ok(Some(
+                    LessFactSearchProofByBuiltinRule::ArctanPrincipalUpperBound(
+                        ArctanPrincipalUpperBoundBuiltinRuleProof {},
+                    ),
+                ));
+            }
+
+            // `0 < arccot(x)`
+            (_, Obj::TrigOperator(TrigOperator::Arccot(_)))
+                if match_arccot_principal_lower(&fact.left, &fact.right) =>
+            {
+                return Ok(Some(
+                    LessFactSearchProofByBuiltinRule::ArccotPrincipalLowerBound(
+                        ArccotPrincipalLowerBoundBuiltinRuleProof {},
+                    ),
+                ));
+            }
+
+            // `arccot(x) < pi`
+            (Obj::TrigOperator(TrigOperator::Arccot(_)), _)
+                if match_arccot_principal_upper(&fact.left, &fact.right) =>
+            {
+                return Ok(Some(
+                    LessFactSearchProofByBuiltinRule::ArccotPrincipalUpperBound(
+                        ArccotPrincipalUpperBoundBuiltinRuleProof {},
+                    ),
+                ));
+            }
+
+            _ => {}
         }
-        if match_arctan_principal_lower(&fact.left, &fact.right) {
-            return Ok(Some(
-                LessFactSearchProofByBuiltinRule::ArctanPrincipalLowerBound(
-                    ArctanPrincipalLowerBoundBuiltinRuleProof {},
-                ),
-            ));
-        }
-        if match_arctan_principal_upper(&fact.left, &fact.right) {
-            return Ok(Some(
-                LessFactSearchProofByBuiltinRule::ArctanPrincipalUpperBound(
-                    ArctanPrincipalUpperBoundBuiltinRuleProof {},
-                ),
-            ));
-        }
-        if match_arccot_principal_lower(&fact.left, &fact.right) {
-            return Ok(Some(
-                LessFactSearchProofByBuiltinRule::ArccotPrincipalLowerBound(
-                    ArccotPrincipalLowerBoundBuiltinRuleProof {},
-                ),
-            ));
-        }
-        if match_arccot_principal_upper(&fact.left, &fact.right) {
-            return Ok(Some(
-                LessFactSearchProofByBuiltinRule::ArccotPrincipalUpperBound(
-                    ArccotPrincipalUpperBoundBuiltinRuleProof {},
-                ),
-            ));
-        }
+
         let Some((cmp, left_normal, right_normal)) =
             compare_closed_objs_by_normalized_decimal(&fact.left, &fact.right)
         else {

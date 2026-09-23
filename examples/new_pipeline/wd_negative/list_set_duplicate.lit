@@ -1,0 +1,5 @@
+# WD negative: list set with unprovable pairwise inequality.
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/wd_negative/list_set_duplicate.lit
+# expect exit != 0
+
+let A = {1, 1}

@@ -107,4 +107,4 @@ Process exit uses `outcome.process_failed()` (false success or session error).
 
 ## Examples
 
-Runnable fixtures: [`examples/new_pipeline_module_manager/`](../../../examples/new_pipeline_module_manager/).
+Runnable fixtures: [`examples/new_pipeline/module_manager/`](../../../examples/new_pipeline/module_manager/).

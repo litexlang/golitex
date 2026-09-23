@@ -1,0 +1,4 @@
+# Node: atomic.ByBuiltinRule.NotEqualFact.ClosedDecimal
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/not_equal_closed_decimal.lit
+
+1 != 0

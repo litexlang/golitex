@@ -1,6 +1,0 @@
-# WD negative: fn_range of a non-function object must fail.
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_wd_negative/fn_range_not_fn.lit
-# expect exit != 0
-
-have a R = 1
-let r = fn_range(a)

@@ -1,0 +1,5 @@
+# Node: atomic.ByBuiltinRule.LessEqualFact.AbsNonnegative
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/less_equal_abs_nonnegative.lit
+
+have a R
+0 <= abs(a)

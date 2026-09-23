@@ -1,0 +1,5 @@
+# Stmt: Definition.HaveObjEqualStmt → exec_have_obj_equal_stmt
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/definition/have_obj_equal.lit
+
+have a R = 3
+a + 1 = 4

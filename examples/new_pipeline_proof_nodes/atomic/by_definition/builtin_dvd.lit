@@ -1,6 +1,0 @@
-# Node: atomic.ByDefinition.BuiltinProp.Dvd
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/atomic/by_definition/builtin_dvd.lit
-
-4 % 2 = 0
-witness exist a Z st {4 = a * 2} from 2
-by def $dvd(4, 2)

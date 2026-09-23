@@ -1,0 +1,4 @@
+# Node: atomic.ByBuiltinRule.LessEqualFact.ClosedNumericComparison
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/less_equal_closed_numeric.lit
+
+1 <= 2

@@ -662,7 +662,7 @@ universal over `A`, even forming `replacement(P, A)` is a well-definedness
 > `have by replacement_axiom: Img from prop P, set A` (same style as
 > `by axiom_of_choice: set F` / `by zorn_lemma: …`) keeps `P` labeled as a prop
 > and `A` as a set. `fn_range(f)` stays available for function ranges. Tracer:
-> [`examples/new_pipeline_stmt_nodes/definition/have_by_replacement_axiom.lit`](../examples/new_pipeline_stmt_nodes/definition/have_by_replacement_axiom.lit).
+> [`examples/new_pipeline/stmt_nodes/definition/have_by_replacement_axiom.lit`](../examples/new_pipeline/stmt_nodes/definition/have_by_replacement_axiom.lit).
 
 ### Functions, application, and range
 
@@ -749,9 +749,9 @@ shift(2) = shift(source)
 ```
 
 > **Preview (`new_pipeline`):** the same step is spelled
-> `have by fn_preimage: source from shift(2) $in fn_range(shift)`
-> (parse builds AST; exec not wired yet). Old `have by preimage` is rejected
-> with a rename hint.
+> `have by fn_preimage: source from shift(2) $in fn_range(shift)`.
+> Old `have by preimage` is rejected with a rename hint. Tracer:
+> [`examples/new_pipeline/stmt_nodes/definition/have_by_fn_preimage.lit`](../examples/new_pipeline/stmt_nodes/definition/have_by_fn_preimage.lit).
 
 This is not inverse-function computation: the introduced `source` is an
 opaque witness satisfying the stored application equality. Litex does not
@@ -2212,6 +2212,23 @@ parameterized context and stores a reusable family. Use `\name<args>` for the
 instance surface (no second name). The complete instance example is in
 [Template instances](#template-instances).
 
+Read a template as the parameterized counterpart of an ordinary definition
+statement. The body is the same kind of definition that would appear outside
+(`have …`, `have fn …`, and the other supported definition forms): Litex
+checks it as if the angle-bracket parameters were already introduced and
+satisfied the header conditions. Instantiating `\name<args>` then gives the
+corresponding defined object or function for those concrete arguments.
+
+That is why `template` is necessary and cannot be replaced by a simple
+`fn_set` / ordinary function whose domain is written as `set`. A Litex function
+parameter must range over one fixed set. The binder kind `set` is not such a
+set: it is a surface parameter kind meaning "a set," not an element of a
+set-of-all-sets. So a family indexed by an arbitrary set belongs in the
+template header, not as a fake function argument. The rejected form
+`have fn identity_set(A set) set = A` is recorded earlier under
+[Bare facts and `have`](#bare-facts-and-have); for a longer reading see
+[Why does Litex have `template`?](FAQ.md#why-does-litex-have-template).
+
 ```litex
 template<S set, z S>:
     have fn const_on_S(x S) S = z
@@ -2640,7 +2657,7 @@ statements are no longer part of the language.
 > - How `-r` / `-f` / `-e` / REPL mount and run:
 >   [`src/new_pipeline/run/README.md`](../src/new_pipeline/run/README.md)
 > - Fixtures:
->   [`examples/new_pipeline_module_manager/`](../examples/new_pipeline_module_manager/)
+>   [`examples/new_pipeline/module_manager/`](../examples/new_pipeline/module_manager/)
 
 A maintained project directory has one `litex.config`.
 
@@ -3122,12 +3139,12 @@ parameter memberships and any extra domain facts of `f` at those names, plus
 the application equality (e.g. `z = f(x, y)`), so a later call `f(x, y)` is
 well-defined. For `replacement` it stores `x $in A` and `$P(x, y)`.
 
-> **Preview (`new_pipeline`):** parse accepts `have by fn_preimage: names from …`
-> (membership in `fn_range(f)`). Exec for that form is not wired yet, so there is
-> no exit-0 stmt-node tracer yet. Default pipeline still uses `have by preimage`.
+> **Preview (`new_pipeline`):** `have by fn_preimage: names from … $in fn_range(f)`
+> is wired (parse + exec). Default pipeline still uses `have by preimage`.
 > Named images from the Axiom of Replacement use
 > `have by replacement_axiom: Img from prop P, set A` (not an anonymous Obj —
-> prop names do not belong in ordinary parenthesized obj arguments).
+> prop names do not belong in ordinary parenthesized obj arguments). Tracer:
+> [`examples/new_pipeline/stmt_nodes/definition/have_by_fn_preimage.lit`](../examples/new_pipeline/stmt_nodes/definition/have_by_fn_preimage.lit).
 
 `obtain` exposes each direct fact in the existential body. Positive concrete
 predicates among those facts may expose positive clauses through forward
@@ -4273,7 +4290,7 @@ The `or` verifier recognizes these exhaustive forms:
 > `a < b or a = b or a > b`,
 > `a > b or a = b or a < b`.
 > One `.lit` per rule:
-> [`examples/new_pipeline_proof_nodes/or/by_builtin_rule/`](../examples/new_pipeline_proof_nodes/or/by_builtin_rule/).
+> [`examples/new_pipeline/proof_nodes/or/by_builtin_rule/`](../examples/new_pipeline/proof_nodes/or/by_builtin_rule/).
 > Other or-builtins above remain legacy-only until ported.
 
 ```litex

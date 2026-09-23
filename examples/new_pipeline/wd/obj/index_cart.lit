@@ -1,0 +1,7 @@
+# Obj WD: index_cart — `$is_set` / nonempty + family ∈ FnSet
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/wd/obj/index_cart.lit
+#
+# Registration half only: family need not yet prove `$in fn(alpha I) S`.
+
+let g = fn(alpha {1}) R {alpha}
+let c = index_cart({1}, R, g)

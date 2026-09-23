@@ -26,6 +26,7 @@ use crate::new_pipeline::execute::execute_have_fn_by_induc_stmt::ExecHaveFnByInd
 use crate::new_pipeline::execute::execute_have_fn_equal_case_by_case_stmt::ExecHaveFnEqualCaseByCaseStmtResult;
 use crate::new_pipeline::execute::execute_have_fn_equal_stmt::ExecHaveFnEqualStmtResult;
 use crate::new_pipeline::execute::execute_have_obj_by_exist_facts_stmt::ExecHaveObjByExistFactsStmtResult;
+use crate::new_pipeline::execute::execute_have_by_fn_preimage_stmt::ExecHaveByFnPreimageStmtResult;
 use crate::new_pipeline::execute::execute_have_by_replacement_axiom_stmt::ExecHaveByReplacementAxiomStmtResult;
 use crate::new_pipeline::execute::execute_obtain_obj_from_atomic_fact_stmt::ExecObtainObjFromAtomicFactStmtResult;
 use crate::new_pipeline::execute::execute_obtain_obj_from_exist_fact_stmt::ExecObtainObjFromExistFactStmtResult;
@@ -91,6 +92,7 @@ pub enum ExecDefinitionStmtResult {
     HaveObjByExistFacts(ExecHaveObjByExistFactsStmtResult),
     ObtainObjFromExistFact(ExecObtainObjFromExistFactStmtResult),
     ObtainObjFromAtomicFact(ExecObtainObjFromAtomicFactStmtResult),
+    HaveByFnPreimage(ExecHaveByFnPreimageStmtResult),
     HaveByReplacementAxiom(ExecHaveByReplacementAxiomStmtResult),
     HaveFnEqual(ExecHaveFnEqualStmtResult),
     HaveFnEqualCaseByCase(ExecHaveFnEqualCaseByCaseStmtResult),
@@ -127,6 +129,7 @@ impl ExecDefinitionStmtResult {
             Self::HaveObjByExistFacts(r) => r.is_failed(),
             Self::ObtainObjFromExistFact(r) => r.is_failed(),
             Self::ObtainObjFromAtomicFact(r) => r.is_failed(),
+            Self::HaveByFnPreimage(r) => r.is_failed(),
             Self::HaveByReplacementAxiom(r) => r.is_failed(),
             Self::HaveFnEqual(r) => r.is_failed(),
             Self::HaveFnEqualCaseByCase(r) => r.is_failed(),

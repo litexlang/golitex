@@ -1,5 +1,0 @@
-# Node: equal.ByBuiltinRule.Calculation.Rational
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/equal/by_builtin_rule/calculation_rational.lit
-
-have x R
-(x + 1) * (x - 1) = x^2 - 1

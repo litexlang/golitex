@@ -1,0 +1,5 @@
+# Node: exist.ByBuiltinRule.RealLineComparisonWitness
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/exist/by_builtin_rule/real_line_comparison_witness.lit
+
+exist a, b R st {a > b}
+exist x R st {x > 100}

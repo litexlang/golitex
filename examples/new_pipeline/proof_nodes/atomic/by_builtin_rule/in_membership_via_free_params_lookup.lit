@@ -1,0 +1,9 @@
+# Node: atomic.ByKnownAtomicFact via equal.ByBuiltinRule.ByEqualToObjWithFreeParamsLookup
+# Run: LITEX_NEW_PIPELINE=1 target/release/litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/in_membership_via_free_params_lookup.lit
+#
+# `$in` lifts across alpha-equal carriers when the goal set is an identifier
+# indexed in `known_equal_to_obj_with_free_params`.
+
+let carrier = fn(x R) R
+have fn worker(x R) R = x
+worker $in carrier

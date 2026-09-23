@@ -189,12 +189,11 @@ pub struct TheoremCall {
 // - `x $in Dom`, … (and f's extra domain facts, instantiated at those names)
 // - `z = f(x, …)`
 //
-// new_pipeline: parse builds AST; exec not wired yet.
 // Replacement images use `have by replacement_axiom: Img from prop P, set A`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HaveByPreimageStmt {
     pub preimage_names: Vec<PlainName>,
-    // Must be `… $in fn_range(…)` (legacy also `… $in replacement(…)`).
+    // Must be `… $in fn_range(…)`.
     pub range_membership: InFact,
     pub line_file: LineFile,
 }

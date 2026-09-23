@@ -1,0 +1,5 @@
+# Node: atomic.ByBuiltinRule.InFact.SetBuilderMembership
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/in_set_builder_membership.lit
+
+have a R = 1
+a $in {x R: x > 0}

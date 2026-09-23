@@ -1,7 +1,0 @@
-# Stmt: Definition.DefPropStmt → exec_def_prop_stmt
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_stmt_nodes/definition/def_prop.lit
-
-prop above_zero(x R):
-    x > 0
-
-$above_zero(1)

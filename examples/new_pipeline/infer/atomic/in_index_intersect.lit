@@ -1,0 +1,9 @@
+# Infer: InFact.IndexIntersect
+# When: store `x $in index_intersect(I, X, A)`.
+# Infers: ambient `x $in X` (and forall fiber; checked via ambient here).
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/infer/atomic/in_index_intersect.lit
+
+have fn A(k {1}) power_set(N) = {1}
+have x set
+trust x $in index_intersect({1}, N, A)
+x $in N
