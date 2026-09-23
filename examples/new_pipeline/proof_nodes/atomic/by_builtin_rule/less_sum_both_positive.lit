@@ -1,0 +1,8 @@
+# Node: atomic.ByBuiltinRule.Less.SumBothPositive
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/less_sum_both_positive.lit
+
+have a R
+have b R
+trust 0 < a
+trust 0 < b
+0 < a + b

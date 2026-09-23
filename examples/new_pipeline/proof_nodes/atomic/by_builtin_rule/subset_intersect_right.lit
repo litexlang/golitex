@@ -1,0 +1,5 @@
+# Node: atomic.ByBuiltinRule.SubsetFact.IntersectSubsetRight
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/subset_intersect_right.lit
+
+have A set, B set
+intersect(A, B) $subset B

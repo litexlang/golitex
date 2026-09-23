@@ -1,5 +1,7 @@
-use crate::new_pipeline::ast::fact::{Fact, NotEqualFact};
-use crate::new_pipeline::ast::obj::{Cos, Number, Obj, Sin, Literal, SetFormer, TrigOperator};
+use crate::new_pipeline::ast::fact::{AtomicFact, Fact, NotEqualFact};
+use crate::new_pipeline::ast::obj::{
+    Abs, ArithmeticOperator, Cos, Literal, Number, Obj, SetFormer, Sin, Sub, TrigOperator,
+};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_inverse_trig::{
     half_pi, negative_half_pi, pi_obj, zero_obj,
 };
@@ -35,6 +37,14 @@ pub enum NotEqualFactSearchProofByBuiltinRule {
     // Mathematical property: `0 < y < pi` ⇒ `sin(y) != 0`.
     // Example: after those bounds, prove `sin(y) != 0` for `cot(y)` WD.
     SinNonzeroOnOpenPi(SinNonzeroOnOpenPiBuiltinRuleProof),
+    // Absolute value is nonzero when the argument is nonzero.
+    // Mathematical property: `x != 0` ⇒ `abs(x) != 0`.
+    // Example: known `x != 0` proves `abs(x) != 0`.
+    AbsNonzeroFromArg(AbsNonzeroFromArgBuiltinRuleProof),
+    // Difference is nonzero when the operands are unequal.
+    // Mathematical property: `a != b` ⇒ `a - b != 0`.
+    // Example: known `x != y` proves `x - y != 0`.
+    DiffNonzeroFromInequality(DiffNonzeroFromInequalityBuiltinRuleProof),
 }
 
 pub struct ClosedDecimalNotEqualBuiltinRuleProof {
@@ -56,13 +66,24 @@ pub struct FromKnownStrictOrderBuiltinRuleProof {
 pub struct CosNonzeroOnOpenHalfPiBuiltinRuleProof {}
 pub struct SinNonzeroOnOpenPiBuiltinRuleProof {}
 
+pub struct AbsNonzeroFromArgBuiltinRuleProof {
+    pub arg_nonzero_proof: VerifyFactResult,
+}
+
+pub struct DiffNonzeroFromInequalityBuiltinRuleProof {
+    pub operands_unequal_proof: VerifyFactResult,
+}
+
 impl Runtime {
-    // Builtin not-equal: closed decimal, known strict order, trig nonzero, then list-set length.
+    // Builtin search for `a != b`.
+    // B0: closed decimal + known strict order. A: match Obj shapes. B1: none.
+    // Example: prove `1 != 0`, `x != 0` from `x > 0`, `{1} != {1, 2}`, `cos(y) != 0`.
     pub fn search_not_equal_fact_proof_by_builtin_rule(
         &mut self,
         fact: &NotEqualFact,
-        _verify_state: VerifyState,
+        verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotEqualFactSearchProofByBuiltinRule>> {
+        // B0 — non-shape
         if let (Some(left), Some(right)) = (
             evaluate_obj_to_normalized_decimal_number(&fact.left),
             evaluate_obj_to_normalized_decimal_number(&fact.right),
@@ -86,29 +107,153 @@ impl Runtime {
                 ),
             ));
         }
-        if let Some(proof) = self.cos_nonzero_on_open_half_pi_proof(fact) {
-            return Ok(Some(proof));
-        }
-        if let Some(proof) = self.sin_nonzero_on_open_pi_proof(fact) {
-            return Ok(Some(proof));
-        }
-        if let (Obj::SetFormer(SetFormer::ListSet(left)), Obj::SetFormer(SetFormer::ListSet(right))) = (&fact.left, &fact.right) {
-            if left.list.len() != right.list.len() {
+
+        // A — shape
+        match (&fact.left, &fact.right) {
+            (
+                Obj::SetFormer(SetFormer::ListSet(left)),
+                Obj::SetFormer(SetFormer::ListSet(right)),
+            ) if left.list.len() != right.list.len() => {
                 return Ok(Some(
                     NotEqualFactSearchProofByBuiltinRule::ListSetDifferentLength(
                         ListSetDifferentLengthBuiltinRuleProof {},
                     ),
                 ));
             }
+
+            (Obj::TrigOperator(TrigOperator::Cos(Cos { arg })), right)
+                if is_zero_obj(right) =>
+            {
+                if let Some(proof) = self.cos_nonzero_on_open_half_pi_for_arg(arg.as_ref()) {
+                    return Ok(Some(proof));
+                }
+            }
+            (left, Obj::TrigOperator(TrigOperator::Cos(Cos { arg })))
+                if is_zero_obj(left) =>
+            {
+                if let Some(proof) = self.cos_nonzero_on_open_half_pi_for_arg(arg.as_ref()) {
+                    return Ok(Some(proof));
+                }
+            }
+
+            (Obj::TrigOperator(TrigOperator::Sin(Sin { arg })), right)
+                if is_zero_obj(right) =>
+            {
+                if let Some(proof) = self.sin_nonzero_on_open_pi_for_arg(arg.as_ref()) {
+                    return Ok(Some(proof));
+                }
+            }
+            (left, Obj::TrigOperator(TrigOperator::Sin(Sin { arg })))
+                if is_zero_obj(left) =>
+            {
+                if let Some(proof) = self.sin_nonzero_on_open_pi_for_arg(arg.as_ref()) {
+                    return Ok(Some(proof));
+                }
+            }
+
+            // `abs(x) != 0` from `x != 0`
+            (
+                Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs { arg })),
+                right,
+            ) if is_zero_obj(right) => {
+                if let Some(proof) =
+                    self.abs_nonzero_from_arg_proof(arg.as_ref(), verify_state.clone())?
+                {
+                    return Ok(Some(proof));
+                }
+            }
+            (
+                left,
+                Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs { arg })),
+            ) if is_zero_obj(left) => {
+                if let Some(proof) =
+                    self.abs_nonzero_from_arg_proof(arg.as_ref(), verify_state.clone())?
+                {
+                    return Ok(Some(proof));
+                }
+            }
+
+            // `a - b != 0` from `a != b`
+            (
+                Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left, right })),
+                zero,
+            ) if is_zero_obj(zero) => {
+                if let Some(proof) = self.diff_nonzero_from_inequality_proof(
+                    left.as_ref(),
+                    right.as_ref(),
+                    verify_state.clone(),
+                )? {
+                    return Ok(Some(proof));
+                }
+            }
+            (
+                zero,
+                Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left, right })),
+            ) if is_zero_obj(zero) => {
+                if let Some(proof) = self.diff_nonzero_from_inequality_proof(
+                    left.as_ref(),
+                    right.as_ref(),
+                    verify_state,
+                )? {
+                    return Ok(Some(proof));
+                }
+            }
+
+            _ => {}
         }
+
         Ok(None)
     }
 
-    fn cos_nonzero_on_open_half_pi_proof(
+    fn abs_nonzero_from_arg_proof(
+        &mut self,
+        arg: &Obj,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<NotEqualFactSearchProofByBuiltinRule>> {
+        let goal = Fact::AtomicFact(AtomicFact::NotEqualFact(NotEqualFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: arg.clone(),
+            right: zero_obj(),
+            line_file: None,
+        }));
+        let arg_nonzero_proof = self.verify_fact(&goal, verify_state)?;
+        if arg_nonzero_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(NotEqualFactSearchProofByBuiltinRule::AbsNonzeroFromArg(
+            AbsNonzeroFromArgBuiltinRuleProof { arg_nonzero_proof },
+        )))
+    }
+
+    fn diff_nonzero_from_inequality_proof(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<NotEqualFactSearchProofByBuiltinRule>> {
+        let goal = Fact::AtomicFact(AtomicFact::NotEqualFact(NotEqualFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: left.clone(),
+            right: right.clone(),
+            line_file: None,
+        }));
+        let operands_unequal_proof = self.verify_fact(&goal, verify_state)?;
+        if operands_unequal_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(
+            NotEqualFactSearchProofByBuiltinRule::DiffNonzeroFromInequality(
+                DiffNonzeroFromInequalityBuiltinRuleProof {
+                    operands_unequal_proof,
+                },
+            ),
+        ))
+    }
+
+    fn cos_nonzero_on_open_half_pi_for_arg(
         &self,
-        fact: &NotEqualFact,
+        arg: &Obj,
     ) -> Option<NotEqualFactSearchProofByBuiltinRule> {
-        let arg = cos_arg_against_zero(fact)?;
         let lower = negative_half_pi();
         let upper = half_pi();
         if self.known_less_fact_id(&lower, arg).is_none() {
@@ -122,11 +267,10 @@ impl Runtime {
         ))
     }
 
-    fn sin_nonzero_on_open_pi_proof(
+    fn sin_nonzero_on_open_pi_for_arg(
         &self,
-        fact: &NotEqualFact,
+        arg: &Obj,
     ) -> Option<NotEqualFactSearchProofByBuiltinRule> {
-        let arg = sin_arg_against_zero(fact)?;
         let lower = zero_obj();
         let upper = pi_obj();
         if self.known_less_fact_id(&lower, arg).is_none() {
@@ -138,22 +282,6 @@ impl Runtime {
         Some(NotEqualFactSearchProofByBuiltinRule::SinNonzeroOnOpenPi(
             SinNonzeroOnOpenPiBuiltinRuleProof {},
         ))
-    }
-}
-
-fn cos_arg_against_zero(fact: &NotEqualFact) -> Option<&Obj> {
-    match (&fact.left, &fact.right) {
-        (Obj::TrigOperator(TrigOperator::Cos(Cos { arg })), right) if is_zero_obj(right) => Some(arg.as_ref()),
-        (left, Obj::TrigOperator(TrigOperator::Cos(Cos { arg }))) if is_zero_obj(left) => Some(arg.as_ref()),
-        _ => None,
-    }
-}
-
-fn sin_arg_against_zero(fact: &NotEqualFact) -> Option<&Obj> {
-    match (&fact.left, &fact.right) {
-        (Obj::TrigOperator(TrigOperator::Sin(Sin { arg })), right) if is_zero_obj(right) => Some(arg.as_ref()),
-        (left, Obj::TrigOperator(TrigOperator::Sin(Sin { arg }))) if is_zero_obj(left) => Some(arg.as_ref()),
-        _ => None,
     }
 }
 

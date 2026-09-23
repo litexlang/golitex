@@ -13,6 +13,7 @@ pub mod not_equal;
 pub mod not_in_fact;
 pub mod not_greater;
 pub mod not_greater_equal;
+pub mod not_is_finite_set;
 pub mod not_is_nonempty_set;
 pub mod not_less;
 pub mod not_less_equal;

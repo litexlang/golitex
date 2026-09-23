@@ -23,7 +23,8 @@ use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_
     ArccosPrincipalUpperBoundBuiltinRuleProof, ArcsinPrincipalLowerBoundBuiltinRuleProof,
     ArcsinPrincipalUpperBoundBuiltinRuleProof, FromKnownInNaturalBuiltinRuleProof,
     LessEqualFactSearchProofByBuiltinRule, MulLeftNonnegativeMonotoneBuiltinRuleProof,
-    MulRightNonnegativeMonotoneBuiltinRuleProof, SubNonnegativeBuiltinRuleProof,
+    MulRightNonnegativeMonotoneBuiltinRuleProof, ProductOfNonnegativesBuiltinRuleProof,
+    SubNonnegativeBuiltinRuleProof, SumOfNonnegativesBuiltinRuleProof,
     UnitCircleLowerBoundBuiltinRuleProof, UnitCircleUpperBoundBuiltinRuleProof,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
@@ -154,15 +155,16 @@ impl Runtime {
                 )))
             }
 
-            // Right Add: `a <= a+b` or `a <= b+a`.
-            (left, Obj::ArithmeticOperator(ArithmeticOperator::Add(Add { left: a, right: b }))) => {
+            // Right Add: `a <= a+b` or `a <= b+a` (only when left matches an addend).
+            // Non-matching goals such as `0 <= u + v` fall through to the left-zero arm.
+            (
+                left,
+                Obj::ArithmeticOperator(ArithmeticOperator::Add(Add { left: a, right: b })),
+            ) if left.ir() == a.as_ref().ir() || left.ir() == b.as_ref().ir() => {
                 if left.ir() == a.as_ref().ir() {
                     return self.add_right_nonnegative_from_addend(b.as_ref(), verify_state);
                 }
-                if left.ir() == b.as_ref().ir() {
-                    return self.add_left_nonnegative_from_addend(a.as_ref(), verify_state);
-                }
-                Ok(None)
+                self.add_left_nonnegative_from_addend(a.as_ref(), verify_state)
             }
 
             // Left Sub: `a-b <= a`, or `-abs(x) <= x`.
@@ -184,7 +186,7 @@ impl Runtime {
                 Ok(None)
             }
 
-            // Left zero: `0 <= abs(x)` or `0 <= n` from `n $in N`.
+            // Left zero: `0 <= abs(x)`, `0 <= a+b`, `0 <= a*b`, or `0 <= n` from `n $in N`.
             (left, right) if is_zero_obj(left) => {
                 if matches!(
                     right,
@@ -193,6 +195,20 @@ impl Runtime {
                     return Ok(Some(LessEqualFactSearchProofByBuiltinRule::AbsNonnegative(
                         AbsNonnegativeBuiltinRuleProof {},
                     )));
+                }
+                if let Obj::ArithmeticOperator(ArithmeticOperator::Add(Add {
+                    left: a,
+                    right: b,
+                })) = right
+                {
+                    return self.sum_of_nonnegatives_proof(a.as_ref(), b.as_ref(), verify_state);
+                }
+                if let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
+                    left: a,
+                    right: b,
+                })) = right
+                {
+                    return self.product_of_nonnegatives_proof(a.as_ref(), b.as_ref(), verify_state);
                 }
                 if let Some(cite_fact_id) = self.known_in_natural_fact_id(right) {
                     return Ok(Some(
@@ -457,6 +473,56 @@ impl Runtime {
         let cite_fact_id = self.known_less_equal_fact_id(&abs_x, &fact.right)?;
         Some(LessEqualFactSearchProofByBuiltinRule::AbsLeImpliesNegUpper(
             AbsLeImpliesNegUpperBuiltinRuleProof { cite_fact_id },
+        ))
+    }
+
+    // `0 <= a + b` from `0 <= a` and `0 <= b`.
+    fn sum_of_nonnegatives_proof(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
+        let left_nonnegative_proof = self.verify_nonnegative(left, verify_state.clone())?;
+        if left_nonnegative_proof.is_failed() {
+            return Ok(None);
+        }
+        let right_nonnegative_proof = self.verify_nonnegative(right, verify_state)?;
+        if right_nonnegative_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(
+            LessEqualFactSearchProofByBuiltinRule::SumOfNonnegatives(
+                SumOfNonnegativesBuiltinRuleProof {
+                    left_nonnegative_proof,
+                    right_nonnegative_proof,
+                },
+            ),
+        ))
+    }
+
+    // `0 <= a * b` from `0 <= a` and `0 <= b`.
+    fn product_of_nonnegatives_proof(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
+        let left_nonnegative_proof = self.verify_nonnegative(left, verify_state.clone())?;
+        if left_nonnegative_proof.is_failed() {
+            return Ok(None);
+        }
+        let right_nonnegative_proof = self.verify_nonnegative(right, verify_state)?;
+        if right_nonnegative_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(
+            LessEqualFactSearchProofByBuiltinRule::ProductOfNonnegatives(
+                ProductOfNonnegativesBuiltinRuleProof {
+                    left_nonnegative_proof,
+                    right_nonnegative_proof,
+                },
+            ),
         ))
     }
 

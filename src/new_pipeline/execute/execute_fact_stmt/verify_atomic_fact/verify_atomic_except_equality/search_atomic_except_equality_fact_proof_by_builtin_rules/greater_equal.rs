@@ -1,9 +1,7 @@
 use crate::new_pipeline::ast::fact::GreaterEqualFact;
 use crate::new_pipeline::ast::names::AtomicName;
-use crate::new_pipeline::ast::obj::{Number, Obj, StandardSet, Literal};
-use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::predecessor_helpers::{
-    is_number_value, match_sub_one,
-};
+use crate::new_pipeline::ast::obj::{ArithmeticOperator, Literal, Number, Obj, StandardSet, Sub};
+use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::predecessor_helpers::is_number_value;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::parse::keywords::IN;
 use crate::new_pipeline::rational_expression::{
@@ -58,13 +56,15 @@ pub struct PredecessorNonNegFromAtLeastOneBuiltinRuleProof {
 }
 
 impl Runtime {
-    // Builtin: reflexivity, known `>`, known `$in N` for `>= 0`, predecessor
-    // non-neg from `>= 1`, then closed decimal.
+    // Builtin search for `a >= b`.
+    // B0: reflexivity + known `>`. A: match Obj shapes. B1: closed decimal.
+    // Example: prove `a >= a`, `n >= 0`, `n - 1 >= 0`, `2 >= 1`.
     pub fn search_greater_equal_fact_proof_by_builtin_rule(
         &mut self,
         fact: &GreaterEqualFact,
         _verify_state: VerifyState,
     ) -> RuntimeResult<Option<GreaterEqualFactSearchProofByBuiltinRule>> {
+        // B0 — non-shape
         if fact.left.ir() == fact.right.ir() {
             return Ok(Some(
                 GreaterEqualFactSearchProofByBuiltinRule::OrderReflexivity(
@@ -81,20 +81,18 @@ impl Runtime {
                 ),
             ));
         }
-        if is_number_value(&fact.right, "0") {
-            if let Some(cite_fact_id) = self.known_in_natural_fact_id(&fact.left) {
-                return Ok(Some(
-                    GreaterEqualFactSearchProofByBuiltinRule::FromKnownInNatural(
-                        FromKnownInNaturalBuiltinRuleProof { cite_fact_id },
-                    ),
-                ));
-            }
-            if let Some(base) = match_sub_one(&fact.left) {
+
+        // A — shape: goals ending at 0
+        match (&fact.left, &fact.right) {
+            (
+                Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left, right })),
+                zero,
+            ) if is_number_value(right.as_ref(), "1") && is_number_value(zero, "0") => {
                 let one = Obj::Literal(Literal::Number(Number {
                     normalized_value: "1".to_string(),
                 }));
                 if let Some(cite_at_least_one_fact_id) =
-                    self.known_greater_equal_fact_id(base, &one)
+                    self.known_greater_equal_fact_id(left.as_ref(), &one)
                 {
                     return Ok(Some(
                         GreaterEqualFactSearchProofByBuiltinRule::PredecessorNonNegFromAtLeastOne(
@@ -105,7 +103,19 @@ impl Runtime {
                     ));
                 }
             }
+            (left, zero) if is_number_value(zero, "0") => {
+                if let Some(cite_fact_id) = self.known_in_natural_fact_id(left) {
+                    return Ok(Some(
+                        GreaterEqualFactSearchProofByBuiltinRule::FromKnownInNatural(
+                            FromKnownInNaturalBuiltinRuleProof { cite_fact_id },
+                        ),
+                    ));
+                }
+            }
+            _ => {}
         }
+
+        // B1 — closed numeric
         let Some((cmp, left_normal, right_normal)) =
             compare_closed_objs_by_normalized_decimal(&fact.left, &fact.right)
         else {

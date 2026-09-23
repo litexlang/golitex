@@ -1,10 +1,14 @@
-use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact, InFact, IsTupleFact, NotInFact, SubsetFact};
+use crate::new_pipeline::ast::fact::{
+    AtomicFact, EqualFact, Fact, InFact, IsTupleFact, LessEqualFact, LessFact, NotInFact, SubsetFact,
+};
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::{
-    Cart, FnObj, FnObjHead, Number, Obj, ObjAtIndex, StandardSet, StructObj, TupleDim,
-    ArithmeticOperator, ExpLogOperator, IntegerOperator, Literal, ProductShape, SetFormer,
-    SetOperator, StructAndFieldAccessObj, TrigOperator,
+    Add, ArithmeticOperator, Cart, ExpLogOperator, FnObj, FnObjHead, FnSet, FunctionSpace,
+    IntegerOperator, IntervalObj, Literal, Mul, Number, Obj, ObjAtIndex, OneSideInfinityIntervalObj,
+    ProductShape, SetFormer, SetOperator, StandardSet, StructAndFieldAccessObj, StructObj,
+    TrigOperator, TupleDim,
 };
+use crate::new_pipeline::ast::param::SetBoundParameterList;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::predecessor_helpers::match_sub_one;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
@@ -78,6 +82,11 @@ pub enum InFactSearchProofByBuiltinRule {
     // Example: after restricted `countdown $in fn(_n N: …) N`, prove
     // `countdown(n - 1) $in N`.
     FnApplicationInCodomain(FnApplicationInCodomainBuiltinRuleProof),
+    // Well-defined function application lands in the function's range.
+    // Mathematical property: if `f(args)` is well-defined for a function with a
+    // known FnSet body, then `f(args) $in fn_range(f)`.
+    // Example: after `have fn g(t R) R = t`, prove `g(1) $in fn_range(g)`.
+    FnApplicationInFnRange(FnApplicationInFnRangeBuiltinRuleProof),
     // Union membership from the left factor.
     // Mathematical property: `x $in A` ⇒ `x $in union(A, B)`.
     // Example: `1 $in {1}` proves `1 $in union({1}, {2})`.
@@ -102,6 +111,20 @@ pub enum InFactSearchProofByBuiltinRule {
     // Mathematical property: `i $in I` and `x $in A(i)` ⇒ `x $in index_union(I, X, A)`.
     // Example: known `1 $in {1}` and `3 $in A(1)` prove `3 $in index_union({1}, N, A)`.
     IndexUnionMembershipFromIndex(IndexUnionMembershipFromIndexBuiltinRuleProof),
+    // Real interval membership from carrier and endpoint bounds.
+    // Mathematical property: `x $in R` plus the matching open/closed endpoint inequalities
+    // prove `x $in '(a,b)` / `'[a,b]` / mixed variants.
+    // Example: known `x $in R`, `0 <= x`, `x < 1` prove `x $in '[0, 1)`.
+    IntervalMembership(IntervalMembershipBuiltinRuleProof),
+    // One-sided real ray membership from carrier and the finite endpoint bound.
+    // Example: known `x $in R` and `0 <= x` prove `x $in '[0,)`.
+    OneSideInfinityIntervalMembership(OneSideInfinityIntervalMembershipBuiltinRuleProof),
+    // Natural addition closure: `a $in N` and `b $in N` ⇒ `a + b $in N`.
+    // Example: known `m $in N`, `n $in N` prove `m + n $in N`.
+    AddInNatural(AddInNaturalBuiltinRuleProof),
+    // Natural multiplication closure: `a $in N` and `b $in N` ⇒ `a * b $in N`.
+    // Example: known `m $in N`, `n $in N` prove `m * n $in N`.
+    MulInNatural(MulInNaturalBuiltinRuleProof),
 }
 
 // Closed decimal membership certificate (sides live on the InFact).
@@ -179,6 +202,9 @@ pub struct FnApplicationInCodomainBuiltinRuleProof {
     pub cite_in_function_set_fact_id: FactId,
 }
 
+// Zero-premise certificate: sides live on the InFact; WD already checked.
+// Example: `g(1) $in fn_range(g)`.
+pub struct FnApplicationInFnRangeBuiltinRuleProof {}
 
 pub struct UnionMembershipFromLeftBuiltinRuleProof {
     pub left_membership_proof: VerifyFactResult,
@@ -207,6 +233,28 @@ pub struct IndexUnionMembershipFromIndexBuiltinRuleProof {
     pub cite_index_in_index_set_fact_id: FactId,
     pub element_in_fiber_proof: VerifyFactResult,
 }
+
+pub struct IntervalMembershipBuiltinRuleProof {
+    pub in_real_proof: VerifyFactResult,
+    pub lower_bound_proof: VerifyFactResult,
+    pub upper_bound_proof: VerifyFactResult,
+}
+
+pub struct OneSideInfinityIntervalMembershipBuiltinRuleProof {
+    pub in_real_proof: VerifyFactResult,
+    pub endpoint_bound_proof: VerifyFactResult,
+}
+
+pub struct AddInNaturalBuiltinRuleProof {
+    pub left_in_n_proof: VerifyFactResult,
+    pub right_in_n_proof: VerifyFactResult,
+}
+
+pub struct MulInNaturalBuiltinRuleProof {
+    pub left_in_n_proof: VerifyFactResult,
+    pub right_in_n_proof: VerifyFactResult,
+}
+
 
 impl Runtime {
     // Builtin InFact search: dispatch by set shape first, then only try rules
@@ -288,6 +336,15 @@ impl Runtime {
             Obj::SetOperator(SetOperator::IndexUnion(_)) => {
                 self.index_union_membership_proof(fact, verify_state)
             }
+            Obj::FunctionSpace(FunctionSpace::FnRange(_)) => {
+                self.fn_application_in_fn_range_proof(fact)
+            }
+            Obj::SetFormer(SetFormer::IntervalObj(_)) => {
+                self.interval_membership_proof(fact, verify_state)
+            }
+            Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(_)) => {
+                self.one_side_infinity_interval_membership_proof(fact, verify_state)
+            }
             _ => {
                 if matches!(&fact.element, Obj::FnObj(_)) {
                     return self.fn_application_in_codomain_proof(fact, verify_state);
@@ -299,52 +356,73 @@ impl Runtime {
 
     // Standard-set `$in`: closed numeric → C-arithmetic / N-predecessor by set
     // → fn-codomain by element → subset lift → native constants by element.
+    // StandardSet membership: B0 closed numeric → A match element shape → B1 cite/fn.
+    // Example: prove `(x + y) $in R`, `sin(x) $in R`, `n - 1 $in N`, `i $in C`.
     fn search_in_fact_standard_set_builtin_rule(
         &mut self,
         fact: &InFact,
         set: &StandardSet,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        // B0 — non-shape closed evaluation
         if let Some(proof) = closed_numeric_membership_proof(fact) {
             return Ok(Some(proof));
         }
 
-        match set {
-            StandardSet::C => {
-                if let Some(proof) = complex_arithmetic_in_c_proof(fact) {
-                    return Ok(Some(proof));
-                }
-            }
-            StandardSet::R => {
-                if let Some(proof) = real_arithmetic_in_r_proof(fact) {
-                    return Ok(Some(proof));
-                }
-                if let Some(proof) = real_trig_in_r_proof(fact) {
-                    return Ok(Some(proof));
-                }
-            }
-            StandardSet::N => {
-                if let Some(proof) = self.predecessor_in_natural_proof(fact)? {
-                    return Ok(Some(proof));
-                }
-            }
-            _ => {}
-        }
-
-        if matches!(&fact.element, Obj::FnObj(_)) {
-            if let Some(proof) =
-                self.fn_application_in_codomain_proof(fact, verify_state.clone())?
-            {
-                return Ok(Some(proof));
-            }
-        }
-
-        if let Some(proof) = self.standard_set_subset_membership_proof(fact, verify_state)? {
-            return Ok(Some(proof));
-        }
-
+        // A — match element constructor (set gates stay as arm guards)
         match &fact.element {
-            Obj::Literal(Literal::ImaginaryUnit(_)) | Obj::Literal(Literal::EulerNumber(_)) | Obj::Literal(Literal::Pi(_)) => {
+            Obj::ArithmeticOperator(ArithmeticOperator::Add(_))
+            | Obj::ArithmeticOperator(ArithmeticOperator::Sub(_))
+            | Obj::ArithmeticOperator(ArithmeticOperator::Mul(_))
+            | Obj::ArithmeticOperator(ArithmeticOperator::Div(_))
+            | Obj::ArithmeticOperator(ArithmeticOperator::Pow(_))
+            | Obj::ArithmeticOperator(ArithmeticOperator::Abs(_))
+            | Obj::IntegerOperator(IntegerOperator::Mod(_))
+            | Obj::IntegerOperator(IntegerOperator::Quot(_))
+            | Obj::ExpLogOperator(ExpLogOperator::Sqrt(_))
+            | Obj::ExpLogOperator(ExpLogOperator::Log(_))
+            | Obj::ExpLogOperator(ExpLogOperator::Ln(_))
+            | Obj::ExpLogOperator(ExpLogOperator::Exp(_)) => {
+                if matches!(set, StandardSet::C) {
+                    if let Some(proof) = complex_arithmetic_in_c_proof(fact) {
+                        return Ok(Some(proof));
+                    }
+                }
+                if matches!(set, StandardSet::R) {
+                    if let Some(proof) = real_arithmetic_in_r_proof(fact) {
+                        return Ok(Some(proof));
+                    }
+                }
+                // `x - 1 $in N` from `x $in N` and `x >= 1`
+                if matches!(set, StandardSet::N) {
+                    if let Some(proof) = self.predecessor_in_natural_proof(fact)? {
+                        return Ok(Some(proof));
+                    }
+                    if let Some(proof) = self.add_in_natural_proof(fact, verify_state.clone())? {
+                        return Ok(Some(proof));
+                    }
+                    if let Some(proof) = self.mul_in_natural_proof(fact, verify_state.clone())? {
+                        return Ok(Some(proof));
+                    }
+                }
+            }
+            Obj::TrigOperator(TrigOperator::Sin(_))
+            | Obj::TrigOperator(TrigOperator::Cos(_))
+            | Obj::TrigOperator(TrigOperator::Tan(_))
+            | Obj::TrigOperator(TrigOperator::Cot(_))
+            | Obj::TrigOperator(TrigOperator::Arcsin(_))
+            | Obj::TrigOperator(TrigOperator::Arccos(_))
+            | Obj::TrigOperator(TrigOperator::Arctan(_))
+            | Obj::TrigOperator(TrigOperator::Arccot(_)) => {
+                if matches!(set, StandardSet::R) {
+                    if let Some(proof) = real_trig_in_r_proof(fact) {
+                        return Ok(Some(proof));
+                    }
+                }
+            }
+            Obj::Literal(Literal::ImaginaryUnit(_))
+            | Obj::Literal(Literal::EulerNumber(_))
+            | Obj::Literal(Literal::Pi(_)) => {
                 if let Some(kind) = native_constant_membership_kind(&fact.element, &fact.set) {
                     return Ok(Some(
                         InFactSearchProofByBuiltinRule::NativeConstantMembership(
@@ -353,7 +431,19 @@ impl Runtime {
                     ));
                 }
             }
+            Obj::FnObj(_) => {
+                if let Some(proof) =
+                    self.fn_application_in_codomain_proof(fact, verify_state.clone())?
+                {
+                    return Ok(Some(proof));
+                }
+            }
             _ => {}
+        }
+
+        // B1 — non-shape cite: known membership in a proper subset
+        if let Some(proof) = self.standard_set_subset_membership_proof(fact, verify_state)? {
+            return Ok(Some(proof));
         }
 
         Ok(None)
@@ -387,6 +477,231 @@ impl Runtime {
             },
         )))
     }
+
+    // Prove `x $in '(a,b)` / `'[a,b]` / mixed from `x $in R` and endpoint bounds.
+    // Example: known `x $in R`, `a <= x`, `x < b` prove `x $in '[a, b)`.
+    fn interval_membership_proof(
+        &mut self,
+        fact: &InFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        let Obj::SetFormer(SetFormer::IntervalObj(interval)) = &fact.set else {
+            return Ok(None);
+        };
+        let (lower_closed, upper_closed, start, end) = match interval {
+            IntervalObj::LeftOpenRightOpen(s) => (false, false, s.start.as_ref(), s.end.as_ref()),
+            IntervalObj::LeftOpenRightClosed(s) => (false, true, s.start.as_ref(), s.end.as_ref()),
+            IntervalObj::LeftClosedRightOpen(s) => (true, false, s.start.as_ref(), s.end.as_ref()),
+            IntervalObj::LeftClosedRightClosed(s) => (true, true, s.start.as_ref(), s.end.as_ref()),
+        };
+
+        let in_real = Fact::AtomicFact(AtomicFact::InFact(InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: fact.element.clone(),
+            set: Obj::StandardSet(StandardSet::R),
+            line_file: None,
+        }));
+        let in_real_proof = self.verify_fact(&in_real, verify_state.clone())?;
+        if in_real_proof.is_failed() {
+            return Ok(None);
+        }
+
+        let lower = if lower_closed {
+            Fact::AtomicFact(AtomicFact::LessEqualFact(LessEqualFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: start.clone(),
+                right: fact.element.clone(),
+                line_file: None,
+            }))
+        } else {
+            Fact::AtomicFact(AtomicFact::LessFact(LessFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: start.clone(),
+                right: fact.element.clone(),
+                line_file: None,
+            }))
+        };
+        let lower_bound_proof = self.verify_fact(&lower, verify_state.clone())?;
+        if lower_bound_proof.is_failed() {
+            return Ok(None);
+        }
+
+        let upper = if upper_closed {
+            Fact::AtomicFact(AtomicFact::LessEqualFact(LessEqualFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: fact.element.clone(),
+                right: end.clone(),
+                line_file: None,
+            }))
+        } else {
+            Fact::AtomicFact(AtomicFact::LessFact(LessFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: fact.element.clone(),
+                right: end.clone(),
+                line_file: None,
+            }))
+        };
+        let upper_bound_proof = self.verify_fact(&upper, verify_state)?;
+        if upper_bound_proof.is_failed() {
+            return Ok(None);
+        }
+
+        Ok(Some(InFactSearchProofByBuiltinRule::IntervalMembership(
+            IntervalMembershipBuiltinRuleProof {
+                in_real_proof,
+                lower_bound_proof,
+                upper_bound_proof,
+            },
+        )))
+    }
+
+    // Prove `x $in '[a,)` / `'(a,)` / `'(,b]` / `'(,b)` from `x $in R` and one bound.
+    // Example: known `x $in R` and `a <= x` prove `x $in '[a,)`.
+    fn one_side_infinity_interval_membership_proof(
+        &mut self,
+        fact: &InFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        let Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(interval)) = &fact.set else {
+            return Ok(None);
+        };
+        let (is_lower_bound, closed, endpoint) = match interval {
+            OneSideInfinityIntervalObj::LeftOpen(s) => (false, false, s.start.as_ref()),
+            OneSideInfinityIntervalObj::LeftClosed(s) => (false, true, s.start.as_ref()),
+            OneSideInfinityIntervalObj::RightOpen(s) => (true, false, s.start.as_ref()),
+            OneSideInfinityIntervalObj::RightClosed(s) => (true, true, s.start.as_ref()),
+        };
+
+        let in_real = Fact::AtomicFact(AtomicFact::InFact(InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: fact.element.clone(),
+            set: Obj::StandardSet(StandardSet::R),
+            line_file: None,
+        }));
+        let in_real_proof = self.verify_fact(&in_real, verify_state.clone())?;
+        if in_real_proof.is_failed() {
+            return Ok(None);
+        }
+
+        let bound = match (is_lower_bound, closed) {
+            (true, true) => Fact::AtomicFact(AtomicFact::LessEqualFact(LessEqualFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: endpoint.clone(),
+                right: fact.element.clone(),
+                line_file: None,
+            })),
+            (true, false) => Fact::AtomicFact(AtomicFact::LessFact(LessFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: endpoint.clone(),
+                right: fact.element.clone(),
+                line_file: None,
+            })),
+            (false, true) => Fact::AtomicFact(AtomicFact::LessEqualFact(LessEqualFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: fact.element.clone(),
+                right: endpoint.clone(),
+                line_file: None,
+            })),
+            (false, false) => Fact::AtomicFact(AtomicFact::LessFact(LessFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: fact.element.clone(),
+                right: endpoint.clone(),
+                line_file: None,
+            })),
+        };
+        let endpoint_bound_proof = self.verify_fact(&bound, verify_state)?;
+        if endpoint_bound_proof.is_failed() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            InFactSearchProofByBuiltinRule::OneSideInfinityIntervalMembership(
+                OneSideInfinityIntervalMembershipBuiltinRuleProof {
+                    in_real_proof,
+                    endpoint_bound_proof,
+                },
+            ),
+        ))
+    }
+
+    // Prove `a + b $in N` from `a $in N` and `b $in N`.
+    // Example: known `m $in N`, `n $in N` prove `m + n $in N`.
+    fn add_in_natural_proof(
+        &mut self,
+        fact: &InFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        let Obj::ArithmeticOperator(ArithmeticOperator::Add(Add { left, right })) = &fact.element
+        else {
+            return Ok(None);
+        };
+        let left_goal = Fact::AtomicFact(AtomicFact::InFact(InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: left.as_ref().clone(),
+            set: Obj::StandardSet(StandardSet::N),
+            line_file: None,
+        }));
+        let left_in_n_proof = self.verify_fact(&left_goal, verify_state.clone())?;
+        if left_in_n_proof.is_failed() {
+            return Ok(None);
+        }
+        let right_goal = Fact::AtomicFact(AtomicFact::InFact(InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: right.as_ref().clone(),
+            set: Obj::StandardSet(StandardSet::N),
+            line_file: None,
+        }));
+        let right_in_n_proof = self.verify_fact(&right_goal, verify_state)?;
+        if right_in_n_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(InFactSearchProofByBuiltinRule::AddInNatural(
+            AddInNaturalBuiltinRuleProof {
+                left_in_n_proof,
+                right_in_n_proof,
+            },
+        )))
+    }
+
+    // Prove `a * b $in N` from `a $in N` and `b $in N`.
+    // Example: known `m $in N`, `n $in N` prove `m * n $in N`.
+    fn mul_in_natural_proof(
+        &mut self,
+        fact: &InFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        let Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul { left, right })) = &fact.element
+        else {
+            return Ok(None);
+        };
+        let left_goal = Fact::AtomicFact(AtomicFact::InFact(InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: left.as_ref().clone(),
+            set: Obj::StandardSet(StandardSet::N),
+            line_file: None,
+        }));
+        let left_in_n_proof = self.verify_fact(&left_goal, verify_state.clone())?;
+        if left_in_n_proof.is_failed() {
+            return Ok(None);
+        }
+        let right_goal = Fact::AtomicFact(AtomicFact::InFact(InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: right.as_ref().clone(),
+            set: Obj::StandardSet(StandardSet::N),
+            line_file: None,
+        }));
+        let right_in_n_proof = self.verify_fact(&right_goal, verify_state)?;
+        if right_in_n_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(InFactSearchProofByBuiltinRule::MulInNatural(
+            MulInNaturalBuiltinRuleProof {
+                left_in_n_proof,
+                right_in_n_proof,
+            },
+        )))
+    }
+
 
     // Prove `f(args) $in R` from a matching InFunctionSet whose applied return is `R`.
     // Example: restricted `countdown $in fn(_n N: …) N` proves `countdown(n - 1) $in N`.
@@ -424,6 +739,41 @@ impl Runtime {
             }
         }
         Ok(None)
+    }
+
+    // Prove `f(args) $in fn_range(f)` when the application is already WD.
+    // Mathematical property: a well-defined application of `f` is a point of the image.
+    // Example: after `have fn g(t R) R = t`, prove `g(1) $in fn_range(g)`.
+    fn fn_application_in_fn_range_proof(
+        &mut self,
+        fact: &InFact,
+    ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        let Obj::FnObj(fn_obj) = &fact.element else {
+            return Ok(None);
+        };
+        let Obj::FunctionSpace(FunctionSpace::FnRange(fn_range)) = &fact.set else {
+            return Ok(None);
+        };
+        let head_obj = fn_obj_head_as_obj(fn_obj.head.as_ref());
+        if head_obj.ir() != fn_range.function.ir() {
+            return Ok(None);
+        }
+        let Some(body) = resolve_fn_set_body_for_fn_range(self, fn_range.function.as_ref()) else {
+            return Ok(None);
+        };
+        if fn_obj.body.len() != 1 {
+            return Ok(None);
+        }
+        let arg_count = fn_obj.body[0].len();
+        let expected = set_bound_parameter_count(&body.set_bound_parameters);
+        if arg_count != expected {
+            return Ok(None);
+        }
+        Ok(Some(
+            InFactSearchProofByBuiltinRule::FnApplicationInFnRange(
+                FnApplicationInFnRangeBuiltinRuleProof {},
+            ),
+        ))
     }
 
     // Prove `element $in target` from a known `element $in source` with source ⊂ target.
@@ -1007,6 +1357,38 @@ impl Runtime {
         }
         Ok(None)
     }
+}
+
+fn fn_obj_head_as_obj(head: &FnObjHead) -> Obj {
+    match head {
+        FnObjHead::Identifier(id) => Obj::Identifier(id.clone()),
+        FnObjHead::AnonymousFnLiteral(a) => {
+            Obj::FunctionSpace(FunctionSpace::AnonymousFn(a.as_ref().clone()))
+        }
+        FnObjHead::FieldAccess(v) => {
+            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(v.clone()))
+        }
+        FnObjHead::InstantiatedTemplateObj(v) => Obj::InstantiatedTemplateObj(v.clone()),
+    }
+}
+
+fn resolve_fn_set_body_for_fn_range(runtime: &Runtime, function: &Obj) -> Option<FnSet> {
+    if let Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) = function {
+        return Some(anon.body.clone());
+    }
+    runtime
+        .collect_in_function_set_candidates(function)
+        .into_iter()
+        .next()
+        .map(|(fn_set, _)| fn_set)
+}
+
+fn set_bound_parameter_count(list: &SetBoundParameterList) -> usize {
+    let mut n = 0;
+    for group in &list.groups {
+        n += group.params.len();
+    }
+    n
 }
 
 fn apply_fn_one_arg(f: &Obj, arg: Obj) -> Option<Obj> {

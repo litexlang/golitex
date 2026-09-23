@@ -3,12 +3,10 @@
 #
 # Surface: `have by fn_preimage: names from … $in fn_range(…)`
 # (renamed from default-pipeline `have by preimage`).
-# Membership is trusted here so this tracer focuses on the stmt arm
-# (application ∈ fn_range builtin is separate).
 
 have fn shift(x R) R = x + 1
 
-trust shift(2) $in fn_range(shift)
+shift(2) $in fn_range(shift)
 
 have by fn_preimage: source from shift(2) $in fn_range(shift)
 
