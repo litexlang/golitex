@@ -2468,25 +2468,6 @@ fn obtain_from_atomic_fact_introduces_witness_and_body() {
 }
 
 #[test]
-fn obtain_from_thm_introduces_witness_and_body() {
-    let mut runtime = runtime_with_file_env();
-    let thm = "thm self_exists:\n    ? forall a R:\n        exist x R st {x = a}";
-    assert!(!exec_one(&mut runtime, thm).is_failed(), "def thm self_exists");
-    assert!(
-        !exec_one(&mut runtime, "obtain theorem_copy from thm self_exists(3)").is_failed(),
-        "obtain from thm"
-    );
-    assert!(
-        !exec_one(&mut runtime, "theorem_copy = 3").is_failed(),
-        "body after obtain from thm"
-    );
-    assert!(
-        !exec_one(&mut runtime, "theorem_copy $in R").is_failed(),
-        "type after obtain from thm"
-    );
-}
-
-#[test]
 fn template_body_obtain_from_atomic_fact_wires() {
     let mut runtime = runtime_with_file_env();
     let prop = "prop has_copy(a R):\n    exist x R st {x = a}";
@@ -2496,18 +2477,6 @@ fn template_body_obtain_from_atomic_fact_wires() {
     assert!(
         !exec_one(&mut runtime, code).is_failed(),
         "template body obtain from $P"
-    );
-}
-
-#[test]
-fn template_body_obtain_from_thm_wires() {
-    let mut runtime = runtime_with_file_env();
-    let thm = "thm self_exists:\n    ? forall a R:\n        exist x R st {x = a}";
-    assert!(!exec_one(&mut runtime, thm).is_failed(), "def thm for template");
-    let code = "template<_S set>:\n    obtain tw from thm self_exists(2)";
-    assert!(
-        !exec_one(&mut runtime, code).is_failed(),
-        "template body obtain from thm"
     );
 }
 
@@ -2748,6 +2717,35 @@ fn not_in_and_set_algebra_builtin_rules() {
         !exec_one(&mut runtime, "abs(x + y) <= abs(x) + abs(y)").is_failed(),
         "abs triangle inequality"
     );
+    assert!(
+        !exec_one(&mut runtime, "abs(x) - abs(y) <= abs(x + y)").is_failed(),
+        "abs reverse triangle add"
+    );
+    assert!(
+        !exec_one(&mut runtime, "abs(x) - abs(y) <= abs(x - y)").is_failed(),
+        "abs reverse triangle sub"
+    );
+    assert!(
+        !exec_one(&mut runtime, "x + y $in R").is_failed(),
+        "real arithmetic closure"
+    );
+    assert!(!exec_one(&mut runtime, "trust x < 0").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "0 > x").is_failed(),
+        "greater from known less"
+    );
+    assert!(
+        !exec_one(&mut runtime, "{1, 2} $subset N").is_failed(),
+        "list-set subset from members"
+    );
+    assert!(
+        !exec_one(&mut runtime, "union({1}, {2}) $subset N").is_failed(),
+        "union subset from both operands"
+    );
+    assert!(
+        !exec_one(&mut runtime, "intersect({1, 2}, {2, 3}) $subset N").is_failed(),
+        "intersect subset from left upper bound"
+    );
     assert!(!exec_one(&mut runtime, "1 $in {1}").is_failed());
     assert!(!exec_one(&mut runtime, "{1} $in {{1}}").is_failed());
     assert!(
@@ -2763,5 +2761,83 @@ fn not_in_and_set_algebra_builtin_rules() {
     assert!(
         !exec_one(&mut runtime, "exist t {1} st {t $in {1}}").is_failed(),
         "exist nonempty-set member witness"
+    );
+}
+
+#[test]
+fn infer_positive_real_power_equal_transfers_r_pos_membership() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have base R+").is_failed());
+    assert!(!exec_one(&mut runtime, "have pow_val R").is_failed());
+    // Pow WD currently accepts C×N (and C×Z×base≠0), not yet R+×R.
+    assert!(!exec_one(&mut runtime, "trust base^2 = pow_val").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "pow_val $in R+").is_failed(),
+        "a^n = y with 0 < a and n in N must infer y $in R+"
+    );
+}
+
+#[test]
+fn trust_in_fn_set_registers_in_function_set_for_application_wd() {
+    let mut runtime = runtime_with_file_env();
+    use crate::new_pipeline::exec_env::SpecialObjectPropertyByDefinition;
+    assert!(!exec_one(&mut runtime, "have f set").is_failed());
+    assert!(!exec_one(&mut runtime, "trust f $in fn(t R) R").is_failed());
+    assert!(
+        runtime
+            .top_exec_env()
+            .special_object_properties
+            .values()
+            .flatten()
+            .any(|p| matches!(p, SpecialObjectPropertyByDefinition::InFunctionSet(_))),
+        "trust f $in fn(...) must register InFunctionSet"
+    );
+    assert!(!exec_one(&mut runtime, "have arg R").is_failed());
+    assert!(!exec_one(&mut runtime, "trust arg = 1").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "f(arg) $in R").is_failed(),
+        "application WD after trust InFunctionSet"
+    );
+}
+
+#[test]
+fn infer_fn_range_membership_projects_codomain() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have fn g(t R) R = t").is_failed());
+    assert!(!exec_one(&mut runtime, "have z R").is_failed());
+    assert!(!exec_one(&mut runtime, "trust z $in fn_range(g)").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "z $in R").is_failed(),
+        "z $in fn_range(g) must infer z $in R"
+    );
+}
+
+#[test]
+fn infer_finite_seq_and_seq_expand_to_fn_set_for_application() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have s set").is_failed());
+    assert!(!exec_one(&mut runtime, "trust s $in finite_seq(R, 3)").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "s(1) $in R").is_failed(),
+        "finite_seq membership must expand to FnSet"
+    );
+    assert!(!exec_one(&mut runtime, "have seq_s set").is_failed());
+    assert!(!exec_one(&mut runtime, "trust seq_s $in seq(R)").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "seq_s(1) $in R").is_failed(),
+        "seq membership must expand to FnSet"
+    );
+}
+
+#[test]
+fn infer_family_union_membership_emits_exist_member() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have F set").is_failed());
+    assert!(!exec_one(&mut runtime, "trust F = {{1}}").is_failed());
+    assert!(!exec_one(&mut runtime, "have w set").is_failed());
+    assert!(!exec_one(&mut runtime, "trust w $in family_union(F)").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "exist item F st {w $in item}").is_failed(),
+        "family_union membership must infer exist member"
     );
 }

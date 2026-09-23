@@ -5,6 +5,7 @@ mod claim_example;
 mod def_misc;
 mod eval;
 mod have;
+mod have_by;
 mod have_fn;
 mod helper;
 mod obtain;

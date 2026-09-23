@@ -42,6 +42,20 @@ pub enum InferAtomicExceptEqualityResult {
     InFactRealInterval(InferInFactRealIntervalResult),
     // `x $in '[a,)` etc. → `x $in R` + one bound.
     InFactOneSideRealInterval(InferInFactOneSideRealIntervalResult),
+    // `x $in S` with `S = fn(...)` → `x $in fn(...)`.
+    InFactEqualFnSetExpand(InferInFactEqualFnSetExpandResult),
+    // `z $in fn_range(f)` → `z $in ret` (+ optional preimage exist).
+    InFactFnRange(InferInFactFnRangeResult),
+    // `x $in finite_seq(S, n)` → `x $in fn(i N+: i <= n) S`.
+    InFactFiniteSeqExpand(InferInFactFiniteSeqExpandResult),
+    // `x $in seq(S)` → `x $in fn(i N+) S`.
+    InFactSeqExpand(InferInFactSeqExpandResult),
+    // `x $in family_union(F)` → `exist item F st {x $in item}`.
+    InFactFamilyUnion(InferInFactFamilyUnionResult),
+    // `x $in index_union(I, X, A)` → ambient + exist fiber.
+    InFactIndexUnion(InferInFactIndexUnionResult),
+    // `x $in index_intersect(I, X, A)` → ambient + forall fiber.
+    InFactIndexIntersect(InferInFactIndexIntersectResult),
     // Order vs resolved numeric bound → sign vs 0.
     LessSign(InferNumericOrderSignResult),
     GreaterSign(InferNumericOrderSignResult),
@@ -126,6 +140,34 @@ pub struct InferInFactRealIntervalResult {
 }
 
 pub struct InferInFactOneSideRealIntervalResult {
+    pub derived: Vec<StoreFactAndInferResult>,
+}
+
+pub struct InferInFactEqualFnSetExpandResult {
+    pub derived: Vec<StoreFactAndInferResult>,
+}
+
+pub struct InferInFactFnRangeResult {
+    pub derived: Vec<StoreFactAndInferResult>,
+}
+
+pub struct InferInFactFiniteSeqExpandResult {
+    pub derived: Box<StoreFactAndInferResult>,
+}
+
+pub struct InferInFactSeqExpandResult {
+    pub derived: Box<StoreFactAndInferResult>,
+}
+
+pub struct InferInFactFamilyUnionResult {
+    pub derived: Box<StoreFactAndInferResult>,
+}
+
+pub struct InferInFactIndexUnionResult {
+    pub derived: Vec<StoreFactAndInferResult>,
+}
+
+pub struct InferInFactIndexIntersectResult {
     pub derived: Vec<StoreFactAndInferResult>,
 }
 
@@ -224,6 +266,37 @@ impl InferAtomicExceptEqualityResult {
                 ids
             }
             Self::InFactOneSideRealInterval(r) => {
+                let mut ids = Vec::new();
+                for d in &r.derived {
+                    ids.extend(d.stored_fact_ids());
+                }
+                ids
+            }
+            Self::InFactEqualFnSetExpand(r) => {
+                let mut ids = Vec::new();
+                for d in &r.derived {
+                    ids.extend(d.stored_fact_ids());
+                }
+                ids
+            }
+            Self::InFactFnRange(r) => {
+                let mut ids = Vec::new();
+                for d in &r.derived {
+                    ids.extend(d.stored_fact_ids());
+                }
+                ids
+            }
+            Self::InFactFiniteSeqExpand(r) => r.derived.stored_fact_ids(),
+            Self::InFactSeqExpand(r) => r.derived.stored_fact_ids(),
+            Self::InFactFamilyUnion(r) => r.derived.stored_fact_ids(),
+            Self::InFactIndexUnion(r) => {
+                let mut ids = Vec::new();
+                for d in &r.derived {
+                    ids.extend(d.stored_fact_ids());
+                }
+                ids
+            }
+            Self::InFactIndexIntersect(r) => {
                 let mut ids = Vec::new();
                 for d in &r.derived {
                     ids.extend(d.stored_fact_ids());

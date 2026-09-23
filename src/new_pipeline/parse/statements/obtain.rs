@@ -1,15 +1,15 @@
-use super::super::keywords::{EXIST, EXIST_BANG, FACT_PREFIX, FROM, OBTAIN, THM};
+use super::super::keywords::{EXIST, EXIST_BANG, FACT_PREFIX, FROM, OBTAIN};
 use super::super::object::is_simple_name;
 use crate::new_pipeline::ast::fact::AtomicFact;
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::stmt::{
-    DefinitionStmt, ObtainObjFromAtomicFact, ObtainObjFromExistFact, ObtainObjFromThm, Stmt,
+    DefinitionStmt, ObtainObjFromAtomicFact, ObtainObjFromExistFact, Stmt,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
 
 impl Runtime {
-    // obtain x, y from exist … / exist! … / $P(…) / thm name(…)
+    // obtain x, y from exist … / exist! … / $P(…)
     pub(in super::super) fn parse_obtain_stmt(
         &mut self,
         block: &TokenBlock,
@@ -50,14 +50,6 @@ impl Runtime {
                     line_file,
                 },
             ))
-        } else if tb.peek() == Some(THM) {
-            tb.expect(THM)?;
-            let call = self.parse_theorem_call(&mut tb)?;
-            Stmt::Definition(DefinitionStmt::ObtainObjFromThm(ObtainObjFromThm {
-                equal_tos: equal_tos.clone(),
-                call,
-                line_file,
-            }))
         } else if tb.peek() == Some(FACT_PREFIX) {
             let atomic = self.parse_atomic_fact(&mut tb, true)?;
             let AtomicFact::NormalAtomicFact(fact) = atomic else {
@@ -74,7 +66,7 @@ impl Runtime {
             ))
         } else {
             return Err(tb.parse_error(
-                "obtain: expected `exist` / `exist!` / `$P(...)` / `thm name(...)` after `from`",
+                "obtain: expected `exist` / `exist!` / `$P(...)` after `from`",
             ));
         };
 

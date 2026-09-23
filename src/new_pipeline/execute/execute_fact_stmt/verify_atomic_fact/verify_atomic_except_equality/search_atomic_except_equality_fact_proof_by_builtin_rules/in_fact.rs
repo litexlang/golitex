@@ -32,6 +32,10 @@ pub enum InFactSearchProofByBuiltinRule {
     // principal inverses land in R.
     // Example: prove `arcsin(x) $in R`, `tan(x) $in R`.
     RealTrigClosure(RealTrigClosureBuiltinRuleProof),
+    // Well-defined real arithmetic expressions inhabit R.
+    // Mathematical property: after child WD, `+ - * / abs …` over R-carriers stay in R.
+    // Example: prove `(x + y) $in R`, `abs(x) $in R`.
+    RealArithmeticClosure(RealArithmeticClosureBuiltinRuleProof),
     // Membership lifts along the standard-set inclusion chain.
     // Mathematical property: if `x $in S` and `S $subset T` among standard sets,
     // then `x $in T`.
@@ -111,6 +115,8 @@ pub struct ComplexArithmeticClosureBuiltinRuleProof {}
 // Real trig closure certificate (sides live on the InFact).
 // Example: `arcsin(x) $in R`.
 pub struct RealTrigClosureBuiltinRuleProof {}
+
+pub struct RealArithmeticClosureBuiltinRuleProof {}
 
 // Subset-lift certificate: cite a known smaller-set membership.
 // Example: source_set `R`, cite `x $in R`, goal `x $in C`.
@@ -310,6 +316,9 @@ impl Runtime {
                 }
             }
             StandardSet::R => {
+                if let Some(proof) = real_arithmetic_in_r_proof(fact) {
+                    return Ok(Some(proof));
+                }
                 if let Some(proof) = real_trig_in_r_proof(fact) {
                     return Ok(Some(proof));
                 }
@@ -1088,6 +1097,31 @@ fn complex_arithmetic_in_c_proof(fact: &InFact) -> Option<InFactSearchProofByBui
         | Obj::ExpLogOperator(ExpLogOperator::Log(_)) => Some(InFactSearchProofByBuiltinRule::ComplexArithmeticClosure(
             ComplexArithmeticClosureBuiltinRuleProof {},
         )),
+        _ => None,
+    }
+}
+
+// WD already forces real operand domains; Add/Sub/Mul/Abs/... are closed in R.
+// Example: prove `(x + y) $in R`, `abs(x) $in R`.
+fn real_arithmetic_in_r_proof(fact: &InFact) -> Option<InFactSearchProofByBuiltinRule> {
+    let Obj::StandardSet(StandardSet::R) = &fact.set else {
+        return None;
+    };
+    match &fact.element {
+        Obj::ArithmeticOperator(ArithmeticOperator::Add(_))
+        | Obj::ArithmeticOperator(ArithmeticOperator::Sub(_))
+        | Obj::ArithmeticOperator(ArithmeticOperator::Mul(_))
+        | Obj::ArithmeticOperator(ArithmeticOperator::Div(_))
+        | Obj::ArithmeticOperator(ArithmeticOperator::Pow(_))
+        | Obj::ArithmeticOperator(ArithmeticOperator::Abs(_))
+        | Obj::ExpLogOperator(ExpLogOperator::Sqrt(_))
+        | Obj::ExpLogOperator(ExpLogOperator::Log(_))
+        | Obj::ExpLogOperator(ExpLogOperator::Ln(_))
+        | Obj::ExpLogOperator(ExpLogOperator::Exp(_)) => Some(
+            InFactSearchProofByBuiltinRule::RealArithmeticClosure(
+                RealArithmeticClosureBuiltinRuleProof {},
+            ),
+        ),
         _ => None,
     }
 }

@@ -1,6 +1,6 @@
 use super::keywords::{
     ABSTRACT_PROP, ALGO, AXIOM, BY, CART, CLAIM, EVAL, EXAMPLE, FINITE_SEQ, FN, FOR, HAVE, IMPORT,
-    LET, MATRIX, OBJ, OBTAIN, PREIMAGE, PROP, QUESTION_GOAL, RELEASE, SEQ, SETTING, SKETCH, STRATEGY,
+    LET, MATRIX, OBJ, OBTAIN, PROP, QUESTION_GOAL, RELEASE, SEQ, SETTING, SKETCH, STRATEGY,
     STRONG_INDUC, STRUCT, TEMPLATE, THM, TRUST, TRY, TUPLE, WITNESS,
 };
 use crate::new_pipeline::ast::stmt::Stmt;
@@ -102,24 +102,9 @@ impl Runtime {
                 .into())
             }
             Some(FN) => self.parse_have_fn_stmt(block),
-            Some(BY) => match block.header.get(2).map(String::as_str) {
-                // AST exists; exec not wired. Needed for multi-arg fn_range /
-                // preimage naming (see HaveByPreimageStmt).
-                Some(PREIMAGE) => Err(RuntimeParseError::new(
-                    "have by preimage: not wired yet in new_pipeline",
-                    block.line,
-                    block.source_path.clone(),
-                )
-                .into()),
-                _ => Err(RuntimeParseError::new(
-                    "have by: expected `preimage`",
-                    block.line,
-                    block.source_path.clone(),
-                )
-                .into()),
-            },
+            Some(BY) => self.parse_have_by_stmt(block),
             None => Err(RuntimeParseError::new(
-                "have: expected object definition, `fn`, or `by preimage`",
+                "have: expected object definition, `fn`, or `by …`",
                 block.line,
                 block.source_path.clone(),
             )

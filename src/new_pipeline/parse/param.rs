@@ -1,5 +1,5 @@
 use super::keywords::{
-    BY, COLON, COMMA, EQUAL, FINITE_SET, GREATER, LEFT_PAREN, LESS, NONEMPTY_SET, RIGHT_ARROW,
+    COLON, COMMA, EQUAL, FINITE_SET, GREATER, LEFT_PAREN, LESS, NONEMPTY_SET, RIGHT_ARROW,
     RIGHT_PAREN, SET,
 };
 use super::object::{is_atom_name, parse_obj};
@@ -71,8 +71,8 @@ impl Runtime {
         Ok(TypedParameterList { groups })
     }
 
-    // Parse `x R` / `x, y R` groups until `=` / `:` / `by` / end of header
-    // (delimiter not consumed). `by` stops for `have Img set by replacement_axiom: …`.
+    // Parse `x R` / `x, y R` groups until `=` / `:` / end of header
+    // (delimiter not consumed).
     pub(super) fn parse_typed_param_list_until_eq_colon_or_end(
         &mut self,
         tb: &mut TokenBlock,
@@ -81,7 +81,6 @@ impl Runtime {
         while !tb.exceed_end_of_head()
             && tb.peek() != Some(EQUAL)
             && tb.peek() != Some(COLON)
-            && tb.peek() != Some(BY)
         {
             groups.push(self.parse_one_typed_param_group(tb)?);
             if tb.peek() == Some(COMMA) {

@@ -12,6 +12,7 @@ use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_
     is_zero_obj, zero_obj, AbsLeFromSymmetricBoundsBuiltinRuleProof,
     AbsLeImpliesNegUpperBuiltinRuleProof, AbsLeImpliesUpperBuiltinRuleProof,
     AbsSelfLowerBuiltinRuleProof, AbsSelfUpperBuiltinRuleProof,
+    AbsReverseTriangleAddBuiltinRuleProof, AbsReverseTriangleSubBuiltinRuleProof,
     AbsTriangleInequalityBuiltinRuleProof, AddLeftCongruenceBuiltinRuleProof,
     AddLeftNonnegativeBuiltinRuleProof, AddRightCongruenceBuiltinRuleProof,
     LessEqualFactSearchProofByBuiltinRule, MulLeftNonnegativeMonotoneBuiltinRuleProof,
@@ -48,6 +49,20 @@ impl Runtime {
             return Ok(Some(proof));
         }
         // Zero-premise abs shapes first (no recursive verify_fact).
+        if abs_reverse_triangle_add_matches(fact) {
+            return Ok(Some(
+                LessEqualFactSearchProofByBuiltinRule::AbsReverseTriangleAdd(
+                    AbsReverseTriangleAddBuiltinRuleProof {},
+                ),
+            ));
+        }
+        if abs_reverse_triangle_sub_matches(fact) {
+            return Ok(Some(
+                LessEqualFactSearchProofByBuiltinRule::AbsReverseTriangleSub(
+                    AbsReverseTriangleSubBuiltinRuleProof {},
+                ),
+            ));
+        }
         if abs_triangle_inequality_matches(fact) {
             return Ok(Some(
                 LessEqualFactSearchProofByBuiltinRule::AbsTriangleInequality(
@@ -452,4 +467,42 @@ fn abs_triangle_inequality_matches(fact: &LessEqualFact) -> bool {
             Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs { arg: ay })),
         ) if ax.as_ref().ir() == x.as_ref().ir() && ay.as_ref().ir() == y.as_ref().ir()
     )
+}
+
+fn abs_reverse_triangle_add_matches(fact: &LessEqualFact) -> bool {
+    abs_reverse_triangle_matches(fact, true)
+}
+
+fn abs_reverse_triangle_sub_matches(fact: &LessEqualFact) -> bool {
+    abs_reverse_triangle_matches(fact, false)
+}
+
+// Goal `abs(x) - abs(y) <= abs(x ± y)`.
+fn abs_reverse_triangle_matches(fact: &LessEqualFact, use_add: bool) -> bool {
+    let Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left, right })) = &fact.left else {
+        return false;
+    };
+    let (
+        Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs { arg: x })),
+        Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs { arg: y })),
+    ) = (left.as_ref(), right.as_ref())
+    else {
+        return false;
+    };
+    let Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs { arg: combo })) = &fact.right else {
+        return false;
+    };
+    if use_add {
+        matches!(
+            combo.as_ref(),
+            Obj::ArithmeticOperator(ArithmeticOperator::Add(Add { left: a, right: b }))
+                if a.as_ref().ir() == x.as_ref().ir() && b.as_ref().ir() == y.as_ref().ir()
+        )
+    } else {
+        matches!(
+            combo.as_ref(),
+            Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left: a, right: b }))
+                if a.as_ref().ir() == x.as_ref().ir() && b.as_ref().ir() == y.as_ref().ir()
+        )
+    }
 }

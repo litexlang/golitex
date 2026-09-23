@@ -83,13 +83,6 @@ impl Runtime {
                     ),
                 ))
             }
-            Stmt::Definition(DefinitionStmt::ObtainObjFromThm(obtain_stmt)) => {
-                Ok(ExecStmtResult::Definition(
-                    ExecDefinitionStmtResult::ObtainObjFromThm(
-                        self.exec_obtain_obj_from_thm_stmt(obtain_stmt)?,
-                    ),
-                ))
-            }
             Stmt::Definition(DefinitionStmt::HaveByReplacementAxiomStmt(have_stmt)) => {
                 Ok(ExecStmtResult::Definition(
                     ExecDefinitionStmtResult::HaveByReplacementAxiom(

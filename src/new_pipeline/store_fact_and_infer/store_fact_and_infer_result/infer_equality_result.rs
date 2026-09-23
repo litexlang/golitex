@@ -10,6 +10,8 @@ pub enum InferEqualityResult {
     CartTupleShape(InferEqualFactCartTupleShapeResult),
     // Rule: `0 = u - v` or `u - v = 0` ⇒ `u = v`.
     SubtractionEqualsZero(InferEqualFactSubtractionEqualsZeroResult),
+    // Rule: `a^x = y` with `a^x $in R+` ⇒ `y $in R+`.
+    PositiveRealPower(InferEqualFactPositiveRealPowerResult),
 }
 
 pub struct InferEqualFactCartTupleShapeResult {
@@ -18,6 +20,10 @@ pub struct InferEqualFactCartTupleShapeResult {
 
 pub struct InferEqualFactSubtractionEqualsZeroResult {
     pub derived: Box<StoreFactAndInferResult>,
+}
+
+pub struct InferEqualFactPositiveRealPowerResult {
+    pub derived: Vec<StoreFactAndInferResult>,
 }
 
 impl InferEqualityResult {
@@ -31,6 +37,13 @@ impl InferEqualityResult {
                 ids
             }
             Self::SubtractionEqualsZero(r) => r.derived.stored_fact_ids(),
+            Self::PositiveRealPower(r) => {
+                let mut ids = Vec::new();
+                for d in &r.derived {
+                    ids.extend(d.stored_fact_ids());
+                }
+                ids
+            }
         }
     }
 }

@@ -2,23 +2,23 @@ use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::{
     Abs, AnonymousFn, Arccos, Arccot, Arcsin, Arctan, ArithmeticOperator, Cart, CartDim, Ceil,
     ClosedRange, Cos, Cot, EulerNumber, Exp, ExpLogOperator, FamilyIntersect, FamilyUnion,
-    FiniteSetMax, FiniteSetMin, FiniteSetSize, FiniteSetStat, Floor, FnObjHead, FnRange, FnSet,
-    FunctionSpace, Gcd, IdentifierObj, ImaginaryUnit, IndexCart, IndexIntersect, IndexUnion,
-    InstantiatedTemplateObj, IntegerOperator, Intersect, IteratedOperator, Lcm, ListSet, Literal,
-    Ln, Max, Min, Number, Obj, Pi, PowerSet, ProductOfFiniteSet, ProductShape, Proj, Quot, Range,
-    SetBuilder, SetFormer, SetMinus, SetOperator, Sign, Sin, Sqrt, StandardSet,
-    StructAndFieldAccessObj, StructObj, Tan, TrigOperator, Tuple, TupleDim, Union,
+    FiniteSeqSet, FiniteSetMax, FiniteSetMin, FiniteSetSize, FiniteSetStat, Floor, FnObjHead,
+    FnRange, FnSet, FunctionSpace, Gcd, IdentifierObj, ImaginaryUnit, IndexCart, IndexIntersect,
+    IndexUnion, InstantiatedTemplateObj, IntegerOperator, Intersect, IteratedOperator, Lcm,
+    ListSet, Literal, Ln, Max, Min, Number, Obj, Pi, PowerSet, ProductOfFiniteSet, ProductShape,
+    Proj, Quot, Range, SeqSet, SetBuilder, SetFormer, SetMinus, SetOperator, Sign, Sin, Sqrt,
+    StandardSet, StructAndFieldAccessObj, StructObj, Tan, TrigOperator, Tuple, TupleDim, Union,
 };
 use crate::new_pipeline::ast::param::{ParamType, SetBoundParameterGroup, SetBoundParameterList};
 use crate::new_pipeline::parse::keywords::{
     ABS, ARCCOS, ARCCOT, ARCSIN, ARCTAN, C, CART, CART_DIM, CEIL, CLOSED_RANGE, COLON, COMMA, COS,
-    COT, C_STAR, DOT, EXP, FAMILY_INTERSECT, FAMILY_UNION, FINITE_SET_MAX, FINITE_SET_MIN,
-    FINITE_SET_PRODUCT, FINITE_SET_SIZE, FLOOR, FN, FN_RANGE, GCD, GREATER, INDEX_CART,
-    INDEX_INTERSECT, INDEX_UNION, INTERSECT, LCM, LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LESS, LN,
-    MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS, POWER_SET, PROJ, Q, QUOT, Q_NEG, Q_POS, Q_STAR, R,
-    RANGE, RIGHT_BRACKET, RIGHT_CURLY, RIGHT_PAREN, R_NEG, R_POS, R_STAR, SET_MINUS, SIGN, SIN,
-    SQRT, STRUCT_VIEW_PREFIX, TAN, TEMPLATE_INSTANCE_PREFIX, TUPLE, TUPLE_DIM, UNION, Z, Z_NEG,
-    Z_POS, Z_STAR,
+    COT, C_STAR, DOT, EXP, FAMILY_INTERSECT, FAMILY_UNION, FINITE_SEQ, FINITE_SET_MAX,
+    FINITE_SET_MIN, FINITE_SET_PRODUCT, FINITE_SET_SIZE, FLOOR, FN, FN_RANGE, GCD, GREATER,
+    INDEX_CART, INDEX_INTERSECT, INDEX_UNION, INTERSECT, LCM, LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN,
+    LESS, LN, MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS, POWER_SET, PROJ, Q, QUOT, Q_NEG, Q_POS,
+    Q_STAR, R, RANGE, RIGHT_BRACKET, RIGHT_CURLY, RIGHT_PAREN, R_NEG, R_POS, R_STAR, SEQ, SET_MINUS,
+    SIGN, SIN, SQRT, STRUCT_VIEW_PREFIX, TAN, TEMPLATE_INSTANCE_PREFIX, TUPLE, TUPLE_DIM, UNION, Z,
+    Z_NEG, Z_POS, Z_STAR,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -582,6 +582,19 @@ fn try_parse_keyword_primary(
         FN_RANGE => Ok(Some(parse_unary_keyword(rt, tb, FN_RANGE, |function| {
             Obj::FunctionSpace(FunctionSpace::FnRange(FnRange {
                 function: Box::new(function),
+            }))
+        })?)),
+        // Finite sequences of length n in S. Example: `finite_seq(R, 3)`.
+        FINITE_SEQ => Ok(Some(parse_binary_keyword(rt, tb, FINITE_SEQ, |set, n| {
+            Obj::SetFormer(SetFormer::FiniteSeqSet(FiniteSeqSet {
+                set: Box::new(set),
+                n: Box::new(n),
+            }))
+        })?)),
+        // Infinite sequences in S. Example: `seq(R)`.
+        SEQ => Ok(Some(parse_unary_keyword(rt, tb, SEQ, |set| {
+            Obj::SetFormer(SetFormer::SeqSet(SeqSet {
+                set: Box::new(set),
             }))
         })?)),
         INDEX_UNION => Ok(Some(parse_ternary_keyword(

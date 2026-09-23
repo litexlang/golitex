@@ -1,0 +1,4 @@
+# Node: atomic.ByBuiltinRule.SubsetFact.IntersectSubsetFromLeftUpperBound
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/atomic/by_builtin_rule/subset_intersect_from_left_upper_bound.lit
+
+intersect({1, 2}, {2, 3}) $subset N

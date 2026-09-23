@@ -1384,17 +1384,18 @@ the witness name `w` for a matching existential statement. After that, the
 witness properties are available in the context.
 
 If a named theorem's only direct conclusion is positive `exist` or `exist!`,
-the explicit call and elimination can be combined:
+use `release thm` (to store the existential) then `obtain` from that exist,
+or keep the existential and name witnesses in a `claim` as needed:
 
 ```litex
 have q Q
-obtain p, d from thm rational_has_unique_reduced_fraction(q)
+release thm rational_has_unique_reduced_fraction(q)
+obtain p, d from exist p N, d N_pos st {q = p / d, …}
 ```
 
-This runs the same argument and premise checks as `release thm`. The theorem call is
-temporary, so its existential does not leak into the surrounding context; the
-named witnesses, their types and body facts, and the `exist!` uniqueness
-interface do. Multiple conclusions, a nonexistential or negated existential
+(`obtain … from thm …` is removed in `new_pipeline`; prefer the two-step form.)
+
+Multiple conclusions, a nonexistential or negated existential
 conclusion, and a mismatched number of names are rejected.
 
 A concrete prop can serve as a named wrapper around that existential:

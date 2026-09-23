@@ -20,7 +20,7 @@ Exit 0 is enough. Stub / not-yet-wired stmt arms are **omitted**.
 fact/          Stmt::Fact
 definition/    LetObj, HaveObj*, HaveByReplacementAxiom, HaveFn*,
                ObtainObjFromExistFact, ObtainObjFromAtomicFact,
-               ObtainObjFromThm, DefProp, DefAbstractProp, DefStruct*,
+               DefProp, DefAbstractProp, DefStruct*,
                DefTemplate (incl. obtain / have-by-replacement_axiom body), DefThm,
                ReleaseObjDef, ReleaseStructDef, ReleaseThm
 witness/       WitnessExistFact, WitnessExistUnique (via exist!),
@@ -34,9 +34,12 @@ by/            ByReflexive/Symmetric/TransitiveProp, Extension, Enumerate*,
 
 Omitted for now: `by zorn_lemma` (wired; chain-upper-bound obligation still
 needs a green tracer). Parse-only / unwired: claim/example/sketch/try,
-eval, setting, axiom, strategy.
-`obtain … from exist` / `exist!` / `$P` / `thm` is wired (see `definition/obtain_*.lit`
+eval, setting, axiom, strategy, `have by fn_preimage` (parse builds AST;
+exec not wired — omit until exit 0).
+`obtain … from exist` / `exist!` / `$P` is wired (see `definition/obtain_*.lit`
 and `definition/def_template_obtain_from_*.lit`).
+`have by replacement_axiom` is wired (see `definition/have_by_replacement_axiom.lit`
+and `definition/def_template_have_by_replacement_axiom.lit`).
 
 ## Run all
 
