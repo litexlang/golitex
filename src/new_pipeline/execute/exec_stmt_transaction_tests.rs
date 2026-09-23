@@ -2723,4 +2723,45 @@ fn not_in_and_set_algebra_builtin_rules() {
         !exec_one(&mut runtime, "x <= x + 1").is_failed(),
         "add right nonnegative"
     );
+    assert!(
+        !exec_one(&mut runtime, "x <= 1 + x").is_failed(),
+        "add left nonnegative"
+    );
+    assert!(!exec_one(&mut runtime, "have y R").is_failed());
+    assert!(!exec_one(&mut runtime, "trust x <= y").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "x + 1 <= y + 1").is_failed(),
+        "add right congruence"
+    );
+    assert!(
+        !exec_one(&mut runtime, "2 * x <= 2 * y").is_failed(),
+        "mul left nonnegative monotone"
+    );
+    assert!(!exec_one(&mut runtime, "trust x <= 3").is_failed());
+    assert!(!exec_one(&mut runtime, "trust 0 - x <= 3").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "abs(x) <= 3").is_failed(),
+        "abs le from symmetric bounds"
+    );
+    assert!(!exec_one(&mut runtime, "trust x + y $in R").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "abs(x + y) <= abs(x) + abs(y)").is_failed(),
+        "abs triangle inequality"
+    );
+    assert!(!exec_one(&mut runtime, "1 $in {1}").is_failed());
+    assert!(!exec_one(&mut runtime, "{1} $in {{1}}").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "1 $in family_union({{1}})").is_failed(),
+        "family_union membership"
+    );
+    assert!(!exec_one(&mut runtime, "2 $in {1, 2}").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "exist t {1, 2} st {t = 2}").is_failed(),
+        "exist equality witness from membership"
+    );
+    assert!(!exec_one(&mut runtime, "$is_nonempty_set({1})").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "exist t {1} st {t $in {1}}").is_failed(),
+        "exist nonempty-set member witness"
+    );
 }

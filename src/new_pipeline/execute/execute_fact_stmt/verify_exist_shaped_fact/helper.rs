@@ -1,5 +1,5 @@
-use crate::new_pipeline::ast::fact::{AtomicFact, ExistShapedFact, QuantifierFreeFact};
-use crate::new_pipeline::ast::obj::{IdentifierObj, Obj, StandardSet, Literal};
+use crate::new_pipeline::ast::fact::{AtomicFact, ExistShapedFact, PlainExistFact, QuantifierFreeFact};
+use crate::new_pipeline::ast::obj::{IdentifierObj, Literal, Obj, StandardSet};
 use crate::new_pipeline::ast::param::ParamType;
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 
@@ -47,6 +47,80 @@ pub(super) fn real_line_comparison_free_operands(exist_fact: &ExistShapedFact) -
         return None;
     }
     Some(vec![])
+}
+
+// Soft match: `exist x S st {x = a}` or `{a = x}` with free `a`.
+// Returns `(S, a)`.
+pub(super) fn equality_witness_from_membership_parts(
+    exist_fact: &ExistShapedFact,
+) -> Option<(Obj, Obj)> {
+    let ExistShapedFact::Exist(plain) = exist_fact else {
+        return None;
+    };
+    if plain.facts.len() != 1 {
+        return None;
+    }
+    let (witness_id, set) = single_obj_param(plain)?;
+    let QuantifierFreeFact::AtomicFact(AtomicFact::EqualFact(equal)) = &plain.facts[0] else {
+        return None;
+    };
+    let free = if plain_id(&equal.left) == Some(witness_id) {
+        if obj_mentions_id(&equal.right, witness_id) {
+            return None;
+        }
+        equal.right.clone()
+    } else if plain_id(&equal.right) == Some(witness_id) {
+        if obj_mentions_id(&equal.left, witness_id) {
+            return None;
+        }
+        equal.left.clone()
+    } else {
+        return None;
+    };
+    Some((set, free))
+}
+
+// Soft match: `exist x S st {x $in S}` with the same set on the binder and atom.
+pub(super) fn nonempty_set_member_witness_set(exist_fact: &ExistShapedFact) -> Option<Obj> {
+    let ExistShapedFact::Exist(plain) = exist_fact else {
+        return None;
+    };
+    if plain.facts.len() != 1 {
+        return None;
+    }
+    let (witness_id, set) = single_obj_param(plain)?;
+    let QuantifierFreeFact::AtomicFact(AtomicFact::InFact(in_fact)) = &plain.facts[0] else {
+        return None;
+    };
+    if plain_id(&in_fact.element) != Some(witness_id) {
+        return None;
+    }
+    if in_fact.set.ir() != set.ir() {
+        return None;
+    }
+    Some(set)
+}
+
+fn single_obj_param(plain: &PlainExistFact) -> Option<(IdentifierId, Obj)> {
+    let mut ids = Vec::new();
+    let mut set = None;
+    for group in &plain.typed_parameters.groups {
+        let ParamType::Obj(domain) = &group.param_type else {
+            return None;
+        };
+        match &set {
+            None => set = Some(domain.clone()),
+            Some(existing) if existing.ir() == domain.ir() => {}
+            _ => return None,
+        }
+        for param in &group.params {
+            ids.push(param.id);
+        }
+    }
+    if ids.len() != 1 {
+        return None;
+    }
+    Some((ids[0], set?))
 }
 
 fn flatten_real_param_ids(

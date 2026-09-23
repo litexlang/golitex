@@ -1,0 +1,7 @@
+# Node: atomic.ByBuiltinRule.LessEqualFact.AbsTriangleInequality
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/atomic/by_builtin_rule/less_equal_abs_triangle_inequality.lit
+
+have x R
+have y R
+trust x + y $in R
+abs(x + y) <= abs(x) + abs(y)

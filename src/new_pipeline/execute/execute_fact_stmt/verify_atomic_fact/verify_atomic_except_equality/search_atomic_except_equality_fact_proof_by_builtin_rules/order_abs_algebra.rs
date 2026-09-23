@@ -47,14 +47,13 @@ impl Runtime {
         {
             return Ok(Some(proof));
         }
-        if let Some(proof) = self.abs_le_from_symmetric_bounds_proof(fact, verify_state.clone())? {
-            return Ok(Some(proof));
-        }
-        if let Some(proof) = self.abs_le_implies_upper_proof(fact) {
-            return Ok(Some(proof));
-        }
-        if let Some(proof) = self.abs_le_implies_neg_upper_proof(fact) {
-            return Ok(Some(proof));
+        // Zero-premise abs shapes first (no recursive verify_fact).
+        if abs_triangle_inequality_matches(fact) {
+            return Ok(Some(
+                LessEqualFactSearchProofByBuiltinRule::AbsTriangleInequality(
+                    AbsTriangleInequalityBuiltinRuleProof {},
+                ),
+            ));
         }
         if abs_self_upper_matches(fact) {
             return Ok(Some(LessEqualFactSearchProofByBuiltinRule::AbsSelfUpper(
@@ -66,12 +65,14 @@ impl Runtime {
                 AbsSelfLowerBuiltinRuleProof {},
             )));
         }
-        if abs_triangle_inequality_matches(fact) {
-            return Ok(Some(
-                LessEqualFactSearchProofByBuiltinRule::AbsTriangleInequality(
-                    AbsTriangleInequalityBuiltinRuleProof {},
-                ),
-            ));
+        if let Some(proof) = self.abs_le_from_symmetric_bounds_proof(fact, verify_state.clone())? {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) = self.abs_le_implies_upper_proof(fact) {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) = self.abs_le_implies_neg_upper_proof(fact) {
+            return Ok(Some(proof));
         }
         Ok(None)
     }

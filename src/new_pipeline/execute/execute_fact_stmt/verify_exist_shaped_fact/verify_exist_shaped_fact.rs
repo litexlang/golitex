@@ -1,20 +1,27 @@
-use crate::new_pipeline::ast::fact::{exist_shaped_fact_from_fact, exist_shaped_fact_to_fact, 
-    exist_shaped_fact_free_args_ref, exist_shaped_fact_id, ExistShapedFact, Fact, InFact,
+use crate::new_pipeline::ast::fact::{
+    exist_shaped_fact_from_fact, exist_shaped_fact_to_fact, exist_shaped_fact_free_args_ref,
+    exist_shaped_fact_id, ExistShapedFact, Fact, InFact, IsNonemptySetFact,
 };
 use crate::new_pipeline::ast::obj::{Obj, StandardSet};
 use crate::new_pipeline::exec_env::exist_shaped_fact_index_key::{
-    exist_shaped_fact_alpha_match_key, exist_shaped_fact_can_prove_goal, exist_shaped_fact_known_lookup_keys,
+    exist_shaped_fact_alpha_match_key, exist_shaped_fact_can_prove_goal,
+    exist_shaped_fact_known_lookup_keys,
 };
 use crate::new_pipeline::exec_env::known_forall_conclusion_memory::{
     exist_at_forall_location, ForallConclusionCite,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::match_forall_conclusion_args::subst_from_ordered_params;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
-use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_shaped_fact::helper::real_line_comparison_free_operands;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_shaped_fact::helper::{
+    equality_witness_from_membership_parts, nonempty_set_member_witness_set,
+    real_line_comparison_free_operands,
+};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_shaped_fact::result::{
     exist_shaped_fact_result_from_search_fail, exist_shaped_fact_result_from_success,
-    exist_shaped_fact_result_from_wd_fail, ExistShapedBuiltinRealLineComparisonWitness,
-    ExistShapedFactSearchProofByBuiltinRule, ExistShapedFactSearchProofByKnownExistShapedFact, ExistShapedFactSearchedProof,
+    exist_shaped_fact_result_from_wd_fail, ExistShapedBuiltinEqualityWitnessFromMembership,
+    ExistShapedBuiltinNonemptySetMemberWitness, ExistShapedBuiltinRealLineComparisonWitness,
+    ExistShapedFactSearchProofByBuiltinRule, ExistShapedFactSearchProofByKnownExistShapedFact,
+    ExistShapedFactSearchedProof,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::{
@@ -79,10 +86,24 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<ExistShapedFactSearchProofByBuiltinRule>> {
         if let Some(proof) =
-            self.search_exist_builtin_real_line_comparison_witness(fact, verify_state)?
+            self.search_exist_builtin_real_line_comparison_witness(fact, verify_state.clone())?
         {
             return Ok(Some(
                 ExistShapedFactSearchProofByBuiltinRule::RealLineComparisonWitness(proof),
+            ));
+        }
+        if let Some(proof) =
+            self.search_exist_builtin_equality_witness_from_membership(fact, verify_state.clone())?
+        {
+            return Ok(Some(
+                ExistShapedFactSearchProofByBuiltinRule::EqualityWitnessFromMembership(proof),
+            ));
+        }
+        if let Some(proof) =
+            self.search_exist_builtin_nonempty_set_member_witness(fact, verify_state)?
+        {
+            return Ok(Some(
+                ExistShapedFactSearchProofByBuiltinRule::NonemptySetMemberWitness(proof),
             ));
         }
         Ok(None)
@@ -125,6 +146,59 @@ impl Runtime {
         Ok(Some(ExistShapedBuiltinRealLineComparisonWitness {
             requirement_facts,
             proof_of_requirement_facts,
+        }))
+    }
+
+    // Builtin: equality witness from membership. See ExistShapedBuiltinEqualityWitnessFromMembership.
+    fn search_exist_builtin_equality_witness_from_membership(
+        &mut self,
+        fact: &ExistShapedFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<ExistShapedBuiltinEqualityWitnessFromMembership>> {
+        let Some((set, member)) = equality_witness_from_membership_parts(fact) else {
+            return Ok(None);
+        };
+        let line_file = fact.plain().line_file.clone();
+        let child_state = verify_state.without_well_defined_storage();
+        let premise: Fact = InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: member,
+            set,
+            line_file,
+        }
+        .into();
+        let membership_proof = self.verify_fact(&premise, child_state)?;
+        if membership_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(ExistShapedBuiltinEqualityWitnessFromMembership {
+            membership_proof,
+        }))
+    }
+
+    // Builtin: nonempty-set member witness. See ExistShapedBuiltinNonemptySetMemberWitness.
+    fn search_exist_builtin_nonempty_set_member_witness(
+        &mut self,
+        fact: &ExistShapedFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<ExistShapedBuiltinNonemptySetMemberWitness>> {
+        let Some(set) = nonempty_set_member_witness_set(fact) else {
+            return Ok(None);
+        };
+        let line_file = fact.plain().line_file.clone();
+        let child_state = verify_state.without_well_defined_storage();
+        let premise: Fact = IsNonemptySetFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            set,
+            line_file,
+        }
+        .into();
+        let nonempty_proof = self.verify_fact(&premise, child_state)?;
+        if nonempty_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(ExistShapedBuiltinNonemptySetMemberWitness {
+            nonempty_proof,
         }))
     }
 
