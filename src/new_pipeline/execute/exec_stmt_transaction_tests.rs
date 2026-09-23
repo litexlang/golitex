@@ -2814,6 +2814,23 @@ fn not_in_and_set_algebra_builtin_rules() {
         !exec_one(&mut runtime, "x_iv $in '(2,)").is_failed(),
         "left-open ray membership"
     );
+    assert!(!exec_one(&mut runtime, "have a_pow R").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "0 <= a_pow^2").is_failed(),
+        "even power nonnegative"
+    );
+    assert!(!exec_one(&mut runtime, "have n_pos N+").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "1 <= n_pos").is_failed(),
+        "N+ implies at least one"
+    );
+    assert!(!exec_one(&mut runtime, "have s_arg R").is_failed());
+    assert!(!exec_one(&mut runtime, "trust 0 <= s_arg").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "0 <= sqrt(s_arg)").is_failed(),
+        "sqrt nonnegative"
+    );
+
     assert!(!exec_one(&mut runtime, "have m N").is_failed());
     assert!(!exec_one(&mut runtime, "have n N").is_failed());
     assert!(

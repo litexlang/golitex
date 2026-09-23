@@ -16,7 +16,7 @@
 //!    ExecEnv here.
 //! 4. Errors use RuntimeParseError + LineFile from TokenBlock.
 //!
-//! Deferred: setting-reference expand at parse; by induc binder reuse (parse_error).
+//! Deferred: by induc binder reuse (parse_error).
 
 mod fact;
 mod fact_prop;

@@ -71,7 +71,6 @@ impl DefinitionStmt {
             DefinitionStmt::HaveFnByForallExistUniqueStmt(x) => x.ir(),
             DefinitionStmt::DefPropStmt(x) => x.ir(),
             DefinitionStmt::DefAbstractPropStmt(x) => x.ir(),
-            DefinitionStmt::DefSettingStmt(x) => x.ir(),
             DefinitionStmt::DefTemplateStmt(x) => x.ir(),
             DefinitionStmt::DefStructStmt(x) => x.ir(),
             DefinitionStmt::DefAlgoStmt(x) => x.ir(),
@@ -649,28 +648,6 @@ impl DefAbstractPropStmt {
         out.push_str(&format!("{} {}{}", ABSTRACT_PROP, self.name, LEFT_PAREN));
         out.push_str(&format!("{}{}", params, RIGHT_PAREN));
 
-        StmtIR(out)
-    }
-    impl_display_pair!();
-}
-
-impl DefSettingStmt {
-    pub fn ir(&self) -> StmtIR {
-        let mut out = String::new();
-        out.push_str(&format!(
-            "{} {}{}{}{}",
-            SETTING,
-            self.name,
-            LEFT_PAREN,
-            self.param_def.ir(),
-            RIGHT_PAREN
-        ));
-        if !self.dom_facts.is_empty() {
-            out.push_str(&format!("{}", COLON));
-            for fact in self.dom_facts.iter() {
-                out.push_str(&format!("\n    {}", fact.ir()));
-            }
-        }
         StmtIR(out)
     }
     impl_display_pair!();

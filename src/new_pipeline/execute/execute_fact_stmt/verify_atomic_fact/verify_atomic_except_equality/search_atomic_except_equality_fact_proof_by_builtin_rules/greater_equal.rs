@@ -8,6 +8,7 @@ use crate::new_pipeline::rational_expression::{
     compare_closed_objs_by_normalized_decimal, NumberCompareResult,
 };
 use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeResult};
+use crate::new_pipeline::execute::execute_fact_stmt::VerifyFactResult;
 
 // Builtin rules for `a >= b`.
 pub enum GreaterEqualFactSearchProofByBuiltinRule {
@@ -28,10 +29,19 @@ pub enum GreaterEqualFactSearchProofByBuiltinRule {
     // Mathematical property: `n $in N` ⇒ `n >= 0`.
     // Example: after `have n N`, prove `n >= 0`.
     FromKnownInNatural(FromKnownInNaturalBuiltinRuleProof),
+    // Positive-natural membership implies at least one: `n $in N+` ⇒ `n >= 1`.
+    // Example: after `have n N+`, prove `n >= 1`.
+    FromKnownInPositiveNatural(FromKnownInPositiveNaturalBuiltinRuleProof),
     // Predecessor stays non-negative from a known lower bound of one.
     // Mathematical property: `x >= 1` ⇒ `x - 1 >= 0`.
     // Example: known `n >= 1` proves `n - 1 >= 0`.
     PredecessorNonNegFromAtLeastOne(PredecessorNonNegFromAtLeastOneBuiltinRuleProof),
+    // Finite-set cardinality is nonnegative.
+    // Example: `$is_finite_set(S)` proves `finite_set_size(S) >= 0`.
+    FiniteSetSizeNonnegative(FiniteSetSizeNonnegativeBuiltinRuleProof),
+    // Nonempty finite set has size at least one.
+    // Example: `$is_finite_set(S)` and `$is_nonempty_set(S)` prove `finite_set_size(S) >= 1`.
+    FiniteSetSizeAtLeastOne(FiniteSetSizeAtLeastOneBuiltinRuleProof),
 }
 
 pub struct ClosedNumericComparisonBuiltinRuleProof {
@@ -51,9 +61,23 @@ pub struct FromKnownInNaturalBuiltinRuleProof {
     pub cite_fact_id: FactId,
 }
 
+pub struct FromKnownInPositiveNaturalBuiltinRuleProof {
+    pub cite_fact_id: FactId,
+}
+
 pub struct PredecessorNonNegFromAtLeastOneBuiltinRuleProof {
     pub cite_at_least_one_fact_id: FactId,
 }
+
+pub struct FiniteSetSizeNonnegativeBuiltinRuleProof {
+    pub finite_proof: VerifyFactResult,
+}
+
+pub struct FiniteSetSizeAtLeastOneBuiltinRuleProof {
+    pub finite_proof: VerifyFactResult,
+    pub nonempty_proof: VerifyFactResult,
+}
+
 
 impl Runtime {
     // Builtin search for `a >= b`.
@@ -62,7 +86,7 @@ impl Runtime {
     pub fn search_greater_equal_fact_proof_by_builtin_rule(
         &mut self,
         fact: &GreaterEqualFact,
-        _verify_state: VerifyState,
+        verify_state: VerifyState,
     ) -> RuntimeResult<Option<GreaterEqualFactSearchProofByBuiltinRule>> {
         // B0 — non-shape
         if fact.left.ir() == fact.right.ir() {
@@ -112,7 +136,24 @@ impl Runtime {
                     ));
                 }
             }
+            (left, right) if is_one_obj(right) => {
+                if let Some(cite_fact_id) = self.known_in_positive_natural_fact_id(left) {
+                    return Ok(Some(
+                        GreaterEqualFactSearchProofByBuiltinRule::FromKnownInPositiveNatural(
+                            FromKnownInPositiveNaturalBuiltinRuleProof { cite_fact_id },
+                        ),
+                    ));
+                }
+            }
             _ => {}
+        }
+
+        if let Some(proof) = self.search_order_finite_set_size_greater_equal_proof(
+            &fact.left,
+            &fact.right,
+            verify_state,
+        )? {
+            return Ok(Some(proof));
         }
 
         // B1 — closed numeric
@@ -157,4 +198,13 @@ impl Runtime {
         }
         None
     }
+}
+
+fn is_one_obj(obj: &Obj) -> bool {
+    matches!(
+        obj,
+        Obj::Literal(Literal::Number(Number {
+            normalized_value,
+        })) if normalized_value == "1"
+    )
 }

@@ -20,7 +20,6 @@ pub const EVAL: &str = "eval";
 pub const WITNESS: &str = "witness";
 pub const STRUCT: &str = "struct";
 pub const TEMPLATE: &str = "template";
-pub const SETTING: &str = "setting";
 pub const STRONG_INDUC: &str = "strong_induc";
 pub const RELEASE: &str = "release";
 pub const OBJ: &str = "obj";

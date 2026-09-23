@@ -5,6 +5,7 @@ use super::runtime_ids::{FactId, IdentifierId, PropRewritePropertyId, WellDefine
 use crate::new_pipeline::ast::names::{AtomicName, BoundName, PlainName};
 use crate::new_pipeline::ast::obj::IdentifierObj;
 use crate::new_pipeline::exec_env::exec_env::ExecEnv;
+use crate::new_pipeline::exec_env::session_view::ExecEnvSessionView;
 use crate::new_pipeline::launch_command::LaunchCommand;
 use crate::new_pipeline::module_manager::{ExportFileAndItsExecEnv, GlobalModuleManager};
 use std::collections::HashMap;
@@ -84,8 +85,9 @@ impl Runtime {
 
     pub fn begin_file(&mut self, file: RealOrVirtualPath) {
         self.current_file = file;
+        let session_view = ExecEnvSessionView::new(self.global_ids.clone(), self.code_source.clone());
         self.execution_environments_stack
-            .push(Box::new(ExecEnv::new(self.global_ids.clone())));
+            .push(Box::new(ExecEnv::new(Some(session_view))));
         self.push_parse_scope();
     }
 
@@ -99,7 +101,9 @@ impl Runtime {
             .execution_environments_stack
             .pop()
             .expect("no file ExecEnv");
-        exec_env.global_ids_at_leave = Some(self.global_ids.clone());
+        if let Some(view) = exec_env.session_view.as_mut() {
+            view.stamp_leave(self.global_ids.clone());
+        }
         self.parse_scope_stack.clear();
         (file, exec_env)
     }
@@ -308,19 +312,16 @@ impl Runtime {
     // Child ExecEnv for a statement-local binder / WD scope. Uses the existing stack.
     pub fn push_local_exec_env(&mut self) {
         self.execution_environments_stack
-            .push(Box::new(ExecEnv::new(self.global_ids.clone())));
+            .push(Box::new(ExecEnv::new(None)));
     }
 
     pub fn pop_local_exec_env(&mut self) -> Box<ExecEnv> {
         if self.execution_environments_stack.len() <= 1 {
             panic!("pop_local_exec_env: refusing to pop the file ExecEnv");
         }
-        let mut exec_env = self
-            .execution_environments_stack
+        self.execution_environments_stack
             .pop()
-            .expect("no local ExecEnv");
-        exec_env.global_ids_at_leave = Some(self.global_ids.clone());
-        exec_env
+            .expect("no local ExecEnv")
     }
 
     // Run `f` in a fresh local ExecEnv; on success return (value, closed local env).

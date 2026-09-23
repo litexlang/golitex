@@ -1,7 +1,7 @@
 use super::keywords::{
     ABSTRACT_PROP, ALGO, AXIOM, BY, CART, CLAIM, EVAL, EXAMPLE, FINITE_SEQ, FN, FOR, HAVE, IMPORT,
-    LET, MATRIX, OBJ, OBTAIN, PROP, QUESTION_GOAL, RELEASE, SEQ, SETTING, SKETCH, STRATEGY,
-    STRONG_INDUC, STRUCT, TEMPLATE, THM, TRUST, TRY, TUPLE, WITNESS,
+    LET, MATRIX, OBJ, OBTAIN, PROP, QUESTION_GOAL, RELEASE, SEQ, SKETCH, STRATEGY, STRONG_INDUC,
+    STRUCT, TEMPLATE, THM, TRUST, TRY, TUPLE, WITNESS,
 };
 use crate::new_pipeline::ast::stmt::Stmt;
 use crate::new_pipeline::runtime::{Runtime, RuntimeParseError, RuntimeResult};
@@ -54,7 +54,12 @@ impl Runtime {
             WITNESS => self.parse_witness_stmt(block),
             STRUCT => self.parse_def_struct_stmt(block),
             TEMPLATE => self.parse_def_template_stmt(block),
-            SETTING => self.parse_def_setting_stmt(block),
+            "setting" => Err(RuntimeParseError::new(
+                "`setting` is not supported in new_pipeline",
+                block.line,
+                block.source_path.clone(),
+            )
+            .into()),
             STRONG_INDUC => Err(RuntimeParseError::new(
                 "`strong_induc` is only valid after `by`",
                 block.line,

@@ -4027,6 +4027,12 @@ forall a, b R+:
         log(2, a) < log(2, b)
 ```
 
+> **Preview (`new_pipeline`):** order builtins now also close these shapes
+> (each rule has its own proof payload): even powers `0 <= a^2` / `0 < a^2`
+> from `a != 0`; positive-base powers `0 <= a^n` / `0 < a^n`; nonnegative base
+> with `n $in N+`; `0 <= sqrt(x)` / `0 < sqrt(x)` and sqrt monotonicity;
+> `n $in N+` ⇒ `1 <= n`; and `log` order/sign with base `> 1`.
+
 The last equivalence is an integer-adjacency rule: a strict bound immediately
 below the successor `n + 1` is the same as the weak bound at `n`. It requires
 both compared objects to be known integers.

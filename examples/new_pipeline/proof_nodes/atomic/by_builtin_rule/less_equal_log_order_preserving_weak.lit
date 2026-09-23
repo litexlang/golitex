@@ -1,0 +1,10 @@
+# Node: atomic.ByBuiltinRule.LessEqual.LogOrderPreservingWeak
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/less_equal_log_order_preserving_weak.lit
+
+have x R
+have y R
+trust 1 < 2
+trust 0 < x
+trust 0 < y
+trust x <= y
+log(2, x) <= log(2, y)

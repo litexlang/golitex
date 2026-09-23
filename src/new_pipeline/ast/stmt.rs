@@ -91,7 +91,6 @@ pub enum DefinitionStmt {
     HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt),
     DefPropStmt(DefPropStmt),
     DefAbstractPropStmt(DefAbstractPropStmt),
-    DefSettingStmt(DefSettingStmt),
     DefTemplateStmt(DefTemplateStmt),
     DefStructStmt(DefStructStmt),
     DefAlgoStmt(DefAlgoStmt),
@@ -316,17 +315,6 @@ pub struct DefPropStmt {
 pub struct DefAbstractPropStmt {
     pub name: PlainName,
     pub params: Vec<PlainName>,
-    pub line_file: LineFile,
-}
-
-// What: named reusable parameter / domain bundle for later statements.
-// Surface: `setting S(x A: …):`
-// Stores: the setting definition for reuse as a binder prefix.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct DefSettingStmt {
-    pub name: PlainName,
-    pub param_def: TypedParameterList,
-    pub dom_facts: Vec<Fact>,
     pub line_file: LineFile,
 }
 

@@ -5,7 +5,7 @@ use crate::new_pipeline::ast::obj::{
     FiniteSeqSet, FiniteSetMax, FiniteSetMin, FiniteSetSize, FiniteSetStat, Floor, FnObjHead,
     FnRange, FnSet, FunctionSpace, Gcd, IdentifierObj, ImaginaryUnit, IndexCart, IndexIntersect,
     IndexUnion, InstantiatedTemplateObj, IntegerOperator, Intersect, IntervalObj, IntervalObjStruct,
-    IteratedOperator, Lcm, ListSet, Literal, Ln, Max, Min, Number, Obj, OneSideInfinityIntervalObj,
+    IteratedOperator, Lcm, ListSet, Literal, Ln, Log, Max, Min, Number, Obj, OneSideInfinityIntervalObj,
     OneSideInfinityIntervalObjStruct, Pi, PowerSet, ProductOfFiniteSet, ProductShape, Proj, Quot,
     Range, SeqSet, SetBuilder, SetFormer, SetMinus, SetOperator, Sign, Sin, Sqrt, StandardSet,
     StructAndFieldAccessObj, StructObj, Tan, TrigOperator, Tuple, TupleDim, Union,
@@ -16,7 +16,7 @@ use crate::new_pipeline::parse::keywords::{
     COT, C_STAR, DOT, EXP, FAMILY_INTERSECT, FAMILY_UNION, FINITE_SEQ, FINITE_SET_MAX,
     FINITE_SET_MIN, FINITE_SET_PRODUCT, FINITE_SET_SIZE, FLOOR, FN, FN_RANGE, GCD, GREATER,
     INDEX_CART, INDEX_INTERSECT, INDEX_UNION, INTERSECT, INTERVAL_LITERAL_PREFIX, LCM,
-    LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LESS, LN, MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS,
+    LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LESS, LN, LOG, MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS,
     POWER_SET, PROJ, Q, QUOT, Q_NEG, Q_POS, Q_STAR, R, RANGE, RIGHT_BRACKET, RIGHT_CURLY,
     RIGHT_PAREN, R_NEG, R_POS, R_STAR, SEQ, SET_MINUS, SIGN, SIN, SQRT, STRUCT_VIEW_PREFIX, TAN,
     TEMPLATE_INSTANCE_PREFIX, TUPLE, TUPLE_DIM, UNION, Z, Z_NEG, Z_POS, Z_STAR,
@@ -430,6 +430,12 @@ fn try_parse_keyword_primary(
         })?)),
         LN => Ok(Some(parse_unary_keyword(rt, tb, LN, |arg| {
             Obj::ExpLogOperator(ExpLogOperator::Ln(Ln { arg: Box::new(arg) }))
+        })?)),
+        LOG => Ok(Some(parse_binary_keyword(rt, tb, LOG, |base, arg| {
+            Obj::ExpLogOperator(ExpLogOperator::Log(Log {
+                base: Box::new(base),
+                arg: Box::new(arg),
+            }))
         })?)),
         UNION => Ok(Some(parse_binary_keyword(rt, tb, UNION, |left, right| {
             Obj::SetOperator(SetOperator::Union(Union {
