@@ -93,70 +93,51 @@ pub struct StoreForallFactWithIffResult {
 }
 
 pub enum InferAtomicFactResult {
-    EqualFact(InferEqualFactResult),
-    ExceptEquality(InferAtomicExceptEqualityResult),
+    // One equal fact may fire many equality-infer rules.
+    EqualFact(Vec<InferEqualityResult>),
+    // One non-equal atomic may fire many shape-specific rules.
+    ExceptEquality(Vec<InferAtomicExceptEqualityResult>),
 }
 
-pub struct InferEqualFactResult {
-    // Empty when neither side is a literal cart/tuple usable for shape facts.
-    pub cart_tuple_shape: Option<InferEqualFactCartTupleShapeResult>,
+// One equality-infer rule application (evidence + derived facts).
+pub enum InferEqualityResult {
+    // Rule: equality to literal cart/tuple records shape facts on the other side.
+    CartTupleShape(InferEqualFactCartTupleShapeResult),
 }
 
-// Rule: equality to literal cart/tuple records shape facts on the other side.
 pub struct InferEqualFactCartTupleShapeResult {
     pub derived: Vec<StoreFactAndInferResult>,
 }
 
-// Mirrors atomic-except-equality `AtomicFact` constructors; each arm owns that
-// shape's infer evidence (no shared Option/Option stage bag).
+// One non-equal atomic infer rule application.
 pub enum InferAtomicExceptEqualityResult {
-    NormalAtomicFact(InferNormalAtomicFactResult),
-    LessFact(InferLessFactResult),
-    GreaterFact(InferGreaterFactResult),
-    LessEqualFact(InferLessEqualFactResult),
-    GreaterEqualFact(InferGreaterEqualFactResult),
-    IsSetFact(InferIsSetFactResult),
-    IsNonemptySetFact(InferIsNonemptySetFactResult),
-    IsFiniteSetFact(InferIsFiniteSetFactResult),
-    InFact(InferInFactResult),
-    IsCartFact(InferIsCartFactResult),
-    IsTupleFact(InferIsTupleFactResult),
-    SubsetFact(InferSubsetFactResult),
-    SupersetFact(InferSupersetFactResult),
-    NotNormalAtomicFact(InferNotNormalAtomicFactResult),
-    NotEqualFact(InferNotEqualFactResult),
-    NotLessFact(InferNotLessFactResult),
-    NotGreaterFact(InferNotGreaterFactResult),
-    NotLessEqualFact(InferNotLessEqualFactResult),
-    NotGreaterEqualFact(InferNotGreaterEqualFactResult),
-    NotIsSetFact(InferNotIsSetFactResult),
-    NotIsNonemptySetFact(InferNotIsNonemptySetFactResult),
-    NotIsFiniteSetFact(InferNotIsFiniteSetFactResult),
-    NotInFact(InferNotInFactResult),
-    NotIsCartFact(InferNotIsCartFactResult),
-    NotIsTupleFact(InferNotIsTupleFactResult),
-    NotSubsetFact(InferNotSubsetFactResult),
-    NotSupersetFact(InferNotSupersetFactResult),
-    FnEqualInFact(InferFnEqualInFactResult),
-    NotFnEqualInFact(InferNotFnEqualInFactResult),
+    // `$P(args)` → parameter-type obligations.
+    NormalAtomicParamTypes(InferNormalAtomicParamTypesProjectedResult),
+    // `$P(args)` → instantiated iff facts (one layer).
+    NormalAtomicExpandDefinition(InferExpandDefinitionResult),
+    // `x $in {y S: …}` → base membership + filters.
+    InFactSetBuilder(InferSetBuilderMembershipProjectionResult),
+    // `A $in power_set(B)` → `A $subset B`.
+    InFactPowerSet(InferPowerSetMembershipProjectionResult),
+    // Order vs resolved numeric bound → sign vs 0.
+    LessSign(InferNumericOrderSignResult),
+    GreaterSign(InferNumericOrderSignResult),
+    LessEqualSign(InferNumericOrderSignResult),
+    GreaterEqualSign(InferNumericOrderSignResult),
+    // `$is_cart(C)` → `cart_dim(C) >= 2`.
+    IsCartDimensionLowerBound(InferIsCartDimensionLowerBoundResult),
+    // `A $subset B` → `forall x A: x $in B`.
+    SubsetElementwiseMembership(InferSubsetElementwiseMembershipResult),
+    // `A $superset B` → `forall x B: x $in A`.
+    SupersetElementwiseMembership(InferSupersetElementwiseMembershipResult),
 }
 
-// NormalAtomicFact infer rules (mutually exclusive).
-pub enum InferNormalAtomicFactResult {
-    // Rule: concrete prop `$P(args)` exposes instantiated iff facts (one layer).
-    ExpandDefinition(InferExpandDefinitionResult),
-    NoInfer,
+pub struct InferNormalAtomicParamTypesProjectedResult {
+    pub derived: Vec<StoreFactAndInferResult>,
 }
 
 pub struct InferExpandDefinitionResult {
     pub derived: Vec<StoreFactAndInferResult>,
-}
-
-// InFact infer rules (mutually exclusive).
-pub enum InferInFactResult {
-    SetBuilder(InferSetBuilderMembershipProjectionResult),
-    PowerSet(InferPowerSetMembershipProjectionResult),
-    NoInfer,
 }
 
 pub struct InferSetBuilderMembershipProjectionResult {
@@ -167,41 +148,21 @@ pub struct InferPowerSetMembershipProjectionResult {
     pub derived: Box<StoreFactAndInferResult>,
 }
 
-// Empty stubs: fill when the first infer rule for that shape exists.
-pub struct InferLessFactResult {}
-pub struct InferGreaterFactResult {}
-pub struct InferLessEqualFactResult {}
-pub struct InferGreaterEqualFactResult {}
-pub struct InferIsSetFactResult {}
-pub struct InferIsNonemptySetFactResult {}
-pub struct InferIsFiniteSetFactResult {}
-pub enum InferIsCartFactResult {
-    // Rule: `$is_cart(C)` exposes `cart_dim(C) >= 2` (every cart has ≥2 factors).
-    DimensionLowerBound(InferIsCartDimensionLowerBoundResult),
+pub struct InferNumericOrderSignResult {
+    pub derived: Box<StoreFactAndInferResult>,
 }
 
 pub struct InferIsCartDimensionLowerBoundResult {
     pub derived: Box<StoreFactAndInferResult>,
 }
-pub struct InferIsTupleFactResult {}
-pub struct InferSubsetFactResult {}
-pub struct InferSupersetFactResult {}
-pub struct InferNotNormalAtomicFactResult {}
-pub struct InferNotEqualFactResult {}
-pub struct InferNotLessFactResult {}
-pub struct InferNotGreaterFactResult {}
-pub struct InferNotLessEqualFactResult {}
-pub struct InferNotGreaterEqualFactResult {}
-pub struct InferNotIsSetFactResult {}
-pub struct InferNotIsNonemptySetFactResult {}
-pub struct InferNotIsFiniteSetFactResult {}
-pub struct InferNotInFactResult {}
-pub struct InferNotIsCartFactResult {}
-pub struct InferNotIsTupleFactResult {}
-pub struct InferNotSubsetFactResult {}
-pub struct InferNotSupersetFactResult {}
-pub struct InferFnEqualInFactResult {}
-pub struct InferNotFnEqualInFactResult {}
+
+pub struct InferSubsetElementwiseMembershipResult {
+    pub derived: Box<StoreFactAndInferResult>,
+}
+
+pub struct InferSupersetElementwiseMembershipResult {
+    pub derived: Box<StoreFactAndInferResult>,
+}
 
 pub struct InferAndFactResult {
     pub components: Vec<InferAtomicFactResult>,
@@ -386,16 +347,34 @@ impl InferExistShapedFactResult {
 impl InferAtomicFactResult {
     pub fn stored_fact_ids(&self) -> Vec<FactId> {
         match self {
-            Self::EqualFact(r) => {
+            Self::EqualFact(rules) => {
                 let mut ids = Vec::new();
-                if let Some(shape) = &r.cart_tuple_shape {
-                    for d in &shape.derived {
-                        ids.extend(d.stored_fact_ids());
-                    }
+                for rule in rules {
+                    ids.extend(rule.stored_fact_ids());
                 }
                 ids
             }
-            Self::ExceptEquality(r) => r.stored_fact_ids(),
+            Self::ExceptEquality(rules) => {
+                let mut ids = Vec::new();
+                for rule in rules {
+                    ids.extend(rule.stored_fact_ids());
+                }
+                ids
+            }
+        }
+    }
+}
+
+impl InferEqualityResult {
+    pub fn stored_fact_ids(&self) -> Vec<FactId> {
+        match self {
+            Self::CartTupleShape(r) => {
+                let mut ids = Vec::new();
+                for d in &r.derived {
+                    ids.extend(d.stored_fact_ids());
+                }
+                ids
+            }
         }
     }
 }
@@ -403,74 +382,35 @@ impl InferAtomicFactResult {
 impl InferAtomicExceptEqualityResult {
     pub fn stored_fact_ids(&self) -> Vec<FactId> {
         match self {
-            Self::NormalAtomicFact(r) => r.stored_fact_ids(),
-            Self::InFact(r) => r.stored_fact_ids(),
-            Self::IsCartFact(r) => r.stored_fact_ids(),
-            Self::LessFact(_)
-            | Self::GreaterFact(_)
-            | Self::LessEqualFact(_)
-            | Self::GreaterEqualFact(_)
-            | Self::IsSetFact(_)
-            | Self::IsNonemptySetFact(_)
-            | Self::IsFiniteSetFact(_)
-            | Self::IsTupleFact(_)
-            | Self::SubsetFact(_)
-            | Self::SupersetFact(_)
-            | Self::NotNormalAtomicFact(_)
-            | Self::NotEqualFact(_)
-            | Self::NotLessFact(_)
-            | Self::NotGreaterFact(_)
-            | Self::NotLessEqualFact(_)
-            | Self::NotGreaterEqualFact(_)
-            | Self::NotIsSetFact(_)
-            | Self::NotIsNonemptySetFact(_)
-            | Self::NotIsFiniteSetFact(_)
-            | Self::NotInFact(_)
-            | Self::NotIsCartFact(_)
-            | Self::NotIsTupleFact(_)
-            | Self::NotSubsetFact(_)
-            | Self::NotSupersetFact(_)
-            | Self::FnEqualInFact(_)
-            | Self::NotFnEqualInFact(_) => Vec::new(),
-        }
-    }
-}
-
-impl InferIsCartFactResult {
-    pub fn stored_fact_ids(&self) -> Vec<FactId> {
-        match self {
-            Self::DimensionLowerBound(r) => r.derived.stored_fact_ids(),
-        }
-    }
-}
-
-impl InferNormalAtomicFactResult {
-    pub fn stored_fact_ids(&self) -> Vec<FactId> {
-        match self {
-            Self::ExpandDefinition(r) => {
+            Self::NormalAtomicParamTypes(r) => {
                 let mut ids = Vec::new();
                 for d in &r.derived {
                     ids.extend(d.stored_fact_ids());
                 }
                 ids
             }
-            Self::NoInfer => Vec::new(),
-        }
-    }
-}
-
-impl InferInFactResult {
-    pub fn stored_fact_ids(&self) -> Vec<FactId> {
-        match self {
-            Self::SetBuilder(r) => {
+            Self::NormalAtomicExpandDefinition(r) => {
                 let mut ids = Vec::new();
                 for d in &r.derived {
                     ids.extend(d.stored_fact_ids());
                 }
                 ids
             }
-            Self::PowerSet(r) => r.derived.stored_fact_ids(),
-            Self::NoInfer => Vec::new(),
+            Self::InFactSetBuilder(r) => {
+                let mut ids = Vec::new();
+                for d in &r.derived {
+                    ids.extend(d.stored_fact_ids());
+                }
+                ids
+            }
+            Self::InFactPowerSet(r) => r.derived.stored_fact_ids(),
+            Self::LessSign(r)
+            | Self::GreaterSign(r)
+            | Self::LessEqualSign(r)
+            | Self::GreaterEqualSign(r) => r.derived.stored_fact_ids(),
+            Self::IsCartDimensionLowerBound(r) => r.derived.stored_fact_ids(),
+            Self::SubsetElementwiseMembership(r) => r.derived.stored_fact_ids(),
+            Self::SupersetElementwiseMembership(r) => r.derived.stored_fact_ids(),
         }
     }
 }

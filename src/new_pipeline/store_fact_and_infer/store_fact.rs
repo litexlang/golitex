@@ -4,12 +4,12 @@ use super::store_fact_and_infer_result::{
     StoreChainFactStorePart, StoreExistShapedFactResult, StoreFactResult, StoreForallFactResult,
     StoreForallFactWithIffResult, StoreNotForallFactStorePart, StoreOrFactResult,
 };
+use crate::new_pipeline::ast::fact::atomic_fact_has_positive_polarity;
 use crate::new_pipeline::ast::fact::{
     exist_shaped_fact_from_fact, exist_shaped_fact_id, exist_shaped_fact_to_fact, AndFact,
-    AtomicFact, ChainFact, ExistShapedFact, Fact, NotForallFact, OrFact, ForallFact,
-    ForallFactWithIff,
+    AtomicFact, ChainFact, ExistShapedFact, Fact, ForallFact, ForallFactWithIff, NotForallFact,
+    OrFact,
 };
-use crate::new_pipeline::ast::fact::atomic_fact_has_positive_polarity;
 use crate::new_pipeline::exec_env::maybe_index_known_closed_numeric_equal;
 use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeResult};
 
@@ -94,7 +94,8 @@ impl Runtime {
     fn index_forall_chain_components(&mut self, forall: &ForallFact) -> RuntimeResult<()> {
         let mut projections = Vec::new();
         for (then_index, then) in forall.then_facts.iter().enumerate() {
-            if let crate::new_pipeline::ast::fact::ExistOrAndChainAtomicFact::ChainFact(chain) = then
+            if let crate::new_pipeline::ast::fact::ExistOrAndChainAtomicFact::ChainFact(chain) =
+                then
             {
                 projections.push((then_index, self.chain_adjacent_atomics(chain)?));
             }

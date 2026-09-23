@@ -2,18 +2,16 @@ use crate::new_pipeline::ast::fact::{AtomicFact, Fact, InFact};
 use crate::new_pipeline::ast::obj::{Obj, SetFormer, SetOperator};
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::store_fact_and_infer::{
-    InferInFactResult, InferPowerSetMembershipProjectionResult,
+    InferAtomicExceptEqualityResult, InferPowerSetMembershipProjectionResult,
     InferSetBuilderMembershipProjectionResult,
 };
 
 impl Runtime {
-    // When: stored `x $in S` where `S` is (or equals) a set-builder / power_set.
-    // Infers: base membership + defining facts, or `x $subset base` for power_set.
-    // Example: trust `a $in {x R: x > 0}` also stores `a $in R` and `a > 0`.
-    pub(super) fn infer_in_fact(
+    // InFact membership projection rules that currently fire (set-builder / power_set).
+    pub(super) fn infer_in_fact_rules(
         &mut self,
         in_fact: &InFact,
-    ) -> RuntimeResult<InferInFactResult> {
+    ) -> RuntimeResult<Vec<InferAtomicExceptEqualityResult>> {
         if let Some(builder) = self.resolve_set_builder_for_membership_projection(&in_fact.set) {
             let mut derived = Vec::new();
             let base_in = AtomicFact::InFact(InFact {
@@ -32,9 +30,9 @@ impl Runtime {
                 let projected = crate::new_pipeline::instantiate::quantifier_free_fact_to_fact(qf);
                 derived.push(self.store_inferred_fact_and_infer(&projected)?);
             }
-            return Ok(InferInFactResult::SetBuilder(
+            return Ok(vec![InferAtomicExceptEqualityResult::InFactSetBuilder(
                 InferSetBuilderMembershipProjectionResult { derived },
-            ));
+            )]);
         }
         if let Some(base) = self.resolve_power_set_base_for_membership_projection(&in_fact.set) {
             let subset = AtomicFact::SubsetFact(crate::new_pipeline::ast::fact::SubsetFact {
@@ -44,11 +42,11 @@ impl Runtime {
                 line_file: in_fact.line_file.clone(),
             });
             let derived = Box::new(self.store_inferred_fact_and_infer(&Fact::AtomicFact(subset))?);
-            return Ok(InferInFactResult::PowerSet(
+            return Ok(vec![InferAtomicExceptEqualityResult::InFactPowerSet(
                 InferPowerSetMembershipProjectionResult { derived },
-            ));
+            )]);
         }
-        Ok(InferInFactResult::NoInfer)
+        Ok(Vec::new())
     }
 
     fn resolve_set_builder_for_membership_projection(
