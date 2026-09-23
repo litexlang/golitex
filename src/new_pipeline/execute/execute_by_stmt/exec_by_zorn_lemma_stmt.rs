@@ -193,7 +193,7 @@ fn zorn_obligations(
 ) -> Vec<Fact> {
     vec![
         IsNonemptySetFact {
-            fact_id: runtime.ids.allocate_fact_id(),
+            fact_id: runtime.global_ids.allocate_fact_id(),
             set: set.clone(),
             line_file: Some(line_file.clone()),
         }
@@ -215,7 +215,7 @@ fn zorn_reflexive(
     let x_obj = Obj::Identifier(IdentifierObj::from_bound_name(&x));
     let atom = prop_atom(runtime, prop_name, vec![x_obj.clone(), x_obj], line_file);
     Fact::ForallFact(ForallFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         typed_parameters: TypedParameterList {
             groups: vec![TypedParameterGroup {
                 params: vec![x],
@@ -244,7 +244,7 @@ fn zorn_transitive(
     let yz = prop_atom(runtime, prop_name, vec![yo, zo.clone()], line_file);
     let xz = prop_atom(runtime, prop_name, vec![xo, zo], line_file);
     Fact::ForallFact(ForallFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         typed_parameters: TypedParameterList {
             groups: vec![TypedParameterGroup {
                 params: vec![x, y, z],
@@ -270,14 +270,14 @@ fn zorn_antisymmetric(
     let xy = prop_atom(runtime, prop_name, vec![xo.clone(), yo.clone()], line_file);
     let yx = prop_atom(runtime, prop_name, vec![yo.clone(), xo.clone()], line_file);
     let eq: AtomicFact = EqualFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         left: xo,
         right: yo,
         line_file: Some(line_file.clone()),
     }
     .into();
     Fact::ForallFact(ForallFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         typed_parameters: TypedParameterList {
             groups: vec![TypedParameterGroup {
                 params: vec![x, y],
@@ -308,7 +308,7 @@ fn zorn_chain_upper_bound(
         unreachable!("upper bound witness is an exist fact");
     };
     Fact::ForallFact(ForallFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         typed_parameters: TypedParameterList {
             groups: vec![TypedParameterGroup {
                 params: vec![c],
@@ -334,7 +334,7 @@ fn zorn_chain_total(
     let left = prop_atom(runtime, prop_name, vec![xo.clone(), yo.clone()], line_file);
     let right = prop_atom(runtime, prop_name, vec![yo, xo], line_file);
     let or_fact = OrFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         facts: vec![
             AndChainAtomicFact::AtomicFact(left),
             AndChainAtomicFact::AtomicFact(right),
@@ -342,7 +342,7 @@ fn zorn_chain_total(
         line_file: Some(line_file.clone()),
     };
     Fact::ForallFact(ForallFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         typed_parameters: TypedParameterList {
             groups: vec![TypedParameterGroup {
                 params: vec![x, y],
@@ -371,7 +371,7 @@ fn zorn_upper_exist(
         line_file,
     );
     Fact::ExistFact(PlainExistFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         typed_parameters: TypedParameterList {
             groups: vec![TypedParameterGroup {
                 params: vec![u],
@@ -393,7 +393,7 @@ fn zorn_maximal_exist(
     let m_obj = Obj::Identifier(IdentifierObj::from_bound_name(&m));
     let atom = prop_atom(runtime, maximal_prop_name, vec![m_obj], line_file);
     Fact::ExistFact(PlainExistFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         typed_parameters: TypedParameterList {
             groups: vec![TypedParameterGroup {
                 params: vec![m],
@@ -412,7 +412,7 @@ fn prop_atom(
     line_file: &LineFile,
 ) -> AtomicFact {
     NormalAtomicFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         predicate: prop_name.clone(),
         body,
         line_file: Some(line_file.clone()),

@@ -145,7 +145,7 @@ impl Runtime {
         }
         let n = eq.left.clone();
         let in_n = crate::new_pipeline::ast::fact::Fact::AtomicFact(AtomicFact::InFact(InFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             element: n.clone(),
             set: Obj::StandardSet(StandardSet::N),
             line_file: fact.line_file.clone(),

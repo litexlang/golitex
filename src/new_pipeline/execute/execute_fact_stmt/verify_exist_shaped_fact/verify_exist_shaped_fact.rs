@@ -109,7 +109,7 @@ impl Runtime {
             }
             seen.push(key);
             let premise: Fact = InFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 element: operand,
                 set: Obj::StandardSet(StandardSet::R),
                 line_file: line_file.clone(),

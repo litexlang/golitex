@@ -56,7 +56,7 @@ impl Runtime {
         failure_message: String,
     ) -> RuntimeResult<VerifyFactResult> {
         let fact = AtomicFact::InFact(InFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             element: obj.clone(),
             set: Obj::StandardSet(set),
             line_file: None,
@@ -84,7 +84,7 @@ impl Runtime {
         failure_message: String,
     ) -> RuntimeResult<VerifyFactResult> {
         let fact = AtomicFact::IsSetFact(IsSetFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             set: set.clone(),
             line_file: None,
         });
@@ -98,7 +98,7 @@ impl Runtime {
         failure_message: String,
     ) -> RuntimeResult<VerifyFactResult> {
         let fact = AtomicFact::IsFiniteSetFact(IsFiniteSetFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             set: set.clone(),
             line_file: None,
         });
@@ -112,7 +112,7 @@ impl Runtime {
         failure_message: String,
     ) -> RuntimeResult<VerifyFactResult> {
         let fact = AtomicFact::IsNonemptySetFact(IsNonemptySetFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             set: set.clone(),
             line_file: None,
         });

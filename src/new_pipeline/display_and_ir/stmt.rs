@@ -355,16 +355,16 @@ impl HaveByPreimageStmt {
 impl HaveByReplacementAxiomStmt {
     pub fn ir(&self) -> StmtIR {
         StmtIR(format!(
-            "{} {} {} {} {}{}{}, {}{}",
+            "{} {} {} {} {}: {} {}, {} {}",
             HAVE,
             self.name,
             SET,
             BY,
             REPLACEMENT_AXIOM,
-            LEFT_PAREN,
+            PROP,
             self.prop_name.ir(),
-            self.source_set.ir(),
-            RIGHT_PAREN
+            SET,
+            self.source_set.ir()
         ))
     }
     impl_display_pair!();
@@ -696,6 +696,7 @@ impl TemplateDefEnum {
             TemplateDefEnum::HaveObjInNonemptySetStmt(x) => x.ir(),
             TemplateDefEnum::HaveObjEqualStmt(x) => x.ir(),
             TemplateDefEnum::HaveObjByExistFactsStmt(x) => x.ir(),
+            TemplateDefEnum::HaveByReplacementAxiomStmt(x) => x.ir(),
             TemplateDefEnum::TrustHaveStmt(x) => x.ir(),
             TemplateDefEnum::ObtainObjFromExistFact(x) => x.ir(),
             TemplateDefEnum::ObtainObjFromAtomicFact(x) => x.ir(),

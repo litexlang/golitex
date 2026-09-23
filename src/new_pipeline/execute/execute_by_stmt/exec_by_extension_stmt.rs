@@ -15,7 +15,7 @@ pub fn exec_by_extension_stmt(
     stmt: &ByExtensionStmt,
 ) -> RuntimeResult<ExecByStmtResult> {
     let goal: Fact = EqualFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         left: stmt.left.clone(),
         right: stmt.right.clone(),
         line_file: Some(stmt.line_file.clone()),
@@ -30,14 +30,14 @@ pub fn exec_by_extension_stmt(
     }
 
     let left_to_right: Fact = SubsetFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         left: stmt.left.clone(),
         right: stmt.right.clone(),
         line_file: Some(stmt.line_file.clone()),
     }
     .into();
     let right_to_left: Fact = SubsetFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         left: stmt.right.clone(),
         right: stmt.left.clone(),
         line_file: Some(stmt.line_file.clone()),

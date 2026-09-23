@@ -89,7 +89,7 @@ Object WD (`verify_obj_well_definedness`) returns
 - `Err(...)` only for real runtime / invariant failures
 
 Requirement search aggregators return soft fail variants on exhaustion; they
-must not emit `Err(RuntimeError::Unknown)` for “no proof found”.
+must not emit `Err(RuntimeError::InternalBug)` for “no proof found”.
 
 Nested must-prove callers reject soft fails at their boundary. Top-level soft
 fails become a leaf `*Result::Failed` inside `ExecStmtResult` (temp env

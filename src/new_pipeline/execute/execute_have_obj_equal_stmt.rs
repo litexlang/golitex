@@ -91,26 +91,26 @@ impl Runtime {
         for ((_, param_type), obj) in bindings.iter().zip(stmt.objs_equal_to.iter()) {
             let type_fact = match param_type {
                 ParamType::Obj(param_set) => Fact::AtomicFact(AtomicFact::InFact(InFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     element: obj.clone(),
                     set: param_set.clone(),
                     line_file: Some(stmt.line_file.clone()),
                 })),
                 ParamType::Set(_) => Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     set: obj.clone(),
                     line_file: Some(stmt.line_file.clone()),
                 })),
                 ParamType::NonemptySet(_) => {
                     Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact {
-                        fact_id: self.ids.allocate_fact_id(),
+                        fact_id: self.global_ids.allocate_fact_id(),
                         set: obj.clone(),
                         line_file: Some(stmt.line_file.clone()),
                     }))
                 }
                 ParamType::FiniteSet(_) => {
                     Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact {
-                        fact_id: self.ids.allocate_fact_id(),
+                        fact_id: self.global_ids.allocate_fact_id(),
                         set: obj.clone(),
                         line_file: Some(stmt.line_file.clone()),
                     }))
@@ -142,7 +142,7 @@ impl Runtime {
 
         for (binding, obj) in bindings.iter().zip(stmt.objs_equal_to.iter()) {
             let (name, _) = binding;
-            let equality_fact_id = self.ids.allocate_fact_id();
+            let equality_fact_id = self.global_ids.allocate_fact_id();
             let left = Obj::Identifier(self.identifier_obj_for_stored_mention(name));
             let equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
                 fact_id: equality_fact_id,

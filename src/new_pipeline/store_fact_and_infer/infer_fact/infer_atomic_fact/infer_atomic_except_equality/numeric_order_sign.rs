@@ -156,7 +156,7 @@ impl Runtime {
                     NumberCompareResult::Greater
                 ) =>
             {
-                Some(sign_gt_zero(left.clone(), line_file, &mut self.ids))
+                Some(sign_gt_zero(left.clone(), line_file, &mut self.global_ids))
             }
             (Some(k), None, OrderKind::GreaterEqual)
                 if matches!(
@@ -164,7 +164,7 @@ impl Runtime {
                     NumberCompareResult::Less
                 ) =>
             {
-                Some(sign_le_zero(right.clone(), line_file, &mut self.ids))
+                Some(sign_le_zero(right.clone(), line_file, &mut self.global_ids))
             }
             (None, Some(k), OrderKind::Greater)
                 if matches!(
@@ -172,7 +172,7 @@ impl Runtime {
                     NumberCompareResult::Greater
                 ) =>
             {
-                Some(sign_gt_zero(left.clone(), line_file, &mut self.ids))
+                Some(sign_gt_zero(left.clone(), line_file, &mut self.global_ids))
             }
             (Some(k), None, OrderKind::Greater)
                 if matches!(
@@ -180,7 +180,7 @@ impl Runtime {
                     NumberCompareResult::Less | NumberCompareResult::Equal
                 ) =>
             {
-                Some(sign_le_zero(right.clone(), line_file, &mut self.ids))
+                Some(sign_le_zero(right.clone(), line_file, &mut self.global_ids))
             }
             (None, Some(k), OrderKind::LessEqual)
                 if matches!(
@@ -188,7 +188,7 @@ impl Runtime {
                     NumberCompareResult::Less
                 ) =>
             {
-                Some(sign_le_zero(left.clone(), line_file, &mut self.ids))
+                Some(sign_le_zero(left.clone(), line_file, &mut self.global_ids))
             }
             (Some(k), None, OrderKind::LessEqual)
                 if matches!(
@@ -196,7 +196,7 @@ impl Runtime {
                     NumberCompareResult::Greater
                 ) =>
             {
-                Some(sign_gt_zero(right.clone(), line_file, &mut self.ids))
+                Some(sign_gt_zero(right.clone(), line_file, &mut self.global_ids))
             }
             (None, Some(k), OrderKind::Less)
                 if matches!(
@@ -204,7 +204,7 @@ impl Runtime {
                     NumberCompareResult::Less | NumberCompareResult::Equal
                 ) =>
             {
-                Some(sign_le_zero(left.clone(), line_file, &mut self.ids))
+                Some(sign_le_zero(left.clone(), line_file, &mut self.global_ids))
             }
             (Some(k), None, OrderKind::Less)
                 if matches!(
@@ -212,7 +212,7 @@ impl Runtime {
                     NumberCompareResult::Greater
                 ) =>
             {
-                Some(sign_gt_zero(right.clone(), line_file, &mut self.ids))
+                Some(sign_gt_zero(right.clone(), line_file, &mut self.global_ids))
             }
             _ => None,
         };
@@ -238,7 +238,7 @@ impl Runtime {
         }
         let flipped = obj_mul_literal_neg_one(left.clone());
         let zero = zero_literal();
-        let fact_id = self.ids.allocate_fact_id();
+        let fact_id = self.global_ids.allocate_fact_id();
         let atomic = match kind {
             OrderKind::Less | OrderKind::LessEqual => {
                 AtomicFact::GreaterEqualFact(GreaterEqualFact {
@@ -307,11 +307,11 @@ fn obj_mul_literal_neg_one(x: Obj) -> Obj {
 fn sign_gt_zero(
     side: Obj,
     line_file: Option<crate::new_pipeline::ast::line_file::LineFile>,
-    ids: &mut crate::new_pipeline::runtime::Ids,
+    global_ids: &mut crate::new_pipeline::runtime::GlobalIds,
 ) -> AtomicFact {
     // Store `0 < side` (same surface as legacy).
     AtomicFact::LessFact(LessFact {
-        fact_id: ids.allocate_fact_id(),
+        fact_id: global_ids.allocate_fact_id(),
         left: zero_literal(),
         right: side,
         line_file,
@@ -321,10 +321,10 @@ fn sign_gt_zero(
 fn sign_le_zero(
     side: Obj,
     line_file: Option<crate::new_pipeline::ast::line_file::LineFile>,
-    ids: &mut crate::new_pipeline::runtime::Ids,
+    global_ids: &mut crate::new_pipeline::runtime::GlobalIds,
 ) -> AtomicFact {
     AtomicFact::LessEqualFact(LessEqualFact {
-        fact_id: ids.allocate_fact_id(),
+        fact_id: global_ids.allocate_fact_id(),
         left: side,
         right: zero_literal(),
         line_file,

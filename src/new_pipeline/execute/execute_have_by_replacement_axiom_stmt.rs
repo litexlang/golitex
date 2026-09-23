@@ -1,7 +1,9 @@
-//! `have Img set by replacement_axiom(P, A)` — named Replacement image.
+//! `have Img set by replacement_axiom: prop P, set A` — Axiom of Replacement.
 //!
-//! No anonymous `replacement_image` Obj. After uniqueness of `P` on `A` is
-//! known, introduce `Img` as a set and store intro/elim facts.
+//! Named image set (not an anonymous Obj). Parenthesized Obj forms in Litex
+//! normally take objs only; passing a prop name inside `(...)` would look wrong,
+//! so the surface uses tagged `prop` / `set` args like `by axiom_of_choice`.
+//! After uniqueness of `P` on `A` is known, introduce `Img` and store intro/elim.
 
 use crate::new_pipeline::ast::fact::{
     AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, ForallFact, InFact, NormalAtomicFact,
@@ -47,7 +49,7 @@ impl ExecHaveByReplacementAxiomStmtResult {
 
 impl Runtime {
     // Example:
-    //   have Img set by replacement_axiom(image_rel, {1, 2})
+    //   have Img set by replacement_axiom: prop image_rel, set {1, 2}
     pub(super) fn exec_have_by_replacement_axiom_stmt(
         &mut self,
         stmt: &HaveByReplacementAxiomStmt,
@@ -66,7 +68,7 @@ impl Runtime {
         if arity != 2 {
             return Ok(ExecHaveByReplacementAxiomStmtResult::Failed(
                 ExecHaveByReplacementAxiomStmtFailed::PropArity(format!(
-                    "replacement_axiom({prop_ir}, {source_ir}) expects a binary prop, but `{prop_ir}` has arity {arity}"
+                    "replacement_axiom: prop {prop_ir}, set {source_ir} expects a binary prop, but `{prop_ir}` has arity {arity}"
                 )),
             ));
         }
@@ -87,7 +89,7 @@ impl Runtime {
         if !self.known_replacement_uniqueness(&stmt.prop_name, &stmt.source_set) {
             return Ok(ExecHaveByReplacementAxiomStmtResult::Failed(
                 ExecHaveByReplacementAxiomStmtFailed::UniquenessMissing(format!(
-                    "replacement_axiom({prop_ir}, {source_ir}) needs uniqueness of `{prop_ir}` over `{source_ir}`: forall x {source_ir}, y, y2 set: ${prop_ir}(x, y) ${prop_ir}(x, y2) => y = y2"
+                    "replacement_axiom: prop {prop_ir}, set {source_ir} needs uniqueness of `{prop_ir}` over `{source_ir}`: forall x {source_ir}, y, y2 set: ${prop_ir}(x, y) ${prop_ir}(x, y2) => y = y2"
                 )),
             ));
         }
@@ -174,7 +176,7 @@ impl Runtime {
         let y_obj = Obj::Identifier(IdentifierObj::from_bound_name(&y));
         let line = Some(stmt.line_file.clone());
         ForallFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters: TypedParameterList {
                 groups: vec![
                     TypedParameterGroup {
@@ -189,7 +191,7 @@ impl Runtime {
             },
             dom_facts: vec![Fact::AtomicFact(AtomicFact::NormalAtomicFact(
                 NormalAtomicFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     predicate: stmt.prop_name.clone(),
                     body: vec![x_obj, y_obj.clone()],
                     line_file: line.clone(),
@@ -197,7 +199,7 @@ impl Runtime {
             ))],
             then_facts: vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
                 InFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     element: y_obj,
                     set: img.clone(),
                     line_file: line.clone(),
@@ -219,7 +221,7 @@ impl Runtime {
         let x_obj = Obj::Identifier(IdentifierObj::from_bound_name(&x));
         let line = Some(stmt.line_file.clone());
         ForallFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters: TypedParameterList {
                 groups: vec![TypedParameterGroup {
                     params: vec![y],
@@ -228,7 +230,7 @@ impl Runtime {
             },
             dom_facts: vec![],
             then_facts: vec![ExistOrAndChainAtomicFact::ExistFact(PlainExistFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 typed_parameters: TypedParameterList {
                     groups: vec![TypedParameterGroup {
                         params: vec![x],
@@ -237,7 +239,7 @@ impl Runtime {
                 },
                 facts: vec![QuantifierFreeFact::AtomicFact(AtomicFact::NormalAtomicFact(
                     NormalAtomicFact {
-                        fact_id: self.ids.allocate_fact_id(),
+                        fact_id: self.global_ids.allocate_fact_id(),
                         predicate: stmt.prop_name.clone(),
                         body: vec![x_obj, y_obj],
                         line_file: line.clone(),

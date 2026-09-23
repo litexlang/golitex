@@ -22,7 +22,7 @@ impl Runtime {
         right: &Obj,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<(VerifyFactResult, VerifyFactResult)>> {
-        let left_fact_id = self.ids.allocate_fact_id();
+        let left_fact_id = self.global_ids.allocate_fact_id();
         let left_in_r = self.verify_fact(
             &Fact::AtomicFact(AtomicFact::InFact(InFact {
                 fact_id: left_fact_id,
@@ -35,7 +35,7 @@ impl Runtime {
         if left_in_r.is_failed() {
             return Ok(None);
         }
-        let right_fact_id = self.ids.allocate_fact_id();
+        let right_fact_id = self.global_ids.allocate_fact_id();
         let right_in_r = self.verify_fact(
             &Fact::AtomicFact(AtomicFact::InFact(InFact {
                 fact_id: right_fact_id,

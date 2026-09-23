@@ -19,26 +19,4 @@ pub mod store_fact;
 pub mod store_fact_and_infer;
 pub mod store_fact_and_infer_result;
 
-pub use store_fact_and_infer_result::{
-    ChainTransitiveCite, InferAndFactResult, InferAtomicExceptEqualityResult,
-    InferAtomicFactResult, InferChainFactResult, InferChainTransitiveClosureResult,
-    InferEqualFactCartTupleShapeResult, InferEqualFactSubtractionEqualsZeroResult,
-    InferEqualityResult, InferExistShapedFactResult, InferExistUniqueFactResult,
-    InferExistUniqueUniquenessForallResult, InferExpandDefinitionResult, InferFactResult,
-    InferForallFactResult, InferForallFactWithIffResult, InferInFactCartProjectionResult,
-    InferInFactClosedRangeResult, InferInFactIntersectBothResult,
-    InferInFactListSetOrEqualitiesResult, InferInFactListSetSingletonEqualResult,
-    InferInFactNaturalNonnegativeResult, InferInFactNegativeStandardSetResult,
-    InferInFactNonzeroStandardSetResult, InferInFactOneSideRealIntervalResult,
-    InferInFactPositiveStandardSetResult, InferInFactRangeResult, InferInFactRealIntervalResult,
-    InferInFactSetMinusSplitResult, InferInFactUnionOrResult, InferIsCartDimensionLowerBoundResult,
-    InferNormalAtomicParamTypesProjectedResult, InferNotExistDemorganForallResult,
-    InferNotExistFactResult, InferNotForallFactResult, InferNumericOrderSignResult,
-    InferOrderFlipMulMinusOneResult, InferOrFactResult, InferPlainExistFactResult,
-    InferPowerSetMembershipProjectionResult, InferSetBuilderMembershipProjectionResult,
-    InferSubsetElementwiseMembershipResult, InferSupersetElementwiseMembershipResult,
-    StoreAndComponentResult, StoreAndFactResult, StoreAtomicFactResult, StoreChainAdjacentResult,
-    StoreChainFactStorePart, StoreExistShapedFactResult, StoreFactAndInferResult, StoreFactResult,
-    StoreForallFactResult, StoreForallFactWithIffResult, StoreNotForallFactStorePart,
-    StoreOrFactResult,
-};
+pub use store_fact_and_infer_result::*;

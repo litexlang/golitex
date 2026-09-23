@@ -62,7 +62,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
         if verify_state.store_well_defined_fact {
-            let wd_id = self.ids.allocate_well_definedness_id();
+            let wd_id = self.global_ids.allocate_well_definedness_id();
             self.top_exec_env_mut()
                 .well_defined_objects
                 .record(obj.clone(), wd_id);
@@ -151,7 +151,7 @@ impl Runtime {
                         requirement_fact_verified: stages.requirement_fact_verified,
                     };
                     if verify_state.store_well_defined_fact {
-                        let wd_id = self.ids.allocate_well_definedness_id();
+                        let wd_id = self.global_ids.allocate_well_definedness_id();
                         self.top_exec_env_mut()
                             .well_defined_objects
                             .record(Obj::FnObj(value.clone()), wd_id);
@@ -218,7 +218,7 @@ impl Runtime {
                     requirement_fact_verified: stages.requirement_fact_verified,
                 };
                 if verify_state.store_well_defined_fact {
-                    let wd_id = self.ids.allocate_well_definedness_id();
+                    let wd_id = self.global_ids.allocate_well_definedness_id();
                     self.top_exec_env_mut()
                         .well_defined_objects
                         .record(Obj::FnObj(value.clone()), wd_id);
@@ -379,7 +379,7 @@ impl Runtime {
                 for _param in &group.params {
                     let arg = &args[arg_index];
                     let membership = AtomicFact::InFact(InFact {
-                        fact_id: self.ids.allocate_fact_id(),
+                        fact_id: self.global_ids.allocate_fact_id(),
                         element: arg.clone(),
                         set: param_type.clone(),
                         line_file: None,
@@ -462,7 +462,7 @@ impl Runtime {
             ));
         }
         if verify_state.store_well_defined_fact {
-            let wd_id = self.ids.allocate_well_definedness_id();
+            let wd_id = self.global_ids.allocate_well_definedness_id();
             self.top_exec_env_mut().well_defined_objects.record(
                 Obj::FunctionSpace(FunctionSpace::FnRange(value.clone())),
                 wd_id,

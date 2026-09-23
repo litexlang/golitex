@@ -23,7 +23,7 @@ pub struct Runtime {
     pub execution_environments_stack: Vec<Box<ExecEnv>>,
     pub parse_scope_stack: Vec<Box<ParseScope>>,
     pub current_file: RealOrVirtualPath,
-    pub ids: Ids,
+    pub global_ids: GlobalIds,
     /// How this Runtime session was launched (`-strict` / `-session` live here).
     pub launch_command: LaunchCommand,
     /// Export-file index of the `.lit` currently being parsed/run in the
@@ -38,7 +38,8 @@ pub struct ParseScope {
 }
 
 /// Global monotonic id counters owned by `Runtime`.
-pub struct Ids {
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct GlobalIds {
     next_fact_id: FactId,
     next_well_definedness_id: WellDefinednessId,
     next_prop_rewrite_property_id: PropRewritePropertyId,
@@ -63,7 +64,7 @@ impl Runtime {
             execution_environments_stack: Vec::new(),
             parse_scope_stack: Vec::new(),
             current_file: file.clone(),
-            ids: Ids::new(),
+            global_ids: GlobalIds::new(),
             launch_command: command,
             current_export_file_id: 0,
         };
@@ -74,7 +75,7 @@ impl Runtime {
     pub fn begin_file(&mut self, file: RealOrVirtualPath) {
         self.current_file = file;
         self.execution_environments_stack
-            .push(Box::new(ExecEnv::new()));
+            .push(Box::new(ExecEnv::new(self.global_ids.clone())));
         self.push_parse_scope();
     }
 
@@ -85,10 +86,11 @@ impl Runtime {
 
     pub fn finish_file(&mut self) -> (RealOrVirtualPath, Box<ExecEnv>) {
         let file = self.current_file.clone();
-        let exec_env = self
+        let mut exec_env = self
             .execution_environments_stack
             .pop()
             .expect("no file ExecEnv");
+        exec_env.global_ids_at_leave = Some(self.global_ids.clone());
         self.parse_scope_stack.clear();
         (file, exec_env)
     }
@@ -228,7 +230,7 @@ impl Runtime {
                 "name `{name}` is already bound in an enclosing parse scope"
             )));
         }
-        let id = self.ids.allocate_identifier_id();
+        let id = self.global_ids.allocate_identifier_id();
         let scope = self
             .parse_scope_stack
             .last_mut()
@@ -282,16 +284,19 @@ impl Runtime {
     // Child ExecEnv for a statement-local binder / WD scope. Uses the existing stack.
     pub fn push_local_exec_env(&mut self) {
         self.execution_environments_stack
-            .push(Box::new(ExecEnv::new()));
+            .push(Box::new(ExecEnv::new(self.global_ids.clone())));
     }
 
     pub fn pop_local_exec_env(&mut self) -> Box<ExecEnv> {
         if self.execution_environments_stack.len() <= 1 {
             panic!("pop_local_exec_env: refusing to pop the file ExecEnv");
         }
-        self.execution_environments_stack
+        let mut exec_env = self
+            .execution_environments_stack
             .pop()
-            .expect("no local ExecEnv")
+            .expect("no local ExecEnv");
+        exec_env.global_ids_at_leave = Some(self.global_ids.clone());
+        exec_env
     }
 
     // Run `f` in a fresh local ExecEnv; on success return (value, closed local env).
@@ -322,7 +327,7 @@ impl ParseScope {
     }
 }
 
-impl Ids {
+impl GlobalIds {
     pub fn new() -> Self {
         Self {
             next_fact_id: FactId::new(1),

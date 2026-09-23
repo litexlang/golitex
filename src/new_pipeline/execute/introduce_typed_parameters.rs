@@ -205,7 +205,7 @@ impl Runtime {
                 let element = Obj::Identifier(self.identifier_obj_for_stored_mention(identifier));
                 let type_fact = match &group.param_type {
                     ParamType::Obj(param_set) => {
-                        let fact_id = self.ids.allocate_fact_id();
+                        let fact_id = self.global_ids.allocate_fact_id();
                         let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
                             fact_id,
                             element: element.clone(),
@@ -218,20 +218,20 @@ impl Runtime {
                         membership
                     }
                     ParamType::Set(_) => Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact {
-                        fact_id: self.ids.allocate_fact_id(),
+                        fact_id: self.global_ids.allocate_fact_id(),
                         set: element,
                         line_file: None,
                     })),
                     ParamType::NonemptySet(_) => {
                         Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact {
-                            fact_id: self.ids.allocate_fact_id(),
+                            fact_id: self.global_ids.allocate_fact_id(),
                             set: element,
                             line_file: None,
                         }))
                     }
                     ParamType::FiniteSet(_) => {
                         Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact {
-                            fact_id: self.ids.allocate_fact_id(),
+                            fact_id: self.global_ids.allocate_fact_id(),
                             set: element,
                             line_file: None,
                         }))

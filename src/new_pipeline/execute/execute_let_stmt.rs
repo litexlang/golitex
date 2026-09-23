@@ -57,7 +57,7 @@ impl Runtime {
             )),
         );
 
-        let equality_fact_id = self.ids.allocate_fact_id();
+        let equality_fact_id = self.global_ids.allocate_fact_id();
         // Definition key stays plain; stored equality LHS uses global name at file root.
         let left = Obj::Identifier(self.identifier_obj_for_stored_mention(&let_stmt.name));
         let equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {

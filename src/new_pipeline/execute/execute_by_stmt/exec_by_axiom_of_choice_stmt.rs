@@ -87,7 +87,7 @@ pub fn exec_by_axiom_of_choice_stmt(
 
 fn ac_obligations(runtime: &mut Runtime, family: &Obj, line_file: &LineFile) -> Vec<Fact> {
     let is_set: Fact = IsSetFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         set: family.clone(),
         line_file: Some(line_file.clone()),
     }
@@ -99,13 +99,13 @@ fn ac_members_nonempty(runtime: &mut Runtime, family: &Obj, line_file: &LineFile
     let a = runtime.fresh_internal_param();
     let a_obj = Obj::Identifier(IdentifierObj::from_bound_name(&a));
     let nonempty: AtomicFact = IsNonemptySetFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         set: a_obj,
         line_file: Some(line_file.clone()),
     }
     .into();
     Fact::ForallFact(ForallFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         typed_parameters: TypedParameterList {
             groups: vec![TypedParameterGroup {
                 params: vec![a],
@@ -150,14 +150,14 @@ fn ac_exist_fact(runtime: &mut Runtime, family: &Obj, line_file: &LineFile) -> F
         equal_to: Box::new(id_val),
     }));
     let named: AtomicFact = NormalAtomicFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         predicate: AtomicName::plain("is_choice_function_for".to_string()),
         body: vec![family.clone(), family.clone(), identity, f_obj],
         line_file: Some(line_file.clone()),
     }
     .into();
     Fact::ExistFact(PlainExistFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         typed_parameters: TypedParameterList {
             groups: vec![TypedParameterGroup {
                 params: vec![f],

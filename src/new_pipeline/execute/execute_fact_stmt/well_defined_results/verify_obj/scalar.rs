@@ -88,7 +88,7 @@ impl Runtime {
             normalized_value: "0".to_string(),
         }));
         let nonzero = AtomicFact::NotEqualFact(NotEqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: value.right.as_ref().clone(),
             right: zero,
             line_file: None,
@@ -132,7 +132,7 @@ impl Runtime {
                 normalized_value: "0".to_string(),
             }));
             let nonzero = AtomicFact::NotEqualFact(NotEqualFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 left: value.right.as_ref().clone(),
                 right: zero,
                 line_file: None,
@@ -199,13 +199,13 @@ impl Runtime {
             normalized_value: "0".to_string(),
         }));
         let left_nz = AtomicFact::NotEqualFact(NotEqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: value.left.as_ref().clone(),
             right: zero.clone(),
             line_file: None,
         });
         let right_nz = AtomicFact::NotEqualFact(NotEqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: value.right.as_ref().clone(),
             right: zero,
             line_file: None,
@@ -356,7 +356,7 @@ impl Runtime {
             normalized_value: "0".to_string(),
         }));
         let positive = AtomicFact::GreaterFact(GreaterFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: value.arg.as_ref().clone(),
             right: zero,
             line_file: None,
@@ -452,13 +452,13 @@ impl Runtime {
             normalized_value: "1".to_string(),
         }));
         let lo = AtomicFact::LessEqualFact(LessEqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: neg_one,
             right: value.arg.as_ref().clone(),
             line_file: None,
         });
         let hi = AtomicFact::LessEqualFact(LessEqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: value.arg.as_ref().clone(),
             right: one,
             line_file: None,
@@ -497,13 +497,13 @@ impl Runtime {
             normalized_value: "1".to_string(),
         }));
         let lo = AtomicFact::LessEqualFact(LessEqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: neg_one,
             right: value.arg.as_ref().clone(),
             line_file: None,
         });
         let hi = AtomicFact::LessEqualFact(LessEqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: value.arg.as_ref().clone(),
             right: one,
             line_file: None,
@@ -585,7 +585,7 @@ impl Runtime {
             normalized_value: "0".to_string(),
         }));
         let nonzero = AtomicFact::NotEqualFact(NotEqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: denom,
             right: zero,
             line_file: None,
@@ -623,7 +623,7 @@ impl Runtime {
             normalized_value: "0".to_string(),
         }));
         let nonzero = AtomicFact::NotEqualFact(NotEqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: denom,
             right: zero,
             line_file: None,
@@ -693,7 +693,7 @@ impl Runtime {
             normalized_value: "0".to_string(),
         }));
         let ge = AtomicFact::LessEqualFact(LessEqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: zero,
             right: value.arg.as_ref().clone(),
             line_file: None,
@@ -736,19 +736,19 @@ impl Runtime {
             normalized_value: "1".to_string(),
         }));
         let base_pos = AtomicFact::GreaterFact(GreaterFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: value.base.as_ref().clone(),
             right: zero.clone(),
             line_file: None,
         });
         let arg_pos = AtomicFact::GreaterFact(GreaterFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: value.arg.as_ref().clone(),
             right: zero,
             line_file: None,
         });
         let base_ne_one = AtomicFact::NotEqualFact(NotEqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: value.base.as_ref().clone(),
             right: one,
             line_file: None,
@@ -870,7 +870,7 @@ impl Runtime {
             normalized_value: "0".to_string(),
         }));
         let nonzero = AtomicFact::NotEqualFact(NotEqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: value.base.as_ref().clone(),
             right: zero,
             line_file: None,

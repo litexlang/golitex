@@ -35,7 +35,7 @@ impl Runtime {
         let mut proof_of_requirement_facts = Vec::with_capacity(2);
 
         let set_goal: Fact = EqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: left.set.as_ref().clone(),
             right: right.set.as_ref().clone(),
             line_file: fact.line_file.clone(),
@@ -49,7 +49,7 @@ impl Runtime {
         proof_of_requirement_facts.push(set_proof);
 
         let pointwise_goal: Fact = EqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: left_at_x,
             right: right_at_x,
             line_file: fact.line_file.clone(),

@@ -464,7 +464,7 @@ by def {x R: 0 <= x} $subset R
 | `index_union(I, X, A)`, `index_intersect(I, X, A)` | Union or intersection of the set-valued family `A : I -> power_set(X)`, with explicit ambient set `X` |
 | `power_set(A)` | Set of subsets of `A` |
 | `replacement(P, A)` | Replacement set defined by a functional predicate `P` (default pipeline) |
-| `have Img set by replacement_axiom(P, A)` | Named Replacement image under `new_pipeline` (no anonymous Obj; see preview note below) |
+| `have Img set by replacement_axiom: prop P, set A` | Named image from the **Axiom of Replacement** (`new_pipeline`; not an Obj — see preview note) |
 | `index_cart(I, S, g)` | Choice functions selecting one value from each factor `g(alpha)` (formerly `general_cart`) |
 
 The suffix must be adjacent to its base. These compact forms are canonical;
@@ -648,13 +648,20 @@ An arbitrary binary relation is not enough: without the exact uniqueness
 universal over `A`, even forming `replacement(P, A)` is a well-definedness
 `error`, before any membership goal is considered.
 
-> **Preview (`new_pipeline`):** there is no anonymous `replacement_image(P, A)`
-> object. Introduce a named image with
-> `have Img set by replacement_axiom(P, A)` after uniqueness of binary
-> `prop`/`abstract_prop` `P` on source `A` is known (same contract as
-> default-pipeline `replacement` WD). The statement stores `$is_set(Img)` plus
-> introduction/elimination foralls. `fn_range(f)` stays available for function
-> ranges. Tracer:
+> **Preview (`new_pipeline`):** this statement is the surface for the **Axiom of
+> Replacement**: after binary `prop`/`abstract_prop` `P` is known to be
+> functional on source set `A`, introduce a named image set `Img` and store
+> `$is_set(Img)` plus introduction/elimination foralls (same mathematical
+> contract as default-pipeline `replacement` WD).
+>
+> It is intentionally **not** an anonymous Obj such as `replacement_image(P, A)`.
+> An Obj written with parentheses would have to take the **prop name** as a
+> parenthesized argument, but in Litex parentheses normally carry only **objs**
+> (calls, set formers, …). Passing a prop name that way would look odd and
+> blur the prop/obj boundary. The tagged form
+> `have Img set by replacement_axiom: prop P, set A` (same style as
+> `by axiom_of_choice: set F` / `by zorn_lemma: …`) keeps `P` labeled as a prop
+> and `A` as a set. `fn_range(f)` stays available for function ranges. Tracer:
 > [`examples/new_pipeline_stmt_nodes/definition/have_by_replacement_axiom.lit`](../examples/new_pipeline_stmt_nodes/definition/have_by_replacement_axiom.lit).
 
 ### Functions, application, and range
@@ -2208,8 +2215,9 @@ template<S set, z S>:
 ```
 
 > **Preview (`new_pipeline`):** a template body may also be `have fn … by cases`
-> or `have fn … by induc`. Instantiated applications unfold by the same
-> object-definition stage as ordinary have-fn:
+> or `have fn … by induc`, or `have … set by replacement_axiom: prop P, set A`.
+> Instantiated applications unfold by the same
+> object-definition stage as ordinary have-fn / have-obj:
 >
 > ```litex
 > template<a R>:
@@ -2226,6 +2234,17 @@ template<S set, z S>:
 >         case n >= 1: countdown_t(n - 1)
 >
 > \countdown_t<{0}>(0) = 0
+>
+> abstract_prop image_rel(x, y)
+> trust:
+>     forall x {1, 2}, y, y2 set:
+>         $image_rel(x, y)
+>         $image_rel(x, y2)
+>         =>:
+>             y = y2
+> template<_S set>:
+>     have Img set by replacement_axiom: prop image_rel, set {1, 2}
+> $is_set(\Img<{0}>)
 > ```
 
 The template body defines exactly one object or function:
@@ -3102,8 +3121,10 @@ well-defined. For `replacement` it stores `x $in A` and `$P(x, y)`.
 > **Preview (`new_pipeline`):** `HaveByPreimageStmt` exists in the AST, but
 > parse/exec still reject with `have by preimage: not wired yet`. Default
 > pipeline supports `from z $in fn_range(f)` and `from y $in replacement(P, A)`.
-> Named Replacement images use `have … set by replacement_axiom(P, A)` (not an
-> anonymous Obj); preimage naming for that form is not wired yet.
+> Named images from the Axiom of Replacement use
+> `have … set by replacement_axiom: prop P, set A` (not an anonymous Obj — prop
+> names do not belong in ordinary parenthesized obj arguments); preimage naming
+> for that form is not wired yet.
 
 `obtain` exposes each direct fact in the existential body. Positive concrete
 predicates among those facts may expose positive clauses through forward

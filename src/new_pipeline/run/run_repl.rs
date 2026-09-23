@@ -83,9 +83,7 @@ fn format_runtime_error(error: &RuntimeError) -> String {
         RuntimeError::ParseError(error) => {
             format!("{} at line {} in {}", error.message, error.line, error.path)
         }
-        RuntimeError::Unsupported(message)
-        | RuntimeError::InternalBug(message)
-        | RuntimeError::Unknown(message) => message.clone(),
+        RuntimeError::Unsupported(message) | RuntimeError::InternalBug(message) => message.clone(),
     }
 }
 

@@ -161,7 +161,7 @@ impl Runtime {
             }
 
             Ok(NotForallFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 typed_parameters: params,
                 dom_facts,
                 then_facts,
@@ -267,14 +267,14 @@ impl Runtime {
                     .into());
                 }
                 let forall_fact = ForallFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     typed_parameters: params,
                     dom_facts,
                     then_facts,
                     line_file: Some(tb.line_file()),
                 };
                 return Ok(Fact::ForallFactWithIff(ForallFactWithIff {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     forall_fact,
                     iff_facts,
                     line_file: Some(tb.line_file()),
@@ -319,7 +319,7 @@ impl Runtime {
             }
 
             Ok(Fact::ForallFact(ForallFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 typed_parameters: params,
                 dom_facts,
                 then_facts,
@@ -383,7 +383,7 @@ impl Runtime {
         }
 
         Ok(Fact::ForallFact(ForallFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters: params,
             dom_facts,
             then_facts: vec![then_fact],
@@ -449,7 +449,7 @@ impl Runtime {
             }
 
             let body = PlainExistFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 typed_parameters: params,
                 facts,
                 line_file: Some(tb.line_file()),
@@ -559,7 +559,7 @@ impl Runtime {
             });
         }
         Ok(QuantifierFreeFact::OrFact(OrFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             facts: list,
             line_file: Some(tb.line_file()),
         }))
@@ -608,7 +608,7 @@ impl Runtime {
                     Ok(AndChainAtomicFact::AtomicFact(collected.remove(0)))
                 } else {
                     Ok(AndChainAtomicFact::AndFact(AndFact {
-                        fact_id: self.ids.allocate_fact_id(),
+                        fact_id: self.global_ids.allocate_fact_id(),
                         facts: collected,
                         line_file: Some(tb.line_file()),
                     }))
@@ -762,7 +762,7 @@ impl Runtime {
         }
 
         Ok(ChainAtomicFact::ChainFact(ChainFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             objs,
             prop_names,
             line_file: Some(line_file),

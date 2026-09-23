@@ -1,4 +1,4 @@
-use super::super::keywords::{BY, COLON, EQUAL, LEFT_PAREN, REPLACEMENT_AXIOM, RIGHT_PAREN};
+use super::super::keywords::{BY, COLON, COMMA, EQUAL, PROP, REPLACEMENT_AXIOM, SET};
 use super::super::object::parse_obj;
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
@@ -11,7 +11,7 @@ use crate::new_pipeline::tokenize::TokenBlock;
 
 impl Runtime {
     // have x T | have x, y T | have x = obj | have x T: facts
-    // | have Img set by replacement_axiom(P, A)
+    // | have Img set by replacement_axiom: prop P, set A
     pub(in super::super) fn parse_have_obj_stmt(
         &mut self,
         block: &TokenBlock,
@@ -54,7 +54,7 @@ impl Runtime {
             if tb.peek() == Some(EQUAL) {
                 tb.expect(EQUAL)?;
                 let mut objs_equal_to = vec![parse_obj(self, &mut tb)?];
-                while tb.peek() == Some(super::super::keywords::COMMA) {
+                while tb.peek() == Some(COMMA) {
                     tb.advance()?;
                     objs_equal_to.push(parse_obj(self, &mut tb)?);
                 }
@@ -69,7 +69,7 @@ impl Runtime {
 
             if !tb.exceed_end_of_head() {
                 return Err(tb.parse_error(
-                    "have: expected `=`, `:`, `by replacement_axiom`, or end of header after parameters",
+                    "have: expected `=`, `:`, `by replacement_axiom:`, or end of header after parameters",
                 ));
             }
             if !tb.body.is_empty() {
@@ -129,7 +129,8 @@ impl Runtime {
         }
     }
 
-    // `by replacement_axiom(P, A)` after a single `name set` binding.
+    // `by replacement_axiom: prop P, set A` after a single `name set` binding.
+    // Same tagged-arg style as `by axiom_of_choice: set F` / `by zorn_lemma: …`.
     fn parse_have_by_replacement_axiom_tail(
         &mut self,
         tb: &mut TokenBlock,
@@ -138,14 +139,20 @@ impl Runtime {
     ) -> RuntimeResult<HaveObjKind> {
         tb.expect(BY)?;
         tb.expect(REPLACEMENT_AXIOM)?;
-        tb.expect(LEFT_PAREN)?;
+        if tb.peek() != Some(COLON) {
+            return Err(tb.parse_error(
+                "expected `by replacement_axiom: prop P, set A`",
+            ));
+        }
+        tb.expect(COLON)?;
+        tb.expect(PROP)?;
         let prop_name = self.parse_prop_name(tb)?;
-        tb.expect(super::super::keywords::COMMA)?;
+        tb.expect(COMMA)?;
+        tb.expect(SET)?;
         let source_set = parse_obj(self, tb)?;
-        tb.expect(RIGHT_PAREN)?;
         if !tb.exceed_end_of_head() {
             return Err(tb.parse_error(
-                "trailing tokens after `have … by replacement_axiom(...)`",
+                "trailing tokens after `have … by replacement_axiom: prop P, set A`",
             ));
         }
         if !tb.body.is_empty() {

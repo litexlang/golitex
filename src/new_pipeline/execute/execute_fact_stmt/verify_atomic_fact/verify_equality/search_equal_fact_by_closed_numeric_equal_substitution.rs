@@ -44,7 +44,7 @@ impl Runtime {
             return Ok(None);
         }
 
-        let residual_fact_id = self.ids.allocate_fact_id();
+        let residual_fact_id = self.global_ids.allocate_fact_id();
         let residual = EqualFact {
             fact_id: residual_fact_id,
             left: rewritten_left.clone(),

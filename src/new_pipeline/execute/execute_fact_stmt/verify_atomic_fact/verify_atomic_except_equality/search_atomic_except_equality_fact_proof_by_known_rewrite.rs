@@ -83,7 +83,7 @@ impl Runtime {
         let gathers = self.symmetric_gathers_for_prop(&normal.predicate);
         for gather in gathers {
             let Some(alternate_atomic) =
-                reorder_normal_atomic_by_gather(normal, &gather, self.ids.allocate_fact_id())
+                reorder_normal_atomic_by_gather(normal, &gather, self.global_ids.allocate_fact_id())
             else {
                 continue;
             };

@@ -113,7 +113,7 @@ pub(super) fn membership_or_equalities_fact(
         .map(|v| {
             AndChainAtomicFact::AtomicFact(
                 EqualFact {
-                    fact_id: runtime.ids.allocate_fact_id(),
+                    fact_id: runtime.global_ids.allocate_fact_id(),
                     left: element.clone(),
                     right: v.clone(),
                     line_file: Some(line_file.clone()),
@@ -123,7 +123,7 @@ pub(super) fn membership_or_equalities_fact(
         })
         .collect();
     Fact::OrFact(OrFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         facts: branches,
         line_file: Some(line_file.clone()),
     })
@@ -146,7 +146,7 @@ pub(super) fn membership_in_fact(
 ) -> Fact {
     Fact::AtomicFact(
         InFact {
-            fact_id: runtime.ids.allocate_fact_id(),
+            fact_id: runtime.global_ids.allocate_fact_id(),
             element: element.clone(),
             set,
             line_file: Some(line_file.clone()),

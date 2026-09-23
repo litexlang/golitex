@@ -49,7 +49,7 @@ impl Runtime {
         let mut corresponding_arg_equal_proofs = Vec::with_capacity(pairs.len());
         for (left_arg, right_arg) in pairs {
             let child = EqualFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 left: left_arg,
                 right: right_arg,
                 line_file: fact.line_file.clone(),

@@ -68,7 +68,7 @@ impl Runtime {
         match finish_by_def(&root, stages) {
             Ok(by_def) => {
                 if verify_state.store_well_defined_fact {
-                    let wd_id = self.ids.allocate_well_definedness_id();
+                    let wd_id = self.global_ids.allocate_well_definedness_id();
                     self.top_exec_env_mut()
                         .well_defined_objects
                         .record(root, wd_id);
@@ -159,7 +159,7 @@ impl Runtime {
         match finish_by_def(&root, stages) {
             Ok(by_def) => {
                 if verify_state.store_well_defined_fact {
-                    let wd_id = self.ids.allocate_well_definedness_id();
+                    let wd_id = self.global_ids.allocate_well_definedness_id();
                     self.top_exec_env_mut()
                         .well_defined_objects
                         .record(root, wd_id);
@@ -303,7 +303,7 @@ impl Runtime {
                 let type_fact = type_fact_for_instantiated_template_arg(
                     arg.clone(),
                     &param_type,
-                    self.ids.allocate_fact_id(),
+                    self.global_ids.allocate_fact_id(),
                 );
                 let req = self.verify_fact(&type_fact, verify_state.clone())?;
                 let failed = req.is_failed();
@@ -347,7 +347,7 @@ impl Runtime {
         match finish_by_def(&root, stages) {
             Ok(by_def) => {
                 if verify_state.store_well_defined_fact {
-                    let wd_id = self.ids.allocate_well_definedness_id();
+                    let wd_id = self.global_ids.allocate_well_definedness_id();
                     self.top_exec_env_mut()
                         .well_defined_objects
                         .record(root.clone(), wd_id);
@@ -368,6 +368,7 @@ impl Runtime {
     // - have fn =: `\Name<args> $in inst(FnSet)` and `\Name<args> = inst(anon)`
     // - have fn by cases / by induc: `\Name<args> $in inst(FnSet)` (no anon equality)
     // - have =: `\Name<args> = subst(rhs)`
+    // - have by replacement_axiom: `$is_set(\Name<args>)` plus intro/elim foralls
     fn maybe_register_instantiated_template_definitional_facts(
         &mut self,
         value: &InstantiatedTemplateObj,
@@ -400,7 +401,7 @@ impl Runtime {
                 };
                 let surface = Obj::InstantiatedTemplateObj(value.clone());
                 let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     element: surface.clone(),
                     set: Obj::FunctionSpace(FunctionSpace::FnSet(anon.body.clone())),
                     line_file: None,
@@ -410,7 +411,7 @@ impl Runtime {
                     self.record_fn_signature_from_definition_membership(in_fact);
                 }
                 let defining_equal = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     left: surface,
                     right: Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)),
                     line_file: None,
@@ -461,7 +462,7 @@ impl Runtime {
                 };
                 let surface = Obj::InstantiatedTemplateObj(value.clone());
                 let defining_equal = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     left: surface,
                     right: expanded_rhs,
                     line_file: None,
@@ -469,6 +470,27 @@ impl Runtime {
                 self.store_fact_and_infer(&defining_equal)?;
                 if let Fact::AtomicFact(AtomicFact::EqualFact(eq)) = &defining_equal {
                     self.record_fn_signature_from_definition_equal(eq);
+                }
+            }
+            TemplateDefEnum::HaveByReplacementAxiomStmt(stmt) => {
+                // Same three facts as plain `have … by replacement_axiom` / release:
+                // `$is_set`, intro forall, elim forall — with `\Name<args>` as Img
+                // and template params substituted into the source set.
+                let Ok(source_set) = self.inst_obj(&stmt.source_set, &subst) else {
+                    return Ok(());
+                };
+                let mut stmt_inst = stmt.clone();
+                stmt_inst.source_set = source_set;
+                let img = Obj::InstantiatedTemplateObj(value.clone());
+                let type_fact = Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    set: img.clone(),
+                    line_file: None,
+                }));
+                let intro = Fact::ForallFact(self.replacement_intro_forall(&stmt_inst, &img));
+                let elim = Fact::ForallFact(self.replacement_elim_forall(&stmt_inst, &img));
+                for fact in [type_fact, intro, elim] {
+                    self.store_fact_and_infer(&fact)?;
                 }
             }
             _ => {}
@@ -496,7 +518,7 @@ impl Runtime {
         };
         let surface = Obj::InstantiatedTemplateObj(value.clone());
         let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             element: surface,
             set: inst_set,
             line_file: None,

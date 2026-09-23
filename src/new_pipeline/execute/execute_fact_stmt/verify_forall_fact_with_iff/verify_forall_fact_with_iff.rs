@@ -68,7 +68,7 @@ impl Runtime {
             dom_then.push(then.clone().into());
         }
         let then_implies_iff = ForallFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters: f.typed_parameters.clone(),
             dom_facts: dom_then,
             then_facts: forall_iff.iff_facts.clone(),
@@ -80,7 +80,7 @@ impl Runtime {
             dom_iff.push(iff.clone().into());
         }
         let iff_implies_then = ForallFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters: f.typed_parameters.clone(),
             dom_facts: dom_iff,
             then_facts: f.then_facts.clone(),

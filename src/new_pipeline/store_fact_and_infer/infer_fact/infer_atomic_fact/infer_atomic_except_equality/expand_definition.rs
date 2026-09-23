@@ -49,7 +49,7 @@ impl Runtime {
         }
         let mut derived = Vec::new();
         for ((_param, param_type), arg) in flat.iter().zip(normal.body.iter()) {
-            let Some(obligation) = type_obligation_fact(arg, param_type, &mut self.ids) else {
+            let Some(obligation) = type_obligation_fact(arg, param_type, &mut self.global_ids) else {
                 continue;
             };
             derived.push(self.store_inferred_fact_and_infer(&obligation)?);
@@ -117,9 +117,9 @@ fn flatten_typed_param_types(
 fn type_obligation_fact(
     arg: &crate::new_pipeline::ast::obj::Obj,
     param_type: &ParamType,
-    ids: &mut crate::new_pipeline::runtime::Ids,
+    global_ids: &mut crate::new_pipeline::runtime::GlobalIds,
 ) -> Option<Fact> {
-    let fact_id = ids.allocate_fact_id();
+    let fact_id = global_ids.allocate_fact_id();
     match param_type {
         ParamType::Obj(set) => Some(Fact::AtomicFact(AtomicFact::InFact(InFact {
             fact_id,

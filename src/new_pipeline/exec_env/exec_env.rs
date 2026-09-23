@@ -22,6 +22,7 @@ use crate::new_pipeline::ast::stmt::LetObjStmt;
 use crate::new_pipeline::ast::stmt::TrustHaveStmt;
 use crate::new_pipeline::exec_env::known_fact_memory::ObjIR;
 use crate::new_pipeline::runtime::runtime_ids::{FactId, WellDefinednessId};
+use crate::new_pipeline::runtime::GlobalIds;
 use std::collections::HashMap;
 use std::rc::Rc;
 
@@ -43,6 +44,10 @@ pub use super::known_fact_memory::{
 /// only to its own instance.  When a statement returns, the result may retain
 /// the child environment so its local definitions, facts, and WD records stay
 /// available to the renderer without being merged into the parent implicitly.
+///
+/// `global_ids_at_enter` / `global_ids_at_leave` are frozen copies of
+/// `Runtime.global_ids` at push / pop. They are diagnostic / range markers only;
+/// merge never copies them (live counters stay on `Runtime`).
 #[derive(Clone)]
 pub struct ExecEnv {
     /// Definitions visible to statements executed in this scope.
@@ -64,6 +69,12 @@ pub struct ExecEnv {
     /// explicitly allows storage; temporary builtin-rule searches therefore
     /// remain read-only.
     pub well_defined_objects: WellDefinedObjectMemory,
+
+    /// `Runtime.global_ids` copied when this ExecEnv was pushed.
+    pub global_ids_at_enter: GlobalIds,
+
+    /// `Runtime.global_ids` copied when this ExecEnv was popped; `None` while live.
+    pub global_ids_at_leave: Option<GlobalIds>,
 }
 
 /// The two-way index for well-defined objects owned by one scope.
@@ -149,13 +160,15 @@ pub enum SpecialObjectPropertyByDefinition {
 // -----------------------------------------------------------------------------
 
 impl ExecEnv {
-    pub fn new() -> Self {
+    pub fn new(global_ids_at_enter: GlobalIds) -> Self {
         Self {
             definitions: DefinitionMemory::new(),
             facts: KnownFactMemory::new(),
             special_object_properties: HashMap::new(),
             prop_rewrite_properties: HashMap::new(),
             well_defined_objects: WellDefinedObjectMemory::new(),
+            global_ids_at_enter,
+            global_ids_at_leave: None,
         }
     }
 
@@ -225,7 +238,7 @@ impl ExecEnv {
 
 impl Default for ExecEnv {
     fn default() -> Self {
-        Self::new()
+        Self::new(GlobalIds::new())
     }
 }
 

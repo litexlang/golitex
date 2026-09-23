@@ -212,7 +212,7 @@ impl Runtime {
             format!("index {} is not a positive integer", value.index.ir()),
         )?);
         let is_tuple = AtomicFact::IsTupleFact(IsTupleFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             set: value.obj.as_ref().clone(),
             line_file: None,
         });
@@ -225,7 +225,7 @@ impl Runtime {
             arg: value.obj.clone(),
         }));
         let bounded = AtomicFact::LessEqualFact(LessEqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: value.index.as_ref().clone(),
             right: tuple_dim.clone(),
             line_file: None,

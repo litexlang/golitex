@@ -19,7 +19,7 @@ fn test_runtime() -> Runtime {
 #[test]
 fn inst_equality_replaces_plain_identifier() {
     let mut runtime = test_runtime();
-    let x_id = runtime.ids.allocate_identifier_id();
+    let x_id = runtime.global_ids.allocate_identifier_id();
     let x = Obj::Identifier(IdentifierObj::plain(x_id, "x".into()));
     let zero = Obj::Literal(Literal::Number(Number {
         normalized_value: "0".into(),
@@ -28,7 +28,7 @@ fn inst_equality_replaces_plain_identifier() {
         normalized_value: "1".into(),
     }));
     let fact = QuantifierFreeFact::AtomicFact(AtomicFact::EqualFact(EqualFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         left: x,
         right: zero,
         line_file: None,

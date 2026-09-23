@@ -11,7 +11,7 @@ impl Runtime {
         is_cart: &IsCartFact,
     ) -> RuntimeResult<InferIsCartDimensionLowerBoundResult> {
         let lower_bound = AtomicFact::GreaterEqualFact(GreaterEqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: Obj::ProductShape(ProductShape::CartDim(CartDim {
                 set: Box::new(is_cart.set.clone()),
             })),

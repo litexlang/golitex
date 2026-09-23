@@ -107,7 +107,7 @@ impl Runtime {
         // HaveFnEqualStmt carries `name: String`; file-root mention uses qualified form.
         let function_obj = Obj::Identifier(self.identifier_obj_for_file_root_symbol(stmt.name.clone()));
 
-        let membership_fact_id = self.ids.allocate_fact_id();
+        let membership_fact_id = self.global_ids.allocate_fact_id();
         let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
             fact_id: membership_fact_id,
             element: function_obj.clone(),
@@ -119,7 +119,7 @@ impl Runtime {
             self.record_fn_signature_from_definition_membership(in_fact);
         }
 
-        let defining_equal_fact_id = self.ids.allocate_fact_id();
+        let defining_equal_fact_id = self.global_ids.allocate_fact_id();
         let defining_equal = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
             fact_id: defining_equal_fact_id,
             left: function_obj,

@@ -42,7 +42,7 @@ impl Runtime {
                 let type_fact = type_fact_for_instantiated_arg(
                     arg.clone(),
                     &param_type,
-                    self.ids.allocate_fact_id(),
+                    self.global_ids.allocate_fact_id(),
                 );
                 let proof = self.verify_fact(&type_fact, verify_state.clone())?;
                 if proof.is_failed() {

@@ -63,7 +63,7 @@ impl Runtime {
         };
 
         let residual = EqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: expanded_body.clone(),
             right: other_side.clone(),
             line_file: parent_fact.line_file.clone(),

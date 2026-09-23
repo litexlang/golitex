@@ -169,7 +169,7 @@ pub struct ObtainObjFromThm {
 // Example: `have by preimage a from square(2) $in fn_range(square)`
 //
 // new_pipeline: AST + keyword exist; parse/exec not wired yet.
-// Replacement images use `have … set by replacement_axiom(P, A)`, not an Obj.
+// Replacement images use `have … set by replacement_axiom: prop P, set A`, not an Obj.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HaveByPreimageStmt {
     pub preimage_names: Vec<PlainName>,
@@ -178,8 +178,11 @@ pub struct HaveByPreimageStmt {
     pub line_file: LineFile,
 }
 
-// Introduce a named set as the Replacement image of `source_set` under binary
-// prop `prop_name`. No anonymous `replacement_image` object.
+// Introduce a named set as the image given by the Axiom of Replacement for
+// binary prop `prop_name` on `source_set`. Not an anonymous Obj: parenthesized
+// Obj forms normally take objs only, and putting a prop name in `(...)` would
+// blur the prop/obj boundary. Surface uses tagged args like axiom_of_choice /
+// zorn_lemma: `have Img set by replacement_axiom: prop P, set A`.
 //
 // Obligations: `prop_name` is a binary user prop/abstract_prop; `source_set` is
 // WD; uniqueness of the prop on the source is already known:
@@ -197,7 +200,7 @@ pub struct HaveByPreimageStmt {
 //           $image_rel(x, y2)
 //           =>:
 //               y = y2
-//   have Img set by replacement_axiom(image_rel, {1, 2})
+//   have Img set by replacement_axiom: prop image_rel, set {1, 2}
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HaveByReplacementAxiomStmt {
     pub name: BoundName,
@@ -288,6 +291,7 @@ pub enum TemplateDefEnum {
     HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),
     HaveObjEqualStmt(HaveObjEqualStmt),
     HaveObjByExistFactsStmt(HaveObjByExistFactsStmt),
+    HaveByReplacementAxiomStmt(HaveByReplacementAxiomStmt),
     TrustHaveStmt(TrustHaveStmt),
     ObtainObjFromExistFact(ObtainObjFromExistFact),
     ObtainObjFromAtomicFact(ObtainObjFromAtomicFact),

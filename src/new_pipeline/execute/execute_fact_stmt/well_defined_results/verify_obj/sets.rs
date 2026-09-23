@@ -93,7 +93,7 @@ impl Runtime {
             ));
         }
         if verify_state.store_well_defined_fact {
-            let wd_id = self.ids.allocate_well_definedness_id();
+            let wd_id = self.global_ids.allocate_well_definedness_id();
             self.top_exec_env_mut()
                 .well_defined_objects
                 .record(Obj::SetOperator(SetOperator::IndexUnion(value.clone())), wd_id);
@@ -155,7 +155,7 @@ impl Runtime {
             ));
         }
         if verify_state.store_well_defined_fact {
-            let wd_id = self.ids.allocate_well_definedness_id();
+            let wd_id = self.global_ids.allocate_well_definedness_id();
             self.top_exec_env_mut()
                 .well_defined_objects
                 .record(Obj::SetOperator(SetOperator::IndexIntersect(value.clone())), wd_id);
@@ -233,7 +233,7 @@ impl Runtime {
             ));
         }
         if verify_state.store_well_defined_fact {
-            let wd_id = self.ids.allocate_well_definedness_id();
+            let wd_id = self.global_ids.allocate_well_definedness_id();
             self.top_exec_env_mut()
                 .well_defined_objects
                 .record(Obj::SetOperator(SetOperator::IndexCart(value.clone())), wd_id);
@@ -290,7 +290,7 @@ impl Runtime {
         for left_index in 0..value.list.len() {
             for right_index in (left_index + 1)..value.list.len() {
                 let not_eq = AtomicFact::NotEqualFact(NotEqualFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     left: value.list[left_index].as_ref().clone(),
                     right: value.list[right_index].as_ref().clone(),
                     line_file: None,
@@ -322,7 +322,7 @@ impl Runtime {
         let proof = self
             .verify_unary_obj_well_definedness_by_def(value.set.as_ref(), verify_state.clone())?;
         let is_cart = AtomicFact::IsCartFact(IsCartFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             set: value.set.as_ref().clone(),
             line_file: None,
         });
@@ -357,7 +357,7 @@ impl Runtime {
             ),
         )?);
         let is_cart = AtomicFact::IsCartFact(IsCartFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             set: value.set.as_ref().clone(),
             line_file: None,
         });
@@ -370,7 +370,7 @@ impl Runtime {
             set: value.set.clone(),
         }));
         let bounded = AtomicFact::LessEqualFact(LessEqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: value.dim.as_ref().clone(),
             right: cart_dim.clone(),
             line_file: None,
@@ -393,7 +393,7 @@ impl Runtime {
         let proof = self
             .verify_unary_obj_well_definedness_by_def(value.arg.as_ref(), verify_state.clone())?;
         let is_tuple = AtomicFact::IsTupleFact(IsTupleFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             set: value.arg.as_ref().clone(),
             line_file: None,
         });

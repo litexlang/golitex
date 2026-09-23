@@ -52,7 +52,7 @@ impl Runtime {
         };
 
         let exist_family = ExistShapedFact::Exist(PlainExistFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters: stmt.param_def.clone(),
             facts: stmt.facts.clone(),
             line_file: Some(stmt.line_file.clone()),

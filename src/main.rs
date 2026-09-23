@@ -82,6 +82,5 @@ fn format_runtime_error(error: &RuntimeError) -> String {
         }
         RuntimeError::Unsupported(message) => format!("unsupported: {}", message),
         RuntimeError::InternalBug(message) => format!("internal_bug: {}", message),
-        RuntimeError::Unknown(message) => format!("unknown: {}", message),
     }
 }

@@ -22,7 +22,7 @@ impl Runtime {
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
 
     ) -> Result<AtomicFact, InstError> {
-    let fact_id = self.ids.allocate_fact_id();
+    let fact_id = self.global_ids.allocate_fact_id();
     match atomic {
         AtomicFact::NormalAtomicFact(f) => {
             let mut body = Vec::with_capacity(f.body.len());

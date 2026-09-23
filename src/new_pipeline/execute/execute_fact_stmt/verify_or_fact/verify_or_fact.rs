@@ -113,7 +113,7 @@ impl Runtime {
             let AndChainAtomicFact::AtomicFact(atomic) = branch else {
                 return Ok(None);
             };
-            let Some(negated_atomic) = negate_atomic_fact(atomic, self.ids.allocate_fact_id())
+            let Some(negated_atomic) = negate_atomic_fact(atomic, self.global_ids.allocate_fact_id())
             else {
                 return Ok(None);
             };

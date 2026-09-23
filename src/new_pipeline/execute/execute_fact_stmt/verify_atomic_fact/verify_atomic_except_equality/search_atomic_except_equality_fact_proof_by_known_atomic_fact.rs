@@ -104,7 +104,7 @@ impl Runtime {
         equality_state: VerifyState,
     ) -> RuntimeResult<Option<EqualFactSearchedProof>> {
         let equal_fact = EqualFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: known_arg.clone(),
             right: goal_arg.clone(),
             line_file: None,

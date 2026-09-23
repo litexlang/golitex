@@ -30,7 +30,7 @@ impl Runtime {
                     facts.push(self.inst_atomic_fact_rec(f, param_to_arg_map)?);
                 }
                 Ok(Fact::AndFact(crate::new_pipeline::ast::fact::AndFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     facts,
                     line_file: a.line_file.clone(),
                 }))
@@ -41,7 +41,7 @@ impl Runtime {
                     objs.push(self.inst_obj_rec(o, param_to_arg_map)?);
                 }
                 Ok(Fact::ChainFact(crate::new_pipeline::ast::fact::ChainFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     objs,
                     prop_names: c.prop_names.clone(),
                     line_file: c.line_file.clone(),
@@ -53,7 +53,7 @@ impl Runtime {
                     facts.push(self.inst_and_chain_atomic(f, param_to_arg_map)?);
                 }
                 Ok(Fact::OrFact(crate::new_pipeline::ast::fact::OrFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     facts,
                     line_file: o.line_file.clone(),
                 }))
@@ -96,7 +96,7 @@ impl Runtime {
         )?;
         let facts = self.inst_qf_facts_rec(&plain.facts, param_to_arg_map)?;
         Ok(PlainExistFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters,
             facts,
             line_file: plain.line_file.clone(),
@@ -157,7 +157,7 @@ impl Runtime {
             )?);
         }
         Ok(ForallFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters,
             dom_facts,
             then_facts,
@@ -191,7 +191,7 @@ impl Runtime {
             )?);
         }
         Ok(ForallFactWithIff {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             forall_fact,
             iff_facts,
             line_file: f.line_file.clone(),
@@ -215,7 +215,7 @@ impl Runtime {
             then_facts.push(self.inst_quantifier_free_fact_rec(then, &shadowed)?);
         }
         Ok(NotForallFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters,
             dom_facts,
             then_facts,
@@ -240,7 +240,7 @@ impl Runtime {
                 }
                 Ok(ExistOrAndChainAtomicFact::AndFact(
                     crate::new_pipeline::ast::fact::AndFact {
-                        fact_id: self.ids.allocate_fact_id(),
+                        fact_id: self.global_ids.allocate_fact_id(),
                         facts,
                         line_file: a.line_file.clone(),
                     },
@@ -253,7 +253,7 @@ impl Runtime {
                 }
                 Ok(ExistOrAndChainAtomicFact::ChainFact(
                     crate::new_pipeline::ast::fact::ChainFact {
-                        fact_id: self.ids.allocate_fact_id(),
+                        fact_id: self.global_ids.allocate_fact_id(),
                         objs,
                         prop_names: c.prop_names.clone(),
                         line_file: c.line_file.clone(),
@@ -267,7 +267,7 @@ impl Runtime {
                 }
                 Ok(ExistOrAndChainAtomicFact::OrFact(
                     crate::new_pipeline::ast::fact::OrFact {
-                        fact_id: self.ids.allocate_fact_id(),
+                        fact_id: self.global_ids.allocate_fact_id(),
                         facts,
                         line_file: o.line_file.clone(),
                     },

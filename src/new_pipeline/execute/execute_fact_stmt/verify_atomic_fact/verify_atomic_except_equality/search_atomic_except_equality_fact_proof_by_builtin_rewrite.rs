@@ -151,7 +151,7 @@ impl Runtime {
         }
 
         let Some(rewritten) =
-            atomic_fact_with_args(fact, rewritten_args, self.ids.allocate_fact_id())
+            atomic_fact_with_args(fact, rewritten_args, self.global_ids.allocate_fact_id())
         else {
             return Ok(None);
         };
@@ -216,7 +216,7 @@ impl Runtime {
                     continue;
                 }
                 let Some(rewritten) =
-                    atomic_fact_with_args(fact, rewritten_args, self.ids.allocate_fact_id())
+                    atomic_fact_with_args(fact, rewritten_args, self.global_ids.allocate_fact_id())
                 else {
                     continue;
                 };
@@ -242,7 +242,7 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByBuiltinOrderDual>> {
-        let Some(alternate) = order_dual_atomic_fact(fact, || self.ids.allocate_fact_id()) else {
+        let Some(alternate) = order_dual_atomic_fact(fact, || self.global_ids.allocate_fact_id()) else {
             return Ok(None);
         };
         let residual_state = VerifyState {

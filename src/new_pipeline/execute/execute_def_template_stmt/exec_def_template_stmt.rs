@@ -36,6 +36,10 @@ use crate::new_pipeline::execute::execute_have_obj_by_exist_facts_stmt::{
     ExecHaveObjByExistFactsStmtFailed, ExecHaveObjByExistFactsStmtResult,
     ExecHaveObjByExistFactsStmtSuccessResult,
 };
+use crate::new_pipeline::execute::execute_have_by_replacement_axiom_stmt::{
+    ExecHaveByReplacementAxiomStmtFailed, ExecHaveByReplacementAxiomStmtResult,
+    ExecHaveByReplacementAxiomStmtSuccessResult,
+};
 use crate::new_pipeline::execute::execute_obtain_obj_from_atomic_fact_stmt::{
     ExecObtainObjFromAtomicFactStmtFailed, ExecObtainObjFromAtomicFactStmtResult,
     ExecObtainObjFromAtomicFactStmtSuccessResult,
@@ -72,6 +76,7 @@ pub enum ExecDefTemplateStmtFailed {
     BodyHaveObjInNonemptySet(ExecHaveObjInNonemptySetStmtFailed),
     BodyHaveObjEqual(ExecHaveObjEqualStmtFailed),
     BodyHaveObjByExistFacts(ExecHaveObjByExistFactsStmtFailed),
+    BodyHaveByReplacementAxiom(ExecHaveByReplacementAxiomStmtFailed),
     BodyObtainObjFromExistFact(ExecObtainObjFromExistFactStmtFailed),
     BodyObtainObjFromAtomicFact(ExecObtainObjFromAtomicFactStmtFailed),
     BodyObtainObjFromThm(ExecObtainObjFromThmStmtFailed),
@@ -87,6 +92,7 @@ pub enum ExecTemplateDefBodyResult {
     HaveObjInNonemptySet(ExecHaveObjInNonemptySetStmtSuccessResult),
     HaveObjEqual(ExecHaveObjEqualStmtSuccessResult),
     HaveObjByExistFacts(ExecHaveObjByExistFactsStmtSuccessResult),
+    HaveByReplacementAxiom(ExecHaveByReplacementAxiomStmtSuccessResult),
     ObtainObjFromExistFact(ExecObtainObjFromExistFactStmtSuccessResult),
     ObtainObjFromAtomicFact(ExecObtainObjFromAtomicFactStmtSuccessResult),
     ObtainObjFromThm(ExecObtainObjFromThmStmtSuccessResult),
@@ -254,6 +260,16 @@ impl Runtime {
                     }
                     ExecHaveObjByExistFactsStmtResult::Failed(failed) => Ok(Err(
                         ExecDefTemplateStmtFailed::BodyHaveObjByExistFacts(failed),
+                    )),
+                }
+            }
+            TemplateDefEnum::HaveByReplacementAxiomStmt(stmt) => {
+                match self.exec_have_by_replacement_axiom_stmt(stmt)? {
+                    ExecHaveByReplacementAxiomStmtResult::Success(ok) => {
+                        Ok(Ok(ExecTemplateDefBodyResult::HaveByReplacementAxiom(ok)))
+                    }
+                    ExecHaveByReplacementAxiomStmtResult::Failed(failed) => Ok(Err(
+                        ExecDefTemplateStmtFailed::BodyHaveByReplacementAxiom(failed),
                     )),
                 }
             }

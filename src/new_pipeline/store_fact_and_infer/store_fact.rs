@@ -153,7 +153,7 @@ impl Runtime {
         let mut dom_then = f.dom_facts.clone();
         dom_then.extend(f.then_facts.iter().cloned().map(Fact::from));
         let forward = ForallFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters: f.typed_parameters.clone(),
             dom_facts: dom_then,
             then_facts: forall_iff.iff_facts.clone(),
@@ -162,7 +162,7 @@ impl Runtime {
         let mut dom_iff = f.dom_facts.clone();
         dom_iff.extend(forall_iff.iff_facts.iter().cloned().map(Fact::from));
         let reverse = ForallFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters: f.typed_parameters.clone(),
             dom_facts: dom_iff,
             then_facts: f.then_facts.clone(),

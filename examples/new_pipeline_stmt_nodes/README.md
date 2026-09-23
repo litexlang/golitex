@@ -21,8 +21,8 @@ fact/          Stmt::Fact
 definition/    LetObj, HaveObj*, HaveByReplacementAxiom, HaveFn*,
                ObtainObjFromExistFact, ObtainObjFromAtomicFact,
                ObtainObjFromThm, DefProp, DefAbstractProp, DefStruct*,
-               DefTemplate (incl. obtain body), DefThm, ReleaseObjDef,
-               ReleaseStructDef, ReleaseThm
+               DefTemplate (incl. obtain / have-by-replacement_axiom body), DefThm,
+               ReleaseObjDef, ReleaseStructDef, ReleaseThm
 witness/       WitnessExistFact, WitnessExistUnique (via exist!),
                WitnessAtomicFact, WitnessNonemptySet
                (no indented body in new_pipeline; no FnSet shortcut)

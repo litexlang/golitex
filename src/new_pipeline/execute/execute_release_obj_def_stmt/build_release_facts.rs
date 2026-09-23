@@ -107,7 +107,7 @@ fn build_let_obj(
     stmt: &Rc<LetObjStmt>,
 ) -> BuiltReleaseFacts {
     let equal = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         left: Obj::Identifier(surface.clone()),
         right: stmt.value.clone(),
         line_file: Some(stmt.line_file.clone()),
@@ -151,7 +151,7 @@ fn build_have_obj_equal(
     let (type_fact, defined_as_struct) =
         type_fact_for_surface(runtime, surface, param_type, &stmt.line_file);
     let equal = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         left: Obj::Identifier(surface.clone()),
         right: rhs.clone(),
         line_file: Some(stmt.line_file.clone()),
@@ -239,7 +239,7 @@ fn build_have_by_replacement_axiom(
 ) -> BuiltReleaseFacts {
     let img = Obj::Identifier(surface.clone());
     let type_fact = Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         set: img.clone(),
         line_file: Some(stmt.line_file.clone()),
     }));
@@ -264,13 +264,13 @@ fn build_have_fn_equal(
     let fn_set = Obj::FunctionSpace(FunctionSpace::FnSet(stmt.equal_to_anonymous_fn.body.clone()));
     let anon = Obj::FunctionSpace(FunctionSpace::AnonymousFn(stmt.equal_to_anonymous_fn.clone()));
     let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         element: Obj::Identifier(surface.clone()),
         set: fn_set,
         line_file: Some(stmt.line_file.clone()),
     }));
     let equal_to_anon = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         left: Obj::Identifier(surface.clone()),
         right: anon,
         line_file: Some(stmt.line_file.clone()),
@@ -296,7 +296,7 @@ fn build_have_fn_case_by_case(
         ret_set: Box::new(stmt.fn_set_clause.ret_set.clone()),
     }));
     let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
-        fact_id: runtime.ids.allocate_fact_id(),
+        fact_id: runtime.global_ids.allocate_fact_id(),
         element: Obj::Identifier(surface.clone()),
         set: fn_set,
         line_file: Some(stmt.line_file.clone()),
@@ -327,13 +327,13 @@ fn build_have_fn_case_by_case(
         let mut dom_facts = base_dom.clone();
         dom_facts.push(and_chain_as_fact(case_fact));
         let equal_atomic = AtomicFact::EqualFact(EqualFact {
-            fact_id: runtime.ids.allocate_fact_id(),
+            fact_id: runtime.global_ids.allocate_fact_id(),
             left: applied.clone(),
             right: equal_to.clone(),
             line_file: Some(stmt.line_file.clone()),
         });
         case_foralls.push(Fact::ForallFact(ForallFact {
-            fact_id: runtime.ids.allocate_fact_id(),
+            fact_id: runtime.global_ids.allocate_fact_id(),
             typed_parameters: typed.clone(),
             dom_facts,
             then_facts: vec![ExistOrAndChainAtomicFact::AtomicFact(equal_atomic)],
@@ -390,7 +390,7 @@ fn type_fact_for_surface(
     let element = Obj::Identifier(surface.clone());
     match param_type {
         ParamType::Obj(param_set) => {
-            let fact_id = runtime.ids.allocate_fact_id();
+            let fact_id = runtime.global_ids.allocate_fact_id();
             let defined_as_struct = match param_set {
                 Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(struct_obj)) => Some((element.clone(), struct_obj.clone())),
                 _ => None,
@@ -407,7 +407,7 @@ fn type_fact_for_surface(
         }
         ParamType::Set(_) => (
             Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact {
-                fact_id: runtime.ids.allocate_fact_id(),
+                fact_id: runtime.global_ids.allocate_fact_id(),
                 set: element,
                 line_file: Some(line_file.clone()),
             })),
@@ -415,7 +415,7 @@ fn type_fact_for_surface(
         ),
         ParamType::NonemptySet(_) => (
             Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact {
-                fact_id: runtime.ids.allocate_fact_id(),
+                fact_id: runtime.global_ids.allocate_fact_id(),
                 set: element,
                 line_file: Some(line_file.clone()),
             })),
@@ -423,7 +423,7 @@ fn type_fact_for_surface(
         ),
         ParamType::FiniteSet(_) => (
             Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact {
-                fact_id: runtime.ids.allocate_fact_id(),
+                fact_id: runtime.global_ids.allocate_fact_id(),
                 set: element,
                 line_file: Some(line_file.clone()),
             })),

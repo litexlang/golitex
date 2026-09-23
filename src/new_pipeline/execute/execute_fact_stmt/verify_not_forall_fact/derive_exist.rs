@@ -25,7 +25,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(ExistShapedFact::Exist(PlainExistFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters: not_forall.typed_parameters.clone(),
             facts: body,
             line_file: not_forall.line_file.clone(),
@@ -39,7 +39,7 @@ impl Runtime {
     ) -> RuntimeResult<Option<Vec<QuantifierFreeFact>>> {
         match fact {
             QuantifierFreeFact::AtomicFact(a) => {
-                let Some(neg) = negate_atomic_fact(a, self.ids.allocate_fact_id()) else {
+                let Some(neg) = negate_atomic_fact(a, self.global_ids.allocate_fact_id()) else {
                     return Ok(None);
                 };
                 Ok(Some(vec![QuantifierFreeFact::AtomicFact(neg)]))
@@ -76,7 +76,7 @@ impl Runtime {
     ) -> RuntimeResult<Option<Vec<QuantifierFreeFact>>> {
         match branch {
             AndChainAtomicFact::AtomicFact(a) => {
-                let Some(neg) = negate_atomic_fact(a, self.ids.allocate_fact_id()) else {
+                let Some(neg) = negate_atomic_fact(a, self.global_ids.allocate_fact_id()) else {
                     return Ok(None);
                 };
                 Ok(Some(vec![QuantifierFreeFact::AtomicFact(neg)]))
@@ -108,13 +108,13 @@ impl Runtime {
         }
         let mut branches = Vec::with_capacity(atomics.len());
         for a in atomics {
-            let Some(neg) = negate_atomic_fact(a, self.ids.allocate_fact_id()) else {
+            let Some(neg) = negate_atomic_fact(a, self.global_ids.allocate_fact_id()) else {
                 return Ok(None);
             };
             branches.push(AndChainAtomicFact::AtomicFact(neg));
         }
         Ok(Some(OrFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             facts: branches,
             line_file,
         }))

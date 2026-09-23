@@ -87,7 +87,7 @@ impl Runtime {
         let mut disequality_proofs = Vec::with_capacity(list_set.list.len());
         for listed in &list_set.list {
             let disequality = Fact::AtomicFact(AtomicFact::NotEqualFact(NotEqualFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 left: fact.element.clone(),
                 right: listed.as_ref().clone(),
                 line_file: None,
@@ -116,7 +116,7 @@ impl Runtime {
             return Ok(None);
         };
         let left_goal = Fact::AtomicFact(AtomicFact::NotInFact(NotInFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             element: fact.element.clone(),
             set: intersect.left.as_ref().clone(),
             line_file: None,
@@ -132,7 +132,7 @@ impl Runtime {
             ));
         }
         let right_goal = Fact::AtomicFact(AtomicFact::NotInFact(NotInFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             element: fact.element.clone(),
             set: intersect.right.as_ref().clone(),
             line_file: None,
@@ -159,7 +159,7 @@ impl Runtime {
             return Ok(None);
         };
         let left_goal = Fact::AtomicFact(AtomicFact::NotInFact(NotInFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             element: fact.element.clone(),
             set: union.left.as_ref().clone(),
             line_file: None,
@@ -169,7 +169,7 @@ impl Runtime {
             return Ok(None);
         }
         let right_goal = Fact::AtomicFact(AtomicFact::NotInFact(NotInFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             element: fact.element.clone(),
             set: union.right.as_ref().clone(),
             line_file: None,

@@ -70,7 +70,7 @@ impl Runtime {
         };
 
         let membership_fact = Fact::AtomicFact(AtomicFact::InFact(InFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             element: stmt.obj.clone(),
             set: Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(struct_obj.clone())),
             line_file: Some(stmt.line_file.clone()),

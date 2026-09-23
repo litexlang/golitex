@@ -400,7 +400,7 @@ impl Runtime {
         };
         for source in proper_subsets_in_membership_proof_order(target) {
             let probe = AtomicFact::InFact(InFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 element: fact.element.clone(),
                 set: Obj::StandardSet(source.clone()),
                 line_file: None,
@@ -435,7 +435,7 @@ impl Runtime {
             return Ok(None);
         };
         let mut requirement_facts = Vec::new();
-        let base_in_id = self.ids.allocate_fact_id();
+        let base_in_id = self.global_ids.allocate_fact_id();
         requirement_facts.push(Fact::AtomicFact(AtomicFact::InFact(InFact {
             fact_id: base_in_id,
             element: fact.element.clone(),
@@ -479,7 +479,7 @@ impl Runtime {
         };
         for (selected_index, listed) in list_set.list.iter().enumerate() {
             let equality = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 left: fact.element.clone(),
                 right: listed.as_ref().clone(),
                 line_file: None,
@@ -511,7 +511,7 @@ impl Runtime {
             return Ok(None);
         };
         let subset = Fact::AtomicFact(AtomicFact::SubsetFact(SubsetFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             left: fact.element.clone(),
             right: power.set.as_ref().clone(),
             line_file: fact.line_file.clone(),
@@ -550,7 +550,7 @@ impl Runtime {
                 Obj::ProductShape(ProductShape::Tuple(_)) => return Ok(None),
                 _ => {
                     let is_tuple_fact = Fact::AtomicFact(AtomicFact::IsTupleFact(IsTupleFact {
-                        fact_id: self.ids.allocate_fact_id(),
+                        fact_id: self.global_ids.allocate_fact_id(),
                         set: fact.element.clone(),
                         line_file: fact.line_file.clone(),
                     }));
@@ -559,7 +559,7 @@ impl Runtime {
                         return Ok(None);
                     }
                     let dimension_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
-                        fact_id: self.ids.allocate_fact_id(),
+                        fact_id: self.global_ids.allocate_fact_id(),
                         left: Obj::ProductShape(ProductShape::TupleDim(TupleDim {
                             arg: Box::new(fact.element.clone()),
                         })),
@@ -595,7 +595,7 @@ impl Runtime {
         let mut coordinate_memberships = Vec::with_capacity(cart.args.len());
         for (coordinate, factor) in coordinates.iter().zip(cart.args.iter()) {
             let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
-                fact_id: self.ids.allocate_fact_id(),
+                fact_id: self.global_ids.allocate_fact_id(),
                 element: coordinate.clone(),
                 set: factor.as_ref().clone(),
                 line_file: fact.line_file.clone(),
@@ -665,7 +665,7 @@ impl Runtime {
             Obj::ProductShape(ProductShape::Tuple(_)) => {
                 for (value, field_type) in field_values.iter().zip(field_types.iter()) {
                     let membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
-                        fact_id: self.ids.allocate_fact_id(),
+                        fact_id: self.global_ids.allocate_fact_id(),
                         element: value.clone(),
                         set: field_type.clone(),
                         line_file: fact.line_file.clone(),
@@ -682,7 +682,7 @@ impl Runtime {
                     args: field_types.iter().cloned().map(Box::new).collect(),
                 }));
                 let cart_membership = Fact::AtomicFact(AtomicFact::InFact(InFact {
-                    fact_id: self.ids.allocate_fact_id(),
+                    fact_id: self.global_ids.allocate_fact_id(),
                     element: fact.element.clone(),
                     set: cart,
                     line_file: fact.line_file.clone(),
@@ -757,7 +757,7 @@ impl Runtime {
             return Ok(None);
         };
         let left_goal = Fact::AtomicFact(AtomicFact::InFact(InFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             element: fact.element.clone(),
             set: union.left.as_ref().clone(),
             line_file: None,
@@ -771,7 +771,7 @@ impl Runtime {
             )));
         }
         let right_goal = Fact::AtomicFact(AtomicFact::InFact(InFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             element: fact.element.clone(),
             set: union.right.as_ref().clone(),
             line_file: None,
@@ -797,7 +797,7 @@ impl Runtime {
             return Ok(None);
         };
         let left_goal = Fact::AtomicFact(AtomicFact::InFact(InFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             element: fact.element.clone(),
             set: intersect.left.as_ref().clone(),
             line_file: None,
@@ -807,7 +807,7 @@ impl Runtime {
             return Ok(None);
         }
         let right_goal = Fact::AtomicFact(AtomicFact::InFact(InFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             element: fact.element.clone(),
             set: intersect.right.as_ref().clone(),
             line_file: None,
@@ -834,7 +834,7 @@ impl Runtime {
             return Ok(None);
         };
         let left_goal = Fact::AtomicFact(AtomicFact::InFact(InFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             element: fact.element.clone(),
             set: set_minus.left.as_ref().clone(),
             line_file: None,
@@ -844,7 +844,7 @@ impl Runtime {
             return Ok(None);
         }
         let right_goal = Fact::AtomicFact(AtomicFact::NotInFact(NotInFact {
-            fact_id: self.ids.allocate_fact_id(),
+            fact_id: self.global_ids.allocate_fact_id(),
             element: fact.element.clone(),
             set: set_minus.right.as_ref().clone(),
             line_file: None,

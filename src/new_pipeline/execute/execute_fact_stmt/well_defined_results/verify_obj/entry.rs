@@ -120,7 +120,7 @@ impl Runtime {
         match finish_by_def(obj, stages) {
             Ok(by_def) => {
                 if verify_state.store_well_defined_fact {
-                    let wd_id = self.ids.allocate_well_definedness_id();
+                    let wd_id = self.global_ids.allocate_well_definedness_id();
                     self.top_exec_env_mut()
                         .well_defined_objects
                         .record(obj.clone(), wd_id);
