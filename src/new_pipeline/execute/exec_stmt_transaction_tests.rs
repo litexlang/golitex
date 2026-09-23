@@ -662,6 +662,37 @@ fn fn_eq_is_removed_parse_error() {
 }
 
 #[test]
+fn by_fn_extension_proves_named_fn_equality() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(&mut runtime, "have fn f(x R) R = x").is_failed(),
+        "define f"
+    );
+    assert!(
+        !exec_one(&mut runtime, "have fn g(x R) R = x").is_failed(),
+        "define g"
+    );
+    assert!(
+        !exec_one(&mut runtime, "by fn_extension f = g").is_failed(),
+        "by fn_extension must prove f = g"
+    );
+    assert!(
+        !exec_one(&mut runtime, "f = g").is_failed(),
+        "stored equality must remain known"
+    );
+}
+
+#[test]
+fn by_fn_extension_fails_without_fn_set() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have f set, g set").is_failed());
+    assert!(
+        exec_one(&mut runtime, "by fn_extension f = g").is_failed(),
+        "plain sets must not get fn_extension"
+    );
+}
+
+#[test]
 fn struct_fewer_than_two_fields_is_parse_error() {
     let mut runtime = runtime_with_file_env();
     for code in [

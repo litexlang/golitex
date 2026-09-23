@@ -1800,14 +1800,17 @@ fact or theorem.
 `$fn_eq_in(f, g, S)` means pointwise equality on `S`.
 
 > **Preview (`new_pipeline`):** `$fn_eq` is removed. Prefer ordinary equality
-> `f = g` when global function equality is intended, or `$fn_eq_in(f, g, S)` for
-> pointwise agreement on `S`. Negation `not $fn_eq_in(f, g, S)` is an ordinary
-> atomic form (same polarity rules as other dollar predicates).
+> `f = g` when global function equality is intended. Prove it with
+> `by fn_extension` when the shared `FnSet` carriers are alpha-equivalent and
+> pointwise agreement closes; use `$fn_eq_in(f, g, S)` only for local agreement
+> on `S`. Negation `not $fn_eq_in(f, g, S)` is an ordinary atomic form (same
+> polarity rules as other dollar predicates).
 
 ```litex
 have fn f(x R) R = x
 have fn g(x R) R = x
 
+by fn_extension f = g
 by def $fn_eq_in(f, g, R)
 ```
 
@@ -2797,7 +2800,7 @@ introductions.
 | `witness $P(args)` | The concrete prop has one positive ordinary `exist` clause; ordinary witness checks run after substitution. `exist!` uses explicit `witness exist! ...` followed by `by def`. | `$P(args)` as the primary fact, then definition inference. |
 | `witness $is_nonempty_set(S)` | The proposed object is in `S`. | Nonemptiness of `S`. |
 | `by cases`, `by contra` | Every branch closes the target, or an explicit contradiction is produced. | The requested target only. |
-| Enumeration, induction, `by for`, `by extension` | The target has the exact finite/range/discrete/extensional shape and every generated subgoal closes. | The requested universal/equality/atomic target. |
+| Enumeration, induction, `by for`, `by extension`, `by fn_extension` | The target has the exact finite/range/discrete/extensional shape and every generated subgoal closes. Preview: `by fn_extension` proves `f = g` from pointwise equality on alpha-equivalent FnSet carriers. | The requested universal/equality/atomic target. |
 | `by def` | One positive concrete/builtin definitional target and every defining clause. Preview: qualified `$Mod::export::P` looks up the prop in a finished export Env. | The target with explicit definition provenance. |
 | `release struct def e` | `e` has a definition-owned struct carrier and `e $in &Struct` verifies. | Exactly one layer of tuple/identity bridges, field carriers, and instantiated struct laws. |
 | `release obj def I` | Preview (`new_pipeline`): `I` is one identifier (optionally `mod::export::`-qualified) with a `StoredIdentifierDefinition` other than a binder `ParamType`. | Re-stores that definition's type / equality / body / fn facts into the current Env (subjects use the written spelling of `I`). For `have fn … by exist!`, re-stores membership + property + uniqueness. |
@@ -3426,6 +3429,27 @@ by for:
     ? forall i1 range(0, 3) => i1 < 3
 by extension {1} = {1}
 ```
+
+> **Preview (`new_pipeline`):** `by fn_extension` proves ordinary function
+> equality `f = g` when both sides have alpha-equivalent `FnSet` carriers and
+> the reconstructed pointwise forall succeeds (including multi-argument /
+> curried signatures taken from that carrier). It stores `f = g`, not a
+> separate `$fn_eq` fact. One-line and block forms mirror `by extension`:
+>
+> ```litex
+> have fn f(x R) R = x
+> have fn g(x R) R = x
+> by fn_extension f = g
+> ```
+>
+> ```litex
+> by fn_extension:
+>     ? f = g
+> ```
+>
+> Local agreement on a proper subset of the domain remains an ordinary
+> `forall`; do not use `by fn_extension` for that. Mutual function-space
+> membership without alpha-equivalent carriers is not yet supported.
 
 Use the block extension form when its proof needs additional statements:
 

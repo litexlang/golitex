@@ -47,3 +47,4 @@ pub use well_defined_results::{
     VerifyEqualFactWellDefinedResult, VerifyExistShapedFactWellDefinedResult,
     VerifyFactWellDefinedResult, VerifyObjWellDefinedResult, VerifyOrFactWellDefinedResult,
 };
+pub use verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::alpha_equal_helper::fn_sets_alpha_equal;
