@@ -245,6 +245,9 @@ pub enum ProductShape {
 }
 
 // Function type, concrete function value, and image of a function.
+// Language surface index: docs/Manual.md § Functions, application, and range
+// (Function surface index). Named definitions: HaveFn* stmts and
+// `have by fn_preimage` in ast/stmt.rs — not fields on these objects.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FunctionSpace {
     // Function space / type: maps with given domain carriers and return set.
@@ -256,6 +259,7 @@ pub enum FunctionSpace {
     AnonymousFn(AnonymousFn),
 
     // Image of a function (range as a set). Example: `fn_range(f)`.
+    // See Manual § Functions, application, and range.
     FnRange(FnRange),
 }
 
@@ -707,6 +711,7 @@ pub struct SetBuilder {
 // Function space `fn(x S, ...) T`. Parameters are SetBound only (`x S`), never `A set`.
 // Dom facts are ordered WD assumptions; `ret_set` may depend on parameters and is
 // instantiated at application. For definitions over an arbitrary set, use template.
+// Surface index: Manual § Functions, application, and range.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FnSet {
     pub set_bound_parameters: SetBoundParameterList,
@@ -778,6 +783,7 @@ pub struct FiniteSetMin {
 }
 
 // Image of a function. Example: `fn_range(f)`.
+// Surface index: Manual § Functions, application, and range.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FnRange {
     pub function: Box<Obj>,
@@ -913,13 +919,13 @@ pub struct InstantiatedTemplateObj {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum OneSideInfinityIntervalObj {
     // (a, +∞). Example: `'(a,)`.
-    LeftOpen(OneSideInfinityIntervalObjStruct),
+    LowerOpen(OneSideInfinityIntervalObjStruct),
     // [a, +∞). Example: `'[a,)`.
-    LeftClosed(OneSideInfinityIntervalObjStruct),
+    LowerClosed(OneSideInfinityIntervalObjStruct),
     // (−∞, a). Example: `'(,a)`.
-    RightOpen(OneSideInfinityIntervalObjStruct),
+    UpperOpen(OneSideInfinityIntervalObjStruct),
     // (−∞, a]. Example: `'(,a]`.
-    RightClosed(OneSideInfinityIntervalObjStruct),
+    UpperClosed(OneSideInfinityIntervalObjStruct),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

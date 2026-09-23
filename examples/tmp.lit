@@ -1,6 +1,2 @@
-# by fn_extension: function extensionality → ordinary f = g
-# Run: LITEX_NEW_PIPELINE=1 target/release/litex -f examples/tmp.lit
-
-have fn f(x R) R = x
-have fn g(x R) R = x
-by fn_extension f = g
+# Scratch file. Do not treat as acceptance.
+# Formal tracers live under examples/new_pipeline/.

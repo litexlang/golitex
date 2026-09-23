@@ -61,8 +61,10 @@ thm finite_product_congruence_insert_step:
     have fn gR(x S) Z = g(x)
     fR = fn(x S) Z {f(x)}
     gR = fn(x S) Z {g(x)}
-    by def $fn_eq_in(fS, fR, S)
-    by def $fn_eq_in(gS, gR, S)
+    forall x S:
+        fS(x) = fR(x)
+    forall x S:
+        gS(x) = gR(x)
     finite_set_product(S, fR) = finite_set_product(S, fS)
     finite_set_product(S, gR) = finite_set_product(S, gS)
 1release thm congruent_mod_transport_equalities(m, finite_set_product(S, fR) * f(a), finite_set_product(S, gR) * g(a), finite_set_product(S, fS) * f(a), finite_set_product(S, gS) * g(a))
@@ -227,7 +229,6 @@ thm finite_set_product_bijective_reindex:
                         h0(x) $in set_minus(carrier_C, {h(z)})
                         h0(x) $in carrier_C
                         qh(x) = q(h(x)) = q(h0(x)) = q0(h0(x)) = q0h0(x)
-                    by def $fn_eq_in(qh, q0h0, S)
                     finite_set_product(S, fn(x S) Z {q(h(x))}) = finite_set_product(S, fn(x S) Z {q0(h0(x))})
                     finite_set_product(S, fn(x S) Z {q0(h0(x))}) = finite_set_product(set_minus(carrier_C, {h(z)}), q0)
                     finite_set_product(union({z}, S), fn(x union({z}, S)) Z {q(h(x))}) = finite_set_product(S, fn(x S) Z {q(h(x))}) * q(h(z)) = finite_set_product(S, fn(x S) Z {q0(h0(x))}) * q(h(z)) = finite_set_product(set_minus(carrier_C, {h(z)}), q0) * q(h(z)) = finite_set_product(set_minus(carrier_C, {h(z)}), fn(y set_minus(carrier_C, {h(z)})) Z {q(y)}) * q(h(z)) = finite_set_product(carrier_C, q)

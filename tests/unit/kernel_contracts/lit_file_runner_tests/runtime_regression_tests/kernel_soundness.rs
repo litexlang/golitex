@@ -111,14 +111,6 @@ $fn_eq(f, g) or $fn_eq(g, f)
                 "verification failed",
             ),
             (
-                "fn_eq_in_fake_excluded_middle",
-                r#"
-have f, g fn(x R) R
-$fn_eq_in(f, g, R) or $fn_eq_in(g, f, R)
-"#,
-                "verification failed",
-            ),
-            (
                 "fn_eq_by_contra",
                 r#"
 have f fn(x R) R

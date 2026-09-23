@@ -1,7 +1,7 @@
 use super::helper::atomic_fact_with_args;
 use crate::new_pipeline::ast::fact::{
-    AtomicFact, Fact, FnEqualInFact, GreaterEqualFact, GreaterFact, LessEqualFact, LessFact,
-    NormalAtomicFact, NotFnEqualInFact, NotGreaterEqualFact, NotGreaterFact, NotLessEqualFact,
+    AtomicFact, Fact, GreaterEqualFact, GreaterFact, LessEqualFact, LessFact,
+    NormalAtomicFact, NotGreaterEqualFact, NotGreaterFact, NotLessEqualFact,
     NotLessFact, NotNormalAtomicFact,
 };
 use crate::new_pipeline::ast::fact::atomic_fact_args_ref;
@@ -26,7 +26,7 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 // Also here:
 //   KnownEqualObjSubstitution — replace a goal arg by a one-hop known equal
 //   peer (e.g. `1 $in S` with stored `S = {…}`), then prove the residual.
-//   OrderDual (prove via order / proper-subset / fn_eq_in dual).
+//   OrderDual (prove via order / proper-subset).
 // Search order: ClosedNumeric, KnownEqualObj, then OrderDual.
 pub enum AtomicExceptEqualityFactSearchProofByBuiltinRewrite {
     ClosedNumericEqualSubstitution(
@@ -319,20 +319,6 @@ fn order_dual_atomic_fact(
                 line_file: f.line_file.clone(),
             }))
         }
-        AtomicFact::FnEqualInFact(f) => Some(AtomicFact::FnEqualInFact(FnEqualInFact {
-            fact_id: next_fact_id(),
-            left: f.right.clone(),
-            right: f.left.clone(),
-            set: f.set.clone(),
-            line_file: f.line_file.clone(),
-        })),
-        AtomicFact::NotFnEqualInFact(f) => Some(AtomicFact::NotFnEqualInFact(NotFnEqualInFact {
-            fact_id: next_fact_id(),
-            left: f.right.clone(),
-            right: f.left.clone(),
-            set: f.set.clone(),
-            line_file: f.line_file.clone(),
-        })),
         AtomicFact::NormalAtomicFact(f)
             if f.body.len() == 2
                 && matches!(

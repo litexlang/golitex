@@ -50,8 +50,6 @@ pub enum AtomicExceptEqualityFactSearchProofByBuiltinRule {
     NotIsTupleFact(NotIsTupleFactSearchProofByBuiltinRule),
     NotSubsetFact(NotSubsetFactSearchProofByBuiltinRule),
     NotSupersetFact(NotSupersetFactSearchProofByBuiltinRule),
-    FnEqualInFact(FnEqualInFactSearchProofByBuiltinRule),
-    NotFnEqualInFact(NotFnEqualInFactSearchProofByBuiltinRule),
 }
 
 // Uninhabited stubs: split into a predicate file when the first builtin rule is added.
@@ -62,5 +60,3 @@ pub enum NotIsCartFactSearchProofByBuiltinRule {}
 pub enum NotIsTupleFactSearchProofByBuiltinRule {}
 pub enum NotSubsetFactSearchProofByBuiltinRule {}
 pub enum NotSupersetFactSearchProofByBuiltinRule {}
-pub enum FnEqualInFactSearchProofByBuiltinRule {}
-pub enum NotFnEqualInFactSearchProofByBuiltinRule {}

@@ -855,16 +855,16 @@ impl IntervalObj {
 impl OneSideInfinityIntervalObj {
     pub fn ir(&self) -> ObjIR {
         match self {
-            OneSideInfinityIntervalObj::LeftOpen(interval) => {
+            OneSideInfinityIntervalObj::LowerOpen(interval) => {
                 ObjIR(format!("'({},)", interval.start.as_ref().ir()))
             }
-            OneSideInfinityIntervalObj::LeftClosed(interval) => {
+            OneSideInfinityIntervalObj::LowerClosed(interval) => {
                 ObjIR(format!("'[{},)", interval.start.as_ref().ir()))
             }
-            OneSideInfinityIntervalObj::RightOpen(interval) => {
+            OneSideInfinityIntervalObj::UpperOpen(interval) => {
                 ObjIR(format!("'(,{})", interval.start.as_ref().ir()))
             }
-            OneSideInfinityIntervalObj::RightClosed(interval) => {
+            OneSideInfinityIntervalObj::UpperClosed(interval) => {
                 ObjIR(format!("'(,{}]", interval.start.as_ref().ir()))
             }
         }

@@ -209,7 +209,7 @@ pub const LOG: &str = "log";
 pub const STRUCT: &str = "struct";
 pub const TEMPLATE: &str = "template";
 pub const STRATEGY: &str = "strategy";
-/// `$fn_eq_in(f, g, S)`: f and g agree on domain set S (encoded as a forall; see verify builtin).
+/// Removed: `$fn_eq_in` is no longer a fact. Kept so the parser can reject it with a clear error.
 pub const FN_EQ_IN: &str = "fn_eq_in";
 /// `$fn_eq(f, g)`: mutual function-space typing and pointwise equality on the shared dom (see verify).
 pub const FN_EQ: &str = "fn_eq";

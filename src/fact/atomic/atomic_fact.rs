@@ -31,7 +31,6 @@ pub enum AtomicFact {
     NotIsTupleFact(NotIsTupleFact),
     NotSubsetFact(NotSubsetFact),
     NotSupersetFact(NotSupersetFact),
-    FnEqualInFact(FnEqualInFact),
     FnEqualFact(FnEqualFact),
 }
 
@@ -66,7 +65,6 @@ impl AtomicFact {
             AtomicFact::NotIsTupleFact(_) => "negated tuple fact".to_string(),
             AtomicFact::NotSubsetFact(_) => "negated subset fact".to_string(),
             AtomicFact::NotSupersetFact(_) => "negated superset fact".to_string(),
-            AtomicFact::FnEqualInFact(_) => "pointwise function equality fact".to_string(),
             AtomicFact::FnEqualFact(_) => "function equality fact".to_string(),
         }
     }

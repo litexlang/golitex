@@ -6,75 +6,7 @@ use crate::execution::function_equality_support::{
 };
 use crate::prelude::*;
 
-// Build f(x) as FnObj for a name or anonymous function.
-fn fn_obj_apply_one_arg(func: &Obj, arg: Obj) -> Option<Obj> {
-    match func {
-        Obj::AnonymousFn(af) => Some(
-            FnObj::new(
-                FnObjHead::AnonymousFnLiteral(Box::new(af.clone())),
-                vec![vec![Box::new(arg)]],
-            )
-            .into(),
-        ),
-        o => {
-            let h = FnObjHead::given_an_atom_return_a_fn_obj_head(o.clone())?;
-            Some(FnObj::new(h, vec![vec![Box::new(arg)]]).into())
-        }
-    }
-}
-
 impl Runtime {
-    // $fn_eq_in(f,g,S): forall x in S, f(x)=g(x); verified as a ForallFact in a local env.
-    pub fn verify_fn_equal_in_fact_with_builtin_rules(
-        &mut self,
-        f: &FnEqualInFact,
-        verify_state: &VerifyState,
-    ) -> Result<ProveFactResult, RuntimeError> {
-        let x_name = self.generate_random_unused_names(1)[0].clone();
-        let x_group =
-            self.fresh_param_group_with_type(vec![x_name], ParamType::Obj(f.set.clone()))?;
-        // Use the same `Obj` shape as `define_params_with_type(..., Forall, ...)` and as parsed
-        // `forall` parameters, so `verify_equal` can match `f(x) = g(x)` from stored `forall` facts.
-        let x: Obj =
-            param_binding_element_obj_for_store(&x_group.params[0], BindingScope::LocalBinder);
-        let Some(left_ap) = fn_obj_apply_one_arg(&f.left, x.clone()) else {
-            return Ok(UnknownGenericStmtResult::new().into());
-        };
-        let Some(right_ap) = fn_obj_apply_one_arg(&f.right, x) else {
-            return Ok(UnknownGenericStmtResult::new().into());
-        };
-        let param_def = TypedParameterList::new(vec![x_group]);
-        let forall_f = self.new_forall_fact(
-            param_def,
-            vec![],
-            vec![self
-                .new_equal_fact(left_ap, right_ap, f.line_file.clone())
-                .into()],
-            f.line_file.clone(),
-        )?;
-        let forall_res = self.verify_forall_fact(&forall_f, verify_state)?;
-        if !forall_res.is_success() {
-            return Ok(forall_res
-                .as_fact_unknown()
-                .cloned()
-                .expect("unknown forall verification carries a fact unknown")
-                .into());
-        }
-        let recorded: Fact = f.clone().into();
-        Ok(
-            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
-                recorded,
-                "fn_eq_in: pointwise equality on the given set (forall x in S, f(x)=g(x))"
-                    .to_string(),
-                BuiltinRuleEvidence::Uncatalogued(
-                    UncataloguedBuiltinRule::VerifyFnEqualInFactWithBuiltinRules,
-                ),
-                vec![forall_res],
-            )
-            .into(),
-        )
-    }
-
     // $fn_eq(f,g): mutual $in, then Forall with params+dom from FnSet and then f(..)=g(..). Name `f(x)` uses
     // Forall binders in the curried apply (see function_equality_support) so it cites user foralls.
     pub fn verify_fn_equal_fact_with_builtin_rules(

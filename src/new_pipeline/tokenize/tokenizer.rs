@@ -21,7 +21,8 @@ impl Tokenizer {
         source_path: RealOrVirtualPath,
     ) -> RuntimeResult<Vec<TokenBlock>> {
         let stripped = self.strip_triple_quote_comment_blocks(code, &source_path)?;
-        let lines: Vec<&str> = stripped.lines().collect();
+        let joined = self.join_line_continuations(&stripped, &source_path)?;
+        let lines: Vec<&str> = joined.lines().collect();
         let mut index = 0;
         self.parse_level(&lines, &mut index, 0, &source_path)
     }
@@ -197,6 +198,50 @@ impl Tokenizer {
             .into());
         }
         Ok(out_lines.join("\n"))
+    }
+
+    // Trailing `\\` joins the next physical line into this one. Mid-line `\\` is
+    // not continuation (distinct from template prefix `\`). A `#` comment after
+    // `\\` is allowed and dropped with the marker. Consumed lines are blanked
+    // so later line numbers stay stable.
+    //
+    // Example:
+    //   a = b \\  # note
+    //      = c
+    // becomes the logical line `a = b    = c`.
+    fn join_line_continuations(
+        &self,
+        source_code: &str,
+        source_path: &RealOrVirtualPath,
+    ) -> RuntimeResult<String> {
+        let mut lines: Vec<String> = source_code.lines().map(|line| line.to_string()).collect();
+        let mut i = 0;
+        while i < lines.len() {
+            if !Self::line_ends_with_line_continuation(&lines[i]) {
+                i += 1;
+                continue;
+            }
+            let open_line = i + 1;
+            let start = i;
+            let mut joined = lines[i].clone();
+            while Self::line_ends_with_line_continuation(&joined) {
+                joined = Self::strip_trailing_line_continuation(&joined);
+                i += 1;
+                if i >= lines.len() {
+                    return Err(RuntimeParseError::new(
+                        "unclosed line continuation `\\\\`",
+                        open_line,
+                        source_path.clone(),
+                    )
+                    .into());
+                }
+                joined.push_str(&lines[i]);
+                lines[i] = String::new();
+            }
+            lines[start] = joined;
+            i = start + 1;
+        }
+        Ok(lines.join("\n"))
     }
 
     fn parse_level(
@@ -377,6 +422,46 @@ impl Tokenizer {
                 ',' | ':' | ')' | ']' | '}' | '>' | '=' | '!' | '<' | '$' | '{' | '#'
             )
     }
+
+    // Code region before a `#` that is outside `"..."` asides.
+    fn code_prefix_before_hash_comment(line: &str) -> &str {
+        let bytes = line.as_bytes();
+        let mut i = 0;
+        while i < bytes.len() {
+            if bytes[i] == b'"' {
+                i += 1;
+                while i < bytes.len() {
+                    if bytes[i] == b'"' {
+                        i += 1;
+                        break;
+                    }
+                    let ch = line[i..].chars().next().unwrap_or('\0');
+                    i += ch.len_utf8();
+                }
+                continue;
+            }
+            if bytes[i] == b'#' {
+                return &line[..i];
+            }
+            let ch = line[i..].chars().next().unwrap_or('\0');
+            i += ch.len_utf8();
+        }
+        line
+    }
+
+    fn line_ends_with_line_continuation(line: &str) -> bool {
+        Self::code_prefix_before_hash_comment(line)
+            .trim_end()
+            .ends_with("\\\\")
+    }
+
+    // Drop trailing `\\` and any following `#` comment so the next line is not
+    // commented out after join.
+    fn strip_trailing_line_continuation(line: &str) -> String {
+        let code = Self::code_prefix_before_hash_comment(line);
+        let trimmed = code.trim_end();
+        trimmed[..trimmed.len() - 2].to_string()
+    }
 }
 
 impl Default for Tokenizer {
@@ -504,5 +589,61 @@ mod tests {
             .expect_err("unclosed block comment");
         let msg = format!("{err:?}");
         assert!(msg.contains("unclosed block comment"), "{msg}");
+    }
+
+    #[test]
+    fn joins_trailing_double_backslash_line_continuation() {
+        let source = "a = b \\\\\n   = c \\\\\n   = 1\n";
+        let blocks = Tokenizer::new()
+            .tokenize(source, RealOrVirtualPath::Eval)
+            .expect("tokenize");
+        assert_eq!(blocks.len(), 1);
+        assert_eq!(
+            blocks[0].header,
+            vec!["a", "=", "b", "=", "c", "=", "1"]
+                .into_iter()
+                .map(str::to_string)
+                .collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn mid_line_double_backslash_is_not_continuation() {
+        let blocks = Tokenizer::new()
+            .tokenize("a \\\\ b = b \\\\ a", RealOrVirtualPath::Eval)
+            .expect("tokenize");
+        assert_eq!(blocks.len(), 1);
+        assert_eq!(
+            blocks[0].header,
+            vec!["a", "\\", "\\", "b", "=", "b", "\\", "\\", "a"]
+                .into_iter()
+                .map(str::to_string)
+                .collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn unclosed_line_continuation_is_error() {
+        let err = Tokenizer::new()
+            .tokenize("a = b \\\\\n", RealOrVirtualPath::Eval)
+            .expect_err("unclosed continuation");
+        let msg = format!("{err:?}");
+        assert!(msg.contains("unclosed line continuation"), "{msg}");
+    }
+
+    #[test]
+    fn line_continuation_allows_trailing_hash_comment() {
+        let source = "a = b \\\\  # asdfadfs\n   = c\n";
+        let blocks = Tokenizer::new()
+            .tokenize(source, RealOrVirtualPath::Eval)
+            .expect("tokenize");
+        assert_eq!(blocks.len(), 1);
+        assert_eq!(
+            blocks[0].header,
+            vec!["a", "=", "b", "=", "c"]
+                .into_iter()
+                .map(str::to_string)
+                .collect::<Vec<_>>()
+        );
     }
 }

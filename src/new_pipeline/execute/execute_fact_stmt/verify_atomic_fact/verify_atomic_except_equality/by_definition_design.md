@@ -24,7 +24,7 @@ Builtin predicates with an **official definition** are not algebraic
 1. Try builtin official-definition expansion.
 2. Else try user `prop` definition expansion.
 
-Rationale: `$subset`, `$fn_eq_in`, `$prime`, … are definitional interfaces.
+Rationale: `$subset`, `$prime`, … are definitional interfaces.
 Expanding them to obligation facts keeps ambient search and statement `by def`
 on one path, with typed evidence per predicate.
 
@@ -41,7 +41,6 @@ Each struct carries `requirement_facts` and `proof_of_requirement_facts`.
 |---------|----------------------|
 | `A $subset B` | `forall x A: x $in B` |
 | `A $superset B` | `forall x B: x $in A` |
-| `$fn_eq_in(f, g, S)` | `forall x S: f(x) = g(x)` |
 | `$proper_subset(A, B)` | `A $subset B` and `A != B` |
 | `$proper_superset(A, B)` | `B $subset A` and `A != B` |
 | `$injective(A, B, f)` | injectivity forall |
@@ -76,7 +75,6 @@ Positive tracers (no trust), under `atomic/by_definition/`:
 
 - `ambient_prop_expand.lit` — user `prop` fork
 - `builtin_subset.lit` / `builtin_superset.lit` — standard-set inclusion
-- `builtin_fn_equal_in.lit` — identical extensions
 - `builtin_coprime.lit` — literal gcd-one
 - `builtin_dvd.lit` — rem-zero + multiple witness
 

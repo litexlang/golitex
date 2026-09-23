@@ -353,8 +353,8 @@ from the older mathematical vocabulary. When the operation is pointwise
 addition and the seed is `0`, they bridge to `sum` and `finite_set_sum`; the
 multiplication/`1` pair bridges to the corresponding products. The operation
 can be user-defined: a verified concrete prop whose unfolding supplies
-`forall x, y T: op(x,y) = x + y` is enough. `$fn_eq_in` supplies pointwise
-congruence, while an already-known `$bijective` fact supplies finite-set
+`forall x, y T: op(x,y) = x + y` is enough. A pointwise forall
+`forall x S: f(x) = g(x)` supplies congruence, while an already-known `$bijective` fact supplies finite-set
 reindexing. The checker uses these facts but does not invent them.
 
 Range reduction has a stricter reindexing rule because it remembers order.
@@ -431,8 +431,8 @@ For integers, the checker also recognizes the two exact singleton intervals:
 when the defined function carriers are alpha-equivalent.
 Once that global function-equality fact is stored, inference stores `f = g` in
 the ordinary equality class, so constructor congruence can also prove facts
-such as `power_set(f) = power_set(g)`. `$fn_eq_in` does not trigger this global
-inference.
+such as `power_set(f) = power_set(g)`. A mere pointwise forall on a proper
+subset of the domain does not trigger this global inference.
 
 A strict positive premise also proves a square root is nonzero:
 `x > 0 => sqrt(x) != 0`. Merely knowing `x >= 0` does not trigger that rule.

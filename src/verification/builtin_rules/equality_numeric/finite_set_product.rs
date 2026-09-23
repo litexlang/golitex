@@ -411,7 +411,7 @@ impl Runtime {
             (Obj::ProductOfFiniteSet(l), Obj::ProductOfFiniteSet(r)) => (l, r),
             _ => return Ok(None),
         };
-        let mut set_result =
+        let set_result =
             if objs_match_for_pattern(left_product.set.as_ref(), right_product.set.as_ref()) {
                 None
             } else {
@@ -429,58 +429,8 @@ impl Runtime {
                 Some(set_result)
             };
 
-        // A stored pointwise function equality is already the exact premise of product
-        // congruence. Equal representatives cover named functions and their defining lambdas.
-        let mut left_candidates = vec![left_product.func.as_ref().clone()];
-        left_candidates
-            .extend(self.get_all_obj_representatives_equal_to_given(left_product.func.as_ref()));
-        let mut right_candidates = vec![right_product.func.as_ref().clone()];
-        right_candidates
-            .extend(self.get_all_obj_representatives_equal_to_given(right_product.func.as_ref()));
-        for left_func in &left_candidates {
-            for right_func in &right_candidates {
-                for (first, second) in [
-                    (left_func.clone(), right_func.clone()),
-                    (right_func.clone(), left_func.clone()),
-                ] {
-                    let fn_eq_in: AtomicFact = self
-                        .new_fn_equal_in_fact(
-                            first,
-                            second,
-                            left_product.set.as_ref().clone(),
-                            line_file.clone(),
-                        )
-                        .into();
-                    let fn_eq_proof = self
-                        .verification_result_from_known_fact_cache(&fn_eq_in.clone().into())
-                        .unwrap_or(
-                            self.verify_atomic_except_equality_with_known_atomic_facts(&fn_eq_in)?,
-                        );
-                    let fn_eq_result = self.complete_atomic_fact_proof_result(
-                        &fn_eq_in,
-                        fn_eq_proof,
-                        builtin_state.verify_state(),
-                    )?;
-                    if fn_eq_result.is_success() {
-                        let mut subgoals = Vec::with_capacity(2);
-                        if let Some(set_result) = set_result.take() {
-                            subgoals.push(set_result);
-                        }
-                        subgoals.push(fn_eq_result);
-                        return Ok(Some(
-                            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
-                                equal_fact.clone().into(),
-                                "equality: finite-set products from known fn_eq_in".to_string(),
-                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetProductPointwiseEquality),
-                                subgoals,
-                            )
-                            .into(),
-                        ));
-                    }
-                }
-            }
-        }
-
+        // Equal representatives cover named functions and their defining lambdas.
+        // Pointwise equality on the product index set is checked below.
         let x_name = self.generate_random_unused_name();
         let (x_binding, x_obj) = self.fresh_bound_param(x_name)?;
         let Some(left_inst) =

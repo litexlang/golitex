@@ -70,7 +70,6 @@ pub struct UserDefinedPropDefinitionProof {
 pub enum BuiltinPropDefinitionProof {
     Subset(BuiltinSubsetDefinitionProof),
     Superset(BuiltinSupersetDefinitionProof),
-    FnEqualIn(BuiltinFnEqualInDefinitionProof),
     ProperSubset(BuiltinProperSubsetDefinitionProof),
     ProperSuperset(BuiltinProperSupersetDefinitionProof),
     Injective(BuiltinInjectiveDefinitionProof),
@@ -88,11 +87,6 @@ pub struct BuiltinSubsetDefinitionProof {
 }
 
 pub struct BuiltinSupersetDefinitionProof {
-    pub requirement_facts: Vec<Fact>,
-    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
-}
-
-pub struct BuiltinFnEqualInDefinitionProof {
     pub requirement_facts: Vec<Fact>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }

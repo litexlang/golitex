@@ -436,23 +436,6 @@ impl Runtime {
         }
     }
 
-    pub fn new_fn_equal_in_fact(
-        &self,
-        left: Obj,
-        right: Obj,
-        set: Obj,
-        line_file: LineFile,
-    ) -> FnEqualInFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        FnEqualInFact {
-            fact_id,
-            left,
-            right,
-            set,
-            line_file,
-        }
-    }
-
     pub fn new_fn_equal_fact(&self, left: Obj, right: Obj, line_file: LineFile) -> FnEqualFact {
         let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
         FnEqualFact {

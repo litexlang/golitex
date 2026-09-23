@@ -1,14 +1,12 @@
 use crate::new_pipeline::ast::fact::{
-    AtomicFact, FnEqualInFact, NormalAtomicFact, NotFnEqualInFact, NotInFact, NotIsCartFact,
-    NotIsFiniteSetFact, NotIsSetFact, NotIsTupleFact, NotNormalAtomicFact, NotSubsetFact,
-    NotSupersetFact,
+    AtomicFact, NormalAtomicFact, NotInFact, NotIsCartFact, NotIsFiniteSetFact, NotIsSetFact,
+    NotIsTupleFact, NotNormalAtomicFact, NotSubsetFact, NotSupersetFact,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 use super::search_atomic_except_equality_fact_proof_by_builtin_rule_result::{
-    AtomicExceptEqualityFactSearchProofByBuiltinRule, FnEqualInFactSearchProofByBuiltinRule,
-    NormalAtomicFactSearchProofByBuiltinRule, NotFnEqualInFactSearchProofByBuiltinRule,
+    AtomicExceptEqualityFactSearchProofByBuiltinRule, NormalAtomicFactSearchProofByBuiltinRule,
     NotInFactSearchProofByBuiltinRule, NotIsCartFactSearchProofByBuiltinRule,
     NotIsFiniteSetFactSearchProofByBuiltinRule, NotIsSetFactSearchProofByBuiltinRule,
     NotIsTupleFactSearchProofByBuiltinRule, NotNormalAtomicFactSearchProofByBuiltinRule,
@@ -106,12 +104,6 @@ impl Runtime {
             AtomicFact::NotSupersetFact(fact) => Ok(self
                 .search_not_superset_fact_proof_by_builtin_rule(fact, verify_state)?
                 .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::NotSupersetFact)),
-            AtomicFact::FnEqualInFact(fact) => Ok(self
-                .search_fn_equal_in_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::FnEqualInFact)),
-            AtomicFact::NotFnEqualInFact(fact) => Ok(self
-                .search_not_fn_equal_in_fact_proof_by_builtin_rule(fact, verify_state)?
-                .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::NotFnEqualInFact)),
         }
     }
 
@@ -168,22 +160,6 @@ impl Runtime {
         _fact: &NotSupersetFact,
         _verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotSupersetFactSearchProofByBuiltinRule>> {
-        Ok(None)
-    }
-
-    pub fn search_fn_equal_in_fact_proof_by_builtin_rule(
-        &mut self,
-        _fact: &FnEqualInFact,
-        _verify_state: VerifyState,
-    ) -> RuntimeResult<Option<FnEqualInFactSearchProofByBuiltinRule>> {
-        Ok(None)
-    }
-
-    pub fn search_not_fn_equal_in_fact_proof_by_builtin_rule(
-        &mut self,
-        _fact: &NotFnEqualInFact,
-        _verify_state: VerifyState,
-    ) -> RuntimeResult<Option<NotFnEqualInFactSearchProofByBuiltinRule>> {
         Ok(None)
     }
 }

@@ -62,8 +62,6 @@ impl AtomicFact {
             AtomicFact::NotIsTupleFact(x) => x.ir(),
             AtomicFact::NotSubsetFact(x) => x.ir(),
             AtomicFact::NotSupersetFact(x) => x.ir(),
-            AtomicFact::FnEqualInFact(x) => x.ir(),
-            AtomicFact::NotFnEqualInFact(x) => x.ir(),
         }
     }
     pub fn display_string(&self) -> String {
@@ -96,8 +94,6 @@ impl AtomicFact {
             AtomicFact::NotIsTupleFact(x) => x.display_string(),
             AtomicFact::NotSubsetFact(x) => x.display_string(),
             AtomicFact::NotSupersetFact(x) => x.display_string(),
-            AtomicFact::FnEqualInFact(x) => x.display_string(),
-            AtomicFact::NotFnEqualInFact(x) => x.display_string(),
         }
     }
 }
@@ -478,69 +474,7 @@ macro_rules! impl_normal_atomic {
 impl_normal_atomic!(NormalAtomicFact, false);
 impl_normal_atomic!(NotNormalAtomicFact, true);
 
-impl FnEqualInFact {
-    pub fn ir(&self) -> FactIR {
-        FactIR(format!(
-            "{}{}{}{}{} {}{} {}{}",
-            FACT_PREFIX,
-            FN_EQ_IN,
-            LEFT_PAREN,
-            self.left.ir(),
-            COMMA,
-            self.right.ir(),
-            COMMA,
-            self.set.ir(),
-            RIGHT_PAREN
-        ))
-    }
-    pub fn display_string(&self) -> String {
-        format!(
-            "{}{}{}{}{} {}{} {}{}",
-            FACT_PREFIX,
-            FN_EQ_IN,
-            LEFT_PAREN,
-            self.left.display_string(),
-            COMMA,
-            self.right.display_string(),
-            COMMA,
-            self.set.display_string(),
-            RIGHT_PAREN
-        )
-    }
-}
 
-impl NotFnEqualInFact {
-    pub fn ir(&self) -> FactIR {
-        FactIR(format!(
-            "{} {}{}{}{}{} {}{} {}{}",
-            NOT,
-            FACT_PREFIX,
-            FN_EQ_IN,
-            LEFT_PAREN,
-            self.left.ir(),
-            COMMA,
-            self.right.ir(),
-            COMMA,
-            self.set.ir(),
-            RIGHT_PAREN
-        ))
-    }
-    pub fn display_string(&self) -> String {
-        format!(
-            "{} {}{}{}{}{} {}{} {}{}",
-            NOT,
-            FACT_PREFIX,
-            FN_EQ_IN,
-            LEFT_PAREN,
-            self.left.display_string(),
-            COMMA,
-            self.right.display_string(),
-            COMMA,
-            self.set.display_string(),
-            RIGHT_PAREN
-        )
-    }
-}
 
 impl AndFact {
     pub fn ir(&self) -> FactIR {

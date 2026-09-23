@@ -44,7 +44,6 @@ impl AtomicFact {
             AtomicFact::NotIsTupleFact(_) => IS_TUPLE.to_string(),
             AtomicFact::NotSubsetFact(_) => SUBSET.to_string(),
             AtomicFact::NotSupersetFact(_) => SUPERSET.to_string(),
-            AtomicFact::FnEqualInFact(_) => FN_EQ_IN.to_string(),
             AtomicFact::FnEqualFact(_) => FN_EQ.to_string(),
         }
     }
@@ -79,7 +78,6 @@ impl AtomicFact {
             AtomicFact::NotIsTupleFact(_) => false,
             AtomicFact::NotSubsetFact(_) => false,
             AtomicFact::NotSupersetFact(_) => false,
-            AtomicFact::FnEqualInFact(_) => true,
             AtomicFact::FnEqualFact(_) => true,
         }
     }
@@ -186,16 +184,6 @@ impl AtomicFact {
             AtomicFact::FnEqualFact(f) => Some(
                 runtime
                     .new_fn_equal_fact(f.right.clone(), f.left.clone(), f.line_file.clone())
-                    .into(),
-            ),
-            AtomicFact::FnEqualInFact(f) => Some(
-                runtime
-                    .new_fn_equal_in_fact(
-                        f.right.clone(),
-                        f.left.clone(),
-                        f.set.clone(),
-                        f.line_file.clone(),
-                    )
                     .into(),
             ),
             _ => None,

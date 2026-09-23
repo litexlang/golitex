@@ -24,7 +24,7 @@ Exit 0 is enough. No requirement to assert which `searched_proof` variant won.
 
 Stub / not-yet-wired nodes are **omitted** (no SKIP placeholders).
 Still open (non-rewrite): empty atomic builtin-rule families (`NormalAtomic` /
-several remaining `Not*` / `FnEqualIn`); more exist builtins;
+several remaining `Not*`); more exist builtins;
 secondary subset leaves (set-minus / power-set / cart / transitivity);
 strict-order duals of add/mul algebra; MatchingOneArgByOne beyond the traced constructors.
 Equality BuiltinRewrite: ClosedNumericEqualSubstitution (equal + atomic) and

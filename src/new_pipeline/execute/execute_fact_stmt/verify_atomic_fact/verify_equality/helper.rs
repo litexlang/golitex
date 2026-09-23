@@ -392,10 +392,10 @@ fn one_side_interval_pairs(
 ) -> Option<Vec<(Obj, Obj)>> {
     use OneSideInfinityIntervalObj::*;
     let (l, r) = match (left, right) {
-        (LeftOpen(l), LeftOpen(r))
-        | (LeftClosed(l), LeftClosed(r))
-        | (RightOpen(l), RightOpen(r))
-        | (RightClosed(l), RightClosed(r)) => (l, r),
+        (LowerOpen(l), LowerOpen(r))
+        | (LowerClosed(l), LowerClosed(r))
+        | (UpperOpen(l), UpperOpen(r))
+        | (UpperClosed(l), UpperClosed(r)) => (l, r),
         _ => return None,
     };
     Some(vec![(l.start.as_ref().clone(), r.start.as_ref().clone())])

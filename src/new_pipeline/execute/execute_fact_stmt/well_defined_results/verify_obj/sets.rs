@@ -482,10 +482,10 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         let start = match value {
-            OneSideInfinityIntervalObj::LeftOpen(v)
-            | OneSideInfinityIntervalObj::LeftClosed(v)
-            | OneSideInfinityIntervalObj::RightOpen(v)
-            | OneSideInfinityIntervalObj::RightClosed(v) => v.start.as_ref(),
+            OneSideInfinityIntervalObj::LowerOpen(v)
+            | OneSideInfinityIntervalObj::LowerClosed(v)
+            | OneSideInfinityIntervalObj::UpperOpen(v)
+            | OneSideInfinityIntervalObj::UpperClosed(v) => v.start.as_ref(),
         };
         let proof = self.verify_unary_obj_well_definedness_by_def(start, verify_state.clone())?;
         let req = self.require_obj_in_standard_set(

@@ -170,12 +170,6 @@ impl From<NotSupersetFact> for AtomicFact {
     }
 }
 
-impl From<FnEqualInFact> for AtomicFact {
-    fn from(f: FnEqualInFact) -> Self {
-        AtomicFact::FnEqualInFact(f)
-    }
-}
-
 impl From<FnEqualFact> for AtomicFact {
     fn from(f: FnEqualFact) -> Self {
         AtomicFact::FnEqualFact(f)
@@ -262,12 +256,6 @@ impl From<SubsetFact> for Fact {
 
 impl From<SupersetFact> for Fact {
     fn from(f: SupersetFact) -> Self {
-        Fact::AtomicFact(f.into())
-    }
-}
-
-impl From<FnEqualInFact> for Fact {
-    fn from(f: FnEqualInFact) -> Self {
         Fact::AtomicFact(f.into())
     }
 }

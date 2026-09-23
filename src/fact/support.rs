@@ -49,7 +49,6 @@ impl AtomicFact {
             AtomicFact::NotIsTupleFact(fact) => fact.fact_id,
             AtomicFact::NotSubsetFact(fact) => fact.fact_id,
             AtomicFact::NotSupersetFact(fact) => fact.fact_id,
-            AtomicFact::FnEqualInFact(fact) => fact.fact_id,
             AtomicFact::FnEqualFact(fact) => fact.fact_id,
         }
     }

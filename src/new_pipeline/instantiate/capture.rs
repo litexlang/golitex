@@ -259,10 +259,10 @@ pub fn collect_free_plain_ids(
             }
         }
         Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(i)) => match i {
-            crate::new_pipeline::ast::obj::OneSideInfinityIntervalObj::LeftOpen(s)
-            | crate::new_pipeline::ast::obj::OneSideInfinityIntervalObj::LeftClosed(s)
-            | crate::new_pipeline::ast::obj::OneSideInfinityIntervalObj::RightOpen(s)
-            | crate::new_pipeline::ast::obj::OneSideInfinityIntervalObj::RightClosed(s) => {
+            crate::new_pipeline::ast::obj::OneSideInfinityIntervalObj::LowerOpen(s)
+            | crate::new_pipeline::ast::obj::OneSideInfinityIntervalObj::LowerClosed(s)
+            | crate::new_pipeline::ast::obj::OneSideInfinityIntervalObj::UpperOpen(s)
+            | crate::new_pipeline::ast::obj::OneSideInfinityIntervalObj::UpperClosed(s) => {
                 collect_free_plain_ids(&s.start, bound, out);
             }
         },

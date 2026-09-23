@@ -10,7 +10,6 @@ The 422 uncatalogued builtin identities are intentionally kept in
 | Axis | Source identity | Status | Roles | Producers | Limitation / next gate |
 | --- | --- | --- | --- | ---: | --- |
 | `atomic_fact` | `AtomicFact::FnEqualFact` | `compiler_gap` | - | 23 | add one positive Result-driven tracer and direct compiler consumer for AtomicFact::FnEqualFact |
-| `atomic_fact` | `AtomicFact::FnEqualInFact` | `compiler_gap` | - | 21 | add one positive Result-driven tracer and direct compiler consumer for AtomicFact::FnEqualInFact |
 | `atomic_fact` | `AtomicFact::IsCartFact` | `compiler_gap` | - | 20 | add one positive Result-driven tracer and direct compiler consumer for AtomicFact::IsCartFact |
 | `builtin_typed` | `matrix.expression_membership` | `abi_decision` | - | 1 | native matrix expressions do not yet have a reviewed Lean target ABI |
 | `builtin_typed` | `nonzero.div` | `evidence_gap` | - | 2 | Litex.Same lacks the reviewed numeric-observation elimination required by division nonzero replay |

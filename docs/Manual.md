@@ -666,6 +666,35 @@ universal over `A`, even forming `replacement(P, A)` is a well-definedness
 
 ### Functions, application, and range
 
+#### Function surface index
+
+Compact map of Litex forms that exist specifically to handle functions.
+Detail for each form lives in the subsections below or in
+[Function predicates](#function-predicates) / definition chapters.
+
+| Kind | Form | Role |
+|---|---|---|
+| Object | `fn(x S) T` | Function space (FnSet) |
+| Object | `fn(x S) T {body}` | Anonymous function value |
+| Object | `A -> B` | FnSet sugar (preview; right-associative) |
+| Object | `f(args)` | Application (including curried) |
+| Object | `fn_range(f)` | Image of the known domain of `f` |
+| Object | `seq(S)` / `finite_seq(S, n)` | Sequence carriers (special FnSets) |
+| Definition | `have fn f(...) T = expr` | Define by equation |
+| Definition | `have fn f(...) T by cases:` | Define by cases |
+| Definition | `have fn f(...) T by induc …` | Define by induction |
+| Definition | `have fn f by exist!: forall …: exist! …` | Define via unique existence |
+| Definition | `have by fn_preimage: x from y $in fn_range(f)` | Introduce a preimage witness |
+| Proof | `by fn_extension: f = g` | Function extensionality → ordinary `f = g` (preview) |
+| Predicate | `$injective` / `$surjective` / `$bijective` | Mapping properties |
+| Predicate | `$is_choice_function_for` | Choice function (with `index_cart`) |
+
+Not part of this surface: `$fn_eq` and `$fn_eq_in` (removed on `new_pipeline`;
+use `by fn_extension` for global `f = g`, and a bare `forall` for local
+pointwise agreement); `by extension` (set extensionality); native `sin` /
+`cos` / … (operators, not first-class function values); `by def` (prop /
+builtin unfold).
+
 `fn(...) ReturnSet` is a function set. Adding `{body}` produces an anonymous
 function value. Function calls are ordinary objects, but the argument and all
 domain conditions must be verified.
@@ -1797,51 +1826,43 @@ fact or theorem.
 
 ### Function predicates
 
-`$fn_eq_in(f, g, S)` means pointwise equality on `S`.
-
-> **Preview (`new_pipeline`):** `$fn_eq` is removed. Prefer ordinary equality
-> `f = g` when global function equality is intended. Prove it with
+> **Preview (`new_pipeline`):** `$fn_eq` and `$fn_eq_in` are removed. Prefer
+> ordinary equality `f = g` for global function equality, proved with
 > `by fn_extension` when the shared `FnSet` carriers are alpha-equivalent and
-> pointwise agreement closes; use `$fn_eq_in(f, g, S)` only for local agreement
-> on `S`. Negation `not $fn_eq_in(f, g, S)` is an ordinary atomic form (same
-> polarity rules as other dollar predicates).
+> pointwise agreement closes. Local agreement on a set `S` is an ordinary
+> `forall x S: f(x) = g(x)`.
 
 ```litex
 have fn f(x R) R = x
 have fn g(x R) R = x
 
 by fn_extension f = g
-by def $fn_eq_in(f, g, R)
+forall x R:
+    f(x) = g(x)
 ```
 
-The local predicate `$fn_eq_in(f, g, S)` does not imply global equality.
-
-Default-pipeline note: legacy code may still mention `$fn_eq(f, g)` for global
-function equality that also stores ordinary `f = g`; that form is not available
-on `new_pipeline`.
+Both `$fn_eq` and `$fn_eq_in` are removed from `new_pipeline`. Prefer
+`by fn_extension` / ordinary `f = g`, or a bare pointwise `forall`.
 
 Mapping predicates describe standard function properties:
 
 | Form | Meaning |
 |---|---|
-| `$fn_eq_in(f, g, S)` | `f` and `g` agree on `S` |
-| `not $fn_eq_in(f, g, S)` | pointwise disagreement on `S` (new_pipeline) |
-| `$is_choice_function_for(I, S, g, f)` | `f` selects one member of `g(alpha)` for every `alpha` in `I` |
 | `$injective(A, B, f)` | `f : A -> B` is injective |
 | `$surjective(A, B, f)` | `f : A -> B` is surjective |
 | `$bijective(A, B, f)` | `f : A -> B` is bijective |
+| `$is_choice_function_for(I, S, g, f)` | `f` selects one member of `g(alpha)` for every `alpha` in `I` |
 
 Function equality needs a compatible function interface, not merely two
 objects with the same value at one point:
 
 ```text
 have f, g set
-f(0) = g(0)
-$fn_eq_in(f, g, R)
+by fn_extension f = g
 ```
 
-This produces `error` before equality verification when `f` and `g` do not
-have known function sets / pointwise evidence.
+This produces `error` when `f` and `g` do not have alpha-equivalent known
+function sets / pointwise evidence.
 
 ### User-defined predicates
 
@@ -2851,7 +2872,7 @@ explanation; this index does not repeat its examples.
 | Compound | `and`, relation chains, `or` | [Conjunctions, chains, and disjunctions](#conjunctions-chains-and-disjunctions) |
 | Existential | `exist`, `exist!`, `not exist` | [Existential facts](#existential-facts) |
 | Universal | `forall`, `forall [Setting]`, `forall [Setting(fresh_names)]`, `forall ... <=>:`, `not forall` | [Universal facts](#universal-facts) |
-| Function predicates | `$fn_eq_in`, mapping properties | [Function predicates](#function-predicates) |
+| Function predicates | `$injective` / `$surjective` / `$bijective`, choice | [Function predicates](#function-predicates) |
 
 ### Statement syntax index
 
@@ -2885,6 +2906,13 @@ explanation; this index does not repeat its examples.
   multi-line comment. Only ASCII `"""` counts; `"`, `""`, or `""""` alone do
   not. Unclosed `"""..."""` is a parse error. Distinct from `#` and from
   inline `"..."`.
+- Line continuation (preview, `new_pipeline`): a line whose code region ends
+  with `\\` joins the next physical line into the same logical line. Optional
+  trailing whitespace and a following `# ...` comment after `\\` are allowed
+  and dropped with the marker (so the continued line is not commented out).
+  Leading spaces on the continued line are ordinary whitespace. Mid-line `\\`
+  is not continuation and is unrelated to the template prefix `\`. A trailing
+  `\\` with no following line is a parse error.
 - Matrix operators contain an apostrophe: `'+`, `'-`, `'*`, `*'`, and `'^`.
 
 ### Unicode mathematical input aliases (preview)
@@ -3064,7 +3092,7 @@ by def $P(args)
 >
 > The same ByDefinition stage also expands **builtin** positive predicates that
 > have an official definition (for example `$subset` / `$superset` → membership
-> forall; `$fn_eq_in` → pointwise equality forall; `$proper_subset` → subset plus
+> forall; `$proper_subset` → subset plus
 > inequality; `$injective` / `$surjective` / `$bijective`; `$prime` / `$coprime` /
 > `$dvd`; `$is_choice_function_for`). User `prop` and builtin predicates share
 > one fork: builtin first, then user `prop`. Design note:
@@ -3079,8 +3107,7 @@ atomic target. The older `by def:` goal block remains accepted for compatibility
 `by def` also names the mathematical-definition route for these builtin
 positive forms: subset, superset, proper subset, proper superset,
 `$prime`, `$coprime`, `$dvd`, `$injective`, `$surjective`, `$bijective`,
-`$fn_eq_in`, and (default pipeline only) `$fn_eq`. On `new_pipeline`, `$fn_eq`
-is removed.
+On `new_pipeline`, `$fn_eq` and `$fn_eq_in` are removed.
 
 When a grouped universal law binds shared convenience variables, a conclusion
 may use only some of them. Litex stores the corresponding reduced universal
@@ -3872,7 +3899,7 @@ aggregate, and remainder rows.
 | Remainder and divisibility | Special residues, Euclidean-remainder uniqueness, compatible nested moduli, and congruence under matching `+`, `-`, and `*` operands. `gcd(a,b)` divides both inputs, and `(a*b)%a=(a*b)%b=0` when the objects are well-defined. |
 | Set and cardinality objects | Union/intersection/difference algebra, intersection reduction from a known subset, cardinality of products, differences, unions and power sets, and empty-set equality from emptiness or zero finite cardinality. |
 | Tuples, Cartesian products, and matrices | Tuple reconstruction from Cartesian membership; tuple/cart equality from equal dimensions and projections; canonical `index_cart` expansion; matrix positive-power base and successor equations. |
-| Functions and materialized definitions | Application equations, alpha-equivalent anonymous functions, pointwise `$fn_eq_in`/`$fn_eq`, same-signature function-set equality, and equality of materialized template or struct values when their resolved objects agree. |
+| Functions and materialized definitions | Application equations, alpha-equivalent anonymous functions, `by fn_extension` / pointwise forall, same-signature function-set equality, and equality of materialized template or struct values when their resolved objects agree. |
 | Finite aggregates and reductions | Empty, singleton, endpoint, split, insertion/removal, distribution, congruence, and supported reindexing rules described under [Powers, logarithms, sums, products, and remainder](#powers-logarithms-sums-products-and-remainder). |
 
 ```litex
@@ -3904,8 +3931,8 @@ Structural equality is recursive but bounded. Matching constructors descend
 to their immediate children; binder-bearing objects compare alpha-equivalent
 binders rather than the printed parameter names. This does not equate two
 different mathematical presentations merely because an external theorem
-could connect them. For functions, use `$fn_eq_in` or `$fn_eq` when pointwise
-equality is the intended interface.
+could connect them. For functions, use `by fn_extension` or a pointwise
+`forall` when extensional agreement is the intended interface.
 
 #### Not-equality routes
 
@@ -4083,7 +4110,7 @@ zero or negative factors with an arbitrary real exponent.
 
 Aggregate rules consume the displayed function and index shape. They do not
 silently replace a summand by an extensionally equal function outside the
-relevant domain; provide `$fn_eq_in` or the exact pointwise universal. The
+relevant domain; provide the exact pointwise universal. The
 subtraction rule also requires one common additive carrier among `Z`, `Q`,
 `R`, and `C`, so it does not totalize natural-number subtraction.
 
@@ -4186,8 +4213,7 @@ reduces to compatible function interfaces and pointwise equality.
 | Interface | Definition or derived builtin consequence |
 |---|---|
 | `A $subset B` / `B $superset A` | Dual spellings of the same inclusion. Reflexivity, structural constructor containment, one-edge membership lifting, and subset chains are supported. Componentwise Cartesian inclusions, integer range into its numeric carrier, real interval into `R`, `fn_range(f)` into its codomain, and union containment from both operands have dedicated shapes. Proper relations unfold to ordinary inclusion plus inequality. |
-| `$fn_eq_in(f,g,S)` | Pointwise equality `forall x S => f(x)=g(x)` on exactly `S`. Aggregate congruence can consume this registered interface. |
-| `$fn_eq(f,g)` | Exact pointwise equality over compatible function carriers. It may use the stored pointwise universal plus matching domains/signatures, or mutual function-space membership with pointwise equality. |
+| `by fn_extension: f = g` | Function extensionality to ordinary `f = g` when FnSet carriers are alpha-equivalent (preview). Local agreement remains a bare `forall`. |
 | `$injective(A,B,f)` | Definition route: members of `A` with equal images are equal. For finite `A`, injectivity gives `finite_set_size(fn_range(f)) = finite_set_size(A)`. |
 | `$surjective(A,B,f)` | Definition route: each member of `B` has a preimage in `A`. A finite source makes the codomain finite and gives `finite_set_size(B) <= finite_set_size(A)`. |
 | `$bijective(A,B,f)` | Definition route combines injectivity and surjectivity. For finite source and target, it preserves cardinality; it also enables finite aggregate reindexing. |
@@ -4246,9 +4272,7 @@ claim:
 by def $fn_eq(fn(x R) R {x}, fn(y R) R {y})
 ```
 
-In the default pipeline, `$fn_eq` / `$fn_eq_in` historically lacked ordinary
-negated atomic forms. On `new_pipeline`, `$fn_eq` is removed and
-`not $fn_eq_in(f, g, S)` is supported. The mapping predicates `$injective`,
+On `new_pipeline`, `$fn_eq` and `$fn_eq_in` are removed. The mapping predicates `$injective`,
 `$surjective`, and `$bijective` may be negated, but the checker does not
 automatically search for a counterexample.
 
@@ -4396,7 +4420,7 @@ Most triggers are atomic facts. A few larger shapes have explicit behavior.
 | Stored fact | Typical inferred information |
 |---|---|
 | Equality | Numeric values, simple linear solved values, `u-v=0` equality, tuple/cart/set-builder/sequence/matrix/function structure, and positive-real membership transported from a known power side. |
-| `$fn_eq(f,g)` | Ordinary object equality `f=g`, so known-equality congruence can use it. `$fn_eq_in` alone has no such global consequence. |
+| `by fn_extension` success | Ordinary object equality `f = g`, so known-equality congruence can use it. |
 | Positive concrete or builtin predicate | Instantiated parameter-type and defining clauses. Proper inclusion exposes inclusion plus inequality; `$prime` exposes its lower bound and trial-divisor universal; `$coprime(a,b)` exposes `a != 0 or b != 0` and `gcd(a,b)=1`; `$dvd(x,y)` exposes `x % y = 0` and an integer multiple witness; mapping properties expose their exact definitions. Abstract predicates have no clauses to expose. |
 | Membership | Constructor-specific carrier, shape, bound, component, disjunction, or existential information listed below. |
 | `$is_cart(C)` | The structural lower bound `2 <= cart_dim(C)`. Other positive/negative type predicates have no general inference branch. |
@@ -4433,7 +4457,7 @@ cart_dim(s) = 2
 Typical consequences include:
 
 - `u - v = 0` gives `u = v` when meaningful;
-- `$fn_eq(f, g)` gives the ordinary equality `f = g`;
+- `by fn_extension` stores the ordinary equality `f = g`;
 - an equality to a closed numeric expression (decimal literals under
   `+ - * / ^ abs min max floor ceil sign`) enables later numeric substitution;
 - supported simple linear equalities record a solved value;

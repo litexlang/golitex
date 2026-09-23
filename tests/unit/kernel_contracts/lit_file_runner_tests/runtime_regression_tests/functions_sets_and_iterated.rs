@@ -2799,7 +2799,8 @@ forall X finite_set, f, g fn(x X) Z:
     finite_set_product(X, fn(x X) Z {f(x) * g(x)}) = finite_set_product(X, f) * finite_set_product(X, g)
 
 forall X finite_set, f, g fn(x X) Z:
-    $fn_eq_in(f, g, X)
+    forall x X:
+        f(x) = g(x)
     =>:
         finite_set_product(X, f) = finite_set_product(X, g)
 
@@ -3873,7 +3874,8 @@ forall op fn(x, y Z) Z:
         reduce(1, 3, id_z, op, 0) = sum(1, 3, id_z)
 
 forall f, g fn(x Z) Z:
-    $fn_eq_in(f, g, 1...3)
+    forall x 1...3:
+        f(x) = g(x)
     =>:
         reduce(1, 3, f, add_z, 0) = reduce(1, 3, g, add_z, 0)
         finite_set_reduce(1...3, f, add_z, 0) = finite_set_reduce(1...3, g, add_z, 0)

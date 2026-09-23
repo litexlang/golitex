@@ -69,8 +69,7 @@ store_fact_and_infer/
 
 | Legacy / table item | Why skip |
 |---|---|
-| `$fn_eq` → ordinary `=` | Prop removed; use `f = g` or `$fn_eq_in` |
-| `$fn_eq_in` store → forall | By-def / verify path; not store-infer |
+| `$fn_eq` / `$fn_eq_in` | Props removed; use `f = g` / `by fn_extension` / bare `forall` |
 | `y $in replacement(P,A)` | No `Obj::Replacement`; named via `have by replacement_axiom` |
 | `x $in &Struct` | Legacy and Manual: no eager public consequences |
 | All `Not*`, `$is_set` / finite / tuple / nonempty | Same as legacy: NoInfer |

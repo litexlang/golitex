@@ -328,23 +328,6 @@ impl AtomicFact {
                     inner.line_file.clone(),
                 )
                 .into(),
-            AtomicFact::FnEqualInFact(inner) => runtime
-                .new_fn_equal_in_fact(
-                    inner
-                        .left
-                        .replace_with_numeric_result_if_can_be_calculated()
-                        .0,
-                    inner
-                        .right
-                        .replace_with_numeric_result_if_can_be_calculated()
-                        .0,
-                    inner
-                        .set
-                        .replace_with_numeric_result_if_can_be_calculated()
-                        .0,
-                    inner.line_file.clone(),
-                )
-                .into(),
             AtomicFact::FnEqualFact(inner) => runtime
                 .new_fn_equal_fact(
                     inner

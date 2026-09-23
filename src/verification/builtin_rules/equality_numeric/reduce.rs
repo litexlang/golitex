@@ -554,7 +554,7 @@ impl Runtime {
 
     /// Reductions are congruent when their structural parameters agree and
     /// their unary functions are pointwise equal on the exact index set.
-    /// Examples use `$fn_eq_in(f,g,a...b)` or `$fn_eq_in(f,g,S)`.
+    /// Examples use `forall x a...b: f(x)=g(x)` or `forall x S: f(x)=g(x)`.
     pub fn try_verify_reduce_pointwise_congruence(
         &mut self,
         equal_fact: &EqualFact,
@@ -648,7 +648,7 @@ impl Runtime {
                 subgoals.push(pointwise);
                 Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                     equal_fact,
-                    "equality: finite_set_reduce congruence from fn_eq_in on the finite set",
+                    "equality: finite_set_reduce congruence from pointwise equality on the finite set",
                     subgoals,
                 )))
             }
@@ -1468,29 +1468,6 @@ impl Runtime {
             self.try_verify_equal_fact_as_builtin_premise(equal_fact, builtin_state)?
         {
             return Ok(Some(direct));
-        }
-        for (first, second) in [
-            (left_func.clone(), right_func.clone()),
-            (right_func.clone(), left_func.clone()),
-        ] {
-            let fn_eq_in: AtomicFact = self
-                .new_fn_equal_in_fact(first, second, set.clone(), line_file.clone())
-                .into();
-            let known_proof = if let Some(result) =
-                self.verification_result_from_known_fact_cache(&fn_eq_in.clone().into())
-            {
-                result
-            } else {
-                self.verify_atomic_except_equality_with_known_atomic_facts(&fn_eq_in)?
-            };
-            let known = self.complete_atomic_fact_proof_result(
-                &fn_eq_in,
-                known_proof,
-                builtin_state.verify_state(),
-            )?;
-            if known.is_success() {
-                return Ok(Some(known));
-            }
         }
 
         let left_func = left_func.clone();

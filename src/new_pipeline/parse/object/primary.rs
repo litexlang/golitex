@@ -902,9 +902,9 @@ fn parse_interval_literal(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResul
             start: Box::new(right),
         };
         let interval = if right_closed {
-            OneSideInfinityIntervalObj::RightClosed(body)
+            OneSideInfinityIntervalObj::UpperClosed(body)
         } else {
-            OneSideInfinityIntervalObj::RightOpen(body)
+            OneSideInfinityIntervalObj::UpperOpen(body)
         };
         return Ok(Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(
             interval,
@@ -921,9 +921,9 @@ fn parse_interval_literal(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResul
             start: Box::new(left),
         };
         let interval = if left_closed {
-            OneSideInfinityIntervalObj::LeftClosed(body)
+            OneSideInfinityIntervalObj::LowerClosed(body)
         } else {
-            OneSideInfinityIntervalObj::LeftOpen(body)
+            OneSideInfinityIntervalObj::LowerOpen(body)
         };
         return Ok(Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(
             interval,

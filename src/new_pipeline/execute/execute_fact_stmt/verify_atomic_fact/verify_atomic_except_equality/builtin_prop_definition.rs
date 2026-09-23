@@ -5,8 +5,8 @@
 //! One predicate ↔ one proof struct under `BuiltinPropDefinitionProof`.
 
 use crate::new_pipeline::ast::fact::{
-    AndChainAtomicFact, AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, FnEqualInFact,
-    ForallFact, InFact, LessEqualFact, NormalAtomicFact, NotEqualFact, OrFact, PlainExistFact,
+    AndChainAtomicFact, AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, ForallFact,
+    InFact, LessEqualFact, NormalAtomicFact, NotEqualFact, OrFact, PlainExistFact,
     QuantifierFreeFact, SubsetFact, SupersetFact,
 };
 use crate::new_pipeline::ast::names::AtomicName;
@@ -18,10 +18,10 @@ use crate::new_pipeline::ast::obj::{
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::{
     BuiltinBijectiveDefinitionProof, BuiltinCoprimeDefinitionProof, BuiltinDvdDefinitionProof,
-    BuiltinFnEqualInDefinitionProof, BuiltinInjectiveDefinitionProof,
-    BuiltinIsChoiceFunctionForDefinitionProof, BuiltinPrimeDefinitionProof,
-    BuiltinProperSubsetDefinitionProof, BuiltinProperSupersetDefinitionProof,
-    BuiltinPropDefinitionProof, BuiltinSubsetDefinitionProof, BuiltinSupersetDefinitionProof,
+    BuiltinInjectiveDefinitionProof, BuiltinIsChoiceFunctionForDefinitionProof,
+    BuiltinPrimeDefinitionProof, BuiltinProperSubsetDefinitionProof,
+    BuiltinProperSupersetDefinitionProof, BuiltinPropDefinitionProof,
+    BuiltinSubsetDefinitionProof, BuiltinSupersetDefinitionProof,
     BuiltinSurjectiveDefinitionProof,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
@@ -43,7 +43,6 @@ impl Runtime {
         match fact {
             AtomicFact::SubsetFact(f) => self.prove_subset_by_definition(f, verify_state),
             AtomicFact::SupersetFact(f) => self.prove_superset_by_definition(f, verify_state),
-            AtomicFact::FnEqualInFact(f) => self.prove_fn_equal_in_by_definition(f, verify_state),
             AtomicFact::NormalAtomicFact(f) => {
                 self.prove_named_builtin_prop_by_definition(f, verify_state)
             }
@@ -136,47 +135,6 @@ impl Runtime {
         };
         Ok(Some(BuiltinPropDefinitionProof::Superset(
             BuiltinSupersetDefinitionProof {
-                requirement_facts,
-                proof_of_requirement_facts,
-            },
-        )))
-    }
-
-    // $fn_eq_in(f, g, S)  ⇔  forall x S: f(x) = g(x)
-    fn prove_fn_equal_in_by_definition(
-        &mut self,
-        fact: &FnEqualInFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
-        let x = self.fresh_internal_param();
-        let x_obj = Obj::Identifier(IdentifierObj::from_bound_name(&x));
-        let Some(fx) = apply_fn_one_arg(&fact.left, x_obj.clone()) else {
-            return Ok(None);
-        };
-        let Some(gx) = apply_fn_one_arg(&fact.right, x_obj) else {
-            return Ok(None);
-        };
-        let forall = Fact::ForallFact(ForallFact {
-            fact_id: self.global_ids.allocate_fact_id(),
-            typed_parameters: typed_obj_params(vec![x], fact.set.clone()),
-            dom_facts: vec![],
-            then_facts: vec![ExistOrAndChainAtomicFact::AtomicFact(
-                AtomicFact::EqualFact(EqualFact {
-                    fact_id: self.global_ids.allocate_fact_id(),
-                    left: fx,
-                    right: gx,
-                    line_file: None,
-                }),
-            )],
-            line_file: None,
-        });
-        let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_definition_requirements(vec![forall], verify_state)?
-        else {
-            return Ok(None);
-        };
-        Ok(Some(BuiltinPropDefinitionProof::FnEqualIn(
-            BuiltinFnEqualInDefinitionProof {
                 requirement_facts,
                 proof_of_requirement_facts,
             },
