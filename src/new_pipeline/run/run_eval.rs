@@ -27,8 +27,8 @@ pub fn run_eval(command: LaunchCommand) -> RuntimeResult<RunEvalResult> {
         }
     }
 
-    runtime.begin_file(RealOrVirtualPath::Eval);
     runtime.set_code_source(crate::new_pipeline::runtime::CodeSource::Eval);
+    runtime.begin_file(RealOrVirtualPath::Eval);
 
     let code_result = match runtime.run_litex_code(&code) {
         Ok(result) => result,

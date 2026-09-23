@@ -18,8 +18,8 @@ pub fn run_repl(command: LaunchCommand) -> RuntimeResult<()> {
         }
     }
 
-    runtime.begin_file(RealOrVirtualPath::Repl);
     runtime.set_code_source(crate::new_pipeline::runtime::CodeSource::Repl);
+    runtime.begin_file(RealOrVirtualPath::Repl);
     run_repl_loop(&mut runtime)
 }
 

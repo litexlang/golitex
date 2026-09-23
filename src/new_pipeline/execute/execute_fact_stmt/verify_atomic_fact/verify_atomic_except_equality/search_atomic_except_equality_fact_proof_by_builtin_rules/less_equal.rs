@@ -94,6 +94,53 @@ pub enum LessEqualFactSearchProofByBuiltinRule {
     // Product of nonnegatives is nonnegative: `0 <= a` and `0 <= b` ⇒ `0 <= a * b`.
     // Example: known `0 <= x`, `0 <= y` prove `0 <= x * y`.
     ProductOfNonnegatives(ProductOfNonnegativesBuiltinRuleProof),
+    // Even integer power is nonnegative: `0 <= a^(2k)` or `0 <= a * a`.
+    // Mathematical property: for every real `a` and even integer `n`, `a^n >= 0`.
+    // Example: prove `0 <= x^2`, `0 <= x * x`.
+    EvenPowNonnegative(EvenPowNonnegativeBuiltinRuleProof),
+    // Positive base power is nonnegative: `0 < a` ⇒ `0 <= a^b`.
+    // Example: known `0 < a` proves `0 <= a^n`.
+    PowNonnegFromPositiveBase(PowNonnegFromPositiveBaseBuiltinRuleProof),
+    // Nonnegative base with positive-integer exponent: `0 <= a` and `n $in N+` ⇒ `0 <= a^n`.
+    // Example: known `0 <= a`, `n $in N+` prove `0 <= a^n`.
+    PowNonnegFromNonnegBasePosIntExp(PowNonnegFromNonnegBasePosIntExpBuiltinRuleProof),
+    // Square root is nonnegative: `0 <= x` ⇒ `0 <= sqrt(x)`.
+    // Example: known `0 <= x` proves `0 <= sqrt(x)`.
+    SqrtNonnegative(SqrtNonnegativeBuiltinRuleProof),
+    // Square root is weakly monotone: `0 <= a`, `0 <= b`, `a <= b` ⇒ `sqrt(a) <= sqrt(b)`.
+    // Example: known `0 <= a`, `0 <= b`, `a <= b` prove `sqrt(a) <= sqrt(b)`.
+    SqrtMonotoneNondecreasing(SqrtMonotoneNondecreasingBuiltinRuleProof),
+    // Positive-natural membership implies at least one: `n $in N+` ⇒ `1 <= n`.
+    // Example: after `have n N+`, prove `1 <= n`.
+    FromKnownInPositiveNatural(FromKnownInPositiveNaturalBuiltinRuleProof),
+    // Log with base > 1 preserves weak order on positive args.
+    // Mathematical property: `1 < a`, `0 < x`, `0 < y`, `x <= y` ⇒ `log(a, x) <= log(a, y)`.
+    // Example: known `1 < 2`, `0 < x`, `0 < y`, `x <= y` prove `log(2, x) <= log(2, y)`.
+    LogOrderPreservingWeak(LogOrderPreservingWeakBuiltinRuleProof),
+    // Order transitivity: known `a <= b`/`a < b` and `b <= c`/`b < c` prove `a <= c`.
+    // Example: known `x <= y` and `y <= z` prove `x <= z`.
+    LessEqualTransitivity(LessEqualTransitivityBuiltinRuleProof),
+    // Subtraction bridge: known `0 <= b - a` prove `a <= b`.
+    // Example: known `0 <= y - x` proves `x <= y`.
+    LessEqualFromNonnegDifference(LessEqualFromNonnegDifferenceBuiltinRuleProof),
+    // Subtraction bridge: known `a <= b` prove `0 <= b - a`.
+    // Example: known `x <= y` proves `0 <= y - x`.
+    NonnegDifferenceFromLessEqual(NonnegDifferenceFromLessEqualBuiltinRuleProof),
+    // Mod remainder nonnegative: `a $in Z`, `b $in N+` ⇒ `0 <= a % b`.
+    // Example: after `have a Z` and `have b N+`, prove `0 <= a % b`.
+    ModRemainderNonnegative(ModRemainderNonnegativeBuiltinRuleProof),
+    // Positive common divisor preserves weak order.
+    // Example: known `0 < c` and `a <= b` prove `a / c <= b / c`.
+    DivMonotoneWeakSamePosDivisor(DivMonotoneWeakSamePosDivisorBuiltinRuleProof),
+    // Finite-set cardinality is nonnegative.
+    // Example: `$is_finite_set(S)` proves `0 <= finite_set_size(S)`.
+    FiniteSetSizeNonnegativeLe(FiniteSetSizeNonnegativeLeBuiltinRuleProof),
+    // Nonempty finite set has size at least one.
+    // Example: `$is_finite_set(S)` and `$is_nonempty_set(S)` prove `1 <= finite_set_size(S)`.
+    FiniteSetSizeAtLeastOneLe(FiniteSetSizeAtLeastOneLeBuiltinRuleProof),
+    // Subset cannot raise finite cardinality.
+    // Example: `A $subset B` with both finite proves `finite_set_size(A) <= finite_set_size(B)`.
+    FiniteSetSizeSubsetLe(FiniteSetSizeSubsetLeBuiltinRuleProof),
 }
 
 pub struct ClosedNumericComparisonBuiltinRuleProof {
@@ -180,6 +227,78 @@ pub struct ProductOfNonnegativesBuiltinRuleProof {
     pub right_nonnegative_proof: VerifyFactResult,
 }
 
+pub struct EvenPowNonnegativeBuiltinRuleProof {}
+
+pub struct PowNonnegFromPositiveBaseBuiltinRuleProof {
+    pub base_positive_proof: VerifyFactResult,
+}
+
+pub struct PowNonnegFromNonnegBasePosIntExpBuiltinRuleProof {
+    pub base_nonnegative_proof: VerifyFactResult,
+    pub exp_in_positive_natural_proof: VerifyFactResult,
+}
+
+pub struct SqrtNonnegativeBuiltinRuleProof {
+    pub arg_nonnegative_proof: VerifyFactResult,
+}
+
+pub struct SqrtMonotoneNondecreasingBuiltinRuleProof {
+    pub left_nonnegative_proof: VerifyFactResult,
+    pub right_nonnegative_proof: VerifyFactResult,
+    pub args_order_proof: VerifyFactResult,
+}
+
+pub struct FromKnownInPositiveNaturalBuiltinRuleProof {
+    pub cite_fact_id: FactId,
+}
+
+pub struct LogOrderPreservingWeakBuiltinRuleProof {
+    pub base_gt_one_proof: VerifyFactResult,
+    pub left_arg_positive_proof: VerifyFactResult,
+    pub right_arg_positive_proof: VerifyFactResult,
+    pub args_order_proof: VerifyFactResult,
+}
+
+pub struct LessEqualTransitivityBuiltinRuleProof {
+    pub left_to_mid_cite_fact_id: FactId,
+    pub mid_to_right_cite_fact_id: FactId,
+}
+
+pub struct LessEqualFromNonnegDifferenceBuiltinRuleProof {
+    pub cite_fact_id: FactId,
+}
+
+pub struct NonnegDifferenceFromLessEqualBuiltinRuleProof {
+    pub cite_fact_id: FactId,
+}
+
+pub struct ModRemainderNonnegativeBuiltinRuleProof {
+    pub dividend_in_z_proof: VerifyFactResult,
+    pub modulus_in_n_pos_proof: VerifyFactResult,
+}
+
+pub struct DivMonotoneWeakSamePosDivisorBuiltinRuleProof {
+    pub divisor_pos_proof: VerifyFactResult,
+    pub numerators_order_proof: VerifyFactResult,
+}
+
+pub struct FiniteSetSizeNonnegativeLeBuiltinRuleProof {
+    pub finite_proof: VerifyFactResult,
+}
+
+pub struct FiniteSetSizeAtLeastOneLeBuiltinRuleProof {
+    pub finite_proof: VerifyFactResult,
+    pub nonempty_proof: VerifyFactResult,
+}
+
+pub struct FiniteSetSizeSubsetLeBuiltinRuleProof {
+    pub left_finite_proof: VerifyFactResult,
+    pub right_finite_proof: VerifyFactResult,
+    pub subset_proof: VerifyFactResult,
+}
+
+
+
 impl Runtime {
     // Builtin search for `a <= b`.
     // B0: reflexivity + known cites (shape-independent).
@@ -215,7 +334,17 @@ impl Runtime {
 
         // A — shape match on (left, right) Obj constructors
         if let Some(proof) =
-            self.search_order_abs_algebra_less_equal_proof(fact, verify_state)?
+            self.search_order_abs_algebra_less_equal_proof(fact, verify_state.clone())?
+        {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) =
+            self.search_order_power_sqrt_log_less_equal_proof(fact, verify_state.clone())?
+        {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) =
+            self.search_order_div_mod_bridge_trans_less_equal_proof(fact, verify_state)?
         {
             return Ok(Some(proof));
         }

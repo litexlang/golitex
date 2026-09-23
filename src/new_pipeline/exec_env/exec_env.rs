@@ -5,7 +5,6 @@ use crate::new_pipeline::ast::stmt::AxiomStmt;
 use crate::new_pipeline::ast::stmt::DefAbstractPropStmt;
 use crate::new_pipeline::ast::stmt::DefAlgoStmt;
 use crate::new_pipeline::ast::stmt::DefPropStmt;
-use crate::new_pipeline::ast::stmt::DefSettingStmt;
 use crate::new_pipeline::ast::stmt::DefStrategyStmt;
 use crate::new_pipeline::ast::stmt::DefStructStmt;
 use crate::new_pipeline::ast::stmt::DefTemplateStmt;
@@ -21,8 +20,8 @@ use crate::new_pipeline::ast::stmt::HaveObjInNonemptySetOrParamTypeStmt;
 use crate::new_pipeline::ast::stmt::LetObjStmt;
 use crate::new_pipeline::ast::stmt::TrustHaveStmt;
 use crate::new_pipeline::exec_env::known_fact_memory::ObjIR;
+use crate::new_pipeline::exec_env::session_view::ExecEnvSessionView;
 use crate::new_pipeline::runtime::runtime_ids::{FactId, WellDefinednessId};
-use crate::new_pipeline::runtime::GlobalIds;
 use std::collections::HashMap;
 use std::rc::Rc;
 
@@ -45,9 +44,9 @@ pub use super::known_fact_memory::{
 /// the child environment so its local definitions, facts, and WD records stay
 /// available to the renderer without being merged into the parent implicitly.
 ///
-/// `global_ids_at_enter` / `global_ids_at_leave` are frozen copies of
-/// `Runtime.global_ids` at push / pop. They are diagnostic / range markers only;
-/// merge never copies them (live counters stay on `Runtime`).
+/// `session_view` is set only for the file-level ExecEnv (Runtime stack index 0):
+/// id watermarks + `CodeSource`. Nested/local ExecEnvs leave it `None`.
+/// Merge never copies `session_view`.
 #[derive(Clone)]
 pub struct ExecEnv {
     /// Definitions visible to statements executed in this scope.
@@ -70,11 +69,8 @@ pub struct ExecEnv {
     /// remain read-only.
     pub well_defined_objects: WellDefinedObjectMemory,
 
-    /// `Runtime.global_ids` copied when this ExecEnv was pushed.
-    pub global_ids_at_enter: GlobalIds,
-
-    /// `Runtime.global_ids` copied when this ExecEnv was popped; `None` while live.
-    pub global_ids_at_leave: Option<GlobalIds>,
+    /// File-level session snapshot only; `None` for nested / statement-local envs.
+    pub session_view: Option<ExecEnvSessionView>,
 }
 
 /// The two-way index for well-defined objects owned by one scope.
@@ -121,7 +117,6 @@ pub struct DefinitionMemory {
     pub algorithm_definitions: HashMap<PlainName, DefAlgoStmt>,
     pub structure_definitions: HashMap<PlainName, DefStructStmt>,
     pub template_definitions: HashMap<PlainName, DefTemplateStmt>,
-    pub setting_definitions: HashMap<PlainName, DefSettingStmt>,
     pub theorem_definitions: HashMap<PlainName, DefThmStmt>,
     pub axiom_definitions: HashMap<PlainName, AxiomStmt>,
     pub strategy_definitions: HashMap<PlainName, DefStrategyStmt>,
@@ -160,15 +155,14 @@ pub enum SpecialObjectPropertyByDefinition {
 // -----------------------------------------------------------------------------
 
 impl ExecEnv {
-    pub fn new(global_ids_at_enter: GlobalIds) -> Self {
+    pub fn new(session_view: Option<ExecEnvSessionView>) -> Self {
         Self {
             definitions: DefinitionMemory::new(),
             facts: KnownFactMemory::new(),
             special_object_properties: HashMap::new(),
             prop_rewrite_properties: HashMap::new(),
             well_defined_objects: WellDefinedObjectMemory::new(),
-            global_ids_at_enter,
-            global_ids_at_leave: None,
+            session_view,
         }
     }
 
@@ -238,7 +232,7 @@ impl ExecEnv {
 
 impl Default for ExecEnv {
     fn default() -> Self {
-        Self::new(GlobalIds::new())
+        Self::new(None)
     }
 }
 
@@ -271,7 +265,6 @@ impl DefinitionMemory {
             algorithm_definitions: HashMap::new(),
             structure_definitions: HashMap::new(),
             template_definitions: HashMap::new(),
-            setting_definitions: HashMap::new(),
             theorem_definitions: HashMap::new(),
             axiom_definitions: HashMap::new(),
             strategy_definitions: HashMap::new(),

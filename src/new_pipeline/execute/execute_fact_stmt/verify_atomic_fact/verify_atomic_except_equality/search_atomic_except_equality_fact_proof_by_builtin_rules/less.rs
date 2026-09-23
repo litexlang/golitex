@@ -12,6 +12,7 @@ use crate::new_pipeline::rational_expression::{
     compare_closed_objs_by_normalized_decimal, NumberCompareResult,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
+use crate::new_pipeline::runtime::FactId;
 
 // Builtin rules for `a < b`.
 pub enum LessFactSearchProofByBuiltinRule {
@@ -47,6 +48,42 @@ pub enum LessFactSearchProofByBuiltinRule {
     // Product of positives: `0 < a` and `0 < b` ⇒ `0 < a * b`.
     // Example: known `0 < x`, `0 < y` prove `0 < x * y`.
     ProductBothPositive(ProductBothPositiveBuiltinRuleProof),
+    // Even integer power is positive from a nonzero base: `a != 0` ⇒ `0 < a^(2k)` / `0 < a * a`.
+    // Example: known `x != 0` proves `0 < x^2`.
+    EvenPowPositiveFromNonzero(EvenPowPositiveFromNonzeroBuiltinRuleProof),
+    // Positive base power is positive: `0 < a` ⇒ `0 < a^b`.
+    // Example: known `0 < a` proves `0 < a^n`.
+    PowPositiveFromPositiveBase(PowPositiveFromPositiveBaseBuiltinRuleProof),
+    // Square root is positive: `0 < x` ⇒ `0 < sqrt(x)`.
+    // Example: known `0 < x` proves `0 < sqrt(x)`.
+    SqrtPositive(SqrtPositiveBuiltinRuleProof),
+    // Square root is strictly monotone: `0 <= a`, `0 <= b`, `a < b` ⇒ `sqrt(a) < sqrt(b)`.
+    SqrtMonotoneIncreasing(SqrtMonotoneIncreasingBuiltinRuleProof),
+    // Log with base > 1 preserves strict order on positive args.
+    // Example: known `1 < 2`, `0 < x`, `0 < y`, `x < y` prove `log(2, x) < log(2, y)`.
+    LogOrderPreservingStrict(LogOrderPreservingStrictBuiltinRuleProof),
+    // Log sign: `1 < a` and `1 < x` ⇒ `0 < log(a, x)`.
+    LogPositiveFromBaseAndArgGtOne(LogPositiveFromBaseAndArgGtOneBuiltinRuleProof),
+    // Log sign: `1 < a`, `0 < x`, `x < 1` ⇒ `log(a, x) < 0`.
+    LogNegativeFromBaseGtOneArgInUnitInterval(LogNegativeFromBaseGtOneArgInUnitIntervalBuiltinRuleProof),
+    // Order transitivity with at least one strict premise.
+    // Example: known `x <= y` and `y < z` prove `x < z`.
+    LessTransitivity(LessTransitivityBuiltinRuleProof),
+    // Subtraction bridge: known `0 < b - a` prove `a < b`.
+    // Example: known `0 < y - x` proves `x < y`.
+    LessFromPosDifference(LessFromPosDifferenceBuiltinRuleProof),
+    // Subtraction bridge: known `a < b` prove `0 < b - a`.
+    // Example: known `x < y` proves `0 < y - x`.
+    PosDifferenceFromLess(PosDifferenceFromLessBuiltinRuleProof),
+    // Mod remainder upper bound: `a $in Z`, `b $in N+` ⇒ `a % b < b`.
+    // Example: after `have a Z` and `have b N+`, prove `a % b < b`.
+    ModRemainderStrictUpperBound(ModRemainderStrictUpperBoundBuiltinRuleProof),
+    // Positive common divisor preserves strict order.
+    // Example: known `0 < c` and `a < b` prove `a / c < b / c`.
+    DivMonotoneStrictSamePosDivisor(DivMonotoneStrictSamePosDivisorBuiltinRuleProof),
+    // Dividing a positive quantity by a factor > 1 shrinks it.
+    // Example: known `0 < a` and `1 < b` prove `a / b < a`.
+    DivByGtOneLessSelf(DivByGtOneLessSelfBuiltinRuleProof),
 }
 
 // Payload: both evaluated normals with left_normal < right_normal.
@@ -84,6 +121,74 @@ pub struct ProductBothPositiveBuiltinRuleProof {
     pub left_positive_proof: VerifyFactResult,
     pub right_positive_proof: VerifyFactResult,
 }
+
+pub struct EvenPowPositiveFromNonzeroBuiltinRuleProof {
+    pub base_nonzero_proof: VerifyFactResult,
+}
+
+pub struct PowPositiveFromPositiveBaseBuiltinRuleProof {
+    pub base_positive_proof: VerifyFactResult,
+}
+
+pub struct SqrtPositiveBuiltinRuleProof {
+    pub arg_positive_proof: VerifyFactResult,
+}
+
+pub struct SqrtMonotoneIncreasingBuiltinRuleProof {
+    pub left_nonnegative_proof: VerifyFactResult,
+    pub right_nonnegative_proof: VerifyFactResult,
+    pub args_order_proof: VerifyFactResult,
+}
+
+pub struct LogOrderPreservingStrictBuiltinRuleProof {
+    pub base_gt_one_proof: VerifyFactResult,
+    pub left_arg_positive_proof: VerifyFactResult,
+    pub right_arg_positive_proof: VerifyFactResult,
+    pub args_order_proof: VerifyFactResult,
+}
+
+pub struct LogPositiveFromBaseAndArgGtOneBuiltinRuleProof {
+    pub base_gt_one_proof: VerifyFactResult,
+    pub arg_gt_one_proof: VerifyFactResult,
+}
+
+pub struct LogNegativeFromBaseGtOneArgInUnitIntervalBuiltinRuleProof {
+    pub base_gt_one_proof: VerifyFactResult,
+    pub arg_positive_proof: VerifyFactResult,
+    pub arg_lt_one_proof: VerifyFactResult,
+}
+
+pub struct LessTransitivityBuiltinRuleProof {
+    pub left_to_mid_cite_fact_id: FactId,
+    pub mid_to_right_cite_fact_id: FactId,
+    pub left_to_mid_strict: bool,
+    pub mid_to_right_strict: bool,
+}
+
+pub struct LessFromPosDifferenceBuiltinRuleProof {
+    pub cite_fact_id: FactId,
+}
+
+pub struct PosDifferenceFromLessBuiltinRuleProof {
+    pub cite_fact_id: FactId,
+}
+
+pub struct ModRemainderStrictUpperBoundBuiltinRuleProof {
+    pub dividend_in_z_proof: VerifyFactResult,
+    pub modulus_in_n_pos_proof: VerifyFactResult,
+}
+
+pub struct DivMonotoneStrictSamePosDivisorBuiltinRuleProof {
+    pub divisor_pos_proof: VerifyFactResult,
+    pub numerators_order_proof: VerifyFactResult,
+}
+
+pub struct DivByGtOneLessSelfBuiltinRuleProof {
+    pub numerator_pos_proof: VerifyFactResult,
+    pub denominator_gt_one_proof: VerifyFactResult,
+}
+
+
 
 impl Runtime {
     // Builtin search for `a < b`.
@@ -157,23 +262,38 @@ impl Runtime {
             (left, Obj::ArithmeticOperator(ArithmeticOperator::Add(Add { left: a, right: b })))
                 if is_zero_obj(left) =>
             {
-                if let Some(proof) =
-                    self.sum_positive_cone_proof(a.as_ref(), b.as_ref(), verify_state)?
-                {
+                if let Some(proof) = self.sum_positive_cone_proof(
+                    a.as_ref(),
+                    b.as_ref(),
+                    verify_state.clone(),
+                )? {
                     return Ok(Some(proof));
                 }
             }
             (left, Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul { left: a, right: b })))
                 if is_zero_obj(left) =>
             {
-                if let Some(proof) =
-                    self.product_both_positive_proof(a.as_ref(), b.as_ref(), verify_state)?
-                {
+                if let Some(proof) = self.product_both_positive_proof(
+                    a.as_ref(),
+                    b.as_ref(),
+                    verify_state.clone(),
+                )? {
                     return Ok(Some(proof));
                 }
             }
 
             _ => {}
+        }
+
+        if let Some(proof) =
+            self.search_order_power_sqrt_log_less_proof(fact, verify_state.clone())?
+        {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) =
+            self.search_order_div_mod_bridge_trans_less_proof(fact, verify_state)?
+        {
+            return Ok(Some(proof));
         }
 
         let Some((cmp, left_normal, right_normal)) =

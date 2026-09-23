@@ -1,70 +1,20 @@
 use super::super::keywords::{
-    COLON, COMMA, EQUIVALENT_SIGN, GREATER, LEFT_PAREN, LESS, SETTING, STRATEGY, STRUCT, TEMPLATE,
+    COLON, COMMA, EQUIVALENT_SIGN, GREATER, LEFT_PAREN, LESS, STRATEGY, STRUCT, TEMPLATE,
 };
 use super::super::object::{is_simple_name, parse_obj};
 use crate::new_pipeline::ast::fact::QuantifierFreeFact;
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::param::TypedParameterList;
 use crate::new_pipeline::ast::stmt::{
-    DefSettingStmt, DefStrategyStmt, DefStructStmt, DefTemplateStmt, DefinitionStmt, Stmt,
-    StructFieldDef, TemplateDefEnum, UnsafeStmt,
+    DefStrategyStmt, DefStructStmt, DefTemplateStmt, DefinitionStmt, Stmt, StructFieldDef,
+    TemplateDefEnum, UnsafeStmt,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
 
 impl Runtime {
-    // setting Name(params) [: body facts]
-    pub(in super::super) fn parse_def_setting_stmt(
-        &mut self,
-        block: &TokenBlock,
-    ) -> RuntimeResult<Stmt> {
-        let mut tb = block.clone();
-        tb.expect(SETTING)?;
-        let name = tb
-            .advance()
-            .map_err(|_| tb.parse_error("`setting` expects a name"))?;
-        if !is_simple_name(&name) {
-            return Err(tb.parse_error(format!("invalid setting name `{name}`")));
-        }
-
-        self.push_parse_scope();
-        let result = (|| {
-            let param_def = self.parse_typed_param_list_in_parens(&mut tb)?;
-            let dom_facts = if tb.peek() == Some(COLON) {
-                tb.expect(COLON)?;
-                if !tb.exceed_end_of_head() {
-                    return Err(tb.parse_error("setting: unexpected tokens after `:` in header"));
-                }
-                self.parse_facts_in_body(&tb.body)?
-            } else {
-                if !tb.exceed_end_of_head() {
-                    return Err(
-                        tb.parse_error("setting: expected `:` or end of header after `(...)`")
-                    );
-                }
-                if !tb.body.is_empty() {
-                    return Err(tb.parse_error("setting without `:` cannot have an indented body"));
-                }
-                Vec::new()
-            };
-            Ok((param_def, dom_facts))
-        })();
-        self.pop_parse_scope();
-        let (param_def, dom_facts) = result?;
-
-        self.define_plain_atom_as_parse(&tb, name.clone())?;
-        Ok(Stmt::Definition(DefinitionStmt::DefSettingStmt(
-            DefSettingStmt {
-                name,
-                param_def,
-                dom_facts,
-                line_file: LineFile::new(block.line, block.source_path.clone()),
-            },
-        )))
-    }
-
     // struct Name: fields [<=>: facts]
-    // struct Name<typed params>: …  (setting refs inside `<>` still deferred)
+    // struct Name<typed params>: …
     pub(in super::super) fn parse_def_struct_stmt(
         &mut self,
         block: &TokenBlock,

@@ -10,7 +10,7 @@
 //!
 //! FactIds are global session counters on `Runtime`; merge only mounts
 //! child-owned defs / facts / WD / special props / prop-rewrite props.
-//! `global_ids_at_enter` / `global_ids_at_leave` are never merged.
+//! `session_view` is never merged.
 
 use super::exec_env::ExecEnv;
 use super::maybe_index_known_closed_numeric_equal;
@@ -18,7 +18,7 @@ use crate::new_pipeline::ast::fact::ExistShapedFact;
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact};
 use crate::new_pipeline::ast::names::PlainName;
 use crate::new_pipeline::parse::keywords::{
-    ABSTRACT_PROP, ALGO, AXIOM, PROP, SETTING, STRATEGY, STRUCT, TEMPLATE, THM,
+    ABSTRACT_PROP, ALGO, AXIOM, PROP, STRATEGY, STRUCT, TEMPLATE, THM,
 };
 use crate::new_pipeline::runtime::{FactId, RuntimeError, RuntimeResult};
 use std::collections::HashMap;
@@ -69,11 +69,6 @@ fn merge_definitions_from(parent: &mut ExecEnv, child: &ExecEnv) -> RuntimeResul
         &mut parent.definitions.template_definitions,
         &child.definitions.template_definitions,
         TEMPLATE,
-    )?;
-    merge_named_map(
-        &mut parent.definitions.setting_definitions,
-        &child.definitions.setting_definitions,
-        SETTING,
     )?;
     merge_named_map(
         &mut parent.definitions.theorem_definitions,

@@ -33,7 +33,6 @@ the AST definition). Callers / other modules must own them:
 
 | Gap | Location | Notes |
 |-----|----------|--------|
-| Setting refs inside `struct Name<…>` | parse `def_misc.rs` | Comment: setting refs in `<>` still deferred. |
 | `struct Name(...)` paren params | parse | Rejected; Manual wants `<…>` only. |
 | Lean / JSON tracers for `ReleaseStructDef` | stmt result / compiler | Exec result type exists; Lean replay still deferred. |
 | Non-literal `$in cart(...)` when `$is_tuple` / `tuple_dim` are unknown | `CartMembership` non-literal branch | Literal `(a,b) $in cart(A,B)` works; symbolic `e $in cart(...)` needs known tuple shape/dim. |

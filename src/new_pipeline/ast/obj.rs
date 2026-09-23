@@ -1,5 +1,5 @@
 //! Framework AST data shapes for new_pipeline.
-//! Field taxonomy follows the legacy language; methods are added later.
+//! Field taxonomy follows the legacy language; methods are added later.wus
 //! Identity: BoundName / IdentifierId for plain refs; FactId; LineFile.
 //!
 //! Layout: top-level `Obj` is 16 families; each family enum wraps the same leaf
