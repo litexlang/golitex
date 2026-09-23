@@ -20,7 +20,7 @@ impl Runtime {
                 .finished_export_exec_env(None, *export_file_id)
                 .and_then(|env| env.definitions.identifiers.get(plain).cloned())
                 .or_else(|| {
-                    if *export_file_id == self.current_export_file_id {
+                    if self.code_source.is_live_root_export(*export_file_id) {
                         self.stored_identifier_definition_visible_in_stack(plain)
                             .cloned()
                     } else {
@@ -35,8 +35,9 @@ impl Runtime {
                 .finished_export_exec_env(Some(*global_mod_id), *export_file_id)
                 .and_then(|env| env.definitions.identifiers.get(plain).cloned())
                 .or_else(|| {
-                    if self.global_module_manager.current_mod_id() == Some(*global_mod_id)
-                        && *export_file_id == self.current_export_file_id
+                    if self
+                        .code_source
+                        .is_live_imported_export(*global_mod_id, *export_file_id)
                     {
                         self.stored_identifier_definition_visible_in_stack(plain)
                             .cloned()

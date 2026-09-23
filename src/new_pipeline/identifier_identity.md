@@ -23,18 +23,20 @@ indexing.
 1. **Allocate at parse.** `define_plain_atom` → `BoundName` with a fresh
    `IdentifierId`. Re-opening binders uses `occupy_bound_name` (same id).
 2. **Resolve plain refs.** Free `x`:
-   - bound in **file-root** parse scope (index 0) →
+   - bound in **outermost** parse scope (index 0) **and** live `CodeSource`
+     is `RootExport` / `ImportedExport` →
      `IdentifierObj::WithExportFileId` / `WithModAndExportFileId`
-     (no id; uses `current_export_file_id` and optional `current_mod_id`);
-   - bound in an **inner** scope → `IdentifierObj::Plain { id, name }`.
+     (no id);
+   - bound in outermost scope under `Eval` / `Repl` / `StandaloneFile`, or
+     bound in an **inner** scope → `IdentifierObj::Plain { id, name }`.
    Undefined plain name → parse error.
 3. **Qualified names** have no `IdentifierId`; identity is the qualified
    `AtomicName` indices + name. They are not stored in `ParseScope`.
 4. **Definition store keys** stay **plain** (`have x` / `let x` / `prop P`
    register under `"x"` / `"P"`). Side-effect facts created at exec
    (`let x = 1` stores equality; `have x R` stores type facts) use
-   `identifier_obj_for_stored_mention`: file-root → qualified LHS/mention,
-   inner → plain.
+   `identifier_obj_for_stored_mention`: outermost + promoting `CodeSource` →
+   qualified LHS/mention, else plain.
 5. **No shadowing.** Same-name nested binders stay forbidden (occupy fence).
 6. **Letter reuse.** After a scope ends, a later `have x` gets a **new** id.
 7. **IR.** Plain → `#<id.value>#<name>` (e.g. `#3#x`). Display → `x` only.
@@ -84,14 +86,16 @@ files uses `file::x` / `mod::file::x`.
   `release obj def` can rebuild those three facts.
   A `template` may run this body under local params; `\Name<args>` installs
   the same three facts (membership / property / uniqueness) on the instance.
-- **`-r` / project mount run loop** still deferred; set `current_mod_id` +
-  `current_export_file_id` before parsing each export file.
+- **`-r` / project mount run loop** still deferred for some polish; set
+  `Runtime.code_source` (`RootExport` / `ImportedExport` / …) before parsing
+  each export or standalone file. `Eval` / `Repl` never pretend to be `f0`.
 
 ## Do-not-break checklist
 
 - [ ] Plain IR embeds `#id#name`; display never shows the id wrapper.
 - [ ] Qualified atoms never allocate `IdentifierId`.
-- [ ] File-root free refs promote; sketch/inner binders stay Plain.
+- [ ] File-root free refs promote only under `RootExport` / `ImportedExport`;
+  `Eval` / `Repl` / `StandaloneFile` stay Plain.
 - [ ] Nested same-name binders remain parse-forbidden.
 - [ ] `inst_*` uses `HashMap<IdentifierId, Obj>` only.
 - [ ] No `surface`/`alpha` dual fields on binder objs.

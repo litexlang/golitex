@@ -151,7 +151,7 @@ impl Runtime {
                 .finished_export_exec_env(None, *export_file_id)
                 .and_then(|env| lookup(env, plain))
                 .or_else(|| {
-                    if *export_file_id == self.current_export_file_id {
+                    if self.code_source.is_live_root_export(*export_file_id) {
                         for env in self.execution_environments_stack.iter().rev() {
                             if let Some(def) = lookup(env, plain) {
                                 return Some(def);
@@ -168,8 +168,9 @@ impl Runtime {
                 .finished_export_exec_env(Some(*global_mod_id), *export_file_id)
                 .and_then(|env| lookup(env, plain))
                 .or_else(|| {
-                    if self.global_module_manager.current_mod_id() == Some(*global_mod_id)
-                        && *export_file_id == self.current_export_file_id
+                    if self
+                        .code_source
+                        .is_live_imported_export(*global_mod_id, *export_file_id)
                     {
                         for env in self.execution_environments_stack.iter().rev() {
                             if let Some(def) = lookup(env, plain) {

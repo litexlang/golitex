@@ -2,14 +2,17 @@
 
 use crate::new_pipeline::module_manager::ExportFileAndItsExecEnv;
 use crate::new_pipeline::run::run_command_outcome::RunFileResult;
-use crate::new_pipeline::runtime::{RealOrVirtualPath, Runtime, RuntimeError, RuntimeResult};
+use crate::new_pipeline::runtime::{
+    CodeSource, RealOrVirtualPath, Runtime, RuntimeError, RuntimeResult,
+};
 use std::fs;
 use std::path::Path;
 
-/// Run one export file under the given module context.
+/// Run one export / standalone file under the given module context.
 ///
-/// - `current_mod_id = None` → root export (`record_root_export`)
-/// - `current_mod_id = Some(i)` → imported module export (`record_imported_export`)
+/// - `current_mod_id = None` → root record path (`record_root_export`) when finishing
+/// - `current_mod_id = Some(i)` → imported record path (`record_imported_export`)
+/// - `code_source` → live outermost-symbol qualification
 /// - `keep_env_open = true` → on success, leave the file env open (for `-session`);
 ///   do not finish or record
 ///
@@ -21,6 +24,7 @@ pub fn run_export_file(
     export_path: &Path,
     export_file_id: usize,
     current_mod_id: Option<usize>,
+    code_source: CodeSource,
     keep_env_open: bool,
 ) -> RuntimeResult<RunFileResult> {
     if !export_path.is_file() {
@@ -39,7 +43,8 @@ pub fn run_export_file(
         .global_module_manager
         .set_current_mod_id(current_mod_id)
         .map_err(RuntimeError::InternalBug)?;
-    runtime.set_current_export_file_id(export_file_id);
+    let _ = export_file_id;
+    runtime.set_code_source(code_source);
     runtime.begin_file(RealOrVirtualPath::Real(export_path.to_path_buf()));
 
     let code_result = match runtime.run_litex_code(&source) {

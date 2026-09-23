@@ -99,6 +99,10 @@ pub fn run_import_module(
             &export.path,
             export_file_id,
             Some(mod_id),
+            crate::new_pipeline::runtime::CodeSource::ImportedExport {
+                global_mod_id: mod_id,
+                export_file_id,
+            },
             false,
         ) {
             Ok(file_result) => file_result,

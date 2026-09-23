@@ -91,6 +91,7 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
             &export.path,
             export_file_id,
             None,
+            crate::new_pipeline::runtime::CodeSource::RootExport { export_file_id },
             keep_env_open,
         ) {
             Ok(file_result) => {
@@ -136,6 +137,7 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
         &path,
         export_file_id,
         None,
+        crate::new_pipeline::runtime::CodeSource::StandaloneFile,
         session,
     ) {
         Ok(file_result) => {

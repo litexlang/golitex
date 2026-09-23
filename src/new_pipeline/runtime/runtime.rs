@@ -1,3 +1,4 @@
+use super::code_source::CodeSource;
 use super::error::{RuntimeError, RuntimeResult};
 use super::real_or_virtual_path::RealOrVirtualPath;
 use super::runtime_ids::{FactId, IdentifierId, PropRewritePropertyId, WellDefinednessId};
@@ -26,9 +27,8 @@ pub struct Runtime {
     pub global_ids: GlobalIds,
     /// How this Runtime session was launched (`-strict` / `-session` live here).
     pub launch_command: LaunchCommand,
-    /// Export-file index of the `.lit` currently being parsed/run in the
-    /// *current* module's `LitexConfig.exports` (0 for bare `-e` / `-f` / REPL).
-    pub current_export_file_id: usize,
+    /// Where the currently running code came from (drives outermost symbol qualify).
+    pub code_source: CodeSource,
 }
 
 /// One parse layer's plain names → [`IdentifierId`].
@@ -49,6 +49,16 @@ pub struct GlobalIds {
 impl Runtime {
     /// Create a session from its launch contract and open the matching file env.
     pub fn new(command: LaunchCommand) -> Self {
+        let code_source = match &command {
+            LaunchCommand::Eval { .. } => CodeSource::Eval,
+            LaunchCommand::Repl { .. } => CodeSource::Repl,
+            LaunchCommand::File { .. } | LaunchCommand::Repository { .. } => {
+                CodeSource::StandaloneFile
+            }
+            LaunchCommand::Help | LaunchCommand::Version => {
+                panic!("Runtime::new does not accept Help/Version LaunchCommand")
+            }
+        };
         let file = match &command {
             LaunchCommand::Repl { .. } => RealOrVirtualPath::Repl,
             LaunchCommand::Eval { .. } => RealOrVirtualPath::Eval,
@@ -66,7 +76,7 @@ impl Runtime {
             current_file: file.clone(),
             global_ids: GlobalIds::new(),
             launch_command: command,
-            current_export_file_id: 0,
+            code_source,
         };
         runtime.begin_file(file);
         runtime
@@ -79,9 +89,8 @@ impl Runtime {
         self.push_parse_scope();
     }
 
-    /// Set which export slot of the current module is being parsed/run.
-    pub fn set_current_export_file_id(&mut self, export_file_id: usize) {
-        self.current_export_file_id = export_file_id;
+    pub fn set_code_source(&mut self, code_source: CodeSource) {
+        self.code_source = code_source;
     }
 
     pub fn finish_file(&mut self) -> (RealOrVirtualPath, Box<ExecEnv>) {
@@ -157,26 +166,39 @@ impl Runtime {
             .is_some_and(|scope| scope.plain.contains_key(name))
     }
 
-    /// Global reference form for a file-root symbol (no IdentifierId).
+    /// Outermost-scope symbol name form from live `code_source`.
     ///
-    /// - root module: `WithExportFileId { current_export_file_id, name }`
-    /// - inside imported mod: `WithModAndExportFileId { current_mod_id, … }`
+    /// - `Eval` / `Repl` / `StandaloneFile` → `Plain` (no publication stamp)
+    /// - `RootExport` → `WithExportFileId`
+    /// - `ImportedExport` → `WithModAndExportFileId`
     pub fn atomic_name_for_file_root_symbol(&self, name: PlainName) -> AtomicName {
-        match self.global_module_manager.current_mod_id() {
-            None => AtomicName::WithExportFileId {
-                export_file_id: self.current_export_file_id,
+        match &self.code_source {
+            CodeSource::Eval | CodeSource::Repl | CodeSource::StandaloneFile => {
+                AtomicName::Plain { name }
+            }
+            CodeSource::RootExport { export_file_id } => AtomicName::WithExportFileId {
+                export_file_id: *export_file_id,
                 name,
             },
-            Some(global_mod_id) => AtomicName::WithModAndExportFileId {
+            CodeSource::ImportedExport {
                 global_mod_id,
-                export_file_id: self.current_export_file_id,
+                export_file_id,
+            } => AtomicName::WithModAndExportFileId {
+                global_mod_id: *global_mod_id,
+                export_file_id: *export_file_id,
                 name,
             },
         }
     }
 
     pub fn identifier_obj_for_file_root_symbol(&self, name: PlainName) -> IdentifierObj {
-        match self.atomic_name_for_file_root_symbol(name) {
+        match self.atomic_name_for_file_root_symbol(name.clone()) {
+            AtomicName::Plain { name } => {
+                let id = self
+                    .resolve_plain_atom(&name)
+                    .expect("file-root Plain symbol must be bound in parse scope");
+                IdentifierObj::plain(id, name)
+            }
             AtomicName::WithExportFileId {
                 export_file_id,
                 name,
@@ -186,37 +208,39 @@ impl Runtime {
                 export_file_id,
                 name,
             } => IdentifierObj::with_mod_and_export_file_id(global_mod_id, export_file_id, name),
-            AtomicName::Plain { name } => {
-                panic!("file-root symbol must not stay Plain: `{name}`")
-            }
         }
     }
 
-    /// Free reference: file-root binding → qualified; inner binding → Plain+id.
+    /// Free reference: outermost + promoting `code_source` → qualified;
+    /// otherwise Plain+id (inner binders, or Eval/Repl/StandaloneFile outermost).
     pub fn identifier_obj_for_plain_free_ref(
         &self,
         name: String,
     ) -> RuntimeResult<IdentifierObj> {
         let (id, scope_index) = self.resolve_plain_atom_with_scope_index(&name)?;
-        if scope_index == 0 {
+        if scope_index == 0 && self.code_source.promotes_outermost_symbols() {
             Ok(self.identifier_obj_for_file_root_symbol(name))
         } else {
             Ok(IdentifierObj::plain(id, name))
         }
     }
 
-    /// Exec/store mention of a defined symbol: qualify iff it is a file-root name.
+    /// Exec/store mention of a defined symbol: qualify iff outermost and promoting.
     pub fn identifier_obj_for_stored_mention(&self, bound: &BoundName) -> IdentifierObj {
-        if self.is_bound_in_file_root_parse_scope(&bound.name) {
+        if self.is_bound_in_file_root_parse_scope(&bound.name)
+            && self.code_source.promotes_outermost_symbols()
+        {
             self.identifier_obj_for_file_root_symbol(bound.name.clone())
         } else {
             IdentifierObj::from_bound_name(bound)
         }
     }
 
-    /// Prop/atomic name free ref: file-root prop → qualified; else stay Plain.
+    /// Prop/atomic name free ref: promote only when outermost and promoting.
     pub fn atomic_name_for_plain_prop_ref(&self, name: String) -> AtomicName {
-        if self.is_bound_in_file_root_parse_scope(&name) {
+        if self.is_bound_in_file_root_parse_scope(&name)
+            && self.code_source.promotes_outermost_symbols()
+        {
             self.atomic_name_for_file_root_symbol(name)
         } else {
             AtomicName::Plain { name }
