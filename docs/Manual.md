@@ -2877,9 +2877,11 @@ explanation; this index does not repeat its examples.
   restriction applies to set builders.
 - `#` starts a line comment. Indentation defines block structure.
 - Inline aside `"..."` (ASCII quotes, single line) is stripped at tokenize time
-  and is not part of the AST. Unclosed `"..."` is a parse error. Distinct from
-  `#` line comments and from block-comment forms that use a line containing
-  only `"`.
+  and is not part of the AST. Unclosed `"..."` is a parse error.
+- Block comment: a line that is exactly `"""` after trim opens or closes a
+  multi-line comment. Only ASCII `"""` counts; `"`, `""`, or `""""` alone do
+  not. Unclosed `"""..."""` is a parse error. Distinct from `#` and from
+  inline `"..."`.
 - Matrix operators contain an apostrophe: `'+`, `'-`, `'*`, `*'`, and `'^`.
 
 ### Unicode mathematical input aliases (preview)

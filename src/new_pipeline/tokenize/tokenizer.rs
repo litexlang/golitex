@@ -20,7 +20,7 @@ impl Tokenizer {
         code: &str,
         source_path: RealOrVirtualPath,
     ) -> RuntimeResult<Vec<TokenBlock>> {
-        let stripped = self.strip_triple_quote_comment_blocks(code);
+        let stripped = self.strip_triple_quote_comment_blocks(code, &source_path)?;
         let lines: Vec<&str> = stripped.lines().collect();
         let mut index = 0;
         self.parse_level(&lines, &mut index, 0, &source_path)
@@ -159,14 +159,26 @@ impl Tokenizer {
         canonical_tokens
     }
 
-    fn strip_triple_quote_comment_blocks(&self, source_code: &str) -> String {
+    // A line that is exactly `"""` after trim opens/closes a block comment.
+    // Unclosed block comments are errors. Distinct from inline `"..."` asides.
+    fn strip_triple_quote_comment_blocks(
+        &self,
+        source_code: &str,
+        source_path: &RealOrVirtualPath,
+    ) -> RuntimeResult<String> {
         let mut in_comment = false;
+        let mut open_line = 0;
         let mut out_lines = Vec::with_capacity(source_code.lines().count());
-        for line in source_code.lines() {
+        for (idx, line) in source_code.lines().enumerate() {
+            let line_no = idx + 1;
             let trimmed = line.trim();
-            let only_quote_chars = !trimmed.is_empty() && trimmed.chars().all(|c| c == '"');
-            if only_quote_chars {
-                in_comment = !in_comment;
+            if trimmed == "\"\"\"" {
+                if in_comment {
+                    in_comment = false;
+                } else {
+                    in_comment = true;
+                    open_line = line_no;
+                }
                 out_lines.push(String::new());
                 continue;
             }
@@ -176,7 +188,15 @@ impl Tokenizer {
                 out_lines.push(line.to_string());
             }
         }
-        out_lines.join("\n")
+        if in_comment {
+            return Err(RuntimeParseError::new(
+                "unclosed block comment `\"\"\"...\"\"\"`",
+                open_line,
+                source_path.clone(),
+            )
+            .into());
+        }
+        Ok(out_lines.join("\n"))
     }
 
     fn parse_level(
@@ -450,5 +470,39 @@ mod tests {
             .expect_err("unclosed aside");
         let msg = format!("{err:?}");
         assert!(msg.contains("unclosed inline aside"), "{msg}");
+    }
+
+    #[test]
+    fn strips_exact_triple_quote_block_comment() {
+        let source = "\"\"\"\na = b\n\"\"\"\n1 = 1\n";
+        let blocks = Tokenizer::new()
+            .tokenize(source, RealOrVirtualPath::Eval)
+            .expect("tokenize");
+        assert_eq!(blocks.len(), 1);
+        assert_eq!(
+            blocks[0].header,
+            vec!["1", "=", "1"]
+                .into_iter()
+                .map(str::to_string)
+                .collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn single_quote_line_is_not_block_delimiter() {
+        let err = Tokenizer::new()
+            .tokenize("\"\n1 = 1\n\"\n", RealOrVirtualPath::Eval)
+            .expect_err("lone quote is inline aside");
+        let msg = format!("{err:?}");
+        assert!(msg.contains("unclosed inline aside"), "{msg}");
+    }
+
+    #[test]
+    fn unclosed_block_comment_is_error() {
+        let err = Tokenizer::new()
+            .tokenize("\"\"\"\na = b\n1 = 1\n", RealOrVirtualPath::Eval)
+            .expect_err("unclosed block comment");
+        let msg = format!("{err:?}");
+        assert!(msg.contains("unclosed block comment"), "{msg}");
     }
 }

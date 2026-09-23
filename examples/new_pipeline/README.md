@@ -10,6 +10,7 @@ examples/new_pipeline/
   wd/               Obj/Fact well-definedness positives
   wd_negative/      WD must-fail tracers
   infer/            store → Infer*Result consequences
+                    (kernel: `src/new_pipeline/store_fact_and_infer/README.md`)
   module_manager/   -r / -f / litex.config mount
 ```
 

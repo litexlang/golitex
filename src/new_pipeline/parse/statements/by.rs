@@ -2,8 +2,8 @@ use super::super::keywords::{
     AXIOM_OF_CHOICE, BY, CASE, CASES, COLON, COMMA, CONTRA, DEF, EQUAL, FROM, IMPOSSIBLE, INDUC,
     LEFT_PAREN, MOD_FLAT_SIGN, MOD_SIGN, OBJ, PROP, QUESTION_GOAL, REFLEXIVE_PROP,
     REGULARITY_AXIOM, RELEASE, RIGHT_ARROW, RIGHT_PAREN, SET, STRONG_INDUC, STRUCT, SYMMETRIC_PROP,
-    TRANSITIVE_PROP, EXTENSION, THM, ENUMERATE, FOR, CLOSED_RANGE, FINITE_SET, FACT_PREFIX, AS,
-    RANGE, IN, ZORN_LEMMA,
+    TRANSITIVE_PROP, EXTENSION, FN_EXTENSION, THM, ENUMERATE, FOR, CLOSED_RANGE, FINITE_SET,
+    FACT_PREFIX, AS, RANGE, IN, ZORN_LEMMA,
 };
 use super::super::object::{is_simple_name, parse_obj, parse_obj_list_paren};
 use crate::new_pipeline::ast::obj::{Obj, SetFormer};
@@ -15,8 +15,9 @@ use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::stmt::{
     ByAxiomOfChoiceStmt, ByCasesStmt, ByContraStmt, ByDefStmt, ByInducStmt, ByReflexivePropStmt,
     ByRegularityAxiomStmt, ByStmt, ByStrongInducStmt, BySymmetricPropStmt, ByTransitivePropStmt,
-    ByExtensionStmt, ByZornLemmaStmt, ClosedRangeOrRange, ByClosedRangeAsCasesStmt,
-    ByEnumerateRangeStmt, ByForStmt, ByEnumerateFiniteSetStmt, ByThmStmt, ReleaseObjDefStmt,
+    ByExtensionStmt, ByFnExtensionStmt, ByZornLemmaStmt, ClosedRangeOrRange,
+    ByClosedRangeAsCasesStmt, ByEnumerateRangeStmt, ByForStmt, ByEnumerateFiniteSetStmt,
+    ByThmStmt, ReleaseObjDefStmt,
     ReleaseStructDefStmt, ReleaseThmStmt, Stmt, TheoremCall, TheoremCallArguments,
 };
 use crate::new_pipeline::parse::prop_registration_shape::{
@@ -40,6 +41,7 @@ impl Runtime {
             Some(SYMMETRIC_PROP) => self.parse_by_symmetric_prop_stmt(&mut tb, block),
             Some(TRANSITIVE_PROP) => self.parse_by_transitive_prop_stmt(&mut tb, block),
             Some(EXTENSION) => self.parse_by_extension_stmt(&mut tb, block),
+            Some(FN_EXTENSION) => self.parse_by_fn_extension_stmt(&mut tb, block),
             Some(ENUMERATE) => self.parse_by_enumerate_stmt(&mut tb, block),
             Some(FOR) => self.parse_by_for_stmt(&mut tb, block),
             Some(CLOSED_RANGE) => self.parse_by_closed_range_as_cases_stmt(&mut tb, block),
@@ -47,7 +49,7 @@ impl Runtime {
             Some(AXIOM_OF_CHOICE) => self.parse_by_axiom_of_choice_stmt(&mut tb, block),
             Some(ZORN_LEMMA) => self.parse_by_zorn_lemma_stmt(&mut tb, block),
             Some(other) => Err(tb.parse_error(format!(
-                "by: `{other}` is not wired yet (supported: cases, contra, def, thm, reflexive_prop, symmetric_prop, transitive_prop, extension, induc, strong_induc, regularity_axiom, axiom_of_choice, zorn_lemma)"
+                "by: `{other}` is not wired yet (supported: cases, contra, def, thm, reflexive_prop, symmetric_prop, transitive_prop, extension, fn_extension, induc, strong_induc, regularity_axiom, axiom_of_choice, zorn_lemma)"
             ))),
             None => Err(tb.parse_error("by: expected a proof directive after `by`")),
         }
@@ -173,6 +175,50 @@ impl Runtime {
         })))
     }
 
+    fn parse_by_fn_extension_stmt(
+        &mut self,
+        tb: &mut TokenBlock,
+        block: &TokenBlock,
+    ) -> RuntimeResult<Stmt> {
+        tb.expect(FN_EXTENSION)?;
+        let (left, right, proof) = if tb.peek() == Some(COLON) {
+            tb.expect_colon_end_of_header()?;
+            if tb.body.is_empty() {
+                return Err(tb.parse_error(
+                    "by fn_extension: expects a `? <equality>` goal block",
+                ));
+            }
+            let mut goal = tb.body[0].clone();
+            let fact = self.parse_goal_fact(&mut goal, "by fn_extension")?;
+            let Fact::AtomicFact(AtomicFact::EqualFact(eq)) = fact else {
+                return Err(tb.parse_error("by fn_extension: goal expects an equality fact"));
+            };
+            let proof = self.parse_body_stmts(&tb.body[1..])?;
+            (eq.left, eq.right, proof)
+        } else {
+            if !tb.body.is_empty() {
+                return Err(tb.parse_error(
+                    "inline by fn_extension does not accept an indented body; use `by fn_extension:`",
+                ));
+            }
+            let atomic = self.parse_atomic_fact(tb, true)?;
+            if !tb.exceed_end_of_head() {
+                return Err(tb.parse_error(
+                    "inline by fn_extension expects exactly one equality",
+                ));
+            }
+            let AtomicFact::EqualFact(eq) = atomic else {
+                return Err(tb.parse_error("by fn_extension: expects an equality fact"));
+            };
+            (eq.left, eq.right, Vec::new())
+        };
+        Ok(Stmt::By(ByStmt::ByFnExtensionStmt(ByFnExtensionStmt {
+            left,
+            right,
+            proof,
+            line_file: LineFile::new(block.line, block.source_path.clone()),
+        })))
+    }
 
     fn parse_by_enumerate_stmt(
         &mut self,

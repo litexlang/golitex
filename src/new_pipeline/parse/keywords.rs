@@ -158,6 +158,7 @@ pub const PROPER_SUPERSET: &str = "proper_superset";
 pub const FN_EQ_IN: &str = "fn_eq_in";
 pub const ENUMERATE: &str = "enumerate";
 pub const EXTENSION: &str = "extension";
+pub const FN_EXTENSION: &str = "fn_extension";
 pub const TRANSITIVE_PROP: &str = "transitive_prop";
 pub const SYMMETRIC_PROP: &str = "symmetric_prop";
 pub const REFLEXIVE_PROP: &str = "reflexive_prop";
