@@ -1,21 +1,31 @@
-# Easy-batch tracers: subset, order-sign, param-type + expand
+# Infer migration smoke (batches 3/4/5)
+have k N
+k >= 0
 
-have S set
-have T set
-trust S $subset T
-forall x S:
-    =>:
-        x $in T
-
-have a R
-trust a >= 1
+have a R+
 0 < a
 
-prop same(x set, y set):
-    x = y
+have x {1, 2}
+x = 1 or x = 2
+
+have A set
+have B set
+have y set
+trust y $in union(A, B)
+y $in A or y $in B
 
 have u set
-have v set
-trust $same(u, v)
-$is_set(u)
-u = v
+trust u $in cart(R, Z)
+$is_tuple(u)
+tuple_dim(u) = 2
+u[1] $in R
+u[2] $in Z
+
+have p R
+trust p < 0
+(-1) * p >= 0
+
+have c R
+have d R
+trust c - d = 0
+c = d

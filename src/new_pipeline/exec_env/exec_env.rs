@@ -10,6 +10,7 @@ use crate::new_pipeline::ast::stmt::DefStrategyStmt;
 use crate::new_pipeline::ast::stmt::DefStructStmt;
 use crate::new_pipeline::ast::stmt::DefTemplateStmt;
 use crate::new_pipeline::ast::stmt::DefThmStmt;
+use crate::new_pipeline::ast::stmt::HaveByReplacementAxiomStmt;
 use crate::new_pipeline::ast::stmt::HaveFnByForallExistUniqueStmt;
 use crate::new_pipeline::ast::stmt::HaveFnByInducStmt;
 use crate::new_pipeline::ast::stmt::HaveFnEqualCaseByCaseStmt;
@@ -85,6 +86,7 @@ pub enum StoredIdentifierDefinition {
     HaveObjEqual((String, Rc<HaveObjEqualStmt>)),
     HaveObjByExistFacts((String, Rc<HaveObjByExistFactsStmt>)),
     TrustHave((String, Rc<TrustHaveStmt>)),
+    HaveByReplacementAxiom((String, Rc<HaveByReplacementAxiomStmt>)),
     LetObj((String, Rc<LetObjStmt>)),
     HaveFnEqual((String, Rc<HaveFnEqualStmt>)),
     HaveFnEqualCaseByCase((String, Rc<HaveFnEqualCaseByCaseStmt>)),

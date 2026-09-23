@@ -140,6 +140,14 @@ impl Runtime {
             FailToVerifyFnSetObjWellDefined,
         >,
     > {
+        if let Some(failed_index) =
+            super::helper::set_bound_param_type_cites_earlier_binder(&value.set_bound_parameters)
+        {
+            return Ok(Err(
+                FailToVerifyFnSetObjWellDefined::ParamTypeCitesEarlierBinder { failed_index },
+            ));
+        }
+
         let param_type_well_defined =
             match self.verify_set_bound_param_types_well_defined(
                 &value.set_bound_parameters,
@@ -205,6 +213,16 @@ impl Runtime {
             FailToVerifyAnonymousFnObjWellDefined,
         >,
     > {
+        if let Some(failed_index) = super::helper::set_bound_param_type_cites_earlier_binder(
+            &value.body.set_bound_parameters,
+        ) {
+            return Ok(Err(
+                FailToVerifyAnonymousFnObjWellDefined::ParamTypeCitesEarlierBinder {
+                    failed_index,
+                },
+            ));
+        }
+
         let param_type_well_defined =
             match self.verify_set_bound_param_types_well_defined(
                 &value.body.set_bound_parameters,

@@ -7,9 +7,9 @@ use crate::new_pipeline::ast::fact::{
 use crate::new_pipeline::ast::obj::{FnObj, FnObjHead, IdentifierObj, Obj, StructObj, FunctionSpace, StructAndFieldAccessObj};
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterList};
 use crate::new_pipeline::ast::stmt::{
-    HaveFnByForallExistUniqueStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt,
-    HaveObjByExistFactsStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt, LetObjStmt,
-    TrustHaveStmt,
+    HaveByReplacementAxiomStmt, HaveFnByForallExistUniqueStmt, HaveFnEqualCaseByCaseStmt,
+    HaveFnEqualStmt, HaveObjByExistFactsStmt, HaveObjEqualStmt,
+    HaveObjInNonemptySetOrParamTypeStmt, LetObjStmt, TrustHaveStmt,
 };
 use crate::new_pipeline::exec_env::StoredIdentifierDefinition;
 use crate::new_pipeline::execute::execute_have_fn_by_induc_stmt::flatten_induc_to_case_by_case;
@@ -61,6 +61,9 @@ impl Runtime {
             }
             StoredIdentifierDefinition::TrustHave((_, stmt)) => {
                 build_trust_have(self, surface, plain, stmt)
+            }
+            StoredIdentifierDefinition::HaveByReplacementAxiom((_, stmt)) => {
+                Ok(Ok(build_have_by_replacement_axiom(self, surface, stmt)))
             }
             StoredIdentifierDefinition::HaveFnEqual((_, stmt)) => {
                 Ok(Ok(build_have_fn_equal(self, surface, stmt)))
@@ -227,6 +230,30 @@ fn build_trust_have(
         facts,
         defined_as_struct,
     }))
+}
+
+fn build_have_by_replacement_axiom(
+    runtime: &mut Runtime,
+    surface: &IdentifierObj,
+    stmt: &Rc<HaveByReplacementAxiomStmt>,
+) -> BuiltReleaseFacts {
+    let img = Obj::Identifier(surface.clone());
+    let type_fact = Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact {
+        fact_id: runtime.ids.allocate_fact_id(),
+        set: img.clone(),
+        line_file: Some(stmt.line_file.clone()),
+    }));
+    let intro = Fact::ForallFact(runtime.replacement_intro_forall(stmt, &img));
+    let elim = Fact::ForallFact(runtime.replacement_elim_forall(stmt, &img));
+    BuiltReleaseFacts {
+        kind: ReleaseObjDefByKind::HaveByReplacementAxiom {
+            type_fact: type_fact.clone(),
+            intro: intro.clone(),
+            elim: elim.clone(),
+        },
+        facts: vec![type_fact, intro, elim],
+        defined_as_struct: None,
+    }
 }
 
 fn build_have_fn_equal(

@@ -8,19 +8,15 @@ use super::fail_to_verify_obj_well_defined::*;
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::obj_well_defined_proof_by_def::*;
 use crate::new_pipeline::ast::fact::{
-    AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, ForallFact, IsCartFact, IsTupleFact,
-    LessEqualFact, NotEqualFact,
+    AtomicFact, IsCartFact, IsTupleFact, LessEqualFact, NotEqualFact,
 };
-use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::{
     FamilyIntersect, FamilyUnion, Cart, CartDim, FiniteSetMax, FiniteSetMin, FiniteSetSize,
-    IdentifierObj, IndexCart, IndexIntersect, IndexUnion, Intersect, IntervalObj, IntervalObjStruct,
-    ListSet, Obj, OneSideInfinityIntervalObj, PowerSet, ProductShape, Proj, ReplacementImage,
-    SetMinus, SetOperator, StandardSet, Tuple, TupleDim, Union,
+    IndexCart, IndexIntersect, IndexUnion, Intersect, IntervalObj, IntervalObjStruct, ListSet, Obj,
+    OneSideInfinityIntervalObj, PowerSet, ProductShape, Proj, SetMinus, SetOperator, StandardSet,
+    Tuple, TupleDim, Union,
 };
-use crate::new_pipeline::ast::param::ParamType;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
-use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
@@ -479,104 +475,6 @@ impl Runtime {
         Ok(self.with_requirements(proof, reqs))
     }
 
-    // replacement_image(P, A): binary user prop/abstract_prop, source WD, and a
-    // known uniqueness forall over A (Manual / ZF Replacement functionality).
-    // Example:
-    //   abstract_prop image_rel(x, y)
-    //   trust forall x {1, 2}, y, y2 set:
-    //       $image_rel(x, y)
-    //       $image_rel(x, y2)
-    //       =>:
-    //           y = y2
-    //   let img = replacement_image(image_rel, {1, 2})
-    pub(super) fn verify_replacement_image_obj_well_definedness(
-        &mut self,
-        value: &ReplacementImage,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<VerifyObjWellDefinedResult> {
-        let root = Obj::ReplacementImage(value.clone());
-        let prop_ir = value.prop_name.display_string();
-        let source_ir = value.source_set.ir();
-
-        let arity = match self.replacement_image_prop_arity(value) {
-            Ok(n) => n,
-            Err(msg) => {
-                return Ok(replacement_image_fail(FailToVerifyObjWellDefinedByDefCommon::Others(
-                    msg,
-                )));
-            }
-        };
-        if arity != 2 {
-            return Ok(replacement_image_fail(
-                FailToVerifyObjWellDefinedByDefCommon::Others(format!(
-                    "replacement_image({prop_ir}, {source_ir}) expects a binary prop, but `{prop_ir}` has arity {arity}"
-                )),
-            ));
-        }
-
-        let stages = self.verify_unary_obj_well_definedness_by_def(
-            value.source_set.as_ref(),
-            verify_state.clone(),
-        )?;
-        if !stages.is_fully_known() {
-            return Ok(replacement_image_fail(stages.into_common_fail(&root)));
-        }
-
-        if !self.known_replacement_image_uniqueness(value) {
-            return Ok(replacement_image_fail(
-                FailToVerifyObjWellDefinedByDefCommon::Others(format!(
-                    "replacement_image({prop_ir}, {source_ir}) needs uniqueness of `{prop_ir}` over `{source_ir}`: forall x {source_ir}, y, y2 set: ${prop_ir}(x, y) ${prop_ir}(x, y2) => y = y2"
-                )),
-            ));
-        }
-
-        if verify_state.store_well_defined_fact {
-            let wd_id = self.ids.allocate_well_definedness_id();
-            self.top_exec_env_mut()
-                .well_defined_objects
-                .record(root, wd_id);
-        }
-        Ok(VerifyObjWellDefinedResult::Success(
-            ObjWellDefinedProof::ByDef(ObjWellDefinedProofByDef::ReplacementImage(
-                ReplacementImageObjWellDefinedProof::from_stages(stages),
-            )),
-        ))
-    }
-
-    fn replacement_image_prop_arity(&self, value: &ReplacementImage) -> Result<usize, String> {
-        if let Some(definition) = self.def_prop_visible(&value.prop_name) {
-            return Ok(definition.typed_parameters.ordered_param_ids().len());
-        }
-        if let Some(definition) = self.def_abstract_prop_visible(&value.prop_name) {
-            return Ok(definition.params.len());
-        }
-        Err(format!(
-            "replacement_image({}, {}) expects `{}` to be a user-defined prop or abstract_prop",
-            value.prop_name.display_string(),
-            value.source_set.ir(),
-            value.prop_name.display_string()
-        ))
-    }
-
-    // Known forall whose then is `y = y2` and whose shape is uniqueness of P on A.
-    fn known_replacement_image_uniqueness(&self, value: &ReplacementImage) -> bool {
-        for env in self.execution_environments_stack.iter().rev() {
-            for cite in &env.facts.known_forall_conclusions.equal_conclusions {
-                let Some(Fact::ForallFact(forall)) = env.facts.facts_by_id.get(&cite.fact_id) else {
-                    continue;
-                };
-                if forall_is_replacement_image_uniqueness(
-                    forall,
-                    &value.prop_name,
-                    value.source_set.as_ref(),
-                ) {
-                    return true;
-                }
-            }
-        }
-        false
-    }
-
     // one-sided ray: endpoint WD + endpoint $in R.
     pub(super) fn verify_one_side_infinity_interval_obj_well_definedness_by_def(
         &mut self,
@@ -633,101 +531,3 @@ impl Runtime {
     }
 }
 
-fn replacement_image_fail(
-    common: FailToVerifyObjWellDefinedByDefCommon,
-) -> VerifyObjWellDefinedResult {
-    VerifyObjWellDefinedResult::Failed(FailToVerifyObjWellDefinedResult::ReplacementImage(
-        FailToVerifyReplacementImageObjWellDefined(common),
-    ))
-}
-
-// True when `forall` is uniqueness of `prop_name` on `source_set`:
-//   forall x A, y, y2 set:
-//       $P(x, y)
-//       $P(x, y2)
-//       =>:
-//           y = y2
-fn forall_is_replacement_image_uniqueness(
-    forall: &ForallFact,
-    prop_name: &AtomicName,
-    source_set: &Obj,
-) -> bool {
-    let mut x_id: Option<IdentifierId> = None;
-    let mut y_id: Option<IdentifierId> = None;
-    let mut y2_id: Option<IdentifierId> = None;
-    for group in &forall.typed_parameters.groups {
-        for param in &group.params {
-            match &group.param_type {
-                ParamType::Obj(domain) if x_id.is_none() && domain == source_set => {
-                    x_id = Some(param.id);
-                }
-                ParamType::Set(_) if y_id.is_none() => {
-                    y_id = Some(param.id);
-                }
-                ParamType::Set(_) if y2_id.is_none() => {
-                    y2_id = Some(param.id);
-                }
-                _ => return false,
-            }
-        }
-    }
-    let (Some(x_id), Some(y_id), Some(y2_id)) = (x_id, y_id, y2_id) else {
-        return false;
-    };
-    // No extra binders.
-    let param_count: usize = forall
-        .typed_parameters
-        .groups
-        .iter()
-        .map(|g| g.params.len())
-        .sum();
-    if param_count != 3 {
-        return false;
-    }
-
-    if forall.dom_facts.len() != 2 || forall.then_facts.len() != 1 {
-        return false;
-    }
-
-    let mut saw_p_x_y = false;
-    let mut saw_p_x_y2 = false;
-    for dom in &forall.dom_facts {
-        let Fact::AtomicFact(AtomicFact::NormalAtomicFact(normal)) = dom else {
-            return false;
-        };
-        if &normal.predicate != prop_name || normal.body.len() != 2 {
-            return false;
-        }
-        if !obj_is_bound_param(&normal.body[0], x_id) {
-            return false;
-        }
-        if obj_is_bound_param(&normal.body[1], y_id) {
-            saw_p_x_y = true;
-        } else if obj_is_bound_param(&normal.body[1], y2_id) {
-            saw_p_x_y2 = true;
-        } else {
-            return false;
-        }
-    }
-    if !saw_p_x_y || !saw_p_x_y2 {
-        return false;
-    }
-
-    let ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact {
-        left,
-        right,
-        ..
-    })) = &forall.then_facts[0]
-    else {
-        return false;
-    };
-    (obj_is_bound_param(left, y_id) && obj_is_bound_param(right, y2_id))
-        || (obj_is_bound_param(left, y2_id) && obj_is_bound_param(right, y_id))
-}
-
-fn obj_is_bound_param(obj: &Obj, id: IdentifierId) -> bool {
-    matches!(
-        obj,
-        Obj::Identifier(IdentifierObj::Plain { id: plain, .. }) if *plain == id
-    )
-}

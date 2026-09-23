@@ -227,7 +227,22 @@ impl Runtime {
         &mut self,
         fact: &Fact,
     ) -> RuntimeResult<crate::new_pipeline::store_fact_and_infer::StoreFactAndInferResult> {
-        use crate::new_pipeline::runtime::RuntimeError;
+        match self.try_store_inferred_fact_and_infer(fact)? {
+            Some(ok) => Ok(ok),
+            None => Err(crate::new_pipeline::runtime::RuntimeError::InternalBug(
+                "inferred fact failed well-definedness check".to_string(),
+            )),
+        }
+    }
+
+    // Soft variant: WD failure yields None (rule may skip) instead of SessionError.
+    // Example: optional order flip when `(-1)*x` is not yet known real.
+    pub(crate) fn try_store_inferred_fact_and_infer(
+        &mut self,
+        fact: &Fact,
+    ) -> RuntimeResult<
+        Option<crate::new_pipeline::store_fact_and_infer::StoreFactAndInferResult>,
+    > {
         let verify_state = VerifyState {
             can_use_forall_fact: true,
             can_use_rewrite: true,
@@ -235,10 +250,8 @@ impl Runtime {
         };
         let wd = self.verify_fact_well_definedness(fact, verify_state)?;
         if wd.is_failed() {
-            return Err(RuntimeError::InternalBug(
-                "inferred fact failed well-definedness check".to_string(),
-            ));
+            return Ok(None);
         }
-        self.store_fact_and_infer(fact)
+        Ok(Some(self.store_fact_and_infer(fact)?))
     }
 }

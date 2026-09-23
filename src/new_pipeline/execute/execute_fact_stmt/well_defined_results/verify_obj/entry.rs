@@ -88,11 +88,6 @@ impl Runtime {
             return self.verify_fn_range_obj_well_definedness(value, verify_state);
         }
 
-        // replacement_image(P, A): binary prop + source WD + known uniqueness forall.
-        if let Obj::ReplacementImage(value) = obj {
-            return self.verify_replacement_image_obj_well_definedness(value, verify_state);
-        }
-
         // Indexed family / choice: `$is_set` half + family ∈ FnSet registration.
         match obj {
             Obj::SetOperator(SetOperator::IndexUnion(value)) => {
@@ -300,9 +295,6 @@ impl Runtime {
                 unreachable!(
                     "InstantiatedTemplateObj WD uses verify_instantiated_template_obj_well_definedness"
                 )
-            }
-            Obj::ReplacementImage(_) => {
-                unreachable!("ReplacementImage WD uses verify_replacement_image_obj_well_definedness")
             }
             Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(value)) => self
                 .verify_one_side_infinity_interval_obj_well_definedness_by_def(value, verify_state),

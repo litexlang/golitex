@@ -464,7 +464,7 @@ by def {x R: 0 <= x} $subset R
 | `index_union(I, X, A)`, `index_intersect(I, X, A)` | Union or intersection of the set-valued family `A : I -> power_set(X)`, with explicit ambient set `X` |
 | `power_set(A)` | Set of subsets of `A` |
 | `replacement(P, A)` | Replacement set defined by a functional predicate `P` (default pipeline) |
-| `replacement_image(P, A)` | Same ZF Replacement idea under `new_pipeline` (top-level Obj; see preview note below) |
+| `have Img set by replacement_axiom(P, A)` | Named Replacement image under `new_pipeline` (no anonymous Obj; see preview note below) |
 | `index_cart(I, S, g)` | Choice functions selecting one value from each factor `g(alpha)` (formerly `general_cart`) |
 
 The suffix must be adjacent to its base. These compact forms are canonical;
@@ -648,16 +648,14 @@ An arbitrary binary relation is not enough: without the exact uniqueness
 universal over `A`, even forming `replacement(P, A)` is a well-definedness
 `error`, before any membership goal is considered.
 
-> **Preview (`new_pipeline`):** the surface keyword is `replacement_image(P, A)`,
-> not `replacement(P, A)`. It is a **top-level** `Obj` variant (not nested under
-> set-former operators), so Replacement keeps a distinct prestige from
-> Separation / set-builder and from `fn_range`. Intended reading:
-> `replacement_image(P, A) = { y | exist x A st {P(x, y)} }` when `P` is
-> functional on `A`. Well-definedness requires a binary user
-> `prop`/`abstract_prop` and a known uniqueness forall of `P` over `A` (same
-> contract as default-pipeline `replacement`). Membership introduction and
-> `have by preimage` for this surface are not wired yet. Tracer:
-> [`examples/new_pipeline_wd/obj/replacement_image.lit`](../examples/new_pipeline_wd/obj/replacement_image.lit).
+> **Preview (`new_pipeline`):** there is no anonymous `replacement_image(P, A)`
+> object. Introduce a named image with
+> `have Img set by replacement_axiom(P, A)` after uniqueness of binary
+> `prop`/`abstract_prop` `P` on source `A` is known (same contract as
+> default-pipeline `replacement` WD). The statement stores `$is_set(Img)` plus
+> introduction/elimination foralls. `fn_range(f)` stays available for function
+> ranges. Tracer:
+> [`examples/new_pipeline_stmt_nodes/definition/have_by_replacement_axiom.lit`](../examples/new_pipeline_stmt_nodes/definition/have_by_replacement_axiom.lit).
 
 ### Functions, application, and range
 
@@ -689,12 +687,22 @@ square_plus_one(3) $in fn_range(square_plus_one)
 > implication; `->` is only the function-set arrow. This sugar does not support
 > `{body}`, domain `: conditions`, or a return set that must name the domain
 > binder — write those with full `fn(...)`.
+>
+> **Preview (`new_pipeline`):** each `fn` / anonymous-fn **parameter domain**
+> (obj carrier) must be a fixed set expression: it must not mention an earlier
+> parameter of the same signature. So `fn(x R, y Z) R` and
+> `fn(p cart(R, Z)) R` are fine, but `fn(x R, y S(x)) R` is not well-defined.
+> Dependence belongs in `: domain conditions`, in the **return set** (after
+> binders are in scope), or in a curried return such as
+> `fn(S power_set(R)) fn(x S) R`. Binder-kind telescopes such as
+> `forall S set, x S` remain sequential and are unchanged.
 
-Function parameter domains are read from left to right, so a later domain may
-cite an earlier parameter. The return set is checked in the scope of all
-function parameters and may cite them too. At application, Litex substitutes
-the actual arguments into that return set before checking later calls or
-membership facts:
+Function parameter domains are fixed set objects read from left to right; a
+later **obj** domain must not cite an earlier parameter. The return set is
+checked in the scope of all function parameters and may cite them. Domain
+`: conditions` may cite them too. At application, Litex substitutes the actual
+arguments into that return set before checking later calls or membership
+facts:
 
 ```litex
 have g fn(S power_set(R)) fn(x S) R
@@ -3094,7 +3102,8 @@ well-defined. For `replacement` it stores `x $in A` and `$P(x, y)`.
 > **Preview (`new_pipeline`):** `HaveByPreimageStmt` exists in the AST, but
 > parse/exec still reject with `have by preimage: not wired yet`. Default
 > pipeline supports `from z $in fn_range(f)` and `from y $in replacement(P, A)`.
-> When wired, `replacement_image` should be accepted in place of `replacement`.
+> Named Replacement images use `have … set by replacement_axiom(P, A)` (not an
+> anonymous Obj); preimage naming for that form is not wired yet.
 
 `obtain` exposes each direct fact in the existential body. Positive concrete
 predicates among those facts may expose positive clauses through forward

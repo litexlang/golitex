@@ -171,9 +171,6 @@ fn pack_success_by_def(
         Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(_)) => ObjWellDefinedProofByDef::Structish(StructishObjWellDefinedProofByDef::StructObj(StructObjObjWellDefinedProof::from_stages(stages))),
         Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(_)) => ObjWellDefinedProofByDef::Structish(StructishObjWellDefinedProofByDef::FieldAccess(FieldAccessObjWellDefinedProof::from_stages(stages))),
         Obj::InstantiatedTemplateObj(_) => ObjWellDefinedProofByDef::InstantiatedTemplateObj(InstantiatedTemplateObjObjWellDefinedProof::from_stages(stages)),
-        Obj::ReplacementImage(_) => ObjWellDefinedProofByDef::ReplacementImage(
-            ReplacementImageObjWellDefinedProof::from_stages(stages),
-        ),
         Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(_)) => ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::OneSideInfinityIntervalObj(OneSideInfinityIntervalObjObjWellDefinedProof::from_stages(stages))),
         Obj::SetFormer(SetFormer::IntervalObj(_)) => ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::IntervalObj(IntervalObjObjWellDefinedProof::from_stages(stages))),
     }
@@ -432,9 +429,6 @@ pub(super) fn wrap_common_fail(
         )),
         Obj::InstantiatedTemplateObj(_) => FailToVerifyObjWellDefinedResult::InstantiatedTemplateObj(
             FailToVerifyInstantiatedTemplateObjObjWellDefined(common),
-        ),
-        Obj::ReplacementImage(_) => FailToVerifyObjWellDefinedResult::ReplacementImage(
-            FailToVerifyReplacementImageObjWellDefined(common),
         ),
         Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(_)) => FailToVerifyObjWellDefinedResult::SetFormer(FailToVerifySetFormerObjWellDefinedResult::OneSideInfinityIntervalObj(
             FailToVerifyOneSideInfinityIntervalObjObjWellDefined(common),
