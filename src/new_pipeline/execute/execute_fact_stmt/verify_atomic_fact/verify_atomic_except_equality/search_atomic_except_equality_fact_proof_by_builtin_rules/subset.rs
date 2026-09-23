@@ -1,44 +1,49 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact, InFact, SubsetFact};
-use crate::new_pipeline::ast::obj::{Obj, StandardSet, SetFormer, SetOperator};
+use crate::new_pipeline::ast::obj::{Obj, SetFormer, SetOperator, StandardSet};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
-// Standard number sets form a fixed inclusion chain.
-// Example: prove `N $subset R`, `Z $subset Q`.
-//
-// Elementary set containments follow from membership definitions.
-// Example: prove `intersect(A, B) $subset A`, `A $subset union(A, B)`.
-//
-// Finite and one-sided real intervals are subsets of R.
-// Example: prove `'[a, b] $subset R`, `'[a,) $subset R`.
-//
-// Every set is a subset of itself.
-// Example: prove `A $subset A`.
+// Builtin proofs for `$subset`. One rule ↔ one dedicated proof struct.
 pub enum SubsetFactSearchProofByBuiltinRule {
+    // Fixed inclusion among standard number sets.
+    // Example: prove `N $subset R`.
     StandardSetSubset(StandardSetSubsetBuiltinRuleProof),
-    ElementarySetSubset(ElementarySetSubsetBuiltinRuleProof),
+    // `intersect(A, B) $subset A`.
+    // Example: prove `intersect({1, 2}, {2}) $subset {1, 2}`.
+    IntersectSubsetLeft(IntersectSubsetLeftBuiltinRuleProof),
+    // `intersect(A, B) $subset B`.
+    // Example: prove `intersect({1, 2}, {2}) $subset {2}`.
+    IntersectSubsetRight(IntersectSubsetRightBuiltinRuleProof),
+    // `A $subset union(A, B)`.
+    // Example: prove `{1} $subset union({1}, {2})`.
+    SubsetUnionLeft(SubsetUnionLeftBuiltinRuleProof),
+    // `B $subset union(A, B)`.
+    // Example: prove `{2} $subset union({1}, {2})`.
+    SubsetUnionRight(SubsetUnionRightBuiltinRuleProof),
+    // `set_minus(A, B) $subset A`.
+    // Example: prove `set_minus({1, 2}, {1}) $subset {1, 2}`.
+    SetMinusSubsetLeft(SetMinusSubsetLeftBuiltinRuleProof),
+    // Real intervals inhabit R.
+    // Example: prove `'[a, b] $subset R`.
     RealIntervalSubsetReal(RealIntervalSubsetRealBuiltinRuleProof),
-    SubsetReflexivity(SubsetReflexivityBuiltinRuleProof),
-    // `{x S: P…} $subset S` — a set-builder is a subset of its parameter set.
-    // Example: `{x R: x > 0} $subset R`.
+    // `{x S: P…} $subset S`.
+    // Example: prove `{x R: x > 0} $subset R`.
     SetBuilderSubsetOfParamSet(SetBuilderSubsetOfParamSetBuiltinRuleProof),
+    // Reflexivity: `A $subset A`.
+    // Example: prove `{1, 2} $subset {1, 2}`.
+    SubsetReflexivity(SubsetReflexivityBuiltinRuleProof),
     // `A $subset S` and `B $subset S` ⇒ `union(A, B) $subset S`.
-    // Mathematical property: binary union is the least upper bound of its operands.
-    // Example: known `{1} $subset N` and `{2} $subset N` prove `union({1}, {2}) $subset N`.
+    // Example: prove `union({1}, {2}) $subset N`.
     UnionSubsetFromBothOperands(UnionSubsetFromBothOperandsBuiltinRuleProof),
     // `A $subset S` ⇒ `intersect(A, B) $subset S`.
-    // Mathematical property: intersection is below each operand, so any upper bound of
-    // the left operand is an upper bound of the intersection.
-    // Example: known `{1, 2} $subset N` proves `intersect({1, 2}, {2, 3}) $subset N`.
+    // Example: prove `intersect({1, 2}, {2, 3}) $subset N`.
     IntersectSubsetFromLeftUpperBound(IntersectSubsetFromLeftUpperBoundBuiltinRuleProof),
     // `B $subset S` ⇒ `intersect(A, B) $subset S`.
-    // Mathematical property: dual of IntersectSubsetFromLeftUpperBound on the right operand.
-    // Example: known `{2, 3} $subset N` proves `intersect({1, 2}, {2, 3}) $subset N`.
+    // Example: prove `intersect({0}, {1, 2}) $subset N` from `{1, 2} $subset N`.
     IntersectSubsetFromRightUpperBound(IntersectSubsetFromRightUpperBoundBuiltinRuleProof),
-    // `{a1, …, an} $subset S` from each `ai $in S` (empty list is vacuously true).
-    // Mathematical property: a finite enumeration is contained in S iff every listed member is.
-    // Example: `1 $in N` and `2 $in N` prove `{1, 2} $subset N`.
+    // `{a1, …, an} $subset S` from each `ai $in S`.
+    // Example: prove `{1, 2} $subset N`.
     ListSetSubsetFromMembers(ListSetSubsetFromMembersBuiltinRuleProof),
 }
 
@@ -47,23 +52,14 @@ pub struct StandardSetSubsetBuiltinRuleProof {
     pub right: StandardSet,
 }
 
-pub enum ElementarySetSubsetKind {
-    IntersectSubsetLeft,
-    IntersectSubsetRight,
-    SubsetUnionLeft,
-    SubsetUnionRight,
-    SetMinusSubsetLeft,
-}
-
-pub struct ElementarySetSubsetBuiltinRuleProof {
-    pub kind: ElementarySetSubsetKind,
-}
-
+pub struct IntersectSubsetLeftBuiltinRuleProof {}
+pub struct IntersectSubsetRightBuiltinRuleProof {}
+pub struct SubsetUnionLeftBuiltinRuleProof {}
+pub struct SubsetUnionRightBuiltinRuleProof {}
+pub struct SetMinusSubsetLeftBuiltinRuleProof {}
 pub struct RealIntervalSubsetRealBuiltinRuleProof {}
-
-pub struct SubsetReflexivityBuiltinRuleProof {}
-
 pub struct SetBuilderSubsetOfParamSetBuiltinRuleProof {}
+pub struct SubsetReflexivityBuiltinRuleProof {}
 
 pub struct UnionSubsetFromBothOperandsBuiltinRuleProof {
     pub left_operand_subset_proof: VerifyFactResult,
@@ -83,94 +79,133 @@ pub struct ListSetSubsetFromMembersBuiltinRuleProof {
 }
 
 impl Runtime {
-    // Builtin: zero-premise subset rules, then union/intersect from operand upper bounds.
-    // Example: prove `N $subset R`, `intersect(A, B) $subset A`, `'[a, b] $subset R`,
-    // `{x R: x > 0} $subset R`, `union(A, B) $subset S` from `A,B $subset S`.
+    // Builtin search for `$subset`.
+    // B0: reflexivity. A: match Obj shapes of (left, right). No sequential rule list.
+    // Example: prove `N $subset R`, `union({1}, {2}) $subset N`.
     pub fn search_subset_fact_proof_by_builtin_rule(
         &mut self,
         fact: &SubsetFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<SubsetFactSearchProofByBuiltinRule>> {
-        if let (Obj::StandardSet(left), Obj::StandardSet(right)) = (&fact.left, &fact.right) {
-            if standard_set_is_subset_eq(left, right) {
-                return Ok(Some(SubsetFactSearchProofByBuiltinRule::StandardSetSubset(
-                    StandardSetSubsetBuiltinRuleProof {
-                        left: left.clone(),
-                        right: right.clone(),
-                    },
-                )));
-            }
-        }
-
-        if let Some(kind) = elementary_set_subset_kind(&fact.left, &fact.right) {
-            return Ok(Some(
-                SubsetFactSearchProofByBuiltinRule::ElementarySetSubset(
-                    ElementarySetSubsetBuiltinRuleProof { kind },
-                ),
-            ));
-        }
-
-        if matches!(
-            &fact.left,
-            Obj::SetFormer(SetFormer::IntervalObj(_)) | Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(_))
-        ) && matches!(&fact.right, Obj::StandardSet(StandardSet::R))
-        {
-            return Ok(Some(
-                SubsetFactSearchProofByBuiltinRule::RealIntervalSubsetReal(
-                    RealIntervalSubsetRealBuiltinRuleProof {},
-                ),
-            ));
-        }
-
-        if let Obj::SetFormer(SetFormer::SetBuilder(builder)) = &fact.left {
-            if builder.param_set.as_ref().ir() == fact.right.ir() {
-                return Ok(Some(
-                    SubsetFactSearchProofByBuiltinRule::SetBuilderSubsetOfParamSet(
-                        SetBuilderSubsetOfParamSetBuiltinRuleProof {},
-                    ),
-                ));
-            }
-        }
-
-        if fact.left == fact.right {
+        // B0 — non-shape
+        if fact.left.ir() == fact.right.ir() {
             return Ok(Some(SubsetFactSearchProofByBuiltinRule::SubsetReflexivity(
                 SubsetReflexivityBuiltinRuleProof {},
             )));
         }
 
-        if let Some(proof) = self.list_set_subset_from_members_proof(fact, verify_state.clone())? {
-            return Ok(Some(proof));
-        }
-        if let Some(proof) = self.union_subset_from_both_operands_proof(fact, verify_state.clone())?
-        {
-            return Ok(Some(proof));
-        }
-        if let Some(proof) =
-            self.intersect_subset_from_left_upper_bound_proof(fact, verify_state.clone())?
-        {
-            return Ok(Some(proof));
-        }
-        if let Some(proof) =
-            self.intersect_subset_from_right_upper_bound_proof(fact, verify_state)?
-        {
-            return Ok(Some(proof));
-        }
+        // A — shape dispatch
+        match (&fact.left, &fact.right) {
+            (Obj::StandardSet(left), Obj::StandardSet(right)) => {
+                if standard_set_is_subset_eq(left, right) {
+                    return Ok(Some(SubsetFactSearchProofByBuiltinRule::StandardSetSubset(
+                        StandardSetSubsetBuiltinRuleProof {
+                            left: left.clone(),
+                            right: right.clone(),
+                        },
+                    )));
+                }
+                Ok(None)
+            }
 
-        Ok(None)
+            (Obj::SetOperator(SetOperator::Intersect(intersect)), right) => {
+                if intersect.left.as_ref() == right {
+                    return Ok(Some(
+                        SubsetFactSearchProofByBuiltinRule::IntersectSubsetLeft(
+                            IntersectSubsetLeftBuiltinRuleProof {},
+                        ),
+                    ));
+                }
+                if intersect.right.as_ref() == right {
+                    return Ok(Some(
+                        SubsetFactSearchProofByBuiltinRule::IntersectSubsetRight(
+                            IntersectSubsetRightBuiltinRuleProof {},
+                        ),
+                    ));
+                }
+                if let Some(proof) = self.intersect_subset_from_left_upper_bound_proof(
+                    intersect.left.as_ref(),
+                    right,
+                    verify_state.clone(),
+                )? {
+                    return Ok(Some(proof));
+                }
+                self.intersect_subset_from_right_upper_bound_proof(
+                    intersect.right.as_ref(),
+                    right,
+                    verify_state,
+                )
+            }
+
+            (left, Obj::SetOperator(SetOperator::Union(union))) => {
+                if union.left.as_ref() == left {
+                    return Ok(Some(SubsetFactSearchProofByBuiltinRule::SubsetUnionLeft(
+                        SubsetUnionLeftBuiltinRuleProof {},
+                    )));
+                }
+                if union.right.as_ref() == left {
+                    return Ok(Some(SubsetFactSearchProofByBuiltinRule::SubsetUnionRight(
+                        SubsetUnionRightBuiltinRuleProof {},
+                    )));
+                }
+                Ok(None)
+            }
+
+            (Obj::SetOperator(SetOperator::Union(union)), right) => self
+                .union_subset_from_both_operands_proof(
+                    union.left.as_ref(),
+                    union.right.as_ref(),
+                    right,
+                    verify_state,
+                ),
+
+            (Obj::SetOperator(SetOperator::SetMinus(set_minus)), right)
+                if set_minus.left.as_ref() == right =>
+            {
+                Ok(Some(
+                    SubsetFactSearchProofByBuiltinRule::SetMinusSubsetLeft(
+                        SetMinusSubsetLeftBuiltinRuleProof {},
+                    ),
+                ))
+            }
+
+            (
+                Obj::SetFormer(SetFormer::IntervalObj(_))
+                | Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(_)),
+                Obj::StandardSet(StandardSet::R),
+            ) => Ok(Some(
+                SubsetFactSearchProofByBuiltinRule::RealIntervalSubsetReal(
+                    RealIntervalSubsetRealBuiltinRuleProof {},
+                ),
+            )),
+
+            (Obj::SetFormer(SetFormer::SetBuilder(builder)), right)
+                if builder.param_set.as_ref().ir() == right.ir() =>
+            {
+                Ok(Some(
+                    SubsetFactSearchProofByBuiltinRule::SetBuilderSubsetOfParamSet(
+                        SetBuilderSubsetOfParamSetBuiltinRuleProof {},
+                    ),
+                ))
+            }
+
+            (Obj::SetFormer(SetFormer::ListSet(list_set)), right) => {
+                self.list_set_subset_from_members_proof(&list_set.list, right, verify_state)
+            }
+
+            _ => Ok(None),
+        }
     }
 
-    // `{a1, …, an} $subset S` from each `ai $in S`.
     fn list_set_subset_from_members_proof(
         &mut self,
-        fact: &SubsetFact,
+        members: &[Box<Obj>],
+        right: &Obj,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<SubsetFactSearchProofByBuiltinRule>> {
-        let Obj::SetFormer(SetFormer::ListSet(list_set)) = &fact.left else {
-            return Ok(None);
-        };
-        let mut member_in_proofs = Vec::with_capacity(list_set.list.len());
-        for element in &list_set.list {
-            let premise = in_fact(element.as_ref(), &fact.right, self);
+        let mut member_in_proofs = Vec::with_capacity(members.len());
+        for element in members {
+            let premise = in_fact(element.as_ref(), right, self);
             let proof = self.verify_fact(&premise, verify_state.clone())?;
             if proof.is_failed() {
                 return Ok(None);
@@ -184,21 +219,19 @@ impl Runtime {
         ))
     }
 
-    // `A $subset S` and `B $subset S` ⇒ `union(A, B) $subset S`.
     fn union_subset_from_both_operands_proof(
         &mut self,
-        fact: &SubsetFact,
+        left_operand: &Obj,
+        right_operand: &Obj,
+        ambient: &Obj,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<SubsetFactSearchProofByBuiltinRule>> {
-        let Obj::SetOperator(SetOperator::Union(union)) = &fact.left else {
-            return Ok(None);
-        };
-        let left_premise = subset_fact(union.left.as_ref(), &fact.right, self);
+        let left_premise = subset_fact(left_operand, ambient, self);
         let left_operand_subset_proof = self.verify_fact(&left_premise, verify_state.clone())?;
         if left_operand_subset_proof.is_failed() {
             return Ok(None);
         }
-        let right_premise = subset_fact(union.right.as_ref(), &fact.right, self);
+        let right_premise = subset_fact(right_operand, ambient, self);
         let right_operand_subset_proof = self.verify_fact(&right_premise, verify_state)?;
         if right_operand_subset_proof.is_failed() {
             return Ok(None);
@@ -213,16 +246,13 @@ impl Runtime {
         ))
     }
 
-    // `A $subset S` ⇒ `intersect(A, B) $subset S`.
     fn intersect_subset_from_left_upper_bound_proof(
         &mut self,
-        fact: &SubsetFact,
+        left_operand: &Obj,
+        ambient: &Obj,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<SubsetFactSearchProofByBuiltinRule>> {
-        let Obj::SetOperator(SetOperator::Intersect(intersect)) = &fact.left else {
-            return Ok(None);
-        };
-        let premise = subset_fact(intersect.left.as_ref(), &fact.right, self);
+        let premise = subset_fact(left_operand, ambient, self);
         let left_operand_subset_proof = self.verify_fact(&premise, verify_state)?;
         if left_operand_subset_proof.is_failed() {
             return Ok(None);
@@ -236,16 +266,13 @@ impl Runtime {
         ))
     }
 
-    // `B $subset S` ⇒ `intersect(A, B) $subset S`.
     fn intersect_subset_from_right_upper_bound_proof(
         &mut self,
-        fact: &SubsetFact,
+        right_operand: &Obj,
+        ambient: &Obj,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<SubsetFactSearchProofByBuiltinRule>> {
-        let Obj::SetOperator(SetOperator::Intersect(intersect)) = &fact.left else {
-            return Ok(None);
-        };
-        let premise = subset_fact(intersect.right.as_ref(), &fact.right, self);
+        let premise = subset_fact(right_operand, ambient, self);
         let right_operand_subset_proof = self.verify_fact(&premise, verify_state)?;
         if right_operand_subset_proof.is_failed() {
             return Ok(None);
@@ -334,27 +361,6 @@ pub(super) fn standard_set_is_subset_eq(left: &StandardSet, right: &StandardSet)
             | (StandardSet::CStar, StandardSet::CStar)
             | (StandardSet::R, StandardSet::R)
     )
-}
-
-fn elementary_set_subset_kind(left: &Obj, right: &Obj) -> Option<ElementarySetSubsetKind> {
-    match (left, right) {
-        (Obj::SetOperator(SetOperator::Intersect(intersect)), right) if intersect.left.as_ref() == right => {
-            Some(ElementarySetSubsetKind::IntersectSubsetLeft)
-        }
-        (Obj::SetOperator(SetOperator::Intersect(intersect)), right) if intersect.right.as_ref() == right => {
-            Some(ElementarySetSubsetKind::IntersectSubsetRight)
-        }
-        (left, Obj::SetOperator(SetOperator::Union(union))) if union.left.as_ref() == left => {
-            Some(ElementarySetSubsetKind::SubsetUnionLeft)
-        }
-        (left, Obj::SetOperator(SetOperator::Union(union))) if union.right.as_ref() == left => {
-            Some(ElementarySetSubsetKind::SubsetUnionRight)
-        }
-        (Obj::SetOperator(SetOperator::SetMinus(set_minus)), right) if set_minus.left.as_ref() == right => {
-            Some(ElementarySetSubsetKind::SetMinusSubsetLeft)
-        }
-        _ => None,
-    }
 }
 
 fn subset_fact(left: &Obj, right: &Obj, runtime: &mut Runtime) -> Fact {

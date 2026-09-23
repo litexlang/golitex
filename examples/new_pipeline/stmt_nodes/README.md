@@ -3,7 +3,7 @@
 One wired `exec_stmt` arm → one `.lit` file.
 File names mirror Rust `Stmt` / `DefinitionStmt` / `ByStmt` / `UnsafeStmt` variants.
 
-Fact **search** paths live in `../new_pipeline_proof_nodes/`. This suite only
+Fact **search** paths live in `../proof_nodes/`. This suite only
 checks that each currently wired statement kind can execute end-to-end.
 
 ## Acceptance

@@ -5,7 +5,7 @@ File names mirror Rust variants / structs for easy cross-check.
 
 When a kernel feature is **new** or an existing surface is **updated /
 widened**, add a **new** `.lit` here (or under the matching
-`new_pipeline_wd` / `stmt_nodes` / `wd_negative` folder) in the same turn.
+`../wd` / `../stmt_nodes` / `../wd_negative` / `../infer` folder) in the same turn.
 Do not leave acceptance only in `examples/tmp.lit`.
 
 ## Writing style

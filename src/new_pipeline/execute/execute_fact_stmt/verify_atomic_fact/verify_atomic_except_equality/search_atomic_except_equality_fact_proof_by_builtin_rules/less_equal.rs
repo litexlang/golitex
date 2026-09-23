@@ -88,6 +88,12 @@ pub enum LessEqualFactSearchProofByBuiltinRule {
     // Reverse triangle (sub form): `abs(x) - abs(y) <= abs(x - y)`.
     // Example: prove `abs(a) - abs(b) <= abs(a - b)`.
     AbsReverseTriangleSub(AbsReverseTriangleSubBuiltinRuleProof),
+    // Sum of nonnegatives is nonnegative: `0 <= a` and `0 <= b` ⇒ `0 <= a + b`.
+    // Example: known `0 <= x`, `0 <= y` prove `0 <= x + y`.
+    SumOfNonnegatives(SumOfNonnegativesBuiltinRuleProof),
+    // Product of nonnegatives is nonnegative: `0 <= a` and `0 <= b` ⇒ `0 <= a * b`.
+    // Example: known `0 <= x`, `0 <= y` prove `0 <= x * y`.
+    ProductOfNonnegatives(ProductOfNonnegativesBuiltinRuleProof),
 }
 
 pub struct ClosedNumericComparisonBuiltinRuleProof {
@@ -163,6 +169,16 @@ pub struct AbsSelfLowerBuiltinRuleProof {}
 pub struct AbsTriangleInequalityBuiltinRuleProof {}
 pub struct AbsReverseTriangleAddBuiltinRuleProof {}
 pub struct AbsReverseTriangleSubBuiltinRuleProof {}
+
+pub struct SumOfNonnegativesBuiltinRuleProof {
+    pub left_nonnegative_proof: VerifyFactResult,
+    pub right_nonnegative_proof: VerifyFactResult,
+}
+
+pub struct ProductOfNonnegativesBuiltinRuleProof {
+    pub left_nonnegative_proof: VerifyFactResult,
+    pub right_nonnegative_proof: VerifyFactResult,
+}
 
 impl Runtime {
     // Builtin search for `a <= b`.

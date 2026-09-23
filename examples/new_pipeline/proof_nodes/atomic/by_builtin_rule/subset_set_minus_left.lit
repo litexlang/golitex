@@ -1,0 +1,5 @@
+# Node: atomic.ByBuiltinRule.SubsetFact.SetMinusSubsetLeft
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/subset_set_minus_left.lit
+
+have A set, B set
+set_minus(A, B) $subset A

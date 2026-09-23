@@ -1,5 +1,31 @@
-have fn shift(x R) R = x + 1
-trust shift(2) $in fn_range(shift)
-have by fn_preimage: source from shift(2) $in fn_range(shift)
-source $in R
-shift(2) = shift(source)
+# Smoke: common builtin wave (sign cone / N / nonzero / infinite set_minus).
+# Interval membership rule exists, but `'[a,b]` parse is not wired yet in new_pipeline.
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/tmp.lit
+
+have a R
+have b R
+trust 0 <= a
+trust 0 <= b
+0 <= a + b
+0 <= a * b
+
+trust 0 < a
+trust 0 < b
+0 < a + b
+
+have m N
+have n N
+m + n $in N
+m * n $in N
+
+have z R
+trust z != 0
+abs(z) != 0
+
+have p R
+have q R
+trust p != q
+p - q != 0
+
+trust not $is_finite_set(N)
+not $is_finite_set(set_minus(N, {0}))

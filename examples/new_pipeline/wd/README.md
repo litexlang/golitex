@@ -1,7 +1,7 @@
 # new_pipeline well-definedness gallery
 
 Positive tracers for **already-implemented** Obj / Fact WD.
-Negatives stay in `../new_pipeline_wd_negative/`.
+Negatives stay in `../wd_negative/`.
 
 ```bash
 LITEX_NEW_PIPELINE=1 target/release/litex -f <this-file>
@@ -38,6 +38,6 @@ fail=0
 while IFS= read -r f; do
   echo "=== $f ==="
   LITEX_NEW_PIPELINE=1 target/release/litex -f "$f" || fail=1
-done < <(find examples/new_pipeline_wd -name '*.lit' | sort)
+done < <(find examples/new_pipeline/wd -name '*.lit' | sort)
 exit $fail
 ```

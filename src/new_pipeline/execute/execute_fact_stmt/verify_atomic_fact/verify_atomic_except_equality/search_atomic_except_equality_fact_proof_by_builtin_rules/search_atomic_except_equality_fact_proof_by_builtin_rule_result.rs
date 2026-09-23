@@ -12,6 +12,7 @@ use super::not_equal::NotEqualFactSearchProofByBuiltinRule;
 pub use super::not_in_fact::NotInFactSearchProofByBuiltinRule;
 use super::not_greater::NotGreaterFactSearchProofByBuiltinRule;
 use super::not_greater_equal::NotGreaterEqualFactSearchProofByBuiltinRule;
+pub use super::not_is_finite_set::NotIsFiniteSetFactSearchProofByBuiltinRule;
 use super::not_is_nonempty_set::NotIsNonemptySetFactSearchProofByBuiltinRule;
 use super::not_less::NotLessFactSearchProofByBuiltinRule;
 use super::not_less_equal::NotLessEqualFactSearchProofByBuiltinRule;
@@ -57,7 +58,6 @@ pub enum AtomicExceptEqualityFactSearchProofByBuiltinRule {
 pub enum NormalAtomicFactSearchProofByBuiltinRule {}
 pub enum NotNormalAtomicFactSearchProofByBuiltinRule {}
 pub enum NotIsSetFactSearchProofByBuiltinRule {}
-pub enum NotIsFiniteSetFactSearchProofByBuiltinRule {}
 pub enum NotIsCartFactSearchProofByBuiltinRule {}
 pub enum NotIsTupleFactSearchProofByBuiltinRule {}
 pub enum NotSubsetFactSearchProofByBuiltinRule {}

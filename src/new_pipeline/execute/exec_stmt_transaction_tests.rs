@@ -2762,6 +2762,60 @@ fn not_in_and_set_algebra_builtin_rules() {
         !exec_one(&mut runtime, "exist t {1} st {t $in {1}}").is_failed(),
         "exist nonempty-set member witness"
     );
+
+    // Common builtin wave: sign cone, interval membership, N closure, nonzero, infinite set_minus.
+    assert!(!exec_one(&mut runtime, "have u R").is_failed());
+    assert!(!exec_one(&mut runtime, "have v R").is_failed());
+    assert!(!exec_one(&mut runtime, "trust 0 <= u").is_failed());
+    assert!(!exec_one(&mut runtime, "trust 0 <= v").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "0 <= u + v").is_failed(),
+        "sum of nonnegatives"
+    );
+    assert!(
+        !exec_one(&mut runtime, "0 <= u * v").is_failed(),
+        "product of nonnegatives"
+    );
+    assert!(!exec_one(&mut runtime, "trust 0 < u").is_failed());
+    assert!(!exec_one(&mut runtime, "trust 0 < v").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "0 < u + v").is_failed(),
+        "sum both positive"
+    );
+    assert!(
+        !exec_one(&mut runtime, "0 < u * v").is_failed(),
+        "product both positive"
+    );
+    // Interval membership builtin is implemented, but `'[a,b]` surface parse is
+    // not wired in new_pipeline yet (INTERVAL_LITERAL_PREFIX is display-only).
+    assert!(!exec_one(&mut runtime, "have m N").is_failed());
+    assert!(!exec_one(&mut runtime, "have n N").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "m + n $in N").is_failed(),
+        "add in natural"
+    );
+    assert!(
+        !exec_one(&mut runtime, "m * n $in N").is_failed(),
+        "mul in natural"
+    );
+    assert!(!exec_one(&mut runtime, "have z R").is_failed());
+    assert!(!exec_one(&mut runtime, "trust z != 0").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "abs(z) != 0").is_failed(),
+        "abs nonzero from arg"
+    );
+    assert!(!exec_one(&mut runtime, "have p R").is_failed());
+    assert!(!exec_one(&mut runtime, "have q R").is_failed());
+    assert!(!exec_one(&mut runtime, "trust p != q").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "p - q != 0").is_failed(),
+        "diff nonzero from inequality"
+    );
+    assert!(!exec_one(&mut runtime, "trust not $is_finite_set(N)").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "not $is_finite_set(set_minus(N, {0}))").is_failed(),
+        "set_minus infinite of infinite finite"
+    );
 }
 
 #[test]

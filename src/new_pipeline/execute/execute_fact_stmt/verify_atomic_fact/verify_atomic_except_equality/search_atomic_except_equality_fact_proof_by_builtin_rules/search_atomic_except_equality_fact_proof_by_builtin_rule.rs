@@ -139,14 +139,6 @@ impl Runtime {
         Ok(None)
     }
 
-    pub fn search_not_is_finite_set_fact_proof_by_builtin_rule(
-        &mut self,
-        _fact: &NotIsFiniteSetFact,
-        _verify_state: VerifyState,
-    ) -> RuntimeResult<Option<NotIsFiniteSetFactSearchProofByBuiltinRule>> {
-        Ok(None)
-    }
-
     pub fn search_not_is_cart_fact_proof_by_builtin_rule(
         &mut self,
         _fact: &NotIsCartFact,

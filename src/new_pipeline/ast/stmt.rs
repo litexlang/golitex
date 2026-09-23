@@ -331,6 +331,8 @@ pub struct DefSettingStmt {
 }
 
 // What: bodies allowed inside a `template<…>:` definition.
+// These are the same definition statements that work outside the template
+// (`have …`, `have fn …`, obtain, …); the template only adds parameters.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum TemplateDefEnum {
     HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),
@@ -346,11 +348,18 @@ pub enum TemplateDefEnum {
     HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt),
 }
 
-// What: uniform definition over binder kinds such as `A set`.
-// Surface: `template T<A set>: have …`
-// Stores: a parameterized definition family; instances fill template args.
-// `fn(A set)` is forbidden as a function domain — use template when the def
-// itself is set-parameterized.
+// What: parameterized counterpart of an ordinary definition statement.
+// Surface: `template<A set>: have name …` / `template<A set>: have fn f …`
+// Stores: a definition family; `\name<args>` fills the template args.
+//
+// The body is checked as if the angle-bracket parameters were already
+// introduced. Instantiating `\name<args>` yields the corresponding defined
+// object or function.
+//
+// Why not `fn(A set)` / a fake fn_set domain: a function parameter must range
+// over one fixed set. Binder kind `set` is not such a set — it means "a set
+// parameter," not an element of a set-of-all-sets. Use template when the
+// definition itself is parameterized by an arbitrary set.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DefTemplateStmt {
     pub template_name: PlainName,

@@ -9,15 +9,10 @@ corresponding Litex source close to that description.
 1. [`01_proof_patterns/`](01_proof_patterns/) contains small proof-control and
    theorem-reuse patterns, including explicit builtin finite-subset closure and
    one-based finite-set indexing.
-1b. [`new_pipeline_proof_nodes/`](new_pipeline_proof_nodes/) contains one `.lit`
-   per concrete new_pipeline proof rule/path (or builtins first); exit 0 under
-   `LITEX_NEW_PIPELINE=1` is the acceptance bar.
-1c. [`new_pipeline_stmt_nodes/`](new_pipeline_stmt_nodes/) contains one `.lit`
-   per currently wired `exec_stmt` arm (Fact, let/have/prop, witness, trust,
-   by reflexive/symmetric); same `LITEX_NEW_PIPELINE=1` acceptance bar.
-1d. [`new_pipeline_module_manager/`](new_pipeline_module_manager/) exercises
-   LaunchCommand + `litex.config` mount (`-r` / `-f` / cwd `-e`); see its
-   README and [`src/new_pipeline/run/README.md`](../src/new_pipeline/run/README.md).
+1b. [`new_pipeline/`](new_pipeline/) is the new_pipeline acceptance tree (phase
+   folders: `proof_nodes/`, `stmt_nodes/`, `wd/`, `wd_negative/`, `infer/`,
+   `module_manager/`). Exit 0 under `LITEX_NEW_PIPELINE=1` is the bar; see
+   [`new_pipeline/README.md`](new_pipeline/README.md).
 2. [`02_builtin_math/`](02_builtin_math/) shows arithmetic, order, finite-set,
    function, and numeric rules provided by the verifier, including native
    natural-number primality and coprimality.
