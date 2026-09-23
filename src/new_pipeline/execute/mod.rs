@@ -16,7 +16,6 @@ mod execute_have_obj_by_exist_facts_stmt;
 mod execute_have_by_replacement_axiom_stmt;
 mod execute_obtain_obj_from_atomic_fact_stmt;
 mod execute_obtain_obj_from_exist_fact_stmt;
-mod execute_obtain_obj_from_thm_stmt;
 mod execute_have_obj_equal_stmt;
 mod execute_have_obj_in_nonempty_set_stmt;
 mod execute_let_stmt;
@@ -76,10 +75,6 @@ pub use execute_obtain_obj_from_atomic_fact_stmt::{
 pub use execute_obtain_obj_from_exist_fact_stmt::{
     ExecObtainObjFromExistFactStmtFailed, ExecObtainObjFromExistFactStmtResult,
     ExecObtainObjFromExistFactStmtSuccessResult, ObtainExistVerifySuccess,
-};
-pub use execute_obtain_obj_from_thm_stmt::{
-    ExecObtainObjFromThmStmtFailed, ExecObtainObjFromThmStmtResult,
-    ExecObtainObjFromThmStmtSuccessResult,
 };
 pub use execute_have_obj_equal_stmt::{
     ExecHaveObjEqualStmtFailed, ExecHaveObjEqualStmtResult, ExecHaveObjEqualStmtSuccessResult,

@@ -464,7 +464,7 @@ by def {x R: 0 <= x} $subset R
 | `index_union(I, X, A)`, `index_intersect(I, X, A)` | Union or intersection of the set-valued family `A : I -> power_set(X)`, with explicit ambient set `X` |
 | `power_set(A)` | Set of subsets of `A` |
 | `replacement(P, A)` | Replacement set defined by a functional predicate `P` (default pipeline) |
-| `have Img set by replacement_axiom: prop P, set A` | Named image from the **Axiom of Replacement** (`new_pipeline`; not an Obj — see preview note) |
+| `have by replacement_axiom: Img from prop P, set A` | Named image from the **Axiom of Replacement** (`new_pipeline`; not an Obj — see preview note) |
 | `index_cart(I, S, g)` | Choice functions selecting one value from each factor `g(alpha)` (formerly `general_cart`) |
 
 The suffix must be adjacent to its base. These compact forms are canonical;
@@ -659,7 +659,7 @@ universal over `A`, even forming `replacement(P, A)` is a well-definedness
 > parenthesized argument, but in Litex parentheses normally carry only **objs**
 > (calls, set formers, …). Passing a prop name that way would look odd and
 > blur the prop/obj boundary. The tagged form
-> `have Img set by replacement_axiom: prop P, set A` (same style as
+> `have by replacement_axiom: Img from prop P, set A` (same style as
 > `by axiom_of_choice: set F` / `by zorn_lemma: …`) keeps `P` labeled as a prop
 > and `A` as a set. `fn_range(f)` stays available for function ranges. Tracer:
 > [`examples/new_pipeline_stmt_nodes/definition/have_by_replacement_axiom.lit`](../examples/new_pipeline_stmt_nodes/definition/have_by_replacement_axiom.lit).
@@ -747,6 +747,11 @@ have by preimage source from shift(2) $in fn_range(shift)
 source $in Z
 shift(2) = shift(source)
 ```
+
+> **Preview (`new_pipeline`):** the same step is spelled
+> `have by fn_preimage: source from shift(2) $in fn_range(shift)`
+> (parse builds AST; exec not wired yet). Old `have by preimage` is rejected
+> with a rename hint.
 
 This is not inverse-function computation: the introduced `source` is an
 opaque witness satisfying the stored application equality. Litex does not
@@ -2215,7 +2220,7 @@ template<S set, z S>:
 ```
 
 > **Preview (`new_pipeline`):** a template body may also be `have fn … by cases`
-> or `have fn … by induc`, or `have … set by replacement_axiom: prop P, set A`.
+> or `have fn … by induc`, or `have by replacement_axiom: Img from prop P, set A`.
 > Instantiated applications unfold by the same
 > object-definition stage as ordinary have-fn / have-obj:
 >
@@ -2243,7 +2248,7 @@ template<S set, z S>:
 >         =>:
 >             y = y2
 > template<_S set>:
->     have Img set by replacement_axiom: prop image_rel, set {1, 2}
+>     have by replacement_axiom: Img from prop image_rel, set {1, 2}
 > $is_set(\Img<{0}>)
 > ```
 
@@ -2755,7 +2760,6 @@ introductions.
 | `trust fact`, `trust have ...` | Parsing, binding, and transactional staging run; well-definedness and proof truth are both skipped (default pipeline). Preview `new_pipeline`: well-definedness is required; truth is still skipped. | One explicit trusted transaction. Failure commits nothing. |
 | `obtain ... from exist ...` | The source existential is known; names, count, and dependent parameter types match. | Opaque witness names plus their type and direct body facts. |
 | `obtain ... from $P(args)` | `$P(args)` is known and its concrete definition has exactly one positive `exist`/`exist!` clause. | The same witness facts after checked definition projection. |
-| `obtain ... from thm name(args)` / `obtain ... from thm name` | The named user, imported, or reserved builtin theorem passes the ordinary call checks and has exactly one direct positive `exist`/`exist!` conclusion. Parentheses are required for a root `forall`; a direct existential theorem uses the bare form. | The theorem application remains scoped; only the eliminated witnesses, types, body facts, and `exist!` uniqueness interface escape. |
 | `have by preimage ...` | Known membership in `fn_range(f)` or `replacement(P,A)` and matching source shape. | Opaque preimage names and the application/relation witness facts. |
 | `have fn ... = ...` | Ordered parameter domains, return carrier, body membership, and side conditions. | A callable function, its signature, and checked defining equation. |
 | `have fn ... by cases` | Cases are exhaustive, pairwise disjoint, and every result belongs to the return set. | A callable piecewise function and guarded case equations. |
@@ -3118,13 +3122,12 @@ parameter memberships and any extra domain facts of `f` at those names, plus
 the application equality (e.g. `z = f(x, y)`), so a later call `f(x, y)` is
 well-defined. For `replacement` it stores `x $in A` and `$P(x, y)`.
 
-> **Preview (`new_pipeline`):** `HaveByPreimageStmt` exists in the AST, but
-> parse/exec still reject with `have by preimage: not wired yet`. Default
-> pipeline supports `from z $in fn_range(f)` and `from y $in replacement(P, A)`.
+> **Preview (`new_pipeline`):** parse accepts `have by fn_preimage: names from …`
+> (membership in `fn_range(f)`). Exec for that form is not wired yet, so there is
+> no exit-0 stmt-node tracer yet. Default pipeline still uses `have by preimage`.
 > Named images from the Axiom of Replacement use
-> `have … set by replacement_axiom: prop P, set A` (not an anonymous Obj — prop
-> names do not belong in ordinary parenthesized obj arguments); preimage naming
-> for that form is not wired yet.
+> `have by replacement_axiom: Img from prop P, set A` (not an anonymous Obj —
+> prop names do not belong in ordinary parenthesized obj arguments).
 
 `obtain` exposes each direct fact in the existential body. Positive concrete
 predicates among those facts may expose positive clauses through forward
@@ -3154,8 +3157,9 @@ thm self_exists:
         exist x R st {x = a}
     witness exist x R st {x = a} from a
 
-obtain theorem_copy from thm self_exists(3)
-theorem_copy = 3
+release thm self_exists(3)
+# Prefer `release thm` then `obtain … from exist …` when witnesses need names.
+# `obtain … from thm …` is removed in new_pipeline.
 
 witness $is_nonempty_set({1, 2}) from 1:
     1 $in {1, 2}
@@ -3177,16 +3181,6 @@ exactly one clause whose outer form is positive `exist` or `exist!`. Litex
 substitutes the call arguments into that clause and then uses the ordinary
 existential eliminator. `abstract_prop`, negated prop facts, `not exist`,
 ordinary nonexistential definitions, and multi-clause definitions are rejected.
-
-`obtain names from thm name(args)` performs the ordinary explicit theorem call
-inside a temporary child environment, then eliminates its sole direct positive
-`exist` or `exist!` conclusion. The theorem may be local, module-qualified and
-imported, or a reserved builtin theorem interface. Argument types, theorem
-domain facts, and builtin requirements are checked exactly as for `release thm`.
-Zero or multiple direct conclusions, a nonexistential conclusion, `not exist`,
-or a witness-count mismatch are errors. The intermediate existential does not
-enter the parent context; detailed output retains the nested named-theorem
-application as the elimination's proof source.
 
 The witness must satisfy the displayed body:
 

@@ -102,7 +102,7 @@ impl Runtime {
     }
 
     // Shared eliminator for a known Exist / ExistUnique family (no verify).
-    // Used by obtain-from-exist, obtain-from-$P, and obtain-from-thm.
+    // Used by obtain-from-exist and obtain-from-$P.
     // For exist!, uniqueness forall is stored into Env via store_and_infer_result
     // (no separate id field — resolve through Env / stored_fact_ids).
     pub(in crate::new_pipeline::execute) fn apply_obtain_from_known_exist_family(

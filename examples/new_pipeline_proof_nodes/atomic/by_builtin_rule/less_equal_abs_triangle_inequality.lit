@@ -3,5 +3,4 @@
 
 have x R
 have y R
-trust x + y $in R
 abs(x + y) <= abs(x) + abs(y)

@@ -1,9 +1,10 @@
-//! `have Img set by replacement_axiom: prop P, set A` — Axiom of Replacement.
+//! `have by replacement_axiom: Img from prop P, set A` — Axiom of Replacement.
 //!
 //! Named image set (not an anonymous Obj). Parenthesized Obj forms in Litex
 //! normally take objs only; passing a prop name inside `(...)` would look wrong,
-//! so the surface uses tagged `prop` / `set` args like `by axiom_of_choice`.
-//! After uniqueness of `P` on `A` is known, introduce `Img` and store intro/elim.
+//! so the surface uses `have by …: name from prop …, set …` (same family as
+//! `have by fn_preimage`). After uniqueness of `P` on `A` is known, introduce
+//! `Img` and store intro/elim.
 
 use crate::new_pipeline::ast::fact::{
     AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, ForallFact, InFact, NormalAtomicFact,
@@ -49,7 +50,7 @@ impl ExecHaveByReplacementAxiomStmtResult {
 
 impl Runtime {
     // Example:
-    //   have Img set by replacement_axiom: prop image_rel, set {1, 2}
+    //   have by replacement_axiom: Img from prop image_rel, set {1, 2}
     pub(super) fn exec_have_by_replacement_axiom_stmt(
         &mut self,
         stmt: &HaveByReplacementAxiomStmt,

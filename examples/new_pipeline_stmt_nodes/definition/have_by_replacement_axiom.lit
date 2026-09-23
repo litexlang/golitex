@@ -4,7 +4,6 @@
 # Named image from the Axiom of Replacement (not an anonymous Obj: prop names
 # do not belong in ordinary parenthesized obj arguments).
 # Needs: binary prop + known uniqueness forall over the source set.
-# Tagged args match `by axiom_of_choice: set F` / `by zorn_lemma: …`.
 
 abstract_prop image_rel(x, y)
 
@@ -15,6 +14,8 @@ trust:
         =>:
             y = y2
 
-have Img set by replacement_axiom: prop image_rel, set {1, 2}
+have by replacement_axiom: Img from prop image_rel, set {1, 2}
+
+$is_set(Img)
 
 release obj def Img

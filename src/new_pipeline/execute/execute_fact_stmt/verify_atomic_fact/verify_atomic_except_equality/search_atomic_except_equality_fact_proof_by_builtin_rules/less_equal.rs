@@ -88,6 +88,12 @@ pub enum LessEqualFactSearchProofByBuiltinRule {
     AbsSelfLower(AbsSelfLowerBuiltinRuleProof),
     // Triangle inequality: `abs(x + y) <= abs(x) + abs(y)`.
     AbsTriangleInequality(AbsTriangleInequalityBuiltinRuleProof),
+    // Reverse triangle (add form): `abs(x) - abs(y) <= abs(x + y)`.
+    // Example: prove `abs(a) - abs(b) <= abs(a + b)`.
+    AbsReverseTriangleAdd(AbsReverseTriangleAddBuiltinRuleProof),
+    // Reverse triangle (sub form): `abs(x) - abs(y) <= abs(x - y)`.
+    // Example: prove `abs(a) - abs(b) <= abs(a - b)`.
+    AbsReverseTriangleSub(AbsReverseTriangleSubBuiltinRuleProof),
 }
 
 pub struct ClosedNumericComparisonBuiltinRuleProof {
@@ -161,6 +167,8 @@ pub struct AbsLeImpliesNegUpperBuiltinRuleProof {
 pub struct AbsSelfUpperBuiltinRuleProof {}
 pub struct AbsSelfLowerBuiltinRuleProof {}
 pub struct AbsTriangleInequalityBuiltinRuleProof {}
+pub struct AbsReverseTriangleAddBuiltinRuleProof {}
+pub struct AbsReverseTriangleSubBuiltinRuleProof {}
 
 impl Runtime {
     // Builtin: reflexivity, known `<`, abs/add order algebra, trig bounds, closed decimal `<=`.

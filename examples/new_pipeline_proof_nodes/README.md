@@ -25,7 +25,8 @@ Exit 0 is enough. No requirement to assert which `searched_proof` variant won.
 Stub / not-yet-wired nodes are **omitted** (no SKIP placeholders).
 Still open (non-rewrite): empty atomic builtin-rule families (`NormalAtomic` /
 several remaining `Not*` / `FnEqualIn`); more exist builtins;
-some secondary In/order/subset leaves; MatchingOneArgByOne beyond the traced constructors.
+secondary subset leaves (set-minus / power-set / cart / transitivity);
+strict-order duals of add/mul algebra; MatchingOneArgByOne beyond the traced constructors.
 Equality BuiltinRewrite: ClosedNumericEqualSubstitution (equal + atomic) and
 atomic KnownEqualObjSubstitution.
 No equality KnownRewrite slot (dead; = uses EqualIr / known_equivalence_classes graph).
@@ -47,8 +48,10 @@ equal/        ByBuiltinRule (FnSet / AnonymousFn / SetBuilder alpha-equal,
               KnownForall (+ViaSymmetry), BuiltinRewrite
               (ClosedNumericEqualSubstitution + arithmetic_ops)
 atomic/       ByBuiltinRule (incl. NotIn closed/list/intersect/union; In
-              union/intersect/set_minus/family_union/index_union; LessEqual abs
-              + add/sub/mul order algebra + triangle/sandwich), KnownAtomicFact,
+              union/intersect/set_minus/family_union/index_union + R-arithmetic
+              closure; LessEqual abs + add/sub/mul order algebra + triangle/
+              reverse-triangle/sandwich; Subset list-set/union/intersect from
+              members or operand upper bounds; Greater from known less), KnownAtomicFact,
               ByDefinition (user prop + builtin official defs; see
               atomic/by_definition/ and src/.../by_definition_design.md),
               BuiltinStrategy (PosAddPos), KnownForall, BuiltinRewrite

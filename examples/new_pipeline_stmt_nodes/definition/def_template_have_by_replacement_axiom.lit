@@ -11,7 +11,7 @@ trust:
             y = y2
 
 template<_S set>:
-    have Img set by replacement_axiom: prop image_rel, set {1, 2}
+    have by replacement_axiom: Img from prop image_rel, set {1, 2}
 
 \Img<{0}> = \Img<{0}>
 $is_set(\Img<{0}>)

@@ -63,7 +63,6 @@ impl DefinitionStmt {
             DefinitionStmt::HaveObjByExistFactsStmt(x) => x.ir(),
             DefinitionStmt::ObtainObjFromExistFact(x) => x.ir(),
             DefinitionStmt::ObtainObjFromAtomicFact(x) => x.ir(),
-            DefinitionStmt::ObtainObjFromThm(x) => x.ir(),
             DefinitionStmt::HaveByPreimageStmt(x) => x.ir(),
             DefinitionStmt::HaveByReplacementAxiomStmt(x) => x.ir(),
             DefinitionStmt::HaveFnEqualStmt(x) => x.ir(),
@@ -323,27 +322,13 @@ impl ObtainObjFromAtomicFact {
     impl_display_pair!();
 }
 
-impl ObtainObjFromThm {
-    pub fn ir(&self) -> StmtIR {
-        StmtIR(format!(
-            "{} {} {} {} {}",
-            OBTAIN,
-            self.equal_tos.join(", "),
-            FROM,
-            THM,
-            self.call.ir()
-        ))
-    }
-    impl_display_pair!();
-}
-
 impl HaveByPreimageStmt {
     pub fn ir(&self) -> StmtIR {
         StmtIR(format!(
-            "{} {} {} {} {} {}",
+            "{} {} {}: {} {} {}",
             HAVE,
             BY,
-            PREIMAGE,
+            FN_PREIMAGE,
             self.preimage_names.join(", "),
             FROM,
             self.range_membership.ir()
@@ -355,12 +340,12 @@ impl HaveByPreimageStmt {
 impl HaveByReplacementAxiomStmt {
     pub fn ir(&self) -> StmtIR {
         StmtIR(format!(
-            "{} {} {} {} {}: {} {}, {} {}",
+            "{} {} {}: {} {} {} {}, {} {}",
             HAVE,
-            self.name,
-            SET,
             BY,
             REPLACEMENT_AXIOM,
+            self.name,
+            FROM,
             PROP,
             self.prop_name.ir(),
             SET,
@@ -700,7 +685,6 @@ impl TemplateDefEnum {
             TemplateDefEnum::TrustHaveStmt(x) => x.ir(),
             TemplateDefEnum::ObtainObjFromExistFact(x) => x.ir(),
             TemplateDefEnum::ObtainObjFromAtomicFact(x) => x.ir(),
-            TemplateDefEnum::ObtainObjFromThm(x) => x.ir(),
             TemplateDefEnum::HaveFnEqualStmt(x) => x.ir(),
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(x) => x.ir(),
             TemplateDefEnum::HaveFnByInducStmt(x) => x.ir(),

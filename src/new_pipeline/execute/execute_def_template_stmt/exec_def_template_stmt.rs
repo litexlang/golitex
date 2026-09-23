@@ -48,10 +48,6 @@ use crate::new_pipeline::execute::execute_obtain_obj_from_exist_fact_stmt::{
     ExecObtainObjFromExistFactStmtFailed, ExecObtainObjFromExistFactStmtResult,
     ExecObtainObjFromExistFactStmtSuccessResult,
 };
-use crate::new_pipeline::execute::execute_obtain_obj_from_thm_stmt::{
-    ExecObtainObjFromThmStmtFailed, ExecObtainObjFromThmStmtResult,
-    ExecObtainObjFromThmStmtSuccessResult,
-};
 use crate::new_pipeline::execute::execute_have_obj_equal_stmt::{
     ExecHaveObjEqualStmtFailed, ExecHaveObjEqualStmtResult, ExecHaveObjEqualStmtSuccessResult,
 };
@@ -79,7 +75,6 @@ pub enum ExecDefTemplateStmtFailed {
     BodyHaveByReplacementAxiom(ExecHaveByReplacementAxiomStmtFailed),
     BodyObtainObjFromExistFact(ExecObtainObjFromExistFactStmtFailed),
     BodyObtainObjFromAtomicFact(ExecObtainObjFromAtomicFactStmtFailed),
-    BodyObtainObjFromThm(ExecObtainObjFromThmStmtFailed),
     BodyHaveFnEqual(ExecHaveFnEqualStmtFailed),
     BodyHaveFnEqualCaseByCase(ExecHaveFnEqualCaseByCaseStmtFailed),
     BodyHaveFnByForallExistUnique(ExecHaveFnByForallExistUniqueStmtFailed),
@@ -95,7 +90,6 @@ pub enum ExecTemplateDefBodyResult {
     HaveByReplacementAxiom(ExecHaveByReplacementAxiomStmtSuccessResult),
     ObtainObjFromExistFact(ExecObtainObjFromExistFactStmtSuccessResult),
     ObtainObjFromAtomicFact(ExecObtainObjFromAtomicFactStmtSuccessResult),
-    ObtainObjFromThm(ExecObtainObjFromThmStmtSuccessResult),
     HaveFnEqual(ExecHaveFnEqualStmtSuccessResult),
     HaveFnEqualCaseByCase(ExecHaveFnEqualCaseByCaseStmtSuccessResult),
     HaveFnByForallExistUnique(ExecHaveFnByForallExistUniqueStmtSuccessResult),
@@ -338,16 +332,6 @@ impl Runtime {
                     }
                     ExecObtainObjFromAtomicFactStmtResult::Failed(failed) => Ok(Err(
                         ExecDefTemplateStmtFailed::BodyObtainObjFromAtomicFact(failed),
-                    )),
-                }
-            }
-            TemplateDefEnum::ObtainObjFromThm(stmt) => {
-                match self.exec_obtain_obj_from_thm_stmt(stmt)? {
-                    ExecObtainObjFromThmStmtResult::Success(ok) => {
-                        Ok(Ok(ExecTemplateDefBodyResult::ObtainObjFromThm(ok)))
-                    }
-                    ExecObtainObjFromThmStmtResult::Failed(failed) => Ok(Err(
-                        ExecDefTemplateStmtFailed::BodyObtainObjFromThm(failed),
                     )),
                 }
             }

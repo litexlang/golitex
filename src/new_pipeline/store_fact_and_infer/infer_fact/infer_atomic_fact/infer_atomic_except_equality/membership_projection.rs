@@ -52,6 +52,8 @@ impl Runtime {
         rules.extend(self.infer_in_fact_standard_set_rules(in_fact)?);
         rules.extend(self.infer_in_fact_list_set_ops_rules(in_fact)?);
         rules.extend(self.infer_in_fact_cart_interval_rules(in_fact)?);
+        rules.extend(self.infer_in_fact_fn_rules(in_fact)?);
+        rules.extend(self.infer_in_fact_index_family_rules(in_fact)?);
         Ok(rules)
     }
 }

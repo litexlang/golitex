@@ -2,4 +2,5 @@
 
 pub mod cart_tuple_shape;
 pub mod infer_equal_fact;
+pub mod positive_real_power;
 pub mod subtraction_equals_zero;

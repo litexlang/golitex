@@ -1,4 +1,4 @@
-# Infer migration smoke (batches 3/4/5)
+# Infer migration smoke (priority: power / fn / index-family / seq)
 have k N
 k >= 0
 
@@ -29,3 +29,38 @@ have c R
 have d R
 trust c - d = 0
 c = d
+
+# positive-real power: a^n = y ⇒ y $in R+ (Pow WD currently needs N/Z exponent)
+have base R+
+have pow_val R
+trust base^2 = pow_val
+pow_val $in R+
+
+# trust f $in FnSet registers InFunctionSet (WD of f(arg))
+have f set
+trust f $in fn(t R) R
+have arg R
+trust arg = 1
+f(arg) $in R
+
+# fn_range membership ⇒ codomain
+have fn g(t R) R = t
+have z R
+trust z $in fn_range(g)
+z $in R
+
+# finite_seq / seq expand to FnSet
+have s set
+trust s $in finite_seq(R, 3)
+s(1) $in R
+
+have seq_s set
+trust seq_s $in seq(R)
+seq_s(1) $in R
+
+# family_union infer exist witness shape
+have F set
+trust F = {{1}}
+have w set
+trust w $in family_union(F)
+exist item F st {w $in item}

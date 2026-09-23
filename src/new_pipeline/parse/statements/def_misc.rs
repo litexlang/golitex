@@ -330,9 +330,6 @@ fn template_def_enum_from_body_stmt(
         Stmt::Definition(DefinitionStmt::ObtainObjFromAtomicFact(stmt)) => {
             Ok(TemplateDefEnum::ObtainObjFromAtomicFact(stmt))
         }
-        Stmt::Definition(DefinitionStmt::ObtainObjFromThm(stmt)) => {
-            Ok(TemplateDefEnum::ObtainObjFromThm(stmt))
-        }
         Stmt::Definition(DefinitionStmt::HaveFnEqualStmt(stmt)) => {
             Ok(TemplateDefEnum::HaveFnEqualStmt(stmt))
         }
@@ -360,7 +357,6 @@ fn template_def_enum_name(body: &TemplateDefEnum) -> Option<String> {
         TemplateDefEnum::TrustHaveStmt(stmt) => first_typed_param_name(&stmt.param_def),
         TemplateDefEnum::ObtainObjFromExistFact(stmt) => stmt.equal_tos.first().cloned(),
         TemplateDefEnum::ObtainObjFromAtomicFact(stmt) => stmt.equal_tos.first().cloned(),
-        TemplateDefEnum::ObtainObjFromThm(stmt) => stmt.equal_tos.first().cloned(),
         TemplateDefEnum::HaveFnEqualStmt(stmt) => Some(stmt.name.clone()),
         TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => Some(stmt.name.clone()),
         TemplateDefEnum::HaveFnByInducStmt(stmt) => Some(stmt.name.clone()),
