@@ -1,4 +1,0 @@
-# Node: atomic.ByBuiltinRule.IsTupleFact.TupleConstructor
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/atomic/by_builtin_rule/is_tuple_constructor.lit
-
-$is_tuple((1, 2))

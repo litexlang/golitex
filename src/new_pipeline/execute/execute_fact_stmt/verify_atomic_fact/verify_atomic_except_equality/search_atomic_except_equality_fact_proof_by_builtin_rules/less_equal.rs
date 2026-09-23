@@ -1,11 +1,5 @@
-use crate::new_pipeline::ast::fact::{AtomicFact, Fact, LessEqualFact};
-use crate::new_pipeline::ast::obj::{
-    Add, ArithmeticOperator, Literal, Number, Obj,
-};
-use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::trig_bounds::{
-    match_arccos_principal_lower, match_arccos_principal_upper, match_arcsin_principal_lower,
-    match_arcsin_principal_upper, match_unit_circle_lower, match_unit_circle_upper,
-};
+use crate::new_pipeline::ast::fact::LessEqualFact;
+use crate::new_pipeline::ast::obj::{Literal, Number, Obj};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::rational_expression::{
@@ -171,12 +165,17 @@ pub struct AbsReverseTriangleAddBuiltinRuleProof {}
 pub struct AbsReverseTriangleSubBuiltinRuleProof {}
 
 impl Runtime {
-    // Builtin: reflexivity, known `<`, abs/add order algebra, trig bounds, closed decimal `<=`.
+    // Builtin search for `a <= b`.
+    // B0: reflexivity + known cites (shape-independent).
+    // A: Obj-shape match (arithmetic / abs / trig).
+    // B1: closed decimal evaluation.
+    // Example: prove `a <= a`, `x <= x + 1`, `abs(x+y) <= abs(x)+abs(y)`, `1 <= 2`.
     pub fn search_less_equal_fact_proof_by_builtin_rule(
         &mut self,
         fact: &LessEqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
+        // B0 — non-shape
         if fact.left.ir() == fact.right.ir() {
             return Ok(Some(
                 LessEqualFactSearchProofByBuiltinRule::OrderReflexivity(
@@ -191,71 +190,21 @@ impl Runtime {
                 FromKnownLessBuiltinRuleProof { cite_fact_id },
             )));
         }
-        if is_zero_obj(&fact.left) {
-            if let Some(cite_fact_id) = self.known_in_natural_fact_id(&fact.right) {
-                return Ok(Some(
-                    LessEqualFactSearchProofByBuiltinRule::FromKnownInNatural(
-                        FromKnownInNaturalBuiltinRuleProof { cite_fact_id },
-                    ),
-                ));
-            }
-            if matches!(
-                &fact.right,
-                Obj::ArithmeticOperator(ArithmeticOperator::Abs(_))
-            ) {
-                return Ok(Some(LessEqualFactSearchProofByBuiltinRule::AbsNonnegative(
-                    AbsNonnegativeBuiltinRuleProof {},
-                )));
-            }
-        }
-        if let Some(proof) = self.add_right_nonnegative_proof(fact, verify_state.clone())? {
+        if let Some(proof) = self.abs_le_implies_upper_proof(fact) {
             return Ok(Some(proof));
         }
-        if let Some(proof) = self.search_order_abs_algebra_less_equal_proof(fact, verify_state)? {
+        if let Some(proof) = self.abs_le_implies_neg_upper_proof(fact) {
             return Ok(Some(proof));
         }
-        if match_arcsin_principal_lower(&fact.left, &fact.right) {
-            return Ok(Some(
-                LessEqualFactSearchProofByBuiltinRule::ArcsinPrincipalLowerBound(
-                    ArcsinPrincipalLowerBoundBuiltinRuleProof {},
-                ),
-            ));
+
+        // A — shape match on (left, right) Obj constructors
+        if let Some(proof) =
+            self.search_order_abs_algebra_less_equal_proof(fact, verify_state)?
+        {
+            return Ok(Some(proof));
         }
-        if match_arcsin_principal_upper(&fact.left, &fact.right) {
-            return Ok(Some(
-                LessEqualFactSearchProofByBuiltinRule::ArcsinPrincipalUpperBound(
-                    ArcsinPrincipalUpperBoundBuiltinRuleProof {},
-                ),
-            ));
-        }
-        if match_arccos_principal_lower(&fact.left, &fact.right) {
-            return Ok(Some(
-                LessEqualFactSearchProofByBuiltinRule::ArccosPrincipalLowerBound(
-                    ArccosPrincipalLowerBoundBuiltinRuleProof {},
-                ),
-            ));
-        }
-        if match_arccos_principal_upper(&fact.left, &fact.right) {
-            return Ok(Some(
-                LessEqualFactSearchProofByBuiltinRule::ArccosPrincipalUpperBound(
-                    ArccosPrincipalUpperBoundBuiltinRuleProof {},
-                ),
-            ));
-        }
-        if match_unit_circle_lower(&fact.left, &fact.right) {
-            return Ok(Some(
-                LessEqualFactSearchProofByBuiltinRule::UnitCircleLowerBound(
-                    UnitCircleLowerBoundBuiltinRuleProof {},
-                ),
-            ));
-        }
-        if match_unit_circle_upper(&fact.left, &fact.right) {
-            return Ok(Some(
-                LessEqualFactSearchProofByBuiltinRule::UnitCircleUpperBound(
-                    UnitCircleUpperBoundBuiltinRuleProof {},
-                ),
-            ));
-        }
+
+        // B1 — closed numeric
         let Some((cmp, left_normal, right_normal)) =
             compare_closed_objs_by_normalized_decimal(&fact.left, &fact.right)
         else {
@@ -269,38 +218,6 @@ impl Runtime {
                 ClosedNumericComparisonBuiltinRuleProof {
                     left_normal,
                     right_normal,
-                },
-            ),
-        ))
-    }
-
-    // Prove `a <= a + b` from a proved `0 <= b`.
-    fn add_right_nonnegative_proof(
-        &mut self,
-        fact: &LessEqualFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
-        let Obj::ArithmeticOperator(ArithmeticOperator::Add(Add { left, right })) = &fact.right
-        else {
-            return Ok(None);
-        };
-        if left.as_ref().ir() != fact.left.ir() {
-            return Ok(None);
-        }
-        let nonnegative = Fact::AtomicFact(AtomicFact::LessEqualFact(LessEqualFact {
-            fact_id: self.global_ids.allocate_fact_id(),
-            left: zero_obj(),
-            right: right.as_ref().clone(),
-            line_file: None,
-        }));
-        let nonnegative_addend_proof = self.verify_fact(&nonnegative, verify_state)?;
-        if nonnegative_addend_proof.is_failed() {
-            return Ok(None);
-        }
-        Ok(Some(
-            LessEqualFactSearchProofByBuiltinRule::AddRightNonnegative(
-                AddRightNonnegativeBuiltinRuleProof {
-                    nonnegative_addend_proof,
                 },
             ),
         ))

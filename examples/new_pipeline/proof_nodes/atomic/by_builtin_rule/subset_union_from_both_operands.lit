@@ -1,0 +1,4 @@
+# Node: atomic.ByBuiltinRule.SubsetFact.UnionSubsetFromBothOperands
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/subset_union_from_both_operands.lit
+
+union({1}, {2}) $subset N

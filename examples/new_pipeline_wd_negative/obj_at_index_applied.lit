@@ -1,8 +1,0 @@
-# Negative: indexed object cannot be used as a function head.
-# `t[i]` stays a valid object; `t[i](a)` must fail at parse.
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_wd_negative/obj_at_index_applied.lit
-# expect exit != 0
-
-let t = (fn(x R) R {x}, 1)
-have a R = 1
-t[1](a) = a

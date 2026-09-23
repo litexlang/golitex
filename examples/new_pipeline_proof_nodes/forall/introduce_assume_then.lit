@@ -1,5 +1,0 @@
-# Node: forall (introduce → assume dom → prove then)
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/forall/introduce_assume_then.lit
-
-forall x R:
-    x = x

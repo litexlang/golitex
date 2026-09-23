@@ -1,7 +1,0 @@
-# Node: atomic.ByDefinition (ambient prop expand)
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/atomic/by_definition/ambient_prop_expand.lit
-
-prop above_zero(x R):
-    x > 0
-
-$above_zero(1)

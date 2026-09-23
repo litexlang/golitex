@@ -562,7 +562,7 @@ not append help text. For example, `litex -j` returns:
 > Tables / parse / elaborate:
 > [`src/new_pipeline/module_manager/README.md`](../src/new_pipeline/module_manager/README.md).
 > Fixtures:
-> [`examples/new_pipeline_module_manager/`](../examples/new_pipeline_module_manager/).
+> [`examples/new_pipeline/module_manager/`](../examples/new_pipeline/module_manager/).
 >
 > Legacy runners may still accept older manifests until migration finishes.
 

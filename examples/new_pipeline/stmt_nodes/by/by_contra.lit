@@ -1,0 +1,6 @@
+# Stmt: By.ByContraStmt → exec_by_contra_stmt
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/by/by_contra.lit
+
+by contra:
+    ? 1 = 1
+    impossible 1 != 1

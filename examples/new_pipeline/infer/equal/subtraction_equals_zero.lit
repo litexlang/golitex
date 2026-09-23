@@ -1,0 +1,9 @@
+# Infer: EqualFact.SubtractionEqualsZero
+# When: store `u - v = 0` (literal zero).
+# Infers: `u = v`.
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/infer/equal/subtraction_equals_zero.lit
+
+have c R = 3
+have d R = 3
+c - d = 0
+c = d

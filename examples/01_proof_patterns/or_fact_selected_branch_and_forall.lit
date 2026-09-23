@@ -1,5 +1,5 @@
 # Moved: fine-grained or proof-node tracers live under
-#   examples/new_pipeline_proof_nodes/or/
+#   examples/new_pipeline/proof_nodes/or/
 #
 # This file remains a short smoke check (SelectedBranch + known_or + forall).
 # Canonical one-rule-per-file tracers:

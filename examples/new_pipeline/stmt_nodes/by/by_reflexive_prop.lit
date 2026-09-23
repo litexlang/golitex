@@ -1,0 +1,12 @@
+# Stmt: By.ByReflexivePropStmt → exec_by_reflexive_prop_stmt
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/by/by_reflexive_prop.lit
+
+prop same(x set, y set):
+    x = y
+
+by reflexive_prop:
+    ? forall x set:
+        $same(x, x)
+
+have a set
+$same(a, a)

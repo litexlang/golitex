@@ -1,5 +1,0 @@
-# WD negative: finite_set_size on a non-finite set must fail.
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_wd_negative/finite_set_size_not_finite.lit
-# expect exit != 0
-
-let n = finite_set_size(R)

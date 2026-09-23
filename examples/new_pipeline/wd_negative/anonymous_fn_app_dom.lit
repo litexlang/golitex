@@ -1,0 +1,6 @@
+# WD negative: AnonymousFnLiteral application must check instantiated dom_facts.
+# `0 > 0` fails, so the application is not well-defined.
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/wd_negative/anonymous_fn_app_dom.lit
+# expect exit != 0
+
+let y = fn(x R: x > 0) R {x}(0)

@@ -1,0 +1,5 @@
+# Stmt: By.ByInducStmt → exec_by_induc_stmt
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/by/by_induc.lit
+
+by induc n from 0:
+    ? n = n

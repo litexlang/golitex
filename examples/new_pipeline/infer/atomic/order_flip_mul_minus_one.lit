@@ -1,0 +1,8 @@
+# Infer: OrderFlipMulMinusOne (from LessFact)
+# When: store `p < 0`.
+# Infers: `(-1) * p >= 0`.
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/infer/atomic/order_flip_mul_minus_one.lit
+
+have p R
+trust p < 0
+(-1) * p >= 0

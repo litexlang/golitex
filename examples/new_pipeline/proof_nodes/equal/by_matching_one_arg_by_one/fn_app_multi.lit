@@ -1,0 +1,13 @@
+# Node: equal.ByMatchingOneArgByOne (multi-layer FnObj peel)
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_matching_one_arg_by_one/fn_app_multi.lit
+#
+# Curried signature via `let f = fn(p R) fn(q R) R` (FnSet, no body) registers
+# InFunctionSet; `let g = f` reuses it through equality-class lookup.
+
+have a R = 1
+have b R = a
+have u R = 2
+have v R = u
+let f = fn(p R) fn(q R) R
+let g = f
+f(u)(a) = g(v)(b)

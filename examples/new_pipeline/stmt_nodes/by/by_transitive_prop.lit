@@ -1,0 +1,12 @@
+# Stmt: By.ByTransitivePropStmt → exec_by_transitive_prop_stmt
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/by/by_transitive_prop.lit
+
+prop same(x set, y set):
+    x = y
+
+by transitive_prop:
+    ? forall x, y, z set:
+        $same(x, y)
+        $same(y, z)
+        =>:
+            $same(x, z)

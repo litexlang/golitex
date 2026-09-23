@@ -1,5 +1,0 @@
-# Stmt: Definition.LetObjStmt → exec_let_obj
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_stmt_nodes/definition/let_obj.lit
-
-let a = 1
-a + 1 = 2

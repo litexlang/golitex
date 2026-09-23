@@ -13,7 +13,7 @@ predicates.
 | Builtin expanders | `builtin_prop_definition.rs` |
 | Result types | `result.rs` (`AtomicExceptEqualityFactSearchProofByDefinition`, `BuiltinPropDefinitionProof`) |
 | Manual preview | `docs/Manual.md` (`by def` / ByDefinition) |
-| Proof-node tracers | `examples/new_pipeline_proof_nodes/atomic/by_definition/` |
+| Proof-node tracers | `examples/new_pipeline/proof_nodes/atomic/by_definition/` |
 | Unit gate | `src/new_pipeline/execute/exec_stmt_transaction_tests.rs` (`builtin_prop_by_definition_*`) |
 
 ## Decision
@@ -68,7 +68,7 @@ not a missing singleton-lifting patch on the forall route.
 
 `by def` only rechecks definition obligations. Soft miss is correct when those
 obligations are not yet proved. Do not fake them with `trust` inside
-`examples/new_pipeline_proof_nodes/` tracers.
+`examples/new_pipeline/proof_nodes/` tracers.
 
 ## Acceptance
 

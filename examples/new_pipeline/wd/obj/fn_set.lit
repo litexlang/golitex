@@ -1,0 +1,4 @@
+# Obj WD: FnSet definition (binder + dom_facts + local_env)
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/wd/obj/fn_set.lit
+
+let S = fn(x R: x > 0) R

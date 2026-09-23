@@ -1,6 +1,0 @@
-# Node: atomic.ByDefinition.BuiltinProp.FnEqualIn
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/atomic/by_definition/builtin_fn_equal_in.lit
-
-have fn f(x R) R = x
-have fn g(x R) R = x
-by def $fn_eq_in(f, g, R)

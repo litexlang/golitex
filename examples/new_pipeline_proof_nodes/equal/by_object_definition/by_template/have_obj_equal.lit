@@ -1,7 +1,0 @@
-# Node: equal.ByObjectDefinition.ByTemplate.HaveObjEqual
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/equal/by_object_definition/by_template/have_obj_equal.lit
-
-template<S set>:
-    have carrier_copy set = S
-
-\carrier_copy<R> = R

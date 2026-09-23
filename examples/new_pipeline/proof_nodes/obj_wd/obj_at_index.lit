@@ -1,0 +1,4 @@
+# Obj WD: t[i] with i in N+ / is_tuple / i <= tuple_dim
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/obj_wd/obj_at_index.lit
+
+let a = (1, 2)[1]

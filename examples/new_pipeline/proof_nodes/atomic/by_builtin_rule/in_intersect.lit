@@ -1,0 +1,4 @@
+# Node: atomic.ByBuiltinRule.InFact.IntersectMembership
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/in_intersect.lit
+
+2 $in intersect({1, 2}, {2, 3})

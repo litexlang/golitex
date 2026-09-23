@@ -1,0 +1,5 @@
+# WD negative: proj on a non-cart must fail ($is_cart).
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/wd_negative/proj_not_cart.lit
+# expect exit != 0
+
+let P = proj(R, 1)

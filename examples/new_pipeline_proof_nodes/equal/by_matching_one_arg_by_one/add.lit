@@ -1,6 +1,0 @@
-# Node: equal.ByMatchingOneArgByOne
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_proof_nodes/equal/by_matching_one_arg_by_one/add.lit
-
-have a R = 1
-have b R = a
-a + 1 = b + 1

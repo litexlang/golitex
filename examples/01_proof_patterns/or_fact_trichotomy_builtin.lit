@@ -1,5 +1,5 @@
 # Moved: fine-grained trichotomy tracers live under
-#   examples/new_pipeline_proof_nodes/or/by_builtin_rule/
+#   examples/new_pipeline/proof_nodes/or/by_builtin_rule/
 #
 # This file remains a short smoke check of all three orders.
 # Canonical one-rule-per-file tracers:

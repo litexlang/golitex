@@ -1,0 +1,7 @@
+# Node: atomic.ByBuiltinRule.NotEqual.FromKnownStrictOrder
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/not_equal_from_known_strict_order.lit
+
+have a R = 1
+have b R = 2
+a < b
+a != b

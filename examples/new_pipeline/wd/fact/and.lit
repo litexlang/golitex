@@ -1,0 +1,6 @@
+# Fact WD: And — each component Fact WD (then Obj WD)
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/wd/fact/and.lit
+
+1 < 2
+2 < 3
+1 < 2 and 2 < 3

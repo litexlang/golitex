@@ -1,0 +1,6 @@
+# Node: equal.ByBuiltinRewrite.ClosedNumericEqualSubstitution
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rewrite/closed_numeric_equal_substitution.lit
+
+have a R = 10
+have b R = 20
+a + b = 30

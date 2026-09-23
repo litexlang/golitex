@@ -1,0 +1,9 @@
+# Infer: InFact.EqualFnSetExpand (+ store InFunctionSet)
+# When: store `f $in A` with `A = fn(...)`.
+# Infers: `f $in fn(...)` and registers callable signature.
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/infer/atomic/in_equal_fn_set_expand.lit
+
+let A = fn(x R) R
+have f set = A
+have a R = 1
+f(a) $in R

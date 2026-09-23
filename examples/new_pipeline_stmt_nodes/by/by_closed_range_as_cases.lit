@@ -1,6 +1,0 @@
-# Stmt: By.ByClosedRangeAsCasesStmt → exec_by_closed_range_as_cases_stmt
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_stmt_nodes/by/by_closed_range_as_cases.lit
-
-have z Z
-trust z $in 1...2
-by closed_range as cases: z $in 1...2

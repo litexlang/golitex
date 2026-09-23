@@ -1,0 +1,4 @@
+# Obj WD: range endpoints in Z
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/wd/obj/range.lit
+
+let r = range(1, 3)

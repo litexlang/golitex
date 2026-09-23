@@ -1,0 +1,4 @@
+# Obj WD: t[i] — i in N+, $is_tuple, i <= tuple_dim
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/wd/obj/obj_at_index.lit
+
+let a = (1, 2)[1]

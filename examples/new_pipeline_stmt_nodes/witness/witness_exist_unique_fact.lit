@@ -1,8 +1,0 @@
-# Stmt: Witness.WitnessExistFact with exist! uniqueness
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline_stmt_nodes/witness/witness_exist_unique_fact.lit
-#
-# Body `x = 0` forces uniqueness: any two witnesses equal to 0 are equal.
-# No indented proof body; ambient builtin equality closes the uniqueness forall.
-
-witness exist! x R st {x = 0} from 0
-exist! x R st {x = 0}
