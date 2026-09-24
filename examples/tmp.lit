@@ -1,15 +1,6 @@
-# Stage B wave 1 power-law probe
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/tmp.lit
-
-have a R+
-have b R+
-have m N+
-have n N+
-a^m * a^n = a^(m + n)
-(a^m)^n = a^(m * n)
-(a * b)^n = a^n * b^n
-
-have c R*
-1 / c = c^(-1)
-have d R*
-c / d = c * d^(-1)
+# Probe: prefix `-` parses as Neg; closed numeric still folds.
+-3 = -3
+abs(-3) = 3
+-2 + 5 = 3
+(-2) * 4 = -8
+-2^2 = -4

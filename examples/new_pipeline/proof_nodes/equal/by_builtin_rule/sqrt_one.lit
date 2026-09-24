@@ -1,0 +1,4 @@
+# Node: equal.ByBuiltinRule.SqrtOne
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/sqrt_one.lit
+
+sqrt(1) = 1

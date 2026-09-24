@@ -1,5 +1,5 @@
 use super::super::keywords::{COLON, HAVE, TRUST};
-use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::stmt::{Stmt, TrustHaveStmt, TrustStmt, TrustBoundaryStmt};
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -20,7 +20,7 @@ impl Runtime {
             let facts = self.parse_facts_in_body(&tb.body)?;
             return Ok(Stmt::Trust(TrustBoundaryStmt::TrustStmt(TrustStmt {
                 facts,
-                line_file: LineFile::new(block.line, block.source_path.clone()),
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
             })));
         }
 
@@ -30,7 +30,7 @@ impl Runtime {
         }
         Ok(Stmt::Trust(TrustBoundaryStmt::TrustStmt(TrustStmt {
             facts: vec![fact],
-            line_file: LineFile::new(block.line, block.source_path.clone()),
+            line_file: SourceLine::new(block.line, self.code_source.clone()),
         })))
     }
 
@@ -79,7 +79,7 @@ impl Runtime {
         Ok(Stmt::Trust(TrustBoundaryStmt::TrustHaveStmt(TrustHaveStmt {
             param_def,
             facts,
-            line_file: LineFile::new(block.line, block.source_path.clone()),
+            line_file: SourceLine::new(block.line, self.code_source.clone()),
         })))
     }
 }

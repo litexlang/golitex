@@ -55,6 +55,14 @@ impl Runtime {
         {
             return Ok(Some(map_power_law_proof(proof)));
         }
+        if let Some(proof) = self
+            .search_equal_fact_builtin_rule_equality_identities_wave2(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(map_equality_identities_wave2_proof(proof)));
+        }
         if let Some(proof) =
             self.search_equal_fact_builtin_rule_inverse_trig(fact, verify_state)?
         {
@@ -77,6 +85,39 @@ fn map_power_law_proof(
         }
         P::QuotientAsMulNegOnePower(p) => {
             EqualitySearchProofByBuiltinRule::QuotientAsMulNegOnePower(p)
+        }
+    }
+}
+
+fn map_equality_identities_wave2_proof(
+    proof: super::by_equality_identities_wave2::EqualityIdentitiesWave2BuiltinRuleProof,
+) -> EqualitySearchProofByBuiltinRule {
+    use super::by_equality_identities_wave2::EqualityIdentitiesWave2BuiltinRuleProof as W;
+    match proof {
+        W::OneToAnyPower(p) => EqualitySearchProofByBuiltinRule::OneToAnyPower(p),
+        W::ZeroToPosNatPower(p) => EqualitySearchProofByBuiltinRule::ZeroToPosNatPower(p),
+        W::SqrtSquare(p) => EqualitySearchProofByBuiltinRule::SqrtSquare(p),
+        W::SqrtZero(p) => EqualitySearchProofByBuiltinRule::SqrtZero(p),
+        W::SqrtOne(p) => EqualitySearchProofByBuiltinRule::SqrtOne(p),
+        W::SqrtOfSquare(p) => EqualitySearchProofByBuiltinRule::SqrtOfSquare(p),
+        W::SqrtProduct(p) => EqualitySearchProofByBuiltinRule::SqrtProduct(p),
+        W::SqrtQuotient(p) => EqualitySearchProofByBuiltinRule::SqrtQuotient(p),
+        W::AbsOfNegation(p) => EqualitySearchProofByBuiltinRule::AbsOfNegation(p),
+        W::AbsProduct(p) => EqualitySearchProofByBuiltinRule::AbsProduct(p),
+        W::AbsSquare(p) => EqualitySearchProofByBuiltinRule::AbsSquare(p),
+        W::LogBaseSelf(p) => EqualitySearchProofByBuiltinRule::LogBaseSelf(p),
+        W::LogOfOne(p) => EqualitySearchProofByBuiltinRule::LogOfOne(p),
+        W::LogOfPowerSameBase(p) => EqualitySearchProofByBuiltinRule::LogOfPowerSameBase(p),
+        W::LogArgPower(p) => EqualitySearchProofByBuiltinRule::LogArgPower(p),
+        W::LogProduct(p) => EqualitySearchProofByBuiltinRule::LogProduct(p),
+        W::LogQuotient(p) => EqualitySearchProofByBuiltinRule::LogQuotient(p),
+        W::LogReciprocal(p) => EqualitySearchProofByBuiltinRule::LogReciprocal(p),
+        W::LogChangeOfBase(p) => EqualitySearchProofByBuiltinRule::LogChangeOfBase(p),
+        W::ZeroMod(p) => EqualitySearchProofByBuiltinRule::ZeroMod(p),
+        W::ModOne(p) => EqualitySearchProofByBuiltinRule::ModOne(p),
+        W::OneModAtLeastTwo(p) => EqualitySearchProofByBuiltinRule::OneModAtLeastTwo(p),
+        W::NestedSameModAbsorption(p) => {
+            EqualitySearchProofByBuiltinRule::NestedSameModAbsorption(p)
         }
     }
 }

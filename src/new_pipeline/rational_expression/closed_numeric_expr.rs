@@ -4,7 +4,7 @@
 //! - leaves are only decimal Number values (e.g. `2`, `2.5`);
 //! - interior nodes are the arithmetic operators that evaluate under
 //!   evaluate_obj_to_normalized_decimal_number:
-//!   `+ - * / pow abs min max floor ceil sign`.
+//!   `+ - * / pow abs min max floor ceil sign` and unary `-` (`neg`).
 //!
 //! It has no free identifiers, `%` / `quot` / gcd / trig / set ops, or
 //! other Obj constructors.
@@ -18,7 +18,7 @@
 //! Closed-numeric store / rewrite paths should take this type (or produce it
 //! at the boundary) instead of re-testing Obj ad hoc.
 
-use crate::new_pipeline::ast::obj::{Abs, Add, Ceil, Div, Floor, Max, Min, Mul, Number, Obj, Pow, Sign, Sub, ArithmeticOperator, Literal};
+use crate::new_pipeline::ast::obj::{Abs, Add, Ceil, Div, Floor, Max, Min, Mul, Neg, Number, Obj, Pow, Sign, Sub, ArithmeticOperator, Literal};
 
 /// Classified closed-numeric tree. See module docs for the definition.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -26,6 +26,7 @@ pub enum ClosedNumericExpr {
     Number(Number),
     Add(Box<ClosedNumericExpr>, Box<ClosedNumericExpr>),
     Sub(Box<ClosedNumericExpr>, Box<ClosedNumericExpr>),
+    Neg(Box<ClosedNumericExpr>),
     Mul(Box<ClosedNumericExpr>, Box<ClosedNumericExpr>),
     Div(Box<ClosedNumericExpr>, Box<ClosedNumericExpr>),
     Pow {
@@ -54,6 +55,9 @@ impl ClosedNumericExpr {
                 Box::new(Self::try_from_obj(&sub.left)?),
                 Box::new(Self::try_from_obj(&sub.right)?),
             )),
+            Obj::ArithmeticOperator(ArithmeticOperator::Neg(neg)) => Some(ClosedNumericExpr::Neg(Box::new(Self::try_from_obj(
+                &neg.arg,
+            )?))),
             Obj::ArithmeticOperator(ArithmeticOperator::Mul(mul)) => Some(ClosedNumericExpr::Mul(
                 Box::new(Self::try_from_obj(&mul.left)?),
                 Box::new(Self::try_from_obj(&mul.right)?),
@@ -100,6 +104,9 @@ impl ClosedNumericExpr {
             ClosedNumericExpr::Sub(left, right) => Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub {
                 left: Box::new(left.to_obj()),
                 right: Box::new(right.to_obj()),
+            })),
+            ClosedNumericExpr::Neg(arg) => Obj::ArithmeticOperator(ArithmeticOperator::Neg(Neg {
+                arg: Box::new(arg.to_obj()),
             })),
             ClosedNumericExpr::Mul(left, right) => Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
                 left: Box::new(left.to_obj()),
@@ -210,9 +217,25 @@ mod tests {
         assert!(is_closed_numeric_expr(&floor));
 
         let sign = Obj::ArithmeticOperator(ArithmeticOperator::Sign(Sign {
-            arg: Box::new(n("-4")),
+            arg: Box::new(n("-2")),
         }));
         assert!(is_closed_numeric_expr(&sign));
+    }
+
+    #[test]
+    fn unary_neg_of_number_is_closed() {
+        use crate::new_pipeline::ast::obj::Neg;
+        let neg = Obj::ArithmeticOperator(ArithmeticOperator::Neg(Neg {
+            arg: Box::new(n("3")),
+        }));
+        assert!(is_closed_numeric_expr(&neg));
+        assert_eq!(
+            ClosedNumericExpr::try_from_obj(&neg)
+                .unwrap()
+                .to_obj()
+                .ir(),
+            neg.ir()
+        );
     }
 
     #[test]

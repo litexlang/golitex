@@ -385,7 +385,7 @@ fn type_fact_for_surface(
     runtime: &mut Runtime,
     surface: &IdentifierObj,
     param_type: &ParamType,
-    line_file: &crate::new_pipeline::ast::line_file::LineFile,
+    line_file: &crate::new_pipeline::ast::line_file::SourceLine,
 ) -> (Fact, Option<(Obj, StructObj)>) {
     let element = Obj::Identifier(surface.clone());
     match param_type {

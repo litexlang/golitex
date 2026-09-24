@@ -244,7 +244,7 @@ impl Runtime {
     fn verify_in_z(
         &mut self,
         obj: &Obj,
-        line_file: &crate::new_pipeline::ast::line_file::LineFile,
+        line_file: &crate::new_pipeline::ast::line_file::SourceLine,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
         let fact = Fact::AtomicFact(AtomicFact::InFact(InFact {
@@ -535,7 +535,7 @@ fn flatten_case_list(
     prefix: Option<AndChainAtomicFact>,
     cases: &mut Vec<AndChainAtomicFact>,
     equal_tos: &mut Vec<Obj>,
-    line_file: &crate::new_pipeline::ast::line_file::LineFile,
+    line_file: &crate::new_pipeline::ast::line_file::SourceLine,
 ) -> Result<(), String> {
     for c in source {
         let merged = match &prefix {
@@ -566,7 +566,7 @@ fn merge_and_chains(
     runtime: &mut Runtime,
     left: &AndChainAtomicFact,
     right: &AndChainAtomicFact,
-    line_file: &crate::new_pipeline::ast::line_file::LineFile,
+    line_file: &crate::new_pipeline::ast::line_file::SourceLine,
 ) -> Result<AndChainAtomicFact, String> {
     let mut atoms = flatten_and_chain_atoms(left);
     atoms.extend(flatten_and_chain_atoms(right));

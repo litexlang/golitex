@@ -115,9 +115,9 @@ impl Runtime {
                     vec![left.clone(), right.clone()],
                     true,
                     chain.line_file.clone().unwrap_or_else(|| {
-                        crate::new_pipeline::ast::line_file::LineFile::new(
+                        crate::new_pipeline::ast::line_file::SourceLine::new(
                             0,
-                            crate::new_pipeline::runtime::RealOrVirtualPath::Eval,
+                            crate::new_pipeline::runtime::CodeSource::Eval,
                         )
                     }),
                 )?

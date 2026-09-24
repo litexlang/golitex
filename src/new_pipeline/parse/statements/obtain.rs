@@ -1,7 +1,7 @@
 use super::super::keywords::{EXIST, EXIST_BANG, FACT_PREFIX, FROM, OBTAIN};
 use super::super::object::is_simple_name;
 use crate::new_pipeline::ast::fact::AtomicFact;
-use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::stmt::{
     DefineObjStmt, DefinitionStmt, ObtainObjFromAtomicFact, ObtainObjFromExistFact, Stmt,
 };
@@ -40,7 +40,7 @@ impl Runtime {
         }
         tb.expect(FROM)?;
 
-        let line_file = LineFile::new(block.line, block.source_path.clone());
+        let line_file = SourceLine::new(block.line, self.code_source.clone());
         let stmt = if tb.peek() == Some(EXIST) || tb.peek() == Some(EXIST_BANG) {
             let fact = self.parse_exist_fact(&mut tb)?;
             Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::ObtainObjFromExistFact(

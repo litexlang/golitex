@@ -9,7 +9,7 @@ pub mod param;
 pub mod stmt;
 
 pub use fact::Fact;
-pub use line_file::LineFile;
+pub use line_file::SourceLine;
 pub use names::{AtomicName, BoundName, PlainName};
 pub use obj::{
     ArithmeticOperator, ComplexOperator, ExpLogOperator, FiniteSetStat, FunctionSpace,

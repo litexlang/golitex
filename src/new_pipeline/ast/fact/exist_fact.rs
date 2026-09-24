@@ -1,5 +1,5 @@
 use super::QuantifierFreeFact;
-use super::super::line_file::LineFile;
+use super::super::line_file::SourceLine;
 use super::super::param::TypedParameterList;
 use crate::new_pipeline::runtime::FactId;
 
@@ -17,7 +17,7 @@ pub struct PlainExistFact {
     pub fact_id: FactId,
     pub typed_parameters: TypedParameterList,
     pub facts: Vec<QuantifierFreeFact>,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 // Three-way exist shape tag for Env indexing and helpers that need exist / exist! / not exist.

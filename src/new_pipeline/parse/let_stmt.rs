@@ -1,6 +1,6 @@
 use super::keywords::EQUAL;
 use super::object::{is_simple_name, parse_obj};
-use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::stmt::{DefineObjStmt, DefinitionStmt, LetObjStmt, Stmt};
 use crate::new_pipeline::runtime::{Runtime, RuntimeParseError, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -60,7 +60,7 @@ impl Runtime {
         Ok(Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::LetObjStmt(LetObjStmt {
             name,
             value,
-            line_file: LineFile::new(block.line, block.source_path.clone()),
+            line_file: SourceLine::new(block.line, self.code_source.clone()),
         }))))
     }
 }

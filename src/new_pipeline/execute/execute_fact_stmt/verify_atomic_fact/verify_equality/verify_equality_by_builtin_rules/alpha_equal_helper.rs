@@ -129,6 +129,7 @@ fn objs_alpha_equal(left: &Obj, right: &Obj, map: &HashMap<IdentifierId, Identif
         (Obj::Literal(Literal::Pi(_)), Obj::Literal(Literal::Pi(_))) => true,
         (Obj::ArithmeticOperator(ArithmeticOperator::Add(l)), Obj::ArithmeticOperator(ArithmeticOperator::Add(r))) => both(&l.left, &l.right, &r.left, &r.right, map),
         (Obj::ArithmeticOperator(ArithmeticOperator::Sub(l)), Obj::ArithmeticOperator(ArithmeticOperator::Sub(r))) => both(&l.left, &l.right, &r.left, &r.right, map),
+        (Obj::ArithmeticOperator(ArithmeticOperator::Neg(l)), Obj::ArithmeticOperator(ArithmeticOperator::Neg(r))) => objs_alpha_equal(&l.arg, &r.arg, map),
         (Obj::ArithmeticOperator(ArithmeticOperator::Mul(l)), Obj::ArithmeticOperator(ArithmeticOperator::Mul(r))) => both(&l.left, &l.right, &r.left, &r.right, map),
         (Obj::ArithmeticOperator(ArithmeticOperator::Div(l)), Obj::ArithmeticOperator(ArithmeticOperator::Div(r))) => both(&l.left, &l.right, &r.left, &r.right, map),
         (Obj::IntegerOperator(IntegerOperator::Mod(l)), Obj::IntegerOperator(IntegerOperator::Mod(r))) => both(&l.left, &l.right, &r.left, &r.right, map),

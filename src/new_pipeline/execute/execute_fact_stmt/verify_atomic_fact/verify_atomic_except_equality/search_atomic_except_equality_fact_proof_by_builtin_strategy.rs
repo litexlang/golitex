@@ -91,7 +91,7 @@ fn is_zero_obj(obj: &Obj) -> bool {
 }
 
 // Match `a + b > 0` or `0 < a + b`. Soft miss otherwise.
-fn positive_sum_goal_summands(fact: &AtomicFact) -> Option<(Obj, Obj, Option<crate::new_pipeline::ast::line_file::LineFile>)> {
+fn positive_sum_goal_summands(fact: &AtomicFact) -> Option<(Obj, Obj, Option<crate::new_pipeline::ast::line_file::SourceLine>)> {
     match fact {
         AtomicFact::GreaterFact(GreaterFact {
             left,

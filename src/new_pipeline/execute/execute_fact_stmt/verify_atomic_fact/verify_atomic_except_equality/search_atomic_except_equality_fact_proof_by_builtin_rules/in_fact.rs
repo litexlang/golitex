@@ -373,6 +373,7 @@ impl Runtime {
         match &fact.element {
             Obj::ArithmeticOperator(ArithmeticOperator::Add(_))
             | Obj::ArithmeticOperator(ArithmeticOperator::Sub(_))
+            | Obj::ArithmeticOperator(ArithmeticOperator::Neg(_))
             | Obj::ArithmeticOperator(ArithmeticOperator::Mul(_))
             | Obj::ArithmeticOperator(ArithmeticOperator::Div(_))
             | Obj::ArithmeticOperator(ArithmeticOperator::Pow(_))
@@ -1470,6 +1471,7 @@ fn complex_arithmetic_in_c_proof(fact: &InFact) -> Option<InFactSearchProofByBui
     match &fact.element {
         Obj::ArithmeticOperator(ArithmeticOperator::Add(_))
         | Obj::ArithmeticOperator(ArithmeticOperator::Sub(_))
+        | Obj::ArithmeticOperator(ArithmeticOperator::Neg(_))
         | Obj::ArithmeticOperator(ArithmeticOperator::Mul(_))
         | Obj::ArithmeticOperator(ArithmeticOperator::Div(_))
         | Obj::IntegerOperator(IntegerOperator::Mod(_))
@@ -1493,6 +1495,7 @@ fn real_arithmetic_in_r_proof(fact: &InFact) -> Option<InFactSearchProofByBuilti
     match &fact.element {
         Obj::ArithmeticOperator(ArithmeticOperator::Add(_))
         | Obj::ArithmeticOperator(ArithmeticOperator::Sub(_))
+        | Obj::ArithmeticOperator(ArithmeticOperator::Neg(_))
         | Obj::ArithmeticOperator(ArithmeticOperator::Mul(_))
         | Obj::ArithmeticOperator(ArithmeticOperator::Div(_))
         | Obj::ArithmeticOperator(ArithmeticOperator::Pow(_))

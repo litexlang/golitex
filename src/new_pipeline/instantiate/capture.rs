@@ -99,6 +99,7 @@ pub fn collect_free_plain_ids(
         Obj::ArithmeticOperator(ArithmeticOperator::Sub(a)) => {
             collect_binary(&a.left, &a.right, bound, out)
         }
+        Obj::ArithmeticOperator(ArithmeticOperator::Neg(a)) => collect_unary(&a.arg, bound, out),
         Obj::ArithmeticOperator(ArithmeticOperator::Mul(a)) => {
             collect_binary(&a.left, &a.right, bound, out)
         }

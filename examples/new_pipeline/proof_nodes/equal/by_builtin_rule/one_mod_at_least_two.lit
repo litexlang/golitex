@@ -1,0 +1,6 @@
+# Node: equal.ByBuiltinRule.OneModAtLeastTwo
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/one_mod_at_least_two.lit
+
+have m N+
+2 <= m
+1 % m = 1

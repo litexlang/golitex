@@ -72,6 +72,7 @@ fn pack_success_by_def(
         Obj::FnObj(_) => ObjWellDefinedProofByDef::FnObj(FnObjObjWellDefinedProof::from_stages(stages)),
         Obj::ArithmeticOperator(ArithmeticOperator::Add(_)) => ObjWellDefinedProofByDef::ArithmeticOperator(ArithmeticOperatorObjWellDefinedProofByDef::Add(AddObjWellDefinedProof::from_stages(stages))),
         Obj::ArithmeticOperator(ArithmeticOperator::Sub(_)) => ObjWellDefinedProofByDef::ArithmeticOperator(ArithmeticOperatorObjWellDefinedProofByDef::Sub(SubObjWellDefinedProof::from_stages(stages))),
+        Obj::ArithmeticOperator(ArithmeticOperator::Neg(_)) => ObjWellDefinedProofByDef::ArithmeticOperator(ArithmeticOperatorObjWellDefinedProofByDef::Neg(NegObjWellDefinedProof::from_stages(stages))),
         Obj::ArithmeticOperator(ArithmeticOperator::Mul(_)) => ObjWellDefinedProofByDef::ArithmeticOperator(ArithmeticOperatorObjWellDefinedProofByDef::Mul(MulObjWellDefinedProof::from_stages(stages))),
         Obj::ArithmeticOperator(ArithmeticOperator::Div(_)) => ObjWellDefinedProofByDef::ArithmeticOperator(ArithmeticOperatorObjWellDefinedProofByDef::Div(DivObjWellDefinedProof::from_stages(stages))),
         Obj::IntegerOperator(IntegerOperator::Mod(_)) => ObjWellDefinedProofByDef::IntegerOperator(IntegerOperatorObjWellDefinedProofByDef::Mod(ModObjWellDefinedProof::from_stages(stages))),
@@ -219,6 +220,9 @@ pub(super) fn wrap_common_fail(
         )),
         Obj::ArithmeticOperator(ArithmeticOperator::Sub(_)) => FailToVerifyObjWellDefinedResult::ArithmeticOperator(FailToVerifyArithmeticOperatorObjWellDefinedResult::Sub(
             FailToVerifySubObjWellDefined(common),
+        )),
+        Obj::ArithmeticOperator(ArithmeticOperator::Neg(_)) => FailToVerifyObjWellDefinedResult::ArithmeticOperator(FailToVerifyArithmeticOperatorObjWellDefinedResult::Neg(
+            FailToVerifyNegObjWellDefined(common),
         )),
         Obj::ArithmeticOperator(ArithmeticOperator::Mul(_)) => FailToVerifyObjWellDefinedResult::ArithmeticOperator(FailToVerifyArithmeticOperatorObjWellDefinedResult::Mul(
             FailToVerifyMulObjWellDefined(common),

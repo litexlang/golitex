@@ -38,6 +38,10 @@ impl EvalRational {
                 let right = Self::from_obj(&sub.right)?;
                 left.sub(&right)
             }
+            Obj::ArithmeticOperator(ArithmeticOperator::Neg(neg)) => {
+                let arg = Self::from_obj(&neg.arg)?;
+                Self::new(0, 1)?.sub(&arg)
+            }
             Obj::ArithmeticOperator(ArithmeticOperator::Mul(mul)) => {
                 let left = Self::from_obj(&mul.left)?;
                 let right = Self::from_obj(&mul.right)?;

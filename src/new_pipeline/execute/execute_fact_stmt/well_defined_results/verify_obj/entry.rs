@@ -155,6 +155,7 @@ impl Runtime {
             Obj::Literal(Literal::Pi(_)) => self.verify_pi_obj_well_definedness_by_def(verify_state),
             Obj::ArithmeticOperator(ArithmeticOperator::Add(value)) => self.verify_add_obj_well_definedness_by_def(value, verify_state),
             Obj::ArithmeticOperator(ArithmeticOperator::Sub(value)) => self.verify_sub_obj_well_definedness_by_def(value, verify_state),
+            Obj::ArithmeticOperator(ArithmeticOperator::Neg(value)) => self.verify_neg_obj_well_definedness_by_def(value, verify_state),
             Obj::ArithmeticOperator(ArithmeticOperator::Mul(value)) => self.verify_mul_obj_well_definedness_by_def(value, verify_state),
             Obj::ArithmeticOperator(ArithmeticOperator::Div(value)) => self.verify_div_obj_well_definedness_by_def(value, verify_state),
             Obj::IntegerOperator(IntegerOperator::Mod(value)) => self.verify_mod_obj_well_definedness_by_def(value, verify_state),

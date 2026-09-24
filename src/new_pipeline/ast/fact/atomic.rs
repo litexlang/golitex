@@ -1,4 +1,4 @@
-use super::super::line_file::LineFile;
+use super::super::line_file::SourceLine;
 use super::super::names::AtomicName;
 use super::super::obj::Obj;
 use crate::new_pipeline::runtime::FactId;
@@ -40,7 +40,7 @@ pub struct EqualFact {
     pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -48,7 +48,7 @@ pub struct NotEqualFact {
     pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -56,7 +56,7 @@ pub struct InFact {
     pub fact_id: FactId,
     pub element: Obj,
     pub set: Obj,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -64,7 +64,7 @@ pub struct NotInFact {
     pub fact_id: FactId,
     pub element: Obj,
     pub set: Obj,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -72,7 +72,7 @@ pub struct LessFact {
     pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -80,7 +80,7 @@ pub struct NotLessFact {
     pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -88,7 +88,7 @@ pub struct GreaterFact {
     pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -96,7 +96,7 @@ pub struct NotGreaterFact {
     pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -104,7 +104,7 @@ pub struct LessEqualFact {
     pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -112,7 +112,7 @@ pub struct NotLessEqualFact {
     pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -120,7 +120,7 @@ pub struct GreaterEqualFact {
     pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -128,7 +128,7 @@ pub struct NotGreaterEqualFact {
     pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -136,7 +136,7 @@ pub struct NormalAtomicFact {
     pub fact_id: FactId,
     pub predicate: AtomicName,
     pub body: Vec<Obj>,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -144,49 +144,49 @@ pub struct NotNormalAtomicFact {
     pub fact_id: FactId,
     pub predicate: AtomicName,
     pub body: Vec<Obj>,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IsSetFact {
     pub fact_id: FactId,
     pub set: Obj,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NotIsSetFact {
     pub fact_id: FactId,
     pub set: Obj,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IsNonemptySetFact {
     pub fact_id: FactId,
     pub set: Obj,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NotIsNonemptySetFact {
     pub fact_id: FactId,
     pub set: Obj,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IsFiniteSetFact {
     pub fact_id: FactId,
     pub set: Obj,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NotIsFiniteSetFact {
     pub fact_id: FactId,
     pub set: Obj,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -194,7 +194,7 @@ pub struct SupersetFact {
     pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -202,7 +202,7 @@ pub struct NotSupersetFact {
     pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -210,7 +210,7 @@ pub struct SubsetFact {
     pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -218,35 +218,35 @@ pub struct NotSubsetFact {
     pub fact_id: FactId,
     pub left: Obj,
     pub right: Obj,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IsTupleFact {
     pub fact_id: FactId,
     pub set: Obj,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NotIsTupleFact {
     pub fact_id: FactId,
     pub set: Obj,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IsCartFact {
     pub fact_id: FactId,
     pub set: Obj,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NotIsCartFact {
     pub fact_id: FactId,
     pub set: Obj,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 impl AtomicFact {

@@ -1,8 +1,8 @@
 use super::primary::{fn_obj_head_from_obj, parse_primary};
 use crate::new_pipeline::ast::obj::{
     Add, ArithmeticOperator, Cart, ClosedRange, Div, Factorial, FieldAccess, FnObj, FnSet,
-    FunctionSpace, IntegerOperator, Intersect, Literal, Mod, Mul, Number, Obj, ObjAtIndex, Pow,
-    ProductShape, SetFormer, SetOperator, StructAndFieldAccessObj, Sub, Union,
+    FunctionSpace, IntegerOperator, Intersect, Mod, Mul, Neg, Obj, ObjAtIndex, Pow, ProductShape,
+    SetFormer, SetOperator, StructAndFieldAccessObj, Sub, Union,
 };
 use crate::new_pipeline::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
 use crate::new_pipeline::parse::keywords::{
@@ -154,13 +154,9 @@ fn parse_closed_range(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Ob
 fn parse_unary(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
     if tb.peek() == Some(SUB) {
         tb.advance()?;
-        let right = parse_unary(rt, tb)?;
-        // Encode unary minus as `0 - right` (no Neg variant).
-        return Ok(Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub {
-            left: Box::new(Obj::Literal(Literal::Number(Number {
-                normalized_value: "0".to_string(),
-            }))),
-            right: Box::new(right),
+        let arg = parse_unary(rt, tb)?;
+        return Ok(Obj::ArithmeticOperator(ArithmeticOperator::Neg(Neg {
+            arg: Box::new(arg),
         })));
     }
     parse_pow(rt, tb)

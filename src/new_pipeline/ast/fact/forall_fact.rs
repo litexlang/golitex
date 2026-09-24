@@ -1,5 +1,5 @@
 use super::{AndFact, AtomicFact, ChainFact, Fact, OrFact, PlainExistFact};
-use super::super::line_file::LineFile;
+use super::super::line_file::SourceLine;
 use super::super::param::TypedParameterList;
 use crate::new_pipeline::runtime::FactId;
 
@@ -26,7 +26,7 @@ pub struct ForallFact {
     // Left-to-right WD: each succeeds, then is assumed for later dom / then facts (temporary).
     pub dom_facts: Vec<Fact>,
     pub then_facts: Vec<ExistOrAndChainAtomicFact>,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

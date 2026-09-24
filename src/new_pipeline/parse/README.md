@@ -410,7 +410,7 @@ Precedence low → high:
 | ranges | `a...b`, `closed_range(a, b)`, `range(a, b)` |
 | cart | `A × B`, `cart(A, B)` (≥2) |
 | unicode / keyword sets | `A ∪ B`, `A ∩ B`; `union` `intersect` `set_minus` `family_union` `family_intersect` `power_set` `index_union` `index_intersect` `index_cart` |
-| arith | `+ - * / % ^`, unary `-`, `abs` `floor` `ceil` `sign` `min` `max` |
+| arith | `+ - * / % ^`, unary `-` (= AST `Neg`), `abs` `floor` `ceil` `sign` `min` `max` |
 | int | `gcd` `lcm` `quot` |
 | trig / explog | `sin cos tan cot arcsin arccos arctan arccot` ; `sqrt exp ln` ; `log(base, x)` |
 | dims / proj / finite | `cart_dim` `tuple_dim` `proj` ; `finite_set_size` `finite_set_max` `finite_set_min` `finite_set_product` |
@@ -494,4 +494,4 @@ Iron rules (also in `mod.rs`):
 1. Plain atoms get `IdentifierId` (see `../identifier_identity.md`): no shadowing; no same-name nested binders.
 2. ParseScope maps plain name → id only.
 3. Do not store facts or read `ExecEnv` here.
-4. Errors: `RuntimeParseError` + `LineFile` from `TokenBlock`.
+4. Errors: `RuntimeParseError` + path from `TokenBlock`; AST stamps `SourceLine` via live `CodeSource`.

@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.LogChangeOfBase
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/log_change_of_base.lit
+
+have x R+
+log(2, x) = log(10, x) / log(10, 2)

@@ -12,6 +12,16 @@ use super::by_inverse_trig::{
     CosArccosLeftInverseBuiltinRuleProof, CotArccotLeftInverseBuiltinRuleProof,
     SinArcsinLeftInverseBuiltinRuleProof, TanArctanLeftInverseBuiltinRuleProof,
 };
+use super::by_equality_identities_wave2::{
+    AbsOfNegationBuiltinRuleProof, AbsProductBuiltinRuleProof, AbsSquareBuiltinRuleProof,
+    LogArgPowerBuiltinRuleProof, LogBaseSelfBuiltinRuleProof, LogChangeOfBaseBuiltinRuleProof,
+    LogOfOneBuiltinRuleProof, LogOfPowerSameBaseBuiltinRuleProof, LogProductBuiltinRuleProof,
+    LogQuotientBuiltinRuleProof, LogReciprocalBuiltinRuleProof, ModOneBuiltinRuleProof,
+    NestedSameModAbsorptionBuiltinRuleProof, OneModAtLeastTwoBuiltinRuleProof,
+    OneToAnyPowerBuiltinRuleProof, SqrtOfSquareBuiltinRuleProof, SqrtOneBuiltinRuleProof,
+    SqrtProductBuiltinRuleProof, SqrtQuotientBuiltinRuleProof, SqrtSquareBuiltinRuleProof,
+    SqrtZeroBuiltinRuleProof, ZeroModBuiltinRuleProof, ZeroToPosNatPowerBuiltinRuleProof,
+};
 use super::by_power_laws::{
     PowerOfPowerBuiltinRuleProof, PowerOfProductBuiltinRuleProof,
     PowerProductSameBaseBuiltinRuleProof, QuotientAsMulNegOnePowerBuiltinRuleProof,
@@ -49,6 +59,29 @@ pub enum EqualitySearchProofByBuiltinRule {
     PowerOfProduct(PowerOfProductBuiltinRuleProof),
     ReciprocalAsNegOnePower(ReciprocalAsNegOnePowerBuiltinRuleProof),
     QuotientAsMulNegOnePower(QuotientAsMulNegOnePowerBuiltinRuleProof),
+    OneToAnyPower(OneToAnyPowerBuiltinRuleProof),
+    ZeroToPosNatPower(ZeroToPosNatPowerBuiltinRuleProof),
+    SqrtSquare(SqrtSquareBuiltinRuleProof),
+    SqrtZero(SqrtZeroBuiltinRuleProof),
+    SqrtOne(SqrtOneBuiltinRuleProof),
+    SqrtOfSquare(SqrtOfSquareBuiltinRuleProof),
+    SqrtProduct(SqrtProductBuiltinRuleProof),
+    SqrtQuotient(SqrtQuotientBuiltinRuleProof),
+    AbsOfNegation(AbsOfNegationBuiltinRuleProof),
+    AbsProduct(AbsProductBuiltinRuleProof),
+    AbsSquare(AbsSquareBuiltinRuleProof),
+    LogBaseSelf(LogBaseSelfBuiltinRuleProof),
+    LogOfOne(LogOfOneBuiltinRuleProof),
+    LogOfPowerSameBase(LogOfPowerSameBaseBuiltinRuleProof),
+    LogArgPower(LogArgPowerBuiltinRuleProof),
+    LogProduct(LogProductBuiltinRuleProof),
+    LogQuotient(LogQuotientBuiltinRuleProof),
+    LogReciprocal(LogReciprocalBuiltinRuleProof),
+    LogChangeOfBase(LogChangeOfBaseBuiltinRuleProof),
+    ZeroMod(ZeroModBuiltinRuleProof),
+    ModOne(ModOneBuiltinRuleProof),
+    OneModAtLeastTwo(OneModAtLeastTwoBuiltinRuleProof),
+    NestedSameModAbsorption(NestedSameModAbsorptionBuiltinRuleProof),
 }
 
 // Builtin Calculation: both sides of an equality reduce to the same value

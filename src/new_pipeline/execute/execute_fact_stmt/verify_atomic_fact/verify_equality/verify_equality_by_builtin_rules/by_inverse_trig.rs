@@ -426,12 +426,13 @@ pub(crate) fn half_pi() -> Obj {
 }
 
 pub(crate) fn negative_half_pi() -> Obj {
-    // Prefer the parse shape of `-pi / 2`: `(0 - pi) / 2`.
+    // Parse shape of `-pi / 2`: `(-pi) / 2` = Div(Neg(pi), 2).
     Obj::ArithmeticOperator(ArithmeticOperator::Div(Div {
-        left: Box::new(Obj::ArithmeticOperator(ArithmeticOperator::Sub(crate::new_pipeline::ast::obj::Sub {
-            left: Box::new(zero_obj()),
-            right: Box::new(pi_obj()),
-        }))),
+        left: Box::new(Obj::ArithmeticOperator(ArithmeticOperator::Neg(
+            crate::new_pipeline::ast::obj::Neg {
+                arg: Box::new(pi_obj()),
+            },
+        ))),
         right: Box::new(Obj::Literal(Literal::Number(Number {
             normalized_value: "2".to_string(),
         }))),

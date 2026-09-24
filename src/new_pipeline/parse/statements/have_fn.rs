@@ -6,7 +6,7 @@ use super::super::object::{is_simple_name, parse_obj};
 use crate::new_pipeline::ast::fact::{
     AndChainAtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact,
 };
-use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::obj::{AnonymousFn, FnSet, Obj};
 use crate::new_pipeline::ast::param::ParamType;
 use crate::new_pipeline::ast::stmt::{
@@ -108,7 +108,7 @@ impl Runtime {
                 HaveFnEqualStmt {
                     name,
                     equal_to_anonymous_fn,
-                    line_file: LineFile::new(block.line, block.source_path.clone()),
+                    line_file: SourceLine::new(block.line, self.code_source.clone()),
                 },
             )))
         })();
@@ -161,7 +161,7 @@ impl Runtime {
                 fn_set_clause,
                 cases,
                 equal_tos,
-                line_file: LineFile::new(block.line, block.source_path.clone()),
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
             },
         )))
     }
@@ -197,7 +197,7 @@ impl Runtime {
                 measure,
                 lower_bound,
                 cases,
-                line_file: LineFile::new(block.line, block.source_path.clone()),
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
             },
         )))
     }
@@ -309,7 +309,7 @@ impl Runtime {
         Ok(Stmt::Definition(DefinitionStmt::HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt {
                 name,
                 forall,
-                line_file: LineFile::new(block.line, block.source_path.clone()),
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
             }),
         ))
     }

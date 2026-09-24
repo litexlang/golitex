@@ -1,6 +1,6 @@
 use super::super::keywords::{AXIOM, THM};
 use super::super::object::is_simple_name;
-use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::stmt::{AxiomStmt, DefThmStmt, DefinitionStmt, Stmt};
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -42,7 +42,7 @@ impl Runtime {
             name,
             fact,
             prove_process,
-            line_file: LineFile::new(block.line, block.source_path.clone()),
+            line_file: SourceLine::new(block.line, self.code_source.clone()),
         })))
     }
 
@@ -67,7 +67,7 @@ impl Runtime {
         Ok(Stmt::Definition(DefinitionStmt::AxiomStmt(AxiomStmt {
             name,
             forall_fact,
-            line_file: LineFile::new(block.line, block.source_path.clone()),
+            line_file: SourceLine::new(block.line, self.code_source.clone()),
         })))
     }
 }

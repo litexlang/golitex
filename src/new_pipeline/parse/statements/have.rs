@@ -1,6 +1,6 @@
 use super::super::keywords::{COLON, COMMA, EQUAL};
 use super::super::object::parse_obj;
-use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::stmt::{
     DefineObjStmt, DefinitionStmt, HaveObjByExistFactsStmt, HaveObjEqualStmt,
     HaveObjInNonemptySetOrParamTypeStmt, Stmt,
@@ -78,7 +78,7 @@ impl Runtime {
                 Ok(Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveObjInNonemptySetStmt(
                     HaveObjInNonemptySetOrParamTypeStmt {
                         param_def,
-                        line_file: LineFile::new(block.line, block.source_path.clone()),
+                        line_file: SourceLine::new(block.line, self.code_source.clone()),
                     },
                 ))))
             }
@@ -90,7 +90,7 @@ impl Runtime {
                     HaveObjEqualStmt {
                         param_def,
                         objs_equal_to,
-                        line_file: LineFile::new(block.line, block.source_path.clone()),
+                        line_file: SourceLine::new(block.line, self.code_source.clone()),
                     },
                 ))))
             }
@@ -102,7 +102,7 @@ impl Runtime {
                     HaveObjByExistFactsStmt {
                         param_def,
                         facts,
-                        line_file: LineFile::new(block.line, block.source_path.clone()),
+                        line_file: SourceLine::new(block.line, self.code_source.clone()),
                     },
                 ))))
             }

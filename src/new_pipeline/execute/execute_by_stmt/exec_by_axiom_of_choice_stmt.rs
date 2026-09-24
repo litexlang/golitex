@@ -9,7 +9,7 @@ use crate::new_pipeline::ast::fact::{
     AtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact, IsNonemptySetFact, IsSetFact, NormalAtomicFact,
     PlainExistFact, QuantifierFreeFact,
 };
-use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::{AnonymousFn, FamilyUnion, FnSet, IdentifierObj, Obj, FunctionSpace, SetOperator};
 use crate::new_pipeline::ast::param::{
@@ -85,7 +85,7 @@ pub fn exec_by_axiom_of_choice_stmt(
     ))
 }
 
-fn ac_obligations(runtime: &mut Runtime, family: &Obj, line_file: &LineFile) -> Vec<Fact> {
+fn ac_obligations(runtime: &mut Runtime, family: &Obj, line_file: &SourceLine) -> Vec<Fact> {
     let is_set: Fact = IsSetFact {
         fact_id: runtime.global_ids.allocate_fact_id(),
         set: family.clone(),
@@ -95,7 +95,7 @@ fn ac_obligations(runtime: &mut Runtime, family: &Obj, line_file: &LineFile) -> 
     vec![is_set, ac_members_nonempty(runtime, family, line_file)]
 }
 
-fn ac_members_nonempty(runtime: &mut Runtime, family: &Obj, line_file: &LineFile) -> Fact {
+fn ac_members_nonempty(runtime: &mut Runtime, family: &Obj, line_file: &SourceLine) -> Fact {
     let a = runtime.fresh_internal_param();
     let a_obj = Obj::Identifier(IdentifierObj::from_bound_name(&a));
     let nonempty: AtomicFact = IsNonemptySetFact {
@@ -118,7 +118,7 @@ fn ac_members_nonempty(runtime: &mut Runtime, family: &Obj, line_file: &LineFile
     })
 }
 
-fn ac_exist_fact(runtime: &mut Runtime, family: &Obj, line_file: &LineFile) -> Fact {
+fn ac_exist_fact(runtime: &mut Runtime, family: &Obj, line_file: &SourceLine) -> Fact {
     let idx = runtime.fresh_internal_param();
     let fn_set = FnSet {
         set_bound_parameters: SetBoundParameterList {

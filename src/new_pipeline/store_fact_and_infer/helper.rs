@@ -1,17 +1,17 @@
 use crate::new_pipeline::ast::fact::ChainFact;
-use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::names::{AtomicName, BoundName};
 use crate::new_pipeline::ast::param::TypedParameterList;
 use crate::new_pipeline::parse::keywords::{
     EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL,
 };
-use crate::new_pipeline::runtime::RealOrVirtualPath;
+use crate::new_pipeline::runtime::CodeSource;
 
-pub(crate) fn chain_line_file(chain_fact: &ChainFact) -> LineFile {
+pub(crate) fn chain_line_file(chain_fact: &ChainFact) -> SourceLine {
     chain_fact
         .line_file
         .clone()
-        .unwrap_or_else(|| LineFile::new(0, RealOrVirtualPath::Eval))
+        .unwrap_or_else(|| SourceLine::new(0, CodeSource::Eval))
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]

@@ -1,5 +1,5 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact, GreaterFact};
-use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::names::BoundName;
 use crate::new_pipeline::ast::obj::{IdentifierObj, Literal, Number, Obj, StandardSet};
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
@@ -8,7 +8,7 @@ use crate::new_pipeline::knowledge_base::{
     load_def_prop, read_def_prop, store_def_prop, write_def_prop,
 };
 use crate::new_pipeline::runtime::runtime_ids::{FactId, IdentifierId};
-use crate::new_pipeline::runtime::RealOrVirtualPath;
+use crate::new_pipeline::runtime::CodeSource;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -37,9 +37,9 @@ fn sample_is_pos() -> DefPropStmt {
             })),
             line_file: None,
         }))],
-        line_file: LineFile::new(
+        line_file: SourceLine::new(
             1,
-            RealOrVirtualPath::Real(PathBuf::from("/abs/module/foo.lit")),
+            CodeSource::RootExport { export_file_id: 0 },
         ),
     }
 }

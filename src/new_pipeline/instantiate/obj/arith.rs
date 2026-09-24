@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
 
-use crate::new_pipeline::ast::obj::{Abs, Add, Arccos, Arccot, Arcsin, Arctan, Ceil, ComplexAbs, Cos, Cot, Div, Exp, Factorial, Floor, Gcd, ImaginaryPart, Lcm, Ln, Log, Max, Min, Mod, Mul, Obj, Pow, Quot, RealPart, Sign, Sin, Sqrt, Sub, Tan, ArithmeticOperator, ComplexOperator, ExpLogOperator, IntegerOperator, TrigOperator};
+use crate::new_pipeline::ast::obj::{Abs, Add, Arccos, Arccot, Arcsin, Arctan, Ceil, ComplexAbs, Cos, Cot, Div, Exp, Factorial, Floor, Gcd, ImaginaryPart, Lcm, Ln, Log, Max, Min, Mod, Mul, Neg, Obj, Pow, Quot, RealPart, Sign, Sin, Sqrt, Sub, Tan, ArithmeticOperator, ComplexOperator, ExpLogOperator, IntegerOperator, TrigOperator};
 use crate::new_pipeline::runtime::Runtime;
 
 use super::super::error::InstError;
@@ -29,6 +29,17 @@ impl Runtime {
         Ok(Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub {
             left: Box::new(self.inst_obj_rec(&a.left, param_to_arg_map)?),
             right: Box::new(self.inst_obj_rec(&a.right, param_to_arg_map)?),
+        })))
+    }
+
+    pub(crate) fn inst_neg_obj(
+        &mut self,
+        a: &Neg,
+        param_to_arg_map: &HashMap<IdentifierId, Obj>,
+
+    ) -> Result<Obj, InstError> {
+        Ok(Obj::ArithmeticOperator(ArithmeticOperator::Neg(Neg {
+            arg: Box::new(self.inst_obj_rec(&a.arg, param_to_arg_map)?),
         })))
     }
 

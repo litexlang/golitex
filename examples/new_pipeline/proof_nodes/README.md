@@ -37,6 +37,11 @@ Equality BuiltinRule power laws (Stage B wave 1): `a^m * a^n = a^(m+n)`,
 `(a^m)^n = a^(m*n)`, `(a*b)^n = a^n * b^n`, `1/a = a^(-1)`, `a/b = a * b^(-1)`
 under `examples/new_pipeline/proof_nodes/equal/by_builtin_rule/power_*.lit` and
 `reciprocal_*` / `quotient_*`.
+Equality BuiltinRule identities (Stage B wave 2): power `1^a` / `0^n`; sqrt /
+abs / log families; mod `0 % a`, `a % 1`, `1 % m`, nested absorption — see
+`one_to_any_power.lit`, `zero_to_pos_nat_power.lit`, `sqrt_*.lit`, `abs_*.lit`,
+`log_*.lit`, `zero_mod.lit`, `mod_one.lit`, `one_mod_at_least_two.lit`,
+`nested_same_mod_absorption.lit`.
 Equality BuiltinRewrite: ClosedNumericEqualSubstitution (equal + atomic) and
 atomic KnownEqualObjSubstitution.
 No equality KnownRewrite slot (dead; = uses EqualIr / known_equivalence_classes graph).
