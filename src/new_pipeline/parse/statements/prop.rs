@@ -1,6 +1,6 @@
 use super::super::keywords::{ABSTRACT_PROP, COLON, PROP};
 use super::super::object::is_simple_name;
-use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::stmt::{DefAbstractPropStmt, DefPropStmt, DefinitionStmt, Stmt};
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -48,7 +48,7 @@ impl Runtime {
             name,
             typed_parameters,
             iff_facts,
-            line_file: LineFile::new(block.line, block.source_path.clone()),
+            line_file: SourceLine::new(block.line, self.code_source.clone()),
         })))
     }
 
@@ -83,7 +83,7 @@ impl Runtime {
             DefAbstractPropStmt {
                 name,
                 params,
-                line_file: LineFile::new(block.line, block.source_path.clone()),
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
             },
         )))
     }

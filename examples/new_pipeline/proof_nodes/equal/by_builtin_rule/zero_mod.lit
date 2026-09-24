@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.ZeroMod
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/zero_mod.lit
+
+have a N+
+0 % a = 0

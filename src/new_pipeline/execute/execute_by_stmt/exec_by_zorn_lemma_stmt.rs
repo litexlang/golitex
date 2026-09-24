@@ -9,7 +9,7 @@ use crate::new_pipeline::ast::fact::{
     AndChainAtomicFact, AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, ForallFact, IsNonemptySetFact,
     NormalAtomicFact, OrFact, PlainExistFact, QuantifierFreeFact,
 };
-use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::{IdentifierObj, Obj, PowerSet, SetOperator};
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
@@ -189,7 +189,7 @@ fn zorn_obligations(
     set: &Obj,
     prop_name: &AtomicName,
     upper_bound_prop_name: &AtomicName,
-    line_file: &LineFile,
+    line_file: &SourceLine,
 ) -> Vec<Fact> {
     vec![
         IsNonemptySetFact {
@@ -209,7 +209,7 @@ fn zorn_reflexive(
     runtime: &mut Runtime,
     set: &Obj,
     prop_name: &AtomicName,
-    line_file: &LineFile,
+    line_file: &SourceLine,
 ) -> Fact {
     let x = runtime.fresh_internal_param();
     let x_obj = Obj::Identifier(IdentifierObj::from_bound_name(&x));
@@ -232,7 +232,7 @@ fn zorn_transitive(
     runtime: &mut Runtime,
     set: &Obj,
     prop_name: &AtomicName,
-    line_file: &LineFile,
+    line_file: &SourceLine,
 ) -> Fact {
     let x = runtime.fresh_internal_param();
     let y = runtime.fresh_internal_param();
@@ -261,7 +261,7 @@ fn zorn_antisymmetric(
     runtime: &mut Runtime,
     set: &Obj,
     prop_name: &AtomicName,
-    line_file: &LineFile,
+    line_file: &SourceLine,
 ) -> Fact {
     let x = runtime.fresh_internal_param();
     let y = runtime.fresh_internal_param();
@@ -295,7 +295,7 @@ fn zorn_chain_upper_bound(
     set: &Obj,
     prop_name: &AtomicName,
     upper_bound_prop_name: &AtomicName,
-    line_file: &LineFile,
+    line_file: &SourceLine,
 ) -> Fact {
     let c = runtime.fresh_internal_param();
     let c_obj = Obj::Identifier(IdentifierObj::from_bound_name(&c));
@@ -325,7 +325,7 @@ fn zorn_chain_total(
     runtime: &mut Runtime,
     chain: &Obj,
     prop_name: &AtomicName,
-    line_file: &LineFile,
+    line_file: &SourceLine,
 ) -> Fact {
     let x = runtime.fresh_internal_param();
     let y = runtime.fresh_internal_param();
@@ -360,7 +360,7 @@ fn zorn_upper_exist(
     set: &Obj,
     chain: &Obj,
     upper_bound_prop_name: &AtomicName,
-    line_file: &LineFile,
+    line_file: &SourceLine,
 ) -> Fact {
     let u = runtime.fresh_internal_param();
     let u_obj = Obj::Identifier(IdentifierObj::from_bound_name(&u));
@@ -387,7 +387,7 @@ fn zorn_maximal_exist(
     runtime: &mut Runtime,
     set: &Obj,
     maximal_prop_name: &AtomicName,
-    line_file: &LineFile,
+    line_file: &SourceLine,
 ) -> Fact {
     let m = runtime.fresh_internal_param();
     let m_obj = Obj::Identifier(IdentifierObj::from_bound_name(&m));
@@ -409,7 +409,7 @@ fn prop_atom(
     runtime: &mut Runtime,
     prop_name: &AtomicName,
     body: Vec<Obj>,
-    line_file: &LineFile,
+    line_file: &SourceLine,
 ) -> AtomicFact {
     NormalAtomicFact {
         fact_id: runtime.global_ids.allocate_fact_id(),

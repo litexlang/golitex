@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.LogReciprocal
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/log_reciprocal.lit
+
+have x R+
+log(2, 1 / x) = 0 - log(2, x)

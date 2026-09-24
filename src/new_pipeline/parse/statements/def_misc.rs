@@ -3,7 +3,7 @@ use super::super::keywords::{
 };
 use super::super::object::{is_simple_name, parse_obj};
 use crate::new_pipeline::ast::fact::QuantifierFreeFact;
-use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::param::TypedParameterList;
 use crate::new_pipeline::ast::stmt::{
     DefStrategyStmt, DefStructStmt, DefTemplateStmt, DefineObjStmt, DefinitionStmt, Stmt, StructFieldDef,
@@ -119,7 +119,7 @@ impl Runtime {
                 param_def_with_dom,
                 fields,
                 equivalent_facts,
-                line_file: LineFile::new(block.line, block.source_path.clone()),
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
             },
         )))
     }
@@ -171,7 +171,7 @@ impl Runtime {
                 template_arg_def,
                 template_arg_dom,
                 template_def_stmt,
-                line_file: LineFile::new(block.line, block.source_path.clone()),
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
             },
         )))
     }
@@ -248,7 +248,7 @@ impl Runtime {
                 name,
                 forall_fact,
                 prove_process,
-                line_file: LineFile::new(block.line, block.source_path.clone()),
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
             },
         )))
     }

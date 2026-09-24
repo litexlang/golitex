@@ -36,6 +36,9 @@ impl Runtime {
             Obj::ArithmeticOperator(ArithmeticOperator::Sub(a)) => {
                 self.inst_sub_obj(a, param_to_arg_map)
             }
+            Obj::ArithmeticOperator(ArithmeticOperator::Neg(a)) => {
+                self.inst_neg_obj(a, param_to_arg_map)
+            }
             Obj::ArithmeticOperator(ArithmeticOperator::Mul(a)) => {
                 self.inst_mul_obj(a, param_to_arg_map)
             }

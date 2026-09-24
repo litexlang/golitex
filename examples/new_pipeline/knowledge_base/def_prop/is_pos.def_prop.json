@@ -27,9 +27,9 @@
   "kind": "def_prop",
   "line_file": {
     "line": 1,
-    "path": {
-      "path": "/abs/module/foo.lit",
-      "tag": "Real"
+    "origin": {
+      "export_file_id": 0,
+      "tag": "RootExport"
     }
   },
   "name": "is_pos",

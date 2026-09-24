@@ -19,6 +19,18 @@ pub fn collect_monomials_in_obj(
         Obj::ArithmeticOperator(ArithmeticOperator::Mul(mul)) => collect_monomials_in_mul(mul, mode),
         Obj::ArithmeticOperator(ArithmeticOperator::Pow(pow)) => collect_monomials_in_pow(pow, mode),
         Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub)) => collect_monomials_in_sub(sub, mode),
+        Obj::ArithmeticOperator(ArithmeticOperator::Neg(neg)) => {
+            // Treat unary minus like `0 - arg` for monomial collection.
+            collect_monomials_in_sub(
+                &Sub {
+                    left: Box::new(Obj::Literal(Literal::Number(Number {
+                        normalized_value: "0".to_string(),
+                    }))),
+                    right: neg.arg.clone(),
+                },
+                mode,
+            )
+        }
         obj => {
             if let Some(m) =
                 MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(

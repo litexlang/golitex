@@ -2,7 +2,7 @@ use crate::new_pipeline::ast::fact::{
     negate_atomic_fact, AndChainAtomicFact, AtomicFact, ExistShapedFact, NotForallFact, OrFact,
     PlainExistFact, QuantifierFreeFact,
 };
-use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
@@ -101,7 +101,7 @@ impl Runtime {
     fn negate_atomics_to_or(
         &mut self,
         atomics: &[AtomicFact],
-        line_file: Option<LineFile>,
+        line_file: Option<SourceLine>,
     ) -> RuntimeResult<Option<OrFact>> {
         if atomics.is_empty() {
             return Ok(None);

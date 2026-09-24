@@ -8,7 +8,7 @@ use crate::new_pipeline::ast::fact::{
     NotIsTupleFact, NotLessEqualFact, NotLessFact, NotNormalAtomicFact, NotSubsetFact,
     NotSupersetFact, SubsetFact, SupersetFact,
 };
-use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::parse::keywords::{
@@ -47,7 +47,7 @@ impl Runtime {
         prop: AtomicName,
         args: Vec<Obj>,
         positive: bool,
-        line_file: LineFile,
+        line_file: SourceLine,
     ) -> RuntimeResult<AtomicFact> {
         let name = match &prop {
             AtomicName::Plain { name } => name.as_str(),
@@ -64,7 +64,7 @@ impl Runtime {
 
         match name {
             EQUAL | NOT_EQUAL | LESS | GREATER | LESS_EQUAL | GREATER_EQUAL => {
-                two_args(name, &args, &line_file)?;
+                two_args(self, name, &args, line_file.line)?;
                 build_binary_compare(
                     self,
                     name,
@@ -75,7 +75,7 @@ impl Runtime {
                 )
             }
             IN => {
-                two_args(name, &args, &line_file)?;
+                two_args(self, name, &args, line_file.line)?;
                 let fact_id = self.global_ids.allocate_fact_id();
                 if positive {
                     Ok(AtomicFact::InFact(InFact {
@@ -94,7 +94,7 @@ impl Runtime {
                 }
             }
             SUBSET => {
-                two_args(name, &args, &line_file)?;
+                two_args(self, name, &args, line_file.line)?;
                 let fact_id = self.global_ids.allocate_fact_id();
                 if positive {
                     Ok(AtomicFact::SubsetFact(SubsetFact {
@@ -113,7 +113,7 @@ impl Runtime {
                 }
             }
             SUPERSET => {
-                two_args(name, &args, &line_file)?;
+                two_args(self, name, &args, line_file.line)?;
                 let fact_id = self.global_ids.allocate_fact_id();
                 if positive {
                     Ok(AtomicFact::SupersetFact(SupersetFact {
@@ -132,7 +132,7 @@ impl Runtime {
                 }
             }
             IS_SET => {
-                one_arg(name, &args, &line_file)?;
+                one_arg(self, name, &args, line_file.line)?;
                 let fact_id = self.global_ids.allocate_fact_id();
                 if positive {
                     Ok(AtomicFact::IsSetFact(IsSetFact {
@@ -149,7 +149,7 @@ impl Runtime {
                 }
             }
             IS_NONEMPTY_SET => {
-                one_arg(name, &args, &line_file)?;
+                one_arg(self, name, &args, line_file.line)?;
                 let fact_id = self.global_ids.allocate_fact_id();
                 if positive {
                     Ok(AtomicFact::IsNonemptySetFact(IsNonemptySetFact {
@@ -166,7 +166,7 @@ impl Runtime {
                 }
             }
             IS_FINITE_SET => {
-                one_arg(name, &args, &line_file)?;
+                one_arg(self, name, &args, line_file.line)?;
                 let fact_id = self.global_ids.allocate_fact_id();
                 if positive {
                     Ok(AtomicFact::IsFiniteSetFact(IsFiniteSetFact {
@@ -183,7 +183,7 @@ impl Runtime {
                 }
             }
             IS_CART => {
-                one_arg(name, &args, &line_file)?;
+                one_arg(self, name, &args, line_file.line)?;
                 let fact_id = self.global_ids.allocate_fact_id();
                 if positive {
                     Ok(AtomicFact::IsCartFact(IsCartFact {
@@ -200,7 +200,7 @@ impl Runtime {
                 }
             }
             IS_TUPLE => {
-                one_arg(name, &args, &line_file)?;
+                one_arg(self, name, &args, line_file.line)?;
                 let fact_id = self.global_ids.allocate_fact_id();
                 if positive {
                     Ok(AtomicFact::IsTupleFact(IsTupleFact {
@@ -222,7 +222,7 @@ impl Runtime {
                         "`${name}` is removed; use ordinary equality `f = g` or `by fn_extension` / `forall` for pointwise agreement"
                     ),
                     line_file.line,
-                    line_file.path.clone(),
+                    self.current_file.clone(),
                 )
                 .into());
             }
@@ -242,7 +242,7 @@ fn normal_or_not(
     predicate: AtomicName,
     body: Vec<Obj>,
     positive: bool,
-    line_file: LineFile,
+    line_file: SourceLine,
 ) -> AtomicFact {
     if positive {
         AtomicFact::NormalAtomicFact(NormalAtomicFact {
@@ -261,24 +261,24 @@ fn normal_or_not(
     }
 }
 
-fn one_arg(name: &str, args: &[Obj], line_file: &LineFile) -> RuntimeResult<()> {
+fn one_arg(rt: &Runtime, name: &str, args: &[Obj], line: usize) -> RuntimeResult<()> {
     if args.len() != 1 {
         return Err(RuntimeParseError::new(
             format!("`{name}` requires 1 argument, got {}", args.len()),
-            line_file.line,
-            line_file.path.clone(),
+            line,
+            rt.current_file.clone(),
         )
         .into());
     }
     Ok(())
 }
 
-fn two_args(name: &str, args: &[Obj], line_file: &LineFile) -> RuntimeResult<()> {
+fn two_args(rt: &Runtime, name: &str, args: &[Obj], line: usize) -> RuntimeResult<()> {
     if args.len() != 2 {
         return Err(RuntimeParseError::new(
             format!("`{name}` requires 2 arguments, got {}", args.len()),
-            line_file.line,
-            line_file.path.clone(),
+            line,
+            rt.current_file.clone(),
         )
         .into());
     }
@@ -291,7 +291,7 @@ fn build_binary_compare(
     left: Obj,
     right: Obj,
     positive: bool,
-    line_file: LineFile,
+    line_file: SourceLine,
 ) -> RuntimeResult<AtomicFact> {
     let fact_id = rt.global_ids.allocate_fact_id();
     Ok(match (op, positive) {
@@ -371,7 +371,7 @@ fn build_binary_compare(
             return Err(RuntimeParseError::new(
                 format!("unknown comparison `{op}`"),
                 line_file.line,
-                line_file.path.clone(),
+                rt.current_file.clone(),
             )
             .into());
         }

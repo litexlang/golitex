@@ -9,7 +9,7 @@ use crate::new_pipeline::ast::obj::{Obj, SetFormer};
 use crate::new_pipeline::ast::fact::{
     AndChainAtomicFact, AtomicFact, ExistOrAndChainAtomicFact, Fact,
 };
-use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::stmt::{
     ByAxiomOfChoiceStmt, ByCasesStmt, ByContraStmt, ByDefStmt, ByInducStmt,
@@ -84,7 +84,7 @@ impl Runtime {
             left,
             right,
             proof,
-            line_file: LineFile::new(block.line, block.source_path.clone()),
+            line_file: SourceLine::new(block.line, self.code_source.clone()),
         })))
     }
 
@@ -129,7 +129,7 @@ impl Runtime {
             left,
             right,
             proof,
-            line_file: LineFile::new(block.line, block.source_path.clone()),
+            line_file: SourceLine::new(block.line, self.code_source.clone()),
         })))
     }
 
@@ -167,7 +167,7 @@ impl Runtime {
             ByEnumerateFiniteSetStmt {
                 forall_fact,
                 proof,
-                line_file: LineFile::new(block.line, block.source_path.clone()),
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
             },
         )))
     }
@@ -205,7 +205,7 @@ impl Runtime {
         Ok(Stmt::By(ByStmt::ByEnumerateRangeStmt(ByEnumerateRangeStmt {
             element,
             range,
-            line_file: LineFile::new(block.line, block.source_path.clone()),
+            line_file: SourceLine::new(block.line, self.code_source.clone()),
         })))
     }
 
@@ -228,7 +228,7 @@ impl Runtime {
         Ok(Stmt::By(ByStmt::ByForStmt(ByForStmt {
             forall_fact,
             proof,
-            line_file: LineFile::new(block.line, block.source_path.clone()),
+            line_file: SourceLine::new(block.line, self.code_source.clone()),
         })))
     }
 
@@ -255,7 +255,7 @@ impl Runtime {
             ByClosedRangeAsCasesStmt {
                 element,
                 closed_range,
-                line_file: LineFile::new(block.line, block.source_path.clone()),
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
             },
         )))
     }
@@ -345,7 +345,7 @@ impl Runtime {
             then_facts,
             proofs,
             impossible_facts,
-            line_file: LineFile::new(block.line, block.source_path.clone()),
+            line_file: SourceLine::new(block.line, self.code_source.clone()),
         })))
     }
 
@@ -397,7 +397,7 @@ impl Runtime {
             to_prove,
             proof,
             impossible_fact,
-            line_file: LineFile::new(block.line, block.source_path.clone()),
+            line_file: SourceLine::new(block.line, self.code_source.clone()),
         })))
     }
 
@@ -439,7 +439,7 @@ impl Runtime {
         }
         Ok(Stmt::By(ByStmt::ByDefStmt(ByDefStmt {
             fact,
-            line_file: LineFile::new(block.line, block.source_path.clone()),
+            line_file: SourceLine::new(block.line, self.code_source.clone()),
         })))
     }
 
@@ -462,7 +462,7 @@ impl Runtime {
             return Ok(Stmt::By(ByStmt::ByThmStmt(ByThmStmt {
                 call,
                 selected_fact,
-                line_file: LineFile::new(block.line, block.source_path.clone()),
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
             })));
         }
         if !tb.exceed_end_of_head() || !tb.body.is_empty() {
@@ -470,7 +470,7 @@ impl Runtime {
         }
         Ok(Stmt::Release(ReleaseStmt::ReleaseThmStmt(ReleaseThmStmt {
             call,
-            line_file: LineFile::new(block.line, block.source_path.clone()),
+            line_file: SourceLine::new(block.line, self.code_source.clone()),
         })))
     }
 
@@ -487,7 +487,7 @@ impl Runtime {
         }
         Ok(Stmt::Release(ReleaseStmt::ReleaseThmStmt(ReleaseThmStmt {
             call,
-            line_file: LineFile::new(block.line, block.source_path.clone()),
+            line_file: SourceLine::new(block.line, self.code_source.clone()),
         })))
     }
 
@@ -513,7 +513,7 @@ impl Runtime {
         }
         Ok(Stmt::Release(ReleaseStmt::ReleaseStructDefStmt(ReleaseStructDefStmt {
             obj,
-            line_file: LineFile::new(block.line, block.source_path.clone()),
+            line_file: SourceLine::new(block.line, self.code_source.clone()),
         })))
     }
 
@@ -540,7 +540,7 @@ impl Runtime {
         };
         Ok(Stmt::Release(ReleaseStmt::ReleaseObjDefStmt(ReleaseObjDefStmt {
             name,
-            line_file: LineFile::new(block.line, block.source_path.clone()),
+            line_file: SourceLine::new(block.line, self.code_source.clone()),
         })))
     }
 
@@ -694,7 +694,7 @@ impl Runtime {
         self.pop_parse_scope();
         let (to_prove, proof, base_proof, step_proof) = parsed?;
 
-        let line_file = LineFile::new(block.line, block.source_path.clone());
+        let line_file = SourceLine::new(block.line, self.code_source.clone());
         if strong {
             Ok(Stmt::By(ByStmt::ByStrongInducStmt(ByStrongInducStmt {
                 to_prove,
@@ -912,7 +912,7 @@ impl Runtime {
         Ok(Stmt::By(ByStmt::ByRegularityAxiomStmt(
             ByRegularityAxiomStmt {
                 set: args[0].clone(),
-                line_file: LineFile::new(block.line, block.source_path.clone()),
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
             },
         )))
     }
@@ -945,7 +945,7 @@ impl Runtime {
         Ok(Stmt::By(ByStmt::ByAxiomOfChoiceStmt(ByAxiomOfChoiceStmt {
             family,
             proof,
-            line_file: LineFile::new(block.line, block.source_path.clone()),
+            line_file: SourceLine::new(block.line, self.code_source.clone()),
         })))
     }
 
@@ -989,7 +989,7 @@ impl Runtime {
             upper_bound_prop_name,
             maximal_prop_name,
             proof,
-            line_file: LineFile::new(block.line, block.source_path.clone()),
+            line_file: SourceLine::new(block.line, self.code_source.clone()),
         })))
     }
 

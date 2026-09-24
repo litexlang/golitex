@@ -1,4 +1,4 @@
-use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::stmt::{ProofBlockStmt, SketchStmt, Stmt};
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -20,7 +20,7 @@ impl Runtime {
         self.pop_parse_scope();
         Ok(Stmt::ProofBlock(ProofBlockStmt::SketchStmt(SketchStmt {
             proof: proof?,
-            line_file: LineFile::new(block.line, block.source_path.clone()),
+            line_file: SourceLine::new(block.line, self.code_source.clone()),
         })))
     }
 }

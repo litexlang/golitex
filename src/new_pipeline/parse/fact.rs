@@ -165,7 +165,7 @@ impl Runtime {
                 typed_parameters: params,
                 dom_facts,
                 then_facts,
-                line_file: Some(tb.line_file()),
+                line_file: Some(tb.line_file(self.code_source.clone())),
             })
         })();
         self.pop_parse_scope();
@@ -271,13 +271,13 @@ impl Runtime {
                     typed_parameters: params,
                     dom_facts,
                     then_facts,
-                    line_file: Some(tb.line_file()),
+                    line_file: Some(tb.line_file(self.code_source.clone())),
                 };
                 return Ok(Fact::ForallFactWithIff(ForallFactWithIff {
                     fact_id: self.global_ids.allocate_fact_id(),
                     forall_fact,
                     iff_facts,
-                    line_file: Some(tb.line_file()),
+                    line_file: Some(tb.line_file(self.code_source.clone())),
                 }));
             }
 
@@ -323,7 +323,7 @@ impl Runtime {
                 typed_parameters: params,
                 dom_facts,
                 then_facts,
-                line_file: Some(tb.line_file()),
+                line_file: Some(tb.line_file(self.code_source.clone())),
             }))
         })();
         self.pop_parse_scope();
@@ -387,7 +387,7 @@ impl Runtime {
             typed_parameters: params,
             dom_facts,
             then_facts: vec![then_fact],
-            line_file: Some(tb.line_file()),
+            line_file: Some(tb.line_file(self.code_source.clone())),
         }))
     }
 
@@ -452,7 +452,7 @@ impl Runtime {
                 fact_id: self.global_ids.allocate_fact_id(),
                 typed_parameters: params,
                 facts,
-                line_file: Some(tb.line_file()),
+                line_file: Some(tb.line_file(self.code_source.clone())),
             };
             Ok(if unique {
                 ExistShapedFact::ExistUnique(body)
@@ -561,7 +561,7 @@ impl Runtime {
         Ok(QuantifierFreeFact::OrFact(OrFact {
             fact_id: self.global_ids.allocate_fact_id(),
             facts: list,
-            line_file: Some(tb.line_file()),
+            line_file: Some(tb.line_file(self.code_source.clone())),
         }))
     }
 
@@ -610,7 +610,7 @@ impl Runtime {
                     Ok(AndChainAtomicFact::AndFact(AndFact {
                         fact_id: self.global_ids.allocate_fact_id(),
                         facts: collected,
-                        line_file: Some(tb.line_file()),
+                        line_file: Some(tb.line_file(self.code_source.clone())),
                     }))
                 }
             }
@@ -638,7 +638,7 @@ impl Runtime {
         tb: &mut TokenBlock,
         positive: bool,
     ) -> RuntimeResult<ChainAtomicFact> {
-        let line_file = tb.line_file();
+        let line_file = tb.line_file(self.code_source.clone());
 
         if tb.peek() == Some(FACT_PREFIX) {
             tb.advance()?;

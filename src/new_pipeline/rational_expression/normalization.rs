@@ -31,6 +31,9 @@ pub fn algebraic_normalization_nonzero_requirements(left: &Obj, right: &Obj) -> 
                 collect(&sub.left, requirements, seen);
                 collect(&sub.right, requirements, seen);
             }
+            Obj::ArithmeticOperator(ArithmeticOperator::Neg(neg)) => {
+                collect(&neg.arg, requirements, seen);
+            }
             Obj::ArithmeticOperator(ArithmeticOperator::Mul(mul)) => {
                 collect(&mul.left, requirements, seen);
                 collect(&mul.right, requirements, seen);

@@ -3,7 +3,7 @@ use super::super::keywords::{
 };
 use super::super::object::parse_obj;
 use crate::new_pipeline::ast::fact::AtomicFact;
-use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::stmt::{
     Stmt, WitnessAtomicFact, WitnessExistFact, WitnessNonemptySet, WitnessStmt,
 };
@@ -65,7 +65,7 @@ impl Runtime {
             WitnessExistFact {
                 equal_tos,
                 exist_shaped_fact_in_witness,
-                line_file: LineFile::new(block.line, block.source_path.clone()),
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
             },
         )))
     }
@@ -98,7 +98,7 @@ impl Runtime {
             WitnessNonemptySet {
                 obj,
                 set,
-                line_file: LineFile::new(block.line, block.source_path.clone()),
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
             },
         )))
     }
@@ -136,7 +136,7 @@ impl Runtime {
             WitnessAtomicFact {
                 atomic_fact,
                 witnesses,
-                line_file: LineFile::new(block.line, block.source_path.clone()),
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
             },
         )))
     }

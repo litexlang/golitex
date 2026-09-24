@@ -1,4 +1,4 @@
-use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::stmt::{ClaimStmt, ProofBlockStmt, Stmt};
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -31,7 +31,7 @@ impl Runtime {
         Ok(Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(ClaimStmt {
             fact,
             proof,
-            line_file: LineFile::new(block.line, block.source_path.clone()),
+            line_file: SourceLine::new(block.line, self.code_source.clone()),
         })))
     }
 }

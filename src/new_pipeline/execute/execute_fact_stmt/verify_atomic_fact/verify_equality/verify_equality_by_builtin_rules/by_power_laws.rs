@@ -4,7 +4,7 @@
 
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact, InFact, NotEqualFact};
 use crate::new_pipeline::ast::obj::{
-    Add, ArithmeticOperator, Div, Literal, Mul, Number, Obj, Pow, StandardSet, Sub,
+    Add, ArithmeticOperator, Div, Literal, Mul, Neg, Number, Obj, Pow, StandardSet, Sub,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
@@ -457,11 +457,10 @@ fn is_neg_one_obj(obj: &Obj) -> bool {
     ) {
         return true;
     }
-    // Prefix `-1` parses as `0 - 1` (no Neg variant).
+    // Prefix `-1` parses as Neg(1).
     matches!(
         obj,
-        Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left, right }))
-            if is_zero_obj(left.as_ref()) && is_one_obj(right.as_ref())
+        Obj::ArithmeticOperator(ArithmeticOperator::Neg(Neg { arg })) if is_one_obj(arg.as_ref())
     )
 }
 

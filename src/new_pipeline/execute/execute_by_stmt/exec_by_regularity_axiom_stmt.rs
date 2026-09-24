@@ -69,7 +69,7 @@ pub fn exec_by_regularity_axiom_stmt(
 fn regularity_axiom_exist_fact(
     runtime: &mut Runtime,
     set: &Obj,
-    line_file: &crate::new_pipeline::ast::line_file::LineFile,
+    line_file: &crate::new_pipeline::ast::line_file::SourceLine,
 ) -> Fact {
     let x = runtime.fresh_internal_param();
     let x_obj = Obj::Identifier(IdentifierObj::from_bound_name(&x));

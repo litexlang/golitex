@@ -1,4 +1,4 @@
-use crate::new_pipeline::ast::obj::{Abs, Add, Arccos, Arccot, Arcsin, Arctan, Ceil, Cos, Cot, Div, Exp, Factorial, Floor, FnObj, FnObjHead, Gcd, IntervalObj, Lcm, Ln, Max, Min, Mod, Mul, Obj, OneSideInfinityIntervalObj, Pow, Quot, Sign, Sin, Sqrt, Sub, Tan, ArithmeticOperator, ComplexOperator, ExpLogOperator, FiniteSetStat, FunctionSpace, IntegerOperator, IteratedOperator, ProductShape, SetFormer, SetOperator, StructAndFieldAccessObj, TrigOperator};
+use crate::new_pipeline::ast::obj::{Abs, Add, Arccos, Arccot, Arcsin, Arctan, Ceil, Cos, Cot, Div, Exp, Factorial, Floor, FnObj, FnObjHead, Gcd, IntervalObj, Lcm, Ln, Max, Min, Mod, Mul, Neg, Obj, OneSideInfinityIntervalObj, Pow, Quot, Sign, Sin, Sqrt, Sub, Tan, ArithmeticOperator, ComplexOperator, ExpLogOperator, FiniteSetStat, FunctionSpace, IntegerOperator, IteratedOperator, ProductShape, SetFormer, SetOperator, StructAndFieldAccessObj, TrigOperator};
 use crate::new_pipeline::exec_env::known_fact_memory::ObjIR;
 
 // Same-shape child pairs for MatchingOneArgByOne (legacy same_shape peel).
@@ -55,6 +55,7 @@ pub(crate) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Ob
 
         (Obj::ArithmeticOperator(ArithmeticOperator::Add(l)), Obj::ArithmeticOperator(ArithmeticOperator::Add(r))) => binary!(l, r),
         (Obj::ArithmeticOperator(ArithmeticOperator::Sub(l)), Obj::ArithmeticOperator(ArithmeticOperator::Sub(r))) => binary!(l, r),
+        (Obj::ArithmeticOperator(ArithmeticOperator::Neg(l)), Obj::ArithmeticOperator(ArithmeticOperator::Neg(r))) => unary!(l, r),
         (Obj::ArithmeticOperator(ArithmeticOperator::Mul(l)), Obj::ArithmeticOperator(ArithmeticOperator::Mul(r))) => binary!(l, r),
         (Obj::ArithmeticOperator(ArithmeticOperator::Div(l)), Obj::ArithmeticOperator(ArithmeticOperator::Div(r))) => binary!(l, r),
         (Obj::IntegerOperator(IntegerOperator::Mod(l)), Obj::IntegerOperator(IntegerOperator::Mod(r))) => binary!(l, r),
@@ -231,6 +232,9 @@ pub(crate) fn replace_obj_matching_ir(obj: &Obj, from_ir: &ObjIR, to: &Obj) -> O
         Obj::ArithmeticOperator(ArithmeticOperator::Sub(a)) => Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub {
             left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),
             right: Box::new(replace_obj_matching_ir(&a.right, from_ir, to)),
+        })),
+        Obj::ArithmeticOperator(ArithmeticOperator::Neg(a)) => Obj::ArithmeticOperator(ArithmeticOperator::Neg(Neg {
+            arg: Box::new(replace_obj_matching_ir(&a.arg, from_ir, to)),
         })),
         Obj::ArithmeticOperator(ArithmeticOperator::Mul(a)) => Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
             left: Box::new(replace_obj_matching_ir(&a.left, from_ir, to)),

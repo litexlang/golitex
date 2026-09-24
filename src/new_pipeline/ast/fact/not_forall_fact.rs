@@ -1,5 +1,5 @@
 use super::QuantifierFreeFact;
-use super::super::line_file::LineFile;
+use super::super::line_file::SourceLine;
 use super::super::param::TypedParameterList;
 use crate::new_pipeline::runtime::FactId;
 
@@ -20,5 +20,5 @@ pub struct NotForallFact {
     pub typed_parameters: TypedParameterList,
     pub dom_facts: Vec<QuantifierFreeFact>,
     pub then_facts: Vec<QuantifierFreeFact>,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }

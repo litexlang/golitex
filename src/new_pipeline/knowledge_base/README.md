@@ -108,10 +108,16 @@ prop is_pos(x R):
   ],
   "line_file": {
     "line": 1,
-    "path": { "tag": "Real", "path": "/abs/module/foo.lit" }
+    "origin": {
+      "export_file_id": 0,
+      "tag": "RootExport"
+    }
   }
 }
 ```
+
+`line_file` is a `SourceLine`: line number plus `CodeSource` origin (no absolute
+path). `StandaloneFile` / display paths live on `Runtime.current_file`.
 
 ### Supported AST subset (grow over time)
 

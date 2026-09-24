@@ -1,5 +1,5 @@
 use super::super::keywords::{REFLEXIVE, REGISTER, SYMMETRIC, TRANSITIVE};
-use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::stmt::{
     RegisterReflexivePropStmt, RegisterStmt, RegisterSymmetricPropStmt,
     RegisterTransitivePropStmt, Stmt,
@@ -42,7 +42,7 @@ impl Runtime {
         Ok(Stmt::Register(RegisterStmt::RegisterReflexivePropStmt(
             RegisterReflexivePropStmt {
                 forall_fact,
-                line_file: LineFile::new(block.line, block.source_path.clone()),
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
             },
         )))
     }
@@ -61,7 +61,7 @@ impl Runtime {
         Ok(Stmt::Register(RegisterStmt::RegisterSymmetricPropStmt(
             RegisterSymmetricPropStmt {
                 forall_fact,
-                line_file: LineFile::new(block.line, block.source_path.clone()),
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
             },
         )))
     }
@@ -80,7 +80,7 @@ impl Runtime {
         Ok(Stmt::Register(RegisterStmt::RegisterTransitivePropStmt(
             RegisterTransitivePropStmt {
                 forall_fact,
-                line_file: LineFile::new(block.line, block.source_path.clone()),
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
             },
         )))
     }

@@ -41,6 +41,7 @@ pub enum LiteralObjWellDefinedProofByDef {
 pub enum ArithmeticOperatorObjWellDefinedProofByDef {
     Add(AddObjWellDefinedProof),
     Sub(SubObjWellDefinedProof),
+    Neg(NegObjWellDefinedProof),
     Mul(MulObjWellDefinedProof),
     Div(DivObjWellDefinedProof),
     Pow(PowObjWellDefinedProof),
@@ -222,6 +223,20 @@ pub struct SubObjWellDefinedProof {
 }
 
 impl SubObjWellDefinedProof {
+    pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
+        Self {
+            child_obj_well_defined: stages.child_obj_well_defined,
+            requirement_fact_verified: stages.requirement_fact_verified,
+        }
+    }
+}
+
+pub struct NegObjWellDefinedProof {
+    pub child_obj_well_defined: Vec<(Obj, VerifyObjWellDefinedResult)>,
+    pub requirement_fact_verified: Vec<VerifyFactResult>,
+}
+
+impl NegObjWellDefinedProof {
     pub fn from_stages(stages: ObjWellDefinedByDefCommonStages) -> Self {
         Self {
             child_obj_well_defined: stages.child_obj_well_defined,

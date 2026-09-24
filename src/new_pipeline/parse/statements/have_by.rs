@@ -8,7 +8,7 @@ use super::super::keywords::{
 };
 use super::super::object::{is_simple_name, parse_obj};
 use crate::new_pipeline::ast::fact::AtomicFact;
-use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::stmt::{
     DefineObjStmt, DefinitionStmt, HaveByPreimageStmt, HaveByReplacementAxiomStmt, Stmt,
 };
@@ -91,7 +91,7 @@ impl Runtime {
                 name: bound,
                 prop_name,
                 source_set,
-                line_file: LineFile::new(block.line, block.source_path.clone()),
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
             }),
         )))
     }
@@ -156,7 +156,7 @@ impl Runtime {
             HaveByPreimageStmt {
                 preimage_names,
                 range_membership,
-                line_file: LineFile::new(block.line, block.source_path.clone()),
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
             },
         ))))
     }

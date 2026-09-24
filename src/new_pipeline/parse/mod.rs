@@ -14,7 +14,7 @@
 //! 2. ParseScope maps plain name → IdentifierId only.
 //! 3. FactId / IdentifierId may be allocated at parse; do not store facts or read
 //!    ExecEnv here.
-//! 4. Errors use RuntimeParseError + LineFile from TokenBlock.
+//! 4. Errors use RuntimeParseError + TokenBlock path; AST uses SourceLine (CodeSource).
 //!
 //! Deferred: by induc binder reuse (parse_error).
 

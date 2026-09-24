@@ -1,6 +1,6 @@
 use super::super::keywords::EVAL;
 use super::super::object::parse_obj;
-use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::stmt::{CommandStmt, EvalStmt, Stmt};
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -19,7 +19,7 @@ impl Runtime {
         }
         Ok(Stmt::Command(CommandStmt::EvalStmt(EvalStmt {
             obj_to_eval,
-            line_file: LineFile::new(block.line, block.source_path.clone()),
+            line_file: SourceLine::new(block.line, self.code_source.clone()),
         })))
     }
 }

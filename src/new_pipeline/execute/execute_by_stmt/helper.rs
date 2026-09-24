@@ -1,7 +1,7 @@
 use crate::new_pipeline::ast::fact::{
     and_chain_as_fact, negate_atomic_fact, AndChainAtomicFact, AtomicFact, Fact, OrFact,
 };
-use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::stmt::Stmt;
 use crate::new_pipeline::execute::execute_by_stmt::result::{
     ByContradictionClosingFailed, ByContradictionClosingSuccess, ByProofBodyFailed,
@@ -123,7 +123,7 @@ pub(super) fn close_by_contradiction(
 pub(super) fn or_fact_from_and_chains(
     runtime: &mut Runtime,
     branches: &[AndChainAtomicFact],
-    line_file: &LineFile,
+    line_file: &SourceLine,
 ) -> OrFact {
     OrFact {
         fact_id: runtime.global_ids.allocate_fact_id(),

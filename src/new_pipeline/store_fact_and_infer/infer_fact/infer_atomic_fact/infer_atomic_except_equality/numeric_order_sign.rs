@@ -145,7 +145,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         kind: OrderKind,
-        line_file: Option<crate::new_pipeline::ast::line_file::LineFile>,
+        line_file: Option<crate::new_pipeline::ast::line_file::SourceLine>,
     ) -> RuntimeResult<Option<InferNumericOrderSignResult>> {
         let left_num = self.resolve_obj_to_normalized_number(left);
         let right_num = self.resolve_obj_to_normalized_number(right);
@@ -228,7 +228,7 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         kind: OrderKind,
-        line_file: Option<crate::new_pipeline::ast::line_file::LineFile>,
+        line_file: Option<crate::new_pipeline::ast::line_file::SourceLine>,
     ) -> RuntimeResult<Option<InferOrderFlipMulMinusOneResult>> {
         if !self.obj_is_resolved_zero(right) {
             return Ok(None);
@@ -306,7 +306,7 @@ fn obj_mul_literal_neg_one(x: Obj) -> Obj {
 
 fn sign_gt_zero(
     side: Obj,
-    line_file: Option<crate::new_pipeline::ast::line_file::LineFile>,
+    line_file: Option<crate::new_pipeline::ast::line_file::SourceLine>,
     global_ids: &mut crate::new_pipeline::runtime::GlobalIds,
 ) -> AtomicFact {
     // Store `0 < side` (same surface as legacy).
@@ -320,7 +320,7 @@ fn sign_gt_zero(
 
 fn sign_le_zero(
     side: Obj,
-    line_file: Option<crate::new_pipeline::ast::line_file::LineFile>,
+    line_file: Option<crate::new_pipeline::ast::line_file::SourceLine>,
     global_ids: &mut crate::new_pipeline::runtime::GlobalIds,
 ) -> AtomicFact {
     AtomicFact::LessEqualFact(LessEqualFact {

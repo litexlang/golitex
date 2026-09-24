@@ -2,13 +2,13 @@
 //! Field taxonomy follows the legacy language; methods are added later.
 //! Identity: definition / store-key names are PlainName; binder params use
 //! BoundName / IdentifierId where wired (see `identifier_identity.md`).
-//! FactId; LineFile.
+//! FactId; SourceLine.
 
 use super::fact::{
-    AndChainAtomicFact, AtomicFact, ExistShapedFact, ExistOrAndChainAtomicFact, Fact, ForallFact, InFact,
-    NormalAtomicFact, QuantifierFreeFact,
+    AndChainAtomicFact, AtomicFact, ExistOrAndChainAtomicFact, ExistShapedFact, Fact, ForallFact,
+    InFact, NormalAtomicFact, QuantifierFreeFact,
 };
-use super::line_file::LineFile;
+use super::line_file::SourceLine;
 use super::names::{AtomicName, BoundName, PlainName};
 use super::obj::{AnonymousFn, ClosedRange, IdentifierObj, ListSet, Obj, Range};
 use super::param::{SetBoundParameterList, TypedParameterList};
@@ -70,7 +70,7 @@ pub enum TrustBoundaryStmt {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TrustStmt {
     pub facts: Vec<Fact>,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: introduce typed names and assert facts without searching a proof.
@@ -80,7 +80,7 @@ pub struct TrustStmt {
 pub struct TrustHaveStmt {
     pub param_def: TypedParameterList,
     pub facts: Vec<Fact>,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // -----------------------------------------------------------------------------
@@ -132,11 +132,12 @@ pub enum DefinitionStmt {
 pub enum DefineObjStmt {
     // Untyped equality binding. Example: `let a = 1`.
     LetObjStmt(LetObjStmt),
-    // Typed names from a nonempty carrier. Example: `have x R` / `have x, y R`.
+    // Typed names from a nonempty carrier (set). Example: `have x R` / `have x, y R`.
     HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),
     // Typed names equal to given objects. Example: `have x R = 1`.
     HaveObjEqualStmt(HaveObjEqualStmt),
-    // Typed names satisfying body facts. Example: `have x R: x > 0`.
+    // Typed names satisfying body facts; the matching `exist` must already be known.
+    // Example: `have x R: x > 0` (requires `exist x R st {x > 0}` proved).
     HaveObjByExistFactsStmt(HaveObjByExistFactsStmt),
     // Name witnesses of a known `exist` / `exist!`.
     // Example: `obtain a from exist x R st {x = 0}`.
@@ -159,7 +160,7 @@ pub enum DefineObjStmt {
 pub struct LetObjStmt {
     pub name: crate::new_pipeline::ast::names::BoundName,
     pub value: Obj,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: introduce typed names from a nonempty set / param-type carrier.
@@ -168,7 +169,7 @@ pub struct LetObjStmt {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HaveObjInNonemptySetOrParamTypeStmt {
     pub param_def: TypedParameterList,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: introduce typed names defined equal to given objects.
@@ -178,18 +179,19 @@ pub struct HaveObjInNonemptySetOrParamTypeStmt {
 pub struct HaveObjEqualStmt {
     pub param_def: TypedParameterList,
     pub objs_equal_to: Vec<Obj>,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: introduce typed names that satisfy given quantifier-free facts.
 // Surface: `have x R:` then indented facts (not `st {…}` sugar here).
+// Requires: the corresponding `exist` (same params + body) is already proved.
 // Stores: the names, carrier facts, the body facts, and ordinary infer.
-// Example: `have x R: x > 0`.
+// Example: `have x R: x > 0` after `exist x R st {x > 0}` is known.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HaveObjByExistFactsStmt {
     pub param_def: TypedParameterList,
     pub facts: Vec<QuantifierFreeFact>,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: eliminate a known exist-shaped fact by naming its witnesses.
@@ -199,7 +201,7 @@ pub struct HaveObjByExistFactsStmt {
 pub struct ObtainObjFromExistFact {
     pub equal_tos: Vec<PlainName>,
     pub fact: ExistShapedFact,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: eliminate a known `$P(…)` whose concrete def is a single positive exist.
@@ -209,7 +211,7 @@ pub struct ObtainObjFromExistFact {
 pub struct ObtainObjFromAtomicFact {
     pub equal_tos: Vec<PlainName>,
     pub fact: NormalAtomicFact,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: arguments of a theorem call — bare name or parenthesized objs.
@@ -248,7 +250,7 @@ pub struct HaveByPreimageStmt {
     pub preimage_names: Vec<PlainName>,
     // Must be `… $in fn_range(…)`.
     pub range_membership: InFact,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: introduce a named set as the Replacement-axiom image of a binary prop.
@@ -280,7 +282,7 @@ pub struct HaveByReplacementAxiomStmt {
     pub name: BoundName,
     pub prop_name: AtomicName,
     pub source_set: Obj,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: define a named function by an anonymous fn body.
@@ -290,7 +292,7 @@ pub struct HaveByReplacementAxiomStmt {
 pub struct HaveFnEqualStmt {
     pub name: PlainName,
     pub equal_to_anonymous_fn: AnonymousFn,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: shared `fn(params: dom) ret` shape for case-by-case / induction defs.
@@ -310,7 +312,7 @@ pub struct HaveFnEqualCaseByCaseStmt {
     pub fn_set_clause: FnSetClause,
     pub cases: Vec<AndChainAtomicFact>,
     pub equal_tos: Vec<Obj>,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: body of one induction case — a value, or nested subcases.
@@ -337,7 +339,7 @@ pub struct HaveFnByInducStmt {
     pub measure: Obj,
     pub lower_bound: Obj,
     pub cases: Vec<HaveFnByInducCase>,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: define a named function from a proved `forall … exist!` goal (no formula body).
@@ -348,7 +350,7 @@ pub struct HaveFnByInducStmt {
 pub struct HaveFnByForallExistUniqueStmt {
     pub name: PlainName,
     pub forall: ForallFact,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: define a named concrete predicate with an iff body.
@@ -360,7 +362,7 @@ pub struct DefPropStmt {
     pub name: PlainName,
     pub typed_parameters: TypedParameterList,
     pub iff_facts: Vec<Fact>,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: declare a named abstract predicate (signature only, no body).
@@ -370,7 +372,7 @@ pub struct DefPropStmt {
 pub struct DefAbstractPropStmt {
     pub name: PlainName,
     pub params: Vec<PlainName>,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // Bodies allowed inside a `template<…>:` definition — same shapes that work
@@ -419,7 +421,7 @@ pub struct DefTemplateStmt {
     pub template_arg_def: TypedParameterList,
     pub template_arg_dom: Vec<QuantifierFreeFact>,
     pub template_def_stmt: TemplateDefEnum,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: one field of a struct definition — binder name + carrier set.
@@ -443,14 +445,14 @@ pub struct DefStructStmt {
     pub param_def_with_dom: Option<(TypedParameterList, Vec<QuantifierFreeFact>)>,
     pub fields: Vec<StructFieldDef>,
     pub equivalent_facts: Vec<Fact>,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: explicit return value inside an algo case / default.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct AlgoReturn {
     pub value: Obj,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: one guarded return arm of an algorithm.
@@ -458,7 +460,7 @@ pub struct AlgoReturn {
 pub struct AlgoCase {
     pub condition: AtomicFact, // may be negated when building default-return coverage
     pub return_stmt: AlgoReturn,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: algo body entry — default return or a guarded case.
@@ -477,7 +479,7 @@ pub struct DefAlgoStmt {
     pub param_bindings: Vec<String>,
     pub default_return: Option<AlgoReturn>,
     pub cases: Vec<AlgoCase>,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: define a named theorem with a proof of its target fact.
@@ -488,7 +490,7 @@ pub struct DefThmStmt {
     pub name: PlainName,
     pub fact: Fact,
     pub prove_process: Vec<Stmt>,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: declare a named axiom (interface checked; truth trusted).
@@ -498,7 +500,7 @@ pub struct DefThmStmt {
 pub struct AxiomStmt {
     pub name: PlainName,
     pub forall_fact: ForallFact,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: named reusable proof strategy for a restricted atomic universal.
@@ -509,7 +511,7 @@ pub struct DefStrategyStmt {
     pub name: PlainName,
     pub forall_fact: ForallFact,
     pub prove_process: Vec<Stmt>,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // -----------------------------------------------------------------------------
@@ -536,7 +538,7 @@ pub enum ReleaseStmt {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ReleaseThmStmt {
     pub call: TheoremCall,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // -----------------------------------------------------------------------------
@@ -589,7 +591,7 @@ pub struct ByCasesStmt {
     pub then_facts: Vec<Fact>,
     pub proofs: Vec<Vec<Stmt>>,
     pub impossible_facts: Vec<Option<AtomicFact>>,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: prove a target by deriving an impossibility from its negation.
@@ -600,7 +602,7 @@ pub struct ByContraStmt {
     pub to_prove: Fact,
     pub proof: Vec<Stmt>,
     pub impossible_fact: AtomicFact,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: prove a forall by enumerating a finite set carrier.
@@ -610,7 +612,7 @@ pub struct ByContraStmt {
 pub struct ByEnumerateFiniteSetStmt {
     pub forall_fact: ForallFact,
     pub proof: Vec<Stmt>,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: ordinary induction on N (or from a lower bound).
@@ -624,7 +626,7 @@ pub struct ByInducStmt {
     pub step_proof: Option<Vec<Stmt>>,
     pub param_binding: String,
     pub induc_from: Obj,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: strong induction on N (or from a lower bound).
@@ -638,7 +640,7 @@ pub struct ByStrongInducStmt {
     pub step_proof: Option<Vec<Stmt>>,
     pub param_binding: String,
     pub induc_from: Obj,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: either a closed range `{a, …, b}` or an open-ended range form.
@@ -668,7 +670,7 @@ pub enum ByForExpansion {
 pub struct ByForStmt {
     pub forall_fact: ForallFact,
     pub proof: Vec<Stmt>,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: prove object equality from both `$subset` directions (extensionality).
@@ -679,7 +681,7 @@ pub struct ByExtensionStmt {
     pub left: Obj,
     pub right: Obj,
     pub proof: Vec<Stmt>,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: prove function object equality from pointwise equality on a shared FnSet.
@@ -691,7 +693,7 @@ pub struct ByFnExtensionStmt {
     pub left: Obj,
     pub right: Obj,
     pub proof: Vec<Stmt>,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: prove membership by enumerating a numeric range.
@@ -701,7 +703,7 @@ pub struct ByFnExtensionStmt {
 pub struct ByEnumerateRangeStmt {
     pub element: Obj,
     pub range: ClosedRangeOrRange,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: treat closed-range membership as a finite case split.
@@ -711,7 +713,7 @@ pub struct ByEnumerateRangeStmt {
 pub struct ByClosedRangeAsCasesStmt {
     pub element: Obj,
     pub closed_range: ClosedRange,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: apply Zorn's lemma with named order / bound / maximality props.
@@ -724,7 +726,7 @@ pub struct ByZornLemmaStmt {
     pub upper_bound_prop_name: AtomicName,
     pub maximal_prop_name: AtomicName,
     pub proof: Vec<Stmt>,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: apply the axiom of choice to a family of nonempty sets.
@@ -734,7 +736,7 @@ pub struct ByZornLemmaStmt {
 pub struct ByAxiomOfChoiceStmt {
     pub family: Obj,
     pub proof: Vec<Stmt>,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: apply the axiom of regularity to a set.
@@ -743,7 +745,7 @@ pub struct ByAxiomOfChoiceStmt {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ByRegularityAxiomStmt {
     pub set: Obj,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: prove an atomic fact by unfolding a concrete / builtin definition.
@@ -752,7 +754,7 @@ pub struct ByRegularityAxiomStmt {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ByDefStmt {
     pub fact: AtomicFact,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: open one definition-owned struct layer (fields / bridges / laws).
@@ -761,7 +763,7 @@ pub struct ByDefStmt {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ReleaseStructDefStmt {
     pub obj: Obj,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: re-store one object-definition's facts for an identifier (preview).
@@ -770,7 +772,7 @@ pub struct ReleaseStructDefStmt {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ReleaseObjDefStmt {
     pub name: IdentifierObj,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: cite a theorem and commit only one selected atomic conclusion.
@@ -780,7 +782,7 @@ pub struct ReleaseObjDefStmt {
 pub struct ByThmStmt {
     pub call: TheoremCall,
     pub selected_fact: AtomicFact,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // -----------------------------------------------------------------------------
@@ -806,7 +808,7 @@ pub enum RegisterStmt {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RegisterTransitivePropStmt {
     pub forall_fact: ForallFact,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: register symmetry of a user prop for later rewrite.
@@ -814,7 +816,7 @@ pub struct RegisterTransitivePropStmt {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RegisterSymmetricPropStmt {
     pub forall_fact: ForallFact,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: register reflexivity of a user prop for later rewrite.
@@ -822,7 +824,7 @@ pub struct RegisterSymmetricPropStmt {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RegisterReflexivePropStmt {
     pub forall_fact: ForallFact,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // -----------------------------------------------------------------------------
@@ -850,7 +852,7 @@ pub enum WitnessStmt {
 pub struct WitnessExistFact {
     pub equal_tos: Vec<Obj>,
     pub exist_shaped_fact_in_witness: ExistShapedFact,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: prove `$P(…)` when its concrete def is a single positive exist clause.
@@ -860,7 +862,7 @@ pub struct WitnessExistFact {
 pub struct WitnessAtomicFact {
     pub atomic_fact: NormalAtomicFact,
     pub witnesses: Vec<Obj>,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: prove a set is nonempty by exhibiting a member.
@@ -870,7 +872,7 @@ pub struct WitnessAtomicFact {
 pub struct WitnessNonemptySet {
     pub obj: Obj,
     pub set: Obj,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // -----------------------------------------------------------------------------
@@ -895,7 +897,7 @@ pub enum ProofBlockStmt {
 pub struct ClaimStmt {
     pub fact: Fact,
     pub proof: Vec<Stmt>,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // What: informal / non-binding proof sketch whose body still checks.
@@ -904,7 +906,7 @@ pub struct ClaimStmt {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SketchStmt {
     pub proof: Vec<Stmt>,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }
 
 // -----------------------------------------------------------------------------
@@ -924,5 +926,5 @@ pub enum CommandStmt {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct EvalStmt {
     pub obj_to_eval: Obj,
-    pub line_file: LineFile,
+    pub line_file: SourceLine,
 }

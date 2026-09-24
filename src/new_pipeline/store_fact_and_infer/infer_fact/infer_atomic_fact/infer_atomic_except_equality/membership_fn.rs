@@ -206,7 +206,7 @@ impl Runtime {
     fn finite_seq_set_to_fn_set(
         &mut self,
         fs: &crate::new_pipeline::ast::obj::FiniteSeqSet,
-        line_file: Option<crate::new_pipeline::ast::line_file::LineFile>,
+        line_file: Option<crate::new_pipeline::ast::line_file::SourceLine>,
     ) -> FnSet {
         let binder = self.fresh_internal_param();
         let binder_obj = Obj::Identifier(IdentifierObj::from_bound_name(&binder));

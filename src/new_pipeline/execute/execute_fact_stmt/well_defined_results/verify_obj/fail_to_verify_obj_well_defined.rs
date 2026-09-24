@@ -39,6 +39,7 @@ pub enum FailToVerifyLiteralObjWellDefinedResult {
 pub enum FailToVerifyArithmeticOperatorObjWellDefinedResult {
     Add(FailToVerifyAddObjWellDefined),
     Sub(FailToVerifySubObjWellDefined),
+    Neg(FailToVerifyNegObjWellDefined),
     Mul(FailToVerifyMulObjWellDefined),
     Div(FailToVerifyDivObjWellDefined),
     Pow(FailToVerifyPowObjWellDefined),
@@ -188,6 +189,8 @@ pub enum FailToVerifyPiObjWellDefined {
 pub struct FailToVerifyAddObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
 pub struct FailToVerifySubObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
+
+pub struct FailToVerifyNegObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
 pub struct FailToVerifyMulObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 

@@ -154,6 +154,10 @@ of the negative value. Parenthesize a negative exponent too: `t^(-1)`, not
 `t^-1`. This explicit-parentheses rule applies to generated and agent-authored
 Litex as well as handwritten source.
 
+In `new_pipeline`, prefix `-a` is the unary arithmetic operator `neg(a)` (AST
+`Neg`), not the same tree as the binary difference `0 - a`. Closed numeric
+evaluation treats both. Do not rely on `-a` and `0 - a` being identical AST.
+
 User-defined names may begin with a letter or one underscore and may then use
 letters, numbers, and underscores. The prefix `__` (two underscores) is
 reserved for generated symbols, including names in Lean output, and is rejected
@@ -4111,6 +4115,11 @@ forall a, b R+:
 > Equality power laws (preview): `a^m * a^n = a^(m+n)`, `(a^m)^n = a^(m*n)`,
 > `(a*b)^n = a^n * b^n` (positive real base, positive natural exponents), and
 > `1/a = a^(-1)`, `a/b = a * b^(-1)` for nonzero denominators.
+> Equality identities wave 2 (preview): `1^a = 1`, `0^n = 0` (`n` in `N+`);
+> sqrt square / zero / one / of-square / product / quotient; abs of negation /
+> product / square; log base-self / of-one / of-power / arg-power / product /
+> quotient / reciprocal / change-of-base; `0 % a = 0`, `a % 1 = 0`,
+> `1 % m = 1` (`2 <= m`), and nested same-mod absorption.
 > One `.lit` per rule under
 > [`examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/`](../examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/)
 > and

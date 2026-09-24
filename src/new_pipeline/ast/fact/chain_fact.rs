@@ -1,5 +1,5 @@
 use super::{AtomicFact, Fact};
-use super::super::line_file::LineFile;
+use super::super::line_file::SourceLine;
 use super::super::names::AtomicName;
 use super::super::obj::Obj;
 use crate::new_pipeline::runtime::FactId;
@@ -9,7 +9,7 @@ pub struct ChainFact {
     pub fact_id: FactId,
     pub objs: Vec<Obj>,
     pub prop_names: Vec<AtomicName>,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

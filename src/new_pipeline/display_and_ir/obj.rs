@@ -22,6 +22,7 @@ impl Obj {
                 | Obj::ArithmeticOperator(ArithmeticOperator::Div(_))
                 | Obj::IntegerOperator(IntegerOperator::Mod(_)) => 2,
                 Obj::ArithmeticOperator(ArithmeticOperator::Pow(_))
+                | Obj::ArithmeticOperator(ArithmeticOperator::Neg(_))
                 | Obj::ArithmeticOperator(ArithmeticOperator::Abs(_))
                 | Obj::TrigOperator(TrigOperator::Sin(_))
                 | Obj::TrigOperator(TrigOperator::Arcsin(_))
@@ -197,6 +198,10 @@ impl Obj {
                     s.push_str(&fmt_with_prec(p.base.as_ref(), 1));
                     s.push_str(&format!(" {} ", POW));
                     s.push_str(&fmt_with_prec(p.exponent.as_ref(), 1));
+                }
+                Obj::ArithmeticOperator(ArithmeticOperator::Neg(n)) => {
+                    s.push_str(SUB);
+                    s.push_str(&fmt_with_prec(n.arg.as_ref(), 1));
                 }
                 Obj::ArithmeticOperator(ArithmeticOperator::Abs(a)) => {
                     s.push_str(&format!(
@@ -890,6 +895,15 @@ impl Sub {
         out.push_str(&format!(" {} ", SUB));
         out.push_str(&self.right.ir());
 
+        ObjIR(out)
+    }
+    impl_display_pair!();
+}
+impl Neg {
+    pub fn ir(&self) -> ObjIR {
+        let mut out = String::new();
+        out.push_str(SUB);
+        out.push_str(&self.arg.ir());
         ObjIR(out)
     }
     impl_display_pair!();

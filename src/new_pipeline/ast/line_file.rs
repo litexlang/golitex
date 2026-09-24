@@ -1,13 +1,15 @@
-use crate::new_pipeline::runtime::RealOrVirtualPath;
+use crate::new_pipeline::runtime::CodeSource;
 
+// Source location on AST: line + live CodeSource (no absolute path).
+// StandaloneFile / display paths live on Runtime.current_file.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct LineFile {
+pub struct SourceLine {
     pub line: usize,
-    pub path: RealOrVirtualPath,
+    pub origin: CodeSource,
 }
 
-impl LineFile {
-    pub fn new(line: usize, path: RealOrVirtualPath) -> Self {
-        Self { line, path }
+impl SourceLine {
+    pub fn new(line: usize, origin: CodeSource) -> Self {
+        Self { line, origin }
     }
 }

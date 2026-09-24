@@ -1,4 +1,6 @@
-use crate::new_pipeline::runtime::{RealOrVirtualPath, RuntimeParseError, RuntimeResult};
+use crate::new_pipeline::runtime::{
+    CodeSource, RealOrVirtualPath, RuntimeParseError, RuntimeResult,
+};
 
 /// One indented source unit handed from tokenizer to parser.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -93,8 +95,8 @@ impl TokenBlock {
         Ok(())
     }
 
-    pub fn line_file(&self) -> crate::new_pipeline::ast::LineFile {
-        crate::new_pipeline::ast::LineFile::new(self.line, self.source_path.clone())
+    pub fn line_file(&self, code_source: CodeSource) -> crate::new_pipeline::ast::SourceLine {
+        crate::new_pipeline::ast::SourceLine::new(self.line, code_source)
     }
 
     pub fn parse_error(

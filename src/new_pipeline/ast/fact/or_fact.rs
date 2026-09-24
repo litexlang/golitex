@@ -1,5 +1,5 @@
 use super::{AndFact, AtomicFact, ChainFact};
-use super::super::line_file::LineFile;
+use super::super::line_file::SourceLine;
 use crate::new_pipeline::runtime::FactId;
 
 // Or branches are only atomic / flat and / chain (not nested or).
@@ -18,7 +18,7 @@ pub enum AndChainAtomicFact {
 pub struct OrFact {
     pub fact_id: FactId,
     pub facts: Vec<AndChainAtomicFact>,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }
 
 // Quantifier-free clause grammar: atomic, and, chain, or.

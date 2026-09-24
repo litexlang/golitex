@@ -9,7 +9,7 @@ use crate::new_pipeline::ast::fact::{
     AtomicFact, EqualFact, Fact, GreaterEqualFact, GreaterFact, InFact, LessEqualFact, LessFact,
     NotEqualFact, NotGreaterEqualFact, NotGreaterFact, NotInFact, NotLessEqualFact, NotLessFact,
 };
-use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::names::BoundName;
 use crate::new_pipeline::ast::obj::{
     IdentifierObj, Literal, Number, Obj, StandardSet,
@@ -19,7 +19,7 @@ use crate::new_pipeline::ast::param::{
 };
 use crate::new_pipeline::ast::stmt::DefPropStmt;
 use crate::new_pipeline::runtime::runtime_ids::{FactId, IdentifierId};
-use crate::new_pipeline::runtime::RealOrVirtualPath;
+use crate::new_pipeline::runtime::CodeSource;
 use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -223,59 +223,82 @@ fn decode_param_type(value: &JsonValue) -> Result<ParamType, KbCodecError> {
     }
 }
 
-fn encode_line_file(line_file: &LineFile) -> Result<JsonValue, KbCodecError> {
+fn encode_line_file(line_file: &SourceLine) -> Result<JsonValue, KbCodecError> {
     Ok(JsonValue::object_from(vec![
         (
             "line".into(),
             JsonValue::Number(line_file.line as f64),
         ),
-        ("path".into(), encode_path(&line_file.path)?),
+        ("origin".into(), encode_code_source(&line_file.origin)?),
     ]))
 }
 
-fn decode_line_file(value: &JsonValue) -> Result<LineFile, KbCodecError> {
+fn decode_line_file(value: &JsonValue) -> Result<SourceLine, KbCodecError> {
     let map = value.as_object()?;
     let line = JsonValue::get(map, "line")?.as_u64()? as usize;
-    let path = decode_path(JsonValue::get(map, "path")?)?;
-    Ok(LineFile::new(line, path))
+    let origin = decode_code_source(JsonValue::get(map, "origin")?)?;
+    Ok(SourceLine::new(line, origin))
 }
 
-fn encode_path(path: &RealOrVirtualPath) -> Result<JsonValue, KbCodecError> {
-    match path {
-        RealOrVirtualPath::Real(p) => Ok(JsonValue::object_from(vec![
-            ("tag".into(), JsonValue::String("Real".into())),
-            (
-                "path".into(),
-                JsonValue::String(p.to_string_lossy().into_owned()),
-            ),
-        ])),
-        RealOrVirtualPath::Eval => Ok(JsonValue::object_from(vec![(
+fn encode_code_source(origin: &CodeSource) -> Result<JsonValue, KbCodecError> {
+    match origin {
+        CodeSource::Eval => Ok(JsonValue::object_from(vec![(
             "tag".into(),
             JsonValue::String("Eval".into()),
         )])),
-        RealOrVirtualPath::Repl => Ok(JsonValue::object_from(vec![(
+        CodeSource::Repl => Ok(JsonValue::object_from(vec![(
             "tag".into(),
             JsonValue::String("Repl".into()),
         )])),
+        CodeSource::StandaloneFile => Ok(JsonValue::object_from(vec![(
+            "tag".into(),
+            JsonValue::String("StandaloneFile".into()),
+        )])),
+        CodeSource::RootExport { export_file_id } => Ok(JsonValue::object_from(vec![
+            ("tag".into(), JsonValue::String("RootExport".into())),
+            (
+                "export_file_id".into(),
+                JsonValue::Number(*export_file_id as f64),
+            ),
+        ])),
+        CodeSource::ImportedExport {
+            global_mod_id,
+            export_file_id,
+        } => Ok(JsonValue::object_from(vec![
+            ("tag".into(), JsonValue::String("ImportedExport".into())),
+            (
+                "global_mod_id".into(),
+                JsonValue::Number(*global_mod_id as f64),
+            ),
+            (
+                "export_file_id".into(),
+                JsonValue::Number(*export_file_id as f64),
+            ),
+        ])),
     }
 }
 
-fn decode_path(value: &JsonValue) -> Result<RealOrVirtualPath, KbCodecError> {
+fn decode_code_source(value: &JsonValue) -> Result<CodeSource, KbCodecError> {
     let map = value.as_object()?;
     match JsonValue::get(map, "tag")?.as_str()? {
-        "Real" => Ok(RealOrVirtualPath::Real(PathBuf::from(
-            JsonValue::get(map, "path")?.as_str()?,
-        ))),
-        "Eval" => Ok(RealOrVirtualPath::Eval),
-        "Repl" => Ok(RealOrVirtualPath::Repl),
+        "Eval" => Ok(CodeSource::Eval),
+        "Repl" => Ok(CodeSource::Repl),
+        "StandaloneFile" => Ok(CodeSource::StandaloneFile),
+        "RootExport" => Ok(CodeSource::RootExport {
+            export_file_id: JsonValue::get(map, "export_file_id")?.as_u64()? as usize,
+        }),
+        "ImportedExport" => Ok(CodeSource::ImportedExport {
+            global_mod_id: JsonValue::get(map, "global_mod_id")?.as_u64()? as usize,
+            export_file_id: JsonValue::get(map, "export_file_id")?.as_u64()? as usize,
+        }),
         other => Err(KbCodecError::Unsupported(format!(
-            "RealOrVirtualPath tag `{other}`"
+            "CodeSource tag `{other}`"
         ))),
     }
 }
 
 fn encode_optional_line_file(
-    line_file: &Option<LineFile>,
+    line_file: &Option<SourceLine>,
 ) -> Result<JsonValue, KbCodecError> {
     match line_file {
         None => Ok(JsonValue::Null),
@@ -283,7 +306,7 @@ fn encode_optional_line_file(
     }
 }
 
-fn decode_optional_line_file(value: &JsonValue) -> Result<Option<LineFile>, KbCodecError> {
+fn decode_optional_line_file(value: &JsonValue) -> Result<Option<SourceLine>, KbCodecError> {
     match value {
         JsonValue::Null => Ok(None),
         other => Ok(Some(decode_line_file(other)?)),
@@ -403,7 +426,7 @@ fn encode_binary_compare(
     fact_id: FactId,
     left: &Obj,
     right: &Obj,
-    line_file: &Option<LineFile>,
+    line_file: &Option<SourceLine>,
 ) -> Result<JsonValue, KbCodecError> {
     Ok(JsonValue::object_from(vec![
         ("tag".into(), JsonValue::String(tag.into())),
@@ -425,7 +448,7 @@ fn encode_in_like(
     fact_id: FactId,
     element: &Obj,
     set: &Obj,
-    line_file: &Option<LineFile>,
+    line_file: &Option<SourceLine>,
 ) -> Result<JsonValue, KbCodecError> {
     Ok(JsonValue::object_from(vec![
         ("tag".into(), JsonValue::String(tag.into())),

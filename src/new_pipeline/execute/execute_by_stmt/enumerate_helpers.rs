@@ -1,7 +1,7 @@
 use crate::new_pipeline::ast::fact::{
     AndChainAtomicFact, EqualFact, Fact, ForallFact, InFact, OrFact,
 };
-use crate::new_pipeline::ast::line_file::LineFile;
+use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::obj::{ClosedRange, IdentifierObj, ListSet, Number, Obj, Range, Literal, SetFormer};
 use crate::new_pipeline::ast::param::ParamType;
 use crate::new_pipeline::ast::stmt::ClosedRangeOrRange;
@@ -106,7 +106,7 @@ pub(super) fn membership_or_equalities_fact(
     runtime: &mut Runtime,
     element: &Obj,
     values: &[Obj],
-    line_file: &LineFile,
+    line_file: &SourceLine,
 ) -> Fact {
     let branches: Vec<AndChainAtomicFact> = values
         .iter()
@@ -142,7 +142,7 @@ pub(super) fn membership_in_fact(
     runtime: &mut Runtime,
     element: &Obj,
     set: Obj,
-    line_file: &LineFile,
+    line_file: &SourceLine,
 ) -> Fact {
     Fact::AtomicFact(
         InFact {

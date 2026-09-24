@@ -35,6 +35,13 @@ pub fn evaluate_obj_to_normalized_decimal_number(obj: &Obj) -> Option<Number> {
             };
             Some(Number::new(difference))
         }
+        Obj::ArithmeticOperator(ArithmeticOperator::Neg(neg)) => {
+            let argument = evaluate_obj_to_normalized_decimal_number(&neg.arg)?;
+            Some(Number::new(sub_signed_decimal_str(
+                "0",
+                &argument.normalized_value,
+            )))
+        }
         Obj::ArithmeticOperator(ArithmeticOperator::Mul(mul)) => {
             let left = evaluate_obj_to_normalized_decimal_number(&mul.left)?;
             let right = evaluate_obj_to_normalized_decimal_number(&mul.right)?;

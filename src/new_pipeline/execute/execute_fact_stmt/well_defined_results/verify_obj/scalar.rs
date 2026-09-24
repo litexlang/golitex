@@ -4,7 +4,7 @@
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use crate::new_pipeline::ast::fact::{AtomicFact, GreaterFact, LessEqualFact, NotEqualFact};
 use crate::new_pipeline::ast::obj::StandardSet;
-use crate::new_pipeline::ast::obj::{Abs, Add, Arccos, Arccot, Arcsin, Arctan, Ceil, ComplexAbs, Cos, Cot, Div, Exp, Factorial, Floor, Gcd, ImaginaryPart, Lcm, Ln, Log, Max, Min, Mod, Mul, Number, Obj, Pow, Quot, RealPart, Sign, Sin, Sqrt, Sub, Tan, IntegerOperator, Literal, TrigOperator};
+use crate::new_pipeline::ast::obj::{Abs, Add, Arccos, Arccot, Arcsin, Arctan, Ceil, ComplexAbs, Cos, Cot, Div, Exp, Factorial, Floor, Gcd, ImaginaryPart, Lcm, Ln, Log, Max, Min, Mod, Mul, Neg, Number, Obj, Pow, Quot, RealPart, Sign, Sin, Sqrt, Sub, Tan, IntegerOperator, Literal, TrigOperator};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
@@ -60,6 +60,17 @@ impl Runtime {
             value.right.as_ref(),
             verify_state,
         )
+    }
+
+    pub(super) fn verify_neg_obj_well_definedness_by_def(
+        &mut self,
+        value: &Neg,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
+        let proof =
+            self.verify_unary_obj_well_definedness_by_def(value.arg.as_ref(), verify_state.clone())?;
+        let req = self.require_obj_in_c(value.arg.as_ref(), verify_state)?;
+        Ok(self.with_requirements(proof, vec![req]))
     }
 
     pub(super) fn verify_mul_obj_well_definedness_by_def(

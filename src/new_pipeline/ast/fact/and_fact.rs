@@ -1,5 +1,5 @@
 use super::AtomicFact;
-use super::super::line_file::LineFile;
+use super::super::line_file::SourceLine;
 use crate::new_pipeline::runtime::FactId;
 
 // Flat and of atomics only. No forall / exist / nested and: keeps store and
@@ -8,5 +8,5 @@ use crate::new_pipeline::runtime::FactId;
 pub struct AndFact {
     pub fact_id: FactId,
     pub facts: Vec<AtomicFact>,
-    pub line_file: Option<LineFile>,
+    pub line_file: Option<SourceLine>,
 }

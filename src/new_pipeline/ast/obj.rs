@@ -1,6 +1,6 @@
 //! Framework AST data shapes for new_pipeline.
 //! Field taxonomy follows the legacy language; methods are added later.wus
-//! Identity: BoundName / IdentifierId for plain refs; FactId; LineFile.
+//! Identity: BoundName / IdentifierId for plain refs; FactId; SourceLine.
 //!
 //! Layout: top-level `Obj` is 16 families; each family enum wraps the same leaf
 //! payload structs as before. Leaf structs follow in stable order after `Obj`.
@@ -34,22 +34,22 @@ pub enum Obj {
     // Built-in number sets and signed/nonzero variants. Example: `N`, `R+`, `Z*`.
     StandardSet(StandardSet),
 
-    // Real arithmetic ops. Example: `a + b`, `abs(x)`, `min(a, b)`.
+    // Real arithmetic ops. Example: `1 + 2 = 3`, `abs(-3) = 3`, `min(7, (-2)) = (-2)`.
     ArithmeticOperator(ArithmeticOperator),
 
-    // Integer-specific ops. Example: `a % d`, `gcd(a, b)`, `n!`.
+    // Integer-specific ops. Example: `(-7) % 3 = 2`, `gcd(54, (-24)) = 6`, `3! = 6`.
     IntegerOperator(IntegerOperator),
 
-    // Trig and inverse trig. Example: `sin(x)`, `arctan(x)`.
+    // Trig and inverse trig. Example: `sin(0) = 0`, `arctan(0) = 0`.
     TrigOperator(TrigOperator),
 
-    // Exp / log / sqrt. Example: `exp(x)`, `ln(x)`, `log(2, x)`, `sqrt(x)`.
+    // Exp / log / sqrt. Example: `exp(0) = 1`, `ln(1) = 0`, `log(2, 8) = 3`, `sqrt(4) = 2`.
     ExpLogOperator(ExpLogOperator),
 
-    // Complex-part ops. Example: `re(z)`, `img(z)`, `C_abs(z)`.
+    // Complex-part ops. Example: `re(i) = 0`, `img(i) = 1`, `C_abs(i) = 1`.
     ComplexOperator(ComplexOperator),
 
-    // Set algebra and indexed families. Example: `union(A, B)`, `power_set(S)`.
+    // Set algebra and indexed families. Example: `union({1}, {2}) = {1, 2}`, `power_set({1})`.
     SetOperator(SetOperator),
 
     // Set constructors / formers. Example: `{1, 2}`, `{x R: x > 0}`, `range(1, 3)`.
@@ -64,7 +64,7 @@ pub enum Obj {
     // Indexed sums / products / fold. Example: `sum(1, n, f)`, `finite_set_product(S, f)`.
     IteratedOperator(IteratedOperator),
 
-    // Finite-set statistics. Example: `finite_set_size(S)`, `finite_set_max(S)`.
+    // Finite-set statistics. Example: `finite_set_size({1, 2}) = 2`, `finite_set_max({1, 3}) = 3`.
     FiniteSetStat(FiniteSetStat),
 
     // Named structs and field paths. Example: `&Point`, `p.x`.
@@ -86,46 +86,49 @@ pub enum Literal {
 // Binary / unary real-or-complex arithmetic (carriers depend on the op).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ArithmeticOperator {
-    // What: addition. Surface: `a + b`. Domain: `a, b $in C`.
+    // What: addition. Surface: `1 + 2 = 3`. Domain: `a, b $in C`.
     Add(Add),
-    // What: subtraction. Surface: `a - b`. Domain: `a, b $in C`.
-    // Prefix unary minus is sugar for `0 - x` at parse (no separate Neg node).
+    // What: subtraction. Surface: `5 - 2 = 3`. Domain: `a, b $in C`.
     Sub(Sub),
-    // What: multiplication. Surface: `a * b`. Domain: `a, b $in C`.
+    // What: additive inverse. Surface: `-3 = (-3)`. Domain: `a $in C`.
+    Neg(Neg),
+    // What: multiplication. Surface: `2 * 3 = 6`. Domain: `a, b $in C`.
     Mul(Mul),
-    // What: division. Surface: `a / b`. Domain: `a, b $in C` and `b != 0`.
+    // What: division. Surface: `6 / 2 = 3`. Domain: `a, b $in C` and `b != 0`.
     Div(Div),
-    // What: exponentiation. Surface: `a^b` (right-associative; tighter than `* /`).
+    // What: exponentiation. Surface: `2^3 = 8` (right-associative; tighter than `* /`).
     // Domain is multi-branch (not a single carrier pair); see `Pow`.
     Pow(Pow),
-    // Absolute value on reals. Example: `abs(x)`.
+    // Absolute value on reals. Example: `abs(-3) = 3`.
     Abs(Abs),
+    // Binary minimum of reals. Example: `min(7, (-2)) = (-2)`.
     Min(Min),
+    // Binary maximum of reals. Example: `max(7, (-2)) = 7`.
     Max(Max),
-    // Greatest integer ≤ x. Example: `floor(x)`.
+    // Greatest integer ≤ x. Example: `floor(3.7) = 3`.
     Floor(Floor),
-    // Least integer ≥ x. Example: `ceil(x)`.
+    // Least integer ≥ x. Example: `ceil(3.2) = 4`.
     Ceil(Ceil),
-    // Sign of a real (−1 / 0 / 1). Example: `sign(x)`.
+    // Sign of a real (−1 / 0 / 1). Example: `sign(-9) = (-1)`.
     Sign(Sign),
 }
 
 // Ops whose primary meaning is on integers.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum IntegerOperator {
-    // Remainder after integer division. Example: `a % d`.
+    // Remainder after integer division. Example: `(-7) % 3 = 2`.
     Mod(Mod),
 
-    // Integer quotient: `a = d * quot(a, d) + a % d`. Example: `quot(a, d)`.
+    // Integer quotient: `a = d * quot(a, d) + a % d`. Example: `quot(-7, 3) = (-3)`.
     Quot(Quot),
 
-    // Greatest common divisor. Example: `gcd(a, b)`.
+    // Greatest common divisor. Example: `gcd(54, (-24)) = 6`.
     Gcd(Gcd),
 
-    // Least common multiple. Example: `lcm(a, b)`.
+    // Least common multiple. Example: `lcm(12, (-18)) = 36`.
     Lcm(Lcm),
 
-    // Factorial. Example: `factorial(n)`.
+    // Factorial. Example: `factorial(3) = 6`, `3! = 6`.
     Factorial(Factorial),
 }
 
@@ -143,41 +146,46 @@ pub enum TrigOperator {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ExpLogOperator {
-    Exp(Exp),   // exponential e^x. Example: `exp(x)`
-    Ln(Ln),     // natural log. Example: `ln(x)`
-    Log(Log),   // log with explicit base. Example: `log(2, x)`
-    Sqrt(Sqrt), // principal square root. Example: `sqrt(x)`
+    Exp(Exp),   // exponential e^x. Example: `exp(0) = 1`
+    Ln(Ln),     // natural log. Example: `ln(1) = 0`
+    Log(Log),   // log with explicit base. Example: `log(2, 8) = 3`
+    Sqrt(Sqrt), // principal square root. Example: `sqrt(4) = 2`
 }
 
 // Complex coordinate / modulus ops (not ordinary real `abs`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ComplexOperator {
-    // Real part of a complex. Example: `re(z)`.
+    // Real part of a complex. Example: `re(i) = 0`.
     RealPart(RealPart),
 
-    // Imaginary part of a complex. Example: `img(z)`.
+    // Imaginary part of a complex. Example: `img(i) = 1`.
     ImaginaryPart(ImaginaryPart),
 
-    // Complex modulus. Example: `C_abs(z)`.
+    // Complex modulus. Example: `C_abs(i) = 1`.
     ComplexAbs(ComplexAbs),
 }
 
 // Set-forming operators on already available sets / families.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SetOperator {
-    // Binary union: elements in A or in B. Example: `union(A, B)`.
+    // Binary union: elements in A or in B.
+    // Example: `union({1}, {2, 3}) = {1, 2, 3}`.
     Union(Union),
 
-    // Binary intersection: elements in both A and B. Example: `intersect(A, B)`.
+    // Binary intersection: elements in both A and B.
+    // Example: `intersect({1, 2}, {2, 3}) = {2}`.
     Intersect(Intersect),
 
-    // Relative complement: elements in A but not in B. Example: `set_minus(A, B)`.
+    // Relative complement: elements in A but not in B.
+    // Example: `set_minus({1, 2, 3}, {2}) = {1, 3}`.
     SetMinus(SetMinus),
 
-    // Union of a family of sets. Example: `family_union(F)`.
+    // Union of a family of sets (here: a set of sets).
+    // Example: `family_union({{1}, {2, 3}}) = {1, 2, 3}`.
     FamilyUnion(FamilyUnion),
 
-    // Intersection of a family of sets. Example: `family_intersect(F)`.
+    // Intersection of a family of sets (here: a set of sets).
+    // Example: `family_intersect({{1, 2}, {2, 3}}) = {2}`.
     FamilyIntersect(FamilyIntersect),
 
     // Indexed union ∪_{i ∈ I} A(i), where A is a set-valued family into ambient X.
@@ -190,7 +198,7 @@ pub enum SetOperator {
     // Example: `index_intersect(I, X, A)`.
     IndexIntersect(IndexIntersect),
 
-    // Set of all subsets of S. Example: `power_set(S)`.
+    // Set of all subsets of S. Example: `power_set({1}) = {{}, {1}}`.
     PowerSet(PowerSet),
 
     // Set of choice functions picking one point from each factor g(α), α ∈ I.
@@ -247,7 +255,7 @@ pub enum ProductShape {
     // i-th factor *set* of a cart (1-based). Example: `proj(cart(R, Z), 1)` = R.
     Proj(Proj),
 
-    // i-th *component* of a tuple / sequence (1-based). Example: `(1, 2)[1]`, `a[1]` when a = (1, 2).
+    // i-th *component* of a tuple / sequence (1-based). Example: `(1, 2)[1] = 1`.
     ObjAtIndex(ObjAtIndex),
 }
 
@@ -297,13 +305,13 @@ pub enum IteratedOperator {
 // Statistics extracted from a finite set of numbers.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FiniteSetStat {
-    // Cardinality. Example: `finite_set_size({1, 2})`.
+    // Cardinality. Example: `finite_set_size({1, 2}) = 2`.
     FiniteSetSize(FiniteSetSize),
 
-    // Greatest element. Example: `finite_set_max({1, 3})`.
+    // Greatest element. Example: `finite_set_max({1, 3}) = 3`.
     FiniteSetMax(FiniteSetMax),
 
-    // Least element. Example: `finite_set_min({1, 3})`.
+    // Least element. Example: `finite_set_min({1, 3}) = 1`.
     FiniteSetMin(FiniteSetMin),
 }
 
@@ -436,7 +444,7 @@ pub struct EulerNumber;
 pub struct Pi;
 
 // What: addition of two objects.
-// Surface: `a + b`
+// Surface: `1 + 2 = 3`
 // Domain: `a, b $in C`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Add {
@@ -445,17 +453,24 @@ pub struct Add {
 }
 
 // What: subtraction of two objects.
-// Surface: `a - b`
+// Surface: `5 - 2 = 3`
 // Domain: `a, b $in C`.
-// Parse also uses `0 - x` for prefix `-x` (no Neg variant).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Sub {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
 }
 
+// What: additive inverse (unary minus).
+// Surface: `-3 = (-3)` (not the same AST as `0 - a`).
+// Domain: `a $in C`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Neg {
+    pub arg: Box<Obj>,
+}
+
 // What: multiplication of two objects.
-// Surface: `a * b`
+// Surface: `2 * 3 = 6`
 // Domain: `a, b $in C`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Mul {
@@ -464,7 +479,7 @@ pub struct Mul {
 }
 
 // What: division of two objects.
-// Surface: `a / b`
+// Surface: `6 / 2 = 3`
 // Domain: `a, b $in C` and `b != 0`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Div {
@@ -472,86 +487,86 @@ pub struct Div {
     pub right: Box<Obj>,
 }
 
-// Mod
+// What: Euclidean remainder. Surface: `(-7) % 3 = 2`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Mod {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
 }
 
-// Quot
+// What: Euclidean quotient. Surface: `quot(-7, 3) = (-3)`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Quot {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
 }
 
-// Gcd
+// What: greatest common divisor. Surface: `gcd(54, (-24)) = 6`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Gcd {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
 }
 
-// Lcm
+// What: least common multiple. Surface: `lcm(12, (-18)) = 36`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Lcm {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
 }
 
-// Floor
+// What: greatest integer ≤ arg. Surface: `floor(3.7) = 3`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Floor {
     pub arg: Box<Obj>,
 }
 
-// Ceil
+// What: least integer ≥ arg. Surface: `ceil(3.2) = 4`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Ceil {
     pub arg: Box<Obj>,
 }
 
-// Min
+// What: binary minimum of reals. Surface: `min(7, (-2)) = (-2)`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Min {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
 }
 
-// Max
+// What: binary maximum of reals. Surface: `max(7, (-2)) = 7`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Max {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
 }
 
-// Exp
+// What: real exponential. Surface: `exp(0) = 1`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Exp {
     pub arg: Box<Obj>,
 }
 
-// Ln
+// What: natural logarithm. Surface: `ln(1) = 0`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Ln {
     pub arg: Box<Obj>,
 }
 
-// Sign
+// What: sign of a real (−1 / 0 / 1). Surface: `sign(-9) = (-1)`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Sign {
     pub arg: Box<Obj>,
 }
 
-// Factorial
+// What: factorial. Surface: `factorial(3) = 6`, also postfix `3! = 6`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Factorial {
     pub arg: Box<Obj>,
 }
 
 // What: exponentiation `base^exponent`.
-// Surface: `a^b` (right-associative; write `t^(-1)`, not `t^-1`).
+// Surface: `2^3 = 8` (right-associative; write `t^(-1)`, not `t^-1`).
 //
 // Domain is intentionally multi-branch (WD tries these in order in new_pipeline):
 // - complex base + natural exponent: `base $in C`, `exponent $in N`
@@ -568,7 +583,7 @@ pub struct Pow {
     pub exponent: Box<Obj>,
 }
 
-// Abs
+// What: absolute value on reals. Surface: `abs(-3) = 3`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Abs {
     pub arg: Box<Obj>,
@@ -622,65 +637,70 @@ pub struct Cot {
     pub arg: Box<Obj>,
 }
 
-// RealPart
+// What: real part of a complex. Surface: `re(i) = 0`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RealPart {
     pub arg: Box<Obj>,
 }
 
-// ImaginaryPart
+// What: imaginary part of a complex. Surface: `img(i) = 1`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ImaginaryPart {
     pub arg: Box<Obj>,
 }
 
-// ComplexAbs
+// What: complex modulus. Surface: `C_abs(i) = 1`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ComplexAbs {
     pub arg: Box<Obj>,
 }
 
-// Sqrt
+// What: principal square root. Surface: `sqrt(4) = 2`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Sqrt {
     pub arg: Box<Obj>,
 }
 
-// Log
+// What: logarithm with explicit base. Surface: `log(2, 8) = 3`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Log {
     pub base: Box<Obj>,
     pub arg: Box<Obj>,
 }
 
-// Union
+// What: binary union of two sets.
+// Surface: `union({1}, {2, 3}) = {1, 2, 3}`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Union {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
 }
 
-// Intersect
+// What: binary intersection of two sets.
+// Surface: `intersect({1, 2}, {2, 3}) = {2}`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Intersect {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
 }
 
-// SetMinus
+// What: relative complement (elements in left but not in right).
+// Surface: `set_minus({1, 2, 3}, {2}) = {1, 3}`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SetMinus {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
 }
 
-// Family union ∪F. Example: `family_union(F)`.
+// What: union of a family of sets — in Litex that family is a set of sets.
+// Surface: `family_union({{1}, {2, 3}}) = {1, 2, 3}`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FamilyUnion {
     pub left: Box<Obj>,
 }
 
-// Family intersection ∩F. Example: `family_intersect(F)`.
+// What: intersection of a family of sets — in Litex that family is a set of sets.
+// Surface: `family_intersect({{1, 2}, {2, 3}}) = {2}`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FamilyIntersect {
     pub left: Box<Obj>,
@@ -705,7 +725,7 @@ pub struct IndexIntersect {
     pub family_fn: Box<Obj>,
 }
 
-// Power set. Example: `power_set(R)`.
+// What: power set of a set. Surface: `power_set({1}) = {{}, {1}}`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PowerSet {
     pub set: Box<Obj>,
@@ -772,7 +792,7 @@ pub struct CartDim {
     pub set: Box<Obj>,
 }
 
-// i-th factor set of a cart. Example: `proj(cart(R, Z), 1)`.
+// i-th factor set of a cart. Example: `proj(cart(R, Z), 1) = R`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Proj {
     pub set: Box<Obj>,
@@ -791,19 +811,19 @@ pub struct Tuple {
     pub args: Vec<Box<Obj>>,
 }
 
-// Cardinality of a finite set. Example: `finite_set_size({1, 2})`.
+// What: cardinality of a finite set. Surface: `finite_set_size({1, 2}) = 2`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FiniteSetSize {
     pub set: Box<Obj>,
 }
 
-// Maximum element of a finite real/integer set. Example: `finite_set_max({1, 3})`.
+// What: maximum of a finite real/integer set. Surface: `finite_set_max({1, 3}) = 3`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FiniteSetMax {
     pub set: Box<Obj>,
 }
 
-// Minimum element of a finite real/integer set. Example: `finite_set_min({1, 3})`.
+// What: minimum of a finite real/integer set. Surface: `finite_set_min({1, 3}) = 1`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FiniteSetMin {
     pub set: Box<Obj>,
@@ -894,7 +914,7 @@ pub struct SeqSet {
     pub set: Box<Obj>,
 }
 
-// Tuple / sequence indexing. Example: `(1, 2)[1]`.
+// What: tuple / sequence indexing (1-based). Surface: `(1, 2)[1] = 1`
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ObjAtIndex {
     pub obj: Box<Obj>,
