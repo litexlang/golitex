@@ -35,24 +35,28 @@ Unicode aliases (e.g. `∀`→`forall`, `∈`→`$in`, `∪`/`∩`/`×` as infix
 
 First header token chooses the family. Anything else is a **bare fact** statement.
 
-| First token | Family |
-|---|---|
-| `prop` | `DefProp` |
-| `abstract_prop` | `DefAbstractProp` |
-| `let` | `LetObj` |
-| `have` | obj / `fn` / `by …` (see below) |
-| `obtain` | `Obtain` |
-| `claim` | local proof block |
-| `thm` / `axiom` / `strategy` | named interface |
-| `sketch` | exploratory block |
-| `trust` | `Trust` / `TrustHave` |
-| `eval` | `Eval` |
-| `witness` | `Witness` |
-| `struct` | `DefStruct` |
-| `template` | `DefTemplate` |
-| `release` | `release thm` / `release struct def` / `release obj def` |
-| `by` | proof directive |
-| *(other)* | bare `Fact` |
+AST nesting: object introductions are
+`Stmt::Definition(DefinitionStmt::DefineObj(…))`;
+`prop` / `thm` / `have fn` / `struct` / … are flat
+`DefinitionStmt` siblings. `release` / `by` / `register` stay top-level.
+
+| First token | AST family | What it does |
+|---|---|---|
+| *(other)* | `Fact` | Assert one fact; search + store |
+| `trust` | `Trust` | Skip truth search; WD still required |
+| `let` | `Definition.DefineObj.LetObj` | Untyped equality binding |
+| `have` | `Definition.DefineObj` or flat `HaveFn*` / `have by` | Introduce objs / define fns |
+| `obtain` | `Definition.DefineObj.Obtain*` | Name exist witnesses |
+| `prop` / `abstract_prop` | `Definition.DefProp` / `DefAbstractProp` | Predicate interface |
+| `struct` | `Definition.DefStruct` | Product carrier |
+| `template` | `Definition.DefTemplate` | Parameterized definition |
+| `thm` / `axiom` / `strategy` | `Definition.DefThm` / `Axiom` / `DefStrategy` | Named goal interfaces |
+| `release` | `Release` | Unpack thm / struct def / obj def |
+| `by` | `By` | Named proof method |
+| `register` | `Register` | Register prop rewrite laws (no proof body) |
+| `witness` | `Witness` | Exhibit witnesses for exist / nonempty |
+| `claim` / `sketch` | `ProofBlock` | Nested local proof scope |
+| `eval` | `Command.Eval` | Evaluate an object for display |
 
 Rejected at dispatch (intentional):
 

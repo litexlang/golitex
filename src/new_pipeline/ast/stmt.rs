@@ -22,14 +22,27 @@ use super::param::{SetBoundParameterList, TypedParameterList};
 // Not a value (Obj) and not itself a proposition (Fact); a bare Fact stmt asserts one.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Stmt {
+    // Assert one fact; search a proof and store it. Example: `1 + 1 = 2`.
     Fact(Fact),
+    // Skip truth search; WD still required; `-strict` rejects. Example: `trust: …`.
     Trust(TrustBoundaryStmt),
+    // Define a name / interface into the env (`DefineObj` or prop/thm/have fn/…).
+    // Example: `let a = 1`, `have x R`, `prop P(x R): …`, `thm t: ? …`.
     Definition(DefinitionStmt),
+    // Unpack a packaged theorem or definition into ambient facts.
+    // Example: `release thm t(a)`, `release struct def p`, `release obj def f`.
     Release(ReleaseStmt),
+    // Prove a goal by a named method. Example: `by cases: …`, `by contra: …`.
     By(ByStmt),
+    // Register rewrite/infer laws of a user prop (no proof body).
+    // Example: `register transitive: ? forall …`.
     Register(RegisterStmt),
+    // Exhibit witnesses for exist / atomic-exist / nonempty goals.
+    // Example: `witness exist x R st {…} from a:`.
     Witness(WitnessStmt),
+    // Nested local proof scope. Example: `claim: ? fact` … / `sketch:` ….
     ProofBlock(ProofBlockStmt),
+    // Non-proof session command. Example: `eval expr`.
     Command(CommandStmt),
 }
 
@@ -44,7 +57,10 @@ pub enum Stmt {
 // Trust boundary: skip truth search; still requires WD; `-strict` rejects these.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum TrustBoundaryStmt {
+    // Assert facts without searching a proof. Example: `trust: 1 = 1`.
     TrustStmt(TrustStmt),
+    // Introduce typed names and assert facts without searching a proof.
+    // Example: `trust have x R: x = x`.
     TrustHaveStmt(TrustHaveStmt),
 }
 
@@ -71,40 +87,68 @@ pub struct TrustHaveStmt {
 // DefinitionStmt
 // -----------------------------------------------------------------------------
 
-// What: define something into the environment.
-// `DefineObj` covers fresh object names (let / have / obtain / have by …);
-// other variants define reusable interfaces or function objects (prop, thm,
-// have fn, struct, …).
+// Define something into the environment.
+// `DefineObj` nests fresh object names; other variants are flat siblings
+// (reusable interfaces / function objects).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum DefinitionStmt {
+    // Fresh object names: `let` / `have` / `obtain` / `have by …`.
     DefineObj(DefineObjStmt),
+    // Named function by one expression body. Example: `have fn f(x R) R = x`.
     HaveFnEqualStmt(HaveFnEqualStmt),
+    // Named function by exhaustive disjoint cases.
+    // Example: `have fn f(x R) R by cases: case x = 0: 0 …`.
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
+    // Named function by induction on a measure.
+    // Example: `have fn countdown(n N) N by induc n from 0: …`.
     HaveFnByInducStmt(HaveFnByInducStmt),
+    // Named function from a proved `forall … exist!` (no formula body).
+    // Example: `have fn f by exist!: ? forall x A: exist! y B st {…}`.
     HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt),
+    // Concrete predicate with iff body. Example: `prop above_zero(x R): x > 0`.
     DefPropStmt(DefPropStmt),
+    // Abstract predicate signature only. Example: `abstract_prop F(x, y)`.
     DefAbstractPropStmt(DefAbstractPropStmt),
+    // Parameterized counterpart of one ordinary definition.
+    // Example: `template<S set>: have carrier_copy set = S`.
     DefTemplateStmt(DefTemplateStmt),
+    // Named product carrier. Example:
+    //   struct Point:
+    //       x R
+    //       y R
     DefStructStmt(DefStructStmt),
+    // Named algorithm (computational case presentation). Example: `algo f(x): …`.
     DefAlgoStmt(DefAlgoStmt),
+    // Named theorem with goal and proof. Example: `thm t: ? 1 = 1`.
     DefThmStmt(DefThmStmt),
+    // Named axiom (interface checked; truth trusted). Example: `axiom a: ? forall …`.
     AxiomStmt(AxiomStmt),
+    // Named reusable proof strategy. Example: `strategy s: ? forall …` then proof.
     DefStrategyStmt(DefStrategyStmt),
 }
 
-// What: introduce / define fresh object names and carriers.
-// Surface: `let` / `have` / `obtain` / `have by …`
+// Introduce / define fresh object names and carriers.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum DefineObjStmt {
+    // Untyped equality binding. Example: `let a = 1`.
     LetObjStmt(LetObjStmt),
+    // Typed names from a nonempty carrier. Example: `have x R` / `have x, y R`.
     HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),
+    // Typed names equal to given objects. Example: `have x R = 1`.
     HaveObjEqualStmt(HaveObjEqualStmt),
+    // Typed names satisfying body facts. Example: `have x R: x > 0`.
     HaveObjByExistFactsStmt(HaveObjByExistFactsStmt),
+    // Name witnesses of a known `exist` / `exist!`.
+    // Example: `obtain a from exist x R st {x = 0}`.
     ObtainObjFromExistFact(ObtainObjFromExistFact),
+    // Name witnesses when `$P(…)` unfolds to one positive exist.
+    // Example: `obtain a from $P(…)`.
     ObtainObjFromAtomicFact(ObtainObjFromAtomicFact),
-    // Name preimages from known image membership (see HaveByPreimageStmt).
+    // Opaque preimages from known image membership.
+    // Example: `have by fn_preimage: a from f(x) $in fn_range(f)`.
     HaveByPreimageStmt(HaveByPreimageStmt),
     // Named set via ZF Replacement (no anonymous replacement_image Obj).
+    // Example: `have by replacement_axiom: Img from prop P, set A`.
     HaveByReplacementAxiomStmt(HaveByReplacementAxiomStmt),
 }
 
@@ -138,8 +182,9 @@ pub struct HaveObjEqualStmt {
 }
 
 // What: introduce typed names that satisfy given quantifier-free facts.
-// Surface: `have x A st {…}`
+// Surface: `have x R:` then indented facts (not `st {…}` sugar here).
 // Stores: the names, carrier facts, the body facts, and ordinary infer.
+// Example: `have x R: x > 0`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HaveObjByExistFactsStmt {
     pub param_def: TypedParameterList,
@@ -257,7 +302,7 @@ pub struct FnSetClause {
 }
 
 // What: define a named function by exhaustive, pairwise-disjoint cases.
-// Surface: `have fn f(…) B: case … = …`
+// Surface: `have fn f(…) B by cases:` then `case …: …`
 // Stores: `f`, signature membership, and guarded case equations.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HaveFnEqualCaseByCaseStmt {
@@ -296,7 +341,7 @@ pub struct HaveFnByInducStmt {
 }
 
 // What: define a named function from a proved `forall … exist!` goal (no formula body).
-// Surface: `have fn f by exist!: forall …: exist! …`
+// Surface: `have fn f by exist!:` then `? forall …: exist! …`
 // Stores: `f $in FnSet`, the property forall, and the uniqueness forall
 // (`release obj def` re-stores the same three facts).
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -307,8 +352,9 @@ pub struct HaveFnByForallExistUniqueStmt {
 }
 
 // What: define a named concrete predicate with an iff body.
-// Surface: `prop P(x A): <=>: …`
+// Surface: `prop P(x A):` then body facts (each fact is an iff conjunct).
 // Stores: foldable prop definition used by `by def` / `$P` verify.
+// Example: `prop above_zero(x R): x > 0`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DefPropStmt {
     pub name: PlainName,
@@ -327,22 +373,31 @@ pub struct DefAbstractPropStmt {
     pub line_file: LineFile,
 }
 
-// What: bodies allowed inside a `template<…>:` definition.
-// Mix of Definition (DefineObj / have fn / …) and trust-have bodies that work
-// outside the template
-// (`have …`, `have fn …`, obtain, …); the template only adds parameters.
+// Bodies allowed inside a `template<…>:` definition — same shapes that work
+// outside the template; the template only adds parameters.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum TemplateDefEnum {
+    // Example: `template<S set>: have carrier_copy set`.
     HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),
+    // Example: `template<S set>: have carrier_copy set = S`.
     HaveObjEqualStmt(HaveObjEqualStmt),
+    // Example: `template<S set>: have x S: x = x`.
     HaveObjByExistFactsStmt(HaveObjByExistFactsStmt),
+    // Example: `template<S set>: have by replacement_axiom: Img from prop P, set S`.
     HaveByReplacementAxiomStmt(HaveByReplacementAxiomStmt),
+    // Example: `template<S set>: trust have x S: x = x`.
     TrustHaveStmt(TrustHaveStmt),
+    // Example: `template<S set>: obtain a from exist x S st {…}`.
     ObtainObjFromExistFact(ObtainObjFromExistFact),
+    // Example: `template<S set>: obtain a from $P(…)`.
     ObtainObjFromAtomicFact(ObtainObjFromAtomicFact),
+    // Example: `template<S set>: have fn id(x S) S = x`.
     HaveFnEqualStmt(HaveFnEqualStmt),
+    // Example: `template<S set>: have fn f(x S) S by cases: …`.
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
+    // Example: `template<S set>: have fn f(…) S by induc …`.
     HaveFnByInducStmt(HaveFnByInducStmt),
+    // Example: `template<S set>: have fn f by exist!: …`.
     HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt),
 }
 
@@ -376,8 +431,12 @@ pub struct StructFieldDef {
 }
 
 // What: define a named struct carrier with fields and optional laws.
-// Surface: `struct &Point: x R, y R`
+// Surface: `struct Point:` then fields; optional `<=>:` laws.
 // Stores: the struct def; field paths need `release struct def` to open.
+// Example:
+//   struct Point:
+//       x R
+//       y R
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DefStructStmt {
     pub name: PlainName,
@@ -457,11 +516,17 @@ pub struct DefStrategyStmt {
 // ReleaseStmt
 // -----------------------------------------------------------------------------
 
-// What: unpack already-packaged definitions / theorems into the ambient env.
+// Unpack already-packaged definitions / theorems into the ambient env.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ReleaseStmt {
+    // Instantiate a theorem and commit all conclusions.
+    // Example: `release thm t` / `release thm t(a, b)`.
     ReleaseThmStmt(ReleaseThmStmt),
+    // Open one definition-owned struct layer (fields / bridges / laws).
+    // Example: `release struct def p`.
     ReleaseStructDefStmt(ReleaseStructDefStmt),
+    // Re-store one object-definition's facts for an identifier (preview).
+    // Example: `release obj def f`.
     ReleaseObjDefStmt(ReleaseObjDefStmt),
 }
 
@@ -478,23 +543,40 @@ pub struct ReleaseThmStmt {
 // ByStmt
 // -----------------------------------------------------------------------------
 
-// What: prove a goal by a named proof method (`by cases`, `by induc`, …).
+// Prove a goal by a named proof method.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ByStmt {
+    // Exhaustive case split. Example: `by cases: case … prove: …`.
     ByCasesStmt(ByCasesStmt),
+    // Contradiction from the negation. Example: `by contra: …`.
     ByContraStmt(ByContraStmt),
+    // Forall by enumerating a finite set. Example: `by enumerate: forall x {…}: …`.
     ByEnumerateFiniteSetStmt(ByEnumerateFiniteSetStmt),
+    // Ordinary induction on N (or from a lower bound). Example: `by induc n from 0: …`.
     ByInducStmt(ByInducStmt),
+    // Strong induction on N. Example: `by strong_induc n from 0: …`.
     ByStrongInducStmt(ByStrongInducStmt),
+    // Forall by iterating finite ranges / carts. Example: `by for: forall …`.
     ByForStmt(ByForStmt),
+    // Set extensionality via both `$subset` directions. Example: `by extension: A = B`.
     ByExtensionStmt(ByExtensionStmt),
+    // Function extensionality on a shared FnSet (preview). Example: `by fn_extension: f = g`.
     ByFnExtensionStmt(ByFnExtensionStmt),
+    // Membership by enumerating a numeric range. Example: `by enumerate_range: e $in …`.
     ByEnumerateRangeStmt(ByEnumerateRangeStmt),
+    // Closed-range membership as a finite case split.
+    // Example: `by closed_range_as_cases: e $in {a, …, b}`.
     ByClosedRangeAsCasesStmt(ByClosedRangeAsCasesStmt),
+    // Zorn's lemma with named order / bound / maximality props. Example: `by zorn_lemma: …`.
     ByZornLemmaStmt(ByZornLemmaStmt),
+    // Axiom of choice on a family of nonempty sets. Example: `by axiom_of_choice: family F`.
     ByAxiomOfChoiceStmt(ByAxiomOfChoiceStmt),
+    // Axiom of regularity. Example: `by regularity_axiom: set S` (also `by regularity:`).
     ByRegularityAxiomStmt(ByRegularityAxiomStmt),
+    // Unfold a concrete / builtin definition. Example: `by def: $P(…)`.
     ByDefStmt(ByDefStmt),
+    // Cite a theorem for one selected atomic conclusion.
+    // Example: `by thm name(args): selected_fact`.
     ByThmStmt(ByThmStmt),
 }
 
@@ -705,11 +787,17 @@ pub struct ByThmStmt {
 // RegisterStmt
 // -----------------------------------------------------------------------------
 
-// What: register rewrite / infer properties of a user prop (not a proof method).
+// Register rewrite / infer properties of a user prop (not a proof method).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum RegisterStmt {
+    // Transitivity for later rewrite / chain infer.
+    // Example: `register transitive: ? forall x, y, z … =>: $P(x, z)`.
     RegisterTransitivePropStmt(RegisterTransitivePropStmt),
+    // Symmetry for later rewrite.
+    // Example: `register symmetric: ? forall x, y … =>: $P(y, x)`.
     RegisterSymmetricPropStmt(RegisterSymmetricPropStmt),
+    // Reflexivity for later rewrite.
+    // Example: `register reflexive: ? forall x … =>: $P(x, x)`.
     RegisterReflexivePropStmt(RegisterReflexivePropStmt),
 }
 
@@ -741,11 +829,17 @@ pub struct RegisterReflexivePropStmt {
 // WitnessStmt
 // -----------------------------------------------------------------------------
 
-// What: supply concrete witnesses for an exist / atomic / nonempty goal.
+// Supply concrete witnesses for an exist / atomic / nonempty goal.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum WitnessStmt {
+    // Exist-shaped fact by exhibiting witnesses.
+    // Example: `witness exist x R st {x = 0} from 0:`.
     WitnessExistFact(WitnessExistFact),
+    // `$P(…)` when its concrete def is a single positive exist clause.
+    // Example: `witness $P(…) from a:`.
     WitnessAtomicFact(WitnessAtomicFact),
+    // Nonemptiness by exhibiting a member.
+    // Example: `witness $is_nonempty_set(S) from e:`.
     WitnessNonemptySet(WitnessNonemptySet),
 }
 
@@ -783,10 +877,14 @@ pub struct WitnessNonemptySet {
 // ProofBlockStmt
 // -----------------------------------------------------------------------------
 
-// What: nested proof blocks that scope local work (claim / sketch).
+// Nested proof blocks that scope local work.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ProofBlockStmt {
+    // Prove a subgoal in a child scope; keep only that target.
+    // Example: `claim: ? 1 = 1` then proof body.
     ClaimStmt(ClaimStmt),
+    // Informal / non-binding sketch whose body still checks.
+    // Example: `sketch: 1 = 1`.
     SketchStmt(SketchStmt),
 }
 
@@ -813,9 +911,10 @@ pub struct SketchStmt {
 // CommandStmt
 // -----------------------------------------------------------------------------
 
-// What: non-proof session commands (eval, …).
+// Non-proof session commands.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum CommandStmt {
+    // Evaluate an object for display (no new proof fact). Example: `eval 1 + 1`.
     EvalStmt(EvalStmt),
 }
 

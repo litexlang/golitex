@@ -4,7 +4,7 @@
 
 use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact, InFact, NotEqualFact};
 use crate::new_pipeline::ast::obj::{
-    Add, ArithmeticOperator, Div, Literal, Mul, Number, Obj, Pow, StandardSet,
+    Add, ArithmeticOperator, Div, Literal, Mul, Number, Obj, Pow, StandardSet, Sub,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
@@ -451,8 +451,23 @@ fn is_one_obj(obj: &Obj) -> bool {
 }
 
 fn is_neg_one_obj(obj: &Obj) -> bool {
-    matches!(
+    if matches!(
         obj,
         Obj::Literal(Literal::Number(Number { normalized_value })) if normalized_value == "-1"
+    ) {
+        return true;
+    }
+    // Prefix `-1` parses as `0 - 1` (no Neg variant).
+    matches!(
+        obj,
+        Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left, right }))
+            if is_zero_obj(left.as_ref()) && is_one_obj(right.as_ref())
+    )
+}
+
+fn is_zero_obj(obj: &Obj) -> bool {
+    matches!(
+        obj,
+        Obj::Literal(Literal::Number(Number { normalized_value })) if normalized_value == "0"
     )
 }

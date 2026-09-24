@@ -27,12 +27,16 @@ Still open (non-rewrite): empty atomic builtin-rule families (`NormalAtomic` /
 several remaining `Not*`); more exist builtins;
 secondary subset leaves (set-minus / power-set / cart / subset-transitivity);
 strict-order duals of add/mul algebra; MatchingOneArgByOne beyond the traced constructors;
-equality-identity builtins (power/log/mod/min/max/…); richer `!=` / set-relation duals.
+equality-identity builtins (more power/log/mod/min/max/…); richer `!=` / set-relation duals.
 Order wave now includes power/sqrt/log, mod bounds, sub↔0 bridges, order
 transitivity, div monotone/shrink (pos and neg divisor), div↔product bridges,
 literal numeric bound chase, integer successor/adjacency/predecessor, positive
 even `1 < i`, finite-set max/min member bounds, union card `<=` sum, surjection
 codomain card `<=` domain, and basic `finite_set_size` card bounds.
+Equality BuiltinRule power laws (Stage B wave 1): `a^m * a^n = a^(m+n)`,
+`(a^m)^n = a^(m*n)`, `(a*b)^n = a^n * b^n`, `1/a = a^(-1)`, `a/b = a * b^(-1)`
+under `examples/new_pipeline/proof_nodes/equal/by_builtin_rule/power_*.lit` and
+`reciprocal_*` / `quotient_*`.
 Equality BuiltinRewrite: ClosedNumericEqualSubstitution (equal + atomic) and
 atomic KnownEqualObjSubstitution.
 No equality KnownRewrite slot (dead; = uses EqualIr / known_equivalence_classes graph).

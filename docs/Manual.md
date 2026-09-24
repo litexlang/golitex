@@ -1904,6 +1904,67 @@ runtime. This section gives each statement family one canonical home.
 > (`prop` / `thm` / `have fn` / `struct` / …) sit as flat siblings.
 > Surface keywords are unchanged; `trust` remains a truth-search skip
 > (WD still checked), not “unchecked”.
+>
+> #### Stmt catalog (what / how)
+>
+> | Family | What it does | How to write |
+> |---|---|---|
+> | `Fact` | Assert one fact; search a proof and store it. | bare line, e.g. `1 + 1 = 2` |
+> | `Trust` | Skip truth search; still require WD; store as trusted. | `trust:` … / `trust have x A:` … |
+> | `Definition` | Define a name / interface into the env (see subtable). | `let` / `have` / `prop` / `thm` / … |
+> | `Release` | Unpack a packaged theorem or definition into ambient facts. | `release thm …` / `release struct def …` / `release obj def …` |
+> | `By` | Prove the current goal by a named method. | `by cases:` / `by contra:` / `by induc …` / … |
+> | `Register` | Register rewrite/infer properties of a user prop (no proof body). | `register reflexive:` / `symmetric:` / `transitive:` + one `? forall …` |
+> | `Witness` | Prove an exist / atomic-exist / nonempty goal by exhibiting witnesses. | `witness exist … from …:` / `witness $P(…) from …:` / `witness $is_nonempty_set(S) from e:` |
+> | `ProofBlock` | Nested local proof scope. | `claim: ? fact` … / `sketch:` … |
+> | `Command` | Non-proof session command. | `eval expr` |
+>
+> **`Definition` / `DefineObj` (object names):**
+>
+> | Kind | What | How |
+> |---|---|---|
+> | `let` | Bind a fresh name to a well-defined object (equality only). | `let a = expr` |
+> | `have …` (carrier) | Introduce typed names from a nonempty carrier. | `have x R` / `have x, y R` |
+> | `have … =` | Introduce typed names equal to given objects. | `have x R = expr` |
+> | `have …:` | Introduce typed names satisfying body facts. | `have x R:` then indented facts |
+> | `obtain … from exist` | Name witnesses of a known `exist` / `exist!`. | `obtain a, b from exist …` |
+> | `obtain … from $P` | Same, when `$P(…)` unfolds to one positive exist. | `obtain a from $P(…)` |
+> | `have by fn_preimage` | Name opaque preimages from a known image membership. | `have by fn_preimage: a from f(x) $in fn_range(f)` |
+> | `have by replacement_axiom` | Name a set as a Replacement-axiom image. | `have by replacement_axiom: Img from prop P, set A` |
+>
+> **`Definition` (interfaces / functions — flat siblings of `DefineObj`):**
+>
+> | Kind | What | How |
+> |---|---|---|
+> | `have fn … =` | Named function by one expression body. | `have fn f(x A) B = expr` |
+> | `have fn … by cases` | Named function by exhaustive disjoint cases. | `have fn f(…) B by cases:` then `case …: …` |
+> | `have fn … by induc` | Named function by induction on a measure. | `have fn f(…) B by induc m from k:` … |
+> | `have fn … by exist!` | Named function from a proved `forall … exist!`. | `have fn f by exist!:` then `? forall …: exist! …` |
+> | `prop` | Concrete predicate with iff body. | `prop P(x A):` then body facts |
+> | `abstract_prop` | Abstract predicate signature only. | `abstract_prop P(x, y)` |
+> | `struct` | Named product carrier (fields, optional laws). | `struct Point:` then fields |
+> | `template` | Parameterized counterpart of one ordinary definition. | `template<A set>:` then one allowed body |
+> | `thm` | Named theorem with goal and proof. | `thm name:` then `? fact` and proof |
+> | `axiom` | Named axiom (interface checked; truth trusted). | `axiom name:` then `? forall …` |
+> | `algo` / `strategy` | Preview / restricted forms (see parse README). | `algo …` / `strategy …` |
+>
+> **`By` (common methods):**
+>
+> | How | What |
+> |---|---|
+> | `by cases:` | Exhaustive case split |
+> | `by contra:` | Contradiction from the negation |
+> | `by induc` / `by strong_induc` | Induction / strong induction |
+> | `by for:` | Finite range / cart enumeration |
+> | `by enumerate:` / `by enumerate_range:` / `by closed_range_as_cases:` | Finite-set or range caseing |
+> | `by extension:` / `by fn_extension:` | Extensionality for sets / functions |
+> | `by def:` | Unfold a concrete / builtin definition |
+> | `by thm name(…): fact` | Cite a theorem for one selected conclusion |
+> | `by regularity_axiom:` / `by axiom_of_choice:` / `by zorn_lemma:` | Named set-theoretic methods |
+>
+> Runnable tracers for each wired arm live under
+> `examples/new_pipeline/stmt_nodes/`. Parse surface details:
+> `src/new_pipeline/parse/README.md`.
 
 ### Bare facts and `have`
 
@@ -4047,8 +4108,13 @@ forall a, b R+:
 > positive even `1 < i`; `finite_set_max` / `finite_set_min` member bounds;
 > union cardinality `<=` sum; and surjection codomain cardinality `<=` domain.
 > Also `finite_set_size` nonnegative / at-least-one / subset comparison.
+> Equality power laws (preview): `a^m * a^n = a^(m+n)`, `(a^m)^n = a^(m*n)`,
+> `(a*b)^n = a^n * b^n` (positive real base, positive natural exponents), and
+> `1/a = a^(-1)`, `a/b = a * b^(-1)` for nonzero denominators.
 > One `.lit` per rule under
-> [`examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/`](../examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/).
+> [`examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/`](../examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/)
+> and
+> [`examples/new_pipeline/proof_nodes/equal/by_builtin_rule/`](../examples/new_pipeline/proof_nodes/equal/by_builtin_rule/).
 
 The last equivalence is an integer-adjacency rule: a strict bound immediately
 below the successor `n + 1` is the same as the weak bound at `n`. It requires
