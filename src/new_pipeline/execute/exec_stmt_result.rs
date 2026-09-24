@@ -18,6 +18,7 @@
 
 use crate::new_pipeline::execute::execute_by_stmt::ExecByStmtResult;
 use crate::new_pipeline::execute::execute_by_stmt::ExecReleaseThmStmtResult;
+use crate::new_pipeline::execute::execute_proof_block_stmt::ExecProofBlockStmtResult;
 use crate::new_pipeline::execute::execute_register_stmt::ExecRegisterStmtResult;
 use crate::new_pipeline::execute::execute_def_abstract_prop_stmt::ExecDefAbstractPropStmtSuccessResult;
 use crate::new_pipeline::execute::execute_def_prop_stmt::ExecDefPropStmtResult;
@@ -82,13 +83,13 @@ impl ParamTypeFactCheckResult {
 
 pub enum ExecStmtResult {
     Fact(ExecFactStmtResult),
-    Introduce(ExecIntroduceStmtResult),
-    Define(ExecDefineStmtResult),
+    Definition(ExecDefinitionStmtResult),
     Witness(ExecWitnessStmtResult),
     Trust(ExecTrustBoundaryStmtResult),
     By(ExecByStmtResult),
     Register(ExecRegisterStmtResult),
     Release(ExecReleaseStmtResult),
+    ProofBlock(ExecProofBlockStmtResult),
 }
 
 pub enum ExecReleaseStmtResult {
@@ -97,18 +98,8 @@ pub enum ExecReleaseStmtResult {
     ObjDef(ExecReleaseObjDefStmtResult),
 }
 
-pub enum ExecIntroduceStmtResult {
-    LetObj(ExecLetObjStmtResult),
-    HaveObjInNonemptySet(ExecHaveObjInNonemptySetStmtResult),
-    HaveObjEqual(ExecHaveObjEqualStmtResult),
-    HaveObjByExistFacts(ExecHaveObjByExistFactsStmtResult),
-    ObtainObjFromExistFact(ExecObtainObjFromExistFactStmtResult),
-    ObtainObjFromAtomicFact(ExecObtainObjFromAtomicFactStmtResult),
-    HaveByFnPreimage(ExecHaveByFnPreimageStmtResult),
-    HaveByReplacementAxiom(ExecHaveByReplacementAxiomStmtResult),
-}
-
-pub enum ExecDefineStmtResult {
+pub enum ExecDefinitionStmtResult {
+    DefineObj(ExecDefineObjStmtResult),
     HaveFnEqual(ExecHaveFnEqualStmtResult),
     HaveFnEqualCaseByCase(ExecHaveFnEqualCaseByCaseStmtResult),
     HaveFnByForallExistUnique(ExecHaveFnByForallExistUniqueStmtResult),
@@ -120,17 +111,28 @@ pub enum ExecDefineStmtResult {
     DefThm(ExecDefThmStmtResult),
 }
 
+pub enum ExecDefineObjStmtResult {
+    LetObj(ExecLetObjStmtResult),
+    HaveObjInNonemptySet(ExecHaveObjInNonemptySetStmtResult),
+    HaveObjEqual(ExecHaveObjEqualStmtResult),
+    HaveObjByExistFacts(ExecHaveObjByExistFactsStmtResult),
+    ObtainObjFromExistFact(ExecObtainObjFromExistFactStmtResult),
+    ObtainObjFromAtomicFact(ExecObtainObjFromAtomicFactStmtResult),
+    HaveByFnPreimage(ExecHaveByFnPreimageStmtResult),
+    HaveByReplacementAxiom(ExecHaveByReplacementAxiomStmtResult),
+}
+
 impl ExecStmtResult {
     pub fn is_failed(&self) -> bool {
         match self {
             Self::Fact(r) => r.is_failed(),
-            Self::Introduce(r) => r.is_failed(),
-            Self::Define(r) => r.is_failed(),
+            Self::Definition(r) => r.is_failed(),
             Self::Witness(r) => r.is_failed(),
             Self::Trust(r) => r.is_failed(),
             Self::By(r) => r.is_failed(),
             Self::Register(r) => r.is_failed(),
             Self::Release(r) => r.is_failed(),
+            Self::ProofBlock(r) => r.is_failed(),
         }
     }
 }
@@ -145,7 +147,24 @@ impl ExecReleaseStmtResult {
     }
 }
 
-impl ExecIntroduceStmtResult {
+impl ExecDefinitionStmtResult {
+    pub fn is_failed(&self) -> bool {
+        match self {
+            Self::DefineObj(r) => r.is_failed(),
+            Self::HaveFnEqual(r) => r.is_failed(),
+            Self::HaveFnEqualCaseByCase(r) => r.is_failed(),
+            Self::HaveFnByForallExistUnique(r) => r.is_failed(),
+            Self::HaveFnByInduc(r) => r.is_failed(),
+            Self::DefProp(r) => r.is_failed(),
+            Self::DefAbstractProp(_) => false,
+            Self::DefStruct(r) => r.is_failed(),
+            Self::DefTemplate(r) => r.is_failed(),
+            Self::DefThm(r) => r.is_failed(),
+        }
+    }
+}
+
+impl ExecDefineObjStmtResult {
     pub fn is_failed(&self) -> bool {
         match self {
             Self::LetObj(r) => r.is_failed(),
@@ -156,22 +175,6 @@ impl ExecIntroduceStmtResult {
             Self::ObtainObjFromAtomicFact(r) => r.is_failed(),
             Self::HaveByFnPreimage(r) => r.is_failed(),
             Self::HaveByReplacementAxiom(r) => r.is_failed(),
-        }
-    }
-}
-
-impl ExecDefineStmtResult {
-    pub fn is_failed(&self) -> bool {
-        match self {
-            Self::HaveFnEqual(r) => r.is_failed(),
-            Self::HaveFnEqualCaseByCase(r) => r.is_failed(),
-            Self::HaveFnByForallExistUnique(r) => r.is_failed(),
-            Self::HaveFnByInduc(r) => r.is_failed(),
-            Self::DefProp(r) => r.is_failed(),
-            Self::DefAbstractProp(_) => false,
-            Self::DefStruct(r) => r.is_failed(),
-            Self::DefTemplate(r) => r.is_failed(),
-            Self::DefThm(r) => r.is_failed(),
         }
     }
 }

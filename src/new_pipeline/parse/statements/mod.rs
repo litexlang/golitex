@@ -1,7 +1,7 @@
 //! Statement family parsers (token blocks → Stmt AST).
 
 mod by;
-mod claim_example;
+mod claim;
 mod def_misc;
 mod eval;
 mod have;

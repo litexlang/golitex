@@ -10,7 +10,7 @@ use super::super::object::{is_simple_name, parse_obj};
 use crate::new_pipeline::ast::fact::AtomicFact;
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::stmt::{
-    IntroduceStmt, DefineStmt, HaveByPreimageStmt, HaveByReplacementAxiomStmt, Stmt,
+    DefineObjStmt, DefinitionStmt, HaveByPreimageStmt, HaveByReplacementAxiomStmt, Stmt,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -87,13 +87,13 @@ impl Runtime {
         self.pop_parse_scope();
         let (prop_name, source_set) = parsed?;
         self.occupy_bound_name_as_parse(block, &bound)?;
-        Ok(Stmt::Introduce(IntroduceStmt::HaveByReplacementAxiomStmt(HaveByReplacementAxiomStmt {
+        Ok(Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveByReplacementAxiomStmt(HaveByReplacementAxiomStmt {
                 name: bound,
                 prop_name,
                 source_set,
                 line_file: LineFile::new(block.line, block.source_path.clone()),
             }),
-        ))
+        )))
     }
 
     // Preimage names from known `… $in fn_range(…)`.
@@ -152,12 +152,12 @@ impl Runtime {
         for name in &preimage_names {
             self.define_plain_atom_as_parse(tb, name.clone())?;
         }
-        Ok(Stmt::Introduce(IntroduceStmt::HaveByPreimageStmt(
+        Ok(Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveByPreimageStmt(
             HaveByPreimageStmt {
                 preimage_names,
                 range_membership,
                 line_file: LineFile::new(block.line, block.source_path.clone()),
             },
-        )))
+        ))))
     }
 }

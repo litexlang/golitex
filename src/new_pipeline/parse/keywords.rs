@@ -7,7 +7,6 @@ pub const LET: &str = "let";
 pub const HAVE: &str = "have";
 pub const OBTAIN: &str = "obtain";
 pub const CLAIM: &str = "claim";
-pub const EXAMPLE: &str = "example";
 pub const THM: &str = "thm";
 pub const AXIOM: &str = "axiom";
 pub const STRATEGY: &str = "strategy";

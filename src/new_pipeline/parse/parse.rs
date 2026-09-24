@@ -1,5 +1,5 @@
 use super::keywords::{
-    ABSTRACT_PROP, ALGO, AXIOM, BY, CART, CLAIM, EVAL, EXAMPLE, FINITE_SEQ, FN, FOR, HAVE, IMPORT,
+    ABSTRACT_PROP, ALGO, AXIOM, BY, CART, CLAIM, EVAL, FINITE_SEQ, FN, FOR, HAVE, IMPORT,
     LET, MATRIX, OBJ, OBTAIN, PROP, QUESTION_GOAL, REGISTER, RELEASE, SEQ, SKETCH, STRATEGY,
     STRONG_INDUC, STRUCT, TEMPLATE, THM, TRUST, TUPLE, WITNESS,
 };
@@ -28,13 +28,12 @@ impl Runtime {
             HAVE => self.parse_have_dispatch(block),
             OBTAIN => self.parse_obtain_stmt(block),
             CLAIM => self.parse_claim_stmt(block),
-            EXAMPLE => self.parse_example_stmt(block),
             THM => self.parse_def_thm_stmt(block),
             AXIOM => self.parse_axiom_stmt(block),
             STRATEGY => self.parse_def_strategy_stmt(block),
             SKETCH => self.parse_sketch_stmt(block),
             QUESTION_GOAL => Err(RuntimeParseError::new(
-                "top-level `?` is not supported; use it as a goal inside claim/example/thm/by/strategy",
+                "top-level `?` is not supported; use it as a goal inside claim/thm/by/strategy",
                 block.line,
                 block.source_path.clone(),
             )

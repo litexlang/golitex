@@ -78,7 +78,8 @@ fn store_matches_example_golden_bytes() {
     let text = store_def_prop(&sample_is_pos()).expect("store");
     let fixture = IS_POS_FIXTURE.trim_end_matches(['\n', '\r']);
     assert_eq!(
-        text, fixture,
+        text.trim_end_matches(['\n', '\r']),
+        fixture,
         "store_def_prop drifted from examples/.../is_pos.def_prop.json; \
          re-dump with LITEX_DUMP_KB_FIXTURES=1 if intentional"
     );

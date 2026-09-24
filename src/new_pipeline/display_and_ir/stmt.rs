@@ -31,8 +31,7 @@ impl Stmt {
         match self {
             Stmt::Fact(x) => StmtIR(x.ir().0),
             Stmt::Trust(x) => x.ir(),
-            Stmt::Introduce(x) => x.ir(),
-            Stmt::Define(x) => x.ir(),
+            Stmt::Definition(x) => x.ir(),
             Stmt::Release(x) => x.ir(),
             Stmt::By(x) => x.ir(),
             Stmt::Register(x) => x.ir(),
@@ -54,37 +53,38 @@ impl TrustBoundaryStmt {
     impl_display_pair!();
 }
 
-impl IntroduceStmt {
+impl DefineObjStmt {
     pub fn ir(&self) -> StmtIR {
         match self {
-            IntroduceStmt::LetObjStmt(x) => x.ir(),
-            IntroduceStmt::HaveObjInNonemptySetStmt(x) => x.ir(),
-            IntroduceStmt::HaveObjEqualStmt(x) => x.ir(),
-            IntroduceStmt::HaveObjByExistFactsStmt(x) => x.ir(),
-            IntroduceStmt::ObtainObjFromExistFact(x) => x.ir(),
-            IntroduceStmt::ObtainObjFromAtomicFact(x) => x.ir(),
-            IntroduceStmt::HaveByPreimageStmt(x) => x.ir(),
-            IntroduceStmt::HaveByReplacementAxiomStmt(x) => x.ir(),
+            DefineObjStmt::LetObjStmt(x) => x.ir(),
+            DefineObjStmt::HaveObjInNonemptySetStmt(x) => x.ir(),
+            DefineObjStmt::HaveObjEqualStmt(x) => x.ir(),
+            DefineObjStmt::HaveObjByExistFactsStmt(x) => x.ir(),
+            DefineObjStmt::ObtainObjFromExistFact(x) => x.ir(),
+            DefineObjStmt::ObtainObjFromAtomicFact(x) => x.ir(),
+            DefineObjStmt::HaveByPreimageStmt(x) => x.ir(),
+            DefineObjStmt::HaveByReplacementAxiomStmt(x) => x.ir(),
         }
     }
     impl_display_pair!();
 }
 
-impl DefineStmt {
+impl DefinitionStmt {
     pub fn ir(&self) -> StmtIR {
         match self {
-            DefineStmt::HaveFnEqualStmt(x) => x.ir(),
-            DefineStmt::HaveFnEqualCaseByCaseStmt(x) => x.ir(),
-            DefineStmt::HaveFnByInducStmt(x) => x.ir(),
-            DefineStmt::HaveFnByForallExistUniqueStmt(x) => x.ir(),
-            DefineStmt::DefPropStmt(x) => x.ir(),
-            DefineStmt::DefAbstractPropStmt(x) => x.ir(),
-            DefineStmt::DefTemplateStmt(x) => x.ir(),
-            DefineStmt::DefStructStmt(x) => x.ir(),
-            DefineStmt::DefAlgoStmt(x) => x.ir(),
-            DefineStmt::DefThmStmt(x) => x.ir(),
-            DefineStmt::AxiomStmt(x) => x.ir(),
-            DefineStmt::DefStrategyStmt(x) => x.ir(),
+            DefinitionStmt::DefineObj(x) => x.ir(),
+            DefinitionStmt::HaveFnEqualStmt(x) => x.ir(),
+            DefinitionStmt::HaveFnEqualCaseByCaseStmt(x) => x.ir(),
+            DefinitionStmt::HaveFnByInducStmt(x) => x.ir(),
+            DefinitionStmt::HaveFnByForallExistUniqueStmt(x) => x.ir(),
+            DefinitionStmt::DefPropStmt(x) => x.ir(),
+            DefinitionStmt::DefAbstractPropStmt(x) => x.ir(),
+            DefinitionStmt::DefTemplateStmt(x) => x.ir(),
+            DefinitionStmt::DefStructStmt(x) => x.ir(),
+            DefinitionStmt::DefAlgoStmt(x) => x.ir(),
+            DefinitionStmt::DefThmStmt(x) => x.ir(),
+            DefinitionStmt::AxiomStmt(x) => x.ir(),
+            DefinitionStmt::DefStrategyStmt(x) => x.ir(),
         }
     }
     impl_display_pair!();
@@ -150,7 +150,6 @@ impl ProofBlockStmt {
     pub fn ir(&self) -> StmtIR {
         match self {
             ProofBlockStmt::ClaimStmt(x) => x.ir(),
-            ProofBlockStmt::ExampleStmt(x) => x.ir(),
             ProofBlockStmt::SketchStmt(x) => x.ir(),
         }
     }
@@ -920,33 +919,6 @@ impl ClaimStmt {
         StmtIR(format!(
             "{}{}\n{}\n{}",
             CLAIM,
-            COLON,
-            indent!(
-                &format!("{} {}", QUESTION_GOAL, &self.fact.ir()),
-                1
-            ),
-            indent!(
-                &self
-                    .proof
-                    .iter()
-                    .map(|s| s.ir())
-                    .collect::<Vec<_>>()
-                    .join(
-                        "
-"
-                    ),
-                1
-            )
-        ))
-    }
-    impl_display_pair!();
-}
-
-impl ExampleStmt {
-    pub fn ir(&self) -> StmtIR {
-        StmtIR(format!(
-            "{}{}\n{}\n{}",
-            EXAMPLE,
             COLON,
             indent!(
                 &format!("{} {}", QUESTION_GOAL, &self.fact.ir()),

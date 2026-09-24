@@ -1,5 +1,9 @@
-use super::exec_stmt_result::{ExecDefineStmtResult, ExecIntroduceStmtResult, ExecReleaseStmtResult, ExecStmtResult};
-use crate::new_pipeline::ast::stmt::{ByStmt, DefineStmt, IntroduceStmt, RegisterStmt, ReleaseStmt, Stmt};
+use super::exec_stmt_result::{
+    ExecDefineObjStmtResult, ExecDefinitionStmtResult, ExecReleaseStmtResult, ExecStmtResult,
+};
+use crate::new_pipeline::ast::stmt::{
+    ByStmt, DefineObjStmt, DefinitionStmt, ProofBlockStmt, RegisterStmt, ReleaseStmt, Stmt,
+};
 use crate::new_pipeline::execute::execute_by_stmt::{
     exec_by_axiom_of_choice_stmt, exec_by_cases_stmt, exec_by_closed_range_as_cases_stmt,
     exec_by_contra_stmt, exec_by_def_stmt, exec_by_enumerate_finite_set_stmt,
@@ -7,11 +11,12 @@ use crate::new_pipeline::execute::execute_by_stmt::{
     exec_by_for_stmt, exec_by_induc_stmt, exec_by_regularity_axiom_stmt,
     exec_by_strong_induc_stmt, exec_by_thm_stmt, exec_by_zorn_lemma_stmt, exec_release_thm_stmt,
 };
+use crate::new_pipeline::execute::execute_def_thm_stmt::exec_def_thm_stmt;
+use crate::new_pipeline::execute::execute_proof_block_stmt::{exec_claim_stmt, exec_sketch_stmt};
 use crate::new_pipeline::execute::execute_register_stmt::{
     exec_register_reflexive_prop_stmt, exec_register_symmetric_prop_stmt,
     exec_register_transitive_prop_stmt,
 };
-use crate::new_pipeline::execute::execute_def_thm_stmt::exec_def_thm_stmt;
 use crate::new_pipeline::runtime::{Runtime, RuntimeError, RuntimeResult};
 
 impl Runtime {
@@ -37,7 +42,7 @@ impl Runtime {
                         crate::new_pipeline::LITEX
                     )));
                 }
-                Stmt::Define(DefineStmt::DefAbstractPropStmt(_)) => {
+                Stmt::Definition(DefinitionStmt::DefAbstractPropStmt(_)) => {
                     return Err(RuntimeError::InvalidArguments(format!(
                         "`abstract_prop` is forbidden under {} `-strict`",
                         crate::new_pipeline::LITEX
@@ -48,115 +53,136 @@ impl Runtime {
         }
         match stmt {
             Stmt::Fact(fact) => Ok(ExecStmtResult::Fact(self.execute_fact_statement(fact)?)),
-            Stmt::Introduce(IntroduceStmt::LetObjStmt(let_stmt)) => Ok(ExecStmtResult::Introduce(ExecIntroduceStmtResult::LetObj(self.exec_let_obj(let_stmt)?),
-            )),
-            Stmt::Introduce(IntroduceStmt::HaveObjInNonemptySetStmt(have_stmt)) => {
-                Ok(ExecStmtResult::Introduce(ExecIntroduceStmtResult::HaveObjInNonemptySet(
+            Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::LetObjStmt(let_stmt))) => {
+                Ok(ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+                    ExecDefineObjStmtResult::LetObj(self.exec_let_obj(let_stmt)?),
+                )))
+            }
+            Stmt::Definition(DefinitionStmt::DefineObj(
+                DefineObjStmt::HaveObjInNonemptySetStmt(have_stmt),
+            )) => Ok(ExecStmtResult::Definition(
+                ExecDefinitionStmtResult::DefineObj(
+                    ExecDefineObjStmtResult::HaveObjInNonemptySet(
                         self.exec_have_obj_in_nonempty_set_stmt(have_stmt)?,
                     ),
-                ))
-            }
-            Stmt::Introduce(IntroduceStmt::HaveObjEqualStmt(have_stmt)) => {
-                Ok(ExecStmtResult::Introduce(ExecIntroduceStmtResult::HaveObjEqual(
-                        self.exec_have_obj_equal_stmt(have_stmt)?,
-                    ),
-                ))
-            }
-            Stmt::Introduce(IntroduceStmt::HaveObjByExistFactsStmt(have_stmt)) => {
-                Ok(ExecStmtResult::Introduce(ExecIntroduceStmtResult::HaveObjByExistFacts(
+                ),
+            )),
+            Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveObjEqualStmt(
+                have_stmt,
+            ))) => Ok(ExecStmtResult::Definition(
+                ExecDefinitionStmtResult::DefineObj(ExecDefineObjStmtResult::HaveObjEqual(
+                    self.exec_have_obj_equal_stmt(have_stmt)?,
+                )),
+            )),
+            Stmt::Definition(DefinitionStmt::DefineObj(
+                DefineObjStmt::HaveObjByExistFactsStmt(have_stmt),
+            )) => Ok(ExecStmtResult::Definition(
+                ExecDefinitionStmtResult::DefineObj(
+                    ExecDefineObjStmtResult::HaveObjByExistFacts(
                         self.exec_have_obj_by_exist_facts_stmt(have_stmt)?,
                     ),
-                ))
-            }
-            Stmt::Introduce(IntroduceStmt::ObtainObjFromExistFact(obtain_stmt)) => {
-                Ok(ExecStmtResult::Introduce(ExecIntroduceStmtResult::ObtainObjFromExistFact(
+                ),
+            )),
+            Stmt::Definition(DefinitionStmt::DefineObj(
+                DefineObjStmt::ObtainObjFromExistFact(obtain_stmt),
+            )) => Ok(ExecStmtResult::Definition(
+                ExecDefinitionStmtResult::DefineObj(
+                    ExecDefineObjStmtResult::ObtainObjFromExistFact(
                         self.exec_obtain_obj_from_exist_fact_stmt(obtain_stmt)?,
                     ),
-                ))
-            }
-            Stmt::Introduce(IntroduceStmt::ObtainObjFromAtomicFact(obtain_stmt)) => {
-                Ok(ExecStmtResult::Introduce(ExecIntroduceStmtResult::ObtainObjFromAtomicFact(
+                ),
+            )),
+            Stmt::Definition(DefinitionStmt::DefineObj(
+                DefineObjStmt::ObtainObjFromAtomicFact(obtain_stmt),
+            )) => Ok(ExecStmtResult::Definition(
+                ExecDefinitionStmtResult::DefineObj(
+                    ExecDefineObjStmtResult::ObtainObjFromAtomicFact(
                         self.exec_obtain_obj_from_atomic_fact_stmt(obtain_stmt)?,
                     ),
-                ))
-            }
-            Stmt::Introduce(IntroduceStmt::HaveByPreimageStmt(have_stmt)) => {
-                Ok(ExecStmtResult::Introduce(ExecIntroduceStmtResult::HaveByFnPreimage(
-                        self.exec_have_by_fn_preimage_stmt(have_stmt)?,
-                    ),
-                ))
-            }
-            Stmt::Introduce(IntroduceStmt::HaveByReplacementAxiomStmt(have_stmt)) => {
-                Ok(ExecStmtResult::Introduce(ExecIntroduceStmtResult::HaveByReplacementAxiom(
+                ),
+            )),
+            Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveByPreimageStmt(
+                have_stmt,
+            ))) => Ok(ExecStmtResult::Definition(
+                ExecDefinitionStmtResult::DefineObj(ExecDefineObjStmtResult::HaveByFnPreimage(
+                    self.exec_have_by_fn_preimage_stmt(have_stmt)?,
+                )),
+            )),
+            Stmt::Definition(DefinitionStmt::DefineObj(
+                DefineObjStmt::HaveByReplacementAxiomStmt(have_stmt),
+            )) => Ok(ExecStmtResult::Definition(
+                ExecDefinitionStmtResult::DefineObj(
+                    ExecDefineObjStmtResult::HaveByReplacementAxiom(
                         self.exec_have_by_replacement_axiom_stmt(have_stmt)?,
                     ),
+                ),
+            )),
+            Stmt::Definition(DefinitionStmt::HaveFnEqualStmt(have_stmt)) => {
+                Ok(ExecStmtResult::Definition(
+                    ExecDefinitionStmtResult::HaveFnEqual(self.exec_have_fn_equal_stmt(have_stmt)?),
                 ))
             }
-            Stmt::Define(DefineStmt::HaveFnEqualStmt(have_stmt)) => {
-                Ok(ExecStmtResult::Define(ExecDefineStmtResult::HaveFnEqual(
-                        self.exec_have_fn_equal_stmt(have_stmt)?,
-                    ),
-                ))
-            }
-            Stmt::Define(DefineStmt::HaveFnEqualCaseByCaseStmt(have_stmt)) => {
-                Ok(ExecStmtResult::Define(ExecDefineStmtResult::HaveFnEqualCaseByCase(
+            Stmt::Definition(DefinitionStmt::HaveFnEqualCaseByCaseStmt(have_stmt)) => {
+                Ok(ExecStmtResult::Definition(
+                    ExecDefinitionStmtResult::HaveFnEqualCaseByCase(
                         self.exec_have_fn_equal_case_by_case_stmt(have_stmt)?,
                     ),
                 ))
             }
-            Stmt::Define(DefineStmt::HaveFnByForallExistUniqueStmt(have_stmt)) => {
-                Ok(ExecStmtResult::Define(ExecDefineStmtResult::HaveFnByForallExistUnique(
+            Stmt::Definition(DefinitionStmt::HaveFnByForallExistUniqueStmt(have_stmt)) => {
+                Ok(ExecStmtResult::Definition(
+                    ExecDefinitionStmtResult::HaveFnByForallExistUnique(
                         self.exec_have_fn_by_forall_exist_unique_stmt(have_stmt)?,
                     ),
                 ))
             }
-            Stmt::Define(DefineStmt::HaveFnByInducStmt(have_stmt)) => {
-                Ok(ExecStmtResult::Define(ExecDefineStmtResult::HaveFnByInduc(
+            Stmt::Definition(DefinitionStmt::HaveFnByInducStmt(have_stmt)) => {
+                Ok(ExecStmtResult::Definition(
+                    ExecDefinitionStmtResult::HaveFnByInduc(
                         self.exec_have_fn_by_induc_stmt(have_stmt)?,
                     ),
                 ))
             }
-            Stmt::Define(DefineStmt::DefPropStmt(def_prop)) => {
-                Ok(ExecStmtResult::Define(ExecDefineStmtResult::DefProp(
-                    self.exec_def_prop_stmt(def_prop)?,
-                )))
-            }
-            Stmt::Define(DefineStmt::DefAbstractPropStmt(def_abstract_prop)) => {
-                Ok(ExecStmtResult::Define(ExecDefineStmtResult::DefAbstractProp(
+            Stmt::Definition(DefinitionStmt::DefPropStmt(def_prop)) => Ok(ExecStmtResult::Definition(
+                ExecDefinitionStmtResult::DefProp(self.exec_def_prop_stmt(def_prop)?),
+            )),
+            Stmt::Definition(DefinitionStmt::DefAbstractPropStmt(def_abstract_prop)) => {
+                Ok(ExecStmtResult::Definition(
+                    ExecDefinitionStmtResult::DefAbstractProp(
                         self.exec_def_abstract_prop_stmt(def_abstract_prop)?,
                     ),
                 ))
             }
-            Stmt::Define(DefineStmt::DefStructStmt(def_struct)) => {
-                Ok(ExecStmtResult::Define(ExecDefineStmtResult::DefStruct(self.exec_def_struct_stmt(def_struct)?),
-                ))
+            Stmt::Definition(DefinitionStmt::DefStructStmt(def_struct)) => {
+                Ok(ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStruct(
+                    self.exec_def_struct_stmt(def_struct)?,
+                )))
             }
-            Stmt::Define(DefineStmt::DefTemplateStmt(def_template)) => {
-                Ok(ExecStmtResult::Define(ExecDefineStmtResult::DefTemplate(
+            Stmt::Definition(DefinitionStmt::DefTemplateStmt(def_template)) => {
+                Ok(ExecStmtResult::Definition(
+                    ExecDefinitionStmtResult::DefTemplate(
                         self.exec_def_template_stmt(def_template)?,
                     ),
                 ))
             }
-            Stmt::Define(DefineStmt::DefThmStmt(def_thm)) => {
-                Ok(ExecStmtResult::Define(ExecDefineStmtResult::DefThm(
-                    exec_def_thm_stmt(self, def_thm)?,
-                )))
-            }
+            Stmt::Definition(DefinitionStmt::DefThmStmt(def_thm)) => Ok(ExecStmtResult::Definition(
+                ExecDefinitionStmtResult::DefThm(exec_def_thm_stmt(self, def_thm)?),
+            )),
             Stmt::Witness(witness_stmt) => {
                 Ok(ExecStmtResult::Witness(self.exec_witness_stmt(witness_stmt)?))
             }
             Stmt::Trust(unsafe_stmt) => {
                 Ok(ExecStmtResult::Trust(self.exec_unsafe_stmt(unsafe_stmt)?))
             }
-            Stmt::Release(ReleaseStmt::ReleaseThmStmt(stmt)) => {
-                Ok(ExecStmtResult::Release(ExecReleaseStmtResult::Thm(exec_release_thm_stmt(self, stmt)?)))
-            }
-            Stmt::Release(ReleaseStmt::ReleaseStructDefStmt(stmt)) => Ok(ExecStmtResult::Release(ExecReleaseStmtResult::StructDef(
-                self.exec_release_struct_def_stmt(stmt)?,
-            ))),
-            Stmt::Release(ReleaseStmt::ReleaseObjDefStmt(stmt)) => Ok(ExecStmtResult::Release(ExecReleaseStmtResult::ObjDef(
-                self.exec_release_obj_def_stmt(stmt)?,
-            ))),
+            Stmt::Release(ReleaseStmt::ReleaseThmStmt(stmt)) => Ok(ExecStmtResult::Release(
+                ExecReleaseStmtResult::Thm(exec_release_thm_stmt(self, stmt)?),
+            )),
+            Stmt::Release(ReleaseStmt::ReleaseStructDefStmt(stmt)) => Ok(ExecStmtResult::Release(
+                ExecReleaseStmtResult::StructDef(self.exec_release_struct_def_stmt(stmt)?),
+            )),
+            Stmt::Release(ReleaseStmt::ReleaseObjDefStmt(stmt)) => Ok(ExecStmtResult::Release(
+                ExecReleaseStmtResult::ObjDef(self.exec_release_obj_def_stmt(stmt)?),
+            )),
             Stmt::Register(RegisterStmt::RegisterReflexivePropStmt(stmt)) => {
                 Ok(ExecStmtResult::Register(exec_register_reflexive_prop_stmt(
                     self, stmt,
@@ -217,8 +243,14 @@ impl Runtime {
             Stmt::By(ByStmt::ByZornLemmaStmt(stmt)) => {
                 Ok(ExecStmtResult::By(exec_by_zorn_lemma_stmt(self, stmt)?))
             }
+            Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(stmt)) => {
+                Ok(ExecStmtResult::ProofBlock(exec_claim_stmt(self, stmt)?))
+            }
+            Stmt::ProofBlock(ProofBlockStmt::SketchStmt(stmt)) => {
+                Ok(ExecStmtResult::ProofBlock(exec_sketch_stmt(self, stmt)?))
+            }
             _ => Err(RuntimeError::Unsupported(
-                "new_pipeline exec_stmt: Fact, let, have-obj-in-nonempty, have-obj-equal, have-obj-by-exist, have-fn-equal, have-fn-by-cases, have-fn-by-exist!, have-fn-by-induc, prop, abstract_prop, struct, template, thm, witness, trust, release thm, release struct def, register reflexive/symmetric/transitive, by extension / contra / cases / def / thm / induc / strong_induc / regularity_axiom / axiom_of_choice / zorn_lemma are wired for the tracer"
+                "new_pipeline exec_stmt: Fact, let, have-obj-in-nonempty, have-obj-equal, have-obj-by-exist, have-fn-equal, have-fn-by-cases, have-fn-by-exist!, have-fn-by-induc, prop, abstract_prop, struct, template, thm, witness, trust, release thm, release struct def, register reflexive/symmetric/transitive, by extension / contra / cases / def / thm / induc / strong_induc / regularity_axiom / axiom_of_choice / zorn_lemma, claim, sketch are wired for the tracer"
                     .to_string(),
             )),
         }

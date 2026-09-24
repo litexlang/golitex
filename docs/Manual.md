@@ -1897,9 +1897,13 @@ runtime. This section gives each statement family one canonical home.
 
 > **Preview (`new_pipeline` AST):** top-level `Stmt` is organized by what the
 > statement does to the environment:
-> `Fact` / `Trust` / `Introduce` / `Define` / `Release` / `By` / `Register` /
-> `Witness` / `ProofBlock` / `Command`. Surface keywords are unchanged;
-> `trust` remains a truth-search skip (WD still checked), not “unchecked”.
+> `Fact` / `Trust` / `Definition` / `Release` / `By` / `Register` /
+> `Witness` / `ProofBlock` / `Command`.
+> Under `Definition`, object introductions nest as `DefineObj`
+> (`let` / `have` / `obtain` / `have by …`); other definitions
+> (`prop` / `thm` / `have fn` / `struct` / …) sit as flat siblings.
+> Surface keywords are unchanged; `trust` remains a truth-search skip
+> (WD still checked), not “unchecked”.
 
 ### Bare facts and `have`
 
@@ -2464,15 +2468,13 @@ They do not prove target behavior for rounding, overflow, compiler choices, or
 special values such as NaN; Python NaN reaches the defensive assertion because
 it satisfies neither generated branch.
 
-### Local proof blocks: `claim`, `example`, and `sketch`
+### Local proof blocks: `claim` and `sketch`
 
 `claim` proves one target and commits that target to the surrounding context.
-`example` proves one target but commits nothing; it is the checked,
-non-exporting counterpart of Lean's anonymous `example`. Temporary proof steps
-remain local in both forms. `sketch` checks a local block without a distinguished
-target and commits nothing. A `claim` or `example` target always
+Temporary proof steps remain local. `sketch` checks a local block without a
+distinguished target and commits nothing. A `claim` target always
 appears under its header as an indented `? fact`; header forms such as
-`claim fact:` and `example fact:` are not accepted.
+`claim fact:` are not accepted.
 
 ```litex
 claim:
@@ -2482,9 +2484,6 @@ claim:
             (x + 1)^2 = 9
     x + 1 = 3
     (x + 1)^2 = 9
-
-example:
-    ? 1 + 1 = 2
 
 sketch:
     2 + 2 = 4
@@ -2496,7 +2495,7 @@ sketch:
 ? 1 = 1
 ```
 
-This is a parse `error`. Put the target under `claim`, `example`, `thm`,
+This is a parse `error`. Put the target under `claim`, `thm`,
 `strategy`, or a statement that explicitly expects a goal.
 
 ### Named interfaces: `thm`, `axiom`, `release thm`, and `by thm ... => fact`
@@ -2812,8 +2811,7 @@ introductions.
 | `struct`, `setting`, `template` | Field/setting/template parameters and body contracts. | A named view, reusable binder prefix, or one parameterized definition family. |
 | `have algo for ...` | A defined function exists and the implementation agrees on its cases/results. | An executable presentation; it does not replace the mathematical function facts. |
 | `claim` | One target is proved in a lexical child scope. | Only the target; helper statements do not escape. |
-| `example` | One target is proved in a lexical child scope. | Nothing; the target and helper statements do not escape. |
-| `sketch` | Every contained statement checks. | Nothing outside the block. |
+| `sketch` | Every contained statement checks; soft-fail fails the whole sketch. | Nothing outside the block. |
 | `thm`, `axiom` | `thm` proves its target; `axiom` checks its interface but trusts truth. | A named reusable theorem interface; universal facts also enter ordinary matching. |
 | `release thm` | Arity/domains/premises; the form is bare and has no goal/proof body. Plain or `mod::export::`-qualified theorem name (preview). | All instantiated conclusions and their ordinary inferred consequences. |
 | `by thm ... => fact` | Arity/domains/premises and one selected atomic target. Same qualified-name lookup as `release thm` (preview). | Only the requested atomic selection and its ordinary inferred consequences. |

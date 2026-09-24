@@ -1,0 +1,5 @@
+# Stmt: ProofBlock.SketchStmt → exec_sketch_stmt
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/proof_block/sketch.lit
+
+sketch:
+    1 = 1

@@ -17,18 +17,14 @@ use super::param::{SetBoundParameterList, TypedParameterList};
 // Stmt (file spine)
 // -----------------------------------------------------------------------------
 
-// Env-changing action: assert a Fact, introduce names, define interfaces,
-// prove by …, release packaged facts, register prop properties, trust, … .
+// Env-changing action: assert a Fact, define names/interfaces, prove by …,
+// release packaged facts, register prop properties, trust, … .
 // Not a value (Obj) and not itself a proposition (Fact); a bare Fact stmt asserts one.
-//
-// Top-level families follow what the statement does to the environment
-// (Plan C), not surface keyword spelling alone.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Stmt {
     Fact(Fact),
     Trust(TrustBoundaryStmt),
-    Introduce(IntroduceStmt),
-    Define(DefineStmt),
+    Definition(DefinitionStmt),
     Release(ReleaseStmt),
     By(ByStmt),
     Register(RegisterStmt),
@@ -72,33 +68,16 @@ pub struct TrustHaveStmt {
 }
 
 // -----------------------------------------------------------------------------
-// IntroduceStmt
+// DefinitionStmt
 // -----------------------------------------------------------------------------
 
-// What: introduce fresh names / carriers into the environment
-// (have, let, obtain, have by …) without defining a reusable interface.
+// What: define something into the environment.
+// `DefineObj` covers fresh object names (let / have / obtain / have by …);
+// other variants define reusable interfaces or function objects (prop, thm,
+// have fn, struct, …).
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum IntroduceStmt {
-    LetObjStmt(LetObjStmt),
-    HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),
-    HaveObjEqualStmt(HaveObjEqualStmt),
-    HaveObjByExistFactsStmt(HaveObjByExistFactsStmt),
-    ObtainObjFromExistFact(ObtainObjFromExistFact),
-    ObtainObjFromAtomicFact(ObtainObjFromAtomicFact),
-    // Name preimages from known image membership (see HaveByPreimageStmt).
-    HaveByPreimageStmt(HaveByPreimageStmt),
-    // Named set via ZF Replacement (no anonymous replacement_image Obj).
-    HaveByReplacementAxiomStmt(HaveByReplacementAxiomStmt),
-}
-
-// -----------------------------------------------------------------------------
-// DefineStmt
-// -----------------------------------------------------------------------------
-
-// What: define a reusable named interface or function object
-// (prop, thm, struct, template, have fn, …).
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum DefineStmt {
+pub enum DefinitionStmt {
+    DefineObj(DefineObjStmt),
     HaveFnEqualStmt(HaveFnEqualStmt),
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
     HaveFnByInducStmt(HaveFnByInducStmt),
@@ -111,6 +90,22 @@ pub enum DefineStmt {
     DefThmStmt(DefThmStmt),
     AxiomStmt(AxiomStmt),
     DefStrategyStmt(DefStrategyStmt),
+}
+
+// What: introduce / define fresh object names and carriers.
+// Surface: `let` / `have` / `obtain` / `have by …`
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum DefineObjStmt {
+    LetObjStmt(LetObjStmt),
+    HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),
+    HaveObjEqualStmt(HaveObjEqualStmt),
+    HaveObjByExistFactsStmt(HaveObjByExistFactsStmt),
+    ObtainObjFromExistFact(ObtainObjFromExistFact),
+    ObtainObjFromAtomicFact(ObtainObjFromAtomicFact),
+    // Name preimages from known image membership (see HaveByPreimageStmt).
+    HaveByPreimageStmt(HaveByPreimageStmt),
+    // Named set via ZF Replacement (no anonymous replacement_image Obj).
+    HaveByReplacementAxiomStmt(HaveByReplacementAxiomStmt),
 }
 
 // What: bind a fresh name to a well-defined object (untyped equality def).
@@ -333,7 +328,8 @@ pub struct DefAbstractPropStmt {
 }
 
 // What: bodies allowed inside a `template<…>:` definition.
-// Mix of Introduce / Define / trust-have bodies that work outside the template
+// Mix of Definition (DefineObj / have fn / …) and trust-have bodies that work
+// outside the template
 // (`have …`, `have fn …`, obtain, …); the template only adds parameters.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum TemplateDefEnum {
@@ -787,11 +783,10 @@ pub struct WitnessNonemptySet {
 // ProofBlockStmt
 // -----------------------------------------------------------------------------
 
-// What: nested proof blocks that scope local work (claim / example / sketch).
+// What: nested proof blocks that scope local work (claim / sketch).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ProofBlockStmt {
     ClaimStmt(ClaimStmt),
-    ExampleStmt(ExampleStmt),
     SketchStmt(SketchStmt),
 }
 
@@ -800,16 +795,6 @@ pub enum ProofBlockStmt {
 // Stores: the target fact; helpers do not escape.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ClaimStmt {
-    pub fact: Fact,
-    pub proof: Vec<Stmt>,
-    pub line_file: LineFile,
-}
-
-// What: worked example with a goal and proof in a child scope.
-// Surface: `example: ? fact` then proof body
-// Stores: nothing outside the block (target and helpers stay local).
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ExampleStmt {
     pub fact: Fact,
     pub proof: Vec<Stmt>,
     pub line_file: LineFile,

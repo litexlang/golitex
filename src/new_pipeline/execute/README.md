@@ -71,15 +71,18 @@ with is_failed() on the proof payload.
 (Success | Failed, or Fail* variants). It must not walk mixed proof bags.
 
 ```text
-ExecStmtResult                    // stmt-kind dispatch only (Plan C)
+ExecStmtResult                    // stmt-kind dispatch only
   Fact(ExecFactStmtResult)
-  Introduce(ExecIntroduceStmtResult)
-  Define(ExecDefineStmtResult)
+  Definition(ExecDefinitionStmtResult)
+    DefineObj(ExecDefineObjStmtResult)   // let / have / obtain / have by …
+    HaveFnEqual | HaveFnEqualCaseByCase | HaveFnByForallExistUnique | HaveFnByInduc
+    DefProp | DefAbstractProp | DefStruct | DefTemplate | DefThm
   Witness(ExecWitnessStmtResult)
   Trust(ExecTrustBoundaryStmtResult)
   By(ExecByStmtResult)
   Register(ExecRegisterStmtResult)
   Release(ExecReleaseStmtResult)   // Thm / StructDef / ObjDef
+  ProofBlock(ExecProofBlockStmtResult)
 
 Leaf *Result = Success(*SuccessResult) | Failed(...)
   (AbstractProp has only SuccessResult; no soft-fail path yet)

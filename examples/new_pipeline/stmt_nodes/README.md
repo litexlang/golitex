@@ -2,7 +2,7 @@
 
 One wired `exec_stmt` arm → one `.lit` file.
 File names mirror Rust `Stmt` family variants
-(`Introduce` / `Define` / `Release` / `By` / `Register` / …).
+(`Definition` / `Release` / `By` / `Register` / …).
 
 Fact **search** paths live in `../proof_nodes/`. This suite only
 checks that each currently wired statement kind can execute end-to-end.
@@ -19,8 +19,9 @@ Exit 0 is enough. Stub / not-yet-wired stmt arms are **omitted**.
 
 ```text
 fact/          Stmt::Fact
-definition/    Introduce (let/have/obtain/have by…) and Define
-               (prop/thm/struct/template/have fn…); also Release* tracers
+definition/    Definition: DefineObj (let/have/obtain/have by…) plus
+               flat siblings (prop/thm/struct/template/have fn…);
+               also Release* tracers live nearby in this tree
 witness/       WitnessExistFact, WitnessExistUnique (via exist!),
                WitnessAtomicFact, WitnessNonemptySet
                (no indented body in new_pipeline; no FnSet shortcut)
@@ -28,11 +29,11 @@ unsafe/        TrustBoundary (trust / trust have)
 register/      RegisterReflexive/Symmetric/TransitiveProp
 by/            Extension, Enumerate*, For, Contra, Cases, Def, Thm,
                Induc, StrongInduc, RegularityAxiom, AxiomOfChoice
+proof_block/   Claim, Sketch
 ```
 
 Omitted for now: `by zorn_lemma` (wired; chain-upper-bound obligation still
-needs a green tracer). Parse-only / unwired: claim/example/sketch,
-eval, axiom, strategy.
+needs a green tracer). Parse-only / unwired: eval, axiom, strategy.
 `obtain … from exist` / `exist!` / `$P` is wired (see `definition/obtain_*.lit`
 and `definition/def_template_obtain_from_*.lit`).
 `have by replacement_axiom` is wired (see `definition/have_by_replacement_axiom.lit`

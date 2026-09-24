@@ -51,11 +51,33 @@ impl Runtime {
             return Ok(Some(EqualitySearchProofByBuiltinRule::Calculation(proof)));
         }
         if let Some(proof) =
+            self.search_equal_fact_builtin_rule_power_laws(fact, verify_state.clone())?
+        {
+            return Ok(Some(map_power_law_proof(proof)));
+        }
+        if let Some(proof) =
             self.search_equal_fact_builtin_rule_inverse_trig(fact, verify_state)?
         {
             return Ok(Some(map_inverse_trig_proof(proof)));
         }
         Ok(None)
+    }
+}
+
+fn map_power_law_proof(
+    proof: super::by_power_laws::PowerLawEqualityBuiltinRuleProof,
+) -> EqualitySearchProofByBuiltinRule {
+    use super::by_power_laws::PowerLawEqualityBuiltinRuleProof as P;
+    match proof {
+        P::PowerProductSameBase(p) => EqualitySearchProofByBuiltinRule::PowerProductSameBase(p),
+        P::PowerOfPower(p) => EqualitySearchProofByBuiltinRule::PowerOfPower(p),
+        P::PowerOfProduct(p) => EqualitySearchProofByBuiltinRule::PowerOfProduct(p),
+        P::ReciprocalAsNegOnePower(p) => {
+            EqualitySearchProofByBuiltinRule::ReciprocalAsNegOnePower(p)
+        }
+        P::QuotientAsMulNegOnePower(p) => {
+            EqualitySearchProofByBuiltinRule::QuotientAsMulNegOnePower(p)
+        }
     }
 }
 

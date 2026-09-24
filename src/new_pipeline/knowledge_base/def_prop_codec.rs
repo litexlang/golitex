@@ -51,9 +51,9 @@ impl From<JsonError> for KbCodecError {
     }
 }
 
-/// Encode one `DefPropStmt` to JSON text.
+/// Encode one `DefPropStmt` to pretty JSON text (2-space indent).
 pub fn store_def_prop(prop: &DefPropStmt) -> Result<String, KbCodecError> {
-    Ok(encode_def_prop(prop)?.stringify())
+    Ok(encode_def_prop(prop)?.stringify_pretty())
 }
 
 /// Decode one `DefPropStmt` from JSON text.
@@ -62,10 +62,14 @@ pub fn load_def_prop(text: &str) -> Result<DefPropStmt, KbCodecError> {
     decode_def_prop(&value)
 }
 
-/// Write one `DefPropStmt` JSON file.
+/// Write one `DefPropStmt` JSON file (pretty, trailing newline).
 pub fn write_def_prop(path: &Path, prop: &DefPropStmt) -> Result<(), KbCodecError> {
     let text = store_def_prop(prop)?;
-    fs::write(path, text).map_err(|error| KbCodecError::Io {
+    let mut body = text;
+    if !body.ends_with('\n') {
+        body.push('\n');
+    }
+    fs::write(path, body).map_err(|error| KbCodecError::Io {
         path: path.to_path_buf(),
         message: error.to_string(),
     })

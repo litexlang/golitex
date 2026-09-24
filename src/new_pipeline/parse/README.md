@@ -42,7 +42,7 @@ First header token chooses the family. Anything else is a **bare fact** statemen
 | `let` | `LetObj` |
 | `have` | obj / `fn` / `by …` (see below) |
 | `obtain` | `Obtain` |
-| `claim` / `example` | local proof block |
+| `claim` | local proof block |
 | `thm` / `axiom` / `strategy` | named interface |
 | `sketch` | exploratory block |
 | `trust` | `Trust` / `TrustHave` |
@@ -58,7 +58,7 @@ Rejected at dispatch (intentional):
 
 | Input | Why |
 |---|---|
-| top-level `?` | goals live inside claim/example/thm/by/… |
+| top-level `?` | goals live inside claim/thm/by/… |
 | `import` | declare deps in `litex.config` |
 | `setting` | not supported in new_pipeline |
 | bare `strong_induc` | only after `by` |
@@ -203,20 +203,18 @@ strategy s:
 
 `axiom` / `strategy` goals are a single `? forall …`. Tracer: `def_thm.lit`
 
-### `claim` / `example` / `sketch`
+### `claim` / `sketch`
 
 ```text
 claim:
-    ? 1 = 1
-
-example:
     ? 1 = 1
 
 sketch:
     1 = 1
 ```
 
-Parse yes; many are still exec-unwired in stmt_nodes.
+Tracers: `examples/new_pipeline/stmt_nodes/proof_block/claim.lit`,
+`sketch.lit`.
 
 ### `trust`
 

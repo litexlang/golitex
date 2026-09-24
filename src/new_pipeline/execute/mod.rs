@@ -2,6 +2,7 @@ mod env_stack_lookup;
 mod exec_stmt;
 mod exec_stmt_result;
 pub mod execute_by_stmt;
+pub mod execute_proof_block_stmt;
 pub mod execute_register_stmt;
 pub mod execute_def_abstract_prop_stmt;
 pub mod execute_def_prop_stmt;
@@ -34,7 +35,7 @@ mod exec_stmt_transaction_tests;
 mod order_stage_a_remainder_tests;
 
 pub use exec_stmt_result::{
-    ExecIntroduceStmtResult, ExecDefineStmtResult, ExecReleaseStmtResult, ExecStmtResult, ParamTypeFactCheckResult, ParamTypeWellDefinedProof,
+    ExecDefineObjStmtResult, ExecDefinitionStmtResult, ExecReleaseStmtResult, ExecStmtResult, ParamTypeFactCheckResult, ParamTypeWellDefinedProof,
 };
 pub use execute_def_abstract_prop_stmt::ExecDefAbstractPropStmtSuccessResult;
 pub use execute_def_prop_stmt::{

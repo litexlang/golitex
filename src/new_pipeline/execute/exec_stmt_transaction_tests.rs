@@ -1577,20 +1577,22 @@ fn fn_set_obj_param_domain_must_not_cite_earlier_binder() {
         FailToVerifyObjWellDefinedResult, VerifyObjWellDefinedResult,
     };
     use crate::new_pipeline::execute::execute_let_stmt::ExecLetObjStmtResult;
-    use crate::new_pipeline::execute::exec_stmt_result::{ExecDefineStmtResult, ExecIntroduceStmtResult};
+    use crate::new_pipeline::execute::exec_stmt_result::{ExecDefinitionStmtResult, ExecDefineObjStmtResult};
     use crate::new_pipeline::execute::ExecStmtResult;
 
     // Flat dependent obj carriers are rejected: domain sets must be fixed up front.
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "have S fn(x R) power_set(R)").is_failed());
     match exec_one(&mut runtime, "let F = fn(x R, y S(x)) R") {
-        ExecStmtResult::Introduce(ExecIntroduceStmtResult::LetObj(
-            ExecLetObjStmtResult::Failed(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::FunctionSpace(
-                    FailToVerifyFunctionSpaceObjWellDefinedResult::FnSet(
-                        FailToVerifyFnSetObjWellDefined::ParamTypeCitesEarlierBinder {
-                            failed_index: 1,
-                        },
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::LetObj(ExecLetObjStmtResult::Failed(
+                VerifyObjWellDefinedResult::Failed(
+                    FailToVerifyObjWellDefinedResult::FunctionSpace(
+                        FailToVerifyFunctionSpaceObjWellDefinedResult::FnSet(
+                            FailToVerifyFnSetObjWellDefined::ParamTypeCitesEarlierBinder {
+                                failed_index: 1,
+                            },
+                        ),
                     ),
                 ),
             )),
@@ -1682,17 +1684,17 @@ fn have_fn_by_cases_slice2() {
     use crate::new_pipeline::execute::execute_have_fn_equal_case_by_case_stmt::{
         ExecHaveFnEqualCaseByCaseStmtFailed, ExecHaveFnEqualCaseByCaseStmtResult,
     };
-    use crate::new_pipeline::execute::{ExecDefineStmtResult, ExecIntroduceStmtResult};
+    use crate::new_pipeline::execute::{ExecDefinitionStmtResult, ExecDefineObjStmtResult};
     use crate::new_pipeline::execute::ExecStmtResult;
 
     let mut runtime = runtime_with_file_env();
     let code = "have fn nonzero_flag(x R) R by cases:\n    case x = 0: 0\n    case x != 0: 1";
     let r = exec_one(&mut runtime, code);
     match &r {
-        ExecStmtResult::Define(ExecDefineStmtResult::HaveFnEqualCaseByCase(
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqualCaseByCase(
             ExecHaveFnEqualCaseByCaseStmtResult::Success(_),
         )) => {}
-        ExecStmtResult::Define(ExecDefineStmtResult::HaveFnEqualCaseByCase(
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqualCaseByCase(
             ExecHaveFnEqualCaseByCaseStmtResult::Failed(f),
         )) => {
             let msg = match f {
@@ -1733,7 +1735,7 @@ fn have_fn_by_cases_slice2() {
 #[test]
 fn have_fn_by_exist_stores_membership_and_properties() {
     use crate::new_pipeline::execute::execute_have_fn_by_forall_exist_unique_stmt::ExecHaveFnByForallExistUniqueStmtResult;
-    use crate::new_pipeline::execute::{ExecDefineStmtResult, ExecIntroduceStmtResult};
+    use crate::new_pipeline::execute::{ExecDefinitionStmtResult, ExecDefineObjStmtResult};
     use crate::new_pipeline::execute::ExecStmtResult;
     use crate::new_pipeline::exec_env::SpecialObjectPropertyByDefinition;
 
@@ -1752,7 +1754,7 @@ fn have_fn_by_exist_stores_membership_and_properties() {
     let code = "have fn f by exist!:\n    ? forall x A:\n        exist! y B st {$F(x, y)}";
     let r = exec_one(&mut runtime, code);
     match &r {
-        ExecStmtResult::Define(ExecDefineStmtResult::HaveFnByForallExistUnique(
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByForallExistUnique(
             ExecHaveFnByForallExistUniqueStmtResult::Success(ok),
         )) => {
             assert!(
@@ -1784,7 +1786,7 @@ fn have_fn_by_exist_fails_when_forall_unproven() {
     use crate::new_pipeline::execute::execute_have_fn_by_forall_exist_unique_stmt::{
         ExecHaveFnByForallExistUniqueStmtFailed, ExecHaveFnByForallExistUniqueStmtResult,
     };
-    use crate::new_pipeline::execute::{ExecDefineStmtResult, ExecIntroduceStmtResult};
+    use crate::new_pipeline::execute::{ExecDefinitionStmtResult, ExecDefineObjStmtResult};
     use crate::new_pipeline::execute::ExecStmtResult;
 
     let mut runtime = runtime_with_file_env();
@@ -1795,7 +1797,7 @@ fn have_fn_by_exist_fails_when_forall_unproven() {
     let code = "have fn f by exist!:\n    ? forall x A:\n        exist! y B st {$F(x, y)}";
     let r = exec_one(&mut runtime, code);
     match &r {
-        ExecStmtResult::Define(ExecDefineStmtResult::HaveFnByForallExistUnique(
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByForallExistUnique(
             ExecHaveFnByForallExistUniqueStmtResult::Failed(
                 ExecHaveFnByForallExistUniqueStmtFailed::SourceForall(_),
             ),
@@ -1918,17 +1920,17 @@ fn have_fn_by_induc_countdown_slice() {
     use crate::new_pipeline::execute::execute_have_fn_by_induc_stmt::{
         ExecHaveFnByInducStmtFailed, ExecHaveFnByInducStmtResult,
     };
-    use crate::new_pipeline::execute::{ExecDefineStmtResult, ExecIntroduceStmtResult};
+    use crate::new_pipeline::execute::{ExecDefinitionStmtResult, ExecDefineObjStmtResult};
     use crate::new_pipeline::execute::ExecStmtResult;
 
     let mut runtime = runtime_with_file_env();
     let code = "have fn countdown(n N) N by induc n from 0:\n    case n = 0: 0\n    case n >= 1: countdown(n - 1)";
     let r = exec_one(&mut runtime, code);
     match &r {
-        ExecStmtResult::Define(ExecDefineStmtResult::HaveFnByInduc(
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByInduc(
             ExecHaveFnByInducStmtResult::Success(_),
         )) => {}
-        ExecStmtResult::Define(ExecDefineStmtResult::HaveFnByInduc(
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByInduc(
             ExecHaveFnByInducStmtResult::Failed(f),
         )) => {
             let msg = match f {
@@ -2007,7 +2009,7 @@ fn auto_open_point_forall_field_reflexive() {
 #[test]
 fn group_struct_def_with_forall_law_succeeds() {
     use crate::new_pipeline::execute::exec_stmt_result::{
-        ExecDefineStmtResult, ExecIntroduceStmtResult, ExecStmtResult as ESR,
+        ExecDefinitionStmtResult, ExecDefineObjStmtResult, ExecStmtResult as ESR,
     };
     use crate::new_pipeline::execute::execute_def_struct_stmt::ExecDefStructStmtResult;
 
@@ -2026,10 +2028,10 @@ struct Group<s nonempty_set>:
 "#;
     let mut runtime = runtime_with_file_env();
     match exec_one(&mut runtime, code) {
-        ESR::Define(ExecDefineStmtResult::DefStruct(
+        ESR::Definition(ExecDefinitionStmtResult::DefStruct(
             ExecDefStructStmtResult::Success(_),
         )) => {}
-        ESR::Define(ExecDefineStmtResult::DefStruct(
+        ESR::Definition(ExecDefinitionStmtResult::DefStruct(
             ExecDefStructStmtResult::Failed(fail),
         )) => panic!("struct Group failed: {:?}", std::mem::discriminant(&fail)),
         other => panic!("unexpected {:?}", std::mem::discriminant(&other)),
@@ -2407,7 +2409,7 @@ fn template_have_fn_by_exist_wires_body() {
     use crate::new_pipeline::execute::execute_def_template_stmt::{
         ExecDefTemplateStmtResult, ExecTemplateDefBodyResult,
     };
-    use crate::new_pipeline::execute::{ExecDefineStmtResult, ExecIntroduceStmtResult};
+    use crate::new_pipeline::execute::{ExecDefinitionStmtResult, ExecDefineObjStmtResult};
     use crate::new_pipeline::execute::ExecStmtResult;
 
     // Def-time body check + instance release of membership/property/uniqueness.
@@ -2427,7 +2429,7 @@ fn template_have_fn_by_exist_wires_body() {
         ? forall x A:
             exist! y B st {$F(x, y)}";
     match exec_one(&mut runtime, def) {
-        ExecStmtResult::Define(ExecDefineStmtResult::DefTemplate(
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefTemplate(
             ExecDefTemplateStmtResult::Success(ok),
         )) => {
             assert!(
@@ -3016,3 +3018,27 @@ fn factorial_keyword_and_postfix_bang_parse_and_eval() {
 
 
 // Stage A remainder order builtins: see `order_stage_a_remainder_tests.rs`.
+
+#[test]
+fn claim_stores_goal_and_sketch_checks_body() {
+    use crate::new_pipeline::execute::execute_proof_block_stmt::ExecProofBlockStmtResult;
+
+    let mut runtime = runtime_with_file_env();
+    let claim = exec_one(&mut runtime, "claim:\n    ? 1 = 1\n");
+    assert!(!claim.is_failed(), "claim should succeed");
+    assert!(matches!(claim, ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(_))));
+    assert!(!exec_one(&mut runtime, "1 = 1").is_failed(), "claim goal must be stored");
+
+    let mut runtime = runtime_with_file_env();
+    let sketch = exec_one(&mut runtime, "sketch:\n    1 = 1\n");
+    assert!(!sketch.is_failed(), "sketch should succeed");
+    assert!(matches!(sketch, ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Sketch(_))));
+}
+
+#[test]
+fn sketch_soft_fail_fails_whole_sketch() {
+    let mut runtime = runtime_with_file_env();
+    // 1 = 2 is a soft-fail fact; sketch must Failed, not SessionError.
+    let sketch = exec_one(&mut runtime, "sketch:\n    1 = 2\n");
+    assert!(sketch.is_failed(), "sketch body soft-fail must fail the sketch");
+}
