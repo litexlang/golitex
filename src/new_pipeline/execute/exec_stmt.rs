@@ -1,17 +1,18 @@
 use super::exec_stmt_result::{
-    ExecDefineObjStmtResult, ExecDefinitionStmtResult, ExecReleaseStmtResult, ExecStmtResult,
+    ExecDefineObjStmtResult, ExecDefinitionStmtResult, ExecReleaseAndExpandStmtResult, ExecStmtResult,
 };
 use crate::new_pipeline::ast::stmt::{
-    ByStmt, DefineObjStmt, DefinitionStmt, ProofBlockStmt, RegisterStmt, ReleaseStmt, Stmt,
+    ByStmt, DefineObjStmt, DefinitionStmt, ProofBlockStmt, RegisterStmt, ReleaseAndExpandStmt, Stmt,
 };
 use crate::new_pipeline::execute::execute_by_stmt::{
-    exec_by_axiom_of_choice_stmt, exec_by_cases_stmt, exec_by_closed_range_as_cases_stmt,
-    exec_by_contra_stmt, exec_by_def_stmt, exec_by_enumerate_finite_set_stmt,
-    exec_by_enumerate_range_stmt, exec_by_extension_stmt, exec_by_fn_extension_stmt,
-    exec_by_for_stmt, exec_by_induc_stmt, exec_by_regularity_axiom_stmt,
-    exec_by_strong_induc_stmt, exec_by_thm_stmt, exec_by_zorn_lemma_stmt, exec_release_thm_stmt,
+    exec_by_cases_stmt, exec_by_contra_stmt, exec_by_def_stmt, exec_by_enumerate_finite_set_stmt,
+    exec_by_extension_stmt, exec_by_fn_extension_stmt, exec_by_for_stmt, exec_by_induc_stmt,
+    exec_by_strong_induc_stmt, exec_by_thm_stmt, exec_expand_range_stmt,
+    exec_release_axiom_of_choice_stmt, exec_release_regularity_axiom_stmt, exec_release_thm_stmt,
+    exec_release_zorn_lemma_stmt,
 };
 use crate::new_pipeline::execute::execute_def_thm_stmt::exec_def_thm_stmt;
+use crate::new_pipeline::execute::execute_def_algo_stmt::exec_def_algo_stmt;
 use crate::new_pipeline::execute::execute_proof_block_stmt::{exec_claim_stmt, exec_sketch_stmt};
 use crate::new_pipeline::execute::execute_register_stmt::{
     exec_register_reflexive_prop_stmt, exec_register_symmetric_prop_stmt,
@@ -165,6 +166,11 @@ impl Runtime {
                     ),
                 ))
             }
+            Stmt::Definition(DefinitionStmt::DefAlgoStmt(def_algo)) => {
+                Ok(ExecStmtResult::Definition(ExecDefinitionStmtResult::DefAlgo(
+                    exec_def_algo_stmt(self, def_algo)?,
+                )))
+            }
             Stmt::Definition(DefinitionStmt::DefThmStmt(def_thm)) => Ok(ExecStmtResult::Definition(
                 ExecDefinitionStmtResult::DefThm(exec_def_thm_stmt(self, def_thm)?),
             )),
@@ -174,15 +180,49 @@ impl Runtime {
             Stmt::Trust(unsafe_stmt) => {
                 Ok(ExecStmtResult::Trust(self.exec_unsafe_stmt(unsafe_stmt)?))
             }
-            Stmt::Release(ReleaseStmt::ReleaseThmStmt(stmt)) => Ok(ExecStmtResult::Release(
-                ExecReleaseStmtResult::Thm(exec_release_thm_stmt(self, stmt)?),
-            )),
-            Stmt::Release(ReleaseStmt::ReleaseStructDefStmt(stmt)) => Ok(ExecStmtResult::Release(
-                ExecReleaseStmtResult::StructDef(self.exec_release_struct_def_stmt(stmt)?),
-            )),
-            Stmt::Release(ReleaseStmt::ReleaseObjDefStmt(stmt)) => Ok(ExecStmtResult::Release(
-                ExecReleaseStmtResult::ObjDef(self.exec_release_obj_def_stmt(stmt)?),
-            )),
+            Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ReleaseThmStmt(stmt)) => {
+                Ok(ExecStmtResult::ReleaseAndExpand(
+                    ExecReleaseAndExpandStmtResult::Thm(exec_release_thm_stmt(self, stmt)?),
+                ))
+            }
+            Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ReleaseStructDefStmt(stmt)) => {
+                Ok(ExecStmtResult::ReleaseAndExpand(
+                    ExecReleaseAndExpandStmtResult::StructDef(
+                        self.exec_release_struct_def_stmt(stmt)?,
+                    ),
+                ))
+            }
+            Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ReleaseObjDefStmt(stmt)) => {
+                Ok(ExecStmtResult::ReleaseAndExpand(
+                    ExecReleaseAndExpandStmtResult::ObjDef(self.exec_release_obj_def_stmt(stmt)?),
+                ))
+            }
+            Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ExpandRangeStmt(stmt)) => {
+                Ok(ExecStmtResult::ReleaseAndExpand(
+                    ExecReleaseAndExpandStmtResult::ExpandRange(exec_expand_range_stmt(self, stmt)?),
+                ))
+            }
+            Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ReleaseRegularityAxiomStmt(stmt)) => {
+                Ok(ExecStmtResult::ReleaseAndExpand(
+                    ExecReleaseAndExpandStmtResult::RegularityAxiom(
+                        exec_release_regularity_axiom_stmt(self, stmt)?,
+                    ),
+                ))
+            }
+            Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ReleaseAxiomOfChoiceStmt(stmt)) => {
+                Ok(ExecStmtResult::ReleaseAndExpand(
+                    ExecReleaseAndExpandStmtResult::AxiomOfChoice(
+                        exec_release_axiom_of_choice_stmt(self, stmt)?,
+                    ),
+                ))
+            }
+            Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ReleaseZornLemmaStmt(stmt)) => {
+                Ok(ExecStmtResult::ReleaseAndExpand(
+                    ExecReleaseAndExpandStmtResult::ZornLemma(exec_release_zorn_lemma_stmt(
+                        self, stmt,
+                    )?),
+                ))
+            }
             Stmt::Register(RegisterStmt::RegisterReflexivePropStmt(stmt)) => {
                 Ok(ExecStmtResult::Register(exec_register_reflexive_prop_stmt(
                     self, stmt,
@@ -210,12 +250,6 @@ impl Runtime {
             Stmt::By(ByStmt::ByForStmt(stmt)) => {
                 Ok(ExecStmtResult::By(exec_by_for_stmt(self, stmt)?))
             }
-            Stmt::By(ByStmt::ByEnumerateRangeStmt(stmt)) => {
-                Ok(ExecStmtResult::By(exec_by_enumerate_range_stmt(self, stmt)?))
-            }
-            Stmt::By(ByStmt::ByClosedRangeAsCasesStmt(stmt)) => {
-                Ok(ExecStmtResult::By(exec_by_closed_range_as_cases_stmt(self, stmt)?))
-            }
             Stmt::By(ByStmt::ByContraStmt(stmt)) => {
                 Ok(ExecStmtResult::By(exec_by_contra_stmt(self, stmt)?))
             }
@@ -234,15 +268,6 @@ impl Runtime {
             Stmt::By(ByStmt::ByStrongInducStmt(stmt)) => {
                 Ok(ExecStmtResult::By(exec_by_strong_induc_stmt(self, stmt)?))
             }
-            Stmt::By(ByStmt::ByRegularityAxiomStmt(stmt)) => {
-                Ok(ExecStmtResult::By(exec_by_regularity_axiom_stmt(self, stmt)?))
-            }
-            Stmt::By(ByStmt::ByAxiomOfChoiceStmt(stmt)) => {
-                Ok(ExecStmtResult::By(exec_by_axiom_of_choice_stmt(self, stmt)?))
-            }
-            Stmt::By(ByStmt::ByZornLemmaStmt(stmt)) => {
-                Ok(ExecStmtResult::By(exec_by_zorn_lemma_stmt(self, stmt)?))
-            }
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(stmt)) => {
                 Ok(ExecStmtResult::ProofBlock(exec_claim_stmt(self, stmt)?))
             }
@@ -250,7 +275,7 @@ impl Runtime {
                 Ok(ExecStmtResult::ProofBlock(exec_sketch_stmt(self, stmt)?))
             }
             _ => Err(RuntimeError::Unsupported(
-                "new_pipeline exec_stmt: Fact, let, have-obj-in-nonempty, have-obj-equal, have-obj-by-exist, have-fn-equal, have-fn-by-cases, have-fn-by-exist!, have-fn-by-induc, prop, abstract_prop, struct, template, thm, witness, trust, release thm, release struct def, register reflexive/symmetric/transitive, by extension / contra / cases / def / thm / induc / strong_induc / regularity_axiom / axiom_of_choice / zorn_lemma, claim, sketch are wired for the tracer"
+                "new_pipeline exec_stmt: Fact, let, have-obj-in-nonempty, have-obj-equal, have-obj-by-exist, have-fn-equal, have-fn-by-cases, have-fn-by-exist!, have-fn-by-induc, prop, abstract_prop, struct, template, thm, witness, trust, release/expand, register reflexive/symmetric/transitive, by extension / contra / cases / def / thm / induc / strong_induc / enumerate finite_set / for, claim, sketch are wired for the tracer"
                     .to_string(),
             )),
         }

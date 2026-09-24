@@ -37,11 +37,13 @@ Equality BuiltinRule power laws (Stage B wave 1): `a^m * a^n = a^(m+n)`,
 `(a^m)^n = a^(m*n)`, `(a*b)^n = a^n * b^n`, `1/a = a^(-1)`, `a/b = a * b^(-1)`
 under `examples/new_pipeline/proof_nodes/equal/by_builtin_rule/power_*.lit` and
 `reciprocal_*` / `quotient_*`.
-Equality BuiltinRule identities (Stage B wave 2): power `1^a` / `0^n`; sqrt /
-abs / log families; mod `0 % a`, `a % 1`, `1 % m`, nested absorption — see
-`one_to_any_power.lit`, `zero_to_pos_nat_power.lit`, `sqrt_*.lit`, `abs_*.lit`,
-`log_*.lit`, `zero_mod.lit`, `mod_one.lit`, `one_mod_at_least_two.lit`,
-`nested_same_mod_absorption.lit`.
+Equality BuiltinRule identities (Stage B wave 2):
+`1^a=1` (`N`), `0^n=0` (`N+`); `sqrt_*` square/zero/one/of_square/product/
+quotient; `abs_*` negation/product/square; `log_*` base_self/of_one/of_power/
+arg_power/product/quotient/reciprocal/change_of_base; `zero_mod`, `mod_one`,
+`one_mod_at_least_two`, `nested_same_mod_absorption`.
+Four files use narrow `trust` only for current WD holes (quotient positivity /
+sqrt-denom / log-nonzero / mod-result in `Z`); remove when WD catches up.
 Equality BuiltinRewrite: ClosedNumericEqualSubstitution (equal + atomic) and
 atomic KnownEqualObjSubstitution.
 No equality KnownRewrite slot (dead; = uses EqualIr / known_equivalence_classes graph).

@@ -20,6 +20,7 @@ pub const STRUCT: &str = "struct";
 pub const TEMPLATE: &str = "template";
 pub const STRONG_INDUC: &str = "strong_induc";
 pub const RELEASE: &str = "release";
+pub const EXPAND: &str = "expand";
 pub const REGISTER: &str = "register";
 pub const OBJ: &str = "obj";
 pub const BY: &str = "by";

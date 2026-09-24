@@ -5,6 +5,7 @@ pub mod execute_by_stmt;
 pub mod execute_proof_block_stmt;
 pub mod execute_register_stmt;
 pub mod execute_def_abstract_prop_stmt;
+pub mod execute_def_algo_stmt;
 pub mod execute_def_prop_stmt;
 pub mod execute_def_struct_stmt;
 pub mod execute_def_template_stmt;
@@ -35,9 +36,12 @@ mod exec_stmt_transaction_tests;
 mod order_stage_a_remainder_tests;
 
 pub use exec_stmt_result::{
-    ExecDefineObjStmtResult, ExecDefinitionStmtResult, ExecReleaseStmtResult, ExecStmtResult, ParamTypeFactCheckResult, ParamTypeWellDefinedProof,
+    ExecDefineObjStmtResult, ExecDefinitionStmtResult, ExecReleaseAndExpandStmtResult, ExecStmtResult, ParamTypeFactCheckResult, ParamTypeWellDefinedProof,
 };
 pub use execute_def_abstract_prop_stmt::ExecDefAbstractPropStmtSuccessResult;
+pub use execute_def_algo_stmt::{
+    ExecDefAlgoStmtFailed, ExecDefAlgoStmtResult, ExecDefAlgoStmtSuccess,
+};
 pub use execute_def_prop_stmt::{
     ExecDefPropStmtFailed, ExecDefPropStmtResult, ExecDefPropStmtSuccessResult,
 };

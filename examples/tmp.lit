@@ -1,6 +1,43 @@
-# Probe: prefix `-` parses as Neg; closed numeric still folds.
--3 = -3
-abs(-3) = 3
--2 + 5 = 3
-(-2) * 4 = -8
--2^2 = -4
+# Stage B wave 2 equality-identity probe
+# Full one-file-per-rule suite:
+#   examples/new_pipeline/proof_nodes/equal/by_builtin_rule/
+have a R+
+have b R+
+have n N+
+have k N
+have z Z
+
+1^k = 1
+0^n = 0
+(sqrt(a))^2 = a
+sqrt(0) = 0
+sqrt(1) = 1
+sqrt(a^2) = a
+sqrt(a * b) = sqrt(a) * sqrt(b)
+abs(0 - a) = abs(a)
+abs(a * b) = abs(a) * abs(b)
+abs(a^2) = a^2
+log(2, 2) = 1
+log(2, 1) = 0
+log(2, 2^k) = k
+log(2, a^k) = k * log(2, a)
+log(2, a * b) = log(2, a) + log(2, b)
+log(2, 6 / 3) = log(2, 6) - log(2, 3)
+0 % 5 = 0
+z % 1 = 0
+1 % 5 = 1
+
+trust b != 0
+trust a / b $in R+
+trust sqrt(b) $in R*
+sqrt(a / b) = sqrt(a) / sqrt(b)
+
+trust a != 0
+trust 1 / a $in R+
+log(2, 1 / a) = 0 - log(2, a)
+
+trust log(10, 2) $in R*
+log(2, a) = log(10, a) / log(10, 2)
+
+trust (z % 3) $in Z
+(z % 3) % 3 = z % 3

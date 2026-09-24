@@ -2,5 +2,5 @@
 # Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/log_arg_power.lit
 
 have x R+
-have y R
+have y N
 log(2, x^y) = y * log(2, x)

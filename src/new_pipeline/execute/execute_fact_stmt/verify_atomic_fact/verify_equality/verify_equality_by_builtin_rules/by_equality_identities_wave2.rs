@@ -728,7 +728,6 @@ impl Runtime {
             right: b,
         })) = arg
         else {
-            eprintln!("wave2 log_quot skip: arg not Div");
             return Ok(None);
         };
         let Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub {
@@ -736,41 +735,32 @@ impl Runtime {
             right: s2,
         })) = right
         else {
-            eprintln!("wave2 log_quot skip: right not Sub");
             return Ok(None);
         };
         let Some((b1, a1)) = match_log(s1.as_ref()) else {
-            eprintln!("wave2 log_quot skip: s1 not log");
             return Ok(None);
         };
         let Some((b2, a2)) = match_log(s2.as_ref()) else {
-            eprintln!("wave2 log_quot skip: s2 not log");
             return Ok(None);
         };
         if b1.ir() != base.ir() || b2.ir() != base.ir() {
-            eprintln!("wave2 log_quot skip: base mismatch");
             return Ok(None);
         }
         if a1.ir() != a.as_ref().ir() || a2.ir() != b.as_ref().ir() {
-            eprintln!("wave2 log_quot skip: arg mismatch");
             return Ok(None);
         }
         let pb = self.verify_order_gt_one(base, verify_state.clone())?;
         if pb.is_failed() {
-            eprintln!("wave2 log_quot skip: base not gt one");
             return Ok(None);
         }
         let px = self.verify_order_positive(a.as_ref(), verify_state.clone())?;
         if px.is_failed() {
-            eprintln!("wave2 log_quot skip: a not positive");
             return Ok(None);
         }
         let py = self.verify_order_positive(b.as_ref(), verify_state)?;
         if py.is_failed() {
-            eprintln!("wave2 log_quot skip: b not positive");
             return Ok(None);
         }
-        eprintln!("wave2 log_quot HIT");
         Ok(Some(LogQuotientBuiltinRuleProof {
             proof_of_requirement_facts: vec![pb, px, py],
         }))

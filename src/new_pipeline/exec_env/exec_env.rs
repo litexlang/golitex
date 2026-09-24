@@ -186,6 +186,16 @@ impl ExecEnv {
             .insert(def_abstract_prop.name.clone(), def_abstract_prop);
     }
 
+    pub fn lookup_def_algo(&self, name: &str) -> Option<&DefAlgoStmt> {
+        self.definitions.algorithm_definitions.get(name)
+    }
+
+    pub fn store_def_algo(&mut self, def_algo: DefAlgoStmt) {
+        self.definitions
+            .algorithm_definitions
+            .insert(def_algo.name.clone(), def_algo);
+    }
+
     pub fn lookup_def_thm(&self, name: &str) -> Option<&DefThmStmt> {
         self.definitions.theorem_definitions.get(name)
     }

@@ -32,7 +32,7 @@ impl Stmt {
             Stmt::Fact(x) => StmtIR(x.ir().0),
             Stmt::Trust(x) => x.ir(),
             Stmt::Definition(x) => x.ir(),
-            Stmt::Release(x) => x.ir(),
+            Stmt::ReleaseAndExpand(x) => x.ir(),
             Stmt::By(x) => x.ir(),
             Stmt::Register(x) => x.ir(),
             Stmt::Witness(x) => x.ir(),
@@ -90,12 +90,16 @@ impl DefinitionStmt {
     impl_display_pair!();
 }
 
-impl ReleaseStmt {
+impl ReleaseAndExpandStmt {
     pub fn ir(&self) -> StmtIR {
         match self {
-            ReleaseStmt::ReleaseThmStmt(x) => x.ir(),
-            ReleaseStmt::ReleaseStructDefStmt(x) => x.ir(),
-            ReleaseStmt::ReleaseObjDefStmt(x) => x.ir(),
+            ReleaseAndExpandStmt::ReleaseThmStmt(x) => x.ir(),
+            ReleaseAndExpandStmt::ReleaseStructDefStmt(x) => x.ir(),
+            ReleaseAndExpandStmt::ReleaseObjDefStmt(x) => x.ir(),
+            ReleaseAndExpandStmt::ExpandRangeStmt(x) => x.ir(),
+            ReleaseAndExpandStmt::ReleaseZornLemmaStmt(x) => x.ir(),
+            ReleaseAndExpandStmt::ReleaseAxiomOfChoiceStmt(x) => x.ir(),
+            ReleaseAndExpandStmt::ReleaseRegularityAxiomStmt(x) => x.ir(),
         }
     }
     impl_display_pair!();
@@ -112,11 +116,6 @@ impl ByStmt {
             ByStmt::ByForStmt(x) => x.ir(),
             ByStmt::ByExtensionStmt(x) => x.ir(),
             ByStmt::ByFnExtensionStmt(x) => x.ir(),
-            ByStmt::ByEnumerateRangeStmt(x) => x.ir(),
-            ByStmt::ByClosedRangeAsCasesStmt(x) => x.ir(),
-            ByStmt::ByZornLemmaStmt(x) => x.ir(),
-            ByStmt::ByAxiomOfChoiceStmt(x) => x.ir(),
-            ByStmt::ByRegularityAxiomStmt(x) => x.ir(),
             ByStmt::ByDefStmt(x) => x.ir(),
             ByStmt::ByThmStmt(x) => x.ir(),
         }
@@ -799,7 +798,7 @@ impl DefAlgoStmt {
         if let Some(default_return) = &self.default_return {
             body.push(default_return.ir());
         }
-        let mut out = format!("{} {} {} {}", HAVE, ALGO, FOR, self.name);
+        let mut out = format!("{} {} {} {} {}", HAVE, ALGO, FOR, FN, self.name);
         out.push_str(LEFT_PAREN);
         out.push_str(&self.param_bindings.join(", "));
         out.push_str(RIGHT_PAREN);
@@ -1357,43 +1356,16 @@ impl ClosedRangeOrRange {
     impl_display_pair!();
 }
 
-impl ByEnumerateRangeStmt {
+impl ExpandRangeStmt {
     pub fn ir(&self) -> StmtIR {
-        let mut out = String::new();
-        let keyword = match &self.range {
-            ClosedRangeOrRange::ClosedRange(_) => CLOSED_RANGE,
-            ClosedRangeOrRange::Range(_) => RANGE,
-        };
-        out.push_str(&format!(
-            "{} {} {}{} {} {}{} {}",
-            BY,
-            ENUMERATE,
-            keyword,
+        StmtIR(format!(
+            "{}{} {} {}{} {}",
+            EXPAND,
             COLON,
             &self.element.ir(),
             FACT_PREFIX,
             IN,
             self.range.ir()
-        ));
-
-        StmtIR(out)
-    }
-    impl_display_pair!();
-}
-
-impl ByClosedRangeAsCasesStmt {
-    pub fn ir(&self) -> StmtIR {
-        StmtIR(format!(
-            "{} {} {} {}{} {} {}{} {}",
-            BY,
-            CLOSED_RANGE,
-            AS,
-            CASES,
-            COLON,
-            &self.element.ir(),
-            FACT_PREFIX,
-            IN,
-            self.closed_range.ir()
         ))
     }
     impl_display_pair!();
@@ -1446,12 +1418,12 @@ impl ByThmStmt {
     impl_display_pair!();
 }
 
-impl ByAxiomOfChoiceStmt {
+impl ReleaseAxiomOfChoiceStmt {
     pub fn ir(&self) -> StmtIR {
         if self.proof.is_empty() {
             return StmtIR(format!(
                 "{} {}{} {} {}",
-                BY,
+                RELEASE,
                 AXIOM_OF_CHOICE,
                 COLON,
                 SET,
@@ -1459,37 +1431,38 @@ impl ByAxiomOfChoiceStmt {
             ));
         }
         let mut out = format!(
-            "{} {}{} {} {}{}",
-            BY,
+            "{} {}{} {} {}{}
+{}",
+            RELEASE,
             AXIOM_OF_CHOICE,
             COLON,
             SET,
             self.family.ir(),
-            COLON
-        );
-        out.push_str("\n");
-        out.push_str(&indent!(
-            &self
-                .proof
-                .iter()
-                .map(|s| s.ir())
-                .collect::<Vec<_>>()
-                .join(
-                    "
+            COLON,
+            indent!(
+                &self
+                    .proof
+                    .iter()
+                    .map(|s| s.ir().0)
+                    .collect::<Vec<_>>()
+                    .join(
+                        "
 "
-                ),
-            1
-        ));
+                    ),
+                1
+            )
+        );
+        let _ = &mut out;
         StmtIR(out)
     }
     impl_display_pair!();
 }
 
-impl ByRegularityAxiomStmt {
+impl ReleaseRegularityAxiomStmt {
     pub fn ir(&self) -> StmtIR {
         StmtIR(format!(
             "{} {}({})",
-            BY,
+            RELEASE,
             REGULARITY_AXIOM,
             &self.set.ir()
         ))
@@ -1497,12 +1470,12 @@ impl ByRegularityAxiomStmt {
     impl_display_pair!();
 }
 
-impl ByZornLemmaStmt {
+impl ReleaseZornLemmaStmt {
     pub fn ir(&self) -> StmtIR {
         let mut out = String::new();
         out.push_str(&format!(
             "{} {}{} {} {}, {} {}, {} {}, {} {}",
-            BY,
+            RELEASE,
             ZORN_LEMMA,
             COLON,
             SET,

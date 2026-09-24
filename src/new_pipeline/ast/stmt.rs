@@ -18,7 +18,7 @@ use super::param::{SetBoundParameterList, TypedParameterList};
 // -----------------------------------------------------------------------------
 
 // Env-changing action: assert a Fact, define names/interfaces, prove by …,
-// release packaged facts, register prop properties, trust, … .
+// release / expand packaged facts, register prop properties, trust, … .
 // Not a value (Obj) and not itself a proposition (Fact); a bare Fact stmt asserts one.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Stmt {
@@ -29,9 +29,9 @@ pub enum Stmt {
     // Define a name / interface into the env (`DefineObj` or prop/thm/have fn/…).
     // Example: `let a = 1`, `have x R`, `prop P(x R): …`, `thm t: ? …`.
     Definition(DefinitionStmt),
-    // Unpack a packaged theorem or definition into ambient facts.
-    // Example: `release thm t(a)`, `release struct def p`, `release obj def f`.
-    Release(ReleaseStmt),
+    // Unpack packaged defs / axioms, or expand range membership into equality cases.
+    // Example: `release thm t(a)`, `expand: x $in range(1, 3)`, `release zorn_lemma: …`.
+    ReleaseAndExpand(ReleaseAndExpandStmt),
     // Prove a goal by a named method. Example: `by cases: …`, `by contra: …`.
     By(ByStmt),
     // Register rewrite/infer laws of a user prop (no proof body).
@@ -117,7 +117,8 @@ pub enum DefinitionStmt {
     //       x R
     //       y R
     DefStructStmt(DefStructStmt),
-    // Named algorithm (computational case presentation). Example: `algo f(x): …`.
+    // Executable presentation attached to an existing fn.
+    // Example: `have algo for fn f(x): …`.
     DefAlgoStmt(DefAlgoStmt),
     // Named theorem with goal and proof. Example: `thm t: ? 1 = 1`.
     DefThmStmt(DefThmStmt),
@@ -470,8 +471,8 @@ pub enum AlgoReturnOrAlgoCase {
     AlgoCase(AlgoCase),
 }
 
-// What: define a named algorithm (computational case presentation).
-// Surface: `algo f(x): …`
+// What: attach an executable presentation to an already-defined function.
+// Surface: `have algo for fn f(x): …`
 // Stores: an executable presentation; does not replace mathematical fn facts.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DefAlgoStmt {
@@ -515,12 +516,12 @@ pub struct DefStrategyStmt {
 }
 
 // -----------------------------------------------------------------------------
-// ReleaseStmt
+// ReleaseAndExpandStmt
 // -----------------------------------------------------------------------------
 
-// Unpack already-packaged definitions / theorems into the ambient env.
+// Unpack packaged definitions / axioms, or expand finite numeric membership.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum ReleaseStmt {
+pub enum ReleaseAndExpandStmt {
     // Instantiate a theorem and commit all conclusions.
     // Example: `release thm t` / `release thm t(a, b)`.
     ReleaseThmStmt(ReleaseThmStmt),
@@ -530,6 +531,18 @@ pub enum ReleaseStmt {
     // Re-store one object-definition's facts for an identifier (preview).
     // Example: `release obj def f`.
     ReleaseObjDefStmt(ReleaseObjDefStmt),
+    // Expand numeric-range membership into equality cases.
+    // Example: `expand: x $in range(1, 3)` stores `x = 1 or x = 2`.
+    ExpandRangeStmt(ExpandRangeStmt),
+    // Apply Zorn's lemma with named order / bound / maximality props.
+    // Example: `release zorn_lemma: set S, prop P, prop U, prop M:`.
+    ReleaseZornLemmaStmt(ReleaseZornLemmaStmt),
+    // Axiom of choice on a family of nonempty sets.
+    // Example: `release axiom_of_choice: set F:`.
+    ReleaseAxiomOfChoiceStmt(ReleaseAxiomOfChoiceStmt),
+    // Axiom of regularity.
+    // Example: `release regularity_axiom(S)`.
+    ReleaseRegularityAxiomStmt(ReleaseRegularityAxiomStmt),
 }
 
 // What: instantiate a theorem and commit all of its conclusions.
@@ -564,17 +577,6 @@ pub enum ByStmt {
     ByExtensionStmt(ByExtensionStmt),
     // Function extensionality on a shared FnSet (preview). Example: `by fn_extension: f = g`.
     ByFnExtensionStmt(ByFnExtensionStmt),
-    // Membership by enumerating a numeric range. Example: `by enumerate_range: e $in …`.
-    ByEnumerateRangeStmt(ByEnumerateRangeStmt),
-    // Closed-range membership as a finite case split.
-    // Example: `by closed_range_as_cases: e $in {a, …, b}`.
-    ByClosedRangeAsCasesStmt(ByClosedRangeAsCasesStmt),
-    // Zorn's lemma with named order / bound / maximality props. Example: `by zorn_lemma: …`.
-    ByZornLemmaStmt(ByZornLemmaStmt),
-    // Axiom of choice on a family of nonempty sets. Example: `by axiom_of_choice: family F`.
-    ByAxiomOfChoiceStmt(ByAxiomOfChoiceStmt),
-    // Axiom of regularity. Example: `by regularity_axiom: set S` (also `by regularity:`).
-    ByRegularityAxiomStmt(ByRegularityAxiomStmt),
     // Unfold a concrete / builtin definition. Example: `by def: $P(…)`.
     ByDefStmt(ByDefStmt),
     // Cite a theorem for one selected atomic conclusion.
@@ -696,31 +698,21 @@ pub struct ByFnExtensionStmt {
     pub line_file: SourceLine,
 }
 
-// What: prove membership by enumerating a numeric range.
-// Surface: `by enumerate_range: e $in …`
-// Stores: the membership fact when enumeration succeeds.
+// What: expand numeric-range membership into equality cases.
+// Surface: `expand: e $in range(…)` / `expand: e $in closed_range(…)` / `expand: e $in a...b`
+// Stores: `e = a or e = b or …` when membership is already known.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ByEnumerateRangeStmt {
+pub struct ExpandRangeStmt {
     pub element: Obj,
     pub range: ClosedRangeOrRange,
     pub line_file: SourceLine,
 }
 
-// What: treat closed-range membership as a finite case split.
-// Surface: `by closed_range_as_cases: e $in {a, …, b}`
-// Stores: the membership fact when the case split closes.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ByClosedRangeAsCasesStmt {
-    pub element: Obj,
-    pub closed_range: ClosedRange,
-    pub line_file: SourceLine,
-}
-
 // What: apply Zorn's lemma with named order / bound / maximality props.
-// Surface: `by zorn_lemma: …`
+// Surface: `release zorn_lemma: set S, prop P, prop U, prop M:`
 // Stores: `exist m S st {$M(m)}` using the supplied maximality prop.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ByZornLemmaStmt {
+pub struct ReleaseZornLemmaStmt {
     pub set: Obj,
     pub prop_name: AtomicName,
     pub upper_bound_prop_name: AtomicName,
@@ -730,20 +722,20 @@ pub struct ByZornLemmaStmt {
 }
 
 // What: apply the axiom of choice to a family of nonempty sets.
-// Surface: `by axiom_of_choice: family F`
+// Surface: `release axiom_of_choice: set F`
 // Stores: existence of a choice function for the family.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ByAxiomOfChoiceStmt {
+pub struct ReleaseAxiomOfChoiceStmt {
     pub family: Obj,
     pub proof: Vec<Stmt>,
     pub line_file: SourceLine,
 }
 
 // What: apply the axiom of regularity to a set.
-// Surface: `by regularity_axiom: set S` (also `by regularity:`)
+// Surface: `release regularity_axiom(S)`
 // Stores: the regularity conclusion for that set (strict mode rejects).
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ByRegularityAxiomStmt {
+pub struct ReleaseRegularityAxiomStmt {
     pub set: Obj,
     pub line_file: SourceLine,
 }

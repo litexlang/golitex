@@ -18,9 +18,14 @@
 
 use crate::new_pipeline::execute::execute_by_stmt::ExecByStmtResult;
 use crate::new_pipeline::execute::execute_by_stmt::ExecReleaseThmStmtResult;
+use crate::new_pipeline::execute::execute_by_stmt::{
+    ExecExpandRangeStmtResult, ExecReleaseAxiomOfChoiceStmtResult,
+    ExecReleaseRegularityAxiomStmtResult, ExecReleaseZornLemmaStmtResult,
+};
 use crate::new_pipeline::execute::execute_proof_block_stmt::ExecProofBlockStmtResult;
 use crate::new_pipeline::execute::execute_register_stmt::ExecRegisterStmtResult;
 use crate::new_pipeline::execute::execute_def_abstract_prop_stmt::ExecDefAbstractPropStmtSuccessResult;
+use crate::new_pipeline::execute::execute_def_algo_stmt::ExecDefAlgoStmtResult;
 use crate::new_pipeline::execute::execute_def_prop_stmt::ExecDefPropStmtResult;
 use crate::new_pipeline::execute::execute_def_struct_stmt::ExecDefStructStmtResult;
 use crate::new_pipeline::execute::execute_def_template_stmt::ExecDefTemplateStmtResult;
@@ -88,14 +93,18 @@ pub enum ExecStmtResult {
     Trust(ExecTrustBoundaryStmtResult),
     By(ExecByStmtResult),
     Register(ExecRegisterStmtResult),
-    Release(ExecReleaseStmtResult),
+    ReleaseAndExpand(ExecReleaseAndExpandStmtResult),
     ProofBlock(ExecProofBlockStmtResult),
 }
 
-pub enum ExecReleaseStmtResult {
+pub enum ExecReleaseAndExpandStmtResult {
     Thm(ExecReleaseThmStmtResult),
     StructDef(ExecReleaseStructDefStmtResult),
     ObjDef(ExecReleaseObjDefStmtResult),
+    ExpandRange(ExecExpandRangeStmtResult),
+    ZornLemma(ExecReleaseZornLemmaStmtResult),
+    AxiomOfChoice(ExecReleaseAxiomOfChoiceStmtResult),
+    RegularityAxiom(ExecReleaseRegularityAxiomStmtResult),
 }
 
 pub enum ExecDefinitionStmtResult {
@@ -108,6 +117,7 @@ pub enum ExecDefinitionStmtResult {
     DefAbstractProp(ExecDefAbstractPropStmtSuccessResult),
     DefStruct(ExecDefStructStmtResult),
     DefTemplate(ExecDefTemplateStmtResult),
+    DefAlgo(ExecDefAlgoStmtResult),
     DefThm(ExecDefThmStmtResult),
 }
 
@@ -131,18 +141,22 @@ impl ExecStmtResult {
             Self::Trust(r) => r.is_failed(),
             Self::By(r) => r.is_failed(),
             Self::Register(r) => r.is_failed(),
-            Self::Release(r) => r.is_failed(),
+            Self::ReleaseAndExpand(r) => r.is_failed(),
             Self::ProofBlock(r) => r.is_failed(),
         }
     }
 }
 
-impl ExecReleaseStmtResult {
+impl ExecReleaseAndExpandStmtResult {
     pub fn is_failed(&self) -> bool {
         match self {
             Self::Thm(r) => r.is_failed(),
             Self::StructDef(r) => r.is_failed(),
             Self::ObjDef(r) => r.is_failed(),
+            Self::ExpandRange(r) => r.is_failed(),
+            Self::ZornLemma(r) => r.is_failed(),
+            Self::AxiomOfChoice(r) => r.is_failed(),
+            Self::RegularityAxiom(r) => r.is_failed(),
         }
     }
 }
@@ -159,6 +173,7 @@ impl ExecDefinitionStmtResult {
             Self::DefAbstractProp(_) => false,
             Self::DefStruct(r) => r.is_failed(),
             Self::DefTemplate(r) => r.is_failed(),
+            Self::DefAlgo(r) => r.is_failed(),
             Self::DefThm(r) => r.is_failed(),
         }
     }

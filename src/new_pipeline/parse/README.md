@@ -66,7 +66,7 @@ Rejected at dispatch (intentional):
 | `import` | declare deps in `litex.config` |
 | `setting` | not supported in new_pipeline |
 | bare `strong_induc` | only after `by` |
-| `have algo` / `have algo for` | not wired |
+| `have algo` without `for fn` | need `have algo for fn f(…):` |
 | `have tuple\|cart\|seq\|finite_seq\|matrix` | removed; use `have fn` |
 
 ---
@@ -123,6 +123,24 @@ Fn header params must be **object-typed** (`x R`), not `set` / `nonempty_set` / 
 `by exist!` has no signature paren list; the body is exactly one shaped `? forall …: exist! …`.
 
 Tracers: `have_fn_equal.lit`, `have_fn_equal_case_by_case.lit`, `have_fn_by_induc.lit`, `have_fn_by_exist.lit`
+
+### `have algo for fn` (preview)
+
+```text
+have fn nonzero_flag(x R) R by cases:
+    case x = 0: 0
+    case x != 0: 1
+
+have algo for fn nonzero_flag(x):
+    case x = 0: 0
+    case x != 0: 1
+```
+
+Attaches an executable presentation to an **already-defined** mathematical
+function. Does not replace `have fn` facts. `eval` does not yet consume user
+algos in new_pipeline.
+
+Tracer: `def_algo.lit`
 
 ### `have by`
 
@@ -254,18 +272,27 @@ No indented body. Tracers: `witness/*.lit`
 eval 1 + 1
 ```
 
-### `release`
+### `release` / `expand`
 
 ```text
 release thm Name
 release thm Name(args…)
 release struct def <obj>
 release obj def name
+release zorn_lemma: set S, prop P, prop U, prop M:
+release axiom_of_choice: set F:
+release regularity_axiom(S)
+expand: e $in range(…)
+expand: e $in closed_range(…)
+expand: e $in a...b
 ```
 
 Bare `by thm Name` / `by thm Name(…)` **without** `=>` also parses as release-thm.
 
-Tracers: `release_thm.lit`, `release_struct_def.lit`, `release_obj_def.lit`
+Old `by enumerate range` / `by closed_range as cases` / `by zorn_lemma` /
+`by axiom_of_choice` / `by regularity_axiom` parse-error with a migrate hint.
+
+Tracers: `definition/release_*.lit`, `release_and_expand/*.lit`
 
 ---
 
@@ -282,16 +309,10 @@ Tracers: `release_thm.lit`, `release_struct_def.lit`, `release_obj_def.lit`
 | extension | `by extension A = B` or `by extension:` + `? A = B` | `by/by_extension.lit` |
 | fn_extension | same for function equality | `by/by_fn_extension.lit` |
 | enumerate finite_set | `by enumerate finite_set:` + `? forall …` | `by/by_enumerate_finite_set.lit` |
-| enumerate range | `by enumerate range: e $in range(…)` | `by/by_enumerate_range.lit` |
-| enumerate closed_range | `e $in closed_range(…)` / `a...b` | |
 | for | `by for:` + `? forall …` | `by/by_for.lit` |
-| closed_range as cases | `by closed_range as cases: e $in …` | `by/by_closed_range_as_cases.lit` |
-| regularity_axiom | `by regularity_axiom(S)` | `by/by_regularity_axiom.lit` |
-| axiom_of_choice | `by axiom_of_choice: set F` | `by/by_axiom_of_choice.lit` |
-| zorn_lemma | `by zorn_lemma: set S, prop P, prop U, prop M` | parse+wired; green tracer TBD |
 
 Finite-set induc forms `by induc S:` / `by induc S in A:` are **removed**.
-
+Range expand / choice / Zorn / regularity live under `release` / `expand` above.
 ---
 
 ## Statements — `register` prop properties
