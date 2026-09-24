@@ -32,6 +32,31 @@ by/            Extension, Enumerate*, For, Contra, Cases, Def, Thm,
 proof_block/   Claim, Sketch
 ```
 
+## What / how (wired arms)
+
+| Folder / file | What | How (surface) |
+|---|---|---|
+| `fact/` | Assert a fact | bare `1 + 1 = 2` |
+| `definition/let_obj.lit` | Equality binding | `let a = expr` |
+| `definition/have_obj_*.lit` | Introduce typed objs | `have x R` / `= expr` / `:` body |
+| `definition/obtain_*.lit` | Name exist witnesses | `obtain a from exist …` / `$P` |
+| `definition/have_by_*.lit` | Preimage / Replacement | `have by fn_preimage:` / `replacement_axiom:` |
+| `definition/have_fn_*.lit` | Define named functions | `have fn … =` / `by cases` / `by induc` / `by exist!` |
+| `definition/def_prop.lit` | Concrete predicate | `prop P(x A):` body |
+| `definition/def_abstract_prop.lit` | Abstract predicate | `abstract_prop P(x, y)` |
+| `definition/def_struct*.lit` | Struct carrier | `struct Point:` fields |
+| `definition/def_template*.lit` | Parameterized def | `template<A set>:` one body |
+| `definition/def_thm.lit` | Named theorem | `thm name: ? fact` + proof |
+| `definition/release_*.lit` | Unpack packaged facts | `release thm` / `struct def` / `obj def` |
+| `unsafe/` | Trust boundary | `trust:` / `trust have …:` |
+| `register/` | Prop rewrite laws | `register reflexive\|symmetric\|transitive:` |
+| `witness/` | Exhibit witnesses | `witness exist … from …:` etc. |
+| `by/` | Named proof methods | `by cases:` / `by contra:` / … |
+| `proof_block/` | Nested scopes | `claim:` / `sketch:` |
+
+Full human catalog: `docs/Manual.md` → Statements → Preview Stmt catalog.
+Parse dispatch: `src/new_pipeline/parse/README.md`.
+
 Omitted for now: `by zorn_lemma` (wired; chain-upper-bound obligation still
 needs a green tracer). Parse-only / unwired: eval, axiom, strategy.
 `obtain … from exist` / `exist!` / `$P` is wired (see `definition/obtain_*.lit`
