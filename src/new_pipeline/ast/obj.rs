@@ -97,38 +97,38 @@ pub enum ArithmeticOperator {
     // What: division. Surface: `a / b`. Domain: `a, b $in C` and `b != 0`. Example: `6 / 2`.
     Div(Div),
     // What: exponentiation. Surface: `a^b` (right-associative; tighter than `* /`).
-    // Domain is multi-branch (not a single carrier pair); see `Pow`. Example: `2^3`.
+    // Domain is multi-branch (not a single carrier pair); see `Pow`. Example: `2^3` (8).
     Pow(Pow),
-    // Absolute value on reals. Surface: `abs(x)`. Example: `abs(-3)`.
+    // Absolute value on reals. Surface: `abs(x)`. Example: `abs(-3)` (3).
     Abs(Abs),
-    // Binary minimum of reals. Surface: `min(a, b)`. Example: `min(7, (-2))`.
+    // Binary minimum of reals. Surface: `min(a, b)`. Example: `min(7, (-2))` (-2).
     Min(Min),
-    // Binary maximum of reals. Surface: `max(a, b)`. Example: `max(7, (-2))`.
+    // Binary maximum of reals. Surface: `max(a, b)`. Example: `max(7, (-2))` (7).
     Max(Max),
-    // Greatest integer ≤ x. Surface: `floor(x)`. Example: `floor(3.7)`.
+    // Greatest integer ≤ x. Surface: `floor(x)`. Example: `floor(3.7)` (3).
     Floor(Floor),
-    // Least integer ≥ x. Surface: `ceil(x)`. Example: `ceil(3.2)`.
+    // Least integer ≥ x. Surface: `ceil(x)`. Example: `ceil(3.2)` (4).
     Ceil(Ceil),
-    // Sign of a real (−1 / 0 / 1). Surface: `sign(x)`. Example: `sign(-9)`.
+    // Sign of a real (−1 / 0 / 1). Surface: `sign(x)`. Example: `sign(-9)` (-1).
     Sign(Sign),
 }
 
 // Ops whose primary meaning is on integers.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum IntegerOperator {
-    // Remainder after integer division. Surface: `a % d`. Example: `(-7) % 3`.
+    // Remainder after integer division. Surface: `a % d`. Example: `(-7) % 3` (2).
     Mod(Mod),
 
-    // Integer quotient: `a = d * quot(a, d) + a % d`. Surface: `quot(a, d)`. Example: `quot(-7, 3)`.
+    // Integer quotient: `a = d * quot(a, d) + a % d`. Surface: `quot(a, d)`. Example: `quot(-7, 3)` (-3).
     Quot(Quot),
 
-    // Greatest common divisor. Surface: `gcd(a, b)`. Example: `gcd(54, (-24))`.
+    // Greatest common divisor. Surface: `gcd(a, b)`. Example: `gcd(54, (-24))` (6).
     Gcd(Gcd),
 
-    // Least common multiple. Surface: `lcm(a, b)`. Example: `lcm(12, (-18))`.
+    // Least common multiple. Surface: `lcm(a, b)`. Example: `lcm(12, (-18))` (36).
     Lcm(Lcm),
 
-    // Factorial. Surface: `factorial(n)`, also postfix `n!`. Example: `3!`.
+    // Factorial. Surface: `factorial(n)`, also postfix `n!`. Example: `3!` (6).
     Factorial(Factorial),
 }
 
@@ -146,22 +146,22 @@ pub enum TrigOperator {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ExpLogOperator {
-    Exp(Exp),   // exponential e^x. Surface: `exp(x)`. Example: `exp(0)`
-    Ln(Ln),     // natural log. Surface: `ln(x)`. Example: `ln(1)`
-    Log(Log),   // log with explicit base. Surface: `log(b, x)`. Example: `log(2, 8)`
-    Sqrt(Sqrt), // principal square root. Surface: `sqrt(x)`. Example: `sqrt(4)`
+    Exp(Exp),   // exponential e^x. Surface: `exp(x)`. Example: `exp(0)` (1)
+    Ln(Ln),     // natural log. Surface: `ln(x)`. Example: `ln(1)` (0)
+    Log(Log),   // log with explicit base. Surface: `log(b, x)`. Example: `log(2, 8)` (3)
+    Sqrt(Sqrt), // principal square root. Surface: `sqrt(x)`. Example: `sqrt(4)` (2)
 }
 
 // Complex coordinate / modulus ops (not ordinary real `abs`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ComplexOperator {
-    // Real part of a complex. Surface: `re(z)`. Example: `re(i)`.
+    // Real part of a complex. Surface: `re(z)`. Example: `re(i)` (0).
     RealPart(RealPart),
 
-    // Imaginary part of a complex. Surface: `img(z)`. Example: `img(i)`.
+    // Imaginary part of a complex. Surface: `img(z)`. Example: `img(i)` (1).
     ImaginaryPart(ImaginaryPart),
 
-    // Complex modulus. Surface: `C_abs(z)`. Example: `C_abs(i)`.
+    // Complex modulus. Surface: `C_abs(z)`. Example: `C_abs(i)` (1).
     ComplexAbs(ComplexAbs),
 }
 
@@ -169,23 +169,23 @@ pub enum ComplexOperator {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SetOperator {
     // Binary union: elements in A or in B.
-    // Surface: `union(A, B)`. Example: `union({1}, {2, 3})`.
+    // Surface: `union(A, B)`. Example: `union({1}, {2, 3})` ({1, 2, 3}).
     Union(Union),
 
     // Binary intersection: elements in both A and B.
-    // Surface: `intersect(A, B)`. Example: `intersect({1, 2}, {2, 3})`.
+    // Surface: `intersect(A, B)`. Example: `intersect({1, 2}, {2, 3})` ({2}).
     Intersect(Intersect),
 
     // Relative complement: elements in A but not in B.
-    // Surface: `set_minus(A, B)`. Example: `set_minus({1, 2, 3}, {2})`.
+    // Surface: `set_minus(A, B)`. Example: `set_minus({1, 2, 3}, {2})` ({1, 3}).
     SetMinus(SetMinus),
 
     // Union of a family of sets (here: a set of sets).
-    // Surface: `family_union(F)`. Example: `family_union({{1}, {2, 3}})`.
+    // Surface: `family_union(F)`. Example: `family_union({{1}, {2, 3}})` ({1, 2, 3}).
     FamilyUnion(FamilyUnion),
 
     // Intersection of a family of sets (here: a set of sets).
-    // Surface: `family_intersect(F)`. Example: `family_intersect({{1, 2}, {2, 3}})`.
+    // Surface: `family_intersect(F)`. Example: `family_intersect({{1, 2}, {2, 3}})` ({2}).
     FamilyIntersect(FamilyIntersect),
 
     // Indexed union ∪_{i ∈ I} A(i), where A is a set-valued family into ambient X.
@@ -198,7 +198,7 @@ pub enum SetOperator {
     // Surface / Example: `index_intersect(I, X, A)`.
     IndexIntersect(IndexIntersect),
 
-    // Set of all subsets of S. Surface: `power_set(S)`. Example: `power_set({1})`.
+    // Set of all subsets of S. Surface: `power_set(S)`. Example: `power_set({1})` ({{}, {1}}).
     PowerSet(PowerSet),
 
     // Set of choice functions picking one point from each factor g(α), α ∈ I.
@@ -217,10 +217,10 @@ pub enum SetFormer {
     // Example: `{x R: x > 0}`.
     SetBuilder(SetBuilder),
 
-    // Half-open integer interval set {start, …, end-1}. Surface: `range(a, b)`. Example: `range(1, 3)`.
+    // Half-open integer interval set {start, …, end-1}. Surface: `range(a, b)`. Example: `range(1, 3)` ({1, 2}).
     Range(Range),
 
-    // Closed integer interval set {start, …, end}. Surface: `closed_range(a, b)`. Example: `closed_range(1, 2)`.
+    // Closed integer interval set {start, …, end}. Surface: `closed_range(a, b)`. Example: `closed_range(1, 2)` ({1, 2}).
     ClosedRange(ClosedRange),
 
     // Length-n sequences in S (n may be 0). Essentially the FnSet of maps from
@@ -246,16 +246,16 @@ pub enum ProductShape {
     // Ordered tuple value (an element of some cart). Example: `(1, 2)`.
     Tuple(Tuple),
 
-    // Number of factors of a cart. Surface: `cart_dim(C)`. Example: `cart_dim(cart(R, Z))`.
+    // Number of factors of a cart. Surface: `cart_dim(C)`. Example: `cart_dim(cart(R, Z))` (2).
     CartDim(CartDim),
 
-    // Length of a tuple. Surface: `tuple_dim(t)`. Example: `tuple_dim((1, 2))`.
+    // Length of a tuple. Surface: `tuple_dim(t)`. Example: `tuple_dim((1, 2))` (2).
     TupleDim(TupleDim),
 
-    // i-th factor *set* of a cart (1-based). Surface: `proj(C, i)`. Example: `proj(cart(R, Z), 1)`.
+    // i-th factor *set* of a cart (1-based). Surface: `proj(C, i)`. Example: `proj(cart(R, Z), 1)` (R).
     Proj(Proj),
 
-    // i-th *component* of a tuple / sequence (1-based). Surface: `t[i]`. Example: `(1, 2)[1]`.
+    // i-th *component* of a tuple / sequence (1-based). Surface: `t[i]`. Example: `(1, 2)[1]` (1).
     ObjAtIndex(ObjAtIndex),
 }
 
@@ -305,13 +305,13 @@ pub enum IteratedOperator {
 // Statistics extracted from a finite set of numbers.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FiniteSetStat {
-    // Cardinality. Surface: `finite_set_size(S)`. Example: `finite_set_size({1, 2})`.
+    // Cardinality. Surface: `finite_set_size(S)`. Example: `finite_set_size({1, 2})` (2).
     FiniteSetSize(FiniteSetSize),
 
-    // Greatest element. Surface: `finite_set_max(S)`. Example: `finite_set_max({1, 3})`.
+    // Greatest element. Surface: `finite_set_max(S)`. Example: `finite_set_max({1, 3})` (3).
     FiniteSetMax(FiniteSetMax),
 
-    // Least element. Surface: `finite_set_min(S)`. Example: `finite_set_min({1, 3})`.
+    // Least element. Surface: `finite_set_min(S)`. Example: `finite_set_min({1, 3})` (1).
     FiniteSetMin(FiniteSetMin),
 }
 
@@ -494,7 +494,7 @@ pub struct Div {
 
 // What: Euclidean remainder.
 // Surface: `a % d`
-// Example: `(-7) % 3`.
+// Example: `(-7) % 3` (2).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Mod {
     pub left: Box<Obj>,
@@ -503,7 +503,7 @@ pub struct Mod {
 
 // What: Euclidean quotient.
 // Surface: `quot(a, d)`
-// Example: `quot(-7, 3)`.
+// Example: `quot(-7, 3)` (-3).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Quot {
     pub left: Box<Obj>,
@@ -512,7 +512,7 @@ pub struct Quot {
 
 // What: greatest common divisor.
 // Surface: `gcd(a, b)`
-// Example: `gcd(54, (-24))`.
+// Example: `gcd(54, (-24))` (6).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Gcd {
     pub left: Box<Obj>,
@@ -521,7 +521,7 @@ pub struct Gcd {
 
 // What: least common multiple.
 // Surface: `lcm(a, b)`
-// Example: `lcm(12, (-18))`.
+// Example: `lcm(12, (-18))` (36).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Lcm {
     pub left: Box<Obj>,
@@ -530,7 +530,7 @@ pub struct Lcm {
 
 // What: greatest integer ≤ arg.
 // Surface: `floor(x)`
-// Example: `floor(3.7)`.
+// Example: `floor(3.7)` (3).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Floor {
     pub arg: Box<Obj>,
@@ -538,7 +538,7 @@ pub struct Floor {
 
 // What: least integer ≥ arg.
 // Surface: `ceil(x)`
-// Example: `ceil(3.2)`.
+// Example: `ceil(3.2)` (4).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Ceil {
     pub arg: Box<Obj>,
@@ -546,7 +546,7 @@ pub struct Ceil {
 
 // What: binary minimum of reals.
 // Surface: `min(a, b)`
-// Example: `min(7, (-2))`.
+// Example: `min(7, (-2))` (-2).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Min {
     pub left: Box<Obj>,
@@ -555,7 +555,7 @@ pub struct Min {
 
 // What: binary maximum of reals.
 // Surface: `max(a, b)`
-// Example: `max(7, (-2))`.
+// Example: `max(7, (-2))` (7).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Max {
     pub left: Box<Obj>,
@@ -564,7 +564,7 @@ pub struct Max {
 
 // What: real exponential.
 // Surface: `exp(x)`
-// Example: `exp(0)`.
+// Example: `exp(0)` (1).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Exp {
     pub arg: Box<Obj>,
@@ -572,7 +572,7 @@ pub struct Exp {
 
 // What: natural logarithm.
 // Surface: `ln(x)`
-// Example: `ln(1)`.
+// Example: `ln(1)` (0).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Ln {
     pub arg: Box<Obj>,
@@ -580,7 +580,7 @@ pub struct Ln {
 
 // What: sign of a real (−1 / 0 / 1).
 // Surface: `sign(x)`
-// Example: `sign(-9)`.
+// Example: `sign(-9)` (-1).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Sign {
     pub arg: Box<Obj>,
@@ -588,7 +588,7 @@ pub struct Sign {
 
 // What: factorial.
 // Surface: `factorial(n)`, also postfix `n!`
-// Example: `3!`.
+// Example: `3!` (6).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Factorial {
     pub arg: Box<Obj>,
@@ -596,7 +596,7 @@ pub struct Factorial {
 
 // What: exponentiation `base^exponent`.
 // Surface: `a^b` (right-associative; write `t^(-1)`, not `t^-1`).
-// Example: `2^3`.
+// Example: `2^3` (8).
 //
 // Domain is intentionally multi-branch (WD tries these in order in new_pipeline):
 // - complex base + natural exponent: `base $in C`, `exponent $in N`
@@ -615,7 +615,7 @@ pub struct Pow {
 
 // What: absolute value on reals.
 // Surface: `abs(x)`
-// Example: `abs(-3)`.
+// Example: `abs(-3)` (3).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Abs {
     pub arg: Box<Obj>,
@@ -671,7 +671,7 @@ pub struct Cot {
 
 // What: real part of a complex.
 // Surface: `re(z)`
-// Example: `re(i)`.
+// Example: `re(i)` (0).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RealPart {
     pub arg: Box<Obj>,
@@ -679,7 +679,7 @@ pub struct RealPart {
 
 // What: imaginary part of a complex.
 // Surface: `img(z)`
-// Example: `img(i)`.
+// Example: `img(i)` (1).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ImaginaryPart {
     pub arg: Box<Obj>,
@@ -687,7 +687,7 @@ pub struct ImaginaryPart {
 
 // What: complex modulus.
 // Surface: `C_abs(z)`
-// Example: `C_abs(i)`.
+// Example: `C_abs(i)` (1).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ComplexAbs {
     pub arg: Box<Obj>,
@@ -695,7 +695,7 @@ pub struct ComplexAbs {
 
 // What: principal square root.
 // Surface: `sqrt(x)`
-// Example: `sqrt(4)`.
+// Example: `sqrt(4)` (2).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Sqrt {
     pub arg: Box<Obj>,
@@ -703,7 +703,7 @@ pub struct Sqrt {
 
 // What: logarithm with explicit base.
 // Surface: `log(b, x)`
-// Example: `log(2, 8)`.
+// Example: `log(2, 8)` (3).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Log {
     pub base: Box<Obj>,
@@ -712,7 +712,7 @@ pub struct Log {
 
 // What: binary union of two sets.
 // Surface: `union(A, B)`
-// Example: `union({1}, {2, 3})`.
+// Example: `union({1}, {2, 3})` ({1, 2, 3}).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Union {
     pub left: Box<Obj>,
@@ -721,7 +721,7 @@ pub struct Union {
 
 // What: binary intersection of two sets.
 // Surface: `intersect(A, B)`
-// Example: `intersect({1, 2}, {2, 3})`.
+// Example: `intersect({1, 2}, {2, 3})` ({2}).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Intersect {
     pub left: Box<Obj>,
@@ -730,7 +730,7 @@ pub struct Intersect {
 
 // What: relative complement (elements in left but not in right).
 // Surface: `set_minus(A, B)`
-// Example: `set_minus({1, 2, 3}, {2})`.
+// Example: `set_minus({1, 2, 3}, {2})` ({1, 3}).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SetMinus {
     pub left: Box<Obj>,
@@ -739,7 +739,7 @@ pub struct SetMinus {
 
 // What: union of a family of sets — in Litex that family is a set of sets.
 // Surface: `family_union(F)`
-// Example: `family_union({{1}, {2, 3}})`.
+// Example: `family_union({{1}, {2, 3}})` ({1, 2, 3}).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FamilyUnion {
     pub left: Box<Obj>,
@@ -747,7 +747,7 @@ pub struct FamilyUnion {
 
 // What: intersection of a family of sets — in Litex that family is a set of sets.
 // Surface: `family_intersect(F)`
-// Example: `family_intersect({{1, 2}, {2, 3}})`.
+// Example: `family_intersect({{1, 2}, {2, 3}})` ({2}).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FamilyIntersect {
     pub left: Box<Obj>,
@@ -774,7 +774,7 @@ pub struct IndexIntersect {
 
 // What: power set of a set.
 // Surface: `power_set(S)`
-// Example: `power_set({1})`.
+// Example: `power_set({1})` ({{}, {1}}).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PowerSet {
     pub set: Box<Obj>,
@@ -837,7 +837,7 @@ pub struct Cart {
 
 // Dimension of a cartesian product set.
 // Surface: `cart_dim(C)`
-// Example: `cart_dim(cart(R, Z))`.
+// Example: `cart_dim(cart(R, Z))` (2).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CartDim {
     pub set: Box<Obj>,
@@ -845,7 +845,7 @@ pub struct CartDim {
 
 // i-th factor set of a cart.
 // Surface: `proj(C, i)`
-// Example: `proj(cart(R, Z), 1)`.
+// Example: `proj(cart(R, Z), 1)` (R).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Proj {
     pub set: Box<Obj>,
@@ -854,7 +854,7 @@ pub struct Proj {
 
 // Length of a tuple.
 // Surface: `tuple_dim(t)`
-// Example: `tuple_dim((1, 2))`.
+// Example: `tuple_dim((1, 2))` (2).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TupleDim {
     pub arg: Box<Obj>,
@@ -868,7 +868,7 @@ pub struct Tuple {
 
 // What: cardinality of a finite set.
 // Surface: `finite_set_size(S)`
-// Example: `finite_set_size({1, 2})`.
+// Example: `finite_set_size({1, 2})` (2).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FiniteSetSize {
     pub set: Box<Obj>,
@@ -876,7 +876,7 @@ pub struct FiniteSetSize {
 
 // What: maximum of a finite real/integer set.
 // Surface: `finite_set_max(S)`
-// Example: `finite_set_max({1, 3})`.
+// Example: `finite_set_max({1, 3})` (3).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FiniteSetMax {
     pub set: Box<Obj>,
@@ -884,7 +884,7 @@ pub struct FiniteSetMax {
 
 // What: minimum of a finite real/integer set.
 // Surface: `finite_set_min(S)`
-// Example: `finite_set_min({1, 3})`.
+// Example: `finite_set_min({1, 3})` (1).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FiniteSetMin {
     pub set: Box<Obj>,
@@ -949,7 +949,7 @@ pub struct FiniteSetReduce {
 
 // Half-open integer range {start, …, end-1}.
 // Surface: `range(a, b)`
-// Example: `range(1, 3)`.
+// Example: `range(1, 3)` ({1, 2}).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Range {
     pub start: Box<Obj>,
@@ -958,7 +958,7 @@ pub struct Range {
 
 // Closed integer range {start, …, end}.
 // Surface: `closed_range(a, b)`
-// Example: `closed_range(1, 2)`.
+// Example: `closed_range(1, 2)` ({1, 2}).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ClosedRange {
     pub start: Box<Obj>,
@@ -981,7 +981,7 @@ pub struct SeqSet {
 
 // What: tuple / sequence indexing (1-based).
 // Surface: `t[i]`
-// Example: `(1, 2)[1]`.
+// Example: `(1, 2)[1]` (1).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ObjAtIndex {
     pub obj: Box<Obj>,

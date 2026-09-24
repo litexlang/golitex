@@ -569,7 +569,7 @@ impl Runtime {
         ))
     }
 
-    pub(super) fn verify_in_integer(
+    pub(crate) fn verify_in_integer(
         &mut self,
         obj: &Obj,
         verify_state: VerifyState,
