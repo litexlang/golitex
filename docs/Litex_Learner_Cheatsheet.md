@@ -482,10 +482,10 @@ callable function.
 Finite enumeration is bounded, not arbitrary quantifier automation:
 
 ```litex
-claim:
-    ? forall x range(1, 3):
-        x = 1 or x = 2
-    by enumerate range: x $in range(1, 3)
+have x Z
+trust x $in range(1, 3)
+expand: x $in range(1, 3)
+# stores: x = 1 or x = 2
 ```
 
 Use <code>by cases</code> when an exhaustive disjunction is already available:

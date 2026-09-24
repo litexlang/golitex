@@ -63,6 +63,14 @@ impl Runtime {
         {
             return Ok(Some(map_equality_identities_wave2_proof(proof)));
         }
+        if let Some(proof) = self
+            .search_equal_fact_builtin_rule_equality_identities_wave3(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(map_equality_identities_wave3_proof(proof)));
+        }
         if let Some(proof) =
             self.search_equal_fact_builtin_rule_inverse_trig(fact, verify_state)?
         {
@@ -119,6 +127,24 @@ fn map_equality_identities_wave2_proof(
         W::NestedSameModAbsorption(p) => {
             EqualitySearchProofByBuiltinRule::NestedSameModAbsorption(p)
         }
+    }
+}
+
+fn map_equality_identities_wave3_proof(
+    proof: super::by_equality_identities_wave3::EqualityIdentitiesWave3BuiltinRuleProof,
+) -> EqualitySearchProofByBuiltinRule {
+    use super::by_equality_identities_wave3::EqualityIdentitiesWave3BuiltinRuleProof as W;
+    match proof {
+        W::MinIdempotent(p) => EqualitySearchProofByBuiltinRule::MinIdempotent(p),
+        W::MaxIdempotent(p) => EqualitySearchProofByBuiltinRule::MaxIdempotent(p),
+        W::MinCommutative(p) => EqualitySearchProofByBuiltinRule::MinCommutative(p),
+        W::MaxCommutative(p) => EqualitySearchProofByBuiltinRule::MaxCommutative(p),
+        W::AbsAbsAbsorption(p) => EqualitySearchProofByBuiltinRule::AbsAbsAbsorption(p),
+        W::ExpOfLn(p) => EqualitySearchProofByBuiltinRule::ExpOfLn(p),
+        W::LnOfExp(p) => EqualitySearchProofByBuiltinRule::LnOfExp(p),
+        W::FloorOfInteger(p) => EqualitySearchProofByBuiltinRule::FloorOfInteger(p),
+        W::CeilOfInteger(p) => EqualitySearchProofByBuiltinRule::CeilOfInteger(p),
+        W::ModSelfZero(p) => EqualitySearchProofByBuiltinRule::ModSelfZero(p),
     }
 }
 

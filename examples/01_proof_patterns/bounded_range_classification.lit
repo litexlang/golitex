@@ -11,7 +11,7 @@
 #             case q < 8: ...
 # Former behavior in the source proof: manual boundary cases continued to q = 0.
 #
-# Now (verified): enumerate the known half-open range once, then inspect its
+# Now (verified): expand the known half-open range once, then inspect its
 # flat equality alternatives.
 
 claim:

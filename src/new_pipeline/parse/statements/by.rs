@@ -1,10 +1,11 @@
 use super::super::keywords::{
-    AXIOM_OF_CHOICE, BY, CASE, CASES, COLON, COMMA, CONTRA, DEF, EQUAL, FROM, IMPOSSIBLE, INDUC,
+    AXIOM_OF_CHOICE, BY, CASE, CASES, COLON, COMMA, CONTRA, DEF, EQUAL, FROM, IMPOSSIBLE, IN, INDUC,
     LEFT_PAREN, MOD_FLAT_SIGN, MOD_SIGN, QUESTION_GOAL, REGULARITY_AXIOM, RIGHT_ARROW, RIGHT_PAREN,
     STRONG_INDUC, EXTENSION, FN_EXTENSION, THM, ENUMERATE, FOR, CLOSED_RANGE, FINITE_SET, RANGE,
     ZORN_LEMMA,
 };
 use super::super::object::{is_simple_name, parse_obj};
+use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::fact::{
     AndChainAtomicFact, AtomicFact, ExistOrAndChainAtomicFact, Fact,
 };

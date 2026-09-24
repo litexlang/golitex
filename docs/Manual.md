@@ -2912,9 +2912,10 @@ introductions.
 | `release struct def e` | `e` has a definition-owned struct carrier and `e $in &Struct` verifies. | Exactly one layer of tuple/identity bridges, field carriers, and instantiated struct laws. |
 | `release obj def I` | Preview (`new_pipeline`): `I` is one identifier (optionally `mod::export::`-qualified) with a `StoredIdentifierDefinition` other than a binder `ParamType`. | Re-stores that definition's type / equality / body / fn facts into the current Env (subjects use the written spelling of `I`). For `have fn … by exist!`, re-stores membership + property + uniqueness. |
 | Predicate-property registrations | Exact reflexive/symmetric/transitive forall shape. Default: `by *_prop`. Preview (`new_pipeline`): `register reflexive` / `symmetric` / `transitive`; one `? forall …` goal only; no indented proof body. | A reusable property route for later rewriting. |
-| `by regularity_axiom` | Its displayed set/nonemptiness obligations. Preview (`new_pipeline`): `release regularity_axiom(S)`; parse+exec wired; fact-only local proofs N/A (no body). | An explicitly trusted set-theoretic conclusion; strict mode rejects the step. |
-| `by axiom_of_choice` | The family is a set and every member is proved nonempty. Preview (`new_pipeline`): `release axiom_of_choice: set F`; parse+exec wired; proof body is fact-only. | Stores `exist f fn(A S)family_union(S) st {$is_choice_function_for(S,S,fn(A S)S {A},f)}`. The existential body is atomic. |
-| `by zorn_lemma` | The set, binary relation, exact named upper-bound/maximality definitions, nonemptiness, partial-order laws, and chain-upper-bound obligation. Preview (`new_pipeline`): `release zorn_lemma: …`; parse+exec wired; prop-definition equality uses IR alignment (no alpha_normalize yet). | Stores `exist m S st {$M(m)}` using the supplied named maximality prop. The chain witness likewise uses the supplied atomic upper-bound prop. |
+| `expand: e $in …` | Preview (`new_pipeline`): membership in a concrete `range` / `closed_range` / `a...b` is already known. | Stores `e = a or e = b or …`. |
+| `release regularity_axiom` | Its displayed set/nonemptiness obligations. Preview (`new_pipeline`): `release regularity_axiom(S)`; parse+exec wired; no proof body. | An explicitly trusted set-theoretic conclusion; strict mode rejects the step. |
+| `release axiom_of_choice` | The family is a set and every member is proved nonempty. Preview (`new_pipeline`): `release axiom_of_choice: set F`; parse+exec wired; proof body is fact-only. | Stores `exist f fn(A S)family_union(S) st {$is_choice_function_for(S,S,fn(A S)S {A},f)}`. The existential body is atomic. |
+| `release zorn_lemma` | The set, binary relation, exact named upper-bound/maximality definitions, nonemptiness, partial-order laws, and chain-upper-bound obligation. Preview (`new_pipeline`): `release zorn_lemma: …`; parse+exec wired; prop-definition equality uses IR alignment (no alpha_normalize yet). | Stores `exist m S st {$M(m)}` using the supplied named maximality prop. The chain witness likewise uses the supplied atomic upper-bound prop. |
 | Terminal `import` command | Only the interactive REPL command grammar and module constraints; it is not a statement. | A qualified environment in the REPL's ephemeral manifest; maintained modules use real manifests instead. |
 | `eval` | The expression belongs to the supported executable subset. | Evaluation output, not a new mathematical proof fact. |
 
@@ -3417,10 +3418,11 @@ by contra:
 This is `unknown` because the temporary assumption concerns `1 = 2`, while the
 named impossible fact `2 = 3` was never derived.
 
-### Finite enumeration and range cases
+### Finite enumeration and range expansion
 
-Enumeration expands a concrete finite domain. `by closed_range as cases`
-records equality cases for a known closed-range member.
+`by enumerate finite_set` proves a forall by checking a concrete finite
+domain. Separately, `expand:` turns known numeric-range membership into
+equality cases for later `by cases`.
 
 ```litex
 have P finite_set = {1, 2, 3}
@@ -3431,9 +3433,6 @@ by enumerate finite_set:
 
 by enumerate finite_set:
     ? forall y {1, 2, 3} => y = 1 or y = 2 or y = 3
-
-have i1 closed_range(1, 3)
-by closed_range as cases: i1 $in 1...3
 ```
 
 Finite-set enumeration always takes its target from the first indented
@@ -3450,29 +3449,28 @@ by enumerate finite_set:
 This is an `error` because `N` is not a finite displayed domain available for
 exhaustive enumeration.
 
-The related forms are `by enumerate range` and `by enumerate closed_range`.
 Half-open domains use `range(start, end)` (elements `start..end`); closed
 domains use `closed_range(start, end)` or `start...end`.
 
 ```litex
 have x Z
 trust x $in range(1, 3)
-by enumerate range: x $in range(1, 3)
+expand: x $in range(1, 3)
 
 have y Z
 trust y $in closed_range(1, 2)
-by enumerate closed_range: y $in closed_range(1, 2)
+expand: y $in closed_range(1, 2)
 
 have z Z
 trust z $in 1...2
-by closed_range as cases: z $in 1...2
+expand: z $in 1...2
 ```
 
 > **Preview (`new_pipeline`):** `range(...)` / `closed_range(...)` are keyword
 > object constructors (same surface as display). `1...n` still parses as a
-> closed range. Range expansion is spelled `expand: e $in …` (not
-> `by enumerate range` / `by closed_range as cases`). It first requires the
-> membership fact, then stores the expanded equality cases.
+> closed range. `expand: e $in …` first requires the membership fact, then
+> stores the expanded equality cases. Old `by enumerate range` /
+> `by closed_range as cases` surfaces are removed.
 
 ### Integer induction
 
@@ -3644,25 +3642,24 @@ the same user-defined predicate.
 > restriction as other NP by-stmts). Soft-fail on missing obligations or prop
 > interface checks; the trusted conclusions are stored after checks succeed.
 
-`by regularity_axiom` exposes set-theoretic foundation as an explicit trusted
-step (default pipeline spelling). Preview (`new_pipeline`) uses
-`release regularity_axiom(A)`:
+`release regularity_axiom` exposes set-theoretic foundation as an explicit trusted
+step. Preview (`new_pipeline`) spelling:
 
 | Form | Checked obligations | Trusted conclusion |
 |---|---|---|
-| `by regularity_axiom(A)` | `A` is nonempty | A member of `A` disjoint from `A` |
+| `release regularity_axiom(A)` | `A` is nonempty | A member of `A` disjoint from `A` |
 
 This form is not an ordinary derived proof. Its statement form and output keep
 the direct boundary visible; `-strict` rejects it. Litex does not taint later
 theorems or facts with transitive trust metadata.
 
-`by axiom_of_choice` now stores its chooser through the builtin named property:
+`release axiom_of_choice` stores its chooser through the builtin named property:
 
 ```litex
 have F set
 trust forall A F:
     $is_nonempty_set(A)
-by axiom_of_choice: set F:
+release axiom_of_choice: set F:
     forall A F:
         $is_nonempty_set(A)
 
@@ -3671,7 +3668,7 @@ forall A F:
     chooser(A) $in A
 ```
 
-`by zorn_lemma` requires the two quantified conditions that occur below
+`release zorn_lemma` requires the two quantified conditions that occur below
 existentials to be named concrete props. Their signatures and definitions are
 checked exactly before any obligation is accepted:
 
@@ -3687,7 +3684,7 @@ prop maximal(m S):
         =>:
             x = m
 
-by zorn_lemma: set S, prop leq, prop upper_bound, prop maximal:
+release zorn_lemma: set S, prop leq, prop upper_bound, prop maximal:
     trust $is_nonempty_set(S)
     trust:
         forall x S:
@@ -4146,6 +4143,9 @@ forall a, b R+:
 > `0 % 5 = 0`, `a % 1 = 0`, `1 % 5 = 1`, nested same-mod absorption.
 > Four proof_nodes use narrow `trust` only for current WD holes
 > (quotient positivity / sqrt denom / log nonzero / mod-result in `Z`).
+> Equality identities wave 3 (preview): `min`/`max` idempotent and commutative;
+> `abs(abs(a)) = abs(a)`; `exp(ln(x)) = x` (`x` in `R+`); `ln(exp(x)) = x`;
+> `floor(n) = n` / `ceil(n) = n` (`n` in `Z`); `a % a = 0` (`a != 0`).
 > One `.lit` per accepted rule under
 > [`examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/`](../examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/)
 > and

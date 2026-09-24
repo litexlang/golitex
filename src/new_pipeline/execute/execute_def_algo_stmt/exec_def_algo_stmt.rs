@@ -103,3 +103,76 @@ pub fn exec_def_algo_stmt(
         closing,
     }))
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::new_pipeline::execute::exec_stmt_result::{
+        ExecDefinitionStmtResult, ExecStmtResult,
+    };
+    use crate::new_pipeline::launch_command::LaunchCommand;
+    use crate::new_pipeline::tokenize::Tokenizer;
+
+    fn runtime_with_file_env() -> Runtime {
+        Runtime::new(LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: false,
+        })
+    }
+
+    fn exec_one(runtime: &mut Runtime, code: &str) -> ExecStmtResult {
+        let tokens = Tokenizer::new()
+            .tokenize(code, runtime.current_file.clone())
+            .expect("tokenize");
+        let stmts = runtime.parse(&tokens).expect("parse");
+        assert_eq!(stmts.len(), 1, "expected exactly one stmt in:\n{code}");
+        runtime
+            .exec_stmt(&stmts[0])
+            .expect("exec_stmt RuntimeResult")
+    }
+
+    #[test]
+    fn def_algo_for_fn_by_cases_succeeds_and_stores() {
+        let mut runtime = runtime_with_file_env();
+        let have_fn = "have fn nonzero_flag(x R) R by cases:\n    case x = 0: 0\n    case x != 0: 1";
+        assert!(
+            !exec_one(&mut runtime, have_fn).is_failed(),
+            "have fn by cases should succeed"
+        );
+
+        let algo = "have algo for fn nonzero_flag(x):\n    case x = 0: 0\n    case x != 0: 1";
+        let r = exec_one(&mut runtime, algo);
+        match &r {
+            ExecStmtResult::Definition(ExecDefinitionStmtResult::DefAlgo(
+                ExecDefAlgoStmtResult::Success(_),
+            )) => {}
+            ExecStmtResult::Definition(ExecDefinitionStmtResult::DefAlgo(
+                ExecDefAlgoStmtResult::Failed(f),
+            )) => panic!("algo failed: {f:?}"),
+            other => panic!("unexpected result: failed={}", other.is_failed()),
+        }
+        assert!(
+            runtime.def_algo_visible_in_stack("nonzero_flag").is_some(),
+            "algo should be stored"
+        );
+    }
+
+    #[test]
+    fn def_algo_mismatched_default_soft_fails() {
+        let mut runtime = runtime_with_file_env();
+        assert!(!exec_one(&mut runtime, "have fn f(x R) R = x").is_failed());
+        let r = exec_one(&mut runtime, "have algo for fn f(x):\n    x + 1");
+        match r {
+            ExecStmtResult::Definition(ExecDefinitionStmtResult::DefAlgo(
+                ExecDefAlgoStmtResult::Failed(ExecDefAlgoStmtFailed::Default { .. }),
+            )) => {}
+            ExecStmtResult::Definition(ExecDefinitionStmtResult::DefAlgo(
+                ExecDefAlgoStmtResult::Failed(other),
+            )) => panic!("expected Default fail, got {other:?}"),
+            ExecStmtResult::Definition(ExecDefinitionStmtResult::DefAlgo(
+                ExecDefAlgoStmtResult::Success(_),
+            )) => panic!("expected soft fail for mismatched algo"),
+            other => panic!("unexpected result: failed={}", other.is_failed()),
+        }
+    }
+}

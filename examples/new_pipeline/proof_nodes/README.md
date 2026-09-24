@@ -44,6 +44,12 @@ arg_power/product/quotient/reciprocal/change_of_base; `zero_mod`, `mod_one`,
 `one_mod_at_least_two`, `nested_same_mod_absorption`.
 Four files use narrow `trust` only for current WD holes (quotient positivity /
 sqrt-denom / log-nonzero / mod-result in `Z`); remove when WD catches up.
+Equality BuiltinRule identities (Stage B wave 3):
+`min`/`max` idempotent + commutative; `abs(abs(a))=abs(a)`;
+`exp(ln(x))=x` (`R+`); `ln(exp(x))=x`; `floor(n)=n` / `ceil(n)=n` (`Z`);
+`a % a = 0` (`a != 0`) — see `min_*.lit`, `max_*.lit`, `abs_abs_absorption.lit`,
+`exp_of_ln.lit`, `ln_of_exp.lit`, `floor_of_integer.lit`, `ceil_of_integer.lit`,
+`mod_self_zero.lit`.
 Equality BuiltinRewrite: ClosedNumericEqualSubstitution (equal + atomic) and
 atomic KnownEqualObjSubstitution.
 No equality KnownRewrite slot (dead; = uses EqualIr / known_equivalence_classes graph).

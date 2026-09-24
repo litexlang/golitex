@@ -22,6 +22,12 @@ use super::by_equality_identities_wave2::{
     SqrtProductBuiltinRuleProof, SqrtQuotientBuiltinRuleProof, SqrtSquareBuiltinRuleProof,
     SqrtZeroBuiltinRuleProof, ZeroModBuiltinRuleProof, ZeroToPosNatPowerBuiltinRuleProof,
 };
+use super::by_equality_identities_wave3::{
+    AbsAbsAbsorptionBuiltinRuleProof, CeilOfIntegerBuiltinRuleProof, ExpOfLnBuiltinRuleProof,
+    FloorOfIntegerBuiltinRuleProof, LnOfExpBuiltinRuleProof, MaxCommutativeBuiltinRuleProof,
+    MaxIdempotentBuiltinRuleProof, MinCommutativeBuiltinRuleProof, MinIdempotentBuiltinRuleProof,
+    ModSelfZeroBuiltinRuleProof,
+};
 use super::by_power_laws::{
     PowerOfPowerBuiltinRuleProof, PowerOfProductBuiltinRuleProof,
     PowerProductSameBaseBuiltinRuleProof, QuotientAsMulNegOnePowerBuiltinRuleProof,
@@ -82,6 +88,16 @@ pub enum EqualitySearchProofByBuiltinRule {
     ModOne(ModOneBuiltinRuleProof),
     OneModAtLeastTwo(OneModAtLeastTwoBuiltinRuleProof),
     NestedSameModAbsorption(NestedSameModAbsorptionBuiltinRuleProof),
+    MinIdempotent(MinIdempotentBuiltinRuleProof),
+    MaxIdempotent(MaxIdempotentBuiltinRuleProof),
+    MinCommutative(MinCommutativeBuiltinRuleProof),
+    MaxCommutative(MaxCommutativeBuiltinRuleProof),
+    AbsAbsAbsorption(AbsAbsAbsorptionBuiltinRuleProof),
+    ExpOfLn(ExpOfLnBuiltinRuleProof),
+    LnOfExp(LnOfExpBuiltinRuleProof),
+    FloorOfInteger(FloorOfIntegerBuiltinRuleProof),
+    CeilOfInteger(CeilOfIntegerBuiltinRuleProof),
+    ModSelfZero(ModSelfZeroBuiltinRuleProof),
 }
 
 // Builtin Calculation: both sides of an equality reduce to the same value
