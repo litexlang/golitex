@@ -24,14 +24,9 @@ pub enum ExecByStmtResult {
     FnExtension(ExecByFnExtensionStmtResult),
     EnumerateFiniteSet(ExecByEnumerateFiniteSetStmtResult),
     For(ExecByForStmtResult),
-    EnumerateRange(ExecByEnumerateRangeStmtResult),
-    ClosedRangeAsCases(ExecByClosedRangeAsCasesStmtResult),
     Thm(ExecByThmStmtResult),
     Induc(ExecByInducStmtResult),
     StrongInduc(ExecByStrongInducStmtResult),
-    RegularityAxiom(ExecByRegularityAxiomStmtResult),
-    AxiomOfChoice(ExecByAxiomOfChoiceStmtResult),
-    ZornLemma(ExecByZornLemmaStmtResult),
 }
 
 impl ExecByStmtResult {
@@ -44,14 +39,9 @@ impl ExecByStmtResult {
             Self::FnExtension(r) => r.is_failed(),
             Self::EnumerateFiniteSet(r) => r.is_failed(),
             Self::For(r) => r.is_failed(),
-            Self::EnumerateRange(r) => r.is_failed(),
-            Self::ClosedRangeAsCases(r) => r.is_failed(),
             Self::Thm(r) => r.is_failed(),
             Self::Induc(r) => r.is_failed(),
             Self::StrongInduc(r) => r.is_failed(),
-            Self::RegularityAxiom(r) => r.is_failed(),
-            Self::AxiomOfChoice(r) => r.is_failed(),
-            Self::ZornLemma(r) => r.is_failed(),
         }
     }
 }
@@ -512,89 +502,65 @@ impl ExecByForStmtResult {
     }
 }
 
-pub enum ExecByEnumerateRangeStmtResult {
-    Success(ExecByEnumerateRangeStmtSuccess),
-    Failed(ExecByEnumerateRangeStmtFailed),
+pub enum ExecExpandRangeStmtResult {
+    Success(ExecExpandRangeStmtSuccess),
+    Failed(ExecExpandRangeStmtFailed),
 }
 
-pub struct ExecByEnumerateRangeStmtSuccess {
+pub struct ExecExpandRangeStmtSuccess {
     pub values: Vec<crate::new_pipeline::ast::obj::Obj>,
     pub membership: VerifyFactResult,
     pub local_env: Box<ExecEnv>,
     pub stored: StoreFactAndInferResult,
 }
 
-pub enum ExecByEnumerateRangeStmtFailed {
+pub enum ExecExpandRangeStmtFailed {
     Domain(String),
     Membership(VerifyFactResult),
     Store(String),
 }
 
-impl ExecByEnumerateRangeStmtResult {
-    pub fn is_failed(&self) -> bool {
-        matches!(self, Self::Failed(_))
-    }
-}
-
-pub enum ExecByClosedRangeAsCasesStmtResult {
-    Success(ExecByClosedRangeAsCasesStmtSuccess),
-    Failed(ExecByClosedRangeAsCasesStmtFailed),
-}
-
-pub struct ExecByClosedRangeAsCasesStmtSuccess {
-    pub values: Vec<crate::new_pipeline::ast::obj::Obj>,
-    pub membership: VerifyFactResult,
-    pub local_env: Box<ExecEnv>,
-    pub stored: StoreFactAndInferResult,
-}
-
-pub enum ExecByClosedRangeAsCasesStmtFailed {
-    Domain(String),
-    Membership(VerifyFactResult),
-    Store(String),
-}
-
-impl ExecByClosedRangeAsCasesStmtResult {
+impl ExecExpandRangeStmtResult {
     pub fn is_failed(&self) -> bool {
         matches!(self, Self::Failed(_))
     }
 }
 
 // ---------------------------------------------------------------------------
-// by regularity_axiom / axiom_of_choice / zorn_lemma
+// release regularity_axiom / axiom_of_choice / zorn_lemma
 // ---------------------------------------------------------------------------
 
-pub enum ExecByRegularityAxiomStmtResult {
-    Success(ExecByRegularityAxiomStmtSuccess),
-    Failed(ExecByRegularityAxiomStmtFailed),
+pub enum ExecReleaseRegularityAxiomStmtResult {
+    Success(ExecReleaseRegularityAxiomStmtSuccess),
+    Failed(ExecReleaseRegularityAxiomStmtFailed),
 }
 
 // Stage order: set_wd → nonempty → stored (trusted regularity conclusion).
-pub struct ExecByRegularityAxiomStmtSuccess {
+pub struct ExecReleaseRegularityAxiomStmtSuccess {
     pub set_wd: VerifyObjWellDefinedResult,
     pub nonempty: VerifyFactResult,
     pub stored: StoreFactAndInferResult,
 }
 
-pub enum ExecByRegularityAxiomStmtFailed {
+pub enum ExecReleaseRegularityAxiomStmtFailed {
     SetWd(VerifyObjWellDefinedResult),
     Nonempty(VerifyFactResult),
     Store(String),
 }
 
-impl ExecByRegularityAxiomStmtResult {
+impl ExecReleaseRegularityAxiomStmtResult {
     pub fn is_failed(&self) -> bool {
         matches!(self, Self::Failed(_))
     }
 }
 
-pub enum ExecByAxiomOfChoiceStmtResult {
-    Success(ExecByAxiomOfChoiceStmtSuccess),
-    Failed(ExecByAxiomOfChoiceStmtFailed),
+pub enum ExecReleaseAxiomOfChoiceStmtResult {
+    Success(ExecReleaseAxiomOfChoiceStmtSuccess),
+    Failed(ExecReleaseAxiomOfChoiceStmtFailed),
 }
 
 // Stage order: family_wd → proof_steps → obligations → local_env → stored.
-pub struct ExecByAxiomOfChoiceStmtSuccess {
+pub struct ExecReleaseAxiomOfChoiceStmtSuccess {
     pub family_wd: VerifyObjWellDefinedResult,
     pub proof_steps: Vec<ByProofStepResult>,
     pub obligations: Vec<VerifyFactResult>,
@@ -602,7 +568,7 @@ pub struct ExecByAxiomOfChoiceStmtSuccess {
     pub stored: StoreFactAndInferResult,
 }
 
-pub enum ExecByAxiomOfChoiceStmtFailed {
+pub enum ExecReleaseAxiomOfChoiceStmtFailed {
     FamilyWd(VerifyObjWellDefinedResult),
     ProofBody(ByProofBodyFailed),
     Obligation {
@@ -612,19 +578,19 @@ pub enum ExecByAxiomOfChoiceStmtFailed {
     Store(String),
 }
 
-impl ExecByAxiomOfChoiceStmtResult {
+impl ExecReleaseAxiomOfChoiceStmtResult {
     pub fn is_failed(&self) -> bool {
         matches!(self, Self::Failed(_))
     }
 }
 
-pub enum ExecByZornLemmaStmtResult {
-    Success(ExecByZornLemmaStmtSuccess),
-    Failed(ExecByZornLemmaStmtFailed),
+pub enum ExecReleaseZornLemmaStmtResult {
+    Success(ExecReleaseZornLemmaStmtSuccess),
+    Failed(ExecReleaseZornLemmaStmtFailed),
 }
 
 // Stage order: set_wd → prop interface checks → proof_steps → obligations → local_env → stored.
-pub struct ExecByZornLemmaStmtSuccess {
+pub struct ExecReleaseZornLemmaStmtSuccess {
     pub set_wd: VerifyObjWellDefinedResult,
     pub proof_steps: Vec<ByProofStepResult>,
     pub obligations: Vec<VerifyFactResult>,
@@ -632,7 +598,7 @@ pub struct ExecByZornLemmaStmtSuccess {
     pub stored: StoreFactAndInferResult,
 }
 
-pub enum ExecByZornLemmaStmtFailed {
+pub enum ExecReleaseZornLemmaStmtFailed {
     SetWd(VerifyObjWellDefinedResult),
     PropInterface(String),
     ProofBody(ByProofBodyFailed),
@@ -643,7 +609,7 @@ pub enum ExecByZornLemmaStmtFailed {
     Store(String),
 }
 
-impl ExecByZornLemmaStmtResult {
+impl ExecReleaseZornLemmaStmtResult {
     pub fn is_failed(&self) -> bool {
         matches!(self, Self::Failed(_))
     }

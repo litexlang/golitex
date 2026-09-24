@@ -1,0 +1,8 @@
+# Stmt: Definition.DefAlgoStmt soft-fail when implementation disagrees
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/definition/def_algo_mismatch.lit
+# Expect: statement outcome error (Failed), not session_error
+
+have fn f(x R) R = x
+
+have algo for fn f(x):
+    x + 1

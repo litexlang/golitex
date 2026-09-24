@@ -1,6 +1,5 @@
 # Node: equal.ByBuiltinRule.SqrtOfSquare
 # Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/sqrt_of_square.lit
 
-have a R
-0 <= a
+have a R+
 sqrt(a^2) = a

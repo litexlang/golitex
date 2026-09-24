@@ -20,7 +20,7 @@ claim:
         q^2 % 10 = 6
         =>:
             q = 4 or q = 6
-    by enumerate range: q $in range(0, 10)
+    expand: q $in range(0, 10)
     by cases:
         ? q = 4 or q = 6
         case q = 0:

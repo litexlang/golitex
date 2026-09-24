@@ -81,7 +81,7 @@ ExecStmtResult                    // stmt-kind dispatch only
   Trust(ExecTrustBoundaryStmtResult)
   By(ExecByStmtResult)
   Register(ExecRegisterStmtResult)
-  Release(ExecReleaseStmtResult)   // Thm / StructDef / ObjDef
+  ReleaseAndExpand(ExecReleaseAndExpandStmtResult)   // Thm / StructDef / ObjDef / ExpandRange / Zorn / AoC / Regularity
   ProofBlock(ExecProofBlockStmtResult)
 
 Leaf *Result = Success(*SuccessResult) | Failed(...)

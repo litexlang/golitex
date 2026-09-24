@@ -2155,7 +2155,7 @@ struct TaggedPoint:
         "inner law must miss before release"
     );
     match exec_one(&mut runtime, "release struct def p.point") {
-        ESR::Release(crate::new_pipeline::execute::ExecReleaseStmtResult::StructDef(
+        ESR::ReleaseAndExpand(crate::new_pipeline::execute::ExecReleaseAndExpandStmtResult::StructDef(
             ExecReleaseStructDefStmtResult::Success(_),
         )) => {}
         other => panic!("expected nested release success, got failed={}", other.is_failed()),
@@ -2253,7 +2253,7 @@ fn release_struct_def_without_carrier_soft_fails() {
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "have x R").is_failed(), "have x R");
     match exec_one(&mut runtime, "release struct def x") {
-        ESR::Release(crate::new_pipeline::execute::ExecReleaseStmtResult::StructDef(
+        ESR::ReleaseAndExpand(crate::new_pipeline::execute::ExecReleaseAndExpandStmtResult::StructDef(
             ExecReleaseStructDefStmtResult::Failed(
                 ExecReleaseStructDefStmtFailed::NoDefinitionOwnedCarrier { .. },
             ),
@@ -2325,7 +2325,7 @@ fn release_obj_def_smoke() {
         };
         use crate::new_pipeline::execute::ExecStmtResult;
         match exec_one(&mut runtime, "release obj def choose") {
-            ExecStmtResult::Release(crate::new_pipeline::execute::ExecReleaseStmtResult::ObjDef(
+            ExecStmtResult::ReleaseAndExpand(crate::new_pipeline::execute::ExecReleaseAndExpandStmtResult::ObjDef(
                 ExecReleaseObjDefStmtResult::Success(ok),
             )) => {
                 assert!(

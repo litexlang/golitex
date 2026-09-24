@@ -2,8 +2,8 @@ use super::helper::{
     proof_verify_state, run_fact_only_proof_steps, store_goal_fact, verify_goal_fact,
 };
 use super::result::{
-    ExecByAxiomOfChoiceStmtFailed, ExecByAxiomOfChoiceStmtResult, ExecByAxiomOfChoiceStmtSuccess,
-    ExecByStmtResult,
+    ExecReleaseAxiomOfChoiceStmtFailed, ExecReleaseAxiomOfChoiceStmtResult,
+    ExecReleaseAxiomOfChoiceStmtSuccess,
 };
 use crate::new_pipeline::ast::fact::{
     AtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact, IsNonemptySetFact, IsSetFact, NormalAtomicFact,
@@ -15,20 +15,18 @@ use crate::new_pipeline::ast::obj::{AnonymousFn, FamilyUnion, FnSet, IdentifierO
 use crate::new_pipeline::ast::param::{
     ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
 };
-use crate::new_pipeline::ast::stmt::ByAxiomOfChoiceStmt;
+use crate::new_pipeline::ast::stmt::ReleaseAxiomOfChoiceStmt;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
-pub fn exec_by_axiom_of_choice_stmt(
+pub fn exec_release_axiom_of_choice_stmt(
     runtime: &mut Runtime,
-    stmt: &ByAxiomOfChoiceStmt,
-) -> RuntimeResult<ExecByStmtResult> {
+    stmt: &ReleaseAxiomOfChoiceStmt,
+) -> RuntimeResult<ExecReleaseAxiomOfChoiceStmtResult> {
     let family_wd =
         runtime.verify_obj_well_definedness(&stmt.family, proof_verify_state())?;
     if family_wd.is_failed() {
-        return Ok(ExecByStmtResult::AxiomOfChoice(
-            ExecByAxiomOfChoiceStmtResult::Failed(ExecByAxiomOfChoiceStmtFailed::FamilyWd(
-                family_wd,
-            )),
+        return Ok(ExecReleaseAxiomOfChoiceStmtResult::Failed(
+            ExecReleaseAxiomOfChoiceStmtFailed::FamilyWd(family_wd),
         ));
     }
 
@@ -36,13 +34,13 @@ pub fn exec_by_axiom_of_choice_stmt(
     let (local_outcome, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
         let proof_steps = match run_fact_only_proof_steps(rt, &stmt.proof)? {
             Ok(steps) => steps,
-            Err(failed) => return Ok(Err(ExecByAxiomOfChoiceStmtFailed::ProofBody(failed))),
+            Err(failed) => return Ok(Err(ExecReleaseAxiomOfChoiceStmtFailed::ProofBody(failed))),
         };
         let mut obligation_proofs = Vec::with_capacity(obligations.len());
         for (index, obligation) in obligations.iter().enumerate() {
             let proof = verify_goal_fact(rt, obligation)?;
             if proof.is_failed() {
-                return Ok(Err(ExecByAxiomOfChoiceStmtFailed::Obligation {
+                return Ok(Err(ExecReleaseAxiomOfChoiceStmtFailed::Obligation {
                     index,
                     result: proof,
                 }));
@@ -56,9 +54,7 @@ pub fn exec_by_axiom_of_choice_stmt(
     let (proof_steps, obligation_proofs) = match local_outcome {
         Ok(v) => v,
         Err(failed) => {
-            return Ok(ExecByStmtResult::AxiomOfChoice(
-                ExecByAxiomOfChoiceStmtResult::Failed(failed),
-            ));
+            return Ok(ExecReleaseAxiomOfChoiceStmtResult::Failed(failed));
         }
     };
 
@@ -68,20 +64,20 @@ pub fn exec_by_axiom_of_choice_stmt(
     let stored = match store_goal_fact(runtime, &choice_fact)? {
         Ok(s) => s,
         Err(msg) => {
-            return Ok(ExecByStmtResult::AxiomOfChoice(
-                ExecByAxiomOfChoiceStmtResult::Failed(ExecByAxiomOfChoiceStmtFailed::Store(msg)),
+            return Ok(ExecReleaseAxiomOfChoiceStmtResult::Failed(
+                ExecReleaseAxiomOfChoiceStmtFailed::Store(msg),
             ));
         }
     };
 
-    Ok(ExecByStmtResult::AxiomOfChoice(
-        ExecByAxiomOfChoiceStmtResult::Success(ExecByAxiomOfChoiceStmtSuccess {
+    Ok(ExecReleaseAxiomOfChoiceStmtResult::Success(
+        ExecReleaseAxiomOfChoiceStmtSuccess {
             family_wd,
             proof_steps,
             obligations: obligation_proofs,
             local_env,
             stored,
-        }),
+        },
     ))
 }
 

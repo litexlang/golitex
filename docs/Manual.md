@@ -667,7 +667,7 @@ universal over `A`, even forming `replacement(P, A)` is a well-definedness
 > (calls, set formers, …). Passing a prop name that way would look odd and
 > blur the prop/obj boundary. The tagged form
 > `have by replacement_axiom: Img from prop P, set A` (same style as
-> `by axiom_of_choice: set F` / `by zorn_lemma: …`) keeps `P` labeled as a prop
+> `release axiom_of_choice: set F` / `release zorn_lemma: …`) keeps `P` labeled as a prop
 > and `A` as a set. `fn_range(f)` stays available for function ranges. Tracer:
 > [`examples/new_pipeline/stmt_nodes/definition/have_by_replacement_axiom.lit`](../examples/new_pipeline/stmt_nodes/definition/have_by_replacement_axiom.lit).
 
@@ -1960,11 +1960,18 @@ runtime. This section gives each statement family one canonical home.
 > | `by contra:` | Contradiction from the negation |
 > | `by induc` / `by strong_induc` | Induction / strong induction |
 > | `by for:` | Finite range / cart enumeration |
-> | `by enumerate:` / `by enumerate_range:` / `by closed_range_as_cases:` | Finite-set or range caseing |
+> | `by enumerate finite_set:` | Finite-set caseing |
 > | `by extension:` / `by fn_extension:` | Extensionality for sets / functions |
 > | `by def:` | Unfold a concrete / builtin definition |
 > | `by thm name(…): fact` | Cite a theorem for one selected conclusion |
-> | `by regularity_axiom:` / `by axiom_of_choice:` / `by zorn_lemma:` | Named set-theoretic methods |
+>
+> **`ReleaseAndExpand`:**
+>
+> | How | What |
+> |---|---|
+> | `expand: e $in range(…)` / `closed_range(…)` / `a...b` | Expand known membership into equality cases |
+> | `release thm` / `struct def` / `obj def` | Unpack packaged definitions |
+> | `release regularity_axiom(S)` / `axiom_of_choice:` / `zorn_lemma:` | Named set-theoretic axioms |
 >
 > Runnable tracers for each wired arm live under
 > `examples/new_pipeline/stmt_nodes/`. Parse surface details:
@@ -2411,6 +2418,21 @@ have algo for f(x):
 
 This is an `error`; the implementation does not agree with the defined
 function.
+
+> **Preview (`new_pipeline`):** the surface is `have algo for fn f(x): …`
+> (the `fn` keyword marks attachment to an existing mathematical function).
+> Execution checks case/default agreement then stores the presentation;
+> `eval` does not yet consume user algos. Tracer: `examples/new_pipeline/stmt_nodes/definition/def_algo.lit`.
+>
+> ```litex
+> have fn parity_value(n Z) Z by cases:
+>     case n % 2 = 0: 0
+>     case n % 2 != 0: 1
+>
+> have algo for fn parity_value(n):
+>     case n % 2 = 0: 0
+>     case n % 2 != 0: 1
+> ```
 
 ### Extracting a proved numerical step to Python or C (experimental)
 
@@ -2890,9 +2912,9 @@ introductions.
 | `release struct def e` | `e` has a definition-owned struct carrier and `e $in &Struct` verifies. | Exactly one layer of tuple/identity bridges, field carriers, and instantiated struct laws. |
 | `release obj def I` | Preview (`new_pipeline`): `I` is one identifier (optionally `mod::export::`-qualified) with a `StoredIdentifierDefinition` other than a binder `ParamType`. | Re-stores that definition's type / equality / body / fn facts into the current Env (subjects use the written spelling of `I`). For `have fn … by exist!`, re-stores membership + property + uniqueness. |
 | Predicate-property registrations | Exact reflexive/symmetric/transitive forall shape. Default: `by *_prop`. Preview (`new_pipeline`): `register reflexive` / `symmetric` / `transitive`; one `? forall …` goal only; no indented proof body. | A reusable property route for later rewriting. |
-| `by regularity_axiom` | Its displayed set/nonemptiness obligations. Preview (`new_pipeline`): parse+exec wired; fact-only local proofs N/A (no body). | An explicitly trusted set-theoretic conclusion; strict mode rejects the step. |
-| `by axiom_of_choice` | The family is a set and every member is proved nonempty. Preview (`new_pipeline`): parse+exec wired; proof body is fact-only. | Stores `exist f fn(A S)family_union(S) st {$is_choice_function_for(S,S,fn(A S)S {A},f)}`. The existential body is atomic. |
-| `by zorn_lemma` | The set, binary relation, exact named upper-bound/maximality definitions, nonemptiness, partial-order laws, and chain-upper-bound obligation. Preview (`new_pipeline`): parse+exec wired; prop-definition equality uses IR alignment (no alpha_normalize yet). | Stores `exist m S st {$M(m)}` using the supplied named maximality prop. The chain witness likewise uses the supplied atomic upper-bound prop. |
+| `by regularity_axiom` | Its displayed set/nonemptiness obligations. Preview (`new_pipeline`): `release regularity_axiom(S)`; parse+exec wired; fact-only local proofs N/A (no body). | An explicitly trusted set-theoretic conclusion; strict mode rejects the step. |
+| `by axiom_of_choice` | The family is a set and every member is proved nonempty. Preview (`new_pipeline`): `release axiom_of_choice: set F`; parse+exec wired; proof body is fact-only. | Stores `exist f fn(A S)family_union(S) st {$is_choice_function_for(S,S,fn(A S)S {A},f)}`. The existential body is atomic. |
+| `by zorn_lemma` | The set, binary relation, exact named upper-bound/maximality definitions, nonemptiness, partial-order laws, and chain-upper-bound obligation. Preview (`new_pipeline`): `release zorn_lemma: …`; parse+exec wired; prop-definition equality uses IR alignment (no alpha_normalize yet). | Stores `exist m S st {$M(m)}` using the supplied named maximality prop. The chain witness likewise uses the supplied atomic upper-bound prop. |
 | Terminal `import` command | Only the interactive REPL command grammar and module constraints; it is not a statement. | A qualified environment in the REPL's ephemeral manifest; maintained modules use real manifests instead. |
 | `eval` | The expression belongs to the supported executable subset. | Evaluation output, not a new mathematical proof fact. |
 
@@ -3448,8 +3470,9 @@ by closed_range as cases: z $in 1...2
 
 > **Preview (`new_pipeline`):** `range(...)` / `closed_range(...)` are keyword
 > object constructors (same surface as display). `1...n` still parses as a
-> closed range. These `by` forms first require the membership fact, then store
-> the expanded equality cases.
+> closed range. Range expansion is spelled `expand: e $in …` (not
+> `by enumerate range` / `by closed_range as cases`). It first requires the
+> membership fact, then stores the expanded equality cases.
 
 ### Integer induction
 
@@ -3499,9 +3522,9 @@ concrete finite list set.
 > available. The induction parameter is bound in `Z`, and the stored conclusion
 > is `forall n Z: n >= base => P(n)`.
 >
-> Also wired under `LITEX_NEW_PIPELINE=1`: `by regularity_axiom(A)`,
-> `by axiom_of_choice: set F` (optional fact-only proof body), and
-> `by zorn_lemma: set S, prop P, prop U, prop M` (optional fact-only proof body).
+> Also wired under `LITEX_NEW_PIPELINE=1`: `release regularity_axiom(A)`,
+> `release axiom_of_choice: set F` (optional fact-only proof body), and
+> `release zorn_lemma: set S, prop P, prop U, prop M` (optional fact-only proof body).
 > Semantics match the default pipeline: prove the displayed obligations, then
 > store the trusted axiomatic conclusion.
 
@@ -3616,13 +3639,14 @@ the same user-defined predicate.
 
 ### Trusted preview proof steps
 
-> **Preview (`new_pipeline`):** `by regularity_axiom`, `by axiom_of_choice`, and
-> `by zorn_lemma` are parse+exec wired. Local proof bodies are fact-only (same
+> **Preview (`new_pipeline`):** `release regularity_axiom`, `release axiom_of_choice`, and
+> `release zorn_lemma` are parse+exec wired. Local proof bodies are fact-only (same
 > restriction as other NP by-stmts). Soft-fail on missing obligations or prop
 > interface checks; the trusted conclusions are stored after checks succeed.
 
 `by regularity_axiom` exposes set-theoretic foundation as an explicit trusted
-step:
+step (default pipeline spelling). Preview (`new_pipeline`) uses
+`release regularity_axiom(A)`:
 
 | Form | Checked obligations | Trusted conclusion |
 |---|---|---|
@@ -4115,12 +4139,14 @@ forall a, b R+:
 > Equality power laws (preview): `a^m * a^n = a^(m+n)`, `(a^m)^n = a^(m*n)`,
 > `(a*b)^n = a^n * b^n` (positive real base, positive natural exponents), and
 > `1/a = a^(-1)`, `a/b = a * b^(-1)` for nonzero denominators.
-> Equality identities wave 2 (preview): `1^a = 1`, `0^n = 0` (`n` in `N+`);
-> sqrt square / zero / one / of-square / product / quotient; abs of negation /
-> product / square; log base-self / of-one / of-power / arg-power / product /
-> quotient / reciprocal / change-of-base; `0 % a = 0`, `a % 1 = 0`,
-> `1 % m = 1` (`2 <= m`), and nested same-mod absorption.
-> One `.lit` per rule under
+> Equality identities wave 2 (preview): `1^a = 1` (`a` in `N`), `0^n = 0`
+> (`n` in `N+`); sqrt square / zero / one / of-square / product / quotient;
+> abs of negation / product / square; log base-self / of-one / of-power /
+> arg-power / product / quotient / reciprocal / change-of-base;
+> `0 % 5 = 0`, `a % 1 = 0`, `1 % 5 = 1`, nested same-mod absorption.
+> Four proof_nodes use narrow `trust` only for current WD holes
+> (quotient positivity / sqrt denom / log nonzero / mod-result in `Z`).
+> One `.lit` per accepted rule under
 > [`examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/`](../examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/)
 > and
 > [`examples/new_pipeline/proof_nodes/equal/by_builtin_rule/`](../examples/new_pipeline/proof_nodes/equal/by_builtin_rule/).

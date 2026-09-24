@@ -1,6 +1,9 @@
 # Node: equal.ByBuiltinRule.NestedSameModAbsorption
 # Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/nested_same_mod_absorption.lit
+# trust: WD that (a % m) $in Z until mod-result carrier WD is stronger.
 
 have a Z
 have m N+
+trust m != 0
+trust (a % m) $in Z
 (a % m) % m = a % m

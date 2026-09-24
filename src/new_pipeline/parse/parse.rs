@@ -1,7 +1,8 @@
 use super::keywords::{
-    ABSTRACT_PROP, ALGO, AXIOM, BY, CART, CLAIM, EVAL, FINITE_SEQ, FN, FOR, HAVE, IMPORT,
-    LET, MATRIX, OBJ, OBTAIN, PROP, QUESTION_GOAL, REGISTER, RELEASE, SEQ, SKETCH, STRATEGY,
-    STRONG_INDUC, STRUCT, TEMPLATE, THM, TRUST, TUPLE, WITNESS,
+    ABSTRACT_PROP, ALGO, AXIOM, AXIOM_OF_CHOICE, BY, CART, CLAIM, EVAL, EXPAND, FINITE_SEQ, FN,
+    FOR, HAVE, IMPORT, LET, MATRIX, OBJ, OBTAIN, PROP, QUESTION_GOAL, REGISTER, REGULARITY_AXIOM,
+    RELEASE, SEQ, SKETCH, STRATEGY, STRONG_INDUC, STRUCT, TEMPLATE, THM, TRUST, TUPLE, WITNESS,
+    ZORN_LEMMA,
 };
 use crate::new_pipeline::ast::stmt::Stmt;
 use crate::new_pipeline::runtime::{Runtime, RuntimeParseError, RuntimeResult};
@@ -68,13 +69,17 @@ impl Runtime {
                 Some(THM) => self.parse_release_thm_stmt(block),
                 Some(STRUCT) => self.parse_release_struct_def_stmt(block),
                 Some(OBJ) => self.parse_release_obj_def_stmt(block),
+                Some(ZORN_LEMMA) => self.parse_release_zorn_lemma_stmt(block),
+                Some(AXIOM_OF_CHOICE) => self.parse_release_axiom_of_choice_stmt(block),
+                Some(REGULARITY_AXIOM) => self.parse_release_regularity_axiom_stmt(block),
                 _ => Err(RuntimeParseError::new(
-                    "release: expected `thm …`, `struct def …`, or `obj def …`",
+                    "release: expected `thm …`, `struct def …`, `obj def …`, `zorn_lemma: …`, `axiom_of_choice: …`, or `regularity_axiom(…)`",
                     block.line,
                     block.source_path.clone(),
                 )
                 .into()),
             },
+            EXPAND => self.parse_expand_range_stmt(block),
             BY => self.parse_by_stmt(block),
             REGISTER => self.parse_register_stmt(block),
             _ => self.parse_fact_stmt(block),
@@ -84,14 +89,17 @@ impl Runtime {
     fn parse_have_dispatch(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
         match block.header.get(1).map(String::as_str) {
             Some(ALGO) => match block.header.get(2).map(String::as_str) {
-                Some(FOR) => Err(RuntimeParseError::new(
-                    "have algo for: not wired yet in new_pipeline",
-                    block.line,
-                    block.source_path.clone(),
-                )
-                .into()),
+                Some(FOR) => match block.header.get(3).map(String::as_str) {
+                    Some(FN) => self.parse_have_algo_for_fn_stmt(block),
+                    _ => Err(RuntimeParseError::new(
+                        "have algo for: expected `fn …` (executable presentation of an existing function)",
+                        block.line,
+                        block.source_path.clone(),
+                    )
+                    .into()),
+                },
                 _ => Err(RuntimeParseError::new(
-                    "have algo: expected `for …`",
+                    "have algo: expected `for fn …`",
                     block.line,
                     block.source_path.clone(),
                 )

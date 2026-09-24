@@ -1,22 +1,19 @@
 use super::super::keywords::{
     AXIOM_OF_CHOICE, BY, CASE, CASES, COLON, COMMA, CONTRA, DEF, EQUAL, FROM, IMPOSSIBLE, INDUC,
-    LEFT_PAREN, MOD_FLAT_SIGN, MOD_SIGN, OBJ, PROP, QUESTION_GOAL, REGULARITY_AXIOM, RELEASE,
-    RIGHT_ARROW, RIGHT_PAREN, SET, STRONG_INDUC, STRUCT, EXTENSION, FN_EXTENSION, THM, ENUMERATE,
-    FOR, CLOSED_RANGE, FINITE_SET, FACT_PREFIX, AS, RANGE, IN, ZORN_LEMMA,
+    LEFT_PAREN, MOD_FLAT_SIGN, MOD_SIGN, QUESTION_GOAL, REGULARITY_AXIOM, RIGHT_ARROW, RIGHT_PAREN,
+    STRONG_INDUC, EXTENSION, FN_EXTENSION, THM, ENUMERATE, FOR, CLOSED_RANGE, FINITE_SET, RANGE,
+    ZORN_LEMMA,
 };
-use super::super::object::{is_simple_name, parse_obj, parse_obj_list_paren};
-use crate::new_pipeline::ast::obj::{Obj, SetFormer};
+use super::super::object::{is_simple_name, parse_obj};
 use crate::new_pipeline::ast::fact::{
     AndChainAtomicFact, AtomicFact, ExistOrAndChainAtomicFact, Fact,
 };
 use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::stmt::{
-    ByAxiomOfChoiceStmt, ByCasesStmt, ByContraStmt, ByDefStmt, ByInducStmt,
-    ByRegularityAxiomStmt, ByStmt, ByStrongInducStmt, ByExtensionStmt, ByFnExtensionStmt,
-    ByZornLemmaStmt, ClosedRangeOrRange, ByClosedRangeAsCasesStmt, ByEnumerateRangeStmt,
-    ByForStmt, ByEnumerateFiniteSetStmt, ByThmStmt, ReleaseObjDefStmt, ReleaseStmt,
-    ReleaseStructDefStmt, ReleaseThmStmt, Stmt, TheoremCall, TheoremCallArguments,
+    ByCasesStmt, ByContraStmt, ByDefStmt, ByInducStmt, ByStmt, ByStrongInducStmt, ByExtensionStmt,
+    ByFnExtensionStmt, ByForStmt, ByEnumerateFiniteSetStmt, ByThmStmt, ReleaseAndExpandStmt,
+    ReleaseThmStmt, Stmt, TheoremCall, TheoremCallArguments,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -35,12 +32,20 @@ impl Runtime {
             Some(FN_EXTENSION) => self.parse_by_fn_extension_stmt(&mut tb, block),
             Some(ENUMERATE) => self.parse_by_enumerate_stmt(&mut tb, block),
             Some(FOR) => self.parse_by_for_stmt(&mut tb, block),
-            Some(CLOSED_RANGE) => self.parse_by_closed_range_as_cases_stmt(&mut tb, block),
-            Some(REGULARITY_AXIOM) => self.parse_by_regularity_axiom_stmt(&mut tb, block),
-            Some(AXIOM_OF_CHOICE) => self.parse_by_axiom_of_choice_stmt(&mut tb, block),
-            Some(ZORN_LEMMA) => self.parse_by_zorn_lemma_stmt(&mut tb, block),
+            Some(CLOSED_RANGE) => Err(tb.parse_error(
+                "removed: use `expand: e $in closed_range(…)` or `expand: e $in a...b`",
+            )),
+            Some(REGULARITY_AXIOM) => Err(tb.parse_error(
+                "removed: use `release regularity_axiom(S)`",
+            )),
+            Some(AXIOM_OF_CHOICE) => Err(tb.parse_error(
+                "removed: use `release axiom_of_choice: set F:`",
+            )),
+            Some(ZORN_LEMMA) => Err(tb.parse_error(
+                "removed: use `release zorn_lemma: set S, prop P, prop U, prop M:`",
+            )),
             Some(other) => Err(tb.parse_error(format!(
-                "by: `{other}` is not wired yet (supported: cases, contra, def, thm, extension, fn_extension, induc, strong_induc, regularity_axiom, axiom_of_choice, zorn_lemma)"
+                "by: `{other}` is not wired yet (supported: cases, contra, def, thm, extension, fn_extension, induc, strong_induc, enumerate finite_set, for)"
             ))),
             None => Err(tb.parse_error("by: expected a proof directive after `by`")),
         }
@@ -141,9 +146,11 @@ impl Runtime {
         tb.expect(ENUMERATE)?;
         match tb.peek() {
             Some(FINITE_SET) => self.parse_by_enumerate_finite_set_stmt(tb, block),
-            Some(RANGE) | Some(CLOSED_RANGE) => self.parse_by_enumerate_range_stmt(tb, block),
+            Some(RANGE) | Some(CLOSED_RANGE) => Err(tb.parse_error(
+                "removed: use `expand: e $in range(…)` / `expand: e $in closed_range(…)` / `expand: e $in a...b`",
+            )),
             other => Err(tb.parse_error(format!(
-                "by enumerate: expected `finite_set`, `range`, or `closed_range`, got {other:?}"
+                "by enumerate: expected `finite_set`, got {other:?}"
             ))),
         }
     }
@@ -172,44 +179,6 @@ impl Runtime {
         )))
     }
 
-    fn parse_by_enumerate_range_stmt(
-        &mut self,
-        tb: &mut TokenBlock,
-        block: &TokenBlock,
-    ) -> RuntimeResult<Stmt> {
-        let is_closed = tb.peek() == Some(CLOSED_RANGE);
-        if is_closed {
-            tb.expect(CLOSED_RANGE)?;
-        } else {
-            tb.expect(RANGE)?;
-        }
-        tb.expect(COLON)?;
-        let element = parse_obj(self, tb)?;
-        tb.expect(FACT_PREFIX)?;
-        tb.expect(IN)?;
-        let domain = parse_obj(self, tb)?;
-        if !tb.exceed_end_of_head() || !tb.body.is_empty() {
-            return Err(tb.parse_error("by enumerate range: unexpected trailing tokens"));
-        }
-        let range = if is_closed {
-            let Obj::SetFormer(SetFormer::ClosedRange(closed)) = domain else {
-                return Err(tb.parse_error("by enumerate closed_range: expected a closed_range object"));
-            };
-            ClosedRangeOrRange::ClosedRange(closed)
-        } else {
-            let Obj::SetFormer(SetFormer::Range(range_obj)) = domain else {
-                return Err(tb.parse_error("by enumerate range: expected a range object"));
-            };
-            ClosedRangeOrRange::Range(range_obj)
-        };
-        Ok(Stmt::By(ByStmt::ByEnumerateRangeStmt(ByEnumerateRangeStmt {
-            element,
-            range,
-            line_file: SourceLine::new(block.line, self.code_source.clone()),
-        })))
-    }
-
-
     fn parse_by_for_stmt(
         &mut self,
         tb: &mut TokenBlock,
@@ -231,35 +200,6 @@ impl Runtime {
             line_file: SourceLine::new(block.line, self.code_source.clone()),
         })))
     }
-
-    fn parse_by_closed_range_as_cases_stmt(
-        &mut self,
-        tb: &mut TokenBlock,
-        block: &TokenBlock,
-    ) -> RuntimeResult<Stmt> {
-        tb.expect(CLOSED_RANGE)?;
-        tb.expect(AS)?;
-        tb.expect(CASES)?;
-        tb.expect(COLON)?;
-        let element = parse_obj(self, tb)?;
-        tb.expect(FACT_PREFIX)?;
-        tb.expect(IN)?;
-        let domain = parse_obj(self, tb)?;
-        let Obj::SetFormer(SetFormer::ClosedRange(closed_range)) = domain else {
-            return Err(tb.parse_error("by closed_range as cases: expected a closed_range object"));
-        };
-        if !tb.exceed_end_of_head() || !tb.body.is_empty() {
-            return Err(tb.parse_error("by closed_range as cases: unexpected trailing tokens"));
-        }
-        Ok(Stmt::By(ByStmt::ByClosedRangeAsCasesStmt(
-            ByClosedRangeAsCasesStmt {
-                element,
-                closed_range,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
-            },
-        )))
-    }
-
 
     fn parse_by_cases_stmt(
         &mut self,
@@ -468,80 +408,12 @@ impl Runtime {
         if !tb.exceed_end_of_head() || !tb.body.is_empty() {
             return Err(tb.parse_error("by thm: expected bare call or `=> <atomic fact>`"));
         }
-        Ok(Stmt::Release(ReleaseStmt::ReleaseThmStmt(ReleaseThmStmt {
-            call,
-            line_file: SourceLine::new(block.line, self.code_source.clone()),
-        })))
-    }
-
-    pub(in super::super) fn parse_release_thm_stmt(
-        &mut self,
-        block: &TokenBlock,
-    ) -> RuntimeResult<Stmt> {
-        let mut tb = block.clone();
-        tb.expect(RELEASE)?;
-        tb.expect(THM)?;
-        let call = self.parse_theorem_call(&mut tb)?;
-        if !tb.exceed_end_of_head() || !tb.body.is_empty() {
-            return Err(tb.parse_error("release thm accepts only a bare theorem call"));
-        }
-        Ok(Stmt::Release(ReleaseStmt::ReleaseThmStmt(ReleaseThmStmt {
-            call,
-            line_file: SourceLine::new(block.line, self.code_source.clone()),
-        })))
-    }
-
-    pub(in super::super) fn parse_release_struct_def_stmt(
-        &mut self,
-        block: &TokenBlock,
-    ) -> RuntimeResult<Stmt> {
-        let mut tb = block.clone();
-        tb.expect(RELEASE)?;
-        tb.expect(STRUCT)?;
-        tb.expect(DEF)?;
-        if tb.exceed_end_of_head() {
-            return Err(tb.parse_error("release struct def expects exactly one object"));
-        }
-        if !tb.body.is_empty() {
-            return Err(tb.parse_error("release struct def does not accept an indented body"));
-        }
-        let obj = parse_obj(self, &mut tb)?;
-        if !tb.exceed_end_of_head() {
-            return Err(tb.parse_error(
-                "release struct def expects exactly one object and has no `as &Struct` form",
-            ));
-        }
-        Ok(Stmt::Release(ReleaseStmt::ReleaseStructDefStmt(ReleaseStructDefStmt {
-            obj,
-            line_file: SourceLine::new(block.line, self.code_source.clone()),
-        })))
-    }
-
-    pub(in super::super) fn parse_release_obj_def_stmt(
-        &mut self,
-        block: &TokenBlock,
-    ) -> RuntimeResult<Stmt> {
-        let mut tb = block.clone();
-        tb.expect(RELEASE)?;
-        tb.expect(OBJ)?;
-        tb.expect(DEF)?;
-        if tb.exceed_end_of_head() {
-            return Err(tb.parse_error("release obj def expects exactly one identifier"));
-        }
-        if !tb.body.is_empty() {
-            return Err(tb.parse_error("release obj def does not accept an indented body"));
-        }
-        let obj = parse_obj(self, &mut tb)?;
-        if !tb.exceed_end_of_head() {
-            return Err(tb.parse_error("release obj def expects exactly one identifier"));
-        }
-        let Obj::Identifier(name) = obj else {
-            return Err(tb.parse_error("release obj def expects an identifier"));
-        };
-        Ok(Stmt::Release(ReleaseStmt::ReleaseObjDefStmt(ReleaseObjDefStmt {
-            name,
-            line_file: SourceLine::new(block.line, self.code_source.clone()),
-        })))
+        Ok(Stmt::ReleaseAndExpand(
+            ReleaseAndExpandStmt::ReleaseThmStmt(ReleaseThmStmt {
+                call,
+                line_file: SourceLine::new(block.line, self.code_source.clone()),
+            }),
+        ))
     }
 
     pub(in super::super) fn parse_theorem_call(
@@ -864,142 +736,3 @@ fn is_negative_atomic(fact: &AtomicFact) -> bool {
     )
 }
 
-fn parse_optional_trailing_proof_colon(
-    tb: &mut TokenBlock,
-    syntax_name: &str,
-) -> RuntimeResult<bool> {
-    if tb.peek() == Some(COLON) {
-        tb.expect(COLON)?;
-        if !tb.exceed_end_of_head() {
-            return Err(tb.parse_error(format!(
-                "{syntax_name}: unexpected token after trailing `:`"
-            )));
-        }
-        return Ok(true);
-    }
-    if tb.exceed_end_of_head() {
-        return Ok(false);
-    }
-    Err(tb.parse_error(format!(
-        "{syntax_name}: expected end of head or trailing `:`"
-    )))
-}
-
-impl Runtime {
-    fn parse_by_regularity_axiom_stmt(
-        &mut self,
-        tb: &mut TokenBlock,
-        block: &TokenBlock,
-    ) -> RuntimeResult<Stmt> {
-        tb.expect(REGULARITY_AXIOM)?;
-        let args = parse_obj_list_paren(self, tb)?;
-        if args.len() != 1 {
-            return Err(tb.parse_error(format!(
-                "by regularity_axiom: expected exactly one set argument, got {}",
-                args.len()
-            )));
-        }
-        if !tb.exceed_end_of_head() {
-            return Err(tb.parse_error(
-                "by regularity_axiom: unexpected token after argument",
-            ));
-        }
-        if !tb.body.is_empty() {
-            return Err(tb.parse_error(
-                "by regularity_axiom: does not accept an indented body",
-            ));
-        }
-        Ok(Stmt::By(ByStmt::ByRegularityAxiomStmt(
-            ByRegularityAxiomStmt {
-                set: args[0].clone(),
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
-            },
-        )))
-    }
-
-    fn parse_by_axiom_of_choice_stmt(
-        &mut self,
-        tb: &mut TokenBlock,
-        block: &TokenBlock,
-    ) -> RuntimeResult<Stmt> {
-        tb.expect(AXIOM_OF_CHOICE)?;
-        if tb.peek() != Some(COLON) {
-            return Err(tb.parse_error(
-                "by axiom_of_choice: expected `by axiom_of_choice: set S:` or `by axiom_of_choice: set S`",
-            ));
-        }
-        tb.expect(COLON)?;
-        tb.expect(SET)?;
-        let family = parse_obj(self, tb)?;
-        let has_proof_body = parse_optional_trailing_proof_colon(tb, "by axiom_of_choice")?;
-        let proof = if has_proof_body {
-            self.parse_body_stmts(&tb.body)?
-        } else {
-            if !tb.body.is_empty() {
-                return Err(tb.parse_error(
-                    "by axiom_of_choice: indented body requires a trailing `:` after the family",
-                ));
-            }
-            Vec::new()
-        };
-        Ok(Stmt::By(ByStmt::ByAxiomOfChoiceStmt(ByAxiomOfChoiceStmt {
-            family,
-            proof,
-            line_file: SourceLine::new(block.line, self.code_source.clone()),
-        })))
-    }
-
-    fn parse_by_zorn_lemma_stmt(
-        &mut self,
-        tb: &mut TokenBlock,
-        block: &TokenBlock,
-    ) -> RuntimeResult<Stmt> {
-        tb.expect(ZORN_LEMMA)?;
-        if tb.peek() != Some(COLON) {
-            return Err(tb.parse_error(
-                "by zorn_lemma: expected `by zorn_lemma: set S, prop P, prop U, prop M:` or the same form without a proof body",
-            ));
-        }
-        tb.expect(COLON)?;
-        tb.expect(SET)?;
-        let set = parse_obj(self, tb)?;
-        tb.expect(COMMA)?;
-        tb.expect(PROP)?;
-        let prop_name = self.parse_by_atomic_prop_name(tb)?;
-        tb.expect(COMMA)?;
-        tb.expect(PROP)?;
-        let upper_bound_prop_name = self.parse_by_atomic_prop_name(tb)?;
-        tb.expect(COMMA)?;
-        tb.expect(PROP)?;
-        let maximal_prop_name = self.parse_by_atomic_prop_name(tb)?;
-        let has_proof_body = parse_optional_trailing_proof_colon(tb, "by zorn_lemma")?;
-        let proof = if has_proof_body {
-            self.parse_body_stmts(&tb.body)?
-        } else {
-            if !tb.body.is_empty() {
-                return Err(tb.parse_error(
-                    "by zorn_lemma: indented body requires a trailing `:` after the header",
-                ));
-            }
-            Vec::new()
-        };
-        Ok(Stmt::By(ByStmt::ByZornLemmaStmt(ByZornLemmaStmt {
-            set,
-            prop_name,
-            upper_bound_prop_name,
-            maximal_prop_name,
-            proof,
-            line_file: SourceLine::new(block.line, self.code_source.clone()),
-        })))
-    }
-
-    fn parse_by_atomic_prop_name(&mut self, tb: &mut TokenBlock) -> RuntimeResult<AtomicName> {
-        let name = tb.advance()?;
-        if !is_simple_name(&name) {
-            return Err(tb.parse_error(format!(
-                "expected a simple prop name, got `{name}`"
-            )));
-        }
-        Ok(AtomicName::plain(name))
-    }
-}

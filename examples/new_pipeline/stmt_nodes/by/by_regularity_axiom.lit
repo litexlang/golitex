@@ -1,4 +1,0 @@
-# Stmt: By.ByRegularityAxiomStmt → exec_by_regularity_axiom_stmt
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/by/by_regularity_axiom.lit
-
-by regularity_axiom({1})

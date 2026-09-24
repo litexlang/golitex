@@ -1,32 +1,30 @@
 use super::helper::{proof_verify_state, store_goal_fact, verify_goal_fact};
 use super::result::{
-    ExecByRegularityAxiomStmtFailed, ExecByRegularityAxiomStmtResult,
-    ExecByRegularityAxiomStmtSuccess, ExecByStmtResult,
+    ExecReleaseRegularityAxiomStmtFailed, ExecReleaseRegularityAxiomStmtResult,
+    ExecReleaseRegularityAxiomStmtSuccess,
 };
 use crate::new_pipeline::ast::fact::{
     AtomicFact, EqualFact, Fact, IsNonemptySetFact, PlainExistFact, QuantifierFreeFact,
 };
 use crate::new_pipeline::ast::obj::{IdentifierObj, Intersect, ListSet, Obj, SetFormer, SetOperator};
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
-use crate::new_pipeline::ast::stmt::ByRegularityAxiomStmt;
+use crate::new_pipeline::ast::stmt::ReleaseRegularityAxiomStmt;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
-pub fn exec_by_regularity_axiom_stmt(
+pub fn exec_release_regularity_axiom_stmt(
     runtime: &mut Runtime,
-    stmt: &ByRegularityAxiomStmt,
-) -> RuntimeResult<ExecByStmtResult> {
+    stmt: &ReleaseRegularityAxiomStmt,
+) -> RuntimeResult<ExecReleaseRegularityAxiomStmtResult> {
     let set_wd =
         runtime.verify_obj_well_definedness(&stmt.set, proof_verify_state())?;
     if set_wd.is_failed() {
-        return Ok(ExecByStmtResult::RegularityAxiom(
-            ExecByRegularityAxiomStmtResult::Failed(ExecByRegularityAxiomStmtFailed::SetWd(
-                set_wd,
-            )),
+        return Ok(ExecReleaseRegularityAxiomStmtResult::Failed(
+            ExecReleaseRegularityAxiomStmtFailed::SetWd(set_wd),
         ));
     }
 
     // Obligation: A is nonempty before the foundation step applies.
-    // Example: by regularity_axiom(A) requires $is_nonempty_set(A).
+    // Example: release regularity_axiom(A) requires $is_nonempty_set(A).
     let nonempty: Fact = IsNonemptySetFact {
         fact_id: runtime.global_ids.allocate_fact_id(),
         set: stmt.set.clone(),
@@ -35,37 +33,32 @@ pub fn exec_by_regularity_axiom_stmt(
     .into();
     let nonempty_proof = verify_goal_fact(runtime, &nonempty)?;
     if nonempty_proof.is_failed() {
-        return Ok(ExecByStmtResult::RegularityAxiom(
-            ExecByRegularityAxiomStmtResult::Failed(ExecByRegularityAxiomStmtFailed::Nonempty(
-                nonempty_proof,
-            )),
+        return Ok(ExecReleaseRegularityAxiomStmtResult::Failed(
+            ExecReleaseRegularityAxiomStmtFailed::Nonempty(nonempty_proof),
         ));
     }
 
     // Trusted regularity/foundation step: every nonempty set A has a member
-    // disjoint from A. Example: by regularity_axiom(A) stores
+    // disjoint from A. Example: release regularity_axiom(A) stores
     // exist x A st {intersect(x, A) = {}}.
     let regularity_fact = regularity_axiom_exist_fact(runtime, &stmt.set, &stmt.line_file);
     let stored = match store_goal_fact(runtime, &regularity_fact)? {
         Ok(s) => s,
         Err(msg) => {
-            return Ok(ExecByStmtResult::RegularityAxiom(
-                ExecByRegularityAxiomStmtResult::Failed(ExecByRegularityAxiomStmtFailed::Store(
-                    msg,
-                )),
+            return Ok(ExecReleaseRegularityAxiomStmtResult::Failed(
+                ExecReleaseRegularityAxiomStmtFailed::Store(msg),
             ));
         }
     };
 
-    Ok(ExecByStmtResult::RegularityAxiom(
-        ExecByRegularityAxiomStmtResult::Success(ExecByRegularityAxiomStmtSuccess {
+    Ok(ExecReleaseRegularityAxiomStmtResult::Success(
+        ExecReleaseRegularityAxiomStmtSuccess {
             set_wd,
             nonempty: nonempty_proof,
             stored,
-        }),
+        },
     ))
 }
-
 fn regularity_axiom_exist_fact(
     runtime: &mut Runtime,
     set: &Obj,

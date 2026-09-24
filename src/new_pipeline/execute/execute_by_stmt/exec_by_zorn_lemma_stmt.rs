@@ -2,8 +2,8 @@ use super::helper::{
     proof_verify_state, run_fact_only_proof_steps, store_goal_fact, verify_goal_fact,
 };
 use super::result::{
-    ExecByStmtResult, ExecByZornLemmaStmtFailed, ExecByZornLemmaStmtResult,
-    ExecByZornLemmaStmtSuccess,
+    ExecReleaseZornLemmaStmtFailed, ExecReleaseZornLemmaStmtResult,
+    ExecReleaseZornLemmaStmtSuccess,
 };
 use crate::new_pipeline::ast::fact::{
     AndChainAtomicFact, AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, ForallFact, IsNonemptySetFact,
@@ -13,25 +13,25 @@ use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::{IdentifierObj, Obj, PowerSet, SetOperator};
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
-use crate::new_pipeline::ast::stmt::{ByZornLemmaStmt, DefPropStmt};
+use crate::new_pipeline::ast::stmt::{ReleaseZornLemmaStmt, DefPropStmt};
 use crate::new_pipeline::parse::prop_registration_shape::plain_prop_name;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
-pub fn exec_by_zorn_lemma_stmt(
+pub fn exec_release_zorn_lemma_stmt(
     runtime: &mut Runtime,
-    stmt: &ByZornLemmaStmt,
-) -> RuntimeResult<ExecByStmtResult> {
+    stmt: &ReleaseZornLemmaStmt,
+) -> RuntimeResult<ExecReleaseZornLemmaStmtResult> {
     let set_wd = runtime.verify_obj_well_definedness(&stmt.set, proof_verify_state())?;
     if set_wd.is_failed() {
-        return Ok(ExecByStmtResult::ZornLemma(ExecByZornLemmaStmtResult::Failed(
-            ExecByZornLemmaStmtFailed::SetWd(set_wd),
-        )));
+        return Ok(ExecReleaseZornLemmaStmtResult::Failed(
+            ExecReleaseZornLemmaStmtFailed::SetWd(set_wd),
+        ));
     }
 
     if let Err(msg) = validate_zorn_props(runtime, stmt) {
-        return Ok(ExecByStmtResult::ZornLemma(ExecByZornLemmaStmtResult::Failed(
-            ExecByZornLemmaStmtFailed::PropInterface(msg),
-        )));
+        return Ok(ExecReleaseZornLemmaStmtResult::Failed(
+            ExecReleaseZornLemmaStmtFailed::PropInterface(msg),
+        ));
     }
 
     let obligations = zorn_obligations(
@@ -45,13 +45,13 @@ pub fn exec_by_zorn_lemma_stmt(
     let (local_outcome, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
         let proof_steps = match run_fact_only_proof_steps(rt, &stmt.proof)? {
             Ok(steps) => steps,
-            Err(failed) => return Ok(Err(ExecByZornLemmaStmtFailed::ProofBody(failed))),
+            Err(failed) => return Ok(Err(ExecReleaseZornLemmaStmtFailed::ProofBody(failed))),
         };
         let mut obligation_proofs = Vec::with_capacity(obligations.len());
         for (index, obligation) in obligations.iter().enumerate() {
             let proof = verify_goal_fact(rt, obligation)?;
             if proof.is_failed() {
-                return Ok(Err(ExecByZornLemmaStmtFailed::Obligation {
+                return Ok(Err(ExecReleaseZornLemmaStmtFailed::Obligation {
                     index,
                     result: proof,
                 }));
@@ -65,9 +65,7 @@ pub fn exec_by_zorn_lemma_stmt(
     let (proof_steps, obligation_proofs) = match local_outcome {
         Ok(v) => v,
         Err(failed) => {
-            return Ok(ExecByStmtResult::ZornLemma(ExecByZornLemmaStmtResult::Failed(
-                failed,
-            )));
+            return Ok(ExecReleaseZornLemmaStmtResult::Failed(failed));
         }
     };
 
@@ -78,45 +76,45 @@ pub fn exec_by_zorn_lemma_stmt(
     let stored = match store_goal_fact(runtime, &maximal_fact)? {
         Ok(s) => s,
         Err(msg) => {
-            return Ok(ExecByStmtResult::ZornLemma(ExecByZornLemmaStmtResult::Failed(
-                ExecByZornLemmaStmtFailed::Store(msg),
-            )));
+            return Ok(ExecReleaseZornLemmaStmtResult::Failed(
+                ExecReleaseZornLemmaStmtFailed::Store(msg),
+            ));
         }
     };
 
-    Ok(ExecByStmtResult::ZornLemma(ExecByZornLemmaStmtResult::Success(
-        ExecByZornLemmaStmtSuccess {
+    Ok(ExecReleaseZornLemmaStmtResult::Success(
+        ExecReleaseZornLemmaStmtSuccess {
             set_wd,
             proof_steps,
             obligations: obligation_proofs,
             local_env,
             stored,
         },
-    )))
+    ))
 }
 
-fn validate_zorn_props(runtime: &Runtime, stmt: &ByZornLemmaStmt) -> Result<(), String> {
+fn validate_zorn_props(runtime: &Runtime, stmt: &ReleaseZornLemmaStmt) -> Result<(), String> {
     let relation = plain_prop_name(&stmt.prop_name);
     let Some(relation_def) = runtime.def_prop_visible_in_stack(relation) else {
         return Err(format!(
-            "by zorn_lemma: relation `{relation}` must be a user-defined prop"
+            "release zorn_lemma: relation `{relation}` must be a user-defined prop"
         ));
     };
     if prop_arity(relation_def) != 2 {
         return Err(format!(
-            "by zorn_lemma: relation `{relation}` must be a binary user-defined prop"
+            "release zorn_lemma: relation `{relation}` must be a binary user-defined prop"
         ));
     }
 
     let ub_name = plain_prop_name(&stmt.upper_bound_prop_name);
     let Some(ub_def) = runtime.def_prop_visible_in_stack(ub_name) else {
         return Err(format!(
-            "by zorn_lemma: upper-bound `{ub_name}` must be a concrete named prop"
+            "release zorn_lemma: upper-bound `{ub_name}` must be a concrete named prop"
         ));
     };
     if prop_arity(ub_def) != 2 {
         return Err(format!(
-            "by zorn_lemma: upper-bound `{ub_name}` must have two parameters `(c power_set(S), u S)`"
+            "release zorn_lemma: upper-bound `{ub_name}` must have two parameters `(c power_set(S), u S)`"
         ));
     }
     let expected_ub = [
@@ -127,12 +125,12 @@ fn validate_zorn_props(runtime: &Runtime, stmt: &ByZornLemmaStmt) -> Result<(), 
     ];
     if !prop_header_types_match(ub_def, &expected_ub) {
         return Err(format!(
-            "by zorn_lemma: upper-bound `{ub_name}` must bind `(c power_set(S), u S)`"
+            "release zorn_lemma: upper-bound `{ub_name}` must bind `(c power_set(S), u S)`"
         ));
     }
     if !matches!(ub_def.iff_facts.as_slice(), [Fact::ForallFact(_)]) {
         return Err(format!(
-            "by zorn_lemma: upper-bound `{ub_name}` must have exactly a forall definition `forall x c: ${}(x, u)`",
+            "release zorn_lemma: upper-bound `{ub_name}` must have exactly a forall definition `forall x c: ${}(x, u)`",
             plain_prop_name(&stmt.prop_name)
         ));
     }
@@ -140,22 +138,22 @@ fn validate_zorn_props(runtime: &Runtime, stmt: &ByZornLemmaStmt) -> Result<(), 
     let max_name = plain_prop_name(&stmt.maximal_prop_name);
     let Some(max_def) = runtime.def_prop_visible_in_stack(max_name) else {
         return Err(format!(
-            "by zorn_lemma: maximality `{max_name}` must be a concrete named prop"
+            "release zorn_lemma: maximality `{max_name}` must be a concrete named prop"
         ));
     };
     if prop_arity(max_def) != 1 {
         return Err(format!(
-            "by zorn_lemma: maximality `{max_name}` must have one parameter `(m S)`"
+            "release zorn_lemma: maximality `{max_name}` must have one parameter `(m S)`"
         ));
     }
     if !prop_header_types_match(max_def, &[stmt.set.clone()]) {
         return Err(format!(
-            "by zorn_lemma: maximality `{max_name}` must bind `(m S)`"
+            "release zorn_lemma: maximality `{max_name}` must bind `(m S)`"
         ));
     }
     if !matches!(max_def.iff_facts.as_slice(), [Fact::ForallFact(_)]) {
         return Err(format!(
-            "by zorn_lemma: maximality `{max_name}` must have exactly a forall definition `forall x S: ${}(m, x) => x = m`",
+            "release zorn_lemma: maximality `{max_name}` must have exactly a forall definition `forall x S: ${}(m, x) => x = m`",
             plain_prop_name(&stmt.prop_name)
         ));
     }
