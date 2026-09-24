@@ -181,7 +181,7 @@ sqrt(4) = 2
 | `min(a, b)`, `max(a, b)` | Native binary minimum and maximum of real arguments |
 | `exp(a)`, `ln(a)` | Native real exponential and natural logarithm |
 | `sign(a)` | Native real sign function with values `(-1)`, `0`, and `1` |
-| `factorial(n)` | Native natural-number factorial |
+| `factorial(n)`, `n!` | Native natural-number factorial (`n!` is postfix sugar in `new_pipeline`) |
 | `a + b`, `a - b`, `a * b`, `a / b` | Arithmetic operations |
 | `a % b` | Euclidean integer remainder |
 | `a^b` | Exponentiation |
@@ -206,6 +206,7 @@ exp(0) = 1
 ln(1) = 0
 sign(-9) = (-1)
 factorial(10) = 3628800
+10! = 3628800
 ```
 
 `gcd(a,b)` requires integer arguments that are not both zero. `quot(a,d)` uses
@@ -214,7 +215,9 @@ Euclidean division with `d $in N+`, so
 `ceil`, `min`, and `max` have the domains shown in [Main object
 criteria](#main-object-criteria).
 `exp` is total on `R`; `ln` requires a positive real; `sign` accepts a real;
-and `factorial` accepts a natural. Transcendental values such as `exp(2)` and
+and `factorial` accepts a natural. Postfix `n!` (preview, `new_pipeline`) is
+the same object as `factorial(n)`; `!=` stays one token and is not factorial.
+Transcendental values such as `exp(2)` and
 `ln(2)` remain symbolic rather than being replaced by decimal approximations.
 These builtin names are reserved. Their verified algebraic and order laws are
 listed under [Native numeric function rules](#native-numeric-function-rules).
@@ -1892,6 +1895,12 @@ A **statement** is a top-level or block-level action. It may verify a fact,
 introduce a name, store a definition, open a proof context, or control the
 runtime. This section gives each statement family one canonical home.
 
+> **Preview (`new_pipeline` AST):** top-level `Stmt` is organized by what the
+> statement does to the environment:
+> `Fact` / `Trust` / `Introduce` / `Define` / `Release` / `By` / `Register` /
+> `Witness` / `ProofBlock` / `Command`. Surface keywords are unchanged;
+> `trust` remains a truth-search skip (WD still checked), not “unchecked”.
+
 ### Bare facts and `have`
 
 Write a fact directly when it should follow from the current context. Use
@@ -2455,14 +2464,13 @@ They do not prove target behavior for rounding, overflow, compiler choices, or
 special values such as NaN; Python NaN reaches the defensive assertion because
 it satisfies neither generated branch.
 
-### Local proof blocks: `claim`, `example`, `sketch`, and `try`
+### Local proof blocks: `claim`, `example`, and `sketch`
 
 `claim` proves one target and commits that target to the surrounding context.
 `example` proves one target but commits nothing; it is the checked,
 non-exporting counterpart of Lean's anonymous `example`. Temporary proof steps
 remain local in both forms. `sketch` checks a local block without a distinguished
-target and commits nothing. `try` checks a candidate block atomically and
-commits it only if every step succeeds. A `claim` or `example` target always
+target and commits nothing. A `claim` or `example` target always
 appears under its header as an indented `? fact`; header forms such as
 `claim fact:` and `example fact:` are not accepted.
 
@@ -2480,12 +2488,6 @@ example:
 
 sketch:
     2 + 2 = 4
-
-try:
-    have x R = 1
-    x + 1 = 2
-
-x = 1
 ```
 
 `? fact` is an internal proof target, not a top-level assertion:
@@ -2812,7 +2814,6 @@ introductions.
 | `claim` | One target is proved in a lexical child scope. | Only the target; helper statements do not escape. |
 | `example` | One target is proved in a lexical child scope. | Nothing; the target and helper statements do not escape. |
 | `sketch` | Every contained statement checks. | Nothing outside the block. |
-| `try` | The statement always succeeds after parsing; its isolated body either commits or rolls back with a retained diagnostic. | All block effects when committed; none when rolled back. |
 | `thm`, `axiom` | `thm` proves its target; `axiom` checks its interface but trusts truth. | A named reusable theorem interface; universal facts also enter ordinary matching. |
 | `release thm` | Arity/domains/premises; the form is bare and has no goal/proof body. Plain or `mod::export::`-qualified theorem name (preview). | All instantiated conclusions and their ordinary inferred consequences. |
 | `by thm ... => fact` | Arity/domains/premises and one selected atomic target. Same qualified-name lookup as `release thm` (preview). | Only the requested atomic selection and its ordinary inferred consequences. |
@@ -2825,7 +2826,7 @@ introductions.
 | `by def` | One positive concrete/builtin definitional target and every defining clause. Preview: qualified `$Mod::export::P` looks up the prop in a finished export Env. | The target with explicit definition provenance. |
 | `release struct def e` | `e` has a definition-owned struct carrier and `e $in &Struct` verifies. | Exactly one layer of tuple/identity bridges, field carriers, and instantiated struct laws. |
 | `release obj def I` | Preview (`new_pipeline`): `I` is one identifier (optionally `mod::export::`-qualified) with a `StoredIdentifierDefinition` other than a binder `ParamType`. | Re-stores that definition's type / equality / body / fn facts into the current Env (subjects use the written spelling of `I`). For `have fn … by exist!`, re-stores membership + property + uniqueness. |
-| Predicate-property registrations | The proof has the exact reflexive/symmetric/transitive predicate shape. | A reusable property route for later rewriting. |
+| Predicate-property registrations | Exact reflexive/symmetric/transitive forall shape. Default: `by *_prop`. Preview (`new_pipeline`): `register reflexive` / `symmetric` / `transitive`; one `? forall …` goal only; no indented proof body. | A reusable property route for later rewriting. |
 | `by regularity_axiom` | Its displayed set/nonemptiness obligations. Preview (`new_pipeline`): parse+exec wired; fact-only local proofs N/A (no body). | An explicitly trusted set-theoretic conclusion; strict mode rejects the step. |
 | `by axiom_of_choice` | The family is a set and every member is proved nonempty. Preview (`new_pipeline`): parse+exec wired; proof body is fact-only. | Stores `exist f fn(A S)family_union(S) st {$is_choice_function_for(S,S,fn(A S)S {A},f)}`. The existential body is atomic. |
 | `by zorn_lemma` | The set, binary relation, exact named upper-bound/maximality definitions, nonemptiness, partial-order laws, and chain-upper-bound obligation. Preview (`new_pipeline`): parse+exec wired; prop-definition equality uses IR alignment (no alpha_normalize yet). | Stores `exist m S st {$M(m)}` using the supplied named maximality prop. The chain witness likewise uses the supplied atomic upper-bound prop. |
@@ -3504,8 +3505,10 @@ when extensional membership is not the mathematical route.
 
 ### Registering predicate properties
 
-The following proof forms verify and register reusable behavior for a
-user-defined binary predicate:
+The following forms verify and register reusable behavior for a user-defined
+binary predicate.
+
+Default pipeline surface (still current outside `new_pipeline`):
 
 | Form | Required mathematical shape | Later use |
 |---|---|---|
@@ -3513,17 +3516,21 @@ user-defined binary predicate:
 | `by symmetric_prop` | One nontrivial argument permutation | Retry positive goals in that permutation. |
 | `by transitive_prop` | `P(x, y)` and `P(y, z)` imply `P(x, z)` | Store non-adjacent chain consequences. |
 
+> **Preview (`new_pipeline`):** the same three registrations are spelled
+> `register reflexive` / `register symmetric` / `register transitive`.
+> Each takes exactly one shaped `? forall …` goal and **no** indented proof
+> body. Prove the forall in the ambient environment first (or rely on ordinary
+> search / `by def`); the statement only registers the rewrite property.
+
 ```litex
 prop same(x set, y set):
     x = y
 
-by symmetric_prop:
+register symmetric:
     ? forall x, y set:
         $same(x, y)
         =>:
             $same(y, x)
-    x = y
-    y = x
 
 forall a, b set:
     $same(a, b)
@@ -3534,7 +3541,7 @@ forall a, b set:
 These registrations require exact predicate shapes:
 
 ```text
-by symmetric_prop:
+register symmetric:
     ? forall x, y set:
         x = y
         =>:
@@ -4031,7 +4038,19 @@ forall a, b R+:
 > (each rule has its own proof payload): even powers `0 <= a^2` / `0 < a^2`
 > from `a != 0`; positive-base powers `0 <= a^n` / `0 < a^n`; nonnegative base
 > with `n $in N+`; `0 <= sqrt(x)` / `0 < sqrt(x)` and sqrt monotonicity;
-> `n $in N+` ⇒ `1 <= n`; and `log` order/sign with base `> 1`.
+> `n $in N+` ⇒ `1 <= n`; `log` order/sign with base `> 1`; Euclidean
+> `0 <= a % b < b` (mod/div object WD still needs an explicit `!= 0` premise
+> today); subtraction bridges `a <= b` ↔ `0 <= b - a` (and strict);
+> order transitivity; positive-divisor monotone division and `a / b < a` when
+> `0 < a` and `1 < b`; negative-divisor order flip; div↔product bridges
+> (`a <= b / c` from `c * a <= b`, and `a <= b * c` from `a / c <= b`);
+> literal numeric bound weakening (including integer predecessor lift);
+> integer successor / adjacency / predecessor / difference-at-least-one;
+> positive even `1 < i`; `finite_set_max` / `finite_set_min` member bounds;
+> union cardinality `<=` sum; and surjection codomain cardinality `<=` domain.
+> Also `finite_set_size` nonnegative / at-least-one / subset comparison.
+> One `.lit` per rule under
+> [`examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/`](../examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/).
 
 The last equivalence is an integer-adjacency rule: a strict bound immediately
 below the successor `n + 1` is the same as the weak bound at `n`. It requires

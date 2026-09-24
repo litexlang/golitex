@@ -13,6 +13,7 @@ examples/new_pipeline/
                     (kernel: `src/new_pipeline/store_fact_and_infer/README.md`)
   tokenize/         tokenizer surface (line continuation, …)
   module_manager/   -r / -f / litex.config mount
+  knowledge_base/   persist / restore (DefProp JSON goldens, later lkb)
 ```
 
 Legacy public reading path (`examples/01_…` … `09_…`) stays outside this tree.

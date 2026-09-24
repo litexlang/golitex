@@ -17,9 +17,6 @@ use crate::new_pipeline::store_fact_and_infer::StoreFactAndInferResult;
 
 // Dispatcher mirrors wired ByStmt branches.
 pub enum ExecByStmtResult {
-    ReflexiveProp(ExecByReflexivePropStmtResult),
-    SymmetricProp(ExecBySymmetricPropStmtResult),
-    TransitiveProp(ExecByTransitivePropStmtResult),
     Cases(ExecByCasesStmtResult),
     Contra(ExecByContraStmtResult),
     Def(ExecByDefStmtResult),
@@ -40,9 +37,6 @@ pub enum ExecByStmtResult {
 impl ExecByStmtResult {
     pub fn is_failed(&self) -> bool {
         match self {
-            Self::ReflexiveProp(r) => r.is_failed(),
-            Self::SymmetricProp(r) => r.is_failed(),
-            Self::TransitiveProp(r) => r.is_failed(),
             Self::Cases(r) => r.is_failed(),
             Self::Contra(r) => r.is_failed(),
             Self::Def(r) => r.is_failed(),
@@ -59,99 +53,6 @@ impl ExecByStmtResult {
             Self::AxiomOfChoice(r) => r.is_failed(),
             Self::ZornLemma(r) => r.is_failed(),
         }
-    }
-}
-
-// ---------------------------------------------------------------------------
-// reflexive_prop / symmetric_prop
-// ---------------------------------------------------------------------------
-
-pub enum ExecByReflexivePropStmtResult {
-    Success(ExecByReflexivePropStmtSuccess),
-    Failed(ExecByReflexivePropStmtFailed),
-}
-
-pub struct ExecByReflexivePropStmtSuccess {
-    pub prop: AtomicName,
-    pub forall_proof: VerifyFactResult,
-    pub local_env: Box<ExecEnv>,
-}
-
-pub enum ExecByReflexivePropStmtFailed {
-    Shape(String),
-    PropNotDefined(String),
-    WrongArity {
-        prop: AtomicName,
-        expected: usize,
-        actual: usize,
-    },
-    Forall(VerifyFactResult),
-}
-
-impl ExecByReflexivePropStmtResult {
-    pub fn is_failed(&self) -> bool {
-        matches!(self, Self::Failed(_))
-    }
-}
-
-pub enum ExecBySymmetricPropStmtResult {
-    Success(ExecBySymmetricPropStmtSuccess),
-    Failed(ExecBySymmetricPropStmtFailed),
-}
-
-pub struct ExecBySymmetricPropStmtSuccess {
-    pub prop: AtomicName,
-    pub forall_proof: VerifyFactResult,
-    pub local_env: Box<ExecEnv>,
-}
-
-pub enum ExecBySymmetricPropStmtFailed {
-    Shape(String),
-    PropNotDefined(String),
-    WrongArity {
-        prop: AtomicName,
-        expected: usize,
-        actual: usize,
-    },
-    Forall(VerifyFactResult),
-}
-
-impl ExecBySymmetricPropStmtResult {
-    pub fn is_failed(&self) -> bool {
-        matches!(self, Self::Failed(_))
-    }
-}
-
-// ---------------------------------------------------------------------------
-// transitive_prop
-// ---------------------------------------------------------------------------
-
-pub enum ExecByTransitivePropStmtResult {
-    Success(ExecByTransitivePropStmtSuccess),
-    Failed(ExecByTransitivePropStmtFailed),
-}
-
-// Stage order: forall_proof → local_env (registration is a parent-env side effect).
-pub struct ExecByTransitivePropStmtSuccess {
-    pub prop: AtomicName,
-    pub forall_proof: VerifyFactResult,
-    pub local_env: Box<ExecEnv>,
-}
-
-pub enum ExecByTransitivePropStmtFailed {
-    Shape(String),
-    PropNotDefined(String),
-    WrongArity {
-        prop: AtomicName,
-        expected: usize,
-        actual: usize,
-    },
-    Forall(VerifyFactResult),
-}
-
-impl ExecByTransitivePropStmtResult {
-    pub fn is_failed(&self) -> bool {
-        matches!(self, Self::Failed(_))
     }
 }
 

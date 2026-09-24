@@ -569,7 +569,7 @@ impl Runtime {
         ))
     }
 
-    fn verify_in_integer(
+    pub(super) fn verify_in_integer(
         &mut self,
         obj: &Obj,
         verify_state: VerifyState,
@@ -583,7 +583,7 @@ impl Runtime {
         self.verify_fact(&goal, verify_state)
     }
 
-    fn verify_is_finite_set(
+    pub(super) fn verify_is_finite_set(
         &mut self,
         set: &Obj,
         verify_state: VerifyState,
@@ -596,7 +596,7 @@ impl Runtime {
         self.verify_fact(&goal, verify_state)
     }
 
-    fn verify_is_nonempty_set(
+    pub(super) fn verify_is_nonempty_set(
         &mut self,
         set: &Obj,
         verify_state: VerifyState,
@@ -609,7 +609,7 @@ impl Runtime {
         self.verify_fact(&goal, verify_state)
     }
 
-    fn verify_subset(
+    pub(super) fn verify_subset(
         &mut self,
         left: &Obj,
         right: &Obj,
@@ -624,7 +624,7 @@ impl Runtime {
         self.verify_fact(&goal, verify_state)
     }
 
-    fn known_order_edges(&self) -> Vec<(FactId, Obj, Obj, bool)> {
+    pub(super) fn known_order_edges(&self) -> Vec<(FactId, Obj, Obj, bool)> {
         let mut edges = Vec::new();
         let less_key = (AtomicName::Plain { name: LESS.into() }, true);
         let less_equal_key = (AtomicName::Plain { name: LESS_EQUAL.into() }, true);
@@ -658,7 +658,7 @@ impl Runtime {
     }
 }
 
-fn match_mod_obj(obj: &Obj) -> Option<(&Obj, &Obj)> {
+pub(super) fn match_mod_obj(obj: &Obj) -> Option<(&Obj, &Obj)> {
     match obj {
         Obj::IntegerOperator(IntegerOperator::Mod(Mod { left, right })) => {
             Some((left.as_ref(), right.as_ref()))
@@ -667,7 +667,7 @@ fn match_mod_obj(obj: &Obj) -> Option<(&Obj, &Obj)> {
     }
 }
 
-fn match_div_obj(obj: &Obj) -> Option<(&Obj, &Obj)> {
+pub(super) fn match_div_obj(obj: &Obj) -> Option<(&Obj, &Obj)> {
     match obj {
         Obj::ArithmeticOperator(ArithmeticOperator::Div(Div { left, right })) => {
             Some((left.as_ref(), right.as_ref()))
@@ -676,7 +676,7 @@ fn match_div_obj(obj: &Obj) -> Option<(&Obj, &Obj)> {
     }
 }
 
-fn match_finite_set_size(obj: &Obj) -> Option<&Obj> {
+pub(super) fn match_finite_set_size(obj: &Obj) -> Option<&Obj> {
     match obj {
         Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(FiniteSetSize { set })) => {
             Some(set.as_ref())
@@ -685,14 +685,14 @@ fn match_finite_set_size(obj: &Obj) -> Option<&Obj> {
     }
 }
 
-fn sub_obj(left: &Obj, right: &Obj) -> Obj {
+pub(super) fn sub_obj(left: &Obj, right: &Obj) -> Obj {
     Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub {
         left: Box::new(left.clone()),
         right: Box::new(right.clone()),
     }))
 }
 
-fn make_less_equal_fact(left: &Obj, right: &Obj, runtime: &mut Runtime) -> Fact {
+pub(super) fn make_less_equal_fact(left: &Obj, right: &Obj, runtime: &mut Runtime) -> Fact {
     Fact::AtomicFact(AtomicFact::LessEqualFact(LessEqualFact {
         fact_id: runtime.global_ids.allocate_fact_id(),
         left: left.clone(),
@@ -701,7 +701,7 @@ fn make_less_equal_fact(left: &Obj, right: &Obj, runtime: &mut Runtime) -> Fact 
     }))
 }
 
-fn make_less_fact(left: &Obj, right: &Obj, runtime: &mut Runtime) -> Fact {
+pub(super) fn make_less_fact(left: &Obj, right: &Obj, runtime: &mut Runtime) -> Fact {
     Fact::AtomicFact(AtomicFact::LessFact(LessFact {
         fact_id: runtime.global_ids.allocate_fact_id(),
         left: left.clone(),
@@ -710,13 +710,13 @@ fn make_less_fact(left: &Obj, right: &Obj, runtime: &mut Runtime) -> Fact {
     }))
 }
 
-fn one_obj() -> Obj {
+pub(super) fn one_obj() -> Obj {
     Obj::Literal(Literal::Number(Number {
         normalized_value: "1".to_string(),
     }))
 }
 
-fn is_one_literal(obj: &Obj) -> bool {
+pub(super) fn is_one_literal(obj: &Obj) -> bool {
     matches!(
         obj,
         Obj::Literal(Literal::Number(Number {

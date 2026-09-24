@@ -84,6 +84,21 @@ pub enum LessFactSearchProofByBuiltinRule {
     // Dividing a positive quantity by a factor > 1 shrinks it.
     // Example: known `0 < a` and `1 < b` prove `a / b < a`.
     DivByGtOneLessSelf(DivByGtOneLessSelfBuiltinRuleProof),
+
+    // Negative common divisor reverses strict order.
+    // Mathematical property: `c < 0` and `b < a` ⇒ `a / c < b / c`.
+    // Example: known `c < 0` and `y < x` prove `x / c < y / c`.
+    DivMonotoneStrictSameNegDivisor(DivMonotoneStrictSameNegDivisorBuiltinRuleProof),
+    // Weaken a known numeric lower bound to a smaller literal strict goal.
+    // Example: known `4 < x` proves `2 < x`.
+    NumericLowerBoundWeakenLt(NumericLowerBoundWeakenLtBuiltinRuleProof),
+    // Weaken a known numeric upper bound to a larger literal strict goal.
+    // Example: known `x < 4` proves `x < 6`.
+    NumericUpperBoundWeakenLt(NumericUpperBoundWeakenLtBuiltinRuleProof),
+    // Positive even integer exceeds one.
+    // Mathematical property: `i $in N+` and `i % 2 = 0` ⇒ `1 < i`.
+    // Example: after `have i N+` and `trust i % 2 = 0`, prove `1 < i`.
+    PositiveEvenGtOne(PositiveEvenGtOneBuiltinRuleProof),
 }
 
 // Payload: both evaluated normals with left_normal < right_normal.
@@ -190,6 +205,26 @@ pub struct DivByGtOneLessSelfBuiltinRuleProof {
 
 
 
+
+pub struct DivMonotoneStrictSameNegDivisorBuiltinRuleProof {
+    pub divisor_neg_proof: VerifyFactResult,
+    pub numerators_order_proof: VerifyFactResult,
+}
+
+pub struct NumericLowerBoundWeakenLtBuiltinRuleProof {
+    pub cite_fact_id: FactId,
+}
+
+pub struct NumericUpperBoundWeakenLtBuiltinRuleProof {
+    pub cite_fact_id: FactId,
+}
+
+pub struct PositiveEvenGtOneBuiltinRuleProof {
+    pub in_n_pos_proof: VerifyFactResult,
+    pub even_proof: VerifyFactResult,
+}
+
+
 impl Runtime {
     // Builtin search for `a < b`.
     // B0: none (no known-cite / reflexivity for strict < here).
@@ -291,7 +326,12 @@ impl Runtime {
             return Ok(Some(proof));
         }
         if let Some(proof) =
-            self.search_order_div_mod_bridge_trans_less_proof(fact, verify_state)?
+            self.search_order_div_mod_bridge_trans_less_proof(fact, verify_state.clone())?
+        {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) =
+            self.search_order_stage_a_remainder_less_proof(fact, verify_state)?
         {
             return Ok(Some(proof));
         }

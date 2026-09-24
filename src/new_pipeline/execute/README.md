@@ -71,14 +71,15 @@ with is_failed() on the proof payload.
 (Success | Failed, or Fail* variants). It must not walk mixed proof bags.
 
 ```text
-ExecStmtResult                    // stmt-kind dispatch only
+ExecStmtResult                    // stmt-kind dispatch only (Plan C)
   Fact(ExecFactStmtResult)
-  Definition(ExecDefinitionStmtResult)
+  Introduce(ExecIntroduceStmtResult)
+  Define(ExecDefineStmtResult)
   Witness(ExecWitnessStmtResult)
-  Unsafe(ExecUnsafeStmtResult)
+  Trust(ExecTrustBoundaryStmtResult)
   By(ExecByStmtResult)
-  ReleaseThm(ExecReleaseThmStmtResult)
-  ReleaseStructDef(ExecReleaseStructDefStmtResult)
+  Register(ExecRegisterStmtResult)
+  Release(ExecReleaseStmtResult)   // Thm / StructDef / ObjDef
 
 Leaf *Result = Success(*SuccessResult) | Failed(...)
   (AbstractProp has only SuccessResult; no soft-fail path yet)

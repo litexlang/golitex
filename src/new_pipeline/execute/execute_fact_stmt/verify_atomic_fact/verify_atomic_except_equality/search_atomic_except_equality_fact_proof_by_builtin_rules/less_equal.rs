@@ -141,6 +141,52 @@ pub enum LessEqualFactSearchProofByBuiltinRule {
     // Subset cannot raise finite cardinality.
     // Example: `A $subset B` with both finite proves `finite_set_size(A) <= finite_set_size(B)`.
     FiniteSetSizeSubsetLe(FiniteSetSizeSubsetLeBuiltinRuleProof),
+
+    // Negative common divisor reverses weak order.
+    // Mathematical property: `c < 0` and `b <= a` ⇒ `a / c <= b / c`.
+    // Example: known `c < 0` and `y <= x` prove `x / c <= y / c`.
+    DivMonotoneWeakSameNegDivisor(DivMonotoneWeakSameNegDivisorBuiltinRuleProof),
+    // Move a positive factor into a right-hand quotient.
+    // Mathematical property: `0 < c` and `c * a <= b` (or `a * c <= b`) ⇒ `a <= b / c`.
+    // Example: known `0 < c` and `c * x <= y` prove `x <= y / c`.
+    LessEqualFromPosDivProductBound(LessEqualFromPosDivProductBoundBuiltinRuleProof),
+    // Move a positive denominator out of a left-hand quotient.
+    // Mathematical property: `0 < c` and `a / c <= b` ⇒ `a <= b * c`.
+    // Example: known `0 < c` and `x / c <= y` prove `x <= y * c`.
+    LessEqualFromPosDenomQuotientBound(LessEqualFromPosDenomQuotientBoundBuiltinRuleProof),
+    // Weaken a known numeric lower bound to a smaller literal weak goal.
+    // Example: known `4 < x` proves `2 <= x`.
+    NumericLowerBoundWeakenLe(NumericLowerBoundWeakenLeBuiltinRuleProof),
+    // Integer discreteness from a strict predecessor lower bound.
+    // Example: known `4 < x` and `x $in Z` prove `5 <= x`.
+    NumericLowerBoundFromStrictPredecessorLe(NumericLowerBoundFromStrictPredecessorLeBuiltinRuleProof),
+    // Weaken a known numeric upper bound to a larger literal weak goal.
+    // Example: known `x < 4` proves `x <= 6`.
+    NumericUpperBoundWeakenLe(NumericUpperBoundWeakenLeBuiltinRuleProof),
+    // Integer successor: `a < b` ⇒ `a + 1 <= b`.
+    // Example: known `m < n` for integers proves `m + 1 <= n`.
+    IntegerSuccessorLe(IntegerSuccessorLeBuiltinRuleProof),
+    // Integer adjacency: `a < b + 1` ⇒ `a <= b`.
+    // Example: known `m < n + 1` for integers proves `m <= n`.
+    IntegerAdjacencyLe(IntegerAdjacencyLeBuiltinRuleProof),
+    // Integer predecessor: `a < b` ⇒ `a <= b - 1`.
+    // Example: known `m < n` for integers proves `m <= n - 1`.
+    IntegerPredecessorLe(IntegerPredecessorLeBuiltinRuleProof),
+    // Integer difference: `a < b` ⇒ `1 <= b - a`.
+    // Example: known `m < n` for integers proves `1 <= n - m`.
+    IntegerDiffAtLeastOneLe(IntegerDiffAtLeastOneLeBuiltinRuleProof),
+    // Members are at most the finite-set maximum.
+    // Example: known `x $in S` proves `x <= finite_set_max(S)`.
+    FiniteSetMaxMemberLe(FiniteSetMaxMemberLeBuiltinRuleProof),
+    // The finite-set minimum is at most every member.
+    // Example: known `x $in S` proves `finite_set_min(S) <= x`.
+    FiniteSetMinMemberLe(FiniteSetMinMemberLeBuiltinRuleProof),
+    // Union cardinality is at most the sum of the input cardinalities.
+    // Example: `finite_set_size(union(A, B)) <= finite_set_size(A) + finite_set_size(B)`.
+    FiniteSetSizeUnionLeSum(FiniteSetSizeUnionLeSumBuiltinRuleProof),
+    // Surjection from a finite source bounds codomain size by source size.
+    // Example: `$surjective(A, B, f)` and finite `A` prove `finite_set_size(B) <= finite_set_size(A)`.
+    FiniteSetSizeSurjectionCodomainLeDomain(FiniteSetSizeSurjectionCodomainLeDomainBuiltinRuleProof),
 }
 
 pub struct ClosedNumericComparisonBuiltinRuleProof {
@@ -299,6 +345,78 @@ pub struct FiniteSetSizeSubsetLeBuiltinRuleProof {
 
 
 
+
+pub struct DivMonotoneWeakSameNegDivisorBuiltinRuleProof {
+    pub divisor_neg_proof: VerifyFactResult,
+    pub numerators_order_proof: VerifyFactResult,
+}
+
+pub struct LessEqualFromPosDivProductBoundBuiltinRuleProof {
+    pub divisor_pos_proof: VerifyFactResult,
+    pub product_bound_proof: VerifyFactResult,
+}
+
+pub struct LessEqualFromPosDenomQuotientBoundBuiltinRuleProof {
+    pub divisor_pos_proof: VerifyFactResult,
+    pub quotient_bound_proof: VerifyFactResult,
+}
+
+pub struct NumericLowerBoundWeakenLeBuiltinRuleProof {
+    pub cite_fact_id: FactId,
+}
+
+pub struct NumericLowerBoundFromStrictPredecessorLeBuiltinRuleProof {
+    pub cite_fact_id: FactId,
+    pub in_z_proof: VerifyFactResult,
+}
+
+pub struct NumericUpperBoundWeakenLeBuiltinRuleProof {
+    pub cite_fact_id: FactId,
+}
+
+pub struct IntegerSuccessorLeBuiltinRuleProof {
+    pub left_in_z_proof: VerifyFactResult,
+    pub right_in_z_proof: VerifyFactResult,
+    pub strict_proof: VerifyFactResult,
+}
+
+pub struct IntegerAdjacencyLeBuiltinRuleProof {
+    pub left_in_z_proof: VerifyFactResult,
+    pub right_in_z_proof: VerifyFactResult,
+    pub strict_proof: VerifyFactResult,
+}
+
+pub struct IntegerPredecessorLeBuiltinRuleProof {
+    pub left_in_z_proof: VerifyFactResult,
+    pub right_in_z_proof: VerifyFactResult,
+    pub strict_proof: VerifyFactResult,
+}
+
+pub struct IntegerDiffAtLeastOneLeBuiltinRuleProof {
+    pub left_in_z_proof: VerifyFactResult,
+    pub right_in_z_proof: VerifyFactResult,
+    pub strict_proof: VerifyFactResult,
+}
+
+pub struct FiniteSetMaxMemberLeBuiltinRuleProof {
+    pub member_proof: VerifyFactResult,
+}
+
+pub struct FiniteSetMinMemberLeBuiltinRuleProof {
+    pub member_proof: VerifyFactResult,
+}
+
+pub struct FiniteSetSizeUnionLeSumBuiltinRuleProof {
+    pub left_finite_proof: VerifyFactResult,
+    pub right_finite_proof: VerifyFactResult,
+}
+
+pub struct FiniteSetSizeSurjectionCodomainLeDomainBuiltinRuleProof {
+    pub cite_surjection_fact_id: FactId,
+    pub domain_finite_proof: VerifyFactResult,
+}
+
+
 impl Runtime {
     // Builtin search for `a <= b`.
     // B0: reflexivity + known cites (shape-independent).
@@ -344,7 +462,12 @@ impl Runtime {
             return Ok(Some(proof));
         }
         if let Some(proof) =
-            self.search_order_div_mod_bridge_trans_less_equal_proof(fact, verify_state)?
+            self.search_order_div_mod_bridge_trans_less_equal_proof(fact, verify_state.clone())?
+        {
+            return Ok(Some(proof));
+        }
+        if let Some(proof) =
+            self.search_order_stage_a_remainder_less_equal_proof(fact, verify_state)?
         {
             return Ok(Some(proof));
         }

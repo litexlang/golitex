@@ -1,7 +1,7 @@
 use super::keywords::{
     ABSTRACT_PROP, ALGO, AXIOM, BY, CART, CLAIM, EVAL, EXAMPLE, FINITE_SEQ, FN, FOR, HAVE, IMPORT,
-    LET, MATRIX, OBJ, OBTAIN, PROP, QUESTION_GOAL, RELEASE, SEQ, SKETCH, STRATEGY, STRONG_INDUC,
-    STRUCT, TEMPLATE, THM, TRUST, TRY, TUPLE, WITNESS,
+    LET, MATRIX, OBJ, OBTAIN, PROP, QUESTION_GOAL, REGISTER, RELEASE, SEQ, SKETCH, STRATEGY,
+    STRONG_INDUC, STRUCT, TEMPLATE, THM, TRUST, TUPLE, WITNESS,
 };
 use crate::new_pipeline::ast::stmt::Stmt;
 use crate::new_pipeline::runtime::{Runtime, RuntimeParseError, RuntimeResult};
@@ -33,7 +33,6 @@ impl Runtime {
             AXIOM => self.parse_axiom_stmt(block),
             STRATEGY => self.parse_def_strategy_stmt(block),
             SKETCH => self.parse_sketch_stmt(block),
-            TRY => self.parse_try_stmt(block),
             QUESTION_GOAL => Err(RuntimeParseError::new(
                 "top-level `?` is not supported; use it as a goal inside claim/example/thm/by/strategy",
                 block.line,
@@ -78,6 +77,7 @@ impl Runtime {
                 .into()),
             },
             BY => self.parse_by_stmt(block),
+            REGISTER => self.parse_register_stmt(block),
             _ => self.parse_fact_stmt(block),
         }
     }

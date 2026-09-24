@@ -18,6 +18,7 @@
 
 use crate::new_pipeline::execute::execute_by_stmt::ExecByStmtResult;
 use crate::new_pipeline::execute::execute_by_stmt::ExecReleaseThmStmtResult;
+use crate::new_pipeline::execute::execute_register_stmt::ExecRegisterStmtResult;
 use crate::new_pipeline::execute::execute_def_abstract_prop_stmt::ExecDefAbstractPropStmtSuccessResult;
 use crate::new_pipeline::execute::execute_def_prop_stmt::ExecDefPropStmtResult;
 use crate::new_pipeline::execute::execute_def_struct_stmt::ExecDefStructStmtResult;
@@ -40,7 +41,7 @@ use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::ExecHav
 use crate::new_pipeline::execute::execute_let_stmt::ExecLetObjStmtResult;
 use crate::new_pipeline::execute::execute_release_struct_def_stmt::ExecReleaseStructDefStmtResult;
 use crate::new_pipeline::execute::execute_release_obj_def_stmt::ExecReleaseObjDefStmtResult;
-use crate::new_pipeline::execute::execute_unsafe_stmt::ExecUnsafeStmtResult;
+use crate::new_pipeline::execute::execute_unsafe_stmt::ExecTrustBoundaryStmtResult;
 use crate::new_pipeline::execute::execute_witness_stmt::ExecWitnessStmtResult;
 
 // WD of one parameter-type annotation (not a Fact).
@@ -81,16 +82,22 @@ impl ParamTypeFactCheckResult {
 
 pub enum ExecStmtResult {
     Fact(ExecFactStmtResult),
-    Definition(ExecDefinitionStmtResult),
+    Introduce(ExecIntroduceStmtResult),
+    Define(ExecDefineStmtResult),
     Witness(ExecWitnessStmtResult),
-    Unsafe(ExecUnsafeStmtResult),
+    Trust(ExecTrustBoundaryStmtResult),
     By(ExecByStmtResult),
-    ReleaseThm(ExecReleaseThmStmtResult),
-    ReleaseStructDef(ExecReleaseStructDefStmtResult),
-    ReleaseObjDef(ExecReleaseObjDefStmtResult),
+    Register(ExecRegisterStmtResult),
+    Release(ExecReleaseStmtResult),
 }
 
-pub enum ExecDefinitionStmtResult {
+pub enum ExecReleaseStmtResult {
+    Thm(ExecReleaseThmStmtResult),
+    StructDef(ExecReleaseStructDefStmtResult),
+    ObjDef(ExecReleaseObjDefStmtResult),
+}
+
+pub enum ExecIntroduceStmtResult {
     LetObj(ExecLetObjStmtResult),
     HaveObjInNonemptySet(ExecHaveObjInNonemptySetStmtResult),
     HaveObjEqual(ExecHaveObjEqualStmtResult),
@@ -99,6 +106,9 @@ pub enum ExecDefinitionStmtResult {
     ObtainObjFromAtomicFact(ExecObtainObjFromAtomicFactStmtResult),
     HaveByFnPreimage(ExecHaveByFnPreimageStmtResult),
     HaveByReplacementAxiom(ExecHaveByReplacementAxiomStmtResult),
+}
+
+pub enum ExecDefineStmtResult {
     HaveFnEqual(ExecHaveFnEqualStmtResult),
     HaveFnEqualCaseByCase(ExecHaveFnEqualCaseByCaseStmtResult),
     HaveFnByForallExistUnique(ExecHaveFnByForallExistUniqueStmtResult),
@@ -114,18 +124,28 @@ impl ExecStmtResult {
     pub fn is_failed(&self) -> bool {
         match self {
             Self::Fact(r) => r.is_failed(),
-            Self::Definition(r) => r.is_failed(),
+            Self::Introduce(r) => r.is_failed(),
+            Self::Define(r) => r.is_failed(),
             Self::Witness(r) => r.is_failed(),
-            Self::Unsafe(r) => r.is_failed(),
+            Self::Trust(r) => r.is_failed(),
             Self::By(r) => r.is_failed(),
-            Self::ReleaseThm(r) => r.is_failed(),
-            Self::ReleaseStructDef(r) => r.is_failed(),
-            Self::ReleaseObjDef(r) => r.is_failed(),
+            Self::Register(r) => r.is_failed(),
+            Self::Release(r) => r.is_failed(),
         }
     }
 }
 
-impl ExecDefinitionStmtResult {
+impl ExecReleaseStmtResult {
+    pub fn is_failed(&self) -> bool {
+        match self {
+            Self::Thm(r) => r.is_failed(),
+            Self::StructDef(r) => r.is_failed(),
+            Self::ObjDef(r) => r.is_failed(),
+        }
+    }
+}
+
+impl ExecIntroduceStmtResult {
     pub fn is_failed(&self) -> bool {
         match self {
             Self::LetObj(r) => r.is_failed(),
@@ -136,6 +156,13 @@ impl ExecDefinitionStmtResult {
             Self::ObtainObjFromAtomicFact(r) => r.is_failed(),
             Self::HaveByFnPreimage(r) => r.is_failed(),
             Self::HaveByReplacementAxiom(r) => r.is_failed(),
+        }
+    }
+}
+
+impl ExecDefineStmtResult {
+    pub fn is_failed(&self) -> bool {
+        match self {
             Self::HaveFnEqual(r) => r.is_failed(),
             Self::HaveFnEqualCaseByCase(r) => r.is_failed(),
             Self::HaveFnByForallExistUnique(r) => r.is_failed(),

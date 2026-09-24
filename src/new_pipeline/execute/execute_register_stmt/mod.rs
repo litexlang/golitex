@@ -1,0 +1,9 @@
+mod exec_register_reflexive_prop_stmt;
+mod exec_register_symmetric_prop_stmt;
+mod exec_register_transitive_prop_stmt;
+mod result;
+
+pub use exec_register_reflexive_prop_stmt::exec_register_reflexive_prop_stmt;
+pub use exec_register_symmetric_prop_stmt::exec_register_symmetric_prop_stmt;
+pub use exec_register_transitive_prop_stmt::exec_register_transitive_prop_stmt;
+pub use result::ExecRegisterStmtResult;

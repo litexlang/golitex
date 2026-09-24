@@ -646,4 +646,25 @@ mod tests {
                 .collect::<Vec<_>>()
         );
     }
+
+    #[test]
+    fn tokenizes_factorial_bang_and_exist_bang() {
+        let tokenizer = Tokenizer::new();
+        let a = tokenizer
+            .tokenize("2!", RealOrVirtualPath::Eval)
+            .expect("tokenize");
+        assert_eq!(a[0].header, vec!["2", "!"]);
+        let b = tokenizer
+            .tokenize("2 != 3", RealOrVirtualPath::Eval)
+            .expect("tokenize");
+        assert_eq!(b[0].header, vec!["2", "!=", "3"]);
+        let c = tokenizer
+            .tokenize("exist! x N", RealOrVirtualPath::Eval)
+            .expect("tokenize");
+        assert_eq!(c[0].header, vec!["exist", "!", "x", "N"]);
+        let d = tokenizer
+            .tokenize("n!", RealOrVirtualPath::Eval)
+            .expect("tokenize");
+        assert_eq!(d[0].header, vec!["n", "!"]);
+    }
 }

@@ -17,17 +17,21 @@ use super::param::{SetBoundParameterList, TypedParameterList};
 // Stmt (file spine)
 // -----------------------------------------------------------------------------
 
-// Env-changing action: assert a Fact, define, prove by …, trust, … .
+// Env-changing action: assert a Fact, introduce names, define interfaces,
+// prove by …, release packaged facts, register prop properties, trust, … .
 // Not a value (Obj) and not itself a proposition (Fact); a bare Fact stmt asserts one.
+//
+// Top-level families follow what the statement does to the environment
+// (Plan C), not surface keyword spelling alone.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Stmt {
     Fact(Fact),
-    UnsafeStmt(UnsafeStmt),
-    Definition(DefinitionStmt),
-    ReleaseThmStmt(ReleaseThmStmt),
-    ReleaseStructDefStmt(ReleaseStructDefStmt),
-    ReleaseObjDefStmt(ReleaseObjDefStmt),
+    Trust(TrustBoundaryStmt),
+    Introduce(IntroduceStmt),
+    Define(DefineStmt),
+    Release(ReleaseStmt),
     By(ByStmt),
+    Register(RegisterStmt),
     Witness(WitnessStmt),
     ProofBlock(ProofBlockStmt),
     Command(CommandStmt),
@@ -38,12 +42,12 @@ pub enum Stmt {
 // -----------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
-// UnsafeStmt
+// TrustBoundaryStmt
 // -----------------------------------------------------------------------------
 
 // Trust boundary: skip truth search; still requires WD; `-strict` rejects these.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum UnsafeStmt {
+pub enum TrustBoundaryStmt {
     TrustStmt(TrustStmt),
     TrustHaveStmt(TrustHaveStmt),
 }
@@ -68,13 +72,13 @@ pub struct TrustHaveStmt {
 }
 
 // -----------------------------------------------------------------------------
-// DefinitionStmt
+// IntroduceStmt
 // -----------------------------------------------------------------------------
 
-// What: introduce names / definitions into the environment
-// (have, let, obtain, prop, thm, template, …).
+// What: introduce fresh names / carriers into the environment
+// (have, let, obtain, have by …) without defining a reusable interface.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum DefinitionStmt {
+pub enum IntroduceStmt {
     LetObjStmt(LetObjStmt),
     HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),
     HaveObjEqualStmt(HaveObjEqualStmt),
@@ -85,6 +89,16 @@ pub enum DefinitionStmt {
     HaveByPreimageStmt(HaveByPreimageStmt),
     // Named set via ZF Replacement (no anonymous replacement_image Obj).
     HaveByReplacementAxiomStmt(HaveByReplacementAxiomStmt),
+}
+
+// -----------------------------------------------------------------------------
+// DefineStmt
+// -----------------------------------------------------------------------------
+
+// What: define a reusable named interface or function object
+// (prop, thm, struct, template, have fn, …).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum DefineStmt {
     HaveFnEqualStmt(HaveFnEqualStmt),
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
     HaveFnByInducStmt(HaveFnByInducStmt),
@@ -319,7 +333,7 @@ pub struct DefAbstractPropStmt {
 }
 
 // What: bodies allowed inside a `template<…>:` definition.
-// These are the same definition statements that work outside the template
+// Mix of Introduce / Define / trust-have bodies that work outside the template
 // (`have …`, `have fn …`, obtain, …); the template only adds parameters.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum TemplateDefEnum {
@@ -444,8 +458,16 @@ pub struct DefStrategyStmt {
 }
 
 // -----------------------------------------------------------------------------
-// ReleaseThmStmt
+// ReleaseStmt
 // -----------------------------------------------------------------------------
+
+// What: unpack already-packaged definitions / theorems into the ambient env.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ReleaseStmt {
+    ReleaseThmStmt(ReleaseThmStmt),
+    ReleaseStructDefStmt(ReleaseStructDefStmt),
+    ReleaseObjDefStmt(ReleaseObjDefStmt),
+}
 
 // What: instantiate a theorem and commit all of its conclusions.
 // Surface: `release thm name(args)` / `release thm name`
@@ -473,9 +495,6 @@ pub enum ByStmt {
     ByFnExtensionStmt(ByFnExtensionStmt),
     ByEnumerateRangeStmt(ByEnumerateRangeStmt),
     ByClosedRangeAsCasesStmt(ByClosedRangeAsCasesStmt),
-    ByTransitivePropStmt(ByTransitivePropStmt),
-    BySymmetricPropStmt(BySymmetricPropStmt),
-    ByReflexivePropStmt(ByReflexivePropStmt),
     ByZornLemmaStmt(ByZornLemmaStmt),
     ByAxiomOfChoiceStmt(ByAxiomOfChoiceStmt),
     ByRegularityAxiomStmt(ByRegularityAxiomStmt),
@@ -617,36 +636,6 @@ pub struct ByClosedRangeAsCasesStmt {
     pub line_file: LineFile,
 }
 
-// What: register / use transitivity of a user prop.
-// Surface: `by transitive: forall …`
-// Stores: a reusable transitive rewrite route for that prop.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ByTransitivePropStmt {
-    pub forall_fact: ForallFact,
-    pub proof: Vec<Stmt>,
-    pub line_file: LineFile,
-}
-
-// What: register / use symmetry of a user prop.
-// Surface: `by symmetric: forall …`
-// Stores: a reusable symmetric rewrite route for that prop.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct BySymmetricPropStmt {
-    pub forall_fact: ForallFact,
-    pub proof: Vec<Stmt>,
-    pub line_file: LineFile,
-}
-
-// What: register / use reflexivity of a user prop.
-// Surface: `by reflexive: forall …`
-// Stores: a reusable reflexive rewrite route for that prop.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ByReflexivePropStmt {
-    pub forall_fact: ForallFact,
-    pub proof: Vec<Stmt>,
-    pub line_file: LineFile,
-}
-
 // What: apply Zorn's lemma with named order / bound / maximality props.
 // Surface: `by zorn_lemma: …`
 // Stores: `exist m S st {$M(m)}` using the supplied maximality prop.
@@ -717,6 +706,42 @@ pub struct ByThmStmt {
 }
 
 // -----------------------------------------------------------------------------
+// RegisterStmt
+// -----------------------------------------------------------------------------
+
+// What: register rewrite / infer properties of a user prop (not a proof method).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum RegisterStmt {
+    RegisterTransitivePropStmt(RegisterTransitivePropStmt),
+    RegisterSymmetricPropStmt(RegisterSymmetricPropStmt),
+    RegisterReflexivePropStmt(RegisterReflexivePropStmt),
+}
+
+// What: register transitivity of a user prop for later rewrite / chain infer.
+// Surface: `register transitive:` + one shaped `? forall …` (no proof body).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RegisterTransitivePropStmt {
+    pub forall_fact: ForallFact,
+    pub line_file: LineFile,
+}
+
+// What: register symmetry of a user prop for later rewrite.
+// Surface: `register symmetric:` + one shaped `? forall …` (no proof body).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RegisterSymmetricPropStmt {
+    pub forall_fact: ForallFact,
+    pub line_file: LineFile,
+}
+
+// What: register reflexivity of a user prop for later rewrite.
+// Surface: `register reflexive:` + one shaped `? forall …` (no proof body).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RegisterReflexivePropStmt {
+    pub forall_fact: ForallFact,
+    pub line_file: LineFile,
+}
+
+// -----------------------------------------------------------------------------
 // WitnessStmt
 // -----------------------------------------------------------------------------
 
@@ -762,13 +787,12 @@ pub struct WitnessNonemptySet {
 // ProofBlockStmt
 // -----------------------------------------------------------------------------
 
-// What: nested proof blocks that scope local work (claim / example / sketch / try).
+// What: nested proof blocks that scope local work (claim / example / sketch).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ProofBlockStmt {
     ClaimStmt(ClaimStmt),
     ExampleStmt(ExampleStmt),
     SketchStmt(SketchStmt),
-    TryStmt(TryStmt),
 }
 
 // What: prove a subgoal in a child scope and keep only that target.
@@ -796,15 +820,6 @@ pub struct ExampleStmt {
 // Stores: nothing outside the block.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SketchStmt {
-    pub proof: Vec<Stmt>,
-    pub line_file: LineFile,
-}
-
-// What: soft-fail probe — Failed inside rolls back and does not stop the session.
-// Surface: `try:` …
-// Stores: all block effects when the body succeeds; none when rolled back.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct TryStmt {
     pub proof: Vec<Stmt>,
     pub line_file: LineFile,
 }

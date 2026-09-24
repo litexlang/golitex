@@ -1,6 +1,6 @@
 //! Object expression parse for new_pipeline (Phase 1).
 //!
-//! Precedence (low → high): unicode ∪∩×, +-, */%, ..., unary -, ^, postfix, primary.
+//! Precedence (low → high): unicode ∪∩×, +-, */%, ..., unary -, ^, postfix (`!` / `.` / call / `[i]`), primary.
 
 mod expression;
 mod primary;

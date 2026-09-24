@@ -44,7 +44,7 @@ First header token chooses the family. Anything else is a **bare fact** statemen
 | `obtain` | `Obtain` |
 | `claim` / `example` | local proof block |
 | `thm` / `axiom` / `strategy` | named interface |
-| `sketch` / `try` | exploratory block |
+| `sketch` | exploratory block |
 | `trust` | `Trust` / `TrustHave` |
 | `eval` | `Eval` |
 | `witness` | `Witness` |
@@ -203,7 +203,7 @@ strategy s:
 
 `axiom` / `strategy` goals are a single `? forall …`. Tracer: `def_thm.lit`
 
-### `claim` / `example` / `try` / `sketch`
+### `claim` / `example` / `sketch`
 
 ```text
 claim:
@@ -211,9 +211,6 @@ claim:
 
 example:
     ? 1 = 1
-
-try:
-    1 = 1
 
 sketch:
     1 = 1
@@ -280,9 +277,6 @@ Tracers: `release_thm.lit`, `release_struct_def.lit`, `release_obj_def.lit`
 | thm | `by thm Call => <atomic>` | `by/by_thm.lit` |
 | induc | `by induc n from base:` + goals; optional `? from n = base:` / `? induc:` | `by/by_induc.lit` |
 | strong_induc | `by strong_induc n from base:` + `? strong_induc:` | `by/by_strong_induc.lit` |
-| reflexive_prop | `by reflexive_prop:` + shaped `? forall …` | `by/by_reflexive_prop.lit` |
-| symmetric_prop | `by symmetric_prop:` + shaped forall | `by/by_symmetric_prop.lit` |
-| transitive_prop | `by transitive_prop:` + shaped forall | `by/by_transitive_prop.lit` |
 | extension | `by extension A = B` or `by extension:` + `? A = B` | `by/by_extension.lit` |
 | fn_extension | same for function equality | `by/by_fn_extension.lit` |
 | enumerate finite_set | `by enumerate finite_set:` + `? forall …` | `by/by_enumerate_finite_set.lit` |
@@ -295,6 +289,18 @@ Tracers: `release_thm.lit`, `release_struct_def.lit`, `release_obj_def.lit`
 | zorn_lemma | `by zorn_lemma: set S, prop P, prop U, prop M` | parse+wired; green tracer TBD |
 
 Finite-set induc forms `by induc S:` / `by induc S in A:` are **removed**.
+
+---
+
+## Statements — `register` prop properties
+
+Not proof methods: verify a shaped forall, then tag the prop for rewrite / infer.
+
+| Form | Sketch | Tracer |
+|---|---|---|
+| reflexive | `register reflexive:` + one shaped `? forall …` (no proof body) | `register/register_reflexive.lit` |
+| symmetric | `register symmetric:` + shaped forall (no proof body) | `register/register_symmetric.lit` |
+| transitive | `register transitive:` + shaped forall (no proof body) | `register/register_transitive.lit` |
 
 ---
 
@@ -409,16 +415,17 @@ Precedence low → high:
 | seq spaces | `seq(S)`, `finite_seq(S, n)` |
 | fn space | `fn(x A) B`, `fn(x A: x > 0) B`, `A -> B` (sugar, right-assoc) |
 | anonymous fn | `fn(x R) R {x + 1}` |
-| apply / index / field | `f(a)`, `f(a)(b)`, `obj[i]`, `obj.field` |
+| apply / index / field / bang | `f(a)`, `f(a)(b)`, `obj[i]`, `obj.field`, postfix `n!` (= `factorial(n)`) |
 | struct view | `&Point`, `&Pair<R>` |
 | template instance | `\Name<args>` (angles required) |
 | interval literals | `'[a,b]` `'(a,b)` `'[a,b)` `'(a,b]` ; rays `'(,a]` `'[a,)` … |
 | fn_range | `fn_range(f)` |
+| factorial | `factorial(n)` and postfix `n!` |
 
 ### Keyword primaries that are **not** parse-wired yet
 
 Keywords exist in `keywords.rs` but have no primary arm today (do not document as working surface):  
-`factorial`, `re` / `img` / `C_abs`, `sum` / `product` / `reduce` / `finite_set_sum` / `finite_set_reduce` (only `finite_set_product` is wired among the reduce family).
+`re` / `img` / `C_abs`, `sum` / `product` / `reduce` / `finite_set_sum` / `finite_set_reduce` (only `finite_set_product` is wired among the reduce family).
 
 ### Typical object rejects
 

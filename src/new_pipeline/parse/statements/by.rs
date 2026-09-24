@@ -1,9 +1,8 @@
 use super::super::keywords::{
     AXIOM_OF_CHOICE, BY, CASE, CASES, COLON, COMMA, CONTRA, DEF, EQUAL, FROM, IMPOSSIBLE, INDUC,
-    LEFT_PAREN, MOD_FLAT_SIGN, MOD_SIGN, OBJ, PROP, QUESTION_GOAL, REFLEXIVE_PROP,
-    REGULARITY_AXIOM, RELEASE, RIGHT_ARROW, RIGHT_PAREN, SET, STRONG_INDUC, STRUCT, SYMMETRIC_PROP,
-    TRANSITIVE_PROP, EXTENSION, FN_EXTENSION, THM, ENUMERATE, FOR, CLOSED_RANGE, FINITE_SET,
-    FACT_PREFIX, AS, RANGE, IN, ZORN_LEMMA,
+    LEFT_PAREN, MOD_FLAT_SIGN, MOD_SIGN, OBJ, PROP, QUESTION_GOAL, REGULARITY_AXIOM, RELEASE,
+    RIGHT_ARROW, RIGHT_PAREN, SET, STRONG_INDUC, STRUCT, EXTENSION, FN_EXTENSION, THM, ENUMERATE,
+    FOR, CLOSED_RANGE, FINITE_SET, FACT_PREFIX, AS, RANGE, IN, ZORN_LEMMA,
 };
 use super::super::object::{is_simple_name, parse_obj, parse_obj_list_paren};
 use crate::new_pipeline::ast::obj::{Obj, SetFormer};
@@ -13,16 +12,11 @@ use crate::new_pipeline::ast::fact::{
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::stmt::{
-    ByAxiomOfChoiceStmt, ByCasesStmt, ByContraStmt, ByDefStmt, ByInducStmt, ByReflexivePropStmt,
-    ByRegularityAxiomStmt, ByStmt, ByStrongInducStmt, BySymmetricPropStmt, ByTransitivePropStmt,
-    ByExtensionStmt, ByFnExtensionStmt, ByZornLemmaStmt, ClosedRangeOrRange,
-    ByClosedRangeAsCasesStmt, ByEnumerateRangeStmt, ByForStmt, ByEnumerateFiniteSetStmt,
-    ByThmStmt, ReleaseObjDefStmt,
+    ByAxiomOfChoiceStmt, ByCasesStmt, ByContraStmt, ByDefStmt, ByInducStmt,
+    ByRegularityAxiomStmt, ByStmt, ByStrongInducStmt, ByExtensionStmt, ByFnExtensionStmt,
+    ByZornLemmaStmt, ClosedRangeOrRange, ByClosedRangeAsCasesStmt, ByEnumerateRangeStmt,
+    ByForStmt, ByEnumerateFiniteSetStmt, ByThmStmt, ReleaseObjDefStmt, ReleaseStmt,
     ReleaseStructDefStmt, ReleaseThmStmt, Stmt, TheoremCall, TheoremCallArguments,
-};
-use crate::new_pipeline::parse::prop_registration_shape::{
-    reflexive_prop_name_from_forall, symmetric_prop_registration_from_forall,
-    transitive_prop_name_from_forall,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -37,9 +31,6 @@ impl Runtime {
             Some(DEF) => self.parse_by_def_stmt(&mut tb, block),
             Some(INDUC) | Some(STRONG_INDUC) => self.parse_by_induc_or_strong_induc_stmt(&mut tb, block),
             Some(THM) => self.parse_by_thm_or_release(&mut tb, block),
-            Some(REFLEXIVE_PROP) => self.parse_by_reflexive_prop_stmt(&mut tb, block),
-            Some(SYMMETRIC_PROP) => self.parse_by_symmetric_prop_stmt(&mut tb, block),
-            Some(TRANSITIVE_PROP) => self.parse_by_transitive_prop_stmt(&mut tb, block),
             Some(EXTENSION) => self.parse_by_extension_stmt(&mut tb, block),
             Some(FN_EXTENSION) => self.parse_by_fn_extension_stmt(&mut tb, block),
             Some(ENUMERATE) => self.parse_by_enumerate_stmt(&mut tb, block),
@@ -49,90 +40,12 @@ impl Runtime {
             Some(AXIOM_OF_CHOICE) => self.parse_by_axiom_of_choice_stmt(&mut tb, block),
             Some(ZORN_LEMMA) => self.parse_by_zorn_lemma_stmt(&mut tb, block),
             Some(other) => Err(tb.parse_error(format!(
-                "by: `{other}` is not wired yet (supported: cases, contra, def, thm, reflexive_prop, symmetric_prop, transitive_prop, extension, fn_extension, induc, strong_induc, regularity_axiom, axiom_of_choice, zorn_lemma)"
+                "by: `{other}` is not wired yet (supported: cases, contra, def, thm, extension, fn_extension, induc, strong_induc, regularity_axiom, axiom_of_choice, zorn_lemma)"
             ))),
             None => Err(tb.parse_error("by: expected a proof directive after `by`")),
         }
     }
 
-    fn parse_by_reflexive_prop_stmt(
-        &mut self,
-        tb: &mut TokenBlock,
-        block: &TokenBlock,
-    ) -> RuntimeResult<Stmt> {
-        tb.expect(REFLEXIVE_PROP)?;
-        tb.expect_colon_end_of_header()?;
-        if tb.body.is_empty() {
-            return Err(tb.parse_error("by reflexive_prop: expects a body"));
-        }
-        let mut goal = tb.body[0].clone();
-        let forall_fact = self.parse_goal_forall_fact(&mut goal, "by reflexive_prop")?;
-        if let Err(msg) = reflexive_prop_name_from_forall(&forall_fact) {
-            return Err(tb.parse_error(msg));
-        }
-        let proof_blocks = &tb.body[1..];
-        let proof = self.with_forall_params_occupied(&forall_fact.typed_parameters, tb, |this| {
-            this.parse_body_stmts(proof_blocks)
-        })?;
-        Ok(Stmt::By(ByStmt::ByReflexivePropStmt(ByReflexivePropStmt {
-            forall_fact,
-            proof,
-            line_file: LineFile::new(block.line, block.source_path.clone()),
-        })))
-    }
-
-    fn parse_by_symmetric_prop_stmt(
-        &mut self,
-        tb: &mut TokenBlock,
-        block: &TokenBlock,
-    ) -> RuntimeResult<Stmt> {
-        tb.expect(SYMMETRIC_PROP)?;
-        tb.expect_colon_end_of_header()?;
-        if tb.body.is_empty() {
-            return Err(tb.parse_error("by symmetric_prop: expects a body"));
-        }
-        let mut goal = tb.body[0].clone();
-        let forall_fact = self.parse_goal_forall_fact(&mut goal, "by symmetric_prop")?;
-        if let Err(msg) = symmetric_prop_registration_from_forall(&forall_fact) {
-            return Err(tb.parse_error(msg));
-        }
-        let proof_blocks = &tb.body[1..];
-        let proof = self.with_forall_params_occupied(&forall_fact.typed_parameters, tb, |this| {
-            this.parse_body_stmts(proof_blocks)
-        })?;
-        Ok(Stmt::By(ByStmt::BySymmetricPropStmt(BySymmetricPropStmt {
-            forall_fact,
-            proof,
-            line_file: LineFile::new(block.line, block.source_path.clone()),
-        })))
-    }
-
-
-    fn parse_by_transitive_prop_stmt(
-        &mut self,
-        tb: &mut TokenBlock,
-        block: &TokenBlock,
-    ) -> RuntimeResult<Stmt> {
-        tb.expect(TRANSITIVE_PROP)?;
-        tb.expect_colon_end_of_header()?;
-        if tb.body.is_empty() {
-            return Err(tb.parse_error("by transitive_prop: expects a body"));
-        }
-        let mut goal = tb.body[0].clone();
-        let forall_fact = self.parse_goal_forall_fact(&mut goal, "by transitive_prop")?;
-        if let Err(msg) = transitive_prop_name_from_forall(&forall_fact) {
-            return Err(tb.parse_error(msg));
-        }
-        let proof_blocks = &tb.body[1..];
-        let proof = self.with_forall_params_occupied(&forall_fact.typed_parameters, tb, |this| {
-            this.parse_body_stmts(proof_blocks)
-        })?;
-        Ok(Stmt::By(ByStmt::ByTransitivePropStmt(ByTransitivePropStmt {
-            forall_fact,
-            proof,
-            line_file: LineFile::new(block.line, block.source_path.clone()),
-        })))
-    }
 
     fn parse_by_extension_stmt(
         &mut self,
@@ -555,10 +468,10 @@ impl Runtime {
         if !tb.exceed_end_of_head() || !tb.body.is_empty() {
             return Err(tb.parse_error("by thm: expected bare call or `=> <atomic fact>`"));
         }
-        Ok(Stmt::ReleaseThmStmt(ReleaseThmStmt {
+        Ok(Stmt::Release(ReleaseStmt::ReleaseThmStmt(ReleaseThmStmt {
             call,
             line_file: LineFile::new(block.line, block.source_path.clone()),
-        }))
+        })))
     }
 
     pub(in super::super) fn parse_release_thm_stmt(
@@ -572,10 +485,10 @@ impl Runtime {
         if !tb.exceed_end_of_head() || !tb.body.is_empty() {
             return Err(tb.parse_error("release thm accepts only a bare theorem call"));
         }
-        Ok(Stmt::ReleaseThmStmt(ReleaseThmStmt {
+        Ok(Stmt::Release(ReleaseStmt::ReleaseThmStmt(ReleaseThmStmt {
             call,
             line_file: LineFile::new(block.line, block.source_path.clone()),
-        }))
+        })))
     }
 
     pub(in super::super) fn parse_release_struct_def_stmt(
@@ -598,10 +511,10 @@ impl Runtime {
                 "release struct def expects exactly one object and has no `as &Struct` form",
             ));
         }
-        Ok(Stmt::ReleaseStructDefStmt(ReleaseStructDefStmt {
+        Ok(Stmt::Release(ReleaseStmt::ReleaseStructDefStmt(ReleaseStructDefStmt {
             obj,
             line_file: LineFile::new(block.line, block.source_path.clone()),
-        }))
+        })))
     }
 
     pub(in super::super) fn parse_release_obj_def_stmt(
@@ -625,10 +538,10 @@ impl Runtime {
         let Obj::Identifier(name) = obj else {
             return Err(tb.parse_error("release obj def expects an identifier"));
         };
-        Ok(Stmt::ReleaseObjDefStmt(ReleaseObjDefStmt {
+        Ok(Stmt::Release(ReleaseStmt::ReleaseObjDefStmt(ReleaseObjDefStmt {
             name,
             line_file: LineFile::new(block.line, block.source_path.clone()),
-        }))
+        })))
     }
 
     pub(in super::super) fn parse_theorem_call(

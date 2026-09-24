@@ -8,7 +8,7 @@
 prop same(x set, y set):
     x = y
 
-by reflexive_prop:
+register reflexive:
     ? forall x set:
         $same(x, x)
 
