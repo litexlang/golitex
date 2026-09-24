@@ -3,7 +3,7 @@ use super::super::object::is_simple_name;
 use crate::new_pipeline::ast::fact::AtomicFact;
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::stmt::{
-    IntroduceStmt, DefineStmt, ObtainObjFromAtomicFact, ObtainObjFromExistFact, Stmt,
+    DefineObjStmt, DefinitionStmt, ObtainObjFromAtomicFact, ObtainObjFromExistFact, Stmt,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -43,13 +43,13 @@ impl Runtime {
         let line_file = LineFile::new(block.line, block.source_path.clone());
         let stmt = if tb.peek() == Some(EXIST) || tb.peek() == Some(EXIST_BANG) {
             let fact = self.parse_exist_fact(&mut tb)?;
-            Stmt::Introduce(IntroduceStmt::ObtainObjFromExistFact(
+            Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::ObtainObjFromExistFact(
                 ObtainObjFromExistFact {
                     equal_tos: equal_tos.clone(),
                     fact,
                     line_file,
                 },
-            ))
+            )))
         } else if tb.peek() == Some(FACT_PREFIX) {
             let atomic = self.parse_atomic_fact(&mut tb, true)?;
             let AtomicFact::NormalAtomicFact(fact) = atomic else {
@@ -57,13 +57,13 @@ impl Runtime {
                     "obtain from `$P` expects a positive normal atomic fact",
                 ));
             };
-            Stmt::Introduce(IntroduceStmt::ObtainObjFromAtomicFact(
+            Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::ObtainObjFromAtomicFact(
                 ObtainObjFromAtomicFact {
                     equal_tos: equal_tos.clone(),
                     fact,
                     line_file,
                 },
-            ))
+            )))
         } else {
             return Err(tb.parse_error(
                 "obtain: expected `exist` / `exist!` / `$P(...)` after `from`",

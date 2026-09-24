@@ -1,0 +1,7 @@
+# Node: equal.ByBuiltinRule.PowerOfPower
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/power_of_power.lit
+
+have a R+
+have m N+
+have n N+
+(a^m)^n = a^(m * n)

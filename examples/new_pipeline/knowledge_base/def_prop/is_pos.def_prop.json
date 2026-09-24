@@ -1,1 +1,55 @@
-{"iff_facts":[{"atomic":{"fact_id":42,"left":{"identifier":{"id":7,"name":"x","tag":"Plain"},"tag":"Identifier"},"line_file":null,"right":{"literal":{"tag":"Number","text":"0"},"tag":"Literal"},"tag":"GreaterFact"},"tag":"AtomicFact"}],"kind":"def_prop","line_file":{"line":1,"path":{"path":"/abs/module/foo.lit","tag":"Real"}},"name":"is_pos","typed_parameters":{"groups":[{"param_type":{"obj":{"set":"R","tag":"StandardSet"},"tag":"Obj"},"params":[{"id":7,"name":"x"}]}]}}
+{
+  "iff_facts": [
+    {
+      "atomic": {
+        "fact_id": 42,
+        "left": {
+          "identifier": {
+            "id": 7,
+            "name": "x",
+            "tag": "Plain"
+          },
+          "tag": "Identifier"
+        },
+        "line_file": null,
+        "right": {
+          "literal": {
+            "tag": "Number",
+            "text": "0"
+          },
+          "tag": "Literal"
+        },
+        "tag": "GreaterFact"
+      },
+      "tag": "AtomicFact"
+    }
+  ],
+  "kind": "def_prop",
+  "line_file": {
+    "line": 1,
+    "path": {
+      "path": "/abs/module/foo.lit",
+      "tag": "Real"
+    }
+  },
+  "name": "is_pos",
+  "typed_parameters": {
+    "groups": [
+      {
+        "param_type": {
+          "obj": {
+            "set": "R",
+            "tag": "StandardSet"
+          },
+          "tag": "Obj"
+        },
+        "params": [
+          {
+            "id": 7,
+            "name": "x"
+          }
+        ]
+      }
+    ]
+  }
+}

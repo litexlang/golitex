@@ -2,7 +2,7 @@ use super::super::keywords::{COLON, COMMA, EQUAL};
 use super::super::object::parse_obj;
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::stmt::{
-    IntroduceStmt, DefineStmt, HaveObjByExistFactsStmt, HaveObjEqualStmt,
+    DefineObjStmt, DefinitionStmt, HaveObjByExistFactsStmt, HaveObjEqualStmt,
     HaveObjInNonemptySetOrParamTypeStmt, Stmt,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
@@ -75,36 +75,36 @@ impl Runtime {
                 for identifier in &identifiers {
                     self.occupy_bound_name_as_parse(block, identifier)?;
                 }
-                Ok(Stmt::Introduce(IntroduceStmt::HaveObjInNonemptySetStmt(
+                Ok(Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveObjInNonemptySetStmt(
                     HaveObjInNonemptySetOrParamTypeStmt {
                         param_def,
                         line_file: LineFile::new(block.line, block.source_path.clone()),
                     },
-                )))
+                ))))
             }
             HaveObjKind::Equal(param_def, objs_equal_to, identifiers) => {
                 for identifier in &identifiers {
                     self.occupy_bound_name_as_parse(block, identifier)?;
                 }
-                Ok(Stmt::Introduce(IntroduceStmt::HaveObjEqualStmt(
+                Ok(Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveObjEqualStmt(
                     HaveObjEqualStmt {
                         param_def,
                         objs_equal_to,
                         line_file: LineFile::new(block.line, block.source_path.clone()),
                     },
-                )))
+                ))))
             }
             HaveObjKind::ByExist(param_def, facts, identifiers) => {
                 for identifier in &identifiers {
                     self.occupy_bound_name_as_parse(block, identifier)?;
                 }
-                Ok(Stmt::Introduce(IntroduceStmt::HaveObjByExistFactsStmt(
+                Ok(Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveObjByExistFactsStmt(
                     HaveObjByExistFactsStmt {
                         param_def,
                         facts,
                         line_file: LineFile::new(block.line, block.source_path.clone()),
                     },
-                )))
+                ))))
             }
         }
     }

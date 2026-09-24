@@ -12,6 +12,11 @@ use super::by_inverse_trig::{
     CosArccosLeftInverseBuiltinRuleProof, CotArccotLeftInverseBuiltinRuleProof,
     SinArcsinLeftInverseBuiltinRuleProof, TanArctanLeftInverseBuiltinRuleProof,
 };
+use super::by_power_laws::{
+    PowerOfPowerBuiltinRuleProof, PowerOfProductBuiltinRuleProof,
+    PowerProductSameBaseBuiltinRuleProof, QuotientAsMulNegOnePowerBuiltinRuleProof,
+    ReciprocalAsNegOnePowerBuiltinRuleProof,
+};
 use super::by_set_builder_alpha_equal::BySetBuilderAlphaEqualBuiltinRuleProof;
 
 // Each equality builtin rule gets its own variant and payload.
@@ -39,6 +44,11 @@ pub enum EqualitySearchProofByBuiltinRule {
     ArccosExactNegOne(ArccosExactNegOneBuiltinRuleProof),
     ArctanExactZero(ArctanExactZeroBuiltinRuleProof),
     ArccotExactZero(ArccotExactZeroBuiltinRuleProof),
+    PowerProductSameBase(PowerProductSameBaseBuiltinRuleProof),
+    PowerOfPower(PowerOfPowerBuiltinRuleProof),
+    PowerOfProduct(PowerOfProductBuiltinRuleProof),
+    ReciprocalAsNegOnePower(ReciprocalAsNegOnePowerBuiltinRuleProof),
+    QuotientAsMulNegOnePower(QuotientAsMulNegOnePowerBuiltinRuleProof),
 }
 
 // Builtin Calculation: both sides of an equality reduce to the same value

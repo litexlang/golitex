@@ -73,7 +73,14 @@ impl JsonValue {
 
     pub fn stringify(&self) -> String {
         let mut out = String::new();
-        write_value(&mut out, self);
+        write_value_compact(&mut out, self);
+        out
+    }
+
+    /// Pretty JSON with 2-space indent (human-facing goldens / examples).
+    pub fn stringify_pretty(&self) -> String {
+        let mut out = String::new();
+        write_value_pretty(&mut out, self, 0);
         out
     }
 
@@ -92,18 +99,12 @@ impl JsonValue {
     }
 }
 
-fn write_value(out: &mut String, value: &JsonValue) {
+fn write_value_compact(out: &mut String, value: &JsonValue) {
     match value {
         JsonValue::Null => out.push_str("null"),
         JsonValue::Bool(true) => out.push_str("true"),
         JsonValue::Bool(false) => out.push_str("false"),
-        JsonValue::Number(n) => {
-            if n.is_finite() && n.fract() == 0.0 && *n >= 0.0 && *n <= (u64::MAX as f64) {
-                out.push_str(&(*n as u64).to_string());
-            } else {
-                out.push_str(&n.to_string());
-            }
-        }
+        JsonValue::Number(n) => write_number(out, *n),
         JsonValue::String(s) => write_string(out, s),
         JsonValue::Array(items) => {
             out.push('[');
@@ -111,7 +112,7 @@ fn write_value(out: &mut String, value: &JsonValue) {
                 if i > 0 {
                     out.push(',');
                 }
-                write_value(out, item);
+                write_value_compact(out, item);
             }
             out.push(']');
         }
@@ -123,10 +124,67 @@ fn write_value(out: &mut String, value: &JsonValue) {
                 }
                 write_string(out, key);
                 out.push(':');
-                write_value(out, value);
+                write_value_compact(out, value);
             }
             out.push('}');
         }
+    }
+}
+
+fn write_value_pretty(out: &mut String, value: &JsonValue, depth: usize) {
+    match value {
+        JsonValue::Null => out.push_str("null"),
+        JsonValue::Bool(true) => out.push_str("true"),
+        JsonValue::Bool(false) => out.push_str("false"),
+        JsonValue::Number(n) => write_number(out, *n),
+        JsonValue::String(s) => write_string(out, s),
+        JsonValue::Array(items) if items.is_empty() => out.push_str("[]"),
+        JsonValue::Array(items) => {
+            out.push('[');
+            out.push('\n');
+            for (i, item) in items.iter().enumerate() {
+                write_indent(out, depth + 1);
+                write_value_pretty(out, item, depth + 1);
+                if i + 1 < items.len() {
+                    out.push(',');
+                }
+                out.push('\n');
+            }
+            write_indent(out, depth);
+            out.push(']');
+        }
+        JsonValue::Object(map) if map.is_empty() => out.push_str("{}"),
+        JsonValue::Object(map) => {
+            out.push('{');
+            out.push('\n');
+            let len = map.len();
+            for (i, (key, value)) in map.iter().enumerate() {
+                write_indent(out, depth + 1);
+                write_string(out, key);
+                out.push_str(": ");
+                write_value_pretty(out, value, depth + 1);
+                if i + 1 < len {
+                    out.push(',');
+                }
+                out.push('\n');
+            }
+            write_indent(out, depth);
+            out.push('}');
+        }
+    }
+}
+
+fn write_indent(out: &mut String, depth: usize) {
+    for _ in 0..depth {
+        out.push_str("  ");
+    }
+}
+
+fn write_number(out: &mut String, n: f64) {
+    if n.is_finite() && n.fract() == 0.0 && n >= 0.0 && n <= (u64::MAX as f64) {
+        out.push_str(&(n as u64).to_string());
+    } else {
+        out.push_str(&n.to_string());
     }
 }
 

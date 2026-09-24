@@ -18,7 +18,7 @@ impl Runtime {
         Ok(stmts)
     }
 
-    // `? <fact>` goal block used inside claim / example / thm / by / …
+    // `? <fact>` goal block used inside claim / thm / by / …
     pub(in super::super) fn parse_goal_fact(
         &mut self,
         block: &mut TokenBlock,

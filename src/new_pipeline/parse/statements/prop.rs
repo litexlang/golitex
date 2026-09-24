@@ -1,7 +1,7 @@
 use super::super::keywords::{ABSTRACT_PROP, COLON, PROP};
 use super::super::object::is_simple_name;
 use crate::new_pipeline::ast::line_file::LineFile;
-use crate::new_pipeline::ast::stmt::{DefAbstractPropStmt, DefPropStmt, IntroduceStmt, DefineStmt, Stmt};
+use crate::new_pipeline::ast::stmt::{DefAbstractPropStmt, DefPropStmt, DefinitionStmt, Stmt};
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
 
@@ -44,7 +44,7 @@ impl Runtime {
         let (typed_parameters, iff_facts) = result?;
 
         self.define_plain_atom_as_parse(&tb, name.clone())?;
-        Ok(Stmt::Define(DefineStmt::DefPropStmt(DefPropStmt {
+        Ok(Stmt::Definition(DefinitionStmt::DefPropStmt(DefPropStmt {
             name,
             typed_parameters,
             iff_facts,
@@ -79,7 +79,7 @@ impl Runtime {
         }
 
         self.define_plain_atom_as_parse(&tb, name.clone())?;
-        Ok(Stmt::Define(DefineStmt::DefAbstractPropStmt(
+        Ok(Stmt::Definition(DefinitionStmt::DefAbstractPropStmt(
             DefAbstractPropStmt {
                 name,
                 params,
