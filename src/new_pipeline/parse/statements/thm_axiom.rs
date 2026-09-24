@@ -1,7 +1,7 @@
 use super::super::keywords::{AXIOM, THM};
 use super::super::object::is_simple_name;
 use crate::new_pipeline::ast::line_file::LineFile;
-use crate::new_pipeline::ast::stmt::{AxiomStmt, DefThmStmt, DefinitionStmt, Stmt};
+use crate::new_pipeline::ast::stmt::{AxiomStmt, DefThmStmt, IntroduceStmt, DefineStmt, Stmt};
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
 
@@ -38,7 +38,7 @@ impl Runtime {
             self.parse_body_stmts(proof_blocks)?
         };
         self.define_plain_atom_as_parse(&tb, name.clone())?;
-        Ok(Stmt::Definition(DefinitionStmt::DefThmStmt(DefThmStmt {
+        Ok(Stmt::Define(DefineStmt::DefThmStmt(DefThmStmt {
             name,
             fact,
             prove_process,
@@ -64,7 +64,7 @@ impl Runtime {
         let mut goal = tb.body[0].clone();
         let forall_fact = self.parse_goal_forall_fact(&mut goal, "axiom")?;
         self.define_plain_atom_as_parse(&tb, name.clone())?;
-        Ok(Stmt::Definition(DefinitionStmt::AxiomStmt(AxiomStmt {
+        Ok(Stmt::Define(DefineStmt::AxiomStmt(AxiomStmt {
             name,
             forall_fact,
             line_file: LineFile::new(block.line, block.source_path.clone()),

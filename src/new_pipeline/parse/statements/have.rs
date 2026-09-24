@@ -2,7 +2,7 @@ use super::super::keywords::{COLON, COMMA, EQUAL};
 use super::super::object::parse_obj;
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::stmt::{
-    DefinitionStmt, HaveObjByExistFactsStmt, HaveObjEqualStmt,
+    IntroduceStmt, DefineStmt, HaveObjByExistFactsStmt, HaveObjEqualStmt,
     HaveObjInNonemptySetOrParamTypeStmt, Stmt,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
@@ -75,7 +75,7 @@ impl Runtime {
                 for identifier in &identifiers {
                     self.occupy_bound_name_as_parse(block, identifier)?;
                 }
-                Ok(Stmt::Definition(DefinitionStmt::HaveObjInNonemptySetStmt(
+                Ok(Stmt::Introduce(IntroduceStmt::HaveObjInNonemptySetStmt(
                     HaveObjInNonemptySetOrParamTypeStmt {
                         param_def,
                         line_file: LineFile::new(block.line, block.source_path.clone()),
@@ -86,7 +86,7 @@ impl Runtime {
                 for identifier in &identifiers {
                     self.occupy_bound_name_as_parse(block, identifier)?;
                 }
-                Ok(Stmt::Definition(DefinitionStmt::HaveObjEqualStmt(
+                Ok(Stmt::Introduce(IntroduceStmt::HaveObjEqualStmt(
                     HaveObjEqualStmt {
                         param_def,
                         objs_equal_to,
@@ -98,7 +98,7 @@ impl Runtime {
                 for identifier in &identifiers {
                     self.occupy_bound_name_as_parse(block, identifier)?;
                 }
-                Ok(Stmt::Definition(DefinitionStmt::HaveObjByExistFactsStmt(
+                Ok(Stmt::Introduce(IntroduceStmt::HaveObjByExistFactsStmt(
                     HaveObjByExistFactsStmt {
                         param_def,
                         facts,

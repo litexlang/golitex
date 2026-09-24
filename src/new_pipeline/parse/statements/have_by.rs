@@ -10,7 +10,7 @@ use super::super::object::{is_simple_name, parse_obj};
 use crate::new_pipeline::ast::fact::AtomicFact;
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::stmt::{
-    DefinitionStmt, HaveByPreimageStmt, HaveByReplacementAxiomStmt, Stmt,
+    IntroduceStmt, DefineStmt, HaveByPreimageStmt, HaveByReplacementAxiomStmt, Stmt,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -87,8 +87,7 @@ impl Runtime {
         self.pop_parse_scope();
         let (prop_name, source_set) = parsed?;
         self.occupy_bound_name_as_parse(block, &bound)?;
-        Ok(Stmt::Definition(
-            DefinitionStmt::HaveByReplacementAxiomStmt(HaveByReplacementAxiomStmt {
+        Ok(Stmt::Introduce(IntroduceStmt::HaveByReplacementAxiomStmt(HaveByReplacementAxiomStmt {
                 name: bound,
                 prop_name,
                 source_set,
@@ -153,7 +152,7 @@ impl Runtime {
         for name in &preimage_names {
             self.define_plain_atom_as_parse(tb, name.clone())?;
         }
-        Ok(Stmt::Definition(DefinitionStmt::HaveByPreimageStmt(
+        Ok(Stmt::Introduce(IntroduceStmt::HaveByPreimageStmt(
             HaveByPreimageStmt {
                 preimage_names,
                 range_membership,

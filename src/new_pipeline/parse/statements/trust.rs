@@ -1,6 +1,6 @@
 use super::super::keywords::{COLON, HAVE, TRUST};
 use crate::new_pipeline::ast::line_file::LineFile;
-use crate::new_pipeline::ast::stmt::{Stmt, TrustHaveStmt, TrustStmt, UnsafeStmt};
+use crate::new_pipeline::ast::stmt::{Stmt, TrustHaveStmt, TrustStmt, TrustBoundaryStmt};
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
 
@@ -18,7 +18,7 @@ impl Runtime {
                 return Err(tb.parse_error("`trust:` facts must be written in an indented body"));
             }
             let facts = self.parse_facts_in_body(&tb.body)?;
-            return Ok(Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(TrustStmt {
+            return Ok(Stmt::Trust(TrustBoundaryStmt::TrustStmt(TrustStmt {
                 facts,
                 line_file: LineFile::new(block.line, block.source_path.clone()),
             })));
@@ -28,7 +28,7 @@ impl Runtime {
         if !tb.body.is_empty() {
             return Err(tb.parse_error("inline `trust` cannot have an indented body; use `trust:`"));
         }
-        Ok(Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(TrustStmt {
+        Ok(Stmt::Trust(TrustBoundaryStmt::TrustStmt(TrustStmt {
             facts: vec![fact],
             line_file: LineFile::new(block.line, block.source_path.clone()),
         })))
@@ -76,7 +76,7 @@ impl Runtime {
         for identifier in &identifiers {
             self.occupy_bound_name_as_parse(block, identifier)?;
         }
-        Ok(Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(TrustHaveStmt {
+        Ok(Stmt::Trust(TrustBoundaryStmt::TrustHaveStmt(TrustHaveStmt {
             param_def,
             facts,
             line_file: LineFile::new(block.line, block.source_path.clone()),

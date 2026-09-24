@@ -1,0 +1,5 @@
+# Node: atomic.ByBuiltinRule.LessEqual.FiniteSetMaxMemberLe
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/less_equal_finite_set_max_member.lit
+
+1 $in {1, 3}
+1 <= finite_set_max({1, 3})

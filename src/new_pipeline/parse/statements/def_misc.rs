@@ -6,8 +6,8 @@ use crate::new_pipeline::ast::fact::QuantifierFreeFact;
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::param::TypedParameterList;
 use crate::new_pipeline::ast::stmt::{
-    DefStrategyStmt, DefStructStmt, DefTemplateStmt, DefinitionStmt, Stmt, StructFieldDef,
-    TemplateDefEnum, UnsafeStmt,
+    DefStrategyStmt, DefStructStmt, DefTemplateStmt, IntroduceStmt, DefineStmt, Stmt, StructFieldDef,
+    TemplateDefEnum, TrustBoundaryStmt,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -113,7 +113,7 @@ impl Runtime {
         let (param_def_with_dom, fields, equivalent_facts) = result?;
 
         self.define_plain_atom_as_parse(&tb, name.clone())?;
-        Ok(Stmt::Definition(DefinitionStmt::DefStructStmt(
+        Ok(Stmt::Define(DefineStmt::DefStructStmt(
             DefStructStmt {
                 name,
                 param_def_with_dom,
@@ -165,7 +165,7 @@ impl Runtime {
         let (template_name, template_arg_def, template_arg_dom, template_def_stmt) = parsed?;
 
         self.define_plain_atom_as_parse(&tb, template_name.clone())?;
-        Ok(Stmt::Definition(DefinitionStmt::DefTemplateStmt(
+        Ok(Stmt::Define(DefineStmt::DefTemplateStmt(
             DefTemplateStmt {
                 template_name,
                 template_arg_def,
@@ -243,7 +243,7 @@ impl Runtime {
                 this.parse_body_stmts(proof_blocks)
             })?;
         self.define_plain_atom_as_parse(&tb, name.clone())?;
-        Ok(Stmt::Definition(DefinitionStmt::DefStrategyStmt(
+        Ok(Stmt::Define(DefineStmt::DefStrategyStmt(
             DefStrategyStmt {
                 name,
                 forall_fact,
@@ -259,37 +259,37 @@ fn template_def_enum_from_body_stmt(
     tb: &TokenBlock,
 ) -> RuntimeResult<TemplateDefEnum> {
     match body {
-        Stmt::Definition(DefinitionStmt::HaveObjInNonemptySetStmt(stmt)) => {
+        Stmt::Introduce(IntroduceStmt::HaveObjInNonemptySetStmt(stmt)) => {
             Ok(TemplateDefEnum::HaveObjInNonemptySetStmt(stmt))
         }
-        Stmt::Definition(DefinitionStmt::HaveObjEqualStmt(stmt)) => {
+        Stmt::Introduce(IntroduceStmt::HaveObjEqualStmt(stmt)) => {
             Ok(TemplateDefEnum::HaveObjEqualStmt(stmt))
         }
-        Stmt::Definition(DefinitionStmt::HaveObjByExistFactsStmt(stmt)) => {
+        Stmt::Introduce(IntroduceStmt::HaveObjByExistFactsStmt(stmt)) => {
             Ok(TemplateDefEnum::HaveObjByExistFactsStmt(stmt))
         }
-        Stmt::Definition(DefinitionStmt::HaveByReplacementAxiomStmt(stmt)) => {
+        Stmt::Introduce(IntroduceStmt::HaveByReplacementAxiomStmt(stmt)) => {
             Ok(TemplateDefEnum::HaveByReplacementAxiomStmt(stmt))
         }
-        Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(stmt)) => {
+        Stmt::Trust(TrustBoundaryStmt::TrustHaveStmt(stmt)) => {
             Ok(TemplateDefEnum::TrustHaveStmt(stmt))
         }
-        Stmt::Definition(DefinitionStmt::ObtainObjFromExistFact(stmt)) => {
+        Stmt::Introduce(IntroduceStmt::ObtainObjFromExistFact(stmt)) => {
             Ok(TemplateDefEnum::ObtainObjFromExistFact(stmt))
         }
-        Stmt::Definition(DefinitionStmt::ObtainObjFromAtomicFact(stmt)) => {
+        Stmt::Introduce(IntroduceStmt::ObtainObjFromAtomicFact(stmt)) => {
             Ok(TemplateDefEnum::ObtainObjFromAtomicFact(stmt))
         }
-        Stmt::Definition(DefinitionStmt::HaveFnEqualStmt(stmt)) => {
+        Stmt::Define(DefineStmt::HaveFnEqualStmt(stmt)) => {
             Ok(TemplateDefEnum::HaveFnEqualStmt(stmt))
         }
-        Stmt::Definition(DefinitionStmt::HaveFnEqualCaseByCaseStmt(stmt)) => {
+        Stmt::Define(DefineStmt::HaveFnEqualCaseByCaseStmt(stmt)) => {
             Ok(TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt))
         }
-        Stmt::Definition(DefinitionStmt::HaveFnByInducStmt(stmt)) => {
+        Stmt::Define(DefineStmt::HaveFnByInducStmt(stmt)) => {
             Ok(TemplateDefEnum::HaveFnByInducStmt(stmt))
         }
-        Stmt::Definition(DefinitionStmt::HaveFnByForallExistUniqueStmt(stmt)) => {
+        Stmt::Define(DefineStmt::HaveFnByForallExistUniqueStmt(stmt)) => {
             Ok(TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt))
         }
         _ => Err(tb.parse_error(

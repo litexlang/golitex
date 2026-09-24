@@ -10,7 +10,7 @@ use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::obj::{AnonymousFn, FnSet, Obj};
 use crate::new_pipeline::ast::param::ParamType;
 use crate::new_pipeline::ast::stmt::{
-    DefinitionStmt, FnSetClause, HaveFnByForallExistUniqueStmt, HaveFnByInducCase,
+    IntroduceStmt, DefineStmt, FnSetClause, HaveFnByForallExistUniqueStmt, HaveFnByInducCase,
     HaveFnByInducCaseBody, HaveFnByInducStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt, Stmt,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeParseError, RuntimeResult};
@@ -104,7 +104,7 @@ impl Runtime {
                 },
                 equal_to: Box::new(equal_to),
             };
-            Ok(Stmt::Definition(DefinitionStmt::HaveFnEqualStmt(
+            Ok(Stmt::Define(DefineStmt::HaveFnEqualStmt(
                 HaveFnEqualStmt {
                     name,
                     equal_to_anonymous_fn,
@@ -155,7 +155,7 @@ impl Runtime {
             equal_tos.push(equal_to);
         }
 
-        Ok(Stmt::Definition(DefinitionStmt::HaveFnEqualCaseByCaseStmt(
+        Ok(Stmt::Define(DefineStmt::HaveFnEqualCaseByCaseStmt(
             HaveFnEqualCaseByCaseStmt {
                 name,
                 fn_set_clause,
@@ -190,7 +190,7 @@ impl Runtime {
             .into());
         }
         let cases = self.parse_have_fn_by_induc_cases(&block.body)?;
-        Ok(Stmt::Definition(DefinitionStmt::HaveFnByInducStmt(
+        Ok(Stmt::Define(DefineStmt::HaveFnByInducStmt(
             HaveFnByInducStmt {
                 name,
                 fn_set_clause,
@@ -306,8 +306,7 @@ impl Runtime {
         let forall = self.parse_goal_forall_fact(&mut goal, "have fn by exist!")?;
         check_have_fn_by_exist_forall_shape(block, &forall)?;
 
-        Ok(Stmt::Definition(
-            DefinitionStmt::HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt {
+        Ok(Stmt::Define(DefineStmt::HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt {
                 name,
                 forall,
                 line_file: LineFile::new(block.line, block.source_path.clone()),

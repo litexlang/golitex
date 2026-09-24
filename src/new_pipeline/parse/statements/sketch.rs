@@ -1,26 +1,11 @@
 use crate::new_pipeline::ast::line_file::LineFile;
-use crate::new_pipeline::ast::stmt::{ProofBlockStmt, SketchStmt, Stmt, TryStmt};
+use crate::new_pipeline::ast::stmt::{ProofBlockStmt, SketchStmt, Stmt};
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
 
-use super::super::keywords::{SKETCH, TRY};
+use super::super::keywords::SKETCH;
 
 impl Runtime {
-    // try:
-    //   <stmts…>
-    pub(in super::super) fn parse_try_stmt(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
-        let mut tb = block.clone();
-        tb.expect(TRY)?;
-        tb.expect_colon_end_of_header()?;
-        self.push_parse_scope();
-        let proof = self.parse_body_stmts(&tb.body);
-        self.pop_parse_scope();
-        Ok(Stmt::ProofBlock(ProofBlockStmt::TryStmt(TryStmt {
-            proof: proof?,
-            line_file: LineFile::new(block.line, block.source_path.clone()),
-        })))
-    }
-
     // sketch:
     //   <stmts…>
     pub(in super::super) fn parse_sketch_stmt(

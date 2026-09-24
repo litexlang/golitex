@@ -3,7 +3,7 @@ use super::super::object::is_simple_name;
 use crate::new_pipeline::ast::fact::AtomicFact;
 use crate::new_pipeline::ast::line_file::LineFile;
 use crate::new_pipeline::ast::stmt::{
-    DefinitionStmt, ObtainObjFromAtomicFact, ObtainObjFromExistFact, Stmt,
+    IntroduceStmt, DefineStmt, ObtainObjFromAtomicFact, ObtainObjFromExistFact, Stmt,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -43,7 +43,7 @@ impl Runtime {
         let line_file = LineFile::new(block.line, block.source_path.clone());
         let stmt = if tb.peek() == Some(EXIST) || tb.peek() == Some(EXIST_BANG) {
             let fact = self.parse_exist_fact(&mut tb)?;
-            Stmt::Definition(DefinitionStmt::ObtainObjFromExistFact(
+            Stmt::Introduce(IntroduceStmt::ObtainObjFromExistFact(
                 ObtainObjFromExistFact {
                     equal_tos: equal_tos.clone(),
                     fact,
@@ -57,7 +57,7 @@ impl Runtime {
                     "obtain from `$P` expects a positive normal atomic fact",
                 ));
             };
-            Stmt::Definition(DefinitionStmt::ObtainObjFromAtomicFact(
+            Stmt::Introduce(IntroduceStmt::ObtainObjFromAtomicFact(
                 ObtainObjFromAtomicFact {
                     equal_tos: equal_tos.clone(),
                     fact,

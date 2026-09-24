@@ -1,7 +1,7 @@
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::{
     Abs, AnonymousFn, Arccos, Arccot, Arcsin, Arctan, ArithmeticOperator, Cart, CartDim, Ceil,
-    ClosedRange, Cos, Cot, EulerNumber, Exp, ExpLogOperator, FamilyIntersect, FamilyUnion,
+    ClosedRange, Cos, Cot, EulerNumber, Exp, ExpLogOperator, Factorial, FamilyIntersect, FamilyUnion,
     FiniteSeqSet, FiniteSetMax, FiniteSetMin, FiniteSetSize, FiniteSetStat, Floor, FnObjHead,
     FnRange, FnSet, FunctionSpace, Gcd, IdentifierObj, ImaginaryUnit, IndexCart, IndexIntersect,
     IndexUnion, InstantiatedTemplateObj, IntegerOperator, Intersect, IntervalObj, IntervalObjStruct,
@@ -13,7 +13,7 @@ use crate::new_pipeline::ast::obj::{
 use crate::new_pipeline::ast::param::{ParamType, SetBoundParameterGroup, SetBoundParameterList};
 use crate::new_pipeline::parse::keywords::{
     ABS, ARCCOS, ARCCOT, ARCSIN, ARCTAN, C, CART, CART_DIM, CEIL, CLOSED_RANGE, COLON, COMMA, COS,
-    COT, C_STAR, DOT, EXP, FAMILY_INTERSECT, FAMILY_UNION, FINITE_SEQ, FINITE_SET_MAX,
+    COT, C_STAR, DOT, EXP, FACTORIAL, FAMILY_INTERSECT, FAMILY_UNION, FINITE_SEQ, FINITE_SET_MAX,
     FINITE_SET_MIN, FINITE_SET_PRODUCT, FINITE_SET_SIZE, FLOOR, FN, FN_RANGE, GCD, GREATER,
     INDEX_CART, INDEX_INTERSECT, INDEX_UNION, INTERSECT, INTERVAL_LITERAL_PREFIX, LCM,
     LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LESS, LN, LOG, MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS,
@@ -430,6 +430,11 @@ fn try_parse_keyword_primary(
         })?)),
         LN => Ok(Some(parse_unary_keyword(rt, tb, LN, |arg| {
             Obj::ExpLogOperator(ExpLogOperator::Ln(Ln { arg: Box::new(arg) }))
+        })?)),
+        FACTORIAL => Ok(Some(parse_unary_keyword(rt, tb, FACTORIAL, |arg| {
+            Obj::IntegerOperator(IntegerOperator::Factorial(Factorial {
+                arg: Box::new(arg),
+            }))
         })?)),
         LOG => Ok(Some(parse_binary_keyword(rt, tb, LOG, |base, arg| {
             Obj::ExpLogOperator(ExpLogOperator::Log(Log {

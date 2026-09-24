@@ -30,12 +30,12 @@ impl Stmt {
     pub fn ir(&self) -> StmtIR {
         match self {
             Stmt::Fact(x) => StmtIR(x.ir().0),
-            Stmt::UnsafeStmt(x) => x.ir(),
-            Stmt::Definition(x) => x.ir(),
-            Stmt::ReleaseThmStmt(x) => x.ir(),
-            Stmt::ReleaseStructDefStmt(x) => x.ir(),
-            Stmt::ReleaseObjDefStmt(x) => x.ir(),
+            Stmt::Trust(x) => x.ir(),
+            Stmt::Introduce(x) => x.ir(),
+            Stmt::Define(x) => x.ir(),
+            Stmt::Release(x) => x.ir(),
             Stmt::By(x) => x.ir(),
+            Stmt::Register(x) => x.ir(),
             Stmt::Witness(x) => x.ir(),
             Stmt::ProofBlock(x) => x.ir(),
             Stmt::Command(x) => x.ir(),
@@ -44,39 +44,58 @@ impl Stmt {
     impl_display_pair!();
 }
 
-impl UnsafeStmt {
+impl TrustBoundaryStmt {
     pub fn ir(&self) -> StmtIR {
         match self {
-            UnsafeStmt::TrustStmt(x) => x.ir(),
-            UnsafeStmt::TrustHaveStmt(x) => x.ir(),
+            TrustBoundaryStmt::TrustStmt(x) => x.ir(),
+            TrustBoundaryStmt::TrustHaveStmt(x) => x.ir(),
         }
     }
     impl_display_pair!();
 }
 
-impl DefinitionStmt {
+impl IntroduceStmt {
     pub fn ir(&self) -> StmtIR {
         match self {
-            DefinitionStmt::LetObjStmt(x) => x.ir(),
-            DefinitionStmt::HaveObjInNonemptySetStmt(x) => x.ir(),
-            DefinitionStmt::HaveObjEqualStmt(x) => x.ir(),
-            DefinitionStmt::HaveObjByExistFactsStmt(x) => x.ir(),
-            DefinitionStmt::ObtainObjFromExistFact(x) => x.ir(),
-            DefinitionStmt::ObtainObjFromAtomicFact(x) => x.ir(),
-            DefinitionStmt::HaveByPreimageStmt(x) => x.ir(),
-            DefinitionStmt::HaveByReplacementAxiomStmt(x) => x.ir(),
-            DefinitionStmt::HaveFnEqualStmt(x) => x.ir(),
-            DefinitionStmt::HaveFnEqualCaseByCaseStmt(x) => x.ir(),
-            DefinitionStmt::HaveFnByInducStmt(x) => x.ir(),
-            DefinitionStmt::HaveFnByForallExistUniqueStmt(x) => x.ir(),
-            DefinitionStmt::DefPropStmt(x) => x.ir(),
-            DefinitionStmt::DefAbstractPropStmt(x) => x.ir(),
-            DefinitionStmt::DefTemplateStmt(x) => x.ir(),
-            DefinitionStmt::DefStructStmt(x) => x.ir(),
-            DefinitionStmt::DefAlgoStmt(x) => x.ir(),
-            DefinitionStmt::DefThmStmt(x) => x.ir(),
-            DefinitionStmt::AxiomStmt(x) => x.ir(),
-            DefinitionStmt::DefStrategyStmt(x) => x.ir(),
+            IntroduceStmt::LetObjStmt(x) => x.ir(),
+            IntroduceStmt::HaveObjInNonemptySetStmt(x) => x.ir(),
+            IntroduceStmt::HaveObjEqualStmt(x) => x.ir(),
+            IntroduceStmt::HaveObjByExistFactsStmt(x) => x.ir(),
+            IntroduceStmt::ObtainObjFromExistFact(x) => x.ir(),
+            IntroduceStmt::ObtainObjFromAtomicFact(x) => x.ir(),
+            IntroduceStmt::HaveByPreimageStmt(x) => x.ir(),
+            IntroduceStmt::HaveByReplacementAxiomStmt(x) => x.ir(),
+        }
+    }
+    impl_display_pair!();
+}
+
+impl DefineStmt {
+    pub fn ir(&self) -> StmtIR {
+        match self {
+            DefineStmt::HaveFnEqualStmt(x) => x.ir(),
+            DefineStmt::HaveFnEqualCaseByCaseStmt(x) => x.ir(),
+            DefineStmt::HaveFnByInducStmt(x) => x.ir(),
+            DefineStmt::HaveFnByForallExistUniqueStmt(x) => x.ir(),
+            DefineStmt::DefPropStmt(x) => x.ir(),
+            DefineStmt::DefAbstractPropStmt(x) => x.ir(),
+            DefineStmt::DefTemplateStmt(x) => x.ir(),
+            DefineStmt::DefStructStmt(x) => x.ir(),
+            DefineStmt::DefAlgoStmt(x) => x.ir(),
+            DefineStmt::DefThmStmt(x) => x.ir(),
+            DefineStmt::AxiomStmt(x) => x.ir(),
+            DefineStmt::DefStrategyStmt(x) => x.ir(),
+        }
+    }
+    impl_display_pair!();
+}
+
+impl ReleaseStmt {
+    pub fn ir(&self) -> StmtIR {
+        match self {
+            ReleaseStmt::ReleaseThmStmt(x) => x.ir(),
+            ReleaseStmt::ReleaseStructDefStmt(x) => x.ir(),
+            ReleaseStmt::ReleaseObjDefStmt(x) => x.ir(),
         }
     }
     impl_display_pair!();
@@ -95,14 +114,22 @@ impl ByStmt {
             ByStmt::ByFnExtensionStmt(x) => x.ir(),
             ByStmt::ByEnumerateRangeStmt(x) => x.ir(),
             ByStmt::ByClosedRangeAsCasesStmt(x) => x.ir(),
-            ByStmt::ByTransitivePropStmt(x) => x.ir(),
-            ByStmt::BySymmetricPropStmt(x) => x.ir(),
-            ByStmt::ByReflexivePropStmt(x) => x.ir(),
             ByStmt::ByZornLemmaStmt(x) => x.ir(),
             ByStmt::ByAxiomOfChoiceStmt(x) => x.ir(),
             ByStmt::ByRegularityAxiomStmt(x) => x.ir(),
             ByStmt::ByDefStmt(x) => x.ir(),
             ByStmt::ByThmStmt(x) => x.ir(),
+        }
+    }
+    impl_display_pair!();
+}
+
+impl RegisterStmt {
+    pub fn ir(&self) -> StmtIR {
+        match self {
+            RegisterStmt::RegisterTransitivePropStmt(x) => x.ir(),
+            RegisterStmt::RegisterSymmetricPropStmt(x) => x.ir(),
+            RegisterStmt::RegisterReflexivePropStmt(x) => x.ir(),
         }
     }
     impl_display_pair!();
@@ -125,7 +152,6 @@ impl ProofBlockStmt {
             ProofBlockStmt::ClaimStmt(x) => x.ir(),
             ProofBlockStmt::ExampleStmt(x) => x.ir(),
             ProofBlockStmt::SketchStmt(x) => x.ir(),
-            ProofBlockStmt::TryStmt(x) => x.ir(),
         }
     }
     impl_display_pair!();
@@ -966,29 +992,6 @@ impl SketchStmt {
     impl_display_pair!();
 }
 
-impl TryStmt {
-    pub fn ir(&self) -> StmtIR {
-        StmtIR(format!(
-            "{}{}\n{}",
-            TRY,
-            COLON,
-            indent!(
-                &self
-                    .proof
-                    .iter()
-                    .map(|s| s.ir())
-                    .collect::<Vec<_>>()
-                    .join(
-                        "
-"
-                    ),
-                1
-            )
-        ))
-    }
-    impl_display_pair!();
-}
-
 impl ReleaseThmStmt {
     pub fn ir(&self) -> StmtIR {
         StmtIR(format!(
@@ -1183,14 +1186,14 @@ impl ByContraStmt {
     impl_display_pair!();
 }
 
-macro_rules! impl_by_prop {
+macro_rules! impl_register_prop_goal_only {
     ($ty:ty, $prop:expr) => {
         impl $ty {
             pub fn ir(&self) -> StmtIR {
-                let mut out = format!(
+                StmtIR(format!(
                     "{} {}:
 {}",
-                    BY,
+                    REGISTER,
                     $prop,
                     indent!(
                         &format!(
@@ -1200,33 +1203,52 @@ macro_rules! impl_by_prop {
                         ),
                         1
                     )
-                );
-                if !self.proof.is_empty() {
-                    out.push_str("\n");
-                    out.push_str(&indent!(
-                        &self
-                            .proof
-                            .iter()
-                            .map(|s| s.ir())
-                            .collect::<Vec<_>>()
-                            .join(
-                                "
-"
-                            ),
-                        1
-                    ));
-                }
-                StmtIR(out)
+                ))
             }
             impl_display_pair!();
         }
     };
 }
 
-impl_by_prop!(ByTransitivePropStmt, TRANSITIVE_PROP);
-impl_by_prop!(BySymmetricPropStmt, SYMMETRIC_PROP);
-impl_by_prop!(ByReflexivePropStmt, REFLEXIVE_PROP);
-impl_by_prop!(ByForStmt, FOR);
+impl_register_prop_goal_only!(RegisterTransitivePropStmt, TRANSITIVE);
+impl_register_prop_goal_only!(RegisterSymmetricPropStmt, SYMMETRIC);
+impl_register_prop_goal_only!(RegisterReflexivePropStmt, REFLEXIVE);
+
+impl ByForStmt {
+    pub fn ir(&self) -> StmtIR {
+        let mut out = format!(
+            "{} {}:
+{}",
+            BY,
+            FOR,
+            indent!(
+                &format!(
+                    "{} {}",
+                    QUESTION_GOAL,
+                    self.forall_fact.ir()
+                ),
+                1
+            )
+        );
+        if !self.proof.is_empty() {
+            out.push_str("\n");
+            out.push_str(&indent!(
+                &self
+                    .proof
+                    .iter()
+                    .map(|s| s.ir())
+                    .collect::<Vec<_>>()
+                    .join(
+                        "
+"
+                    ),
+                1
+            ));
+        }
+        StmtIR(out)
+    }
+    impl_display_pair!();
+}
 
 impl ByEnumerateFiniteSetStmt {
     pub fn ir(&self) -> StmtIR {

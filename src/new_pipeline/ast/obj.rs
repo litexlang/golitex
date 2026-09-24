@@ -83,13 +83,20 @@ pub enum Literal {
     Pi(Pi),                       // `pi`
 }
 
-// Binary / unary real arithmetic.
+// Binary / unary real-or-complex arithmetic (carriers depend on the op).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ArithmeticOperator {
+    // What: addition. Surface: `a + b`. Domain: `a, b $in C`.
     Add(Add),
+    // What: subtraction. Surface: `a - b`. Domain: `a, b $in C`.
+    // Prefix unary minus is sugar for `0 - x` at parse (no separate Neg node).
     Sub(Sub),
+    // What: multiplication. Surface: `a * b`. Domain: `a, b $in C`.
     Mul(Mul),
+    // What: division. Surface: `a / b`. Domain: `a, b $in C` and `b != 0`.
     Div(Div),
+    // What: exponentiation. Surface: `a^b` (right-associative; tighter than `* /`).
+    // Domain is multi-branch (not a single carrier pair); see `Pow`.
     Pow(Pow),
     // Absolute value on reals. Example: `abs(x)`.
     Abs(Abs),
@@ -428,28 +435,37 @@ pub struct EulerNumber;
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Pi;
 
-// Add
+// What: addition of two objects.
+// Surface: `a + b`
+// Domain: `a, b $in C`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Add {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
 }
 
-// Sub
+// What: subtraction of two objects.
+// Surface: `a - b`
+// Domain: `a, b $in C`.
+// Parse also uses `0 - x` for prefix `-x` (no Neg variant).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Sub {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
 }
 
-// Mul
+// What: multiplication of two objects.
+// Surface: `a * b`
+// Domain: `a, b $in C`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Mul {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
 }
 
-// Div
+// What: division of two objects.
+// Surface: `a / b`
+// Domain: `a, b $in C` and `b != 0`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Div {
     pub left: Box<Obj>,
@@ -534,7 +550,18 @@ pub struct Factorial {
     pub arg: Box<Obj>,
 }
 
-// Pow
+// What: exponentiation `base^exponent`.
+// Surface: `a^b` (right-associative; write `t^(-1)`, not `t^-1`).
+//
+// Domain is intentionally multi-branch (WD tries these in order in new_pipeline):
+// - complex base + natural exponent: `base $in C`, `exponent $in N`
+//   (includes the convention `0^0 = 1`)
+// - nonzero complex base + integer exponent: `base $in C`, `base != 0`,
+//   `exponent $in Z`
+//
+// Broader real/rational branches (e.g. positive real base with real exponent)
+// are documented in Manual / legacy routes; general `C^R` / `C^C` is out of
+// scope. Invalid examples: `i^(1/2)`, `0^(-1)`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Pow {
     pub base: Box<Obj>,

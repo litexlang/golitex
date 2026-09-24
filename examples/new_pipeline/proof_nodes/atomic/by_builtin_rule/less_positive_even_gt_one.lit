@@ -1,0 +1,8 @@
+# Node: atomic.ByBuiltinRule.Less.PositiveEvenGtOne
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/less_positive_even_gt_one.lit
+
+have i Z
+trust i $in N+
+trust 2 != 0
+trust i % 2 = 0
+1 < i

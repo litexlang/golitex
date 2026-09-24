@@ -1402,16 +1402,48 @@ fn known_rewrite_reflexivity_registers_and_proves() {
     assert!(
         !exec_one(
             &mut runtime,
-            "by reflexive_prop:\n    ? forall x set:\n        $same(x, x)"
+            "register reflexive:\n    ? forall x set:\n        $same(x, x)"
         )
         .is_failed(),
-        "by reflexive_prop must register"
+        "register reflexive must register"
     );
     assert!(!exec_one(&mut runtime, "have a set").is_failed());
     assert!(
         !exec_one(&mut runtime, "$same(a, a)").is_failed(),
         "reflexive goal must succeed after registration"
     );
+}
+
+#[test]
+fn register_prop_rejects_proof_body() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(
+        &mut runtime,
+        "prop same(x set, y set):\n    x = y"
+    )
+    .is_failed());
+    for (label, code) in [
+        (
+            "reflexive",
+            "register reflexive:\n    ? forall x set:\n        $same(x, x)\n    x = x",
+        ),
+        (
+            "symmetric",
+            "register symmetric:\n    ? forall x, y set:\n        $same(x, y)\n        =>:\n            $same(y, x)\n    x = y",
+        ),
+        (
+            "transitive",
+            "register transitive:\n    ? forall x, y, z set:\n        $same(x, y)\n        $same(y, z)\n        =>:\n            $same(x, z)\n    x = z",
+        ),
+    ] {
+        let tokens = Tokenizer::new()
+            .tokenize(code, runtime.current_file.clone())
+            .expect("tokenize");
+        assert!(
+            runtime.parse(&tokens).is_err(),
+            "register {label} with proof body must fail parse"
+        );
+    }
 }
 
 #[test]
@@ -1448,10 +1480,10 @@ fn known_rewrite_symmetry_proves_swapped_args() {
     assert!(
         !exec_one(
             &mut runtime,
-            "by symmetric_prop:\n    ? forall x, y set:\n        $same(x, y)\n        =>:\n            $same(y, x)"
+            "register symmetric:\n    ? forall x, y set:\n        $same(x, y)\n        =>:\n            $same(y, x)"
         )
         .is_failed(),
-        "by symmetric_prop must register"
+        "register symmetric must register"
     );
     assert!(!exec_one(&mut runtime, "have a set, b set").is_failed());
     assert!(!exec_one(&mut runtime, "trust $same(a, b)").is_failed());
@@ -1545,14 +1577,14 @@ fn fn_set_obj_param_domain_must_not_cite_earlier_binder() {
         FailToVerifyObjWellDefinedResult, VerifyObjWellDefinedResult,
     };
     use crate::new_pipeline::execute::execute_let_stmt::ExecLetObjStmtResult;
-    use crate::new_pipeline::execute::exec_stmt_result::ExecDefinitionStmtResult;
+    use crate::new_pipeline::execute::exec_stmt_result::{ExecDefineStmtResult, ExecIntroduceStmtResult};
     use crate::new_pipeline::execute::ExecStmtResult;
 
     // Flat dependent obj carriers are rejected: domain sets must be fixed up front.
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "have S fn(x R) power_set(R)").is_failed());
     match exec_one(&mut runtime, "let F = fn(x R, y S(x)) R") {
-        ExecStmtResult::Definition(ExecDefinitionStmtResult::LetObj(
+        ExecStmtResult::Introduce(ExecIntroduceStmtResult::LetObj(
             ExecLetObjStmtResult::Failed(VerifyObjWellDefinedResult::Failed(
                 FailToVerifyObjWellDefinedResult::FunctionSpace(
                     FailToVerifyFunctionSpaceObjWellDefinedResult::FnSet(
@@ -1650,17 +1682,17 @@ fn have_fn_by_cases_slice2() {
     use crate::new_pipeline::execute::execute_have_fn_equal_case_by_case_stmt::{
         ExecHaveFnEqualCaseByCaseStmtFailed, ExecHaveFnEqualCaseByCaseStmtResult,
     };
-    use crate::new_pipeline::execute::ExecDefinitionStmtResult;
+    use crate::new_pipeline::execute::{ExecDefineStmtResult, ExecIntroduceStmtResult};
     use crate::new_pipeline::execute::ExecStmtResult;
 
     let mut runtime = runtime_with_file_env();
     let code = "have fn nonzero_flag(x R) R by cases:\n    case x = 0: 0\n    case x != 0: 1";
     let r = exec_one(&mut runtime, code);
     match &r {
-        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqualCaseByCase(
+        ExecStmtResult::Define(ExecDefineStmtResult::HaveFnEqualCaseByCase(
             ExecHaveFnEqualCaseByCaseStmtResult::Success(_),
         )) => {}
-        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqualCaseByCase(
+        ExecStmtResult::Define(ExecDefineStmtResult::HaveFnEqualCaseByCase(
             ExecHaveFnEqualCaseByCaseStmtResult::Failed(f),
         )) => {
             let msg = match f {
@@ -1701,7 +1733,7 @@ fn have_fn_by_cases_slice2() {
 #[test]
 fn have_fn_by_exist_stores_membership_and_properties() {
     use crate::new_pipeline::execute::execute_have_fn_by_forall_exist_unique_stmt::ExecHaveFnByForallExistUniqueStmtResult;
-    use crate::new_pipeline::execute::ExecDefinitionStmtResult;
+    use crate::new_pipeline::execute::{ExecDefineStmtResult, ExecIntroduceStmtResult};
     use crate::new_pipeline::execute::ExecStmtResult;
     use crate::new_pipeline::exec_env::SpecialObjectPropertyByDefinition;
 
@@ -1720,7 +1752,7 @@ fn have_fn_by_exist_stores_membership_and_properties() {
     let code = "have fn f by exist!:\n    ? forall x A:\n        exist! y B st {$F(x, y)}";
     let r = exec_one(&mut runtime, code);
     match &r {
-        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByForallExistUnique(
+        ExecStmtResult::Define(ExecDefineStmtResult::HaveFnByForallExistUnique(
             ExecHaveFnByForallExistUniqueStmtResult::Success(ok),
         )) => {
             assert!(
@@ -1752,7 +1784,7 @@ fn have_fn_by_exist_fails_when_forall_unproven() {
     use crate::new_pipeline::execute::execute_have_fn_by_forall_exist_unique_stmt::{
         ExecHaveFnByForallExistUniqueStmtFailed, ExecHaveFnByForallExistUniqueStmtResult,
     };
-    use crate::new_pipeline::execute::ExecDefinitionStmtResult;
+    use crate::new_pipeline::execute::{ExecDefineStmtResult, ExecIntroduceStmtResult};
     use crate::new_pipeline::execute::ExecStmtResult;
 
     let mut runtime = runtime_with_file_env();
@@ -1763,7 +1795,7 @@ fn have_fn_by_exist_fails_when_forall_unproven() {
     let code = "have fn f by exist!:\n    ? forall x A:\n        exist! y B st {$F(x, y)}";
     let r = exec_one(&mut runtime, code);
     match &r {
-        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByForallExistUnique(
+        ExecStmtResult::Define(ExecDefineStmtResult::HaveFnByForallExistUnique(
             ExecHaveFnByForallExistUniqueStmtResult::Failed(
                 ExecHaveFnByForallExistUniqueStmtFailed::SourceForall(_),
             ),
@@ -1886,17 +1918,17 @@ fn have_fn_by_induc_countdown_slice() {
     use crate::new_pipeline::execute::execute_have_fn_by_induc_stmt::{
         ExecHaveFnByInducStmtFailed, ExecHaveFnByInducStmtResult,
     };
-    use crate::new_pipeline::execute::ExecDefinitionStmtResult;
+    use crate::new_pipeline::execute::{ExecDefineStmtResult, ExecIntroduceStmtResult};
     use crate::new_pipeline::execute::ExecStmtResult;
 
     let mut runtime = runtime_with_file_env();
     let code = "have fn countdown(n N) N by induc n from 0:\n    case n = 0: 0\n    case n >= 1: countdown(n - 1)";
     let r = exec_one(&mut runtime, code);
     match &r {
-        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByInduc(
+        ExecStmtResult::Define(ExecDefineStmtResult::HaveFnByInduc(
             ExecHaveFnByInducStmtResult::Success(_),
         )) => {}
-        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByInduc(
+        ExecStmtResult::Define(ExecDefineStmtResult::HaveFnByInduc(
             ExecHaveFnByInducStmtResult::Failed(f),
         )) => {
             let msg = match f {
@@ -1975,7 +2007,7 @@ fn auto_open_point_forall_field_reflexive() {
 #[test]
 fn group_struct_def_with_forall_law_succeeds() {
     use crate::new_pipeline::execute::exec_stmt_result::{
-        ExecDefinitionStmtResult, ExecStmtResult as ESR,
+        ExecDefineStmtResult, ExecIntroduceStmtResult, ExecStmtResult as ESR,
     };
     use crate::new_pipeline::execute::execute_def_struct_stmt::ExecDefStructStmtResult;
 
@@ -1994,10 +2026,10 @@ struct Group<s nonempty_set>:
 "#;
     let mut runtime = runtime_with_file_env();
     match exec_one(&mut runtime, code) {
-        ESR::Definition(ExecDefinitionStmtResult::DefStruct(
+        ESR::Define(ExecDefineStmtResult::DefStruct(
             ExecDefStructStmtResult::Success(_),
         )) => {}
-        ESR::Definition(ExecDefinitionStmtResult::DefStruct(
+        ESR::Define(ExecDefineStmtResult::DefStruct(
             ExecDefStructStmtResult::Failed(fail),
         )) => panic!("struct Group failed: {:?}", std::mem::discriminant(&fail)),
         other => panic!("unexpected {:?}", std::mem::discriminant(&other)),
@@ -2121,7 +2153,9 @@ struct TaggedPoint:
         "inner law must miss before release"
     );
     match exec_one(&mut runtime, "release struct def p.point") {
-        ESR::ReleaseStructDef(ExecReleaseStructDefStmtResult::Success(_)) => {}
+        ESR::Release(crate::new_pipeline::execute::ExecReleaseStmtResult::StructDef(
+            ExecReleaseStructDefStmtResult::Success(_),
+        )) => {}
         other => panic!("expected nested release success, got failed={}", other.is_failed()),
     }
     assert!(
@@ -2217,8 +2251,10 @@ fn release_struct_def_without_carrier_soft_fails() {
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "have x R").is_failed(), "have x R");
     match exec_one(&mut runtime, "release struct def x") {
-        ESR::ReleaseStructDef(ExecReleaseStructDefStmtResult::Failed(
-            ExecReleaseStructDefStmtFailed::NoDefinitionOwnedCarrier { .. },
+        ESR::Release(crate::new_pipeline::execute::ExecReleaseStmtResult::StructDef(
+            ExecReleaseStructDefStmtResult::Failed(
+                ExecReleaseStructDefStmtFailed::NoDefinitionOwnedCarrier { .. },
+            ),
         )) => {}
         other => panic!(
             "expected NoDefinitionOwnedCarrier, got failed={}",
@@ -2287,7 +2323,9 @@ fn release_obj_def_smoke() {
         };
         use crate::new_pipeline::execute::ExecStmtResult;
         match exec_one(&mut runtime, "release obj def choose") {
-            ExecStmtResult::ReleaseObjDef(ExecReleaseObjDefStmtResult::Success(ok)) => {
+            ExecStmtResult::Release(crate::new_pipeline::execute::ExecReleaseStmtResult::ObjDef(
+                ExecReleaseObjDefStmtResult::Success(ok),
+            )) => {
                 assert!(
                     matches!(
                         ok.looked_up,
@@ -2369,7 +2407,7 @@ fn template_have_fn_by_exist_wires_body() {
     use crate::new_pipeline::execute::execute_def_template_stmt::{
         ExecDefTemplateStmtResult, ExecTemplateDefBodyResult,
     };
-    use crate::new_pipeline::execute::ExecDefinitionStmtResult;
+    use crate::new_pipeline::execute::{ExecDefineStmtResult, ExecIntroduceStmtResult};
     use crate::new_pipeline::execute::ExecStmtResult;
 
     // Def-time body check + instance release of membership/property/uniqueness.
@@ -2389,7 +2427,7 @@ fn template_have_fn_by_exist_wires_body() {
         ? forall x A:
             exist! y B st {$F(x, y)}";
     match exec_one(&mut runtime, def) {
-        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefTemplate(
+        ExecStmtResult::Define(ExecDefineStmtResult::DefTemplate(
             ExecDefTemplateStmtResult::Success(ok),
         )) => {
             assert!(
@@ -2938,3 +2976,43 @@ fn infer_family_union_membership_emits_exist_member() {
         "family_union membership must infer exist member"
     );
 }
+
+
+#[test]
+fn order_div_mod_bridge_smoke() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have a Z").is_failed(), "have a Z");
+    assert!(!exec_one(&mut runtime, "have b N+").is_failed(), "have b N+");
+    assert!(!exec_one(&mut runtime, "trust b != 0").is_failed(), "trust b != 0");
+    assert!(!exec_one(&mut runtime, "0 <= a % b").is_failed(), "0 <= a % b");
+    assert!(!exec_one(&mut runtime, "a % b < b").is_failed(), "a % b < b");
+
+    assert!(!exec_one(&mut runtime, "have x R").is_failed());
+    assert!(!exec_one(&mut runtime, "have y R").is_failed());
+    assert!(!exec_one(&mut runtime, "have c R").is_failed());
+    assert!(!exec_one(&mut runtime, "trust 0 < c").is_failed());
+    assert!(!exec_one(&mut runtime, "trust c != 0").is_failed());
+    assert!(!exec_one(&mut runtime, "trust x <= y").is_failed());
+    assert!(!exec_one(&mut runtime, "x / c <= y / c").is_failed(), "div monotone");
+    assert!(!exec_one(&mut runtime, "trust 0 < x").is_failed());
+    assert!(!exec_one(&mut runtime, "trust 1 < c").is_failed());
+    assert!(!exec_one(&mut runtime, "x / c < x").is_failed(), "div shrink");
+}
+
+#[test]
+fn factorial_keyword_and_postfix_bang_parse_and_eval() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        !exec_one(&mut runtime, "factorial(3) = 6").is_failed(),
+        "factorial(3) = 6"
+    );
+    assert!(!exec_one(&mut runtime, "3! = 6").is_failed(), "3! = 6");
+    assert!(
+        !exec_one(&mut runtime, "factorial(3) = 3!").is_failed(),
+        "factorial(3) = 3!"
+    );
+    assert!(!exec_one(&mut runtime, "2 != 3").is_failed(), "2 != 3 still works");
+}
+
+
+// Stage A remainder order builtins: see `order_stage_a_remainder_tests.rs`.

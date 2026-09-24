@@ -5,4 +5,5 @@ have a R
 have b R
 trust 0 < a
 trust 1 < b
+trust b != 0
 a / b < a

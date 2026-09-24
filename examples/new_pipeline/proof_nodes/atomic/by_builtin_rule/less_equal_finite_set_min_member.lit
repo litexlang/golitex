@@ -1,0 +1,5 @@
+# Node: atomic.ByBuiltinRule.LessEqual.FiniteSetMinMemberLe
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/less_equal_finite_set_min_member.lit
+
+3 $in {1, 3}
+finite_set_min({1, 3}) <= 3

@@ -2,6 +2,7 @@ mod env_stack_lookup;
 mod exec_stmt;
 mod exec_stmt_result;
 pub mod execute_by_stmt;
+pub mod execute_register_stmt;
 pub mod execute_def_abstract_prop_stmt;
 pub mod execute_def_prop_stmt;
 pub mod execute_def_struct_stmt;
@@ -29,9 +30,11 @@ mod release_one_struct_layer;
 
 #[cfg(test)]
 mod exec_stmt_transaction_tests;
+#[cfg(test)]
+mod order_stage_a_remainder_tests;
 
 pub use exec_stmt_result::{
-    ExecDefinitionStmtResult, ExecStmtResult, ParamTypeFactCheckResult, ParamTypeWellDefinedProof,
+    ExecIntroduceStmtResult, ExecDefineStmtResult, ExecReleaseStmtResult, ExecStmtResult, ParamTypeFactCheckResult, ParamTypeWellDefinedProof,
 };
 pub use execute_def_abstract_prop_stmt::ExecDefAbstractPropStmtSuccessResult;
 pub use execute_def_prop_stmt::{
@@ -95,7 +98,7 @@ pub use execute_release_struct_def_stmt::{
 };
 pub use execute_unsafe_stmt::{
     ExecTrustHaveStmtFailed, ExecTrustHaveStmtResult, ExecTrustHaveStmtSuccessResult,
-    ExecTrustStmtResult, ExecTrustStmtSuccessResult, ExecUnsafeStmtResult,
+    ExecTrustStmtResult, ExecTrustStmtSuccessResult, ExecTrustBoundaryStmtResult,
 };
 pub use execute_witness_stmt::{
     ExecWitnessAtomicFactStmtFailed, ExecWitnessAtomicFactStmtResult,

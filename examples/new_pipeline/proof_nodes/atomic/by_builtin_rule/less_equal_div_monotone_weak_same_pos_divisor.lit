@@ -5,5 +5,6 @@ have a R
 have b R
 have c R
 trust 0 < c
+trust c != 0
 trust a <= b
 a / c <= b / c

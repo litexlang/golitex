@@ -19,6 +19,7 @@ pub mod not_less;
 pub mod not_less_equal;
 pub mod order_abs_algebra;
 pub mod order_div_mod_bridge_trans;
+pub mod order_stage_a_remainder;
 pub mod order_power_sqrt_log;
 pub mod predecessor_helpers;
 pub mod search_atomic_except_equality_fact_proof_by_builtin_rule;

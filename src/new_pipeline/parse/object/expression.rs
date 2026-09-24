@@ -1,12 +1,12 @@
 use super::primary::{fn_obj_head_from_obj, parse_primary};
 use crate::new_pipeline::ast::obj::{
-    Add, ArithmeticOperator, Cart, ClosedRange, Div, FieldAccess, FnObj, FnSet, FunctionSpace,
-    IntegerOperator, Intersect, Literal, Mod, Mul, Number, Obj, ObjAtIndex, Pow, ProductShape,
-    SetFormer, SetOperator, StructAndFieldAccessObj, Sub, Union,
+    Add, ArithmeticOperator, Cart, ClosedRange, Div, Factorial, FieldAccess, FnObj, FnSet,
+    FunctionSpace, IntegerOperator, Intersect, Literal, Mod, Mul, Number, Obj, ObjAtIndex, Pow,
+    ProductShape, SetFormer, SetOperator, StructAndFieldAccessObj, Sub, Union,
 };
 use crate::new_pipeline::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
 use crate::new_pipeline::parse::keywords::{
-    ADD, DIV, DOT, DOT_DOT_DOT, FN_ARROW, LEFT_BRACKET, LEFT_PAREN, MOD_OP, MUL, POW,
+    ADD, BANG, DIV, DOT, DOT_DOT_DOT, FN_ARROW, LEFT_BRACKET, LEFT_PAREN, MOD_OP, MUL, POW,
     RIGHT_BRACKET, SUB, UNICODE_CART, UNICODE_INTERSECT, UNICODE_UNION,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
@@ -184,6 +184,7 @@ fn parse_pow(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
 fn parse_postfix(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
     let mut left = parse_primary(rt, tb)?;
     left = parse_field_and_call_postfixes(rt, tb, left)?;
+    left = parse_optional_factorial_bang(tb, left)?;
     loop {
         if tb.peek() != Some(LEFT_BRACKET) {
             break;
@@ -196,8 +197,22 @@ fn parse_postfix(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
             index: Box::new(index),
         }));
         left = parse_field_and_call_postfixes(rt, tb, left)?;
+        left = parse_optional_factorial_bang(tb, left)?;
     }
     Ok(left)
+}
+
+// Postfix `!` → Factorial. Tokenizer keeps `!=` as one token, so this does not
+// steal inequality. `exist!` is parsed in fact keywords as `exist` then `!`.
+// Example: `3!`, `n!`, `(n+1)!`, `f(n)!`.
+fn parse_optional_factorial_bang(tb: &mut TokenBlock, left: Obj) -> RuntimeResult<Obj> {
+    if tb.peek() != Some(BANG) {
+        return Ok(left);
+    }
+    tb.advance()?;
+    Ok(Obj::IntegerOperator(IntegerOperator::Factorial(Factorial {
+        arg: Box::new(left),
+    })))
 }
 
 fn parse_field_and_call_postfixes(

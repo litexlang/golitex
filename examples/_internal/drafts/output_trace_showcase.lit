@@ -83,8 +83,6 @@ prop tmp_same_obj(x set, y set):
 by reflexive_prop:
     ? forall x set:
         $tmp_same_obj(x, x)
-    x = x
-    by def $tmp_same_obj(x, x)
 
 by transitive_prop:
     ? forall x, y, z set:
@@ -92,17 +90,12 @@ by transitive_prop:
         $tmp_same_obj(y, z)
         =>:
             $tmp_same_obj(x, z)
-    x = y
-    y = z
-    x = z
 
 by symmetric_prop:
     ? forall x, y set:
         $tmp_same_obj(x, y)
         =>:
             $tmp_same_obj(y, x)
-    x = y
-    y = x
 
 
 # Explicit choice-backed theorem interface.
