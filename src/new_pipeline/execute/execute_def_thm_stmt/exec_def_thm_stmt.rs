@@ -51,6 +51,7 @@ pub fn exec_def_thm_stmt(
 ) -> RuntimeResult<ExecDefThmStmtResult> {
     if runtime.def_thm_visible_in_stack(&stmt.name).is_some()
         || runtime.axiom_visible_in_stack(&stmt.name).is_some()
+        || runtime.def_strategy_visible_in_stack(&stmt.name).is_some()
     {
         return Ok(ExecDefThmStmtResult::Failed(ExecDefThmStmtFailed::NameClash(
             format!("thm `{}` is already defined", stmt.name),

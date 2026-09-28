@@ -31,6 +31,8 @@ use crate::new_pipeline::execute::execute_def_prop_stmt::ExecDefPropStmtResult;
 use crate::new_pipeline::execute::execute_def_struct_stmt::ExecDefStructStmtResult;
 use crate::new_pipeline::execute::execute_def_template_stmt::ExecDefTemplateStmtResult;
 use crate::new_pipeline::execute::execute_def_thm_stmt::ExecDefThmStmtResult;
+use crate::new_pipeline::execute::execute_def_strategy_stmt::ExecDefStrategyStmtResult;
+use crate::new_pipeline::execute::execute_axiom_stmt::ExecAxiomStmtResult;
 use crate::new_pipeline::execute::execute_fact_stmt::{
     ExecFactStmtResult, VerifyFactResult, VerifyObjWellDefinedResult,
 };
@@ -121,6 +123,8 @@ pub enum ExecDefinitionStmtResult {
     DefTemplate(ExecDefTemplateStmtResult),
     DefAlgo(ExecDefAlgoStmtResult),
     DefThm(ExecDefThmStmtResult),
+    Axiom(ExecAxiomStmtResult),
+    DefStrategy(ExecDefStrategyStmtResult),
 }
 
 pub enum ExecDefineObjStmtResult {
@@ -178,6 +182,8 @@ impl ExecDefinitionStmtResult {
             Self::DefTemplate(r) => r.is_failed(),
             Self::DefAlgo(r) => r.is_failed(),
             Self::DefThm(r) => r.is_failed(),
+            Self::Axiom(r) => r.is_failed(),
+            Self::DefStrategy(r) => r.is_failed(),
         }
     }
 }

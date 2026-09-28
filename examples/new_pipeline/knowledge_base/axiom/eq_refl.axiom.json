@@ -1,0 +1,61 @@
+{
+  "forall_fact": {
+    "dom_facts": [],
+    "fact_id": 20,
+    "line_file": null,
+    "then_facts": [
+      {
+        "atomic": {
+          "fact_id": 21,
+          "left": {
+            "identifier": {
+              "id": 11,
+              "name": "x",
+              "tag": "Plain"
+            },
+            "tag": "Identifier"
+          },
+          "line_file": null,
+          "right": {
+            "identifier": {
+              "id": 11,
+              "name": "x",
+              "tag": "Plain"
+            },
+            "tag": "Identifier"
+          },
+          "tag": "EqualFact"
+        },
+        "tag": "AtomicFact"
+      }
+    ],
+    "typed_parameters": {
+      "groups": [
+        {
+          "param_type": {
+            "obj": {
+              "set": "R",
+              "tag": "StandardSet"
+            },
+            "tag": "Obj"
+          },
+          "params": [
+            {
+              "id": 11,
+              "name": "x"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "kind": "axiom",
+  "line_file": {
+    "line": 1,
+    "origin": {
+      "export_file_id": 0,
+      "tag": "RootExport"
+    }
+  },
+  "name": "eq_refl"
+}

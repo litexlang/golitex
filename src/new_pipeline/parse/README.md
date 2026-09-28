@@ -223,7 +223,8 @@ strategy s:
     # proof
 ```
 
-`axiom` / `strategy` goals are a single `? forall …`. Tracer: `def_thm.lit`
+`axiom` / `strategy` goals are a single `? forall …`. Tracers: `def_thm.lit`,
+`axiom.lit`, `def_strategy.lit`.
 
 ### `claim` / `sketch`
 
@@ -273,8 +274,9 @@ eval 1 + 1
 eval (1 + 2)^2
 ```
 
-Closed numeric display evaluation (exact rational, else closed decimal).
-Does not store a proof fact. Does not consume user algos yet.
+Rewrite via `known_closed_numeric_equal`, require `ClosedNumericExpr` residual,
+then simplify (exact rational, else closed decimal). Does not store a proof
+fact. Does not consume user algos yet.
 Tracer: `examples/new_pipeline/stmt_nodes/command/eval.lit`
 
 ### `release` / `expand`

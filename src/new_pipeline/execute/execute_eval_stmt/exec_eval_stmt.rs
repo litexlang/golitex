@@ -1,32 +1,47 @@
-use super::helper::evaluate_obj_for_eval_stmt;
+use super::helper::evaluate_closed_numeric_obj;
 use super::result::{
     ExecCommandStmtResult, ExecEvalStmtFailed, ExecEvalStmtResult, ExecEvalStmtSuccess,
 };
 use crate::new_pipeline::ast::stmt::EvalStmt;
+use crate::new_pipeline::rational_expression::ClosedNumericExpr;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
-// eval expr: evaluate a supported closed expression for display.
+// eval expr: closed-numeric display evaluation (no proof fact stored).
 //
-// Condition: `expr` belongs to the closed numeric executable subset
-// (exact rational, else closed decimal). No proof fact is stored.
-// After: Success carries source + evaluated object; Failed if unsupported.
+// Stages:
+//   1. Substitute known_closed_numeric_equal representatives (atomic-fact rewrite).
+//   2. Residual must be ClosedNumericExpr; else soft Failed.
+//   3. Simplify (exact rational, else closed decimal).
 //
 // Example:
-//   eval (1 + 2)^2
-//   # → evaluated_object = 9
+//   have a R = 10
+//   eval a + 1
+//   # → rewritten 10 + 1 → evaluated 11
 pub fn exec_eval_stmt(
-    _runtime: &mut Runtime,
+    runtime: &mut Runtime,
     stmt: &EvalStmt,
 ) -> RuntimeResult<ExecCommandStmtResult> {
-    let Some(evaluated_object) = evaluate_obj_for_eval_stmt(&stmt.obj_to_eval) else {
+    let (rewritten_object, cited_equal_fact_ids) =
+        runtime.rewrite_obj_by_known_closed_numeric_equal(&stmt.obj_to_eval);
+
+    if ClosedNumericExpr::try_from_obj(&rewritten_object).is_none() {
         return Ok(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Failed(
-            ExecEvalStmtFailed::UnsupportedExpression,
+            ExecEvalStmtFailed::NotClosedNumericAfterRewrite,
+        )));
+    }
+
+    let Some(evaluated_object) = evaluate_closed_numeric_obj(&rewritten_object) else {
+        return Ok(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Failed(
+            ExecEvalStmtFailed::EvaluationFailed,
         )));
     };
+
     Ok(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Success(
         ExecEvalStmtSuccess {
             statement: stmt.clone(),
             source_object: stmt.obj_to_eval.clone(),
+            rewritten_object,
+            cited_equal_fact_ids,
             evaluated_object,
         },
     )))
@@ -66,13 +81,52 @@ mod tests {
         match outcome {
             ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Success(
                 success,
-            ))) => match success.evaluated_object {
-                Obj::Literal(Literal::Number(Number { normalized_value })) => {
-                    assert_eq!(normalized_value, "9");
+            ))) => {
+                assert!(success.cited_equal_fact_ids.is_empty());
+                match success.evaluated_object {
+                    Obj::Literal(Literal::Number(Number { normalized_value })) => {
+                        assert_eq!(normalized_value, "9");
+                    }
+                    other => panic!("expected number 9, got {other:?}"),
                 }
-                other => panic!("expected number 9, got {other:?}"),
-            },
+            }
             other => panic!("expected eval Success, failed={}", other.is_failed()),
+        }
+    }
+
+    #[test]
+    fn eval_after_closed_numeric_equal_rewrite() {
+        let mut runtime = runtime_with_file_env();
+        assert!(!exec_one(&mut runtime, "have a R = 10").is_failed());
+        let outcome = exec_one(&mut runtime, "eval a + 1");
+        match outcome {
+            ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Success(
+                success,
+            ))) => {
+                assert_eq!(success.cited_equal_fact_ids.len(), 1);
+                match success.evaluated_object {
+                    Obj::Literal(Literal::Number(Number { normalized_value })) => {
+                        assert_eq!(normalized_value, "11");
+                    }
+                    other => panic!("expected number 11, got {other:?}"),
+                }
+            }
+            other => panic!("expected eval Success after rewrite, failed={}", other.is_failed()),
+        }
+    }
+
+    #[test]
+    fn eval_factorial_not_closed_numeric_soft_fails() {
+        let mut runtime = runtime_with_file_env();
+        let outcome = exec_one(&mut runtime, "eval 2!");
+        match outcome {
+            ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Failed(
+                ExecEvalStmtFailed::NotClosedNumericAfterRewrite,
+            ))) => {}
+            other => panic!(
+                "expected NotClosedNumericAfterRewrite, failed={}",
+                other.is_failed()
+            ),
         }
     }
 
@@ -82,9 +136,12 @@ mod tests {
         let outcome = exec_one(&mut runtime, "eval N");
         match outcome {
             ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Failed(
-                ExecEvalStmtFailed::UnsupportedExpression,
+                ExecEvalStmtFailed::NotClosedNumericAfterRewrite,
             ))) => {}
-            other => panic!("expected UnsupportedExpression, failed={}", other.is_failed()),
+            other => panic!(
+                "expected NotClosedNumericAfterRewrite, failed={}",
+                other.is_failed()
+            ),
         }
     }
 }

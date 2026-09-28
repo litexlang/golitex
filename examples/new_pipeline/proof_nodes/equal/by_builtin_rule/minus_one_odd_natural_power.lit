@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.MinusOneOddNaturalPower
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/minus_one_odd_natural_power.lit
+
+have m N
+(-1)^(2 * m + 1) = -1

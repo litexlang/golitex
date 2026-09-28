@@ -6,16 +6,18 @@
 
 use super::json_mini::{JsonError, JsonValue};
 use crate::new_pipeline::ast::fact::{
-    AtomicFact, EqualFact, Fact, GreaterEqualFact, GreaterFact, InFact, LessEqualFact, LessFact,
-    NotEqualFact, NotGreaterEqualFact, NotGreaterFact, NotInFact, NotLessEqualFact, NotLessFact,
+    AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, ForallFact, GreaterEqualFact,
+    GreaterFact, InFact, LessEqualFact, LessFact, NotEqualFact, NotGreaterEqualFact,
+    NotGreaterFact, NotInFact, NotLessEqualFact, NotLessFact, QuantifierFreeFact,
 };
 use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::names::BoundName;
 use crate::new_pipeline::ast::obj::{
-    IdentifierObj, Literal, Number, Obj, StandardSet,
+    AnonymousFn, FnSet, FunctionSpace, IdentifierObj, Literal, Number, Obj, StandardSet,
 };
 use crate::new_pipeline::ast::param::{
-    FiniteSet, NonemptySet, ParamType, Set, TypedParameterGroup, TypedParameterList,
+    FiniteSet, NonemptySet, ParamType, Set, SetBoundParameterGroup, SetBoundParameterList,
+    TypedParameterGroup, TypedParameterList,
 };
 use crate::new_pipeline::ast::stmt::DefPropStmt;
 use crate::new_pipeline::runtime::runtime_ids::{FactId, IdentifierId};
@@ -319,8 +321,12 @@ pub(crate) fn encode_fact(fact: &Fact) -> Result<JsonValue, KbCodecError> {
             ("tag".into(), JsonValue::String("AtomicFact".into())),
             ("atomic".into(), encode_atomic_fact(atomic)?),
         ])),
+        Fact::ForallFact(forall) => Ok(JsonValue::object_from(vec![
+            ("tag".into(), JsonValue::String("ForallFact".into())),
+            ("forall".into(), encode_forall_fact(forall)?),
+        ])),
         other => Err(KbCodecError::Unsupported(format!(
-            "Fact variant `{other:?}` (def_prop codec subset)"
+            "Fact variant `{other:?}` (kb wire subset)"
         ))),
     }
 }
@@ -331,8 +337,11 @@ pub(crate) fn decode_fact(value: &JsonValue) -> Result<Fact, KbCodecError> {
         "AtomicFact" => Ok(Fact::AtomicFact(decode_atomic_fact(JsonValue::get(
             map, "atomic",
         )?)?)),
+        "ForallFact" => Ok(Fact::ForallFact(decode_forall_fact(JsonValue::get(
+            map, "forall",
+        )?)?)),
         other => Err(KbCodecError::Unsupported(format!(
-            "Fact tag `{other}` (def_prop codec subset)"
+            "Fact tag `{other}` (kb wire subset)"
         ))),
     }
 }
@@ -588,8 +597,16 @@ pub(crate) fn encode_obj(obj: &Obj) -> Result<JsonValue, KbCodecError> {
             ("tag".into(), JsonValue::String("StandardSet".into())),
             ("set".into(), JsonValue::String(standard_set_name(set).into())),
         ])),
+        Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => Ok(JsonValue::object_from(vec![
+            ("tag".into(), JsonValue::String("AnonymousFn".into())),
+            ("anonymous_fn".into(), encode_anonymous_fn(anon)?),
+        ])),
+        Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)) => Ok(JsonValue::object_from(vec![
+            ("tag".into(), JsonValue::String("FnSet".into())),
+            ("fn_set".into(), encode_fn_set(fn_set)?),
+        ])),
         other => Err(KbCodecError::Unsupported(format!(
-            "Obj variant `{other:?}` (def_prop codec subset)"
+            "Obj variant `{other:?}` (kb wire subset)"
         ))),
     }
 }
@@ -607,8 +624,14 @@ pub(crate) fn decode_obj(value: &JsonValue) -> Result<Obj, KbCodecError> {
         "StandardSet" => Ok(Obj::StandardSet(decode_standard_set(
             JsonValue::get(map, "set")?.as_str()?,
         )?)),
+        "AnonymousFn" => Ok(Obj::FunctionSpace(FunctionSpace::AnonymousFn(
+            decode_anonymous_fn(JsonValue::get(map, "anonymous_fn")?)?,
+        ))),
+        "FnSet" => Ok(Obj::FunctionSpace(FunctionSpace::FnSet(decode_fn_set(
+            JsonValue::get(map, "fn_set")?,
+        )?))),
         other => Err(KbCodecError::Unsupported(format!(
-            "Obj tag `{other}` (def_prop codec subset)"
+            "Obj tag `{other}` (kb wire subset)"
         ))),
     }
 }
@@ -757,5 +780,214 @@ pub(crate) fn decode_standard_set(name: &str) -> Result<StandardSet, KbCodecErro
                 "StandardSet `{other}`"
             )))
         }
+    })
+}
+
+pub(crate) fn encode_set_bound_parameter_list(
+    list: &SetBoundParameterList,
+) -> Result<JsonValue, KbCodecError> {
+    let groups = list
+        .groups
+        .iter()
+        .map(encode_set_bound_parameter_group)
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(JsonValue::object_from(vec![(
+        "groups".into(),
+        JsonValue::Array(groups),
+    )]))
+}
+
+pub(crate) fn decode_set_bound_parameter_list(
+    value: &JsonValue,
+) -> Result<SetBoundParameterList, KbCodecError> {
+    let map = value.as_object()?;
+    let groups = JsonValue::get(map, "groups")?
+        .as_array()?
+        .iter()
+        .map(decode_set_bound_parameter_group)
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(SetBoundParameterList { groups })
+}
+
+fn encode_set_bound_parameter_group(
+    group: &SetBoundParameterGroup,
+) -> Result<JsonValue, KbCodecError> {
+    let params = group
+        .params
+        .iter()
+        .map(encode_bound_name)
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(JsonValue::object_from(vec![
+        ("params".into(), JsonValue::Array(params)),
+        ("param_type".into(), encode_obj(group.param_type.as_ref())?),
+    ]))
+}
+
+fn decode_set_bound_parameter_group(
+    value: &JsonValue,
+) -> Result<SetBoundParameterGroup, KbCodecError> {
+    let map = value.as_object()?;
+    let params = JsonValue::get(map, "params")?
+        .as_array()?
+        .iter()
+        .map(decode_bound_name)
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(SetBoundParameterGroup {
+        params,
+        param_type: Box::new(decode_obj(JsonValue::get(map, "param_type")?)?),
+    })
+}
+
+pub(crate) fn encode_quantifier_free_fact(
+    fact: &QuantifierFreeFact,
+) -> Result<JsonValue, KbCodecError> {
+    match fact {
+        QuantifierFreeFact::AtomicFact(atomic) => Ok(JsonValue::object_from(vec![
+            ("tag".into(), JsonValue::String("AtomicFact".into())),
+            ("atomic".into(), encode_atomic_fact(atomic)?),
+        ])),
+        other => Err(KbCodecError::Unsupported(format!(
+            "QuantifierFreeFact `{other:?}` (kb wire subset)"
+        ))),
+    }
+}
+
+pub(crate) fn decode_quantifier_free_fact(
+    value: &JsonValue,
+) -> Result<QuantifierFreeFact, KbCodecError> {
+    let map = value.as_object()?;
+    match JsonValue::get(map, "tag")?.as_str()? {
+        "AtomicFact" => Ok(QuantifierFreeFact::AtomicFact(decode_atomic_fact(
+            JsonValue::get(map, "atomic")?,
+        )?)),
+        other => Err(KbCodecError::Unsupported(format!(
+            "QuantifierFreeFact tag `{other}`"
+        ))),
+    }
+}
+
+pub(crate) fn encode_fn_set(fn_set: &FnSet) -> Result<JsonValue, KbCodecError> {
+    let dom = fn_set
+        .dom_facts
+        .iter()
+        .map(encode_quantifier_free_fact)
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(JsonValue::object_from(vec![
+        (
+            "set_bound_parameters".into(),
+            encode_set_bound_parameter_list(&fn_set.set_bound_parameters)?,
+        ),
+        ("dom_facts".into(), JsonValue::Array(dom)),
+        ("ret_set".into(), encode_obj(fn_set.ret_set.as_ref())?),
+    ]))
+}
+
+pub(crate) fn decode_fn_set(value: &JsonValue) -> Result<FnSet, KbCodecError> {
+    let map = value.as_object()?;
+    let dom = JsonValue::get(map, "dom_facts")?
+        .as_array()?
+        .iter()
+        .map(decode_quantifier_free_fact)
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(FnSet {
+        set_bound_parameters: decode_set_bound_parameter_list(JsonValue::get(
+            map,
+            "set_bound_parameters",
+        )?)?,
+        dom_facts: dom,
+        ret_set: Box::new(decode_obj(JsonValue::get(map, "ret_set")?)?),
+    })
+}
+
+pub(crate) fn encode_anonymous_fn(anon: &AnonymousFn) -> Result<JsonValue, KbCodecError> {
+    Ok(JsonValue::object_from(vec![
+        ("body".into(), encode_fn_set(&anon.body)?),
+        ("equal_to".into(), encode_obj(anon.equal_to.as_ref())?),
+    ]))
+}
+
+pub(crate) fn decode_anonymous_fn(value: &JsonValue) -> Result<AnonymousFn, KbCodecError> {
+    let map = value.as_object()?;
+    Ok(AnonymousFn {
+        body: decode_fn_set(JsonValue::get(map, "body")?)?,
+        equal_to: Box::new(decode_obj(JsonValue::get(map, "equal_to")?)?),
+    })
+}
+
+pub(crate) fn encode_exist_or_and_chain(
+    fact: &ExistOrAndChainAtomicFact,
+) -> Result<JsonValue, KbCodecError> {
+    match fact {
+        ExistOrAndChainAtomicFact::AtomicFact(atomic) => Ok(JsonValue::object_from(vec![
+            ("tag".into(), JsonValue::String("AtomicFact".into())),
+            ("atomic".into(), encode_atomic_fact(atomic)?),
+        ])),
+        other => Err(KbCodecError::Unsupported(format!(
+            "ExistOrAndChainAtomicFact `{other:?}` (kb wire subset)"
+        ))),
+    }
+}
+
+pub(crate) fn decode_exist_or_and_chain(
+    value: &JsonValue,
+) -> Result<ExistOrAndChainAtomicFact, KbCodecError> {
+    let map = value.as_object()?;
+    match JsonValue::get(map, "tag")?.as_str()? {
+        "AtomicFact" => Ok(ExistOrAndChainAtomicFact::AtomicFact(decode_atomic_fact(
+            JsonValue::get(map, "atomic")?,
+        )?)),
+        other => Err(KbCodecError::Unsupported(format!(
+            "ExistOrAndChainAtomicFact tag `{other}`"
+        ))),
+    }
+}
+
+pub(crate) fn encode_forall_fact(forall: &ForallFact) -> Result<JsonValue, KbCodecError> {
+    let dom = forall
+        .dom_facts
+        .iter()
+        .map(encode_fact)
+        .collect::<Result<Vec<_>, _>>()?;
+    let then_facts = forall
+        .then_facts
+        .iter()
+        .map(encode_exist_or_and_chain)
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(JsonValue::object_from(vec![
+        (
+            "fact_id".into(),
+            JsonValue::Number(forall.fact_id.value() as f64),
+        ),
+        (
+            "typed_parameters".into(),
+            encode_typed_parameter_list(&forall.typed_parameters)?,
+        ),
+        ("dom_facts".into(), JsonValue::Array(dom)),
+        ("then_facts".into(), JsonValue::Array(then_facts)),
+        (
+            "line_file".into(),
+            encode_optional_line_file(&forall.line_file)?,
+        ),
+    ]))
+}
+
+pub(crate) fn decode_forall_fact(value: &JsonValue) -> Result<ForallFact, KbCodecError> {
+    let map = value.as_object()?;
+    let dom = JsonValue::get(map, "dom_facts")?
+        .as_array()?
+        .iter()
+        .map(decode_fact)
+        .collect::<Result<Vec<_>, _>>()?;
+    let then_facts = JsonValue::get(map, "then_facts")?
+        .as_array()?
+        .iter()
+        .map(decode_exist_or_and_chain)
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(ForallFact {
+        fact_id: FactId::new(JsonValue::get(map, "fact_id")?.as_u64()?),
+        typed_parameters: decode_typed_parameter_list(JsonValue::get(map, "typed_parameters")?)?,
+        dom_facts: dom,
+        then_facts,
+        line_file: decode_optional_line_file(JsonValue::get(map, "line_file")?)?,
     })
 }

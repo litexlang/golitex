@@ -1,5 +1,5 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact, InFact, SubsetFact};
-use crate::new_pipeline::ast::obj::{Obj, SetFormer, SetOperator, StandardSet};
+use crate::new_pipeline::ast::obj::{Obj, SetFormer, SetOperator, StandardSet, Union};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
@@ -45,6 +45,15 @@ pub enum SubsetFactSearchProofByBuiltinRule {
     // `{a1, …, an} $subset S` from each `ai $in S`.
     // Example: prove `{1, 2} $subset N`.
     ListSetSubsetFromMembers(ListSetSubsetFromMembersBuiltinRuleProof),
+    // `union(A, B) $subset union(C, D)` from componentwise subsets
+    // (same operand order or crossed).
+    // Example: trust `A $subset C`; trust `B $subset D`;
+    //          `union(A, B) $subset union(C, D)`.
+    UnionSubsetFromComponentwise(UnionSubsetFromComponentwiseBuiltinRuleProof),
+    // Integer `range` / `closed_range` sits in its numeric carrier.
+    // For `N` / `N+`, the start must already inhabit that carrier.
+    // Example: have `a N`; have `b Z`; `a...b $subset N`.
+    IntegerRangeSubsetNumericCarrier(IntegerRangeSubsetNumericCarrierBuiltinRuleProof),
 }
 
 pub struct StandardSetSubsetBuiltinRuleProof {
@@ -76,6 +85,14 @@ pub struct IntersectSubsetFromRightUpperBoundBuiltinRuleProof {
 
 pub struct ListSetSubsetFromMembersBuiltinRuleProof {
     pub member_in_proofs: Vec<VerifyFactResult>,
+}
+
+pub struct UnionSubsetFromComponentwiseBuiltinRuleProof {
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+pub struct IntegerRangeSubsetNumericCarrierBuiltinRuleProof {
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
 impl Runtime {
@@ -137,6 +154,22 @@ impl Runtime {
                 )
             }
 
+            (Obj::SetOperator(SetOperator::Union(left_union)), Obj::SetOperator(SetOperator::Union(right_union))) => {
+                if let Some(proof) = self.union_subset_from_componentwise_proof(
+                    left_union,
+                    right_union,
+                    verify_state.clone(),
+                )? {
+                    return Ok(Some(proof));
+                }
+                self.union_subset_from_both_operands_proof(
+                    left_union.left.as_ref(),
+                    left_union.right.as_ref(),
+                    &fact.right,
+                    verify_state,
+                )
+            }
+
             (left, Obj::SetOperator(SetOperator::Union(union))) => {
                 if union.left.as_ref() == left {
                     return Ok(Some(SubsetFactSearchProofByBuiltinRule::SubsetUnionLeft(
@@ -192,6 +225,24 @@ impl Runtime {
             (Obj::SetFormer(SetFormer::ListSet(list_set)), right) => {
                 self.list_set_subset_from_members_proof(&list_set.list, right, verify_state)
             }
+
+            (
+                Obj::SetFormer(SetFormer::Range(range)),
+                Obj::StandardSet(target),
+            ) => self.integer_range_subset_numeric_carrier_proof(
+                range.start.as_ref(),
+                target,
+                verify_state,
+            ),
+
+            (
+                Obj::SetFormer(SetFormer::ClosedRange(range)),
+                Obj::StandardSet(target),
+            ) => self.integer_range_subset_numeric_carrier_proof(
+                range.start.as_ref(),
+                target,
+                verify_state,
+            ),
 
             _ => Ok(None),
         }
@@ -281,6 +332,79 @@ impl Runtime {
             SubsetFactSearchProofByBuiltinRule::IntersectSubsetFromRightUpperBound(
                 IntersectSubsetFromRightUpperBoundBuiltinRuleProof {
                     right_operand_subset_proof,
+                },
+            ),
+        ))
+    }
+
+    fn union_subset_from_componentwise_proof(
+        &mut self,
+        left_union: &Union,
+        right_union: &Union,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<SubsetFactSearchProofByBuiltinRule>> {
+        for ((l1, r1), (l2, r2)) in [
+            (
+                (left_union.left.as_ref(), right_union.left.as_ref()),
+                (left_union.right.as_ref(), right_union.right.as_ref()),
+            ),
+            (
+                (left_union.left.as_ref(), right_union.right.as_ref()),
+                (left_union.right.as_ref(), right_union.left.as_ref()),
+            ),
+        ] {
+            let mut proofs = Vec::new();
+            let mut ok = true;
+            for (left, right) in [(l1, r1), (l2, r2)] {
+                if left.ir() == right.ir() {
+                    continue;
+                }
+                let premise = subset_fact(left, right, self);
+                let proof = self.verify_fact(&premise, verify_state.clone())?;
+                if proof.is_failed() {
+                    ok = false;
+                    break;
+                }
+                proofs.push(proof);
+            }
+            if ok {
+                return Ok(Some(
+                    SubsetFactSearchProofByBuiltinRule::UnionSubsetFromComponentwise(
+                        UnionSubsetFromComponentwiseBuiltinRuleProof {
+                            proof_of_requirement_facts: proofs,
+                        },
+                    ),
+                ));
+            }
+        }
+        Ok(None)
+    }
+
+    fn integer_range_subset_numeric_carrier_proof(
+        &mut self,
+        start: &Obj,
+        target: &StandardSet,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<SubsetFactSearchProofByBuiltinRule>> {
+        let required_start = match target {
+            StandardSet::N => Some(StandardSet::N),
+            StandardSet::NPos => Some(StandardSet::NPos),
+            other if standard_set_is_subset_eq(&StandardSet::Z, other) => None,
+            _ => return Ok(None),
+        };
+        let mut proofs = Vec::new();
+        if let Some(required_start) = required_start {
+            let premise = in_fact(start, &Obj::StandardSet(required_start), self);
+            let proof = self.verify_fact(&premise, verify_state)?;
+            if proof.is_failed() {
+                return Ok(None);
+            }
+            proofs.push(proof);
+        }
+        Ok(Some(
+            SubsetFactSearchProofByBuiltinRule::IntegerRangeSubsetNumericCarrier(
+                IntegerRangeSubsetNumericCarrierBuiltinRuleProof {
+                    proof_of_requirement_facts: proofs,
                 },
             ),
         ))

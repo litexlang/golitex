@@ -1,0 +1,8 @@
+# Node: equal.ByBuiltinRule.QuotEuclideanDecomposition
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/quot_euclidean_decomposition.lit
+
+have a Z
+have d N+
+# Narrow trust: quot / mod WD currently needs an explicit nonzero divisor witness.
+trust d != 0
+a = d * quot(a, d) + (a % d)

@@ -99,6 +99,19 @@ pub enum LessFactSearchProofByBuiltinRule {
     // Mathematical property: `i $in N+` and `i % 2 = 0` ⇒ `1 < i`.
     // Example: after `have i N+` and `trust i % 2 = 0`, prove `1 < i`.
     PositiveEvenGtOne(PositiveEvenGtOneBuiltinRuleProof),
+    // Right addend congruence (strict): `a < b` ⇒ `a + c < b + c`.
+    // Example: known `x < y` proves `x + 1 < y + 1`.
+    AddRightCongruenceStrict(AddRightCongruenceStrictBuiltinRuleProof),
+    // Left addend congruence (strict): `a < b` ⇒ `c + a < c + b`.
+    // Example: known `x < y` proves `1 + x < 1 + y`.
+    AddLeftCongruenceStrict(AddLeftCongruenceStrictBuiltinRuleProof),
+    // Left multiplication by a positive factor preserves strict order.
+    // Mathematical property: `0 < k` and `a < b` ⇒ `k * a < k * b`.
+    // Example: known `0 < 2` and `x < y` prove `2 * x < 2 * y`.
+    MulLeftPositiveMonotoneStrict(MulLeftPositiveMonotoneStrictBuiltinRuleProof),
+    // Right multiplication by a positive factor preserves strict order.
+    // Example: known `0 < c` and `a < b` prove `a * c < b * c`.
+    MulRightPositiveMonotoneStrict(MulRightPositiveMonotoneStrictBuiltinRuleProof),
 }
 
 // Payload: both evaluated normals with left_normal < right_normal.
@@ -224,6 +237,24 @@ pub struct PositiveEvenGtOneBuiltinRuleProof {
     pub even_proof: VerifyFactResult,
 }
 
+pub struct AddRightCongruenceStrictBuiltinRuleProof {
+    pub premise_proof: VerifyFactResult,
+}
+
+pub struct AddLeftCongruenceStrictBuiltinRuleProof {
+    pub premise_proof: VerifyFactResult,
+}
+
+pub struct MulLeftPositiveMonotoneStrictBuiltinRuleProof {
+    pub positive_factor_proof: VerifyFactResult,
+    pub order_premise_proof: VerifyFactResult,
+}
+
+pub struct MulRightPositiveMonotoneStrictBuiltinRuleProof {
+    pub positive_factor_proof: VerifyFactResult,
+    pub order_premise_proof: VerifyFactResult,
+}
+
 
 impl Runtime {
     // Builtin search for `a < b`.
@@ -314,6 +345,70 @@ impl Runtime {
                     verify_state.clone(),
                 )? {
                     return Ok(Some(proof));
+                }
+            }
+
+            // Both Add: strict congruence on shared addend.
+            (
+                Obj::ArithmeticOperator(ArithmeticOperator::Add(Add {
+                    left: left_l,
+                    right: left_r,
+                })),
+                Obj::ArithmeticOperator(ArithmeticOperator::Add(Add {
+                    left: right_l,
+                    right: right_r,
+                })),
+            ) => {
+                if left_r.as_ref().ir() == right_r.as_ref().ir() {
+                    if let Some(proof) = self.add_right_congruence_strict_proof(
+                        left_l.as_ref(),
+                        right_l.as_ref(),
+                        verify_state.clone(),
+                    )? {
+                        return Ok(Some(proof));
+                    }
+                }
+                if left_l.as_ref().ir() == right_l.as_ref().ir() {
+                    if let Some(proof) = self.add_left_congruence_strict_proof(
+                        left_r.as_ref(),
+                        right_r.as_ref(),
+                        verify_state.clone(),
+                    )? {
+                        return Ok(Some(proof));
+                    }
+                }
+            }
+
+            // Both Mul: positive-factor monotone strict.
+            (
+                Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
+                    left: left_l,
+                    right: left_r,
+                })),
+                Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
+                    left: right_l,
+                    right: right_r,
+                })),
+            ) => {
+                if left_l.as_ref().ir() == right_l.as_ref().ir() {
+                    if let Some(proof) = self.mul_left_positive_monotone_strict_proof(
+                        left_l.as_ref(),
+                        left_r.as_ref(),
+                        right_r.as_ref(),
+                        verify_state.clone(),
+                    )? {
+                        return Ok(Some(proof));
+                    }
+                }
+                if left_r.as_ref().ir() == right_r.as_ref().ir() {
+                    if let Some(proof) = self.mul_right_positive_monotone_strict_proof(
+                        left_l.as_ref(),
+                        right_l.as_ref(),
+                        left_r.as_ref(),
+                        verify_state.clone(),
+                    )? {
+                        return Ok(Some(proof));
+                    }
                 }
             }
 
@@ -450,5 +545,113 @@ impl Runtime {
             },
         ));
         self.verify_fact(&goal, verify_state)
+    }
+
+    fn add_right_congruence_strict_proof(
+        &mut self,
+        left_l: &Obj,
+        right_l: &Obj,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<LessFactSearchProofByBuiltinRule>> {
+        let premise = Fact::AtomicFact(AtomicFact::LessFact(LessFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: left_l.clone(),
+            right: right_l.clone(),
+            line_file: None,
+        }));
+        let premise_proof = self.verify_fact(&premise, verify_state)?;
+        if premise_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(
+            LessFactSearchProofByBuiltinRule::AddRightCongruenceStrict(
+                AddRightCongruenceStrictBuiltinRuleProof { premise_proof },
+            ),
+        ))
+    }
+
+    fn add_left_congruence_strict_proof(
+        &mut self,
+        left_r: &Obj,
+        right_r: &Obj,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<LessFactSearchProofByBuiltinRule>> {
+        let premise = Fact::AtomicFact(AtomicFact::LessFact(LessFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: left_r.clone(),
+            right: right_r.clone(),
+            line_file: None,
+        }));
+        let premise_proof = self.verify_fact(&premise, verify_state)?;
+        if premise_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(
+            LessFactSearchProofByBuiltinRule::AddLeftCongruenceStrict(
+                AddLeftCongruenceStrictBuiltinRuleProof { premise_proof },
+            ),
+        ))
+    }
+
+    fn mul_left_positive_monotone_strict_proof(
+        &mut self,
+        k: &Obj,
+        left_a: &Obj,
+        right_b: &Obj,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<LessFactSearchProofByBuiltinRule>> {
+        let positive_factor_proof = self.verify_positive(k, verify_state.clone())?;
+        if positive_factor_proof.is_failed() {
+            return Ok(None);
+        }
+        let order_premise = Fact::AtomicFact(AtomicFact::LessFact(LessFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: left_a.clone(),
+            right: right_b.clone(),
+            line_file: None,
+        }));
+        let order_premise_proof = self.verify_fact(&order_premise, verify_state)?;
+        if order_premise_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(
+            LessFactSearchProofByBuiltinRule::MulLeftPositiveMonotoneStrict(
+                MulLeftPositiveMonotoneStrictBuiltinRuleProof {
+                    positive_factor_proof,
+                    order_premise_proof,
+                },
+            ),
+        ))
+    }
+
+    fn mul_right_positive_monotone_strict_proof(
+        &mut self,
+        left_a: &Obj,
+        right_b: &Obj,
+        k: &Obj,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<LessFactSearchProofByBuiltinRule>> {
+        let positive_factor_proof = self.verify_positive(k, verify_state.clone())?;
+        if positive_factor_proof.is_failed() {
+            return Ok(None);
+        }
+        let order_premise = Fact::AtomicFact(AtomicFact::LessFact(LessFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: left_a.clone(),
+            right: right_b.clone(),
+            line_file: None,
+        }));
+        let order_premise_proof = self.verify_fact(&order_premise, verify_state)?;
+        if order_premise_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(
+            LessFactSearchProofByBuiltinRule::MulRightPositiveMonotoneStrict(
+                MulRightPositiveMonotoneStrictBuiltinRuleProof {
+                    positive_factor_proof,
+                    order_premise_proof,
+                },
+            ),
+        ))
     }
 }

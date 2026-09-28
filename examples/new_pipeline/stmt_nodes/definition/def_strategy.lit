@@ -1,0 +1,6 @@
+# Stmt: Definition.DefStrategyStmt → exec_def_strategy_stmt
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/definition/def_strategy.lit
+
+strategy refl_on_r:
+    ? forall x R:
+        x = x

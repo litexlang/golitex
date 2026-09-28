@@ -13,6 +13,8 @@ use crate::new_pipeline::execute::execute_by_stmt::{
     exec_release_zorn_lemma_stmt,
 };
 use crate::new_pipeline::execute::execute_def_thm_stmt::exec_def_thm_stmt;
+use crate::new_pipeline::execute::execute_def_strategy_stmt::exec_def_strategy_stmt;
+use crate::new_pipeline::execute::execute_axiom_stmt::exec_axiom_stmt;
 use crate::new_pipeline::execute::execute_def_algo_stmt::exec_def_algo_stmt;
 use crate::new_pipeline::execute::execute_eval_stmt::exec_eval_stmt;
 use crate::new_pipeline::execute::execute_proof_block_stmt::{exec_claim_stmt, exec_sketch_stmt};
@@ -176,6 +178,17 @@ impl Runtime {
             Stmt::Definition(DefinitionStmt::DefThmStmt(def_thm)) => Ok(ExecStmtResult::Definition(
                 ExecDefinitionStmtResult::DefThm(exec_def_thm_stmt(self, def_thm)?),
             )),
+            Stmt::Definition(DefinitionStmt::AxiomStmt(axiom)) => Ok(ExecStmtResult::Definition(
+                ExecDefinitionStmtResult::Axiom(exec_axiom_stmt(self, axiom)?),
+            )),
+            Stmt::Definition(DefinitionStmt::DefStrategyStmt(def_strategy)) => {
+                Ok(ExecStmtResult::Definition(
+                    ExecDefinitionStmtResult::DefStrategy(exec_def_strategy_stmt(
+                        self,
+                        def_strategy,
+                    )?),
+                ))
+            }
             Stmt::Witness(witness_stmt) => {
                 Ok(ExecStmtResult::Witness(self.exec_witness_stmt(witness_stmt)?))
             }
@@ -279,10 +292,6 @@ impl Runtime {
             Stmt::Command(CommandStmt::EvalStmt(stmt)) => {
                 Ok(ExecStmtResult::Command(exec_eval_stmt(self, stmt)?))
             }
-            _ => Err(RuntimeError::Unsupported(
-                "new_pipeline exec_stmt: Fact, let, have-obj-in-nonempty, have-obj-equal, have-obj-by-exist, have-fn-equal, have-fn-by-cases, have-fn-by-exist!, have-fn-by-induc, prop, abstract_prop, struct, template, thm, witness, trust, release/expand, register reflexive/symmetric/transitive, by extension / contra / cases / def / thm / induc / strong_induc / enumerate finite_set / for, claim, sketch, eval are wired for the tracer"
-                    .to_string(),
-            )),
         }
     }
 }

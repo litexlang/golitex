@@ -11,7 +11,10 @@ examples/new_pipeline/knowledge_base/
   def_prop/                 DefPropStmt ↔ JSON
   def_abstract_prop/        DefAbstractPropStmt ↔ JSON
   def_thm/                  DefThmStmt ↔ JSON (empty prove_process MVP)
-  stored_identifier/        StoredIdentifierDefinition ↔ JSON (LetObj / HaveObj* MVP)
+  stored_identifier/        StoredIdentifierDefinition ↔ JSON
+                            (LetObj / HaveObj* / HaveFnEqual)
+  axiom/                    AxiomStmt ↔ JSON
+  def_struct/               DefStructStmt ↔ JSON (fields; optional laws)
 ```
 
 White-box Rust tests live under

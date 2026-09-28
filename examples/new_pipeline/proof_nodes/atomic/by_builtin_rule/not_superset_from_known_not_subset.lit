@@ -1,0 +1,5 @@
+# Node: atomic.ByBuiltinRule.NotSupersetFromKnownNotSubset
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/not_superset_from_known_not_subset.lit
+
+trust not {1} $subset {2}
+not {2} $superset {1}

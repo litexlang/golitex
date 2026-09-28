@@ -95,6 +95,22 @@ impl Runtime {
         {
             return Ok(Some(map_equality_identities_wave6_proof(proof)));
         }
+        if let Some(proof) = self
+            .search_equal_fact_builtin_rule_equality_identities_wave7(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(map_equality_identities_wave7_proof(proof)));
+        }
+        if let Some(proof) = self
+            .search_equal_fact_builtin_rule_equality_identities_wave8(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(map_equality_identities_wave8_proof(proof)));
+        }
         if let Some(proof) =
             self.search_equal_fact_builtin_rule_inverse_trig(fact, verify_state)?
         {
@@ -215,6 +231,51 @@ fn map_equality_identities_wave6_proof(
         W::MaxLeftWhenLessEqual(p) => EqualitySearchProofByBuiltinRule::MaxLeftWhenLessEqual(p),
         W::MinLeftWhenLessEqual(p) => EqualitySearchProofByBuiltinRule::MinLeftWhenLessEqual(p),
         W::MinRightWhenLessEqual(p) => EqualitySearchProofByBuiltinRule::MinRightWhenLessEqual(p),
+    }
+}
+
+fn map_equality_identities_wave7_proof(
+    proof: super::by_equality_identities_wave7::EqualityIdentitiesWave7BuiltinRuleProof,
+) -> EqualitySearchProofByBuiltinRule {
+    use super::by_equality_identities_wave7::EqualityIdentitiesWave7BuiltinRuleProof as W;
+    match proof {
+        W::GcdDividesArgument(p) => EqualitySearchProofByBuiltinRule::GcdDividesArgument(p),
+        W::ProductModFactorZero(p) => EqualitySearchProofByBuiltinRule::ProductModFactorZero(p),
+        W::EqualityFromTwoSidedWeakOrder(p) => {
+            EqualitySearchProofByBuiltinRule::EqualityFromTwoSidedWeakOrder(p)
+        }
+        W::DiffZeroFromEqualOperands(p) => {
+            EqualitySearchProofByBuiltinRule::DiffZeroFromEqualOperands(p)
+        }
+        W::ZeroProductCancel(p) => EqualitySearchProofByBuiltinRule::ZeroProductCancel(p),
+        W::SignOfNegation(p) => EqualitySearchProofByBuiltinRule::SignOfNegation(p),
+        W::SignTimesAbsEqualsArg(p) => EqualitySearchProofByBuiltinRule::SignTimesAbsEqualsArg(p),
+        W::AbsEqualsSignTimesArg(p) => EqualitySearchProofByBuiltinRule::AbsEqualsSignTimesArg(p),
+        W::SignOfProduct(p) => EqualitySearchProofByBuiltinRule::SignOfProduct(p),
+        W::SubtractionFromKnownAddition(p) => {
+            EqualitySearchProofByBuiltinRule::SubtractionFromKnownAddition(p)
+        }
+    }
+}
+
+fn map_equality_identities_wave8_proof(
+    proof: super::by_equality_identities_wave8::EqualityIdentitiesWave8BuiltinRuleProof,
+) -> EqualitySearchProofByBuiltinRule {
+    use super::by_equality_identities_wave8::EqualityIdentitiesWave8BuiltinRuleProof as W;
+    match proof {
+        W::QuotEuclideanDecomposition(p) => {
+            EqualitySearchProofByBuiltinRule::QuotEuclideanDecomposition(p)
+        }
+        W::ModDividendMinusRemainderZero(p) => {
+            EqualitySearchProofByBuiltinRule::ModDividendMinusRemainderZero(p)
+        }
+        W::SquareSumComponentZero(p) => {
+            EqualitySearchProofByBuiltinRule::SquareSumComponentZero(p)
+        }
+        W::MinusOneOddNaturalPower(p) => {
+            EqualitySearchProofByBuiltinRule::MinusOneOddNaturalPower(p)
+        }
+        W::LcmGcdProductAbs(p) => EqualitySearchProofByBuiltinRule::LcmGcdProductAbs(p),
     }
 }
 

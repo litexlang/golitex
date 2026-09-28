@@ -1921,7 +1921,7 @@ runtime. This section gives each statement family one canonical home.
 > | `Register` | Register rewrite/infer properties of a user prop (no proof body). | `register reflexive:` / `symmetric:` / `transitive:` + one `? forall …` |
 > | `Witness` | Prove an exist / atomic-exist / nonempty goal by exhibiting witnesses. | `witness exist … from …:` / `witness $P(…) from …:` / `witness $is_nonempty_set(S) from e:` |
 > | `ProofBlock` | Nested local proof scope. | `claim: ? fact` … / `sketch:` … |
-> | `Command` | Non-proof session command. | `eval expr` (preview: closed numeric display eval; no proof fact; no user algo yet; tracer `examples/new_pipeline/stmt_nodes/command/eval.lit`) |
+> | `Command` | Non-proof session command. | `eval expr` (preview: closed-numeric equal rewrite then simplify; no proof fact; no user algo yet; tracer `examples/new_pipeline/stmt_nodes/command/eval.lit`) |
 >
 > **`Definition` / `DefineObj` (object names):**
 >
@@ -1950,7 +1950,7 @@ runtime. This section gives each statement family one canonical home.
 > | `template` | Parameterized counterpart of one ordinary definition. | `template<A set>:` then one allowed body |
 > | `thm` | Named theorem with goal and proof. | `thm name:` then `? fact` and proof |
 > | `axiom` | Named axiom (interface checked; truth trusted). | `axiom name:` then `? forall …` |
-> | `algo` / `strategy` | Preview / restricted forms (see parse README). | `algo …` / `strategy …` |
+> | `algo` / `strategy` | Preview: `have algo for fn` and `strategy name: ? forall …` are parse+exec wired. | `algo …` / `strategy …` |
 >
 > **`By` (common methods):**
 >
@@ -2422,8 +2422,10 @@ function.
 > **Preview (`new_pipeline`):** the surface is `have algo for fn f(x): …`
 > (the `fn` keyword marks attachment to an existing mathematical function).
 > Execution checks case/default agreement then stores the presentation;
-> `eval` evaluates closed numeric expressions for display (exact rational,
-> else closed decimal) but does not store a proof fact and does not yet
+> `eval` first substitutes `known_closed_numeric_equal` representatives
+> (same rewrite as atomic-fact closed-numeric substitution), requires a
+> `ClosedNumericExpr` residual, then simplifies for display (exact rational,
+> else closed decimal). It does not store a proof fact and does not yet
 > consume user algos. Tracers: `examples/new_pipeline/stmt_nodes/definition/def_algo.lit`,
 > `examples/new_pipeline/stmt_nodes/command/eval.lit`.
 >
@@ -2436,7 +2438,8 @@ function.
 >     case n % 2 = 0: 0
 >     case n % 2 != 0: 1
 >
-> eval (1 + 2)^2
+> have a R = 10
+> eval a + 1
 > ```
 
 ### Extracting a proved numerical step to Python or C (experimental)
@@ -2603,6 +2606,10 @@ parenthesized call interface to a trusted fact without proving it.
 > stack for plain names and a finished export file's Env for qualified names —
 > the same path as `release obj def`. Fact search still does not merge another
 > module's ambient facts; only the named theorem definition is resolved.
+> `axiom` is wired the same way as `thm` for storage: after a successful
+> `axiom` statement the named interface is stored and its `forall` enters
+> ambient known facts (no proof body). `release thm name(args)` and
+> `by thm name(args) => fact` resolve axiom names as well as theorem names.
 
 The call spelling records whether instantiation is taking place:
 
@@ -2743,6 +2750,13 @@ A `strategy` proves a named, restricted atomic universal pattern. Once the
 definition succeeds, its proved `forall` enters ordinary fact matching and is
 available to all later statements in that environment. There is no separate
 activation state.
+
+> **Preview (`new_pipeline`):** `strategy` is parse+exec wired like `thm`'s
+> forall path (fact-only proof body). The named interface is stored under
+> `strategy_definitions`, and the proved `forall` is injected into ordinary
+> known-fact matching. Kernel does not yet enforce a stricter “atomic
+> conclusion only” shape beyond `? forall …`. Tracer:
+> [`examples/new_pipeline/stmt_nodes/definition/def_strategy.lit`](../examples/new_pipeline/stmt_nodes/definition/def_strategy.lit).
 
 ```litex
 prop is_one(x R):
@@ -2907,7 +2921,7 @@ introductions.
 | `thm`, `axiom` | `thm` proves its target; `axiom` checks its interface but trusts truth. | A named reusable theorem interface; universal facts also enter ordinary matching. |
 | `release thm` | Arity/domains/premises; the form is bare and has no goal/proof body. Plain or `mod::export::`-qualified theorem name (preview). | All instantiated conclusions and their ordinary inferred consequences. |
 | `by thm ... => fact` | Arity/domains/premises and one selected atomic target. Same qualified-name lookup as `release thm` (preview). | Only the requested atomic selection and its ordinary inferred consequences. |
-| `strategy` | The statement proves its restricted atomic universal pattern. | A named definition whose proved `forall` enters ordinary matching. |
+| `strategy` | The statement proves its `? forall` goal (preview: fact-only body; no stricter atomic-shape gate yet). | A named definition whose proved `forall` enters ordinary matching. |
 | `witness exist/exist!` | Witness count/types/body; `exist!` additionally verifies the generated two-candidate uniqueness universal. | The exact existential fact. Binder names stay local. |
 | `witness $P(args)` | The concrete prop has one positive ordinary `exist` clause; ordinary witness checks run after substitution. `exist!` uses explicit `witness exist! ...` followed by `by def`. | `$P(args)` as the primary fact, then definition inference. |
 | `witness $is_nonempty_set(S)` | The proposed object is in `S`. | Nonemptiness of `S`. |
@@ -4163,6 +4177,26 @@ forall a, b R+:
 > Equality identities wave 6 (preview): `abs(a) = a` when `0 <= a`;
 > `abs(a) = 0 - a` when `a <= 0`; `sign(a) = 1` when `0 < a`;
 > `sign(a) = 0 - 1` when `a < 0`; ordered `min`/`max` when `a <= b` or `b <= a`.
+> Equality identities wave 7 (preview): `a % gcd(a, b) = 0` /
+> `(a * b) % a = 0` (nonzero divisor; gcd nodes use narrow `trust` for current
+> gcd WD); `a = b` from `a <= b` and `b <= a`; `a - b = 0` from `a = b`;
+> `b = 0` from `a * b = 0` and `a != 0`; `sign(0 - a) = 0 - sign(a)`;
+> `sign(a) * abs(a) = a`; `abs(a) = sign(a) * a`;
+> `sign(a * b) = sign(a) * sign(b)` (sign algebra nodes use narrow
+> `trust sign(_) $in R` for current mul / sign WD);
+> `a = c - b` from known `a + b = c`.
+> Equality identities wave 8 (preview): Euclidean
+> `a = d * quot(a, d) + (a % d)`; `(a - (a % b)) % b = 0` (narrow `trust`
+> nonzero divisor for current mod/quot WD); `a = 0` from known
+> `a^2 + b^2 = 0`; `(-1)^(2 * m + 1) = -1` (`m` in `N`);
+> `lcm(a, b) * gcd(a, b) = abs(a * b)` (narrow trust for current lcm/gcd WD).
+> NotEqual leftovers (preview, A9 partial): `$is_nonempty_set(A)` ⇒ `A != {}`;
+> `n $in N` and `1 <= n` ⇒ `n != 0`; `a != 0` ⇒ `a^n != 0` (integer exponent);
+> `a != 0` and `b != 0` ⇒ `a / b != 0`; `a * b != 0` ⇒ `a != 0`;
+> `0 < a` ⇒ `sqrt(a) != 0`; `a != 0` ⇒ `a^2 + b^2 != 0`;
+> `a != -b` ⇒ `a + b != 0`; `x $in A` and `y $notin A` ⇒ `x != y`.
+> Strict order add/mul (preview, A10 partial): `a < b` ⇒ `a + c < b + c`;
+> `0 < k` and `a < b` ⇒ `a * k < b * k` (and left-factor forms).
 > One `.lit` per accepted rule under
 > [`examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/`](../examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/)
 > and
@@ -4353,7 +4387,7 @@ reduces to compatible function interfaces and pointwise equality.
 
 | Interface | Definition or derived builtin consequence |
 |---|---|
-| `A $subset B` / `B $superset A` | Dual spellings of the same inclusion. Reflexivity, structural constructor containment, one-edge membership lifting, and subset chains are supported. Componentwise Cartesian inclusions, integer range into its numeric carrier, real interval into `R`, `fn_range(f)` into its codomain, and union containment from both operands have dedicated shapes. Proper relations unfold to ordinary inclusion plus inequality. |
+| `A $subset B` / `B $superset A` | Dual spellings of the same inclusion. Reflexivity, structural constructor containment, one-edge membership lifting, and subset chains are supported. Componentwise Cartesian inclusions, integer range into its numeric carrier, real interval into `R`, `fn_range(f)` into its codomain, and union containment from both operands have dedicated shapes. Proper relations unfold to ordinary inclusion plus inequality. Preview (`new_pipeline`): `not A $subset B` from known `not B $superset A`, and `not A $superset B` from known `not B $subset A`; binary `union(A,B) $subset union(C,D)` from componentwise subsets; `range` / `closed_range` into `N`/`N+` when the start inhabits that carrier (and into any standard set above `Z` with no extra premise). |
 | `by fn_extension: f = g` | Function extensionality to ordinary `f = g` when FnSet carriers are alpha-equivalent (preview). Local agreement remains a bare `forall`. |
 | `$injective(A,B,f)` | Definition route: members of `A` with equal images are equal. For finite `A`, injectivity gives `finite_set_size(fn_range(f)) = finite_set_size(A)`. |
 | `$surjective(A,B,f)` | Definition route: each member of `B` has a preimage in `A`. A finite source makes the codomain finite and gives `finite_set_size(B) <= finite_set_size(A)`. |

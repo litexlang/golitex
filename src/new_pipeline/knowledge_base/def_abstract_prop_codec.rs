@@ -6,7 +6,7 @@ use super::def_prop_codec::{
 use super::json_mini::JsonValue;
 use crate::new_pipeline::ast::stmt::DefAbstractPropStmt;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 /// Encode one `DefAbstractPropStmt` to pretty JSON.
 pub fn store_def_abstract_prop(stmt: &DefAbstractPropStmt) -> Result<String, KbCodecError> {

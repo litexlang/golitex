@@ -9,7 +9,7 @@ use super::def_prop_codec::{
 use super::json_mini::JsonValue;
 use crate::new_pipeline::ast::stmt::DefThmStmt;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 pub fn store_def_thm(stmt: &DefThmStmt) -> Result<String, KbCodecError> {
     Ok(encode_def_thm(stmt)?.stringify_pretty())

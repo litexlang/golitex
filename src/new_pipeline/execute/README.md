@@ -76,7 +76,7 @@ ExecStmtResult                    // stmt-kind dispatch only
   Definition(ExecDefinitionStmtResult)
     DefineObj(ExecDefineObjStmtResult)   // let / have / obtain / have by …
     HaveFnEqual | HaveFnEqualCaseByCase | HaveFnByForallExistUnique | HaveFnByInduc
-    DefProp | DefAbstractProp | DefStruct | DefTemplate | DefThm
+    DefProp | DefAbstractProp | DefStruct | DefTemplate | DefThm | Axiom | DefStrategy
   Witness(ExecWitnessStmtResult)
   Trust(ExecTrustBoundaryStmtResult)
   By(ExecByStmtResult)

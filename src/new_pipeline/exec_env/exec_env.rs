@@ -230,6 +230,22 @@ impl ExecEnv {
         self.definitions.axiom_definitions.get(name)
     }
 
+    pub fn store_axiom(&mut self, axiom: AxiomStmt) {
+        self.definitions
+            .axiom_definitions
+            .insert(axiom.name.clone(), axiom);
+    }
+
+    pub fn lookup_def_strategy(&self, name: &str) -> Option<&DefStrategyStmt> {
+        self.definitions.strategy_definitions.get(name)
+    }
+
+    pub fn store_def_strategy(&mut self, def_strategy: DefStrategyStmt) {
+        self.definitions
+            .strategy_definitions
+            .insert(def_strategy.name.clone(), def_strategy);
+    }
+
     // Success path of exec_stmt: commit the temp child into this parent.
     // Failed discards the child instead — see merge_exec_env.rs module docs.
     pub fn merge_from(

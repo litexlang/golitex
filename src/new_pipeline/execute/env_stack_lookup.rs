@@ -1,7 +1,8 @@
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::ast::stmt::{
-    AxiomStmt, DefAbstractPropStmt, DefPropStmt, DefStructStmt, DefTemplateStmt, DefThmStmt,
+    AxiomStmt, DefAbstractPropStmt, DefPropStmt, DefStrategyStmt, DefStructStmt, DefTemplateStmt,
+    DefThmStmt,
 };
 use crate::new_pipeline::exec_env::ExecEnv;
 use crate::new_pipeline::runtime::runtime_ids::WellDefinednessId;
@@ -92,6 +93,20 @@ impl Runtime {
     pub(crate) fn axiom_visible_in_stack(&self, name: &str) -> Option<&AxiomStmt> {
         for env in self.execution_environments_stack.iter().rev() {
             if let Some(def) = env.lookup_axiom(name) {
+                return Some(def);
+            }
+        }
+        None
+    }
+
+    // Plain → live stack. Qualified → finished export Env (same path as def_thm).
+    pub(crate) fn axiom_visible(&self, name: &AtomicName) -> Option<&AxiomStmt> {
+        self.lookup_named_definition(name, |env, plain| env.lookup_axiom(plain))
+    }
+
+    pub(crate) fn def_strategy_visible_in_stack(&self, name: &str) -> Option<&DefStrategyStmt> {
+        for env in self.execution_environments_stack.iter().rev() {
+            if let Some(def) = env.lookup_def_strategy(name) {
                 return Some(def);
             }
         }
