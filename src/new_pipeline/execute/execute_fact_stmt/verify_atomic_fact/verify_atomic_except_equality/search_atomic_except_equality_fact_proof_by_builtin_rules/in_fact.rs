@@ -3,10 +3,10 @@ use crate::new_pipeline::ast::fact::{
 };
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::{
-    Add, ArithmeticOperator, Cart, ExpLogOperator, FnObj, FnObjHead, FnSet, FunctionSpace,
-    IntegerOperator, IntervalObj, Literal, Mul, Number, Obj, ObjAtIndex, OneSideInfinityIntervalObj,
-    ProductShape, SetFormer, SetOperator, StandardSet, StructAndFieldAccessObj, StructObj,
-    TrigOperator, TupleDim,
+    Add, ArithmeticOperator, Cart, ComplexOperator, ExpLogOperator, FnObj, FnObjHead, FnSet,
+    FunctionSpace, IntegerOperator, IntervalObj, IteratedOperator, Literal, Mul, Number, Obj,
+    ObjAtIndex, OneSideInfinityIntervalObj, ProductShape, SetFormer, SetOperator, StandardSet,
+    StructAndFieldAccessObj, StructObj, TrigOperator, TupleDim,
 };
 use crate::new_pipeline::ast::param::SetBoundParameterList;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::predecessor_helpers::match_sub_one;
@@ -36,6 +36,17 @@ pub enum InFactSearchProofByBuiltinRule {
     // principal inverses land in R.
     // Example: prove `arcsin(x) $in R`, `tan(x) $in R`.
     RealTrigClosure(RealTrigClosureBuiltinRuleProof),
+    // Real trig values also inhabit C via R ⊂ C.
+    // Mathematical property: sin/cos/... : R → R ⊂ C.
+    // Example: prove `sin(x) $in C` so Add/Pow WD over C can see trig terms.
+    RealTrigInComplex(RealTrigInComplexBuiltinRuleProof),
+    // Complex modulus / coordinates inhabit R.
+    // Mathematical property: `C_abs(z)`, `re(z)`, `img(z)` are real after WD.
+    // Example: prove `C_abs(z) $in R`, `re(z) $in R`.
+    ComplexCoordinateInReal(ComplexCoordinateInRealBuiltinRuleProof),
+    // Complex modulus / coordinates also inhabit C via R ⊂ C.
+    // Example: prove `re(z) $in C` for Add WD of coordinate formulas.
+    ComplexCoordinateInComplex(ComplexCoordinateInComplexBuiltinRuleProof),
     // Well-defined real arithmetic expressions inhabit R.
     // Mathematical property: after child WD, `+ - * / abs …` over R-carriers stay in R.
     // Example: prove `(x + y) $in R`, `abs(x) $in R`.
@@ -138,6 +149,18 @@ pub struct ComplexArithmeticClosureBuiltinRuleProof {}
 // Real trig closure certificate (sides live on the InFact).
 // Example: `arcsin(x) $in R`.
 pub struct RealTrigClosureBuiltinRuleProof {}
+
+// Real trig as complex values (sides live on the InFact).
+// Example: `sin(x) $in C`.
+pub struct RealTrigInComplexBuiltinRuleProof {}
+
+// Complex modulus / re / img inhabit R.
+// Example: `C_abs(z) $in R`.
+pub struct ComplexCoordinateInRealBuiltinRuleProof {}
+
+// Complex modulus / re / img inhabit C.
+// Example: `re(z) $in C`.
+pub struct ComplexCoordinateInComplexBuiltinRuleProof {}
 
 pub struct RealArithmeticClosureBuiltinRuleProof {}
 
@@ -417,6 +440,40 @@ impl Runtime {
             | Obj::TrigOperator(TrigOperator::Arccot(_)) => {
                 if matches!(set, StandardSet::R) {
                     if let Some(proof) = real_trig_in_r_proof(fact) {
+                        return Ok(Some(proof));
+                    }
+                }
+                if matches!(set, StandardSet::C) {
+                    if let Some(proof) = real_trig_in_c_proof(fact) {
+                        return Ok(Some(proof));
+                    }
+                }
+            }
+            Obj::IteratedOperator(IteratedOperator::Sum(_))
+            | Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(_))
+            | Obj::IteratedOperator(IteratedOperator::Product(_))
+            | Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(_)) => {
+                if matches!(set, StandardSet::C) {
+                    if let Some(proof) = complex_arithmetic_in_c_proof(fact) {
+                        return Ok(Some(proof));
+                    }
+                }
+                if matches!(set, StandardSet::R) {
+                    if let Some(proof) = real_arithmetic_in_r_proof(fact) {
+                        return Ok(Some(proof));
+                    }
+                }
+            }
+            Obj::ComplexOperator(ComplexOperator::ComplexAbs(_))
+            | Obj::ComplexOperator(ComplexOperator::RealPart(_))
+            | Obj::ComplexOperator(ComplexOperator::ImaginaryPart(_)) => {
+                if matches!(set, StandardSet::R) {
+                    if let Some(proof) = complex_coordinate_in_r_proof(fact) {
+                        return Ok(Some(proof));
+                    }
+                }
+                if matches!(set, StandardSet::C) {
+                    if let Some(proof) = complex_coordinate_in_c_proof(fact) {
                         return Ok(Some(proof));
                     }
                 }
@@ -1479,9 +1536,17 @@ fn complex_arithmetic_in_c_proof(fact: &InFact) -> Option<InFactSearchProofByBui
         | Obj::ArithmeticOperator(ArithmeticOperator::Pow(_))
         | Obj::ArithmeticOperator(ArithmeticOperator::Abs(_))
         | Obj::ExpLogOperator(ExpLogOperator::Sqrt(_))
-        | Obj::ExpLogOperator(ExpLogOperator::Log(_)) => Some(InFactSearchProofByBuiltinRule::ComplexArithmeticClosure(
-            ComplexArithmeticClosureBuiltinRuleProof {},
-        )),
+        | Obj::ExpLogOperator(ExpLogOperator::Log(_))
+        | Obj::ExpLogOperator(ExpLogOperator::Ln(_))
+        | Obj::ExpLogOperator(ExpLogOperator::Exp(_))
+        | Obj::IteratedOperator(IteratedOperator::Sum(_))
+        | Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(_))
+        | Obj::IteratedOperator(IteratedOperator::Product(_))
+        | Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(_)) => Some(
+            InFactSearchProofByBuiltinRule::ComplexArithmeticClosure(
+                ComplexArithmeticClosureBuiltinRuleProof {},
+            ),
+        ),
         _ => None,
     }
 }
@@ -1503,7 +1568,11 @@ fn real_arithmetic_in_r_proof(fact: &InFact) -> Option<InFactSearchProofByBuilti
         | Obj::ExpLogOperator(ExpLogOperator::Sqrt(_))
         | Obj::ExpLogOperator(ExpLogOperator::Log(_))
         | Obj::ExpLogOperator(ExpLogOperator::Ln(_))
-        | Obj::ExpLogOperator(ExpLogOperator::Exp(_)) => Some(
+        | Obj::ExpLogOperator(ExpLogOperator::Exp(_))
+        | Obj::IteratedOperator(IteratedOperator::Sum(_))
+        | Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(_))
+        | Obj::IteratedOperator(IteratedOperator::Product(_))
+        | Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(_)) => Some(
             InFactSearchProofByBuiltinRule::RealArithmeticClosure(
                 RealArithmeticClosureBuiltinRuleProof {},
             ),
@@ -1529,6 +1598,63 @@ fn real_trig_in_r_proof(fact: &InFact) -> Option<InFactSearchProofByBuiltinRule>
         | Obj::TrigOperator(TrigOperator::Arccot(_)) => Some(InFactSearchProofByBuiltinRule::RealTrigClosure(
             RealTrigClosureBuiltinRuleProof {},
         )),
+        _ => None,
+    }
+}
+
+// Real trig values inhabit C (R ⊂ C). Example: prove `sin(x) $in C`.
+fn real_trig_in_c_proof(fact: &InFact) -> Option<InFactSearchProofByBuiltinRule> {
+    let Obj::StandardSet(StandardSet::C) = &fact.set else {
+        return None;
+    };
+    match &fact.element {
+        Obj::TrigOperator(TrigOperator::Sin(_))
+        | Obj::TrigOperator(TrigOperator::Cos(_))
+        | Obj::TrigOperator(TrigOperator::Tan(_))
+        | Obj::TrigOperator(TrigOperator::Cot(_))
+        | Obj::TrigOperator(TrigOperator::Arcsin(_))
+        | Obj::TrigOperator(TrigOperator::Arccos(_))
+        | Obj::TrigOperator(TrigOperator::Arctan(_))
+        | Obj::TrigOperator(TrigOperator::Arccot(_)) => {
+            Some(InFactSearchProofByBuiltinRule::RealTrigInComplex(
+                RealTrigInComplexBuiltinRuleProof {},
+            ))
+        }
+        _ => None,
+    }
+}
+
+// C_abs / re / img inhabit R after their complex-arg WD.
+// Example: prove `C_abs(z) $in R`, `re(z) $in R`.
+fn complex_coordinate_in_r_proof(fact: &InFact) -> Option<InFactSearchProofByBuiltinRule> {
+    let Obj::StandardSet(StandardSet::R) = &fact.set else {
+        return None;
+    };
+    match &fact.element {
+        Obj::ComplexOperator(ComplexOperator::ComplexAbs(_))
+        | Obj::ComplexOperator(ComplexOperator::RealPart(_))
+        | Obj::ComplexOperator(ComplexOperator::ImaginaryPart(_)) => {
+            Some(InFactSearchProofByBuiltinRule::ComplexCoordinateInReal(
+                ComplexCoordinateInRealBuiltinRuleProof {},
+            ))
+        }
+        _ => None,
+    }
+}
+
+// Same coordinates also inhabit C via R ⊂ C.
+fn complex_coordinate_in_c_proof(fact: &InFact) -> Option<InFactSearchProofByBuiltinRule> {
+    let Obj::StandardSet(StandardSet::C) = &fact.set else {
+        return None;
+    };
+    match &fact.element {
+        Obj::ComplexOperator(ComplexOperator::ComplexAbs(_))
+        | Obj::ComplexOperator(ComplexOperator::RealPart(_))
+        | Obj::ComplexOperator(ComplexOperator::ImaginaryPart(_)) => {
+            Some(InFactSearchProofByBuiltinRule::ComplexCoordinateInComplex(
+                ComplexCoordinateInComplexBuiltinRuleProof {},
+            ))
+        }
         _ => None,
     }
 }

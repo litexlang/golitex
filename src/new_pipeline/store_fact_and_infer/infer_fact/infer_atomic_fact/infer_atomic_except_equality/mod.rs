@@ -8,7 +8,5 @@ pub mod membership_fn;
 pub mod membership_index_family;
 pub mod membership_list_set_ops;
 pub mod membership_projection;
-pub mod membership_standard_set;
-pub mod numeric_order_sign;
 pub mod subset;
 pub mod superset;

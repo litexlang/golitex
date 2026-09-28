@@ -1,0 +1,8 @@
+# Builtin: GreaterEqualFact.OrderFlipMulMinusOne
+# When: known `p < 0` / `p <= 0`.
+# Proves: `(-1) * p >= 0` at verify time (no eager infer).
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/order/order_flip_mul_minus_one.lit
+
+have p R
+trust p < 0
+(-1) * p >= 0

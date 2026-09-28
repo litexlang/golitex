@@ -1,7 +1,0 @@
-# Infer: InFact.NaturalNonnegative
-# When: store `k $in N`.
-# Infers: `k >= 0`.
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/infer/atomic/in_natural_nonnegative.lit
-
-have k N
-k >= 0

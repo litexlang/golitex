@@ -1,0 +1,3 @@
+# Node: equal.ByBuiltinRule.ProductSplitLastTerm
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/product_split_last_term.lit
+product(1, 3, fn(x Z) Z {x}) = product(1, 2, fn(x Z) Z {x}) * 3

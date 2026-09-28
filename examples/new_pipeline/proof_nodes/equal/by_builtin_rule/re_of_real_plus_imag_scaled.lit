@@ -1,0 +1,2 @@
+# Node: equal.ByBuiltinRule.ReOfRealPlusImagScaled
+re(2 + 3 * i) = 2

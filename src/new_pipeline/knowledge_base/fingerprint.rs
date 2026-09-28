@@ -1,5 +1,8 @@
 //! Content-addressed fingerprint for a module's KB artifact.
 //!
+//! Hit rule (see also README): compare this hash to `manifest.json`'s
+//! `fingerprint`. Equal + readable cache → hit; anything else → miss / cold.
+//!
 //! Stable FNV-1a 64 over ABI + config + ordered export bytes + dep fingerprints.
 //! Not cryptographic; only for cache invalidation.
 

@@ -15,8 +15,8 @@
 //! | 1 | `exist!` uniqueness forall; `not exist` De Morgan forall | done |
 //! | 2 | NormalAtomic: expand def + param-type projection | done |
 //! | 3 | InFact membership families | done (incl. index_cart) |
-//! | 4 | EqualFact fact-generating arms | done (indexes on store) |
-//! | 5 | Subset/Superset; order→sign; `$is_cart` dim; mul-by-(−1) | done |
+//! | 4 | EqualFact fact-generating arms | done (indexes on store; `u-v=0⇒u=v` is verify builtin) |
+//! | 5 | Subset/Superset; order→sign; `$is_cart` dim; mul-by-(−1) | done (`N⇒>=0` is verify builtin) |
 //! | — | `$fn_eq` / Replacement Obj / Struct eager infer | **won't migrate** (see README) |
 //!
 //! Details and won't-migrate rationale: `store_fact_and_infer/README.md`.

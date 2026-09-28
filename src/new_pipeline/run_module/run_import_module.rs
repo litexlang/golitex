@@ -1,5 +1,6 @@
 //! Run one imported module package (recursive imports, then exports).
 
+use super::import_kb::{try_finish_import_from_kb, write_kb_after_cold_import, ImportKbHit};
 use super::load_config::{load_config, normalize_module_dir};
 use super::run_export_file::run_export_file;
 use crate::new_pipeline::run::run_command_outcome::{RunFileResult, RunSessionError};
@@ -19,6 +20,9 @@ pub enum RunImportModuleOutcome {
 /// Config import order: recurse each dep first (missing/broken → FailToImport).
 /// Then mount this module and run its exports in config order.
 /// Soft Failed on an export → FailToImport (file result already pushed).
+///
+/// After deps + mount: try `__litex_knowledge_base__/` hit; on miss cold-run
+/// exports then best-effort write-back (see `import_kb`).
 pub fn run_import_module(
     runtime: &mut Runtime,
     module_dir: &Path,
@@ -92,6 +96,19 @@ pub fn run_import_module(
         .exports
         .clone();
 
+    match try_finish_import_from_kb(runtime, &key, &config, std_root, mod_id, &exports)? {
+        ImportKbHit::Applied => {
+            running.remove(&key);
+            done.insert(key);
+            return Ok(RunImportModuleOutcome::Done);
+        }
+        ImportKbHit::Miss => {}
+        ImportKbHit::SessionError(error) => {
+            running.remove(&key);
+            return Ok(RunImportModuleOutcome::SessionError(error));
+        }
+    }
+
     for (export_file_id, export) in exports.iter().enumerate() {
         let file_result = match run_export_file(
             runtime,
@@ -122,6 +139,8 @@ pub fn run_import_module(
             ));
         }
     }
+
+    write_kb_after_cold_import(runtime, &key, &config, std_root, mod_id);
 
     running.remove(&key);
     done.insert(key);

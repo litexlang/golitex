@@ -417,44 +417,75 @@ fn subset_trust_infers_elementwise_forall() {
 }
 
 #[test]
-fn order_sign_infers_from_literal_bound() {
+fn order_sign_from_positive_literal_bound_by_builtin() {
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "have a R").is_failed());
     assert!(!exec_one(&mut runtime, "trust a >= 1").is_failed());
     assert!(
         !exec_one(&mut runtime, "0 < a").is_failed(),
-        "a >= 1 must infer 0 < a"
+        "a >= 1 must prove 0 < a via OrderSignFromPositiveLiteralBound"
     );
 }
 
 #[test]
-fn order_flip_mul_minus_one_from_less_zero() {
+fn order_sign_from_negative_literal_bound_by_builtin() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have a R").is_failed());
+    assert!(!exec_one(&mut runtime, "trust a <= -1").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "a <= 0").is_failed(),
+        "a <= -1 must prove a <= 0 via OrderSignFromNegativeLiteralBound"
+    );
+}
+
+#[test]
+fn order_flip_mul_minus_one_from_less_zero_by_builtin() {
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "have a R").is_failed());
     assert!(!exec_one(&mut runtime, "trust a < 0").is_failed());
     assert!(
         !exec_one(&mut runtime, "(-1) * a >= 0").is_failed(),
-        "a < 0 must infer (-1)*a >= 0"
+        "a < 0 must prove (-1)*a >= 0 via OrderFlipMulMinusOne"
     );
 }
 
 #[test]
-fn natural_membership_infers_nonnegative() {
+fn natural_membership_proves_nonnegative_by_builtin() {
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "have k N").is_failed());
     assert!(
         !exec_one(&mut runtime, "k >= 0").is_failed(),
-        "k $in N must infer k >= 0"
+        "k $in N must prove k >= 0 via FromKnownInNatural"
     );
 }
 
 #[test]
-fn positive_standard_set_membership_infers_positive() {
+fn positive_standard_set_membership_proves_positive_by_builtin() {
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "have a R+").is_failed());
     assert!(
         !exec_one(&mut runtime, "0 < a").is_failed(),
-        "a $in R+ must infer 0 < a"
+        "a $in R+ must prove 0 < a via FromKnownInPositiveStandardSet"
+    );
+}
+
+#[test]
+fn negative_standard_set_membership_proves_negative_by_builtin() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have a R-").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "a < 0").is_failed(),
+        "a $in R- must prove a < 0 via FromKnownInNegativeStandardSet"
+    );
+}
+
+#[test]
+fn nonzero_standard_set_membership_proves_not_equal_zero_by_builtin() {
+    let mut runtime = runtime_with_file_env();
+    assert!(!exec_one(&mut runtime, "have a R*").is_failed());
+    assert!(
+        !exec_one(&mut runtime, "a != 0").is_failed(),
+        "a $in R* must prove a != 0 via FromKnownInNonzeroStandardSet"
     );
 }
 
@@ -536,14 +567,14 @@ fn range_membership_infers_integer_bounds() {
 #[test]
 
 
-fn subtraction_equals_zero_infers_equality() {
+fn subtraction_equals_zero_proves_equality_by_builtin() {
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "have a R").is_failed());
     assert!(!exec_one(&mut runtime, "have b R").is_failed());
     assert!(!exec_one(&mut runtime, "trust a - b = 0").is_failed());
     assert!(
         !exec_one(&mut runtime, "a = b").is_failed(),
-        "a - b = 0 must infer a = b"
+        "a - b = 0 must prove a = b via EqualFromKnownDifferenceZero"
     );
 }
 

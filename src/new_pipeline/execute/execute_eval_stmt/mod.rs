@@ -10,6 +10,9 @@ mod exec_eval_stmt;
 mod helper;
 mod result;
 
+#[cfg(test)]
+mod exec_eval_stmt_tests;
+
 pub(in crate::new_pipeline::execute) use exec_eval_stmt::exec_eval_stmt;
 pub use result::{
     ExecCommandStmtResult, ExecEvalStmtFailed, ExecEvalStmtResult, ExecEvalStmtSuccess,

@@ -1,33 +1,30 @@
-# Probe A: abstract relation only release (no obtain)
+# B1 reformulation builtins smoke (verify-time, no eager infer)
 
-have S set
-abstract_prop leq(x, y)
-prop upper_bound(c power_set(S), u S):
-    forall x c:
-        $leq(x, u)
-prop maximal(m S):
-    forall x S:
-        $leq(m, x)
-        =>:
-            x = m
+have k N
+k >= 0
 
-release zorn_lemma: set S, prop leq, prop upper_bound, prop maximal:
-    trust $is_nonempty_set(S)
-    trust:
-        forall x S:
-            $leq(x, x)
-        forall x, y, z S:
-            $leq(x, y)
-            $leq(y, z)
-            =>:
-                $leq(x, z)
-        forall x, y S:
-            $leq(x, y)
-            $leq(y, x)
-            =>:
-                x = y
-        forall c power_set(S):
-            forall x, y c:
-                $leq(x, y) or $leq(y, x)
-            =>:
-                exist u S st {$upper_bound(c, u)}
+have a R+
+0 < a
+
+have b R-
+b < 0
+
+have c R*
+c != 0
+
+have p R
+trust p < 0
+(-1) * p >= 0
+
+have q R
+trust q >= 1
+0 < q
+
+have r R
+trust r <= -1
+r <= 0
+
+have u R = 3
+have v R = 3
+u - v = 0
+u = v

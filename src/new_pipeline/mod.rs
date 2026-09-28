@@ -10,6 +10,8 @@ pub const LITEX: &str = "Litex";
 
 pub mod ast;
 pub mod launch_command;
+#[cfg(test)]
+mod launch_command_tests;
 pub mod display_and_ir;
 pub mod exec_env;
 pub mod execute;

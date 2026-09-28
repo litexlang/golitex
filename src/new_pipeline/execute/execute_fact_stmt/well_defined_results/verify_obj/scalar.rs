@@ -354,30 +354,13 @@ impl Runtime {
         value: &Ln,
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
-        let proof = self
-            .verify_unary_obj_well_definedness_by_def(value.arg.as_ref(), verify_state.clone())?;
-        let mut reqs = Vec::new();
-        reqs.push(self.require_obj_in_standard_set(
+        // Domain is the positive reals R+. Example: `ln(e)` after `e $in R+`.
+        self.verify_unary_carrier_obj_well_definedness_by_def(
             value.arg.as_ref(),
-            StandardSet::R,
-            verify_state.clone(),
-            "ln argument must belong to R".to_string(),
-        )?);
-        let zero = Obj::Literal(Literal::Number(Number {
-            normalized_value: "0".to_string(),
-        }));
-        let positive = AtomicFact::GreaterFact(GreaterFact {
-            fact_id: self.global_ids.allocate_fact_id(),
-            left: value.arg.as_ref().clone(),
-            right: zero,
-            line_file: None,
-        });
-        reqs.push(self.verify_required_atomic_fact(
-            positive,
+            StandardSet::RPos,
+            "ln",
             verify_state,
-            "ln: argument must be a positive real".to_string(),
-        )?);
-        Ok(self.with_requirements(proof, reqs))
+        )
     }
 
     pub(super) fn verify_sign_obj_well_definedness_by_def(
@@ -411,12 +394,17 @@ impl Runtime {
         value: &Pow,
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
-        // Simplified port of old multi-branch pow domain: try C×N then C×Z×base≠0.
+        // Multi-branch pow domain: R×N (covers real trig powers), then C×N, then C×Z×base≠0.
+        // Example: `sin(x)^2` is WD from `sin(x) $in R` and `2 $in N`.
         let proof = self.verify_binary_obj_well_definedness_by_def(
             value.base.as_ref(),
             value.exponent.as_ref(),
             verify_state.clone(),
         )?;
+        let reqs_r = self.try_pow_domain_real_natural(value, verify_state.clone())?;
+        if reqs_r.iter().all(|r| !r.is_failed()) {
+            return Ok(self.with_requirements(proof, reqs_r));
+        }
         let reqs_n = self.try_pow_domain_complex_natural(value, verify_state.clone())?;
         if reqs_n.iter().all(|r| !r.is_failed()) {
             return Ok(self.with_requirements(proof, reqs_n));
@@ -836,6 +824,27 @@ impl Runtime {
             "obj must belong to required carrier".to_string(),
         )?);
         Ok(self.with_requirements(proof, reqs))
+    }
+
+    fn try_pow_domain_real_natural(
+        &mut self,
+        value: &Pow,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Vec<VerifyFactResult>> {
+        let mut reqs = Vec::new();
+        reqs.push(self.require_obj_in_standard_set(
+            value.base.as_ref(),
+            StandardSet::R,
+            verify_state.clone(),
+            "pow base must belong to R".to_string(),
+        )?);
+        reqs.push(self.require_obj_in_standard_set(
+            value.exponent.as_ref(),
+            StandardSet::N,
+            verify_state,
+            "pow exponent must belong to N".to_string(),
+        )?);
+        Ok(reqs)
     }
 
     fn try_pow_domain_complex_natural(

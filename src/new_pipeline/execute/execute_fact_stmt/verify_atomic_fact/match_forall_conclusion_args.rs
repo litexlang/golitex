@@ -5,10 +5,18 @@
 //! 2. same constructor shape → recurse on corresponding children
 //! 3. otherwise → instantiate under current subst, then strict equal
 //!
+//! Params that appear only in dom facts (not in the conclusion) stay unbound
+//! here; `complete_forall_subst_from_dom_facts` fills them from known atomics.
+//!
 //! Example: pattern `f(a)`, goal `f(t)` with param `a` → bind `a↦t` inside
 //! the application (ByStructure), not “whole term already equal”.
+//! Example (dom-only middle param): known `forall x,y,z: $P(x,y), $P(y,z) => $P(x,z)`
+//! goal `$P(a,c)` binds `x,z` from the conclusion; `y` is completed from a known
+//! `$P(a,b)` matching the first dom under the partial subst.
 
-use crate::new_pipeline::ast::fact::EqualFact;
+use crate::new_pipeline::ast::fact::{
+    atomic_fact_args_ref, atomic_fact_has_positive_polarity, AtomicFact, EqualFact, Fact, ForallFact,
+};
 use crate::new_pipeline::ast::obj::{IdentifierObj, Obj};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::helper::corresponding_arg_pairs;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::{
@@ -22,12 +30,48 @@ use std::collections::{HashMap, HashSet};
 
 impl Runtime {
     // Soft miss → Ok(None). Nested equal / rebound use VerifyState all flags false.
+    // May leave params unbound when they do not occur in the conclusion args;
+    // callers that need a full subst must run `complete_forall_subst_from_dom_facts`.
     pub(crate) fn match_forall_conclusion_args(
         &mut self,
         pattern_args: &[&Obj],
         goal_args: &[&Obj],
         ordered_param_ids: &[IdentifierId],
     ) -> RuntimeResult<Option<MatchForallConclusionArgsProof>> {
+        let Some((subst, arg_match_proofs)) =
+            self.match_forall_conclusion_args_to_subst(pattern_args, goal_args, ordered_param_ids)?
+        else {
+            return Ok(None);
+        };
+
+        // Full binding required for the legacy Vec evidence shape. Prefer the
+        // subst API + `complete_forall_subst_from_dom_facts` when middles exist.
+        for id in ordered_param_ids {
+            if !subst.contains_key(id) {
+                return Ok(None);
+            }
+        }
+
+        let forall_parameters_match_what_args: Vec<Obj> = ordered_param_ids
+            .iter()
+            .map(|id| subst.get(id).expect("checked").clone())
+            .collect();
+
+        Ok(Some(MatchForallConclusionArgsProof {
+            forall_parameters_match_what_args,
+            arg_match_proofs,
+        }))
+    }
+
+    // Like `match_forall_conclusion_args`, but keeps a partial subst when some
+    // forall params do not occur in the conclusion.
+    pub(crate) fn match_forall_conclusion_args_to_subst(
+        &mut self,
+        pattern_args: &[&Obj],
+        goal_args: &[&Obj],
+        ordered_param_ids: &[IdentifierId],
+    ) -> RuntimeResult<Option<(HashMap<IdentifierId, Obj>, Vec<ForallConclusionArgMatchProof>)>>
+    {
         if pattern_args.len() != goal_args.len() {
             return Ok(None);
         }
@@ -55,21 +99,86 @@ impl Runtime {
             arg_match_proofs.push(proof);
         }
 
-        for id in ordered_param_ids {
-            if !subst.contains_key(id) {
-                return Ok(None);
+        Ok(Some((subst, arg_match_proofs)))
+    }
+
+    // Bind params that appear only in dom facts by matching each atomic dom
+    // against known ambient atomics under the current partial subst.
+    // Example: after `$P(x,z)` bound `x,z`, match dom `$P(x,y)` to known `$P(a,b)`.
+    pub(crate) fn complete_forall_subst_from_dom_facts(
+        &mut self,
+        forall: &ForallFact,
+        subst: &mut HashMap<IdentifierId, Obj>,
+        ordered_param_ids: &[IdentifierId],
+    ) -> RuntimeResult<bool> {
+        let param_set: HashSet<IdentifierId> = ordered_param_ids.iter().copied().collect();
+        let equality_state = VerifyState {
+            can_use_forall_fact: false,
+            can_use_rewrite: false,
+            store_well_defined_fact: false,
+        };
+
+        let mut guard = 0;
+        while ordered_param_ids.iter().any(|id| !subst.contains_key(id)) {
+            guard += 1;
+            if guard > ordered_param_ids.len() + 2 {
+                return Ok(false);
+            }
+            let mut progress = false;
+            for dom in &forall.dom_facts {
+                let Fact::AtomicFact(pattern_atomic) = dom else {
+                    continue;
+                };
+                let candidates = self.visible_known_atomics_matching_prop(pattern_atomic);
+                for known in candidates {
+                    let mut trial = subst.clone();
+                    let pattern_args = atomic_fact_args_ref(pattern_atomic);
+                    let known_args = atomic_fact_args_ref(&known);
+                    if pattern_args.len() != known_args.len() {
+                        continue;
+                    }
+                    let mut ok = true;
+                    for (pattern_arg, goal_arg) in pattern_args.iter().zip(known_args.iter()) {
+                        if self
+                            .match_forall_one_arg(
+                                pattern_arg,
+                                goal_arg,
+                                &param_set,
+                                &mut trial,
+                                equality_state.clone(),
+                            )?
+                            .is_none()
+                        {
+                            ok = false;
+                            break;
+                        }
+                    }
+                    if ok && trial.len() > subst.len() {
+                        *subst = trial;
+                        progress = true;
+                        break;
+                    }
+                }
+                if progress {
+                    break;
+                }
+            }
+            if !progress {
+                return Ok(false);
             }
         }
+        Ok(true)
+    }
 
-        let forall_parameters_match_what_args: Vec<Obj> = ordered_param_ids
-            .iter()
-            .map(|id| subst.get(id).expect("checked").clone())
-            .collect();
-
-        Ok(Some(MatchForallConclusionArgsProof {
-            forall_parameters_match_what_args,
-            arg_match_proofs,
-        }))
+    fn visible_known_atomics_matching_prop(&self, pattern: &AtomicFact) -> Vec<AtomicFact> {
+        let key = (pattern.prop_name(), atomic_fact_has_positive_polarity(pattern));
+        let mut out = Vec::new();
+        for env in self.execution_environments_stack.iter().rev() {
+            if let Some(entries) = env.facts.known_atomic_except_equality_facts.by_prop.get(&key) {
+                out.extend(entries.iter().cloned());
+            }
+        }
+        out
     }
 
     fn prove_objs_equal_strict(

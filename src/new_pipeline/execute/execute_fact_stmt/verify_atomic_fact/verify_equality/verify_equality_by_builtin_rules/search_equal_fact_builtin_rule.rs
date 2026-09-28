@@ -50,6 +50,16 @@ impl Runtime {
         if let Some(proof) = self.search_equal_fact_by_calculation(fact, verify_state.clone())? {
             return Ok(Some(EqualitySearchProofByBuiltinRule::Calculation(proof)));
         }
+        if let Some(proof) = self
+            .search_equal_fact_builtin_rule_equal_from_known_difference_zero(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(
+                EqualitySearchProofByBuiltinRule::EqualFromKnownDifferenceZero(proof),
+            ));
+        }
         if let Some(proof) =
             self.search_equal_fact_builtin_rule_power_laws(fact, verify_state.clone())?
         {
@@ -134,6 +144,43 @@ impl Runtime {
             )?
         {
             return Ok(Some(map_equality_identities_wave11_proof(proof)));
+        }
+        if let Some(proof) = self
+            .search_equal_fact_builtin_rule_equality_identities_wave12(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(map_equality_identities_wave12_proof(proof)));
+        }
+        if let Some(proof) = self
+            .search_equal_fact_builtin_rule_equality_identities_wave13(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(map_equality_identities_wave13_proof(proof)));
+        }
+        if let Some(proof) = self
+            .search_equal_fact_builtin_rule_equality_identities_wave14(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(map_equality_identities_wave14_proof(proof)));
+        }
+        if let Some(proof) = self
+            .search_equal_fact_builtin_rule_equality_identities_wave15(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(map_equality_identities_wave15_proof(proof)));
+        }
+        if let Some(proof) = self
+            .search_equal_fact_builtin_rule_closed_trig(fact, verify_state.clone())?
+        {
+            return Ok(Some(map_closed_trig_proof(proof)));
         }
         if let Some(proof) =
             self.search_equal_fact_builtin_rule_inverse_trig(fact, verify_state)?
@@ -372,6 +419,143 @@ fn map_equality_identities_wave11_proof(
         W::ReduceAddZeroEqualsSum(p) => EqualitySearchProofByBuiltinRule::ReduceAddZeroEqualsSum(p),
         W::FiniteSetReduceAddZeroEqualsSum(p) => EqualitySearchProofByBuiltinRule::FiniteSetReduceAddZeroEqualsSum(p),
         W::PowOfLogInverse(p) => EqualitySearchProofByBuiltinRule::PowOfLogInverse(p),
+    }
+}
+
+fn map_equality_identities_wave12_proof(
+    proof: super::by_equality_identities_wave12::EqualityIdentitiesWave12BuiltinRuleProof,
+) -> EqualitySearchProofByBuiltinRule {
+    use super::by_equality_identities_wave12::EqualityIdentitiesWave12BuiltinRuleProof as W;
+    match proof {
+        W::UnionSetMinusDecomposition(p) => {
+            EqualitySearchProofByBuiltinRule::UnionSetMinusDecomposition(p)
+        }
+        W::SetMinusIntersectSelf(p) => EqualitySearchProofByBuiltinRule::SetMinusIntersectSelf(p),
+        W::ReOfImaginaryUnit(p) => EqualitySearchProofByBuiltinRule::ReOfImaginaryUnit(p),
+        W::ImgOfImaginaryUnit(p) => EqualitySearchProofByBuiltinRule::ImgOfImaginaryUnit(p),
+        W::ReOfRealEmbedding(p) => EqualitySearchProofByBuiltinRule::ReOfRealEmbedding(p),
+        W::ImgOfRealEmbedding(p) => EqualitySearchProofByBuiltinRule::ImgOfRealEmbedding(p),
+        W::ReOfRealPlusI(p) => EqualitySearchProofByBuiltinRule::ReOfRealPlusI(p),
+        W::ImgOfRealPlusI(p) => EqualitySearchProofByBuiltinRule::ImgOfRealPlusI(p),
+        W::ComplexAbsOfImaginaryUnit(p) => {
+            EqualitySearchProofByBuiltinRule::ComplexAbsOfImaginaryUnit(p)
+        }
+        W::ModNestedDivisibleAbsorption(p) => {
+            EqualitySearchProofByBuiltinRule::ModNestedDivisibleAbsorption(p)
+        }
+        W::SumSplitLastTerm(p) => EqualitySearchProofByBuiltinRule::SumSplitLastTerm(p),
+        W::ProductSplitLastTerm(p) => EqualitySearchProofByBuiltinRule::ProductSplitLastTerm(p),
+        W::FiniteSetSumListExpansion(p) => {
+            EqualitySearchProofByBuiltinRule::FiniteSetSumListExpansion(p)
+        }
+        W::FiniteSetProductListExpansion(p) => {
+            EqualitySearchProofByBuiltinRule::FiniteSetProductListExpansion(p)
+        }
+    }
+}
+
+fn map_equality_identities_wave13_proof(
+    proof: super::by_equality_identities_wave13::EqualityIdentitiesWave13BuiltinRuleProof,
+) -> EqualitySearchProofByBuiltinRule {
+    use super::by_equality_identities_wave13::EqualityIdentitiesWave13BuiltinRuleProof as W;
+    match proof {
+        W::EulerEqualsExpOne(p) => EqualitySearchProofByBuiltinRule::EulerEqualsExpOne(p),
+        W::LnOfEuler(p) => EqualitySearchProofByBuiltinRule::LnOfEuler(p),
+        W::ReOfReal(p) => EqualitySearchProofByBuiltinRule::ReOfReal(p),
+        W::ImgOfReal(p) => EqualitySearchProofByBuiltinRule::ImgOfReal(p),
+        W::ReOfRealPlusImagScaled(p) => {
+            EqualitySearchProofByBuiltinRule::ReOfRealPlusImagScaled(p)
+        }
+        W::ImgOfRealPlusImagScaled(p) => {
+            EqualitySearchProofByBuiltinRule::ImgOfRealPlusImagScaled(p)
+        }
+        W::ComplexAbsOfNonnegReal(p) => {
+            EqualitySearchProofByBuiltinRule::ComplexAbsOfNonnegReal(p)
+        }
+        W::ComplexAbsOfImagScaled(p) => {
+            EqualitySearchProofByBuiltinRule::ComplexAbsOfImagScaled(p)
+        }
+        W::ClosedRangeLiteralExpansion(p) => {
+            EqualitySearchProofByBuiltinRule::ClosedRangeLiteralExpansion(p)
+        }
+        W::RangeLiteralExpansion(p) => EqualitySearchProofByBuiltinRule::RangeLiteralExpansion(p),
+        W::PowerSetOfEmpty(p) => EqualitySearchProofByBuiltinRule::PowerSetOfEmpty(p),
+        W::PowerSetOfSingleton(p) => EqualitySearchProofByBuiltinRule::PowerSetOfSingleton(p),
+        W::FamilyUnionOfEmpty(p) => EqualitySearchProofByBuiltinRule::FamilyUnionOfEmpty(p),
+        W::CartWithEmptyFactor(p) => EqualitySearchProofByBuiltinRule::CartWithEmptyFactor(p),
+        W::UnionOverIntersectDistributive(p) => {
+            EqualitySearchProofByBuiltinRule::UnionOverIntersectDistributive(p)
+        }
+        W::SetMinusChainToUnion(p) => EqualitySearchProofByBuiltinRule::SetMinusChainToUnion(p),
+        W::FnRangeOfConstantAnonymousFn(p) => {
+            EqualitySearchProofByBuiltinRule::FnRangeOfConstantAnonymousFn(p)
+        }
+        W::SeqEqualsFnOnN(p) => EqualitySearchProofByBuiltinRule::SeqEqualsFnOnN(p),
+        W::FiniteSeqEqualsFnOnClosedRange(p) => {
+            EqualitySearchProofByBuiltinRule::FiniteSeqEqualsFnOnClosedRange(p)
+        }
+    }
+}
+
+fn map_equality_identities_wave14_proof(
+    proof: super::by_equality_identities_wave14::EqualityIdentitiesWave14BuiltinRuleProof,
+) -> EqualitySearchProofByBuiltinRule {
+    use super::by_equality_identities_wave14::EqualityIdentitiesWave14BuiltinRuleProof as W;
+    match proof {
+        W::IndexUnionEmptyIndex(p) => EqualitySearchProofByBuiltinRule::IndexUnionEmptyIndex(p),
+        W::IndexIntersectEmptyIndex(p) => {
+            EqualitySearchProofByBuiltinRule::IndexIntersectEmptyIndex(p)
+        }
+        W::IndexCartEmptyIndex(p) => EqualitySearchProofByBuiltinRule::IndexCartEmptyIndex(p),
+        W::IndexUnionSingleton(p) => EqualitySearchProofByBuiltinRule::IndexUnionSingleton(p),
+        W::FiniteSeqZeroEqualsFnOnEmpty(p) => {
+            EqualitySearchProofByBuiltinRule::FiniteSeqZeroEqualsFnOnEmpty(p)
+        }
+        W::SetBuilderObviouslyEmpty(p) => {
+            EqualitySearchProofByBuiltinRule::SetBuilderObviouslyEmpty(p)
+        }
+        W::ComplexAbsSquaredOfRectForm(p) => {
+            EqualitySearchProofByBuiltinRule::ComplexAbsSquaredOfRectForm(p)
+        }
+        W::ExpOfSum(p) => EqualitySearchProofByBuiltinRule::ExpOfSum(p),
+        W::LogBasePower(p) => EqualitySearchProofByBuiltinRule::LogBasePower(p),
+        W::ReOfProduct(p) => EqualitySearchProofByBuiltinRule::ReOfProduct(p),
+        W::ImgOfProduct(p) => EqualitySearchProofByBuiltinRule::ImgOfProduct(p),
+        W::SinOfSum(p) => EqualitySearchProofByBuiltinRule::SinOfSum(p),
+        W::CosOfSum(p) => EqualitySearchProofByBuiltinRule::CosOfSum(p),
+        W::ReduceSingleTermWithAddZero(p) => {
+            EqualitySearchProofByBuiltinRule::ReduceSingleTermWithAddZero(p)
+        }
+    }
+}
+
+fn map_equality_identities_wave15_proof(
+    proof: super::by_equality_identities_wave15::EqualityIdentitiesWave15BuiltinRuleProof,
+) -> EqualitySearchProofByBuiltinRule {
+    use super::by_equality_identities_wave15::EqualityIdentitiesWave15BuiltinRuleProof as W;
+    match proof {
+        W::FiniteSetSumFubiniSwap(p) => {
+            EqualitySearchProofByBuiltinRule::FiniteSetSumFubiniSwap(p)
+        }
+        W::FiniteSetSumOverCartesianProduct(p) => {
+            EqualitySearchProofByBuiltinRule::FiniteSetSumOverCartesianProduct(p)
+        }
+    }
+}
+
+fn map_closed_trig_proof(
+    proof: super::by_closed_trig::ClosedTrigEqualityBuiltinRuleProof,
+) -> EqualitySearchProofByBuiltinRule {
+    use super::by_closed_trig::ClosedTrigEqualityBuiltinRuleProof as C;
+    match proof {
+        C::SinOfZero(p) => EqualitySearchProofByBuiltinRule::SinOfZero(p),
+        C::CosOfZero(p) => EqualitySearchProofByBuiltinRule::CosOfZero(p),
+        C::TanOfZero(p) => EqualitySearchProofByBuiltinRule::TanOfZero(p),
+        C::SinOfHalfPi(p) => EqualitySearchProofByBuiltinRule::SinOfHalfPi(p),
+        C::CosOfPi(p) => EqualitySearchProofByBuiltinRule::CosOfPi(p),
+        C::SinOfPi(p) => EqualitySearchProofByBuiltinRule::SinOfPi(p),
+        C::CotOfHalfPi(p) => EqualitySearchProofByBuiltinRule::CotOfHalfPi(p),
+        C::PythagoreanIdentity(p) => EqualitySearchProofByBuiltinRule::PythagoreanIdentity(p),
     }
 }
 

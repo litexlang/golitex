@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.UnionOverIntersectDistributive
+have A set
+have B set
+have C set
+union(A, intersect(B, C)) = intersect(union(A, B), union(A, C))

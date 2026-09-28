@@ -187,6 +187,16 @@ pub enum LessEqualFactSearchProofByBuiltinRule {
     // Surjection from a finite source bounds codomain size by source size.
     // Example: `$surjective(A, B, f)` and finite `A` prove `finite_set_size(B) <= finite_set_size(A)`.
     FiniteSetSizeSurjectionCodomainLeDomain(FiniteSetSizeSurjectionCodomainLeDomainBuiltinRuleProof),
+    // Order flip: `(-1)*x <= 0` from known `x >= 0` or `x > 0`.
+    // Example: trust a >= 0; (-1) * a <= 0.
+    OrderFlipMulMinusOne(
+        crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::order_flip_mul_minus_one::OrderFlipMulMinusOneToLessEqualBuiltinRuleProof,
+    ),
+    // Sign from a known negative literal upper bound: `x <= 0`.
+    // Example: known `a <= -1` proves `a <= 0`.
+    OrderSignFromNegativeLiteralBound(
+        crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::order_sign_from_literal_bound::OrderSignFromNegativeLiteralBoundBuiltinRuleProof,
+    ),
 }
 
 pub struct ClosedNumericComparisonBuiltinRuleProof {
@@ -442,6 +452,16 @@ impl Runtime {
             return Ok(Some(LessEqualFactSearchProofByBuiltinRule::FromKnownLess(
                 FromKnownLessBuiltinRuleProof { cite_fact_id },
             )));
+        }
+        if let Some(proof) = self.try_order_flip_mul_minus_one_to_less_equal(fact) {
+            return Ok(Some(LessEqualFactSearchProofByBuiltinRule::OrderFlipMulMinusOne(
+                proof,
+            )));
+        }
+        if let Some(proof) = self.try_order_sign_from_negative_literal_bound(fact) {
+            return Ok(Some(
+                LessEqualFactSearchProofByBuiltinRule::OrderSignFromNegativeLiteralBound(proof),
+            ));
         }
         if let Some(proof) = self.abs_le_implies_upper_proof(fact) {
             return Ok(Some(proof));

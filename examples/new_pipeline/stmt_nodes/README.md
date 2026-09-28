@@ -29,7 +29,8 @@ unsafe/        TrustBoundary (trust / trust have)
 register/      RegisterReflexive/Symmetric/TransitiveProp
 by/            Extension, EnumerateFiniteSet, For, Contra, Cases, Def, Thm,
                Induc, StrongInduc
-release_and_expand/  ExpandRange, ReleaseAxiomOfChoice, ReleaseRegularityAxiom
+release_and_expand/  ExpandRange, ReleaseAxiomOfChoice, ReleaseRegularityAxiom,
+               ReleaseZornLemma
                (plus release thm/struct/obj live under definition/)
 proof_block/   Claim, Sketch
 command/       Eval (closed-numeric rewrite + recursive eval / stored algo; no proof fact)
@@ -55,7 +56,7 @@ command/       Eval (closed-numeric rewrite + recursive eval / stored algo; no p
 | `definition/def_strategy.lit` | Named strategy (proved forall) | `strategy name: ? forall …` + proof; later `$P` via known_strategy |
 | `definition/def_strategy_peel_sum.lit` | known_strategy peel | binary `$is_pos(a+b)` package → `$is_pos(a+b+c+d)` without intermediate sums |
 | `definition/release_*.lit` | Unpack packaged facts | `release thm` / `struct def` / `obj def` |
-| `release_and_expand/` | Expand range / release axioms | `expand:` / `release axiom_of_choice` / `release regularity_axiom` |
+| `release_and_expand/` | Expand range / release axioms | `expand:` / `release axiom_of_choice` / `release regularity_axiom` / `release zorn_lemma` |
 | `unsafe/` | Trust boundary | `trust:` / `trust have …:` |
 | `register/` | Prop rewrite laws | `register reflexive\|symmetric\|transitive:` |
 | `witness/` | Exhibit witnesses | `witness exist … from …:` etc. |
@@ -67,8 +68,10 @@ command/       Eval (closed-numeric rewrite + recursive eval / stored algo; no p
 Full human catalog: `docs/Manual.md` → Statements → Preview Stmt catalog.
 Parse dispatch: `src/new_pipeline/parse/README.md`.
 
-Omitted for now: `release zorn_lemma` (wired; chain-upper-bound obligation still
-needs a green tracer).
+`release zorn_lemma` is wired (see `release_and_expand/release_zorn_lemma.lit`):
+named upper-bound / maximality props are checked by IR alignment against the
+exact forall shapes; obligations are fact-only in the body (trust them outside
+first, same pattern as `release axiom_of_choice`).
 `eval` rewrites via `known_closed_numeric_equal`, then recursively evaluates:
 closed-numeric simplify, and plain-Identifier `FnObj` through a stored algo.
 It does **not** store a proof fact. Recursive-algo examples are deferred.

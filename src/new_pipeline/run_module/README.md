@@ -19,7 +19,8 @@ This package **calls** those APIs and runs files.
 | `load_config.rs` | Find `litex.config`, read, `parse_litex_config` (incl. `std_root`); `load_config_or_empty` |
 | `mount_cwd_config.rs` | `-e` / bare REPL: mount cwd config (missing → empty) |
 | `run_export_file.rs` | Run one export `.lit`; set mod/export ids; record env |
-| `run_import_module.rs` | One imported package: recurse imports (config order), then exports |
+| `import_kb.rs` | Import KB hit + cold write-back (always on) |
+| `run_import_module.rs` | One imported package: recurse imports, then KB hit or cold exports |
 | `run_project.rs` | Root / `-r`: root imports then root exports; optional `-session` |
 | `run_file_with_config.rs` | `-f`: directory-local config mount + target file |
 
@@ -30,9 +31,13 @@ run_project(root):
   cfg = load_config(root, std_root)          # missing → Err
   for imp in cfg.imports:
       run_import_module(...)                 # soft fail → FailToImport
+                                             # try KB hit; else cold exports + write
   for exp in cfg.exports:
       run_export_file(...)                   # soft fail → FailToImport
 ```
+
+KB design contract: [`../knowledge_base/README.md`](../knowledge_base/README.md)
+(definitions-only product, fingerprint, remap; always-on import cache).
 
 ## Run order (`-f`)
 

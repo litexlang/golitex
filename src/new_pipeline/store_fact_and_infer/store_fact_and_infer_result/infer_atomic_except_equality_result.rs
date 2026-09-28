@@ -14,14 +14,6 @@ pub enum InferAtomicExceptEqualityResult {
     InFactSetBuilder(InferSetBuilderMembershipProjectionResult),
     // `A $in power_set(B)` → `A $subset B`.
     InFactPowerSet(InferPowerSetMembershipProjectionResult),
-    // `x $in N` → `x >= 0`.
-    InFactNaturalNonnegative(InferInFactNaturalNonnegativeResult),
-    // `x $in Q+/R+/N+` → `0 < x`.
-    InFactPositiveStandardSet(InferInFactPositiveStandardSetResult),
-    // `x $in Q-/Z-/R-` → `x < 0`.
-    InFactNegativeStandardSet(InferInFactNegativeStandardSetResult),
-    // `x $in Q*/Z*/R*/C*` → `x != 0`.
-    InFactNonzeroStandardSet(InferInFactNonzeroStandardSetResult),
     // `x $in {a}` → `x = a`.
     InFactListSetSingletonEqual(InferInFactListSetSingletonEqualResult),
     // `x $in {a, b, …}` → `x = a or x = b or …`.
@@ -58,13 +50,6 @@ pub enum InferAtomicExceptEqualityResult {
     InFactIndexIntersect(InferInFactIndexIntersectResult),
     // `f $in index_cart(I, S, g)` → FnSet membership + `$is_choice_function_for`.
     InFactIndexCart(InferInFactIndexCartResult),
-    // Order vs resolved numeric bound → sign vs 0.
-    LessSign(InferNumericOrderSignResult),
-    GreaterSign(InferNumericOrderSignResult),
-    LessEqualSign(InferNumericOrderSignResult),
-    GreaterEqualSign(InferNumericOrderSignResult),
-    // Order vs 0 → flip by multiplying left by (-1).
-    OrderFlipMulMinusOne(InferOrderFlipMulMinusOneResult),
     // `$is_cart(C)` → `cart_dim(C) >= 2`.
     IsCartDimensionLowerBound(InferIsCartDimensionLowerBoundResult),
     // `A $subset B` → `forall x A: x $in B`.
@@ -86,22 +71,6 @@ pub struct InferSetBuilderMembershipProjectionResult {
 }
 
 pub struct InferPowerSetMembershipProjectionResult {
-    pub derived: Box<StoreFactAndInferResult>,
-}
-
-pub struct InferInFactNaturalNonnegativeResult {
-    pub derived: Box<StoreFactAndInferResult>,
-}
-
-pub struct InferInFactPositiveStandardSetResult {
-    pub derived: Box<StoreFactAndInferResult>,
-}
-
-pub struct InferInFactNegativeStandardSetResult {
-    pub derived: Box<StoreFactAndInferResult>,
-}
-
-pub struct InferInFactNonzeroStandardSetResult {
     pub derived: Box<StoreFactAndInferResult>,
 }
 
@@ -177,14 +146,6 @@ pub struct InferInFactIndexCartResult {
     pub derived: Vec<StoreFactAndInferResult>,
 }
 
-pub struct InferNumericOrderSignResult {
-    pub derived: Box<StoreFactAndInferResult>,
-}
-
-pub struct InferOrderFlipMulMinusOneResult {
-    pub derived: Box<StoreFactAndInferResult>,
-}
-
 pub struct InferIsCartDimensionLowerBoundResult {
     pub derived: Box<StoreFactAndInferResult>,
 }
@@ -222,10 +183,6 @@ impl InferAtomicExceptEqualityResult {
                 ids
             }
             Self::InFactPowerSet(r) => r.derived.stored_fact_ids(),
-            Self::InFactNaturalNonnegative(r) => r.derived.stored_fact_ids(),
-            Self::InFactPositiveStandardSet(r) => r.derived.stored_fact_ids(),
-            Self::InFactNegativeStandardSet(r) => r.derived.stored_fact_ids(),
-            Self::InFactNonzeroStandardSet(r) => r.derived.stored_fact_ids(),
             Self::InFactListSetSingletonEqual(r) => r.derived.stored_fact_ids(),
             Self::InFactListSetOrEqualities(r) => r.derived.stored_fact_ids(),
             Self::InFactUnionOr(r) => r.derived.stored_fact_ids(),
@@ -316,11 +273,6 @@ impl InferAtomicExceptEqualityResult {
                 }
                 ids
             }
-            Self::LessSign(r)
-            | Self::GreaterSign(r)
-            | Self::LessEqualSign(r)
-            | Self::GreaterEqualSign(r) => r.derived.stored_fact_ids(),
-            Self::OrderFlipMulMinusOne(r) => r.derived.stored_fact_ids(),
             Self::IsCartDimensionLowerBound(r) => r.derived.stored_fact_ids(),
             Self::SubsetElementwiseMembership(r) => r.derived.stored_fact_ids(),
             Self::SupersetElementwiseMembership(r) => r.derived.stored_fact_ids(),

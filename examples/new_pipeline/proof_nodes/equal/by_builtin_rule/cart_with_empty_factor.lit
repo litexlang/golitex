@@ -1,0 +1,3 @@
+# Node: equal.ByBuiltinRule.CartWithEmptyFactor
+have A set
+cart(A, {}) = {}

@@ -575,6 +575,13 @@ For compatibility with the older family-object forms,
 three-argument object remains the canonical form when empty-index semantics
 matter.
 
+**Settled empty-family intersection (absolute form):** mathematicians treat
+`⋂ ∅` without an ambient universe as the class of *everything* (vacuous
+`∀ A ∈ ∅. x ∈ A`), not as the empty set. Litex therefore does **not** prove
+`family_intersect({}) = {}`. Use `index_intersect({}, X, A) = X` whenever the
+empty-index intersection must be a set. `family_intersect({})` may still be a
+well-formed object expression; it simply has no “equals empty” builtin identity.
+
 Indexed-family algebra is handled by ordinary one-step builtin rules. Exact
 family transformations for singleton domains, family/domain monotonicity,
 domain partitions, De Morgan laws, external `union`/`intersect`/`set_minus`,
@@ -2942,7 +2949,7 @@ introductions.
 | `expand: e $in …` | Preview (`new_pipeline`): membership in a concrete `range` / `closed_range` / `a...b` is already known. | Stores `e = a or e = b or …`. |
 | `release regularity_axiom` | Its displayed set/nonemptiness obligations. Preview (`new_pipeline`): `release regularity_axiom(S)`; parse+exec wired; no proof body. | An explicitly trusted set-theoretic conclusion; strict mode rejects the step. |
 | `release axiom_of_choice` | The family is a set and every member is proved nonempty. Preview (`new_pipeline`): `release axiom_of_choice: set F`; parse+exec wired; proof body is fact-only. | Stores `exist f fn(A S)family_union(S) st {$is_choice_function_for(S,S,fn(A S)S {A},f)}`. The existential body is atomic. |
-| `release zorn_lemma` | The set, binary relation, exact named upper-bound/maximality definitions, nonemptiness, partial-order laws, and chain-upper-bound obligation. Preview (`new_pipeline`): `release zorn_lemma: …`; parse+exec wired; prop-definition equality uses IR alignment (no alpha_normalize yet). | Stores `exist m S st {$M(m)}` using the supplied named maximality prop. The chain witness likewise uses the supplied atomic upper-bound prop. |
+| `release zorn_lemma` | The set, binary relation, exact named upper-bound/maximality definitions, nonemptiness, partial-order laws, and chain-upper-bound obligation. Preview (`new_pipeline`): `release zorn_lemma: …`; parse+exec wired with green tracer; prop-definition equality uses IR alignment (binder ids taken from the user prop body). | Stores `exist m S st {$M(m)}` using the supplied named maximality prop. The chain witness likewise uses the supplied atomic upper-bound prop. |
 | Terminal `import` command | Only the interactive REPL command grammar and module constraints; it is not a statement. | A qualified environment in the REPL's ephemeral manifest; maintained modules use real manifests instead. |
 | `eval` | The expression belongs to the supported executable subset. | Evaluation output, not a new mathematical proof fact. |
 
@@ -3697,7 +3704,9 @@ forall A F:
 
 `release zorn_lemma` requires the two quantified conditions that occur below
 existentials to be named concrete props. Their signatures and definitions are
-checked exactly before any obligation is accepted:
+checked exactly (IR alignment) before any obligation is accepted. Local proof
+bodies are fact-only — trust the obligations outside first (same pattern as
+`release axiom_of_choice`):
 
 ```litex
 have S set
@@ -3711,26 +3720,45 @@ prop maximal(m S):
         =>:
             x = m
 
+trust $is_nonempty_set(S)
+trust:
+    forall x S:
+        $leq(x, x)
+    forall x, y, z S:
+        $leq(x, y)
+        $leq(y, z)
+        =>:
+            $leq(x, z)
+    forall x, y S:
+        $leq(x, y)
+        $leq(y, x)
+        =>:
+            x = y
+    forall c power_set(S):
+        forall x, y c:
+            $leq(x, y) or $leq(y, x)
+        =>:
+            exist u S st {$upper_bound(c, u)}
+
 release zorn_lemma: set S, prop leq, prop upper_bound, prop maximal:
-    trust $is_nonempty_set(S)
-    trust:
-        forall x S:
-            $leq(x, x)
-        forall x, y, z S:
-            $leq(x, y)
-            $leq(y, z)
-            =>:
-                $leq(x, z)
-        forall x, y S:
-            $leq(x, y)
-            $leq(y, x)
-            =>:
-                x = y
-        forall c power_set(S):
-            forall x, y c:
-                $leq(x, y) or $leq(y, x)
-            =>:
-                exist u S st {$upper_bound(c, u)}
+    $is_nonempty_set(S)
+    forall x S:
+        $leq(x, x)
+    forall x, y, z S:
+        $leq(x, y)
+        $leq(y, z)
+        =>:
+            $leq(x, z)
+    forall x, y S:
+        $leq(x, y)
+        $leq(y, x)
+        =>:
+            x = y
+    forall c power_set(S):
+        forall x, y c:
+            $leq(x, y) or $leq(y, x)
+        =>:
+            exist u S st {$upper_bound(c, u)}
 
 obtain m from exist m S st {$maximal(m)}
 ```
@@ -4210,6 +4238,36 @@ forall a, b R+:
 > `proj(cart(...), k)` / `(a,b)[k]`; finite-set size set-minus / union;
 > `closed_range(a,a) = {a}`; single-term `sum`/`product`; reduce↔sum bridges;
 > `b^(log(b,x)) = x`.
+> Equality identities wave 12 (preview): `union(A, set_minus(B, A)) = union(A, B)`;
+> `set_minus(B, intersect(A, B)) = set_minus(B, A)`; complex `re(i)=0`,
+> `img(i)=1`, `re(1)=1`, `img(1)=0`, `re(1+i)=1`, `img(1+i)=1`, `C_abs(i)=1`;
+> `(a % (k*m)) % m = a % m`; last-term `sum`/`product` split; list
+> `finite_set_sum`/`finite_set_product` expansion (narrow `trust` for current
+> Add/Mul / aggregate carrier WD).
+> Equality identities wave 13 + closed trig (preview): `e = exp(1)`, `ln(e)=1`;
+> `sin(0)/cos(0)/tan(0)`, `sin(pi/2)`, `cos(pi)`, `sin(pi)`, Pythagorean;
+> `re(a)=a` / `img(a)=0` for `a R`; `re/img(a+b*i)`; `C_abs` on nonnegative
+> reals / imag-scaled; literal `range`/`closed_range` expansion;
+> `power_set({})`/`power_set({a})`; `family_union({})`; empty-factor `cart`;
+> union-over-intersect; set_minus chain; constant `fn_range` (literal
+> anonymous ok); `seq(S)=fn(x N) S` and
+> `finite_seq(S,n)=fn(x closed_range(0,n-1)) S`.
+> Equality identities wave 14 / Obj P0–P2 (preview): WD fixes so basic
+> `ln(e)`, `tan(0)`, Pythagorean, `sum`/`product` Add/Mul, anonymous
+> `fn_range`, `finite_seq` finiteness, and reduce-single no longer need
+> narrow trust; `index_union({},X,A)={}`, `index_intersect({},X,A)=X`,
+> `index_cart({},S,g)={{}}`, singleton `index_union`; `finite_seq(S,0)=fn(x {}) S`;
+> `{x N: x < 0}={}`; `cot(pi/2)=0`; `C_abs(a+b*i)^2=a^2+b^2`;
+> `exp(a+b)=exp(a)exp(b)`; `log(a^b,c)=log(a,c)/b`; `re/img` of products;
+> `sin/cos` angle-addition; `reduce(s,s,f,add,0)=f(s)`. Empty absolute
+> intersection (preview, settled): no `family_intersect({})={}` (vacuous ∩ is
+> the universe class; use `index_intersect({},X,A)=X`). Equality identities
+> wave 15 (preview): finite-set Fubini —
+> `∑_X ∑_Y f((x,y)) = ∑_Y ∑_X f((x,y))`, and
+> `∑_X ∑_Y f((x,y)) = ∑_{cart(X,Y)} f`.
+> NotIn interval (preview): open endpoint / outside bounds.
+> NotIn / NotIsFiniteSet (preview): `x $in B` ⇒ `not x $in set_minus(A, B)`;
+> `not $is_finite_set(N)` (and other standard carriers).
 > Greater add/mul (preview, A10): `a > b` ⇒ `a + c > b + c` / `c + a > c + b`;
 > `0 < k` and `a > b` ⇒ `a * k > b * k` / `k * a > k * b`.
 > Equality identities wave 8 (preview): Euclidean
@@ -4614,8 +4672,8 @@ have n N
 0 <= n
 ```
 
-The `have` statement stores `n $in N`; inference records the standard
-nonnegativity consequence. The second line then reuses known information.
+The `have` statement stores `n $in N`. The second line is proved at verify
+time by `FromKnownInNatural` (carrier → nonnegativity is not eager infer).
 
 Inference does not prove an arbitrary desired consequence:
 
@@ -4632,14 +4690,14 @@ Most triggers are atomic facts. A few larger shapes have explicit behavior.
 
 | Stored fact | Typical inferred information |
 |---|---|
-| Equality | Numeric values, simple linear solved values, `u-v=0` equality, tuple/cart/set-builder/sequence/matrix/function structure, and positive-real membership transported from a known power side. |
+| Equality | Numeric values, simple linear solved values, tuple/cart/set-builder/sequence/matrix/function structure, and positive-real membership transported from a known power side. Literal `u-v=0` ⇒ `u=v` is verify-time `EqualFromKnownDifferenceZero`. |
 | `by fn_extension` success | Ordinary object equality `f = g`, so known-equality congruence can use it. |
 | Positive concrete or builtin predicate | Instantiated parameter-type and defining clauses. Proper inclusion exposes inclusion plus inequality; `$prime` exposes its lower bound and trial-divisor universal; `$coprime(a,b)` exposes `a != 0 or b != 0` and `gcd(a,b)=1`; `$dvd(x,y)` exposes `x % y = 0` and an integer multiple witness; mapping properties expose their exact definitions. Abstract predicates have no clauses to expose. |
 | Membership | Constructor-specific carrier, shape, bound, component, disjunction, or existential information listed below. |
 | `$is_cart(C)` | The structural lower bound `2 <= cart_dim(C)`. Other positive/negative type predicates have no general inference branch. |
 | Subset or superset | One fresh universal membership consequence in the corresponding direction. A builder on the subset side skips this eager universal because builder membership already exposes its domain and filters. |
 | Proper inclusion | Through its builtin definition: ordinary inclusion and set inequality. |
-| Order against a resolved concrete bound | Selected sign information, including the equivalent comparison after multiplying both sides by `(-1)` when that normalized shape is supported. |
+| Order against a resolved concrete bound | *(verify)* Selected sign spelling and mul-by-`(-1)` flip via `OrderSignFromPositive/NegativeLiteralBound` / `OrderFlipMulMinusOne` — not eager infer. |
 | `exist!` | A universal saying any two complete witness tuples satisfying the body are componentwise equal. |
 | `not exist` | The corresponding universal De Morgan negation when the body shape is supported. |
 | `not forall` | An existential counterexample: domain facts plus negated conclusions, all quantifier-free by syntax (`new_pipeline`). |
@@ -4669,7 +4727,8 @@ cart_dim(s) = 2
 
 Typical consequences include:
 
-- `u - v = 0` gives `u = v` when meaningful;
+- `u - v = 0` gives `u = v` when meaningful *(verify-time
+  `EqualFromKnownDifferenceZero`, not eager infer)*;
 - `by fn_extension` stores the ordinary equality `f = g`;
 - an equality to a closed numeric expression (decimal literals under
   `+ - * / ^ abs min max floor ceil sign`, integer-domain `% quot gcd lcm !`,
@@ -4712,8 +4771,8 @@ Main families are:
 
 | Membership | Inferred information |
 |---|---|
-| `x $in N` | `0 <= x` |
-| Positive, negative, or nonzero numeric subsets | Corresponding sign or disequality |
+| `x $in N` | *(verify)* `0 <= x` / `x >= 0` via `FromKnownInNatural` — not eager infer |
+| Positive, negative, or nonzero numeric subsets | *(verify)* Corresponding sign or disequality via `FromKnownInPositive/Negative/NonzeroStandardSet` — not eager infer |
 | `x $in {a}` / `x $in {a, b, ...}` | Atomic equality for a singleton; otherwise the finite equality disjunction. Empty display adds nothing. |
 | `x $in union(A,B)` | `x $in A or x $in B` |
 | `x $in intersect(A,B)` | Both component memberships |

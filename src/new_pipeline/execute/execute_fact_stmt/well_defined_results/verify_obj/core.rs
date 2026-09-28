@@ -455,8 +455,8 @@ impl Runtime {
         Ok(Ok(proof))
     }
 
-    // fn_range(f): children, then f must have a visible InFunctionSet registration.
-    // Example: after `let f = fn(x R) R {x}`, `fn_range(f)` is WD.
+    // fn_range(f): children, then f is a literal AnonymousFn or has InFunctionSet.
+    // Example: `fn_range(fn(x R) R {1})` and, after `have fn f(...)`, `fn_range(f)`.
     pub(super) fn verify_fn_range_obj_well_definedness(
         &mut self,
         value: &FnRange,
@@ -479,9 +479,12 @@ impl Runtime {
                 ),
             });
         }
-        if self
-            .collect_in_function_set_candidates(value.function.as_ref())
-            .is_empty()
+        let is_anonymous_fn =
+            matches!(value.function.as_ref(), Obj::FunctionSpace(FunctionSpace::AnonymousFn(_)));
+        if !is_anonymous_fn
+            && self
+                .collect_in_function_set_candidates(value.function.as_ref())
+                .is_empty()
         {
             return Ok(VerifyObjWellDefinedResult::Failed {
                 obj: root,

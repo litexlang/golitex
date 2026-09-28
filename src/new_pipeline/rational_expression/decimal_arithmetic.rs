@@ -4,7 +4,15 @@ use crate::new_pipeline::rational_expression::helper::{
     count_closed_range_integer_endpoints, count_half_open_range_integer_endpoints,
 };
 
-// Fold a closed numeric Obj tree to a normalized decimal Number.
+// Primary closed-numeric calculation entry.
+//
+// The interface is intentionally tiny: Obj in → Option<Number> out (or None when
+// the tree is not a foldable closed value). Equality, order, `$in`, `eval`, and
+// ClosedNumericExpr domain gates all reuse this one leaf — it is basic runtime
+// plumbing, not a feature-local helper. Keeping numeric fold logic here (instead
+// of copying it into each caller) makes the surface easy to maintain: widen or
+// harden once, every consumer sees the same behavior.
+//
 // Supports arithmetic ops, integer-domain `% quot gcd lcm !`, and foldable
 // `sqrt` / `log` (perfect square / integer power).
 // Complex nested examples (must keep working):

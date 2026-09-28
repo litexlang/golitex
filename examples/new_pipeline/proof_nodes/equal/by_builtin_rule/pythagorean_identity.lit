@@ -1,0 +1,4 @@
+# Node: equal.ByBuiltinRule.PythagoreanIdentity
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/pythagorean_identity.lit
+have x R
+sin(x)^2 + cos(x)^2 = 1

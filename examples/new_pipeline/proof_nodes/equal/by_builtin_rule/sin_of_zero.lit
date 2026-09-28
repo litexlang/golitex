@@ -1,0 +1,2 @@
+# Node: equal.ByBuiltinRule.SinOfZero
+sin(0) = 0

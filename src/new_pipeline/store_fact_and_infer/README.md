@@ -31,11 +31,11 @@ store_fact_and_infer/
     infer_not_forall_fact.rs
     infer_forall_fact*.rs    # NoInfer (intentional)
     infer_atomic_fact/
-      infer_equal_fact/      # cart/tuple, u−v=0, positive-real power
+      infer_equal_fact/      # cart/tuple shape, positive-real power
       infer_atomic_except_equality/
         expand_definition.rs     # NormalAtomic param types + iff
         membership_*.rs          # InFact by set former / ops
-        subset.rs / superset.rs / is_cart.rs / numeric_order_sign.rs
+        subset.rs / superset.rs / is_cart.rs
   store_fact_and_infer_result/
     # one result type family per dispatcher / rule group
 ```
@@ -52,17 +52,21 @@ store_fact_and_infer/
 **EqualFact**
 
 - Cart/tuple shape (`$is_cart` / dim)
-- Literal `u − v = 0` → `u = v`
+- Literal `u − v = 0` → `u = v` is **verify-time**
+  `EqualFromKnownDifferenceZero` (not infer)
 - Positive-real power membership transport  
   (set-builder / anon / closed-numeric / FnSet signature live on **store indexes**)
 
 **Other atomics**
 
 - NormalAtomic: param-type projection + one-layer def expand
-- InFact: N/sign sets, list/union/intersect/set_minus, cart, ranges/intervals,
+- InFact: list/union/intersect/set_minus, cart, ranges/intervals,
   set-builder, power_set, equal-FnSet / fn_range / finite_seq / seq,
   family_union / index_union / index_intersect / **index_cart**
-- Order → sign vs 0; mul-by-(−1) flip
+- Carrier → sign / nonnegativity / nonzero is **verify-time** only:
+  `FromKnownInNatural`, `FromKnownInPositive/Negative/NonzeroStandardSet`
+- Order bound → sign spelling and mul-by-(−1) flip are **verify-time** only:
+  `OrderSignFromPositive/NegativeLiteralBound`, `OrderFlipMulMinusOne`
 - `$is_cart` → dim ≥ 2; Subset / Superset → elementwise forall
 
 ## Intentionally not migrated
