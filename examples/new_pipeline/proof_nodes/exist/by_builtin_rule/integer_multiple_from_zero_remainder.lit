@@ -1,0 +1,5 @@
+# Node: exist.ByBuiltinRule.IntegerMultipleFromZeroRemainder
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/exist/by_builtin_rule/integer_multiple_from_zero_remainder.lit
+
+6 % 3 = 0
+exist k Z st {6 = 3 * k}

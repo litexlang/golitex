@@ -97,6 +97,19 @@ pub enum ExistShapedFactSearchProofByBuiltinRule {
     EqualityWitnessFromMembership(ExistShapedBuiltinEqualityWitnessFromMembership),
     // Witness from nonempty: `$is_nonempty_set(S)` ⇒ `exist x S st {x $in S}`.
     NonemptySetMemberWitness(ExistShapedBuiltinNonemptySetMemberWitness),
+    // Rational with positive integer denominator: `q $in Q` ⇒
+    // `exist a, b Z st {b > 0, q = a / b}`.
+    RationalPositiveDenominator(ExistShapedBuiltinRationalPositiveDenominator),
+    // Rational as integer / nonzero-integer: `q $in Q` ⇒
+    // `exist a Z, b Z* st {q = a / b}`.
+    RationalIntegerRatio(ExistShapedBuiltinRationalIntegerRatio),
+    // Zero remainder ⇒ integer multiple: `a % b = 0`, `b != 0` ⇒
+    // `exist k Z st {a = b * k}`.
+    IntegerMultipleFromZeroRemainder(ExistShapedBuiltinIntegerMultipleFromZeroRemainder),
+    // Archimedean reciprocal: `epsilon $in R+` ⇒ `exist n N+ st {1 / n < epsilon}`.
+    ArchimedeanReciprocal(ExistShapedBuiltinArchimedeanReciprocal),
+    // Real density by midpoint: `a < b` on reals ⇒ `exist r R st {a < r < b}`.
+    RealDensityMidpoint(ExistShapedBuiltinRealDensityMidpoint),
 }
 
 // Existential witness on the real line for a comparison atom.
@@ -124,6 +137,46 @@ pub struct ExistShapedBuiltinEqualityWitnessFromMembership {
 // Example: `$is_nonempty_set({1})` proves `exist x {1} st {x $in {1}}`.
 pub struct ExistShapedBuiltinNonemptySetMemberWitness {
     pub nonempty_proof: VerifyFactResult,
+}
+
+// Rational representation with a positive integer denominator.
+// Mathematical property: every rational is `a / b` for integers `a, b` with `b > 0`.
+// Example: `1/2 $in Q` proves `exist a, b Z st {b > 0, 1/2 = a / b}`
+// (when exist-body WD of the quotient succeeds).
+pub struct ExistShapedBuiltinRationalPositiveDenominator {
+    pub rational_membership_proof: VerifyFactResult,
+}
+
+// Rational as an integer numerator over a nonzero integer denominator.
+// Mathematical property: every rational is `a / b` for `a Z`, `b Z*`.
+// Example: `1/2 $in Q` proves `exist a Z, b Z* st {1/2 = a / b}`.
+pub struct ExistShapedBuiltinRationalIntegerRatio {
+    pub rational_membership_proof: VerifyFactResult,
+}
+
+// Integer multiple from a zero Euclidean remainder.
+// Mathematical property: if `a, b $in Z`, `b != 0`, and `a % b = 0`, then
+// there is an integer `k` with `a = b * k`.
+// Example: known `6 % 3 = 0` proves `exist k Z st {6 = 3 * k}`.
+pub struct ExistShapedBuiltinIntegerMultipleFromZeroRemainder {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+// Archimedean reciprocal bound.
+// Mathematical property: every positive real `ε` admits `n N+` with `1/n < ε`.
+// Example: `0.5 $in R+` proves `exist n N+ st {1 / n < 0.5}`.
+pub struct ExistShapedBuiltinArchimedeanReciprocal {
+    pub positive_bound_proof: VerifyFactResult,
+}
+
+// Real density via the midpoint principle.
+// Mathematical property: if `a < b` for reals `a, b`, then some real lies
+// strictly between them (e.g. the midpoint).
+// Example: known `0 < 1` proves `exist r R st {0 < r < 1}`.
+pub struct ExistShapedBuiltinRealDensityMidpoint {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
 pub struct ExistShapedFactSearchProofByKnownExistShapedFact {

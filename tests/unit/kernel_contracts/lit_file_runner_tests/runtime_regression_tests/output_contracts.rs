@@ -719,12 +719,17 @@ $can_be_divided_by_8(x)
 $can_be_divided_by_2(x)
 "#;
 
-    let mut runtime = Runtime::new(RuntimeOptions::new(
-        VerifyStrictnessPolicy::Ordinary,
-        OutputDetail::Normal,
-        OutputLanguage::SimplifiedChinese,
-        SummaryOption::None,
-    ), VirtualSource::Named(("zh_forall_output_uses_short_conclusions_and_compact_citation").into()));
+    let mut runtime = Runtime::new_with_virtual_source(
+        RuntimeOptions::new(
+            VerifyStrictnessPolicy::Ordinary,
+            OutputDetail::Normal,
+            OutputLanguage::SimplifiedChinese,
+            SummaryOption::None,
+        ),
+        VirtualSource::Named(
+            "zh_forall_output_uses_short_conclusions_and_compact_citation".into(),
+        ),
+    );
 
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);

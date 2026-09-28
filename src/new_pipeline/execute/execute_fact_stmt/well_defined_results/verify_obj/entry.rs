@@ -96,7 +96,7 @@ impl Runtime {
             return self.verify_field_access_obj_well_definedness(value, verify_state);
         }
 
-        // Identifier / template-instance / anonymous-literal headed FnObj: domain check.
+        // Identifier / template-instance / anonymous-literal / field-access headed FnObj.
         if let Obj::FnObj(value) = obj {
             match value.head.as_ref() {
                 FnObjHead::Identifier(_) | FnObjHead::InstantiatedTemplateObj(_) => {
@@ -111,7 +111,12 @@ impl Runtime {
                         verify_state,
                     );
                 }
-                FnObjHead::FieldAccess(_) => {}
+                FnObjHead::FieldAccess(_) => {
+                    return self.verify_field_access_headed_fn_obj_well_definedness(
+                        value,
+                        verify_state,
+                    );
+                }
             }
         }
 

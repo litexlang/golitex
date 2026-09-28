@@ -1,0 +1,9 @@
+# Node: exist.ByBuiltinRule.RationalIntegerRatio
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/exist/by_builtin_rule/rational_integer_ratio.lit
+#
+# Green substitute for RationalPositiveDenominator: exist-body WD of `a / b`
+# with binders `a, b Z` fails because sibling `b > 0` is not assumed during WD.
+# The Z* denominator form establishes `b != 0` from the binder carrier.
+
+1 / 2 $in Q
+exist a Z, b Z* st {1 / 2 = a / b}

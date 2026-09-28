@@ -4569,6 +4569,23 @@ rule target.
 | Integer interval witness | `a,b $in R` and `b-a>1` for `exist c Z st {a<c<b}`, or `b-a>=1` for the weak-endpoint form. |
 | Greatest natural member | The body has the canonical membership-and-upper-bound shape, while `S` is finite, nonempty, and `S $subset N`. |
 
+> **Preview (`new_pipeline`):** exist builtins currently include (each its own
+> result struct + tracer under
+> [`examples/new_pipeline/proof_nodes/exist/by_builtin_rule/`](../examples/new_pipeline/proof_nodes/exist/by_builtin_rule/)):
+> real-line comparison witness, equality witness from membership, nonempty-set
+> member witness, rational integer/`Z*` ratio (`exist a Z, b Z* st {q = a / b}`),
+> integer multiple from zero remainder (`exist k Z st {a = b * k}`), Archimedean
+> reciprocal (`exist n N+ st {1 / n < ε}`), and real density midpoint
+> (`exist r R st {a < r < b}`).
+> The positive-denominator form `exist a, b Z st {b > 0, q = a / b}` is matched
+> in the kernel but currently fails exist-body well-definedness of `a / b`
+> (sibling `b > 0` is not assumed during WD); use the `Z*` ratio form instead.
+> Also: closed-integer `$prime` / `not $prime` / `$coprime` / `not $coprime` by
+> computation under
+> [`examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/`](../examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/)
+> (`prime_by_computation.lit`, …). `by def $prime(n)` still requires proving the
+> trial-divisor forall; computation does not discharge that definition path.
+
 ```litex
 forall epsilon R+:
     exist n N+ st {1 / n < epsilon}

@@ -1,0 +1,9 @@
+# Obj WD: InstantiatedTemplateObj (have-obj template surface)
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/wd/obj/template_instance.lit
+#
+# Code already lived in verify_obj/structs.rs; this is the positive WD tracer.
+
+template<S set>:
+    have carrier_copy set = S
+
+\carrier_copy<R> = R

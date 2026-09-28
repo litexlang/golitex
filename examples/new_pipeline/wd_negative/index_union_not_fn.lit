@@ -1,4 +1,4 @@
-# WD negative: index_union family not registered in any FnSet must fail.
+# WD negative: index_union family not in `fn(k I) power_set(X)` must fail.
 # Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/wd_negative/index_union_not_fn.lit
 # expect exit != 0
 

@@ -2,7 +2,9 @@
 
 use super::entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
 use super::fail_to_verify_obj_well_defined::*;
-use super::helper::{set_bound_parameter_count, set_bound_params_to_arg_map};
+use super::helper::{
+    fn_obj_head_as_obj, set_bound_parameter_count, set_bound_params_to_arg_map,
+};
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::obj_well_defined_proof_by_def::*;
 use crate::new_pipeline::ast::fact::{AtomicFact, InFact};
@@ -270,17 +272,131 @@ impl Runtime {
         }
     }
 
+    // `p.f(a)`: WD the FieldAccess head, then domain-check args against the field's
+    // declared FnSet type (or a stored InFunctionSet on the field object).
+    // Example: after `struct Bundle: f fn(x R) R` and `forall p &Bundle:`, WD of `p.f(0)`.
+    pub(super) fn verify_field_access_headed_fn_obj_well_definedness(
+        &mut self,
+        value: &FnObj,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<VerifyObjWellDefinedResult> {
+        let FnObjHead::FieldAccess(access) = value.head.as_ref() else {
+            return Err(crate::new_pipeline::runtime::RuntimeError::InternalBug(
+                "verify_field_access_headed_fn_obj expects FieldAccess head".to_string(),
+            ));
+        };
+        let root = Obj::FnObj(value.clone());
+        let head_obj = fn_obj_head_as_obj(value.head.as_ref());
+        let head_wd = self.verify_obj_well_definedness(&head_obj, verify_state.clone())?;
+        if head_wd.is_failed() {
+            return Ok(VerifyObjWellDefinedResult::Failed {
+                obj: root,
+                reason: FailToVerifyObjWellDefinedResult::FnObj(
+                    FailToVerifyFnObjObjWellDefined::Domain(
+                        ObjWellDefinedByDefCommonStages::from_children(vec![head_wd])
+                            .into_common_fail(&Obj::FnObj(value.clone())),
+                    ),
+                ),
+            });
+        }
+        if value.body.is_empty() {
+            return Ok(VerifyObjWellDefinedResult::Failed {
+                obj: root,
+                reason: FailToVerifyObjWellDefinedResult::FnObj(
+                    FailToVerifyFnObjObjWellDefined::Domain(
+                        ObjWellDefinedByDefCommonStages::from_children(vec![head_wd])
+                            .into_common_fail(&Obj::FnObj(value.clone())),
+                    ),
+                ),
+            });
+        }
+
+        let mut candidate_spaces: Vec<FnSet> = self
+            .collect_in_function_set_candidates(&head_obj)
+            .into_iter()
+            .map(|(fs, _)| fs)
+            .collect();
+        if let Some(field_type) = self.resolve_field_access_field_type(access) {
+            match field_type {
+                Obj::FunctionSpace(FunctionSpace::FnSet(fs)) => candidate_spaces.push(fs),
+                Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => {
+                    candidate_spaces.push(anon.body)
+                }
+                _ => {}
+            }
+        }
+        if candidate_spaces.is_empty() {
+            return Ok(VerifyObjWellDefinedResult::Failed {
+                obj: root,
+                reason: FailToVerifyObjWellDefinedResult::FnObj(
+                    FailToVerifyFnObjObjWellDefined::NotInFunctionSet,
+                ),
+            });
+        }
+
+        let mut last_domain_fail: Option<ObjWellDefinedByDefCommonStages> = None;
+        for fn_set in candidate_spaces {
+            match self.try_verify_fn_obj_against_fn_set(value, &fn_set, verify_state.clone())? {
+                Ok(mut stages) => {
+                    let mut children = vec![head_wd];
+                    children.append(&mut stages.child_obj_well_defined);
+                    let (child_proofs, _) = ObjWellDefinedByDefCommonStages::from_children(children)
+                        .into_success_child_proofs();
+                    let proof = FnObjObjWellDefinedProof {
+                        domain_fn_set: Some(FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set }),
+                        child_obj_well_defined: child_proofs,
+                        requirement_fact_verified: stages.requirement_fact_verified,
+                    };
+                    if verify_state.store_well_defined_fact {
+                        let wd_id = self.global_ids.allocate_well_definedness_id();
+                        self.top_exec_env_mut()
+                            .well_defined_objects
+                            .record(root.clone(), wd_id);
+                    }
+                    return Ok(VerifyObjWellDefinedResult::Success(
+                        ObjWellDefinedProof::ByDef {
+                            obj: root,
+                            proof: ObjWellDefinedProofByDef::FnObj(proof),
+                        },
+                    ));
+                }
+                Err(stages) => {
+                    last_domain_fail = Some(stages);
+                }
+            }
+        }
+
+        let fail_stages = match last_domain_fail {
+            Some(mut stages) => {
+                let mut children = vec![head_wd];
+                children.append(&mut stages.child_obj_well_defined);
+                stages.child_obj_well_defined = children;
+                stages
+            }
+            None => ObjWellDefinedByDefCommonStages::from_children(vec![head_wd]),
+        };
+        Ok(VerifyObjWellDefinedResult::Failed {
+            obj: root,
+            reason: FailToVerifyObjWellDefinedResult::FnObj(
+                FailToVerifyFnObjObjWellDefined::Domain(
+                    fail_stages.into_common_fail(&Obj::FnObj(value.clone())),
+                ),
+            ),
+        })
+    }
+
     pub(super) fn verify_fn_obj_well_definedness_by_def(
         &mut self,
         value: &FnObj,
         verify_state: VerifyState,
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
-        // AnonymousFnLiteral / Identifier / InstantiatedTemplateObj: dedicated entry paths.
+        // Dedicated entry paths handle all current FnObjHead variants.
         if matches!(
             value.head.as_ref(),
             FnObjHead::AnonymousFnLiteral(_)
                 | FnObjHead::Identifier(_)
                 | FnObjHead::InstantiatedTemplateObj(_)
+                | FnObjHead::FieldAccess(_)
         ) {
             return Ok(ObjWellDefinedByDefCommonStages::leaf());
         }

@@ -10,6 +10,7 @@ pub mod is_tuple;
 pub mod known_strict_order;
 pub mod less;
 pub mod less_equal;
+pub mod normal_atomic;
 pub mod not_equal;
 pub mod not_in_fact;
 pub mod not_greater;

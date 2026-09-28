@@ -13,9 +13,10 @@ mod normalization;
 
 pub use closed_numeric_expr::{is_closed_numeric_expr, ClosedNumericExpr};
 pub use decimal_arithmetic::{
-    evaluate_obj_to_normalized_decimal_number, log_integer_power_decimal_str,
-    normalized_decimal_str_is_integer, normalized_decimal_str_is_non_negative_integer,
-    sqrt_decimal_str_and_normalize, two_objs_equal_by_closed_decimal_calculation,
+    evaluate_obj_to_normalized_decimal_number, gcd_decimal_str_and_normalize,
+    log_integer_power_decimal_str, normalized_decimal_str_is_integer,
+    normalized_decimal_str_is_non_negative_integer, sqrt_decimal_str_and_normalize,
+    two_objs_equal_by_closed_decimal_calculation,
 };
 pub use decimal_comparison::{
     compare_closed_objs_by_normalized_decimal, compare_number_strings, NumberCompareResult,

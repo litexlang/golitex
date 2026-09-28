@@ -55,8 +55,48 @@ pub enum AtomicExceptEqualityFactSearchProofByBuiltinRule {
 }
 
 // Uninhabited stubs: split into a predicate file when the first builtin rule is added.
-pub enum NormalAtomicFactSearchProofByBuiltinRule {}
-pub enum NotNormalAtomicFactSearchProofByBuiltinRule {}
+pub enum NormalAtomicFactSearchProofByBuiltinRule {
+    // Closed u64 primality computation.
+    // Mathematical property: `$prime(n)` for a resolved nonnegative integer prime.
+    // Example: `$prime(17)`.
+    PrimeByComputation(NormalAtomicPrimeByComputation),
+    // Closed natural coprimality via gcd-one.
+    // Mathematical property: `$coprime(a, b)` when resolved nonnegative integers
+    // satisfy `gcd(a, b) = 1` and are not both zero.
+    // Example: `$coprime(14, 25)`.
+    CoprimeByComputation(NormalAtomicCoprimeByComputation),
+}
+
+pub struct NormalAtomicPrimeByComputation {
+    pub resolved_value: String,
+}
+
+pub struct NormalAtomicCoprimeByComputation {
+    pub left_resolved: String,
+    pub right_resolved: String,
+}
+
+pub enum NotNormalAtomicFactSearchProofByBuiltinRule {
+    // Closed u64 non-primality computation.
+    // Mathematical property: `not $prime(n)` for a resolved nonnegative non-prime.
+    // Example: `not $prime(1)`.
+    NotPrimeByComputation(NotNormalAtomicNotPrimeByComputation),
+    // Closed natural non-coprimality via gcd.
+    // Mathematical property: `not $coprime(a, b)` when resolved nonnegative
+    // integers fail the gcd-one criterion.
+    // Example: `not $coprime(14, 21)`.
+    NotCoprimeByComputation(NotNormalAtomicNotCoprimeByComputation),
+}
+
+pub struct NotNormalAtomicNotPrimeByComputation {
+    pub resolved_value: String,
+}
+
+pub struct NotNormalAtomicNotCoprimeByComputation {
+    pub left_resolved: String,
+    pub right_resolved: String,
+}
+
 pub enum NotIsSetFactSearchProofByBuiltinRule {}
 pub enum NotIsCartFactSearchProofByBuiltinRule {}
 pub enum NotIsTupleFactSearchProofByBuiltinRule {}

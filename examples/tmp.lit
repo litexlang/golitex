@@ -1,29 +1,24 @@
-# Combined cases for remaining OR builtins (equality-plus-strict, residues,
-# successor tail, square-sum nonzero, classical implication, integer discrete).
+# Wave3: exist-shaped builtins + prime/coprime by computation
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/tmp.lit
 
-# --- OR: EqualityPlusStrictCoversWeak ---
-have a, b R
-trust a <= b
-a = b or a < b
+# --- exist: RationalIntegerRatio (green; PositiveDenominator skipped: body WD) ---
+1 / 2 $in Q
+exist a Z, b Z* st {1 / 2 = a / b}
 
-# --- OR: CompleteResidues ---
-have n Z
-n % 2 = 0 or n % 2 = 1
+# --- exist: IntegerMultipleFromZeroRemainder ---
+6 % 3 = 0
+exist k Z st {6 = 3 * k}
 
-# --- OR: IntegerSuccessorTail ---
-have x Z
-trust x >= 1
-x = 1 or x = 2 or x = 3 or x > 3
+# --- exist: ArchimedeanReciprocal ---
+0.5 $in R+
+exist n N+ st {1 / n < 0.5}
 
-# --- OR: SquareSumComponentNonzero ---
-have u, v R
-trust u^2 + v^2 != 0
-u != 0 or v != 0
+# --- exist: RealDensityMidpoint ---
+0 < 1
+exist r R st {0 < r < 1}
 
-# --- OR: ClassicalImplication ---
-have c, d R
-c != 0 or c * d = 0
-
-# --- OR: IntegerDiscreteSplit ---
-have y, m Z
-y <= m or y >= m + 1
+# --- atomic: prime / coprime computation ---
+$prime(17)
+not $prime(1)
+$coprime(14, 25)
+not $coprime(14, 21)
