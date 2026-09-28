@@ -1,7 +1,0 @@
-# Infer: InFact.PositiveStandardSet
-# When: store `a $in R+`.
-# Infers: `0 < a`.
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/infer/atomic/in_positive_standard_set.lit
-
-have a R+
-0 < a

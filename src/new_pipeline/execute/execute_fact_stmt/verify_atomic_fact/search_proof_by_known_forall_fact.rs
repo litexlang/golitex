@@ -6,14 +6,18 @@
 //! Pipeline for one cite (soft miss → Ok(None)):
 //! 1. Load the forall and the atomic conclusion at `cite.location`
 //! 2. Require same prop name and polarity as the goal
-//! 3. `match_forall_conclusion_args` — bind bare params; non-param positions
-//!    subst-under-current-subst then strict equal (VerifyState all false)
+//! 3. `match_forall_conclusion_args_to_subst` — bind bare params from conclusion
+//! 3b. `complete_forall_subst_from_dom_facts` — bind params that appear only in dom
 //! 4. `prove_forall_instantiation_requirements` — param-type facts, then dom
 //!
 //! Example (non-equality):
 //!   known `forall a R: a > 0 => a + 1 > 1`
 //!   goal  `3 + 1 > 1`
 //!   → match binds/equals args, prove `3 $in R` and `3 > 0`, done.
+//! Example (dom-only middle):
+//!   known `forall x,y,z S: $leq(x,y), $leq(y,z) => $leq(x,z)`
+//!   goal  `$leq(a,c)` with known `$leq(a,b)`, `$leq(b,c)`
+//!   → conclusion binds `x,z`; dom completion binds `y`.
 
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact, ForallConclusionLocation};
 use crate::new_pipeline::ast::fact::{
@@ -22,7 +26,6 @@ use crate::new_pipeline::ast::fact::{
 use crate::new_pipeline::exec_env::known_forall_conclusion_memory::{
     atomic_at_forall_location, ForallConclusionCite,
 };
-use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::match_forall_conclusion_args::subst_from_ordered_params;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{FactId, Runtime, RuntimeResult};
@@ -136,15 +139,24 @@ impl Runtime {
         let conclusion_args = atomic_fact_args_ref(&conclusion);
         let goal_args = atomic_fact_args_ref(goal);
 
-        // Stage 3: match conclusion args to goal args (shared helper).
-        let Some(matched) =
-            self.match_forall_conclusion_args(&conclusion_args, &goal_args, &param_ids)?
+        // Stage 3: match conclusion args (may leave dom-only params unbound).
+        let Some((mut subst, arg_match_proofs)) =
+            self.match_forall_conclusion_args_to_subst(&conclusion_args, &goal_args, &param_ids)?
         else {
             return Ok(None);
         };
 
+        // Stage 3b: bind params that appear only in dom facts.
+        if !self.complete_forall_subst_from_dom_facts(&forall, &mut subst, &param_ids)? {
+            return Ok(None);
+        }
+
+        let forall_parameters_match_what_args: Vec<_> = param_ids
+            .iter()
+            .map(|id| subst.get(id).expect("dom completion").clone())
+            .collect();
+
         // Stage 4: param-type obligations, then dom facts (shared helper).
-        let subst = subst_from_ordered_params(&param_ids, &matched.forall_parameters_match_what_args);
         let Some(instantiation_requirements) =
             self.prove_forall_instantiation_requirements(&forall, &subst, verify_state)?
         else {
@@ -153,8 +165,8 @@ impl Runtime {
 
         Ok(Some(SearchProofByKnownForallFact {
             cite: cite.clone(),
-            forall_parameters_match_what_args: matched.forall_parameters_match_what_args,
-            arg_match_proofs: matched.arg_match_proofs,
+            forall_parameters_match_what_args,
+            arg_match_proofs,
             instantiation_requirements,
         }))
     }

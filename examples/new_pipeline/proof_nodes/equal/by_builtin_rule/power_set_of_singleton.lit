@@ -1,0 +1,2 @@
+# Node: equal.ByBuiltinRule.PowerSetOfSingleton
+power_set({1}) = { {}, {1} }

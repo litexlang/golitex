@@ -8,6 +8,8 @@
 
 pub mod error;
 pub mod internal_names;
+#[cfg(test)]
+mod internal_names_tests;
 pub mod real_or_virtual_path;
 pub mod code_source;
 pub mod runtime;

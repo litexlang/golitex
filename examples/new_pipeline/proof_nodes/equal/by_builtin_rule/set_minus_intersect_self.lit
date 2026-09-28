@@ -1,0 +1,6 @@
+# Node: equal.ByBuiltinRule.SetMinusIntersectSelf
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/set_minus_intersect_self.lit
+
+have A set
+have B set
+set_minus(B, intersect(A, B)) = set_minus(B, A)

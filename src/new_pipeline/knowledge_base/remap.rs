@@ -6,7 +6,9 @@ use crate::new_pipeline::ast::fact::{
     AtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact, QuantifierFreeFact,
 };
 use crate::new_pipeline::ast::names::BoundName;
-use crate::new_pipeline::ast::obj::{AnonymousFn, FnSet, FunctionSpace, IdentifierObj, Obj};
+use crate::new_pipeline::ast::obj::{
+    AnonymousFn, ArithmeticOperator, FnSet, FunctionSpace, IdentifierObj, Obj,
+};
 use crate::new_pipeline::ast::param::{
     ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
 };
@@ -254,6 +256,30 @@ fn remap_obj(obj: &mut Obj, plan: &RemapPlan) -> Result<(), KbCodecError> {
         Obj::Literal(_) | Obj::StandardSet(_) => Ok(()),
         Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)) => remap_fn_set(fn_set, plan),
         Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => remap_anonymous_fn(anon, plan),
+        Obj::ArithmeticOperator(ArithmeticOperator::Add(add)) => {
+            remap_obj(add.left.as_mut(), plan)?;
+            remap_obj(add.right.as_mut(), plan)?;
+            Ok(())
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub)) => {
+            remap_obj(sub.left.as_mut(), plan)?;
+            remap_obj(sub.right.as_mut(), plan)?;
+            Ok(())
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Mul(mul)) => {
+            remap_obj(mul.left.as_mut(), plan)?;
+            remap_obj(mul.right.as_mut(), plan)?;
+            Ok(())
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Div(div)) => {
+            remap_obj(div.left.as_mut(), plan)?;
+            remap_obj(div.right.as_mut(), plan)?;
+            Ok(())
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Neg(neg)) => {
+            remap_obj(neg.arg.as_mut(), plan)?;
+            Ok(())
+        }
         other => Err(KbCodecError::Unsupported(format!(
             "remap Obj `{other:?}` (kb remap subset)"
         ))),

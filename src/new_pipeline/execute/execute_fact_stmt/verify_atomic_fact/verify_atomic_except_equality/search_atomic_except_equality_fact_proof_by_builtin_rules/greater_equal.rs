@@ -42,6 +42,11 @@ pub enum GreaterEqualFactSearchProofByBuiltinRule {
     // Nonempty finite set has size at least one.
     // Example: `$is_finite_set(S)` and `$is_nonempty_set(S)` prove `finite_set_size(S) >= 1`.
     FiniteSetSizeAtLeastOne(FiniteSetSizeAtLeastOneBuiltinRuleProof),
+    // Order flip: `(-1)*x >= 0` from known `x < 0` or `x <= 0`.
+    // Example: trust a < 0; (-1) * a >= 0.
+    OrderFlipMulMinusOne(
+        crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::order_flip_mul_minus_one::OrderFlipMulMinusOneToGreaterEqualBuiltinRuleProof,
+    ),
 }
 
 pub struct ClosedNumericComparisonBuiltinRuleProof {
@@ -103,6 +108,11 @@ impl Runtime {
                 GreaterEqualFactSearchProofByBuiltinRule::FromKnownGreater(
                     FromKnownGreaterBuiltinRuleProof { cite_fact_id },
                 ),
+            ));
+        }
+        if let Some(proof) = self.try_order_flip_mul_minus_one_to_greater_equal(fact) {
+            return Ok(Some(
+                GreaterEqualFactSearchProofByBuiltinRule::OrderFlipMulMinusOne(proof),
             ));
         }
 

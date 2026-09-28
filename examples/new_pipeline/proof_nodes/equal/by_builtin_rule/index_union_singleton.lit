@@ -1,0 +1,4 @@
+# Node: equal.ByBuiltinRule.IndexUnionSingleton
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/index_union_singleton.lit
+have fn A(x N) power_set(N) = {x}
+index_union({1}, N, A) = A(1)

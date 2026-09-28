@@ -8,18 +8,12 @@ use super::StoreFactAndInferResult;
 pub enum InferEqualityResult {
     // Rule: equality to literal cart/tuple records shape facts on the other side.
     CartTupleShape(InferEqualFactCartTupleShapeResult),
-    // Rule: `0 = u - v` or `u - v = 0` ⇒ `u = v`.
-    SubtractionEqualsZero(InferEqualFactSubtractionEqualsZeroResult),
     // Rule: `a^x = y` with `a^x $in R+` ⇒ `y $in R+`.
     PositiveRealPower(InferEqualFactPositiveRealPowerResult),
 }
 
 pub struct InferEqualFactCartTupleShapeResult {
     pub derived: Vec<StoreFactAndInferResult>,
-}
-
-pub struct InferEqualFactSubtractionEqualsZeroResult {
-    pub derived: Box<StoreFactAndInferResult>,
 }
 
 pub struct InferEqualFactPositiveRealPowerResult {
@@ -36,7 +30,6 @@ impl InferEqualityResult {
                 }
                 ids
             }
-            Self::SubtractionEqualsZero(r) => r.derived.stored_fact_ids(),
             Self::PositiveRealPower(r) => {
                 let mut ids = Vec::new();
                 for d in &r.derived {

@@ -2,6 +2,7 @@
 //!
 //! Design contract: [`README.md`](README.md).
 
+mod import_kb;
 mod load_config;
 mod mount_cwd_config;
 mod run_export_file;

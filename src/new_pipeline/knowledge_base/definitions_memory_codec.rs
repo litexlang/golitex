@@ -77,7 +77,10 @@ fn encode_definition_memory(defs: &DefinitionMemory) -> Result<JsonValue, KbCode
     thm_keys.sort();
     for name in thm_keys {
         let stmt = defs.theorem_definitions.get(&name).expect("key present");
-        theorems.push(JsonValue::parse(&store_def_thm(stmt)?)?);
+        // Cache only the theorem interface; proof body is not needed to release / by thm.
+        let mut for_store = stmt.clone();
+        for_store.prove_process.clear();
+        theorems.push(JsonValue::parse(&store_def_thm(&for_store)?)?);
     }
     let mut axioms = Vec::new();
     let mut ax_keys: Vec<_> = defs.axiom_definitions.keys().cloned().collect();

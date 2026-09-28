@@ -5,18 +5,164 @@ Owns **persistence and restore** of imported-module products so `-r` / `-f` /
 
 This package is an **accelerator**. It must not change proof routes or
 mathematical results. A cache hit must leave the session looking like a full
-cold `run_import_module` of the same module.
+cold `run_import_module` of the same module (for the **definition / release /
+thm** surface consumers actually use).
 
 Companion packages:
 
 | Package | Owns |
 |---------|------|
 | `module_manager/` | Live tables: `ImportedModule`, `ExportFileAndItsExecEnv`, mount APIs |
-| `run_module/` | Cold path: recurse imports, run export `.lit`, record envs |
-| `knowledge_base/` (this) | Fingerprint, serialize/deserialize, load + id/`mod_id` remap, write-back |
-| `runtime/` / `exec_env/` | Session owners that load must remount into (authorization-gated) |
+| `run_module/` | Cold path + KB hit/write via `import_kb.rs` |
+| `knowledge_base/` (this) | Fingerprint, codecs, remap, write/load helpers (`import_cache`) |
+| `runtime/` / `exec_env/` | Live session; KB only reads watermarks / installs finished export envs via run_import |
 
-## Package layout (implemented so far)
+---
+
+## Design locked (summary)
+
+These decisions are fixed for the current MVP. Change them only with an
+explicit contract bump (`KB_ABI`) and docs update.
+
+### 1. Role
+
+| | |
+|--|--|
+| **What** | Local, gitignored build cache beside each imported module’s `litex.config` |
+| **Dir name** | `__litex_knowledge_base__/` (pycache rhythm, not mtime-alone) |
+| **Authority** | Sources + `litex.config` remain source of truth; KB is never hand-edited math |
+| **Scope** | **Imported** modules only (root exports stay cold unless later extended) |
+
+### 2. Product shape (definitions-only)
+
+Importers resolve `M::F::…` through finished export **`definitions`**
+(`by def`, `release thm` / `by thm`, `release obj def`, …). They do **not**
+mine foreign `facts` / WD / rewrite tables.
+
+Therefore the on-disk MVP stores **per-export `DefinitionMemory`**, not a full
+`ExecEnv`. Hit installs an `ExecEnv` whose `definitions` are remapped and whose
+facts/WD maps stay empty (same consumer contract as today).
+
+`DefThmStmt.prove_process` is **stripped on write** (empty on load): release /
+by thm only need the goal interface.
+
+### 3. On-disk layout
+
+```text
+<module_root>/__litex_knowledge_base__/
+  manifest.json                 # abi, fingerprint, mod_id↔path, export watermarks
+  exports/<export_file_id>/
+    definitions.json            # one DefinitionMemory (supported subset)
+```
+
+`KB_ABI` (`paths.rs`) bumps when wire/manifest layout is incompatible.
+
+### 4. Import hook (always on)
+
+| | |
+|--|--|
+| **Where** | `run_module/import_kb.rs` (called from `run_import_module`) |
+| **Policy helpers** | `knowledge_base/import_cache.rs` (fingerprint, hit, cold write-back) |
+| **Gate** | None — every successful import tries hit, then write after cold |
+
+### 5. Load / rebuild / write loop
+
+```text
+run_import_module(M):
+  recurse deps (same as today)
+  mount_module(M) → mod_id
+  try_finish_import_from_kb:
+    fp = fingerprint(M + transitive import sources + KB_ABI)
+    try_hit(fp):
+      hit  → remap ids → record finished exports from definitions
+             → advance Runtime.global_ids to remapped leave
+             → skip cold exec of M's exports; Done
+      miss → fall through
+  cold: run_export_file for each export (unchanged)
+  write_kb_after_cold_import (best-effort;
+    Unsupported def shapes → skip / clear cache, do not fail import)
+```
+
+Fingerprint is **content-addressed** (stable FNV-1a over config bytes, ordered
+export bytes, sorted dep fingerprints, ABI). mtime is never the sole validity
+check.
+
+#### How hit is decided
+
+```text
+fp_now = fingerprint_module_recursive(M)
+read M/__litex_knowledge_base__/manifest.json
+  missing / unreadable / abi mismatch     → miss
+  manifest.fingerprint != fp_now          → miss   (sources or deps changed)
+  export count ≠ litex.config [export]    → miss
+  definitions.json unloadable / corrupt   → miss
+  otherwise                               → hit → load + remap; skip cold exec
+```
+
+One line: **hit = same fingerprint as last successful cold write, and the
+cache still loads cleanly.**
+
+Do **not** write on: cache hit; soft Fail / FailToImport / SessionError;
+partial export failure.
+
+### 6. Remap on every load (required)
+
+A KB blob is a **frozen session view**. Loading into another Runtime must look
+as if M were cold-built **in this session**. Two families only:
+
+**A. GlobalIds (per-counter delta)**
+
+```text
+delta_k = runtime.now_k - cached_enter_k
+every id of kind k in the product  += delta_k
+after each export: cursor = cached_leave + deltas
+finally: runtime.global_ids = remapped leave of last export
+```
+
+Kinds: `FactId`, `WellDefinednessId`, `PropRewritePropertyId`, `IdentifierId`.
+Watermarks in the manifest are **KB-owned u64 snapshots** (`GlobalIdsSnapshot`);
+`GlobalIds::to_u64s` / `from_u64s` bridge Runtime without exposing private fields
+elsewhere.
+
+**B. `global_mod_id` (path table)**
+
+Manifest stores `old_mod_id → module path`. Load builds
+`old_mod_id → new_mod_id` via this session’s `path_to_mod_id`. Rewrite
+`WithModAndExportFileId` (and any other mod-carrying cites in the def subset).
+
+**Do not remap `export_file_id`.** It is that module’s `[export]` order; if
+exports change, fingerprint must miss and rebuild.
+
+### 7. Outside-KB surface (minimal)
+
+The **only** intentional non-KB call site for the cache policy is
+`run_import_module` (plus tiny `GlobalIds` watermark helpers on Runtime).
+Do not scatter write/hit logic into `execute/` or `module_manager/`.
+
+### 8. Acceptance
+
+| Test | What it proves |
+|------|----------------|
+| `knowledge_base::unit_tests::*` | Codecs, fingerprint, write/mount remap |
+| `run_module::tests::run_project_kb_cache_write_then_hit_cross_mod` | Cold writes lkb; second `-r` hits; `by def` / `release thm` / `by thm` / `release obj def` still succeed; lib export not re-exec’d |
+
+```bash
+cargo test -p litex-lang --lib \
+  new_pipeline::run_module::tests::run_project_kb_cache_write_then_hit_cross_mod \
+  -- --exact
+```
+
+### 9. Non-goals / deferred
+
+- Full `ExecEnv` blob (facts, WD, rewrite indexes)
+- Caching **root** exports
+- Remaining identifier tags (case/induc/exist!, trust, …), template, strategy, algo
+- Silent field drops (unsupported → `KbCodecError::Unsupported`)
+- User-edited KB as a library
+
+---
+
+## Package layout
 
 | File | Owns |
 |------|------|
@@ -24,103 +170,57 @@ Companion packages:
 | `json_mini.rs` | Zero-dep JSON `Value` + parse/stringify |
 | `def_prop_codec.rs` | `DefPropStmt` + shared AST wire helpers |
 | `def_abstract_prop_codec.rs` | `DefAbstractPropStmt` |
-| `def_thm_codec.rs` | `DefThmStmt` (empty `prove_process` only) |
+| `def_thm_codec.rs` | `DefThmStmt` (empty `prove_process` on wire) |
 | `stored_identifier_codec.rs` | `StoredIdentifierDefinition` MVP tags |
 | `axiom_codec.rs` | `AxiomStmt` |
 | `def_struct_codec.rs` | `DefStructStmt` |
-| `definitions_memory_codec.rs` | One export's `DefinitionMemory` subset |
+| `definitions_memory_codec.rs` | One export’s `DefinitionMemory` subset |
 | `fingerprint.rs` | Content-addressed module fingerprint |
-| `manifest.rs` | `__litex_knowledge_base__/manifest.json` |
-| `remap.rs` | GlobalIds deltas + `global_mod_id` remap |
+| `manifest.rs` | `manifest.json` + `GlobalIdsSnapshot` |
+| `remap.rs` | Apply GlobalIds deltas + `global_mod_id` table |
 | `mount.rs` | `write_module_kb` / `try_mount_module` |
-| `paths.rs` | On-disk path helpers + `KB_ABI` |
+| `import_cache.rs` | Fingerprint tree, hit helpers, cold write-back, `ExecEnv` from mounted defs |
+| `paths.rs` | On-disk paths + `KB_ABI` |
 | `README.md` | This contract |
 
-White-box tests live under
-`tests/unit/new_pipeline/knowledge_base/` (see that folder’s README), loaded by
-`#[cfg(test)]` from this `mod.rs`. **Human-facing goldens and `.lit` sources**
-live under `examples/new_pipeline/knowledge_base/`.
+White-box tests: `tests/unit/new_pipeline/knowledge_base/` (loaded via
+`#[cfg(test)]`). Codec goldens / `.lit` surfaces:
+`examples/new_pipeline/knowledge_base/`.
 
-Public API:
+### Public API (high level)
 
 | Fn | Role |
 |----|------|
-| `store_def_prop` / `load_def_prop` / file IO | `DefPropStmt` |
-| `store_def_abstract_prop` / `load_…` / file IO | `DefAbstractPropStmt` |
-| `store_def_thm` / `load_…` / file IO | `DefThmStmt` |
-| `store_stored_identifier` / `load_…` / file IO | `StoredIdentifierDefinition` |
-| `store_axiom` / `load_…` / file IO | `AxiomStmt` |
-| `store_def_struct` / `load_…` / file IO | `DefStructStmt` |
-| `store_definition_memory` / `load_…` / file IO | one export `DefinitionMemory` subset |
-| `compute_fingerprint` | content-addressed fingerprint |
-| `write_module_kb` | write `__litex_knowledge_base__/` |
-| `try_mount_module` | fingerprint check + load + remap |
-| `remap_definition_memory` / `RemapPlan` | id / mod_id rewrite |
+| per-kind `store_*` / `load_*` | Single definition codecs |
+| `store_definition_memory` / `load_…` | One export `DefinitionMemory` |
+| `compute_fingerprint` / `fingerprint_module_recursive` | Cache key |
+| `write_module_kb` / `try_mount_module` | Disk write / load+remap |
+| `try_hit_import_cache` / `write_import_cache_after_cold` | Import cache helpers |
+| `exec_env_from_mounted_export` | Build finished-export `ExecEnv` for record |
+| `remap_definition_memory` / `RemapPlan` | Id rewrite |
 
-### Codec roadmap (definitions)
+### Codec roadmap
 
 | Priority | Kind | Status |
 |----------|------|--------|
-| 1 | `def_prop` | done |
-| 2 | `def_abstract_prop` | done |
-| 3 | `def_thm` | done (MVP: empty prove_process; Stmt body deferred) |
-| 4 | `stored_identifier` | done (LetObj, HaveObjEqual, HaveObjInNonemptySetOrParamType, HaveFnEqual) |
-| 5 | `axiom` | done (codec; exec is separate) |
-| 6 | `def_struct` | done (fields + optional `equivalent_facts` / param_def) |
-| 7 | mount MVP | done (**definitions-only** product; see below) |
-| next | remaining have-fn tags; template; full ExecEnv blob; `run_import` wiring | planned |
-
-Implementation may lag later sections. Wiring into `run_import_module` comes
-after format / fingerprint / remap contracts are fixed — and that wiring lives
-outside this package (Runtime / module_manager), not here.
+| 1–6 | prop / abstract_prop / thm / identifiers / axiom / struct | done (see subset limits) |
+| 7 | mount + import hook | done (always on) |
+| next | more have-fn tags; template; fuller Obj/Fact; optional full ExecEnv | planned |
 
 ---
 
-## Mount MVP (definitions-only, in-package)
+## Import hook (detail)
 
-**Decision (this folder):** on-disk product is **per-export `DefinitionMemory`**,
-not a full `ExecEnv`. Matches the importer consumer contract (defs / release /
-thm surface). Facts / WD are omitted until a later full-env blob is justified.
-
-### On-disk layout
+KB load/write is always attempted for imported modules.
 
 ```text
-<module_root>/__litex_knowledge_base__/
-  manifest.json
-  exports/
-    0/definitions.json
-    1/definitions.json
-    …
+import M
+  → recurse deps
+  → mount_module
+  → fingerprint + try_hit_import_cache
+       hit  → install remapped DefinitionMemory into finished exports; skip exec
+       miss → cold run_export_file… → write_import_cache_after_cold (best-effort)
 ```
-
-`manifest.json` stores: `abi`, `fingerprint`, `self_mod_id`, `mod_id_to_path`,
-and per-export name / relative path / GlobalIds enter+leave watermarks
-(**KB-owned u64 snapshots** — does not read Runtime private fields).
-
-### API rhythm (caller-owned)
-
-```text
-cold success
-  → compute_fingerprint(...)
-  → write_module_kb(module_root, fp, self_mod_id, mod_id_to_path, exports)
-
-later import
-  → fp' = compute_fingerprint(...)
-  → try_mount_module(module_root, fp', now_snapshot, path_to_new_mod_id)
-       Ok(MountedModule)  → caller inserts remapped DefinitionMemory into
-                            live ImportedModule / finished export slots
-       Err(KbMountMiss)   → cold run_import_module, then write_module_kb
-```
-
-`try_mount_module` applies:
-
-1. GlobalIds deltas (`now - cached_enter` per counter, advancing cursor across
-   exports like a cold build).
-2. `global_mod_id` remap via `mod_id_to_path` ∩ `path_to_new_mod_id`.
-
-This package **does not** call `GlobalModuleManager` or mutate `Runtime` /
-`ExecEnv`. Mount here means: produce a remapped product ready for a future
-session owner to install.
 
 ---
 
@@ -139,7 +239,7 @@ cold exec_def_prop
 
 later
   → load_def_prop / read_def_prop  →  DefPropStmt
-  → (future) GlobalIds + global_mod_id remap
+  → GlobalIds + global_mod_id remap (on mount)
   → insert predicate_definitions[name]
 ```
 
@@ -206,7 +306,7 @@ path). `StandaloneFile` / display paths live on `Runtime.current_file`.
 | Area | Supported now |
 |------|----------------|
 | `ParamType` | `Set` / `NonemptySet` / `FiniteSet` / `Obj` |
-| `Obj` | `Identifier` (all three forms), `Literal` (Number/i/e/pi), `StandardSet`, `FnSet`, `AnonymousFn` |
+| `Obj` | `Identifier` (all three forms), `Literal` (Number/i/e/pi), `StandardSet`, `FnSet`, `AnonymousFn`, arithmetic `Add`/`Sub`/`Mul`/`Div`/`Neg` |
 | `Fact` | `AtomicFact`, `ForallFact` (then-clause: atomic only for now) |
 | `AtomicFact` | order/equality compares + `In` / `NotIn` (and their `Not*` compare forms) |
 | `QuantifierFreeFact` | atomic (for FnSet / set-bound dom) |
@@ -216,9 +316,8 @@ when real props need them; do not silently drop fields.
 
 ### Acceptance
 
-Unit tests in `def_prop_codec.rs`: `is_pos`-shaped `DefPropStmt` →
-`store_def_prop` → `load_def_prop` → `PartialEq`; plus temp-file
-`write_def_prop` / `read_def_prop`.
+Unit tests under `tests/unit/new_pipeline/knowledge_base/`: round-trip +
+example goldens; `LITEX_DUMP_KB_FIXTURES=1` regenerates goldens.
 
 ---
 
@@ -229,34 +328,30 @@ placed beside a module’s `litex.config` (same idea as `__pycache__` / `target/
 
 | | |
 |--|--|
-| **Who writes it** | Litex, after successfully building that import module |
-| **Who reads it** | Later `-r` / import of the same module, when fingerprint is still valid |
-| **What it stores** | The module product: finished export envs (and manifest / fingerprint), not raw `.lit` text as the source of truth |
+| **Who writes it** | Litex, after successfully building that import module (when cache enabled) |
+| **Who reads it** | Later `-r` / import of the same module, when fingerprint still matches |
+| **What it stores** | Manifest + per-export **definitions** (MVP); not raw `.lit` as source of truth |
 | **What it is not** | Not a proof library users edit by hand; not a substitute for sources; not allowed to change math when hit |
 
 Sources + `litex.config` remain authoritative. If anything in the fingerprint
-set changes (or the KB ABI / kernel contract bumps), the artifact is ignored
-and the module is rebuilt, then the directory is updated again.
-
-Exact file names inside `__litex_knowledge_base__/` (e.g. binary blob vs JSON
-projection) are still design-open; this README only fixes the **role** of the
-directory versus this Rust package.
+set changes (or `KB_ABI` bumps), the artifact is ignored and the module is
+rebuilt, then the directory is updated again.
 
 ---
 
 ## Observation: what importers actually read from a finished export env
 
-Why store an import module’s `ExecEnv` at all? So **other** modules that
-`import` it can resolve `M::F::…` without re-running that package.
+Why cache an import module’s product? So **other** modules that `import` it can
+resolve `M::F::…` without re-running that package.
 
 **Consumer contract (current `new_pipeline` lookup paths):**
 
 | Used across finished export envs? | What |
 |-----------------------------------|------|
-| **Yes** | `definitions` — especially `theorem_definitions`, `predicate_definitions`, `abstract_predicate_definitions`, and `identifiers` (release / expand-by-def) |
+| **Yes** | `definitions` — theorems, props, abstract props, identifiers (release / expand-by-def), axioms, structs, … |
 | **No** | `facts` (known-fact indexes / `facts_by_id` search) |
 | **No** | `well_defined_objects` as a cross-module known-WD library |
-| **No** | `prop_rewrite_properties` / most `special_object_properties` walks (those stay on the **live** exec-env stack) |
+| **No** | `prop_rewrite_properties` / most `special_object_properties` walks (live exec-env stack only) |
 
 Code anchors: qualified def lookup and release go through
 `finished_export_exec_env` → `definitions` (`env_stack_lookup`,
@@ -273,15 +368,8 @@ So for an **importer**:
 - Qualified identifiers are treated as already-resolved for object WD; the
   importer does not mine the foreign WD table.
 
-Known facts inside an export env matter when **building that file** (and for
-a full cold-run isomorphic product). They are **not** the API surface for
-later `import` consumers.
-
-**lkb implication:** the *motivation* for caching import products is this
-definition / release / thm surface. MVP still prefers storing a full
-`ExecEnv` per export so a cache hit matches cold `run_import_module`
-shape; definitions-only blobs remain a possible later optimization if this
-consumer contract is frozen and measured.
+**lkb implication:** MVP caches **definitions-only**. A later full-`ExecEnv`
+blob remains optional if cold-isomorphism for facts/WD is ever required.
 
 ---
 
@@ -291,53 +379,30 @@ Same **frequency model** as Python `__pycache__`: check on import (and on
 `-r` while building deps); miss or stale → rebuild; success → write back.
 Difference from CPython: **staleness is content-addressed**, not mtime-only.
 
-### Write-back (update / create `__litex_knowledge_base__`)
+### Write-back
 
 | Rule | |
 |------|--|
-| **When** | Every time an **imported** module is **successfully** built in-session |
-| **Paths** | `-r` via `run_import_module`, and `-f` / `-e` / REPL import preload that cold-runs or dirty-rebuilds the same |
-| **Create** | No lkb dir / artifact yet → write after success |
-| **Overwrite** | Artifact existed but this run rebuilt the module → replace with the new product |
-| **Do not write** | Cache **hit** (load only); soft Fail / FailToImport / SessionError; partial export failure |
+| **When** | Imported module **successfully** cold-built |
+| **Create / overwrite** | Missing or rebuilt → write/replace |
+| **Do not write** | Cache hit; soft Fail / FailToImport / SessionError; partial export failure; Unsupported encode (best-effort skip) |
 
-MVP: write for **imported packages** only. Root’s own exports stay cold-run
-each time unless a later decision extends caching.
-
-### Dirty / must rebuild (not mtime-alone)
+### Dirty / must rebuild
 
 | Rule | |
 |------|--|
-| **Authority** | Content-addressed **fingerprint** (this module’s `.lit` + `litex.config`, transitive deps, std, Litex kernel / KB ABI) |
-| **Hit** | Fingerprint matches → load + remap; skip re-`exec_stmt` for that module’s exports |
-| **Miss** | Missing artifact, fingerprint mismatch, or unloadable/corrupt → cold `run_import_module` for that module, then write-back on success |
-| **mtime** | Optional fast reject only; **never** the sole validity check |
-
-Mental loop:
-
-```text
-import / -r reaches module M
-  → fingerprint(M) vs lkb?
-      match → load
-      else  → run exports → on success write/update lkb
-```
+| **Authority** | Fingerprint (this module’s `.lit` + `litex.config`, transitive deps, `KB_ABI`) |
+| **Hit** | Match → load + remap; skip re-`exec_stmt` for that module’s exports |
+| **Miss** | Missing / mismatch / corrupt / ABI mismatch → cold then write-back |
+| **mtime** | Never the sole validity check |
 
 ---
 
 ## Locked: load remap (session view → new Runtime)
 
-A stored module product is a **frozen session view** of that import’s finished
-export `ExecEnv`s. Loading into another Runtime must make citations and indexes
-look as if the module had been cold-built in *this* session.
-
-There are **two semantic remap families** (and no third kind of session index
-inside `ExecEnv` today):
+See **Design locked §6** for the short form. Detail:
 
 ### 1. Monotonic `GlobalIds` (uniform per-counter delta)
-
-`ExecEnv` records `global_ids_at_enter` / `global_ids_at_leave`. On load, for
-each counter (`FactId`, `WellDefinednessId`, `IdentifierId`, and
-`PropRewritePropertyId` if it ever appears in env data):
 
 ```text
 delta = runtime.now - cached_enter
@@ -345,44 +410,20 @@ every id of that kind in the env  += delta
 runtime.now  = cached_leave + delta
 ```
 
-Example: saved enter fact=90, load when runtime fact=100 → add 10 to every
-`FactId` in that product; then advance the live counter past the remapped
-leave.
+Multi-export modules advance a **cursor** like cold build: each export remaps
+against the current cursor, then cursor becomes that export’s remapped leave.
 
-Same idea for the other counters; deltas are **per counter**, taken from the
-enter/leave snapshots (not one magic number for all kinds).
-
-### 2. `global_mod_id` on qualified names (path-anchored table)
-
-`AtomicName::WithModAndExportFileId` and `IdentifierObj::WithModAndExportFileId`
-carry a **this-run** `global_mod_id`. Numbers are not stable across sessions.
-
-On load, remap with a table built from **module path** (not “add a constant”):
+### 2. `global_mod_id` (path-anchored table)
 
 | In the blob | Meaning | New value |
 |-------------|---------|-----------|
 | self’s old mod id | this imported module | this session’s `path_to_mod_id[self]` |
 | dep’s old mod id | an import that module used | this session’s `path_to_mod_id[dep]` |
 
-Example: saved `m2::f3::T`, now this package is mod 5 → every such occurrence
-becomes `m5::f3::T`. A cite that was `m10::…` for a dep that is now mod 8
-becomes `m8::…`.
+**`export_file_id` does not remap.** Layout change ⇒ fingerprint miss ⇒ rebuild.
 
-**`export_file_id` does not remap** on a valid load: it is that module’s
-`[export]` order. If exports change, the fingerprint must miss and the module
-is rebuilt (never load a layout-mismatched blob).
+### Implementation note
 
-`WithExportFileId` (no mod field) is “current module + export index”; the index
-stays; only the mount slot of the whole product changes.
-
-The lkb manifest must therefore store enough to rebuild the old
-`mod_id → path` map used when the blob was written (so load can invert to
-`old_mod_id → new_mod_id`).
-
-### Implementation note (not a third semantic family)
-
-Plain `IdentifierId` and qualified `mN::fK::…` are embedded in `ObjIR` /
-index keys (`#id#name`, `m2::f3::…`). Remap must **rewrite AST and rebuild
-`HashMap` keys** (`facts_by_id`, WD maps, `special_object_properties`,
-equality-class indexes, …). That is the same two families above, applied
-through IR — not a separate kind of stored identity.
+Plain `IdentifierId` and qualified `mN::fK::…` sit inside AST (and would sit in
+IR keys if a full env were cached). Remap **rewrites AST** for the definitions
+subset. Full-env remaps would also rebuild `HashMap` keys — same two families.

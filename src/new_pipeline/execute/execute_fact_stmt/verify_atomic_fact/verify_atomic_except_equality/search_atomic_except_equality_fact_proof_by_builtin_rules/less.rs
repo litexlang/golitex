@@ -1,6 +1,11 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact, LessFact};
 use crate::new_pipeline::ast::obj::{Add, ArithmeticOperator, Mul, Obj, Sub, TrigOperator};
+use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::from_known_in_signed_standard_set::{
+    FromKnownInNegativeStandardSetBuiltinRuleProof, FromKnownInPositiveStandardSetBuiltinRuleProof,
+};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::{is_zero_obj, zero_obj};
+use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::order_flip_mul_minus_one::OrderFlipMulMinusOneToLessBuiltinRuleProof;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::order_sign_from_literal_bound::OrderSignFromPositiveLiteralBoundBuiltinRuleProof;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::predecessor_helpers::is_number_value;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::trig_bounds::{
@@ -112,6 +117,18 @@ pub enum LessFactSearchProofByBuiltinRule {
     // Right multiplication by a positive factor preserves strict order.
     // Example: known `0 < c` and `a < b` prove `a * c < b * c`.
     MulRightPositiveMonotoneStrict(MulRightPositiveMonotoneStrictBuiltinRuleProof),
+    // Positive standard-set membership implies `0 < x`.
+    // Example: after `have a R+`, prove `0 < a`.
+    FromKnownInPositiveStandardSet(FromKnownInPositiveStandardSetBuiltinRuleProof),
+    // Negative standard-set membership implies `x < 0`.
+    // Example: after `have a R-`, prove `a < 0`.
+    FromKnownInNegativeStandardSet(FromKnownInNegativeStandardSetBuiltinRuleProof),
+    // Sign from a known positive literal lower bound.
+    // Example: known `a >= 1` proves `0 < a`.
+    OrderSignFromPositiveLiteralBound(OrderSignFromPositiveLiteralBoundBuiltinRuleProof),
+    // Order flip: `(-1)*x < 0` from known `x > 0`.
+    // Example: trust a > 0; (-1) * a < 0.
+    OrderFlipMulMinusOne(OrderFlipMulMinusOneToLessBuiltinRuleProof),
 }
 
 // Payload: both evaluated normals with left_normal < right_normal.
@@ -267,6 +284,26 @@ impl Runtime {
         fact: &LessFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessFactSearchProofByBuiltinRule>> {
+        if let Some(proof) = self.try_from_known_in_positive_standard_set(fact) {
+            return Ok(Some(
+                LessFactSearchProofByBuiltinRule::FromKnownInPositiveStandardSet(proof),
+            ));
+        }
+        if let Some(proof) = self.try_from_known_in_negative_standard_set(fact) {
+            return Ok(Some(
+                LessFactSearchProofByBuiltinRule::FromKnownInNegativeStandardSet(proof),
+            ));
+        }
+        if let Some(proof) = self.try_order_sign_from_positive_literal_bound(fact) {
+            return Ok(Some(
+                LessFactSearchProofByBuiltinRule::OrderSignFromPositiveLiteralBound(proof),
+            ));
+        }
+        if let Some(proof) = self.try_order_flip_mul_minus_one_to_less(fact) {
+            return Ok(Some(LessFactSearchProofByBuiltinRule::OrderFlipMulMinusOne(
+                proof,
+            )));
+        }
         match (&fact.left, &fact.right) {
             // `x - 1 < x`
             (

@@ -1,4 +1,6 @@
 mod closed_numeric_expr;
+#[cfg(test)]
+mod closed_numeric_expr_tests;
 mod decimal_arithmetic;
 mod decimal_comparison;
 mod denominator_clearing;

@@ -1,0 +1,2 @@
+# Node: equal.ByBuiltinRule.ClosedRangeLiteralExpansion
+closed_range(1, 3) = {1, 2, 3}

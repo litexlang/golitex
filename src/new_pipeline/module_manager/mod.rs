@@ -10,6 +10,9 @@ mod litex_config;
 mod mount;
 mod parse_litex_config;
 
+#[cfg(test)]
+mod parse_litex_config_tests;
+
 pub use export_file::ExportFileAndItsExecEnv;
 pub use global_module_manager::GlobalModuleManager;
 pub use imported_module::ImportedModule;

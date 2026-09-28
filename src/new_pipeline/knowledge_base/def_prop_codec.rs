@@ -13,7 +13,8 @@ use crate::new_pipeline::ast::fact::{
 use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::names::BoundName;
 use crate::new_pipeline::ast::obj::{
-    AnonymousFn, FnSet, FunctionSpace, IdentifierObj, Literal, Number, Obj, StandardSet,
+    Add, AnonymousFn, ArithmeticOperator, Div, FnSet, FunctionSpace, IdentifierObj, Literal, Mul,
+    Neg, Number, Obj, StandardSet, Sub,
 };
 use crate::new_pipeline::ast::param::{
     FiniteSet, NonemptySet, ParamType, Set, SetBoundParameterGroup, SetBoundParameterList,
@@ -605,6 +606,40 @@ pub(crate) fn encode_obj(obj: &Obj) -> Result<JsonValue, KbCodecError> {
             ("tag".into(), JsonValue::String("FnSet".into())),
             ("fn_set".into(), encode_fn_set(fn_set)?),
         ])),
+        Obj::ArithmeticOperator(ArithmeticOperator::Add(Add { left, right })) => {
+            Ok(JsonValue::object_from(vec![
+                ("tag".into(), JsonValue::String("Add".into())),
+                ("left".into(), encode_obj(left)?),
+                ("right".into(), encode_obj(right)?),
+            ]))
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left, right })) => {
+            Ok(JsonValue::object_from(vec![
+                ("tag".into(), JsonValue::String("Sub".into())),
+                ("left".into(), encode_obj(left)?),
+                ("right".into(), encode_obj(right)?),
+            ]))
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul { left, right })) => {
+            Ok(JsonValue::object_from(vec![
+                ("tag".into(), JsonValue::String("Mul".into())),
+                ("left".into(), encode_obj(left)?),
+                ("right".into(), encode_obj(right)?),
+            ]))
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Div(Div { left, right })) => {
+            Ok(JsonValue::object_from(vec![
+                ("tag".into(), JsonValue::String("Div".into())),
+                ("left".into(), encode_obj(left)?),
+                ("right".into(), encode_obj(right)?),
+            ]))
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Neg(Neg { arg })) => {
+            Ok(JsonValue::object_from(vec![
+                ("tag".into(), JsonValue::String("Neg".into())),
+                ("arg".into(), encode_obj(arg)?),
+            ]))
+        }
         other => Err(KbCodecError::Unsupported(format!(
             "Obj variant `{other:?}` (kb wire subset)"
         ))),
@@ -630,6 +665,25 @@ pub(crate) fn decode_obj(value: &JsonValue) -> Result<Obj, KbCodecError> {
         "FnSet" => Ok(Obj::FunctionSpace(FunctionSpace::FnSet(decode_fn_set(
             JsonValue::get(map, "fn_set")?,
         )?))),
+        "Add" => Ok(Obj::ArithmeticOperator(ArithmeticOperator::Add(Add {
+            left: Box::new(decode_obj(JsonValue::get(map, "left")?)?),
+            right: Box::new(decode_obj(JsonValue::get(map, "right")?)?),
+        }))),
+        "Sub" => Ok(Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub {
+            left: Box::new(decode_obj(JsonValue::get(map, "left")?)?),
+            right: Box::new(decode_obj(JsonValue::get(map, "right")?)?),
+        }))),
+        "Mul" => Ok(Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
+            left: Box::new(decode_obj(JsonValue::get(map, "left")?)?),
+            right: Box::new(decode_obj(JsonValue::get(map, "right")?)?),
+        }))),
+        "Div" => Ok(Obj::ArithmeticOperator(ArithmeticOperator::Div(Div {
+            left: Box::new(decode_obj(JsonValue::get(map, "left")?)?),
+            right: Box::new(decode_obj(JsonValue::get(map, "right")?)?),
+        }))),
+        "Neg" => Ok(Obj::ArithmeticOperator(ArithmeticOperator::Neg(Neg {
+            arg: Box::new(decode_obj(JsonValue::get(map, "arg")?)?),
+        }))),
         other => Err(KbCodecError::Unsupported(format!(
             "Obj tag `{other}` (kb wire subset)"
         ))),

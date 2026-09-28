@@ -1,0 +1,4 @@
+# Node: equal.ByBuiltinRule.ReOfRealEmbedding
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/re_of_real_embedding.lit
+
+re(1) = 1

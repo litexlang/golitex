@@ -17,8 +17,16 @@ examples/new_pipeline/knowledge_base/
   def_struct/               DefStructStmt ↔ JSON (fields; optional laws)
 ```
 
-Mount / fingerprint / remap APIs are exercised by Rust unit tests under
-`tests/unit/.../knowledge_base/mount/` (temp dirs), not by a golden tree here.
+Mount / fingerprint / remap: Rust unit tests under
+`tests/unit/.../knowledge_base/mount/`.
+
+Import cache E2E (cold write → hit → `by def` / `release thm` / `by thm` /
+`release obj def`):  
+`run_module::tests::run_project_kb_cache_write_then_hit_cross_mod`  
+(not a checked-in `__litex_knowledge_base__/`).
+
+Design contract:  
+[`src/new_pipeline/knowledge_base/README.md`](../../../src/new_pipeline/knowledge_base/README.md).
 
 White-box Rust tests live under
 `tests/unit/new_pipeline/knowledge_base/` and **load goldens from this

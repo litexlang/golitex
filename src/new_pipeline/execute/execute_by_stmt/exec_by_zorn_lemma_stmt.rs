@@ -10,7 +10,7 @@ use crate::new_pipeline::ast::fact::{
     NormalAtomicFact, OrFact, PlainExistFact, QuantifierFreeFact,
 };
 use crate::new_pipeline::ast::line_file::SourceLine;
-use crate::new_pipeline::ast::names::AtomicName;
+use crate::new_pipeline::ast::names::{AtomicName, BoundName};
 use crate::new_pipeline::ast::obj::{IdentifierObj, Obj, PowerSet, SetOperator};
 use crate::new_pipeline::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
 use crate::new_pipeline::ast::stmt::{ReleaseZornLemmaStmt, DefPropStmt};
@@ -93,67 +93,169 @@ pub fn exec_release_zorn_lemma_stmt(
     ))
 }
 
-fn validate_zorn_props(runtime: &Runtime, stmt: &ReleaseZornLemmaStmt) -> Result<(), String> {
+fn validate_zorn_props(runtime: &mut Runtime, stmt: &ReleaseZornLemmaStmt) -> Result<(), String> {
     let relation = plain_prop_name(&stmt.prop_name);
-    let Some(relation_def) = runtime.def_prop_visible_in_stack(relation) else {
+    let relation_arity = if let Some(abs) = runtime.def_abstract_prop_visible_in_stack(relation) {
+        abs.params.len()
+    } else if let Some(def) = runtime.def_prop_visible_in_stack(relation) {
+        prop_arity(def)
+    } else {
         return Err(format!(
-            "release zorn_lemma: relation `{relation}` must be a user-defined prop"
+            "release zorn_lemma: relation `{relation}` must be a user-defined prop or abstract_prop"
         ));
     };
-    if prop_arity(relation_def) != 2 {
+    if relation_arity != 2 {
         return Err(format!(
             "release zorn_lemma: relation `{relation}` must be a binary user-defined prop"
         ));
     }
 
+    validate_upper_bound_prop(runtime, stmt)?;
+    validate_maximal_prop(runtime, stmt)?;
+    Ok(())
+}
+
+fn validate_upper_bound_prop(
+    runtime: &mut Runtime,
+    stmt: &ReleaseZornLemmaStmt,
+) -> Result<(), String> {
     let ub_name = plain_prop_name(&stmt.upper_bound_prop_name);
-    let Some(ub_def) = runtime.def_prop_visible_in_stack(ub_name) else {
+    let Some(ub_def) = runtime.def_prop_visible_in_stack(ub_name).cloned() else {
         return Err(format!(
             "release zorn_lemma: upper-bound `{ub_name}` must be a concrete named prop"
         ));
     };
-    if prop_arity(ub_def) != 2 {
+    if prop_arity(&ub_def) != 2 {
         return Err(format!(
             "release zorn_lemma: upper-bound `{ub_name}` must have two parameters `(c power_set(S), u S)`"
         ));
     }
-    let expected_ub = [
+    let expected_types = [
         Obj::SetOperator(SetOperator::PowerSet(PowerSet {
             set: Box::new(stmt.set.clone()),
         })),
         stmt.set.clone(),
     ];
-    if !prop_header_types_match(ub_def, &expected_ub) {
+    if !prop_header_types_match(&ub_def, &expected_types) {
         return Err(format!(
             "release zorn_lemma: upper-bound `{ub_name}` must bind `(c power_set(S), u S)`"
         ));
     }
-    if !matches!(ub_def.iff_facts.as_slice(), [Fact::ForallFact(_)]) {
+    let Some((c, u)) = prop_param_pair(&ub_def) else {
+        return Err(format!(
+            "release zorn_lemma: upper-bound `{ub_name}` must bind `(c power_set(S), u S)`"
+        ));
+    };
+    let [Fact::ForallFact(actual)] = ub_def.iff_facts.as_slice() else {
         return Err(format!(
             "release zorn_lemma: upper-bound `{ub_name}` must have exactly a forall definition `forall x c: ${}(x, u)`",
             plain_prop_name(&stmt.prop_name)
         ));
+    };
+    let Some(x) = single_forall_binder(actual) else {
+        return Err(format!(
+            "release zorn_lemma: upper-bound `{ub_name}` must have exactly a forall definition `forall x c: ${}(x, u)`",
+            plain_prop_name(&stmt.prop_name)
+        ));
+    };
+    // Expected uses the definition's own binder id so IR compares without alpha_normalize.
+    let expected = ForallFact {
+        fact_id: runtime.global_ids.allocate_fact_id(),
+        typed_parameters: TypedParameterList {
+            groups: vec![TypedParameterGroup {
+                params: vec![x.clone()],
+                param_type: ParamType::Obj(Obj::Identifier(IdentifierObj::from_bound_name(&c))),
+            }],
+        },
+        dom_facts: vec![],
+        then_facts: vec![ExistOrAndChainAtomicFact::AtomicFact(prop_atom(
+            runtime,
+            &stmt.prop_name,
+            vec![
+                Obj::Identifier(IdentifierObj::from_bound_name(&x)),
+                Obj::Identifier(IdentifierObj::from_bound_name(&u)),
+            ],
+            &stmt.line_file,
+        ))],
+        line_file: Some(stmt.line_file.clone()),
+    };
+    if actual.ir() != expected.ir() {
+        return Err(format!(
+            "release zorn_lemma: upper-bound `{ub_name}` must have exactly the definition `forall x c: ${}(x, u)`",
+            plain_prop_name(&stmt.prop_name)
+        ));
     }
+    Ok(())
+}
 
+fn validate_maximal_prop(
+    runtime: &mut Runtime,
+    stmt: &ReleaseZornLemmaStmt,
+) -> Result<(), String> {
     let max_name = plain_prop_name(&stmt.maximal_prop_name);
-    let Some(max_def) = runtime.def_prop_visible_in_stack(max_name) else {
+    let Some(max_def) = runtime.def_prop_visible_in_stack(max_name).cloned() else {
         return Err(format!(
             "release zorn_lemma: maximality `{max_name}` must be a concrete named prop"
         ));
     };
-    if prop_arity(max_def) != 1 {
+    if prop_arity(&max_def) != 1 {
         return Err(format!(
             "release zorn_lemma: maximality `{max_name}` must have one parameter `(m S)`"
         ));
     }
-    if !prop_header_types_match(max_def, &[stmt.set.clone()]) {
+    if !prop_header_types_match(&max_def, &[stmt.set.clone()]) {
         return Err(format!(
             "release zorn_lemma: maximality `{max_name}` must bind `(m S)`"
         ));
     }
-    if !matches!(max_def.iff_facts.as_slice(), [Fact::ForallFact(_)]) {
+    let Some(m) = prop_param_single(&max_def) else {
+        return Err(format!(
+            "release zorn_lemma: maximality `{max_name}` must bind `(m S)`"
+        ));
+    };
+    let [Fact::ForallFact(actual)] = max_def.iff_facts.as_slice() else {
         return Err(format!(
             "release zorn_lemma: maximality `{max_name}` must have exactly a forall definition `forall x S: ${}(m, x) => x = m`",
+            plain_prop_name(&stmt.prop_name)
+        ));
+    };
+    let Some(x) = single_forall_binder(actual) else {
+        return Err(format!(
+            "release zorn_lemma: maximality `{max_name}` must have exactly a forall definition `forall x S: ${}(m, x) => x = m`",
+            plain_prop_name(&stmt.prop_name)
+        ));
+    };
+    let xo = Obj::Identifier(IdentifierObj::from_bound_name(&x));
+    let mo = Obj::Identifier(IdentifierObj::from_bound_name(&m));
+    let expected = ForallFact {
+        fact_id: runtime.global_ids.allocate_fact_id(),
+        typed_parameters: TypedParameterList {
+            groups: vec![TypedParameterGroup {
+                params: vec![x.clone()],
+                param_type: ParamType::Obj(stmt.set.clone()),
+            }],
+        },
+        dom_facts: vec![prop_atom(
+            runtime,
+            &stmt.prop_name,
+            vec![mo.clone(), xo.clone()],
+            &stmt.line_file,
+        )
+        .into()],
+        then_facts: vec![ExistOrAndChainAtomicFact::AtomicFact(
+            EqualFact {
+                fact_id: runtime.global_ids.allocate_fact_id(),
+                left: xo,
+                right: mo,
+                line_file: Some(stmt.line_file.clone()),
+            }
+            .into(),
+        )],
+        line_file: Some(stmt.line_file.clone()),
+    };
+    if actual.ir() != expected.ir() {
+        return Err(format!(
+            "release zorn_lemma: maximality `{max_name}` must have exactly the definition `forall x S: ${}(m, x) => x = m`",
             plain_prop_name(&stmt.prop_name)
         ));
     }
@@ -180,6 +282,43 @@ fn prop_header_types_match(definition: &DefPropStmt, expected: &[Obj]) -> bool {
         }
     }
     actual == expected
+}
+
+fn prop_param_pair(definition: &DefPropStmt) -> Option<(BoundName, BoundName)> {
+    let flat: Vec<_> = definition
+        .typed_parameters
+        .groups
+        .iter()
+        .flat_map(|g| g.params.iter().cloned())
+        .collect();
+    if flat.len() != 2 {
+        return None;
+    }
+    Some((flat[0].clone(), flat[1].clone()))
+}
+
+fn prop_param_single(definition: &DefPropStmt) -> Option<BoundName> {
+    let flat: Vec<_> = definition
+        .typed_parameters
+        .groups
+        .iter()
+        .flat_map(|g| g.params.iter().cloned())
+        .collect();
+    if flat.len() != 1 {
+        return None;
+    }
+    Some(flat[0].clone())
+}
+
+fn single_forall_binder(fact: &ForallFact) -> Option<BoundName> {
+    if fact.typed_parameters.groups.len() != 1 {
+        return None;
+    }
+    let group = &fact.typed_parameters.groups[0];
+    if group.params.len() != 1 {
+        return None;
+    }
+    Some(group.params[0].clone())
 }
 
 fn zorn_obligations(
@@ -418,91 +557,3 @@ fn prop_atom(
     .into()
 }
 
-
-#[cfg(test)]
-mod diag_zorn {
-    use super::*;
-    use crate::new_pipeline::execute::ExecStmtResult;
-    use crate::new_pipeline::launch_command::LaunchCommand;
-    use crate::new_pipeline::runtime::Runtime;
-    use crate::new_pipeline::tokenize::Tokenizer;
-    use crate::new_pipeline::execute::execute_by_stmt::result::{
-        ExecReleaseZornLemmaStmtFailed, ExecReleaseZornLemmaStmtResult,
-    };
-    use crate::new_pipeline::execute::exec_stmt_result::ExecReleaseAndExpandStmtResult;
-
-    fn exec_chunk(runtime: &mut Runtime, code: &str) {
-        let tokens = Tokenizer::new()
-            .tokenize(code, runtime.current_file.clone())
-            .expect("tok");
-        let stmts = runtime.parse(&tokens).expect("parse");
-        for (i, stmt) in stmts.iter().enumerate() {
-            let r = runtime.exec_stmt(stmt).expect("exec");
-            if r.is_failed() {
-                eprintln!("FAILED at stmt index {i}: {}", stmt.ir());
-                match r {
-                    ExecStmtResult::ReleaseAndExpand(
-                        ExecReleaseAndExpandStmtResult::ZornLemma(zr),
-                    ) => match zr {
-                        ExecReleaseZornLemmaStmtResult::Failed(f) => match f {
-                            ExecReleaseZornLemmaStmtFailed::PropInterface(msg) => {
-                                eprintln!("PropInterface: {msg}")
-                            }
-                            ExecReleaseZornLemmaStmtFailed::SetWd(_) => eprintln!("SetWd"),
-                            ExecReleaseZornLemmaStmtFailed::ProofBody(_) => {
-                                eprintln!("ProofBody")
-                            }
-                            ExecReleaseZornLemmaStmtFailed::Obligation { index, .. } => {
-                                eprintln!("Obligation index={index}")
-                            }
-                            ExecReleaseZornLemmaStmtFailed::Store(msg) => {
-                                eprintln!("Store: {msg}")
-                            }
-                        },
-                        _ => eprintln!("zorn Success unexpectedly in fail branch"),
-                    },
-                    other => eprintln!("other failed kind, is_failed={}", other.is_failed()),
-                }
-                panic!("soft fail");
-            }
-        }
-    }
-
-    #[test]
-    fn diag_release_zorn() {
-        let mut runtime = Runtime::new(LaunchCommand::Eval { code: String::new(), session: false, strict: false });
-        let code = r#"
-have S set
-abstract_prop leq(x, y)
-prop upper_bound(c power_set(S), u S):
-    forall x c:
-        $leq(x, u)
-prop maximal(m S):
-    forall x S:
-        $leq(m, x)
-        =>:
-            x = m
-release zorn_lemma: set S, prop leq, prop upper_bound, prop maximal:
-    trust $is_nonempty_set(S)
-    trust:
-        forall x S:
-            $leq(x, x)
-        forall x, y, z S:
-            $leq(x, y)
-            $leq(y, z)
-            =>:
-                $leq(x, z)
-        forall x, y S:
-            $leq(x, y)
-            $leq(y, x)
-            =>:
-                x = y
-        forall c power_set(S):
-            forall x, y c:
-                $leq(x, y) or $leq(y, x)
-            =>:
-                exist u S st {$upper_bound(c, u)}
-"#;
-        exec_chunk(&mut runtime, code);
-    }
-}

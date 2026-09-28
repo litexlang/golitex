@@ -385,4 +385,30 @@ impl GlobalIds {
         self.next_identifier_id = current.add_one();
         current
     }
+
+    /// KB / cache watermarks without exposing typed id fields.
+    pub fn to_u64s(&self) -> (u64, u64, u64, u64) {
+        (
+            self.next_fact_id.value(),
+            self.next_well_definedness_id.value(),
+            self.next_prop_rewrite_property_id.value(),
+            self.next_identifier_id.value(),
+        )
+    }
+
+    pub fn from_u64s(
+        next_fact_id: u64,
+        next_well_definedness_id: u64,
+        next_prop_rewrite_property_id: u64,
+        next_identifier_id: u64,
+    ) -> Self {
+        Self {
+            next_fact_id: FactId::new(next_fact_id),
+            next_well_definedness_id: WellDefinednessId::new(next_well_definedness_id),
+            next_prop_rewrite_property_id: PropRewritePropertyId::new(
+                next_prop_rewrite_property_id,
+            ),
+            next_identifier_id: IdentifierId::new(next_identifier_id),
+        }
+    }
 }

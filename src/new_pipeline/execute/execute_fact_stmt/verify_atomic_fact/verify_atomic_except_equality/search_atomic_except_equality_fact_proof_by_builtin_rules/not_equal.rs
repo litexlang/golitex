@@ -34,14 +34,26 @@ pub enum NotEqualFactSearchProofByBuiltinRule {
     // Mathematical property: `a > b` or `a < b` ⇒ `a != b`.
     // Example: known `x > 0` proves `x != 0`.
     FromKnownStrictOrder(FromKnownStrictOrderBuiltinRuleProof),
+    // Nonzero standard-set membership implies `x != 0`.
+    // Example: after `have a R*`, prove `a != 0`.
+    FromKnownInNonzeroStandardSet(
+        crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::from_known_in_signed_standard_set::FromKnownInNonzeroStandardSetBuiltinRuleProof,
+    ),
     // Cosine is nonzero on the open principal tangent interval.
     // Mathematical property: `-pi/2 < y < pi/2` ⇒ `cos(y) != 0`.
     // Example: after those bounds, prove `cos(y) != 0` for `tan(y)` WD.
     CosNonzeroOnOpenHalfPi(CosNonzeroOnOpenHalfPiBuiltinRuleProof),
+    // Cosine at 0 is nonzero: cos(0) = 1 ≠ 0.
+    // Mathematical property: cos(0) != 0 (used by `tan(0)` WD).
+    // Example: prove `cos(0) != 0`.
+    CosNonzeroAtZero(CosNonzeroAtZeroBuiltinRuleProof),
     // Sine is nonzero on the open principal cotangent interval.
     // Mathematical property: `0 < y < pi` ⇒ `sin(y) != 0`.
     // Example: after those bounds, prove `sin(y) != 0` for `cot(y)` WD.
     SinNonzeroOnOpenPi(SinNonzeroOnOpenPiBuiltinRuleProof),
+    // Sine at pi/2 is nonzero: sin(pi/2) = 1 ≠ 0.
+    // Example: prove `sin(pi/2) != 0` for `cot(pi/2)` WD.
+    SinNonzeroAtHalfPi(SinNonzeroAtHalfPiBuiltinRuleProof),
     // Absolute value is nonzero when the argument is nonzero.
     // Mathematical property: `x != 0` ⇒ `abs(x) != 0`.
     // Example: known `x != 0` proves `abs(x) != 0`.
@@ -105,7 +117,9 @@ pub struct FromKnownStrictOrderBuiltinRuleProof {
 }
 
 pub struct CosNonzeroOnOpenHalfPiBuiltinRuleProof {}
+pub struct CosNonzeroAtZeroBuiltinRuleProof {}
 pub struct SinNonzeroOnOpenPiBuiltinRuleProof {}
+pub struct SinNonzeroAtHalfPiBuiltinRuleProof {}
 
 pub struct AbsNonzeroFromArgBuiltinRuleProof {
     pub arg_nonzero_proof: VerifyFactResult,
@@ -183,6 +197,11 @@ impl Runtime {
                 ),
             ));
         }
+        if let Some(proof) = self.try_from_known_in_nonzero_standard_set(fact) {
+            return Ok(Some(
+                NotEqualFactSearchProofByBuiltinRule::FromKnownInNonzeroStandardSet(proof),
+            ));
+        }
 
         // A — shape
         match (&fact.left, &fact.right) {
@@ -200,6 +219,11 @@ impl Runtime {
             (Obj::TrigOperator(TrigOperator::Cos(Cos { arg })), right)
                 if is_zero_obj(right) =>
             {
+                if is_zero_obj(arg.as_ref()) {
+                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::CosNonzeroAtZero(
+                        CosNonzeroAtZeroBuiltinRuleProof {},
+                    )));
+                }
                 if let Some(proof) = self.cos_nonzero_on_open_half_pi_for_arg(arg.as_ref()) {
                     return Ok(Some(proof));
                 }
@@ -207,6 +231,11 @@ impl Runtime {
             (left, Obj::TrigOperator(TrigOperator::Cos(Cos { arg })))
                 if is_zero_obj(left) =>
             {
+                if is_zero_obj(arg.as_ref()) {
+                    return Ok(Some(NotEqualFactSearchProofByBuiltinRule::CosNonzeroAtZero(
+                        CosNonzeroAtZeroBuiltinRuleProof {},
+                    )));
+                }
                 if let Some(proof) = self.cos_nonzero_on_open_half_pi_for_arg(arg.as_ref()) {
                     return Ok(Some(proof));
                 }
@@ -215,6 +244,13 @@ impl Runtime {
             (Obj::TrigOperator(TrigOperator::Sin(Sin { arg })), right)
                 if is_zero_obj(right) =>
             {
+                if is_half_pi_obj(arg.as_ref()) {
+                    return Ok(Some(
+                        NotEqualFactSearchProofByBuiltinRule::SinNonzeroAtHalfPi(
+                            SinNonzeroAtHalfPiBuiltinRuleProof {},
+                        ),
+                    ));
+                }
                 if let Some(proof) = self.sin_nonzero_on_open_pi_for_arg(arg.as_ref()) {
                     return Ok(Some(proof));
                 }
@@ -222,6 +258,13 @@ impl Runtime {
             (left, Obj::TrigOperator(TrigOperator::Sin(Sin { arg })))
                 if is_zero_obj(left) =>
             {
+                if is_half_pi_obj(arg.as_ref()) {
+                    return Ok(Some(
+                        NotEqualFactSearchProofByBuiltinRule::SinNonzeroAtHalfPi(
+                            SinNonzeroAtHalfPiBuiltinRuleProof {},
+                        ),
+                    ));
+                }
                 if let Some(proof) = self.sin_nonzero_on_open_pi_for_arg(arg.as_ref()) {
                     return Ok(Some(proof));
                 }
@@ -860,4 +903,8 @@ fn is_zero_obj(obj: &Obj) -> bool {
             normalized_value,
         })) if normalized_value == "0"
     ) || objs_equal_by_rational_expression_evaluation(obj, &zero_obj())
+}
+
+fn is_half_pi_obj(obj: &Obj) -> bool {
+    objs_equal_by_rational_expression_evaluation(obj, &half_pi())
 }

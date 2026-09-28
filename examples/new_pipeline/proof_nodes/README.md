@@ -27,7 +27,7 @@ Still open (non-rewrite): empty atomic builtin-rule families (`NormalAtomic` /
 several remaining `Not*`); more exist builtins;
 secondary subset leaves (set-minus / power-set / cart / subset-transitivity);
 MatchingOneArgByOne beyond the traced constructors;
-deeper aggregate (sum split / Fubini / bijective reindex); nested-mod algebra;
+deeper aggregate (sum split / bijective reindex); nested-mod algebra;
 complex `re`/`img` equalities; richer `!=`.
 NotSubset / NotSuperset duality (A7): known `not B $superset A` proves
 `not A $subset B`, and known `not B $subset A` proves `not A $superset B` —
@@ -112,6 +112,38 @@ sum/product single-term; reduce↔sum bridges; pow-of-log inverse — see
 `tuple_component_at_index.lit`, `finite_set_size_*.lit`,
 `sum_single_term.lit`, `reduce_add_zero_equals_sum.lit`,
 `pow_of_log_inverse.lit`, etc.
+Equality BuiltinRule identities (Stage B wave 12):
+union/set_minus decomposition; set_minus∩self; complex `re`/`img`/`C_abs`
+basics; nested mod absorption; sum/product last-term split; finite-set
+sum/product list expansion — see `union_set_minus_decomposition.lit`,
+`set_minus_intersect_self.lit`, `re_of_*.lit`, `img_of_*.lit`,
+`complex_abs_of_imaginary_unit.lit`, `mod_nested_divisible_absorption.lit`,
+`sum_split_last_term.lit`, `product_split_last_term.lit`,
+`finite_set_sum_list_expansion.lit`, `finite_set_product_list_expansion.lit`.
+Equality BuiltinRule identities (Stage B wave 13) + closed trig:
+`e=exp(1)`, `ln(e)=1`; `sin/cos/tan` specials + Pythagorean; complex
+`re/img` on reals and `a+b*i`; `C_abs` on nonnegative/imag-scaled;
+`range`/`closed_range` literal expansion; `power_set` empty/singleton;
+`family_union({})`; empty-factor `cart`; union-over-intersect; set_minus
+chain; constant `fn_range` (literal anonymous ok); `seq`/`finite_seq` as FnSet —
+see `euler_equals_exp_one.lit`, `sin_of_zero.lit`, `pythagorean_identity.lit`,
+`closed_range_literal_expansion.lit`, `seq_equals_fn_on_n.lit`, etc.
+Equality BuiltinRule identities (Stage B wave 14 / Obj P0–P2):
+`index_union/intersect/cart` empty-index + singleton union; `finite_seq(S,0)`;
+obviously-empty set-builder; `cot(pi/2)`; `C_abs(a+b*i)^2`; `exp(a+b)`;
+`log(a^b,c)`; `re/img` of product; trig angle-add; reduce single-term with
+add/0 — see `index_*_empty_index.lit`, `cot_of_half_pi.lit`,
+`complex_abs_squared_of_rect_form.lit`, `exp_of_sum.lit`, `sin_of_sum.lit`,
+`reduce_single_term_with_add_zero.lit`. Atomic: finite_seq finiteness —
+`is_finite_set_finite_seq_zero.lit`, `is_finite_set_finite_seq_from_finite_codomain.lit`.
+Empty absolute ∩ settled: no `family_intersect({})={}` (use `index_intersect`);
+negative probe `examples/new_pipeline/equal_negative/family_intersect_empty_equals_empty.lit`
+(expect exit ≠ 0).
+Equality BuiltinRule identities (Stage B wave 15): finite-set Fubini —
+nested double-sum swap, and nested = flat sum over `cart(X,Y)` when the
+summand is `f((x,y))` — see `finite_set_sum_fubini_swap.lit`,
+`finite_set_sum_over_cartesian_product.lit`.
+NotIn interval open-endpoint / outside (atomic).
 Equality BuiltinRule identities (Stage B wave 10):
 empty aggregates `finite_set_sum/product/reduce` and empty-range
 `sum`/`product`/`reduce` — see `finite_set_*_empty.lit`, `sum_empty_range.lit`,
@@ -145,7 +177,8 @@ equal/        ByBuiltinRule (FnSet / AnonymousFn / SetBuilder alpha-equal,
               (identifier / fn / template), BuiltinStrategy, MatchingOneArgByOne,
               KnownForall (+ViaSymmetry), BuiltinRewrite
               (ClosedNumericEqualSubstitution + arithmetic_ops)
-atomic/       ByBuiltinRule (incl. NotIn closed/list/intersect/union; In
+atomic/       ByBuiltinRule (incl. NotIn closed/list/intersect/union/set_minus;
+              NotIsFiniteSet standard infinite + set_minus; In
               union/intersect/set_minus/family_union/index_union + R-arithmetic
               closure; LessEqual abs + add/sub/mul order algebra + triangle/
               reverse-triangle/sandwich; Subset list-set/union/intersect from

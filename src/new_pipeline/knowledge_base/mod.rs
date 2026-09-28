@@ -10,6 +10,7 @@ mod def_struct_codec;
 mod def_thm_codec;
 mod definitions_memory_codec;
 mod fingerprint;
+mod import_cache;
 mod json_mini;
 mod manifest;
 mod mount;
@@ -34,6 +35,11 @@ pub use definitions_memory_codec::{
     write_definition_memory,
 };
 pub use fingerprint::{compute_fingerprint, FingerprintInputs};
+pub use import_cache::{
+    exec_env_from_mounted_export, fingerprint_module_recursive, global_ids_from_snapshot,
+    mounted_matches_config, path_key, snapshot_from_global_ids, try_hit_import_cache,
+    write_import_cache_after_cold,
+};
 pub use manifest::{
     GlobalIdsDeltas, GlobalIdsSnapshot, KbManifest, ManifestExportEntry,
 };

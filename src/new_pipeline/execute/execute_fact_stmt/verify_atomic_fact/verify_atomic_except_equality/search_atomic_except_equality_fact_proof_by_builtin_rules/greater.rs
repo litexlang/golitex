@@ -1,5 +1,7 @@
-use crate::new_pipeline::ast::fact::{AtomicFact, Fact, GreaterFact};
-use crate::new_pipeline::ast::obj::{Add, ArithmeticOperator, Mul, Obj};
+use crate::new_pipeline::ast::fact::{AtomicFact, Fact, GreaterFact, InFact};
+use crate::new_pipeline::ast::obj::{
+    Add, ArithmeticOperator, Literal, Mul, Number, Obj, StandardSet,
+};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::rational_expression::{
@@ -31,6 +33,14 @@ pub enum GreaterFactSearchProofByBuiltinRule {
     // Right multiplication by a positive factor preserves strict order.
     // Example: known `0 < c` and `a > b` prove `a * c > b * c`.
     MulRightPositiveMonotoneStrict(MulRightPositiveMonotoneStrictBuiltinRuleProof),
+    // Positive-real membership implies strict positivity.
+    // Mathematical property: `x $in R+` ⇒ `x > 0`.
+    // Example: prove `e > 0` from `e $in R+`.
+    FromPositiveRealMembership(FromPositiveRealMembershipBuiltinRuleProof),
+    // Native Euler constant is strictly positive: `e > 0`.
+    NativeEulerGreaterZero(NativeEulerGreaterZeroBuiltinRuleProof),
+    // Native Pi constant is strictly positive: `pi > 0`.
+    NativePiGreaterZero(NativePiGreaterZeroBuiltinRuleProof),
 }
 
 pub struct ClosedNumericComparisonBuiltinRuleProof {
@@ -60,8 +70,16 @@ pub struct MulRightPositiveMonotoneStrictBuiltinRuleProof {
     pub order_premise_proof: VerifyFactResult,
 }
 
+pub struct FromPositiveRealMembershipBuiltinRuleProof {
+    pub membership_proof: VerifyFactResult,
+}
+
+pub struct NativeEulerGreaterZeroBuiltinRuleProof {}
+
+pub struct NativePiGreaterZeroBuiltinRuleProof {}
+
 impl Runtime {
-    // Builtin: known strict less dual, add/mul congruence, then closed decimal.
+    // Builtin: known strict less dual, add/mul congruence, R+ membership, native e/pi, then closed decimal.
     // Example: prove `0 > x` from known `x < 0`, or prove `a + c > b + c` from `a > b`.
     pub fn search_greater_fact_proof_by_builtin_rule(
         &mut self,
@@ -72,6 +90,28 @@ impl Runtime {
             return Ok(Some(GreaterFactSearchProofByBuiltinRule::FromKnownLess(
                 FromKnownLessBuiltinRuleProof { cite_fact_id },
             )));
+        }
+        if is_zero_obj(&fact.right) {
+            if matches!(&fact.left, Obj::Literal(crate::new_pipeline::ast::obj::Literal::EulerNumber(_))) {
+                return Ok(Some(
+                    GreaterFactSearchProofByBuiltinRule::NativeEulerGreaterZero(
+                        NativeEulerGreaterZeroBuiltinRuleProof {},
+                    ),
+                ));
+            }
+            if matches!(&fact.left, Obj::Literal(crate::new_pipeline::ast::obj::Literal::Pi(_))) {
+                return Ok(Some(
+                    GreaterFactSearchProofByBuiltinRule::NativePiGreaterZero(
+                        NativePiGreaterZeroBuiltinRuleProof {},
+                    ),
+                ));
+            }
+            if let Some(proof) = self.greater_from_positive_real_membership_proof(
+                &fact.left,
+                verify_state.clone(),
+            )? {
+                return Ok(Some(proof));
+            }
         }
         match (&fact.left, &fact.right) {
             (
@@ -261,4 +301,33 @@ impl Runtime {
             ),
         ))
     }
+
+    fn greater_from_positive_real_membership_proof(
+        &mut self,
+        left: &Obj,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<GreaterFactSearchProofByBuiltinRule>> {
+        let premise = Fact::AtomicFact(AtomicFact::InFact(InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: left.clone(),
+            set: Obj::StandardSet(StandardSet::RPos),
+            line_file: None,
+        }));
+        let membership_proof = self.verify_fact(&premise, verify_state)?;
+        if membership_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(
+            GreaterFactSearchProofByBuiltinRule::FromPositiveRealMembership(
+                FromPositiveRealMembershipBuiltinRuleProof { membership_proof },
+            ),
+        ))
+    }
+}
+
+fn is_zero_obj(obj: &Obj) -> bool {
+    matches!(
+        obj,
+        Obj::Literal(Literal::Number(Number { normalized_value })) if normalized_value == "0"
+    )
 }

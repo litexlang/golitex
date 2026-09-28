@@ -1,0 +1,2 @@
+# Node: atomic.ByBuiltinRule.NotInFact.NonMembershipOfIntervalOutside
+not 2 $in '[0, 1]

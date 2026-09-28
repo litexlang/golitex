@@ -93,6 +93,61 @@ fn run_project_cross_mod_release_thm_and_by_def() {
 }
 
 #[test]
+fn run_project_kb_cache_write_then_hit_cross_mod() {
+    let root = temp_dir("kb_cache");
+    write(
+        &root.join("lib/litex.config"),
+        "[export]\nbase = \"./base.lit\"\n",
+    );
+    write(
+        &root.join("lib/base.lit"),
+        "prop above_zero(x R):\n    x > 0\n\n\
+         thm add_zero_right:\n    ? forall x R:\n        x + 0 = x\n    x + 0 = x\n\n\
+         have fn id(x R) R = x\n\
+         let c = 1\n",
+    );
+    write(
+        &root.join("litex.config"),
+        "[import]\nLib = \"./lib\"\n\n[export]\nmain = \"./main.lit\"\n",
+    );
+    write(
+        &root.join("main.lit"),
+        "by def $Lib::base::above_zero(1)\n\n\
+         release thm Lib::base::add_zero_right(2)\n\
+         2 + 0 = 2\n\n\
+         by thm Lib:::add_zero_right(3) => 3 + 0 = 3\n\n\
+         release obj def Lib::base::c\n\
+         Lib::base::c = 1\n\n\
+         release obj def Lib::base::id\n\
+         Lib::base::id(1) = 1\n",
+    );
+
+    let first = run_project(LaunchCommand::Repository {
+        path: root.clone(),
+        session: false,
+        strict: false,
+    })
+    .expect("first run_project");
+    assert!(first.run.success, "{:?}", first.run.session_error);
+    assert!(
+        root.join("lib/__litex_knowledge_base__/manifest.json").is_file(),
+        "expected kb write after cold import"
+    );
+
+    let second = run_project(LaunchCommand::Repository {
+        path: root.clone(),
+        session: false,
+        strict: false,
+    })
+    .expect("second run_project");
+    assert!(second.run.success, "{:?}", second.run.session_error);
+    // Root export still runs; imported lib should be served from kb (no lib file result).
+    assert_eq!(second.files.len(), 1, "kb hit should skip re-exec of lib export");
+
+    let _ = fs::remove_dir_all(&root);
+}
+
+#[test]
 fn run_project_soft_fail_becomes_fail_to_import() {
     let root = temp_dir("soft");
     write(
