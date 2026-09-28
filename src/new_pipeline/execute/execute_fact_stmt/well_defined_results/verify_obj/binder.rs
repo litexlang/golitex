@@ -41,9 +41,10 @@ impl Runtime {
                     ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::FnSet(p))
                 }, proof)
             }
-            Err(reason) => Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::FunctionSpace(FailToVerifyFunctionSpaceObjWellDefinedResult::FnSet(reason)),
-            )),
+            Err(reason) => Ok(VerifyObjWellDefinedResult::Failed {
+                obj: Obj::FunctionSpace(FunctionSpace::FnSet(value.clone())),
+                reason: FailToVerifyObjWellDefinedResult::FunctionSpace(FailToVerifyFunctionSpaceObjWellDefinedResult::FnSet(reason)),
+            }),
         }
     }
 
@@ -76,9 +77,10 @@ impl Runtime {
                     ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(p))
                 }, proof)
             }
-            Err(reason) => Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::FunctionSpace(FailToVerifyFunctionSpaceObjWellDefinedResult::AnonymousFn(reason)),
-            )),
+            Err(reason) => Ok(VerifyObjWellDefinedResult::Failed {
+                obj: Obj::FunctionSpace(FunctionSpace::AnonymousFn(value.clone())),
+                reason: FailToVerifyObjWellDefinedResult::FunctionSpace(FailToVerifyFunctionSpaceObjWellDefinedResult::AnonymousFn(reason)),
+            }),
         }
     }
 
@@ -102,9 +104,10 @@ impl Runtime {
                     ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::SetBuilder(p))
                 }, proof)
             }
-            Err(reason) => Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::SetFormer(FailToVerifySetFormerObjWellDefinedResult::SetBuilder(reason)),
-            )),
+            Err(reason) => Ok(VerifyObjWellDefinedResult::Failed {
+                obj: Obj::SetFormer(SetFormer::SetBuilder(value.clone())),
+                reason: FailToVerifyObjWellDefinedResult::SetFormer(FailToVerifySetFormerObjWellDefinedResult::SetBuilder(reason)),
+            }),
         }
     }
 
@@ -119,11 +122,12 @@ impl Runtime {
             let wd_id = self.global_ids.allocate_well_definedness_id();
             self.top_exec_env_mut()
                 .well_defined_objects
-                .record(obj, wd_id);
+                .record(obj.clone(), wd_id);
         }
-        Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef(
-            wrap(proof),
-        )))
+        Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+            obj,
+            proof: wrap(proof),
+        }))
     }
 
     fn verify_fn_set_obj_well_definedness_in_local(
@@ -133,7 +137,7 @@ impl Runtime {
     ) -> RuntimeResult<
         Result<
             (
-                Vec<(Obj, Box<ObjWellDefinedProof>)>,
+                Vec<Box<ObjWellDefinedProof>>,
                 Vec<FactWellDefinedProof>,
                 Box<ObjWellDefinedProof>,
             ),
@@ -154,10 +158,11 @@ impl Runtime {
                 verify_state.clone(),
             )? {
                 Ok(proofs) => proofs,
-                Err((failed_index, succeeded, failed)) => {
+                Err((failed_index, succeeded, failed_obj, failed)) => {
                     return Ok(Err(FailToVerifyFnSetObjWellDefined::ParamType {
                         failed_index,
                         succeeded,
+                        failed_obj,
                         failed: Box::new(failed),
                     }));
                 }
@@ -187,10 +192,11 @@ impl Runtime {
                 dom_fact_well_defined,
                 Box::new(ret_set_well_defined),
             ))),
-            VerifyObjWellDefinedResult::Failed(failed) => {
+            VerifyObjWellDefinedResult::Failed { obj: failed_obj, reason: failed } => {
                 Ok(Err(FailToVerifyFnSetObjWellDefined::RetSet {
                     param_type_well_defined,
                     dom_fact_well_defined,
+                    failed_obj,
                     failed: Box::new(failed),
                 }))
             }
@@ -204,7 +210,7 @@ impl Runtime {
     ) -> RuntimeResult<
         Result<
             (
-                Vec<(Obj, Box<ObjWellDefinedProof>)>,
+                Vec<Box<ObjWellDefinedProof>>,
                 Vec<FactWellDefinedProof>,
                 Box<ObjWellDefinedProof>,
                 Box<ObjWellDefinedProof>,
@@ -229,10 +235,11 @@ impl Runtime {
                 verify_state.clone(),
             )? {
                 Ok(proofs) => proofs,
-                Err((failed_index, succeeded, failed)) => {
+                Err((failed_index, succeeded, failed_obj, failed)) => {
                     return Ok(Err(FailToVerifyAnonymousFnObjWellDefined::ParamType {
                         failed_index,
                         succeeded,
+                        failed_obj,
                         failed: Box::new(failed),
                     }));
                 }
@@ -260,10 +267,11 @@ impl Runtime {
             match self.verify_obj_well_definedness(value.body.ret_set.as_ref(), verify_state.clone())?
             {
                 VerifyObjWellDefinedResult::Success(proof) => Box::new(proof),
-                VerifyObjWellDefinedResult::Failed(failed) => {
+                VerifyObjWellDefinedResult::Failed { obj: failed_obj, reason: failed } => {
                     return Ok(Err(FailToVerifyAnonymousFnObjWellDefined::RetSet {
                         param_type_well_defined,
                         dom_fact_well_defined,
+                        failed_obj,
                         failed: Box::new(failed),
                     }));
                 }
@@ -272,11 +280,12 @@ impl Runtime {
         let body_well_defined =
             match self.verify_obj_well_definedness(value.equal_to.as_ref(), verify_state.clone())? {
                 VerifyObjWellDefinedResult::Success(proof) => Box::new(proof),
-                VerifyObjWellDefinedResult::Failed(failed) => {
+                VerifyObjWellDefinedResult::Failed { obj: failed_obj, reason: failed } => {
                     return Ok(Err(FailToVerifyAnonymousFnObjWellDefined::Body {
                         param_type_well_defined,
                         dom_fact_well_defined,
                         ret_set_well_defined,
+                        failed_obj,
                         failed: Box::new(failed),
                     }));
                 }
@@ -331,10 +340,11 @@ impl Runtime {
         let param_set_well_defined =
             match self.verify_obj_well_definedness(value.param_set.as_ref(), verify_state.clone())? {
                 VerifyObjWellDefinedResult::Success(proof) => Box::new(proof),
-                VerifyObjWellDefinedResult::Failed(failed) => {
-                    return Ok(Err(FailToVerifySetBuilderObjWellDefined::ParamSet(
-                        Box::new(failed),
-                    )));
+                VerifyObjWellDefinedResult::Failed { obj, reason: failed } => {
+                    return Ok(Err(FailToVerifySetBuilderObjWellDefined::ParamSet {
+                        obj,
+                        failed: Box::new(failed),
+                    }));
                 }
             };
 
@@ -368,10 +378,11 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<
         Result<
-            Vec<(Obj, Box<ObjWellDefinedProof>)>,
+            Vec<Box<ObjWellDefinedProof>>,
             (
                 usize,
-                Vec<(Obj, Box<ObjWellDefinedProof>)>,
+                Vec<Box<ObjWellDefinedProof>>,
+                Obj,
                 FailToVerifyObjWellDefinedResult,
             ),
         >,
@@ -382,10 +393,10 @@ impl Runtime {
             let param_type = group.param_type.as_ref();
             match self.verify_obj_well_definedness(param_type, verify_state.clone())? {
                 VerifyObjWellDefinedResult::Success(proof) => {
-                    succeeded.push((param_type.clone(), Box::new(proof)));
+                    succeeded.push(Box::new(proof));
                 }
-                VerifyObjWellDefinedResult::Failed(failed) => {
-                    return Ok(Err((index, succeeded, failed)));
+                VerifyObjWellDefinedResult::Failed { obj: failed_obj, reason: failed } => {
+                    return Ok(Err((index, succeeded, failed_obj, failed)));
                 }
             }
             index += 1;

@@ -18,10 +18,8 @@ impl Runtime {
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         let mut child_obj_well_defined = Vec::new();
         for obj in objs {
-            child_obj_well_defined.push((
-                (*obj).clone(),
-                self.verify_obj_well_definedness(obj, verify_state.clone())?,
-            ));
+            child_obj_well_defined
+                .push(self.verify_obj_well_definedness(obj, verify_state.clone())?);
         }
         Ok(ObjWellDefinedByDefCommonStages::from_children(
             child_obj_well_defined,

@@ -91,7 +91,7 @@ impl Runtime {
                 Ok(result) => result,
                 Err(IntroduceTypedParametersFailed::ParamType(failed)) => {
                     let reason = match failed {
-                        VerifyObjWellDefinedResult::Failed(reason) => reason,
+                        VerifyObjWellDefinedResult::Failed { reason, .. } => reason,
                         _ => fail_to_verify_obj_well_defined_others(
                             "forall: typed parameter well-definedness failed".to_string(),
                         ),

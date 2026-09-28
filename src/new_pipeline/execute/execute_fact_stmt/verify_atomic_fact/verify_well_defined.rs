@@ -28,7 +28,7 @@ impl Runtime {
         let mut succeeded_args = Vec::new();
         for arg in args {
             match self.verify_obj_well_definedness(arg, verify_state.clone())? {
-                VerifyObjWellDefinedResult::Failed(reason) => {
+                VerifyObjWellDefinedResult::Failed { reason, .. } => {
                     return Ok(VerifyAtomicFactWellDefinedResult::Failed(
                         FailToVerifyAtomicFactWellDefinedResult { reason },
                     ));

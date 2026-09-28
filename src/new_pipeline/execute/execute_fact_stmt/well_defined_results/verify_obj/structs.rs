@@ -30,8 +30,12 @@ impl Runtime {
         let plain = value.name.local_name();
         let expected_arity = {
             let Some(def) = self.def_struct_visible_in_stack(plain) else {
-                return Ok(VerifyObjWellDefinedResult::Failed(
-                    FailToVerifyObjWellDefinedResult::Structish(
+                let root = Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(
+                    value.clone(),
+                ));
+                return Ok(VerifyObjWellDefinedResult::Failed {
+                    obj: root,
+                    reason: FailToVerifyObjWellDefinedResult::Structish(
                         FailToVerifyStructishObjWellDefinedResult::StructObj(
                             FailToVerifyStructObjObjWellDefined(
                                 FailToVerifyObjWellDefinedByDefCommon::Others(format!(
@@ -40,7 +44,7 @@ impl Runtime {
                             ),
                         ),
                     ),
-                ));
+                });
             };
             match &def.param_def_with_dom {
                 None => 0,
@@ -48,8 +52,12 @@ impl Runtime {
             }
         };
         if value.params.len() != expected_arity {
-            return Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::Structish(
+            let root = Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(
+                value.clone(),
+            ));
+            return Ok(VerifyObjWellDefinedResult::Failed {
+                obj: root,
+                reason: FailToVerifyObjWellDefinedResult::Structish(
                     FailToVerifyStructishObjWellDefinedResult::StructObj(
                         FailToVerifyStructObjObjWellDefined(
                             FailToVerifyObjWellDefinedByDefCommon::Others(format!(
@@ -59,7 +67,7 @@ impl Runtime {
                         ),
                     ),
                 ),
-            ));
+            });
         }
 
         let refs: Vec<&Obj> = value.params.iter().collect();
@@ -71,13 +79,19 @@ impl Runtime {
                     let wd_id = self.global_ids.allocate_well_definedness_id();
                     self.top_exec_env_mut()
                         .well_defined_objects
-                        .record(root, wd_id);
+                        .record(root.clone(), wd_id);
                 }
                 Ok(VerifyObjWellDefinedResult::Success(
-                    ObjWellDefinedProof::ByDef(by_def),
+                    ObjWellDefinedProof::ByDef {
+                        obj: root,
+                        proof: by_def,
+                    },
                 ))
             }
-            Err(fail) => Ok(VerifyObjWellDefinedResult::Failed(fail)),
+            Err(fail) => Ok(VerifyObjWellDefinedResult::Failed {
+                obj: root,
+                reason: fail,
+            }),
         }
     }
 
@@ -89,8 +103,11 @@ impl Runtime {
         value: &FieldAccess,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
+        let root =
+            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(value.clone()));
         if value.fields.is_empty() {
             return Ok(field_access_fail(
+                root,
                 "field access expects at least one field name".to_string(),
             ));
         }
@@ -98,41 +115,47 @@ impl Runtime {
         let receiver_wd =
             self.verify_obj_well_definedness(value.obj.as_ref(), verify_state.clone())?;
         if receiver_wd.is_failed() {
-            return Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::Structish(
+            return Ok(VerifyObjWellDefinedResult::Failed {
+                obj: root,
+                reason: FailToVerifyObjWellDefinedResult::Structish(
                     FailToVerifyStructishObjWellDefinedResult::FieldAccess(
                         FailToVerifyFieldAccessObjWellDefined(
                             FailToVerifyObjWellDefinedByDefCommon::Child {
                                 obj: value.obj.as_ref().clone(),
                                 child: Box::new(match receiver_wd {
-                                    VerifyObjWellDefinedResult::Failed(reason) => reason,
+                                    VerifyObjWellDefinedResult::Failed { reason, .. } => reason,
                                     VerifyObjWellDefinedResult::Success(_) => unreachable!(),
                                 }),
                             },
                         ),
                     ),
                 ),
-            ));
+            });
         }
 
         let Some(mut carrier) = self.resolve_definition_struct_carrier(value.obj.as_ref()) else {
-            return Ok(field_access_fail(format!(
-                "object has no definition-time struct carrier for field `{}`",
-                value.fields.join(".")
-            )));
+            return Ok(field_access_fail(
+                root,
+                format!(
+                    "object has no definition-time struct carrier for field `{}`",
+                    value.fields.join(".")
+                ),
+            ));
         };
 
         for (index, field_name) in value.fields.iter().enumerate() {
             let plain = carrier.name.local_name().to_string();
             let Some(def) = self.def_struct_visible_in_stack(&plain) else {
-                return Ok(field_access_fail(format!(
-                    "struct `{plain}` is not defined"
-                )));
+                return Ok(field_access_fail(
+                    root,
+                    format!("struct `{plain}` is not defined"),
+                ));
             };
             let Some(field_def) = def.fields.iter().find(|f| f.binding.name == *field_name) else {
-                return Ok(field_access_fail(format!(
-                    "struct `{plain}` has no field `{field_name}`"
-                )));
+                return Ok(field_access_fail(
+                    root,
+                    format!("struct `{plain}` has no field `{field_name}`"),
+                ));
             };
             let is_last = index + 1 == value.fields.len();
             if is_last {
@@ -143,32 +166,36 @@ impl Runtime {
                     carrier = next.clone()
                 }
                 _ => {
-                    return Ok(field_access_fail(format!(
-                        "field `{field_name}` of struct `{plain}` is not a struct carrier"
-                    )));
+                    return Ok(field_access_fail(
+                        root,
+                        format!(
+                            "field `{field_name}` of struct `{plain}` is not a struct carrier"
+                        ),
+                    ));
                 }
             }
         }
 
-        let stages = ObjWellDefinedByDefCommonStages::from_children(vec![(
-            value.obj.as_ref().clone(),
-            receiver_wd,
-        )]);
-        let root =
-            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(value.clone()));
+        let stages = ObjWellDefinedByDefCommonStages::from_children(vec![receiver_wd]);
         match finish_by_def(&root, stages) {
             Ok(by_def) => {
                 if verify_state.store_well_defined_fact {
                     let wd_id = self.global_ids.allocate_well_definedness_id();
                     self.top_exec_env_mut()
                         .well_defined_objects
-                        .record(root, wd_id);
+                        .record(root.clone(), wd_id);
                 }
                 Ok(VerifyObjWellDefinedResult::Success(
-                    ObjWellDefinedProof::ByDef(by_def),
+                    ObjWellDefinedProof::ByDef {
+                        obj: root,
+                        proof: by_def,
+                    },
                 ))
             }
-            Err(fail) => Ok(VerifyObjWellDefinedResult::Failed(fail)),
+            Err(fail) => Ok(VerifyObjWellDefinedResult::Failed {
+                obj: root,
+                reason: fail,
+            }),
         }
     }
 
@@ -237,8 +264,7 @@ impl Runtime {
         let plain = value.template_name.local_name();
         let (expected_arity, param_groups, dom_facts) = {
             let Some(def) = self.def_template_visible_in_stack(plain) else {
-                return Ok(template_fail(
-                    FailToVerifyObjWellDefinedByDefCommon::Others(format!(
+                return Ok(template_fail(Obj::InstantiatedTemplateObj(value.clone()), FailToVerifyObjWellDefinedByDefCommon::Others(format!(
                         "template `{plain}` is not defined"
                     )),
                 ));
@@ -250,8 +276,7 @@ impl Runtime {
             )
         };
         if value.args.len() != expected_arity {
-            return Ok(template_fail(
-                FailToVerifyObjWellDefinedByDefCommon::Others(format!(
+            return Ok(template_fail(Obj::InstantiatedTemplateObj(value.clone()), FailToVerifyObjWellDefinedByDefCommon::Others(format!(
                     "template `{plain}` expects {expected_arity} argument(s), got {}",
                     value.args.len()
                 )),
@@ -262,12 +287,15 @@ impl Runtime {
         for arg in &value.args {
             let child = self.verify_obj_well_definedness(arg, verify_state.clone())?;
             let failed = child.is_failed();
-            stages.child_obj_well_defined.push((arg.clone(), child));
+            stages.child_obj_well_defined.push(child);
             if failed {
                 let root = Obj::InstantiatedTemplateObj(value.clone());
                 return Ok(match finish_by_def(&root, stages) {
                     Ok(_) => unreachable!(),
-                    Err(fail) => VerifyObjWellDefinedResult::Failed(fail),
+                    Err(fail) => VerifyObjWellDefinedResult::Failed {
+                        obj: root,
+                        reason: fail,
+                    },
                 });
             }
         }
@@ -291,8 +319,7 @@ impl Runtime {
             let param_type = match self.inst_param_type(&group.param_type, &subst) {
                 Ok(param_type) => param_type,
                 Err(_) => {
-                    return Ok(template_fail(
-                        FailToVerifyObjWellDefinedByDefCommon::Others(format!(
+                    return Ok(template_fail(Obj::InstantiatedTemplateObj(value.clone()), FailToVerifyObjWellDefinedByDefCommon::Others(format!(
                             "template `{plain}`: failed to instantiate parameter type"
                         )),
                     ));
@@ -312,7 +339,10 @@ impl Runtime {
                     let root = Obj::InstantiatedTemplateObj(value.clone());
                     return Ok(match finish_by_def(&root, stages) {
                         Ok(_) => unreachable!(),
-                        Err(fail) => VerifyObjWellDefinedResult::Failed(fail),
+                        Err(fail) => VerifyObjWellDefinedResult::Failed {
+                            obj: root,
+                            reason: fail,
+                        },
                     });
                 }
                 arg_index += 1;
@@ -323,8 +353,7 @@ impl Runtime {
             let instantiated = match self.inst_quantifier_free_fact(dom, &subst) {
                 Ok(f) => f,
                 Err(_) => {
-                    return Ok(template_fail(
-                        FailToVerifyObjWellDefinedByDefCommon::Others(format!(
+                    return Ok(template_fail(Obj::InstantiatedTemplateObj(value.clone()), FailToVerifyObjWellDefinedByDefCommon::Others(format!(
                             "template `{plain}`: failed to instantiate domain fact"
                         )),
                     ));
@@ -338,7 +367,10 @@ impl Runtime {
                 let root = Obj::InstantiatedTemplateObj(value.clone());
                 return Ok(match finish_by_def(&root, stages) {
                     Ok(_) => unreachable!(),
-                    Err(fail) => VerifyObjWellDefinedResult::Failed(fail),
+                    Err(fail) => VerifyObjWellDefinedResult::Failed {
+                        obj: root,
+                        reason: fail,
+                    },
                 });
             }
         }
@@ -357,10 +389,16 @@ impl Runtime {
                     self.maybe_register_instantiated_template_definitional_facts(value)?;
                 }
                 Ok(VerifyObjWellDefinedResult::Success(
-                    ObjWellDefinedProof::ByDef(by_def),
+                    ObjWellDefinedProof::ByDef {
+                        obj: root,
+                        proof: by_def,
+                    },
                 ))
             }
-            Err(fail) => Ok(VerifyObjWellDefinedResult::Failed(fail)),
+            Err(fail) => Ok(VerifyObjWellDefinedResult::Failed {
+                obj: root,
+                reason: fail,
+            }),
         }
     }
 
@@ -531,20 +569,29 @@ impl Runtime {
     }
 }
 
-fn template_fail(common: FailToVerifyObjWellDefinedByDefCommon) -> VerifyObjWellDefinedResult {
-    VerifyObjWellDefinedResult::Failed(FailToVerifyObjWellDefinedResult::InstantiatedTemplateObj(
-        FailToVerifyInstantiatedTemplateObjObjWellDefined(common),
-    ))
+fn template_fail(
+    obj: Obj,
+    common: FailToVerifyObjWellDefinedByDefCommon,
+) -> VerifyObjWellDefinedResult {
+    VerifyObjWellDefinedResult::Failed {
+        obj,
+        reason: FailToVerifyObjWellDefinedResult::InstantiatedTemplateObj(
+            FailToVerifyInstantiatedTemplateObjObjWellDefined(common),
+        ),
+    }
 }
 
-fn field_access_fail(message: String) -> VerifyObjWellDefinedResult {
-    VerifyObjWellDefinedResult::Failed(FailToVerifyObjWellDefinedResult::Structish(
-        FailToVerifyStructishObjWellDefinedResult::FieldAccess(
-            FailToVerifyFieldAccessObjWellDefined(FailToVerifyObjWellDefinedByDefCommon::Others(
-                message,
-            )),
+fn field_access_fail(obj: Obj, message: String) -> VerifyObjWellDefinedResult {
+    VerifyObjWellDefinedResult::Failed {
+        obj,
+        reason: FailToVerifyObjWellDefinedResult::Structish(
+            FailToVerifyStructishObjWellDefinedResult::FieldAccess(
+                FailToVerifyFieldAccessObjWellDefined(FailToVerifyObjWellDefinedByDefCommon::Others(
+                    message,
+                )),
+            ),
         ),
-    ))
+    }
 }
 
 // Same shapes as forall instantiation param-type obligations.

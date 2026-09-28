@@ -75,32 +75,44 @@ impl Runtime {
         value: &IndexUnion,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
+        let root = Obj::SetOperator(SetOperator::IndexUnion(value.clone()));
         let stages = self.verify_index_union_obj_well_definedness_by_def(value, verify_state.clone())?;
         if !stages.is_fully_known() {
-            return Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::SetOperator(FailToVerifySetOperatorObjWellDefinedResult::IndexUnion(
-                    FailToVerifyIndexUnionObjWellDefined::Domain(
-                        stages.into_common_fail(&Obj::SetOperator(SetOperator::IndexUnion(value.clone()))),
+            return Ok(VerifyObjWellDefinedResult::Failed {
+                obj: root,
+                reason: FailToVerifyObjWellDefinedResult::SetOperator(
+                    FailToVerifySetOperatorObjWellDefinedResult::IndexUnion(
+                        FailToVerifyIndexUnionObjWellDefined::Domain(
+                            stages.into_common_fail(&Obj::SetOperator(SetOperator::IndexUnion(value.clone()))),
+                        ),
                     ),
-                )),
-            ));
+                ),
+            });
         }
         if !self.obj_has_in_function_set(value.family_fn.as_ref()) {
-            return Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::SetOperator(FailToVerifySetOperatorObjWellDefinedResult::IndexUnion(
-                    FailToVerifyIndexUnionObjWellDefined::NotInFunctionSet,
-                )),
-            ));
+            return Ok(VerifyObjWellDefinedResult::Failed {
+                obj: root,
+                reason: FailToVerifyObjWellDefinedResult::SetOperator(
+                    FailToVerifySetOperatorObjWellDefinedResult::IndexUnion(
+                        FailToVerifyIndexUnionObjWellDefined::NotInFunctionSet,
+                    ),
+                ),
+            });
         }
         if verify_state.store_well_defined_fact {
             let wd_id = self.global_ids.allocate_well_definedness_id();
             self.top_exec_env_mut()
                 .well_defined_objects
-                .record(Obj::SetOperator(SetOperator::IndexUnion(value.clone())), wd_id);
+                .record(root.clone(), wd_id);
         }
-        Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef(
-            ObjWellDefinedProofByDef::SetOperator(SetOperatorObjWellDefinedProofByDef::IndexUnion(IndexUnionObjWellDefinedProof::from_stages(stages))),
-        )))
+        Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+            obj: root,
+            proof: ObjWellDefinedProofByDef::SetOperator(
+                SetOperatorObjWellDefinedProofByDef::IndexUnion(
+                    IndexUnionObjWellDefinedProof::from_stages(stages),
+                ),
+            ),
+        }))
     }
 
     fn verify_index_union_obj_well_definedness_by_def(
@@ -136,35 +148,45 @@ impl Runtime {
         value: &IndexIntersect,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
+        let root = Obj::SetOperator(SetOperator::IndexIntersect(value.clone()));
         let stages =
             self.verify_index_intersect_obj_well_definedness_by_def(value, verify_state.clone())?;
         if !stages.is_fully_known() {
-            return Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::SetOperator(FailToVerifySetOperatorObjWellDefinedResult::IndexIntersect(
-                    FailToVerifyIndexIntersectObjWellDefined::Domain(
-                        stages.into_common_fail(&Obj::SetOperator(SetOperator::IndexIntersect(value.clone()))),
+            return Ok(VerifyObjWellDefinedResult::Failed {
+                obj: root,
+                reason: FailToVerifyObjWellDefinedResult::SetOperator(
+                    FailToVerifySetOperatorObjWellDefinedResult::IndexIntersect(
+                        FailToVerifyIndexIntersectObjWellDefined::Domain(
+                            stages.into_common_fail(&Obj::SetOperator(SetOperator::IndexIntersect(value.clone()))),
+                        ),
                     ),
-                )),
-            ));
+                ),
+            });
         }
         if !self.obj_has_in_function_set(value.family_fn.as_ref()) {
-            return Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::SetOperator(FailToVerifySetOperatorObjWellDefinedResult::IndexIntersect(
-                    FailToVerifyIndexIntersectObjWellDefined::NotInFunctionSet,
-                )),
-            ));
+            return Ok(VerifyObjWellDefinedResult::Failed {
+                obj: root,
+                reason: FailToVerifyObjWellDefinedResult::SetOperator(
+                    FailToVerifySetOperatorObjWellDefinedResult::IndexIntersect(
+                        FailToVerifyIndexIntersectObjWellDefined::NotInFunctionSet,
+                    ),
+                ),
+            });
         }
         if verify_state.store_well_defined_fact {
             let wd_id = self.global_ids.allocate_well_definedness_id();
             self.top_exec_env_mut()
                 .well_defined_objects
-                .record(Obj::SetOperator(SetOperator::IndexIntersect(value.clone())), wd_id);
+                .record(root.clone(), wd_id);
         }
-        Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef(
-            ObjWellDefinedProofByDef::SetOperator(SetOperatorObjWellDefinedProofByDef::IndexIntersect(
-                IndexIntersectObjWellDefinedProof::from_stages(stages),
-            )),
-        )))
+        Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+            obj: root,
+            proof: ObjWellDefinedProofByDef::SetOperator(
+                SetOperatorObjWellDefinedProofByDef::IndexIntersect(
+                    IndexIntersectObjWellDefinedProof::from_stages(stages),
+                ),
+            ),
+        }))
     }
 
     fn verify_index_intersect_obj_well_definedness_by_def(
@@ -214,35 +236,45 @@ impl Runtime {
         value: &IndexCart,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
+        let root = Obj::SetOperator(SetOperator::IndexCart(value.clone()));
         let stages =
             self.verify_index_cart_obj_well_definedness_by_def(value, verify_state.clone())?;
         if !stages.is_fully_known() {
-            return Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::SetOperator(FailToVerifySetOperatorObjWellDefinedResult::IndexCart(
-                    FailToVerifyIndexCartObjWellDefined::Domain(
-                        stages.into_common_fail(&Obj::SetOperator(SetOperator::IndexCart(value.clone()))),
+            return Ok(VerifyObjWellDefinedResult::Failed {
+                obj: root,
+                reason: FailToVerifyObjWellDefinedResult::SetOperator(
+                    FailToVerifySetOperatorObjWellDefinedResult::IndexCart(
+                        FailToVerifyIndexCartObjWellDefined::Domain(
+                            stages.into_common_fail(&Obj::SetOperator(SetOperator::IndexCart(value.clone()))),
+                        ),
                     ),
-                )),
-            ));
+                ),
+            });
         }
         if !self.obj_has_in_function_set(value.family_fn.as_ref()) {
-            return Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::SetOperator(FailToVerifySetOperatorObjWellDefinedResult::IndexCart(
-                    FailToVerifyIndexCartObjWellDefined::NotInFunctionSet,
-                )),
-            ));
+            return Ok(VerifyObjWellDefinedResult::Failed {
+                obj: root,
+                reason: FailToVerifyObjWellDefinedResult::SetOperator(
+                    FailToVerifySetOperatorObjWellDefinedResult::IndexCart(
+                        FailToVerifyIndexCartObjWellDefined::NotInFunctionSet,
+                    ),
+                ),
+            });
         }
         if verify_state.store_well_defined_fact {
             let wd_id = self.global_ids.allocate_well_definedness_id();
             self.top_exec_env_mut()
                 .well_defined_objects
-                .record(Obj::SetOperator(SetOperator::IndexCart(value.clone())), wd_id);
+                .record(root.clone(), wd_id);
         }
-        Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef(
-            ObjWellDefinedProofByDef::SetOperator(SetOperatorObjWellDefinedProofByDef::IndexCart(IndexCartObjWellDefinedProof::from_stages(
-                stages,
-            ))),
-        )))
+        Ok(VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByDef {
+            obj: root,
+            proof: ObjWellDefinedProofByDef::SetOperator(
+                SetOperatorObjWellDefinedProofByDef::IndexCart(
+                    IndexCartObjWellDefinedProof::from_stages(stages),
+                ),
+            ),
+        }))
     }
 
     fn verify_index_cart_obj_well_definedness_by_def(

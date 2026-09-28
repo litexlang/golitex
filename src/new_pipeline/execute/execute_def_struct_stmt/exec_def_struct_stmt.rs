@@ -168,7 +168,7 @@ impl Runtime {
                 VerifyObjWellDefinedResult::Success(proof) => {
                     field_type_well_defined.push(proof);
                 }
-                failed @ VerifyObjWellDefinedResult::Failed(_) => {
+                failed @ VerifyObjWellDefinedResult::Failed { .. } => {
                     return Ok(Err(ExecDefStructStmtFailed::FieldType(failed)));
                 }
             }

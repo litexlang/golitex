@@ -280,7 +280,10 @@ pub enum FailToVerifyIndexCartObjWellDefined {
 pub struct FailToVerifyListSetObjWellDefined(pub FailToVerifyObjWellDefinedByDefCommon);
 
 pub enum FailToVerifySetBuilderObjWellDefined {
-    ParamSet(Box<FailToVerifyObjWellDefinedResult>),
+    ParamSet {
+        obj: Obj,
+        failed: Box<FailToVerifyObjWellDefinedResult>,
+    },
     Fact {
         failed_index: usize,
         param_set_well_defined: Box<ObjWellDefinedProof>,
@@ -299,18 +302,20 @@ pub enum FailToVerifyFnSetObjWellDefined {
     },
     ParamType {
         failed_index: usize,
-        succeeded: Vec<(Obj, Box<ObjWellDefinedProof>)>,
+        succeeded: Vec<Box<ObjWellDefinedProof>>,
+        failed_obj: Obj,
         failed: Box<FailToVerifyObjWellDefinedResult>,
     },
     DomFact {
         failed_index: usize,
-        param_type_well_defined: Vec<(Obj, Box<ObjWellDefinedProof>)>,
+        param_type_well_defined: Vec<Box<ObjWellDefinedProof>>,
         succeeded_dom: Vec<FactWellDefinedProof>,
         failed_dom: Box<FailToVerifyFactWellDefinedResult>,
     },
     RetSet {
-        param_type_well_defined: Vec<(Obj, Box<ObjWellDefinedProof>)>,
+        param_type_well_defined: Vec<Box<ObjWellDefinedProof>>,
         dom_fact_well_defined: Vec<FactWellDefinedProof>,
+        failed_obj: Obj,
         failed: Box<FailToVerifyObjWellDefinedResult>,
     },
     Others(String),
@@ -323,28 +328,31 @@ pub enum FailToVerifyAnonymousFnObjWellDefined {
     },
     ParamType {
         failed_index: usize,
-        succeeded: Vec<(Obj, Box<ObjWellDefinedProof>)>,
+        succeeded: Vec<Box<ObjWellDefinedProof>>,
+        failed_obj: Obj,
         failed: Box<FailToVerifyObjWellDefinedResult>,
     },
     DomFact {
         failed_index: usize,
-        param_type_well_defined: Vec<(Obj, Box<ObjWellDefinedProof>)>,
+        param_type_well_defined: Vec<Box<ObjWellDefinedProof>>,
         succeeded_dom: Vec<FactWellDefinedProof>,
         failed_dom: Box<FailToVerifyFactWellDefinedResult>,
     },
     RetSet {
-        param_type_well_defined: Vec<(Obj, Box<ObjWellDefinedProof>)>,
+        param_type_well_defined: Vec<Box<ObjWellDefinedProof>>,
         dom_fact_well_defined: Vec<FactWellDefinedProof>,
+        failed_obj: Obj,
         failed: Box<FailToVerifyObjWellDefinedResult>,
     },
     Body {
-        param_type_well_defined: Vec<(Obj, Box<ObjWellDefinedProof>)>,
+        param_type_well_defined: Vec<Box<ObjWellDefinedProof>>,
         dom_fact_well_defined: Vec<FactWellDefinedProof>,
         ret_set_well_defined: Box<ObjWellDefinedProof>,
+        failed_obj: Obj,
         failed: Box<FailToVerifyObjWellDefinedResult>,
     },
     BodyInRetSet {
-        param_type_well_defined: Vec<(Obj, Box<ObjWellDefinedProof>)>,
+        param_type_well_defined: Vec<Box<ObjWellDefinedProof>>,
         dom_fact_well_defined: Vec<FactWellDefinedProof>,
         ret_set_well_defined: Box<ObjWellDefinedProof>,
         body_well_defined: Box<ObjWellDefinedProof>,

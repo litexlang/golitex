@@ -129,7 +129,7 @@ impl Runtime {
 
 fn extract_obj_wd_fail(failed: VerifyObjWellDefinedResult) -> FailToVerifyObjWellDefinedResult {
     match failed {
-        VerifyObjWellDefinedResult::Failed(reason) => reason,
+        VerifyObjWellDefinedResult::Failed { reason, .. } => reason,
         _ => fail_to_verify_obj_well_defined_others(
             "param type well-definedness failed".to_string(),
         ),
