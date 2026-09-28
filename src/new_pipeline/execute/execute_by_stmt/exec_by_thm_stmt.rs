@@ -130,27 +130,31 @@ pub(crate) fn prepare_release_conclusions(
     runtime: &mut Runtime,
     call: &TheoremCall,
 ) -> RuntimeResult<Result<PreparedRelease, ExecReleaseThmStmtFailed>> {
-    let Some(def_thm) = runtime.def_thm_visible(&call.name).cloned() else {
-        return Ok(Err(ExecReleaseThmStmtFailed::ThmNotFound(
-            call.name.display_string(),
-        )));
-    };
-    let thm_name = call.name.local_name();
-
-    match &def_thm.fact {
-        Fact::ForallFact(forall) => prepare_forall_release(runtime, forall, &call.arguments),
-        other => match &call.arguments {
-            TheoremCallArguments::Bare => Ok(Ok(PreparedRelease {
-                dom_facts: Vec::new(),
-                conclusions: vec![other.clone()],
-            })),
-            TheoremCallArguments::Parenthesized(_) => Ok(Err(ExecReleaseThmStmtFailed::Shape(
-                format!(
-                    "release thm `{thm_name}`: non-forall theorem must be called without arguments"
-                ),
-            ))),
-        },
+    if let Some(def_thm) = runtime.def_thm_visible(&call.name).cloned() {
+        let thm_name = call.name.local_name();
+        return match &def_thm.fact {
+            Fact::ForallFact(forall) => prepare_forall_release(runtime, forall, &call.arguments),
+            other => match &call.arguments {
+                TheoremCallArguments::Bare => Ok(Ok(PreparedRelease {
+                    dom_facts: Vec::new(),
+                    conclusions: vec![other.clone()],
+                })),
+                TheoremCallArguments::Parenthesized(_) => Ok(Err(ExecReleaseThmStmtFailed::Shape(
+                    format!(
+                        "release thm `{thm_name}`: non-forall theorem must be called without arguments"
+                    ),
+                ))),
+            },
+        };
     }
+
+    if let Some(axiom) = runtime.axiom_visible(&call.name).cloned() {
+        return prepare_forall_release(runtime, &axiom.forall_fact, &call.arguments);
+    }
+
+    Ok(Err(ExecReleaseThmStmtFailed::ThmNotFound(
+        call.name.display_string(),
+    )))
 }
 
 fn prepare_forall_release(

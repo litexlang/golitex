@@ -17,6 +17,8 @@ pub mod not_is_finite_set;
 pub mod not_is_nonempty_set;
 pub mod not_less;
 pub mod not_less_equal;
+pub mod not_subset;
+pub mod not_superset;
 pub mod order_abs_algebra;
 pub mod order_div_mod_bridge_trans;
 pub mod order_stage_a_remainder;

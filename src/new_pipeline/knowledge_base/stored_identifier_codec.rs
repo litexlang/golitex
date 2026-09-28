@@ -1,19 +1,20 @@
 //! Store / load one `StoredIdentifierDefinition` entry as JSON.
 //!
-//! MVP subset: `LetObj`, `HaveObjEqual`, `HaveObjInNonemptySetOrParamType`.
-//! Other have-fn / obtain / trust variants → Unsupported until needed.
+//! Supported tags: `LetObj`, `HaveObjEqual`, `HaveObjInNonemptySetOrParamType`,
+//! `HaveFnEqual`. Other have-fn / obtain / trust variants → Unsupported.
 
 use super::def_prop_codec::{
-    decode_bound_name, decode_line_file, decode_obj, decode_typed_parameter_list,
-    encode_bound_name, encode_line_file, encode_obj, encode_typed_parameter_list, KbCodecError,
+    decode_anonymous_fn, decode_bound_name, decode_line_file, decode_obj,
+    decode_typed_parameter_list, encode_anonymous_fn, encode_bound_name, encode_line_file,
+    encode_obj, encode_typed_parameter_list, KbCodecError,
 };
 use super::json_mini::JsonValue;
 use crate::new_pipeline::ast::stmt::{
-    HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt, LetObjStmt,
+    HaveFnEqualStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt, LetObjStmt,
 };
 use crate::new_pipeline::exec_env::StoredIdentifierDefinition;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::rc::Rc;
 
 pub fn store_stored_identifier(
@@ -86,8 +87,17 @@ fn encode_stored_identifier(
                 ("stmt".into(), encode_have_obj_in(stmt)?),
             ]))
         }
+        StoredIdentifierDefinition::HaveFnEqual((plain, stmt)) => Ok(JsonValue::object_from(vec![
+            (
+                "kind".into(),
+                JsonValue::String("stored_identifier".into()),
+            ),
+            ("tag".into(), JsonValue::String("HaveFnEqual".into())),
+            ("plain_name".into(), JsonValue::String(plain.clone())),
+            ("stmt".into(), encode_have_fn_equal(stmt)?),
+        ])),
         other => Err(KbCodecError::Unsupported(format!(
-            "StoredIdentifierDefinition variant `{other:?}` (MVP subset)"
+            "StoredIdentifierDefinition variant `{other:?}` (kb identifier subset)"
         ))),
     }
 }
@@ -119,8 +129,12 @@ fn decode_stored_identifier(
                 Rc::new(decode_have_obj_in(stmt_v)?),
             )),
         ),
+        "HaveFnEqual" => Ok(StoredIdentifierDefinition::HaveFnEqual((
+            plain,
+            Rc::new(decode_have_fn_equal(stmt_v)?),
+        ))),
         other => Err(KbCodecError::Unsupported(format!(
-            "stored_identifier tag `{other}` (MVP subset)"
+            "stored_identifier tag `{other}` (kb identifier subset)"
         ))),
     }
 }
@@ -190,6 +204,29 @@ fn decode_have_obj_in(
     let map = value.as_object()?;
     Ok(HaveObjInNonemptySetOrParamTypeStmt {
         param_def: decode_typed_parameter_list(JsonValue::get(map, "param_def")?)?,
+        line_file: decode_line_file(JsonValue::get(map, "line_file")?)?,
+    })
+}
+
+fn encode_have_fn_equal(stmt: &HaveFnEqualStmt) -> Result<JsonValue, KbCodecError> {
+    Ok(JsonValue::object_from(vec![
+        ("name".into(), JsonValue::String(stmt.name.clone())),
+        (
+            "equal_to_anonymous_fn".into(),
+            encode_anonymous_fn(&stmt.equal_to_anonymous_fn)?,
+        ),
+        ("line_file".into(), encode_line_file(&stmt.line_file)?),
+    ]))
+}
+
+fn decode_have_fn_equal(value: &JsonValue) -> Result<HaveFnEqualStmt, KbCodecError> {
+    let map = value.as_object()?;
+    Ok(HaveFnEqualStmt {
+        name: JsonValue::get(map, "name")?.as_str()?.to_string(),
+        equal_to_anonymous_fn: decode_anonymous_fn(JsonValue::get(
+            map,
+            "equal_to_anonymous_fn",
+        )?)?,
         line_file: decode_line_file(JsonValue::get(map, "line_file")?)?,
     })
 }

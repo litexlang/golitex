@@ -26,6 +26,8 @@ Companion packages:
 | `def_abstract_prop_codec.rs` | `DefAbstractPropStmt` |
 | `def_thm_codec.rs` | `DefThmStmt` (empty `prove_process` only) |
 | `stored_identifier_codec.rs` | `StoredIdentifierDefinition` MVP tags |
+| `axiom_codec.rs` | `AxiomStmt` |
+| `def_struct_codec.rs` | `DefStructStmt` |
 | `README.md` | This contract |
 
 White-box tests live under
@@ -41,6 +43,8 @@ Public API:
 | `store_def_abstract_prop` / `load_…` / file IO | `DefAbstractPropStmt` |
 | `store_def_thm` / `load_…` / file IO | `DefThmStmt` |
 | `store_stored_identifier` / `load_…` / file IO | `StoredIdentifierDefinition` |
+| `store_axiom` / `load_…` / file IO | `AxiomStmt` |
+| `store_def_struct` / `load_…` / file IO | `DefStructStmt` |
 
 ### Codec roadmap (definitions)
 
@@ -49,8 +53,10 @@ Public API:
 | 1 | `def_prop` | done |
 | 2 | `def_abstract_prop` | done |
 | 3 | `def_thm` | done (MVP: empty prove_process; Stmt body deferred) |
-| 4 | `stored_identifier` | done (MVP: LetObj, HaveObjEqual, HaveObjInNonemptySetOrParamType) |
-| next | expand Obj/Fact + have-fn identifier tags; then struct / template | planned |
+| 4 | `stored_identifier` | done (LetObj, HaveObjEqual, HaveObjInNonemptySetOrParamType, HaveFnEqual) |
+| 5 | `axiom` | done (codec + `exec_stmt` / Env store) |
+| 6 | `def_struct` | done (fields + optional `equivalent_facts` / param_def) |
+| next | remaining have-fn tags; template; fingerprint / remap / `run_import` wiring | planned |
 
 Implementation may lag later sections. Wiring into `run_import_module` comes
 after format / fingerprint / remap contracts are fixed.
@@ -139,9 +145,10 @@ path). `StandaloneFile` / display paths live on `Runtime.current_file`.
 | Area | Supported now |
 |------|----------------|
 | `ParamType` | `Set` / `NonemptySet` / `FiniteSet` / `Obj` |
-| `Obj` | `Identifier` (all three forms), `Literal` (Number/i/e/pi), `StandardSet` |
-| `Fact` | `AtomicFact` only |
+| `Obj` | `Identifier` (all three forms), `Literal` (Number/i/e/pi), `StandardSet`, `FnSet`, `AnonymousFn` |
+| `Fact` | `AtomicFact`, `ForallFact` (then-clause: atomic only for now) |
 | `AtomicFact` | order/equality compares + `In` / `NotIn` (and their `Not*` compare forms) |
+| `QuantifierFreeFact` | atomic (for FnSet / set-bound dom) |
 
 Other `Obj` / `Fact` variants → `KbCodecError::Unsupported`. Expand the codec
 when real props need them; do not silently drop fields.

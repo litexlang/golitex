@@ -382,11 +382,19 @@ fn is_one_obj(obj: &Obj) -> bool {
 }
 
 fn is_neg_one_obj(obj: &Obj) -> bool {
-    if let Some(inner) = match_negation(obj) {
-        return is_one_obj(inner);
-    }
-    matches!(
+    if matches!(
         obj,
         Obj::Literal(Literal::Number(Number { normalized_value })) if normalized_value == "-1"
-    )
+    ) {
+        return true;
+    }
+    match obj {
+        Obj::ArithmeticOperator(ArithmeticOperator::Neg(Neg { arg })) => is_one_obj(arg.as_ref()),
+        Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left, right }))
+            if is_zero_obj(left.as_ref()) =>
+        {
+            is_one_obj(right.as_ref())
+        }
+        _ => false,
+    }
 }

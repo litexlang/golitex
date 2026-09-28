@@ -10,7 +10,6 @@ use super::search_atomic_except_equality_fact_proof_by_builtin_rule_result::{
     NotInFactSearchProofByBuiltinRule, NotIsCartFactSearchProofByBuiltinRule,
     NotIsFiniteSetFactSearchProofByBuiltinRule, NotIsSetFactSearchProofByBuiltinRule,
     NotIsTupleFactSearchProofByBuiltinRule, NotNormalAtomicFactSearchProofByBuiltinRule,
-    NotSubsetFactSearchProofByBuiltinRule, NotSupersetFactSearchProofByBuiltinRule,
 };
 
 impl Runtime {
@@ -144,22 +143,6 @@ impl Runtime {
         _fact: &NotIsTupleFact,
         _verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotIsTupleFactSearchProofByBuiltinRule>> {
-        Ok(None)
-    }
-
-    pub fn search_not_subset_fact_proof_by_builtin_rule(
-        &mut self,
-        _fact: &NotSubsetFact,
-        _verify_state: VerifyState,
-    ) -> RuntimeResult<Option<NotSubsetFactSearchProofByBuiltinRule>> {
-        Ok(None)
-    }
-
-    pub fn search_not_superset_fact_proof_by_builtin_rule(
-        &mut self,
-        _fact: &NotSupersetFact,
-        _verify_state: VerifyState,
-    ) -> RuntimeResult<Option<NotSupersetFactSearchProofByBuiltinRule>> {
         Ok(None)
     }
 }

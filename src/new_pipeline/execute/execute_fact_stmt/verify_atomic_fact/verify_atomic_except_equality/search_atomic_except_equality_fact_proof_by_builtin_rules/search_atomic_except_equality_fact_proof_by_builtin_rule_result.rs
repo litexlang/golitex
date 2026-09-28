@@ -16,6 +16,8 @@ pub use super::not_is_finite_set::NotIsFiniteSetFactSearchProofByBuiltinRule;
 use super::not_is_nonempty_set::NotIsNonemptySetFactSearchProofByBuiltinRule;
 use super::not_less::NotLessFactSearchProofByBuiltinRule;
 use super::not_less_equal::NotLessEqualFactSearchProofByBuiltinRule;
+use super::not_subset::NotSubsetFactSearchProofByBuiltinRule;
+use super::not_superset::NotSupersetFactSearchProofByBuiltinRule;
 use super::subset::SubsetFactSearchProofByBuiltinRule;
 use super::superset::SupersetFactSearchProofByBuiltinRule;
 
@@ -58,5 +60,3 @@ pub enum NotNormalAtomicFactSearchProofByBuiltinRule {}
 pub enum NotIsSetFactSearchProofByBuiltinRule {}
 pub enum NotIsCartFactSearchProofByBuiltinRule {}
 pub enum NotIsTupleFactSearchProofByBuiltinRule {}
-pub enum NotSubsetFactSearchProofByBuiltinRule {}
-pub enum NotSupersetFactSearchProofByBuiltinRule {}

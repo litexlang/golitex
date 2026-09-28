@@ -2,10 +2,14 @@
 # Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/command/eval.lit
 #
 # Before: `eval` parsed but exec_stmt returned Unsupported.
-# Now: closed numeric eval for display; no proof fact stored.
-# Boundary: free symbols / sets / user algos still unsupported
-#   (e.g. `eval N` soft-fails; `eval parity_value(4)` not yet).
+# Now: rewrite via known_closed_numeric_equal, then ClosedNumericExpr simplify;
+#      display only (no proof fact stored).
+# Boundary: residual must be closed numeric
+#   (e.g. `eval 2!`, `eval N`, unbound `eval a` soft-fail; user algo not yet).
 
 eval (1 + 2)^2
 eval 1 / 2
-eval 2!
+eval abs(-3)
+
+have a R = 10
+eval a + 1

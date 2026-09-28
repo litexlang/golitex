@@ -1,0 +1,35 @@
+{
+  "equivalent_facts": [],
+  "fields": [
+    {
+      "binding": {
+        "id": 31,
+        "name": "x"
+      },
+      "field_type": {
+        "set": "R",
+        "tag": "StandardSet"
+      }
+    },
+    {
+      "binding": {
+        "id": 32,
+        "name": "y"
+      },
+      "field_type": {
+        "set": "R",
+        "tag": "StandardSet"
+      }
+    }
+  ],
+  "kind": "def_struct",
+  "line_file": {
+    "line": 1,
+    "origin": {
+      "export_file_id": 0,
+      "tag": "RootExport"
+    }
+  },
+  "name": "Point",
+  "param_def_with_dom": null
+}

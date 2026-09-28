@@ -1,0 +1,7 @@
+# Node: equal.ByBuiltinRule.DiffZeroFromEqualOperands
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/diff_zero_from_equal_operands.lit
+
+have a R
+have b R
+trust a = b
+a - b = 0

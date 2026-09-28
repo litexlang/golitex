@@ -27,7 +27,25 @@ Still open (non-rewrite): empty atomic builtin-rule families (`NormalAtomic` /
 several remaining `Not*`); more exist builtins;
 secondary subset leaves (set-minus / power-set / cart / subset-transitivity);
 strict-order duals of add/mul algebra; MatchingOneArgByOne beyond the traced constructors;
-equality-identity builtins (more power/log/mod/min/max/…); richer `!=` / set-relation duals.
+equality-identity leftovers (log↔pow inverse, deeper mod, …); richer `!=`.
+NotSubset / NotSuperset duality (A7): known `not B $superset A` proves
+`not A $subset B`, and known `not B $subset A` proves `not A $superset B` —
+see `not_subset_from_known_not_superset.lit`,
+`not_superset_from_known_not_subset.lit`.
+Subset leftovers (A8): `union(A,B) $subset union(C,D)` componentwise;
+`range` / `closed_range` into `N`/`N+`/`Z`/`Q`/`R` —
+see `subset_union_from_componentwise.lit`,
+`subset_integer_range_numeric_carrier.lit`.
+NotEqual leftovers (A9 partial): nonempty ⇒ `A != {}`;
+`n $in N` ∧ `1 <= n` ⇒ `n != 0`; `a != 0` ⇒ `a^n != 0`;
+`a != 0` ∧ `b != 0` ⇒ `a/b != 0`; `a*b != 0` ⇒ `a != 0`;
+`0 < a` ⇒ `sqrt(a) != 0`; `a != 0` ⇒ `a^2+b^2 != 0`;
+`a != -b` ⇒ `a+b != 0`; membership contradiction `x $in A`, `y $notin A`
+⇒ `x != y` — see `not_equal_*.lit`.
+Strict order add/mul (A10 partial): `a < b` ⇒ `a+c < b+c`;
+`0 < k` and `a < b` ⇒ `a*k < b*k` — see
+`less_add_right_congruence_strict.lit`,
+`less_mul_right_positive_monotone_strict.lit`.
 Order wave now includes power/sqrt/log, mod bounds, sub↔0 bridges, order
 transitivity, div monotone/shrink (pos and neg divisor), div↔product bridges,
 literal numeric bound chase, integer successor/adjacency/predecessor, positive
@@ -65,6 +83,24 @@ Equality BuiltinRule identities (Stage B wave 6):
 `sign(a)=0-1` (`a < 0`); ordered `min`/`max` — see `abs_nonneg_equals_self.lit`,
 `abs_nonpos_equals_negation.lit`, `sign_of_*.lit`, `max_*_when_less_equal.lit`,
 `min_*_when_less_equal.lit`.
+Equality BuiltinRule identities (Stage B wave 7):
+`a % gcd(a,b)=0` / `(a*b)%a=0` (nonzero divisor; gcd uses narrow trust for WD);
+`a=b` from two-sided `<=`; `a-b=0` from `a=b`; zero-product cancel;
+`sign(0-a)=0-sign(a)`; `sign(a)*abs(a)=a`; `abs(a)=sign(a)*a`;
+`sign(a*b)=sign(a)*sign(b)` (sign nodes use narrow `trust sign(_) $in R`);
+`a=c-b` from known `a+b=c` — see `gcd_divides_argument.lit`,
+`product_mod_factor_zero.lit`, `equality_from_two_sided_weak_order.lit`,
+`diff_zero_from_equal_operands.lit`, `zero_product_cancel.lit`,
+`sign_of_negation.lit`, `sign_times_abs_equals_arg.lit`,
+`abs_equals_sign_times_arg.lit`, `sign_of_product.lit`,
+`subtraction_from_known_addition.lit`.
+Equality BuiltinRule identities (Stage B wave 8):
+Euclidean `a=d*quot(a,d)+(a%d)`; `(a-(a%b))%b=0` (narrow nonzero-divisor trust);
+`a=0` from known `a^2+b^2=0`; `(-1)^(2*m+1)=-1`;
+`lcm(a,b)*gcd(a,b)=abs(a*b)` (narrow lcm/gcd WD trust) — see
+`quot_euclidean_decomposition.lit`, `mod_dividend_minus_remainder_zero.lit`,
+`square_sum_component_zero.lit`, `minus_one_odd_natural_power.lit`,
+`lcm_gcd_product_abs.lit`.
 Equality BuiltinRewrite: ClosedNumericEqualSubstitution (equal + atomic) and
 atomic KnownEqualObjSubstitution.
 No equality KnownRewrite slot (dead; = uses EqualIr / known_equivalence_classes graph).
@@ -92,7 +128,10 @@ atomic/       ByBuiltinRule (incl. NotIn closed/list/intersect/union; In
               members or operand upper bounds; Greater from known less), KnownAtomicFact,
               ByDefinition (user prop + builtin official defs; see
               atomic/by_definition/ and src/.../by_definition_design.md),
-              BuiltinStrategy (PosAddPos), KnownForall, BuiltinRewrite
+              BuiltinStrategy (atomic family: additive_sign / nonzero /
+              structural_order / numeric_carrier / set_membership / subset /
+              is_finite_set / is_nonempty_set; see atomic/by_builtin_strategy/),
+              KnownForall, BuiltinRewrite
               (ClosedNumeric, KnownEqualObj, OrderDual, ClosedNumeric arithmetic_ops),
               KnownRewrite (Reflexivity/Symmetry)
 and/          per-component verify

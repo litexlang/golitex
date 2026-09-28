@@ -44,6 +44,18 @@ use super::by_equality_identities_wave6::{
     MinLeftWhenLessEqualBuiltinRuleProof, MinRightWhenLessEqualBuiltinRuleProof,
     SignOfNegativeBuiltinRuleProof, SignOfPositiveBuiltinRuleProof,
 };
+use super::by_equality_identities_wave7::{
+    AbsEqualsSignTimesArgBuiltinRuleProof, DiffZeroFromEqualOperandsBuiltinRuleProof,
+    EqualityFromTwoSidedWeakOrderBuiltinRuleProof, GcdDividesArgumentBuiltinRuleProof,
+    ProductModFactorZeroBuiltinRuleProof, SignOfNegationBuiltinRuleProof,
+    SignOfProductBuiltinRuleProof, SignTimesAbsEqualsArgBuiltinRuleProof,
+    SubtractionFromKnownAdditionBuiltinRuleProof, ZeroProductCancelBuiltinRuleProof,
+};
+use super::by_equality_identities_wave8::{
+    LcmGcdProductAbsBuiltinRuleProof, MinusOneOddNaturalPowerBuiltinRuleProof,
+    ModDividendMinusRemainderZeroBuiltinRuleProof, QuotEuclideanDecompositionBuiltinRuleProof,
+    SquareSumComponentZeroBuiltinRuleProof,
+};
 use super::by_power_laws::{
     PowerOfPowerBuiltinRuleProof, PowerOfProductBuiltinRuleProof,
     PowerProductSameBaseBuiltinRuleProof, QuotientAsMulNegOnePowerBuiltinRuleProof,
@@ -134,6 +146,21 @@ pub enum EqualitySearchProofByBuiltinRule {
     MaxLeftWhenLessEqual(MaxLeftWhenLessEqualBuiltinRuleProof),
     MinLeftWhenLessEqual(MinLeftWhenLessEqualBuiltinRuleProof),
     MinRightWhenLessEqual(MinRightWhenLessEqualBuiltinRuleProof),
+    GcdDividesArgument(GcdDividesArgumentBuiltinRuleProof),
+    ProductModFactorZero(ProductModFactorZeroBuiltinRuleProof),
+    EqualityFromTwoSidedWeakOrder(EqualityFromTwoSidedWeakOrderBuiltinRuleProof),
+    DiffZeroFromEqualOperands(DiffZeroFromEqualOperandsBuiltinRuleProof),
+    ZeroProductCancel(ZeroProductCancelBuiltinRuleProof),
+    SignOfNegation(SignOfNegationBuiltinRuleProof),
+    SignTimesAbsEqualsArg(SignTimesAbsEqualsArgBuiltinRuleProof),
+    AbsEqualsSignTimesArg(AbsEqualsSignTimesArgBuiltinRuleProof),
+    SignOfProduct(SignOfProductBuiltinRuleProof),
+    SubtractionFromKnownAddition(SubtractionFromKnownAdditionBuiltinRuleProof),
+    QuotEuclideanDecomposition(QuotEuclideanDecompositionBuiltinRuleProof),
+    ModDividendMinusRemainderZero(ModDividendMinusRemainderZeroBuiltinRuleProof),
+    SquareSumComponentZero(SquareSumComponentZeroBuiltinRuleProof),
+    MinusOneOddNaturalPower(MinusOneOddNaturalPowerBuiltinRuleProof),
+    LcmGcdProductAbs(LcmGcdProductAbsBuiltinRuleProof),
 }
 
 // Builtin Calculation: both sides of an equality reduce to the same value

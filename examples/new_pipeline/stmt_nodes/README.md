@@ -51,6 +51,8 @@ command/       Eval (closed numeric display eval; no proof fact; no user algo ye
 | `definition/def_struct*.lit` | Struct carrier | `struct Point:` fields |
 | `definition/def_template*.lit` | Parameterized def | `template<A set>:` one body |
 | `definition/def_thm.lit` | Named theorem | `thm name: ? fact` + proof |
+| `definition/axiom.lit` | Named axiom (trusted forall) | `axiom name: ? forall …` |
+| `definition/def_strategy.lit` | Named strategy (proved forall) | `strategy name: ? forall …` + proof |
 | `definition/release_*.lit` | Unpack packaged facts | `release thm` / `struct def` / `obj def` |
 | `release_and_expand/` | Expand range / release axioms | `expand:` / `release axiom_of_choice` / `release regularity_axiom` |
 | `unsafe/` | Trust boundary | `trust:` / `trust have …:` |
@@ -58,22 +60,28 @@ command/       Eval (closed numeric display eval; no proof fact; no user algo ye
 | `witness/` | Exhibit witnesses | `witness exist … from …:` etc. |
 | `by/` | Named proof methods | `by cases:` / `by contra:` / … |
 | `proof_block/` | Nested scopes | `claim:` / `sketch:` |
-| `command/eval.lit` | Display eval of closed numeric expr | `eval (1 + 2)^2` |
+| `command/eval.lit` | Display eval after closed-numeric rewrite | `eval (1 + 2)^2` / `have a R = 10` then `eval a + 1` |
 
 Full human catalog: `docs/Manual.md` → Statements → Preview Stmt catalog.
 Parse dispatch: `src/new_pipeline/parse/README.md`.
 
 Omitted for now: `release zorn_lemma` (wired; chain-upper-bound obligation still
-needs a green tracer). Parse-only / unwired: axiom, strategy.
-`eval` is wired for closed numeric display evaluation (exact rational, then
-closed decimal); it does **not** store a proof fact and does **not** consume
-user algos yet. Tracer: `command/eval.lit`.
+needs a green tracer).
+`eval` rewrites via `known_closed_numeric_equal`, requires a `ClosedNumericExpr`
+residual, then simplifies (exact rational, else closed decimal). It does
+**not** store a proof fact and does **not** consume user algos yet.
+Tracer: `command/eval.lit`.
 `have algo for fn` is wired for store+agreement (see `definition/def_algo.lit`).
 `obtain … from exist` / `exist!` / `$P` is wired (see `definition/obtain_*.lit`
 and `definition/def_template_obtain_from_*.lit`).
 `have by replacement_axiom` is wired (see `definition/have_by_replacement_axiom.lit`
 and `definition/def_template_have_by_replacement_axiom.lit`).
 `have by fn_preimage` is wired (see `definition/have_by_fn_preimage.lit`).
+`axiom` is wired (see `definition/axiom.lit`); `release thm` / `by thm` resolve
+axiom names the same way as theorems.
+`strategy` is wired (see `definition/def_strategy.lit`): proves a `? forall`,
+stores the named interface, and injects the forall into ordinary matching
+(no separate strategy search channel).
 
 ## Run all
 

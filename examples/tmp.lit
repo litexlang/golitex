@@ -1,3 +1,33 @@
-# Tracer: object WD Success carries subject; second use is ByKnown.
-let a = 1 + 2
-a = 3
+# A9 rest + A10 strict add/mul smoke
+
+have a R+
+sqrt(a) != 0
+
+have x R
+have y R
+trust x != 0
+x^2 + y^2 != 0
+
+have u R
+have v R
+trust u != 0 - v
+u + v != 0
+
+have p R
+have q R
+have A set
+trust p $in A
+trust q $notin A
+p != q
+
+have m R
+have n R
+have c R
+trust m < n
+m + c < n + c
+
+have s R
+have t R
+have k R+
+trust s < t
+s * k < t * k

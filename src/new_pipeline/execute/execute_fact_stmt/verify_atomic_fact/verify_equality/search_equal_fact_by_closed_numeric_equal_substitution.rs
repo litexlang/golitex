@@ -1,6 +1,7 @@
 use super::by_builtin_rewrite_result::ClosedNumericEqualSubstitutionBuiltinRewriteProof;
 use super::helper::replace_obj_matching_ir;
 use crate::new_pipeline::ast::fact::EqualFact;
+use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::exec_env::known_fact_memory::ObjIR;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::rational_expression::ClosedNumericExpr;
@@ -88,5 +89,26 @@ impl Runtime {
             }
         }
         out
+    }
+
+    // One-shot closed-numeric index substitution on a single object (eval / rewrite).
+    // Example: after `have a R = 10`, `a + 1` → `(10 + 1, [fact_id])`.
+    pub(crate) fn rewrite_obj_by_known_closed_numeric_equal(
+        &self,
+        obj: &Obj,
+    ) -> (Obj, Vec<FactId>) {
+        let entries = self.visible_closed_numeric_equal_entries();
+        let mut rewritten = obj.clone();
+        let mut cited = Vec::new();
+        for (from_ir, closed, fact_id) in &entries {
+            let closed_obj = closed.to_obj();
+            let next = replace_obj_matching_ir(&rewritten, from_ir, &closed_obj);
+            if next.ir() == rewritten.ir() {
+                continue;
+            }
+            rewritten = next;
+            cited.push(*fact_id);
+        }
+        (rewritten, cited)
     }
 }

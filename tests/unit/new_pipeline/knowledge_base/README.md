@@ -10,6 +10,8 @@ Goldens / `.lit` live under `examples/new_pipeline/knowledge_base/`:
 | `def_abstract_prop/` | `…/def_abstract_prop/` |
 | `def_thm/` | `…/def_thm/` |
 | `stored_identifier/` | `…/stored_identifier/` |
+| `axiom/` | `…/axiom/` |
+| `def_struct/` | `…/def_struct/` |
 | `json_mini/` | (no example golden) |
 
 Re-dump goldens:

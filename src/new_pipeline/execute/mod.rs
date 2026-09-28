@@ -11,6 +11,8 @@ pub mod execute_def_prop_stmt;
 pub mod execute_def_struct_stmt;
 pub mod execute_def_template_stmt;
 pub mod execute_def_thm_stmt;
+pub mod execute_def_strategy_stmt;
+pub mod execute_axiom_stmt;
 pub mod execute_fact_stmt;
 mod execute_have_fn_by_forall_exist_unique_stmt;
 mod execute_have_fn_by_induc_stmt;
@@ -56,6 +58,15 @@ pub use execute_def_struct_stmt::{
 pub use execute_def_template_stmt::{
     AssumedTemplateDomFactResult, ExecDefTemplateStmtFailed, ExecDefTemplateStmtResult,
     ExecDefTemplateStmtSuccessResult, ExecTemplateDefBodyResult,
+};
+pub use execute_def_thm_stmt::{
+    ExecDefThmStmtFailed, ExecDefThmStmtResult, ExecDefThmStmtSuccess,
+};
+pub use execute_def_strategy_stmt::{
+    ExecDefStrategyStmtFailed, ExecDefStrategyStmtResult, ExecDefStrategyStmtSuccess,
+};
+pub use execute_axiom_stmt::{
+    ExecAxiomStmtFailed, ExecAxiomStmtResult, ExecAxiomStmtSuccess,
 };
 pub use execute_fact_stmt::{ExecFactStmtResult, ExecFactStmtSuccessResult, VerifyState};
 pub use execute_have_fn_by_forall_exist_unique_stmt::{
