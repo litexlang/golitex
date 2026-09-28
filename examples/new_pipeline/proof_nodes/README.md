@@ -46,10 +46,25 @@ Four files use narrow `trust` only for current WD holes (quotient positivity /
 sqrt-denom / log-nonzero / mod-result in `Z`); remove when WD catches up.
 Equality BuiltinRule identities (Stage B wave 3):
 `min`/`max` idempotent + commutative; `abs(abs(a))=abs(a)`;
-`exp(ln(x))=x` (`R+`); `ln(exp(x))=x`; `floor(n)=n` / `ceil(n)=n` (`Z`);
-`a % a = 0` (`a != 0`) — see `min_*.lit`, `max_*.lit`, `abs_abs_absorption.lit`,
-`exp_of_ln.lit`, `ln_of_exp.lit`, `floor_of_integer.lit`, `ceil_of_integer.lit`,
-`mod_self_zero.lit`.
+`exp(ln(x))=x` (`R+`); `ln(exp(x))=x` (narrow `trust exp(x) $in R+` for ln WD);
+`floor(n)=n` / `ceil(n)=n` (`Z`); `a % a = 0` (`a != 0`) — see `min_*.lit`,
+`max_*.lit`, `abs_abs_absorption.lit`, `exp_of_ln.lit`, `ln_of_exp.lit`,
+`floor_of_integer.lit`, `ceil_of_integer.lit`, `mod_self_zero.lit`.
+Equality BuiltinRule identities (Stage B wave 4):
+`floor(ceil(n))=n`, `ceil(floor(n))=n` (`Z`); `sqrt(a^2)=abs(a)` — see
+`floor_of_ceil_of_integer.lit`, `ceil_of_floor_of_integer.lit`,
+`sqrt_of_square_equals_abs.lit`.
+Equality BuiltinRule identities (Stage B wave 5):
+`quot(a,1)=a`; `quot(a,a)=1` (`N+`); `lcm` commutative / idempotent-abs;
+`gcd` commutative / idempotent-abs / left-right zero-abs (narrow `trust a != 0`
+for current gcd WD); `(n+1)!=(n+1)*n!` (narrow `trust n! $in N` for factorial
+carrier / mul WD) — see `quot_*.lit`, `lcm_*.lit`, `gcd_*.lit`,
+`factorial_successor.lit`.
+Equality BuiltinRule identities (Stage B wave 6):
+`abs(a)=a` (`0 <= a`); `abs(a)=0-a` (`a <= 0`); `sign(a)=1` (`0 < a`);
+`sign(a)=0-1` (`a < 0`); ordered `min`/`max` — see `abs_nonneg_equals_self.lit`,
+`abs_nonpos_equals_negation.lit`, `sign_of_*.lit`, `max_*_when_less_equal.lit`,
+`min_*_when_less_equal.lit`.
 Equality BuiltinRewrite: ClosedNumericEqualSubstitution (equal + atomic) and
 atomic KnownEqualObjSubstitution.
 No equality KnownRewrite slot (dead; = uses EqualIr / known_equivalence_classes graph).

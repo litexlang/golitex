@@ -6,6 +6,7 @@ pub mod execute_proof_block_stmt;
 pub mod execute_register_stmt;
 pub mod execute_def_abstract_prop_stmt;
 pub mod execute_def_algo_stmt;
+pub mod execute_eval_stmt;
 pub mod execute_def_prop_stmt;
 pub mod execute_def_struct_stmt;
 pub mod execute_def_template_stmt;
@@ -41,6 +42,9 @@ pub use exec_stmt_result::{
 pub use execute_def_abstract_prop_stmt::ExecDefAbstractPropStmtSuccessResult;
 pub use execute_def_algo_stmt::{
     ExecDefAlgoStmtFailed, ExecDefAlgoStmtResult, ExecDefAlgoStmtSuccess,
+};
+pub use execute_eval_stmt::{
+    ExecCommandStmtResult, ExecEvalStmtFailed, ExecEvalStmtResult, ExecEvalStmtSuccess,
 };
 pub use execute_def_prop_stmt::{
     ExecDefPropStmtFailed, ExecDefPropStmtResult, ExecDefPropStmtSuccessResult,

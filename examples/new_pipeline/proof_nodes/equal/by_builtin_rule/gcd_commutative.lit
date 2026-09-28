@@ -1,0 +1,8 @@
+# Node: equal.ByBuiltinRule.GcdCommutative
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/gcd_commutative.lit
+
+have a Z
+have b Z
+# Narrow trust: gcd WD currently needs a nonzero witness.
+trust a != 0
+gcd(a, b) = gcd(b, a)

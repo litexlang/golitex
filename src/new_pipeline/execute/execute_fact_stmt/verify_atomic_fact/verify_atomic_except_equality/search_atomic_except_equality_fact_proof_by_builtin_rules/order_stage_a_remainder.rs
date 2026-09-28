@@ -689,15 +689,6 @@ impl Runtime {
         Ok(None)
     }
 
-    fn verify_order_negative(
-        &mut self,
-        obj: &Obj,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<VerifyFactResult> {
-        let goal = make_less_fact(obj, &zero_obj(), self);
-        self.verify_fact(&goal, verify_state)
-    }
-
     fn verify_membership(
         &mut self,
         element: &Obj,

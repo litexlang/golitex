@@ -1,29 +1,20 @@
 # Unit tests: `new_pipeline::knowledge_base`
 
-Loaded from `src/new_pipeline/knowledge_base/mod.rs` via:
+Loaded from `src/new_pipeline/knowledge_base/mod.rs`.
 
-```rust
-#[cfg(test)]
-#[path = "../../../tests/unit/new_pipeline/knowledge_base/mod.rs"]
-mod unit_tests;
-```
+Goldens / `.lit` live under `examples/new_pipeline/knowledge_base/`:
 
-| Path | Covers |
-|------|--------|
-| `def_prop/` | `store_def_prop` / `load_def_prop` / file write-read |
-| `json_mini/` | Hand-rolled JSON Value round-trip |
+| Test module | Example tree |
+|-------------|--------------|
+| `def_prop/` | `…/def_prop/` |
+| `def_abstract_prop/` | `…/def_abstract_prop/` |
+| `def_thm/` | `…/def_thm/` |
+| `stored_identifier/` | `…/stored_identifier/` |
+| `json_mini/` | (no example golden) |
 
-**Goldens and `.lit` sources** live under the example tree (not here):
-
-`examples/new_pipeline/knowledge_base/`
-
-Def-prop tests `include_str!` /
-re-dump that tree’s `def_prop/is_pos.def_prop.json`.
-
-## Regenerate example golden
+Re-dump goldens:
 
 ```bash
 LITEX_DUMP_KB_FIXTURES=1 cargo test -p litex-lang --lib \
-  new_pipeline::knowledge_base::unit_tests::def_prop::tests::dump_is_pos_fixture \
-  -- --exact --nocapture
+  new_pipeline::knowledge_base::unit_tests:: -- dump_fixture --nocapture
 ```

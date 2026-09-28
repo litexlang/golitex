@@ -175,4 +175,24 @@ mod tests {
             other => panic!("unexpected result: failed={}", other.is_failed()),
         }
     }
+
+    #[test]
+    fn def_algo_via_run_eval_like_cli() {
+        use crate::new_pipeline::run::run_eval::run_eval;
+        let code = "have fn nonzero_flag(x R) R by cases:\n    case x = 0: 0\n    case x != 0: 1\n\nhave algo for fn nonzero_flag(x):\n    case x = 0: 0\n    case x != 0: 1";
+        let result = run_eval(LaunchCommand::Eval {
+            code: code.to_string(),
+            session: false,
+            strict: false,
+        })
+        .expect("run_eval");
+        assert!(
+            result.run.success,
+            "cli-like run_eval should succeed; failed_indices={:?} session={:?}",
+            result.run.failed_statement_results,
+            result.run.session_error.is_some()
+        );
+        assert_eq!(result.run.statement_results.len(), 2);
+        assert!(!result.run.statement_results[1].is_failed());
+    }
 }

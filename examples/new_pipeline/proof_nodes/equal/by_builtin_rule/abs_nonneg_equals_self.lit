@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.AbsNonnegEqualsSelf
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/abs_nonneg_equals_self.lit
+
+have a R+
+abs(a) = a

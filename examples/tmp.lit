@@ -1,18 +1,44 @@
-# Stage B wave 3 equality-identity probe
-have a R
-have b R
+# Wave 5 + 6 smoke: quot/lcm/gcd/factorial + abs/sign/ordered min/max.
+
+have a Z
+have b Z
+have n N
+have p N+
 have x R+
 have y R
-have n Z
-have m N+
+have z R
+have u R
+have v R
+have s R
+have t R
 
-min(a, a) = a
-max(a, a) = a
-min(a, b) = min(b, a)
-max(a, b) = max(b, a)
-abs(abs(a)) = abs(a)
-exp(ln(x)) = x
-ln(exp(y)) = y
-floor(n) = n
-ceil(n) = n
-m % m = 0
+quot(a, 1) = a
+quot(p, p) = 1
+lcm(a, b) = lcm(b, a)
+lcm(a, a) = abs(a)
+
+trust a != 0
+gcd(a, b) = gcd(b, a)
+gcd(a, a) = abs(a)
+gcd(a, 0) = abs(a)
+gcd(0, a) = abs(a)
+
+trust n! $in N
+(n + 1)! = (n + 1) * n!
+
+abs(x) = x
+sign(x) = 1
+
+trust y <= 0
+abs(y) = 0 - y
+
+trust z < 0
+sign(z) = 0 - 1
+
+trust u <= v
+max(u, v) = v
+min(u, v) = u
+
+trust t <= s
+max(s, t) = s
+min(s, t) = t

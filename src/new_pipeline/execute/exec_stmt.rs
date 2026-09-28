@@ -2,7 +2,8 @@ use super::exec_stmt_result::{
     ExecDefineObjStmtResult, ExecDefinitionStmtResult, ExecReleaseAndExpandStmtResult, ExecStmtResult,
 };
 use crate::new_pipeline::ast::stmt::{
-    ByStmt, DefineObjStmt, DefinitionStmt, ProofBlockStmt, RegisterStmt, ReleaseAndExpandStmt, Stmt,
+    ByStmt, CommandStmt, DefineObjStmt, DefinitionStmt, ProofBlockStmt, RegisterStmt,
+    ReleaseAndExpandStmt, Stmt,
 };
 use crate::new_pipeline::execute::execute_by_stmt::{
     exec_by_cases_stmt, exec_by_contra_stmt, exec_by_def_stmt, exec_by_enumerate_finite_set_stmt,
@@ -13,6 +14,7 @@ use crate::new_pipeline::execute::execute_by_stmt::{
 };
 use crate::new_pipeline::execute::execute_def_thm_stmt::exec_def_thm_stmt;
 use crate::new_pipeline::execute::execute_def_algo_stmt::exec_def_algo_stmt;
+use crate::new_pipeline::execute::execute_eval_stmt::exec_eval_stmt;
 use crate::new_pipeline::execute::execute_proof_block_stmt::{exec_claim_stmt, exec_sketch_stmt};
 use crate::new_pipeline::execute::execute_register_stmt::{
     exec_register_reflexive_prop_stmt, exec_register_symmetric_prop_stmt,
@@ -274,8 +276,11 @@ impl Runtime {
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(stmt)) => {
                 Ok(ExecStmtResult::ProofBlock(exec_sketch_stmt(self, stmt)?))
             }
+            Stmt::Command(CommandStmt::EvalStmt(stmt)) => {
+                Ok(ExecStmtResult::Command(exec_eval_stmt(self, stmt)?))
+            }
             _ => Err(RuntimeError::Unsupported(
-                "new_pipeline exec_stmt: Fact, let, have-obj-in-nonempty, have-obj-equal, have-obj-by-exist, have-fn-equal, have-fn-by-cases, have-fn-by-exist!, have-fn-by-induc, prop, abstract_prop, struct, template, thm, witness, trust, release/expand, register reflexive/symmetric/transitive, by extension / contra / cases / def / thm / induc / strong_induc / enumerate finite_set / for, claim, sketch are wired for the tracer"
+                "new_pipeline exec_stmt: Fact, let, have-obj-in-nonempty, have-obj-equal, have-obj-by-exist, have-fn-equal, have-fn-by-cases, have-fn-by-exist!, have-fn-by-induc, prop, abstract_prop, struct, template, thm, witness, trust, release/expand, register reflexive/symmetric/transitive, by extension / contra / cases / def / thm / induc / strong_induc / enumerate finite_set / for, claim, sketch, eval are wired for the tracer"
                     .to_string(),
             )),
         }

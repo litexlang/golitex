@@ -71,6 +71,30 @@ impl Runtime {
         {
             return Ok(Some(map_equality_identities_wave3_proof(proof)));
         }
+        if let Some(proof) = self
+            .search_equal_fact_builtin_rule_equality_identities_wave4(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(map_equality_identities_wave4_proof(proof)));
+        }
+        if let Some(proof) = self
+            .search_equal_fact_builtin_rule_equality_identities_wave5(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(map_equality_identities_wave5_proof(proof)));
+        }
+        if let Some(proof) = self
+            .search_equal_fact_builtin_rule_equality_identities_wave6(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(map_equality_identities_wave6_proof(proof)));
+        }
         if let Some(proof) =
             self.search_equal_fact_builtin_rule_inverse_trig(fact, verify_state)?
         {
@@ -145,6 +169,52 @@ fn map_equality_identities_wave3_proof(
         W::FloorOfInteger(p) => EqualitySearchProofByBuiltinRule::FloorOfInteger(p),
         W::CeilOfInteger(p) => EqualitySearchProofByBuiltinRule::CeilOfInteger(p),
         W::ModSelfZero(p) => EqualitySearchProofByBuiltinRule::ModSelfZero(p),
+    }
+}
+
+fn map_equality_identities_wave4_proof(
+    proof: super::by_equality_identities_wave4::EqualityIdentitiesWave4BuiltinRuleProof,
+) -> EqualitySearchProofByBuiltinRule {
+    use super::by_equality_identities_wave4::EqualityIdentitiesWave4BuiltinRuleProof as W;
+    match proof {
+        W::FloorOfCeilOfInteger(p) => EqualitySearchProofByBuiltinRule::FloorOfCeilOfInteger(p),
+        W::CeilOfFloorOfInteger(p) => EqualitySearchProofByBuiltinRule::CeilOfFloorOfInteger(p),
+        W::SqrtOfSquareEqualsAbs(p) => EqualitySearchProofByBuiltinRule::SqrtOfSquareEqualsAbs(p),
+    }
+}
+
+fn map_equality_identities_wave5_proof(
+    proof: super::by_equality_identities_wave5::EqualityIdentitiesWave5BuiltinRuleProof,
+) -> EqualitySearchProofByBuiltinRule {
+    use super::by_equality_identities_wave5::EqualityIdentitiesWave5BuiltinRuleProof as W;
+    match proof {
+        W::QuotByOne(p) => EqualitySearchProofByBuiltinRule::QuotByOne(p),
+        W::QuotSelfOne(p) => EqualitySearchProofByBuiltinRule::QuotSelfOne(p),
+        W::LcmCommutative(p) => EqualitySearchProofByBuiltinRule::LcmCommutative(p),
+        W::LcmIdempotentAbs(p) => EqualitySearchProofByBuiltinRule::LcmIdempotentAbs(p),
+        W::GcdCommutative(p) => EqualitySearchProofByBuiltinRule::GcdCommutative(p),
+        W::GcdIdempotentAbs(p) => EqualitySearchProofByBuiltinRule::GcdIdempotentAbs(p),
+        W::GcdRightZeroAbs(p) => EqualitySearchProofByBuiltinRule::GcdRightZeroAbs(p),
+        W::GcdLeftZeroAbs(p) => EqualitySearchProofByBuiltinRule::GcdLeftZeroAbs(p),
+        W::FactorialSuccessor(p) => EqualitySearchProofByBuiltinRule::FactorialSuccessor(p),
+    }
+}
+
+fn map_equality_identities_wave6_proof(
+    proof: super::by_equality_identities_wave6::EqualityIdentitiesWave6BuiltinRuleProof,
+) -> EqualitySearchProofByBuiltinRule {
+    use super::by_equality_identities_wave6::EqualityIdentitiesWave6BuiltinRuleProof as W;
+    match proof {
+        W::AbsNonnegEqualsSelf(p) => EqualitySearchProofByBuiltinRule::AbsNonnegEqualsSelf(p),
+        W::AbsNonposEqualsNegation(p) => {
+            EqualitySearchProofByBuiltinRule::AbsNonposEqualsNegation(p)
+        }
+        W::SignOfPositive(p) => EqualitySearchProofByBuiltinRule::SignOfPositive(p),
+        W::SignOfNegative(p) => EqualitySearchProofByBuiltinRule::SignOfNegative(p),
+        W::MaxRightWhenLessEqual(p) => EqualitySearchProofByBuiltinRule::MaxRightWhenLessEqual(p),
+        W::MaxLeftWhenLessEqual(p) => EqualitySearchProofByBuiltinRule::MaxLeftWhenLessEqual(p),
+        W::MinLeftWhenLessEqual(p) => EqualitySearchProofByBuiltinRule::MinLeftWhenLessEqual(p),
+        W::MinRightWhenLessEqual(p) => EqualitySearchProofByBuiltinRule::MinRightWhenLessEqual(p),
     }
 }
 

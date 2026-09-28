@@ -1,0 +1,11 @@
+# Stmt: Command.EvalStmt → exec_eval_stmt
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/command/eval.lit
+#
+# Before: `eval` parsed but exec_stmt returned Unsupported.
+# Now: closed numeric eval for display; no proof fact stored.
+# Boundary: free symbols / sets / user algos still unsupported
+#   (e.g. `eval N` soft-fails; `eval parity_value(4)` not yet).
+
+eval (1 + 2)^2
+eval 1 / 2
+eval 2!

@@ -1,0 +1,34 @@
+{
+  "fact": {
+    "atomic": {
+      "fact_id": 10,
+      "left": {
+        "literal": {
+          "tag": "Number",
+          "text": "1"
+        },
+        "tag": "Literal"
+      },
+      "line_file": null,
+      "right": {
+        "literal": {
+          "tag": "Number",
+          "text": "1"
+        },
+        "tag": "Literal"
+      },
+      "tag": "EqualFact"
+    },
+    "tag": "AtomicFact"
+  },
+  "kind": "def_thm",
+  "line_file": {
+    "line": 1,
+    "origin": {
+      "export_file_id": 0,
+      "tag": "RootExport"
+    }
+  },
+  "name": "one_is_one",
+  "prove_process": []
+}

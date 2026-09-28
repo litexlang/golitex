@@ -1,0 +1,8 @@
+# knowledge_base / def_abstract_prop: marked
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/knowledge_base/def_abstract_prop/marked.lit
+# Stored: marked.def_abstract_prop.json
+
+abstract_prop marked(x)
+
+trust $marked(1)
+$marked(1)

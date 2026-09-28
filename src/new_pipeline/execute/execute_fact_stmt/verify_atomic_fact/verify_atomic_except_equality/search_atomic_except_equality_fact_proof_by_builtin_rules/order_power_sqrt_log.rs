@@ -519,12 +519,30 @@ impl Runtime {
         self.verify_fact(&goal, verify_state)
     }
 
+    pub(crate) fn verify_order_nonpositive(
+        &mut self,
+        obj: &Obj,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<VerifyFactResult> {
+        let goal = make_less_equal_fact(obj, &zero_obj(), self);
+        self.verify_fact(&goal, verify_state)
+    }
+
     pub(crate) fn verify_order_positive(
         &mut self,
         obj: &Obj,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
         let goal = make_less_fact(&zero_obj(), obj, self);
+        self.verify_fact(&goal, verify_state)
+    }
+
+    pub(crate) fn verify_order_negative(
+        &mut self,
+        obj: &Obj,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<VerifyFactResult> {
+        let goal = make_less_fact(obj, &zero_obj(), self);
         self.verify_fact(&goal, verify_state)
     }
 
