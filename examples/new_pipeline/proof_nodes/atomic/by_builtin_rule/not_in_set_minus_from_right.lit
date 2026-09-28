@@ -1,5 +1,5 @@
 # Node: atomic.ByBuiltinRule.NotInFact.NonMembershipOfSetMinusFromRight
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/not_in_set_minus_from_right.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/not_in_set_minus_from_right.lit
 
 have A set
 have B set

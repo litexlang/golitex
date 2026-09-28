@@ -1,5 +1,5 @@
 # Node: atomic.ByBuiltinRule.NormalAtomic.PrimeByComputation
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/prime_by_computation.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/prime_by_computation.lit
 
 $prime(2)
 $prime(17)

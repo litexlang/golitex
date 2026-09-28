@@ -552,15 +552,15 @@ not append help text. For example, `litex -j` returns:
 
 ## Project Modules
 
-> **new_pipeline (`LITEX_NEW_PIPELINE=1`):** no `submodule` and no `[hierarchy]`;
+> **Project modules:** no `submodule` and no `[hierarchy]`;
 > `[export]` is `.lit` files only; `[import]` / `[import std]` both mount
 > modules under one shared alias namespace (`[import std]` bare `N` means
 > `N = N`; `Alias = StdName` resolves to `<std_root>/<StdName>`).
 >
 > LaunchCommand design:
-> [`src/new_pipeline/run/README.md`](../src/new_pipeline/run/README.md).
+> [`src/run/README.md`](../src/run/README.md).
 > Tables / parse / elaborate:
-> [`src/new_pipeline/module_manager/README.md`](../src/new_pipeline/module_manager/README.md).
+> [`src/module_manager/README.md`](../src/module_manager/README.md).
 > Fixtures:
 > [`examples/new_pipeline/module_manager/`](../examples/new_pipeline/module_manager/).
 >
@@ -596,27 +596,6 @@ Mount soft Failed → session `FailToImport`. For `-f`, soft Failed on the
 **target** file itself is a normal file failure, not `FailToImport`.
 
 Source-level `import` is rejected; project source uses its manifest.
-
-### Legacy default pipeline (when `LITEX_NEW_PIPELINE` is unset)
-
-`-r` and `-f` share one left-to-right order inside a module: run imports, then
-run the ordered `[export]` `.lit` list. Running a module runs that full list.
-Running a registered file follows the same prefix and stops after that file.
-When the direct parent has no `litex.config`, `litex -f` instead performs one
-isolated batch run. It does not search ancestor folders. A present but invalid
-configuration, or a target that is not exported exactly once, remains a
-project error and never falls back. Use `litex -isolated -f` to force isolation
-when configuration is present.
-
-Dependency order is the module's `[export]` order after its imports.
-`[import]` and `[import std]` are trusted by default under the legacy runner;
-rerun with `-strict` to verify every loaded dependency. Do not write `trust` in
-`litex.config`: remove that prefix when migrating an older project.
-
-`litex -r <project>` verifies the complete ordered `[export]` list. In contrast,
-`litex -f <file>` trusts and loads only the earlier `[export]` entries needed to
-provide that file's project context, then verifies the selected file. Litex
-reports those prefix entries as `unverified_imports`.
 
 ## Reserved Helper Commands
 

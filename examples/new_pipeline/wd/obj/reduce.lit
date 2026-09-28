@@ -1,5 +1,5 @@
 # Obj WD: reduce — Z endpoints, homogeneous op, seed ∈ carrier, iterand ret match
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/wd/obj/reduce.lit
+# Run: litex -f examples/new_pipeline/wd/obj/reduce.lit
 #
 # Before Wave4: children-only. Empty ranges allowed (no start<=end).
 

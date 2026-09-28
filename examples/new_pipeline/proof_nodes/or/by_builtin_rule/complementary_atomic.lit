@@ -1,5 +1,5 @@
 # Node: or.ByBuiltinRule.ComplementaryAtomic
 # Rule struct: OrBuiltinComplementaryAtomic
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/or/by_builtin_rule/complementary_atomic.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/or/by_builtin_rule/complementary_atomic.lit
 
 1 = 1 or 1 != 1

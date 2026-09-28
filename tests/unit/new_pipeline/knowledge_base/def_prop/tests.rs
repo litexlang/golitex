@@ -1,14 +1,14 @@
-use crate::new_pipeline::ast::fact::{AtomicFact, Fact, GreaterFact};
-use crate::new_pipeline::ast::line_file::SourceLine;
-use crate::new_pipeline::ast::names::BoundName;
-use crate::new_pipeline::ast::obj::{IdentifierObj, Literal, Number, Obj, StandardSet};
-use crate::new_pipeline::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
-use crate::new_pipeline::ast::stmt::DefPropStmt;
-use crate::new_pipeline::knowledge_base::{
+use crate::ast::fact::{AtomicFact, Fact, GreaterFact};
+use crate::ast::line_file::SourceLine;
+use crate::ast::names::BoundName;
+use crate::ast::obj::{IdentifierObj, Literal, Number, Obj, StandardSet};
+use crate::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
+use crate::ast::stmt::DefPropStmt;
+use crate::knowledge_base::{
     load_def_prop, read_def_prop, store_def_prop, write_def_prop,
 };
-use crate::new_pipeline::runtime::runtime_ids::{FactId, IdentifierId};
-use crate::new_pipeline::runtime::CodeSource;
+use crate::runtime::runtime_ids::{FactId, IdentifierId};
+use crate::runtime::CodeSource;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};

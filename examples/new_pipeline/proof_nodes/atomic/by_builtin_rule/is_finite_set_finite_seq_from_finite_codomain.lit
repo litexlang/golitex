@@ -1,3 +1,3 @@
 # Node: atomic.ByBuiltinRule.IsFiniteSet.FiniteSeqFromFiniteCodomain
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/is_finite_set_finite_seq_from_finite_codomain.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/is_finite_set_finite_seq_from_finite_codomain.lit
 $is_finite_set(finite_seq({1}, 3))

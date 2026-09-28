@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.LogOfPowerSameBase
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/log_of_power_same_base.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/log_of_power_same_base.lit
 
 have x N
 log(2, 2^x) = x

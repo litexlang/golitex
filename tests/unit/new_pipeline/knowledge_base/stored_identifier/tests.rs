@@ -1,16 +1,16 @@
-use crate::new_pipeline::ast::line_file::SourceLine;
-use crate::new_pipeline::ast::names::BoundName;
-use crate::new_pipeline::ast::obj::{
+use crate::ast::line_file::SourceLine;
+use crate::ast::names::BoundName;
+use crate::ast::obj::{
     AnonymousFn, FnSet, IdentifierObj, Literal, Number, Obj, StandardSet,
 };
-use crate::new_pipeline::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
-use crate::new_pipeline::ast::stmt::{HaveFnEqualStmt, LetObjStmt};
-use crate::new_pipeline::exec_env::StoredIdentifierDefinition;
-use crate::new_pipeline::knowledge_base::{
+use crate::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
+use crate::ast::stmt::{HaveFnEqualStmt, LetObjStmt};
+use crate::exec_env::StoredIdentifierDefinition;
+use crate::knowledge_base::{
     load_stored_identifier, store_stored_identifier, write_stored_identifier,
 };
-use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
-use crate::new_pipeline::runtime::CodeSource;
+use crate::runtime::runtime_ids::IdentifierId;
+use crate::runtime::CodeSource;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 

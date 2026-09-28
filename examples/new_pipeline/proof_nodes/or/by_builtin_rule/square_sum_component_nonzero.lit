@@ -1,6 +1,6 @@
 # Node: or.ByBuiltinRule.SquareSumComponentNonzero
 # Rule struct: OrBuiltinSquareSumComponentNonzero
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/or/by_builtin_rule/square_sum_component_nonzero.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/or/by_builtin_rule/square_sum_component_nonzero.lit
 
 have a, b R
 trust a^2 + b^2 != 0

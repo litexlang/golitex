@@ -10,7 +10,7 @@ checks that each currently wired statement kind can execute end-to-end.
 ## Acceptance
 
 ```bash
-LITEX_NEW_PIPELINE=1 target/release/litex -f <this-file>
+target/release/litex -f <this-file>
 ```
 
 Exit 0 is enough. Stub / not-yet-wired stmt arms are **omitted**.
@@ -66,7 +66,7 @@ command/       Eval (closed-numeric rewrite + recursive eval / stored algo; no p
 | `command/eval_closed_numeric_complex.lit` | Nested closed-numeric display eval | `eval gcd(54,(-24))+3!*sqrt(4)` / rewrite `a+b*c` |
 
 Full human catalog: `docs/Manual.md` → Statements → Preview Stmt catalog.
-Parse dispatch: `src/new_pipeline/parse/README.md`.
+Parse dispatch: `src/parse/README.md`.
 
 `release zorn_lemma` is wired (see `release_and_expand/release_zorn_lemma.lit`):
 named upper-bound / maximality props are checked by IR alignment against the
@@ -96,7 +96,7 @@ export PATH="/usr/bin:/bin:$PATH"
 fail=0
 while IFS= read -r f; do
   echo "=== $f ==="
-  LITEX_NEW_PIPELINE=1 target/release/litex -f "$f" || fail=1
+  target/release/litex -f "$f" || fail=1
 done < <(find examples/new_pipeline/stmt_nodes -name '*.lit' | sort)
 exit $fail
 ```

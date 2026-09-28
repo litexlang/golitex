@@ -1,7 +1,7 @@
 # Node: equal.ByBuiltinRule.Calculation.ClosedDecimal (arithmetic ops)
 # Closed-numeric calculation for abs / min / max / floor / ceil / sign / pow
 # when every leaf is a decimal Number.
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/calculation_closed_decimal_arithmetic_ops.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/calculation_closed_decimal_arithmetic_ops.lit
 
 abs(-3) = 3
 abs(3) = 3

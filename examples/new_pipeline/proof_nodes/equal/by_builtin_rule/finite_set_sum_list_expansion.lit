@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.FiniteSetSumListExpansion
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/finite_set_sum_list_expansion.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/finite_set_sum_list_expansion.lit
 
 # Narrow trust: current equality WD for finite_set_sum needs a numeric carrier.
 trust finite_set_sum({1, 2}, fn(x Z) Z {x}) $in Z

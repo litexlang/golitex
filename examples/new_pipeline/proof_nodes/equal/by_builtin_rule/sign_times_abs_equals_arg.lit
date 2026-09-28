@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.SignTimesAbsEqualsArg
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/sign_times_abs_equals_arg.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/sign_times_abs_equals_arg.lit
 
 have a R
 # Narrow trust: mul WD currently needs sign(a) in R.

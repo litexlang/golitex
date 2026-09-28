@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.AbsNonposEqualsNegation
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/abs_nonpos_equals_negation.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/abs_nonpos_equals_negation.lit
 
 have a R
 trust a <= 0

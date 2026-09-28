@@ -1,5 +1,5 @@
 # Node: atomic.ByBuiltinRule.Less.LogPositiveFromBaseAndArgGtOne
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/less_log_positive_from_base_and_arg_gt_one.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/less_log_positive_from_base_and_arg_gt_one.lit
 
 have x R
 trust 1 < 2

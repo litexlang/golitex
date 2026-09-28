@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.SignOfPositive
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/sign_of_positive.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/sign_of_positive.lit
 
 have a R+
 sign(a) = 1

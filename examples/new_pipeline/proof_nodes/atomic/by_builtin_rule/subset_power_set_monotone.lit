@@ -1,6 +1,6 @@
 # Node: atomic.ByBuiltinRule.SubsetFact.SubsetPowerSetMonotone
 # Rule struct: SubsetPowerSetMonotoneBuiltinRuleProof
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/subset_power_set_monotone.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/subset_power_set_monotone.lit
 
 have A set
 have B set

@@ -1,5 +1,5 @@
 # knowledge_base / axiom: eq_refl
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/knowledge_base/axiom/eq_refl.lit
+# Run: litex -f examples/new_pipeline/knowledge_base/axiom/eq_refl.lit
 # Stored: eq_refl.axiom.json
 
 axiom eq_refl:

@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.OneToAnyPower
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/one_to_any_power.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/one_to_any_power.lit
 
 have a N
 1^a = 1

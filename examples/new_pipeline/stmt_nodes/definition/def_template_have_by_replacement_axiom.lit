@@ -1,5 +1,5 @@
 # Stmt: Definition.DefTemplateStmt body HaveByReplacementAxiomStmt
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/definition/def_template_have_by_replacement_axiom.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/definition/def_template_have_by_replacement_axiom.lit
 #
 # Template body may be `have by replacement_axiom`; instantiate unfolds
 # `$is_set(\Img<…>)` plus intro/elim foralls on `\Img<args>`.

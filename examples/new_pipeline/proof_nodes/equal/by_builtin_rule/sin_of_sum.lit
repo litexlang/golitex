@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.SinOfSum
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/sin_of_sum.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/sin_of_sum.lit
 have a R
 have b R
 sin(a + b) = sin(a) * cos(b) + cos(a) * sin(b)

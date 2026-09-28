@@ -1,5 +1,5 @@
 # Node: atomic.ByBuiltinRewrite.OrderDual
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rewrite/order_dual.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rewrite/order_dual.lit
 #
 # Under the assumption `a < b`, prove `b > a` (OrderDual rewrite).
 

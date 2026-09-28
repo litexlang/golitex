@@ -1,5 +1,5 @@
 # Stmt: UnsafeStmt.TrustHaveStmt → exec_trust_have_stmt
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/unsafe/trust_have_stmt.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/unsafe/trust_have_stmt.lit
 
 trust have denominator R:
     denominator != 0

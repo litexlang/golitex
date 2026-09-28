@@ -1,970 +1,414 @@
-//! Run-wide runtime state and current-source lifecycle.
-
-use crate::prelude::*;
-use std::cell::Cell;
+use super::code_source::CodeSource;
+use super::error::{RuntimeError, RuntimeResult};
+use super::real_or_virtual_path::RealOrVirtualPath;
+use super::runtime_ids::{FactId, IdentifierId, PropRewritePropertyId, WellDefinednessId};
+use crate::ast::names::{AtomicName, BoundName, PlainName};
+use crate::ast::obj::IdentifierObj;
+use crate::exec_env::exec_env::ExecEnv;
+use crate::exec_env::session_view::ExecEnvSessionView;
+use crate::launch_command::LaunchCommand;
+use crate::module_manager::{ExportFileAndItsExecEnv, GlobalModuleManager};
 use std::collections::HashMap;
-use std::rc::Rc;
 
-/// Owns the mutable state for one top-level Litex invocation.
+// -----------------------------------------------------------------------------
+// Core data model
+// -----------------------------------------------------------------------------
+
+/// Process-wide owner of new_pipeline execution and parse state.
 ///
-/// The runtime keeps module lookup, source activation, environments, IDs, and
-/// invocation configuration together so nested execution never needs a second
-/// runtime registry.
+/// Like `ExecEnv`, this is core data model: it owns the live stacks, current
+/// file, global id counters, and global module manager.  A single `Runtime` drives
+/// one interpreter session; `ExecEnv` instances on
+/// `execution_environments_stack` are the per-scope stores it pushes and pops.
 pub struct Runtime {
-    /// Module registry and persistent source environments for this top-level
-    /// run.
-    pub module_manager: Box<ModuleManager>,
-
-    /// Module that owns `current_source_id`.
-    ///
-    /// Source IDs are module-local because import targets carry their owner
-    /// module ID. A Runtime is always source-bound; construction creates a
-    /// registered virtual source before exposing the value.
-    pub(crate) current_module_id: ModuleId,
-
-    /// Source currently being parsed or executed.
-    pub(crate) current_source_id: SourceId,
-
-    /// Whether the current file is executed as trusted source.
-    ///
-    /// Trusted repository execution (for example `-r` prefix runs) skips
-    /// re-verifying statements that were already checked by the source
-    /// selection path. Trust and prior-verification helpers temporarily use
-    /// the same mode. This is transient runtime state, not an execution
-    /// option or source metadata.
-    pub is_current_file_trusted: bool,
-
-    /// Temporary environments nested inside the current source.
+    pub global_module_manager: GlobalModuleManager,
     pub execution_environments_stack: Vec<Box<ExecEnv>>,
-
-    /// Transient binder and scope state shared by one nested parser traversal.
-    ///
-    /// Changing the current source neither consumes nor resets it.
-    pub(crate) parse_context: ParseContext,
-
-    /// Number of nested definition statements currently being parsed.
-    ///
-    /// Bare AtomicName references at a use site remain unqualified.  A
-    /// definition body, however, records its local names with the owning
-    /// module so the same stored theorem/definition can be used after import
-    /// without guessing an imported module at the caller.
-    pub(crate) parsing_definition_depth: usize,
-
-    /// Monotone runtime-wide allocator for fact IDs.
-    ///
-    /// Local environments may disappear, but a fact ID is never reused during
-    /// the run.
-    pub next_fact_id: Cell<u64>,
-
-    /// Runtime-wide allocator for globally unique symbol IDs.
-    pub symbol_id_allocator: Rc<SymbolIdAllocator>,
-
-    /// Direct struct carriers learned when typed bindings execute.
-    ///
-    /// Exact transient binder identities remain usable after their local
-    /// environment ends, for example when a stored theorem is instantiated.
-    pub(crate) executed_direct_struct_carriers: HashMap<SymbolId, StructObj>,
-
-    /// Execution options for output and configured dependency verification.
-    pub execution_options: RuntimeOptions,
+    pub parse_scope_stack: Vec<Box<ParseScope>>,
+    pub current_file: RealOrVirtualPath,
+    pub global_ids: GlobalIds,
+    /// How this Runtime session was launched (`-strict` / `-session` live here).
+    pub launch_command: LaunchCommand,
+    /// Where the currently running code came from (drives outermost symbol qualify).
+    pub code_source: CodeSource,
 }
 
-/// Checkpoint used when temporarily activating another registered source.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct SourceActivation {
-    /// Module that owns the checkpointed source id.
-    pub module_id: ModuleId,
+/// One parse layer's plain names → [`IdentifierId`].
+/// Inner scopes must not reuse a visible outer plain name.
+pub struct ParseScope {
+    pub plain: HashMap<String, IdentifierId>,
+}
 
-    /// Source that was active before a projection temporarily switched source.
-    pub source_id: SourceId,
-
-    /// Active verification mode restored with the source.
-    pub mode: TrustedOrRequireVerify,
+/// Global monotonic id counters owned by `Runtime`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct GlobalIds {
+    next_fact_id: FactId,
+    next_well_definedness_id: WellDefinednessId,
+    next_prop_rewrite_property_id: PropRewritePropertyId,
+    next_identifier_id: IdentifierId,
 }
 
 impl Runtime {
-    /// Construct a runtime whose active source is `VirtualSource::Eval`.
-    pub fn new(execution_options: RuntimeOptions) -> Self {
-        Self::new_with_virtual_source(execution_options, VirtualSource::Eval)
-    }
-
-    /// Construct a runtime whose active root source is already selected.
-    pub fn new_with_source(
-        execution_options: RuntimeOptions,
-        origin: SourcePath,
-    ) -> Self {
-        Self::new_with_source_and_fact_id_start(execution_options, origin, 1)
-    }
-
-    pub fn new_with_virtual_source(
-        execution_options: RuntimeOptions,
-        kind: VirtualSource,
-    ) -> Self {
-        Self::new_with_source(execution_options, SourcePath::VirtualSource(kind))
-    }
-
-    pub fn new_with_real_file(
-        execution_options: RuntimeOptions,
-        path: impl Into<String>,
-    ) -> Self {
-        Self::new_with_source(
-            execution_options,
-            SourcePath::RealFilePath(RealFilePath::new(path.into())),
-        )
-    }
-
-    /// Construct a repository-discovery runtime. The root module is already a
-    /// repository location; its active source is the discovery virtual source.
-    pub fn new_for_repository(
-        execution_options: RuntimeOptions,
-        repository_root: RealDirectoryPath,
-        main_file_path: RealFilePath,
-    ) -> Result<Self, String> {
-        let mut module_manager = ModuleManager::new();
-        let source_id = module_manager.create_virtual_root_module(VirtualSource::Named(
-            format!("repository-discovery:{}", main_file_path),
-        ));
-        module_manager.configure_repository_root_module(repository_root, main_file_path)?;
-        Ok(Self::from_module_manager(
-            module_manager,
-            source_id,
-            execution_options,
-            1,
-        ))
-    }
-
-    /// Default-options runtime on a virtual source.
-    pub fn with_virtual_source(kind: VirtualSource) -> Self {
-        Self::new_with_virtual_source(RuntimeOptions::default(), kind)
-    }
-
-    /// Default-options runtime on a named or legacy-label virtual source.
-    pub fn with_named_source(name: impl AsRef<str>) -> Self {
-        Self::with_virtual_source(virtual_source_from_label(name.as_ref()))
-    }
-
-    /// Default-options runtime on a real file path.
-    pub fn with_real_file(path: impl Into<String>) -> Self {
-        Self::new_with_real_file(RuntimeOptions::default(), path)
-    }
-
-    /// Construct an independent runtime with an explicitly disjoint fact-ID
-    /// range. This is used by compiler-only structural passes that must create
-    /// temporary facts without colliding with IDs retained by an execution
-    /// runtime. Semantic execution should use Runtime::new.
-    pub(crate) fn new_with_fact_id_start(
-        execution_options: RuntimeOptions,
-        fact_id_start: u64,
-    ) -> Self {
-        Self::new_with_source_and_fact_id_start(
-            execution_options,
-            SourcePath::VirtualSource(VirtualSource::Eval),
-            fact_id_start,
-        )
-    }
-
-    fn new_with_source_and_fact_id_start(
-        execution_options: RuntimeOptions,
-        origin: SourcePath,
-        fact_id_start: u64,
-    ) -> Self {
-        let mut module_manager = ModuleManager::new();
-        let source_id = match origin {
-            SourcePath::VirtualSource(kind) => module_manager.create_virtual_root_module(kind),
-            SourcePath::RealFilePath(path) => module_manager.create_file_root_module(path),
+    /// Create a session from its launch contract and open the matching file env.
+    pub fn new(command: LaunchCommand) -> Self {
+        let code_source = match &command {
+            LaunchCommand::Eval { .. } => CodeSource::Eval,
+            LaunchCommand::Repl { .. } => CodeSource::Repl,
+            LaunchCommand::File { .. } | LaunchCommand::Repository { .. } => {
+                CodeSource::StandaloneFile
+            }
+            LaunchCommand::Help | LaunchCommand::Version => {
+                panic!("Runtime::new does not accept Help/Version LaunchCommand")
+            }
         };
-        Self::from_module_manager(module_manager, source_id, execution_options, fact_id_start)
-    }
-
-    fn from_module_manager(
-        module_manager: ModuleManager,
-        source_id: SourceId,
-        execution_options: RuntimeOptions,
-        fact_id_start: u64,
-    ) -> Self {
-        Runtime {
-            module_manager: Box::new(module_manager),
-            current_module_id: ModuleId::ROOT,
-            current_source_id: source_id,
-            is_current_file_trusted: false,
-            execution_environments_stack: vec![],
-            parse_context: ParseContext::new(),
-            parsing_definition_depth: 0,
-            next_fact_id: Cell::new(fact_id_start),
-            symbol_id_allocator: Rc::new(SymbolIdAllocator::new()),
-            executed_direct_struct_carriers: HashMap::new(),
-            execution_options,
-        }
-    }
-}
-
-fn virtual_source_from_label(label: &str) -> VirtualSource {
-    match label.to_ascii_lowercase().as_str() {
-        "eval" => VirtualSource::Eval,
-        "repl" => VirtualSource::Repl,
-        "session" => VirtualSource::Session,
-        "to-lean" | "to_lean" => VirtualSource::ToLean,
-        "to-latex" | "to_latex" => VirtualSource::ToLatex,
-        "code-extraction" | "code_extraction" => VirtualSource::CodeExtraction,
-        _ => VirtualSource::Named(label.to_string()),
-    }
-}
-
-impl Default for Runtime {
-    fn default() -> Self {
-        Self::new(RuntimeOptions::default())
-    }
-}
-
-impl Runtime {
-    pub fn allocate_fact_id(&self) -> Result<FactId, RuntimeError> {
-        let value = self.next_fact_id.get();
-        let next_value = value.checked_add(1).ok_or_else(|| {
-            RuntimeError::from(UnknownRuntimeError(RuntimeErrorStruct::new_with_just_msg(
-                "fact ID space exhausted".to_string(),
-            )))
-        })?;
-        self.next_fact_id.set(next_value);
-        Ok(FactId::new(value))
-    }
-
-    /// Construct facts with IDs allocated exclusively by this Runtime.
-    pub fn new_equal_fact(&self, left: Obj, right: Obj, line_file: LineFile) -> EqualFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        EqualFact {
-            fact_id,
-            left,
-            right,
-            line_file,
-        }
-    }
-
-    pub fn new_equal_fact_from_refs(
-        &self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-    ) -> EqualFact {
-        self.new_equal_fact(left.clone(), right.clone(), line_file)
-    }
-
-    pub fn new_not_equal_fact(&self, left: Obj, right: Obj, line_file: LineFile) -> NotEqualFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        NotEqualFact {
-            fact_id,
-            left,
-            right,
-            line_file,
-        }
-    }
-
-    pub fn new_less_fact(&self, left: Obj, right: Obj, line_file: LineFile) -> LessFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        LessFact {
-            fact_id,
-            left,
-            right,
-            line_file,
-        }
-    }
-
-    pub fn new_greater_fact(&self, left: Obj, right: Obj, line_file: LineFile) -> GreaterFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        GreaterFact {
-            fact_id,
-            left,
-            right,
-            line_file,
-        }
-    }
-
-    pub fn new_less_equal_fact(&self, left: Obj, right: Obj, line_file: LineFile) -> LessEqualFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        LessEqualFact {
-            fact_id,
-            left,
-            right,
-            line_file,
-        }
-    }
-
-    pub fn new_greater_equal_fact(
-        &self,
-        left: Obj,
-        right: Obj,
-        line_file: LineFile,
-    ) -> GreaterEqualFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        GreaterEqualFact {
-            fact_id,
-            left,
-            right,
-            line_file,
-        }
-    }
-
-    pub fn new_not_less_fact(&self, left: Obj, right: Obj, line_file: LineFile) -> NotLessFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        NotLessFact {
-            fact_id,
-            left,
-            right,
-            line_file,
-        }
-    }
-
-    pub fn new_not_greater_fact(
-        &self,
-        left: Obj,
-        right: Obj,
-        line_file: LineFile,
-    ) -> NotGreaterFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        NotGreaterFact {
-            fact_id,
-            left,
-            right,
-            line_file,
-        }
-    }
-
-    pub fn new_not_less_equal_fact(
-        &self,
-        left: Obj,
-        right: Obj,
-        line_file: LineFile,
-    ) -> NotLessEqualFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        NotLessEqualFact {
-            fact_id,
-            left,
-            right,
-            line_file,
-        }
-    }
-
-    pub fn new_not_greater_equal_fact(
-        &self,
-        left: Obj,
-        right: Obj,
-        line_file: LineFile,
-    ) -> NotGreaterEqualFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        NotGreaterEqualFact {
-            fact_id,
-            left,
-            right,
-            line_file,
-        }
-    }
-
-    pub fn new_in_fact(&self, element: Obj, set: Obj, line_file: LineFile) -> InFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        InFact {
-            fact_id,
-            element,
-            set,
-            line_file,
-        }
-    }
-
-    pub fn new_not_in_fact(&self, element: Obj, set: Obj, line_file: LineFile) -> NotInFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        NotInFact {
-            fact_id,
-            element,
-            set,
-            line_file,
-        }
-    }
-
-    pub fn new_is_set_fact(&self, set: Obj, line_file: LineFile) -> IsSetFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        IsSetFact {
-            fact_id,
-            set,
-            line_file,
-        }
-    }
-
-    pub fn new_is_nonempty_set_fact(&self, set: Obj, line_file: LineFile) -> IsNonemptySetFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        IsNonemptySetFact {
-            fact_id,
-            set,
-            line_file,
-        }
-    }
-
-    pub fn new_is_finite_set_fact(&self, set: Obj, line_file: LineFile) -> IsFiniteSetFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        IsFiniteSetFact {
-            fact_id,
-            set,
-            line_file,
-        }
-    }
-
-    pub fn new_is_cart_fact(&self, set: Obj, line_file: LineFile) -> IsCartFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        IsCartFact {
-            fact_id,
-            set,
-            line_file,
-        }
-    }
-
-    pub fn new_is_tuple_fact(&self, tuple: Obj, line_file: LineFile) -> IsTupleFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        IsTupleFact {
-            fact_id,
-            set: tuple,
-            line_file,
-        }
-    }
-
-    pub fn new_not_is_set_fact(&self, set: Obj, line_file: LineFile) -> NotIsSetFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        NotIsSetFact {
-            fact_id,
-            set,
-            line_file,
-        }
-    }
-
-    pub fn new_not_is_nonempty_set_fact(
-        &self,
-        set: Obj,
-        line_file: LineFile,
-    ) -> NotIsNonemptySetFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        NotIsNonemptySetFact {
-            fact_id,
-            set,
-            line_file,
-        }
-    }
-
-    pub fn new_not_is_finite_set_fact(&self, set: Obj, line_file: LineFile) -> NotIsFiniteSetFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        NotIsFiniteSetFact {
-            fact_id,
-            set,
-            line_file,
-        }
-    }
-
-    pub fn new_not_is_cart_fact(&self, set: Obj, line_file: LineFile) -> NotIsCartFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        NotIsCartFact {
-            fact_id,
-            set,
-            line_file,
-        }
-    }
-
-    pub fn new_not_is_tuple_fact(&self, tuple: Obj, line_file: LineFile) -> NotIsTupleFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        NotIsTupleFact {
-            fact_id,
-            set: tuple,
-            line_file,
-        }
-    }
-
-    pub fn new_subset_fact(&self, left: Obj, right: Obj, line_file: LineFile) -> SubsetFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        SubsetFact {
-            fact_id,
-            left,
-            right,
-            line_file,
-        }
-    }
-
-    pub fn new_superset_fact(&self, left: Obj, right: Obj, line_file: LineFile) -> SupersetFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        SupersetFact {
-            fact_id,
-            left,
-            right,
-            line_file,
-        }
-    }
-
-    pub fn new_not_subset_fact(&self, left: Obj, right: Obj, line_file: LineFile) -> NotSubsetFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        NotSubsetFact {
-            fact_id,
-            left,
-            right,
-            line_file,
-        }
-    }
-
-    pub fn new_not_superset_fact(
-        &self,
-        left: Obj,
-        right: Obj,
-        line_file: LineFile,
-    ) -> NotSupersetFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        NotSupersetFact {
-            fact_id,
-            left,
-            right,
-            line_file,
-        }
-    }
-
-    pub fn new_fn_equal_fact(&self, left: Obj, right: Obj, line_file: LineFile) -> FnEqualFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        FnEqualFact {
-            fact_id,
-            left,
-            right,
-            line_file,
-        }
-    }
-
-    pub fn new_normal_atomic_fact(
-        &self,
-        predicate: AtomicName,
-        body: Vec<Obj>,
-        line_file: LineFile,
-    ) -> NormalAtomicFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        NormalAtomicFact {
-            fact_id,
-            predicate,
-            body,
-            line_file,
-        }
-    }
-
-    pub fn new_not_normal_atomic_fact(
-        &self,
-        predicate: AtomicName,
-        body: Vec<Obj>,
-        line_file: LineFile,
-    ) -> NotNormalAtomicFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        NotNormalAtomicFact {
-            fact_id,
-            predicate,
-            body,
-            line_file,
-        }
-    }
-
-    pub fn new_not_forall_fact(&self, forall_fact: ForallFact) -> NotForallFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        NotForallFact {
-            fact_id,
-            forall_fact,
-        }
-    }
-
-    pub fn new_and_fact(&self, facts: Vec<AtomicFact>, line_file: LineFile) -> AndFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        AndFact {
-            fact_id,
-            facts,
-            line_file,
-        }
-    }
-
-    pub fn new_or_fact(&self, facts: Vec<AndChainAtomicFact>, line_file: LineFile) -> OrFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        OrFact {
-            fact_id,
-            facts,
-            line_file,
-        }
-    }
-
-    pub fn new_chain_fact(
-        &self,
-        objs: Vec<Obj>,
-        prop_names: Vec<AtomicName>,
-        line_file: LineFile,
-    ) -> ChainFact {
-        let fact_id = self.allocate_fact_id().expect("fact ID space exhausted");
-        ChainFact {
-            fact_id,
-            objs,
-            prop_names,
-            line_file,
-        }
-    }
-
-    pub fn new_forall_fact(
-        &self,
-        typed_parameters: TypedParameterList,
-        dom_facts: Vec<Fact>,
-        then_facts: Vec<ExistOrAndChainAtomicFact>,
-        line_file: LineFile,
-    ) -> Result<ForallFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        let fact = ForallFact {
-            fact_id,
-            typed_parameters,
-            dom_facts,
-            then_facts,
-            line_file,
+        let file = match &command {
+            LaunchCommand::Repl { .. } => RealOrVirtualPath::Repl,
+            LaunchCommand::Eval { .. } => RealOrVirtualPath::Eval,
+            LaunchCommand::File { path, .. } | LaunchCommand::Repository { path, .. } => {
+                RealOrVirtualPath::Real(path.clone())
+            }
+            LaunchCommand::Help | LaunchCommand::Version => {
+                panic!("Runtime::new does not accept Help/Version LaunchCommand")
+            }
         };
-        check_forall_fact_has_no_duplicate_forall_free_parameter(&fact)?;
-        Ok(fact)
-    }
-
-    pub fn new_forall_fact_with_iff(
-        &self,
-        forall_fact: ForallFact,
-        iff_facts: Vec<ExistOrAndChainAtomicFact>,
-        line_file: LineFile,
-    ) -> Result<ForallFactWithIff, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        let fact = ForallFactWithIff {
-            fact_id,
-            forall_fact,
-            iff_facts,
-            line_file,
+        let mut runtime = Self {
+            global_module_manager: GlobalModuleManager::new(),
+            execution_environments_stack: Vec::new(),
+            parse_scope_stack: Vec::new(),
+            current_file: file.clone(),
+            global_ids: GlobalIds::new(),
+            launch_command: command,
+            code_source,
         };
-        check_forall_fact_with_iff_has_no_duplicate_forall_free_parameter(&fact)?;
-        Ok(fact)
+        runtime.begin_file(file);
+        runtime
     }
 
-    pub fn new_plain_exist_fact(
-        &self,
-        typed_parameters: TypedParameterList,
-        facts: Vec<QuantifierFreeFact>,
-        line_file: LineFile,
-    ) -> Result<PlainExistFact, RuntimeError> {
-        let fact_id = self.allocate_fact_id()?;
-        let fact = PlainExistFact {
-            fact_id,
-            typed_parameters,
-            facts,
-            line_file,
-        };
-        check_exist_fact_has_no_duplicate_exist_free_parameter(&ExistFact::PlainExistFact(
-            fact.clone(),
-        ))?;
-        Ok(fact)
+    pub fn begin_file(&mut self, file: RealOrVirtualPath) {
+        self.current_file = file;
+        let session_view = ExecEnvSessionView::new(self.global_ids.clone(), self.code_source.clone());
+        self.execution_environments_stack
+            .push(Box::new(ExecEnv::new(Some(session_view))));
+        self.push_parse_scope();
     }
 
-    pub fn set_output_detail(&mut self, output_detail: OutputDetail) {
-        self.execution_options.set_output_detail(output_detail);
+    pub fn set_code_source(&mut self, code_source: CodeSource) {
+        self.code_source = code_source;
     }
 
-    pub fn effective_output_detail(&self) -> OutputDetail {
-        self.execution_options.output_detail()
+    pub fn finish_file(&mut self) -> (RealOrVirtualPath, Box<ExecEnv>) {
+        let file = self.current_file.clone();
+        let mut exec_env = self
+            .execution_environments_stack
+            .pop()
+            .expect("no file ExecEnv");
+        if let Some(view) = exec_env.session_view.as_mut() {
+            view.stamp_leave(self.global_ids.clone());
+        }
+        self.parse_scope_stack.clear();
+        (file, exec_env)
     }
 
-    #[deprecated(note = "use `set_output_detail`")]
-    pub fn set_output_style(&mut self, output_detail: OutputDetail) {
-        self.set_output_detail(output_detail);
+    pub fn abort_file(&mut self) {
+        self.execution_environments_stack.clear();
+        self.parse_scope_stack.clear();
     }
 
-    #[deprecated(note = "use `effective_output_detail`")]
-    pub fn effective_output_style(&self) -> OutputDetail {
-        self.effective_output_detail()
-    }
-
-    pub fn is_compact_output(&self) -> bool {
-        self.effective_output_detail() == OutputDetail::Compact
-    }
-
-    pub fn is_normal_output(&self) -> bool {
-        self.effective_output_detail() == OutputDetail::Normal
-    }
-
-    pub fn is_detailed_output(&self) -> bool {
-        self.effective_output_detail() == OutputDetail::Detailed
-    }
-
-    pub fn current_file_path_rc(&self) -> Rc<str> {
-        Rc::from(self.current_source().display_label())
-    }
-
-    pub fn current_source(&self) -> &Source {
-        let module_id = self.current_module_id;
-        let source_id = self.current_source_id;
-        self.module_manager
-            .module(module_id)
-            .and_then(|module| module.source(source_id))
-            .expect("current source should be registered")
-    }
-
-    fn activate_source(
+    pub fn publish_completed_export_file(
         &mut self,
-        module_id: ModuleId,
-        source_id: SourceId,
-        mode: TrustedOrRequireVerify,
+        file: RealOrVirtualPath,
+        exec_env: Box<ExecEnv>,
     ) {
-        assert!(
-            self.execution_environments_stack.is_empty(),
-            "a source cannot be selected with an active local environment"
-        );
-        assert!(
-            self.module_manager
-                .module(module_id)
-                .and_then(|module| module.source(source_id))
-                .is_some(),
-            "a source can only be selected after it has been registered"
-        );
-        self.current_module_id = module_id;
-        self.current_source_id = source_id;
-        self.is_current_file_trusted = mode == TrustedOrRequireVerify::Trusted;
+        let name = file.name();
+        let path = file.display_path();
+        self.global_module_manager
+            .record_root_export(ExportFileAndItsExecEnv::new(name, path, exec_env));
     }
 
-    pub fn source_activation(&self) -> SourceActivation {
-        SourceActivation {
-            module_id: self.current_module_id,
-            source_id: self.current_source_id,
-            mode: self.current_execution_mode(),
-        }
+    pub fn push_parse_scope(&mut self) {
+        self.parse_scope_stack.push(Box::new(ParseScope::new()));
     }
 
-    pub fn restore_source_activation(&mut self, activation: SourceActivation) {
-        self.activate_source(activation.module_id, activation.source_id, activation.mode);
+    pub fn pop_parse_scope(&mut self) {
+        self.parse_scope_stack
+            .pop()
+            .expect("parse scope stack empty");
     }
 
-    pub fn current_parse_context(&self) -> &ParseContext {
-        &self.parse_context
-    }
-
-    pub fn current_parse_context_mut(&mut self) -> &mut ParseContext {
-        &mut self.parse_context
-    }
-
-    pub fn current_module_id(&self) -> ModuleId {
-        self.current_module_id
-    }
-
-    pub fn current_source_id(&self) -> SourceId {
-        self.current_source_id
-    }
-
-    pub fn current_module(&self) -> &ModuleRunner {
-        self.module_manager
-            .module(self.current_module_id())
-            .expect("current module should exist")
-    }
-
-    pub fn current_module_mut(&mut self) -> &mut ModuleRunner {
-        let module_id = self.current_module_id();
-        self.module_manager
-            .module_mut(module_id)
-            .expect("current module should exist")
-    }
-
-    pub fn activate_source_for_execution(&mut self, module_id: ModuleId, source_id: SourceId) {
-        self.activate_source_with_mode(
-            module_id,
-            source_id,
-            TrustedOrRequireVerify::RequireVerification,
-        );
-    }
-
-    pub fn activate_source_with_mode(
-        &mut self,
-        module_id: ModuleId,
-        source_id: SourceId,
-        execution_mode: TrustedOrRequireVerify,
-    ) {
-        debug_assert!(
-            self.parse_context.is_at_root_scope(),
-            "a source cannot be selected inside an active parser scope"
-        );
-        self.activate_source(module_id, source_id, execution_mode);
-    }
-
-    pub fn canonical_module_name_for_parse(&self, name: &str) -> String {
-        self.module_manager
-            .canonical_name_for_reference(self.current_module_id, name)
-            .unwrap_or_else(|| name.to_string())
-    }
-
-    pub fn strict_mode_applies_to_current_module(&self) -> bool {
-        if !self.execution_options.is_strict() {
-            return false;
-        }
-        !self
-            .module_manager
-            .module(self.current_module_id)
-            .is_some_and(|module| module.is_standard_library)
-    }
-
-    pub fn current_execution_mode(&self) -> TrustedOrRequireVerify {
-        if self.is_current_file_trusted {
-            TrustedOrRequireVerify::Trusted
-        } else {
-            TrustedOrRequireVerify::RequireVerification
-        }
-    }
-
-    pub fn current_execution_is_trusted_source(&self) -> bool {
-        self.current_execution_mode() == TrustedOrRequireVerify::Trusted
-    }
-
-    pub fn record_unverified_import(
-        &mut self,
-        kind: UnverifiedImportKind,
-        name: String,
-        line_file: LineFile,
-    ) {
-        if self
-            .module_manager
-            .unverified_imports
-            .iter()
-            .any(|entry| entry.kind == kind && entry.name == name && entry.line_file == line_file)
-        {
-            return;
-        }
-        self.module_manager
-            .unverified_imports
-            .push(UnverifiedImport {
-                kind,
-                name,
-                line_file,
-            });
-    }
-
-    pub fn unverified_imports(&self) -> &[UnverifiedImport] {
-        &self.module_manager.unverified_imports
-    }
-
-    pub fn replace_current_execution_mode(
-        &mut self,
-        execution_mode: TrustedOrRequireVerify,
-    ) -> TrustedOrRequireVerify {
-        let previous = self.current_execution_mode();
-        self.is_current_file_trusted = execution_mode == TrustedOrRequireVerify::Trusted;
-        previous
-    }
-}
-
-impl Runtime {
-    pub fn validate_name(
-        &mut self,
-        name: &str,
-        _current_line_file: LineFile,
-    ) -> Result<(), RuntimeError> {
-        if let Err(invalid_name_message) = is_valid_litex_name(name) {
-            return Err(ParseRuntimeError(RuntimeErrorStruct::new_with_just_msg(
-                invalid_name_message,
-            ))
-            .into());
-        }
-
-        Ok(())
-    }
-
-    pub fn validate_user_fn_param_names_for_parse(
-        &mut self,
-        names: &[String],
-        line_file: LineFile,
-    ) -> Result<(), RuntimeError> {
-        for name in names {
-            if let Err(e) = is_valid_litex_name(name) {
-                return Err(
-                    ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
-                        e,
-                        line_file.clone(),
-                    ))
-                    .into(),
-                );
+    pub fn plain_atom_is_visible(&self, name: &str) -> bool {
+        for scope in &self.parse_scope_stack {
+            if scope.plain.contains_key(name) {
+                return true;
             }
         }
-        Ok(())
+        false
     }
 
-    pub fn validate_names_and_insert_into_top_parsing_time_name_scope(
-        &mut self,
-        names: &Vec<String>,
-        line_file: LineFile,
-    ) -> Result<(), RuntimeError> {
-        for name in names {
-            self.validate_name_and_insert_into_top_parsing_time_name_scope(
-                name,
-                line_file.clone(),
-            )?;
-        }
-        Ok(())
+    pub fn resolve_plain_atom(&self, name: &str) -> RuntimeResult<IdentifierId> {
+        Ok(self.resolve_plain_atom_with_scope_index(name)?.0)
     }
 
-    /// Validates identifier syntax only; does not record bindings (see `run_in_local_parsing_time_name_scope`).
-    pub fn validate_name_and_insert_into_top_parsing_time_name_scope(
-        &mut self,
+    /// Resolve a plain name and report which parse-scope index holds it.
+    /// Index `0` is the file-root scope pushed by `begin_file`.
+    pub fn resolve_plain_atom_with_scope_index(
+        &self,
         name: &str,
-        line_file: LineFile,
-    ) -> Result<(), RuntimeError> {
-        self.validate_name(name, line_file)
+    ) -> RuntimeResult<(IdentifierId, usize)> {
+        for (scope_index, scope) in self.parse_scope_stack.iter().enumerate().rev() {
+            if let Some(id) = scope.plain.get(name) {
+                return Ok((*id, scope_index));
+            }
+        }
+        Err(RuntimeError::InternalBug(format!(
+            "undefined name `{name}`"
+        )))
     }
-}
 
-impl Runtime {
-    /// Point the current source at a physical file path without creating another
-    /// source. Used when a virtual or discovery source later resolves to a file.
-    pub fn set_current_user_lit_file_path(&mut self, path: &str) {
-        let module_id = self.current_module_id;
-        let source_id = self.current_source_id;
-        self.module_manager
-            .module_mut(module_id)
-            .and_then(|module| module.source_mut(source_id))
-            .expect("current user source should be registered")
-            .origin = SourcePath::RealFilePath(RealFilePath::new(path));
-        if module_id == ModuleId::ROOT {
-            self.module_manager
-                .module_mut(module_id)
-                .expect("root module should exist")
-                .location = ModuleLocation::SingleFile;
+    /// True when `name` is bound in the file-root parse scope (scope 0).
+    pub fn is_bound_in_file_root_parse_scope(&self, name: &str) -> bool {
+        self.parse_scope_stack
+            .first()
+            .is_some_and(|scope| scope.plain.contains_key(name))
+    }
+
+    /// Outermost-scope symbol name form from live `code_source`.
+    ///
+    /// - `Eval` / `Repl` / `StandaloneFile` → `Plain` (no publication stamp)
+    /// - `RootExport` → `WithExportFileId`
+    /// - `ImportedExport` → `WithModAndExportFileId`
+    pub fn atomic_name_for_file_root_symbol(&self, name: PlainName) -> AtomicName {
+        match &self.code_source {
+            CodeSource::Eval | CodeSource::Repl | CodeSource::StandaloneFile => {
+                AtomicName::Plain { name }
+            }
+            CodeSource::RootExport { export_file_id } => AtomicName::WithExportFileId {
+                export_file_id: *export_file_id,
+                name,
+            },
+            CodeSource::ImportedExport {
+                global_mod_id,
+                export_file_id,
+            } => AtomicName::WithModAndExportFileId {
+                global_mod_id: *global_mod_id,
+                export_file_id: *export_file_id,
+                name,
+            },
         }
     }
 
-    /// Make the discovered repository's root module the persistent environment for
-    /// interactive input. This method does not itself execute the ordered `[export]` plan.
-    #[deprecated(note = "use prepare_current_module_for_virtual_source")]
-    pub fn prepare_current_repository_for_repl(
-        &mut self,
-        source_path: &str,
-    ) -> Result<(), RuntimeError> {
-        self.prepare_current_module_for_virtual_source(virtual_source_from_label(source_path))
+    pub fn identifier_obj_for_file_root_symbol(&self, name: PlainName) -> IdentifierObj {
+        match self.atomic_name_for_file_root_symbol(name.clone()) {
+            AtomicName::Plain { name } => {
+                let id = self
+                    .resolve_plain_atom(&name)
+                    .expect("file-root Plain symbol must be bound in parse scope");
+                IdentifierObj::plain(id, name)
+            }
+            AtomicName::WithExportFileId {
+                export_file_id,
+                name,
+            } => IdentifierObj::with_export_file_id(export_file_id, name),
+            AtomicName::WithModAndExportFileId {
+                global_mod_id,
+                export_file_id,
+                name,
+            } => IdentifierObj::with_mod_and_export_file_id(global_mod_id, export_file_id, name),
+        }
     }
 
-    pub fn prepare_current_module_for_virtual_source(
-        &mut self,
-        kind: VirtualSource,
-    ) -> Result<(), RuntimeError> {
-        debug_assert!(
-            self.parse_context.is_at_root_scope(),
-            "a repository REPL cannot start inside an active parser scope"
-        );
-        let inherited_environment = self.current_source().environment.clone();
-        let module_id = self
-            .module_manager
-            .module(ModuleId::ROOT)
-            .map(|module| module.id)
-            .expect("repository root module should exist");
-        let source_id = self
-            .module_manager
-            .create_virtual_source(module_id, kind)
-            .expect("repository REPL source should be registered");
-        self.module_manager
-            .module_mut(module_id)
-            .and_then(|module| module.source_mut(source_id))
-            .expect("interactive source should be registered")
-            .environment = inherited_environment;
-        self.activate_source(
-            ModuleId::ROOT,
-            source_id,
-            TrustedOrRequireVerify::RequireVerification,
-        );
+    /// Free reference: outermost + promoting `code_source` → qualified;
+    /// otherwise Plain+id (inner binders, or Eval/Repl/StandaloneFile outermost).
+    pub fn identifier_obj_for_plain_free_ref(
+        &self,
+        name: String,
+    ) -> RuntimeResult<IdentifierObj> {
+        let (id, scope_index) = self.resolve_plain_atom_with_scope_index(&name)?;
+        if scope_index == 0 && self.code_source.promotes_outermost_symbols() {
+            Ok(self.identifier_obj_for_file_root_symbol(name))
+        } else {
+            Ok(IdentifierObj::plain(id, name))
+        }
+    }
+
+    /// Exec/store mention of a defined symbol: qualify iff outermost and promoting.
+    pub fn identifier_obj_for_stored_mention(&self, bound: &BoundName) -> IdentifierObj {
+        if self.is_bound_in_file_root_parse_scope(&bound.name)
+            && self.code_source.promotes_outermost_symbols()
+        {
+            self.identifier_obj_for_file_root_symbol(bound.name.clone())
+        } else {
+            IdentifierObj::from_bound_name(bound)
+        }
+    }
+
+    /// Prop/atomic name free ref: promote only when outermost and promoting.
+    pub fn atomic_name_for_plain_prop_ref(&self, name: String) -> AtomicName {
+        if self.is_bound_in_file_root_parse_scope(&name)
+            && self.code_source.promotes_outermost_symbols()
+        {
+            self.atomic_name_for_file_root_symbol(name)
+        } else {
+            AtomicName::Plain { name }
+        }
+    }
+
+    // Allocate a new IdentifierId and occupy `name` in the current scope.
+    pub fn define_plain_atom(&mut self, name: String) -> RuntimeResult<BoundName> {
+        if self.plain_atom_is_visible(&name) {
+            return Err(RuntimeError::InternalBug(format!(
+                "name `{name}` is already bound in an enclosing parse scope"
+            )));
+        }
+        let id = self.global_ids.allocate_identifier_id();
+        let scope = self
+            .parse_scope_stack
+            .last_mut()
+            .ok_or_else(|| RuntimeError::InternalBug("no parse scope".to_string()))?;
+        scope.plain.insert(name.clone(), id);
+        Ok(BoundName::new(id, name))
+    }
+
+    // Re-occupy an existing BoundName (e.g. re-open forall binders) without reallocating.
+    pub fn occupy_bound_name(&mut self, bound: &BoundName) -> RuntimeResult<()> {
+        if self.plain_atom_is_visible(&bound.name) {
+            return Err(RuntimeError::InternalBug(format!(
+                "name `{}` is already bound in an enclosing parse scope",
+                bound.name
+            )));
+        }
+        let scope = self
+            .parse_scope_stack
+            .last_mut()
+            .ok_or_else(|| RuntimeError::InternalBug("no parse scope".to_string()))?;
+        scope.plain.insert(bound.name.clone(), bound.id);
         Ok(())
+    }
+
+    /// Elaborate surface `::` segments using `global_module_manager.current_mod_id`.
+    pub fn elaborate_name_parts(&self, parts: &[String]) -> RuntimeResult<AtomicName> {
+        self.global_module_manager
+            .elaborate_name_parts(parts)
+            .map_err(RuntimeError::InternalBug)
+    }
+
+    /// Elaborate `a:::b` flatten sugar.
+    pub fn elaborate_flat_import(&self, alias: &str, name: String) -> RuntimeResult<AtomicName> {
+        self.global_module_manager
+            .elaborate_flat_import(alias, name)
+            .map_err(RuntimeError::InternalBug)
+    }
+
+    pub fn top_exec_env(&self) -> &ExecEnv {
+        self.execution_environments_stack
+            .last()
+            .expect("no ExecEnv")
+    }
+
+    pub fn top_exec_env_mut(&mut self) -> &mut ExecEnv {
+        self.execution_environments_stack
+            .last_mut()
+            .expect("no ExecEnv")
+    }
+
+    // Child ExecEnv for a statement-local binder / WD scope. Uses the existing stack.
+    pub fn push_local_exec_env(&mut self) {
+        self.execution_environments_stack
+            .push(Box::new(ExecEnv::new(None)));
+    }
+
+    pub fn pop_local_exec_env(&mut self) -> Box<ExecEnv> {
+        if self.execution_environments_stack.len() <= 1 {
+            panic!("pop_local_exec_env: refusing to pop the file ExecEnv");
+        }
+        self.execution_environments_stack
+            .pop()
+            .expect("no local ExecEnv")
+    }
+
+    // Run `f` in a fresh local ExecEnv; on success return (value, closed local env).
+    // On error the local env is discarded.
+    pub fn run_in_local_env_and_take_env<T, F>(&mut self, f: F) -> RuntimeResult<(T, Box<ExecEnv>)>
+    where
+        F: FnOnce(&mut Self) -> RuntimeResult<T>,
+    {
+        self.push_local_exec_env();
+        match f(self) {
+            Ok(value) => {
+                let local_env = self.pop_local_exec_env();
+                Ok((value, local_env))
+            }
+            Err(err) => {
+                let _ = self.pop_local_exec_env();
+                Err(err)
+            }
+        }
     }
 }
 
-#[cfg(test)]
-#[path = "../../tests/unit/runtime/state/test_support.rs"]
-mod test_support;
+impl ParseScope {
+    pub fn new() -> Self {
+        Self {
+            plain: HashMap::new(),
+        }
+    }
+}
+
+impl GlobalIds {
+    pub fn new() -> Self {
+        Self {
+            next_fact_id: FactId::new(1),
+            next_well_definedness_id: WellDefinednessId::new(1),
+            next_prop_rewrite_property_id: PropRewritePropertyId::new(1),
+            next_identifier_id: IdentifierId::new(1),
+        }
+    }
+
+    pub fn allocate_fact_id(&mut self) -> FactId {
+        let current = self.next_fact_id;
+        self.next_fact_id = current.add_one();
+        current
+    }
+
+    pub fn allocate_well_definedness_id(&mut self) -> WellDefinednessId {
+        let current = self.next_well_definedness_id;
+        self.next_well_definedness_id = current.add_one();
+        current
+    }
+
+    pub fn allocate_prop_rewrite_property_id(&mut self) -> PropRewritePropertyId {
+        let current = self.next_prop_rewrite_property_id;
+        self.next_prop_rewrite_property_id = current.add_one();
+        current
+    }
+
+    pub fn allocate_identifier_id(&mut self) -> IdentifierId {
+        let current = self.next_identifier_id;
+        self.next_identifier_id = current.add_one();
+        current
+    }
+
+    /// KB / cache watermarks without exposing typed id fields.
+    pub fn to_u64s(&self) -> (u64, u64, u64, u64) {
+        (
+            self.next_fact_id.value(),
+            self.next_well_definedness_id.value(),
+            self.next_prop_rewrite_property_id.value(),
+            self.next_identifier_id.value(),
+        )
+    }
+
+    pub fn from_u64s(
+        next_fact_id: u64,
+        next_well_definedness_id: u64,
+        next_prop_rewrite_property_id: u64,
+        next_identifier_id: u64,
+    ) -> Self {
+        Self {
+            next_fact_id: FactId::new(next_fact_id),
+            next_well_definedness_id: WellDefinednessId::new(next_well_definedness_id),
+            next_prop_rewrite_property_id: PropRewritePropertyId::new(
+                next_prop_rewrite_property_id,
+            ),
+            next_identifier_id: IdentifierId::new(next_identifier_id),
+        }
+    }
+}

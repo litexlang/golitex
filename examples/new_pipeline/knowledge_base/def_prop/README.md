@@ -14,7 +14,7 @@ $is_pos(1)
 Run:
 
 ```bash
-LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/knowledge_base/def_prop/is_pos.lit
+litex -f examples/new_pipeline/knowledge_base/def_prop/is_pos.lit
 ```
 
 ## Stored artifact (`is_pos.def_prop.json`)

@@ -1,5 +1,5 @@
 # Stmt: Definition.HaveObjInNonemptySetStmt → exec_have_obj_in_nonempty_set_stmt
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/definition/have_obj_in_nonempty_set.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/definition/have_obj_in_nonempty_set.lit
 
 have x R
 x = x

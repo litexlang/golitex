@@ -1,5 +1,5 @@
 # Stmt: DefAlgoByCases soft-fail when case coverage is incomplete
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/definition/def_algo_mismatch.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/definition/def_algo_mismatch.lit
 # Expect: statement outcome error (Failed), not session_error
 
 algo g(x R) R by cases:

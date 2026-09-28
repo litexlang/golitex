@@ -1,5 +1,5 @@
 # Node: exist.ByBuiltinRule.RealDensityMidpoint
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/exist/by_builtin_rule/real_density_midpoint.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/exist/by_builtin_rule/real_density_midpoint.lit
 
 0 < 1
 exist r R st {0 < r < 1}

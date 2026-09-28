@@ -26,7 +26,7 @@ Import cache E2E (cold write → hit → `by def` / `release thm` / `by thm` /
 (not a checked-in `__litex_knowledge_base__/`).
 
 Design contract:  
-[`src/new_pipeline/knowledge_base/README.md`](../../../src/new_pipeline/knowledge_base/README.md).
+[`src/knowledge_base/README.md`](../../../src/knowledge_base/README.md).
 
 White-box Rust tests live under
 `tests/unit/new_pipeline/knowledge_base/` and **load goldens from this
@@ -37,7 +37,7 @@ examples tree** (single source of truth for “what store looks like”).
 1. Litex still runs the `.lit` (definition works):
 
 ```bash
-LITEX_NEW_PIPELINE=1 target/release/litex -f \
+target/release/litex -f \
   examples/new_pipeline/knowledge_base/def_prop/is_pos.lit
 ```
 

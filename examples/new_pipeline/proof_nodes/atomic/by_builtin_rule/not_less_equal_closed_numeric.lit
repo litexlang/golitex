@@ -1,4 +1,4 @@
 # Node: atomic.ByBuiltinRule.NotLessEqualFact.ClosedNumericComparison
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/not_less_equal_closed_numeric.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/not_less_equal_closed_numeric.lit
 
 not 3 <= 1

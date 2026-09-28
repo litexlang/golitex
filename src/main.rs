@@ -12,10 +12,9 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-use litex::cli::run_command_line_commands;
-use litex::new_pipeline::run::launch as launch_new_pipeline;
-use litex::new_pipeline::runtime::RuntimeError;
-use litex::new_pipeline::LITEX;
+use litex::run::launch;
+use litex::runtime::RuntimeError;
+use litex::LITEX;
 use std::process;
 
 const CLI_STACK_SIZE: usize = 64 * 1024 * 1024;
@@ -24,39 +23,16 @@ fn main() {
     std::thread::Builder::new()
         .name(format!("{}-cli", LITEX.to_ascii_lowercase()))
         .stack_size(CLI_STACK_SIZE)
-        .spawn(run_selected_cli)
+        .spawn(run_cli)
         .expect(&format!("start {} CLI thread", LITEX))
         .join()
         .expect(&format!("{} CLI thread panicked", LITEX));
 }
 
-fn run_selected_cli() {
-    if use_new_pipeline_track() {
-        launch_new_pipeline_track();
-    } else {
-        run_command_line_commands();
-    }
-}
-
-/// Dual-track switch.  Default remains the legacy CLI.
-fn use_new_pipeline_track() -> bool {
-    match std::env::var("LITEX_NEW_PIPELINE") {
-        Ok(value) => {
-            let value = value.trim();
-            !(value.is_empty() || value == "0" || value.eq_ignore_ascii_case("false"))
-        }
-        Err(_) => false,
-    }
-}
-
-fn launch_new_pipeline_track() {
-    match launch_new_pipeline() {
+fn run_cli() {
+    match launch() {
         Ok(outcome) => {
-            if let Some(json) = outcome.normal_json() {
-                println!("{}", json);
-            }
             if outcome.process_failed() {
-                // Soft Failed / session_error stay in the outcome payload for later JSON.
                 process::exit(1);
             }
         }

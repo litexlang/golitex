@@ -1,5 +1,5 @@
 # Node: atomic.ByBuiltinRule.LessEqualFact.MulLeftNonnegativeMonotone
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/less_equal_mul_left_nonnegative_monotone.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/less_equal_mul_left_nonnegative_monotone.lit
 
 have x R
 have y R

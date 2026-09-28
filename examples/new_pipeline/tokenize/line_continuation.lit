@@ -1,6 +1,6 @@
 # Node: tokenize.line_continuation
 # Status: acceptance
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/tokenize/line_continuation.lit
+# Run: litex -f examples/new_pipeline/tokenize/line_continuation.lit
 #
 # Trailing \\ joins the next physical line. Indent on the continued line is
 # ordinary whitespace. A `#` comment after \\ is allowed. Mid-line \\ is not

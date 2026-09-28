@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.FiniteSetSizeUnion
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/finite_set_size_union.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/finite_set_size_union.lit
 
 have A finite_set
 have B finite_set

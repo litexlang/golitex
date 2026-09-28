@@ -1,5 +1,5 @@
 # Stmt: Definition.DefTemplateStmt body ObtainObjFromExistFact
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/definition/def_template_obtain_from_exist.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/definition/def_template_obtain_from_exist.lit
 #
 # Template allows exactly one body statement. Prove the source exist in the
 # ambient env first; the template body only performs obtain.

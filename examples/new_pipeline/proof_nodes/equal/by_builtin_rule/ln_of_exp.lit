@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.LnOfExp
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/ln_of_exp.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/ln_of_exp.lit
 # trust: WD of ln(exp(x)) needs exp(x) known in R+ until exp-range WD is stronger.
 
 have x R

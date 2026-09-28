@@ -1,0 +1,86 @@
+use crate::ast::fact::{AtomicFact, Fact, IsFiniteSetFact};
+use crate::ast::obj::{Literal, Number, Obj, SetFormer};
+use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
+use crate::execute::execute_fact_stmt::VerifyState;
+use crate::runtime::{Runtime, RuntimeResult};
+
+// These constructors carry finiteness intrinsically.
+// Example: prove `$is_finite_set({1, 2})`, `$is_finite_set(closed_range(1, n))`.
+pub enum IsFiniteSetFactSearchProofByBuiltinRule {
+    ListSet(ListSetFiniteBuiltinRuleProof),
+    ClosedRange(ClosedRangeFiniteBuiltinRuleProof),
+    Range(RangeFiniteBuiltinRuleProof),
+    // Length-zero finite sequence carrier is always finite (one empty sequence).
+    // Example: `$is_finite_set(finite_seq(R, 0))`.
+    FiniteSeqZeroLength(FiniteSeqZeroLengthFiniteBuiltinRuleProof),
+    // Finite codomain ⇒ finite length-n sequence carrier.
+    // Example: `$is_finite_set({1})` proves `$is_finite_set(finite_seq({1}, 3))`.
+    FiniteSeqFromFiniteCodomain(FiniteSeqFromFiniteCodomainBuiltinRuleProof),
+}
+
+pub struct ListSetFiniteBuiltinRuleProof {}
+
+pub struct ClosedRangeFiniteBuiltinRuleProof {}
+
+pub struct RangeFiniteBuiltinRuleProof {}
+
+pub struct FiniteSeqZeroLengthFiniteBuiltinRuleProof {}
+
+pub struct FiniteSeqFromFiniteCodomainBuiltinRuleProof {
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+impl Runtime {
+    // Builtin: list sets and integer ranges are finite by construction.
+    // Example: prove `$is_finite_set({1, 2})`, `$is_finite_set(1...n)`.
+    pub fn search_is_finite_set_fact_proof_by_builtin_rule(
+        &mut self,
+        fact: &IsFiniteSetFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<IsFiniteSetFactSearchProofByBuiltinRule>> {
+        match &fact.set {
+            Obj::SetFormer(SetFormer::ListSet(_)) => Ok(Some(IsFiniteSetFactSearchProofByBuiltinRule::ListSet(
+                ListSetFiniteBuiltinRuleProof {},
+            ))),
+            Obj::SetFormer(SetFormer::ClosedRange(_)) => Ok(Some(IsFiniteSetFactSearchProofByBuiltinRule::ClosedRange(
+                ClosedRangeFiniteBuiltinRuleProof {},
+            ))),
+            Obj::SetFormer(SetFormer::Range(_)) => Ok(Some(IsFiniteSetFactSearchProofByBuiltinRule::Range(
+                RangeFiniteBuiltinRuleProof {},
+            ))),
+            Obj::SetFormer(SetFormer::FiniteSeqSet(seq)) => {
+                if is_zero_obj(seq.n.as_ref()) {
+                    return Ok(Some(
+                        IsFiniteSetFactSearchProofByBuiltinRule::FiniteSeqZeroLength(
+                            FiniteSeqZeroLengthFiniteBuiltinRuleProof {},
+                        ),
+                    ));
+                }
+                let premise = Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    set: seq.set.as_ref().clone(),
+                    line_file: None,
+                }));
+                let proof = self.verify_fact(&premise, verify_state)?;
+                if proof.is_failed() {
+                    return Ok(None);
+                }
+                Ok(Some(
+                    IsFiniteSetFactSearchProofByBuiltinRule::FiniteSeqFromFiniteCodomain(
+                        FiniteSeqFromFiniteCodomainBuiltinRuleProof {
+                            proof_of_requirement_facts: vec![proof],
+                        },
+                    ),
+                ))
+            }
+            _ => Ok(None),
+        }
+    }
+}
+
+fn is_zero_obj(obj: &Obj) -> bool {
+    matches!(
+        obj,
+        Obj::Literal(Literal::Number(Number { normalized_value })) if normalized_value == "0"
+    )
+}

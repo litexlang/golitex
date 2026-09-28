@@ -1,5 +1,5 @@
 # Stmt: By.ByCasesStmt → exec_by_cases_stmt
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/by/by_cases.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/by/by_cases.lit
 
 by cases:
     ? 1 = 1

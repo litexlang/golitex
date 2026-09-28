@@ -1,5 +1,5 @@
 # Node: atomic.ByBuiltinRule.LessEqual.NumericLowerBoundFromStrictPredecessorLe
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/less_equal_numeric_lower_bound_from_strict_predecessor.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/less_equal_numeric_lower_bound_from_strict_predecessor.lit
 
 have x Z
 trust 4 < x

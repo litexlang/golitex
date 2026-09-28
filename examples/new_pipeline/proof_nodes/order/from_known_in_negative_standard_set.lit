@@ -1,7 +1,7 @@
 # Builtin: LessFact.FromKnownInNegativeStandardSet
 # When: known `a $in R-` / `Q-` / `Z-`.
 # Proves: `a < 0` at verify time (no eager infer).
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/order/from_known_in_negative_standard_set.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/order/from_known_in_negative_standard_set.lit
 
 have a R-
 a < 0

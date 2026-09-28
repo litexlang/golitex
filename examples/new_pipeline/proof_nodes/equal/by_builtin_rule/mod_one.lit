@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.ModOne
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/mod_one.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/mod_one.lit
 
 have a Z
 a % 1 = 0

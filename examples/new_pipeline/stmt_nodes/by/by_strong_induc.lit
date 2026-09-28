@@ -1,5 +1,5 @@
 # Stmt: By.ByStrongInducStmt → exec_by_strong_induc_stmt
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/by/by_strong_induc.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/by/by_strong_induc.lit
 
 by strong_induc m from 0:
     ? m = m

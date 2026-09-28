@@ -1,5 +1,5 @@
 # Node: exist.ByBuiltinRule.NonemptySetMemberWitness
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/exist/by_builtin_rule/nonempty_set_member_witness.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/exist/by_builtin_rule/nonempty_set_member_witness.lit
 
 $is_nonempty_set({1})
 exist x {1} st {x $in {1}}

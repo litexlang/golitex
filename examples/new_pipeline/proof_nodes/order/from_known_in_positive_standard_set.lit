@@ -1,7 +1,7 @@
 # Builtin: LessFact.FromKnownInPositiveStandardSet
 # When: known `a $in R+` / `Q+` / `N+`.
 # Proves: `0 < a` at verify time (no eager infer).
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/order/from_known_in_positive_standard_set.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/order/from_known_in_positive_standard_set.lit
 
 have a R+
 0 < a

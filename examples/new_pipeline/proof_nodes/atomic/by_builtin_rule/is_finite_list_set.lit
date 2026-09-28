@@ -1,4 +1,4 @@
 # Node: atomic.ByBuiltinRule.IsFiniteSetFact.ListSet
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/is_finite_list_set.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/is_finite_list_set.lit
 
 $is_finite_set({1, 2})

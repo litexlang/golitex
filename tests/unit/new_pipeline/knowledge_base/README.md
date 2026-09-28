@@ -1,6 +1,6 @@
 # Unit tests: `new_pipeline::knowledge_base`
 
-Loaded from `src/new_pipeline/knowledge_base/mod.rs`.
+Loaded from `src/knowledge_base/mod.rs`.
 
 Goldens / `.lit` live under `examples/new_pipeline/knowledge_base/`:
 

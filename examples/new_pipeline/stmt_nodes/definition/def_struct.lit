@@ -1,5 +1,5 @@
 # Stmt: Definition.DefStructStmt → exec_def_struct_stmt
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/definition/def_struct.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/definition/def_struct.lit
 # Scope: definition WD + store only (no `&Struct` / release struct def / membership).
 
 struct Point:

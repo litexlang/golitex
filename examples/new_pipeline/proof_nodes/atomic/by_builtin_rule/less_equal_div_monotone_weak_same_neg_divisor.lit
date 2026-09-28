@@ -1,5 +1,5 @@
 # Node: atomic.ByBuiltinRule.LessEqual.DivMonotoneWeakSameNegDivisor
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/less_equal_div_monotone_weak_same_neg_divisor.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/less_equal_div_monotone_weak_same_neg_divisor.lit
 
 have a R
 have b R

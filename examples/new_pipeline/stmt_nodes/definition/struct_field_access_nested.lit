@@ -1,5 +1,5 @@
 # FieldAccess: `x.y` and `x.y.z` as one node with fields: Vec
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/tmp.lit
+# Run: litex -f examples/tmp.lit
 
 struct Coordinates:
     x R

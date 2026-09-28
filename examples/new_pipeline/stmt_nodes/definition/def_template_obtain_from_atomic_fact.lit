@@ -1,5 +1,5 @@
 # Stmt: Definition.DefTemplateStmt body ObtainObjFromAtomicFact
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/definition/def_template_obtain_from_atomic_fact.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/definition/def_template_obtain_from_atomic_fact.lit
 #
 # Prove `$P` in the ambient env first; the template body only performs obtain.
 

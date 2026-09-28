@@ -1,5 +1,5 @@
 # Stmt: Definition.HaveObjByExistFactsStmt → exec_have_obj_by_exist_facts_stmt
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/definition/have_obj_by_exist_facts.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/definition/have_obj_by_exist_facts.lit
 
 have c R:
     c > 10

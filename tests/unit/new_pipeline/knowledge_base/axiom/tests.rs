@@ -1,14 +1,14 @@
-use crate::new_pipeline::ast::fact::{
+use crate::ast::fact::{
     AtomicFact, EqualFact, ExistOrAndChainAtomicFact, ForallFact,
 };
-use crate::new_pipeline::ast::line_file::SourceLine;
-use crate::new_pipeline::ast::names::BoundName;
-use crate::new_pipeline::ast::obj::{IdentifierObj, Obj, StandardSet};
-use crate::new_pipeline::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
-use crate::new_pipeline::ast::stmt::AxiomStmt;
-use crate::new_pipeline::knowledge_base::{load_axiom, store_axiom, write_axiom};
-use crate::new_pipeline::runtime::runtime_ids::{FactId, IdentifierId};
-use crate::new_pipeline::runtime::CodeSource;
+use crate::ast::line_file::SourceLine;
+use crate::ast::names::BoundName;
+use crate::ast::obj::{IdentifierObj, Obj, StandardSet};
+use crate::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
+use crate::ast::stmt::AxiomStmt;
+use crate::knowledge_base::{load_axiom, store_axiom, write_axiom};
+use crate::runtime::runtime_ids::{FactId, IdentifierId};
+use crate::runtime::CodeSource;
 use std::path::{Path, PathBuf};
 
 const FIXTURE: &str =

@@ -1,5 +1,5 @@
 # Node: atomic.ByBuiltinRule.Less.SqrtMonotoneIncreasing
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/less_sqrt_monotone_increasing.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/less_sqrt_monotone_increasing.lit
 
 have x R
 have y R

@@ -1,4 +1,4 @@
 # Stmt: Fact → execute_fact_statement
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/fact/execute_fact.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/fact/execute_fact.lit
 
 1 + 1 = 2

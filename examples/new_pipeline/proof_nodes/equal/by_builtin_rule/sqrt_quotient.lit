@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.SqrtQuotient
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/sqrt_quotient.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/sqrt_quotient.lit
 # trust: WD of a/b in R+ and sqrt(b) in R* until quotient/sqrt WD is stronger.
 
 have a R+

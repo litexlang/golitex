@@ -1,5 +1,5 @@
 # Inverse trig acceptance probes (new_pipeline).
-# Run: LITEX_NEW_PIPELINE=1 target/release/litex -f examples/tmp_inverse_trig.lit
+# Run: target/release/litex -f examples/tmp_inverse_trig.lit
 
 arcsin(0) = 0
 arcsin(1) = pi / 2

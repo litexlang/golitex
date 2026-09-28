@@ -1,6 +1,6 @@
 # Node: or.ByBuiltinRule.LessOrGreaterEqual
 # Rule struct: OrBuiltinLessOrGreaterEqual
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/or/by_builtin_rule/less_or_greater_equal.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/or/by_builtin_rule/less_or_greater_equal.lit
 
 have a, b R
 a < b or a >= b

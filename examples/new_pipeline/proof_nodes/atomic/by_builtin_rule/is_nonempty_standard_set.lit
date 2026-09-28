@@ -1,4 +1,4 @@
 # Node: atomic.ByBuiltinRule.IsNonemptySetFact.StandardSet
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/is_nonempty_standard_set.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/is_nonempty_standard_set.lit
 
 $is_nonempty_set(R)

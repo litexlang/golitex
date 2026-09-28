@@ -1,5 +1,5 @@
 # Fact WD: Forall binder — param type + then under local env
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/wd/fact/forall.lit
+# Run: litex -f examples/new_pipeline/wd/fact/forall.lit
 
 forall x R:
     x = x

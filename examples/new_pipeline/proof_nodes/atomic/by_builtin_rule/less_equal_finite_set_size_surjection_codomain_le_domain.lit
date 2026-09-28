@@ -1,5 +1,5 @@
 # Node: atomic.ByBuiltinRule.LessEqual.FiniteSetSizeSurjectionCodomainLeDomain
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/less_equal_finite_set_size_surjection_codomain_le_domain.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/less_equal_finite_set_size_surjection_codomain_le_domain.lit
 
 have A set = {1, 2}
 have B set = {1}

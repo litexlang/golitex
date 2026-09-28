@@ -1,5 +1,5 @@
 # Obj WD: index_union / index_intersect — full family `$in fn(k I) power_set(X)`
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/wd/obj/index_union.lit
+# Run: litex -f examples/new_pipeline/wd/obj/index_union.lit
 #
 # Before Wave4: registration half only (any InFunctionSet).
 # Now: family must inhabit `fn(k I) power_set(X)`.

@@ -4,7 +4,7 @@ Positive tracers for **already-implemented** Obj / Fact WD.
 Negatives stay in `../wd_negative/`.
 
 ```bash
-LITEX_NEW_PIPELINE=1 target/release/litex -f <this-file>
+target/release/litex -f <this-file>
 ```
 
 ## Status (Obj) — after Wave4 (Sum/Product/Reduce + Index* full type + FieldAccess FnObj)
@@ -37,7 +37,7 @@ export PATH="/usr/bin:/bin:$PATH"
 fail=0
 while IFS= read -r f; do
   echo "=== $f ==="
-  LITEX_NEW_PIPELINE=1 target/release/litex -f "$f" || fail=1
+  target/release/litex -f "$f" || fail=1
 done < <(find examples/new_pipeline/wd -name '*.lit' | sort)
 exit $fail
 ```

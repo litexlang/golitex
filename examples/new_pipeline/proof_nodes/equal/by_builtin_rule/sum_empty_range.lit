@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.SumEmptyRange
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/sum_empty_range.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/sum_empty_range.lit
 
 trust 0 < 1
 sum(1, 0, fn(x Z) Z {x}) = 0

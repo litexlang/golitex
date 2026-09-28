@@ -1,5 +1,5 @@
 # Stmt: ReleaseAndExpand.ReleaseZornLemmaStmt → exec_release_zorn_lemma_stmt
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/release_and_expand/release_zorn_lemma.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/release_and_expand/release_zorn_lemma.lit
 #
 # Trusted Zorn step after nonempty + partial-order + chain-upper-bound obligations.
 # Proof body is fact-only (trust lives outside, same pattern as release axiom_of_choice).

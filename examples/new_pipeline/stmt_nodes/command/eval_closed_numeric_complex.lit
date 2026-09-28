@@ -1,5 +1,5 @@
 # Stmt: Command.EvalStmt — complex closed-numeric display eval
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/command/eval_closed_numeric_complex.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/command/eval_closed_numeric_complex.lit
 #
 # Nested closed trees (arithmetic + integer ops + foldable sqrt/log) and rewrite.
 # Companion equality tracer:

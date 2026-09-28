@@ -1,5 +1,5 @@
 # Tracer: have fn by exist! — exec, release, template def + instance.
-# Run: LITEX_NEW_PIPELINE=1 target/release/litex -f examples/tmp_have_fn_by_exist.lit
+# Run: target/release/litex -f examples/tmp_have_fn_by_exist.lit
 #
 # Intentionally omitted: surface `f $in fn(x A) B` (FnSet spelling may not
 # alpha-match). Property forall is the smoke check for membership-driven use.

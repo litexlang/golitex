@@ -1,4 +1,4 @@
 # Node: atomic.ByBuiltinRule.NotInFact.ListSetExhaustiveDisequality
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/not_in_list_set_exhaustive_disequality.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/not_in_list_set_exhaustive_disequality.lit
 
 not 4 $in {1, 2, 3}

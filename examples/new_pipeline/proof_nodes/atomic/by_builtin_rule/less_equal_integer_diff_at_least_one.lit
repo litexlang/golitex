@@ -1,5 +1,5 @@
 # Node: atomic.ByBuiltinRule.LessEqual.IntegerDiffAtLeastOneLe
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/less_equal_integer_diff_at_least_one.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/less_equal_integer_diff_at_least_one.lit
 
 have a Z
 have b Z

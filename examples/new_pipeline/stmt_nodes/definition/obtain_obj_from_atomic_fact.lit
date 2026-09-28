@@ -1,5 +1,5 @@
 # Stmt: Definition.ObtainObjFromAtomicFact → exec_obtain_obj_from_atomic_fact_stmt
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/definition/obtain_obj_from_atomic_fact.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/definition/obtain_obj_from_atomic_fact.lit
 #
 # `$P(args)` must verify; concrete prop has exactly one positive exist/exist!
 # clause; obtain projects that clause and eliminates.

@@ -1,5 +1,5 @@
 # Node: atomic.ByBuiltinStrategy.ClosedRangeNonemptyFromEndpointOrder
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_strategy/closed_range_nonempty.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_strategy/closed_range_nonempty.lit
 
 forall n Z:
     1 <= n

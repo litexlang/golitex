@@ -1,5 +1,5 @@
 # Node: atomic.ByDefinition.BuiltinProp.Subset
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_definition/builtin_subset.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_definition/builtin_subset.lit
 #
 # Design: see by_definition_design.md next to the ByDefinition search code.
 # Finite list-set inclusions like `{1} $subset {1, 2}` are not this path;

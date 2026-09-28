@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.SetMinusUnionDeMorgan
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/set_minus_union_de_morgan.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/set_minus_union_de_morgan.lit
 
 have A set
 have B set

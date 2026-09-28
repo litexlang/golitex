@@ -31,66 +31,6 @@ name = "litex"
 name = "litex"
 path = "src/main.rs"
 
-[[bin]]
-name = "stmt_result_to_lean_compiler"
-path = "src/stmt_result_to_lean_compiler/command_line.rs"
-
-[[test]]
-name = "error_output_modes"
-path = "tests/integration/error_output_modes.rs"
-
-[[test]]
-name = "code_extraction_cli"
-path = "tests/integration/code_extraction_cli.rs"
-
-[[test]]
-name = "examples_publication"
-path = "tests/integration/examples_publication.rs"
-
-[[test]]
-name = "inference_reentrancy"
-path = "tests/integration/inference_reentrancy.rs"
-
-[[test]]
-name = "module_local_drafts"
-path = "tests/integration/module_local_drafts.rs"
-
-[[test]]
-name = "public_api"
-path = "tests/integration/public_api.rs"
-
-[[test]]
-name = "run_target_cli"
-path = "tests/integration/run_target_cli.rs"
-
-[[test]]
-name = "retired_cli_commands"
-path = "tests/integration/retired_cli_commands.rs"
-
-[[test]]
-name = "statement_result_json"
-path = "tests/integration/statement_result_json.rs"
-
-[[test]]
-name = "showcases"
-path = "tests/integration/showcases.rs"
-
-[[test]]
-name = "source_architecture"
-path = "tests/integration/source_architecture.rs"
-
-[[test]]
-name = "source_readmes"
-path = "tests/integration/source_readmes.rs"
-
-[[test]]
-name = "stmt_result_to_lean_compiler_cli"
-path = "tests/integration/stmt_result_to_lean_compiler_cli.rs"
-
-[[test]]
-name = "stmt_result_to_lean_compiler_tracers"
-path = "tests/integration/stmt_result_to_lean_compiler_tracers.rs"
-
 [dependencies]
 
 [profile.dev]

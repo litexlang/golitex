@@ -11,12 +11,12 @@
 # Prefer `have` / `let`. Use `trust` only when typed `have x S` cannot WD the
 # carrier yet (same pragmatic escape as some existing proof-node files).
 #
-# Kernel overview: `src/new_pipeline/store_fact_and_infer/README.md`.
+# Kernel overview: `src/store_fact_and_infer/README.md`.
 
 ## Acceptance
 
 ```bash
-LITEX_NEW_PIPELINE=1 target/release/litex -f <this-file>
+target/release/litex -f <this-file>
 ```
 
 Exit 0 is enough.
@@ -39,7 +39,7 @@ export PATH="/usr/bin:/bin:$PATH"
 fail=0
 while IFS= read -r f; do
   echo "=== $f ==="
-  LITEX_NEW_PIPELINE=1 target/release/litex -f "$f" || fail=1
+  target/release/litex -f "$f" || fail=1
 done < <(find examples/new_pipeline/infer -name '*.lit' | sort)
 exit $fail
 ```

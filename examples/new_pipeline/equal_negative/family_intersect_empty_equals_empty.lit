@@ -1,7 +1,7 @@
 # Negative equality: family_intersect({}) = {} must NOT succeed.
 # Absolute empty ∩ is the universe class (vacuous membership), not {}.
 # Use index_intersect({}, X, A) = X for empty-index intersection as a set.
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/equal_negative/family_intersect_empty_equals_empty.lit
+# Run: litex -f examples/new_pipeline/equal_negative/family_intersect_empty_equals_empty.lit
 # expect exit != 0
 
 family_intersect({}) = {}

@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.MinLeftWhenLessEqual
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/min_left_when_less_equal.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/min_left_when_less_equal.lit
 
 have a R
 have b R

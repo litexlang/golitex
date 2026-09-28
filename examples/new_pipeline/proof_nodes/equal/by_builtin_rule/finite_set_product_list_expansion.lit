@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.FiniteSetProductListExpansion
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/finite_set_product_list_expansion.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/finite_set_product_list_expansion.lit
 
 # Narrow trust: current equality WD for finite_set_product needs a numeric carrier.
 trust finite_set_product({1, 2}, fn(x Z) Z {x}) $in Z

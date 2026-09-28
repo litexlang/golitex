@@ -1982,7 +1982,7 @@ runtime. This section gives each statement family one canonical home.
 >
 > Runnable tracers for each wired arm live under
 > `examples/new_pipeline/stmt_nodes/`. Parse surface details:
-> `src/new_pipeline/parse/README.md`.
+> `src/parse/README.md`.
 
 ### Bare facts and `have`
 
@@ -2799,9 +2799,9 @@ statements are no longer part of the language.
 > namespace.
 >
 > - Tables / parse / `::` elaborate:
->   [`src/new_pipeline/module_manager/README.md`](../src/new_pipeline/module_manager/README.md)
+>   [`src/module_manager/README.md`](../src/module_manager/README.md)
 > - How `-r` / `-f` / `-e` / REPL mount and run:
->   [`src/new_pipeline/run/README.md`](../src/new_pipeline/run/README.md)
+>   [`src/run/README.md`](../src/run/README.md)
 > - Fixtures:
 >   [`examples/new_pipeline/module_manager/`](../examples/new_pipeline/module_manager/)
 
@@ -2821,7 +2821,7 @@ chap2 = "./chapter02.lit"
 chap3 = "./chapter03.lit"
 ```
 
-Under `LITEX_NEW_PIPELINE=1`:
+Under the Litex CLI:
 
 | Command | Config | Behavior |
 |---------|--------|----------|
@@ -3217,7 +3217,7 @@ by def $P(args)
 > inequality; `$injective` / `$surjective` / `$bijective`; `$prime` / `$coprime` /
 > `$dvd`; `$is_choice_function_for`). User `prop` and builtin predicates share
 > one fork: builtin first, then user `prop`. Design note:
-> `src/new_pipeline/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/by_definition_design.md`.
+> `src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/by_definition_design.md`.
 > Finite list-set inclusions such as `{1} $subset {1, 2}` are **not** a by-def
 > goal; use `by enumerate finite_set`.
 
@@ -3555,7 +3555,7 @@ concrete finite list set.
 > available. The induction parameter is bound in `Z`, and the stored conclusion
 > is `forall n Z: n >= base => P(n)`.
 >
-> Also wired under `LITEX_NEW_PIPELINE=1`: `release regularity_axiom(A)`,
+> Also wired under the Litex CLI: `release regularity_axiom(A)`,
 > `release axiom_of_choice: set F` (optional fact-only proof body), and
 > `release zorn_lemma: set S, prop P, prop U, prop M` (optional fact-only proof body).
 > Semantics match the default pipeline: prove the displayed obligations, then

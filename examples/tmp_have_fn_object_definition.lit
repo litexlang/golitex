@@ -1,5 +1,5 @@
 # Object-definition equality unfolds (all leaf shapes).
-# Run: LITEX_NEW_PIPELINE=1 target/release/litex -f examples/tmp_have_fn_object_definition.lit
+# Run: target/release/litex -f examples/tmp_have_fn_object_definition.lit
 
 # --- Identifier: have … = … ---
 have sum_two R = 1 + 1
