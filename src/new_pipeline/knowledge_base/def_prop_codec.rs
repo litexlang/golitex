@@ -130,7 +130,7 @@ fn decode_def_prop(value: &JsonValue) -> Result<DefPropStmt, KbCodecError> {
     })
 }
 
-fn encode_typed_parameter_list(list: &TypedParameterList) -> Result<JsonValue, KbCodecError> {
+pub(crate) fn encode_typed_parameter_list(list: &TypedParameterList) -> Result<JsonValue, KbCodecError> {
     let groups = list
         .groups
         .iter()
@@ -142,7 +142,7 @@ fn encode_typed_parameter_list(list: &TypedParameterList) -> Result<JsonValue, K
     )]))
 }
 
-fn decode_typed_parameter_list(value: &JsonValue) -> Result<TypedParameterList, KbCodecError> {
+pub(crate) fn decode_typed_parameter_list(value: &JsonValue) -> Result<TypedParameterList, KbCodecError> {
     let map = value.as_object()?;
     let groups = JsonValue::get(map, "groups")?
         .as_array()?
@@ -152,7 +152,7 @@ fn decode_typed_parameter_list(value: &JsonValue) -> Result<TypedParameterList, 
     Ok(TypedParameterList { groups })
 }
 
-fn encode_typed_parameter_group(group: &TypedParameterGroup) -> Result<JsonValue, KbCodecError> {
+pub(crate) fn encode_typed_parameter_group(group: &TypedParameterGroup) -> Result<JsonValue, KbCodecError> {
     let params = group
         .params
         .iter()
@@ -164,7 +164,7 @@ fn encode_typed_parameter_group(group: &TypedParameterGroup) -> Result<JsonValue
     ]))
 }
 
-fn decode_typed_parameter_group(value: &JsonValue) -> Result<TypedParameterGroup, KbCodecError> {
+pub(crate) fn decode_typed_parameter_group(value: &JsonValue) -> Result<TypedParameterGroup, KbCodecError> {
     let map = value.as_object()?;
     let params = JsonValue::get(map, "params")?
         .as_array()?
@@ -175,21 +175,21 @@ fn decode_typed_parameter_group(value: &JsonValue) -> Result<TypedParameterGroup
     Ok(TypedParameterGroup { params, param_type })
 }
 
-fn encode_bound_name(name: &BoundName) -> Result<JsonValue, KbCodecError> {
+pub(crate) fn encode_bound_name(name: &BoundName) -> Result<JsonValue, KbCodecError> {
     Ok(JsonValue::object_from(vec![
         ("id".into(), JsonValue::Number(name.id.value() as f64)),
         ("name".into(), JsonValue::String(name.name.clone())),
     ]))
 }
 
-fn decode_bound_name(value: &JsonValue) -> Result<BoundName, KbCodecError> {
+pub(crate) fn decode_bound_name(value: &JsonValue) -> Result<BoundName, KbCodecError> {
     let map = value.as_object()?;
     let id = IdentifierId::new(JsonValue::get(map, "id")?.as_u64()?);
     let name = JsonValue::get(map, "name")?.as_str()?.to_string();
     Ok(BoundName::new(id, name))
 }
 
-fn encode_param_type(param_type: &ParamType) -> Result<JsonValue, KbCodecError> {
+pub(crate) fn encode_param_type(param_type: &ParamType) -> Result<JsonValue, KbCodecError> {
     match param_type {
         ParamType::Set(_) => Ok(JsonValue::object_from(vec![(
             "tag".into(),
@@ -210,7 +210,7 @@ fn encode_param_type(param_type: &ParamType) -> Result<JsonValue, KbCodecError> 
     }
 }
 
-fn decode_param_type(value: &JsonValue) -> Result<ParamType, KbCodecError> {
+pub(crate) fn decode_param_type(value: &JsonValue) -> Result<ParamType, KbCodecError> {
     let map = value.as_object()?;
     match JsonValue::get(map, "tag")?.as_str()? {
         "Set" => Ok(ParamType::Set(Set {})),
@@ -223,7 +223,7 @@ fn decode_param_type(value: &JsonValue) -> Result<ParamType, KbCodecError> {
     }
 }
 
-fn encode_line_file(line_file: &SourceLine) -> Result<JsonValue, KbCodecError> {
+pub(crate) fn encode_line_file(line_file: &SourceLine) -> Result<JsonValue, KbCodecError> {
     Ok(JsonValue::object_from(vec![
         (
             "line".into(),
@@ -233,14 +233,14 @@ fn encode_line_file(line_file: &SourceLine) -> Result<JsonValue, KbCodecError> {
     ]))
 }
 
-fn decode_line_file(value: &JsonValue) -> Result<SourceLine, KbCodecError> {
+pub(crate) fn decode_line_file(value: &JsonValue) -> Result<SourceLine, KbCodecError> {
     let map = value.as_object()?;
     let line = JsonValue::get(map, "line")?.as_u64()? as usize;
     let origin = decode_code_source(JsonValue::get(map, "origin")?)?;
     Ok(SourceLine::new(line, origin))
 }
 
-fn encode_code_source(origin: &CodeSource) -> Result<JsonValue, KbCodecError> {
+pub(crate) fn encode_code_source(origin: &CodeSource) -> Result<JsonValue, KbCodecError> {
     match origin {
         CodeSource::Eval => Ok(JsonValue::object_from(vec![(
             "tag".into(),
@@ -278,7 +278,7 @@ fn encode_code_source(origin: &CodeSource) -> Result<JsonValue, KbCodecError> {
     }
 }
 
-fn decode_code_source(value: &JsonValue) -> Result<CodeSource, KbCodecError> {
+pub(crate) fn decode_code_source(value: &JsonValue) -> Result<CodeSource, KbCodecError> {
     let map = value.as_object()?;
     match JsonValue::get(map, "tag")?.as_str()? {
         "Eval" => Ok(CodeSource::Eval),
@@ -297,7 +297,7 @@ fn decode_code_source(value: &JsonValue) -> Result<CodeSource, KbCodecError> {
     }
 }
 
-fn encode_optional_line_file(
+pub(crate) fn encode_optional_line_file(
     line_file: &Option<SourceLine>,
 ) -> Result<JsonValue, KbCodecError> {
     match line_file {
@@ -306,14 +306,14 @@ fn encode_optional_line_file(
     }
 }
 
-fn decode_optional_line_file(value: &JsonValue) -> Result<Option<SourceLine>, KbCodecError> {
+pub(crate) fn decode_optional_line_file(value: &JsonValue) -> Result<Option<SourceLine>, KbCodecError> {
     match value {
         JsonValue::Null => Ok(None),
         other => Ok(Some(decode_line_file(other)?)),
     }
 }
 
-fn encode_fact(fact: &Fact) -> Result<JsonValue, KbCodecError> {
+pub(crate) fn encode_fact(fact: &Fact) -> Result<JsonValue, KbCodecError> {
     match fact {
         Fact::AtomicFact(atomic) => Ok(JsonValue::object_from(vec![
             ("tag".into(), JsonValue::String("AtomicFact".into())),
@@ -325,7 +325,7 @@ fn encode_fact(fact: &Fact) -> Result<JsonValue, KbCodecError> {
     }
 }
 
-fn decode_fact(value: &JsonValue) -> Result<Fact, KbCodecError> {
+pub(crate) fn decode_fact(value: &JsonValue) -> Result<Fact, KbCodecError> {
     let map = value.as_object()?;
     match JsonValue::get(map, "tag")?.as_str()? {
         "AtomicFact" => Ok(Fact::AtomicFact(decode_atomic_fact(JsonValue::get(
@@ -337,7 +337,7 @@ fn decode_fact(value: &JsonValue) -> Result<Fact, KbCodecError> {
     }
 }
 
-fn encode_atomic_fact(atomic: &AtomicFact) -> Result<JsonValue, KbCodecError> {
+pub(crate) fn encode_atomic_fact(atomic: &AtomicFact) -> Result<JsonValue, KbCodecError> {
     match atomic {
         AtomicFact::GreaterFact(f) => encode_binary_compare(
             "GreaterFact",
@@ -421,7 +421,7 @@ fn encode_atomic_fact(atomic: &AtomicFact) -> Result<JsonValue, KbCodecError> {
     }
 }
 
-fn encode_binary_compare(
+pub(crate) fn encode_binary_compare(
     tag: &str,
     fact_id: FactId,
     left: &Obj,
@@ -443,7 +443,7 @@ fn encode_binary_compare(
     ]))
 }
 
-fn encode_in_like(
+pub(crate) fn encode_in_like(
     tag: &str,
     fact_id: FactId,
     element: &Obj,
@@ -465,7 +465,7 @@ fn encode_in_like(
     ]))
 }
 
-fn decode_atomic_fact(value: &JsonValue) -> Result<AtomicFact, KbCodecError> {
+pub(crate) fn decode_atomic_fact(value: &JsonValue) -> Result<AtomicFact, KbCodecError> {
     let map = value.as_object()?;
     let tag = JsonValue::get(map, "tag")?.as_str()?;
     match tag {
@@ -574,7 +574,7 @@ fn decode_atomic_fact(value: &JsonValue) -> Result<AtomicFact, KbCodecError> {
     }
 }
 
-fn encode_obj(obj: &Obj) -> Result<JsonValue, KbCodecError> {
+pub(crate) fn encode_obj(obj: &Obj) -> Result<JsonValue, KbCodecError> {
     match obj {
         Obj::Identifier(id) => Ok(JsonValue::object_from(vec![
             ("tag".into(), JsonValue::String("Identifier".into())),
@@ -594,7 +594,7 @@ fn encode_obj(obj: &Obj) -> Result<JsonValue, KbCodecError> {
     }
 }
 
-fn decode_obj(value: &JsonValue) -> Result<Obj, KbCodecError> {
+pub(crate) fn decode_obj(value: &JsonValue) -> Result<Obj, KbCodecError> {
     let map = value.as_object()?;
     match JsonValue::get(map, "tag")?.as_str()? {
         "Identifier" => Ok(Obj::Identifier(decode_identifier_obj(JsonValue::get(
@@ -613,7 +613,7 @@ fn decode_obj(value: &JsonValue) -> Result<Obj, KbCodecError> {
     }
 }
 
-fn encode_identifier_obj(id: &IdentifierObj) -> Result<JsonValue, KbCodecError> {
+pub(crate) fn encode_identifier_obj(id: &IdentifierObj) -> Result<JsonValue, KbCodecError> {
     match id {
         IdentifierObj::Plain { id, name } => Ok(JsonValue::object_from(vec![
             ("tag".into(), JsonValue::String("Plain".into())),
@@ -653,7 +653,7 @@ fn encode_identifier_obj(id: &IdentifierObj) -> Result<JsonValue, KbCodecError> 
     }
 }
 
-fn decode_identifier_obj(value: &JsonValue) -> Result<IdentifierObj, KbCodecError> {
+pub(crate) fn decode_identifier_obj(value: &JsonValue) -> Result<IdentifierObj, KbCodecError> {
     let map = value.as_object()?;
     match JsonValue::get(map, "tag")?.as_str()? {
         "Plain" => Ok(IdentifierObj::plain(
@@ -675,7 +675,7 @@ fn decode_identifier_obj(value: &JsonValue) -> Result<IdentifierObj, KbCodecErro
     }
 }
 
-fn encode_literal(lit: &Literal) -> Result<JsonValue, KbCodecError> {
+pub(crate) fn encode_literal(lit: &Literal) -> Result<JsonValue, KbCodecError> {
     match lit {
         Literal::Number(n) => Ok(JsonValue::object_from(vec![
             ("tag".into(), JsonValue::String("Number".into())),
@@ -696,7 +696,7 @@ fn encode_literal(lit: &Literal) -> Result<JsonValue, KbCodecError> {
     }
 }
 
-fn decode_literal(value: &JsonValue) -> Result<Literal, KbCodecError> {
+pub(crate) fn decode_literal(value: &JsonValue) -> Result<Literal, KbCodecError> {
     let map = value.as_object()?;
     match JsonValue::get(map, "tag")?.as_str()? {
         "Number" => Ok(Literal::Number(Number {
@@ -715,7 +715,7 @@ fn decode_literal(value: &JsonValue) -> Result<Literal, KbCodecError> {
     }
 }
 
-fn standard_set_name(set: &StandardSet) -> &'static str {
+pub(crate) fn standard_set_name(set: &StandardSet) -> &'static str {
     match set {
         StandardSet::NPos => "NPos",
         StandardSet::N => "N",
@@ -735,7 +735,7 @@ fn standard_set_name(set: &StandardSet) -> &'static str {
     }
 }
 
-fn decode_standard_set(name: &str) -> Result<StandardSet, KbCodecError> {
+pub(crate) fn decode_standard_set(name: &str) -> Result<StandardSet, KbCodecError> {
     Ok(match name {
         "NPos" => StandardSet::NPos,
         "N" => StandardSet::N,

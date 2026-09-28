@@ -1921,7 +1921,7 @@ runtime. This section gives each statement family one canonical home.
 > | `Register` | Register rewrite/infer properties of a user prop (no proof body). | `register reflexive:` / `symmetric:` / `transitive:` + one `? forall …` |
 > | `Witness` | Prove an exist / atomic-exist / nonempty goal by exhibiting witnesses. | `witness exist … from …:` / `witness $P(…) from …:` / `witness $is_nonempty_set(S) from e:` |
 > | `ProofBlock` | Nested local proof scope. | `claim: ? fact` … / `sketch:` … |
-> | `Command` | Non-proof session command. | `eval expr` |
+> | `Command` | Non-proof session command. | `eval expr` (preview: closed numeric display eval; no proof fact; no user algo yet; tracer `examples/new_pipeline/stmt_nodes/command/eval.lit`) |
 >
 > **`Definition` / `DefineObj` (object names):**
 >
@@ -2422,7 +2422,10 @@ function.
 > **Preview (`new_pipeline`):** the surface is `have algo for fn f(x): …`
 > (the `fn` keyword marks attachment to an existing mathematical function).
 > Execution checks case/default agreement then stores the presentation;
-> `eval` does not yet consume user algos. Tracer: `examples/new_pipeline/stmt_nodes/definition/def_algo.lit`.
+> `eval` evaluates closed numeric expressions for display (exact rational,
+> else closed decimal) but does not store a proof fact and does not yet
+> consume user algos. Tracers: `examples/new_pipeline/stmt_nodes/definition/def_algo.lit`,
+> `examples/new_pipeline/stmt_nodes/command/eval.lit`.
 >
 > ```litex
 > have fn parity_value(n Z) Z by cases:
@@ -2432,6 +2435,8 @@ function.
 > have algo for fn parity_value(n):
 >     case n % 2 = 0: 0
 >     case n % 2 != 0: 1
+>
+> eval (1 + 2)^2
 > ```
 
 ### Extracting a proved numerical step to Python or C (experimental)
@@ -4144,8 +4149,20 @@ forall a, b R+:
 > Four proof_nodes use narrow `trust` only for current WD holes
 > (quotient positivity / sqrt denom / log nonzero / mod-result in `Z`).
 > Equality identities wave 3 (preview): `min`/`max` idempotent and commutative;
-> `abs(abs(a)) = abs(a)`; `exp(ln(x)) = x` (`x` in `R+`); `ln(exp(x)) = x`;
+> `abs(abs(a)) = abs(a)`; `exp(ln(x)) = x` (`x` in `R+`); `ln(exp(x)) = x`
+> (proof_node uses narrow `trust exp(x) $in R+` for current ln WD);
 > `floor(n) = n` / `ceil(n) = n` (`n` in `Z`); `a % a = 0` (`a != 0`).
+> Equality identities wave 4 (preview): `floor(ceil(n)) = n`,
+> `ceil(floor(n)) = n` (`n` in `Z`); `sqrt(a^2) = abs(a)`.
+> Equality identities wave 5 (preview): `quot(a, 1) = a`;
+> `quot(a, a) = 1` (`a` in `N+`);
+> `lcm` commutative / idempotent-abs; `gcd` commutative / idempotent-abs /
+> zero-abs (four gcd proof_nodes use narrow `trust a != 0` for current gcd WD);
+> `(n+1)! = (n+1) * n!` (`n` in `N`; proof_node uses narrow `trust n! $in N`
+> for current factorial carrier / mul WD).
+> Equality identities wave 6 (preview): `abs(a) = a` when `0 <= a`;
+> `abs(a) = 0 - a` when `a <= 0`; `sign(a) = 1` when `0 < a`;
+> `sign(a) = 0 - 1` when `a < 0`; ordered `min`/`max` when `a <= b` or `b <= a`.
 > One `.lit` per accepted rule under
 > [`examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/`](../examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/)
 > and

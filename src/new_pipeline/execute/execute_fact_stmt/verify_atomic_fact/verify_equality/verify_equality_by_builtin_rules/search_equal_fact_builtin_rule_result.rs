@@ -28,6 +28,22 @@ use super::by_equality_identities_wave3::{
     MaxIdempotentBuiltinRuleProof, MinCommutativeBuiltinRuleProof, MinIdempotentBuiltinRuleProof,
     ModSelfZeroBuiltinRuleProof,
 };
+use super::by_equality_identities_wave4::{
+    CeilOfFloorOfIntegerBuiltinRuleProof, FloorOfCeilOfIntegerBuiltinRuleProof,
+    SqrtOfSquareEqualsAbsBuiltinRuleProof,
+};
+use super::by_equality_identities_wave5::{
+    FactorialSuccessorBuiltinRuleProof, GcdCommutativeBuiltinRuleProof,
+    GcdIdempotentAbsBuiltinRuleProof, GcdLeftZeroAbsBuiltinRuleProof,
+    GcdRightZeroAbsBuiltinRuleProof, LcmCommutativeBuiltinRuleProof,
+    LcmIdempotentAbsBuiltinRuleProof, QuotByOneBuiltinRuleProof, QuotSelfOneBuiltinRuleProof,
+};
+use super::by_equality_identities_wave6::{
+    AbsNonnegEqualsSelfBuiltinRuleProof, AbsNonposEqualsNegationBuiltinRuleProof,
+    MaxLeftWhenLessEqualBuiltinRuleProof, MaxRightWhenLessEqualBuiltinRuleProof,
+    MinLeftWhenLessEqualBuiltinRuleProof, MinRightWhenLessEqualBuiltinRuleProof,
+    SignOfNegativeBuiltinRuleProof, SignOfPositiveBuiltinRuleProof,
+};
 use super::by_power_laws::{
     PowerOfPowerBuiltinRuleProof, PowerOfProductBuiltinRuleProof,
     PowerProductSameBaseBuiltinRuleProof, QuotientAsMulNegOnePowerBuiltinRuleProof,
@@ -98,6 +114,26 @@ pub enum EqualitySearchProofByBuiltinRule {
     FloorOfInteger(FloorOfIntegerBuiltinRuleProof),
     CeilOfInteger(CeilOfIntegerBuiltinRuleProof),
     ModSelfZero(ModSelfZeroBuiltinRuleProof),
+    FloorOfCeilOfInteger(FloorOfCeilOfIntegerBuiltinRuleProof),
+    CeilOfFloorOfInteger(CeilOfFloorOfIntegerBuiltinRuleProof),
+    SqrtOfSquareEqualsAbs(SqrtOfSquareEqualsAbsBuiltinRuleProof),
+    QuotByOne(QuotByOneBuiltinRuleProof),
+    QuotSelfOne(QuotSelfOneBuiltinRuleProof),
+    LcmCommutative(LcmCommutativeBuiltinRuleProof),
+    LcmIdempotentAbs(LcmIdempotentAbsBuiltinRuleProof),
+    GcdCommutative(GcdCommutativeBuiltinRuleProof),
+    GcdIdempotentAbs(GcdIdempotentAbsBuiltinRuleProof),
+    GcdRightZeroAbs(GcdRightZeroAbsBuiltinRuleProof),
+    GcdLeftZeroAbs(GcdLeftZeroAbsBuiltinRuleProof),
+    FactorialSuccessor(FactorialSuccessorBuiltinRuleProof),
+    AbsNonnegEqualsSelf(AbsNonnegEqualsSelfBuiltinRuleProof),
+    AbsNonposEqualsNegation(AbsNonposEqualsNegationBuiltinRuleProof),
+    SignOfPositive(SignOfPositiveBuiltinRuleProof),
+    SignOfNegative(SignOfNegativeBuiltinRuleProof),
+    MaxRightWhenLessEqual(MaxRightWhenLessEqualBuiltinRuleProof),
+    MaxLeftWhenLessEqual(MaxLeftWhenLessEqualBuiltinRuleProof),
+    MinLeftWhenLessEqual(MinLeftWhenLessEqualBuiltinRuleProof),
+    MinRightWhenLessEqual(MinRightWhenLessEqualBuiltinRuleProof),
 }
 
 // Builtin Calculation: both sides of an equality reduce to the same value

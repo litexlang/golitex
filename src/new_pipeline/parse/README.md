@@ -138,7 +138,7 @@ have algo for fn nonzero_flag(x):
 
 Attaches an executable presentation to an **already-defined** mathematical
 function. Does not replace `have fn` facts. `eval` does not yet consume user
-algos in new_pipeline.
+algos in new_pipeline (closed numeric display eval is wired separately).
 
 Tracer: `def_algo.lit`
 
@@ -270,7 +270,12 @@ No indented body. Tracers: `witness/*.lit`
 
 ```text
 eval 1 + 1
+eval (1 + 2)^2
 ```
+
+Closed numeric display evaluation (exact rational, else closed decimal).
+Does not store a proof fact. Does not consume user algos yet.
+Tracer: `examples/new_pipeline/stmt_nodes/command/eval.lit`
 
 ### `release` / `expand`
 

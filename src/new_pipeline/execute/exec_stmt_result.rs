@@ -22,6 +22,7 @@ use crate::new_pipeline::execute::execute_by_stmt::{
     ExecExpandRangeStmtResult, ExecReleaseAxiomOfChoiceStmtResult,
     ExecReleaseRegularityAxiomStmtResult, ExecReleaseZornLemmaStmtResult,
 };
+use crate::new_pipeline::execute::execute_eval_stmt::ExecCommandStmtResult;
 use crate::new_pipeline::execute::execute_proof_block_stmt::ExecProofBlockStmtResult;
 use crate::new_pipeline::execute::execute_register_stmt::ExecRegisterStmtResult;
 use crate::new_pipeline::execute::execute_def_abstract_prop_stmt::ExecDefAbstractPropStmtSuccessResult;
@@ -95,6 +96,7 @@ pub enum ExecStmtResult {
     Register(ExecRegisterStmtResult),
     ReleaseAndExpand(ExecReleaseAndExpandStmtResult),
     ProofBlock(ExecProofBlockStmtResult),
+    Command(ExecCommandStmtResult),
 }
 
 pub enum ExecReleaseAndExpandStmtResult {
@@ -143,6 +145,7 @@ impl ExecStmtResult {
             Self::Register(r) => r.is_failed(),
             Self::ReleaseAndExpand(r) => r.is_failed(),
             Self::ProofBlock(r) => r.is_failed(),
+            Self::Command(r) => r.is_failed(),
         }
     }
 }

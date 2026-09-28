@@ -32,6 +32,7 @@ by/            Extension, EnumerateFiniteSet, For, Contra, Cases, Def, Thm,
 release_and_expand/  ExpandRange, ReleaseAxiomOfChoice, ReleaseRegularityAxiom
                (plus release thm/struct/obj live under definition/)
 proof_block/   Claim, Sketch
+command/       Eval (closed numeric display eval; no proof fact; no user algo yet)
 ```
 
 ## What / how (wired arms)
@@ -57,14 +58,17 @@ proof_block/   Claim, Sketch
 | `witness/` | Exhibit witnesses | `witness exist … from …:` etc. |
 | `by/` | Named proof methods | `by cases:` / `by contra:` / … |
 | `proof_block/` | Nested scopes | `claim:` / `sketch:` |
+| `command/eval.lit` | Display eval of closed numeric expr | `eval (1 + 2)^2` |
 
 Full human catalog: `docs/Manual.md` → Statements → Preview Stmt catalog.
 Parse dispatch: `src/new_pipeline/parse/README.md`.
 
 Omitted for now: `release zorn_lemma` (wired; chain-upper-bound obligation still
-needs a green tracer). Parse-only / unwired: eval, axiom, strategy.
-`have algo for fn` is wired for store+agreement (see `definition/def_algo.lit`);
-eval does not yet consume user algos.
+needs a green tracer). Parse-only / unwired: axiom, strategy.
+`eval` is wired for closed numeric display evaluation (exact rational, then
+closed decimal); it does **not** store a proof fact and does **not** consume
+user algos yet. Tracer: `command/eval.lit`.
+`have algo for fn` is wired for store+agreement (see `definition/def_algo.lit`).
 `obtain … from exist` / `exist!` / `$P` is wired (see `definition/obtain_*.lit`
 and `definition/def_template_obtain_from_*.lit`).
 `have by replacement_axiom` is wired (see `definition/have_by_replacement_axiom.lit`

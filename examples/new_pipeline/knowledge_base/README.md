@@ -7,11 +7,11 @@ Dedicated example tree for **persisting / restoring** module products
 
 ```text
 examples/new_pipeline/knowledge_base/
-  README.md                 (this file)
-  def_prop/                 first codec: one DefPropStmt ↔ JSON
-    is_pos.lit              source prop
-    is_pos.def_prop.json    committed store artifact (golden)
-    README.md
+  README.md
+  def_prop/                 DefPropStmt ↔ JSON
+  def_abstract_prop/        DefAbstractPropStmt ↔ JSON
+  def_thm/                  DefThmStmt ↔ JSON (empty prove_process MVP)
+  stored_identifier/        StoredIdentifierDefinition ↔ JSON (LetObj / HaveObj* MVP)
 ```
 
 White-box Rust tests live under

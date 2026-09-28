@@ -1,0 +1,6 @@
+# knowledge_base / stored_identifier: let a = 1
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/knowledge_base/stored_identifier/let_a.lit
+# Stored: let_a.stored_identifier.json
+
+let a = 1
+a = 1

@@ -83,6 +83,7 @@ ExecStmtResult                    // stmt-kind dispatch only
   Register(ExecRegisterStmtResult)
   ReleaseAndExpand(ExecReleaseAndExpandStmtResult)   // Thm / StructDef / ObjDef / ExpandRange / Zorn / AoC / Regularity
   ProofBlock(ExecProofBlockStmtResult)
+  Command(ExecCommandStmtResult)   // Eval
 
 Leaf *Result = Success(*SuccessResult) | Failed(...)
   (AbstractProp has only SuccessResult; no soft-fail path yet)

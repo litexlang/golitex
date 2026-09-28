@@ -22,20 +22,35 @@ Companion packages:
 |------|------|
 | `mod.rs` | Module exports only |
 | `json_mini.rs` | Zero-dep JSON `Value` + parse/stringify |
-| `def_prop_codec.rs` | Store/load one `DefPropStmt` as JSON |
+| `def_prop_codec.rs` | `DefPropStmt` + shared AST wire helpers |
+| `def_abstract_prop_codec.rs` | `DefAbstractPropStmt` |
+| `def_thm_codec.rs` | `DefThmStmt` (empty `prove_process` only) |
+| `stored_identifier_codec.rs` | `StoredIdentifierDefinition` MVP tags |
 | `README.md` | This contract |
 
 White-box tests live under
 `tests/unit/new_pipeline/knowledge_base/` (see that folder’s README), loaded by
 `#[cfg(test)]` from this `mod.rs`. **Human-facing goldens and `.lit` sources**
-live under `examples/new_pipeline/knowledge_base/` (def_prop first).
+live under `examples/new_pipeline/knowledge_base/`.
 
-Public API (def prop only for now):
+Public API:
 
 | Fn | Role |
 |----|------|
-| `store_def_prop` / `load_def_prop` | `DefPropStmt` ↔ JSON `String` |
-| `write_def_prop` / `read_def_prop` | same ↔ file on disk |
+| `store_def_prop` / `load_def_prop` / file IO | `DefPropStmt` |
+| `store_def_abstract_prop` / `load_…` / file IO | `DefAbstractPropStmt` |
+| `store_def_thm` / `load_…` / file IO | `DefThmStmt` |
+| `store_stored_identifier` / `load_…` / file IO | `StoredIdentifierDefinition` |
+
+### Codec roadmap (definitions)
+
+| Priority | Kind | Status |
+|----------|------|--------|
+| 1 | `def_prop` | done |
+| 2 | `def_abstract_prop` | done |
+| 3 | `def_thm` | done (MVP: empty prove_process; Stmt body deferred) |
+| 4 | `stored_identifier` | done (MVP: LetObj, HaveObjEqual, HaveObjInNonemptySetOrParamType) |
+| next | expand Obj/Fact + have-fn identifier tags; then struct / template | planned |
 
 Implementation may lag later sections. Wiring into `run_import_module` comes
 after format / fingerprint / remap contracts are fixed.

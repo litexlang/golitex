@@ -583,6 +583,20 @@ impl Runtime {
         self.verify_fact(&goal, verify_state)
     }
 
+    pub(crate) fn verify_in_natural(
+        &mut self,
+        obj: &Obj,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<VerifyFactResult> {
+        let goal = Fact::AtomicFact(AtomicFact::InFact(InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: obj.clone(),
+            set: Obj::StandardSet(StandardSet::N),
+            line_file: None,
+        }));
+        self.verify_fact(&goal, verify_state)
+    }
+
     pub(super) fn verify_is_finite_set(
         &mut self,
         set: &Obj,
