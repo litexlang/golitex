@@ -36,8 +36,10 @@ Wave3 NormalAtomic computation: `$prime` / `not $prime` / `$coprime` /
 `not $coprime` on closed nonnegative integers — see
 `prime_by_computation.lit`, `not_prime_by_computation.lit`,
 `coprime_by_computation.lit`, `not_coprime_by_computation.lit`.
-`by def $prime(n)` still needs its trial-divisor forall; computation does not
-discharge that obligation (honest skip for trust-free by-definition prime).
+Wave5 ByDefinition builtins (no trust): `$injective` / `$surjective` /
+`$bijective` (singleton identity), `$prime` (`by def $prime(5)`),
+`$is_choice_function_for` (finite constant choice) — see
+`atomic/by_definition/builtin_injective.lit` and siblings.
 NotSubset / NotSuperset duality (A7): known `not B $superset A` proves
 `not A $subset B`, and known `not B $subset A` proves `not A $superset B` —
 see `not_subset_from_known_not_superset.lit`,

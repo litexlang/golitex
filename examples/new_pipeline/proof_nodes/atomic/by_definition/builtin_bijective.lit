@@ -1,0 +1,9 @@
+# Node: atomic.ByDefinition.BuiltinProp.Bijective
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_definition/builtin_bijective.lit
+#
+# Obligations: $injective and $surjective on the same triple.
+# Same singleton identity setup as the injective / surjective tracers.
+
+have fn id1(x {1}) {1} = x
+exist x {1} st {x = 1}
+by def $bijective({1}, {1}, id1)

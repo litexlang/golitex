@@ -76,16 +76,17 @@ Positive tracers (no trust), under `atomic/by_definition/`:
 - `ambient_prop_expand.lit` — user `prop` fork
 - `builtin_subset.lit` / `builtin_superset.lit` — standard-set inclusion
 - `builtin_coprime.lit` — literal gcd-one
-- `$prime` / `$coprime` closed-integer computation (not by-definition):
-  `atomic/by_builtin_rule/prime_by_computation.lit`,
-  `not_prime_by_computation.lit`, `coprime_by_computation.lit`,
-  `not_coprime_by_computation.lit`. Trust-free `by def $prime(n)` remains
-  blocked on the trial-divisor forall obligation.
 - `builtin_dvd.lit` — rem-zero + multiple witness
+- `builtin_injective.lit` — singleton identity
+- `builtin_surjective.lit` / `builtin_bijective.lit` — singleton identity plus
+  finite membership exist seed `exist x {1} st {x = 1}`
+- `builtin_prime.lit` — `by def $prime(5)` (trial obligations close ambiently)
+- `builtin_is_choice_function_for.lit` — finite index + constant choice fn
+
+`$prime` / `$coprime` closed-integer **computation** (ByBuiltinRule, not
+by-definition) remains under `atomic/by_builtin_rule/prime_by_computation.lit`,
+`not_prime_by_computation.lit`, `coprime_by_computation.lit`,
+`not_coprime_by_computation.lit`.
 
 Unit tests also cover `$proper_*` with trusted obligations, and assert that
 `by def {1} $subset {1, 2}` soft-fails.
-
-Deferred as separate acceptance (not claimed green here): `$injective` /
-`$surjective` / `$bijective` / `$prime` / `$is_choice_function_for` end-to-end
-without trust when obligation search is still thin on new_pipeline.

@@ -1,24 +1,17 @@
-# Wave3: exist-shaped builtins + prime/coprime by computation
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/tmp.lit
+# Wave5 ByDefinition demo (no trust)
+# Run: LITEX_NEW_PIPELINE=1 target/release/litex -f examples/tmp.lit
 
-# --- exist: RationalIntegerRatio (green; PositiveDenominator skipped: body WD) ---
-1 / 2 $in Q
-exist a Z, b Z* st {1 / 2 = a / b}
+# injective / surjective / bijective — singleton identity
+have fn id1(x {1}) {1} = x
+exist x {1} st {x = 1}
+by def $injective({1}, {1}, id1)
+by def $surjective({1}, {1}, id1)
+by def $bijective({1}, {1}, id1)
 
-# --- exist: IntegerMultipleFromZeroRemainder ---
-6 % 3 = 0
-exist k Z st {6 = 3 * k}
+# prime — trial obligations close ambiently on small closed literal
+by def $prime(5)
 
-# --- exist: ArchimedeanReciprocal ---
-0.5 $in R+
-exist n N+ st {1 / n < 0.5}
-
-# --- exist: RealDensityMidpoint ---
-0 < 1
-exist r R st {0 < r < 1}
-
-# --- atomic: prime / coprime computation ---
-$prime(17)
-not $prime(1)
-$coprime(14, 25)
-not $coprime(14, 21)
+# choice — finite index, constant family and choice
+have fn g_choice(alpha {1}) power_set({1}) = {1}
+have fn f_choice(alpha {1}) {1} = 1
+by def $is_choice_function_for({1}, power_set({1}), g_choice, f_choice)

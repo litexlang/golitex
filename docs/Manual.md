@@ -3228,6 +3228,7 @@ atomic target. The older `by def:` goal block remains accepted for compatibility
 `by def` also names the mathematical-definition route for these builtin
 positive forms: subset, superset, proper subset, proper superset,
 `$prime`, `$coprime`, `$dvd`, `$injective`, `$surjective`, `$bijective`,
+`$is_choice_function_for`.
 On `new_pipeline`, `$fn_eq` and `$fn_eq_in` are removed.
 
 When a grouped universal law binds shared convenience variables, a conclusion
@@ -4583,8 +4584,11 @@ rule target.
 > Also: closed-integer `$prime` / `not $prime` / `$coprime` / `not $coprime` by
 > computation under
 > [`examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/`](../examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/)
-> (`prime_by_computation.lit`, …). `by def $prime(n)` still requires proving the
-> trial-divisor forall; computation does not discharge that definition path.
+> (`prime_by_computation.lit`, …). Trust-free ByDefinition tracers for
+> `$injective` / `$surjective` / `$bijective` / `$prime` /
+> `$is_choice_function_for` live under
+> [`examples/new_pipeline/proof_nodes/atomic/by_definition/`](../examples/new_pipeline/proof_nodes/atomic/by_definition/)
+> (`builtin_injective.lit`, `builtin_prime.lit`, …).
 
 ```litex
 forall epsilon R+:
