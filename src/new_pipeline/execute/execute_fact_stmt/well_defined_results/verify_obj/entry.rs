@@ -1,6 +1,6 @@
 //! Object WD entry: known-memory lookup, then match Obj → family branch.
 //!
-//! Soft miss is `Ok(Failed(...))` — ill-formed / not WD, not "unknown theorem".
+//! Soft miss is `Ok(Failed { .. })` — ill-formed / not WD, not "unknown theorem".
 //! Must-prove callers reject that at their boundary.
 
 use super::fail_to_verify_obj_well_defined::FailToVerifyObjWellDefinedResult;
@@ -16,22 +16,46 @@ use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::runtime_ids::WellDefinednessId;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
-// Top-level object WD: Success(proof) | Failed(reason). Proof never embeds Fail.
+// Top-level object WD: Success(proof) | Failed { obj, reason }. Proof never embeds Fail.
 pub enum VerifyObjWellDefinedResult {
     Success(ObjWellDefinedProof),
-    Failed(FailToVerifyObjWellDefinedResult),
+    Failed {
+        obj: Obj,
+        reason: FailToVerifyObjWellDefinedResult,
+    },
 }
 
-// Success-only evidence that an object is well-defined.
+// Success-only evidence that an object is well-defined. Always carries the subject.
 pub enum ObjWellDefinedProof {
     // the well-definedness of this object is already proved earlier
-    ByKnown { wd_id: WellDefinednessId },
-    ByDef(ObjWellDefinedProofByDef),
+    ByKnown {
+        obj: Obj,
+        wd_id: WellDefinednessId,
+    },
+    ByDef {
+        obj: Obj,
+        proof: ObjWellDefinedProofByDef,
+    },
+}
+
+impl ObjWellDefinedProof {
+    pub fn obj(&self) -> &Obj {
+        match self {
+            Self::ByKnown { obj, .. } | Self::ByDef { obj, .. } => obj,
+        }
+    }
 }
 
 impl VerifyObjWellDefinedResult {
     pub fn is_failed(&self) -> bool {
-        matches!(self, Self::Failed(_))
+        matches!(self, Self::Failed { .. })
+    }
+
+    pub fn obj(&self) -> &Obj {
+        match self {
+            Self::Success(proof) => proof.obj(),
+            Self::Failed { obj, .. } => obj,
+        }
     }
 }
 
@@ -45,7 +69,10 @@ impl Runtime {
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
         if let Some(wd_id) = self.well_defined_visible_in_stack(obj) {
             return Ok(VerifyObjWellDefinedResult::Success(
-                ObjWellDefinedProof::ByKnown { wd_id },
+                ObjWellDefinedProof::ByKnown {
+                    obj: obj.clone(),
+                    wd_id,
+                },
             ));
         }
 
@@ -131,10 +158,16 @@ impl Runtime {
                         .record(obj.clone(), wd_id);
                 }
                 Ok(VerifyObjWellDefinedResult::Success(
-                    ObjWellDefinedProof::ByDef(by_def),
+                    ObjWellDefinedProof::ByDef {
+                        obj: obj.clone(),
+                        proof: by_def,
+                    },
                 ))
             }
-            Err(fail) => Ok(VerifyObjWellDefinedResult::Failed(fail)),
+            Err(fail) => Ok(VerifyObjWellDefinedResult::Failed {
+                obj: obj.clone(),
+                reason: fail,
+            }),
         }
     }
 

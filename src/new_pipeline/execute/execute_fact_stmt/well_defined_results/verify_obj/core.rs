@@ -7,7 +7,7 @@ use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::obj_well_defined_proof_by_def::*;
 use crate::new_pipeline::ast::fact::{AtomicFact, InFact};
 use crate::new_pipeline::ast::obj::{
-    FnObj, FnObjHead, FnRange, FnSet, FunctionSpace, IdentifierObj, Literal, Obj, StructAndFieldAccessObj,
+    FnObj, FnObjHead, FnRange, FnSet, FunctionSpace, IdentifierObj, Literal, Obj,
 };
 use crate::new_pipeline::exec_env::exec_env::SpecialObjectPropertyByDefinition;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
@@ -31,13 +31,13 @@ impl Runtime {
             }
         };
         if !self.identifier_defined_in_stack(&name) {
-            return Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::Identifier(
-                    FailToVerifyIdentifierObjWellDefined::Undefined {
-                        obj: Obj::Identifier(value.clone()),
-                    },
+            let obj = Obj::Identifier(value.clone());
+            return Ok(VerifyObjWellDefinedResult::Failed {
+                obj: obj.clone(),
+                reason: FailToVerifyObjWellDefinedResult::Identifier(
+                    FailToVerifyIdentifierObjWellDefined::Undefined { obj },
                 ),
-            ));
+            });
         }
         self.finish_leaf_obj_success(Obj::Identifier(value.clone()), verify_state)
     }
@@ -80,7 +80,10 @@ impl Runtime {
             _ => ObjWellDefinedProofByDef::Identifier(IdentifierObjWellDefinedProof::new()),
         };
         Ok(VerifyObjWellDefinedResult::Success(
-            ObjWellDefinedProof::ByDef(by_def),
+            ObjWellDefinedProof::ByDef {
+                obj,
+                proof: by_def,
+            },
         ))
     }
 
@@ -105,59 +108,68 @@ impl Runtime {
                 ));
             }
         };
+        let root = Obj::FnObj(value.clone());
         // Template-instance heads register InFunctionSet during their own WD.
         if matches!(value.head.as_ref(), FnObjHead::InstantiatedTemplateObj(_)) {
             let head_wd = self.verify_obj_well_definedness(&head_obj, verify_state.clone())?;
             if head_wd.is_failed() {
-                return Ok(VerifyObjWellDefinedResult::Failed(
-                    FailToVerifyObjWellDefinedResult::FnObj(
+                return Ok(VerifyObjWellDefinedResult::Failed {
+                    obj: root,
+                    reason: FailToVerifyObjWellDefinedResult::FnObj(
                         FailToVerifyFnObjObjWellDefined::Domain(
-                            ObjWellDefinedByDefCommonStages::from_children(vec![(
-                                head_obj, head_wd,
-                            )])
-                            .into_common_fail(&Obj::FnObj(value.clone())),
+                            ObjWellDefinedByDefCommonStages::from_children(vec![head_wd])
+                                .into_common_fail(&Obj::FnObj(value.clone())),
                         ),
                     ),
-                ));
+                });
             }
         }
         let candidates = self.collect_in_function_set_candidates(&head_obj);
         if candidates.is_empty() {
-            return Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::FnObj(
+            return Ok(VerifyObjWellDefinedResult::Failed {
+                obj: root,
+                reason: FailToVerifyObjWellDefinedResult::FnObj(
                     FailToVerifyFnObjObjWellDefined::NotInFunctionSet,
                 ),
-            ));
+            });
         }
         if value.body.is_empty() {
-            return Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::FnObj(FailToVerifyFnObjObjWellDefined::Domain(
-                    ObjWellDefinedByDefCommonStages::leaf()
-                        .into_common_fail(&Obj::FnObj(value.clone())),
-                )),
-            ));
+            return Ok(VerifyObjWellDefinedResult::Failed {
+                obj: root,
+                reason: FailToVerifyObjWellDefinedResult::FnObj(
+                    FailToVerifyFnObjObjWellDefined::Domain(
+                        ObjWellDefinedByDefCommonStages::leaf()
+                            .into_common_fail(&Obj::FnObj(value.clone())),
+                    ),
+                ),
+            });
         }
 
         let mut last_domain_fail: Option<ObjWellDefinedByDefCommonStages> = None;
         for (fn_set, fact_id) in candidates {
             match self.try_verify_fn_obj_against_fn_set(value, &fn_set, verify_state.clone())? {
                 Ok(stages) => {
+                    let (child_obj_well_defined, requirement_fact_verified) =
+                        stages.into_success_child_proofs();
                     let proof = FnObjObjWellDefinedProof {
                         domain_fn_set: Some(FnObjDomainFnSetEvidence::InFunctionSet {
                             fn_set,
                             fact_id,
                         }),
-                        child_obj_well_defined: stages.child_obj_well_defined,
-                        requirement_fact_verified: stages.requirement_fact_verified,
+                        child_obj_well_defined,
+                        requirement_fact_verified,
                     };
                     if verify_state.store_well_defined_fact {
                         let wd_id = self.global_ids.allocate_well_definedness_id();
                         self.top_exec_env_mut()
                             .well_defined_objects
-                            .record(Obj::FnObj(value.clone()), wd_id);
+                            .record(root.clone(), wd_id);
                     }
                     return Ok(VerifyObjWellDefinedResult::Success(
-                        ObjWellDefinedProof::ByDef(ObjWellDefinedProofByDef::FnObj(proof)),
+                        ObjWellDefinedProof::ByDef {
+                            obj: root,
+                            proof: ObjWellDefinedProofByDef::FnObj(proof),
+                        },
                     ));
                 }
                 Err(stages) => {
@@ -167,11 +179,14 @@ impl Runtime {
         }
 
         let fail_stages = last_domain_fail.unwrap_or_else(ObjWellDefinedByDefCommonStages::leaf);
-        Ok(VerifyObjWellDefinedResult::Failed(
-            FailToVerifyObjWellDefinedResult::FnObj(FailToVerifyFnObjObjWellDefined::Domain(
-                fail_stages.into_common_fail(&Obj::FnObj(value.clone())),
-            )),
-        ))
+        Ok(VerifyObjWellDefinedResult::Failed {
+            obj: Obj::FnObj(value.clone()),
+            reason: FailToVerifyObjWellDefinedResult::FnObj(
+                FailToVerifyFnObjObjWellDefined::Domain(
+                    fail_stages.into_common_fail(&Obj::FnObj(value.clone())),
+                ),
+            ),
+        })
     }
 
     // `fn(x R: x > 0) R {x}(a)`: WD the literal, then check args against its own FnSet
@@ -188,56 +203,69 @@ impl Runtime {
                     .to_string(),
             ));
         };
+        let root = Obj::FnObj(value.clone());
         let anon_obj = Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon.as_ref().clone()));
         let head_wd = self.verify_obj_well_definedness(&anon_obj, verify_state.clone())?;
         if head_wd.is_failed() {
-            return Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::FnObj(FailToVerifyFnObjObjWellDefined::Domain(
-                    ObjWellDefinedByDefCommonStages::from_children(vec![(anon_obj, head_wd)])
-                        .into_common_fail(&Obj::FnObj(value.clone())),
-                )),
-            ));
+            return Ok(VerifyObjWellDefinedResult::Failed {
+                obj: root,
+                reason: FailToVerifyObjWellDefinedResult::FnObj(
+                    FailToVerifyFnObjObjWellDefined::Domain(
+                        ObjWellDefinedByDefCommonStages::from_children(vec![head_wd])
+                            .into_common_fail(&Obj::FnObj(value.clone())),
+                    ),
+                ),
+            });
         }
         if value.body.is_empty() {
-            return Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::FnObj(FailToVerifyFnObjObjWellDefined::Domain(
-                    ObjWellDefinedByDefCommonStages::from_children(vec![(anon_obj, head_wd)])
-                        .into_common_fail(&Obj::FnObj(value.clone())),
-                )),
-            ));
+            return Ok(VerifyObjWellDefinedResult::Failed {
+                obj: root,
+                reason: FailToVerifyObjWellDefinedResult::FnObj(
+                    FailToVerifyFnObjObjWellDefined::Domain(
+                        ObjWellDefinedByDefCommonStages::from_children(vec![head_wd])
+                            .into_common_fail(&Obj::FnObj(value.clone())),
+                    ),
+                ),
+            });
         }
 
         let fn_set = anon.body.clone();
         match self.try_verify_fn_obj_against_fn_set(value, &fn_set, verify_state.clone())? {
             Ok(mut stages) => {
-                let mut children = vec![(anon_obj, head_wd)];
+                let mut children = vec![head_wd];
                 children.append(&mut stages.child_obj_well_defined);
+                let (child_proofs, _) = ObjWellDefinedByDefCommonStages::from_children(children)
+                    .into_success_child_proofs();
                 let proof = FnObjObjWellDefinedProof {
                     domain_fn_set: Some(FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set }),
-                    child_obj_well_defined: children,
+                    child_obj_well_defined: child_proofs,
                     requirement_fact_verified: stages.requirement_fact_verified,
                 };
                 if verify_state.store_well_defined_fact {
                     let wd_id = self.global_ids.allocate_well_definedness_id();
                     self.top_exec_env_mut()
                         .well_defined_objects
-                        .record(Obj::FnObj(value.clone()), wd_id);
+                        .record(root.clone(), wd_id);
                 }
                 Ok(VerifyObjWellDefinedResult::Success(
-                    ObjWellDefinedProof::ByDef(ObjWellDefinedProofByDef::FnObj(proof)),
+                    ObjWellDefinedProof::ByDef {
+                        obj: root,
+                        proof: ObjWellDefinedProofByDef::FnObj(proof),
+                    },
                 ))
             }
             Err(mut stages) => {
-                let mut children = vec![(anon_obj, head_wd)];
+                let mut children = vec![head_wd];
                 children.append(&mut stages.child_obj_well_defined);
                 stages.child_obj_well_defined = children;
-                Ok(VerifyObjWellDefinedResult::Failed(
-                    FailToVerifyObjWellDefinedResult::FnObj(
+                Ok(VerifyObjWellDefinedResult::Failed {
+                    obj: root,
+                    reason: FailToVerifyObjWellDefinedResult::FnObj(
                         FailToVerifyFnObjObjWellDefined::Domain(
                             stages.into_common_fail(&Obj::FnObj(value.clone())),
                         ),
                     ),
-                ))
+                })
             }
         }
     }
@@ -368,7 +396,7 @@ impl Runtime {
             for arg in &args {
                 let child = self.verify_obj_well_definedness(arg, verify_state.clone())?;
                 let failed = child.is_failed();
-                proof.child_obj_well_defined.push((arg.clone(), child));
+                proof.child_obj_well_defined.push(child);
                 if failed {
                     return Ok(Err(proof));
                 }
@@ -438,42 +466,47 @@ impl Runtime {
             value.function.as_ref(),
             verify_state.clone(),
         )?;
+        let root = Obj::FunctionSpace(FunctionSpace::FnRange(value.clone()));
         if !stages.is_fully_known() {
-            return Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::FunctionSpace(
+            return Ok(VerifyObjWellDefinedResult::Failed {
+                obj: root,
+                reason: FailToVerifyObjWellDefinedResult::FunctionSpace(
                     FailToVerifyFunctionSpaceObjWellDefinedResult::FnRange(
                         FailToVerifyFnRangeObjWellDefined::Domain(stages.into_common_fail(
                             &Obj::FunctionSpace(FunctionSpace::FnRange(value.clone())),
                         )),
                     ),
                 ),
-            ));
+            });
         }
         if self
             .collect_in_function_set_candidates(value.function.as_ref())
             .is_empty()
         {
-            return Ok(VerifyObjWellDefinedResult::Failed(
-                FailToVerifyObjWellDefinedResult::FunctionSpace(
+            return Ok(VerifyObjWellDefinedResult::Failed {
+                obj: root,
+                reason: FailToVerifyObjWellDefinedResult::FunctionSpace(
                     FailToVerifyFunctionSpaceObjWellDefinedResult::FnRange(
                         FailToVerifyFnRangeObjWellDefined::NotInFunctionSet,
                     ),
                 ),
-            ));
+            });
         }
         if verify_state.store_well_defined_fact {
             let wd_id = self.global_ids.allocate_well_definedness_id();
-            self.top_exec_env_mut().well_defined_objects.record(
-                Obj::FunctionSpace(FunctionSpace::FnRange(value.clone())),
-                wd_id,
-            );
+            self.top_exec_env_mut()
+                .well_defined_objects
+                .record(root.clone(), wd_id);
         }
         Ok(VerifyObjWellDefinedResult::Success(
-            ObjWellDefinedProof::ByDef(ObjWellDefinedProofByDef::FunctionSpace(
-                FunctionSpaceObjWellDefinedProofByDef::FnRange(
-                    FnRangeObjWellDefinedProof::from_stages(stages),
+            ObjWellDefinedProof::ByDef {
+                obj: root,
+                proof: ObjWellDefinedProofByDef::FunctionSpace(
+                    FunctionSpaceObjWellDefinedProofByDef::FnRange(
+                        FnRangeObjWellDefinedProof::from_stages(stages),
+                    ),
                 ),
-            )),
+            },
         ))
     }
 

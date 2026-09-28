@@ -1,4 +1,4 @@
-//! Object well-definedness: Success(ByKnown | ByDef) | Failed.
+//! Object well-definedness: Success(ByKnown { obj, .. } | ByDef { obj, .. }) | Failed { obj, reason }.
 //!
 //! Entry matches every Obj variant; families live in sibling modules.
 //! ByDef success proofs mirror Obj. Scalar (P0) fills requirement facts.

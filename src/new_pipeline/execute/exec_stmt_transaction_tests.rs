@@ -1586,15 +1586,16 @@ fn fn_set_obj_param_domain_must_not_cite_earlier_binder() {
     match exec_one(&mut runtime, "let F = fn(x R, y S(x)) R") {
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
             ExecDefineObjStmtResult::LetObj(ExecLetObjStmtResult::Failed(
-                VerifyObjWellDefinedResult::Failed(
-                    FailToVerifyObjWellDefinedResult::FunctionSpace(
+                VerifyObjWellDefinedResult::Failed {
+                    obj: _,
+                    reason: FailToVerifyObjWellDefinedResult::FunctionSpace(
                         FailToVerifyFunctionSpaceObjWellDefinedResult::FnSet(
                             FailToVerifyFnSetObjWellDefined::ParamTypeCitesEarlierBinder {
                                 failed_index: 1,
                             },
                         ),
                     ),
-                ),
+                },
             )),
         )) => {}
         other => panic!(

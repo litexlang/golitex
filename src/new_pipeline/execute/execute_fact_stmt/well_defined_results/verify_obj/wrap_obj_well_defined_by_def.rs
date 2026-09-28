@@ -23,7 +23,7 @@ pub(super) fn finish_by_def(
 fn expect_success_obj_proof(result: VerifyObjWellDefinedResult) -> Box<ObjWellDefinedProof> {
     match result {
         VerifyObjWellDefinedResult::Success(proof) => Box::new(proof),
-        VerifyObjWellDefinedResult::Failed(_) => {
+        VerifyObjWellDefinedResult::Failed { .. } => {
             unreachable!("finish_by_def only packs fully-known stages")
         }
     }
@@ -35,7 +35,7 @@ fn take_child_proofs(
 ) -> Vec<Box<ObjWellDefinedProof>> {
     let mut out = Vec::with_capacity(n);
     for _ in 0..n {
-        let (_obj, result) = stages.child_obj_well_defined.remove(0);
+        let result = stages.child_obj_well_defined.remove(0);
         out.push(expect_success_obj_proof(result));
     }
     out

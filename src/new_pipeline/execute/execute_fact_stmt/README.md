@@ -77,15 +77,17 @@ equal / atomic-except-equality).
 Object WD (`verify_obj_well_definedness`) returns
 `RuntimeResult<VerifyObjWellDefinedResult>`:
 
-- `Ok(Success(ByKnown { wd_id }))` when a WD id is visible on the env stack
-- `Ok(Success(ByDef(proof)))` when by-definition succeeds; `ObjWellDefinedProofByDef`
-  mirrors `Obj` (one dedicated proof struct per variant). Scalar (P0),
-  identifier-headed `FnObj`, binder objects (`FnSet` / `AnonymousFn` /
-  `SetBuilder` with `local_env`), and cart/index (`CartDim` / `Proj` /
-  `TupleDim` / `ObjAtIndex`) fill named semantic requirements; many other
-  set/iterated constructors remain children-only until later slices
-- `Ok(Failed(reason))` when a child WD or requirement soft-misses;
+- `Ok(Success(ByKnown { obj, wd_id }))` when a WD id is visible on the env stack
+- `Ok(Success(ByDef { obj, proof }))` when by-definition succeeds;
+  `ObjWellDefinedProofByDef` mirrors `Obj` (one dedicated proof struct per
+  variant). Scalar (P0), identifier-headed `FnObj`, binder objects (`FnSet` /
+  `AnonymousFn` / `SetBuilder` with `local_env`), and cart/index (`CartDim` /
+  `Proj` / `TupleDim` / `ObjAtIndex`) fill named semantic requirements; many
+  other set/iterated constructors remain children-only until later slices
+- `Ok(Failed { obj, reason })` when a child WD or requirement soft-misses;
   `FailToVerifyObjWellDefinedResult` also mirrors `Obj`
+- Success child evidence stores `Vec<Box<ObjWellDefinedProof>>` (subject is on
+  each nested proof; no separate `(Obj, proof)` pair)
 - `Err(...)` only for real runtime / invariant failures
 
 Requirement search aggregators return soft fail variants on exhaustion; they
@@ -116,7 +118,9 @@ does not write new well-definedness records into the current scope.
 The equality and atomic-except-equality pipelines keep their search slots in a fixed
 order. There is **no fact-level exact-IR cite** search slot (composites and
 atomics alike). Object WD reuses recorded proofs via
-`VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByKnown { .. })`.
+`VerifyObjWellDefinedResult::Success(ObjWellDefinedProof::ByKnown { obj, .. })`.
+Both Success proofs and `Failed { obj, reason }` carry the subject `Obj`.
+Nested Success child evidence is `Vec<Box<ObjWellDefinedProof>>` (subject lives on each proof).
 
 Atomic-except-equality search is:
 

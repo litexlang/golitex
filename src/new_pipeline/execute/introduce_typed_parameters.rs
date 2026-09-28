@@ -24,8 +24,7 @@ use crate::new_pipeline::ast::stmt::{
 use crate::new_pipeline::exec_env::exec_env::SpecialObjectPropertyByDefinition;
 use crate::new_pipeline::exec_env::StoredIdentifierDefinition;
 use crate::new_pipeline::execute::execute_fact_stmt::{
-    fail_to_verify_obj_well_defined_others, ParamTypeWellDefinedProof, VerifyObjWellDefinedResult,
-    VerifyState,
+    ParamTypeWellDefinedProof, VerifyObjWellDefinedResult, VerifyState,
 };
 use crate::new_pipeline::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
 use crate::new_pipeline::execute::release_one_struct_layer::{
@@ -110,10 +109,10 @@ impl Runtime {
             if proof.is_failed() {
                 let failed = match proof {
                     ParamTypeWellDefinedProof::Obj(wd) => wd,
-                    _ => VerifyObjWellDefinedResult::Failed(
-                        fail_to_verify_obj_well_defined_others(
-                            "param type well-definedness failed".to_string(),
-                        ),
+                    ParamTypeWellDefinedProof::Set
+                    | ParamTypeWellDefinedProof::NonemptySet
+                    | ParamTypeWellDefinedProof::FiniteSet => unreachable!(
+                        "kind param types never soft-fail well-definedness"
                     ),
                 };
                 return Ok(Err(IntroduceTypedParametersFailed::ParamType(failed)));
@@ -157,10 +156,10 @@ impl Runtime {
             if proof.is_failed() {
                 let failed = match proof {
                     ParamTypeWellDefinedProof::Obj(wd) => wd,
-                    _ => VerifyObjWellDefinedResult::Failed(
-                        fail_to_verify_obj_well_defined_others(
-                            "param type well-definedness failed".to_string(),
-                        ),
+                    ParamTypeWellDefinedProof::Set
+                    | ParamTypeWellDefinedProof::NonemptySet
+                    | ParamTypeWellDefinedProof::FiniteSet => unreachable!(
+                        "kind param types never soft-fail well-definedness"
                     ),
                 };
                 return Ok(Err(failed));
