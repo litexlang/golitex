@@ -24,9 +24,13 @@ Exit 0 is enough.
 ## Layout
 
 ```text
-equal/    InferEqualityResult (PositiveRealPower, SubtractionEqualsZero, …)
-atomic/   InferAtomicExceptEqualityResult (InFact*, order flip, index_cart, …)
+equal/    InferEqualityResult (PositiveRealPower, CartTupleShape, …)
+atomic/   InferAtomicExceptEqualityResult (InFact shape expose, subset, …)
 ```
+
+B1 reformulation (carrier→sign, order flip, `u-v=0`⇒`u=v`) lives under
+`examples/new_pipeline/proof_nodes/order/` and `proof_nodes/equality/` as
+verify-time builtins, not here.
 
 ## Run all
 
