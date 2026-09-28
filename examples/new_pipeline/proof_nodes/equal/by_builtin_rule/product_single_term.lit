@@ -1,0 +1,4 @@
+# Node: equal.ByBuiltinRule.ProductSingleTerm
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/product_single_term.lit
+
+product(3, 3, fn(x Z) Z {x}) = 3

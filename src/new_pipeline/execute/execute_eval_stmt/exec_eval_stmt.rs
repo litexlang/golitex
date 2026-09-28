@@ -15,7 +15,7 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 //   eval a + 1
 //   # → 11
 //
-//   have algo for fn nonzero_flag(x): …
+//   algo nonzero_flag(x R) R by cases: …
 //   eval nonzero_flag(0) + 1
 //   # → 1
 pub fn exec_eval_stmt(
@@ -125,15 +125,25 @@ mod tests {
     }
 
     #[test]
-    fn eval_factorial_not_closed_numeric_soft_fails() {
+    fn eval_factorial_sqrt_log_closed_numeric_succeed() {
         let mut runtime = runtime_with_file_env();
-        let outcome = exec_one(&mut runtime, "eval 2!");
+        assert_eval_number(&mut runtime, "eval 2!", "2");
+        assert_eval_number(&mut runtime, "eval 3!", "6");
+        assert_eval_number(&mut runtime, "eval sqrt(4)", "2");
+        assert_eval_number(&mut runtime, "eval sqrt(0.36)", "0.6");
+        assert_eval_number(&mut runtime, "eval log(2, 8)", "3");
+    }
+
+    #[test]
+    fn eval_non_square_sqrt_soft_fails() {
+        let mut runtime = runtime_with_file_env();
+        let outcome = exec_one(&mut runtime, "eval sqrt(2)");
         match outcome {
             ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Failed(
-                ExecEvalStmtFailed::UnsupportedExpression,
+                ExecEvalStmtFailed::EvaluationFailed,
             ))) => {}
             other => panic!(
-                "expected UnsupportedExpression, failed={}",
+                "expected EvaluationFailed for sqrt(2), failed={}",
                 other.is_failed()
             ),
         }

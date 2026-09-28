@@ -13,6 +13,8 @@ pub mod by_equality_identities_wave6;
 pub mod by_equality_identities_wave7;
 pub mod by_equality_identities_wave8;
 pub mod by_equality_identities_wave9;
+pub mod by_equality_identities_wave10;
+pub mod by_equality_identities_wave11;
 pub mod by_set_builder_alpha_equal;
 pub mod search_equal_fact_by_calculation;
 pub mod search_equal_fact_builtin_rule;

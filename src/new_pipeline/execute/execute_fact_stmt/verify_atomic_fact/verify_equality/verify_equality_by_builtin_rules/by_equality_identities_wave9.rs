@@ -76,6 +76,34 @@ pub struct PowerSetFiniteSetSizeBuiltinRuleProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
+
+// Builtin UnionAssociative: union(union(A, B), C) = union(A, union(B, C)).
+// Example: have A, B, C set; union(union(A, B), C) = union(A, union(B, C)).
+pub struct UnionAssociativeBuiltinRuleProof {}
+
+// Builtin IntersectAssociative: intersect(intersect(A, B), C) = intersect(A, intersect(B, C)).
+// Example: have A, B, C set; intersect(intersect(A, B), C) = intersect(A, intersect(B, C)).
+pub struct IntersectAssociativeBuiltinRuleProof {}
+
+// Builtin IntersectUnionDistributive:
+//   intersect(A, union(B, C)) = union(intersect(A, B), intersect(A, C)).
+// Example: have A, B, C set; intersect(A, union(B, C)) = union(intersect(A, B), intersect(A, C)).
+pub struct IntersectUnionDistributiveBuiltinRuleProof {}
+
+// Builtin SetMinusUnionDeMorgan:
+//   set_minus(A, union(B, C)) = intersect(set_minus(A, B), set_minus(A, C)).
+// Example: have A, B, C set; set_minus(A, union(B, C)) = intersect(set_minus(A, B), set_minus(A, C)).
+pub struct SetMinusUnionDeMorganBuiltinRuleProof {}
+
+// Builtin SetMinusIntersectDeMorgan:
+//   set_minus(A, intersect(B, C)) = union(set_minus(A, B), set_minus(A, C)).
+// Example: have A, B, C set; set_minus(A, intersect(B, C)) = union(set_minus(A, B), set_minus(A, C)).
+pub struct SetMinusIntersectDeMorganBuiltinRuleProof {}
+
+// Builtin IntersectSetMinusSelfEmpty: intersect(A, set_minus(B, A)) = {}.
+// Example: have A set; have B set; intersect(A, set_minus(B, A)) = {}.
+pub struct IntersectSetMinusSelfEmptyBuiltinRuleProof {}
+
 pub enum EqualityIdentitiesWave9BuiltinRuleProof {
     UnionEmptyRight(UnionEmptyRightBuiltinRuleProof),
     UnionEmptyLeft(UnionEmptyLeftBuiltinRuleProof),
@@ -91,6 +119,12 @@ pub enum EqualityIdentitiesWave9BuiltinRuleProof {
     IntersectFromSubset(IntersectFromSubsetBuiltinRuleProof),
     EmptySetFromNotNonempty(EmptySetFromNotNonemptyBuiltinRuleProof),
     PowerSetFiniteSetSize(PowerSetFiniteSetSizeBuiltinRuleProof),
+    UnionAssociative(UnionAssociativeBuiltinRuleProof),
+    IntersectAssociative(IntersectAssociativeBuiltinRuleProof),
+    IntersectUnionDistributive(IntersectUnionDistributiveBuiltinRuleProof),
+    SetMinusUnionDeMorgan(SetMinusUnionDeMorganBuiltinRuleProof),
+    SetMinusIntersectDeMorgan(SetMinusIntersectDeMorganBuiltinRuleProof),
+    IntersectSetMinusSelfEmpty(IntersectSetMinusSelfEmptyBuiltinRuleProof),
 }
 
 impl Runtime {
@@ -170,6 +204,47 @@ impl Runtime {
                     ),
                 ));
             }
+            if union_associative_shape(left, right) {
+                return Ok(Some(EqualityIdentitiesWave9BuiltinRuleProof::UnionAssociative(
+                    UnionAssociativeBuiltinRuleProof {},
+                )));
+            }
+            if intersect_associative_shape(left, right) {
+                return Ok(Some(
+                    EqualityIdentitiesWave9BuiltinRuleProof::IntersectAssociative(
+                        IntersectAssociativeBuiltinRuleProof {},
+                    ),
+                ));
+            }
+            if intersect_union_distributive_shape(left, right) {
+                return Ok(Some(
+                    EqualityIdentitiesWave9BuiltinRuleProof::IntersectUnionDistributive(
+                        IntersectUnionDistributiveBuiltinRuleProof {},
+                    ),
+                ));
+            }
+            if set_minus_union_de_morgan_shape(left, right) {
+                return Ok(Some(
+                    EqualityIdentitiesWave9BuiltinRuleProof::SetMinusUnionDeMorgan(
+                        SetMinusUnionDeMorganBuiltinRuleProof {},
+                    ),
+                ));
+            }
+            if set_minus_intersect_de_morgan_shape(left, right) {
+                return Ok(Some(
+                    EqualityIdentitiesWave9BuiltinRuleProof::SetMinusIntersectDeMorgan(
+                        SetMinusIntersectDeMorganBuiltinRuleProof {},
+                    ),
+                ));
+            }
+            if intersect_set_minus_self_empty_shape(left, right) {
+                return Ok(Some(
+                    EqualityIdentitiesWave9BuiltinRuleProof::IntersectSetMinusSelfEmpty(
+                        IntersectSetMinusSelfEmptyBuiltinRuleProof {},
+                    ),
+                ));
+            }
+
             if let Some(base) = power_set_finite_set_size_shape(left, right) {
                 let premise = Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact {
                     fact_id: self.global_ids.allocate_fact_id(),
@@ -404,4 +479,80 @@ fn power_set_finite_set_size_shape(size_side: &Obj, pow_side: &Obj) -> Option<Ob
     } else {
         None
     }
+}
+
+fn union_associative_shape(left: &Obj, right: &Obj) -> bool {
+    let Some(left_outer) = match_union(left) else { return false; };
+    let Some(left_inner) = match_union(left_outer.left.as_ref()) else { return false; };
+    let Some(right_outer) = match_union(right) else { return false; };
+    let Some(right_inner) = match_union(right_outer.right.as_ref()) else { return false; };
+    left_inner.left.ir() == right_outer.left.ir()
+        && left_inner.right.ir() == right_inner.left.ir()
+        && left_outer.right.ir() == right_inner.right.ir()
+}
+
+fn intersect_associative_shape(left: &Obj, right: &Obj) -> bool {
+    let Some(left_outer) = match_intersect(left) else { return false; };
+    let Some(left_inner) = match_intersect(left_outer.left.as_ref()) else { return false; };
+    let Some(right_outer) = match_intersect(right) else { return false; };
+    let Some(right_inner) = match_intersect(right_outer.right.as_ref()) else { return false; };
+    left_inner.left.ir() == right_outer.left.ir()
+        && left_inner.right.ir() == right_inner.left.ir()
+        && left_outer.right.ir() == right_inner.right.ir()
+}
+
+fn intersect_union_distributive_shape(left: &Obj, right: &Obj) -> bool {
+    let Some(intersect) = match_intersect(left) else { return false; };
+    let Some(union) = match_union(intersect.right.as_ref()) else { return false; };
+    let Some(right_union) = match_union(right) else { return false; };
+    let Some(left_i) = match_intersect(right_union.left.as_ref()) else { return false; };
+    let Some(right_i) = match_intersect(right_union.right.as_ref()) else { return false; };
+    let a = intersect.left.as_ref();
+    a.ir() == left_i.left.ir()
+        && a.ir() == right_i.left.ir()
+        && union.left.ir() == left_i.right.ir()
+        && union.right.ir() == right_i.right.ir()
+}
+
+fn set_minus_union_de_morgan_shape(left: &Obj, right: &Obj) -> bool {
+    let Some(diff) = match_set_minus(left) else { return false; };
+    let Some(removed_union) = match_union(diff.right.as_ref()) else { return false; };
+    let Some(inter) = match_intersect(right) else { return false; };
+    let Some(left_diff) = match_set_minus(inter.left.as_ref()) else { return false; };
+    let Some(right_diff) = match_set_minus(inter.right.as_ref()) else { return false; };
+    let a = diff.left.as_ref();
+    a.ir() == left_diff.left.ir()
+        && a.ir() == right_diff.left.ir()
+        && removed_union.left.ir() == left_diff.right.ir()
+        && removed_union.right.ir() == right_diff.right.ir()
+}
+
+fn set_minus_intersect_de_morgan_shape(left: &Obj, right: &Obj) -> bool {
+    let Some(diff) = match_set_minus(left) else { return false; };
+    let Some(removed_inter) = match_intersect(diff.right.as_ref()) else { return false; };
+    let Some(u) = match_union(right) else { return false; };
+    let Some(left_diff) = match_set_minus(u.left.as_ref()) else { return false; };
+    let Some(right_diff) = match_set_minus(u.right.as_ref()) else { return false; };
+    let a = diff.left.as_ref();
+    a.ir() == left_diff.left.ir()
+        && a.ir() == right_diff.left.ir()
+        && removed_inter.left.ir() == left_diff.right.ir()
+        && removed_inter.right.ir() == right_diff.right.ir()
+}
+
+fn intersect_set_minus_self_empty_shape(intersect_side: &Obj, empty_side: &Obj) -> bool {
+    let Some(i) = match_intersect(intersect_side) else { return false; };
+    if !is_empty_list_set(empty_side) {
+        return false;
+    }
+    for (plain, difference) in [
+        (i.left.as_ref(), i.right.as_ref()),
+        (i.right.as_ref(), i.left.as_ref()),
+    ] {
+        let Some(diff) = match_set_minus(difference) else { continue; };
+        if plain.ir() == diff.right.ir() {
+            return true;
+        }
+    }
+    false
 }

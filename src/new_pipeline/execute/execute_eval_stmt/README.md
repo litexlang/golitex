@@ -7,6 +7,7 @@ Display evaluation only (no proof fact stored).
 1. `known_closed_numeric_equal` rewrite (same index as atomic-fact rewrite)
 2. Recursive `evaluate_obj`
    - `ClosedNumericExpr` → exact rational / closed decimal
+     (includes integer-domain `% quot gcd lcm !`, foldable `sqrt` / `log`)
    - arithmetic ops → eval children → rebuild → simplify
    - plain-Identifier `FnObj` with stored algo → case dispatch → eval return
 
@@ -24,3 +25,4 @@ Display evaluation only (no proof fact stored).
 ## Tracer
 
 `examples/new_pipeline/stmt_nodes/command/eval.lit`
+Complex nested closed trees: `command/eval_closed_numeric_complex.lit`

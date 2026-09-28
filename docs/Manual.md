@@ -1950,7 +1950,7 @@ runtime. This section gives each statement family one canonical home.
 > | `template` | Parameterized counterpart of one ordinary definition. | `template<A set>:` then one allowed body |
 > | `thm` | Named theorem with goal and proof. | `thm name:` then `? fact` and proof |
 > | `axiom` | Named axiom (interface checked; truth trusted). | `axiom name:` then `? forall …` |
-> | `algo` / `strategy` | Preview: `have algo for fn` and `strategy name: ? forall …` are parse+exec wired. | `algo …` / `strategy …` |
+> | `algo` / `strategy` | Preview: `algo name(…) ret by cases:` / `by induc …:` defines fn+algo; `strategy name: ? forall …` parse+exec wired. | `algo …` / `strategy …` |
 >
 > **`By` (common methods):**
 >
@@ -2391,11 +2391,14 @@ statement and one family name.
 
 ### Executable implementations and `eval`
 
-`have algo for f(args)` attaches an executable presentation to an already
-defined function. `eval expr` evaluates supported concrete expressions using
-exact symbolic arithmetic.
+Legacy surface `have algo for f(args)` attaches an executable presentation to an
+already defined function. Preview (`new_pipeline`) uses top-level
+`algo f(…) R by cases:` / `by induc …:` which defines the function and the
+executable presentation together. `eval expr` evaluates supported concrete
+expressions using exact symbolic arithmetic.
 
 ```litex
+# legacy
 have fn parity_value(n Z) Z by cases:
     case n % 2 = 0: 0
     case n % 2 != 0: 1
@@ -2408,14 +2411,22 @@ eval parity_value(4)
 parity_value(4) = 0
 ```
 
-An implementation must match the mathematical function facts:
+```litex
+# preview (new_pipeline)
+algo parity_value(n Z) Z by cases:
+    case n % 2 = 0: 0
+    case n % 2 != 0: 1
+
+eval parity_value(4)
+```
+
+Legacy implementations must match the mathematical function facts:
 
 ```text
 have fn f(x R) R = x
 have algo for f(x):
     x + 1
 ```
-
 This is an `error`; the implementation does not agree with the defined
 function.
 
@@ -2912,7 +2923,7 @@ introductions.
 | `have fn ... by exist!` | Preview (`new_pipeline`): proved `forall … exist!` goal; FnSet well-defined. | `f $in FnSet`, property forall, uniqueness forall (no equality unfold); def-table + `release obj def`; `template` instance releases the same three facts. |
 | `prop`, `abstract_prop` | Parameter definitions; concrete `prop` clauses must be well-defined. | A foldable concrete definition or an uninterpreted predicate interface. |
 | `struct`, `setting`, `template` | Field/setting/template parameters and body contracts. | A named view, reusable binder prefix, or one parameterized definition family. |
-| `have algo for ...` | A defined function exists and the implementation agrees on its cases/results. | An executable presentation; it does not replace the mathematical function facts. |
+| `algo … by cases` / `by induc` (preview) / legacy `have algo for …` | Preview: defines the fn (same checks as `have fn … by cases` / `by induc`) and stores executable algo. Legacy attaches presentation to an existing fn. | Callable fn facts plus an executable presentation for `eval`. |
 | `claim` | One target is proved in a lexical child scope. | Only the target; helper statements do not escape. |
 | `sketch` | Every contained statement checks; soft-fail fails the whole sketch. | Nothing outside the block. |
 | `thm`, `axiom` | `thm` proves its target; `axiom` checks its interface but trusts truth. | A named reusable theorem interface; universal facts also enter ordinary matching. |
@@ -4182,6 +4193,25 @@ forall a, b R+:
 > `sign(a * b) = sign(a) * sign(b)` (sign algebra nodes use narrow
 > `trust sign(_) $in R` for current mul / sign WD);
 > `a = c - b` from known `a + b = c`.
+> Equality identities wave 9 (preview): set algebra empties
+> `union(A, {}) = A` / `union({}, A) = A`; `intersect(A, {}) = {}` /
+> `intersect({}, A) = {}`; `set_minus(A, A) = {}` / `set_minus(A, {}) = A` /
+> `set_minus({}, A) = {}`; `union`/`intersect` commutative and idempotent;
+> `B $subset A` ⇒ `intersect(A, B) = B`; `not $is_nonempty_set(A)` ⇒ `A = {}`;
+> `$is_finite_set(S)` ⇒ `finite_set_size(power_set(S)) = 2^finite_set_size(S)`;
+> also associative / distributive / De Morgan set identities and
+> `intersect(A, set_minus(B, A)) = {}`.
+> Equality identities wave 10 (preview): empty aggregates
+> `finite_set_sum({}, f) = 0`; `finite_set_product({}, f) = 1`;
+> `finite_set_reduce({}, f, op, seed) = seed`; empty-range
+> `reduce`/`sum`/`product` when `end < start`.
+> Equality identities wave 11 (preview): remaining Obj equalities —
+> union absorption / set-minus recovery from subset; empty from size 0;
+> `proj(cart(...), k)` / `(a,b)[k]`; finite-set size set-minus / union;
+> `closed_range(a,a) = {a}`; single-term `sum`/`product`; reduce↔sum bridges;
+> `b^(log(b,x)) = x`.
+> Greater add/mul (preview, A10): `a > b` ⇒ `a + c > b + c` / `c + a > c + b`;
+> `0 < k` and `a > b` ⇒ `a * k > b * k` / `k * a > k * b`.
 > Equality identities wave 8 (preview): Euclidean
 > `a = d * quot(a, d) + (a % d)`; `(a - (a % b)) % b = 0` (narrow `trust`
 > nonzero divisor for current mod/quot WD); `a = 0` from known
@@ -4642,7 +4672,8 @@ Typical consequences include:
 - `u - v = 0` gives `u = v` when meaningful;
 - `by fn_extension` stores the ordinary equality `f = g`;
 - an equality to a closed numeric expression (decimal literals under
-  `+ - * / ^ abs min max floor ceil sign`) enables later numeric substitution;
+  `+ - * / ^ abs min max floor ceil sign`, integer-domain `% quot gcd lcm !`,
+  and foldable `sqrt` / `log`) enables later numeric substitution;
 - supported simple linear equalities record a solved value;
 - equality to a tuple or product records its shape and dimension;
 - equality to a displayed sequence, matrix, or anonymous function records the
