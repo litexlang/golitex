@@ -117,9 +117,12 @@ pub enum DefinitionStmt {
     //       x R
     //       y R
     DefStructStmt(DefStructStmt),
-    // Executable presentation attached to an existing fn.
-    // Example: `have algo for fn f(x): …`.
-    DefAlgoStmt(DefAlgoStmt),
+    // Define a named function together with its executable cases.
+    // Example: `algo f(x R) R by cases: case …: …`.
+    DefAlgoByCasesStmt(DefAlgoByCasesStmt),
+    // Define a named function together with its executable induction.
+    // Example: `algo countdown(n N) N by induc n from 0: …`.
+    DefAlgoByInducStmt(DefAlgoByInducStmt),
     // Named theorem with goal and proof. Example: `thm t: ? 1 = 1`.
     DefThmStmt(DefThmStmt),
     // Named axiom (interface checked; truth trusted). Example: `axiom a: ? forall …`.
@@ -449,37 +452,28 @@ pub struct DefStructStmt {
     pub line_file: SourceLine,
 }
 
-// What: explicit return value inside an algo case / default.
+// What: define a named function by cases and store its executable presentation.
+// Surface: `algo f(…) B by cases:` then `case …: …`
+// Stores: mathematical fn facts (same strength as `have fn … by cases`) plus algo.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct AlgoReturn {
-    pub value: Obj,
-    pub line_file: SourceLine,
-}
-
-// What: one guarded return arm of an algorithm.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct AlgoCase {
-    pub condition: AtomicFact, // may be negated when building default-return coverage
-    pub return_stmt: AlgoReturn,
-    pub line_file: SourceLine,
-}
-
-// What: algo body entry — default return or a guarded case.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum AlgoReturnOrAlgoCase {
-    AlgoReturn(AlgoReturn),
-    AlgoCase(AlgoCase),
-}
-
-// What: attach an executable presentation to an already-defined function.
-// Surface: `have algo for fn f(x): …`
-// Stores: an executable presentation; does not replace mathematical fn facts.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct DefAlgoStmt {
+pub struct DefAlgoByCasesStmt {
     pub name: PlainName,
-    pub param_bindings: Vec<String>,
-    pub default_return: Option<AlgoReturn>,
-    pub cases: Vec<AlgoCase>,
+    pub fn_set_clause: FnSetClause,
+    pub cases: Vec<AndChainAtomicFact>,
+    pub equal_tos: Vec<Obj>,
+    pub line_file: SourceLine,
+}
+
+// What: define a named function by induction and store its executable presentation.
+// Surface: `algo f(…) B by induc measure from lower: …`
+// Stores: mathematical fn facts (same strength as `have fn … by induc`) plus algo.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DefAlgoByInducStmt {
+    pub name: PlainName,
+    pub fn_set_clause: FnSetClause,
+    pub measure: Obj,
+    pub lower_bound: Obj,
+    pub cases: Vec<HaveFnByInducCase>,
     pub line_file: SourceLine,
 }
 
@@ -506,7 +500,8 @@ pub struct AxiomStmt {
 
 // What: named reusable proof strategy for a restricted atomic universal.
 // Surface: `strategy name: forall …` then proof body
-// Stores: the proved forall into ordinary matching under that name.
+// Stores: the named strategy definition; later non-equality atomics may apply
+// it via the known_strategy search stage (not ambient known_forall).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DefStrategyStmt {
     pub name: PlainName,

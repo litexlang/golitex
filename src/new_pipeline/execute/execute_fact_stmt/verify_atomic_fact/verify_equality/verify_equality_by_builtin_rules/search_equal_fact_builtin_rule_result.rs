@@ -56,6 +56,15 @@ use super::by_equality_identities_wave8::{
     ModDividendMinusRemainderZeroBuiltinRuleProof, QuotEuclideanDecompositionBuiltinRuleProof,
     SquareSumComponentZeroBuiltinRuleProof,
 };
+use super::by_equality_identities_wave9::{
+    EmptySetFromNotNonemptyBuiltinRuleProof, IntersectCommutativeBuiltinRuleProof,
+    IntersectEmptyLeftBuiltinRuleProof, IntersectEmptyRightBuiltinRuleProof,
+    IntersectFromSubsetBuiltinRuleProof, IntersectIdempotentBuiltinRuleProof,
+    PowerSetFiniteSetSizeBuiltinRuleProof, SetMinusEmptyLeftBuiltinRuleProof,
+    SetMinusEmptyRightBuiltinRuleProof, SetMinusSelfEmptyBuiltinRuleProof,
+    UnionCommutativeBuiltinRuleProof, UnionEmptyLeftBuiltinRuleProof,
+    UnionEmptyRightBuiltinRuleProof, UnionIdempotentBuiltinRuleProof,
+};
 use super::by_power_laws::{
     PowerOfPowerBuiltinRuleProof, PowerOfProductBuiltinRuleProof,
     PowerProductSameBaseBuiltinRuleProof, QuotientAsMulNegOnePowerBuiltinRuleProof,
@@ -161,6 +170,20 @@ pub enum EqualitySearchProofByBuiltinRule {
     SquareSumComponentZero(SquareSumComponentZeroBuiltinRuleProof),
     MinusOneOddNaturalPower(MinusOneOddNaturalPowerBuiltinRuleProof),
     LcmGcdProductAbs(LcmGcdProductAbsBuiltinRuleProof),
+    UnionEmptyRight(UnionEmptyRightBuiltinRuleProof),
+    UnionEmptyLeft(UnionEmptyLeftBuiltinRuleProof),
+    IntersectEmptyRight(IntersectEmptyRightBuiltinRuleProof),
+    IntersectEmptyLeft(IntersectEmptyLeftBuiltinRuleProof),
+    SetMinusSelfEmpty(SetMinusSelfEmptyBuiltinRuleProof),
+    SetMinusEmptyRight(SetMinusEmptyRightBuiltinRuleProof),
+    SetMinusEmptyLeft(SetMinusEmptyLeftBuiltinRuleProof),
+    UnionCommutative(UnionCommutativeBuiltinRuleProof),
+    IntersectCommutative(IntersectCommutativeBuiltinRuleProof),
+    UnionIdempotent(UnionIdempotentBuiltinRuleProof),
+    IntersectIdempotent(IntersectIdempotentBuiltinRuleProof),
+    IntersectFromSubset(IntersectFromSubsetBuiltinRuleProof),
+    EmptySetFromNotNonempty(EmptySetFromNotNonemptyBuiltinRuleProof),
+    PowerSetFiniteSetSize(PowerSetFiniteSetSizeBuiltinRuleProof),
 }
 
 // Builtin Calculation: both sides of an equality reduce to the same value

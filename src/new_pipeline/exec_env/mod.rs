@@ -9,7 +9,8 @@ pub mod or_fact_index_key;
 pub mod session_view;
 
 pub use exec_env::{
-    ExecEnv, SpecialObjectPropertyByDefinition, StoredIdentifierDefinition,
+    DefinitionMemory, ExecEnv, SpecialObjectPropertyByDefinition, StoredDefAlgo,
+    StoredIdentifierDefinition,
 };
 pub use session_view::ExecEnvSessionView;
 pub use exist_shaped_fact_index_key::{

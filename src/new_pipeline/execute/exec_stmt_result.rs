@@ -26,7 +26,8 @@ use crate::new_pipeline::execute::execute_eval_stmt::ExecCommandStmtResult;
 use crate::new_pipeline::execute::execute_proof_block_stmt::ExecProofBlockStmtResult;
 use crate::new_pipeline::execute::execute_register_stmt::ExecRegisterStmtResult;
 use crate::new_pipeline::execute::execute_def_abstract_prop_stmt::ExecDefAbstractPropStmtSuccessResult;
-use crate::new_pipeline::execute::execute_def_algo_stmt::ExecDefAlgoStmtResult;
+use crate::new_pipeline::execute::execute_def_algo_by_cases_stmt::ExecDefAlgoByCasesStmtResult;
+use crate::new_pipeline::execute::execute_def_algo_by_induc_stmt::ExecDefAlgoByInducStmtResult;
 use crate::new_pipeline::execute::execute_def_prop_stmt::ExecDefPropStmtResult;
 use crate::new_pipeline::execute::execute_def_struct_stmt::ExecDefStructStmtResult;
 use crate::new_pipeline::execute::execute_def_template_stmt::ExecDefTemplateStmtResult;
@@ -121,7 +122,8 @@ pub enum ExecDefinitionStmtResult {
     DefAbstractProp(ExecDefAbstractPropStmtSuccessResult),
     DefStruct(ExecDefStructStmtResult),
     DefTemplate(ExecDefTemplateStmtResult),
-    DefAlgo(ExecDefAlgoStmtResult),
+    DefAlgoByCases(ExecDefAlgoByCasesStmtResult),
+    DefAlgoByInduc(ExecDefAlgoByInducStmtResult),
     DefThm(ExecDefThmStmtResult),
     Axiom(ExecAxiomStmtResult),
     DefStrategy(ExecDefStrategyStmtResult),
@@ -180,7 +182,8 @@ impl ExecDefinitionStmtResult {
             Self::DefAbstractProp(_) => false,
             Self::DefStruct(r) => r.is_failed(),
             Self::DefTemplate(r) => r.is_failed(),
-            Self::DefAlgo(r) => r.is_failed(),
+            Self::DefAlgoByCases(r) => r.is_failed(),
+            Self::DefAlgoByInduc(r) => r.is_failed(),
             Self::DefThm(r) => r.is_failed(),
             Self::Axiom(r) => r.is_failed(),
             Self::DefStrategy(r) => r.is_failed(),

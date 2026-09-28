@@ -38,7 +38,10 @@ impl Runtime {
         None
     }
 
-    pub(crate) fn def_algo_visible_in_stack(&self, name: &str) -> Option<&crate::new_pipeline::ast::stmt::DefAlgoStmt> {
+    pub(crate) fn def_algo_visible_in_stack(
+        &self,
+        name: &str,
+    ) -> Option<&crate::new_pipeline::exec_env::StoredDefAlgo> {
         for env in self.execution_environments_stack.iter().rev() {
             if let Some(def) = env.lookup_def_algo(name) {
                 return Some(def);

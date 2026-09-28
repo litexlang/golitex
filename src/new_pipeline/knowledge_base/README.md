@@ -28,6 +28,12 @@ Companion packages:
 | `stored_identifier_codec.rs` | `StoredIdentifierDefinition` MVP tags |
 | `axiom_codec.rs` | `AxiomStmt` |
 | `def_struct_codec.rs` | `DefStructStmt` |
+| `definitions_memory_codec.rs` | One export's `DefinitionMemory` subset |
+| `fingerprint.rs` | Content-addressed module fingerprint |
+| `manifest.rs` | `__litex_knowledge_base__/manifest.json` |
+| `remap.rs` | GlobalIds deltas + `global_mod_id` remap |
+| `mount.rs` | `write_module_kb` / `try_mount_module` |
+| `paths.rs` | On-disk path helpers + `KB_ABI` |
 | `README.md` | This contract |
 
 White-box tests live under
@@ -45,6 +51,11 @@ Public API:
 | `store_stored_identifier` / `load_…` / file IO | `StoredIdentifierDefinition` |
 | `store_axiom` / `load_…` / file IO | `AxiomStmt` |
 | `store_def_struct` / `load_…` / file IO | `DefStructStmt` |
+| `store_definition_memory` / `load_…` / file IO | one export `DefinitionMemory` subset |
+| `compute_fingerprint` | content-addressed fingerprint |
+| `write_module_kb` | write `__litex_knowledge_base__/` |
+| `try_mount_module` | fingerprint check + load + remap |
+| `remap_definition_memory` / `RemapPlan` | id / mod_id rewrite |
 
 ### Codec roadmap (definitions)
 
@@ -54,12 +65,62 @@ Public API:
 | 2 | `def_abstract_prop` | done |
 | 3 | `def_thm` | done (MVP: empty prove_process; Stmt body deferred) |
 | 4 | `stored_identifier` | done (LetObj, HaveObjEqual, HaveObjInNonemptySetOrParamType, HaveFnEqual) |
-| 5 | `axiom` | done (codec + `exec_stmt` / Env store) |
+| 5 | `axiom` | done (codec; exec is separate) |
 | 6 | `def_struct` | done (fields + optional `equivalent_facts` / param_def) |
-| next | remaining have-fn tags; template; fingerprint / remap / `run_import` wiring | planned |
+| 7 | mount MVP | done (**definitions-only** product; see below) |
+| next | remaining have-fn tags; template; full ExecEnv blob; `run_import` wiring | planned |
 
 Implementation may lag later sections. Wiring into `run_import_module` comes
-after format / fingerprint / remap contracts are fixed.
+after format / fingerprint / remap contracts are fixed — and that wiring lives
+outside this package (Runtime / module_manager), not here.
+
+---
+
+## Mount MVP (definitions-only, in-package)
+
+**Decision (this folder):** on-disk product is **per-export `DefinitionMemory`**,
+not a full `ExecEnv`. Matches the importer consumer contract (defs / release /
+thm surface). Facts / WD are omitted until a later full-env blob is justified.
+
+### On-disk layout
+
+```text
+<module_root>/__litex_knowledge_base__/
+  manifest.json
+  exports/
+    0/definitions.json
+    1/definitions.json
+    …
+```
+
+`manifest.json` stores: `abi`, `fingerprint`, `self_mod_id`, `mod_id_to_path`,
+and per-export name / relative path / GlobalIds enter+leave watermarks
+(**KB-owned u64 snapshots** — does not read Runtime private fields).
+
+### API rhythm (caller-owned)
+
+```text
+cold success
+  → compute_fingerprint(...)
+  → write_module_kb(module_root, fp, self_mod_id, mod_id_to_path, exports)
+
+later import
+  → fp' = compute_fingerprint(...)
+  → try_mount_module(module_root, fp', now_snapshot, path_to_new_mod_id)
+       Ok(MountedModule)  → caller inserts remapped DefinitionMemory into
+                            live ImportedModule / finished export slots
+       Err(KbMountMiss)   → cold run_import_module, then write_module_kb
+```
+
+`try_mount_module` applies:
+
+1. GlobalIds deltas (`now - cached_enter` per counter, advancing cursor across
+   exports like a cold build).
+2. `global_mod_id` remap via `mod_id_to_path` ∩ `path_to_new_mod_id`.
+
+This package **does not** call `GlobalModuleManager` or mutate `Runtime` /
+`ExecEnv`. Mount here means: produce a remapped product ready for a future
+session owner to install.
 
 ---
 

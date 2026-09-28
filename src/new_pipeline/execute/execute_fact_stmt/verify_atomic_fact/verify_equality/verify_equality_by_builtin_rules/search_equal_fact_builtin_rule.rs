@@ -111,6 +111,14 @@ impl Runtime {
         {
             return Ok(Some(map_equality_identities_wave8_proof(proof)));
         }
+        if let Some(proof) = self
+            .search_equal_fact_builtin_rule_equality_identities_wave9(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(map_equality_identities_wave9_proof(proof)));
+        }
         if let Some(proof) =
             self.search_equal_fact_builtin_rule_inverse_trig(fact, verify_state)?
         {
@@ -276,6 +284,30 @@ fn map_equality_identities_wave8_proof(
             EqualitySearchProofByBuiltinRule::MinusOneOddNaturalPower(p)
         }
         W::LcmGcdProductAbs(p) => EqualitySearchProofByBuiltinRule::LcmGcdProductAbs(p),
+    }
+}
+
+fn map_equality_identities_wave9_proof(
+    proof: super::by_equality_identities_wave9::EqualityIdentitiesWave9BuiltinRuleProof,
+) -> EqualitySearchProofByBuiltinRule {
+    use super::by_equality_identities_wave9::EqualityIdentitiesWave9BuiltinRuleProof as W;
+    match proof {
+        W::UnionEmptyRight(p) => EqualitySearchProofByBuiltinRule::UnionEmptyRight(p),
+        W::UnionEmptyLeft(p) => EqualitySearchProofByBuiltinRule::UnionEmptyLeft(p),
+        W::IntersectEmptyRight(p) => EqualitySearchProofByBuiltinRule::IntersectEmptyRight(p),
+        W::IntersectEmptyLeft(p) => EqualitySearchProofByBuiltinRule::IntersectEmptyLeft(p),
+        W::SetMinusSelfEmpty(p) => EqualitySearchProofByBuiltinRule::SetMinusSelfEmpty(p),
+        W::SetMinusEmptyRight(p) => EqualitySearchProofByBuiltinRule::SetMinusEmptyRight(p),
+        W::SetMinusEmptyLeft(p) => EqualitySearchProofByBuiltinRule::SetMinusEmptyLeft(p),
+        W::UnionCommutative(p) => EqualitySearchProofByBuiltinRule::UnionCommutative(p),
+        W::IntersectCommutative(p) => EqualitySearchProofByBuiltinRule::IntersectCommutative(p),
+        W::UnionIdempotent(p) => EqualitySearchProofByBuiltinRule::UnionIdempotent(p),
+        W::IntersectIdempotent(p) => EqualitySearchProofByBuiltinRule::IntersectIdempotent(p),
+        W::IntersectFromSubset(p) => EqualitySearchProofByBuiltinRule::IntersectFromSubset(p),
+        W::EmptySetFromNotNonempty(p) => {
+            EqualitySearchProofByBuiltinRule::EmptySetFromNotNonempty(p)
+        }
+        W::PowerSetFiniteSetSize(p) => EqualitySearchProofByBuiltinRule::PowerSetFiniteSetSize(p),
     }
 }
 

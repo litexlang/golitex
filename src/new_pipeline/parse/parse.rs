@@ -1,6 +1,6 @@
 use super::keywords::{
     ABSTRACT_PROP, ALGO, AXIOM, AXIOM_OF_CHOICE, BY, CART, CLAIM, EVAL, EXPAND, FINITE_SEQ, FN,
-    FOR, HAVE, IMPORT, LET, MATRIX, OBJ, OBTAIN, PROP, QUESTION_GOAL, REGISTER, REGULARITY_AXIOM,
+    HAVE, IMPORT, LET, MATRIX, OBJ, OBTAIN, PROP, QUESTION_GOAL, REGISTER, REGULARITY_AXIOM,
     RELEASE, SEQ, SKETCH, STRATEGY, STRONG_INDUC, STRUCT, TEMPLATE, THM, TRUST, TUPLE, WITNESS,
     ZORN_LEMMA,
 };
@@ -50,6 +50,7 @@ impl Runtime {
             )
             .into()),
             EVAL => self.parse_eval_stmt(block),
+            ALGO => self.parse_algo_stmt(block),
             WITNESS => self.parse_witness_stmt(block),
             STRUCT => self.parse_def_struct_stmt(block),
             TEMPLATE => self.parse_def_template_stmt(block),
@@ -88,23 +89,12 @@ impl Runtime {
 
     fn parse_have_dispatch(&mut self, block: &TokenBlock) -> RuntimeResult<Stmt> {
         match block.header.get(1).map(String::as_str) {
-            Some(ALGO) => match block.header.get(2).map(String::as_str) {
-                Some(FOR) => match block.header.get(3).map(String::as_str) {
-                    Some(FN) => self.parse_have_algo_for_fn_stmt(block),
-                    _ => Err(RuntimeParseError::new(
-                        "have algo for: expected `fn …` (executable presentation of an existing function)",
-                        block.line,
-                        block.source_path.clone(),
-                    )
-                    .into()),
-                },
-                _ => Err(RuntimeParseError::new(
-                    "have algo: expected `for fn …`",
-                    block.line,
-                    block.source_path.clone(),
-                )
-                .into()),
-            },
+            Some(ALGO) => Err(RuntimeParseError::new(
+                "removed `have algo for fn`; use top-level `algo name(…) ret by cases:` or `by induc …:`",
+                block.line,
+                block.source_path.clone(),
+            )
+            .into()),
             Some(TUPLE) | Some(CART) | Some(SEQ) | Some(FINITE_SEQ) | Some(MATRIX) => {
                 Err(RuntimeParseError::new(
                     "removed; use have fn for indexed data",

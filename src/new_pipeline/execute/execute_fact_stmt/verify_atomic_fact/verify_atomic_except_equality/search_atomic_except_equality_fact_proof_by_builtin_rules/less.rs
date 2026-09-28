@@ -516,7 +516,7 @@ impl Runtime {
         )))
     }
 
-    fn verify_positive(
+    pub(crate) fn verify_positive(
         &mut self,
         obj: &Obj,
         verify_state: VerifyState,

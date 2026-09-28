@@ -1,6 +1,16 @@
 # Stmt: Definition.DefStrategyStmt → exec_def_strategy_stmt
+# Then: non-equality atomic via known_strategy (ByKnownStrategy).
 # Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/definition/def_strategy.lit
 
-strategy refl_on_r:
+prop is_one(x R):
+    x = 1
+
+strategy use_is_one:
     ? forall x R:
-        x = x
+        x = 1
+        =>:
+            $is_one(x)
+    $is_one(x)
+
+have a R = 1
+$is_one(a)

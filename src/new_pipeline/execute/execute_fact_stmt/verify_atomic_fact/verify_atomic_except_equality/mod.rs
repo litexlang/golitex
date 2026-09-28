@@ -9,6 +9,7 @@ pub mod search_atomic_except_equality_fact_proof_by_definition;
 pub mod search_atomic_except_equality_fact_proof_by_known_rewrite;
 pub mod search_atomic_except_equality_fact_proof_by_known_atomic_fact;
 pub mod search_atomic_except_equality_fact_proof_by_known_forall_fact;
+pub mod search_atomic_except_equality_fact_proof_by_known_strategy;
 pub mod verify_atomic_except_equality;
 
 pub use search_atomic_except_equality_fact_proof_by_builtin_rewrite::AtomicExceptEqualityFactSearchProofByBuiltinRewrite;
@@ -19,5 +20,6 @@ pub use search_atomic_except_equality_fact_proof_by_known_rewrite::AtomicExceptE
 pub use result::{
     AtomicExceptEqualityFactSearchProofByDefinition,
     AtomicExceptEqualityFactSearchProofByKnownAtomicFact, AtomicExceptEqualityFactSearchedProof,
-    VerifyAtomicExceptEqualityFactFailed, VerifyAtomicExceptEqualityFactResult,
+    SearchProofByKnownStrategy, VerifyAtomicExceptEqualityFactFailed,
+    VerifyAtomicExceptEqualityFactResult,
 };

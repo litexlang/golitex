@@ -202,7 +202,7 @@ impl Runtime {
         )))
     }
 
-    fn parse_have_fn_by_induc_cases(
+    pub(in crate::new_pipeline::parse) fn parse_have_fn_by_induc_cases(
         &mut self,
         blocks: &[TokenBlock],
     ) -> RuntimeResult<Vec<HaveFnByInducCase>> {

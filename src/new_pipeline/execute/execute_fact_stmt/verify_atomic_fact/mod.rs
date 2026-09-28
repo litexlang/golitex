@@ -14,7 +14,8 @@ pub use verify_equality::SearchProofByKnownForallFact;
 pub use verify_atomic_except_equality::{
     AtomicExceptEqualityFactSearchProofByDefinition,
     AtomicExceptEqualityFactSearchProofByKnownAtomicFact, AtomicExceptEqualityFactSearchedProof,
-    VerifyAtomicExceptEqualityFactFailed, VerifyAtomicExceptEqualityFactResult,
+    SearchProofByKnownStrategy, VerifyAtomicExceptEqualityFactFailed,
+    VerifyAtomicExceptEqualityFactResult,
 };
 pub use verify_equality::{
     EqualFactSearchedProof, EqualFactSearchedProofByEquivalenceClass, EqualFactWellDefinedProof,

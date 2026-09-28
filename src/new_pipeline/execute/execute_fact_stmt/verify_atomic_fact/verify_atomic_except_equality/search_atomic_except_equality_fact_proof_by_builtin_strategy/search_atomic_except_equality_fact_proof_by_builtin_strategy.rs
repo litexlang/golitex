@@ -1,3 +1,4 @@
+use super::helper::{enter_strategy_goal, leave_strategy_goal, strategy_goal_key};
 use super::result::AtomicExceptEqualityFactSearchProofByBuiltinStrategy;
 use crate::new_pipeline::ast::fact::AtomicFact;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
@@ -12,6 +13,21 @@ impl Runtime {
         // Literal tuple struct membership is skipped here (depends on struct-env APIs).
         // Prefer CartMembership for cartesian constructors.
 
+        let goal_key = strategy_goal_key(fact);
+        if !enter_strategy_goal(&goal_key) {
+            return Ok(None);
+        }
+        let result =
+            self.search_atomic_except_equality_fact_proof_by_builtin_strategy_inner(fact, verify_state);
+        leave_strategy_goal(&goal_key);
+        result
+    }
+
+    fn search_atomic_except_equality_fact_proof_by_builtin_strategy_inner(
+        &mut self,
+        fact: &AtomicFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByBuiltinStrategy>> {
         // nonzero (NotEqual)
         if let Some(proof) = self.search_nonzero_product_strategy(fact, verify_state.clone())? {
             return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NonzeroProduct(proof)));

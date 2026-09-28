@@ -81,7 +81,8 @@ impl DefinitionStmt {
             DefinitionStmt::DefAbstractPropStmt(x) => x.ir(),
             DefinitionStmt::DefTemplateStmt(x) => x.ir(),
             DefinitionStmt::DefStructStmt(x) => x.ir(),
-            DefinitionStmt::DefAlgoStmt(x) => x.ir(),
+            DefinitionStmt::DefAlgoByCasesStmt(x) => x.ir(),
+            DefinitionStmt::DefAlgoByInducStmt(x) => x.ir(),
             DefinitionStmt::DefThmStmt(x) => x.ir(),
             DefinitionStmt::AxiomStmt(x) => x.ir(),
             DefinitionStmt::DefStrategyStmt(x) => x.ir(),
@@ -758,62 +759,102 @@ impl DefStructStmt {
     impl_display_pair!();
 }
 
-impl AlgoReturn {
+impl DefAlgoByCasesStmt {
     pub fn ir(&self) -> StmtIR {
-        StmtIR(self.value.ir().0)
-    }
-    impl_display_pair!();
-}
-
-impl AlgoCase {
-    pub fn ir(&self) -> StmtIR {
-        StmtIR(format!(
-            "{} {}{} {}",
-            CASE,
-            self.condition.ir(),
-            COLON,
-            indent!(&self.return_stmt.ir(), 1)
-        ))
-    }
-    impl_display_pair!();
-}
-
-impl AlgoReturnOrAlgoCase {
-    pub fn ir(&self) -> StmtIR {
-        match self {
-            AlgoReturnOrAlgoCase::AlgoReturn(x) => x.ir(),
-            AlgoReturnOrAlgoCase::AlgoCase(x) => x.ir(),
-        }
-    }
-    impl_display_pair!();
-}
-
-impl DefAlgoStmt {
-    pub fn ir(&self) -> StmtIR {
-        let mut body: Vec<_> = self
-            .cases
+        let params: Vec<_> = self
+            .fn_set_clause
+            .set_bound_parameters
+            .groups
             .iter()
-            .map(|c| c.ir())
+            .map(|g| g.ir())
             .collect();
-        if let Some(default_return) = &self.default_return {
-            body.push(default_return.ir());
-        }
-        let mut out = format!("{} {} {} {} {}", HAVE, ALGO, FOR, FN, self.name);
+        let dom: Vec<_> = self
+            .fn_set_clause
+            .dom_facts
+            .iter()
+            .map(|d| d.ir())
+            .collect();
+        let mut out = format!("{} {}", ALGO, self.name);
         out.push_str(LEFT_PAREN);
-        out.push_str(&self.param_bindings.join(", "));
+        if !params.is_empty() && !dom.is_empty() {
+            out.push_str(&params.join(", "));
+            out.push_str(&format!("{} ", COLON));
+            out.push_str(&dom.join(", "));
+        } else if dom.is_empty() {
+            out.push_str(&params.join(", "));
+        } else if params.is_empty() {
+            out.push_str(COLON);
+            out.push_str(&dom.join(", "));
+        }
         out.push_str(RIGHT_PAREN);
         out.push_str(&format!(
-            "{}
-{}",
-            COLON,
-            indent!(
-                &body.join(
-                    "
-"
-                ),
-                1
-            )
+            " {} {} {} {}
+",
+            self.fn_set_clause.ret_set.ir(),
+            BY,
+            CASES,
+            COLON
         ));
+        for (i, case) in self.cases.iter().enumerate() {
+            let line = format!(
+                "{} {}{} {}",
+                CASE,
+                case.ir(),
+                COLON,
+                self.equal_tos[i].ir()
+            );
+            out.push_str(&indent!(&line, 1));
+            if i + 1 < self.cases.len() {
+                out.push_str("\n");
+            }
+        }
+        StmtIR(out)
+    }
+    impl_display_pair!();
+}
+
+impl DefAlgoByInducStmt {
+    pub fn ir(&self) -> StmtIR {
+        let params: Vec<_> = self
+            .fn_set_clause
+            .set_bound_parameters
+            .groups
+            .iter()
+            .map(|g| g.ir())
+            .collect();
+        let dom: Vec<_> = self
+            .fn_set_clause
+            .dom_facts
+            .iter()
+            .map(|d| d.ir())
+            .collect();
+        let mut out = format!("{} {}", ALGO, self.name);
+        out.push_str(LEFT_PAREN);
+        if !params.is_empty() && !dom.is_empty() {
+            out.push_str(&params.join(", "));
+            out.push_str(&format!("{} ", COLON));
+            out.push_str(&dom.join(", "));
+        } else if dom.is_empty() {
+            out.push_str(&params.join(", "));
+        } else if params.is_empty() {
+            out.push_str(COLON);
+            out.push_str(&dom.join(", "));
+        }
+        out.push_str(RIGHT_PAREN);
+        out.push_str(&format!(
+            " {} {} {} {} {} {}",
+            self.fn_set_clause.ret_set.ir(),
+            BY,
+            INDUC,
+            self.measure.ir(),
+            FROM,
+            self.lower_bound.ir()
+        ));
+        out.push_str(COLON);
+        for case in self.cases.iter() {
+            out.push_str("\n");
+            out.push_str(&indent!(&case.ir(), 1));
+        }
         StmtIR(out)
     }
     impl_display_pair!();

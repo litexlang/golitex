@@ -8,7 +8,13 @@ mod def_abstract_prop_codec;
 mod def_prop_codec;
 mod def_struct_codec;
 mod def_thm_codec;
+mod definitions_memory_codec;
+mod fingerprint;
 mod json_mini;
+mod manifest;
+mod mount;
+mod paths;
+mod remap;
 mod stored_identifier_codec;
 
 pub use axiom_codec::{load_axiom, read_axiom, store_axiom, write_axiom};
@@ -23,6 +29,21 @@ pub use def_struct_codec::{
     load_def_struct, read_def_struct, store_def_struct, write_def_struct,
 };
 pub use def_thm_codec::{load_def_thm, read_def_thm, store_def_thm, write_def_thm};
+pub use definitions_memory_codec::{
+    load_definition_memory, read_definition_memory, store_definition_memory,
+    write_definition_memory,
+};
+pub use fingerprint::{compute_fingerprint, FingerprintInputs};
+pub use manifest::{
+    GlobalIdsDeltas, GlobalIdsSnapshot, KbManifest, ManifestExportEntry,
+};
+pub use mount::{
+    try_mount_module, write_module_kb, ExportKbWrite, KbMountMiss, MountedExport, MountedModule,
+};
+pub use paths::{
+    export_definitions_path, kb_dir, manifest_path, KB_ABI, KB_DIR_NAME,
+};
+pub use remap::{remap_definition_memory, RemapPlan};
 pub use stored_identifier_codec::{
     load_stored_identifier, read_stored_identifier, store_stored_identifier,
     write_stored_identifier,

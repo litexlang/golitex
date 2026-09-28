@@ -12,6 +12,7 @@ Goldens / `.lit` live under `examples/new_pipeline/knowledge_base/`:
 | `stored_identifier/` | `…/stored_identifier/` |
 | `axiom/` | `…/axiom/` |
 | `def_struct/` | `…/def_struct/` |
+| `mount/` | (temp-dir write/mount; no golden) |
 | `json_mini/` | (no example golden) |
 
 Re-dump goldens:

@@ -17,6 +17,9 @@ examples/new_pipeline/knowledge_base/
   def_struct/               DefStructStmt ↔ JSON (fields; optional laws)
 ```
 
+Mount / fingerprint / remap APIs are exercised by Rust unit tests under
+`tests/unit/.../knowledge_base/mount/` (temp dirs), not by a golden tree here.
+
 White-box Rust tests live under
 `tests/unit/new_pipeline/knowledge_base/` and **load goldens from this
 examples tree** (single source of truth for “what store looks like”).
