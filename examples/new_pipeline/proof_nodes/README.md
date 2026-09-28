@@ -52,6 +52,9 @@ transitivity, div monotone/shrink (pos and neg divisor), div↔product bridges,
 literal numeric bound chase, integer successor/adjacency/predecessor, positive
 even `1 < i`, finite-set max/min member bounds, union card `<=` sum, surjection
 codomain card `<=` domain, and basic `finite_set_size` card bounds.
+B1 reformulation (verify-time only; see `order/` and `equality/`):
+`FromKnownInNatural` / signed / nonzero standard-set; order-sign from literal
+bound; `OrderFlipMulMinusOne`; `EqualFromKnownDifferenceZero`.
 Equality BuiltinRule power laws (Stage B wave 1): `a^m * a^n = a^(m+n)`,
 `(a^m)^n = a^(m*n)`, `(a*b)^n = a^n * b^n`, `1/a = a^(-1)`, `a/b = a * b^(-1)`
 under `examples/new_pipeline/proof_nodes/equal/by_builtin_rule/power_*.lit` and

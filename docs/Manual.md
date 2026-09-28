@@ -4188,6 +4188,10 @@ forall a, b R+:
 > positive even `1 < i`; `finite_set_max` / `finite_set_min` member bounds;
 > union cardinality `<=` sum; and surjection codomain cardinality `<=` domain.
 > Also `finite_set_size` nonnegative / at-least-one / subset comparison.
+> B1 reformulation (verify-time, not eager infer): `x $in N` ⇒ `x >= 0`;
+> `x $in R+/R-/R*` ⇒ `0 < x` / `x < 0` / `x != 0`; bound → sign spelling
+> (`a >= 1` ⇒ `0 < a`, `a <= -1` ⇒ `a <= 0`); mul-by-`(-1)` order flip;
+> and `u - v = 0` ⇒ `u = v` (`EqualFromKnownDifferenceZero`).
 > Equality power laws (preview): `a^m * a^n = a^(m+n)`, `(a^m)^n = a^(m*n)`,
 > `(a*b)^n = a^n * b^n` (positive real base, positive natural exponents), and
 > `1/a = a^(-1)`, `a/b = a * b^(-1)` for nonzero denominators.
