@@ -37,8 +37,7 @@ fn capture_statement_results_json_on_verifier_stack(
         .name(format!("stmt-result-json-v2-test-{label}"))
         .stack_size(32 * 1024 * 1024)
         .spawn(move || {
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(label);
+            let mut runtime = Runtime::with_named_source(label);
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())

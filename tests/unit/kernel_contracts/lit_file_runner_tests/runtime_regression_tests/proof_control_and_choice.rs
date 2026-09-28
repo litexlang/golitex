@@ -34,8 +34,7 @@ example:
 example_value = 1
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("example_stmt_is_checked_and_does_not_export_its_goal");
+    let mut runtime = Runtime::with_named_source("example_stmt_is_checked_and_does_not_export_its_goal");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -64,8 +63,7 @@ example:
         local_value = local_value
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("example_stmt_accepts_a_checked_goal_without_exporting_bindings");
+    let mut runtime = Runtime::with_named_source("example_stmt_accepts_a_checked_goal_without_exporting_bindings");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -93,8 +91,7 @@ sketch:
 2 = 3
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("sketch_stmt_is_checked_and_local");
+    let mut runtime = Runtime::with_named_source("sketch_stmt_is_checked_and_local");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -125,8 +122,7 @@ try:
 x = 1
 "#;
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("try_stmt_is_checked_and_committed");
+        let mut runtime = Runtime::with_named_source("try_stmt_is_checked_and_committed");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -166,10 +162,7 @@ try:
 b = 1
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "try_stmt_commit_merges_child_equality_into_parent_equality_class",
-            );
+            let mut runtime = Runtime::with_named_source("try_stmt_commit_merges_child_equality_into_parent_equality_class",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -191,8 +184,7 @@ try:
     import std basics
 "#;
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("try_stmt_rejects_import_control_statement");
+        let mut runtime = Runtime::with_named_source("try_stmt_rejects_import_control_statement");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -220,8 +212,7 @@ try:
     4 = 5
 "#;
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("try_stmt_unknown_rolls_back_and_returns_success");
+        let mut runtime = Runtime::with_named_source("try_stmt_unknown_rolls_back_and_returns_success");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -262,8 +253,7 @@ try:
     1 / 0 = 0
 "#;
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("try_stmt_error_rolls_back_and_returns_success");
+        let mut runtime = Runtime::with_named_source("try_stmt_error_rolls_back_and_returns_success");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -317,8 +307,7 @@ claim:
     1 = 1
 "#;
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("internal_claim_question_goal_remains_supported");
+        let mut runtime = Runtime::with_named_source("internal_claim_question_goal_remains_supported");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -343,8 +332,7 @@ claim:
     trust x = 1
 "#;
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("internal_claim_question_goal_allows_proof_body");
+        let mut runtime = Runtime::with_named_source("internal_claim_question_goal_allows_proof_body");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -438,8 +426,7 @@ by induc n from 0:
         $qgoal_induc_p(n + 1)
 "#;
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("question_goal_is_the_only_goal_syntax");
+        let mut runtime = Runtime::with_named_source("question_goal_is_the_only_goal_syntax");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -473,8 +460,7 @@ by cases:
         impossible 1 = 1
 "#;
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("bodyless_case_closed");
+        let mut runtime = Runtime::with_named_source("bodyless_case_closed");
         let (stmt_results, runtime_error) = execute_source(positive_source, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -495,8 +481,7 @@ by cases:
     case 1 = 1
 "#;
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("bodyless_case_unclosed");
+        let mut runtime = Runtime::with_named_source("bodyless_case_unclosed");
         let (stmt_results, runtime_error) = execute_source(negative_source, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -534,8 +519,7 @@ by strong_induc m from 0:
     ? m = m
 "#;
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("bodyless_by_thm_goal_closed");
+        let mut runtime = Runtime::with_named_source("bodyless_by_thm_goal_closed");
         let (results, error) = execute_source(selected_theorem_source, &mut runtime);
         let (succeeded, output) = render_run_output(&runtime, &results, &error);
         assert!(
@@ -564,8 +548,7 @@ by strong_induc m from 0:
         ];
 
         for (index, (source, expected)) in negative_cases.iter().enumerate() {
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(&format!("bodyless_by_goal_negative_{index}"));
+            let mut runtime = Runtime::with_named_source(&format!("bodyless_by_goal_negative_{index}"));
             let (results, error) = execute_source(source, &mut runtime);
             let (succeeded, output) = render_run_output(&runtime, &results, &error);
             assert!(
@@ -589,8 +572,7 @@ prop prove(x R):
 
 $prove(1)
 "#;
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("prove_is_available_as_an_identifier");
+        let mut runtime = Runtime::with_named_source("prove_is_available_as_an_identifier");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -610,8 +592,7 @@ fn top_level_question_goal_is_rejected_with_goal_block_hint() {
 ? 1 = 1
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source("top_level_question_goal_is_rejected");
+            let mut runtime = Runtime::with_named_source("top_level_question_goal_is_rejected");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -672,8 +653,7 @@ sketch:
     fn(x 1...3) R {a(x)}(2) = fn(x 1...3) R {a(x)}(k)
 "#;
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("fn_range_intro_subset_and_preimage_work");
+        let mut runtime = Runtime::with_named_source("fn_range_intro_subset_and_preimage_work");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -705,8 +685,7 @@ claim:
 
 "#;
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("fn_range_membership_infers_preimage_existence");
+        let mut runtime = Runtime::with_named_source("fn_range_membership_infers_preimage_existence");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -728,8 +707,7 @@ sketch:
     have by preimage x from f(1) $in R
 "#;
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("have_by_preimage_rejects_non_range_source");
+        let mut runtime = Runtime::with_named_source("have_by_preimage_rejects_non_range_source");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -757,8 +735,7 @@ sketch:
     have by preimage x, y from f(1) $in fn_range(f)
 "#;
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("have_by_preimage_checks_witness_count");
+        let mut runtime = Runtime::with_named_source("have_by_preimage_checks_witness_count");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -784,8 +761,7 @@ abstract_prop one_arg_relation(x)
 have B set = replacement(one_arg_relation, {1})
 "#;
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("replacement_requires_binary_prop");
+        let mut runtime = Runtime::with_named_source("replacement_requires_binary_prop");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -811,8 +787,7 @@ abstract_prop rel(x, y)
 have B set = replacement(rel, {1})
 "#;
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("replacement_requires_uniqueness_over_source_set");
+        let mut runtime = Runtime::with_named_source("replacement_requires_uniqueness_over_source_set");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -856,10 +831,7 @@ x $in {3, 5, 9}
 $rel(x, y)
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "replacement_membership_infers_preimage_and_preimage_stmt_works",
-            );
+            let mut runtime = Runtime::with_named_source("replacement_membership_infers_preimage_and_preimage_stmt_works",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -891,8 +863,7 @@ trust $rel(1, y)
 y $in replacement(rel, {1, 2})
 "#;
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("replacement_membership_intro_from_relation_witness");
+        let mut runtime = Runtime::with_named_source("replacement_membership_intro_from_relation_witness");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -936,10 +907,7 @@ claim:
     replacement(rel, {x}) = replacement(rel, {x})
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "replacement_uniqueness_keeps_outer_same_spelling_parameter_rigid",
-            );
+            let mut runtime = Runtime::with_named_source("replacement_uniqueness_keeps_outer_same_spelling_parameter_rigid",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -963,8 +931,7 @@ forall x R:
         x = x
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("nested_forall_reusing_outer_param_is_rejected");
+    let mut runtime = Runtime::with_named_source("nested_forall_reusing_outer_param_is_rejected");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -1005,9 +972,7 @@ trust exist x R st {x = x}
 trust exist y R st {y = y}
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime
-        .start_isolated_source("induction_proof_local_names_do_not_leak_outside_their_proof_block");
+    let mut runtime = Runtime::with_named_source("induction_proof_local_names_do_not_leak_outside_their_proof_block");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -1026,8 +991,7 @@ trust:
         exist x R st {x = x}
 "#;
 
-    let mut invalid_runtime = Runtime::default();
-    invalid_runtime.start_isolated_source("parser_scope_rejects_active_cross_kind_reuse");
+    let mut invalid_runtime = Runtime::with_named_source("parser_scope_rejects_active_cross_kind_reuse");
     let (invalid_results, invalid_error) =
         execute_source(invalid_source_code, &mut invalid_runtime);
     let (invalid_succeeded, invalid_output) =
@@ -1051,8 +1015,7 @@ trust forall x R:
     x = x
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("parser_scope_releases_finished_scopes");
+    let mut runtime = Runtime::with_named_source("parser_scope_releases_finished_scopes");
     let (stmt_results, runtime_error) = execute_source(valid_source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -1065,8 +1028,7 @@ trust forall x R:
 
 #[test]
 fn failed_scope_begin_does_not_leak_a_partial_binding() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("failed_scope_begin_does_not_leak");
+    let mut runtime = Runtime::with_named_source("failed_scope_begin_does_not_leak");
 
     let (_, first_error) = execute_source("trust have x, x R", &mut runtime);
     assert!(
@@ -1085,8 +1047,7 @@ fn failed_scope_begin_does_not_leak_a_partial_binding() {
 
 #[test]
 fn failed_statement_parse_rolls_back_all_new_bindings() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("failed_statement_parse_rolls_back_bindings");
+    let mut runtime = Runtime::with_named_source("failed_statement_parse_rolls_back_bindings");
 
     let (_, first_error) = execute_source("trust have x R, y", &mut runtime);
     assert!(first_error.is_some(), "the incomplete definition must fail");
@@ -1102,8 +1063,7 @@ fn failed_statement_parse_rolls_back_all_new_bindings() {
 
 #[test]
 fn trust_statements_skip_well_definedness_and_remain_atomic() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("trust_statements_skip_well_definedness");
+    let mut runtime = Runtime::with_named_source("trust_statements_skip_well_definedness");
 
     let unchecked_source = r#"
 trust:
@@ -1128,12 +1088,11 @@ trust:
     999 = 1000
     1 / 0 = 0
 "#;
-    let mut strict_runtime = Runtime::new(RuntimeOptions::strict(
+    let mut strict_runtime = Runtime::new_with_virtual_source(RuntimeOptions::strict(
         OutputDetail::Normal,
         OutputLanguage::English,
         SummaryOption::None,
-    ));
-    strict_runtime.start_isolated_source("strict_trust_is_atomic");
+    ), VirtualSource::Named(("strict_trust_is_atomic").into()));
     let (failed_results, failed_error) = execute_source(strict_source, &mut strict_runtime);
     assert!(failed_results.is_empty());
     assert!(failed_error.is_some());
@@ -1146,8 +1105,7 @@ trust:
 
 #[test]
 fn trust_have_skips_well_definedness_and_commits_atomically() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("trust_have_skips_well_definedness");
+    let mut runtime = Runtime::with_named_source("trust_have_skips_well_definedness");
 
     let unchecked_source = r#"
 trust have rollback_probe R:
@@ -1183,8 +1141,7 @@ trust have rollback_probe R:
     assert!(duplicate_error.is_some());
     assert!(runtime.is_name_used_for_identifier("rollback_probe"));
 
-    let mut dependent_runtime = Runtime::default();
-    dependent_runtime.start_isolated_source("trust_have_keeps_local_prefix_visible");
+    let mut dependent_runtime = Runtime::with_named_source("trust_have_keeps_local_prefix_visible");
     let dependent_source = r#"
 trust have denominator R:
     denominator != 0
@@ -1230,8 +1187,7 @@ by enumerate finite_set:
         y = 3 or y = 4
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("inline_extension_and_block_for_and_enumerate_keep_proof_routes");
+    let mut runtime = Runtime::with_named_source("inline_extension_and_block_for_and_enumerate_keep_proof_routes");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -1255,8 +1211,7 @@ fn proof_method_goal_placement_boundaries_are_explicit() {
         "by for forall n range(0, 1) => n < 1",
         "by enumerate finite_set forall n {0} => n = 0",
     ] {
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("removed_inline_proof_goal");
+        let mut runtime = Runtime::with_named_source("removed_inline_proof_goal");
         let (results, error) = execute_source(source_code, &mut runtime);
         let (succeeded, output) = render_run_output(&runtime, &results, &error);
         assert!(
@@ -1269,8 +1224,7 @@ fn proof_method_goal_placement_boundaries_are_explicit() {
         );
     }
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("inline_extension_body_boundary");
+    let mut runtime = Runtime::with_named_source("inline_extension_body_boundary");
     let (results, error) = execute_source("by extension {1} = {1}:\n    1 = 1", &mut runtime);
     let (succeeded, output) = render_run_output(&runtime, &results, &error);
     assert!(!succeeded, "inline extension accepted a body:\n{output}");
@@ -1290,8 +1244,7 @@ by enumerate finite_set:
         x = 1 or x = 2
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("by_enumerate_finite_set_resolves_named_literal_definition");
+    let mut runtime = Runtime::with_named_source("by_enumerate_finite_set_resolves_named_literal_definition");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
@@ -1322,8 +1275,7 @@ forall I power_set(R), f, g fn(x I) R:
         fn(x I) R {f(x) / g(x)} $in fn(x I) R
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source("anonymous_quotient_lambda_uses_nonzero_on_predicate");
+            let mut runtime = Runtime::with_named_source("anonymous_quotient_lambda_uses_nonzero_on_predicate");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1350,10 +1302,7 @@ forall E set:
     fn(y E) R {0} $in fn(x E) R
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source(
-        "anonymous_function_alpha_equivalent_signature_uses_membership_builtin",
-    );
+    let mut runtime = Runtime::with_named_source("anonymous_function_alpha_equivalent_signature_uses_membership_builtin",);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
@@ -1377,8 +1326,7 @@ forall E power_set(R), f, g fn(x E) R:
     fn(x E) R {f(x) / g(x)} $in fn(x E) R
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("anonymous_quotient_lambda_without_nonzero_premise_is_rejected");
+    let mut runtime = Runtime::with_named_source("anonymous_quotient_lambda_without_nonzero_premise_is_rejected");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
@@ -1410,10 +1358,7 @@ thm nested_existential_quotient_is_well_defined:
     trust exist delta R+ st {fn(x E) R {1 / g(x)} $in fn(x E) R}
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "anonymous_quotient_lambda_in_existential_respects_nonzero_on_predicate",
-            );
+            let mut runtime = Runtime::with_named_source("anonymous_quotient_lambda_in_existential_respects_nonzero_on_predicate",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1433,9 +1378,7 @@ prop nonzero(value R):
     value != 0
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime
-        .start_isolated_source("existential_well_definedness_uses_preceding_predicate_definition");
+    let mut runtime = Runtime::with_named_source("existential_well_definedness_uses_preceding_predicate_definition");
     let (setup_results, setup_error) = execute_source(setup, &mut runtime);
     assert!(
         setup_error.is_none(),
@@ -1454,8 +1397,7 @@ prop nonzero(value R):
 
 #[test]
 fn existential_well_definedness_still_requires_a_nonzero_premise() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("existential_well_definedness_still_requires_a_nonzero_premise");
+    let mut runtime = Runtime::with_named_source("existential_well_definedness_still_requires_a_nonzero_premise");
     let fact = parse_fact_for_wd(
         &mut runtime,
         "exist denominator R st {1 / denominator = 1 / denominator}",
@@ -1482,10 +1424,7 @@ forall X power_set(R), x0 X:
     fn(x set_minus(X, {x0})) R {1 / (x - x0)} $in fn(x set_minus(X, {x0})) R
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "anonymous_quotient_lambda_over_punctured_set_is_well_defined",
-            );
+            let mut runtime = Runtime::with_named_source("anonymous_quotient_lambda_over_punctured_set_is_well_defined",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1631,8 +1570,7 @@ by zorn_lemma: set s, prop leq, prop is_upper_bound, prop is_maximal
 }
 
 fn run_zorn_lemma_regression_source(source_code: &str, file_label: &str) -> (bool, String) {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source(file_label);
+    let mut runtime = Runtime::with_named_source(file_label);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     render_run_output(&runtime, &stmt_results, &runtime_error)
 }
@@ -1671,8 +1609,7 @@ by axiom_of_choice: set S:
     trust forall A S:
         $is_nonempty_set(A)
 "#;
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("by_axiom_of_choice_structured_result");
+    let mut runtime = Runtime::with_named_source("by_axiom_of_choice_structured_result");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     assert!(runtime_error.is_none(), "{runtime_error:?}");
     let result = stmt_results
@@ -1788,8 +1725,7 @@ choose(s) $in s
 }
 
 fn run_axiom_of_choice_regression_source(source_code: &str, file_label: &str) -> (bool, String) {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source(file_label);
+    let mut runtime = Runtime::with_named_source(file_label);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     render_run_output(&runtime, &stmt_results, &runtime_error)
 }
@@ -1859,8 +1795,7 @@ fn remaining_by_goal_header_shorthands_are_rejected() {
     ];
 
     for (index, source_code) in cases.iter().enumerate() {
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source(&format!("removed_by_header_{}", index));
+        let mut runtime = Runtime::with_named_source(&format!("removed_by_header_{}", index));
         let (results, error) = execute_source(source_code, &mut runtime);
         let (succeeded, output) = render_run_output(&runtime, &results, &error);
         assert!(

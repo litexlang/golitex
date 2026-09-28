@@ -24,12 +24,16 @@ pub fn discover_repository(
             config.hierarchy_line,
         ));
     }
-    let root_module_id = runtime
-        .start_repository_run_typed(
+    let root_module_id = {
+        let options = runtime.execution_options;
+        *runtime = Runtime::new_for_repository(
+            options,
             RealDirectoryPath::new(repository_root.clone()),
             RealFilePath::new(config_path.clone()),
         )
         .map_err(|message| repository_error(message, repository_path, 0))?;
+        ModuleId::ROOT
+    };
 
     let mut mount_stack = vec![root_module_id];
     discover_module_config(

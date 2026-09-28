@@ -27,8 +27,7 @@ fn run_example_lit_file(relative_path: &str) {
         None => panic!("{:?} must be valid UTF-8", lit_path),
     };
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source(path_str);
+    let mut runtime = Runtime::with_named_source(path_str);
     let normalized_source = remove_windows_carriage_from_str(lit_content.as_str());
     let start_time = Instant::now();
     let (stmt_results, runtime_error) = execute_source(normalized_source.as_str(), &mut runtime);

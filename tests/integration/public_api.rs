@@ -8,15 +8,15 @@ use litex::api::{
 
 #[test]
 fn curated_api_executes_litex_inside_an_existing_runtime() {
-    let mut runtime = Runtime::new(RuntimeOptions::new(
-        VerifyStrictnessPolicy::Ordinary,
-        OutputDetail::Compact,
-        OutputLanguage::English,
-        SummaryOption::None,
-    ));
-    runtime.start_virtual_source(litex::api::VirtualSource::Named(
-        "public-api.lit".to_string(),
-    ));
+    let mut runtime = Runtime::new_with_virtual_source(
+        RuntimeOptions::new(
+            VerifyStrictnessPolicy::Ordinary,
+            OutputDetail::Compact,
+            OutputLanguage::English,
+            SummaryOption::None,
+        ),
+        litex::api::VirtualSource::Named("public-api.lit".to_string()),
+    );
 
     let SourceRunOutcome {
         stmt_results: results,
@@ -90,7 +90,8 @@ fn curated_api_exposes_one_owned_entry_for_every_batch_input() {
 
 #[test]
 fn curated_api_keeps_only_canonical_execution_paths_public() {
-    let _: fn(&mut Runtime, litex::api::VirtualSource) = Runtime::start_virtual_source;
+    let _: fn(RuntimeOptions, litex::api::VirtualSource) -> Runtime =
+        Runtime::new_with_virtual_source;
     let _: fn(&mut Runtime, &str) -> SourceRunOutcome = Runtime::execute_source;
     let _: fn(&str, RuntimeOptions) -> RunOutcome = litex::pipeline::run_eval_command;
     let _: fn(&str, RuntimeOptions) -> RunOutcome = litex::pipeline::run_file_command;

@@ -1,0 +1,11 @@
+# Node: atomic.ByBuiltinRule.SubsetFact.SubsetCartComponentwise
+# Rule struct: SubsetCartComponentwiseBuiltinRuleProof
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/subset_cart_componentwise.lit
+
+have A set
+have B set
+have C set
+have D set
+trust A $subset C
+trust B $subset D
+cart(A, B) $subset cart(C, D)

@@ -1,7 +1,9 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact, InFact, SubsetFact};
-use crate::new_pipeline::ast::obj::{Obj, SetFormer, SetOperator, StandardSet, Union};
+use crate::new_pipeline::ast::names::AtomicName;
+use crate::new_pipeline::ast::obj::{Cart, Obj, ProductShape, SetFormer, SetOperator, StandardSet, Union};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
+use crate::new_pipeline::parse::keywords::SUBSET;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 // Builtin proofs for `$subset`. One rule ↔ one dedicated proof struct.
@@ -54,6 +56,20 @@ pub enum SubsetFactSearchProofByBuiltinRule {
     // For `N` / `N+`, the start must already inhabit that carrier.
     // Example: have `a N`; have `b Z`; `a...b $subset N`.
     IntegerRangeSubsetNumericCarrier(IntegerRangeSubsetNumericCarrierBuiltinRuleProof),
+    // `A $subset B` ⇒ `power_set(A) $subset power_set(B)`.
+    // Example: trust `A $subset B`; prove `power_set(A) $subset power_set(B)`.
+    SubsetPowerSetMonotone(SubsetPowerSetMonotoneBuiltinRuleProof),
+    // `A $subset B` ⇒ `set_minus(A, C) $subset set_minus(B, C)`.
+    // Example: trust `A $subset B`; prove `set_minus(A, C) $subset set_minus(B, C)`.
+    SubsetSetMinusCommonRightMonotone(SubsetSetMinusCommonRightMonotoneBuiltinRuleProof),
+    // Componentwise: `A $subset C`, `B $subset D` ⇒ `cart(A, B) $subset cart(C, D)`.
+    // Example: trust `A $subset C`; trust `B $subset D`;
+    //          `cart(A, B) $subset cart(C, D)`.
+    SubsetCartComponentwise(SubsetCartComponentwiseBuiltinRuleProof),
+    // Transitivity through one known middle set: `A $subset B`, `B $subset C`
+    // ⇒ `A $subset C`.
+    // Example: trust `A $subset B`; trust `B $subset C`; prove `A $subset C`.
+    SubsetTransitivity(SubsetTransitivityBuiltinRuleProof),
 }
 
 pub struct StandardSetSubsetBuiltinRuleProof {
@@ -95,6 +111,23 @@ pub struct IntegerRangeSubsetNumericCarrierBuiltinRuleProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
+pub struct SubsetPowerSetMonotoneBuiltinRuleProof {
+    pub base_subset_proof: VerifyFactResult,
+}
+
+pub struct SubsetSetMinusCommonRightMonotoneBuiltinRuleProof {
+    pub left_operand_subset_proof: VerifyFactResult,
+}
+
+pub struct SubsetCartComponentwiseBuiltinRuleProof {
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+pub struct SubsetTransitivityBuiltinRuleProof {
+    pub left_to_middle_proof: VerifyFactResult,
+    pub middle_to_right_proof: VerifyFactResult,
+}
+
 impl Runtime {
     // Builtin search for `$subset`.
     // B0: reflexivity. A: match Obj shapes of (left, right). No sequential rule list.
@@ -112,7 +145,7 @@ impl Runtime {
         }
 
         // A — shape dispatch
-        match (&fact.left, &fact.right) {
+        let shape = match (&fact.left, &fact.right) {
             (Obj::StandardSet(left), Obj::StandardSet(right)) => {
                 if standard_set_is_subset_eq(left, right) {
                     return Ok(Some(SubsetFactSearchProofByBuiltinRule::StandardSetSubset(
@@ -150,7 +183,7 @@ impl Runtime {
                 self.intersect_subset_from_right_upper_bound_proof(
                     intersect.right.as_ref(),
                     right,
-                    verify_state,
+                    verify_state.clone(),
                 )
             }
 
@@ -166,7 +199,7 @@ impl Runtime {
                     left_union.left.as_ref(),
                     left_union.right.as_ref(),
                     &fact.right,
-                    verify_state,
+                    verify_state.clone(),
                 )
             }
 
@@ -189,8 +222,31 @@ impl Runtime {
                     union.left.as_ref(),
                     union.right.as_ref(),
                     right,
-                    verify_state,
+                    verify_state.clone(),
                 ),
+
+            (
+                Obj::SetOperator(SetOperator::SetMinus(left_minus)),
+                Obj::SetOperator(SetOperator::SetMinus(right_minus)),
+            ) => {
+                if left_minus.right.as_ref().ir() == right_minus.right.as_ref().ir() {
+                    if let Some(proof) = self.subset_set_minus_common_right_monotone_proof(
+                        left_minus.left.as_ref(),
+                        right_minus.left.as_ref(),
+                        verify_state.clone(),
+                    )? {
+                        return Ok(Some(proof));
+                    }
+                }
+                if left_minus.left.as_ref() == &fact.right {
+                    return Ok(Some(
+                        SubsetFactSearchProofByBuiltinRule::SetMinusSubsetLeft(
+                            SetMinusSubsetLeftBuiltinRuleProof {},
+                        ),
+                    ));
+                }
+                Ok(None)
+            }
 
             (Obj::SetOperator(SetOperator::SetMinus(set_minus)), right)
                 if set_minus.left.as_ref() == right =>
@@ -201,6 +257,20 @@ impl Runtime {
                     ),
                 ))
             }
+
+            (
+                Obj::SetOperator(SetOperator::PowerSet(left_power)),
+                Obj::SetOperator(SetOperator::PowerSet(right_power)),
+            ) => self.subset_power_set_monotone_proof(
+                left_power.set.as_ref(),
+                right_power.set.as_ref(),
+                verify_state.clone(),
+            ),
+
+            (
+                Obj::ProductShape(ProductShape::Cart(left_cart)),
+                Obj::ProductShape(ProductShape::Cart(right_cart)),
+            ) => self.subset_cart_componentwise_proof(left_cart, right_cart, verify_state.clone()),
 
             (
                 Obj::SetFormer(SetFormer::IntervalObj(_))
@@ -223,7 +293,7 @@ impl Runtime {
             }
 
             (Obj::SetFormer(SetFormer::ListSet(list_set)), right) => {
-                self.list_set_subset_from_members_proof(&list_set.list, right, verify_state)
+                self.list_set_subset_from_members_proof(&list_set.list, right, verify_state.clone())
             }
 
             (
@@ -232,7 +302,7 @@ impl Runtime {
             ) => self.integer_range_subset_numeric_carrier_proof(
                 range.start.as_ref(),
                 target,
-                verify_state,
+                verify_state.clone(),
             ),
 
             (
@@ -241,11 +311,17 @@ impl Runtime {
             ) => self.integer_range_subset_numeric_carrier_proof(
                 range.start.as_ref(),
                 target,
-                verify_state,
+                verify_state.clone(),
             ),
 
             _ => Ok(None),
+        }?;
+        if shape.is_some() {
+            return Ok(shape);
         }
+
+        // Bounded leaf: one known middle set for transitivity.
+        self.subset_transitivity_proof(fact, verify_state)
     }
 
     fn list_set_subset_from_members_proof(
@@ -408,6 +484,134 @@ impl Runtime {
                 },
             ),
         ))
+    }
+
+    // `A $subset B` ⇒ `power_set(A) $subset power_set(B)`.
+    fn subset_power_set_monotone_proof(
+        &mut self,
+        left_base: &Obj,
+        right_base: &Obj,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<SubsetFactSearchProofByBuiltinRule>> {
+        let premise = subset_fact(left_base, right_base, self);
+        let base_subset_proof = self.verify_fact(&premise, verify_state)?;
+        if base_subset_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(
+            SubsetFactSearchProofByBuiltinRule::SubsetPowerSetMonotone(
+                SubsetPowerSetMonotoneBuiltinRuleProof { base_subset_proof },
+            ),
+        ))
+    }
+
+    // `A $subset B` ⇒ `set_minus(A, C) $subset set_minus(B, C)`.
+    fn subset_set_minus_common_right_monotone_proof(
+        &mut self,
+        left_operand: &Obj,
+        right_operand: &Obj,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<SubsetFactSearchProofByBuiltinRule>> {
+        let premise = subset_fact(left_operand, right_operand, self);
+        let left_operand_subset_proof = self.verify_fact(&premise, verify_state)?;
+        if left_operand_subset_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(
+            SubsetFactSearchProofByBuiltinRule::SubsetSetMinusCommonRightMonotone(
+                SubsetSetMinusCommonRightMonotoneBuiltinRuleProof {
+                    left_operand_subset_proof,
+                },
+            ),
+        ))
+    }
+
+    // Componentwise cart inclusion from factor subsets.
+    fn subset_cart_componentwise_proof(
+        &mut self,
+        left_cart: &Cart,
+        right_cart: &Cart,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<SubsetFactSearchProofByBuiltinRule>> {
+        if left_cart.args.len() != right_cart.args.len() {
+            return Ok(None);
+        }
+        let mut proofs = Vec::new();
+        for (left_factor, right_factor) in left_cart.args.iter().zip(right_cart.args.iter()) {
+            if left_factor.as_ref().ir() == right_factor.as_ref().ir() {
+                continue;
+            }
+            let premise = subset_fact(left_factor.as_ref(), right_factor.as_ref(), self);
+            let proof = self.verify_fact(&premise, verify_state.clone())?;
+            if proof.is_failed() {
+                return Ok(None);
+            }
+            proofs.push(proof);
+        }
+        Ok(Some(
+            SubsetFactSearchProofByBuiltinRule::SubsetCartComponentwise(
+                SubsetCartComponentwiseBuiltinRuleProof {
+                    proof_of_requirement_facts: proofs,
+                },
+            ),
+        ))
+    }
+
+    // `A $subset B`, `B $subset C` through one stored middle set.
+    fn subset_transitivity_proof(
+        &mut self,
+        fact: &SubsetFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<SubsetFactSearchProofByBuiltinRule>> {
+        let left_ir = fact.left.ir();
+        let right_ir = fact.right.ir();
+        let key = (
+            AtomicName::Plain {
+                name: SUBSET.into(),
+            },
+            true,
+        );
+        let mut known_subsets = Vec::new();
+        for env in self.execution_environments_stack.iter().rev() {
+            let Some(knowns) = env.facts.known_atomic_except_equality_facts.by_prop.get(&key)
+            else {
+                continue;
+            };
+            for known in knowns {
+                if let AtomicFact::SubsetFact(s) = known {
+                    known_subsets.push((s.left.clone(), s.right.clone()));
+                }
+            }
+        }
+        for (first_left, first_right) in &known_subsets {
+            if first_left.ir() != left_ir {
+                continue;
+            }
+            let middle_ir = first_right.ir();
+            for (second_left, second_right) in &known_subsets {
+                if second_left.ir() != middle_ir || second_right.ir() != right_ir {
+                    continue;
+                }
+                let left_premise = subset_fact(first_left, first_right, self);
+                let left_to_middle_proof =
+                    self.verify_fact(&left_premise, verify_state.clone())?;
+                if left_to_middle_proof.is_failed() {
+                    continue;
+                }
+                let right_premise = subset_fact(second_left, second_right, self);
+                let middle_to_right_proof = self.verify_fact(&right_premise, verify_state.clone())?;
+                if middle_to_right_proof.is_failed() {
+                    continue;
+                }
+                return Ok(Some(SubsetFactSearchProofByBuiltinRule::SubsetTransitivity(
+                    SubsetTransitivityBuiltinRuleProof {
+                        left_to_middle_proof,
+                        middle_to_right_proof,
+                    },
+                )));
+            }
+        }
+        Ok(None)
     }
 }
 

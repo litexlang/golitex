@@ -67,10 +67,6 @@ pub struct Runtime {
 
     /// Execution options for output and configured dependency verification.
     pub execution_options: RuntimeOptions,
-
-    /// Whether the constructor-created virtual source is still available for
-    /// the first explicit source selection.
-    bootstrap_source_pending: bool,
 }
 
 /// Checkpoint used when temporarily activating another registered source.
@@ -87,20 +83,105 @@ pub struct SourceActivation {
 }
 
 impl Runtime {
+    /// Construct a runtime whose active source is `VirtualSource::Eval`.
     pub fn new(execution_options: RuntimeOptions) -> Self {
-        Self::new_with_fact_id_start(execution_options, 1)
+        Self::new_with_virtual_source(execution_options, VirtualSource::Eval)
+    }
+
+    /// Construct a runtime whose active root source is already selected.
+    pub fn new_with_source(
+        execution_options: RuntimeOptions,
+        origin: SourcePath,
+    ) -> Self {
+        Self::new_with_source_and_fact_id_start(execution_options, origin, 1)
+    }
+
+    pub fn new_with_virtual_source(
+        execution_options: RuntimeOptions,
+        kind: VirtualSource,
+    ) -> Self {
+        Self::new_with_source(execution_options, SourcePath::VirtualSource(kind))
+    }
+
+    pub fn new_with_real_file(
+        execution_options: RuntimeOptions,
+        path: impl Into<String>,
+    ) -> Self {
+        Self::new_with_source(
+            execution_options,
+            SourcePath::RealFilePath(RealFilePath::new(path.into())),
+        )
+    }
+
+    /// Construct a repository-discovery runtime. The root module is already a
+    /// repository location; its active source is the discovery virtual source.
+    pub fn new_for_repository(
+        execution_options: RuntimeOptions,
+        repository_root: RealDirectoryPath,
+        main_file_path: RealFilePath,
+    ) -> Result<Self, String> {
+        let mut module_manager = ModuleManager::new();
+        let source_id = module_manager.create_virtual_root_module(VirtualSource::Named(
+            format!("repository-discovery:{}", main_file_path),
+        ));
+        module_manager.configure_repository_root_module(repository_root, main_file_path)?;
+        Ok(Self::from_module_manager(
+            module_manager,
+            source_id,
+            execution_options,
+            1,
+        ))
+    }
+
+    /// Default-options runtime on a virtual source.
+    pub fn with_virtual_source(kind: VirtualSource) -> Self {
+        Self::new_with_virtual_source(RuntimeOptions::default(), kind)
+    }
+
+    /// Default-options runtime on a named or legacy-label virtual source.
+    pub fn with_named_source(name: impl AsRef<str>) -> Self {
+        Self::with_virtual_source(virtual_source_from_label(name.as_ref()))
+    }
+
+    /// Default-options runtime on a real file path.
+    pub fn with_real_file(path: impl Into<String>) -> Self {
+        Self::new_with_real_file(RuntimeOptions::default(), path)
     }
 
     /// Construct an independent runtime with an explicitly disjoint fact-ID
     /// range. This is used by compiler-only structural passes that must create
     /// temporary facts without colliding with IDs retained by an execution
-    /// runtime. Semantic execution should use [`Runtime::new`].
+    /// runtime. Semantic execution should use Runtime::new.
     pub(crate) fn new_with_fact_id_start(
         execution_options: RuntimeOptions,
         fact_id_start: u64,
     ) -> Self {
+        Self::new_with_source_and_fact_id_start(
+            execution_options,
+            SourcePath::VirtualSource(VirtualSource::Eval),
+            fact_id_start,
+        )
+    }
+
+    fn new_with_source_and_fact_id_start(
+        execution_options: RuntimeOptions,
+        origin: SourcePath,
+        fact_id_start: u64,
+    ) -> Self {
         let mut module_manager = ModuleManager::new();
-        let source_id = module_manager.create_virtual_root_module(VirtualSource::Eval);
+        let source_id = match origin {
+            SourcePath::VirtualSource(kind) => module_manager.create_virtual_root_module(kind),
+            SourcePath::RealFilePath(path) => module_manager.create_file_root_module(path),
+        };
+        Self::from_module_manager(module_manager, source_id, execution_options, fact_id_start)
+    }
+
+    fn from_module_manager(
+        module_manager: ModuleManager,
+        source_id: SourceId,
+        execution_options: RuntimeOptions,
+        fact_id_start: u64,
+    ) -> Self {
         Runtime {
             module_manager: Box::new(module_manager),
             current_module_id: ModuleId::ROOT,
@@ -113,18 +194,18 @@ impl Runtime {
             symbol_id_allocator: Rc::new(SymbolIdAllocator::new()),
             executed_direct_struct_carriers: HashMap::new(),
             execution_options,
-            bootstrap_source_pending: true,
         }
     }
 }
 
-fn virtual_source_from_legacy_label(label: &str) -> VirtualSource {
+fn virtual_source_from_label(label: &str) -> VirtualSource {
     match label.to_ascii_lowercase().as_str() {
         "eval" => VirtualSource::Eval,
         "repl" => VirtualSource::Repl,
         "session" => VirtualSource::Session,
         "to-lean" | "to_lean" => VirtualSource::ToLean,
         "to-latex" | "to_latex" => VirtualSource::ToLatex,
+        "code-extraction" | "code_extraction" => VirtualSource::CodeExtraction,
         _ => VirtualSource::Named(label.to_string()),
     }
 }
@@ -635,7 +716,6 @@ impl Runtime {
         self.current_module_id = module_id;
         self.current_source_id = source_id;
         self.is_current_file_trusted = mode == TrustedOrRequireVerify::Trusted;
-        self.bootstrap_source_pending = false;
     }
 
     pub fn source_activation(&self) -> SourceActivation {
@@ -726,10 +806,6 @@ impl Runtime {
 
     pub fn current_execution_is_trusted_source(&self) -> bool {
         self.current_execution_mode() == TrustedOrRequireVerify::Trusted
-    }
-
-    pub(crate) fn mark_source_execution_started(&mut self) {
-        self.bootstrap_source_pending = false;
     }
 
     pub fn record_unverified_import(
@@ -829,82 +905,8 @@ impl Runtime {
 }
 
 impl Runtime {
-    pub fn start_virtual_source(&mut self, kind: VirtualSource) {
-        debug_assert!(self.parse_context.is_at_root_scope());
-        let source_id = self.start_standalone_source(SourcePath::VirtualSource(kind));
-        self.activate_source(
-            ModuleId::ROOT,
-            source_id,
-            TrustedOrRequireVerify::RequireVerification,
-        );
-    }
-
-    pub fn start_real_file(&mut self, path: &str) {
-        self.start_real_file_path(RealFilePath::new(path));
-    }
-
-    pub fn start_real_file_path(&mut self, path: RealFilePath) {
-        debug_assert!(self.parse_context.is_at_root_scope());
-        let source_id = self.start_standalone_source(SourcePath::RealFilePath(path));
-        self.activate_source(
-            ModuleId::ROOT,
-            source_id,
-            TrustedOrRequireVerify::RequireVerification,
-        );
-    }
-
-    /// Start a standalone virtual source with its own root module.
-    #[deprecated(note = "use start_virtual_source with a VirtualSource variant")]
-    pub fn start_isolated_source(&mut self, legacy_label: &str) {
-        self.start_virtual_source(virtual_source_from_legacy_label(legacy_label));
-    }
-
-    /// Start a standalone physical file run with its own root module and source.
-    #[deprecated(note = "use start_real_file")]
-    pub fn start_isolated_file(&mut self, source_path: &str) {
-        self.start_real_file(source_path);
-    }
-
-    /// Start a repository run with its root module. Registered sources are
-    /// activated by the repository execution pipeline as they execute.
-    pub fn start_repository_run(
-        &mut self,
-        repository_root: String,
-        main_file_path: String,
-    ) -> Result<ModuleId, String> {
-        self.start_repository_run_typed(
-            RealDirectoryPath::new(repository_root),
-            RealFilePath::new(main_file_path),
-        )
-    }
-
-    pub fn start_repository_run_typed(
-        &mut self,
-        repository_root: RealDirectoryPath,
-        main_file_path: RealFilePath,
-    ) -> Result<ModuleId, String> {
-        if !self.bootstrap_source_pending {
-            return Err(
-                "repository root cannot be started after source execution has begun".to_string(),
-            );
-        }
-        let module_id = self
-            .module_manager
-            .configure_repository_root_module(repository_root, main_file_path.clone())?;
-        self.module_manager
-            .module_mut(module_id)
-            .and_then(|module| module.source_mut(self.current_source_id))
-            .expect("repository discovery source should be registered")
-            .origin = SourcePath::VirtualSource(VirtualSource::Named(format!(
-            "repository-discovery:{}",
-            main_file_path
-        )));
-        self.bootstrap_source_pending = false;
-        Ok(module_id)
-    }
-
-    /// After a standalone source has been created, point that current source at
-    /// a physical file path without creating another source.
+    /// Point the current source at a physical file path without creating another
+    /// source. Used when a virtual or discovery source later resolves to a file.
     pub fn set_current_user_lit_file_path(&mut self, path: &str) {
         let module_id = self.current_module_id;
         let source_id = self.current_source_id;
@@ -928,9 +930,7 @@ impl Runtime {
         &mut self,
         source_path: &str,
     ) -> Result<(), RuntimeError> {
-        self.prepare_current_module_for_virtual_source(virtual_source_from_legacy_label(
-            source_path,
-        ))
+        self.prepare_current_module_for_virtual_source(virtual_source_from_label(source_path))
     }
 
     pub fn prepare_current_module_for_virtual_source(
@@ -962,35 +962,6 @@ impl Runtime {
             TrustedOrRequireVerify::RequireVerification,
         );
         Ok(())
-    }
-
-    fn start_standalone_source(&mut self, origin: SourcePath) -> SourceId {
-        assert!(
-            self.bootstrap_source_pending,
-            "a standalone source can only be started before source execution"
-        );
-        let source_id = self.current_source_id;
-        let location = match &origin {
-            SourcePath::RealFilePath(_) => ModuleLocation::SingleFile,
-            SourcePath::VirtualSource(_) => ModuleLocation::Virtual,
-        };
-        let module = self
-            .module_manager
-            .module_mut(ModuleId::ROOT)
-            .expect("runtime root module should exist");
-        {
-            let source = module
-                .source_mut(source_id)
-                .expect("runtime bootstrap source should be registered");
-            source.origin = origin;
-            source.canonical_name = None;
-            source.load_status = SourceLoadStatus::Loaded;
-            source.load_mode = TrustedOrRequireVerify::RequireVerification;
-        }
-        module.module_source_id = Some(source_id);
-        module.location = location;
-        self.bootstrap_source_pending = false;
-        source_id
     }
 }
 

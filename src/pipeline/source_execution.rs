@@ -30,7 +30,6 @@ impl SourceRunOutcome {
 
 impl Runtime {
     pub fn execute_source(&mut self, source_code: &str) -> SourceRunOutcome {
-        self.mark_source_execution_started();
         let blocks = match tokenize_source_code(source_code, self) {
             Ok(blocks) => blocks,
             Err(error) => {

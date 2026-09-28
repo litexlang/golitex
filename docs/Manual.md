@@ -4614,9 +4614,34 @@ The `or` verifier recognizes these exhaustive forms:
 > `a = b or a < b or a > b`,
 > `a < b or a = b or a > b`,
 > `a > b or a = b or a < b`.
+> Also ported (each its own builtin / result struct):
+> `P or not P` (complementary atomics),
+> `abs(x) = x or abs(x) = (-x)` (either branch order),
+> `a = 0 or b = 0` when `a, b $in R` and known `a * b = 0` (either product /
+> branch order),
+> `n = 0 or n >= 1` for `n $in N`,
+> complementary strict/weak pairs `a < b or a >= b` and `a > b or a <= b`
+> (either branch order; structs `OrBuiltinLessOrGreaterEqual` /
+> `OrBuiltinGreaterOrLessEqual`),
+> weak-order comparability `a <= b or a >= b` (either branch order;
+> `OrBuiltinWeakOrderLeOrGe`),
+> equality-plus-strict covering a known weak bound
+> (`a = b or a < b` from `a <= b`, and the `>` / `>=` dual;
+> `OrBuiltinEqualityPlusStrictCoversWeak`),
+> complete residues `n % m = 0 or … or n % m = m-1` for positive literal `m`
+> (`OrBuiltinCompleteResidues`),
+> integer successor tail from a known lower bound
+> (`OrBuiltinIntegerSuccessorTail`),
+> square-sum nonzero `a != 0 or b != 0` from known `a^2+b^2 != 0`
+> (`OrBuiltinSquareSumComponentNonzero`),
+> classical packaging `not A or B` under local assume-`A`-prove-`B`
+> (`OrBuiltinClassicalImplication`; exactly one negative-polarity arm;
+> top-level examples may use `a != 0 or …` when `not $p(…)` cannot start a
+> statement),
+> and integer discrete split `x <= n or x >= n + 1` (or predecessor dual;
+> `OrBuiltinIntegerDiscreteSplit`).
 > One `.lit` per rule:
 > [`examples/new_pipeline/proof_nodes/or/by_builtin_rule/`](../examples/new_pipeline/proof_nodes/or/by_builtin_rule/).
-> Other or-builtins above remain legacy-only until ported.
 
 ```litex
 forall a, b R:

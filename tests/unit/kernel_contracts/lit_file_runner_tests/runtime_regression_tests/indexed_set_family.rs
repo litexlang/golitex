@@ -2,8 +2,7 @@ use super::*;
 use crate::test_support::execute_source;
 
 fn run(source: &str, name: &str) -> (bool, String) {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source(name);
+    let mut runtime = Runtime::with_named_source(name);
     let (stmt_results, runtime_error) = execute_source(source, &mut runtime);
     let (succeeded, output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     (succeeded, output)

@@ -13,10 +13,7 @@ struct NonzeroRealView:
 forall candidate &NonzeroRealView:
     candidate.value != 0
 "#;
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source(
-        "struct_equivalent_facts_provide_sequential_well_definedness_context",
-    );
+    let mut runtime = Runtime::with_named_source("struct_equivalent_facts_provide_sequential_well_definedness_context",);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
@@ -45,8 +42,7 @@ struct ReversedNonzeroRealView:
 "#,
         ),
     ] {
-        let mut boundary_runtime = Runtime::default();
-        boundary_runtime.start_isolated_source(name);
+        let mut boundary_runtime = Runtime::with_named_source(name);
         let (boundary_results, boundary_error) = execute_source(source, &mut boundary_runtime);
         let (boundary_succeeded, boundary_output) =
             render_run_output(&boundary_runtime, &boundary_results, &boundary_error);
@@ -101,8 +97,7 @@ claim:
     release struct def container.order
     (x, z) $in container.order.le_rel
 "#;
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source("one_field_struct_is_a_named_view_of_its_field_carrier");
+            let mut runtime = Runtime::with_named_source("one_field_struct_is_a_named_view_of_its_field_carrier");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -122,8 +117,7 @@ claim:
                 "a one-field identity view must not invent tuple shape"
             );
 
-            let mut empty_runtime = Runtime::default();
-            empty_runtime.start_isolated_source("zero_field_struct_still_rejects");
+            let mut empty_runtime = Runtime::with_named_source("zero_field_struct_still_rejects");
             let (empty_results, empty_error) = execute_source(
                 "struct Empty:\n    <=>:\n        0 = 0\n",
                 &mut empty_runtime,
@@ -155,10 +149,7 @@ forall p &Pair<R>, a, b R:
         p.first = a
         p.second = b
 "#;
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "struct_field_projection_is_a_structural_definitional_reduction",
-            );
+            let mut runtime = Runtime::with_named_source("struct_field_projection_is_a_structural_definitional_reduction",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -174,10 +165,7 @@ forall p &Pair<R>, a, b R:
                 "both field equalities should use structural provenance:\n{run_output}"
             );
 
-            let mut negative_runtime = Runtime::default();
-            negative_runtime.start_isolated_source(
-                "struct_field_projection_does_not_select_the_wrong_component",
-            );
+            let mut negative_runtime = Runtime::with_named_source("struct_field_projection_does_not_select_the_wrong_component",);
             let (negative_results, negative_error) = execute_source(
                 r#"
 struct Pair<S set>:
@@ -214,8 +202,7 @@ template<X nonempty_set, n N, x X>:
     have repeated &SizedList<X, n> = (n, fn(k N+: k <= n) X {x})
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("typed_have_admits_literal_dependent_struct_constructor");
+    let mut runtime = Runtime::with_named_source("typed_have_admits_literal_dependent_struct_constructor");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -234,8 +221,7 @@ struct SizedList<X set, n N>:
 
 have invalid &SizedList<R, 2> = (3, fn(k N+: k <= 2) R {k})
 "#;
-    let mut invalid_runtime = Runtime::default();
-    invalid_runtime.start_isolated_source("typed_have_rejects_struct_constructor_with_false_law");
+    let mut invalid_runtime = Runtime::with_named_source("typed_have_rejects_struct_constructor_with_false_law");
     let (stmt_results, runtime_error) = execute_source(invalid_source, &mut invalid_runtime);
     let (run_succeeded, _) = render_run_output(&invalid_runtime, &stmt_results, &runtime_error);
     assert!(
@@ -256,10 +242,7 @@ struct SizedList<X set, n N>:
 (2, fn(k N+: k <= 2) R {k}) $in &SizedList<R, 2>
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source(
-        "direct_literal_tuple_membership_checks_dependent_struct_constructor",
-    );
+    let mut runtime = Runtime::with_named_source("direct_literal_tuple_membership_checks_dependent_struct_constructor",);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
@@ -277,9 +260,7 @@ struct SizedList<X set, n N>:
 
 (3, fn(k N+: k <= 2) R {k}) $in &SizedList<R, 2>
 "#;
-    let mut invalid_runtime = Runtime::default();
-    invalid_runtime
-        .start_isolated_source("direct_literal_tuple_membership_rejects_false_struct_law");
+    let mut invalid_runtime = Runtime::with_named_source("direct_literal_tuple_membership_rejects_false_struct_law");
     let (stmt_results, runtime_error) = execute_source(invalid_source, &mut invalid_runtime);
     let (run_succeeded, _) = render_run_output(&invalid_runtime, &stmt_results, &runtime_error);
     assert!(
@@ -299,9 +280,7 @@ have pair_value &Pair = (1, 2)
 pair_value.second = 2
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime
-        .start_isolated_source("named_struct_field_projects_through_one_checked_tuple_constructor");
+    let mut runtime = Runtime::with_named_source("named_struct_field_projects_through_one_checked_tuple_constructor");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
@@ -331,9 +310,7 @@ forall x1, x2 &BoxedReal:
         x1 = x2
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime
-        .start_isolated_source("obtain_from_exist_unique_preserves_uniqueness_for_struct_members");
+    let mut runtime = Runtime::with_named_source("obtain_from_exist_unique_preserves_uniqueness_for_struct_members");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -354,8 +331,7 @@ template<s set: s = s>:
 \id_on_set{R} = R
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("template_instantiation_prefers_angle_brackets");
+    let mut runtime = Runtime::with_named_source("template_instantiation_prefers_angle_brackets");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -388,8 +364,7 @@ template id_on_set<s set>:
     have id_on_set set = s
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("template_header_rejects_redundant_name");
+    let mut runtime = Runtime::with_named_source("template_header_rejects_redundant_name");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -412,8 +387,7 @@ template<S set>:
     have broken S = 1
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("template_body_is_still_checked_when_defined");
+    let mut runtime = Runtime::with_named_source("template_body_is_still_checked_when_defined");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -434,10 +408,7 @@ template<S set>:
 \sequence<R> = \sequence<R>
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source(
-        "template_result_separates_header_parameters_from_body_definition_parameters",
-    );
+    let mut runtime = Runtime::with_named_source("template_result_separates_header_parameters_from_body_definition_parameters",);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
@@ -602,8 +573,7 @@ template<S set, n N+: 2 <= n>:
             application
         );
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source(case_name);
+        let mut runtime = Runtime::with_named_source(case_name);
         let (stmt_results, runtime_error) = execute_source(&source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -629,8 +599,7 @@ template<S set, n N+: 2 <= n>:
 \guarded<R, 2> = R
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("valid_template_header");
+    let mut runtime = Runtime::with_named_source("valid_template_header");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -655,8 +624,7 @@ trust x $in \Filtered<R>
 $marked(x)
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("preverified_template_set_builder_definition_unfolds");
+    let mut runtime = Runtime::with_named_source("preverified_template_set_builder_definition_unfolds");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -680,8 +648,7 @@ template<S set>:
             std::rc::Rc::from("preverified_nested_template_boundary"),
         )
         .expect("tokenize nested-template boundary fixture");
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("preverified_nested_template_boundary");
+    let mut runtime = Runtime::with_named_source("preverified_nested_template_boundary");
     let stmt = runtime
         .parse_statement(&mut blocks[0])
         .expect("parse template definition");
@@ -708,8 +675,7 @@ prop accepts(S set, b &Box<S>):
 have b &Box<R> = (0, 0)
 "#;
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("deterministic_infer_rule_firings_are_cached");
+        let mut runtime = Runtime::with_named_source("deterministic_infer_rule_firings_are_cached");
         let (stmt_results, runtime_error) = execute_source(setup, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -770,10 +736,7 @@ p.first $in R
 p.second $in R
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source(
-        "defined_struct_membership_materializes_named_and_positional_projections",
-    );
+    let mut runtime = Runtime::with_named_source("defined_struct_membership_materializes_named_and_positional_projections",);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
@@ -808,8 +771,7 @@ trust have p &Pair<R>
 p[1] $in R
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("struct_tuple_projection_materializes_cart_view_on_demand");
+    let mut runtime = Runtime::with_named_source("struct_tuple_projection_materializes_cart_view_on_demand");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
@@ -839,8 +801,7 @@ struct Pair<S set>:
 trust (1, 2) $in &Pair<R>
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("generic_struct_membership_keeps_tuple_view_opaque");
+    let mut runtime = Runtime::with_named_source("generic_struct_membership_keeps_tuple_view_opaque");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
@@ -905,10 +866,7 @@ forall direct &Pair:
     direct.first >= 0
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "release_struct_def_releases_one_verified_layer_and_direct_bindings_open_automatically",
-            );
+            let mut runtime = Runtime::with_named_source("release_struct_def_releases_one_verified_layer_and_direct_bindings_open_automatically",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -944,8 +902,7 @@ have fn make_outer(x N) &Outer = ((x, 0), 0)
 make_outer(1).inner.value = make_outer(1).inner.value
 $is_tuple(make_outer(1).inner)
 "#;
-        let mut wd_only_runtime = Runtime::default();
-        wd_only_runtime.start_isolated_source("field_path_wd_releases_no_facts");
+        let mut wd_only_runtime = Runtime::with_named_source("field_path_wd_releases_no_facts");
         let (results, error) = execute_source(wd_only, &mut wd_only_runtime);
         let (succeeded, output) = render_run_output(&wd_only_runtime, &results, &error);
         assert!(
@@ -970,9 +927,7 @@ struct Pair:
 have fn make_pair(first, second R) &Pair = (first, second)
 make_pair(1, 2).first = 1
 "#;
-        let mut without_release_runtime = Runtime::default();
-        without_release_runtime
-            .start_isolated_source("function_result_struct_facts_require_release");
+        let mut without_release_runtime = Runtime::with_named_source("function_result_struct_facts_require_release");
         let (results, error) = execute_source(without_release, &mut without_release_runtime);
         let (succeeded, output) = render_run_output(&without_release_runtime, &results, &error);
         assert!(
@@ -989,8 +944,7 @@ have raw cart(R, R) = (1, 2)
 trust raw $in &Pair
 release struct def raw
 "#;
-        let mut raw_runtime = Runtime::default();
-        raw_runtime.start_isolated_source("raw_membership_has_no_struct_view");
+        let mut raw_runtime = Runtime::with_named_source("raw_membership_has_no_struct_view");
         let (results, error) = execute_source(raw_membership, &mut raw_runtime);
         let (succeeded, output) = render_run_output(&raw_runtime, &results, &error);
         assert!(
@@ -1006,8 +960,7 @@ struct Pair:
 have fn make_pair(first, second R) &Pair = (first, second)
 release struct def make_pair(1, 2) as &Pair
 "#;
-        let mut as_form_runtime = Runtime::default();
-        as_form_runtime.start_isolated_source("release_struct_def_has_no_as_form");
+        let mut as_form_runtime = Runtime::with_named_source("release_struct_def_has_no_as_form");
         let (results, error) = execute_source(as_form, &mut as_form_runtime);
         let (succeeded, output) = render_run_output(&as_form_runtime, &results, &error);
         assert!(
@@ -1027,8 +980,7 @@ struct Outer:
 forall outer &Outer:
     $is_tuple(outer.inner)
 "#;
-        let mut non_recursive_runtime = Runtime::default();
-        non_recursive_runtime.start_isolated_source("struct_release_is_non_recursive");
+        let mut non_recursive_runtime = Runtime::with_named_source("struct_release_is_non_recursive");
         let (results, error) = execute_source(non_recursive, &mut non_recursive_runtime);
         let (succeeded, output) = render_run_output(&non_recursive_runtime, &results, &error);
         assert!(
@@ -1044,8 +996,7 @@ struct Pair:
 have fn make_pair(x R) &Pair = (x, x)
 have A set
 "#;
-        let mut atomic_runtime = Runtime::default();
-        atomic_runtime.start_isolated_source("failed_struct_release_is_atomic");
+        let mut atomic_runtime = Runtime::with_named_source("failed_struct_release_is_atomic");
         let (setup_results, setup_error) = execute_source(setup, &mut atomic_runtime);
         let (setup_succeeded, setup_output) =
             render_run_output(&atomic_runtime, &setup_results, &setup_error);
@@ -1087,8 +1038,7 @@ trust x $in A
 $marked(x)
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("cached_membership_can_use_later_set_builder_definition");
+    let mut runtime = Runtime::with_named_source("cached_membership_can_use_later_set_builder_definition");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -1109,8 +1059,7 @@ try:
     0 = 1
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("failed_try_discards_infer_rule_firings");
+    let mut runtime = Runtime::with_named_source("failed_try_discards_infer_rule_firings");
     let firings_before = runtime
         .top_level_env()
         .known_facts_cache
@@ -1168,8 +1117,7 @@ template<s set>:
     have group_quotient fn (g &Group<s>) power_set(s)
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source("template_can_use_struct_with_function_valued_fields");
+            let mut runtime = Runtime::with_named_source("template_can_use_struct_with_function_valued_fields");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1211,9 +1159,7 @@ claim:
     g.op(g.inv(x), x) = g.identity
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime
-                .start_isolated_source("struct_filter_predicate_unfolds_for_direct_field_carrier");
+            let mut runtime = Runtime::with_named_source("struct_filter_predicate_unfolds_for_direct_field_carrier");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1252,10 +1198,7 @@ have p2 &CoordinatePair = (p.x, p.y)
 p2.first = 1
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "definition_struct_carrier_is_stable_across_other_memberships",
-            );
+            let mut runtime = Runtime::with_named_source("definition_struct_carrier_is_stable_across_other_memberships",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1358,10 +1301,7 @@ template<n N>:
 \indexed_value<1>.entries(0) = 1
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "explicit_struct_fields_and_tuple_indexes_work_through_call_argument_lists",
-            );
+            let mut runtime = Runtime::with_named_source("explicit_struct_fields_and_tuple_indexes_work_through_call_argument_lists",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1396,8 +1336,7 @@ fn removed_unfold_syntax_is_rejected_and_name_is_available() {
 have unfold R = 1
 unfold = 1
 "#;
-    let mut identifier_runtime = Runtime::default();
-    identifier_runtime.start_isolated_source("unfold_is_no_longer_a_keyword");
+    let mut identifier_runtime = Runtime::with_named_source("unfold_is_no_longer_a_keyword");
     let (stmt_results, runtime_error) = execute_source(identifier_source, &mut identifier_runtime);
     let (run_succeeded, run_output) =
         render_run_output(&identifier_runtime, &stmt_results, &runtime_error);
@@ -1412,8 +1351,7 @@ have fn first(left, right R) R = left
 have pair cart(R, R) = (1, 2)
 first(unfold pair) = 1
 "#;
-    let mut removed_syntax_runtime = Runtime::default();
-    removed_syntax_runtime.start_isolated_source("removed_unfold_syntax_is_rejected");
+    let mut removed_syntax_runtime = Runtime::with_named_source("removed_unfold_syntax_is_rejected");
     let (stmt_results, runtime_error) =
         execute_source(removed_syntax_source, &mut removed_syntax_runtime);
     let (run_succeeded, run_output) =
@@ -1443,10 +1381,7 @@ thm point_direct_carrier_is_available_in_proof:
 release thm point_direct_carrier_is_available_in_proof((1, 2))
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "direct_struct_carrier_replays_from_theorem_goal_into_proof",
-            );
+            let mut runtime = Runtime::with_named_source("direct_struct_carrier_replays_from_theorem_goal_into_proof",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1476,10 +1411,7 @@ thm box_direct_carrier_keeps_its_identity:
     b.value = b.value
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "parameterized_direct_struct_carrier_keeps_dependent_symbol_ids",
-            );
+            let mut runtime = Runtime::with_named_source("parameterized_direct_struct_carrier_keeps_dependent_symbol_ids",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1505,8 +1437,7 @@ trust p $in &Point
 p.x = p.x
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("struct_membership_fact_does_not_enable_direct_field_access");
+    let mut runtime = Runtime::with_named_source("struct_membership_fact_does_not_enable_direct_field_access");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -1547,10 +1478,7 @@ thm tagged_integer_view_for_item:
     item.code = item.code
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "separate_same_name_binders_keep_symbol_specific_direct_struct_carriers",
-            );
+            let mut runtime = Runtime::with_named_source("separate_same_name_binders_keep_symbol_specific_direct_struct_carriers",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1578,8 +1506,7 @@ have endomorphism &Endomorphism = (fn(x R) R {x + 1}, 0)
 endomorphism.apply(2) = endomorphism.apply(2)
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source("direct_struct_carrier_function_field_remains_callable");
+            let mut runtime = Runtime::with_named_source("direct_struct_carrier_function_field_remains_callable");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1622,10 +1549,7 @@ prop share_scalar_system(s, v, w nonempty_set, Vspace &VectorSpace<s, v>, Wspace
     Vspace.scalars = Wspace.scalars
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "chained_direct_struct_carriers_support_bundled_vector_space_operations",
-            );
+            let mut runtime = Runtime::with_named_source("chained_direct_struct_carriers_support_bundled_vector_space_operations",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1662,10 +1586,7 @@ have node &Node = ((1, 0), 0)
 node.leaf.value $in R
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "chained_field_access_continues_from_the_defined_struct_carrier",
-            );
+            let mut runtime = Runtime::with_named_source("chained_field_access_continues_from_the_defined_struct_carrier",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1701,10 +1622,7 @@ have fn projected_entry(f fn(k N+) N, idx N+) N = boxed(f).entries(idx)
 projected_entry(identity_entry, 1) $in N
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "callable_struct_field_projection_is_well_defined_as_a_function_head",
-            );
+            let mut runtime = Runtime::with_named_source("callable_struct_field_projection_is_well_defined_as_a_function_head",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1745,10 +1663,7 @@ thm local_struct_return_projection:
     n = n
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "local_function_struct_return_is_visible_before_nested_block_execution",
-            );
+            let mut runtime = Runtime::with_named_source("local_function_struct_return_is_visible_before_nested_block_execution",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1775,8 +1690,7 @@ have fn boxed(f fn(k N+) N) &CallableBox = (f, 0)
 have fn invalid_scalar_call(f fn(k N+) N, idx N+) N = boxed(f).tag(idx)
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source("callable_struct_field_projection_rejects_scalar_fields");
+            let mut runtime = Runtime::with_named_source("callable_struct_field_projection_rejects_scalar_fields");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1814,10 +1728,7 @@ claim:
     bundle.scalars.one $in s
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "chained_direct_struct_carriers_support_module_qualified_field_types",
-            );
+            let mut runtime = Runtime::with_named_source("chained_direct_struct_carriers_support_module_qualified_field_types",);
             runtime.current_module_mut().module_name = "Current".to_string();
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -1851,10 +1762,7 @@ have point &Point = (1, 2)
 point.x.value = 1
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "chained_field_access_rejects_non_struct_intermediate_fields",
-            );
+            let mut runtime = Runtime::with_named_source("chained_field_access_rejects_non_struct_intermediate_fields",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1895,10 +1803,7 @@ trust holder.point $in &Point
 holder.point.x = 1
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "chained_field_access_does_not_follow_named_definitions_or_known_memberships",
-            );
+            let mut runtime = Runtime::with_named_source("chained_field_access_does_not_follow_named_definitions_or_known_memberships",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1932,8 +1837,7 @@ have endomorphism &Endomorphism = (fn(x R) R {x + 1}, 0)
 endomorphism.apply(1).value = 2
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source("chained_field_access_rejects_scalar_function_returns");
+            let mut runtime = Runtime::with_named_source("chained_field_access_rejects_scalar_function_returns");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1969,9 +1873,7 @@ trust raw(1) = point
 raw(1).x = 1
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime
-                .start_isolated_source("function_results_do_not_acquire_struct_fields_from_facts");
+            let mut runtime = Runtime::with_named_source("function_results_do_not_acquire_struct_fields_from_facts");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2003,8 +1905,7 @@ struct Point:
 have right_half_plane set = {p &Point: p.x >= 0}
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source("direct_struct_carrier_is_available_in_set_builder_body");
+            let mut runtime = Runtime::with_named_source("direct_struct_carrier_is_available_in_set_builder_body");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2030,10 +1931,7 @@ trust forall index N:
     f(index) $in {0}
 by def $maps_into(R, f, {0})
 "#;
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source(
-        "by_def_packages_an_exact_known_universal_clause_with_bounded_type_checks",
-    );
+    let mut runtime = Runtime::with_named_source("by_def_packages_an_exact_known_universal_clause_with_bounded_type_checks",);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
@@ -2052,8 +1950,7 @@ prop maps_into(A set, f fn(n N) A, S power_set(A)):
 trust have f fn(n N) R
 by def $maps_into(R, f, {0})
 "#;
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("by_def_does_not_package_a_missing_universal_clause");
+    let mut runtime = Runtime::with_named_source("by_def_does_not_package_a_missing_universal_clause");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
@@ -2079,8 +1976,7 @@ struct PointHolder:
         point.x = point.x
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source("direct_struct_carrier_is_available_for_struct_fields");
+            let mut runtime = Runtime::with_named_source("direct_struct_carrier_is_available_for_struct_fields");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2108,8 +2004,7 @@ obtain point from exist p &Point st {p = p}
 point.x = point.x
 "#;
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("obtain_inherits_direct_struct_carrier");
+        let mut runtime = Runtime::with_named_source("obtain_inherits_direct_struct_carrier");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2138,10 +2033,7 @@ obtain carrier, box from exist s nonempty_set, b &Box<s> st {b = b}
 box.value = box.value
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "obtain_instantiates_parameterized_direct_struct_carrier_by_symbol_id",
-            );
+            let mut runtime = Runtime::with_named_source("obtain_instantiates_parameterized_direct_struct_carrier_by_symbol_id",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2178,10 +2070,7 @@ prop is_real_vector_space(v nonempty_set, vector_zero v, vector_smul fn(a R, x v
     (vector_zero, vector_smul) $in &VectorSpace<R, real_scalars, v>
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "nested_struct_verification_freshens_same_named_field_binders",
-            );
+            let mut runtime = Runtime::with_named_source("nested_struct_verification_freshens_same_named_field_binders",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2215,8 +2104,7 @@ forall S nonempty_set, x S:
     \selected_self<S>(x) = x
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source("template_proof_uses_the_instantiated_forall_binder_id");
+            let mut runtime = Runtime::with_named_source("template_proof_uses_the_instantiated_forall_binder_id");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2250,10 +2138,7 @@ forall S nonempty_set, wrap fn(value S) S, x S:
     wrap(\selected_wrapped_self<S, wrap>(x)) = wrap(x)
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "template_proof_indexes_a_materialized_callable_nested_inside_another_application",
-            );
+            let mut runtime = Runtime::with_named_source("template_proof_indexes_a_materialized_callable_nested_inside_another_application",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2285,10 +2170,7 @@ forall T nonempty_set, combine fn(left, right T) T, identity T, values fn(index 
     \recursive_fold<T, combine, identity>(values, count + 1) = combine(\recursive_fold<T, combine, identity>(values, (count + 1) - 1), values((count + 1) - 1)) = combine(\recursive_fold<T, combine, identity>(values, count), values(count))
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "template_recursive_function_materializes_public_computation_equations",
-            );
+            let mut runtime = Runtime::with_named_source("template_recursive_function_materializes_public_computation_equations",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2324,10 +2206,7 @@ forall T nonempty_set, marker, fallback, value T:
         \choose_marker<T, marker, fallback>(value) = fallback
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "template_case_function_materializes_public_computation_equations",
-            );
+            let mut runtime = Runtime::with_named_source("template_case_function_materializes_public_computation_equations",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2354,10 +2233,7 @@ forall T nonempty_set, combine fn(left, right T) T, marker, value T:
     \combine_with_marker<T, combine, marker>(value) = combine(value, marker)
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "template_simple_function_materializes_public_computation_equation",
-            );
+            let mut runtime = Runtime::with_named_source("template_simple_function_materializes_public_computation_equation",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2397,10 +2273,7 @@ forall S nonempty_set, x S:
     \selected_self_with_local_proof<S>(x) = x
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "template_choice_materializes_local_exist_elimination_and_witness",
-            );
+            let mut runtime = Runtime::with_named_source("template_choice_materializes_local_exist_elimination_and_witness",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2439,10 +2312,7 @@ forall S nonempty_set, x S:
     \selected_self_again<S>(x) $in S
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "template_choice_materializes_local_equal_object_definition",
-            );
+            let mut runtime = Runtime::with_named_source("template_choice_materializes_local_equal_object_definition",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2478,8 +2348,7 @@ forall S nonempty_set, marker, x S:
     \selected_marker_with_local_case<S, marker>(x) = marker
 "#;
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("template_choice_materializes_local_case_function");
+        let mut runtime = Runtime::with_named_source("template_choice_materializes_local_case_function");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2533,10 +2402,7 @@ forall S nonempty_set, marker, seed, x S:
     \selected_constant<S, marker>(seed)(x) = marker
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "template_choice_returning_refined_function_remains_callable",
-            );
+            let mut runtime = Runtime::with_named_source("template_choice_returning_refined_function_remains_callable",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2558,9 +2424,7 @@ have A T
 A(1, 2, 3) $in R
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime
-        .start_isolated_source("named_set_equal_to_fn_set_is_nonempty_and_registers_function_type");
+    let mut runtime = Runtime::with_named_source("named_set_equal_to_fn_set_is_nonempty_and_registers_function_type");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -2581,10 +2445,7 @@ have A \tensor3<R, 3>
 A(1, 2, 3) $in R
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source(
-        "template_named_set_equal_to_fn_set_is_nonempty_and_registers_function_type",
-    );
+    let mut runtime = Runtime::with_named_source("template_named_set_equal_to_fn_set_is_nonempty_and_registers_function_type",);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -2603,8 +2464,7 @@ trust a <= b
 a = b
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("weak_order_does_not_recursively_prove_equality");
+    let mut runtime = Runtime::with_named_source("weak_order_does_not_recursively_prove_equality");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -2624,8 +2484,7 @@ trust b <= a
 a = b
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("two_known_weak_order_directions_prove_equality");
+    let mut runtime = Runtime::with_named_source("two_known_weak_order_directions_prove_equality");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -2656,8 +2515,7 @@ exist a, b R st {a >= b}
 exist a, b R st {b <= a}
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("real_line_comparison_exist_witnesses_are_builtin_rules");
+    let mut runtime = Runtime::with_named_source("real_line_comparison_exist_witnesses_are_builtin_rules");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -2686,8 +2544,7 @@ forall epsilon R+:
     exist n N+ st {1 / n < epsilon}
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("archimedean_reciprocal_bound_is_a_builtin_rule");
+    let mut runtime = Runtime::with_named_source("archimedean_reciprocal_bound_is_a_builtin_rule");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -2718,10 +2575,7 @@ forall a, b R:
         exist c Z st {a <= c <= b}
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source(
-        "sufficiently_wide_real_intervals_have_integer_witnesses_as_builtin_rules",
-    );
+    let mut runtime = Runtime::with_named_source("sufficiently_wide_real_intervals_have_integer_witnesses_as_builtin_rules",);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -2742,10 +2596,7 @@ forall a, b R:
         );
     }
 
-    let mut short_interval_runtime = Runtime::default();
-    short_interval_runtime.start_isolated_source(
-        "strict_real_interval_without_length_bound_has_no_integer_builtin_witness",
-    );
+    let mut short_interval_runtime = Runtime::with_named_source("strict_real_interval_without_length_bound_has_no_integer_builtin_witness",);
     let (short_interval_results, short_interval_error) = execute_source(
         r#"
 forall a, b R:
@@ -2776,8 +2627,7 @@ forall S finite_set:
         not $is_nonempty_set(S)
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("finite_set_size_zero_is_not_nonempty_is_a_builtin_rule");
+    let mut runtime = Runtime::with_named_source("finite_set_size_zero_is_not_nonempty_is_a_builtin_rule");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -2802,8 +2652,7 @@ forall x R:
         -x > 5
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("negation_reverses_order_as_a_builtin_rule");
+    let mut runtime = Runtime::with_named_source("negation_reverses_order_as_a_builtin_rule");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -2833,8 +2682,7 @@ forall a, b, q R+:
         a <= b
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("positive_real_powers_reflect_order_as_builtin_rules");
+    let mut runtime = Runtime::with_named_source("positive_real_powers_reflect_order_as_builtin_rules");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -2858,8 +2706,7 @@ forall q Q:
     exist a Z, b Z* st {q = a / b}
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("rational_integer_ratio_representation_is_a_builtin_rule");
+    let mut runtime = Runtime::with_named_source("rational_integer_ratio_representation_is_a_builtin_rule");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -2881,9 +2728,7 @@ fn rational_integer_ratio_representation_requires_a_rational_target() {
 exist a Z, b Z* st {sqrt(2) = a / b}
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime
-        .start_isolated_source("rational_integer_ratio_representation_requires_a_rational_target");
+    let mut runtime = Runtime::with_named_source("rational_integer_ratio_representation_requires_a_rational_target");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -2907,10 +2752,7 @@ a > b or a <= b
 exist x R st {x = a}
 exist x R st {x > a}
 "#;
-            let mut positive_runtime = Runtime::default();
-            positive_runtime.start_isolated_source(
-                "real_line_comparison_builtins_require_real_operands_positive",
-            );
+            let mut positive_runtime = Runtime::with_named_source("real_line_comparison_builtins_require_real_operands_positive",);
             let (positive_results, positive_error) =
                 execute_source(positive_source, &mut positive_runtime);
             let (positive_succeeded, positive_output) =
@@ -2928,14 +2770,11 @@ exist x R st {x > a}
                 ("existence_equality", "have S set\nexist x R st {x = S}"),
                 ("existence_order", "have S set\nexist x R st {x > S}"),
             ] {
-                let mut runtime = Runtime::default();
-                runtime.start_isolated_source(
-                    format!(
+                let mut runtime = Runtime::with_named_source(format!(
                         "real_line_comparison_builtins_require_real_operands_{}",
                         label
                     )
-                    .as_str(),
-                );
+                    .as_str(),);
                 let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
                 let (run_succeeded, run_output) =
                     render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2961,8 +2800,7 @@ forall z, w C:
     =>:
         z = 0 or w = 0
 "#;
-    let mut positive_runtime = Runtime::default();
-    positive_runtime.start_isolated_source("zero_product_split_accepts_native_fields");
+    let mut positive_runtime = Runtime::with_named_source("zero_product_split_accepts_native_fields");
     let (positive_results, positive_error) = execute_source(positive_source, &mut positive_runtime);
     let (positive_succeeded, positive_output) =
         render_run_output(&positive_runtime, &positive_results, &positive_error);
@@ -2982,8 +2820,7 @@ have A, B set
 trust A * B = 0
 A = 0 or B = 0
 "#;
-    let mut non_real_runtime = Runtime::default();
-    non_real_runtime.start_isolated_source("zero_product_split_rejects_non_scalars");
+    let mut non_real_runtime = Runtime::with_named_source("zero_product_split_rejects_non_scalars");
     let (non_real_results, non_real_error) = execute_source(non_real_source, &mut non_real_runtime);
     let (non_real_succeeded, non_real_output) =
         render_run_output(&non_real_runtime, &non_real_results, &non_real_error);
@@ -3003,9 +2840,7 @@ trust:
 have chosen Z:
     chosen != 100
 "#;
-    let mut equality_runtime = Runtime::default();
-    equality_runtime
-        .start_isolated_source("known_forall_existential_matching_rejects_equality_as_inequality");
+    let mut equality_runtime = Runtime::with_named_source("known_forall_existential_matching_rejects_equality_as_inequality");
     let (equality_results, equality_error) =
         execute_source(equality_as_inequality, &mut equality_runtime);
     let (equality_succeeded, equality_output) =
@@ -3024,9 +2859,7 @@ trust:
 have chosen Z:
     not $p(chosen)
 "#;
-    let mut predicate_runtime = Runtime::default();
-    predicate_runtime
-        .start_isolated_source("known_forall_existential_matching_rejects_positive_as_negative");
+    let mut predicate_runtime = Runtime::with_named_source("known_forall_existential_matching_rejects_positive_as_negative");
     let (predicate_results, predicate_error) =
         execute_source(positive_as_negative, &mut predicate_runtime);
     let (predicate_succeeded, predicate_output) =
@@ -3044,9 +2877,7 @@ trust:
 have chosen Z:
     chosen = 100
 "#;
-    let mut exact_runtime = Runtime::default();
-    exact_runtime
-        .start_isolated_source("known_forall_existential_matching_still_accepts_exact_equality");
+    let mut exact_runtime = Runtime::with_named_source("known_forall_existential_matching_still_accepts_exact_equality");
     let (exact_results, exact_error) = execute_source(exact_equality, &mut exact_runtime);
     let (exact_succeeded, exact_output) =
         render_run_output(&exact_runtime, &exact_results, &exact_error);
@@ -3080,10 +2911,7 @@ thm use_rel_trans_like:
     $rel(X, a, c)
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "known_forall_instantiation_fills_middle_param_from_dom_facts",
-            );
+            let mut runtime = Runtime::with_named_source("known_forall_instantiation_fills_middle_param_from_dom_facts",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -3108,9 +2936,7 @@ b = a * k1 = a * 0 = 0
 0 * k2 = 0
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime
-        .start_isolated_source("zero_product_cancellation_does_not_recursively_reenter_equality");
+    let mut runtime = Runtime::with_named_source("zero_product_cancellation_does_not_recursively_reenter_equality");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -3133,8 +2959,7 @@ forall a1, b1, a2, b2 R:
         a1 = a2 and b1 = b2
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("exist_unique_infers_component_uniqueness_forall");
+    let mut runtime = Runtime::with_named_source("exist_unique_infers_component_uniqueness_forall");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -3158,8 +2983,7 @@ forall a1, b1, a2, b2 R:
         b1 = b2
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("exist_unique_component_uniqueness_proves_split_then_facts");
+    let mut runtime = Runtime::with_named_source("exist_unique_component_uniqueness_proves_split_then_facts");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -3185,8 +3009,7 @@ sketch:
     exist! a, b R st {$p(a, b)}
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("exist_unique_still_accepts_tuple_uniqueness_forall");
+    let mut runtime = Runtime::with_named_source("exist_unique_still_accepts_tuple_uniqueness_forall");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -3215,8 +3038,7 @@ forall x A:
     $F(x, f(x))
 "#;
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("have_fn_by_exist_accepts_question_goal_target");
+        let mut runtime = Runtime::with_named_source("have_fn_by_exist_accepts_question_goal_target");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -3246,8 +3068,7 @@ forall x A:
     $F(x, f(x))
 "#;
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("have_fn_by_exist_prove_body_can_establish_target");
+        let mut runtime = Runtime::with_named_source("have_fn_by_exist_prove_body_can_establish_target");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -3301,10 +3122,7 @@ forall a, b R, f fn(t '[a, b]) R, x '[a, b]:
     dependent_function_value(a, b, f, x) = f(x)
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "have_fn_by_exist_rebinds_value_dependent_function_signature",
-            );
+            let mut runtime = Runtime::with_named_source("have_fn_by_exist_rebinds_value_dependent_function_signature",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -3337,8 +3155,7 @@ forall x A, y B:
         y = f(x)
 "#;
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("have_fn_by_exist_releases_unique_witness_direction");
+        let mut runtime = Runtime::with_named_source("have_fn_by_exist_releases_unique_witness_direction");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -3376,10 +3193,7 @@ trust forall z R:
 $P(0)
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "have_fn_by_exist_caches_alpha_equivalent_uniqueness_forall",
-            );
+            let mut runtime = Runtime::with_named_source("have_fn_by_exist_caches_alpha_equivalent_uniqueness_forall",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -3416,10 +3230,7 @@ forall x A, y B:
         y = f(x)
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "have_fn_by_exist_unique_witness_direction_keeps_all_body_facts",
-            );
+            let mut runtime = Runtime::with_named_source("have_fn_by_exist_unique_witness_direction_keeps_all_body_facts",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -3451,8 +3262,7 @@ forall x A:
     $F(x, f(x))
 "#;
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("have_fn_by_exist_requires_question_goal");
+        let mut runtime = Runtime::with_named_source("have_fn_by_exist_requires_question_goal");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -3480,8 +3290,7 @@ have fn f by exist!:
     ? 1 = 1
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source("have_fn_by_exist_question_goal_requires_forall_target");
+            let mut runtime = Runtime::with_named_source("have_fn_by_exist_question_goal_requires_forall_target");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -3528,8 +3337,7 @@ forall F finite_set, c set:
         $is_finite_set(c)
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("elementary_set_elimination_and_subset_rules_are_builtin");
+    let mut runtime = Runtime::with_named_source("elementary_set_elimination_and_subset_rules_are_builtin");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -3562,8 +3370,7 @@ have A, B set
 B = set_minus(A, set_minus(A, B))
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("set_minus_relative_complement_requires_subset");
+    let mut runtime = Runtime::with_named_source("set_minus_relative_complement_requires_subset");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -3609,10 +3416,7 @@ trust have original &Family<R, 2>:
 trust $is_dual_family(R, 2, original, \selected_family<R, 2, original>)
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "distinct_template_struct_memberships_expand_distinct_field_views",
-            );
+            let mut runtime = Runtime::with_named_source("distinct_template_struct_memberships_expand_distinct_field_views",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -3650,8 +3454,7 @@ thm equal_index_transport:
     witness exist y &IndexedBox<A, m> st {y = x} from transported
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("have_equal_object_transports_across_equal_struct_indices");
+    let mut runtime = Runtime::with_named_source("have_equal_object_transports_across_equal_struct_indices");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -3705,10 +3508,7 @@ thm concrete_template_after_symbolic_template:
     trust \metric_ball<R, real_distance>(5, 2) = I
 "#;
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source(
-        "stale_local_template_equality_candidate_does_not_abort_later_application",
-    );
+    let mut runtime = Runtime::with_named_source("stale_local_template_equality_candidate_does_not_abort_later_application",);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 

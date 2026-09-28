@@ -172,13 +172,14 @@ fn run_file_isolated(
     })?;
 
     let mut runtime = Runtime::new(command);
-    let code_result = match runtime.run_litex_code(&source) {
+    let mut code_result = match runtime.run_litex_code(&source) {
         Ok(result) => result,
         Err(error) => {
             runtime.abort_file();
             return Err(error);
         }
     };
+    code_result.attach_normal_json(&runtime, "file", Some(path.as_path()));
 
     if !code_result.success {
         runtime.abort_file();

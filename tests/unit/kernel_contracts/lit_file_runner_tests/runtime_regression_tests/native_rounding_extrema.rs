@@ -261,8 +261,7 @@ fn assert_source_fails(source: &str, label: &str) {
 }
 
 fn run_source(source: &str, label: &str) -> (bool, String) {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source(label);
+    let mut runtime = Runtime::with_named_source(label);
     let (results, error) = execute_source(source, &mut runtime);
     render_run_output(&runtime, &results, &error)
 }

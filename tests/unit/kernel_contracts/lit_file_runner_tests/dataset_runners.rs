@@ -99,7 +99,7 @@ fn run_gsm8k_jsonl_file(
     };
 
     if *total_count == 0 {
-        runtime.start_isolated_source(jsonl_path_str.as_str());
+        *runtime = Runtime::with_named_source(jsonl_path_str.as_str());
     } else {
         runtime.reset_for_isolated_runner_item();
         runtime.set_current_user_lit_file_path(jsonl_path_str.as_str());
@@ -220,7 +220,7 @@ fn run_finished_litex_jsonl_dataset(dataset_label: &str, jsonl_path: &Path, labe
     let runtime_setup_start = Instant::now();
     let mut runtime = Runtime::default();
     let runtime_setup_duration_ms = runtime_setup_start.elapsed().as_secs_f64() * 1000.0;
-    runtime.start_isolated_source(jsonl_path_str.as_str());
+    *runtime = Runtime::with_named_source(jsonl_path_str.as_str());
 
     let run_wall_start = Instant::now();
     let mut total_count: usize = 0;
@@ -405,7 +405,7 @@ fn run_metamathqa_jsonl_file(
         Err(read_error) => panic!("failed to read {:?}: {}", jsonl_path, read_error),
     };
 
-    runtime.start_isolated_source(jsonl_path_str.as_str());
+    *runtime = Runtime::with_named_source(jsonl_path_str.as_str());
 
     for (line_index, line) in jsonl_content.lines().enumerate() {
         if line.trim().is_empty() {

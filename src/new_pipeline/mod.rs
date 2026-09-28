@@ -16,6 +16,7 @@ pub mod display_and_ir;
 pub mod exec_env;
 pub mod execute;
 pub mod instantiate;
+pub mod json_output;
 pub mod knowledge_base;
 pub mod module_manager;
 pub mod parse;

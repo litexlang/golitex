@@ -69,8 +69,7 @@ fn anonymous_function_membership_is_not_dispatched_by_the_generic_orchestrator()
 
 #[test]
 fn registered_symmetric_predicate_verifier_wraps_the_exact_reordered_child_result() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("registered_symmetric_result_test.lit");
+    let mut runtime = Runtime::with_named_source("registered_symmetric_result_test.lit");
     let (_, setup_error) = execute_source("prop any_set(x set, y set):\n    x = x", &mut runtime);
     assert!(setup_error.is_none(), "{setup_error:?}");
     let mut parse_atomic = |source: &str| {

@@ -182,10 +182,9 @@ impl ModuleManager {
         Ok(id)
     }
 
-    /// Convert the constructor-created virtual root into a repository root.
-    /// The bootstrap source remains registered so Runtime never loses its
-    /// active `(ModuleId, SourceId)` pair while discovery builds the export
-    /// tree.
+    /// Convert a constructor-created virtual root into a repository root.
+    /// The already-registered root source stays active so Runtime never loses
+    /// its `(ModuleId, SourceId)` pair while discovery builds the export tree.
     pub fn configure_repository_root_module(
         &mut self,
         module_root_path: RealDirectoryPath,

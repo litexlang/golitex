@@ -4,7 +4,7 @@ use super::{
     render_run_output, render_run_summary, resolve_source_file_path, RunSummaryRequest, RunTarget,
 };
 use crate::error::RuntimeError;
-use crate::module_system::{discover_repository, VirtualSource};
+use crate::module_system::discover_repository;
 use crate::result::StmtResult;
 use crate::runtime::{LitexExecution, Runtime, RuntimeOptions};
 use crate::syntax::source_formatting::remove_windows_carriage_from_str;
@@ -22,7 +22,6 @@ pub struct RunOutcome {
 pub fn run_eval_command(source: &str, options: RuntimeOptions) -> RunOutcome {
     let mut runtime = Runtime::new(options);
     let target = RunTarget::Eval;
-    runtime.start_virtual_source(VirtualSource::Eval);
     let (stmt_results, runtime_error) = runtime
         .execute_source(remove_windows_carriage_from_str(source).as_str())
         .into_parts();

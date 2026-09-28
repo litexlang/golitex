@@ -17,7 +17,9 @@ For every AST type in this module, these are the **only** two methods.
 See [`../identifier_identity.md`](../identifier_identity.md).
 
 - **Plain** identifiers: `ir` = `#<IdentifierId>#<name>` (e.g. `#3#x`);
-  `display_string` = surface name only (`x`).
+  `display_string` currently follows IR text for most compound facts;
+  `readable_string` strips `#id#` wrappers for humans (e.g. `#1#k $in N` →
+  `k $in N`). JSON Normal output uses `readable_string`.
 - **Qualified** identifiers: IR and display use the same qualified spelling
   (no `IdentifierId`).
 - **Binder objs** (`SetBuilder` / `FnSet` / `AnonymousFn`): single body;

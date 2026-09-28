@@ -72,8 +72,7 @@ fn run_repl_loop_with_readers_and_mode(
     stdout_writer: &mut dyn Write,
     output_mode: ReplOutputMode,
 ) -> io::Result<()> {
-    let mut runtime = Runtime::new(options);
-    initialize_isolated_repl_runtime(&mut runtime);
+    let mut runtime = Runtime::new_with_virtual_source(options, VirtualSource::Repl);
     let stream = output_mode.stream_name();
     let content = JsonValue::Object(vec![
         (
@@ -345,10 +344,6 @@ fn repl_io_error(stream: &str, event: &str, message: &str) -> String {
             ),
         ]),
     )
-}
-
-fn initialize_isolated_repl_runtime(runtime: &mut Runtime) {
-    runtime.start_virtual_source(VirtualSource::Repl);
 }
 
 fn repl_line_starts_block(line: &str) -> bool {

@@ -4,8 +4,7 @@ use crate::test_support::execute_source;
 use std::rc::Rc;
 
 fn run_sequence_source(source: &str, label: &str) -> (bool, String) {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source(label);
+    let mut runtime = Runtime::with_named_source(label);
     let (stmt_results, runtime_error) = execute_source(source, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     (run_succeeded, run_output)
@@ -15,8 +14,7 @@ fn run_sequence_property_wd(source: &str, label: &str) -> (bool, String) {
     let (setup, property) = source
         .rsplit_once('\n')
         .expect("fixture has a declaration followed by one property fact");
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source(label);
+    let mut runtime = Runtime::with_named_source(label);
     let (setup_results, setup_error) = execute_source(setup, &mut runtime);
     if setup_error.is_some() {
         return render_run_output(&runtime, &setup_results, &setup_error);

@@ -6,8 +6,7 @@ use crate::test_support::execute_source;
 
 #[test]
 fn registered_transitive_predicate_chain_store_returns_typed_closure_inference() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("registered_transitive_predicate_chain_result_test.lit");
+    let mut runtime = Runtime::with_named_source("registered_transitive_predicate_chain_result_test.lit");
     let (_, setup_error) = execute_source(
         "prop same_set(x set, y set):\n    x = y\ntrust R $same_set C\ntrust C $same_set N",
         &mut runtime,

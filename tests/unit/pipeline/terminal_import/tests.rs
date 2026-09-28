@@ -61,8 +61,7 @@ fn failed_terminal_import_rolls_back_before_the_same_alias_is_retried() {
     );
     write_file(&valid.join("main.lit"), "have value R = 7\n");
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("repl");
+    let mut runtime = Runtime::with_named_source("repl");
     let (failed_ok, failed) = run_terminal_import(
         format!("import \"{}\" as Retry", broken.to_string_lossy()).as_str(),
         &mut runtime,
@@ -92,8 +91,7 @@ fn standard_terminal_import_records_execution_then_reuse() {
     );
     write_file(&std_root.join("basics/main.lit"), "have std_value R = 1\n");
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("repl");
+    let mut runtime = Runtime::with_named_source("repl");
 
     with_standard_library_root(&std_root, || {
         let (first_ok, first) = run_terminal_import("import std basics", &mut runtime);
@@ -116,12 +114,11 @@ fn strict_terminal_import_verifies_and_rolls_back_a_failing_module() {
     );
     write_file(&dependency.join("assumption.lit"), "1 = 0\n");
 
-    let mut runtime = Runtime::new(RuntimeOptions::strict(
+    let mut runtime = Runtime::new_with_virtual_source(RuntimeOptions::strict(
         OutputDetail::Normal,
         OutputLanguage::English,
         SummaryOption::None,
-    ));
-    runtime.start_isolated_source("repl");
+    ), VirtualSource::Named(("repl").into()));
     let (ok, output) = run_terminal_import(
         format!(
             "import \"{}\" as StrictDependency",

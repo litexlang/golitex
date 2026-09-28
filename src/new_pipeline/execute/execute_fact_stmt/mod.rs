@@ -6,7 +6,7 @@ mod exec_fact_stmt;
 mod result;
 mod verify;
 mod verify_and_fact;
-mod verify_atomic_fact;
+pub mod verify_atomic_fact;
 mod verify_chain_fact;
 mod verify_exist_shaped_fact;
 mod verify_fact_result;

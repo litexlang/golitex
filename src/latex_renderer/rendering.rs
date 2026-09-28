@@ -44,7 +44,7 @@ pub fn to_latex_from_file(file_path: &str) -> Result<String, RuntimeError> {
         Some(target) => to_latex_project_run(&mut runtime, target),
         None => {
             let source = read_source(resolved_path.as_str())?;
-            runtime.start_real_file(resolved_path.as_str());
+            let mut runtime = Runtime::with_real_file(resolved_path.as_str());
             to_latex(source.as_str(), &mut runtime)
         }
     }
@@ -55,8 +55,7 @@ pub fn to_latex_from_source(
     _source_label: &str,
 ) -> Result<String, RuntimeError> {
     let normalized = source_code.replace('\r', "");
-    let mut runtime = Runtime::default();
-    runtime.start_virtual_source(VirtualSource::ToLatex);
+    let mut runtime = Runtime::with_virtual_source(VirtualSource::ToLatex);
     to_latex(normalized.as_str(), &mut runtime)
 }
 

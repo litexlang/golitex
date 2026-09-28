@@ -70,12 +70,11 @@ pub(super) fn run_runtime_contract_suite_impl() {
 fn runtime_contract_builtin() {
     let source_code = "1 = 1";
 
-    let mut import_runtime = Runtime::new(RuntimeOptions::strict(
+    let mut import_runtime = Runtime::new_with_virtual_source(RuntimeOptions::strict(
         OutputDetail::Normal,
         OutputLanguage::English,
         SummaryOption::None,
-    ));
-    import_runtime.start_isolated_source("runtime_contract_import");
+    ), VirtualSource::Named(("runtime_contract_import").into()));
     let (import_stmt_results, import_runtime_error) =
         execute_source(source_code, &mut import_runtime);
     let (import_run_succeeded, import_run_output) =

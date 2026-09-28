@@ -322,10 +322,7 @@ forall z, w C:
     =>:
         fn(x C) R {re(x)}(z) = fn(x C) R {re(w)}(z)
 "#;
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source(
-                "native_complex_congruence_composes_with_structural_beta_reduction",
-            );
+            let mut runtime = Runtime::with_named_source("native_complex_congruence_composes_with_structural_beta_reduction",);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -341,10 +338,7 @@ forall z, w C:
                 "complex congruence should expose structural provenance:\n{run_output}"
             );
 
-            let mut negative_runtime = Runtime::default();
-            negative_runtime.start_isolated_source(
-                "native_complex_congruence_does_not_invent_argument_equality",
-            );
+            let mut negative_runtime = Runtime::with_named_source("native_complex_congruence_does_not_invent_argument_equality",);
             let (negative_results, negative_error) = execute_source(
                 "forall z, w C:\n    C_abs(z) = C_abs(w)",
                 &mut negative_runtime,
@@ -548,8 +542,7 @@ fn complex_python_and_evaluator_paths_fail_explicitly() {
 }
 
 fn run_complex_source(source_code: &str, label: &str) -> (bool, String) {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source(label);
+    let mut runtime = Runtime::with_named_source(label);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     render_run_output(&runtime, &stmt_results, &runtime_error)
 }

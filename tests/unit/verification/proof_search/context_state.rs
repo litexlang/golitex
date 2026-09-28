@@ -123,8 +123,7 @@ fn unknown_atomic_facts_are_not_memoized() {
 }
 
 fn new_test_runtime() -> Runtime {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("proof_search_state_test.lit");
+    let mut runtime = Runtime::with_named_source("proof_search_state_test.lit");
     runtime
 }
 

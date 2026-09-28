@@ -2,8 +2,7 @@ use super::*;
 use crate::test_support::execute_source;
 
 fn run_source(source: &str, label: &str, detailed: bool) -> (Runtime, bool, String) {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source(label);
+    let mut runtime = Runtime::with_named_source(label);
     if detailed {
         runtime.set_output_detail(OutputDetail::Detailed);
     }
@@ -107,8 +106,7 @@ fn real_analysis_builtin_theorems_require_explicit_premises_and_do_not_leak() {
         "a real LUB certificate must not be proved implicitly:\n{output}"
     );
 
-    let mut completeness_runtime = Runtime::default();
-    completeness_runtime.start_isolated_source("real_completeness_no_leak");
+    let mut completeness_runtime = Runtime::with_named_source("real_completeness_no_leak");
     let failed_completeness = "release thm real_least_upper_bound_exists({}, 0)";
     let (results, error) = execute_source(failed_completeness, &mut completeness_runtime);
     let (succeeded, output) = render_run_output(&completeness_runtime, &results, &error);
@@ -142,8 +140,7 @@ fn real_analysis_builtin_theorems_require_explicit_premises_and_do_not_leak() {
         "a real GLB certificate must not be proved implicitly:\n{output}"
     );
 
-    let mut density_runtime = Runtime::default();
-    density_runtime.start_isolated_source("rational_density_no_leak");
+    let mut density_runtime = Runtime::with_named_source("rational_density_no_leak");
     let (results, error) = execute_source(
         "release thm rational_between_reals(1, 0)",
         &mut density_runtime,
@@ -190,8 +187,7 @@ exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}
 
 #[test]
 fn rational_reduced_fraction_builtin_theorem_requires_a_rational_argument_and_does_not_leak() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("rational_reduced_fraction_no_leak");
+    let mut runtime = Runtime::with_named_source("rational_reduced_fraction_no_leak");
     let (setup_results, setup_error) = execute_source("have x R", &mut runtime);
     let (setup_succeeded, setup_output) = render_run_output(&runtime, &setup_results, &setup_error);
     assert!(setup_succeeded, "setup should succeed:\n{setup_output}");
@@ -214,8 +210,7 @@ fn rational_reduced_fraction_builtin_theorem_requires_a_rational_argument_and_do
 
 #[test]
 fn finite_set_builtin_theorems_check_requirements_and_do_not_leak() {
-    let mut subset_runtime = Runtime::default();
-    subset_runtime.start_isolated_source("finite_subset_builtin_no_leak");
+    let mut subset_runtime = Runtime::with_named_source("finite_subset_builtin_no_leak");
     let (setup_results, setup_error) =
         execute_source("have A set\nhave B finite_set = {1}", &mut subset_runtime);
     let (setup_succeeded, setup_output) =
@@ -248,8 +243,7 @@ fn finite_set_builtin_theorems_check_requirements_and_do_not_leak() {
         "a failed subset theorem must not store its conclusion:\n{probe_output}"
     );
 
-    let mut index_runtime = Runtime::default();
-    index_runtime.start_isolated_source("finite_index_builtin_no_leak");
+    let mut index_runtime = Runtime::with_named_source("finite_index_builtin_no_leak");
     let (setup_results, setup_error) = execute_source("have S set", &mut index_runtime);
     let (setup_succeeded, setup_output) =
         render_run_output(&index_runtime, &setup_results, &setup_error);
@@ -274,8 +268,7 @@ fn finite_set_builtin_theorems_check_requirements_and_do_not_leak() {
 
 #[test]
 fn failed_builtin_theorem_call_does_not_leak_its_conclusion() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("builtin_theorem_no_leak");
+    let mut runtime = Runtime::with_named_source("builtin_theorem_no_leak");
     let target = "0 $in {x R: x = 1}";
     let failed_call = format!("release thm set_builder_member(0, {{x R: x = 1}})");
     let (results, error) = execute_source(&failed_call, &mut runtime);

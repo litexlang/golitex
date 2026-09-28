@@ -7,8 +7,7 @@ use crate::result::{
 use crate::runtime::{Runtime, RuntimeOptions};
 
 fn runtime_with_source_context(name: &str) -> Runtime {
-    let mut runtime = Runtime::default();
-    runtime.start_virtual_source(VirtualSource::CodeExtraction);
+    let mut runtime = Runtime::with_virtual_source(VirtualSource::CodeExtraction);
     runtime.set_current_user_lit_file_path(name);
     runtime
 }

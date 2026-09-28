@@ -37,8 +37,7 @@ pub(super) fn extract_code_from_source(
     target: CodeExtractionTarget,
 ) -> Result<String, RuntimeError> {
     let normalized = source_code.replace('\r', "");
-    let mut runtime = Runtime::default();
-    runtime.start_virtual_source(VirtualSource::CodeExtraction);
+    let mut runtime = Runtime::with_virtual_source(VirtualSource::CodeExtraction);
     extract_code(normalized.as_str(), &mut runtime, target)
 }
 
@@ -49,8 +48,7 @@ pub(super) fn extract_code_from_file(
     let resolved_path = resolve_file_path(file_path)?;
     let source = read_source(resolved_path.as_str())?;
     let selected_source = select_marked_source(source.as_str(), resolved_path.as_str())?;
-    let mut runtime = Runtime::default();
-    runtime.start_real_file(resolved_path.as_str());
+    let mut runtime = Runtime::with_real_file(resolved_path.as_str());
     extract_code(selected_source.as_str(), &mut runtime, target)
 }
 

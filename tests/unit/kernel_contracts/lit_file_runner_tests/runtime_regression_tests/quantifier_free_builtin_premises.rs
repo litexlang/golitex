@@ -64,8 +64,7 @@ forall x R:
     =>:
         x $in {y R: y <= 0 or 1 <= y}
 "#;
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("builtin_rules_consume_complete_quantifier_free_premises");
+    let mut runtime = Runtime::with_named_source("builtin_rules_consume_complete_quantifier_free_premises");
     let (results, error) = execute_source(source, &mut runtime);
     let (succeeded, output) = render_run_output(&runtime, &results, &error);
     assert!(
@@ -121,8 +120,7 @@ x $in closed_range(a, b)
 "#,
         ),
     ] {
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source(name);
+        let mut runtime = Runtime::with_named_source(name);
         let (results, error) = execute_source(source, &mut runtime);
         let (succeeded, output) = render_run_output(&runtime, &results, &error);
         assert!(
