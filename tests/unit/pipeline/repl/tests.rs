@@ -1,9 +1,9 @@
 use super::{
-    initialize_isolated_repl_runtime, run_isolated_repl_with_runtime_and_readers,
-    run_latex_repl_loop_with_readers, run_repl_loop_with_readers_and_mode, ReplOutputMode,
+    run_isolated_repl_with_runtime_and_readers, run_latex_repl_loop_with_readers,
+    run_repl_loop_with_readers_and_mode, ReplOutputMode,
 };
 use crate::pipeline::execute_isolated_file_in_runtime;
-use crate::prelude::{OutputDetail, OutputLanguage};
+use crate::prelude::{OutputDetail, OutputLanguage, VirtualSource};
 use crate::runtime::{Runtime, RuntimeOptions, SummaryOption, VerifyStrictnessPolicy};
 use crate::test_support::execute_source;
 use std::fs;
@@ -74,8 +74,7 @@ fn repl_still_executes_single_line_input_immediately() {
 
 #[test]
 fn isolated_repl_uses_the_explicit_repl_source_label() {
-    let mut runtime = Runtime::default();
-    initialize_isolated_repl_runtime(&mut runtime);
+    let runtime = Runtime::with_virtual_source(VirtualSource::Repl);
 
     assert_eq!(runtime.current_file_path_rc().as_ref(), "repl");
 }

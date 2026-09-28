@@ -703,7 +703,7 @@ fn run_litex_run_group(group: LitexRunGroup) -> LitexRunGroupSummary {
         }
 
         if item_index == 0 {
-            *runtime = Runtime::with_named_source(item.path_for_runtime.as_str());
+            runtime = Runtime::with_named_source(item.path_for_runtime.as_str());
         } else {
             runtime.reset_for_isolated_runner_item();
             runtime.set_current_user_lit_file_path(item.path_for_runtime.as_str());

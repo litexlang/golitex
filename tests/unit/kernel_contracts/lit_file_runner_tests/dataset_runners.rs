@@ -218,9 +218,8 @@ fn run_finished_litex_jsonl_dataset(dataset_label: &str, jsonl_path: &Path, labe
     };
 
     let runtime_setup_start = Instant::now();
-    let mut runtime = Runtime::default();
+    let mut runtime = Runtime::with_named_source(jsonl_path_str.as_str());
     let runtime_setup_duration_ms = runtime_setup_start.elapsed().as_secs_f64() * 1000.0;
-    *runtime = Runtime::with_named_source(jsonl_path_str.as_str());
 
     let run_wall_start = Instant::now();
     let mut total_count: usize = 0;

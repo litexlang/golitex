@@ -1,15 +1,14 @@
 use crate::new_pipeline::ast::fact::{
-    AtomicFact, NormalAtomicFact, NotInFact, NotIsCartFact, NotIsFiniteSetFact, NotIsSetFact,
-    NotIsTupleFact, NotNormalAtomicFact, NotSubsetFact, NotSupersetFact,
+    AtomicFact, NotInFact, NotIsCartFact, NotIsFiniteSetFact, NotIsSetFact, NotIsTupleFact,
+    NotSubsetFact, NotSupersetFact,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 use super::search_atomic_except_equality_fact_proof_by_builtin_rule_result::{
-    AtomicExceptEqualityFactSearchProofByBuiltinRule, NormalAtomicFactSearchProofByBuiltinRule,
-    NotInFactSearchProofByBuiltinRule, NotIsCartFactSearchProofByBuiltinRule,
-    NotIsFiniteSetFactSearchProofByBuiltinRule, NotIsSetFactSearchProofByBuiltinRule,
-    NotIsTupleFactSearchProofByBuiltinRule, NotNormalAtomicFactSearchProofByBuiltinRule,
+    AtomicExceptEqualityFactSearchProofByBuiltinRule, NotInFactSearchProofByBuiltinRule,
+    NotIsCartFactSearchProofByBuiltinRule, NotIsFiniteSetFactSearchProofByBuiltinRule,
+    NotIsSetFactSearchProofByBuiltinRule, NotIsTupleFactSearchProofByBuiltinRule,
 };
 
 impl Runtime {
@@ -104,22 +103,6 @@ impl Runtime {
                 .search_not_superset_fact_proof_by_builtin_rule(fact, verify_state)?
                 .map(AtomicExceptEqualityFactSearchProofByBuiltinRule::NotSupersetFact)),
         }
-    }
-
-    pub fn search_normal_atomic_fact_proof_by_builtin_rule(
-        &mut self,
-        _fact: &NormalAtomicFact,
-        _verify_state: VerifyState,
-    ) -> RuntimeResult<Option<NormalAtomicFactSearchProofByBuiltinRule>> {
-        Ok(None)
-    }
-
-    pub fn search_not_normal_atomic_fact_proof_by_builtin_rule(
-        &mut self,
-        _fact: &NotNormalAtomicFact,
-        _verify_state: VerifyState,
-    ) -> RuntimeResult<Option<NotNormalAtomicFactSearchProofByBuiltinRule>> {
-        Ok(None)
     }
 
     pub fn search_not_is_set_fact_proof_by_builtin_rule(

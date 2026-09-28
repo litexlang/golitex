@@ -23,11 +23,21 @@ LITEX_NEW_PIPELINE=1 target/release/litex -f <this-file>
 Exit 0 is enough. No requirement to assert which `searched_proof` variant won.
 
 Stub / not-yet-wired nodes are **omitted** (no SKIP placeholders).
-Still open (non-rewrite): empty atomic builtin-rule families (`NormalAtomic` /
-several remaining `Not*`); more exist builtins;
+Still open (non-rewrite): several remaining `Not*` atomic builtin-rule families;
 MatchingOneArgByOne beyond the traced constructors;
 deeper aggregate (sum split / bijective reindex); nested-mod algebra;
 complex `re`/`img` equalities; richer `!=`.
+Wave3 exist builtins: `RationalIntegerRatio`, `IntegerMultipleFromZeroRemainder`,
+`ArchimedeanReciprocal`, `RealDensityMidpoint` — see
+`exist/by_builtin_rule/`. Skipped green tracer for
+`RationalPositiveDenominator`: exist-body WD of `a / b` with binders `a, b Z`
+fails because sibling `b > 0` is not assumed during WD (use `Z*` ratio form).
+Wave3 NormalAtomic computation: `$prime` / `not $prime` / `$coprime` /
+`not $coprime` on closed nonnegative integers — see
+`prime_by_computation.lit`, `not_prime_by_computation.lit`,
+`coprime_by_computation.lit`, `not_coprime_by_computation.lit`.
+`by def $prime(n)` still needs its trial-divisor forall; computation does not
+discharge that obligation (honest skip for trust-free by-definition prime).
 NotSubset / NotSuperset duality (A7): known `not B $superset A` proves
 `not A $subset B`, and known `not B $subset A` proves `not A $superset B` —
 see `not_subset_from_known_not_superset.lit`,
@@ -194,7 +204,9 @@ atomic/       ByBuiltinRule (incl. NotIn closed/list/intersect/union/set_minus;
               closure; LessEqual abs + add/sub/mul order algebra + triangle/
               reverse-triangle/sandwich; Subset list-set/union/intersect from
               members or operand upper bounds + power-set/set-minus/cart/
-              transitivity secondary leaves; Greater from known less), KnownAtomicFact,
+              transitivity secondary leaves; Greater from known less;
+              NormalAtomic `$prime`/`$coprime` + `not $prime`/`not $coprime`
+              by closed-integer computation), KnownAtomicFact,
               ByDefinition (user prop + builtin official defs; see
               atomic/by_definition/ and src/.../by_definition_design.md),
               BuiltinStrategy (atomic family: additive_sign / nonzero /
@@ -205,7 +217,9 @@ atomic/       ByBuiltinRule (incl. NotIn closed/list/intersect/union/set_minus;
               KnownRewrite (Reflexivity/Symmetry)
 and/          per-component verify
 chain/        adjacent order / equality
-exist/        ByBuiltinRule (real-line, equality-from-membership, nonempty-member),
+exist/        ByBuiltinRule (real-line, equality-from-membership, nonempty-member,
+              rational Z* ratio, integer multiple from rem=0, Archimedean
+              reciprocal, real density midpoint),
               KnownExist, KnownForall
 forall/       introduce → assume → then
 forall_iff/   both directions

@@ -1,0 +1,6 @@
+# Node: atomic.ByBuiltinRule.NotNormalAtomic.NotPrimeByComputation
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/not_prime_by_computation.lit
+
+not $prime(0)
+not $prime(1)
+not $prime(9)

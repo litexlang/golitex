@@ -1,21 +1,22 @@
 //! Set-construction object WD.
 //! Light legacy requirements: CartDim/Proj/TupleDim, ListSet pairwise !=,
 //! FiniteSetSize/Max/Min, Interval/Ray in R, Index*/IndexCart `$is_set` +
-//! family ∈ FnSet (registration half). Union/PowerSet/Cart/Tuple stay children-only.
+//! family `$in fn(...)` full type check. Union/PowerSet/Cart/Tuple stay children-only.
 
 use super::entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
 use super::fail_to_verify_obj_well_defined::*;
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use super::obj_well_defined_proof_by_def::*;
 use crate::new_pipeline::ast::fact::{
-    AtomicFact, IsCartFact, IsTupleFact, LessEqualFact, NotEqualFact,
+    AtomicFact, InFact, IsCartFact, IsTupleFact, LessEqualFact, NotEqualFact,
 };
 use crate::new_pipeline::ast::obj::{
-    FamilyIntersect, FamilyUnion, Cart, CartDim, FiniteSetMax, FiniteSetMin, FiniteSetSize,
-    IndexCart, IndexIntersect, IndexUnion, Intersect, IntervalObj, IntervalObjStruct, ListSet, Obj,
-    OneSideInfinityIntervalObj, PowerSet, ProductShape, Proj, SetMinus, SetOperator, StandardSet,
-    Tuple, TupleDim, Union,
+    FamilyIntersect, FamilyUnion, Cart, CartDim, FiniteSetMax, FiniteSetMin, FiniteSetSize, FnSet,
+    FunctionSpace, IndexCart, IndexIntersect, IndexUnion, Intersect, IntervalObj, IntervalObjStruct,
+    ListSet, Obj, OneSideInfinityIntervalObj, PowerSet, ProductShape, Proj, SetMinus, SetOperator,
+    StandardSet, Tuple, TupleDim, Union,
 };
+use crate::new_pipeline::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
@@ -67,34 +68,25 @@ impl Runtime {
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_unary_obj_well_definedness_by_def(value.left.as_ref(), verify_state)
     }
-    // index_union(I, X, A): children, `$is_set(I)`, `$is_set(X)`, then A ∈ some FnSet.
+    // index_union(I, X, A): children, `$is_set(I)`, `$is_set(X)`, then
+    // `A $in fn(k I) power_set(X)`.
     // Example: after `let A = fn(k {1}) power_set(N) {{1}}`, `index_union({1}, N, A)` is WD.
-    // Full legacy also checks `A $in fn(k I) power_set(X)` (deferred).
     pub(super) fn verify_index_union_obj_well_definedness(
         &mut self,
         value: &IndexUnion,
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyObjWellDefinedResult> {
         let root = Obj::SetOperator(SetOperator::IndexUnion(value.clone()));
-        let stages = self.verify_index_union_obj_well_definedness_by_def(value, verify_state.clone())?;
+        let stages =
+            self.verify_index_union_obj_well_definedness_by_def(value, verify_state.clone())?;
         if !stages.is_fully_known() {
             return Ok(VerifyObjWellDefinedResult::Failed {
                 obj: root,
                 reason: FailToVerifyObjWellDefinedResult::SetOperator(
                     FailToVerifySetOperatorObjWellDefinedResult::IndexUnion(
-                        FailToVerifyIndexUnionObjWellDefined::Domain(
-                            stages.into_common_fail(&Obj::SetOperator(SetOperator::IndexUnion(value.clone()))),
-                        ),
-                    ),
-                ),
-            });
-        }
-        if !self.obj_has_in_function_set(value.family_fn.as_ref()) {
-            return Ok(VerifyObjWellDefinedResult::Failed {
-                obj: root,
-                reason: FailToVerifyObjWellDefinedResult::SetOperator(
-                    FailToVerifySetOperatorObjWellDefinedResult::IndexUnion(
-                        FailToVerifyIndexUnionObjWellDefined::NotInFunctionSet,
+                        FailToVerifyIndexUnionObjWellDefined::Domain(stages.into_common_fail(
+                            &Obj::SetOperator(SetOperator::IndexUnion(value.clone())),
+                        )),
                     ),
                 ),
             });
@@ -136,13 +128,35 @@ impl Runtime {
         )?);
         reqs.push(self.require_is_set(
             value.ambient_set.as_ref(),
-            verify_state,
+            verify_state.clone(),
             format!("index_union: ambient {} is not a set", value.ambient_set.ir()),
+        )?);
+        let family_type = self.fresh_indexed_family_fn_set(
+            value.index_set.as_ref().clone(),
+            Obj::SetOperator(SetOperator::PowerSet(PowerSet {
+                set: value.ambient_set.clone(),
+            })),
+        );
+        let membership = AtomicFact::InFact(InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: value.family_fn.as_ref().clone(),
+            set: Obj::FunctionSpace(FunctionSpace::FnSet(family_type)),
+            line_file: None,
+        });
+        reqs.push(self.verify_required_atomic_fact(
+            membership,
+            verify_state,
+            format!(
+                "index_union: family {} is not in fn(k {}) power_set({})",
+                value.family_fn.ir(),
+                value.index_set.ir(),
+                value.ambient_set.ir()
+            ),
         )?);
         Ok(self.with_requirements(proof, reqs))
     }
 
-    // index_intersect: same `$is_set` + family ∈ FnSet half as index_union.
+    // index_intersect: same `$is_set` + `family $in fn(k I) power_set(X)` as index_union.
     pub(super) fn verify_index_intersect_obj_well_definedness(
         &mut self,
         value: &IndexIntersect,
@@ -156,19 +170,9 @@ impl Runtime {
                 obj: root,
                 reason: FailToVerifyObjWellDefinedResult::SetOperator(
                     FailToVerifySetOperatorObjWellDefinedResult::IndexIntersect(
-                        FailToVerifyIndexIntersectObjWellDefined::Domain(
-                            stages.into_common_fail(&Obj::SetOperator(SetOperator::IndexIntersect(value.clone()))),
-                        ),
-                    ),
-                ),
-            });
-        }
-        if !self.obj_has_in_function_set(value.family_fn.as_ref()) {
-            return Ok(VerifyObjWellDefinedResult::Failed {
-                obj: root,
-                reason: FailToVerifyObjWellDefinedResult::SetOperator(
-                    FailToVerifySetOperatorObjWellDefinedResult::IndexIntersect(
-                        FailToVerifyIndexIntersectObjWellDefined::NotInFunctionSet,
+                        FailToVerifyIndexIntersectObjWellDefined::Domain(stages.into_common_fail(
+                            &Obj::SetOperator(SetOperator::IndexIntersect(value.clone())),
+                        )),
                     ),
                 ),
             });
@@ -213,9 +217,31 @@ impl Runtime {
         )?);
         reqs.push(self.require_is_set(
             value.ambient_set.as_ref(),
-            verify_state,
+            verify_state.clone(),
             format!(
                 "index_intersect: ambient {} is not a set",
+                value.ambient_set.ir()
+            ),
+        )?);
+        let family_type = self.fresh_indexed_family_fn_set(
+            value.index_set.as_ref().clone(),
+            Obj::SetOperator(SetOperator::PowerSet(PowerSet {
+                set: value.ambient_set.clone(),
+            })),
+        );
+        let membership = AtomicFact::InFact(InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: value.family_fn.as_ref().clone(),
+            set: Obj::FunctionSpace(FunctionSpace::FnSet(family_type)),
+            line_file: None,
+        });
+        reqs.push(self.verify_required_atomic_fact(
+            membership,
+            verify_state,
+            format!(
+                "index_intersect: family {} is not in fn(k {}) power_set({})",
+                value.family_fn.ir(),
+                value.index_set.ir(),
                 value.ambient_set.ir()
             ),
         )?);
@@ -228,9 +254,10 @@ impl Runtime {
     ) -> RuntimeResult<ObjWellDefinedByDefCommonStages> {
         self.verify_unary_obj_well_definedness_by_def(value.set.as_ref(), verify_state)
     }
-    // index_cart(I, S, g): children, `$is_set(I)`, `$is_nonempty_set(S)`, then g ∈ FnSet.
-    // Example: after `let g = fn(alpha {1}) power_set(N) {{1}}`, `index_cart({1}, power_set(N), g)` is WD.
-    // Full legacy also checks `g $in fn(alpha I) S` (deferred).
+    // index_cart(I, S, g): children, `$is_set(I)`, `$is_nonempty_set(S)`, then
+    // `g $in fn(alpha I) S`.
+    // Example: after `let g = fn(alpha {1}) power_set(N) {{1}}`,
+    // `index_cart({1}, power_set(N), g)` is WD.
     pub(super) fn verify_index_cart_obj_well_definedness(
         &mut self,
         value: &IndexCart,
@@ -244,19 +271,9 @@ impl Runtime {
                 obj: root,
                 reason: FailToVerifyObjWellDefinedResult::SetOperator(
                     FailToVerifySetOperatorObjWellDefinedResult::IndexCart(
-                        FailToVerifyIndexCartObjWellDefined::Domain(
-                            stages.into_common_fail(&Obj::SetOperator(SetOperator::IndexCart(value.clone()))),
-                        ),
-                    ),
-                ),
-            });
-        }
-        if !self.obj_has_in_function_set(value.family_fn.as_ref()) {
-            return Ok(VerifyObjWellDefinedResult::Failed {
-                obj: root,
-                reason: FailToVerifyObjWellDefinedResult::SetOperator(
-                    FailToVerifySetOperatorObjWellDefinedResult::IndexCart(
-                        FailToVerifyIndexCartObjWellDefined::NotInFunctionSet,
+                        FailToVerifyIndexCartObjWellDefined::Domain(stages.into_common_fail(
+                            &Obj::SetOperator(SetOperator::IndexCart(value.clone())),
+                        )),
                     ),
                 ),
             });
@@ -301,13 +318,47 @@ impl Runtime {
         )?);
         reqs.push(self.require_is_nonempty_set(
             value.family_set.as_ref(),
-            verify_state,
+            verify_state.clone(),
             format!(
                 "index_cart: family {} is not a nonempty set",
                 value.family_set.ir()
             ),
         )?);
+        let family_type = self.fresh_indexed_family_fn_set(
+            value.index_set.as_ref().clone(),
+            value.family_set.as_ref().clone(),
+        );
+        let membership = AtomicFact::InFact(InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: value.family_fn.as_ref().clone(),
+            set: Obj::FunctionSpace(FunctionSpace::FnSet(family_type)),
+            line_file: None,
+        });
+        reqs.push(self.verify_required_atomic_fact(
+            membership,
+            verify_state,
+            format!(
+                "index_cart: family {} is not in fn(alpha {}) {}",
+                value.family_fn.ir(),
+                value.index_set.ir(),
+                value.family_set.ir()
+            ),
+        )?);
         Ok(self.with_requirements(proof, reqs))
+    }
+
+    fn fresh_indexed_family_fn_set(&mut self, index_set: Obj, ret_set: Obj) -> FnSet {
+        let param = self.fresh_internal_param();
+        FnSet {
+            set_bound_parameters: SetBoundParameterList {
+                groups: vec![SetBoundParameterGroup {
+                    params: vec![param],
+                    param_type: Box::new(index_set),
+                }],
+            },
+            dom_facts: vec![],
+            ret_set: Box::new(ret_set),
+        }
     }
 
     // list set: children, then pairwise != among elements.

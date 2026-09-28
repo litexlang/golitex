@@ -76,6 +76,11 @@ Positive tracers (no trust), under `atomic/by_definition/`:
 - `ambient_prop_expand.lit` — user `prop` fork
 - `builtin_subset.lit` / `builtin_superset.lit` — standard-set inclusion
 - `builtin_coprime.lit` — literal gcd-one
+- `$prime` / `$coprime` closed-integer computation (not by-definition):
+  `atomic/by_builtin_rule/prime_by_computation.lit`,
+  `not_prime_by_computation.lit`, `coprime_by_computation.lit`,
+  `not_coprime_by_computation.lit`. Trust-free `by def $prime(n)` remains
+  blocked on the trial-divisor forall obligation.
 - `builtin_dvd.lit` — rem-zero + multiple witness
 
 Unit tests also cover `$proper_*` with trusted obligations, and assert that

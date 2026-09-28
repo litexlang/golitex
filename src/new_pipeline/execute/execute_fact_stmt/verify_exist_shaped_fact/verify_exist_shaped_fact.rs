@@ -1,8 +1,11 @@
 use crate::new_pipeline::ast::fact::{
     exist_shaped_fact_from_fact, exist_shaped_fact_to_fact, exist_shaped_fact_free_args_ref,
-    exist_shaped_fact_id, ExistShapedFact, Fact, InFact, IsNonemptySetFact,
+    exist_shaped_fact_id, EqualFact, ExistShapedFact, Fact, InFact, IsNonemptySetFact, LessFact,
+    NotEqualFact,
 };
-use crate::new_pipeline::ast::obj::{Obj, StandardSet};
+use crate::new_pipeline::ast::obj::{
+    IntegerOperator, Literal, Mod, Number, Obj, StandardSet,
+};
 use crate::new_pipeline::exec_env::exist_shaped_fact_index_key::{
     exist_shaped_fact_alpha_match_key, exist_shaped_fact_can_prove_goal,
     exist_shaped_fact_known_lookup_keys,
@@ -13,15 +16,20 @@ use crate::new_pipeline::exec_env::known_forall_conclusion_memory::{
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::match_forall_conclusion_args::subst_from_ordered_params;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_shaped_fact::helper::{
-    equality_witness_from_membership_parts, nonempty_set_member_witness_set,
-    real_line_comparison_free_operands,
+    archimedean_reciprocal_bound, equality_witness_from_membership_parts,
+    integer_multiple_from_zero_remainder_operands, nonempty_set_member_witness_set,
+    rational_integer_ratio_free_operand, rational_positive_denominator_free_operand,
+    real_density_midpoint_endpoints, real_line_comparison_free_operands,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_exist_shaped_fact::result::{
     exist_shaped_fact_result_from_search_fail, exist_shaped_fact_result_from_success,
-    exist_shaped_fact_result_from_wd_fail, ExistShapedBuiltinEqualityWitnessFromMembership,
-    ExistShapedBuiltinNonemptySetMemberWitness, ExistShapedBuiltinRealLineComparisonWitness,
-    ExistShapedFactSearchProofByBuiltinRule, ExistShapedFactSearchProofByKnownExistShapedFact,
-    ExistShapedFactSearchedProof,
+    exist_shaped_fact_result_from_wd_fail, ExistShapedBuiltinArchimedeanReciprocal,
+    ExistShapedBuiltinEqualityWitnessFromMembership,
+    ExistShapedBuiltinIntegerMultipleFromZeroRemainder,
+    ExistShapedBuiltinNonemptySetMemberWitness, ExistShapedBuiltinRationalIntegerRatio,
+    ExistShapedBuiltinRationalPositiveDenominator, ExistShapedBuiltinRealDensityMidpoint,
+    ExistShapedBuiltinRealLineComparisonWitness, ExistShapedFactSearchProofByBuiltinRule,
+    ExistShapedFactSearchProofByKnownExistShapedFact, ExistShapedFactSearchedProof,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::{
@@ -100,10 +108,45 @@ impl Runtime {
             ));
         }
         if let Some(proof) =
-            self.search_exist_builtin_nonempty_set_member_witness(fact, verify_state)?
+            self.search_exist_builtin_nonempty_set_member_witness(fact, verify_state.clone())?
         {
             return Ok(Some(
                 ExistShapedFactSearchProofByBuiltinRule::NonemptySetMemberWitness(proof),
+            ));
+        }
+        if let Some(proof) =
+            self.search_exist_builtin_rational_positive_denominator(fact, verify_state.clone())?
+        {
+            return Ok(Some(
+                ExistShapedFactSearchProofByBuiltinRule::RationalPositiveDenominator(proof),
+            ));
+        }
+        if let Some(proof) =
+            self.search_exist_builtin_rational_integer_ratio(fact, verify_state.clone())?
+        {
+            return Ok(Some(
+                ExistShapedFactSearchProofByBuiltinRule::RationalIntegerRatio(proof),
+            ));
+        }
+        if let Some(proof) = self
+            .search_exist_builtin_integer_multiple_from_zero_remainder(fact, verify_state.clone())?
+        {
+            return Ok(Some(
+                ExistShapedFactSearchProofByBuiltinRule::IntegerMultipleFromZeroRemainder(proof),
+            ));
+        }
+        if let Some(proof) =
+            self.search_exist_builtin_archimedean_reciprocal(fact, verify_state.clone())?
+        {
+            return Ok(Some(
+                ExistShapedFactSearchProofByBuiltinRule::ArchimedeanReciprocal(proof),
+            ));
+        }
+        if let Some(proof) =
+            self.search_exist_builtin_real_density_midpoint(fact, verify_state)?
+        {
+            return Ok(Some(
+                ExistShapedFactSearchProofByBuiltinRule::RealDensityMidpoint(proof),
             ));
         }
         Ok(None)
@@ -199,6 +242,199 @@ impl Runtime {
         }
         Ok(Some(ExistShapedBuiltinNonemptySetMemberWitness {
             nonempty_proof,
+        }))
+    }
+
+    // Builtin: rational positive-denominator representation.
+    // See ExistShapedBuiltinRationalPositiveDenominator.
+    fn search_exist_builtin_rational_positive_denominator(
+        &mut self,
+        fact: &ExistShapedFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<ExistShapedBuiltinRationalPositiveDenominator>> {
+        let Some(rational) = rational_positive_denominator_free_operand(fact) else {
+            return Ok(None);
+        };
+        let line_file = fact.plain().line_file.clone();
+        let child_state = verify_state.without_well_defined_storage();
+        let premise: Fact = InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: rational,
+            set: Obj::StandardSet(StandardSet::Q),
+            line_file,
+        }
+        .into();
+        let rational_membership_proof = self.verify_fact(&premise, child_state)?;
+        if rational_membership_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(ExistShapedBuiltinRationalPositiveDenominator {
+            rational_membership_proof,
+        }))
+    }
+
+    // Builtin: rational integer / nonzero-integer ratio.
+    // See ExistShapedBuiltinRationalIntegerRatio.
+    fn search_exist_builtin_rational_integer_ratio(
+        &mut self,
+        fact: &ExistShapedFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<ExistShapedBuiltinRationalIntegerRatio>> {
+        let Some(rational) = rational_integer_ratio_free_operand(fact) else {
+            return Ok(None);
+        };
+        let line_file = fact.plain().line_file.clone();
+        let child_state = verify_state.without_well_defined_storage();
+        let premise: Fact = InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: rational,
+            set: Obj::StandardSet(StandardSet::Q),
+            line_file,
+        }
+        .into();
+        let rational_membership_proof = self.verify_fact(&premise, child_state)?;
+        if rational_membership_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(ExistShapedBuiltinRationalIntegerRatio {
+            rational_membership_proof,
+        }))
+    }
+
+    // Builtin: zero remainder ⇒ integer multiple.
+    // See ExistShapedBuiltinIntegerMultipleFromZeroRemainder.
+    fn search_exist_builtin_integer_multiple_from_zero_remainder(
+        &mut self,
+        fact: &ExistShapedFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<ExistShapedBuiltinIntegerMultipleFromZeroRemainder>> {
+        let Some((dividend, divisor)) = integer_multiple_from_zero_remainder_operands(fact) else {
+            return Ok(None);
+        };
+        let line_file = fact.plain().line_file.clone();
+        let child_state = verify_state.without_well_defined_storage();
+        let zero = Obj::Literal(Literal::Number(Number {
+            normalized_value: "0".to_string(),
+        }));
+        let requirement_facts: Vec<Fact> = vec![
+            InFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                element: dividend.clone(),
+                set: Obj::StandardSet(StandardSet::Z),
+                line_file: line_file.clone(),
+            }
+            .into(),
+            InFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                element: divisor.clone(),
+                set: Obj::StandardSet(StandardSet::Z),
+                line_file: line_file.clone(),
+            }
+            .into(),
+            NotEqualFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: divisor.clone(),
+                right: zero.clone(),
+                line_file: line_file.clone(),
+            }
+            .into(),
+            EqualFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: Obj::IntegerOperator(IntegerOperator::Mod(Mod {
+                    left: Box::new(dividend),
+                    right: Box::new(divisor),
+                })),
+                right: zero,
+                line_file,
+            }
+            .into(),
+        ];
+        let mut proof_of_requirement_facts = Vec::with_capacity(requirement_facts.len());
+        for premise in &requirement_facts {
+            let proof = self.verify_fact(premise, child_state.clone())?;
+            if proof.is_failed() {
+                return Ok(None);
+            }
+            proof_of_requirement_facts.push(proof);
+        }
+        Ok(Some(ExistShapedBuiltinIntegerMultipleFromZeroRemainder {
+            requirement_facts,
+            proof_of_requirement_facts,
+        }))
+    }
+
+    // Builtin: Archimedean reciprocal bound. See ExistShapedBuiltinArchimedeanReciprocal.
+    fn search_exist_builtin_archimedean_reciprocal(
+        &mut self,
+        fact: &ExistShapedFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<ExistShapedBuiltinArchimedeanReciprocal>> {
+        let Some(bound) = archimedean_reciprocal_bound(fact) else {
+            return Ok(None);
+        };
+        let line_file = fact.plain().line_file.clone();
+        let child_state = verify_state.without_well_defined_storage();
+        let premise: Fact = InFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            element: bound,
+            set: Obj::StandardSet(StandardSet::RPos),
+            line_file,
+        }
+        .into();
+        let positive_bound_proof = self.verify_fact(&premise, child_state)?;
+        if positive_bound_proof.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(ExistShapedBuiltinArchimedeanReciprocal {
+            positive_bound_proof,
+        }))
+    }
+
+    // Builtin: real density midpoint. See ExistShapedBuiltinRealDensityMidpoint.
+    fn search_exist_builtin_real_density_midpoint(
+        &mut self,
+        fact: &ExistShapedFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<ExistShapedBuiltinRealDensityMidpoint>> {
+        let Some((left, right)) = real_density_midpoint_endpoints(fact) else {
+            return Ok(None);
+        };
+        let line_file = fact.plain().line_file.clone();
+        let child_state = verify_state.without_well_defined_storage();
+        let requirement_facts: Vec<Fact> = vec![
+            InFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                element: left.clone(),
+                set: Obj::StandardSet(StandardSet::R),
+                line_file: line_file.clone(),
+            }
+            .into(),
+            InFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                element: right.clone(),
+                set: Obj::StandardSet(StandardSet::R),
+                line_file: line_file.clone(),
+            }
+            .into(),
+            LessFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left,
+                right,
+                line_file,
+            }
+            .into(),
+        ];
+        let mut proof_of_requirement_facts = Vec::with_capacity(requirement_facts.len());
+        for premise in &requirement_facts {
+            let proof = self.verify_fact(premise, child_state.clone())?;
+            if proof.is_failed() {
+                return Ok(None);
+            }
+            proof_of_requirement_facts.push(proof);
+        }
+        Ok(Some(ExistShapedBuiltinRealDensityMidpoint {
+            requirement_facts,
+            proof_of_requirement_facts,
         }))
     }
 

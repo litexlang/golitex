@@ -73,7 +73,8 @@ Rules:
 
 - `project_stmt_normal(result, runtime) -> JsonValue`
 - `project_run_normal(run, runtime, target, path) -> JsonValue`
-- `print_run_outcome_normal(outcome)` — used by new_pipeline launch
+- `emit_run_normal(run, runtime, target, path) -> String` — used when
+  attaching `normal_json` on `-e` / `-f` (printed by new_pipeline launch)
 
 Projection needs a live `Runtime` so cite `FactId`s can resolve to
 `readable_string` text.
