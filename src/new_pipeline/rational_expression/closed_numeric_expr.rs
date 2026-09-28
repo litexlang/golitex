@@ -10,9 +10,14 @@
 //!
 //! It has no free identifiers, trig / set ops, or other Obj constructors.
 //!
-//! Examples that are closed: `2`, `2^3/7 + 10 * 2.5`, `abs(-3)`, `3!`,
+//! Simple closed examples: `2`, `2^3/7 + 10 * 2.5`, `abs(-3)`, `3!`,
 //! `gcd(12, 8)`, `sqrt(4)`, `log(2, 8)`.
-//! Examples that are not: `a + 1`, `2.5 % 1`, `sin(0)`.
+//! Complex nested closed examples (run these tracers):
+//!   `examples/new_pipeline/proof_nodes/equal/by_builtin_rule/calculation_closed_decimal_complex_nested.lit`
+//!   `examples/new_pipeline/stmt_nodes/command/eval_closed_numeric_complex.lit`
+//! e.g. `sqrt(4) * log(2, 8) + floor(2.5)! = 8`,
+//!      `((-7) % 3)^log(2, 4) + sqrt(0.36) = 4.6`.
+//! Examples that are not closed: `a + 1`, `2.5 % 1`, `sin(0)`, `sqrt(2)` (fold fails).
 //!
 //! Obj still owns the language surface. This enum is a classified view:
 //! try_from_obj succeeds only after the closed-numeric check, so a value of

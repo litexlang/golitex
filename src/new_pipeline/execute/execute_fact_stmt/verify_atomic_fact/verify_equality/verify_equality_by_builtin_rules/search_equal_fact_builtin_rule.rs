@@ -119,6 +119,22 @@ impl Runtime {
         {
             return Ok(Some(map_equality_identities_wave9_proof(proof)));
         }
+        if let Some(proof) = self
+            .search_equal_fact_builtin_rule_equality_identities_wave10(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(map_equality_identities_wave10_proof(proof)));
+        }
+        if let Some(proof) = self
+            .search_equal_fact_builtin_rule_equality_identities_wave11(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(map_equality_identities_wave11_proof(proof)));
+        }
         if let Some(proof) =
             self.search_equal_fact_builtin_rule_inverse_trig(fact, verify_state)?
         {
@@ -308,6 +324,54 @@ fn map_equality_identities_wave9_proof(
             EqualitySearchProofByBuiltinRule::EmptySetFromNotNonempty(p)
         }
         W::PowerSetFiniteSetSize(p) => EqualitySearchProofByBuiltinRule::PowerSetFiniteSetSize(p),
+        W::UnionAssociative(p) => EqualitySearchProofByBuiltinRule::UnionAssociative(p),
+        W::IntersectAssociative(p) => EqualitySearchProofByBuiltinRule::IntersectAssociative(p),
+        W::IntersectUnionDistributive(p) => {
+            EqualitySearchProofByBuiltinRule::IntersectUnionDistributive(p)
+        }
+        W::SetMinusUnionDeMorgan(p) => EqualitySearchProofByBuiltinRule::SetMinusUnionDeMorgan(p),
+        W::SetMinusIntersectDeMorgan(p) => {
+            EqualitySearchProofByBuiltinRule::SetMinusIntersectDeMorgan(p)
+        }
+        W::IntersectSetMinusSelfEmpty(p) => {
+            EqualitySearchProofByBuiltinRule::IntersectSetMinusSelfEmpty(p)
+        }
+    }
+}
+
+fn map_equality_identities_wave10_proof(
+    proof: super::by_equality_identities_wave10::EqualityIdentitiesWave10BuiltinRuleProof,
+) -> EqualitySearchProofByBuiltinRule {
+    use super::by_equality_identities_wave10::EqualityIdentitiesWave10BuiltinRuleProof as W;
+    match proof {
+        W::FiniteSetSumEmpty(p) => EqualitySearchProofByBuiltinRule::FiniteSetSumEmpty(p),
+        W::FiniteSetProductEmpty(p) => EqualitySearchProofByBuiltinRule::FiniteSetProductEmpty(p),
+        W::FiniteSetReduceEmpty(p) => EqualitySearchProofByBuiltinRule::FiniteSetReduceEmpty(p),
+        W::ReduceEmpty(p) => EqualitySearchProofByBuiltinRule::ReduceEmpty(p),
+        W::SumEmptyRange(p) => EqualitySearchProofByBuiltinRule::SumEmptyRange(p),
+        W::ProductEmptyRange(p) => EqualitySearchProofByBuiltinRule::ProductEmptyRange(p),
+    }
+}
+
+
+fn map_equality_identities_wave11_proof(
+    proof: super::by_equality_identities_wave11::EqualityIdentitiesWave11BuiltinRuleProof,
+) -> EqualitySearchProofByBuiltinRule {
+    use super::by_equality_identities_wave11::EqualityIdentitiesWave11BuiltinRuleProof as W;
+    match proof {
+        W::UnionAbsorptionFromSubset(p) => EqualitySearchProofByBuiltinRule::UnionAbsorptionFromSubset(p),
+        W::SetMinusRecoversSubset(p) => EqualitySearchProofByBuiltinRule::SetMinusRecoversSubset(p),
+        W::EmptySetFromSizeZero(p) => EqualitySearchProofByBuiltinRule::EmptySetFromSizeZero(p),
+        W::CartProjFactor(p) => EqualitySearchProofByBuiltinRule::CartProjFactor(p),
+        W::TupleComponentAtIndex(p) => EqualitySearchProofByBuiltinRule::TupleComponentAtIndex(p),
+        W::FiniteSetSizeSetMinus(p) => EqualitySearchProofByBuiltinRule::FiniteSetSizeSetMinus(p),
+        W::FiniteSetSizeUnion(p) => EqualitySearchProofByBuiltinRule::FiniteSetSizeUnion(p),
+        W::ClosedRangeSingletonListSet(p) => EqualitySearchProofByBuiltinRule::ClosedRangeSingletonListSet(p),
+        W::SumSingleTerm(p) => EqualitySearchProofByBuiltinRule::SumSingleTerm(p),
+        W::ProductSingleTerm(p) => EqualitySearchProofByBuiltinRule::ProductSingleTerm(p),
+        W::ReduceAddZeroEqualsSum(p) => EqualitySearchProofByBuiltinRule::ReduceAddZeroEqualsSum(p),
+        W::FiniteSetReduceAddZeroEqualsSum(p) => EqualitySearchProofByBuiltinRule::FiniteSetReduceAddZeroEqualsSum(p),
+        W::PowOfLogInverse(p) => EqualitySearchProofByBuiltinRule::PowOfLogInverse(p),
     }
 }
 

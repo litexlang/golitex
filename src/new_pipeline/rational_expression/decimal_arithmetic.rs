@@ -4,6 +4,12 @@ use crate::new_pipeline::rational_expression::helper::{
     count_closed_range_integer_endpoints, count_half_open_range_integer_endpoints,
 };
 
+// Fold a closed numeric Obj tree to a normalized decimal Number.
+// Supports arithmetic ops, integer-domain `% quot gcd lcm !`, and foldable
+// `sqrt` / `log` (perfect square / integer power).
+// Complex nested examples (must keep working):
+//   examples/.../calculation_closed_decimal_complex_nested.lit
+//   e.g. `sqrt(4) * log(2, 8) + floor(2.5)!`, `((-7) % 3)^log(2, 4) + sqrt(0.36)`.
 pub fn evaluate_obj_to_normalized_decimal_number(obj: &Obj) -> Option<Number> {
     match obj {
         Obj::Literal(Literal::Number(number)) => Some(number.clone()),
@@ -53,6 +59,12 @@ pub fn evaluate_obj_to_normalized_decimal_number(obj: &Obj) -> Option<Number> {
         Obj::IntegerOperator(IntegerOperator::Mod(mod_obj)) => {
             let left = evaluate_obj_to_normalized_decimal_number(&mod_obj.left)?;
             let right = evaluate_obj_to_normalized_decimal_number(&mod_obj.right)?;
+            if !normalized_decimal_str_is_integer(&left.normalized_value)
+                || !normalized_decimal_str_is_integer(&right.normalized_value)
+                || normalize_decimal_number_string(&right.normalized_value) == "0"
+            {
+                return None;
+            }
             Some(Number::new(mod_decimal_str_and_normalize(
                 &left.normalized_value,
                 &right.normalized_value,
@@ -61,6 +73,12 @@ pub fn evaluate_obj_to_normalized_decimal_number(obj: &Obj) -> Option<Number> {
         Obj::IntegerOperator(IntegerOperator::Quot(quot)) => {
             let left = evaluate_obj_to_normalized_decimal_number(&quot.left)?;
             let right = evaluate_obj_to_normalized_decimal_number(&quot.right)?;
+            if !normalized_decimal_str_is_integer(&left.normalized_value)
+                || !normalized_decimal_str_is_non_negative_integer(&right.normalized_value)
+                || normalize_decimal_number_string(&right.normalized_value) == "0"
+            {
+                return None;
+            }
             Some(Number::new(quot_decimal_str_and_normalize(
                 &left.normalized_value,
                 &right.normalized_value,
@@ -109,6 +127,16 @@ pub fn evaluate_obj_to_normalized_decimal_number(obj: &Obj) -> Option<Number> {
                 return None;
             }
             Some(Number::new("0".to_string()))
+        }
+        Obj::ExpLogOperator(ExpLogOperator::Sqrt(sqrt)) => {
+            let argument = evaluate_obj_to_normalized_decimal_number(&sqrt.arg)?;
+            sqrt_decimal_str_and_normalize(&argument.normalized_value).map(Number::new)
+        }
+        Obj::ExpLogOperator(ExpLogOperator::Log(log)) => {
+            let base = evaluate_obj_to_normalized_decimal_number(&log.base)?;
+            let argument = evaluate_obj_to_normalized_decimal_number(&log.arg)?;
+            log_integer_power_decimal_str(&base.normalized_value, &argument.normalized_value)
+                .map(Number::new)
         }
         Obj::ArithmeticOperator(ArithmeticOperator::Sign(sign)) => {
             let argument = evaluate_obj_to_normalized_decimal_number(&sign.arg)?;
@@ -235,6 +263,173 @@ fn evaluate_nonempty_numeric_list_set(set: &Obj, take_maximum: bool) -> Option<N
 
 fn normalized_decimal_str_is_non_negative(s: &str) -> bool {
     !s.trim().starts_with('-')
+}
+
+pub fn normalized_decimal_str_is_integer(s: &str) -> bool {
+    !normalize_decimal_number_string(s).contains('.')
+}
+
+pub fn normalized_decimal_str_is_non_negative_integer(s: &str) -> bool {
+    let normalized = normalize_decimal_number_string(s);
+    normalized_decimal_str_is_non_negative(&normalized)
+        && normalized_decimal_str_is_integer(&normalized)
+}
+
+// Perfect-square fold to a terminating decimal.
+// Simple: sqrt(4)=2, sqrt(0.36)=0.6.
+// Nested use: see calculation_closed_decimal_complex_nested.lit
+//   (`ceil(sqrt(0.36) + 1.1) * 3!`, `((-7) % 3)^log(2, 4) + sqrt(0.36)`).
+// Non-square (sqrt(2)) or non-terminating radical decimal → None.
+pub fn sqrt_decimal_str_and_normalize(value: &str) -> Option<String> {
+    let normalized = normalize_decimal_number_string(value);
+    if normalized.starts_with('-') {
+        return None;
+    }
+    if normalized == "0" {
+        return Some("0".to_string());
+    }
+    let (numerator, denominator) = decimal_str_to_reduced_nonneg_fraction_strings(&normalized)?;
+    let sqrt_numerator = integer_perfect_sqrt_nonneg_int_str(&numerator)?;
+    let sqrt_denominator = integer_perfect_sqrt_nonneg_int_str(&denominator)?;
+    safe_div(&sqrt_numerator, &sqrt_denominator)
+}
+
+// Discrete log: find nonnegative integer x with base^x = arg (exact decimal).
+// Simple: log(2,8)=3, log(0.5,0.25)=2. Non-integer power → None.
+// Nested use: see calculation_closed_decimal_complex_nested.lit
+//   (`sqrt(4) * log(2, 8) + floor(2.5)!`, `a + b * c` after `have c R = log(2, 8)`).
+pub fn log_integer_power_decimal_str(base: &str, arg: &str) -> Option<String> {
+    let base = normalize_decimal_number_string(base);
+    let arg = normalize_decimal_number_string(arg);
+    if base.starts_with('-') || arg.starts_with('-') || base == "0" || arg == "0" || base == "1" {
+        return None;
+    }
+    if arg == "1" {
+        return Some("0".to_string());
+    }
+
+    let base_vs_one = compare_nonneg_decimal_str_sign(&base, "1");
+    let base_vs_zero = compare_nonneg_decimal_str_sign(&base, "0");
+    if base_vs_zero != std::cmp::Ordering::Greater {
+        return None;
+    }
+
+    let mut acc = "1".to_string();
+    for exponent in 0..10_000usize {
+        if acc == arg {
+            return Some(exponent.to_string());
+        }
+        let next = mul_signed_decimal_str(&acc, &base);
+        if normalized_decimal_string_exceeds_pow_budget(&next) {
+            return None;
+        }
+        if next == arg {
+            return Some((exponent + 1).to_string());
+        }
+        match base_vs_one {
+            std::cmp::Ordering::Greater => {
+                if compare_nonneg_decimal_str_sign(&next, &arg) == std::cmp::Ordering::Greater {
+                    return None;
+                }
+            }
+            std::cmp::Ordering::Less => {
+                if compare_nonneg_decimal_str_sign(&next, &arg) == std::cmp::Ordering::Less {
+                    return None;
+                }
+            }
+            std::cmp::Ordering::Equal => return None,
+        }
+        acc = next;
+    }
+    None
+}
+
+fn decimal_str_to_reduced_nonneg_fraction_strings(value: &str) -> Option<(String, String)> {
+    let normalized = normalize_decimal_number_string(value);
+    if normalized.starts_with('-') {
+        return None;
+    }
+    let (integer_part, fractional_part) = match normalized.split_once('.') {
+        Some((integer, fraction)) => (integer, fraction),
+        None => return Some((normalized, "1".to_string())),
+    };
+    let integer_digits = if integer_part.is_empty() || integer_part == "0" {
+        String::new()
+    } else {
+        integer_part.trim_start_matches('0').to_string()
+    };
+    let numerator_raw = format!("{}{}", integer_digits, fractional_part);
+    let numerator = if numerator_raw.is_empty() {
+        "0".to_string()
+    } else {
+        normalize_decimal_number_string(&numerator_raw)
+    };
+    let denominator = normalize_decimal_number_string(&format!(
+        "1{}",
+        "0".repeat(fractional_part.len())
+    ));
+    if numerator == "0" {
+        return Some(("0".to_string(), "1".to_string()));
+    }
+    let gcd = gcd_decimal_str_and_normalize(&numerator, &denominator)?;
+    Some((
+        quot_decimal_str_and_normalize(&numerator, &gcd),
+        quot_decimal_str_and_normalize(&denominator, &gcd),
+    ))
+}
+
+fn integer_perfect_sqrt_nonneg_int_str(value: &str) -> Option<String> {
+    let normalized = normalize_decimal_number_string(value);
+    if !normalized_decimal_str_is_non_negative_integer(&normalized) {
+        return None;
+    }
+    if normalized == "0" || normalized == "1" {
+        return Some(normalized);
+    }
+
+    let mut low = "0".to_string();
+    let mut high = normalized.clone();
+    let mut candidate = "0".to_string();
+    while compare_nonneg_decimal_str_sign(&low, &high) != std::cmp::Ordering::Greater {
+        let mid = quot_decimal_str_and_normalize(
+            &add_decimal_str_and_normalize(&low, &high),
+            "2",
+        );
+        let square = mul_signed_decimal_str(&mid, &mid);
+        match compare_nonneg_decimal_str_sign(&square, &normalized) {
+            std::cmp::Ordering::Equal => return Some(normalize_decimal_number_string(&mid)),
+            std::cmp::Ordering::Less => {
+                candidate = mid.clone();
+                low = add_decimal_str_and_normalize(&mid, "1");
+            }
+            std::cmp::Ordering::Greater => {
+                if mid == "0" {
+                    return None;
+                }
+                high = sub_decimal_str_and_normalize(&mid, "1");
+            }
+        }
+    }
+    let square = mul_signed_decimal_str(&candidate, &candidate);
+    if square == normalized {
+        Some(normalize_decimal_number_string(&candidate))
+    } else {
+        None
+    }
+}
+
+fn compare_nonneg_decimal_str_sign(left: &str, right: &str) -> std::cmp::Ordering {
+    let difference = sub_decimal_str_and_normalize(
+        &normalize_decimal_number_string(left),
+        &normalize_decimal_number_string(right),
+    );
+    if difference == "0" {
+        std::cmp::Ordering::Equal
+    } else if difference.starts_with('-') {
+        std::cmp::Ordering::Less
+    } else {
+        std::cmp::Ordering::Greater
+    }
 }
 
 fn floor_decimal_str(value: &str) -> String {

@@ -26,8 +26,9 @@ Stub / not-yet-wired nodes are **omitted** (no SKIP placeholders).
 Still open (non-rewrite): empty atomic builtin-rule families (`NormalAtomic` /
 several remaining `Not*`); more exist builtins;
 secondary subset leaves (set-minus / power-set / cart / subset-transitivity);
-strict-order duals of add/mul algebra; MatchingOneArgByOne beyond the traced constructors;
-equality-identity leftovers (log↔pow inverse, deeper mod, …); richer `!=`.
+MatchingOneArgByOne beyond the traced constructors;
+deeper aggregate (sum split / Fubini / bijective reindex); nested-mod algebra;
+complex `re`/`img` equalities; richer `!=`.
 NotSubset / NotSuperset duality (A7): known `not B $superset A` proves
 `not A $subset B`, and known `not B $subset A` proves `not A $superset B` —
 see `not_subset_from_known_not_superset.lit`,
@@ -94,6 +95,29 @@ Equality BuiltinRule identities (Stage B wave 7):
 `sign_of_negation.lit`, `sign_times_abs_equals_arg.lit`,
 `abs_equals_sign_times_arg.lit`, `sign_of_product.lit`,
 `subtraction_from_known_addition.lit`.
+Equality BuiltinRule identities (Stage B wave 9):
+set empties / commutative / idempotent; intersect-from-subset;
+empty-from-not-nonempty; power_set cardinality — see `union_empty_*.lit`,
+`intersect_empty_*.lit`, `set_minus_*.lit`, `union_commutative.lit`,
+`intersect_from_subset.lit`, `empty_set_from_not_nonempty.lit`,
+`power_set_finite_set_size.lit`, plus associative / distributive / De Morgan
+(`union_associative.lit`, `intersect_associative.lit`,
+`intersect_union_distributive.lit`, `set_minus_*_de_morgan.lit`,
+`intersect_set_minus_self_empty.lit`).
+Equality BuiltinRule identities (Stage B wave 11):
+union absorption / set-minus recovery; empty from size 0; cart proj /
+tuple index; finite-set size set-minus/union; closed_range singleton;
+sum/product single-term; reduce↔sum bridges; pow-of-log inverse — see
+`union_absorption_from_subset.lit`, `cart_proj_factor.lit`,
+`tuple_component_at_index.lit`, `finite_set_size_*.lit`,
+`sum_single_term.lit`, `reduce_add_zero_equals_sum.lit`,
+`pow_of_log_inverse.lit`, etc.
+Equality BuiltinRule identities (Stage B wave 10):
+empty aggregates `finite_set_sum/product/reduce` and empty-range
+`sum`/`product`/`reduce` — see `finite_set_*_empty.lit`, `sum_empty_range.lit`,
+`product_empty_range.lit`, `reduce_empty.lit`.
+Greater add/mul congruence (A10): `greater_add_*_congruence_strict.lit`,
+`greater_mul_right_positive_monotone_strict.lit`.
 Equality BuiltinRule identities (Stage B wave 8):
 Euclidean `a=d*quot(a,d)+(a%d)`; `(a-(a%b))%b=0` (narrow nonzero-divisor trust);
 `a=0` from known `a^2+b^2=0`; `(-1)^(2*m+1)=-1`;
@@ -117,7 +141,7 @@ or/           ByBuiltinRule (trichotomy ×3, NaturalZeroOrAtLeastOne), SelectedB
               KnownOr, KnownForall
 equal/        ByBuiltinRule (FnSet / AnonymousFn / SetBuilder alpha-equal,
               EqualToObjWithFreeParamsLookup, Calculation closed decimal +
-              arithmetic_ops), EquivalenceClass, ObjectDefinition
+              arithmetic_ops + integer_sqrt_log + complex_nested), EquivalenceClass, ObjectDefinition
               (identifier / fn / template), BuiltinStrategy, MatchingOneArgByOne,
               KnownForall (+ViaSymmetry), BuiltinRewrite
               (ClosedNumericEqualSubstitution + arithmetic_ops)

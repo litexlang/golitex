@@ -455,7 +455,7 @@ Precedence low → high:
 ### Keyword primaries that are **not** parse-wired yet
 
 Keywords exist in `keywords.rs` but have no primary arm today (do not document as working surface):  
-`re` / `img` / `C_abs`, `sum` / `product` / `reduce` / `finite_set_sum` / `finite_set_reduce` (only `finite_set_product` is wired among the reduce family).
+`re` / `img` / `C_abs`, `sum` / `product` / `reduce` / `finite_set_sum` / `finite_set_product` / `finite_set_reduce` (aggregate family wired).
 
 ### Typical object rejects
 

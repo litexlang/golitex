@@ -1,25 +1,28 @@
 use crate::new_pipeline::ast::names::AtomicName;
 use crate::new_pipeline::ast::obj::{
     Abs, AnonymousFn, Arccos, Arccot, Arcsin, Arctan, ArithmeticOperator, Cart, CartDim, Ceil,
-    ClosedRange, Cos, Cot, EulerNumber, Exp, ExpLogOperator, Factorial, FamilyIntersect, FamilyUnion,
-    FiniteSeqSet, FiniteSetMax, FiniteSetMin, FiniteSetSize, FiniteSetStat, Floor, FnObjHead,
-    FnRange, FnSet, FunctionSpace, Gcd, IdentifierObj, ImaginaryUnit, IndexCart, IndexIntersect,
-    IndexUnion, InstantiatedTemplateObj, IntegerOperator, Intersect, IntervalObj, IntervalObjStruct,
-    IteratedOperator, Lcm, ListSet, Literal, Ln, Log, Max, Min, Number, Obj, OneSideInfinityIntervalObj,
-    OneSideInfinityIntervalObjStruct, Pi, PowerSet, ProductOfFiniteSet, ProductShape, Proj, Quot,
-    Range, SeqSet, SetBuilder, SetFormer, SetMinus, SetOperator, Sign, Sin, Sqrt, StandardSet,
-    StructAndFieldAccessObj, StructObj, Tan, TrigOperator, Tuple, TupleDim, Union,
+    ClosedRange, ComplexAbs, ComplexOperator, Cos, Cot, EulerNumber, Exp, ExpLogOperator,
+    Factorial, FamilyIntersect, FamilyUnion, FiniteSeqSet, FiniteSetMax, FiniteSetMin,
+    FiniteSetReduce, FiniteSetSize, FiniteSetStat, Floor, FnObjHead, FnRange, FnSet, FunctionSpace,
+    Gcd, IdentifierObj, ImaginaryPart, ImaginaryUnit, IndexCart, IndexIntersect, IndexUnion,
+    InstantiatedTemplateObj, IntegerOperator, Intersect, IntervalObj, IntervalObjStruct,
+    IteratedOperator, Lcm, ListSet, Literal, Ln, Log, Max, Min, Number, Obj,
+    OneSideInfinityIntervalObj, OneSideInfinityIntervalObjStruct, Pi, PowerSet, Product,
+    ProductOfFiniteSet, ProductShape, Proj, Quot, Range, RealPart, Reduce, SeqSet, SetBuilder,
+    SetFormer, SetMinus, SetOperator, Sign, Sin, Sqrt, StandardSet, StructAndFieldAccessObj,
+    StructObj, Sum, SumOfFiniteSet, Tan, TrigOperator, Tuple, TupleDim, Union,
 };
 use crate::new_pipeline::ast::param::{ParamType, SetBoundParameterGroup, SetBoundParameterList};
 use crate::new_pipeline::parse::keywords::{
     ABS, ARCCOS, ARCCOT, ARCSIN, ARCTAN, C, CART, CART_DIM, CEIL, CLOSED_RANGE, COLON, COMMA, COS,
-    COT, C_STAR, DOT, EXP, FACTORIAL, FAMILY_INTERSECT, FAMILY_UNION, FINITE_SEQ, FINITE_SET_MAX,
-    FINITE_SET_MIN, FINITE_SET_PRODUCT, FINITE_SET_SIZE, FLOOR, FN, FN_RANGE, GCD, GREATER,
-    INDEX_CART, INDEX_INTERSECT, INDEX_UNION, INTERSECT, INTERVAL_LITERAL_PREFIX, LCM,
-    LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LESS, LN, LOG, MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS,
-    POWER_SET, PROJ, Q, QUOT, Q_NEG, Q_POS, Q_STAR, R, RANGE, RIGHT_BRACKET, RIGHT_CURLY,
-    RIGHT_PAREN, R_NEG, R_POS, R_STAR, SEQ, SET_MINUS, SIGN, SIN, SQRT, STRUCT_VIEW_PREFIX, TAN,
-    TEMPLATE_INSTANCE_PREFIX, TUPLE, TUPLE_DIM, UNION, Z, Z_NEG, Z_POS, Z_STAR,
+    COT, C_ABS, C_STAR, DOT, EXP, FACTORIAL, FAMILY_INTERSECT, FAMILY_UNION, FINITE_SEQ,
+    FINITE_SET_MAX, FINITE_SET_MIN, FINITE_SET_PRODUCT, FINITE_SET_REDUCE, FINITE_SET_SIZE,
+    FINITE_SET_SUM, FLOOR, FN, FN_RANGE, GCD, GREATER, IMG, INDEX_CART, INDEX_INTERSECT, INDEX_UNION,
+    INTERSECT, INTERVAL_LITERAL_PREFIX, LCM, LEFT_BRACKET, LEFT_CURLY, LEFT_PAREN, LESS, LN, LOG,
+    MAX, MIN, MOD_FLAT_SIGN, MOD_SIGN, N, N_POS, POWER_SET, PRODUCT, PROJ, Q, QUOT, Q_NEG, Q_POS,
+    Q_STAR, R, RANGE, RE, REDUCE, RIGHT_BRACKET, RIGHT_CURLY, RIGHT_PAREN, R_NEG, R_POS, R_STAR,
+    SEQ, SET_MINUS, SIGN, SIN, SQRT, STRUCT_VIEW_PREFIX, SUM, TAN, TEMPLATE_INSTANCE_PREFIX, TUPLE,
+    TUPLE_DIM, UNION, Z, Z_NEG, Z_POS, Z_STAR,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 use crate::new_pipeline::tokenize::TokenBlock;
@@ -431,6 +434,16 @@ fn try_parse_keyword_primary(
         LN => Ok(Some(parse_unary_keyword(rt, tb, LN, |arg| {
             Obj::ExpLogOperator(ExpLogOperator::Ln(Ln { arg: Box::new(arg) }))
         })?)),
+        RE => Ok(Some(parse_unary_keyword(rt, tb, RE, |arg| {
+            Obj::ComplexOperator(ComplexOperator::RealPart(RealPart { arg: Box::new(arg) }))
+        })?)),
+        IMG => Ok(Some(parse_unary_keyword(rt, tb, IMG, |arg| {
+            Obj::ComplexOperator(ComplexOperator::ImaginaryPart(ImaginaryPart { arg: Box::new(arg) }))
+        })?)),
+        C_ABS => Ok(Some(parse_unary_keyword(rt, tb, C_ABS, |arg| {
+            Obj::ComplexOperator(ComplexOperator::ComplexAbs(ComplexAbs { arg: Box::new(arg) }))
+        })?)),
+
         FACTORIAL => Ok(Some(parse_unary_keyword(rt, tb, FACTORIAL, |arg| {
             Obj::IntegerOperator(IntegerOperator::Factorial(Factorial {
                 arg: Box::new(arg),
@@ -523,6 +536,63 @@ fn try_parse_keyword_primary(
                 Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(ProductOfFiniteSet {
                     set: Box::new(set),
                     func: Box::new(func),
+                }))
+            },
+        )?)),
+        FINITE_SET_SUM => Ok(Some(parse_binary_keyword(
+            rt,
+            tb,
+            FINITE_SET_SUM,
+            |set, func| {
+                Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(SumOfFiniteSet {
+                    set: Box::new(set),
+                    func: Box::new(func),
+                }))
+            },
+        )?)),
+        SUM => Ok(Some(parse_ternary_keyword(rt, tb, SUM, |start, end, func| {
+            Obj::IteratedOperator(IteratedOperator::Sum(Sum {
+                start: Box::new(start),
+                end: Box::new(end),
+                func: Box::new(func),
+            }))
+        })?)),
+        PRODUCT => Ok(Some(parse_ternary_keyword(
+            rt,
+            tb,
+            PRODUCT,
+            |start, end, func| {
+                Obj::IteratedOperator(IteratedOperator::Product(Product {
+                    start: Box::new(start),
+                    end: Box::new(end),
+                    func: Box::new(func),
+                }))
+            },
+        )?)),
+        FINITE_SET_REDUCE => Ok(Some(parse_quaternary_keyword(
+            rt,
+            tb,
+            FINITE_SET_REDUCE,
+            |set, func, op, seed| {
+                Obj::IteratedOperator(IteratedOperator::FiniteSetReduce(FiniteSetReduce {
+                    set: Box::new(set),
+                    func: Box::new(func),
+                    op: Box::new(op),
+                    seed: Box::new(seed),
+                }))
+            },
+        )?)),
+        REDUCE => Ok(Some(parse_quinary_keyword(
+            rt,
+            tb,
+            REDUCE,
+            |start, end, func, op, seed| {
+                Obj::IteratedOperator(IteratedOperator::Reduce(Reduce {
+                    start: Box::new(start),
+                    end: Box::new(end),
+                    func: Box::new(func),
+                    op: Box::new(op),
+                    seed: Box::new(seed),
                 }))
             },
         )?)),
@@ -697,6 +767,43 @@ fn parse_ternary_keyword(
     let second = args.pop().expect("arity checked");
     let first = args.pop().expect("arity checked");
     Ok(build(first, second, third))
+}
+
+fn parse_quaternary_keyword(
+    rt: &mut Runtime,
+    tb: &mut TokenBlock,
+    name: &str,
+    build: impl FnOnce(Obj, Obj, Obj, Obj) -> Obj,
+) -> RuntimeResult<Obj> {
+    tb.advance()?;
+    let mut args = parse_obj_list_paren(rt, tb)?;
+    if args.len() != 4 {
+        return Err(tb.parse_error(format!("`{name}` expects 4 arguments")));
+    }
+    let fourth = args.pop().expect("arity checked");
+    let third = args.pop().expect("arity checked");
+    let second = args.pop().expect("arity checked");
+    let first = args.pop().expect("arity checked");
+    Ok(build(first, second, third, fourth))
+}
+
+fn parse_quinary_keyword(
+    rt: &mut Runtime,
+    tb: &mut TokenBlock,
+    name: &str,
+    build: impl FnOnce(Obj, Obj, Obj, Obj, Obj) -> Obj,
+) -> RuntimeResult<Obj> {
+    tb.advance()?;
+    let mut args = parse_obj_list_paren(rt, tb)?;
+    if args.len() != 5 {
+        return Err(tb.parse_error(format!("`{name}` expects 5 arguments")));
+    }
+    let fifth = args.pop().expect("arity checked");
+    let fourth = args.pop().expect("arity checked");
+    let third = args.pop().expect("arity checked");
+    let second = args.pop().expect("arity checked");
+    let first = args.pop().expect("arity checked");
+    Ok(build(first, second, third, fourth, fifth))
 }
 
 fn parse_number(tb: &mut TokenBlock) -> RuntimeResult<Obj> {

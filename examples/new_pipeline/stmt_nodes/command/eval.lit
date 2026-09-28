@@ -4,11 +4,16 @@
 # Pipeline: known_closed_numeric_equal rewrite → recursive evaluate
 #   (closed-numeric simplify; Identifier FnObj → stored algo).
 # No proof fact stored. Recursive algo examples are deferred.
-# Boundary: `eval 2!`, `eval N`, unbound symbols soft-fail.
+# Boundary: `eval sqrt(2)` / `eval N` / unbound symbols soft-fail.
+# Now also: integer closed ops and foldable `sqrt` / `log`.
 
 eval (1 + 2)^2
 eval 1 / 2
 eval abs(-3)
+eval 3!
+eval sqrt(4)
+eval sqrt(0.36)
+eval log(2, 8)
 
 have a R = 10
 eval a + 1

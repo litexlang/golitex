@@ -61,7 +61,8 @@ command/       Eval (closed-numeric rewrite + recursive eval / stored algo; no p
 | `witness/` | Exhibit witnesses | `witness exist … from …:` etc. |
 | `by/` | Named proof methods | `by cases:` / `by contra:` / … |
 | `proof_block/` | Nested scopes | `claim:` / `sketch:` |
-| `command/eval.lit` | Display eval: closed-numeric rewrite + algo | `eval a + 1` / `eval nonzero_flag(0) + 1` |
+| `command/eval.lit` | Display eval: closed-numeric rewrite + algo | `eval 3!` / `eval sqrt(4)` / `eval a + 1` / `eval nonzero_flag(0) + 1` |
+| `command/eval_closed_numeric_complex.lit` | Nested closed-numeric display eval | `eval gcd(54,(-24))+3!*sqrt(4)` / rewrite `a+b*c` |
 
 Full human catalog: `docs/Manual.md` → Statements → Preview Stmt catalog.
 Parse dispatch: `src/new_pipeline/parse/README.md`.

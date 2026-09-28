@@ -57,13 +57,30 @@ use super::by_equality_identities_wave8::{
     SquareSumComponentZeroBuiltinRuleProof,
 };
 use super::by_equality_identities_wave9::{
-    EmptySetFromNotNonemptyBuiltinRuleProof, IntersectCommutativeBuiltinRuleProof,
-    IntersectEmptyLeftBuiltinRuleProof, IntersectEmptyRightBuiltinRuleProof,
-    IntersectFromSubsetBuiltinRuleProof, IntersectIdempotentBuiltinRuleProof,
-    PowerSetFiniteSetSizeBuiltinRuleProof, SetMinusEmptyLeftBuiltinRuleProof,
-    SetMinusEmptyRightBuiltinRuleProof, SetMinusSelfEmptyBuiltinRuleProof,
+    EmptySetFromNotNonemptyBuiltinRuleProof, IntersectAssociativeBuiltinRuleProof,
+    IntersectCommutativeBuiltinRuleProof, IntersectEmptyLeftBuiltinRuleProof,
+    IntersectEmptyRightBuiltinRuleProof, IntersectFromSubsetBuiltinRuleProof,
+    IntersectIdempotentBuiltinRuleProof, IntersectSetMinusSelfEmptyBuiltinRuleProof,
+    IntersectUnionDistributiveBuiltinRuleProof, PowerSetFiniteSetSizeBuiltinRuleProof,
+    SetMinusEmptyLeftBuiltinRuleProof, SetMinusEmptyRightBuiltinRuleProof,
+    SetMinusIntersectDeMorganBuiltinRuleProof, SetMinusSelfEmptyBuiltinRuleProof,
+    SetMinusUnionDeMorganBuiltinRuleProof, UnionAssociativeBuiltinRuleProof,
     UnionCommutativeBuiltinRuleProof, UnionEmptyLeftBuiltinRuleProof,
     UnionEmptyRightBuiltinRuleProof, UnionIdempotentBuiltinRuleProof,
+};
+use super::by_equality_identities_wave10::{
+    FiniteSetProductEmptyBuiltinRuleProof, FiniteSetReduceEmptyBuiltinRuleProof,
+    FiniteSetSumEmptyBuiltinRuleProof, ProductEmptyRangeBuiltinRuleProof,
+    ReduceEmptyBuiltinRuleProof, SumEmptyRangeBuiltinRuleProof,
+};
+use super::by_equality_identities_wave11::{
+    CartProjFactorBuiltinRuleProof, ClosedRangeSingletonListSetBuiltinRuleProof,
+    EmptySetFromSizeZeroBuiltinRuleProof, FiniteSetReduceAddZeroEqualsSumBuiltinRuleProof,
+    FiniteSetSizeSetMinusBuiltinRuleProof, FiniteSetSizeUnionBuiltinRuleProof,
+    PowOfLogInverseBuiltinRuleProof, ProductSingleTermBuiltinRuleProof,
+    ReduceAddZeroEqualsSumBuiltinRuleProof, SetMinusRecoversSubsetBuiltinRuleProof,
+    SumSingleTermBuiltinRuleProof, TupleComponentAtIndexBuiltinRuleProof,
+    UnionAbsorptionFromSubsetBuiltinRuleProof,
 };
 use super::by_power_laws::{
     PowerOfPowerBuiltinRuleProof, PowerOfProductBuiltinRuleProof,
@@ -184,6 +201,31 @@ pub enum EqualitySearchProofByBuiltinRule {
     IntersectFromSubset(IntersectFromSubsetBuiltinRuleProof),
     EmptySetFromNotNonempty(EmptySetFromNotNonemptyBuiltinRuleProof),
     PowerSetFiniteSetSize(PowerSetFiniteSetSizeBuiltinRuleProof),
+    UnionAssociative(UnionAssociativeBuiltinRuleProof),
+    IntersectAssociative(IntersectAssociativeBuiltinRuleProof),
+    IntersectUnionDistributive(IntersectUnionDistributiveBuiltinRuleProof),
+    SetMinusUnionDeMorgan(SetMinusUnionDeMorganBuiltinRuleProof),
+    SetMinusIntersectDeMorgan(SetMinusIntersectDeMorganBuiltinRuleProof),
+    IntersectSetMinusSelfEmpty(IntersectSetMinusSelfEmptyBuiltinRuleProof),
+    FiniteSetSumEmpty(FiniteSetSumEmptyBuiltinRuleProof),
+    FiniteSetProductEmpty(FiniteSetProductEmptyBuiltinRuleProof),
+    FiniteSetReduceEmpty(FiniteSetReduceEmptyBuiltinRuleProof),
+    ReduceEmpty(ReduceEmptyBuiltinRuleProof),
+    SumEmptyRange(SumEmptyRangeBuiltinRuleProof),
+    ProductEmptyRange(ProductEmptyRangeBuiltinRuleProof),
+    UnionAbsorptionFromSubset(UnionAbsorptionFromSubsetBuiltinRuleProof),
+    SetMinusRecoversSubset(SetMinusRecoversSubsetBuiltinRuleProof),
+    EmptySetFromSizeZero(EmptySetFromSizeZeroBuiltinRuleProof),
+    CartProjFactor(CartProjFactorBuiltinRuleProof),
+    TupleComponentAtIndex(TupleComponentAtIndexBuiltinRuleProof),
+    FiniteSetSizeSetMinus(FiniteSetSizeSetMinusBuiltinRuleProof),
+    FiniteSetSizeUnion(FiniteSetSizeUnionBuiltinRuleProof),
+    ClosedRangeSingletonListSet(ClosedRangeSingletonListSetBuiltinRuleProof),
+    SumSingleTerm(SumSingleTermBuiltinRuleProof),
+    ProductSingleTerm(ProductSingleTermBuiltinRuleProof),
+    ReduceAddZeroEqualsSum(ReduceAddZeroEqualsSumBuiltinRuleProof),
+    FiniteSetReduceAddZeroEqualsSum(FiniteSetReduceAddZeroEqualsSumBuiltinRuleProof),
+    PowOfLogInverse(PowOfLogInverseBuiltinRuleProof),
 }
 
 // Builtin Calculation: both sides of an equality reduce to the same value
@@ -196,6 +238,9 @@ pub enum EqualitySearchProofByBuiltinRule {
 //
 // Examples:
 // - ClosedDecimal: `1 + 1 = 2`, `2 * 3 = 6`
+// - Complex nested ClosedDecimal:
+//   examples/.../calculation_closed_decimal_complex_nested.lit
+//   e.g. `sqrt(4) * log(2, 8) + floor(2.5)! = 8`
 // - Rational: `(x + 1) * (x - 1) = x^2 - 1`, `x + 0 = x`
 //
 // Payload: ClosedDecimal stores both normal forms; Rational stores none

@@ -417,3 +417,92 @@ fn prop_atom(
     }
     .into()
 }
+
+
+#[cfg(test)]
+mod diag_zorn {
+    use super::*;
+    use crate::new_pipeline::execute::ExecStmtResult;
+    use crate::new_pipeline::launch_command::LaunchCommand;
+    use crate::new_pipeline::runtime::Runtime;
+    use crate::new_pipeline::tokenize::Tokenizer;
+    use crate::new_pipeline::execute::execute_by_stmt::result::{
+        ExecReleaseZornLemmaStmtFailed, ExecReleaseZornLemmaStmtResult,
+    };
+    use crate::new_pipeline::execute::exec_stmt_result::ExecReleaseAndExpandStmtResult;
+
+    fn exec_chunk(runtime: &mut Runtime, code: &str) {
+        let tokens = Tokenizer::new()
+            .tokenize(code, runtime.current_file.clone())
+            .expect("tok");
+        let stmts = runtime.parse(&tokens).expect("parse");
+        for (i, stmt) in stmts.iter().enumerate() {
+            let r = runtime.exec_stmt(stmt).expect("exec");
+            if r.is_failed() {
+                eprintln!("FAILED at stmt index {i}: {}", stmt.ir());
+                match r {
+                    ExecStmtResult::ReleaseAndExpand(
+                        ExecReleaseAndExpandStmtResult::ZornLemma(zr),
+                    ) => match zr {
+                        ExecReleaseZornLemmaStmtResult::Failed(f) => match f {
+                            ExecReleaseZornLemmaStmtFailed::PropInterface(msg) => {
+                                eprintln!("PropInterface: {msg}")
+                            }
+                            ExecReleaseZornLemmaStmtFailed::SetWd(_) => eprintln!("SetWd"),
+                            ExecReleaseZornLemmaStmtFailed::ProofBody(_) => {
+                                eprintln!("ProofBody")
+                            }
+                            ExecReleaseZornLemmaStmtFailed::Obligation { index, .. } => {
+                                eprintln!("Obligation index={index}")
+                            }
+                            ExecReleaseZornLemmaStmtFailed::Store(msg) => {
+                                eprintln!("Store: {msg}")
+                            }
+                        },
+                        _ => eprintln!("zorn Success unexpectedly in fail branch"),
+                    },
+                    other => eprintln!("other failed kind, is_failed={}", other.is_failed()),
+                }
+                panic!("soft fail");
+            }
+        }
+    }
+
+    #[test]
+    fn diag_release_zorn() {
+        let mut runtime = Runtime::new(LaunchCommand::Eval { code: String::new(), session: false, strict: false });
+        let code = r#"
+have S set
+abstract_prop leq(x, y)
+prop upper_bound(c power_set(S), u S):
+    forall x c:
+        $leq(x, u)
+prop maximal(m S):
+    forall x S:
+        $leq(m, x)
+        =>:
+            x = m
+release zorn_lemma: set S, prop leq, prop upper_bound, prop maximal:
+    trust $is_nonempty_set(S)
+    trust:
+        forall x S:
+            $leq(x, x)
+        forall x, y, z S:
+            $leq(x, y)
+            $leq(y, z)
+            =>:
+                $leq(x, z)
+        forall x, y S:
+            $leq(x, y)
+            $leq(y, x)
+            =>:
+                x = y
+        forall c power_set(S):
+            forall x, y c:
+                $leq(x, y) or $leq(y, x)
+            =>:
+                exist u S st {$upper_bound(c, u)}
+"#;
+        exec_chunk(&mut runtime, code);
+    }
+}
