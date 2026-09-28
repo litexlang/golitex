@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.SetMinusEmptyLeft
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/set_minus_empty_left.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/set_minus_empty_left.lit
 
 have A set
 set_minus({}, A) = {}

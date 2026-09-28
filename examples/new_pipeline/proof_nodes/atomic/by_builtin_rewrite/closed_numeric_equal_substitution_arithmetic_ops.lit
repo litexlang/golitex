@@ -1,6 +1,6 @@
 # Node: atomic.ByBuiltinRewrite.ClosedNumericEqualSubstitution (arithmetic ops)
 # Same closed-numeric abs / min / max store-rewrite surface as equal/; goal is atomic equality.
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rewrite/closed_numeric_equal_substitution_arithmetic_ops.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rewrite/closed_numeric_equal_substitution_arithmetic_ops.lit
 
 have a R = abs(-3)
 a = 3

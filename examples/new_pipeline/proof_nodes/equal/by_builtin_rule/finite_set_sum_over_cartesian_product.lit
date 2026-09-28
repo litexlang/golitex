@@ -1,4 +1,4 @@
 # Node: equal.ByBuiltinRule.FiniteSetSumOverCartesianProduct
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/finite_set_sum_over_cartesian_product.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/finite_set_sum_over_cartesian_product.lit
 have fn g(p cart({1}, {2})) R = 0
 finite_set_sum({1}, fn(x {1}) R {finite_set_sum({2}, fn(y {2}) R {g((x, y))})}) = finite_set_sum(cart({1}, {2}), g)

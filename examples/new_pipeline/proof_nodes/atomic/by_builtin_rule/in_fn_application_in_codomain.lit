@@ -1,5 +1,5 @@
 # Node: atomic.ByBuiltinRule.In.FnApplicationInCodomain
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/in_fn_application_in_codomain.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/in_fn_application_in_codomain.lit
 
 have fn id(x R) R = x
 have a R = 1

@@ -1,4 +1,4 @@
 # Node: equal.ByBuiltinRule.FiniteSetProductEmpty
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/finite_set_product_empty.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/finite_set_product_empty.lit
 
 finite_set_product({}, fn(x Z) Z {x}) = 1

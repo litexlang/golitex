@@ -1,4 +1,4 @@
 # Obj WD: cart_dim(S) requires $is_cart(S)
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/wd/obj/cart_dim.lit
+# Run: litex -f examples/new_pipeline/wd/obj/cart_dim.lit
 
 let d = cart_dim(cart(R, R))

@@ -1,5 +1,5 @@
 # Stmt: ReleaseAndExpand.ReleaseAxiomOfChoiceStmt → exec_release_axiom_of_choice_stmt
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/release_and_expand/release_axiom_of_choice.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/release_and_expand/release_axiom_of_choice.lit
 
 have F set
 trust:

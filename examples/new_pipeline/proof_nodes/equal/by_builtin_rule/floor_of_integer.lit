@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.FloorOfInteger
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/floor_of_integer.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/floor_of_integer.lit
 
 have n Z
 floor(n) = n

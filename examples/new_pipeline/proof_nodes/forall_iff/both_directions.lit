@@ -1,5 +1,5 @@
 # Node: forall_with_iff (then⇒iff and iff⇒then)
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/forall_iff/both_directions.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/forall_iff/both_directions.lit
 
 forall x, y R:
     =>:

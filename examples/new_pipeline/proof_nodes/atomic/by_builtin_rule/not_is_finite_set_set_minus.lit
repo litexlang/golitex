@@ -1,5 +1,5 @@
 # Node: atomic.ByBuiltinRule.NotIsFiniteSet.SetMinusInfiniteOfInfiniteFinite
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/not_is_finite_set_set_minus.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/not_is_finite_set_set_minus.lit
 
 trust not $is_finite_set(N)
 not $is_finite_set(set_minus(N, {0}))

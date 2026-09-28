@@ -1,5 +1,5 @@
 # Node: atomic.ByBuiltinRule.SubsetFact.SubsetUnionRight
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/subset_union_right.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/subset_union_right.lit
 
 have A set, B set
 B $subset union(A, B)

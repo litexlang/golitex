@@ -1,6 +1,6 @@
 # Node: equal.ByKnownForallFactViaSymmetry
 # Struct: EqualFactSearchedProofByKnownForallViaSymmetry
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_known_forall/via_symmetry.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_known_forall/via_symmetry.lit
 #
 # Forall concludes `rhs = lhs` orientation; goal asks the swapped sides.
 

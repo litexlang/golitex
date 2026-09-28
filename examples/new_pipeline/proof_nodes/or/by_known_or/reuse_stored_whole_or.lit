@@ -1,6 +1,6 @@
 # Node: or.ByKnownOrFact
 # Struct: OrFactSearchProofByKnownOrFact
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/or/by_known_or/reuse_stored_whole_or.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/or/by_known_or/reuse_stored_whole_or.lit
 #
 # First line stores the whole or (via SelectedBranch).
 # Second line reuses it from known_or.

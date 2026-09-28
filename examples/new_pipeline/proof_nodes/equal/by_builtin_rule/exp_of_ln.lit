@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.ExpOfLn
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/exp_of_ln.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/exp_of_ln.lit
 
 have x R+
 exp(ln(x)) = x

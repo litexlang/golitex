@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.EmptySetFromSizeZero
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/empty_set_from_size_zero.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/empty_set_from_size_zero.lit
 
 have A finite_set
 trust finite_set_size(A) = 0

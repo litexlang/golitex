@@ -1,7 +1,7 @@
 # Infer: InFact.FiniteSeqExpand
 # When: store `s $in finite_seq(R, n)`.
 # Infers: `s $in fn(i N+: i <= n) R` (callable).
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/infer/atomic/in_finite_seq_expand.lit
+# Run: litex -f examples/new_pipeline/infer/atomic/in_finite_seq_expand.lit
 
 have s set
 trust s $in finite_seq(R, 3)

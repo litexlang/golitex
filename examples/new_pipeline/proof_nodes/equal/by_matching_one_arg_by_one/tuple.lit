@@ -1,5 +1,5 @@
 # Node: equal.ByMatchingOneArgByOne (Tuple peel)
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_matching_one_arg_by_one/tuple.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_matching_one_arg_by_one/tuple.lit
 
 have a R = 1
 have b R = a

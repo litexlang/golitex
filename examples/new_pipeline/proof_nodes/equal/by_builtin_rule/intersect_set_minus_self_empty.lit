@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.IntersectSetMinusSelfEmpty
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/intersect_set_minus_self_empty.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/intersect_set_minus_self_empty.lit
 
 have A set
 have B set

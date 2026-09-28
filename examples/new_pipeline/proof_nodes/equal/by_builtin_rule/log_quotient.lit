@@ -1,4 +1,4 @@
 # Node: equal.ByBuiltinRule.LogQuotient
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/log_quotient.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/log_quotient.lit
 
 log(2, 6 / 3) = log(2, 6) - log(2, 3)

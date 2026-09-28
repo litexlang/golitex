@@ -1,5 +1,5 @@
 # Node: and (per-component verify)
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/and/components.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/and/components.lit
 
 1 < 2
 2 < 3

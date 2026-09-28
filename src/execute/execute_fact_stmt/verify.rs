@@ -1,0 +1,26 @@
+use super::verify_fact_result::VerifyFactResult;
+use super::VerifyState;
+use crate::ast::fact::{exist_shaped_fact_from_fact, Fact};
+use crate::runtime::{Runtime, RuntimeResult};
+
+impl Runtime {
+    pub fn verify_fact(
+        &mut self,
+        fact: &Fact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<VerifyFactResult> {
+        match fact {
+            Fact::AtomicFact(fact) => self.verify_atomic_fact(fact, verify_state),
+            Fact::AndFact(fact) => self.verify_and_fact(fact, verify_state),
+            Fact::ChainFact(fact) => self.verify_chain_fact(fact, verify_state),
+            Fact::OrFact(fact) => self.verify_or_fact(fact, verify_state),
+            Fact::ExistFact(_) | Fact::ExistUniqueFact(_) | Fact::NotExistFact(_) => {
+                let family = exist_shaped_fact_from_fact(fact).expect("exist family from fact");
+                self.verify_exist_shaped_fact(&family, verify_state)
+            }
+            Fact::ForallFact(fact) => self.verify_forall_fact(fact, verify_state),
+            Fact::ForallFactWithIff(fact) => self.verify_forall_fact_with_iff(fact, verify_state),
+            Fact::NotForall(fact) => self.verify_not_forall_fact(fact, verify_state),
+        }
+    }
+}

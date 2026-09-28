@@ -8,7 +8,7 @@
 #   real_line_trichotomy_greater_eq_less.lit
 #
 # Run:
-#   LITEX_NEW_PIPELINE=1 litex -f examples/01_proof_patterns/or_fact_trichotomy_builtin.lit
+#   litex -f examples/01_proof_patterns/or_fact_trichotomy_builtin.lit
 
 have a R, b R
 a = b or a < b or a > b

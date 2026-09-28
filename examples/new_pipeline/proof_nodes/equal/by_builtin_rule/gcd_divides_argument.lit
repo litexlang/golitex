@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.GcdDividesArgument
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/gcd_divides_argument.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/gcd_divides_argument.lit
 
 have a Z
 have b Z

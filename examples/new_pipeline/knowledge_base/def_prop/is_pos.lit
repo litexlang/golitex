@@ -1,5 +1,5 @@
 # knowledge_base / def_prop: is_pos
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/knowledge_base/def_prop/is_pos.lit
+# Run: litex -f examples/new_pipeline/knowledge_base/def_prop/is_pos.lit
 # Stored shape: is_pos.def_prop.json (store_def_prop golden)
 
 prop is_pos(x R):

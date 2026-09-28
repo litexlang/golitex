@@ -1,5 +1,5 @@
 # Stmt: By.ByFnExtensionStmt → exec_by_fn_extension_stmt
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/by/by_fn_extension.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/by/by_fn_extension.lit
 
 have fn f(x R) R = x
 have fn g(x R) R = x

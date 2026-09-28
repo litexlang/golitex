@@ -11,7 +11,7 @@ corresponding Litex source close to that description.
    one-based finite-set indexing.
 1b. [`new_pipeline/`](new_pipeline/) is the new_pipeline acceptance tree (phase
    folders: `proof_nodes/`, `stmt_nodes/`, `wd/`, `wd_negative/`, `infer/`,
-   `module_manager/`). Exit 0 under `LITEX_NEW_PIPELINE=1` is the bar; see
+   `module_manager/`). Exit 0 under the Litex CLI is the bar; see
    [`new_pipeline/README.md`](new_pipeline/README.md).
 2. [`02_builtin_math/`](02_builtin_math/) shows arithmetic, order, finite-set,
    function, and numeric rules provided by the verifier, including native

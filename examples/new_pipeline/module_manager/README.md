@@ -1,8 +1,8 @@
 # new_pipeline module-manager examples
 
 Small projects that exercise **config mount + LaunchCommand** under
-`LITEX_NEW_PIPELINE=1`. Design write-up:
-[`src/new_pipeline/run/README.md`](../../src/new_pipeline/run/README.md).
+the Litex CLI. Design write-up:
+[`src/run/README.md`](../../src/run/README.md).
 
 ## Layout
 
@@ -33,8 +33,7 @@ isolated/             -f alone.lit with no litex.config
 ## Acceptance
 
 ```bash
-export LITEX_NEW_PIPELINE=1
-BIN=target/debug/litex   # or target/release/litex
+export BIN=target/debug/litex   # or target/release/litex
 
 $BIN -r examples/new_pipeline/module_manager/repo
 # repo/main.lit also checks cross-mod `release thm` / `by thm` / `by def`
@@ -58,7 +57,7 @@ $BIN -f examples/new_pipeline/module_manager/file_prefix/b.lit
 ## Run all positive cases
 
 ```bash
-export LITEX_NEW_PIPELINE=1 PATH="/usr/bin:/bin:$PATH"
+export PATH="/usr/bin:/bin:$PATH"
 BIN="${BIN:-target/debug/litex}"
 fail=0
 $BIN -r examples/new_pipeline/module_manager/repo || fail=1

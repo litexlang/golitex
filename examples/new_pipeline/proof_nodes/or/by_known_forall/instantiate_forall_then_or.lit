@@ -1,6 +1,6 @@
 # Node: or.ByKnownForallFact
 # Struct: SearchProofByKnownForallFact (or conclusion)
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/or/by_known_forall/instantiate_forall_then_or.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/or/by_known_forall/instantiate_forall_then_or.lit
 #
 # Defined prop + proved forall; instantiate to an or conclusion.
 

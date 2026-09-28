@@ -1,7 +1,7 @@
 # Builtin: LessFact.OrderSignFromPositiveLiteralBound
 # When: known `a >= k` / `a > k` with resolved k > 0 (or left-bound form).
 # Proves: `0 < a` at verify time (no eager infer).
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/order/order_sign_from_positive_literal_bound.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/order/order_sign_from_positive_literal_bound.lit
 
 have a R
 trust a >= 1

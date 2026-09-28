@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.SignOfNegation
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/sign_of_negation.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/sign_of_negation.lit
 
 have a R
 # Narrow trust: outer sign / arithmetic WD currently needs sign(a) in R.

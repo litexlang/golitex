@@ -1,5 +1,5 @@
 # Stmt: Command.EvalStmt → exec_eval_stmt
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/command/eval.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/command/eval.lit
 #
 # Pipeline: known_closed_numeric_equal rewrite → recursive evaluate
 #   (closed-numeric simplify; Identifier FnObj → stored algo).

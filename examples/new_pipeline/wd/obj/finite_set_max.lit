@@ -1,4 +1,4 @@
 # Obj WD: finite_set_max requires finite + nonempty
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/wd/obj/finite_set_max.lit
+# Run: litex -f examples/new_pipeline/wd/obj/finite_set_max.lit
 
 let m = finite_set_max({1, 2})

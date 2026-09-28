@@ -1,10 +1,10 @@
-use crate::new_pipeline::ast::line_file::SourceLine;
-use crate::new_pipeline::ast::names::BoundName;
-use crate::new_pipeline::ast::obj::{Obj, StandardSet};
-use crate::new_pipeline::ast::stmt::{DefStructStmt, StructFieldDef};
-use crate::new_pipeline::knowledge_base::{load_def_struct, store_def_struct, write_def_struct};
-use crate::new_pipeline::runtime::runtime_ids::IdentifierId;
-use crate::new_pipeline::runtime::CodeSource;
+use crate::ast::line_file::SourceLine;
+use crate::ast::names::BoundName;
+use crate::ast::obj::{Obj, StandardSet};
+use crate::ast::stmt::{DefStructStmt, StructFieldDef};
+use crate::knowledge_base::{load_def_struct, store_def_struct, write_def_struct};
+use crate::runtime::runtime_ids::IdentifierId;
+use crate::runtime::CodeSource;
 use std::path::{Path, PathBuf};
 
 const FIXTURE: &str = include_str!(

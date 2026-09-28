@@ -1,4 +1,4 @@
 # Node: atomic.ByBuiltinRule.InFact.UnionMembershipFromLeft
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/in_union_from_left.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/in_union_from_left.lit
 
 1 $in union({1}, {2})

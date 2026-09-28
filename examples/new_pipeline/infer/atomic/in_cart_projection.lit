@@ -1,7 +1,7 @@
 # Infer: InFact.CartProjection
 # When: store `u $in cart(R, Z)`.
 # Infers: tuple shape + coordinate memberships.
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/infer/atomic/in_cart_projection.lit
+# Run: litex -f examples/new_pipeline/infer/atomic/in_cart_projection.lit
 
 have u set
 trust u $in cart(R, Z)

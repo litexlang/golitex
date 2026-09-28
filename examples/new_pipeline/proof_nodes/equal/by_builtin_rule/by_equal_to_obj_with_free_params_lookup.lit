@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.ByEqualToObjWithFreeParamsLookup
-# Run: LITEX_NEW_PIPELINE=1 target/release/litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/by_equal_to_obj_with_free_params_lookup.lit
+# Run: target/release/litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/by_equal_to_obj_with_free_params_lookup.lit
 #
 # Store-time index `known_equal_to_obj_with_free_params` remembers binder-carrying
 # equalities (`let` / stored `name = rhs`). Verify reads that index instead of

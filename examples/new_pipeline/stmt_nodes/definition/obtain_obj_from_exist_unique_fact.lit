@@ -1,5 +1,5 @@
 # Stmt: Definition.ObtainObjFromExistFact (exist!) → exec_obtain_obj_from_exist_fact_stmt
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/definition/obtain_obj_from_exist_unique_fact.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/definition/obtain_obj_from_exist_unique_fact.lit
 #
 # From exist!, obtain also stores the uniqueness forall.
 

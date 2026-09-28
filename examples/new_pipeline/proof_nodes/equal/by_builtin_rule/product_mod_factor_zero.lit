@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.ProductModFactorZero
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/product_mod_factor_zero.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/product_mod_factor_zero.lit
 
 have a Z
 have b Z

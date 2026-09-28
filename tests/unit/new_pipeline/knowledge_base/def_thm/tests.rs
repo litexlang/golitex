@@ -1,10 +1,10 @@
-use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact};
-use crate::new_pipeline::ast::line_file::SourceLine;
-use crate::new_pipeline::ast::obj::{Literal, Number, Obj};
-use crate::new_pipeline::ast::stmt::DefThmStmt;
-use crate::new_pipeline::knowledge_base::{load_def_thm, store_def_thm, write_def_thm};
-use crate::new_pipeline::runtime::runtime_ids::FactId;
-use crate::new_pipeline::runtime::CodeSource;
+use crate::ast::fact::{AtomicFact, EqualFact, Fact};
+use crate::ast::line_file::SourceLine;
+use crate::ast::obj::{Literal, Number, Obj};
+use crate::ast::stmt::DefThmStmt;
+use crate::knowledge_base::{load_def_thm, store_def_thm, write_def_thm};
+use crate::runtime::runtime_ids::FactId;
+use crate::runtime::CodeSource;
 use std::path::{Path, PathBuf};
 
 const FIXTURE: &str = include_str!(

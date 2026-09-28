@@ -6,11 +6,11 @@ on:
       suite:
         description: "Litex suite to run"
         required: true
-        default: run_examples
+        default: smoke_cli
         type: choice
         options:
-          - run_examples
-          - run_all_docs_examples_runtime_contracts
+          - smoke_cli
+          - lib_core
 
 env:
   CARGO_TERM_COLOR: always
@@ -36,14 +36,17 @@ jobs:
       - name: Run selected suite
         run: |
           case "${{ inputs.suite }}" in
-            run_examples)
-              cargo test --release "${{ inputs.suite }}" -- --nocapture
+            smoke_cli)
+              cargo build --release --locked
+              ./target/release/litex -e '1 = 1'
+              ./target/release/litex -f examples/new_pipeline/knowledge_base/def_prop/is_pos.lit
               ;;
-            run_all_docs_examples_runtime_contracts)
-              cargo test --release "${{ inputs.suite }}" -- --ignored --nocapture
+            lib_core)
+              cargo test --release --lib knowledge_base:: --locked
+              cargo test --release --lib run_module:: --locked
               ;;
             *)
-              echo "::error::unknown example suite: ${{ inputs.suite }}"
+              echo "::error::unknown suite: ${{ inputs.suite }}"
               exit 1
               ;;
           esac

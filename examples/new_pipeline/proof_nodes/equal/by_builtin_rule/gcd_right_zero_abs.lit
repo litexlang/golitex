@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.GcdRightZeroAbs
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/gcd_right_zero_abs.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/gcd_right_zero_abs.lit
 
 have a Z
 # Narrow trust: gcd WD currently needs a nonzero witness.

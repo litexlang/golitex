@@ -1,5 +1,5 @@
 # Stmt: Definition.HaveByPreimageStmt → exec_have_by_fn_preimage_stmt
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/definition/have_by_fn_preimage.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/definition/have_by_fn_preimage.lit
 #
 # Surface: `have by fn_preimage: names from … $in fn_range(…)`
 # (renamed from default-pipeline `have by preimage`).

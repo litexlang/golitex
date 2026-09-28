@@ -1,5 +1,5 @@
 # Node: equal.ByObjectDefinition.ByTemplate.HaveFnEqualApplication
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_object_definition/by_template/have_fn_equal_application.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_object_definition/by_template/have_fn_equal_application.lit
 
 template<S set, z S>:
     have fn const_on_S(x S) S = z

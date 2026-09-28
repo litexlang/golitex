@@ -1,5 +1,5 @@
 # Auto-open on direct `&Struct` bind releases one layer of `<=>:` laws.
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/definition/struct_auto_open_layer.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/definition/struct_auto_open_layer.lit
 
 struct PairLaw:
     a R

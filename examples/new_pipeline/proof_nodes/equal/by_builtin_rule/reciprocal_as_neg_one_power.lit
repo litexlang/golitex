@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.ReciprocalAsNegOnePower
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/reciprocal_as_neg_one_power.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/reciprocal_as_neg_one_power.lit
 
 have a R*
 1 / a = a^(-1)

@@ -1,9 +1,9 @@
-use crate::new_pipeline::ast::line_file::SourceLine;
-use crate::new_pipeline::ast::stmt::DefAbstractPropStmt;
-use crate::new_pipeline::knowledge_base::{
+use crate::ast::line_file::SourceLine;
+use crate::ast::stmt::DefAbstractPropStmt;
+use crate::knowledge_base::{
     load_def_abstract_prop, store_def_abstract_prop, write_def_abstract_prop,
 };
-use crate::new_pipeline::runtime::CodeSource;
+use crate::runtime::CodeSource;
 use std::fs;
 use std::path::{Path, PathBuf};
 

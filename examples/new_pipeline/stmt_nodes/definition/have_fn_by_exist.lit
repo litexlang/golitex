@@ -1,5 +1,5 @@
 # Stmt: Definition.HaveFnByForallExistUniqueStmt → exec_have_fn_by_forall_exist_unique_stmt
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/definition/have_fn_by_exist.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/definition/have_fn_by_exist.lit
 # Also see examples/tmp_have_fn_by_exist.lit for release + template def-check boundaries.
 
 abstract_prop F(x, y)

@@ -1,6 +1,6 @@
 # Node: equal.ByKnownForallFact
 # Struct: SearchProofByKnownForallFact (equal conclusion)
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_known_forall/instantiate_forall_then_equal.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_known_forall/instantiate_forall_then_equal.lit
 #
 # Store a forall whose then is an equality; cite it at concrete args.
 

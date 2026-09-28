@@ -17,7 +17,7 @@ definitions or ambient assumptions in these tracers (see
 ## Acceptance
 
 ```bash
-LITEX_NEW_PIPELINE=1 target/release/litex -f <this-file>
+target/release/litex -f <this-file>
 ```
 
 Exit 0 is enough. No requirement to assert which `searched_proof` variant won.
@@ -236,7 +236,7 @@ export PATH="/usr/bin:/bin:$PATH"
 fail=0
 while IFS= read -r f; do
   echo "=== $f ==="
-  LITEX_NEW_PIPELINE=1 target/release/litex -f "$f" || fail=1
+  target/release/litex -f "$f" || fail=1
 done < <(find examples/new_pipeline/proof_nodes -name '*.lit' | sort)
 exit $fail
 ```

@@ -8,6 +8,6 @@ SetBuilder `facts` are themselves ill-defined, `proj` on a non-cart,
 or tuple index outside `N+` / beyond `tuple_dim`.
 
 ```bash
-LITEX_NEW_PIPELINE=1 target/release/litex -f <file>
+target/release/litex -f <file>
 # expect exit != 0
 ```

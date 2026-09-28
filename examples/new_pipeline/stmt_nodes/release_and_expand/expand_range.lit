@@ -1,5 +1,5 @@
 # Stmt: ReleaseAndExpand.ExpandRangeStmt → exec_expand_range_stmt
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/release_and_expand/expand_range.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/release_and_expand/expand_range.lit
 
 have x Z
 trust x $in range(1, 3)

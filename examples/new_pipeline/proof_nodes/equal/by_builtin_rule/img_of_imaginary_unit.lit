@@ -1,4 +1,4 @@
 # Node: equal.ByBuiltinRule.ImgOfImaginaryUnit
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/img_of_imaginary_unit.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/img_of_imaginary_unit.lit
 
 img(i) = 1

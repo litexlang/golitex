@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.SqrtOfSquareEqualsAbs
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/sqrt_of_square_equals_abs.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/sqrt_of_square_equals_abs.lit
 
 have a R
 sqrt(a^2) = abs(a)

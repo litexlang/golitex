@@ -1,7 +1,7 @@
 # Infer: InFact.FamilyUnion
 # When: store `w $in family_union(F)`.
 # Infers: `exist item F st {w $in item}`.
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/infer/atomic/in_family_union.lit
+# Run: litex -f examples/new_pipeline/infer/atomic/in_family_union.lit
 
 have w set
 trust w $in family_union({{1}})

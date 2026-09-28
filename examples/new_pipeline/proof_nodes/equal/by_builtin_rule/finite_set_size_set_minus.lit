@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinRule.FiniteSetSizeSetMinus
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/finite_set_size_set_minus.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/finite_set_size_set_minus.lit
 
 have A finite_set
 have B finite_set

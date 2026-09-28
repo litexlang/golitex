@@ -1,6 +1,6 @@
 # new_pipeline example tracers
 
-Phase-oriented acceptance suite for `src/new_pipeline/`.
+Phase-oriented acceptance suite for `src/`.
 One user-visible kernel stage → one subdirectory (not a raw mirror of every Rust module).
 
 ```text
@@ -11,7 +11,7 @@ examples/new_pipeline/
   wd_negative/      WD must-fail tracers
   equal_negative/   equality must-fail probes (e.g. no family_intersect({})={})
   infer/            store → Infer*Result consequences
-                    (kernel: `src/new_pipeline/store_fact_and_infer/README.md`)
+                    (kernel: `src/store_fact_and_infer/README.md`)
   tokenize/         tokenizer surface (line continuation, …)
   module_manager/   -r / -f / litex.config mount
   knowledge_base/   persist / restore (DefProp JSON goldens, later lkb)
@@ -22,7 +22,7 @@ Legacy public reading path (`examples/01_…` … `09_…`) stays outside this t
 ## Acceptance
 
 ```bash
-LITEX_NEW_PIPELINE=1 target/release/litex -f <this-file>
+target/release/litex -f <this-file>
 ```
 
 Exit 0 (or intentional non-zero for `wd_negative` / `equal_negative`) is the gate.

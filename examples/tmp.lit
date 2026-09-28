@@ -1,17 +1,8 @@
-# Wave5 ByDefinition demo (no trust)
-# Run: LITEX_NEW_PIPELINE=1 target/release/litex -f examples/tmp.lit
-
-# injective / surjective / bijective — singleton identity
-have fn id1(x {1}) {1} = x
-exist x {1} st {x = 1}
-by def $injective({1}, {1}, id1)
-by def $surjective({1}, {1}, id1)
-by def $bijective({1}, {1}, id1)
-
-# prime — trial obligations close ambiently on small closed literal
-by def $prime(5)
-
-# choice — finite index, constant family and choice
-have fn g_choice(alpha {1}) power_set({1}) = {1}
-have fn f_choice(alpha {1}) {1} = 1
-by def $is_choice_function_for({1}, power_set({1}), g_choice, f_choice)
+# set_minus membership infer split
+# Covered here because lib-test harness stack overflows on re-verify;
+# CLI uses a 64MB thread and runs the full path.
+have x set
+trust x $in set_minus({1, 2}, {2})
+x $in {1, 2}
+not x $in {2}
+x != 2

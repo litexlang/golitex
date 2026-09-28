@@ -1,4 +1,4 @@
 # Node: atomic.ByBuiltinRule.NotEqualFact.ListSetDifferentLength
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/not_equal_list_set_different_length.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/not_equal_list_set_different_length.lit
 
 {1} != {1, 2}

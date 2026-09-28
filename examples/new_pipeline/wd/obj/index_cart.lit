@@ -1,5 +1,5 @@
 # Obj WD: index_cart — full family `$in fn(alpha I) S`
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/wd/obj/index_cart.lit
+# Run: litex -f examples/new_pipeline/wd/obj/index_cart.lit
 #
 # Before Wave4: registration half only.
 # Now: `g $in fn(alpha I) S` with nonempty family set S.

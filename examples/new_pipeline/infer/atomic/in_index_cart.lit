@@ -1,7 +1,7 @@
 # Infer: InFact.IndexCart
 # When: store `f $in index_cart(I, S, g)`.
 # Infers: `f $in fn(alpha I) family_union(S)` and `$is_choice_function_for(I, S, g, f)`.
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/infer/atomic/in_index_cart.lit
+# Run: litex -f examples/new_pipeline/infer/atomic/in_index_cart.lit
 
 let g = fn(alpha {1}) R {alpha}
 have f set

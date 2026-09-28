@@ -1,6 +1,6 @@
 # Node: or.ByBuiltinRule.AbsSignSplit
 # Rule struct: OrBuiltinAbsSignSplit
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/or/by_builtin_rule/abs_sign_split.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/or/by_builtin_rule/abs_sign_split.lit
 
 have x R
 abs(x) = x or abs(x) = (-x)

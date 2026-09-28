@@ -1,5 +1,5 @@
 # Node: atomic.ByKnownAtomicFact (via equality class)
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_known_atomic_fact/cite_via_equality_class.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_known_atomic_fact/cite_via_equality_class.lit
 
 have a R = 1
 have b R = a

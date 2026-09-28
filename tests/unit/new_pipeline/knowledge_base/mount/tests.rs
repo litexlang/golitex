@@ -1,18 +1,18 @@
 //! Unit tests for mount / fingerprint / definition_memory.
 
-use crate::new_pipeline::ast::fact::{AtomicFact, EqualFact, Fact};
-use crate::new_pipeline::ast::line_file::SourceLine;
-use crate::new_pipeline::ast::names::BoundName;
-use crate::new_pipeline::ast::obj::{IdentifierObj, Literal, Number, Obj, StandardSet};
-use crate::new_pipeline::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
-use crate::new_pipeline::ast::stmt::DefPropStmt;
-use crate::new_pipeline::exec_env::exec_env::DefinitionMemory;
-use crate::new_pipeline::knowledge_base::{
+use crate::ast::fact::{AtomicFact, EqualFact, Fact};
+use crate::ast::line_file::SourceLine;
+use crate::ast::names::BoundName;
+use crate::ast::obj::{IdentifierObj, Literal, Number, Obj, StandardSet};
+use crate::ast::param::{ParamType, TypedParameterGroup, TypedParameterList};
+use crate::ast::stmt::DefPropStmt;
+use crate::exec_env::exec_env::DefinitionMemory;
+use crate::knowledge_base::{
     compute_fingerprint, store_definition_memory, try_mount_module, write_module_kb,
     ExportKbWrite, FingerprintInputs, GlobalIdsSnapshot, KbMountMiss,
 };
-use crate::new_pipeline::runtime::runtime_ids::{FactId, IdentifierId};
-use crate::new_pipeline::runtime::CodeSource;
+use crate::runtime::runtime_ids::{FactId, IdentifierId};
+use crate::runtime::CodeSource;
 use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::PathBuf;
@@ -176,7 +176,7 @@ fn mount_misses_on_fingerprint_mismatch() {
 fn definition_memory_round_trip_string() {
     let defs = sample_defs(7, 42);
     let text = store_definition_memory(&defs).expect("store");
-    let back = crate::new_pipeline::knowledge_base::load_definition_memory(&text).expect("load");
+    let back = crate::knowledge_base::load_definition_memory(&text).expect("load");
     assert_eq!(
         store_definition_memory(&back).expect("re-store"),
         text

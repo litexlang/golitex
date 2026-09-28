@@ -1,5 +1,5 @@
 # Node: atomic.ByDefinition.BuiltinProp.Prime
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/atomic/by_definition/builtin_prime.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_definition/builtin_prime.lit
 #
 # Obligations: 2 <= 5 and forall d range(2, 5): 5 % d != 0
 # Closed small prime: ambient search discharges both (no trust).

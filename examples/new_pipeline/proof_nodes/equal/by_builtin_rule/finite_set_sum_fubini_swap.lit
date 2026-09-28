@@ -1,4 +1,4 @@
 # Node: equal.ByBuiltinRule.FiniteSetSumFubiniSwap
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/finite_set_sum_fubini_swap.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/finite_set_sum_fubini_swap.lit
 have fn g(p cart({1}, {2})) R = 0
 finite_set_sum({1}, fn(x {1}) R {finite_set_sum({2}, fn(y {2}) R {g((x, y))})}) = finite_set_sum({2}, fn(y {2}) R {finite_set_sum({1}, fn(x {1}) R {g((x, y))})})

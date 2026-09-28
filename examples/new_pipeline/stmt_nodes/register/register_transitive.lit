@@ -1,5 +1,5 @@
 # Stmt: Register.RegisterTransitivePropStmt → exec_register_transitive_prop_stmt
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/register/register_transitive.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/register/register_transitive.lit
 # No indented proof body: one shaped `? forall …` only.
 
 prop same(x set, y set):

@@ -1,7 +1,7 @@
 # Node: equal.ByBuiltinRule.Calculation.ClosedDecimal (complex nested closed trees)
 # Nested closed-numeric calculation mixing arithmetic, integer ops, foldable
 # sqrt/log, and known_closed_numeric_equal rewrite.
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/calculation_closed_decimal_complex_nested.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/calculation_closed_decimal_complex_nested.lit
 #
 # See also: calculation_closed_decimal.lit, calculation_closed_decimal_arithmetic_ops.lit,
 #           calculation_closed_decimal_integer_sqrt_log.lit

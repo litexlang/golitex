@@ -1,3 +1,3 @@
 # Node: equal.ByBuiltinRule.SumSplitLastTerm
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/sum_split_last_term.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/sum_split_last_term.lit
 sum(1, 3, fn(x Z) Z {x}) = sum(1, 2, fn(x Z) Z {x}) + 3

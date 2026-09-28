@@ -1,5 +1,5 @@
 # Stmt: ReleaseThmStmt → exec_release_thm_stmt
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/definition/release_thm.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/definition/release_thm.lit
 
 thm positive_is_nonzero:
     ? forall x R:

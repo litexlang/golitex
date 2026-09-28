@@ -1,5 +1,5 @@
 # Stmt: Definition.HaveByReplacementAxiomStmt → exec_have_by_replacement_axiom_stmt
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/definition/have_by_replacement_axiom.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/definition/have_by_replacement_axiom.lit
 #
 # Named image from the Axiom of Replacement (not an anonymous Obj: prop names
 # do not belong in ordinary parenthesized obj arguments).

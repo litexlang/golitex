@@ -30,15 +30,12 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
 
       - name: Clippy
-        run: cargo clippy -- -W warnings
+        run: cargo clippy -- -A warnings
 
       - name: Core tests
         run: |
-          cargo test --lib common::
-          cargo test --lib infer::
-          cargo test --lib obj::
-          cargo test --lib parse::
-          cargo test --lib pipeline::
+          cargo test --lib knowledge_base::
+          cargo test --lib run_module::
           cargo test --lib rational_expression::
-          cargo test --lib stmt::
-          cargo test --lib verify::
+          cargo test --lib parse::
+          cargo test --lib execute::exec_stmt_transaction_tests

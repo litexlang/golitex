@@ -1,5 +1,5 @@
 # Node: equal.ByObjectDefinition.ByFnApplication.HaveFnByInduc
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_object_definition/by_fn_application/have_fn_by_induc.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_object_definition/by_fn_application/have_fn_by_induc.lit
 
 have fn countdown(n N) N by induc n from 0:
     case n = 0: 0

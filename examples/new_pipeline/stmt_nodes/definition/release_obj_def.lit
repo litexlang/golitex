@@ -1,5 +1,5 @@
 # Stmt: ReleaseObjDefStmt → exec_release_obj_def_stmt
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/definition/release_obj_def.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/definition/release_obj_def.lit
 
 let x = 1
 release obj def x

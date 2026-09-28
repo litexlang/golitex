@@ -1,5 +1,5 @@
 # Node: equal.ByBuiltinStrategy.FiniteSetProductPointwiseEquality
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_strategy/finite_set_product_pointwise.lit
+# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_strategy/finite_set_product_pointwise.lit
 #
 # Bodies differ so EqualIR cannot close the goal; the strategy proves
 # `{1} = {1}` and local pointwise `1 = 0 + 1`.

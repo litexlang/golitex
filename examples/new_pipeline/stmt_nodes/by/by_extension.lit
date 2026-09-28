@@ -1,5 +1,5 @@
 # Stmt: By.ByExtensionStmt → exec_by_extension_stmt
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/by/by_extension.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/by/by_extension.lit
 
 by extension:
     ? {1} = {1}

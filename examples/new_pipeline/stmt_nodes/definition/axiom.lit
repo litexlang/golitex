@@ -1,6 +1,6 @@
 # Stmt: Definition.AxiomStmt → exec_axiom_stmt
 # Also: ambient known-forall after store; release thm / by thm resolve axiom names.
-# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/definition/axiom.lit
+# Run: litex -f examples/new_pipeline/stmt_nodes/definition/axiom.lit
 
 abstract_prop background(x)
 
