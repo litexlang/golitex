@@ -125,7 +125,7 @@ Nested Success child evidence is `Vec<Box<ObjWellDefinedProof>>` (subject lives 
 Atomic-except-equality search is:
 
 builtin rule → known atomic → builtin strategy → by definition →
-known forall → builtin algebraic rewrite → known algebraic rewrite.
+known strategy → known forall → builtin algebraic rewrite → known algebraic rewrite.
 
 Equality search is:
 

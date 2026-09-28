@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.PowerSetFiniteSetSize
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/power_set_finite_set_size.lit
+
+have S finite_set
+finite_set_size(power_set(S)) = 2^finite_set_size(S)

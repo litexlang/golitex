@@ -15,7 +15,8 @@ use crate::new_pipeline::execute::execute_by_stmt::{
 use crate::new_pipeline::execute::execute_def_thm_stmt::exec_def_thm_stmt;
 use crate::new_pipeline::execute::execute_def_strategy_stmt::exec_def_strategy_stmt;
 use crate::new_pipeline::execute::execute_axiom_stmt::exec_axiom_stmt;
-use crate::new_pipeline::execute::execute_def_algo_stmt::exec_def_algo_stmt;
+use crate::new_pipeline::execute::execute_def_algo_by_cases_stmt::exec_def_algo_by_cases_stmt;
+use crate::new_pipeline::execute::execute_def_algo_by_induc_stmt::exec_def_algo_by_induc_stmt;
 use crate::new_pipeline::execute::execute_eval_stmt::exec_eval_stmt;
 use crate::new_pipeline::execute::execute_proof_block_stmt::{exec_claim_stmt, exec_sketch_stmt};
 use crate::new_pipeline::execute::execute_register_stmt::{
@@ -170,10 +171,19 @@ impl Runtime {
                     ),
                 ))
             }
-            Stmt::Definition(DefinitionStmt::DefAlgoStmt(def_algo)) => {
-                Ok(ExecStmtResult::Definition(ExecDefinitionStmtResult::DefAlgo(
-                    exec_def_algo_stmt(self, def_algo)?,
-                )))
+            Stmt::Definition(DefinitionStmt::DefAlgoByCasesStmt(def_algo)) => {
+                Ok(ExecStmtResult::Definition(
+                    ExecDefinitionStmtResult::DefAlgoByCases(exec_def_algo_by_cases_stmt(
+                        self, def_algo,
+                    )?),
+                ))
+            }
+            Stmt::Definition(DefinitionStmt::DefAlgoByInducStmt(def_algo)) => {
+                Ok(ExecStmtResult::Definition(
+                    ExecDefinitionStmtResult::DefAlgoByInduc(exec_def_algo_by_induc_stmt(
+                        self, def_algo,
+                    )?),
+                ))
             }
             Stmt::Definition(DefinitionStmt::DefThmStmt(def_thm)) => Ok(ExecStmtResult::Definition(
                 ExecDefinitionStmtResult::DefThm(exec_def_thm_stmt(self, def_thm)?),

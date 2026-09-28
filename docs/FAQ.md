@@ -1507,9 +1507,10 @@ is mathematically routine, but the object is syntactically deep.
 
 A `strategy` packages that structural argument as one checked, named universal
 proof. The potentially deep reasoning lives in the definition body; after the
-definition succeeds, the resulting `forall` participates in the same ordinary
-matching used by other known universal facts. There is no second strategy-only
-proof-search route.
+definition succeeds, matching non-equality atomics may apply it through the
+dedicated known-strategy search route (same match / instantiation mechanics as
+known forall, but cited by strategy name). Strategies are not injected into
+ordinary known-forall matching.
 
 The shape is:
 
@@ -1521,8 +1522,8 @@ strategy name:
             $target_predicate(...)
 ```
 
-After the strategy is defined, Litex can use its proved `forall` when it sees a
-matching predicate goal. Its visibility follows the normal environment and
+After the strategy is defined, Litex can use it when it sees a matching
+predicate goal. Its visibility follows the normal environment and
 lexical-scope rules. In serious files, a strategy should be backed by a real
 checked proof or by clearly marked proof debt, just like any other reusable
 universal fact.

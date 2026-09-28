@@ -1,12 +1,49 @@
 use crate::new_pipeline::ast::fact::{
-    Fact, GreaterEqualFact, GreaterFact, InFact, IsFiniteSetFact, IsNonemptySetFact, LessEqualFact,
-    LessFact, NotEqualFact, NotInFact, SubsetFact,
+    atomic_fact_args_ref, AtomicFact, Fact, GreaterEqualFact, GreaterFact, InFact, IsFiniteSetFact,
+    IsNonemptySetFact, LessEqualFact, LessFact, NotEqualFact, NotInFact, SubsetFact,
 };
 use crate::new_pipeline::ast::line_file::SourceLine;
 use crate::new_pipeline::ast::obj::{Literal, Number, Obj};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::new_pipeline::execute::execute_fact_stmt::VerifyState;
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
+use std::cell::RefCell;
+
+// Break strategy → verify_fact → strategy cycles (e.g. nonempty(closed_range(a,b))
+// requiring a <= b while a nested search re-enters the same nonempty goal).
+thread_local! {
+    static BUILTIN_STRATEGY_GOAL_STACK: RefCell<Vec<String>> = RefCell::new(Vec::new());
+}
+
+pub(super) fn strategy_goal_key(fact: &AtomicFact) -> String {
+    let args: Vec<String> = atomic_fact_args_ref(fact)
+        .iter()
+        .map(|obj| format!("{}", obj.ir()))
+        .collect();
+    format!("{}:{}", fact.prop_name(), args.join(","))
+}
+
+pub(super) fn enter_strategy_goal(key: &str) -> bool {
+    BUILTIN_STRATEGY_GOAL_STACK.with(|stack| {
+        let mut stack = stack.borrow_mut();
+        if stack.iter().any(|seen| seen == key) {
+            return false;
+        }
+        stack.push(key.to_string());
+        true
+    })
+}
+
+pub(super) fn leave_strategy_goal(key: &str) {
+    BUILTIN_STRATEGY_GOAL_STACK.with(|stack| {
+        let mut stack = stack.borrow_mut();
+        if stack.last().map(|s| s.as_str()) == Some(key) {
+            stack.pop();
+        } else {
+            stack.retain(|seen| seen != key);
+        }
+    });
+}
 
 pub(super) fn zero_obj() -> Obj {
     Obj::Literal(Literal::Number(Number {
@@ -42,6 +79,8 @@ impl Runtime {
         requirement_facts: Vec<Fact>,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<(Vec<Fact>, Vec<VerifyFactResult>)>> {
+        // Strategy children may use rewrite (e.g. a >= 0 ↔ 0 <= a). Goal-IR
+        // cycle guard on the strategy dispatcher blocks strategy re-entry loops.
         let child_state = verify_state.without_well_defined_storage();
         let mut proof_of_requirement_facts = Vec::with_capacity(requirement_facts.len());
         for requirement in &requirement_facts {

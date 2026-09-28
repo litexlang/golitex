@@ -1,10 +1,15 @@
 use crate::new_pipeline::ast::fact::{AtomicFact, Fact};
+use crate::new_pipeline::ast::names::PlainName;
+use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::{
     AtomicExceptEqualityFactSearchProofByBuiltinRewrite,
     AtomicExceptEqualityFactSearchProofByBuiltinRule, AtomicExceptEqualityFactSearchProofByBuiltinStrategy,
     AtomicExceptEqualityFactSearchProofByKnownRewrite,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualFactSearchedProof;
+use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::{
+    ForallConclusionArgMatchProof, ProveForallInstantiationRequirementsProof,
+};
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::{
     AtomicFactWellDefinedProof, FailToVerifyAtomicFactWellDefinedResult,
 };
@@ -43,9 +48,20 @@ pub enum AtomicExceptEqualityFactSearchedProof {
     ByKnownAtomicFact(AtomicExceptEqualityFactSearchProofByKnownAtomicFact),
     ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy),
     ByDefinition(AtomicExceptEqualityFactSearchProofByDefinition),
+    ByKnownStrategy(SearchProofByKnownStrategy),
     ByKnownForallFact(SearchProofByKnownForallFact),
     ByBuiltinRewrite(AtomicExceptEqualityFactSearchProofByBuiltinRewrite),
     ByKnownRewrite(AtomicExceptEqualityFactSearchProofByKnownRewrite),
+}
+
+// Apply one user-defined strategy forall to a non-equality atomic goal.
+// Field order = apply stages: cite → match args → prove instantiation requirements.
+pub struct SearchProofByKnownStrategy {
+    pub strategy_name: PlainName,
+    pub then_index: usize,
+    pub forall_parameters_match_what_args: Vec<Obj>,
+    pub arg_match_proofs: Vec<ForallConclusionArgMatchProof>,
+    pub instantiation_requirements: ProveForallInstantiationRequirementsProof,
 }
 
 pub struct AtomicExceptEqualityFactSearchProofByKnownAtomicFact {
@@ -54,6 +70,7 @@ pub struct AtomicExceptEqualityFactSearchProofByKnownAtomicFact {
     // (forall/rewrite off). Same ObjIR usually lands on ByEqualIr.
     pub why_parameters_of_known_fact_are_equal_to_givens: Vec<EqualFactSearchedProof>,
 }
+
 
 // By-definition fork: user `prop` vs builtin predicate definitions.
 pub enum AtomicExceptEqualityFactSearchProofByDefinition {

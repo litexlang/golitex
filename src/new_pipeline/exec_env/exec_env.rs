@@ -3,7 +3,8 @@ use crate::new_pipeline::ast::obj::{FiniteSeqSet, FnSet, Obj, SeqSet, StructObj}
 use crate::new_pipeline::ast::param::ParamType;
 use crate::new_pipeline::ast::stmt::AxiomStmt;
 use crate::new_pipeline::ast::stmt::DefAbstractPropStmt;
-use crate::new_pipeline::ast::stmt::DefAlgoStmt;
+use crate::new_pipeline::ast::stmt::DefAlgoByCasesStmt;
+use crate::new_pipeline::ast::stmt::DefAlgoByInducStmt;
 use crate::new_pipeline::ast::stmt::DefPropStmt;
 use crate::new_pipeline::ast::stmt::DefStrategyStmt;
 use crate::new_pipeline::ast::stmt::DefStructStmt;
@@ -103,6 +104,21 @@ pub enum StoredIdentifierDefinition {
     ParamType((BoundName, ParamType)),
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum StoredDefAlgo {
+    ByCases(DefAlgoByCasesStmt),
+    ByInduc(DefAlgoByInducStmt),
+}
+
+impl StoredDefAlgo {
+    pub fn name(&self) -> &PlainName {
+        match self {
+            Self::ByCases(s) => &s.name,
+            Self::ByInduc(s) => &s.name,
+        }
+    }
+}
+
 /// Definitions introduced in one execution environment.
 ///
 /// All maps are keyed by `PlainName` (unqualified local name);
@@ -114,7 +130,7 @@ pub struct DefinitionMemory {
 
     pub predicate_definitions: HashMap<PlainName, DefPropStmt>,
     pub abstract_predicate_definitions: HashMap<PlainName, DefAbstractPropStmt>,
-    pub algorithm_definitions: HashMap<PlainName, DefAlgoStmt>,
+    pub algorithm_definitions: HashMap<PlainName, StoredDefAlgo>,
     pub structure_definitions: HashMap<PlainName, DefStructStmt>,
     pub template_definitions: HashMap<PlainName, DefTemplateStmt>,
     pub theorem_definitions: HashMap<PlainName, DefThmStmt>,
@@ -186,14 +202,14 @@ impl ExecEnv {
             .insert(def_abstract_prop.name.clone(), def_abstract_prop);
     }
 
-    pub fn lookup_def_algo(&self, name: &str) -> Option<&DefAlgoStmt> {
+    pub fn lookup_def_algo(&self, name: &str) -> Option<&StoredDefAlgo> {
         self.definitions.algorithm_definitions.get(name)
     }
 
-    pub fn store_def_algo(&mut self, def_algo: DefAlgoStmt) {
+    pub fn store_def_algo(&mut self, def_algo: StoredDefAlgo) {
         self.definitions
             .algorithm_definitions
-            .insert(def_algo.name.clone(), def_algo);
+            .insert(def_algo.name().clone(), def_algo);
     }
 
     pub fn lookup_def_thm(&self, name: &str) -> Option<&DefThmStmt> {

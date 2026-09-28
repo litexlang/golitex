@@ -5,7 +5,7 @@ use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
     // Stage order: builtin rule → known atomic → builtin strategy →
-    // by definition → known forall → (if allowed) builtin rewrite →
+    // by definition → known strategy → known forall → (if allowed) builtin rewrite →
     // known rewrite.
     //
     // Why rewrite (after known/search slots): bridge goals that still mention
@@ -53,6 +53,17 @@ impl Runtime {
         }
 
         if verify_state.can_use_forall_fact {
+            if let Some(result) = self
+                .search_atomic_except_equality_fact_proof_by_known_strategy(
+                    fact,
+                    verify_state.clone(),
+                )?
+            {
+                return Ok(Some(
+                    AtomicExceptEqualityFactSearchedProof::ByKnownStrategy(result),
+                ));
+            }
+
             if let Some(result) = self
                 .search_atomic_except_equality_fact_proof_by_known_forall_fact(
                     fact,

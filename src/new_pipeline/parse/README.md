@@ -66,7 +66,7 @@ Rejected at dispatch (intentional):
 | `import` | declare deps in `litex.config` |
 | `setting` | not supported in new_pipeline |
 | bare `strong_induc` | only after `by` |
-| `have algo` without `for fn` | need `have algo for fn f(…):` |
+| `have algo for fn …` | removed; use top-level `algo name(…) ret by cases:` / `by induc …:` |
 | `have tuple\|cart\|seq\|finite_seq\|matrix` | removed; use `have fn` |
 
 ---
@@ -124,21 +124,21 @@ Fn header params must be **object-typed** (`x R`), not `set` / `nonempty_set` / 
 
 Tracers: `have_fn_equal.lit`, `have_fn_equal_case_by_case.lit`, `have_fn_by_induc.lit`, `have_fn_by_exist.lit`
 
-### `have algo for fn` (preview)
+### `algo` (preview)
 
 ```text
-have fn nonzero_flag(x R) R by cases:
+algo nonzero_flag(x R) R by cases:
     case x = 0: 0
     case x != 0: 1
 
-have algo for fn nonzero_flag(x):
-    case x = 0: 0
-    case x != 0: 1
+algo countdown(n N) N by induc n from 0:
+    case n = 0: 0
+    case n >= 1: countdown(n - 1)
 ```
 
-Attaches an executable presentation to an **already-defined** mathematical
-function. Does not replace `have fn` facts. `eval` does not yet consume user
-algos in new_pipeline (closed numeric display eval is wired separately).
+Defines the mathematical function with the same strength as `have fn … by
+cases` / `by induc`, and stores an executable presentation. Preview `eval`
+consumes stored algos for plain-Identifier calls (see `command/eval.lit`).
 
 Tracer: `def_algo.lit`
 
@@ -224,7 +224,7 @@ strategy s:
 ```
 
 `axiom` / `strategy` goals are a single `? forall …`. Tracers: `def_thm.lit`,
-`axiom.lit`, `def_strategy.lit`.
+`axiom.lit`, `def_strategy.lit` (strategy then applies via known_strategy).
 
 ### `claim` / `sketch`
 
@@ -274,9 +274,9 @@ eval 1 + 1
 eval (1 + 2)^2
 ```
 
-Rewrite via `known_closed_numeric_equal`, require `ClosedNumericExpr` residual,
-then simplify (exact rational, else closed decimal). Does not store a proof
-fact. Does not consume user algos yet.
+Rewrite via `known_closed_numeric_equal`, then recursively evaluate
+(closed-numeric simplify; Identifier FnObj → stored algo). Does not store a
+proof fact. Recursive-algo examples deferred.
 Tracer: `examples/new_pipeline/stmt_nodes/command/eval.lit`
 
 ### `release` / `expand`

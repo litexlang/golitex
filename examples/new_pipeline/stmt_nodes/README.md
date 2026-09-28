@@ -32,7 +32,7 @@ by/            Extension, EnumerateFiniteSet, For, Contra, Cases, Def, Thm,
 release_and_expand/  ExpandRange, ReleaseAxiomOfChoice, ReleaseRegularityAxiom
                (plus release thm/struct/obj live under definition/)
 proof_block/   Claim, Sketch
-command/       Eval (closed numeric display eval; no proof fact; no user algo yet)
+command/       Eval (closed-numeric rewrite + recursive eval / stored algo; no proof fact)
 ```
 
 ## What / how (wired arms)
@@ -45,14 +45,15 @@ command/       Eval (closed numeric display eval; no proof fact; no user algo ye
 | `definition/obtain_*.lit` | Name exist witnesses | `obtain a from exist …` / `$P` |
 | `definition/have_by_*.lit` | Preimage / Replacement | `have by fn_preimage:` / `replacement_axiom:` |
 | `definition/have_fn_*.lit` | Define named functions | `have fn … =` / `by cases` / `by induc` / `by exist!` |
-| `definition/def_algo.lit` | Algo presentation for existing fn | `have algo for fn f(x): …` |
+| `definition/def_algo.lit` | Algo fn + executable cases | `algo f(x R) R by cases:` … |
 | `definition/def_prop.lit` | Concrete predicate | `prop P(x A):` body |
 | `definition/def_abstract_prop.lit` | Abstract predicate | `abstract_prop P(x, y)` |
 | `definition/def_struct*.lit` | Struct carrier | `struct Point:` fields |
 | `definition/def_template*.lit` | Parameterized def | `template<A set>:` one body |
 | `definition/def_thm.lit` | Named theorem | `thm name: ? fact` + proof |
 | `definition/axiom.lit` | Named axiom (trusted forall) | `axiom name: ? forall …` |
-| `definition/def_strategy.lit` | Named strategy (proved forall) | `strategy name: ? forall …` + proof |
+| `definition/def_strategy.lit` | Named strategy (proved forall) | `strategy name: ? forall …` + proof; later `$P` via known_strategy |
+| `definition/def_strategy_peel_sum.lit` | known_strategy peel | binary `$is_pos(a+b)` package → `$is_pos(a+b+c+d)` without intermediate sums |
 | `definition/release_*.lit` | Unpack packaged facts | `release thm` / `struct def` / `obj def` |
 | `release_and_expand/` | Expand range / release axioms | `expand:` / `release axiom_of_choice` / `release regularity_axiom` |
 | `unsafe/` | Trust boundary | `trust:` / `trust have …:` |
@@ -60,18 +61,18 @@ command/       Eval (closed numeric display eval; no proof fact; no user algo ye
 | `witness/` | Exhibit witnesses | `witness exist … from …:` etc. |
 | `by/` | Named proof methods | `by cases:` / `by contra:` / … |
 | `proof_block/` | Nested scopes | `claim:` / `sketch:` |
-| `command/eval.lit` | Display eval after closed-numeric rewrite | `eval (1 + 2)^2` / `have a R = 10` then `eval a + 1` |
+| `command/eval.lit` | Display eval: closed-numeric rewrite + algo | `eval a + 1` / `eval nonzero_flag(0) + 1` |
 
 Full human catalog: `docs/Manual.md` → Statements → Preview Stmt catalog.
 Parse dispatch: `src/new_pipeline/parse/README.md`.
 
 Omitted for now: `release zorn_lemma` (wired; chain-upper-bound obligation still
 needs a green tracer).
-`eval` rewrites via `known_closed_numeric_equal`, requires a `ClosedNumericExpr`
-residual, then simplifies (exact rational, else closed decimal). It does
-**not** store a proof fact and does **not** consume user algos yet.
+`eval` rewrites via `known_closed_numeric_equal`, then recursively evaluates:
+closed-numeric simplify, and plain-Identifier `FnObj` through a stored algo.
+It does **not** store a proof fact. Recursive-algo examples are deferred.
 Tracer: `command/eval.lit`.
-`have algo for fn` is wired for store+agreement (see `definition/def_algo.lit`).
+Top-level `algo … by cases` / `by induc` is wired (see `definition/def_algo.lit`).
 `obtain … from exist` / `exist!` / `$P` is wired (see `definition/obtain_*.lit`
 and `definition/def_template_obtain_from_*.lit`).
 `have by replacement_axiom` is wired (see `definition/have_by_replacement_axiom.lit`
@@ -80,8 +81,9 @@ and `definition/def_template_have_by_replacement_axiom.lit`).
 `axiom` is wired (see `definition/axiom.lit`); `release thm` / `by thm` resolve
 axiom names the same way as theorems.
 `strategy` is wired (see `definition/def_strategy.lit`): proves a `? forall`,
-stores the named interface, and injects the forall into ordinary matching
-(no separate strategy search channel).
+stores the named interface under `strategy_definitions`, and later non-equality
+atomics may apply it via the `known_strategy` search stage (after by-definition,
+before known forall). The forall is **not** injected into ordinary known_forall.
 
 ## Run all
 

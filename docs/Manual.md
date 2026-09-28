@@ -1921,7 +1921,7 @@ runtime. This section gives each statement family one canonical home.
 > | `Register` | Register rewrite/infer properties of a user prop (no proof body). | `register reflexive:` / `symmetric:` / `transitive:` + one `? forall …` |
 > | `Witness` | Prove an exist / atomic-exist / nonempty goal by exhibiting witnesses. | `witness exist … from …:` / `witness $P(…) from …:` / `witness $is_nonempty_set(S) from e:` |
 > | `ProofBlock` | Nested local proof scope. | `claim: ? fact` … / `sketch:` … |
-> | `Command` | Non-proof session command. | `eval expr` (preview: closed-numeric equal rewrite then simplify; no proof fact; no user algo yet; tracer `examples/new_pipeline/stmt_nodes/command/eval.lit`) |
+> | `Command` | Non-proof session command. | `eval expr` (preview: closed-numeric rewrite + recursive eval including stored algo; no proof fact; recursive-algo examples deferred; tracer `examples/new_pipeline/stmt_nodes/command/eval.lit`) |
 >
 > **`Definition` / `DefineObj` (object names):**
 >
@@ -2419,27 +2419,23 @@ have algo for f(x):
 This is an `error`; the implementation does not agree with the defined
 function.
 
-> **Preview (`new_pipeline`):** the surface is `have algo for fn f(x): …`
-> (the `fn` keyword marks attachment to an existing mathematical function).
-> Execution checks case/default agreement then stores the presentation;
-> `eval` first substitutes `known_closed_numeric_equal` representatives
-> (same rewrite as atomic-fact closed-numeric substitution), requires a
-> `ClosedNumericExpr` residual, then simplifies for display (exact rational,
-> else closed decimal). It does not store a proof fact and does not yet
-> consume user algos. Tracers: `examples/new_pipeline/stmt_nodes/definition/def_algo.lit`,
+> **Preview (`new_pipeline`):** the surface is `algo f(x R) R by cases:` or
+> `algo f(n N) N by induc n from 0:` (no separate `have fn` required).
+> Execution defines the function (same checks as `have fn … by cases` / `by induc`)
+> and stores the executable presentation.
+> `eval` first substitutes `known_closed_numeric_equal` representatives, then
+> recursively evaluates: closed-numeric simplify, and plain-Identifier function
+> calls through a stored algo (case match → return expr → evaluate again).
+> It does not store a proof fact. Dedicated recursive-algo tracers are deferred.
+> Tracers: `examples/new_pipeline/stmt_nodes/definition/def_algo.lit`,
 > `examples/new_pipeline/stmt_nodes/command/eval.lit`.
 >
 > ```litex
-> have fn parity_value(n Z) Z by cases:
->     case n % 2 = 0: 0
->     case n % 2 != 0: 1
+> algo nonzero_flag(x R) R by cases:
+>     case x = 0: 0
+>     case x != 0: 1
 >
-> have algo for fn parity_value(n):
->     case n % 2 = 0: 0
->     case n % 2 != 0: 1
->
-> have a R = 10
-> eval a + 1
+> eval nonzero_flag(0) + 1
 > ```
 
 ### Extracting a proved numerical step to Python or C (experimental)
@@ -2747,15 +2743,16 @@ trusted background or proof debt, never as a checked proof of the conclusion.
 ### Strategies
 
 A `strategy` proves a named, restricted atomic universal pattern. Once the
-definition succeeds, its proved `forall` enters ordinary fact matching and is
-available to all later statements in that environment. There is no separate
-activation state.
+definition succeeds, later non-equality atomics may apply it through the
+dedicated known-strategy search stage. There is no ambient known-forall
+injection and no separate activation state.
 
 > **Preview (`new_pipeline`):** `strategy` is parse+exec wired like `thm`'s
 > forall path (fact-only proof body). The named interface is stored under
-> `strategy_definitions`, and the proved `forall` is injected into ordinary
-> known-fact matching. Kernel does not yet enforce a stricter “atomic
-> conclusion only” shape beyond `? forall …`. Tracer:
+> `strategy_definitions`. The proved forall is **not** injected into ordinary
+> known_forall matching; non-equality atomics apply it through `known_strategy`
+> (after by-definition, before known forall), returning `ByKnownStrategy`.
+> Tracer:
 > [`examples/new_pipeline/stmt_nodes/definition/def_strategy.lit`](../examples/new_pipeline/stmt_nodes/definition/def_strategy.lit).
 
 ```litex
@@ -2767,10 +2764,10 @@ strategy use_is_one:
         x = 1
         =>:
             $is_one(x)
-    x = 1
-    by def $is_one(x)
+    $is_one(x)
 
-$is_one(1)
+have a R = 1
+$is_one(a)
 ```
 
 `use` and `stop` are ordinary identifier names; the former strategy-control
@@ -2921,7 +2918,7 @@ introductions.
 | `thm`, `axiom` | `thm` proves its target; `axiom` checks its interface but trusts truth. | A named reusable theorem interface; universal facts also enter ordinary matching. |
 | `release thm` | Arity/domains/premises; the form is bare and has no goal/proof body. Plain or `mod::export::`-qualified theorem name (preview). | All instantiated conclusions and their ordinary inferred consequences. |
 | `by thm ... => fact` | Arity/domains/premises and one selected atomic target. Same qualified-name lookup as `release thm` (preview). | Only the requested atomic selection and its ordinary inferred consequences. |
-| `strategy` | The statement proves its `? forall` goal (preview: fact-only body; no stricter atomic-shape gate yet). | A named definition whose proved `forall` enters ordinary matching. |
+| `strategy` | The statement proves its `? forall` goal (preview: fact-only body; no stricter atomic-shape gate yet). | A named strategy definition; later non-equality atomics may apply it via `known_strategy` (`ByKnownStrategy`), not ambient known_forall. |
 | `witness exist/exist!` | Witness count/types/body; `exist!` additionally verifies the generated two-candidate uniqueness universal. | The exact existential fact. Binder names stay local. |
 | `witness $P(args)` | The concrete prop has one positive ordinary `exist` clause; ordinary witness checks run after substitution. `exist!` uses explicit `witness exist! ...` followed by `by def`. | `$P(args)` as the primary fact, then definition inference. |
 | `witness $is_nonempty_set(S)` | The proposed object is in `S`. | Nonemptiness of `S`. |
@@ -3099,8 +3096,8 @@ For an ordinary atomic fact, Litex follows this public progression:
 2. Reuse an already known fact, including transport through known equalities,
    or evaluate a closed expression directly.
 3. Try a bounded builtin mathematical rule or a terminating structural rule.
-4. Try an applicable known `forall` (including one published by a strategy
-   definition), a concrete definition, or a registered predicate property.
+4. Try an applicable known strategy (user `strategy` definition), known `forall`,
+   a concrete definition, or a registered predicate property.
 5. On success, store the fact and run builtin inference on the new information.
 
 This is goal-directed verification, not unrestricted theorem search. A builtin
@@ -4201,6 +4198,17 @@ forall a, b R+:
 > [`examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/`](../examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/)
 > and
 > [`examples/new_pipeline/proof_nodes/equal/by_builtin_rule/`](../examples/new_pipeline/proof_nodes/equal/by_builtin_rule/).
+>
+> Builtin strategy (preview, `new_pipeline`): structural requirement strategies
+> with typed evidence (one strategy ↔ one result struct). Equality strategies
+> include extremum antisymmetry, finite-set product pointwise, mod congruence,
+> and rational identities with nonzero premises. Atomic strategies cover
+> additive sign, nonzero product, structural order, numeric carrier closure,
+> set membership / subset decomposition, and recursive `$is_finite_set` /
+> `$is_nonempty_set` constructors. Tracers under
+> [`examples/new_pipeline/proof_nodes/atomic/by_builtin_strategy/`](../examples/new_pipeline/proof_nodes/atomic/by_builtin_strategy/)
+> and
+> [`examples/new_pipeline/proof_nodes/equal/by_builtin_strategy/`](../examples/new_pipeline/proof_nodes/equal/by_builtin_strategy/).
 
 The last equivalence is an integer-adjacency rule: a strict bound immediately
 below the successor `n + 1` is the same as the weak bound at `n`. It requires

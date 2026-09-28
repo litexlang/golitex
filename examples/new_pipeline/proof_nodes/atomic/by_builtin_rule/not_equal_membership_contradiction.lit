@@ -5,5 +5,5 @@ have x R
 have y R
 have A set
 trust x $in A
-trust y $notin A
+trust not y $in A
 x != y

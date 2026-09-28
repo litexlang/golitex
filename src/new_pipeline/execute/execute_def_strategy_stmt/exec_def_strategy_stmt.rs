@@ -2,27 +2,29 @@ use crate::new_pipeline::ast::fact::Fact;
 use crate::new_pipeline::ast::stmt::DefStrategyStmt;
 use crate::new_pipeline::exec_env::exec_env::ExecEnv;
 use crate::new_pipeline::execute::execute_by_stmt::{
-    proof_verify_state, run_fact_only_proof_steps, store_goal_fact, verify_goal_fact,
-    ByProofBodyFailed, ByProofStepResult,
+    proof_verify_state, run_fact_only_proof_steps, verify_goal_fact, ByProofBodyFailed,
+    ByProofStepResult,
 };
 use crate::new_pipeline::execute::execute_fact_stmt::{
     VerifyFactResult, VerifyFactWellDefinedResult,
 };
 use crate::new_pipeline::runtime::{Runtime, RuntimeResult};
-use crate::new_pipeline::store_fact_and_infer::StoreFactAndInferResult;
 
-// strategy Name: ? forall … — prove the forall (fact-only body), store the named
-// interface, and inject the forall into ordinary known-fact matching.
+// strategy Name: ? forall … — prove the forall (fact-only body) and store the
+// named interface under strategy_definitions.
 //
-// No separate strategy search channel and no activation state.
-// Shape restriction ("restricted atomic") is not enforced here; any well-formed
-// forall goal is accepted (same proof path as thm's forall branch).
+// The proved forall is NOT injected into ordinary known_forall matching.
+// Later atomic goals use it via the dedicated known_strategy search stage.
 //
 // Example:
-//   strategy refl_on_r:
+//   prop is_one(x R):
+//       x = 1
+//   strategy use_is_one:
 //       ? forall x R:
-//           x = x
-//   # later: known forall matching may use this fact
+//           x = 1
+//           =>:
+//               $is_one(x)
+//       $is_one(x)
 
 pub enum ExecDefStrategyStmtResult {
     Success(ExecDefStrategyStmtSuccess),
@@ -34,7 +36,6 @@ pub struct ExecDefStrategyStmtSuccess {
     pub proof_steps: Vec<ByProofStepResult>,
     pub conclusion_proofs: Vec<VerifyFactResult>,
     pub local_env: Box<ExecEnv>,
-    pub stored: StoreFactAndInferResult,
 }
 
 pub enum ExecDefStrategyStmtFailed {
@@ -46,7 +47,6 @@ pub enum ExecDefStrategyStmtFailed {
         index: usize,
         result: VerifyFactResult,
     },
-    Store(String),
 }
 
 impl ExecDefStrategyStmtResult {
@@ -90,21 +90,11 @@ pub fn exec_def_strategy_stmt(
 
     runtime.top_exec_env_mut().store_def_strategy(stmt.clone());
 
-    let stored = match store_goal_fact(runtime, &goal)? {
-        Ok(s) => s,
-        Err(msg) => {
-            return Ok(ExecDefStrategyStmtResult::Failed(
-                ExecDefStrategyStmtFailed::Store(msg),
-            ));
-        }
-    };
-
     Ok(ExecDefStrategyStmtResult::Success(ExecDefStrategyStmtSuccess {
         goal_wd,
         proof_steps,
         conclusion_proofs,
         local_env,
-        stored,
     }))
 }
 
@@ -203,7 +193,6 @@ mod tests {
                     ExecDefStrategyStmtFailed::Conclusion { index, .. } => {
                         format!("Conclusion:{index}")
                     }
-                    ExecDefStrategyStmtFailed::Store(msg) => format!("Store:{msg}"),
                 };
                 panic!("strategy failed: {kind}")
             }
@@ -212,4 +201,3 @@ mod tests {
         assert!(runtime.def_strategy_visible_in_stack("refl_on_r").is_some());
     }
 }
-

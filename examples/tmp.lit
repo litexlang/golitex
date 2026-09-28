@@ -1,33 +1,11 @@
-# A9 rest + A10 strict add/mul smoke
-
-have a R+
-sqrt(a) != 0
-
-have x R
-have y R
-trust x != 0
-x^2 + y^2 != 0
-
-have u R
-have v R
-trust u != 0 - v
-u + v != 0
-
-have p R
-have q R
-have A set
-trust p $in A
-trust q $notin A
-p != q
-
-have m R
-have n R
-have c R
-trust m < n
-m + c < n + c
-
-have s R
-have t R
-have k R+
-trust s < t
-s * k < t * k
+# E9 probe empties
+have f fn(x Z) Z
+finite_set_sum({}, f) = 0
+finite_set_product({}, f) = 1
+have op fn(acc Z, v Z) Z
+have seed Z
+finite_set_reduce({}, f, op, seed) = seed
+have a Z
+have b Z
+trust b < a
+reduce(a, b, f, op, seed) = seed

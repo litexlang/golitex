@@ -1,10 +1,6 @@
-# Stmt: Definition.DefAlgoStmt → exec_def_algo_stmt
+# Stmt: Definition.DefAlgoByCasesStmt → exec_def_algo_by_cases_stmt
 # Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/stmt_nodes/definition/def_algo.lit
 
-have fn nonzero_flag(x R) R by cases:
-    case x = 0: 0
-    case x != 0: 1
-
-have algo for fn nonzero_flag(x):
+algo nonzero_flag(x R) R by cases:
     case x = 0: 0
     case x != 0: 1
