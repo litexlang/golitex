@@ -3,9 +3,10 @@
 //! Prefer this module over importing the kernel's implementation modules or
 //! the broad internal [`crate::prelude`].
 //!
-//! `Runtime::execute_source` executes inside the source context created by the
-//! runtime constructor. Select a different virtual or file source before the
-//! first execution when the source label matters:
+//! `Runtime::execute_source` runs inside the source fixed at construction.
+//! Use `Runtime::new` / `Default` for eval, or `with_virtual_source` /
+//! `with_real_file` / `new_for_repository` when the source label or path
+//! matters:
 //!
 //! ```
 //! use litex::api::Runtime;

@@ -6,7 +6,9 @@
 pub mod fact;
 pub mod obj;
 pub mod param;
+pub mod readable;
 pub mod stmt;
 pub mod types;
 
+pub use readable::readable_string_from_ir_text;
 pub use types::{FactIR, ObjIR, ParamIR, StmtIR};

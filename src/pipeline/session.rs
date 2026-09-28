@@ -387,7 +387,8 @@ fn initialize_session_runtime(
     }
 
     if target == SessionTarget::Isolated || !directory.join("litex.config").is_file() {
-        runtime.start_virtual_source(VirtualSource::Session);
+        let options = runtime.execution_options;
+        *runtime = Runtime::new_with_virtual_source(options, VirtualSource::Session);
         return Ok(("isolated", vec![]));
     }
 

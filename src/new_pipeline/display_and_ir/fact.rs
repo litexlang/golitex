@@ -10,6 +10,13 @@ macro_rules! impl_display_pair {
         pub fn display_string(&self) -> String {
             self.ir().display_string()
         }
+
+        // Human-facing: IR text with `#id#` wrappers stripped.
+        pub fn readable_string(&self) -> String {
+            crate::new_pipeline::display_and_ir::readable_string_from_ir_text(
+                self.ir().as_str(),
+            )
+        }
     };
 }
 
@@ -64,6 +71,7 @@ impl AtomicFact {
             AtomicFact::NotSupersetFact(x) => x.ir(),
         }
     }
+
     pub fn display_string(&self) -> String {
         match self {
             AtomicFact::NormalAtomicFact(x) => x.display_string(),
@@ -95,6 +103,11 @@ impl AtomicFact {
             AtomicFact::NotSubsetFact(x) => x.display_string(),
             AtomicFact::NotSupersetFact(x) => x.display_string(),
         }
+    }
+
+    // Human-facing: IR text with `#id#` wrappers stripped.
+    pub fn readable_string(&self) -> String {
+        crate::new_pipeline::display_and_ir::readable_string_from_ir_text(self.ir().as_str())
     }
 }
 

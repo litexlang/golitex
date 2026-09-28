@@ -4,8 +4,7 @@ use super::*;
 
 #[test]
 fn compositional_well_definedness_memo_returns_exact_reuse_source() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("compositional-wd-reuse.lit");
+    let mut runtime = Runtime::with_named_source("compositional-wd-reuse.lit");
     let object: Obj = Number::new("1".to_string()).into();
     let verify_state = VerifyState::initial();
 
@@ -32,8 +31,7 @@ fn compositional_well_definedness_memo_returns_exact_reuse_source() {
 
 #[test]
 fn active_well_definedness_reentry_is_an_error() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("ordinary-active-wd-reentry.lit");
+    let mut runtime = Runtime::with_named_source("ordinary-active-wd-reentry.lit");
     let object: Obj = Number::new("1".to_string()).into();
     let verify_state = VerifyState::initial();
     verify_state.begin_well_defined_object(&obj_equality_key(&object));

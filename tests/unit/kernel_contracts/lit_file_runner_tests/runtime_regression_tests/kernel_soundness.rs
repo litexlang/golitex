@@ -648,8 +648,7 @@ thm alpha_from_trust:
     forall z R:
         $p(z)
 "#;
-    let mut trusted_runtime = Runtime::default();
-    trusted_runtime.start_isolated_source("forall_alpha_cache_reuses_trusted_fact");
+    let mut trusted_runtime = Runtime::with_named_source("forall_alpha_cache_reuses_trusted_fact");
     let (trusted_results, trusted_error) = execute_source(trusted_source, &mut trusted_runtime);
     let (trusted_succeeded, trusted_output) =
         render_run_output(&trusted_runtime, &trusted_results, &trusted_error);
@@ -671,8 +670,7 @@ thm clean_alpha:
     forall z R:
         z = z
 "#;
-    let mut clean_runtime = Runtime::default();
-    clean_runtime.start_isolated_source("forall_alpha_cache_stays_clean");
+    let mut clean_runtime = Runtime::with_named_source("forall_alpha_cache_stays_clean");
     let (clean_results, clean_error) = execute_source(clean_source, &mut clean_runtime);
     let (clean_succeeded, clean_output) =
         render_run_output(&clean_runtime, &clean_results, &clean_error);
@@ -921,8 +919,7 @@ $positive_value(-2, R)
 }
 
 fn run_kernel_soundness_source(source_code: &str, label: &str) -> (bool, String) {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source(label);
+    let mut runtime = Runtime::with_named_source(label);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     render_run_output(&runtime, &stmt_results, &runtime_error)
 }

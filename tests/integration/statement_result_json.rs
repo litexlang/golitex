@@ -6,8 +6,7 @@ use std::rc::Rc;
 
 #[test]
 fn numeric_fact_statement_result_json_retains_normalization_store_and_infer() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("numeric_fact_statement_result_json");
+    let mut runtime = Runtime::with_named_source("numeric_fact_statement_result_json");
     let tokenizer = Tokenizer::new();
     let mut blocks = tokenizer
         .parse_blocks(
@@ -127,8 +126,7 @@ fn refined_standard_set_infer_statement_result_json_retains_typed_source_carrier
             StandardSet::CStar,
         ),
     ] {
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("refined_standard_set_infer_statement_result_json");
+        let mut runtime = Runtime::with_named_source("refined_standard_set_infer_statement_result_json");
         let tokenizer = Tokenizer::new();
         let mut blocks = tokenizer
             .parse_blocks(
@@ -170,8 +168,7 @@ fn refined_standard_set_infer_statement_result_json_retains_typed_source_carrier
 
 #[test]
 fn object_choice_statement_result_json_retains_typed_standard_set_nonempty_child_evidence() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("object_choice_statement_result_json");
+    let mut runtime = Runtime::with_named_source("object_choice_statement_result_json");
     let tokenizer = Tokenizer::new();
     let mut blocks = tokenizer
         .parse_blocks(
@@ -219,8 +216,7 @@ fn object_choice_statement_result_json_retains_typed_standard_set_nonempty_child
 
 #[test]
 fn claim_statement_result_json_serializes_named_verification_fields_and_children() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("claim_statement_result_json");
+    let mut runtime = Runtime::with_named_source("claim_statement_result_json");
     let tokenizer = Tokenizer::new();
     let mut blocks = tokenizer
         .parse_blocks(
@@ -306,8 +302,7 @@ fn claim_statement_result_json_serializes_named_verification_fields_and_children
 
 #[test]
 fn trusted_claim_result_contains_only_environment_effects() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("trusted_claim_statement_result_json");
+    let mut runtime = Runtime::with_named_source("trusted_claim_statement_result_json");
     runtime.replace_current_execution_mode(TrustedOrRequireVerify::Trusted);
     let tokenizer = Tokenizer::new();
     let mut blocks = tokenizer
@@ -345,8 +340,7 @@ fn trusted_claim_result_contains_only_environment_effects() {
 
 #[test]
 fn set_builder_wd_scope_is_reused_through_its_complete_binder_result() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("set_builder_recursive_wd");
+    let mut runtime = Runtime::with_named_source("set_builder_recursive_wd");
     let tokenizer = Tokenizer::new();
     let mut blocks = tokenizer
         .parse_blocks(
@@ -412,8 +406,7 @@ fn set_builder_wd_scope_is_reused_through_its_complete_binder_result() {
 
 #[test]
 fn anonymous_function_wd_reuses_alpha_equivalent_complete_binder_result() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("anonymous_function_recursive_wd");
+    let mut runtime = Runtime::with_named_source("anonymous_function_recursive_wd");
     let tokenizer = Tokenizer::new();
     let mut blocks = tokenizer
         .parse_blocks(
@@ -490,8 +483,7 @@ fn anonymous_function_wd_reuses_alpha_equivalent_complete_binder_result() {
 
 #[test]
 fn object_wd_reuse_is_explicit_inside_one_statement_and_resets_for_the_next() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("statement_local_object_wd_reuse");
+    let mut runtime = Runtime::with_named_source("statement_local_object_wd_reuse");
     let tokenizer = Tokenizer::new();
     let blocks = tokenizer
         .parse_blocks(
@@ -543,8 +535,7 @@ fn object_wd_reuse_is_explicit_inside_one_statement_and_resets_for_the_next() {
 
 #[test]
 fn forall_wd_returns_binder_premise_and_conclusion_layers() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("forall_recursive_wd");
+    let mut runtime = Runtime::with_named_source("forall_recursive_wd");
     let tokenizer = Tokenizer::new();
     let mut blocks = tokenizer
         .parse_blocks(
@@ -580,8 +571,7 @@ fn forall_wd_returns_binder_premise_and_conclusion_layers() {
 
 #[test]
 fn partial_predicate_wd_retains_its_domain_proof_result() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("partial_predicate_recursive_wd");
+    let mut runtime = Runtime::with_named_source("partial_predicate_recursive_wd");
     let tokenizer = Tokenizer::new();
     let mut blocks = tokenizer
         .parse_blocks("$prime(2)", Rc::from("partial_predicate_recursive_wd.lit"))

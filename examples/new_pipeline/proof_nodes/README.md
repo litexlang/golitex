@@ -25,7 +25,6 @@ Exit 0 is enough. No requirement to assert which `searched_proof` variant won.
 Stub / not-yet-wired nodes are **omitted** (no SKIP placeholders).
 Still open (non-rewrite): empty atomic builtin-rule families (`NormalAtomic` /
 several remaining `Not*`); more exist builtins;
-secondary subset leaves (set-minus / power-set / cart / subset-transitivity);
 MatchingOneArgByOne beyond the traced constructors;
 deeper aggregate (sum split / bijective reindex); nested-mod algebra;
 complex `re`/`img` equalities; richer `!=`.
@@ -37,6 +36,10 @@ Subset leftovers (A8): `union(A,B) $subset union(C,D)` componentwise;
 `range` / `closed_range` into `N`/`N+`/`Z`/`Q`/`R` —
 see `subset_union_from_componentwise.lit`,
 `subset_integer_range_numeric_carrier.lit`.
+Secondary subset leaves: power-set monotone, set-minus common-right monotone,
+cart componentwise, subset transitivity — see
+`subset_power_set_monotone.lit`, `subset_set_minus_common_right_monotone.lit`,
+`subset_cart_componentwise.lit`, `subset_transitivity.lit`.
 NotEqual leftovers (A9 partial): nonempty ⇒ `A != {}`;
 `n $in N` ∧ `1 <= n` ⇒ `n != 0`; `a != 0` ⇒ `a^n != 0`;
 `a != 0` ∧ `b != 0` ⇒ `a/b != 0`; `a*b != 0` ⇒ `a != 0`;
@@ -172,8 +175,13 @@ WD gallery (positives for done Obj/Fact WD): `examples/new_pipeline/wd/`.
 ## Layout
 
 ```text
-or/           ByBuiltinRule (trichotomy ×3, NaturalZeroOrAtLeastOne), SelectedBranch,
-              KnownOr, KnownForall
+or/           ByBuiltinRule (trichotomy ×3, NaturalZeroOrAtLeastOne,
+              ComplementaryAtomic, AbsSignSplit, ZeroProductSplit,
+              LessOrGreaterEqual, GreaterOrLessEqual, WeakOrderLeOrGe,
+              EqualityPlusStrictCoversWeak, CompleteResidues,
+              IntegerSuccessorTail, SquareSumComponentNonzero,
+              ClassicalImplication, IntegerDiscreteSplit),
+              SelectedBranch, KnownOr, KnownForall
 equal/        ByBuiltinRule (FnSet / AnonymousFn / SetBuilder alpha-equal,
               EqualToObjWithFreeParamsLookup, Calculation closed decimal +
               arithmetic_ops + integer_sqrt_log + complex_nested), EquivalenceClass, ObjectDefinition
@@ -185,7 +193,8 @@ atomic/       ByBuiltinRule (incl. NotIn closed/list/intersect/union/set_minus;
               union/intersect/set_minus/family_union/index_union + R-arithmetic
               closure; LessEqual abs + add/sub/mul order algebra + triangle/
               reverse-triangle/sandwich; Subset list-set/union/intersect from
-              members or operand upper bounds; Greater from known less), KnownAtomicFact,
+              members or operand upper bounds + power-set/set-minus/cart/
+              transitivity secondary leaves; Greater from known less), KnownAtomicFact,
               ByDefinition (user prop + builtin official defs; see
               atomic/by_definition/ and src/.../by_definition_design.md),
               BuiltinStrategy (atomic family: additive_sign / nonzero /

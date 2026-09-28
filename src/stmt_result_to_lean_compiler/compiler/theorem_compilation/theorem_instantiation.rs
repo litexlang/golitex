@@ -351,12 +351,11 @@ impl StmtResultToLeanCompiler {
                 application_to_target_same,
             });
         }
-        let mut instantiator = Runtime::default();
+        let mut instantiator = Runtime::with_virtual_source(VirtualSource::ToLean);
         // Capture-avoiding substitution for existential conclusions consults
         // the Runtime's visible-definition frame even though compilation does
         // not execute or search for any proof. Give this isolated structural
         // instantiator the same mandatory empty frame as an ordinary source.
-        instantiator.start_virtual_source(VirtualSource::ToLean);
         for (domain_index, ((source_domain, retained_domain), check)) in source_forall
             .dom_facts
             .iter()

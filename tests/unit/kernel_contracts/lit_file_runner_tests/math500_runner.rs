@@ -101,8 +101,7 @@ fn run_math500_tmp() {
         None => panic!("{:?} must be valid UTF-8", math500_tmp_path),
     };
 
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source(path_for_runtime);
+    let mut runtime = Runtime::with_named_source(path_for_runtime);
 
     let mut durations_ms: Vec<(String, f64)> = Vec::new();
     for (snippet_index, snippet) in snippets.iter().enumerate() {
@@ -232,7 +231,7 @@ fn run_math500_litex_lit_dir(base_dir: &Path) {
     let runtime_setup_start = Instant::now();
     let mut runtime = Runtime::default();
     let runtime_setup_duration_ms = runtime_setup_start.elapsed().as_secs_f64() * 1000.0;
-    runtime.start_isolated_source(base_dir_str.as_str());
+    runtime = Runtime::with_named_source(base_dir_str.as_str());
 
     let run_wall_start = Instant::now();
     let mut total_count: usize = 0;

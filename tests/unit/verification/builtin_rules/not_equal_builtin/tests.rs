@@ -14,8 +14,7 @@ forall a set, b set:
 
 #[test]
 fn not_equal_symmetry_is_a_builtin_rule_with_a_negative_boundary() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("not-equality-symmetry-positive");
+    let mut runtime = Runtime::with_named_source("not-equality-symmetry-positive");
     let (results, error) = execute_source(SYMMETRY_SOURCE, &mut runtime);
     let (succeeded, output) = render_run_output(&runtime, &results, &error);
     assert!(succeeded, "not-equality symmetry should verify:\n{output}");
@@ -24,8 +23,7 @@ fn not_equal_symmetry_is_a_builtin_rule_with_a_negative_boundary() {
         "the proof should name the builtin route:\n{output}"
     );
 
-    let mut negative_runtime = Runtime::default();
-    negative_runtime.start_isolated_source("not-equality-symmetry-negative");
+    let mut negative_runtime = Runtime::with_named_source("not-equality-symmetry-negative");
     let (negative_results, negative_error) =
         execute_source("have a, b R\nb != a", &mut negative_runtime);
     let (negative_succeeded, negative_output) =
@@ -47,8 +45,7 @@ have x, y R
 trust $marked(x)
 y != x
 "#;
-    let mut known_forall_runtime = Runtime::default();
-    known_forall_runtime.start_isolated_source("not-equality-symmetry-known-forall");
+    let mut known_forall_runtime = Runtime::with_named_source("not-equality-symmetry-known-forall");
     let (known_forall_results, known_forall_error) =
         execute_source(known_forall_source, &mut known_forall_runtime);
     let (known_forall_succeeded, known_forall_output) = render_run_output(

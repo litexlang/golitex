@@ -1,0 +1,9 @@
+# Node: or.ByBuiltinRule.ClassicalImplication
+# Rule struct: OrBuiltinClassicalImplication
+# Run: LITEX_NEW_PIPELINE=1 litex -f examples/new_pipeline/proof_nodes/or/by_builtin_rule/classical_implication.lit
+#
+# Packaging not A or B: assume A (= negate of the negative arm), prove B.
+# Example: under a = 0, prove a * b = 0 ⇒ a != 0 or a * b = 0.
+
+have a, b R
+a != 0 or a * b = 0

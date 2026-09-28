@@ -52,6 +52,9 @@ fn use_new_pipeline_track() -> bool {
 fn launch_new_pipeline_track() {
     match launch_new_pipeline() {
         Ok(outcome) => {
+            if let Some(json) = outcome.normal_json() {
+                println!("{}", json);
+            }
             if outcome.process_failed() {
                 // Soft Failed / session_error stay in the outcome payload for later JSON.
                 process::exit(1);

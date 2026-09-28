@@ -252,7 +252,7 @@ fn run_examples_phase1_with_runtime(
         };
     }
 
-    runtime.start_isolated_source(phase1_groups[0].items[0].path_for_runtime.as_str());
+    *runtime = Runtime::with_named_source(phase1_groups[0].items[0].path_for_runtime.as_str());
     crate::verification::known_forall_profile::reset();
 
     let examples_wall_start = Instant::now();
@@ -356,7 +356,7 @@ fn run_examples_phase1_sequential_with_runtime(
         examples_ran = true;
         let examples_wall_start = Instant::now();
         let first_path = phase1_items[0].path_for_runtime.as_str();
-        runtime.start_isolated_source(first_path);
+        *runtime = Runtime::with_named_source(first_path);
         crate::verification::known_forall_profile::reset();
 
         for (item_index, item) in phase1_items.iter().enumerate() {
@@ -493,7 +493,7 @@ fn run_docs_markdown_with_runtime(
 
     if runtime_needs_file_path {
         let synthetic_path = format!("{} ```litex``` snippets", docs_label);
-        runtime.start_isolated_source(synthetic_path.as_str());
+        *runtime = Runtime::with_named_source(synthetic_path.as_str());
     }
 
     println!(
@@ -703,7 +703,7 @@ fn run_litex_run_group(group: LitexRunGroup) -> LitexRunGroupSummary {
         }
 
         if item_index == 0 {
-            runtime.start_isolated_source(item.path_for_runtime.as_str());
+            *runtime = Runtime::with_named_source(item.path_for_runtime.as_str());
         } else {
             runtime.reset_for_isolated_runner_item();
             runtime.set_current_user_lit_file_path(item.path_for_runtime.as_str());

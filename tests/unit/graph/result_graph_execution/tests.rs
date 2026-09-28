@@ -100,8 +100,7 @@ have fn iterate(n N) R+ by induc n from 0:
 
 #[test]
 fn completed_result_graph_does_not_need_runtime() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("runtime_free_result_graph");
+    let mut runtime = Runtime::with_named_source("runtime_free_result_graph");
     let (results, error) = execute_source("2 + 3 $in N", &mut runtime);
     assert!(error.is_none());
     drop(runtime);

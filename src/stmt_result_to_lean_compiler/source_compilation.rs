@@ -34,8 +34,7 @@ pub fn execute_litex_source_for_lean_compilation(
     _source_label: &str,
 ) -> Result<Vec<StmtResult>, RuntimeError> {
     let normalized = source.replace('\r', "");
-    let mut runtime = Runtime::default();
-    runtime.start_virtual_source(VirtualSource::ToLean);
+    let mut runtime = Runtime::with_virtual_source(VirtualSource::ToLean);
     let outcome = runtime.execute_source(&normalized);
     if let Some(error) = outcome.runtime_error {
         return Err(error);

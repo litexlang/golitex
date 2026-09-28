@@ -33,6 +33,8 @@ pub struct RunLitexCodeResult {
     /// Clone yet, so Rust stores indices; JSON can expand them to objects.
     pub failed_statement_results: Option<Vec<usize>>,
     pub session_error: Option<RunSessionError>,
+    /// Pretty Normal JSON for this run (filled while Runtime is still alive).
+    pub normal_json: Option<String>,
 }
 
 pub struct RunFileResult {
@@ -91,11 +93,24 @@ impl RunLitexCodeResult {
             statement_results,
             failed_statement_results,
             session_error,
+            normal_json: None,
         }
     }
 
     pub fn process_failed(&self) -> bool {
         !self.success
+    }
+
+    /// Fill `normal_json` while the Runtime still holds cited facts.
+    pub fn attach_normal_json(
+        &mut self,
+        runtime: &crate::new_pipeline::runtime::Runtime,
+        target: &str,
+        path: Option<&std::path::Path>,
+    ) {
+        self.normal_json = Some(crate::new_pipeline::json_output::emit_run_normal(
+            self, runtime, target, path,
+        ));
     }
 }
 
@@ -131,6 +146,7 @@ impl RunRepoResult {
             statement_results: Vec::new(),
             failed_statement_results: None,
             session_error,
+            normal_json: None,
         };
         Self { path, run, files }
     }
@@ -161,6 +177,15 @@ impl RunCommandOutcome {
             Self::RunEval(r) => r.process_failed(),
             Self::RunRepo(r) => r.process_failed(),
             Self::RunRepl | Self::Help(_) | Self::Version(_) => false,
+        }
+    }
+
+    pub fn normal_json(&self) -> Option<&str> {
+        match self {
+            Self::RunFile(r) => r.run.normal_json.as_deref(),
+            Self::RunEval(r) => r.run.normal_json.as_deref(),
+            Self::RunRepo(r) => r.run.normal_json.as_deref(),
+            Self::RunRepl | Self::Help(_) | Self::Version(_) => None,
         }
     }
 }

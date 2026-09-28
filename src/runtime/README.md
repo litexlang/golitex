@@ -7,13 +7,12 @@ is carried explicitly by `VerifyState`, not stored on `Runtime`.
 
 ```text
 Runtime::new(options: LitexExecutionOptions)
-  module_manager = one shared module world with a registered Eval source
+  module_manager = one shared module world with VirtualSource::Eval
   current_module_id = ModuleId::ROOT
   current_source_id = SourceId(0)
   next_fact_id = Cell(1) // advanced only by Runtime::new_*_fact
-start_real_file("example.lit")
-  reuse the constructor source as ModuleId::ROOT/SourceId(0)
-  update its origin and keep the current source pair
+Runtime::with_real_file("example.lit")
+  root source origin is already the real file at construction
 run source `1 = 1`
   parse and execute statement
   allocate f1
@@ -24,7 +23,7 @@ run source `1 = 1`
 
 | Owner | State and concrete example |
 | --- | --- |
-| `Runtime` | Stored facts receive `f1`, then `f2`; popped local facts do not cause ID reuse. It owns the one transient `ParseContext` shared across recursive parsing of a compound statement. It also retains execution-derived direct struct carriers by exact `SymbolId`, so a stored theorem can later instantiate field syntax whose original binder scope has ended. Its `LitexExecutionOptions` value owns verification strictness, output detail, language, and summary settings; source selection and isolation remain with the command or pipeline entry point. |
+| `Runtime` | Stored facts receive `f1`, then `f2`; popped local facts do not cause ID reuse. It owns the one transient `ParseContext` shared across recursive parsing of a compound statement. It also retains execution-derived direct struct carriers by exact `SymbolId`, so a stored theorem can later instantiate field syntax whose original binder scope has ended. Its `LitexExecutionOptions` value owns verification strictness, output detail, language, and summary settings; the active source is fixed at construction (`new`, `new_with_source`, `new_with_virtual_source`, `new_with_real_file`, `new_for_repository`, or the `with_*` helpers). |
 | `VerifyState` | Owns one explicit proof-search tree: successful atomic/WD memos and recursion guards. A child proof scope can read parent memos, while child entries never become visible in its parent. It also carries the explicit `InferenceState` used by stores reached from that verification tree. A fresh top-level state starts a fresh search. |
 | `current source` | `Runtime.current_module_id` plus `Runtime.current_source_id` always identifies one registered `Source`; the pair is concrete for the lifetime of Runtime. `Runtime.is_current_file_trusted` and `Runtime.execution_environments_stack` hold only active invocation state. `SourcePath::RealFilePath` is the only source origin accepted by filesystem/module path logic; `SourcePath::VirtualSource` is used for eval, REPL, session, generated projections, and `VirtualSource::Named` embedding labels. |
 | `SourceActivation` | A short-lived checkpoint used by graph/rendering helpers while they temporarily activate another registered source. It is not a second source registry or a persistent source stack. |
@@ -39,8 +38,9 @@ The acceptance boundary is exercised by
 returned an error when `execute_source` was called before a source was selected;
 the current behavior executes through the constructor-registered
 `ModuleId::ROOT`/`SourceId(0)` source. Repository setup is covered by
-`repository_start_reuses_the_registered_constructor_source`, which keeps that
-same concrete pair active while discovery configures the root module.
+`repository_start_reuses_the_registered_constructor_source`, which builds the
+runtime with `Runtime::new_for_repository` so the discovery source is already
+active.
 
 Start with [`runtime.rs`](runtime.rs) for the `Runtime` fields and run initialization,
 [`execution_options.rs`](execution_options.rs) for Litex execution configuration,

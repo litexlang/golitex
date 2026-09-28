@@ -32,8 +32,7 @@ fn exact_symbol_substitution_does_not_replace_a_same_name_binding() {
 
 #[test]
 fn set_builder_instantiation_alpha_renames_only_its_own_symbol() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("set_builder_capture_avoidance");
+    let mut runtime = Runtime::with_named_source("set_builder_capture_avoidance");
     let a_binding = runtime
         .allocate_local_symbol_binding("a".to_string())
         .unwrap();
@@ -90,8 +89,7 @@ fn set_builder_instantiation_alpha_renames_only_its_own_symbol() {
 
 #[test]
 fn surviving_closed_set_builder_replacement_keeps_outer_binder_fresh() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("closed_set_builder_replacement");
+    let mut runtime = Runtime::with_named_source("closed_set_builder_replacement");
     let a_binding = runtime
         .allocate_local_symbol_binding("a".to_string())
         .unwrap();
@@ -162,8 +160,7 @@ fn surviving_closed_set_builder_replacement_keeps_outer_binder_fresh() {
 
 #[test]
 fn function_binder_instantiation_preserves_outer_argument_and_concrete_type() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("function_binder_capture_avoidance");
+    let mut runtime = Runtime::with_named_source("function_binder_capture_avoidance");
     let a_binding = runtime
         .allocate_local_symbol_binding("a".to_string())
         .unwrap();
@@ -226,8 +223,7 @@ fn function_binder_instantiation_preserves_outer_argument_and_concrete_type() {
 
 #[test]
 fn anonymous_function_restores_binder_only_after_collision_disappears() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("closed_anonymous_function_replacement");
+    let mut runtime = Runtime::with_named_source("closed_anonymous_function_replacement");
     let f_binding = runtime
         .allocate_local_symbol_binding("f".to_string())
         .unwrap();
@@ -303,8 +299,7 @@ fn anonymous_function_restores_binder_only_after_collision_disappears() {
 
 #[test]
 fn set_builder_alpha_rename_updates_a_dependent_parameter_set() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("set_builder_dependent_type_alpha_rename");
+    let mut runtime = Runtime::with_named_source("set_builder_dependent_type_alpha_rename");
     let n_binding = runtime
         .allocate_local_symbol_binding("n".to_string())
         .unwrap();

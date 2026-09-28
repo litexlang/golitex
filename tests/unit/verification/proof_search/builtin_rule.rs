@@ -67,8 +67,7 @@ fn quantifier_free_premise_structure_does_not_reset_the_builtin_depth_budget() {
 
     let root_state = BuiltinRuleSearchState::initial();
     let child_state = root_state.after_applying_rule();
-    let mut child_runtime = Runtime::default();
-    child_runtime.start_isolated_source("qff_premise_child_depth.lit");
+    let mut child_runtime = Runtime::with_named_source("qff_premise_child_depth.lit");
     let child_result = child_runtime
         .try_verify_builtin_rule_premise(&premise, &child_state)
         .expect("bounded compound-premise verification should not error");
@@ -77,8 +76,7 @@ fn quantifier_free_premise_structure_does_not_reset_the_builtin_depth_budget() {
         "logical compound structure must not reopen a consumed builtin-rule step"
     );
 
-    let mut root_runtime = Runtime::default();
-    root_runtime.start_isolated_source("qff_premise_root_depth.lit");
+    let mut root_runtime = Runtime::with_named_source("qff_premise_root_depth.lit");
     let root_result = root_runtime
         .try_verify_builtin_rule_premise(&premise, &root_state)
         .expect("root compound-premise verification should not error");
@@ -112,8 +110,7 @@ fn quantifier_free_and_and_chain_premises_verify_every_atomic_leaf() {
     ));
 
     let child_state = BuiltinRuleSearchState::initial().after_applying_rule();
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("qff_and_chain_premises.lit");
+    let mut runtime = Runtime::with_named_source("qff_and_chain_premises.lit");
     let and_result = runtime
         .try_verify_builtin_rule_premise(&and_premise, &child_state)
         .expect("conjunction premise verification should not error");
@@ -126,8 +123,7 @@ fn quantifier_free_and_and_chain_premises_verify_every_atomic_leaf() {
 
 #[test]
 fn integer_leaf_reuses_known_finiteness_without_opening_a_direct_rule() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("integer_leaf_finite_set_size_test.lit");
+    let mut runtime = Runtime::with_named_source("integer_leaf_finite_set_size_test.lit");
     let (_, setup_error) = crate::test_support::execute_source("have a, b Z\n", &mut runtime);
     assert!(setup_error.is_none(), "fixture endpoints: {setup_error:?}");
 

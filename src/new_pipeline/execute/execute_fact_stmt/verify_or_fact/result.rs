@@ -1,4 +1,4 @@
-use crate::new_pipeline::ast::fact::{Fact, OrFact};
+use crate::new_pipeline::ast::fact::{AtomicFact, Fact, OrFact};
 use crate::new_pipeline::ast::obj::Obj;
 use crate::new_pipeline::exec_env::exec_env::ExecEnv;
 use crate::new_pipeline::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
@@ -59,6 +59,56 @@ pub enum OrFactSearchProofByBuiltinRule {
     // Property: every natural is zero or at least one.
     // Example: after `have n N`, prove `n = 0 or n >= 1`.
     NaturalZeroOrAtLeastOne(OrBuiltinNaturalZeroOrAtLeastOne),
+    // Either branch order: `P or not P` for complementary atomics.
+    // Property: classical excluded middle on a pair of complementary atomic facts.
+    // Example: `1 = 1 or 1 != 1`.
+    ComplementaryAtomic(OrBuiltinComplementaryAtomic),
+    // Either branch order: `abs(x) = x or abs(x) = (-x)`.
+    // Property: absolute value equals the number or its additive inverse.
+    // Example: after `have x R`, prove `abs(x) = x or abs(x) = (-x)`.
+    AbsSignSplit(OrBuiltinAbsSignSplit),
+    // Either branch order: `a = 0 or b = 0` when `a * b = 0` (or `b * a = 0`) is known.
+    // Property: a real product is zero only if a factor is zero.
+    // Example: after `have a, b R` and `trust a * b = 0`, prove `a = 0 or b = 0`.
+    ZeroProductSplit(OrBuiltinZeroProductSplit),
+    // Either branch order: `a < b or a >= b` on the same real terms.
+    // Property: strict < and weak >= are complementary on R.
+    // Example: after `have a, b R`, prove `a < b or a >= b`.
+    LessOrGreaterEqual(OrBuiltinLessOrGreaterEqual),
+    // Either branch order: `a > b or a <= b` on the same real terms.
+    // Property: strict > and weak <= are complementary on R.
+    // Example: after `have a, b R`, prove `a > b or a <= b`.
+    GreaterOrLessEqual(OrBuiltinGreaterOrLessEqual),
+    // Either branch order: `a <= b or a >= b` on the same real terms.
+    // Property: weak order on R is total (comparability).
+    // Example: after `have a, b R`, prove `a <= b or a >= b`.
+    WeakOrderLeOrGe(OrBuiltinWeakOrderLeOrGe),
+    // Either branch order: `a = b or a < b` when `a <= b` is known
+    // (dual: `a = b or a > b` when `a >= b` is known).
+    // Property: equality plus the matching strict order covers a known weak bound.
+    // Example: after `have a, b R` and `trust a <= b`, prove `a = b or a < b`.
+    EqualityPlusStrictCoversWeak(OrBuiltinEqualityPlusStrictCoversWeak),
+    // Exhaustive residues: `n % m = 0 or … or n % m = m-1` for positive literal m.
+    // Property: every integer has a unique residue mod a positive integer.
+    // Example: after `have n Z`, prove `n % 2 = 0 or n % 2 = 1`.
+    CompleteResidues(OrBuiltinCompleteResidues),
+    // Finite successor equalities plus strict tail from a known integer lower bound.
+    // Property: if `x >= base` in Z, then x equals one of finitely many successors or exceeds the last.
+    // Example: after `have x Z` and `trust x >= 1`, prove `x = 1 or x = 2 or x = 3 or x > 3`.
+    IntegerSuccessorTail(OrBuiltinIntegerSuccessorTail),
+    // Either branch order: `a != 0 or b != 0` from known `a^2 + b^2 != 0` (or `a*a + b*b`).
+    // Property: a nonzero square sum forces a nonzero component.
+    // Example: after `have a, b R` and `trust a^2 + b^2 != 0`, prove `a != 0 or b != 0`.
+    SquareSumComponentNonzero(OrBuiltinSquareSumComponentNonzero),
+    // Packaging `not A or B` (exactly one negative-polarity branch): assume A, prove B.
+    // Property: classical implication as a two-branch disjunction.
+    // Example: after `trust forall x R: $p(x) =>: $q(x)` and `have a R`,
+    // prove `not $p(a) or $q(a)`.
+    ClassicalImplication(OrBuiltinClassicalImplication),
+    // Either branch order: `x <= n or x >= n + 1` (or predecessor dual) for integers.
+    // Property: consecutive integers leave no gap on Z.
+    // Example: after `have x, n Z`, prove `x <= n or x >= n + 1`.
+    IntegerDiscreteSplit(OrBuiltinIntegerDiscreteSplit),
 }
 
 // Evidence for `a = b or a < b or a > b` after proving both sides in R.
@@ -89,6 +139,98 @@ pub struct OrBuiltinRealLineTrichotomyGreaterEqLess {
 pub struct OrBuiltinNaturalZeroOrAtLeastOne {
     pub n: Obj,
     pub n_in_n: VerifyFactResult,
+}
+
+// Evidence for `P or not P` (either branch order) via complementary atomics.
+pub struct OrBuiltinComplementaryAtomic {
+    pub left: AtomicFact,
+    pub right: AtomicFact,
+}
+
+// Evidence for `abs(x) = x or abs(x) = (-x)` (either branch order).
+pub struct OrBuiltinAbsSignSplit {
+    pub arg: Obj,
+}
+
+// Evidence for `a = 0 or b = 0` after `a, b $in R` and known `a * b = 0`.
+pub struct OrBuiltinZeroProductSplit {
+    pub left: Obj,
+    pub right: Obj,
+    pub left_in_r: VerifyFactResult,
+    pub right_in_r: VerifyFactResult,
+    pub product_zero: VerifyFactResult,
+}
+
+// Evidence for `a < b or a >= b` (either branch order) after both sides in R.
+pub struct OrBuiltinLessOrGreaterEqual {
+    pub left: Obj,
+    pub right: Obj,
+    pub left_in_r: VerifyFactResult,
+    pub right_in_r: VerifyFactResult,
+}
+
+// Evidence for `a > b or a <= b` (either branch order) after both sides in R.
+pub struct OrBuiltinGreaterOrLessEqual {
+    pub left: Obj,
+    pub right: Obj,
+    pub left_in_r: VerifyFactResult,
+    pub right_in_r: VerifyFactResult,
+}
+
+// Evidence for `a <= b or a >= b` (either branch order) after both sides in R.
+pub struct OrBuiltinWeakOrderLeOrGe {
+    pub left: Obj,
+    pub right: Obj,
+    pub left_in_r: VerifyFactResult,
+    pub right_in_r: VerifyFactResult,
+}
+
+// Evidence for equality-plus-strict covering a known weak bound.
+pub struct OrBuiltinEqualityPlusStrictCoversWeak {
+    pub left: Obj,
+    pub right: Obj,
+    pub weak_bound: VerifyFactResult,
+}
+
+// Evidence for exhaustive residues mod a positive literal modulus.
+pub struct OrBuiltinCompleteResidues {
+    pub subject: Obj,
+    pub modulus: Obj,
+}
+
+// Evidence for integer successor-tail split after Z membership and lower bound.
+pub struct OrBuiltinIntegerSuccessorTail {
+    pub subject: Obj,
+    pub base: Obj,
+    pub subject_in_z: VerifyFactResult,
+    pub base_in_z: VerifyFactResult,
+    pub subject_ge_base: VerifyFactResult,
+}
+
+// Evidence for component nonzero from a known nonzero square sum.
+pub struct OrBuiltinSquareSumComponentNonzero {
+    pub left: Obj,
+    pub right: Obj,
+    pub square_sum_nonzero: VerifyFactResult,
+}
+
+// Evidence for classical `not A or B`: assume A locally, prove B.
+pub struct OrBuiltinClassicalImplication {
+    pub assumed_from_branch_index: usize,
+    pub conclusion_branch_index: usize,
+    pub assumed_premise: Fact,
+    pub assumed_well_defined: FactWellDefinedProof,
+    pub assumed_store_and_infer: StoreFactAndInferResult,
+    pub conclusion_proof: VerifyFactResult,
+    pub local_env: Box<ExecEnv>,
+}
+
+// Evidence for integer discrete split after both sides in Z.
+pub struct OrBuiltinIntegerDiscreteSplit {
+    pub subject: Obj,
+    pub base: Obj,
+    pub subject_in_z: VerifyFactResult,
+    pub base_in_z: VerifyFactResult,
 }
 
 // Classical: assume ¬ of every other branch in a local env, prove selected.

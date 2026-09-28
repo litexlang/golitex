@@ -5,8 +5,7 @@ use std::collections::HashMap;
 
 #[test]
 fn forall_alpha_rename_avoids_every_existing_bound_name() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("forall_alpha_rename_reserved_names");
+    let mut runtime = Runtime::with_named_source("forall_alpha_rename_reserved_names");
     let a_binding = runtime
         .allocate_local_symbol_binding("a".to_string())
         .unwrap();
@@ -65,8 +64,7 @@ fn forall_alpha_rename_avoids_every_existing_bound_name() {
 
 #[test]
 fn exist_alpha_rename_avoids_every_existing_bound_name() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("exist_alpha_rename_reserved_names");
+    let mut runtime = Runtime::with_named_source("exist_alpha_rename_reserved_names");
     let a_binding = runtime
         .allocate_local_symbol_binding("a".to_string())
         .unwrap();

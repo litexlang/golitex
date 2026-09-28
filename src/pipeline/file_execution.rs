@@ -99,7 +99,8 @@ pub fn execute_isolated_file_in_runtime(
         }
     };
 
-    runtime.start_real_file(target_file_path);
+    let options = runtime.execution_options;
+    *runtime = Runtime::new_with_real_file(options, target_file_path.to_string());
     let outcome =
         runtime.execute_source(remove_windows_carriage_from_str(source_code.as_str()).as_str());
     (outcome.stmt_results, outcome.runtime_error)

@@ -9,8 +9,7 @@ by induc P:
     ? from P = {}
     ? induc x, S
 "#;
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("finite_set_induction_structured_result");
+    let mut runtime = Runtime::with_named_source("finite_set_induction_structured_result");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     assert!(runtime_error.is_none(), "{runtime_error:?}");
     let [StmtResult::Success(SuccessStmtResult::By(SuccessByStmtResult::ByFiniteSetInducStmt(
@@ -96,8 +95,7 @@ by induc P:
 $finite_set_induction_test({1, 2})
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source("finite_set_induction_positive");
+            let mut runtime = Runtime::with_named_source("finite_set_induction_positive");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -149,8 +147,7 @@ by induc P in A:
 $finite_set_induction_carrier_test(A)
 "#;
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("finite_set_induction_carrier");
+        let mut runtime = Runtime::with_named_source("finite_set_induction_carrier");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -180,8 +177,7 @@ by induc P:
     ? induc x, S
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source("finite_set_induction_bodyless_closed_branches");
+            let mut runtime = Runtime::with_named_source("finite_set_induction_bodyless_closed_branches");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -218,8 +214,7 @@ by induc P:
     ? induc x, S
 "#;
 
-            let mut runtime = Runtime::default();
-            runtime.start_isolated_source("finite_set_induction_bodyless_negative");
+            let mut runtime = Runtime::with_named_source("finite_set_induction_bodyless_negative");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);

@@ -20,8 +20,7 @@ fn compare_to_zero_matches_expectations() {
 
 #[test]
 fn positive_literal_bound_retains_typed_zero_sign_inference() {
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("numeric_order_bound_result_test.lit");
+    let mut runtime = Runtime::with_named_source("numeric_order_bound_result_test.lit");
     let (mut results, error) = execute_source("have n Z\ntrust n >= 1", &mut runtime);
     assert!(error.is_none(), "{error:?}");
     let result = results.pop().expect("trust statement returns one Result");
