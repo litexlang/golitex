@@ -72,7 +72,7 @@ impl Runtime {
 
         // Child equalities: no forall, no rewrite, no WD store.
         let matching_child_state = VerifyState {
-            can_use_forall_fact: false,
+            can_use_def_and_known_forall_and_known_strategy: false,
             can_use_rewrite: false,
             store_well_defined_fact: false,
         };
@@ -82,7 +82,7 @@ impl Runtime {
             return Ok(Some(EqualFactSearchedProof::ByMatchingOneArgByOne(result)));
         }
 
-        if verify_state.can_use_forall_fact {
+        if verify_state.can_use_def_and_known_forall_and_known_strategy {
             if let Some(result) =
                 self.search_equal_fact_proof_by_known_forall_fact(fact, verify_state.clone())?
             {

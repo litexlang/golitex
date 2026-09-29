@@ -1,95 +1,120 @@
 //! Localized copy for frequent atomic (non-equality) builtin rule ids.
-//! Dedicate files per rule later; this covers the Normal-path hot set first.
+//! English is complete here; Chinese is filled for the hot set (others → EN).
 
-use super::fallback::{fallback_builtin_rule_text, BuiltinRuleText};
+use super::bilingual::bilingual_builtin;
+use super::fallback::BuiltinRuleText;
 use crate::launch_command::OutputLanguage;
 
 pub fn explain_atomic_rule_id(rule_id: &'static str, lang: OutputLanguage) -> BuiltinRuleText {
-    let pair = match (rule_id, lang) {
-        ("FromKnownInNatural", OutputLanguage::English) => Some((
+    match rule_id {
+        "FromKnownInNatural" => bilingual_builtin(
+            rule_id,
             "From known in N",
             "The goal follows from a known natural-number membership",
-        )),
-        ("FromKnownInNatural", OutputLanguage::Chinese) => {
-            Some(("已知属于自然数", "目标由已知的自然数成员关系推出"))
-        }
-        ("FromKnownInPositiveNatural", OutputLanguage::English) => Some((
+            Some("已知属于自然数"),
+            Some("目标由已知的自然数成员关系推出"),
+            lang,
+        ),
+        "FromKnownInPositiveNatural" => bilingual_builtin(
+            rule_id,
             "From known in positive N",
             "The goal follows from a known positive-natural membership",
-        )),
-        ("FromKnownInPositiveNatural", OutputLanguage::Chinese) => {
-            Some(("已知属于正自然数", "目标由已知的正自然数成员关系推出"))
-        }
-        ("FromKnownGreater", OutputLanguage::English) => Some((
+            Some("已知属于正自然数"),
+            Some("目标由已知的正自然数成员关系推出"),
+            lang,
+        ),
+        "FromKnownGreater" => bilingual_builtin(
+            rule_id,
             "From known greater",
             "The weak order follows from a known strict greater fact",
-        )),
-        ("FromKnownGreater", OutputLanguage::Chinese) => {
-            Some(("已知严格大于", "弱序目标由已知的严格大于推出"))
-        }
-        ("OrderReflexivity", OutputLanguage::English) => {
-            Some(("Order reflexivity", "A quantity is less-or-equal to itself"))
-        }
-        ("OrderReflexivity", OutputLanguage::Chinese) => {
-            Some(("序的自反性", "任何量都不大于也不小于自己（≤ 自身）"))
-        }
-        ("ClosedNumericComparison", OutputLanguage::English) => Some((
+            Some("已知严格大于"),
+            Some("弱序目标由已知的严格大于推出"),
+            lang,
+        ),
+        "OrderReflexivity" => bilingual_builtin(
+            rule_id,
+            "Order reflexivity",
+            "A quantity is less-or-equal to itself",
+            Some("序的自反性"),
+            Some("任何量都不大于也不小于自己（≤ 自身）"),
+            lang,
+        ),
+        "ClosedNumericComparison" => bilingual_builtin(
+            rule_id,
             "Closed numeric comparison",
             "Both sides are closed numbers and compare as stated",
-        )),
-        ("ClosedNumericComparison", OutputLanguage::Chinese) => {
-            Some(("封闭数值比较", "两边都是可计算的数，并满足所述比较"))
-        }
-        ("OrderFlipMulMinusOne", OutputLanguage::English) => Some((
+            Some("封闭数值比较"),
+            Some("两边都是可计算的数，并满足所述比较"),
+            lang,
+        ),
+        "OrderFlipMulMinusOne" => bilingual_builtin(
+            rule_id,
             "Order flip by ×(-1)",
             "Multiplying by -1 reverses the inequality",
-        )),
-        ("OrderFlipMulMinusOne", OutputLanguage::Chinese) => {
-            Some(("乘以 -1 反转不等式", "两边同乘 -1 后不等式方向相反"))
-        }
-        ("FromKnownInPositiveStandardSet", OutputLanguage::English) => Some((
+            Some("乘以 -1 反转不等式"),
+            Some("两边同乘 -1 后不等式方向相反"),
+            lang,
+        ),
+        "FromKnownInPositiveStandardSet" => bilingual_builtin(
+            rule_id,
             "From known in positive set",
             "The goal follows from membership in a positive standard set",
-        )),
-        ("FromKnownInPositiveStandardSet", OutputLanguage::Chinese) => {
-            Some(("已知属于正标准集", "目标由正标准集上的成员关系推出"))
-        }
-        ("FromKnownInNegativeStandardSet", OutputLanguage::English) => Some((
+            Some("已知属于正标准集"),
+            Some("目标由正标准集上的成员关系推出"),
+            lang,
+        ),
+        "FromKnownInNegativeStandardSet" => bilingual_builtin(
+            rule_id,
             "From known in negative set",
             "The goal follows from membership in a negative standard set",
-        )),
-        ("FromKnownInNegativeStandardSet", OutputLanguage::Chinese) => {
-            Some(("已知属于负标准集", "目标由负标准集上的成员关系推出"))
-        }
-        ("FromKnownInNonzeroStandardSet", OutputLanguage::English) => Some((
+            Some("已知属于负标准集"),
+            Some("目标由负标准集上的成员关系推出"),
+            lang,
+        ),
+        "FromKnownInNonzeroStandardSet" => bilingual_builtin(
+            rule_id,
             "From known nonzero",
             "Inequality follows from known nonzero / nonzero-set membership",
-        )),
-        ("FromKnownInNonzeroStandardSet", OutputLanguage::Chinese) => {
-            Some(("已知非零", "不等关系由已知非零（或非零集成员）推出"))
-        }
-        ("OrderSignFromPositiveLiteralBound", OutputLanguage::English) => Some((
+            Some("已知非零"),
+            Some("不等关系由已知非零（或非零集成员）推出"),
+            lang,
+        ),
+        "OrderSignFromPositiveLiteralBound" => bilingual_builtin(
+            rule_id,
             "Sign from positive bound",
             "A positive literal bound forces the stated order/sign",
-        )),
-        ("OrderSignFromPositiveLiteralBound", OutputLanguage::Chinese) => {
-            Some(("由正下界得符号", "正的字面下界推出所述序/符号关系"))
-        }
-        ("OrderSignFromNegativeLiteralBound", OutputLanguage::English) => Some((
+            Some("由正下界得符号"),
+            Some("正的字面下界推出所述序/符号关系"),
+            lang,
+        ),
+        "OrderSignFromNegativeLiteralBound" => bilingual_builtin(
+            rule_id,
             "Sign from negative bound",
             "A negative literal bound forces the stated order/sign",
-        )),
-        ("OrderSignFromNegativeLiteralBound", OutputLanguage::Chinese) => {
-            Some(("由负上界得符号", "负的字面上界推出所述序/符号关系"))
+            Some("由负上界得符号"),
+            Some("负的字面上界推出所述序/符号关系"),
+            lang,
+        ),
+        other => {
+            // English-readable fallback; Chinese intentionally reuses English for now.
+            let rule_name = humanize_rule_id(other);
+            let message = format!("Verified by the `{other}` builtin rule");
+            BuiltinRuleText {
+                rule_id: other,
+                rule_name,
+                message,
+            }
         }
-        _ => None,
-    };
-    match pair {
-        Some((rule_name, message)) => BuiltinRuleText {
-            rule_id,
-            rule_name: rule_name.to_string(),
-            message: message.to_string(),
-        },
-        None => fallback_builtin_rule_text(rule_id, lang),
     }
+}
+
+fn humanize_rule_id(rule_id: &str) -> String {
+    let mut out = String::new();
+    for (i, ch) in rule_id.chars().enumerate() {
+        if i > 0 && ch.is_ascii_uppercase() {
+            out.push(' ');
+        }
+        out.push(ch);
+    }
+    out
 }

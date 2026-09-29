@@ -2,7 +2,7 @@
 pub struct VerifyState {
     // Forall lookup is one layer only. Nested forall→forall search grows
     // exponentially, so nested proof steps turn this off.
-    pub can_use_forall_fact: bool,
+    pub can_use_def_and_known_forall_and_known_strategy: bool,
 
     // Blocks rewrite loops, e.g. `$p(a, b)` via symmetry needs `$p(b, a)`,
     // which must not try symmetry back to `$p(a, b)`.

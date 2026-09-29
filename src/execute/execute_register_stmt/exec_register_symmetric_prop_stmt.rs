@@ -51,7 +51,7 @@ pub fn exec_register_symmetric_prop_stmt(
     }
 
     let verify_state = VerifyState {
-        can_use_forall_fact: true,
+        can_use_def_and_known_forall_and_known_strategy: true,
         can_use_rewrite: true,
         store_well_defined_fact: true,
     };
@@ -78,7 +78,9 @@ pub fn exec_register_symmetric_prop_stmt(
         .prop_rewrite_properties
         .entry(prop.clone())
         .or_default()
-        .push(PropRewriteProperty::SymmetricArgumentPermutate(vec![gather]));
+        .push(PropRewriteProperty::SymmetricArgumentPermutate(vec![
+            gather,
+        ]));
 
     Ok(ExecRegisterStmtResult::SymmetricProp(
         ExecRegisterSymmetricPropStmtResult::Success(ExecRegisterSymmetricPropStmtSuccess {

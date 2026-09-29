@@ -1,8 +1,6 @@
+use crate::ast::fact::{atomic_fact_args_ref, atomic_fact_has_positive_polarity};
 use crate::ast::fact::{AtomicFact, EqualFact};
 use crate::ast::obj::Obj;
-use crate::ast::fact::{
-    atomic_fact_args_ref, atomic_fact_has_positive_polarity,
-};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::{
     AtomicExceptEqualityFactSearchProofByKnownAtomicFact, EqualFactSearchedProof,
 };
@@ -28,16 +26,13 @@ impl Runtime {
         }
 
         let equality_state = VerifyState {
-            can_use_forall_fact: false,
+            can_use_def_and_known_forall_and_known_strategy: false,
             can_use_rewrite: false,
             store_well_defined_fact: false,
         };
         let _ = verify_state;
 
-        let lookup_key = (
-            fact.prop_name(),
-            atomic_fact_has_positive_polarity(fact),
-        );
+        let lookup_key = (fact.prop_name(), atomic_fact_has_positive_polarity(fact));
         let goal_args = atomic_fact_args_ref(fact);
 
         // Clone candidates first so nested equality search can borrow &mut self.

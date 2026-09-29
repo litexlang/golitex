@@ -136,21 +136,33 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
         },
         ExecDefinitionStmtResult::DefThm(r) => match r {
             ExecDefThmStmtResult::Success(s) => {
-                success_from_store(runtime, "thm …".into(), "def_thm", &s.stored)
+                let stores = store_fact_texts(&s.stored.store);
+                let infers = infer_fact_texts_from_store_and_infer(runtime, &s.stored);
+                let statement = stores
+                    .first()
+                    .cloned()
+                    .unwrap_or_else(|| "thm".to_string());
+                success_parts(runtime, statement, "def_thm", stores, infers)
             }
-            ExecDefThmStmtResult::Failed(_) => failed(runtime, "thm …", "def_thm"),
+            ExecDefThmStmtResult::Failed(_) => failed(runtime, "thm", "def_thm"),
         },
         ExecDefinitionStmtResult::Axiom(r) => match r {
             ExecAxiomStmtResult::Success(s) => {
-                success_from_store(runtime, "axiom …".into(), "axiom", &s.stored)
+                let stores = store_fact_texts(&s.stored.store);
+                let infers = infer_fact_texts_from_store_and_infer(runtime, &s.stored);
+                let statement = stores
+                    .first()
+                    .cloned()
+                    .unwrap_or_else(|| "axiom".to_string());
+                success_parts(runtime, statement, "axiom", stores, infers)
             }
-            ExecAxiomStmtResult::Failed(_) => failed(runtime, "axiom …", "axiom"),
+            ExecAxiomStmtResult::Failed(_) => failed(runtime, "axiom", "axiom"),
         },
         ExecDefinitionStmtResult::DefStrategy(r) => match r {
             ExecDefStrategyStmtResult::Success(_) => {
-                success_plain(runtime, "strategy …".into(), "def_strategy")
+                success_plain(runtime, "strategy".into(), "def_strategy")
             }
-            ExecDefStrategyStmtResult::Failed(_) => failed(runtime, "strategy …", "def_strategy"),
+            ExecDefStrategyStmtResult::Failed(_) => failed(runtime, "strategy", "def_strategy"),
         },
     }
 }
@@ -482,15 +494,20 @@ fn project_proof_block(p: &ExecProofBlockStmtResult, runtime: &Runtime) -> JsonV
     match p {
         ExecProofBlockStmtResult::Claim(r) => match r {
             ExecClaimStmtResult::Success(s) => {
-                success_from_store(runtime, "claim …".into(), "claim", &s.stored)
+                let stores = store_fact_texts(&s.stored.store);
+                let infers = infer_fact_texts_from_store_and_infer(runtime, &s.stored);
+                let statement = stores
+                    .first()
+                    .cloned()
+                    .map(|g| format!("claim: {g}"))
+                    .unwrap_or_else(|| "claim".to_string());
+                success_parts(runtime, statement, "claim", stores, infers)
             }
-            ExecClaimStmtResult::Failed(_) => failed(runtime, "claim …", "claim"),
+            ExecClaimStmtResult::Failed(_) => failed(runtime, "claim", "claim"),
         },
         ExecProofBlockStmtResult::Sketch(r) => match r {
-            ExecSketchStmtResult::Success(_) => {
-                success_plain(runtime, "sketch …".into(), "sketch")
-            }
-            ExecSketchStmtResult::Failed(_) => failed(runtime, "sketch …", "sketch"),
+            ExecSketchStmtResult::Success(_) => success_plain(runtime, "sketch".into(), "sketch"),
+            ExecSketchStmtResult::Failed(_) => failed(runtime, "sketch", "sketch"),
         },
     }
 }
