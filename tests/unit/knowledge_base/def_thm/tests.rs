@@ -8,7 +8,7 @@ use crate::runtime::CodeSource;
 use std::path::{Path, PathBuf};
 
 const FIXTURE: &str = include_str!(
-    "../../../../../examples/knowledge_base/def_thm/one_is_one.def_thm.json"
+    "../../../../examples/knowledge_base/def_thm/one_is_one.def_thm.json"
 );
 
 fn sample() -> DefThmStmt {

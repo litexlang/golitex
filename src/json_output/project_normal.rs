@@ -1,9 +1,10 @@
 //! Project ExecStmtResult → Normal JSON (see README).
 
+use super::explain::{explain_equality_builtin_rule, fallback_builtin_rule_text};
 use super::helper::{
     array_of_strings, bool_value, builtin_rule_with_optional_cite, cite_forall_from_fact_id,
     cite_from_fact_id, empty_string_array, infer_fact_texts_from_store_and_infer, object,
-    split_have_fact_id_texts, store_fact_texts, string,
+    output_language, split_have_fact_id_texts, store_fact_texts, string,
 };
 use crate::ast::fact::AtomicFact;
 use crate::execute::{
@@ -342,98 +343,67 @@ fn why_from_atomic_builtin_rule(
     rule: &AtomicExceptEqualityFactSearchProofByBuiltinRule,
     runtime: &Runtime,
 ) -> JsonValue {
+    let lang = output_language(runtime);
+    let cite_text = |rule_id: &'static str, cite: Option<_>| {
+        let text = fallback_builtin_rule_text(rule_id, lang);
+        builtin_rule_with_optional_cite(runtime, &text, cite)
+    };
     match rule {
         AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(g) => match g {
             GreaterEqualFactSearchProofByBuiltinRule::FromKnownInNatural(p) => {
-                builtin_rule_with_optional_cite(runtime, "FromKnownInNatural", Some(p.cite_fact_id))
+                cite_text("FromKnownInNatural", Some(p.cite_fact_id))
             }
             GreaterEqualFactSearchProofByBuiltinRule::FromKnownInPositiveNatural(p) => {
-                builtin_rule_with_optional_cite(
-                    runtime,
-                    "FromKnownInPositiveNatural",
-                    Some(p.cite_fact_id),
-                )
+                cite_text("FromKnownInPositiveNatural", Some(p.cite_fact_id))
             }
             GreaterEqualFactSearchProofByBuiltinRule::FromKnownGreater(p) => {
-                builtin_rule_with_optional_cite(runtime, "FromKnownGreater", Some(p.cite_fact_id))
+                cite_text("FromKnownGreater", Some(p.cite_fact_id))
             }
             GreaterEqualFactSearchProofByBuiltinRule::OrderFlipMulMinusOne(p) => {
-                builtin_rule_with_optional_cite(
-                    runtime,
-                    "OrderFlipMulMinusOne",
-                    Some(p.cite_fact_id),
-                )
+                cite_text("OrderFlipMulMinusOne", Some(p.cite_fact_id))
             }
             GreaterEqualFactSearchProofByBuiltinRule::OrderReflexivity(_) => {
-                builtin_rule_with_optional_cite(runtime, "OrderReflexivity", None)
+                cite_text("OrderReflexivity", None)
             }
             GreaterEqualFactSearchProofByBuiltinRule::ClosedNumericComparison(_) => {
-                builtin_rule_with_optional_cite(runtime, "ClosedNumericComparison", None)
+                cite_text("ClosedNumericComparison", None)
             }
-            _ => builtin_rule_with_optional_cite(runtime, "GreaterEqualBuiltin", None),
+            _ => cite_text("GreaterEqualBuiltin", None),
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(l) => match l {
             LessEqualFactSearchProofByBuiltinRule::FromKnownInNatural(p) => {
-                builtin_rule_with_optional_cite(runtime, "FromKnownInNatural", Some(p.cite_fact_id))
+                cite_text("FromKnownInNatural", Some(p.cite_fact_id))
             }
             LessEqualFactSearchProofByBuiltinRule::OrderFlipMulMinusOne(p) => {
-                builtin_rule_with_optional_cite(
-                    runtime,
-                    "OrderFlipMulMinusOne",
-                    Some(p.cite_fact_id),
-                )
+                cite_text("OrderFlipMulMinusOne", Some(p.cite_fact_id))
             }
             LessEqualFactSearchProofByBuiltinRule::OrderSignFromNegativeLiteralBound(p) => {
-                builtin_rule_with_optional_cite(
-                    runtime,
-                    "OrderSignFromNegativeLiteralBound",
-                    Some(p.cite_fact_id),
-                )
+                cite_text("OrderSignFromNegativeLiteralBound", Some(p.cite_fact_id))
             }
-            _ => builtin_rule_with_optional_cite(runtime, "LessEqualBuiltin", None),
+            _ => cite_text("LessEqualBuiltin", None),
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(l) => match l {
             LessFactSearchProofByBuiltinRule::FromKnownInPositiveStandardSet(p) => {
-                builtin_rule_with_optional_cite(
-                    runtime,
-                    "FromKnownInPositiveStandardSet",
-                    Some(p.cite_fact_id),
-                )
+                cite_text("FromKnownInPositiveStandardSet", Some(p.cite_fact_id))
             }
             LessFactSearchProofByBuiltinRule::FromKnownInNegativeStandardSet(p) => {
-                builtin_rule_with_optional_cite(
-                    runtime,
-                    "FromKnownInNegativeStandardSet",
-                    Some(p.cite_fact_id),
-                )
+                cite_text("FromKnownInNegativeStandardSet", Some(p.cite_fact_id))
             }
             LessFactSearchProofByBuiltinRule::OrderSignFromPositiveLiteralBound(p) => {
-                builtin_rule_with_optional_cite(
-                    runtime,
-                    "OrderSignFromPositiveLiteralBound",
-                    Some(p.cite_fact_id),
-                )
+                cite_text("OrderSignFromPositiveLiteralBound", Some(p.cite_fact_id))
             }
             LessFactSearchProofByBuiltinRule::OrderFlipMulMinusOne(p) => {
-                builtin_rule_with_optional_cite(
-                    runtime,
-                    "OrderFlipMulMinusOne",
-                    Some(p.cite_fact_id),
-                )
+                cite_text("OrderFlipMulMinusOne", Some(p.cite_fact_id))
             }
-            _ => builtin_rule_with_optional_cite(runtime, "LessBuiltin", None),
+            _ => cite_text("LessBuiltin", None),
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(n) => match n {
             NotEqualFactSearchProofByBuiltinRule::FromKnownInNonzeroStandardSet(p) => {
-                builtin_rule_with_optional_cite(
-                    runtime,
-                    "FromKnownInNonzeroStandardSet",
-                    Some(p.cite_fact_id),
-                )
+                cite_text("FromKnownInNonzeroStandardSet", Some(p.cite_fact_id))
             }
-            _ => builtin_rule_with_optional_cite(runtime, "NotEqualBuiltin", None),
+            _ => cite_text("NotEqualBuiltin", None),
         },
-        _ => builtin_rule_with_optional_cite(runtime, "AtomicBuiltin", None),
+        _ => cite_text("AtomicBuiltin", None),
     }
 }
 
@@ -441,14 +411,13 @@ fn why_from_equal_builtin_rule(
     rule: &EqualitySearchProofByBuiltinRule,
     runtime: &Runtime,
 ) -> JsonValue {
-    match rule {
+    let lang = output_language(runtime);
+    let text = explain_equality_builtin_rule(rule, lang);
+    let cite = match rule {
         EqualitySearchProofByBuiltinRule::EqualFromKnownDifferenceZero(p) => {
-            builtin_rule_with_optional_cite(
-                runtime,
-                "EqualFromKnownDifferenceZero",
-                Some(p.cite_fact_id),
-            )
+            Some(p.cite_fact_id)
         }
-        _ => builtin_rule_with_optional_cite(runtime, "EqualityBuiltin", None),
-    }
+        _ => None,
+    };
+    builtin_rule_with_optional_cite(runtime, &text, cite)
 }

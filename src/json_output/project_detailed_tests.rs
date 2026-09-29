@@ -49,7 +49,7 @@ fn detailed_entry_falls_back_to_normal_success_shape() {
     let goal = exec_one(&mut runtime, "k >= 0");
     let json = project_stmt_detailed(&goal, &runtime);
     assert_eq!(object_field(&json, "success"), &JsonValue::Bool(true));
-    assert!(object_field(&json, "why_verified").as_object().is_some());
+    assert!(object_field(&json, "why_verified").as_object().is_ok());
     let stores = object_field(&json, "stores")
         .as_array()
         .expect("stores");

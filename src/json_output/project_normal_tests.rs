@@ -65,14 +65,65 @@ fn normal_json_have_natural_then_nonnegative_by_builtin() {
         Some("builtin_rule")
     );
     assert_eq!(
-        why.get("rule").and_then(|v| v.as_str().ok()),
+        why.get("rule_name").and_then(|v| v.as_str().ok()),
         Some("FromKnownInNatural")
     );
+    assert!(why.get("message").and_then(|v| v.as_str().ok()).is_some());
+    assert!(why.get("rule").is_none(), "Normal JSON must not print rule_id");
     let cite = why.get("cite").and_then(|v| v.as_str().ok()).unwrap_or("");
     assert_eq!(cite, "k $in N");
     assert!(
         !cite.contains('#'),
         "readable cite must not keep #id# wrappers: {cite:?}"
+    );
+}
+
+#[test]
+fn normal_json_calculation_one_plus_two_english() {
+    let mut runtime = runtime_with_file_env();
+    let goal = exec_one(&mut runtime, "1 + 2 = 3");
+    let goal_json = project_stmt_normal(&goal, &runtime);
+    assert_eq!(object_field(&goal_json, "success"), &JsonValue::Bool(true));
+    let why = object_field(&goal_json, "why_verified")
+        .as_object()
+        .expect("why_verified");
+    assert_eq!(
+        why.get("type").and_then(|v| v.as_str().ok()),
+        Some("builtin_rule")
+    );
+    assert_eq!(
+        why.get("rule_name").and_then(|v| v.as_str().ok()),
+        Some("Calculation")
+    );
+    assert_eq!(
+        why.get("message").and_then(|v| v.as_str().ok()),
+        Some("Both sides evaluate to the same number")
+    );
+    assert!(why.get("rule").is_none());
+    assert!(why.get("variant").is_none());
+}
+
+#[test]
+fn normal_json_calculation_one_plus_two_chinese() {
+    let mut runtime = Runtime::new(LaunchCommand::Eval {
+        code: String::new(),
+        session: false,
+        strict: false,
+        language: OutputLanguage::Chinese,
+    });
+    let goal = exec_one(&mut runtime, "1 + 2 = 3");
+    let goal_json = project_stmt_normal(&goal, &runtime);
+    assert_eq!(object_field(&goal_json, "success"), &JsonValue::Bool(true));
+    let why = object_field(&goal_json, "why_verified")
+        .as_object()
+        .expect("why_verified");
+    assert_eq!(
+        why.get("rule_name").and_then(|v| v.as_str().ok()),
+        Some("计算")
+    );
+    assert_eq!(
+        why.get("message").and_then(|v| v.as_str().ok()),
+        Some("两边都算出同一个数")
     );
 }
 
