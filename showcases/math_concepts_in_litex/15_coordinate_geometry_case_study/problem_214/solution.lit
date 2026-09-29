@@ -76,13 +76,13 @@ thm median_double_angle_scalar_finish_214:
 thm problem_214_median_double_angle:
     ? forall pa, pb, pc, pm, pn cart(R, R):
         # △ABC 非退化。
-        $geo::is_triangle(pa, pb, pc),
+        $geo::is_triangle(pa, pb, pc)
         # CM 是 AB 的中线。
-        $geo::is_midpoint(pm, pa, pb),
+        $geo::is_midpoint(pm, pa, pb)
         # N 在 AB 越过 B 的延长线上。
-        $geo::is_on_extension(pn, pa, pb),
+        $geo::is_on_extension(pn, pa, pb)
         # ∠BCN = ∠BCM（普通无向度量角）。
-        $geo::are_angles_congruent(pb, pc, pn, pb, pc, pm),
+        $geo::are_angles_congruent(pb, pc, pn, pb, pc, pm)
         # CN = 2CM（平方距离形式，等价于正长度等式）。
         geo::distance_sq(pc, pn) = 4 * geo::distance_sq(pc, pm)
         =>:
@@ -104,7 +104,8 @@ thm problem_214_median_double_angle:
 
     # N=A+t(B-A), t>1；并取得其两坐标式。
     by def $geo::is_on_extension(pn, pa, pb)
-    obtain t from exist t0 R st {t0 > 1, pn = (pa[1] + t0 * (pb[1] - pa[1]), pa[2] + t0 * (pb[2] - pa[2]))}
+    obtain t from exist t0 R st {t0 > 1
+    pn = (pa[1] + t0 * (pb[1] - pa[1]), pa[2] + t0 * (pb[2] - pa[2]))}
     pn[1] = pa[1] + t * (pb[1] - pa[1])
     pn[2] = pa[2] + t * (pb[2] - pa[2])
 

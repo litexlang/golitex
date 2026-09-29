@@ -1,10 +1,10 @@
 # Isolated polynomial probe for Problem 464.
 thm problem_464_algebra_probe:
     ? forall qx, qy, cx, cy, dx, dy R:
-        qx^2 + qy^2 = cx^2 + cy^2,
-        qx^2 + qy^2 = dx^2 + dy^2,
-        qx^2 + qy^2 != 0,
-        qx * cy - qy * cx != 0,
+        qx^2 + qy^2 = cx^2 + cy^2
+        qx^2 + qy^2 = dx^2 + dy^2
+        qx^2 + qy^2 != 0
+        qx * cy - qy * cx != 0
         (2 * ((dx + qx) * qy - (dy + qy) * qx)) * ((2 * (qx^2 + qy^2 - qx * cx - qy * cy))^2 - (-2 * (qx * cy - qy * cx))^2) + 2 * (2 * ((dx + qx) * qx + (dy + qy) * qy)) * (-2 * (qx * cy - qy * cx)) * (2 * (qx^2 + qy^2 - qx * cx - qy * cy)) = 0
         =>:
             (dx + qx) * cy - (dy + qy) * cx = 0

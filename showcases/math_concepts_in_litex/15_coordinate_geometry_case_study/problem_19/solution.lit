@@ -12,7 +12,7 @@
 # Coordinate-sum elimination used by the 3D orthocenter bridge.
 thm orthocenter_dot3_bridge:
     ? forall a1, a2, a3, b1, b2, b3, c1, c2, c3 R:
-        a1 * (c1 - b1) + a2 * (c2 - b2) + a3 * (c3 - b3) = 0,
+        a1 * (c1 - b1) + a2 * (c2 - b2) + a3 * (c3 - b3) = 0
         b1 * (a1 - c1) + b2 * (a2 - c2) + b3 * (a3 - c3) = 0
         =>:
             a1 * b1 + a2 * b2 + a3 * b3 = b1 * c1 + b2 * c2 + b3 * c3
@@ -28,8 +28,8 @@ thm orthocenter_dot3_bridge:
 # Translate a right angle through a common origin when both translated rays are normal to the origin vector.
 thm translated_right_angle_bridge:
     ? forall b1, b2, b3, c1, c2, c3, n1, n2, n3 R:
-        n1 * b1 + n2 * b2 + n3 * b3 = 0,
-        n1 * c1 + n2 * c2 + n3 * c3 = 0,
+        n1 * b1 + n2 * b2 + n3 * b3 = 0
+        n1 * c1 + n2 * c2 + n3 * c3 = 0
         (b1 - n1) * (c1 - n1) + (b2 - n2) * (c2 - n2) + (b3 - n3) * (c3 - n3) = 0
         =>:
             b1 * c1 + b2 * c2 + b3 * c3 + n1^2 + n2^2 + n3^2 = 0
@@ -43,8 +43,8 @@ thm translated_right_angle_bridge:
 # Recover a translated right angle from the corresponding common-origin dot-product identity.
 thm translate_pair_back_bridge:
     ? forall a1, a2, a3, b1, b2, b3, n1, n2, n3 R:
-        n1 * a1 + n2 * a2 + n3 * a3 = 0,
-        n1 * b1 + n2 * b2 + n3 * b3 = 0,
+        n1 * a1 + n2 * a2 + n3 * a3 = 0
+        n1 * b1 + n2 * b2 + n3 * b3 = 0
         a1 * b1 + a2 * b2 + a3 * b3 + n1^2 + n2^2 + n3^2 = 0
         =>:
             (a1 - n1) * (b1 - n1) + (a2 - n2) * (b2 - n2) + (a3 - n3) * (b3 - n3) = 0
@@ -120,9 +120,9 @@ prop right_bdc(bx, b_y, bz, cx, cy, cz, dx, dy, dz R):
 
 thm imo19_geometry_bridge_probe:
     ? forall ax, ay, az, bx, b_y, bz, cx, cy, cz, dx, dy, dz, hx, hy, hz R:
-        $tetrahedron3(ax, ay, az, bx, b_y, bz, cx, cy, cz, dx, dy, dz),
-        $foot_d_on_abc(ax, ay, az, bx, b_y, bz, cx, cy, cz, dx, dy, dz, hx, hy, hz),
-        $orthocenter_abc(ax, ay, az, bx, b_y, bz, cx, cy, cz, hx, hy, hz),
+        $tetrahedron3(ax, ay, az, bx, b_y, bz, cx, cy, cz, dx, dy, dz)
+        $foot_d_on_abc(ax, ay, az, bx, b_y, bz, cx, cy, cz, dx, dy, dz, hx, hy, hz)
+        $orthocenter_abc(ax, ay, az, bx, b_y, bz, cx, cy, cz, hx, hy, hz)
         $right_bdc(bx, b_y, bz, cx, cy, cz, dx, dy, dz)
         =>:
             (ax - dx) * (bx - dx) + (ay - dy) * (b_y - dy) + (az - dz) * (bz - dz) = 0
@@ -204,8 +204,8 @@ thm add_right_cancel_bridge:
 
 thm combine_three_equalities:
     ? forall a, b, c, p, q, r R:
-        a = p,
-        b = q,
+        a = p
+        b = q
         c = r
         =>:
             a + b + c = p + q + r
@@ -222,8 +222,8 @@ thm combine_three_equalities:
 
 thm pythagorean_three_sum:
     ? forall x, y, z, u, v, w R:
-        x^2 = u^2 + v^2,
-        y^2 = v^2 + w^2,
+        x^2 = u^2 + v^2
+        y^2 = v^2 + w^2
         z^2 = w^2 + u^2
         =>:
             x^2 + y^2 + z^2 = 2 * (u^2 + v^2 + w^2)
@@ -234,8 +234,8 @@ thm pythagorean_three_sum:
 
 thm pythagorean_three_sum_scaled:
     ? forall x, y, z, u, v, w R:
-        x^2 = u^2 + v^2,
-        y^2 = v^2 + w^2,
+        x^2 = u^2 + v^2
+        y^2 = v^2 + w^2
         z^2 = w^2 + u^2
         =>:
             3 * (x^2 + y^2 + z^2) = 6 * (u^2 + v^2 + w^2)
@@ -284,7 +284,7 @@ thm equality_three_only_if:
 
 thm equality_three_if:
     ? forall x, y, z R:
-        x = y,
+        x = y
         y = z
         =>:
             (x + y + z)^2 = 3 * (x^2 + y^2 + z^2)
@@ -301,8 +301,8 @@ thm equality_three_if:
 
 thm nonnegative_equal_of_equal_squares:
     ? forall x, y R:
-        x >= 0,
-        y >= 0,
+        x >= 0
+        y >= 0
         x^2 = y^2
         =>:
             x = y
@@ -332,8 +332,8 @@ thm nonnegative_equal_of_equal_squares:
 # Here x,y,z are AB,BC,CA and u,v,w are AD,BD,CD.
 thm imo19_metric_inequality:
     ? forall x, y, z, u, v, w R:
-        x^2 = u^2 + v^2,
-        y^2 = v^2 + w^2,
+        x^2 = u^2 + v^2
+        y^2 = v^2 + w^2
         z^2 = w^2 + u^2
         =>:
             (x + y + z)^2 <= 6 * (u^2 + v^2 + w^2)
@@ -345,15 +345,15 @@ thm imo19_metric_inequality:
 
 thm imo19_metric_equality_only_if:
     ? forall x, y, z, u, v, w R:
-        x >= 0,
-        y >= 0,
-        z >= 0,
-        u >= 0,
-        v >= 0,
-        w >= 0,
-        x^2 = u^2 + v^2,
-        y^2 = v^2 + w^2,
-        z^2 = w^2 + u^2,
+        x >= 0
+        y >= 0
+        z >= 0
+        u >= 0
+        v >= 0
+        w >= 0
+        x^2 = u^2 + v^2
+        y^2 = v^2 + w^2
+        z^2 = w^2 + u^2
         (x + y + z)^2 = 6 * (u^2 + v^2 + w^2)
         =>:
             u = v
@@ -388,16 +388,16 @@ thm imo19_metric_equality_only_if:
 
 thm imo19_metric_equality_if:
     ? forall x, y, z, u, v, w R:
-        x >= 0,
-        y >= 0,
-        z >= 0,
-        u >= 0,
-        v >= 0,
-        w >= 0,
-        x^2 = u^2 + v^2,
-        y^2 = v^2 + w^2,
-        z^2 = w^2 + u^2,
-        u = v,
+        x >= 0
+        y >= 0
+        z >= 0
+        u >= 0
+        v >= 0
+        w >= 0
+        x^2 = u^2 + v^2
+        y^2 = v^2 + w^2
+        z^2 = w^2 + u^2
+        u = v
         v = w
         =>:
             (x + y + z)^2 = 6 * (u^2 + v^2 + w^2)
@@ -432,9 +432,9 @@ thm imo19_metric_equality_if:
 # Substitute nonnegative edge-length witnesses into a squared-distance Pythagorean identity.
 thm distance_identity_to_length_identity:
     ? forall x, u, v, X, U, V R:
-        x^2 = X,
-        u^2 = U,
-        v^2 = V,
+        x^2 = X
+        u^2 = U
+        v^2 = V
         X = U + V
         =>:
             x^2 = u^2 + v^2
@@ -464,35 +464,35 @@ thm imo_1970_5_inequality:
     # NL subject: ABCD is an arbitrary tetrahedron in Cartesian coordinates.
     ? forall ax, ay, az, bx, b_y, bz, cx, cy, cz, dx, dy, dz, hx, hy, hz, x, y, z, u, v, w R:
         # NL: ABCD is a tetrahedron.
-        $tetrahedron3(ax, ay, az, bx, b_y, bz, cx, cy, cz, dx, dy, dz),
+        $tetrahedron3(ax, ay, az, bx, b_y, bz, cx, cy, cz, dx, dy, dz)
         # NL: H is the foot of the perpendicular from D to plane ABC.
-        $foot_d_on_abc(ax, ay, az, bx, b_y, bz, cx, cy, cz, dx, dy, dz, hx, hy, hz),
+        $foot_d_on_abc(ax, ay, az, bx, b_y, bz, cx, cy, cz, dx, dy, dz, hx, hy, hz)
         # NL: H is the orthocenter of triangle ABC.
-        $orthocenter_abc(ax, ay, az, bx, b_y, bz, cx, cy, cz, hx, hy, hz),
+        $orthocenter_abc(ax, ay, az, bx, b_y, bz, cx, cy, cz, hx, hy, hz)
         # NL: angle BDC is a right angle.
-        $right_bdc(bx, b_y, bz, cx, cy, cz, dx, dy, dz),
+        $right_bdc(bx, b_y, bz, cx, cy, cz, dx, dy, dz)
         # Formal encoding: x=AB and x is a nonnegative length.
-        x >= 0,
+        x >= 0
         # Formal encoding: y=BC and y is a nonnegative length.
-        y >= 0,
+        y >= 0
         # Formal encoding: z=CA and z is a nonnegative length.
-        z >= 0,
+        z >= 0
         # Formal encoding: u=AD and u is a nonnegative length.
-        u >= 0,
+        u >= 0
         # Formal encoding: v=BD and v is a nonnegative length.
-        v >= 0,
+        v >= 0
         # Formal encoding: w=CD and w is a nonnegative length.
-        w >= 0,
+        w >= 0
         # Formal encoding: x^2=AB^2.
-        x^2 = distance_sq3(ax, ay, az, bx, b_y, bz),
+        x^2 = distance_sq3(ax, ay, az, bx, b_y, bz)
         # Formal encoding: y^2=BC^2.
-        y^2 = distance_sq3(bx, b_y, bz, cx, cy, cz),
+        y^2 = distance_sq3(bx, b_y, bz, cx, cy, cz)
         # Formal encoding: z^2=CA^2.
-        z^2 = distance_sq3(cx, cy, cz, ax, ay, az),
+        z^2 = distance_sq3(cx, cy, cz, ax, ay, az)
         # Formal encoding: u^2=AD^2.
-        u^2 = distance_sq3(ax, ay, az, dx, dy, dz),
+        u^2 = distance_sq3(ax, ay, az, dx, dy, dz)
         # Formal encoding: v^2=BD^2.
-        v^2 = distance_sq3(bx, b_y, bz, dx, dy, dz),
+        v^2 = distance_sq3(bx, b_y, bz, dx, dy, dz)
         # Formal encoding: w^2=CD^2.
         w^2 = distance_sq3(cx, cy, cz, dx, dy, dz)
         =>:
@@ -520,37 +520,37 @@ thm imo_1970_5_equality_only_if:
     # NL subject: ABCD is an arbitrary tetrahedron in Cartesian coordinates.
     ? forall ax, ay, az, bx, b_y, bz, cx, cy, cz, dx, dy, dz, hx, hy, hz, x, y, z, u, v, w R:
         # NL: ABCD is a tetrahedron.
-        $tetrahedron3(ax, ay, az, bx, b_y, bz, cx, cy, cz, dx, dy, dz),
+        $tetrahedron3(ax, ay, az, bx, b_y, bz, cx, cy, cz, dx, dy, dz)
         # NL: H is the foot of the perpendicular from D to plane ABC.
-        $foot_d_on_abc(ax, ay, az, bx, b_y, bz, cx, cy, cz, dx, dy, dz, hx, hy, hz),
+        $foot_d_on_abc(ax, ay, az, bx, b_y, bz, cx, cy, cz, dx, dy, dz, hx, hy, hz)
         # NL: H is the orthocenter of triangle ABC.
-        $orthocenter_abc(ax, ay, az, bx, b_y, bz, cx, cy, cz, hx, hy, hz),
+        $orthocenter_abc(ax, ay, az, bx, b_y, bz, cx, cy, cz, hx, hy, hz)
         # NL: angle BDC is a right angle.
-        $right_bdc(bx, b_y, bz, cx, cy, cz, dx, dy, dz),
+        $right_bdc(bx, b_y, bz, cx, cy, cz, dx, dy, dz)
         # Formal encoding: x=AB and x is a nonnegative length.
-        x >= 0,
+        x >= 0
         # Formal encoding: y=BC and y is a nonnegative length.
-        y >= 0,
+        y >= 0
         # Formal encoding: z=CA and z is a nonnegative length.
-        z >= 0,
+        z >= 0
         # Formal encoding: u=AD and u is a nonnegative length.
-        u >= 0,
+        u >= 0
         # Formal encoding: v=BD and v is a nonnegative length.
-        v >= 0,
+        v >= 0
         # Formal encoding: w=CD and w is a nonnegative length.
-        w >= 0,
+        w >= 0
         # Formal encoding: x^2=AB^2.
-        x^2 = distance_sq3(ax, ay, az, bx, b_y, bz),
+        x^2 = distance_sq3(ax, ay, az, bx, b_y, bz)
         # Formal encoding: y^2=BC^2.
-        y^2 = distance_sq3(bx, b_y, bz, cx, cy, cz),
+        y^2 = distance_sq3(bx, b_y, bz, cx, cy, cz)
         # Formal encoding: z^2=CA^2.
-        z^2 = distance_sq3(cx, cy, cz, ax, ay, az),
+        z^2 = distance_sq3(cx, cy, cz, ax, ay, az)
         # Formal encoding: u^2=AD^2.
-        u^2 = distance_sq3(ax, ay, az, dx, dy, dz),
+        u^2 = distance_sq3(ax, ay, az, dx, dy, dz)
         # Formal encoding: v^2=BD^2.
-        v^2 = distance_sq3(bx, b_y, bz, dx, dy, dz),
+        v^2 = distance_sq3(bx, b_y, bz, dx, dy, dz)
         # Formal encoding: w^2=CD^2.
-        w^2 = distance_sq3(cx, cy, cz, dx, dy, dz),
+        w^2 = distance_sq3(cx, cy, cz, dx, dy, dz)
         # NL equality hypothesis: (AB+BC+CA)^2 = 6(AD^2+BD^2+CD^2).
         (x + y + z)^2 = 6 * (u^2 + v^2 + w^2)
         =>:
@@ -580,39 +580,39 @@ thm imo_1970_5_equality_if:
     # NL subject: ABCD is an arbitrary tetrahedron in Cartesian coordinates.
     ? forall ax, ay, az, bx, b_y, bz, cx, cy, cz, dx, dy, dz, hx, hy, hz, x, y, z, u, v, w R:
         # NL: ABCD is a tetrahedron.
-        $tetrahedron3(ax, ay, az, bx, b_y, bz, cx, cy, cz, dx, dy, dz),
+        $tetrahedron3(ax, ay, az, bx, b_y, bz, cx, cy, cz, dx, dy, dz)
         # NL: H is the foot of the perpendicular from D to plane ABC.
-        $foot_d_on_abc(ax, ay, az, bx, b_y, bz, cx, cy, cz, dx, dy, dz, hx, hy, hz),
+        $foot_d_on_abc(ax, ay, az, bx, b_y, bz, cx, cy, cz, dx, dy, dz, hx, hy, hz)
         # NL: H is the orthocenter of triangle ABC.
-        $orthocenter_abc(ax, ay, az, bx, b_y, bz, cx, cy, cz, hx, hy, hz),
+        $orthocenter_abc(ax, ay, az, bx, b_y, bz, cx, cy, cz, hx, hy, hz)
         # NL: angle BDC is a right angle.
-        $right_bdc(bx, b_y, bz, cx, cy, cz, dx, dy, dz),
+        $right_bdc(bx, b_y, bz, cx, cy, cz, dx, dy, dz)
         # Formal encoding: x=AB and x is a nonnegative length.
-        x >= 0,
+        x >= 0
         # Formal encoding: y=BC and y is a nonnegative length.
-        y >= 0,
+        y >= 0
         # Formal encoding: z=CA and z is a nonnegative length.
-        z >= 0,
+        z >= 0
         # Formal encoding: u=AD and u is a nonnegative length.
-        u >= 0,
+        u >= 0
         # Formal encoding: v=BD and v is a nonnegative length.
-        v >= 0,
+        v >= 0
         # Formal encoding: w=CD and w is a nonnegative length.
-        w >= 0,
+        w >= 0
         # Formal encoding: x^2=AB^2.
-        x^2 = distance_sq3(ax, ay, az, bx, b_y, bz),
+        x^2 = distance_sq3(ax, ay, az, bx, b_y, bz)
         # Formal encoding: y^2=BC^2.
-        y^2 = distance_sq3(bx, b_y, bz, cx, cy, cz),
+        y^2 = distance_sq3(bx, b_y, bz, cx, cy, cz)
         # Formal encoding: z^2=CA^2.
-        z^2 = distance_sq3(cx, cy, cz, ax, ay, az),
+        z^2 = distance_sq3(cx, cy, cz, ax, ay, az)
         # Formal encoding: u^2=AD^2.
-        u^2 = distance_sq3(ax, ay, az, dx, dy, dz),
+        u^2 = distance_sq3(ax, ay, az, dx, dy, dz)
         # Formal encoding: v^2=BD^2.
-        v^2 = distance_sq3(bx, b_y, bz, dx, dy, dz),
+        v^2 = distance_sq3(bx, b_y, bz, dx, dy, dz)
         # Formal encoding: w^2=CD^2.
-        w^2 = distance_sq3(cx, cy, cz, dx, dy, dz),
+        w^2 = distance_sq3(cx, cy, cz, dx, dy, dz)
         # NL equality condition, first equality: AD=BD.
-        u = v,
+        u = v
         # NL equality condition, second equality: BD=CD; together these say AD=BD=CD.
         v = w
         =>:

@@ -54,7 +54,7 @@ excerpt):
 ```json
 {
   "kind": "run",
-  "ok": true,
+  "success": true,
   "detail": "normal",
   "session_error": null,
   "statement_results": [
@@ -71,7 +71,7 @@ excerpt):
 
 Read the result in this order:
 
-1. Did the whole run succeed (<code>ok</code>) and did each statement succeed
+1. Did the whole run succeed (<code>success</code>) and did each statement succeed
    (<code>success</code>)?
 2. Why was it accepted (<code>why_verified</code>)?
 3. What was actually added to the context (<code>stores</code>, <code>infers</code>)?
@@ -419,7 +419,7 @@ The context only says that <code>x</code> is real. It does not say which real
 number <code>x</code> is, so <code>x = 0</code> normally soft-fails with
 <code>why_failed.phase: search_proof</code>.
 
-For a run containing a soft-failed statement, top-level <code>ok</code> is
+For a run containing a soft-failed statement, top-level <code>success</code> is
 <code>false</code>, but the failed statement remains in
 <code>statement_results</code> with <code>success: false</code>. Read
 <code>why_failed</code> rather than treating the envelope alone as the
@@ -573,7 +573,7 @@ litex -session -f path/to/file.lit
 ```
 
 Batch commands (`-e` / `-f` / `-r`) return one Normal JSON document. The REPL
-prints short status lines. For automation, inspect top-level <code>ok</code>,
+prints short status lines. For automation, inspect top-level <code>success</code>,
 each statement's <code>success</code>, and <code>session_error</code>; do not
 infer success from nested evidence text alone.
 

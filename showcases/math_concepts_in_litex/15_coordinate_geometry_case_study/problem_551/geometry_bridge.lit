@@ -5,7 +5,7 @@
 # Explicit equality transport helpers used by the affine coordinate bridge.
 thm problem_551_add_equalities:
     ? forall aa, bb, cc, dd R:
-        aa = bb,
+        aa = bb
         cc = dd
         =>:
             aa + cc = bb + dd
@@ -13,7 +13,7 @@ thm problem_551_add_equalities:
 
 thm problem_551_subtract_equalities:
     ? forall aa, bb, cc, dd R:
-        aa = bb,
+        aa = bb
         cc = dd
         =>:
             aa - cc = bb - dd
@@ -28,7 +28,7 @@ thm problem_551_scale_left:
 
 thm problem_551_multiply_equalities:
     ? forall aa, bb, cc, dd R:
-        aa = bb,
+        aa = bb
         cc = dd
         =>:
             aa * cc = bb * dd
@@ -37,8 +37,8 @@ thm problem_551_multiply_equalities:
 # Explicitly transport coordinate aliases through a squared distance sum.
 thm problem_551_distance_from_aliases:
     ? forall dd, xx, yy, aa, bb R:
-        dd = xx^2 + yy^2,
-        xx = aa,
+        dd = xx^2 + yy^2
+        xx = aa
         yy = bb
         =>:
             dd = aa^2 + bb^2
@@ -56,8 +56,8 @@ thm problem_551_distance_from_aliases:
 # Explicit affine difference helper for endpoint coordinates.
 thm problem_551_affine_endpoint_difference:
     ? forall aa, cc, dd, ee, pp, qq, tt R:
-        pp = cc - aa,
-        qq = dd - aa,
+        pp = cc - aa
+        qq = dd - aa
         ee = cc + tt * (dd - cc)
         =>:
             ee - dd = (tt - 1) * (qq - pp)
@@ -75,9 +75,9 @@ thm problem_551_affine_endpoint_difference:
 # compound expressions, so the coordinate expansion is proved through this theorem.
 thm problem_551_affine_ray_endpoint_coordinate:
     ? forall aa, bb, dd, ff, oo, uu, qq, vv R:
-        uu = aa - oo,
-        bb - oo = -uu,
-        qq = dd - aa,
+        uu = aa - oo
+        bb - oo = -uu
+        qq = dd - aa
         ff = aa + vv * (dd - aa)
         =>:
             ff - bb = 2 * uu + vv * qq
@@ -96,10 +96,10 @@ thm problem_551_affine_ray_endpoint_coordinate:
 
 thm problem_551_affine_endpoint_coordinate:
     ? forall aa, bb, cc, dd, ee, oo, uu, pp, qq, tt R:
-        uu = aa - oo,
-        bb - oo = -uu,
-        pp = cc - aa,
-        qq = dd - aa,
+        uu = aa - oo
+        bb - oo = -uu
+        pp = cc - aa
+        qq = dd - aa
         ee = cc + tt * (dd - cc)
         =>:
             ee - bb = 2 * uu + tt * qq + (1 - tt) * pp
@@ -129,7 +129,7 @@ thm problem_551_affine_endpoint_coordinate:
 # Explicitly subtract two endpoint coordinates expressed from the same base point.
 thm problem_551_affine_endpoint_gap:
     ? forall bb, ee, ff, uu, pp, qq, tt, vv R:
-        ee - bb = 2 * uu + tt * qq + (1 - tt) * pp,
+        ee - bb = 2 * uu + tt * qq + (1 - tt) * pp
         ff - bb = 2 * uu + vv * qq
         =>:
             ff - ee = (vv - tt) * qq + (tt - 1) * pp
@@ -143,8 +143,8 @@ thm problem_551_affine_endpoint_gap:
 # Eliminate zero summands from an explicitly expanded affine dot product.
 thm problem_551_component_elimination:
     ? forall aa, bb, cc R:
-        aa + bb + cc = 0,
-        bb = 0,
+        aa + bb + cc = 0
+        bb = 0
         cc = 0
         =>:
             aa = 0
@@ -156,7 +156,7 @@ thm problem_551_component_elimination:
 # Eliminate a known-zero right summand.
 thm problem_551_sum_zero_left:
     ? forall aa, bb R:
-        aa + bb = 0,
+        aa + bb = 0
         bb = 0
         =>:
             aa = 0
@@ -167,7 +167,7 @@ thm problem_551_sum_zero_left:
 # Transport zero across an equality whose left side is known to vanish.
 thm problem_551_zero_from_equal:
     ? forall aa, bb R:
-        aa = bb,
+        aa = bb
         aa = 0
         =>:
             bb = 0
@@ -177,7 +177,7 @@ thm problem_551_zero_from_equal:
 # Explicit coordinate-alias transport into a two-dimensional dot product.
 thm problem_551_dot_from_coordinate_aliases:
     ? forall ux, uy, ex, ey, rx, ry R:
-        ex = rx,
+        ex = rx
         ey = ry
         =>:
             ux * ex + uy * ey = ux * rx + uy * ry
@@ -192,7 +192,7 @@ thm problem_551_dot_from_coordinate_aliases:
 # Expand the dot product of OA with an affine point on CD.
 thm problem_551_affine_dot_expansion:
     ? forall ux, uy, px, py, qx, qy, ex, ey, t R:
-        ex = 2 * ux + t * qx + (1 - t) * px,
+        ex = 2 * ux + t * qx + (1 - t) * px
         ey = 2 * uy + t * qy + (1 - t) * py
         =>:
             ux * ex + uy * ey = 2 * (ux^2 + uy^2) + t * (ux * qx + uy * qy) + (1 - t) * (ux * px + uy * py)
@@ -205,7 +205,7 @@ thm problem_551_affine_dot_expansion:
 # Expand the dot product of OA with a point on ray AD.
 thm problem_551_ray_dot_expansion:
     ? forall ux, uy, qx, qy, fx, fy, v R:
-        fx = 2 * ux + v * qx,
+        fx = 2 * ux + v * qx
         fy = 2 * uy + v * qy
         =>:
             ux * fx + uy * fy = 2 * (ux^2 + uy^2) + v * (ux * qx + uy * qy)
@@ -219,8 +219,8 @@ thm problem_551_ray_dot_expansion:
 # into the corresponding zero dot product against OA.
 thm problem_551_negated_dot_from_aliases:
     ? forall ux, uy, bdx, bdy, x, y R:
-        bdx = -ux,
-        bdy = -uy,
+        bdx = -ux
+        bdy = -uy
         bdx * x + bdy * y = 0
         =>:
             ux * x + uy * y = 0
@@ -232,22 +232,22 @@ thm problem_551_negated_dot_from_aliases:
 
 thm problem_551_geometry_bridge:
     ? forall a, b, c, d, ep, f, m, n, o cart(R, R), r R+, s, t, k, v, w R:
-        $geo::is_midpoint(o, a, b),
-        $geo::is_perpendicular(o, a, a, m),
-        $geo::is_perpendicular(o, b, b, n),
-        $geo::is_on_circle(a, o, r),
-        $geo::is_on_circle(d, o, r),
-        $geo::are_segments_congruent(c, d, c, a),
-        c[1] = (1 - s) * a[1] + s * m[1],
-        c[2] = (1 - s) * a[2] + s * m[2],
-        ep = (c[1] + t * (d[1] - c[1]), c[2] + t * (d[2] - c[2])),
-        ep[1] = (1 - k) * b[1] + k * n[1],
-        ep[2] = (1 - k) * b[2] + k * n[2],
-        f = (a[1] + v * (d[1] - a[1]), a[2] + v * (d[2] - a[2])),
-        f[1] = (1 - w) * b[1] + w * n[1],
+        $geo::is_midpoint(o, a, b)
+        $geo::is_perpendicular(o, a, a, m)
+        $geo::is_perpendicular(o, b, b, n)
+        $geo::is_on_circle(a, o, r)
+        $geo::is_on_circle(d, o, r)
+        $geo::are_segments_congruent(c, d, c, a)
+        c[1] = (1 - s) * a[1] + s * m[1]
+        c[2] = (1 - s) * a[2] + s * m[2]
+        ep = (c[1] + t * (d[1] - c[1]), c[2] + t * (d[2] - c[2]))
+        ep[1] = (1 - k) * b[1] + k * n[1]
+        ep[2] = (1 - k) * b[2] + k * n[2]
+        f = (a[1] + v * (d[1] - a[1]), a[2] + v * (d[2] - a[2]))
+        f[1] = (1 - w) * b[1] + w * n[1]
         f[2] = (1 - w) * b[2] + w * n[2]
         =>:
-            geo::dot(geo::vec(o, d), geo::vec(d, ep)) = 0,
+            geo::dot(geo::vec(o, d), geo::vec(d, ep)) = 0
             geo::distance_sq(b, ep) = geo::distance_sq(ep, f)
 
     by def $geo::is_midpoint(o, a, b)

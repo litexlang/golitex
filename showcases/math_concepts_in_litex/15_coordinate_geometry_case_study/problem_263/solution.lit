@@ -8,8 +8,8 @@
 # 则可在不引入除法分支的情况下消去 t。
 thm problem_263_length_eliminate:
     ? forall t, ap_len, fm_len, be_len R:
-        t > 0,
-        t * ap_len = be_len,
+        t > 0
+        t * ap_len = be_len
         2 * t * fm_len = (1 - t) * be_len
         =>:
             ap_len - 2 * fm_len = be_len
@@ -26,8 +26,8 @@ thm problem_263_length_eliminate:
 # 该形式避免后续坐标证明中反复处理分式 t/(1+t)。
 thm problem_263_parameter_identity:
     ? forall t, s R:
-        t > 0,
-        2 * t^2 = 1,
+        t > 0
+        2 * t^2 = 1
         s * (1 + t) = t
         =>:
             t * s = 1 - t
@@ -47,8 +47,8 @@ thm problem_263_parameter_identity:
 # 两个非负实数平方相等，则二者相等。
 thm problem_263_nonnegative_equal_of_equal_squares:
     ? forall x, y R:
-        x >= 0,
-        y >= 0,
+        x >= 0
+        y >= 0
         x^2 = y^2
         =>:
             x = y
@@ -78,9 +78,9 @@ thm problem_263_nonnegative_equal_of_equal_squares:
 # 非负比例的平方关系可提升为长度关系。
 thm problem_263_nonnegative_length_scale:
     ? forall k, x, y R:
-        k >= 0,
-        x >= 0,
-        y >= 0,
+        k >= 0
+        x >= 0
+        y >= 0
         x^2 = k^2 * y^2
         =>:
             x = k * y
@@ -94,13 +94,13 @@ thm problem_263_nonnegative_length_scale:
 # 该桥只做坐标恒等式，不承担任何几何参数提取。
 thm problem_263_metric_from_coordinate_relations:
     ? forall a, b, ep, f, m, p cart(R, R), t R:
-        ep[1] - b[1] = t * (p[1] - a[1]),
-        ep[2] - b[2] = t * (p[2] - a[2]),
-        m[1] - f[1] = ((1 - t) / 2) * (m[1] - a[1]),
-        m[2] - f[2] = ((1 - t) / 2) * (m[2] - a[2]),
+        ep[1] - b[1] = t * (p[1] - a[1])
+        ep[2] - b[2] = t * (p[2] - a[2])
+        m[1] - f[1] = ((1 - t) / 2) * (m[1] - a[1])
+        m[2] - f[2] = ((1 - t) / 2) * (m[2] - a[2])
         geo::distance_sq(a, m) = geo::distance_sq(a, p)
         =>:
-            geo::distance_sq(b, ep) = t^2 * geo::distance_sq(a, p),
+            geo::distance_sq(b, ep) = t^2 * geo::distance_sq(a, p)
             geo::distance_sq(f, m) = ((1 - t) / 2)^2 * geo::distance_sq(a, p)
 
     by thm geo::distance_sq_coordinate_formula(b, ep)
@@ -123,12 +123,12 @@ thm problem_263_metric_from_coordinate_relations:
 # 两条距离平方比例及 0<t<=1 足以推出题目的长度线性关系。
 thm problem_263_length_finish_from_squares:
     ? forall t, ap_sq, fm_sq, be_sq R:
-        t > 0,
-        t <= 1,
-        ap_sq >= 0,
-        fm_sq >= 0,
-        be_sq >= 0,
-        be_sq = t^2 * ap_sq,
+        t > 0
+        t <= 1
+        ap_sq >= 0
+        fm_sq >= 0
+        be_sq >= 0
+        be_sq = t^2 * ap_sq
         fm_sq = ((1 - t) / 2)^2 * ap_sq
         =>:
             sqrt(ap_sq) - 2 * sqrt(fm_sq) = sqrt(be_sq)
@@ -157,13 +157,13 @@ thm problem_263_length_finish_from_squares:
 # 便于直接接收 is_foot 展开后“F在线段BE所在直线”的参数见证。
 thm problem_263_isosceles_foot_midpoint_coordinates:
     ? forall a, b, ep, f cart(R, R), r R:
-        b != ep,
-        geo::distance_sq(a, b) = geo::distance_sq(a, ep),
-        f[1] = (1 - r) * b[1] + r * ep[1],
-        f[2] = (1 - r) * b[2] + r * ep[2],
+        b != ep
+        geo::distance_sq(a, b) = geo::distance_sq(a, ep)
+        f[1] = (1 - r) * b[1] + r * ep[1]
+        f[2] = (1 - r) * b[2] + r * ep[2]
         geo::dot(geo::vec(a, f), geo::vec(b, ep)) = 0
         =>:
-            f[1] = (b[1] + ep[1]) / 2,
+            f[1] = (b[1] + ep[1]) / 2
             f[2] = (b[2] + ep[2]) / 2
 
     by thm geo::distance_sq_coordinate_formula(a, b)
@@ -226,28 +226,28 @@ thm problem_263_isosceles_foot_midpoint_coordinates:
 # 输入全部是题设谓词展开后得到的坐标/点积事实；输出恰为度量桥所需五项关系。
 thm problem_263_square_intersection_coordinate_bridge:
     ? forall a, b, c, d, ep, f, m, p cart(R, R), t, s, q R:
-        d[1] = a[1] + c[1] - b[1],
-        d[2] = a[2] + c[2] - b[2],
-        ep[1] = a[1] + t * (c[1] - a[1]),
-        ep[2] = a[2] + t * (c[2] - a[2]),
-        f[1] = (b[1] + ep[1]) / 2,
-        f[2] = (b[2] + ep[2]) / 2,
-        m[1] = (1 - s) * b[1] + s * c[1],
-        m[2] = (1 - s) * b[2] + s * c[2],
-        p[1] = c[1] + q * (d[1] - c[1]),
-        p[2] = c[2] + q * (d[2] - c[2]),
-        geo::dot(geo::vec(a, m), geo::vec(b, ep)) = 0,
-        geo::dot(geo::vec(a, p), geo::vec(a, m)) = 0,
-        geo::dot(geo::vec(a, b), geo::vec(a, d)) = 0,
-        geo::distance_sq(a, b) = geo::distance_sq(a, d),
-        geo::distance_sq(a, b) > 0,
-        t > 0,
+        d[1] = a[1] + c[1] - b[1]
+        d[2] = a[2] + c[2] - b[2]
+        ep[1] = a[1] + t * (c[1] - a[1])
+        ep[2] = a[2] + t * (c[2] - a[2])
+        f[1] = (b[1] + ep[1]) / 2
+        f[2] = (b[2] + ep[2]) / 2
+        m[1] = (1 - s) * b[1] + s * c[1]
+        m[2] = (1 - s) * b[2] + s * c[2]
+        p[1] = c[1] + q * (d[1] - c[1])
+        p[2] = c[2] + q * (d[2] - c[2])
+        geo::dot(geo::vec(a, m), geo::vec(b, ep)) = 0
+        geo::dot(geo::vec(a, p), geo::vec(a, m)) = 0
+        geo::dot(geo::vec(a, b), geo::vec(a, d)) = 0
+        geo::distance_sq(a, b) = geo::distance_sq(a, d)
+        geo::distance_sq(a, b) > 0
+        t > 0
         2 * t^2 = 1
         =>:
-            ep[1] - b[1] = t * (p[1] - a[1]),
-            ep[2] - b[2] = t * (p[2] - a[2]),
-            m[1] - f[1] = ((1 - t) / 2) * (m[1] - a[1]),
-            m[2] - f[2] = ((1 - t) / 2) * (m[2] - a[2]),
+            ep[1] - b[1] = t * (p[1] - a[1])
+            ep[2] - b[2] = t * (p[2] - a[2])
+            m[1] - f[1] = ((1 - t) / 2) * (m[1] - a[1])
+            m[2] - f[2] = ((1 - t) / 2) * (m[2] - a[2])
             geo::distance_sq(a, m) = geo::distance_sq(a, p)
 
     by thm geo::vec_coordinate_formula(a, b)
@@ -536,13 +536,13 @@ thm problem_263_square_intersection_coordinate_bridge:
 
 thm problem_263:
     ? forall a, b, c, d, ep, f, m, p cart(R, R):
-        $geo::is_square(a, b, c, d),
-        $geo::is_on_segment(ep, a, c),
-        $geo::are_segments_congruent(a, ep, b, c),
-        $geo::is_foot(f, a, b, ep),
-        $geo::is_on_extension(m, a, f),
-        $geo::is_on_line(m, b, c),
-        $geo::is_perpendicular(a, p, a, m),
+        $geo::is_square(a, b, c, d)
+        $geo::is_on_segment(ep, a, c)
+        $geo::are_segments_congruent(a, ep, b, c)
+        $geo::is_foot(f, a, b, ep)
+        $geo::is_on_extension(m, a, f)
+        $geo::is_on_line(m, b, c)
+        $geo::is_perpendicular(a, p, a, m)
         $geo::is_on_extension(p, c, d)
         =>:
             sqrt(geo::distance_sq(a, p)) - 2 * sqrt(geo::distance_sq(f, m)) = sqrt(geo::distance_sq(b, ep))
@@ -614,12 +614,14 @@ thm problem_263:
     f[2] = (b[2] + ep[2]) / 2
 
     # M lies on the extension of AF and on line BC; P lies on the extension of CD.
-    obtain u from exist u0 R st {u0 > 1, m = (a[1] + u0 * (f[1] - a[1]), a[2] + u0 * (f[2] - a[2]))}
+    obtain u from exist u0 R st {u0 > 1
+    m = (a[1] + u0 * (f[1] - a[1]), a[2] + u0 * (f[2] - a[2]))}
     m[1] = a[1] + u * (f[1] - a[1])
     m[2] = a[2] + u * (f[2] - a[2])
     by thm geo::on_line_implies_affine_parameter(b, c, m)
     obtain s from exist s0 R st {m[1] = (1 - s0) * b[1] + s0 * c[1], m[2] = (1 - s0) * b[2] + s0 * c[2]}
-    obtain q from exist q0 R st {q0 > 1, p = (c[1] + q0 * (d[1] - c[1]), c[2] + q0 * (d[2] - c[2]))}
+    obtain q from exist q0 R st {q0 > 1
+    p = (c[1] + q0 * (d[1] - c[1]), c[2] + q0 * (d[2] - c[2]))}
     p[1] = c[1] + q * (d[1] - c[1])
     p[2] = c[2] + q * (d[2] - c[2])
 

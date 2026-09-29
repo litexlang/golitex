@@ -29,8 +29,8 @@
 
 thm nonnegative_equal_of_equal_squares:
     ? forall x, y R:
-        x >= 0,
-        y > 0,
+        x >= 0
+        y > 0
         x^2 = y^2
         =>:
             x = y
@@ -43,8 +43,8 @@ thm nonnegative_equal_of_equal_squares:
 
 thm problem_225_rotation_perpendicular_core:
     ? forall c, s R:
-        c^2 + s^2 = 1,
-        (0, 0) != (4 - 2 * s, 2 * c),
+        c^2 + s^2 = 1
+        (0, 0) != (4 - 2 * s, 2 * c)
         (0, 6) != (3 * c, 3 * s)
         =>:
             $geo::is_perpendicular((0, 0), (4 - 2 * s, 2 * c), (0, 6), (3 * c, 3 * s))
@@ -57,13 +57,13 @@ thm problem_225_rotation_perpendicular_core:
 # Exact first counterclockwise collinear position.
 thm problem_225_first_collinear_length_core:
     ? forall c, s R, f cart(R, R):
-        c = (6 - 4 * sqrt(21)) / 25,
-        s = (8 + 3 * sqrt(21)) / 25,
+        c = (6 - 4 * sqrt(21)) / 25
+        s = (8 + 3 * sqrt(21)) / 25
         f = (4 - 2 * s, 2 * c)
         =>:
-            c^2 + s^2 = 1,
-            3 * c + 4 * s = 2,
-            s > 0,
+            c^2 + s^2 = 1
+            3 * c + 4 * s = 2
+            s > 0
             sqrt(geo::distance_sq((0, 0), f)) = (4 * sqrt(21) - 6) / 5
     sqrt(21)^2 = 21
     sqrt(21) > 0
@@ -146,12 +146,12 @@ thm problem_225_first_collinear_length_core:
 # Exact second counterclockwise collinear position in a full turn.
 thm problem_225_second_collinear_length_core:
     ? forall c, s R, f cart(R, R):
-        c = (6 + 4 * sqrt(21)) / 25,
-        s = (8 - 3 * sqrt(21)) / 25,
+        c = (6 + 4 * sqrt(21)) / 25
+        s = (8 - 3 * sqrt(21)) / 25
         f = (4 - 2 * s, 2 * c)
         =>:
-            c^2 + s^2 = 1,
-            3 * c + 4 * s = 2,
+            c^2 + s^2 = 1
+            3 * c + 4 * s = 2
             sqrt(geo::distance_sq((0, 0), f)) = (4 * sqrt(21) + 6) / 5
     sqrt(21)^2 = 21
     sqrt(21) > 0
@@ -224,7 +224,7 @@ thm problem_225_second_collinear_length_core:
 # Completeness of the two collinear rotation parameters.
 thm problem_225_collinear_parameter_cases:
     ? forall c, s R:
-        c^2 + s^2 = 1,
+        c^2 + s^2 = 1
         3 * c + 4 * s = 2
         =>:
             s = (8 + 3 * sqrt(21)) / 25 or s = (8 - 3 * sqrt(21)) / 25
@@ -283,8 +283,8 @@ thm problem_225_collinear_parameter_cases:
 # Therefore every collinear position gives exactly one of the two possible CF lengths.
 thm problem_225_collinear_length_cases:
     ? forall c, s R, f cart(R, R):
-        c^2 + s^2 = 1,
-        3 * c + 4 * s = 2,
+        c^2 + s^2 = 1
+        3 * c + 4 * s = 2
         f = (4 - 2 * s, 2 * c)
         =>:
             sqrt(geo::distance_sq((0, 0), f)) = (4 * sqrt(21) - 6) / 5 or sqrt(geo::distance_sq((0, 0), f)) = (4 * sqrt(21) + 6) / 5

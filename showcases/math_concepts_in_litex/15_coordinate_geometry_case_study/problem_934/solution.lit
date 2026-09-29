@@ -17,11 +17,11 @@
 thm problem_934_angle_bisector_midpoint_perpendicular:
     ? forall a, b, c, d cart(R, R):
         # “在△ABC中”。
-        $geo::is_triangle(a, b, c),
+        $geo::is_triangle(a, b, c)
         # “AD平分∠BAC”。
-        $geo::is_angle_bisector(b, a, c, d),
+        $geo::is_angle_bisector(b, a, c, d)
         # “D是BC的中点”。
-        $geo::is_midpoint(d, b, c),
+        $geo::is_midpoint(d, b, c)
         # “AD⊥BC”。
         $geo::is_perpendicular(a, d, b, c)
         =>:

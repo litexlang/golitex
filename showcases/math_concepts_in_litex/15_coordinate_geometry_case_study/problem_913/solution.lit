@@ -12,14 +12,15 @@
 # 若BC平行DE，且F在DE以E为端点的延长线上，则BC平行FE。
 thm problem_913_parallel_preserved_on_extension:
     ? forall b, c, d, ep, f cart(R, R):
-        $geo::is_parallel(b, c, d, ep),
+        $geo::is_parallel(b, c, d, ep)
         $geo::is_on_extension(f, d, ep)
         =>:
             $geo::is_parallel(b, c, f, ep)
 
     by def $geo::is_parallel(b, c, d, ep)
     by def $geo::is_on_extension(f, d, ep)
-    obtain t from exist t0 R st {t0 > 1, f = (d[1] + t0 * (ep[1] - d[1]), d[2] + t0 * (ep[2] - d[2]))}
+    obtain t from exist t0 R st {t0 > 1
+    f = (d[1] + t0 * (ep[1] - d[1]), d[2] + t0 * (ep[2] - d[2]))}
     f[1] = d[1] + t * (ep[1] - d[1])
     f[2] = d[2] + t * (ep[2] - d[2])
     
@@ -48,15 +49,15 @@ thm problem_913_parallel_preserved_on_extension:
 thm problem_913_rhombus:
     ? forall a, b, c, d, ep, f cart(R, R):
         # △ABC是等边三角形。
-        $geo::is_equilateral(a, b, c),
+        $geo::is_equilateral(a, b, c)
         # △CDE是等边三角形。
-        $geo::is_equilateral(c, d, ep),
+        $geo::is_equilateral(c, d, ep)
         # 题图隐含：AC=CD（两个等边三角形边长相等）。
-        $geo::are_segments_congruent(a, c, c, d),
+        $geo::are_segments_congruent(a, c, c, d)
         # BF∥CE。
-        $geo::is_parallel(b, f, c, ep),
+        $geo::is_parallel(b, f, c, ep)
         # F在DE以E为端点的延长线上。
-        $geo::is_on_extension(f, d, ep),
+        $geo::is_on_extension(f, d, ep)
         # 题图隐含：BC∥DE（两等边三角形的同向配置）。
         $geo::is_parallel(b, c, d, ep)
         =>:

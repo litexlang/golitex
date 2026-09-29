@@ -10,15 +10,15 @@
 thm problem_474:
     ? forall a, b, c, d, ep, o cart(R, R), r R+:
         # 【NL条件1】四边形ABCD是平行四边形（采用通常非退化四边形语义）。
-        $geo::is_nondegenerate_parallelogram(a, b, c, d),
+        $geo::is_nondegenerate_parallelogram(a, b, c, d)
         # 【NL条件2】该圆以BC为直径，圆心为O。
-        $geo::is_diameter_endpoints(b, c, o),
+        $geo::is_diameter_endpoints(b, c, o)
         # 【NL条件3】直径端点B在圆O上。
-        $geo::is_on_circle(b, o, r),
+        $geo::is_on_circle(b, o, r)
         # 【NL条件4】直径端点C在圆O上。
-        $geo::is_on_circle(c, o, r),
+        $geo::is_on_circle(c, o, r)
         # 【NL条件5】圆O与AD交于E，因此E在圆O上；E在AD上由下一条中点条件给出。
-        $geo::is_on_circle(ep, o, r),
+        $geo::is_on_circle(ep, o, r)
         # 【NL条件6】点E是AD的中点。
         $geo::is_midpoint(ep, a, d)
         =>:

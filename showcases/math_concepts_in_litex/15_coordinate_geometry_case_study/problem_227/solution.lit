@@ -22,8 +22,8 @@
 
 thm problem_227_part1_sss_interface:
     ? forall a, b, c, d, q cart(R, R):
-        geo::distance_sq(a, c) = geo::distance_sq(q, b),
-        geo::distance_sq(c, d) = geo::distance_sq(b, d),
+        geo::distance_sq(a, c) = geo::distance_sq(q, b)
+        geo::distance_sq(c, d) = geo::distance_sq(b, d)
         geo::distance_sq(d, a) = geo::distance_sq(d, q)
         =>:
             $geo::are_triangles_congruent(a, c, d, q, b, d)
@@ -36,7 +36,7 @@ thm problem_227_part1_sss_interface:
 
 thm problem_227_part2_upper_interface:
     ? forall a, b, c, d cart(R, R):
-        $geo::is_midpoint(d, b, c),
+        $geo::is_midpoint(d, b, c)
         not $geo::is_collinear(a, b, c)
         =>:
             exist d_ab, d_ac, d_ad R st {d_ab >= 0, d_ac >= 0, d_ad >= 0, d_ab * d_ab = geo::distance_sq(a, b), d_ac * d_ac = geo::distance_sq(a, c), d_ad * d_ad = geo::distance_sq(a, d), d_ab + d_ac > 2 * d_ad}
@@ -51,7 +51,7 @@ thm problem_227_part2_upper_interface:
 # the construction "extend AD to E with ED=AD"). Then △ACD ≌ △EBD.
 thm problem_227_part1:
     ? forall a, b, c, d, ep cart(R, R):
-        $geo::is_midpoint(d, b, c),
+        $geo::is_midpoint(d, b, c)
         $geo::is_midpoint(d, a, ep)
         =>:
             $geo::are_triangles_congruent(a, c, d, ep, b, d)
@@ -74,8 +74,8 @@ thm problem_227_part1:
 # It is not available as a named theorem in the imported geometry KB.
 thm problem_227_nonnegative_equal_of_equal_squares:
     ? forall x, y R:
-        x >= 0,
-        y > 0,
+        x >= 0
+        y > 0
         x^2 = y^2
         =>:
             x = y
@@ -91,17 +91,17 @@ thm problem_227_nonnegative_equal_of_equal_squares:
 # Apollonius gives 4 AD^2 = 2 AB^2 + 2 AC^2 - BC^2.
 thm problem_227_part2_scalar:
     ? forall d_ab, d_ac, d_ad, d_bc R:
-        d_ab >= 0,
-        d_ac >= 0,
-        d_ad >= 0,
-        d_bc >= 0,
-        d_ab * d_ab = 100,
-        d_ac * d_ac = 36,
-        d_ab + d_ac > 2 * d_ad,
-        d_bc < d_ab + d_ac,
+        d_ab >= 0
+        d_ac >= 0
+        d_ad >= 0
+        d_bc >= 0
+        d_ab * d_ab = 100
+        d_ac * d_ac = 36
+        d_ab + d_ac > 2 * d_ad
+        d_bc < d_ab + d_ac
         4 * d_ad * d_ad = 2 * d_ab * d_ab + 2 * d_ac * d_ac - d_bc * d_bc
         =>:
-            2 < d_ad,
+            2 < d_ad
             d_ad < 8
     d_ab^2 = d_ab * d_ab
     d_ab^2 = 100
@@ -167,11 +167,11 @@ thm problem_227_part2_scalar:
 # Part (3): BE + CF > EF via reflection across D.
 thm problem_227_reflection_equalities:
     ? forall b, c, d, p, f, g cart(R, R):
-        $geo::is_midpoint(d, b, c),
-        $geo::is_midpoint(d, p, g),
+        $geo::is_midpoint(d, b, c)
+        $geo::is_midpoint(d, p, g)
         $geo::is_perpendicular(p, d, d, f)
         =>:
-            geo::distance_sq(b, p) = geo::distance_sq(c, g),
+            geo::distance_sq(b, p) = geo::distance_sq(c, g)
             geo::distance_sq(f, p) = geo::distance_sq(f, g)
 
     by def $geo::is_midpoint(d, b, c)
@@ -238,14 +238,14 @@ thm problem_227_reflection_equalities:
 
 thm problem_227_reflected_triangle_noncollinear:
     ? forall a, b, c, d, p, f, g cart(R, R), s, t R:
-        not $geo::is_collinear(a, b, c),
-        0 < s,
-        s < 1,
-        0 < t,
-        t < 1,
-        p = (a[1] + s * (b[1] - a[1]), a[2] + s * (b[2] - a[2])),
-        f = (a[1] + t * (c[1] - a[1]), a[2] + t * (c[2] - a[2])),
-        $geo::is_midpoint(d, b, c),
+        not $geo::is_collinear(a, b, c)
+        0 < s
+        s < 1
+        0 < t
+        t < 1
+        p = (a[1] + s * (b[1] - a[1]), a[2] + s * (b[2] - a[2]))
+        f = (a[1] + t * (c[1] - a[1]), a[2] + t * (c[2] - a[2]))
+        $geo::is_midpoint(d, b, c)
         $geo::is_midpoint(d, p, g)
         =>:
             not $geo::is_collinear(c, f, g)
@@ -360,15 +360,15 @@ thm problem_227_reflected_triangle_noncollinear:
 
 thm problem_227_part3_inequality:
     ? forall a, b, c, d, p, f, g cart(R, R), s, t R:
-        not $geo::is_collinear(a, b, c),
-        0 < s,
-        s < 1,
-        0 < t,
-        t < 1,
-        p = (a[1] + s * (b[1] - a[1]), a[2] + s * (b[2] - a[2])),
-        f = (a[1] + t * (c[1] - a[1]), a[2] + t * (c[2] - a[2])),
-        $geo::is_midpoint(d, b, c),
-        $geo::is_midpoint(d, p, g),
+        not $geo::is_collinear(a, b, c)
+        0 < s
+        s < 1
+        0 < t
+        t < 1
+        p = (a[1] + s * (b[1] - a[1]), a[2] + s * (b[2] - a[2]))
+        f = (a[1] + t * (c[1] - a[1]), a[2] + t * (c[2] - a[2]))
+        $geo::is_midpoint(d, b, c)
+        $geo::is_midpoint(d, p, g)
         $geo::is_perpendicular(p, d, d, f)
         =>:
             exist l_be, l_cf, l_ef R st {l_be >= 0, l_cf >= 0, l_ef >= 0, l_be * l_be = geo::distance_sq(b, p), l_cf * l_cf = geo::distance_sq(c, f), l_ef * l_ef = geo::distance_sq(p, f), l_be + l_cf > l_ef}

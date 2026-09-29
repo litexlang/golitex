@@ -21,10 +21,10 @@
 # this scalar lemma removes the nonzero geometric factors.
 thm problem_512_factor_finish:
     ? forall q, h, z, target R:
-        q > 0,
-        h > 0,
-        z > 0,
-        q * h * z * (2 * h + z) * (q * z - 1) = 0,
+        q > 0
+        h > 0
+        z > 0
+        q * h * z * (2 * h + z) * (q * z - 1) = 0
         2 * target = (z - 2 * h) * (z + 2 * h) * (q * z - 1)
         =>:
             target = 0
@@ -52,14 +52,14 @@ thm problem_512_factor_finish:
 # differences from O, so this lemma makes no geometric assumptions.
 thm problem_512_coordinate_bridge:
     ? forall ux, uy, vx, vy, ex, ey, q, h, z R:
-        q > 0,
-        h > 0,
-        z > 0,
-        ux^2 + uy^2 = h^2,
-        vx^2 + vy^2 = h^2,
-        z^2 = (ux + vx)^2 + (uy + vy)^2,
-        ex = q * (z + h) * ux + q * h * vx - ux,
-        ey = q * (z + h) * uy + q * h * vy - uy,
+        q > 0
+        h > 0
+        z > 0
+        ux^2 + uy^2 = h^2
+        vx^2 + vy^2 = h^2
+        z^2 = (ux + vx)^2 + (uy + vy)^2
+        ex = q * (z + h) * ux + q * h * vx - ux
+        ey = q * (z + h) * uy + q * h * vy - uy
         ex^2 + ey^2 = h^2
         =>:
             ex * (vx - ux) + ey * (vy - uy) = 0
@@ -163,8 +163,8 @@ thm problem_512_coordinate_bridge:
 # Two direction vectors perpendicular to the same nonzero vector are parallel.
 thm problem_512_common_normal_core:
     ? forall nx, ny, x1, x2, y1, y2 R:
-        nx^2 + ny^2 > 0,
-        nx * x1 + ny * x2 = 0,
+        nx^2 + ny^2 > 0
+        nx * x1 + ny * x2 = 0
         nx * y1 + ny * y2 = 0
         =>:
             x1 * y2 - x2 * y1 = 0
@@ -177,23 +177,23 @@ thm problem_512_common_normal_core:
 thm problem_512:
     ? forall a, b, c, d, ep, f, o cart(R, R), r R+:
         # 【NL条件1】△ABC是三角形。
-        $geo::is_triangle(a, b, c),
+        $geo::is_triangle(a, b, c)
         # 【NL条件2】⊙O是△ABC的外接圆：A在⊙O上。
-        $geo::is_on_circle(a, o, r),
+        $geo::is_on_circle(a, o, r)
         # 【NL条件3】⊙O是△ABC的外接圆：B在⊙O上。
-        $geo::is_on_circle(b, o, r),
+        $geo::is_on_circle(b, o, r)
         # 【NL条件4】⊙O是△ABC的外接圆：C在⊙O上。
-        $geo::is_on_circle(c, o, r),
+        $geo::is_on_circle(c, o, r)
         # 【NL条件5】AB为⊙O的直径。
-        $geo::is_diameter_endpoints(a, b, o),
+        $geo::is_diameter_endpoints(a, b, o)
         # 【NL条件6】D是△ABC的内心。
-        $geo::is_incenter(d, a, b, c),
+        $geo::is_incenter(d, a, b, c)
         # 【NL条件7】AD延长后交⊙O于E：E在AD延长线上。
-        $geo::is_on_extension(ep, a, d),
+        $geo::is_on_extension(ep, a, d)
         # 【NL条件8】AD延长后交⊙O于E：E在⊙O上。
-        $geo::is_on_circle(ep, o, r),
+        $geo::is_on_circle(ep, o, r)
         # 【NL条件9】过E的直线EF是⊙O在E处的切线。
-        $geo::is_tangent_at(ep, f, o, r),
+        $geo::is_tangent_at(ep, f, o, r)
         # 【NL条件10】切线EF交AB的延长线于F。
         $geo::is_on_extension(f, a, b)
         =>:
@@ -210,7 +210,8 @@ thm problem_512:
     by def $geo::is_incenter(d, a, b, c)
     obtain ab, bc, ca from exist ab, bc, ca R+ st {ab^2 = geo::distance_sq(a, b), bc^2 = geo::distance_sq(b, c), ca^2 = geo::distance_sq(c, a), d[1] * (ab + bc + ca) = bc * a[1] + ca * b[1] + ab * c[1], d[2] * (ab + bc + ca) = bc * a[2] + ca * b[2] + ab * c[2]}
     by def $geo::is_on_extension(ep, a, d)
-    obtain t from exist t0 R st {t0 > 1, ep = (a[1] + t0 * (d[1] - a[1]), a[2] + t0 * (d[2] - a[2]))}
+    obtain t from exist t0 R st {t0 > 1
+    ep = (a[1] + t0 * (d[1] - a[1]), a[2] + t0 * (d[2] - a[2]))}
     by def $geo::is_on_circle(ep, o, r)
     by def $geo::is_tangent_at(ep, f, o, r)
     by def $geo::is_perpendicular(o, ep, ep, f)

@@ -202,6 +202,10 @@ impl Runtime {
                 NotEqualFactSearchProofByBuiltinRule::FromKnownInNonzeroStandardSet(proof),
             ));
         }
+        // Prove `a != b` from a known / already-proved `b != a` (no recursive flip).
+        if let Some(proof) = self.try_not_equal_symmetry(fact, verify_state.clone())? {
+            return Ok(Some(proof));
+        }
 
         // A — shape
         match (&fact.left, &fact.right) {
@@ -438,6 +442,37 @@ impl Runtime {
         }
 
         Ok(None)
+    }
+
+    // Not-equal symmetry: only when the flipped fact is already known.
+    // Avoids recursive flip loops (`a != b` ↔ `b != a`).
+    fn try_not_equal_symmetry(
+        &mut self,
+        fact: &NotEqualFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<NotEqualFactSearchProofByBuiltinRule>> {
+        if self
+            .known_not_equal_fact_id(&fact.right, &fact.left)
+            .is_none()
+        {
+            return Ok(None);
+        }
+        let alternate_fact = Fact::AtomicFact(AtomicFact::NotEqualFact(NotEqualFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: fact.right.clone(),
+            right: fact.left.clone(),
+            line_file: None,
+        }));
+        let proof_of_alternate_fact = self.verify_fact(&alternate_fact, verify_state)?;
+        if proof_of_alternate_fact.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(NotEqualFactSearchProofByBuiltinRule::NotEqualSymmetry(
+            NotEqualSymmetryBuiltinRuleProof {
+                alternate_fact,
+                proof_of_alternate_fact,
+            },
+        )))
     }
 
     fn abs_nonzero_from_arg_proof(

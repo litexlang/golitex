@@ -27,7 +27,7 @@ representation theory, model theory, and universal algebra are collection
 non-goals, not missing chapters.
 
 `main.lit` contains no `trust`. The independent release file and module
-runners must both return top-level `ok: true`. See `math_collections.md` for
+runners must both return top-level `success: true`. See `math_collections.md` for
 the exact interface and boundary decisions.
 
 `same_math_in_lean.lean` expresses the same progression using

@@ -1,7 +1,7 @@
 thm same_nonnegative_square:
     ? forall x, y R:
-        0 <= x,
-        0 <= y,
+        0 <= x
+        0 <= y
         x^2 = y^2
         =>:
             x = y
@@ -26,10 +26,10 @@ thm same_nonnegative_square:
 
 thm affine_scalar_core:
     ? forall ux, uy, vx, vy, q R:
-        ux * vx + uy * vy = 0,
+        ux * vx + uy * vy = 0
         ux^2 + uy^2 = vx^2 + vy^2
         =>:
-            (q * ux - vx)^2 + (q * uy - vy)^2 = (-ux - q * vx)^2 + (-uy - q * vy)^2,
+            (q * ux - vx)^2 + (q * uy - vy)^2 = (-ux - q * vx)^2 + (-uy - q * vy)^2
             (q * ux - vx) * (-ux - q * vx) + (q * uy - vy) * (-uy - q * vy) = 0
     (q * ux - vx)^2 + (q * uy - vy)^2 = q^2 * (ux^2 + uy^2) - 2 * q * (ux * vx + uy * vy) + (vx^2 + vy^2)
     (-ux - q * vx)^2 + (-uy - q * vy)^2 = (ux^2 + uy^2) + 2 * q * (ux * vx + uy * vy) + q^2 * (vx^2 + vy^2)
@@ -74,16 +74,16 @@ thm affine_scalar_core:
 
 thm affine_right_core:
     ? forall pa, pb, pc, pd, pe, pf cart(R, R), t R:
-        pd[1] = (pb[1] + pc[1]) / 2,
-        pd[2] = (pb[2] + pc[2]) / 2,
-        pe[1] = pa[1] + t * (pb[1] - pa[1]),
-        pe[2] = pa[2] + t * (pb[2] - pa[2]),
-        pf[1] = pa[1] + (1 - t) * (pc[1] - pa[1]),
-        pf[2] = pa[2] + (1 - t) * (pc[2] - pa[2]),
-        (pb[1] - pa[1]) * (pc[1] - pa[1]) + (pb[2] - pa[2]) * (pc[2] - pa[2]) = 0,
+        pd[1] = (pb[1] + pc[1]) / 2
+        pd[2] = (pb[2] + pc[2]) / 2
+        pe[1] = pa[1] + t * (pb[1] - pa[1])
+        pe[2] = pa[2] + t * (pb[2] - pa[2])
+        pf[1] = pa[1] + (1 - t) * (pc[1] - pa[1])
+        pf[2] = pa[2] + (1 - t) * (pc[2] - pa[2])
+        (pb[1] - pa[1]) * (pc[1] - pa[1]) + (pb[2] - pa[2]) * (pc[2] - pa[2]) = 0
         (pb[1] - pa[1])^2 + (pb[2] - pa[2])^2 = (pc[1] - pa[1])^2 + (pc[2] - pa[2])^2
         =>:
-            geo::distance_sq(pd, pe) = geo::distance_sq(pd, pf),
+            geo::distance_sq(pd, pe) = geo::distance_sq(pd, pf)
             geo::dot(geo::vec(pd, pe), geo::vec(pd, pf)) = 0
 
     have ux R = pb[1] - pa[1]
@@ -169,19 +169,19 @@ thm affine_right_core:
 thm problem_282_part1:
     ? forall pa, pb, pc, pd, pe, pf cart(R, R):
         # △ABC has the stated right angle.
-        $geo::is_right_angle(pb, pa, pc),
+        $geo::is_right_angle(pb, pa, pc)
         # △ABC has the stated equal legs.
-        $geo::are_segments_congruent(pa, pb, pa, pc),
+        $geo::are_segments_congruent(pa, pb, pa, pc)
         # D is the midpoint of BC.
-        $geo::is_midpoint(pd, pb, pc),
+        $geo::is_midpoint(pd, pb, pc)
         # E and F are respectively on AB and AC.
-        $geo::is_on_segment(pe, pa, pb),
-        $geo::is_on_segment(pf, pa, pc),
+        $geo::is_on_segment(pe, pa, pb)
+        $geo::is_on_segment(pf, pa, pc)
         # The condition BE=AF.
         $geo::are_segments_congruent(pb, pe, pa, pf)
         =>:
             # The conclusion: DEF is isosceles right.
-            $geo::are_segments_congruent(pd, pe, pd, pf),
+            $geo::are_segments_congruent(pd, pe, pd, pf)
             $geo::is_right_angle(pe, pd, pf)
 
     by def $geo::is_right_angle(pb, pa, pc)
@@ -262,20 +262,20 @@ thm problem_282_part1:
 thm problem_282_part2:
     ? forall pa, pb, pc, pd, pe, pf cart(R, R):
         # △ABC has the stated right angle.
-        $geo::is_right_angle(pb, pa, pc),
+        $geo::is_right_angle(pb, pa, pc)
         # △ABC has the stated equal legs.
-        $geo::are_segments_congruent(pa, pb, pa, pc),
+        $geo::are_segments_congruent(pa, pb, pa, pc)
         # D is the midpoint of BC.
-        $geo::is_midpoint(pd, pb, pc),
+        $geo::is_midpoint(pd, pb, pc)
         # E lies on the extension of AB beyond B.
-        $geo::is_on_extension(pe, pa, pb),
+        $geo::is_on_extension(pe, pa, pb)
         # F lies on the extension of CA beyond A.
-        $geo::is_on_extension(pf, pc, pa),
+        $geo::is_on_extension(pf, pc, pa)
         # The condition BE=AF.
         $geo::are_segments_congruent(pb, pe, pa, pf)
         =>:
             # The conclusion: DEF is isosceles right.
-            $geo::are_segments_congruent(pd, pe, pd, pf),
+            $geo::are_segments_congruent(pd, pe, pd, pf)
             $geo::is_right_angle(pe, pd, pf)
 
     by def $geo::is_right_angle(pb, pa, pc)
@@ -285,8 +285,10 @@ thm problem_282_part2:
     by def $geo::is_on_extension(pf, pc, pa)
     by def $geo::are_segments_congruent(pb, pe, pa, pf)
 
-    obtain t from exist t0 R st {t0 > 1, pe = (pa[1] + t0 * (pb[1] - pa[1]), pa[2] + t0 * (pb[2] - pa[2]))}
-    obtain r from exist r0 R st {r0 > 1, pf = (pc[1] + r0 * (pa[1] - pc[1]), pc[2] + r0 * (pa[2] - pc[2]))}
+    obtain t from exist t0 R st {t0 > 1
+    pe = (pa[1] + t0 * (pb[1] - pa[1]), pa[2] + t0 * (pb[2] - pa[2]))}
+    obtain r from exist r0 R st {r0 > 1
+    pf = (pc[1] + r0 * (pa[1] - pc[1]), pc[2] + r0 * (pa[2] - pc[2]))}
 
     by thm geo::affine_distance_from_parameter(pa, pb, pe, t)
     geo::distance_sq(pe, pb) = (1 - t)^2 * geo::distance_sq(pa, pb)

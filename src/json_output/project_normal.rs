@@ -1,20 +1,17 @@
 //! Project ExecStmtResult → Normal JSON (see README).
 
 use super::explain::{
-    explain_atomic_rule_id, explain_compound_fact_why, explain_define_obj_why,
-    explain_equality_builtin_rule,
+    explain_atomic_rule_id, explain_compound_fact_why, explain_equality_builtin_rule,
 };
 use super::helper::{
     array_of_strings, bool_value, builtin_rule_with_optional_cite, cite_forall_from_fact_id,
     cite_from_fact_id, empty_string_array, infer_fact_texts_from_store_and_infer, object,
-    output_language, split_have_fact_id_texts, store_fact_texts, string,
+    output_language, store_fact_texts, string,
 };
+use super::project_stmt_catalog::project_non_fact_stmt;
 use crate::ast::fact::AtomicFact;
-use crate::execute::{
-    ExecDefineObjStmtResult, ExecDefinitionStmtResult, ExecFactStmtResult,
-    ExecHaveObjByExistFactsStmtResult, ExecHaveObjEqualStmtResult,
-    ExecHaveObjInNonemptySetStmtResult, ExecLetObjStmtResult, ExecStmtResult,
-};
+use crate::execute::{ExecFactStmtResult, ExecStmtResult};
+
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::{
     greater_equal::GreaterEqualFactSearchProofByBuiltinRule,
     less::LessFactSearchProofByBuiltinRule,
@@ -56,19 +53,7 @@ impl OutputDetail {
 pub fn project_stmt_normal(result: &ExecStmtResult, runtime: &Runtime) -> JsonValue {
     match result {
         ExecStmtResult::Fact(fact) => project_fact_stmt(fact, runtime),
-        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
-            ExecDefineObjStmtResult::HaveObjInNonemptySet(have),
-        )) => project_have_in_nonempty(have, runtime),
-        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
-            ExecDefineObjStmtResult::HaveObjEqual(have),
-        )) => project_have_equal(have, runtime),
-        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
-            ExecDefineObjStmtResult::LetObj(let_obj),
-        )) => project_let_obj(let_obj, runtime),
-        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
-            ExecDefineObjStmtResult::HaveObjByExistFacts(have),
-        )) => project_have_by_exist(have, runtime),
-        other => project_unsupported_stmt(other, runtime),
+        other => project_non_fact_stmt(other, runtime),
     }
 }
 
@@ -94,7 +79,7 @@ pub fn project_run_normal(
     };
     object(vec![
         ("kind", string("run")),
-        ("ok", bool_value(run.success)),
+        ("success", bool_value(run.success)),
         ("target", string(target)),
         ("path", path_value),
         ("detail", string(OutputDetail::Normal.as_str())),
@@ -136,179 +121,6 @@ fn project_fact_stmt(fact: &ExecFactStmtResult, runtime: &Runtime) -> JsonValue 
                 ("infers", empty_string_array()),
             ])
         }
-    }
-}
-
-fn project_have_in_nonempty(
-    have: &ExecHaveObjInNonemptySetStmtResult,
-    runtime: &Runtime,
-) -> JsonValue {
-    match have {
-        ExecHaveObjInNonemptySetStmtResult::Success(success) => {
-            let statement = success.statement.readable_string();
-            let (stores, infers) = split_have_fact_id_texts(
-                runtime,
-                &success.store_and_infer_result.stored_fact_ids,
-            );
-            object(vec![
-                ("success", bool_value(true)),
-                ("statement", string(statement)),
-                (
-                    "why_verified",
-                    define_obj_why_json(runtime, "have_in_nonempty"),
-                ),
-                ("stores", array_of_strings(stores)),
-                ("infers", array_of_strings(infers)),
-            ])
-        }
-        ExecHaveObjInNonemptySetStmtResult::Failed(_) => object(vec![
-            ("success", bool_value(false)),
-            ("statement", string("have …")),
-            ("why_failed", object(vec![("phase", string("have_obj"))])),
-            ("stores", empty_string_array()),
-            ("infers", empty_string_array()),
-        ]),
-    }
-}
-
-fn project_have_equal(have: &ExecHaveObjEqualStmtResult, runtime: &Runtime) -> JsonValue {
-    match have {
-        ExecHaveObjEqualStmtResult::Success(success) => {
-            let statement = success.statement.readable_string();
-            let (stores, infers) = split_have_fact_id_texts(
-                runtime,
-                &success.store_and_infer_result.stored_fact_ids,
-            );
-            object(vec![
-                ("success", bool_value(true)),
-                ("statement", string(statement)),
-                ("why_verified", define_obj_why_json(runtime, "have_equal")),
-                ("stores", array_of_strings(stores)),
-                ("infers", array_of_strings(infers)),
-            ])
-        }
-        ExecHaveObjEqualStmtResult::Failed(_) => object(vec![
-            ("success", bool_value(false)),
-            ("statement", string("have … = …")),
-            (
-                "why_failed",
-                object(vec![("phase", string("have_obj_equal"))]),
-            ),
-            ("stores", empty_string_array()),
-            ("infers", empty_string_array()),
-        ]),
-    }
-}
-
-fn project_let_obj(let_obj: &ExecLetObjStmtResult, runtime: &Runtime) -> JsonValue {
-    match let_obj {
-        ExecLetObjStmtResult::Success(success) => {
-            let statement = success.statement.readable_string();
-            let (stores, infers) =
-                split_have_fact_id_texts(runtime, &success.stored_fact_ids);
-            object(vec![
-                ("success", bool_value(true)),
-                ("statement", string(statement)),
-                ("why_verified", define_obj_why_json(runtime, "let")),
-                ("stores", array_of_strings(stores)),
-                ("infers", array_of_strings(infers)),
-            ])
-        }
-        ExecLetObjStmtResult::Failed(_) => object(vec![
-            ("success", bool_value(false)),
-            ("statement", string("let …")),
-            ("why_failed", object(vec![("phase", string("let_obj"))])),
-            ("stores", empty_string_array()),
-            ("infers", empty_string_array()),
-        ]),
-    }
-}
-
-fn project_have_by_exist(
-    have: &ExecHaveObjByExistFactsStmtResult,
-    runtime: &Runtime,
-) -> JsonValue {
-    match have {
-        ExecHaveObjByExistFactsStmtResult::Success(success) => {
-            let statement = success.statement.readable_string();
-            let (stores, infers) = split_have_fact_id_texts(
-                runtime,
-                &success.store_and_infer_result.stored_fact_ids,
-            );
-            object(vec![
-                ("success", bool_value(true)),
-                ("statement", string(statement)),
-                ("why_verified", define_obj_why_json(runtime, "have_by_exist")),
-                ("stores", array_of_strings(stores)),
-                ("infers", array_of_strings(infers)),
-            ])
-        }
-        ExecHaveObjByExistFactsStmtResult::Failed(_) => object(vec![
-            ("success", bool_value(false)),
-            ("statement", string("have … by exist")),
-            (
-                "why_failed",
-                object(vec![("phase", string("have_by_exist"))]),
-            ),
-            ("stores", empty_string_array()),
-            ("infers", empty_string_array()),
-        ]),
-    }
-}
-
-fn define_obj_why_json(runtime: &Runtime, kind: &str) -> JsonValue {
-    let text = explain_define_obj_why(kind, output_language(runtime));
-    object(vec![
-        ("type", string(text.type_tag)),
-        ("rule_name", string(text.rule_name)),
-        ("message", string(text.message)),
-    ])
-}
-
-fn project_unsupported_stmt(result: &ExecStmtResult, runtime: &Runtime) -> JsonValue {
-    let success = !result.is_failed();
-    let lang = output_language(runtime);
-    let (rule_name, message) = match lang {
-        crate::launch_command::OutputLanguage::English => (
-            stmt_kind_label(result),
-            "Normal projection for this statement kind is not detailed yet".to_string(),
-        ),
-        crate::launch_command::OutputLanguage::Chinese => (
-            stmt_kind_label(result),
-            "该语句种类的 Normal 投影尚未细化".to_string(),
-        ),
-    };
-    object(vec![
-        ("success", bool_value(success)),
-        ("statement", string(stmt_kind_label(result))),
-        (
-            if success {
-                "why_verified"
-            } else {
-                "why_failed"
-            },
-            object(vec![
-                ("type", string("stmt")),
-                ("rule_name", string(rule_name)),
-                ("message", string(message)),
-            ]),
-        ),
-        ("stores", empty_string_array()),
-        ("infers", empty_string_array()),
-    ])
-}
-
-fn stmt_kind_label(result: &ExecStmtResult) -> String {
-    match result {
-        ExecStmtResult::Fact(_) => "fact".into(),
-        ExecStmtResult::Definition(_) => "definition".into(),
-        ExecStmtResult::Witness(_) => "witness".into(),
-        ExecStmtResult::Trust(_) => "trust".into(),
-        ExecStmtResult::By(_) => "by".into(),
-        ExecStmtResult::Register(_) => "register".into(),
-        ExecStmtResult::ReleaseAndExpand(_) => "release_and_expand".into(),
-        ExecStmtResult::ProofBlock(_) => "proof_block".into(),
-        ExecStmtResult::Command(_) => "command".into(),
     }
 }
 
@@ -483,6 +295,12 @@ fn why_from_atomic_builtin_rule(
             LessEqualFactSearchProofByBuiltinRule::FromKnownInNatural(p) => {
                 cite_text("FromKnownInNatural", Some(p.cite_fact_id))
             }
+            LessEqualFactSearchProofByBuiltinRule::FromKnownInPositiveStandardSet(p) => {
+                cite_text("FromKnownInPositiveStandardSet", Some(p.cite_fact_id))
+            }
+            LessEqualFactSearchProofByBuiltinRule::FromKnownInNegativeStandardSet(p) => {
+                cite_text("FromKnownInNegativeStandardSet", Some(p.cite_fact_id))
+            }
             LessEqualFactSearchProofByBuiltinRule::OrderFlipMulMinusOne(p) => {
                 cite_text("OrderFlipMulMinusOne", Some(p.cite_fact_id))
             }
@@ -509,6 +327,9 @@ fn why_from_atomic_builtin_rule(
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(n) => match n {
             NotEqualFactSearchProofByBuiltinRule::FromKnownInNonzeroStandardSet(p) => {
                 cite_text("FromKnownInNonzeroStandardSet", Some(p.cite_fact_id))
+            }
+            NotEqualFactSearchProofByBuiltinRule::NotEqualSymmetry(_) => {
+                cite_text("NotEqualSymmetry", None)
             }
             _ => cite_text("NotEqualBuiltin", None),
         },

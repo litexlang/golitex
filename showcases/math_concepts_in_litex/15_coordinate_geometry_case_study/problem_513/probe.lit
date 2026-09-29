@@ -2,20 +2,20 @@
 
 thm problem_513_parameter_kernel:
     ? forall a, b, c, t, S, x1, x2, y1, y2, q1, q2, z1, z2, V1, V2 R:
-        a > 0,
-        b > 0,
-        c > 0,
-        t > 0,
-        S = a + b + c,
-        c^2 = x1^2 + x2^2,
-        b^2 = y1^2 + y2^2,
-        a^2 = (y1 - x1)^2 + (y2 - x2)^2,
-        x1^2 + x2^2 = 2 * (q1 * x1 + q2 * x2),
-        y1^2 + y2^2 = 2 * (q1 * y1 + q2 * y2),
-        V1 = b * x1 + c * y1,
-        V2 = b * x2 + c * y2,
-        S * z1 = t * V1,
-        S * z2 = t * V2,
+        a > 0
+        b > 0
+        c > 0
+        t > 0
+        S = a + b + c
+        c^2 = x1^2 + x2^2
+        b^2 = y1^2 + y2^2
+        a^2 = (y1 - x1)^2 + (y2 - x2)^2
+        x1^2 + x2^2 = 2 * (q1 * x1 + q2 * x2)
+        y1^2 + y2^2 = 2 * (q1 * y1 + q2 * y2)
+        V1 = b * x1 + c * y1
+        V2 = b * x2 + c * y2
+        S * z1 = t * V1
+        S * z2 = t * V2
         z1^2 + z2^2 = 2 * (q1 * z1 + q2 * z2)
         =>:
             t * (b + c - a) = b + c

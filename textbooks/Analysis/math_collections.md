@@ -2,7 +2,7 @@
 
 > Publication status (2026-08-21): Introduction, Chapters 1--11, and Appendix A
 > are in the source module. Chapters 8--11 have green persistent replay and
-> registered canonical `-f` results with exit 0 and top-level `ok=true`. The
+> registered canonical `-f` results with exit 0 and top-level `success=true`. The
 > synchronized formal mirror passes the same Chapter 11 `-f` boundary. The
 > user-selected acceptance boundary does not require a whole-module `-r`.
 > Chapter 11's Riemann and Riemann--Stieltjes interfaces are current published

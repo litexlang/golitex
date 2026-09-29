@@ -3,10 +3,19 @@
 use crate::ast::fact::AtomicFact;
 use crate::ast::names::AtomicName;
 use crate::ast::obj::Obj;
-use crate::parse::keywords::{GREATER, GREATER_EQUAL, LESS};
+use crate::parse::keywords::{EQUAL, GREATER, GREATER_EQUAL, LESS};
 use crate::runtime::{FactId, Runtime};
 
 impl Runtime {
+    // Known `left != right` with matching IR sides.
+    // Stored under prop family `=` with negative polarity (see AtomicFact::prop_name).
+    pub(crate) fn known_not_equal_fact_id(&self, left: &Obj, right: &Obj) -> Option<FactId> {
+        self.known_order_fact_id(EQUAL, false, left, right, |a| match a {
+            AtomicFact::NotEqualFact(n) => Some((&n.left, &n.right, n.fact_id)),
+            _ => None,
+        })
+    }
+
     // Known `left > right` with matching IR sides.
     pub(crate) fn known_greater_fact_id(&self, left: &Obj, right: &Obj) -> Option<FactId> {
         self.known_order_fact_id(GREATER, true, left, right, |a| match a {

@@ -22,7 +22,7 @@ thm problem_229_half_angle_algebra:
     ? forall t, r R:
         2 * r * (1 - t) = 1
         =>:
-            2 * (r - t)^2 = (r - t - 1)^2 + (1 - t - r)^2,
+            2 * (r - t)^2 = (r - t - 1)^2 + (1 - t - r)^2
             2 * (r - t)^2 = 2 * t^2 + 2 * (1 - r)^2
     by thm problem_229_linear_bridge(t, r)
     by thm geo::add_equalities(2 * r^2, 2 * r^2, -4 * r * t, 2 - 4 * r)
@@ -45,9 +45,9 @@ thm problem_229_det_algebra:
 
 thm problem_229_det_coordinate_bridge:
     ? forall mx, my, nx, ny, ux, uy, t, r R:
-        mx = (1 - t) * ux - t * uy,
-        my = (1 - t) * uy + t * ux,
-        nx = (1 - r) * ux - r * uy,
+        mx = (1 - t) * ux - t * uy
+        my = (1 - t) * uy + t * ux
+        nx = (1 - r) * ux - r * uy
         ny = (1 - r) * uy + r * ux
         =>:
             mx * ny - my * nx = (ux^2 + uy^2) * (r - t)
@@ -79,9 +79,9 @@ thm problem_229_dot_algebra:
 
 thm problem_229_dot_coordinate_bridge:
     ? forall mx, my, nx, ny, ux, uy, t, r R:
-        mx = (1 - t) * ux - t * uy,
-        my = (1 - t) * uy + t * ux,
-        nx = (1 - r) * ux - r * uy,
+        mx = (1 - t) * ux - t * uy
+        my = (1 - t) * uy + t * ux
+        nx = (1 - r) * ux - r * uy
         ny = (1 - r) * uy + r * ux
         =>:
             mx * nx + my * ny = (ux^2 + uy^2) * ((1 - t) * (1 - r) + t * r)
@@ -108,8 +108,8 @@ thm problem_229_dot_coordinate_bridge:
 
 thm problem_229_angle_factor_bridge:
     ? forall detv, dotv, s, t, r R:
-        detv = dotv,
-        detv = s * (r - t),
+        detv = dotv
+        detv = s * (r - t)
         dotv = s * ((1 - t) * (1 - r) + t * r)
         =>:
             s * (2 * r * (1 - t) - 1) = 0
@@ -125,7 +125,7 @@ thm problem_229_angle_factor_bridge:
 
 thm problem_229_mn_x_bridge:
     ? forall mx, nx, ux, uy, t, r R:
-        mx = (1 - t) * ux - t * uy,
+        mx = (1 - t) * ux - t * uy
         nx = (1 - r) * ux - r * uy
         =>:
             mx - nx = (r - t) * ux + (r - t) * uy
@@ -136,7 +136,7 @@ thm problem_229_mn_x_bridge:
 
 thm problem_229_mn_y_bridge:
     ? forall my, ny, ux, uy, t, r R:
-        my = (1 - t) * uy + t * ux,
+        my = (1 - t) * uy + t * ux
         ny = (1 - r) * uy + r * ux
         =>:
             my - ny = (r - t) * uy - (r - t) * ux
@@ -147,7 +147,7 @@ thm problem_229_mn_y_bridge:
 
 thm problem_229_qn_x_bridge:
     ? forall qx, nx, ux, uy, t, r R:
-        qx = -((1 - t) * uy + t * ux),
+        qx = -((1 - t) * uy + t * ux)
         nx = (1 - r) * ux - r * uy
         =>:
             qx - nx = (r - t - 1) * ux - (1 - t - r) * uy
@@ -158,7 +158,7 @@ thm problem_229_qn_x_bridge:
 
 thm problem_229_negated_coordinate_bridge:
     ? forall qx, my, expr R:
-        qx = -my,
+        qx = -my
         my = expr
         =>:
             qx = -expr
@@ -171,7 +171,7 @@ thm problem_229_negated_coordinate_bridge:
 
 thm problem_229_qn_y_bridge:
     ? forall qy, ny, ux, uy, t, r R:
-        qy = (1 - t) * ux - t * uy,
+        qy = (1 - t) * ux - t * uy
         ny = (1 - r) * uy + r * ux
         =>:
             qy - ny = (1 - t - r) * ux + (r - t - 1) * uy
@@ -182,7 +182,7 @@ thm problem_229_qn_y_bridge:
 
 thm problem_229_affine_start_offset:
     ? forall p, b, d, delta, t R:
-        p = b + t * d,
+        p = b + t * d
         d = delta
         =>:
             p - b = t * delta
@@ -195,8 +195,8 @@ thm problem_229_affine_start_offset:
 
 thm problem_229_affine_end_offset:
     ? forall p, b, z, d, delta, t R:
-        p = b + t * d,
-        z - b = d,
+        p = b + t * d
+        z - b = d
         d = delta
         =>:
             z - p = (1 - t) * delta
@@ -211,7 +211,7 @@ thm problem_229_affine_end_offset:
 
 thm problem_229_mn_distance_bridge:
     ? forall p, z cart(R, R), k, ux, uy R:
-        p[1] - z[1] = k * ux + k * uy,
+        p[1] - z[1] = k * ux + k * uy
         p[2] - z[2] = k * uy - k * ux
         =>:
             geo::distance_sq(p, z) = 2 * k^2 * (ux^2 + uy^2)
@@ -238,7 +238,7 @@ thm problem_229_mn_distance_bridge:
 
 thm problem_229_rotated_distance_bridge:
     ? forall p, z cart(R, R), alpha, beta, ux, uy R:
-        z[1] - p[1] = alpha * ux - beta * uy,
+        z[1] - p[1] = alpha * ux - beta * uy
         z[2] - p[2] = beta * ux + alpha * uy
         =>:
             geo::distance_sq(p, z) = (alpha^2 + beta^2) * (ux^2 + uy^2)
@@ -262,21 +262,21 @@ thm problem_229_rotated_distance_bridge:
 thm problem_229_distance_core:
     ? forall a, b, c, m, n, q cart(R, R):
         # 原题：“已知△ABC中，∠BAC=90°。”
-        $geo::is_right_angle(b, a, c),
+        $geo::is_right_angle(b, a, c)
         # 原题：“AB=AC。”
-        $geo::are_segments_congruent(a, b, a, c),
+        $geo::are_segments_congruent(a, b, a, c)
         # 原题：“AM、AN分别交BC于点M，N。”
-        $geo::is_on_segment(m, b, c),
-        $geo::is_on_segment(n, b, c),
+        $geo::is_on_segment(m, b, c)
+        $geo::is_on_segment(n, b, c)
         # 原题：“在∠BAC内部作∠MAN=45°。”
-        $translation::is_45_degree_angle(m, a, n),
+        $translation::is_45_degree_angle(m, a, n)
         # 原题：“将△ABM绕点A逆时针旋转90°，使AB边与AC边重合。”
-        $geo::rotated_90_cw(c, a, b),
+        $geo::rotated_90_cw(c, a, b)
         # 原题：“把旋转后点M的对应点记作点Q，得到△ACQ。”
         $geo::rotated_90_cw(q, a, m)
         =>:
             # 第（2）问的平方距离形式：MN=NQ。
-            geo::distance_sq(m, n) = geo::distance_sq(n, q),
+            geo::distance_sq(m, n) = geo::distance_sq(n, q)
             # 第（3）问：MN²=BM²+NC²。
             geo::distance_sq(m, n) = geo::distance_sq(b, m) + geo::distance_sq(n, c)
     by def $translation::is_45_degree_angle(m, a, n)
@@ -430,16 +430,16 @@ thm problem_229_distance_core:
 thm problem_229_part2:
     ? forall a, b, c, m, n, q cart(R, R):
         # 原题：“已知△ABC中，∠BAC=90°。”
-        $geo::is_right_angle(b, a, c),
+        $geo::is_right_angle(b, a, c)
         # 原题：“AB=AC。”
-        $geo::are_segments_congruent(a, b, a, c),
+        $geo::are_segments_congruent(a, b, a, c)
         # 原题：“AM、AN分别交BC于点M，N。”
-        $geo::is_on_segment(m, b, c),
-        $geo::is_on_segment(n, b, c),
+        $geo::is_on_segment(m, b, c)
+        $geo::is_on_segment(n, b, c)
         # 原题：“在∠BAC内部作∠MAN=45°。”
-        $translation::is_45_degree_angle(m, a, n),
+        $translation::is_45_degree_angle(m, a, n)
         # 原题：“将△ABM绕点A逆时针旋转90°，使AB边与AC边重合。”
-        $geo::rotated_90_cw(c, a, b),
+        $geo::rotated_90_cw(c, a, b)
         # 原题：“把旋转后点M的对应点记作点Q，得到△ACQ。”
         $geo::rotated_90_cw(q, a, m)
         =>:
@@ -452,16 +452,16 @@ thm problem_229_part2:
 thm problem_229_part3:
     ? forall a, b, c, m, n, q cart(R, R):
         # 原题：“已知△ABC中，∠BAC=90°。”
-        $geo::is_right_angle(b, a, c),
+        $geo::is_right_angle(b, a, c)
         # 原题：“AB=AC。”
-        $geo::are_segments_congruent(a, b, a, c),
+        $geo::are_segments_congruent(a, b, a, c)
         # 原题：“AM、AN分别交BC于点M，N。”
-        $geo::is_on_segment(m, b, c),
-        $geo::is_on_segment(n, b, c),
+        $geo::is_on_segment(m, b, c)
+        $geo::is_on_segment(n, b, c)
         # 原题：“在∠BAC内部作∠MAN=45°。”
-        $translation::is_45_degree_angle(m, a, n),
+        $translation::is_45_degree_angle(m, a, n)
         # 原题：“将△ABM绕点A逆时针旋转90°，使AB边与AC边重合。”
-        $geo::rotated_90_cw(c, a, b),
+        $geo::rotated_90_cw(c, a, b)
         # 原题：“把旋转后点M的对应点记作点Q，得到△ACQ。”
         $geo::rotated_90_cw(q, a, m)
         =>:

@@ -2,8 +2,8 @@
 
 thm nonnegative_equal_of_equal_squares:
     ? forall x, y R:
-        x >= 0,
-        y >= 0,
+        x >= 0
+        y >= 0
         x^2 = y^2
         =>:
             x = y
@@ -32,7 +32,7 @@ thm nonnegative_equal_of_equal_squares:
 
 thm sqrt_product_square:
     ? forall x, y R:
-        x >= 0,
+        x >= 0
         y >= 0
         =>:
             (sqrt(x) * sqrt(y))^2 = x * y
@@ -44,7 +44,7 @@ thm sqrt_product_square:
 
 thm affine_chord_distance_products:
     ? forall a, d, h cart(R, R), t R:
-        h[1] = a[1] + t * (d[1] - a[1]),
+        h[1] = a[1] + t * (d[1] - a[1])
         h[2] = a[2] + t * (d[2] - a[2])
         =>:
             geo::distance_sq(h, a) * geo::distance_sq(h, d) = (t * (1 - t) * geo::distance_sq(a, d))^2
@@ -72,15 +72,15 @@ thm cancel_same_minuend:
 thm problem_951_intersecting_chords:
     ? forall a, b, c, d, h, o cart(R, R), r R+:
         # A、B、C、D均在⊙O上。
-        $geo::is_on_circle(a, o, r),
-        $geo::is_on_circle(b, o, r),
-        $geo::is_on_circle(c, o, r),
-        $geo::is_on_circle(d, o, r),
+        $geo::is_on_circle(a, o, r)
+        $geo::is_on_circle(b, o, r)
+        $geo::is_on_circle(c, o, r)
+        $geo::is_on_circle(d, o, r)
         # AB是直径；CD是非退化弦。
-        $geo::is_diameter_endpoints(a, b, o),
-        c != d,
+        $geo::is_diameter_endpoints(a, b, o)
+        c != d
         # AD与BC交于H（图示中的内部交点）。
-        $geo::is_on_segment(h, a, d),
+        $geo::is_on_segment(h, a, d)
         $geo::is_on_segment(h, b, c)
         =>:
             sqrt(geo::distance_sq(h, a)) * sqrt(geo::distance_sq(h, d)) = sqrt(geo::distance_sq(h, b)) * sqrt(geo::distance_sq(h, c))

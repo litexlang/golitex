@@ -13,12 +13,12 @@
 # 并同时得到第二问需要的 DE²=CB²。
 thm problem_473_congruence_bridge:
     ? forall a, b, c, d, ep cart(R, R):
-        $geo::is_midpoint(c, a, b),
-        $geo::are_angles_congruent(d, a, c, ep, c, b),
-        $geo::is_parallel(c, d, b, ep),
+        $geo::is_midpoint(c, a, b)
+        $geo::are_angles_congruent(d, a, c, ep, c, b)
+        $geo::is_parallel(c, d, b, ep)
         $translation::are_on_same_strict_side_of_line(a, b, d, ep)
         =>:
-            $geo::are_triangles_congruent(d, a, c, ep, c, b),
+            $geo::are_triangles_congruent(d, a, c, ep, c, b)
             geo::distance_sq(d, ep) = geo::distance_sq(c, b)
 
     # Midpoint coordinates: CA and CB have the same directed vector x.
@@ -58,7 +58,9 @@ thm problem_473_congruence_bridge:
     geo::det(geo::vec(a, b), geo::vec(a, ep)) = geo::det(geo::vec(a, b), geo::vec(b, ep))
     geo::det(geo::vec(a, b), geo::vec(c, d)) * geo::det(geo::vec(a, b), geo::vec(b, ep)) > 0
     by thm ratio_probe::problem_473_positive_parallel_ratio(geo::vec(a, b), geo::vec(c, d), geo::vec(b, ep))
-    obtain t from exist t0 R st {t0 > 0, geo::vec(b, ep)[1] = t0 * geo::vec(c, d)[1], geo::vec(b, ep)[2] = t0 * geo::vec(c, d)[2]}
+    obtain t from exist t0 R st {t0 > 0
+    geo::vec(b, ep)[1] = t0 * geo::vec(c, d)[1]
+    geo::vec(b, ep)[2] = t0 * geo::vec(c, d)[2]}
     geo::vec(b, ep)[1] = t * geo::vec(c, d)[1]
     geo::vec(b, ep)[2] = t * geo::vec(c, d)[2]
     geo::vec(b, ep)[1] = ep[1] - b[1]
@@ -164,11 +166,11 @@ thm problem_473_congruence_bridge:
 thm problem_473_part1:
     ? forall a, b, c, d, ep cart(R, R):
         # 【原题条件1】C是线段AB的中点。
-        $geo::is_midpoint(c, a, b),
+        $geo::is_midpoint(c, a, b)
         # 【原题条件2】∠DAC=∠ECB。
-        $geo::are_angles_congruent(d, a, c, ep, c, b),
+        $geo::are_angles_congruent(d, a, c, ep, c, b)
         # 【原题条件3】CD∥BE。
-        $geo::is_parallel(c, d, b, ep),
+        $geo::is_parallel(c, d, b, ep)
         # 【“如图”方向条件】D、E位于直线AB的同一侧。
         $translation::are_on_same_strict_side_of_line(a, b, d, ep)
         =>:
@@ -180,13 +182,13 @@ thm problem_473_part1:
 thm problem_473_part2:
     ? forall a, b, c, d, ep cart(R, R):
         # 【原题条件1】C是线段AB的中点。
-        $geo::is_midpoint(c, a, b),
+        $geo::is_midpoint(c, a, b)
         # 【原题条件2】∠DAC=∠ECB。
-        $geo::are_angles_congruent(d, a, c, ep, c, b),
+        $geo::are_angles_congruent(d, a, c, ep, c, b)
         # 【原题条件3】CD∥BE。
-        $geo::is_parallel(c, d, b, ep),
+        $geo::is_parallel(c, d, b, ep)
         # 【“如图”方向条件】D、E位于直线AB的同一侧。
-        $translation::are_on_same_strict_side_of_line(a, b, d, ep),
+        $translation::are_on_same_strict_side_of_line(a, b, d, ep)
         # 【第二问已知】AB=16。
         sqrt(geo::distance_sq(a, b)) = 16
         =>:

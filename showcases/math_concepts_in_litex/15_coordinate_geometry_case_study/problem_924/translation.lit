@@ -384,7 +384,7 @@ thm half_equality_expand:
 
 thm divide_both_sides:
     ? forall a, b, c R:
-        a * c = b * c,
+        a * c = b * c
         c != 0
         =>:
             a = b
@@ -392,7 +392,7 @@ thm divide_both_sides:
 
 thm add_equalities:
     ? forall a, b, c, d R:
-        a = b,
+        a = b
         c = d
         =>:
             a + c = b + d
@@ -400,7 +400,7 @@ thm add_equalities:
 
 thm subtract_equalities:
     ? forall a, b, c, d R:
-        a = b,
+        a = b
         c = d
         =>:
             a - c = b - d
@@ -560,7 +560,7 @@ thm segments_congruent_symmetric:
 
 thm segments_congruent_transitive:
     ? forall a, b, c, d, p, q cart(R, R):
-        distance_sq(a, b) = distance_sq(c, d),
+        distance_sq(a, b) = distance_sq(c, d)
         distance_sq(c, d) = distance_sq(p, q)
         =>:
             distance_sq(a, b) = distance_sq(p, q)
@@ -809,11 +809,11 @@ thm point_difference_norm_pos:
 # Helper lemma: elimination of variables from dot and det equations
 thm dot_det_eliminate:
     ? forall dx, dy, vx, vy R:
-        dx*vx + dy*vy = 0,
-        dx*vy - dy*vx = 0,
+        dx*vx + dy*vy = 0
+        dx*vy - dy*vx = 0
         dx^2 + dy^2 > 0
         =>:
-            vx = 0,
+            vx = 0
             vy = 0
     dx * (dx*vx + dy*vy) = 0
     dy * (dx*vy - dy*vx) = 0
@@ -845,7 +845,7 @@ thm collinear_to_standard_det:
 # Zero factor law: if a product is zero and one factor is nonzero, the other must be zero
 thm zero_factor_law:
     ? forall a, b R:
-        a != 0,
+        a != 0
         a * b = 0
         =>:
             b = 0
@@ -880,7 +880,7 @@ thm rearrange_sum:
 # One-dimensional midpoint theorem
 thm one_dimensional_midpoint:
     ? forall xa, xb, xm R:
-        xa != xb,
+        xa != xb
         (xm - xa)^2 = (xb - xm)^2
         =>:
             xm = (xa + xb) / 2
@@ -920,11 +920,11 @@ thm one_dimensional_midpoint:
 # Collinear point with equal distances is the midpoint
 thm collinear_equidistant_implies_midpoint:
     ? forall a, b, m cart(R, R):
-        a != b,
-        $is_collinear(a, m, b),
+        a != b
+        $is_collinear(a, m, b)
         distance_sq(a, m) = distance_sq(m, b)
         =>:
-            m[1] = (a[1] + b[1]) / 2,
+            m[1] = (a[1] + b[1]) / 2
             m[2] = (a[2] + b[2]) / 2
 
     # Expand distance_sq to coordinate form
@@ -1074,7 +1074,7 @@ thm det_neg_left:
 
 thm apollonius_theorem:
     ? forall a, b, c, m cart(R, R):
-        m[1] = (b[1] + c[1]) / 2,
+        m[1] = (b[1] + c[1]) / 2
         m[2] = (b[2] + c[2]) / 2
         =>:
             4 * distance_sq(a, m) = 2 * distance_sq(a, b) + 2 * distance_sq(a, c) - distance_sq(b, c)
@@ -1090,9 +1090,9 @@ thm apollonius_theorem:
 
 thm distance_sq_translate:
     ? forall a, b, t, a2, b2 cart(R, R):
-        a2[1] = a[1] + t[1],
-        a2[2] = a[2] + t[2],
-        b2[1] = b[1] + t[1],
+        a2[1] = a[1] + t[1]
+        a2[2] = a[2] + t[2]
+        b2[1] = b[1] + t[1]
         b2[2] = b[2] + t[2]
         =>:
             distance_sq(a2, b2) = distance_sq(a, b)
@@ -1105,7 +1105,7 @@ thm distance_sq_translate:
 # Parallelogram law in coordinates
 thm parallelogram_diagonals:
     ? forall a, b, c, d cart(R, R):
-        d[1] = a[1] + c[1] - b[1],
+        d[1] = a[1] + c[1] - b[1]
         d[2] = a[2] + c[2] - b[2]
         =>:
             distance_sq(a, c) + distance_sq(b, d) = 2 * distance_sq(a, b) + 2 * distance_sq(b, c)
@@ -1192,7 +1192,7 @@ thm collinear_third:
 
 thm parallelogram_sides:
     ? forall a, b, c, d cart(R, R):
-        d[1] = a[1] + c[1] - b[1],
+        d[1] = a[1] + c[1] - b[1]
         d[2] = a[2] + c[2] - b[2]
         =>:
             distance_sq(a, d) = distance_sq(b, c)
@@ -1204,7 +1204,7 @@ thm parallelogram_sides:
 
 thm circumcenter_equidistant:
     ? forall a, b, c, o cart(R, R):
-        distance_sq(o, a) = distance_sq(o, b),
+        distance_sq(o, a) = distance_sq(o, b)
         distance_sq(o, b) = distance_sq(o, c)
         =>:
             distance_sq(o, a) = distance_sq(o, c)
@@ -1238,8 +1238,8 @@ thm thales_converse:
 # SAS Third Side: Given two sides and included angle equal, the third side is equal
 thm sas_third_side:
     ? forall p, q, r, u, v, w cart(R, R):
-        distance_sq(p, q) = distance_sq(u, v),
-        distance_sq(q, r) = distance_sq(v, w),
+        distance_sq(p, q) = distance_sq(u, v)
+        distance_sq(q, r) = distance_sq(v, w)
         dot(vec(q, p), vec(q, r)) = dot(vec(v, u), vec(v, w))
         =>:
             distance_sq(p, r) = distance_sq(u, w)
@@ -1263,16 +1263,16 @@ thm sas_third_side:
 thm sas_congruence:
     ? forall p, q, r, u, v, w cart(R, R):
         # SAS条件：两边及夹角
-        distance_sq(p, q) = distance_sq(u, v),
-        distance_sq(q, r) = distance_sq(v, w),
+        distance_sq(p, q) = distance_sq(u, v)
+        distance_sq(q, r) = distance_sq(v, w)
         dot(vec(q, p), vec(q, r)) = dot(vec(v, u), vec(v, w))
         =>:
             # 结论：所有对应边相等
-            distance_sq(p, r) = distance_sq(u, w),
-            distance_sq(p, q) = distance_sq(u, v),
-            distance_sq(q, r) = distance_sq(v, w),
+            distance_sq(p, r) = distance_sq(u, w)
+            distance_sq(p, q) = distance_sq(u, v)
+            distance_sq(q, r) = distance_sq(v, w)
             # 所有对应角相等（用dot表示）
-            dot(vec(p, q), vec(p, r)) = dot(vec(u, v), vec(u, w)),
+            dot(vec(p, q), vec(p, r)) = dot(vec(u, v), vec(u, w))
             dot(vec(r, p), vec(r, q)) = dot(vec(w, u), vec(w, v))
     # First: third side from sas_third_side
     by thm sas_third_side(p, q, r, u, v, w)
@@ -1321,13 +1321,13 @@ thm sas_congruence:
 thm sss_congruence:
     ? forall p, q, r, u, v, w cart(R, R):
         # SSS条件：三边相等
-        distance_sq(p, q) = distance_sq(u, v),
-        distance_sq(q, r) = distance_sq(v, w),
+        distance_sq(p, q) = distance_sq(u, v)
+        distance_sq(q, r) = distance_sq(v, w)
         distance_sq(p, r) = distance_sq(u, w)
         =>:
             # 结论：所有对应角相等
-            dot(vec(p, q), vec(p, r)) = dot(vec(u, v), vec(u, w)),
-            dot(vec(q, p), vec(q, r)) = dot(vec(v, u), vec(v, w)),
+            dot(vec(p, q), vec(p, r)) = dot(vec(u, v), vec(u, w))
+            dot(vec(q, p), vec(q, r)) = dot(vec(v, u), vec(v, w))
             dot(vec(r, p), vec(r, q)) = dot(vec(w, u), vec(w, v))
     # Angle at q equals angle at v: use cosine law to express dot products
     by thm cosine_law(p, q, r)
@@ -1470,15 +1470,15 @@ thm twice_dot_from_distances_direct:
 
 thm asa_scalar_core:
     ? forall a, b, c, A, B R:
-        c > 0,
-        a >= 0,
-        b >= 0,
-        A >= 0,
-        B >= 0,
-        A * (c + b - a) = a * (c + B - A),
+        c > 0
+        a >= 0
+        b >= 0
+        A >= 0
+        B >= 0
+        A * (c + b - a) = a * (c + B - A)
         B * (c + a - b) = b * (c + A - B)
         =>:
-            A = a,
+            A = a
             B = b
 
     # Add the two angle equations.
@@ -1525,11 +1525,11 @@ thm asa_scalar_core:
 
 thm asa_angle_equations_bridge:
     ? forall p, q, r, u, v, w cart(R, R):
-        distance_sq(p, q) = distance_sq(u, v),
-        dot(vec(p, q), vec(p, r)) * distance_sq(v, w) = dot(vec(u, v), vec(u, w)) * distance_sq(q, r),
+        distance_sq(p, q) = distance_sq(u, v)
+        dot(vec(p, q), vec(p, r)) * distance_sq(v, w) = dot(vec(u, v), vec(u, w)) * distance_sq(q, r)
         dot(vec(q, p), vec(q, r)) * distance_sq(w, u) = dot(vec(v, u), vec(v, w)) * distance_sq(r, p)
         =>:
-            distance_sq(v, w) * (distance_sq(p, q) + distance_sq(p, r) - distance_sq(q, r)) = distance_sq(q, r) * (distance_sq(p, q) + distance_sq(u, w) - distance_sq(v, w)),
+            distance_sq(v, w) * (distance_sq(p, q) + distance_sq(p, r) - distance_sq(q, r)) = distance_sq(q, r) * (distance_sq(p, q) + distance_sq(u, w) - distance_sq(v, w))
             distance_sq(u, w) * (distance_sq(p, q) + distance_sq(q, r) - distance_sq(p, r)) = distance_sq(p, r) * (distance_sq(p, q) + distance_sq(v, w) - distance_sq(u, w))
 
     by thm twice_dot_from_distances_direct(q, p, r)
@@ -1560,13 +1560,17 @@ thm asa_angle_equations_bridge:
 
 thm asa_congruence:
     ? forall p, q, r, u, v, w cart(R, R):
-        p != q, q != r, r != p,
-        u != v, v != w, w != u,
-        distance_sq(p, q) = distance_sq(u, v),
-        dot(vec(p, q), vec(p, r)) * distance_sq(v, w) = dot(vec(u, v), vec(u, w)) * distance_sq(q, r),
+        p != q
+        q != r
+        r != p
+        u != v
+        v != w
+        w != u
+        distance_sq(p, q) = distance_sq(u, v)
+        dot(vec(p, q), vec(p, r)) * distance_sq(v, w) = dot(vec(u, v), vec(u, w)) * distance_sq(q, r)
         dot(vec(q, p), vec(q, r)) * distance_sq(w, u) = dot(vec(v, u), vec(v, w)) * distance_sq(r, p)
         =>:
-            distance_sq(q, r) = distance_sq(v, w),
+            distance_sq(q, r) = distance_sq(v, w)
             distance_sq(p, r) = distance_sq(u, w)
 
     by thm asa_angle_equations_bridge(p, q, r, u, v, w)
@@ -1602,8 +1606,8 @@ thm parallel_symmetric:
 # SSS: the three squared side equalities determine the included dot product.
 thm sss_dot_equal:
     ? forall p, q, r, u, v, w cart(R, R):
-        distance_sq(p, q) = distance_sq(u, v),
-        distance_sq(q, r) = distance_sq(v, w),
+        distance_sq(p, q) = distance_sq(u, v)
+        distance_sq(q, r) = distance_sq(v, w)
         distance_sq(p, r) = distance_sq(u, w)
         =>:
             dot(vec(q, p), vec(q, r)) = dot(vec(v, u), vec(v, w))
@@ -1647,7 +1651,7 @@ thm pythagorean_theorem:
 # Stewart's theorem for an affine point on the segment from b to c.
 thm stewart_theorem:
     ? forall a, b, c, d cart(R, R), t R:
-        d[1] = (1 - t) * b[1] + t * c[1],
+        d[1] = (1 - t) * b[1] + t * c[1]
         d[2] = (1 - t) * b[2] + t * c[2]
         =>:
             distance_sq(a, d) = (1 - t) * distance_sq(a, b) + t * distance_sq(a, c) - t * (1 - t) * distance_sq(b, c)
@@ -1731,7 +1735,7 @@ thm div_mul_cancel_probe:
 
 thm cramer_first_circle_equation:
     ? forall x1, y1, x2, y2, s1, s2, delta R:
-        delta = x1 * y2 - y1 * x2,
+        delta = x1 * y2 - y1 * x2
         delta != 0
         =>:
             2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x1 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y1) = s1
@@ -1747,7 +1751,7 @@ thm cramer_first_circle_equation:
 
 thm cramer_second_circle_equation:
     ? forall x1, y1, x2, y2, s1, s2, delta R:
-        delta = x1 * y2 - y1 * x2,
+        delta = x1 * y2 - y1 * x2
         delta != 0
         =>:
             2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x2 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y2) = s2
@@ -1782,8 +1786,8 @@ thm eq_substitution_in_sum:
 
 thm cramer_third_circle_equation:
     ? forall x1, y1, x2, y2, x3, y3, s1, s2, s3, delta R:
-        delta = x1 * y2 - y1 * x2,
-        delta != 0,
+        delta = x1 * y2 - y1 * x2
+        delta != 0
         s1 * (x2 * y3 - y2 * x3) - s2 * (x1 * y3 - y1 * x3) + s3 * delta = 0
         =>:
             2 * (((s1 * y2 - y1 * s2) / (2 * delta)) * x3 + ((x1 * s2 - s1 * x2) / (2 * delta)) * y3) = s3
@@ -1820,8 +1824,8 @@ thm center_offset_square:
 
 thm common_center_implies_concyclic:
     ? forall a, b, c, d, o cart(R, R):
-        distance_sq(o, a) = distance_sq(o, d),
-        distance_sq(o, b) = distance_sq(o, d),
+        distance_sq(o, a) = distance_sq(o, d)
+        distance_sq(o, b) = distance_sq(o, d)
         distance_sq(o, c) = distance_sq(o, d)
         =>:
             $are_concyclic(a, b, c, d)
@@ -1832,9 +1836,9 @@ thm common_center_implies_concyclic:
 
 thm translated_circle_equation_gives_distance:
     ? forall d, p, o cart(R, R), ux, uy, x, y R:
-        o = (d[1] + ux, d[2] + uy),
-        x = p[1] - d[1],
-        y = p[2] - d[2],
+        o = (d[1] + ux, d[2] + uy)
+        x = p[1] - d[1]
+        y = p[2] - d[2]
         2 * (ux * x + uy * y) = x^2 + y^2
         =>:
             distance_sq(o, p) = distance_sq(o, d)
@@ -1857,7 +1861,7 @@ thm translated_circle_equation_gives_distance:
 # are required to be non-collinear with D so the finite center is unique.
 thm concyclic_det_criterion_implies_concyclic:
     ? forall a, b, c, d cart(R, R):
-        (a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]) != 0,
+        (a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]) != 0
         ((a[1] - d[1])^2 + (a[2] - d[2])^2) * ((b[1] - d[1]) * (c[2] - d[2]) - (b[2] - d[2]) * (c[1] - d[1])) - ((b[1] - d[1])^2 + (b[2] - d[2])^2) * ((a[1] - d[1]) * (c[2] - d[2]) - (a[2] - d[2]) * (c[1] - d[1])) + ((c[1] - d[1])^2 + (c[2] - d[2])^2) * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1])) = 0
         =>:
             $are_concyclic(a, b, c, d)
@@ -1871,7 +1875,7 @@ thm concyclic_det_criterion_implies_concyclic:
 
 thm concyclic_det_criterion:
     ? forall a, b, c, d cart(R, R):
-        (a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]) != 0,
+        (a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1]) != 0
         ((a[1] - d[1])^2 + (a[2] - d[2])^2) * ((b[1] - d[1]) * (c[2] - d[2]) - (b[2] - d[2]) * (c[1] - d[1])) - ((b[1] - d[1])^2 + (b[2] - d[2])^2) * ((a[1] - d[1]) * (c[2] - d[2]) - (a[2] - d[2]) * (c[1] - d[1])) + ((c[1] - d[1])^2 + (c[2] - d[2])^2) * ((a[1] - d[1]) * (b[2] - d[2]) - (a[2] - d[2]) * (b[1] - d[1])) = 0
         =>:
             distance_sq(a, d) * det(vec(d, b), vec(d, c)) - distance_sq(b, d) * det(vec(d, a), vec(d, c)) + distance_sq(c, d) * det(vec(d, a), vec(d, b)) = 0
@@ -1935,7 +1939,7 @@ thm det_scale_right:
 
 thm perpendicular_from_parallel:
     ? forall a, b, c, d cart(R, R):
-        det(vec(a, b), vec(c, d)) = 0,
+        det(vec(a, b), vec(c, d)) = 0
         dot(vec(a, b), vec(a, b)) != 0
         =>:
             dot(vec(a, b), (vec(c, d)[2], -(vec(c, d)[1]))) = 0
@@ -1947,7 +1951,7 @@ thm perpendicular_from_parallel:
 
 thm median_length:
     ? forall a, b, c, m cart(R, R):
-        m[1] = (b[1] + c[1]) / 2,
+        m[1] = (b[1] + c[1]) / 2
         m[2] = (b[2] + c[2]) / 2
         =>:
             4 * distance_sq(a, m) = 2 * distance_sq(a, b) + 2 * distance_sq(a, c) - distance_sq(b, c)
@@ -1961,7 +1965,7 @@ thm median_length:
 
 thm reflection_distance:
     ? forall p, a, b cart(R, R):
-        b[1] = 2 * a[1] - p[1],
+        b[1] = 2 * a[1] - p[1]
         b[2] = 2 * a[2] - p[2]
         =>:
             distance_sq(a, p) = distance_sq(a, b)
@@ -1973,8 +1977,8 @@ thm reflection_distance:
 
 thm foot_perp_parametric:
     ? forall a, b, p, f cart(R, R), t R:
-        f[1] = a[1] + t * (b[1] - a[1]),
-        f[2] = a[2] + t * (b[2] - a[2]),
+        f[1] = a[1] + t * (b[1] - a[1])
+        f[2] = a[2] + t * (b[2] - a[2])
         (p[1] - a[1]) * (b[1] - a[1]) + (p[2] - a[2]) * (b[2] - a[2]) = t * ((b[1] - a[1])^2 + (b[2] - a[2])^2)
         =>:
             dot(vec(p, f), vec(a, b)) = 0
@@ -2002,7 +2006,7 @@ thm affine_combination_distance_sq:
 
 thm midpoint_segment_ratio:
     ? forall a, b, m, p cart(R, R), t R:
-        $is_midpoint(m, a, b),
+        $is_midpoint(m, a, b)
         $is_affine_combination(p, a, b, t)
         =>:
             distance_sq(a, p) = (2 * t)^2 * distance_sq(a, m)
@@ -2032,9 +2036,9 @@ thm inner_product_distance_identity:
 # Squared distances scale by k^2 under coordinate-wise similarity
 thm similar_triangles_ratio:
     ? forall p, q, r, u, v, w cart(R, R), k R:
-        u[1] - v[1] = k * (p[1] - q[1]),
-        u[2] - v[2] = k * (p[2] - q[2]),
-        w[1] - v[1] = k * (r[1] - q[1]),
+        u[1] - v[1] = k * (p[1] - q[1])
+        u[2] - v[2] = k * (p[2] - q[2])
+        w[1] - v[1] = k * (r[1] - q[1])
         w[2] - v[2] = k * (r[2] - q[2])
         =>:
             distance_sq(u, w) = k^2 * distance_sq(p, r)
@@ -2058,9 +2062,9 @@ thm similar_triangles_ratio:
 # Dot products scale by k^2 under coordinate-wise similarity
 thm similar_triangles_dot:
     ? forall p, q, r, u, v, w cart(R, R), k R:
-        u[1] - v[1] = k * (p[1] - q[1]),
-        u[2] - v[2] = k * (p[2] - q[2]),
-        w[1] - v[1] = k * (r[1] - q[1]),
+        u[1] - v[1] = k * (p[1] - q[1])
+        u[2] - v[2] = k * (p[2] - q[2])
+        w[1] - v[1] = k * (r[1] - q[1])
         w[2] - v[2] = k * (r[2] - q[2])
         =>:
             dot(vec(v, u), vec(v, w)) = k^2 * dot(vec(q, p), vec(q, r))
@@ -2087,9 +2091,9 @@ thm similar_triangles_dot:
 # Determinants scale by k^2 under coordinate-wise similarity
 thm similar_triangles_det:
     ? forall p, q, r, u, v, w cart(R, R), k R:
-        u[1] - v[1] = k * (p[1] - q[1]),
-        u[2] - v[2] = k * (p[2] - q[2]),
-        w[1] - v[1] = k * (r[1] - q[1]),
+        u[1] - v[1] = k * (p[1] - q[1])
+        u[2] - v[2] = k * (p[2] - q[2])
+        w[1] - v[1] = k * (r[1] - q[1])
         w[2] - v[2] = k * (r[2] - q[2])
         =>:
             det(vec(v, u), vec(v, w)) = k^2 * det(vec(q, p), vec(q, r))
@@ -2134,10 +2138,10 @@ thm dot_squared_plus_det_squared:
 
 thm rotation_preserves_distance:
     ? forall a, b, a2, b2 cart(R, R), c, s R:
-        c^2 + s^2 = 1,
-        a2[1] = c * a[1] - s * a[2],
-        a2[2] = s * a[1] + c * a[2],
-        b2[1] = c * b[1] - s * b[2],
+        c^2 + s^2 = 1
+        a2[1] = c * a[1] - s * a[2]
+        a2[2] = s * a[1] + c * a[2]
+        b2[1] = c * b[1] - s * b[2]
         b2[2] = s * b[1] + c * b[2]
         =>:
             distance_sq(a2, b2) = distance_sq(a, b)

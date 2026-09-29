@@ -1,7 +1,7 @@
 thm same_nonnegative_square:
     ? forall x, y R:
-        0 <= x,
-        0 <= y,
+        0 <= x
+        0 <= y
         x^2 = y^2
         =>:
             x = y
@@ -26,10 +26,10 @@ thm same_nonnegative_square:
 
 thm affine_scalar_core:
     ? forall ux, uy, vx, vy, q R:
-        ux * vx + uy * vy = 0,
+        ux * vx + uy * vy = 0
         ux^2 + uy^2 = vx^2 + vy^2
         =>:
-            (q * ux - vx)^2 + (q * uy - vy)^2 = (-ux - q * vx)^2 + (-uy - q * vy)^2,
+            (q * ux - vx)^2 + (q * uy - vy)^2 = (-ux - q * vx)^2 + (-uy - q * vy)^2
             (q * ux - vx) * (-ux - q * vx) + (q * uy - vy) * (-uy - q * vy) = 0
     (q * ux - vx)^2 + (q * uy - vy)^2 = q^2 * (ux^2 + uy^2) - 2 * q * (ux * vx + uy * vy) + (vx^2 + vy^2)
     (-ux - q * vx)^2 + (-uy - q * vy)^2 = (ux^2 + uy^2) + 2 * q * (ux * vx + uy * vy) + q^2 * (vx^2 + vy^2)
@@ -74,16 +74,16 @@ thm affine_scalar_core:
 
 thm affine_right_core:
     ? forall pa, pb, pc, pd, pe, pf cart(R, R), t R:
-        pd[1] = (pb[1] + pc[1]) / 2,
-        pd[2] = (pb[2] + pc[2]) / 2,
-        pe[1] = pa[1] + t * (pb[1] - pa[1]),
-        pe[2] = pa[2] + t * (pb[2] - pa[2]),
-        pf[1] = pa[1] + (1 - t) * (pc[1] - pa[1]),
-        pf[2] = pa[2] + (1 - t) * (pc[2] - pa[2]),
-        (pb[1] - pa[1]) * (pc[1] - pa[1]) + (pb[2] - pa[2]) * (pc[2] - pa[2]) = 0,
+        pd[1] = (pb[1] + pc[1]) / 2
+        pd[2] = (pb[2] + pc[2]) / 2
+        pe[1] = pa[1] + t * (pb[1] - pa[1])
+        pe[2] = pa[2] + t * (pb[2] - pa[2])
+        pf[1] = pa[1] + (1 - t) * (pc[1] - pa[1])
+        pf[2] = pa[2] + (1 - t) * (pc[2] - pa[2])
+        (pb[1] - pa[1]) * (pc[1] - pa[1]) + (pb[2] - pa[2]) * (pc[2] - pa[2]) = 0
         (pb[1] - pa[1])^2 + (pb[2] - pa[2])^2 = (pc[1] - pa[1])^2 + (pc[2] - pa[2])^2
         =>:
-            geo::distance_sq(pd, pe) = geo::distance_sq(pd, pf),
+            geo::distance_sq(pd, pe) = geo::distance_sq(pd, pf)
             geo::dot(geo::vec(pd, pe), geo::vec(pd, pf)) = 0
 
     have ux R = pb[1] - pa[1]

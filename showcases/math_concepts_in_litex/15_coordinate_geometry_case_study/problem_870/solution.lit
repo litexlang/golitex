@@ -10,7 +10,7 @@
 # 【局部代数辅助引理】用于从“零的平方乘积”等式中推出右端为零。
 thm zero_square_mul_eq_forces_rhs_zero:
     ? forall a, b, c R:
-        a = 0,
+        a = 0
         a^2 * b = c
         =>:
             c = 0
@@ -21,7 +21,7 @@ thm zero_square_mul_eq_forces_rhs_zero:
 # 【局部代数辅助引理】将两个已知等式显式提升到平方乘积中。
 thm problem_870_product_substitution:
     ? forall n, m, x, y R:
-        n = m,
+        n = m
         x = y
         =>:
             n^2 * x = m^2 * y
@@ -44,7 +44,7 @@ thm problem_870_triangle_and_legs_counterexample:
         z = z
         =>:
             # 【原题条件】在△ABC中。
-            $translation::is_triangle((0, 2), (-1, 0), (1, 0)),
+            $translation::is_triangle((0, 2), (-1, 0), (1, 0))
             # 【原题条件】AB=AC。
             $translation::are_segments_congruent((0, 2), (-1, 0), (0, 2), (1, 0))
 
@@ -76,7 +76,7 @@ thm problem_870_point_e_counterexample:
         z = z
         =>:
             # 【原题条件】E是边AC上一点。
-            $translation::is_on_segment((1 / 5, 8 / 5), (0, 2), (1, 0)),
+            $translation::is_on_segment((1 / 5, 8 / 5), (0, 2), (1, 0))
             # 【原题条件】BE=BC。
             $translation::are_segments_congruent((-1, 0), (1 / 5, 8 / 5), (-1, 0), (1, 0))
 
@@ -105,7 +105,7 @@ thm problem_870_point_d_counterexample:
         z = z
         =>:
             # 【原题条件】D在BE的延长线上（越过E）。
-            $translation::is_on_extension((8 / 25, 44 / 25), (-1, 0), (1 / 5, 8 / 5)),
+            $translation::is_on_extension((8 / 25, 44 / 25), (-1, 0), (1 / 5, 8 / 5))
             # 【原题条件】过点A作BE的垂线，交于D，即AD垂直BE。
             $translation::is_perpendicular((0, 2), (8 / 25, 44 / 25), (-1, 0), (1 / 5, 8 / 5))
 
@@ -234,17 +234,17 @@ thm problem_870_full_counterexample:
         z = z
         =>:
             # 【原题条件1】在△ABC中。
-            $translation::is_triangle((0, 2), (-1, 0), (1, 0)),
+            $translation::is_triangle((0, 2), (-1, 0), (1, 0))
             # 【原题条件2】AB=AC。
-            $translation::are_segments_congruent((0, 2), (-1, 0), (0, 2), (1, 0)),
+            $translation::are_segments_congruent((0, 2), (-1, 0), (0, 2), (1, 0))
             # 【原题条件3】E是边AC上一点。
-            $translation::is_on_segment((1 / 5, 8 / 5), (0, 2), (1, 0)),
+            $translation::is_on_segment((1 / 5, 8 / 5), (0, 2), (1, 0))
             # 【原题条件4】BE=BC。
-            $translation::are_segments_congruent((-1, 0), (1 / 5, 8 / 5), (-1, 0), (1, 0)),
+            $translation::are_segments_congruent((-1, 0), (1 / 5, 8 / 5), (-1, 0), (1, 0))
             # 【原题条件5】D在BE越过E的延长线上。
-            $translation::is_on_extension((8 / 25, 44 / 25), (-1, 0), (1 / 5, 8 / 5)),
+            $translation::is_on_extension((8 / 25, 44 / 25), (-1, 0), (1 / 5, 8 / 5))
             # 【原题条件6】过点A作BE的垂线并交于D，即AD垂直BE。
-            $translation::is_perpendicular((0, 2), (8 / 25, 44 / 25), (-1, 0), (1 / 5, 8 / 5)),
+            $translation::is_perpendicular((0, 2), (8 / 25, 44 / 25), (-1, 0), (1 / 5, 8 / 5))
             # 【原题结论的否定】△ADE不相似于△ABC，故原命题为假。
             not $translation::are_triangles_similar((0, 2), (8 / 25, 44 / 25), (1 / 5, 8 / 5), (0, 2), (-1, 0), (1, 0))
 

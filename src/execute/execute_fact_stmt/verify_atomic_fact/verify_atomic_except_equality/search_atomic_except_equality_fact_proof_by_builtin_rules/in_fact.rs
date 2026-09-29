@@ -178,6 +178,7 @@ pub struct SetBuilderMembershipBuiltinRuleProof {
 
 pub enum NativeConstantMembershipKind {
     ImaginaryUnitInComplex,
+    ImaginaryUnitInNonzeroComplex,
     EulerNumberInPositiveReal,
     EulerNumberInReal,
     EulerNumberInComplex,
@@ -1688,6 +1689,9 @@ fn native_constant_membership_kind(
     match (element, set) {
         (Obj::Literal(Literal::ImaginaryUnit(_)), Obj::StandardSet(StandardSet::C)) => {
             Some(NativeConstantMembershipKind::ImaginaryUnitInComplex)
+        }
+        (Obj::Literal(Literal::ImaginaryUnit(_)), Obj::StandardSet(StandardSet::CStar)) => {
+            Some(NativeConstantMembershipKind::ImaginaryUnitInNonzeroComplex)
         }
         (Obj::Literal(Literal::EulerNumber(_)), Obj::StandardSet(StandardSet::RPos)) => {
             Some(NativeConstantMembershipKind::EulerNumberInPositiveReal)

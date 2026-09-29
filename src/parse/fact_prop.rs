@@ -23,6 +23,8 @@ pub const IS_CART: &str = "is_cart";
 pub const IS_TUPLE: &str = "is_tuple";
 pub const SUBSET: &str = "subset";
 pub const SUPERSET: &str = "superset";
+pub const PROPER_SUBSET: &str = "proper_subset";
+pub const PROPER_SUPERSET: &str = "proper_superset";
 pub const FN_EQ: &str = "fn_eq";
 pub const FN_EQ_IN: &str = "fn_eq_in";
 
@@ -31,13 +33,14 @@ pub fn is_infix_prop_name(name: &str) -> bool {
         name,
         IN | SUBSET
             | SUPERSET
+            | PROPER_SUBSET
+            | PROPER_SUPERSET
             | EQUAL
             | NOT_EQUAL
             | LESS
             | GREATER
             | LESS_EQUAL
             | GREATER_EQUAL
-            
     )
 }
 

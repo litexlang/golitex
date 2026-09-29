@@ -1,12 +1,12 @@
 # Problem 473 geometric integration: midpoint + equal angle + directed parallelism.
 thm problem_473_congruence_bridge:
     ? forall a, b, c, d, ep cart(R, R):
-        $geo::is_midpoint(c, a, b),
-        $geo::are_angles_congruent(d, a, c, ep, c, b),
-        $geo::is_parallel(c, d, b, ep),
+        $geo::is_midpoint(c, a, b)
+        $geo::are_angles_congruent(d, a, c, ep, c, b)
+        $geo::is_parallel(c, d, b, ep)
         $translation::are_on_same_strict_side_of_line(a, b, d, ep)
         =>:
-            $geo::are_triangles_congruent(d, a, c, ep, c, b),
+            $geo::are_triangles_congruent(d, a, c, ep, c, b)
             geo::distance_sq(d, ep) = geo::distance_sq(c, b)
 
     # Midpoint coordinates: CA and CB have the same directed vector x.
@@ -46,7 +46,9 @@ thm problem_473_congruence_bridge:
     geo::det(geo::vec(a, b), geo::vec(a, ep)) = geo::det(geo::vec(a, b), geo::vec(b, ep))
     geo::det(geo::vec(a, b), geo::vec(c, d)) * geo::det(geo::vec(a, b), geo::vec(b, ep)) > 0
     by thm ratio_probe::problem_473_positive_parallel_ratio(geo::vec(a, b), geo::vec(c, d), geo::vec(b, ep))
-    obtain t from exist t0 R st {t0 > 0, geo::vec(b, ep)[1] = t0 * geo::vec(c, d)[1], geo::vec(b, ep)[2] = t0 * geo::vec(c, d)[2]}
+    obtain t from exist t0 R st {t0 > 0
+    geo::vec(b, ep)[1] = t0 * geo::vec(c, d)[1]
+    geo::vec(b, ep)[2] = t0 * geo::vec(c, d)[2]}
     geo::vec(b, ep)[1] = t * geo::vec(c, d)[1]
     geo::vec(b, ep)[2] = t * geo::vec(c, d)[2]
     geo::vec(b, ep)[1] = ep[1] - b[1]

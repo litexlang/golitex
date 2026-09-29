@@ -2,18 +2,18 @@
 # Every geometric assumption below directly matches one sentence in problem.md.
 thm problem_546_corrected:
     ? forall a, b, c, d, ep, o cart(R, R), r R+:
-        $geo::is_triangle(a, b, c),
-        $geo::is_on_circle(a, o, r),
-        $geo::is_on_circle(b, o, r),
-        $geo::is_on_circle(c, o, r),
-        $geo::is_diameter_endpoints(a, b, o),
-        $geo::is_tangent_at(b, d, o, r),
-        $geo::is_on_extension(d, a, c),
-        $geo::is_midpoint(ep, a, c),
-        geo::distance_sq(b, d) = 36,
+        $geo::is_triangle(a, b, c)
+        $geo::is_on_circle(a, o, r)
+        $geo::is_on_circle(b, o, r)
+        $geo::is_on_circle(c, o, r)
+        $geo::is_diameter_endpoints(a, b, o)
+        $geo::is_tangent_at(b, d, o, r)
+        $geo::is_on_extension(d, a, c)
+        $geo::is_midpoint(ep, a, c)
+        geo::distance_sq(b, d) = 36
         geo::distance_sq(c, d) = 16
         =>:
-            $geo::is_perpendicular(o, ep, a, c),
+            $geo::is_perpendicular(o, ep, a, c)
             geo::distance_sq(o, ep) = 5
 
     by def $geo::is_triangle(a, b, c)
@@ -23,7 +23,8 @@ thm problem_546_corrected:
     by def $geo::is_on_circle(b, o, r)
     by def $geo::is_on_circle(c, o, r)
     by def $geo::is_on_extension(d, a, c)
-    obtain t from exist t0 R st {t0 > 1, d = (a[1] + t0 * (c[1] - a[1]), a[2] + t0 * (c[2] - a[2]))}
+    obtain t from exist t0 R st {t0 > 1
+    d = (a[1] + t0 * (c[1] - a[1]), a[2] + t0 * (c[2] - a[2]))}
     by def $geo::is_midpoint(ep, a, c)
 
     # Thales: angle ACB is right.

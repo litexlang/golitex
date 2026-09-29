@@ -44,8 +44,8 @@ thm lagrange_dot_det_product_217:
 # 等长正交基中的交叉投影平方桥。
 thm equal_orthogonal_cross_projection_217:
     ? forall x, y, p cart(R, R):
-        geo::dot(x, y) = 0,
-        geo::dot(x, x) = geo::dot(y, y),
+        geo::dot(x, y) = 0
+        geo::dot(x, x) = geo::dot(y, y)
         geo::dot(x, x) != 0
         =>:
             geo::det(p, x)^2 = geo::dot(p, y)^2
@@ -77,9 +77,9 @@ thm equal_orthogonal_cross_projection_217:
 # 绝对值相等且非零，则 M 的 BD 参数为 1/2。
 thm affine_cross_square_midpoint_217:
     ? forall a, b, d, m, p cart(R, R):
-        $geo::is_on_line(m, b, d),
-        geo::det(p, geo::vec(a, m)) = 0,
-        geo::det(p, geo::vec(a, b))^2 = geo::det(p, geo::vec(a, d))^2,
+        $geo::is_on_line(m, b, d)
+        geo::det(p, geo::vec(a, m)) = 0
+        geo::det(p, geo::vec(a, b))^2 = geo::det(p, geo::vec(a, d))^2
         geo::det(p, geo::vec(a, b)) != 0
         =>:
             $geo::is_midpoint(m, b, d)
@@ -123,17 +123,17 @@ thm affine_cross_square_midpoint_217:
 thm problem_217_midpoint:
     ? forall a, b, c, d, pe, m cart(R, R):
         # 【条件1】AB=AC。
-        $geo::are_segments_congruent(a, b, a, c),
+        $geo::are_segments_congruent(a, b, a, c)
         # 【条件2】∠BAC=90°。
-        $geo::is_right_angle(b, a, c),
+        $geo::is_right_angle(b, a, c)
         # 【条件3】AE=AD。
-        $geo::are_segments_congruent(a, pe, a, d),
+        $geo::are_segments_congruent(a, pe, a, d)
         # 【条件4】∠EAD=90°。
-        $geo::is_right_angle(pe, a, d),
+        $geo::is_right_angle(pe, a, d)
         # 【条件5】延长EA到M。
-        $geo::is_on_extension(m, pe, a),
+        $geo::is_on_extension(m, pe, a)
         # 【条件6】M在直线BD上。
-        $geo::is_on_line(m, b, d),
+        $geo::is_on_line(m, b, d)
         # 【条件7】∠AEC=90°。
         $geo::is_right_angle(a, pe, c)
         =>:
@@ -200,7 +200,8 @@ thm problem_217_midpoint:
 
     # M 在 EA 的延长线上，因此 AM 与 AE 共线。
     by def $geo::is_on_extension(m, pe, a)
-    obtain t from exist t0 R st {t0 > 1, m = (pe[1] + t0 * (a[1] - pe[1]), pe[2] + t0 * (a[2] - pe[2]))}
+    obtain t from exist t0 R st {t0 > 1
+    m = (pe[1] + t0 * (a[1] - pe[1]), pe[2] + t0 * (a[2] - pe[2]))}
     by thm geo::vec_coordinate_formula(a, m)
     geo::vec(a, m) = (m[1] - a[1], m[2] - a[2])
     geo::vec(a, m)[1] = m[1] - a[1] = pe[1] + t * (a[1] - pe[1]) - a[1] = (1 - t) * (pe[1] - a[1]) = (1 - t) * p[1]

@@ -123,7 +123,7 @@ Batch JSON presents those outcomes as:
 
 | Internal | In Normal JSON |
 |----------|----------------|
-| Success | statement `"success": true`; run `"ok": true` when every stmt succeeded and there is no session error |
+| Success | statement `"success": true`; run `"success": true` when every stmt succeeded and there is no session error |
 | Failed | statement `"success": false` **inside** `statement_results` (presentation may say “error”; Rust stays Failed) |
 | SessionError | top-level `"session_error"` set; session must stop |
 
@@ -147,7 +147,7 @@ Lean replay and detailed tooling.
 ```json
 {
   "kind": "run",
-  "ok": true,
+  "success": true,
   "target": "eval",
   "path": null,
   "detail": "normal",
@@ -160,7 +160,7 @@ Lean replay and detailed tooling.
 | Field | Meaning |
 |-------|---------|
 | `kind` | Always `"run"` for verifier batch commands |
-| `ok` | `true` iff every statement succeeded and `session_error` is null |
+| `success` | `true` iff every statement succeeded and `session_error` is null |
 | `target` | `"eval"`, `"file"`, or `"repository"` |
 | `path` | `null` for `-e`; requested path for `-f` / `-r` |
 | `detail` | `"normal"` for the default CLI projection |
@@ -168,7 +168,7 @@ Lean replay and detailed tooling.
 | `statement_results` | One Normal object per executed statement, in order |
 | `session_error` | Hard stop payload, or `null` |
 
-Programs should read `ok`, `statement_results`, and `session_error`. Exit
+Programs should read `success`, `statement_results`, and `session_error`. Exit
 status `0` means success; `1` means a Failed statement or SessionError; `2`
 means invalid arguments.
 
@@ -221,7 +221,7 @@ Successful inline run:
   "detail": "normal",
   "kind": "run",
   "language": "en",
-  "ok": true,
+  "success": true,
   "path": null,
   "session_error": null,
   "statement_results": [
@@ -247,7 +247,7 @@ Soft miss with a successful prefix retained:
   "detail": "normal",
   "kind": "run",
   "language": "en",
-  "ok": false,
+  "success": false,
   "path": null,
   "session_error": null,
   "statement_results": [

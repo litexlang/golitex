@@ -1,15 +1,15 @@
 # Scalar finish for problem 546.
 thm problem_546_scalar_finish:
     ? forall t, s, q R:
-        t > 1,
-        s > 0,
-        t * s = 4 * q,
-        t * (t - 1) * s = 36,
+        t > 1
+        s > 0
+        t * s = 4 * q
+        t * (t - 1) * s = 36
         (t - 1)^2 * s = 16
         =>:
-            t = 9 / 5,
-            s = 25,
-            q = 45 / 4,
+            t = 9 / 5
+            s = 25
+            q = 45 / 4
             q - s / 4 = 5
 
     have z R = (t - 1) * s

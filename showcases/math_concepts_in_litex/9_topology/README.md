@@ -17,7 +17,7 @@ connectedness, quotient topology, and algebraic topology are optional later
 subjects rather than gaps in this module.
 
 `main.lit` contains no `trust`. Both the independent release file runner and
-module runner return top-level `ok: true`. See `math_collections.md` for the
+module runner return top-level `success: true`. See `math_collections.md` for the
 fixed scope and interface decisions.
 
 `same_math_in_lean.lean` defines sets as predicates, packages

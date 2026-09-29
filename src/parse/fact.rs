@@ -690,7 +690,9 @@ impl Runtime {
                 if !prop_names.is_empty()
                     && (prop_str == IN
                         || prop_str == super::fact_prop::SUBSET
-                        || prop_str == super::fact_prop::SUPERSET)
+                        || prop_str == super::fact_prop::SUPERSET
+                        || prop_str == super::fact_prop::PROPER_SUBSET
+                        || prop_str == super::fact_prop::PROPER_SUPERSET)
                 {
                     return Err(RuntimeParseError::new(
                         format!("`${prop_str}` cannot appear in a comparison chain"),
@@ -703,7 +705,9 @@ impl Runtime {
                 if prop_names.is_empty()
                     && (prop_str == IN
                         || prop_str == super::fact_prop::SUBSET
-                        || prop_str == super::fact_prop::SUPERSET)
+                        || prop_str == super::fact_prop::SUPERSET
+                        || prop_str == super::fact_prop::PROPER_SUBSET
+                        || prop_str == super::fact_prop::PROPER_SUPERSET)
                 {
                     if !tb.exceed_end_of_head()
                         && (tb.peek().map(is_comparison_op).unwrap_or(false)

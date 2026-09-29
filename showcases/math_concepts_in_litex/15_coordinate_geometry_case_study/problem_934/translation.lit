@@ -54,7 +54,7 @@ prop is_triangle(a, b, c cart(R, R)):
 
 thm add_equalities:
     ? forall a, b, c, d R:
-        a = b,
+        a = b
         c = d
         =>:
             a + c = b + d
@@ -79,8 +79,8 @@ thm perpendicular_dot_expand:
 # A point on the perpendicular bisector of AB is equidistant from A and B.
 thm perpendicular_bisector_equidistant:
     ? forall a, b, o, p cart(R, R):
-        a != b,
-        $is_midpoint(o, a, b),
+        a != b
+        $is_midpoint(o, a, b)
         $is_perpendicular(p, o, a, b)
         =>:
             distance_sq(p, a) = distance_sq(p, b)

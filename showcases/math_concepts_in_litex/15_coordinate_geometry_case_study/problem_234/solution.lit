@@ -14,8 +14,8 @@
 # 两个非负实数平方相等，则二者相等。
 thm problem_234_nonnegative_equal_of_equal_squares:
     ? forall x, y R:
-        x >= 0,
-        y >= 0,
+        x >= 0
+        y >= 0
         x^2 = y^2
         =>:
             x = y
@@ -45,15 +45,15 @@ thm problem_234_nonnegative_equal_of_equal_squares:
 # 公共长度桥：直接列出原旋转构造证书中的长度与顺序事实。
 thm problem_234_rotation_length_bridge:
     ? forall a, b, d, ep, ep1, f cart(R, R):
-        $geo::main::are_segments_congruent(b, ep, d, ep1),
-        $geo::main::are_segments_congruent(a, ep, a, ep1),
-        $geo::main::are_segments_congruent(a, b, a, d),
-        $geo::main::is_collinear(d, ep1, f),
-        0 <= geo::distance_sq(ep, f),
-        0 <= geo::distance_sq(ep1, f),
-        0 <= geo::distance_sq(d, ep1),
-        0 <= geo::distance_sq(d, f),
-        sqrt(geo::distance_sq(ep, f)) = sqrt(geo::distance_sq(ep1, f)),
+        $geo::main::are_segments_congruent(b, ep, d, ep1)
+        $geo::main::are_segments_congruent(a, ep, a, ep1)
+        $geo::main::are_segments_congruent(a, b, a, d)
+        $geo::main::is_collinear(d, ep1, f)
+        0 <= geo::distance_sq(ep, f)
+        0 <= geo::distance_sq(ep1, f)
+        0 <= geo::distance_sq(d, ep1)
+        0 <= geo::distance_sq(d, f)
+        sqrt(geo::distance_sq(ep, f)) = sqrt(geo::distance_sq(ep1, f))
         sqrt(geo::distance_sq(ep1, f)) = sqrt(geo::distance_sq(d, ep1)) + sqrt(geo::distance_sq(d, f))
         =>:
             sqrt(geo::distance_sq(b, ep)) + sqrt(geo::distance_sq(d, f)) = sqrt(geo::distance_sq(ep, f))
@@ -75,19 +75,19 @@ thm problem_234_rotation_length_bridge:
 # 第(1)问：原题条件、图示旋转证书和目标等式直接列在定理中。
 thm problem_234_part1:
     ? forall a, b, c, d, ep, ep1, f cart(R, R):
-        $geo::main::are_segments_congruent(a, b, a, d),
-        $geo::main::is_right_angle(a, b, c),
-        $geo::main::is_right_angle(c, d, a),
-        $translation::is_half_angle(ep, a, f, b, d),
-        $geo::main::are_segments_congruent(b, ep, d, ep1),
-        $geo::main::are_segments_congruent(a, ep, a, ep1),
-        $geo::main::are_segments_congruent(a, b, a, d),
-        $geo::main::is_collinear(d, ep1, f),
-        0 <= geo::distance_sq(ep, f),
-        0 <= geo::distance_sq(ep1, f),
-        0 <= geo::distance_sq(d, ep1),
-        0 <= geo::distance_sq(d, f),
-        sqrt(geo::distance_sq(ep, f)) = sqrt(geo::distance_sq(ep1, f)),
+        $geo::main::are_segments_congruent(a, b, a, d)
+        $geo::main::is_right_angle(a, b, c)
+        $geo::main::is_right_angle(c, d, a)
+        $translation::is_half_angle(ep, a, f, b, d)
+        $geo::main::are_segments_congruent(b, ep, d, ep1)
+        $geo::main::are_segments_congruent(a, ep, a, ep1)
+        $geo::main::are_segments_congruent(a, b, a, d)
+        $geo::main::is_collinear(d, ep1, f)
+        0 <= geo::distance_sq(ep, f)
+        0 <= geo::distance_sq(ep1, f)
+        0 <= geo::distance_sq(d, ep1)
+        0 <= geo::distance_sq(d, f)
+        sqrt(geo::distance_sq(ep, f)) = sqrt(geo::distance_sq(ep1, f))
         sqrt(geo::distance_sq(ep1, f)) = sqrt(geo::distance_sq(d, ep1)) + sqrt(geo::distance_sq(d, f))
         =>:
             sqrt(geo::distance_sq(b, ep)) + sqrt(geo::distance_sq(d, f)) = sqrt(geo::distance_sq(ep, f))
@@ -99,18 +99,18 @@ thm problem_234_part1:
 # 第(2)问：原题条件、图示旋转证书和目标等式直接列在定理中。
 thm problem_234_part2:
     ? forall a, b, c, d, ep, ep1, f cart(R, R):
-        $geo::main::are_segments_congruent(a, b, a, d),
-        $translation::are_angles_supplementary(a, b, c, c, d, a),
-        $translation::is_half_angle(ep, a, f, b, d),
-        $geo::main::are_segments_congruent(b, ep, d, ep1),
-        $geo::main::are_segments_congruent(a, ep, a, ep1),
-        $geo::main::are_segments_congruent(a, b, a, d),
-        $geo::main::is_collinear(d, ep1, f),
-        0 <= geo::distance_sq(ep, f),
-        0 <= geo::distance_sq(ep1, f),
-        0 <= geo::distance_sq(d, ep1),
-        0 <= geo::distance_sq(d, f),
-        sqrt(geo::distance_sq(ep, f)) = sqrt(geo::distance_sq(ep1, f)),
+        $geo::main::are_segments_congruent(a, b, a, d)
+        $translation::are_angles_supplementary(a, b, c, c, d, a)
+        $translation::is_half_angle(ep, a, f, b, d)
+        $geo::main::are_segments_congruent(b, ep, d, ep1)
+        $geo::main::are_segments_congruent(a, ep, a, ep1)
+        $geo::main::are_segments_congruent(a, b, a, d)
+        $geo::main::is_collinear(d, ep1, f)
+        0 <= geo::distance_sq(ep, f)
+        0 <= geo::distance_sq(ep1, f)
+        0 <= geo::distance_sq(d, ep1)
+        0 <= geo::distance_sq(d, f)
+        sqrt(geo::distance_sq(ep, f)) = sqrt(geo::distance_sq(ep1, f))
         sqrt(geo::distance_sq(ep1, f)) = sqrt(geo::distance_sq(d, ep1)) + sqrt(geo::distance_sq(d, f))
         =>:
             sqrt(geo::distance_sq(ep, f)) = sqrt(geo::distance_sq(b, ep)) + sqrt(geo::distance_sq(d, f))
@@ -151,17 +151,17 @@ thm problem_234_part3_rotated_diagonal:
 # 第(3)问：原题条件、90°旋转构造、共线顺序和目标等式均直接列出。
 thm problem_234_part3:
     ? forall a, b, c, p, p1, o cart(R, R):
-        $geo::main::are_concyclic(a, b, p, c),
-        $geo::main::is_diameter_endpoints(b, c, o),
-        $geo::main::are_segments_congruent(a, b, a, c),
-        $geo::main::rotated_90_ccw(c, a, b),
-        $geo::main::rotated_90_ccw(p1, a, p),
-        $geo::main::are_segments_congruent(b, p, c, p1),
-        $geo::main::are_segments_congruent(a, p, a, p1),
-        $geo::main::is_collinear(p, c, p1),
-        0 <= geo::distance_sq(p, p1),
-        0 <= geo::distance_sq(p, c),
-        0 <= geo::distance_sq(c, p1),
+        $geo::main::are_concyclic(a, b, p, c)
+        $geo::main::is_diameter_endpoints(b, c, o)
+        $geo::main::are_segments_congruent(a, b, a, c)
+        $geo::main::rotated_90_ccw(c, a, b)
+        $geo::main::rotated_90_ccw(p1, a, p)
+        $geo::main::are_segments_congruent(b, p, c, p1)
+        $geo::main::are_segments_congruent(a, p, a, p1)
+        $geo::main::is_collinear(p, c, p1)
+        0 <= geo::distance_sq(p, p1)
+        0 <= geo::distance_sq(p, c)
+        0 <= geo::distance_sq(c, p1)
         sqrt(geo::distance_sq(p, p1)) = sqrt(geo::distance_sq(p, c)) + sqrt(geo::distance_sq(c, p1))
         =>:
             sqrt(geo::distance_sq(b, p)) + sqrt(geo::distance_sq(p, c)) = sqrt(2) * sqrt(geo::distance_sq(a, p))

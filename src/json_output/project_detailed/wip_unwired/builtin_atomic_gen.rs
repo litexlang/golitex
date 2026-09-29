@@ -532,6 +532,30 @@ pub(super) fn project_atomic_builtin_rule(
             }
             object(entries)
         },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::FromKnownInPositiveStandardSet(p)) => {
+            let mut entries = vec![
+                ("type", string("builtin_rule")),
+                ("family", string("LessEqualFact")),
+                ("rule", string("FromKnownInPositiveStandardSet")),
+            ];
+            entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
+            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
+                entries.push(("cite", string(fact.readable_string())));
+            }
+            object(entries)
+        },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::FromKnownInNegativeStandardSet(p)) => {
+            let mut entries = vec![
+                ("type", string("builtin_rule")),
+                ("family", string("LessEqualFact")),
+                ("rule", string("FromKnownInNegativeStandardSet")),
+            ];
+            entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
+            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
+                entries.push(("cite", string(fact.readable_string())));
+            }
+            object(entries)
+        },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::ArcsinPrincipalLowerBound(p)) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),

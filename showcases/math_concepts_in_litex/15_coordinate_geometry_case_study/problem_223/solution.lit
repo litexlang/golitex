@@ -126,15 +126,15 @@ thm direct_tuple_ne_2:
 # Scalar bridge for the two nontrivial clauses of ordinary angle congruence.
 thm normalized_angle_scalar_bridge:
     ? forall x, q, n1, n2, d1, d2 R:
-        x > 0,
-        x < 1,
-        q > 0,
-        2 * q * n1 = x * (x - 1),
-        q^2 * d1 = x^2 * (x - 1)^2,
-        n2 = -1 / 2,
+        x > 0
+        x < 1
+        q > 0
+        2 * q * n1 = x * (x - 1)
+        q^2 * d1 = x^2 * (x - 1)^2
+        n2 = -1 / 2
         d2 = 1
         =>:
-            n1^2 * d2 = n2^2 * d1,
+            n1^2 * d2 = n2^2 * d1
             n1 * n2 >= 0
     x - 1 < 0
     x * (x - 1) < 0
@@ -180,11 +180,11 @@ thm normalized_angle_scalar_bridge:
 
 thm moving_num_scalar_elimination:
     ? forall x, s, a, b, n R:
-        x > 0,
-        x < 1,
-        s^2 = 3,
-        2 * (x^2 - x + 1) * a = 3 * x^2 - 2 * x + 1,
-        2 * (x^2 - x + 1) * b = s * (1 - x)^2,
+        x > 0
+        x < 1
+        s^2 = 3
+        2 * (x^2 - x + 1) * a = 3 * x^2 - 2 * x + 1
+        2 * (x^2 - x + 1) * b = s * (1 - x)^2
         n = (1 - a) * (1 / 2 - a) + (0 - b) * (s / 2 - b)
         =>:
             2 * (x^2 - x + 1) * n = x * (x - 1)
@@ -233,10 +233,10 @@ thm moving_num_scalar_elimination:
 
 thm moving_dist_b_scalar_elimination:
     ? forall x, s, a, b R:
-        x > 0,
-        x < 1,
-        s^2 = 3,
-        2 * (x^2 - x + 1) * a = 3 * x^2 - 2 * x + 1,
+        x > 0
+        x < 1
+        s^2 = 3
+        2 * (x^2 - x + 1) * a = 3 * x^2 - 2 * x + 1
         2 * (x^2 - x + 1) * b = s * (1 - x)^2
         =>:
             (x^2 - x + 1) * ((1 - a)^2 + (0 - b)^2) = (x - 1)^2
@@ -280,10 +280,10 @@ thm moving_dist_b_scalar_elimination:
 
 thm moving_dist_c_scalar_elimination:
     ? forall x, s, a, b R:
-        x > 0,
-        x < 1,
-        s^2 = 3,
-        2 * (x^2 - x + 1) * a = 3 * x^2 - 2 * x + 1,
+        x > 0
+        x < 1
+        s^2 = 3
+        2 * (x^2 - x + 1) * a = 3 * x^2 - 2 * x + 1
         2 * (x^2 - x + 1) * b = s * (1 - x)^2
         =>:
             (x^2 - x + 1) * ((1 / 2 - a)^2 + (s / 2 - b)^2) = x^2
@@ -328,12 +328,12 @@ thm moving_dist_c_scalar_elimination:
 # Geometry-to-scalar bridge for the moving angle.
 thm moving_angle_num_coordinate_bridge:
     ? forall x R, p cart(R, R):
-        x > 0,
-        x < 1,
-        x^2 - x + 1 > 0,
-        2 * (x^2 - x + 1) * p[1] = 3 * x^2 - 2 * x + 1,
-        2 * (x^2 - x + 1) * p[2] = sqrt(3) * (1 - x)^2,
-        (1, 0) != p,
+        x > 0
+        x < 1
+        x^2 - x + 1 > 0
+        2 * (x^2 - x + 1) * p[1] = 3 * x^2 - 2 * x + 1
+        2 * (x^2 - x + 1) * p[2] = sqrt(3) * (1 - x)^2
+        (1, 0) != p
         (1 / 2, sqrt(3) / 2) != p
         =>:
             2 * (x^2 - x + 1) * geo::angle_cos_num((1, 0), p, (1 / 2, sqrt(3) / 2)) = x * (x - 1)
@@ -357,12 +357,12 @@ thm moving_angle_num_coordinate_bridge:
 
 thm moving_angle_dist_b_coordinate_bridge:
     ? forall x R, p cart(R, R):
-        x > 0,
-        x < 1,
-        x^2 - x + 1 > 0,
-        2 * (x^2 - x + 1) * p[1] = 3 * x^2 - 2 * x + 1,
-        2 * (x^2 - x + 1) * p[2] = sqrt(3) * (1 - x)^2,
-        (1, 0) != p,
+        x > 0
+        x < 1
+        x^2 - x + 1 > 0
+        2 * (x^2 - x + 1) * p[1] = 3 * x^2 - 2 * x + 1
+        2 * (x^2 - x + 1) * p[2] = sqrt(3) * (1 - x)^2
+        (1, 0) != p
         (1 / 2, sqrt(3) / 2) != p
         =>:
             (x^2 - x + 1) * geo::distance_sq(p, (1, 0)) = (x - 1)^2
@@ -374,12 +374,12 @@ thm moving_angle_dist_b_coordinate_bridge:
 
 thm moving_angle_dist_c_coordinate_bridge:
     ? forall x R, p cart(R, R):
-        x > 0,
-        x < 1,
-        x^2 - x + 1 > 0,
-        2 * (x^2 - x + 1) * p[1] = 3 * x^2 - 2 * x + 1,
-        2 * (x^2 - x + 1) * p[2] = sqrt(3) * (1 - x)^2,
-        (1, 0) != p,
+        x > 0
+        x < 1
+        x^2 - x + 1 > 0
+        2 * (x^2 - x + 1) * p[1] = 3 * x^2 - 2 * x + 1
+        2 * (x^2 - x + 1) * p[2] = sqrt(3) * (1 - x)^2
+        (1, 0) != p
         (1 / 2, sqrt(3) / 2) != p
         =>:
             (x^2 - x + 1) * geo::distance_sq(p, (1 / 2, sqrt(3) / 2)) = x^2
@@ -393,12 +393,12 @@ thm moving_angle_dist_c_coordinate_bridge:
 
 thm moving_angle_den_coordinate_bridge:
     ? forall x R, p cart(R, R):
-        x > 0,
-        x < 1,
-        x^2 - x + 1 > 0,
-        2 * (x^2 - x + 1) * p[1] = 3 * x^2 - 2 * x + 1,
-        2 * (x^2 - x + 1) * p[2] = sqrt(3) * (1 - x)^2,
-        (1, 0) != p,
+        x > 0
+        x < 1
+        x^2 - x + 1 > 0
+        2 * (x^2 - x + 1) * p[1] = 3 * x^2 - 2 * x + 1
+        2 * (x^2 - x + 1) * p[2] = sqrt(3) * (1 - x)^2
+        (1, 0) != p
         (1 / 2, sqrt(3) / 2) != p
         =>:
             (x^2 - x + 1)^2 * geo::angle_cos_den((1, 0), p, (1 / 2, sqrt(3) / 2)) = x^2 * (x - 1)^2
@@ -415,7 +415,7 @@ thm reference_angle_cos_data:
     ? forall x R:
         x = x
         =>:
-            geo::angle_cos_num((1, 0), (0, 0), (-1 / 2, sqrt(3) / 2)) = -1 / 2,
+            geo::angle_cos_num((1, 0), (0, 0), (-1 / 2, sqrt(3) / 2)) = -1 / 2
             geo::angle_cos_den((1, 0), (0, 0), (-1 / 2, sqrt(3) / 2)) = 1
 
     by thm direct_tuple_ne_1(x)
@@ -443,9 +443,9 @@ thm reference_angle_cos_data:
 
 thm problem_223_part1_coordinate_core:
     ? forall x R, p cart(R, R):
-        x > 0,
-        x < 1,
-        2 * (x^2 - x + 1) * p[1] = 3 * x^2 - 2 * x + 1,
+        x > 0
+        x < 1
+        2 * (x^2 - x + 1) * p[1] = 3 * x^2 - 2 * x + 1
         2 * (x^2 - x + 1) * p[2] = sqrt(3) * (1 - x)^2
         =>:
             $geo::are_angles_congruent((1, 0), p, (1 / 2, sqrt(3) / 2), (1, 0), (0, 0), (-1 / 2, sqrt(3) / 2))
@@ -516,10 +516,10 @@ thm problem_223_part1_coordinate_core:
 
 thm part2_circle_scalar_elimination:
     ? forall x, s, a, b R:
-        x > 0,
-        x < 1,
-        s^2 = 3,
-        2 * (x^2 - x + 1) * a = 3 * x^2 - 2 * x + 1,
+        x > 0
+        x < 1
+        s^2 = 3
+        2 * (x^2 - x + 1) * a = 3 * x^2 - 2 * x + 1
         2 * (x^2 - x + 1) * b = s * (1 - x)^2
         =>:
             a^2 + b^2 = 4 * ((3 / 4 - a)^2 + (s / 4 - b)^2)
@@ -607,9 +607,9 @@ thm part2_circle_scalar_elimination:
 
 thm problem_223_part2_coordinate_core:
     ? forall x R, p cart(R, R):
-        x > 0,
-        x < 1,
-        2 * (x^2 - x + 1) * p[1] = 3 * x^2 - 2 * x + 1,
+        x > 0
+        x < 1
+        2 * (x^2 - x + 1) * p[1] = 3 * x^2 - 2 * x + 1
         2 * (x^2 - x + 1) * p[2] = sqrt(3) * (1 - x)^2
         =>:
             geo::distance_sq((0, 0), p) = 4 * geo::distance_sq(p, (3 / 4, sqrt(3) / 4))

@@ -1,7 +1,7 @@
 # Problem 464 bridge probe 1: circle/side semantic data to the nonzero algebra premise.
 thm problem_464_circle_side_nonzero_bridge_probe:
     ? forall a, b, c, d, o cart(R, R):
-        $geo::is_diameter_endpoints(a, b, o),
+        $geo::is_diameter_endpoints(a, b, o)
         $translation::are_on_same_strict_side_of_line(a, b, c, d)
         =>:
             (b[1] - o[1]) * (c[2] - o[2]) - (b[2] - o[2]) * (c[1] - o[1]) != 0

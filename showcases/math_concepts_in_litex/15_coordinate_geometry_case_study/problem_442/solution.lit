@@ -5,8 +5,8 @@
 # 从30°条件的平方关系中选出等腰三角形顶角点积的负半根。
 thm problem_442_negative_half_root:
     ? forall s, q R:
-        s > 0,
-        4 * (s - q)^2 = 6 * s * (s - q),
+        s > 0
+        4 * (s - q)^2 = 6 * s * (s - q)
         s - q > 0
         =>:
             2 * q + s = 0
@@ -30,9 +30,9 @@ thm problem_442_negative_half_root:
 # ∠ABG=∠ACF的平方余弦等式中，消去恒正因子后得到点序参数关系。
 thm problem_442_parameter_relation:
     ? forall s, h, u R:
-        s > 0,
-        h > 0,
-        u > 0,
+        s > 0
+        h > 0
+        u > 0
         (h + u) * (h * u - h + u) = 0
         =>:
             h * u - h + u = 0
@@ -44,8 +44,8 @@ thm problem_442_parameter_relation:
 # 参数关系也给出h>u，这是最终角的同号分支所需事实。
 thm problem_442_parameter_order:
     ? forall h, u R:
-        h > 0,
-        u > 0,
+        h > 0
+        u > 0
         h * u - h + u = 0
         =>:
             h - u > 0
@@ -60,7 +60,7 @@ thm problem_442_parameter_order:
 # Generic squared-product substitution: n=m and x=y imply n²x=m²y.
 thm problem_442_product_substitution:
     ? forall n, m, x, y R:
-        n = m,
+        n = m
         x = y
         =>:
             n^2 * x = m^2 * y
@@ -79,11 +79,11 @@ thm problem_442_product_substitution:
 thm problem_442_part1:
     ? forall a, b, c, d cart(R, R):
         # 【原题条件1】ABC 是非退化三角形。
-        $geo::is_triangle(a, b, c),
+        $geo::is_triangle(a, b, c)
         # 【原题条件2】AD 是 ∠BAC 的角平分线。
-        $geo::is_angle_bisector(b, a, c, d),
+        $geo::is_angle_bisector(b, a, c, d)
         # 【原题条件3】D 在线段 BC 上。
-        $geo::is_on_segment(d, b, c),
+        $geo::is_on_segment(d, b, c)
         # 【原题条件4】AD ⟂ BC。
         $geo::is_perpendicular(a, d, b, c)
         =>:
@@ -189,8 +189,8 @@ thm problem_442_part1:
 # AB=AC且底角ABC=30度时，顶角点积为-|AB|²/2。
 thm problem_442_isosceles_30_dot_bridge:
     ? forall a, b, c cart(R, R):
-        $geo::is_triangle(a, b, c),
-        geo::distance_sq(a, b) = geo::distance_sq(a, c),
+        $geo::is_triangle(a, b, c)
+        geo::distance_sq(a, b) = geo::distance_sq(a, c)
         $translation::is_angle_30(a, b, c)
         =>:
             geo::dot(geo::vec(a, b), geo::vec(a, c)) = -geo::distance_sq(a, b) / 2
@@ -270,15 +270,15 @@ thm problem_442_isosceles_30_dot_bridge:
 # while G lies on the extension of CA beyond A.
 thm problem_442_incidence_witness:
     ? forall a, b, c, d, ep, f, g cart(R, R):
-        $geo::is_triangle(a, b, c),
-        $geo::is_angle_bisector(b, a, c, d),
-        $geo::is_perpendicular(a, d, b, c),
-        $geo::is_on_segment(ep, a, d),
-        $geo::is_on_extension(f, c, ep),
-        exist h0 R st {0 < h0, h0 < 1, f = (a[1] + h0 * (b[1] - a[1]), a[2] + h0 * (b[2] - a[2]))},
+        $geo::is_triangle(a, b, c)
+        $geo::is_angle_bisector(b, a, c, d)
+        $geo::is_perpendicular(a, d, b, c)
+        $geo::is_on_segment(ep, a, d)
+        $geo::is_on_extension(f, c, ep)
+        exist h0 R st {0 < h0, h0 < 1, f = (a[1] + h0 * (b[1] - a[1]), a[2] + h0 * (b[2] - a[2]))}
         $geo::is_on_extension(g, c, a)
         =>:
-            exist h R st {0 < h, h < 1, f = (a[1] + h * (b[1] - a[1]), a[2] + h * (b[2] - a[2]))},
+            exist h R st {0 < h, h < 1, f = (a[1] + h * (b[1] - a[1]), a[2] + h * (b[2] - a[2]))}
             exist u R st {u > 0, g = (a[1] - u * (c[1] - a[1]), a[2] - u * (c[2] - a[2]))}
     obtain h_param from exist h0 R st {0 < h0, h0 < 1, f = (a[1] + h0 * (b[1] - a[1]), a[2] + h0 * (b[2] - a[2]))}
     witness exist h R st {0 < h, h < 1, f = (a[1] + h * (b[1] - a[1]), a[2] + h * (b[2] - a[2]))} from h_param:
@@ -286,7 +286,8 @@ thm problem_442_incidence_witness:
         h_param < 1
         f = (a[1] + h_param * (b[1] - a[1]), a[2] + h_param * (b[2] - a[2]))
     by def $geo::is_on_extension(g, c, a)
-    obtain t from exist t0 R st {t0 > 1, g = (c[1] + t0 * (a[1] - c[1]), c[2] + t0 * (a[2] - c[2]))}
+    obtain t from exist t0 R st {t0 > 1
+    g = (c[1] + t0 * (a[1] - c[1]), c[2] + t0 * (a[2] - c[2]))}
     t - 1 > 0
     g[1] = c[1] + t * (a[1] - c[1]) = a[1] - (t - 1) * (c[1] - a[1])
     g[2] = c[2] + t * (a[2] - c[2]) = a[2] - (t - 1) * (c[2] - a[2])
@@ -301,9 +302,9 @@ thm problem_442_incidence_witness:
 # scalar bridge probe and is repeated here so the integration file is closed.
 thm problem_442_part2_scalar_relation:
     ? forall s, h, u R:
-        s > 0,
-        h > 0,
-        u > 0,
+        s > 0
+        h > 0
+        u > 0
         (s * (2 - u) / 2)^2 * (s^2 * (h^2 + h + 1)) = (s * (h + 2) / 2)^2 * (s^2 * (u^2 - u + 1))
         =>:
             h * u - h + u = 0
@@ -325,9 +326,9 @@ thm problem_442_part2_scalar_relation:
 
 thm problem_442_part2_scalar_target:
     ? forall s, h, u R:
-        s > 0,
-        h > 0,
-        u > 0,
+        s > 0
+        h > 0
+        u > 0
         h * u - h + u = 0
         =>:
             (s * h * (2 * h - u) / 2)^2 * (s^2 * h^2 * (h^2 + h + 1)) = (s * h * (2 * h + 1) / 2)^2 * (s^2 * h^2 * (h^2 - h * u + u^2))
@@ -338,9 +339,9 @@ thm problem_442_part2_scalar_target:
 
 thm problem_442_part2_scalar_sign:
     ? forall s, h, u R:
-        s > 0,
-        h > 0,
-        u > 0,
+        s > 0
+        h > 0
+        u > 0
         h * u - h + u = 0
         =>:
             (s * h * (2 * h - u) / 2) * (s * h * (2 * h + 1) / 2) >= 0
@@ -368,14 +369,14 @@ thm problem_442_part2_scalar_sign:
 # forces equality of the target angles.
 thm problem_442_part2_coordinate_certificate:
     ? forall a, b, c, f, g cart(R, R), s, h, u R:
-        s > 0,
-        h > 0,
-        u > 0,
-        geo::distance_sq(a, b) = s,
-        geo::distance_sq(a, c) = s,
-        geo::dot(geo::vec(a, b), geo::vec(a, c)) = -s / 2,
-        f = (a[1] + h * (b[1] - a[1]), a[2] + h * (b[2] - a[2])),
-        g = (a[1] - u * (c[1] - a[1]), a[2] - u * (c[2] - a[2])),
+        s > 0
+        h > 0
+        u > 0
+        geo::distance_sq(a, b) = s
+        geo::distance_sq(a, c) = s
+        geo::dot(geo::vec(a, b), geo::vec(a, c)) = -s / 2
+        f = (a[1] + h * (b[1] - a[1]), a[2] + h * (b[2] - a[2]))
+        g = (a[1] - u * (c[1] - a[1]), a[2] - u * (c[2] - a[2]))
         $geo::are_angles_congruent(a, b, g, a, c, f)
         =>:
             $geo::are_angles_congruent(a, f, g, a, f, c)
@@ -601,27 +602,27 @@ thm problem_442_part2_coordinate_certificate:
 thm problem_442_part2:
     ? forall a, b, c, d, ep, f, g cart(R, R):
         # 【原题条件1】ABC 是非退化三角形。
-        $geo::is_triangle(a, b, c),
+        $geo::is_triangle(a, b, c)
         # 【原题条件2】AD 是 ∠BAC 的角平分线。
-        $geo::is_angle_bisector(b, a, c, d),
+        $geo::is_angle_bisector(b, a, c, d)
         # 【原题条件3】D 在线段 BC 上。
-        $geo::is_on_segment(d, b, c),
+        $geo::is_on_segment(d, b, c)
         # 【原题条件4】AD ⟂ BC。
-        $geo::is_perpendicular(a, d, b, c),
+        $geo::is_perpendicular(a, d, b, c)
         # 【原题条件5】∠ABC = 30°。
-        $translation::is_angle_30(a, b, c),
+        $translation::is_angle_30(a, b, c)
         # 【原题条件6】点 E 在线段 AD 上。
-        $geo::is_on_segment(ep, a, d),
+        $geo::is_on_segment(ep, a, d)
         # 【原题条件7】连接 CE 并延长，延长线经过点 F。
-        $geo::is_on_extension(f, c, ep),
+        $geo::is_on_extension(f, c, ep)
         # 【原题条件8】点 F 在线段 AB 上。
-        $geo::is_on_segment(f, a, b),
+        $geo::is_on_segment(f, a, b)
         # 【图示补充】F 不是点 A，因此 F 是 AB 的内部交点。
-        f != a,
+        f != a
         # 【图示补充】F 不是点 B，因此 F 是 AB 的内部交点。
-        f != b,
+        f != b
         # 【原题条件9】BG 交 CA 越过 A 的延长线于点 G。
-        $geo::is_on_extension(g, c, a),
+        $geo::is_on_extension(g, c, a)
         # 【原题条件10】∠ABG = ∠ACF。
         $geo::are_angles_congruent(a, b, g, a, c, f)
         =>:
@@ -654,7 +655,8 @@ thm problem_442_part2:
 
     # G在CA越过A的延长线上：t>1，令u=t-1>0。
     by def $geo::is_on_extension(g, c, a)
-    obtain t from exist t0 R st {t0 > 1, g = (c[1] + t0 * (a[1] - c[1]), c[2] + t0 * (a[2] - c[2]))}
+    obtain t from exist t0 R st {t0 > 1
+    g = (c[1] + t0 * (a[1] - c[1]), c[2] + t0 * (a[2] - c[2]))}
     t - 1 > 0
     g[1] = c[1] + t * (a[1] - c[1]) = a[1] - (t - 1) * (c[1] - a[1])
     g[2] = c[2] + t * (a[2] - c[2]) = a[2] - (t - 1) * (c[2] - a[2])

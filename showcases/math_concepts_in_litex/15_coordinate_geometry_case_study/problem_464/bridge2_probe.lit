@@ -1,12 +1,12 @@
 # Problem 464 bridge probe 2: angle-sum semantic expansion into the algebra core.
 thm problem_464_angle_bridge_probe:
     ? forall a, b, c, d, o cart(R, R), r R+:
-        $geo::is_on_circle(a, o, r),
-        $geo::is_on_circle(b, o, r),
-        $geo::is_on_circle(c, o, r),
-        $geo::is_on_circle(d, o, r),
-        $geo::is_diameter_endpoints(a, b, o),
-        $translation::are_on_same_strict_side_of_line(a, b, c, d),
+        $geo::is_on_circle(a, o, r)
+        $geo::is_on_circle(b, o, r)
+        $geo::is_on_circle(c, o, r)
+        $geo::is_on_circle(d, o, r)
+        $geo::is_diameter_endpoints(a, b, o)
+        $translation::are_on_same_strict_side_of_line(a, b, c, d)
         $translation::angle_plus_twice_angle_is_straight(d, a, b, a, b, c)
         =>:
             ((d[1] - o[1]) + (b[1] - o[1])) * (c[2] - o[2]) - ((d[2] - o[2]) + (b[2] - o[2])) * (c[1] - o[1]) = 0
