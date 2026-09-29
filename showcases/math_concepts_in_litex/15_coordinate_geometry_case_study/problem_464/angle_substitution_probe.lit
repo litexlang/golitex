@@ -1,7 +1,7 @@
 # Explicit equality-congruence helpers for the encoded angle-sum identity.
 thm problem_464_multiply_equalities:
     ? forall a, b, c, d R:
-        a = b,
+        a = b
         c = d
         =>:
             a * c = b * d
@@ -15,10 +15,10 @@ thm problem_464_multiply_equalities:
 
 thm problem_464_angle_substitution_scalar:
     ? forall s1, c1, c2, s2, A, B, U, V R:
-        s1 * (c2^2 - s2^2) + 2 * c1 * c2 * s2 = 0,
-        s1 = 2 * A,
-        c1 = 2 * B,
-        c2 = 2 * U,
+        s1 * (c2^2 - s2^2) + 2 * c1 * c2 * s2 = 0
+        s1 = 2 * A
+        c1 = 2 * B
+        c2 = 2 * U
         s2 = -2 * V
         =>:
             (2 * A) * ((2 * U)^2 - (-2 * V)^2) + 2 * (2 * B) * (-2 * V) * (2 * U) = 0

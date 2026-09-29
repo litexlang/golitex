@@ -2,10 +2,10 @@
 
 thm problem_473_vector_angle_scale_unique:
     ? forall x, y cart(R, R), t R:
-        t > 0,
-        geo::dot(x, x) > 0,
-        geo::dot(x, x) * geo::dot(y, y) - geo::dot(x, y)^2 > 0,
-        geo::dot((x[1] + y[1], x[2] + y[2]), x)^2 * (geo::dot((x[1] + t * y[1], x[2] + t * y[2]), (x[1] + t * y[1], x[2] + t * y[2])) * geo::dot(x, x)) = geo::dot((x[1] + t * y[1], x[2] + t * y[2]), x)^2 * (geo::dot((x[1] + y[1], x[2] + y[2]), (x[1] + y[1], x[2] + y[2])) * geo::dot(x, x)),
+        t > 0
+        geo::dot(x, x) > 0
+        geo::dot(x, x) * geo::dot(y, y) - geo::dot(x, y)^2 > 0
+        geo::dot((x[1] + y[1], x[2] + y[2]), x)^2 * (geo::dot((x[1] + t * y[1], x[2] + t * y[2]), (x[1] + t * y[1], x[2] + t * y[2])) * geo::dot(x, x)) = geo::dot((x[1] + t * y[1], x[2] + t * y[2]), x)^2 * (geo::dot((x[1] + y[1], x[2] + y[2]), (x[1] + y[1], x[2] + y[2])) * geo::dot(x, x))
         geo::dot((x[1] + y[1], x[2] + y[2]), x) * geo::dot((x[1] + t * y[1], x[2] + t * y[2]), x) >= 0
         =>:
             t = 1

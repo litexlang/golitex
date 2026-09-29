@@ -1,7 +1,7 @@
 # Problem 473: parallel vectors with matching strict orientation differ by a positive scalar.
 thm problem_473_positive_parallel_ratio:
     ? forall x, d, ep cart(R, R):
-        geo::det(d, ep) = 0,
+        geo::det(d, ep) = 0
         geo::det(x, d) * geo::det(x, ep) > 0
         =>:
             exist t R st {t > 0, ep[1] = t * d[1], ep[2] = t * d[2]}
@@ -45,12 +45,14 @@ thm problem_473_positive_parallel_ratio:
         k * geo::det(x, d)^2 <= 0
         geo::det(x, d) * geo::det(x, ep) <= 0
         impossible geo::det(x, d) * geo::det(x, ep) > 0
-    witness exist t R st {t > 0, ep[1] = t * d[1], ep[2] = t * d[2]} from k
+    witness exist t R st {t > 0
+    ep[1] = t * d[1]
+    ep[2] = t * d[2]} from k
 
 # Scaling the second vector scales its determinant by the same factor.
 thm problem_473_det_second_scaled:
     ? forall x, d, ep cart(R, R), t R:
-        ep[1] = t * d[1],
+        ep[1] = t * d[1]
         ep[2] = t * d[2]
         =>:
             geo::det(x, ep) = geo::det(x, d) * t

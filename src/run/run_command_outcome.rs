@@ -63,7 +63,7 @@ pub struct VersionResult {
 
 pub struct ExtractResult {
     pub json: String,
-    pub ok: bool,
+    pub success: bool,
 }
 
 fn failed_indices(statement_results: &[ExecStmtResult]) -> Option<Vec<usize>> {
@@ -177,12 +177,12 @@ impl VersionResult {
 }
 
 impl ExtractResult {
-    pub fn new(json: String, ok: bool) -> Self {
-        Self { json, ok }
+    pub fn new(json: String, success: bool) -> Self {
+        Self { json, success }
     }
 
     pub fn process_failed(&self) -> bool {
-        !self.ok
+        !self.success
     }
 }
 

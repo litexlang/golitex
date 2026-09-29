@@ -19,13 +19,13 @@
 thm problem_297_midpoint_perpendicular:
     ? forall a, b, c, d, foot, m, n cart(R, R):
         # 原题条件1：∠ACB=90°。
-        $geo::is_right_angle(a, c, b),
+        $geo::is_right_angle(a, c, b)
         # 原题条件2：D 为线段 BC 上任一点（含端点）。
-        $geo::is_on_segment(d, c, b),
+        $geo::is_on_segment(d, c, b)
         # 原题条件3：DE⊥AB，且 E（此处为 foot）是垂足。
-        $geo::is_foot(foot, d, a, b),
+        $geo::is_foot(foot, d, a, b)
         # 原题条件4：M 是 AD 的中点。
-        $geo::is_midpoint(m, a, d),
+        $geo::is_midpoint(m, a, d)
         # 原题条件5：N 是 CE 的中点。
         $geo::is_midpoint(n, c, foot)
         =>:

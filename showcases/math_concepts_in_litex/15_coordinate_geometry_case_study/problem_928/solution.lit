@@ -26,10 +26,10 @@
 
 thm problem_928_quadrilateral_congruence:
     ? forall a, b, c, d cart(R, R):
-        $geo::is_triangle(a, b, d),
-        $geo::is_triangle(c, d, b),
-        $geo::are_segments_congruent(a, b, c, d),
-        $geo::are_segments_congruent(d, a, b, c),
+        $geo::is_triangle(a, b, d)
+        $geo::is_triangle(c, d, b)
+        $geo::are_segments_congruent(a, b, c, d)
+        $geo::are_segments_congruent(d, a, b, c)
         $geo::are_angles_congruent(b, a, d, d, c, b)
         =>:
             $geo::are_triangles_congruent(a, b, d, c, d, b)

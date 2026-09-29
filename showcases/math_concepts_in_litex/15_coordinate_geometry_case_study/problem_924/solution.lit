@@ -22,16 +22,16 @@
 thm problem_924_rotation_congruence:
     ? forall a, b, c, d, f cart(R, R), c0, s0 R:
         # 旋转系数约束
-        c0^2 + s0^2 = 1,
+        c0^2 + s0^2 = 1
         # AB=AC（等腰）
-        geo::distance_sq(a, b) = geo::distance_sq(a, c),
+        geo::distance_sq(a, b) = geo::distance_sq(a, c)
         # AD=AF（等腰，原题中的 E 在形式化中记为 f）
-        geo::distance_sq(a, d) = geo::distance_sq(a, f),
+        geo::distance_sq(a, d) = geo::distance_sq(a, f)
         # AC 是 AB 绕 A 旋转 (c0,s0)
-        c[1] - a[1] = c0 * (b[1] - a[1]) - s0 * (b[2] - a[2]),
-        c[2] - a[2] = s0 * (b[1] - a[1]) + c0 * (b[2] - a[2]),
+        c[1] - a[1] = c0 * (b[1] - a[1]) - s0 * (b[2] - a[2])
+        c[2] - a[2] = s0 * (b[1] - a[1]) + c0 * (b[2] - a[2])
         # AF 是 AD 绕 A 旋转 (c0,s0)
-        f[1] - a[1] = c0 * (d[1] - a[1]) - s0 * (d[2] - a[2]),
+        f[1] - a[1] = c0 * (d[1] - a[1]) - s0 * (d[2] - a[2])
         f[2] - a[2] = s0 * (d[1] - a[1]) + c0 * (d[2] - a[2])
         =>:
             $geo::are_segments_congruent(b, d, c, f)

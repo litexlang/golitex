@@ -12,11 +12,11 @@
 
 thm basis_coefficient_unique:
     ? forall u, v, p cart(R, R), a, b, c, d R:
-        geo::det(u, v) != 0,
-        p = (a * u[1] + b * v[1], a * u[2] + b * v[2]),
+        geo::det(u, v) != 0
+        p = (a * u[1] + b * v[1], a * u[2] + b * v[2])
         p = (c * u[1] + d * v[1], c * u[2] + d * v[2])
         =>:
-            a = c,
+            a = c
             b = d
     p[1] = a * u[1] + b * v[1]
     p[1] = c * u[1] + d * v[1]
@@ -60,13 +60,13 @@ thm basis_coefficient_unique:
 # Scalar-coordinate form avoids constructing a synthetic tuple.
 thm basis_coefficient_unique_coordinates:
     ? forall u, v cart(R, R), p1, p2, a, b, c, d R:
-        geo::det(u, v) != 0,
-        p1 = a * u[1] + b * v[1],
-        p2 = a * u[2] + b * v[2],
-        p1 = c * u[1] + d * v[1],
+        geo::det(u, v) != 0
+        p1 = a * u[1] + b * v[1]
+        p2 = a * u[2] + b * v[2]
+        p1 = c * u[1] + d * v[1]
         p2 = c * u[2] + d * v[2]
         =>:
-            a = c,
+            a = c
             b = d
     a * u[1] + b * v[1] = c * u[1] + d * v[1]
     a * u[2] + b * v[2] = c * u[2] + d * v[2]
@@ -104,24 +104,24 @@ thm basis_coefficient_unique_coordinates:
 # Problem 465 Part 2: coefficient equations at E and F.
 thm part2_coefficient_bus_probe:
     ? forall a, b, c, d, ee, f, g, h cart(R, R), t, q, z, x, y, r, s R:
-        geo::det(geo::vec(a, b), geo::vec(a, c)) != 0,
-        g = (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2])),
-        h[1] = (1 - q) * g[1] + q * d[1],
-        h[2] = (1 - q) * g[2] + q * d[2],
-        h[1] = (1 - z) * a[1] + z * c[1],
-        h[2] = (1 - z) * a[2] + z * c[2],
-        ee = (a[1] + r * (d[1] - a[1]), a[2] + r * (d[2] - a[2])),
-        ee = (b[1] + s * (c[1] - b[1]), b[2] + s * (c[2] - b[2])),
-        f[1] = (1 - x) * a[1] + x * c[1],
-        f[2] = (1 - x) * a[2] + x * c[2],
-        f[1] = (1 - y) * b[1] + y * d[1],
+        geo::det(geo::vec(a, b), geo::vec(a, c)) != 0
+        g = (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))
+        h[1] = (1 - q) * g[1] + q * d[1]
+        h[2] = (1 - q) * g[2] + q * d[2]
+        h[1] = (1 - z) * a[1] + z * c[1]
+        h[2] = (1 - z) * a[2] + z * c[2]
+        ee = (a[1] + r * (d[1] - a[1]), a[2] + r * (d[2] - a[2]))
+        ee = (b[1] + s * (c[1] - b[1]), b[2] + s * (c[2] - b[2]))
+        f[1] = (1 - x) * a[1] + x * c[1]
+        f[2] = (1 - x) * a[2] + x * c[2]
+        f[1] = (1 - y) * b[1] + y * d[1]
         f[2] = (1 - y) * b[2] + y * d[2]
         =>:
-            q * (d[1] - a[1]) = z * (c[1] - a[1]) + (q - 1) * t * (b[1] - a[1]),
-            q * (d[2] - a[2]) = z * (c[2] - a[2]) + (q - 1) * t * (b[2] - a[2]),
-            r * (q - 1) * t = q * (1 - s),
-            r * z = q * s,
-            q * (1 - y) + y * (q - 1) * t = 0,
+            q * (d[1] - a[1]) = z * (c[1] - a[1]) + (q - 1) * t * (b[1] - a[1])
+            q * (d[2] - a[2]) = z * (c[2] - a[2]) + (q - 1) * t * (b[2] - a[2])
+            r * (q - 1) * t = q * (1 - s)
+            r * z = q * s
+            q * (1 - y) + y * (q - 1) * t = 0
             q * x = y * z
 
     by thm geo::vec_coordinate_formula(a, b)
@@ -251,7 +251,7 @@ thm part2_coefficient_bus_probe:
 # Local affine-parameter bridge copied from the verified geometry library source.
 thm local_collinear_coordinates_imply_affine_parameter:
     ? forall a, b, p cart(R, R):
-        a != b,
+        a != b
         (p[1] - a[1]) * (b[2] - a[2]) - (p[2] - a[2]) * (b[1] - a[1]) = 0
         =>:
             exist t R st {p[1] = (1 - t) * a[1] + t * b[1], p[2] = (1 - t) * a[2] + t * b[2]}
@@ -305,10 +305,10 @@ thm local_on_line_implies_affine_parameter:
 
 thm part2_affine_witness_probe:
     ? forall a, b, c, d, f, g, h cart(R, R):
-        $geo::is_on_segment(g, a, b),
-        $geo::is_on_line(h, g, d),
-        $geo::is_on_line(h, a, c),
-        $geo::is_on_line(f, a, c),
+        $geo::is_on_segment(g, a, b)
+        $geo::is_on_line(h, g, d)
+        $geo::is_on_line(h, a, c)
+        $geo::is_on_line(f, a, c)
         $geo::is_on_line(f, b, d)
         =>:
             exist u, v, w, x, y R st {0 <= u, u <= 1, g = (a[1] + u * (b[1] - a[1]), a[2] + u * (b[2] - a[2])), h[1] = (1 - v) * g[1] + v * d[1], h[2] = (1 - v) * g[2] + v * d[2], h[1] = (1 - w) * a[1] + w * c[1], h[2] = (1 - w) * a[2] + w * c[2], f[1] = (1 - x) * a[1] + x * c[1], f[2] = (1 - x) * a[2] + x * c[2], f[1] = (1 - y) * b[1] + y * d[1], f[2] = (1 - y) * b[2] + y * d[2]}
@@ -345,8 +345,8 @@ thm local_radius_b_linear:
 
 thm local_radius_c_quadratic:
     ? forall a1, a2, b1, b2, c1, c2, o1, o2, s R:
-        (a1 - o1)^2 + (a2 - o2)^2 = (c1 - o1)^2 + (c2 - o2)^2,
-        c1 = a1 + s * (b1 - a1),
+        (a1 - o1)^2 + (a2 - o2)^2 = (c1 - o1)^2 + (c2 - o2)^2
+        c1 = a1 + s * (b1 - a1)
         c2 = a2 + s * (b2 - a2)
         =>:
             2 * s * ((a1 - o1) * (b1 - a1) + (a2 - o2) * (b2 - a2)) + s^2 * ((b1 - a1)^2 + (b2 - a2)^2) = 0
@@ -359,7 +359,7 @@ thm local_radius_c_quadratic:
 
 thm local_circle_affine_eliminate:
     ? forall U, V, s R:
-        2 * U + V = 0,
+        2 * U + V = 0
         2 * s * U + s^2 * V = 0
         =>:
             s * (s - 1) * V = 0
@@ -379,7 +379,7 @@ thm local_swap_zero_product:
 
 thm local_zero_factor:
     ? forall x, y R:
-        x * y = 0,
+        x * y = 0
         y != 0
         =>:
             x = 0
@@ -390,9 +390,9 @@ thm local_zero_factor:
 
 thm concyclic_three_distinct_nondegenerate_probe:
     ? forall a, b, c, d cart(R, R):
-        $geo::are_concyclic(a, b, c, d),
-        a != b,
-        a != c,
+        $geo::are_concyclic(a, b, c, d)
+        a != b
+        a != c
         b != c
         =>:
             geo::det(geo::vec(a, b), geo::vec(a, c)) != 0
@@ -457,10 +457,10 @@ thm concyclic_three_distinct_nondegenerate_probe:
 
 thm local_scalar_basis_first_coefficient_zero:
     ? forall u1, u2, v1, v2, p1, p2, t, z R:
-        u1 * v2 - u2 * v1 != 0,
-        p1 = t * u1,
-        p2 = t * u2,
-        p1 = z * v1,
+        u1 * v2 - u2 * v1 != 0
+        p1 = t * u1
+        p2 = t * u2
+        p1 = z * v1
         p2 = z * v2
         =>:
             t = 0
@@ -480,10 +480,10 @@ thm local_scalar_basis_first_coefficient_zero:
 
 thm local_point_basis_first_coefficient_zero:
     ? forall a, b, c, p cart(R, R), t, z R:
-        geo::det(geo::vec(a, b), geo::vec(a, c)) != 0,
-        p[1] - a[1] = t * (b[1] - a[1]),
-        p[2] - a[2] = t * (b[2] - a[2]),
-        p[1] - a[1] = z * (c[1] - a[1]),
+        geo::det(geo::vec(a, b), geo::vec(a, c)) != 0
+        p[1] - a[1] = t * (b[1] - a[1])
+        p[2] - a[2] = t * (b[2] - a[2])
+        p[1] - a[1] = z * (c[1] - a[1])
         p[2] - a[2] = z * (c[2] - a[2])
         =>:
             t = 0
@@ -496,12 +496,12 @@ thm local_point_basis_first_coefficient_zero:
 # Problem 465 Part 2: the intended non-endpoint condition G != A excludes q=0.
 thm part2_q_nonzero_from_nonendpoint:
     ? forall a, b, c, d, g, h cart(R, R), t, q, z R:
-        geo::det(geo::vec(a, b), geo::vec(a, c)) != 0,
-        g = (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2])),
-        h[1] = (1 - q) * g[1] + q * d[1],
-        h[2] = (1 - q) * g[2] + q * d[2],
-        h[1] = (1 - z) * a[1] + z * c[1],
-        h[2] = (1 - z) * a[2] + z * c[2],
+        geo::det(geo::vec(a, b), geo::vec(a, c)) != 0
+        g = (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))
+        h[1] = (1 - q) * g[1] + q * d[1]
+        h[2] = (1 - q) * g[2] + q * d[2]
+        h[1] = (1 - z) * a[1] + z * c[1]
+        h[2] = (1 - z) * a[2] + z * c[2]
         g != a
         =>:
             q != 0
@@ -572,7 +572,7 @@ thm local_scale_linear:
 
 thm local_weighted_coordinate_sum:
     ? forall r1, r2, u1, u2, v1, v2, w1, w2, q, h, s R:
-        q * u1 = h * v1 - s * w1,
+        q * u1 = h * v1 - s * w1
         q * u2 = h * v2 - s * w2
         =>:
             q * (r1 * u1 + r2 * u2) = h * (r1 * v1 + r2 * v2) - s * (r1 * w1 + r2 * w2)
@@ -588,13 +588,13 @@ thm local_weighted_coordinate_sum:
 
 thm cyclic_center_algebra_probe:
     ? forall a, b, c, d, o cart(R, R), t, q, h, L, K R:
-        geo::distance_sq(o, a) = geo::distance_sq(o, b),
-        geo::distance_sq(o, a) = geo::distance_sq(o, c),
-        geo::distance_sq(o, a) = geo::distance_sq(o, d),
-        q * (d[1] - a[1]) = h * (c[1] - a[1]) - (1 - q) * t * (b[1] - a[1]),
-        q * (d[2] - a[2]) = h * (c[2] - a[2]) - (1 - q) * t * (b[2] - a[2]),
-        L = (b[1] - a[1])^2 + (b[2] - a[2])^2,
-        L = (c[1] - a[1])^2 + (c[2] - a[2])^2,
+        geo::distance_sq(o, a) = geo::distance_sq(o, b)
+        geo::distance_sq(o, a) = geo::distance_sq(o, c)
+        geo::distance_sq(o, a) = geo::distance_sq(o, d)
+        q * (d[1] - a[1]) = h * (c[1] - a[1]) - (1 - q) * t * (b[1] - a[1])
+        q * (d[2] - a[2]) = h * (c[2] - a[2]) - (1 - q) * t * (b[2] - a[2])
+        L = (b[1] - a[1])^2 + (b[2] - a[2])^2
+        L = (c[1] - a[1])^2 + (c[2] - a[2])^2
         K = (b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2])
         =>:
             L * (h^2 + (1 - q)^2 * t^2 - h * q + q * (1 - q) * t) - 2 * h * (1 - q) * t * K = 0
@@ -690,7 +690,7 @@ thm part2_equidistance_scaled_probe:
         L = (b[1] - a[1])^2 + (b[2] - a[2])^2
         K = (b[1] - a[1]) * (c[1] - a[1]) + (b[2] - a[2]) * (c[2] - a[2])
         # AB=AC.
-        $geo::are_segments_congruent(a, b, a, c),
+        $geo::are_segments_congruent(a, b, a, c)
         # BG=DG.
         $geo::are_segments_congruent(b, g, d, g)
         =>:
@@ -797,10 +797,10 @@ thm part2_equidistance_scaled_probe:
 
 thm part2_scaled_parameter_elimination_probe:
     ? forall h, q, t, L, K R:
-        L != 0,
-        q != 0,
-        h + q * t - q - t != 0,
-        L * (h^2 + (1 - q)^2 * t^2 - h * q + q * (1 - q) * t) - 2 * h * (1 - q) * t * K = 0,
+        L != 0
+        q != 0
+        h + q * t - q - t != 0
+        L * (h^2 + (1 - q)^2 * t^2 - h * q + q * (1 - q) * t) - 2 * h * (1 - q) * t * K = 0
         L * (h^2 + t^2 - q^2 * (1 - t)^2) - 2 * h * t * K = 0
         =>:
             h = q * t - q - t + 1
@@ -822,9 +822,9 @@ thm part2_scaled_parameter_elimination_probe:
 # It excludes the spurious factor left by the verified scaled elimination.
 thm extension_parameters_exclude_spurious_factor:
     ? forall h, q, t, r, s R:
-        q != 0,
-        r > 1,
-        r * (q - 1) * t = q * (1 - s),
+        q != 0
+        r > 1
+        r * (q - 1) * t = q * (1 - s)
         r * h = q * s
         =>:
             h + q * t - q - t != 0
@@ -858,7 +858,7 @@ thm extension_parameters_exclude_spurious_factor:
 
 thm local_zero_factor_law:
     ? forall a, b R:
-        a != 0,
+        a != 0
         a * b = 0
         =>:
             b = 0
@@ -868,9 +868,9 @@ thm local_zero_factor_law:
 
 thm part2_f_parameter_product_probe:
     ? forall h, q, t, x, y R:
-        q != 0,
-        h = (q - 1) * (t - 1),
-        q * (1 - y) + y * (q - 1) * t = 0,
+        q != 0
+        h = (q - 1) * (t - 1)
+        q * (1 - y) + y * (q - 1) * t = 0
         q * x = y * h
         =>:
             h^4 = (x - h)^2 * (1 - h)^2
@@ -908,10 +908,10 @@ thm part2_f_parameter_product_probe:
 
 thm part2_affine_metric_bridge:
     ? forall a, c, f, p cart(R, R), h, x R:
-        p[1] = (1 - h) * a[1] + h * c[1],
-        p[2] = (1 - h) * a[2] + h * c[2],
-        f[1] = (1 - x) * a[1] + x * c[1],
-        f[2] = (1 - x) * a[2] + x * c[2],
+        p[1] = (1 - h) * a[1] + h * c[1]
+        p[2] = (1 - h) * a[2] + h * c[2]
+        f[1] = (1 - x) * a[1] + x * c[1]
+        f[2] = (1 - x) * a[2] + x * c[2]
         h^4 = (x - h)^2 * (1 - h)^2
         =>:
             geo::distance_sq(a, p)^2 = geo::distance_sq(p, f) * geo::distance_sq(p, c)
@@ -972,25 +972,25 @@ thm part2_affine_metric_bridge:
 thm problem_465_part2:
     ? forall a, b, c, d, e1, f, g, h cart(R, R):
         # 四边形ABCD内接于圆O。
-        $geo::are_concyclic(a, b, c, d),
+        $geo::are_concyclic(a, b, c, d)
         # AD、BC的延长线相交于E。
-        $geo::is_on_extension(e1, a, d),
-        $geo::is_on_extension(e1, b, c),
+        $geo::is_on_extension(e1, a, d)
+        $geo::is_on_extension(e1, b, c)
         # AC、BD相交于F。
-        $geo::is_on_line(f, a, c),
-        $geo::is_on_line(f, b, d),
+        $geo::is_on_line(f, a, c)
+        $geo::is_on_line(f, b, d)
         # 按图，G是线段AB的内点，GD交AC于H。
-        $geo::is_on_segment(g, a, b),
-        g != a,
-        g != b,
-        $geo::is_on_line(h, g, d),
-        $geo::is_on_line(h, a, c),
+        $geo::is_on_segment(g, a, b)
+        g != a
+        g != b
+        $geo::is_on_line(h, g, d)
+        $geo::is_on_line(h, a, c)
         # AB=AC，BG=DG。
-        $geo::are_segments_congruent(a, b, a, c),
-        $geo::are_segments_congruent(b, g, d, g),
+        $geo::are_segments_congruent(a, b, a, c)
+        $geo::are_segments_congruent(b, g, d, g)
         # 圆内接四边形的三个基准顶点互异。
-        a != b,
-        a != c,
+        a != b
+        a != c
         b != c
         =>:
             # 证明 AH^2=HF·HC；用平方距离消去根式。
@@ -1003,9 +1003,11 @@ thm problem_465_part2:
     geo::det(geo::vec(a, b), geo::vec(a, c)) != 0
 
     by def $geo::is_on_extension(e1, a, d)
-    obtain r from exist r0 R st {r0 > 1, e1 = (a[1] + r0 * (d[1] - a[1]), a[2] + r0 * (d[2] - a[2]))}
+    obtain r from exist r0 R st {r0 > 1
+    e1 = (a[1] + r0 * (d[1] - a[1]), a[2] + r0 * (d[2] - a[2]))}
     by def $geo::is_on_extension(e1, b, c)
-    obtain s from exist s0 R st {s0 > 1, e1 = (b[1] + s0 * (c[1] - b[1]), b[2] + s0 * (c[2] - b[2]))}
+    obtain s from exist s0 R st {s0 > 1
+    e1 = (b[1] + s0 * (c[1] - b[1]), b[2] + s0 * (c[2] - b[2]))}
 
     by thm part2_coefficient_bus_probe(a, b, c, d, e1, f, g, h, t, q, z, x, y, r, s)
     q * (d[1] - a[1]) = z * (c[1] - a[1]) + (q - 1) * t * (b[1] - a[1])

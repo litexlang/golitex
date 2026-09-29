@@ -5,11 +5,11 @@
 
 thm problem_1141_angle_equality:
     ? forall a, b, c, d, m cart(R, R):
-        geo::vec(a, b) = geo::vec(c, d),
-        $geo::is_midpoint(m, b, c),
-        a != b,
-        a != m,
-        d != c,
+        geo::vec(a, b) = geo::vec(c, d)
+        $geo::is_midpoint(m, b, c)
+        a != b
+        a != m
+        d != c
         d != m
         =>:
             $geo::are_angles_congruent(b, a, m, c, d, m)

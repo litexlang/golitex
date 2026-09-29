@@ -10,8 +10,8 @@
 # 非负实数的平方相等，则两数相等。
 thm problem_880_same_nonnegative_square:
     ? forall x, y R:
-        0 <= x,
-        0 <= y,
+        0 <= x
+        0 <= y
         x^2 = y^2
         =>:
             x = y
@@ -37,13 +37,13 @@ thm problem_880_same_nonnegative_square:
 thm problem_880_nondegenerate:
     ? forall a, b, c, d, pe cart(R, R):
         # 等腰三角形：AB = AC
-        geo::distance_sq(a, b) = geo::distance_sq(a, c),
+        geo::distance_sq(a, b) = geo::distance_sq(a, c)
         # E在线段AB上
-        $geo::is_on_segment(pe, a, b),
+        $geo::is_on_segment(pe, a, b)
         # D在线段AC上
-        $geo::is_on_segment(d, a, c),
+        $geo::is_on_segment(d, a, c)
         # BE = CD
-        geo::distance_sq(b, pe) = geo::distance_sq(c, d),
+        geo::distance_sq(b, pe) = geo::distance_sq(c, d)
         # 非退化分支
         a != b
         =>:
@@ -237,11 +237,11 @@ thm problem_880_nondegenerate:
 thm problem_880:
     ? forall a, b, c, d, pe cart(R, R):
         # 原题："△ABC是等腰三角形"（顶点A，两腰AB、AC）
-        $geo::is_isosceles(a, b, c),
+        $geo::is_isosceles(a, b, c)
         # 原题："点E在腰AB上"
-        $geo::is_on_segment(pe, a, b),
+        $geo::is_on_segment(pe, a, b)
         # 原题："点D在腰AC上"
-        $geo::is_on_segment(d, a, c),
+        $geo::is_on_segment(d, a, c)
         # 原题："BE = CD"
         $geo::are_segments_congruent(b, pe, c, d)
         =>:

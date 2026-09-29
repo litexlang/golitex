@@ -1,10 +1,10 @@
 # Intermediate algebra-shape bridge: keep coordinate expressions abstract until one level below geometry.
 thm problem_464_angle_core_from_four_terms:
     ? forall s1, c1, c2, s2, qx, qy, cx, cy, dx, dy R:
-        s1 * (c2^2 - s2^2) + 2 * c1 * c2 * s2 = 0,
-        s1 = 2 * ((dx + qx) * qy - (dy + qy) * qx),
-        c1 = 2 * ((dx + qx) * qx + (dy + qy) * qy),
-        c2 = 2 * (qx^2 + qy^2 - qx * cx - qy * cy),
+        s1 * (c2^2 - s2^2) + 2 * c1 * c2 * s2 = 0
+        s1 = 2 * ((dx + qx) * qy - (dy + qy) * qx)
+        c1 = 2 * ((dx + qx) * qx + (dy + qy) * qy)
+        c2 = 2 * (qx^2 + qy^2 - qx * cx - qy * cy)
         s2 = -2 * (qx * cy - qy * cx)
         =>:
             (2 * ((dx + qx) * qy - (dy + qy) * qx)) * ((2 * (qx^2 + qy^2 - qx * cx - qy * cy))^2 - (-2 * (qx * cy - qy * cx))^2) + 2 * (2 * ((dx + qx) * qx + (dy + qy) * qy)) * (-2 * (qx * cy - qy * cx)) * (2 * (qx^2 + qy^2 - qx * cx - qy * cy)) = 0

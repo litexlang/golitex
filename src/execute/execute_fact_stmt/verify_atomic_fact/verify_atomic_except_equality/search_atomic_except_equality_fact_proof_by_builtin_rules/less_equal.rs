@@ -26,6 +26,14 @@ pub enum LessEqualFactSearchProofByBuiltinRule {
     // Mathematical property: `n $in N` ⇒ `0 <= n`.
     // Example: after `have n N`, prove `0 <= n`.
     FromKnownInNatural(FromKnownInNaturalBuiltinRuleProof),
+    // Positive standard-set membership implies non-negative.
+    // Mathematical property: `x $in R+` / `Q+` / `N+` ⇒ `0 <= x`.
+    // Example: after `have a R+`, prove `0 <= a` (needed by `sqrt` WD / `abs(a) = a`).
+    FromKnownInPositiveStandardSet(FromKnownInPositiveStandardSetForLessEqualBuiltinRuleProof),
+    // Negative standard-set membership implies non-positive.
+    // Mathematical property: `x $in R-` / `Q-` / `Z-` ⇒ `x <= 0`.
+    // Example: after `have a R-`, prove `a <= 0` (needed by `abs(a) = 0 - a`).
+    FromKnownInNegativeStandardSet(FromKnownInNegativeStandardSetForLessEqualBuiltinRuleProof),
     // Arcsin principal lower bound: `-pi/2 <= arcsin(x)` on the arcsin domain.
     // Example: after `(-1) <= x <= 1`, prove `-pi / 2 <= arcsin(x)`.
     ArcsinPrincipalLowerBound(ArcsinPrincipalLowerBoundBuiltinRuleProof),
@@ -213,6 +221,14 @@ pub struct FromKnownLessBuiltinRuleProof {
 }
 
 pub struct FromKnownInNaturalBuiltinRuleProof {
+    pub cite_fact_id: FactId,
+}
+
+pub struct FromKnownInPositiveStandardSetForLessEqualBuiltinRuleProof {
+    pub cite_fact_id: FactId,
+}
+
+pub struct FromKnownInNegativeStandardSetForLessEqualBuiltinRuleProof {
     pub cite_fact_id: FactId,
 }
 
@@ -452,6 +468,20 @@ impl Runtime {
             return Ok(Some(LessEqualFactSearchProofByBuiltinRule::FromKnownLess(
                 FromKnownLessBuiltinRuleProof { cite_fact_id },
             )));
+        }
+        if let Some(cite_fact_id) = self.try_less_equal_from_known_in_positive_standard_set(fact) {
+            return Ok(Some(
+                LessEqualFactSearchProofByBuiltinRule::FromKnownInPositiveStandardSet(
+                    FromKnownInPositiveStandardSetForLessEqualBuiltinRuleProof { cite_fact_id },
+                ),
+            ));
+        }
+        if let Some(cite_fact_id) = self.try_less_equal_from_known_in_negative_standard_set(fact) {
+            return Ok(Some(
+                LessEqualFactSearchProofByBuiltinRule::FromKnownInNegativeStandardSet(
+                    FromKnownInNegativeStandardSetForLessEqualBuiltinRuleProof { cite_fact_id },
+                ),
+            ));
         }
         if let Some(proof) = self.try_order_flip_mul_minus_one_to_less_equal(fact) {
             return Ok(Some(LessEqualFactSearchProofByBuiltinRule::OrderFlipMulMinusOne(

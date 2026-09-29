@@ -35,17 +35,17 @@ thm problem_228_points_distinct_from_second_difference:
 # Unified coordinate certificate behind both figures.
 thm problem_228_coordinate_core:
     ? forall a, x, y R, pc, pe, pg cart(R, R):
-        a > 0,
-        x < a,
-        a + y > 0,
-        pc[1] = a,
-        pc[2] = 0,
-        pe[1] = (x - y) / 2,
-        pe[2] = (x + y) / 2,
-        pg[1] = (a + x) / 2,
+        a > 0
+        x < a
+        a + y > 0
+        pc[1] = a
+        pc[2] = 0
+        pe[1] = (x - y) / 2
+        pe[2] = (x + y) / 2
+        pg[1] = (a + x) / 2
         pg[2] = (a + y) / 2
         =>:
-            $geo::are_segments_congruent(pe, pg, pc, pg),
+            $geo::are_segments_congruent(pe, pg, pc, pg)
             $geo::is_perpendicular(pe, pg, pc, pg)
 
     by thm geo::distance_sq_coordinate_formula(pe, pg)
@@ -93,25 +93,25 @@ thm problem_228_coordinate_core:
 # Figure 1: F lies on BC and E is the inward isosceles-right vertex.
 thm problem_228_figure1:
     ? forall a, t R, pa, pb, pc, pd, pe, pf, pg cart(R, R):
-        a > 0,
-        0 < t,
-        t < a,
-        pa[1] = 0,
-        pa[2] = a,
-        pb[1] = 0,
-        pb[2] = 0,
-        pc[1] = a,
-        pc[2] = 0,
-        pd[1] = a,
-        pd[2] = a,
-        pf[1] = t,
-        pf[2] = 0,
-        pe[1] = t / 2,
-        pe[2] = t / 2,
-        pg[1] = (a + t) / 2,
+        a > 0
+        0 < t
+        t < a
+        pa[1] = 0
+        pa[2] = a
+        pb[1] = 0
+        pb[2] = 0
+        pc[1] = a
+        pc[2] = 0
+        pd[1] = a
+        pd[2] = a
+        pf[1] = t
+        pf[2] = 0
+        pe[1] = t / 2
+        pe[2] = t / 2
+        pg[1] = (a + t) / 2
         pg[2] = a / 2
         =>:
-            $geo::are_segments_congruent(pe, pg, pc, pg),
+            $geo::are_segments_congruent(pe, pg, pc, pg)
             $geo::is_perpendicular(pe, pg, pc, pg)
 
     pe[1] = (t - 0) / 2
@@ -124,7 +124,7 @@ thm problem_228_figure1:
 # Positive factor below one gives a strict product bound.
 thm problem_228_product_less_self:
     ? forall t, u R:
-        t > 0,
+        t > 0
         u < 1
         =>:
             t * u < t
@@ -137,30 +137,30 @@ thm problem_228_product_less_self:
 # Figure 2: clockwise rotation of BEF through an acute angle.
 thm problem_228_figure2:
     ? forall a, t, co, si R, pa, pb, pc, pd, pe, pf, pg cart(R, R):
-        a > 0,
-        0 < t,
-        t < a,
-        0 < co,
-        co < 1,
-        0 < si,
-        si < 1,
-        co^2 + si^2 = 1,
-        pa[1] = 0,
-        pa[2] = a,
-        pb[1] = 0,
-        pb[2] = 0,
-        pc[1] = a,
-        pc[2] = 0,
-        pd[1] = a,
-        pd[2] = a,
-        pf[1] = t * co,
-        pf[2] = -t * si,
-        pe[1] = t * (co + si) / 2,
-        pe[2] = t * (co - si) / 2,
-        pg[1] = (a + t * co) / 2,
+        a > 0
+        0 < t
+        t < a
+        0 < co
+        co < 1
+        0 < si
+        si < 1
+        co^2 + si^2 = 1
+        pa[1] = 0
+        pa[2] = a
+        pb[1] = 0
+        pb[2] = 0
+        pc[1] = a
+        pc[2] = 0
+        pd[1] = a
+        pd[2] = a
+        pf[1] = t * co
+        pf[2] = -t * si
+        pe[1] = t * (co + si) / 2
+        pe[2] = t * (co - si) / 2
+        pg[1] = (a + t * co) / 2
         pg[2] = (a - t * si) / 2
         =>:
-            $geo::are_segments_congruent(pe, pg, pc, pg),
+            $geo::are_segments_congruent(pe, pg, pc, pg)
             $geo::is_perpendicular(pe, pg, pc, pg)
 
     t * co < t

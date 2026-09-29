@@ -1,0 +1,7 @@
+# Builtin: LessEqualFact.FromKnownInNegativeStandardSet
+# When: known `a $in R-` / `Q-` / `Z-`.
+# Proves: `a <= 0` at verify time.
+# Run: litex -f examples/proof_nodes/order/from_known_in_negative_standard_set_weak.lit
+
+have a R-
+a <= 0

@@ -1,0 +1,159 @@
+# Write mathematically correct code with Litex: Newton's method for sqrt(2).
+#
+# Why this showcase matters: Litex verifies the mathematical behavior of an
+# algorithm, checks its executable algo, and extracts that checked boundary as
+# ordinary Python or C. The generated function can then run inside existing
+# scripts, scientific-computing pipelines, services, and other host systems;
+# the surrounding application does not have to be rewritten in Litex.
+#
+# Here the recursive sequence uses the exact function selected for extraction.
+# Starting from one, the checked trajectory never reaches zero, and its
+# residual gap contracts quadratically:
+#
+#   g_(n + 1) <= g_n^2 / 4
+#   g_n <= 4 * (1 / 4)^(2^n)
+#
+# Boundary: this Litex proof uses exact real arithmetic. The generated Python
+# and C code uses target-language numeric semantics, including floating point,
+# which this proof does not verify.
+
+have fn square_root_two_residual(x R) R = x^2 - 2
+
+# One `algo … by cases` defines the mathematical fn and the extractable cases.
+# The explicit x = 0 restart totalizes the step on R for extraction; the proved
+# trajectory starts at 1 and stays >= 1, so it never takes that branch.
+# [-extract]
+algo newton_sqrt_two_step(x R) R by cases:
+    case x = 0: 1
+    case x != 0: (x + 2 / x) / 2
+# [end of -extract]
+
+have fn sqrt_two_newton_iterate(n N) R by induc n from 0:
+    case n = 0: 1
+    case n > 0: newton_sqrt_two_step(sqrt_two_newton_iterate(n - 1))
+
+have fn sqrt_two_newton_gap(n N) R = abs(square_root_two_residual(sqrt_two_newton_iterate(n)))
+
+# This comparison sequence obeys B_(n + 1) = B_n^2 / 4.
+have fn sqrt_two_newton_gap_bound(n N) R+ = 4 * (1 / 4)^(2^n)
+
+# For every positive input, the exact extracted step satisfies the residual
+# square identity behind quadratic convergence.
+thm newton_sqrt_two_step_one_step_gap_identity:
+    ? forall x R+:
+        4 * x^2 * abs(square_root_two_residual(newton_sqrt_two_step(x))) = abs(square_root_two_residual(x))^2
+    let next_residual = square_root_two_residual(newton_sqrt_two_step(x))
+    let current_residual = square_root_two_residual(x)
+    newton_sqrt_two_step(x) = (x + 2 / x) / 2
+    next_residual = newton_sqrt_two_step(x)^2 - 2
+    current_residual = x^2 - 2
+    newton_sqrt_two_step(x)^2 - 2 = ((x + 2 / x) / 2)^2 - 2
+    next_residual = newton_sqrt_two_step(x)^2 - 2 = ((x + 2 / x) / 2)^2 - 2
+    current_residual^2 = (x^2 - 2)^2
+    4 * x^2 * (((x + 2 / x) / 2)^2 - 2) = (x^2 - 2)^2
+    4 * x^2 * next_residual = 4 * x^2 * (((x + 2 / x) / 2)^2 - 2) = (x^2 - 2)^2 = current_residual^2
+    4 * x^2 > 0
+    4 * x^2 != 0
+    current_residual^2 >= 0
+    4 * x^2 * next_residual >= 0
+    (4 * x^2 * next_residual) / (4 * x^2) >= 0
+    next_residual = (4 * x^2 * next_residual) / (4 * x^2) >= 0
+    abs(next_residual) = next_residual
+    abs(current_residual)^2 = current_residual^2
+    4 * x^2 * abs(square_root_two_residual(newton_sqrt_two_step(x))) = 4 * x^2 * abs(next_residual) = 4 * x^2 * next_residual = current_residual^2 = abs(current_residual)^2 = abs(square_root_two_residual(x))^2
+
+# A positive input is sent above one. This is the invariant used to keep the
+# recursive trajectory away from the totalized zero branch.
+thm newton_sqrt_two_step_greater_than_one:
+    ? forall x R+:
+        newton_sqrt_two_step(x) > 1
+    newton_sqrt_two_step(x) = (x + 2 / x) / 2
+    newton_sqrt_two_step(x) - 1 = ((x - 1)^2 + 1) / (2 * x)
+    (x - 1)^2 >= 0
+    (x - 1)^2 + 1 > 0
+    2 * x > 0
+    ((x - 1)^2 + 1) / (2 * x) > 0
+
+# Top-level `by induc` then a thin `thm`: avoids nested `forall n` + `by induc n`
+# binder reuse (deferred in the current parser).
+by induc n from 0:
+    ? sqrt_two_newton_iterate(n) >= 1
+    ? from n = 0:
+        sqrt_two_newton_iterate(0) = 1
+    ? induc:
+        sqrt_two_newton_iterate(n + 1) = newton_sqrt_two_step(sqrt_two_newton_iterate(n))
+        by thm newton_sqrt_two_step_greater_than_one(sqrt_two_newton_iterate(n)) => newton_sqrt_two_step(sqrt_two_newton_iterate(n)) > 1
+
+thm sqrt_two_newton_iterate_at_least_one:
+    ? forall n N:
+        sqrt_two_newton_iterate(n) >= 1
+
+thm sqrt_two_newton_gap_step_identity:
+    ? forall n N:
+        4 * sqrt_two_newton_iterate(n)^2 * sqrt_two_newton_gap(n + 1) = sqrt_two_newton_gap(n)^2
+    by thm sqrt_two_newton_iterate_at_least_one(n) => sqrt_two_newton_iterate(n) >= 1
+    sqrt_two_newton_iterate(n + 1) = newton_sqrt_two_step(sqrt_two_newton_iterate(n))
+    sqrt_two_newton_gap(n + 1) = abs(square_root_two_residual(sqrt_two_newton_iterate(n + 1))) = abs(square_root_two_residual(newton_sqrt_two_step(sqrt_two_newton_iterate(n))))
+    sqrt_two_newton_gap(n) = abs(square_root_two_residual(sqrt_two_newton_iterate(n)))
+    4 * sqrt_two_newton_iterate(n)^2 * sqrt_two_newton_gap(n + 1) = 4 * sqrt_two_newton_iterate(n)^2 * abs(square_root_two_residual(newton_sqrt_two_step(sqrt_two_newton_iterate(n))))
+    sqrt_two_newton_gap(n)^2 = abs(square_root_two_residual(sqrt_two_newton_iterate(n)))^2
+    by thm newton_sqrt_two_step_one_step_gap_identity(sqrt_two_newton_iterate(n)) => 4 * sqrt_two_newton_iterate(n)^2 * abs(square_root_two_residual(newton_sqrt_two_step(sqrt_two_newton_iterate(n)))) = abs(square_root_two_residual(sqrt_two_newton_iterate(n)))^2
+
+# Since x_n >= 1, the exact identity yields a quadratic residual contraction.
+thm sqrt_two_newton_gap_contracts_quadratically:
+    ? forall n N:
+        sqrt_two_newton_gap(n + 1) <= sqrt_two_newton_gap(n)^2 / 4
+    by thm sqrt_two_newton_iterate_at_least_one(n) => sqrt_two_newton_iterate(n) >= 1
+    sqrt_two_newton_iterate(n) - 1 >= 0
+    sqrt_two_newton_iterate(n) + 1 > 0
+    (sqrt_two_newton_iterate(n) - 1) * (sqrt_two_newton_iterate(n) + 1) >= 0
+    sqrt_two_newton_iterate(n)^2 - 1 = (sqrt_two_newton_iterate(n) - 1) * (sqrt_two_newton_iterate(n) + 1) >= 0
+    sqrt_two_newton_iterate(n)^2 >= 1
+    sqrt_two_newton_gap(n + 1) = abs(square_root_two_residual(sqrt_two_newton_iterate(n + 1)))
+    abs(square_root_two_residual(sqrt_two_newton_iterate(n + 1))) >= 0
+    sqrt_two_newton_gap(n + 1) >= 0
+    4 * sqrt_two_newton_gap(n + 1) <= 4 * sqrt_two_newton_iterate(n)^2 * sqrt_two_newton_gap(n + 1)
+    by thm sqrt_two_newton_gap_step_identity(n) => 4 * sqrt_two_newton_iterate(n)^2 * sqrt_two_newton_gap(n + 1) = sqrt_two_newton_gap(n)^2
+    4 * sqrt_two_newton_gap(n + 1) <= sqrt_two_newton_gap(n)^2
+
+thm sqrt_two_newton_gap_bound_step:
+    ? forall n N:
+        sqrt_two_newton_gap_bound(n + 1) = sqrt_two_newton_gap_bound(n)^2 / 4
+    have t R+ = (1 / 4)^(2^n)
+    sqrt_two_newton_gap_bound(n) = 4 * (1 / 4)^(2^n) = 4 * t
+    2^(n + 1) = 2^n * 2
+    (1 / 4)^(2^(n + 1)) = (1 / 4)^(2^n * 2) = ((1 / 4)^(2^n))^2 = t^2
+    sqrt_two_newton_gap_bound(n + 1) = 4 * (1 / 4)^(2^(n + 1)) = 4 * t^2
+    sqrt_two_newton_gap_bound(n)^2 / 4 = (4 * t)^2 / 4 = 16 * t^2 / 4 = 4 * t^2
+
+# Solving the comparison recurrence gives a double-exponential residual bound.
+# Same packaging as above: top-level induc, then thin named thm.
+by induc n from 0:
+    ? sqrt_two_newton_gap(n) <= sqrt_two_newton_gap_bound(n)
+    ? from n = 0:
+        sqrt_two_newton_iterate(0) = 1
+        sqrt_two_newton_gap(0) = abs(square_root_two_residual(sqrt_two_newton_iterate(0))) = abs(-1) = 1
+        sqrt_two_newton_gap_bound(0) = 4 * (1 / 4)^(2^0) = 4 * (1 / 4) = 1
+    ? induc:
+        sqrt_two_newton_gap(n) = abs(square_root_two_residual(sqrt_two_newton_iterate(n)))
+        abs(square_root_two_residual(sqrt_two_newton_iterate(n))) >= 0
+        sqrt_two_newton_gap(n) >= 0
+        sqrt_two_newton_gap_bound(n) > 0
+        sqrt_two_newton_gap_bound(n) - sqrt_two_newton_gap(n) >= 0
+        sqrt_two_newton_gap_bound(n) + sqrt_two_newton_gap(n) >= 0
+        (sqrt_two_newton_gap_bound(n) - sqrt_two_newton_gap(n)) * (sqrt_two_newton_gap_bound(n) + sqrt_two_newton_gap(n)) >= 0
+        sqrt_two_newton_gap_bound(n)^2 - sqrt_two_newton_gap(n)^2 = (sqrt_two_newton_gap_bound(n) - sqrt_two_newton_gap(n)) * (sqrt_two_newton_gap_bound(n) + sqrt_two_newton_gap(n)) >= 0
+        sqrt_two_newton_gap(n)^2 <= sqrt_two_newton_gap_bound(n)^2
+        sqrt_two_newton_gap(n)^2 / 4 <= sqrt_two_newton_gap_bound(n)^2 / 4
+        by thm sqrt_two_newton_gap_contracts_quadratically(n) => sqrt_two_newton_gap(n + 1) <= sqrt_two_newton_gap(n)^2 / 4
+        by thm sqrt_two_newton_gap_bound_step(n) => sqrt_two_newton_gap_bound(n + 1) = sqrt_two_newton_gap_bound(n)^2 / 4
+        sqrt_two_newton_gap(n + 1) <= sqrt_two_newton_gap(n)^2 / 4 <= sqrt_two_newton_gap_bound(n)^2 / 4 = sqrt_two_newton_gap_bound(n + 1)
+
+thm sqrt_two_newton_gap_is_bounded:
+    ? forall n N:
+        sqrt_two_newton_gap(n) <= sqrt_two_newton_gap_bound(n)
+
+# A concrete consequence of the proved rate after two steps.
+by thm sqrt_two_newton_gap_is_bounded(2) => sqrt_two_newton_gap(2) <= sqrt_two_newton_gap_bound(2)
+sqrt_two_newton_gap_bound(2) = 1 / 64
+sqrt_two_newton_gap(2) <= 1 / 64

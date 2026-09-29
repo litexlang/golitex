@@ -64,9 +64,9 @@ have fn hexagon_area(a, b, c, d, ep, f cart(R, R)) R = sqrt(((a[1] * b[2] - a[2]
 # A common midpoint of both diagonals characterizes a nondegenerate parallelogram.
 thm common_midpoint_nondegenerate_parallelogram:
     ? forall a, b, c, d, m cart(R, R):
-        $geo::is_midpoint(m, a, c),
-        $geo::is_midpoint(m, b, d),
-        a != b,
+        $geo::is_midpoint(m, a, c)
+        $geo::is_midpoint(m, b, d)
+        a != b
         a != d
         =>:
             $geo::is_parallelogram(a, b, c, d)
@@ -372,9 +372,9 @@ thm coordinate_certificate_parallelogram:
 thm problem_547_parallelogram:
     ? forall a, b, c, d, ep, f, o, p, q cart(R, R), t R:
         # 原题条件：中心为O、半径为6cm的正六边形ABCDEF。
-        $is_regular_hexagon(a, b, c, d, ep, f, o, 6),
+        $is_regular_hexagon(a, b, c, d, ep, f, o, 6)
         # 原题条件：P从A出发，以1cm/s沿AF运动，运动时间为t。
-        $is_uniform_segment_motion(p, a, f, t, 6),
+        $is_uniform_segment_motion(p, a, f, t, 6)
         # 原题条件：Q同时从D出发，以1cm/s沿DC运动，运动时间为t。
         $is_uniform_segment_motion(q, d, c, t, 6)
         =>:
@@ -390,7 +390,7 @@ thm problem_547_parallelogram:
 
 thm add_equalities_local:
     ? forall a, b, c, d R:
-        a = b,
+        a = b
         c = d
         =>:
             a + c = b + d
@@ -405,7 +405,7 @@ thm multiply_both_sides_local:
 
 thm subtract_equalities_local:
     ? forall a, b, c, d R:
-        a = b,
+        a = b
         c = d
         =>:
             a - c = b - d
@@ -639,9 +639,9 @@ thm coordinate_reduced_forms:
 
 thm cross_substitute_local:
     ? forall x1, x2, x3, x4, x5, x6, x7, x8 R:
-        x1 = x2,
-        x3 = x4,
-        x5 = x6,
+        x1 = x2
+        x3 = x4
+        x5 = x6
         x7 = x8
         =>:
             x1 * x3 - x5 * x7 = x2 * x4 - x6 * x8
@@ -833,9 +833,9 @@ thm coordinate_certificate_area_ratio_verified:
 thm problem_547_area_ratio:
     ? forall a, b, c, d, ep, f, o, p, q cart(R, R), t R:
         # 原题条件：中心为O、半径为6cm的正六边形ABCDEF。
-        $is_regular_hexagon(a, b, c, d, ep, f, o, 6),
+        $is_regular_hexagon(a, b, c, d, ep, f, o, 6)
         # 原题条件：P从A出发，以1cm/s沿AF运动，运动时间为t。
-        $is_uniform_segment_motion(p, a, f, t, 6),
+        $is_uniform_segment_motion(p, a, f, t, 6)
         # 原题条件：Q同时从D出发，以1cm/s沿DC运动，运动时间为t。
         $is_uniform_segment_motion(q, d, c, t, 6)
         =>:

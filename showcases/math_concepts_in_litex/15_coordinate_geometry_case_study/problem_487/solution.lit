@@ -3,7 +3,7 @@
 # Rewrite both a squared factor and its multiplicative companion.
 thm problem_487_product_substitution:
     ? forall n, m, x, y R:
-        n = m,
+        n = m
         x = y
         =>:
             n^2 * x = m^2 * y
@@ -21,7 +21,7 @@ thm problem_487_product_substitution:
 # Recover a positive right factor from a positive product.
 thm problem_487_positive_right_factor:
     ? forall a, b R:
-        a > 0,
+        a > 0
         a * b > 0
         =>:
             b > 0
@@ -38,19 +38,19 @@ thm problem_487_positive_right_factor:
 thm problem_487:
     ? forall a, b, c, d, ep, o cart(R, R), r R+:
         # 【NL条件1】△ABC是三角形。
-        $geo::is_triangle(a, b, c),
+        $geo::is_triangle(a, b, c)
         # 【NL条件2】△ABC内接于⊙O：点A在圆心O、半径r的圆上。
-        $geo::is_on_circle(a, o, r),
+        $geo::is_on_circle(a, o, r)
         # 【NL条件3】△ABC内接于⊙O：点B在圆心O、半径r的圆上。
-        $geo::is_on_circle(b, o, r),
+        $geo::is_on_circle(b, o, r)
         # 【NL条件4】△ABC内接于⊙O：点C在圆心O、半径r的圆上。
-        $geo::is_on_circle(c, o, r),
+        $geo::is_on_circle(c, o, r)
         # 【NL条件5】AB是⊙O的直径。
-        $geo::is_diameter_endpoints(a, b, o),
+        $geo::is_diameter_endpoints(a, b, o)
         # 【NL条件6】CD是⊙O的直径。
-        $geo::is_diameter_endpoints(c, d, o),
+        $geo::is_diameter_endpoints(c, d, o)
         # 【NL条件7】点E在DB从D经过B方向的延长线上。
-        $geo::is_on_extension(ep, d, b),
+        $geo::is_on_extension(ep, d, b)
         # 【NL条件8】∠DEC = ∠ABC。
         $geo::are_angles_congruent(d, ep, c, a, b, c)
         =>:
@@ -67,7 +67,8 @@ thm problem_487:
     by def $geo::is_on_extension(ep, d, b)
     by def $geo::are_angles_congruent(d, ep, c, a, b, c)
 
-    obtain t from exist t0 R st {t0 > 1, ep = (d[1] + t0 * (b[1] - d[1]), d[2] + t0 * (b[2] - d[2]))}
+    obtain t from exist t0 R st {t0 > 1
+    ep = (d[1] + t0 * (b[1] - d[1]), d[2] + t0 * (b[2] - d[2]))}
 
     have ux R = b[1] - o[1]
     have uy R = b[2] - o[2]

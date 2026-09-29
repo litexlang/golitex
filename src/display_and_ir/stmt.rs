@@ -490,6 +490,11 @@ impl HaveFnEqualStmt {
         ));
         out
     }
+
+    // Human-facing: IR text with `#id#` wrappers stripped.
+    pub fn readable_string(&self) -> String {
+        crate::display_and_ir::readable_string_from_ir_text(self.ir().as_str())
+    }
 }
 
 impl HaveFnEqualCaseByCaseStmt {

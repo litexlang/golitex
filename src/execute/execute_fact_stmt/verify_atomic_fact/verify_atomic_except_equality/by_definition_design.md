@@ -41,8 +41,8 @@ Each struct carries `requirement_facts` and `proof_of_requirement_facts`.
 |---------|----------------------|
 | `A $subset B` | `forall x A: x $in B` |
 | `A $superset B` | `forall x B: x $in A` |
-| `$proper_subset(A, B)` | `A $subset B` and `A != B` |
-| `$proper_superset(A, B)` | `B $subset A` and `A != B` |
+| `$proper_subset(A, B)` / infix `A $proper_subset B` | `A $subset B` and `A != B` |
+| `$proper_superset(A, B)` / infix `A $proper_superset B` | `B $subset A` and `A != B` |
 | `$injective(A, B, f)` | injectivity forall |
 | `$surjective(A, B, f)` | surjectivity forall/exist |
 | `$bijective(A, B, f)` | injective and surjective |
@@ -51,7 +51,8 @@ Each struct carries `requirement_facts` and `proof_of_requirement_facts`.
 | `$coprime(a, b)` | `(a != 0 or b != 0)` and `gcd(a, b) = 1` |
 | `$dvd(x, y)` | `x % y = 0` and `exist a Z: x = a * y` |
 
-`$proper_*` is **prefix** `$proper_subset(A, B)` (not infix).
+`$proper_*` may be written **prefix** `$proper_subset(A, B)` or **infix**
+`A $proper_subset B` (binary `$` atomics).
 
 ## Explicit non-goals
 

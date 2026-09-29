@@ -3,8 +3,8 @@
 
 thm nonnegative_equal_of_equal_squares:
     ? forall x, y R:
-        x >= 0,
-        y >= 0,
+        x >= 0
+        y >= 0
         x^2 = y^2
         =>:
             x = y
@@ -33,10 +33,10 @@ thm nonnegative_equal_of_equal_squares:
 
 thm parallelogram_coordinate_closure:
     ? forall a, b, c, d cart(R, R):
-        $geo::is_parallelogram(a, b, c, d),
+        $geo::is_parallelogram(a, b, c, d)
         $geo::is_triangle(a, b, d)
         =>:
-            d[1] = a[1] + c[1] - b[1],
+            d[1] = a[1] + c[1] - b[1]
             d[2] = a[2] + c[2] - b[2]
 
     by def $geo::is_parallelogram(a, b, c, d)
@@ -82,10 +82,10 @@ thm parallelogram_coordinate_closure:
 
 thm problem_1150_AE_eq_CF:
     ? forall a, b, c, d, ep, f cart(R, R):
-        $geo::is_parallelogram(a, b, c, d),
-        $geo::is_triangle(a, b, d),
-        $geo::is_on_segment(ep, d, b),
-        $geo::is_on_segment(f, b, d),
+        $geo::is_parallelogram(a, b, c, d)
+        $geo::is_triangle(a, b, d)
+        $geo::is_on_segment(ep, d, b)
+        $geo::is_on_segment(f, b, d)
         $geo::are_segments_congruent(d, ep, b, f)
         =>:
             $geo::are_segments_congruent(a, ep, c, f)

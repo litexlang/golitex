@@ -2,15 +2,15 @@
 
 thm problem_513_distance_recovery_kernel:
     ? forall a, b, c, t, S, x1, x2, u1, u2, z1, z2, V1, V2 R:
-        S > 0,
-        S = a + b + c,
-        t * (b + c - a) = b + c,
-        x1^2 + x2^2 = c^2,
-        V1^2 + V2^2 = b * c * (b + c - a) * S,
-        2 * (V1 * x1 + V2 * x2) = c * (b + c - a) * S,
-        S * u1 = V1,
-        S * u2 = V2,
-        S * z1 = t * V1,
+        S > 0
+        S = a + b + c
+        t * (b + c - a) = b + c
+        x1^2 + x2^2 = c^2
+        V1^2 + V2^2 = b * c * (b + c - a) * S
+        2 * (V1 * x1 + V2 * x2) = c * (b + c - a) * S
+        S * u1 = V1
+        S * u2 = V2
+        S * z1 = t * V1
         S * z2 = t * V2
         =>:
             (z1 - x1)^2 + (z2 - x2)^2 = (z1 - u1)^2 + (z2 - u2)^2

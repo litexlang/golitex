@@ -1,7 +1,7 @@
 # Local verification probe for the scalar cancellation used in solution.lit.
 thm problem_464_scale_nonzero_probe:
     ? forall detv, x R:
-        detv = 2 * x,
+        detv = 2 * x
         detv != 0
         =>:
             x != 0

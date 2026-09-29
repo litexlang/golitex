@@ -12,12 +12,13 @@
 # 若F在DE以E为端点的延长线上，且EF=DE，则DF^2=4DE^2。
 thm problem_914_equal_extension_double:
     ? forall d, ep, f cart(R, R):
-        $geo::is_on_extension(f, d, ep),
+        $geo::is_on_extension(f, d, ep)
         $geo::are_segments_congruent(ep, f, d, ep)
         =>:
             geo::distance_sq(d, f) = 4 * geo::distance_sq(d, ep)
     by def $geo::is_on_extension(f, d, ep)
-    obtain t from exist t0 R st {t0 > 1, f = (d[1] + t0 * (ep[1] - d[1]), d[2] + t0 * (ep[2] - d[2]))}
+    obtain t from exist t0 R st {t0 > 1
+    f = (d[1] + t0 * (ep[1] - d[1]), d[2] + t0 * (ep[2] - d[2]))}
     t > 1
     f[1] = d[1] + t * (ep[1] - d[1])
     f[2] = d[2] + t * (ep[2] - d[2])
@@ -71,15 +72,15 @@ thm problem_914_equal_extension_double:
 thm problem_914:
     ? forall b, c, d, ep, f, g cart(R, R):
         # 已知△CDE为等边三角形。
-        $geo::is_equilateral(c, d, ep),
+        $geo::is_equilateral(c, d, ep)
         # 过点C作CG垂直DE于点G，即G是C到直线DE的垂足。
-        $geo::is_foot(g, c, d, ep),
+        $geo::is_foot(g, c, d, ep)
         # 四边形BCEF为菱形。
-        $geo::is_rhombus(b, c, ep, f),
+        $geo::is_rhombus(b, c, ep, f)
         # 题图隐含前提：F在DE以E为端点的延长线上。
-        $geo::is_on_extension(f, d, ep),
+        $geo::is_on_extension(f, d, ep)
         # 平行四边形BCEF的第四顶点F满足向量关系：由BC∥FE和BF∥CE推出。
-        f[1] = b[1] + ep[1] - c[1],
+        f[1] = b[1] + ep[1] - c[1]
         f[2] = b[2] + ep[2] - c[2]
         =>:
             # 求证：DF=2DE；以等价的平方距离形式表达。

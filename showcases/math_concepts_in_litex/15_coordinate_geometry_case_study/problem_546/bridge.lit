@@ -2,19 +2,19 @@
 # It contains no problem-specific geometric predicate.
 thm problem_546_coordinate_bridge:
     ? forall a, b, c, d, m, o cart(R, R), t, s, q R:
-        d[1] = a[1] + t * (c[1] - a[1]),
-        d[2] = a[2] + t * (c[2] - a[2]),
-        m[1] = (a[1] + c[1]) / 2,
-        m[2] = (a[2] + c[2]) / 2,
-        $geo::is_midpoint(o, a, b),
-        geo::dot(geo::vec(c, a), geo::vec(c, b)) = 0,
-        geo::dot(geo::vec(b, a), geo::vec(b, d)) = 0,
-        geo::distance_sq(a, c) = s,
+        d[1] = a[1] + t * (c[1] - a[1])
+        d[2] = a[2] + t * (c[2] - a[2])
+        m[1] = (a[1] + c[1]) / 2
+        m[2] = (a[2] + c[2]) / 2
+        $geo::is_midpoint(o, a, b)
+        geo::dot(geo::vec(c, a), geo::vec(c, b)) = 0
+        geo::dot(geo::vec(b, a), geo::vec(b, d)) = 0
+        geo::distance_sq(a, c) = s
         geo::distance_sq(a, o) = q
         =>:
-            geo::distance_sq(a, b) = t * s,
-            geo::distance_sq(b, d) = t * (t - 1) * s,
-            geo::distance_sq(c, d) = (t - 1)^2 * s,
+            geo::distance_sq(a, b) = t * s
+            geo::distance_sq(b, d) = t * (t - 1) * s
+            geo::distance_sq(c, d) = (t - 1)^2 * s
             geo::distance_sq(o, m) = q - s / 4
 
     by def $geo::is_midpoint(o, a, b)

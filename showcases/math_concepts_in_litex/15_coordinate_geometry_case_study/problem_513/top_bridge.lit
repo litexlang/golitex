@@ -2,11 +2,11 @@
 
 thm problem_513_public_bridge:
     ? forall a, b, c, o, p, d, r cart(R, R):
-        $geo::is_circumcenter(o, a, b, c),
-        $geo::is_incenter(p, a, b, c),
-        $geo::is_on_segment(d, b, c),
-        $geo::is_on_extension(d, a, p),
-        $geo::is_on_extension(r, a, p),
+        $geo::is_circumcenter(o, a, b, c)
+        $geo::is_incenter(p, a, b, c)
+        $geo::is_on_segment(d, b, c)
+        $geo::is_on_extension(d, a, p)
+        $geo::is_on_extension(r, a, p)
         $geo::are_segments_congruent(o, r, o, a)
         =>:
             $geo::are_segments_congruent(r, b, r, p)
@@ -19,7 +19,8 @@ thm problem_513_public_bridge:
     by def $geo::are_segments_congruent(o, a, o, b)
     by def $geo::are_segments_congruent(o, a, o, c)
     by def $geo::is_on_extension(r, a, p)
-    obtain t from exist t0 R st {t0 > 1, r = (a[1] + t0 * (p[1] - a[1]), a[2] + t0 * (p[2] - a[2]))}
+    obtain t from exist t0 R st {t0 > 1
+    r = (a[1] + t0 * (p[1] - a[1]), a[2] + t0 * (p[2] - a[2]))}
     by def $geo::are_segments_congruent(o, r, o, a)
 
     # Coordinates relative to A; side convention is A=BC, B=CA, C=AB.

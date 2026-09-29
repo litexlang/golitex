@@ -1,0 +1,7 @@
+# Builtin: LessEqualFact.FromKnownInPositiveStandardSet
+# When: known `a $in R+` / `Q+` / `N+`.
+# Proves: `0 <= a` at verify time (needed by sqrt WD / abs identities).
+# Run: litex -f examples/proof_nodes/order/from_known_in_positive_standard_set_weak.lit
+
+have a R+
+0 <= a

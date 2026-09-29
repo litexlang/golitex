@@ -45,7 +45,7 @@ pub fn project_run_detailed(
     };
     object(vec![
         ("kind", string("run")),
-        ("ok", bool_value(run.success)),
+        ("success", bool_value(run.success)),
         ("target", string(target)),
         ("path", path_value),
         ("detail", string(OutputDetail::Detailed.as_str())),

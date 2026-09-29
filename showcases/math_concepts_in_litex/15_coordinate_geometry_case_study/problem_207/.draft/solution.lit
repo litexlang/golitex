@@ -52,13 +52,13 @@
 # usual parallelogram translate d = a + c - b.
 thm orthogonal_parallel_quadrilateral_coordinates:
     ? forall a, b, c, d cart(R, R):
-        a != b,
-        a != d,
-        geo::det(geo::vec(a, b), geo::vec(d, c)) = 0,
-        geo::det(geo::vec(a, d), geo::vec(b, c)) = 0,
+        a != b
+        a != d
+        geo::det(geo::vec(a, b), geo::vec(d, c)) = 0
+        geo::det(geo::vec(a, d), geo::vec(b, c)) = 0
         geo::dot(geo::vec(a, d), geo::vec(a, b)) = 0
         =>:
-            d[1] = a[1] + c[1] - b[1],
+            d[1] = a[1] + c[1] - b[1]
             d[2] = a[2] + c[2] - b[2]
 
     by thm geo::perpendicular_dot_expand(a, d, a, b)
@@ -123,11 +123,11 @@ thm orthogonal_parallel_quadrilateral_coordinates:
 # Orthogonal equal-length vector data used by the square configuration.
 thm square_bisector_vector_data:
     ? forall u, v cart(R, R), t R:
-        geo::dot(u, v) = 0,
+        geo::dot(u, v) = 0
         geo::dot(u, u) = geo::dot(v, v)
         =>:
-            geo::dot((u[1] + t * v[1], u[2] + t * v[2]), (u[1] + t * v[1], u[2] + t * v[2])) = (1 + t^2) * geo::dot(v, v),
-            geo::dot((u[1] + t * v[1], u[2] + t * v[2]), (u[1] / 2 + v[1], u[2] / 2 + v[2])) = (t + 1 / 2) * geo::dot(v, v),
+            geo::dot((u[1] + t * v[1], u[2] + t * v[2]), (u[1] + t * v[1], u[2] + t * v[2])) = (1 + t^2) * geo::dot(v, v)
+            geo::dot((u[1] + t * v[1], u[2] + t * v[2]), (u[1] / 2 + v[1], u[2] / 2 + v[2])) = (t + 1 / 2) * geo::dot(v, v)
             geo::dot((u[1] / 2 + v[1], u[2] / 2 + v[2]), v) = geo::dot(v, v)
 
     by thm geo::dot_coordinate_formula(u, v)
@@ -161,17 +161,17 @@ thm square_bisector_vector_data:
 # Convert the square point coordinates into the three dot identities consumed by the scalar bridge.
 thm square_configuration_point_data:
     ? forall a, b, c, d, pt_e, pt_f cart(R, R), t R:
-        d[1] = a[1] + c[1] - b[1],
-        d[2] = a[2] + c[2] - b[2],
-        pt_e[1] = b[1] + t * (c[1] - b[1]),
-        pt_e[2] = b[2] + t * (c[2] - b[2]),
-        pt_f[1] = (c[1] + d[1]) / 2,
-        pt_f[2] = (c[2] + d[2]) / 2,
-        geo::dot(geo::vec(a, b), geo::vec(a, d)) = 0,
+        d[1] = a[1] + c[1] - b[1]
+        d[2] = a[2] + c[2] - b[2]
+        pt_e[1] = b[1] + t * (c[1] - b[1])
+        pt_e[2] = b[2] + t * (c[2] - b[2])
+        pt_f[1] = (c[1] + d[1]) / 2
+        pt_f[2] = (c[2] + d[2]) / 2
+        geo::dot(geo::vec(a, b), geo::vec(a, d)) = 0
         geo::dot(geo::vec(a, b), geo::vec(a, b)) = geo::dot(geo::vec(a, d), geo::vec(a, d))
         =>:
-            geo::dot(geo::vec(a, pt_e), geo::vec(a, pt_e)) = (1 + t^2) * geo::dot(geo::vec(a, d), geo::vec(a, d)),
-            geo::dot(geo::vec(a, pt_e), geo::vec(a, pt_f)) = (t + 1 / 2) * geo::dot(geo::vec(a, d), geo::vec(a, d)),
+            geo::dot(geo::vec(a, pt_e), geo::vec(a, pt_e)) = (1 + t^2) * geo::dot(geo::vec(a, d), geo::vec(a, d))
+            geo::dot(geo::vec(a, pt_e), geo::vec(a, pt_f)) = (t + 1 / 2) * geo::dot(geo::vec(a, d), geo::vec(a, d))
             geo::dot(geo::vec(a, pt_f), geo::vec(a, d)) = geo::dot(geo::vec(a, d), geo::vec(a, d))
 
     by thm geo::vec_coordinate_formula(a, b)
@@ -233,9 +233,9 @@ thm square_configuration_point_data:
 # witnesses carried by the angle-bisector predicate.
 thm midpoint_angle_bisector_parameter:
     ? forall t, q R, ae, ad R+:
-        q > 0,
-        ad^2 = q,
-        ae^2 = (1 + t^2) * q,
+        q > 0
+        ad^2 = q
+        ae^2 = (1 + t^2) * q
         (t + 1 / 2) * q * ad = q * ae
         =>:
             t = 3 / 4
@@ -262,13 +262,13 @@ thm midpoint_angle_bisector_parameter:
 thm problem_207_part2_from_geometry_probe:
     ? forall pa, pb, pc, pd, pe, pf cart(R, R):
         # 【原题条件1】正方形 ABCD
-        $geo::is_square(pa, pb, pc, pd),
+        $geo::is_square(pa, pb, pc, pd)
         # 【原题条件2】E 为 BC 边上任意点
-        $geo::is_on_segment(pe, pb, pc),
+        $geo::is_on_segment(pe, pb, pc)
         # 【原题条件3】F 在 CD 边上（由角平分线和中点共同确定位置）
-        $geo::is_on_segment(pf, pc, pd),
+        $geo::is_on_segment(pf, pc, pd)
         # 【原题条件4】AF 平分 ∠EAD
-        $translation::is_metric_angle_bisector(pe, pa, pd, pf),
+        $translation::is_metric_angle_bisector(pe, pa, pd, pf)
         # 【原题条件5 = 第(1)问结论】F 为 CD 中点
         $geo::is_midpoint(pf, pc, pd)
         =>:

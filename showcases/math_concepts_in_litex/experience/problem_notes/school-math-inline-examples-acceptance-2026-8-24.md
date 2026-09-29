@@ -40,12 +40,12 @@ block, is what the runner executed.
 
 - Historical persistent tracer evidence used the pre-target session mode that
   existed on 2026-08-24. It returned a `block` event with `id: tracer-001` and
-  `ok: true` for the opening facts, definition, and unqualified membership
+  `success: true` for the opening facts, definition, and unqualified membership
   application. That CLI mode has since been retired; the file and repository
   gates below remain reproducible.
 - Focused file gate:
   `target/release/litex -compact -runner -f showcases/math_concepts_in_litex/1_middle_school_math_in_nutshell/main.lit`
-  exited `0` with top-level `result: success` and `ok: true`.
+  exited `0` with top-level `result: success` and `success: true`.
 - Complete showcase gate:
   `target/release/litex -compact -runner -r showcases/math_concepts_in_litex/1_middle_school_math_in_nutshell`
-  exited `0` with top-level `result: success` and `ok: true`.
+  exited `0` with top-level `result: success` and `success: true`.

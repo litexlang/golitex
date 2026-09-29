@@ -832,7 +832,7 @@ This source does not name a rule. The goal `x + y >= 0` can be split into the pr
 ```json
 {
   "kind": "run",
-  "ok": true,
+  "success": true,
   "detail": "normal",
   "session_error": null,
   "statement_results": [
@@ -910,7 +910,7 @@ Here `prop` gives a reusable interface; `claim` establishes an instantiable univ
 ```json
 {
   "kind": "run",
-  "ok": true,
+  "success": true,
   "detail": "normal",
   "session_error": null,
   "statement_results": [
@@ -977,7 +977,7 @@ The Litex source preserves premises and conclusion; it does not write `simpa` or
 ```json
 {
   "kind": "run",
-  "ok": true,
+  "success": true,
   "detail": "normal",
   "session_error": null,
   "statement_results": [
@@ -1098,7 +1098,7 @@ Below is the execution result of this fragment.
 ```json
 {
   "kind": "run",
-  "ok": true,
+  "success": true,
   "target": "eval",
   "path": null,
   "detail": "normal",
@@ -1132,7 +1132,7 @@ This record splits “why this sentence can be written down” into traceable lo
 | What the reader wants to know | What to look at in the record |
 | --- | --- |
 | Which statement ran | `statement` |
-| Whether it succeeded | statement `success`, and run `ok` / `session_error` |
+| Whether it succeeded | statement `success`, and run `success` / `session_error` |
 | Why it holds | `why_verified` (rule name, cite, definition route, …) |
 | Why it stopped | `why_failed.phase` and `why_failed.goal` |
 | What entered the later context | `stores` and `infers` |
@@ -1149,7 +1149,7 @@ When we enter `1 = 0`, Litex's Normal JSON output is
 ```json
 {
   "kind": "run",
-  "ok": false,
+  "success": false,
   "target": "eval",
   "path": null,
   "detail": "normal",
@@ -1314,7 +1314,7 @@ AI first tries to obtain convergence of the new sequence by `by def` without con
 ```json
 {
   "kind": "run",
-  "ok": false,
+  "success": false,
   "detail": "normal",
   "session_error": null,
   "statement_results": [

@@ -16,7 +16,7 @@
 # Same square and the same weak sign determine the scalar itself.
 thm problem_505_same_sign_equal_squares:
     ? forall x, y R:
-        x^2 = y^2,
+        x^2 = y^2
         x * y >= 0
         =>:
             x = y
@@ -54,11 +54,11 @@ thm problem_505_same_sign_equal_squares:
 # equality of the normalized dot and determinant numerators.
 thm problem_505_directed_angle_metric_bridge:
     ? forall p, q, r, u, v, w cart(R, R):
-        $translation::are_directed_angles_congruent(p, q, r, u, v, w),
-        geo::distance_sq(q, p) = geo::distance_sq(q, r),
+        $translation::are_directed_angles_congruent(p, q, r, u, v, w)
+        geo::distance_sq(q, p) = geo::distance_sq(q, r)
         geo::distance_sq(v, u) = geo::distance_sq(v, w)
         =>:
-            geo::dot(geo::vec(q, p), geo::vec(q, r)) * geo::distance_sq(v, u) = geo::dot(geo::vec(v, u), geo::vec(v, w)) * geo::distance_sq(q, p),
+            geo::dot(geo::vec(q, p), geo::vec(q, r)) * geo::distance_sq(v, u) = geo::dot(geo::vec(v, u), geo::vec(v, w)) * geo::distance_sq(q, p)
             geo::det(geo::vec(q, p), geo::vec(q, r)) * geo::distance_sq(v, u) = geo::det(geo::vec(v, u), geo::vec(v, w)) * geo::distance_sq(q, p)
     by def $translation::are_directed_angles_congruent(p, q, r, u, v, w)
     by def $geo::are_angles_congruent(p, q, r, u, v, w)
@@ -110,11 +110,11 @@ thm problem_505_directed_angle_metric_bridge:
 # A common scaled rotation preserves dot products once the scale is nonzero.
 thm problem_505_scaled_rotation_preserves_dot:
     ? forall x, y, z, w cart(R, R), n, c, s R:
-        n > 0,
-        n * y[1] = c * x[1] - s * x[2],
-        n * y[2] = s * x[1] + c * x[2],
-        n * w[1] = c * z[1] - s * z[2],
-        n * w[2] = s * z[1] + c * z[2],
+        n > 0
+        n * y[1] = c * x[1] - s * x[2]
+        n * y[2] = s * x[1] + c * x[2]
+        n * w[1] = c * z[1] - s * z[2]
+        n * w[2] = s * z[1] + c * z[2]
         c^2 + s^2 = n^2
         =>:
             geo::dot(x, z) = geo::dot(y, w)
@@ -134,9 +134,9 @@ thm problem_505_scaled_rotation_preserves_dot:
 # If one directed rotation sends x to y and z to w, it preserves the cross dot.
 thm problem_505_rotation_pair_dot:
     ? forall x, y, z, w cart(R, R):
-        geo::dot(x, y) = geo::dot(z, w),
-        geo::det(x, y) = geo::det(z, w),
-        geo::dot(x, x) = geo::dot(y, y),
+        geo::dot(x, y) = geo::dot(z, w)
+        geo::det(x, y) = geo::det(z, w)
+        geo::dot(x, x) = geo::dot(y, y)
         geo::dot(z, z) = geo::dot(w, w)
         =>:
             geo::dot(x, z) = geo::dot(y, w)
@@ -243,11 +243,11 @@ thm problem_505_rotation_pair_dot:
 # two equal-length vector pairs, so the cross dot is preserved.
 thm problem_505_cross_scaled_rotation_pair_dot:
     ? forall x, y, z, w cart(R, R):
-        geo::dot(x, y) * geo::dot(z, z) = geo::dot(z, w) * geo::dot(x, x),
-        geo::det(x, y) * geo::dot(z, z) = geo::det(z, w) * geo::dot(x, x),
-        geo::dot(x, x) = geo::dot(y, y),
-        geo::dot(z, z) = geo::dot(w, w),
-        geo::dot(x, x) > 0,
+        geo::dot(x, y) * geo::dot(z, z) = geo::dot(z, w) * geo::dot(x, x)
+        geo::det(x, y) * geo::dot(z, z) = geo::det(z, w) * geo::dot(x, x)
+        geo::dot(x, x) = geo::dot(y, y)
+        geo::dot(z, z) = geo::dot(w, w)
+        geo::dot(x, x) > 0
         geo::dot(z, z) > 0
         =>:
             geo::dot(x, z) = geo::dot(y, w)
@@ -323,11 +323,11 @@ thm problem_505_cross_scaled_rotation_pair_dot:
 
 thm problem_505:
     ? forall a, b, c, d, ep cart(R, R):
-        $geo::is_triangle(a, b, c),
-        $geo::is_triangle(a, d, ep),
-        $geo::is_on_segment(d, b, c),
-        $translation::are_directed_angles_congruent(b, a, d, c, a, ep),
-        $geo::are_segments_congruent(a, b, a, d),
+        $geo::is_triangle(a, b, c)
+        $geo::is_triangle(a, d, ep)
+        $geo::is_on_segment(d, b, c)
+        $translation::are_directed_angles_congruent(b, a, d, c, a, ep)
+        $geo::are_segments_congruent(a, b, a, d)
         $geo::are_segments_congruent(a, c, a, ep)
         =>:
             $geo::are_triangles_congruent(a, b, c, a, d, ep)

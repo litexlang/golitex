@@ -4,7 +4,7 @@
 # One-coordinate factorization used by the midpoint expansion.
 thm problem_476_one_coordinate_factor:
     ? forall x, y, z, m, r R:
-        m = (x + y) / 2,
+        m = (x + y) / 2
         z = y - r * x
         =>:
             m^2 - (z - m)^2 = (1 + r) * x * z
@@ -27,11 +27,11 @@ thm problem_476_one_coordinate_factor:
 # Equal source lengths force AB perpendicular to AF after midpoint expansion.
 thm problem_476_equal_length_orthogonality:
     ? forall a1, a2, b1, b2, c1, c2, e1, e2, f1, f2, r R:
-        r > 0,
-        e1 = (b1 + c1) / 2,
-        e2 = (b2 + c2) / 2,
-        f1 = c1 + r * (a1 - b1),
-        f2 = c2 + r * (a2 - b2),
+        r > 0
+        e1 = (b1 + c1) / 2
+        e2 = (b2 + c2) / 2
+        f1 = c1 + r * (a1 - b1)
+        f2 = c2 + r * (a2 - b2)
         (e1 - a1)^2 + (e2 - a2)^2 = (f1 - e1)^2 + (f2 - e2)^2
         =>:
             (b1 - a1) * (f1 - a1) + (b2 - a2) * (f2 - a2) = 0
@@ -73,7 +73,7 @@ thm problem_476_equal_length_orthogonality:
 # Replace both factors of a squared product using two scalar equalities.
 thm problem_476_square_product_substitution:
     ? forall n, m, x, y R:
-        n = m,
+        n = m
         x = y
         =>:
             n^2 * x = m^2 * y
@@ -91,7 +91,7 @@ thm problem_476_square_product_substitution:
 # Replace both factors of an ordinary product using two scalar equalities.
 thm problem_476_linear_product_substitution:
     ? forall n, m, x, y R:
-        n = m,
+        n = m
         x = y
         =>:
             n * x = m * y
@@ -103,17 +103,17 @@ thm problem_476_linear_product_substitution:
 
 thm problem_476_angle_coordinate_core:
     ? forall a, b, c, d, ep, f cart(R, R), r R:
-        b != a,
-        ep != a,
-        c != f,
-        ep != f,
-        r > 0,
-        d[1] = a[1] + c[1] - b[1],
-        d[2] = a[2] + c[2] - b[2],
-        ep[1] = (b[1] + c[1]) / 2,
-        ep[2] = (b[2] + c[2]) / 2,
-        f[1] = c[1] + r * (d[1] - c[1]),
-        f[2] = c[2] + r * (d[2] - c[2]),
+        b != a
+        ep != a
+        c != f
+        ep != f
+        r > 0
+        d[1] = a[1] + c[1] - b[1]
+        d[2] = a[2] + c[2] - b[2]
+        ep[1] = (b[1] + c[1]) / 2
+        ep[2] = (b[2] + c[2]) / 2
+        f[1] = c[1] + r * (d[1] - c[1])
+        f[2] = c[2] + r * (d[2] - c[2])
         geo::distance_sq(a, ep) = geo::distance_sq(ep, f)
         =>:
             $geo::are_angles_congruent(b, a, ep, c, f, ep)
@@ -225,19 +225,19 @@ thm problem_476_angle_coordinate_core:
 thm problem_476:
     ? forall a, b, c, d, ep, f cart(R, R):
         # 【NL条件1】四边形ABCD是平行四边形（采用通常非退化四边形语义）。
-        $geo::is_nondegenerate_parallelogram(a, b, c, d),
+        $geo::is_nondegenerate_parallelogram(a, b, c, d)
         # 【NL条件2a】点E在边BC上。
-        $geo::is_on_segment(ep, b, c),
+        $geo::is_on_segment(ep, b, c)
         # 【NL条件2b】点F在边CD上。
-        $geo::is_on_segment(f, c, d),
+        $geo::is_on_segment(f, c, d)
         # 【NL条件3】点E是边BC的中点。
-        $geo::is_midpoint(ep, b, c),
+        $geo::is_midpoint(ep, b, c)
         # 【NL条件4】AE=EF。
-        $geo::are_segments_congruent(a, ep, ep, f),
+        $geo::are_segments_congruent(a, ep, ep, f)
         # 【角良定义】以下四项只排除命名角的零射线，不增加额外几何构型。
-        b != a,
-        ep != a,
-        c != f,
+        b != a
+        ep != a
+        c != f
         ep != f
         =>:
             # 【NL结论】∠BAE=∠CFE。

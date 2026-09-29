@@ -13,9 +13,9 @@ thm local_radius_linear:
 
 thm same_chord_radius_scalar:
     ? forall p, q, r, L, M, t, s R:
-        2 * p + L = 0,
-        2 * q + L = 0,
-        2 * r + M = 0,
+        2 * p + L = 0
+        2 * q + L = 0
+        2 * r + M = 0
         t * r = s * q + (1 - s) * p
         =>:
             t * M = L
@@ -44,7 +44,7 @@ thm same_chord_radius_scalar:
 
 thm same_chord_dot_scalar:
     ? forall L, M, UW, UV, t, s R:
-        t * M = L,
+        t * M = L
         t * UW = s * UV + (1 - s) * L
         =>:
             t * (M - UW) = s * (L - UV)
@@ -61,7 +61,7 @@ thm same_chord_det_scalar:
 
 thm affine_linear_form_scalar:
     ? forall dx, dy, cx, cy, bx, bz, px, py, t, s R:
-        t * dx = s * cx + (1 - s) * bx,
+        t * dx = s * cx + (1 - s) * bx
         t * dy = s * cy + (1 - s) * bz
         =>:
             t * (px * dx + py * dy) = s * (px * cx + py * cy) + (1 - s) * (px * bx + py * bz)
@@ -79,14 +79,14 @@ thm affine_linear_form_scalar:
 
 thm same_chord_scalar_bus:
     ? forall p, q, r, L, M, UW, UV, DUW, DUV, t, s R:
-        2 * p + L = 0,
-        2 * q + L = 0,
-        2 * r + M = 0,
-        t * r = s * q + (1 - s) * p,
-        t * UW = s * UV + (1 - s) * L,
+        2 * p + L = 0
+        2 * q + L = 0
+        2 * r + M = 0
+        t * r = s * q + (1 - s) * p
+        t * UW = s * UV + (1 - s) * L
         t * DUW = s * DUV
         =>:
-            t * (M - UW) = s * (L - UV),
+            t * (M - UW) = s * (L - UV)
             t * (-DUW) = s * (-DUV)
     by thm same_chord_radius_scalar(p, q, r, L, M, t, s)
     t * M = L
@@ -98,14 +98,14 @@ thm same_chord_scalar_bus:
 # t * AD = s * AC + (1-s) * AB.
 thm same_chord_point_coordinate_bridge:
     ? forall a, b, c, d, o cart(R, R), t, s R:
-        (a[1] - o[1])^2 + (a[2] - o[2])^2 = (b[1] - o[1])^2 + (b[2] - o[2])^2,
-        (a[1] - o[1])^2 + (a[2] - o[2])^2 = (c[1] - o[1])^2 + (c[2] - o[2])^2,
-        (a[1] - o[1])^2 + (a[2] - o[2])^2 = (d[1] - o[1])^2 + (d[2] - o[2])^2,
-        (b[1] - a[1])^2 + (b[2] - a[2])^2 = (c[1] - a[1])^2 + (c[2] - a[2])^2,
-        t * (d[1] - a[1]) = s * (c[1] - a[1]) + (1 - s) * (b[1] - a[1]),
+        (a[1] - o[1])^2 + (a[2] - o[2])^2 = (b[1] - o[1])^2 + (b[2] - o[2])^2
+        (a[1] - o[1])^2 + (a[2] - o[2])^2 = (c[1] - o[1])^2 + (c[2] - o[2])^2
+        (a[1] - o[1])^2 + (a[2] - o[2])^2 = (d[1] - o[1])^2 + (d[2] - o[2])^2
+        (b[1] - a[1])^2 + (b[2] - a[2])^2 = (c[1] - a[1])^2 + (c[2] - a[2])^2
+        t * (d[1] - a[1]) = s * (c[1] - a[1]) + (1 - s) * (b[1] - a[1])
         t * (d[2] - a[2]) = s * (c[2] - a[2]) + (1 - s) * (b[2] - a[2])
         =>:
-            t * ((b[1] - d[1]) * (a[1] - d[1]) + (b[2] - d[2]) * (a[2] - d[2])) = s * ((a[1] - b[1]) * (c[1] - b[1]) + (a[2] - b[2]) * (c[2] - b[2])),
+            t * ((b[1] - d[1]) * (a[1] - d[1]) + (b[2] - d[2]) * (a[2] - d[2])) = s * ((a[1] - b[1]) * (c[1] - b[1]) + (a[2] - b[2]) * (c[2] - b[2]))
             t * ((b[1] - d[1]) * (a[2] - d[2]) - (b[2] - d[2]) * (a[1] - d[1])) = s * ((a[1] - b[1]) * (c[2] - b[2]) - (a[2] - b[2]) * (c[1] - b[1]))
 
     by thm local_radius_linear(a[1], a[2], b[1], b[2], o[1], o[2])

@@ -1,5 +1,9 @@
-# Node: atomic.ByBuiltinRule.SqrtNonzeroFromPositiveArg
+# Node: atomic.ByBuiltinRule.SqrtNonzeroFromPositiveArg / strict order
 # Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/not_equal_sqrt_nonzero_from_positive.lit
+#
+# When: `have a R+`, then `sqrt(a) > 0` and `sqrt(a) != 0`.
+# After: positivity of sqrt from `0 < a`; inequality from the strict order.
 
 have a R+
+sqrt(a) > 0
 sqrt(a) != 0

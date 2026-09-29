@@ -1,5 +1,8 @@
 # Node: equal.ByBuiltinRule.AbsNonnegEqualsSelf
 # Run: litex -f examples/proof_nodes/equal/by_builtin_rule/abs_nonneg_equals_self.lit
+#
+# When: `have a R+` (so `0 <= a`).
+# After: `abs(a) = a`.
 
 have a R+
 abs(a) = a

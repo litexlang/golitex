@@ -30,10 +30,10 @@ prop segment_ratio_one_fourth(a, b, c, d cart(R, R)):
 # `is_on_segment(pf,pc,pd)` records “AF meets side CD at F”; midpoint is stated separately.
 axiom problem_207_part1_statement:
     ? forall pa, pb, pc, pd, pe, pf cart(R, R):
-        $geo::is_square(pa, pb, pc, pd),
-        $geo::is_on_segment(pe, pb, pc),
-        $geo::is_on_segment(pf, pc, pd),
-        $is_metric_angle_bisector(pe, pa, pd, pf),
+        $geo::is_square(pa, pb, pc, pd)
+        $geo::is_on_segment(pe, pb, pc)
+        $geo::is_on_segment(pf, pc, pd)
+        $is_metric_angle_bisector(pe, pa, pd, pf)
         $geo::is_midpoint(pf, pc, pd)
         =>:
             $segment_length_equals_sum_twice(pa, pe, pb, pe, pc, pe)
@@ -41,10 +41,10 @@ axiom problem_207_part1_statement:
 # Part (2): CE : BC = 1 : 4.
 axiom problem_207_part2_statement:
     ? forall pa, pb, pc, pd, pe, pf cart(R, R):
-        $geo::is_square(pa, pb, pc, pd),
-        $geo::is_on_segment(pe, pb, pc),
-        $geo::is_on_segment(pf, pc, pd),
-        $is_metric_angle_bisector(pe, pa, pd, pf),
+        $geo::is_square(pa, pb, pc, pd)
+        $geo::is_on_segment(pe, pb, pc)
+        $geo::is_on_segment(pf, pc, pd)
+        $is_metric_angle_bisector(pe, pa, pd, pf)
         $geo::is_midpoint(pf, pc, pd)
         =>:
             $segment_ratio_one_fourth(pc, pe, pb, pc)
@@ -55,14 +55,14 @@ axiom problem_207_part2_statement:
 # These extension predicates also encode the required incidences/intersections.
 axiom problem_207_part3_statement:
     ? forall pa, pb, pc, pd, pe, pf, pg, ph cart(R, R):
-        $geo::is_square(pa, pb, pc, pd),
-        $geo::is_on_segment(pe, pb, pc),
-        $geo::is_on_segment(pf, pc, pd),
-        $is_metric_angle_bisector(pe, pa, pd, pf),
-        $geo::is_on_extension(pg, pa, pf),
-        $geo::is_on_extension(pg, pb, pc),
-        $geo::is_on_extension(ph, pa, pe),
-        $geo::is_on_extension(ph, pd, pc),
+        $geo::is_square(pa, pb, pc, pd)
+        $geo::is_on_segment(pe, pb, pc)
+        $geo::is_on_segment(pf, pc, pd)
+        $is_metric_angle_bisector(pe, pa, pd, pf)
+        $geo::is_on_extension(pg, pa, pf)
+        $geo::is_on_extension(pg, pb, pc)
+        $geo::is_on_extension(ph, pa, pe)
+        $geo::is_on_extension(ph, pd, pc)
         $geo::are_segments_congruent(pc, pg, pd, pf)
         =>:
             $geo::is_perpendicular(ph, pg, pa, pg)

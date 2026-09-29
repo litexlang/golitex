@@ -3,14 +3,14 @@
 
 thm problem_551_scalar_core:
     ? forall ux, uy, px, py, qx, qy, t, v R:
-        ux^2 + uy^2 > 0,
-        ux * px + uy * py = 0,
-        2 * (ux * qx + uy * qy) + (qx^2 + qy^2) = 0,
-        (qx^2 + qy^2) - 2 * (qx * px + qy * py) = 0,
-        2 * (ux^2 + uy^2) + t * (ux * qx + uy * qy) = 0,
+        ux^2 + uy^2 > 0
+        ux * px + uy * py = 0
+        2 * (ux * qx + uy * qy) + (qx^2 + qy^2) = 0
+        (qx^2 + qy^2) - 2 * (qx * px + qy * py) = 0
+        2 * (ux^2 + uy^2) + t * (ux * qx + uy * qy) = 0
         2 * (ux^2 + uy^2) + v * (ux * qx + uy * qy) = 0
         =>:
-            (ux + qx) * (qx - px) + (uy + qy) * (qy - py) = 0,
+            (ux + qx) * (qx - px) + (uy + qy) * (qy - py) = 0
             (2 * ux + t * qx + (1 - t) * px)^2 + (2 * uy + t * qy + (1 - t) * py)^2 = ((v - t) * qx + (t - 1) * px)^2 + ((v - t) * qy + (t - 1) * py)^2
 
     have uu R = ux^2 + uy^2

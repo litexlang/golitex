@@ -207,7 +207,7 @@ generic interfaces rather than defining them.
 
 ## Verification and trust boundary
 
-Acceptance requires the release Litex runner to report top-level `ok: true`
+Acceptance requires the release Litex runner to report top-level `success: true`
 for `main.lit`, `main2.lit`, and the registered module directory. The published
 Litex files must add no direct `trust` or local `axiom`. Builtin arithmetic,
 logic, and registered prior-module imports remain inside Litex's ordinary

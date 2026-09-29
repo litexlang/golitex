@@ -1,8 +1,9 @@
-# set_minus membership infer split
-# Covered here because lib-test harness stack overflows on re-verify;
-# CLI uses a 64MB thread and runs the full path.
-have x set
-trust x $in set_minus({1, 2}, {2})
-x $in {1, 2}
-not x $in {2}
-x != 2
+have a R
+have b R
+trust a != b
+b != a
+
+forall x set, y set:
+    x != y
+    =>:
+        y != x

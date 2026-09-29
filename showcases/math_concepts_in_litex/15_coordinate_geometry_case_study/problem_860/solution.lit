@@ -12,7 +12,7 @@ thm problem_860_divide_both_sides:
     # a、b是待比较实数，c是两边共有的实数因子。
     ? forall a, b, c R:
         # 条件：a*c与b*c相等。
-        a * c = b * c,
+        a * c = b * c
         # 条件：共有因子c非零。
         c != 0
         =>:
@@ -25,7 +25,7 @@ thm problem_860_affine_parameter:
     # a、b是确定直线的点，p是该直线上的点。
     ? forall a, b, p cart(R, R):
         # 条件：a与b不重合。
-        a != b,
+        a != b
         # 条件：p、a、b的坐标行列式为零，即三点共线的坐标形式。
         (p[1] - a[1]) * (b[2] - a[2]) - (p[2] - a[2]) * (b[1] - a[1]) = 0
         =>:
@@ -66,13 +66,13 @@ thm problem_860_shared_line_collinearity:
     # a、b、d、q、p是平面点；b、d确定作为参照的直线。
     ? forall a, b, d, q, p cart(R, R):
         # 条件：a、p、q共线。
-        $geo::is_collinear(a, p, q),
+        $geo::is_collinear(a, p, q)
         # 条件：b、q、d共线。
-        $geo::is_collinear(b, q, d),
+        $geo::is_collinear(b, q, d)
         # 条件：b、p、d共线。
-        $geo::is_collinear(b, p, d),
+        $geo::is_collinear(b, p, d)
         # 条件：公共点q与p不同。
-        q != p,
+        q != p
         # 条件：参照直线的确定点b与d不同。
         b != d
         =>:
@@ -123,51 +123,51 @@ thm problem_860:
     # 题目中的点A、B、C、D、O、E、G以及圆的正半径r。
     ? forall A, B, C0, D, O, E, G cart(R, R), r R+:
         # 条件1：ABCD是菱形。
-        $geo::is_rhombus(A, B, C0, D),
+        $geo::is_rhombus(A, B, C0, D)
         # 条件2：非退化菱形的顶点A、B、D不共线。
-        $geo::is_triangle(A, B, D),
+        $geo::is_triangle(A, B, D)
         # 条件3：O在对角线AC上。
-        $geo::is_collinear(A, O, C0),
+        $geo::is_collinear(A, O, C0)
         # 条件4：O在对角线BD上。
-        $geo::is_collinear(B, O, D),
+        $geo::is_collinear(B, O, D)
         # 条件5：O与A不重合。
-        O != A,
+        O != A
         # 条件6：O与C不重合。
-        O != C0,
+        O != C0
         # 条件7：O与B不重合。
-        O != B,
+        O != B
         # 条件8：O与D不重合。
-        O != D,
+        O != D
         # 条件9：A在以O为圆心、r为半径的圆上。
-        $geo::is_on_circle(A, O, r),
+        $geo::is_on_circle(A, O, r)
         # 条件10：B在以O为圆心、r为半径的圆上。
-        $geo::is_on_circle(B, O, r),
+        $geo::is_on_circle(B, O, r)
         # 条件11：E在以O为圆心、r为半径的圆上。
-        $geo::is_on_circle(E, O, r),
+        $geo::is_on_circle(E, O, r)
         # 条件12：E在直线BD上。
-        $geo::is_collinear(B, E, D),
+        $geo::is_collinear(B, E, D)
         # 条件13：G在直线AE上。
-        $geo::is_collinear(A, G, E),
+        $geo::is_collinear(A, G, E)
         # 条件14：G与A不重合。
-        G != A,
+        G != A
         # 条件15：G与E不重合。
-        G != E,
+        G != E
         # 条件16：G在直线BD上。
-        $geo::is_collinear(B, G, D),
+        $geo::is_collinear(B, G, D)
         # 条件17：线段AG与EG等长。
-        $geo::are_segments_congruent(A, G, E, G),
+        $geo::are_segments_congruent(A, G, E, G)
         # 条件18：A与B不重合。
-        A != B,
+        A != B
         # 条件19：B与C不重合。
-        B != C0,
+        B != C0
         # 条件20：C与D不重合。
-        C0 != D,
+        C0 != D
         # 条件21：D与A不重合。
-        D != A,
+        D != A
         # 条件22：A与E不重合。
-        A != E,
+        A != E
         # 条件23：E与B不重合。
-        E != B,
+        E != B
         # 条件24：E与D不重合。
         E != D
         =>:

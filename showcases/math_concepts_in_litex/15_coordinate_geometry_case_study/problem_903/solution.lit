@@ -38,7 +38,7 @@ thm equal_distance_coordinate_difference:
 # If O and D are both equidistant from B and C, then OD is perpendicular to BC.
 thm equal_distances_give_perpendicular_dot:
     ? forall b, c, d, o cart(R, R):
-        geo::distance_sq(o, b) = geo::distance_sq(o, c),
+        geo::distance_sq(o, b) = geo::distance_sq(o, c)
         geo::distance_sq(d, b) = geo::distance_sq(d, c)
         =>:
             geo::dot(geo::vec(o, d), geo::vec(b, c)) = 0
@@ -77,8 +77,8 @@ thm equal_distances_give_perpendicular_dot:
 # A nonzero direction u parallel to v transfers orthogonality from u to v.
 thm dot_det_transfer:
     ? forall ux, uy, vx, vy, wx, wy R:
-        ux * wx + uy * wy = 0,
-        ux * vy - uy * vx = 0,
+        ux * wx + uy * wy = 0
+        ux * vy - uy * vx = 0
         ux^2 + uy^2 > 0
         =>:
             vx * wx + vy * wy = 0
@@ -95,7 +95,7 @@ thm dot_det_transfer:
 
 thm parallel_preserves_perpendicular:
     ? forall a, b, c, d, p, q cart(R, R):
-        $geo::is_parallel(a, b, c, d),
+        $geo::is_parallel(a, b, c, d)
         $geo::is_perpendicular(a, b, p, q)
         =>:
             $geo::is_perpendicular(c, d, p, q)
@@ -122,10 +122,10 @@ thm parallel_preserves_perpendicular:
 
 thm problem_903_tangent:
     ? forall b, c, d, x, o cart(R, R), r R+:
-        $geo::is_on_circle(b, o, r),
-        $geo::is_on_circle(c, o, r),
-        $geo::is_on_circle(d, o, r),
-        geo::distance_sq(b, d) = geo::distance_sq(c, d),
+        $geo::is_on_circle(b, o, r)
+        $geo::is_on_circle(c, o, r)
+        $geo::is_on_circle(d, o, r)
+        geo::distance_sq(b, d) = geo::distance_sq(c, d)
         $geo::is_parallel(b, c, d, x)
         =>:
             $is_tangent_at(d, x, o, r)

@@ -8,7 +8,7 @@
 # 同一90°旋转保持两个向量的点积。
 thm problem_911_same_quarter_turn_preserves_dot:
     ? forall a, b, c, d, e_point cart(R, R):
-        $geo::rotated_90_ccw(c, a, b),
+        $geo::rotated_90_ccw(c, a, b)
         $geo::rotated_90_ccw(e_point, a, d)
         =>:
             geo::dot(geo::vec(a, c), geo::vec(a, e_point)) = geo::dot(geo::vec(a, b), geo::vec(a, d))
@@ -39,21 +39,21 @@ thm problem_911_same_quarter_turn_preserves_dot:
 thm problem_911_congruence:
     ? forall a, b, c, d, e_point cart(R, R):
         # △ABC是三角形
-        $geo::is_triangle(a, b, c),
+        $geo::is_triangle(a, b, c)
         # ∠BAC=90°
-        $geo::is_right_angle(b, a, c),
+        $geo::is_right_angle(b, a, c)
         # AB=1
-        geo::distance_sq(a, b) = 1,
+        geo::distance_sq(a, b) = 1
         # AC=1
-        geo::distance_sq(a, c) = 1,
+        geo::distance_sq(a, c) = 1
         # D是BC边上一点
-        $geo::is_on_segment(d, b, c),
+        $geo::is_on_segment(d, b, c)
         # ∠DAE=90°
-        $geo::is_right_angle(d, a, e_point),
+        $geo::is_right_angle(d, a, e_point)
         # AD=AE（等腰直角三角形）
-        geo::distance_sq(a, d) = geo::distance_sq(a, e_point),
+        geo::distance_sq(a, d) = geo::distance_sq(a, e_point)
         # C是B绕A逆时针旋转90°
-        $geo::rotated_90_ccw(c, a, b),
+        $geo::rotated_90_ccw(c, a, b)
         # E是D绕A逆时针旋转90°（如图同向）
         $geo::rotated_90_ccw(e_point, a, d)
         =>:

@@ -53,7 +53,7 @@ litex -e '1 = 1'
 ```
 
 `-version` prints a short text line. `-e` returns one Normal JSON `run`
-document; a successful check has `"ok": true`.
+document; a successful check has `"success": true`.
 
 ## A few commands to start
 

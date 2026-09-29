@@ -1,8 +1,8 @@
 # Small final coordinate rewrite for Problem 464.
 thm problem_464_final_det_rewrite:
     ? forall adx, ady, ux, uy, cx, cy R:
-        adx = ux,
-        ady = uy,
+        adx = ux
+        ady = uy
         ux * cy - uy * cx = 0
         =>:
             cx * ady - cy * adx = 0

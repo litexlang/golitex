@@ -26,10 +26,10 @@ thm problem_473_double_square_positive:
 # parallel scale t cannot take the spurious squared-cosine branch.
 thm problem_473_positive_scale_unique:
     ? forall u, v, w, t R:
-        u > 0,
-        t > 0,
-        u * w - v^2 > 0,
-        (t - 1) * (u * w - v^2) * (u * t + u + 2 * v * t) = 0,
+        u > 0
+        t > 0
+        u * w - v^2 > 0
+        (t - 1) * (u * w - v^2) * (u * t + u + 2 * v * t) = 0
         (u + v) * (u + t * v) >= 0
         =>:
             t = 1

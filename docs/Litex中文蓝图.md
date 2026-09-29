@@ -832,7 +832,7 @@ forall x, y R:
 ```json
 {
   "kind": "run",
-  "ok": true,
+  "success": true,
   "detail": "normal",
   "session_error": null,
   "statement_results": [
@@ -910,7 +910,7 @@ $is_positive(a)
 ```json
 {
   "kind": "run",
-  "ok": true,
+  "success": true,
   "detail": "normal",
   "session_error": null,
   "statement_results": [
@@ -977,7 +977,7 @@ Litex 源码保存前提和结论，没有写 `simpa` 或指定等式改写方�
 ```json
 {
   "kind": "run",
-  "ok": true,
+  "success": true,
   "detail": "normal",
   "session_error": null,
   "statement_results": [
@@ -1098,7 +1098,7 @@ a + 1 = 2
 ```json
 {
   "kind": "run",
-  "ok": true,
+  "success": true,
   "target": "eval",
   "path": null,
   "detail": "normal",
@@ -1132,7 +1132,7 @@ a + 1 = 2
 | 读者想知道什么 | 在记录里看哪里 |
 | --- | --- |
 | 跑了哪一句 | `statement` |
-| 是否成功 | 语句的 `success`，以及整次运行的 `ok` / `session_error` |
+| 是否成功 | 语句的 `success`，以及整次运行的 `success` / `session_error` |
 | 为什么成立 | `why_verified`（规则名、引用、定义路径等） |
 | 为什么停下 | `why_failed.phase` 与 `why_failed.goal` |
 | 什么进入了后续上下文 | `stores` 与 `infers` |
@@ -1149,7 +1149,7 @@ Normal JSON 是面向人与工具的日常记录。完整的 verify/exec 证据�
 ```json
 {
   "kind": "run",
-  "ok": false,
+  "success": false,
   "target": "eval",
   "path": null,
   "detail": "normal",
@@ -1314,7 +1314,7 @@ AI 先试图在没有构造 `forall / exist` 结构的情况下，直接 `by def
 ```json
 {
   "kind": "run",
-  "ok": false,
+  "success": false,
   "detail": "normal",
   "session_error": null,
   "statement_results": [

@@ -58,7 +58,7 @@ fn render_extracted_artifact(
     };
     JsonValue::object_from(vec![
         ("kind".into(), JsonValue::String("artifact".into())),
-        ("ok".into(), JsonValue::Bool(true)),
+        ("success".into(), JsonValue::Bool(true)),
         (
             "artifact".into(),
             JsonValue::String("extracted_code".into()),
@@ -76,7 +76,7 @@ fn render_extracted_artifact(
 pub fn extract_launch_error_json(error: &RuntimeError) -> String {
     JsonValue::object_from(vec![
         ("kind".into(), JsonValue::String("artifact".into())),
-        ("ok".into(), JsonValue::Bool(false)),
+        ("success".into(), JsonValue::Bool(false)),
         (
             "artifact".into(),
             JsonValue::String("extracted_code".into()),

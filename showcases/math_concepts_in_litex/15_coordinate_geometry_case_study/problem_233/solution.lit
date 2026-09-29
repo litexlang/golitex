@@ -11,8 +11,8 @@
 
 thm problem_233_candidate_nonnegative_equal_squares:
     ? forall x, y R:
-        x >= 0,
-        y >= 0,
+        x >= 0
+        y >= 0
         x^2 = y^2
         =>:
             x = y
@@ -41,20 +41,20 @@ thm problem_233_candidate_nonnegative_equal_squares:
 
 thm problem_233_candidate_length_core:
     ? forall a, b, d, ep, f cart(R, R), ux, uy, vx, vy, q, t, y R:
-        q > 0,
-        t >= 0,
-        y >= 0,
-        b[1] - a[1] = ux,
-        b[2] - a[2] = uy,
-        d[1] - a[1] = vx,
-        d[2] - a[2] = vy,
-        ux^2 + uy^2 = q,
-        vx^2 + vy^2 = q,
-        ux * vx + uy * vy = -q / 2,
-        ep[1] - a[1] = (1 + t) * ux + 2 * t * vx,
-        ep[2] - a[2] = (1 + t) * uy + 2 * t * vy,
-        f[1] - a[1] = 2 * y * ux + (1 + y) * vx,
-        f[2] - a[2] = 2 * y * uy + (1 + y) * vy,
+        q > 0
+        t >= 0
+        y >= 0
+        b[1] - a[1] = ux
+        b[2] - a[2] = uy
+        d[1] - a[1] = vx
+        d[2] - a[2] = vy
+        ux^2 + uy^2 = q
+        vx^2 + vy^2 = q
+        ux * vx + uy * vy = -q / 2
+        ep[1] - a[1] = (1 + t) * ux + 2 * t * vx
+        ep[2] - a[2] = (1 + t) * uy + 2 * t * vy
+        f[1] - a[1] = 2 * y * ux + (1 + y) * vx
+        f[2] - a[2] = 2 * y * uy + (1 + y) * vy
         3 * t * y + t + y - 1 = 0
         =>:
             sqrt(geo::distance_sq(ep, f)) = sqrt(geo::distance_sq(b, ep)) + sqrt(geo::distance_sq(d, f))
@@ -174,8 +174,8 @@ thm problem_233_candidate_length_core:
 # Scalar branch selector used by the 120-degree predicate bridge.
 thm problem_233_negative_half_root_probe:
     ? forall n, q R:
-        q > 0,
-        n^2 = q^2 / 4,
+        q > 0
+        n^2 = q^2 / 4
         n * (-1 / 2) >= 0
         =>:
             n = -q / 2
@@ -197,7 +197,7 @@ thm problem_233_negative_half_root_probe:
 # Generic product substitution, decomposed into verified multiplication chains.
 thm problem_233_product_substitution:
     ? forall n, m, x, y R:
-        n = m,
+        n = m
         x = y
         =>:
             n^2 * x = m^2 * y
@@ -214,7 +214,7 @@ thm problem_233_product_substitution:
 
 thm problem_233_linear_product_substitution:
     ? forall n, m, x, y R:
-        n = m,
+        n = m
         x = y
         =>:
             n * x = m * y
@@ -284,14 +284,14 @@ thm problem_233_120_dot_bridge:
 # Algebraic bridge: equal nonzero 120-degree sides and two right-angle equations.
 thm problem_233_two_dot_eliminate:
     ? forall ux, uy, vx, vy, wx, wy, q R:
-        ux^2 + uy^2 = q,
-        vx^2 + vy^2 = q,
-        ux * vx + uy * vy = -q / 2,
-        q > 0,
-        ux * wx + uy * wy = q,
+        ux^2 + uy^2 = q
+        vx^2 + vy^2 = q
+        ux * vx + uy * vy = -q / 2
+        q > 0
+        ux * wx + uy * wy = q
         vx * wx + vy * wy = q
         =>:
-            wx = 2 * (ux + vx),
+            wx = 2 * (ux + vx)
             wy = 2 * (uy + vy)
     # The difference z = w - 2(u+v) is orthogonal to both u and v.
     ux * (wx - 2 * (ux + vx)) + uy * (wy - 2 * (uy + vy)) = (ux * wx + uy * wy) - 2 * (ux^2 + uy^2) - 2 * (ux * vx + uy * vy)
@@ -352,17 +352,17 @@ thm problem_233_two_dot_eliminate:
 
 thm problem_233_affine_component_probe:
     ? forall a, b, c, d, ep, f cart(R, R), t, r, y R:
-        c[1] - a[1] = 2 * ((b[1] - a[1]) + (d[1] - a[1])),
-        c[2] - a[2] = 2 * ((b[2] - a[2]) + (d[2] - a[2])),
-        ep[1] = b[1] + t * (c[1] - b[1]),
-        ep[2] = b[2] + t * (c[2] - b[2]),
-        f[1] = c[1] + r * (d[1] - c[1]),
-        f[2] = c[2] + r * (d[2] - c[2]),
+        c[1] - a[1] = 2 * ((b[1] - a[1]) + (d[1] - a[1]))
+        c[2] - a[2] = 2 * ((b[2] - a[2]) + (d[2] - a[2]))
+        ep[1] = b[1] + t * (c[1] - b[1])
+        ep[2] = b[2] + t * (c[2] - b[2])
+        f[1] = c[1] + r * (d[1] - c[1])
+        f[2] = c[2] + r * (d[2] - c[2])
         y = 1 - r
         =>:
-            ep[1] - a[1] = (1 + t) * (b[1] - a[1]) + 2 * t * (d[1] - a[1]),
-            ep[2] - a[2] = (1 + t) * (b[2] - a[2]) + 2 * t * (d[2] - a[2]),
-            f[1] - a[1] = 2 * y * (b[1] - a[1]) + (1 + y) * (d[1] - a[1]),
+            ep[1] - a[1] = (1 + t) * (b[1] - a[1]) + 2 * t * (d[1] - a[1])
+            ep[2] - a[2] = (1 + t) * (b[2] - a[2]) + 2 * t * (d[2] - a[2])
+            f[1] - a[1] = 2 * y * (b[1] - a[1]) + (1 + y) * (d[1] - a[1])
             f[2] - a[2] = 2 * y * (b[2] - a[2]) + (1 + y) * (d[2] - a[2])
     ep[1] - a[1] = (b[1] - a[1]) + t * ((c[1] - a[1]) - (b[1] - a[1]))
     (c[1] - a[1]) - (b[1] - a[1]) = 2 * ((b[1] - a[1]) + (d[1] - a[1])) - (b[1] - a[1])
@@ -421,7 +421,7 @@ thm problem_233_affine_component_probe:
 
 thm problem_233_right_angle_dot_bridge:
     ? forall a, b, c cart(R, R), q R:
-        $geo::is_right_angle(a, b, c),
+        $geo::is_right_angle(a, b, c)
         geo::distance_sq(a, b) = q
         =>:
             geo::dot(geo::vec(a, b), geo::vec(a, c)) = q
@@ -449,7 +449,7 @@ thm problem_233_60_predicate_bridge:
     ? forall a, ep, f cart(R, R):
         $geo::are_angles_congruent(ep, a, f, (1, 0), (0, 0), (1 / 2, sqrt(3) / 2))
         =>:
-            geo::dot(geo::vec(a, ep), geo::vec(a, f))^2 * 1 = (1 / 2)^2 * (geo::distance_sq(a, ep) * geo::distance_sq(a, f)),
+            geo::dot(geo::vec(a, ep), geo::vec(a, f))^2 * 1 = (1 / 2)^2 * (geo::distance_sq(a, ep) * geo::distance_sq(a, f))
             geo::dot(geo::vec(a, ep), geo::vec(a, f)) * (1 / 2) >= 0
     by def $geo::are_angles_congruent(ep, a, f, (1, 0), (0, 0), (1 / 2, sqrt(3) / 2))
 
@@ -491,10 +491,10 @@ thm problem_233_60_predicate_bridge:
 # Select the valid branch after the squared 60-degree relation factors.
 thm problem_233_angle_branch_probe:
     ? forall t, y, q R:
-        0 <= t,
-        0 <= y,
-        q > 0,
-        6 * (t + y) * (3 * t * y + t + y - 1) = 0,
+        0 <= t
+        0 <= y
+        q > 0
+        6 * (t + y) * (3 * t * y + t + y - 1) = 0
         q * (3 * t * y + 3 * t + 3 * y - 1) >= 0
         =>:
             3 * t * y + t + y - 1 = 0
@@ -532,13 +532,13 @@ thm problem_233_angle_branch_probe:
 # The Gram formulas for AE and AF plus the 60-degree cosine predicate data.
 thm problem_233_gram_angle_probe:
     ? forall t, y, q, n, p, z R:
-        0 <= t,
-        0 <= y,
-        q > 0,
-        n = q * (3 * t * y + 3 * t + 3 * y - 1) / 2,
-        p = q * (3 * t^2 + 1),
-        z = q * (3 * y^2 + 1),
-        n^2 * 1 = (1 / 2)^2 * (p * z),
+        0 <= t
+        0 <= y
+        q > 0
+        n = q * (3 * t * y + 3 * t + 3 * y - 1) / 2
+        p = q * (3 * t^2 + 1)
+        z = q * (3 * y^2 + 1)
+        n^2 * 1 = (1 / 2)^2 * (p * z)
         n * (1 / 2) >= 0
         =>:
             3 * t * y + t + y - 1 = 0
@@ -572,8 +572,8 @@ thm problem_233_gram_angle_probe:
 # Pure scalar affine-Gram identities used by the predicate-level top theorem.
 thm problem_233_ep_norm_affine_probe:
     ? forall ux, uy, vx, vy, q, t R:
-        ux^2 + uy^2 = q,
-        vx^2 + vy^2 = q,
+        ux^2 + uy^2 = q
+        vx^2 + vy^2 = q
         ux * vx + uy * vy = -q / 2
         =>:
             ((1 + t) * ux + 2 * t * vx)^2 + ((1 + t) * uy + 2 * t * vy)^2 = q * (3 * t^2 + 1)
@@ -583,8 +583,8 @@ thm problem_233_ep_norm_affine_probe:
 
 thm problem_233_f_norm_affine_probe:
     ? forall ux, uy, vx, vy, q, y R:
-        ux^2 + uy^2 = q,
-        vx^2 + vy^2 = q,
+        ux^2 + uy^2 = q
+        vx^2 + vy^2 = q
         ux * vx + uy * vy = -q / 2
         =>:
             (2 * y * ux + (1 + y) * vx)^2 + (2 * y * uy + (1 + y) * vy)^2 = q * (3 * y^2 + 1)
@@ -594,8 +594,8 @@ thm problem_233_f_norm_affine_probe:
 
 thm problem_233_cross_affine_probe:
     ? forall ux, uy, vx, vy, q, t, y R:
-        ux^2 + uy^2 = q,
-        vx^2 + vy^2 = q,
+        ux^2 + uy^2 = q
+        vx^2 + vy^2 = q
         ux * vx + uy * vy = -q / 2
         =>:
             ((1 + t) * ux + 2 * t * vx) * (2 * y * ux + (1 + y) * vx) + ((1 + t) * uy + 2 * t * vy) * (2 * y * uy + (1 + y) * vy) = q * (3 * t * y + 3 * t + 3 * y - 1) / 2
@@ -605,10 +605,10 @@ thm problem_233_cross_affine_probe:
 
 thm problem_233_ep_distance_bridge:
     ? forall a, ep cart(R, R), ux, uy, vx, vy, q, t R:
-        ep[1] - a[1] = (1 + t) * ux + 2 * t * vx,
-        ep[2] - a[2] = (1 + t) * uy + 2 * t * vy,
-        ux^2 + uy^2 = q,
-        vx^2 + vy^2 = q,
+        ep[1] - a[1] = (1 + t) * ux + 2 * t * vx
+        ep[2] - a[2] = (1 + t) * uy + 2 * t * vy
+        ux^2 + uy^2 = q
+        vx^2 + vy^2 = q
         ux * vx + uy * vy = -q / 2
         =>:
             geo::distance_sq(a, ep) = q * (3 * t^2 + 1)
@@ -626,10 +626,10 @@ thm problem_233_ep_distance_bridge:
 
 thm problem_233_f_distance_bridge:
     ? forall a, f cart(R, R), ux, uy, vx, vy, q, y R:
-        f[1] - a[1] = 2 * y * ux + (1 + y) * vx,
-        f[2] - a[2] = 2 * y * uy + (1 + y) * vy,
-        ux^2 + uy^2 = q,
-        vx^2 + vy^2 = q,
+        f[1] - a[1] = 2 * y * ux + (1 + y) * vx
+        f[2] - a[2] = 2 * y * uy + (1 + y) * vy
+        ux^2 + uy^2 = q
+        vx^2 + vy^2 = q
         ux * vx + uy * vy = -q / 2
         =>:
             geo::distance_sq(a, f) = q * (3 * y^2 + 1)
@@ -647,12 +647,12 @@ thm problem_233_f_distance_bridge:
 
 thm problem_233_dot_distance_bridge:
     ? forall a, ep, f cart(R, R), ux, uy, vx, vy, q, t, y R:
-        ep[1] - a[1] = (1 + t) * ux + 2 * t * vx,
-        ep[2] - a[2] = (1 + t) * uy + 2 * t * vy,
-        f[1] - a[1] = 2 * y * ux + (1 + y) * vx,
-        f[2] - a[2] = 2 * y * uy + (1 + y) * vy,
-        ux^2 + uy^2 = q,
-        vx^2 + vy^2 = q,
+        ep[1] - a[1] = (1 + t) * ux + 2 * t * vx
+        ep[2] - a[2] = (1 + t) * uy + 2 * t * vy
+        f[1] - a[1] = 2 * y * ux + (1 + y) * vx
+        f[2] - a[2] = 2 * y * uy + (1 + y) * vy
+        ux^2 + uy^2 = q
+        vx^2 + vy^2 = q
         ux * vx + uy * vy = -q / 2
         =>:
             geo::dot(geo::vec(a, ep), geo::vec(a, f)) = q * (3 * t * y + 3 * t + 3 * y - 1) / 2
@@ -673,17 +673,17 @@ thm problem_233_dot_distance_bridge:
 thm problem_233_length_sum:
     ? forall a, b, c, d, ep, f cart(R, R):
         # 原题条件：AB = AD。
-        $geo::are_segments_congruent(a, b, a, d),
+        $geo::are_segments_congruent(a, b, a, d)
         # 原题条件：∠BAD = 120°。
-        $geo::are_angles_congruent(b, a, d, (1, 0), (0, 0), (-1 / 2, sqrt(3) / 2)),
+        $geo::are_angles_congruent(b, a, d, (1, 0), (0, 0), (-1 / 2, sqrt(3) / 2))
         # 原题条件：∠ABC = 90°。
-        $geo::is_right_angle(a, b, c),
+        $geo::is_right_angle(a, b, c)
         # 原题条件：∠ADC = 90°。
-        $geo::is_right_angle(a, d, c),
+        $geo::is_right_angle(a, d, c)
         # 原题条件：E 在线段 BC 上。
-        $geo::is_on_segment(ep, b, c),
+        $geo::is_on_segment(ep, b, c)
         # 原题条件：F 在线段 CD 上。
-        $geo::is_on_segment(f, c, d),
+        $geo::is_on_segment(f, c, d)
         # 原题条件：∠EAF = 60°。
         $geo::are_angles_congruent(ep, a, f, (1, 0), (0, 0), (1 / 2, sqrt(3) / 2))
         =>:

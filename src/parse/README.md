@@ -348,14 +348,14 @@ fact ::= forall | exist | exist! | not … | qf
 |---|---|
 | compare | `1 = 1`, `x > 0`, `a != b` |
 | chain (positive) | `1 < 2 < 3` |
-| infix `$` | `x $in R`, `A $subset B`, `A $superset B` |
-| prefix `$` | `$above_zero(1)`, `$is_set(S)`, `$is_finite_set(S)` |
+| infix `$` | `x $in R`, `A $subset B`, `A $superset B`, `A $proper_subset B` |
+| prefix `$` | `$above_zero(1)`, `$is_set(S)`, `$is_finite_set(S)`, `$proper_subset(A,B)` |
 | `and` / `or` | `x > 0 and x < 1` / `… or …` |
 | `not` atomic | `not x > 0`, `not $P(a)` |
 
 Builtin `$` atoms with dedicated AST:  
 `=` `!=` `<` `>` `<=` `>=` `$in` `$subset` `$superset` `$is_set` `$is_nonempty_set` `$is_finite_set` `$is_cart` `$is_tuple`  
-(and their `not …` forms). Other `$names` → normal atomic (e.g. `$proper_subset(A,B)`).
+(and their `not …` forms). Other `$names` → normal atomic (e.g. `$proper_subset`); binary normal atomics may also be written infix (`A $proper_subset B`).
 
 Qualified props: `$Mod::name`, `$Mod:::name`, `$a::b::c` (prefix only, not infix).
 

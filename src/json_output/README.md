@@ -82,8 +82,10 @@ Rules:
   2. `equality_builtin` — every equality variant has its own `rule_id` (fallback
      EN name until dedicated Chinese copy)
   3. `atomic_common` — hot atomic membership/order rules with EN/ZH
-  4. `stmt_why` — `let` / `have` define-obj + coarse compound facts
-  5. remaining stmt kinds still use unsupported stub with localized note
+  4. `stmt_why` + `project_stmt_catalog` — **all** `ExecStmtResult` branches
+     (define-obj / have-fn / prop / struct / trust / by / register / release /
+     claim / sketch / eval / …) get Normal `rule_name`+`message`
+  5. remaining equality Chinese copy still gradual
 - `stores` / `infers` / `cite` / `statement` / `goal` use `readable_string`
   (IR with `#id#` wrappers stripped), not raw IR and not `fact_id`.
 - Cite may include `line` when the cited fact has a source line; omit `line` if unknown.
@@ -134,7 +136,7 @@ Fact success sketch:
 ```json
 {
   "kind": "run",
-  "ok": true,
+  "success": true,
   "target": "eval",
   "path": null,
   "detail": "normal",

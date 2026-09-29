@@ -2,7 +2,7 @@
 //!
 //! B1 boundary: carrier → sign is verify-time only (not eager infer).
 
-use crate::ast::fact::{AtomicFact, InFact, LessFact, NotEqualFact};
+use crate::ast::fact::{AtomicFact, InFact, LessEqualFact, LessFact, NotEqualFact};
 use crate::ast::names::AtomicName;
 use crate::ast::obj::{Literal, Number, Obj, StandardSet};
 use crate::parse::keywords::IN;
@@ -53,6 +53,35 @@ impl Runtime {
             &[StandardSet::QNeg, StandardSet::ZNeg, StandardSet::RNeg],
         )?;
         Some(FromKnownInNegativeStandardSetBuiltinRuleProof { cite_fact_id })
+    }
+
+    // `0 <= x` from known `x $in Q+` / `R+` / `N+`.
+    // Dedicated LessEqual rule (do not share the LessFact proof struct).
+    pub(crate) fn try_less_equal_from_known_in_positive_standard_set(
+        &self,
+        fact: &LessEqualFact,
+    ) -> Option<FactId> {
+        if !is_literal_zero(&fact.left) {
+            return None;
+        }
+        self.known_in_one_of_standard_sets(
+            &fact.right,
+            &[StandardSet::QPos, StandardSet::RPos, StandardSet::NPos],
+        )
+    }
+
+    // `x <= 0` from known `x $in Q-` / `Z-` / `R-`.
+    pub(crate) fn try_less_equal_from_known_in_negative_standard_set(
+        &self,
+        fact: &LessEqualFact,
+    ) -> Option<FactId> {
+        if !is_literal_zero(&fact.right) {
+            return None;
+        }
+        self.known_in_one_of_standard_sets(
+            &fact.left,
+            &[StandardSet::QNeg, StandardSet::ZNeg, StandardSet::RNeg],
+        )
     }
 
     pub(crate) fn try_from_known_in_nonzero_standard_set(
@@ -124,6 +153,8 @@ impl Runtime {
 fn is_literal_zero(obj: &Obj) -> bool {
     matches!(
         obj,
-        Obj::Literal(Literal::Number(Number { normalized_value })) if normalized_value == "0"
+        Obj::Literal(Literal::Number(Number {
+            normalized_value,
+        })) if normalized_value == "0"
     )
 }

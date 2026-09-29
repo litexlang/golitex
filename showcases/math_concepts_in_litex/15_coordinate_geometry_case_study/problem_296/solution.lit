@@ -15,11 +15,11 @@
 thm problem_296_equilateral_altitude_midpoint_distance:
     ? forall pa, pb, pc, pd, pe cart(R, R):
         # △ABC 是等边三角形。
-        $geo::is_equilateral(pa, pb, pc),
+        $geo::is_equilateral(pa, pb, pc)
         # D 在线段 BC 上。
-        $geo::is_on_segment(pd, pb, pc),
+        $geo::is_on_segment(pd, pb, pc)
         # AD ⟂ BC，即 AD 是 BC 边上的高。
-        $geo::is_perpendicular(pa, pd, pb, pc),
+        $geo::is_perpendicular(pa, pd, pb, pc)
         # E 是 AC 的中点。
         $geo::is_midpoint(pe, pa, pc)
         =>:

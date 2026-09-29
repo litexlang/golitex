@@ -49,5 +49,5 @@ target/release/litex -compact -runner -f showcases/math_concepts_in_litex/1_midd
 target/release/litex -compact -runner -r showcases/math_concepts_in_litex/1_middle_school_math_in_nutshell
 ```
 
-Both commands returned exit code `0` with top-level runner `ok: true` on
+Both commands returned exit code `0` with top-level runner `success: true` on
 2026-08-24. The module contains no direct `trust` or local `axiom`.

@@ -18,11 +18,11 @@
 thm problem_639_perpendicular_bisector:
     ? forall a, b, o, p cart(R, R):
         # 原题隐含的非退化条件：A、B 是不同点。
-        a != b,
+        a != b
 
         # 原题条件1：O 是 AB 的中点（两个坐标等式共同表达）。
-        2 * o[1] = a[1] + b[1],
-        2 * o[2] = a[2] + b[2],
+        2 * o[1] = a[1] + b[1]
+        2 * o[2] = a[2] + b[2]
 
         # 原题条件2：P 在直线 l 上；结合“l 过 O 且 l⊥AB”，消元为 PO⊥AB。
         # 即 vec(P,O)·vec(A,B)=0 的坐标展开式。

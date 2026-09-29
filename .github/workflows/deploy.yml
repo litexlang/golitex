@@ -228,7 +228,7 @@ jobs:
             printf '%s\n' "${OUTPUT}"
             exit 1
           fi
-          if ! printf '%s\n' "${OUTPUT}" | grep -F '"ok": true' > /dev/null; then
+          if ! printf '%s\n' "${OUTPUT}" | grep -F '"success": true' > /dev/null; then
             printf '%s\n' "${OUTPUT}"
             exit 1
           fi
@@ -418,7 +418,7 @@ jobs:
 
             test do
               version_output = shell_output("#{bin}/litex -version")
-              assert_match '"ok": true', version_output
+              assert_match '"success": true', version_output
               assert_match %Q{"version": "#{version}"}, version_output
               (testpath/"test.lit").write "import std basics\nquot(-7, 3) = -3\n$dvd(12, 3)\n"
               output = shell_output("#{bin}/litex -isolated -f #{testpath}/test.lit")
@@ -567,7 +567,7 @@ jobs:
             printf '%s\n' "${OUTPUT}"
             exit 1
           fi
-          if ! printf '%s\n' "${OUTPUT}" | grep -F '"ok": true' > /dev/null; then
+          if ! printf '%s\n' "${OUTPUT}" | grep -F '"success": true' > /dev/null; then
             printf '%s\n' "${OUTPUT}"
             exit 1
           fi
@@ -618,7 +618,7 @@ jobs:
               printf '%s\n' "${OUTPUT}"
               exit 1
             fi
-            if ! printf '%s\n' "${OUTPUT}" | grep -F '"ok": true' > /dev/null; then
+            if ! printf '%s\n' "${OUTPUT}" | grep -F '"success": true' > /dev/null; then
               printf '%s\n' "${OUTPUT}"
               exit 1
             fi
