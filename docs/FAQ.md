@@ -17,8 +17,9 @@ translations remain visible and available for reuse. Treat a feature or proof
 as complete only when its current tests, dated status, explicit `trust`
 boundary, and known limitations support that claim.
 
-Litex source stays the same across natural languages. Current CLI output is
-English Normal JSON / short status text; see [`docs/cli.md`](cli.md).
+Litex source stays the same across natural languages. Batch Normal JSON carries
+a `"language": "en"|"zh"` field from `-lang` (default `en`); statement labels
+are still English until localized catalogs land. See [`docs/cli.md`](cli.md).
 
 ## Why is Litex called Litex?
 
@@ -34,9 +35,9 @@ Litex is inspired by LaTeX's practical design for writing mathematics.
 
 ## Does Litex support multiple output languages?
 
-The Litex source language is shared. The current CLI prints English Normal JSON
-for batch runs and short English status lines in the REPL. Localized CLI labels
-are not part of the present command surface; see [`docs/cli.md`](cli.md).
+The Litex source language is shared. Batch Normal JSON includes
+`"language": "en"|"zh"` from `-lang` (default English). Localized statement
+labels are not wired yet; see [`docs/cli.md`](cli.md).
 
 ## How is Litex invented?
 

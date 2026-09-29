@@ -107,11 +107,15 @@ Fact success sketch:
   "target": "eval",
   "path": null,
   "detail": "normal",
+  "language": "en",
   "statement_results": [ /* Normal or Detailed stmt objects */ ],
   "session_error": null
 }
 ```
 
+`language` is `en` or `zh` from `-lang` (default `en`). Statement label text is
+still English in this wiring pass; the field selects which catalog future
+projections will use.
 ## API
 
 - `project_stmt_normal` / `project_run_normal` / `emit_run_normal`

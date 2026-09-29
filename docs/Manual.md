@@ -2519,11 +2519,9 @@ have fn sqrt_two_newton_iterate(n N) R+ by induc n from 0:
     case n > 0: newton_sqrt_two(sqrt_two_newton_iterate(n - 1))
 
 # The proved iteration stays positive and never uses this zero restart.
-# [-extract]
 have fn newton_sqrt_two_step(x R) R by cases:
     case x = 0: 1
     case x != 0: (x + 2 / x) / 2
-# [end of -extract]
 
 claim:
     ? forall x R+:
@@ -2531,7 +2529,7 @@ claim:
     newton_sqrt_two_step(x) = (x + 2 / x) / 2 = newton_sqrt_two(x)
 
 # [-extract]
-have algo for newton_sqrt_two_step(x):
+algo newton_sqrt_two_step(x R) R by cases:
     case x = 0: 1
     case x != 0: (x + 2 / x) / 2
 # [end of -extract]

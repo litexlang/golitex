@@ -2,7 +2,7 @@
 
 use crate::ast::obj::{Number, Obj, ArithmeticOperator, Literal};
 use crate::execute::ExecStmtResult;
-use crate::launch_command::LaunchCommand;
+use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
@@ -11,6 +11,7 @@ fn runtime_with_file_env() -> Runtime {
         code: String::new(),
         session: false,
         strict: false,
+        language: OutputLanguage::English,
     })
 }
 
@@ -1557,7 +1558,7 @@ fn fn_obj_application_requires_in_function_set() {
     assert!(
         runtime
             .top_exec_env()
-            .special_object_properties
+            .special_object_properties_by_def
             .values()
             .flatten()
             .any(|p| matches!(p, SpecialObjectPropertyByDefinition::InFunctionSet(_))),
@@ -1690,7 +1691,7 @@ fn have_fn_equal_and_by_exist_slice1() {
     assert!(
         runtime
             .top_exec_env()
-            .special_object_properties
+            .special_object_properties_by_def
             .values()
             .flatten()
             .any(|p| matches!(p, SpecialObjectPropertyByDefinition::InFunctionSet(_))),
@@ -1744,7 +1745,7 @@ fn have_fn_by_cases_slice2() {
     assert!(
         runtime
             .top_exec_env()
-            .special_object_properties
+            .special_object_properties_by_def
             .values()
             .flatten()
             .any(|p| matches!(p, SpecialObjectPropertyByDefinition::InFunctionSet(_))),
@@ -1799,7 +1800,7 @@ fn have_fn_by_exist_stores_membership_and_properties() {
 
     let props_ok = runtime
         .top_exec_env()
-        .special_object_properties
+        .special_object_properties_by_def
         .values()
         .flatten()
         .any(|p| matches!(p, SpecialObjectPropertyByDefinition::InFunctionSet(_)));
@@ -2212,6 +2213,7 @@ fn cart_membership_literal_tuple_succeeds_via_run_eval() {
         code: "(1, 2) $in cart(R, Z)".to_string(),
         session: false,
         strict: false,
+        language: OutputLanguage::English,
     };
     let result = run_eval(cmd).expect("run_eval");
     assert!(
@@ -2948,7 +2950,7 @@ fn trust_in_fn_set_registers_in_function_set_for_application_wd() {
     assert!(
         runtime
             .top_exec_env()
-            .special_object_properties
+            .special_object_properties_by_def
             .values()
             .flatten()
             .any(|p| matches!(p, SpecialObjectPropertyByDefinition::InFunctionSet(_))),

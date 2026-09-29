@@ -435,7 +435,7 @@ impl Runtime {
         let mut out = Vec::new();
         for env in self.execution_environments_stack.iter().rev() {
             for key in &keys {
-                let Some(props) = env.special_object_properties.get(key) else {
+                let Some(props) = env.special_object_properties_by_def.get(key) else {
                     continue;
                 };
                 for prop in props {

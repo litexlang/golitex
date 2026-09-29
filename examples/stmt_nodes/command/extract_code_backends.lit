@@ -15,9 +15,9 @@ have a R = 1
 a + 1 = 2
 
 # [-extract]
-have fn increment(x R) R = x + 1
-have algo for increment(x):
-    x + 1
+algo step(x R) R by cases:
+    case x = 0: 1
+    case x != 0: x + 1
 # [end of -extract]
 
 # Current behavior:

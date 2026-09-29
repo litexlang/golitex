@@ -152,7 +152,7 @@ pub fn try_hit_import_cache(
 
 // Turn one remapped export into a finished-export ExecEnv ready for
 // `record_imported_export`. Facts/WD stay empty (definitions-only MVP);
-// session_view carries remapped enter/leave watermarks.
+// session_view carries remapped enter/leave watermarks for KB.
 pub fn exec_env_from_mounted_export(export: &MountedExport, global_mod_id: usize) -> ExecEnv {
     let mut view = ExecEnvSessionView::new(
         global_ids_from_snapshot(&export.global_ids_at_enter),

@@ -17,9 +17,7 @@ use super::maybe_index_known_closed_numeric_equal;
 use crate::ast::fact::ExistShapedFact;
 use crate::ast::fact::{AtomicFact, Fact};
 use crate::ast::names::PlainName;
-use crate::parse::keywords::{
-    ABSTRACT_PROP, ALGO, AXIOM, PROP, STRATEGY, STRUCT, TEMPLATE, THM,
-};
+use crate::parse::keywords::{ABSTRACT_PROP, ALGO, AXIOM, PROP, STRATEGY, STRUCT, TEMPLATE, THM};
 use crate::runtime::{FactId, RuntimeError, RuntimeResult};
 use std::collections::HashMap;
 
@@ -139,15 +137,24 @@ fn merge_facts_from(parent: &mut ExecEnv, child: &ExecEnv) -> RuntimeResult<()> 
                 parent.facts.record_fact(fact_id, fact.clone());
             }
             Fact::ExistFact(plain) => {
-                parent.facts.known_exist.store(&ExistShapedFact::Exist(plain.clone()));
+                parent
+                    .facts
+                    .known_exist
+                    .store(&ExistShapedFact::Exist(plain.clone()));
                 parent.facts.record_fact(fact_id, fact.clone());
             }
             Fact::ExistUniqueFact(plain) => {
-                parent.facts.known_exist.store(&ExistShapedFact::ExistUnique(plain.clone()));
+                parent
+                    .facts
+                    .known_exist
+                    .store(&ExistShapedFact::ExistUnique(plain.clone()));
                 parent.facts.record_fact(fact_id, fact.clone());
             }
             Fact::NotExistFact(plain) => {
-                parent.facts.known_exist.store(&ExistShapedFact::NotExist(plain.clone()));
+                parent
+                    .facts
+                    .known_exist
+                    .store(&ExistShapedFact::NotExist(plain.clone()));
                 parent.facts.record_fact(fact_id, fact.clone());
             }
             _ => {
@@ -162,8 +169,7 @@ fn merge_facts_from(parent: &mut ExecEnv, child: &ExecEnv) -> RuntimeResult<()> 
 
 fn index_atomic_except_equality(parent: &mut ExecEnv, atomic_fact: &AtomicFact) {
     let key = atomic_fact.prop_name();
-    let positive_polarity =
-        crate::ast::fact::atomic_fact_has_positive_polarity(atomic_fact);
+    let positive_polarity = crate::ast::fact::atomic_fact_has_positive_polarity(atomic_fact);
     parent.facts.known_atomic_except_equality_facts.store(
         key,
         positive_polarity,
@@ -197,9 +203,9 @@ fn merge_well_defined_objects_from(parent: &mut ExecEnv, child: &ExecEnv) -> Run
 }
 
 fn merge_special_object_properties_from(parent: &mut ExecEnv, child: &ExecEnv) {
-    for (key, values) in child.special_object_properties.iter() {
+    for (key, values) in child.special_object_properties_by_def.iter() {
         parent
-            .special_object_properties
+            .special_object_properties_by_def
             .entry(key.clone())
             .or_default()
             .extend(values.iter().cloned());

@@ -1604,16 +1604,12 @@ Litex 还在做另一条实验性编译路线：把（部分）已验证的证�
 ```litex
 have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2
 
-have fn newton_sqrt_two_step(x R) R by cases:
-    case x = 0: 1
-    case x != 0: (x + 2 / x) / 2
-
 claim:
     ? forall x R+:
         newton_sqrt_two_step(x) = newton_sqrt_two(x)
     newton_sqrt_two_step(x) = (x + 2 / x) / 2 = newton_sqrt_two(x)
 
-have algo for newton_sqrt_two_step(x):
+algo newton_sqrt_two_step(x R) R by cases:
     case x = 0: 1
     case x != 0: (x + 2 / x) / 2
 ```

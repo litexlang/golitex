@@ -7,7 +7,7 @@
 //! member bounds, union card, and surjection card.
 
 use crate::execute::ExecStmtResult;
-use crate::launch_command::LaunchCommand;
+use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
@@ -16,6 +16,7 @@ fn runtime_with_file_env() -> Runtime {
         code: String::new(),
         session: false,
         strict: false,
+        language: OutputLanguage::English,
     })
 }
 

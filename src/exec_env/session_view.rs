@@ -1,12 +1,11 @@
-//! Session snapshot for a file-level ExecEnv (parse/exec stack index 0).
+//! Session snapshot for litex_knowledge_base watermarks.
 
 use crate::runtime::{CodeSource, GlobalIds};
 
-/// Frozen view of the live Runtime session when a **file-level** ExecEnv opens.
+/// Records GlobalIds (and CodeSource) when Runtime opens this file-level ExecEnv.
 ///
-/// Nested / statement-local ExecEnvs leave `ExecEnv.session_view = None` —
-/// they inherit the file env's publication and id range context.
-/// Merge never copies this.
+/// Nested / statement-local ExecEnvs leave `ExecEnv.session_view = None`.
+/// Merge never copies this. Leave watermark is stamped when the file finishes.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ExecEnvSessionView {
     pub global_ids_at_enter: GlobalIds,

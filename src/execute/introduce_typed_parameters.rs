@@ -286,7 +286,7 @@ impl Runtime {
         fact_id: FactId,
     ) {
         self.top_exec_env_mut()
-            .special_object_properties
+            .special_object_properties_by_def
             .entry(element.ir())
             .or_default()
             .push(SpecialObjectPropertyByDefinition::DefinedAsStruct((
@@ -303,7 +303,7 @@ impl Runtime {
         fact_id: FactId,
     ) {
         self.top_exec_env_mut()
-            .special_object_properties
+            .special_object_properties_by_def
             .entry(element.ir())
             .or_default()
             .push(SpecialObjectPropertyByDefinition::InFunctionSet((
@@ -319,7 +319,7 @@ impl Runtime {
         fact_id: FactId,
     ) {
         self.top_exec_env_mut()
-            .special_object_properties
+            .special_object_properties_by_def
             .entry(element.ir())
             .or_default()
             .push(SpecialObjectPropertyByDefinition::EqualToFunction((
@@ -339,7 +339,7 @@ impl Runtime {
         fact_id: FactId,
     ) {
         self.top_exec_env_mut()
-            .special_object_properties
+            .special_object_properties_by_def
             .entry(element.ir())
             .or_default()
             .push(SpecialObjectPropertyByDefinition::DefinedAsFiniteSeq((
@@ -355,7 +355,7 @@ impl Runtime {
         fact_id: FactId,
     ) {
         self.top_exec_env_mut()
-            .special_object_properties
+            .special_object_properties_by_def
             .entry(element.ir())
             .or_default()
             .push(SpecialObjectPropertyByDefinition::DefinedAsSeqSet((
