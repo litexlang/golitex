@@ -66,9 +66,12 @@ fn normal_json_have_natural_then_nonnegative_by_builtin() {
     );
     assert_eq!(
         why.get("rule_name").and_then(|v| v.as_str().ok()),
-        Some("FromKnownInNatural")
+        Some("From known in N")
     );
-    assert!(why.get("message").and_then(|v| v.as_str().ok()).is_some());
+    assert_eq!(
+        why.get("message").and_then(|v| v.as_str().ok()),
+        Some("The goal follows from a known natural-number membership")
+    );
     assert!(why.get("rule").is_none(), "Normal JSON must not print rule_id");
     let cite = why.get("cite").and_then(|v| v.as_str().ok()).unwrap_or("");
     assert_eq!(cite, "k $in N");
@@ -142,6 +145,25 @@ fn normal_json_list_set_have_infers_or() {
             t.contains("or") && t.contains("=")
         }),
         "have a {{1,2}} should infer or-equalities: {json:?}"
+    );
+}
+
+#[test]
+fn normal_json_let_obj_define_why() {
+    let mut runtime = runtime_with_file_env();
+    let stmt = exec_one(&mut runtime, "let a = 1");
+    let json = project_stmt_normal(&stmt, &runtime);
+    assert_eq!(object_field(&json, "success"), &JsonValue::Bool(true));
+    let why = object_field(&json, "why_verified")
+        .as_object()
+        .expect("why_verified");
+    assert_eq!(
+        why.get("type").and_then(|v| v.as_str().ok()),
+        Some("define_obj")
+    );
+    assert_eq!(
+        why.get("rule_name").and_then(|v| v.as_str().ok()),
+        Some("Let binding")
     );
 }
 

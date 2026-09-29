@@ -1701,7 +1701,7 @@ Litex 作者花了约两年时间，几乎天天从早到晚、完全志愿地�
 ### 特别感谢
 
 Litex 由沈嘉辰与 Litex 团队创建和维护。特别感谢 Wei Lin、Siqi Sun、
-Peng Sun、Chenxuan Huang、Yan Lu、Sheng Xu、Keyao Zhu、Xingjian Ma
+Peng Sun、Chenxuan Huang、Yan Lu、Sheng Xu、Keyao Zhu
 和 Zhaoxuan Hong 对项目给予的支持与建议。
 
 ### 相关链接
