@@ -1,8 +1,9 @@
-//! `witness $is_nonempty_set(S) from o` — prove nonemptiness by a concrete member.
+//! `witness $is_nonempty_set(S) from o [:]` — prove nonemptiness by a concrete member.
 //!
 //! Mathematical contract:
 //! - WD(o), WD(S);
-//! - verify `o $in S`;
+//! - optional local proof body (full Stmt);
+//! - verify `o $in S` in that local env;
 //! - store `IsNonemptySetFact(S)`.
 //! No FnSet/codomain shortcut (legacy weirdness deliberately omitted).
 //!
@@ -12,9 +13,12 @@
 
 use crate::ast::fact::{AtomicFact, Fact, InFact, IsNonemptySetFact};
 use crate::ast::stmt::WitnessNonemptySet;
+use crate::exec_env::exec_env::ExecEnv;
+use crate::execute::exec_stmt_result::ExecStmtResult;
 use crate::execute::execute_fact_stmt::{
     VerifyFactResult, VerifyObjWellDefinedResult, VerifyState,
 };
+use crate::execute::execute_proof_block_stmt::{run_proof_body_stmts, ProofBlockBodyFailed};
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::StoreFactAndInferResult;
 
@@ -32,19 +36,23 @@ impl ExecWitnessNonemptySetStmtResult {
 pub enum ExecWitnessNonemptySetStmtFailed {
     ObjWd(VerifyObjWellDefinedResult),
     SetWd(VerifyObjWellDefinedResult),
+    ProofBody(ProofBlockBodyFailed),
     Membership(VerifyFactResult),
 }
 
+// Stage order: obj WD → set WD → proof_steps → membership → local_env → store.
 pub struct ExecWitnessNonemptySetStmtSuccessResult {
     pub statement: WitnessNonemptySet,
     pub obj_well_defined: VerifyObjWellDefinedResult,
     pub set_well_defined: VerifyObjWellDefinedResult,
+    pub proof_steps: Vec<ExecStmtResult>,
     pub membership_check: VerifyFactResult,
+    pub local_env: Box<ExecEnv>,
     pub store_and_infer_result: StoreFactAndInferResult,
 }
 
 impl Runtime {
-    // Pipeline: WD(o) → WD(S) → verify `o $in S` → store `$is_nonempty_set(S)`.
+    // Pipeline: WD(o) → WD(S) → local(proof → `o $in S`) → store `$is_nonempty_set(S)`.
     pub(in crate::execute) fn exec_witness_nonempty_set(
         &mut self,
         stmt: &WitnessNonemptySet,
@@ -77,12 +85,29 @@ impl Runtime {
             set: stmt.set.clone(),
             line_file: Some(stmt.line_file.clone()),
         }));
-        let membership_check = self.verify_fact(&membership_fact, verify_state)?;
-        if membership_check.is_failed() {
-            return Ok(ExecWitnessNonemptySetStmtResult::Failed(
-                ExecWitnessNonemptySetStmtFailed::Membership(membership_check),
-            ));
-        }
+
+        let (local_outcome, local_env) = self.run_in_local_env_and_take_env(|rt| {
+            let proof_steps = match run_proof_body_stmts(rt, &stmt.proof)? {
+                Ok(steps) => steps,
+                Err(failed) => {
+                    return Ok(Err(ExecWitnessNonemptySetStmtFailed::ProofBody(failed)));
+                }
+            };
+            let membership_check = rt.verify_fact(&membership_fact, verify_state.clone())?;
+            if membership_check.is_failed() {
+                return Ok(Err(ExecWitnessNonemptySetStmtFailed::Membership(
+                    membership_check,
+                )));
+            }
+            Ok(Ok((proof_steps, membership_check)))
+        })?;
+
+        let (proof_steps, membership_check) = match local_outcome {
+            Ok(v) => v,
+            Err(failed) => {
+                return Ok(ExecWitnessNonemptySetStmtResult::Failed(failed));
+            }
+        };
 
         let nonempty_fact = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact {
             fact_id: self.global_ids.allocate_fact_id(),
@@ -96,7 +121,9 @@ impl Runtime {
                 statement: stmt.clone(),
                 obj_well_defined,
                 set_well_defined,
+                proof_steps,
                 membership_check,
+                local_env,
                 store_and_infer_result,
             },
         ))

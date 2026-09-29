@@ -263,9 +263,13 @@ witness exist x R st {x = 0} from 0
 witness exist! x R st {x = 0} from 0
 witness $is_nonempty_set(S) from e
 witness $P(…) from a, b
+witness exist u R st {0 < u, u < 1} from 1 / 2:
+    0 < 1 / 2
+    1 / 2 < 1
 ```
 
-No indented body. Tracers: `witness/*.lit`
+Optional trailing `:` + indented proof body (full Stmt). Flat header means empty proof.
+Tracers: `witness/*.lit`
 
 ### `eval`
 
@@ -500,7 +504,7 @@ Authoring tip for `-` / `^`: prefer `-(t^2)`, `(-t)^2`, `t^(-1)` over ambiguous 
 | `$in` / `$subset` / `$superset` inside compare chains | use separate atomics |
 | nested `forall` in then / exist-or-and positions | lift or reshape |
 | `by def` on a negative atomic | positive atomics only |
-| `witness` / `obtain` with indented body | flat header only |
+| `obtain` with indented body | flat header only |
 | `$fn_eq` / `$fn_eq_in` | removed |
 
 ---

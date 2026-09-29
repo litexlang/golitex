@@ -130,7 +130,8 @@ pub use execute_witness_stmt::{
     ExecWitnessAtomicFactStmtSuccessResult, ExecWitnessExistFactStmtFailed,
     ExecWitnessExistFactStmtResult, ExecWitnessExistFactStmtSuccessResult,
     ExecWitnessNonemptySetStmtFailed, ExecWitnessNonemptySetStmtResult,
-    ExecWitnessNonemptySetStmtSuccessResult, ExecWitnessStmtResult, WitnessExistCheckSuccess,
+    ExecWitnessNonemptySetStmtSuccessResult, ExecWitnessStmtResult, WitnessExistAmbientSuccess,
+    WitnessExistObligationSuccess,
 };
 pub use introduce_typed_parameters::{
     IntroduceTypedParametersFailed, IntroduceTypedParametersResult, SharedHaveDefinition,

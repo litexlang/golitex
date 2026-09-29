@@ -822,43 +822,46 @@ pub struct RegisterReflexivePropStmt {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum WitnessStmt {
     // Exist-shaped fact by exhibiting witnesses.
-    // Example: `witness exist x R st {x = 0} from 0:`.
+    // Example: `witness exist x R st {x = 0} from 0` or `… from 0:` with proof body.
     WitnessExistFact(WitnessExistFact),
     // `$P(…)` when its concrete def is a single positive exist clause.
-    // Example: `witness $P(…) from a:`.
+    // Example: `witness $P(…) from a` or `… from a:` with proof body.
     WitnessAtomicFact(WitnessAtomicFact),
     // Nonemptiness by exhibiting a member.
-    // Example: `witness $is_nonempty_set(S) from e:`.
+    // Example: `witness $is_nonempty_set(S) from e` or `… from e:` with proof body.
     WitnessNonemptySet(WitnessNonemptySet),
 }
 
 // What: introduce an exist-shaped fact by exhibiting witnesses.
-// Surface: `witness exist … from a, b:` …
-// Stores: the exist / exist! fact (binder names stay local).
+// Surface: `witness exist … from a, b` or `… from a, b:` + local proof body.
+// Stores: the exist / exist! fact (binder names stay local; helpers stay in local_env).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WitnessExistFact {
     pub equal_tos: Vec<Obj>,
     pub exist_shaped_fact_in_witness: ExistShapedFact,
+    pub proof: Vec<Stmt>,
     pub line_file: SourceLine,
 }
 
 // What: prove `$P(…)` when its concrete def is a single positive exist clause.
-// Surface: `witness $P(…) from a:` …
+// Surface: `witness $P(…) from a` or `… from a:` + local proof body.
 // Stores: `$P(…)` then ordinary definition inference.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WitnessAtomicFact {
     pub atomic_fact: NormalAtomicFact,
     pub witnesses: Vec<Obj>,
+    pub proof: Vec<Stmt>,
     pub line_file: SourceLine,
 }
 
 // What: prove a set is nonempty by exhibiting a member.
-// Surface: `witness $is_nonempty_set(S) from e:` …
+// Surface: `witness $is_nonempty_set(S) from e` or `… from e:` + local proof body.
 // Stores: nonemptiness of `S`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WitnessNonemptySet {
     pub obj: Obj,
     pub set: Obj,
+    pub proof: Vec<Stmt>,
     pub line_file: SourceLine,
 }
 

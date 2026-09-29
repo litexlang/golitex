@@ -1031,13 +1031,14 @@ impl ReleaseThmStmt {
 impl WitnessExistFact {
     pub fn ir(&self) -> StmtIR {
         let equal_tos: Vec<_> = self.equal_tos.iter().map(|o| o.ir()).collect();
-        StmtIR(format!(
+        let header = format!(
             "{} {} {} {}",
             WITNESS,
             self.exist_shaped_fact_in_witness.ir(),
             FROM,
             equal_tos.join(", ")
-        ))
+        );
+        witness_ir_with_optional_proof(&header, &self.proof)
     }
     impl_display_pair!();
 }
@@ -1045,20 +1046,21 @@ impl WitnessExistFact {
 impl WitnessAtomicFact {
     pub fn ir(&self) -> StmtIR {
         let witnesses: Vec<_> = self.witnesses.iter().map(|o| o.ir()).collect();
-        StmtIR(format!(
+        let header = format!(
             "{} {} {} {}",
             WITNESS,
             self.atomic_fact.ir(),
             FROM,
             witnesses.join(", ")
-        ))
+        );
+        witness_ir_with_optional_proof(&header, &self.proof)
     }
     impl_display_pair!();
 }
 
 impl WitnessNonemptySet {
     pub fn ir(&self) -> StmtIR {
-        StmtIR(format!(
+        let header = format!(
             "{} {}{}({}) {} {}",
             WITNESS,
             FACT_PREFIX,
@@ -1066,9 +1068,25 @@ impl WitnessNonemptySet {
             self.set.ir(),
             FROM,
             self.obj.ir()
-        ))
+        );
+        witness_ir_with_optional_proof(&header, &self.proof)
     }
     impl_display_pair!();
+}
+
+fn witness_ir_with_optional_proof(header: &str, proof: &[Stmt]) -> StmtIR {
+    if proof.is_empty() {
+        return StmtIR(header.to_string());
+    }
+    let body = proof
+        .iter()
+        .map(|s| s.ir())
+        .collect::<Vec<_>>()
+        .join(
+            "
+",
+        );
+    StmtIR(format!("{}{}\n{}", header, COLON, indent!(&body, 1)))
 }
 
 impl ByCasesStmt {

@@ -1,11 +1,14 @@
 # Stmt: Witness.WitnessAtomicFact → exec_witness_stmt / exec_witness_atomic_fact
 # Run: litex -f examples/stmt_nodes/witness/witness_atomic_fact.lit
 #
-# Concrete prop with sole ordinary `exist` clause. No indented proof body;
-# ambient obligations must already hold (`2 = 2` is builtin).
+# Concrete prop with sole ordinary `exist` clause. Flat or with local proof body.
 
 prop has_copy(a R):
     exist x R st {x = a}
 
 witness $has_copy(2) from 2
 $has_copy(2)
+
+witness $has_copy(3) from 3:
+    3 = 3
+$has_copy(3)

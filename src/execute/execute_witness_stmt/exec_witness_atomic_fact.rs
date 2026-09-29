@@ -1,11 +1,12 @@
-//! `witness $P(args) from ws…` — introduce `$P` via its sole ordinary `exist` clause.
+//! `witness $P(args) from ws… [:]` — introduce `$P` via its sole ordinary `exist` clause.
 //!
 //! Mathematical contract:
 //! - resolve concrete prop (reject abstract_prop / missing);
 //! - sole definition clause must be ordinary `exist` (reject `exist!` / `not exist` /
 //!   multi-clause / non-exist);
 //! - instantiate clause with call args;
-//! - run the same exist-witness obligation checks as `witness exist` (no store of exist);
+//! - run the same exist-witness ambient + local proof + obligation checks as `witness exist`
+//!   (no store of exist);
 //! - store `$P` via `store_fact_and_infer` (definition inference may expose the exist).
 //!
 //! Example:
@@ -21,11 +22,14 @@ use crate::ast::fact::{
 };
 use crate::ast::obj::Obj;
 use crate::ast::stmt::WitnessAtomicFact;
-use super::exec_witness_exist_fact::{
-    ExecWitnessExistFactStmtFailed, WitnessExistCheckSuccess,
-};
+use crate::exec_env::exec_env::ExecEnv;
+use crate::execute::exec_stmt_result::ExecStmtResult;
 use crate::runtime::{IdentifierId, Runtime, RuntimeResult};
 use crate::store_fact_and_infer::StoreFactAndInferResult;
+
+use super::exec_witness_exist_fact::{
+    ExecWitnessExistFactStmtFailed, WitnessExistAmbientSuccess, WitnessExistObligationSuccess,
+};
 
 pub enum ExecWitnessAtomicFactStmtResult {
     Success(ExecWitnessAtomicFactStmtSuccessResult),
@@ -46,16 +50,20 @@ pub enum ExecWitnessAtomicFactStmtFailed {
     ExistCheck(ExecWitnessExistFactStmtFailed),
 }
 
+// Stage order: projected_exist → ambient → proof_steps → obligations → local_env → store.
 pub struct ExecWitnessAtomicFactStmtSuccessResult {
     pub statement: WitnessAtomicFact,
     pub projected_exist: ExistShapedFact,
-    pub exist_check: WitnessExistCheckSuccess,
+    pub ambient: WitnessExistAmbientSuccess,
+    pub proof_steps: Vec<ExecStmtResult>,
+    pub obligations: WitnessExistObligationSuccess,
+    pub local_env: Box<ExecEnv>,
     pub store_and_infer_result: StoreFactAndInferResult,
 }
 
 impl Runtime {
     // Pipeline: resolve prop → project sole ordinary exist → inst with call args
-    // → exist-witness checks (no store) → store `$P`.
+    // → ambient WD + local proof + obligations (no store of exist) → store `$P`.
     pub(in crate::execute) fn exec_witness_atomic_fact(
         &mut self,
         stmt: &WitnessAtomicFact,
@@ -117,9 +125,13 @@ impl Runtime {
             }
         };
 
-        let exist_check =
-            match self.check_witness_exist_obligations(&projected_exist, &stmt.witnesses)? {
-                Ok(check) => check,
+        let (ambient, proof_steps, obligations, local_env) =
+            match self.run_witness_exist_with_proof(
+                &projected_exist,
+                &stmt.witnesses,
+                &stmt.proof,
+            )? {
+                Ok(v) => v,
                 Err(failed) => {
                     return Ok(ExecWitnessAtomicFactStmtResult::Failed(
                         ExecWitnessAtomicFactStmtFailed::ExistCheck(failed),
@@ -135,7 +147,10 @@ impl Runtime {
             ExecWitnessAtomicFactStmtSuccessResult {
                 statement: stmt.clone(),
                 projected_exist,
-                exist_check,
+                ambient,
+                proof_steps,
+                obligations,
+                local_env,
                 store_and_infer_result,
             },
         ))

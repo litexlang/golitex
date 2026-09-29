@@ -1086,6 +1086,22 @@ fn witness_exist_succeeds_without_local_proof_body() {
 }
 
 #[test]
+fn witness_exist_succeeds_with_local_proof_body() {
+    let mut runtime = runtime_with_file_env();
+    let src = "witness exist u R st {0 < u, u < 1} from 1 / 2:\n    0 < 1 / 2\n    1 / 2 < 1";
+    let outcome = exec_one(&mut runtime, src);
+    assert!(
+        !outcome.is_failed(),
+        "expected Success for witness exist with local proof body"
+    );
+    assert!(matches!(outcome, ExecStmtResult::Witness(_)));
+    assert!(
+        !exec_one(&mut runtime, "exist u R st {0 < u, u < 1}").is_failed(),
+        "stored exist must verify"
+    );
+}
+
+#[test]
 fn witness_exist_body_miss_is_soft_fail_and_does_not_store() {
     let mut runtime = runtime_with_file_env();
     let before = runtime.top_exec_env().facts.facts_by_id.len();

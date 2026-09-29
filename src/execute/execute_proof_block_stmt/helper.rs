@@ -10,8 +10,8 @@ use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::StoreFactAndInferResult;
 
 // Run each body stmt through `exec_stmt` so helpers get the usual temp merge
-// into the current (claim/sketch) local env. Soft-fail lifts to ProofBody.
-pub(super) fn run_proof_body_stmts(
+// into the current (claim/sketch/witness) local env. Soft-fail lifts to ProofBody.
+pub(in crate::execute) fn run_proof_body_stmts(
     runtime: &mut Runtime,
     proof: &[Stmt],
 ) -> RuntimeResult<Result<Vec<ExecStmtResult>, ProofBlockBodyFailed>> {

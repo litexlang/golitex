@@ -1,5 +1,5 @@
 //! Witness statements: constructive introduction of exist / `$P` / nonempty set.
-//! No local binder env and no indented proof body.
+//! Optional local proof body (full Stmt); obligations checked after proof in that scope.
 
 mod exec_witness_atomic_fact;
 mod exec_witness_exist_fact;
@@ -11,7 +11,8 @@ pub use exec_witness_atomic_fact::{
 };
 pub use exec_witness_exist_fact::{
     ExecWitnessExistFactStmtFailed, ExecWitnessExistFactStmtResult,
-    ExecWitnessExistFactStmtSuccessResult, ExecWitnessStmtResult, WitnessExistCheckSuccess,
+    ExecWitnessExistFactStmtSuccessResult, ExecWitnessStmtResult, WitnessExistAmbientSuccess,
+    WitnessExistObligationSuccess,
 };
 pub use exec_witness_nonempty_set::{
     ExecWitnessNonemptySetStmtFailed, ExecWitnessNonemptySetStmtResult,
