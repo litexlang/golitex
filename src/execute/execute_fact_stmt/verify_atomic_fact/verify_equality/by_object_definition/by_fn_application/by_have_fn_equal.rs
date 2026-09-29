@@ -10,7 +10,7 @@
 //!   id(a) = a
 
 use crate::ast::fact::EqualFact;
-use crate::ast::obj::{FnObj, FnObjHead, Obj, FunctionSpace};
+use crate::ast::obj::{FnObj, FnObjHead, FunctionSpace, Obj};
 use crate::exec_env::exec_env::SpecialObjectPropertyByDefinition;
 use crate::exec_env::StoredIdentifierDefinition;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
@@ -35,7 +35,8 @@ impl Runtime {
         let Obj::FnObj(fn_obj) = app_side else {
             return Ok(None);
         };
-        let Some(expanded_body) = self.expanded_named_or_literal_anon_fn_application_body(fn_obj)?
+        let Some(expanded_body) =
+            self.expanded_named_or_literal_anon_fn_application_body(fn_obj)?
         else {
             return Ok(None);
         };
@@ -47,7 +48,7 @@ impl Runtime {
             line_file: parent_fact.line_file.clone(),
         };
         let child_state = VerifyState {
-            can_use_forall_fact: verify_state.can_use_forall_fact,
+            can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
             can_use_rewrite: false,
             store_well_defined_fact: false,
         };
@@ -70,10 +71,7 @@ impl Runtime {
         if fn_obj.body.len() != 1 {
             return Ok(None);
         }
-        let fn_args: Vec<Obj> = fn_obj.body[0]
-            .iter()
-            .map(|a| a.as_ref().clone())
-            .collect();
+        let fn_args: Vec<Obj> = fn_obj.body[0].iter().map(|a| a.as_ref().clone()).collect();
 
         let anon = match fn_obj.head.as_ref() {
             FnObjHead::AnonymousFnLiteral(anon) => anon.as_ref().clone(),
@@ -104,7 +102,6 @@ impl Runtime {
         }
     }
 
-
     fn anonymous_fn_from_have_fn_equal_definition(
         &self,
         head: &crate::ast::obj::IdentifierObj,
@@ -112,9 +109,7 @@ impl Runtime {
         let name = match head {
             crate::ast::obj::IdentifierObj::Plain { name, .. }
             | crate::ast::obj::IdentifierObj::WithExportFileId { name, .. }
-            | crate::ast::obj::IdentifierObj::WithModAndExportFileId { name, .. } => {
-                name.as_str()
-            }
+            | crate::ast::obj::IdentifierObj::WithModAndExportFileId { name, .. } => name.as_str(),
         };
         let StoredIdentifierDefinition::HaveFnEqual((_, stmt)) =
             self.stored_identifier_definition_visible_in_stack(name)?
@@ -139,4 +134,3 @@ impl Runtime {
         None
     }
 }
-

@@ -12,13 +12,9 @@ use crate::ast::fact::{
 };
 use crate::ast::names::AtomicName;
 use crate::ast::obj::{IdentifierObj, Obj};
-use crate::ast::param::{
-    ParamType, Set, TypedParameterGroup, TypedParameterList,
-};
+use crate::ast::param::{ParamType, Set, TypedParameterGroup, TypedParameterList};
 use crate::ast::stmt::HaveByReplacementAxiomStmt;
-use crate::execute::execute_fact_stmt::{
-    VerifyObjWellDefinedResult, VerifyState,
-};
+use crate::execute::execute_fact_stmt::{VerifyObjWellDefinedResult, VerifyState};
 use crate::execute::introduce_typed_parameters::SharedHaveDefinition;
 use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::{Runtime, RuntimeResult};
@@ -75,12 +71,11 @@ impl Runtime {
         }
 
         let verify_state = VerifyState {
-            can_use_forall_fact: true,
+            can_use_def_and_known_forall_and_known_strategy: true,
             can_use_rewrite: true,
             store_well_defined_fact: true,
         };
-        let source_wd =
-            self.verify_obj_well_definedness(&stmt.source_set, verify_state.clone())?;
+        let source_wd = self.verify_obj_well_definedness(&stmt.source_set, verify_state.clone())?;
         if source_wd.is_failed() {
             return Ok(ExecHaveByReplacementAxiomStmtResult::Failed(
                 ExecHaveByReplacementAxiomStmtFailed::SourceWd(source_wd),
@@ -154,7 +149,8 @@ impl Runtime {
     fn known_replacement_uniqueness(&self, prop_name: &AtomicName, source_set: &Obj) -> bool {
         for env in self.execution_environments_stack.iter().rev() {
             for cite in &env.facts.known_forall_conclusions.equal_conclusions {
-                let Some(Fact::ForallFact(forall)) = env.facts.facts_by_id.get(&cite.fact_id) else {
+                let Some(Fact::ForallFact(forall)) = env.facts.facts_by_id.get(&cite.fact_id)
+                else {
                     continue;
                 };
                 if forall_is_replacement_uniqueness(forall, prop_name, source_set) {
@@ -238,14 +234,14 @@ impl Runtime {
                         param_type: ParamType::Obj(stmt.source_set.clone()),
                     }],
                 },
-                facts: vec![QuantifierFreeFact::AtomicFact(AtomicFact::NormalAtomicFact(
-                    NormalAtomicFact {
+                facts: vec![QuantifierFreeFact::AtomicFact(
+                    AtomicFact::NormalAtomicFact(NormalAtomicFact {
                         fact_id: self.global_ids.allocate_fact_id(),
                         predicate: stmt.prop_name.clone(),
                         body: vec![x_obj, y_obj],
                         line_file: line.clone(),
-                    },
-                ))],
+                    }),
+                )],
                 line_file: line.clone(),
             })],
             line_file: line,
@@ -316,9 +312,7 @@ fn forall_is_replacement_uniqueness(
         return false;
     }
     let ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact {
-        left,
-        right,
-        ..
+        left, right, ..
     })) = &forall.then_facts[0]
     else {
         return false;

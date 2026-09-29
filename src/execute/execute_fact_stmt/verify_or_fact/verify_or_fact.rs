@@ -186,7 +186,7 @@ impl Runtime {
         fact: &OrFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<OrFactSearchedProof>> {
-        if !verify_state.can_use_forall_fact {
+        if !verify_state.can_use_def_and_known_forall_and_known_strategy {
             return Ok(None);
         }
         let lookup_key = or_fact_index_key(fact);

@@ -101,7 +101,7 @@ impl Runtime {
         Result<(IntroduceTypedParametersResult, Vec<FactWellDefinedProof>), ExecDefPropStmtFailed>,
     > {
         let verify_state = VerifyState {
-            can_use_forall_fact: true,
+            can_use_def_and_known_forall_and_known_strategy: true,
             can_use_rewrite: true,
             store_well_defined_fact: true,
         };

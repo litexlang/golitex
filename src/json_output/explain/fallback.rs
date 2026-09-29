@@ -10,22 +10,27 @@ pub struct BuiltinRuleText {
     pub message: String,
 }
 
-/// Temporary text when a dedicated explain file is not written yet.
-/// `rule_name` stays the English rule id until a real translation exists.
+/// Temporary text when a dedicated explain entry is not written yet.
+/// English uses a humanized rule id; Chinese currently reuses English
+/// (EN-first policy — fill translations later without changing call sites).
 pub fn fallback_builtin_rule_text(rule_id: &'static str, lang: OutputLanguage) -> BuiltinRuleText {
-    let (rule_name, message) = match lang {
-        OutputLanguage::English => (
-            rule_id.to_string(),
-            format!("Verified by builtin rule `{rule_id}`"),
-        ),
-        OutputLanguage::Chinese => (
-            rule_id.to_string(),
-            format!("由内置规则 `{rule_id}` 验证"),
-        ),
-    };
+    let rule_name = humanize_rule_id(rule_id);
+    let message = format!("Verified by the `{rule_id}` builtin rule");
+    let _ = lang; // keep signature for bilingual call sites
     BuiltinRuleText {
         rule_id,
         rule_name,
         message,
     }
+}
+
+fn humanize_rule_id(rule_id: &str) -> String {
+    let mut out = String::new();
+    for (i, ch) in rule_id.chars().enumerate() {
+        if i > 0 && ch.is_ascii_uppercase() {
+            out.push(' ');
+        }
+        out.push(ch);
+    }
+    out
 }

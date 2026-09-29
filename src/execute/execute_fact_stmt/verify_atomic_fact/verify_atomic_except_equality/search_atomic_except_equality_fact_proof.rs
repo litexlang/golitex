@@ -52,7 +52,7 @@ impl Runtime {
             )));
         }
 
-        if verify_state.can_use_forall_fact {
+        if verify_state.can_use_def_and_known_forall_and_known_strategy {
             if let Some(result) = self
                 .search_atomic_except_equality_fact_proof_by_known_strategy(
                     fact,

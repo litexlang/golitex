@@ -467,7 +467,7 @@ impl Runtime {
         fact: &ExistShapedFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<SearchProofByKnownForallFact>> {
-        if !verify_state.can_use_forall_fact {
+        if !verify_state.can_use_def_and_known_forall_and_known_strategy {
             return Ok(None);
         }
         for lookup_key in exist_shaped_fact_known_lookup_keys(fact) {

@@ -41,7 +41,7 @@ impl Runtime {
     }
 
     fn search_and_fact_by_known_forall(&mut self, goal: &AndFact, verify_state: VerifyState) -> RuntimeResult<Option<SearchProofByKnownForallFact>> {
-        if !verify_state.can_use_forall_fact { return Ok(None); }
+        if !verify_state.can_use_def_and_known_forall_and_known_strategy { return Ok(None); }
         let key = and_forall_conclusion_index_key(goal);
         let mut cites = Vec::new();
         for env in self.execution_environments_stack.iter().rev() {
