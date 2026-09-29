@@ -30,11 +30,12 @@ formula to update after the proof.
 
 Here, `newton_sqrt_two_step` is both the transition used by the verified
 trajectory in [`main.lit`](main.lit) and the function exported to
-[`newton_sqrt_two.py`](newton_sqrt_two.py). Litex proves an exact quadratic
-residual bound for the trajectory that calls that same function:
+[`newton_sqrt_two.py`](newton_sqrt_two.py). Litex proves the concrete exact
+residual after two steps from `1`:
 
 ```text
-x_(n+1) = step(x_n)        g_(n+1) ≤ g_n² / 4
+x0 = 1,  x1 = 3/2,  x2 = 17/12
+|x2^2 - 2| = 1/144 <= 1/64
 ```
 
 Newton's method is replaceable; **one semantic owner for specification, proof,
@@ -66,15 +67,15 @@ be manually reimplemented.
 
 The proof uses exact real arithmetic; generated Python and C use target-language
 numeric semantics. This showcase establishes a shared source for the formula,
-branches, trajectory, and exact-real theorem. It does not establish IEEE-754
-rounding, overflow, compiler correctness, or correctness of the surrounding
-application.
+branches, a concrete trajectory, and an exact-real residual bound. It does not
+establish IEEE-754 rounding, overflow, compiler correctness, or correctness of
+the surrounding application.
 
 The Litex source contains no `trust` or project axiom. Its checking boundary
 still includes the Litex parser, verifier, builtin rules, inference rules, and
 extractor. This is one supported instance of the architecture, not a general
 theorem about all extracted programs.
 
-> **Note:** induction theorems are written as top-level `by induc` plus a thin
-> named `thm` (not `thm` with nested `forall n` + `by induc n`), to avoid a
-> deferred parse binder-reuse limitation in the current kernel.
+> **Source shape note:** the file uses concrete unrolling instead of
+> `have fn … R by induc` and instead of nested `forall n` + `by induc n`, both
+> of which are blocked on the current kernel without a kernel change.

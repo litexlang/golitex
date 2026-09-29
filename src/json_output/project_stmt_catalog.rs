@@ -6,7 +6,12 @@ use super::helper::{
     array_of_strings, bool_value, empty_string_array, infer_fact_texts_from_store_and_infer,
     object, output_language, split_have_fact_id_texts, store_fact_texts, string,
 };
-use crate::execute::execute_by_stmt::ExecByStmtResult;
+use crate::execute::execute_by_stmt::{
+    ExecByCasesStmtResult, ExecByContraStmtResult, ExecByDefStmtResult,
+    ExecByEnumerateFiniteSetStmtResult, ExecByExtensionStmtResult, ExecByFnExtensionStmtResult,
+    ExecByForStmtResult, ExecByInducStmtResult, ExecByStmtResult, ExecByStrongInducStmtResult,
+    ExecByThmStmtResult,
+};
 use crate::execute::execute_eval_stmt::{ExecCommandStmtResult, ExecEvalStmtResult};
 use crate::execute::execute_proof_block_stmt::{
     ExecClaimStmtResult, ExecProofBlockStmtResult, ExecSketchStmtResult,
@@ -130,11 +135,15 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
             }
         },
         ExecDefinitionStmtResult::DefThm(r) => match r {
-            ExecDefThmStmtResult::Success(_) => success_plain(runtime, "thm …".into(), "def_thm"),
+            ExecDefThmStmtResult::Success(s) => {
+                success_from_store(runtime, "thm …".into(), "def_thm", &s.stored)
+            }
             ExecDefThmStmtResult::Failed(_) => failed(runtime, "thm …", "def_thm"),
         },
         ExecDefinitionStmtResult::Axiom(r) => match r {
-            ExecAxiomStmtResult::Success(_) => success_plain(runtime, "axiom …".into(), "axiom"),
+            ExecAxiomStmtResult::Success(s) => {
+                success_from_store(runtime, "axiom …".into(), "axiom", &s.stored)
+            }
             ExecAxiomStmtResult::Failed(_) => failed(runtime, "axiom …", "axiom"),
         },
         ExecDefinitionStmtResult::DefStrategy(r) => match r {
@@ -305,22 +314,91 @@ fn project_trust(t: &ExecTrustBoundaryStmtResult, runtime: &Runtime) -> JsonValu
 }
 
 fn project_by(b: &ExecByStmtResult, runtime: &Runtime) -> JsonValue {
-    let (ok, kind) = match b {
-        ExecByStmtResult::Cases(r) => (!r.is_failed(), "by_cases"),
-        ExecByStmtResult::Contra(r) => (!r.is_failed(), "by_contra"),
-        ExecByStmtResult::Def(r) => (!r.is_failed(), "by_def"),
-        ExecByStmtResult::Extension(r) => (!r.is_failed(), "by_extension"),
-        ExecByStmtResult::FnExtension(r) => (!r.is_failed(), "by_fn_extension"),
-        ExecByStmtResult::EnumerateFiniteSet(r) => (!r.is_failed(), "by_enumerate"),
-        ExecByStmtResult::For(r) => (!r.is_failed(), "by_for"),
-        ExecByStmtResult::Thm(r) => (!r.is_failed(), "by_thm"),
-        ExecByStmtResult::Induc(r) => (!r.is_failed(), "by_induc"),
-        ExecByStmtResult::StrongInduc(r) => (!r.is_failed(), "by_strong_induc"),
-    };
-    if ok {
-        success_plain(runtime, kind.replace('_', " "), kind)
-    } else {
-        failed(runtime, &kind.replace('_', " "), kind)
+    match b {
+        ExecByStmtResult::Cases(r) => match r {
+            ExecByCasesStmtResult::Success(s) => {
+                let (stores, infers) = flatten_store_nodes(runtime, &s.stored);
+                success_parts(runtime, "by cases".into(), "by_cases", stores, infers)
+            }
+            ExecByCasesStmtResult::Failed(_) => failed(runtime, "by cases", "by_cases"),
+        },
+        ExecByStmtResult::Contra(r) => match r {
+            ExecByContraStmtResult::Success(s) => success_from_store(
+                runtime,
+                s.goal.readable_string(),
+                "by_contra",
+                &s.stored,
+            ),
+            ExecByContraStmtResult::Failed(_) => failed(runtime, "by contradiction", "by_contra"),
+        },
+        ExecByStmtResult::Def(r) => match r {
+            ExecByDefStmtResult::Success(s) => {
+                success_from_store(runtime, "by def".into(), "by_def", &s.stored)
+            }
+            ExecByDefStmtResult::Failed(_) => failed(runtime, "by def", "by_def"),
+        },
+        ExecByStmtResult::Extension(r) => match r {
+            ExecByExtensionStmtResult::Success(s) => {
+                success_from_store(runtime, "by extension".into(), "by_extension", &s.stored)
+            }
+            ExecByExtensionStmtResult::Failed(_) => {
+                failed(runtime, "by extension", "by_extension")
+            }
+        },
+        ExecByStmtResult::FnExtension(r) => match r {
+            ExecByFnExtensionStmtResult::Success(s) => success_from_store(
+                runtime,
+                "by fn_extension".into(),
+                "by_fn_extension",
+                &s.stored,
+            ),
+            ExecByFnExtensionStmtResult::Failed(_) => {
+                failed(runtime, "by fn_extension", "by_fn_extension")
+            }
+        },
+        ExecByStmtResult::EnumerateFiniteSet(r) => match r {
+            ExecByEnumerateFiniteSetStmtResult::Success(s) => success_from_store(
+                runtime,
+                "by enumerate".into(),
+                "by_enumerate",
+                &s.stored,
+            ),
+            ExecByEnumerateFiniteSetStmtResult::Failed(_) => {
+                failed(runtime, "by enumerate", "by_enumerate")
+            }
+        },
+        ExecByStmtResult::For(r) => match r {
+            ExecByForStmtResult::Success(s) => {
+                success_from_store(runtime, "by for".into(), "by_for", &s.stored)
+            }
+            ExecByForStmtResult::Failed(_) => failed(runtime, "by for", "by_for"),
+        },
+        ExecByStmtResult::Thm(r) => match r {
+            ExecByThmStmtResult::Success(s) => success_from_store(
+                runtime,
+                format!("by thm {}", s.thm_name),
+                "by_thm",
+                &s.stored,
+            ),
+            ExecByThmStmtResult::Failed(_) => failed(runtime, "by thm", "by_thm"),
+        },
+        ExecByStmtResult::Induc(r) => match r {
+            ExecByInducStmtResult::Success(s) => {
+                success_from_store(runtime, "by induc".into(), "by_induc", &s.stored)
+            }
+            ExecByInducStmtResult::Failed(_) => failed(runtime, "by induc", "by_induc"),
+        },
+        ExecByStmtResult::StrongInduc(r) => match r {
+            ExecByStrongInducStmtResult::Success(s) => success_from_store(
+                runtime,
+                "by strong_induc".into(),
+                "by_strong_induc",
+                &s.stored,
+            ),
+            ExecByStrongInducStmtResult::Failed(_) => {
+                failed(runtime, "by strong_induc", "by_strong_induc")
+            }
+        },
     }
 }
 

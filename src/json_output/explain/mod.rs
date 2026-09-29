@@ -2,14 +2,20 @@
 //!
 //! Keep all Chinese/English copy here. Verify/exec IR types stay language-free;
 //! projection calls into this module with `OutputLanguage` from LaunchCommand.
+//!
+//! Policy (current phase): finish **English** `rule_name` / `message` for every
+//! surface. Chinese slots stay in the API (`bilingual_*` / `OutputLanguage`)
+//! and fall back to English until filled.
 
 pub mod atomic_common;
+pub mod bilingual;
 pub mod equality_builtin;
 pub mod equality_calculation;
 pub mod fallback;
 pub mod stmt_why;
 
 pub use atomic_common::explain_atomic_rule_id;
+pub use bilingual::{bilingual_builtin, bilingual_stmt_pair};
 pub use equality_builtin::explain_equality_builtin_rule;
 pub use equality_calculation::explain_calculation;
 pub use fallback::{fallback_builtin_rule_text, BuiltinRuleText};
