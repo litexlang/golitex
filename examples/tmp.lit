@@ -1,7 +1,4 @@
-# Witness with local proof body
-
-witness exist u R st {0 < u, u < 1} from 1 / 2:
-    0 < 1 / 2
-    1 / 2 < 1
-
-exist u R st {0 < u, u < 1}
+have a R = abs(-3)
+a = 3
+have b R = min(1, 2)
+b + 1 = 2

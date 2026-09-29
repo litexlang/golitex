@@ -25,12 +25,8 @@ impl Runtime {
             return Ok(None);
         }
 
-        let equality_state = VerifyState {
-            can_use_def_and_known_forall_and_known_strategy: false,
-            can_use_rewrite: false,
-            store_well_defined_fact: false,
-        };
-        let _ = verify_state;
+        // Arg equality: known / peel only (no nested builtin / deep search).
+        let equality_state = verify_state.known_only_no_wd();
 
         let lookup_key = (fact.prop_name(), atomic_fact_has_positive_polarity(fact));
         let goal_args = atomic_fact_args_ref(fact);

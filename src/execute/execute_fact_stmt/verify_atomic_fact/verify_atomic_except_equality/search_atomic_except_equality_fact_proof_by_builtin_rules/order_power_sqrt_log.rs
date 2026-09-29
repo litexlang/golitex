@@ -516,7 +516,8 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
         let goal = make_less_equal_fact(&zero_obj(), obj, self);
-        self.verify_fact(&goal, verify_state)
+        // Premise of a builtin rule: cite-only / known, no nested premise-producing rules.
+        self.verify_fact(&goal, verify_state.after_builtin_rule())
     }
 
     pub(crate) fn verify_order_nonpositive(
@@ -525,7 +526,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
         let goal = make_less_equal_fact(obj, &zero_obj(), self);
-        self.verify_fact(&goal, verify_state)
+        self.verify_fact(&goal, verify_state.after_builtin_rule())
     }
 
     pub(crate) fn verify_order_positive(
@@ -534,7 +535,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
         let goal = make_less_fact(&zero_obj(), obj, self);
-        self.verify_fact(&goal, verify_state)
+        self.verify_fact(&goal, verify_state.after_builtin_rule())
     }
 
     pub(crate) fn verify_order_negative(
@@ -543,7 +544,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
         let goal = make_less_fact(obj, &zero_obj(), self);
-        self.verify_fact(&goal, verify_state)
+        self.verify_fact(&goal, verify_state.after_builtin_rule())
     }
 
     pub(crate) fn verify_order_gt_one(
@@ -552,7 +553,7 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<VerifyFactResult> {
         let goal = make_less_fact(&one_obj(), obj, self);
-        self.verify_fact(&goal, verify_state)
+        self.verify_fact(&goal, verify_state.after_builtin_rule())
     }
 
     pub(crate) fn verify_order_nonzero(
@@ -566,7 +567,7 @@ impl Runtime {
             right: zero_obj(),
             line_file: None,
         }));
-        self.verify_fact(&goal, verify_state)
+        self.verify_fact(&goal, verify_state.after_builtin_rule())
     }
 
     pub(crate) fn verify_in_positive_natural(

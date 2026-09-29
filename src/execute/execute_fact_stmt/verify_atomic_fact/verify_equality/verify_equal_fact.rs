@@ -34,20 +34,19 @@ impl Runtime {
         }
     }
 
-    // Stage order: builtin rule → equivalence class → object definition → builtin strategy →
-    // matching one arg by one → known forall → (if allowed) builtin rewrite.
+    // Cheap phase: builtin rule (one shot) → equivalence class.
+    // Deep phase (can_use_def_and_known_forall_and_known_strategy):
+    //   object definition → builtin strategy → matching one arg → known forall →
+    //   (can_use_rewrite) builtin rewrite.
     // MatchingOneArgByOne is constructor peel (not rewrite).
-    //
-    // Why rewrite: Calculation needs closed numeric trees; goals may still
-    // mention identifiers equal to a stored closed form. Rewrite substitutes
-    // those representatives, then proves the residual with rewrite off — see
-    // EqualitySearchProofByBuiltinRewrite (ClosedNumeric only; not general congruence).
     // Ok(None) means no proof found; that is not a runtime error.
     pub fn search_equal_fact_proof(
         &mut self,
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualFactSearchedProof>> {
+        // Builtin rules always run: cite-only / calculation arms ignore the budget;
+        // premise-producing arms self-gate on can_use_builtin_rule.
         if let Some(result) = self.search_equal_fact_builtin_rule(fact, verify_state.clone())? {
             return Ok(Some(EqualFactSearchedProof::ByBuiltinRule(result)));
         }
@@ -56,6 +55,17 @@ impl Runtime {
             self.search_equal_fact_proof_by_equivalence_class(fact, verify_state.clone())?
         {
             return Ok(Some(EqualFactSearchedProof::ByEquivalenceClass(result)));
+        }
+
+        if !verify_state.can_use_def_and_known_forall_and_known_strategy {
+            // Matching peel stays available as a cheap structural step.
+            let matching_child_state = verify_state.known_only_no_wd();
+            if let Some(result) = self
+                .search_equal_fact_proof_by_matching_one_arg_by_one(fact, matching_child_state)?
+            {
+                return Ok(Some(EqualFactSearchedProof::ByMatchingOneArgByOne(result)));
+            }
+            return Ok(None);
         }
 
         if let Some(result) =
@@ -70,24 +80,17 @@ impl Runtime {
             return Ok(Some(EqualFactSearchedProof::ByBuiltinStrategy(result)));
         }
 
-        // Child equalities: no forall, no rewrite, no WD store.
-        let matching_child_state = VerifyState {
-            can_use_def_and_known_forall_and_known_strategy: false,
-            can_use_rewrite: false,
-            store_well_defined_fact: false,
-        };
+        let matching_child_state = verify_state.known_only_no_wd();
         if let Some(result) =
             self.search_equal_fact_proof_by_matching_one_arg_by_one(fact, matching_child_state)?
         {
             return Ok(Some(EqualFactSearchedProof::ByMatchingOneArgByOne(result)));
         }
 
-        if verify_state.can_use_def_and_known_forall_and_known_strategy {
-            if let Some(result) =
-                self.search_equal_fact_proof_by_known_forall_fact(fact, verify_state.clone())?
-            {
-                return Ok(Some(result));
-            }
+        if let Some(result) =
+            self.search_equal_fact_proof_by_known_forall_fact(fact, verify_state.clone())?
+        {
+            return Ok(Some(result));
         }
 
         if verify_state.can_use_rewrite {
@@ -106,28 +109,29 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualitySearchProofByBuiltinStrategy>> {
+        let child_state = verify_state.after_strategy();
         if let Some(proof) =
-            self.search_equal_fact_by_rational_with_nonzero_premises(fact, verify_state.clone())?
+            self.search_equal_fact_by_rational_with_nonzero_premises(fact, child_state.clone())?
         {
             return Ok(Some(
                 EqualitySearchProofByBuiltinStrategy::RationalWithNonzeroPremises(proof),
             ));
         }
         if let Some(proof) =
-            self.search_equal_fact_by_extremum_equality(fact, verify_state.clone())?
+            self.search_equal_fact_by_extremum_equality(fact, child_state.clone())?
         {
             return Ok(Some(
                 EqualitySearchProofByBuiltinStrategy::ExtremumEquality(proof),
             ));
         }
         if let Some(proof) =
-            self.search_equal_fact_by_finite_set_product_pointwise(fact, verify_state.clone())?
+            self.search_equal_fact_by_finite_set_product_pointwise(fact, child_state.clone())?
         {
             return Ok(Some(
                 EqualitySearchProofByBuiltinStrategy::FiniteSetProductPointwiseEquality(proof),
             ));
         }
-        if let Some(proof) = self.search_equal_fact_by_mod_congruence(fact, verify_state)? {
+        if let Some(proof) = self.search_equal_fact_by_mod_congruence(fact, child_state)? {
             return Ok(Some(EqualitySearchProofByBuiltinStrategy::ModCongruence(
                 proof,
             )));

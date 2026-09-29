@@ -500,45 +500,50 @@ impl Runtime {
             return Ok(Some(proof));
         }
 
-        // A — shape match on (left, right) Obj constructors
+        // Closed numeric is zero-premise (no nested rule search).
+        if let Some((cmp, left_normal, right_normal)) =
+            compare_closed_objs_by_normalized_decimal(&fact.left, &fact.right)
+        {
+            if !matches!(cmp, NumberCompareResult::Greater) {
+                return Ok(Some(
+                    LessEqualFactSearchProofByBuiltinRule::ClosedNumericComparison(
+                        ClosedNumericComparisonBuiltinRuleProof {
+                            left_normal,
+                            right_normal,
+                        },
+                    ),
+                ));
+            }
+        }
+
+        // Premise-producing / shape rules consume the builtin-rule budget.
+        if !verify_state.can_use_builtin_rule {
+            return Ok(None);
+        }
+        let child_state = verify_state.after_builtin_rule();
+
         if let Some(proof) =
-            self.search_order_abs_algebra_less_equal_proof(fact, verify_state.clone())?
+            self.search_order_abs_algebra_less_equal_proof(fact, child_state.clone())?
         {
             return Ok(Some(proof));
         }
         if let Some(proof) =
-            self.search_order_power_sqrt_log_less_equal_proof(fact, verify_state.clone())?
+            self.search_order_power_sqrt_log_less_equal_proof(fact, child_state.clone())?
         {
             return Ok(Some(proof));
         }
         if let Some(proof) =
-            self.search_order_div_mod_bridge_trans_less_equal_proof(fact, verify_state.clone())?
+            self.search_order_div_mod_bridge_trans_less_equal_proof(fact, child_state.clone())?
         {
             return Ok(Some(proof));
         }
         if let Some(proof) =
-            self.search_order_stage_a_remainder_less_equal_proof(fact, verify_state)?
+            self.search_order_stage_a_remainder_less_equal_proof(fact, child_state)?
         {
             return Ok(Some(proof));
         }
 
-        // B1 — closed numeric
-        let Some((cmp, left_normal, right_normal)) =
-            compare_closed_objs_by_normalized_decimal(&fact.left, &fact.right)
-        else {
-            return Ok(None);
-        };
-        if matches!(cmp, NumberCompareResult::Greater) {
-            return Ok(None);
-        }
-        Ok(Some(
-            LessEqualFactSearchProofByBuiltinRule::ClosedNumericComparison(
-                ClosedNumericComparisonBuiltinRuleProof {
-                    left_normal,
-                    right_normal,
-                },
-            ),
-        ))
+        Ok(None)
     }
 }
 

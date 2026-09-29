@@ -88,6 +88,7 @@ impl Runtime {
                 continue;
             };
             let residual_state = VerifyState {
+            can_use_builtin_rule: verify_state.can_use_builtin_rule,
                 can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
                 can_use_rewrite: false,
                 store_well_defined_fact: false,
