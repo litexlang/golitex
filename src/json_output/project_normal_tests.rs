@@ -116,16 +116,21 @@ fn normal_json_calculation_one_plus_two_chinese() {
     });
     let goal = exec_one(&mut runtime, "1 + 2 = 3");
     let goal_json = project_stmt_normal(&goal, &runtime);
-    assert_eq!(object_field(&goal_json, "success"), &JsonValue::Bool(true));
-    let why = object_field(&goal_json, "why_verified")
+    // Option 2: Chinese session localizes JSON keys as well as rule text.
+    assert_eq!(object_field(&goal_json, "成功"), &JsonValue::Bool(true));
+    let why = object_field(&goal_json, "证明方法")
         .as_object()
-        .expect("why_verified");
+        .expect("证明方法");
     assert_eq!(
-        why.get("rule_name").and_then(|v| v.as_str().ok()),
+        why.get("类型").and_then(|v| v.as_str().ok()),
+        Some("builtin_rule")
+    );
+    assert_eq!(
+        why.get("规则名").and_then(|v| v.as_str().ok()),
         Some("计算")
     );
     assert_eq!(
-        why.get("message").and_then(|v| v.as_str().ok()),
+        why.get("说明").and_then(|v| v.as_str().ok()),
         Some("两边都算出同一个数")
     );
 }

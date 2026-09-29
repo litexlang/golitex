@@ -55,7 +55,8 @@ pub fn exec_register_transitive_prop_stmt(
         can_use_def_and_known_forall_and_known_strategy: true,
         can_use_rewrite: true,
         store_well_defined_fact: true,
-    };
+                builtin_strategy_depth_remaining: VerifyState::BUILTIN_STRATEGY_DEPTH_LIMIT,
+};
     let (forall_outcome, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
         let forall_proof = rt.verify_forall_fact(&stmt.forall_fact, verify_state)?;
         if forall_proof.is_failed() {

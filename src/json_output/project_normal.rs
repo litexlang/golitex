@@ -1,7 +1,7 @@
 //! Project ExecStmtResult → Normal JSON (see README).
 
 use super::explain::{
-    explain_atomic_rule_id, explain_compound_fact_why, explain_equality_builtin_rule,
+    explain_compound_fact_why,
 };
 use super::helper::{
     array_of_strings, bool_value, builtin_rule_with_optional_cite, cite_forall_from_fact_id,
@@ -12,13 +12,6 @@ use super::project_stmt_catalog::project_non_fact_stmt;
 use crate::ast::fact::AtomicFact;
 use crate::execute::{ExecFactStmtResult, ExecStmtResult};
 
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::{
-    greater_equal::GreaterEqualFactSearchProofByBuiltinRule,
-    less::LessFactSearchProofByBuiltinRule,
-    less_equal::LessEqualFactSearchProofByBuiltinRule,
-    not_equal::NotEqualFactSearchProofByBuiltinRule,
-    AtomicExceptEqualityFactSearchProofByBuiltinRule,
-};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::EqualitySearchProofByBuiltinRule;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::{
     AtomicExceptEqualityFactSearchedProof, EqualFactSearchedProof,
@@ -64,6 +57,7 @@ pub fn project_run_normal(
     target: &str,
     path: Option<&Path>,
 ) -> JsonValue {
+    let lang = output_language(runtime);
     let statement_results: Vec<JsonValue> = run
         .statement_results
         .iter()
@@ -77,7 +71,7 @@ pub fn project_run_normal(
         None => JsonValue::Null,
         Some(err) => string(format!("{err:?}")),
     };
-    object(vec![
+    object(lang, vec![
         ("kind", string("run")),
         ("success", bool_value(run.success)),
         ("target", string(target)),
@@ -93,6 +87,7 @@ pub fn project_run_normal(
 }
 
 fn project_fact_stmt(fact: &ExecFactStmtResult, runtime: &Runtime) -> JsonValue {
+    let lang = output_language(runtime);
     match fact {
         ExecFactStmtResult::Success(success) => {
             let statement = verify_goal_display(&success.verify_result);
@@ -102,7 +97,7 @@ fn project_fact_stmt(fact: &ExecFactStmtResult, runtime: &Runtime) -> JsonValue 
                 runtime,
                 &success.store_and_infer_result,
             );
-            object(vec![
+            object(lang, vec![
                 ("success", bool_value(true)),
                 ("statement", string(statement)),
                 ("why_verified", why),
@@ -112,8 +107,8 @@ fn project_fact_stmt(fact: &ExecFactStmtResult, runtime: &Runtime) -> JsonValue 
         }
         ExecFactStmtResult::Failed(verify) => {
             let statement = verify_goal_display(verify);
-            let why = why_failed(verify);
-            object(vec![
+            let why = why_failed(verify, lang);
+            object(lang, vec![
                 ("success", bool_value(false)),
                 ("statement", string(statement)),
                 ("why_failed", why),
@@ -157,18 +152,19 @@ fn verify_goal_display(verify: &VerifyFactResult) -> String {
 }
 
 fn why_verified(verify: &VerifyFactResult, runtime: &Runtime) -> JsonValue {
+    let lang = output_language(runtime);
     match verify {
         VerifyFactResult::AtomicExceptEquality(r) => match r.as_ref() {
             VerifyAtomicExceptEqualityFactResult::Success(s) => {
                 why_from_atomic_except_searched(&s.searched_proof, runtime)
             }
             VerifyAtomicExceptEqualityFactResult::Failed(_) => {
-                object(vec![("type", string("failed"))])
+                object(lang, vec![("type", string("failed"))])
             }
         },
         VerifyFactResult::Equality(r) => match r.as_ref() {
             VerifyEqualityResult::Success(s) => why_from_equal_searched(&s.searched_proof, runtime),
-            VerifyEqualityResult::Failed(_) => object(vec![("type", string("failed"))]),
+            VerifyEqualityResult::Failed(_) => object(lang, vec![("type", string("failed"))]),
         },
         VerifyFactResult::AndFact(_) => compound_why_json(runtime, "and"),
         VerifyFactResult::OrFact(_) => compound_why_json(runtime, "or"),
@@ -182,20 +178,21 @@ fn why_verified(verify: &VerifyFactResult, runtime: &Runtime) -> JsonValue {
 }
 
 fn compound_why_json(runtime: &Runtime, kind: &str) -> JsonValue {
-    let text = explain_compound_fact_why(kind, output_language(runtime));
-    object(vec![
+    let lang = output_language(runtime);
+    let text = explain_compound_fact_why(kind, lang);
+    object(lang, vec![
         ("type", string(text.type_tag)),
         ("rule_name", string(text.rule_name)),
         ("message", string(text.message)),
     ])
 }
 
-fn why_failed(verify: &VerifyFactResult) -> JsonValue {
+fn why_failed(verify: &VerifyFactResult, lang: crate::launch_command::OutputLanguage) -> JsonValue {
     if verify.is_wd_failed() {
-        return object(vec![("phase", string("well_defined"))]);
+        return object(lang, vec![("phase", string("well_defined"))]);
     }
     let goal = verify_goal_display(verify);
-    object(vec![
+    object(lang, vec![
         ("phase", string("search_proof")),
         ("goal", string(goal)),
     ])
@@ -205,6 +202,7 @@ fn why_from_atomic_except_searched(
     searched: &AtomicExceptEqualityFactSearchedProof,
     runtime: &Runtime,
 ) -> JsonValue {
+    let lang = output_language(runtime);
     match searched {
         AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(p) => {
             cite_from_fact_id(runtime, p.cite_fact_id)
@@ -216,125 +214,58 @@ fn why_from_atomic_except_searched(
             why_from_atomic_builtin_rule(r, runtime)
         }
         AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(_) => {
-            object(vec![("type", string("builtin_strategy"))])
+            object(lang, vec![("type", string("builtin_strategy"))])
         }
         AtomicExceptEqualityFactSearchedProof::ByDefinition(_) => {
-            object(vec![("type", string("by_definition"))])
+            object(lang, vec![("type", string("by_definition"))])
         }
         AtomicExceptEqualityFactSearchedProof::ByKnownStrategy(_) => {
-            object(vec![("type", string("known_strategy"))])
+            object(lang, vec![("type", string("known_strategy"))])
         }
         AtomicExceptEqualityFactSearchedProof::ByBuiltinRewrite(_) => {
-            object(vec![("type", string("builtin_rewrite"))])
+            object(lang, vec![("type", string("builtin_rewrite"))])
         }
         AtomicExceptEqualityFactSearchedProof::ByKnownRewrite(_) => {
-            object(vec![("type", string("known_rewrite"))])
+            object(lang, vec![("type", string("known_rewrite"))])
         }
     }
 }
 
 fn why_from_equal_searched(searched: &EqualFactSearchedProof, runtime: &Runtime) -> JsonValue {
+    let lang = output_language(runtime);
     match searched {
         EqualFactSearchedProof::ByBuiltinRule(r) => why_from_equal_builtin_rule(r, runtime),
         EqualFactSearchedProof::ByKnownForallFact(p) => {
             cite_forall_from_fact_id(runtime, p.cite.fact_id)
         }
         EqualFactSearchedProof::ByEquivalenceClass(_) => {
-            object(vec![("type", string("equivalence_class"))])
+            object(lang, vec![("type", string("equivalence_class"))])
         }
         EqualFactSearchedProof::ByObjectDefinition(_) => {
-            object(vec![("type", string("object_definition"))])
+            object(lang, vec![("type", string("object_definition"))])
         }
         EqualFactSearchedProof::ByBuiltinStrategy(_) => {
-            object(vec![("type", string("builtin_strategy"))])
+            object(lang, vec![("type", string("builtin_strategy"))])
         }
         EqualFactSearchedProof::ByMatchingOneArgByOne(_) => {
-            object(vec![("type", string("matching_one_arg_by_one"))])
+            object(lang, vec![("type", string("matching_one_arg_by_one"))])
         }
         EqualFactSearchedProof::ByKnownForallFactViaSymmetry(_) => {
-            object(vec![("type", string("known_forall_via_symmetry"))])
+            object(lang, vec![("type", string("known_forall_via_symmetry"))])
         }
         EqualFactSearchedProof::ByBuiltinRewrite(_) => {
-            object(vec![("type", string("builtin_rewrite"))])
+            object(lang, vec![("type", string("builtin_rewrite"))])
         }
     }
 }
 
 fn why_from_atomic_builtin_rule(
-    rule: &AtomicExceptEqualityFactSearchProofByBuiltinRule,
+    rule: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::AtomicExceptEqualityFactSearchProofByBuiltinRule,
     runtime: &Runtime,
 ) -> JsonValue {
     let lang = output_language(runtime);
-    let cite_text = |rule_id: &'static str, cite: Option<_>| {
-        let text = explain_atomic_rule_id(rule_id, lang);
-        builtin_rule_with_optional_cite(runtime, &text, cite)
-    };
-    match rule {
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(g) => match g {
-            GreaterEqualFactSearchProofByBuiltinRule::FromKnownInNatural(p) => {
-                cite_text("FromKnownInNatural", Some(p.cite_fact_id))
-            }
-            GreaterEqualFactSearchProofByBuiltinRule::FromKnownInPositiveNatural(p) => {
-                cite_text("FromKnownInPositiveNatural", Some(p.cite_fact_id))
-            }
-            GreaterEqualFactSearchProofByBuiltinRule::FromKnownGreater(p) => {
-                cite_text("FromKnownGreater", Some(p.cite_fact_id))
-            }
-            GreaterEqualFactSearchProofByBuiltinRule::OrderFlipMulMinusOne(p) => {
-                cite_text("OrderFlipMulMinusOne", Some(p.cite_fact_id))
-            }
-            GreaterEqualFactSearchProofByBuiltinRule::OrderReflexivity(_) => {
-                cite_text("OrderReflexivity", None)
-            }
-            GreaterEqualFactSearchProofByBuiltinRule::ClosedNumericComparison(_) => {
-                cite_text("ClosedNumericComparison", None)
-            }
-            _ => cite_text("GreaterEqualBuiltin", None),
-        },
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(l) => match l {
-            LessEqualFactSearchProofByBuiltinRule::FromKnownInNatural(p) => {
-                cite_text("FromKnownInNatural", Some(p.cite_fact_id))
-            }
-            LessEqualFactSearchProofByBuiltinRule::FromKnownInPositiveStandardSet(p) => {
-                cite_text("FromKnownInPositiveStandardSet", Some(p.cite_fact_id))
-            }
-            LessEqualFactSearchProofByBuiltinRule::FromKnownInNegativeStandardSet(p) => {
-                cite_text("FromKnownInNegativeStandardSet", Some(p.cite_fact_id))
-            }
-            LessEqualFactSearchProofByBuiltinRule::OrderFlipMulMinusOne(p) => {
-                cite_text("OrderFlipMulMinusOne", Some(p.cite_fact_id))
-            }
-            LessEqualFactSearchProofByBuiltinRule::OrderSignFromNegativeLiteralBound(p) => {
-                cite_text("OrderSignFromNegativeLiteralBound", Some(p.cite_fact_id))
-            }
-            _ => cite_text("LessEqualBuiltin", None),
-        },
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(l) => match l {
-            LessFactSearchProofByBuiltinRule::FromKnownInPositiveStandardSet(p) => {
-                cite_text("FromKnownInPositiveStandardSet", Some(p.cite_fact_id))
-            }
-            LessFactSearchProofByBuiltinRule::FromKnownInNegativeStandardSet(p) => {
-                cite_text("FromKnownInNegativeStandardSet", Some(p.cite_fact_id))
-            }
-            LessFactSearchProofByBuiltinRule::OrderSignFromPositiveLiteralBound(p) => {
-                cite_text("OrderSignFromPositiveLiteralBound", Some(p.cite_fact_id))
-            }
-            LessFactSearchProofByBuiltinRule::OrderFlipMulMinusOne(p) => {
-                cite_text("OrderFlipMulMinusOne", Some(p.cite_fact_id))
-            }
-            _ => cite_text("LessBuiltin", None),
-        },
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(n) => match n {
-            NotEqualFactSearchProofByBuiltinRule::FromKnownInNonzeroStandardSet(p) => {
-                cite_text("FromKnownInNonzeroStandardSet", Some(p.cite_fact_id))
-            }
-            NotEqualFactSearchProofByBuiltinRule::NotEqualSymmetry(_) => {
-                cite_text("NotEqualSymmetry", None)
-            }
-            _ => cite_text("NotEqualBuiltin", None),
-        },
-        _ => cite_text("AtomicBuiltin", None),
-    }
+    let text = rule.rule_id_and_message(lang);
+    builtin_rule_with_optional_cite(runtime, &text, rule.cite_fact_id())
 }
 
 fn why_from_equal_builtin_rule(
@@ -342,7 +273,7 @@ fn why_from_equal_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     let lang = output_language(runtime);
-    let text = explain_equality_builtin_rule(rule, lang);
+    let text = rule.rule_id_and_message(lang);
     let cite = match rule {
         EqualitySearchProofByBuiltinRule::EqualFromKnownDifferenceZero(p) => {
             Some(p.cite_fact_id)

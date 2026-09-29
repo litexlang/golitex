@@ -1,18 +1,22 @@
 //! Map `$prop(...)` / infix `$prop` names onto AtomicFact variants.
 
 use crate::ast::fact::{
-    AtomicFact, EqualFact, GreaterEqualFact, GreaterFact, InFact, IsCartFact,
-    IsFiniteSetFact, IsNonemptySetFact, IsSetFact, IsTupleFact, LessEqualFact, LessFact,
-    NormalAtomicFact, NotEqualFact, NotGreaterEqualFact, NotGreaterFact,
-    NotInFact, NotIsCartFact, NotIsFiniteSetFact, NotIsNonemptySetFact, NotIsSetFact,
-    NotIsTupleFact, NotLessEqualFact, NotLessFact, NotNormalAtomicFact, NotSubsetFact,
-    NotSupersetFact, SubsetFact, SupersetFact,
+    AtomicFact, BijectiveFact, CoprimeFact, DvdFact, EqualFact, GreaterEqualFact, GreaterFact,
+    InFact, InjectiveFact, IsCartFact, IsChoiceFunctionForFact, IsFiniteSetFact, IsNonemptySetFact,
+    IsSetFact, IsTupleFact, LessEqualFact, LessFact, NormalAtomicFact, NotBijectiveFact,
+    NotCoprimeFact, NotDvdFact, NotEqualFact, NotGreaterEqualFact, NotGreaterFact, NotInFact,
+    NotInjectiveFact, NotIsCartFact, NotIsChoiceFunctionForFact, NotIsFiniteSetFact,
+    NotIsNonemptySetFact, NotIsSetFact, NotIsTupleFact, NotLessEqualFact, NotLessFact,
+    NotNormalAtomicFact, NotPrimeFact, NotProperSubsetFact, NotProperSupersetFact, NotSubsetFact,
+    NotSupersetFact, NotSurjectiveFact, PrimeFact, ProperSubsetFact, ProperSupersetFact,
+    SubsetFact, SupersetFact, SurjectiveFact,
 };
 use crate::ast::line_file::SourceLine;
 use crate::ast::names::AtomicName;
 use crate::ast::obj::Obj;
 use crate::parse::keywords::{
-    EQUAL, GREATER, GREATER_EQUAL, IN, LESS, LESS_EQUAL, NOT_EQUAL,
+    BIJECTIVE, COPRIME, DVD, EQUAL, GREATER, GREATER_EQUAL, IN, INJECTIVE, IS_CHOICE_FUNCTION_FOR,
+    LESS, LESS_EQUAL, NOT_EQUAL, PRIME, SURJECTIVE,
 };
 use crate::runtime::{FactId, Runtime, RuntimeParseError, RuntimeResult};
 
@@ -229,6 +233,187 @@ impl Runtime {
                 )
                 .into());
             }
+            PROPER_SUBSET => {
+                two_args(self, name, &args, line_file.line)?;
+                let fact_id = self.global_ids.allocate_fact_id();
+                if positive {
+                    Ok(AtomicFact::ProperSubsetFact(ProperSubsetFact {
+                        fact_id,
+                        left: args[0].clone(),
+                        right: args[1].clone(),
+                        line_file: Some(line_file),
+                    }))
+                } else {
+                    Ok(AtomicFact::NotProperSubsetFact(NotProperSubsetFact {
+                        fact_id,
+                        left: args[0].clone(),
+                        right: args[1].clone(),
+                        line_file: Some(line_file),
+                    }))
+                }
+            }
+            PROPER_SUPERSET => {
+                two_args(self, name, &args, line_file.line)?;
+                let fact_id = self.global_ids.allocate_fact_id();
+                if positive {
+                    Ok(AtomicFact::ProperSupersetFact(ProperSupersetFact {
+                        fact_id,
+                        left: args[0].clone(),
+                        right: args[1].clone(),
+                        line_file: Some(line_file),
+                    }))
+                } else {
+                    Ok(AtomicFact::NotProperSupersetFact(NotProperSupersetFact {
+                        fact_id,
+                        left: args[0].clone(),
+                        right: args[1].clone(),
+                        line_file: Some(line_file),
+                    }))
+                }
+            }
+            PRIME => {
+                one_arg(self, name, &args, line_file.line)?;
+                let fact_id = self.global_ids.allocate_fact_id();
+                if positive {
+                    Ok(AtomicFact::PrimeFact(PrimeFact {
+                        fact_id,
+                        value: args[0].clone(),
+                        line_file: Some(line_file),
+                    }))
+                } else {
+                    Ok(AtomicFact::NotPrimeFact(NotPrimeFact {
+                        fact_id,
+                        value: args[0].clone(),
+                        line_file: Some(line_file),
+                    }))
+                }
+            }
+            COPRIME => {
+                two_args(self, name, &args, line_file.line)?;
+                let fact_id = self.global_ids.allocate_fact_id();
+                if positive {
+                    Ok(AtomicFact::CoprimeFact(CoprimeFact {
+                        fact_id,
+                        left: args[0].clone(),
+                        right: args[1].clone(),
+                        line_file: Some(line_file),
+                    }))
+                } else {
+                    Ok(AtomicFact::NotCoprimeFact(NotCoprimeFact {
+                        fact_id,
+                        left: args[0].clone(),
+                        right: args[1].clone(),
+                        line_file: Some(line_file),
+                    }))
+                }
+            }
+            DVD => {
+                two_args(self, name, &args, line_file.line)?;
+                let fact_id = self.global_ids.allocate_fact_id();
+                if positive {
+                    Ok(AtomicFact::DvdFact(DvdFact {
+                        fact_id,
+                        left: args[0].clone(),
+                        right: args[1].clone(),
+                        line_file: Some(line_file),
+                    }))
+                } else {
+                    Ok(AtomicFact::NotDvdFact(NotDvdFact {
+                        fact_id,
+                        left: args[0].clone(),
+                        right: args[1].clone(),
+                        line_file: Some(line_file),
+                    }))
+                }
+            }
+            INJECTIVE => {
+                n_args(self, name, &args, 3, line_file.line)?;
+                let fact_id = self.global_ids.allocate_fact_id();
+                if positive {
+                    Ok(AtomicFact::InjectiveFact(InjectiveFact {
+                        fact_id,
+                        domain: args[0].clone(),
+                        codomain: args[1].clone(),
+                        function: args[2].clone(),
+                        line_file: Some(line_file),
+                    }))
+                } else {
+                    Ok(AtomicFact::NotInjectiveFact(NotInjectiveFact {
+                        fact_id,
+                        domain: args[0].clone(),
+                        codomain: args[1].clone(),
+                        function: args[2].clone(),
+                        line_file: Some(line_file),
+                    }))
+                }
+            }
+            SURJECTIVE => {
+                n_args(self, name, &args, 3, line_file.line)?;
+                let fact_id = self.global_ids.allocate_fact_id();
+                if positive {
+                    Ok(AtomicFact::SurjectiveFact(SurjectiveFact {
+                        fact_id,
+                        domain: args[0].clone(),
+                        codomain: args[1].clone(),
+                        function: args[2].clone(),
+                        line_file: Some(line_file),
+                    }))
+                } else {
+                    Ok(AtomicFact::NotSurjectiveFact(NotSurjectiveFact {
+                        fact_id,
+                        domain: args[0].clone(),
+                        codomain: args[1].clone(),
+                        function: args[2].clone(),
+                        line_file: Some(line_file),
+                    }))
+                }
+            }
+            BIJECTIVE => {
+                n_args(self, name, &args, 3, line_file.line)?;
+                let fact_id = self.global_ids.allocate_fact_id();
+                if positive {
+                    Ok(AtomicFact::BijectiveFact(BijectiveFact {
+                        fact_id,
+                        domain: args[0].clone(),
+                        codomain: args[1].clone(),
+                        function: args[2].clone(),
+                        line_file: Some(line_file),
+                    }))
+                } else {
+                    Ok(AtomicFact::NotBijectiveFact(NotBijectiveFact {
+                        fact_id,
+                        domain: args[0].clone(),
+                        codomain: args[1].clone(),
+                        function: args[2].clone(),
+                        line_file: Some(line_file),
+                    }))
+                }
+            }
+            IS_CHOICE_FUNCTION_FOR => {
+                n_args(self, name, &args, 4, line_file.line)?;
+                let fact_id = self.global_ids.allocate_fact_id();
+                if positive {
+                    Ok(AtomicFact::IsChoiceFunctionForFact(IsChoiceFunctionForFact {
+                        fact_id,
+                        index: args[0].clone(),
+                        set: args[1].clone(),
+                        family: args[2].clone(),
+                        choice: args[3].clone(),
+                        line_file: Some(line_file),
+                    }))
+                } else {
+                    Ok(AtomicFact::NotIsChoiceFunctionForFact(
+                        NotIsChoiceFunctionForFact {
+                            fact_id,
+                            index: args[0].clone(),
+                            set: args[1].clone(),
+                            family: args[2].clone(),
+                            choice: args[3].clone(),
+                            line_file: Some(line_file),
+                        },
+                    ))
+                }
+            }
             _ => Ok(normal_or_not(
                 self.global_ids.allocate_fact_id(),
                 prop,
@@ -238,6 +423,18 @@ impl Runtime {
             )),
         }
     }
+}
+
+fn n_args(rt: &Runtime, name: &str, args: &[Obj], expected: usize, line: usize) -> RuntimeResult<()> {
+    if args.len() != expected {
+        return Err(RuntimeParseError::new(
+            format!("`{name}` requires {expected} arguments, got {}", args.len()),
+            line,
+            rt.current_file.clone(),
+        )
+        .into());
+    }
+    Ok(())
 }
 
 fn normal_or_not(

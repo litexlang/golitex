@@ -73,7 +73,8 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
             can_use_rewrite: false,
             store_well_defined_fact: false,
-        };
+                    builtin_strategy_depth_remaining: verify_state.builtin_strategy_depth_remaining,
+};
         let residual_equal = self.verify_equal_fact(&residual, child_state)?;
         if residual_equal.is_failed() {
             return Ok(None);
@@ -99,7 +100,8 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
             can_use_rewrite: true,
             store_well_defined_fact: false,
-        };
+                    builtin_strategy_depth_remaining: verify_state.builtin_strategy_depth_remaining,
+};
         for case in cases {
             let Ok(inst_case) = self.inst_and_chain_atomic(&case.case_fact, subst) else {
                 continue;

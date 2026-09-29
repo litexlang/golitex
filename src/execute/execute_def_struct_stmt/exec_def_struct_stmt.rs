@@ -132,7 +132,8 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: true,
             can_use_rewrite: true,
             store_well_defined_fact: true,
-        };
+                    builtin_strategy_depth_remaining: VerifyState::BUILTIN_STRATEGY_DEPTH_LIMIT,
+};
 
         let introduced_params = if let Some((params, _)) = &def_struct.param_def_with_dom {
             match self.introduce_typed_parameters(params, verify_state.clone())? {
@@ -208,7 +209,8 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: true,
             can_use_rewrite: true,
             store_well_defined_fact: true,
-        };
+                    builtin_strategy_depth_remaining: VerifyState::BUILTIN_STRATEGY_DEPTH_LIMIT,
+};
 
         let field_params = field_typed_parameters(fields);
         let defined_fields = self.define_typed_parameters_in_current_env(&field_params, None)?;

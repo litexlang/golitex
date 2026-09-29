@@ -717,15 +717,18 @@ impl Runtime {
                 continue;
             };
             for known in knowns {
-                if let AtomicFact::NormalAtomicFact(NormalAtomicFact {
-                    fact_id,
-                    body,
-                    ..
-                }) = known
-                {
-                    if body.len() == 3 {
+                match known {
+                    AtomicFact::SurjectiveFact(f) => {
+                        out.push((f.fact_id, f.domain.clone(), f.codomain.clone()));
+                    }
+                    AtomicFact::NormalAtomicFact(NormalAtomicFact {
+                        fact_id,
+                        body,
+                        ..
+                    }) if body.len() == 3 => {
                         out.push((*fact_id, body[0].clone(), body[1].clone()));
                     }
+                    _ => {}
                 }
             }
         }

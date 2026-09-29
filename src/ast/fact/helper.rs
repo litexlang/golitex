@@ -1,11 +1,14 @@
 use super::{
-    AndChainAtomicFact, AtomicFact, EqualFact, ExistShapedFact, Fact, PlainExistFact,
-    GreaterEqualFact, GreaterFact, InFact, IsCartFact, IsFiniteSetFact, IsNonemptySetFact,
-    IsSetFact, IsTupleFact, LessEqualFact, LessFact, NormalAtomicFact, NotEqualFact,
-    NotGreaterEqualFact, NotGreaterFact, NotInFact, NotIsCartFact, NotIsFiniteSetFact,
-    NotIsNonemptySetFact, NotIsSetFact, NotIsTupleFact, NotLessEqualFact, NotLessFact,
-    NotNormalAtomicFact, NotSubsetFact, NotSupersetFact, OrFact, QuantifierFreeFact, SubsetFact,
-    SupersetFact,
+    AndChainAtomicFact, AtomicFact, BijectiveFact, CoprimeFact, DvdFact, EqualFact,
+    ExistShapedFact, Fact, PlainExistFact, GreaterEqualFact, GreaterFact, InFact, InjectiveFact,
+    IsCartFact, IsChoiceFunctionForFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact, IsTupleFact,
+    LessEqualFact, LessFact, NormalAtomicFact, NotBijectiveFact, NotCoprimeFact, NotDvdFact,
+    NotEqualFact, NotGreaterEqualFact, NotGreaterFact, NotInFact, NotInjectiveFact, NotIsCartFact,
+    NotIsChoiceFunctionForFact, NotIsFiniteSetFact, NotIsNonemptySetFact, NotIsSetFact,
+    NotIsTupleFact, NotLessEqualFact, NotLessFact, NotNormalAtomicFact, NotPrimeFact,
+    NotProperSubsetFact, NotProperSupersetFact, NotSubsetFact, NotSupersetFact, NotSurjectiveFact,
+    OrFact, PrimeFact, ProperSubsetFact, ProperSupersetFact, QuantifierFreeFact, SubsetFact,
+    SupersetFact, SurjectiveFact,
 };
 use super::super::obj::{IdentifierObj, Obj};
 use super::super::param::ParamType;
@@ -30,6 +33,15 @@ pub fn atomic_fact_has_positive_polarity(fact: &AtomicFact) -> bool {
             | AtomicFact::NotIsTupleFact(_)
             | AtomicFact::NotSubsetFact(_)
             | AtomicFact::NotSupersetFact(_)
+            | AtomicFact::NotProperSubsetFact(_)
+            | AtomicFact::NotProperSupersetFact(_)
+            | AtomicFact::NotPrimeFact(_)
+            | AtomicFact::NotCoprimeFact(_)
+            | AtomicFact::NotDvdFact(_)
+            | AtomicFact::NotInjectiveFact(_)
+            | AtomicFact::NotSurjectiveFact(_)
+            | AtomicFact::NotBijectiveFact(_)
+            | AtomicFact::NotIsChoiceFunctionForFact(_)
     )
 }
 
@@ -63,6 +75,28 @@ pub fn atomic_fact_args_ref(fact: &AtomicFact) -> Vec<&Obj> {
         AtomicFact::NotSubsetFact(f) => vec![&f.left, &f.right],
         AtomicFact::SupersetFact(f) => vec![&f.left, &f.right],
         AtomicFact::NotSupersetFact(f) => vec![&f.left, &f.right],
+        AtomicFact::ProperSubsetFact(f) => vec![&f.left, &f.right],
+        AtomicFact::NotProperSubsetFact(f) => vec![&f.left, &f.right],
+        AtomicFact::ProperSupersetFact(f) => vec![&f.left, &f.right],
+        AtomicFact::NotProperSupersetFact(f) => vec![&f.left, &f.right],
+        AtomicFact::PrimeFact(f) => vec![&f.value],
+        AtomicFact::NotPrimeFact(f) => vec![&f.value],
+        AtomicFact::CoprimeFact(f) => vec![&f.left, &f.right],
+        AtomicFact::NotCoprimeFact(f) => vec![&f.left, &f.right],
+        AtomicFact::DvdFact(f) => vec![&f.left, &f.right],
+        AtomicFact::NotDvdFact(f) => vec![&f.left, &f.right],
+        AtomicFact::InjectiveFact(f) => vec![&f.domain, &f.codomain, &f.function],
+        AtomicFact::NotInjectiveFact(f) => vec![&f.domain, &f.codomain, &f.function],
+        AtomicFact::SurjectiveFact(f) => vec![&f.domain, &f.codomain, &f.function],
+        AtomicFact::NotSurjectiveFact(f) => vec![&f.domain, &f.codomain, &f.function],
+        AtomicFact::BijectiveFact(f) => vec![&f.domain, &f.codomain, &f.function],
+        AtomicFact::NotBijectiveFact(f) => vec![&f.domain, &f.codomain, &f.function],
+        AtomicFact::IsChoiceFunctionForFact(f) => {
+            vec![&f.index, &f.set, &f.family, &f.choice]
+        }
+        AtomicFact::NotIsChoiceFunctionForFact(f) => {
+            vec![&f.index, &f.set, &f.family, &f.choice]
+        }
     }
 }
 
@@ -366,6 +400,140 @@ pub fn negate_atomic_fact(fact: &AtomicFact, new_fact_id: FactId) -> Option<Atom
             fact_id: new_fact_id,
             left: f.left.clone(),
             right: f.right.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::ProperSubsetFact(f) => NotProperSubsetFact {
+            fact_id: new_fact_id,
+            left: f.left.clone(),
+            right: f.right.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotProperSubsetFact(f) => ProperSubsetFact {
+            fact_id: new_fact_id,
+            left: f.left.clone(),
+            right: f.right.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::ProperSupersetFact(f) => NotProperSupersetFact {
+            fact_id: new_fact_id,
+            left: f.left.clone(),
+            right: f.right.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotProperSupersetFact(f) => ProperSupersetFact {
+            fact_id: new_fact_id,
+            left: f.left.clone(),
+            right: f.right.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::PrimeFact(f) => NotPrimeFact {
+            fact_id: new_fact_id,
+            value: f.value.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotPrimeFact(f) => PrimeFact {
+            fact_id: new_fact_id,
+            value: f.value.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::CoprimeFact(f) => NotCoprimeFact {
+            fact_id: new_fact_id,
+            left: f.left.clone(),
+            right: f.right.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotCoprimeFact(f) => CoprimeFact {
+            fact_id: new_fact_id,
+            left: f.left.clone(),
+            right: f.right.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::DvdFact(f) => NotDvdFact {
+            fact_id: new_fact_id,
+            left: f.left.clone(),
+            right: f.right.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotDvdFact(f) => DvdFact {
+            fact_id: new_fact_id,
+            left: f.left.clone(),
+            right: f.right.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::InjectiveFact(f) => NotInjectiveFact {
+            fact_id: new_fact_id,
+            domain: f.domain.clone(),
+            codomain: f.codomain.clone(),
+            function: f.function.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotInjectiveFact(f) => InjectiveFact {
+            fact_id: new_fact_id,
+            domain: f.domain.clone(),
+            codomain: f.codomain.clone(),
+            function: f.function.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::SurjectiveFact(f) => NotSurjectiveFact {
+            fact_id: new_fact_id,
+            domain: f.domain.clone(),
+            codomain: f.codomain.clone(),
+            function: f.function.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotSurjectiveFact(f) => SurjectiveFact {
+            fact_id: new_fact_id,
+            domain: f.domain.clone(),
+            codomain: f.codomain.clone(),
+            function: f.function.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::BijectiveFact(f) => NotBijectiveFact {
+            fact_id: new_fact_id,
+            domain: f.domain.clone(),
+            codomain: f.codomain.clone(),
+            function: f.function.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotBijectiveFact(f) => BijectiveFact {
+            fact_id: new_fact_id,
+            domain: f.domain.clone(),
+            codomain: f.codomain.clone(),
+            function: f.function.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::IsChoiceFunctionForFact(f) => NotIsChoiceFunctionForFact {
+            fact_id: new_fact_id,
+            index: f.index.clone(),
+            set: f.set.clone(),
+            family: f.family.clone(),
+            choice: f.choice.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotIsChoiceFunctionForFact(f) => IsChoiceFunctionForFact {
+            fact_id: new_fact_id,
+            index: f.index.clone(),
+            set: f.set.clone(),
+            family: f.family.clone(),
+            choice: f.choice.clone(),
             line_file: f.line_file.clone(),
         }
         .into(),

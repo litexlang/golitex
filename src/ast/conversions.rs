@@ -2,12 +2,15 @@
 //! Prefer `leaf.into()` / `atomic.into()` over `AtomicFact::Variant(leaf)`.
 
 use crate::ast::fact::{
-    AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, GreaterEqualFact,
-    GreaterFact, InFact, IsCartFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact, IsTupleFact,
-    LessEqualFact, LessFact, NormalAtomicFact, NotEqualFact,
-    NotGreaterEqualFact, NotGreaterFact, NotInFact, NotIsCartFact, NotIsFiniteSetFact,
-    NotIsNonemptySetFact, NotIsSetFact, NotIsTupleFact, NotLessEqualFact, NotLessFact,
-    NotNormalAtomicFact, NotSubsetFact, NotSupersetFact, SubsetFact, SupersetFact,
+    AtomicFact, BijectiveFact, CoprimeFact, DvdFact, EqualFact, ExistOrAndChainAtomicFact, Fact,
+    GreaterEqualFact, GreaterFact, InFact, InjectiveFact, IsCartFact, IsChoiceFunctionForFact,
+    IsFiniteSetFact, IsNonemptySetFact, IsSetFact, IsTupleFact, LessEqualFact, LessFact,
+    NormalAtomicFact, NotBijectiveFact, NotCoprimeFact, NotDvdFact, NotEqualFact,
+    NotGreaterEqualFact, NotGreaterFact, NotInFact, NotInjectiveFact, NotIsCartFact,
+    NotIsChoiceFunctionForFact, NotIsFiniteSetFact, NotIsNonemptySetFact, NotIsSetFact,
+    NotIsTupleFact, NotLessEqualFact, NotLessFact, NotNormalAtomicFact, NotPrimeFact,
+    NotProperSubsetFact, NotProperSupersetFact, NotSubsetFact, NotSupersetFact, NotSurjectiveFact,
+    PrimeFact, ProperSubsetFact, ProperSupersetFact, SubsetFact, SupersetFact, SurjectiveFact,
 };
 
 impl From<NormalAtomicFact> for AtomicFact {
@@ -91,6 +94,60 @@ impl From<SubsetFact> for AtomicFact {
 impl From<SupersetFact> for AtomicFact {
     fn from(f: SupersetFact) -> Self {
         AtomicFact::SupersetFact(f)
+    }
+}
+
+impl From<ProperSubsetFact> for AtomicFact {
+    fn from(f: ProperSubsetFact) -> Self {
+        AtomicFact::ProperSubsetFact(f)
+    }
+}
+
+impl From<ProperSupersetFact> for AtomicFact {
+    fn from(f: ProperSupersetFact) -> Self {
+        AtomicFact::ProperSupersetFact(f)
+    }
+}
+
+impl From<PrimeFact> for AtomicFact {
+    fn from(f: PrimeFact) -> Self {
+        AtomicFact::PrimeFact(f)
+    }
+}
+
+impl From<CoprimeFact> for AtomicFact {
+    fn from(f: CoprimeFact) -> Self {
+        AtomicFact::CoprimeFact(f)
+    }
+}
+
+impl From<DvdFact> for AtomicFact {
+    fn from(f: DvdFact) -> Self {
+        AtomicFact::DvdFact(f)
+    }
+}
+
+impl From<InjectiveFact> for AtomicFact {
+    fn from(f: InjectiveFact) -> Self {
+        AtomicFact::InjectiveFact(f)
+    }
+}
+
+impl From<SurjectiveFact> for AtomicFact {
+    fn from(f: SurjectiveFact) -> Self {
+        AtomicFact::SurjectiveFact(f)
+    }
+}
+
+impl From<BijectiveFact> for AtomicFact {
+    fn from(f: BijectiveFact) -> Self {
+        AtomicFact::BijectiveFact(f)
+    }
+}
+
+impl From<IsChoiceFunctionForFact> for AtomicFact {
+    fn from(f: IsChoiceFunctionForFact) -> Self {
+        AtomicFact::IsChoiceFunctionForFact(f)
     }
 }
 
@@ -178,7 +235,59 @@ impl From<NotSupersetFact> for AtomicFact {
     }
 }
 
+impl From<NotProperSubsetFact> for AtomicFact {
+    fn from(f: NotProperSubsetFact) -> Self {
+        AtomicFact::NotProperSubsetFact(f)
+    }
+}
 
+impl From<NotProperSupersetFact> for AtomicFact {
+    fn from(f: NotProperSupersetFact) -> Self {
+        AtomicFact::NotProperSupersetFact(f)
+    }
+}
+
+impl From<NotPrimeFact> for AtomicFact {
+    fn from(f: NotPrimeFact) -> Self {
+        AtomicFact::NotPrimeFact(f)
+    }
+}
+
+impl From<NotCoprimeFact> for AtomicFact {
+    fn from(f: NotCoprimeFact) -> Self {
+        AtomicFact::NotCoprimeFact(f)
+    }
+}
+
+impl From<NotDvdFact> for AtomicFact {
+    fn from(f: NotDvdFact) -> Self {
+        AtomicFact::NotDvdFact(f)
+    }
+}
+
+impl From<NotInjectiveFact> for AtomicFact {
+    fn from(f: NotInjectiveFact) -> Self {
+        AtomicFact::NotInjectiveFact(f)
+    }
+}
+
+impl From<NotSurjectiveFact> for AtomicFact {
+    fn from(f: NotSurjectiveFact) -> Self {
+        AtomicFact::NotSurjectiveFact(f)
+    }
+}
+
+impl From<NotBijectiveFact> for AtomicFact {
+    fn from(f: NotBijectiveFact) -> Self {
+        AtomicFact::NotBijectiveFact(f)
+    }
+}
+
+impl From<NotIsChoiceFunctionForFact> for AtomicFact {
+    fn from(f: NotIsChoiceFunctionForFact) -> Self {
+        AtomicFact::NotIsChoiceFunctionForFact(f)
+    }
+}
 
 impl From<AtomicFact> for Fact {
     fn from(f: AtomicFact) -> Self {
@@ -270,7 +379,59 @@ impl From<SupersetFact> for Fact {
     }
 }
 
+impl From<ProperSubsetFact> for Fact {
+    fn from(f: ProperSubsetFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
 
+impl From<ProperSupersetFact> for Fact {
+    fn from(f: ProperSupersetFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<PrimeFact> for Fact {
+    fn from(f: PrimeFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<CoprimeFact> for Fact {
+    fn from(f: CoprimeFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<DvdFact> for Fact {
+    fn from(f: DvdFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<InjectiveFact> for Fact {
+    fn from(f: InjectiveFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<SurjectiveFact> for Fact {
+    fn from(f: SurjectiveFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<BijectiveFact> for Fact {
+    fn from(f: BijectiveFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<IsChoiceFunctionForFact> for Fact {
+    fn from(f: IsChoiceFunctionForFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
 
 impl From<NotNormalAtomicFact> for Fact {
     fn from(f: NotNormalAtomicFact) -> Self {
@@ -352,6 +513,60 @@ impl From<NotSubsetFact> for Fact {
 
 impl From<NotSupersetFact> for Fact {
     fn from(f: NotSupersetFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<NotProperSubsetFact> for Fact {
+    fn from(f: NotProperSubsetFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<NotProperSupersetFact> for Fact {
+    fn from(f: NotProperSupersetFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<NotPrimeFact> for Fact {
+    fn from(f: NotPrimeFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<NotCoprimeFact> for Fact {
+    fn from(f: NotCoprimeFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<NotDvdFact> for Fact {
+    fn from(f: NotDvdFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<NotInjectiveFact> for Fact {
+    fn from(f: NotInjectiveFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<NotSurjectiveFact> for Fact {
+    fn from(f: NotSurjectiveFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<NotBijectiveFact> for Fact {
+    fn from(f: NotBijectiveFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<NotIsChoiceFunctionForFact> for Fact {
+    fn from(f: NotIsChoiceFunctionForFact) -> Self {
         Fact::AtomicFact(f.into())
     }
 }

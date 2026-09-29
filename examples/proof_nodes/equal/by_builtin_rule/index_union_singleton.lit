@@ -1,4 +1,7 @@
 # Node: equal.ByBuiltinRule.IndexUnionSingleton
 # Run: litex -f examples/proof_nodes/equal/by_builtin_rule/index_union_singleton.lit
-have fn A(x N) power_set(N) = {x}
+#
+# Family domain must match the index set for index_union WD.
+
+have fn A(x {1}) power_set(N) = {x}
 index_union({1}, N, A) = A(1)

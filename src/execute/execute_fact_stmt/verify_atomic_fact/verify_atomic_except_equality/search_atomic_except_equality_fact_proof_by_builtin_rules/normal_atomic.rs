@@ -1,47 +1,83 @@
-use crate::ast::fact::{NormalAtomicFact, NotNormalAtomicFact};
+use crate::ast::fact::{
+    CoprimeFact, NormalAtomicFact, NotCoprimeFact, NotNormalAtomicFact, NotPrimeFact, PrimeFact,
+};
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::rational_expression::gcd_decimal_str_and_normalize;
 use crate::runtime::{Runtime, RuntimeResult};
-use crate::parse::keywords::{COPRIME, PRIME};
 
 use super::search_atomic_except_equality_fact_proof_by_builtin_rule_result::{
-    NormalAtomicCoprimeByComputation, NormalAtomicFactSearchProofByBuiltinRule,
-    NormalAtomicPrimeByComputation, NotNormalAtomicFactSearchProofByBuiltinRule,
-    NotNormalAtomicNotCoprimeByComputation, NotNormalAtomicNotPrimeByComputation,
+    CoprimeByComputation, CoprimeFactSearchProofByBuiltinRule, NormalAtomicFactSearchProofByBuiltinRule,
+    NotCoprimeByComputation, NotCoprimeFactSearchProofByBuiltinRule,
+    NotNormalAtomicFactSearchProofByBuiltinRule, NotPrimeByComputation,
+    NotPrimeFactSearchProofByBuiltinRule, PrimeByComputation, PrimeFactSearchProofByBuiltinRule,
 };
 
 impl Runtime {
+    // Official `$prime` / `$coprime` now use dedicated AtomicFact variants.
+    // User-defined `$prop(...)` has no NormalAtomic builtin search yet.
     pub fn search_normal_atomic_fact_proof_by_builtin_rule(
         &mut self,
-        fact: &NormalAtomicFact,
+        _fact: &NormalAtomicFact,
         _verify_state: VerifyState,
     ) -> RuntimeResult<Option<NormalAtomicFactSearchProofByBuiltinRule>> {
-        if let Some(proof) = self.search_normal_atomic_prime_by_computation(fact)? {
-            return Ok(Some(NormalAtomicFactSearchProofByBuiltinRule::PrimeByComputation(
-                proof,
-            )));
-        }
-        if let Some(proof) = self.search_normal_atomic_coprime_by_computation(fact)? {
-            return Ok(Some(
-                NormalAtomicFactSearchProofByBuiltinRule::CoprimeByComputation(proof),
-            ));
-        }
         Ok(None)
     }
 
     pub fn search_not_normal_atomic_fact_proof_by_builtin_rule(
         &mut self,
-        fact: &NotNormalAtomicFact,
+        _fact: &NotNormalAtomicFact,
         _verify_state: VerifyState,
     ) -> RuntimeResult<Option<NotNormalAtomicFactSearchProofByBuiltinRule>> {
-        if let Some(proof) = self.search_not_normal_atomic_not_prime_by_computation(fact)? {
+        Ok(None)
+    }
+
+    pub fn search_prime_fact_proof_by_builtin_rule(
+        &mut self,
+        fact: &PrimeFact,
+        _verify_state: VerifyState,
+    ) -> RuntimeResult<Option<PrimeFactSearchProofByBuiltinRule>> {
+        if let Some(proof) = self.search_prime_by_computation(fact)? {
+            return Ok(Some(PrimeFactSearchProofByBuiltinRule::PrimeByComputation(
+                proof,
+            )));
+        }
+        Ok(None)
+    }
+
+    pub fn search_coprime_fact_proof_by_builtin_rule(
+        &mut self,
+        fact: &CoprimeFact,
+        _verify_state: VerifyState,
+    ) -> RuntimeResult<Option<CoprimeFactSearchProofByBuiltinRule>> {
+        if let Some(proof) = self.search_coprime_by_computation(fact)? {
             return Ok(Some(
-                NotNormalAtomicFactSearchProofByBuiltinRule::NotPrimeByComputation(proof),
+                CoprimeFactSearchProofByBuiltinRule::CoprimeByComputation(proof),
             ));
         }
-        if let Some(proof) = self.search_not_normal_atomic_not_coprime_by_computation(fact)? {
+        Ok(None)
+    }
+
+    pub fn search_not_prime_fact_proof_by_builtin_rule(
+        &mut self,
+        fact: &NotPrimeFact,
+        _verify_state: VerifyState,
+    ) -> RuntimeResult<Option<NotPrimeFactSearchProofByBuiltinRule>> {
+        if let Some(proof) = self.search_not_prime_by_computation(fact)? {
             return Ok(Some(
-                NotNormalAtomicFactSearchProofByBuiltinRule::NotCoprimeByComputation(proof),
+                NotPrimeFactSearchProofByBuiltinRule::NotPrimeByComputation(proof),
+            ));
+        }
+        Ok(None)
+    }
+
+    pub fn search_not_coprime_fact_proof_by_builtin_rule(
+        &mut self,
+        fact: &NotCoprimeFact,
+        _verify_state: VerifyState,
+    ) -> RuntimeResult<Option<NotCoprimeFactSearchProofByBuiltinRule>> {
+        if let Some(proof) = self.search_not_coprime_by_computation(fact)? {
+            return Ok(Some(
+                NotCoprimeFactSearchProofByBuiltinRule::NotCoprimeByComputation(proof),
             ));
         }
         Ok(None)
@@ -51,14 +87,11 @@ impl Runtime {
     // Mathematical property: `$prime(n)` holds exactly when the resolved
     // nonnegative integer is prime.
     // Example: `$prime(17)`.
-    fn search_normal_atomic_prime_by_computation(
+    fn search_prime_by_computation(
         &self,
-        fact: &NormalAtomicFact,
-    ) -> RuntimeResult<Option<NormalAtomicPrimeByComputation>> {
-        if fact.predicate.local_name() != PRIME || fact.body.len() != 1 {
-            return Ok(None);
-        }
-        let Some(value) = self.resolve_obj_to_normalized_number(&fact.body[0]) else {
+        fact: &PrimeFact,
+    ) -> RuntimeResult<Option<PrimeByComputation>> {
+        let Some(value) = self.resolve_obj_to_normalized_number(&fact.value) else {
             return Ok(None);
         };
         let Ok(n) = value.parse::<u64>() else {
@@ -67,7 +100,7 @@ impl Runtime {
         if !is_prime_u64(n) {
             return Ok(None);
         }
-        Ok(Some(NormalAtomicPrimeByComputation {
+        Ok(Some(PrimeByComputation {
             resolved_value: value,
         }))
     }
@@ -76,21 +109,17 @@ impl Runtime {
     // Mathematical property: `$coprime(a, b)` when both resolve to nonnegative
     // integers that are not both zero and `gcd(a, b) = 1`.
     // Example: `$coprime(14, 25)`.
-    fn search_normal_atomic_coprime_by_computation(
+    fn search_coprime_by_computation(
         &self,
-        fact: &NormalAtomicFact,
-    ) -> RuntimeResult<Option<NormalAtomicCoprimeByComputation>> {
-        if fact.predicate.local_name() != COPRIME || fact.body.len() != 2 {
-            return Ok(None);
-        }
-        let Some((left, right)) = self.resolve_nonneg_integer_pair(&fact.body[0], &fact.body[1])
-        else {
+        fact: &CoprimeFact,
+    ) -> RuntimeResult<Option<CoprimeByComputation>> {
+        let Some((left, right)) = self.resolve_nonneg_integer_pair(&fact.left, &fact.right) else {
             return Ok(None);
         };
         if !values_are_coprime(&left, &right) {
             return Ok(None);
         }
-        Ok(Some(NormalAtomicCoprimeByComputation {
+        Ok(Some(CoprimeByComputation {
             left_resolved: left,
             right_resolved: right,
         }))
@@ -100,14 +129,11 @@ impl Runtime {
     // Mathematical property: `not $prime(n)` when the resolved nonnegative
     // integer is composite or below 2.
     // Example: `not $prime(1)`, `not $prime(9)`.
-    fn search_not_normal_atomic_not_prime_by_computation(
+    fn search_not_prime_by_computation(
         &self,
-        fact: &NotNormalAtomicFact,
-    ) -> RuntimeResult<Option<NotNormalAtomicNotPrimeByComputation>> {
-        if fact.predicate.local_name() != PRIME || fact.body.len() != 1 {
-            return Ok(None);
-        }
-        let Some(value) = self.resolve_obj_to_normalized_number(&fact.body[0]) else {
+        fact: &NotPrimeFact,
+    ) -> RuntimeResult<Option<NotPrimeByComputation>> {
+        let Some(value) = self.resolve_obj_to_normalized_number(&fact.value) else {
             return Ok(None);
         };
         let Ok(n) = value.parse::<u64>() else {
@@ -116,7 +142,7 @@ impl Runtime {
         if is_prime_u64(n) {
             return Ok(None);
         }
-        Ok(Some(NotNormalAtomicNotPrimeByComputation {
+        Ok(Some(NotPrimeByComputation {
             resolved_value: value,
         }))
     }
@@ -125,21 +151,17 @@ impl Runtime {
     // Mathematical property: `not $coprime(a, b)` when both resolve to
     // nonnegative integers with `gcd != 1` (including `0, 0`).
     // Example: `not $coprime(14, 21)`, `not $coprime(0, 0)`.
-    fn search_not_normal_atomic_not_coprime_by_computation(
+    fn search_not_coprime_by_computation(
         &self,
-        fact: &NotNormalAtomicFact,
-    ) -> RuntimeResult<Option<NotNormalAtomicNotCoprimeByComputation>> {
-        if fact.predicate.local_name() != COPRIME || fact.body.len() != 2 {
-            return Ok(None);
-        }
-        let Some((left, right)) = self.resolve_nonneg_integer_pair(&fact.body[0], &fact.body[1])
-        else {
+        fact: &NotCoprimeFact,
+    ) -> RuntimeResult<Option<NotCoprimeByComputation>> {
+        let Some((left, right)) = self.resolve_nonneg_integer_pair(&fact.left, &fact.right) else {
             return Ok(None);
         };
         if values_are_coprime(&left, &right) {
             return Ok(None);
         }
-        Ok(Some(NotNormalAtomicNotCoprimeByComputation {
+        Ok(Some(NotCoprimeByComputation {
             left_resolved: left,
             right_resolved: right,
         }))

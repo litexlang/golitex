@@ -180,7 +180,8 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: true,
             can_use_rewrite: true,
             store_well_defined_fact: true,
-        };
+                    builtin_strategy_depth_remaining: VerifyState::BUILTIN_STRATEGY_DEPTH_LIMIT,
+};
 
         let introduced_params = match self
             .introduce_typed_parameters(&def_template.template_arg_def, verify_state.clone())?

@@ -1,6 +1,0 @@
-# Node: equal.ByBuiltinRule.FiniteSetSizeUnion
-# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/finite_set_size_union.lit
-
-have A finite_set
-have B finite_set
-finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))

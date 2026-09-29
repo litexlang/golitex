@@ -259,6 +259,11 @@ pub(super) fn project_equality_builtin_rule(rule: &EqualitySearchProofByBuiltinR
             entries.push(("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)));
             object(entries)
         },
+        EqualitySearchProofByBuiltinRule::ModCompatibleSmallerModulus(p) => {
+            let mut entries = vec![("type", string("builtin_rule")), ("rule", string("ModCompatibleSmallerModulus"))];
+            entries.push(("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)));
+            object(entries)
+        },
         EqualitySearchProofByBuiltinRule::MinIdempotent(p) => {
             let mut entries = vec![("type", string("builtin_rule")), ("rule", string("MinIdempotent"))];
             let _ = p;

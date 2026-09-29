@@ -1,7 +1,6 @@
 //! English catalog for equality builtin rules.
-//! Chinese slots are `None` for now (`bilingual_builtin` falls back to English).
+//! Chinese slots reuse English until dedicated zh copy is filled.
 
-use super::bilingual::bilingual_builtin;
 use super::equality_calculation::explain_calculation;
 use super::fallback::BuiltinRuleText;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::EqualitySearchProofByBuiltinRule;
@@ -13,1533 +12,972 @@ pub fn explain_equality_builtin_rule(
 ) -> BuiltinRuleText {
     match rule {
         EqualitySearchProofByBuiltinRule::Calculation(proof) => explain_calculation(proof, lang),
-        EqualitySearchProofByBuiltinRule::ByEqualIr(_) => bilingual_builtin(
-            "ByEqualIr",
-            "Equal by IR",
-            "Both sides share the same internal representation",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ByEqualToObjWithFreeParamsLookup(_) => bilingual_builtin(
-            "ByEqualToObjWithFreeParamsLookup",
-            "Equal via free-param object",
-            "Equality follows from a looked-up object with free parameters",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ByFnSetAlphaEqual(_) => bilingual_builtin(
-            "ByFnSetAlphaEqual",
-            "FnSet α-equal",
-            "Function sets are equal up to renaming bound variables",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ByAnonymousFnAlphaEqual(_) => bilingual_builtin(
-            "ByAnonymousFnAlphaEqual",
-            "Anonymous fn α-equal",
-            "Anonymous functions are equal up to renaming bound variables",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::BySetBuilderAlphaEqual(_) => bilingual_builtin(
-            "BySetBuilderAlphaEqual",
-            "Set-builder α-equal",
-            "Set builders are equal up to renaming bound variables",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SinArcsinLeftInverse(_) => bilingual_builtin(
-            "SinArcsinLeftInverse",
-            "sin ∘ arcsin",
-            "sin(arcsin(x)) = x on the arcsin range",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::CosArccosLeftInverse(_) => bilingual_builtin(
-            "CosArccosLeftInverse",
-            "cos ∘ arccos",
-            "cos(arccos(x)) = x on the arccos range",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::TanArctanLeftInverse(_) => bilingual_builtin(
-            "TanArctanLeftInverse",
-            "tan ∘ arctan",
-            "tan(arctan(x)) = x",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::CotArccotLeftInverse(_) => bilingual_builtin(
-            "CotArccotLeftInverse",
-            "cot ∘ arccot",
-            "cot(arccot(x)) = x",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ArcsinSinRightInverse(_) => bilingual_builtin(
-            "ArcsinSinRightInverse",
-            "arcsin ∘ sin",
-            "arcsin(sin(x)) = x on the principal interval",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ArccosCosRightInverse(_) => bilingual_builtin(
-            "ArccosCosRightInverse",
-            "arccos ∘ cos",
-            "arccos(cos(x)) = x on the principal interval",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ArctanTanRightInverse(_) => bilingual_builtin(
-            "ArctanTanRightInverse",
-            "arctan ∘ tan",
-            "arctan(tan(x)) = x on the principal interval",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ArccotCotRightInverse(_) => bilingual_builtin(
-            "ArccotCotRightInverse",
-            "arccot ∘ cot",
-            "arccot(cot(x)) = x on the principal interval",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ArcsinExactZero(_) => bilingual_builtin(
-            "ArcsinExactZero",
-            "arcsin 0",
-            "arcsin(0) = 0",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ArcsinExactOne(_) => bilingual_builtin(
-            "ArcsinExactOne",
-            "arcsin 1",
-            "arcsin(1) = π/2",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ArcsinExactNegOne(_) => bilingual_builtin(
-            "ArcsinExactNegOne",
-            "arcsin(-1)",
-            "arcsin(-1) = -π/2",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ArccosExactOne(_) => bilingual_builtin(
-            "ArccosExactOne",
-            "arccos 1",
-            "arccos(1) = 0",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ArccosExactZero(_) => bilingual_builtin(
-            "ArccosExactZero",
-            "arccos 0",
-            "arccos(0) = π/2",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ArccosExactNegOne(_) => bilingual_builtin(
-            "ArccosExactNegOne",
-            "arccos(-1)",
-            "arccos(-1) = π",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ArctanExactZero(_) => bilingual_builtin(
-            "ArctanExactZero",
-            "arctan 0",
-            "arctan(0) = 0",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ArccotExactZero(_) => bilingual_builtin(
-            "ArccotExactZero",
-            "arccot 0",
-            "arccot(0) = π/2",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::PowerProductSameBase(_) => bilingual_builtin(
-            "PowerProductSameBase",
-            "a^m · a^n",
-            "a^m · a^n = a^(m+n)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::PowerOfPower(_) => bilingual_builtin(
-            "PowerOfPower",
-            "(a^m)^n",
-            "(a^m)^n = a^(m·n)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::PowerOfProduct(_) => bilingual_builtin(
-            "PowerOfProduct",
-            "(a·b)^n",
-            "(a·b)^n = a^n · b^n",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ReciprocalAsNegOnePower(_) => bilingual_builtin(
-            "ReciprocalAsNegOnePower",
-            "1/a as a^(-1)",
-            "1/a = a^(-1)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::QuotientAsMulNegOnePower(_) => bilingual_builtin(
-            "QuotientAsMulNegOnePower",
-            "a/b as a·b^(-1)",
-            "a/b = a · b^(-1)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::OneToAnyPower(_) => bilingual_builtin(
-            "OneToAnyPower",
-            "1^n",
-            "1^n = 1",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ZeroToPosNatPower(_) => bilingual_builtin(
-            "ZeroToPosNatPower",
-            "0^n (n>0)",
-            "0^n = 0 for positive natural n",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SqrtSquare(_) => bilingual_builtin(
-            "SqrtSquare",
-            "√(a²)",
-            "√(a²) relates to |a| / square-root of a square",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SqrtZero(_) => bilingual_builtin(
-            "SqrtZero",
-            "√0",
-            "√0 = 0",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SqrtOne(_) => bilingual_builtin(
-            "SqrtOne",
-            "√1",
-            "√1 = 1",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SqrtOfSquare(_) => bilingual_builtin(
-            "SqrtOfSquare",
-            "√(a·a)",
-            "√(a·a) = |a|",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SqrtProduct(_) => bilingual_builtin(
-            "SqrtProduct",
-            "√(a·b)",
-            "√(a·b) = √a · √b (when defined)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SqrtQuotient(_) => bilingual_builtin(
-            "SqrtQuotient",
-            "√(a/b)",
-            "√(a/b) = √a / √b (when defined)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::AbsOfNegation(_) => bilingual_builtin(
-            "AbsOfNegation",
-            "|-a|",
-            "|-a| = |a|",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::AbsProduct(_) => bilingual_builtin(
-            "AbsProduct",
-            "|a·b|",
-            "|a·b| = |a|·|b|",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::AbsSquare(_) => bilingual_builtin(
-            "AbsSquare",
-            "|a|²",
-            "|a|² = a²",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::LogBaseSelf(_) => bilingual_builtin(
-            "LogBaseSelf",
-            "log_a(a)",
-            "log_a(a) = 1",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::LogOfOne(_) => bilingual_builtin(
-            "LogOfOne",
-            "log_a(1)",
-            "log_a(1) = 0",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::LogOfPowerSameBase(_) => bilingual_builtin(
-            "LogOfPowerSameBase",
-            "log_a(a^n)",
-            "log_a(a^n) = n",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::LogArgPower(_) => bilingual_builtin(
-            "LogArgPower",
-            "log_a(b^n)",
-            "log_a(b^n) = n · log_a(b)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::LogProduct(_) => bilingual_builtin(
-            "LogProduct",
-            "log_a(b·c)",
-            "log_a(b·c) = log_a(b) + log_a(c)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::LogQuotient(_) => bilingual_builtin(
-            "LogQuotient",
-            "log_a(b/c)",
-            "log_a(b/c) = log_a(b) - log_a(c)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::LogReciprocal(_) => bilingual_builtin(
-            "LogReciprocal",
-            "log_a(1/b)",
-            "log_a(1/b) = -log_a(b)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::LogChangeOfBase(_) => bilingual_builtin(
-            "LogChangeOfBase",
-            "change of base",
-            "log_a(b) = log_c(b) / log_c(a)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ZeroMod(_) => bilingual_builtin(
-            "ZeroMod",
-            "0 mod n",
-            "0 mod n = 0",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ModOne(_) => bilingual_builtin(
-            "ModOne",
-            "a mod 1",
-            "a mod 1 = 0",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::OneModAtLeastTwo(_) => bilingual_builtin(
-            "OneModAtLeastTwo",
-            "1 mod n (n≥2)",
-            "1 mod n = 1 when n ≥ 2",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::NestedSameModAbsorption(_) => bilingual_builtin(
-            "NestedSameModAbsorption",
-            "nested same mod",
-            "(a mod n) mod n = a mod n",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::MinIdempotent(_) => bilingual_builtin(
-            "MinIdempotent",
-            "min(a,a)",
-            "min(a,a) = a",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::MaxIdempotent(_) => bilingual_builtin(
-            "MaxIdempotent",
-            "max(a,a)",
-            "max(a,a) = a",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::MinCommutative(_) => bilingual_builtin(
-            "MinCommutative",
-            "min commutative",
-            "min(a,b) = min(b,a)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::MaxCommutative(_) => bilingual_builtin(
-            "MaxCommutative",
-            "max commutative",
-            "max(a,b) = max(b,a)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::AbsAbsAbsorption(_) => bilingual_builtin(
-            "AbsAbsAbsorption",
-            "||a||",
-            "||a|| = |a|",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ExpOfLn(_) => bilingual_builtin(
-            "ExpOfLn",
-            "exp(ln(x))",
-            "exp(ln(x)) = x",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::LnOfExp(_) => bilingual_builtin(
-            "LnOfExp",
-            "ln(exp(x))",
-            "ln(exp(x)) = x",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::FloorOfInteger(_) => bilingual_builtin(
-            "FloorOfInteger",
-            "⌊n⌋ for integer n",
-            "⌊n⌋ = n when n is an integer",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::CeilOfInteger(_) => bilingual_builtin(
-            "CeilOfInteger",
-            "⌈n⌉ for integer n",
-            "⌈n⌉ = n when n is an integer",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ModSelfZero(_) => bilingual_builtin(
-            "ModSelfZero",
-            "a mod a",
-            "a mod a = 0",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::FloorOfCeilOfInteger(_) => bilingual_builtin(
-            "FloorOfCeilOfInteger",
-            "⌊⌈n⌉⌋",
-            "⌊⌈n⌉⌋ = n for integer n",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::CeilOfFloorOfInteger(_) => bilingual_builtin(
-            "CeilOfFloorOfInteger",
-            "⌈⌊n⌋⌉",
-            "⌈⌊n⌋⌉ = n for integer n",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SqrtOfSquareEqualsAbs(_) => bilingual_builtin(
-            "SqrtOfSquareEqualsAbs",
-            "√(a²)=|a|",
-            "√(a²) = |a|",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::QuotByOne(_) => bilingual_builtin(
-            "QuotByOne",
-            "a ÷ 1",
-            "a quot 1 = a",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::QuotSelfOne(_) => bilingual_builtin(
-            "QuotSelfOne",
-            "a ÷ a",
-            "a quot a = 1 (a ≠ 0)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::LcmCommutative(_) => bilingual_builtin(
-            "LcmCommutative",
-            "lcm commutative",
-            "lcm(a,b) = lcm(b,a)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::LcmIdempotentAbs(_) => bilingual_builtin(
-            "LcmIdempotentAbs",
-            "lcm(a,a)",
-            "lcm(a,a) = |a|",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::GcdCommutative(_) => bilingual_builtin(
-            "GcdCommutative",
-            "gcd commutative",
-            "gcd(a,b) = gcd(b,a)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::GcdIdempotentAbs(_) => bilingual_builtin(
-            "GcdIdempotentAbs",
-            "gcd(a,a)",
-            "gcd(a,a) = |a|",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::GcdRightZeroAbs(_) => bilingual_builtin(
-            "GcdRightZeroAbs",
-            "gcd(a,0)",
-            "gcd(a,0) = |a|",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::GcdLeftZeroAbs(_) => bilingual_builtin(
-            "GcdLeftZeroAbs",
-            "gcd(0,a)",
-            "gcd(0,a) = |a|",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::FactorialSuccessor(_) => bilingual_builtin(
-            "FactorialSuccessor",
-            "(n+1)!",
-            "(n+1)! = (n+1)·n!",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::AbsNonnegEqualsSelf(_) => bilingual_builtin(
-            "AbsNonnegEqualsSelf",
-            "|a| for a≥0",
-            "|a| = a when a ≥ 0",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::AbsNonposEqualsNegation(_) => bilingual_builtin(
-            "AbsNonposEqualsNegation",
-            "|a| for a≤0",
-            "|a| = -a when a ≤ 0",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SignOfPositive(_) => bilingual_builtin(
-            "SignOfPositive",
-            "sign of positive",
-            "sign(a) = 1 when a > 0",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SignOfNegative(_) => bilingual_builtin(
-            "SignOfNegative",
-            "sign of negative",
-            "sign(a) = -1 when a < 0",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::MaxRightWhenLessEqual(_) => bilingual_builtin(
-            "MaxRightWhenLessEqual",
-            "max when a≤b",
-            "max(a,b) = b when a ≤ b",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::MaxLeftWhenLessEqual(_) => bilingual_builtin(
-            "MaxLeftWhenLessEqual",
-            "max when b≤a",
-            "max(a,b) = a when b ≤ a",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::MinLeftWhenLessEqual(_) => bilingual_builtin(
-            "MinLeftWhenLessEqual",
-            "min when a≤b",
-            "min(a,b) = a when a ≤ b",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::MinRightWhenLessEqual(_) => bilingual_builtin(
-            "MinRightWhenLessEqual",
-            "min when b≤a",
-            "min(a,b) = b when b ≤ a",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::GcdDividesArgument(_) => bilingual_builtin(
-            "GcdDividesArgument",
-            "gcd divides",
-            "gcd(a,b) divides a (and b)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ProductModFactorZero(_) => bilingual_builtin(
-            "ProductModFactorZero",
-            "product mod factor",
-            "(k·n) mod n = 0",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::EqualityFromTwoSidedWeakOrder(_) => bilingual_builtin(
-            "EqualityFromTwoSidedWeakOrder",
-            "a≤b and b≤a",
-            "a = b follows from a ≤ b and b ≤ a",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::DiffZeroFromEqualOperands(_) => bilingual_builtin(
-            "DiffZeroFromEqualOperands",
-            "a−b=0 from a=b",
-            "a − b = 0 follows from a = b",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::EqualFromKnownDifferenceZero(_) => bilingual_builtin(
-            "EqualFromKnownDifferenceZero",
-            "a=b from a−b=0",
-            "a = b follows from a known a − b = 0",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ZeroProductCancel(_) => bilingual_builtin(
-            "ZeroProductCancel",
-            "zero product",
-            "a·b = 0 with a≠0 gives b = 0 (and symmetrically)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SignOfNegation(_) => bilingual_builtin(
-            "SignOfNegation",
-            "sign(-a)",
-            "sign(-a) = -sign(a)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SignTimesAbsEqualsArg(_) => bilingual_builtin(
-            "SignTimesAbsEqualsArg",
-            "sign(a)·|a|",
-            "sign(a)·|a| = a",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::AbsEqualsSignTimesArg(_) => bilingual_builtin(
-            "AbsEqualsSignTimesArg",
-            "|a| = sign(a)·a",
-            "|a| = sign(a)·a when sign is defined",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SignOfProduct(_) => bilingual_builtin(
-            "SignOfProduct",
-            "sign(a·b)",
-            "sign(a·b) = sign(a)·sign(b)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SubtractionFromKnownAddition(_) => bilingual_builtin(
-            "SubtractionFromKnownAddition",
-            "subtraction from addition",
-            "c = a − b follows from a known a = b + c",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::QuotEuclideanDecomposition(_) => bilingual_builtin(
-            "QuotEuclideanDecomposition",
-            "Euclidean quot",
-            "a = (a quot n)·n + (a mod n)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ModDividendMinusRemainderZero(_) => bilingual_builtin(
-            "ModDividendMinusRemainderZero",
-            "mod remainder",
-            "a − (a mod n) is divisible by n",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SquareSumComponentZero(_) => bilingual_builtin(
-            "SquareSumComponentZero",
-            "square-sum zero",
-            "a² + b² = 0 forces a = 0 and b = 0 (over reals)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::MinusOneOddNaturalPower(_) => bilingual_builtin(
-            "MinusOneOddNaturalPower",
-            "(-1)^(odd)",
-            "(-1)^n = -1 for odd natural n",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::LcmGcdProductAbs(_) => bilingual_builtin(
-            "LcmGcdProductAbs",
-            "lcm·gcd",
-            "lcm(a,b)·gcd(a,b) = |a·b|",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::UnionEmptyRight(_) => bilingual_builtin(
-            "UnionEmptyRight",
-            "A ∪ ∅",
-            "A ∪ ∅ = A",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::UnionEmptyLeft(_) => bilingual_builtin(
-            "UnionEmptyLeft",
-            "∅ ∪ A",
-            "∅ ∪ A = A",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::IntersectEmptyRight(_) => bilingual_builtin(
-            "IntersectEmptyRight",
-            "A ∩ ∅",
-            "A ∩ ∅ = ∅",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::IntersectEmptyLeft(_) => bilingual_builtin(
-            "IntersectEmptyLeft",
-            "∅ ∩ A",
-            "∅ ∩ A = ∅",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SetMinusSelfEmpty(_) => bilingual_builtin(
-            "SetMinusSelfEmpty",
-            "A \\ A",
-            "A \\ A = ∅",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SetMinusEmptyRight(_) => bilingual_builtin(
-            "SetMinusEmptyRight",
-            "A \\ ∅",
-            "A \\ ∅ = A",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SetMinusEmptyLeft(_) => bilingual_builtin(
-            "SetMinusEmptyLeft",
-            "∅ \\ A",
-            "∅ \\ A = ∅",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::UnionCommutative(_) => bilingual_builtin(
-            "UnionCommutative",
-            "union commutative",
-            "A ∪ B = B ∪ A",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::IntersectCommutative(_) => bilingual_builtin(
-            "IntersectCommutative",
-            "intersect commutative",
-            "A ∩ B = B ∩ A",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::UnionIdempotent(_) => bilingual_builtin(
-            "UnionIdempotent",
-            "A ∪ A",
-            "A ∪ A = A",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::IntersectIdempotent(_) => bilingual_builtin(
-            "IntersectIdempotent",
-            "A ∩ A",
-            "A ∩ A = A",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::IntersectFromSubset(_) => bilingual_builtin(
-            "IntersectFromSubset",
-            "intersect from subset",
-            "A ⊆ B gives A ∩ B = A",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::EmptySetFromNotNonempty(_) => bilingual_builtin(
-            "EmptySetFromNotNonempty",
-            "empty from not nonempty",
-            "¬$is_nonempty_set(A) gives A = ∅",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::PowerSetFiniteSetSize(_) => bilingual_builtin(
-            "PowerSetFiniteSetSize",
-            "|pow(A)|",
-            "|pow(A)| = 2^|A| for finite A",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::UnionAssociative(_) => bilingual_builtin(
-            "UnionAssociative",
-            "union associative",
-            "(A ∪ B) ∪ C = A ∪ (B ∪ C)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::IntersectAssociative(_) => bilingual_builtin(
-            "IntersectAssociative",
-            "intersect associative",
-            "(A ∩ B) ∩ C = A ∩ (B ∩ C)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::IntersectUnionDistributive(_) => bilingual_builtin(
-            "IntersectUnionDistributive",
-            "∩ distributes over ∪",
-            "A ∩ (B ∪ C) = (A ∩ B) ∪ (A ∩ C)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SetMinusUnionDeMorgan(_) => bilingual_builtin(
-            "SetMinusUnionDeMorgan",
-            "\\ over ∪",
-            "A \\ (B ∪ C) = (A \\ B) ∩ (A \\ C)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SetMinusIntersectDeMorgan(_) => bilingual_builtin(
-            "SetMinusIntersectDeMorgan",
-            "\\ over ∩",
-            "A \\ (B ∩ C) = (A \\ B) ∪ (A \\ C)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::IntersectSetMinusSelfEmpty(_) => bilingual_builtin(
-            "IntersectSetMinusSelfEmpty",
-            "A ∩ (A\\B)",
-            "A ∩ (A \\ B) relates to emptiness / difference",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::FiniteSetSumEmpty(_) => bilingual_builtin(
-            "FiniteSetSumEmpty",
-            "sum over ∅",
-            "∑_{x∈∅} f(x) = 0",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::FiniteSetProductEmpty(_) => bilingual_builtin(
-            "FiniteSetProductEmpty",
-            "product over ∅",
-            "∏_{x∈∅} f(x) = 1",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::FiniteSetReduceEmpty(_) => bilingual_builtin(
-            "FiniteSetReduceEmpty",
-            "reduce over ∅",
-            "reduce over the empty set is the unit",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ReduceEmpty(_) => bilingual_builtin(
-            "ReduceEmpty",
-            "reduce empty",
-            "reduce on an empty range is the unit",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SumEmptyRange(_) => bilingual_builtin(
-            "SumEmptyRange",
-            "sum empty range",
-            "∑ over an empty range is 0",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ProductEmptyRange(_) => bilingual_builtin(
-            "ProductEmptyRange",
-            "product empty range",
-            "∏ over an empty range is 1",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::UnionAbsorptionFromSubset(_) => bilingual_builtin(
-            "UnionAbsorptionFromSubset",
-            "union absorption",
-            "A ⊆ B gives A ∪ B = B",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SetMinusRecoversSubset(_) => bilingual_builtin(
-            "SetMinusRecoversSubset",
-            "difference recovers subset",
-            "A ⊆ B gives B \\ (B \\ A) = A",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::EmptySetFromSizeZero(_) => bilingual_builtin(
-            "EmptySetFromSizeZero",
-            "empty from size 0",
-            "|A| = 0 gives A = ∅",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::CartProjFactor(_) => bilingual_builtin(
-            "CartProjFactor",
-            "cart projection factor",
-            "Projection recovers a Cartesian factor",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::TupleComponentAtIndex(_) => bilingual_builtin(
-            "TupleComponentAtIndex",
-            "tuple component",
-            "The i-th component of a tuple equals the stated entry",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::FiniteSetSizeSetMinus(_) => bilingual_builtin(
-            "FiniteSetSizeSetMinus",
-            "|A\\B|",
-            "|A \\ B| = |A| − |A ∩ B| for finite sets",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::FiniteSetSizeUnion(_) => bilingual_builtin(
-            "FiniteSetSizeUnion",
-            "|A∪B|",
-            "|A ∪ B| = |A| + |B| − |A ∩ B|",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ClosedRangeSingletonListSet(_) => bilingual_builtin(
-            "ClosedRangeSingletonListSet",
-            "closed range singleton",
-            "{n..n} = {n}",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SumSingleTerm(_) => bilingual_builtin(
-            "SumSingleTerm",
-            "sum one term",
-            "∑ with a single term equals that term",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ProductSingleTerm(_) => bilingual_builtin(
-            "ProductSingleTerm",
-            "product one term",
-            "∏ with a single term equals that term",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ReduceAddZeroEqualsSum(_) => bilingual_builtin(
-            "ReduceAddZeroEqualsSum",
-            "reduce +0 as sum",
-            "reduce with add and 0 equals a sum",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::FiniteSetReduceAddZeroEqualsSum(_) => bilingual_builtin(
-            "FiniteSetReduceAddZeroEqualsSum",
-            "finite-set reduce as sum",
-            "finite-set reduce with + and 0 equals a sum",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::PowOfLogInverse(_) => bilingual_builtin(
-            "PowOfLogInverse",
-            "a^(log_a b)",
-            "a^(log_a(b)) = b",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::UnionSetMinusDecomposition(_) => bilingual_builtin(
-            "UnionSetMinusDecomposition",
-            "union\\difference",
-            "A ∪ B = A ∪ (B \\ A)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SetMinusIntersectSelf(_) => bilingual_builtin(
-            "SetMinusIntersectSelf",
-            "A \\ (A∩B)",
-            "A \\ (A ∩ B) = A \\ B",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ReOfImaginaryUnit(_) => bilingual_builtin(
-            "ReOfImaginaryUnit",
-            "Re(i)",
-            "Re(i) = 0",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ImgOfImaginaryUnit(_) => bilingual_builtin(
-            "ImgOfImaginaryUnit",
-            "Im(i)",
-            "Im(i) = 1",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ReOfRealEmbedding(_) => bilingual_builtin(
-            "ReOfRealEmbedding",
-            "Re of real",
-            "Re(embed(x)) = x",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ImgOfRealEmbedding(_) => bilingual_builtin(
-            "ImgOfRealEmbedding",
-            "Im of real",
-            "Im(embed(x)) = 0",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ReOfRealPlusI(_) => bilingual_builtin(
-            "ReOfRealPlusI",
-            "Re(x+i)",
-            "Re(x + i) = x",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ImgOfRealPlusI(_) => bilingual_builtin(
-            "ImgOfRealPlusI",
-            "Im(x+i)",
-            "Im(x + i) = 1",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ComplexAbsOfImaginaryUnit(_) => bilingual_builtin(
-            "ComplexAbsOfImaginaryUnit",
-            "|i|",
-            "|i| = 1",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ModNestedDivisibleAbsorption(_) => bilingual_builtin(
-            "ModNestedDivisibleAbsorption",
-            "nested mod absorption",
-            "If n | m then (a mod m) mod n = a mod n",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SumSplitLastTerm(_) => bilingual_builtin(
-            "SumSplitLastTerm",
-            "sum split last",
-            "Sum splits off its last term",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ProductSplitLastTerm(_) => bilingual_builtin(
-            "ProductSplitLastTerm",
-            "product split last",
-            "Product splits off its last term",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::FiniteSetSumListExpansion(_) => bilingual_builtin(
-            "FiniteSetSumListExpansion",
-            "finite-set sum expand",
-            "Sum over a list-set expands to an explicit sum",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::FiniteSetProductListExpansion(_) => bilingual_builtin(
-            "FiniteSetProductListExpansion",
-            "finite-set product expand",
-            "Product over a list-set expands to an explicit product",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::EulerEqualsExpOne(_) => bilingual_builtin(
-            "EulerEqualsExpOne",
-            "e = exp(1)",
-            "e = exp(1)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::LnOfEuler(_) => bilingual_builtin(
-            "LnOfEuler",
-            "ln(e)",
-            "ln(e) = 1",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ReOfReal(_) => bilingual_builtin(
-            "ReOfReal",
-            "Re(x) for real x",
-            "Re(x) = x for real x",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ImgOfReal(_) => bilingual_builtin(
-            "ImgOfReal",
-            "Im(x) for real x",
-            "Im(x) = 0 for real x",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ReOfRealPlusImagScaled(_) => bilingual_builtin(
-            "ReOfRealPlusImagScaled",
-            "Re(x+y·i)",
-            "Re(x + y·i) = x",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ImgOfRealPlusImagScaled(_) => bilingual_builtin(
-            "ImgOfRealPlusImagScaled",
-            "Im(x+y·i)",
-            "Im(x + y·i) = y",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ComplexAbsOfNonnegReal(_) => bilingual_builtin(
-            "ComplexAbsOfNonnegReal",
-            "|x| for x≥0 real",
-            "|embed(x)| = x for x ≥ 0",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ComplexAbsOfImagScaled(_) => bilingual_builtin(
-            "ComplexAbsOfImagScaled",
-            "|y·i|",
-            "|y·i| = |y|",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ClosedRangeLiteralExpansion(_) => bilingual_builtin(
-            "ClosedRangeLiteralExpansion",
-            "closed range expand",
-            "A numeric closed range expands to an explicit list set",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::RangeLiteralExpansion(_) => bilingual_builtin(
-            "RangeLiteralExpansion",
-            "range expand",
-            "A numeric range expands to an explicit list set",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::PowerSetOfEmpty(_) => bilingual_builtin(
-            "PowerSetOfEmpty",
-            "pow(∅)",
-            "pow(∅) = {∅}",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::PowerSetOfSingleton(_) => bilingual_builtin(
-            "PowerSetOfSingleton",
-            "pow({a})",
-            "pow({a}) = {∅, {a}}",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::FamilyUnionOfEmpty(_) => bilingual_builtin(
-            "FamilyUnionOfEmpty",
-            "⋃∅",
-            "⋃∅ = ∅",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::CartWithEmptyFactor(_) => bilingual_builtin(
-            "CartWithEmptyFactor",
-            "A × ∅",
-            "A × ∅ = ∅",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::UnionOverIntersectDistributive(_) => bilingual_builtin(
-            "UnionOverIntersectDistributive",
-            "∪ over ∩",
-            "A ∪ (B ∩ C) = (A ∪ B) ∩ (A ∪ C)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SetMinusChainToUnion(_) => bilingual_builtin(
-            "SetMinusChainToUnion",
-            "chained difference",
-            "A \\ B \\ C expands via union of removed sets",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::FnRangeOfConstantAnonymousFn(_) => bilingual_builtin(
-            "FnRangeOfConstantAnonymousFn",
-            "range of constant fn",
-            "Range of a constant anonymous function is a singleton",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SeqEqualsFnOnN(_) => bilingual_builtin(
-            "SeqEqualsFnOnN",
-            "seq as fn on N",
-            "A sequence equals its function on N",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::FiniteSeqEqualsFnOnClosedRange(_) => bilingual_builtin(
-            "FiniteSeqEqualsFnOnClosedRange",
-            "finite seq as fn",
-            "A finite sequence equals its function on a closed range",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::IndexUnionEmptyIndex(_) => bilingual_builtin(
-            "IndexUnionEmptyIndex",
-            "⋃_{i∈∅}",
-            "Indexed union over an empty index is ∅",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::IndexIntersectEmptyIndex(_) => bilingual_builtin(
-            "IndexIntersectEmptyIndex",
-            "⋂_{i∈∅}",
-            "Indexed intersect over an empty index is the ambient universe convention used by Litex",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::IndexCartEmptyIndex(_) => bilingual_builtin(
-            "IndexCartEmptyIndex",
-            "indexed cart empty",
-            "Indexed Cartesian product over an empty index is a unit",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::IndexUnionSingleton(_) => bilingual_builtin(
-            "IndexUnionSingleton",
-            "⋃_{i∈{a}}",
-            "Indexed union over a singleton index is the single set",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::FiniteSeqZeroEqualsFnOnEmpty(_) => bilingual_builtin(
-            "FiniteSeqZeroEqualsFnOnEmpty",
-            "empty finite seq",
-            "The length-0 finite sequence equals the function on the empty range",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SetBuilderObviouslyEmpty(_) => bilingual_builtin(
-            "SetBuilderObviouslyEmpty",
-            "empty set-builder",
-            "A contradictory set-builder equals ∅",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ComplexAbsSquaredOfRectForm(_) => bilingual_builtin(
-            "ComplexAbsSquaredOfRectForm",
-            "|x+y i|²",
-            "|x + y·i|² = x² + y²",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ExpOfSum(_) => bilingual_builtin(
-            "ExpOfSum",
-            "exp(x+y)",
-            "exp(x+y) = exp(x)·exp(y)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::LogBasePower(_) => bilingual_builtin(
-            "LogBasePower",
-            "log_(a^n)(b)",
-            "log_(a^n)(b) = (1/n)·log_a(b)",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ReOfProduct(_) => bilingual_builtin(
-            "ReOfProduct",
-            "Re(z·w)",
-            "Re(z·w) expands from rectangular forms",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ImgOfProduct(_) => bilingual_builtin(
-            "ImgOfProduct",
-            "Im(z·w)",
-            "Im(z·w) expands from rectangular forms",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SinOfSum(_) => bilingual_builtin(
-            "SinOfSum",
-            "sin(x+y)",
-            "sin(x+y) = sin x cos y + cos x sin y",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::CosOfSum(_) => bilingual_builtin(
-            "CosOfSum",
-            "cos(x+y)",
-            "cos(x+y) = cos x cos y − sin x sin y",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::ReduceSingleTermWithAddZero(_) => bilingual_builtin(
-            "ReduceSingleTermWithAddZero",
-            "reduce one term",
-            "Reduce with a single term and +0 equals that term",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::FiniteSetSumFubiniSwap(_) => bilingual_builtin(
-            "FiniteSetSumFubiniSwap",
-            "Fubini swap for sums",
-            "Finite double sums may swap summation order",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::FiniteSetSumOverCartesianProduct(_) => bilingual_builtin(
-            "FiniteSetSumOverCartesianProduct",
-            "sum over A×B",
-            "Sum over a Cartesian product expands as an iterated sum",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SinOfZero(_) => bilingual_builtin(
-            "SinOfZero",
-            "sin 0",
-            "sin(0) = 0",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::CosOfZero(_) => bilingual_builtin(
-            "CosOfZero",
-            "cos 0",
-            "cos(0) = 1",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::TanOfZero(_) => bilingual_builtin(
-            "TanOfZero",
-            "tan 0",
-            "tan(0) = 0",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SinOfHalfPi(_) => bilingual_builtin(
-            "SinOfHalfPi",
-            "sin(π/2)",
-            "sin(π/2) = 1",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::CosOfPi(_) => bilingual_builtin(
-            "CosOfPi",
-            "cos(π)",
-            "cos(π) = -1",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::SinOfPi(_) => bilingual_builtin(
-            "SinOfPi",
-            "sin(π)",
-            "sin(π) = 0",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::CotOfHalfPi(_) => bilingual_builtin(
-            "CotOfHalfPi",
-            "cot(π/2)",
-            "cot(π/2) = 0",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
-        EqualitySearchProofByBuiltinRule::PythagoreanIdentity(_) => bilingual_builtin(
-            "PythagoreanIdentity",
-            "sin²+cos²",
-            "sin²(x) + cos²(x) = 1",
-            None, // zh rule_name
-            None, // zh message
-            lang,
-        ),
+        EqualitySearchProofByBuiltinRule::ByEqualIr(_) => BuiltinRuleText {
+            rule_id: "ByEqualIr",
+            rule_name: "Equal by IR".to_string(),
+            message: "Both sides share the same internal representation".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ByEqualToObjWithFreeParamsLookup(_) => BuiltinRuleText {
+            rule_id: "ByEqualToObjWithFreeParamsLookup",
+            rule_name: "Equal via free-param object".to_string(),
+            message: "Equality follows from a looked-up object with free parameters".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ByFnSetAlphaEqual(_) => BuiltinRuleText {
+            rule_id: "ByFnSetAlphaEqual",
+            rule_name: "FnSet α-equal".to_string(),
+            message: "Function sets are equal up to renaming bound variables".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ByAnonymousFnAlphaEqual(_) => BuiltinRuleText {
+            rule_id: "ByAnonymousFnAlphaEqual",
+            rule_name: "Anonymous fn α-equal".to_string(),
+            message: "Anonymous functions are equal up to renaming bound variables".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::BySetBuilderAlphaEqual(_) => BuiltinRuleText {
+            rule_id: "BySetBuilderAlphaEqual",
+            rule_name: "Set-builder α-equal".to_string(),
+            message: "Set builders are equal up to renaming bound variables".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SinArcsinLeftInverse(_) => BuiltinRuleText {
+            rule_id: "SinArcsinLeftInverse",
+            rule_name: "sin ∘ arcsin".to_string(),
+            message: "sin(arcsin(x)) = x on the arcsin range".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::CosArccosLeftInverse(_) => BuiltinRuleText {
+            rule_id: "CosArccosLeftInverse",
+            rule_name: "cos ∘ arccos".to_string(),
+            message: "cos(arccos(x)) = x on the arccos range".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::TanArctanLeftInverse(_) => BuiltinRuleText {
+            rule_id: "TanArctanLeftInverse",
+            rule_name: "tan ∘ arctan".to_string(),
+            message: "tan(arctan(x)) = x".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::CotArccotLeftInverse(_) => BuiltinRuleText {
+            rule_id: "CotArccotLeftInverse",
+            rule_name: "cot ∘ arccot".to_string(),
+            message: "cot(arccot(x)) = x".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ArcsinSinRightInverse(_) => BuiltinRuleText {
+            rule_id: "ArcsinSinRightInverse",
+            rule_name: "arcsin ∘ sin".to_string(),
+            message: "arcsin(sin(x)) = x on the principal interval".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ArccosCosRightInverse(_) => BuiltinRuleText {
+            rule_id: "ArccosCosRightInverse",
+            rule_name: "arccos ∘ cos".to_string(),
+            message: "arccos(cos(x)) = x on the principal interval".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ArctanTanRightInverse(_) => BuiltinRuleText {
+            rule_id: "ArctanTanRightInverse",
+            rule_name: "arctan ∘ tan".to_string(),
+            message: "arctan(tan(x)) = x on the principal interval".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ArccotCotRightInverse(_) => BuiltinRuleText {
+            rule_id: "ArccotCotRightInverse",
+            rule_name: "arccot ∘ cot".to_string(),
+            message: "arccot(cot(x)) = x on the principal interval".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ArcsinExactZero(_) => BuiltinRuleText {
+            rule_id: "ArcsinExactZero",
+            rule_name: "arcsin 0".to_string(),
+            message: "arcsin(0) = 0".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ArcsinExactOne(_) => BuiltinRuleText {
+            rule_id: "ArcsinExactOne",
+            rule_name: "arcsin 1".to_string(),
+            message: "arcsin(1) = π/2".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ArcsinExactNegOne(_) => BuiltinRuleText {
+            rule_id: "ArcsinExactNegOne",
+            rule_name: "arcsin(-1)".to_string(),
+            message: "arcsin(-1) = -π/2".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ArccosExactOne(_) => BuiltinRuleText {
+            rule_id: "ArccosExactOne",
+            rule_name: "arccos 1".to_string(),
+            message: "arccos(1) = 0".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ArccosExactZero(_) => BuiltinRuleText {
+            rule_id: "ArccosExactZero",
+            rule_name: "arccos 0".to_string(),
+            message: "arccos(0) = π/2".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ArccosExactNegOne(_) => BuiltinRuleText {
+            rule_id: "ArccosExactNegOne",
+            rule_name: "arccos(-1)".to_string(),
+            message: "arccos(-1) = π".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ArctanExactZero(_) => BuiltinRuleText {
+            rule_id: "ArctanExactZero",
+            rule_name: "arctan 0".to_string(),
+            message: "arctan(0) = 0".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ArccotExactZero(_) => BuiltinRuleText {
+            rule_id: "ArccotExactZero",
+            rule_name: "arccot 0".to_string(),
+            message: "arccot(0) = π/2".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::PowerProductSameBase(_) => BuiltinRuleText {
+            rule_id: "PowerProductSameBase",
+            rule_name: "a^m · a^n".to_string(),
+            message: "a^m · a^n = a^(m+n)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::PowerOfPower(_) => BuiltinRuleText {
+            rule_id: "PowerOfPower",
+            rule_name: "(a^m)^n".to_string(),
+            message: "(a^m)^n = a^(m·n)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::PowerOfProduct(_) => BuiltinRuleText {
+            rule_id: "PowerOfProduct",
+            rule_name: "(a·b)^n".to_string(),
+            message: "(a·b)^n = a^n · b^n".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ReciprocalAsNegOnePower(_) => BuiltinRuleText {
+            rule_id: "ReciprocalAsNegOnePower",
+            rule_name: "1/a as a^(-1)".to_string(),
+            message: "1/a = a^(-1)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::QuotientAsMulNegOnePower(_) => BuiltinRuleText {
+            rule_id: "QuotientAsMulNegOnePower",
+            rule_name: "a/b as a·b^(-1)".to_string(),
+            message: "a/b = a · b^(-1)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::OneToAnyPower(_) => BuiltinRuleText {
+            rule_id: "OneToAnyPower",
+            rule_name: "1^n".to_string(),
+            message: "1^n = 1".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ZeroToPosNatPower(_) => BuiltinRuleText {
+            rule_id: "ZeroToPosNatPower",
+            rule_name: "0^n (n>0)".to_string(),
+            message: "0^n = 0 for positive natural n".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SqrtSquare(_) => BuiltinRuleText {
+            rule_id: "SqrtSquare",
+            rule_name: "√(a²)".to_string(),
+            message: "√(a²) relates to |a| / square-root of a square".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SqrtZero(_) => BuiltinRuleText {
+            rule_id: "SqrtZero",
+            rule_name: "√0".to_string(),
+            message: "√0 = 0".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SqrtOne(_) => BuiltinRuleText {
+            rule_id: "SqrtOne",
+            rule_name: "√1".to_string(),
+            message: "√1 = 1".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SqrtOfSquare(_) => BuiltinRuleText {
+            rule_id: "SqrtOfSquare",
+            rule_name: "√(a·a)".to_string(),
+            message: "√(a·a) = |a|".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SqrtProduct(_) => BuiltinRuleText {
+            rule_id: "SqrtProduct",
+            rule_name: "√(a·b)".to_string(),
+            message: "√(a·b) = √a · √b (when defined)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SqrtQuotient(_) => BuiltinRuleText {
+            rule_id: "SqrtQuotient",
+            rule_name: "√(a/b)".to_string(),
+            message: "√(a/b) = √a / √b (when defined)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::AbsOfNegation(_) => BuiltinRuleText {
+            rule_id: "AbsOfNegation",
+            rule_name: "|-a|".to_string(),
+            message: "|-a| = |a|".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::AbsProduct(_) => BuiltinRuleText {
+            rule_id: "AbsProduct",
+            rule_name: "|a·b|".to_string(),
+            message: "|a·b| = |a|·|b|".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::AbsSquare(_) => BuiltinRuleText {
+            rule_id: "AbsSquare",
+            rule_name: "|a|²".to_string(),
+            message: "|a|² = a²".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::LogBaseSelf(_) => BuiltinRuleText {
+            rule_id: "LogBaseSelf",
+            rule_name: "log_a(a)".to_string(),
+            message: "log_a(a) = 1".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::LogOfOne(_) => BuiltinRuleText {
+            rule_id: "LogOfOne",
+            rule_name: "log_a(1)".to_string(),
+            message: "log_a(1) = 0".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::LogOfPowerSameBase(_) => BuiltinRuleText {
+            rule_id: "LogOfPowerSameBase",
+            rule_name: "log_a(a^n)".to_string(),
+            message: "log_a(a^n) = n".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::LogArgPower(_) => BuiltinRuleText {
+            rule_id: "LogArgPower",
+            rule_name: "log_a(b^n)".to_string(),
+            message: "log_a(b^n) = n · log_a(b)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::LogProduct(_) => BuiltinRuleText {
+            rule_id: "LogProduct",
+            rule_name: "log_a(b·c)".to_string(),
+            message: "log_a(b·c) = log_a(b) + log_a(c)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::LogQuotient(_) => BuiltinRuleText {
+            rule_id: "LogQuotient",
+            rule_name: "log_a(b/c)".to_string(),
+            message: "log_a(b/c) = log_a(b) - log_a(c)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::LogReciprocal(_) => BuiltinRuleText {
+            rule_id: "LogReciprocal",
+            rule_name: "log_a(1/b)".to_string(),
+            message: "log_a(1/b) = -log_a(b)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::LogChangeOfBase(_) => BuiltinRuleText {
+            rule_id: "LogChangeOfBase",
+            rule_name: "change of base".to_string(),
+            message: "log_a(b) = log_c(b) / log_c(a)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ZeroMod(_) => BuiltinRuleText {
+            rule_id: "ZeroMod",
+            rule_name: "0 mod n".to_string(),
+            message: "0 mod n = 0".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ModOne(_) => BuiltinRuleText {
+            rule_id: "ModOne",
+            rule_name: "a mod 1".to_string(),
+            message: "a mod 1 = 0".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::OneModAtLeastTwo(_) => BuiltinRuleText {
+            rule_id: "OneModAtLeastTwo",
+            rule_name: "1 mod n (n≥2)".to_string(),
+            message: "1 mod n = 1 when n ≥ 2".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::NestedSameModAbsorption(_) => BuiltinRuleText {
+            rule_id: "NestedSameModAbsorption",
+            rule_name: "nested same mod".to_string(),
+            message: "(a mod n) mod n = a mod n".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ModCompatibleSmallerModulus(_) => BuiltinRuleText {
+            rule_id: "ModCompatibleSmallerModulus",
+            rule_name: "compatible smaller modulus".to_string(),
+            message: "a mod d = (a mod m) mod d when m mod d = 0".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::MinIdempotent(_) => BuiltinRuleText {
+            rule_id: "MinIdempotent",
+            rule_name: "min(a,a)".to_string(),
+            message: "min(a,a) = a".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::MaxIdempotent(_) => BuiltinRuleText {
+            rule_id: "MaxIdempotent",
+            rule_name: "max(a,a)".to_string(),
+            message: "max(a,a) = a".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::MinCommutative(_) => BuiltinRuleText {
+            rule_id: "MinCommutative",
+            rule_name: "min commutative".to_string(),
+            message: "min(a,b) = min(b,a)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::MaxCommutative(_) => BuiltinRuleText {
+            rule_id: "MaxCommutative",
+            rule_name: "max commutative".to_string(),
+            message: "max(a,b) = max(b,a)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::AbsAbsAbsorption(_) => BuiltinRuleText {
+            rule_id: "AbsAbsAbsorption",
+            rule_name: "||a||".to_string(),
+            message: "||a|| = |a|".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ExpOfLn(_) => BuiltinRuleText {
+            rule_id: "ExpOfLn",
+            rule_name: "exp(ln(x))".to_string(),
+            message: "exp(ln(x)) = x".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::LnOfExp(_) => BuiltinRuleText {
+            rule_id: "LnOfExp",
+            rule_name: "ln(exp(x))".to_string(),
+            message: "ln(exp(x)) = x".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::FloorOfInteger(_) => BuiltinRuleText {
+            rule_id: "FloorOfInteger",
+            rule_name: "⌊n⌋ for integer n".to_string(),
+            message: "⌊n⌋ = n when n is an integer".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::CeilOfInteger(_) => BuiltinRuleText {
+            rule_id: "CeilOfInteger",
+            rule_name: "⌈n⌉ for integer n".to_string(),
+            message: "⌈n⌉ = n when n is an integer".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ModSelfZero(_) => BuiltinRuleText {
+            rule_id: "ModSelfZero",
+            rule_name: "a mod a".to_string(),
+            message: "a mod a = 0".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::FloorOfCeilOfInteger(_) => BuiltinRuleText {
+            rule_id: "FloorOfCeilOfInteger",
+            rule_name: "⌊⌈n⌉⌋".to_string(),
+            message: "⌊⌈n⌉⌋ = n for integer n".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::CeilOfFloorOfInteger(_) => BuiltinRuleText {
+            rule_id: "CeilOfFloorOfInteger",
+            rule_name: "⌈⌊n⌋⌉".to_string(),
+            message: "⌈⌊n⌋⌉ = n for integer n".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SqrtOfSquareEqualsAbs(_) => BuiltinRuleText {
+            rule_id: "SqrtOfSquareEqualsAbs",
+            rule_name: "√(a²)=|a|".to_string(),
+            message: "√(a²) = |a|".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::QuotByOne(_) => BuiltinRuleText {
+            rule_id: "QuotByOne",
+            rule_name: "a ÷ 1".to_string(),
+            message: "a quot 1 = a".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::QuotSelfOne(_) => BuiltinRuleText {
+            rule_id: "QuotSelfOne",
+            rule_name: "a ÷ a".to_string(),
+            message: "a quot a = 1 (a ≠ 0)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::LcmCommutative(_) => BuiltinRuleText {
+            rule_id: "LcmCommutative",
+            rule_name: "lcm commutative".to_string(),
+            message: "lcm(a,b) = lcm(b,a)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::LcmIdempotentAbs(_) => BuiltinRuleText {
+            rule_id: "LcmIdempotentAbs",
+            rule_name: "lcm(a,a)".to_string(),
+            message: "lcm(a,a) = |a|".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::GcdCommutative(_) => BuiltinRuleText {
+            rule_id: "GcdCommutative",
+            rule_name: "gcd commutative".to_string(),
+            message: "gcd(a,b) = gcd(b,a)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::GcdIdempotentAbs(_) => BuiltinRuleText {
+            rule_id: "GcdIdempotentAbs",
+            rule_name: "gcd(a,a)".to_string(),
+            message: "gcd(a,a) = |a|".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::GcdRightZeroAbs(_) => BuiltinRuleText {
+            rule_id: "GcdRightZeroAbs",
+            rule_name: "gcd(a,0)".to_string(),
+            message: "gcd(a,0) = |a|".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::GcdLeftZeroAbs(_) => BuiltinRuleText {
+            rule_id: "GcdLeftZeroAbs",
+            rule_name: "gcd(0,a)".to_string(),
+            message: "gcd(0,a) = |a|".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::FactorialSuccessor(_) => BuiltinRuleText {
+            rule_id: "FactorialSuccessor",
+            rule_name: "(n+1)!".to_string(),
+            message: "(n+1)! = (n+1)·n!".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::AbsNonnegEqualsSelf(_) => BuiltinRuleText {
+            rule_id: "AbsNonnegEqualsSelf",
+            rule_name: "|a| for a≥0".to_string(),
+            message: "|a| = a when a ≥ 0".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::AbsNonposEqualsNegation(_) => BuiltinRuleText {
+            rule_id: "AbsNonposEqualsNegation",
+            rule_name: "|a| for a≤0".to_string(),
+            message: "|a| = -a when a ≤ 0".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SignOfPositive(_) => BuiltinRuleText {
+            rule_id: "SignOfPositive",
+            rule_name: "sign of positive".to_string(),
+            message: "sign(a) = 1 when a > 0".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SignOfNegative(_) => BuiltinRuleText {
+            rule_id: "SignOfNegative",
+            rule_name: "sign of negative".to_string(),
+            message: "sign(a) = -1 when a < 0".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::MaxRightWhenLessEqual(_) => BuiltinRuleText {
+            rule_id: "MaxRightWhenLessEqual",
+            rule_name: "max when a≤b".to_string(),
+            message: "max(a,b) = b when a ≤ b".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::MaxLeftWhenLessEqual(_) => BuiltinRuleText {
+            rule_id: "MaxLeftWhenLessEqual",
+            rule_name: "max when b≤a".to_string(),
+            message: "max(a,b) = a when b ≤ a".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::MinLeftWhenLessEqual(_) => BuiltinRuleText {
+            rule_id: "MinLeftWhenLessEqual",
+            rule_name: "min when a≤b".to_string(),
+            message: "min(a,b) = a when a ≤ b".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::MinRightWhenLessEqual(_) => BuiltinRuleText {
+            rule_id: "MinRightWhenLessEqual",
+            rule_name: "min when b≤a".to_string(),
+            message: "min(a,b) = b when b ≤ a".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::GcdDividesArgument(_) => BuiltinRuleText {
+            rule_id: "GcdDividesArgument",
+            rule_name: "gcd divides".to_string(),
+            message: "gcd(a,b) divides a (and b)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ProductModFactorZero(_) => BuiltinRuleText {
+            rule_id: "ProductModFactorZero",
+            rule_name: "product mod factor".to_string(),
+            message: "(k·n) mod n = 0".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::EqualityFromTwoSidedWeakOrder(_) => BuiltinRuleText {
+            rule_id: "EqualityFromTwoSidedWeakOrder",
+            rule_name: "a≤b and b≤a".to_string(),
+            message: "a = b follows from a ≤ b and b ≤ a".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::DiffZeroFromEqualOperands(_) => BuiltinRuleText {
+            rule_id: "DiffZeroFromEqualOperands",
+            rule_name: "a−b=0 from a=b".to_string(),
+            message: "a − b = 0 follows from a = b".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::EqualFromKnownDifferenceZero(_) => BuiltinRuleText {
+            rule_id: "EqualFromKnownDifferenceZero",
+            rule_name: "a=b from a−b=0".to_string(),
+            message: "a = b follows from a known a − b = 0".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ZeroProductCancel(_) => BuiltinRuleText {
+            rule_id: "ZeroProductCancel",
+            rule_name: "zero product".to_string(),
+            message: "a·b = 0 with a≠0 gives b = 0 (and symmetrically)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SignOfNegation(_) => BuiltinRuleText {
+            rule_id: "SignOfNegation",
+            rule_name: "sign(-a)".to_string(),
+            message: "sign(-a) = -sign(a)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SignTimesAbsEqualsArg(_) => BuiltinRuleText {
+            rule_id: "SignTimesAbsEqualsArg",
+            rule_name: "sign(a)·|a|".to_string(),
+            message: "sign(a)·|a| = a".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::AbsEqualsSignTimesArg(_) => BuiltinRuleText {
+            rule_id: "AbsEqualsSignTimesArg",
+            rule_name: "|a| = sign(a)·a".to_string(),
+            message: "|a| = sign(a)·a when sign is defined".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SignOfProduct(_) => BuiltinRuleText {
+            rule_id: "SignOfProduct",
+            rule_name: "sign(a·b)".to_string(),
+            message: "sign(a·b) = sign(a)·sign(b)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SubtractionFromKnownAddition(_) => BuiltinRuleText {
+            rule_id: "SubtractionFromKnownAddition",
+            rule_name: "subtraction from addition".to_string(),
+            message: "c = a − b follows from a known a = b + c".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::QuotEuclideanDecomposition(_) => BuiltinRuleText {
+            rule_id: "QuotEuclideanDecomposition",
+            rule_name: "Euclidean quot".to_string(),
+            message: "a = (a quot n)·n + (a mod n)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ModDividendMinusRemainderZero(_) => BuiltinRuleText {
+            rule_id: "ModDividendMinusRemainderZero",
+            rule_name: "mod remainder".to_string(),
+            message: "a − (a mod n) is divisible by n".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SquareSumComponentZero(_) => BuiltinRuleText {
+            rule_id: "SquareSumComponentZero",
+            rule_name: "square-sum zero".to_string(),
+            message: "a² + b² = 0 forces a = 0 and b = 0 (over reals)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::MinusOneOddNaturalPower(_) => BuiltinRuleText {
+            rule_id: "MinusOneOddNaturalPower",
+            rule_name: "(-1)^(odd)".to_string(),
+            message: "(-1)^n = -1 for odd natural n".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::LcmGcdProductAbs(_) => BuiltinRuleText {
+            rule_id: "LcmGcdProductAbs",
+            rule_name: "lcm·gcd".to_string(),
+            message: "lcm(a,b)·gcd(a,b) = |a·b|".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::UnionEmptyRight(_) => BuiltinRuleText {
+            rule_id: "UnionEmptyRight",
+            rule_name: "A ∪ ∅".to_string(),
+            message: "A ∪ ∅ = A".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::UnionEmptyLeft(_) => BuiltinRuleText {
+            rule_id: "UnionEmptyLeft",
+            rule_name: "∅ ∪ A".to_string(),
+            message: "∅ ∪ A = A".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::IntersectEmptyRight(_) => BuiltinRuleText {
+            rule_id: "IntersectEmptyRight",
+            rule_name: "A ∩ ∅".to_string(),
+            message: "A ∩ ∅ = ∅".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::IntersectEmptyLeft(_) => BuiltinRuleText {
+            rule_id: "IntersectEmptyLeft",
+            rule_name: "∅ ∩ A".to_string(),
+            message: "∅ ∩ A = ∅".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SetMinusSelfEmpty(_) => BuiltinRuleText {
+            rule_id: "SetMinusSelfEmpty",
+            rule_name: "A \\ A".to_string(),
+            message: "A \\ A = ∅".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SetMinusEmptyRight(_) => BuiltinRuleText {
+            rule_id: "SetMinusEmptyRight",
+            rule_name: "A \\ ∅".to_string(),
+            message: "A \\ ∅ = A".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SetMinusEmptyLeft(_) => BuiltinRuleText {
+            rule_id: "SetMinusEmptyLeft",
+            rule_name: "∅ \\ A".to_string(),
+            message: "∅ \\ A = ∅".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::UnionCommutative(_) => BuiltinRuleText {
+            rule_id: "UnionCommutative",
+            rule_name: "union commutative".to_string(),
+            message: "A ∪ B = B ∪ A".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::IntersectCommutative(_) => BuiltinRuleText {
+            rule_id: "IntersectCommutative",
+            rule_name: "intersect commutative".to_string(),
+            message: "A ∩ B = B ∩ A".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::UnionIdempotent(_) => BuiltinRuleText {
+            rule_id: "UnionIdempotent",
+            rule_name: "A ∪ A".to_string(),
+            message: "A ∪ A = A".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::IntersectIdempotent(_) => BuiltinRuleText {
+            rule_id: "IntersectIdempotent",
+            rule_name: "A ∩ A".to_string(),
+            message: "A ∩ A = A".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::IntersectFromSubset(_) => BuiltinRuleText {
+            rule_id: "IntersectFromSubset",
+            rule_name: "intersect from subset".to_string(),
+            message: "A ⊆ B gives A ∩ B = A".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::EmptySetFromNotNonempty(_) => BuiltinRuleText {
+            rule_id: "EmptySetFromNotNonempty",
+            rule_name: "empty from not nonempty".to_string(),
+            message: "¬$is_nonempty_set(A) gives A = ∅".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::PowerSetFiniteSetSize(_) => BuiltinRuleText {
+            rule_id: "PowerSetFiniteSetSize",
+            rule_name: "|pow(A)|".to_string(),
+            message: "|pow(A)| = 2^|A| for finite A".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::UnionAssociative(_) => BuiltinRuleText {
+            rule_id: "UnionAssociative",
+            rule_name: "union associative".to_string(),
+            message: "(A ∪ B) ∪ C = A ∪ (B ∪ C)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::IntersectAssociative(_) => BuiltinRuleText {
+            rule_id: "IntersectAssociative",
+            rule_name: "intersect associative".to_string(),
+            message: "(A ∩ B) ∩ C = A ∩ (B ∩ C)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::IntersectUnionDistributive(_) => BuiltinRuleText {
+            rule_id: "IntersectUnionDistributive",
+            rule_name: "∩ distributes over ∪".to_string(),
+            message: "A ∩ (B ∪ C) = (A ∩ B) ∪ (A ∩ C)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SetMinusUnionDeMorgan(_) => BuiltinRuleText {
+            rule_id: "SetMinusUnionDeMorgan",
+            rule_name: "\\ over ∪".to_string(),
+            message: "A \\ (B ∪ C) = (A \\ B) ∩ (A \\ C)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SetMinusIntersectDeMorgan(_) => BuiltinRuleText {
+            rule_id: "SetMinusIntersectDeMorgan",
+            rule_name: "\\ over ∩".to_string(),
+            message: "A \\ (B ∩ C) = (A \\ B) ∪ (A \\ C)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::IntersectSetMinusSelfEmpty(_) => BuiltinRuleText {
+            rule_id: "IntersectSetMinusSelfEmpty",
+            rule_name: "A ∩ (A\\B)".to_string(),
+            message: "A ∩ (A \\ B) relates to emptiness / difference".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::FiniteSetSumEmpty(_) => BuiltinRuleText {
+            rule_id: "FiniteSetSumEmpty",
+            rule_name: "sum over ∅".to_string(),
+            message: "∑_{x∈∅} f(x) = 0".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::FiniteSetProductEmpty(_) => BuiltinRuleText {
+            rule_id: "FiniteSetProductEmpty",
+            rule_name: "product over ∅".to_string(),
+            message: "∏_{x∈∅} f(x) = 1".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::FiniteSetReduceEmpty(_) => BuiltinRuleText {
+            rule_id: "FiniteSetReduceEmpty",
+            rule_name: "reduce over ∅".to_string(),
+            message: "reduce over the empty set is the unit".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ReduceEmpty(_) => BuiltinRuleText {
+            rule_id: "ReduceEmpty",
+            rule_name: "reduce empty".to_string(),
+            message: "reduce on an empty range is the unit".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SumEmptyRange(_) => BuiltinRuleText {
+            rule_id: "SumEmptyRange",
+            rule_name: "sum empty range".to_string(),
+            message: "∑ over an empty range is 0".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ProductEmptyRange(_) => BuiltinRuleText {
+            rule_id: "ProductEmptyRange",
+            rule_name: "product empty range".to_string(),
+            message: "∏ over an empty range is 1".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::UnionAbsorptionFromSubset(_) => BuiltinRuleText {
+            rule_id: "UnionAbsorptionFromSubset",
+            rule_name: "union absorption".to_string(),
+            message: "A ⊆ B gives A ∪ B = B".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SetMinusRecoversSubset(_) => BuiltinRuleText {
+            rule_id: "SetMinusRecoversSubset",
+            rule_name: "difference recovers subset".to_string(),
+            message: "A ⊆ B gives B \\ (B \\ A) = A".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::EmptySetFromSizeZero(_) => BuiltinRuleText {
+            rule_id: "EmptySetFromSizeZero",
+            rule_name: "empty from size 0".to_string(),
+            message: "|A| = 0 gives A = ∅".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::CartProjFactor(_) => BuiltinRuleText {
+            rule_id: "CartProjFactor",
+            rule_name: "cart projection factor".to_string(),
+            message: "Projection recovers a Cartesian factor".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::TupleComponentAtIndex(_) => BuiltinRuleText {
+            rule_id: "TupleComponentAtIndex",
+            rule_name: "tuple component".to_string(),
+            message: "The i-th component of a tuple equals the stated entry".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::FiniteSetSizeSetMinus(_) => BuiltinRuleText {
+            rule_id: "FiniteSetSizeSetMinus",
+            rule_name: "|A\\B|".to_string(),
+            message: "|A \\ B| = |A| − |A ∩ B| for finite sets".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::FiniteSetSizeUnion(_) => BuiltinRuleText {
+            rule_id: "FiniteSetSizeUnion",
+            rule_name: "|A∪B|".to_string(),
+            message: "|A ∪ B| = |A| + |B| − |A ∩ B|".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ClosedRangeSingletonListSet(_) => BuiltinRuleText {
+            rule_id: "ClosedRangeSingletonListSet",
+            rule_name: "closed range singleton".to_string(),
+            message: "{n..n} = {n}".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SumSingleTerm(_) => BuiltinRuleText {
+            rule_id: "SumSingleTerm",
+            rule_name: "sum one term".to_string(),
+            message: "∑ with a single term equals that term".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ProductSingleTerm(_) => BuiltinRuleText {
+            rule_id: "ProductSingleTerm",
+            rule_name: "product one term".to_string(),
+            message: "∏ with a single term equals that term".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ReduceAddZeroEqualsSum(_) => BuiltinRuleText {
+            rule_id: "ReduceAddZeroEqualsSum",
+            rule_name: "reduce +0 as sum".to_string(),
+            message: "reduce with add and 0 equals a sum".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::FiniteSetReduceAddZeroEqualsSum(_) => BuiltinRuleText {
+            rule_id: "FiniteSetReduceAddZeroEqualsSum",
+            rule_name: "finite-set reduce as sum".to_string(),
+            message: "finite-set reduce with + and 0 equals a sum".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::PowOfLogInverse(_) => BuiltinRuleText {
+            rule_id: "PowOfLogInverse",
+            rule_name: "a^(log_a b)".to_string(),
+            message: "a^(log_a(b)) = b".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::UnionSetMinusDecomposition(_) => BuiltinRuleText {
+            rule_id: "UnionSetMinusDecomposition",
+            rule_name: "union\\difference".to_string(),
+            message: "A ∪ B = A ∪ (B \\ A)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SetMinusIntersectSelf(_) => BuiltinRuleText {
+            rule_id: "SetMinusIntersectSelf",
+            rule_name: "A \\ (A∩B)".to_string(),
+            message: "A \\ (A ∩ B) = A \\ B".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ReOfImaginaryUnit(_) => BuiltinRuleText {
+            rule_id: "ReOfImaginaryUnit",
+            rule_name: "Re(i)".to_string(),
+            message: "Re(i) = 0".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ImgOfImaginaryUnit(_) => BuiltinRuleText {
+            rule_id: "ImgOfImaginaryUnit",
+            rule_name: "Im(i)".to_string(),
+            message: "Im(i) = 1".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ReOfRealEmbedding(_) => BuiltinRuleText {
+            rule_id: "ReOfRealEmbedding",
+            rule_name: "Re of real".to_string(),
+            message: "Re(embed(x)) = x".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ImgOfRealEmbedding(_) => BuiltinRuleText {
+            rule_id: "ImgOfRealEmbedding",
+            rule_name: "Im of real".to_string(),
+            message: "Im(embed(x)) = 0".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ReOfRealPlusI(_) => BuiltinRuleText {
+            rule_id: "ReOfRealPlusI",
+            rule_name: "Re(x+i)".to_string(),
+            message: "Re(x + i) = x".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ImgOfRealPlusI(_) => BuiltinRuleText {
+            rule_id: "ImgOfRealPlusI",
+            rule_name: "Im(x+i)".to_string(),
+            message: "Im(x + i) = 1".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ComplexAbsOfImaginaryUnit(_) => BuiltinRuleText {
+            rule_id: "ComplexAbsOfImaginaryUnit",
+            rule_name: "|i|".to_string(),
+            message: "|i| = 1".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ModNestedDivisibleAbsorption(_) => BuiltinRuleText {
+            rule_id: "ModNestedDivisibleAbsorption",
+            rule_name: "nested mod absorption".to_string(),
+            message: "If n | m then (a mod m) mod n = a mod n".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SumSplitLastTerm(_) => BuiltinRuleText {
+            rule_id: "SumSplitLastTerm",
+            rule_name: "sum split last".to_string(),
+            message: "Sum splits off its last term".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ProductSplitLastTerm(_) => BuiltinRuleText {
+            rule_id: "ProductSplitLastTerm",
+            rule_name: "product split last".to_string(),
+            message: "Product splits off its last term".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::FiniteSetSumListExpansion(_) => BuiltinRuleText {
+            rule_id: "FiniteSetSumListExpansion",
+            rule_name: "finite-set sum expand".to_string(),
+            message: "Sum over a list-set expands to an explicit sum".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::FiniteSetProductListExpansion(_) => BuiltinRuleText {
+            rule_id: "FiniteSetProductListExpansion",
+            rule_name: "finite-set product expand".to_string(),
+            message: "Product over a list-set expands to an explicit product".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::EulerEqualsExpOne(_) => BuiltinRuleText {
+            rule_id: "EulerEqualsExpOne",
+            rule_name: "e = exp(1)".to_string(),
+            message: "e = exp(1)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::LnOfEuler(_) => BuiltinRuleText {
+            rule_id: "LnOfEuler",
+            rule_name: "ln(e)".to_string(),
+            message: "ln(e) = 1".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ReOfReal(_) => BuiltinRuleText {
+            rule_id: "ReOfReal",
+            rule_name: "Re(x) for real x".to_string(),
+            message: "Re(x) = x for real x".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ImgOfReal(_) => BuiltinRuleText {
+            rule_id: "ImgOfReal",
+            rule_name: "Im(x) for real x".to_string(),
+            message: "Im(x) = 0 for real x".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ReOfRealPlusImagScaled(_) => BuiltinRuleText {
+            rule_id: "ReOfRealPlusImagScaled",
+            rule_name: "Re(x+y·i)".to_string(),
+            message: "Re(x + y·i) = x".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ImgOfRealPlusImagScaled(_) => BuiltinRuleText {
+            rule_id: "ImgOfRealPlusImagScaled",
+            rule_name: "Im(x+y·i)".to_string(),
+            message: "Im(x + y·i) = y".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ComplexAbsOfNonnegReal(_) => BuiltinRuleText {
+            rule_id: "ComplexAbsOfNonnegReal",
+            rule_name: "|x| for x≥0 real".to_string(),
+            message: "|embed(x)| = x for x ≥ 0".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ComplexAbsOfImagScaled(_) => BuiltinRuleText {
+            rule_id: "ComplexAbsOfImagScaled",
+            rule_name: "|y·i|".to_string(),
+            message: "|y·i| = |y|".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ClosedRangeLiteralExpansion(_) => BuiltinRuleText {
+            rule_id: "ClosedRangeLiteralExpansion",
+            rule_name: "closed range expand".to_string(),
+            message: "A numeric closed range expands to an explicit list set".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::RangeLiteralExpansion(_) => BuiltinRuleText {
+            rule_id: "RangeLiteralExpansion",
+            rule_name: "range expand".to_string(),
+            message: "A numeric range expands to an explicit list set".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::PowerSetOfEmpty(_) => BuiltinRuleText {
+            rule_id: "PowerSetOfEmpty",
+            rule_name: "pow(∅)".to_string(),
+            message: "pow(∅) = {∅}".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::PowerSetOfSingleton(_) => BuiltinRuleText {
+            rule_id: "PowerSetOfSingleton",
+            rule_name: "pow({a})".to_string(),
+            message: "pow({a}) = {∅, {a}}".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::FamilyUnionOfEmpty(_) => BuiltinRuleText {
+            rule_id: "FamilyUnionOfEmpty",
+            rule_name: "⋃∅".to_string(),
+            message: "⋃∅ = ∅".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::CartWithEmptyFactor(_) => BuiltinRuleText {
+            rule_id: "CartWithEmptyFactor",
+            rule_name: "A × ∅".to_string(),
+            message: "A × ∅ = ∅".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::UnionOverIntersectDistributive(_) => BuiltinRuleText {
+            rule_id: "UnionOverIntersectDistributive",
+            rule_name: "∪ over ∩".to_string(),
+            message: "A ∪ (B ∩ C) = (A ∪ B) ∩ (A ∪ C)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SetMinusChainToUnion(_) => BuiltinRuleText {
+            rule_id: "SetMinusChainToUnion",
+            rule_name: "chained difference".to_string(),
+            message: "A \\ B \\ C expands via union of removed sets".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::FnRangeOfConstantAnonymousFn(_) => BuiltinRuleText {
+            rule_id: "FnRangeOfConstantAnonymousFn",
+            rule_name: "range of constant fn".to_string(),
+            message: "Range of a constant anonymous function is a singleton".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SeqEqualsFnOnN(_) => BuiltinRuleText {
+            rule_id: "SeqEqualsFnOnN",
+            rule_name: "seq as fn on N".to_string(),
+            message: "A sequence equals its function on N".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::FiniteSeqEqualsFnOnClosedRange(_) => BuiltinRuleText {
+            rule_id: "FiniteSeqEqualsFnOnClosedRange",
+            rule_name: "finite seq as fn".to_string(),
+            message: "A finite sequence equals its function on a closed range".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::IndexUnionEmptyIndex(_) => BuiltinRuleText {
+            rule_id: "IndexUnionEmptyIndex",
+            rule_name: "⋃_{i∈∅}".to_string(),
+            message: "Indexed union over an empty index is ∅".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::IndexIntersectEmptyIndex(_) => BuiltinRuleText {
+            rule_id: "IndexIntersectEmptyIndex",
+            rule_name: "⋂_{i∈∅}".to_string(),
+            message: "Indexed intersect over an empty index is the ambient universe convention used by Litex".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::IndexCartEmptyIndex(_) => BuiltinRuleText {
+            rule_id: "IndexCartEmptyIndex",
+            rule_name: "indexed cart empty".to_string(),
+            message: "Indexed Cartesian product over an empty index is a unit".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::IndexUnionSingleton(_) => BuiltinRuleText {
+            rule_id: "IndexUnionSingleton",
+            rule_name: "⋃_{i∈{a}}".to_string(),
+            message: "Indexed union over a singleton index is the single set".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::FiniteSeqZeroEqualsFnOnEmpty(_) => BuiltinRuleText {
+            rule_id: "FiniteSeqZeroEqualsFnOnEmpty",
+            rule_name: "empty finite seq".to_string(),
+            message: "The length-0 finite sequence equals the function on the empty range".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SetBuilderObviouslyEmpty(_) => BuiltinRuleText {
+            rule_id: "SetBuilderObviouslyEmpty",
+            rule_name: "empty set-builder".to_string(),
+            message: "A contradictory set-builder equals ∅".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ComplexAbsSquaredOfRectForm(_) => BuiltinRuleText {
+            rule_id: "ComplexAbsSquaredOfRectForm",
+            rule_name: "|x+y i|²".to_string(),
+            message: "|x + y·i|² = x² + y²".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ExpOfSum(_) => BuiltinRuleText {
+            rule_id: "ExpOfSum",
+            rule_name: "exp(x+y)".to_string(),
+            message: "exp(x+y) = exp(x)·exp(y)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::LogBasePower(_) => BuiltinRuleText {
+            rule_id: "LogBasePower",
+            rule_name: "log_(a^n)(b)".to_string(),
+            message: "log_(a^n)(b) = (1/n)·log_a(b)".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ReOfProduct(_) => BuiltinRuleText {
+            rule_id: "ReOfProduct",
+            rule_name: "Re(z·w)".to_string(),
+            message: "Re(z·w) expands from rectangular forms".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ImgOfProduct(_) => BuiltinRuleText {
+            rule_id: "ImgOfProduct",
+            rule_name: "Im(z·w)".to_string(),
+            message: "Im(z·w) expands from rectangular forms".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SinOfSum(_) => BuiltinRuleText {
+            rule_id: "SinOfSum",
+            rule_name: "sin(x+y)".to_string(),
+            message: "sin(x+y) = sin x cos y + cos x sin y".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::CosOfSum(_) => BuiltinRuleText {
+            rule_id: "CosOfSum",
+            rule_name: "cos(x+y)".to_string(),
+            message: "cos(x+y) = cos x cos y − sin x sin y".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::ReduceSingleTermWithAddZero(_) => BuiltinRuleText {
+            rule_id: "ReduceSingleTermWithAddZero",
+            rule_name: "reduce one term".to_string(),
+            message: "Reduce with a single term and +0 equals that term".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::FiniteSetSumFubiniSwap(_) => BuiltinRuleText {
+            rule_id: "FiniteSetSumFubiniSwap",
+            rule_name: "Fubini swap for sums".to_string(),
+            message: "Finite double sums may swap summation order".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::FiniteSetSumOverCartesianProduct(_) => BuiltinRuleText {
+            rule_id: "FiniteSetSumOverCartesianProduct",
+            rule_name: "sum over A×B".to_string(),
+            message: "Sum over a Cartesian product expands as an iterated sum".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SinOfZero(_) => BuiltinRuleText {
+            rule_id: "SinOfZero",
+            rule_name: "sin 0".to_string(),
+            message: "sin(0) = 0".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::CosOfZero(_) => BuiltinRuleText {
+            rule_id: "CosOfZero",
+            rule_name: "cos 0".to_string(),
+            message: "cos(0) = 1".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::TanOfZero(_) => BuiltinRuleText {
+            rule_id: "TanOfZero",
+            rule_name: "tan 0".to_string(),
+            message: "tan(0) = 0".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SinOfHalfPi(_) => BuiltinRuleText {
+            rule_id: "SinOfHalfPi",
+            rule_name: "sin(π/2)".to_string(),
+            message: "sin(π/2) = 1".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::CosOfPi(_) => BuiltinRuleText {
+            rule_id: "CosOfPi",
+            rule_name: "cos(π)".to_string(),
+            message: "cos(π) = -1".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::SinOfPi(_) => BuiltinRuleText {
+            rule_id: "SinOfPi",
+            rule_name: "sin(π)".to_string(),
+            message: "sin(π) = 0".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::CotOfHalfPi(_) => BuiltinRuleText {
+            rule_id: "CotOfHalfPi",
+            rule_name: "cot(π/2)".to_string(),
+            message: "cot(π/2) = 0".to_string(),
+        },
+        EqualitySearchProofByBuiltinRule::PythagoreanIdentity(_) => BuiltinRuleText {
+            rule_id: "PythagoreanIdentity",
+            rule_name: "sin²+cos²".to_string(),
+            message: "sin²(x) + cos²(x) = 1".to_string(),
+        },
+    }
+}
+
+
+impl EqualitySearchProofByBuiltinRule {
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        explain_equality_builtin_rule(self, lang)
     }
 }

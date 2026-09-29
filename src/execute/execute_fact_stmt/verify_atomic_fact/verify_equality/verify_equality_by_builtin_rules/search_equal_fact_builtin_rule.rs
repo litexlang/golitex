@@ -238,6 +238,9 @@ fn map_equality_identities_wave2_proof(
         W::NestedSameModAbsorption(p) => {
             EqualitySearchProofByBuiltinRule::NestedSameModAbsorption(p)
         }
+        W::ModCompatibleSmallerModulus(p) => {
+            EqualitySearchProofByBuiltinRule::ModCompatibleSmallerModulus(p)
+        }
     }
 }
 

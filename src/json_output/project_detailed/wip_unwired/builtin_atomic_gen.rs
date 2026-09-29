@@ -4,7 +4,8 @@ use super::verify::project_verify_fact;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules as br;
 use br::AtomicExceptEqualityFactSearchProofByBuiltinRule;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::search_atomic_except_equality_fact_proof_by_builtin_rule_result::{
-    NormalAtomicFactSearchProofByBuiltinRule, NotNormalAtomicFactSearchProofByBuiltinRule,
+    CoprimeFactSearchProofByBuiltinRule, NotCoprimeFactSearchProofByBuiltinRule,
+    NotPrimeFactSearchProofByBuiltinRule, PrimeFactSearchProofByBuiltinRule,
 };
 use crate::json_output::helper::{object, string};
 use crate::knowledge_base::JsonValue;
@@ -15,19 +16,19 @@ pub(super) fn project_atomic_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::NormalAtomicFact(NormalAtomicFactSearchProofByBuiltinRule::PrimeByComputation(p)) => {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::PrimeFact(PrimeFactSearchProofByBuiltinRule::PrimeByComputation(p)) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),
-                ("family", string("NormalAtomicFact")),
+                ("family", string("PrimeFact")),
                 ("rule", string("PrimeByComputation")),
             ];
             entries.push(("resolved_value", string(p.resolved_value.clone())));
             object(entries)
         },
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::NormalAtomicFact(NormalAtomicFactSearchProofByBuiltinRule::CoprimeByComputation(p)) => {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::CoprimeFact(CoprimeFactSearchProofByBuiltinRule::CoprimeByComputation(p)) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),
-                ("family", string("NormalAtomicFact")),
+                ("family", string("CoprimeFact")),
                 ("rule", string("CoprimeByComputation")),
             ];
             entries.push(("left_resolved", string(p.left_resolved.clone())));
@@ -1799,19 +1800,19 @@ pub(super) fn project_atomic_builtin_rule(
             let _ = p;
             object(entries)
         },
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotNormalAtomicFact(NotNormalAtomicFactSearchProofByBuiltinRule::NotPrimeByComputation(p)) => {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotPrimeFact(NotPrimeFactSearchProofByBuiltinRule::NotPrimeByComputation(p)) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),
-                ("family", string("NotNormalAtomicFact")),
+                ("family", string("NotPrimeFact")),
                 ("rule", string("NotPrimeByComputation")),
             ];
             entries.push(("resolved_value", string(p.resolved_value.clone())));
             object(entries)
         },
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotNormalAtomicFact(NotNormalAtomicFactSearchProofByBuiltinRule::NotCoprimeByComputation(p)) => {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotCoprimeFact(NotCoprimeFactSearchProofByBuiltinRule::NotCoprimeByComputation(p)) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),
-                ("family", string("NotNormalAtomicFact")),
+                ("family", string("NotCoprimeFact")),
                 ("rule", string("NotCoprimeByComputation")),
             ];
             entries.push(("left_resolved", string(p.left_resolved.clone())));
@@ -2214,5 +2215,53 @@ pub(super) fn project_atomic_builtin_rule(
             }
             object(entries)
         },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NormalAtomicFact(_) => object(vec![
+            ("type", string("builtin_rule")), ("family", string("NormalAtomicFact")),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotNormalAtomicFact(_) => object(vec![
+            ("type", string("builtin_rule")), ("family", string("NotNormalAtomicFact")),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::ProperSubsetFact(_) => object(vec![
+            ("type", string("builtin_rule")), ("family", string("ProperSubsetFact")),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::ProperSupersetFact(_) => object(vec![
+            ("type", string("builtin_rule")), ("family", string("ProperSupersetFact")),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::DvdFact(_) => object(vec![
+            ("type", string("builtin_rule")), ("family", string("DvdFact")),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InjectiveFact(_) => object(vec![
+            ("type", string("builtin_rule")), ("family", string("InjectiveFact")),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::SurjectiveFact(_) => object(vec![
+            ("type", string("builtin_rule")), ("family", string("SurjectiveFact")),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::BijectiveFact(_) => object(vec![
+            ("type", string("builtin_rule")), ("family", string("BijectiveFact")),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::IsChoiceFunctionForFact(_) => object(vec![
+            ("type", string("builtin_rule")), ("family", string("IsChoiceFunctionForFact")),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotProperSubsetFact(_) => object(vec![
+            ("type", string("builtin_rule")), ("family", string("NotProperSubsetFact")),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotProperSupersetFact(_) => object(vec![
+            ("type", string("builtin_rule")), ("family", string("NotProperSupersetFact")),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotDvdFact(_) => object(vec![
+            ("type", string("builtin_rule")), ("family", string("NotDvdFact")),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotInjectiveFact(_) => object(vec![
+            ("type", string("builtin_rule")), ("family", string("NotInjectiveFact")),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotSurjectiveFact(_) => object(vec![
+            ("type", string("builtin_rule")), ("family", string("NotSurjectiveFact")),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotBijectiveFact(_) => object(vec![
+            ("type", string("builtin_rule")), ("family", string("NotBijectiveFact")),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotIsChoiceFunctionForFact(_) => object(vec![
+            ("type", string("builtin_rule")), ("family", string("NotIsChoiceFunctionForFact")),
+        ]),
     }
 }

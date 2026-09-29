@@ -79,7 +79,8 @@ impl Runtime {
         requirement_facts: Vec<Fact>,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<(Vec<Fact>, Vec<VerifyFactResult>)>> {
-        // Strategy children: one nested builtin layer; no nested strategy/def/forall/rewrite.
+        // Strategy children: nested strategy allowed while depth remains;
+        // rewrite stays off (see VerifyState::after_strategy).
         let child_state = verify_state.after_strategy();
         let mut proof_of_requirement_facts = Vec::with_capacity(requirement_facts.len());
         for requirement in &requirement_facts {

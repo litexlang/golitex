@@ -15,10 +15,11 @@ use crate::store_fact_and_infer::StoreFactAndInferResult;
 
 pub(crate) fn proof_verify_state() -> VerifyState {
     VerifyState {
-            can_use_builtin_rule: true,
+        can_use_builtin_rule: true,
         can_use_def_and_known_forall_and_known_strategy: true,
         can_use_rewrite: true,
         store_well_defined_fact: true,
+        builtin_strategy_depth_remaining: VerifyState::BUILTIN_STRATEGY_DEPTH_LIMIT,
     }
 }
 

@@ -176,9 +176,19 @@ impl Runtime {
                 return Ok((*id, scope_index));
             }
         }
-        Err(RuntimeError::InternalBug(format!(
-            "undefined name `{name}`"
-        )))
+        let msg = format!("undefined name `{name}`");
+        let _ = std::fs::write(
+            "/tmp/litex_undef_dbg.txt",
+            format!(
+                "{msg}\nstack_len={}\nscopes={:?}\n",
+                self.parse_scope_stack.len(),
+                self.parse_scope_stack
+                    .iter()
+                    .map(|s| s.plain.keys().cloned().collect::<Vec<_>>())
+                    .collect::<Vec<_>>()
+            ),
+        );
+        Err(RuntimeError::InternalBug(msg))
     }
 
     /// True when `name` is bound in the file-root parse scope (scope 0).
@@ -283,6 +293,45 @@ impl Runtime {
             .ok_or_else(|| RuntimeError::InternalBug("no parse scope".to_string()))?;
         scope.plain.insert(name.clone(), id);
         Ok(BoundName::new(id, name))
+    }
+
+    // Obtain under `with_forall_params_occupied` / nested by-proof scopes: bind the
+    // witness name in the file-root parse scope so its IdentifierId survives when
+    // those temporary scopes pop. Top-level obtain (only file-root present) still
+    // binds in the current scope. Callers that introduce nested obtains must
+    // remove these root bindings after the enclosing thm/claim finishes.
+    pub fn define_plain_atom_for_obtain(&mut self, name: String) -> RuntimeResult<BoundName> {
+        if self.plain_atom_is_visible(&name) {
+            return Err(RuntimeError::InternalBug(format!(
+                "name `{name}` is already bound in an enclosing parse scope"
+            )));
+        }
+        let id = self.global_ids.allocate_identifier_id();
+        let scope_index = if self.parse_scope_stack.len() > 1 {
+            0
+        } else {
+            self.parse_scope_stack
+                .len()
+                .checked_sub(1)
+                .ok_or_else(|| RuntimeError::InternalBug("no parse scope".to_string()))?
+        };
+        eprintln!(
+            "define_plain_atom_for_obtain name={name} id={} scope_index={scope_index} stack_len={}",
+            id.value(),
+            self.parse_scope_stack.len()
+        );
+        let scope = self
+            .parse_scope_stack
+            .get_mut(scope_index)
+            .ok_or_else(|| RuntimeError::InternalBug("no parse scope".to_string()))?;
+        scope.plain.insert(name.clone(), id);
+        Ok(BoundName::new(id, name))
+    }
+
+    pub fn remove_plain_atom_from_file_root_scope(&mut self, name: &str) {
+        if let Some(scope) = self.parse_scope_stack.first_mut() {
+            scope.plain.remove(name);
+        }
     }
 
     // Re-occupy an existing BoundName (e.g. re-open forall binders) without reallocating.

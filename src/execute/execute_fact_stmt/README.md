@@ -174,8 +174,10 @@ conclusion and alpha-compares to the goal before instantiation requirements.
    `after_builtin_rule()` to children — known / cite-only only).
 2. **Known** (equivalence class / known atomic).
 3. **Deep** (`can_use_def_and_known_forall_and_known_strategy`): builtin strategy
-   (children use `after_strategy()`), by definition / object definition, known
-   strategy, known forall, then (`can_use_rewrite`) rewrite.
+   (children use `after_strategy()`, which may keep deep search on for up to
+   `BUILTIN_STRATEGY_DEPTH_LIMIT` nested strategy layers so carrier closures
+   like `(a - (a % b)) $in Z` can nest), by definition / object definition,
+   known strategy, known forall, then (`can_use_rewrite`) rewrite.
 
 `or` search order is:
 
