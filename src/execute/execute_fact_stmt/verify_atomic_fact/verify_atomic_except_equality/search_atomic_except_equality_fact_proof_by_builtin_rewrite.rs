@@ -1,16 +1,14 @@
 use super::helper::atomic_fact_with_args;
 use crate::ast::fact::{
     AtomicFact, Fact, GreaterEqualFact, GreaterFact, LessEqualFact, LessFact,
-    NormalAtomicFact, NotGreaterEqualFact, NotGreaterFact, NotLessEqualFact,
-    NotLessFact, NotNormalAtomicFact,
+    NotGreaterEqualFact, NotGreaterFact, NotLessEqualFact, NotLessFact,
+    NotProperSubsetFact, NotProperSupersetFact, ProperSubsetFact, ProperSupersetFact,
 };
 use crate::ast::fact::atomic_fact_args_ref;
-use crate::ast::names::AtomicName;
 use crate::ast::obj::Obj;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::helper::replace_obj_matching_ir;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
-use crate::parse::keywords::{PROPER_SUBSET, PROPER_SUPERSET};
 use crate::runtime::runtime_ids::FactId;
 use crate::runtime::{Runtime, RuntimeResult};
 
@@ -26,13 +24,19 @@ use crate::runtime::{Runtime, RuntimeResult};
 // Also here:
 //   KnownEqualObjSubstitution — replace a goal arg by a one-hop known equal
 //   peer (e.g. `1 $in S` with stored `S = {…}`), then prove the residual.
+//   FnApplicationUnfoldSubstitution — unfold top-level `f(args)` via have-fn
+//   definition into the body, then prove the residual (needed when equals are
+//   not yet stored, e.g. under forall for `$is_choice_function_for`).
 //   OrderDual (prove via order / proper-subset).
-// Search order: ClosedNumeric, KnownEqualObj, then OrderDual.
+// Search order: ClosedNumeric, KnownEqualObj, FnApplicationUnfold, then OrderDual.
 pub enum AtomicExceptEqualityFactSearchProofByBuiltinRewrite {
     ClosedNumericEqualSubstitution(
         AtomicExceptEqualityFactSearchProofByClosedNumericEqualSubstitution,
     ),
     KnownEqualObjSubstitution(AtomicExceptEqualityFactSearchProofByKnownEqualObjSubstitution),
+    FnApplicationUnfoldSubstitution(
+        AtomicExceptEqualityFactSearchProofByFnApplicationUnfoldSubstitution,
+    ),
     OrderDual(AtomicExceptEqualityFactSearchProofByBuiltinOrderDual),
 }
 
@@ -64,13 +68,29 @@ pub struct AtomicExceptEqualityFactSearchProofByKnownEqualObjSubstitution {
     pub proof_of_rewritten_fact: VerifyFactResult,
 }
 
+// Unfold each top-level FnObj arg via have-fn / anon-fn definition, then prove residual.
+// Mathematical property: if `f = fn(...) { body }`, then P(f(args), …) follows from
+// P(subst(body), …).
+//
+// Example:
+//   have fn f_choice(alpha {1}) {1} = 1
+//   have fn g_choice(alpha {1}) power_set({1}) = {1}
+//   forall alpha {1}:
+//       f_choice(alpha) $in g_choice(alpha)
+// unfolds both applications to prove `1 $in {1}`.
+pub struct AtomicExceptEqualityFactSearchProofByFnApplicationUnfoldSubstitution {
+    pub rewritten_fact: Fact,
+    pub unfold_equal_proofs: Vec<VerifyFactResult>,
+    pub proof_of_rewritten_fact: VerifyFactResult,
+}
+
 pub struct AtomicExceptEqualityFactSearchProofByBuiltinOrderDual {
     pub alternate_fact: Fact,
     pub proof_of_alternate_fact: VerifyFactResult,
 }
 
 impl Runtime {
-    // Builtin rewrite dispatcher: ClosedNumeric, KnownEqualObj, then OrderDual.
+    // Builtin rewrite dispatcher: ClosedNumeric, KnownEqualObj, FnUnfold, then OrderDual.
     pub fn search_atomic_except_equality_fact_proof_by_builtin_rewrite(
         &mut self,
         fact: &AtomicFact,
@@ -96,6 +116,18 @@ impl Runtime {
         {
             return Ok(Some(
                 AtomicExceptEqualityFactSearchProofByBuiltinRewrite::KnownEqualObjSubstitution(
+                    proof,
+                ),
+            ));
+        }
+        if let Some(proof) = self
+            .search_atomic_except_equality_by_fn_application_unfold_substitution(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(
+                AtomicExceptEqualityFactSearchProofByBuiltinRewrite::FnApplicationUnfoldSubstitution(
                     proof,
                 ),
             ));
@@ -160,7 +192,8 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
             can_use_rewrite: false,
             store_well_defined_fact: false,
-        };
+                    builtin_strategy_depth_remaining: verify_state.builtin_strategy_depth_remaining,
+};
         let proof_of_rewritten_fact = self.verify_atomic_fact(&rewritten, residual_state)?;
         if proof_of_rewritten_fact.is_failed() {
             return Ok(None);
@@ -195,7 +228,8 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
             can_use_rewrite: false,
             store_well_defined_fact: false,
-        };
+                    builtin_strategy_depth_remaining: verify_state.builtin_strategy_depth_remaining,
+};
 
         for (arg_index, arg) in args.iter().enumerate() {
             let from_ir = arg.ir();
@@ -239,6 +273,88 @@ impl Runtime {
         Ok(None)
     }
 
+    // Unfold every top-level FnObj arg in one pass, then prove the residual.
+    // Example: `f_choice(alpha) $in g_choice(alpha)` → `1 $in {1}` under forall.
+    fn search_atomic_except_equality_by_fn_application_unfold_substitution(
+        &mut self,
+        fact: &AtomicFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByFnApplicationUnfoldSubstitution>>
+    {
+        if matches!(fact, AtomicFact::EqualFact(_)) {
+            return Ok(None);
+        }
+        if !verify_state.can_use_def_and_known_forall_and_known_strategy {
+            return Ok(None);
+        }
+        let args: Vec<Obj> = atomic_fact_args_ref(fact)
+            .into_iter()
+            .cloned()
+            .collect();
+        let equal_child_state = VerifyState {
+            can_use_builtin_rule: verify_state.can_use_builtin_rule,
+            can_use_def_and_known_forall_and_known_strategy: true,
+            can_use_rewrite: false,
+            store_well_defined_fact: false,
+                    builtin_strategy_depth_remaining: VerifyState::BUILTIN_STRATEGY_DEPTH_LIMIT,
+};
+        let residual_state = VerifyState {
+            can_use_builtin_rule: verify_state.can_use_builtin_rule,
+            can_use_def_and_known_forall_and_known_strategy: verify_state
+                .can_use_def_and_known_forall_and_known_strategy,
+            can_use_rewrite: false,
+            store_well_defined_fact: false,
+                    builtin_strategy_depth_remaining: verify_state.builtin_strategy_depth_remaining,
+};
+
+        let mut rewritten_args = args.clone();
+        let mut unfold_equal_proofs = Vec::new();
+        for (arg_index, arg) in args.iter().enumerate() {
+            let Obj::FnObj(fn_obj) = arg else {
+                continue;
+            };
+            let Some(expanded_body) =
+                self.expanded_named_or_literal_anon_fn_application_body(fn_obj)?
+            else {
+                continue;
+            };
+            if expanded_body.ir() == arg.ir() {
+                continue;
+            }
+            let equal_goal = crate::ast::fact::EqualFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: arg.clone(),
+                right: expanded_body.clone(),
+                line_file: None,
+            };
+            let equal_proof = self.verify_equal_fact(&equal_goal, equal_child_state.clone())?;
+            if equal_proof.is_failed() {
+                continue;
+            }
+            rewritten_args[arg_index] = expanded_body;
+            unfold_equal_proofs.push(equal_proof);
+        }
+        if unfold_equal_proofs.is_empty() {
+            return Ok(None);
+        }
+        let Some(rewritten) =
+            atomic_fact_with_args(fact, rewritten_args, self.global_ids.allocate_fact_id())
+        else {
+            return Ok(None);
+        };
+        let proof_of_rewritten_fact = self.verify_atomic_fact(&rewritten, residual_state)?;
+        if proof_of_rewritten_fact.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(
+            AtomicExceptEqualityFactSearchProofByFnApplicationUnfoldSubstitution {
+                rewritten_fact: rewritten.into(),
+                unfold_equal_proofs,
+                proof_of_rewritten_fact,
+            },
+        ))
+    }
+
     fn search_atomic_except_equality_by_order_dual(
         &mut self,
         fact: &AtomicFact,
@@ -252,7 +368,8 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
             can_use_rewrite: false,
             store_well_defined_fact: false,
-        };
+                    builtin_strategy_depth_remaining: verify_state.builtin_strategy_depth_remaining,
+};
         let proof_of_alternate_fact = self.verify_atomic_fact(&alternate, residual_state)?;
         if proof_of_alternate_fact.is_failed() {
             return Ok(None);
@@ -322,47 +439,31 @@ fn order_dual_atomic_fact(
                 line_file: f.line_file.clone(),
             }))
         }
-        AtomicFact::NormalAtomicFact(f)
-            if f.body.len() == 2
-                && matches!(
-                    &f.predicate,
-                    AtomicName::Plain { name } if name == PROPER_SUBSET || name == PROPER_SUPERSET
-                ) =>
-        {
-            let AtomicName::Plain { name } = &f.predicate else {
-                return None;
-            };
-            let dual_name = if name == PROPER_SUBSET {
-                PROPER_SUPERSET
-            } else {
-                PROPER_SUBSET
-            };
-            Some(AtomicFact::NormalAtomicFact(NormalAtomicFact {
+        AtomicFact::ProperSubsetFact(f) => Some(AtomicFact::ProperSupersetFact(ProperSupersetFact {
+            fact_id: next_fact_id(),
+            left: f.right.clone(),
+            right: f.left.clone(),
+            line_file: f.line_file.clone(),
+        })),
+        AtomicFact::ProperSupersetFact(f) => Some(AtomicFact::ProperSubsetFact(ProperSubsetFact {
+            fact_id: next_fact_id(),
+            left: f.right.clone(),
+            right: f.left.clone(),
+            line_file: f.line_file.clone(),
+        })),
+        AtomicFact::NotProperSubsetFact(f) => {
+            Some(AtomicFact::NotProperSupersetFact(NotProperSupersetFact {
                 fact_id: next_fact_id(),
-                predicate: AtomicName::plain(dual_name.to_string()),
-                body: vec![f.body[1].clone(), f.body[0].clone()],
+                left: f.right.clone(),
+                right: f.left.clone(),
                 line_file: f.line_file.clone(),
             }))
         }
-        AtomicFact::NotNormalAtomicFact(f)
-            if f.body.len() == 2
-                && matches!(
-                    &f.predicate,
-                    AtomicName::Plain { name } if name == PROPER_SUBSET || name == PROPER_SUPERSET
-                ) =>
-        {
-            let AtomicName::Plain { name } = &f.predicate else {
-                return None;
-            };
-            let dual_name = if name == PROPER_SUBSET {
-                PROPER_SUPERSET
-            } else {
-                PROPER_SUBSET
-            };
-            Some(AtomicFact::NotNormalAtomicFact(NotNormalAtomicFact {
+        AtomicFact::NotProperSupersetFact(f) => {
+            Some(AtomicFact::NotProperSubsetFact(NotProperSubsetFact {
                 fact_id: next_fact_id(),
-                predicate: AtomicName::plain(dual_name.to_string()),
-                body: vec![f.body[1].clone(), f.body[0].clone()],
+                left: f.right.clone(),
+                right: f.left.clone(),
                 line_file: f.line_file.clone(),
             }))
         }

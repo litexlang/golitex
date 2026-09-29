@@ -75,7 +75,8 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: true,
             can_use_rewrite: true,
             store_well_defined_fact: true,
-        };
+                    builtin_strategy_depth_remaining: VerifyState::BUILTIN_STRATEGY_DEPTH_LIMIT,
+};
         let source_wd = self.verify_obj_well_definedness(&stmt.source_set, verify_state.clone())?;
         if source_wd.is_failed() {
             return Ok(ExecHaveByReplacementAxiomStmtResult::Failed(

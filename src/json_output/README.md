@@ -37,8 +37,26 @@ Success:
 }
 ```
 
-Chinese session (`-lang zh`): same shape with localized `rule_name` /
-`message` (e.g. `"计算"` / `"两边都算出同一个数"`).
+Chinese session (`-lang zh`): same shape with **localized field names** and
+localized `rule_name` / `message` values. Example:
+
+```json
+{
+  "成功": true,
+  "语句": "1 + 2 = 3",
+  "证明方法": {
+    "类型": "builtin_rule",
+    "规则名": "计算",
+    "说明": "两边都算出同一个数"
+  },
+  "存储": ["1 + 2 = 3"],
+  "推断": []
+}
+```
+
+`type` *values* (e.g. `builtin_rule`) stay English stable tokens. Key remapping
+lives in `json_keys.rs` (`localize_key`); authors always write English keys in
+code and `object(lang, …)` remaps them.
 
 Cited-membership example:
 
@@ -75,6 +93,11 @@ Rules:
 - `success` is a bool (not `outcome` string).
 - Builtin why: print `rule_name` + `message` only (no `rule` / `rule_id` /
   `variant` in Normal JSON). Stable ids live inside `explain/` for tests.
+- Atomic builtin path: `rule.rule_id_and_message(lang)` on
+  `AtomicExceptEqualityFactSearchProofByBuiltinRule` (family enums / leaf
+  proofs implement the method under `explain/atomic_builtin_rule/`). Projection
+  does not hardcode rule-id strings. Equality uses the same method shape on
+  `EqualitySearchProofByBuiltinRule`.
 - All Chinese/English copy lives under `json_output/explain/` — verify/exec IR
   stays language-free. `OutputLanguage` comes from `LaunchCommand` (`-lang`).
 - Priority of explain coverage:

@@ -14,6 +14,13 @@ impl Runtime {
         &mut self,
         block: &TokenBlock,
     ) -> RuntimeResult<Stmt> {
+        let _ = std::fs::write(
+            "/tmp/litex_obtain_dbg.txt",
+            format!(
+                "parse_obtain_stmt enter stack_len={}\n",
+                self.parse_scope_stack.len()
+            ),
+        );
         let mut tb = block.clone();
         tb.expect(OBTAIN)?;
 
@@ -78,8 +85,27 @@ impl Runtime {
         }
 
         for name in &equal_tos {
-            self.define_plain_atom_as_parse(&tb, name.clone())?;
+            self.define_plain_atom_for_obtain_as_parse(&tb, name.clone())?;
         }
         Ok(stmt)
+    }
+
+    fn define_plain_atom_for_obtain_as_parse(
+        &mut self,
+        tb: &TokenBlock,
+        name: String,
+    ) -> RuntimeResult<crate::ast::names::BoundName> {
+        self.define_plain_atom_for_obtain(name)
+            .map_err(|err| match err {
+                crate::runtime::RuntimeError::InternalBug(message) => {
+                    crate::runtime::RuntimeParseError::new(
+                        message,
+                        tb.line,
+                        tb.source_path.clone(),
+                    )
+                    .into()
+                }
+                other => other,
+            })
     }
 }

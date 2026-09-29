@@ -123,7 +123,8 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: true,
             can_use_rewrite: true,
             store_well_defined_fact: true,
-        };
+                    builtin_strategy_depth_remaining: VerifyState::BUILTIN_STRATEGY_DEPTH_LIMIT,
+};
         let atomic_as_fact = Fact::AtomicFact(AtomicFact::NormalAtomicFact(stmt.fact.clone()));
         let verify_atomic = self.verify_fact(&atomic_as_fact, verify_state)?;
         if verify_atomic.is_failed() {

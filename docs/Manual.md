@@ -3238,8 +3238,10 @@ by def $P(args)
 > have an official definition (for example `$subset` / `$superset` → membership
 > forall; `$proper_subset` → subset plus
 > inequality; `$injective` / `$surjective` / `$bijective`; `$prime` / `$coprime` /
-> `$dvd`; `$is_choice_function_for`). User `prop` and builtin predicates share
-> one fork: builtin first, then user `prop`. Design note:
+> `$dvd`; `$is_choice_function_for`). These builtins are **dedicated
+> `AtomicFact` variants** in the kernel AST; `NormalAtomicFact` is only for
+> user-defined `$prop(...)`. User `prop` and builtin predicates share one fork:
+> builtin first, then user `prop`. Design note:
 > `src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/by_definition_design.md`.
 > Finite list-set inclusions such as `{1} $subset {1, 2}` are **not** a by-def
 > goal; use `by enumerate finite_set`.
@@ -4625,11 +4627,17 @@ rule target.
 > Also: closed-integer `$prime` / `not $prime` / `$coprime` / `not $coprime` by
 > computation under
 > [`examples/proof_nodes/atomic/by_builtin_rule/`](../examples/proof_nodes/atomic/by_builtin_rule/)
-> (`prime_by_computation.lit`, …). Trust-free ByDefinition tracers for
-> `$injective` / `$surjective` / `$bijective` / `$prime` /
+> (`prime_by_computation.lit`, …). These computation rules attach to the
+> dedicated `PrimeFact` / `CoprimeFact` / `NotPrimeFact` / `NotCoprimeFact`
+> families (`NormalAtomicFact` is user `$prop` only). Trust-free ByDefinition
+> tracers for `$injective` / `$surjective` / `$bijective` / `$prime` /
 > `$is_choice_function_for` live under
 > [`examples/proof_nodes/atomic/by_definition/`](../examples/proof_nodes/atomic/by_definition/)
-> (`builtin_injective.lit`, `builtin_prime.lit`, …).
+> (`builtin_injective.lit`, `builtin_prime.lit`, …). The choice-function tracer
+> needs atomic **FnApplicationUnfold** rewrite (preview): under a finite
+> `forall`, unfold top-level `f(args)` via `have fn` definitions so
+> `f_choice(alpha) $in g_choice(alpha)` becomes `1 $in {1}` without first
+> storing the pointwise equalities.
 
 <!-- litex:skip-test -->
 ```litex

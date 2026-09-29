@@ -1,16 +1,19 @@
 //! Shared helpers for Normal JSON projection.
 
+use super::json_keys::localize_key;
 use crate::ast::fact::{AtomicFact, ExistShapedFact, Fact};
 use crate::ast::line_file::SourceLine;
 use crate::knowledge_base::JsonValue;
+use crate::launch_command::OutputLanguage;
 use crate::runtime::{FactId, Runtime};
 use crate::store_fact_and_infer::{StoreFactAndInferResult, StoreFactResult};
 use std::collections::BTreeMap;
 
-pub(super) fn object(entries: Vec<(&str, JsonValue)>) -> JsonValue {
+/// Build an object; keys are English in source and remapped by `lang`.
+pub(super) fn object(lang: OutputLanguage, entries: Vec<(&str, JsonValue)>) -> JsonValue {
     let mut map = BTreeMap::new();
     for (key, value) in entries {
-        map.insert(key.to_string(), value);
+        map.insert(localize_key(key, lang), value);
     }
     JsonValue::Object(map)
 }
@@ -88,12 +91,31 @@ fn atomic_source_line(fact: &AtomicFact) -> Option<&SourceLine> {
         AtomicFact::NotIsTupleFact(f) => f.line_file.as_ref(),
         AtomicFact::NotSubsetFact(f) => f.line_file.as_ref(),
         AtomicFact::NotSupersetFact(f) => f.line_file.as_ref(),
+        AtomicFact::ProperSubsetFact(f) => f.line_file.as_ref(),
+        AtomicFact::ProperSupersetFact(f) => f.line_file.as_ref(),
+        AtomicFact::PrimeFact(f) => f.line_file.as_ref(),
+        AtomicFact::CoprimeFact(f) => f.line_file.as_ref(),
+        AtomicFact::DvdFact(f) => f.line_file.as_ref(),
+        AtomicFact::InjectiveFact(f) => f.line_file.as_ref(),
+        AtomicFact::SurjectiveFact(f) => f.line_file.as_ref(),
+        AtomicFact::BijectiveFact(f) => f.line_file.as_ref(),
+        AtomicFact::IsChoiceFunctionForFact(f) => f.line_file.as_ref(),
+        AtomicFact::NotProperSubsetFact(f) => f.line_file.as_ref(),
+        AtomicFact::NotProperSupersetFact(f) => f.line_file.as_ref(),
+        AtomicFact::NotPrimeFact(f) => f.line_file.as_ref(),
+        AtomicFact::NotCoprimeFact(f) => f.line_file.as_ref(),
+        AtomicFact::NotDvdFact(f) => f.line_file.as_ref(),
+        AtomicFact::NotInjectiveFact(f) => f.line_file.as_ref(),
+        AtomicFact::NotSurjectiveFact(f) => f.line_file.as_ref(),
+        AtomicFact::NotBijectiveFact(f) => f.line_file.as_ref(),
+        AtomicFact::NotIsChoiceFunctionForFact(f) => f.line_file.as_ref(),
     }
 }
 
 pub(super) fn cite_from_fact_id(runtime: &Runtime, fact_id: FactId) -> JsonValue {
+    let lang = output_language(runtime);
     let Some(fact) = runtime.fact_by_id_in_stack(fact_id) else {
-        return object(vec![("type", string("cite_known"))]);
+        return object(lang, vec![("type", string("cite_known"))]);
     };
     let mut entries = vec![
         ("type", string("cite_known")),
@@ -102,12 +124,13 @@ pub(super) fn cite_from_fact_id(runtime: &Runtime, fact_id: FactId) -> JsonValue
     if let Some(line) = fact_line(fact) {
         entries.insert(1, ("line", JsonValue::Number(line as f64)));
     }
-    object(entries)
+    object(lang, entries)
 }
 
 pub(super) fn cite_forall_from_fact_id(runtime: &Runtime, fact_id: FactId) -> JsonValue {
+    let lang = output_language(runtime);
     let Some(fact) = runtime.fact_by_id_in_stack(fact_id) else {
-        return object(vec![("type", string("cite_forall"))]);
+        return object(lang, vec![("type", string("cite_forall"))]);
     };
     let mut entries = vec![
         ("type", string("cite_forall")),
@@ -116,7 +139,7 @@ pub(super) fn cite_forall_from_fact_id(runtime: &Runtime, fact_id: FactId) -> Js
     if let Some(line) = fact_line(fact) {
         entries.insert(1, ("line", JsonValue::Number(line as f64)));
     }
-    object(entries)
+    object(lang, entries)
 }
 
 pub(super) fn builtin_rule_with_optional_cite(
@@ -124,6 +147,7 @@ pub(super) fn builtin_rule_with_optional_cite(
     text: &crate::json_output::explain::BuiltinRuleText,
     cite_fact_id: Option<FactId>,
 ) -> JsonValue {
+    let lang = output_language(runtime);
     // Print rule_name + message only; rule_id stays internal to explain/.
     let mut entries = vec![
         ("type", string("builtin_rule")),
@@ -138,10 +162,10 @@ pub(super) fn builtin_rule_with_optional_cite(
             entries.push(("cite", string(fact_display(fact))));
         }
     }
-    object(entries)
+    object(lang, entries)
 }
 
-pub(super) fn output_language(runtime: &Runtime) -> crate::launch_command::OutputLanguage {
+pub(super) fn output_language(runtime: &Runtime) -> OutputLanguage {
     runtime.launch_command.output_language()
 }
 

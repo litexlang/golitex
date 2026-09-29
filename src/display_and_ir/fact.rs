@@ -55,6 +55,15 @@ impl AtomicFact {
             AtomicFact::IsTupleFact(x) => x.ir(),
             AtomicFact::SubsetFact(x) => x.ir(),
             AtomicFact::SupersetFact(x) => x.ir(),
+            AtomicFact::ProperSubsetFact(x) => x.ir(),
+            AtomicFact::ProperSupersetFact(x) => x.ir(),
+            AtomicFact::PrimeFact(x) => x.ir(),
+            AtomicFact::CoprimeFact(x) => x.ir(),
+            AtomicFact::DvdFact(x) => x.ir(),
+            AtomicFact::InjectiveFact(x) => x.ir(),
+            AtomicFact::SurjectiveFact(x) => x.ir(),
+            AtomicFact::BijectiveFact(x) => x.ir(),
+            AtomicFact::IsChoiceFunctionForFact(x) => x.ir(),
             AtomicFact::NotNormalAtomicFact(x) => x.ir(),
             AtomicFact::NotEqualFact(x) => x.ir(),
             AtomicFact::NotLessFact(x) => x.ir(),
@@ -69,6 +78,15 @@ impl AtomicFact {
             AtomicFact::NotIsTupleFact(x) => x.ir(),
             AtomicFact::NotSubsetFact(x) => x.ir(),
             AtomicFact::NotSupersetFact(x) => x.ir(),
+            AtomicFact::NotProperSubsetFact(x) => x.ir(),
+            AtomicFact::NotProperSupersetFact(x) => x.ir(),
+            AtomicFact::NotPrimeFact(x) => x.ir(),
+            AtomicFact::NotCoprimeFact(x) => x.ir(),
+            AtomicFact::NotDvdFact(x) => x.ir(),
+            AtomicFact::NotInjectiveFact(x) => x.ir(),
+            AtomicFact::NotSurjectiveFact(x) => x.ir(),
+            AtomicFact::NotBijectiveFact(x) => x.ir(),
+            AtomicFact::NotIsChoiceFunctionForFact(x) => x.ir(),
         }
     }
 
@@ -88,6 +106,15 @@ impl AtomicFact {
             AtomicFact::IsTupleFact(x) => x.display_string(),
             AtomicFact::SubsetFact(x) => x.display_string(),
             AtomicFact::SupersetFact(x) => x.display_string(),
+            AtomicFact::ProperSubsetFact(x) => x.display_string(),
+            AtomicFact::ProperSupersetFact(x) => x.display_string(),
+            AtomicFact::PrimeFact(x) => x.display_string(),
+            AtomicFact::CoprimeFact(x) => x.display_string(),
+            AtomicFact::DvdFact(x) => x.display_string(),
+            AtomicFact::InjectiveFact(x) => x.display_string(),
+            AtomicFact::SurjectiveFact(x) => x.display_string(),
+            AtomicFact::BijectiveFact(x) => x.display_string(),
+            AtomicFact::IsChoiceFunctionForFact(x) => x.display_string(),
             AtomicFact::NotNormalAtomicFact(x) => x.display_string(),
             AtomicFact::NotEqualFact(x) => x.display_string(),
             AtomicFact::NotLessFact(x) => x.display_string(),
@@ -102,6 +129,15 @@ impl AtomicFact {
             AtomicFact::NotIsTupleFact(x) => x.display_string(),
             AtomicFact::NotSubsetFact(x) => x.display_string(),
             AtomicFact::NotSupersetFact(x) => x.display_string(),
+            AtomicFact::NotProperSubsetFact(x) => x.display_string(),
+            AtomicFact::NotProperSupersetFact(x) => x.display_string(),
+            AtomicFact::NotPrimeFact(x) => x.display_string(),
+            AtomicFact::NotCoprimeFact(x) => x.display_string(),
+            AtomicFact::NotDvdFact(x) => x.display_string(),
+            AtomicFact::NotInjectiveFact(x) => x.display_string(),
+            AtomicFact::NotSurjectiveFact(x) => x.display_string(),
+            AtomicFact::NotBijectiveFact(x) => x.display_string(),
+            AtomicFact::NotIsChoiceFunctionForFact(x) => x.display_string(),
         }
     }
 
@@ -404,6 +440,183 @@ impl NotSupersetFact {
         )
     }
 }
+
+impl ProperSubsetFact {
+    pub fn ir(&self) -> FactIR {
+        FactIR(format!(
+            "{} {}{} {}",
+            self.left.ir(),
+            FACT_PREFIX,
+            PROPER_SUBSET,
+            self.right.ir()
+        ))
+    }
+    pub fn display_string(&self) -> String {
+        format!(
+            "{} {}{} {}",
+            self.left.display_string(),
+            FACT_PREFIX,
+            PROPER_SUBSET,
+            self.right.display_string()
+        )
+    }
+}
+
+impl NotProperSubsetFact {
+    pub fn ir(&self) -> FactIR {
+        FactIR(format!(
+            "{} {} {}{} {}",
+            NOT,
+            self.left.ir(),
+            FACT_PREFIX,
+            PROPER_SUBSET,
+            self.right.ir()
+        ))
+    }
+    pub fn display_string(&self) -> String {
+        format!(
+            "{} {} {}{} {}",
+            NOT,
+            self.left.display_string(),
+            FACT_PREFIX,
+            PROPER_SUBSET,
+            self.right.display_string()
+        )
+    }
+}
+
+impl ProperSupersetFact {
+    pub fn ir(&self) -> FactIR {
+        FactIR(format!(
+            "{} {}{} {}",
+            self.left.ir(),
+            FACT_PREFIX,
+            PROPER_SUPERSET,
+            self.right.ir()
+        ))
+    }
+    pub fn display_string(&self) -> String {
+        format!(
+            "{} {}{} {}",
+            self.left.display_string(),
+            FACT_PREFIX,
+            PROPER_SUPERSET,
+            self.right.display_string()
+        )
+    }
+}
+
+impl NotProperSupersetFact {
+    pub fn ir(&self) -> FactIR {
+        FactIR(format!(
+            "{} {} {}{} {}",
+            NOT,
+            self.left.ir(),
+            FACT_PREFIX,
+            PROPER_SUPERSET,
+            self.right.ir()
+        ))
+    }
+    pub fn display_string(&self) -> String {
+        format!(
+            "{} {} {}{} {}",
+            NOT,
+            self.left.display_string(),
+            FACT_PREFIX,
+            PROPER_SUPERSET,
+            self.right.display_string()
+        )
+    }
+}
+
+macro_rules! impl_dollar_prefix_args {
+    ($ty:ty, $kw:expr, $($field:ident),+) => {
+        impl $ty {
+            pub fn ir(&self) -> FactIR {
+                let parts = vec![$(self.$field.ir()),+];
+                FactIR(format!(
+                    "{}{}{}{}{}",
+                    FACT_PREFIX,
+                    $kw,
+                    LEFT_PAREN,
+                    parts.join(&format!("{} ", COMMA)),
+                    RIGHT_PAREN
+                ))
+            }
+            pub fn display_string(&self) -> String {
+                let parts = vec![$(self.$field.display_string()),+];
+                format!(
+                    "{}{}{}{}{}",
+                    FACT_PREFIX,
+                    $kw,
+                    LEFT_PAREN,
+                    parts.join(&format!("{} ", COMMA)),
+                    RIGHT_PAREN
+                )
+            }
+        }
+    };
+}
+
+macro_rules! impl_not_dollar_prefix_args {
+    ($ty:ty, $kw:expr, $($field:ident),+) => {
+        impl $ty {
+            pub fn ir(&self) -> FactIR {
+                let parts = vec![$(self.$field.ir()),+];
+                FactIR(format!(
+                    "{} {}{}{}{}{}",
+                    NOT,
+                    FACT_PREFIX,
+                    $kw,
+                    LEFT_PAREN,
+                    parts.join(&format!("{} ", COMMA)),
+                    RIGHT_PAREN
+                ))
+            }
+            pub fn display_string(&self) -> String {
+                let parts = vec![$(self.$field.display_string()),+];
+                format!(
+                    "{} {}{}{}{}{}",
+                    NOT,
+                    FACT_PREFIX,
+                    $kw,
+                    LEFT_PAREN,
+                    parts.join(&format!("{} ", COMMA)),
+                    RIGHT_PAREN
+                )
+            }
+        }
+    };
+}
+
+impl_dollar_prefix_args!(PrimeFact, PRIME, value);
+impl_not_dollar_prefix_args!(NotPrimeFact, PRIME, value);
+impl_dollar_prefix_args!(CoprimeFact, COPRIME, left, right);
+impl_not_dollar_prefix_args!(NotCoprimeFact, COPRIME, left, right);
+impl_dollar_prefix_args!(DvdFact, DVD, left, right);
+impl_not_dollar_prefix_args!(NotDvdFact, DVD, left, right);
+impl_dollar_prefix_args!(InjectiveFact, INJECTIVE, domain, codomain, function);
+impl_not_dollar_prefix_args!(NotInjectiveFact, INJECTIVE, domain, codomain, function);
+impl_dollar_prefix_args!(SurjectiveFact, SURJECTIVE, domain, codomain, function);
+impl_not_dollar_prefix_args!(NotSurjectiveFact, SURJECTIVE, domain, codomain, function);
+impl_dollar_prefix_args!(BijectiveFact, BIJECTIVE, domain, codomain, function);
+impl_not_dollar_prefix_args!(NotBijectiveFact, BIJECTIVE, domain, codomain, function);
+impl_dollar_prefix_args!(
+    IsChoiceFunctionForFact,
+    IS_CHOICE_FUNCTION_FOR,
+    index,
+    set,
+    family,
+    choice
+);
+impl_not_dollar_prefix_args!(
+    NotIsChoiceFunctionForFact,
+    IS_CHOICE_FUNCTION_FOR,
+    index,
+    set,
+    family,
+    choice
+);
 
 macro_rules! impl_normal_atomic {
     ($ty:ty, $negated:expr) => {

@@ -1,5 +1,0 @@
-# Node: equal.ByBuiltinRule.SumEmptyRange
-# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/sum_empty_range.lit
-
-trust 0 < 1
-sum(1, 0, fn(x Z) Z {x}) = 0

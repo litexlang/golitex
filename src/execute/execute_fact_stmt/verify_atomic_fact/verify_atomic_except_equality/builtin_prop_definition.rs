@@ -5,11 +5,11 @@
 //! One predicate ↔ one proof struct under `BuiltinPropDefinitionProof`.
 
 use crate::ast::fact::{
-    AndChainAtomicFact, AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, ForallFact,
-    InFact, LessEqualFact, NormalAtomicFact, NotEqualFact, OrFact, PlainExistFact,
-    QuantifierFreeFact, SubsetFact, SupersetFact,
+    AndChainAtomicFact, AtomicFact, BijectiveFact, CoprimeFact, DvdFact, EqualFact,
+    ExistOrAndChainAtomicFact, Fact, ForallFact, InFact, InjectiveFact, IsChoiceFunctionForFact,
+    LessEqualFact, NotEqualFact, OrFact, PlainExistFact, ProperSubsetFact,
+    ProperSupersetFact, QuantifierFreeFact, SubsetFact, SupersetFact, SurjectiveFact,
 };
-use crate::ast::names::AtomicName;
 use crate::ast::names::BoundName;
 use crate::ast::obj::{
     ArithmeticOperator, FnObj, FnObjHead, FunctionSpace, Gcd, IdentifierObj, IntegerOperator,
@@ -26,14 +26,10 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 };
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
-use crate::parse::keywords::{
-    IS_CHOICE_FUNCTION_FOR, PROPER_SUBSET, PROPER_SUPERSET,
-};
 use crate::runtime::{Runtime, RuntimeResult};
-use crate::parse::keywords::{BIJECTIVE, COPRIME, DVD, INJECTIVE, PRIME, SURJECTIVE};
 
 impl Runtime {
-    // Try builtin definition expansion (dedicated AST or named NormalAtomic).
+    // Try builtin definition expansion for dedicated AtomicFact variants.
     // Soft miss → Ok(None).
     pub(super) fn search_builtin_prop_definition_proof(
         &mut self,
@@ -43,30 +39,21 @@ impl Runtime {
         match fact {
             AtomicFact::SubsetFact(f) => self.prove_subset_by_definition(f, verify_state),
             AtomicFact::SupersetFact(f) => self.prove_superset_by_definition(f, verify_state),
-            AtomicFact::NormalAtomicFact(f) => {
-                self.prove_named_builtin_prop_by_definition(f, verify_state)
+            AtomicFact::ProperSubsetFact(f) => {
+                self.prove_proper_subset_by_definition(f, verify_state)
             }
-            _ => Ok(None),
-        }
-    }
-
-    fn prove_named_builtin_prop_by_definition(
-        &mut self,
-        fact: &NormalAtomicFact,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
-        match fact.predicate.local_name() {
-            PROPER_SUBSET => self.prove_proper_subset_by_definition(fact, verify_state),
-            PROPER_SUPERSET => self.prove_proper_superset_by_definition(fact, verify_state),
-            INJECTIVE => self.prove_injective_by_definition(fact, verify_state),
-            SURJECTIVE => self.prove_surjective_by_definition(fact, verify_state),
-            BIJECTIVE => self.prove_bijective_by_definition(fact, verify_state),
-            IS_CHOICE_FUNCTION_FOR => {
-                self.prove_is_choice_function_for_by_definition(fact, verify_state)
+            AtomicFact::ProperSupersetFact(f) => {
+                self.prove_proper_superset_by_definition(f, verify_state)
             }
-            PRIME => self.prove_prime_by_definition(fact, verify_state),
-            COPRIME => self.prove_coprime_by_definition(fact, verify_state),
-            DVD => self.prove_dvd_by_definition(fact, verify_state),
+            AtomicFact::InjectiveFact(f) => self.prove_injective_by_definition(f, verify_state),
+            AtomicFact::SurjectiveFact(f) => self.prove_surjective_by_definition(f, verify_state),
+            AtomicFact::BijectiveFact(f) => self.prove_bijective_by_definition(f, verify_state),
+            AtomicFact::IsChoiceFunctionForFact(f) => {
+                self.prove_is_choice_function_for_by_definition(f, verify_state)
+            }
+            AtomicFact::PrimeFact(f) => self.prove_prime_by_definition(f, verify_state),
+            AtomicFact::CoprimeFact(f) => self.prove_coprime_by_definition(f, verify_state),
+            AtomicFact::DvdFact(f) => self.prove_dvd_by_definition(f, verify_state),
             _ => Ok(None),
         }
     }
@@ -144,14 +131,11 @@ impl Runtime {
     // $proper_subset(A, B)  ⇔  A $subset B  and  A != B
     fn prove_proper_subset_by_definition(
         &mut self,
-        fact: &NormalAtomicFact,
+        fact: &ProperSubsetFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
-        if fact.body.len() != 2 {
-            return Ok(None);
-        }
-        let left = fact.body[0].clone();
-        let right = fact.body[1].clone();
+        let left = fact.left.clone();
+        let right = fact.right.clone();
         let requirements = vec![
             Fact::AtomicFact(AtomicFact::SubsetFact(SubsetFact {
                 fact_id: self.global_ids.allocate_fact_id(),
@@ -182,14 +166,11 @@ impl Runtime {
     // $proper_superset(A, B)  ⇔  B $subset A  and  A != B
     fn prove_proper_superset_by_definition(
         &mut self,
-        fact: &NormalAtomicFact,
+        fact: &ProperSupersetFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
-        if fact.body.len() != 2 {
-            return Ok(None);
-        }
-        let left = fact.body[0].clone();
-        let right = fact.body[1].clone();
+        let left = fact.left.clone();
+        let right = fact.right.clone();
         let requirements = vec![
             Fact::AtomicFact(AtomicFact::SubsetFact(SubsetFact {
                 fact_id: self.global_ids.allocate_fact_id(),
@@ -220,14 +201,11 @@ impl Runtime {
     // $injective(A, B, f)  ⇔  forall x1, x2 A: f(x1)=f(x2) => x1=x2
     fn prove_injective_by_definition(
         &mut self,
-        fact: &NormalAtomicFact,
+        fact: &InjectiveFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
-        if fact.body.len() != 3 {
-            return Ok(None);
-        }
-        let domain = fact.body[0].clone();
-        let function = fact.body[2].clone();
+        let domain = fact.domain.clone();
+        let function = fact.function.clone();
         let x1 = self.fresh_internal_param();
         let x2 = self.fresh_internal_param();
         let x1_obj = Obj::Identifier(IdentifierObj::from_bound_name(&x1));
@@ -273,15 +251,12 @@ impl Runtime {
     // $surjective(A, B, f)  ⇔  forall y B: exist x A: y = f(x)
     fn prove_surjective_by_definition(
         &mut self,
-        fact: &NormalAtomicFact,
+        fact: &SurjectiveFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
-        if fact.body.len() != 3 {
-            return Ok(None);
-        }
-        let domain = fact.body[0].clone();
-        let codomain = fact.body[1].clone();
-        let function = fact.body[2].clone();
+        let domain = fact.domain.clone();
+        let codomain = fact.codomain.clone();
+        let function = fact.function.clone();
         let y = self.fresh_internal_param();
         let x = self.fresh_internal_param();
         let y_obj = Obj::Identifier(IdentifierObj::from_bound_name(&y));
@@ -325,23 +300,22 @@ impl Runtime {
     // $bijective(A, B, f)  ⇔  $injective(A,B,f) and $surjective(A,B,f)
     fn prove_bijective_by_definition(
         &mut self,
-        fact: &NormalAtomicFact,
+        fact: &BijectiveFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
-        if fact.body.len() != 3 {
-            return Ok(None);
-        }
         let requirements = vec![
-            Fact::AtomicFact(AtomicFact::NormalAtomicFact(NormalAtomicFact {
+            Fact::AtomicFact(AtomicFact::InjectiveFact(InjectiveFact {
                 fact_id: self.global_ids.allocate_fact_id(),
-                predicate: AtomicName::plain(INJECTIVE.to_string()),
-                body: fact.body.clone(),
+                domain: fact.domain.clone(),
+                codomain: fact.codomain.clone(),
+                function: fact.function.clone(),
                 line_file: None,
             })),
-            Fact::AtomicFact(AtomicFact::NormalAtomicFact(NormalAtomicFact {
+            Fact::AtomicFact(AtomicFact::SurjectiveFact(SurjectiveFact {
                 fact_id: self.global_ids.allocate_fact_id(),
-                predicate: AtomicName::plain(SURJECTIVE.to_string()),
-                body: fact.body.clone(),
+                domain: fact.domain.clone(),
+                codomain: fact.codomain.clone(),
+                function: fact.function.clone(),
                 line_file: None,
             })),
         ];
@@ -361,15 +335,12 @@ impl Runtime {
     // $is_choice_function_for(I, S, g, f)  ⇔  forall alpha I: f(alpha) $in g(alpha)
     fn prove_is_choice_function_for_by_definition(
         &mut self,
-        fact: &NormalAtomicFact,
+        fact: &IsChoiceFunctionForFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
-        if fact.body.len() != 4 {
-            return Ok(None);
-        }
-        let index = fact.body[0].clone();
-        let family_fn = fact.body[2].clone();
-        let choice_fn = fact.body[3].clone();
+        let index = fact.index.clone();
+        let family_fn = fact.family.clone();
+        let choice_fn = fact.choice.clone();
         let alpha = self.fresh_internal_param();
         let alpha_obj = Obj::Identifier(IdentifierObj::from_bound_name(&alpha));
         let Some(f_alpha) = apply_fn_one_arg(&choice_fn, alpha_obj.clone()) else {
@@ -408,13 +379,10 @@ impl Runtime {
     // $prime(p)  ⇔  2 <= p  and  forall d range(2, p): p % d != 0
     fn prove_prime_by_definition(
         &mut self,
-        fact: &NormalAtomicFact,
+        fact: &crate::ast::fact::PrimeFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
-        if fact.body.len() != 1 {
-            return Ok(None);
-        }
-        let p = fact.body[0].clone();
+        let p = fact.value.clone();
         let two = number_literal("2");
         let zero = number_literal("0");
         let lower = Fact::AtomicFact(AtomicFact::LessEqualFact(LessEqualFact {
@@ -463,14 +431,11 @@ impl Runtime {
     // $coprime(a, b)  ⇔  (a != 0 or b != 0)  and  gcd(a, b) = 1
     fn prove_coprime_by_definition(
         &mut self,
-        fact: &NormalAtomicFact,
+        fact: &CoprimeFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
-        if fact.body.len() != 2 {
-            return Ok(None);
-        }
-        let a = fact.body[0].clone();
-        let b = fact.body[1].clone();
+        let a = fact.left.clone();
+        let b = fact.right.clone();
         let zero = number_literal("0");
         let one = number_literal("1");
         let non_all_zero = Fact::OrFact(OrFact {
@@ -516,14 +481,11 @@ impl Runtime {
     // $dvd(x, y)  ⇔  x % y = 0  and  exist a Z: x = a * y
     fn prove_dvd_by_definition(
         &mut self,
-        fact: &NormalAtomicFact,
+        fact: &DvdFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<BuiltinPropDefinitionProof>> {
-        if fact.body.len() != 2 {
-            return Ok(None);
-        }
-        let x = fact.body[0].clone();
-        let y = fact.body[1].clone();
+        let x = fact.left.clone();
+        let y = fact.right.clone();
         let zero = number_literal("0");
         let rem_zero = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
             fact_id: self.global_ids.allocate_fact_id(),

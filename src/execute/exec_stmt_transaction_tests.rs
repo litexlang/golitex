@@ -3085,3 +3085,31 @@ fn sketch_soft_fail_fails_whole_sketch() {
     let sketch = exec_one(&mut runtime, "sketch:\n    1 = 2\n");
     assert!(sketch.is_failed(), "sketch body soft-fail must fail the sketch");
 }
+
+#[test]
+fn obtain_under_forall_claim_reproduces_citation_shape() {
+    let mut runtime = runtime_with_file_env();
+    let prop = "prop divides(a Z, b Z):\n    exist k Z st {b = a * k}";
+    assert!(!exec_one(&mut runtime, prop).is_failed(), "def prop");
+    let code = r#"claim:
+    ? forall d N+, a Z:
+        $divides(d, a)
+        a != 0
+        =>:
+            d <= abs(a)
+    obtain k from exist k Z st {a = d * k}
+    abs(k) $in N+"#;
+    match crate::parse::parse::parse_stmts_from_source(&mut runtime, code) {
+        Ok(stmts) => {
+            eprintln!("parsed {} stmts; root plain keys={:?}", stmts.len(),
+                runtime.parse_scope_stack.first().map(|s| s.plain.keys().cloned().collect::<Vec<_>>()));
+            for (i, stmt) in stmts.iter().enumerate() {
+                match runtime.exec_stmt(stmt) {
+                    Ok(r) => eprintln!("exec[{i}] failed={}", r.is_failed()),
+                    Err(e) => panic!("exec[{i}] RuntimeError: {e:?}"),
+                }
+            }
+        }
+        Err(e) => panic!("parse error: {e:?}"),
+    }
+}

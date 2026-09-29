@@ -58,7 +58,25 @@ impl Runtime {
             | AtomicFact::NotIsCartFact(_)
             | AtomicFact::NotIsTupleFact(_)
             | AtomicFact::NotSubsetFact(_)
-            | AtomicFact::NotSupersetFact(_) => {}
+            | AtomicFact::NotSupersetFact(_)
+            | AtomicFact::ProperSubsetFact(_)
+            | AtomicFact::ProperSupersetFact(_)
+            | AtomicFact::PrimeFact(_)
+            | AtomicFact::CoprimeFact(_)
+            | AtomicFact::DvdFact(_)
+            | AtomicFact::InjectiveFact(_)
+            | AtomicFact::SurjectiveFact(_)
+            | AtomicFact::BijectiveFact(_)
+            | AtomicFact::IsChoiceFunctionForFact(_)
+            | AtomicFact::NotProperSubsetFact(_)
+            | AtomicFact::NotProperSupersetFact(_)
+            | AtomicFact::NotPrimeFact(_)
+            | AtomicFact::NotCoprimeFact(_)
+            | AtomicFact::NotDvdFact(_)
+            | AtomicFact::NotInjectiveFact(_)
+            | AtomicFact::NotSurjectiveFact(_)
+            | AtomicFact::NotBijectiveFact(_)
+            | AtomicFact::NotIsChoiceFunctionForFact(_) => {}
         }
         Ok(rules)
     }

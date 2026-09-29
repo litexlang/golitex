@@ -81,7 +81,8 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: false,
             can_use_rewrite: false,
             store_well_defined_fact: false,
-        };
+                    builtin_strategy_depth_remaining: 0,
+};
 
         let mut subst: HashMap<IdentifierId, Obj> = HashMap::new();
         let mut arg_match_proofs = Vec::with_capacity(pattern_args.len());
@@ -118,7 +119,8 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: false,
             can_use_rewrite: false,
             store_well_defined_fact: false,
-        };
+                    builtin_strategy_depth_remaining: 0,
+};
 
         let mut guard = 0;
         while ordered_param_ids.iter().any(|id| !subst.contains_key(id)) {

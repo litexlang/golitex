@@ -126,6 +126,14 @@ pub struct NestedSameModAbsorptionBuiltinRuleProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 
+// Builtin ModCompatibleSmallerModulus: a % d = (a % m) % d when m % d = 0.
+// Mathematical property: if the larger modulus is a multiple of the smaller,
+// nested reduction by the larger modulus does not change remainder mod d.
+// Example: forall p Z: p % 2 = (p % 8) % 2.
+pub struct ModCompatibleSmallerModulusBuiltinRuleProof {
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
 pub enum EqualityIdentitiesWave2BuiltinRuleProof {
     OneToAnyPower(OneToAnyPowerBuiltinRuleProof),
     ZeroToPosNatPower(ZeroToPosNatPowerBuiltinRuleProof),
@@ -150,6 +158,7 @@ pub enum EqualityIdentitiesWave2BuiltinRuleProof {
     ModOne(ModOneBuiltinRuleProof),
     OneModAtLeastTwo(OneModAtLeastTwoBuiltinRuleProof),
     NestedSameModAbsorption(NestedSameModAbsorptionBuiltinRuleProof),
+    ModCompatibleSmallerModulus(ModCompatibleSmallerModulusBuiltinRuleProof),
 }
 
 impl Runtime {
@@ -229,6 +238,13 @@ impl Runtime {
             if let Some(p) = self.try_nested_same_mod_absorption(left, right, child.clone())? {
                 return Ok(Some(
                     EqualityIdentitiesWave2BuiltinRuleProof::NestedSameModAbsorption(p),
+                ));
+            }
+            if let Some(p) =
+                self.try_mod_compatible_smaller_modulus(left, right, child.clone())?
+            {
+                return Ok(Some(
+                    EqualityIdentitiesWave2BuiltinRuleProof::ModCompatibleSmallerModulus(p),
                 ));
             }
         }
@@ -964,6 +980,60 @@ impl Runtime {
         }
         Ok(Some(NestedSameModAbsorptionBuiltinRuleProof {
             proof_of_requirement_facts: vec![proof],
+        }))
+    }
+
+    // When: goal is `a % d = (a % m) % d` and `m % d = 0` is provable.
+    // After: nested mod by a multiple of d preserves the remainder mod d.
+    // Example: `p % 2 = (p % 8) % 2`.
+    fn try_mod_compatible_smaller_modulus(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<ModCompatibleSmallerModulusBuiltinRuleProof>> {
+        let Some((a_left, d_left)) = match_mod(left) else {
+            return Ok(None);
+        };
+        let Some((inner, d_right)) = match_mod(right) else {
+            return Ok(None);
+        };
+        if d_left.ir() != d_right.ir() {
+            return Ok(None);
+        }
+        let Some((a_inner, m)) = match_mod(inner) else {
+            return Ok(None);
+        };
+        if a_left.ir() != a_inner.ir() {
+            return Ok(None);
+        }
+        let zero = Obj::Literal(Literal::Number(Number {
+            normalized_value: "0".to_string(),
+        }));
+        let rem = Obj::IntegerOperator(IntegerOperator::Mod(Mod {
+            left: Box::new(m.clone()),
+            right: Box::new(d_left.clone()),
+        }));
+        let divisible = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            left: rem,
+            right: zero,
+            line_file: None,
+        }));
+        let divisible_proof = self.verify_fact(&divisible, verify_state.clone())?;
+        if divisible_proof.is_failed() {
+            return Ok(None);
+        }
+        let nonzero_small = self.verify_order_nonzero(d_left, verify_state.clone())?;
+        if nonzero_small.is_failed() {
+            return Ok(None);
+        }
+        let nonzero_large = self.verify_order_nonzero(m, verify_state)?;
+        if nonzero_large.is_failed() {
+            return Ok(None);
+        }
+        Ok(Some(ModCompatibleSmallerModulusBuiltinRuleProof {
+            proof_of_requirement_facts: vec![divisible_proof, nonzero_small, nonzero_large],
         }))
     }
 

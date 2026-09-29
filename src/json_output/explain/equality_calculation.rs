@@ -1,40 +1,53 @@
 //! Localized text for EqualitySearchProofByCalculation.
-//!
-//! Internal variants (ClosedDecimal / Rational) only affect `message`;
-//! JSON does not expose a `variant` field.
 
 use super::fallback::BuiltinRuleText;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::search_equal_fact_builtin_rule_result::EqualitySearchProofByCalculation;
 use crate::launch_command::OutputLanguage;
 
+impl EqualitySearchProofByCalculation {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        match self {
+            Self::ClosedDecimal { .. } => BuiltinRuleText {
+                rule_id: "Calculation",
+                rule_name: "Calculation".to_string(),
+                message: "Both sides evaluate to the same number".to_string(),
+            },
+            Self::Rational {} => BuiltinRuleText {
+                rule_id: "Calculation",
+                rule_name: "Calculation".to_string(),
+                message: "Both sides are the same rational expression".to_string(),
+            },
+        }
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        match self {
+            Self::ClosedDecimal { .. } => BuiltinRuleText {
+                rule_id: "Calculation",
+                rule_name: "计算".to_string(),
+                message: "两边都算出同一个数".to_string(),
+            },
+            Self::Rational {} => BuiltinRuleText {
+                rule_id: "Calculation",
+                rule_name: "计算".to_string(),
+                message: "两边是同一个有理式".to_string(),
+            },
+        }
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
 pub fn explain_calculation(
     proof: &EqualitySearchProofByCalculation,
     lang: OutputLanguage,
 ) -> BuiltinRuleText {
-    let rule_id = "Calculation";
-    let (rule_name, message) = match (proof, lang) {
-        (EqualitySearchProofByCalculation::ClosedDecimal { .. }, OutputLanguage::English) => (
-            "Calculation".to_string(),
-            "Both sides evaluate to the same number".to_string(),
-        ),
-        (EqualitySearchProofByCalculation::ClosedDecimal { .. }, OutputLanguage::Chinese) => (
-            "计算".to_string(),
-            "两边都算出同一个数".to_string(),
-        ),
-        (EqualitySearchProofByCalculation::Rational {}, OutputLanguage::English) => (
-            "Calculation".to_string(),
-            "Both sides are the same rational expression".to_string(),
-        ),
-        (EqualitySearchProofByCalculation::Rational {}, OutputLanguage::Chinese) => (
-            "计算".to_string(),
-            "两边是同一个有理式".to_string(),
-        ),
-    };
-    BuiltinRuleText {
-        rule_id,
-        rule_name,
-        message,
-    }
+    proof.rule_id_and_message(lang)
 }
 
 #[cfg(test)]

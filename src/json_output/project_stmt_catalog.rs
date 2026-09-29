@@ -555,13 +555,14 @@ fn success_parts(
     stores: Vec<String>,
     infers: Vec<String>,
 ) -> JsonValue {
-    let text = explain_stmt_kind(kind, output_language(runtime));
-    object(vec![
+    let lang = output_language(runtime);
+    let text = explain_stmt_kind(kind, lang);
+    object(lang, vec![
         ("success", bool_value(true)),
         ("statement", string(statement)),
         (
             "why_verified",
-            object(vec![
+            object(lang, vec![
                 ("type", string(text.type_tag)),
                 ("rule_name", string(text.rule_name)),
                 ("message", string(text.message)),
@@ -573,13 +574,14 @@ fn success_parts(
 }
 
 fn failed(runtime: &Runtime, statement: &str, kind: &str) -> JsonValue {
-    let text = explain_stmt_kind(kind, output_language(runtime));
-    object(vec![
+    let lang = output_language(runtime);
+    let text = explain_stmt_kind(kind, lang);
+    object(lang, vec![
         ("success", bool_value(false)),
         ("statement", string(statement)),
         (
             "why_failed",
-            object(vec![
+            object(lang, vec![
                 ("type", string(text.type_tag)),
                 ("rule_name", string(text.rule_name)),
                 ("message", string(text.message)),

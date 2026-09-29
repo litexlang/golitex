@@ -7,6 +7,7 @@
 pub mod emit;
 pub mod explain;
 pub mod helper;
+pub mod json_keys;
 pub mod project_detailed;
 pub mod project_normal;
 mod project_stmt_catalog;

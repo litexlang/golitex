@@ -24,6 +24,8 @@ pub fn exec_sketch_stmt(
         }
     })?;
 
+    runtime.release_obtain_parse_bindings_in_stmts(&stmt.proof);
+
     match local_outcome {
         Ok(proof_steps) => Ok(ExecProofBlockStmtResult::Sketch(
             ExecSketchStmtResult::Success(ExecSketchStmtSuccess {

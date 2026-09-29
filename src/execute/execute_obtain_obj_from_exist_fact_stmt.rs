@@ -79,7 +79,8 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: true,
             can_use_rewrite: true,
             store_well_defined_fact: true,
-        };
+                    builtin_strategy_depth_remaining: VerifyState::BUILTIN_STRATEGY_DEPTH_LIMIT,
+};
         let verified = self.verify_exist_shaped_fact(&stmt.fact, verify_state)?;
         let verify_exist = match self.unwrap_obtain_exist_verify(verified)? {
             Ok(success) => success,
@@ -208,6 +209,13 @@ impl Runtime {
             for old in &group.params {
                 let name = equal_tos[equal_index].clone();
                 equal_index += 1;
+                eprintln!(
+                    "obtain resolve equal_to={name} visible={} root_keys={:?}",
+                    self.plain_atom_is_visible(&name),
+                    self.parse_scope_stack
+                        .first()
+                        .map(|s| s.plain.keys().cloned().collect::<Vec<_>>())
+                );
                 let id = self.resolve_plain_atom(&name)?;
                 let bound = BoundName::new(id, name);
                 let obj = Obj::Identifier(self.identifier_obj_for_stored_mention(&bound));

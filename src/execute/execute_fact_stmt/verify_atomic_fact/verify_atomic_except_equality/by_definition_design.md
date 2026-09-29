@@ -28,6 +28,11 @@ Rationale: `$subset`, `$prime`, … are definitional interfaces.
 Expanding them to obligation facts keeps ambient search and statement `by def`
 on one path, with typed evidence per predicate.
 
+**AST shape:** each official builtin is a **dedicated `AtomicFact` variant**
+(`ProperSubsetFact`, `PrimeFact`, `CoprimeFact`, `DvdFact`, `InjectiveFact`,
+`SurjectiveFact`, `BijectiveFact`, `IsChoiceFunctionForFact`, and their `Not*`
+twins). `NormalAtomicFact` / `NotNormalAtomicFact` are **user-defined
+`$prop(...)` only** — they are not used for these builtins.
 ## Evidence shape
 
 **One builtin predicate ↔ one dedicated proof struct** under
@@ -83,9 +88,13 @@ Positive tracers (no trust), under `atomic/by_definition/`:
   finite membership exist seed `exist x {1} st {x = 1}`
 - `builtin_prime.lit` — `by def $prime(5)` (trial obligations close ambiently)
 - `builtin_is_choice_function_for.lit` — finite index + constant choice fn
+  (closes via FnApplicationUnfold rewrite on the forall body; see
+  `search_atomic_except_equality_fact_proof_by_builtin_rewrite.rs`)
 
-`$prime` / `$coprime` closed-integer **computation** (ByBuiltinRule, not
-by-definition) remains under `atomic/by_builtin_rule/prime_by_computation.lit`,
+`$prime` / `$coprime` closed-integer **computation** (ByBuiltinRule on the
+dedicated `PrimeFact` / `CoprimeFact` / `NotPrimeFact` / `NotCoprimeFact`
+families, not `NormalAtomicFact`) remains under
+`atomic/by_builtin_rule/prime_by_computation.lit`,
 `not_prime_by_computation.lit`, `coprime_by_computation.lit`,
 `not_coprime_by_computation.lit`.
 
