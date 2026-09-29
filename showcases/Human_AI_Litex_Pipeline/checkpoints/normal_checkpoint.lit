@@ -1,2 +1,0 @@
-# Persistent-session checkpoint after group and subgroup, before normal_subgroup.
-# N001-N004 are replayed here as literal `try:` transactions from the journal.

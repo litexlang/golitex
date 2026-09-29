@@ -53,20 +53,37 @@ impl Runtime {
         let code_source = match &command {
             LaunchCommand::Eval { .. } => CodeSource::Eval,
             LaunchCommand::Repl { .. } => CodeSource::Repl,
-            LaunchCommand::File { .. } | LaunchCommand::Repository { .. } => {
-                CodeSource::StandaloneFile
-            }
-            LaunchCommand::Help | LaunchCommand::Version => {
+            LaunchCommand::File { .. }
+            | LaunchCommand::Repository { .. }
+            | LaunchCommand::Extract {
+                input: crate::launch_command::ExtractInput::File(_)
+                    | crate::launch_command::ExtractInput::Repository(_),
+                ..
+            } => CodeSource::StandaloneFile,
+            LaunchCommand::Extract {
+                input: crate::launch_command::ExtractInput::Code(_),
+                ..
+            } => CodeSource::Eval,
+            LaunchCommand::Help { .. } | LaunchCommand::Version { .. } => {
                 panic!("Runtime::new does not accept Help/Version LaunchCommand")
             }
         };
         let file = match &command {
             LaunchCommand::Repl { .. } => RealOrVirtualPath::Repl,
-            LaunchCommand::Eval { .. } => RealOrVirtualPath::Eval,
-            LaunchCommand::File { path, .. } | LaunchCommand::Repository { path, .. } => {
-                RealOrVirtualPath::Real(path.clone())
-            }
-            LaunchCommand::Help | LaunchCommand::Version => {
+            LaunchCommand::Eval { .. }
+            | LaunchCommand::Extract {
+                input: crate::launch_command::ExtractInput::Code(_),
+                ..
+            } => RealOrVirtualPath::Eval,
+            LaunchCommand::File { path, .. }
+            | LaunchCommand::Repository { path, .. }
+            | LaunchCommand::Extract {
+                input:
+                    crate::launch_command::ExtractInput::File(path)
+                    | crate::launch_command::ExtractInput::Repository(path),
+                ..
+            } => RealOrVirtualPath::Real(path.clone()),
+            LaunchCommand::Help { .. } | LaunchCommand::Version { .. } => {
                 panic!("Runtime::new does not accept Help/Version LaunchCommand")
             }
         };
@@ -85,7 +102,8 @@ impl Runtime {
 
     pub fn begin_file(&mut self, file: RealOrVirtualPath) {
         self.current_file = file;
-        let session_view = ExecEnvSessionView::new(self.global_ids.clone(), self.code_source.clone());
+        let session_view =
+            ExecEnvSessionView::new(self.global_ids.clone(), self.code_source.clone());
         self.execution_environments_stack
             .push(Box::new(ExecEnv::new(Some(session_view))));
         self.push_parse_scope();

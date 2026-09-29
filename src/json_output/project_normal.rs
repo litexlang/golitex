@@ -87,6 +87,10 @@ pub fn project_run_normal(
         ("target", string(target)),
         ("path", path_value),
         ("detail", string(OutputDetail::Normal.as_str())),
+        (
+            "language",
+            string(runtime.launch_command.output_language().as_str()),
+        ),
         ("statement_results", JsonValue::Array(statement_results)),
         ("session_error", session_error),
     ])

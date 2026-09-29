@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::ast::fact::{AtomicFact, EqualFact, QuantifierFreeFact};
 use crate::ast::obj::{IdentifierObj, Number, Obj, SetBuilder, Literal};
 use crate::ast::names::BoundName;
-use crate::launch_command::LaunchCommand;
+use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;
 use crate::runtime::runtime_ids::IdentifierId;
 use crate::tokenize::Tokenizer;
@@ -13,6 +13,7 @@ fn test_runtime() -> Runtime {
         code: String::new(),
         session: false,
         strict: false,
+        language: OutputLanguage::English,
     })
 }
 

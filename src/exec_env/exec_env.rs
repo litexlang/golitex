@@ -45,9 +45,8 @@ pub use super::known_fact_memory::{
 /// the child environment so its local definitions, facts, and WD records stay
 /// available to the renderer without being merged into the parent implicitly.
 ///
-/// `session_view` is set only for the file-level ExecEnv (Runtime stack index 0):
-/// id watermarks + `CodeSource`. Nested/local ExecEnvs leave it `None`.
-/// Merge never copies `session_view`.
+/// `session_view` is set only for the file-level ExecEnv (Runtime stack
+/// index 0). Nested/local ExecEnvs leave it `None`. Merge never copies it.
 #[derive(Clone)]
 pub struct ExecEnv {
     /// Definitions visible to statements executed in this scope.
@@ -57,7 +56,7 @@ pub struct ExecEnv {
     pub facts: KnownFactMemory,
 
     /// Definition-time shape memory only. Never written from arbitrary stored facts.
-    pub special_object_properties: HashMap<ObjIR, Vec<SpecialObjectPropertyByDefinition>>,
+    pub special_object_properties_by_def: HashMap<ObjIR, Vec<SpecialObjectPropertyByDefinition>>,
 
     /// Algebraic properties proved for predicates in this scope.
     pub prop_rewrite_properties: HashMap<AtomicName, Vec<PropRewriteProperty>>,
@@ -70,7 +69,9 @@ pub struct ExecEnv {
     /// remain read-only.
     pub well_defined_objects: WellDefinedObjectMemory,
 
-    /// File-level session snapshot only; `None` for nested / statement-local envs.
+    /// When Runtime opens this file-level env: GlobalIds at enter (leave stamped
+    /// at finish) plus the file's CodeSource. Prepares litex_knowledge_base
+    /// watermarks. `None` for nested / statement-local envs.
     pub session_view: Option<ExecEnvSessionView>,
 }
 
@@ -175,7 +176,7 @@ impl ExecEnv {
         Self {
             definitions: DefinitionMemory::new(),
             facts: KnownFactMemory::new(),
-            special_object_properties: HashMap::new(),
+            special_object_properties_by_def: HashMap::new(),
             prop_rewrite_properties: HashMap::new(),
             well_defined_objects: WellDefinedObjectMemory::new(),
             session_view,
@@ -264,10 +265,7 @@ impl ExecEnv {
 
     // Success path of exec_stmt: commit the temp child into this parent.
     // Failed discards the child instead — see merge_exec_env.rs module docs.
-    pub fn merge_from(
-        &mut self,
-        child: &ExecEnv,
-    ) -> crate::runtime::RuntimeResult<()> {
+    pub fn merge_from(&mut self, child: &ExecEnv) -> crate::runtime::RuntimeResult<()> {
         super::merge_exec_env::merge_exec_env_from(self, child)
     }
 }

@@ -7,6 +7,7 @@ pub enum RunCommandOutcome {
     RunFile(RunFileResult),
     RunEval(RunEvalResult),
     RunRepo(RunRepoResult),
+    Extract(ExtractResult),
     /// Interactive REPL: prints each step; no accumulated payload.
     RunRepl,
     Help(HelpResult),
@@ -58,6 +59,11 @@ pub struct HelpResult {
 
 pub struct VersionResult {
     pub version: String,
+}
+
+pub struct ExtractResult {
+    pub json: String,
+    pub ok: bool,
 }
 
 fn failed_indices(statement_results: &[ExecStmtResult]) -> Option<Vec<usize>> {
@@ -170,12 +176,23 @@ impl VersionResult {
     }
 }
 
+impl ExtractResult {
+    pub fn new(json: String, ok: bool) -> Self {
+        Self { json, ok }
+    }
+
+    pub fn process_failed(&self) -> bool {
+        !self.ok
+    }
+}
+
 impl RunCommandOutcome {
     pub fn process_failed(&self) -> bool {
         match self {
             Self::RunFile(r) => r.process_failed(),
             Self::RunEval(r) => r.process_failed(),
             Self::RunRepo(r) => r.process_failed(),
+            Self::Extract(r) => r.process_failed(),
             Self::RunRepl | Self::Help(_) | Self::Version(_) => false,
         }
     }
@@ -185,6 +202,7 @@ impl RunCommandOutcome {
             Self::RunFile(r) => r.run.normal_json.as_deref(),
             Self::RunEval(r) => r.run.normal_json.as_deref(),
             Self::RunRepo(r) => r.run.normal_json.as_deref(),
+            Self::Extract(r) => Some(r.json.as_str()),
             Self::RunRepl | Self::Help(_) | Self::Version(_) => None,
         }
     }

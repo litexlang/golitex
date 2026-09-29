@@ -58,7 +58,7 @@ litex -version
 ## Basic Shape
 
 ```text
-litex [-strict] [-session] <command>
+litex [-strict] [-session] [-lang <en|zh>] <command>
 ```
 
 With no command, `litex` starts the interactive REPL described above.
@@ -69,12 +69,14 @@ Shared flags may appear before the command token:
 |------|---------|
 | `-strict` | Forbid user `trust`, `trust have`, and `abstract_prop`. |
 | `-session` | After a successful `-e` / `-f` / `-r` run, keep the Runtime open and continue as REPL. |
+| `-lang <tok>` | Output language for JSON / status text. `en` \| `english` (default) or `zh` \| `chinese`. Does not change Litex source. |
 
 Examples:
 
 ```bash
 litex -strict -e "1 = 1"
 litex -session -f chapter.lit
+litex -lang zh -f examples/tmp.lit
 litex -f examples/tmp.lit
 ```
 
@@ -90,8 +92,15 @@ source value.
 | `litex -e <code>` | Mount `cwd/litex.config` when present, then run the source string. |
 | `litex -f <file>` | Mount `parent(file)/litex.config` when present; otherwise run the file alone. |
 | `litex -r <directory>` | Require `<directory>/litex.config`, mount all imports, then run all exports. |
+| `litex -extractpython <code\|-f\|-r>` | Verify extractable fragments, then emit a Python `extracted_code` artifact (experimental). |
+| `litex -extractc <code\|-f\|-r>` | Same as above, emitting a C99 fragment (experimental). |
 | `litex -help` | Print usage text. |
 | `litex -version` | Print `Litex <version>`. |
+
+`-extractpython` / `-extractc` do not take `-session` or `-strict`. For `-f`,
+source must contain `# [-extract]` / `# [end of -extract]` marker pairs; only
+those blocks are verified and translated. Inline code and `-r` use whole-input
+semantics. Details: [`src/extract_executable_code/README.md`](../src/extract_executable_code/README.md).
 
 `-e` values must be the next token and must not start with `-`. Source that
 begins with `-` belongs in a `.lit` file and should be run with `-f`.
@@ -142,6 +151,7 @@ Lean replay and detailed tooling.
   "target": "eval",
   "path": null,
   "detail": "normal",
+  "language": "en",
   "statement_results": [],
   "session_error": null
 }
@@ -154,6 +164,7 @@ Lean replay and detailed tooling.
 | `target` | `"eval"`, `"file"`, or `"repository"` |
 | `path` | `null` for `-e`; requested path for `-f` / `-r` |
 | `detail` | `"normal"` for the default CLI projection |
+| `language` | `"en"` or `"zh"` from `-lang` (default `"en"`); statement labels still English in this pass |
 | `statement_results` | One Normal object per executed statement, in order |
 | `session_error` | Hard stop payload, or `null` |
 
@@ -209,6 +220,7 @@ Successful inline run:
 {
   "detail": "normal",
   "kind": "run",
+  "language": "en",
   "ok": true,
   "path": null,
   "session_error": null,
@@ -234,6 +246,7 @@ Soft miss with a successful prefix retained:
 {
   "detail": "normal",
   "kind": "run",
+  "language": "en",
   "ok": false,
   "path": null,
   "session_error": null,

@@ -1,4 +1,4 @@
-use crate::launch_command::LaunchCommand;
+use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::internal_names::{
     format_internal_fact_name, format_internal_param_name, INTERNAL_FACT_PREFIX,
     INTERNAL_PARAM_PREFIX,
@@ -11,6 +11,7 @@ fn fresh_internal_param_names_match_identifier_ids() {
         code: String::new(),
         session: false,
         strict: false,
+        language: OutputLanguage::English,
     });
     let a = rt.fresh_internal_param();
     let b = rt.fresh_internal_param();
@@ -27,6 +28,7 @@ fn fresh_internal_fact_names_match_fact_ids() {
         code: String::new(),
         session: false,
         strict: false,
+        language: OutputLanguage::English,
     });
     let (name, id) = rt.fresh_internal_fact_name();
     assert_eq!(name, format_internal_fact_name(id));

@@ -5,7 +5,7 @@ use crate::execute::execute_def_algo_by_cases_stmt::{
     ExecDefAlgoByCasesStmtFailed, ExecDefAlgoByCasesStmtResult,
 };
 use crate::execute::execute_have_fn_equal_case_by_case_stmt::ExecHaveFnEqualCaseByCaseStmtFailed;
-use crate::launch_command::LaunchCommand;
+use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
@@ -14,6 +14,7 @@ fn runtime_with_file_env() -> Runtime {
         code: String::new(),
         session: false,
         strict: false,
+        language: OutputLanguage::English,
     })
 }
 
@@ -73,6 +74,7 @@ fn def_algo_by_cases_via_run_eval_like_cli() {
         code: code.to_string(),
         session: false,
         strict: false,
+        language: OutputLanguage::English,
     })
     .expect("run_eval");
     assert!(

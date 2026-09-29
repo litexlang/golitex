@@ -10,6 +10,7 @@ mod launch_command_tests;
 pub mod display_and_ir;
 pub mod exec_env;
 pub mod execute;
+pub mod extract_executable_code;
 pub mod instantiate;
 pub mod json_output;
 pub mod knowledge_base;

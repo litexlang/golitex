@@ -30,9 +30,8 @@ impl Runtime {
         let plain = value.name.local_name();
         let expected_arity = {
             let Some(def) = self.def_struct_visible_in_stack(plain) else {
-                let root = Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(
-                    value.clone(),
-                ));
+                let root =
+                    Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(value.clone()));
                 return Ok(VerifyObjWellDefinedResult::Failed {
                     obj: root,
                     reason: FailToVerifyObjWellDefinedResult::Structish(
@@ -52,9 +51,8 @@ impl Runtime {
             }
         };
         if value.params.len() != expected_arity {
-            let root = Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(
-                value.clone(),
-            ));
+            let root =
+                Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(value.clone()));
             return Ok(VerifyObjWellDefinedResult::Failed {
                 obj: root,
                 reason: FailToVerifyObjWellDefinedResult::Structish(
@@ -168,9 +166,7 @@ impl Runtime {
                 _ => {
                     return Ok(field_access_fail(
                         root,
-                        format!(
-                            "field `{field_name}` of struct `{plain}` is not a struct carrier"
-                        ),
+                        format!("field `{field_name}` of struct `{plain}` is not a struct carrier"),
                     ));
                 }
             }
@@ -241,7 +237,7 @@ impl Runtime {
     pub(super) fn defined_as_struct_visible_in_stack(&self, obj: &Obj) -> Option<StructObj> {
         let key = obj.ir();
         for env in self.execution_environments_stack.iter().rev() {
-            let Some(props) = env.special_object_properties.get(&key) else {
+            let Some(props) = env.special_object_properties_by_def.get(&key) else {
                 continue;
             };
             for prop in props {
@@ -264,7 +260,9 @@ impl Runtime {
         let plain = value.template_name.local_name();
         let (expected_arity, param_groups, dom_facts) = {
             let Some(def) = self.def_template_visible_in_stack(plain) else {
-                return Ok(template_fail(Obj::InstantiatedTemplateObj(value.clone()), FailToVerifyObjWellDefinedByDefCommon::Others(format!(
+                return Ok(template_fail(
+                    Obj::InstantiatedTemplateObj(value.clone()),
+                    FailToVerifyObjWellDefinedByDefCommon::Others(format!(
                         "template `{plain}` is not defined"
                     )),
                 ));
@@ -276,7 +274,9 @@ impl Runtime {
             )
         };
         if value.args.len() != expected_arity {
-            return Ok(template_fail(Obj::InstantiatedTemplateObj(value.clone()), FailToVerifyObjWellDefinedByDefCommon::Others(format!(
+            return Ok(template_fail(
+                Obj::InstantiatedTemplateObj(value.clone()),
+                FailToVerifyObjWellDefinedByDefCommon::Others(format!(
                     "template `{plain}` expects {expected_arity} argument(s), got {}",
                     value.args.len()
                 )),
@@ -319,7 +319,9 @@ impl Runtime {
             let param_type = match self.inst_param_type(&group.param_type, &subst) {
                 Ok(param_type) => param_type,
                 Err(_) => {
-                    return Ok(template_fail(Obj::InstantiatedTemplateObj(value.clone()), FailToVerifyObjWellDefinedByDefCommon::Others(format!(
+                    return Ok(template_fail(
+                        Obj::InstantiatedTemplateObj(value.clone()),
+                        FailToVerifyObjWellDefinedByDefCommon::Others(format!(
                             "template `{plain}`: failed to instantiate parameter type"
                         )),
                     ));
@@ -353,7 +355,9 @@ impl Runtime {
             let instantiated = match self.inst_quantifier_free_fact(dom, &subst) {
                 Ok(f) => f,
                 Err(_) => {
-                    return Ok(template_fail(Obj::InstantiatedTemplateObj(value.clone()), FailToVerifyObjWellDefinedByDefCommon::Others(format!(
+                    return Ok(template_fail(
+                        Obj::InstantiatedTemplateObj(value.clone()),
+                        FailToVerifyObjWellDefinedByDefCommon::Others(format!(
                             "template `{plain}`: failed to instantiate domain fact"
                         )),
                     ));
@@ -586,9 +590,9 @@ fn field_access_fail(obj: Obj, message: String) -> VerifyObjWellDefinedResult {
         obj,
         reason: FailToVerifyObjWellDefinedResult::Structish(
             FailToVerifyStructishObjWellDefinedResult::FieldAccess(
-                FailToVerifyFieldAccessObjWellDefined(FailToVerifyObjWellDefinedByDefCommon::Others(
-                    message,
-                )),
+                FailToVerifyFieldAccessObjWellDefined(
+                    FailToVerifyObjWellDefinedByDefCommon::Others(message),
+                ),
             ),
         ),
     }

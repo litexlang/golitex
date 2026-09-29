@@ -4,7 +4,7 @@ use crate::execute::exec_stmt_result::{
 use crate::execute::execute_def_strategy_stmt::{
     ExecDefStrategyStmtFailed, ExecDefStrategyStmtResult,
 };
-use crate::launch_command::LaunchCommand;
+use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
@@ -13,6 +13,7 @@ fn runtime_with_file_env() -> Runtime {
         code: String::new(),
         session: false,
         strict: false,
+        language: OutputLanguage::English,
     })
 }
 

@@ -127,7 +127,7 @@ impl Runtime {
     fn visible_equal_to_function_obj(&self, obj: &Obj) -> Option<Obj> {
         let key = obj.ir();
         for env in self.execution_environments_stack.iter().rev() {
-            let Some(props) = env.special_object_properties.get(&key) else {
+            let Some(props) = env.special_object_properties_by_def.get(&key) else {
                 continue;
             };
             for prop in props {

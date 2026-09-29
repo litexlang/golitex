@@ -21,7 +21,8 @@ finishes. Companion packages:
 | `Repository` | `-r <dir>` | `run_repo` → `run_project` | **`<dir>`** (missing → hard error) |
 
 Shared flags (where allowed): `-session` (keep last env → REPL), `-strict`
-(forbid `trust` / `trust have` / `abstract_prop`).
+(forbid `trust` / `trust have` / `abstract_prop`), `-lang en|zh` (JSON /
+status output language; default `en`).
 
 ## Shared mount contract
 

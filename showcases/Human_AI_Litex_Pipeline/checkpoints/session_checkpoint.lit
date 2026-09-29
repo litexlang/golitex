@@ -1,5 +1,0 @@
-# Persistent-session boundary for replaying the subgroup proof journal.
-#
-# This registered checkpoint intentionally declares no mathematics. A session
-# through it loads `group.lit` and `group_homomorphism.lit` but stops before
-# `subgroup.lit`, so B001-B005 can be replayed without name collisions.

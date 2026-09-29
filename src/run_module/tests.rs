@@ -1,6 +1,6 @@
 //! Unit tests for config-driven `-r` / `-f`.
 
-use crate::launch_command::LaunchCommand;
+use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::run::run_command_outcome::RunSessionError;
 use crate::run_module::{
     mount_cwd_config, run_file_with_config, run_project, MountCwdConfigOutcome,
@@ -44,6 +44,7 @@ fn run_project_runs_import_then_root_export() {
         path: root.clone(),
         session: false,
         strict: false,
+        language: OutputLanguage::English,
     })
     .expect("run_project");
 
@@ -83,6 +84,7 @@ fn run_project_cross_mod_release_thm_and_by_def() {
         path: root.clone(),
         session: false,
         strict: false,
+        language: OutputLanguage::English,
     })
     .expect("run_project");
 
@@ -126,6 +128,7 @@ fn run_project_kb_cache_write_then_hit_cross_mod() {
         path: root.clone(),
         session: false,
         strict: false,
+        language: OutputLanguage::English,
     })
     .expect("first run_project");
     assert!(first.run.success, "{:?}", first.run.session_error);
@@ -138,6 +141,7 @@ fn run_project_kb_cache_write_then_hit_cross_mod() {
         path: root.clone(),
         session: false,
         strict: false,
+        language: OutputLanguage::English,
     })
     .expect("second run_project");
     assert!(second.run.success, "{:?}", second.run.session_error);
@@ -160,6 +164,7 @@ fn run_project_soft_fail_becomes_fail_to_import() {
         path: root.clone(),
         session: false,
         strict: false,
+        language: OutputLanguage::English,
     })
     .expect("run_project");
 
@@ -187,6 +192,7 @@ fn run_project_missing_import_dir_is_fail_to_import() {
         path: root.clone(),
         session: false,
         strict: false,
+        language: OutputLanguage::English,
     })
     .expect("run_project");
 
@@ -210,6 +216,7 @@ fn run_file_isolated_without_config() {
         path: path.clone(),
         session: false,
         strict: false,
+        language: OutputLanguage::English,
     })
     .expect("run_file");
 
@@ -234,6 +241,7 @@ fn run_file_stops_at_listed_export() {
         path: root.join("a.lit"),
         session: false,
         strict: false,
+        language: OutputLanguage::English,
     })
     .expect("run_file");
 
@@ -257,6 +265,7 @@ fn run_file_unlisted_runs_all_exports_then_target() {
         path: root.join("scratch.lit"),
         session: false,
         strict: false,
+        language: OutputLanguage::English,
     })
     .expect("run_file");
 
@@ -280,6 +289,7 @@ fn run_file_mount_soft_fail_is_fail_to_import() {
         path: root.join("scratch.lit"),
         session: false,
         strict: false,
+        language: OutputLanguage::English,
     })
     .expect("run_file");
 
@@ -306,6 +316,7 @@ fn run_file_target_soft_fail_is_normal_failure() {
         path: root.join("scratch.lit"),
         session: false,
         strict: false,
+        language: OutputLanguage::English,
     })
     .expect("run_file");
 
@@ -325,6 +336,7 @@ fn mount_cwd_config_empty_when_missing() {
         code: "1 = 1".to_string(),
         session: false,
         strict: false,
+        language: OutputLanguage::English,
     });
     runtime.abort_file();
     let outcome = mount_cwd_config(&mut runtime).expect("mount");
@@ -350,6 +362,7 @@ fn mount_cwd_config_runs_exports() {
         code: "1 = 1".to_string(),
         session: false,
         strict: false,
+        language: OutputLanguage::English,
     });
     runtime.abort_file();
     let outcome = mount_cwd_config(&mut runtime).expect("mount");
@@ -376,6 +389,7 @@ fn mount_cwd_config_soft_fail_is_fail_to_import() {
         code: "1 = 1".to_string(),
         session: false,
         strict: false,
+        language: OutputLanguage::English,
     });
     runtime.abort_file();
     let outcome = mount_cwd_config(&mut runtime).expect("mount");
