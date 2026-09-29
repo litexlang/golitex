@@ -32,7 +32,7 @@ impl Runtime {
             return Ok(None);
         }
 
-        let child_state = verify_state.without_well_defined_storage();
+        let child_state = verify_state.after_strategy();
         let required = [
             LessEqualFact {
                 fact_id: self.global_ids.allocate_fact_id(),

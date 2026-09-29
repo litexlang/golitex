@@ -4,20 +4,20 @@ use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
-    // Stage order: builtin rule → known atomic → builtin strategy →
-    // by definition → known strategy → known forall → (if allowed) builtin rewrite →
-    // known rewrite.
+    // Cheap phase: builtin rule (one shot) → known atomic.
+    // Deep phase (can_use_def_and_known_forall_and_known_strategy):
+    //   builtin strategy → by definition → known strategy → known forall →
+    //   (can_use_rewrite) builtin rewrite → known rewrite.
     //
-    // Why rewrite (after known/search slots): bridge goals that still mention
-    // identifiers to closed-numeric / dual forms so specialized builtins can
-    // fire, with an explicit certificate (not opaque resolve_obj). See
-    // AtomicExceptEqualityFactSearchProofByBuiltinRewrite.
+    // Builtin-rule premises inherit after_builtin_rule() (known / direct only).
     // Ok(None) means no proof found; that is not a runtime error.
     pub fn search_atomic_except_equality_fact_proof(
         &mut self,
         fact: &AtomicFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchedProof>> {
+        // Builtin rules always run: cite-only / closed-numeric arms ignore the
+        // budget; premise-producing arms self-gate on can_use_builtin_rule.
         if let Some(result) = self
             .search_atomic_except_equality_fact_proof_by_builtin_rule(fact, verify_state.clone())?
         {
@@ -33,6 +33,10 @@ impl Runtime {
             return Ok(Some(
                 AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(result),
             ));
+        }
+
+        if !verify_state.can_use_def_and_known_forall_and_known_strategy {
+            return Ok(None);
         }
 
         if let Some(result) = self.search_atomic_except_equality_fact_proof_by_builtin_strategy(
@@ -52,28 +56,26 @@ impl Runtime {
             )));
         }
 
-        if verify_state.can_use_def_and_known_forall_and_known_strategy {
-            if let Some(result) = self
-                .search_atomic_except_equality_fact_proof_by_known_strategy(
-                    fact,
-                    verify_state.clone(),
-                )?
-            {
-                return Ok(Some(
-                    AtomicExceptEqualityFactSearchedProof::ByKnownStrategy(result),
-                ));
-            }
+        if let Some(result) = self
+            .search_atomic_except_equality_fact_proof_by_known_strategy(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(
+                AtomicExceptEqualityFactSearchedProof::ByKnownStrategy(result),
+            ));
+        }
 
-            if let Some(result) = self
-                .search_atomic_except_equality_fact_proof_by_known_forall_fact(
-                    fact,
-                    verify_state.clone(),
-                )?
-            {
-                return Ok(Some(
-                    AtomicExceptEqualityFactSearchedProof::ByKnownForallFact(result),
-                ));
-            }
+        if let Some(result) = self
+            .search_atomic_except_equality_fact_proof_by_known_forall_fact(
+                fact,
+                verify_state.clone(),
+            )?
+        {
+            return Ok(Some(
+                AtomicExceptEqualityFactSearchedProof::ByKnownForallFact(result),
+            ));
         }
 
         if verify_state.can_use_rewrite {
@@ -89,10 +91,7 @@ impl Runtime {
             }
 
             if let Some(result) = self
-                .search_atomic_except_equality_fact_proof_by_known_rewrite(
-                    fact,
-                    verify_state,
-                )?
+                .search_atomic_except_equality_fact_proof_by_known_rewrite(fact, verify_state)?
             {
                 return Ok(Some(
                     AtomicExceptEqualityFactSearchedProof::ByKnownRewrite(result),

@@ -161,11 +161,21 @@ are projected into `by_exist`. Matching is shared
 same-shape compounds (`FnObj`, arithmetic, `FieldAccess`, …) via
 `ByStructure` child proofs (legacy-aligned); otherwise instantiate the
 pattern under the subst so far and prove `pattern_after_subst = goal` by
-equal search with all `VerifyState` flags false (`can_use_forall_fact`,
-`can_use_rewrite`, `store_well_defined_fact`; certificate type
+equal search with `VerifyState::known_only_no_wd()` (no builtin budget,
+no deep phase, no rewrite, no WD store; certificate type
 `StrictEqualArgProof`). Nested param occurrences inside compound objs are
 bound during that structural recursion. Exist apply also instantiates the
 conclusion and alpha-compares to the goal before instantiation requirements.
+
+`VerifyState` search phases (atomic / equal):
+
+1. **Builtin rule** (always entered; cite-only / closed-numeric arms ignore the
+   budget; premise-producing arms require `can_use_builtin_rule` and pass
+   `after_builtin_rule()` to children — known / cite-only only).
+2. **Known** (equivalence class / known atomic).
+3. **Deep** (`can_use_def_and_known_forall_and_known_strategy`): builtin strategy
+   (children use `after_strategy()`), by definition / object definition, known
+   strategy, known forall, then (`can_use_rewrite`) rewrite.
 
 `or` search order is:
 

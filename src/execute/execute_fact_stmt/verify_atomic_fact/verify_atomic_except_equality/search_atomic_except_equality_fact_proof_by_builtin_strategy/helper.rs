@@ -79,9 +79,8 @@ impl Runtime {
         requirement_facts: Vec<Fact>,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<(Vec<Fact>, Vec<VerifyFactResult>)>> {
-        // Strategy children may use rewrite (e.g. a >= 0 ↔ 0 <= a). Goal-IR
-        // cycle guard on the strategy dispatcher blocks strategy re-entry loops.
-        let child_state = verify_state.without_well_defined_storage();
+        // Strategy children: one nested builtin layer; no nested strategy/def/forall/rewrite.
+        let child_state = verify_state.after_strategy();
         let mut proof_of_requirement_facts = Vec::with_capacity(requirement_facts.len());
         for requirement in &requirement_facts {
             let proof = self.verify_fact(requirement, child_state.clone())?;

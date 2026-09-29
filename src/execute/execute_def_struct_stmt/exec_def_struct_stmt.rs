@@ -128,6 +128,7 @@ impl Runtime {
         def_struct: &DefStructStmt,
     ) -> RuntimeResult<Result<OuterLocalParts, ExecDefStructStmtFailed>> {
         let verify_state = VerifyState {
+            can_use_builtin_rule: true,
             can_use_def_and_known_forall_and_known_strategy: true,
             can_use_rewrite: true,
             store_well_defined_fact: true,
@@ -203,6 +204,7 @@ impl Runtime {
         Result<(StoreHaveObjAndInferResult, Vec<FactWellDefinedProof>), ExecDefStructStmtFailed>,
     > {
         let verify_state = VerifyState {
+            can_use_builtin_rule: true,
             can_use_def_and_known_forall_and_known_strategy: true,
             can_use_rewrite: true,
             store_well_defined_fact: true,

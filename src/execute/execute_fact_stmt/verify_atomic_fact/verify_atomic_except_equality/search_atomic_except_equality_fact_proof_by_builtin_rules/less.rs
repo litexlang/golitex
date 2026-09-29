@@ -304,8 +304,25 @@ impl Runtime {
                 proof,
             )));
         }
+
+        // Zero-premise closed numeric (no nested search).
+        if let Some((cmp, left_normal, right_normal)) =
+            compare_closed_objs_by_normalized_decimal(&fact.left, &fact.right)
+        {
+            if cmp == NumberCompareResult::Less {
+                return Ok(Some(
+                    LessFactSearchProofByBuiltinRule::ClosedNumericComparison(
+                        ClosedNumericComparisonBuiltinRuleProof {
+                            left_normal,
+                            right_normal,
+                        },
+                    ),
+                ));
+            }
+        }
+
+        // Pure shape cites that do not nest verify_fact.
         match (&fact.left, &fact.right) {
-            // `x - 1 < x`
             (
                 Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub { left, right })),
                 minuend,
@@ -316,8 +333,6 @@ impl Runtime {
                     },
                 )));
             }
-
-            // `-pi/2 < arctan(x)`
             (_, Obj::TrigOperator(TrigOperator::Arctan(_)))
                 if match_arctan_principal_lower(&fact.left, &fact.right) =>
             {
@@ -327,8 +342,6 @@ impl Runtime {
                     ),
                 ));
             }
-
-            // `arctan(x) < pi/2`
             (Obj::TrigOperator(TrigOperator::Arctan(_)), _)
                 if match_arctan_principal_upper(&fact.left, &fact.right) =>
             {
@@ -338,8 +351,6 @@ impl Runtime {
                     ),
                 ));
             }
-
-            // `0 < arccot(x)`
             (_, Obj::TrigOperator(TrigOperator::Arccot(_)))
                 if match_arccot_principal_lower(&fact.left, &fact.right) =>
             {
@@ -349,8 +360,6 @@ impl Runtime {
                     ),
                 ));
             }
-
-            // `arccot(x) < pi`
             (Obj::TrigOperator(TrigOperator::Arccot(_)), _)
                 if match_arccot_principal_upper(&fact.left, &fact.right) =>
             {
@@ -360,7 +369,15 @@ impl Runtime {
                     ),
                 ));
             }
+            _ => {}
+        }
 
+        if !verify_state.can_use_builtin_rule {
+            return Ok(None);
+        }
+        let verify_state = verify_state.after_builtin_rule();
+
+        match (&fact.left, &fact.right) {
             // `0 < a + b` / `0 < a * b`
             (left, Obj::ArithmeticOperator(ArithmeticOperator::Add(Add { left: a, right: b })))
                 if is_zero_obj(left) =>
@@ -468,22 +485,7 @@ impl Runtime {
             return Ok(Some(proof));
         }
 
-        let Some((cmp, left_normal, right_normal)) =
-            compare_closed_objs_by_normalized_decimal(&fact.left, &fact.right)
-        else {
-            return Ok(None);
-        };
-        if cmp != NumberCompareResult::Less {
-            return Ok(None);
-        }
-        Ok(Some(
-            LessFactSearchProofByBuiltinRule::ClosedNumericComparison(
-                ClosedNumericComparisonBuiltinRuleProof {
-                    left_normal,
-                    right_normal,
-                },
-            ),
-        ))
+        Ok(None)
     }
 
 

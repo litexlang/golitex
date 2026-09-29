@@ -84,6 +84,7 @@ fn dispatch_stored_algo(
     evaluated_args: &[Obj],
 ) -> RuntimeResult<Result<Obj, ExecEvalStmtFailed>> {
     let verify_state = VerifyState {
+            can_use_builtin_rule: true,
         can_use_def_and_known_forall_and_known_strategy: true,
         can_use_rewrite: true,
         store_well_defined_fact: false,
