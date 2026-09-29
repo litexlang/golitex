@@ -12,7 +12,7 @@ use crate::runtime::CodeSource;
 use std::path::{Path, PathBuf};
 
 const FIXTURE: &str =
-    include_str!("../../../../../examples/knowledge_base/axiom/eq_refl.axiom.json");
+    include_str!("../../../../examples/knowledge_base/axiom/eq_refl.axiom.json");
 
 fn sample() -> AxiomStmt {
     let x = BoundName::new(IdentifierId::new(11), "x".to_string());

@@ -15,10 +15,10 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 const LET_A_FIXTURE: &str = include_str!(
-    "../../../../../examples/knowledge_base/stored_identifier/let_a.stored_identifier.json"
+    "../../../../examples/knowledge_base/stored_identifier/let_a.stored_identifier.json"
 );
 const HAVE_FN_ID_FIXTURE: &str = include_str!(
-    "../../../../../examples/knowledge_base/stored_identifier/have_fn_id.stored_identifier.json"
+    "../../../../examples/knowledge_base/stored_identifier/have_fn_id.stored_identifier.json"
 );
 
 fn sample_let_a() -> StoredIdentifierDefinition {

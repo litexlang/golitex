@@ -26,10 +26,30 @@ Success:
 ```json
 {
   "success": true,
+  "statement": "1 + 2 = 3",
+  "why_verified": {
+    "type": "builtin_rule",
+    "rule_name": "Calculation",
+    "message": "Both sides evaluate to the same number"
+  },
+  "stores": ["1 + 2 = 3"],
+  "infers": []
+}
+```
+
+Chinese session (`-lang zh`): same shape with localized `rule_name` /
+`message` (e.g. `"计算"` / `"两边都算出同一个数"`).
+
+Cited-membership example:
+
+```json
+{
+  "success": true,
   "statement": "k >= 0",
   "why_verified": {
     "type": "builtin_rule",
-    "rule": "FromKnownInNatural",
+    "rule_name": "FromKnownInNatural",
+    "message": "Verified by builtin rule `FromKnownInNatural`",
     "line": 1,
     "cite": "k $in N"
   },
@@ -53,6 +73,10 @@ Failure:
 Rules:
 
 - `success` is a bool (not `outcome` string).
+- Builtin why: print `rule_name` + `message` only (no `rule` / `rule_id` /
+  `variant` in Normal JSON). Stable ids live inside `explain/` for tests.
+- All Chinese/English copy lives under `json_output/explain/` — verify/exec IR
+  stays language-free. `OutputLanguage` comes from `LaunchCommand` (`-lang`).
 - `stores` / `infers` / `cite` / `statement` / `goal` use `readable_string`
   (IR with `#id#` wrappers stripped), not raw IR and not `fact_id`.
 - Cite may include `line` when the cited fact has a source line; omit `line` if unknown.
@@ -113,9 +137,8 @@ Fact success sketch:
 }
 ```
 
-`language` is `en` or `zh` from `-lang` (default `en`). Statement label text is
-still English in this wiring pass; the field selects which catalog future
-projections will use.
+`language` is `en` or `zh` from `-lang` (default `en`). Builtin `rule_name` /
+`message` follow this language via `json_output/explain/`.
 ## API
 
 - `project_stmt_normal` / `project_run_normal` / `emit_run_normal`

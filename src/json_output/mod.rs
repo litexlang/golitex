@@ -5,6 +5,7 @@
 //! `project_detailed` (L2 local_env summary, T1 no search_trace). Compact is reserved.
 
 pub mod emit;
+pub mod explain;
 pub mod helper;
 pub mod project_detailed;
 pub mod project_normal;

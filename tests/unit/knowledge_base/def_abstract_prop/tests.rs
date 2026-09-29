@@ -8,7 +8,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 const FIXTURE: &str = include_str!(
-    "../../../../../examples/knowledge_base/def_abstract_prop/marked.def_abstract_prop.json"
+    "../../../../examples/knowledge_base/def_abstract_prop/marked.def_abstract_prop.json"
 );
 
 fn sample() -> DefAbstractPropStmt {

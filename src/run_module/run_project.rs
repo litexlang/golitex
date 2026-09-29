@@ -4,10 +4,11 @@ use super::load_config::{load_config, resolve_std_root};
 use super::run_export_file::run_export_file;
 use super::run_import_module::{run_import_module, RunImportModuleOutcome};
 use crate::launch_command::LaunchCommand;
-use crate::run::run_command_outcome::{RunRepoResult, RunSessionError};
+use crate::run::run_command_outcome::{RunFileResult, RunRepoResult, RunSessionError};
 use crate::run::run_repl::run_repl_loop;
 use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
 use std::collections::HashSet;
+use std::path::PathBuf;
 
 /// `-r <repository>`: load root config, run import modules, then root exports.
 pub fn run_project(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
@@ -55,7 +56,7 @@ pub fn run_project(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
         )? {
             RunImportModuleOutcome::Done => {}
             RunImportModuleOutcome::SessionError(session_error) => {
-                return Ok(RunRepoResult::new(root, file_results, Some(session_error)));
+                return Ok(finish_repo(&runtime, root, file_results, Some(session_error)));
             }
         }
     }
@@ -74,11 +75,17 @@ pub fn run_project(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
             crate::runtime::CodeSource::RootExport { export_file_id },
             keep_env_open,
         ) {
-            Ok(file_result) => {
+            Ok(mut file_result) => {
+                file_result.run.attach_normal_json(
+                    &runtime,
+                    "file",
+                    Some(file_result.path.as_path()),
+                );
                 let failed = !file_result.run.success;
                 file_results.push(file_result);
                 if failed {
-                    return Ok(RunRepoResult::new(
+                    return Ok(finish_repo(
+                        &runtime,
                         root,
                         file_results,
                         Some(RunSessionError::FailToImport),
@@ -86,7 +93,8 @@ pub fn run_project(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
                 }
                 if keep_env_open {
                     if let Err(error) = run_repl_loop(&mut runtime) {
-                        return Ok(RunRepoResult::new(
+                        return Ok(finish_repo(
+                            &runtime,
                             root,
                             file_results,
                             Some(RunSessionError::Runtime(error)),
@@ -95,7 +103,8 @@ pub fn run_project(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
                 }
             }
             Err(error) => {
-                return Ok(RunRepoResult::new(
+                return Ok(finish_repo(
+                    &runtime,
                     root,
                     file_results,
                     Some(RunSessionError::Runtime(error)),
@@ -104,5 +113,18 @@ pub fn run_project(command: LaunchCommand) -> RuntimeResult<RunRepoResult> {
         }
     }
 
-    Ok(RunRepoResult::new(root, file_results, None))
+    Ok(finish_repo(&runtime, root, file_results, None))
+}
+
+fn finish_repo(
+    runtime: &Runtime,
+    root: PathBuf,
+    files: Vec<RunFileResult>,
+    session_error: Option<RunSessionError>,
+) -> RunRepoResult {
+    let mut result = RunRepoResult::new(root.clone(), files, session_error);
+    result
+        .run
+        .attach_normal_json(runtime, "repo", Some(root.as_path()));
+    result
 }

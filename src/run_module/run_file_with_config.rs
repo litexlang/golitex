@@ -71,7 +71,7 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
         )? {
             RunImportModuleOutcome::Done => {}
             RunImportModuleOutcome::SessionError(session_error) => {
-                return Ok(fail_to_import_result(path, session_error));
+                return Ok(fail_to_import_result(&runtime, path, session_error));
             }
         }
     }
@@ -97,9 +97,10 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
             Ok(file_result) => {
                 if !file_result.run.success {
                     if is_target {
-                        return Ok(RunFileResult::new(path, file_result.run));
+                        return Ok(file_result_with_json(&runtime, path, file_result.run));
                     }
                     return Ok(fail_to_import_result(
+                        &runtime,
                         path,
                         RunSessionError::FailToImport,
                     ));
@@ -107,7 +108,8 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
                 if is_target {
                     if keep_env_open {
                         if let Err(error) = run_repl_loop(&mut runtime) {
-                            return Ok(RunFileResult::new(
+                            return Ok(file_result_with_json(
+                                &runtime,
                                 path,
                                 RunLitexCodeResult::new(
                                     file_result.run.statement_results,
@@ -116,11 +118,12 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
                             ));
                         }
                     }
-                    return Ok(RunFileResult::new(path, file_result.run));
+                    return Ok(file_result_with_json(&runtime, path, file_result.run));
                 }
             }
             Err(error) => {
                 return Ok(fail_to_import_result(
+                    &runtime,
                     path,
                     RunSessionError::Runtime(error),
                 ));
@@ -142,11 +145,12 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
     ) {
         Ok(file_result) => {
             if !file_result.run.success {
-                return Ok(RunFileResult::new(path, file_result.run));
+                return Ok(file_result_with_json(&runtime, path, file_result.run));
             }
             if session {
                 if let Err(error) = run_repl_loop(&mut runtime) {
-                    return Ok(RunFileResult::new(
+                    return Ok(file_result_with_json(
+                        &runtime,
                         path,
                         RunLitexCodeResult::new(
                             file_result.run.statement_results,
@@ -155,7 +159,7 @@ pub fn run_file_with_config(command: LaunchCommand) -> RuntimeResult<RunFileResu
                     ));
                 }
             }
-            Ok(RunFileResult::new(path, file_result.run))
+            Ok(file_result_with_json(&runtime, path, file_result.run))
         }
         Err(error) => Err(error),
     }
@@ -196,8 +200,22 @@ fn run_file_isolated(
     Ok(RunFileResult::new(path, code_result))
 }
 
-fn fail_to_import_result(path: PathBuf, session_error: RunSessionError) -> RunFileResult {
-    RunFileResult::new(
+fn file_result_with_json(
+    runtime: &Runtime,
+    path: PathBuf,
+    mut run: RunLitexCodeResult,
+) -> RunFileResult {
+    run.attach_normal_json(runtime, "file", Some(path.as_path()));
+    RunFileResult::new(path, run)
+}
+
+fn fail_to_import_result(
+    runtime: &Runtime,
+    path: PathBuf,
+    session_error: RunSessionError,
+) -> RunFileResult {
+    file_result_with_json(
+        runtime,
         path,
         RunLitexCodeResult::new(Vec::new(), Some(session_error)),
     )

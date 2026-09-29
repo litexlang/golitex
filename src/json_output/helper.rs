@@ -121,12 +121,14 @@ pub(super) fn cite_forall_from_fact_id(runtime: &Runtime, fact_id: FactId) -> Js
 
 pub(super) fn builtin_rule_with_optional_cite(
     runtime: &Runtime,
-    rule: &str,
+    text: &crate::json_output::explain::BuiltinRuleText,
     cite_fact_id: Option<FactId>,
 ) -> JsonValue {
+    // Print rule_name + message only; rule_id stays internal to explain/.
     let mut entries = vec![
         ("type", string("builtin_rule")),
-        ("rule", string(rule)),
+        ("rule_name", string(text.rule_name.clone())),
+        ("message", string(text.message.clone())),
     ];
     if let Some(fact_id) = cite_fact_id {
         if let Some(fact) = runtime.fact_by_id_in_stack(fact_id) {
@@ -137,6 +139,10 @@ pub(super) fn builtin_rule_with_optional_cite(
         }
     }
     object(entries)
+}
+
+pub(super) fn output_language(runtime: &Runtime) -> crate::launch_command::OutputLanguage {
+    runtime.launch_command.output_language()
 }
 
 pub(super) fn store_fact_texts(store: &StoreFactResult) -> Vec<String> {

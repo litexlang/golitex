@@ -15,7 +15,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 // Golden lives under examples/ (the KB example “repo”), not under tests/.
 const IS_POS_FIXTURE: &str =
-    include_str!("../../../../../examples/knowledge_base/def_prop/is_pos.def_prop.json");
+    include_str!("../../../../examples/knowledge_base/def_prop/is_pos.def_prop.json");
 
 fn sample_is_pos() -> DefPropStmt {
     DefPropStmt {
