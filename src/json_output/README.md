@@ -48,8 +48,8 @@ Cited-membership example:
   "statement": "k >= 0",
   "why_verified": {
     "type": "builtin_rule",
-    "rule_name": "FromKnownInNatural",
-    "message": "Verified by builtin rule `FromKnownInNatural`",
+    "rule_name": "From known in N",
+    "message": "The goal follows from a known natural-number membership",
     "line": 1,
     "cite": "k $in N"
   },
@@ -77,6 +77,13 @@ Rules:
   `variant` in Normal JSON). Stable ids live inside `explain/` for tests.
 - All Chinese/English copy lives under `json_output/explain/` — verify/exec IR
   stays language-free. `OutputLanguage` comes from `LaunchCommand` (`-lang`).
+- Priority of explain coverage:
+  1. `equality_calculation` — full EN/ZH
+  2. `equality_builtin` — every equality variant has its own `rule_id` (fallback
+     EN name until dedicated Chinese copy)
+  3. `atomic_common` — hot atomic membership/order rules with EN/ZH
+  4. `stmt_why` — `let` / `have` define-obj + coarse compound facts
+  5. remaining stmt kinds still use unsupported stub with localized note
 - `stores` / `infers` / `cite` / `statement` / `goal` use `readable_string`
   (IR with `#id#` wrappers stripped), not raw IR and not `fact_id`.
 - Cite may include `line` when the cited fact has a source line; omit `line` if unknown.
