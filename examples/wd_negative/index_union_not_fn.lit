@@ -1,0 +1,6 @@
+# WD negative: index_union family not in `fn(k I) power_set(X)` must fail.
+# Run: litex -f examples/wd_negative/index_union_not_fn.lit
+# expect exit != 0
+
+have a R
+let u = index_union({1}, N, a)

@@ -1,0 +1,5 @@
+# Fact WD: Forall binder — param type + then under local env
+# Run: litex -f examples/wd/fact/forall.lit
+
+forall x R:
+    x = x

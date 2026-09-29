@@ -1,0 +1,7 @@
+# Stmt: UnsafeStmt.TrustHaveStmt → exec_trust_have_stmt
+# Run: litex -f examples/stmt_nodes/unsafe/trust_have_stmt.lit
+
+trust have denominator R:
+    denominator != 0
+
+1 / denominator = 1 / denominator

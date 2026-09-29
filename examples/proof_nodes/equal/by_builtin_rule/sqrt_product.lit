@@ -1,0 +1,6 @@
+# Node: equal.ByBuiltinRule.SqrtProduct
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/sqrt_product.lit
+
+have a R+
+have b R+
+sqrt(a * b) = sqrt(a) * sqrt(b)

@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.FiniteSetReduceEmpty
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/finite_set_reduce_empty.lit
+
+have seed Z
+finite_set_reduce({}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, seed) = seed

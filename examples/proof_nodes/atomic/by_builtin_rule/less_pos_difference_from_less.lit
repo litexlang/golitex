@@ -1,0 +1,7 @@
+# Node: atomic.ByBuiltinRule.Less.PosDifferenceFromLess
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_pos_difference_from_less.lit
+
+have a R
+have b R
+trust a < b
+0 < b - a

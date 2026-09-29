@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.LcmIdempotentAbs
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/lcm_idempotent_abs.lit
+
+have a Z
+lcm(a, a) = abs(a)

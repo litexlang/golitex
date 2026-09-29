@@ -1,0 +1,10 @@
+# Stmt: ReleaseAndExpand.ReleaseAxiomOfChoiceStmt → exec_release_axiom_of_choice_stmt
+# Run: litex -f examples/stmt_nodes/release_and_expand/release_axiom_of_choice.lit
+
+have F set
+trust:
+    forall A F:
+        $is_nonempty_set(A)
+release axiom_of_choice: set F:
+    forall A F:
+        $is_nonempty_set(A)

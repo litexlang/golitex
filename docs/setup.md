@@ -52,16 +52,17 @@ litex -version
 litex -e '1 = 1'
 ```
 
-Both commands return JSON. The second command should contain `"ok": true`.
+`-version` prints a short text line. `-e` returns one Normal JSON `run`
+document; a successful check has `"ok": true`.
 
 ## A few commands to start
 
 ```bash
 litex                              # start the interactive REPL
 litex -e '1 + 1 = 2'               # run source directly
-litex -f example.lit               # run a project file or standalone file automatically
+litex -f example.lit               # run a project file or standalone file
 ```
 
-For every command, option, JSON output shape, session protocol, graph command,
-and project layout rule, read the [complete CLI reference](cli.md). For small
-proofs to try next, see the [examples](../examples/README.md).
+For every command, option, JSON output shape, session flag, and project layout
+rule, read the [complete CLI reference](cli.md). For small proofs to try next,
+see the [examples](../examples/README.md).

@@ -1,0 +1,5 @@
+# Node: atomic.ByBuiltinRule.SupersetFact.Reflexivity
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/superset_reflexivity.lit
+
+have A set
+$superset(A, A)

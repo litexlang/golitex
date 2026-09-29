@@ -1,0 +1,9 @@
+# Node: equal.ByBuiltinRule.SignOfProduct
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/sign_of_product.lit
+
+have a R
+have b R
+# Narrow trust: product / sign WD currently needs sign carriers in R.
+trust sign(a) $in R
+trust sign(b) $in R
+sign(a * b) = sign(a) * sign(b)

@@ -1,6 +1,0 @@
-# Node: equal.ByBuiltinRule.AbsProduct
-# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/abs_product.lit
-
-have a R
-have b R
-abs(a * b) = abs(a) * abs(b)

@@ -1,4 +1,4 @@
-//! new_pipeline parse: token blocks → AST only.
+//! Parse: token blocks → AST only.
 //!
 //! Layers (dependency goes downward only):
 //!   parse.rs          — statement dispatch
@@ -9,7 +9,7 @@
 //!   keywords.rs       — local spellings (no legacy syntax import)
 //!
 //! Iron rules:
-//! 1. Plain atoms carry IdentifierId (see `new_pipeline/identifier_identity.md`):
+//! 1. Plain atoms carry IdentifierId (see `identifier_identity.md`):
 //!    no shadowing; no same-name nested binders; letter reuse allocates a new id.
 //! 2. ParseScope maps plain name → IdentifierId only.
 //! 3. FactId / IdentifierId may be allocated at parse; do not store facts or read

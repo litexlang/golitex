@@ -1,0 +1,12 @@
+# Node: atomic.ByBuiltinRule — inequality symmetry
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/not_equal_symmetry.lit
+#
+# When: known `a != b` for sets; goal `b != a`.
+# After: builtin not-equal symmetry proves the flipped inequality.
+
+forall a set, b set:
+    $is_set(a)
+    $is_set(b)
+    a != b
+    =>:
+        b != a

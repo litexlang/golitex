@@ -1,0 +1,9 @@
+# Node: equal — unary minus binds looser than power
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/unary_minus_power_precedence.lit
+#
+# When: parse/verify `-2^2` vs `(-2)^2`.
+# After: `-2^2` is `-(2^2) = -4`; `(-2)^2 = 4`.
+
+-2^2 = -(2^2) = (-4)
+(-2)^2 = 4
+-(2^2) != (-2)^2

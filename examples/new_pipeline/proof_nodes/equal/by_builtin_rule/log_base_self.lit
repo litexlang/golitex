@@ -1,4 +1,0 @@
-# Node: equal.ByBuiltinRule.LogBaseSelf
-# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/log_base_self.lit
-
-log(2, 2) = 1

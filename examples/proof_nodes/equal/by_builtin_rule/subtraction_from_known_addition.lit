@@ -1,0 +1,8 @@
+# Node: equal.ByBuiltinRule.SubtractionFromKnownAddition
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/subtraction_from_known_addition.lit
+
+have a R
+have b R
+have c R
+trust a + b = c
+a = c - b

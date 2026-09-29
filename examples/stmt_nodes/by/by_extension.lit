@@ -1,0 +1,5 @@
+# Stmt: By.ByExtensionStmt → exec_by_extension_stmt
+# Run: litex -f examples/stmt_nodes/by/by_extension.lit
+
+by extension:
+    ? {1} = {1}

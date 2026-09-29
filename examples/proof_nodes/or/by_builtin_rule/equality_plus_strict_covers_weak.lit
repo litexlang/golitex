@@ -1,0 +1,7 @@
+# Node: or.ByBuiltinRule.EqualityPlusStrictCoversWeak
+# Rule struct: OrBuiltinEqualityPlusStrictCoversWeak
+# Run: litex -f examples/proof_nodes/or/by_builtin_rule/equality_plus_strict_covers_weak.lit
+
+have a, b R
+trust a <= b
+a = b or a < b

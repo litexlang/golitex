@@ -1,0 +1,4 @@
+# Node: atomic.ByBuiltinRule.Subset.SetBuilderSubsetOfParamSet
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/subset_set_builder_of_param_set.lit
+
+{x R: x > 0} $subset R

@@ -1,11 +1,11 @@
-//! Well-definedness verification for new_pipeline.
+//! Well-definedness verification.
 //!
 //! Object WD and the thin Fact WD dispatcher live here. Per-fact WD types and
 //! algorithms live under each verify_*_fact module; this mod re-exports them.
 //! Prefer `verify_xxx_fact_well_definedness` when the Fact shape is known.
 
 mod verify_fact;
-mod verify_obj;
+pub mod verify_obj;
 mod verify_param_type;
 mod well_defined_result;
 

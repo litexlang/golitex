@@ -1,0 +1,7 @@
+# Node: chain (adjacent equality)
+# Run: litex -f examples/proof_nodes/chain/adjacent_equality.lit
+
+have a R = 1
+have b R = a
+have c R = b
+a = b = c

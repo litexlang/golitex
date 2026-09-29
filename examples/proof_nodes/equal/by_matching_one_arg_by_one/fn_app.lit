@@ -1,0 +1,7 @@
+# Node: equal.ByMatchingOneArgByOne (FnObj peel)
+# Run: litex -f examples/proof_nodes/equal/by_matching_one_arg_by_one/fn_app.lit
+
+have a R = 1
+have b R = a
+let f = fn(x R) R {x}
+f(a) = f(b)

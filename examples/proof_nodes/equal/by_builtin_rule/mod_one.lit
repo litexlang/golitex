@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.ModOne
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/mod_one.lit
+
+have a Z
+a % 1 = 0

@@ -1,0 +1,8 @@
+# Node: atomic.ByBuiltinRule.GreaterFact.AddRightCongruenceStrict
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/greater_add_right_congruence_strict.lit
+
+have a R
+have b R
+have c R
+trust a > b
+a + c > b + c

@@ -1,4 +1,4 @@
-# new_pipeline `knowledge_base`
+# `knowledge_base`
 
 Owns **persistence and restore** of imported-module products so `-r` / `-f` /
 `-e` / REPL preload can skip repeating `exec_stmt` on clean dependency trees.
@@ -148,7 +148,7 @@ Do not scatter write/hit logic into `execute/` or `module_manager/`.
 
 ```bash
 cargo test -p litex-lang --lib \
-  new_pipeline::run_module::tests::run_project_kb_cache_write_then_hit_cross_mod \
+  run_module::tests::run_project_kb_cache_write_then_hit_cross_mod \
   -- --exact
 ```
 
@@ -183,9 +183,9 @@ cargo test -p litex-lang --lib \
 | `paths.rs` | On-disk paths + `KB_ABI` |
 | `README.md` | This contract |
 
-White-box tests: `tests/unit/new_pipeline/knowledge_base/` (loaded via
+White-box tests: `tests/unit/knowledge_base/` (loaded via
 `#[cfg(test)]`). Codec goldens / `.lit` surfaces:
-`examples/new_pipeline/knowledge_base/`.
+`examples/knowledge_base/`.
 
 ### Public API (high level)
 
@@ -316,7 +316,7 @@ when real props need them; do not silently drop fields.
 
 ### Acceptance
 
-Unit tests under `tests/unit/new_pipeline/knowledge_base/`: round-trip +
+Unit tests under `tests/unit/knowledge_base/`: round-trip +
 example goldens; `LITEX_DUMP_KB_FIXTURES=1` regenerates goldens.
 
 ---
@@ -344,7 +344,7 @@ rebuilt, then the directory is updated again.
 Why cache an import module’s product? So **other** modules that `import` it can
 resolve `M::F::…` without re-running that package.
 
-**Consumer contract (current `new_pipeline` lookup paths):**
+**Consumer contract (current lookup paths):**
 
 | Used across finished export envs? | What |
 |-----------------------------------|------|

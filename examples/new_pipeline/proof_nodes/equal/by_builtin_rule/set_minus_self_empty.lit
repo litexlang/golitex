@@ -1,5 +1,0 @@
-# Node: equal.ByBuiltinRule.SetMinusSelfEmpty
-# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/set_minus_self_empty.lit
-
-have A set
-set_minus(A, A) = {}

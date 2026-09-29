@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.ComplexAbsSquaredOfRectForm
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/complex_abs_squared_of_rect_form.lit
+have a R
+have b R
+C_abs(a + b * i)^2 = a^2 + b^2

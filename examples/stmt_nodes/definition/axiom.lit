@@ -1,0 +1,28 @@
+# Stmt: Definition.AxiomStmt → exec_axiom_stmt
+# Also: ambient known-forall after store; release thm / by thm resolve axiom names.
+# Run: litex -f examples/stmt_nodes/definition/axiom.lit
+
+abstract_prop background(x)
+
+axiom background_at_zero:
+    ? forall x R:
+        x = 0
+        =>:
+            $background(x)
+
+trust have a R:
+    a = 0
+
+# forall is ambient after axiom — no release / by thm required
+$background(a)
+
+axiom zero_sides_ax:
+    ? forall x R:
+        x + 0 = x
+        0 + x = x
+
+# release thm / by thm also resolve axiom names
+release thm zero_sides_ax(2)
+0 + 2 = 2
+
+by thm zero_sides_ax(3) => 3 + 0 = 0 + 3

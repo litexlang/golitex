@@ -1,0 +1,7 @@
+# Obj WD: reduce — Z endpoints, homogeneous op, seed ∈ carrier, iterand ret match
+# Run: litex -f examples/wd/obj/reduce.lit
+#
+# Before Wave4: children-only. Empty ranges allowed (no start<=end).
+
+let r = reduce(1, 3, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0)
+r = r

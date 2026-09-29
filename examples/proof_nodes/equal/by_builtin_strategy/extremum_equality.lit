@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinStrategy.ExtremumEquality
+# Run: litex -f examples/proof_nodes/equal/by_builtin_strategy/extremum_equality.lit
+
+have a R = 1
+max(a, a) = a

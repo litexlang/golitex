@@ -77,13 +77,13 @@ store_fact_and_infer/
 | `y $in replacement(P,A)` | No `Obj::Replacement`; named via `have by replacement_axiom` |
 | `x $in &Struct` | Legacy and Manual: no eager public consequences |
 | All `Not*`, `$is_set` / finite / tuple / nonempty | Same as legacy: NoInfer |
-| MatrixSet membership | No MatrixSet Obj in new_pipeline |
+| MatrixSet membership | No MatrixSet Obj |
 | Symbolic-cart / deep equal-set chase / fn-app unfold | Optional polish, not required |
 
 ## Tracers
 
-One rule → one file under `examples/new_pipeline/infer/` (see that README).
+One rule → one file under `examples/infer/` (see that README).
 
 ```bash
-target/release/litex -f examples/new_pipeline/infer/atomic/in_index_cart.lit
+target/release/litex -f examples/infer/atomic/in_index_cart.lit
 ```

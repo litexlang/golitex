@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.ImgOfProduct
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/img_of_product.lit
+have z C
+have w C
+img(z * w) = re(z) * img(w) + img(z) * re(w)

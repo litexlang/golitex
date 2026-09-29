@@ -1,0 +1,6 @@
+# Node: equal.ByBuiltinRule.MinCommutative
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/min_commutative.lit
+
+have a R
+have b R
+min(a, b) = min(b, a)

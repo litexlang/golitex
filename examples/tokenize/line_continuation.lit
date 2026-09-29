@@ -1,0 +1,17 @@
+# Node: tokenize.line_continuation
+# Status: acceptance
+# Run: litex -f examples/tokenize/line_continuation.lit
+#
+# Trailing \\ joins the next physical line. Indent on the continued line is
+# ordinary whitespace. A `#` comment after \\ is allowed. Mid-line \\ is not
+# continuation. Distinct from \template.
+
+1 + 1 \\
+  = 2
+
+have a R, b R, c R
+trust a = b
+trust b = c
+
+a = b \\  # note on this break
+   = c

@@ -1,9 +1,9 @@
 # Litex CLI
 
-<!-- CLI spine: choose a command family → run one typed command shape → inspect its JSON result → use the detailed family contract when needed -->
+<!-- CLI spine: choose a command → run it → read Normal JSON (or REPL text) -->
 
-This is the complete command-line reference for the Rust `litex` binary. If
-Litex is not installed yet, start with the short [setup guide](setup.md).
+This is the command-line reference for the current Litex pipeline (`src/`).
+If Litex is not installed yet, start with the short [setup guide](setup.md).
 
 Created and maintained by Jiachen Shen.
 
@@ -27,20 +27,10 @@ Start the REPL:
 litex
 ```
 
-The ordinary REPL is always isolated, including when the current directory
-contains `litex.config`. It is a persistent terminal environment, not a
-project run.
-
-Startup output is JSON Lines. A terminal initially receives a `ready` event
-and a `prompt` event:
-
-```json
-{"kind":"stream","ok":true,"stream":"repl","event":"ready","id":null,"statement_results":[],"content":{"version":"<version>","mode":"isolated"},"error":null}
-{"kind":"stream","ok":true,"stream":"repl","event":"prompt","id":null,"statement_results":[],"content":">>> ","error":null}
-```
-
-Use Ctrl+D to exit. On Windows PowerShell, press Ctrl+Z and then Enter. The
-REPL emits a final `closed` event before exiting.
+The REPL mounts `cwd/litex.config` when that file exists (otherwise an empty
+project), then accepts interactive blocks. End a block with a blank line. Use
+Ctrl+D to exit (on Windows PowerShell, Ctrl+Z then Enter). Each block prints
+a short status line (`success` or `error`), not a full JSON document.
 
 Run a `.lit` file:
 
@@ -48,11 +38,10 @@ Run a `.lit` file:
 litex -f "your_file.lit"
 ```
 
-If the file's direct parent contains `litex.config`, Litex loads its configured
-source prefix through that file. Otherwise it runs the file in isolation. Both
-forms are batch runs and exit after emitting one `run` document. Use
-`litex -isolated -f "your_file.lit"` to force isolation even when a direct-parent
-configuration exists.
+If the file's direct parent contains `litex.config`, Litex mounts that module
+and runs the configured prefix through the file (see
+[Project modules](#project-modules)). Otherwise it runs the file in isolation.
+Both forms are batch runs: they emit one Normal `run` JSON document and exit.
 
 Run Litex source directly:
 
@@ -69,226 +58,82 @@ litex -version
 ## Basic Shape
 
 ```text
-litex [-strict] [-lang <code>] [-isolated] <command>
+litex [-strict] [-session] <command>
 ```
 
-With no command, `litex` starts an isolated interactive verifier REPL. It does
-not discover `litex.config` in the current directory or search parent
-directories. This terminal is deliberately separate from the fixed module
-tree, so it may load modules interactively.
+With no command, `litex` starts the interactive REPL described above.
 
-The CLI has one primary command per invocation. The optional prefix has the
-fixed order shown above. Options are not removed or reordered before command
-parsing: repeated, out-of-order, trailing, or meaningless options are rejected.
-For example:
+Shared flags may appear before the command token:
 
-```bash
-litex -strict -isolated -f examples/tmp.lit
-litex -session -f chapter.lit
-litex -lang zh -e "1 = 1"
-```
-
-Every invocation must match one documented command shape exactly. Additional
-tokens are rejected, except for the one documented optional graph-output path.
-The parser is a hardcoded command whitelist, not a general argument parser.
-For example, `litex -strict -e "1 = 1"` is valid, while
-`litex -e "1 = 1" -strict`, `litex -strict -strict -e "1 = 1"`, and
-`litex -strict -help` are invalid.
-
-## Command Prefix Options
-
-| Option | Meaning |
-|--------|---------|
-| `-strict` | Select a strict execution variant. Verify every configured import and every export loaded by `-f`, then reject user `trust`, `trust have`, and `axiom`. `-r` already verifies its complete export tree. It is rejected for help, version, LaTeX, extraction, and Lean commands. |
-| `-lang <code>` | Localize human-readable messages and labels. JSON field names and machine discriminator values stay stable. Mathematical source strings remain in Litex syntax. |
-
-Supported language codes are:
-
-```text
-en, zh, zh-Hans, zh-Hant, ja, ko, es, fr, de, pt, ru, ar, hi, vi, id
-```
-
-Current mappings:
-
-| Code | Output language |
-|------|-----------------|
-| `en` | English |
-| `zh` | Simplified Chinese |
-| `zh-Hans` | Simplified Chinese |
-| `zh-Hant` | Traditional Chinese |
-| `ja` | Japanese |
-| `ko` | Korean |
-| `es` | Spanish |
-| `fr` | French |
-| `de` | German |
-| `pt` | Portuguese |
-| `ru` | Russian |
-| `ar` | Arabic |
-| `hi` | Hindi |
-| `vi` | Vietnamese |
-| `id` | Indonesian |
-
-Successful statement results and every `RuntimeError` use one canonical
-detailed JSON projection. Detailed errors preserve causal `previous_error`
-data, `failed_step`,
-`failed_goal`, nested `unknown_result` data, step indexes, and internal
-execution results. This includes parse, well-definedness, verification,
-unknown, execution, instantiation, and inference failures. Fields for
-diagnostic data that does not exist are omitted rather than synthesized.
-
-The CLI does not have a warning branch or a top-level `warnings` field. This
-contract is consistent across file, repository, REPL, session, and `try:`
-execution paths.
-
-`-compact`, `-detail`, and `-summarize` are not CLI options; using any of them
-returns a `cli_error`. `-lang` affects command families that render verifier
-output. `-strict` applies only to execution, graph, and session variants.
-`-isolated` applies only to file, file-graph, file-session, file-conversion, and
-Lean variants. Plain file selectors choose project context when their direct
-parent contains `litex.config` and isolated context otherwise; `-isolated`
-forces the latter. An option is rejected when its selected command has no
-corresponding typed run variant.
-
-## JSON Output Contract
-
-Every Litex CLI response is JSON. Batch commands write one JSON document;
-interactive commands write JSON Lines, with one complete JSON object per
-event. Litex never prints a bare help string, version string, generated source,
-graph, or handled error to stdout.
-
-The intentionally small common envelope is:
-
-```json
-{
-  "kind": "run",
-  "ok": true
-}
-```
-
-`kind` selects the command-family payload and `ok` reports whether that
-operation succeeded. There is no `schema`, `program`, or `warnings` field.
-The top-level kinds are deliberately few:
-
-| `kind` | Commands |
-|--------|----------|
-| `help` | `litex -help` |
-| `version` | `litex -version` |
-| `run` | `litex -e`, `litex -f`, and `litex -r` |
-| `artifact` | graph, LaTeX, Python, C, and Lean commands |
-| `stream` | verifier REPL, LaTeX REPL, and framed session events |
-| `cli_error` | unknown options, extra arguments, and unsupported combinations |
-
-Handled errors use an `error` object. Its discriminator is also named `kind`,
-not `code` or `error_type`:
-
-```json
-{
-  "kind": "cli_error",
-  "ok": false,
-  "message": "unsupported CLI command combination"
-}
-```
-
-For batch commands, exit status `0` means success, `1` means a recognized run
-or artifact command failed, and `2` means the command line itself was invalid.
-The JSON `ok` field is the primary machine-readable result and agrees with
-these statuses. Interactive processes report individual operation failures in
-their stream events and may continue running.
-
-## Value Rules
-
-Commands that take a value require the next command-line token to be present and
-not start with `-`.
+| Flag | Meaning |
+|------|---------|
+| `-strict` | Forbid user `trust`, `trust have`, and `abstract_prop`. |
+| `-session` | After a successful `-e` / `-f` / `-r` run, keep the Runtime open and continue as REPL. |
 
 Examples:
 
 ```bash
-litex -e "1 = 1"
-litex -isolated -f examples/tmp.lit
-litex -r examples/08_module_repository
+litex -strict -e "1 = 1"
+litex -session -f chapter.lit
+litex -f examples/tmp.lit
 ```
 
-This means source code beginning with `-` should usually be put in a `.lit`
-file and run with `-f`.
+The parser is a small whitelist. Unsupported options and trailing tokens are
+rejected. Put flags before the command (`-strict -e "..."`), not after the
+source value.
 
-Prefix options are parsed only in their fixed positions before the command.
-A command value still cannot start with `-`; `-lang` consumes the following
-language-code token in the prefix.
-
-## Verifier Commands
+## Commands
 
 | Command | Behavior |
 |---------|----------|
-| `litex` | Start an isolated interactive verifier REPL. |
-| `litex -e <code>` | Run a Litex source string. |
-| `litex -f <file>` | If the direct parent contains `litex.config`, run that module's imports plus the ordered `[export]` prefix through this registered `.lit` file; otherwise run it as an isolated script. Exit after the batch result. |
-| `litex -isolated -f <file>` | Ignore any direct-parent project configuration, run one isolated batch file, and exit. |
-| `litex -r <project>` | Run a module's imports, then its complete ordered `[export]` `.lit` list. |
-| `litex -session -f <file>` | Select project or isolated context by the same direct-parent rule as `-f`, run the file, then keep that Runtime alive as a framed persistent session. |
-| `litex -isolated -session -f <file>` | Run one standalone file, then keep that same Runtime alive as a framed persistent session. |
+| `litex` | Mount `cwd/litex.config` when present, then start the interactive REPL. |
+| `litex -e <code>` | Mount `cwd/litex.config` when present, then run the source string. |
+| `litex -f <file>` | Mount `parent(file)/litex.config` when present; otherwise run the file alone. |
+| `litex -r <directory>` | Require `<directory>/litex.config`, mount all imports, then run all exports. |
+| `litex -help` | Print usage text. |
+| `litex -version` | Print `Litex <version>`. |
 
-## Lean Compiler Commands
+`-e` values must be the next token and must not start with `-`. Source that
+begins with `-` belongs in a `.lit` file and should be run with `-f`.
 
-| Command | Behavior |
-|---------|----------|
-| `litex -isolated -f <input.lit> -lean <output.lean>` | Verify and compile one Litex source file into one complete Lean file. The output is replaced only after the complete source compiles successfully. |
+Launch and mount details live in
+[`src/run/README.md`](../src/run/README.md) and
+[`src/module_manager/README.md`](../src/module_manager/README.md).
 
-The canonical single-file tracer can be generated through either the main CLI
-or the dedicated compiler wrapper:
+## Statement outcomes
 
-```bash
-litex -isolated -f lean/examples/1_SetSystem.lit -lean \
-  lean/examples/1_SetSystem.lean
+Internally, each statement ends in one of three ways:
 
-./lean/stmt_result_to_lean_compiler.sh compile lean/examples/1_SetSystem.lit
-```
+| Internal | Meaning | Parent env | Session |
+|----------|---------|------------|---------|
+| **Success** | Statement completed | merge temp → parent | continue |
+| **Failed** | Soft miss (search / WD / similar) | discard temp | **continue** |
+| **SessionError** | Hard failure | no merge | **stop** |
 
-Declaration-bearing `sketch` blocks compile into isolated Lean namespaces.
-This preserves source order without leaking names between examples. Unsupported
-or trusted routes fail closed; the compiler does not emit `sorry` or project
-axioms.
+Batch JSON presents those outcomes as:
 
-Declare local project files in ordered `[export]` entries. A module
-`litex.config` may declare non-standard packages in `[import]` or installed
-packages in `[import std]`. Files cite canonical names such as
-`Algebra::chap3::theorem` or `basics::theorem`. No `.lit` source file can
-write imports; this includes standalone files selected automatically by `-f`
-or forced with `-isolated -f`.
+| Internal | In Normal JSON |
+|----------|----------------|
+| Success | statement `"success": true`; run `"ok": true` when every stmt succeeded and there is no session error |
+| Failed | statement `"success": false` **inside** `statement_results` (presentation may say “error”; Rust stays Failed) |
+| SessionError | top-level `"session_error"` set; session must stop |
 
-The ordinary REPL may load further interfaces dynamically with terminal
-commands:
+Soft Failed statements stay in `statement_results`. They are **not** lifted into
+a top-level `verify_error` that clears the array. Process exit is nonzero when
+any Failed occurred or a SessionError occurred.
 
-<!-- litex:skip-test -->
-```text
-litex> import "../Algebra" as Algebra
-litex> Algebra::implementation::some_fact
-litex> import std basics
-litex> basics::some_fact
-```
+A soft miss is not a proof that the proposition is false. It means the current
+routes did not establish it (or well-definedness failed). Add a smaller fact,
+fix a domain obligation, or repair the statement.
 
-The quoted target must be a folder with a module `litex.config`. The import
-runs that module's declared imports and full ordered `[export]` list.
-Conceptually, each command appends a dependency to an
-invisible, in-memory `litex.config` owned by that REPL. It is not written to
-disk, disappears when the process exits, and never becomes a Litex statement
-or statement Result. For reproducible source, declare the dependency in the
-real project manifest.
+## JSON Output Contract
 
-For `-e`, `-f`, and `-r`, Litex emits one `run` object. The main payload is the
-`statement_results` array. `target` is `eval`, `file`, or `repository`; `path`
-is null for inline source and contains the requested path for file and
-repository targets. `error` is null on success.
+`-e`, `-f`, and `-r` emit one Normal `run` document on stdout. The projection
+is defined in [`src/json_output/README.md`](../src/json_output/README.md).
+It does **not** dump the full verify/exec IR; that tree remains available for
+Lean replay and detailed tooling.
 
-Ordinary verifier commands are designed for both inspection and automation.
-Programs should read `ok`, `statement_results`, and `error`; the exit status is
-also nonzero for a failed run. Ordinary `run` objects do not contain a
-`summary` field.
-
-### Run Output Examples
-
-A successful inline run has this outer shape. Statement results contain the
-detailed verifier-owned proof and execution data; the example abbreviates one
-result for readability:
+### Run envelope
 
 ```json
 {
@@ -296,369 +141,196 @@ result for readability:
   "ok": true,
   "target": "eval",
   "path": null,
+  "detail": "normal",
+  "statement_results": [],
+  "session_error": null
+}
+```
+
+| Field | Meaning |
+|-------|---------|
+| `kind` | Always `"run"` for verifier batch commands |
+| `ok` | `true` iff every statement succeeded and `session_error` is null |
+| `target` | `"eval"`, `"file"`, or `"repository"` |
+| `path` | `null` for `-e`; requested path for `-f` / `-r` |
+| `detail` | `"normal"` for the default CLI projection |
+| `statement_results` | One Normal object per executed statement, in order |
+| `session_error` | Hard stop payload, or `null` |
+
+Programs should read `ok`, `statement_results`, and `session_error`. Exit
+status `0` means success; `1` means a Failed statement or SessionError; `2`
+means invalid arguments.
+
+### Normal statement shape
+
+Success:
+
+```json
+{
+  "success": true,
+  "statement": "k >= 0",
+  "why_verified": {
+    "type": "builtin_rule",
+    "rule": "FromKnownInNatural",
+    "cite": "k $in N"
+  },
+  "stores": ["k >= 0"],
+  "infers": []
+}
+```
+
+Soft failure (still inside `statement_results`):
+
+```json
+{
+  "success": false,
+  "statement": "a > 10",
+  "why_failed": {
+    "phase": "search_proof",
+    "goal": "a > 10"
+  },
+  "stores": [],
+  "infers": []
+}
+```
+
+Rules:
+
+- `success` is a bool (not an `outcome` string).
+- `stores`, `infers`, `cite`, `statement`, and `goal` use readable Litex text.
+- Normal skips well-definedness subtrees; look at `why_failed.phase` when a
+  statement did not succeed.
+
+### Examples
+
+Successful inline run:
+
+```json
+{
+  "detail": "normal",
+  "kind": "run",
+  "ok": true,
+  "path": null,
+  "session_error": null,
   "statement_results": [
     {
-      "outcome": "success",
-      "result": {
-        "kind": "Fact",
-        "statement": "1 + 1 = 2"
+      "infers": [],
+      "statement": "1 = 1",
+      "stores": ["1 = 1"],
+      "success": true,
+      "why_verified": {
+        "rule": "EqualityBuiltin",
+        "type": "builtin_rule"
       }
     }
   ],
-  "error": null
+  "target": "eval"
 }
 ```
 
-If verification fails, the successful prefix remains in `statement_results`
-and `error` contains the detailed failure. The most useful error fields are
-usually `kind`, `message`, `line`, `statement`, and `previous_error`:
+Soft miss with a successful prefix retained:
 
 ```json
 {
+  "detail": "normal",
   "kind": "run",
   "ok": false,
-  "target": "eval",
   "path": null,
-  "statement_results": [],
-  "error": {
-    "kind": "verify_error",
-    "line": 1,
-    "message": "verification failed",
-    "statement": "1 = 0",
-    "previous_error": {
-      "kind": "unknown_error",
-      "line": 1,
-      "message": "unknown result",
-      "statement": "1 = 0",
-      "failed_goal": "1 = 0"
+  "session_error": null,
+  "statement_results": [
+    {
+      "infers": [],
+      "statement": "have a R",
+      "stores": ["a $in R"],
+      "success": true,
+      "why_verified": { "type": "define_obj" }
+    },
+    {
+      "infers": [],
+      "statement": "a > 10",
+      "stores": [],
+      "success": false,
+      "why_failed": {
+        "goal": "a > 10",
+        "phase": "search_proof"
+      }
     }
-  }
+  ],
+  "target": "eval"
 }
 ```
 
-Every `-f` file command is batch-only: success or failure emits one ordinary
-`run` object and then exits. Use bare `litex` for the ordinary REPL, or add
-`-session` when a verified file Runtime must accept later framed requests.
+### Help and version
 
-## Session Command
+`litex -help` prints plain usage text. `litex -version` prints
+`Litex <version>`. Invalid argument combinations print a short `launch_error: ...`
+line on stderr and exit with code `2`.
 
-`litex -session` starts a persistent, machine-readable verifier process. With
-no target, it uses the current directory's `litex.config` with the same
-no-plan project startup as the ordinary REPL; `litex -isolated -session`
-disables that project context.
+## Session Flag
 
-`litex -session -f <file>` uses the same direct-parent context selection as an
-ordinary `-f` command. With a configuration it runs the ordered registered
-prefix; without one it runs the file in isolation. If that startup run
-verifies, the process emits `ready` and accepts later blocks in the same
-Runtime, so its definitions and facts are already available. If startup fails,
-the process emits `startup_error` with `statement_results` and an `error`
-object, then does not enter the session loop. `litex -isolated -session -f
-<file>` forces the standalone branch even when configuration exists.
+`-session` is not a separate framed protocol. It means: after a **successful**
+`-e`, `-f`, or `-r` run, keep the last Runtime environment and continue in the
+ordinary REPL. Failed batch runs do not enter that REPL.
 
-The session writes one JSON object per event and accepts these stdin frames:
+Example:
 
-```text
-run <id> <utf8-byte-count>\n<source bytes>
-artifacts <id>
-close
-```
-
-`run` executes exactly one arbitrary, including multiline, source block in the
-same persistent Runtime. `artifacts` returns the accumulated summary, result
-graph, fact graph, and definition graph, including a successful preloaded
-prefix. Every response uses the same shallow stream envelope:
-
-```json
-{"kind":"stream","ok":true,"stream":"session","event":"result","id":"example-1","statement_results":[],"content":null,"error":null}
-```
-
-The event values are `ready`, `startup_error`, `result`, `artifacts`,
-`artifacts_unavailable`, `skipped`, `protocol_error`, and `closed`. Structured
-verifier results are values in `statement_results` and `error`; they are not
-escaped into a `trace` string.
-
-Session `run` frames are Litex source, not terminal input. They reject
-`import`, and the protocol intentionally defines no separate import frame;
-dependencies for a session come from its `litex.config` preload.
-
-A parsed top-level `try:` block always returns a `result` event with `ok: true`.
-Its statement result reports whether the isolated body was `Committed` or
-`RolledBack`; a rollback keeps its diagnostic but publishes no environment
-changes. The client may submit another `run` frame, and `artifacts` remains
-available. A malformed source frame that never parses as a `try` is an ordinary
-source error. Like any other failed Litex statement, it stops later frames:
-subsequent `run` requests return `skipped`, and `artifacts` returns
-`artifacts_unavailable`. A `try:` nested inside another top-level statement does
-not make a parse failure in that outer statement recoverable.
-
-### Iterating after a verified file
-
-Use `target/release/litex -session -f chap4.lit` when the selected file run
-already verifies and later framed experiments should reuse that environment. A
-committed outermost `try:` publishes its definitions and facts to the
-persistent Runtime; a rolled-back `try:` discards only that candidate.
-
-Session file preload always executes the selected file. It does not provide a
-hidden “prefix before a failing target” mode. When repairing a failing
-registered file, keep the candidate in the file and rerun release
-`-f <file>` so every probe is checked in the real configured execution order.
-
-For example, a client can send a frame shaped like:
-
-```text
-run chap5-001 <utf8-byte-count>
-try:
-    <one or more chap5 top-level statements>
-```
-
-The byte count covers only the source bytes after the frame header; clients
-should compute it from the UTF-8 payload. Prefix execution is the cold part of
-the run. File preload pays that cost once and keeps the populated Runtime;
-later frames parse and verify only their submitted source.
-
-## Graph Commands
-
-| Command | Behavior |
-|---------|----------|
-| `litex -graph -e <code> <json>` | Run a source string and save one recursive statement-result/proof/FactId graph JSON object. |
-| `litex -graph -f <file> <json>` | Run a file and save one recursive statement-result/proof/FactId graph JSON object. |
-| `litex -graph -r <repo> <json>` | Discover the repository module graph, run its ordered `[export]` table, and save one recursive statement-result/proof/FactId graph JSON object. |
-| `litex -factgraph -e <code> <json>` | Run a source string and save a fact-only verification dependency graph. |
-| `litex -factgraph -f <file> <json>` | Run a file and save a fact-only verification dependency graph. |
-| `litex -factgraph -r <repo> <json>` | Discover the repository module graph, run its ordered `[export]` table, and save a fact-only verification dependency graph. |
-| `litex -defgraph -e <code> <json>` | Run a source string and save an environment-backed definition dependency graph. |
-| `litex -defgraph -f <file> <json>` | Run a file and save an environment-backed definition dependency graph. |
-| `litex -defgraph -r <repo> <json>` | Discover the repository module graph, run its ordered `[export]` table, and save an environment-backed definition dependency graph. |
-
-The main graph is `litex-result-graph` version 3. It walks the recursive
-`StmtResult` value directly and creates nodes for statement, well-definedness,
-verification, proof, store, store-effect, inference, and fact layers. Tree
-edges preserve result-field order; semantic citation, premise, conclusion, and
-stored-fact edges use `FactId`, while memo reuse points to the exact shared
-proof node. The wrapper includes a `summary`, machine-readable `nodes` and
-`edges`, and a Mermaid `flowchart LR` string for quick rendering.
-Its target metadata follows the runner contract: `kind` is always present and
-`path` is included when a source path exists. The fact graph uses contract
-version 0.2, and the definition graph uses contract version 0.3.
-If the final `<json>` path is omitted, Litex returns an `artifact` object whose
-`content` is the graph JSON object. If a path is supplied, Litex writes the raw
-graph JSON to that file and returns an `artifact` object with `output_path` set
-and `content` null. The graph is never encoded as a JSON string inside the
-wrapper. In this repository, generated graph JSON, Mermaid, SVG, or PNG
-artifacts should be written under `tmp/graphs/`; `tmp/` is ignored by git.
-
-`-factgraph` is the preview proof-flow view. It deliberately omits `prop`,
-function, and object-definition nodes. Its nodes are ordinary facts, `claim`s,
-and `thm`s; its edges come from the verifier's actual cited facts, instantiated
-`forall` facts, checked requirements, and fact-level definition unfolding. The
-JSON includes a `longest_chain` field and a Mermaid flowchart. The main chain
-compresses automatic inferred facts into their surrounding edges, so a reader
-can follow one long, concrete chain from assumptions or trusted boundaries to a
-theorem without mixing it with the definition graph.
-
-`-defgraph` inventories definitions from the final Runtime environment and
-records their dependency and provenance edges. Like the other graph commands,
-it returns the graph under the artifact envelope when no output path is given.
-
-## LaTeX Commands
-
-| Command | Behavior |
-|---------|----------|
-| `litex -latex` | Start the interactive LaTeX-output REPL. |
-| `litex -latex -e <code>` | Compile a source string to LaTeX. |
-| `litex -latex -f <file>` | Compile a file to LaTeX. |
-| `litex -latex -r <repo>` | Compile the repository ordered `[export]` table to LaTeX. |
-
-After `-latex`, the only accepted target selectors are `-e`, `-f`, and `-r`.
-If no selector follows `-latex`, Litex starts the interactive LaTeX REPL.
-
-The LaTeX path is a compile/pretty-print path, not the same proof trace as the
-verifier commands. Batch commands return an `artifact` object with
-`artifact: "rendered_source"`, `format: "latex"`, and the generated text in
-`content`. Failures set `ok` to false, `content` to null, and populate `error`.
-The interactive LaTeX REPL emits `stream` JSON lines.
-
-## Executable Code Extraction Commands
-
-| Command | Behavior |
-|---------|----------|
-| `litex -extractpython <code>` | Verify inline source and emit Python for the supported executable definitions. |
-| `litex -extractpython -f <file>` | Verify the file's ordered `# [-extract]` blocks and emit Python for the supported definitions. |
-| `litex -extractpython -r <repo>` | Verify a repository's ordered `[export]` table and emit Python. |
-| `litex -extractc <code>` | Verify inline source and emit a C99 translation-unit fragment for the supported executable definitions. |
-| `litex -extractc -f <file>` | Verify the file's ordered `# [-extract]` blocks and emit the supported definitions as C99. |
-| `litex -extractc -r <repo>` | Verify a repository's ordered `[export]` table and emit C99. |
-
-The extraction subsystem is deliberately not a whole-Litex compiler. It emits
-supported numeric assignments and `algo` definitions, reports when no
-extractable definitions exist, and rejects known unsupported native-complex
-and number-theory forms instead of approximating them. Python uses ordinary
-floating-point expressions. C uses C99 `double`, emits no `main`, and currently
-requires module-level constants to be literal arithmetic so the generated
-translation unit remains valid C. Neither target proves IEEE-754 behavior.
-
-Inline source follows the extraction flag directly; `-e` is not accepted.
-The retired `-python` command is not a compatibility alias.
-
-File extraction is explicitly selected inside the source:
-
-```litex
-# [-extract]
-have fn increment(x R) R = x + 1
-# [end of -extract]
-
-# This proof is checked by an ordinary full-file run, not by extraction.
-increment(1) = 2
-
-# [-extract]
-have algo for increment(x):
-    x + 1
-# [end of -extract]
-```
-
-Each marker must occupy a whole trimmed line. The marker lines are excluded;
-the enclosed blocks are concatenated in source order and then passed to the
-existing verifier and Python/C backend. The selected source must therefore be
-self-contained. `-f` does not load a configured project prefix or verify the
-unselected statements. It preserves blank lines internally so diagnostics
-still point to the original file locations. Missing, nested, unmatched, or
-unclosed markers are errors; there is no whole-file fallback. Use ordinary
-`litex -f <file>` to verify the complete mathematical development. Inline and
-`-r` extraction retain their whole-input behavior.
-
-Extraction returns an `artifact` object with `artifact: "extracted_code"`,
-`format: "python"` or `"c"`, and the generated source in `content`. The Lean
-compiler similarly returns `artifact: "compiled_source"`, `format: "lean"`,
-and its written file in `output_path`.
-
-## Information Commands
-
-| Command | Behavior |
-|---------|----------|
-| `litex -help` | Return `{"kind":"help","ok":true,"entries":[...]}` and exit. |
-| `litex -version` | Return `{"kind":"version","ok":true,"version":"..."}` and exit. |
-
-Unknown commands return one `cli_error` object and exit with code `2`. They do
-not append help text. For example, `litex -j` returns:
-
-```json
-{
-  "kind": "cli_error",
-  "ok": false,
-  "message": "unsupported CLI command combination"
-}
+```bash
+litex -session -f chapter.lit
 ```
 
 ## Project Modules
 
-> **Project modules:** no `submodule` and no `[hierarchy]`;
-> `[export]` is `.lit` files only; `[import]` / `[import std]` both mount
-> modules under one shared alias namespace (`[import std]` bare `N` means
-> `N = N`; `Alias = StdName` resolves to `<std_root>/<StdName>`).
->
-> LaunchCommand design:
-> [`src/run/README.md`](../src/run/README.md).
-> Tables / parse / elaborate:
-> [`src/module_manager/README.md`](../src/module_manager/README.md).
-> Fixtures:
-> [`examples/new_pipeline/module_manager/`](../examples/new_pipeline/module_manager/).
->
-> Legacy runners may still accept older manifests until migration finishes.
+There is no `submodule` and no `[hierarchy]`. `[export]` lists `.lit` files
+only. `[import]` / `[import std]` mount modules under one shared alias
+namespace (`[import std]` bare `N` means `N = N`; `Alias = StdName` resolves
+to `<std_root>/<StdName>`).
+
+Fixtures:
+[`examples/module_manager/`](../examples/module_manager/).
 
 Use `litex.config` to organize a module:
 
 - select each participating `.lit` file exactly once, in mathematical order,
   under `[export]` (files only; no child-folder export);
 - declare external module folders under `[import] Alias = path` and std
-  packages under `[import std]` as either bare `N` (meaning `N = N`) or
-  `Alias = StdName` (path `<std_root>/<StdName>`);
+  packages under `[import std]` as either bare `N` or `Alias = StdName`;
 - keep import aliases unique across both import sections;
 - cite mounted packages and exports with canonical names, such as
   `Algebra::chap1::name` or `basics:::name`.
 
-`[export]` is an explicit selection list, not an inventory of the directory.
-Unlisted files and folders are sidecars: module discovery does not parse them,
-execute them, or add them to the module namespace. Declared export paths still
-must exist and point to a `.lit` file. Imported targets must be external
-module folders; imports cannot target individual `.lit` files.
+`[export]` is an explicit selection list, not a directory inventory. Unlisted
+files are sidecars: discovery does not parse or execute them. Source-level
+`import` is rejected; project source uses its manifest.
 
-### new_pipeline launch behavior
+### Mount behavior
 
 | Command | Config lookup | Mount behavior |
 |---------|---------------|----------------|
 | `litex -r <dir>` | `<dir>/litex.config` (required) | all imports, then all exports |
 | `litex -f <file>` | `parent(file)/litex.config` (missing → empty) | if listed: imports + exports through that file; if unlisted: all exports then the file; if no config: isolated |
 | `litex -e <code>` | `cwd/litex.config` (missing → empty) | all imports + all exports, then eval |
-| bare `litex` (REPL) | `cwd/litex.config` (missing → empty) | all imports + all exports, then REPL |
+| bare `litex` | `cwd/litex.config` (missing → empty) | all imports + all exports, then REPL |
 
 Mount soft Failed → session `FailToImport`. For `-f`, soft Failed on the
 **target** file itself is a normal file failure, not `FailToImport`.
 
-Source-level `import` is rejected; project source uses its manifest.
+## Lean compiler
 
-## Reserved Helper Commands
+The Litex-to-Lean path is a separate toolchain. Prefer the wrapper under
+[`lean/`](../lean/README.md), for example:
 
-These commands are parsed by the Rust CLI but are not implemented as functional
-features in the Rust kernel yet:
+```bash
+./lean/stmt_result_to_lean_compiler.sh compile lean/examples/1_SetSystem.lit
+```
 
-| Command | Current status |
-|---------|----------------|
-| `litex -fmt <code>` | Prints a placeholder message. |
-| `litex -install <module>` | Reserved for module management; not implemented in the Rust kernel yet. |
-| `litex -uninstall <module>` | Reserved for module management; not implemented in the Rust kernel yet. |
-| `litex -list` | Reserved for module management; not implemented in the Rust kernel yet. |
-| `litex -update <module>` | Reserved for module management; not implemented in the Rust kernel yet. |
-| `litex -tutorial` | Reserved for tutorial mode; not implemented in the Rust kernel yet. |
-
-Use source files, imports, and `-f` or `-r` for current local workflows.
+Coverage and fail-closed boundaries live in that README, not in this CLI page.
 
 ## Practical Recipes
 
-Run a one-line fact:
-
 ```bash
 litex -e "1 = 1"
-```
-
-Run a standalone file:
-
-```bash
 litex -f examples/tmp.lit
-```
-
-Run a project plan:
-
-```bash
-litex -r examples/08_module_repository
-```
-
-Run a strict CI-style check:
-
-```bash
+litex -r examples/module_manager/repo
 litex -strict -f examples/tmp.lit
-```
-
-Generate a recursive result graph:
-
-```bash
-litex -graph -f examples/04_case_studies/gcd_from_finite_divisors.lit tmp/graphs/gcd_graph.json
-```
-
-Generate a fact-only verification chain:
-
-```bash
-litex -isolated -factgraph -f examples/tmp.lit tmp/graphs/tmp_fact_graph.json
-```
-
-Run with Chinese output labels:
-
-```bash
-litex -lang zh -e "1 = 1"
-```
-
-Compile a file to LaTeX:
-
-```bash
-litex -isolated -latex -f examples/tmp.lit
+litex -session -f examples/tmp.lit
 ```

@@ -1,0 +1,18 @@
+# Stmt: Definition.HaveFnByForallExistUniqueStmt → exec_have_fn_by_forall_exist_unique_stmt
+# Run: litex -f examples/stmt_nodes/definition/have_fn_by_exist.lit
+# Also see examples/tmp_have_fn_by_exist.lit for release + template def-check boundaries.
+
+abstract_prop F(x, y)
+have A set
+have B set
+
+trust:
+    forall x A:
+        exist! y B st {$F(x, y)}
+
+have fn f by exist!:
+    ? forall x A:
+        exist! y B st {$F(x, y)}
+
+forall x A:
+    $F(x, f(x))

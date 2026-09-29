@@ -1,0 +1,4 @@
+# Node: atomic.ByBuiltinStrategy.PowerSetFiniteFromBase
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_strategy/is_finite_set_power_set.lit
+
+$is_finite_set(power_set({1}))

@@ -1,7 +1,0 @@
-# Node: or.ByBuiltinRule.IntegerSuccessorTail
-# Rule struct: OrBuiltinIntegerSuccessorTail
-# Run: litex -f examples/new_pipeline/proof_nodes/or/by_builtin_rule/integer_successor_tail.lit
-
-have x Z
-trust x >= 1
-x = 1 or x = 2 or x = 3 or x > 3

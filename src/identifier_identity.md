@@ -1,4 +1,4 @@
-# Identifier identity (new_pipeline)
+# Identifier identity
 
 Status: **current** — plain atoms carry `IdentifierId`.
 
@@ -78,7 +78,7 @@ files uses `file::x` / `mod::file::x`.
 - Some stmt-only binder slots (induction / `for`) may still be bare `String`;
   migrate to `BoundName` when those paths are wired.
 - **`have fn … = …` / `have …:` (by exist) / `have fn by cases` / `have fn by induc`**
-  are wired in new_pipeline. Occupy `f` at file root before parsing the body so
+  are wired. Occupy `f` at file root before parsing the body so
   free refs to `f` qualify via the same rule.
   `have fn by exist!` parses goal-only with forall/`exist!` shape checks; exec
   stores `f $in FnSet`, property forall, and uniqueness forall (no EqualToFunction),

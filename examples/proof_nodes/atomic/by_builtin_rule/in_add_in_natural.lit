@@ -1,0 +1,6 @@
+# Node: atomic.ByBuiltinRule.In.AddInNatural
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/in_add_in_natural.lit
+
+have m N
+have n N
+m + n $in N

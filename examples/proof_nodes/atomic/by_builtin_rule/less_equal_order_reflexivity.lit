@@ -1,0 +1,4 @@
+# Node: atomic.ByBuiltinRule.LessEqualFact.OrderReflexivity
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_equal_order_reflexivity.lit
+
+2 <= 2

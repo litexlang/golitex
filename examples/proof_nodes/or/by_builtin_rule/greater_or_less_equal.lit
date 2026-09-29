@@ -1,0 +1,6 @@
+# Node: or.ByBuiltinRule.GreaterOrLessEqual
+# Rule struct: OrBuiltinGreaterOrLessEqual
+# Run: litex -f examples/proof_nodes/or/by_builtin_rule/greater_or_less_equal.lit
+
+have a, b R
+a > b or a <= b

@@ -1,0 +1,9 @@
+# Node: atomic.ByBuiltinRule.Less.SqrtMonotoneIncreasing
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_sqrt_monotone_increasing.lit
+
+have x R
+have y R
+trust 0 <= x
+trust 0 <= y
+trust x < y
+sqrt(x) < sqrt(y)

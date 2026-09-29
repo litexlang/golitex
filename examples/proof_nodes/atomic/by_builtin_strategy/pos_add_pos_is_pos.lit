@@ -1,0 +1,8 @@
+# Node: atomic.ByBuiltinStrategy.PosAddPosIsPos
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_strategy/pos_add_pos_is_pos.lit
+
+forall a, b R:
+    a > 0
+    b > 0
+    =>:
+        a + b > 0

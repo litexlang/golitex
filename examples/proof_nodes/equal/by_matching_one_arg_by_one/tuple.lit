@@ -1,0 +1,8 @@
+# Node: equal.ByMatchingOneArgByOne (Tuple peel)
+# Run: litex -f examples/proof_nodes/equal/by_matching_one_arg_by_one/tuple.lit
+
+have a R = 1
+have b R = a
+have c R = 2
+have d R = c
+(a, c) = (b, d)

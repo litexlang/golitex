@@ -1,0 +1,7 @@
+# Node: atomic.ByBuiltinRewrite.OrderDual (negated order)
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rewrite/order_dual_not.lit
+
+forall a, b R:
+    not a < b
+    =>:
+        not b > a

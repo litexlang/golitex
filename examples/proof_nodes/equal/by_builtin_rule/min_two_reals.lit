@@ -1,0 +1,7 @@
+# Node: equal.ByBuiltinRule — binary min on reals
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/min_two_reals.lit
+#
+# When: `min(a, b)` for concrete reals.
+# After: returns the lesser argument. Distinct from finite_set min membership.
+
+min(7, -2) = -2

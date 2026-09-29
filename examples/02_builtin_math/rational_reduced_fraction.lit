@@ -1,4 +1,0 @@
-# Every rational number has a unique reduced integer fraction with a positive denominator.
-# This mathematical result is exposed through an explicit theorem interface.
-have a Q
-release thm rational_has_unique_reduced_fraction(a)

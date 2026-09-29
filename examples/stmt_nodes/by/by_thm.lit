@@ -1,0 +1,11 @@
+# Stmt: By.ByThmStmt → exec_by_thm_stmt
+# Run: litex -f examples/stmt_nodes/by/by_thm.lit
+
+thm zero_sides:
+    ? forall x R:
+        x + 0 = x
+        0 + x = x
+    x + 0 = x
+    0 + x = x
+
+by thm zero_sides(2) => 2 + 0 = 0 + 2

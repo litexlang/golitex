@@ -6,7 +6,7 @@ use crate::runtime::{Runtime, RuntimeResult};
 
 // Pointwise / constructor-wise equality: same outer shape ⇒ prove each
 // corresponding child equal. Port of legacy same_shape_and_corresponding_args_match
-// over new_pipeline Obj (except binder shapes: SetBuilder / AnonymousFn / FnSet).
+// over Obj (except binder shapes: SetBuilder / AnonymousFn / FnSet).
 //
 // Mathematical property: congruence of constructors —
 // if corresponding children are equal, the constructed terms are equal.

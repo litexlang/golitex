@@ -1,4 +1,0 @@
-# Obj WD: Sqrt (scalar P0) — arg in R and >= 0
-# Run: litex -f examples/new_pipeline/wd/obj/scalar_sqrt.lit
-
-let s = sqrt(4)

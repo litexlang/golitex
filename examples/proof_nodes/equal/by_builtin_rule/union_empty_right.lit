@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.UnionEmptyRight
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/union_empty_right.lit
+
+have A set
+union(A, {}) = A

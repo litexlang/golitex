@@ -1,0 +1,5 @@
+# Node: atomic.ByBuiltinRule.IsCartFact.CartConstructor
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/is_cart_constructor.lit
+
+have A set, B set
+$is_cart(cart(A, B))

@@ -30,7 +30,10 @@ pub use exec_by_regularity_axiom_stmt::exec_release_regularity_axiom_stmt;
 pub use exec_by_axiom_of_choice_stmt::exec_release_axiom_of_choice_stmt;
 pub use exec_by_zorn_lemma_stmt::exec_release_zorn_lemma_stmt;
 pub use result::{
-    ByProofBodyFailed, ByProofStepResult, ExecByStmtResult, ExecExpandRangeStmtResult,
+    ByProofBodyFailed, ByProofStepResult, ExecByCasesStmtResult, ExecByContraStmtResult,
+    ExecByDefStmtResult, ExecByEnumerateFiniteSetStmtResult, ExecByExtensionStmtResult,
+    ExecByFnExtensionStmtResult, ExecByForStmtResult, ExecByInducStmtResult, ExecByStmtResult,
+    ExecByStrongInducStmtResult, ExecByThmStmtResult, ExecExpandRangeStmtResult,
     ExecReleaseAxiomOfChoiceStmtResult, ExecReleaseRegularityAxiomStmtResult,
     ExecReleaseThmStmtFailed, ExecReleaseThmStmtResult, ExecReleaseZornLemmaStmtResult,
 };

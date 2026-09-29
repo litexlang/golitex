@@ -1,6 +1,0 @@
-# Node: atomic.ByBuiltinRule.InFact.FamilyUnionMembershipFromMember
-# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/in_family_union_from_member.lit
-
-1 $in {1}
-{1} $in {{1}}
-1 $in family_union({{1}})

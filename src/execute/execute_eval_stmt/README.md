@@ -24,5 +24,5 @@ Display evaluation only (no proof fact stored).
 
 ## Tracer
 
-`examples/new_pipeline/stmt_nodes/command/eval.lit`
+`examples/stmt_nodes/command/eval.lit`
 Complex nested closed trees: `command/eval_closed_numeric_complex.lit`

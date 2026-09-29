@@ -1,0 +1,9 @@
+# Node: equal.ByBuiltinRule.ModNestedDivisibleAbsorption
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/mod_nested_divisible_absorption.lit
+
+have a Z
+have m N+
+have k N+
+trust m != 0
+trust k != 0
+(a % (k * m)) % m = a % m

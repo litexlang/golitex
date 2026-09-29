@@ -1,0 +1,5 @@
+# Stmt: Definition.HaveObjInNonemptySetStmt → exec_have_obj_in_nonempty_set_stmt
+# Run: litex -f examples/stmt_nodes/definition/have_obj_in_nonempty_set.lit
+
+have x R
+x = x

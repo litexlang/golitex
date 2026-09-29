@@ -32,9 +32,9 @@ These ownership boundaries imply the following rules:
 - Treat verification as necessary but not sufficient. A verified proof may still contain redundant facts, accidental interfaces, or an avoidable representation detour.
 - Report every `trust`, `abstract_prop`, assumed interface, unverified import, and checker boundary. Do not call a development `checkable` while unresolved trust remains.
 
-## New-pipeline result-shape contract
+## Result-shape contract
 
-When working on `src/new_pipeline`, make the return types expose the function's
+When working on `src/`, make the return types expose the function's
 actual control flow. There are two distinct shapes:
 
 ### Sequential pipelines use result structs

@@ -1,0 +1,8 @@
+# Node: atomic.ByBuiltinStrategy.NonzeroProduct
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_strategy/nonzero_product.lit
+
+forall a, b R:
+    a != 0
+    b != 0
+    =>:
+        a * b != 0

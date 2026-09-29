@@ -1,4 +1,0 @@
-# Fact WD: Equal — both sides Obj WD (here Div obligations)
-# Run: litex -f examples/new_pipeline/wd/fact/equal.lit
-
-1 / 2 = 1 / 2

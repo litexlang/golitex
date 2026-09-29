@@ -1,0 +1,7 @@
+# Node: atomic.ByBuiltinRule.LessEqual.IntegerSuccessorLe
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_equal_integer_successor.lit
+
+have a Z
+have b Z
+trust a < b
+a + 1 <= b

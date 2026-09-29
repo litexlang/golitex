@@ -1,0 +1,6 @@
+# Obj WD: Identifier-headed FnObj — InFunctionSet + domain
+# Run: litex -f examples/wd/obj/fn_app.lit
+
+have a R = 1
+let f = fn(x R) R {x}
+let y = f(a)

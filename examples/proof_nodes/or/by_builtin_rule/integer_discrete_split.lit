@@ -1,0 +1,6 @@
+# Node: or.ByBuiltinRule.IntegerDiscreteSplit
+# Rule struct: OrBuiltinIntegerDiscreteSplit
+# Run: litex -f examples/proof_nodes/or/by_builtin_rule/integer_discrete_split.lit
+
+have x, n Z
+x <= n or x >= n + 1

@@ -1,4 +1,0 @@
-# Obj WD: list set pairwise !=
-# Run: litex -f examples/new_pipeline/wd/obj/list_set.lit
-
-let A = {1, 2}

@@ -1,0 +1,4 @@
+# Node: equal.ByBuiltinRule.ReOfRealPlusI
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/re_of_real_plus_i.lit
+
+re(1 + i) = 1

@@ -1,7 +1,0 @@
-# Stmt: Witness.WitnessExistFact → exec_witness_stmt / exec_witness_exist_fact
-# Run: litex -f examples/new_pipeline/stmt_nodes/witness/witness_exist_fact.lit
-#
-# New pipeline: witness exist has no indented proof body; obligations must
-# already hold (here `0 = 0` is builtin).
-
-witness exist x R st {x = 0} from 0

@@ -1,0 +1,7 @@
+# Stmt: Definition.DefTemplateStmt → exec_def_template_stmt
+# Run: litex -f examples/stmt_nodes/definition/def_template.lit
+
+template<S set>:
+    have carrier_copy set = S
+
+\carrier_copy<R> = R

@@ -1,0 +1,7 @@
+# Infer: InFact.ListSetOrEqualities
+# When: store `x $in {a, b}`.
+# Infers: `x = a or x = b`.
+# Run: litex -f examples/infer/atomic/in_list_set_or_equalities.lit
+
+have x {1, 2}
+x = 1 or x = 2

@@ -1,0 +1,9 @@
+# Node: equal.ByBuiltinRule — smaller modulus absorbs nested larger compatible mod
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/mod_compatible_smaller_modulus.lit
+#
+# When: prove `p % 2 = (p % 8) % 2` (2 divides 8).
+# After: nested mod by a multiple preserves the smaller-modulus remainder.
+# Related but distinct: mod_nested_divisible_absorption is `(a % (k*m)) % m = a % m`.
+
+forall p Z:
+    p % 2 = (p % 8) % 2

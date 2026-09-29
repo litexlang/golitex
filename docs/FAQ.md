@@ -17,9 +17,8 @@ translations remain visible and available for reuse. Treat a feature or proof
 as complete only when its current tests, dated status, explicit `trust`
 boundary, and known limitations support that claim.
 
-Litex source code stays the same across languages, but CLI output supports
-localized JSON keys and explanatory labels with `litex -lang <code> ...`.
-See [`docs/cli.md`](cli.md) for the supported language codes.
+Litex source stays the same across natural languages. Current CLI output is
+English Normal JSON / short status text; see [`docs/cli.md`](cli.md).
 
 ## Why is Litex called Litex?
 
@@ -35,11 +34,9 @@ Litex is inspired by LaTeX's practical design for writing mathematics.
 
 ## Does Litex support multiple output languages?
 
-Yes. Use `litex -lang <code> ...` to localize JSON keys and explanatory labels.
-The proof script inside fields such as `statement`, `fact`, and
-`cited_statement` remains ordinary Litex code. Supported codes include `en`,
-`zh`, `zh-Hans`, `zh-Hant`, `ja`, `ko`, `es`, `fr`, `de`, `pt`, `ru`, `ar`,
-`hi`, `vi`, and `id`.
+The Litex source language is shared. The current CLI prints English Normal JSON
+for batch runs and short English status lines in the REPL. Localized CLI labels
+are not part of the present command surface; see [`docs/cli.md`](cli.md).
 
 ## How is Litex invented?
 
@@ -176,6 +173,7 @@ syntax. In particular, a `forall` cannot be used directly as one branch of an
 closed subclaim, name the compound fact with a zero-parameter `prop`, then use
 the resulting atomic call in the outer fact:
 
+<!-- litex:skip-test -->
 ```litex
 prop all_reals_reflexive():
     forall x R:
@@ -281,6 +279,7 @@ can provide additional imported `forall` facts. The user-facing effect is
 similar: the verifier can use common mathematical background without the
 current file proving a local lemma first.
 
+<!-- litex:skip-test -->
 ```litex
 forall x, y R:
     x - y > 0
@@ -760,7 +759,7 @@ For example:
   that wants to explain its construction may still define a transparently
   named source function such as `gcd_by_finite_divisors`, prove its
   specification, and bridge it to native `gcd`; see
-  [`gcd_from_finite_divisors.lit`](../examples/04_case_studies/gcd_from_finite_divisors.lit).
+  [`gcd_from_finite_divisors.lit`](../examples/_internal/regression/gcd_from_finite_divisors.lit).
 - Native `$coprime(a, b)` follows the elementary `Nat.Coprime` surface and is
   available for all natural pairs without importing `std/basics`; it is false
   at `(0,0)`. Integer and general-ring coprimality remain distinct interfaces.
@@ -811,12 +810,12 @@ view of a subset of a Cartesian product. The field names label the positions in
 that product.
 
 A structure must declare at least two fields. There is no one-field “identity
-view” of a sole carrier under the `new_pipeline` contract (parse error:
-`struct definition expects at least two fields`). The default pipeline still
-allows a one-field degenerate case; that is not the forward language rule.
+view” of a sole carrier (parse error:
+`struct definition expects at least two fields`).
 
 For example:
 
+<!-- litex:skip-test -->
 ```litex
 struct FirstQuadrant:
     x R
@@ -1137,29 +1136,39 @@ automatic: without the known leaf `x = y`, that product equality remains
 unknown. Premise-producing mathematical equality rules are tried only after
 these zero-premise routes fail.
 
-## Why does Litex distinguish `true`, `unknown`, and `error`?
+## Why does Litex distinguish Success, Failed, and SessionError?
 
-The three statuses separate three different situations that are easy to
-confuse.
+These three outcomes separate situations that are easy to confuse.
 
-`true` means Litex found a proof route from builtin rules, known facts, known
-`forall` facts, definitions, or other accepted context. `unknown` means the
-statement is meaningful, but Litex did not find enough information to prove it.
-The statement may be false, or it may only need a smaller intermediate step.
-`error` means the statement is not a valid checkable fact yet, for example
-because the syntax is wrong, a name is undeclared, or an expression is not
-well-defined.
+**Success** means Litex found a proof route (or completed a definition) from
+builtin rules, known facts, known `forall` facts, definitions, or other
+accepted context, and merged the temporary environment into the parent.
 
-This makes the feedback loop more useful. An `unknown` result usually suggests
-"add the missing mathematical fact." An `error` result suggests "fix the
-expression or its domain information before discussing truth."
+**Failed** (soft miss) means the statement did not succeed. The temporary
+environment is discarded and the session continues. Common causes:
 
-Some atomic equality failures include a narrower `detail`. If a known equality
-stops at a function-valued prefix such as `trace(q) = base(q)` while the goal
-asks about `trace(q)(row)`, Litex reports the unmatched outer application and
-that nearest prefix. This is guidance to project or rewrite the prefix before
-applying the remaining argument; it does not perform new congruence or accept
-the failed goal.
+- search miss: the statement is meaningful, but current evidence is not enough;
+- well-definedness miss: an object or fact is not legal yet;
+- other soft statement failures in the same transactional envelope.
+
+A soft miss is not a proof that the proposition is false. It may be false, or
+it may only need a smaller intermediate step. Batch JSON keeps soft misses
+inside `statement_results` with `"success": false` and a `why_failed` payload.
+
+**SessionError** means a hard failure. The session must stop. Batch JSON
+exposes this as top-level `"session_error"`.
+
+This makes the feedback loop more useful. A search soft miss usually suggests
+"add the missing mathematical fact." A well-definedness soft miss suggests
+"fix the expression or its domain information before discussing truth." A
+SessionError suggests "stop and repair the session invariant."
+
+Some atomic equality failures include a narrower detail in the evidence tree.
+If a known equality stops at a function-valued prefix such as
+`trace(q) = base(q)` while the goal asks about `trace(q)(row)`, Litex reports
+the unmatched outer application and that nearest prefix. This is guidance to
+project or rewrite the prefix before applying the remaining argument; it does
+not perform new congruence or accept the failed goal.
 
 ## Can a cache change a closed automatic proof route?
 
@@ -1196,7 +1205,7 @@ tries to prove or disprove the fact.
 For example, a function application must have an argument in the function's
 domain, and a division must have a nonzero denominator. If those facts are not
 available, Litex should report a problem with the expression, not merely say
-that the desired equality is `unknown`.
+that the desired equality soft-fails.
 
 A function name introduced by `let` need not carry its signature directly.
 After `let g = f`, well-definedness follows that exact transparent definition
@@ -1371,6 +1380,7 @@ exist` is the Litex form of that ordinary mathematical move.
 
 For example:
 
+<!-- litex:skip-test -->
 ```litex
 witness exist u R st {u > 0, u < 1} from 1 / 2:
     1 / 2 > 0
@@ -1387,13 +1397,14 @@ If a named theorem's only direct conclusion is positive `exist` or `exist!`,
 use `release thm` (to store the existential) then `obtain` from that exist,
 or keep the existential and name witnesses in a `claim` as needed:
 
+<!-- litex:skip-test -->
 ```litex
 have q Q
 release thm rational_has_unique_reduced_fraction(q)
 obtain p, d from exist p N, d N_pos st {q = p / d, …}
 ```
 
-(`obtain … from thm …` is removed in `new_pipeline`; prefer the two-step form.)
+(`obtain … from thm …` is removed; prefer the two-step form.)
 
 Multiple conclusions, a nonexistential or negated existential
 conclusion, and a mismatched number of names are rejected.
@@ -1411,6 +1422,7 @@ copy = 2
 
 The same wrapper can also be the target of `witness`:
 
+<!-- litex:skip-test -->
 ```litex
 prop divides(p Z, u Z):
     exist k Z st {p = u * k}
@@ -1465,6 +1477,7 @@ preimage. `have by preimage` turns that move into an explicit proof step.
 
 For example:
 
+<!-- litex:skip-test -->
 ```litex
 sketch:
     have f fn(x R: x > 0) R

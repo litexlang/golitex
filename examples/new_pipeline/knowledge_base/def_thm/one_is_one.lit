@@ -1,6 +1,0 @@
-# knowledge_base / def_thm: one_is_one
-# Run: litex -f examples/new_pipeline/knowledge_base/def_thm/one_is_one.lit
-# Stored: one_is_one.def_thm.json (prove_process empty in MVP codec)
-
-thm one_is_one:
-    ? 1 = 1

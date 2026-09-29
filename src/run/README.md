@@ -1,4 +1,4 @@
-# new_pipeline `run` — LaunchCommand design
+# `run` — LaunchCommand design
 
 How each CLI launch form builds a `Runtime`, mounts modules (if any), and
 finishes. Companion packages:
@@ -105,4 +105,4 @@ Process exit uses `outcome.process_failed()` (false success or session error).
 
 ## Examples
 
-Runnable fixtures: [`examples/new_pipeline/module_manager/`](../../../examples/new_pipeline/module_manager/).
+Runnable fixtures: [`examples/module_manager/`](../../../examples/module_manager/).

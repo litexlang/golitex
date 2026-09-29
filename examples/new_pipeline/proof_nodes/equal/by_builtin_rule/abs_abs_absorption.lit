@@ -1,5 +1,0 @@
-# Node: equal.ByBuiltinRule.AbsAbsAbsorption
-# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/abs_abs_absorption.lit
-
-have a R
-abs(abs(a)) = abs(a)

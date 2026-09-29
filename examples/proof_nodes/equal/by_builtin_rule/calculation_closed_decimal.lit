@@ -1,0 +1,4 @@
+# Node: equal.ByBuiltinRule.Calculation.ClosedDecimal
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/calculation_closed_decimal.lit
+
+1 + 1 = 2

@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.UnionIdempotent
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/union_idempotent.lit
+
+have A set
+union(A, A) = A

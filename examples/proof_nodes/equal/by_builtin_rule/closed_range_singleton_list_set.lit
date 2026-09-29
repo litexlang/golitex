@@ -1,0 +1,4 @@
+# Node: equal.ByBuiltinRule.ClosedRangeSingletonListSet
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/closed_range_singleton_list_set.lit
+
+closed_range(1, 1) = {1}

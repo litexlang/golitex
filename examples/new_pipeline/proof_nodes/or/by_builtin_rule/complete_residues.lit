@@ -1,6 +1,0 @@
-# Node: or.ByBuiltinRule.CompleteResidues
-# Rule struct: OrBuiltinCompleteResidues
-# Run: litex -f examples/new_pipeline/proof_nodes/or/by_builtin_rule/complete_residues.lit
-
-have n Z
-n % 2 = 0 or n % 2 = 1

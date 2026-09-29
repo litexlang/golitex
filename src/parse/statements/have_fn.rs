@@ -75,7 +75,7 @@ impl Runtime {
 
             if tb.peek() == Some(COLON) {
                 return Err(RuntimeParseError::new(
-                    "have fn colon case body: not wired yet in new_pipeline (use `by cases`)",
+                    "have fn colon case body: not wired yet (use `by cases`)",
                     block.line,
                     block.source_path.clone(),
                 )

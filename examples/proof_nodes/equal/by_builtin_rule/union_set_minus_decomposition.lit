@@ -1,0 +1,6 @@
+# Node: equal.ByBuiltinRule.UnionSetMinusDecomposition
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/union_set_minus_decomposition.lit
+
+have A set
+have B set
+union(A, set_minus(B, A)) = union(A, B)

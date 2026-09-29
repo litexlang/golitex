@@ -1,0 +1,6 @@
+# Stmt: By.ByContraStmt → exec_by_contra_stmt
+# Run: litex -f examples/stmt_nodes/by/by_contra.lit
+
+by contra:
+    ? 1 = 1
+    impossible 1 != 1

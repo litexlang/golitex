@@ -1,4 +1,4 @@
-//! Statement execution results for new_pipeline.
+//! Statement execution results.
 //!
 //! Top level dispatches by stmt kind only. Soft Success|Failed lives inside
 //! each leaf `*Result`. Session-stopping bugs stay in `RuntimeResult::Err`.

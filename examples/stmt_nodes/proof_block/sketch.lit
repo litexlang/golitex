@@ -1,0 +1,5 @@
+# Stmt: ProofBlock.SketchStmt → exec_sketch_stmt
+# Run: litex -f examples/stmt_nodes/proof_block/sketch.lit
+
+sketch:
+    1 = 1

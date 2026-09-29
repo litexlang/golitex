@@ -1,0 +1,12 @@
+# Stmt: ReleaseThmStmt → exec_release_thm_stmt
+# Run: litex -f examples/stmt_nodes/definition/release_thm.lit
+
+thm positive_is_nonzero:
+    ? forall x R:
+        x > 0
+        =>:
+            x != 0
+    x != 0
+
+release thm positive_is_nonzero(1)
+1 != 0

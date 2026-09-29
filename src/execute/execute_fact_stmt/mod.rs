@@ -5,15 +5,15 @@
 mod exec_fact_stmt;
 mod result;
 mod verify;
-mod verify_and_fact;
+pub mod verify_and_fact;
 pub mod verify_atomic_fact;
-mod verify_chain_fact;
-mod verify_exist_shaped_fact;
+pub mod verify_chain_fact;
+pub mod verify_exist_shaped_fact;
 mod verify_fact_result;
-mod verify_forall_fact;
-mod verify_forall_fact_with_iff;
-mod verify_not_forall_fact;
-mod verify_or_fact;
+pub mod verify_forall_fact;
+pub mod verify_forall_fact_with_iff;
+pub mod verify_not_forall_fact;
+pub mod verify_or_fact;
 mod verify_state;
 pub mod well_defined_results;
 

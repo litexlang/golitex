@@ -1,4 +1,0 @@
-# Fact WD: Exist binder — param type + body under local env
-# Run: litex -f examples/new_pipeline/wd/fact/exist.lit
-
-exist x R st {x > 0}

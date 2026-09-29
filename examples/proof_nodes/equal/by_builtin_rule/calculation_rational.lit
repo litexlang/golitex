@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.Calculation.Rational
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/calculation_rational.lit
+
+have x R
+(x + 1) * (x - 1) = x^2 - 1

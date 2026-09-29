@@ -1,0 +1,7 @@
+# knowledge_base / axiom: eq_refl
+# Run: litex -f examples/knowledge_base/axiom/eq_refl.lit
+# Stored: eq_refl.axiom.json
+
+axiom eq_refl:
+    ? forall x R:
+        x = x

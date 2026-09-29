@@ -1,6 +1,0 @@
-# Node: atomic.ByBuiltinRule.IntegerRangeSubsetNumericCarrier
-# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/subset_integer_range_numeric_carrier.lit
-
-have a N
-have b Z
-a...b $subset N

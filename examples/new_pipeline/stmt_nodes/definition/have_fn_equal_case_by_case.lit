@@ -1,9 +1,0 @@
-# Stmt: Definition.HaveFnEqualCaseByCaseStmt → exec_have_fn_equal_case_by_case_stmt
-# Run: litex -f examples/new_pipeline/stmt_nodes/definition/have_fn_equal_case_by_case.lit
-
-have fn nonzero_flag(x R) R by cases:
-    case x = 0: 0
-    case x != 0: 1
-
-nonzero_flag(0) = 0
-nonzero_flag(2) = 1

@@ -1,4 +1,4 @@
-use super::run_command::NEW_PIPELINE_VERSION;
+use super::run_command::VERSION;
 use crate::launch_command::LaunchCommand;
 use crate::run_module::{mount_cwd_config, MountCwdConfigOutcome};
 use crate::runtime::{RealOrVirtualPath, Runtime, RuntimeError, RuntimeResult};
@@ -26,7 +26,7 @@ pub fn run_repl(command: LaunchCommand) -> RuntimeResult<()> {
 /// Continue a REPL in an already-open file/eval Runtime env (used by `-session`).
 pub fn run_repl_loop(runtime: &mut Runtime) -> RuntimeResult<()> {
     runtime.set_code_source(crate::runtime::CodeSource::Repl);
-    println!("{} REPL {}", LITEX, NEW_PIPELINE_VERSION);
+    println!("{} REPL {}", LITEX, VERSION);
     println!("type `exit` or Ctrl-D to quit; end a block with a blank line");
 
     loop {

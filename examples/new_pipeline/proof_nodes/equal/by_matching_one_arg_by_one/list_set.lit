@@ -1,6 +1,0 @@
-# Node: equal.ByMatchingOneArgByOne (ListSet peel)
-# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_matching_one_arg_by_one/list_set.lit
-
-have a R = 1
-have b R = a
-{a} = {b}

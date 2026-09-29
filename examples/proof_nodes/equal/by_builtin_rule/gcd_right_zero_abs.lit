@@ -1,0 +1,7 @@
+# Node: equal.ByBuiltinRule.GcdRightZeroAbs
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/gcd_right_zero_abs.lit
+
+have a Z
+# Narrow trust: gcd WD currently needs a nonzero witness.
+trust a != 0
+gcd(a, 0) = abs(a)

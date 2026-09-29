@@ -1,0 +1,8 @@
+# Node: equal.ByBuiltinRule.ProductModFactorZero
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/product_mod_factor_zero.lit
+
+have a Z
+have b Z
+# Narrow trust: mod WD currently needs a nonzero divisor.
+trust a != 0
+(a * b) % a = 0

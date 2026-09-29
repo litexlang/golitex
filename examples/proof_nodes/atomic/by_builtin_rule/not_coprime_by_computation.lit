@@ -1,0 +1,5 @@
+# Node: atomic.ByBuiltinRule.NotNormalAtomic.NotCoprimeByComputation
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/not_coprime_by_computation.lit
+
+not $coprime(14, 21)
+not $coprime(0, 0)

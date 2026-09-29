@@ -1,0 +1,6 @@
+# Node: equal.ByBuiltinRule.IntersectSetMinusSelfEmpty
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/intersect_set_minus_self_empty.lit
+
+have A set
+have B set
+intersect(A, set_minus(B, A)) = {}

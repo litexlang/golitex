@@ -1,0 +1,4 @@
+# Node: equal.ByBuiltinRule.SqrtZero
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/sqrt_zero.lit
+
+sqrt(0) = 0

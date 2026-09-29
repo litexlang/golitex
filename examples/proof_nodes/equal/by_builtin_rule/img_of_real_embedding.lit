@@ -1,0 +1,4 @@
+# Node: equal.ByBuiltinRule.ImgOfRealEmbedding
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/img_of_real_embedding.lit
+
+img(1) = 0

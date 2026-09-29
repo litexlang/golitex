@@ -1,0 +1,7 @@
+# Node: equal.ByBuiltinRule.LogChangeOfBase
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/log_change_of_base.lit
+# trust: WD of log(10, 2) in R* until log-nonzero WD is stronger.
+
+have x R+
+trust log(10, 2) $in R*
+log(2, x) = log(10, x) / log(10, 2)

@@ -1,4 +1,4 @@
-//! Framework AST data shapes for new_pipeline.
+//! Framework AST data shapes.
 //! Field taxonomy follows the legacy language; methods are added later.
 //! Identity: parameter lists store BoundName (name + IdentifierId).
 

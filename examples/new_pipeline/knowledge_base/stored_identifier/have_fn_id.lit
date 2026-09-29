@@ -1,6 +1,0 @@
-# knowledge_base / stored_identifier: have fn id
-# Run: litex -f examples/new_pipeline/knowledge_base/stored_identifier/have_fn_id.lit
-# Stored: have_fn_id.stored_identifier.json
-# Definition-only surface for the HaveFnEqual store shape.
-
-have fn id(x R) R = x

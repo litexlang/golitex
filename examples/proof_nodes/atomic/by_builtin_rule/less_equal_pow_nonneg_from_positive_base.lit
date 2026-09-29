@@ -1,0 +1,7 @@
+# Node: atomic.ByBuiltinRule.LessEqual.PowNonnegFromPositiveBase
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_equal_pow_nonneg_from_positive_base.lit
+
+have a R
+have n N
+trust 0 < a
+0 <= a^n

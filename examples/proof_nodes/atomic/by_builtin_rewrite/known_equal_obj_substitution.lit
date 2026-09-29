@@ -1,0 +1,5 @@
+# Node: atomic.ByBuiltinRewrite.KnownEqualObjSubstitution
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rewrite/known_equal_obj_substitution.lit
+
+have S set = {1, 2}
+1 $in S

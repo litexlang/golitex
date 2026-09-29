@@ -1,10 +1,10 @@
-use crate::launch_command::LaunchCommand;
 use super::run_command_outcome::{HelpResult, RunCommandOutcome, VersionResult};
 use super::{run_eval, run_file, run_repl, run_repo};
+use crate::launch_command::LaunchCommand;
 use crate::runtime::RuntimeResult;
 use crate::LITEX;
 
-pub const NEW_PIPELINE_VERSION: &str = env!("CARGO_PKG_VERSION");
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub fn run_command(command: LaunchCommand) -> RuntimeResult<RunCommandOutcome> {
     match command {
@@ -13,9 +13,9 @@ pub fn run_command(command: LaunchCommand) -> RuntimeResult<RunCommandOutcome> {
             Ok(RunCommandOutcome::Help(HelpResult::new(entries)))
         }
         LaunchCommand::Version => {
-            println!("{} {}", LITEX, NEW_PIPELINE_VERSION);
+            println!("{} {}", LITEX, VERSION);
             Ok(RunCommandOutcome::Version(VersionResult::new(
-                NEW_PIPELINE_VERSION,
+                VERSION,
             )))
         }
         command @ LaunchCommand::Repl { .. } => {
@@ -40,7 +40,7 @@ pub fn run_command(command: LaunchCommand) -> RuntimeResult<RunCommandOutcome> {
 fn print_help_message() -> Vec<String> {
     let bin = LITEX.to_ascii_lowercase();
     let entries = vec![
-        format!("{} (test track)", LITEX),
+        format!("{}", LITEX),
         format!("{}", bin),
         format!("{} -e <code>", bin),
         format!("{} -f <file>", bin),
@@ -49,9 +49,7 @@ fn print_help_message() -> Vec<String> {
         format!("{} -f <file> -session", bin),
         format!("{} -help", bin),
         format!("{} -version", bin),
-        "Without LITEX_NEW_PIPELINE, the legacy CLI is used.".to_string(),
-        "-session keeps the Runtime env open and continues as REPL after -e/-f/-r."
-            .to_string(),
+        "-session keeps the Runtime env open and continues as REPL after -e/-f/-r.".to_string(),
         "-strict forbids `trust` / `trust have` / `abstract_prop`.".to_string(),
     ];
     println!("{}", entries[0]);
@@ -63,6 +61,5 @@ fn print_help_message() -> Vec<String> {
     println!();
     println!("{}", entries[9]);
     println!("{}", entries[10]);
-    println!("{}", entries[11]);
     entries
 }

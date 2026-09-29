@@ -1,4 +1,0 @@
-# Node: equal.ByBuiltinRule.SqrtOne
-# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/sqrt_one.lit
-
-sqrt(1) = 1

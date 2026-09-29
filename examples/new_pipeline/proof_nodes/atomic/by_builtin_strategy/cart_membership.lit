@@ -1,6 +1,0 @@
-# Node: atomic.ByBuiltinStrategy.CartMembership
-# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_strategy/cart_membership.lit
-
-forall x R, y Z:
-    =>:
-        (x, y) $in cart(R, Z)

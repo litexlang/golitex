@@ -1,0 +1,8 @@
+# Node: equal.ByObjectDefinition.ByFnApplication.HaveFnByInduc
+# Run: litex -f examples/proof_nodes/equal/by_object_definition/by_fn_application/have_fn_by_induc.lit
+
+have fn countdown(n N) N by induc n from 0:
+    case n = 0: 0
+    case n >= 1: countdown(n - 1)
+
+countdown(0) = 0

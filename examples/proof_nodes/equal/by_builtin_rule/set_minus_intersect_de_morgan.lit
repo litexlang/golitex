@@ -1,0 +1,7 @@
+# Node: equal.ByBuiltinRule.SetMinusIntersectDeMorgan
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/set_minus_intersect_de_morgan.lit
+
+have A set
+have B set
+have C set
+set_minus(A, intersect(B, C)) = union(set_minus(A, B), set_minus(A, C))

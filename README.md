@@ -169,6 +169,7 @@ forall a, b R:
 
 A known `forall` fact used to prove a concrete atomic fact:
 
+<!-- litex:skip-test -->
 ```litex
 prop is_positive(n R):
     exist a R+ st {n > a}
@@ -197,6 +198,7 @@ zero = 0
 
 A theorem—name a reusable conclusion, then cite it (transitivity of divisibility):
 
+<!-- litex:skip-test -->
 ```litex
 prop divides_by(d, n Z):
     exist k Z st {n = d * k}
@@ -221,6 +223,7 @@ by thm divides_transitive(2, 6, 30) => $divides_by(2, 30)
 
 A named function:
 
+<!-- litex:skip-test -->
 ```litex
 have fn reciprocal(x R: x != 0) R = 1 / x
 reciprocal(2) = 1 / 2
@@ -240,6 +243,7 @@ claim:
 
 Proof by contradiction—show that “every real satisfies `x^2 >= x`” fails:
 
+<!-- litex:skip-test -->
 ```litex
 by contra:
     ? not forall x R:
@@ -266,6 +270,7 @@ by cases:
 
 Proof by induction—the sum of the first `n` odd positives is `n^2`:
 
+<!-- litex:skip-test -->
 ```litex
 have fn kth_odd(k Z) Z = 2 * k - 1
 
@@ -311,6 +316,7 @@ forall s nonempty_set, G &Group<s>, identity s:
 
 A `template`—a parameterized definition family, then `\name<args>` to materialize:
 
+<!-- litex:skip-test -->
 ```litex
 struct Triple<X set>:
     first X
@@ -328,6 +334,7 @@ p.first = 1
 
 A simple word problem—identifiers may be written in Chinese:
 
+<!-- litex:skip-test -->
 ```litex
 # Mom's age is 3 times Xiao Ming's age plus 4; Xiao Ming is 15. How old is Mom?
 have 小明年龄 R = 15

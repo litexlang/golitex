@@ -1,0 +1,6 @@
+# Node: equal.ByBuiltinRule.CartProjFactor
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/cart_proj_factor.lit
+
+have A set
+have B set
+proj(cart(A, B), 1) = A

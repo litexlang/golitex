@@ -57,5 +57,5 @@ pub use stored_identifier_codec::{
 };
 
 #[cfg(test)]
-#[path = "../../tests/unit/new_pipeline/knowledge_base/mod.rs"]
+#[path = "../../tests/unit/knowledge_base/mod.rs"]
 mod unit_tests;

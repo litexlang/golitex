@@ -1,0 +1,4 @@
+# Obj WD: SetBuilder definition (binder + facts)
+# Run: litex -f examples/proof_nodes/obj_wd/set_builder.lit
+
+let A = {x R: x > 0}

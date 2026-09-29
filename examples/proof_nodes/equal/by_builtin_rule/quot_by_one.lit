@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.QuotByOne
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/quot_by_one.lit
+
+have a Z
+quot(a, 1) = a

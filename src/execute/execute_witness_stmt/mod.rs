@@ -1,5 +1,5 @@
 //! Witness statements: constructive introduction of exist / `$P` / nonempty set.
-//! No local binder env and no indented proof body in new_pipeline.
+//! No local binder env and no indented proof body.
 
 mod exec_witness_atomic_fact;
 mod exec_witness_exist_fact;

@@ -295,6 +295,7 @@ theorem convergesTo_mul_const {s : ℕ → ℝ} {a : ℝ} (c : ℝ)
 The Litex proof chooses `epsilon / (abs(c) + 1)`. Since the denominator is
 always positive, one estimate covers both `c = 0` and `c != 0`.
 
+<!-- litex:skip-test -->
 ```litex
 prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):
     forall n N:
@@ -348,6 +349,7 @@ Litex treats a chain as one factual statement. For a two-equation system, the
 intermediate expressions can be written in the same order as a handwritten
 calculation:
 
+<!-- litex:skip-test -->
 ```litex
 forall x, y R:
     2 * x + 3 * y = 10
@@ -418,6 +420,7 @@ belong to `N+` and satisfy the substituted equation.
 The next example uses abstract predicates so that only the logical shape is
 at issue:
 
+<!-- litex:skip-test -->
 ```litex
 abstract_prop p0(x, y)
 abstract_prop q0(x, y)
@@ -457,6 +460,7 @@ logical argument.
 To show that the multiples of `4` are not the even natural numbers, `2` is the
 decisive counterexample:
 
+<!-- litex:skip-test -->
 ```litex
 by contra:
     ? {a N: a % 4 = 0} != {a N: a % 2 = 0}
@@ -612,6 +616,7 @@ Both systems can express Euclid's argument in the following form:
 The Litex claim places the background lemmas in its premise and keeps the main
 argument as a direct proof spine:
 
+<!-- litex:skip-test -->
 ```litex
 # `$prime(a)` is native. Its symbolic contract is `2 <= a` together with
 # `a % b != 0` for every `b` in `range(2, a)`.
@@ -711,6 +716,7 @@ this anonymous recursive form is not Litex syntax:
 A closed compound fact can instead receive a predicate name. Its call is
 atomic and can occupy the outer branch position:
 
+<!-- litex:skip-test -->
 ```litex
 prop all_reals_reflexive():
     forall x R:

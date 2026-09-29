@@ -65,7 +65,7 @@ pub fn parse_primary(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
     }
     if token == LEFT_BRACKET {
         return Err(tb.parse_error(
-            "`[...]` finite-sequence list literals are not in new_pipeline; use index postfix `obj[i]`",
+            "`[...]` finite-sequence list literals are not supported; use index postfix `obj[i]`",
         ));
     }
     if token == FN {

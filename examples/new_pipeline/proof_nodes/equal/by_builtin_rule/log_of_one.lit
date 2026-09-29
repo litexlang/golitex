@@ -1,4 +1,0 @@
-# Node: equal.ByBuiltinRule.LogOfOne
-# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/log_of_one.lit
-
-log(2, 1) = 0

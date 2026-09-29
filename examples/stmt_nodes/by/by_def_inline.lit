@@ -1,0 +1,8 @@
+# Stmt: By.ByDefStmt inline header goal
+# Run: litex -f examples/stmt_nodes/by/by_def_inline.lit
+#
+# When: `by def <fact>` with the goal on the header (no `?` block).
+# After: same as block `by def:` — explicit definition check commits the fact.
+# Example: by def {1} $subset {1}
+
+by def {1} $subset {1}

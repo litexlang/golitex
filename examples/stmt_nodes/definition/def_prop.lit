@@ -1,0 +1,7 @@
+# Stmt: Definition.DefPropStmt → exec_def_prop_stmt
+# Run: litex -f examples/stmt_nodes/definition/def_prop.lit
+
+prop above_zero(x R):
+    x > 0
+
+$above_zero(1)

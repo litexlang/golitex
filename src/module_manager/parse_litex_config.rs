@@ -1,4 +1,4 @@
-//! Parse new_pipeline `litex.config` into `LitexConfig` (data only).
+//! Parse `litex.config` into `LitexConfig` (data only).
 
 use super::litex_config::{LitexConfig, LitexConfigExport, LitexConfigImport};
 use std::collections::HashSet;
@@ -32,7 +32,7 @@ pub fn parse_litex_config(
                 "[hierarchy]" | "[module]" => {
                     return Err(err(
                         line,
-                        "new_pipeline litex.config does not use [hierarchy] or [module]",
+                        "litex.config does not use [hierarchy] or [module]",
                     ));
                 }
                 _ => {

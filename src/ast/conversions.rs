@@ -1,4 +1,4 @@
-//! Enum wrapping conversions for new_pipeline facts.
+//! Enum wrapping conversions for facts.
 //! Prefer `leaf.into()` / `atomic.into()` over `AtomicFact::Variant(leaf)`.
 
 use crate::ast::fact::{

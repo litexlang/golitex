@@ -1,7 +1,8 @@
 # Memorial: legacy Litex kernel
 
-This directory is an **archival copy** of the pre–new-pipeline `src/` tree
-(plus related legacy unit/integration tests).
+This directory is an **archival copy** of the previous `src/` tree
+(plus related legacy unit/integration tests), before the current kernel
+became the sole crate root.
 
 It is **not** part of the Rust crate:
 

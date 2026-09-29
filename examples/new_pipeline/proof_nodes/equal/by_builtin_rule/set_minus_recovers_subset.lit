@@ -1,7 +1,0 @@
-# Node: equal.ByBuiltinRule.SetMinusRecoversSubset
-# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/set_minus_recovers_subset.lit
-
-have A set
-have B set
-trust B $subset A
-B = set_minus(A, set_minus(A, B))

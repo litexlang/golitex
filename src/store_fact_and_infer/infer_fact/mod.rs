@@ -7,7 +7,7 @@
 //! - ExistUnique / NotExist: shape rewrite to uniqueness / De Morgan forall.
 //! - Or / plain Exist / Forall*: intentionally `NoInfer` unless a shape rule applies.
 //!
-//! # Legacy → new_pipeline migration (Builtin Inference) — closed
+//! # Legacy migration (Builtin Inference) — closed
 //!
 //! | Batch | Legacy source | Status |
 //! |---|---|---|

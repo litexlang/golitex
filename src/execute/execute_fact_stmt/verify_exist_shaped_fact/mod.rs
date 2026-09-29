@@ -5,8 +5,10 @@ mod verify_well_defined;
 mod well_defined_result;
 
 pub use result::{
-    VerifyExistShapedFactFailed, VerifyExistShapedFactResult, VerifyExistUniqueFactResult, VerifyExistUniqueFactSuccess,
-    VerifyNotExistFactResult, VerifyPlainExistFactResult, VerifyPlainExistFactSuccess,
+    ExistShapedFactSearchProofByBuiltinRule, ExistShapedFactSearchedProof,
+    VerifyExistShapedFactFailed, VerifyExistShapedFactResult, VerifyExistUniqueFactResult,
+    VerifyExistUniqueFactSuccess, VerifyNotExistFactResult, VerifyPlainExistFactResult,
+    VerifyPlainExistFactSuccess,
 };
 pub use well_defined_result::{
     ExistShapedFactWellDefinedProof, FailToVerifyExistShapedFactWellDefinedResult,

@@ -1,0 +1,5 @@
+# Node: atomic.ByBuiltinRule.NormalAtomic.CoprimeByComputation
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/coprime_by_computation.lit
+
+$coprime(14, 25)
+$coprime(0, 1)

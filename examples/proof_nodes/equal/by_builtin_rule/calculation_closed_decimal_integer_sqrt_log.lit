@@ -1,0 +1,24 @@
+# Node: equal.ByBuiltinRule.Calculation.ClosedDecimal (integer ops + sqrt/log fold)
+# Closed-numeric calculation for `% quot gcd lcm !` (integer domain) and
+# detectable `sqrt` perfect squares / integer-power `log`.
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/calculation_closed_decimal_integer_sqrt_log.lit
+#
+# Before: `3! = 6` already proved via evaluate, but `3!` was not ClosedNumericExpr
+# (no eval / known_closed_numeric_equal index). `sqrt(4)=2` / `log(2,8)=3` had no
+# closed decimal fold (only identity builtins for special shapes).
+# Now: integer-gated IntegerOperator + perfect-square sqrt + integer-power log.
+# Boundary: `2.5 % 1` not closed; `sqrt(2)` / `log(2,3)` do not fold.
+
+3! = 6
+factorial(4) = 24
+(-7) % 3 = 2
+quot(17, 5) = 3
+gcd(54, (-24)) = 6
+lcm(12, (-18)) = 36
+sqrt(4) = 2
+sqrt(0.36) = 0.6
+log(2, 8) = 3
+log(10, 100) = 2
+
+have a N = 3!
+a + 1 = 7

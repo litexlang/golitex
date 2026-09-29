@@ -1,6 +1,0 @@
-# Node: atomic.ByBuiltinRule.EmptySetFromNonempty
-# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/not_equal_empty_from_nonempty.lit
-
-have A set
-trust $is_nonempty_set(A)
-A != {}

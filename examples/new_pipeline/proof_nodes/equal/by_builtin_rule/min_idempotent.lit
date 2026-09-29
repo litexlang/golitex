@@ -1,5 +1,0 @@
-# Node: equal.ByBuiltinRule.MinIdempotent
-# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/min_idempotent.lit
-
-have a R
-min(a, a) = a

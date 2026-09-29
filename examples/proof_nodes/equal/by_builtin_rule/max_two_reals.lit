@@ -1,0 +1,7 @@
+# Node: equal.ByBuiltinRule — binary max on reals
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/max_two_reals.lit
+#
+# When: `max(a, b)` for concrete reals.
+# After: returns the greater argument.
+
+max(7, -2) = 7

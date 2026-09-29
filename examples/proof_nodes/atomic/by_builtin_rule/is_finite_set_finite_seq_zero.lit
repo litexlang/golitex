@@ -1,0 +1,3 @@
+# Node: atomic.ByBuiltinRule.IsFiniteSet.FiniteSeqZeroLength
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/is_finite_set_finite_seq_zero.lit
+$is_finite_set(finite_seq(R, 0))

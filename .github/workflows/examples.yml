@@ -39,7 +39,7 @@ jobs:
             smoke_cli)
               cargo build --release --locked
               ./target/release/litex -e '1 = 1'
-              ./target/release/litex -f examples/new_pipeline/knowledge_base/def_prop/is_pos.lit
+              ./target/release/litex -f examples/knowledge_base/def_prop/is_pos.lit
               ;;
             lib_core)
               cargo test --release --lib knowledge_base:: --locked

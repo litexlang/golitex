@@ -1,0 +1,4 @@
+# Node: atomic.ByBuiltinRule.SubsetFact.StandardSetSubset
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/subset_standard_set.lit
+
+N $subset R

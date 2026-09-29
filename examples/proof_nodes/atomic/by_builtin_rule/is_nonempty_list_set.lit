@@ -1,0 +1,4 @@
+# Node: atomic.ByBuiltinRule.IsNonemptySetFact.ListSet
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/is_nonempty_list_set.lit
+
+$is_nonempty_set({1, 2})

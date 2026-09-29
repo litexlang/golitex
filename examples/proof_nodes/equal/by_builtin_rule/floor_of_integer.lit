@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.FloorOfInteger
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/floor_of_integer.lit
+
+have n Z
+floor(n) = n

@@ -1,0 +1,3 @@
+# Node: equal.ByBuiltinRule.FiniteSeqZeroEqualsFnOnEmpty
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/finite_seq_zero_equals_fn_on_empty.lit
+finite_seq(R, 0) = fn(x {}) R

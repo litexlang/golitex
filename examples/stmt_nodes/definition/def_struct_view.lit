@@ -1,0 +1,14 @@
+# Stmt: Obj.StructObj via `&` parse + light WD
+# Run: litex -f examples/stmt_nodes/definition/def_struct_view.lit
+# Scope: parse `&Name` / `&Name<...>` and StructObj WD only (no `$in &Struct`).
+
+struct Point:
+    x R
+    y R
+
+struct Pair<A set>:
+    left A
+    right A
+
+let point_set = &Point
+let pair_set = &Pair<R>

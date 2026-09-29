@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.PowOfLogInverse
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/pow_of_log_inverse.lit
+
+have x N
+2^(log(2, 2^x)) = 2^x

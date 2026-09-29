@@ -1,0 +1,8 @@
+# Node: atomic.ByBuiltinRule.LessEqual.ProductOfNonnegatives
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_equal_product_of_nonnegatives.lit
+
+have a R
+have b R
+trust 0 <= a
+trust 0 <= b
+0 <= a * b

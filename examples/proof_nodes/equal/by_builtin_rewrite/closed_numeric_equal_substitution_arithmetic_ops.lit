@@ -1,0 +1,12 @@
+# Node: equal.ByBuiltinRewrite.ClosedNumericEqualSubstitution (arithmetic ops)
+# Store / rewrite when the closed representative uses abs / min / max / floor / sign.
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rewrite/closed_numeric_equal_substitution_arithmetic_ops.lit
+
+have a R = abs(-3)
+a = 3
+
+have b R = min(1, 2)
+b + 1 = 2
+
+have c R = max(floor(2.5), sign(-1))
+c = 2

@@ -1,4 +1,0 @@
-# Node: equal.ByBuiltinRule.ImgOfRealPlusI
-# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/img_of_real_plus_i.lit
-
-img(1 + i) = 1

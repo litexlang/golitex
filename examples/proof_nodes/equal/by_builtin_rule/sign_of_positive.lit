@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.SignOfPositive
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/sign_of_positive.lit
+
+have a R+
+sign(a) = 1

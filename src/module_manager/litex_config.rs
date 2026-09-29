@@ -1,4 +1,4 @@
-//! Parsed `litex.config` for new_pipeline (import / export only).
+//! Parsed `litex.config` (import / export only).
 
 use std::path::PathBuf;
 

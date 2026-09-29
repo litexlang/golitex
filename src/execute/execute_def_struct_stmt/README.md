@@ -17,7 +17,7 @@ module’s own comments point at them.
 6. Soft-fail variants: `ParamType`, `AutoOpenStructLayer`, `StructureDomain`,
    `FieldType`, `EquivalentFact`.
 
-Parse (not this module): `new_pipeline` requires **at least two fields**;
+Parse (not this module): requires **at least two fields**;
 0 or 1 field is a parse error. Release has no one-field identity-view path.
 
 ## Not implemented here / deferred by design of this module

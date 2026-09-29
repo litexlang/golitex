@@ -1,0 +1,6 @@
+# Node: equal.ByBuiltinRule.LogProduct
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/log_product.lit
+
+have x R+
+have y R+
+log(2, x * y) = log(2, x) + log(2, y)

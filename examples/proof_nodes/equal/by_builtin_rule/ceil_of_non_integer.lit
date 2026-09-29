@@ -1,0 +1,8 @@
+# Node: equal.ByBuiltinRule — ceil of a non-integer real
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/ceil_of_non_integer.lit
+#
+# When: `ceil` on a non-integer decimal.
+# After: folds to the expected integer. Distinct from ceil_of_integer.
+
+ceil(3.25) = 4
+ceil(-3.25) = -3

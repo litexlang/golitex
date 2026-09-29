@@ -14,7 +14,7 @@ methods at the same time.
 The foundational correspondence is intentional:
 
 ```text
-The new pipeline owns its runtime IDs in `runtime::runtime_ids`.
+Runtime IDs live in `runtime::runtime_ids`.
 `runtime::runtime_ids::FactId` is intentionally independent from the legacy
 `fact::id::FactId`; compatibility, if needed later, must be explicit.
 Verifier result types mostly mirror Fact shape; atomic facts flatten to

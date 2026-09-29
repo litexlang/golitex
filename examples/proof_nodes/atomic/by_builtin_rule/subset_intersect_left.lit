@@ -1,0 +1,5 @@
+# Node: atomic.ByBuiltinRule.SubsetFact.IntersectSubsetLeft
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/subset_intersect_left.lit
+
+have A set, B set
+intersect(A, B) $subset A

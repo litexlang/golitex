@@ -1,4 +1,4 @@
-//! Structural substitution (instantiation) for `Obj` and `Fact` in new_pipeline.
+//! Structural substitution (instantiation) for `Obj` and `Fact`.
 //!
 //! ## Why these are `Runtime` methods
 //!

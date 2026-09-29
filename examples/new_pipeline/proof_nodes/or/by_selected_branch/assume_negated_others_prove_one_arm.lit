@@ -1,8 +1,0 @@
-# Node: or.BySelectedBranch
-# Struct: OrFactSearchProofBySelectedBranch
-# Run: litex -f examples/new_pipeline/proof_nodes/or/by_selected_branch/assume_negated_others_prove_one_arm.lit
-#
-# Assume not of the other arm(s), prove one arm.
-# Example: prove 1 = 1 under local assumption not (1 = 2).
-
-1 = 1 or 1 = 2

@@ -1,0 +1,4 @@
+# Fact WD: Exist binder — param type + body under local env
+# Run: litex -f examples/wd/fact/exist.lit
+
+exist x R st {x > 0}

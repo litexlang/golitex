@@ -20,6 +20,6 @@ pub use search_atomic_except_equality_fact_proof_by_known_rewrite::AtomicExceptE
 pub use result::{
     AtomicExceptEqualityFactSearchProofByDefinition,
     AtomicExceptEqualityFactSearchProofByKnownAtomicFact, AtomicExceptEqualityFactSearchedProof,
-    SearchProofByKnownStrategy, VerifyAtomicExceptEqualityFactFailed,
-    VerifyAtomicExceptEqualityFactResult,
+    BuiltinPropDefinitionProof, SearchProofByKnownStrategy, UserDefinedPropDefinitionProof,
+    VerifyAtomicExceptEqualityFactFailed, VerifyAtomicExceptEqualityFactResult,
 };

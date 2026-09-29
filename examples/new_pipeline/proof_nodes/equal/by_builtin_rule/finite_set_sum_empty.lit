@@ -1,4 +1,0 @@
-# Node: equal.ByBuiltinRule.FiniteSetSumEmpty
-# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/finite_set_sum_empty.lit
-
-finite_set_sum({}, fn(x Z) Z {x}) = 0

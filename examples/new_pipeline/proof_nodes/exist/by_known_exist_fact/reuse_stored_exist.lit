@@ -1,5 +1,0 @@
-# Node: exist.ByKnownExistFact
-# Run: litex -f examples/new_pipeline/proof_nodes/exist/by_known_exist_fact/reuse_stored_exist.lit
-
-exist x R st {x = 1}
-exist x R st {x = 1}

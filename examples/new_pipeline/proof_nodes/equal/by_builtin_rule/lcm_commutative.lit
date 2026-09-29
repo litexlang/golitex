@@ -1,6 +1,0 @@
-# Node: equal.ByBuiltinRule.LcmCommutative
-# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/lcm_commutative.lit
-
-have a Z
-have b Z
-lcm(a, b) = lcm(b, a)

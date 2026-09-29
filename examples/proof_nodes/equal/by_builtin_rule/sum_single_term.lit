@@ -1,0 +1,4 @@
+# Node: equal.ByBuiltinRule.SumSingleTerm
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/sum_single_term.lit
+
+sum(3, 3, fn(x Z) Z {x}) = 3

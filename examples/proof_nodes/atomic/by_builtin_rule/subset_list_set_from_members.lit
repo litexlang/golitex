@@ -1,0 +1,4 @@
+# Node: atomic.ByBuiltinRule.SubsetFact.ListSetSubsetFromMembers
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/subset_list_set_from_members.lit
+
+{1, 2} $subset N

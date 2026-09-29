@@ -1,0 +1,6 @@
+# knowledge_base / stored_identifier: let a = 1
+# Run: litex -f examples/knowledge_base/stored_identifier/let_a.lit
+# Stored: let_a.stored_identifier.json
+
+let a = 1
+a = 1

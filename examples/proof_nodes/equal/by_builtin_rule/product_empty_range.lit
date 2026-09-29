@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.ProductEmptyRange
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/product_empty_range.lit
+
+trust 0 < 1
+product(1, 0, fn(x Z) Z {x}) = 1

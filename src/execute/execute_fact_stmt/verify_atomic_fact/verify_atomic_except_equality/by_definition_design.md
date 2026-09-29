@@ -1,6 +1,6 @@
 # ByDefinition: builtin prop vs user `prop`
 
-Status: **current** (new_pipeline preview).
+Status: **current** (preview).
 
 Canonical note for ambient / `by def` definition expansion of positive atomic
 predicates.
@@ -13,7 +13,7 @@ predicates.
 | Builtin expanders | `builtin_prop_definition.rs` |
 | Result types | `result.rs` (`AtomicExceptEqualityFactSearchProofByDefinition`, `BuiltinPropDefinitionProof`) |
 | Manual preview | `docs/Manual.md` (`by def` / ByDefinition) |
-| Proof-node tracers | `examples/new_pipeline/proof_nodes/atomic/by_definition/` |
+| Proof-node tracers | `examples/proof_nodes/atomic/by_definition/` |
 | Unit gate | `src/execute/exec_stmt_transaction_tests.rs` (`builtin_prop_by_definition_*`) |
 
 ## Decision
@@ -51,7 +51,7 @@ Each struct carries `requirement_facts` and `proof_of_requirement_facts`.
 | `$coprime(a, b)` | `(a != 0 or b != 0)` and `gcd(a, b) = 1` |
 | `$dvd(x, y)` | `x % y = 0` and `exist a Z: x = a * y` |
 
-On new_pipeline, `$proper_*` is **prefix** `$proper_subset(A, B)` (not infix).
+`$proper_*` is **prefix** `$proper_subset(A, B)` (not infix).
 
 ## Explicit non-goals
 
@@ -67,7 +67,7 @@ not a missing singleton-lifting patch on the forall route.
 
 `by def` only rechecks definition obligations. Soft miss is correct when those
 obligations are not yet proved. Do not fake them with `trust` inside
-`examples/new_pipeline/proof_nodes/` tracers.
+`examples/proof_nodes/` tracers.
 
 ## Acceptance
 

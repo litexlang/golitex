@@ -1,3 +1,0 @@
-# Node: equal.ByBuiltinRule.CotOfHalfPi
-# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/cot_of_half_pi.lit
-cot(pi / 2) = 0

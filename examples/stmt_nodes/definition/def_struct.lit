@@ -1,0 +1,13 @@
+# Stmt: Definition.DefStructStmt → exec_def_struct_stmt
+# Run: litex -f examples/stmt_nodes/definition/def_struct.lit
+# Scope: definition WD + store only (no `&Struct` / release struct def / membership).
+
+struct Point:
+    x R
+    y R
+    <=>:
+        x = x
+
+struct Pair<A set>:
+    left A
+    right A

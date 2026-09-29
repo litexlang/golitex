@@ -14,7 +14,7 @@ use std::collections::HashMap;
 // Core data model
 // -----------------------------------------------------------------------------
 
-/// Process-wide owner of new_pipeline execution and parse state.
+/// Process-wide owner of execution and parse state.
 ///
 /// Like `ExecEnv`, this is core data model: it owns the live stacks, current
 /// file, global id counters, and global module manager.  A single `Runtime` drives

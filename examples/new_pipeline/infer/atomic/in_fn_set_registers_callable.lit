@@ -1,8 +1,0 @@
-# Infer / store: InFact FnSet → InFunctionSet registration
-# When: store `f $in fn(...)`.
-# Effect: `f(a)` becomes well-defined / usable.
-# Run: litex -f examples/new_pipeline/infer/atomic/in_fn_set_registers_callable.lit
-
-have f fn(x R) R
-have a R = 1
-f(a) $in R
