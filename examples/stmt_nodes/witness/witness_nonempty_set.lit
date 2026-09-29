@@ -1,8 +1,11 @@
 # Stmt: Witness.WitnessNonemptySet → exec_witness_stmt / exec_witness_nonempty_set
 # Run: litex -f examples/stmt_nodes/witness/witness_nonempty_set.lit
 #
-# Prove `$is_nonempty_set(S)` by a concrete member. No indented proof body;
-# membership must already hold (list-set membership is builtin).
+# Prove `$is_nonempty_set(S)` by a concrete member. Flat or with local proof body.
 
 witness $is_nonempty_set({1, 2}) from 1
 $is_nonempty_set({1, 2})
+
+witness $is_nonempty_set({3, 4}) from 3:
+    3 $in {3, 4}
+$is_nonempty_set({3, 4})

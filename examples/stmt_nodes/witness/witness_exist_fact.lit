@@ -1,7 +1,13 @@
 # Stmt: Witness.WitnessExistFact → exec_witness_stmt / exec_witness_exist_fact
 # Run: litex -f examples/stmt_nodes/witness/witness_exist_fact.lit
 #
-# Witness exist has no indented proof body; obligations must
-# already hold (here `0 = 0` is builtin).
+# Flat form: empty proof body; obligations must already hold ambiently
+# (here `0 = 0` is builtin).
 
 witness exist x R st {x = 0} from 0
+
+# With local proof body: prove substituted obligations inside the witness.
+
+witness exist u R st {0 < u, u < 1} from 1 / 2:
+    0 < 1 / 2
+    1 / 2 < 1

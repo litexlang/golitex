@@ -2960,9 +2960,9 @@ introductions.
 | `release thm` | Arity/domains/premises; the form is bare and has no goal/proof body. Plain or `mod::export::`-qualified theorem name (preview). | All instantiated conclusions and their ordinary inferred consequences. |
 | `by thm ... => fact` | Arity/domains/premises and one selected atomic target. Same qualified-name lookup as `release thm` (preview). | Only the requested atomic selection and its ordinary inferred consequences. |
 | `strategy` | The statement proves its `? forall` goal (preview: fact-only body; no stricter atomic-shape gate yet). | A named strategy definition; later non-equality atomics may apply it via `known_strategy` (`ByKnownStrategy`), not ambient known_forall. |
-| `witness exist/exist!` | Witness count/types/body; `exist!` additionally verifies the generated two-candidate uniqueness universal. | The exact existential fact. Binder names stay local. |
-| `witness $P(args)` | The concrete prop has one positive ordinary `exist` clause; ordinary witness checks run after substitution. `exist!` uses explicit `witness exist! ...` followed by `by def`. | `$P(args)` as the primary fact, then definition inference. |
-| `witness $is_nonempty_set(S)` | The proposed object is in `S`. | Nonemptiness of `S`. |
+| `witness exist/exist!` | Witness count/types/body (optional local proof body first); `exist!` additionally verifies the generated two-candidate uniqueness universal. | The exact existential fact. Binder names and helpers stay local. |
+| `witness $P(args)` | The concrete prop has one positive ordinary `exist` clause; ordinary witness checks run after substitution (optional local proof body). `exist!` uses explicit `witness exist! ...` followed by `by def`. | `$P(args)` as the primary fact, then definition inference. |
+| `witness $is_nonempty_set(S)` | The proposed object is in `S` (optional local proof body). | Nonemptiness of `S`. |
 | `by cases`, `by contra` | Every branch closes the target, or an explicit contradiction is produced. | The requested target only. |
 | Enumeration, induction, `by for`, `by extension`, `by fn_extension` | The target has the exact finite/range/discrete/extensional shape and every generated subgoal closes. Preview: `by fn_extension` proves `f = g` from pointwise equality on alpha-equivalent FnSet carriers. | The requested universal/equality/atomic target. |
 | `by def` | One positive concrete/builtin definitional target and every defining clause. Preview: qualified `$Mod::export::P` looks up the prop in a finished export Env. | The target with explicit definition provenance. |
@@ -3286,19 +3286,21 @@ This is an `error` because an abstract predicate has no definition to unfold.
 ### Witnesses, `obtain`, and preimages
 
 > **Preview:** `witness exist` / `exist!` / `$P(args)` /
-> `$is_nonempty_set(S)` are wired at top level. None of these forms has an
-> indented proof body or a local binder scope — prove type, body, membership,
-> and (for `exist!`) uniqueness obligations in the ambient environment first,
-> then submit witnesses in one line. `exist!` verifies the generated
-> two-candidate uniqueness forall via the same builder as `obtain` from
-> `exist!`. `witness $P` requires a concrete prop whose sole clause is
-> ordinary `exist` (reject `exist!` / `not exist` / multi-clause /
-> `abstract_prop`); after witness checks it stores `$P` (definition inference
-> may expose the exist). Nonemptiness stores `$is_nonempty_set(S)` after
-> verifying `o $in S` — there is **no** FnSet/codomain shortcut. `obtain … from
-> exist` / `exist!` / `$P` is also wired at top level and as a
-> `template` body. Prefer the ambient-proof-then-one-line witness style above;
-> older indented `:` proof blocks on these forms are not current.
+> `$is_nonempty_set(S)` are wired at top level. Each form may be a flat one-line
+> header, or end with `:` and an indented local proof body (full Stmt list,
+> claim-style). Ambient WD of the exist / witnesses runs first; the proof body
+> then runs in a local env; type, substituted body, membership, and (for
+> `exist!`) uniqueness obligations are verified in that same local after the
+> proof steps. Helpers stay in the discarded local env; only the target fact
+> is stored. `exist!` verifies the generated two-candidate uniqueness forall
+> via the same builder as `obtain` from `exist!`. `witness $P` requires a
+> concrete prop whose sole clause is ordinary `exist` (reject `exist!` /
+> `not exist` / multi-clause / `abstract_prop`); after witness checks it stores
+> `$P` (definition inference may expose the exist). Nonemptiness stores
+> `$is_nonempty_set(S)` after verifying `o $in S` — there is **no**
+> FnSet/codomain shortcut. `obtain … from exist` / `exist!` / `$P` is also
+> wired at top level and as a `template` body (still no indented body on
+> `obtain`).
 
 
 Use `witness` to prove an existential or nonempty-set goal. Use `obtain` to

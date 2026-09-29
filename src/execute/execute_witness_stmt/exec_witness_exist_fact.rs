@@ -1,11 +1,13 @@
-//! Pipeline: count → exist WD → witness WD → type checks → body checks → [exist!] → store.
+//! Pipeline: count → exist WD → witness WD → local(proof → type → body → [exist!]) → store.
 //!
-//! No local binder env and no proof body. Body facts are verified after substituting
-//! binders with witness objects; earlier body successes are not stored for later ones.
-//! Example:
-//!   0 $in R
-//!   0 = 0
+//! Optional indented proof body runs in a local env (full Stmt, claim-style).
+//! Substituted body obligations are verified after the proof steps in that same local.
+//! Example (flat):
 //!   witness exist x R st {x = 0} from 0
+//! Example (with body):
+//!   witness exist u R st {0 < u, u < 1} from 1 / 2:
+//!       0 < 1 / 2
+//!       1 / 2 < 1
 
 use std::collections::HashMap;
 
@@ -14,12 +16,14 @@ use crate::ast::fact::{
 };
 use crate::ast::obj::Obj;
 use crate::ast::param::ParamType;
-use crate::ast::stmt::{WitnessExistFact, WitnessStmt};
-use crate::execute::exec_stmt_result::ParamTypeFactCheckResult;
+use crate::ast::stmt::{Stmt, WitnessExistFact, WitnessStmt};
+use crate::exec_env::exec_env::ExecEnv;
+use crate::execute::exec_stmt_result::{ExecStmtResult, ParamTypeFactCheckResult};
 use crate::execute::execute_fact_stmt::{
     FactWellDefinedProof, FailToVerifyFactWellDefinedResult, VerifyFactResult,
     VerifyFactWellDefinedResult, VerifyObjWellDefinedResult, VerifyState,
 };
+use crate::execute::execute_proof_block_stmt::{run_proof_body_stmts, ProofBlockBodyFailed};
 use crate::instantiate::quantifier_free_fact_to_fact;
 use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
 use crate::store_fact_and_infer::StoreFactAndInferResult;
@@ -58,25 +62,33 @@ pub enum ExecWitnessExistFactStmtFailed {
     WitnessCountMismatch,
     ExistFactWellDefined(FailToVerifyFactWellDefinedResult),
     WitnessObjWellDefined(VerifyObjWellDefinedResult),
+    ProofBody(ProofBlockBodyFailed),
     WitnessType(VerifyFactResult),
     BodyCheck(VerifyFactResult),
     BodyInstantiate,
     Uniqueness(VerifyFactResult),
 }
 
-// Check stages only (no store). Shared by `witness exist` and `witness $P`.
-pub struct WitnessExistCheckSuccess {
+// Ambient WD stages before the local proof scope (shared by exist / `$P`).
+pub struct WitnessExistAmbientSuccess {
     pub exist_fact_well_defined: FactWellDefinedProof,
     pub witness_obj_well_defined: Vec<VerifyObjWellDefinedResult>,
+}
+
+// Obligation stages after proof_steps inside the local env.
+pub struct WitnessExistObligationSuccess {
     pub witness_type_checks: Vec<ParamTypeFactCheckResult>,
     pub body_checks: Vec<VerifyFactResult>,
     pub uniqueness_check: Option<VerifyFactResult>,
 }
 
-// field order = stage order
+// Stage order: ambient → proof_steps → obligations → local_env → store.
 pub struct ExecWitnessExistFactStmtSuccessResult {
     pub statement: WitnessExistFact,
-    pub exist_check: WitnessExistCheckSuccess,
+    pub ambient: WitnessExistAmbientSuccess,
+    pub proof_steps: Vec<ExecStmtResult>,
+    pub obligations: WitnessExistObligationSuccess,
+    pub local_env: Box<ExecEnv>,
     pub store_and_infer_result: StoreFactAndInferResult,
 }
 
@@ -101,22 +113,26 @@ impl Runtime {
     }
 
     // Mathematical contract: concrete witnesses satisfy param types and the
-    // substituted exist body; then the exist fact is stored. No binder scope.
+    // substituted exist body (after optional local proof); then store the exist.
     pub(in crate::execute) fn exec_witness_exist_fact(
         &mut self,
         stmt: &WitnessExistFact,
     ) -> RuntimeResult<ExecWitnessExistFactStmtResult> {
-        match self.check_witness_exist_obligations(
+        match self.run_witness_exist_with_proof(
             &stmt.exist_shaped_fact_in_witness,
             &stmt.equal_tos,
+            &stmt.proof,
         )? {
-            Ok(exist_check) => {
+            Ok((ambient, proof_steps, obligations, local_env)) => {
                 let exist_as_fact = exist_shaped_fact_to_fact(&stmt.exist_shaped_fact_in_witness);
                 let store_and_infer_result = self.store_fact_and_infer(&exist_as_fact)?;
                 Ok(ExecWitnessExistFactStmtResult::Success(
                     ExecWitnessExistFactStmtSuccessResult {
                         statement: stmt.clone(),
-                        exist_check,
+                        ambient,
+                        proof_steps,
+                        obligations,
+                        local_env,
                         store_and_infer_result,
                     },
                 ))
@@ -125,12 +141,23 @@ impl Runtime {
         }
     }
 
-    // Same WD / type / body / uniqueness checks as `witness exist`, without storing.
-    pub(in crate::execute) fn check_witness_exist_obligations(
+    // Shared by `witness exist` and `witness $P`: ambient WD, then local proof + obligations.
+    pub(in crate::execute) fn run_witness_exist_with_proof(
         &mut self,
         exist_fact: &ExistShapedFact,
         equal_tos: &[Obj],
-    ) -> RuntimeResult<Result<WitnessExistCheckSuccess, ExecWitnessExistFactStmtFailed>> {
+        proof: &[Stmt],
+    ) -> RuntimeResult<
+        Result<
+            (
+                WitnessExistAmbientSuccess,
+                Vec<ExecStmtResult>,
+                WitnessExistObligationSuccess,
+                Box<ExecEnv>,
+            ),
+            ExecWitnessExistFactStmtFailed,
+        >,
+    > {
         let verify_state = VerifyState {
             can_use_forall_fact: true,
             can_use_rewrite: true,
@@ -156,6 +183,45 @@ impl Runtime {
             return Ok(Err(ExecWitnessExistFactStmtFailed::WitnessCountMismatch));
         }
 
+        let ambient = match self.check_witness_exist_ambient(exist_fact, equal_tos, verify_state.clone())?
+        {
+            Ok(a) => a,
+            Err(failed) => return Ok(Err(failed)),
+        };
+
+        let need_uniqueness = matches!(exist_fact, ExistShapedFact::ExistUnique(_));
+        let (local_outcome, local_env) = self.run_in_local_env_and_take_env(|rt| {
+            let proof_steps = match run_proof_body_stmts(rt, proof)? {
+                Ok(steps) => steps,
+                Err(failed) => {
+                    return Ok(Err(ExecWitnessExistFactStmtFailed::ProofBody(failed)));
+                }
+            };
+            match rt.check_witness_exist_obligations_after_proof(
+                plain,
+                equal_tos,
+                need_uniqueness,
+                verify_state.clone(),
+            )? {
+                Ok(obligations) => Ok(Ok((proof_steps, obligations))),
+                Err(failed) => Ok(Err(failed)),
+            }
+        })?;
+
+        match local_outcome {
+            Ok((proof_steps, obligations)) => {
+                Ok(Ok((ambient, proof_steps, obligations, local_env)))
+            }
+            Err(failed) => Ok(Err(failed)),
+        }
+    }
+
+    fn check_witness_exist_ambient(
+        &mut self,
+        exist_fact: &ExistShapedFact,
+        equal_tos: &[Obj],
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Result<WitnessExistAmbientSuccess, ExecWitnessExistFactStmtFailed>> {
         let exist_fact_well_defined =
             match self.wrap_exist_fact_wd(exist_fact, verify_state.clone())? {
                 VerifyFactWellDefinedResult::Success(proof) => proof,
@@ -177,23 +243,32 @@ impl Runtime {
             witness_obj_well_defined.push(wd);
         }
 
+        Ok(Ok(WitnessExistAmbientSuccess {
+            exist_fact_well_defined,
+            witness_obj_well_defined,
+        }))
+    }
+
+    fn check_witness_exist_obligations_after_proof(
+        &mut self,
+        plain: &PlainExistFact,
+        equal_tos: &[Obj],
+        need_uniqueness: bool,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Result<WitnessExistObligationSuccess, ExecWitnessExistFactStmtFailed>> {
         let witness_type_checks =
             match self.verify_witness_param_type_checks(plain, equal_tos, verify_state.clone())? {
                 Ok(checks) => checks,
-                Err(failed) => {
-                    return Ok(Err(failed));
-                }
+                Err(failed) => return Ok(Err(failed)),
             };
 
         let body_checks =
             match self.verify_witness_body_checks(plain, equal_tos, verify_state.clone())? {
                 Ok(checks) => checks,
-                Err(failed) => {
-                    return Ok(Err(failed));
-                }
+                Err(failed) => return Ok(Err(failed)),
             };
 
-        let uniqueness_check = if matches!(exist_fact, ExistShapedFact::ExistUnique(_)) {
+        let uniqueness_check = if need_uniqueness {
             let uniqueness = self.build_exist_unique_uniqueness_forall_fact(plain)?;
             let uniqueness_as_fact = Fact::ForallFact(uniqueness);
             let verify_result = self.verify_fact(&uniqueness_as_fact, verify_state)?;
@@ -207,9 +282,7 @@ impl Runtime {
             None
         };
 
-        Ok(Ok(WitnessExistCheckSuccess {
-            exist_fact_well_defined,
-            witness_obj_well_defined,
+        Ok(Ok(WitnessExistObligationSuccess {
             witness_type_checks,
             body_checks,
             uniqueness_check,

@@ -1,9 +1,7 @@
-have a R
-have b R
-trust a != b
-b != a
+# Witness with local proof body
 
-forall x set, y set:
-    x != y
-    =>:
-        y != x
+witness exist u R st {0 < u, u < 1} from 1 / 2:
+    0 < 1 / 2
+    1 / 2 < 1
+
+exist u R st {0 < u, u < 1}
