@@ -1,3 +1,0 @@
-have fn f(n N) R by induc n from 0:
-    case n = 0: 1
-    case n > 0: f(n - 1)
