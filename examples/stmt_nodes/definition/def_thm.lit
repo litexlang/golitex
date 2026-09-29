@@ -1,0 +1,5 @@
+# Stmt: Definition.DefThmStmt → exec_def_thm_stmt
+# Run: litex -f examples/stmt_nodes/definition/def_thm.lit
+
+thm one_is_one:
+    ? 1 = 1

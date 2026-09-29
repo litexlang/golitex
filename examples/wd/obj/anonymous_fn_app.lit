@@ -1,0 +1,5 @@
+# Obj WD: AnonymousFnLiteral application uses the literal's own FnSet
+# (param membership + instantiated dom_facts).
+# Run: litex -f examples/wd/obj/anonymous_fn_app.lit
+
+let y = fn(x R: x > 0) R {x}(1)

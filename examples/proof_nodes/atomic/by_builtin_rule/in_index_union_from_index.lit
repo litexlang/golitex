@@ -1,0 +1,7 @@
+# Node: atomic.ByBuiltinRule.InFact.IndexUnionMembershipFromIndex
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/in_index_union_from_index.lit
+
+have fn A(k {1}) power_set(N) = {1}
+1 $in {1}
+1 $in A(1)
+1 $in index_union({1}, N, A)

@@ -1,0 +1,8 @@
+# Node: atomic.ByDefinition.BuiltinProp.Injective
+# Run: litex -f examples/proof_nodes/atomic/by_definition/builtin_injective.lit
+#
+# Obligation: forall x1, x2 {1}: id1(x1) = id1(x2) => x1 = x2
+# Singleton identity closes ambiently (no trust).
+
+have fn id1(x {1}) {1} = x
+by def $injective({1}, {1}, id1)

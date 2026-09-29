@@ -1,6 +1,0 @@
-# Stmt: ReleaseAndExpand.ExpandRangeStmt → exec_expand_range_stmt (closed_range / a...b)
-# Run: litex -f examples/new_pipeline/stmt_nodes/release_and_expand/expand_closed_range.lit
-
-have z Z
-trust z $in 1...2
-expand: z $in 1...2

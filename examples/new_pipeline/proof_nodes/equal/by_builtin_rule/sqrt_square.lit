@@ -1,5 +1,0 @@
-# Node: equal.ByBuiltinRule.SqrtSquare
-# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/sqrt_square.lit
-
-have x R+
-(sqrt(x))^2 = x

@@ -1,4 +1,4 @@
-//! new_pipeline module world: global mounts, litex.config shapes, export envs.
+//! Module world: global mounts, litex.config shapes, export envs.
 //!
 //! Design contract: [`README.md`](README.md).
 

@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.IntersectIdempotent
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/intersect_idempotent.lit
+
+have A set
+intersect(A, A) = A

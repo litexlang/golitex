@@ -1,4 +1,4 @@
-//! Where the currently running code came from (new_pipeline live session).
+//! Where the currently running code came from (live session).
 
 /// Live provenance of the code being parsed/executed.
 ///

@@ -1,0 +1,8 @@
+# Node: atomic.ByDefinition — proper subset / proper superset
+# Run: litex -f examples/proof_nodes/atomic/by_definition/proper_subset.lit
+#
+# When: goal is `A $proper_subset B` (or proper_superset) for concrete sets.
+# After: by-def expands to subset + inequality.
+
+by def {0} $proper_subset {0, 1}
+by def {0, 1} $proper_superset {0}

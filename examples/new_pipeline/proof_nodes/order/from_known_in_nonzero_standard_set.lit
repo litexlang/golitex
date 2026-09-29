@@ -1,7 +1,0 @@
-# Builtin: NotEqualFact.FromKnownInNonzeroStandardSet
-# When: known `a $in R*` / `Q*` / `Z*` / `C*`.
-# Proves: `a != 0` at verify time (no eager infer).
-# Run: litex -f examples/new_pipeline/proof_nodes/order/from_known_in_nonzero_standard_set.lit
-
-have a R*
-a != 0

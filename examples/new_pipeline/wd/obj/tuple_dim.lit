@@ -1,4 +1,0 @@
-# Obj WD: tuple_dim(t) requires $is_tuple(t)
-# Run: litex -f examples/new_pipeline/wd/obj/tuple_dim.lit
-
-let d = tuple_dim((1, 2))

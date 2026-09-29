@@ -1,0 +1,4 @@
+# Node: atomic.ByBuiltinRule.LessEqual.FiniteSetSizeNonnegativeLe
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_equal_finite_set_size_nonnegative.lit
+
+0 <= finite_set_size({1, 2})

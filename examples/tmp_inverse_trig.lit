@@ -1,4 +1,4 @@
-# Inverse trig acceptance probes (new_pipeline).
+# Inverse trig acceptance probes.
 # Run: target/release/litex -f examples/tmp_inverse_trig.lit
 
 arcsin(0) = 0

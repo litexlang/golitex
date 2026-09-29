@@ -1,7 +1,7 @@
 //! Stage A remainder order-builtin gates.
 //!
 //! Mirrors the one-lit-per-rule tracers under
-//! `examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/` for:
+//! `examples/proof_nodes/atomic/by_builtin_rule/` for:
 //! neg-divisor flip, div↔product bridges, numeric bound chase, integer
 //! successor/adjacency/predecessor, positive even `1 < i`, finite-set max/min
 //! member bounds, union card, and surjection card.

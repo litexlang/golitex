@@ -1,0 +1,6 @@
+# Node: equal.ByBuiltinRule.FiniteSetSumListExpansion
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/finite_set_sum_list_expansion.lit
+
+# Narrow trust: current equality WD for finite_set_sum needs a numeric carrier.
+trust finite_set_sum({1, 2}, fn(x Z) Z {x}) $in Z
+finite_set_sum({1, 2}, fn(x Z) Z {x}) = 1 + 2

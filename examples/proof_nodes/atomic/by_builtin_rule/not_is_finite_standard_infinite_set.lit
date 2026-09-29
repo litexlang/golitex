@@ -1,0 +1,4 @@
+# Node: atomic.ByBuiltinRule.NotIsFiniteSetFact.StandardInfiniteSet
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/not_is_finite_standard_infinite_set.lit
+
+not $is_finite_set(N)

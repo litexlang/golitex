@@ -1,4 +1,0 @@
-# Obj WD: finite_set_size requires $is_finite_set
-# Run: litex -f examples/new_pipeline/wd/obj/finite_set_size.lit
-
-let n = finite_set_size({1, 2})

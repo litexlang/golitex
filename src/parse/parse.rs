@@ -9,7 +9,7 @@ use crate::runtime::{Runtime, RuntimeParseError, RuntimeResult};
 use crate::tokenize::TokenBlock;
 
 impl Runtime {
-    /// Parse token blocks into new-pipeline statements.
+    /// Parse token blocks into statements.
     pub fn parse(&mut self, token_blocks: &[TokenBlock]) -> RuntimeResult<Vec<Stmt>> {
         let mut stmts = Vec::new();
         for block in token_blocks {
@@ -55,7 +55,7 @@ impl Runtime {
             STRUCT => self.parse_def_struct_stmt(block),
             TEMPLATE => self.parse_def_template_stmt(block),
             "setting" => Err(RuntimeParseError::new(
-                "`setting` is not supported in new_pipeline",
+                "`setting` is not supported",
                 block.line,
                 block.source_path.clone(),
             )

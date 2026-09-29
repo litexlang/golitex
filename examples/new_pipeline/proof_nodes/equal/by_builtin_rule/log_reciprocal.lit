@@ -1,8 +1,0 @@
-# Node: equal.ByBuiltinRule.LogReciprocal
-# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/log_reciprocal.lit
-# trust: WD of 1/x in R+ until reciprocal WD is stronger.
-
-have x R+
-trust x != 0
-trust 1 / x $in R+
-log(2, 1 / x) = 0 - log(2, x)

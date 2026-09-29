@@ -1,0 +1,4 @@
+# Node: atomic.ByDefinition.BuiltinProp.Superset
+# Run: litex -f examples/proof_nodes/atomic/by_definition/builtin_superset.lit
+
+by def R $superset N

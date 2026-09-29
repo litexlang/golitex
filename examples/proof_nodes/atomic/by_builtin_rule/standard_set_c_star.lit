@@ -1,0 +1,14 @@
+# Node: atomic — C* nonzero complex carrier
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/standard_set_c_star.lit
+#
+# When: `have z C*` / membership facts about C*.
+# After: C* members are in C and nonzero; 0 is not in C*.
+
+have z C*
+z $in C
+z != 0
+i $in C*
+1 $in C*
+not 0 $in C*
+R* $subset C*
+C* $subset C

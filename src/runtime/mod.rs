@@ -1,4 +1,4 @@
-//! Runtime core data model and identity types for the new pipeline.
+//! Runtime core data model and identity types.
 //!
 //! `Runtime` is process-wide session state (stacks, ids, modules).  Per-scope
 //! stores live in `ExecEnv` on `execution_environments_stack`.

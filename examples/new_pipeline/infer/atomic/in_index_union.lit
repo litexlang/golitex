@@ -1,9 +1,0 @@
-# Infer: InFact.IndexUnion
-# When: store `x $in index_union(I, X, A)`.
-# Infers: ambient `x $in X` (and an exist fiber; checked via ambient here).
-# Run: litex -f examples/new_pipeline/infer/atomic/in_index_union.lit
-
-have fn A(k {1}) power_set(N) = {1}
-have x set
-trust x $in index_union({1}, N, A)
-x $in N

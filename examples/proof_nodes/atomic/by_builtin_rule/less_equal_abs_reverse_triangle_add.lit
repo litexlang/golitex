@@ -1,0 +1,6 @@
+# Node: atomic.ByBuiltinRule.LessEqualFact.AbsReverseTriangleAdd
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_equal_abs_reverse_triangle_add.lit
+
+have x R
+have y R
+abs(x) - abs(y) <= abs(x + y)

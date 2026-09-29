@@ -1,4 +1,0 @@
-# Node: atomic.ByBuiltinRule.IsSetFact.AlwaysTrue
-# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/is_set_always_true.lit
-
-$is_set(R)

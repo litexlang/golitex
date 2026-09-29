@@ -1,0 +1,7 @@
+# Node: atomic.ByBuiltinRule.LessEqual.ModRemainderNonnegative
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_equal_mod_remainder_nonnegative.lit
+
+have a Z
+have b N+
+trust b != 0
+0 <= a % b

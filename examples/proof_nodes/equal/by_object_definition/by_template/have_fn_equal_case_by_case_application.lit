@@ -1,0 +1,10 @@
+# Node: equal.ByObjectDefinition.ByTemplate.HaveFnEqualCaseByCaseApplication
+# Run: litex -f examples/proof_nodes/equal/by_object_definition/by_template/have_fn_equal_case_by_case_application.lit
+
+template<t R>:
+    have fn above_t(x R) Z by cases:
+        case x > t: 1
+        case x = t: 0
+        case x < t: (-1)
+
+\above_t<0>(-2) = (-1)

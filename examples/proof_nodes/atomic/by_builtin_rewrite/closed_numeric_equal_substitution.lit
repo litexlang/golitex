@@ -1,0 +1,5 @@
+# Node: atomic.ByBuiltinRewrite.ClosedNumericEqualSubstitution
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rewrite/closed_numeric_equal_substitution.lit
+
+have a R = 10
+a > 0

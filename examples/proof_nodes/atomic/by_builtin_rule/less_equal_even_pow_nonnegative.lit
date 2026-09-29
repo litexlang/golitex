@@ -1,0 +1,5 @@
+# Node: atomic.ByBuiltinRule.LessEqual.EvenPowNonnegative
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_equal_even_pow_nonnegative.lit
+
+have a R
+0 <= a^2

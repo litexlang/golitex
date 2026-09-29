@@ -1,9 +1,0 @@
-# Root export after `Lib` is mounted.
-# Cross-mod: look up thm / prop in finished import export Env.
-
-by def $Lib::base::above_zero(1)
-
-release thm Lib::base::add_zero_right(2)
-2 + 0 = 2
-
-by thm Lib:::add_zero_right(3) => 3 + 0 = 3

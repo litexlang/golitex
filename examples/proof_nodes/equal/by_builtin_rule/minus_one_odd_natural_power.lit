@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.MinusOneOddNaturalPower
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/minus_one_odd_natural_power.lit
+
+have m N
+(-1)^(2 * m + 1) = -1

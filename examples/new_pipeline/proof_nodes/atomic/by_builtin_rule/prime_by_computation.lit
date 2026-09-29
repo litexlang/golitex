@@ -1,6 +1,0 @@
-# Node: atomic.ByBuiltinRule.NormalAtomic.PrimeByComputation
-# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/prime_by_computation.lit
-
-$prime(2)
-$prime(17)
-$prime(97)

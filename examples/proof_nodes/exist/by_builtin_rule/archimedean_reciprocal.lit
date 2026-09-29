@@ -1,0 +1,5 @@
+# Node: exist.ByBuiltinRule.ArchimedeanReciprocal
+# Run: litex -f examples/proof_nodes/exist/by_builtin_rule/archimedean_reciprocal.lit
+
+0.5 $in R+
+exist n N+ st {1 / n < 0.5}

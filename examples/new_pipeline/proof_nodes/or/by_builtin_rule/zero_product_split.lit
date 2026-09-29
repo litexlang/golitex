@@ -1,7 +1,0 @@
-# Node: or.ByBuiltinRule.ZeroProductSplit
-# Rule struct: OrBuiltinZeroProductSplit
-# Run: litex -f examples/new_pipeline/proof_nodes/or/by_builtin_rule/zero_product_split.lit
-
-have a, b R
-trust a * b = 0
-a = 0 or b = 0

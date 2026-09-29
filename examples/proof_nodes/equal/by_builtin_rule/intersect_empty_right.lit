@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.IntersectEmptyRight
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/intersect_empty_right.lit
+
+have A set
+intersect(A, {}) = {}

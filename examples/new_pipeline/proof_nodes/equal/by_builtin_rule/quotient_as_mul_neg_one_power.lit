@@ -1,6 +1,0 @@
-# Node: equal.ByBuiltinRule.QuotientAsMulNegOnePower
-# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/quotient_as_mul_neg_one_power.lit
-
-have a R
-have b R*
-a / b = a * b^(-1)

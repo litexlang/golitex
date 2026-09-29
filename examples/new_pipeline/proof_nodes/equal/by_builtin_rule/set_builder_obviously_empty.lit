@@ -1,3 +1,0 @@
-# Node: equal.ByBuiltinRule.SetBuilderObviouslyEmpty
-# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/set_builder_obviously_empty.lit
-{x N: x < 0} = {}

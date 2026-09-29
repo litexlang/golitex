@@ -1,0 +1,4 @@
+# Node: equal.ByBuiltinRule.ReduceAddZeroEqualsSum
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/reduce_add_zero_equals_sum.lit
+
+reduce(1, 3, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = sum(1, 3, fn(x Z) Z {x})

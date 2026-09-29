@@ -1,0 +1,4 @@
+# Node: atomic.ByBuiltinRule.GreaterEqualFact.ClosedNumericComparison
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/greater_equal_closed_numeric.lit
+
+2 >= 1

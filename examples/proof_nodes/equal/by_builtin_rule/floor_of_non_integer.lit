@@ -1,0 +1,8 @@
+# Node: equal.ByBuiltinRule — floor of a non-integer real
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/floor_of_non_integer.lit
+#
+# When: `floor` on a non-integer decimal (positive or negative).
+# After: folds to the expected integer. Distinct from floor_of_integer.
+
+floor(3.75) = 3
+floor(-3.75) = -4

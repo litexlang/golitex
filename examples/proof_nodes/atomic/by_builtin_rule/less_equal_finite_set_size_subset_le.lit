@@ -1,0 +1,5 @@
+# Node: atomic.ByBuiltinRule.LessEqual.FiniteSetSizeSubsetLe
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_equal_finite_set_size_subset_le.lit
+
+{1} $subset {1, 2}
+finite_set_size({1}) <= finite_set_size({1, 2})

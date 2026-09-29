@@ -1,4 +1,4 @@
-//! Framework AST fact shapes for new_pipeline.
+//! Framework AST fact shapes.
 //! Field taxonomy follows the legacy language; methods are added later.
 //! Identity: prop/predicate names as AtomicName; FactId; SourceLine.
 //! Plain objs inside facts use IdentifierId (see `identifier_identity.md`).

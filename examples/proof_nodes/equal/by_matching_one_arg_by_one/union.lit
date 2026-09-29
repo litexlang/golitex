@@ -1,0 +1,8 @@
+# Node: equal.ByMatchingOneArgByOne (Union peel, nested ListSet)
+# Run: litex -f examples/proof_nodes/equal/by_matching_one_arg_by_one/union.lit
+
+have a R = 1
+have b R = a
+have c R = 2
+have d R = c
+union({a}, {c}) = union({b}, {d})

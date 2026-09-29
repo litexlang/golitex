@@ -1,4 +1,4 @@
-//! Kernel-generated surface names for new_pipeline.
+//! Kernel-generated surface names.
 //!
 //! User source cannot start with `__` (tokenizer / name validation). Temporary
 //! params and printable fact names use one shape each:

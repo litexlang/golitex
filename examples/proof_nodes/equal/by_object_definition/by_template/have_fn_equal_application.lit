@@ -1,0 +1,7 @@
+# Node: equal.ByObjectDefinition.ByTemplate.HaveFnEqualApplication
+# Run: litex -f examples/proof_nodes/equal/by_object_definition/by_template/have_fn_equal_application.lit
+
+template<S set, z S>:
+    have fn const_on_S(x S) S = z
+
+\const_on_S<R, 0>(2) = 0

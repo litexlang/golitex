@@ -1,5 +1,0 @@
-# Node: equal.ByBuiltinRule.MaxIdempotent
-# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/max_idempotent.lit
-
-have a R
-max(a, a) = a

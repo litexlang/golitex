@@ -1,9 +1,0 @@
-# Obj WD: index_cart — full family `$in fn(alpha I) S`
-# Run: litex -f examples/new_pipeline/wd/obj/index_cart.lit
-#
-# Before Wave4: registration half only.
-# Now: `g $in fn(alpha I) S` with nonempty family set S.
-
-let g = fn(alpha {1}) power_set(N) {{1}}
-let c = index_cart({1}, power_set(N), g)
-c = c

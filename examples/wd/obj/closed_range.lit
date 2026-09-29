@@ -1,0 +1,4 @@
+# Obj WD: closed_range endpoints in Z
+# Run: litex -f examples/wd/obj/closed_range.lit
+
+let r = closed_range(1, 2)

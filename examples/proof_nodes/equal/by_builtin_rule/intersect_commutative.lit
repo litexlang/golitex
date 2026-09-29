@@ -1,0 +1,6 @@
+# Node: equal.ByBuiltinRule.IntersectCommutative
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/intersect_commutative.lit
+
+have A set
+have B set
+intersect(A, B) = intersect(B, A)

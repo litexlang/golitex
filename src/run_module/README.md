@@ -10,7 +10,7 @@ This package **calls** those APIs and runs files.
 |---------|------|
 | LaunchCommand design | [`../run/README.md`](../run/README.md) |
 | Module tables / `::` | [`../module_manager/README.md`](../module_manager/README.md) |
-| Fixtures | [`examples/new_pipeline/module_manager/`](../../../examples/new_pipeline/module_manager/) |
+| Fixtures | [`examples/module_manager/`](../../../examples/module_manager/) |
 
 ## Layout
 

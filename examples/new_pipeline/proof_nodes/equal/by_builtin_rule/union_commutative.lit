@@ -1,6 +1,0 @@
-# Node: equal.ByBuiltinRule.UnionCommutative
-# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/union_commutative.lit
-
-have A set
-have B set
-union(A, B) = union(B, A)

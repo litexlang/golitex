@@ -1,0 +1,7 @@
+# Node: atomic.ByBuiltinRule.Less.ModRemainderStrictUpperBound
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_mod_remainder_strict_upper_bound.lit
+
+have a Z
+have b N+
+trust b != 0
+a % b < b

@@ -1,4 +1,0 @@
-# Obj WD: AnonymousFn definition (binder + body)
-# Run: litex -f examples/new_pipeline/wd/obj/anonymous_fn.lit
-
-let f = fn(x R: x > 0) R {x}

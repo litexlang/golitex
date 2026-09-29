@@ -1,9 +1,0 @@
-# Builtin: EqualFromKnownDifferenceZero
-# When: known `u - v = 0` (literal zero).
-# Proves: `u = v` at verify time (no eager infer).
-# Run: litex -f examples/new_pipeline/proof_nodes/equality/equal_from_known_difference_zero.lit
-
-have c R = 3
-have d R = 3
-c - d = 0
-c = d

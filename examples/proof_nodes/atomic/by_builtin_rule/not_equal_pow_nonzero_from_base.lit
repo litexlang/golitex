@@ -1,0 +1,7 @@
+# Node: atomic.ByBuiltinRule.PowNonzeroFromBase
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/not_equal_pow_nonzero_from_base.lit
+
+have a R
+have n N+
+trust a != 0
+a^n != 0

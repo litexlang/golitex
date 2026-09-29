@@ -1,6 +1,6 @@
 # IR and display_string
 
-This module owns two views of new_pipeline AST:
+This module owns two views of the AST:
 
 | API | Role |
 |-----|------|

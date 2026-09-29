@@ -1,4 +1,4 @@
-# new_pipeline module management — final data plan
+# Module management — final data plan
 
 Canonical contract. Implementation may lag; further Rust renames need Core
 Struct / AST approval when coding.

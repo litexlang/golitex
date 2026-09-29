@@ -11,7 +11,7 @@ pub use crate::display_and_ir::ObjIR;
 
 // Known facts and search indexes for one ExecEnv scope.
 // Authority is facts_by_id plus known-* search indexes. Fact verify has no
-// exact-IR cite slot. Rationale: `new_pipeline/identifier_identity.md`.
+// exact-IR cite slot. Rationale: `identifier_identity.md`.
 #[derive(Clone)]
 pub struct KnownFactMemory {
     // Canonical store: every stored fact's full AST keyed by FactId.

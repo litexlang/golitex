@@ -1,0 +1,4 @@
+# Node: atomic.ByBuiltinRule.GreaterEqual.FiniteSetSizeAtLeastOne
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/greater_equal_finite_set_size_at_least_one.lit
+
+finite_set_size({1, 2}) >= 1

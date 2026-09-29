@@ -2,7 +2,7 @@
 
 文档由沈嘉辰创建和维护。
 
-最后更新：2026 年 9 月 22 日。
+最后更新：2026 年 9 月 28 日。
 
 官网页面: https://litexlang.com/doc/Litex中文蓝图
 
@@ -337,6 +337,7 @@ forall a, b R:
 
 已知全称事实，用来推出具体的原子事实：
 
+<!-- litex:skip-test -->
 ```litex
 prop is_positive(n R):
     exist a R+ st {n > a}
@@ -365,6 +366,7 @@ zero = 0
 
 定理——命名可复用结论，再按需引用（整除传递性）：
 
+<!-- litex:skip-test -->
 ```litex
 prop divides_by(d, n Z):
     exist k Z st {n = d * k}
@@ -389,6 +391,7 @@ by thm divides_transitive(2, 6, 30) => $divides_by(2, 30)
 
 具名函数：
 
+<!-- litex:skip-test -->
 ```litex
 have fn reciprocal(x R: x != 0) R = 1 / x
 reciprocal(2) = 1 / 2
@@ -408,6 +411,7 @@ claim:
 
 反证法——否定「每个实数都满足 `x^2 >= x`」：
 
+<!-- litex:skip-test -->
 ```litex
 by contra:
     ? not forall x R:
@@ -434,6 +438,7 @@ by cases:
 
 归纳法——前 `n` 个正奇数之和等于 `n^2`：
 
+<!-- litex:skip-test -->
 ```litex
 have fn kth_odd(k Z) Z = 2 * k - 1
 
@@ -479,6 +484,7 @@ forall s nonempty_set, G &Group<s>, identity s:
 
 模板——按参数族实例化定义，再用 `\name<args>` 取出：
 
+<!-- litex:skip-test -->
 ```litex
 struct Triple<X set>:
     first X
@@ -496,6 +502,7 @@ p.first = 1
 
 一道简单应用题——变量名可以用中文：
 
+<!-- litex:skip-test -->
 ```litex
 # 妈妈年龄是小明年龄的 3 倍再加 4；小明 15 岁。妈妈几岁？
 have 小明年龄 R = 15
@@ -555,6 +562,7 @@ Lean 先声明共同元素类型 `α : Type*`，再声明 `s`、`t`、`u : Set �
 **误解 1：我不太熟集合论，就不会用∈、∪去表达群、拓扑空间、开集这类常见概念。**  
 这首先是**词典问题**，不是先修一门集合论课程才能动手。日常数学里怎么说，Litex 里就应有对应的可读写法。例如群、拓扑空间（及其开集族）可以直接写成工作层接口，而不必先手搓底层编码：
 
+<!-- litex:skip-test -->
 ```litex
 # Group: carrier set, operation, identity, inverse, and the usual laws
 struct Group<s nonempty_set>:
@@ -823,45 +831,17 @@ forall x, y R:
 
 ```json
 {
-  "result": "success",
-  "type": "universal fact",
-  "line": 1,
-  "statement": "forall x, y R:\n    x >= 0\n    y >= 0\n    =>:\n        x + y >= 0",
-  "parameters": [
-    "x",
-    "y"
-  ],
-  "assumptions": [
+  "kind": "run",
+  "ok": true,
+  "detail": "normal",
+  "session_error": null,
+  "statement_results": [
     {
-      "fact": "x $in R",
-      "reason": "parameter definition"
-    },
-    {
-      "fact": "y $in R",
-      "reason": "parameter definition"
-    },
-    {
-      "fact": "x >= 0",
-      "reason": "forall premise",
-      "inferred_facts": [
-        "-1 * x <= 0"
-      ]
-    },
-    {
-      "fact": "y >= 0",
-      "reason": "forall premise",
-      "inferred_facts": [
-        "-1 * y <= 0"
-      ]
-    }
-  ],
-  "conclusions": [
-    {
-      "statement": "x + y >= 0",
-      "why_verified": {
-        "type": "builtin rule",
-        "rule": "0 <= a + b from known atomic facts 0 <= a and 0 <= b"
-      }
+      "success": true,
+      "statement": "forall x, y R: /     x >= 0 /     y >= 0 /     =>: /         x + y >= 0",
+      "why_verified": { "type": "..." },
+      "stores": ["..."],
+      "infers": []
     }
   ]
 }
@@ -905,6 +885,7 @@ ha : a > 10
 
 **Litex 源码｜直接写 what**
 
+<!-- litex:skip-test -->
 ```litex
 prop is_positive(n R):
     exist a R+ st {n > a}
@@ -928,17 +909,19 @@ $is_positive(a)
 
 ```json
 {
-  "result": "success",
-  "type": "prop fact",
-  "line": 14,
-  "statement": "$is_positive(a)",
-  "why_verified": {
-    "type": "cite forall fact",
-    "cite_source": {
-      "line": 5
-    },
-    "cited_statement": "forall x R:\n    x > 10\n    =>:\n        $is_positive(x)"
-  }
+  "kind": "run",
+  "ok": true,
+  "detail": "normal",
+  "session_error": null,
+  "statement_results": [
+    {
+      "success": true,
+      "statement": "$is_positive(a)",
+      "why_verified": { "type": "..." },
+      "stores": ["..."],
+      "infers": []
+    }
+  ]
 }
 ```
 
@@ -993,45 +976,17 @@ Litex 源码保存前提和结论，没有写 `simpa` 或指定等式改写方�
 
 ```json
 {
-  "result": "success",
-  "type": "universal fact",
-  "line": 4,
-  "statement": "forall a, b R:\n    $is_positive(a)\n    a = b\n    =>:\n        $is_positive(b)",
-  "parameters": [
-    "a",
-    "b"
-  ],
-  "assumptions": [
+  "kind": "run",
+  "ok": true,
+  "detail": "normal",
+  "session_error": null,
+  "statement_results": [
     {
-      "fact": "a $in R",
-      "reason": "parameter definition"
-    },
-    {
-      "fact": "b $in R",
-      "reason": "parameter definition"
-    },
-    {
-      "fact": "$is_positive(a)",
-      "reason": "forall premise",
-      "inferred_facts": [
-        "a > 0"
-      ]
-    },
-    {
-      "fact": "a = b",
-      "reason": "forall premise"
-    }
-  ],
-  "conclusions": [
-    {
-      "statement": "$is_positive(b)",
-      "why_verified": {
-        "type": "cite prop fact",
-        "cite_source": {
-          "line": 5
-        },
-        "cited_statement": "$is_positive(a)"
-      }
+      "success": true,
+      "statement": "forall a, b R: /     $is_positive(a) /     a = b /     =>: /         $is_positiv",
+      "why_verified": { "type": "..." },
+      "stores": ["..."],
+      "infers": []
     }
   ]
 }
@@ -1144,219 +1099,27 @@ a + 1 = 2
 {
   "kind": "run",
   "ok": true,
+  "target": "eval",
+  "path": null,
+  "detail": "normal",
+  "session_error": null,
   "statement_results": [
     {
-      "outcome": "success",
-      "result": {
-        "kind": "LetObjStmt",
-        "statement": "let a = 1",
-        "common": {
-          "infers": {
-            "stores": [
-              {
-                "fact_id": "f1",
-                "statement": "a = 1",
-                "reason": "object definition",
-                "inferred_facts": []
-              }
-            ],
-            "rule_applications": []
-          }
-        }
-      }
+      "success": true,
+      "statement": "let a = 1",
+      "why_verified": { "type": "define_obj" },
+      "stores": ["a = 1"],
+      "infers": []
     },
     {
-      "outcome": "success",
-      "result": {
-        "kind": "Fact",
-        "statement": "a + 1 = 2",
-        "evidence": {
-          "kind": "Verified",
-          "well_definedness": {
-            "kind": "WellDefinedFactResult",
-            "fact": "a + 1 = 2",
-            "proof": {
-              "kind": "AtomicFact",
-              "statement": "a + 1 = 2",
-              "arguments": [
-                {
-                  "argument_index": 0,
-                  "object": "a + 1",
-                  "result": {
-                    "value": {
-                      "kind": "Direct",
-                      "object": "a + 1",
-                      "intrinsic_result_set": "C",
-                      "target_requirements": [
-                        {
-                          "role": {
-                            "kind": "BuiltinArgumentMembership",
-                            "argument_index": 0
-                          },
-                          "expected_proposition": "a $in C",
-                          "verification": {
-                            "value": {
-                              "kind": "AtomicFact",
-                              "statement": "a $in C",
-                              "proof": {
-                                "kind": "Reuse",
-                                "source": {
-                                  "value": {
-                                    "kind": "AtomicFact",
-                                    "statement": "a $in C",
-                                    "proof": {
-                                      "kind": "Transform",
-                                      "rule": {
-                                        "kind": "TransparentDefinitionReduction",
-                                        "definitions": [
-                                          {
-                                            "symbol": "a",
-                                            "definition_object": "1",
-                                            "defining_equality": "a = 1"
-                                          }
-                                        ]
-                                      },
-                                      "source": {
-                                        "kind": "AtomicFact",
-                                        "statement": "1 $in C",
-                                        "proof": {
-                                          "kind": "BuiltinRule",
-                                          "diagnostic_label": "number in C",
-                                          "evidence": {
-                                            "kind": "Typed",
-                                            "rule_id": "numeric.closed_membership",
-                                            "value": {
-                                              "kind": "ClosedNumericMembership",
-                                              "expected_target": "1 $in C",
-                                              "target_set": "C",
-                                              "evaluation": {
-                                                "expression": "1",
-                                                "value": "1",
-                                                "step": {
-                                                  "kind": "Literal",
-                                                  "literal": "1"
-                                                }
-                                              }
-                                            }
-                                          },
-                                          "subgoals": []
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      ]
-                    }
-                  }
-                },
-                {
-                  "argument_index": 1,
-                  "object": "2",
-                  "result": {
-                    "value": {
-                      "kind": "Direct",
-                      "object": "2"
-                    }
-                  }
-                }
-              ],
-              "predicate": {
-                "kind": "SuccessVerifyAtomicPredicateWellDefinedResult",
-                "name": "=",
-                "expected_arity": 2,
-                "domain_checks": []
-              }
-            }
-          },
-          "proof": {
-            "kind": "AtomicFact",
-            "statement": "a + 1 = 2",
-            "proof": {
-              "kind": "Reuse",
-              "source": {
-                "value": {
-                  "kind": "AtomicFact",
-                  "statement": "a + 1 = 2",
-                  "proof": {
-                    "kind": "Transform",
-                    "rule": {
-                      "kind": "TransparentDefinitionReduction",
-                      "definitions": [
-                        {
-                          "symbol": "a",
-                          "definition_object": "1",
-                          "defining_equality": "a = 1"
-                        }
-                      ]
-                    },
-                    "source": {
-                      "kind": "AtomicFact",
-                      "statement": "1 + 1 = 2",
-                      "proof": {
-                        "kind": "BuiltinRule",
-                        "diagnostic_label": "calculation",
-                        "evidence": {
-                          "kind": "Typed",
-                          "rule_id": "equality.rational_normalization",
-                          "value": {
-                            "kind": "RationalNormalization",
-                            "expected_target": "1 + 1 = 2",
-                            "left_evaluation": {
-                              "expression": "1 + 1",
-                              "value": "2",
-                              "step": {
-                                "kind": "Binary",
-                                "operator": "Add",
-                                "left": {
-                                  "expression": "1",
-                                  "value": "1",
-                                  "step": {
-                                    "kind": "Literal",
-                                    "literal": "1"
-                                  }
-                                },
-                                "right": {
-                                  "expression": "1",
-                                  "value": "1",
-                                  "step": {
-                                    "kind": "Literal",
-                                    "literal": "1"
-                                  }
-                                }
-                              }
-                            },
-                            "right_evaluation": {
-                              "expression": "2",
-                              "value": "2",
-                              "step": {
-                                "kind": "Literal",
-                                "literal": "2"
-                              }
-                            }
-                          }
-                        },
-                        "subgoals": []
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "store": {
-          "fact": "a + 1 = 2",
-          "fact_id": "f2",
-          "infers": {
-            "stores": [],
-            "rule_applications": []
-          }
-        }
-      }
+      "success": true,
+      "statement": "a + 1 = 2",
+      "why_verified": {
+        "type": "builtin_rule",
+        "rule": "EqualityBuiltin"
+      },
+      "stores": ["a + 1 = 2"],
+      "infers": []
     }
   ]
 }
@@ -1366,55 +1129,43 @@ a + 1 = 2
 
 这份记录把“这句话为什么能写下来”拆成了可追踪的局部步骤：先确认 `a + 1` 的参数满足运算所需的集合条件；再沿着已定义的 `a = 1` 透明化简为 `1 + 1 = 2`；最后由数值规范化规则完成计算。对读者来说，它至少回答了五个局部问题：
 
-| 读者想知道什么 | 记录中看什么 |
+| 读者想知道什么 | 在记录里看哪里 |
 | --- | --- |
-| 语句和语句类型 | 语句内容与类型（`statement`、`kind`）：这是定义符号、定义谓词、定义函数，还是验证事实？ |
-| 这句话是否有意义 | 良定义性检查（`well_definedness`）：对象和运算是否处在允许的定义域内？ |
-| 为什么成立 | 证据和证明过程（`evidence`、`proof`）中的良定义性检查、定义化简与规则依据 |
-| 它是否成为后续基础 | 保存结果（`store`）和已接受上下文 |
-| 检查过程中得到什么引申 | 引申结果（`infers`）及其规则应用 |
+| 跑了哪一句 | `statement` |
+| 是否成功 | 语句的 `success`，以及整次运行的 `ok` / `session_error` |
+| 为什么成立 | `why_verified`（规则名、引用、定义路径等） |
+| 为什么停下 | `why_failed.phase` 与 `why_failed.goal` |
+| 什么进入了后续上下文 | `stores` 与 `infers` |
+
+Normal JSON 是面向人与工具的日常记录。完整的 verify/exec 证据树仍留给 Lean 回放与详细工具使用；它不是日常 `-e` / `-f` / `-r` 打印的内容。
 
 例如，`let a = 1` 是定义符号 `a`，并记录 `a = 1`；`a + 1 = 2` 则是在当前上下文中验证一个事实。良定义性检查先确认语句是否有意义：例如 `1 / 0 = 1 / 0` 虽然两边形式相同，但 `0` 不能作为除法允许的分母，因此这个语句不满足良定义性要求。
 
 <details>
 <summary><strong>展开查看：Litex执行结果</strong></summary>
 
-当我们输入 ` 1 = 0 ` 时，Litex的输出是
+当我们输入 `1 = 0` 时，Litex 的 Normal JSON 输出是
 
 ```json
 {
-  "error_type": "VerifyError",
-  "result": "error",
-  "line": 1,
-  "message": "verification failed",
-  "type": "equality fact",
-  "statement": "1 = 0",
-  "phases": {
-    "verify_well_definedness": {
-      "status": "success"
-    },
-    "verify_process": {
-      "status": "error",
-      "message": "verification failed"
-    },
-    "affect_environment": {
-      "status": "not_run",
-      "message": "previous phase failed"
+  "kind": "run",
+  "ok": false,
+  "target": "eval",
+  "path": null,
+  "detail": "normal",
+  "session_error": null,
+  "statement_results": [
+    {
+      "success": false,
+      "statement": "1 = 0",
+      "why_failed": {
+        "phase": "search_proof",
+        "goal": "1 = 0"
+      },
+      "stores": [],
+      "infers": []
     }
-  },
-  "previous_error": {
-    "error_type": "UnknownError",
-    "result": "error",
-    "line": 1,
-    "message": "unknown result",
-    "type": "equality fact",
-    "statement": "1 = 0",
-    "failed_goal": "1 = 0",
-    "unknown_result": {
-      "type": "atomic fact unknown",
-      "goal": "1 = 0"
-    }
-  }
+  ]
 }
 ```
 
@@ -1562,9 +1313,22 @@ AI 先试图在没有构造 `forall / exist` 结构的情况下，直接 `by def
 
 ```json
 {
-  "result": "rejected_rolled_back",
-  "failed_phase": "verify_process",
-  "verifier_evidence": "cannot prove then-clause; failed goal $converges_to(fn(n N) R {c * s(n)}, c * a)"
+  "kind": "run",
+  "ok": false,
+  "detail": "normal",
+  "session_error": null,
+  "statement_results": [
+    {
+      "success": false,
+      "statement": "...",
+      "why_failed": {
+        "phase": "search_proof",
+        "goal": "$converges_to(fn(n N) R {c * s(n)}, c * a)"
+      },
+      "stores": [],
+      "infers": []
+    }
+  ]
 }
 ```
 
@@ -1634,6 +1398,7 @@ Litex编译成Lean，并接入Mathlib-Style的Lean代码，要经过以下过程
 
 举例：我们想要证明前`n`个正奇数之和是`n^2`。我们先写下Litex的源码：
 
+<!-- litex:skip-test -->
 ```litex
 have fn kth_odd(k Z) Z = 2 * k - 1
 
@@ -1835,6 +1600,7 @@ Litex 还在做另一条实验性编译路线：把（部分）已验证的证�
 
 同一份用于科学计算的 Litex 证明，可以转化成可执行代码。例如牛顿法逼近 √2 的单步更新：
 
+<!-- litex:skip-test -->
 ```litex
 have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2
 

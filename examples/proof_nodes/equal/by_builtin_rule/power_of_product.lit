@@ -1,0 +1,7 @@
+# Node: equal.ByBuiltinRule.PowerOfProduct
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/power_of_product.lit
+
+have a R+
+have b R+
+have n N+
+(a * b)^n = a^n * b^n

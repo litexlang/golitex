@@ -1,0 +1,4 @@
+# Stmt: ReleaseAndExpand.ReleaseRegularityAxiomStmt → exec_release_regularity_axiom_stmt
+# Run: litex -f examples/stmt_nodes/release_and_expand/release_regularity_axiom.lit
+
+release regularity_axiom({1})

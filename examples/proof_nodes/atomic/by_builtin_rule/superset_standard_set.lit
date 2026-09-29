@@ -1,0 +1,4 @@
+# Node: atomic.ByBuiltinRule.SupersetFact.StandardSetSuperset
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/superset_standard_set.lit
+
+$superset(R, N)

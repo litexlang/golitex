@@ -1,0 +1,5 @@
+# Node: atomic.ByBuiltinRule.InFact.StandardSetSubsetMembership
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/in_standard_set_subset_membership.lit
+
+have x R
+x $in C

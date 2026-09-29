@@ -1,0 +1,8 @@
+# Node: equal.ByBuiltinRule — lcm with a negative argument
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/lcm_with_negative.lit
+#
+# When: `lcm` with a negative integer operand.
+# After: result is the positive lcm (absolute-value semantics).
+
+lcm(12, -18) = 36
+lcm(0, 0) = 0

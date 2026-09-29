@@ -1,0 +1,4 @@
+# Node: equal.ByBuiltinRule.LogBasePower
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/log_base_power.lit
+have c N+
+log(2^3, c) = log(2, c) / 3

@@ -1,0 +1,8 @@
+# Stmt: By.ByExtensionStmt inline header goal
+# Run: litex -f examples/stmt_nodes/by/by_extension_inline.lit
+#
+# When: `by extension <equality>` with the goal on the header.
+# After: extensionality proves the equality.
+# Example: by extension {1} = {1}
+
+by extension {1} = {1}

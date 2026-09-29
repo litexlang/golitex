@@ -1,0 +1,13 @@
+# Stmt: ProofBlock.ClaimStmt → exec_claim_stmt
+# Run: litex -f examples/stmt_nodes/proof_block/claim.lit
+
+claim:
+    ? 1 = 1
+
+# Goal fact is stored; can be reused.
+1 = 1
+
+# Forall claim: params stay local; only the forall is stored.
+claim:
+    ? forall x R:
+        x = x

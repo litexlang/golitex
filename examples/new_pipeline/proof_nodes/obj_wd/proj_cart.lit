@@ -1,4 +1,0 @@
-# Obj WD: proj(cart(...), i) with dim in N+ / is_cart / dim <= cart_dim
-# Run: litex -f examples/new_pipeline/proof_nodes/obj_wd/proj_cart.lit
-
-let P = proj(cart(R, R), 1)

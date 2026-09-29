@@ -1,0 +1,7 @@
+# Node: equal.ByBuiltinRule.PowerProductSameBase
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/power_product_same_base.lit
+
+have a R+
+have m N+
+have n N+
+a^m * a^n = a^(m + n)

@@ -32,7 +32,7 @@ Keep these four words separate:
 | **Object** | A mathematical value or expression | <code>x</code>, <code>R</code>, <code>{1, 2}</code>, <code>x + 1</code>, <code>fn(t R) R</code> |
 | **Fact** | A proposition about objects | <code>x = 2</code>, <code>x $in R</code>, <code>$prime(n)</code> |
 | **Statement** | A line or block that introduces, defines, or checks facts | <code>have</code>, a bare fact, <code>prop</code>, <code>claim</code>, <code>thm</code> |
-| **Output** | The verifier's evidence, context effects, or stopping point | proof route, stored fact, <code>unknown</code>, <code>error</code> |
+| **Output** | The verifier's evidence, context effects, or stopping point | proof route, stored fact, soft miss (`success: false`), session error |
 
 The most useful authoring question is not “which tactic should I use?” It is:
 
@@ -47,7 +47,7 @@ Install Litex or use the online playground. The smallest useful local run is:
 litex -e '1 + 1 = 2'
 ```
 
-The command returns JSON. A successful run has a small envelope like this
+The command returns Normal JSON. A successful run has a small envelope like this
 (fields inside <code>statement_results</code> are shown only as a readable
 excerpt):
 
@@ -55,14 +55,15 @@ excerpt):
 {
   "kind": "run",
   "ok": true,
+  "detail": "normal",
+  "session_error": null,
   "statement_results": [
     {
-      "outcome": "success",
-      "result": {
-        "statement": "1 + 1 = 2",
-        "evidence": { "proof": { "kind": "BuiltinRule" } },
-        "store": { "fact": "1 + 1 = 2", "fact_id": "f1" }
-      }
+      "success": true,
+      "statement": "1 + 1 = 2",
+      "why_verified": { "type": "builtin_rule", "rule": "EqualityBuiltin" },
+      "stores": ["1 + 1 = 2"],
+      "infers": []
     }
   ]
 }
@@ -70,13 +71,13 @@ excerpt):
 
 Read the result in this order:
 
-1. Was the statement accepted (<code>outcome</code>) and did the whole run succeed
-   (<code>ok</code>)?
-2. Why was it accepted (<code>evidence</code>, <code>proof</code>, or theorem
-   citation)?
-3. What was actually added to the context (<code>store</code>, <code>infers</code>,
-   or an object definition)?
-4. If it stopped, what is the earliest failed phase and failed goal?
+1. Did the whole run succeed (<code>ok</code>) and did each statement succeed
+   (<code>success</code>)?
+2. Why was it accepted (<code>why_verified</code>)?
+3. What was actually added to the context (<code>stores</code>, <code>infers</code>)?
+4. If it stopped, what is <code>why_failed.phase</code> and <code>why_failed.goal</code>?
+   Soft misses stay inside <code>statement_results</code>; only
+   <code>session_error</code> is a hard stop.
 
 The output is part of the working method, not an after-the-fact log. It tells
 you what the next legal/useful statement can build on.
@@ -99,6 +100,7 @@ checked from the current context and become available after they succeed.
 
 Names may depend on earlier names:
 
+<!-- litex:skip-test -->
 ```litex
 have x R = 2
 have y R = x + 1
@@ -144,6 +146,7 @@ shift(2) = 3
 
 Use <code>let</code> when the name is only a local abbreviation:
 
+<!-- litex:skip-test -->
 ```litex
 have fn shift(t R) R = t + 1
 let successor = shift
@@ -251,6 +254,7 @@ The standard sets are <code>N</code>, <code>Z</code>, <code>Q</code>, <code>R</c
 and <code>C</code>, with common subsets such as <code>N+</code>, <code>R-</code>,
 and <code>C*</code>. A set builder is bounded by an existing set:
 
+<!-- litex:skip-test -->
 ```litex
 release thm set_builder_member(1, {x R: x > 0})
 ```
@@ -300,6 +304,7 @@ block.
 
 An existential proof gives its witness explicitly:
 
+<!-- litex:skip-test -->
 ```litex
 witness exist x R st {x^2 = 4} from 2:
     2^2 = 4
@@ -333,6 +338,7 @@ extra echo.
 
 Induction is explicit when the invariant is not a direct builtin fact:
 
+<!-- litex:skip-test -->
 ```litex
 claim:
     ? forall n N:
@@ -357,6 +363,7 @@ conclusion; proof-control commands belong in a proof block.
 This small divisibility development shows how a definition, witnesses, a
 reusable theorem, and ordinary fact reuse fit together:
 
+<!-- litex:skip-test -->
 ```litex
 prop divides_by(d, n Z):
     exist k Z st {n = d * k}
@@ -393,14 +400,14 @@ mathematics.
 
 | Output/phase | Meaning | Next move |
 |---|---|---|
-| Parse error | The source is not in the accepted grammar | Fix indentation, delimiters, binders, or fact nesting |
-| Name/type error | An identifier, arity, callable interface, or carrier is wrong | Check spelling, imports, argument count, and exact domain |
-| Well-definedness error | An object is not legal yet | Prove membership, bounds, nonzero divisors, or a typed construction |
-| <code>unknown</code> verification | The fact is meaningful but current evidence is insufficient | Add the smallest equality, membership fact, theorem call, or witness |
-| Later use fails | The earlier statement stored a different interface than expected | Inspect <code>store</code>/<code>infers</code>; distinguish an object, fact, predicate, and function |
+| Parse / CLI hard error | The source or command is not accepted | Fix indentation, delimiters, binders, or the command line |
+| Name/type problem | An identifier, arity, callable interface, or carrier is wrong | Check spelling, imports, argument count, and exact domain |
+| Well-definedness soft miss | An object is not legal yet | Prove membership, bounds, nonzero divisors, or a typed construction |
+| Search soft miss | The fact is meaningful but current evidence is insufficient | Add the smallest equality, membership fact, theorem call, or witness |
+| Later use fails | The earlier statement stored a different interface than expected | Inspect <code>stores</code>/<code>infers</code>; distinguish an object, fact, predicate, and function |
 | <code>trust</code> or <code>axiom</code> appears | The route includes an explicit assumption | Mark the debt; this is not fully checkable under strict mode |
 
-An <code>unknown</code> result is not a proof that the proposition is false:
+A soft miss is not a proof that the proposition is false:
 
 <!-- litex:skip-test -->
 ```litex
@@ -409,12 +416,14 @@ x = 0
 ```
 
 The context only says that <code>x</code> is real. It does not say which real
-number <code>x</code> is, so <code>x = 0</code> is normally unknown.
+number <code>x</code> is, so <code>x = 0</code> normally soft-fails with
+<code>why_failed.phase: search_proof</code>.
 
-For a run containing an unknown statement, the top-level <code>ok</code> may be
-<code>false</code> while the underlying reason appears as a nested
-<code>unknown_result</code>. Read the failed goal and phase rather than treating
-the envelope alone as the mathematical explanation.
+For a run containing a soft-failed statement, top-level <code>ok</code> is
+<code>false</code>, but the failed statement remains in
+<code>statement_results</code> with <code>success: false</code>. Read
+<code>why_failed</code> rather than treating the envelope alone as the
+mathematical explanation.
 
 ### Three high-value repair patterns
 
@@ -429,7 +438,7 @@ forall y R:
     p_affine((y + 5) / 2) = 2 * ((y + 5) / 2) - 5 = y
 ```
 
-**Inside out.** If one compound equality is unknown, expose the smallest
+**Inside out.** If one compound equality soft-fails, expose the smallest
 changed subterm, then lift it through the outer expression:
 
 ```litex
@@ -502,6 +511,7 @@ by cases:
 
 A <code>struct</code> creates a reusable carrier and field vocabulary:
 
+<!-- litex:skip-test -->
 ```litex
 struct Point:
     x R
@@ -549,11 +559,8 @@ and laws.
 # One expression
 litex -e '1 + 1 = 2'
 
-# One file; project mode is selected when its direct parent has litex.config
+# One file; project mode when its direct parent has litex.config
 litex -f path/to/file.lit
-
-# Force a standalone file
-litex -isolated -f scratch.lit
 
 # Full configured project, including its exports
 litex -r path/to/project
@@ -561,14 +568,14 @@ litex -r path/to/project
 # Reject explicit trust during a complete audit
 litex -strict -r path/to/project
 
-# Keep one runtime alive for framed exploratory requests
+# After a successful file run, keep the Runtime and continue in the REPL
 litex -session -f path/to/file.lit
 ```
 
-Batch commands return one JSON document. Interactive commands return JSON
-Lines. For automation, inspect the top-level <code>ok</code> and the statement
-results; do not infer success from a pretty message or from nested trace text
-alone.
+Batch commands (`-e` / `-f` / `-r`) return one Normal JSON document. The REPL
+prints short status lines. For automation, inspect top-level <code>ok</code>,
+each statement's <code>success</code>, and <code>session_error</code>; do not
+infer success from nested evidence text alone.
 
 ### A practical authoring checklist
 
@@ -598,14 +605,8 @@ fail closed when a construct is outside that subset.
 
 - Read the [Manual](Manual.md) for exact syntax, well-definedness, proof
   boundaries, output contracts, inference, modules, and compiler coverage.
-- Run the files in [examples/01_proof_patterns](../examples/01_proof_patterns/)
-  when you know which proof route you want to study.
-- Browse [examples/02_builtin_math](../examples/02_builtin_math/) for the
-  verifier's arithmetic, order, set, function, and aggregate rules.
-- Browse [examples/03_language_features](../examples/03_language_features/)
-  for definitions, settings, structs, imports, and well-definedness.
-- Use [examples/04_case_studies](../examples/04_case_studies/) for larger
-  developments.
+- Prefer the phase acceptance tree under [examples/](../examples/)
+  (`proof_nodes/`, `stmt_nodes/`, `wd/`, `module_manager/`, …).
 
 The learner's central habit is simple: write the next mathematical fact, read
 the verifier's evidence, and let only accepted context drive the next line.

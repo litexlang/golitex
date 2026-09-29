@@ -1,4 +1,4 @@
-//! Litex language kernel (new pipeline).
+//! Litex language kernel.
 
 /// Product display name for user-facing messages.
 pub const LITEX: &str = "Litex";

@@ -1,7 +1,0 @@
-# Stmt: Definition.DefAbstractPropStmt → exec_def_abstract_prop_stmt
-# Run: litex -f examples/new_pipeline/stmt_nodes/definition/def_abstract_prop.lit
-
-abstract_prop marked(x)
-
-trust $marked(1)
-$marked(1)

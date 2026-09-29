@@ -1,4 +1,4 @@
-//! Requirement-fact verification for object WD (new_pipeline AST).
+//! Requirement-fact verification for object WD.
 //!
 //! Mirrors old target_requirements: after child WD, prove domain facts true.
 //! Search miss returns Ok(branch Failed), same as fact proof search — not Err.

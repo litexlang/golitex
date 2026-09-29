@@ -1,0 +1,11 @@
+# Stmt: Definition.LetObjStmt transparent callable alias
+# Run: litex -f examples/stmt_nodes/definition/let_callable_alias.lit
+#
+# When: `let g = f` after `have fn f(...) = ...`, then apply `g(...)`.
+# After: `g` reduces to `f`; `g(1) = 2` verifies via the body of `f`.
+# Example: have fn f(x R) R = x + 1; let g = f; g(1) = 2
+
+have fn f(x R) R = x + 1
+let g = f
+g(1) = 2
+fn_range(g) = fn_range(f)

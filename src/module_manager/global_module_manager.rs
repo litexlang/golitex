@@ -1,4 +1,4 @@
-//! Session/project-wide module owner for new_pipeline.
+//! Session/project-wide module owner.
 
 use super::export_file::ExportFileAndItsExecEnv;
 use super::imported_module::ImportedModule;

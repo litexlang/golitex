@@ -1,0 +1,10 @@
+# Node: atomic.ByBuiltinRule.Less.DivMonotoneStrictSamePosDivisor
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_div_monotone_strict_same_pos_divisor.lit
+
+have a R
+have b R
+have c R
+trust 0 < c
+trust c != 0
+trust a < b
+a / c < b / c

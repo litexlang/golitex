@@ -1,4 +1,0 @@
-# Node: equal.ByBuiltinRule.FiniteSetReduceAddZeroEqualsSum
-# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/finite_set_reduce_add_zero_equals_sum.lit
-
-finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = finite_set_sum({1, 2}, fn(x Z) Z {x})

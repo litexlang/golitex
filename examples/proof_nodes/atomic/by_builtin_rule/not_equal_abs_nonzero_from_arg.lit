@@ -1,0 +1,6 @@
+# Node: atomic.ByBuiltinRule.NotEqual.AbsNonzeroFromArg
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/not_equal_abs_nonzero_from_arg.lit
+
+have x R
+trust x != 0
+abs(x) != 0

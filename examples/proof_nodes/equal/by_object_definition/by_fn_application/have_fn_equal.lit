@@ -1,0 +1,5 @@
+# Node: equal.ByObjectDefinition.ByFnApplication.HaveFnEqual
+# Run: litex -f examples/proof_nodes/equal/by_object_definition/by_fn_application/have_fn_equal.lit
+
+have fn id(x R) R = x
+id(1) = 1

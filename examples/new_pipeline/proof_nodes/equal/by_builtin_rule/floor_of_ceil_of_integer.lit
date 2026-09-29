@@ -1,5 +1,0 @@
-# Node: equal.ByBuiltinRule.FloorOfCeilOfInteger
-# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/floor_of_ceil_of_integer.lit
-
-have n Z
-floor(ceil(n)) = n

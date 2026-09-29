@@ -1,0 +1,5 @@
+# Node: atomic.ByBuiltinRule.LessEqual.FiniteSetSizeUnionLeSum
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_equal_finite_set_size_union_le_sum.lit
+
+trust $is_finite_set(union({1}, {2}))
+finite_set_size(union({1}, {2})) <= finite_set_size({1}) + finite_set_size({2})

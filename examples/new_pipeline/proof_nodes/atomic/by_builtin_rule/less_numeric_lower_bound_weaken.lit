@@ -1,6 +1,0 @@
-# Node: atomic.ByBuiltinRule.Less.NumericLowerBoundWeakenLt
-# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/less_numeric_lower_bound_weaken.lit
-
-have x R
-trust 4 < x
-2 < x

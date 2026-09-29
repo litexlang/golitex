@@ -1,6 +1,0 @@
-# Node: or.ByBuiltinRule.RealLineTrichotomyGreaterEqLess
-# Rule struct: OrBuiltinRealLineTrichotomyGreaterEqLess
-# Run: litex -f examples/new_pipeline/proof_nodes/or/by_builtin_rule/real_line_trichotomy_greater_eq_less.lit
-
-have a R, b R
-a > b or a = b or a < b

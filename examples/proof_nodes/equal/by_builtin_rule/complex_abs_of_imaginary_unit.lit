@@ -1,0 +1,4 @@
+# Node: equal.ByBuiltinRule.ComplexAbsOfImaginaryUnit
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/complex_abs_of_imaginary_unit.lit
+
+C_abs(i) = 1

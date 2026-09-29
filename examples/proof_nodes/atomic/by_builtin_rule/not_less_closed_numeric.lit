@@ -1,0 +1,4 @@
+# Node: atomic.ByBuiltinRule.NotLessFact.ClosedNumericComparison
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/not_less_closed_numeric.lit
+
+not 2 < 1

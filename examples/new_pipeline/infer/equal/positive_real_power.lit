@@ -1,8 +1,0 @@
-# Infer: EqualFact.PositiveRealPower
-# When: store `a^n = y` with `0 < a` and `n $in R`.
-# Infers: `y $in R+`.
-# Run: litex -f examples/new_pipeline/infer/equal/positive_real_power.lit
-
-have base R+
-have pow_val R = base^2
-pow_val $in R+

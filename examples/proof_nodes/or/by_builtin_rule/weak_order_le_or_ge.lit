@@ -1,0 +1,6 @@
+# Node: or.ByBuiltinRule.WeakOrderLeOrGe
+# Rule struct: OrBuiltinWeakOrderLeOrGe
+# Run: litex -f examples/proof_nodes/or/by_builtin_rule/weak_order_le_or_ge.lit
+
+have a, b R
+a <= b or a >= b

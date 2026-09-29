@@ -1,0 +1,9 @@
+# Obj WD: sum / product — Z endpoints, start<=end, unary iterand ret ⊆ C
+# Run: litex -f examples/wd/obj/sum_product.lit
+#
+# Before Wave4: children-only (no start<=end / scalar-return obligations).
+
+let s = sum(1, 3, fn(x Z) Z {x})
+let p = product(1, 3, fn(x Z) Z {x})
+s = s
+p = p

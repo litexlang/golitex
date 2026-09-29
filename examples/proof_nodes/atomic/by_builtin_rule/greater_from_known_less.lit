@@ -1,0 +1,6 @@
+# Node: atomic.ByBuiltinRule.GreaterFact.FromKnownLess
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/greater_from_known_less.lit
+
+have x R
+trust x < 0
+0 > x

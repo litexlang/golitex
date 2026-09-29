@@ -1,0 +1,5 @@
+# WD negative: range endpoint not in Z.
+# Run: litex -f examples/wd_negative/range_not_integer.lit
+# expect exit != 0
+
+let r = range(1 / 2, 3)

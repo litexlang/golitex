@@ -1,5 +1,0 @@
-# Stmt: By.ByDefStmt → exec_by_def_stmt
-# Run: litex -f examples/new_pipeline/stmt_nodes/by/by_def.lit
-
-by def:
-    ? {1} $subset {1}

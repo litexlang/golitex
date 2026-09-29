@@ -1,0 +1,4 @@
+# Stmt: Fact → execute_fact_statement
+# Run: litex -f examples/stmt_nodes/fact/execute_fact.lit
+
+1 + 1 = 2

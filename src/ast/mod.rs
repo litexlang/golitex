@@ -1,4 +1,4 @@
-//! New-pipeline AST framework (legacy taxonomy, adapted identity).
+//! AST framework (legacy taxonomy, adapted identity).
 
 pub mod conversions;
 pub mod fact;

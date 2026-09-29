@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.SetMinusEmptyRight
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/set_minus_empty_right.lit
+
+have A set
+set_minus(A, {}) = A

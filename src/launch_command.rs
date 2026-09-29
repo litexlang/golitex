@@ -1,7 +1,7 @@
 use crate::runtime::{RuntimeError, RuntimeResult};
 use std::path::PathBuf;
 
-/// How a new_pipeline Runtime session was launched. Shared by `run` and `runtime` (no cycle).
+/// How a Runtime session was launched. Shared by `run` and `runtime` (no cycle).
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum LaunchCommand {
     Help,
@@ -86,7 +86,7 @@ pub fn parse_launch_command(args: &[String]) -> RuntimeResult<LaunchCommand> {
             strict,
         }),
         _ => Err(RuntimeError::InvalidArguments(
-            "new_pipeline supports bare REPL, `-e <code>`, `-f <file>`, `-r <repository>`, optional `-session` / `-strict`, `-help`, `-version`"
+            "supports bare REPL, `-e <code>`, `-f <file>`, `-r <repository>`, optional `-session` / `-strict`, `-help`, `-version`"
                 .to_string(),
         )),
     }

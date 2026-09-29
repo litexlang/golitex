@@ -1,4 +1,4 @@
-//! Framework AST data shapes for new_pipeline.
+//! Framework AST data shapes.
 //! Field taxonomy follows the legacy language; methods are added later.
 //! Identity: BoundName / IdentifierId for plain refs; FactId; SourceLine.
 //!
@@ -598,7 +598,7 @@ pub struct Factorial {
 // Surface: `a^b` (right-associative; write `t^(-1)`, not `t^-1`).
 // Example: `2^3` (8).
 //
-// Domain is intentionally multi-branch (WD tries these in order in new_pipeline):
+// Domain is intentionally multi-branch (WD tries these in order):
 // - complex base + natural exponent: `base $in C`, `exponent $in N`
 //   (includes the convention `0^0 = 1`)
 // - nonzero complex base + integer exponent: `base $in C`, `base != 0`,

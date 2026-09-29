@@ -31,3 +31,4 @@ pub use result::{
     EqualFactSearchedProofByKnownForallViaSymmetry, SearchProofByKnownForallFact,
     VerifyEqualityFailed, VerifyEqualityResult,
 };
+pub use search_equal_fact_proof_by_matching_one_arg_by_one::EqualFactSearchedProofByMatchingOneArgByOne;

@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.OneToAnyPower
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/one_to_any_power.lit
+
+have a N
+1^a = 1

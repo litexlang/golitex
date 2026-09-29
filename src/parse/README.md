@@ -1,4 +1,4 @@
-# new_pipeline parse surface
+# Parse surface
 
 What this module accepts: token blocks → AST (`Stmt` / `Fact` / `Obj`).
 
@@ -6,7 +6,7 @@ This is a **parse** reference, not a verifier guide.
 
 - Layers: `parse.rs` (dispatch) → `statements/*` → `fact*.rs` → `object/*` → `param.rs`
 - Keywords: `keywords.rs` (no legacy `syntax::keywords` import)
-- Exec wiring may lag parse: see `examples/new_pipeline/stmt_nodes/README.md`
+- Exec wiring may lag parse: see `examples/stmt_nodes/README.md`
 - Human tutorial: `docs/Manual.md` / `docs/Litex_Learner_Cheatsheet.md`
 
 Acceptance for cited tracers:
@@ -64,7 +64,7 @@ Rejected at dispatch (intentional):
 |---|---|
 | top-level `?` | goals live inside claim/thm/by/… |
 | `import` | declare deps in `litex.config` |
-| `setting` | not supported in new_pipeline |
+| `setting` | not supported |
 | bare `strong_induc` | only after `by` |
 | `have algo for fn …` | removed; use top-level `algo name(…) ret by cases:` / `by induc …:` |
 | `have tuple\|cart\|seq\|finite_seq\|matrix` | removed; use `have fn` |
@@ -79,7 +79,7 @@ Rejected at dispatch (intentional):
 1 + 1 = 2
 ```
 
-Tracer: `examples/new_pipeline/stmt_nodes/fact/execute_fact.lit`
+Tracer: `examples/stmt_nodes/fact/execute_fact.lit`
 
 ### `let`
 
@@ -236,7 +236,7 @@ sketch:
     1 = 1
 ```
 
-Tracers: `examples/new_pipeline/stmt_nodes/proof_block/claim.lit`,
+Tracers: `examples/stmt_nodes/proof_block/claim.lit`,
 `sketch.lit`.
 
 ### `trust`
@@ -277,7 +277,7 @@ eval (1 + 2)^2
 Rewrite via `known_closed_numeric_equal`, then recursively evaluate
 (closed-numeric simplify; Identifier FnObj → stored algo). Does not store a
 proof fact. Recursive-algo examples deferred.
-Tracer: `examples/new_pipeline/stmt_nodes/command/eval.lit`
+Tracer: `examples/stmt_nodes/command/eval.lit`
 
 ### `release` / `expand`
 
@@ -371,7 +371,7 @@ Body entries are QF (atomic / and / chain / or / leading `not` on arms). Empty `
 
 `not exist …` is allowed; **`not exist!` is not**.
 
-Tracer: `examples/new_pipeline/wd/fact/exist.lit`
+Tracer: `examples/wd/fact/exist.lit`
 
 ### Forall
 
@@ -413,7 +413,7 @@ forall x R: x != 0 => 1 / x = 1 / x
 
 Preferred authoring (no empty dom): write then-only `forall x R:` rather than `forall x R:` + bare `=>:`.
 
-Tracer: `examples/new_pipeline/wd/fact/forall.lit`
+Tracer: `examples/wd/fact/forall.lit`
 
 ---
 

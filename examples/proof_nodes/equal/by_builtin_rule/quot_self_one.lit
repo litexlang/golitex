@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.QuotSelfOne
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/quot_self_one.lit
+
+have a N+
+quot(a, a) = 1

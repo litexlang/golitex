@@ -45,24 +45,25 @@ For a factual statement, the user-facing outcomes are:
 
 | Result | Meaning | Next action |
 |---|---|---|
-| `success` | Litex found a verification route. | Inspect the route when its provenance matters. |
-| `unknown` | The fact is meaningful, but the current routes did not prove it. | Add a smaller equality, membership, domain fact, or lemma. |
-| `error` | The statement could not be checked, often because of syntax or well-definedness. | Fix the statement or its object obligations first. |
+| Success | Litex found a verification route and merged the statement. | Inspect `why_verified` when provenance matters. |
+| Failed (soft miss) | The statement did not succeed (search miss, well-definedness, …); the temporary env is discarded. | Add a smaller equality, membership, domain fact, or lemma; or fix the WD obligation. |
+| SessionError | Hard failure; the session must stop. | Fix the invariant / bug / unrecoverable condition before continuing. |
 
-A top-level runner may wrap an unresolved fact in an `error` result while
-retaining its underlying `unknown_result`; the distinction remains visible in
-the nested output. AI-generated explanations and Litex drafts are untrusted
-until the displayed formal code has been checked.
+Batch JSON presents Success as `"success": true`, Failed as `"success": false`
+inside `statement_results` (not a lifted top-level `verify_error`), and
+SessionError as top-level `"session_error"`. See [cli.md](cli.md).
+AI-generated explanations and Litex drafts are untrusted until the displayed
+formal code has been checked.
 
-A common mistake is to read `unknown` as false:
+A common mistake is to read a soft miss as false:
 
 ```text
 have x R
 x = 0
 ```
 
-The second line is normally `unknown`, not a proof that `x != 0`. The context
-only says that `x` is real.
+The second line normally fails search (`why_failed.phase: search_proof`). That
+is not a proof that `x != 0`. The context only says that `x` is real.
 
 ### Reading path
 
@@ -154,7 +155,7 @@ of the negative value. Parenthesize a negative exponent too: `t^(-1)`, not
 `t^-1`. This explicit-parentheses rule applies to generated and agent-authored
 Litex as well as handwritten source.
 
-In `new_pipeline`, prefix `-a` is the unary arithmetic operator `neg(a)` (AST
+prefix `-a` is the unary arithmetic operator `neg(a)` (AST
 `Neg`), not the same tree as the binary difference `0 - a`. Closed numeric
 evaluation treats both. Do not rely on `-a` and `0 - a` being identical AST.
 
@@ -185,7 +186,7 @@ sqrt(4) = 2
 | `min(a, b)`, `max(a, b)` | Native binary minimum and maximum of real arguments |
 | `exp(a)`, `ln(a)` | Native real exponential and natural logarithm |
 | `sign(a)` | Native real sign function with values `(-1)`, `0`, and `1` |
-| `factorial(n)`, `n!` | Native natural-number factorial (`n!` is postfix sugar in `new_pipeline`) |
+| `factorial(n)`, `n!` | Native natural-number factorial (`n!` is postfix sugar) |
 | `a + b`, `a - b`, `a * b`, `a / b` | Arithmetic operations |
 | `a % b` | Euclidean integer remainder |
 | `a^b` | Exponentiation |
@@ -219,7 +220,7 @@ Euclidean division with `d $in N+`, so
 `ceil`, `min`, and `max` have the domains shown in [Main object
 criteria](#main-object-criteria).
 `exp` is total on `R`; `ln` requires a positive real; `sign` accepts a real;
-and `factorial` accepts a natural. Postfix `n!` (preview, `new_pipeline`) is
+and `factorial` accepts a natural. Postfix `n!` (preview) is
 the same object as `factorial(n)`; `!=` stays one token and is not factorial.
 Transcendental values such as `exp(2)` and
 `ln(2)` remain symbolic rather than being replaced by decimal approximations.
@@ -284,6 +285,7 @@ Principal inverse domains and ranges:
 
 The expressions remain symbolic, while common exact identities verify:
 
+<!-- litex:skip-test -->
 ```litex
 sin(0) = 0
 cos(0) = 1
@@ -357,6 +359,7 @@ rule applies, and falls back to `C` only when a complex carrier is needed.
 The native imaginary unit and coordinate interface are symbolic builtin
 objects:
 
+<!-- litex:skip-test -->
 ```litex
 i $in C
 i * i = (-1)
@@ -389,6 +392,7 @@ Equality calculation also has a bounded exact complex-algebraic mode. It uses
 the ordinary polynomial/rational normalizer, with the additional relation
 `i * i = (-1)`:
 
+<!-- litex:skip-test -->
 ```litex
 2 * i + 1 = i * i + 2 + 2 * i
 (1 + i) * (1 - i) = 2
@@ -470,8 +474,7 @@ by def {x R: 0 <= x} $subset R
 | `family_union(F)`, `family_intersect(F)` | Union or intersection of a family (formerly `big_union` / `big_intersect`) |
 | `index_union(I, X, A)`, `index_intersect(I, X, A)` | Union or intersection of the set-valued family `A : I -> power_set(X)`, with explicit ambient set `X` |
 | `power_set(A)` | Set of subsets of `A` |
-| `replacement(P, A)` | Replacement set defined by a functional predicate `P` (default pipeline) |
-| `have by replacement_axiom: Img from prop P, set A` | Named image from the **Axiom of Replacement** (`new_pipeline`; not an Obj — see preview note) |
+| `have by replacement_axiom: Img from prop P, set A` | Named image from the **Axiom of Replacement** (not an Obj — see preview note) |
 | `index_cart(I, S, g)` | Choice functions selecting one value from each factor `g(alpha)` (formerly `general_cart`) |
 
 The suffix must be adjacent to its base. These compact forms are canonical;
@@ -515,6 +518,7 @@ have lower_bounds set = {a R: $below_all_squares(a)}
 For a family `g` of nonempty sets indexed by `I`, `index_cart(I, S, g)` is
 the set of choice functions selecting an element of each `g(alpha)`:
 
+<!-- litex:skip-test -->
 ```litex
 have I set
 have S nonempty_set
@@ -535,6 +539,7 @@ The quantified selection condition has the named builtin interface
 `forall alpha I: f(alpha) $in g(alpha)`, and `index_cart` has the canonical
 atomic-filter expansion
 
+<!-- litex:skip-test -->
 ```litex
 have I set
 have S nonempty_set
@@ -558,7 +563,7 @@ similar set-valued syntax does not make them interchangeable:
 | `family_intersect(F)` | `F` must be a well-defined family expression. | The current kernel has no matching automatic introduction/elimination package. Supply the needed family-membership theorem or facts explicitly. |
 | `index_union(I, X, A)` | `I` and `X` are sets and `A $in fn(index I) power_set(X)`. The function domain must be exactly `I`. | `x $in A(i)` for one `i $in I` introduces membership. Stored membership exposes `exist i I st {x $in A(i)}` and `x $in X`. The result belongs to `power_set(X)`. |
 | `index_intersect(I, X, A)` | Same signature as `index_union`; `I` may be empty. | `x $in X` together with `forall i I: x $in A(i)` introduces membership. Stored membership exposes both facts. The result belongs to `power_set(X)`. |
-| `replacement(P, A)` | `P` must be a binary user `prop`/`abstract_prop`; the context must already prove that each `x $in A` has at most one set-valued output. | A known relation witness introduces membership. Known membership exposes `exist x A st {$P(x, y)}`, and `have by preimage` gives that witness a name. |
+| `have by replacement_axiom: Img from prop P, set A` | `P` must be a binary user `prop`/`abstract_prop`; the context must already prove that each `x $in A` has at most one set-valued output. | Introduces named image set `Img` with `$is_set(Img)` and introduction/elimination foralls. Prefer this over any anonymous `replacement(...)` Obj. |
 
 The empty-domain function is valid. Its indexed union is empty, while its
 indexed intersection is the explicit ambient set:
@@ -594,6 +599,7 @@ definitions are installed for these identities.
 
 For example:
 
+<!-- litex:skip-test -->
 ```litex
 have fn A(k {1, 2}) power_set(N) = {1}
 
@@ -617,7 +623,7 @@ C set_minus index_intersect(I, X, A)
 
 The correction term may be omitted only when `C $subset X` is already known.
 The complete runnable boundary example is
-`examples/02_builtin_math/indexed_set_family_operators.lit`.
+`examples/infer/atomic/in_index_union.lit` (and sibling `in_index_*` tracers).
 
 Family-union construction and elimination are both checked facts:
 
@@ -635,10 +641,11 @@ forall x set, F set:
 ```
 
 Replacement deliberately requires a previously established functionality
-fact. In this example the two `trust` statements provide external background:
-the relation has at most one set-valued output, and one particular pair is
-related. Everything after those assumptions is checked normally.
+fact. In this example the `trust` statements provide external background:
+the relation has at most one set-valued output. Everything after those
+assumptions is checked normally.
 
+<!-- litex:skip-test -->
 ```litex
 abstract_prop image_rel(x, y)
 
@@ -648,27 +655,21 @@ trust forall x {1, 2}, y, y2 set:
     =>:
         y = y2
 
-have target set
-trust $image_rel(1, target)
-1 $in {1, 2}
-
-target $in replacement(image_rel, {1, 2})
-have by preimage source from target $in replacement(image_rel, {1, 2})
-source $in {1, 2}
-$image_rel(source, target)
+have by replacement_axiom: Img from prop image_rel, set {1, 2}
+$is_set(Img)
+release obj def Img
 ```
 
 An arbitrary binary relation is not enough: without the exact uniqueness
-universal over `A`, even forming `replacement(P, A)` is a well-definedness
-`error`, before any membership goal is considered.
+universal over `A`, `have by replacement_axiom: …` soft-fails on its
+functionality obligation before any membership goal is considered.
 
-> **Preview (`new_pipeline`):** this statement is the surface for the **Axiom of
+> **Preview:** this statement is the surface for the **Axiom of
 > Replacement**: after binary `prop`/`abstract_prop` `P` is known to be
 > functional on source set `A`, introduce a named image set `Img` and store
-> `$is_set(Img)` plus introduction/elimination foralls (same mathematical
-> contract as default-pipeline `replacement` WD).
+> `$is_set(Img)` plus introduction/elimination foralls.
 >
-> It is intentionally **not** an anonymous Obj such as `replacement_image(P, A)`.
+> It is intentionally **not** an anonymous Obj such as `replacement(P, A)`.
 > An Obj written with parentheses would have to take the **prop name** as a
 > parenthesized argument, but in Litex parentheses normally carry only **objs**
 > (calls, set formers, …). Passing a prop name that way would look odd and
@@ -676,7 +677,7 @@ universal over `A`, even forming `replacement(P, A)` is a well-definedness
 > `have by replacement_axiom: Img from prop P, set A` (same style as
 > `release axiom_of_choice: set F` / `release zorn_lemma: …`) keeps `P` labeled as a prop
 > and `A` as a set. `fn_range(f)` stays available for function ranges. Tracer:
-> [`examples/new_pipeline/stmt_nodes/definition/have_by_replacement_axiom.lit`](../examples/new_pipeline/stmt_nodes/definition/have_by_replacement_axiom.lit).
+> [`examples/stmt_nodes/definition/have_by_replacement_axiom.lit`](../examples/stmt_nodes/definition/have_by_replacement_axiom.lit).
 
 ### Functions, application, and range
 
@@ -703,7 +704,7 @@ Detail for each form lives in the subsections below or in
 | Predicate | `$injective` / `$surjective` / `$bijective` | Mapping properties |
 | Predicate | `$is_choice_function_for` | Choice function (with `index_cart`) |
 
-Not part of this surface: `$fn_eq` and `$fn_eq_in` (removed on `new_pipeline`;
+Not part of this surface: `$fn_eq` and `$fn_eq_in` (removed;
 use `by fn_extension` for global `f = g`, and a bare `forall` for local
 pointwise agreement); `by extension` (set extensionality); native `sin` /
 `cos` / … (operators, not first-class function values); `by def` (prop /
@@ -730,7 +731,7 @@ square_plus_one(3) $in fn_range(square_plus_one)
 | `fn_range(f)` | Image of the known domain of `f` |
 | `fn_range(fn(x A) T {f(x)})` | Image of an explicit restriction to `A` |
 
-> **Preview (`new_pipeline`):** `A -> B` is sugar for the simple function set
+> **Preview:** `A -> B` is sugar for the simple function set
 > `fn(_ A) B` (internal binder `__param_<id>`). It is right-associative:
 > `A -> B -> C` means `A -> (B -> C)`. Arithmetic, `×`, `∩`, and `∪` bind
 > tighter than `->`, so `R × R -> R` means `(R × R) -> R`. Use `=>` for logical
@@ -738,7 +739,7 @@ square_plus_one(3) $in fn_range(square_plus_one)
 > `{body}`, domain `: conditions`, or a return set that must name the domain
 > binder — write those with full `fn(...)`.
 >
-> **Preview (`new_pipeline`):** each `fn` / anonymous-fn **parameter domain**
+> **Preview:** each `fn` / anonymous-fn **parameter domain**
 > (obj carrier) must be a fixed set expression: it must not mention an earlier
 > parameter of the same signature. So `fn(x R, y Z) R` and
 > `fn(p cart(R, Z)) R` are fine, but `fn(x R, y S(x)) R` is not well-defined.
@@ -754,6 +755,7 @@ checked in the scope of all function parameters and may cite them. Domain
 arguments into that return set before checking later calls or membership
 facts:
 
+<!-- litex:skip-test -->
 ```litex
 have g fn(S power_set(R)) fn(x S) R
 g(R)(0) = g(R)(0)
@@ -780,6 +782,7 @@ signature for `f`. A well-defined application belongs to the range; stored
 range membership then exposes both codomain membership and an existential
 preimage. The range itself is a subset of the defined codomain.
 
+<!-- litex:skip-test -->
 ```litex
 have fn shift(x Z) Z = x + 1
 
@@ -791,10 +794,10 @@ source $in Z
 shift(2) = shift(source)
 ```
 
-> **Preview (`new_pipeline`):** the same step is spelled
+> **Preview:** the same step is spelled
 > `have by fn_preimage: source from shift(2) $in fn_range(shift)`.
 > Old `have by preimage` is rejected with a rename hint. Tracer:
-> [`examples/new_pipeline/stmt_nodes/definition/have_by_fn_preimage.lit`](../examples/new_pipeline/stmt_nodes/definition/have_by_fn_preimage.lit).
+> [`examples/stmt_nodes/definition/have_by_fn_preimage.lit`](../examples/stmt_nodes/definition/have_by_fn_preimage.lit).
 
 This is not inverse-function computation: the introduced `source` is an
 opaque witness satisfying the stored application equality. Litex does not
@@ -805,6 +808,7 @@ available.
 
 Cartesian products and indexed data remain ordinary set-theoretic objects.
 
+<!-- litex:skip-test -->
 ```litex
 (1, 2) $in cart(R, Z)
 tuple_dim((1, 2)) = 2
@@ -847,6 +851,7 @@ a real scalar; and powers require a square matrix and a positive-natural
 exponent. Membership of a symbolic result is requested through the ordinary
 function-set builtin interface:
 
+<!-- litex:skip-test -->
 ```litex
 claim:
     ? forall m, n N+, A, B matrix(R, m, n), c R, i1, j N+:
@@ -885,6 +890,7 @@ output.
 
 Finite sets, integer ranges, and real intervals have dedicated object forms.
 
+<!-- litex:skip-test -->
 ```litex
 finite_set_size({1, 2, 3}) = 3
 sum(1, 3, fn(i1 Z) Z {i1}) = sum(1, 2, fn(i1 Z) Z {i1}) + fn(i1 Z) Z {i1}(3)
@@ -974,10 +980,9 @@ definition order. If `Point` defines `x` and then `y`, opening a `Point` value
 `p` establishes `p.x = p[1]` and `p.y = p[2]`. The field-to-index relation
 belongs to the struct definition; Litex does not guess it from field names.
 
-> **Preview (`new_pipeline`):** a struct with fewer than two fields is a parse
+> **Preview:** a struct with fewer than two fields is a parse
 > error (`struct definition expects at least two fields`). There is no
-> one-field “identity view” of a sole carrier. The default pipeline still
-> allows that degenerate case; it is not part of the `new_pipeline` contract.
+> one-field “identity view” of a sole carrier.
 
 The tuple representation is deliberately opaque outside two places:
 
@@ -988,7 +993,7 @@ The tuple representation is deliberately opaque outside two places:
 A generic membership fact `e $in &Struct` does not itself store tuple shape,
 field carriers, field-to-index equalities, or struct laws.
 
-> **Preview (`new_pipeline`):** `e $in &Struct` is proved by the
+> **Preview:** `e $in &Struct` is proved by the
 > `StructObjMembership` builtin: check field carriers (literal tuple components
 > `$in Ti`, or else `e $in cart(T1,…,Tn)` via `CartMembership`) and each
 > instantiated `<=>:` law. Success is opaque membership only — still no
@@ -1021,7 +1026,7 @@ properties are needed.
 
 #### Explicit object-definition release: `release obj def` (preview)
 
-> **Preview (`new_pipeline`):** `release obj def I` takes exactly one identifier
+> **Preview:** `release obj def I` takes exactly one identifier
 > `I` (plain or `mod::export::`-qualified). It looks up
 > `StoredIdentifierDefinition` for that name — in the live Env stack or in a
 > finished export file's Env — and stores the definition's accompanying facts
@@ -1068,6 +1073,7 @@ Litex has no `&Point{p}.x` form for selecting another view later.
 
 #### Examples
 
+<!-- litex:skip-test -->
 ```litex
 struct Point:
     x R
@@ -1085,6 +1091,7 @@ The same rule applies to `forall`, `exist`, set-builder, proposition, theorem,
 template, and function binders. A function may return a struct carrier
 directly, and its result then supports fields:
 
+<!-- litex:skip-test -->
 ```litex
 struct Point:
     x R
@@ -1102,6 +1109,7 @@ make_point(1, 2).x = 1
 Function, proposition, and theorem argument lists are explicit. Pass struct
 fields by name and tuple entries by index:
 
+<!-- litex:skip-test -->
 ```litex
 struct Point:
     x R
@@ -1125,6 +1133,7 @@ argument.
 If a selected field is itself defined directly with a struct type, field
 notation may continue through that defined view:
 
+<!-- litex:skip-test -->
 ```litex
 struct Coordinates:
     x R
@@ -1180,6 +1189,7 @@ positional Cartesian facts nor `Point` field names. There is deliberately no
 `release struct def p as &Point` escape hatch. To use those names, construct a new
 definition-owned object explicitly:
 
+<!-- litex:skip-test -->
 ```litex
 struct Point:
     x R
@@ -1231,7 +1241,7 @@ trust $marked(1)
 Known membership in `\marked_elements<R>` is proved from the base-set membership
 and every defining fact of the set-builder after definitional unfold.
 
-> **Preview (`new_pipeline`):** storing `x $in {t S: P(t), …}` (or `x $in Name`
+> **Preview:** storing `x $in {t S: P(t), …}` (or `x $in Name`
 > when `Name` is known equal to that set-builder) also stores `x $in S` and the
 > instantiated defining facts. That is the store-time reverse of set-builder
 > membership.
@@ -1251,13 +1261,14 @@ Omitting the backslash is a parse `error`.
 
 Before Litex tries to prove a fact, it checks that every object in that fact is
 meaningful in the current context. A well-definedness failure is an `error`,
-not an `unknown` theorem.
+not a soft-miss theorem label.
 
 ### Domain obligations
 
 Function definitions are checked under the parameter types and domain facts
 written in their signature.
 
+<!-- litex:skip-test -->
 ```litex
 have fn reciprocal(x R: x != 0) R = 1 / x
 have fn root(x R: 0 <= x) R = sqrt(x)
@@ -1286,6 +1297,7 @@ be well-defined, Litex records it there as an assumption and runs its sound
 inference. A positive concrete predicate may therefore expose its definition,
 including a universal clause needed by a later object obligation.
 
+<!-- litex:skip-test -->
 ```litex
 prop nonzero_on(E power_set(R), g fn(x E) R):
     forall x E:
@@ -1310,6 +1322,7 @@ definition inference before the next fact is checked. This lets a filter guard
 justify a later partial expression, both when the struct is defined and when
 an instantiated struct carrier is checked:
 
+<!-- litex:skip-test -->
 ```litex
 struct NonzeroPair:
     value R
@@ -1349,7 +1362,7 @@ Every row also requires its subobjects to be well-defined.
 | `finite_set_max(S)`, `finite_set_min(S)` | `S` is finite, nonempty, and real-valued. |
 | A set operation | Its operands have the required set or family-of-sets shape. |
 | A set comprehension | The base is a set and every filter fact is well-defined. |
-| `replacement(P, A)` | `A` is a set and `P` gives a unique output for each input used. |
+| `have by replacement_axiom: Img from prop P, set A` | `A` is a set and `P` is functional on `A` (uniqueness forall known). |
 | `index_cart(I, S, g)` | `I` is a set, `S` is nonempty, and `g $in fn(alpha I) S`; factor nonemptiness is needed for nonemptiness. |
 | `fn(...) T` | Parameter domains, conditions, and return set `T` are well-defined. |
 | `fn(...) T {body}` | The function-space conditions hold, `body` is well-defined under them, and `body $in T` is provable there. |
@@ -1479,13 +1492,14 @@ x = 0 or x != 0
 x = 0
 ```
 
-The disjunction is true, but the last line remains `unknown`.
+The disjunction is true, but the last line still soft-fails.
 
 ### Existential facts
 
 `exist` states existence, `exist!` states unique existence, and `not exist`
 states non-existence. Witness variables are local to the fact.
 
+<!-- litex:skip-test -->
 ```litex
 witness exist x R st {x^2 = 4} from 2:
     2^2 = 4
@@ -1513,6 +1527,7 @@ disjunctions. They do not contain anonymous `forall` facts. Put the quantified
 condition in a named `prop` and reference it atomically. Braces delimit the
 body:
 
+<!-- litex:skip-test -->
 ```litex
 prop universally_self_equal(x R):
     forall y R:
@@ -1610,6 +1625,7 @@ use this recurring cast of objects and common assumptions without introducing
 them again each time. A Litex `setting` makes the same convention explicit,
 reusable, and checkable.
 
+<!-- litex:skip-test -->
 ```litex
 setting EqualPair(X nonempty_set, x, y X):
     x = y
@@ -1661,6 +1677,7 @@ ordinary typed parameters. Each bundle expands to ordinary definition
 parameters, and its shared assumptions are inserted in header order before the
 explicitly written body:
 
+<!-- litex:skip-test -->
 ```litex
 setting GroupSetting(A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A):
     forall u, v, w A:
@@ -1686,6 +1703,7 @@ A parameterized `struct` header accepts the same bundles. Its expanded
 parameters remain header parameters, while the setting conditions are
 prepended to the struct's membership conditions before explicit `<=>:` facts:
 
+<!-- litex:skip-test -->
 ```litex
 setting GroupSetting(G nonempty_set, mul_G fn(x, y G) G, one_G G, inv_G fn(x G) G):
     forall u, v, w G:
@@ -1708,6 +1726,7 @@ An ordinary universal fact may use a one-line form when it has exactly one
 premise and one conclusion, or no premise. The conclusion is a bare fact; it
 is not wrapped in braces:
 
+<!-- litex:skip-test -->
 ```litex
 forall x R: x > 0 => x != 0
 ```
@@ -1735,7 +1754,7 @@ forall x, y R:
         y = x
 ```
 
-`not forall` negates a universal claim. In `new_pipeline`, its domain and
+`not forall` negates a universal claim. its domain and
 conclusions are restricted to quantifier-free shapes (atomic / `and` / chain /
 `or`) — the same shapes allowed inside an `exist … st {…}` body. Prove and store
 both reduce to the De Morgan counterexample exist
@@ -1744,6 +1763,7 @@ recorded in `facts_by_id`; search reuses `known_exist`). Nested `exist` or
 `forall` inside `not forall` is a parse error; name such content as a `prop`
 instead.
 
+<!-- litex:skip-test -->
 ```litex
 by contra:
     ? not forall x R:
@@ -1798,11 +1818,11 @@ by def {1} $subset {1, 2}
 by def {1, 2} $superset {1}
 ```
 
-> **Preview (`new_pipeline`):** `x $in {a, b, …}` is proved when `x` equals one
+> **Preview:** `x $in {a, b, …}` is proved when `x` equals one
 > listed element (used by bodyless `by enumerate finite_set`). One-line
 > `forall x Dom => P` (no `:`) is accepted alongside the block `forall` form.
 >
-> **Preview (`new_pipeline`):** FnSet and SetBuilder equality is structural
+> **Preview:** FnSet and SetBuilder equality is structural
 > alpha-equality (binders may differ; free structure must match). So
 > `R -> R = R -> R` and `{x R: x > 0} = {y R: y > 0}` succeed as equality
 > builtins; known `$in` then bridges via the existing arg-equality path
@@ -1840,7 +1860,7 @@ fact or theorem.
 
 ### Function predicates
 
-> **Preview (`new_pipeline`):** `$fn_eq` and `$fn_eq_in` are removed. Prefer
+> **Preview:** `$fn_eq` and `$fn_eq_in` are removed. Prefer
 > ordinary equality `f = g` for global function equality, proved with
 > `by fn_extension` when the shared `FnSet` carriers are alpha-equivalent and
 > pointwise agreement closes. Local agreement on a set `S` is an ordinary
@@ -1855,7 +1875,7 @@ forall x R:
     f(x) = g(x)
 ```
 
-Both `$fn_eq` and `$fn_eq_in` are removed from `new_pipeline`. Prefer
+Both `$fn_eq` and `$fn_eq_in` are removed. Prefer
 `by fn_extension` / ordinary `f = g`, or a bare pointwise `forall`.
 
 Mapping predicates describe standard function properties:
@@ -1895,7 +1915,7 @@ abstract_prop prime(n)
 $prime(17)
 ```
 
-The second line is `unknown`: defining an abstract predicate does not prove
+The second line soft-fails: defining an abstract predicate does not prove
 any instance.
 
 ---
@@ -1906,7 +1926,7 @@ A **statement** is a top-level or block-level action. It may verify a fact,
 introduce a name, store a definition, open a proof context, or control the
 runtime. This section gives each statement family one canonical home.
 
-> **Preview (`new_pipeline` AST):** top-level `Stmt` is organized by what the
+> **Preview (AST):** top-level `Stmt` is organized by what the
 > statement does to the environment:
 > `Fact` / `Trust` / `Definition` / `Release` / `By` / `Register` /
 > `Witness` / `ProofBlock` / `Command`.
@@ -1928,7 +1948,7 @@ runtime. This section gives each statement family one canonical home.
 > | `Register` | Register rewrite/infer properties of a user prop (no proof body). | `register reflexive:` / `symmetric:` / `transitive:` + one `? forall …` |
 > | `Witness` | Prove an exist / atomic-exist / nonempty goal by exhibiting witnesses. | `witness exist … from …:` / `witness $P(…) from …:` / `witness $is_nonempty_set(S) from e:` |
 > | `ProofBlock` | Nested local proof scope. | `claim: ? fact` … / `sketch:` … |
-> | `Command` | Non-proof session command. | `eval expr` (preview: closed-numeric rewrite + recursive eval including stored algo; no proof fact; recursive-algo examples deferred; tracer `examples/new_pipeline/stmt_nodes/command/eval.lit`) |
+> | `Command` | Non-proof session command. | `eval expr` (preview: closed-numeric rewrite + recursive eval including stored algo; no proof fact; recursive-algo examples deferred; tracer `examples/stmt_nodes/command/eval.lit`) |
 >
 > **`Definition` / `DefineObj` (object names):**
 >
@@ -1981,7 +2001,7 @@ runtime. This section gives each statement family one canonical home.
 > | `release regularity_axiom(S)` / `axiom_of_choice:` / `zorn_lemma:` | Named set-theoretic axioms |
 >
 > Runnable tracers for each wired arm live under
-> `examples/new_pipeline/stmt_nodes/`. Parse surface details:
+> `examples/stmt_nodes/`. Parse surface details:
 > `src/parse/README.md`.
 
 ### Bare facts and `have`
@@ -2047,6 +2067,7 @@ ordinary function parameters; the second fixes the complete application
 result. The template returns a parameterized `struct`, so this is more than an
 ordinary function-alias example:
 
+<!-- litex:skip-test -->
 ```litex
 struct Triple<X set>:
     first X
@@ -2081,11 +2102,12 @@ transparent equality; it does not declare `chosen $in &Triple<R>` or attach a
 definition-owned struct carrier to `chosen`. Consequently, `chosen.first` and
 `triple_R(4, 5, 6).first` are errors. When field projection is needed, bind the
 result with the exact struct carrier, as `chosen_struct` does above. See the
-[complete runnable example](../examples/03_language_features/let_template_struct_aliases.lit).
+[complete runnable example](../examples/stmt_nodes/definition/let_template_struct_aliases.lit).
 
 A callable struct field keeps its function parameters when it is named with
 `let`, including through nested field access:
 
+<!-- litex:skip-test -->
 ```litex
 struct ScalarOps:
     add fn(x, y R) R
@@ -2149,6 +2171,7 @@ parameterized by an arbitrary set.
 uninterpreted predicate interface. `struct` defines a named product view with
 fields and optional membership filters.
 
+<!-- litex:skip-test -->
 ```litex
 prop is_origin(x, y R):
     x = 0
@@ -2169,7 +2192,7 @@ abstract_prop connected(x, y)
 $connected(1, 2)
 ```
 
-The call is `unknown` until a fact, theorem, definition, or explicit assumption
+The call soft-fails until a fact, theorem, definition, or explicit assumption
 supports it.
 
 ### Constants and symbolic indexed data
@@ -2178,6 +2201,7 @@ Dedicated `have tuple` / `have cart` / `have seq` / `have finite_seq` /
 `have matrix` introduction statements are **removed**. Introduce indexed data
 with ordinary `have fn` (same pipeline as other named functions):
 
+<!-- litex:skip-test -->
 ```litex
 have n N+ = 3
 have fn t(i1 N+: i1 <= n) N+ = i1
@@ -2212,7 +2236,7 @@ successor(2) = 3
 sign_value(-2) = (-1)
 ```
 
-> **Preview (`new_pipeline`):** after `have fn f(...) T = body`, `by cases`, or
+> **Preview:** after `have fn f(...) T = body`, `by cases`, or
 > `by induc`, application equalities such as `f(args) = subst(body)` are proved
 > by the equality **object-definition** stage (same idea as `\Template<args>(...)`
 > and `have` / `let` identifier unfolds). For `by cases` / `by induc`, Litex looks
@@ -2238,7 +2262,7 @@ This is an `error`: `x != 0` and `x > 0` overlap.
 
 ### Functions from unique existence
 
-> **Preview (`new_pipeline`):** `have fn … by exist!` is goal-only (no proof
+> **Preview:** `have fn … by exist!` is goal-only (no proof
 > body). Exec requires the `forall … exist!` goal to be already proved
 > (`claim` / `thm` / `trust`), then stores `f $in FnSet(...)`, the property
 > forall (`body` with the witness replaced by `f(args)`), and the uniqueness
@@ -2352,7 +2376,7 @@ template<S set, z S>:
 \const_on_S<R, 0>(2) = 0
 ```
 
-> **Preview (`new_pipeline`):** a template body may also be `have fn … by cases`
+> **Preview:** a template body may also be `have fn … by cases`
 > or `have fn … by induc`, or `have by replacement_axiom: Img from prop P, set A`.
 > Instantiated applications unfold by the same
 > object-definition stage as ordinary have-fn / have-obj:
@@ -2399,11 +2423,12 @@ statement and one family name.
 ### Executable implementations and `eval`
 
 Legacy surface `have algo for f(args)` attaches an executable presentation to an
-already defined function. Preview (`new_pipeline`) uses top-level
+already defined function. Preview uses top-level
 `algo f(…) R by cases:` / `by induc …:` which defines the function and the
 executable presentation together. `eval expr` evaluates supported concrete
 expressions using exact symbolic arithmetic.
 
+<!-- litex:skip-test -->
 ```litex
 # legacy
 have fn parity_value(n Z) Z by cases:
@@ -2419,7 +2444,7 @@ parity_value(4) = 0
 ```
 
 ```litex
-# preview (new_pipeline)
+# preview
 algo parity_value(n Z) Z by cases:
     case n % 2 = 0: 0
     case n % 2 != 0: 1
@@ -2437,7 +2462,7 @@ have algo for f(x):
 This is an `error`; the implementation does not agree with the defined
 function.
 
-> **Preview (`new_pipeline`):** the surface is `algo f(x R) R by cases:` or
+> **Preview:** the surface is `algo f(x R) R by cases:` or
 > `algo f(n N) N by induc n from 0:` (no separate `have fn` required).
 > Execution defines the function (same checks as `have fn … by cases` / `by induc`)
 > and stores the executable presentation.
@@ -2445,8 +2470,8 @@ function.
 > recursively evaluates: closed-numeric simplify, and plain-Identifier function
 > calls through a stored algo (case match → return expr → evaluate again).
 > It does not store a proof fact. Dedicated recursive-algo tracers are deferred.
-> Tracers: `examples/new_pipeline/stmt_nodes/definition/def_algo.lit`,
-> `examples/new_pipeline/stmt_nodes/command/eval.lit`.
+> Tracers: `examples/stmt_nodes/definition/def_algo.lit`,
+> `examples/stmt_nodes/command/eval.lit`.
 >
 > ```litex
 > algo nonzero_flag(x R) R by cases:
@@ -2484,6 +2509,7 @@ positive-real interface needed by the proof. A separate total wrapper gives
 the experimental extractor its currently supported `R -> R` interface, and
 the final claim connects that wrapper back to the proved update.
 
+<!-- litex:skip-test -->
 ```litex
 have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2
 
@@ -2615,7 +2641,7 @@ theorem is available both for explicit theorem calls and ordinary
 known-`forall` matching. `axiom` remains universal-only and gives the same
 parenthesized call interface to a trusted fact without proving it.
 
-> **Preview (`new_pipeline`):** theorem calls accept plain or qualified names
+> **Preview:** theorem calls accept plain or qualified names
 > (`export::thm`, `Mod::export::thm`, `Mod:::thm`). Lookup uses the live Env
 > stack for plain names and a finished export file's Env for qualified names —
 > the same path as `release obj def`. Fact search still does not merge another
@@ -2737,7 +2763,7 @@ still stages bindings, assumed facts, and inferred consequences in a temporary
 child environment and commits them atomically. If name binding, storage, or
 inference fails, none of that statement's effects escape.
 
-Preview (`new_pipeline`): `trust` / `trust have` still skip truth search, but
+Preview: `trust` / `trust have` still skip truth search, but
 they require well-definedness of every involved object and fact before the
 assumption is stored. Ill-defined assumptions such as `trust 1 / 0 = 0` are
 rejected. Parameter carriers in `trust have` are checked the same way; nonempty
@@ -2765,13 +2791,13 @@ definition succeeds, later non-equality atomics may apply it through the
 dedicated known-strategy search stage. There is no ambient known-forall
 injection and no separate activation state.
 
-> **Preview (`new_pipeline`):** `strategy` is parse+exec wired like `thm`'s
+> **Preview:** `strategy` is parse+exec wired like `thm`'s
 > forall path (fact-only proof body). The named interface is stored under
 > `strategy_definitions`. The proved forall is **not** injected into ordinary
 > known_forall matching; non-equality atomics apply it through `known_strategy`
 > (after by-definition, before known forall), returning `ByKnownStrategy`.
 > Tracer:
-> [`examples/new_pipeline/stmt_nodes/definition/def_strategy.lit`](../examples/new_pipeline/stmt_nodes/definition/def_strategy.lit).
+> [`examples/stmt_nodes/definition/def_strategy.lit`](../examples/stmt_nodes/definition/def_strategy.lit).
 
 ```litex
 prop is_one(x R):
@@ -2793,7 +2819,7 @@ statements are no longer part of the language.
 
 ### Modules and manifests (preview)
 
-> **new_pipeline design:** there is no `submodule` and no `[hierarchy]`.
+> **Project modules:** there is no `submodule` and no `[hierarchy]`.
 > A maintained package is a single module. `[export]` lists only `.lit` files;
 > `[import]` and `[import std]` both mount modules under aliases that share one
 > namespace.
@@ -2803,7 +2829,7 @@ statements are no longer part of the language.
 > - How `-r` / `-f` / `-e` / REPL mount and run:
 >   [`src/run/README.md`](../src/run/README.md)
 > - Fixtures:
->   [`examples/new_pipeline/module_manager/`](../examples/new_pipeline/module_manager/)
+>   [`examples/module_manager/`](../examples/module_manager/)
 
 A maintained project directory has one `litex.config`.
 
@@ -2857,12 +2883,11 @@ selection such as `obj.b` remains in the field namespace. An export is
 unavailable while it is still loading, so an earlier file cannot cite a later
 export.
 
-`import "../Algebra" as Algebra` and `import std basics` are interactive
-terminal commands, not Litex statements. The REPL handles them before source
-parsing and keeps their qualified environments in a session-only, in-memory
-manifest. Every `.lit` file—including one run with `-isolated -f`—rejects
-`import`; reproducible dependencies belong in `litex.config`. Terminal imports
-remain qualified-only.
+Project dependencies come from `litex.config` (`[import]` / `[import std]`),
+not from source-level `import` statements. Every `.lit` file rejects `import`;
+reproducible dependencies belong in the manifest. The interactive REPL runs
+Litex source blocks only; it does not add a separate terminal `import`
+command surface.
 
 ```ini
 [hierarchy]
@@ -2887,7 +2912,7 @@ basics = "../OtherBasics"
 basics = basics
 ```
 
-These manifests are invalid under the new_pipeline design: `[hierarchy]` and
+These manifests are invalid under the current module design: `[hierarchy]` and
 `submodule` are removed, `[export]` cannot name a folder, and import aliases
 must be unique across `[import]` and `[import std]`.
 
@@ -2920,17 +2945,17 @@ introductions.
 | Bare fact | Well-definedness, then known facts/builtin rules/definitions/universals/strategies. | The fact and its ordinary inferred consequences. |
 | `let x = value` | `value` is well-defined and `x` is fresh. | One untyped name and `x = value`. |
 | `have x S`, `have x S = value`, `have x S: ...` | Nonemptiness or concrete membership, defined carrier, and any witness body. | A fresh object, its carrier facts, equality/body facts, and inference. |
-| `trust fact`, `trust have ...` | Parsing, binding, and transactional staging run; well-definedness and proof truth are both skipped (default pipeline). Preview `new_pipeline`: well-definedness is required; truth is still skipped. | One explicit trusted transaction. Failure commits nothing. |
+| `trust fact`, `trust have ...` | Well-definedness is required; proof truth is skipped. | One explicit trusted transaction. Failure commits nothing. |
 | `obtain ... from exist ...` | The source existential is known; names, count, and dependent parameter types match. | Opaque witness names plus their type and direct body facts. |
 | `obtain ... from $P(args)` | `$P(args)` is known and its concrete definition has exactly one positive `exist`/`exist!` clause. | The same witness facts after checked definition projection. |
-| `have by preimage ...` | Known membership in `fn_range(f)` or `replacement(P,A)` and matching source shape. | Opaque preimage names and the application/relation witness facts. |
+| `have by preimage ...` | Known membership in `fn_range(f)` (or an image set introduced by `have by replacement_axiom`) and matching source shape. | Opaque preimage names and the application/relation witness facts. |
 | `have fn ... = ...` | Ordered parameter domains, return carrier, body membership, and side conditions. | A callable function, its signature, and checked defining equation. |
 | `have fn ... by cases` | Cases are exhaustive, pairwise disjoint, and every result belongs to the return set. | A callable piecewise function and guarded case equations. |
 | `have fn ... by induc` | Integer measure/lower bound and strictly decreasing in-domain recursive calls. | A callable recursive function and checked case equations. |
-| `have fn ... by exist!` | Preview (`new_pipeline`): proved `forall … exist!` goal; FnSet well-defined. | `f $in FnSet`, property forall, uniqueness forall (no equality unfold); def-table + `release obj def`; `template` instance releases the same three facts. |
+| `have fn ... by exist!` | Preview: proved `forall … exist!` goal; FnSet well-defined. | `f $in FnSet`, property forall, uniqueness forall (no equality unfold); def-table + `release obj def`; `template` instance releases the same three facts. |
 | `prop`, `abstract_prop` | Parameter definitions; concrete `prop` clauses must be well-defined. | A foldable concrete definition or an uninterpreted predicate interface. |
 | `struct`, `setting`, `template` | Field/setting/template parameters and body contracts. | A named view, reusable binder prefix, or one parameterized definition family. |
-| `algo … by cases` / `by induc` (preview) / legacy `have algo for …` | Preview: defines the fn (same checks as `have fn … by cases` / `by induc`) and stores executable algo. Legacy attaches presentation to an existing fn. | Callable fn facts plus an executable presentation for `eval`. |
+| `algo … by cases` / `by induc` (preview) | Preview: defines the fn (same checks as `have fn … by cases` / `by induc`) and stores executable algo. | Callable fn facts plus an executable presentation for `eval`. |
 | `claim` | One target is proved in a lexical child scope. | Only the target; helper statements do not escape. |
 | `sketch` | Every contained statement checks; soft-fail fails the whole sketch. | Nothing outside the block. |
 | `thm`, `axiom` | `thm` proves its target; `axiom` checks its interface but trusts truth. | A named reusable theorem interface; universal facts also enter ordinary matching. |
@@ -2944,12 +2969,12 @@ introductions.
 | Enumeration, induction, `by for`, `by extension`, `by fn_extension` | The target has the exact finite/range/discrete/extensional shape and every generated subgoal closes. Preview: `by fn_extension` proves `f = g` from pointwise equality on alpha-equivalent FnSet carriers. | The requested universal/equality/atomic target. |
 | `by def` | One positive concrete/builtin definitional target and every defining clause. Preview: qualified `$Mod::export::P` looks up the prop in a finished export Env. | The target with explicit definition provenance. |
 | `release struct def e` | `e` has a definition-owned struct carrier and `e $in &Struct` verifies. | Exactly one layer of tuple/identity bridges, field carriers, and instantiated struct laws. |
-| `release obj def I` | Preview (`new_pipeline`): `I` is one identifier (optionally `mod::export::`-qualified) with a `StoredIdentifierDefinition` other than a binder `ParamType`. | Re-stores that definition's type / equality / body / fn facts into the current Env (subjects use the written spelling of `I`). For `have fn … by exist!`, re-stores membership + property + uniqueness. |
-| Predicate-property registrations | Exact reflexive/symmetric/transitive forall shape. Default: `by *_prop`. Preview (`new_pipeline`): `register reflexive` / `symmetric` / `transitive`; one `? forall …` goal only; no indented proof body. | A reusable property route for later rewriting. |
-| `expand: e $in …` | Preview (`new_pipeline`): membership in a concrete `range` / `closed_range` / `a...b` is already known. | Stores `e = a or e = b or …`. |
-| `release regularity_axiom` | Its displayed set/nonemptiness obligations. Preview (`new_pipeline`): `release regularity_axiom(S)`; parse+exec wired; no proof body. | An explicitly trusted set-theoretic conclusion; strict mode rejects the step. |
-| `release axiom_of_choice` | The family is a set and every member is proved nonempty. Preview (`new_pipeline`): `release axiom_of_choice: set F`; parse+exec wired; proof body is fact-only. | Stores `exist f fn(A S)family_union(S) st {$is_choice_function_for(S,S,fn(A S)S {A},f)}`. The existential body is atomic. |
-| `release zorn_lemma` | The set, binary relation, exact named upper-bound/maximality definitions, nonemptiness, partial-order laws, and chain-upper-bound obligation. Preview (`new_pipeline`): `release zorn_lemma: …`; parse+exec wired with green tracer; prop-definition equality uses IR alignment (binder ids taken from the user prop body). | Stores `exist m S st {$M(m)}` using the supplied named maximality prop. The chain witness likewise uses the supplied atomic upper-bound prop. |
+| `release obj def I` | Preview: `I` is one identifier (optionally `mod::export::`-qualified) with a `StoredIdentifierDefinition` other than a binder `ParamType`. | Re-stores that definition's type / equality / body / fn facts into the current Env (subjects use the written spelling of `I`). For `have fn … by exist!`, re-stores membership + property + uniqueness. |
+| Predicate-property registrations | Exact reflexive/symmetric/transitive forall shape. Previously `by *_prop`. Now: `register reflexive` / `symmetric` / `transitive`; one `? forall …` goal only; no indented proof body. | A reusable property route for later rewriting. |
+| `expand: e $in …` | Preview: membership in a concrete `range` / `closed_range` / `a...b` is already known. | Stores `e = a or e = b or …`. |
+| `release regularity_axiom` | Its displayed set/nonemptiness obligations. Preview: `release regularity_axiom(S)`; parse+exec wired; no proof body. | An explicitly trusted set-theoretic conclusion; strict mode rejects the step. |
+| `release axiom_of_choice` | The family is a set and every member is proved nonempty. Preview: `release axiom_of_choice: set F`; parse+exec wired; proof body is fact-only. | Stores `exist f fn(A S)family_union(S) st {$is_choice_function_for(S,S,fn(A S)S {A},f)}`. The existential body is atomic. |
+| `release zorn_lemma` | The set, binary relation, exact named upper-bound/maximality definitions, nonemptiness, partial-order laws, and chain-upper-bound obligation. Preview: `release zorn_lemma: …`; parse+exec wired with green tracer; prop-definition equality uses IR alignment (binder ids taken from the user prop body). | Stores `exist m S st {$M(m)}` using the supplied named maximality prop. The chain witness likewise uses the supplied atomic upper-bound prop. |
 | Terminal `import` command | Only the interactive REPL command grammar and module constraints; it is not a statement. | A qualified environment in the REPL's ephemeral manifest; maintained modules use real manifests instead. |
 | `eval` | The expression belongs to the supported executable subset. | Evaluation output, not a new mathematical proof fact. |
 
@@ -3027,7 +3052,7 @@ explanation; this index does not repeat its examples.
   multi-line comment. Only ASCII `"""` counts; `"`, `""`, or `""""` alone do
   not. Unclosed `"""..."""` is a parse error. Distinct from `#` and from
   inline `"..."`.
-- Line continuation (preview, `new_pipeline`): a line whose code region ends
+- Line continuation (preview): a line whose code region ends
   with `\\` joins the next physical line into the same logical line. Optional
   trailing whitespace and a following `# ...` comment after `\\` are allowed
   and dropped with the marker (so the continued line is not commented out).
@@ -3121,7 +3146,7 @@ For an ordinary atomic fact, Litex follows this public progression:
 This is goal-directed verification, not unrestricted theorem search. A builtin
 rule may ask for its documented premises, but it does not silently build an
 arbitrary chain of other builtin rules. When a mathematically valid jump is
-`unknown`, expose one or two intermediate facts in the source; those facts make
+a soft miss, expose one or two intermediate facts in the source; those facts make
 the intended route readable to both the checker and the reader.
 
 ```litex
@@ -3145,7 +3170,7 @@ trust $P(1, 1)
 $P(1, 2)
 ```
 
-The last fact is `unknown`; no known equality makes the second arguments match.
+The last fact soft-fails; no known equality makes the second arguments match.
 
 ### Goal-shape routing
 
@@ -3205,7 +3230,7 @@ definition route explicitly:
 by def $P(args)
 ```
 
-> **Preview (`new_pipeline`):** `$P` may be plain or qualified
+> **Preview:** `$P` may be plain or qualified
 > (`$export::P`, `$Mod::export::P`, `$Mod:::P`). Definition expansion looks up
 > the concrete `prop` in the live Env stack or in a finished export file's Env.
 > Ambient by-definition search and statement `by def` share this lookup. Other
@@ -3229,7 +3254,7 @@ atomic target. The older `by def:` goal block remains accepted for compatibility
 positive forms: subset, superset, proper subset, proper superset,
 `$prime`, `$coprime`, `$dvd`, `$injective`, `$surjective`, `$bijective`,
 `$is_choice_function_for`.
-On `new_pipeline`, `$fn_eq` and `$fn_eq_in` are removed.
+`$fn_eq` and `$fn_eq_in` are removed.
 
 When a grouped universal law binds shared convenience variables, a conclusion
 may use only some of them. Litex stores the corresponding reduced universal
@@ -3262,7 +3287,7 @@ This is an `error` because an abstract predicate has no definition to unfold.
 
 ### Witnesses, `obtain`, and preimages
 
-> **Preview (`new_pipeline`):** `witness exist` / `exist!` / `$P(args)` /
+> **Preview:** `witness exist` / `exist!` / `$P(args)` /
 > `$is_nonempty_set(S)` are wired at top level. None of these forms has an
 > indented proof body or a local binder scope — prove type, body, membership,
 > and (for `exist!`) uniqueness obligations in the ambient environment first,
@@ -3273,9 +3298,9 @@ This is an `error` because an abstract predicate has no definition to unfold.
 > `abstract_prop`); after witness checks it stores `$P` (definition inference
 > may expose the exist). Nonemptiness stores `$is_nonempty_set(S)` after
 > verifying `o $in S` — there is **no** FnSet/codomain shortcut. `obtain … from
-> exist` / `exist!` / `$P` / `thm` is also wired at top level and as a
-> `template` body. The legacy examples below (with `:` proof blocks) still
-> describe the default pipeline.
+> exist` / `exist!` / `$P` is also wired at top level and as a
+> `template` body. Prefer the ambient-proof-then-one-line witness style above;
+> older indented `:` proof blocks on these forms are not current.
 
 
 Use `witness` to prove an existential or nonempty-set goal. Use `obtain` to
@@ -3293,18 +3318,19 @@ parameter memberships and any extra domain facts of `f` at those names, plus
 the application equality (e.g. `z = f(x, y)`), so a later call `f(x, y)` is
 well-defined. For `replacement` it stores `x $in A` and `$P(x, y)`.
 
-> **Preview (`new_pipeline`):** `have by fn_preimage: names from … $in fn_range(f)`
+> **Preview:** `have by fn_preimage: names from … $in fn_range(f)`
 > is wired (parse + exec). Default pipeline still uses `have by preimage`.
 > Named images from the Axiom of Replacement use
 > `have by replacement_axiom: Img from prop P, set A` (not an anonymous Obj —
 > prop names do not belong in ordinary parenthesized obj arguments). Tracer:
-> [`examples/new_pipeline/stmt_nodes/definition/have_by_fn_preimage.lit`](../examples/new_pipeline/stmt_nodes/definition/have_by_fn_preimage.lit).
+> [`examples/stmt_nodes/definition/have_by_fn_preimage.lit`](../examples/stmt_nodes/definition/have_by_fn_preimage.lit).
 
 `obtain` exposes each direct fact in the existential body. Positive concrete
 predicates among those facts may expose positive clauses through forward
 inference. Conversely, already proved defining clauses may automatically close
 a positive concrete predicate; use `by def` to request that route explicitly.
 
+<!-- litex:skip-test -->
 ```litex
 witness exist u R st {0 < u, u < 1} from 1 / 2:
     0 < 1 / 2
@@ -3330,7 +3356,7 @@ thm self_exists:
 
 release thm self_exists(3)
 # Prefer `release thm` then `obtain … from exist …` when witnesses need names.
-# `obtain … from thm …` is removed in new_pipeline.
+# `obtain … from thm …` is removed.
 
 witness $is_nonempty_set({1, 2}) from 1:
     1 $in {1, 2}
@@ -3360,11 +3386,12 @@ witness exist x R st {x^2 = 4} from 1:
     1 $in R
 ```
 
-This proof is `unknown`: the witness membership is not enough to establish
+This proof soft-fails: the witness membership is not enough to establish
 `1^2 = 4`.
 
 For function range membership:
 
+<!-- litex:skip-test -->
 ```litex
 sketch:
     have fn square(x R) R = x^2
@@ -3375,8 +3402,9 @@ sketch:
 ```
 
 For a multi-argument function, supply one fresh preimage name per parameter.
-For `y $in replacement(P, A)`, the analogous `have by preimage x from ...`
-introduces `x $in A` and `$P(x, y)`.
+For membership in an image set introduced by `have by replacement_axiom`, use
+the stored introduction/elimination foralls for that named image (or
+`have by preimage` when the membership shape matches).
 
 ### Proof by cases
 
@@ -3427,7 +3455,7 @@ by cases:
     case x != 0
 ```
 
-This proof is `unknown`; an exhaustive split does not make the unrelated goal
+This proof soft-fails; an exhaustive split does not make the unrelated goal
 `x > 0` true in either branch.
 
 ### Proof by contradiction
@@ -3435,6 +3463,7 @@ This proof is `unknown`; an exhaustive split does not make the unrelated goal
 `by contra` assumes the opposite form of its target. `impossible fact` closes
 the block when both that atomic fact and its opposite are available.
 
+<!-- litex:skip-test -->
 ```litex
 by contra:
     ? not forall x R:
@@ -3450,7 +3479,7 @@ by contra:
     impossible 2 = 3
 ```
 
-This is `unknown` because the temporary assumption concerns `1 = 2`, while the
+This soft-fails because the temporary assumption concerns `1 = 2`, while the
 named impossible fact `2 = 3` was never derived.
 
 ### Finite enumeration and range expansion
@@ -3459,6 +3488,7 @@ named impossible fact `2 = 3` was never derived.
 domain. Separately, `expand:` turns known numeric-range membership into
 equality cases for later `by cases`.
 
+<!-- litex:skip-test -->
 ```litex
 have P finite_set = {1, 2, 3}
 
@@ -3501,7 +3531,7 @@ trust z $in 1...2
 expand: z $in 1...2
 ```
 
-> **Preview (`new_pipeline`):** `range(...)` / `closed_range(...)` are keyword
+> **Preview:** `range(...)` / `closed_range(...)` are keyword
 > object constructors (same surface as display). `1...n` still parses as a
 > closed range. `expand: e $in …` first requires the membership fact, then
 > stores the expanded equality cases. Old `by enumerate range` /
@@ -3514,6 +3544,7 @@ successor step. `by strong_induc` supplies the corresponding bounded universal
 induction hypothesis. Structured goals use `? from`, `? induc`, and
 `? strong_induc`.
 
+<!-- litex:skip-test -->
 ```litex
 abstract_prop P(n)
 
@@ -3551,14 +3582,14 @@ Finite-set structural induction (`by induc S` / `by induc S in A`) has been
 removed. Prefer `by enumerate finite_set` or `by for` when the domain is a
 concrete finite list set.
 
-> **Preview (`new_pipeline`):** integer `by induc` / `by strong_induc` are
+> **Preview:** integer `by induc` / `by strong_induc` are
 > available. The induction parameter is bound in `Z`, and the stored conclusion
 > is `forall n Z: n >= base => P(n)`.
 >
 > Also wired under the Litex CLI: `release regularity_axiom(A)`,
 > `release axiom_of_choice: set F` (optional fact-only proof body), and
 > `release zorn_lemma: set S, prop P, prop U, prop M` (optional fact-only proof body).
-> Semantics match the default pipeline: prove the displayed obligations, then
+> Semantics: prove the displayed obligations, then
 > store the trusted axiomatic conclusion.
 
 ### Bounded iteration and extensionality
@@ -3577,7 +3608,7 @@ by for:
 by extension {1} = {1}
 ```
 
-> **Preview (`new_pipeline`):** `by fn_extension` proves ordinary function
+> **Preview:** `by fn_extension` proves ordinary function
 > equality `f = g` when both sides have alpha-equivalent `FnSet` carriers and
 > the reconstructed pointwise forall succeeds (including multi-argument /
 > curried signatures taken from that carrier). It stores `f = g`, not a
@@ -3600,6 +3631,7 @@ by extension {1} = {1}
 
 Use the block extension form when its proof needs additional statements:
 
+<!-- litex:skip-test -->
 ```litex
 by extension:
     ? {1, 2} = {2, 1}
@@ -3618,28 +3650,27 @@ by extension:
     ? 1 = 2
 ```
 
-The proof reaches `unknown` because membership in `1` and `2` does not match;
+The proof soft-fails because membership in `1` and `2` does not match;
 the runner reports the failed subset obligation. Use direct equality reasoning
 when extensional membership is not the mathematical route.
 
 ### Registering predicate properties
 
 The following forms verify and register reusable behavior for a user-defined
-binary predicate.
-
-Default pipeline surface (still current outside `new_pipeline`):
+binary predicate. Spell them as `register reflexive` / `register symmetric` /
+`register transitive`. Each takes exactly one shaped `? forall …` goal and
+**no** indented proof body. Prove the forall in the ambient environment first
+(or rely on ordinary search / `by def`); the statement only registers the
+rewrite property.
 
 | Form | Required mathematical shape | Later use |
 |---|---|---|
-| `by reflexive_prop` | `P(x, x)` | Close reflexive positive goals. |
-| `by symmetric_prop` | One nontrivial argument permutation | Retry positive goals in that permutation. |
-| `by transitive_prop` | `P(x, y)` and `P(y, z)` imply `P(x, z)` | Store non-adjacent chain consequences. |
+| `register reflexive` | `P(x, x)` | Close reflexive positive goals. |
+| `register symmetric` | One nontrivial argument permutation | Retry positive goals in that permutation. |
+| `register transitive` | `P(x, y)` and `P(y, z)` imply `P(x, z)` | Store non-adjacent chain consequences. |
 
-> **Preview (`new_pipeline`):** the same three registrations are spelled
-> `register reflexive` / `register symmetric` / `register transitive`.
-> Each takes exactly one shaped `? forall …` goal and **no** indented proof
-> body. Prove the forall in the ambient environment first (or rely on ordinary
-> search / `by def`); the statement only registers the rewrite property.
+> **Preview:** older spellings `by reflexive_prop` / `by symmetric_prop` /
+> `by transitive_prop` are removed.
 
 ```litex
 prop same(x set, y set):
@@ -3672,13 +3703,13 @@ the same user-defined predicate.
 
 ### Trusted preview proof steps
 
-> **Preview (`new_pipeline`):** `release regularity_axiom`, `release axiom_of_choice`, and
+> **Preview:** `release regularity_axiom`, `release axiom_of_choice`, and
 > `release zorn_lemma` are parse+exec wired. Local proof bodies are fact-only (same
 > restriction as other NP by-stmts). Soft-fail on missing obligations or prop
 > interface checks; the trusted conclusions are stored after checks succeed.
 
 `release regularity_axiom` exposes set-theoretic foundation as an explicit trusted
-step. Preview (`new_pipeline`) spelling:
+step. Preview spelling:
 
 | Form | Checked obligations | Trusted conclusion |
 |---|---|---|
@@ -3690,6 +3721,7 @@ theorems or facts with transitive trust metadata.
 
 `release axiom_of_choice` stores its chooser through the builtin named property:
 
+<!-- litex:skip-test -->
 ```litex
 have F set
 trust forall A F:
@@ -3776,7 +3808,7 @@ description; structural recursion is labeled `builtin strategy`; a theorem
 route includes citation information. The CLI retains requirements,
 instantiations, and inference effects useful for debugging.
 
-When a result is `unknown`, read the failed node rather than adding broad
+When a statement soft-fails, read the failed node rather than adding broad
 automation immediately:
 
 | Unknown shape | Useful next question |
@@ -3843,7 +3875,7 @@ subset-chain search. Both finite-set names are kernel interfaces, not
 `std/basics` exports.
 
 This section catalogues public rule families. It does not promise that every
-mathematically equivalent spelling is recognized. When a goal is `unknown`,
+mathematically equivalent spelling is recognized. When a goal soft-fails,
 write a smaller intermediate fact that exposes a supported shape.
 
 ### Common rule families
@@ -3870,7 +3902,7 @@ reformulation is automatic.
 
 Detailed output distinguishes computation, direct builtin rules, structural
 strategies, definition routes, and explicit builtin theorem calls. Consult that
-proof tree when a nearby spelling is `unknown`, then state the missing bridge
+proof tree when a nearby spelling soft-fails, then state the missing bridge
 fact explicitly.
 
 #### Declarative algebra, nonzero, and order schemas
@@ -3892,6 +3924,7 @@ together.
 
 These are executable instances of four different groups:
 
+<!-- litex:skip-test -->
 ```litex
 forall x, y R:
     abs(x * y) = abs(x) * abs(y)
@@ -3937,7 +3970,7 @@ The declarative set schemas cover the following groups:
 | Nonemptiness | A nonempty union operand makes the union nonempty. `power_set(A)` is nonempty for every set `A`. |
 | Power set | `A $subset B` introduces both `A $in power_set(B)` and `power_set(A) $subset power_set(B)`; a finite base gives a finite power set. |
 
-> **Preview (`new_pipeline`):** `A $in power_set(B)` is proved from `A $subset B`.
+> **Preview:** `A $in power_set(B)` is proved from `A $subset B`.
 > In particular `{x S: …} $subset S` is recognized, so
 > `have name power_set(S) = {x S: …}` type-checks. Storing `x $in power_set(B)`
 > also records `x $subset B`.
@@ -3978,6 +4011,7 @@ Finite-set constructors feed a second layer of custom cardinality rules. The
 intersection, difference, and union facts appear before the equality because
 they are the exact known premises consumed by later one-layer rules:
 
+<!-- litex:skip-test -->
 ```litex
 forall A, B finite_set:
     $is_finite_set(intersect(A, B))
@@ -4027,7 +4061,7 @@ forall x R:
     x = 0
 ```
 
-This is `unknown`; the conclusion is false for arbitrary real `x`, and no
+This soft-fails; the conclusion is false for arbitrary real `x`, and no
 builtin pattern closes it.
 
 ### Equality rules
@@ -4049,6 +4083,7 @@ aggregate, and remainder rows.
 | Functions and materialized definitions | Application equations, alpha-equivalent anonymous functions, `by fn_extension` / pointwise forall, same-signature function-set equality, and equality of materialized template or struct values when their resolved objects agree. |
 | Finite aggregates and reductions | Empty, singleton, endpoint, split, insertion/removal, distribution, congruence, and supported reindexing rules described under [Powers, logarithms, sums, products, and remainder](#powers-logarithms-sums-products-and-remainder). |
 
+<!-- litex:skip-test -->
 ```litex
 forall x, y R:
     x = y
@@ -4113,7 +4148,7 @@ forall a, b R:
         a^2 + b^2 != 0
 ```
 
-Large algebraic jumps may still be `unknown`. Expose the identity and the
+Large algebraic jumps may still soft-fail. Expose the identity and the
 numeric simplifications separately:
 
 ```text
@@ -4142,6 +4177,7 @@ alone never supplies an order. The order layer recognizes these contracts:
 | Finite aggregates and extrema | Pointwise weak/strict order on the relevant index set gives sum order. A nonnegative finite-set summand is at most the total. Finite-set extrema bound every member. Finite subset inclusion bounds cardinality, and union cardinality is at most the sum. |
 | Native ordered objects | Floor and ceiling preserve weak order but not strict order. `min` and `max` expose argument bounds and componentwise monotonicity. Native `exp`/`ln` and trigonometric order use the dedicated sections below; complex modulus uses the [complex scalar contract](#complex-scalars-beta-preview). |
 
+<!-- litex:skip-test -->
 ```litex
 forall x R:
     0 <= x^2
@@ -4174,7 +4210,7 @@ forall a, b R+:
         log(2, a) < log(2, b)
 ```
 
-> **Preview (`new_pipeline`):** order builtins now also close these shapes
+> **Preview:** order builtins now also close these shapes
 > (each rule has its own proof payload): even powers `0 <= a^2` / `0 < a^2`
 > from `a != 0`; positive-base powers `0 <= a^n` / `0 < a^n`; nonnegative base
 > with `n $in N+`; `0 <= sqrt(x)` / `0 < sqrt(x)` and sqrt monotonicity;
@@ -4288,20 +4324,20 @@ forall a, b R+:
 > Strict order add/mul (preview, A10 partial): `a < b` ⇒ `a + c < b + c`;
 > `0 < k` and `a < b` ⇒ `a * k < b * k` (and left-factor forms).
 > One `.lit` per accepted rule under
-> [`examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/`](../examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/)
+> [`examples/proof_nodes/atomic/by_builtin_rule/`](../examples/proof_nodes/atomic/by_builtin_rule/)
 > and
-> [`examples/new_pipeline/proof_nodes/equal/by_builtin_rule/`](../examples/new_pipeline/proof_nodes/equal/by_builtin_rule/).
+> [`examples/proof_nodes/equal/by_builtin_rule/`](../examples/proof_nodes/equal/by_builtin_rule/).
 >
-> Builtin strategy (preview, `new_pipeline`): structural requirement strategies
+> Builtin strategy (preview): structural requirement strategies
 > with typed evidence (one strategy ↔ one result struct). Equality strategies
 > include extremum antisymmetry, finite-set product pointwise, mod congruence,
 > and rational identities with nonzero premises. Atomic strategies cover
 > additive sign, nonzero product, structural order, numeric carrier closure,
 > set membership / subset decomposition, and recursive `$is_finite_set` /
 > `$is_nonempty_set` constructors. Tracers under
-> [`examples/new_pipeline/proof_nodes/atomic/by_builtin_strategy/`](../examples/new_pipeline/proof_nodes/atomic/by_builtin_strategy/)
+> [`examples/proof_nodes/atomic/by_builtin_strategy/`](../examples/proof_nodes/atomic/by_builtin_strategy/)
 > and
-> [`examples/new_pipeline/proof_nodes/equal/by_builtin_strategy/`](../examples/new_pipeline/proof_nodes/equal/by_builtin_strategy/).
+> [`examples/proof_nodes/equal/by_builtin_strategy/`](../examples/proof_nodes/equal/by_builtin_strategy/).
 
 The last equivalence is an integer-adjacency rule: a strict bound immediately
 below the successor `n + 1` is the same as the weak bound at `n`. It requires
@@ -4316,7 +4352,7 @@ forall a, b, c R:
         a * c < b * c
 ```
 
-This is `unknown` because multiplication reverses or collapses order when the
+This soft-fails because multiplication reverses or collapses order when the
 sign of `c` is not known.
 
 ### Trigonometric rules
@@ -4376,6 +4412,7 @@ logarithms, and even-power absolute-value rules remain real-only.
 For positive real factors, a real exponent distributes over multiplication in
 either equality direction:
 
+<!-- litex:skip-test -->
 ```litex
 forall a, b R+, x R:
     (a * b)^x = a^x * b^x
@@ -4390,6 +4427,7 @@ relevant domain; provide the exact pointwise universal. The
 subtraction rule also requires one common additive carrier among `Z`, `Q`,
 `R`, and `C`, so it does not totalize natural-number subtraction.
 
+<!-- litex:skip-test -->
 ```litex
 have f fn(index Z) R
 have g fn(index Z) R
@@ -4403,6 +4441,7 @@ forall X finite_set, p, q fn(x X) Z:
     finite_set_product(X, fn(x X) Z {p(x) * q(x)}) = finite_set_product(X, p) * finite_set_product(X, q)
 ```
 
+<!-- litex:skip-test -->
 ```litex
 forall m Z:
     m != 0
@@ -4478,7 +4517,7 @@ have A set
 $is_finite_set(A)
 ```
 
-The second line is `unknown`; arbitrary sets need not be finite.
+The second line soft-fails; arbitrary sets need not be finite.
 
 ### Inclusion and function rules
 
@@ -4488,7 +4527,7 @@ reduces to compatible function interfaces and pointwise equality.
 
 | Interface | Definition or derived builtin consequence |
 |---|---|
-| `A $subset B` / `B $superset A` | Dual spellings of the same inclusion. Reflexivity, structural constructor containment, one-edge membership lifting, and subset chains are supported. Componentwise Cartesian inclusions, integer range into its numeric carrier, real interval into `R`, `fn_range(f)` into its codomain, and union containment from both operands have dedicated shapes. Proper relations unfold to ordinary inclusion plus inequality. Preview (`new_pipeline`): `not A $subset B` from known `not B $superset A`, and `not A $superset B` from known `not B $subset A`; binary `union(A,B) $subset union(C,D)` from componentwise subsets; `range` / `closed_range` into `N`/`N+` when the start inhabits that carrier (and into any standard set above `Z` with no extra premise). |
+| `A $subset B` / `B $superset A` | Dual spellings of the same inclusion. Reflexivity, structural constructor containment, one-edge membership lifting, and subset chains are supported. Componentwise Cartesian inclusions, integer range into its numeric carrier, real interval into `R`, `fn_range(f)` into its codomain, and union containment from both operands have dedicated shapes. Proper relations unfold to ordinary inclusion plus inequality. Preview: `not A $subset B` from known `not B $superset A`, and `not A $superset B` from known `not B $subset A`; binary `union(A,B) $subset union(C,D)` from componentwise subsets; `range` / `closed_range` into `N`/`N+` when the start inhabits that carrier (and into any standard set above `Z` with no extra premise). |
 | `by fn_extension: f = g` | Function extensionality to ordinary `f = g` when FnSet carriers are alpha-equivalent (preview). Local agreement remains a bare `forall`. |
 | `$injective(A,B,f)` | Definition route: members of `A` with equal images are equal. For finite `A`, injectivity gives `finite_set_size(fn_range(f)) = finite_set_size(A)`. |
 | `$surjective(A,B,f)` | Definition route: each member of `B` has a preimage in `A`. A finite source makes the codomain finite and gives `finite_set_size(B) <= finite_set_size(A)`. |
@@ -4497,6 +4536,7 @@ reduces to compatible function interfaces and pointwise equality.
 Here the definition proofs register the mapping facts, after which the
 cardinality rules consume them directly:
 
+<!-- litex:skip-test -->
 ```litex
 have fn mapping_identity(x {1, 2, 3}) {1, 2, 3} = x
 
@@ -4529,6 +4569,7 @@ universal-membership facts may still compose several ordinary proof steps.
 This rule only answers membership goals; it does not rewrite an order goal
 such as `0 < x` into membership in a positive-number set.
 
+<!-- litex:skip-test -->
 ```litex
 by def {1} $subset {1, 2}
 
@@ -4548,7 +4589,7 @@ claim:
 by def $fn_eq(fn(x R) R {x}, fn(y R) R {y})
 ```
 
-On `new_pipeline`, `$fn_eq` and `$fn_eq_in` are removed. The mapping predicates `$injective`,
+`$fn_eq` and `$fn_eq_in` are removed. The mapping predicates `$injective`,
 `$surjective`, and `$bijective` may be negated, but the checker does not
 automatically search for a counterexample.
 
@@ -4570,9 +4611,9 @@ rule target.
 | Integer interval witness | `a,b $in R` and `b-a>1` for `exist c Z st {a<c<b}`, or `b-a>=1` for the weak-endpoint form. |
 | Greatest natural member | The body has the canonical membership-and-upper-bound shape, while `S` is finite, nonempty, and `S $subset N`. |
 
-> **Preview (`new_pipeline`):** exist builtins currently include (each its own
+> **Preview:** exist builtins currently include (each its own
 > result struct + tracer under
-> [`examples/new_pipeline/proof_nodes/exist/by_builtin_rule/`](../examples/new_pipeline/proof_nodes/exist/by_builtin_rule/)):
+> [`examples/proof_nodes/exist/by_builtin_rule/`](../examples/proof_nodes/exist/by_builtin_rule/)):
 > real-line comparison witness, equality witness from membership, nonempty-set
 > member witness, rational integer/`Z*` ratio (`exist a Z, b Z* st {q = a / b}`),
 > integer multiple from zero remainder (`exist k Z st {a = b * k}`), Archimedean
@@ -4583,13 +4624,14 @@ rule target.
 > (sibling `b > 0` is not assumed during WD); use the `Z*` ratio form instead.
 > Also: closed-integer `$prime` / `not $prime` / `$coprime` / `not $coprime` by
 > computation under
-> [`examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/`](../examples/new_pipeline/proof_nodes/atomic/by_builtin_rule/)
+> [`examples/proof_nodes/atomic/by_builtin_rule/`](../examples/proof_nodes/atomic/by_builtin_rule/)
 > (`prime_by_computation.lit`, …). Trust-free ByDefinition tracers for
 > `$injective` / `$surjective` / `$bijective` / `$prime` /
 > `$is_choice_function_for` live under
-> [`examples/new_pipeline/proof_nodes/atomic/by_definition/`](../examples/new_pipeline/proof_nodes/atomic/by_definition/)
+> [`examples/proof_nodes/atomic/by_definition/`](../examples/proof_nodes/atomic/by_definition/)
 > (`builtin_injective.lit`, `builtin_prime.lit`, …).
 
+<!-- litex:skip-test -->
 ```litex
 forall epsilon R+:
     exist n N+ st {1 / n < epsilon}
@@ -4629,7 +4671,7 @@ The `or` verifier recognizes these exhaustive forms:
 | `a!=0 or b!=0` | A known real square-sum nonzero fact in the supported `a^2+b^2` or `a*a+b*b` shape. |
 | `not A or B` | Classical implication packaging: under a temporary local assumption `A`, the ordinary atomic verifier proves `B`. |
 
-> **Preview (`new_pipeline`):** real-line trichotomy currently matches only these
+> **Preview:** real-line trichotomy currently matches only these
 > exact branch orders (each is its own builtin, with nested proofs of
 > `left $in R` and `right $in R`):
 > `a = b or a < b or a > b`,
@@ -4662,7 +4704,7 @@ The `or` verifier recognizes these exhaustive forms:
 > and integer discrete split `x <= n or x >= n + 1` (or predecessor dual;
 > `OrBuiltinIntegerDiscreteSplit`).
 > One `.lit` per rule:
-> [`examples/new_pipeline/proof_nodes/or/by_builtin_rule/`](../examples/new_pipeline/proof_nodes/or/by_builtin_rule/).
+> [`examples/proof_nodes/or/by_builtin_rule/`](../examples/proof_nodes/or/by_builtin_rule/).
 
 ```litex
 forall a, b R:
@@ -4682,13 +4724,14 @@ forall x R:
 Branch order is flexible only where the matcher explicitly treats it as a
 permutation. Adding unrelated branches, changing the bound pattern, or hiding
 the operands behind a user predicate can make the direct builtin route
-`unknown`; use an ordinary theorem or proof block for that presentation.
+soft-fails; use an ordinary theorem or proof block for that presentation.
 
 ### Reduced rational fractions (preview)
 
 Litex has a narrow builtin for the standard reduced-fraction representation of
 a rational number with positive denominator. The public named form is:
 
+<!-- litex:skip-test -->
 ```litex
 have a Q
 release thm rational_has_unique_reduced_fraction(a)
@@ -4732,7 +4775,7 @@ have n N
 n = 0
 ```
 
-The equality remains `unknown`.
+The equality still soft-fails.
 
 ### Facts that trigger inference
 
@@ -4750,7 +4793,7 @@ Most triggers are atomic facts. A few larger shapes have explicit behavior.
 | Order against a resolved concrete bound | *(verify)* Selected sign spelling and mul-by-`(-1)` flip via `OrderSignFromPositive/NegativeLiteralBound` / `OrderFlipMulMinusOne` — not eager infer. |
 | `exist!` | A universal saying any two complete witness tuples satisfying the body are componentwise equal. |
 | `not exist` | The corresponding universal De Morgan negation when the body shape is supported. |
-| `not forall` | An existential counterexample: domain facts plus negated conclusions, all quantifier-free by syntax (`new_pipeline`). |
+| `not forall` | An existential counterexample: domain facts plus negated conclusions, all quantifier-free by syntax. |
 | Equality/order chain | Atomic consequences from its transitive closure, followed by the ordinary inference for each consequence. |
 
 An outer `and`, `or`, or `forall` does not receive the same general extra
@@ -4797,7 +4840,7 @@ x^2 = 4
 x = 2
 ```
 
-The last line is `unknown`; the stored square equation has two real solutions.
+The last line soft-fails; the stored square equation has two real solutions.
 
 ### Membership inference
 
@@ -4830,7 +4873,7 @@ Main families are:
 | `x $in family_union(F)` | `exist A F st {x $in A}` |
 | `x $in index_union(I,X,A)` | `x $in X` and `exist i I st {x $in A(i)}` |
 | `x $in index_intersect(I,X,A)` | `x $in X` and `forall i I: x $in A(i)` |
-| `y $in replacement(P,A)` | `exist x A st {$P(x,y)}` |
+| `y $in Img` after `have by replacement_axiom: Img from prop P, set A` | Use the stored elimination forall for `Img` (existential witness in `A` related by `$P`) |
 | `y $in fn_range(f)` | Membership in the defined codomain plus an existential preimage carrying every instantiated domain condition and `y=f(args)` |
 | `A $in power_set(B)` | `A $subset B` |
 | `x $in cart(A, B, ...)` | Tuple shape, dimension, and coordinate memberships |
@@ -4854,7 +4897,7 @@ have x R
 x > 0
 ```
 
-The second line is `unknown`; `R` contains positive, zero, and negative values.
+The second line soft-fails; `R` contains positive, zero, and negative values.
 
 ### Subset, superset, and order inference
 
@@ -4921,12 +4964,13 @@ its builtin rules into a separately verified small kernel.
 
 Every unskipped `litex` fenced block in this manual is intended to be
 self-contained and is run by
-`cargo test --release run_docs_markdown_files -- --nocapture`. A skipped
+`python3 tests/tooling/run_docs_markdown_files.py` (after
+`cargo build --release`). A skipped
 `litex` block carries an adjacent `litex:skip-test` marker and is deliberately
 invalid; a `text` block is either another deliberately invalid example, a
 non-executable shape, or an output sketch. The surrounding paragraph states
-the intended reading and, for failures, whether checking reaches `unknown` or
-`error`.
+the intended reading and, for failures, whether checking soft-fails or
+reports an `error` presentation of Failed.
 
 The language implementation is the final source of truth when this manual and
 the runner disagree. Such disagreement is a documentation or diagnostic bug

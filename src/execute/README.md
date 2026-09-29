@@ -1,4 +1,4 @@
-# new_pipeline statement execution
+# Statement execution
 
 ## Hard rule: only `exec_stmt`
 

@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.ReduceEmpty
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/reduce_empty.lit
+
+trust 0 < 1
+reduce(1, 0, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 7) = 7

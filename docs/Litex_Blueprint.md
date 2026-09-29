@@ -2,7 +2,7 @@
 
 Created and maintained by Jiachen Shen.
 
-Last updated: September 22, 2026.
+Last updated: September 28, 2026.
 
 Website: https://litexlang.com/doc/Litex_Blueprint
 
@@ -337,6 +337,7 @@ forall a, b R:
 
 A known `forall` fact used to prove a concrete atomic fact:
 
+<!-- litex:skip-test -->
 ```litex
 prop is_positive(n R):
     exist a R+ st {n > a}
@@ -365,6 +366,7 @@ zero = 0
 
 A theorem—name a reusable conclusion, then cite it (transitivity of divisibility):
 
+<!-- litex:skip-test -->
 ```litex
 prop divides_by(d, n Z):
     exist k Z st {n = d * k}
@@ -389,6 +391,7 @@ by thm divides_transitive(2, 6, 30) => $divides_by(2, 30)
 
 A named function:
 
+<!-- litex:skip-test -->
 ```litex
 have fn reciprocal(x R: x != 0) R = 1 / x
 reciprocal(2) = 1 / 2
@@ -408,6 +411,7 @@ claim:
 
 Proof by contradiction—show that “every real satisfies `x^2 >= x`” fails:
 
+<!-- litex:skip-test -->
 ```litex
 by contra:
     ? not forall x R:
@@ -434,6 +438,7 @@ by cases:
 
 Proof by induction—the sum of the first `n` odd positives is `n^2`:
 
+<!-- litex:skip-test -->
 ```litex
 have fn kth_odd(k Z) Z = 2 * k - 1
 
@@ -479,6 +484,7 @@ forall s nonempty_set, G &Group<s>, identity s:
 
 A `template`—a parameterized definition family, then `\name<args>` to materialize:
 
+<!-- litex:skip-test -->
 ```litex
 struct Triple<X set>:
     first X
@@ -496,6 +502,7 @@ p.first = 1
 
 A simple word problem—identifiers may be written in Chinese:
 
+<!-- litex:skip-test -->
 ```litex
 # Mom's age is 3 times Xiao Ming's age plus 4; Xiao Ming is 15. How old is Mom?
 have 小明年龄 R = 15
@@ -555,6 +562,7 @@ Choosing set theory as the foundation is often heard as two claims—really two 
 **Misreading 1: If I am not fluent in set theory, I cannot express ordinary notions such as groups, topological spaces, or open sets with ∈ and ∪.**  
 This is first a **dictionary problem**, not a prerequisite course in set theory. How everyday mathematics says it should have a readable Litex counterpart. Groups and topological spaces (with their open-set families) can be written as working-layer interfaces, without first hand-coding a low-level encoding:
 
+<!-- litex:skip-test -->
 ```litex
 # Group: carrier set, operation, identity, inverse, and the usual laws
 struct Group<s nonempty_set>:
@@ -823,45 +831,17 @@ This source does not name a rule. The goal `x + y >= 0` can be split into the pr
 
 ```json
 {
-  "result": "success",
-  "type": "universal fact",
-  "line": 1,
-  "statement": "forall x, y R:\n    x >= 0\n    y >= 0\n    =>:\n        x + y >= 0",
-  "parameters": [
-    "x",
-    "y"
-  ],
-  "assumptions": [
+  "kind": "run",
+  "ok": true,
+  "detail": "normal",
+  "session_error": null,
+  "statement_results": [
     {
-      "fact": "x $in R",
-      "reason": "parameter definition"
-    },
-    {
-      "fact": "y $in R",
-      "reason": "parameter definition"
-    },
-    {
-      "fact": "x >= 0",
-      "reason": "forall premise",
-      "inferred_facts": [
-        "-1 * x <= 0"
-      ]
-    },
-    {
-      "fact": "y >= 0",
-      "reason": "forall premise",
-      "inferred_facts": [
-        "-1 * y <= 0"
-      ]
-    }
-  ],
-  "conclusions": [
-    {
-      "statement": "x + y >= 0",
-      "why_verified": {
-        "type": "builtin rule",
-        "rule": "0 <= a + b from known atomic facts 0 <= a and 0 <= b"
-      }
+      "success": true,
+      "statement": "forall x, y R: /     x >= 0 /     y >= 0 /     =>: /         x + y >= 0",
+      "why_verified": { "type": "..." },
+      "stores": ["..."],
+      "infers": []
     }
   ]
 }
@@ -905,6 +885,7 @@ ha : a > 10
 
 **Litex source｜writes what directly**
 
+<!-- litex:skip-test -->
 ```litex
 prop is_positive(n R):
     exist a R+ st {n > a}
@@ -928,17 +909,19 @@ Here `prop` gives a reusable interface; `claim` establishes an instantiable univ
 
 ```json
 {
-  "result": "success",
-  "type": "prop fact",
-  "line": 14,
-  "statement": "$is_positive(a)",
-  "why_verified": {
-    "type": "cite forall fact",
-    "cite_source": {
-      "line": 5
-    },
-    "cited_statement": "forall x R:\n    x > 10\n    =>:\n        $is_positive(x)"
-  }
+  "kind": "run",
+  "ok": true,
+  "detail": "normal",
+  "session_error": null,
+  "statement_results": [
+    {
+      "success": true,
+      "statement": "$is_positive(a)",
+      "why_verified": { "type": "..." },
+      "stores": ["..."],
+      "infers": []
+    }
+  ]
 }
 ```
 
@@ -993,45 +976,17 @@ The Litex source preserves premises and conclusion; it does not write `simpa` or
 
 ```json
 {
-  "result": "success",
-  "type": "universal fact",
-  "line": 4,
-  "statement": "forall a, b R:\n    $is_positive(a)\n    a = b\n    =>:\n        $is_positive(b)",
-  "parameters": [
-    "a",
-    "b"
-  ],
-  "assumptions": [
+  "kind": "run",
+  "ok": true,
+  "detail": "normal",
+  "session_error": null,
+  "statement_results": [
     {
-      "fact": "a $in R",
-      "reason": "parameter definition"
-    },
-    {
-      "fact": "b $in R",
-      "reason": "parameter definition"
-    },
-    {
-      "fact": "$is_positive(a)",
-      "reason": "forall premise",
-      "inferred_facts": [
-        "a > 0"
-      ]
-    },
-    {
-      "fact": "a = b",
-      "reason": "forall premise"
-    }
-  ],
-  "conclusions": [
-    {
-      "statement": "$is_positive(b)",
-      "why_verified": {
-        "type": "cite prop fact",
-        "cite_source": {
-          "line": 5
-        },
-        "cited_statement": "$is_positive(a)"
-      }
+      "success": true,
+      "statement": "forall a, b R: /     $is_positive(a) /     a = b /     =>: /         $is_positiv",
+      "why_verified": { "type": "..." },
+      "stores": ["..."],
+      "infers": []
     }
   ]
 }
@@ -1144,219 +1099,27 @@ Below is the execution result of this fragment.
 {
   "kind": "run",
   "ok": true,
+  "target": "eval",
+  "path": null,
+  "detail": "normal",
+  "session_error": null,
   "statement_results": [
     {
-      "outcome": "success",
-      "result": {
-        "kind": "LetObjStmt",
-        "statement": "let a = 1",
-        "common": {
-          "infers": {
-            "stores": [
-              {
-                "fact_id": "f1",
-                "statement": "a = 1",
-                "reason": "object definition",
-                "inferred_facts": []
-              }
-            ],
-            "rule_applications": []
-          }
-        }
-      }
+      "success": true,
+      "statement": "let a = 1",
+      "why_verified": { "type": "define_obj" },
+      "stores": ["a = 1"],
+      "infers": []
     },
     {
-      "outcome": "success",
-      "result": {
-        "kind": "Fact",
-        "statement": "a + 1 = 2",
-        "evidence": {
-          "kind": "Verified",
-          "well_definedness": {
-            "kind": "WellDefinedFactResult",
-            "fact": "a + 1 = 2",
-            "proof": {
-              "kind": "AtomicFact",
-              "statement": "a + 1 = 2",
-              "arguments": [
-                {
-                  "argument_index": 0,
-                  "object": "a + 1",
-                  "result": {
-                    "value": {
-                      "kind": "Direct",
-                      "object": "a + 1",
-                      "intrinsic_result_set": "C",
-                      "target_requirements": [
-                        {
-                          "role": {
-                            "kind": "BuiltinArgumentMembership",
-                            "argument_index": 0
-                          },
-                          "expected_proposition": "a $in C",
-                          "verification": {
-                            "value": {
-                              "kind": "AtomicFact",
-                              "statement": "a $in C",
-                              "proof": {
-                                "kind": "Reuse",
-                                "source": {
-                                  "value": {
-                                    "kind": "AtomicFact",
-                                    "statement": "a $in C",
-                                    "proof": {
-                                      "kind": "Transform",
-                                      "rule": {
-                                        "kind": "TransparentDefinitionReduction",
-                                        "definitions": [
-                                          {
-                                            "symbol": "a",
-                                            "definition_object": "1",
-                                            "defining_equality": "a = 1"
-                                          }
-                                        ]
-                                      },
-                                      "source": {
-                                        "kind": "AtomicFact",
-                                        "statement": "1 $in C",
-                                        "proof": {
-                                          "kind": "BuiltinRule",
-                                          "diagnostic_label": "number in C",
-                                          "evidence": {
-                                            "kind": "Typed",
-                                            "rule_id": "numeric.closed_membership",
-                                            "value": {
-                                              "kind": "ClosedNumericMembership",
-                                              "expected_target": "1 $in C",
-                                              "target_set": "C",
-                                              "evaluation": {
-                                                "expression": "1",
-                                                "value": "1",
-                                                "step": {
-                                                  "kind": "Literal",
-                                                  "literal": "1"
-                                                }
-                                              }
-                                            }
-                                          },
-                                          "subgoals": []
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      ]
-                    }
-                  }
-                },
-                {
-                  "argument_index": 1,
-                  "object": "2",
-                  "result": {
-                    "value": {
-                      "kind": "Direct",
-                      "object": "2"
-                    }
-                  }
-                }
-              ],
-              "predicate": {
-                "kind": "SuccessVerifyAtomicPredicateWellDefinedResult",
-                "name": "=",
-                "expected_arity": 2,
-                "domain_checks": []
-              }
-            }
-          },
-          "proof": {
-            "kind": "AtomicFact",
-            "statement": "a + 1 = 2",
-            "proof": {
-              "kind": "Reuse",
-              "source": {
-                "value": {
-                  "kind": "AtomicFact",
-                  "statement": "a + 1 = 2",
-                  "proof": {
-                    "kind": "Transform",
-                    "rule": {
-                      "kind": "TransparentDefinitionReduction",
-                      "definitions": [
-                        {
-                          "symbol": "a",
-                          "definition_object": "1",
-                          "defining_equality": "a = 1"
-                        }
-                      ]
-                    },
-                    "source": {
-                      "kind": "AtomicFact",
-                      "statement": "1 + 1 = 2",
-                      "proof": {
-                        "kind": "BuiltinRule",
-                        "diagnostic_label": "calculation",
-                        "evidence": {
-                          "kind": "Typed",
-                          "rule_id": "equality.rational_normalization",
-                          "value": {
-                            "kind": "RationalNormalization",
-                            "expected_target": "1 + 1 = 2",
-                            "left_evaluation": {
-                              "expression": "1 + 1",
-                              "value": "2",
-                              "step": {
-                                "kind": "Binary",
-                                "operator": "Add",
-                                "left": {
-                                  "expression": "1",
-                                  "value": "1",
-                                  "step": {
-                                    "kind": "Literal",
-                                    "literal": "1"
-                                  }
-                                },
-                                "right": {
-                                  "expression": "1",
-                                  "value": "1",
-                                  "step": {
-                                    "kind": "Literal",
-                                    "literal": "1"
-                                  }
-                                }
-                              }
-                            },
-                            "right_evaluation": {
-                              "expression": "2",
-                              "value": "2",
-                              "step": {
-                                "kind": "Literal",
-                                "literal": "2"
-                              }
-                            }
-                          }
-                        },
-                        "subgoals": []
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "store": {
-          "fact": "a + 1 = 2",
-          "fact_id": "f2",
-          "infers": {
-            "stores": [],
-            "rule_applications": []
-          }
-        }
-      }
+      "success": true,
+      "statement": "a + 1 = 2",
+      "why_verified": {
+        "type": "builtin_rule",
+        "rule": "EqualityBuiltin"
+      },
+      "stores": ["a + 1 = 2"],
+      "infers": []
     }
   ]
 }
@@ -1368,53 +1131,41 @@ This record splits “why this sentence can be written down” into traceable lo
 
 | What the reader wants to know | What to look at in the record |
 | --- | --- |
-| Statement and statement type | Statement content and type (`statement`, `kind`): is this defining a symbol, a predicate, a function, or verifying a fact? |
-| Whether the sentence is meaningful | Well-definedness check (`well_definedness`): are objects and operations in allowed domains? |
-| Why it holds | Well-definedness checks, definition reductions, and rule grounds in the evidence and proof process (`evidence`, `proof`) |
-| Whether it becomes a later basis | Store result (`store`) and the accepted context |
-| What inferences were obtained during checking | Inferences (`infers`) and their rule applications |
+| Which statement ran | `statement` |
+| Whether it succeeded | statement `success`, and run `ok` / `session_error` |
+| Why it holds | `why_verified` (rule name, cite, definition route, …) |
+| Why it stopped | `why_failed.phase` and `why_failed.goal` |
+| What entered the later context | `stores` and `infers` |
+
+Normal JSON is the user-facing record. The full verify/exec evidence tree remains available for Lean replay and detailed tooling; it is not what everyday `-e` / `-f` / `-r` prints.
 
 For example, `let a = 1` defines the symbol `a` and records `a = 1`; `a + 1 = 2` verifies a fact in the current context. Well-definedness first confirms whether the statement is meaningful: for instance `1 / 0 = 1 / 0` has the same form on both sides, but `0` is not an allowed denominator for division, so the statement fails the well-definedness requirement.
 
 <details>
 <summary><strong>Expand: Litex execution result</strong></summary>
 
-When we enter ` 1 = 0 `, Litex's output is
+When we enter `1 = 0`, Litex's Normal JSON output is
 
 ```json
 {
-  "error_type": "VerifyError",
-  "result": "error",
-  "line": 1,
-  "message": "verification failed",
-  "type": "equality fact",
-  "statement": "1 = 0",
-  "phases": {
-    "verify_well_definedness": {
-      "status": "success"
-    },
-    "verify_process": {
-      "status": "error",
-      "message": "verification failed"
-    },
-    "affect_environment": {
-      "status": "not_run",
-      "message": "previous phase failed"
+  "kind": "run",
+  "ok": false,
+  "target": "eval",
+  "path": null,
+  "detail": "normal",
+  "session_error": null,
+  "statement_results": [
+    {
+      "success": false,
+      "statement": "1 = 0",
+      "why_failed": {
+        "phase": "search_proof",
+        "goal": "1 = 0"
+      },
+      "stores": [],
+      "infers": []
     }
-  },
-  "previous_error": {
-    "error_type": "UnknownError",
-    "result": "error",
-    "line": 1,
-    "message": "unknown result",
-    "type": "equality fact",
-    "statement": "1 = 0",
-    "failed_goal": "1 = 0",
-    "unknown_result": {
-      "type": "atomic fact unknown",
-      "goal": "1 = 0"
-    }
-  }
+  ]
 }
 ```
 
@@ -1562,9 +1313,22 @@ AI first tries to obtain convergence of the new sequence by `by def` without con
 
 ```json
 {
-  "result": "rejected_rolled_back",
-  "failed_phase": "verify_process",
-  "verifier_evidence": "cannot prove then-clause; failed goal $converges_to(fn(n N) R {c * s(n)}, c * a)"
+  "kind": "run",
+  "ok": false,
+  "detail": "normal",
+  "session_error": null,
+  "statement_results": [
+    {
+      "success": false,
+      "statement": "...",
+      "why_failed": {
+        "phase": "search_proof",
+        "goal": "$converges_to(fn(n N) R {c * s(n)}, c * a)"
+      },
+      "stores": [],
+      "infers": []
+    }
+  ]
 }
 ```
 
@@ -1634,6 +1398,7 @@ Compiling Litex to Lean and connecting to Mathlib-style Lean code goes through t
 
 Example: we want to prove that the sum of the first `n` positive odd numbers is `n^2`. We first write Litex source:
 
+<!-- litex:skip-test -->
 ```litex
 have fn kth_odd(k Z) Z = 2 * k - 1
 
@@ -1835,6 +1600,7 @@ This route is deliberately narrow and experimental. It is not a whole-Litex-to-P
 
 The same Litex proof used for scientific computing can become executable code. For example, one Newton step toward √2:
 
+<!-- litex:skip-test -->
 ```litex
 have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2
 

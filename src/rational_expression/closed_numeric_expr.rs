@@ -13,8 +13,8 @@
 //! Simple closed examples: `2`, `2^3/7 + 10 * 2.5`, `abs(-3)`, `3!`,
 //! `gcd(12, 8)`, `sqrt(4)`, `log(2, 8)`.
 //! Complex nested closed examples (run these tracers):
-//!   `examples/new_pipeline/proof_nodes/equal/by_builtin_rule/calculation_closed_decimal_complex_nested.lit`
-//!   `examples/new_pipeline/stmt_nodes/command/eval_closed_numeric_complex.lit`
+//!   `examples/proof_nodes/equal/by_builtin_rule/calculation_closed_decimal_complex_nested.lit`
+//!   `examples/stmt_nodes/command/eval_closed_numeric_complex.lit`
 //! e.g. `sqrt(4) * log(2, 8) + floor(2.5)! = 8`,
 //!      `((-7) % 3)^log(2, 4) + sqrt(0.36) = 4.6`.
 //! Examples that are not closed: `a + 1`, `2.5 % 1`, `sin(0)`, `sqrt(2)` (fold fails).

@@ -1,7 +1,0 @@
-# Stmt: UnsafeStmt.TrustStmt → exec_trust_stmt
-# Run: litex -f examples/new_pipeline/stmt_nodes/unsafe/trust_stmt.lit
-
-trust:
-    7 = 7
-
-7 = 7

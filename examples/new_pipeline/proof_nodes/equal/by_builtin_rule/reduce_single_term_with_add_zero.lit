@@ -1,3 +1,0 @@
-# Node: equal.ByBuiltinRule.ReduceSingleTermWithAddZero
-# Run: litex -f examples/new_pipeline/proof_nodes/equal/by_builtin_rule/reduce_single_term_with_add_zero.lit
-reduce(2, 2, fn(x Z) Z {x}, fn(a, b Z) Z {a + b}, 0) = 2

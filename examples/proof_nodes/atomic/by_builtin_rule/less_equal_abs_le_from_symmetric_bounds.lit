@@ -1,0 +1,7 @@
+# Node: atomic.ByBuiltinRule.LessEqualFact.AbsLeFromSymmetricBounds
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_equal_abs_le_from_symmetric_bounds.lit
+
+have x R
+trust x <= 3
+trust 0 - x <= 3
+abs(x) <= 3

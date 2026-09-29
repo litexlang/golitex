@@ -1,0 +1,3 @@
+# Node: equal.ByBuiltinRule.TanOfZero
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/tan_of_zero.lit
+tan(0) = 0

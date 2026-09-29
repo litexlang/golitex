@@ -1,0 +1,5 @@
+# Node: atomic.ByBuiltinRule.InFact.ComplexArithmeticClosure
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/in_complex_arithmetic_closure.lit
+
+have x C
+(x + 1) $in C

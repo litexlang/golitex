@@ -1,0 +1,7 @@
+# Node: atomic.ByBuiltinRule.GreaterEqual.FromKnownGreater
+# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/greater_equal_from_known_greater.lit
+
+have a R = 2
+have b R = 1
+a > b
+a >= b

@@ -1,0 +1,3 @@
+# Node: equal.ByBuiltinRule.FnRangeOfConstantAnonymousFn
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/fn_range_of_constant_anonymous_fn.lit
+fn_range(fn(x R) R {1}) = {1}

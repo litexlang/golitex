@@ -1,5 +1,5 @@
 //! Scalar object WD (P0): children + carrier / domain requirement facts.
-//! Ported from verification/well_definedness/object/scalar.rs into new_pipeline AST.
+//! Ported from verification/well_definedness/object/scalar.rs.
 
 use super::obj_well_defined_by_def_common::ObjWellDefinedByDefCommonStages;
 use crate::ast::fact::{AtomicFact, GreaterFact, LessEqualFact, NotEqualFact};

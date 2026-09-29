@@ -1,0 +1,5 @@
+# Node: equal.ByBuiltinRule.AbsSquare
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/abs_square.lit
+
+have a R
+abs(a^2) = a^2

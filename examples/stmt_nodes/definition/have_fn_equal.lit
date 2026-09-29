@@ -1,0 +1,5 @@
+# Stmt: Definition.HaveFnEqualStmt → exec_have_fn_equal_stmt
+# Run: litex -f examples/stmt_nodes/definition/have_fn_equal.lit
+
+have fn id(x R) R = x
+id(1) = 1

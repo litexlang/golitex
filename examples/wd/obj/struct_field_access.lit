@@ -1,0 +1,12 @@
+# Obj WD: StructObj + FieldAccess (definition-time carrier walk)
+# Run: litex -f examples/wd/obj/struct_field_access.lit
+#
+# Code already lived in verify_obj/structs.rs; this is the positive WD tracer.
+
+struct Point:
+    x R
+    y R
+
+forall p &Point:
+    p.x = p.x
+    p.y = p.y

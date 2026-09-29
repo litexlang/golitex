@@ -1,4 +1,4 @@
-//! Statement and fact keyword spellings for new_pipeline parse.
+//! Statement and fact keyword spellings for parse.
 //! Kept local so parse does not import legacy `syntax::keywords`.
 
 pub const PROP: &str = "prop";

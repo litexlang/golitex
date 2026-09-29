@@ -1,9 +1,0 @@
-# Node: atomic.ByDefinition.BuiltinProp.IsChoiceFunctionFor
-# Run: litex -f examples/new_pipeline/proof_nodes/atomic/by_definition/builtin_is_choice_function_for.lit
-#
-# Obligation: forall alpha {1}: f_choice(alpha) $in g_choice(alpha)
-# Finite index {1}, constant family {1}, constant choice 1 (no trust).
-
-have fn g_choice(alpha {1}) power_set({1}) = {1}
-have fn f_choice(alpha {1}) {1} = 1
-by def $is_choice_function_for({1}, power_set({1}), g_choice, f_choice)

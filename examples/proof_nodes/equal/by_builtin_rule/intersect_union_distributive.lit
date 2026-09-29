@@ -1,0 +1,7 @@
+# Node: equal.ByBuiltinRule.IntersectUnionDistributive
+# Run: litex -f examples/proof_nodes/equal/by_builtin_rule/intersect_union_distributive.lit
+
+have A set
+have B set
+have C set
+intersect(A, union(B, C)) = union(intersect(A, B), intersect(A, C))

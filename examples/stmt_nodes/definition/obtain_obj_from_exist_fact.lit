@@ -1,0 +1,9 @@
+# Stmt: Definition.ObtainObjFromExistFact → exec_obtain_obj_from_exist_fact_stmt
+# Run: litex -f examples/stmt_nodes/definition/obtain_obj_from_exist_fact.lit
+#
+# Source exist must already be known; obtain names the witness and stores body facts.
+
+witness exist u R st {u = 0} from 0
+obtain w from exist u R st {u = 0}
+w = 0
+w $in R

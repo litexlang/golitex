@@ -1,4 +1,4 @@
-//! Framework AST name shapes for new_pipeline.
+//! Framework AST name shapes.
 //!
 //! Qualified atoms use **indices** (not surface alias strings). Two id spaces:
 //!

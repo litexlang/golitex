@@ -1,0 +1,9 @@
+# Node: equal.ByObjectDefinition.ByFnApplication.HaveFnEqualCaseByCase
+# Run: litex -f examples/proof_nodes/equal/by_object_definition/by_fn_application/have_fn_equal_case_by_case.lit
+
+have fn sign_value(x R) Z by cases:
+    case x > 0: 1
+    case x = 0: 0
+    case x < 0: (-1)
+
+sign_value(-2) = (-1)
