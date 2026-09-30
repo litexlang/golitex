@@ -1,9 +1,6 @@
-# Migration blocker B02: see plan/迁移的plan/和example有关.md.
 # Node: equal.ByBuiltinRule.LcmGcdProductAbs
 # Run: litex -f examples/proof_nodes/equal/by_builtin_rule/lcm_gcd_product_abs.lit
 
 have a Z*
 have b Z*
-trust lcm(a, b) $in N
-trust gcd(a, b) $in N+
 lcm(a, b) * gcd(a, b) = abs(a * b)

@@ -1,8 +1,5 @@
-# Migration blocker B04: see plan/迁移的plan/和example有关.md.
 # Node: equal.ByBuiltinRule.FactorialSuccessor
 # Run: litex -f examples/proof_nodes/equal/by_builtin_rule/factorial_successor.lit
 
 have n N
-# Narrow trust: symbolic n! currently lacks a carrier for mul WD.
-trust n! $in N
 (n + 1)! = (n + 1) * n!

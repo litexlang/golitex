@@ -1,34 +1,4 @@
-prop odd(n Z):
-    exist k Z st {n = 2 * k + 1}
-
-prop even(n Z):
-    exist k Z st {n = 2 * k}
-
-# (2) prop exist-binder name may match obtain / witness name
-claim:
-    ? forall n Z:
-        $odd(n)
-        =>:
-            1 = 1
-    obtain k from $odd(n)
-    witness $odd(n) from k
-
-# (3) obtain k from exist k, then rebind obtain k from another exist k
-exist a Z st {0 = 2 * a}
-exist b Z st {2 = 2 * b}
 claim:
     ? 1 = 1
-    obtain k from exist k Z st {0 = 2 * k}
-    0 = 2 * k
-    obtain k from exist k Z st {2 = 2 * k}
-    2 = 2 * k
-
-# sequential obtain k from two props
-claim:
-    ? forall n Z:
-        $odd(n)
-        $even(n + 1)
-        =>:
-            1 = 1
-    obtain k from $odd(n)
-    obtain k from $even(n + 1)
+    obtain k from exist k R st {k = 0}
+have k R

@@ -36,6 +36,8 @@ algo newton_sqrt_two_step(x R) R by cases:
 claim:
     ? forall x R+:
         newton_sqrt_two_step(x) = newton_sqrt_two(x)
+    0 < x
+    x != 0
     newton_sqrt_two_step(x) = (x + 2 / x) / 2 = newton_sqrt_two(x)
 
 have fn sqrt_two_newton_iterate(n N) R+ by induc n from 0:

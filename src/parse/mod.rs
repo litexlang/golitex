@@ -27,4 +27,8 @@ mod param;
 mod parse;
 mod statements;
 
+#[cfg(test)]
+#[path = "../../tests/unit/parse/input_integrity.rs"]
+mod input_integrity_tests;
+
 pub use statements::prop_registration_shape;

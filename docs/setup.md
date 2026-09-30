@@ -53,7 +53,20 @@ litex -e '1 = 1'
 ```
 
 `-version` prints a short text line. `-e` returns one Normal JSON `run`
-document; a successful check has `"success": true`.
+document in the default English mode; a successful batch check exits `0`
+and has `"success": true` with `"session_error": null`. Use `-lang en` for
+programs expecting English JSON keys; `-lang zh` localizes them.
+
+To check this checkout rather than a separately installed release:
+
+```bash
+cargo build --release
+./target/release/litex -version
+./target/release/litex -e '1 = 1'
+```
+
+The reference documents describe this checkout’s `src/` entrypoint. An installed
+release can have a different command set; compare `-version` and `-help`.
 
 ## A few commands to start
 

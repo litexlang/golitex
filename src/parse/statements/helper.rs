@@ -77,7 +77,7 @@ impl Runtime {
         let mut facts = Vec::with_capacity(body.len());
         for block in body {
             let mut child = block.clone();
-            facts.push(self.parse_fact(&mut child)?);
+            facts.push(self.parse_complete_fact(&mut child)?);
         }
         Ok(facts)
     }

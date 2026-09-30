@@ -18,8 +18,8 @@ as complete only when its current tests, dated status, explicit `trust`
 boundary, and known limitations support that claim.
 
 Litex source stays the same across natural languages. Batch Normal JSON carries
-a `"language": "en"|"zh"` field from `-lang` (default `en`); statement labels
-are still English until localized catalogs land. See [`docs/cli.md`](cli.md).
+a language selection from `-lang` (default `en`); Chinese output localizes
+field names and proof explanations, including `"语言": "zh"`. See [`docs/cli.md`](cli.md).
 
 ## Why is Litex called Litex?
 
@@ -36,8 +36,9 @@ Litex is inspired by LaTeX's practical design for writing mathematics.
 ## Does Litex support multiple output languages?
 
 The Litex source language is shared. Batch Normal JSON includes
-`"language": "en"|"zh"` from `-lang` (default English). Localized statement
-labels are not wired yet; see [`docs/cli.md`](cli.md).
+English keys by default. With `-lang zh`, envelope and statement keys become
+Chinese, and rule names and explanations are translated. Source syntax stays
+the same; see [`docs/cli.md`](cli.md).
 
 ## How is Litex invented?
 
@@ -97,7 +98,7 @@ As far as Litex is concerned, Litex contains and only contains standard math pro
 ## Why does Litex have this particular menu of objects and statements?
 
 Litex's grammar is intentionally finite and opinionated. The goal is not to
-trust have every possible proof-engine concept become a new surface form. The goal is
+have every possible proof-engine concept become a new surface form. The goal is
 to keep a small set of object and statement forms that make ordinary
 mathematical writing comfortable while remaining checkable.
 
@@ -173,6 +174,12 @@ syntax. In particular, a `forall` cannot be used directly as one branch of an
 `or`, even though Lean can recursively compose that proposition shape. For a
 closed subclaim, name the compound fact with a zero-parameter `prop`, then use
 the resulting atomic call in the outer fact:
+
+The current parser requires a nonempty `prop` parameter list. The closed,
+zero-argument predicate below is retained as an intended interface, not
+working syntax. Use a predicate with real mathematical parameters in current code.
+
+> **Migration example:** Current `src/` checking stops at `parse_error: expected at least one parameter inside (...)`. This retained block is not a verified result.
 
 <!-- litex:skip-test -->
 ```litex
@@ -279,6 +286,8 @@ Some of these routes are Rust-level verifier rules, while standard packages
 can provide additional imported `forall` facts. The user-facing effect is
 similar: the verifier can use common mathematical background without the
 current file proving a local lemma first.
+
+> **Migration example:** Current `src/` checking stops at `search_proof` (`forall x, y R:`). This retained block is not a verified result.
 
 <!-- litex:skip-test -->
 ```litex
@@ -664,7 +673,7 @@ later users to inherit one privileged construction history.
 
 ## Are `sin`, `cos`, `tan`, and `cot` numerical functions?
 
-They are native symbolic real objects in the 0.9.110 beta preview. Arguments
+They are native symbolic real objects in the current beta. Arguments
 are real angles in radians. The verifier knows a small central interface and
 derives parity, difference and double-angle formulas, selected `pi` values,
 periodicity, cofunction formulas, and range bounds through one canonical
@@ -674,15 +683,15 @@ normalizer.
 `cos(x) != 0`, while `cot(x)` requires `sin(x) != 0`; an undefined expression
 fails well-definedness before equality checking. The preview remains symbolic:
 `eval` and Python extraction reject native trigonometric expressions explicitly.
-The current Litex-to-Lean compiler has no checked trigonometric proof backend, so
-trigonometric expressions remain outside its defined subset even though some
-nontrigonometric definitions and scoped proof commands are now supported. The
-preview also does not yet include inverse or complex trigonometry, analytic
-definitions, or every common special-angle value.
+The current parser also accepts real `arcsin`, `arccos`, `arctan`, and
+`arccot`, with domain and principal-range rules described in the
+[manual](Manual.md#native-real-trigonometry-beta-preview). This is not a
+complex-trigonometry or numerical-evaluation interface. Lean compilation is
+not connected to the current Cargo build; see the [CLI boundary](cli.md#lean-compiler-boundary).
 
 ## Does the native `C` scalar system turn every number into a complex value?
 
-No. In the 0.9.110 beta preview, `C` is the largest default scalar carrier and
+No. In the current beta, `C` is the largest default scalar carrier and
 the standard sets satisfy `N ⊆ Z ⊆ Q ⊆ R ⊆ C`. The verifier still preserves
 the narrow conclusion it can establish. Integer arithmetic remains integer
 arithmetic, and real arithmetic remains real arithmetic; an expression falls
@@ -706,14 +715,11 @@ also performs bounded exact polynomial/rational normalization with
 nonzero well-definedness proof. `eval` and Python extraction do not acquire a
 complex runtime representation.
 
-The Litex-to-Lean compiler replays the typed complex-normalization certificate
-for `+`, `-`, `*`, and reviewed closed denominators using native `Complex.I`.
-Complex powers and symbolic denominators remain fail-closed in that backend;
-successful Litex verification alone does not widen the compiler's supported
-target shapes.
-Existing sources that used `C`, `i`, `re`, `img`, or `C_abs` as ordinary
-identifiers must migrate; see
-[Complex Scalar Migration](Complex_Scalar_Migration.md).
+Earlier Lean artifacts describe a separate complex-normalization backend;
+they do not establish compiler coverage for the current `src/` pipeline.
+Names such as `C`, `i`, `re`, `img`, and `C_abs` are reserved native forms;
+sources using them as ordinary identifiers must choose other names. See the
+[complex scalar reference](Manual.md#complex-scalars-beta-preview).
 
 ## Why not just import a big library and cite the theorem?
 
@@ -815,6 +821,8 @@ view” of a sole carrier (parse error:
 `struct definition expects at least two fields`).
 
 For example:
+
+> **Migration example:** Current `src/` checking stops at `release_thm` (`release thm …`). This retained block is not a verified result.
 
 <!-- litex:skip-test -->
 ```litex
@@ -993,6 +1001,14 @@ template<S set>:
 
 \my_seq<R> = fn(n N+) R
 
+```
+
+This verifies the instantiated set equality. Automatic membership transport
+into that template instance is still a gap; the following currently soft-fails:
+
+```text
+template<S set>:
+    have my_seq set = fn(n N+) S
 have a fn(n N+) R
 a $in \my_seq<R>
 ```
@@ -1092,26 +1108,15 @@ ordinary numeric calculation, and then stores the new fact. This is the core
 reader experience: write the next useful fact, let the checker explain why it
 follows, then continue from the stronger context.
 
-The partial Litex-to-Lean compiler preserves the distinction between that explicit
-value and bare `have x R`. The latter is genuine witness selection: its runtime
-result links the checked nonemptiness proof to the stored `x $in R` fact, and
-Lean receives `Exists.choose`/`choose_spec` from that same certificate. It is
-not compiled as an unconstrained opaque value. Selection from meta-level
-`set`, `nonempty_set`, or `finite_set` parameter types remains outside the
-current checked subset until it has a separate inhabited-type contract.
-
-Positive existential introduction and extraction are also in the checked
-subset. A verified `witness exist` becomes a Lean `Exists` proof, while
-`obtain` and body-style `have x T: ...` use ordered `Exists.choose` and the
-matching `choose_spec` projections. Alpha-renamed existential binders are
-accepted only through the verifier's canonical equivalence check. Distinct
-Litex names that sanitize to one Lean binder name are rejected with a rename
-diagnostic, preventing accidental capture. `exist!`, `not exist`, and preimage
-extraction still have separate explicit boundaries.
+Bare `have x R` is witness selection from a nonempty carrier; it differs from
+the explicit definition `have x R = 2`. The current runtime retains verification
+and storage evidence for these steps. An independent Lean replay would need to
+preserve that distinction. The earlier compiler experiment is not built by
+the current `src/`; no current Lean coverage follows from this example.
 
 When the exact existential is already a known fact, the verifier records that
 direct `FactId` citation before considering specialized builtin existential
-routes. This keeps the compiler's source provenance stable; it does not widen
+routes. This retains the source of the accepted fact; it does not widen
 ordinary existential proof search.
 
 ## Does zero-premise direct evaluation replace every symbol by an equal object?
@@ -1171,31 +1176,22 @@ the unmatched outer application and that nearest prefix. This is guidance to
 project or rewrite the prefix before applying the remaining argument; it does
 not perform new congruence or accept the failed goal.
 
-## Can a cache change a closed automatic proof route?
+## Does tuple projection automatically supply every carrier fact?
 
-No. An internal cache or reverse index is an accelerator, not a mathematical
-premise. When an automatic rule has a closed premise family, its alternatives
-are generated from the current target, so the cold form
-
-```litex
-forall x, y N:
-    (x, y)[1] $in C
-```
-
-and the same goal after explicitly materializing its derivable intermediate
-carrier
+The current verifier needs an explicit coordinate equality for this example.
+The former direct `(x, y)[1] $in C` goal soft-fails; expose the selected value
+before requesting its carrier:
 
 ```litex
 forall x, y N:
-    (x, y)[1] $in N
+    (x, y)[1] = x
     (x, y)[1] $in C
 ```
 
-must have the same result. Here the target `C` determines which fixed proper
-standard subcarriers are checked; the verifier does not ask which sets have
-already been stored for `(x, y)[1]`. This invariant does not make automatic
-proof search unbounded. An explicit user lemma outside a rule's documented
-premise family may still enable a later proof.
+The equality is a checked mathematical bridge. This example establishes that
+route, not a general guarantee that cold and pre-populated proof searches
+discover identical intermediate facts. A cache should preserve meaning, but
+adding an explicit proved fact may enable a route that a bare goal misses.
 
 ## Why does Litex check well-definedness before truth?
 
@@ -1381,7 +1377,6 @@ exist` is the Litex form of that ordinary mathematical move.
 
 For example:
 
-<!-- litex:skip-test -->
 ```litex
 witness exist u R st {u > 0, u < 1} from 1 / 2:
     1 / 2 > 0
@@ -1398,11 +1393,13 @@ If a named theorem's only direct conclusion is positive `exist` or `exist!`,
 use `release thm` (to store the existential) then `obtain` from that exist,
 or keep the existential and name witnesses in a `claim` as needed:
 
+> **Migration example:** Current `src/` checking stops at `release_thm` (`release thm …`). This retained block is not a verified result.
+
 <!-- litex:skip-test -->
 ```litex
 have q Q
 release thm rational_has_unique_reduced_fraction(q)
-obtain p, d from exist p N, d N_pos st {q = p / d, …}
+obtain p, d from exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}
 ```
 
 (`obtain … from thm …` is removed; prefer the two-step form.)
@@ -1423,7 +1420,6 @@ copy = 2
 
 The same wrapper can also be the target of `witness`:
 
-<!-- litex:skip-test -->
 ```litex
 prop divides(p Z, u Z):
     exist k Z st {p = u * k}
@@ -1447,36 +1443,21 @@ ordinary `exist`. An `exist!` definition, abstract prop, negated source,
 `not exist`, or definition with an extra clause is not accepted by this named
 witness form.
 
-The Litex-to-Lean backend lowers this plain positive `exist` introduction with
-checked definition-introduction evidence. Explicit unique existence remains a
-separate compiler boundary rather than being lowered to an unchecked Lean term.
-
-The design keeps the difference clear: the existential statement itself is a
-fact, while the witness name is a local object introduced for the current
-argument.
-
-In the current checked Litex-to-Lean slice, that distinction is preserved directly:
-the existential remains a theorem, the named witness is selected from that
-same theorem, and each exposed type or body fact is a projection of its
-`choose_spec`. The compiler does not replace `obtain` with an unconstrained
-constant. For the named-prop shorthand, it additionally retains the verified
-prop call, checks that the recorded concrete definition unfolds to the exact
-existential source, and emits `simpa only [definition] using source` before
-selecting the witness. Thus the shorthand and its expanded positive `exist`
-form have the same checked Lean meaning.
-In the introduction direction, the compiler instead retains a checked
-`DefinitionIntroduction` certificate, proves the instantiated existential from
-the supplied witness, and folds it to the named prop with `simpa only`. The
-compiler uses the definition frozen by execution rather than looking it up
-again.
+The existential statement is a fact; a name introduced by `obtain` denotes
+a selected witness together with its checked type and body facts. These are
+runtime contracts. Earlier Lean experiments describe how such evidence might
+be replayed with `Exists.choose` and `choose_spec`; that backend is not part
+of the current build, so this section makes no current Lean replay claim.
 
 ## How do function ranges and preimages work?
 
 `fn_range(f)` is the set of values reached by a function `f`. If Litex knows
 that a value is in this range, then ordinary mathematics allows us to choose a
-preimage. `have by preimage` turns that move into an explicit proof step.
+preimage. `have by fn_preimage` turns that move into an explicit proof step.
 
 For example:
+
+> **Migration example:** Current `src/` checking stops at `session_error`. This retained block is not a verified result.
 
 <!-- litex:skip-test -->
 ```litex
@@ -1484,7 +1465,7 @@ sketch:
     have f fn(x R: x > 0) R
 
     f(1) $in fn_range(f)
-    have by preimage x from f(1) $in fn_range(f)
+    have by fn_preimage: x from f(1) $in fn_range(f)
 
     x $in R
     x > 0

@@ -1,9 +1,6 @@
-# Migration blocker B02: see plan/迁移的plan/和example有关.md.
 # Node: equal.ByBuiltinRule.GcdDividesArgument
 # Run: litex -f examples/proof_nodes/equal/by_builtin_rule/gcd_divides_argument.lit
 
 have a Z*
 have b Z
-trust gcd(a, b) $in N+
-gcd(a, b) != 0
 a % gcd(a, b) = 0

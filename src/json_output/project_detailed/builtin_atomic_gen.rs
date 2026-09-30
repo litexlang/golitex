@@ -1301,6 +1301,14 @@ pub(super) fn project_atomic_builtin_rule(
             let _ = p;
             object_for(runtime, entries)
         },
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::NativeScalarCodomain(p)) => {
+            object_for(runtime, vec![
+                ("type", string("builtin_rule")),
+                ("family", string("InFact")),
+                ("rule", string("NativeScalarCodomain")),
+                ("codomain", string(p.codomain.ir().as_str().to_string())),
+            ])
+        },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::StandardSetSubsetMembership(p)) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),

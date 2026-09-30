@@ -95,7 +95,7 @@ def run_block(litex: Path, code: str, cwd: Path) -> tuple[bool, str]:
             return False, f"non-JSON stdout ({err}): {proc.stdout[:500]}"
         if data.get("kind") != "run":
             return False, f"unexpected kind: {data.get('kind')!r}\n{proc.stdout[:500]}"
-        if data.get("ok") is not True:
+        if data.get("success") is not True:
             return False, proc.stdout.strip()
         if data.get("session_error") is not None:
             return False, proc.stdout.strip()
