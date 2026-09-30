@@ -192,7 +192,6 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
             can_use_rewrite: false,
             store_well_defined_fact: false,
-                    builtin_strategy_depth_remaining: verify_state.builtin_strategy_depth_remaining,
 };
         let proof_of_rewritten_fact = self.verify_atomic_fact(&rewritten, residual_state)?;
         if proof_of_rewritten_fact.is_failed() {
@@ -228,7 +227,6 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
             can_use_rewrite: false,
             store_well_defined_fact: false,
-                    builtin_strategy_depth_remaining: verify_state.builtin_strategy_depth_remaining,
 };
 
         for (arg_index, arg) in args.iter().enumerate() {
@@ -296,7 +294,6 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: true,
             can_use_rewrite: false,
             store_well_defined_fact: false,
-                    builtin_strategy_depth_remaining: VerifyState::BUILTIN_STRATEGY_DEPTH_LIMIT,
 };
         let residual_state = VerifyState {
             can_use_builtin_rule: verify_state.can_use_builtin_rule,
@@ -304,7 +301,6 @@ impl Runtime {
                 .can_use_def_and_known_forall_and_known_strategy,
             can_use_rewrite: false,
             store_well_defined_fact: false,
-                    builtin_strategy_depth_remaining: verify_state.builtin_strategy_depth_remaining,
 };
 
         let mut rewritten_args = args.clone();
@@ -368,7 +364,6 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
             can_use_rewrite: false,
             store_well_defined_fact: false,
-                    builtin_strategy_depth_remaining: verify_state.builtin_strategy_depth_remaining,
 };
         let proof_of_alternate_fact = self.verify_atomic_fact(&alternate, residual_state)?;
         if proof_of_alternate_fact.is_failed() {

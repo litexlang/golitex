@@ -53,7 +53,6 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: true,
             can_use_rewrite: true,
             store_well_defined_fact: true,
-                    builtin_strategy_depth_remaining: VerifyState::BUILTIN_STRATEGY_DEPTH_LIMIT,
 };
 
         let anon_obj = Obj::FunctionSpace(FunctionSpace::AnonymousFn(stmt.equal_to_anonymous_fn.clone()));

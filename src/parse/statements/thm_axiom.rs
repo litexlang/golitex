@@ -37,12 +37,13 @@ impl Runtime {
         } else {
             self.parse_body_stmts(proof_blocks)?
         };
+        self.release_obtain_parse_bindings_in_stmts(&prove_process);
         self.define_plain_atom_as_parse(&tb, name.clone())?;
         Ok(Stmt::Definition(DefinitionStmt::DefThmStmt(DefThmStmt {
             name,
             fact,
             prove_process,
-            line_file: SourceLine::new(block.line, self.code_source.clone()),
+            line_file: SourceLine::new(block.line, self.code_source.clone())
         })))
     }
 
@@ -67,7 +68,7 @@ impl Runtime {
         Ok(Stmt::Definition(DefinitionStmt::AxiomStmt(AxiomStmt {
             name,
             forall_fact,
-            line_file: SourceLine::new(block.line, self.code_source.clone()),
+            line_file: SourceLine::new(block.line, self.code_source.clone())
         })))
     }
 }

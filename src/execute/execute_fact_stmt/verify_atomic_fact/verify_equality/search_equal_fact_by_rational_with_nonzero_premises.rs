@@ -1,7 +1,7 @@
 use super::by_builtin_strategy_result::RationalWithNonzeroPremisesStrategySingleStep;
-use crate::ast::fact::{EqualFact, Fact, NotEqualFact};
+use crate::ast::fact::{EqualFact, NotEqualFact};
 use crate::ast::obj::{Number, Obj, Literal};
-use crate::execute::execute_fact_stmt::VerifyState;
+use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
 use crate::rational_expression::{
     algebraic_normalization_nonzero_requirements, objs_equal_by_rational_expression_evaluation,
 };
@@ -13,7 +13,7 @@ impl Runtime {
     pub fn search_equal_fact_by_rational_with_nonzero_premises(
         &mut self,
         fact: &EqualFact,
-        verify_state: VerifyState,
+        ctx: StrategySearch,
     ) -> RuntimeResult<Option<RationalWithNonzeroPremisesStrategySingleStep>> {
         if !objs_equal_by_rational_expression_evaluation(&fact.left, &fact.right) {
             return Ok(None);
@@ -28,25 +28,23 @@ impl Runtime {
         let zero = Obj::Literal(Literal::Number(Number {
             normalized_value: "0".to_string(),
         }));
-        let mut requirement_facts = Vec::with_capacity(required_objects.len());
-        let mut proof_of_requirement_facts = Vec::with_capacity(required_objects.len());
-        let child_state = verify_state.without_well_defined_storage();
-
+        let mut requirements = Vec::with_capacity(required_objects.len());
         for object in required_objects {
-            let premise: Fact = NotEqualFact {
-                fact_id: self.global_ids.allocate_fact_id(),
-                left: object,
-                right: zero.clone(),
-                line_file: fact.line_file.clone(),
-            }
-            .into();
-            let proof = self.verify_fact(&premise, child_state.clone())?;
-            if proof.is_failed() {
-                return Ok(None);
-            }
-            requirement_facts.push(premise);
-            proof_of_requirement_facts.push(proof);
+            requirements.push(
+                NotEqualFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: object,
+                    right: zero.clone(),
+                    line_file: fact.line_file.clone(),
+                }
+                .into(),
+            );
         }
+        let Some((requirement_facts, proof_of_requirement_facts)) =
+            self.verify_strategy_requirements(requirements, ctx)?
+        else {
+            return Ok(None);
+        };
 
         Ok(Some(RationalWithNonzeroPremisesStrategySingleStep {
             requirement_facts,

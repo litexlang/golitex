@@ -87,7 +87,6 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: true,
             can_use_rewrite: true,
             store_well_defined_fact: true,
-                    builtin_strategy_depth_remaining: VerifyState::BUILTIN_STRATEGY_DEPTH_LIMIT,
 };
         let source_membership = self.verify_fact(
             &Fact::AtomicFact(AtomicFact::InFact(stmt.range_membership.clone())),

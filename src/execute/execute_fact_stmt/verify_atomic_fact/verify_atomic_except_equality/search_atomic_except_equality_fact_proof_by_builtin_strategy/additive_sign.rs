@@ -6,14 +6,14 @@ use super::result::{
 use crate::ast::fact::{AtomicFact, GreaterEqualFact, GreaterFact, LessEqualFact, LessFact};
 use crate::ast::line_file::SourceLine;
 use crate::ast::obj::{ArithmeticOperator, Obj};
-use crate::execute::execute_fact_stmt::VerifyState;
+use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
     pub(super) fn search_pos_add_pos_is_pos_strategy(
         &mut self,
         fact: &AtomicFact,
-        verify_state: VerifyState,
+        ctx: StrategySearch,
     ) -> RuntimeResult<Option<PosAddPosIsPosStrategySingleStep>> {
         let Some((l, r, lf)) = positive_sum_goal_summands(fact) else {
             return Ok(None);
@@ -23,7 +23,7 @@ impl Runtime {
             self.strategy_greater_fact(r, zero_obj(), lf),
         ];
         let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_strategy_requirements(requirements, verify_state)?
+            self.verify_strategy_requirements(requirements, ctx)?
         else {
             return Ok(None);
         };
@@ -36,7 +36,7 @@ impl Runtime {
     pub(super) fn search_nonnegative_sum_is_nonnegative_strategy(
         &mut self,
         fact: &AtomicFact,
-        verify_state: VerifyState,
+        ctx: StrategySearch,
     ) -> RuntimeResult<Option<NonnegativeSumIsNonnegativeStrategySingleStep>> {
         let Some((l, r, lf)) = nonnegative_sum_goal_summands(fact) else {
             return Ok(None);
@@ -46,7 +46,7 @@ impl Runtime {
             self.strategy_less_equal_fact(zero_obj(), r, lf),
         ];
         let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_strategy_requirements(requirements, verify_state)?
+            self.verify_strategy_requirements(requirements, ctx)?
         else {
             return Ok(None);
         };
@@ -59,7 +59,7 @@ impl Runtime {
     pub(super) fn search_strict_additive_left_strict_strategy(
         &mut self,
         fact: &AtomicFact,
-        verify_state: VerifyState,
+        ctx: StrategySearch,
     ) -> RuntimeResult<Option<StrictAdditiveLeftStrictStrategySingleStep>> {
         let Some((l, r, lf)) = positive_sum_goal_summands(fact) else {
             return Ok(None);
@@ -69,7 +69,7 @@ impl Runtime {
             self.strategy_less_equal_fact(zero_obj(), r, lf),
         ];
         let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_strategy_requirements(requirements, verify_state)?
+            self.verify_strategy_requirements(requirements, ctx)?
         else {
             return Ok(None);
         };
@@ -82,7 +82,7 @@ impl Runtime {
     pub(super) fn search_strict_additive_right_strict_strategy(
         &mut self,
         fact: &AtomicFact,
-        verify_state: VerifyState,
+        ctx: StrategySearch,
     ) -> RuntimeResult<Option<StrictAdditiveRightStrictStrategySingleStep>> {
         let Some((l, r, lf)) = positive_sum_goal_summands(fact) else {
             return Ok(None);
@@ -92,7 +92,7 @@ impl Runtime {
             self.strategy_less_fact(zero_obj(), r, lf),
         ];
         let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_strategy_requirements(requirements, verify_state)?
+            self.verify_strategy_requirements(requirements, ctx)?
         else {
             return Ok(None);
         };

@@ -1,12 +1,5 @@
-prop divides(a Z, b Z):
-    exist k Z st {b = a * k}
-
-# Minimal: obtain under forall goal, then cite witness equality-ish
-claim:
-    ? forall d N+, a Z:
-        $divides(d, a)
-        =>:
-            exist k Z st {a = d * k}
-    obtain k from exist k Z st {a = d * k}:
-        $divides(d, a)
-    a = d * k
+# Nested integer carrier via StrategySearch
+have a Z
+have b N+
+trust b != 0
+(a - (a % b)) $in Z

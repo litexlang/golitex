@@ -18,23 +18,8 @@ impl Runtime {
                 tb.parse_error("claim: expects a `? <fact>` goal block and optional proof body")
             );
         }
-        let _ = std::fs::write(
-            "/tmp/litex_claim_dbg.txt",
-            format!(
-                "claim body_len={} first_headers={:?}\n",
-                tb.body.len(),
-                tb.body
-                    .iter()
-                    .map(|b| b.header.get(0).cloned().unwrap_or_default())
-                    .collect::<Vec<_>>()
-            ),
-        );
         let mut goal = tb.body[0].clone();
         let fact = self.parse_goal_fact(&mut goal, "claim")?;
-        let _ = std::fs::write(
-            "/tmp/litex_claim_dbg2.txt",
-            format!("goal_ok proof_blocks={}\n", tb.body.len().saturating_sub(1)),
-        );
         let proof_blocks = &tb.body[1..];
         let proof = if let Some(params) = Self::forall_params_of_fact(&fact) {
             self.with_forall_params_occupied(params, &tb, |this| {
@@ -43,10 +28,13 @@ impl Runtime {
         } else {
             self.parse_body_stmts(proof_blocks)?
         };
+        // Nested obtain names were bound at file-root for id stability; drop the
+        // visible binding so later top-level stmts may reuse the same names.
+        self.release_obtain_parse_bindings_in_stmts(&proof);
         Ok(Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(ClaimStmt {
             fact,
             proof,
-            line_file: SourceLine::new(block.line, self.code_source.clone()),
+            line_file: SourceLine::new(block.line, self.code_source.clone())
         })))
     }
 }

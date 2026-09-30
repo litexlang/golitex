@@ -3,7 +3,7 @@ use super::super::object::is_simple_name;
 use crate::ast::fact::AtomicFact;
 use crate::ast::line_file::SourceLine;
 use crate::ast::stmt::{
-    DefineObjStmt, DefinitionStmt, ObtainObjFromAtomicFact, ObtainObjFromExistFact, Stmt,
+    DefineObjStmt, DefinitionStmt, ObtainObjFromAtomicFact, ObtainObjFromExistFact, Stmt
 };
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::tokenize::TokenBlock;
@@ -14,13 +14,6 @@ impl Runtime {
         &mut self,
         block: &TokenBlock,
     ) -> RuntimeResult<Stmt> {
-        let _ = std::fs::write(
-            "/tmp/litex_obtain_dbg.txt",
-            format!(
-                "parse_obtain_stmt enter stack_len={}\n",
-                self.parse_scope_stack.len()
-            ),
-        );
         let mut tb = block.clone();
         tb.expect(OBTAIN)?;
 
@@ -54,7 +47,7 @@ impl Runtime {
                 ObtainObjFromExistFact {
                     equal_tos: equal_tos.clone(),
                     fact,
-                    line_file,
+                    line_file
                 },
             )))
         } else if tb.peek() == Some(FACT_PREFIX) {
@@ -68,7 +61,7 @@ impl Runtime {
                 ObtainObjFromAtomicFact {
                     equal_tos: equal_tos.clone(),
                     fact,
-                    line_file,
+                    line_file
                 },
             )))
         } else {
@@ -85,7 +78,7 @@ impl Runtime {
         }
 
         for name in &equal_tos {
-            self.define_plain_atom_for_obtain_as_parse(&tb, name.clone())?;
+            self.define_plain_atom_for_obtain_as_parse(&tb, name.clone(), block.line)?;
         }
         Ok(stmt)
     }
@@ -94,8 +87,9 @@ impl Runtime {
         &mut self,
         tb: &TokenBlock,
         name: String,
+        source_line: usize,
     ) -> RuntimeResult<crate::ast::names::BoundName> {
-        self.define_plain_atom_for_obtain(name)
+        self.define_plain_atom_for_obtain(name, source_line)
             .map_err(|err| match err {
                 crate::runtime::RuntimeError::InternalBug(message) => {
                     crate::runtime::RuntimeParseError::new(
@@ -105,7 +99,7 @@ impl Runtime {
                     )
                     .into()
                 }
-                other => other,
+                other => other
             })
     }
 }

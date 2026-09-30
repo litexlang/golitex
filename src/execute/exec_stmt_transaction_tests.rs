@@ -11,7 +11,7 @@ fn runtime_with_file_env() -> Runtime {
         code: String::new(),
         session: false,
         strict: false,
-        language: OutputLanguage::English,
+        language: OutputLanguage::English
     })
 }
 
@@ -28,7 +28,7 @@ fn exec_one(runtime: &mut Runtime, code: &str) -> ExecStmtResult {
 
 fn number_one() -> Obj {
     Obj::Literal(Literal::Number(Number {
-        normalized_value: "1".to_string(),
+        normalized_value: "1".to_string()
     }))
 }
 
@@ -75,17 +75,17 @@ fn closed_numeric_order_comparisons() {
 fn calculation_lib_closed_decimal_smoke() {
     use crate::ast::obj::{Add, Number, Obj, ArithmeticOperator, Literal};
     use crate::rational_expression::{
-        evaluate_obj_to_normalized_decimal_number, two_objs_equal_by_closed_decimal_calculation,
+        evaluate_obj_to_normalized_decimal_number, two_objs_equal_by_closed_decimal_calculation
     };
     let one = Obj::Literal(Literal::Number(Number {
-        normalized_value: "1".into(),
+        normalized_value: "1".into()
     }));
     let two = Obj::Literal(Literal::Number(Number {
-        normalized_value: "2".into(),
+        normalized_value: "2".into()
     }));
     let add = Obj::ArithmeticOperator(ArithmeticOperator::Add(Add {
         left: Box::new(one.clone()),
-        right: Box::new(one.clone()),
+        right: Box::new(one.clone())
     }));
     let n = evaluate_obj_to_normalized_decimal_number(&add).expect("eval 1+1");
     assert_eq!(n.normalized_value, "2");
@@ -834,7 +834,7 @@ fn or_fact_ill_defined_branch_is_wd_fail() {
         other => panic!(
             "expected WD fail for ill-defined or branch, got failed={}",
             other.is_failed()
-        ),
+        )
     }
 }
 
@@ -890,7 +890,7 @@ fn forall_or_then_indexes_by_or_and_instantiates() {
 fn or_fact_trichotomy_eq_less_greater_by_builtin() {
     use crate::execute::execute_fact_stmt::{
         ExecFactStmtResult, OrFactSearchProofByBuiltinRule, OrFactSearchedProof, VerifyFactResult,
-        VerifyOrFactResult,
+        VerifyOrFactResult
     };
 
     let mut runtime = runtime_with_file_env();
@@ -910,9 +910,9 @@ fn or_fact_trichotomy_eq_less_greater_by_builtin() {
                 assert!(!p.left_in_r.is_failed());
                 assert!(!p.right_in_r.is_failed());
             }
-            _other => panic!("expected EqLessGreater builtin, got other searched_proof"),
+            _other => panic!("expected EqLessGreater builtin, got other searched_proof")
         },
-        VerifyOrFactResult::Failed(_) => panic!("expected Success"),
+        VerifyOrFactResult::Failed(_) => panic!("expected Success")
     }
 }
 
@@ -920,7 +920,7 @@ fn or_fact_trichotomy_eq_less_greater_by_builtin() {
 fn or_fact_trichotomy_less_eq_greater_by_builtin() {
     use crate::execute::execute_fact_stmt::{
         ExecFactStmtResult, OrFactSearchProofByBuiltinRule, OrFactSearchedProof, VerifyFactResult,
-        VerifyOrFactResult,
+        VerifyOrFactResult
     };
 
     let mut runtime = runtime_with_file_env();
@@ -939,7 +939,7 @@ fn or_fact_trichotomy_less_eq_greater_by_builtin() {
                 OrFactSearchProofByBuiltinRule::RealLineTrichotomyLessEqGreater(_)
             )
         )),
-        VerifyOrFactResult::Failed(_) => panic!("expected Success"),
+        VerifyOrFactResult::Failed(_) => panic!("expected Success")
     }
 }
 
@@ -947,7 +947,7 @@ fn or_fact_trichotomy_less_eq_greater_by_builtin() {
 fn or_fact_trichotomy_greater_eq_less_by_builtin() {
     use crate::execute::execute_fact_stmt::{
         ExecFactStmtResult, OrFactSearchProofByBuiltinRule, OrFactSearchedProof, VerifyFactResult,
-        VerifyOrFactResult,
+        VerifyOrFactResult
     };
 
     let mut runtime = runtime_with_file_env();
@@ -966,14 +966,14 @@ fn or_fact_trichotomy_greater_eq_less_by_builtin() {
                 OrFactSearchProofByBuiltinRule::RealLineTrichotomyGreaterEqLess(_)
             )
         )),
-        VerifyOrFactResult::Failed(_) => panic!("expected Success"),
+        VerifyOrFactResult::Failed(_) => panic!("expected Success")
     }
 }
 
 #[test]
 fn or_fact_trichotomy_unlisted_order_is_not_builtin() {
     use crate::execute::execute_fact_stmt::{
-        ExecFactStmtResult, OrFactSearchedProof, VerifyFactResult, VerifyOrFactResult,
+        ExecFactStmtResult, OrFactSearchedProof, VerifyFactResult, VerifyOrFactResult
     };
 
     let mut runtime = runtime_with_file_env();
@@ -994,7 +994,7 @@ fn or_fact_trichotomy_unlisted_order_is_not_builtin() {
                 );
             }
         }
-        other => panic!("unexpected stmt outcome: failed={}", other.is_failed()),
+        other => panic!("unexpected stmt outcome: failed={}", other.is_failed())
     }
 }
 
@@ -1099,6 +1099,19 @@ fn witness_exist_succeeds_with_local_proof_body() {
         !exec_one(&mut runtime, "exist u R st {0 < u, u < 1}").is_failed(),
         "stored exist must verify"
     );
+}
+
+#[test]
+fn witness_exist_proof_body_can_mention_exist_binder() {
+    let mut runtime = runtime_with_file_env();
+    // Binder `m` must be in parse scope inside the witness proof body.
+    let src = "witness exist m R st {m = 0} from 0:\n    m = 0";
+    let outcome = exec_one(&mut runtime, src);
+    assert!(
+        !outcome.is_failed(),
+        "expected Success: witness proof body may use exist binder name"
+    );
+    assert!(matches!(outcome, ExecStmtResult::Witness(_)));
 }
 
 #[test]
@@ -1615,7 +1628,7 @@ fn fn_arrow_sugar_desugars_to_fn_set() {
 fn fn_set_obj_param_domain_must_not_cite_earlier_binder() {
     use crate::execute::execute_fact_stmt::well_defined_results::{
         FailToVerifyFnSetObjWellDefined, FailToVerifyFunctionSpaceObjWellDefinedResult,
-        FailToVerifyObjWellDefinedResult, VerifyObjWellDefinedResult,
+        FailToVerifyObjWellDefinedResult, VerifyObjWellDefinedResult
     };
     use crate::execute::execute_let_stmt::ExecLetObjStmtResult;
     use crate::execute::exec_stmt_result::{ExecDefinitionStmtResult, ExecDefineObjStmtResult};
@@ -1632,17 +1645,17 @@ fn fn_set_obj_param_domain_must_not_cite_earlier_binder() {
                     reason: FailToVerifyObjWellDefinedResult::FunctionSpace(
                         FailToVerifyFunctionSpaceObjWellDefinedResult::FnSet(
                             FailToVerifyFnSetObjWellDefined::ParamTypeCitesEarlierBinder {
-                                failed_index: 1,
+                                failed_index: 1
                             },
                         ),
-                    ),
+                    )
                 },
             )),
         )) => {}
         other => panic!(
             "expected ParamTypeCitesEarlierBinder at group 1, got failed={}",
             other.is_failed()
-        ),
+        )
     }
     assert!(
         exec_one(&mut runtime, "let g = fn(x R, y S(x)) R {y}").is_failed(),
@@ -1724,7 +1737,7 @@ fn have_fn_equal_and_by_exist_slice1() {
 fn have_fn_by_cases_slice2() {
     use crate::exec_env::SpecialObjectPropertyByDefinition;
     use crate::execute::execute_have_fn_equal_case_by_case_stmt::{
-        ExecHaveFnEqualCaseByCaseStmtFailed, ExecHaveFnEqualCaseByCaseStmtResult,
+        ExecHaveFnEqualCaseByCaseStmtFailed, ExecHaveFnEqualCaseByCaseStmtResult
     };
     use crate::execute::{ExecDefinitionStmtResult, ExecDefineObjStmtResult};
     use crate::execute::ExecStmtResult;
@@ -1756,7 +1769,7 @@ fn have_fn_by_cases_slice2() {
             };
             panic!("have fn by cases failed: {msg}");
         }
-        _other => panic!("unexpected result shape for by cases"),
+        _other => panic!("unexpected result shape for by cases")
     }
     assert!(
         runtime
@@ -1811,7 +1824,7 @@ fn have_fn_by_exist_stores_membership_and_properties() {
         other => panic!(
             "expected Success for by exist!, got failed={}",
             other.is_failed()
-        ),
+        )
     }
 
     let props_ok = runtime
@@ -1826,7 +1839,7 @@ fn have_fn_by_exist_stores_membership_and_properties() {
 #[test]
 fn have_fn_by_exist_fails_when_forall_unproven() {
     use crate::execute::execute_have_fn_by_forall_exist_unique_stmt::{
-        ExecHaveFnByForallExistUniqueStmtFailed, ExecHaveFnByForallExistUniqueStmtResult,
+        ExecHaveFnByForallExistUniqueStmtFailed, ExecHaveFnByForallExistUniqueStmtResult
     };
     use crate::execute::{ExecDefinitionStmtResult, ExecDefineObjStmtResult};
     use crate::execute::ExecStmtResult;
@@ -1847,7 +1860,7 @@ fn have_fn_by_exist_fails_when_forall_unproven() {
         other => panic!(
             "expected SourceForall soft fail, got failed={}",
             other.is_failed()
-        ),
+        )
     }
 }
 
@@ -1960,7 +1973,7 @@ fn have_fn_by_cases_sign_trichotomy_slice() {
 #[test]
 fn have_fn_by_induc_countdown_slice() {
     use crate::execute::execute_have_fn_by_induc_stmt::{
-        ExecHaveFnByInducStmtFailed, ExecHaveFnByInducStmtResult,
+        ExecHaveFnByInducStmtFailed, ExecHaveFnByInducStmtResult
     };
     use crate::execute::{ExecDefinitionStmtResult, ExecDefineObjStmtResult};
     use crate::execute::ExecStmtResult;
@@ -2001,11 +2014,11 @@ fn have_fn_by_induc_countdown_slice() {
                 ExecHaveFnByInducStmtFailed::CaseBodyInRetSet(i, _) => {
                     format!("CaseBodyInRetSet {i}")
                 }
-                ExecHaveFnByInducStmtFailed::Shape(s) => format!("Shape({s})"),
+                ExecHaveFnByInducStmtFailed::Shape(s) => format!("Shape({s})")
             };
             panic!("countdown by induc failed: {msg}");
         }
-        other => panic!("unexpected result for induc: failed={}", other.is_failed()),
+        other => panic!("unexpected result for induc: failed={}", other.is_failed())
     }
     assert!(
         !exec_one(&mut runtime, "forall n N:\n    countdown(n) $in N").is_failed(),
@@ -2018,7 +2031,7 @@ fn auto_open_point_forall_field_reflexive() {
     use crate::execute::execute_fact_stmt::ExecFactStmtResult;
     use crate::execute::execute_fact_stmt::{
         FailToVerifyForallFactWellDefinedResult, VerifyFactResult, VerifyForallFactFailed,
-        VerifyForallFactResult,
+        VerifyForallFactResult
     };
 
     let mut runtime = runtime_with_file_env();
@@ -2041,17 +2054,17 @@ fn auto_open_point_forall_field_reflexive() {
                     failed_then_index,
                     ..
                 }) => panic!("forall then fail at {failed_then_index}"),
-                VerifyForallFactResult::Success(_) => panic!("unexpected"),
+                VerifyForallFactResult::Success(_) => panic!("unexpected")
             }
         }
-        other => panic!("unexpected failed={}", other.is_failed()),
+        other => panic!("unexpected failed={}", other.is_failed())
     }
 }
 
 #[test]
 fn group_struct_def_with_forall_law_succeeds() {
     use crate::execute::exec_stmt_result::{
-        ExecDefinitionStmtResult, ExecDefineObjStmtResult, ExecStmtResult as ESR,
+        ExecDefinitionStmtResult, ExecDefineObjStmtResult, ExecStmtResult as ESR
     };
     use crate::execute::execute_def_struct_stmt::ExecDefStructStmtResult;
 
@@ -2076,7 +2089,7 @@ struct Group<s nonempty_set>:
         ESR::Definition(ExecDefinitionStmtResult::DefStruct(
             ExecDefStructStmtResult::Failed(fail),
         )) => panic!("struct Group failed: {:?}", std::mem::discriminant(&fail)),
-        other => panic!("unexpected {:?}", std::mem::discriminant(&other)),
+        other => panic!("unexpected {:?}", std::mem::discriminant(&other))
     }
 }
 
@@ -2200,7 +2213,7 @@ struct TaggedPoint:
         ESR::ReleaseAndExpand(crate::execute::ExecReleaseAndExpandStmtResult::StructDef(
             ExecReleaseStructDefStmtResult::Success(_),
         )) => {}
-        other => panic!("expected nested release success, got failed={}", other.is_failed()),
+        other => panic!("expected nested release success, got failed={}", other.is_failed())
     }
     assert!(
         !exec_one(&mut runtime, "p.point.x = 0").is_failed(),
@@ -2229,7 +2242,7 @@ fn cart_membership_literal_tuple_succeeds_via_run_eval() {
         code: "(1, 2) $in cart(R, Z)".to_string(),
         session: false,
         strict: false,
-        language: OutputLanguage::English,
+        language: OutputLanguage::English
     };
     let result = run_eval(cmd).expect("run_eval");
     assert!(
@@ -2289,7 +2302,7 @@ struct PosPoint:
 #[test]
 fn release_struct_def_without_carrier_soft_fails() {
     use crate::execute::execute_release_struct_def_stmt::{
-        ExecReleaseStructDefStmtFailed, ExecReleaseStructDefStmtResult,
+        ExecReleaseStructDefStmtFailed, ExecReleaseStructDefStmtResult
     };
     use crate::execute::ExecStmtResult as ESR;
 
@@ -2304,7 +2317,7 @@ fn release_struct_def_without_carrier_soft_fails() {
         other => panic!(
             "expected NoDefinitionOwnedCarrier, got failed={}",
             other.is_failed()
-        ),
+        )
     }
 }
 
@@ -2364,7 +2377,7 @@ fn release_obj_def_smoke() {
     {
         use crate::exec_env::StoredIdentifierDefinition;
         use crate::execute::execute_release_obj_def_stmt::{
-            ExecReleaseObjDefStmtResult, ReleaseObjDefByKind,
+            ExecReleaseObjDefStmtResult, ReleaseObjDefByKind
         };
         use crate::execute::ExecStmtResult;
         match exec_one(&mut runtime, "release obj def choose") {
@@ -2394,7 +2407,7 @@ fn release_obj_def_smoke() {
             other => panic!(
                 "expected release Success for by exist!, got failed={}",
                 other.is_failed()
-            ),
+            )
         }
     }
     assert!(
@@ -2450,7 +2463,7 @@ fn template_have_fn_by_induc_object_definition_unfold() {
 #[test]
 fn template_have_fn_by_exist_wires_body() {
     use crate::execute::execute_def_template_stmt::{
-        ExecDefTemplateStmtResult, ExecTemplateDefBodyResult,
+        ExecDefTemplateStmtResult, ExecTemplateDefBodyResult
     };
     use crate::execute::{ExecDefinitionStmtResult, ExecDefineObjStmtResult};
     use crate::execute::ExecStmtResult;
@@ -2486,7 +2499,7 @@ fn template_have_fn_by_exist_wires_body() {
         other => panic!(
             "expected template Success, got failed={}",
             other.is_failed()
-        ),
+        )
     }
     assert!(
         !exec_one(&mut runtime, "\\choose_t<{0}> = \\choose_t<{0}>").is_failed(),
@@ -3087,29 +3100,36 @@ fn sketch_soft_fail_fails_whole_sketch() {
 }
 
 #[test]
-fn obtain_under_forall_claim_reproduces_citation_shape() {
+fn obtain_under_forall_claim_keeps_witness_id_for_exec() {
     let mut runtime = runtime_with_file_env();
     let prop = "prop divides(a Z, b Z):\n    exist k Z st {b = a * k}";
     assert!(!exec_one(&mut runtime, prop).is_failed(), "def prop");
+    // Two obtains named `k` in separate claims must both parse (file-root
+    // binding released after each claim) and exec without undefined-name.
     let code = r#"claim:
     ? forall d N+, a Z:
         $divides(d, a)
-        a != 0
         =>:
-            d <= abs(a)
+            1 = 1
     obtain k from exist k Z st {a = d * k}
-    abs(k) $in N+"#;
-    match crate::parse::parse::parse_stmts_from_source(&mut runtime, code) {
-        Ok(stmts) => {
-            eprintln!("parsed {} stmts; root plain keys={:?}", stmts.len(),
-                runtime.parse_scope_stack.first().map(|s| s.plain.keys().cloned().collect::<Vec<_>>()));
-            for (i, stmt) in stmts.iter().enumerate() {
-                match runtime.exec_stmt(stmt) {
-                    Ok(r) => eprintln!("exec[{i}] failed={}", r.is_failed()),
-                    Err(e) => panic!("exec[{i}] RuntimeError: {e:?}"),
-                }
-            }
-        }
-        Err(e) => panic!("parse error: {e:?}"),
+    a = d * k
+claim:
+    ? forall d N+, a Z:
+        $divides(d, a)
+        =>:
+            1 = 1
+    obtain k from exist k Z st {a = d * k}
+    a = d * k"#;
+    let tokens = Tokenizer::new()
+        .tokenize(code, runtime.current_file.clone())
+        .expect("tokenize");
+    let stmts = runtime.parse(&tokens).expect("parse two claims with obtain k");
+    assert_eq!(stmts.len(), 2);
+    for (i, stmt) in stmts.iter().enumerate() {
+        let result = runtime.exec_stmt(stmt).unwrap_or_else(|e| panic!("exec[{i}]: {e:?}"));
+        assert!(
+            !result.is_failed(),
+            "claim[{i}] should succeed after obtain-under-forall fix"
+        );
     }
 }

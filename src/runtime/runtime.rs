@@ -30,12 +30,17 @@ pub struct Runtime {
     pub launch_command: LaunchCommand,
     /// Where the currently running code came from (drives outermost symbol qualify).
     pub code_source: CodeSource,
+    // Obtain under nested parse scopes binds at file-root so the IdentifierId
+    // survives `with_forall_params_occupied` pop; whole-file parse then releases
+    // that visible binding at the end of thm/claim/sketch/strategy. Exec still
+    // needs the same id (baked into later proof ASTs), so keep (line, name) → id.
+    pub obtain_parse_ids: HashMap<(usize, String), IdentifierId>
 }
 
 /// One parse layer's plain names → [`IdentifierId`].
 /// Inner scopes must not reuse a visible outer plain name.
 pub struct ParseScope {
-    pub plain: HashMap<String, IdentifierId>,
+    pub plain: HashMap<String, IdentifierId>
 }
 
 /// Global monotonic id counters owned by `Runtime`.
@@ -44,7 +49,7 @@ pub struct GlobalIds {
     next_fact_id: FactId,
     next_well_definedness_id: WellDefinednessId,
     next_prop_rewrite_property_id: PropRewritePropertyId,
-    next_identifier_id: IdentifierId,
+    next_identifier_id: IdentifierId
 }
 
 impl Runtime {
@@ -95,6 +100,7 @@ impl Runtime {
             global_ids: GlobalIds::new(),
             launch_command: command,
             code_source,
+            obtain_parse_ids: HashMap::new()
         };
         runtime.begin_file(file);
         runtime
@@ -123,12 +129,14 @@ impl Runtime {
             view.stamp_leave(self.global_ids.clone());
         }
         self.parse_scope_stack.clear();
+        self.obtain_parse_ids.clear();
         (file, exec_env)
     }
 
     pub fn abort_file(&mut self) {
         self.execution_environments_stack.clear();
         self.parse_scope_stack.clear();
+        self.obtain_parse_ids.clear();
     }
 
     pub fn publish_completed_export_file(
@@ -176,19 +184,27 @@ impl Runtime {
                 return Ok((*id, scope_index));
             }
         }
-        let msg = format!("undefined name `{name}`");
-        let _ = std::fs::write(
-            "/tmp/litex_undef_dbg.txt",
-            format!(
-                "{msg}\nstack_len={}\nscopes={:?}\n",
-                self.parse_scope_stack.len(),
-                self.parse_scope_stack
-                    .iter()
-                    .map(|s| s.plain.keys().cloned().collect::<Vec<_>>())
-                    .collect::<Vec<_>>()
-            ),
-        );
-        Err(RuntimeError::InternalBug(msg))
+        Err(RuntimeError::InternalBug(format!(
+            "undefined name `{name}`"
+        )))
+    }
+
+    // Resolve an obtain witness name: live parse scope first, then the
+    // (source_line, name) id recorded when the obtain was parsed.
+    pub fn resolve_obtain_plain_atom(
+        &self,
+        source_line: usize,
+        name: &str,
+    ) -> RuntimeResult<IdentifierId> {
+        if let Ok((id, _)) = self.resolve_plain_atom_with_scope_index(name) {
+            return Ok(id);
+        }
+        if let Some(id) = self.obtain_parse_ids.get(&(source_line, name.to_string())) {
+            return Ok(*id);
+        }
+        Err(RuntimeError::InternalBug(format!(
+            "undefined name `{name}`"
+        )))
     }
 
     /// True when `name` is bound in the file-root parse scope (scope 0).
@@ -210,16 +226,16 @@ impl Runtime {
             }
             CodeSource::RootExport { export_file_id } => AtomicName::WithExportFileId {
                 export_file_id: *export_file_id,
-                name,
+                name
             },
             CodeSource::ImportedExport {
                 global_mod_id,
-                export_file_id,
+                export_file_id
             } => AtomicName::WithModAndExportFileId {
                 global_mod_id: *global_mod_id,
                 export_file_id: *export_file_id,
-                name,
-            },
+                name
+            }
         }
     }
 
@@ -233,13 +249,13 @@ impl Runtime {
             }
             AtomicName::WithExportFileId {
                 export_file_id,
-                name,
+                name
             } => IdentifierObj::with_export_file_id(export_file_id, name),
             AtomicName::WithModAndExportFileId {
                 global_mod_id,
                 export_file_id,
-                name,
-            } => IdentifierObj::with_mod_and_export_file_id(global_mod_id, export_file_id, name),
+                name
+            } => IdentifierObj::with_mod_and_export_file_id(global_mod_id, export_file_id, name)
         }
     }
 
@@ -297,10 +313,18 @@ impl Runtime {
 
     // Obtain under `with_forall_params_occupied` / nested by-proof scopes: bind the
     // witness name in the file-root parse scope so its IdentifierId survives when
-    // those temporary scopes pop. Top-level obtain (only file-root present) still
-    // binds in the current scope. Callers that introduce nested obtains must
-    // remove these root bindings after the enclosing thm/claim finishes.
-    pub fn define_plain_atom_for_obtain(&mut self, name: String) -> RuntimeResult<BoundName> {
+    // those temporary scopes pop during the same proof body's parse. Top-level
+    // obtain (only file-root present) still binds in the current scope.
+    //
+    // Whole-file parse then releases nested obtain names from file-root at the end
+    // of thm/claim/sketch/strategy so later statements may reuse the same surface
+    // name (e.g. `witness exist k`). The allocated id is kept in `obtain_parse_ids`
+    // keyed by `(source_line, name)` for exec.
+    pub fn define_plain_atom_for_obtain(
+        &mut self,
+        name: String,
+        source_line: usize,
+    ) -> RuntimeResult<BoundName> {
         if self.plain_atom_is_visible(&name) {
             return Err(RuntimeError::InternalBug(format!(
                 "name `{name}` is already bound in an enclosing parse scope"
@@ -315,16 +339,13 @@ impl Runtime {
                 .checked_sub(1)
                 .ok_or_else(|| RuntimeError::InternalBug("no parse scope".to_string()))?
         };
-        eprintln!(
-            "define_plain_atom_for_obtain name={name} id={} scope_index={scope_index} stack_len={}",
-            id.value(),
-            self.parse_scope_stack.len()
-        );
         let scope = self
             .parse_scope_stack
             .get_mut(scope_index)
             .ok_or_else(|| RuntimeError::InternalBug("no parse scope".to_string()))?;
         scope.plain.insert(name.clone(), id);
+        self.obtain_parse_ids
+            .insert((source_line, name.clone()), id);
         Ok(BoundName::new(id, name))
     }
 
@@ -414,7 +435,7 @@ impl Runtime {
 impl ParseScope {
     pub fn new() -> Self {
         Self {
-            plain: HashMap::new(),
+            plain: HashMap::new()
         }
     }
 }
@@ -425,7 +446,7 @@ impl GlobalIds {
             next_fact_id: FactId::new(1),
             next_well_definedness_id: WellDefinednessId::new(1),
             next_prop_rewrite_property_id: PropRewritePropertyId::new(1),
-            next_identifier_id: IdentifierId::new(1),
+            next_identifier_id: IdentifierId::new(1)
         }
     }
 
@@ -475,7 +496,7 @@ impl GlobalIds {
             next_prop_rewrite_property_id: PropRewritePropertyId::new(
                 next_prop_rewrite_property_id,
             ),
-            next_identifier_id: IdentifierId::new(next_identifier_id),
+            next_identifier_id: IdentifierId::new(next_identifier_id)
         }
     }
 }

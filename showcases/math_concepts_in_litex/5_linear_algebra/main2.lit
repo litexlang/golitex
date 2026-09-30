@@ -6,14 +6,42 @@
 # complementary role of `setting`: it names recurring contexts of those
 # declaration-typed values without flattening their fields or repeating laws.
 
-setting FieldSetting(K nonempty_set, field &main::Field<K>)
+# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
+# Former: setting FieldSetting(K nonempty_set, field &main::Field<K>)
+struct FieldSetting:
+    K nonempty_set
+    field &main::Field<K>
 
-setting VectorSpaceSetting([FieldSetting(K, field)], V nonempty_set, space &main::VectorSpace<K, field, V>)
+# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
+# Former: setting VectorSpaceSetting([FieldSetting(K, field)], V nonempty_set, space &main::VectorSpace<K, field, V>)
+struct VectorSpaceSetting:
+    # former parent setting ref: [FieldSetting(K, field)]
+    V nonempty_set
+    space &main::VectorSpace<K
+    field
+    V>
 
-setting VectorSpacesSetting([FieldSetting(K, field)], V, W nonempty_set, source &main::VectorSpace<K, field, V>, target &main::VectorSpace<K, field, W>)
+# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
+# Former: setting VectorSpacesSetting([FieldSetting(K, field)], V, W nonempty_set, source &main::VectorSpace<K, field, V>, target &main::VectorSpace<K, field, W>)
+struct VectorSpacesSetting:
+    # former parent setting ref: [FieldSetting(K, field)]
+    V
+    W nonempty_set
+    source &main::VectorSpace<K
+    field
+    V>
+    target &main::VectorSpace<K
+    field
+    W>
 
-setting LinearMapSetting([VectorSpacesSetting], T fn(v V) W):
-    $main::is_linear_map(K, field, V, W, source, target, T)
+# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
+# Former: setting LinearMapSetting([VectorSpacesSetting], T fn(v V) W):
+struct LinearMapSetting:
+    # former parent setting ref: [VectorSpacesSetting]
+    T fn(v V) W
+    _todo_placeholder set
+    <=>:
+        $main::is_linear_map(K, field, V, W, source, target, T)
 
 # A one-space Setting exposes the declaration-owned fields of `space` and the
 # declaration-owned scalar operations of `field`.

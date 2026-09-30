@@ -1,15 +1,13 @@
 use crate::ast::fact::{
-    AtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact, InFact, NormalAtomicFact,
+    AtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact, InFact, IsChoiceFunctionForFact,
     PlainExistFact, QuantifierFreeFact,
 };
-use crate::ast::names::AtomicName;
 use crate::ast::obj::{
     FamilyUnion, FnObj, FnObjHead, FnSet, FunctionSpace, IdentifierObj, Obj, SetOperator,
 };
 use crate::ast::param::{
     ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
 };
-use crate::parse::keywords::IS_CHOICE_FUNCTION_FOR;
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::{
     InferAtomicExceptEqualityResult, InferInFactFamilyUnionResult, InferInFactIndexCartResult,
@@ -242,15 +240,12 @@ impl Runtime {
             derived.push(stored);
         }
 
-        let choice = AtomicFact::NormalAtomicFact(NormalAtomicFact {
+        let choice = AtomicFact::IsChoiceFunctionForFact(IsChoiceFunctionForFact {
             fact_id: self.global_ids.allocate_fact_id(),
-            predicate: AtomicName::plain(IS_CHOICE_FUNCTION_FOR.to_string()),
-            body: vec![
-                index_cart.index_set.as_ref().clone(),
-                index_cart.family_set.as_ref().clone(),
-                index_cart.family_fn.as_ref().clone(),
-                in_fact.element.clone(),
-            ],
+            index: index_cart.index_set.as_ref().clone(),
+            set: index_cart.family_set.as_ref().clone(),
+            family: index_cart.family_fn.as_ref().clone(),
+            choice: in_fact.element.clone(),
             line_file: in_fact.line_file.clone(),
         });
         if let Some(stored) = self.try_store_inferred_fact_and_infer(&Fact::AtomicFact(choice))? {

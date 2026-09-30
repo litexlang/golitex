@@ -2,7 +2,7 @@ use super::by_builtin_strategy_result::FiniteSetProductPointwiseEqualityStrategy
 use crate::ast::fact::{EqualFact, Fact};
 use crate::ast::obj::{AnonymousFn, FnObj, FnObjHead, IdentifierObj, Obj, FunctionSpace, IteratedOperator, StructAndFieldAccessObj};
 use crate::ast::param::{ParamType, SetBoundParameterList, TypedParameterGroup, TypedParameterList};
-use crate::execute::execute_fact_stmt::VerifyState;
+use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
 use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::{Runtime, RuntimeResult};
 use std::collections::HashMap;
@@ -13,7 +13,7 @@ impl Runtime {
     pub fn search_equal_fact_by_finite_set_product_pointwise(
         &mut self,
         fact: &EqualFact,
-        verify_state: VerifyState,
+        ctx: StrategySearch,
     ) -> RuntimeResult<Option<FiniteSetProductPointwiseEqualityStrategySingleStep>> {
         let (Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(left)), Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(right))) =
             (&fact.left, &fact.right)
@@ -30,7 +30,7 @@ impl Runtime {
             return Ok(None);
         };
 
-        let child_state = verify_state.without_well_defined_storage();
+        let child = ctx.after_layer();
         let mut requirement_facts = Vec::with_capacity(2);
         let mut proof_of_requirement_facts = Vec::with_capacity(2);
 
@@ -41,7 +41,7 @@ impl Runtime {
             line_file: fact.line_file.clone(),
         }
         .into();
-        let set_proof = self.verify_fact(&set_goal, child_state.clone())?;
+        let set_proof = self.verify_fact_in_strategy(&set_goal, child)?;
         if set_proof.is_failed() {
             return Ok(None);
         }
@@ -64,7 +64,7 @@ impl Runtime {
                 }],
             };
             rt.define_typed_parameters_in_current_env(&params, None)?;
-            rt.verify_fact(&pointwise_goal, child_state.clone())
+            rt.verify_fact_in_strategy(&pointwise_goal, child)
         })?;
         if pointwise_proof.is_failed() {
             return Ok(None);

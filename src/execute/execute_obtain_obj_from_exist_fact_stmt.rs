@@ -18,7 +18,7 @@ use std::collections::HashMap;
 
 use crate::ast::fact::{
     AndFact, AtomicFact, EqualFact, ExistOrAndChainAtomicFact, ExistShapedFact, Fact, ForallFact,
-    PlainExistFact,
+    PlainExistFact
 };
 use crate::ast::names::BoundName;
 use crate::ast::obj::{IdentifierObj, Obj, Tuple, ProductShape};
@@ -27,7 +27,7 @@ use crate::ast::stmt::ObtainObjFromExistFact;
 use crate::execute::execute_fact_stmt::{
     VerifyExistShapedFactFailed, VerifyExistShapedFactResult, VerifyExistUniqueFactResult,
     VerifyExistUniqueFactSuccess, VerifyFactResult, VerifyPlainExistFactResult,
-    VerifyPlainExistFactSuccess, VerifyState,
+    VerifyPlainExistFactSuccess, VerifyState
 };
 use crate::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
 use crate::instantiate::quantifier_free_fact_to_fact;
@@ -36,12 +36,12 @@ use crate::runtime::{IdentifierId, Runtime, RuntimeError, RuntimeResult};
 pub enum ExecObtainObjFromExistFactStmtFailed {
     ArityMismatch { expected: usize, got: usize },
     NotExistSource,
-    Exist(VerifyExistShapedFactFailed),
+    Exist(VerifyExistShapedFactFailed)
 }
 
 pub enum ObtainExistVerifySuccess {
     Exist(VerifyPlainExistFactSuccess),
-    ExistUnique(VerifyExistUniqueFactSuccess),
+    ExistUnique(VerifyExistUniqueFactSuccess)
 }
 
 // Pipeline: verify known exist → rename binders → define + store body
@@ -49,12 +49,12 @@ pub enum ObtainExistVerifySuccess {
 pub struct ExecObtainObjFromExistFactStmtSuccessResult {
     pub statement: ObtainObjFromExistFact,
     pub verify_exist: ObtainExistVerifySuccess,
-    pub store_and_infer_result: StoreHaveObjAndInferResult,
+    pub store_and_infer_result: StoreHaveObjAndInferResult
 }
 
 pub enum ExecObtainObjFromExistFactStmtResult {
     Success(ExecObtainObjFromExistFactStmtSuccessResult),
-    Failed(ExecObtainObjFromExistFactStmtFailed),
+    Failed(ExecObtainObjFromExistFactStmtFailed)
 }
 
 impl ExecObtainObjFromExistFactStmtResult {
@@ -74,13 +74,7 @@ impl Runtime {
             ));
         }
 
-        let verify_state = VerifyState {
-            can_use_builtin_rule: true,
-            can_use_def_and_known_forall_and_known_strategy: true,
-            can_use_rewrite: true,
-            store_well_defined_fact: true,
-                    builtin_strategy_depth_remaining: VerifyState::BUILTIN_STRATEGY_DEPTH_LIMIT,
-};
+        let verify_state = VerifyState::top_level();
         let verified = self.verify_exist_shaped_fact(&stmt.fact, verify_state)?;
         let verify_exist = match self.unwrap_obtain_exist_verify(verified)? {
             Ok(success) => success,
@@ -91,15 +85,19 @@ impl Runtime {
             }
         };
 
-        match self.apply_obtain_from_known_exist_family(&stmt.fact, &stmt.equal_tos)? {
+        match self.apply_obtain_from_known_exist_family(
+            &stmt.fact,
+            &stmt.equal_tos,
+            stmt.line_file.line,
+        )? {
             Ok(store_and_infer_result) => Ok(ExecObtainObjFromExistFactStmtResult::Success(
                 ExecObtainObjFromExistFactStmtSuccessResult {
                     statement: stmt.clone(),
                     verify_exist,
-                    store_and_infer_result,
+                    store_and_infer_result
                 },
             )),
-            Err(failed) => Ok(ExecObtainObjFromExistFactStmtResult::Failed(failed)),
+            Err(failed) => Ok(ExecObtainObjFromExistFactStmtResult::Failed(failed))
         }
     }
 
@@ -111,6 +109,7 @@ impl Runtime {
         &mut self,
         family: &ExistShapedFact,
         equal_tos: &[String],
+        source_line: usize,
     ) -> RuntimeResult<Result<StoreHaveObjAndInferResult, ExecObtainObjFromExistFactStmtFailed>>
     {
         if matches!(family, ExistShapedFact::NotExist(_)) {
@@ -123,12 +122,12 @@ impl Runtime {
         if expected != got {
             return Ok(Err(ExecObtainObjFromExistFactStmtFailed::ArityMismatch {
                 expected,
-                got,
+                got
             }));
         }
 
         let (renamed_params, subst) =
-            self.build_obtain_renamed_params_and_subst(plain, equal_tos)?;
+            self.build_obtain_renamed_params_and_subst(plain, equal_tos, source_line)?;
 
         let mut store_and_infer_result =
             self.define_typed_parameters_in_current_env(&renamed_params, None)?;
@@ -180,11 +179,11 @@ impl Runtime {
                 _ => Err(RuntimeError::InternalBug(
                     "obtain: expected exist / exist! verify result, got unexpected exist family branch"
                         .to_string(),
-                )),
+                ))
             },
             _ => Err(RuntimeError::InternalBug(
                 "obtain: expected ExistFact verify result".to_string(),
-            )),
+            ))
         }
     }
 
@@ -192,6 +191,7 @@ impl Runtime {
         &mut self,
         plain: &PlainExistFact,
         equal_tos: &[String],
+        source_line: usize,
     ) -> RuntimeResult<(TypedParameterList, HashMap<IdentifierId, Obj>)> {
         let mut subst = HashMap::new();
         let mut groups = Vec::new();
@@ -209,14 +209,7 @@ impl Runtime {
             for old in &group.params {
                 let name = equal_tos[equal_index].clone();
                 equal_index += 1;
-                eprintln!(
-                    "obtain resolve equal_to={name} visible={} root_keys={:?}",
-                    self.plain_atom_is_visible(&name),
-                    self.parse_scope_stack
-                        .first()
-                        .map(|s| s.plain.keys().cloned().collect::<Vec<_>>())
-                );
-                let id = self.resolve_plain_atom(&name)?;
+                let id = self.resolve_obtain_plain_atom(source_line, &name)?;
                 let bound = BoundName::new(id, name);
                 let obj = Obj::Identifier(self.identifier_obj_for_stored_mention(&bound));
                 subst.insert(old.id, obj);
@@ -347,7 +340,7 @@ impl Runtime {
                 fact_id: self.global_ids.allocate_fact_id(),
                 left,
                 right,
-                line_file: plain.line_file.clone(),
+                line_file: plain.line_file.clone()
             });
             vec![ExistOrAndChainAtomicFact::AtomicFact(equal)]
         } else {
@@ -357,24 +350,24 @@ impl Runtime {
                     fact_id: self.global_ids.allocate_fact_id(),
                     left: Obj::Identifier(IdentifierObj::from_bound_name(left_b)),
                     right: Obj::Identifier(IdentifierObj::from_bound_name(right_b)),
-                    line_file: plain.line_file.clone(),
+                    line_file: plain.line_file.clone()
                 }));
             }
             vec![ExistOrAndChainAtomicFact::AndFact(AndFact {
                 fact_id: self.global_ids.allocate_fact_id(),
                 facts: equals,
-                line_file: plain.line_file.clone(),
+                line_file: plain.line_file.clone()
             })]
         };
 
         Ok(ForallFact {
             fact_id: self.global_ids.allocate_fact_id(),
             typed_parameters: TypedParameterList {
-                groups: forall_groups,
+                groups: forall_groups
             },
             dom_facts,
             then_facts,
-            line_file: plain.line_file.clone(),
+            line_file: plain.line_file.clone()
         })
     }
 }
@@ -387,7 +380,7 @@ fn witness_tuple_or_single(binders: &[BoundName]) -> Obj {
             args: binders
                 .iter()
                 .map(|b| Box::new(Obj::Identifier(IdentifierObj::from_bound_name(b))))
-                .collect(),
+                .collect()
         }))
     }
 }

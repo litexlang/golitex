@@ -8,6 +8,6 @@ pub(super) fn text(
     BuiltinRuleText {
         rule_id,
         rule_name: rule_name.to_string(),
-        message: message.to_string(),
+        message: message.to_string()
     }
 }

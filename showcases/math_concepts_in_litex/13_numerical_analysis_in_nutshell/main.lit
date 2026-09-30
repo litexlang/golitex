@@ -25,8 +25,10 @@ have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2
 # The proved iteration stays positive, so it never uses the zero branch. This
 # explicit restart makes the same single-step formula total on R for the
 # experimental Python extractor without changing the mathematical update.
+# One `algo … by cases` defines the mathematical fn and the extractable cases.
+# (Replaced removed `have fn` + `have algo for` pair.)
 # [-extract]
-have fn newton_sqrt_two_step(x R) R by cases:
+algo newton_sqrt_two_step(x R) R by cases:
     case x = 0: 1
     case x != 0: (x + 2 / x) / 2
 # [end of -extract]
@@ -35,12 +37,6 @@ claim:
     ? forall x R+:
         newton_sqrt_two_step(x) = newton_sqrt_two(x)
     newton_sqrt_two_step(x) = (x + 2 / x) / 2 = newton_sqrt_two(x)
-
-# [-extract]
-have algo for newton_sqrt_two_step(x):
-    case x = 0: 1
-    case x != 0: (x + 2 / x) / 2
-# [end of -extract]
 
 have fn sqrt_two_newton_iterate(n N) R+ by induc n from 0:
     case n = 0: 1

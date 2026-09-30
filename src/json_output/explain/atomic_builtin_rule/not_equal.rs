@@ -25,7 +25,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 use crate::json_output::explain::fallback::BuiltinRuleText;
 use crate::launch_command::OutputLanguage;
 use crate::runtime::FactId;
-use super::text::{family_fallback, text};
+use super::text::text;
 
 impl NotEqualFactSearchProofByBuiltinRule {
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -34,10 +34,7 @@ impl NotEqualFactSearchProofByBuiltinRule {
             Self::NotEqualSymmetry(p) => p.rule_id_and_message(lang),
             Self::ListSetDifferentLength(p) => p.rule_id_and_message(lang),
             Self::FromKnownStrictOrder(p) => p.rule_id_and_message(lang),
-            Self::FromKnownInNonzeroStandardSet(_) => family_fallback(
-                "FromKnownInNonzeroStandardSet",
-                lang,
-            ),
+            Self::FromKnownInNonzeroStandardSet(p) => p.rule_id_and_message(lang),
             Self::CosNonzeroOnOpenHalfPi(p) => p.rule_id_and_message(lang),
             Self::CosNonzeroAtZero(p) => p.rule_id_and_message(lang),
             Self::SinNonzeroOnOpenPi(p) => p.rule_id_and_message(lang),
@@ -117,11 +114,19 @@ impl NotEqualSymmetryBuiltinRuleProof {
 
 impl ListSetDifferentLengthBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("ListSetDifferentLength", OutputLanguage::English)
+        text(
+            "ListSetDifferentLength",
+            "List sets ≠ by length",
+            "List sets of different lengths are unequal",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "ListSetDifferentLength",
+            "列表集因长度不等",
+            "不同长度的列表集不等",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -134,11 +139,19 @@ impl ListSetDifferentLengthBuiltinRuleProof {
 
 impl FromKnownStrictOrderBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("FromKnownStrictOrder", OutputLanguage::English)
+        text(
+            "FromKnownStrictOrder",
+            "From known strict order",
+            "Inequality follows from a known strict order fact",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "FromKnownStrictOrder",
+            "由已知严格序",
+            "不等关系由已知严格序事实推出",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -176,11 +189,19 @@ impl FromKnownInNonzeroStandardSetBuiltinRuleProof {
 
 impl CosNonzeroOnOpenHalfPiBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("CosNonzeroOnOpenHalfPi", OutputLanguage::English)
+        text(
+            "CosNonzeroOnOpenHalfPi",
+            "cos ≠ 0 on (-π/2,π/2)",
+            "cosine is nonzero on the open half-pi interval",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "CosNonzeroOnOpenHalfPi",
+            "cos 在 (-π/2,π/2) 非零",
+            "余弦在开半 π 区间上非零",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -193,11 +214,19 @@ impl CosNonzeroOnOpenHalfPiBuiltinRuleProof {
 
 impl CosNonzeroAtZeroBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("CosNonzeroAtZero", OutputLanguage::English)
+        text(
+            "CosNonzeroAtZero",
+            "cos(0) ≠ 0",
+            "cosine is nonzero at zero",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "CosNonzeroAtZero",
+            "cos(0) ≠ 0",
+            "余弦在 0 处非零",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -210,11 +239,19 @@ impl CosNonzeroAtZeroBuiltinRuleProof {
 
 impl SinNonzeroOnOpenPiBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("SinNonzeroOnOpenPi", OutputLanguage::English)
+        text(
+            "SinNonzeroOnOpenPi",
+            "sin ≠ 0 on (0,π)",
+            "sine is nonzero on the open pi interval",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "SinNonzeroOnOpenPi",
+            "sin 在 (0,π) 非零",
+            "正弦在开 π 区间上非零",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -227,11 +264,19 @@ impl SinNonzeroOnOpenPiBuiltinRuleProof {
 
 impl SinNonzeroAtHalfPiBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("SinNonzeroAtHalfPi", OutputLanguage::English)
+        text(
+            "SinNonzeroAtHalfPi",
+            "sin(π/2) ≠ 0",
+            "sine is nonzero at half pi",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "SinNonzeroAtHalfPi",
+            "sin(π/2) ≠ 0",
+            "正弦在 π/2 处非零",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -244,11 +289,19 @@ impl SinNonzeroAtHalfPiBuiltinRuleProof {
 
 impl AbsNonzeroFromArgBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("AbsNonzeroFromArg", OutputLanguage::English)
+        text(
+            "AbsNonzeroFromArg",
+            "|x| ≠ 0 from x ≠ 0",
+            "Absolute value is nonzero when the argument is nonzero",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "AbsNonzeroFromArg",
+            "由 x ≠ 0 得 |x| ≠ 0",
+            "当参数非零时绝对值非零",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -261,11 +314,19 @@ impl AbsNonzeroFromArgBuiltinRuleProof {
 
 impl DiffNonzeroFromInequalityBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("DiffNonzeroFromInequality", OutputLanguage::English)
+        text(
+            "DiffNonzeroFromInequality",
+            "a-b ≠ 0 from a ≠ b",
+            "A difference is nonzero when the operands are unequal",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "DiffNonzeroFromInequality",
+            "由 a ≠ b 得 a-b ≠ 0",
+            "两边不等则差非零",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -278,11 +339,19 @@ impl DiffNonzeroFromInequalityBuiltinRuleProof {
 
 impl EmptySetFromNonemptyBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("EmptySetFromNonempty", OutputLanguage::English)
+        text(
+            "EmptySetFromNonempty",
+            "∅ ≠ nonempty",
+            "The empty set is unequal to a nonempty set",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "EmptySetFromNonempty",
+            "∅ ≠ 非空",
+            "空集不等于非空集",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -295,11 +364,19 @@ impl EmptySetFromNonemptyBuiltinRuleProof {
 
 impl ZeroFromNatAndOneLeBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("ZeroFromNatAndOneLe", OutputLanguage::English)
+        text(
+            "ZeroFromNatAndOneLe",
+            "0 from n∈N and 1≤n false path",
+            "Zero follows from natural membership with a one-lower-bound contradiction path",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "ZeroFromNatAndOneLe",
+            "由 n∈N 与 1≤n 矛盾得 0",
+            "由自然数成员与 1 下界矛盾路径得到零",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -312,11 +389,19 @@ impl ZeroFromNatAndOneLeBuiltinRuleProof {
 
 impl PowNonzeroFromBaseBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("PowNonzeroFromBase", OutputLanguage::English)
+        text(
+            "PowNonzeroFromBase",
+            "pow ≠ 0 from base",
+            "A power is nonzero when the base is nonzero",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "PowNonzeroFromBase",
+            "由底非零得幂非零",
+            "底非零则幂非零",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -329,11 +414,19 @@ impl PowNonzeroFromBaseBuiltinRuleProof {
 
 impl DivNonzeroFromFactorsBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("DivNonzeroFromFactors", OutputLanguage::English)
+        text(
+            "DivNonzeroFromFactors",
+            "a/b ≠ 0 from factors",
+            "A quotient is nonzero when numerator and denominator are nonzero",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "DivNonzeroFromFactors",
+            "由因子得 a/b ≠ 0",
+            "分子分母都非零则商非零",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -346,11 +439,19 @@ impl DivNonzeroFromFactorsBuiltinRuleProof {
 
 impl ProductComponentNonzeroBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("ProductComponentNonzero", OutputLanguage::English)
+        text(
+            "ProductComponentNonzero",
+            "Product ≠ 0 from component",
+            "A product is nonzero when a component is nonzero under nonzero companions",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "ProductComponentNonzero",
+            "由分量得积 ≠ 0",
+            "在同伴非零时，分量非零则积非零",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -363,11 +464,19 @@ impl ProductComponentNonzeroBuiltinRuleProof {
 
 impl SqrtNonzeroFromPositiveArgBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("SqrtNonzeroFromPositiveArg", OutputLanguage::English)
+        text(
+            "SqrtNonzeroFromPositiveArg",
+            "√ ≠ 0 from positive arg",
+            "Square root is nonzero when the argument is positive",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "SqrtNonzeroFromPositiveArg",
+            "由正参数得 √ ≠ 0",
+            "当参数为正时平方根非零",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -380,11 +489,19 @@ impl SqrtNonzeroFromPositiveArgBuiltinRuleProof {
 
 impl SquareSumNonzeroFromComponentBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("SquareSumNonzeroFromComponent", OutputLanguage::English)
+        text(
+            "SquareSumNonzeroFromComponent",
+            "a²+b² ≠ 0",
+            "A sum of squares is nonzero when a component is nonzero",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "SquareSumNonzeroFromComponent",
+            "a²+b² ≠ 0",
+            "分量非零则平方和非零",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -397,11 +514,19 @@ impl SquareSumNonzeroFromComponentBuiltinRuleProof {
 
 impl AddNonzeroFromNotEqualNegationBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("AddNonzeroFromNotEqualNegation", OutputLanguage::English)
+        text(
+            "AddNonzeroFromNotEqualNegation",
+            "a+b ≠ 0 from a ≠ -b",
+            "A sum is nonzero when the summands are not negatives",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "AddNonzeroFromNotEqualNegation",
+            "由 a ≠ -b 得 a+b ≠ 0",
+            "加数互不为相反数则和非零",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -414,11 +539,19 @@ impl AddNonzeroFromNotEqualNegationBuiltinRuleProof {
 
 impl MembershipContradictionBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("MembershipContradiction", OutputLanguage::English)
+        text(
+            "MembershipContradiction",
+            "Membership contradiction",
+            "Conflicting membership facts yield inequality",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "MembershipContradiction",
+            "成员关系矛盾",
+            "冲突的成员关系推出不等",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {

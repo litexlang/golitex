@@ -34,33 +34,42 @@ prop inner_pasch_witness_exists(Point set, Bet power_set(cart(Point, Point, Poin
 
 # Dimensionless neutral geometry: congruence, segment construction,
 # five-segment, betweenness identity, inner Pasch, and lower dimension.
-setting TarskiNeutralDimensionlessSetting(Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point):
-    forall p1, p2 Point:
+# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
+# Former: setting TarskiNeutralDimensionlessSetting(Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point):
+struct TarskiNeutralDimensionlessSetting:
+    Point nonempty_set
+    Bet power_set(cart(Point, Point, Point))
+    Cong power_set(cart(Point, Point, Point, Point))
+    lower_a
+    lower_b
+    lower_c Point
+    <=>:
+        forall p1, p2 Point:
         (p1, p2, p2, p1) $in Cong
-    forall p1, p2, p3, p4, p5, p6 Point:
+        forall p1, p2, p3, p4, p5, p6 Point:
         (p1, p2, p3, p4) $in Cong
         (p1, p2, p5, p6) $in Cong
         =>:
-            (p3, p4, p5, p6) $in Cong
-    forall p1, p2, p3 Point:
+        (p3, p4, p5, p6) $in Cong
+        forall p1, p2, p3 Point:
         (p1, p2, p3, p3) $in Cong
         =>:
-            p1 = p2
-    forall p1, p2, p3, p4 Point:
+        p1 = p2
+        forall p1, p2, p3, p4 Point:
         exist x Point st {(p1, p2, x) $in Bet, (p2, x, p3, p4) $in Cong}
-    $satisfies_five_segment(Point, Bet, Cong)
-    forall p1, p2 Point:
+        $satisfies_five_segment(Point, Bet, Cong)
+        forall p1, p2 Point:
         (p1, p2, p1) $in Bet
         =>:
-            p1 = p2
-    forall p1, p2, p3, p4, p5 Point:
+        p1 = p2
+        forall p1, p2, p3, p4, p5 Point:
         (p1, p4, p3) $in Bet
         (p2, p5, p3) $in Bet
         =>:
-            $inner_pasch_witness_exists(Point, Bet, p4, p2, p5, p1)
-    not (lower_a, lower_b, lower_c) $in Bet
-    not (lower_b, lower_c, lower_a) $in Bet
-    not (lower_c, lower_a, lower_b) $in Bet
+        $inner_pasch_witness_exists(Point, Bet, p4, p2, p5, p1)
+        not (lower_a, lower_b, lower_c) $in Bet
+        not (lower_b, lower_c, lower_a) $in Bet
+        not (lower_c, lower_a, lower_b) $in Bet
 
 # Tarski assumes only pseudo-reflexivity. Ordinary reflexivity is derived by
 # applying inner transitivity to the reversed segment twice.
@@ -572,8 +581,14 @@ thm isosceles_triangle_has_equal_base_angles:
     by def $are_angles_congruent(Point, Bet, Cong, b, a, c, b, c, a)
 
 # The hierarchy now branches by adding laws rather than changing primitives.
-setting TarskiNeutralWithDecidableEqualitySetting([TarskiNeutralDimensionlessSetting]):
-    forall p1, p2 Point:
+# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
+# Former: setting TarskiNeutralWithDecidableEqualitySetting([TarskiNeutralDimensionlessSetting]):
+struct TarskiNeutralWithDecidableEqualitySetting:
+    # former parent setting ref: [TarskiNeutralDimensionlessSetting]
+    _todo_a set
+    _todo_b set
+    <=>:
+        forall p1, p2 Point:
         p1 = p2 or p1 != p2
 
 # GeoCoq l2_11: congruent adjacent pieces have congruent unions. The
@@ -868,14 +883,20 @@ thm point_reflection_involutive:
 
 # Upper dimension specializes the dimensionless neutral theory to a plane:
 # three points equidistant from two distinct points must be collinear.
-setting Tarski2DSetting([TarskiNeutralWithDecidableEqualitySetting]):
-    forall p1, p2, p3, p4, p5 Point:
+# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
+# Former: setting Tarski2DSetting([TarskiNeutralWithDecidableEqualitySetting]):
+struct Tarski2DSetting:
+    # former parent setting ref: [TarskiNeutralWithDecidableEqualitySetting]
+    _todo_a set
+    _todo_b set
+    <=>:
+        forall p1, p2, p3, p4, p5 Point:
         p4 != p5
         $are_segments_congruent(Point, Cong, p1, p4, p1, p5)
         $are_segments_congruent(Point, Cong, p2, p4, p2, p5)
         $are_segments_congruent(Point, Cong, p3, p4, p3, p5)
         =>:
-            $are_collinear(Point, Bet, p1, p2, p3)
+        $are_collinear(Point, Bet, p1, p2, p3)
 
 # Litex consumes universal axioms with existential conclusions most reliably
 # through a named atomic result predicate; this is propositionally the same
@@ -885,13 +906,19 @@ prop euclid_intersection_witness_exists(Point set, Bet power_set(cart(Point, Poi
 
 # The Euclidean branch adds only the SST Euclid axiom. All preceding segment,
 # angle, and reflection results therefore remain visibly neutral.
-setting TarskiEuclidean2DSetting([Tarski2DSetting]):
-    forall p1, p2, p3, p4, p5 Point:
+# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
+# Former: setting TarskiEuclidean2DSetting([Tarski2DSetting]):
+struct TarskiEuclidean2DSetting:
+    # former parent setting ref: [Tarski2DSetting]
+    _todo_a set
+    _todo_b set
+    <=>:
+        forall p1, p2, p3, p4, p5 Point:
         $is_between(Point, Bet, p1, p4, p5)
         $is_between(Point, Bet, p2, p4, p3)
         p1 != p4
         =>:
-            $euclid_intersection_witness_exists(Point, Bet, p1, p2, p3, p5)
+        $euclid_intersection_witness_exists(Point, Bet, p1, p2, p3, p5)
 
 # Chapter 12 (Par_strict and Par). The intersection existential is named so
 # the no-common-point clause remains an atomic, reusable proposition.

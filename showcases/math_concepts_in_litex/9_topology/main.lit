@@ -8,15 +8,20 @@
 
 # A topology is represented by its family of open subsets, closed under finite
 # intersections and arbitrary unions.
-setting TopologicalSpaceSetting(X set, open_sets power_set(power_set(X))):
-    {} $in open_sets
-    X $in open_sets
-    forall U, V open_sets:
+# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
+# Former: setting TopologicalSpaceSetting(X set, open_sets power_set(power_set(X))):
+struct TopologicalSpaceSetting:
+    X set
+    open_sets power_set(power_set(X))
+    <=>:
+        {} $in open_sets
+        X $in open_sets
+        forall U, V open_sets:
         intersect(U, V) $in open_sets
-    forall family power_set(power_set(X)):
+        forall family power_set(power_set(X)):
         family $subset open_sets
         =>:
-            family_union(family) $in open_sets
+        family_union(family) $in open_sets
 
 prop is_topology_on([TopologicalSpaceSetting])
 
@@ -80,18 +85,38 @@ thm topology_binary_union:
                     B $in family
                     point $in family_union(family)
 
-setting TopologicalMapSetting([TopologicalSpaceSetting(X, open_sets_X)], [TopologicalSpaceSetting(Y, open_sets_Y)], f fn(x X) Y)
+# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
+# Former: setting TopologicalMapSetting([TopologicalSpaceSetting(X, open_sets_X)], [TopologicalSpaceSetting(Y, open_sets_Y)], f fn(x X) Y)
+struct TopologicalMapSetting:
+    # former parent setting ref: [TopologicalSpaceSetting(X, open_sets_X)]
+    # former parent setting ref: [TopologicalSpaceSetting(Y, open_sets_Y)]
+    f fn(x X) Y
+    _todo_placeholder set
 
-setting ContinuousMapSetting([TopologicalMapSetting]):
-    forall open_Y open_sets_Y:
+# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
+# Former: setting ContinuousMapSetting([TopologicalMapSetting]):
+struct ContinuousMapSetting:
+    # former parent setting ref: [TopologicalMapSetting]
+    _todo_a set
+    _todo_b set
+    <=>:
+        forall open_Y open_sets_Y:
         {x X: f(x) $in open_Y} $in open_sets_X
 
 prop is_continuous([ContinuousMapSetting])
 
-setting ContinuousCompositionSetting([TopologicalSpaceSetting(A, open_sets_A)], [TopologicalSpaceSetting(B, open_sets_B)], [TopologicalSpaceSetting(CarrierC, open_sets_C)], f fn(x A) B, g fn(y B) CarrierC):
-    forall open_B open_sets_B:
+# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
+# Former: setting ContinuousCompositionSetting([TopologicalSpaceSetting(A, open_sets_A)], [TopologicalSpaceSetting(B, open_sets_B)], [TopologicalSpaceSetting(CarrierC, open_sets_C)], f fn(x A) B, g fn(y B) CarrierC):
+struct ContinuousCompositionSetting:
+    # former parent setting ref: [TopologicalSpaceSetting(A, open_sets_A)]
+    # former parent setting ref: [TopologicalSpaceSetting(B, open_sets_B)]
+    # former parent setting ref: [TopologicalSpaceSetting(CarrierC, open_sets_C)]
+    f fn(x A) B
+    g fn(y B) CarrierC
+    <=>:
+        forall open_B open_sets_B:
         {x A: f(x) $in open_B} $in open_sets_A
-    forall open_C open_sets_C:
+        forall open_C open_sets_C:
         {y B: g(y) $in open_C} $in open_sets_B
 
 # Tracer theorem: settings carry the ambient hypotheses; the proof works with

@@ -1,5 +1,5 @@
 use super::super::keywords::{
-    COLON, COMMA, EQUIVALENT_SIGN, GREATER, LEFT_PAREN, LESS, STRATEGY, STRUCT, TEMPLATE,
+    COLON, COMMA, EQUIVALENT_SIGN, GREATER, LEFT_PAREN, LESS, STRATEGY, STRUCT, TEMPLATE
 };
 use super::super::object::{is_simple_name, parse_obj};
 use crate::ast::fact::QuantifierFreeFact;
@@ -7,7 +7,7 @@ use crate::ast::line_file::SourceLine;
 use crate::ast::param::TypedParameterList;
 use crate::ast::stmt::{
     DefStrategyStmt, DefStructStmt, DefTemplateStmt, DefineObjStmt, DefinitionStmt, Stmt, StructFieldDef,
-    TemplateDefEnum, TrustBoundaryStmt,
+    TemplateDefEnum, TrustBoundaryStmt
 };
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::tokenize::TokenBlock;
@@ -99,7 +99,7 @@ impl Runtime {
                     }
                     fields.push(StructFieldDef {
                         binding,
-                        field_type,
+                        field_type
                     });
                 }
             }
@@ -119,7 +119,7 @@ impl Runtime {
                 param_def_with_dom,
                 fields,
                 equivalent_facts,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, self.code_source.clone())
             },
         )))
     }
@@ -171,7 +171,7 @@ impl Runtime {
                 template_arg_def,
                 template_arg_dom,
                 template_def_stmt,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, self.code_source.clone())
             },
         )))
     }
@@ -242,13 +242,14 @@ impl Runtime {
             self.with_forall_params_occupied(&forall_fact.typed_parameters, &tb, |this| {
                 this.parse_body_stmts(proof_blocks)
             })?;
+        self.release_obtain_parse_bindings_in_stmts(&prove_process);
         self.define_plain_atom_as_parse(&tb, name.clone())?;
         Ok(Stmt::Definition(DefinitionStmt::DefStrategyStmt(
             DefStrategyStmt {
                 name,
                 forall_fact,
                 prove_process,
-                line_file: SourceLine::new(block.line, self.code_source.clone()),
+                line_file: SourceLine::new(block.line, self.code_source.clone())
             },
         )))
     }
@@ -294,7 +295,7 @@ fn template_def_enum_from_body_stmt(
         }
         _ => Err(tb.parse_error(
             "template body only supports `have` / `trust have` / `obtain` definition statements",
-        )),
+        ))
     }
 }
 
@@ -310,7 +311,7 @@ fn template_def_enum_name(body: &TemplateDefEnum) -> Option<String> {
         TemplateDefEnum::HaveFnEqualStmt(stmt) => Some(stmt.name.clone()),
         TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => Some(stmt.name.clone()),
         TemplateDefEnum::HaveFnByInducStmt(stmt) => Some(stmt.name.clone()),
-        TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => Some(stmt.name.clone()),
+        TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => Some(stmt.name.clone())
     }
 }
 
