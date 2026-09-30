@@ -2,8 +2,8 @@
 //!
 //! Source of truth stays the result tree. This module only projects for humans / AI.
 //! Default emit paths use `OutputDetail::Normal`. Compact is a thin success/fail
-//! projection. Detailed is implemented under `project_detailed` (L2 local_env
-//! summary, T1 no search_trace; currently falls back to Normal).
+//! projection. Detailed is field-isomorphic IR projection under `project_detailed`
+//! (`local_env` omitted).
 
 pub mod emit;
 pub mod explain;

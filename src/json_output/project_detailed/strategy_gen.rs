@@ -1,7 +1,7 @@
 //! Generated builtin-strategy detailed projection.
 use super::store::project_verify_facts;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinStrategy;
-use crate::json_output::helper::{object, string};
+use crate::json_output::helper::{object_for, string};
 use crate::knowledge_base::JsonValue;
 use crate::runtime::Runtime;
 
@@ -10,567 +10,567 @@ pub(super) fn project_atomic_builtin_strategy(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PosAddPosIsPos(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PosAddPosIsPos(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("PosAddPosIsPos")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NonnegativeSumIsNonnegative(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NonnegativeSumIsNonnegative(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("NonnegativeSumIsNonnegative")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StrictAdditiveLeftStrict(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StrictAdditiveLeftStrict(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("StrictAdditiveLeftStrict")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StrictAdditiveRightStrict(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StrictAdditiveRightStrict(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("StrictAdditiveRightStrict")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NonzeroProduct(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NonzeroProduct(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("NonzeroProduct")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FiniteSetMaxListMembersLessEqual(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FiniteSetMaxListMembersLessEqual(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("FiniteSetMaxListMembersLessEqual")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FiniteSetMaxConstructorPartsLessEqual(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FiniteSetMaxConstructorPartsLessEqual(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("FiniteSetMaxConstructorPartsLessEqual")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FiniteSetMinListMembersLessEqual(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FiniteSetMinListMembersLessEqual(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("FiniteSetMinListMembersLessEqual")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FiniteSetMinConstructorPartsLessEqual(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FiniteSetMinConstructorPartsLessEqual(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("FiniteSetMinConstructorPartsLessEqual")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ProductNonnegativeBothNonneg(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ProductNonnegativeBothNonneg(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("ProductNonnegativeBothNonneg")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ProductNonnegativeBothNonpos(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ProductNonnegativeBothNonpos(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("ProductNonnegativeBothNonpos")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddComponentwiseLessEqual(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddComponentwiseLessEqual(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("AddComponentwiseLessEqual")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddCrossedLessEqual(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddCrossedLessEqual(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("AddCrossedLessEqual")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubSharedSubtrahendLessEqual(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubSharedSubtrahendLessEqual(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("SubSharedSubtrahendLessEqual")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubSharedMinuendLessEqual(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubSharedMinuendLessEqual(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("SubSharedMinuendLessEqual")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::DivSharedPositiveDenomLessEqual(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::DivSharedPositiveDenomLessEqual(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("DivSharedPositiveDenomLessEqual")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::DivSharedNegativeDenomLessEqual(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::DivSharedNegativeDenomLessEqual(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("DivSharedNegativeDenomLessEqual")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PowSharedExponentLessEqual(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PowSharedExponentLessEqual(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("PowSharedExponentLessEqual")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AbsVsSquareLessEqual(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AbsVsSquareLessEqual(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("AbsVsSquareLessEqual")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddRightNonnegativeShiftLeft(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddRightNonnegativeShiftLeft(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("AddRightNonnegativeShiftLeft")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddRightNonnegativeShiftRight(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddRightNonnegativeShiftRight(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("AddRightNonnegativeShiftRight")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddLeftNonpositiveShiftLeft(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddLeftNonpositiveShiftLeft(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("AddLeftNonpositiveShiftLeft")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddLeftNonpositiveShiftRight(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddLeftNonpositiveShiftRight(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("AddLeftNonpositiveShiftRight")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubNonpositiveToZero(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubNonpositiveToZero(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("SubNonpositiveToZero")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubNonnegativeFromZero(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubNonnegativeFromZero(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("SubNonnegativeFromZero")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MulScaleFactorOneOrMoreRight(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MulScaleFactorOneOrMoreRight(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("MulScaleFactorOneOrMoreRight")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MulScaleFactorOneOrLessLeft(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MulScaleFactorOneOrLessLeft(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("MulScaleFactorOneOrLessLeft")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MulComponentwiseLessEqualAligned(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MulComponentwiseLessEqualAligned(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("MulComponentwiseLessEqualAligned")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MulComponentwiseLessEqualCrossed(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MulComponentwiseLessEqualCrossed(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("MulComponentwiseLessEqualCrossed")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::CommonNonnegativeFactorLessEqual(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::CommonNonnegativeFactorLessEqual(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("CommonNonnegativeFactorLessEqual")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ProductPositiveBothPos(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ProductPositiveBothPos(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("ProductPositiveBothPos")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ProductPositiveBothNeg(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ProductPositiveBothNeg(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("ProductPositiveBothNeg")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientPositiveSameSignPos(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientPositiveSameSignPos(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("QuotientPositiveSameSignPos")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientPositiveSameSignNeg(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientPositiveSameSignNeg(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("QuotientPositiveSameSignNeg")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddComponentwiseStrictLeft(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddComponentwiseStrictLeft(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("AddComponentwiseStrictLeft")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddComponentwiseStrictRight(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddComponentwiseStrictRight(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("AddComponentwiseStrictRight")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubSharedSubtrahendLess(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubSharedSubtrahendLess(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("SubSharedSubtrahendLess")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubSharedMinuendLess(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubSharedMinuendLess(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("SubSharedMinuendLess")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::DivSharedPositiveDenomLess(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::DivSharedPositiveDenomLess(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("DivSharedPositiveDenomLess")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::DivSharedNegativeDenomLess(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::DivSharedNegativeDenomLess(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("DivSharedNegativeDenomLess")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PowSharedExponentLess(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PowSharedExponentLess(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("PowSharedExponentLess")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AbsVsSquareLess(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AbsVsSquareLess(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("AbsVsSquareLess")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddRightStrictShiftLeftStrict(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddRightStrictShiftLeftStrict(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("AddRightStrictShiftLeftStrict")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddRightStrictShiftLeftWeak(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddRightStrictShiftLeftWeak(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("AddRightStrictShiftLeftWeak")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddRightStrictShiftRightStrict(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddRightStrictShiftRightStrict(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("AddRightStrictShiftRightStrict")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddRightStrictShiftRightWeak(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AddRightStrictShiftRightWeak(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("AddRightStrictShiftRightWeak")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubPositiveToZero(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubPositiveToZero(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("SubPositiveToZero")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubPositiveFromZero(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubPositiveFromZero(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("SubPositiveFromZero")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::CommonPositiveFactorLess(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::CommonPositiveFactorLess(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("CommonPositiveFactorLess")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FiniteSetSizeInNumericCarrier(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FiniteSetSizeInNumericCarrier(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("FiniteSetSizeInNumericCarrier")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FiniteExtremumSourceInCarrier(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FiniteExtremumSourceInCarrier(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("FiniteExtremumSourceInCarrier")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RefinedNumericCarrier(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RefinedNumericCarrier(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("RefinedNumericCarrier")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RealArithmeticCarrierClosureAdd(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RealArithmeticCarrierClosureAdd(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("RealArithmeticCarrierClosureAdd")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RealArithmeticCarrierClosureSub(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RealArithmeticCarrierClosureSub(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("RealArithmeticCarrierClosureSub")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RealArithmeticCarrierClosureMul(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RealArithmeticCarrierClosureMul(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("RealArithmeticCarrierClosureMul")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RealArithmeticCarrierClosureDiv(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RealArithmeticCarrierClosureDiv(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("RealArithmeticCarrierClosureDiv")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RealArithmeticCarrierClosurePow(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RealArithmeticCarrierClosurePow(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("RealArithmeticCarrierClosurePow")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RationalArithmeticCarrierClosureAdd(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RationalArithmeticCarrierClosureAdd(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("RationalArithmeticCarrierClosureAdd")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RationalArithmeticCarrierClosureSub(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RationalArithmeticCarrierClosureSub(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("RationalArithmeticCarrierClosureSub")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RationalArithmeticCarrierClosureMul(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RationalArithmeticCarrierClosureMul(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("RationalArithmeticCarrierClosureMul")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RationalArithmeticCarrierClosureDiv(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RationalArithmeticCarrierClosureDiv(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("RationalArithmeticCarrierClosureDiv")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RationalArithmeticCarrierClosurePow(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RationalArithmeticCarrierClosurePow(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("RationalArithmeticCarrierClosurePow")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RationalArithmeticCarrierClosureAbs(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RationalArithmeticCarrierClosureAbs(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("RationalArithmeticCarrierClosureAbs")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntegerArithmeticCarrierClosureAdd(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntegerArithmeticCarrierClosureAdd(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("IntegerArithmeticCarrierClosureAdd")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntegerArithmeticCarrierClosureSub(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntegerArithmeticCarrierClosureSub(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("IntegerArithmeticCarrierClosureSub")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntegerArithmeticCarrierClosureMul(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntegerArithmeticCarrierClosureMul(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("IntegerArithmeticCarrierClosureMul")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntegerArithmeticCarrierClosureMod(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntegerArithmeticCarrierClosureMod(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("IntegerArithmeticCarrierClosureMod")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntegerArithmeticCarrierClosurePowNat(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntegerArithmeticCarrierClosurePowNat(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("IntegerArithmeticCarrierClosurePowNat")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntegerArithmeticCarrierClosureAbs(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntegerArithmeticCarrierClosureAbs(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("IntegerArithmeticCarrierClosureAbs")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NaturalArithmeticCarrierClosureAdd(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NaturalArithmeticCarrierClosureAdd(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("NaturalArithmeticCarrierClosureAdd")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NaturalArithmeticCarrierClosureMul(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NaturalArithmeticCarrierClosureMul(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("NaturalArithmeticCarrierClosureMul")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NaturalArithmeticCarrierClosureSub(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NaturalArithmeticCarrierClosureSub(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("NaturalArithmeticCarrierClosureSub")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NaturalArithmeticCarrierClosurePow(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NaturalArithmeticCarrierClosurePow(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("NaturalArithmeticCarrierClosurePow")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NaturalArithmeticCarrierClosureAbs(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NaturalArithmeticCarrierClosureAbs(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("NaturalArithmeticCarrierClosureAbs")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PositiveNaturalCarrierAddLeftPos(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PositiveNaturalCarrierAddLeftPos(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("PositiveNaturalCarrierAddLeftPos")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PositiveNaturalCarrierAddRightPos(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PositiveNaturalCarrierAddRightPos(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("PositiveNaturalCarrierAddRightPos")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PositiveNaturalCarrierMul(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PositiveNaturalCarrierMul(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("PositiveNaturalCarrierMul")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PositiveNaturalCarrierPow(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PositiveNaturalCarrierPow(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("PositiveNaturalCarrierPow")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PositiveNaturalCarrierAbs(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PositiveNaturalCarrierAbs(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("PositiveNaturalCarrierAbs")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PositiveNaturalCarrierFiniteSetSize(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PositiveNaturalCarrierFiniteSetSize(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("PositiveNaturalCarrierFiniteSetSize")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::CartMembership(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::CartMembership(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("CartMembership")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::UnionMembershipFromLeft(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::UnionMembershipFromLeft(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("UnionMembershipFromLeft")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::UnionMembershipFromRight(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::UnionMembershipFromRight(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("UnionMembershipFromRight")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntersectMembership(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntersectMembership(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("IntersectMembership")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SetMinusMembership(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SetMinusMembership(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("SetMinusMembership")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PowerSetMembership(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PowerSetMembership(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("PowerSetMembership")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RangeMembership(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RangeMembership(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("RangeMembership")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ClosedRangeMembership(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ClosedRangeMembership(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("ClosedRangeMembership")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntervalMembership(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntervalMembership(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("IntervalMembership")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SetBuilderMembership(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SetBuilderMembership(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("SetBuilderMembership")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ListSetSubsetFromMembers(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ListSetSubsetFromMembers(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("ListSetSubsetFromMembers")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::UnionSubsetFromBothOperands(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::UnionSubsetFromBothOperands(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("UnionSubsetFromBothOperands")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntersectSubsetFromLeftOperand(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntersectSubsetFromLeftOperand(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("IntersectSubsetFromLeftOperand")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntersectSubsetFromRightOperand(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntersectSubsetFromRightOperand(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("IntersectSubsetFromRightOperand")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SetMinusSubsetFromLeft(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SetMinusSubsetFromLeft(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("SetMinusSubsetFromLeft")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubsetOfIntersectFromBothBounds(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SubsetOfIntersectFromBothBounds(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("SubsetOfIntersectFromBothBounds")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FnRangeFiniteFromDomain(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FnRangeFiniteFromDomain(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("FnRangeFiniteFromDomain")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PowerSetFiniteFromBase(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PowerSetFiniteFromBase(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("PowerSetFiniteFromBase")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SetBuilderFiniteFromParamSet(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SetBuilderFiniteFromParamSet(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("SetBuilderFiniteFromParamSet")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::UnionFiniteFromBoth(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::UnionFiniteFromBoth(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("UnionFiniteFromBoth")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntersectFiniteFromBoth(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntersectFiniteFromBoth(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("IntersectFiniteFromBoth")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SetMinusFiniteFromLeft(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SetMinusFiniteFromLeft(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("SetMinusFiniteFromLeft")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::CartFiniteFromFactors(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::CartFiniteFromFactors(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("CartFiniteFromFactors")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ClosedRangeNonemptyFromEndpointOrder(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ClosedRangeNonemptyFromEndpointOrder(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("ClosedRangeNonemptyFromEndpointOrder")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RangeNonemptyFromEndpointOrder(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RangeNonemptyFromEndpointOrder(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("RangeNonemptyFromEndpointOrder")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntervalNonemptyFromEndpointOrder(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntervalNonemptyFromEndpointOrder(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("IntervalNonemptyFromEndpointOrder")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::UnionNonemptyFromLeft(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::UnionNonemptyFromLeft(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("UnionNonemptyFromLeft")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::UnionNonemptyFromRight(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::UnionNonemptyFromRight(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("UnionNonemptyFromRight")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::CartNonemptyFromAllFactors(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::CartNonemptyFromAllFactors(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("CartNonemptyFromAllFactors")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FnSetNonemptyFromCodomain(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FnSetNonemptyFromCodomain(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("FnSetNonemptyFromCodomain")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AnonymousFnNonemptyFromCodomain(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AnonymousFnNonemptyFromCodomain(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("AnonymousFnNonemptyFromCodomain")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FiniteSeqSetNonemptyFromCodomain(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FiniteSeqSetNonemptyFromCodomain(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("FiniteSeqSetNonemptyFromCodomain")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SeqSetNonemptyFromCodomain(p) => object(vec![
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SeqSetNonemptyFromCodomain(p) => object_for(runtime, vec![
             ("type", string("builtin_strategy")),
             ("strategy", string("SeqSetNonemptyFromCodomain")),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),

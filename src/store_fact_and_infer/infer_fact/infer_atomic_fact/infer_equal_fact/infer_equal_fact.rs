@@ -16,6 +16,9 @@ impl Runtime {
         if let Some(pow) = self.infer_equal_fact_positive_real_power(equal_fact)? {
             rules.push(InferEqualityResult::PositiveRealPower(pow));
         }
+        if let Some(linear) = self.infer_equal_fact_simple_linear_solved_value(equal_fact)? {
+            rules.push(InferEqualityResult::SimpleLinearSolvedValue(linear));
+        }
         Ok(rules)
     }
 }

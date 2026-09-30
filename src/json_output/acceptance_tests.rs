@@ -474,6 +474,10 @@ fn acceptance_json_keys_chinese_map() {
         ("language", "语言"),
         ("statement_results", "语句结果"),
         ("session_error", "会话错误"),
+        ("verify", "验证"),
+        ("store_and_infer", "存储与推理"),
+        ("fact", "命题"),
+        ("fact_id", "命题编号"),
     ] {
         assert_eq!(localize_key(en, OutputLanguage::Chinese), zh);
         assert_eq!(localize_key(en, OutputLanguage::English), en);

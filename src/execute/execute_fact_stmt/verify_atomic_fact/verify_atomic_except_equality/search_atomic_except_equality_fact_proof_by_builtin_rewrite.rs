@@ -188,7 +188,7 @@ impl Runtime {
             return Ok(None);
         };
         let residual_state = VerifyState {
-            can_use_builtin_rule: verify_state.can_use_builtin_rule,
+            can_use_builtin_rule_round: verify_state.can_use_builtin_rule_round,
             can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
             can_use_rewrite: false,
             store_well_defined_fact: false,
@@ -223,7 +223,7 @@ impl Runtime {
             .collect();
         let adjacency = self.visible_equivalence_class_adjacency();
         let residual_state = VerifyState {
-            can_use_builtin_rule: verify_state.can_use_builtin_rule,
+            can_use_builtin_rule_round: verify_state.can_use_builtin_rule_round,
             can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
             can_use_rewrite: false,
             store_well_defined_fact: false,
@@ -290,13 +290,13 @@ impl Runtime {
             .cloned()
             .collect();
         let equal_child_state = VerifyState {
-            can_use_builtin_rule: verify_state.can_use_builtin_rule,
+            can_use_builtin_rule_round: verify_state.can_use_builtin_rule_round,
             can_use_def_and_known_forall_and_known_strategy: true,
             can_use_rewrite: false,
             store_well_defined_fact: false,
 };
         let residual_state = VerifyState {
-            can_use_builtin_rule: verify_state.can_use_builtin_rule,
+            can_use_builtin_rule_round: verify_state.can_use_builtin_rule_round,
             can_use_def_and_known_forall_and_known_strategy: verify_state
                 .can_use_def_and_known_forall_and_known_strategy,
             can_use_rewrite: false,
@@ -360,7 +360,7 @@ impl Runtime {
             return Ok(None);
         };
         let residual_state = VerifyState {
-            can_use_builtin_rule: verify_state.can_use_builtin_rule,
+            can_use_builtin_rule_round: verify_state.can_use_builtin_rule_round,
             can_use_def_and_known_forall_and_known_strategy: verify_state.can_use_def_and_known_forall_and_known_strategy,
             can_use_rewrite: false,
             store_well_defined_fact: false,

@@ -34,6 +34,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     FromKnownInPositiveNaturalBuiltinRuleProof,
     FromKnownInPositiveStandardSetForLessEqualBuiltinRuleProof,
     FromKnownLessBuiltinRuleProof,
+    FromKnownGreaterEqualDualBuiltinRuleProof,
     IntegerAdjacencyLeBuiltinRuleProof,
     IntegerDiffAtLeastOneLeBuiltinRuleProof,
     IntegerPredecessorLeBuiltinRuleProof,
@@ -74,6 +75,7 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::ClosedNumericComparison(p) => p.rule_id_and_message(lang),
             Self::OrderReflexivity(p) => p.rule_id_and_message(lang),
             Self::FromKnownLess(p) => p.rule_id_and_message(lang),
+            Self::FromKnownGreaterEqualDual(p) => p.rule_id_and_message(lang),
             Self::FromKnownInNatural(p) => p.rule_id_and_message(lang),
             Self::FromKnownInPositiveStandardSet(p) => p.rule_id_and_message(lang),
             Self::FromKnownInNegativeStandardSet(p) => p.rule_id_and_message(lang),
@@ -138,6 +140,7 @@ impl LessEqualFactSearchProofByBuiltinRule {
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
             Self::FromKnownLess(p) => Some(p.cite_fact_id),
+            Self::FromKnownGreaterEqualDual(p) => Some(p.cite_fact_id),
             Self::FromKnownInNatural(p) => Some(p.cite_fact_id),
             Self::FromKnownInPositiveStandardSet(p) => Some(p.cite_fact_id),
             Self::FromKnownInNegativeStandardSet(p) => Some(p.cite_fact_id),
@@ -221,6 +224,31 @@ impl FromKnownLessBuiltinRuleProof {
             "FromKnownLess",
             "已知严格小于",
             "弱序目标由已知的严格小于推出",
+        )
+    }
+
+    pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
+        match lang {
+            OutputLanguage::English => self.rule_id_and_message_en(),
+            OutputLanguage::Chinese => self.rule_id_and_message_zh(),
+        }
+    }
+}
+
+impl FromKnownGreaterEqualDualBuiltinRuleProof {
+    pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
+        text(
+            "FromKnownGreaterEqualDual",
+            "From known greater-or-equal (dual)",
+            "The weak less-or-equal follows by flipping a known greater-or-equal fact",
+        )
+    }
+
+    pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
+        text(
+            "FromKnownGreaterEqualDual",
+            "已知大于等于（对偶）",
+            "弱小于等于目标由已知的大于等于对偶推出",
         )
     }
 

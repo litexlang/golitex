@@ -31,11 +31,7 @@ prop composition_is_associative_at(Obj, Mor set, Hom fn(hom_source, hom_target O
 
 # A category setting is the reusable theorem context. Closure is already
 # encoded by the dependent carriers of identity and compose.
-# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
-# Former: setting CategorySetting(Obj, Mor set, Hom fn(hom_source, hom_target Obj) power_set(Mor), identity fn(identity_object Obj) Hom(identity_object, identity_object), compose fn(comp_source, comp_middle, comp_target Obj, comp_first Hom(comp_source, comp_middle), comp_second Hom(comp_middle, comp_target)) Hom(comp_source, comp_target)):
-struct CategorySetting:
-    Obj
-    Mor set
+struct Category<Obj set, Mor set>:
     Hom fn(hom_source, hom_target Obj) power_set(Mor)
     identity fn(identity_object Obj) Hom(identity_object, identity_object)
     compose fn(comp_source, comp_middle, comp_target Obj, comp_first Hom(comp_source, comp_middle), comp_second Hom(comp_middle, comp_target)) Hom(comp_source, comp_target)
@@ -45,56 +41,45 @@ struct CategorySetting:
         forall source, middle, target, far_target Obj, f Hom(source, middle), g Hom(middle, target), h Hom(target, far_target):
             $composition_is_associative_at(Obj, Mor, Hom, compose, source, middle, target, far_target, f, g, h)
 
-prop is_category([CategorySetting])
+prop is_category(Obj set, Mor set, Hom fn(hom_source, hom_target Obj) power_set(Mor), identity fn(identity_object Obj) Hom(identity_object, identity_object), compose fn(comp_source, comp_middle, comp_target Obj, comp_first Hom(comp_source, comp_middle), comp_second Hom(comp_middle, comp_target)) Hom(comp_source, comp_target)):
+    forall object Obj:
+        $is_identity_morphism(Obj, Mor, Hom, compose, object, identity(object))
+    forall source, middle, target, far_target Obj, f Hom(source, middle), g Hom(middle, target), h Hom(target, far_target):
+        $composition_is_associative_at(Obj, Mor, Hom, compose, source, middle, target, far_target, f, g, h)
+
 
 thm category_identity_is_identity_morphism:
-    ? forall [CategorySetting], chosen_object Obj:
+    ? forall Obj set, Mor set, Hom fn(hom_source, hom_target Obj) power_set(Mor), identity fn(identity_object Obj) Hom(identity_object, identity_object), compose fn(comp_source, comp_middle, comp_target Obj, comp_first Hom(comp_source, comp_middle), comp_second Hom(comp_middle, comp_target)) Hom(comp_source, comp_target), chosen_object Obj:
         $is_identity_morphism(Obj, Mor, Hom, compose, chosen_object, identity(chosen_object))
 
 thm category_composition_is_associative:
-    ? forall [CategorySetting], source_object, first_middle_object, second_middle_object, target_object Obj, first_arrow Hom(source_object, first_middle_object), middle_arrow Hom(first_middle_object, second_middle_object), last_arrow Hom(second_middle_object, target_object):
+    ? forall Obj set, Mor set, Hom fn(hom_source, hom_target Obj) power_set(Mor), identity fn(identity_object Obj) Hom(identity_object, identity_object), compose fn(comp_source, comp_middle, comp_target Obj, comp_first Hom(comp_source, comp_middle), comp_second Hom(comp_middle, comp_target)) Hom(comp_source, comp_target), source_object, first_middle_object, second_middle_object, target_object Obj, first_arrow Hom(source_object, first_middle_object), middle_arrow Hom(first_middle_object, second_middle_object), last_arrow Hom(second_middle_object, target_object):
         $composition_is_associative_at(Obj, Mor, Hom, compose, source_object, first_middle_object, second_middle_object, target_object, first_arrow, middle_arrow, last_arrow)
 
 thm category_composition_is_a_morphism:
-    ? forall [CategorySetting], source_object, middle_object, target_object Obj, first_arrow Hom(source_object, middle_object), second_arrow Hom(middle_object, target_object):
+    ? forall Obj set, Mor set, Hom fn(hom_source, hom_target Obj) power_set(Mor), identity fn(identity_object Obj) Hom(identity_object, identity_object), compose fn(comp_source, comp_middle, comp_target Obj, comp_first Hom(comp_source, comp_middle), comp_second Hom(comp_middle, comp_target)) Hom(comp_source, comp_target), source_object, middle_object, target_object Obj, first_arrow Hom(source_object, middle_object), second_arrow Hom(middle_object, target_object):
         $is_morphism(Obj, Mor, Hom, source_object, target_object, compose(source_object, middle_object, target_object, first_arrow, second_arrow))
-    compose(source_object, middle_object, target_object, first_arrow, second_arrow) $in Hom(source_object, target_object) $subset Mor
+    compose(source_object, middle_object, target_object, first_arrow, second_arrow) $in Hom(source_object, target_object)
+    Hom(source_object, target_object) $subset Mor
     by def $is_morphism(Obj, Mor, Hom, source_object, target_object, compose(source_object, middle_object, target_object, first_arrow, second_arrow))
 
 thm selected_composite_is_composite:
-    ? forall [CategorySetting], source_object, middle_object, target_object Obj, first_arrow Hom(source_object, middle_object), second_arrow Hom(middle_object, target_object):
+    ? forall Obj set, Mor set, Hom fn(hom_source, hom_target Obj) power_set(Mor), identity fn(identity_object Obj) Hom(identity_object, identity_object), compose fn(comp_source, comp_middle, comp_target Obj, comp_first Hom(comp_source, comp_middle), comp_second Hom(comp_middle, comp_target)) Hom(comp_source, comp_target), source_object, middle_object, target_object Obj, first_arrow Hom(source_object, middle_object), second_arrow Hom(middle_object, target_object):
         $is_composite(Obj, Mor, Hom, compose, source_object, middle_object, target_object, first_arrow, second_arrow, compose(source_object, middle_object, target_object, first_arrow, second_arrow))
     by def $is_composite(Obj, Mor, Hom, compose, source_object, middle_object, target_object, first_arrow, second_arrow, compose(source_object, middle_object, target_object, first_arrow, second_arrow))
 
-# Pairing two category settings once keeps later map theorems readable.
-# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
-# Former: setting CategoriesSetting([CategorySetting(CObj, CMor, CHom, Cidentity, Ccompose)], [CategorySetting(DObj, DMor, DHom, Didentity, Dcompose)])
-struct CategoriesSetting:
-    # former parent setting ref: [CategorySetting(CObj, CMor, CHom, Cidentity, Ccompose)]
-    # former parent setting ref: [CategorySetting(DObj, DMor, DHom, Didentity, Dcompose)]
-    _todo_a set
-    _todo_b set
-
-# A functor combines the category pair with typed object and arrow maps.
-# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
-# Former: setting FunctorSetting([CategoriesSetting], object_map fn(functor_object CObj) DObj, arrow_map fn(functor_source, functor_target CObj, functor_arrow CHom(functor_source, functor_target)) DHom(object_map(functor_source), object_map(functor_target))):
-struct FunctorSetting:
-    # former parent setting ref: [CategoriesSetting]
-    object_map fn(functor_object CObj) DObj
-    arrow_map fn(functor_source, functor_target CObj, functor_arrow CHom(functor_source, functor_target)) DHom(object_map(functor_source), object_map(functor_target))
-    <=>:
-        forall mapped_object CObj:
-            arrow_map(mapped_object, mapped_object, Cidentity(mapped_object)) = Didentity(object_map(mapped_object))
-        forall mapped_source, mapped_middle, mapped_target CObj, first_arrow CHom(mapped_source, mapped_middle), second_arrow CHom(mapped_middle, mapped_target):
-            arrow_map(mapped_source, mapped_target, Ccompose(mapped_source, mapped_middle, mapped_target, first_arrow, second_arrow)) = Dcompose(object_map(mapped_source), object_map(mapped_middle), object_map(mapped_target), arrow_map(mapped_source, mapped_middle, first_arrow), arrow_map(mapped_middle, mapped_target, second_arrow))
-
-prop is_functor([FunctorSetting])
+# Functor laws as a flat proposition (by-def ABI).
+prop is_functor(CObj set, CMor set, CHom fn(hom_source, hom_target CObj) power_set(CMor), Cidentity fn(identity_object CObj) CHom(identity_object, identity_object), Ccompose fn(comp_source, comp_middle, comp_target CObj, comp_first CHom(comp_source, comp_middle), comp_second CHom(comp_middle, comp_target)) CHom(comp_source, comp_target), DObj set, DMor set, DHom fn(hom_source, hom_target DObj) power_set(DMor), Didentity fn(identity_object DObj) DHom(identity_object, identity_object), Dcompose fn(comp_source, comp_middle, comp_target DObj, comp_first DHom(comp_source, comp_middle), comp_second DHom(comp_middle, comp_target)) DHom(comp_source, comp_target), F_object fn(functor_object CObj) DObj, F_arrow fn(functor_source, functor_target CObj, functor_arrow CHom(functor_source, functor_target)) DHom(F_object(functor_source), F_object(functor_target))):
+    forall mapped_object CObj:
+        F_arrow(mapped_object, mapped_object, Cidentity(mapped_object)) = Didentity(F_object(mapped_object))
+    forall mapped_source, mapped_middle, mapped_target CObj, first_arrow CHom(mapped_source, mapped_middle), second_arrow CHom(mapped_middle, mapped_target):
+        F_arrow(mapped_source, mapped_target, Ccompose(mapped_source, mapped_middle, mapped_target, first_arrow, second_arrow)) = Dcompose(F_object(mapped_source), F_object(mapped_middle), F_object(mapped_target), F_arrow(mapped_source, mapped_middle, first_arrow), F_arrow(mapped_middle, mapped_target, second_arrow))
 
 # This constructor theorem has two consumers: identity and composite functors.
 # It centralizes the definition fold so each construction shows only its maps
 # and its two preservation arguments.
 thm functor_from_preservation_laws:
-    ? forall [CategoriesSetting], object_map fn(functor_object CObj) DObj, arrow_map fn(functor_source, functor_target CObj, functor_arrow CHom(functor_source, functor_target)) DHom(object_map(functor_source), object_map(functor_target)):
+    ? forall CObj set, CMor set, CHom fn(hom_source, hom_target CObj) power_set(CMor), Cidentity fn(identity_object CObj) CHom(identity_object, identity_object), Ccompose fn(comp_source, comp_middle, comp_target CObj, comp_first CHom(comp_source, comp_middle), comp_second CHom(comp_middle, comp_target)) CHom(comp_source, comp_target), DObj set, DMor set, DHom fn(hom_source, hom_target DObj) power_set(DMor), Didentity fn(identity_object DObj) DHom(identity_object, identity_object), Dcompose fn(comp_source, comp_middle, comp_target DObj, comp_first DHom(comp_source, comp_middle), comp_second DHom(comp_middle, comp_target)) DHom(comp_source, comp_target), object_map fn(functor_object CObj) DObj, arrow_map fn(functor_source, functor_target CObj, functor_arrow CHom(functor_source, functor_target)) DHom(object_map(functor_source), object_map(functor_target)):
         forall preserved_object CObj:
             arrow_map(preserved_object, preserved_object, Cidentity(preserved_object)) = Didentity(object_map(preserved_object))
         forall preserved_source, preserved_middle, preserved_target CObj, first_arrow CHom(preserved_source, preserved_middle), second_arrow CHom(preserved_middle, preserved_target):
@@ -105,7 +90,7 @@ thm functor_from_preservation_laws:
 
 # The new transparent let syntax keeps the two callable identity maps local.
 thm identity_functor_exists:
-    ? forall [CategorySetting]:
+    ? forall Obj set, Mor set, Hom fn(hom_source, hom_target Obj) power_set(Mor), identity fn(identity_object Obj) Hom(identity_object, identity_object), compose fn(comp_source, comp_middle, comp_target Obj, comp_first Hom(comp_source, comp_middle), comp_second Hom(comp_middle, comp_target)) Hom(comp_source, comp_target):
         exist identity_object_map fn(chosen_object Obj) Obj, identity_arrow_map fn(chosen_source, chosen_target Obj, chosen_arrow Hom(chosen_source, chosen_target)) Hom(identity_object_map(chosen_source), identity_object_map(chosen_target)) st {$is_functor(Obj, Mor, Hom, identity, compose, Obj, Mor, Hom, identity, compose, identity_object_map, identity_arrow_map)}
     let identity_on_objects = fn(chosen_object Obj) Obj {chosen_object}
     let identity_on_arrows = fn(chosen_source, chosen_target Obj, chosen_arrow Hom(chosen_source, chosen_target)) Hom(identity_on_objects(chosen_source), identity_on_objects(chosen_target)) {chosen_arrow}
@@ -121,29 +106,15 @@ thm identity_functor_exists:
             compose(identity_on_objects(chosen_source), identity_on_objects(chosen_middle), identity_on_objects(chosen_target), identity_on_arrows(chosen_source, chosen_middle, first_arrow), identity_on_arrows(chosen_middle, chosen_target, second_arrow)) = compose(chosen_source, chosen_middle, chosen_target, first_arrow, second_arrow)
         release thm functor_from_preservation_laws(Obj, Mor, Hom, identity, compose, Obj, Mor, Hom, identity, compose, identity_on_objects, identity_on_arrows)
 
-# The middle category is already supplied by the first functor setting, so this
-# setting adds only the third category and the second functor's maps and laws.
-# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
-# Former: setting ComposableFunctorsSetting([FunctorSetting(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow)], [CategorySetting(EObj, EMor, EHom, Eidentity, Ecompose)], G_object fn(g_object DObj) EObj, G_arrow fn(g_source, g_target DObj, g_arrow DHom(g_source, g_target)) EHom(G_object(g_source), G_object(g_target))):
-struct ComposableFunctorsSetting:
-    # former parent setting ref: [FunctorSetting(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow)]
-    # former parent setting ref: [CategorySetting(EObj, EMor, EHom, Eidentity, Ecompose)]
-    G_object fn(g_object DObj) EObj
-    G_arrow fn(g_source, g_target DObj, g_arrow DHom(g_source, g_target)) EHom(G_object(g_source), G_object(g_target))
-    <=>:
-        forall mapped_object DObj:
-            G_arrow(mapped_object, mapped_object, Didentity(mapped_object)) = Eidentity(G_object(mapped_object))
-        forall mapped_source, mapped_middle, mapped_target DObj, first_arrow DHom(mapped_source, mapped_middle), second_arrow DHom(mapped_middle, mapped_target):
-            G_arrow(mapped_source, mapped_target, Dcompose(mapped_source, mapped_middle, mapped_target, first_arrow, second_arrow)) = Ecompose(G_object(mapped_source), G_object(mapped_middle), G_object(mapped_target), G_arrow(mapped_source, mapped_middle, first_arrow), G_arrow(mapped_middle, mapped_target, second_arrow))
-
+# Composite of functors F: C -> D and G: D -> E.
 thm composite_functor_preserves_identity:
-    ? forall [ComposableFunctorsSetting], chosen_object CObj:
+    ? forall CObj set, CMor set, CHom fn(hom_source, hom_target CObj) power_set(CMor), Cidentity fn(identity_object CObj) CHom(identity_object, identity_object), Ccompose fn(comp_source, comp_middle, comp_target CObj, comp_first CHom(comp_source, comp_middle), comp_second CHom(comp_middle, comp_target)) CHom(comp_source, comp_target), DObj set, DMor set, DHom fn(hom_source, hom_target DObj) power_set(DMor), Didentity fn(identity_object DObj) DHom(identity_object, identity_object), Dcompose fn(comp_source, comp_middle, comp_target DObj, comp_first DHom(comp_source, comp_middle), comp_second DHom(comp_middle, comp_target)) DHom(comp_source, comp_target), F_object fn(functor_object CObj) DObj, F_arrow fn(functor_source, functor_target CObj, functor_arrow CHom(functor_source, functor_target)) DHom(F_object(functor_source), F_object(functor_target)), EObj set, EMor set, EHom fn(hom_source, hom_target EObj) power_set(EMor), Eidentity fn(identity_object EObj) EHom(identity_object, identity_object), Ecompose fn(comp_source, comp_middle, comp_target EObj, comp_first EHom(comp_source, comp_middle), comp_second EHom(comp_middle, comp_target)) EHom(comp_source, comp_target), G_object fn(g_object DObj) EObj, G_arrow fn(g_source, g_target DObj, g_arrow DHom(g_source, g_target)) EHom(G_object(g_source), G_object(g_target)), chosen_object CObj:
         G_arrow(F_object(chosen_object), F_object(chosen_object), F_arrow(chosen_object, chosen_object, Cidentity(chosen_object))) = Eidentity(G_object(F_object(chosen_object)))
     F_arrow(chosen_object, chosen_object, Cidentity(chosen_object)) = Didentity(F_object(chosen_object))
     G_arrow(F_object(chosen_object), F_object(chosen_object), F_arrow(chosen_object, chosen_object, Cidentity(chosen_object))) = G_arrow(F_object(chosen_object), F_object(chosen_object), Didentity(F_object(chosen_object))) = Eidentity(G_object(F_object(chosen_object)))
 
 thm composite_functor_preserves_composition:
-    ? forall [ComposableFunctorsSetting], chosen_source, chosen_middle, chosen_target CObj, source_arrow CHom(chosen_source, chosen_middle), target_arrow CHom(chosen_middle, chosen_target):
+    ? forall CObj set, CMor set, CHom fn(hom_source, hom_target CObj) power_set(CMor), Cidentity fn(identity_object CObj) CHom(identity_object, identity_object), Ccompose fn(comp_source, comp_middle, comp_target CObj, comp_first CHom(comp_source, comp_middle), comp_second CHom(comp_middle, comp_target)) CHom(comp_source, comp_target), DObj set, DMor set, DHom fn(hom_source, hom_target DObj) power_set(DMor), Didentity fn(identity_object DObj) DHom(identity_object, identity_object), Dcompose fn(comp_source, comp_middle, comp_target DObj, comp_first DHom(comp_source, comp_middle), comp_second DHom(comp_middle, comp_target)) DHom(comp_source, comp_target), F_object fn(functor_object CObj) DObj, F_arrow fn(functor_source, functor_target CObj, functor_arrow CHom(functor_source, functor_target)) DHom(F_object(functor_source), F_object(functor_target)), EObj set, EMor set, EHom fn(hom_source, hom_target EObj) power_set(EMor), Eidentity fn(identity_object EObj) EHom(identity_object, identity_object), Ecompose fn(comp_source, comp_middle, comp_target EObj, comp_first EHom(comp_source, comp_middle), comp_second EHom(comp_middle, comp_target)) EHom(comp_source, comp_target), G_object fn(g_object DObj) EObj, G_arrow fn(g_source, g_target DObj, g_arrow DHom(g_source, g_target)) EHom(G_object(g_source), G_object(g_target)), chosen_source, chosen_middle, chosen_target CObj, source_arrow CHom(chosen_source, chosen_middle), target_arrow CHom(chosen_middle, chosen_target):
         G_arrow(F_object(chosen_source), F_object(chosen_target), F_arrow(chosen_source, chosen_target, Ccompose(chosen_source, chosen_middle, chosen_target, source_arrow, target_arrow))) = Ecompose(G_object(F_object(chosen_source)), G_object(F_object(chosen_middle)), G_object(F_object(chosen_target)), G_arrow(F_object(chosen_source), F_object(chosen_middle), F_arrow(chosen_source, chosen_middle, source_arrow)), G_arrow(F_object(chosen_middle), F_object(chosen_target), F_arrow(chosen_middle, chosen_target, target_arrow)))
     F_arrow(chosen_source, chosen_target, Ccompose(chosen_source, chosen_middle, chosen_target, source_arrow, target_arrow)) = Dcompose(F_object(chosen_source), F_object(chosen_middle), F_object(chosen_target), F_arrow(chosen_source, chosen_middle, source_arrow), F_arrow(chosen_middle, chosen_target, target_arrow))
     G_arrow(F_object(chosen_source), F_object(chosen_target), Dcompose(F_object(chosen_source), F_object(chosen_middle), F_object(chosen_target), F_arrow(chosen_source, chosen_middle, source_arrow), F_arrow(chosen_middle, chosen_target, target_arrow))) = Ecompose(G_object(F_object(chosen_source)), G_object(F_object(chosen_middle)), G_object(F_object(chosen_target)), G_arrow(F_object(chosen_source), F_object(chosen_middle), F_arrow(chosen_source, chosen_middle, source_arrow)), G_arrow(F_object(chosen_middle), F_object(chosen_target), F_arrow(chosen_middle, chosen_target, target_arrow)))
@@ -152,7 +123,7 @@ thm composite_functor_preserves_composition:
 # Primary tracer: local names expose the mathematical composite maps without
 # publishing proof-only adapters.
 thm composition_of_functors_exists:
-    ? forall [ComposableFunctorsSetting]:
+    ? forall CObj set, CMor set, CHom fn(hom_source, hom_target CObj) power_set(CMor), Cidentity fn(identity_object CObj) CHom(identity_object, identity_object), Ccompose fn(comp_source, comp_middle, comp_target CObj, comp_first CHom(comp_source, comp_middle), comp_second CHom(comp_middle, comp_target)) CHom(comp_source, comp_target), DObj set, DMor set, DHom fn(hom_source, hom_target DObj) power_set(DMor), Didentity fn(identity_object DObj) DHom(identity_object, identity_object), Dcompose fn(comp_source, comp_middle, comp_target DObj, comp_first DHom(comp_source, comp_middle), comp_second DHom(comp_middle, comp_target)) DHom(comp_source, comp_target), F_object fn(functor_object CObj) DObj, F_arrow fn(functor_source, functor_target CObj, functor_arrow CHom(functor_source, functor_target)) DHom(F_object(functor_source), F_object(functor_target)), EObj set, EMor set, EHom fn(hom_source, hom_target EObj) power_set(EMor), Eidentity fn(identity_object EObj) EHom(identity_object, identity_object), Ecompose fn(comp_source, comp_middle, comp_target EObj, comp_first EHom(comp_source, comp_middle), comp_second EHom(comp_middle, comp_target)) EHom(comp_source, comp_target), G_object fn(g_object DObj) EObj, G_arrow fn(g_source, g_target DObj, g_arrow DHom(g_source, g_target)) EHom(G_object(g_source), G_object(g_target)):
         exist composite_object_map fn(chosen_object CObj) EObj, composite_arrow_map fn(chosen_source, chosen_target CObj, chosen_arrow CHom(chosen_source, chosen_target)) EHom(composite_object_map(chosen_source), composite_object_map(chosen_target)) st {$is_functor(CObj, CMor, CHom, Cidentity, Ccompose, EObj, EMor, EHom, Eidentity, Ecompose, composite_object_map, composite_arrow_map)}
     let composite_on_objects = fn(chosen_object CObj) EObj {G_object(F_object(chosen_object))}
     let composite_on_arrows = fn(chosen_source, chosen_target CObj, chosen_arrow CHom(chosen_source, chosen_target)) EHom(composite_on_objects(chosen_source), composite_on_objects(chosen_target)) {G_arrow(F_object(chosen_source), F_object(chosen_target), F_arrow(chosen_source, chosen_target, chosen_arrow))}
@@ -169,37 +140,17 @@ thm composition_of_functors_exists:
             composite_on_arrows(chosen_source, chosen_target, Ccompose(chosen_source, chosen_middle, chosen_target, source_arrow, target_arrow)) = G_arrow(F_object(chosen_source), F_object(chosen_target), F_arrow(chosen_source, chosen_target, Ccompose(chosen_source, chosen_middle, chosen_target, source_arrow, target_arrow))) = Ecompose(G_object(F_object(chosen_source)), G_object(F_object(chosen_middle)), G_object(F_object(chosen_target)), G_arrow(F_object(chosen_source), F_object(chosen_middle), F_arrow(chosen_source, chosen_middle, source_arrow)), G_arrow(F_object(chosen_middle), F_object(chosen_target), F_arrow(chosen_middle, chosen_target, target_arrow))) = Ecompose(composite_on_objects(chosen_source), composite_on_objects(chosen_middle), composite_on_objects(chosen_target), composite_on_arrows(chosen_source, chosen_middle, source_arrow), composite_on_arrows(chosen_middle, chosen_target, target_arrow))
         release thm functor_from_preservation_laws(CObj, CMor, CHom, Cidentity, Ccompose, EObj, EMor, EHom, Eidentity, Ecompose, composite_on_objects, composite_on_arrows)
 
-# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
-# Former: setting ParallelFunctorsSetting([FunctorSetting(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow)], G_object fn(g_object CObj) DObj, G_arrow fn(g_source, g_target CObj, g_arrow CHom(g_source, g_target)) DHom(G_object(g_source), G_object(g_target))):
-struct ParallelFunctorsSetting:
-    # former parent setting ref: [FunctorSetting(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow)]
-    G_object fn(g_object CObj) DObj
-    G_arrow fn(g_source, g_target CObj, g_arrow CHom(g_source, g_target)) DHom(G_object(g_source), G_object(g_target))
-    <=>:
-        forall mapped_object CObj:
-            G_arrow(mapped_object, mapped_object, Cidentity(mapped_object)) = Didentity(G_object(mapped_object))
-        forall mapped_source, mapped_middle, mapped_target CObj, first_arrow CHom(mapped_source, mapped_middle), second_arrow CHom(mapped_middle, mapped_target):
-            G_arrow(mapped_source, mapped_target, Ccompose(mapped_source, mapped_middle, mapped_target, first_arrow, second_arrow)) = Dcompose(G_object(mapped_source), G_object(mapped_middle), G_object(mapped_target), G_arrow(mapped_source, mapped_middle, first_arrow), G_arrow(mapped_middle, mapped_target, second_arrow))
-
 # Naturality is named at one arrow so diagram calculations can select the
 # exact square they need before unfolding it to an equality.
-prop naturality_square_commutes([CategoriesSetting], F_object fn(f_object CObj) DObj, F_arrow fn(f_source, f_target CObj, f_arrow CHom(f_source, f_target)) DHom(F_object(f_source), F_object(f_target)), G_object fn(g_object CObj) DObj, G_arrow fn(g_source, g_target CObj, g_arrow CHom(g_source, g_target)) DHom(G_object(g_source), G_object(g_target)), component fn(natural_object CObj) DHom(F_object(natural_object), G_object(natural_object)), natural_source, natural_target CObj, natural_arrow CHom(natural_source, natural_target)):
+prop naturality_square_commutes(CObj set, CMor set, CHom fn(hom_source, hom_target CObj) power_set(CMor), Cidentity fn(identity_object CObj) CHom(identity_object, identity_object), Ccompose fn(comp_source, comp_middle, comp_target CObj, comp_first CHom(comp_source, comp_middle), comp_second CHom(comp_middle, comp_target)) CHom(comp_source, comp_target), DObj set, DMor set, DHom fn(hom_source, hom_target DObj) power_set(DMor), Didentity fn(identity_object DObj) DHom(identity_object, identity_object), Dcompose fn(comp_source, comp_middle, comp_target DObj, comp_first DHom(comp_source, comp_middle), comp_second DHom(comp_middle, comp_target)) DHom(comp_source, comp_target), F_object fn(f_object CObj) DObj, F_arrow fn(f_source, f_target CObj, f_arrow CHom(f_source, f_target)) DHom(F_object(f_source), F_object(f_target)), G_object fn(g_object CObj) DObj, G_arrow fn(g_source, g_target CObj, g_arrow CHom(g_source, g_target)) DHom(G_object(g_source), G_object(g_target)), component fn(natural_object CObj) DHom(F_object(natural_object), G_object(natural_object)), natural_source, natural_target CObj, natural_arrow CHom(natural_source, natural_target)):
     Dcompose(F_object(natural_source), F_object(natural_target), G_object(natural_target), F_arrow(natural_source, natural_target, natural_arrow), component(natural_target)) = Dcompose(F_object(natural_source), G_object(natural_source), G_object(natural_target), component(natural_source), G_arrow(natural_source, natural_target, natural_arrow))
 
-# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
-# Former: setting NaturalTransformationSetting([ParallelFunctorsSetting], component fn(natural_object CObj) DHom(F_object(natural_object), G_object(natural_object))):
-struct NaturalTransformationSetting:
-    # former parent setting ref: [ParallelFunctorsSetting]
-    component fn(natural_object CObj) DHom(F_object(natural_object), G_object(natural_object))
-    _todo_placeholder set
-    <=>:
-        forall natural_source, natural_target CObj, natural_arrow CHom(natural_source, natural_target):
-            $naturality_square_commutes(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, G_object, G_arrow, component, natural_source, natural_target, natural_arrow)
-
-prop is_natural_transformation([NaturalTransformationSetting])
+prop is_natural_transformation(CObj set, CMor set, CHom fn(hom_source, hom_target CObj) power_set(CMor), Cidentity fn(identity_object CObj) CHom(identity_object, identity_object), Ccompose fn(comp_source, comp_middle, comp_target CObj, comp_first CHom(comp_source, comp_middle), comp_second CHom(comp_middle, comp_target)) CHom(comp_source, comp_target), DObj set, DMor set, DHom fn(hom_source, hom_target DObj) power_set(DMor), Didentity fn(identity_object DObj) DHom(identity_object, identity_object), Dcompose fn(comp_source, comp_middle, comp_target DObj, comp_first DHom(comp_source, comp_middle), comp_second DHom(comp_middle, comp_target)) DHom(comp_source, comp_target), F_object fn(functor_object CObj) DObj, F_arrow fn(functor_source, functor_target CObj, functor_arrow CHom(functor_source, functor_target)) DHom(F_object(functor_source), F_object(functor_target)), G_object fn(g_object CObj) DObj, G_arrow fn(g_source, g_target CObj, g_arrow CHom(g_source, g_target)) DHom(G_object(g_source), G_object(g_target)), component fn(natural_object CObj) DHom(F_object(natural_object), G_object(natural_object))):
+    forall natural_source, natural_target CObj, natural_arrow CHom(natural_source, natural_target):
+        $naturality_square_commutes(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, G_object, G_arrow, component, natural_source, natural_target, natural_arrow)
 
 thm natural_transformation_from_naturality:
-    ? forall [ParallelFunctorsSetting], component fn(natural_object CObj) DHom(F_object(natural_object), G_object(natural_object)):
+    ? forall CObj set, CMor set, CHom fn(hom_source, hom_target CObj) power_set(CMor), Cidentity fn(identity_object CObj) CHom(identity_object, identity_object), Ccompose fn(comp_source, comp_middle, comp_target CObj, comp_first CHom(comp_source, comp_middle), comp_second CHom(comp_middle, comp_target)) CHom(comp_source, comp_target), DObj set, DMor set, DHom fn(hom_source, hom_target DObj) power_set(DMor), Didentity fn(identity_object DObj) DHom(identity_object, identity_object), Dcompose fn(comp_source, comp_middle, comp_target DObj, comp_first DHom(comp_source, comp_middle), comp_second DHom(comp_middle, comp_target)) DHom(comp_source, comp_target), F_object fn(functor_object CObj) DObj, F_arrow fn(functor_source, functor_target CObj, functor_arrow CHom(functor_source, functor_target)) DHom(F_object(functor_source), F_object(functor_target)), G_object fn(g_object CObj) DObj, G_arrow fn(g_source, g_target CObj, g_arrow CHom(g_source, g_target)) DHom(G_object(g_source), G_object(g_target)), component fn(natural_object CObj) DHom(F_object(natural_object), G_object(natural_object)):
         forall natural_source, natural_target CObj, natural_arrow CHom(natural_source, natural_target):
             $naturality_square_commutes(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, G_object, G_arrow, component, natural_source, natural_target, natural_arrow)
         =>:
@@ -207,7 +158,7 @@ thm natural_transformation_from_naturality:
     by def $is_natural_transformation(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, G_object, G_arrow, component)
 
 thm identity_component_is_natural:
-    ? forall [FunctorSetting(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow)], chosen_source, chosen_target CObj, chosen_arrow CHom(chosen_source, chosen_target):
+    ? forall CObj set, CMor set, CHom fn(hom_source, hom_target CObj) power_set(CMor), Cidentity fn(identity_object CObj) CHom(identity_object, identity_object), Ccompose fn(comp_source, comp_middle, comp_target CObj, comp_first CHom(comp_source, comp_middle), comp_second CHom(comp_middle, comp_target)) CHom(comp_source, comp_target), DObj set, DMor set, DHom fn(hom_source, hom_target DObj) power_set(DMor), Didentity fn(identity_object DObj) DHom(identity_object, identity_object), Dcompose fn(comp_source, comp_middle, comp_target DObj, comp_first DHom(comp_source, comp_middle), comp_second DHom(comp_middle, comp_target)) DHom(comp_source, comp_target), F_object fn(functor_object CObj) DObj, F_arrow fn(functor_source, functor_target CObj, functor_arrow CHom(functor_source, functor_target)) DHom(F_object(functor_source), F_object(functor_target)), chosen_source, chosen_target CObj, chosen_arrow CHom(chosen_source, chosen_target):
         $naturality_square_commutes(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, F_object, F_arrow, fn(chosen_object CObj) DHom(F_object(chosen_object), F_object(chosen_object)) {Didentity(F_object(chosen_object))}, chosen_source, chosen_target, chosen_arrow)
     release thm category_identity_is_identity_morphism(DObj, DMor, DHom, Didentity, Dcompose, F_object(chosen_target))
     release thm category_identity_is_identity_morphism(DObj, DMor, DHom, Didentity, Dcompose, F_object(chosen_source))
@@ -218,7 +169,7 @@ thm identity_component_is_natural:
     by def $naturality_square_commutes(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, F_object, F_arrow, fn(chosen_object CObj) DHom(F_object(chosen_object), F_object(chosen_object)) {Didentity(F_object(chosen_object))}, chosen_source, chosen_target, chosen_arrow)
 
 thm identity_natural_transformation_exists:
-    ? forall [FunctorSetting(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow)]:
+    ? forall CObj set, CMor set, CHom fn(hom_source, hom_target CObj) power_set(CMor), Cidentity fn(identity_object CObj) CHom(identity_object, identity_object), Ccompose fn(comp_source, comp_middle, comp_target CObj, comp_first CHom(comp_source, comp_middle), comp_second CHom(comp_middle, comp_target)) CHom(comp_source, comp_target), DObj set, DMor set, DHom fn(hom_source, hom_target DObj) power_set(DMor), Didentity fn(identity_object DObj) DHom(identity_object, identity_object), Dcompose fn(comp_source, comp_middle, comp_target DObj, comp_first DHom(comp_source, comp_middle), comp_second DHom(comp_middle, comp_target)) DHom(comp_source, comp_target), F_object fn(functor_object CObj) DObj, F_arrow fn(functor_source, functor_target CObj, functor_arrow CHom(functor_source, functor_target)) DHom(F_object(functor_source), F_object(functor_target)):
         exist identity_component fn(chosen_object CObj) DHom(F_object(chosen_object), F_object(chosen_object)) st {$is_natural_transformation(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, F_object, F_arrow, identity_component)}
     let identity_on_components = fn(chosen_object CObj) DHom(F_object(chosen_object), F_object(chosen_object)) {Didentity(F_object(chosen_object))}
     witness exist identity_component fn(chosen_object CObj) DHom(F_object(chosen_object), F_object(chosen_object)) st {$is_natural_transformation(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, F_object, F_arrow, identity_component)} from identity_on_components:
@@ -228,25 +179,11 @@ thm identity_natural_transformation_exists:
             release thm identity_component_is_natural(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, chosen_source, chosen_target, chosen_arrow)
         release thm natural_transformation_from_naturality(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, F_object, F_arrow, identity_on_components)
 
-# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
-# Former: setting ComposableNaturalTransformationsSetting([NaturalTransformationSetting(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, G_object, G_arrow, alpha)], H_object fn(h_object CObj) DObj, H_arrow fn(h_source, h_target CObj, h_arrow CHom(h_source, h_target)) DHom(H_object(h_source), H_object(h_target)), beta fn(component_object CObj) DHom(G_object(component_object), H_object(component_object))):
-struct ComposableNaturalTransformationsSetting:
-    # former parent setting ref: [NaturalTransformationSetting(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, G_object, G_arrow, alpha)]
-    H_object fn(h_object CObj) DObj
-    H_arrow fn(h_source, h_target CObj, h_arrow CHom(h_source, h_target)) DHom(H_object(h_source), H_object(h_target))
-    beta fn(component_object CObj) DHom(G_object(component_object), H_object(component_object))
-    <=>:
-        forall mapped_object CObj:
-            H_arrow(mapped_object, mapped_object, Cidentity(mapped_object)) = Didentity(H_object(mapped_object))
-        forall mapped_source, mapped_middle, mapped_target CObj, first_arrow CHom(mapped_source, mapped_middle), second_arrow CHom(mapped_middle, mapped_target):
-            H_arrow(mapped_source, mapped_target, Ccompose(mapped_source, mapped_middle, mapped_target, first_arrow, second_arrow)) = Dcompose(H_object(mapped_source), H_object(mapped_middle), H_object(mapped_target), H_arrow(mapped_source, mapped_middle, first_arrow), H_arrow(mapped_middle, mapped_target, second_arrow))
-        forall natural_source, natural_target CObj, natural_arrow CHom(natural_source, natural_target):
-            $naturality_square_commutes(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, G_object, G_arrow, H_object, H_arrow, beta, natural_source, natural_target, natural_arrow)
-
+# Vertical composition of natural transformations.
 # The local names are not proof-only wrappers: they expose the six object
 # images, three arrow images, and four components in the familiar diagram.
 thm vertical_composite_component_is_natural:
-    ? forall [ComposableNaturalTransformationsSetting], chosen_source, chosen_target CObj, chosen_arrow CHom(chosen_source, chosen_target):
+    ? forall CObj set, CMor set, CHom fn(hom_source, hom_target CObj) power_set(CMor), Cidentity fn(identity_object CObj) CHom(identity_object, identity_object), Ccompose fn(comp_source, comp_middle, comp_target CObj, comp_first CHom(comp_source, comp_middle), comp_second CHom(comp_middle, comp_target)) CHom(comp_source, comp_target), DObj set, DMor set, DHom fn(hom_source, hom_target DObj) power_set(DMor), Didentity fn(identity_object DObj) DHom(identity_object, identity_object), Dcompose fn(comp_source, comp_middle, comp_target DObj, comp_first DHom(comp_source, comp_middle), comp_second DHom(comp_middle, comp_target)) DHom(comp_source, comp_target), F_object fn(functor_object CObj) DObj, F_arrow fn(functor_source, functor_target CObj, functor_arrow CHom(functor_source, functor_target)) DHom(F_object(functor_source), F_object(functor_target)), G_object fn(g_object CObj) DObj, G_arrow fn(g_source, g_target CObj, g_arrow CHom(g_source, g_target)) DHom(G_object(g_source), G_object(g_target)), alpha fn(natural_object CObj) DHom(F_object(natural_object), G_object(natural_object)), H_object fn(h_object CObj) DObj, H_arrow fn(h_source, h_target CObj, h_arrow CHom(h_source, h_target)) DHom(H_object(h_source), H_object(h_target)), beta fn(component_object CObj) DHom(G_object(component_object), H_object(component_object)), chosen_source, chosen_target CObj, chosen_arrow CHom(chosen_source, chosen_target):
         Dcompose(F_object(chosen_source), F_object(chosen_target), H_object(chosen_target), F_arrow(chosen_source, chosen_target, chosen_arrow), Dcompose(F_object(chosen_target), G_object(chosen_target), H_object(chosen_target), alpha(chosen_target), beta(chosen_target))) = Dcompose(F_object(chosen_source), H_object(chosen_source), H_object(chosen_target), Dcompose(F_object(chosen_source), G_object(chosen_source), H_object(chosen_source), alpha(chosen_source), beta(chosen_source)), H_arrow(chosen_source, chosen_target, chosen_arrow))
     let f_source = F_object(chosen_source)
     let f_target = F_object(chosen_target)
@@ -281,7 +218,7 @@ thm vertical_composite_component_is_natural:
     Dcompose(f_source, h_source, h_target, Dcompose(f_source, g_source, h_source, alpha_source, beta_source), h_image) = Dcompose(F_object(chosen_source), H_object(chosen_source), H_object(chosen_target), Dcompose(F_object(chosen_source), G_object(chosen_source), H_object(chosen_source), alpha(chosen_source), beta(chosen_source)), H_arrow(chosen_source, chosen_target, chosen_arrow))
 
 thm vertical_composition_of_natural_transformations_exists:
-    ? forall [ComposableNaturalTransformationsSetting]:
+    ? forall CObj set, CMor set, CHom fn(hom_source, hom_target CObj) power_set(CMor), Cidentity fn(identity_object CObj) CHom(identity_object, identity_object), Ccompose fn(comp_source, comp_middle, comp_target CObj, comp_first CHom(comp_source, comp_middle), comp_second CHom(comp_middle, comp_target)) CHom(comp_source, comp_target), DObj set, DMor set, DHom fn(hom_source, hom_target DObj) power_set(DMor), Didentity fn(identity_object DObj) DHom(identity_object, identity_object), Dcompose fn(comp_source, comp_middle, comp_target DObj, comp_first DHom(comp_source, comp_middle), comp_second DHom(comp_middle, comp_target)) DHom(comp_source, comp_target), F_object fn(functor_object CObj) DObj, F_arrow fn(functor_source, functor_target CObj, functor_arrow CHom(functor_source, functor_target)) DHom(F_object(functor_source), F_object(functor_target)), G_object fn(g_object CObj) DObj, G_arrow fn(g_source, g_target CObj, g_arrow CHom(g_source, g_target)) DHom(G_object(g_source), G_object(g_target)), alpha fn(natural_object CObj) DHom(F_object(natural_object), G_object(natural_object)), H_object fn(h_object CObj) DObj, H_arrow fn(h_source, h_target CObj, h_arrow CHom(h_source, h_target)) DHom(H_object(h_source), H_object(h_target)), beta fn(component_object CObj) DHom(G_object(component_object), H_object(component_object)):
         exist vertical_component fn(chosen_object CObj) DHom(F_object(chosen_object), H_object(chosen_object)) st {$is_natural_transformation(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, H_object, H_arrow, vertical_component)}
     let vertical_components = fn(chosen_object CObj) DHom(F_object(chosen_object), H_object(chosen_object)) {Dcompose(F_object(chosen_object), G_object(chosen_object), H_object(chosen_object), alpha(chosen_object), beta(chosen_object))}
     witness exist vertical_component fn(chosen_object CObj) DHom(F_object(chosen_object), H_object(chosen_object)) st {$is_natural_transformation(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, H_object, H_arrow, vertical_component)} from vertical_components:

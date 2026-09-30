@@ -117,7 +117,7 @@ impl Runtime {
         ctx: StrategySearch,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchedProof>> {
         let cite_state = VerifyState::strategy_wd();
-        // Cite-only / zero-premise builtin arms (can_use_builtin_rule=false).
+        // Cite-only / zero-premise builtin arms (can_use_builtin_rule_round=0).
         // E.g. N+ membership lifts to Z without opening a premise-producing rule.
         if let Some(result) = self
             .search_atomic_except_equality_fact_proof_by_builtin_rule(fact, cite_state.clone())?
@@ -185,7 +185,7 @@ impl Runtime {
         ctx: StrategySearch,
     ) -> RuntimeResult<Option<EqualFactSearchedProof>> {
         let cite_state = VerifyState::strategy_wd();
-        // Cite-only / calculation equality arms under can_use_builtin_rule=false.
+        // Cite-only / calculation equality arms under can_use_builtin_rule_round=0.
         if let Some(result) = self.search_equal_fact_builtin_rule(fact, cite_state.clone())? {
             return Ok(Some(EqualFactSearchedProof::ByBuiltinRule(result)));
         }

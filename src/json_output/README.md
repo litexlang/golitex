@@ -9,14 +9,13 @@ verify/exec IR (Lean replay and detail still read the full tree).
 pub enum OutputDetail {
     Compact,   // thin: success + statement (+ fail_reason)
     Normal,    // current default for all emit paths
-    Detailed,  // field-isomorphic projection (L2 local_env, T1 no search_trace)
+    Detailed,  // field-isomorphic IR projection (omit local_env)
 }
 ```
 
-Default CLI / test emit uses **Normal**. **Compact** is implemented under
-`project_compact/` (`project_stmt_compact` / `project_run_compact` /
-`emit_run_compact`). **Detailed** is temporarily a Normal fallback while the
-IR projector under `project_detailed/` is realigned.
+Default CLI / test emit uses **Normal**. **Compact** and **Detailed** are
+implemented under `project_compact` / `project_detailed`
+(`project_stmt_*` / `project_run_*` / `emit_run_*`).
 
 ## Compact statement shape
 
@@ -156,7 +155,7 @@ Rules:
   1. Every Normal surface has English + Chinese `rule_name` / `message`
      (stmt kinds, compound facts, searched-proof routes, equality leaves,
      every atomic builtin leaf, Calculation).
-  2. Detailed remains a Normal fallback until its IR projector is finished.
+  2. Detailed projects the full result IR tree and omits `local_env`.
 - `stores` / `infers` / `cite` / `statement` / `goal` use `readable_string`
   (IR with `#id#` wrappers stripped), not raw IR and not `fact_id`.
 - Cite may include `line` when the cited fact has a source line; omit `line` if unknown.
@@ -166,14 +165,14 @@ Rules:
 
 Same envelope as Normal run JSON, but `"detail": "detailed"`.
 
-Each statement projects the **result IR fields** (not search noise, T1):
+Each statement projects the **result IR fields** recursively:
 
 - `success`, `kind`, `statement`
-- `verify`: full recursive VerifyFactResult (includes WD + winning `searched_proof`)
-- `store_and_infer`: `{ stores, infers }` entries with `fact_id` + readable `fact`
-- binder `local_env`: **L2 summary** only (`identifiers`, `facts`, `well_defined`)
+- nested stage fields (`verify`, `store_and_infer`, WD, searched_proof, …)
+- `Fact` / `Obj` as `readable_string`; `FactId` with optional readable cite
+- **`local_env` is omitted** at every nesting level (no `ExecEnv` dump)
 
-Does **not** include failed search attempts / `search_trace`.
+Does **not** invent `search_trace` / failed-search noise.
 
 Fact success sketch:
 
@@ -202,6 +201,9 @@ Fact success sketch:
 }
 ```
 
+Chinese (`-lang zh`): field keys remapped (`验证` / `存储与推理` / …); IR
+variant tags such as `kind` values may stay English.
+
 ## Run envelope
 
 ```json
@@ -220,10 +222,10 @@ Fact success sketch:
 `language` is `en` or `zh` from `-lang` (default `en`). Builtin `rule_name` /
 `message` follow this language via `json_output/explain/`.
 
-## Acceptance (Normal + Compact)
+## Acceptance (Normal + Compact + Detailed)
 
 Locked by `cargo test --lib json_output::` (`acceptance_tests` +
-`project_normal_tests` + `project_compact_tests`):
+`project_normal_tests` + `project_compact_tests` + `project_detailed_tests`):
 
 1. **Normal success shape / field order**: `success` → `statement` →
    `proof_method` → `stores` → `infers`
@@ -239,11 +241,10 @@ Locked by `cargo test --lib json_output::` (`acceptance_tests` +
 8. **Stmt kinds**: every catalog kind has bilingual `explain_stmt_kind`
 9. **Equality builtins**: all variants bilingual via `rule.rule_id_and_message(lang)`
 10. **Searched-proof routes / compound facts**: bilingual `rule_name` + `message`
-11. **Run envelope**: `kind` / `success` / `detail` (`normal`|`compact`) /
+11. **Run envelope**: `kind` / `success` / `detail` (`normal`|`compact`|`detailed`) /
     `language` / `statement_results`
-
-**Out of this acceptance gate:** Detailed projector still falls back to Normal
-until realigned.
+12. **Detailed**: fact success has `verify` + `store_and_infer`; no `local_env`;
+    Chinese keys for top-level Detailed fields; run `detail=detailed`
 
 ## API
 

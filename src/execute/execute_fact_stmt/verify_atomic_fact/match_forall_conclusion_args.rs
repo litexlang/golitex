@@ -77,7 +77,7 @@ impl Runtime {
         }
         let param_set: HashSet<IdentifierId> = ordered_param_ids.iter().copied().collect();
         let equality_state = VerifyState {
-            can_use_builtin_rule: false,
+            can_use_builtin_rule_round: 0,
             can_use_def_and_known_forall_and_known_strategy: false,
             can_use_rewrite: false,
             store_well_defined_fact: false,
@@ -114,7 +114,7 @@ impl Runtime {
     ) -> RuntimeResult<bool> {
         let param_set: HashSet<IdentifierId> = ordered_param_ids.iter().copied().collect();
         let equality_state = VerifyState {
-            can_use_builtin_rule: false,
+            can_use_builtin_rule_round: 0,
             can_use_def_and_known_forall_and_known_strategy: false,
             can_use_rewrite: false,
             store_well_defined_fact: false,

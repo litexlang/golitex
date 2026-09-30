@@ -35,8 +35,9 @@ impl Runtime {
         }
     }
 
-    // Cheap phase: builtin rule (one shot) → equivalence class.
-    // Deep phase (can_use_def_and_known_forall_and_known_strategy):
+    // Cheap phase: builtin rule → equivalence class.
+    // Deep phase (can_use_def_and_known_forall_and_known_strategy, round > 0):
+    //   with_one_less_round() once, then
     //   object definition → verify_by_strategy → matching one arg → known forall →
     //   (can_use_rewrite) builtin rewrite.
     // MatchingOneArgByOne is constructor peel (not rewrite).
@@ -46,10 +47,13 @@ impl Runtime {
         fact: &EqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<EqualFactSearchedProof>> {
-        // Builtin rules always run: cite-only / calculation arms ignore the budget;
-        // premise-producing arms self-gate on can_use_builtin_rule.
-        if let Some(result) = self.search_equal_fact_builtin_rule(fact, verify_state.clone())? {
-            return Ok(Some(EqualFactSearchedProof::ByBuiltinRule(result)));
+        // Enter builtin only when round > 0; pass round - 1 into the search.
+        if verify_state.can_use_builtin_rule_round > 0 {
+            if let Some(result) =
+                self.search_equal_fact_builtin_rule(fact, verify_state.with_one_less_round())?
+            {
+                return Ok(Some(EqualFactSearchedProof::ByBuiltinRule(result)));
+            }
         }
 
         if let Some(result) =
@@ -58,7 +62,9 @@ impl Runtime {
             return Ok(Some(EqualFactSearchedProof::ByEquivalenceClass(result)));
         }
 
-        if !verify_state.can_use_def_and_known_forall_and_known_strategy {
+        if !verify_state.can_use_def_and_known_forall_and_known_strategy
+            || verify_state.can_use_builtin_rule_round == 0
+        {
             // Matching peel stays available as a cheap structural step.
             let matching_child_state = verify_state.known_only_no_wd();
             if let Some(result) = self
@@ -69,8 +75,10 @@ impl Runtime {
             return Ok(None);
         }
 
+        let deep_state = verify_state.with_one_less_round();
+
         if let Some(result) =
-            self.search_equal_fact_proof_by_object_definition(fact, verify_state.clone())?
+            self.search_equal_fact_proof_by_object_definition(fact, deep_state.clone())?
         {
             return Ok(Some(EqualFactSearchedProof::ByObjectDefinition(result)));
         }
@@ -79,7 +87,7 @@ impl Runtime {
             return Ok(Some(result));
         }
 
-        let matching_child_state = verify_state.known_only_no_wd();
+        let matching_child_state = deep_state.known_only_no_wd();
         if let Some(result) =
             self.search_equal_fact_proof_by_matching_one_arg_by_one(fact, matching_child_state)?
         {
@@ -87,14 +95,14 @@ impl Runtime {
         }
 
         if let Some(result) =
-            self.search_equal_fact_proof_by_known_forall_fact(fact, verify_state.clone())?
+            self.search_equal_fact_proof_by_known_forall_fact(fact, deep_state.clone())?
         {
             return Ok(Some(result));
         }
 
-        if verify_state.can_use_rewrite {
+        if deep_state.can_use_rewrite {
             if let Some(result) =
-                self.search_equal_fact_proof_by_builtin_rewrite(fact, verify_state)?
+                self.search_equal_fact_proof_by_builtin_rewrite(fact, deep_state)?
             {
                 return Ok(Some(EqualFactSearchedProof::ByBuiltinRewrite(result)));
             }

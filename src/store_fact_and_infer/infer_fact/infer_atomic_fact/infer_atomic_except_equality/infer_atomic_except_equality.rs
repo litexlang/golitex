@@ -39,8 +39,6 @@ impl Runtime {
             }
             AtomicFact::LessFact(_)
             | AtomicFact::GreaterFact(_)
-            | AtomicFact::LessEqualFact(_)
-            | AtomicFact::GreaterEqualFact(_)
             | AtomicFact::IsSetFact(_)
             | AtomicFact::IsNonemptySetFact(_)
             | AtomicFact::IsFiniteSetFact(_)
@@ -77,6 +75,16 @@ impl Runtime {
             | AtomicFact::NotSurjectiveFact(_)
             | AtomicFact::NotBijectiveFact(_)
             | AtomicFact::NotIsChoiceFunctionForFact(_) => {}
+            AtomicFact::LessEqualFact(le) => {
+                if let Some(r) = self.infer_less_equal_nonneg_lower_from_closed_bound(le)? {
+                    rules.push(InferAtomicExceptEqualityResult::OrderDualAndNonnegLowerBound(r));
+                }
+            }
+            AtomicFact::GreaterEqualFact(ge) => {
+                if let Some(r) = self.infer_greater_equal_order_dual_and_nonneg_lower(ge)? {
+                    rules.push(InferAtomicExceptEqualityResult::OrderDualAndNonnegLowerBound(r));
+                }
+            }
         }
         Ok(rules)
     }

@@ -54,39 +54,9 @@ struct VectorSpace<K nonempty_set, field &Field<K>, V nonempty_set>:
         forall x V:
             smul(field.one, x) = x
 
-# Settings name recurring theorem contexts. The mathematical data and laws
-# remain owned by the declaration-typed struct values above.
-# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
-# Former: setting FieldSetting(K nonempty_set, field &Field<K>)
-struct FieldSetting:
-    K nonempty_set
-    field &Field<K>
-
-# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
-# Former: setting VectorSpaceSetting([FieldSetting(K, field)], V nonempty_set, space &VectorSpace<K, field, V>)
-struct VectorSpaceSetting:
-    # former parent setting ref: [FieldSetting(K, field)]
-    V nonempty_set
-    space &VectorSpace<K
-    field
-    V>
-
-# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
-# Former: setting VectorSpacesSetting([FieldSetting(K, field)], V, W nonempty_set, source &VectorSpace<K, field, V>, target &VectorSpace<K, field, W>)
-struct VectorSpacesSetting:
-    # former parent setting ref: [FieldSetting(K, field)]
-    V
-    W nonempty_set
-    source &VectorSpace<K
-    field
-    V>
-    target &VectorSpace<K
-    field
-    W>
-
 # Any element acting as a left additive identity must equal the stored zero.
 thm additive_identity_unique:
-    ? forall [VectorSpaceSetting], identity_candidate V:
+    ? forall K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, identity_candidate V:
         forall x V:
             space.add(identity_candidate, x) = x
         =>:
@@ -97,7 +67,7 @@ thm additive_identity_unique:
 # Existence comes from the vector-space law; associativity and commutativity
 # show that any two additive inverses coincide.
 thm additive_inverse_exists_unique:
-    ? forall [VectorSpaceSetting], x V:
+    ? forall K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, x V:
         exist! y V st {space.add(x, y) = space.zero}
     obtain y from exist y V st {space.add(x, y) = space.zero}
     forall y1, y2 V:
@@ -114,7 +84,7 @@ template<K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, 
             exist! y V st {space.add(x, y) = space.zero}
 
 thm vector_neg_spec:
-    ? forall [VectorSpaceSetting], x V:
+    ? forall K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, x V:
         space.add(x, \vector_neg<K, field, V, space>(x)) = space.zero
 
 template<K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>>:
@@ -122,7 +92,7 @@ template<K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, 
 
 # Add the inverse of the common left operand to both sides.
 thm add_left_cancel:
-    ? forall [VectorSpaceSetting], x, y, z V:
+    ? forall K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, x, y, z V:
         space.add(x, y) = space.add(x, z)
         =>:
             y = z
@@ -137,14 +107,14 @@ thm add_left_cancel:
 
 # Compare 0*x with 0*x + 0*x and cancel to derive the zero-scalar law.
 thm vector_space_scalar_constants_in_carrier:
-    ? forall [VectorSpaceSetting]:
+    ? forall K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>:
         field.zero $in K
         field.one $in K
     field.zero $in K
     field.one $in K
 
 thm zero_scalar_times_vector:
-    ? forall [VectorSpaceSetting], x V:
+    ? forall K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, x V:
         space.smul(field.zero, x) = space.zero
     have p V = space.smul(field.zero, x)
     field.add(field.zero, field.zero) = field.zero
@@ -159,7 +129,7 @@ thm zero_scalar_times_vector:
 
 # Distribute a scalar over 0+0, then cancel the repeated term.
 thm scalar_times_zero_vector:
-    ? forall [VectorSpaceSetting], a K:
+    ? forall K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, a K:
         space.smul(a, space.zero) = space.zero
     have q V = space.smul(a, space.zero)
     space.add(space.zero, space.zero) = space.zero
@@ -170,24 +140,14 @@ thm scalar_times_zero_vector:
     space.add(q, q) = space.add(q, space.zero)
     by thm add_left_cancel(K, field, V, space, q, q, space.zero) => q = space.zero
 
-prop is_linear_map([VectorSpacesSetting], T fn(v V) W):
+prop is_linear_map(K nonempty_set, field &Field<K>, V nonempty_set, W nonempty_set, source &VectorSpace<K, field, V>, target &VectorSpace<K, field, W>, T fn(v V) W):
     forall u, v V:
         T(source.add(u, v)) = target.add(T(u), T(v))
     forall a K, v V:
         T(source.smul(a, v)) = target.smul(a, T(v))
 
-# A linear-map setting extends the two-space context with linearity of T.
-# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
-# Former: setting LinearMapSetting([VectorSpacesSetting], T fn(v V) W):
-struct LinearMapSetting:
-    # former parent setting ref: [VectorSpacesSetting]
-    T fn(v V) W
-    _todo_placeholder set
-    <=>:
-        $is_linear_map(K, field, V, W, source, target, T)
-
 # A subspace contains zero and is closed under vector addition and scalar action.
-prop is_subspace([VectorSpaceSetting], U power_set(V)):
+prop is_subspace(K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, field, V>, U power_set(V)):
     space.zero $in U
     forall u, v V:
         u $in U
@@ -207,7 +167,7 @@ template<V set, zeroV V>:
 
 # Additivity forces the image of zero to be the target zero vector.
 thm linear_map_sends_zero_to_zero:
-    ? forall [LinearMapSetting]:
+    ? forall K nonempty_set, field &Field<K>, V nonempty_set, W nonempty_set, source &VectorSpace<K, field, V>, target &VectorSpace<K, field, W>, T fn(v V) W:
         T(source.zero) = target.zero
     source.add(source.zero, source.zero) = source.zero
     T(source.add(source.zero, source.zero)) = target.add(T(source.zero), T(source.zero))
@@ -218,7 +178,7 @@ thm linear_map_sends_zero_to_zero:
 
 # Apply the map to x + (-x) and use uniqueness of the target inverse.
 thm linear_map_sends_neg_to_neg:
-    ? forall [LinearMapSetting], x V:
+    ? forall K nonempty_set, field &Field<K>, V nonempty_set, W nonempty_set, source &VectorSpace<K, field, V>, target &VectorSpace<K, field, W>, T fn(v V) W, x V:
         T(\vector_neg<K, field, V, source>(x)) = \vector_neg<K, field, W, target>(T(x))
     let source_neg = \vector_neg<K, field, V, source>
     let target_neg = \vector_neg<K, field, W, target>
@@ -236,7 +196,7 @@ thm linear_map_sends_neg_to_neg:
 # Verify zero membership and closure under addition and scalar multiplication
 # for the native set-builder kernel.
 thm linear_map_kernel_is_subspace:
-    ? forall [LinearMapSetting]:
+    ? forall K nonempty_set, field &Field<K>, V nonempty_set, W nonempty_set, source &VectorSpace<K, field, V>, target &VectorSpace<K, field, W>, T fn(v V) W:
         $is_subspace(K, field, V, source, \linear_kernel<V, W, target.zero, T>)
     let kernel = \linear_kernel<V, W, target.zero, T>
     by thm linear_map_sends_zero_to_zero(K, field, V, W, source, target, T) => T(source.zero) = target.zero
@@ -271,7 +231,7 @@ thm linear_map_kernel_is_subspace:
 
 # Injectivity turns T(x)=0=T(0) into x=0, proving kernel(T)={0}.
 thm injective_linear_map_has_trivial_kernel:
-    ? forall [LinearMapSetting]:
+    ? forall K nonempty_set, field &Field<K>, V nonempty_set, W nonempty_set, source &VectorSpace<K, field, V>, target &VectorSpace<K, field, W>, T fn(v V) W:
         $injective(V, W, T)
         =>:
             \linear_kernel<V, W, target.zero, T> = \zero_subspace<V, source.zero>
@@ -296,7 +256,7 @@ thm injective_linear_map_has_trivial_kernel:
 
 # If T(u)=T(v), then u-v lies in the trivial kernel; cancellation gives u=v.
 thm trivial_kernel_implies_injective:
-    ? forall [LinearMapSetting]:
+    ? forall K nonempty_set, field &Field<K>, V nonempty_set, W nonempty_set, source &VectorSpace<K, field, V>, target &VectorSpace<K, field, W>, T fn(v V) W:
         \linear_kernel<V, W, target.zero, T> = \zero_subspace<V, source.zero>
         =>:
             $injective(V, W, T)

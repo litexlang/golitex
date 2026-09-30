@@ -41,6 +41,14 @@ fn chinese_key(english_key: &str) -> &str {
         "phase" => "阶段",
         "goal" => "目标命题",
         "family" => "族",
+        // Detailed IR fields
+        "verify" => "验证",
+        "store_and_infer" => "存储与推理",
+        "fact" => "命题",
+        "fact_id" => "命题编号",
+        "well_defined" => "良定性",
+        "searched_proof" => "搜索证明",
+        "rule" => "规则",
         // fallback: keep English so unknown keys still work
         other => other,
     }

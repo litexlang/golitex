@@ -372,7 +372,7 @@ impl Runtime {
             _ => {}
         }
 
-        if !verify_state.can_use_builtin_rule {
+        if verify_state.can_use_builtin_rule_round == 0 {
             return Ok(None);
         }
         let verify_state = verify_state.after_builtin_rule();

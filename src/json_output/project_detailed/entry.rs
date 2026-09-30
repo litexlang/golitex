@@ -13,7 +13,7 @@ use crate::execute::{
     ExecHaveObjEqualStmtResult, ExecHaveObjInNonemptySetStmtFailed,
     ExecHaveObjInNonemptySetStmtResult, ExecStmtResult, ParamTypeFactCheckResult,
 };
-use crate::json_output::helper::{bool_value, object, string};
+use crate::json_output::helper::{bool_value, object_for, string};
 use crate::json_output::project_normal::OutputDetail;
 use crate::knowledge_base::JsonValue;
 use crate::run::run_command_outcome::RunLitexCodeResult;
@@ -43,12 +43,16 @@ pub fn project_run_detailed(
         None => JsonValue::Null,
         Some(err) => string(format!("{err:?}")),
     };
-    object(vec![
+    object_for(runtime, vec![
         ("kind", string("run")),
         ("success", bool_value(run.success)),
         ("target", string(target)),
         ("path", path_value),
         ("detail", string(OutputDetail::Detailed.as_str())),
+        (
+            "language",
+            string(runtime.launch_command.output_language().as_str()),
+        ),
         ("statement_results", JsonValue::Array(statement_results)),
         ("session_error", session_error),
     ])
@@ -56,7 +60,7 @@ pub fn project_run_detailed(
 
 pub(super) fn project_fact_only(fact: &ExecFactStmtResult, runtime: &Runtime) -> JsonValue {
     match fact {
-        ExecFactStmtResult::Success(success) => object(vec![
+        ExecFactStmtResult::Success(success) => object_for(runtime, vec![
             ("success", bool_value(true)),
             ("kind", string("fact")),
             (
@@ -72,14 +76,14 @@ pub(super) fn project_fact_only(fact: &ExecFactStmtResult, runtime: &Runtime) ->
                 project_store_and_infer(&success.store_and_infer_result, runtime),
             ),
         ]),
-        ExecFactStmtResult::Failed(verify) => object(vec![
+        ExecFactStmtResult::Failed(verify) => object_for(runtime, vec![
             ("success", bool_value(false)),
             ("kind", string("fact")),
             ("statement", string(verify_goal_display(verify))),
             ("verify", project_verify_fact(verify, runtime)),
             (
                 "store_and_infer",
-                object(vec![
+                object_for(runtime, vec![
                     ("stores", JsonValue::Array(Vec::new())),
                     ("infers", JsonValue::Array(Vec::new())),
                 ]),
@@ -93,7 +97,7 @@ pub(super) fn project_have_in_nonempty_only(
     runtime: &Runtime,
 ) -> JsonValue {
     match have {
-        ExecHaveObjInNonemptySetStmtResult::Success(success) => object(vec![
+        ExecHaveObjInNonemptySetStmtResult::Success(success) => object_for(runtime, vec![
             ("success", bool_value(true)),
             ("kind", string("have_obj_in_nonempty_set")),
             ("statement", string(success.statement.readable_string())),
@@ -122,13 +126,13 @@ pub(super) fn project_have_in_nonempty_only(
                 project_have_store_ids(&success.store_and_infer_result.stored_fact_ids, runtime),
             ),
         ]),
-        ExecHaveObjInNonemptySetStmtResult::Failed(failed) => object(vec![
+        ExecHaveObjInNonemptySetStmtResult::Failed(failed) => object_for(runtime, vec![
             ("success", bool_value(false)),
             ("kind", string("have_obj_in_nonempty_set")),
             ("why_failed", project_have_in_failed(failed, runtime)),
             (
                 "store_and_infer",
-                object(vec![
+                object_for(runtime, vec![
                     ("stores", JsonValue::Array(Vec::new())),
                     ("infers", JsonValue::Array(Vec::new())),
                 ]),
@@ -142,7 +146,7 @@ pub(super) fn project_have_equal_only(
     runtime: &Runtime,
 ) -> JsonValue {
     match have {
-        ExecHaveObjEqualStmtResult::Success(success) => object(vec![
+        ExecHaveObjEqualStmtResult::Success(success) => object_for(runtime, vec![
             ("success", bool_value(true)),
             ("kind", string("have_obj_equal")),
             ("statement", string(success.statement.readable_string())),
@@ -181,16 +185,16 @@ pub(super) fn project_have_equal_only(
                 project_have_store_ids(&success.store_and_infer_result.stored_fact_ids, runtime),
             ),
         ]),
-        ExecHaveObjEqualStmtResult::Failed(_) => object(vec![
+        ExecHaveObjEqualStmtResult::Failed(_) => object_for(runtime, vec![
             ("success", bool_value(false)),
             ("kind", string("have_obj_equal")),
             (
                 "why_failed",
-                object(vec![("phase", string("have_obj_equal"))]),
+                object_for(runtime, vec![("phase", string("have_obj_equal"))]),
             ),
             (
                 "store_and_infer",
-                object(vec![
+                object_for(runtime, vec![
                     ("stores", JsonValue::Array(Vec::new())),
                     ("infers", JsonValue::Array(Vec::new())),
                 ]),
@@ -204,16 +208,16 @@ fn project_have_in_failed(
     runtime: &Runtime,
 ) -> JsonValue {
     match failed {
-        ExecHaveObjInNonemptySetStmtFailed::ParamType(wd) => object(vec![
+        ExecHaveObjInNonemptySetStmtFailed::ParamType(wd) => object_for(runtime, vec![
             ("phase", string("param_type")),
             ("well_defined", project_verify_obj_wd(wd, runtime)),
         ]),
-        ExecHaveObjInNonemptySetStmtFailed::NonemptyCheck(v) => object(vec![
+        ExecHaveObjInNonemptySetStmtFailed::NonemptyCheck(v) => object_for(runtime, vec![
             ("phase", string("nonempty_check")),
             ("verify", project_verify_fact(v, runtime)),
         ]),
         ExecHaveObjInNonemptySetStmtFailed::AutoOpenStructLayer(_) => {
-            object(vec![("phase", string("auto_open_struct_layer"))])
+            object_for(runtime, vec![("phase", string("auto_open_struct_layer"))])
         }
     }
 }
@@ -223,10 +227,10 @@ fn project_param_type_fact_check(
     runtime: &Runtime,
 ) -> JsonValue {
     match check {
-        ParamTypeFactCheckResult::Set => object(vec![("type", string("set"))]),
-        ParamTypeFactCheckResult::NonemptySet => object(vec![("type", string("nonempty_set"))]),
-        ParamTypeFactCheckResult::FiniteSet => object(vec![("type", string("finite_set"))]),
-        ParamTypeFactCheckResult::Obj(v) => object(vec![
+        ParamTypeFactCheckResult::Set => object_for(runtime, vec![("type", string("set"))]),
+        ParamTypeFactCheckResult::NonemptySet => object_for(runtime, vec![("type", string("nonempty_set"))]),
+        ParamTypeFactCheckResult::FiniteSet => object_for(runtime, vec![("type", string("finite_set"))]),
+        ParamTypeFactCheckResult::Obj(v) => object_for(runtime, vec![
             ("type", string("obj")),
             ("verify", project_verify_fact(v, runtime)),
         ]),
