@@ -53,8 +53,13 @@ impl Runtime {
             equal_tos.push(parse_obj(self, tb)?);
         }
 
-        let proof =
-            self.parse_witness_optional_proof_body(tb, &proof_blocks, "witness exist")?;
+        // Re-occupy exist binders so the local proof body can mention them
+        // (legacy: parse_stmts_with_existing_free_param_bindings).
+        // Example: `witness exist m R st {m = 0} from 0: m = 0`
+        let params = exist_shaped_fact_in_witness.plain().typed_parameters.clone();
+        let proof = self.with_forall_params_occupied(&params, block, |this| {
+            this.parse_witness_optional_proof_body(tb, &proof_blocks, "witness exist")
+        })?;
 
         Ok(Stmt::Witness(WitnessStmt::WitnessExistFact(
             WitnessExistFact {

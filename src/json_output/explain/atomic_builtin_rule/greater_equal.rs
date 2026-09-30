@@ -12,7 +12,7 @@ use crate::json_output::explain::fallback::BuiltinRuleText;
 use crate::launch_command::OutputLanguage;
 use crate::runtime::FactId;
 
-use super::text::{family_fallback, text};
+use super::text::text;
 
 impl GreaterEqualFactSearchProofByBuiltinRule {
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -171,12 +171,19 @@ impl ClosedNumericComparisonBuiltinRuleProof {
 
 impl PredecessorNonNegFromAtLeastOneBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("PredecessorNonNegFromAtLeastOne", OutputLanguage::English)
+        text(
+            "PredecessorNonNegFromAtLeastOne",
+            "n-1 ≥ 0 from n ≥ 1",
+            "Predecessor is nonnegative when the value is at least one",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        // ZH not filled yet — reuse English.
-        self.rule_id_and_message_en()
+        text(
+            "PredecessorNonNegFromAtLeastOne",
+            "由 n ≥ 1 得 n-1 ≥ 0",
+            "当值至少为 1 时前驱非负",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -189,11 +196,19 @@ impl PredecessorNonNegFromAtLeastOneBuiltinRuleProof {
 
 impl FiniteSetSizeNonnegativeBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("FiniteSetSizeNonnegative", OutputLanguage::English)
+        text(
+            "FiniteSetSizeNonnegative",
+            "|S| ≥ 0",
+            "Finite-set size is nonnegative",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "FiniteSetSizeNonnegative",
+            "|S| ≥ 0",
+            "有限集大小非负",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -206,11 +221,19 @@ impl FiniteSetSizeNonnegativeBuiltinRuleProof {
 
 impl FiniteSetSizeAtLeastOneBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("FiniteSetSizeAtLeastOne", OutputLanguage::English)
+        text(
+            "FiniteSetSizeAtLeastOne",
+            "|S| ≥ 1",
+            "A nonempty finite set has size at least one",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "FiniteSetSizeAtLeastOne",
+            "|S| ≥ 1",
+            "非空有限集大小至少为 1",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {

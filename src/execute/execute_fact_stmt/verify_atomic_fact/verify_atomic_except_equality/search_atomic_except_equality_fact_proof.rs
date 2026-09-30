@@ -6,7 +6,8 @@ use crate::runtime::{Runtime, RuntimeResult};
 impl Runtime {
     // Cheap phase: builtin rule (one shot) → known atomic.
     // Deep phase (can_use_def_and_known_forall_and_known_strategy):
-    //   builtin strategy → by definition → known strategy → known forall →
+    //   verify_by_strategy (builtin + known strategy, StrategySearch depth) →
+    //   by definition → known forall →
     //   (can_use_rewrite) builtin rewrite → known rewrite.
     //
     // Builtin-rule premises inherit after_builtin_rule() (known / direct only).
@@ -39,13 +40,8 @@ impl Runtime {
             return Ok(None);
         }
 
-        if let Some(result) = self.search_atomic_except_equality_fact_proof_by_builtin_strategy(
-            fact,
-            verify_state.clone(),
-        )? {
-            return Ok(Some(
-                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(result),
-            ));
+        if let Some(result) = self.verify_by_strategy_atomic_except_equality(fact)? {
+            return Ok(Some(result));
         }
 
         if let Some(result) =
@@ -54,17 +50,6 @@ impl Runtime {
             return Ok(Some(AtomicExceptEqualityFactSearchedProof::ByDefinition(
                 result,
             )));
-        }
-
-        if let Some(result) = self
-            .search_atomic_except_equality_fact_proof_by_known_strategy(
-                fact,
-                verify_state.clone(),
-            )?
-        {
-            return Ok(Some(
-                AtomicExceptEqualityFactSearchedProof::ByKnownStrategy(result),
-            ));
         }
 
         if let Some(result) = self

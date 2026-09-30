@@ -18,9 +18,11 @@ impl Runtime {
         self.push_parse_scope();
         let proof = self.parse_body_stmts(&tb.body);
         self.pop_parse_scope();
+        let proof = proof?;
+        self.release_obtain_parse_bindings_in_stmts(&proof);
         Ok(Stmt::ProofBlock(ProofBlockStmt::SketchStmt(SketchStmt {
-            proof: proof?,
-            line_file: SourceLine::new(block.line, self.code_source.clone()),
+            proof,
+            line_file: SourceLine::new(block.line, self.code_source.clone())
         })))
     }
 }

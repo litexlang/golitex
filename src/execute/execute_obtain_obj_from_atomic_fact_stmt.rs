@@ -18,7 +18,7 @@
 use std::collections::HashMap;
 
 use crate::ast::fact::{
-    exist_shaped_fact_from_fact, exist_shaped_fact_to_fact, AtomicFact, ExistShapedFact, Fact,
+    exist_shaped_fact_from_fact, exist_shaped_fact_to_fact, AtomicFact, ExistShapedFact, Fact
 };
 use crate::ast::obj::Obj;
 use crate::ast::stmt::ObtainObjFromAtomicFact;
@@ -33,19 +33,19 @@ pub enum ExecObtainObjFromAtomicFactStmtFailed {
     BadDefinition(String),
     AtomicVerifyFailed(VerifyFactResult),
     Instantiate(String),
-    Apply(ExecObtainObjFromExistFactStmtFailed),
+    Apply(ExecObtainObjFromExistFactStmtFailed)
 }
 
 pub struct ExecObtainObjFromAtomicFactStmtSuccessResult {
     pub statement: ObtainObjFromAtomicFact,
     pub verify_atomic: VerifyFactResult,
     pub projected_exist: ExistShapedFact,
-    pub store_and_infer_result: StoreHaveObjAndInferResult,
+    pub store_and_infer_result: StoreHaveObjAndInferResult
 }
 
 pub enum ExecObtainObjFromAtomicFactStmtResult {
     Success(ExecObtainObjFromAtomicFactStmtSuccessResult),
-    Failed(ExecObtainObjFromAtomicFactStmtFailed),
+    Failed(ExecObtainObjFromAtomicFactStmtFailed)
 }
 
 impl ExecObtainObjFromAtomicFactStmtResult {
@@ -118,13 +118,7 @@ impl Runtime {
             }
         };
 
-        let verify_state = VerifyState {
-            can_use_builtin_rule: true,
-            can_use_def_and_known_forall_and_known_strategy: true,
-            can_use_rewrite: true,
-            store_well_defined_fact: true,
-                    builtin_strategy_depth_remaining: VerifyState::BUILTIN_STRATEGY_DEPTH_LIMIT,
-};
+        let verify_state = VerifyState::top_level();
         let atomic_as_fact = Fact::AtomicFact(AtomicFact::NormalAtomicFact(stmt.fact.clone()));
         let verify_atomic = self.verify_fact(&atomic_as_fact, verify_state)?;
         if verify_atomic.is_failed() {
@@ -133,18 +127,22 @@ impl Runtime {
             ));
         }
 
-        match self.apply_obtain_from_known_exist_family(&projected_exist, &stmt.equal_tos)? {
+        match self.apply_obtain_from_known_exist_family(
+            &projected_exist,
+            &stmt.equal_tos,
+            stmt.line_file.line,
+        )? {
             Ok(store_and_infer_result) => Ok(ExecObtainObjFromAtomicFactStmtResult::Success(
                 ExecObtainObjFromAtomicFactStmtSuccessResult {
                     statement: stmt.clone(),
                     verify_atomic,
                     projected_exist,
-                    store_and_infer_result,
+                    store_and_infer_result
                 },
             )),
             Err(failed) => Ok(ExecObtainObjFromAtomicFactStmtResult::Failed(
                 ExecObtainObjFromAtomicFactStmtFailed::Apply(failed),
-            )),
+            ))
         }
     }
 }
@@ -167,6 +165,6 @@ fn project_sole_positive_exist_clause(
         None => Err(
             "obtain from `$P` requires the sole definition clause to be `exist` or `exist!`"
                 .to_string(),
-        ),
+        )
     }
 }

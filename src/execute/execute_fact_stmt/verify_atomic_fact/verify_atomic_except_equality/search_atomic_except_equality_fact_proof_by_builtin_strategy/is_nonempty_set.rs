@@ -1,14 +1,14 @@
 use super::result::*;
 use crate::ast::fact::{AtomicFact, IsNonemptySetFact};
 use crate::ast::obj::{FunctionSpace, IntervalObj, Obj, ProductShape, SetFormer, SetOperator};
-use crate::execute::execute_fact_stmt::VerifyState;
+use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
     pub(super) fn search_closed_range_nonempty_from_endpoint_order_strategy(
         &mut self,
         fact: &AtomicFact,
-        verify_state: VerifyState,
+        ctx: StrategySearch,
     ) -> RuntimeResult<Option<ClosedRangeNonemptyFromEndpointOrderStrategySingleStep>> {
         let Some(set) = as_nonempty_set(fact) else { return Ok(None); };
         let Obj::SetFormer(SetFormer::ClosedRange(r)) = set else { return Ok(None); };
@@ -19,7 +19,7 @@ impl Runtime {
             lf,
         )];
         let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_strategy_requirements(requirements, verify_state)?
+            self.verify_strategy_requirements(requirements, ctx)?
         else { return Ok(None); };
         Ok(Some(ClosedRangeNonemptyFromEndpointOrderStrategySingleStep {
             requirement_facts,
@@ -30,7 +30,7 @@ impl Runtime {
     pub(super) fn search_range_nonempty_from_endpoint_order_strategy(
         &mut self,
         fact: &AtomicFact,
-        verify_state: VerifyState,
+        ctx: StrategySearch,
     ) -> RuntimeResult<Option<RangeNonemptyFromEndpointOrderStrategySingleStep>> {
         let Some(set) = as_nonempty_set(fact) else { return Ok(None); };
         let Obj::SetFormer(SetFormer::Range(r)) = set else { return Ok(None); };
@@ -41,7 +41,7 @@ impl Runtime {
             lf,
         )];
         let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_strategy_requirements(requirements, verify_state)?
+            self.verify_strategy_requirements(requirements, ctx)?
         else { return Ok(None); };
         Ok(Some(RangeNonemptyFromEndpointOrderStrategySingleStep {
             requirement_facts,
@@ -52,7 +52,7 @@ impl Runtime {
     pub(super) fn search_interval_nonempty_from_endpoint_order_strategy(
         &mut self,
         fact: &AtomicFact,
-        verify_state: VerifyState,
+        ctx: StrategySearch,
     ) -> RuntimeResult<Option<IntervalNonemptyFromEndpointOrderStrategySingleStep>> {
         let Some(set) = as_nonempty_set(fact) else { return Ok(None); };
         let Obj::SetFormer(SetFormer::IntervalObj(interval)) = set else { return Ok(None); };
@@ -64,7 +64,7 @@ impl Runtime {
             vec![self.strategy_less_fact(start, end, lf)]
         };
         let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_strategy_requirements(requirements, verify_state)?
+            self.verify_strategy_requirements(requirements, ctx)?
         else { return Ok(None); };
         Ok(Some(IntervalNonemptyFromEndpointOrderStrategySingleStep {
             requirement_facts,
@@ -75,14 +75,14 @@ impl Runtime {
     pub(super) fn search_union_nonempty_from_left_strategy(
         &mut self,
         fact: &AtomicFact,
-        verify_state: VerifyState,
+        ctx: StrategySearch,
     ) -> RuntimeResult<Option<UnionNonemptyFromLeftStrategySingleStep>> {
         let Some(set) = as_nonempty_set(fact) else { return Ok(None); };
         let Obj::SetOperator(SetOperator::Union(u)) = set else { return Ok(None); };
         let lf = line_file(fact);
         let requirements = vec![self.strategy_is_nonempty_set_fact(u.left.as_ref().clone(), lf)];
         let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_strategy_requirements(requirements, verify_state)?
+            self.verify_strategy_requirements(requirements, ctx)?
         else { return Ok(None); };
         Ok(Some(UnionNonemptyFromLeftStrategySingleStep {
             requirement_facts,
@@ -93,14 +93,14 @@ impl Runtime {
     pub(super) fn search_union_nonempty_from_right_strategy(
         &mut self,
         fact: &AtomicFact,
-        verify_state: VerifyState,
+        ctx: StrategySearch,
     ) -> RuntimeResult<Option<UnionNonemptyFromRightStrategySingleStep>> {
         let Some(set) = as_nonempty_set(fact) else { return Ok(None); };
         let Obj::SetOperator(SetOperator::Union(u)) = set else { return Ok(None); };
         let lf = line_file(fact);
         let requirements = vec![self.strategy_is_nonempty_set_fact(u.right.as_ref().clone(), lf)];
         let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_strategy_requirements(requirements, verify_state)?
+            self.verify_strategy_requirements(requirements, ctx)?
         else { return Ok(None); };
         Ok(Some(UnionNonemptyFromRightStrategySingleStep {
             requirement_facts,
@@ -111,7 +111,7 @@ impl Runtime {
     pub(super) fn search_cart_nonempty_from_all_factors_strategy(
         &mut self,
         fact: &AtomicFact,
-        verify_state: VerifyState,
+        ctx: StrategySearch,
     ) -> RuntimeResult<Option<CartNonemptyFromAllFactorsStrategySingleStep>> {
         let Some(set) = as_nonempty_set(fact) else { return Ok(None); };
         let Obj::ProductShape(ProductShape::Cart(cart)) = set else { return Ok(None); };
@@ -121,7 +121,7 @@ impl Runtime {
             requirements.push(self.strategy_is_nonempty_set_fact(factor.as_ref().clone(), lf.clone()));
         }
         let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_strategy_requirements(requirements, verify_state)?
+            self.verify_strategy_requirements(requirements, ctx)?
         else { return Ok(None); };
         Ok(Some(CartNonemptyFromAllFactorsStrategySingleStep {
             requirement_facts,
@@ -132,14 +132,14 @@ impl Runtime {
     pub(super) fn search_fn_set_nonempty_from_codomain_strategy(
         &mut self,
         fact: &AtomicFact,
-        verify_state: VerifyState,
+        ctx: StrategySearch,
     ) -> RuntimeResult<Option<FnSetNonemptyFromCodomainStrategySingleStep>> {
         let Some(set) = as_nonempty_set(fact) else { return Ok(None); };
         let Obj::FunctionSpace(FunctionSpace::FnSet(fn_set)) = set else { return Ok(None); };
         let lf = line_file(fact);
         let requirements = vec![self.strategy_is_nonempty_set_fact(fn_set.ret_set.as_ref().clone(), lf)];
         let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_strategy_requirements(requirements, verify_state)?
+            self.verify_strategy_requirements(requirements, ctx)?
         else { return Ok(None); };
         Ok(Some(FnSetNonemptyFromCodomainStrategySingleStep {
             requirement_facts,
@@ -150,14 +150,14 @@ impl Runtime {
     pub(super) fn search_anonymous_fn_nonempty_from_codomain_strategy(
         &mut self,
         fact: &AtomicFact,
-        verify_state: VerifyState,
+        ctx: StrategySearch,
     ) -> RuntimeResult<Option<AnonymousFnNonemptyFromCodomainStrategySingleStep>> {
         let Some(set) = as_nonempty_set(fact) else { return Ok(None); };
         let Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) = set else { return Ok(None); };
         let lf = line_file(fact);
         let requirements = vec![self.strategy_is_nonempty_set_fact(anon.body.ret_set.as_ref().clone(), lf)];
         let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_strategy_requirements(requirements, verify_state)?
+            self.verify_strategy_requirements(requirements, ctx)?
         else { return Ok(None); };
         Ok(Some(AnonymousFnNonemptyFromCodomainStrategySingleStep {
             requirement_facts,
@@ -168,14 +168,14 @@ impl Runtime {
     pub(super) fn search_finite_seq_set_nonempty_from_codomain_strategy(
         &mut self,
         fact: &AtomicFact,
-        verify_state: VerifyState,
+        ctx: StrategySearch,
     ) -> RuntimeResult<Option<FiniteSeqSetNonemptyFromCodomainStrategySingleStep>> {
         let Some(set) = as_nonempty_set(fact) else { return Ok(None); };
         let Obj::SetFormer(SetFormer::FiniteSeqSet(seq)) = set else { return Ok(None); };
         let lf = line_file(fact);
         let requirements = vec![self.strategy_is_nonempty_set_fact(seq.set.as_ref().clone(), lf)];
         let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_strategy_requirements(requirements, verify_state)?
+            self.verify_strategy_requirements(requirements, ctx)?
         else { return Ok(None); };
         Ok(Some(FiniteSeqSetNonemptyFromCodomainStrategySingleStep {
             requirement_facts,
@@ -186,14 +186,14 @@ impl Runtime {
     pub(super) fn search_seq_set_nonempty_from_codomain_strategy(
         &mut self,
         fact: &AtomicFact,
-        verify_state: VerifyState,
+        ctx: StrategySearch,
     ) -> RuntimeResult<Option<SeqSetNonemptyFromCodomainStrategySingleStep>> {
         let Some(set) = as_nonempty_set(fact) else { return Ok(None); };
         let Obj::SetFormer(SetFormer::SeqSet(seq)) = set else { return Ok(None); };
         let lf = line_file(fact);
         let requirements = vec![self.strategy_is_nonempty_set_fact(seq.set.as_ref().clone(), lf)];
         let Some((requirement_facts, proof_of_requirement_facts)) =
-            self.verify_strategy_requirements(requirements, verify_state)?
+            self.verify_strategy_requirements(requirements, ctx)?
         else { return Ok(None); };
         Ok(Some(SeqSetNonemptyFromCodomainStrategySingleStep {
             requirement_facts,

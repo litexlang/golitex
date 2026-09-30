@@ -66,7 +66,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 use crate::json_output::explain::fallback::BuiltinRuleText;
 use crate::launch_command::OutputLanguage;
 use crate::runtime::FactId;
-use super::text::{family_fallback, text};
+use super::text::text;
 
 impl LessEqualFactSearchProofByBuiltinRule {
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -309,11 +309,19 @@ impl FromKnownInNegativeStandardSetForLessEqualBuiltinRuleProof {
 
 impl ArcsinPrincipalLowerBoundBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("ArcsinPrincipalLowerBound", OutputLanguage::English)
+        text(
+            "ArcsinPrincipalLowerBound",
+            "arcsin lower bound",
+            "arcsin stays within its principal lower bound",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "ArcsinPrincipalLowerBound",
+            "arcsin 下界",
+            "arcsin 落在其主值下界内",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -326,11 +334,19 @@ impl ArcsinPrincipalLowerBoundBuiltinRuleProof {
 
 impl ArcsinPrincipalUpperBoundBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("ArcsinPrincipalUpperBound", OutputLanguage::English)
+        text(
+            "ArcsinPrincipalUpperBound",
+            "arcsin upper bound",
+            "arcsin stays within its principal upper bound",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "ArcsinPrincipalUpperBound",
+            "arcsin 上界",
+            "arcsin 落在其主值上界内",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -343,11 +359,19 @@ impl ArcsinPrincipalUpperBoundBuiltinRuleProof {
 
 impl ArccosPrincipalLowerBoundBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("ArccosPrincipalLowerBound", OutputLanguage::English)
+        text(
+            "ArccosPrincipalLowerBound",
+            "arccos lower bound",
+            "arccos stays within its principal lower bound",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "ArccosPrincipalLowerBound",
+            "arccos 下界",
+            "arccos 落在其主值下界内",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -360,11 +384,19 @@ impl ArccosPrincipalLowerBoundBuiltinRuleProof {
 
 impl ArccosPrincipalUpperBoundBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("ArccosPrincipalUpperBound", OutputLanguage::English)
+        text(
+            "ArccosPrincipalUpperBound",
+            "arccos upper bound",
+            "arccos stays within its principal upper bound",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "ArccosPrincipalUpperBound",
+            "arccos 上界",
+            "arccos 落在其主值上界内",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -377,11 +409,19 @@ impl ArccosPrincipalUpperBoundBuiltinRuleProof {
 
 impl UnitCircleLowerBoundBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("UnitCircleLowerBound", OutputLanguage::English)
+        text(
+            "UnitCircleLowerBound",
+            "Unit-circle lower bound",
+            "Trig values on the unit circle respect the lower bound",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "UnitCircleLowerBound",
+            "单位圆下界",
+            "单位圆上的三角函数值满足下界",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -394,11 +434,19 @@ impl UnitCircleLowerBoundBuiltinRuleProof {
 
 impl UnitCircleUpperBoundBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("UnitCircleUpperBound", OutputLanguage::English)
+        text(
+            "UnitCircleUpperBound",
+            "Unit-circle upper bound",
+            "Trig values on the unit circle respect the upper bound",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "UnitCircleUpperBound",
+            "单位圆上界",
+            "单位圆上的三角函数值满足上界",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -411,11 +459,19 @@ impl UnitCircleUpperBoundBuiltinRuleProof {
 
 impl AbsNonnegativeBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("AbsNonnegative", OutputLanguage::English)
+        text(
+            "AbsNonnegative",
+            "|x| ≥ 0",
+            "Absolute value is nonnegative",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "AbsNonnegative",
+            "|x| ≥ 0",
+            "绝对值非负",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -428,11 +484,19 @@ impl AbsNonnegativeBuiltinRuleProof {
 
 impl AddRightNonnegativeBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("AddRightNonnegative", OutputLanguage::English)
+        text(
+            "AddRightNonnegative",
+            "Add right nonnegative",
+            "Adding a nonnegative term on the right preserves ≤",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "AddRightNonnegative",
+            "右边加非负",
+            "右边加上非负项保持 ≤",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -445,11 +509,19 @@ impl AddRightNonnegativeBuiltinRuleProof {
 
 impl AddLeftNonnegativeBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("AddLeftNonnegative", OutputLanguage::English)
+        text(
+            "AddLeftNonnegative",
+            "Add left nonnegative",
+            "Adding a nonnegative term on the left preserves ≤",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "AddLeftNonnegative",
+            "左边加非负",
+            "左边加上非负项保持 ≤",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -462,11 +534,19 @@ impl AddLeftNonnegativeBuiltinRuleProof {
 
 impl AddRightCongruenceBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("AddRightCongruence", OutputLanguage::English)
+        text(
+            "AddRightCongruence",
+            "Add right (≤)",
+            "Adding the same term on the right preserves ≤",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "AddRightCongruence",
+            "右边加（≤）",
+            "右边加上相同项保持 ≤",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -479,11 +559,19 @@ impl AddRightCongruenceBuiltinRuleProof {
 
 impl AddLeftCongruenceBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("AddLeftCongruence", OutputLanguage::English)
+        text(
+            "AddLeftCongruence",
+            "Add left (≤)",
+            "Adding the same term on the left preserves ≤",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "AddLeftCongruence",
+            "左边加（≤）",
+            "左边加上相同项保持 ≤",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -496,11 +584,19 @@ impl AddLeftCongruenceBuiltinRuleProof {
 
 impl SubNonnegativeBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("SubNonnegative", OutputLanguage::English)
+        text(
+            "SubNonnegative",
+            "a-b ≥ 0",
+            "A difference is nonnegative under the stated premises",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "SubNonnegative",
+            "a-b ≥ 0",
+            "在所述前提下差非负",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -513,11 +609,19 @@ impl SubNonnegativeBuiltinRuleProof {
 
 impl MulLeftNonnegativeMonotoneBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("MulLeftNonnegativeMonotone", OutputLanguage::English)
+        text(
+            "MulLeftNonnegativeMonotone",
+            "× left monotone (≤)",
+            "Multiplying on the left by a nonnegative factor preserves ≤",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "MulLeftNonnegativeMonotone",
+            "左乘单调（≤）",
+            "左边乘以非负因子保持 ≤",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -530,11 +634,19 @@ impl MulLeftNonnegativeMonotoneBuiltinRuleProof {
 
 impl MulRightNonnegativeMonotoneBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("MulRightNonnegativeMonotone", OutputLanguage::English)
+        text(
+            "MulRightNonnegativeMonotone",
+            "× right monotone (≤)",
+            "Multiplying on the right by a nonnegative factor preserves ≤",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "MulRightNonnegativeMonotone",
+            "右乘单调（≤）",
+            "右边乘以非负因子保持 ≤",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -547,11 +659,19 @@ impl MulRightNonnegativeMonotoneBuiltinRuleProof {
 
 impl AbsLeFromSymmetricBoundsBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("AbsLeFromSymmetricBounds", OutputLanguage::English)
+        text(
+            "AbsLeFromSymmetricBounds",
+            "|x| ≤ M from ± bounds",
+            "Absolute value is bounded by M when -M ≤ x ≤ M",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "AbsLeFromSymmetricBounds",
+            "由 ± 界得 |x| ≤ M",
+            "当 -M ≤ x ≤ M 时，|x| ≤ M",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -564,11 +684,19 @@ impl AbsLeFromSymmetricBoundsBuiltinRuleProof {
 
 impl AbsLeImpliesUpperBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("AbsLeImpliesUpper", OutputLanguage::English)
+        text(
+            "AbsLeImpliesUpper",
+            "|x| ≤ M ⇒ x ≤ M",
+            "An absolute-value upper bound implies the same bound on x",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "AbsLeImpliesUpper",
+            "|x| ≤ M ⇒ x ≤ M",
+            "绝对值上界蕴含 x 的同样上界",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -581,11 +709,19 @@ impl AbsLeImpliesUpperBuiltinRuleProof {
 
 impl AbsLeImpliesNegUpperBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("AbsLeImpliesNegUpper", OutputLanguage::English)
+        text(
+            "AbsLeImpliesNegUpper",
+            "|x| ≤ M ⇒ -x ≤ M",
+            "An absolute-value upper bound implies the same bound on -x",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "AbsLeImpliesNegUpper",
+            "|x| ≤ M ⇒ -x ≤ M",
+            "绝对值上界蕴含 -x 的同样上界",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -598,11 +734,19 @@ impl AbsLeImpliesNegUpperBuiltinRuleProof {
 
 impl AbsSelfUpperBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("AbsSelfUpper", OutputLanguage::English)
+        text(
+            "AbsSelfUpper",
+            "x ≤ |x|",
+            "A quantity is at most its absolute value",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "AbsSelfUpper",
+            "x ≤ |x|",
+            "任何量都不大于其绝对值",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -615,11 +759,19 @@ impl AbsSelfUpperBuiltinRuleProof {
 
 impl AbsSelfLowerBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("AbsSelfLower", OutputLanguage::English)
+        text(
+            "AbsSelfLower",
+            "-|x| ≤ x",
+            "A quantity is at least the negation of its absolute value",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "AbsSelfLower",
+            "-|x| ≤ x",
+            "任何量都不小于其绝对值的相反数",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -632,11 +784,19 @@ impl AbsSelfLowerBuiltinRuleProof {
 
 impl AbsTriangleInequalityBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("AbsTriangleInequality", OutputLanguage::English)
+        text(
+            "AbsTriangleInequality",
+            "Triangle inequality",
+            "|a+b| ≤ |a|+|b|",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "AbsTriangleInequality",
+            "三角不等式",
+            "|a+b| ≤ |a|+|b|",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -649,11 +809,19 @@ impl AbsTriangleInequalityBuiltinRuleProof {
 
 impl AbsReverseTriangleAddBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("AbsReverseTriangleAdd", OutputLanguage::English)
+        text(
+            "AbsReverseTriangleAdd",
+            "Reverse triangle (|a|+|b|)",
+            "Reverse triangle inequality for absolute values of a sum",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "AbsReverseTriangleAdd",
+            "反向三角（|a|+|b|）",
+            "和的绝对值的反向三角不等式",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -666,11 +834,19 @@ impl AbsReverseTriangleAddBuiltinRuleProof {
 
 impl AbsReverseTriangleSubBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("AbsReverseTriangleSub", OutputLanguage::English)
+        text(
+            "AbsReverseTriangleSub",
+            "Reverse triangle (|a|-|b|)",
+            "Reverse triangle inequality for absolute values of a difference",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "AbsReverseTriangleSub",
+            "反向三角（|a|-|b|）",
+            "差的绝对值的反向三角不等式",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -683,11 +859,19 @@ impl AbsReverseTriangleSubBuiltinRuleProof {
 
 impl SumOfNonnegativesBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("SumOfNonnegatives", OutputLanguage::English)
+        text(
+            "SumOfNonnegatives",
+            "Sum of nonnegatives ≥ 0",
+            "A sum of nonnegative terms is nonnegative",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "SumOfNonnegatives",
+            "非负和 ≥ 0",
+            "非负项之和非负",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -700,11 +884,19 @@ impl SumOfNonnegativesBuiltinRuleProof {
 
 impl ProductOfNonnegativesBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("ProductOfNonnegatives", OutputLanguage::English)
+        text(
+            "ProductOfNonnegatives",
+            "Product of nonnegatives ≥ 0",
+            "A product of nonnegative factors is nonnegative",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "ProductOfNonnegatives",
+            "非负积 ≥ 0",
+            "非负因子之积非负",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -717,11 +909,19 @@ impl ProductOfNonnegativesBuiltinRuleProof {
 
 impl EvenPowNonnegativeBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("EvenPowNonnegative", OutputLanguage::English)
+        text(
+            "EvenPowNonnegative",
+            "Even power ≥ 0",
+            "An even power is nonnegative",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "EvenPowNonnegative",
+            "偶次幂 ≥ 0",
+            "偶次幂非负",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -734,11 +934,19 @@ impl EvenPowNonnegativeBuiltinRuleProof {
 
 impl PowNonnegFromPositiveBaseBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("PowNonnegFromPositiveBase", OutputLanguage::English)
+        text(
+            "PowNonnegFromPositiveBase",
+            "pow ≥ 0 (pos base)",
+            "A positive base raised to a real power is nonnegative where defined",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "PowNonnegFromPositiveBase",
+            "幂 ≥ 0（正底）",
+            "正底数的实数次幂在有定义时非负",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -751,11 +959,19 @@ impl PowNonnegFromPositiveBaseBuiltinRuleProof {
 
 impl PowNonnegFromNonnegBasePosIntExpBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("PowNonnegFromNonnegBasePosIntExp", OutputLanguage::English)
+        text(
+            "PowNonnegFromNonnegBasePosIntExp",
+            "pow ≥ 0 (nonneg base)",
+            "A nonnegative base to a positive integer power is nonnegative",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "PowNonnegFromNonnegBasePosIntExp",
+            "幂 ≥ 0（非负底）",
+            "非负底数的正整数次幂非负",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -768,11 +984,19 @@ impl PowNonnegFromNonnegBasePosIntExpBuiltinRuleProof {
 
 impl SqrtNonnegativeBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("SqrtNonnegative", OutputLanguage::English)
+        text(
+            "SqrtNonnegative",
+            "√ ≥ 0",
+            "Square root is nonnegative",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "SqrtNonnegative",
+            "√ ≥ 0",
+            "平方根非负",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -785,11 +1009,19 @@ impl SqrtNonnegativeBuiltinRuleProof {
 
 impl SqrtMonotoneNondecreasingBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("SqrtMonotoneNondecreasing", OutputLanguage::English)
+        text(
+            "SqrtMonotoneNondecreasing",
+            "√ monotone weak",
+            "Square root is nondecreasing on [0,∞)",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "SqrtMonotoneNondecreasing",
+            "√ 弱单调",
+            "平方根在 [0,∞) 上非减",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -827,11 +1059,19 @@ impl FromKnownInPositiveNaturalBuiltinRuleProof {
 
 impl LogOrderPreservingWeakBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("LogOrderPreservingWeak", OutputLanguage::English)
+        text(
+            "LogOrderPreservingWeak",
+            "log order weak",
+            "Log with base > 1 preserves ≤",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "LogOrderPreservingWeak",
+            "对数弱保序",
+            "底大于 1 的对数保持 ≤",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -844,11 +1084,19 @@ impl LogOrderPreservingWeakBuiltinRuleProof {
 
 impl LessEqualTransitivityBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("LessEqualTransitivity", OutputLanguage::English)
+        text(
+            "LessEqualTransitivity",
+            "≤ transitivity",
+            "Less-or-equal is transitive",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "LessEqualTransitivity",
+            "≤ 传递性",
+            "≤ 具有传递性",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -861,11 +1109,19 @@ impl LessEqualTransitivityBuiltinRuleProof {
 
 impl LessEqualFromNonnegDifferenceBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("LessEqualFromNonnegDifference", OutputLanguage::English)
+        text(
+            "LessEqualFromNonnegDifference",
+            "≤ from nonnegative difference",
+            "a ≤ b when b-a is nonnegative",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "LessEqualFromNonnegDifference",
+            "由非负差得 ≤",
+            "当 b-a 非负时 a ≤ b",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -878,11 +1134,19 @@ impl LessEqualFromNonnegDifferenceBuiltinRuleProof {
 
 impl NonnegDifferenceFromLessEqualBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("NonnegDifferenceFromLessEqual", OutputLanguage::English)
+        text(
+            "NonnegDifferenceFromLessEqual",
+            "b-a ≥ 0 from a ≤ b",
+            "Nonnegative difference follows from ≤",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "NonnegDifferenceFromLessEqual",
+            "由 a ≤ b 得 b-a ≥ 0",
+            "由 ≤ 得到非负差",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -895,11 +1159,19 @@ impl NonnegDifferenceFromLessEqualBuiltinRuleProof {
 
 impl ModRemainderNonnegativeBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("ModRemainderNonnegative", OutputLanguage::English)
+        text(
+            "ModRemainderNonnegative",
+            "mod remainder ≥ 0",
+            "Euclidean remainder is nonnegative",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "ModRemainderNonnegative",
+            "模余数 ≥ 0",
+            "欧几里得余数非负",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -912,11 +1184,19 @@ impl ModRemainderNonnegativeBuiltinRuleProof {
 
 impl DivMonotoneWeakSamePosDivisorBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("DivMonotoneWeakSamePosDivisor", OutputLanguage::English)
+        text(
+            "DivMonotoneWeakSamePosDivisor",
+            "÷ monotone weak (pos)",
+            "Division by the same positive divisor preserves ≤",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "DivMonotoneWeakSamePosDivisor",
+            "除法弱单调（正）",
+            "同除以正除数保持 ≤",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -929,11 +1209,19 @@ impl DivMonotoneWeakSamePosDivisorBuiltinRuleProof {
 
 impl FiniteSetSizeNonnegativeLeBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("FiniteSetSizeNonnegativeLe", OutputLanguage::English)
+        text(
+            "FiniteSetSizeNonnegativeLe",
+            "|S| ≥ 0 as ≤",
+            "Finite-set size is nonnegative (as ≤)",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "FiniteSetSizeNonnegativeLe",
+            "|S| ≥ 0（≤）",
+            "有限集大小非负（写成 ≤）",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -946,11 +1234,19 @@ impl FiniteSetSizeNonnegativeLeBuiltinRuleProof {
 
 impl FiniteSetSizeAtLeastOneLeBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("FiniteSetSizeAtLeastOneLe", OutputLanguage::English)
+        text(
+            "FiniteSetSizeAtLeastOneLe",
+            "|S| ≥ 1 as ≤",
+            "A nonempty finite set has size at least one (as ≤)",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "FiniteSetSizeAtLeastOneLe",
+            "|S| ≥ 1（≤）",
+            "非空有限集大小至少为 1（写成 ≤）",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -963,11 +1259,19 @@ impl FiniteSetSizeAtLeastOneLeBuiltinRuleProof {
 
 impl FiniteSetSizeSubsetLeBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("FiniteSetSizeSubsetLe", OutputLanguage::English)
+        text(
+            "FiniteSetSizeSubsetLe",
+            "|A| ≤ |B| from A⊆B",
+            "Subset relation implies a weak inequality on finite-set sizes",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "FiniteSetSizeSubsetLe",
+            "由 A⊆B 得 |A| ≤ |B|",
+            "子集关系蕴含有限集大小的弱不等式",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -980,11 +1284,19 @@ impl FiniteSetSizeSubsetLeBuiltinRuleProof {
 
 impl DivMonotoneWeakSameNegDivisorBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("DivMonotoneWeakSameNegDivisor", OutputLanguage::English)
+        text(
+            "DivMonotoneWeakSameNegDivisor",
+            "÷ monotone weak (neg)",
+            "Division by the same negative divisor reverses and preserves ≤",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "DivMonotoneWeakSameNegDivisor",
+            "除法弱单调（负）",
+            "同除以负除数反转并保持 ≤",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -997,11 +1309,19 @@ impl DivMonotoneWeakSameNegDivisorBuiltinRuleProof {
 
 impl LessEqualFromPosDivProductBoundBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("LessEqualFromPosDivProductBound", OutputLanguage::English)
+        text(
+            "LessEqualFromPosDivProductBound",
+            "≤ from positive divisor product",
+            "A product bound with positive divisor yields ≤",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "LessEqualFromPosDivProductBound",
+            "由正除数积得 ≤",
+            "正除数的积界给出 ≤",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1014,11 +1334,19 @@ impl LessEqualFromPosDivProductBoundBuiltinRuleProof {
 
 impl LessEqualFromPosDenomQuotientBoundBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("LessEqualFromPosDenomQuotientBound", OutputLanguage::English)
+        text(
+            "LessEqualFromPosDenomQuotientBound",
+            "≤ from positive-denom quotient",
+            "A quotient bound with positive denominator yields ≤",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "LessEqualFromPosDenomQuotientBound",
+            "由正分母商得 ≤",
+            "正分母的商界给出 ≤",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1031,11 +1359,19 @@ impl LessEqualFromPosDenomQuotientBoundBuiltinRuleProof {
 
 impl NumericLowerBoundWeakenLeBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("NumericLowerBoundWeakenLe", OutputLanguage::English)
+        text(
+            "NumericLowerBoundWeakenLe",
+            "Weaken numeric lower (≤)",
+            "A numeric lower bound weakens under ≤",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "NumericLowerBoundWeakenLe",
+            "放宽数值下界（≤）",
+            "数值下界在 ≤ 下可放宽",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1048,11 +1384,19 @@ impl NumericLowerBoundWeakenLeBuiltinRuleProof {
 
 impl NumericLowerBoundFromStrictPredecessorLeBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("NumericLowerBoundFromStrictPredecessorLe", OutputLanguage::English)
+        text(
+            "NumericLowerBoundFromStrictPredecessorLe",
+            "Lower bound via predecessor",
+            "A numeric lower bound follows from a strict predecessor comparison",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "NumericLowerBoundFromStrictPredecessorLe",
+            "由前驱得下界",
+            "由严格前驱比较得到数值下界",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1065,11 +1409,19 @@ impl NumericLowerBoundFromStrictPredecessorLeBuiltinRuleProof {
 
 impl NumericUpperBoundWeakenLeBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("NumericUpperBoundWeakenLe", OutputLanguage::English)
+        text(
+            "NumericUpperBoundWeakenLe",
+            "Weaken numeric upper (≤)",
+            "A numeric upper bound weakens under ≤",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "NumericUpperBoundWeakenLe",
+            "放宽数值上界（≤）",
+            "数值上界在 ≤ 下可放宽",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1082,11 +1434,19 @@ impl NumericUpperBoundWeakenLeBuiltinRuleProof {
 
 impl IntegerSuccessorLeBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("IntegerSuccessorLe", OutputLanguage::English)
+        text(
+            "IntegerSuccessorLe",
+            "n ≤ n+1",
+            "An integer is ≤ its successor",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "IntegerSuccessorLe",
+            "n ≤ n+1",
+            "整数 ≤ 其后继",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1099,11 +1459,19 @@ impl IntegerSuccessorLeBuiltinRuleProof {
 
 impl IntegerAdjacencyLeBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("IntegerAdjacencyLe", OutputLanguage::English)
+        text(
+            "IntegerAdjacencyLe",
+            "Integer adjacency ≤",
+            "Adjacent integers compare by ≤",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "IntegerAdjacencyLe",
+            "整数相邻 ≤",
+            "相邻整数按 ≤ 比较",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1116,11 +1484,19 @@ impl IntegerAdjacencyLeBuiltinRuleProof {
 
 impl IntegerPredecessorLeBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("IntegerPredecessorLe", OutputLanguage::English)
+        text(
+            "IntegerPredecessorLe",
+            "n-1 ≤ n",
+            "An integer predecessor is ≤ the integer",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "IntegerPredecessorLe",
+            "n-1 ≤ n",
+            "整数前驱 ≤ 该整数",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1133,11 +1509,19 @@ impl IntegerPredecessorLeBuiltinRuleProof {
 
 impl IntegerDiffAtLeastOneLeBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("IntegerDiffAtLeastOneLe", OutputLanguage::English)
+        text(
+            "IntegerDiffAtLeastOneLe",
+            "Integer gap ≥ 1",
+            "Distinct integers differ by at least one",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "IntegerDiffAtLeastOneLe",
+            "整数间隔 ≥ 1",
+            "不同整数至少相差 1",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1150,11 +1534,19 @@ impl IntegerDiffAtLeastOneLeBuiltinRuleProof {
 
 impl FiniteSetMaxMemberLeBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("FiniteSetMaxMemberLe", OutputLanguage::English)
+        text(
+            "FiniteSetMaxMemberLe",
+            "max member ≤",
+            "Every member of a finite set is ≤ its maximum",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "FiniteSetMaxMemberLe",
+            "元素 ≤ 最大值",
+            "有限集每个元素 ≤ 其最大值",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1167,11 +1559,19 @@ impl FiniteSetMaxMemberLeBuiltinRuleProof {
 
 impl FiniteSetMinMemberLeBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("FiniteSetMinMemberLe", OutputLanguage::English)
+        text(
+            "FiniteSetMinMemberLe",
+            "min ≤ member",
+            "The minimum of a finite set is ≤ every member",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "FiniteSetMinMemberLe",
+            "最小值 ≤ 元素",
+            "有限集最小值 ≤ 每个元素",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1184,11 +1584,19 @@ impl FiniteSetMinMemberLeBuiltinRuleProof {
 
 impl FiniteSetSizeUnionLeSumBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("FiniteSetSizeUnionLeSum", OutputLanguage::English)
+        text(
+            "FiniteSetSizeUnionLeSum",
+            "|A∪B| ≤ |A|+|B|",
+            "Finite-set union size is at most the sum of sizes",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "FiniteSetSizeUnionLeSum",
+            "|A∪B| ≤ |A|+|B|",
+            "有限并集大小不超过各大小之和",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
@@ -1201,11 +1609,19 @@ impl FiniteSetSizeUnionLeSumBuiltinRuleProof {
 
 impl FiniteSetSizeSurjectionCodomainLeDomainBuiltinRuleProof {
     pub fn rule_id_and_message_en(&self) -> BuiltinRuleText {
-        family_fallback("FiniteSetSizeSurjectionCodomainLeDomain", OutputLanguage::English)
+        text(
+            "FiniteSetSizeSurjectionCodomainLeDomain",
+            "|codomain| ≤ |domain|",
+            "A surjection implies the codomain is no larger than the domain",
+        )
     }
 
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        self.rule_id_and_message_en()
+        text(
+            "FiniteSetSizeSurjectionCodomainLeDomain",
+            "|值域| ≤ |定义域|",
+            "满射蕴含值域不大于定义域",
+        )
     }
 
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {

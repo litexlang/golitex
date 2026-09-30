@@ -93,24 +93,24 @@ Rules:
 - `success` is a bool (not `outcome` string).
 - Builtin why: print `rule_name` + `message` only (no `rule` / `rule_id` /
   `variant` in Normal JSON). Stable ids live inside `explain/` for tests.
-- Atomic builtin path: `rule.rule_id_and_message(lang)` on
-  `AtomicExceptEqualityFactSearchProofByBuiltinRule` (family enums / leaf
-  proofs implement the method under `explain/atomic_builtin_rule/`). Projection
-  does not hardcode rule-id strings. Equality uses the same method shape on
-  `EqualitySearchProofByBuiltinRule`.
+- Builtin why path: call `rule.rule_id_and_message(lang)` only.
+  - Atomic: `explain/atomic_builtin_rule/` (order/≠ leaves filled EN+ZH; other
+    families use bilingual family-level stubs until leaf modules are wired).
+  - Equality: `explain/equality_builtin_rule/` (top enum dispatches to each
+    leaf; every leaf + Calculation has EN+ZH).
+  Projection never matches on rule variants for copy text.
+- Non-builtin searched-proof routes (`builtin_strategy`, `by_definition`,
+  `equivalence_class`, …) use `explain/searched_proof_why.rs` so they also
+  emit `rule_name` + `message` (not a bare `type` tag).
 - All Chinese/English copy lives under `json_output/explain/` — verify/exec IR
   stays language-free. `OutputLanguage` comes from `LaunchCommand` (`-lang`).
 - Priority of explain coverage:
-  1. **English-first:** every Normal surface should have a complete English
-     `rule_name` + `message`. Chinese uses the same hooks (`OutputLanguage`,
-     `bilingual_*`) and falls back to English until a translation is filled.
-  2. `equality_calculation` — full EN/ZH
-  3. `equality_builtin` — every equality variant has English copy (+ ZH `None`
-     slots)
-  4. `atomic_common` — hot atomic membership/order rules (EN + ZH where done)
-  5. `stmt_why` + `project_stmt_catalog` — all stmt branches; by/thm/claim carry
-     stores when the exec result provides them
-  6. remaining Chinese copy is gradual (do not block English completeness)
+  1. Every Normal surface has English + Chinese `rule_name` / `message`
+     (stmt kinds, compound facts, searched-proof routes, equality leaves,
+     atomic order/≠ leaves, family stubs, Calculation).
+  2. Unwired atomic families (`InFact`, `Subset`, …) still use family-level
+     stubs until leaf modules are added; copy is bilingual.
+  3. Detailed remains a Normal fallback until its IR projector is finished.
 - `stores` / `infers` / `cite` / `statement` / `goal` use `readable_string`
   (IR with `#id#` wrappers stripped), not raw IR and not `fact_id`.
 - Cite may include `line` when the cited fact has a source line; omit `line` if unknown.
@@ -173,6 +173,7 @@ Fact success sketch:
 
 `language` is `en` or `zh` from `-lang` (default `en`). Builtin `rule_name` /
 `message` follow this language via `json_output/explain/`.
+
 ## API
 
 - `project_stmt_normal` / `project_run_normal` / `emit_run_normal`

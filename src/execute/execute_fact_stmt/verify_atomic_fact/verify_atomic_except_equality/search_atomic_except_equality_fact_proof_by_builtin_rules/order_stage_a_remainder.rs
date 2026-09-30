@@ -4,9 +4,7 @@
 //!
 //! One matcher ↔ one dedicated proof struct (see less_equal.rs / less.rs).
 
-use crate::ast::fact::{
-    AtomicFact, EqualFact, Fact, InFact, LessEqualFact, LessFact, NormalAtomicFact,
-};
+use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact, LessEqualFact, LessFact};
 use crate::ast::names::AtomicName;
 use crate::ast::obj::{
     Add, ArithmeticOperator, Div, FiniteSetMax, FiniteSetMin, FiniteSetSize, FiniteSetStat,
@@ -717,18 +715,8 @@ impl Runtime {
                 continue;
             };
             for known in knowns {
-                match known {
-                    AtomicFact::SurjectiveFact(f) => {
-                        out.push((f.fact_id, f.domain.clone(), f.codomain.clone()));
-                    }
-                    AtomicFact::NormalAtomicFact(NormalAtomicFact {
-                        fact_id,
-                        body,
-                        ..
-                    }) if body.len() == 3 => {
-                        out.push((*fact_id, body[0].clone(), body[1].clone()));
-                    }
-                    _ => {}
+                if let AtomicFact::SurjectiveFact(f) = known {
+                    out.push((f.fact_id, f.domain.clone(), f.codomain.clone()));
                 }
             }
         }

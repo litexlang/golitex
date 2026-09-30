@@ -1,23 +1,42 @@
 //! Project ExecStmtResult → Normal JSON (see README).
 
-use super::explain::{
-    explain_compound_fact_why,
-};
+use super::explain::{explain_compound_fact_why, explain_searched_proof_why};
 use super::helper::{
     array_of_strings, bool_value, builtin_rule_with_optional_cite, cite_forall_from_fact_id,
     cite_from_fact_id, empty_string_array, infer_fact_texts_from_store_and_infer, object,
     output_language, store_fact_texts, string,
 };
 use super::project_stmt_catalog::project_non_fact_stmt;
-use crate::ast::fact::AtomicFact;
+use crate::ast::fact::{AtomicFact, Fact};
+use crate::display_and_ir::readable_string_from_ir_text;
 use crate::execute::{ExecFactStmtResult, ExecStmtResult};
 
+use crate::execute::execute_fact_stmt::verify_and_fact::{
+    VerifyAndFactFailed, VerifyAndFactResult,
+};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::EqualitySearchProofByBuiltinRule;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::{
     AtomicExceptEqualityFactSearchedProof, EqualFactSearchedProof,
     VerifyAtomicExceptEqualityFactFailed, VerifyAtomicExceptEqualityFactResult,
     VerifyEqualityFailed, VerifyEqualityResult,
 };
+use crate::execute::execute_fact_stmt::verify_chain_fact::{
+    VerifyChainFactFailed, VerifyChainFactResult,
+};
+use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::{
+    VerifyExistShapedFactFailed, VerifyExistShapedFactResult, VerifyExistUniqueFactResult,
+    VerifyNotExistFactResult, VerifyPlainExistFactResult,
+};
+use crate::execute::execute_fact_stmt::verify_forall_fact::{
+    VerifyForallFactFailed, VerifyForallFactResult,
+};
+use crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::{
+    VerifyForallFactWithIffFailed, VerifyForallFactWithIffResult,
+};
+use crate::execute::execute_fact_stmt::verify_not_forall_fact::{
+    VerifyNotForallFactFailed, VerifyNotForallFactResult,
+};
+use crate::execute::execute_fact_stmt::verify_or_fact::{VerifyOrFactFailed, VerifyOrFactResult};
 use crate::execute::execute_fact_stmt::VerifyFactResult;
 use crate::knowledge_base::JsonValue;
 use crate::run::run_command_outcome::RunLitexCodeResult;
@@ -141,30 +160,112 @@ fn verify_goal_display(verify: &VerifyFactResult) -> String {
                 "<wd_failed>".into()
             }
         },
-        VerifyFactResult::AndFact(_) => "and …".into(),
-        VerifyFactResult::ChainFact(_) => "chain …".into(),
-        VerifyFactResult::OrFact(_) => "or …".into(),
-        VerifyFactResult::ExistShapedFact(_) => "exist …".into(),
-        VerifyFactResult::ForallFact(_) => "forall …".into(),
-        VerifyFactResult::ForallFactWithIff(_) => "forall … <=> …".into(),
-        VerifyFactResult::NotForall(_) => "not forall …".into(),
+        VerifyFactResult::AndFact(r) => match r.as_ref() {
+            VerifyAndFactResult::Success(s) => Fact::AndFact(s.fact.clone()).readable_string(),
+            VerifyAndFactResult::Failed(VerifyAndFactFailed::FailToSearchProof { fact, .. })
+            | VerifyAndFactResult::Failed(VerifyAndFactFailed::FailToVerifyWellDefined {
+                fact,
+                ..
+            }) => Fact::AndFact(fact.clone()).readable_string(),
+        },
+        VerifyFactResult::ChainFact(r) => match r.as_ref() {
+            VerifyChainFactResult::Success(s) => Fact::ChainFact(s.fact.clone()).readable_string(),
+            VerifyChainFactResult::Failed(VerifyChainFactFailed::FailToSearchProof { fact, .. })
+            | VerifyChainFactResult::Failed(VerifyChainFactFailed::FailToVerifyWellDefined {
+                fact,
+                ..
+            }) => Fact::ChainFact(fact.clone()).readable_string(),
+        },
+        VerifyFactResult::OrFact(r) => match r.as_ref() {
+            VerifyOrFactResult::Success(s) => Fact::OrFact(s.fact.clone()).readable_string(),
+            VerifyOrFactResult::Failed(VerifyOrFactFailed::FailToSearchProof { fact, .. }) => {
+                Fact::OrFact(fact.clone()).readable_string()
+            }
+            VerifyOrFactResult::Failed(VerifyOrFactFailed::FailToVerifyWellDefined(_)) => {
+                "<wd_failed>".into()
+            }
+        },
+        VerifyFactResult::ExistShapedFact(r) => exist_shaped_goal_display(r),
+        VerifyFactResult::ForallFact(r) => match r.as_ref() {
+            VerifyForallFactResult::Success(s) => {
+                Fact::ForallFact(s.fact.clone()).readable_string()
+            }
+            VerifyForallFactResult::Failed(VerifyForallFactFailed::FailToSearchProof {
+                fact, ..
+            }) => Fact::ForallFact(fact.clone()).readable_string(),
+            VerifyForallFactResult::Failed(VerifyForallFactFailed::FailToVerifyWellDefined(_)) => {
+                "<wd_failed>".into()
+            }
+        },
+        VerifyFactResult::ForallFactWithIff(r) => match r.as_ref() {
+            VerifyForallFactWithIffResult::Success(s) => {
+                Fact::ForallFactWithIff(s.fact.clone()).readable_string()
+            }
+            VerifyForallFactWithIffResult::Failed(
+                VerifyForallFactWithIffFailed::FailThenImpliesIff { fact, .. },
+            )
+            | VerifyForallFactWithIffResult::Failed(
+                VerifyForallFactWithIffFailed::FailIffImpliesThen { fact, .. },
+            ) => Fact::ForallFactWithIff(fact.clone()).readable_string(),
+        },
+        VerifyFactResult::NotForall(r) => match r.as_ref() {
+            VerifyNotForallFactResult::Success(s) => {
+                Fact::NotForall(s.fact.clone()).readable_string()
+            }
+            VerifyNotForallFactResult::Failed(VerifyNotForallFactFailed::UnsupportedNegation {
+                fact,
+            })
+            | VerifyNotForallFactResult::Failed(
+                VerifyNotForallFactFailed::FailToProveDerivedExist { fact, .. },
+            ) => Fact::NotForall(fact.clone()).readable_string(),
+        },
     }
 }
 
+fn exist_shaped_goal_display(r: &VerifyExistShapedFactResult) -> String {
+    let fact = match r {
+        VerifyExistShapedFactResult::PlainExistFact(VerifyPlainExistFactResult::Success(s)) => {
+            &s.fact
+        }
+        VerifyExistShapedFactResult::ExistUniqueFact(VerifyExistUniqueFactResult::Success(s)) => {
+            &s.fact
+        }
+        VerifyExistShapedFactResult::NotExistFact(VerifyNotExistFactResult::Success(s)) => &s.fact,
+        VerifyExistShapedFactResult::PlainExistFact(VerifyPlainExistFactResult::Failed(
+            VerifyExistShapedFactFailed::FailToSearchProof { fact, .. },
+        ))
+        | VerifyExistShapedFactResult::ExistUniqueFact(VerifyExistUniqueFactResult::Failed(
+            VerifyExistShapedFactFailed::FailToSearchProof { fact, .. },
+        ))
+        | VerifyExistShapedFactResult::NotExistFact(VerifyNotExistFactResult::Failed(
+            VerifyExistShapedFactFailed::FailToSearchProof { fact, .. },
+        )) => fact,
+        VerifyExistShapedFactResult::PlainExistFact(VerifyPlainExistFactResult::Failed(
+            VerifyExistShapedFactFailed::FailToVerifyWellDefined(_),
+        ))
+        | VerifyExistShapedFactResult::ExistUniqueFact(VerifyExistUniqueFactResult::Failed(
+            VerifyExistShapedFactFailed::FailToVerifyWellDefined(_),
+        ))
+        | VerifyExistShapedFactResult::NotExistFact(VerifyNotExistFactResult::Failed(
+            VerifyExistShapedFactFailed::FailToVerifyWellDefined(_),
+        )) => return "<wd_failed>".into(),
+    };
+    readable_string_from_ir_text(fact.ir().as_str())
+}
+
 fn why_verified(verify: &VerifyFactResult, runtime: &Runtime) -> JsonValue {
-    let lang = output_language(runtime);
     match verify {
         VerifyFactResult::AtomicExceptEquality(r) => match r.as_ref() {
             VerifyAtomicExceptEqualityFactResult::Success(s) => {
                 why_from_atomic_except_searched(&s.searched_proof, runtime)
             }
             VerifyAtomicExceptEqualityFactResult::Failed(_) => {
-                object(lang, vec![("type", string("failed"))])
+                searched_proof_why_json(runtime, "failed")
             }
         },
         VerifyFactResult::Equality(r) => match r.as_ref() {
             VerifyEqualityResult::Success(s) => why_from_equal_searched(&s.searched_proof, runtime),
-            VerifyEqualityResult::Failed(_) => object(lang, vec![("type", string("failed"))]),
+            VerifyEqualityResult::Failed(_) => searched_proof_why_json(runtime, "failed"),
         },
         VerifyFactResult::AndFact(_) => compound_why_json(runtime, "and"),
         VerifyFactResult::OrFact(_) => compound_why_json(runtime, "or"),
@@ -187,6 +288,16 @@ fn compound_why_json(runtime: &Runtime, kind: &str) -> JsonValue {
     ])
 }
 
+fn searched_proof_why_json(runtime: &Runtime, kind: &str) -> JsonValue {
+    let lang = output_language(runtime);
+    let text = explain_searched_proof_why(kind, lang);
+    object(lang, vec![
+        ("type", string(text.type_tag)),
+        ("rule_name", string(text.rule_name)),
+        ("message", string(text.message)),
+    ])
+}
+
 fn why_failed(verify: &VerifyFactResult, lang: crate::launch_command::OutputLanguage) -> JsonValue {
     if verify.is_wd_failed() {
         return object(lang, vec![("phase", string("well_defined"))]);
@@ -202,7 +313,6 @@ fn why_from_atomic_except_searched(
     searched: &AtomicExceptEqualityFactSearchedProof,
     runtime: &Runtime,
 ) -> JsonValue {
-    let lang = output_language(runtime);
     match searched {
         AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(p) => {
             cite_from_fact_id(runtime, p.cite_fact_id)
@@ -214,47 +324,46 @@ fn why_from_atomic_except_searched(
             why_from_atomic_builtin_rule(r, runtime)
         }
         AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(_) => {
-            object(lang, vec![("type", string("builtin_strategy"))])
+            searched_proof_why_json(runtime, "builtin_strategy")
         }
         AtomicExceptEqualityFactSearchedProof::ByDefinition(_) => {
-            object(lang, vec![("type", string("by_definition"))])
+            searched_proof_why_json(runtime, "by_definition")
         }
         AtomicExceptEqualityFactSearchedProof::ByKnownStrategy(_) => {
-            object(lang, vec![("type", string("known_strategy"))])
+            searched_proof_why_json(runtime, "known_strategy")
         }
         AtomicExceptEqualityFactSearchedProof::ByBuiltinRewrite(_) => {
-            object(lang, vec![("type", string("builtin_rewrite"))])
+            searched_proof_why_json(runtime, "builtin_rewrite")
         }
         AtomicExceptEqualityFactSearchedProof::ByKnownRewrite(_) => {
-            object(lang, vec![("type", string("known_rewrite"))])
+            searched_proof_why_json(runtime, "known_rewrite")
         }
     }
 }
 
 fn why_from_equal_searched(searched: &EqualFactSearchedProof, runtime: &Runtime) -> JsonValue {
-    let lang = output_language(runtime);
     match searched {
         EqualFactSearchedProof::ByBuiltinRule(r) => why_from_equal_builtin_rule(r, runtime),
         EqualFactSearchedProof::ByKnownForallFact(p) => {
             cite_forall_from_fact_id(runtime, p.cite.fact_id)
         }
         EqualFactSearchedProof::ByEquivalenceClass(_) => {
-            object(lang, vec![("type", string("equivalence_class"))])
+            searched_proof_why_json(runtime, "equivalence_class")
         }
         EqualFactSearchedProof::ByObjectDefinition(_) => {
-            object(lang, vec![("type", string("object_definition"))])
+            searched_proof_why_json(runtime, "object_definition")
         }
         EqualFactSearchedProof::ByBuiltinStrategy(_) => {
-            object(lang, vec![("type", string("builtin_strategy"))])
+            searched_proof_why_json(runtime, "builtin_strategy")
         }
         EqualFactSearchedProof::ByMatchingOneArgByOne(_) => {
-            object(lang, vec![("type", string("matching_one_arg_by_one"))])
+            searched_proof_why_json(runtime, "matching_one_arg_by_one")
         }
         EqualFactSearchedProof::ByKnownForallFactViaSymmetry(_) => {
-            object(lang, vec![("type", string("known_forall_via_symmetry"))])
+            searched_proof_why_json(runtime, "known_forall_via_symmetry")
         }
         EqualFactSearchedProof::ByBuiltinRewrite(_) => {
-            object(lang, vec![("type", string("builtin_rewrite"))])
+            searched_proof_why_json(runtime, "builtin_rewrite")
         }
     }
 }
@@ -274,11 +383,5 @@ fn why_from_equal_builtin_rule(
 ) -> JsonValue {
     let lang = output_language(runtime);
     let text = rule.rule_id_and_message(lang);
-    let cite = match rule {
-        EqualitySearchProofByBuiltinRule::EqualFromKnownDifferenceZero(p) => {
-            Some(p.cite_fact_id)
-        }
-        _ => None,
-    };
-    builtin_rule_with_optional_cite(runtime, &text, cite)
+    builtin_rule_with_optional_cite(runtime, &text, rule.cite_fact_id())
 }

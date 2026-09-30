@@ -62,6 +62,7 @@ pub enum ExecWitnessExistFactStmtFailed {
     WitnessCountMismatch,
     ExistFactWellDefined(FailToVerifyFactWellDefinedResult),
     WitnessObjWellDefined(VerifyObjWellDefinedResult),
+    IntroduceBinders(crate::execute::introduce_typed_parameters::IntroduceTypedParametersFailed),
     ProofBody(ProofBlockBodyFailed),
     WitnessType(VerifyFactResult),
     BodyCheck(VerifyFactResult),
@@ -142,6 +143,10 @@ impl Runtime {
     }
 
     // Shared by `witness exist` and `witness $P`: ambient WD, then local proof + obligations.
+    // Before the proof body, bind exist params and store `param = witness` so the
+    // body can mention binder names (legacy parity), e.g.
+    //   witness exist m R st {m = 0} from 0:
+    //       m = 0
     pub(in crate::execute) fn run_witness_exist_with_proof(
         &mut self,
         exist_fact: &ExistShapedFact,
@@ -158,13 +163,7 @@ impl Runtime {
             ExecWitnessExistFactStmtFailed,
         >,
     > {
-        let verify_state = VerifyState {
-            can_use_builtin_rule: true,
-            can_use_def_and_known_forall_and_known_strategy: true,
-            can_use_rewrite: true,
-            store_well_defined_fact: true,
-                    builtin_strategy_depth_remaining: VerifyState::BUILTIN_STRATEGY_DEPTH_LIMIT,
-};
+        let verify_state = VerifyState::top_level();
 
         let plain = match exist_fact {
             ExistShapedFact::Exist(p) | ExistShapedFact::ExistUnique(p) => p,
@@ -193,6 +192,31 @@ impl Runtime {
 
         let need_uniqueness = matches!(exist_fact, ExistShapedFact::ExistUnique(_));
         let (local_outcome, local_env) = self.run_in_local_env_and_take_env(|rt| {
+            match rt.introduce_typed_parameters(&plain.typed_parameters, verify_state.clone())? {
+                Ok(_) => {}
+                Err(failed) => {
+                    return Ok(Err(ExecWitnessExistFactStmtFailed::IntroduceBinders(failed)));
+                }
+            }
+            {
+                let mut witness_index = 0;
+                for group in &plain.typed_parameters.groups {
+                    for param in &group.params {
+                        let witness = &equal_tos[witness_index];
+                        witness_index += 1;
+                        let left = Obj::Identifier(rt.identifier_obj_for_stored_mention(param));
+                        let equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(
+                            crate::ast::fact::EqualFact {
+                                fact_id: rt.global_ids.allocate_fact_id(),
+                                left,
+                                right: witness.clone(),
+                                line_file: plain.line_file.clone(),
+                            },
+                        ));
+                        rt.store_fact_and_infer(&equal_fact)?;
+                    }
+                }
+            }
             let proof_steps = match run_proof_body_stmts(rt, proof)? {
                 Ok(steps) => steps,
                 Err(failed) => {

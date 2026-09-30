@@ -88,7 +88,6 @@ fn dispatch_stored_algo(
         can_use_def_and_known_forall_and_known_strategy: true,
         can_use_rewrite: true,
         store_well_defined_fact: false,
-                builtin_strategy_depth_remaining: VerifyState::BUILTIN_STRATEGY_DEPTH_LIMIT,
 };
     match algo {
         StoredDefAlgo::ByCases(stmt) => {

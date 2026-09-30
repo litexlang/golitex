@@ -81,7 +81,6 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: false,
             can_use_rewrite: false,
             store_well_defined_fact: false,
-                    builtin_strategy_depth_remaining: 0,
 };
 
         let mut subst: HashMap<IdentifierId, Obj> = HashMap::new();
@@ -119,7 +118,6 @@ impl Runtime {
             can_use_def_and_known_forall_and_known_strategy: false,
             can_use_rewrite: false,
             store_well_defined_fact: false,
-                    builtin_strategy_depth_remaining: 0,
 };
 
         let mut guard = 0;

@@ -1,11 +1,11 @@
 use crate::ast::fact::{
-    atomic_fact_args_ref, AtomicFact, Fact, GreaterEqualFact, GreaterFact, InFact, IsFiniteSetFact,
+    atomic_fact_args_ref, AtomicFact, Fact, GreaterFact, InFact, IsFiniteSetFact,
     IsNonemptySetFact, LessEqualFact, LessFact, NotEqualFact, NotInFact, SubsetFact,
 };
 use crate::ast::line_file::SourceLine;
 use crate::ast::obj::{Literal, Number, Obj};
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
-use crate::execute::execute_fact_stmt::VerifyState;
+use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
 use crate::runtime::{Runtime, RuntimeResult};
 use std::cell::RefCell;
 
@@ -74,17 +74,16 @@ pub(super) fn is_zero_obj(obj: &Obj) -> bool {
 
 
 impl Runtime {
-    pub(super) fn verify_strategy_requirements(
+    // Prove strategy premises inside StrategySearch: known + nested strategy only.
+    pub(crate) fn verify_strategy_requirements(
         &mut self,
         requirement_facts: Vec<Fact>,
-        verify_state: VerifyState,
+        ctx: StrategySearch,
     ) -> RuntimeResult<Option<(Vec<Fact>, Vec<VerifyFactResult>)>> {
-        // Strategy children: nested strategy allowed while depth remains;
-        // rewrite stays off (see VerifyState::after_strategy).
-        let child_state = verify_state.after_strategy();
+        let child = ctx.after_layer();
         let mut proof_of_requirement_facts = Vec::with_capacity(requirement_facts.len());
         for requirement in &requirement_facts {
-            let proof = self.verify_fact(requirement, child_state.clone())?;
+            let proof = self.verify_fact_in_strategy(requirement, child)?;
             if proof.is_failed() {
                 return Ok(None);
             }
@@ -93,13 +92,13 @@ impl Runtime {
         Ok(Some((requirement_facts, proof_of_requirement_facts)))
     }
 
-    pub(super) fn try_strategy_requirement_alternatives(
+    pub(crate) fn try_strategy_requirement_alternatives(
         &mut self,
         alternatives: Vec<Vec<Fact>>,
-        verify_state: VerifyState,
+        ctx: StrategySearch,
     ) -> RuntimeResult<Option<(Vec<Fact>, Vec<VerifyFactResult>)>> {
         for required in alternatives {
-            if let Some(ok) = self.verify_strategy_requirements(required, verify_state.clone())? {
+            if let Some(ok) = self.verify_strategy_requirements(required, ctx)? {
                 return Ok(Some(ok));
             }
         }

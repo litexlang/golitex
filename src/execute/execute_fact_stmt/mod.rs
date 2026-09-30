@@ -4,6 +4,7 @@
 
 mod exec_fact_stmt;
 mod result;
+mod strategy_search;
 mod verify;
 pub mod verify_and_fact;
 pub mod verify_atomic_fact;
@@ -12,6 +13,7 @@ pub mod verify_exist_shaped_fact;
 mod verify_fact_result;
 pub mod verify_forall_fact;
 pub mod verify_forall_fact_with_iff;
+mod verify_in_strategy;
 pub mod verify_not_forall_fact;
 pub mod verify_or_fact;
 mod verify_state;
@@ -36,6 +38,7 @@ pub use verify_or_fact::{
     OrBuiltinRealLineTrichotomyLessEqGreater, OrFactSearchProofByBuiltinRule,
     OrFactSearchedProof, VerifyOrFactFailed, VerifyOrFactResult, VerifyOrFactSuccess,
 };
+pub use strategy_search::StrategySearch;
 pub use verify_state::VerifyState;
 pub use well_defined_results::{
     fail_to_verify_obj_well_defined_others, AtomicFactWellDefinedProof, EqualFactWellDefinedProof,

@@ -8,10 +8,17 @@
 
 # The group setting supplies one carrier, multiplication, identity, inverse,
 # and the standard group laws to every theorem that names it.
-setting GroupSetting(A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A):
-    forall u, v, w A:
+# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
+# Former: setting GroupSetting(A nonempty_set, mul fn(x, y A) A, one A, inv fn(x A) A):
+struct GroupSetting:
+    A nonempty_set
+    mul fn(x, y A) A
+    one A
+    inv fn(x A) A
+    <=>:
+        forall u, v, w A:
         mul(mul(u, v), w) = mul(u, mul(v, w))
-    forall u A:
+        forall u A:
         mul(one, u) = u
         mul(u, one) = u
         mul(inv(u), u) = one
@@ -50,8 +57,15 @@ prop is_group_homomorphism([GroupSetting(A, mul_A, one_A, inv_A)], [GroupSetting
 
 # A homomorphism setting combines its source and target groups with the single
 # multiplication-preservation law used by downstream theorems.
-setting GroupHomomorphismSetting([GroupSetting(A, mul_A, one_A, inv_A)], [GroupSetting(B, mul_B, one_B, inv_B)], f fn(x A) B):
-    forall x, y A:
+# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
+# Former: setting GroupHomomorphismSetting([GroupSetting(A, mul_A, one_A, inv_A)], [GroupSetting(B, mul_B, one_B, inv_B)], f fn(x A) B):
+struct GroupHomomorphismSetting:
+    # former parent setting ref: [GroupSetting(A, mul_A, one_A, inv_A)]
+    # former parent setting ref: [GroupSetting(B, mul_B, one_B, inv_B)]
+    f fn(x A) B
+    _todo_placeholder set
+    <=>:
+        forall x, y A:
         f(mul_A(x, y)) = mul_B(f(x), f(y))
 
 thm homomorphism_maps_identity:
@@ -119,16 +133,25 @@ thm kernel_is_normal_subgroup:
 # The setting records the familiar additive and multiplicative laws. The two
 # zero-multiplication equations are kept in the operational interface because
 # every quotient and domain proof below consumes them directly.
-setting CommutativeRingSetting(A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A):
-    forall x, y, z A:
+# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
+# Former: setting CommutativeRingSetting(A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A):
+struct CommutativeRingSetting:
+    A nonempty_set
+    add fn(x, y A) A
+    zero A
+    neg fn(x A) A
+    mul fn(x, y A) A
+    one A
+    <=>:
+        forall x, y, z A:
         add(add(x, y), z) = add(x, add(y, z))
         mul(mul(x, y), z) = mul(x, mul(y, z))
         mul(x, add(y, z)) = add(mul(x, y), mul(x, z))
         mul(add(x, y), z) = add(mul(x, z), mul(y, z))
-    forall x, y A:
+        forall x, y A:
         add(x, y) = add(y, x)
         mul(x, y) = mul(y, x)
-    forall x A:
+        forall x A:
         add(zero, x) = x
         add(x, zero) = x
         add(x, neg(x)) = zero
@@ -137,18 +160,25 @@ setting CommutativeRingSetting(A nonempty_set, add fn(x, y A) A, zero A, neg fn(
         mul(x, one) = x
         mul(zero, x) = zero
         mul(x, zero) = zero
-    neg(zero) = zero
+        neg(zero) = zero
 
 prop is_commutative_ring([CommutativeRingSetting])
 
-setting RingHomomorphismSetting([CommutativeRingSetting(A, add_A, zero_A, neg_A, mul_A, one_A)], [CommutativeRingSetting(B, add_B, zero_B, neg_B, mul_B, one_B)], map fn(x A) B):
-    forall x, y A:
+# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
+# Former: setting RingHomomorphismSetting([CommutativeRingSetting(A, add_A, zero_A, neg_A, mul_A, one_A)], [CommutativeRingSetting(B, add_B, zero_B, neg_B, mul_B, one_B)], map fn(x A) B):
+struct RingHomomorphismSetting:
+    # former parent setting ref: [CommutativeRingSetting(A, add_A, zero_A, neg_A, mul_A, one_A)]
+    # former parent setting ref: [CommutativeRingSetting(B, add_B, zero_B, neg_B, mul_B, one_B)]
+    map fn(x A) B
+    _todo_placeholder set
+    <=>:
+        forall x, y A:
         map(add_A(x, y)) = add_B(map(x), map(y))
         map(mul_A(x, y)) = mul_B(map(x), map(y))
-    forall x A:
+        forall x A:
         map(neg_A(x)) = neg_B(map(x))
-    map(zero_A) = zero_B
-    map(one_A) = one_B
+        map(zero_A) = zero_B
+        map(one_A) = one_B
 
 prop is_ring_homomorphism([RingHomomorphismSetting])
 
@@ -185,15 +215,21 @@ prop is_field([CommutativeRingSetting]):
 
 # A quotient ring is represented by the universal data actually used below:
 # a surjective ring homomorphism whose kernel is exactly the chosen ideal.
-setting QuotientRingPresentationSetting([RingHomomorphismSetting], I power_set(A)):
-    $is_ideal(A, add_A, zero_A, neg_A, mul_A, one_A, I)
-    forall kernel_element I:
+# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
+# Former: setting QuotientRingPresentationSetting([RingHomomorphismSetting], I power_set(A)):
+struct QuotientRingPresentationSetting:
+    # former parent setting ref: [RingHomomorphismSetting]
+    I power_set(A)
+    _todo_placeholder set
+    <=>:
+        $is_ideal(A, add_A, zero_A, neg_A, mul_A, one_A, I)
+        forall kernel_element I:
         map(kernel_element) = zero_B
-    forall x A:
+        forall x A:
         map(x) = zero_B
         =>:
-            x $in I
-    forall quotient_element B:
+        x $in I
+        forall quotient_element B:
         exist representative A st {map(representative) = quotient_element}
 
 prop is_quotient_ring_presentation([QuotientRingPresentationSetting])

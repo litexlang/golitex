@@ -56,11 +56,33 @@ struct VectorSpace<K nonempty_set, field &Field<K>, V nonempty_set>:
 
 # Settings name recurring theorem contexts. The mathematical data and laws
 # remain owned by the declaration-typed struct values above.
-setting FieldSetting(K nonempty_set, field &Field<K>)
+# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
+# Former: setting FieldSetting(K nonempty_set, field &Field<K>)
+struct FieldSetting:
+    K nonempty_set
+    field &Field<K>
 
-setting VectorSpaceSetting([FieldSetting(K, field)], V nonempty_set, space &VectorSpace<K, field, V>)
+# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
+# Former: setting VectorSpaceSetting([FieldSetting(K, field)], V nonempty_set, space &VectorSpace<K, field, V>)
+struct VectorSpaceSetting:
+    # former parent setting ref: [FieldSetting(K, field)]
+    V nonempty_set
+    space &VectorSpace<K
+    field
+    V>
 
-setting VectorSpacesSetting([FieldSetting(K, field)], V, W nonempty_set, source &VectorSpace<K, field, V>, target &VectorSpace<K, field, W>)
+# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
+# Former: setting VectorSpacesSetting([FieldSetting(K, field)], V, W nonempty_set, source &VectorSpace<K, field, V>, target &VectorSpace<K, field, W>)
+struct VectorSpacesSetting:
+    # former parent setting ref: [FieldSetting(K, field)]
+    V
+    W nonempty_set
+    source &VectorSpace<K
+    field
+    V>
+    target &VectorSpace<K
+    field
+    W>
 
 # Any element acting as a left additive identity must equal the stored zero.
 thm additive_identity_unique:
@@ -156,8 +178,14 @@ prop is_linear_map([VectorSpacesSetting], T fn(v V) W):
         T(source.smul(a, v)) = target.smul(a, T(v))
 
 # A linear-map setting extends the two-space context with linearity of T.
-setting LinearMapSetting([VectorSpacesSetting], T fn(v V) W):
-    $is_linear_map(K, field, V, W, source, target, T)
+# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
+# Former: setting LinearMapSetting([VectorSpacesSetting], T fn(v V) W):
+struct LinearMapSetting:
+    # former parent setting ref: [VectorSpacesSetting]
+    T fn(v V) W
+    _todo_placeholder set
+    <=>:
+        $is_linear_map(K, field, V, W, source, target, T)
 
 # A subspace contains zero and is closed under vector addition and scalar action.
 prop is_subspace([VectorSpaceSetting], U power_set(V)):

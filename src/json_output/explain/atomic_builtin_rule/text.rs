@@ -1,9 +1,4 @@
-use crate::json_output::explain::fallback::{fallback_builtin_rule_text, BuiltinRuleText};
-use crate::launch_command::OutputLanguage;
-
-pub(super) fn family_fallback(rule_id: &'static str, lang: OutputLanguage) -> BuiltinRuleText {
-    fallback_builtin_rule_text(rule_id, lang)
-}
+use crate::json_output::explain::fallback::BuiltinRuleText;
 
 pub(super) fn text(
     rule_id: &'static str,

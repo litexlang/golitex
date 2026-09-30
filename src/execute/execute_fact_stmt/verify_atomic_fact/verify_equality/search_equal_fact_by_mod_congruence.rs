@@ -1,7 +1,7 @@
 use super::by_builtin_strategy_result::ModCongruenceStrategySingleStep;
-use crate::ast::fact::{EqualFact, Fact};
+use crate::ast::fact::EqualFact;
 use crate::ast::obj::{Mod, Obj, ArithmeticOperator, IntegerOperator};
-use crate::execute::execute_fact_stmt::VerifyState;
+use crate::execute::execute_fact_stmt::strategy_search::StrategySearch;
 use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
@@ -10,7 +10,7 @@ impl Runtime {
     pub fn search_equal_fact_by_mod_congruence(
         &mut self,
         fact: &EqualFact,
-        verify_state: VerifyState,
+        ctx: StrategySearch,
     ) -> RuntimeResult<Option<ModCongruenceStrategySingleStep>> {
         let (Obj::IntegerOperator(IntegerOperator::Mod(left_mod)), Obj::IntegerOperator(IntegerOperator::Mod(right_mod))) = (&fact.left, &fact.right) else {
             return Ok(None);
@@ -31,41 +31,35 @@ impl Runtime {
             _ => return Ok(None),
         };
 
-        let child_state = verify_state.without_well_defined_storage();
-        let mut requirement_facts = Vec::with_capacity(3);
-        let mut proof_of_requirement_facts = Vec::with_capacity(3);
-
-        let modulus_goal: Fact = EqualFact {
-            fact_id: self.global_ids.allocate_fact_id(),
-            left: left_mod.right.as_ref().clone(),
-            right: right_mod.right.as_ref().clone(),
-            line_file: fact.line_file.clone(),
-        }
-        .into();
-        let modulus_proof = self.verify_fact(&modulus_goal, child_state.clone())?;
-        if modulus_proof.is_failed() {
-            return Ok(None);
-        }
-        requirement_facts.push(modulus_goal);
-        proof_of_requirement_facts.push(modulus_proof);
-
         let left_modulus = left_mod.right.as_ref();
         let right_modulus = right_mod.right.as_ref();
-        for (left_op, right_op) in pairs {
-            let child: Fact = EqualFact {
+        let mut requirements = Vec::with_capacity(3);
+        requirements.push(
+            EqualFact {
                 fact_id: self.global_ids.allocate_fact_id(),
-                left: residue_mod(&left_op, left_modulus),
-                right: residue_mod(&right_op, right_modulus),
+                left: left_mod.right.as_ref().clone(),
+                right: right_mod.right.as_ref().clone(),
                 line_file: fact.line_file.clone(),
             }
-            .into();
-            let proof = self.verify_fact(&child, child_state.clone())?;
-            if proof.is_failed() {
-                return Ok(None);
-            }
-            requirement_facts.push(child);
-            proof_of_requirement_facts.push(proof);
+            .into(),
+        );
+        for (left_op, right_op) in pairs {
+            requirements.push(
+                EqualFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: residue_mod(&left_op, left_modulus),
+                    right: residue_mod(&right_op, right_modulus),
+                    line_file: fact.line_file.clone(),
+                }
+                .into(),
+            );
         }
+
+        let Some((requirement_facts, proof_of_requirement_facts)) =
+            self.verify_strategy_requirements(requirements, ctx)?
+        else {
+            return Ok(None);
+        };
 
         Ok(Some(ModCongruenceStrategySingleStep {
             requirement_facts,

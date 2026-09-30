@@ -6,11 +6,10 @@ use super::result::{
     ExecReleaseAxiomOfChoiceStmtSuccess,
 };
 use crate::ast::fact::{
-    AtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact, IsNonemptySetFact, IsSetFact, NormalAtomicFact,
-    PlainExistFact, QuantifierFreeFact,
+    AtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact, IsChoiceFunctionForFact,
+    IsNonemptySetFact, IsSetFact, PlainExistFact, QuantifierFreeFact,
 };
 use crate::ast::line_file::SourceLine;
-use crate::ast::names::AtomicName;
 use crate::ast::obj::{AnonymousFn, FamilyUnion, FnSet, IdentifierObj, Obj, FunctionSpace, SetOperator};
 use crate::ast::param::{
     ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup, TypedParameterList,
@@ -145,13 +144,14 @@ fn ac_exist_fact(runtime: &mut Runtime, family: &Obj, line_file: &SourceLine) ->
         },
         equal_to: Box::new(id_val),
     }));
-    let named: AtomicFact = NormalAtomicFact {
+    let named = AtomicFact::IsChoiceFunctionForFact(IsChoiceFunctionForFact {
         fact_id: runtime.global_ids.allocate_fact_id(),
-        predicate: AtomicName::plain("is_choice_function_for".to_string()),
-        body: vec![family.clone(), family.clone(), identity, f_obj],
+        index: family.clone(),
+        set: family.clone(),
+        family: identity,
+        choice: f_obj,
         line_file: Some(line_file.clone()),
-    }
-    .into();
+    });
     Fact::ExistFact(PlainExistFact {
         fact_id: runtime.global_ids.allocate_fact_id(),
         typed_parameters: TypedParameterList {
