@@ -18,6 +18,11 @@ pub(super) fn object(lang: OutputLanguage, entries: Vec<(&str, JsonValue)>) -> J
     JsonValue::Object(map)
 }
 
+/// Same as `object`, language taken from Runtime (`-lang`).
+pub(super) fn object_for(runtime: &Runtime, entries: Vec<(&str, JsonValue)>) -> JsonValue {
+    object(output_language(runtime), entries)
+}
+
 pub(super) fn string(s: impl Into<String>) -> JsonValue {
     JsonValue::String(s.into())
 }

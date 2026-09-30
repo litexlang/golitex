@@ -1,11 +1,11 @@
 //! Generated Obj WD by-def projection. Prefer regenerating via scripts if shapes change.
-use super::store::{project_local_env_summary, project_verify_facts};
+use super::store::{project_verify_facts};
 use super::wd::{project_fact_wd_proof, project_obj_wd_proof};
 use crate::ast::obj::Obj;
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
     ObjWellDefinedProof, ObjWellDefinedProofByDef, *,
 };
-use crate::json_output::helper::{object, string};
+use crate::json_output::helper::{object_for, string};
 use crate::knowledge_base::JsonValue;
 use crate::runtime::Runtime;
 
@@ -18,7 +18,7 @@ fn project_common_by_def(
     runtime: &Runtime,
 ) -> JsonValue {
     let child_json: Vec<JsonValue> = children.iter().map(|c| project_obj_wd_proof(c, runtime)).collect();
-    object(vec![
+    object_for(runtime, vec![
         ("type", string("by_def")),
         ("family", string(family)),
         ("kind", string(kind)),
@@ -64,19 +64,19 @@ pub(super) fn project_obj_wd_by_def(obj: &Obj, proof: &ObjWellDefinedProofByDef,
             ];
             if let Some(domain) = &p.domain_fn_set {
                 let d = match domain {
-                    FnObjDomainFnSetEvidence::InFunctionSet { fn_set, fact_id } => object(vec![
+                    FnObjDomainFnSetEvidence::InFunctionSet { fn_set, fact_id } => object_for(runtime, vec![
                         ("type", string("in_function_set")),
                         ("fn_set", string(crate::display_and_ir::readable_string_from_ir_text(fn_set.ir().as_str()))),
                         ("fact_id", string(fact_id.to_string())),
                     ]),
-                    FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set } => object(vec![
+                    FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set } => object_for(runtime, vec![
                         ("type", string("anonymous_literal")),
                         ("fn_set", string(crate::display_and_ir::readable_string_from_ir_text(fn_set.ir().as_str()))),
                     ]),
                 };
                 entries.push(("domain_fn_set", d));
             }
-            object(entries)
+            object_for(runtime, entries)
         },
         ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(p)) => {
             let mut entries = vec![
@@ -86,23 +86,21 @@ pub(super) fn project_obj_wd_by_def(obj: &Obj, proof: &ObjWellDefinedProofByDef,
                 ("dom_fact_well_defined", JsonValue::Array(p.dom_fact_well_defined.iter().map(|f| project_fact_wd_proof(f, runtime)).collect())),
                 ("ret_set_well_defined", project_obj_wd_proof(&p.ret_set_well_defined, runtime)),
                 ("body_well_defined", project_obj_wd_proof(&p.body_well_defined, runtime)),
-                ("local_env", project_local_env_summary(&p.local_env, runtime)),
-            ];
+                            ];
             if let Some(body_in) = &p.body_in_ret_set {
                 entries.push(("body_in_ret_set", super::verify::project_verify_fact(body_in, runtime)));
             }
-            object(entries)
+            object_for(runtime, entries)
         },
         ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::FnRange(p)) => project_common_by_def(obj, "FunctionSpace", "FnRange", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
-        ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::FnSet(p)) => object(vec![
+        ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::FnSet(p)) => object_for(runtime, vec![
             ("type", string("by_def")), ("family", string("FunctionSpace")), ("kind", string("FnSet")),
             ("obj", string(obj.readable_string())),
             ("param_type_well_defined", JsonValue::Array(p.param_type_well_defined.iter().map(|c| project_obj_wd_proof(c, runtime)).collect())),
             ("dom_fact_well_defined", JsonValue::Array(p.dom_fact_well_defined.iter().map(|f| project_fact_wd_proof(f, runtime)).collect())),
             ("ret_set_well_defined", project_obj_wd_proof(&p.ret_set_well_defined, runtime)),
-            ("local_env", project_local_env_summary(&p.local_env, runtime)),
-        ]),
-        ObjWellDefinedProofByDef::Identifier(p) => { let _ = p; object(vec![("type", string("by_def")), ("family", string("Identifier")), ("kind", string("Identifier")), ("obj", string(obj.readable_string()))]) },
+                    ]),
+        ObjWellDefinedProofByDef::Identifier(p) => { let _ = p; object_for(runtime, vec![("type", string("by_def")), ("family", string("Identifier")), ("kind", string("Identifier")), ("obj", string(obj.readable_string()))]) },
         ObjWellDefinedProofByDef::InstantiatedTemplateObj(p) => project_common_by_def(obj, "InstantiatedTemplateObj", "InstantiatedTemplateObj", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
         ObjWellDefinedProofByDef::IntegerOperator(IntegerOperatorObjWellDefinedProofByDef::Factorial(p)) => project_common_by_def(obj, "IntegerOperator", "Factorial", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
         ObjWellDefinedProofByDef::IntegerOperator(IntegerOperatorObjWellDefinedProofByDef::Gcd(p)) => project_common_by_def(obj, "IntegerOperator", "Gcd", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
@@ -115,18 +113,18 @@ pub(super) fn project_obj_wd_by_def(obj: &Obj, proof: &ObjWellDefinedProofByDef,
         ObjWellDefinedProofByDef::IteratedOperator(IteratedOperatorObjWellDefinedProofByDef::Reduce(p)) => project_common_by_def(obj, "IteratedOperator", "Reduce", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
         ObjWellDefinedProofByDef::IteratedOperator(IteratedOperatorObjWellDefinedProofByDef::Sum(p)) => project_common_by_def(obj, "IteratedOperator", "Sum", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
         ObjWellDefinedProofByDef::IteratedOperator(IteratedOperatorObjWellDefinedProofByDef::SumOfFiniteSet(p)) => project_common_by_def(obj, "IteratedOperator", "SumOfFiniteSet", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
-        ObjWellDefinedProofByDef::Literal(LiteralObjWellDefinedProofByDef::EulerNumber(p)) => { let _ = p; object(vec![("type", string("by_def")), ("family", string("Literal")), ("kind", string("EulerNumber")), ("obj", string(obj.readable_string()))]) },
-        ObjWellDefinedProofByDef::Literal(LiteralObjWellDefinedProofByDef::ImaginaryUnit(p)) => { let _ = p; object(vec![("type", string("by_def")), ("family", string("Literal")), ("kind", string("ImaginaryUnit")), ("obj", string(obj.readable_string()))]) },
-        ObjWellDefinedProofByDef::Literal(LiteralObjWellDefinedProofByDef::Number(p)) => { let _ = p; object(vec![("type", string("by_def")), ("family", string("Literal")), ("kind", string("Number")), ("obj", string(obj.readable_string()))]) },
-        ObjWellDefinedProofByDef::Literal(LiteralObjWellDefinedProofByDef::Pi(p)) => { let _ = p; object(vec![("type", string("by_def")), ("family", string("Literal")), ("kind", string("Pi")), ("obj", string(obj.readable_string()))]) },
+        ObjWellDefinedProofByDef::Literal(LiteralObjWellDefinedProofByDef::EulerNumber(p)) => { let _ = p; object_for(runtime, vec![("type", string("by_def")), ("family", string("Literal")), ("kind", string("EulerNumber")), ("obj", string(obj.readable_string()))]) },
+        ObjWellDefinedProofByDef::Literal(LiteralObjWellDefinedProofByDef::ImaginaryUnit(p)) => { let _ = p; object_for(runtime, vec![("type", string("by_def")), ("family", string("Literal")), ("kind", string("ImaginaryUnit")), ("obj", string(obj.readable_string()))]) },
+        ObjWellDefinedProofByDef::Literal(LiteralObjWellDefinedProofByDef::Number(p)) => { let _ = p; object_for(runtime, vec![("type", string("by_def")), ("family", string("Literal")), ("kind", string("Number")), ("obj", string(obj.readable_string()))]) },
+        ObjWellDefinedProofByDef::Literal(LiteralObjWellDefinedProofByDef::Pi(p)) => { let _ = p; object_for(runtime, vec![("type", string("by_def")), ("family", string("Literal")), ("kind", string("Pi")), ("obj", string(obj.readable_string()))]) },
         ObjWellDefinedProofByDef::ProductShape(ProductShapeObjWellDefinedProofByDef::Cart(p)) => project_common_by_def(obj, "ProductShape", "Cart", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
-        ObjWellDefinedProofByDef::ProductShape(ProductShapeObjWellDefinedProofByDef::CartDim(p)) => object(vec![
+        ObjWellDefinedProofByDef::ProductShape(ProductShapeObjWellDefinedProofByDef::CartDim(p)) => object_for(runtime, vec![
             ("type", string("by_def")), ("family", string("ProductShape")), ("kind", string("CartDim")),
             ("obj", string(obj.readable_string())),
             ("set_well_defined", project_obj_wd_proof(&p.set_well_defined, runtime)),
             ("set_is_cart", super::verify::project_verify_fact(&p.set_is_cart, runtime)),
         ]),
-        ObjWellDefinedProofByDef::ProductShape(ProductShapeObjWellDefinedProofByDef::ObjAtIndex(p)) => object(vec![
+        ObjWellDefinedProofByDef::ProductShape(ProductShapeObjWellDefinedProofByDef::ObjAtIndex(p)) => object_for(runtime, vec![
             ("type", string("by_def")), ("family", string("ProductShape")), ("kind", string("ObjAtIndex")),
             ("obj", string(obj.readable_string())),
             ("obj_well_defined", project_obj_wd_proof(&p.obj_well_defined, runtime)),
@@ -135,7 +133,7 @@ pub(super) fn project_obj_wd_by_def(obj: &Obj, proof: &ObjWellDefinedProofByDef,
             ("obj_is_tuple", super::verify::project_verify_fact(&p.obj_is_tuple, runtime)),
             ("index_le_tuple_dim", super::verify::project_verify_fact(&p.index_le_tuple_dim, runtime)),
         ]),
-        ObjWellDefinedProofByDef::ProductShape(ProductShapeObjWellDefinedProofByDef::Proj(p)) => object(vec![
+        ObjWellDefinedProofByDef::ProductShape(ProductShapeObjWellDefinedProofByDef::Proj(p)) => object_for(runtime, vec![
             ("type", string("by_def")), ("family", string("ProductShape")), ("kind", string("Proj")),
             ("obj", string(obj.readable_string())),
             ("set_well_defined", project_obj_wd_proof(&p.set_well_defined, runtime)),
@@ -145,7 +143,7 @@ pub(super) fn project_obj_wd_by_def(obj: &Obj, proof: &ObjWellDefinedProofByDef,
             ("dim_le_cart_dim", super::verify::project_verify_fact(&p.dim_le_cart_dim, runtime)),
         ]),
         ObjWellDefinedProofByDef::ProductShape(ProductShapeObjWellDefinedProofByDef::Tuple(p)) => project_common_by_def(obj, "ProductShape", "Tuple", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
-        ObjWellDefinedProofByDef::ProductShape(ProductShapeObjWellDefinedProofByDef::TupleDim(p)) => object(vec![
+        ObjWellDefinedProofByDef::ProductShape(ProductShapeObjWellDefinedProofByDef::TupleDim(p)) => object_for(runtime, vec![
             ("type", string("by_def")), ("family", string("ProductShape")), ("kind", string("TupleDim")),
             ("obj", string(obj.readable_string())),
             ("arg_well_defined", project_obj_wd_proof(&p.arg_well_defined, runtime)),
@@ -158,13 +156,12 @@ pub(super) fn project_obj_wd_by_def(obj: &Obj, proof: &ObjWellDefinedProofByDef,
         ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::OneSideInfinityIntervalObj(p)) => project_common_by_def(obj, "SetFormer", "OneSideInfinityIntervalObj", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
         ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::Range(p)) => project_common_by_def(obj, "SetFormer", "Range", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
         ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::SeqSet(p)) => project_common_by_def(obj, "SetFormer", "SeqSet", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
-        ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::SetBuilder(p)) => object(vec![
+        ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::SetBuilder(p)) => object_for(runtime, vec![
             ("type", string("by_def")), ("family", string("SetFormer")), ("kind", string("SetBuilder")),
             ("obj", string(obj.readable_string())),
             ("param_set_well_defined", project_obj_wd_proof(&p.param_set_well_defined, runtime)),
             ("fact_well_defined", JsonValue::Array(p.fact_well_defined.iter().map(|f| project_fact_wd_proof(f, runtime)).collect())),
-            ("local_env", project_local_env_summary(&p.local_env, runtime)),
-        ]),
+                    ]),
         ObjWellDefinedProofByDef::SetOperator(SetOperatorObjWellDefinedProofByDef::FamilyIntersect(p)) => project_common_by_def(obj, "SetOperator", "FamilyIntersect", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
         ObjWellDefinedProofByDef::SetOperator(SetOperatorObjWellDefinedProofByDef::FamilyUnion(p)) => project_common_by_def(obj, "SetOperator", "FamilyUnion", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
         ObjWellDefinedProofByDef::SetOperator(SetOperatorObjWellDefinedProofByDef::IndexCart(p)) => project_common_by_def(obj, "SetOperator", "IndexCart", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
@@ -174,7 +171,7 @@ pub(super) fn project_obj_wd_by_def(obj: &Obj, proof: &ObjWellDefinedProofByDef,
         ObjWellDefinedProofByDef::SetOperator(SetOperatorObjWellDefinedProofByDef::PowerSet(p)) => project_common_by_def(obj, "SetOperator", "PowerSet", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
         ObjWellDefinedProofByDef::SetOperator(SetOperatorObjWellDefinedProofByDef::SetMinus(p)) => project_common_by_def(obj, "SetOperator", "SetMinus", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
         ObjWellDefinedProofByDef::SetOperator(SetOperatorObjWellDefinedProofByDef::Union(p)) => project_common_by_def(obj, "SetOperator", "Union", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
-        ObjWellDefinedProofByDef::StandardSet(p) => { let _ = p; object(vec![("type", string("by_def")), ("family", string("StandardSet")), ("kind", string("StandardSet")), ("obj", string(obj.readable_string()))]) },
+        ObjWellDefinedProofByDef::StandardSet(p) => { let _ = p; object_for(runtime, vec![("type", string("by_def")), ("family", string("StandardSet")), ("kind", string("StandardSet")), ("obj", string(obj.readable_string()))]) },
         ObjWellDefinedProofByDef::Structish(StructishObjWellDefinedProofByDef::FieldAccess(p)) => project_common_by_def(obj, "Structish", "FieldAccess", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
         ObjWellDefinedProofByDef::Structish(StructishObjWellDefinedProofByDef::StructObj(p)) => project_common_by_def(obj, "Structish", "StructObj", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),
         ObjWellDefinedProofByDef::TrigOperator(TrigOperatorObjWellDefinedProofByDef::Arccos(p)) => project_common_by_def(obj, "TrigOperator", "Arccos", &p.child_obj_well_defined, &p.requirement_fact_verified, runtime),

@@ -76,7 +76,7 @@ impl Runtime {
             line_file: Some(stmt.line_file.clone()),
         }));
         let verify_state = VerifyState {
-            can_use_builtin_rule: true,
+            can_use_builtin_rule_round: VerifyState::TOP_BUILTIN_RULE_ROUND,
             can_use_def_and_known_forall_and_known_strategy: true,
             can_use_rewrite: true,
             store_well_defined_fact: true,

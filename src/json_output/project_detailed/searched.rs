@@ -4,7 +4,7 @@ use super::equality_builtin_gen::project_equality_builtin_rule;
 use super::exist_builtin_gen::project_exist_builtin_rule;
 use super::or_builtin_gen::project_or_builtin_rule;
 use super::builtin_atomic_gen::project_atomic_builtin_rule;
-use super::store::{project_local_env_summary, project_verify_facts};
+use super::store::{project_verify_facts};
 use super::strategy_gen::project_atomic_builtin_strategy;
 use super::verify::project_verify_fact;
 use crate::ast::fact::Fact;
@@ -24,7 +24,7 @@ use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFact
 use crate::execute::execute_fact_stmt::verify_or_fact::{
     OrFactSearchProofBySelectedBranch, OrFactSearchedProof,
 };
-use crate::json_output::helper::{object, string};
+use crate::json_output::helper::{object_for, string};
 use crate::knowledge_base::JsonValue;
 use crate::runtime::Runtime;
 
@@ -52,10 +52,10 @@ pub(super) fn project_atomic_except_searched(
             project_known_forall(p, runtime)
         }
         AtomicExceptEqualityFactSearchedProof::ByBuiltinRewrite(_) => {
-            object(vec![("type", string("by_builtin_rewrite"))])
+            object_for(runtime, vec![("type", string("by_builtin_rewrite"))])
         }
         AtomicExceptEqualityFactSearchedProof::ByKnownRewrite(_) => {
-            object(vec![("type", string("by_known_rewrite"))])
+            object_for(runtime, vec![("type", string("by_known_rewrite"))])
         }
     }
 }
@@ -98,10 +98,10 @@ fn project_equivalence_class(
             if let Some(fact) = runtime.fact_by_id_in_stack(*fact_id) {
                 entries.push(("cite", string(fact.readable_string())));
             }
-            object(entries)
+            object_for(runtime, entries)
         })
         .collect();
-    object(vec![
+    object_for(runtime, vec![
         ("type", string("by_equivalence_class")),
         ("path", JsonValue::Array(path)),
     ])
@@ -118,7 +118,7 @@ fn project_object_definition(
     };
     match proof {
         EqualitySearchProofByObjectDefinition::ByIdentifier(inner) => match inner {
-            EqualitySearchProofByIdentifierObjectDefinition::HaveObjEqual(p) => object(vec![
+            EqualitySearchProofByIdentifierObjectDefinition::HaveObjEqual(p) => object_for(runtime, vec![
                 ("type", string("by_object_definition")),
                 ("kind", string("identifier_have_obj_equal")),
                 ("expanded_rhs", string(p.expanded_rhs.readable_string())),
@@ -127,7 +127,7 @@ fn project_object_definition(
                     project_verify_fact(&p.residual_equal, runtime),
                 ),
             ]),
-            EqualitySearchProofByIdentifierObjectDefinition::LetObj(p) => object(vec![
+            EqualitySearchProofByIdentifierObjectDefinition::LetObj(p) => object_for(runtime, vec![
                 ("type", string("by_object_definition")),
                 ("kind", string("identifier_let_obj")),
                 ("expanded_rhs", string(p.expanded_rhs.readable_string())),
@@ -138,7 +138,7 @@ fn project_object_definition(
             ]),
         },
         EqualitySearchProofByObjectDefinition::ByFnApplication(inner) => match inner {
-            EqualitySearchProofByFnApplicationObjectDefinition::HaveFnEqual(p) => object(vec![
+            EqualitySearchProofByFnApplicationObjectDefinition::HaveFnEqual(p) => object_for(runtime, vec![
                 ("type", string("by_object_definition")),
                 ("kind", string("fn_application_have_fn_equal")),
                 ("expanded_body", string(p.expanded_body.readable_string())),
@@ -148,7 +148,7 @@ fn project_object_definition(
                 ),
             ]),
             EqualitySearchProofByFnApplicationObjectDefinition::HaveFnEqualCaseByCase(p) => {
-                object(vec![
+                object_for(runtime, vec![
                     ("type", string("by_object_definition")),
                     ("kind", string("fn_application_have_fn_equal_case_by_case")),
                     (
@@ -162,7 +162,7 @@ fn project_object_definition(
                     ),
                 ])
             }
-            EqualitySearchProofByFnApplicationObjectDefinition::HaveFnByInduc(p) => object(vec![
+            EqualitySearchProofByFnApplicationObjectDefinition::HaveFnByInduc(p) => object_for(runtime, vec![
                 ("type", string("by_object_definition")),
                 ("kind", string("fn_application_have_fn_by_induc")),
                 ("expanded_body", string(p.expanded_body.readable_string())),
@@ -173,7 +173,7 @@ fn project_object_definition(
             ]),
         },
         EqualitySearchProofByObjectDefinition::ByTemplate(inner) => match inner {
-            EqualitySearchProofByTemplateObjectDefinition::HaveObjEqual(p) => object(vec![
+            EqualitySearchProofByTemplateObjectDefinition::HaveObjEqual(p) => object_for(runtime, vec![
                 ("type", string("by_object_definition")),
                 ("kind", string("template_have_obj_equal")),
                 ("expanded_rhs", string(p.expanded_rhs.readable_string())),
@@ -182,8 +182,7 @@ fn project_object_definition(
                     project_verify_fact(&p.residual_equal, runtime),
                 ),
             ]),
-            EqualitySearchProofByTemplateObjectDefinition::HaveFnEqualApplication(p) => object(
-                vec![
+            EqualitySearchProofByTemplateObjectDefinition::HaveFnEqualApplication(p) => object_for(runtime, vec![
                     ("type", string("by_object_definition")),
                     ("kind", string("template_have_fn_equal_application")),
                     ("expanded_body", string(p.expanded_body.readable_string())),
@@ -195,7 +194,7 @@ fn project_object_definition(
             ),
             EqualitySearchProofByTemplateObjectDefinition::HaveFnEqualCaseByCaseApplication(
                 p,
-            ) => object(vec![
+            ) => object_for(runtime, vec![
                 ("type", string("by_object_definition")),
                 (
                     "kind",
@@ -212,7 +211,7 @@ fn project_object_definition(
                 ),
             ]),
             EqualitySearchProofByTemplateObjectDefinition::HaveFnByInducApplication(p) => {
-                object(vec![
+                object_for(runtime, vec![
                     ("type", string("by_object_definition")),
                     ("kind", string("template_have_fn_by_induc_application")),
                     ("expanded_body", string(p.expanded_body.readable_string())),
@@ -252,7 +251,7 @@ fn project_equality_builtin_strategy(
             &p.proof_of_requirement_facts,
         ),
     };
-    object(vec![
+    object_for(runtime, vec![
         ("type", string("builtin_strategy")),
         ("strategy", string(name)),
         (
@@ -275,7 +274,7 @@ fn project_matching_one_arg(
     proof: &EqualFactSearchedProofByMatchingOneArgByOne,
     runtime: &Runtime,
 ) -> JsonValue {
-    object(vec![
+    object_for(runtime, vec![
         ("type", string("by_matching_one_arg_by_one")),
         (
             "corresponding_arg_equal_proofs",
@@ -288,7 +287,7 @@ fn project_known_forall_via_symmetry(
     proof: &EqualFactSearchedProofByKnownForallViaSymmetry,
     runtime: &Runtime,
 ) -> JsonValue {
-    object(vec![
+    object_for(runtime, vec![
         ("type", string("by_known_forall_via_symmetry")),
         (
             "reversed_equal",
@@ -318,10 +317,10 @@ fn project_equality_builtin_rewrite(
                     if let Some(fact) = runtime.fact_by_id_in_stack(*id) {
                         entries.push(("fact", string(fact.readable_string())));
                     }
-                    object(entries)
+                    object_for(runtime, entries)
                 })
                 .collect();
-            object(vec![
+            object_for(runtime, vec![
                 ("type", string("by_builtin_rewrite")),
                 ("rule", string("ClosedNumericEqualSubstitution")),
                 ("rewritten_left", string(p.rewritten_left.readable_string())),
@@ -350,7 +349,7 @@ fn project_known_atomic(
     if let Some(fact) = runtime.fact_by_id_in_stack(proof.cite_fact_id) {
         entries.push(("cite", string(fact.readable_string())));
     }
-    object(entries)
+    object_for(runtime, entries)
 }
 
 fn project_known_forall(proof: &SearchProofByKnownForallFact, runtime: &Runtime) -> JsonValue {
@@ -378,11 +377,11 @@ fn project_known_forall(proof: &SearchProofByKnownForallFact, runtime: &Runtime)
             runtime,
         ),
     ));
-    object(entries)
+    object_for(runtime, entries)
 }
 
 fn project_known_strategy(proof: &SearchProofByKnownStrategy, runtime: &Runtime) -> JsonValue {
-    object(vec![
+    object_for(runtime, vec![
         ("type", string("by_known_strategy")),
         ("strategy_name", string(proof.strategy_name.clone())),
         ("then_index", JsonValue::Number(proof.then_index as f64)),
@@ -411,7 +410,7 @@ fn project_by_definition(
 }
 
 fn project_user_prop_def(proof: &UserDefinedPropDefinitionProof, runtime: &Runtime) -> JsonValue {
-    object(vec![
+    object_for(runtime, vec![
         ("type", string("by_definition")),
         ("kind", string("user_defined_prop")),
         (
@@ -487,7 +486,7 @@ fn project_builtin_prop_def(proof: &BuiltinPropDefinitionProof, runtime: &Runtim
             ("dvd", &p.requirement_facts, &p.proof_of_requirement_facts)
         }
     };
-    object(vec![
+    object_for(runtime, vec![
         ("type", string("by_definition")),
         ("kind", string(kind)),
         (
@@ -518,7 +517,7 @@ pub(super) fn project_or_searched(searched: &OrFactSearchedProof, runtime: &Runt
             if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
                 entries.push(("cite", string(fact.readable_string())));
             }
-            object(entries)
+            object_for(runtime, entries)
         }
         OrFactSearchedProof::ByKnownForallFact(p) => project_known_forall(p, runtime),
     }
@@ -528,7 +527,7 @@ fn project_or_selected_branch(
     proof: &OrFactSearchProofBySelectedBranch,
     runtime: &Runtime,
 ) -> JsonValue {
-    object(vec![
+    object_for(runtime, vec![
         ("type", string("by_selected_branch")),
         (
             "selected_index",
@@ -538,11 +537,7 @@ fn project_or_selected_branch(
             "selected_branch",
             project_verify_fact(&proof.selected_branch, runtime),
         ),
-        (
-            "local_env",
-            project_local_env_summary(&proof.local_env, runtime),
-        ),
-    ])
+            ])
 }
 
 pub(super) fn project_exist_searched(
@@ -559,7 +554,7 @@ pub(super) fn project_exist_searched(
             if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
                 entries.push(("cite", string(fact.readable_string())));
             }
-            object(entries)
+            object_for(runtime, entries)
         }
         ExistShapedFactSearchedProof::ByKnownForallFact(p) => project_known_forall(p, runtime),
     }

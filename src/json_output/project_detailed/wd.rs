@@ -1,6 +1,5 @@
 //! Object / fact well-definedness projection for Detailed output.
 
-use super::store::project_local_env_summary;
 use super::wd_by_def::project_obj_wd_by_def;
 use crate::execute::ParamTypeWellDefinedProof;
 use crate::execute::execute_fact_stmt::well_defined_results::{
@@ -13,13 +12,13 @@ use crate::execute::execute_fact_stmt::verify_forall_fact::ForallFactWellDefined
 use crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::ForallFactWithIffWellDefinedProof;
 use crate::execute::execute_fact_stmt::verify_not_forall_fact::NotForallFactWellDefinedProof;
 use crate::execute::execute_fact_stmt::verify_or_fact::OrFactWellDefinedProof;
-use crate::json_output::helper::{object, string};
+use crate::json_output::helper::{object_for, string};
 use crate::knowledge_base::JsonValue;
 use crate::runtime::Runtime;
 
 pub(super) fn project_obj_wd_proof(proof: &ObjWellDefinedProof, runtime: &Runtime) -> JsonValue {
     match proof {
-        ObjWellDefinedProof::ByKnown { obj, wd_id } => object(vec![
+        ObjWellDefinedProof::ByKnown { obj, wd_id } => object_for(runtime, vec![
             ("type", string("by_known")),
             ("obj", string(obj.readable_string())),
             ("wd_id", string(wd_id.to_string())),
@@ -33,11 +32,11 @@ pub(super) fn project_verify_obj_wd(
     runtime: &Runtime,
 ) -> JsonValue {
     match result {
-        VerifyObjWellDefinedResult::Success(proof) => object(vec![
+        VerifyObjWellDefinedResult::Success(proof) => object_for(runtime, vec![
             ("success", JsonValue::Bool(true)),
             ("proof", project_obj_wd_proof(proof, runtime)),
         ]),
-        VerifyObjWellDefinedResult::Failed { obj, reason: _ } => object(vec![
+        VerifyObjWellDefinedResult::Failed { obj, reason: _ } => object_for(runtime, vec![
             ("success", JsonValue::Bool(false)),
             ("obj", string(obj.readable_string())),
             ("phase", string("well_defined")),
@@ -49,7 +48,7 @@ pub(super) fn project_atomic_wd_proof(
     proof: &AtomicFactWellDefinedProof,
     runtime: &Runtime,
 ) -> JsonValue {
-    object(vec![(
+    object_for(runtime, vec![(
         "well_defined_of_each_parameter",
         JsonValue::Array(
             proof
@@ -65,7 +64,7 @@ pub(super) fn project_equal_wd_proof(
     proof: &EqualFactWellDefinedProof,
     runtime: &Runtime,
 ) -> JsonValue {
-    object(vec![
+    object_for(runtime, vec![
         ("left", project_obj_wd_proof(&proof.left, runtime)),
         ("right", project_obj_wd_proof(&proof.right, runtime)),
     ])
@@ -76,10 +75,10 @@ pub(super) fn project_param_type_wd(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
-        ParamTypeWellDefinedProof::Set => object(vec![("type", string("set"))]),
-        ParamTypeWellDefinedProof::NonemptySet => object(vec![("type", string("nonempty_set"))]),
-        ParamTypeWellDefinedProof::FiniteSet => object(vec![("type", string("finite_set"))]),
-        ParamTypeWellDefinedProof::Obj(wd) => object(vec![
+        ParamTypeWellDefinedProof::Set => object_for(runtime, vec![("type", string("set"))]),
+        ParamTypeWellDefinedProof::NonemptySet => object_for(runtime, vec![("type", string("nonempty_set"))]),
+        ParamTypeWellDefinedProof::FiniteSet => object_for(runtime, vec![("type", string("finite_set"))]),
+        ParamTypeWellDefinedProof::Obj(wd) => object_for(runtime, vec![
             ("type", string("obj")),
             ("well_defined", project_verify_obj_wd(wd, runtime)),
         ]),
@@ -92,12 +91,12 @@ pub(super) fn project_verify_fact_wd_result(
 ) -> JsonValue {
     match result {
         crate::execute::execute_fact_stmt::VerifyFactWellDefinedResult::Success(proof) => {
-            object(vec![
+            object_for(runtime, vec![
                 ("success", JsonValue::Bool(true)),
                 ("proof", project_fact_wd_proof(proof, runtime)),
             ])
         }
-        crate::execute::execute_fact_stmt::VerifyFactWellDefinedResult::Failed(_) => object(vec![
+        crate::execute::execute_fact_stmt::VerifyFactWellDefinedResult::Failed(_) => object_for(runtime, vec![
             ("success", JsonValue::Bool(false)),
             ("phase", string("well_defined")),
         ]),
@@ -106,15 +105,15 @@ pub(super) fn project_verify_fact_wd_result(
 
 pub(super) fn project_fact_wd_proof(proof: &FactWellDefinedProof, runtime: &Runtime) -> JsonValue {
     match proof {
-        FactWellDefinedProof::Equality(p) => object(vec![
+        FactWellDefinedProof::Equality(p) => object_for(runtime, vec![
             ("type", string("equality")),
             ("proof", project_equal_wd_proof(p, runtime)),
         ]),
-        FactWellDefinedProof::AtomicExceptEquality(p) => object(vec![
+        FactWellDefinedProof::AtomicExceptEquality(p) => object_for(runtime, vec![
             ("type", string("atomic_except_equality")),
             ("proof", project_atomic_wd_proof(p, runtime)),
         ]),
-        FactWellDefinedProof::AndFact { components } => object(vec![
+        FactWellDefinedProof::AndFact { components } => object_for(runtime, vec![
             ("type", string("and")),
             (
                 "components",
@@ -126,7 +125,7 @@ pub(super) fn project_fact_wd_proof(proof: &FactWellDefinedProof, runtime: &Runt
                 ),
             ),
         ]),
-        FactWellDefinedProof::ChainFact { adjacent } => object(vec![
+        FactWellDefinedProof::ChainFact { adjacent } => object_for(runtime, vec![
             ("type", string("chain")),
             (
                 "adjacent",
@@ -147,7 +146,7 @@ pub(super) fn project_fact_wd_proof(proof: &FactWellDefinedProof, runtime: &Runt
 }
 
 pub(super) fn project_or_wd_proof(proof: &OrFactWellDefinedProof, runtime: &Runtime) -> JsonValue {
-    object(vec![
+    object_for(runtime, vec![
         ("type", string("or")),
         (
             "branches",
@@ -166,7 +165,7 @@ pub(super) fn project_exist_wd_proof(
     proof: &ExistShapedFactWellDefinedProof,
     runtime: &Runtime,
 ) -> JsonValue {
-    object(vec![
+    object_for(runtime, vec![
         ("type", string("exist_shaped")),
         (
             "param_type_well_defined",
@@ -188,15 +187,11 @@ pub(super) fn project_exist_wd_proof(
                     .collect(),
             ),
         ),
-        (
-            "local_env",
-            project_local_env_summary(&proof.local_env, runtime),
-        ),
-    ])
+            ])
 }
 
 fn project_forall_wd(proof: &ForallFactWellDefinedProof, runtime: &Runtime) -> JsonValue {
-    object(vec![
+    object_for(runtime, vec![
         ("type", string("forall")),
         (
             "param_type_well_defined",
@@ -228,15 +223,11 @@ fn project_forall_wd(proof: &ForallFactWellDefinedProof, runtime: &Runtime) -> J
                     .collect(),
             ),
         ),
-        (
-            "local_env",
-            project_local_env_summary(&proof.local_env, runtime),
-        ),
-    ])
+            ])
 }
 
 fn project_forall_iff_wd(proof: &ForallFactWithIffWellDefinedProof, runtime: &Runtime) -> JsonValue {
-    object(vec![
+    object_for(runtime, vec![
         ("type", string("forall_iff")),
         (
             "param_type_well_defined",
@@ -278,15 +269,11 @@ fn project_forall_iff_wd(proof: &ForallFactWithIffWellDefinedProof, runtime: &Ru
                     .collect(),
             ),
         ),
-        (
-            "local_env",
-            project_local_env_summary(&proof.local_env, runtime),
-        ),
-    ])
+            ])
 }
 
 fn project_not_forall_wd(proof: &NotForallFactWellDefinedProof, runtime: &Runtime) -> JsonValue {
-    object(vec![
+    object_for(runtime, vec![
         ("type", string("not_forall")),
         (
             "param_type_well_defined",
@@ -318,9 +305,5 @@ fn project_not_forall_wd(proof: &NotForallFactWellDefinedProof, runtime: &Runtim
                     .collect(),
             ),
         ),
-        (
-            "local_env",
-            project_local_env_summary(&proof.local_env, runtime),
-        ),
-    ])
+            ])
 }

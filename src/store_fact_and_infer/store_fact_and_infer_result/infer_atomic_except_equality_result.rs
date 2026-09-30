@@ -56,6 +56,9 @@ pub enum InferAtomicExceptEqualityResult {
     SubsetElementwiseMembership(InferSubsetElementwiseMembershipResult),
     // `A $superset B` → `forall x B: x $in A`.
     SupersetElementwiseMembership(InferSupersetElementwiseMembershipResult),
+    // Order dual / nonnegative lower bound from a closed numeric bound.
+    // Example: store `t >= 10` ⇒ `10 <= t` and `0 <= t`.
+    OrderDualAndNonnegLowerBound(InferOrderDualAndNonnegLowerBoundResult),
 }
 
 pub struct InferNormalAtomicParamTypesProjectedResult {
@@ -156,6 +159,10 @@ pub struct InferSubsetElementwiseMembershipResult {
 
 pub struct InferSupersetElementwiseMembershipResult {
     pub derived: Box<StoreFactAndInferResult>,
+}
+
+pub struct InferOrderDualAndNonnegLowerBoundResult {
+    pub derived: Vec<StoreFactAndInferResult>,
 }
 
 impl InferAtomicExceptEqualityResult {
@@ -276,6 +283,13 @@ impl InferAtomicExceptEqualityResult {
             Self::IsCartDimensionLowerBound(r) => r.derived.stored_fact_ids(),
             Self::SubsetElementwiseMembership(r) => r.derived.stored_fact_ids(),
             Self::SupersetElementwiseMembership(r) => r.derived.stored_fact_ids(),
+            Self::OrderDualAndNonnegLowerBound(r) => {
+                let mut ids = Vec::new();
+                for d in &r.derived {
+                    ids.extend(d.stored_fact_ids());
+                }
+                ids
+            }
         }
     }
 }

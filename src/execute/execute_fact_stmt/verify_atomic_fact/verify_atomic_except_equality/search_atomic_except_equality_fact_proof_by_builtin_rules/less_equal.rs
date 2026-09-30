@@ -22,6 +22,9 @@ pub enum LessEqualFactSearchProofByBuiltinRule {
     // Mathematical property: `a < b` ⇒ `a <= b`.
     // Example: known `x < 0` proves `x <= 0`.
     FromKnownLess(FromKnownLessBuiltinRuleProof),
+    // Order dual cite: known `b >= a` proves `a <= b`.
+    // Example: known `t >= 10` proves `10 <= t` without rewrite.
+    FromKnownGreaterEqualDual(FromKnownGreaterEqualDualBuiltinRuleProof),
     // Natural membership implies non-negative.
     // Mathematical property: `n $in N` ⇒ `0 <= n`.
     // Example: after `have n N`, prove `0 <= n`.
@@ -217,6 +220,10 @@ pub struct OrderReflexivityBuiltinRuleProof {
 }
 
 pub struct FromKnownLessBuiltinRuleProof {
+    pub cite_fact_id: FactId,
+}
+
+pub struct FromKnownGreaterEqualDualBuiltinRuleProof {
     pub cite_fact_id: FactId,
 }
 
@@ -516,8 +523,24 @@ impl Runtime {
             }
         }
 
+        // Even power ≥ 0 is zero-premise; keep it available at round 0 so nested
+        // premises of AddLeft/RightNonnegative can use it.
+        if let Some(proof) = self.try_even_pow_nonnegative_zero_premise(fact) {
+            return Ok(Some(proof));
+        }
+
+        // Cite known `b >= a` as `a <= b` (order dual). Zero-premise; needed when
+        // nested under a premise-producing builtin (rewrite OrderDual is off).
+        if let Some(cite_fact_id) = self.known_greater_equal_fact_id(&fact.right, &fact.left) {
+            return Ok(Some(
+                LessEqualFactSearchProofByBuiltinRule::FromKnownGreaterEqualDual(
+                    FromKnownGreaterEqualDualBuiltinRuleProof { cite_fact_id },
+                ),
+            ));
+        }
+
         // Premise-producing / shape rules consume the builtin-rule budget.
-        if !verify_state.can_use_builtin_rule {
+        if verify_state.can_use_builtin_rule_round == 0 {
             return Ok(None);
         }
         let child_state = verify_state.after_builtin_rule();

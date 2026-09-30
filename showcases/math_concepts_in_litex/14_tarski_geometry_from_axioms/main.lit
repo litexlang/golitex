@@ -34,14 +34,11 @@ prop inner_pasch_witness_exists(Point set, Bet power_set(cart(Point, Point, Poin
 
 # Dimensionless neutral geometry: congruence, segment construction,
 # five-segment, betweenness identity, inner Pasch, and lower dimension.
-# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
-# Former: setting TarskiNeutralDimensionlessSetting(Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point):
-struct TarskiNeutralDimensionlessSetting:
-    Point nonempty_set
+struct TarskiNeutralGeometry<Point nonempty_set>:
     Bet power_set(cart(Point, Point, Point))
     Cong power_set(cart(Point, Point, Point, Point))
-    lower_a
-    lower_b
+    lower_a Point
+    lower_b Point
     lower_c Point
     <=>:
         forall p1, p2 Point:
@@ -74,14 +71,14 @@ struct TarskiNeutralDimensionlessSetting:
 # Tarski assumes only pseudo-reflexivity. Ordinary reflexivity is derived by
 # applying inner transitivity to the reversed segment twice.
 thm segment_congruence_reflexive:
-    ? forall [TarskiNeutralDimensionlessSetting], a, b Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, a, b Point:
         $are_segments_congruent(Point, Cong, a, b, a, b)
     (b, a, a, b) $in Cong
     by def $are_segments_congruent(Point, Cong, a, b, a, b)
 
 # Tracer theorem: symmetry is a checked consequence, not another axiom.
 thm segment_congruence_symmetric:
-    ? forall [TarskiNeutralDimensionlessSetting], a, b, c, d Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, a, b, c, d Point:
         $are_segments_congruent(Point, Cong, a, b, c, d)
         =>:
             $are_segments_congruent(Point, Cong, c, d, a, b)
@@ -90,7 +87,7 @@ thm segment_congruence_symmetric:
 
 # Chapter 2: ordinary congruence algebra derived from the SST primitives.
 thm segment_congruence_transitive:
-    ? forall [TarskiNeutralDimensionlessSetting], a, b, c, d, f, g Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, a, b, c, d, f, g Point:
         $are_segments_congruent(Point, Cong, a, b, c, d)
         $are_segments_congruent(Point, Cong, c, d, f, g)
         =>:
@@ -99,7 +96,7 @@ thm segment_congruence_transitive:
     by def $are_segments_congruent(Point, Cong, a, b, f, g)
 
 thm segment_congruence_left_commutative:
-    ? forall [TarskiNeutralDimensionlessSetting], a, b, c, d Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, a, b, c, d Point:
         $are_segments_congruent(Point, Cong, a, b, c, d)
         =>:
             $are_segments_congruent(Point, Cong, b, a, c, d)
@@ -108,7 +105,7 @@ thm segment_congruence_left_commutative:
     by def $are_segments_congruent(Point, Cong, b, a, c, d)
 
 thm segment_congruence_right_commutative:
-    ? forall [TarskiNeutralDimensionlessSetting], a, b, c, d Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, a, b, c, d Point:
         $are_segments_congruent(Point, Cong, a, b, c, d)
         =>:
             $are_segments_congruent(Point, Cong, a, b, d, c)
@@ -117,7 +114,7 @@ thm segment_congruence_right_commutative:
     by thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, d, c, a, b) => $are_segments_congruent(Point, Cong, a, b, d, c)
 
 thm segment_congruence_endpoint_commutative:
-    ? forall [TarskiNeutralDimensionlessSetting], a, b, c, d Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, a, b, c, d Point:
         $are_segments_congruent(Point, Cong, a, b, c, d)
         =>:
             $are_segments_congruent(Point, Cong, b, a, d, c)
@@ -126,7 +123,7 @@ thm segment_congruence_endpoint_commutative:
 
 # Chapter 3 begins with non-strict reflexivity of betweenness.
 thm between_trivial:
-    ? forall [TarskiNeutralDimensionlessSetting], a, b Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, a, b Point:
         $is_between(Point, Bet, a, b, b)
     obtain x from exist x Point st {(a, b, x) $in Bet, (b, x, b, b) $in Cong}
     b = x
@@ -136,7 +133,7 @@ thm between_trivial:
 # Symmetry of betweenness is derived synthetically from inner Pasch rather than
 # assumed as a primitive relation law.
 thm between_symmetric:
-    ? forall [TarskiNeutralDimensionlessSetting], a, b, c Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, a, b, c Point:
         $is_between(Point, Bet, a, b, c)
         =>:
             $is_between(Point, Bet, c, b, a)
@@ -151,7 +148,7 @@ thm between_symmetric:
 # GeoCoq's between_exchange3: nested betweenness intervals exchange their
 # middle endpoints. Inner Pasch supplies the single collapsing witness.
 thm between_exchange:
-    ? forall [TarskiNeutralDimensionlessSetting], a, b, c, d Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, a, b, c, d Point:
         $is_between(Point, Bet, a, b, c)
         $is_between(Point, Bet, a, c, d)
         =>:
@@ -166,7 +163,7 @@ thm between_exchange:
 # Extend any directed segment by a genuinely new endpoint. The fixed
 # lower-dimension witnesses provide a nondegenerate comparison segment.
 thm point_has_strict_extension:
-    ? forall [TarskiNeutralDimensionlessSetting], a, b Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, a, b Point:
         exist x Point st {$is_between(Point, Bet, a, b, x), b != x}
     claim:
         ? lower_a != lower_b
@@ -282,7 +279,7 @@ thm midpoint_has_congruent_halves:
 
 # Swapping the endpoints preserves both betweenness and equal half-segments.
 thm midpoint_symmetric:
-    ? forall [TarskiNeutralDimensionlessSetting], midpoint, endpoint_a, endpoint_b Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, midpoint, endpoint_a, endpoint_b Point:
         $is_midpoint(Point, Bet, Cong, midpoint, endpoint_a, endpoint_b)
         =>:
             $is_midpoint(Point, Bet, Cong, midpoint, endpoint_b, endpoint_a)
@@ -294,7 +291,7 @@ thm midpoint_symmetric:
 # The trivial betweenness and degenerate congruence laws give a midpoint when
 # both endpoints coincide.
 thm point_is_own_degenerate_midpoint:
-    ? forall [TarskiNeutralDimensionlessSetting], a Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, a Point:
         $is_midpoint(Point, Bet, Cong, a, a, a)
     by thm between_trivial(Point, Bet, Cong, lower_a, lower_b, lower_c, a, a) => $is_between(Point, Bet, a, a, a)
     by thm segment_congruence_reflexive(Point, Bet, Cong, lower_a, lower_b, lower_c, a, a) => $are_segments_congruent(Point, Cong, a, a, a, a)
@@ -454,7 +451,7 @@ thm angle_congruence_is_nondegenerate:
 # Each possible equality collapses one of the three betweenness alternatives,
 # so noncollinearity forces all three points to be distinct.
 thm noncollinear_points_are_pairwise_distinct:
-    ? forall [TarskiNeutralDimensionlessSetting], a, b, c Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, a, b, c Point:
         not $are_collinear(Point, Bet, a, b, c)
         =>:
             a != b
@@ -491,7 +488,7 @@ thm noncollinear_points_are_pairwise_distinct:
 # Two small projections make the primitive SST axioms explicitly callable in
 # later synthetic proofs.
 thm degenerate_segments_congruent:
-    ? forall [TarskiNeutralDimensionlessSetting], a, b Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, a, b Point:
         $are_segments_congruent(Point, Cong, a, a, b, b)
     obtain x from exist x Point st {(a, a, x) $in Bet, (a, x, b, b) $in Cong}
     a = x
@@ -501,7 +498,7 @@ thm degenerate_segments_congruent:
 # Expose the primitive five-segment implication as a named theorem that later
 # synthetic proofs can cite with selected conclusions.
 thm five_segment:
-    ? forall [TarskiNeutralDimensionlessSetting], q1, q2, q3, q4, q5, q6, q7, q8 Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, q1, q2, q3, q4, q5, q6, q7, q8 Point:
         $are_segments_congruent(Point, Cong, q1, q3, q2, q4)
         $are_segments_congruent(Point, Cong, q3, q5, q4, q6)
         $are_segments_congruent(Point, Cong, q1, q7, q2, q8)
@@ -516,7 +513,7 @@ thm five_segment:
 # Two applications of five-segment compare a pair of opposite extensions,
 # first at their endpoints and then from an arbitrary comparison point b.
 thm opposite_extensions_preserve_distances:
-    ? forall [TarskiNeutralDimensionlessSetting], a, b, c, c_ext, f_ext Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, a, b, c, c_ext, f_ext Point:
         $is_between(Point, Bet, a, c, c_ext)
         $are_segments_congruent(Point, Cong, c, c_ext, c, a)
         $is_between(Point, Bet, c, a, f_ext)
@@ -544,7 +541,7 @@ thm opposite_extensions_preserve_distances:
 # equal base angles. Four segment constructions supply Definition 11.2's
 # witnesses; the final five-segment application joins them.
 thm isosceles_triangle_has_equal_base_angles:
-    ? forall [TarskiNeutralDimensionlessSetting], a, b, c Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, a, b, c Point:
         not $are_collinear(Point, Bet, a, b, c)
         $are_segments_congruent(Point, Cong, b, a, b, c)
         =>:
@@ -581,12 +578,13 @@ thm isosceles_triangle_has_equal_base_angles:
     by def $are_angles_congruent(Point, Bet, Cong, b, a, c, b, c, a)
 
 # The hierarchy now branches by adding laws rather than changing primitives.
-# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
-# Former: setting TarskiNeutralWithDecidableEqualitySetting([TarskiNeutralDimensionlessSetting]):
-struct TarskiNeutralWithDecidableEqualitySetting:
-    # former parent setting ref: [TarskiNeutralDimensionlessSetting]
-    _todo_a set
-    _todo_b set
+# Neutral geometry plus decidable point equality.
+struct TarskiNeutralDecidableGeometry<Point nonempty_set>:
+    Bet power_set(cart(Point, Point, Point))
+    Cong power_set(cart(Point, Point, Point, Point))
+    lower_a Point
+    lower_b Point
+    lower_c Point
     <=>:
         forall p1, p2 Point:
             p1 = p2 or p1 != p2
@@ -594,7 +592,7 @@ struct TarskiNeutralWithDecidableEqualitySetting:
 # GeoCoq l2_11: congruent adjacent pieces have congruent unions. The
 # degenerate first-piece case is separated by decidable point equality.
 thm segment_congruence_addition:
-    ? forall [TarskiNeutralWithDecidableEqualitySetting], a, b, c, a2, b2, c2 Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, a, b, c, a2, b2, c2 Point:
         $is_between(Point, Bet, a, b, c)
         $is_between(Point, Bet, a2, b2, c2)
         $are_segments_congruent(Point, Cong, a, b, a2, b2)
@@ -619,7 +617,7 @@ thm segment_congruence_addition:
 # inner distance. Two strict extensions turn it into two forward applications
 # of the primitive five-segment law.
 thm inner_five_segment:
-    ? forall [TarskiNeutralWithDecidableEqualitySetting], a, b, c, d, a2, b2, c2, d2 Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, a, b, c, d, a2, b2, c2, d2 Point:
         $is_inner_five_segment_configuration(Point, Bet, Cong, a, b, c, d, a2, b2, c2, d2)
         =>:
             $are_segments_congruent(Point, Cong, b, d, b2, d2)
@@ -656,7 +654,7 @@ thm inner_five_segment:
 # adjacent sides align the four extension witnesses; two inverse five-segment
 # applications then recover the opposite side.
 thm side_angle_side_gives_third_side:
-    ? forall [TarskiNeutralWithDecidableEqualitySetting], a, b, c, a2, b2, c2 Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, a, b, c, a2, b2, c2 Point:
         $are_angles_congruent(Point, Bet, Cong, a, b, c, a2, b2, c2)
         $are_segments_congruent(Point, Cong, a, b, a2, b2)
         $are_segments_congruent(Point, Cong, b, c, b2, c2)
@@ -686,7 +684,7 @@ thm side_angle_side_gives_third_side:
 # Package the three side equalities obtained from side-angle-side as triangle
 # congruence in the Chapter 4 relation.
 thm triangle_congruence_sas:
-    ? forall [TarskiNeutralWithDecidableEqualitySetting], a, b, c, a2, b2, c2 Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, a, b, c, a2, b2, c2 Point:
         $are_angles_congruent(Point, Bet, Cong, a, b, c, a2, b2, c2)
         $are_segments_congruent(Point, Cong, a, b, a2, b2)
         $are_segments_congruent(Point, Cong, b, c, b2, c2)
@@ -699,7 +697,7 @@ thm triangle_congruence_sas:
 # its four required extensions; two five-segment applications compare their
 # final chord without replacing the angle definition by an SSS abbreviation.
 thm triangle_congruence_sss_gives_angles:
-    ? forall [TarskiNeutralWithDecidableEqualitySetting], a, b, c, a2, b2, c2 Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, a, b, c, a2, b2, c2 Point:
         a != b
         c != b
         $are_triangles_congruent(Point, Cong, a, b, c, a2, b2, c2)
@@ -766,7 +764,7 @@ thm triangle_congruence_sss_gives_angles:
 # The next three theorems establish the basic equivalence-style laws of the
 # four-extension angle-congruence relation.
 thm angle_congruence_reflexive:
-    ? forall [TarskiNeutralWithDecidableEqualitySetting], a, b, c Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, a, b, c Point:
         a != b
         c != b
         =>:
@@ -779,7 +777,7 @@ thm angle_congruence_reflexive:
 
 # Swap the two angle triples and reuse the same extension witnesses.
 thm angle_congruence_symmetric:
-    ? forall [TarskiNeutralDimensionlessSetting], a, b, c, a2, b2, c2 Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, a, b, c, a2, b2, c2 Point:
         $are_angles_congruent(Point, Bet, Cong, a, b, c, a2, b2, c2)
         =>:
             $are_angles_congruent(Point, Bet, Cong, a2, b2, c2, a, b, c)
@@ -790,7 +788,7 @@ thm angle_congruence_symmetric:
 
 # Reversing both arms of one angle preserves the extension construction.
 thm angle_congruence_arms_commutative:
-    ? forall [TarskiNeutralDimensionlessSetting], a, b, c, a2, b2, c2 Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, a, b, c, a2, b2, c2 Point:
         $are_angles_congruent(Point, Bet, Cong, a, b, c, a2, b2, c2)
         =>:
             $are_angles_congruent(Point, Bet, Cong, c, b, a, c2, b2, a2)
@@ -803,7 +801,7 @@ thm angle_congruence_arms_commutative:
 # same segment coincide. A degenerate five-segment conclusion reduces to
 # Cong(x,y,y,y), so congruence identity finishes the proof.
 thm segment_extension_unique:
-    ? forall [TarskiNeutralDimensionlessSetting], q, a, b, c, x, y Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, q, a, b, c, x, y Point:
         q != a
         $is_between(Point, Bet, q, a, x)
         $are_segments_congruent(Point, Cong, a, x, b, c)
@@ -823,7 +821,7 @@ thm segment_extension_unique:
 # Central reflection exists directly by extending the ray from the point
 # through its center by another copy of the point-center segment.
 thm point_reflection_exists:
-    ? forall [TarskiNeutralDimensionlessSetting], point, center Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, point, center Point:
         exist reflected_point Point st {$is_point_reflection(Point, Bet, Cong, point, reflected_point, center)}
     obtain reflected_point from exist selected Point st {(point, center, selected) $in Bet, (center, selected, point, center) $in Cong}
     by def $is_between(Point, Bet, point, center, reflected_point)
@@ -836,7 +834,7 @@ thm point_reflection_exists:
 # Two reflected points extend the same ray by the same segment, so segment
 # extension uniqueness identifies them.
 thm point_reflection_unique:
-    ? forall [TarskiNeutralWithDecidableEqualitySetting], point, center, reflected1, reflected2 Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, point, center, reflected1, reflected2 Point:
         $is_point_reflection(Point, Bet, Cong, point, reflected1, center)
         $is_point_reflection(Point, Bet, Cong, point, reflected2, center)
         =>:
@@ -866,14 +864,14 @@ thm point_reflection_unique:
             by thm segment_extension_unique(Point, Bet, Cong, lower_a, lower_b, lower_c, point, center, point, center, reflected1, reflected2) => reflected1 = reflected2
 
 thm point_reflection_fixes_center:
-    ? forall [TarskiNeutralDimensionlessSetting], center Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, center Point:
         $is_point_reflection(Point, Bet, Cong, center, center, center)
     by thm point_is_own_degenerate_midpoint(Point, Bet, Cong, lower_a, lower_b, lower_c, center) => $is_midpoint(Point, Bet, Cong, center, center, center)
     by def $is_point_reflection(Point, Bet, Cong, center, center, center)
 
 # Symmetry of midpoint data shows that reflecting twice returns the original point.
 thm point_reflection_involutive:
-    ? forall [TarskiNeutralDimensionlessSetting], point, reflected_point, center Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, point, reflected_point, center Point:
         $is_point_reflection(Point, Bet, Cong, point, reflected_point, center)
         =>:
             $is_point_reflection(Point, Bet, Cong, reflected_point, point, center)
@@ -883,12 +881,13 @@ thm point_reflection_involutive:
 
 # Upper dimension specializes the dimensionless neutral theory to a plane:
 # three points equidistant from two distinct points must be collinear.
-# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
-# Former: setting Tarski2DSetting([TarskiNeutralWithDecidableEqualitySetting]):
-struct Tarski2DSetting:
-    # former parent setting ref: [TarskiNeutralWithDecidableEqualitySetting]
-    _todo_a set
-    _todo_b set
+# Upper dimension: three points equidistant from two distinct points are collinear.
+struct Tarski2DGeometry<Point nonempty_set>:
+    Bet power_set(cart(Point, Point, Point))
+    Cong power_set(cart(Point, Point, Point, Point))
+    lower_a Point
+    lower_b Point
+    lower_c Point
     <=>:
         forall p1, p2, p3, p4, p5 Point:
             p4 != p5
@@ -906,12 +905,13 @@ prop euclid_intersection_witness_exists(Point set, Bet power_set(cart(Point, Poi
 
 # The Euclidean branch adds only the SST Euclid axiom. All preceding segment,
 # angle, and reflection results therefore remain visibly neutral.
-# Migrated from removed `setting` surface; struct placeholder — not expected to verify yet.
-# Former: setting TarskiEuclidean2DSetting([Tarski2DSetting]):
-struct TarskiEuclidean2DSetting:
-    # former parent setting ref: [Tarski2DSetting]
-    _todo_a set
-    _todo_b set
+# Euclidean 2D: SST Euclid axiom on top of the plane.
+struct TarskiEuclidean2DGeometry<Point nonempty_set>:
+    Bet power_set(cart(Point, Point, Point))
+    Cong power_set(cart(Point, Point, Point, Point))
+    lower_a Point
+    lower_b Point
+    lower_c Point
     <=>:
         forall p1, p2, p3, p4, p5 Point:
             $is_between(Point, Bet, p1, p4, p5)
@@ -966,7 +966,7 @@ thm strict_parallel_lines_are_coplanar_and_disjoint:
 
 # Tracer for the one genuinely Euclidean law in this slice.
 thm euclid_postulate_supplies_intersections:
-    ? forall [TarskiEuclidean2DSetting], euclid_a, euclid_b, euclid_c, euclid_d, euclid_e Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, euclid_a, euclid_b, euclid_c, euclid_d, euclid_e Point:
         $is_between(Point, Bet, euclid_a, euclid_d, euclid_e)
         $is_between(Point, Bet, euclid_b, euclid_d, euclid_c)
         euclid_a != euclid_d
@@ -975,7 +975,7 @@ thm euclid_postulate_supplies_intersections:
 
 # Each side is congruent to itself, so every triangle is congruent to itself.
 thm triangle_congruence_reflexive:
-    ? forall [TarskiNeutralDimensionlessSetting], a, b, c Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, a, b, c Point:
         $are_triangles_congruent(Point, Cong, a, b, c, a, b, c)
     by thm segment_congruence_reflexive(Point, Bet, Cong, lower_a, lower_b, lower_c, a, b) => $are_segments_congruent(Point, Cong, a, b, a, b)
     by thm segment_congruence_reflexive(Point, Bet, Cong, lower_a, lower_b, lower_c, a, c) => $are_segments_congruent(Point, Cong, a, c, a, c)
@@ -985,7 +985,7 @@ thm triangle_congruence_reflexive:
 # Triangle congruence inherits symmetry and transitivity coordinatewise from
 # segment congruence.
 thm triangle_congruence_symmetric:
-    ? forall [TarskiNeutralDimensionlessSetting], a, b, c, a2, b2, c2 Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, a, b, c, a2, b2, c2 Point:
         $are_triangles_congruent(Point, Cong, a, b, c, a2, b2, c2)
         =>:
             $are_triangles_congruent(Point, Cong, a2, b2, c2, a, b, c)
@@ -997,7 +997,7 @@ thm triangle_congruence_symmetric:
 
 # Compose the three corresponding side congruences componentwise.
 thm triangle_congruence_transitive:
-    ? forall [TarskiNeutralDimensionlessSetting], a, b, c, a2, b2, c2, a3, b3, c3 Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, a, b, c, a2, b2, c2, a3, b3, c3 Point:
         $are_triangles_congruent(Point, Cong, a, b, c, a2, b2, c2)
         $are_triangles_congruent(Point, Cong, a2, b2, c2, a3, b3, c3)
         =>:
@@ -1011,7 +1011,7 @@ thm triangle_congruence_transitive:
 
 # A nonvertex point lies on its own ray using trivial betweenness.
 thm out_on_ray_reflexive:
-    ? forall [TarskiNeutralDimensionlessSetting], vertex, point Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, vertex, point Point:
         point != vertex
         =>:
             $is_out_on_ray(Point, Bet, vertex, point, point)
@@ -1036,7 +1036,7 @@ thm out_on_ray_symmetric:
 # Either betweenness branch in the ray definition is one of the collinearity
 # disjuncts.
 thm out_on_ray_implies_collinear:
-    ? forall [TarskiNeutralDimensionlessSetting], vertex, first_point, second_point Point:
+    ? forall Point nonempty_set, Bet power_set(cart(Point, Point, Point)), Cong power_set(cart(Point, Point, Point, Point)), lower_a, lower_b, lower_c Point, vertex, first_point, second_point Point:
         $is_out_on_ray(Point, Bet, vertex, first_point, second_point)
         =>:
             $are_collinear(Point, Bet, vertex, first_point, second_point)

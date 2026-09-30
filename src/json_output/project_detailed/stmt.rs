@@ -1,7 +1,7 @@
 //! Detailed projection for non-fact statement kinds.
 
 use super::store::{
-    project_have_store_ids, project_local_env_summary, project_store_and_infer, project_verify_facts,
+    project_have_store_ids, project_store_and_infer, project_verify_facts,
 };
 use super::verify::project_verify_fact;
 use super::wd::{
@@ -33,7 +33,7 @@ use crate::execute::{
     ExecObtainObjFromExistFactStmtResult, ExecReleaseAndExpandStmtResult, ExecStmtResult,
     ExecTrustBoundaryStmtResult, ParamTypeFactCheckResult,
 };
-use crate::json_output::helper::{bool_value, object, string};
+use crate::json_output::helper::{bool_value, object_for, string};
 use crate::knowledge_base::JsonValue;
 use crate::runtime::{FactId, Runtime};
 use crate::store_fact_and_infer::StoreFactAndInferResult;
@@ -68,7 +68,7 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                 }
                 _ => None,
             },
-        ),
+            runtime),
         ExecDefinitionStmtResult::HaveFnEqualCaseByCase(r) => project_success_failed_shell(
             "have_fn_equal_case_by_case",
             !r.is_failed(),
@@ -84,7 +84,7 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                 }
                 _ => None,
             },
-        ),
+            runtime),
         ExecDefinitionStmtResult::HaveFnByForallExistUnique(r) => project_success_failed_shell(
             "have_fn_by_forall_exist_unique",
             !r.is_failed(),
@@ -100,7 +100,7 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                 }
                 _ => None,
             },
-        ),
+            runtime),
         ExecDefinitionStmtResult::HaveFnByInduc(r) => project_success_failed_shell(
             "have_fn_by_induc",
             !r.is_failed(),
@@ -114,9 +114,9 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                 }
                 _ => None,
             },
-        ),
+            runtime),
         ExecDefinitionStmtResult::DefProp(r) => project_def_prop(r, runtime),
-        ExecDefinitionStmtResult::DefAbstractProp(r) => project_def_abstract_prop(r),
+        ExecDefinitionStmtResult::DefAbstractProp(r) => project_def_abstract_prop(r, runtime),
         ExecDefinitionStmtResult::DefStruct(r) => project_success_failed_shell(
             "def_struct",
             !r.is_failed(),
@@ -125,7 +125,7 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                 _ => None,
             },
             None,
-        ),
+            runtime),
         ExecDefinitionStmtResult::DefTemplate(r) => project_success_failed_shell(
             "def_template",
             !r.is_failed(),
@@ -134,7 +134,7 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                 _ => None,
             },
             None,
-        ),
+            runtime),
         ExecDefinitionStmtResult::DefAlgoByCases(r) => project_success_failed_shell(
             "def_algo_by_cases",
             !r.is_failed(),
@@ -143,7 +143,7 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                 _ => None,
             },
             None,
-        ),
+            runtime),
         ExecDefinitionStmtResult::DefAlgoByInduc(r) => project_success_failed_shell(
             "def_algo_by_induc",
             !r.is_failed(),
@@ -152,7 +152,7 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
                 _ => None,
             },
             None,
-        ),
+            runtime),
         ExecDefinitionStmtResult::DefThm(r) => project_def_thm(r, runtime),
         ExecDefinitionStmtResult::Axiom(r) => project_axiom(r, runtime),
         ExecDefinitionStmtResult::DefStrategy(r) => project_def_strategy(r, runtime),
@@ -162,7 +162,7 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
 
 fn project_def_thm(result: &ExecDefThmStmtResult, runtime: &Runtime) -> JsonValue {
     match result {
-        ExecDefThmStmtResult::Success(s) => object(vec![
+        ExecDefThmStmtResult::Success(s) => object_for(runtime, vec![
             ("success", bool_value(true)),
             ("kind", string("def_thm")),
             (
@@ -174,7 +174,7 @@ fn project_def_thm(result: &ExecDefThmStmtResult, runtime: &Runtime) -> JsonValu
                 JsonValue::Array(
                     s.proof_steps
                         .iter()
-                        .map(|step| project_by_proof_step(step, runtime))
+                        .map(|step| project_stmt_detailed(step, runtime))
                         .collect(),
                 ),
             ),
@@ -182,13 +182,9 @@ fn project_def_thm(result: &ExecDefThmStmtResult, runtime: &Runtime) -> JsonValu
                 "conclusion_proofs",
                 project_verify_facts(&s.conclusion_proofs, runtime),
             ),
-            (
-                "local_env",
-                project_local_env_summary(&s.local_env, runtime),
-            ),
-            ("store_and_infer", project_store_and_infer(&s.stored, runtime)),
+                        ("store_and_infer", project_store_and_infer(&s.stored, runtime)),
         ]),
-        ExecDefThmStmtResult::Failed(_) => object(vec![
+        ExecDefThmStmtResult::Failed(_) => object_for(runtime, vec![
             ("success", bool_value(false)),
             ("kind", string("def_thm")),
         ]),
@@ -197,7 +193,7 @@ fn project_def_thm(result: &ExecDefThmStmtResult, runtime: &Runtime) -> JsonValu
 
 fn project_axiom(result: &ExecAxiomStmtResult, runtime: &Runtime) -> JsonValue {
     match result {
-        ExecAxiomStmtResult::Success(s) => object(vec![
+        ExecAxiomStmtResult::Success(s) => object_for(runtime, vec![
             ("success", bool_value(true)),
             ("kind", string("axiom")),
             (
@@ -206,7 +202,7 @@ fn project_axiom(result: &ExecAxiomStmtResult, runtime: &Runtime) -> JsonValue {
             ),
             ("store_and_infer", project_store_and_infer(&s.stored, runtime)),
         ]),
-        ExecAxiomStmtResult::Failed(_) => object(vec![
+        ExecAxiomStmtResult::Failed(_) => object_for(runtime, vec![
             ("success", bool_value(false)),
             ("kind", string("axiom")),
         ]),
@@ -215,7 +211,7 @@ fn project_axiom(result: &ExecAxiomStmtResult, runtime: &Runtime) -> JsonValue {
 
 fn project_def_strategy(result: &ExecDefStrategyStmtResult, runtime: &Runtime) -> JsonValue {
     match result {
-        ExecDefStrategyStmtResult::Success(s) => object(vec![
+        ExecDefStrategyStmtResult::Success(s) => object_for(runtime, vec![
             ("success", bool_value(true)),
             ("kind", string("def_strategy")),
             (
@@ -224,23 +220,14 @@ fn project_def_strategy(result: &ExecDefStrategyStmtResult, runtime: &Runtime) -
             ),
             (
                 "proof_steps",
-                JsonValue::Array(
-                    s.proof_steps
-                        .iter()
-                        .map(|step| project_by_proof_step(step, runtime))
-                        .collect(),
-                ),
+                project_by_proof_steps(&s.proof_steps, runtime),
             ),
             (
                 "conclusion_proofs",
                 project_verify_facts(&s.conclusion_proofs, runtime),
             ),
-            (
-                "local_env",
-                project_local_env_summary(&s.local_env, runtime),
-            ),
-        ]),
-        ExecDefStrategyStmtResult::Failed(_) => object(vec![
+                    ]),
+        ExecDefStrategyStmtResult::Failed(_) => object_for(runtime, vec![
             ("success", bool_value(false)),
             ("kind", string("def_strategy")),
         ]),
@@ -257,7 +244,7 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
             super::entry::project_have_equal_only(r, runtime)
         }
         ExecDefineObjStmtResult::HaveObjByExistFacts(r) => match r {
-            ExecHaveObjByExistFactsStmtResult::Success(s) => object(vec![
+            ExecHaveObjByExistFactsStmtResult::Success(s) => object_for(runtime, vec![
                 ("success", bool_value(true)),
                 ("kind", string("have_obj_by_exist_facts")),
                 ("statement", string(s.statement.readable_string())),
@@ -266,13 +253,13 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                     project_have_store_ids(&s.store_and_infer_result.stored_fact_ids, runtime),
                 ),
             ]),
-            ExecHaveObjByExistFactsStmtResult::Failed(_) => object(vec![
+            ExecHaveObjByExistFactsStmtResult::Failed(_) => object_for(runtime, vec![
                 ("success", bool_value(false)),
                 ("kind", string("have_obj_by_exist_facts")),
             ]),
         },
         ExecDefineObjStmtResult::ObtainObjFromExistFact(r) => match r {
-            ExecObtainObjFromExistFactStmtResult::Success(s) => object(vec![
+            ExecObtainObjFromExistFactStmtResult::Success(s) => object_for(runtime, vec![
                 ("success", bool_value(true)),
                 ("kind", string("obtain_obj_from_exist_fact")),
                 ("statement", string(s.statement.readable_string())),
@@ -281,13 +268,13 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                     project_have_store_ids(&s.store_and_infer_result.stored_fact_ids, runtime),
                 ),
             ]),
-            ExecObtainObjFromExistFactStmtResult::Failed(_) => object(vec![
+            ExecObtainObjFromExistFactStmtResult::Failed(_) => object_for(runtime, vec![
                 ("success", bool_value(false)),
                 ("kind", string("obtain_obj_from_exist_fact")),
             ]),
         },
         ExecDefineObjStmtResult::ObtainObjFromAtomicFact(r) => match r {
-            ExecObtainObjFromAtomicFactStmtResult::Success(s) => object(vec![
+            ExecObtainObjFromAtomicFactStmtResult::Success(s) => object_for(runtime, vec![
                 ("success", bool_value(true)),
                 ("kind", string("obtain_obj_from_atomic_fact")),
                 ("statement", string(s.statement.readable_string())),
@@ -296,13 +283,13 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                     project_have_store_ids(&s.store_and_infer_result.stored_fact_ids, runtime),
                 ),
             ]),
-            ExecObtainObjFromAtomicFactStmtResult::Failed(_) => object(vec![
+            ExecObtainObjFromAtomicFactStmtResult::Failed(_) => object_for(runtime, vec![
                 ("success", bool_value(false)),
                 ("kind", string("obtain_obj_from_atomic_fact")),
             ]),
         },
         ExecDefineObjStmtResult::HaveByFnPreimage(r) => match r {
-            ExecHaveByFnPreimageStmtResult::Success(s) => object(vec![
+            ExecHaveByFnPreimageStmtResult::Success(s) => object_for(runtime, vec![
                 ("success", bool_value(true)),
                 ("kind", string("have_by_fn_preimage")),
                 ("statement", string(s.statement.readable_string())),
@@ -311,13 +298,13 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                     project_have_store_ids(&s.store_and_infer_result.stored_fact_ids, runtime),
                 ),
             ]),
-            ExecHaveByFnPreimageStmtResult::Failed(_) => object(vec![
+            ExecHaveByFnPreimageStmtResult::Failed(_) => object_for(runtime, vec![
                 ("success", bool_value(false)),
                 ("kind", string("have_by_fn_preimage")),
             ]),
         },
         ExecDefineObjStmtResult::HaveByReplacementAxiom(r) => match r {
-            ExecHaveByReplacementAxiomStmtResult::Success(s) => object(vec![
+            ExecHaveByReplacementAxiomStmtResult::Success(s) => object_for(runtime, vec![
                 ("success", bool_value(true)),
                 ("kind", string("have_by_replacement_axiom")),
                 ("statement", string(s.statement.readable_string())),
@@ -326,7 +313,7 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                     project_have_store_ids(&s.stored_fact_ids, runtime),
                 ),
             ]),
-            ExecHaveByReplacementAxiomStmtResult::Failed(_) => object(vec![
+            ExecHaveByReplacementAxiomStmtResult::Failed(_) => object_for(runtime, vec![
                 ("success", bool_value(false)),
                 ("kind", string("have_by_replacement_axiom")),
             ]),
@@ -336,7 +323,7 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
 
 fn project_let_obj(result: &ExecLetObjStmtResult, runtime: &Runtime) -> JsonValue {
     match result {
-        ExecLetObjStmtResult::Success(s) => object(vec![
+        ExecLetObjStmtResult::Success(s) => object_for(runtime, vec![
             ("success", bool_value(true)),
             ("kind", string("let_obj")),
             ("statement", string(s.statement.readable_string())),
@@ -349,7 +336,7 @@ fn project_let_obj(result: &ExecLetObjStmtResult, runtime: &Runtime) -> JsonValu
                 project_fact_ids_as_store(&s.stored_fact_ids, runtime),
             ),
         ]),
-        ExecLetObjStmtResult::Failed(_) => object(vec![
+        ExecLetObjStmtResult::Failed(_) => object_for(runtime, vec![
             ("success", bool_value(false)),
             ("kind", string("let_obj")),
         ]),
@@ -358,7 +345,7 @@ fn project_let_obj(result: &ExecLetObjStmtResult, runtime: &Runtime) -> JsonValu
 
 fn project_def_prop(result: &ExecDefPropStmtResult, runtime: &Runtime) -> JsonValue {
     match result {
-        ExecDefPropStmtResult::Success(s) => object(vec![
+        ExecDefPropStmtResult::Success(s) => object_for(runtime, vec![
             ("success", bool_value(true)),
             ("kind", string("def_prop")),
             ("statement", string(s.statement.readable_string())),
@@ -384,20 +371,19 @@ fn project_def_prop(result: &ExecDefPropStmtResult, runtime: &Runtime) -> JsonVa
                         .collect(),
                 ),
             ),
-            (
-                "local_env",
-                project_local_env_summary(&s.local_env, runtime),
-            ),
-        ]),
-        ExecDefPropStmtResult::Failed(_) => object(vec![
+                    ]),
+        ExecDefPropStmtResult::Failed(_) => object_for(runtime, vec![
             ("success", bool_value(false)),
             ("kind", string("def_prop")),
         ]),
     }
 }
 
-fn project_def_abstract_prop(result: &ExecDefAbstractPropStmtSuccessResult) -> JsonValue {
-    object(vec![
+fn project_def_abstract_prop(
+    result: &ExecDefAbstractPropStmtSuccessResult,
+    runtime: &Runtime,
+) -> JsonValue {
+    object_for(runtime, vec![
         ("success", bool_value(true)),
         ("kind", string("def_abstract_prop")),
         ("statement", string(result.statement.readable_string())),
@@ -408,7 +394,7 @@ fn project_witness(result: &ExecWitnessStmtResult, runtime: &Runtime) -> JsonVal
     match result {
         ExecWitnessStmtResult::WitnessExistFact(r) => match r {
             crate::execute::execute_witness_stmt::ExecWitnessExistFactStmtResult::Success(s) => {
-                object(vec![
+                object_for(runtime, vec![
                     ("success", bool_value(true)),
                     ("kind", string("witness_exist_fact")),
                     ("statement", string(s.statement.readable_string())),
@@ -419,7 +405,7 @@ fn project_witness(result: &ExecWitnessStmtResult, runtime: &Runtime) -> JsonVal
                 ])
             }
             crate::execute::execute_witness_stmt::ExecWitnessExistFactStmtResult::Failed(_) => {
-                object(vec![
+                object_for(runtime, vec![
                     ("success", bool_value(false)),
                     ("kind", string("witness_exist_fact")),
                 ])
@@ -427,7 +413,7 @@ fn project_witness(result: &ExecWitnessStmtResult, runtime: &Runtime) -> JsonVal
         },
         ExecWitnessStmtResult::WitnessAtomicFact(r) => match r {
             crate::execute::execute_witness_stmt::ExecWitnessAtomicFactStmtResult::Success(s) => {
-                object(vec![
+                object_for(runtime, vec![
                     ("success", bool_value(true)),
                     ("kind", string("witness_atomic_fact")),
                     ("statement", string(s.statement.readable_string())),
@@ -438,7 +424,7 @@ fn project_witness(result: &ExecWitnessStmtResult, runtime: &Runtime) -> JsonVal
                 ])
             }
             crate::execute::execute_witness_stmt::ExecWitnessAtomicFactStmtResult::Failed(_) => {
-                object(vec![
+                object_for(runtime, vec![
                     ("success", bool_value(false)),
                     ("kind", string("witness_atomic_fact")),
                 ])
@@ -446,7 +432,7 @@ fn project_witness(result: &ExecWitnessStmtResult, runtime: &Runtime) -> JsonVal
         },
         ExecWitnessStmtResult::WitnessNonemptySet(r) => match r {
             crate::execute::execute_witness_stmt::ExecWitnessNonemptySetStmtResult::Success(s) => {
-                object(vec![
+                object_for(runtime, vec![
                     ("success", bool_value(true)),
                     ("kind", string("witness_nonempty_set")),
                     ("statement", string(s.statement.readable_string())),
@@ -457,7 +443,7 @@ fn project_witness(result: &ExecWitnessStmtResult, runtime: &Runtime) -> JsonVal
                 ])
             }
             crate::execute::execute_witness_stmt::ExecWitnessNonemptySetStmtResult::Failed(_) => {
-                object(vec![
+                object_for(runtime, vec![
                     ("success", bool_value(false)),
                     ("kind", string("witness_nonempty_set")),
                 ])
@@ -469,7 +455,7 @@ fn project_witness(result: &ExecWitnessStmtResult, runtime: &Runtime) -> JsonVal
 fn project_trust(result: &ExecTrustBoundaryStmtResult, runtime: &Runtime) -> JsonValue {
     match result {
         ExecTrustBoundaryStmtResult::TrustStmt(r) => match r {
-            crate::execute::execute_unsafe_stmt::ExecTrustStmtResult::Success(s) => object(vec![
+            crate::execute::execute_unsafe_stmt::ExecTrustStmtResult::Success(s) => object_for(runtime, vec![
                 ("success", bool_value(true)),
                 ("kind", string("trust")),
                 ("statement", string(s.statement.readable_string())),
@@ -492,14 +478,13 @@ fn project_trust(result: &ExecTrustBoundaryStmtResult, runtime: &Runtime) -> Jso
                     ),
                 ),
             ]),
-            crate::execute::execute_unsafe_stmt::ExecTrustStmtResult::Failed(_) => object(vec![
+            crate::execute::execute_unsafe_stmt::ExecTrustStmtResult::Failed(_) => object_for(runtime, vec![
                 ("success", bool_value(false)),
                 ("kind", string("trust")),
             ]),
         },
         ExecTrustBoundaryStmtResult::TrustHaveStmt(r) => match r {
-            crate::execute::execute_unsafe_stmt::ExecTrustHaveStmtResult::Success(s) => object(
-                vec![
+            crate::execute::execute_unsafe_stmt::ExecTrustHaveStmtResult::Success(s) => object_for(runtime, vec![
                     ("success", bool_value(true)),
                     ("kind", string("trust_have")),
                     ("statement", string(s.statement.readable_string())),
@@ -530,7 +515,7 @@ fn project_trust(result: &ExecTrustBoundaryStmtResult, runtime: &Runtime) -> Jso
                     ),
                 ],
             ),
-            crate::execute::execute_unsafe_stmt::ExecTrustHaveStmtResult::Failed(_) => object(vec![
+            crate::execute::execute_unsafe_stmt::ExecTrustHaveStmtResult::Failed(_) => object_for(runtime, vec![
                 ("success", bool_value(false)),
                 ("kind", string("trust_have")),
             ]),
@@ -566,7 +551,7 @@ fn project_by_proof_steps(steps: &[ByProofStepResult], runtime: &Runtime) -> Jso
 
 fn project_by_extension(result: &ExecByExtensionStmtResult, runtime: &Runtime) -> JsonValue {
     match result {
-        ExecByExtensionStmtResult::Success(s) => object(vec![
+        ExecByExtensionStmtResult::Success(s) => object_for(runtime, vec![
             ("success", bool_value(true)),
             ("kind", string("by_extension")),
             (
@@ -585,13 +570,9 @@ fn project_by_extension(result: &ExecByExtensionStmtResult, runtime: &Runtime) -
                 "right_to_left",
                 project_verify_fact(&s.right_to_left, runtime),
             ),
-            (
-                "local_env",
-                project_local_env_summary(&s.local_env, runtime),
-            ),
-            ("stored", project_store_and_infer(&s.stored, runtime)),
+                        ("stored", project_store_and_infer(&s.stored, runtime)),
         ]),
-        ExecByExtensionStmtResult::Failed(_) => object(vec![
+        ExecByExtensionStmtResult::Failed(_) => object_for(runtime, vec![
             ("success", bool_value(false)),
             ("kind", string("by_extension")),
         ]),
@@ -600,7 +581,7 @@ fn project_by_extension(result: &ExecByExtensionStmtResult, runtime: &Runtime) -
 
 fn project_by_fn_extension(result: &ExecByFnExtensionStmtResult, runtime: &Runtime) -> JsonValue {
     match result {
-        ExecByFnExtensionStmtResult::Success(s) => object(vec![
+        ExecByFnExtensionStmtResult::Success(s) => object_for(runtime, vec![
             ("success", bool_value(true)),
             ("kind", string("by_fn_extension")),
             (
@@ -621,13 +602,9 @@ fn project_by_fn_extension(result: &ExecByFnExtensionStmtResult, runtime: &Runti
                 "pointwise_proof",
                 project_verify_fact(&s.pointwise_proof, runtime),
             ),
-            (
-                "local_env",
-                project_local_env_summary(&s.local_env, runtime),
-            ),
-            ("stored", project_store_and_infer(&s.stored, runtime)),
+                        ("stored", project_store_and_infer(&s.stored, runtime)),
         ]),
-        ExecByFnExtensionStmtResult::Failed(_) => object(vec![
+        ExecByFnExtensionStmtResult::Failed(_) => object_for(runtime, vec![
             ("success", bool_value(false)),
             ("kind", string("by_fn_extension")),
         ]),
@@ -636,7 +613,7 @@ fn project_by_fn_extension(result: &ExecByFnExtensionStmtResult, runtime: &Runti
 
 fn project_by_contra(result: &ExecByContraStmtResult, runtime: &Runtime) -> JsonValue {
     match result {
-        ExecByContraStmtResult::Success(s) => object(vec![
+        ExecByContraStmtResult::Success(s) => object_for(runtime, vec![
             ("success", bool_value(true)),
             ("kind", string("by_contra")),
             (
@@ -660,13 +637,9 @@ fn project_by_contra(result: &ExecByContraStmtResult, runtime: &Runtime) -> Json
                 "proof_steps",
                 project_by_proof_steps(&s.proof_steps, runtime),
             ),
-            (
-                "local_env",
-                project_local_env_summary(&s.local_env, runtime),
-            ),
-            ("stored", project_store_and_infer(&s.stored, runtime)),
+                        ("stored", project_store_and_infer(&s.stored, runtime)),
         ]),
-        ExecByContraStmtResult::Failed(_) => object(vec![
+        ExecByContraStmtResult::Failed(_) => object_for(runtime, vec![
             ("success", bool_value(false)),
             ("kind", string("by_contra")),
         ]),
@@ -675,7 +648,7 @@ fn project_by_contra(result: &ExecByContraStmtResult, runtime: &Runtime) -> Json
 
 fn project_by_cases(result: &ExecByCasesStmtResult, runtime: &Runtime) -> JsonValue {
     match result {
-        ExecByCasesStmtResult::Success(s) => object(vec![
+        ExecByCasesStmtResult::Success(s) => object_for(runtime, vec![
             ("success", bool_value(true)),
             ("kind", string("by_cases")),
             (
@@ -698,7 +671,7 @@ fn project_by_cases(result: &ExecByCasesStmtResult, runtime: &Runtime) -> JsonVa
                 ),
             ),
         ]),
-        ExecByCasesStmtResult::Failed(_) => object(vec![
+        ExecByCasesStmtResult::Failed(_) => object_for(runtime, vec![
             ("success", bool_value(false)),
             ("kind", string("by_cases")),
         ]),
@@ -707,7 +680,7 @@ fn project_by_cases(result: &ExecByCasesStmtResult, runtime: &Runtime) -> JsonVa
 
 fn project_by_def(result: &ExecByDefStmtResult, runtime: &Runtime) -> JsonValue {
     match result {
-        ExecByDefStmtResult::Success(s) => object(vec![
+        ExecByDefStmtResult::Success(s) => object_for(runtime, vec![
             ("success", bool_value(true)),
             ("kind", string("by_def")),
             (
@@ -715,13 +688,9 @@ fn project_by_def(result: &ExecByDefStmtResult, runtime: &Runtime) -> JsonValue 
                 project_verify_fact_wd_result(&s.goal_wd, runtime),
             ),
             ("proof", project_verify_fact(&s.proof, runtime)),
-            (
-                "local_env",
-                project_local_env_summary(&s.local_env, runtime),
-            ),
-            ("stored", project_store_and_infer(&s.stored, runtime)),
+                        ("stored", project_store_and_infer(&s.stored, runtime)),
         ]),
-        ExecByDefStmtResult::Failed(_) => object(vec![
+        ExecByDefStmtResult::Failed(_) => object_for(runtime, vec![
             ("success", bool_value(false)),
             ("kind", string("by_def")),
         ]),
@@ -730,7 +699,7 @@ fn project_by_def(result: &ExecByDefStmtResult, runtime: &Runtime) -> JsonValue 
 
 fn project_by_thm(result: &ExecByThmStmtResult, runtime: &Runtime) -> JsonValue {
     match result {
-        ExecByThmStmtResult::Success(s) => object(vec![
+        ExecByThmStmtResult::Success(s) => object_for(runtime, vec![
             ("success", bool_value(true)),
             ("kind", string("by_thm")),
             ("thm_name", string(s.thm_name.clone())),
@@ -742,13 +711,9 @@ fn project_by_thm(result: &ExecByThmStmtResult, runtime: &Runtime) -> JsonValue 
                 "selected_proof",
                 project_verify_fact(&s.selected_proof, runtime),
             ),
-            (
-                "local_env",
-                project_local_env_summary(&s.local_env, runtime),
-            ),
-            ("stored", project_store_and_infer(&s.stored, runtime)),
+                        ("stored", project_store_and_infer(&s.stored, runtime)),
         ]),
-        ExecByThmStmtResult::Failed(_) => object(vec![
+        ExecByThmStmtResult::Failed(_) => object_for(runtime, vec![
             ("success", bool_value(false)),
             ("kind", string("by_thm")),
         ]),
@@ -761,7 +726,7 @@ fn project_by_induc(
     runtime: &Runtime,
 ) -> JsonValue {
     match result {
-        ExecByInducStmtResult::Success(s) => object(vec![
+        ExecByInducStmtResult::Success(s) => object_for(runtime, vec![
             ("success", bool_value(true)),
             ("kind", string(kind)),
             (
@@ -775,7 +740,7 @@ fn project_by_induc(
             ),
             ("stored", project_store_and_infer(&s.stored, runtime)),
         ]),
-        ExecByInducStmtResult::Failed(_) => object(vec![
+        ExecByInducStmtResult::Failed(_) => object_for(runtime, vec![
             ("success", bool_value(false)),
             ("kind", string(kind)),
         ]),
@@ -787,7 +752,7 @@ fn project_by_strong_induc(
     runtime: &Runtime,
 ) -> JsonValue {
     match result {
-        ExecByStrongInducStmtResult::Success(s) => object(vec![
+        ExecByStrongInducStmtResult::Success(s) => object_for(runtime, vec![
             ("success", bool_value(true)),
             ("kind", string("by_strong_induc")),
             (
@@ -801,7 +766,7 @@ fn project_by_strong_induc(
             ),
             ("stored", project_store_and_infer(&s.stored, runtime)),
         ]),
-        ExecByStrongInducStmtResult::Failed(_) => object(vec![
+        ExecByStrongInducStmtResult::Failed(_) => object_for(runtime, vec![
             ("success", bool_value(false)),
             ("kind", string("by_strong_induc")),
         ]),
@@ -813,7 +778,7 @@ fn project_by_enumerate(
     runtime: &Runtime,
 ) -> JsonValue {
     match result {
-        ExecByEnumerateFiniteSetStmtResult::Success(s) => object(vec![
+        ExecByEnumerateFiniteSetStmtResult::Success(s) => object_for(runtime, vec![
             ("success", bool_value(true)),
             ("kind", string("by_enumerate_finite_set")),
             (
@@ -822,7 +787,7 @@ fn project_by_enumerate(
             ),
             ("stored", project_store_and_infer(&s.stored, runtime)),
         ]),
-        ExecByEnumerateFiniteSetStmtResult::Failed(_) => object(vec![
+        ExecByEnumerateFiniteSetStmtResult::Failed(_) => object_for(runtime, vec![
             ("success", bool_value(false)),
             ("kind", string("by_enumerate_finite_set")),
         ]),
@@ -831,7 +796,7 @@ fn project_by_enumerate(
 
 fn project_by_for(result: &ExecByForStmtResult, runtime: &Runtime) -> JsonValue {
     match result {
-        ExecByForStmtResult::Success(s) => object(vec![
+        ExecByForStmtResult::Success(s) => object_for(runtime, vec![
             ("success", bool_value(true)),
             ("kind", string("by_for")),
             (
@@ -840,15 +805,15 @@ fn project_by_for(result: &ExecByForStmtResult, runtime: &Runtime) -> JsonValue 
             ),
             ("stored", project_store_and_infer(&s.stored, runtime)),
         ]),
-        ExecByForStmtResult::Failed(_) => object(vec![
+        ExecByForStmtResult::Failed(_) => object_for(runtime, vec![
             ("success", bool_value(false)),
             ("kind", string("by_for")),
         ]),
     }
 }
 
-fn project_register(result: &ExecRegisterStmtResult, _runtime: &Runtime) -> JsonValue {
-    object(vec![
+fn project_register(result: &ExecRegisterStmtResult, runtime: &Runtime) -> JsonValue {
+    object_for(runtime, vec![
         ("success", bool_value(!result.is_failed())),
         ("kind", string("register")),
     ])
@@ -868,7 +833,7 @@ fn project_release_and_expand(
         ExecReleaseAndExpandStmtResult::AxiomOfChoice(_) => "release_axiom_of_choice",
         ExecReleaseAndExpandStmtResult::RegularityAxiom(_) => "release_regularity_axiom",
     };
-    object(vec![
+    object_for(runtime, vec![
         ("success", bool_value(!result.is_failed())),
         ("kind", string(kind)),
     ])
@@ -877,7 +842,7 @@ fn project_release_and_expand(
 fn project_proof_block(result: &ExecProofBlockStmtResult, runtime: &Runtime) -> JsonValue {
     match result {
         ExecProofBlockStmtResult::Claim(r) => match r {
-            ExecClaimStmtResult::Success(s) => object(vec![
+            ExecClaimStmtResult::Success(s) => object_for(runtime, vec![
                 ("success", bool_value(true)),
                 ("kind", string("claim")),
                 (
@@ -897,19 +862,15 @@ fn project_proof_block(result: &ExecProofBlockStmtResult, runtime: &Runtime) -> 
                     "conclusion_proofs",
                     project_verify_facts(&s.conclusion_proofs, runtime),
                 ),
-                (
-                    "local_env",
-                    project_local_env_summary(&s.local_env, runtime),
-                ),
-                ("stored", project_store_and_infer(&s.stored, runtime)),
+                                ("stored", project_store_and_infer(&s.stored, runtime)),
             ]),
-            ExecClaimStmtResult::Failed(_) => object(vec![
+            ExecClaimStmtResult::Failed(_) => object_for(runtime, vec![
                 ("success", bool_value(false)),
                 ("kind", string("claim")),
             ]),
         },
         ExecProofBlockStmtResult::Sketch(r) => match r {
-            ExecSketchStmtResult::Success(s) => object(vec![
+            ExecSketchStmtResult::Success(s) => object_for(runtime, vec![
                 ("success", bool_value(true)),
                 ("kind", string("sketch")),
                 (
@@ -921,12 +882,8 @@ fn project_proof_block(result: &ExecProofBlockStmtResult, runtime: &Runtime) -> 
                             .collect(),
                     ),
                 ),
-                (
-                    "local_env",
-                    project_local_env_summary(&s.local_env, runtime),
-                ),
-            ]),
-            ExecSketchStmtResult::Failed(_) => object(vec![
+                            ]),
+            ExecSketchStmtResult::Failed(_) => object_for(runtime, vec![
                 ("success", bool_value(false)),
                 ("kind", string("sketch")),
             ]),
@@ -934,10 +891,10 @@ fn project_proof_block(result: &ExecProofBlockStmtResult, runtime: &Runtime) -> 
     }
 }
 
-fn project_command(result: &ExecCommandStmtResult, _runtime: &Runtime) -> JsonValue {
+fn project_command(result: &ExecCommandStmtResult, runtime: &Runtime) -> JsonValue {
     match result {
         ExecCommandStmtResult::Eval(r) => match r {
-            ExecEvalStmtResult::Success(s) => object(vec![
+            ExecEvalStmtResult::Success(s) => object_for(runtime, vec![
                 ("success", bool_value(true)),
                 ("kind", string("eval")),
                 ("statement", string(s.statement.readable_string())),
@@ -954,7 +911,7 @@ fn project_command(result: &ExecCommandStmtResult, _runtime: &Runtime) -> JsonVa
                     string(s.evaluated_object.readable_string()),
                 ),
             ]),
-            ExecEvalStmtResult::Failed(_) => object(vec![
+            ExecEvalStmtResult::Failed(_) => object_for(runtime, vec![
                 ("success", bool_value(false)),
                 ("kind", string("eval")),
             ]),
@@ -967,6 +924,7 @@ fn project_success_failed_shell(
     success: bool,
     statement: Option<String>,
     store: Option<JsonValue>,
+    runtime: &Runtime,
 ) -> JsonValue {
     let mut entries = vec![
         ("success", bool_value(success)),
@@ -978,7 +936,7 @@ fn project_success_failed_shell(
     if let Some(store) = store {
         entries.push(("store_and_infer", store));
     }
-    object(entries)
+    object_for(runtime, entries)
 }
 
 fn project_fact_ids_as_store(fact_ids: &[FactId], runtime: &Runtime) -> JsonValue {
@@ -991,10 +949,10 @@ fn project_param_type_fact_check(
     runtime: &Runtime,
 ) -> JsonValue {
     match check {
-        ParamTypeFactCheckResult::Set => object(vec![("type", string("set"))]),
-        ParamTypeFactCheckResult::NonemptySet => object(vec![("type", string("nonempty_set"))]),
-        ParamTypeFactCheckResult::FiniteSet => object(vec![("type", string("finite_set"))]),
-        ParamTypeFactCheckResult::Obj(v) => object(vec![
+        ParamTypeFactCheckResult::Set => object_for(runtime, vec![("type", string("set"))]),
+        ParamTypeFactCheckResult::NonemptySet => object_for(runtime, vec![("type", string("nonempty_set"))]),
+        ParamTypeFactCheckResult::FiniteSet => object_for(runtime, vec![("type", string("finite_set"))]),
+        ParamTypeFactCheckResult::Obj(v) => object_for(runtime, vec![
             ("type", string("obj")),
             ("verify", project_verify_fact(v, runtime)),
         ]),

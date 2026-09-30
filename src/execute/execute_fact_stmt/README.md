@@ -169,16 +169,20 @@ conclusion and alpha-compares to the goal before instantiation requirements.
 
 `VerifyState` search phases (atomic / equal):
 
-1. **Builtin rule** (always entered; cite-only / closed-numeric arms ignore the
-   budget; premise-producing arms require `can_use_builtin_rule` and pass
-   `after_builtin_rule()` to children — known / cite-only only).
-2. **Known** (equivalence class / known atomic).
-3. **Deep** (`can_use_def_and_known_forall_and_known_strategy`): 
-   `verify_by_strategy` (enters `StrategySearch` with depth 16; nested
-   requirements may only use cite-only builtin, known, and further strategy —
-   no by-def / forall / rewrite; carrier closures like `(a - (a % b)) $in Z`
-   nest via strategy depth), then by definition / object definition, known
-   forall, then (`can_use_rewrite`) rewrite.
+1. **Builtin rule** (enter only if `can_use_builtin_rule_round > 0`, then pass
+   `with_one_less_round()` / round - 1; premise-producing arms may
+   `after_builtin_rule()` again for children; cite-only still runs at the
+   decremented round including 0. Strategy cite-only calls by_builtin_rule
+   directly and does not use this entry gate).
+2. **Known** (equivalence class / known atomic; does not consume round).
+3. **Deep** (`can_use_def_and_known_forall_and_known_strategy` and
+   `can_use_builtin_rule_round > 0`): enter once via `with_one_less_round()`
+   (round - 1 for the whole phase), then `verify_by_strategy` (enters
+   `StrategySearch` with depth 16; nested requirements may only use cite-only
+   builtin, known, and further strategy — no by-def / forall / rewrite;
+   carrier closures like `(a - (a % b)) $in Z` nest via strategy depth), then
+   by definition / object definition, known forall, then (`can_use_rewrite`)
+   rewrite. Top-level round starts at 2.
 
 `or` search order is:
 
