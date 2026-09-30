@@ -180,7 +180,7 @@ Success:
 {
   "success": true,
   "statement": "k >= 0",
-  "why_verified": {
+  "proof_method": {
     "type": "builtin_rule",
     "rule": "FromKnownInNatural",
     "cite": "k $in N"
@@ -230,7 +230,7 @@ Successful inline run:
       "statement": "1 = 1",
       "stores": ["1 = 1"],
       "success": true,
-      "why_verified": {
+      "proof_method": {
         "rule": "EqualityBuiltin",
         "type": "builtin_rule"
       }
@@ -256,7 +256,7 @@ Soft miss with a successful prefix retained:
       "statement": "have a R",
       "stores": ["a $in R"],
       "success": true,
-      "why_verified": { "type": "define_obj" }
+      "proof_method": { "type": "define_obj" }
     },
     {
       "infers": [],

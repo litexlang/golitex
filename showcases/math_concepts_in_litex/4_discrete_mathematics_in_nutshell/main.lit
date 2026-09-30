@@ -19,7 +19,7 @@ have fn pascal_entry(a Z, b Z: a >= 0, b >= 0) N by induc a + b from 0:
 
 # Binomial coefficients read the diagonal coordinates of the Pascal table and
 # are zero outside the usual range k <= n.
-have fn choose_fn(n, k N) N:
+have fn choose_fn(n, k N) N by cases:
     case k <= n: pascal_entry(k, n - k)
     case k > n: 0
 

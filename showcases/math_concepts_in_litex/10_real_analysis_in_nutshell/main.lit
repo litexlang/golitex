@@ -75,7 +75,7 @@ thm sequence_limit_unique:
 
 # Convergence plus uniqueness turns the relational limit into a callable
 # selector on the set of convergent real sequences.
-have fn lim by exist!:
+claim:
     ? forall a seq(R):
         $is_convergent_sequence(a)
         =>:
@@ -91,6 +91,12 @@ have fn lim by exist!:
                 =>:
                     L1 = L2
             by thm sequence_limit_unique(a, L1, L2) => L1 = L2
+
+have fn lim by exist!:
+    ? forall a seq(R):
+        $is_convergent_sequence(a)
+        =>:
+            exist! L R st {$has_limit(a, L)}
 
 forall a seq(R):
     $is_convergent_sequence(a)

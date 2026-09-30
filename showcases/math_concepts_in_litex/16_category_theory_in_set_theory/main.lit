@@ -41,9 +41,9 @@ struct CategorySetting:
     compose fn(comp_source, comp_middle, comp_target Obj, comp_first Hom(comp_source, comp_middle), comp_second Hom(comp_middle, comp_target)) Hom(comp_source, comp_target)
     <=>:
         forall object Obj:
-        $is_identity_morphism(Obj, Mor, Hom, compose, object, identity(object))
+            $is_identity_morphism(Obj, Mor, Hom, compose, object, identity(object))
         forall source, middle, target, far_target Obj, f Hom(source, middle), g Hom(middle, target), h Hom(target, far_target):
-        $composition_is_associative_at(Obj, Mor, Hom, compose, source, middle, target, far_target, f, g, h)
+            $composition_is_associative_at(Obj, Mor, Hom, compose, source, middle, target, far_target, f, g, h)
 
 prop is_category([CategorySetting])
 
@@ -84,9 +84,9 @@ struct FunctorSetting:
     arrow_map fn(functor_source, functor_target CObj, functor_arrow CHom(functor_source, functor_target)) DHom(object_map(functor_source), object_map(functor_target))
     <=>:
         forall mapped_object CObj:
-        arrow_map(mapped_object, mapped_object, Cidentity(mapped_object)) = Didentity(object_map(mapped_object))
+            arrow_map(mapped_object, mapped_object, Cidentity(mapped_object)) = Didentity(object_map(mapped_object))
         forall mapped_source, mapped_middle, mapped_target CObj, first_arrow CHom(mapped_source, mapped_middle), second_arrow CHom(mapped_middle, mapped_target):
-        arrow_map(mapped_source, mapped_target, Ccompose(mapped_source, mapped_middle, mapped_target, first_arrow, second_arrow)) = Dcompose(object_map(mapped_source), object_map(mapped_middle), object_map(mapped_target), arrow_map(mapped_source, mapped_middle, first_arrow), arrow_map(mapped_middle, mapped_target, second_arrow))
+            arrow_map(mapped_source, mapped_target, Ccompose(mapped_source, mapped_middle, mapped_target, first_arrow, second_arrow)) = Dcompose(object_map(mapped_source), object_map(mapped_middle), object_map(mapped_target), arrow_map(mapped_source, mapped_middle, first_arrow), arrow_map(mapped_middle, mapped_target, second_arrow))
 
 prop is_functor([FunctorSetting])
 
@@ -132,9 +132,9 @@ struct ComposableFunctorsSetting:
     G_arrow fn(g_source, g_target DObj, g_arrow DHom(g_source, g_target)) EHom(G_object(g_source), G_object(g_target))
     <=>:
         forall mapped_object DObj:
-        G_arrow(mapped_object, mapped_object, Didentity(mapped_object)) = Eidentity(G_object(mapped_object))
+            G_arrow(mapped_object, mapped_object, Didentity(mapped_object)) = Eidentity(G_object(mapped_object))
         forall mapped_source, mapped_middle, mapped_target DObj, first_arrow DHom(mapped_source, mapped_middle), second_arrow DHom(mapped_middle, mapped_target):
-        G_arrow(mapped_source, mapped_target, Dcompose(mapped_source, mapped_middle, mapped_target, first_arrow, second_arrow)) = Ecompose(G_object(mapped_source), G_object(mapped_middle), G_object(mapped_target), G_arrow(mapped_source, mapped_middle, first_arrow), G_arrow(mapped_middle, mapped_target, second_arrow))
+            G_arrow(mapped_source, mapped_target, Dcompose(mapped_source, mapped_middle, mapped_target, first_arrow, second_arrow)) = Ecompose(G_object(mapped_source), G_object(mapped_middle), G_object(mapped_target), G_arrow(mapped_source, mapped_middle, first_arrow), G_arrow(mapped_middle, mapped_target, second_arrow))
 
 thm composite_functor_preserves_identity:
     ? forall [ComposableFunctorsSetting], chosen_object CObj:
@@ -177,9 +177,9 @@ struct ParallelFunctorsSetting:
     G_arrow fn(g_source, g_target CObj, g_arrow CHom(g_source, g_target)) DHom(G_object(g_source), G_object(g_target))
     <=>:
         forall mapped_object CObj:
-        G_arrow(mapped_object, mapped_object, Cidentity(mapped_object)) = Didentity(G_object(mapped_object))
+            G_arrow(mapped_object, mapped_object, Cidentity(mapped_object)) = Didentity(G_object(mapped_object))
         forall mapped_source, mapped_middle, mapped_target CObj, first_arrow CHom(mapped_source, mapped_middle), second_arrow CHom(mapped_middle, mapped_target):
-        G_arrow(mapped_source, mapped_target, Ccompose(mapped_source, mapped_middle, mapped_target, first_arrow, second_arrow)) = Dcompose(G_object(mapped_source), G_object(mapped_middle), G_object(mapped_target), G_arrow(mapped_source, mapped_middle, first_arrow), G_arrow(mapped_middle, mapped_target, second_arrow))
+            G_arrow(mapped_source, mapped_target, Ccompose(mapped_source, mapped_middle, mapped_target, first_arrow, second_arrow)) = Dcompose(G_object(mapped_source), G_object(mapped_middle), G_object(mapped_target), G_arrow(mapped_source, mapped_middle, first_arrow), G_arrow(mapped_middle, mapped_target, second_arrow))
 
 # Naturality is named at one arrow so diagram calculations can select the
 # exact square they need before unfolding it to an equality.
@@ -194,7 +194,7 @@ struct NaturalTransformationSetting:
     _todo_placeholder set
     <=>:
         forall natural_source, natural_target CObj, natural_arrow CHom(natural_source, natural_target):
-        $naturality_square_commutes(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, G_object, G_arrow, component, natural_source, natural_target, natural_arrow)
+            $naturality_square_commutes(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, G_object, G_arrow, component, natural_source, natural_target, natural_arrow)
 
 prop is_natural_transformation([NaturalTransformationSetting])
 
@@ -237,11 +237,11 @@ struct ComposableNaturalTransformationsSetting:
     beta fn(component_object CObj) DHom(G_object(component_object), H_object(component_object))
     <=>:
         forall mapped_object CObj:
-        H_arrow(mapped_object, mapped_object, Cidentity(mapped_object)) = Didentity(H_object(mapped_object))
+            H_arrow(mapped_object, mapped_object, Cidentity(mapped_object)) = Didentity(H_object(mapped_object))
         forall mapped_source, mapped_middle, mapped_target CObj, first_arrow CHom(mapped_source, mapped_middle), second_arrow CHom(mapped_middle, mapped_target):
-        H_arrow(mapped_source, mapped_target, Ccompose(mapped_source, mapped_middle, mapped_target, first_arrow, second_arrow)) = Dcompose(H_object(mapped_source), H_object(mapped_middle), H_object(mapped_target), H_arrow(mapped_source, mapped_middle, first_arrow), H_arrow(mapped_middle, mapped_target, second_arrow))
+            H_arrow(mapped_source, mapped_target, Ccompose(mapped_source, mapped_middle, mapped_target, first_arrow, second_arrow)) = Dcompose(H_object(mapped_source), H_object(mapped_middle), H_object(mapped_target), H_arrow(mapped_source, mapped_middle, first_arrow), H_arrow(mapped_middle, mapped_target, second_arrow))
         forall natural_source, natural_target CObj, natural_arrow CHom(natural_source, natural_target):
-        $naturality_square_commutes(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, G_object, G_arrow, H_object, H_arrow, beta, natural_source, natural_target, natural_arrow)
+            $naturality_square_commutes(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, G_object, G_arrow, H_object, H_arrow, beta, natural_source, natural_target, natural_arrow)
 
 # The local names are not proof-only wrappers: they expose the six object
 # images, three arrow images, and four components in the familiar diagram.

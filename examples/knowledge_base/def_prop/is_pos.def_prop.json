@@ -1,55 +1,55 @@
 {
-  "iff_facts": [
-    {
-      "atomic": {
-        "fact_id": 42,
-        "left": {
-          "identifier": {
-            "id": 7,
-            "name": "x",
-            "tag": "Plain"
-          },
-          "tag": "Identifier"
-        },
-        "line_file": null,
-        "right": {
-          "literal": {
-            "tag": "Number",
-            "text": "0"
-          },
-          "tag": "Literal"
-        },
-        "tag": "GreaterFact"
-      },
-      "tag": "AtomicFact"
-    }
-  ],
   "kind": "def_prop",
-  "line_file": {
-    "line": 1,
-    "origin": {
-      "export_file_id": 0,
-      "tag": "RootExport"
-    }
-  },
   "name": "is_pos",
   "typed_parameters": {
     "groups": [
       {
-        "param_type": {
-          "obj": {
-            "set": "R",
-            "tag": "StandardSet"
-          },
-          "tag": "Obj"
-        },
         "params": [
           {
             "id": 7,
             "name": "x"
           }
-        ]
+        ],
+        "param_type": {
+          "tag": "Obj",
+          "obj": {
+            "tag": "StandardSet",
+            "set": "R"
+          }
+        }
       }
     ]
+  },
+  "iff_facts": [
+    {
+      "tag": "AtomicFact",
+      "atomic": {
+        "tag": "GreaterFact",
+        "fact_id": 42,
+        "left": {
+          "tag": "Identifier",
+          "identifier": {
+            "tag": "Plain",
+            "id": 7,
+            "name": "x"
+          }
+        },
+        "right": {
+          "tag": "Literal",
+          "literal": {
+            "tag": "Number",
+            "text": "0"
+          }
+        },
+        "line_file": null
+      }
+    }
+  ],
+  "line_file": {
+    "line": 1,
+    "origin": {
+      "tag": "RootExport",
+      "export_file_id": 0
+    }
   }
 }

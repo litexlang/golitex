@@ -89,7 +89,7 @@ impl Runtime {
         self.push_parse_scope();
         let result = (|| {
             tb.expect(FORALL)?;
-            let params = self.parse_typed_param_list_until_colon(tb)?;
+            let params = self.parse_typed_param_list_until_colon_allow_empty(tb)?;
             if !tb.exceed_end_of_head() {
                 return Err(RuntimeParseError::new(
                     "trailing tokens after `not forall` header",
@@ -176,7 +176,8 @@ impl Runtime {
         self.push_parse_scope();
         let result = (|| {
             tb.expect(FORALL)?;
-            let params = self.parse_typed_param_list_until_colon_or_arrow(tb)?;
+            // Allow `forall:` / `forall => P` with no binders (see Manual).
+            let params = self.parse_typed_param_list_until_colon_or_arrow_allow_empty(tb, true)?;
 
             match tb.peek() {
                 Some(RIGHT_ARROW) => {

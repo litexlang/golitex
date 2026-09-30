@@ -17,11 +17,11 @@ struct TopologicalSpaceSetting:
         {} $in open_sets
         X $in open_sets
         forall U, V open_sets:
-        intersect(U, V) $in open_sets
+            intersect(U, V) $in open_sets
         forall family power_set(power_set(X)):
-        family $subset open_sets
-        =>:
-        family_union(family) $in open_sets
+            family $subset open_sets
+            =>:
+                family_union(family) $in open_sets
 
 prop is_topology_on([TopologicalSpaceSetting])
 
@@ -101,7 +101,7 @@ struct ContinuousMapSetting:
     _todo_b set
     <=>:
         forall open_Y open_sets_Y:
-        {x X: f(x) $in open_Y} $in open_sets_X
+            {x X: f(x) $in open_Y} $in open_sets_X
 
 prop is_continuous([ContinuousMapSetting])
 
@@ -115,9 +115,9 @@ struct ContinuousCompositionSetting:
     g fn(y B) CarrierC
     <=>:
         forall open_B open_sets_B:
-        {x A: f(x) $in open_B} $in open_sets_A
+            {x A: f(x) $in open_B} $in open_sets_A
         forall open_C open_sets_C:
-        {y B: g(y) $in open_C} $in open_sets_B
+            {y B: g(y) $in open_C} $in open_sets_B
 
 # Tracer theorem: settings carry the ambient hypotheses; the proof works with
 # the native preimage set builders directly.

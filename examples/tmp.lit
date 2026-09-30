@@ -1,5 +1,4 @@
-# Nested integer carrier via StrategySearch
-have a Z
-have b N+
-trust b != 0
-(a - (a % b)) $in Z
+prop is_collinear(a, b, c set)
+by contra:
+    ? 1 = 1
+    impossible not $is_collinear(1, 1, 1)

@@ -1,0 +1,6 @@
+# Stmt: By.ByContraStmt — `impossible not <atomic>`
+# Run: litex -f examples/stmt_nodes/by/by_contra_impossible_not.lit
+
+by contra:
+    ? 0 $in {0}
+    impossible not 0 $in {0}

@@ -1,48 +1,48 @@
 {
   "kind": "stored_identifier",
+  "tag": "HaveFnEqual",
   "plain_name": "id",
   "stmt": {
+    "name": "id",
     "equal_to_anonymous_fn": {
       "body": {
-        "dom_facts": [],
-        "ret_set": {
-          "set": "R",
-          "tag": "StandardSet"
-        },
         "set_bound_parameters": {
           "groups": [
             {
-              "param_type": {
-                "set": "R",
-                "tag": "StandardSet"
-              },
               "params": [
                 {
                   "id": 15,
                   "name": "x"
                 }
-              ]
+              ],
+              "param_type": {
+                "tag": "StandardSet",
+                "set": "R"
+              }
             }
           ]
+        },
+        "dom_facts": [],
+        "ret_set": {
+          "tag": "StandardSet",
+          "set": "R"
         }
       },
       "equal_to": {
+        "tag": "Identifier",
         "identifier": {
+          "tag": "Plain",
           "id": 15,
-          "name": "x",
-          "tag": "Plain"
-        },
-        "tag": "Identifier"
+          "name": "x"
+        }
       }
     },
     "line_file": {
       "line": 1,
       "origin": {
-        "export_file_id": 0,
-        "tag": "RootExport"
+        "tag": "RootExport",
+        "export_file_id": 0
       }
-    },
-    "name": "id"
-  },
-  "tag": "HaveFnEqual"
+    }
+  }
 }

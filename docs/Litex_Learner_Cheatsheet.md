@@ -61,7 +61,7 @@ excerpt):
     {
       "success": true,
       "statement": "1 + 1 = 2",
-      "why_verified": { "type": "builtin_rule", "rule": "EqualityBuiltin" },
+      "proof_method": { "type": "builtin_rule", "rule": "EqualityBuiltin" },
       "stores": ["1 + 1 = 2"],
       "infers": []
     }
@@ -73,7 +73,7 @@ Read the result in this order:
 
 1. Did the whole run succeed (<code>success</code>) and did each statement succeed
    (<code>success</code>)?
-2. Why was it accepted (<code>why_verified</code>)?
+2. Why was it accepted (<code>proof_method</code>)?
 3. What was actually added to the context (<code>stores</code>, <code>infers</code>)?
 4. If it stopped, what is <code>why_failed.phase</code> and <code>why_failed.goal</code>?
    Soft misses stay inside <code>statement_results</code>; only

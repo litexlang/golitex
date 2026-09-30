@@ -265,7 +265,7 @@ impl Runtime {
                     let proof = self.parse_body_stmts(&arm.body[..n - 1])?;
                     let mut last = arm.body[n - 1].clone();
                     last.expect(IMPOSSIBLE)?;
-                    let imp = self.parse_atomic_fact(&mut last, true)?;
+                    let imp = self.parse_impossible_atomic_fact(&mut last)?;
                     if !last.exceed_end_of_head() || !last.body.is_empty() {
                         return Err(last.parse_error("impossible: expected a single atomic fact"));
                     }
@@ -313,7 +313,7 @@ impl Runtime {
             self.with_forall_params_occupied(params, tb, |this| {
                 let proof = this.parse_body_stmts(proof_blocks)?;
                 last.expect(IMPOSSIBLE)?;
-                let impossible_fact = this.parse_atomic_fact(&mut last, true)?;
+                let impossible_fact = this.parse_impossible_atomic_fact(&mut last)?;
                 if !last.exceed_end_of_head() || !last.body.is_empty() {
                     return Err(last.parse_error("impossible: expected a single atomic fact"));
                 }
@@ -324,7 +324,7 @@ impl Runtime {
             let result = (|| {
                 let proof = self.parse_body_stmts(proof_blocks)?;
                 last.expect(IMPOSSIBLE)?;
-                let impossible_fact = self.parse_atomic_fact(&mut last, true)?;
+                let impossible_fact = self.parse_impossible_atomic_fact(&mut last)?;
                 if !last.exceed_end_of_head() || !last.body.is_empty() {
                     return Err(last.parse_error("impossible: expected a single atomic fact"));
                 }

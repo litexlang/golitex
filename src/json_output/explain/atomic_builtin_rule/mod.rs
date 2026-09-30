@@ -5,11 +5,29 @@
 //! leaf proof owns its copy here (not in `project_normal`).
 
 mod cite;
-mod families;
+mod greater;
 mod greater_equal;
+mod in_fact;
+mod is_cart;
+mod is_finite_set;
+mod is_nonempty_set;
+mod is_set;
+mod is_tuple;
 mod less;
 mod less_equal;
 mod not_equal;
+mod not_greater;
+mod not_greater_equal;
+mod not_in_fact;
+mod not_is_finite_set;
+mod not_is_nonempty_set;
+mod not_less;
+mod not_less_equal;
+mod not_subset;
+mod not_superset;
+mod misc_result;
+mod subset;
+mod superset;
 mod text;
 
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::AtomicExceptEqualityFactSearchProofByBuiltinRule;
@@ -18,60 +36,55 @@ use crate::launch_command::OutputLanguage;
 use crate::runtime::FactId;
 
 use self::cite::cite_from_atomic_builtin_rule;
-use self::families::family_text;
 
 impl AtomicExceptEqualityFactSearchProofByBuiltinRule {
     pub fn rule_id_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
         match self {
-            Self::GreaterEqualFact(g) => g.rule_id_and_message(lang),
-            Self::LessEqualFact(l) => l.rule_id_and_message(lang),
-            Self::LessFact(l) => l.rule_id_and_message(lang),
-            Self::NotEqualFact(n) => n.rule_id_and_message(lang),
-            Self::GreaterFact(_) => family_text("GreaterFactBuiltin", lang),
-            Self::IsSetFact(_) => family_text("IsSetFactBuiltin", lang),
-            Self::IsNonemptySetFact(_) => family_text("IsNonemptySetFactBuiltin", lang),
-            Self::IsFiniteSetFact(_) => family_text("IsFiniteSetFactBuiltin", lang),
-            Self::InFact(_) => family_text("InFactBuiltin", lang),
-            Self::IsCartFact(_) => family_text("IsCartFactBuiltin", lang),
-            Self::IsTupleFact(_) => family_text("IsTupleFactBuiltin", lang),
-            Self::SubsetFact(_) => family_text("SubsetFactBuiltin", lang),
-            Self::SupersetFact(_) => family_text("SupersetFactBuiltin", lang),
-            Self::ProperSubsetFact(_) => family_text("ProperSubsetFactBuiltin", lang),
-            Self::ProperSupersetFact(_) => family_text("ProperSupersetFactBuiltin", lang),
-            Self::PrimeFact(_) => family_text("PrimeFactBuiltin", lang),
-            Self::CoprimeFact(_) => family_text("CoprimeFactBuiltin", lang),
-            Self::DvdFact(_) => family_text("DvdFactBuiltin", lang),
-            Self::InjectiveFact(_) => family_text("InjectiveFactBuiltin", lang),
-            Self::SurjectiveFact(_) => family_text("SurjectiveFactBuiltin", lang),
-            Self::BijectiveFact(_) => family_text("BijectiveFactBuiltin", lang),
-            Self::IsChoiceFunctionForFact(_) => {
-                family_text("IsChoiceFunctionForFactBuiltin", lang)
-            }
-            Self::NormalAtomicFact(_) => family_text("NormalAtomicFactBuiltin", lang),
-            Self::NotNormalAtomicFact(_) => family_text("NotNormalAtomicFactBuiltin", lang),
-            Self::NotLessFact(_) => family_text("NotLessFactBuiltin", lang),
-            Self::NotGreaterFact(_) => family_text("NotGreaterFactBuiltin", lang),
-            Self::NotLessEqualFact(_) => family_text("NotLessEqualFactBuiltin", lang),
-            Self::NotGreaterEqualFact(_) => family_text("NotGreaterEqualFactBuiltin", lang),
-            Self::NotIsSetFact(_) => family_text("NotIsSetFactBuiltin", lang),
-            Self::NotIsNonemptySetFact(_) => family_text("NotIsNonemptySetFactBuiltin", lang),
-            Self::NotIsFiniteSetFact(_) => family_text("NotIsFiniteSetFactBuiltin", lang),
-            Self::NotInFact(_) => family_text("NotInFactBuiltin", lang),
-            Self::NotIsCartFact(_) => family_text("NotIsCartFactBuiltin", lang),
-            Self::NotIsTupleFact(_) => family_text("NotIsTupleFactBuiltin", lang),
-            Self::NotSubsetFact(_) => family_text("NotSubsetFactBuiltin", lang),
-            Self::NotSupersetFact(_) => family_text("NotSupersetFactBuiltin", lang),
-            Self::NotProperSubsetFact(_) => family_text("NotProperSubsetFactBuiltin", lang),
-            Self::NotProperSupersetFact(_) => family_text("NotProperSupersetFactBuiltin", lang),
-            Self::NotPrimeFact(_) => family_text("NotPrimeFactBuiltin", lang),
-            Self::NotCoprimeFact(_) => family_text("NotCoprimeFactBuiltin", lang),
-            Self::NotDvdFact(_) => family_text("NotDvdFactBuiltin", lang),
-            Self::NotInjectiveFact(_) => family_text("NotInjectiveFactBuiltin", lang),
-            Self::NotSurjectiveFact(_) => family_text("NotSurjectiveFactBuiltin", lang),
-            Self::NotBijectiveFact(_) => family_text("NotBijectiveFactBuiltin", lang),
-            Self::NotIsChoiceFunctionForFact(_) => {
-                family_text("NotIsChoiceFunctionForFactBuiltin", lang)
-            }
+            Self::BijectiveFact(bf) => bf.rule_id_and_message(lang),
+            Self::CoprimeFact(cf) => cf.rule_id_and_message(lang),
+            Self::DvdFact(df) => df.rule_id_and_message(lang),
+            Self::GreaterEqualFact(gef) => gef.rule_id_and_message(lang),
+            Self::GreaterFact(gf) => gf.rule_id_and_message(lang),
+            Self::InFact(if_) => if_.rule_id_and_message(lang),
+            Self::InjectiveFact(if_) => if_.rule_id_and_message(lang),
+            Self::IsCartFact(icf) => icf.rule_id_and_message(lang),
+            Self::IsChoiceFunctionForFact(icfff) => icfff.rule_id_and_message(lang),
+            Self::IsFiniteSetFact(ifsf) => ifsf.rule_id_and_message(lang),
+            Self::IsNonemptySetFact(insf) => insf.rule_id_and_message(lang),
+            Self::IsSetFact(isf) => isf.rule_id_and_message(lang),
+            Self::IsTupleFact(itf) => itf.rule_id_and_message(lang),
+            Self::LessEqualFact(lef) => lef.rule_id_and_message(lang),
+            Self::LessFact(lf) => lf.rule_id_and_message(lang),
+            Self::NormalAtomicFact(naf) => naf.rule_id_and_message(lang),
+            Self::NotBijectiveFact(nbf) => nbf.rule_id_and_message(lang),
+            Self::NotCoprimeFact(ncf) => ncf.rule_id_and_message(lang),
+            Self::NotDvdFact(ndf) => ndf.rule_id_and_message(lang),
+            Self::NotEqualFact(nef) => nef.rule_id_and_message(lang),
+            Self::NotGreaterEqualFact(ngef) => ngef.rule_id_and_message(lang),
+            Self::NotGreaterFact(ngf) => ngf.rule_id_and_message(lang),
+            Self::NotInFact(nif) => nif.rule_id_and_message(lang),
+            Self::NotInjectiveFact(nif) => nif.rule_id_and_message(lang),
+            Self::NotIsCartFact(nicf) => nicf.rule_id_and_message(lang),
+            Self::NotIsChoiceFunctionForFact(nicfff) => nicfff.rule_id_and_message(lang),
+            Self::NotIsFiniteSetFact(nifsf) => nifsf.rule_id_and_message(lang),
+            Self::NotIsNonemptySetFact(ninsf) => ninsf.rule_id_and_message(lang),
+            Self::NotIsSetFact(nisf) => nisf.rule_id_and_message(lang),
+            Self::NotIsTupleFact(nitf) => nitf.rule_id_and_message(lang),
+            Self::NotLessEqualFact(nlef) => nlef.rule_id_and_message(lang),
+            Self::NotLessFact(nlf) => nlf.rule_id_and_message(lang),
+            Self::NotNormalAtomicFact(nnaf) => nnaf.rule_id_and_message(lang),
+            Self::NotPrimeFact(npf) => npf.rule_id_and_message(lang),
+            Self::NotProperSubsetFact(npsf) => npsf.rule_id_and_message(lang),
+            Self::NotProperSupersetFact(npsf) => npsf.rule_id_and_message(lang),
+            Self::NotSubsetFact(nsf) => nsf.rule_id_and_message(lang),
+            Self::NotSupersetFact(nsf) => nsf.rule_id_and_message(lang),
+            Self::NotSurjectiveFact(nsf) => nsf.rule_id_and_message(lang),
+            Self::PrimeFact(pf) => pf.rule_id_and_message(lang),
+            Self::ProperSubsetFact(psf) => psf.rule_id_and_message(lang),
+            Self::ProperSupersetFact(psf) => psf.rule_id_and_message(lang),
+            Self::SubsetFact(sf) => sf.rule_id_and_message(lang),
+            Self::SupersetFact(sf) => sf.rule_id_and_message(lang),
+            Self::SurjectiveFact(sf) => sf.rule_id_and_message(lang),
         }
     }
 
@@ -79,3 +92,4 @@ impl AtomicExceptEqualityFactSearchProofByBuiltinRule {
         cite_from_atomic_builtin_rule(self)
     }
 }
+

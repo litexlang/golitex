@@ -548,7 +548,7 @@ impl ReciprocalAsNegOnePowerBuiltinRuleProof {
         text("ReciprocalAsNegOnePower", "1/a as a^(-1)", "1/a = a^(-1)")
     }
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        text("ReciprocalAsNegOnePower", "1/a as a^(-1)", "1/a = a^(-1)")
+        text("ReciprocalAsNegOnePower", "1/a 即 a^(-1)", "1/a = a^(-1)")
     }
 
 
@@ -565,7 +565,7 @@ impl QuotientAsMulNegOnePowerBuiltinRuleProof {
         text("QuotientAsMulNegOnePower", "a/b as a·b^(-1)", "a/b = a · b^(-1)")
     }
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        text("QuotientAsMulNegOnePower", "a/b as a·b^(-1)", "a/b = a · b^(-1)")
+        text("QuotientAsMulNegOnePower", "a/b 即 a·b^(-1)", "a/b = a · b^(-1)")
     }
 
 
@@ -888,7 +888,7 @@ impl LogChangeOfBaseBuiltinRuleProof {
         text("LogChangeOfBase", "change of base", "log_a(b) = log_c(b) / log_c(a)")
     }
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        text("LogChangeOfBase", "change of base", "log_a(b) = log_c(b) / log_c(a)")
+        text("LogChangeOfBase", "换底公式", "log_a(b) = log_c(b) / log_c(a)")
     }
 
 
@@ -956,7 +956,7 @@ impl NestedSameModAbsorptionBuiltinRuleProof {
         text("NestedSameModAbsorption", "nested same mod", "(a mod n) mod n = a mod n")
     }
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        text("NestedSameModAbsorption", "nested same mod", "(a mod n) mod n = a mod n")
+        text("NestedSameModAbsorption", "同模嵌套吸收", "(a mod n) mod n = a mod n")
     }
 
 
@@ -2503,7 +2503,7 @@ impl ReOfRealEmbeddingBuiltinRuleProof {
         text("ReOfRealEmbedding", "Re of real", "Re(embed(x)) = x")
     }
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        text("ReOfRealEmbedding", "Re of real", "Re(embed(x)) = x")
+        text("ReOfRealEmbedding", "实嵌入的 Re", "Re(embed(x)) = x")
     }
 
 
@@ -2520,7 +2520,7 @@ impl ImgOfRealEmbeddingBuiltinRuleProof {
         text("ImgOfRealEmbedding", "Im of real", "Im(embed(x)) = 0")
     }
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        text("ImgOfRealEmbedding", "Im of real", "Im(embed(x)) = 0")
+        text("ImgOfRealEmbedding", "实嵌入的 Im", "Im(embed(x)) = 0")
     }
 
 
@@ -2928,7 +2928,7 @@ impl SetMinusChainToUnionBuiltinRuleProof {
         text("SetMinusChainToUnion", "chained difference", "A \\ B \\ C expands via union of removed sets")
     }
     pub fn rule_id_and_message_zh(&self) -> BuiltinRuleText {
-        text("SetMinusChainToUnion", "chained difference", "A \\\\ B \\\\ C expands via union of removed sets")
+        text("SetMinusChainToUnion", "链式差集", "A \\\\ B \\\\ C 通过被去掉集合的并展开")
     }
 
 

@@ -11,21 +11,21 @@ use crate::tokenize::TokenBlock;
 
 impl Runtime {
     // Parse `x R` / `x, y R` groups until `:` (consumed).
-    // Defines each parameter atom in the current parse scope.
-    pub(super) fn parse_typed_param_list_until_colon(
+    // Empty list allowed for parameterless `forall:` / `not forall:`.
+    pub(super) fn parse_typed_param_list_until_colon_allow_empty(
         &mut self,
         tb: &mut TokenBlock,
     ) -> RuntimeResult<TypedParameterList> {
-        let params = self.parse_typed_param_list_until_colon_or_arrow(tb)?;
+        let params = self.parse_typed_param_list_until_colon_or_arrow_allow_empty(tb, true)?;
         tb.expect(COLON)?;
         Ok(params)
     }
 
-    // Parse `x R` / `x, y R` groups until `:` or `=>` (delimiter not consumed).
-    // Used by inline `forall x Dom => P` and block `forall x Dom:`.
-    pub(super) fn parse_typed_param_list_until_colon_or_arrow(
+    // `allow_empty`: parameterless `forall:` / `forall => P` (no binders).
+    pub(super) fn parse_typed_param_list_until_colon_or_arrow_allow_empty(
         &mut self,
         tb: &mut TokenBlock,
+        allow_empty: bool,
     ) -> RuntimeResult<TypedParameterList> {
         let mut groups = Vec::new();
         while !tb.exceed_end_of_head()
@@ -37,7 +37,7 @@ impl Runtime {
                 tb.advance()?;
             }
         }
-        if groups.is_empty() {
+        if groups.is_empty() && !allow_empty {
             return Err(RuntimeParseError::new(
                 "expected at least one parameter",
                 tb.line,

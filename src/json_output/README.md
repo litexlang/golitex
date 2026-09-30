@@ -7,17 +7,63 @@ verify/exec IR (Lean replay and detail still read the full tree).
 
 ```rust
 pub enum OutputDetail {
-    Compact,   // reserved
+    Compact,   // thin: success + statement (+ fail_reason)
     Normal,    // current default for all emit paths
     Detailed,  // field-isomorphic projection (L2 local_env, T1 no search_trace)
 }
 ```
 
-Default CLI / test emit uses **Normal**. **Detailed** is temporarily a
-Normal fallback while the IR projector under `project_detailed/` is realigned
-to current Exec/Verify types (`project_stmt_detailed` /
-`project_run_detailed` / `emit_run_detailed` still exist as entry points).
-Compact stays reserved.
+Default CLI / test emit uses **Normal**. **Compact** is implemented under
+`project_compact/` (`project_stmt_compact` / `project_run_compact` /
+`emit_run_compact`). **Detailed** is temporarily a Normal fallback while the
+IR projector under `project_detailed/` is realigned.
+
+## Compact statement shape
+
+Success — only disposition + source text:
+
+```json
+{
+  "success": true,
+  "statement": "1 + 2 = 3"
+}
+```
+
+Failure — add a thin `fail_reason` (`phase` + optional `goal`):
+
+```json
+{
+  "success": false,
+  "statement": "a > 10",
+  "fail_reason": {
+    "phase": "search_proof",
+    "goal": "a > 10"
+  }
+}
+```
+
+Chinese (`-lang zh`):
+
+```json
+{
+  "成功": true,
+  "语句": "1 + 2 = 3"
+}
+```
+
+```json
+{
+  "成功": false,
+  "语句": "a > 10",
+  "失败原因": {
+    "阶段": "搜索证明",
+    "目标命题": "a > 10"
+  }
+}
+```
+
+Compact deliberately omits `proof_method`, `stores`, `infers`, and cite details.
+Field order: `success` → `statement` → (`fail_reason` when failed).
 
 ## Normal statement shape (frozen)
 
@@ -27,7 +73,7 @@ Success:
 {
   "success": true,
   "statement": "1 + 2 = 3",
-  "why_verified": {
+  "proof_method": {
     "type": "builtin_rule",
     "rule_name": "Calculation",
     "message": "Both sides evaluate to the same number"
@@ -38,14 +84,15 @@ Success:
 ```
 
 Chinese session (`-lang zh`): same shape with **localized field names** and
-localized `rule_name` / `message` values. Example:
+localized `type` / `phase` / `rule_name` / `message` values (no English tokens
+under Chinese keys). Example:
 
 ```json
 {
   "成功": true,
   "语句": "1 + 2 = 3",
   "证明方法": {
-    "类型": "builtin_rule",
+    "类型": "内置规则",
     "规则名": "计算",
     "说明": "两边都算出同一个数"
   },
@@ -54,9 +101,10 @@ localized `rule_name` / `message` values. Example:
 }
 ```
 
-`type` *values* (e.g. `builtin_rule`) stay English stable tokens. Key remapping
-lives in `json_keys.rs` (`localize_key`); authors always write English keys in
-code and `object(lang, …)` remaps them.
+Key remapping lives in `json_keys.rs` (`localize_key`); authors always write
+English keys in code and `object(lang, …)` remaps them. Under `-lang zh`,
+emitted `类型` / `阶段` *values* are Chinese too (owned by explain/helper
+match arms).
 
 Cited-membership example:
 
@@ -64,7 +112,7 @@ Cited-membership example:
 {
   "success": true,
   "statement": "k >= 0",
-  "why_verified": {
+  "proof_method": {
     "type": "builtin_rule",
     "rule_name": "From known in N",
     "message": "The goal follows from a known natural-number membership",
@@ -94,8 +142,8 @@ Rules:
 - Builtin why: print `rule_name` + `message` only (no `rule` / `rule_id` /
   `variant` in Normal JSON). Stable ids live inside `explain/` for tests.
 - Builtin why path: call `rule.rule_id_and_message(lang)` only.
-  - Atomic: `explain/atomic_builtin_rule/` (order/≠ leaves filled EN+ZH; other
-    families use bilingual family-level stubs until leaf modules are wired).
+  - Atomic: `explain/atomic_builtin_rule/` — every family enum and every leaf
+    proof has dedicated EN+ZH copy (no family-level stubs).
   - Equality: `explain/equality_builtin_rule/` (top enum dispatches to each
     leaf; every leaf + Calculation has EN+ZH).
   Projection never matches on rule variants for copy text.
@@ -107,10 +155,8 @@ Rules:
 - Priority of explain coverage:
   1. Every Normal surface has English + Chinese `rule_name` / `message`
      (stmt kinds, compound facts, searched-proof routes, equality leaves,
-     atomic order/≠ leaves, family stubs, Calculation).
-  2. Unwired atomic families (`InFact`, `Subset`, …) still use family-level
-     stubs until leaf modules are added; copy is bilingual.
-  3. Detailed remains a Normal fallback until its IR projector is finished.
+     every atomic builtin leaf, Calculation).
+  2. Detailed remains a Normal fallback until its IR projector is finished.
 - `stores` / `infers` / `cite` / `statement` / `goal` use `readable_string`
   (IR with `#id#` wrappers stripped), not raw IR and not `fact_id`.
 - Cite may include `line` when the cited fact has a source line; omit `line` if unknown.
@@ -174,8 +220,34 @@ Fact success sketch:
 `language` is `en` or `zh` from `-lang` (default `en`). Builtin `rule_name` /
 `message` follow this language via `json_output/explain/`.
 
+## Acceptance (Normal + Compact)
+
+Locked by `cargo test --lib json_output::` (`acceptance_tests` +
+`project_normal_tests` + `project_compact_tests`):
+
+1. **Normal success shape / field order**: `success` → `statement` →
+   `proof_method` → `stores` → `infers`
+2. **Normal failure shape**: `success: false` → `statement` → `why_failed` →
+   empty `stores`/`infers`
+3. **Compact success**: only `success` + `statement` (no proof_method/stores/infers)
+4. **Compact failure**: `success` → `statement` → `fail_reason` (`phase` +
+   optional `goal`)
+5. **Builtin why (Normal)**: `type` + `rule_name` + `message` only (no `rule` /
+   `rule_id` / `variant`)
+6. **Cite (Normal)**: readable string, no `#id#` wrappers; optional `line`
+7. **Chinese (`-lang zh`)**: field keys remapped; type/phase/rule text Chinese
+8. **Stmt kinds**: every catalog kind has bilingual `explain_stmt_kind`
+9. **Equality builtins**: all variants bilingual via `rule.rule_id_and_message(lang)`
+10. **Searched-proof routes / compound facts**: bilingual `rule_name` + `message`
+11. **Run envelope**: `kind` / `success` / `detail` (`normal`|`compact`) /
+    `language` / `statement_results`
+
+**Out of this acceptance gate:** Detailed projector still falls back to Normal
+until realigned.
+
 ## API
 
+- `project_stmt_compact` / `project_run_compact` / `emit_run_compact`
 - `project_stmt_normal` / `project_run_normal` / `emit_run_normal`
 - `project_stmt_detailed` / `project_run_detailed` / `emit_run_detailed`
 

@@ -3,15 +3,15 @@
 use super::json_keys::localize_key;
 use crate::ast::fact::{AtomicFact, ExistShapedFact, Fact};
 use crate::ast::line_file::SourceLine;
-use crate::knowledge_base::JsonValue;
+use crate::knowledge_base::{JsonObject, JsonValue};
 use crate::launch_command::OutputLanguage;
 use crate::runtime::{FactId, Runtime};
 use crate::store_fact_and_infer::{StoreFactAndInferResult, StoreFactResult};
-use std::collections::BTreeMap;
 
 /// Build an object; keys are English in source and remapped by `lang`.
+/// Field order follows `entries` (not alphabetical).
 pub(super) fn object(lang: OutputLanguage, entries: Vec<(&str, JsonValue)>) -> JsonValue {
-    let mut map = BTreeMap::new();
+    let mut map = JsonObject::new();
     for (key, value) in entries {
         map.insert(localize_key(key, lang), value);
     }
@@ -114,11 +114,12 @@ fn atomic_source_line(fact: &AtomicFact) -> Option<&SourceLine> {
 
 pub(super) fn cite_from_fact_id(runtime: &Runtime, fact_id: FactId) -> JsonValue {
     let lang = output_language(runtime);
+    let type_tag = type_value_cite_known(lang);
     let Some(fact) = runtime.fact_by_id_in_stack(fact_id) else {
-        return object(lang, vec![("type", string("cite_known"))]);
+        return object(lang, vec![("type", string(type_tag))]);
     };
     let mut entries = vec![
-        ("type", string("cite_known")),
+        ("type", string(type_tag)),
         ("cite", string(fact_display(fact))),
     ];
     if let Some(line) = fact_line(fact) {
@@ -129,11 +130,12 @@ pub(super) fn cite_from_fact_id(runtime: &Runtime, fact_id: FactId) -> JsonValue
 
 pub(super) fn cite_forall_from_fact_id(runtime: &Runtime, fact_id: FactId) -> JsonValue {
     let lang = output_language(runtime);
+    let type_tag = type_value_cite_forall(lang);
     let Some(fact) = runtime.fact_by_id_in_stack(fact_id) else {
-        return object(lang, vec![("type", string("cite_forall"))]);
+        return object(lang, vec![("type", string(type_tag))]);
     };
     let mut entries = vec![
-        ("type", string("cite_forall")),
+        ("type", string(type_tag)),
         ("cite", string(fact_display(fact))),
     ];
     if let Some(line) = fact_line(fact) {
@@ -150,7 +152,7 @@ pub(super) fn builtin_rule_with_optional_cite(
     let lang = output_language(runtime);
     // Print rule_name + message only; rule_id stays internal to explain/.
     let mut entries = vec![
-        ("type", string("builtin_rule")),
+        ("type", string(type_value_builtin_rule(lang))),
         ("rule_name", string(text.rule_name.clone())),
         ("message", string(text.message.clone())),
     ];
@@ -241,4 +243,39 @@ pub(super) fn split_have_fact_id_texts(
         }
     }
     (stores, infers)
+}
+
+pub(super) fn type_value_cite_known(lang: OutputLanguage) -> &'static str {
+    match lang {
+        OutputLanguage::English => "cite_known",
+        OutputLanguage::Chinese => "引用已知",
+    }
+}
+
+pub(super) fn type_value_cite_forall(lang: OutputLanguage) -> &'static str {
+    match lang {
+        OutputLanguage::English => "cite_forall",
+        OutputLanguage::Chinese => "引用全称",
+    }
+}
+
+pub(super) fn type_value_builtin_rule(lang: OutputLanguage) -> &'static str {
+    match lang {
+        OutputLanguage::English => "builtin_rule",
+        OutputLanguage::Chinese => "内置规则",
+    }
+}
+
+pub(super) fn phase_value_search_proof(lang: OutputLanguage) -> &'static str {
+    match lang {
+        OutputLanguage::English => "search_proof",
+        OutputLanguage::Chinese => "搜索证明",
+    }
+}
+
+pub(super) fn phase_value_well_defined(lang: OutputLanguage) -> &'static str {
+    match lang {
+        OutputLanguage::English => "well_defined",
+        OutputLanguage::Chinese => "良定性",
+    }
 }

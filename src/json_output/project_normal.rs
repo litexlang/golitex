@@ -4,7 +4,7 @@ use super::explain::{explain_compound_fact_why, explain_searched_proof_why};
 use super::helper::{
     array_of_strings, bool_value, builtin_rule_with_optional_cite, cite_forall_from_fact_id,
     cite_from_fact_id, empty_string_array, infer_fact_texts_from_store_and_infer, object,
-    output_language, store_fact_texts, string,
+    output_language, phase_value_search_proof, phase_value_well_defined, store_fact_texts, string,
 };
 use super::project_stmt_catalog::project_non_fact_stmt;
 use crate::ast::fact::{AtomicFact, Fact};
@@ -43,7 +43,7 @@ use crate::run::run_command_outcome::RunLitexCodeResult;
 use crate::runtime::Runtime;
 use std::path::Path;
 
-/// Output detail level. Today every emit path uses Normal.
+/// Output detail level.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum OutputDetail {
     Compact,
@@ -110,7 +110,7 @@ fn project_fact_stmt(fact: &ExecFactStmtResult, runtime: &Runtime) -> JsonValue 
     match fact {
         ExecFactStmtResult::Success(success) => {
             let statement = verify_goal_display(&success.verify_result);
-            let why = why_verified(&success.verify_result, runtime);
+            let why = build_proof_method(&success.verify_result, runtime);
             let stores = store_fact_texts(&success.store_and_infer_result.store);
             let infers = infer_fact_texts_from_store_and_infer(
                 runtime,
@@ -119,7 +119,7 @@ fn project_fact_stmt(fact: &ExecFactStmtResult, runtime: &Runtime) -> JsonValue 
             object(lang, vec![
                 ("success", bool_value(true)),
                 ("statement", string(statement)),
-                ("why_verified", why),
+                ("proof_method", why),
                 ("stores", array_of_strings(stores)),
                 ("infers", array_of_strings(infers)),
             ])
@@ -253,7 +253,7 @@ fn exist_shaped_goal_display(r: &VerifyExistShapedFactResult) -> String {
     readable_string_from_ir_text(fact.ir().as_str())
 }
 
-fn why_verified(verify: &VerifyFactResult, runtime: &Runtime) -> JsonValue {
+fn build_proof_method(verify: &VerifyFactResult, runtime: &Runtime) -> JsonValue {
     match verify {
         VerifyFactResult::AtomicExceptEquality(r) => match r.as_ref() {
             VerifyAtomicExceptEqualityFactResult::Success(s) => {
@@ -300,13 +300,19 @@ fn searched_proof_why_json(runtime: &Runtime, kind: &str) -> JsonValue {
 
 fn why_failed(verify: &VerifyFactResult, lang: crate::launch_command::OutputLanguage) -> JsonValue {
     if verify.is_wd_failed() {
-        return object(lang, vec![("phase", string("well_defined"))]);
+        return object(
+            lang,
+            vec![("phase", string(phase_value_well_defined(lang)))],
+        );
     }
     let goal = verify_goal_display(verify);
-    object(lang, vec![
-        ("phase", string("search_proof")),
-        ("goal", string(goal)),
-    ])
+    object(
+        lang,
+        vec![
+            ("phase", string(phase_value_search_proof(lang))),
+            ("goal", string(goal)),
+        ],
+    )
 }
 
 fn why_from_atomic_except_searched(
