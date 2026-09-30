@@ -23,6 +23,53 @@ target/release/litex -f <this-file>
 Exit 0 is enough. No requirement to assert which `searched_proof` variant won.
 
 Stub / not-yet-wired nodes are **omitted** (no SKIP placeholders).
+
+## Fundamental equality examples
+
+| What the example demonstrates | Runnable file |
+| --- | --- |
+| Known `a = b`; prove `a = c` by calculating `b = c` (`b` is `1 + 1`, `c` is `2`) | [Left peer, builtin bridge](equal/by_equivalence_class/via_left_peer_builtin.lit) |
+| Known `a = b`; prove `a = c` by alpha identity of `b` and `c` (`fn(x R) R` and `fn(y R) R`) | [Left peer, alpha bridge](equal/by_equivalence_class/via_left_peer_alpha.lit) |
+| A named union equals the union with its two symbolic operands swapped | [Union commutativity bridge](equal/by_equivalence_class/via_left_peer_union_commutative.lit) |
+| A named anonymous function equals a fresh alpha-equivalent function | [Anonymous-function bridge](equal/by_equivalence_class/via_left_peer_anonymous_fn.lit) |
+| A named set builder equals a fresh alpha-equivalent set builder | [Set-builder bridge](equal/by_equivalence_class/via_left_peer_set_builder.lit) |
+| Only the right endpoint has a stored peer; reverse its stored edge | [Right peer](equal/by_equivalence_class/via_right_peer_builtin.lit) |
+| Both endpoint classes contribute a peer, with two stored edges on each side | [Both peers and multi-edge paths](equal/by_equivalence_class/via_both_peers_multi_edge.lit) |
+| Compare two function applications by matching their heads and citing known equality of their arguments | [Matching bridge](equal/by_equivalence_class/via_peers_matching_fn_app.lit) |
+| The two sides have the same IR: `x = x` | [SameIr](equal/by_they_are_the_same/by_equal_ir.lit) |
+| Function sets differ only by bound parameter names | [FnSet alpha identity](equal/by_they_are_the_same/by_fn_set_alpha_equal.lit) |
+| Anonymous functions rename both the parameter and its uses in the body | [AnonymousFn alpha identity](equal/by_they_are_the_same/by_anonymous_fn_alpha_equal.lit) |
+| Set builders rename the bound parameter in the condition | [SetBuilder alpha identity](equal/by_they_are_the_same/by_set_builder_alpha_equal.lit) |
+
+The peer examples deliberately leave their bridge unasserted before the goal:
+the missing equality must be proved during the class search. The result is
+`ByEquivalenceClass::ViaPeers`, with stored paths and a checked bridge.
+If all connecting equalities are already stored, the result is `KnownPath`;
+see [the stored-path example](equal/by_equivalence_class/path_from_generating_edges.lit).
+
+For `let a = 1 + 1` followed by `a = 2`, calculation and transitivity occur
+at different levels. The actual proof has this shape:
+
+```text
+a = 2                       ByEquivalenceClass::ViaPeers
+  a = 1 + 1                 stored equality from let
+  1 + 1 = 2                 ByBuiltinRule::Calculation
+```
+
+The class proof combines these steps by transitivity. The calculation child
+only proves `1 + 1 = 2`; the stored path supplies its connection to `a`.
+Writing `1 + 1 = 2` directly instead selects `ByBuiltinRule::Calculation`
+at the outer level. The union example follows the same class structure but
+uses `UnionCommutative` as its bridge. The function-application example uses
+`ByMatchingOneArgByOne`, whose argument subproof cites a `KnownPath`.
+
+`ByTheyAreTheSame` has `SameIr` and `SameFreeParamShape` cases. The latter's
+name refers here to alpha correspondence of bound parameters; genuinely free
+identifiers must keep their identities. Carriers, return sets, bodies, and
+conditions must agree under the correspondence.
+
+## Further coverage
+
 Still open (non-rewrite): several remaining `Not*` atomic builtin-rule families;
 MatchingOneArgByOne beyond the traced constructors;
 deeper aggregate (sum split / bijective reindex); nested-mod algebra;

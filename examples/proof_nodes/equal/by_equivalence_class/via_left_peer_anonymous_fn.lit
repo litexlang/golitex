@@ -1,0 +1,8 @@
+# Node: equal.ByEquivalenceClass.ViaPeers, bridge ByTheyAreTheSame.AnonymousFn
+# Run: target/release/litex -strict -f examples/proof_nodes/equal/by_equivalence_class/via_left_peer_anonymous_fn.lit
+# Follow a's stored equality to the anonymous function, then rename x to y
+# consistently in both the bound parameter and the body.
+
+let a = fn(x R) R {x}
+
+a = fn(y R) R {y}

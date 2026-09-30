@@ -1,0 +1,23 @@
+# Executed both as RootExport directly and as ImportedExport from ../main.lit.
+prop odd(a Z):
+    exist t Z st {a = 2 * t + 1}
+claim:
+    ? forall n Z:
+        $odd(n)
+        =>:
+            $odd(n)
+    obtain k from $odd(n)
+    n = 2 * k + 1
+
+sketch:
+    witness exist k Z st {k > 0} from 1
+    obtain k from exist k Z st {k > 0}
+    k > 0
+
+witness exist exported Z st {exported = 7} from 7
+obtain exported from exist exported Z st {exported = 7}
+exported = 7
+
+thm exported_value:
+    ? exported = 7
+    exported = 7

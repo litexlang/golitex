@@ -105,10 +105,9 @@ thm selected_successor_lies_on_graph:
 
 # Before comparing a function on first_set with one on all naturals, expose
 # the finite domain's ambient carrier once.
-by enumerate finite_set:
-    ? forall element first_set:
-        element $in N
 by def first_set $subset N
+forall element first_set:
+    element $in N
 
 # All three definitions now agree on the common finite domain.
 thm three_successor_presentations_agree:

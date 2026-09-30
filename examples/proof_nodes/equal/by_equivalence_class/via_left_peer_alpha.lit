@@ -1,0 +1,9 @@
+# Node: equal.ByEquivalenceClass.ViaPeers (left path + alpha bridge)
+# Run: target/release/litex -strict -f examples/proof_nodes/equal/by_equivalence_class/via_left_peer_alpha.lit
+# Here b denotes fn(x R) R, and c denotes fn(y R) R.
+# The declaration stores a = b. To prove a = c, compare b with c by renaming x to y.
+# b = c is proved inside this search, not asserted beforehand.
+
+let a = fn(x R) R
+
+a = fn(y R) R

@@ -242,7 +242,6 @@ impl Runtime {
             self.with_forall_params_occupied(&forall_fact.typed_parameters, &tb, |this| {
                 this.parse_body_stmts(proof_blocks)
             })?;
-        self.release_obtain_parse_bindings_in_stmts(&prove_process);
         self.define_plain_atom_as_parse(&tb, name.clone())?;
         Ok(Stmt::Definition(DefinitionStmt::DefStrategyStmt(
             DefStrategyStmt {
@@ -306,8 +305,8 @@ fn template_def_enum_name(body: &TemplateDefEnum) -> Option<String> {
         TemplateDefEnum::HaveObjByExistFactsStmt(stmt) => first_typed_param_name(&stmt.param_def),
         TemplateDefEnum::HaveByReplacementAxiomStmt(stmt) => Some(stmt.name.name.clone()),
         TemplateDefEnum::TrustHaveStmt(stmt) => first_typed_param_name(&stmt.param_def),
-        TemplateDefEnum::ObtainObjFromExistFact(stmt) => stmt.equal_tos.first().cloned(),
-        TemplateDefEnum::ObtainObjFromAtomicFact(stmt) => stmt.equal_tos.first().cloned(),
+        TemplateDefEnum::ObtainObjFromExistFact(stmt) => stmt.equal_tos.first().map(|bound| bound.name.clone()),
+        TemplateDefEnum::ObtainObjFromAtomicFact(stmt) => stmt.equal_tos.first().map(|bound| bound.name.clone()),
         TemplateDefEnum::HaveFnEqualStmt(stmt) => Some(stmt.name.clone()),
         TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => Some(stmt.name.clone()),
         TemplateDefEnum::HaveFnByInducStmt(stmt) => Some(stmt.name.clone()),

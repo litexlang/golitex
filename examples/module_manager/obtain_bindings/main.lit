@@ -1,0 +1,5 @@
+# target/release/litex -strict -f examples/module_manager/obtain_bindings/main.lit
+release thm local::root_witness_value
+local::root_witness = 3
+release thm Witnesses::witnesses::exported_value
+Witnesses::witnesses::exported = 7

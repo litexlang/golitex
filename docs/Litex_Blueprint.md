@@ -2,7 +2,7 @@
 
 Created and maintained by Jiachen Shen.
 
-Last updated: September 28, 2026.
+Last updated: September 30, 2026.
 
 Website: https://litexlang.com/doc/Litex_Blueprint
 
@@ -63,11 +63,15 @@ The following are not mutually exclusive user classes, but four entry points for
 
 Why another formal language?
 
-Lean is a major reference point for Litex. An earlier compiler experiment explored translating Litex evidence to Lean, and the retained artifacts illustrate the intended connection. The current `src/` and Cargo targets do not build that compiler. Treat a readable Lean frontend as a research direction, not as a promise that current Litex programs already compile to Lean.
+When I first encountered Lean, I was astonished: mathematics could be written as code, and proofs could be checked by a machine! The very idea of turning mathematics into code was exciting, and it led me to think about how I would want to use a formal language.
 
-Lean is hard often not only because “type theory is hard.” A more common friction is this: everyday mathematics talks about sets, elements, functions, and relations; many proof assistants’ default interface first places people in a world of goals and tactics. People care about *what is true*; the system’s default first asks *how do I attack the goal*.
+As I learned, a few questions took shape. What if I could simply write `1 + 1 = 2`, without first writing `example` and then `by ...`? What if, after defining oddness, I could write `$odd(13)` and let the language check it against the definition? What if, already knowing that all humans are mortal and that Socrates is human, I could write that Socrates is mortal without explicitly citing the universal premise again?
 
-If one starts from everyday mathematical expression and flips Lean’s default design, the basic starting points of Litex follow:
+These questions gradually came together as a basic idea behind Litex: **the user writes each mathematical step; the formal language finds and explains why that step holds.** Calculation, definitions, and known premises supply different kinds of grounds, while the user's way of participating stays the same: writing the fact that should hold next.
+
+The author still supplies the key mathematical constructions and the route of the argument. The language handles as much of the local verification between steps as it can and presents the grounds it finds. Many of Litex's simplifications and conventions follow this division of work.
+
+This division of work leads to several basic starting points for Litex:
 
 1. On the user side, return to sets, elements, functions, and relations—rather than crossing type engineering first.
 2. Source by default writes *what to prove*; the kernel searches for *how*.
@@ -86,6 +90,8 @@ Modern formal languages with Lean as a leading representative laid an irreplacea
 *Here sits a division of labor that is easy to underestimate, yet essential: **the language helps you prove; the user says what to prove**—not the reverse, where the user must first learn how to prove and then encode those proof steps into the source. So Litex output is not merely pass/fail: it tells you the mathematical grounds behind each statement. When you read Litex source, you are reading what should hold; from the output, you also read the mathematical principles that support each line—beyond the source text itself. Lean is usually the other way around: the source writes how to prove, and Lean’s output tells you what you have proved.*
 
 If you want to understand Litex’s design, the best way is to walk the path yourself: start from everyday mathematics, notice the interface mismatch, return *what* to people and hand *how* to the kernel. What you arrive at may not be called Litex; but you will see why it almost had to grow this way.
+
+Lean is a major reference point for Litex. An earlier compiler experiment explored translating Litex evidence to Lean, and the retained artifacts illustrate the intended connection. The current `src/` and Cargo targets do not build that compiler. Treat a readable Lean frontend as a research direction, not as a promise that current Litex programs already compile to Lean.
 
 Because Litex searches for the desired *how to verify* on your behalf, that search is rather complex in design; Litex must also have the common verify rules built in. So Litex’s full trusted verification-and-rules surface is on the order of a few hundred thousand lines of Rust—dozens of times Lean’s small kernel (about 5–8 thousand lines of C++). But the other side of the runtime story also holds: Litex need not first compile a proof into intermediate code and then refine it; at heart it is more like a huge, shape-based fancy Ctrl+F—constrained matching over a fact table and a rule table. So on a typical interaction path, the time and memory cost of search is usually far lower than Lean’s compile–refine–kernel-check path. That is also why Litex was almost impossible to finish before the AI era: for a language to succeed, its design should stay coherent, so the number of authors is preferably no more than two; yet Litex is so large that one or two people could not complete such an engineering effort without AI help—especially for a formal language that nearly tolerates zero bugs. Precisely because that trusted surface is huge, the Litex author must give Litex a compiler to Lean, so that Lean’s small kernel can independently recheck and help ensure Litex’s internal run is sound.
 

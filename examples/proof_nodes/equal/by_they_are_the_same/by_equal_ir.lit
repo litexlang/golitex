@@ -1,5 +1,6 @@
 # Node: equal.ByTheyAreTheSame.SameIr
-# Run: litex -f examples/proof_nodes/equal/by_they_are_the_same/by_equal_ir.lit
+# Run: target/release/litex -strict -f examples/proof_nodes/equal/by_they_are_the_same/by_equal_ir.lit
+# Both occurrences refer to the very same bound x: their IR is identical.
 
 forall x R:
     x = x

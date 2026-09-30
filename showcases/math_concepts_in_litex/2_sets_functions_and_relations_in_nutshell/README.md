@@ -20,7 +20,7 @@ selection. It does not redeclare those concepts locally.
 Run the Litex project from the repository root:
 
 ```bash
-target/release/litex -graph -r showcases/math_concepts_in_litex/2_sets_functions_and_relations_in_nutshell
+target/release/litex -strict -r showcases/math_concepts_in_litex/2_sets_functions_and_relations_in_nutshell
 ```
 
 The handwritten Lean comparison has no imports and uses only Lean 4's Prelude:
@@ -35,7 +35,13 @@ existence into primitive existential and universal propositions, then uses
 `Classical.choose`; this makes the comparison with Litex's `have fn ... by
 exist!` explicit.
 
-Both published files are checkable and contain no proof holes or trusted
-steps. More advanced material—axiomatic set theory, inverse images,
+The Litex source contains no trusted steps, but its complete verification is
+still blocked by the current migration. The finite-domain membership proof
+now uses the proved `first_set $subset N` directly; enumeration of a named
+domain is unsupported. Remaining failures are recorded in
+[`和showcase有关.md`](../../../plan/迁移的plan/和showcase有关.md).
+The Lean comparison was not reverified during this cleanup.
+
+More advanced material—axiomatic set theory, inverse images,
 equivalence relations, quotients, cardinal comparison, and
 Cantor--Bernstein—is intentionally outside this introductory slice.

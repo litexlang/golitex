@@ -88,7 +88,6 @@ impl Runtime {
         match self.apply_obtain_from_known_exist_family(
             &stmt.fact,
             &stmt.equal_tos,
-            stmt.line_file.line,
         )? {
             Ok(store_and_infer_result) => Ok(ExecObtainObjFromExistFactStmtResult::Success(
                 ExecObtainObjFromExistFactStmtSuccessResult {
@@ -108,8 +107,7 @@ impl Runtime {
     pub(in crate::execute) fn apply_obtain_from_known_exist_family(
         &mut self,
         family: &ExistShapedFact,
-        equal_tos: &[String],
-        source_line: usize,
+        equal_tos: &[BoundName],
     ) -> RuntimeResult<Result<StoreHaveObjAndInferResult, ExecObtainObjFromExistFactStmtFailed>>
     {
         if matches!(family, ExistShapedFact::NotExist(_)) {
@@ -127,13 +125,7 @@ impl Runtime {
         }
 
         let (renamed_params, subst) =
-            self.build_obtain_renamed_params_and_subst(plain, equal_tos, source_line)?;
-
-        // Rebind: drop ambient definitions of the obtain names so a second
-        // `obtain k` in the same claim can merge (parent would otherwise clash).
-        for name in equal_tos {
-            self.remove_identifier_definition_from_stack(name);
-        }
+            self.build_obtain_renamed_params_and_subst(plain, equal_tos)?;
 
         let mut store_and_infer_result =
             self.define_typed_parameters_in_current_env(&renamed_params, None)?;
@@ -196,8 +188,7 @@ impl Runtime {
     fn build_obtain_renamed_params_and_subst(
         &mut self,
         plain: &PlainExistFact,
-        equal_tos: &[String],
-        source_line: usize,
+        equal_tos: &[BoundName],
     ) -> RuntimeResult<(TypedParameterList, HashMap<IdentifierId, Obj>)> {
         let mut subst = HashMap::new();
         let mut groups = Vec::new();
@@ -213,10 +204,8 @@ impl Runtime {
                 })?;
             let mut params = Vec::new();
             for old in &group.params {
-                let name = equal_tos[equal_index].clone();
+                let bound = equal_tos[equal_index].clone();
                 equal_index += 1;
-                let id = self.resolve_obtain_plain_atom(source_line, &name)?;
-                let bound = BoundName::new(id, name);
                 let obj = Obj::Identifier(self.identifier_obj_for_stored_mention(&bound));
                 subst.insert(old.id, obj);
                 params.push(bound);

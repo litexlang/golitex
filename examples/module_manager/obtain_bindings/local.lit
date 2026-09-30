@@ -1,0 +1,52 @@
+# Run from the repository root:
+# target/release/litex -strict -f examples/module_manager/obtain_bindings/local.lit
+# Previously rejected, unchanged source (the local k was promoted to f0::k):
+# prop odd(a Z):
+#     exist t Z st {a = 2 * t + 1}
+# claim:
+#     ? forall n Z:
+#         $odd(n)
+#         =>:
+#             $odd(n)
+#     obtain k from $odd(n)
+#     n = 2 * k + 1
+
+prop odd(a Z):
+    exist t Z st {a = 2 * t + 1}
+claim:
+    ? forall n Z:
+        $odd(n)
+        =>:
+            $odd(n)
+    obtain k from $odd(n)
+    n = 2 * k + 1
+
+# The existential k ends before the outer witness k is introduced.
+claim:
+    ? 1 = 1
+    witness exist k Z st {k > 0} from 1
+    obtain k from exist k Z st {k > 0}
+    k > 0
+
+# Recover the original parity construction without trust.
+claim:
+    ? forall n Z:
+        $odd(n)
+        =>:
+            $odd(3 * n + 2)
+    obtain k from $odd(n)
+    3 * n + 2 = 3 * (2 * k + 1) + 2 = 2 * (3 * k + 2) + 1
+    witness $odd(3 * n + 2) from 3 * k + 2
+
+# A real file-root witness remains exportable.
+witness exist t Z st {t = 3} from 3
+obtain root_witness from exist t Z st {t = 3}
+root_witness = 3
+
+thm root_witness_value:
+    ? root_witness = 3
+    root_witness = 3
+
+# Negative boundaries are executable in obtain_binding_tests:
+# repeating a visible witness name is rejected; distinct witnesses cannot
+# prove 0 = 1; the incorrect obtained equality n = 2*k+2 remains rejected.

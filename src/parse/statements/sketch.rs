@@ -19,7 +19,6 @@ impl Runtime {
         let proof = self.parse_body_stmts(&tb.body);
         self.pop_parse_scope();
         let proof = proof?;
-        self.release_obtain_parse_bindings_in_stmts(&proof);
         Ok(Stmt::ProofBlock(ProofBlockStmt::SketchStmt(SketchStmt {
             proof,
             line_file: SourceLine::new(block.line, self.code_source.clone())

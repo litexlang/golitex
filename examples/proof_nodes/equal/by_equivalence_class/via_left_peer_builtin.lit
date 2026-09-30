@@ -1,0 +1,10 @@
+# Node: equal.ByEquivalenceClass.ViaPeers (left path + builtin bridge)
+# Run: target/release/litex -strict -f examples/proof_nodes/equal/by_equivalence_class/via_left_peer_builtin.lit
+# Here b denotes 1 + 1, and c denotes 2.
+# The declaration stores a = b. To prove a = c, calculate b = c.
+# 1 + 1 = 2 is proved inside this search, not asserted beforehand.
+# The whole proof is ViaPeers (transitivity); only its bridge is Calculation.
+
+let a = 1 + 1
+
+a = 2

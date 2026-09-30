@@ -24,7 +24,6 @@ pub fn exec_claim_stmt(
     stmt: &ClaimStmt,
 ) -> RuntimeResult<ExecProofBlockStmtResult> {
     if matches!(stmt.fact, Fact::ForallFactWithIff(_)) {
-        runtime.release_obtain_parse_bindings_in_stmts(&stmt.proof);
         return Ok(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Failed(
             ExecClaimStmtFailed::GoalUnsupported(
                 "claim: forall ... <=> goals are not supported".to_string(),
@@ -35,7 +34,6 @@ pub fn exec_claim_stmt(
     let goal_wd =
         runtime.verify_fact_well_definedness(&stmt.fact, claim_proof_verify_state())?;
     if goal_wd.is_failed() {
-        runtime.release_obtain_parse_bindings_in_stmts(&stmt.proof);
         return Ok(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Failed(
             ExecClaimStmtFailed::GoalWd(goal_wd),
         )));
@@ -61,7 +59,6 @@ pub fn exec_claim_stmt(
         }
     })?;
 
-    runtime.release_obtain_parse_bindings_in_stmts(&stmt.proof);
 
     let (proof_steps, conclusion_proofs) = match local_outcome {
         Ok(v) => v,

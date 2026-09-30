@@ -1,0 +1,8 @@
+# Node: equal.ByEquivalenceClass.ViaPeers, bridge ByTheyAreTheSame.SetBuilder
+# Run: target/release/litex -strict -f examples/proof_nodes/equal/by_equivalence_class/via_left_peer_set_builder.lit
+# Follow a's stored equality to the set builder, then rename x to y
+# in its condition while keeping the carrier and threshold unchanged.
+
+let a = {x R: x > 0}
+
+a = {y R: y > 0}

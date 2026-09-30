@@ -130,7 +130,6 @@ impl Runtime {
         match self.apply_obtain_from_known_exist_family(
             &projected_exist,
             &stmt.equal_tos,
-            stmt.line_file.line,
         )? {
             Ok(store_and_infer_result) => Ok(ExecObtainObjFromAtomicFactStmtResult::Success(
                 ExecObtainObjFromAtomicFactStmtSuccessResult {

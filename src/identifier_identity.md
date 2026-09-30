@@ -38,12 +38,14 @@ indexing.
    `identifier_obj_for_stored_mention`: outermost + promoting `CodeSource` →
    qualified LHS/mention, else plain.
 5. **No shadowing.** Same-name nested binders stay forbidden (occupy fence).
-   Obtain-only exceptions (not general shadowing):
-   - before parsing `obtain k from exist k`, live file-root obtain bindings of
-     the equal_tos names are stashed so **that** exist binder can occupy;
-   - a later `obtain k` may replace an earlier file-root obtain binding
-     (new `IdentifierId` + `source_line` in `obtain_parse_ids`).
-   A later standalone `exist k` / `forall k` after `obtain k` still collides.
+   `obtain` uses the same rule as `let` / `have`. Its source is parsed before
+   its new witnesses are declared: in `obtain k from exist k Z st {k > 0}`,
+   the existential k has already left scope when the outer witness k gets
+   its own fresh ID. Both obtain ASTs carry `Vec<BoundName>`; execution uses
+   those IDs directly. There is no obtain-specific Runtime ID table,
+   file-root promotion of local witnesses, or visible-name rebinding.
+   A later standalone `exist k` / `forall k` after a still-visible
+   `obtain k` collides as it would with any other visible binding.
 6. **Letter reuse.** After a scope ends, a later `have x` gets a **new** id.
 7. **IR.** Plain → `#<id.value>#<name>` (e.g. `#3#x`). Display → `x` only.
    Qualified → `f0::x` / `m0::f1::x` style placeholders.
@@ -67,8 +69,12 @@ indexing.
 
 The definition table stores definitions under the **surface plain name**.
 Stmt payload fields that are definition / store keys (`Def*Stmt.name`,
-`HaveFn*Stmt.name`, `DefTemplateStmt.template_name`, obtain `equal_tos`,
+`HaveFn*Stmt.name`, `DefTemplateStmt.template_name`,
 `HaveByPreimageStmt.preimage_names`, …) are typed as `PlainName`.
+Binding-carrying payloads such as `LetObjStmt.name`, have parameters, and
+obtain `equal_tos` preserve `BoundName`; their `.name` remains the definition
+table key. Stored mentions are promoted only when the file-root binding has
+the same ID, so a later top-level name cannot capture an earlier local one.
 Occurrence identity for objects/facts uses `IdentifierId` on plain AST/IR,
 or qualified indices+name after file-root promotion.
 Looking up “what is `x` defined as?” is by plain name; citing it across

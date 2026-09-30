@@ -1,0 +1,17 @@
+# Node: equal.ByEquivalenceClass.ViaPeers, bridge ByMatchingOneArgByOne
+# Run: target/release/litex -strict -f examples/proof_nodes/equal/by_equivalence_class/via_peers_matching_fn_app.lit
+# The declarations store a = f(x), b = f(y), and y = x.
+# The bridge compares f(x) and f(y) by matching their heads and arguments;
+# its argument equality x = y cites the stored edge in reverse.
+
+have f fn(t R) R
+
+have x R
+
+let y = x
+
+let a = f(x)
+
+let b = f(y)
+
+a = b
